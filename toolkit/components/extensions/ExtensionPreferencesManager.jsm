@@ -25,7 +25,6 @@ var EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
 const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");

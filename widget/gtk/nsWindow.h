@@ -491,7 +491,6 @@ private:
                                    gint* aRootX, gint* aRootY);
     void               ClearCachedResources();
     nsIWidgetListener* GetListener();
-    bool               IsComposited() const;
 
     void               UpdateClientOffsetForCSDWindow();
 
@@ -609,6 +608,9 @@ private:
     // full translucency at this time; each pixel is either fully opaque
     // or fully transparent.
     gchar*       mTransparencyBitmap;
+    // True when we're on compositing window manager and this
+    // window is using visual with alpha channel.
+    bool         mHasAlphaVisual;
 
     // all of our DND stuff
     void   InitDragEvent(mozilla::WidgetDragEvent& aEvent);

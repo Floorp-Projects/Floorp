@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.runtime-item {
+  align-items: center;
+  display: flex;
+  font-size: 20px;
+  margin-inline-start: 24px;
+}
+
+.runtime-item__icon {
+  fill: var(--runtime-item-icon-color);
+  height: 24px;
+  margin-inline-end: 9px;
+  width: 24px;
+  -moz-context-properties: fill;
+}
+
+.runtime-item--selected {
+  color: var(--runtime-item-selected-color);
+}
+
+.runtime-item__icon--selected {
+  fill: var(--runtime-item-selected-color);
+}

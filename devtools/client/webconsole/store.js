@@ -23,6 +23,7 @@ const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
 const { reducers } = require("./reducers/index");
 
 // Middleware
+const eventTelemetry = require("./middleware/event-telemetry");
 const historyPersistence = require("./middleware/history-persistence");
 const thunk = require("./middleware/thunk");
 
@@ -78,6 +79,7 @@ function configureStore(hud, options = {}) {
   const middleware = applyMiddleware(
     thunk.bind(null, {prefsService}),
     historyPersistence,
+    eventTelemetry.bind(null, options.telemetry, options.sessionId),
   );
 
   return createStore(

@@ -47,6 +47,9 @@ ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 # %include taskcluster/scripts/run-task
 ADD topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
 
+# %include taskcluster/scripts/misc/fetch-content
+ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-content
+
 # %include taskcluster/scripts/tester/test-linux.sh
 ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /builds/worker/bin/test-linux.sh
 

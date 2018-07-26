@@ -492,14 +492,14 @@ RemoteSpellChecker.prototype = {
 
     let dictionary = Cc["@mozilla.org/spellchecker/personaldictionary;1"]
                        .getService(Ci.mozIPersonalDictionary);
-    dictionary.addWord(this._spellInfo.misspelling, "");
+    dictionary.addWord(this._spellInfo.misspelling);
 
     this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:recheck", {});
   },
   undoAddToDictionary(word) {
     let dictionary = Cc["@mozilla.org/spellchecker/personaldictionary;1"]
                        .getService(Ci.mozIPersonalDictionary);
-    dictionary.removeWord(word, "");
+    dictionary.removeWord(word);
 
     this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:recheck", {});
   },

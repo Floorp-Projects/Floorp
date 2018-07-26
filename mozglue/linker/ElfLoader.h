@@ -8,6 +8,7 @@
 #include <vector>
 #include <dlfcn.h>
 #include <signal.h>
+#include "mozilla/Atomics.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -446,12 +447,13 @@ protected:
   void Forget(LibHandle *handle);
   void Forget(CustomElf *handle);
 
-  /* Last error. Used for dlerror() */
   friend class SystemElf;
   friend const char *__wrap_dlerror(void);
   friend void *__wrap_dlsym(void *handle, const char *symbol);
   friend int __wrap_dlclose(void *handle);
-  const char *lastError;
+  /* __wrap_dlerror() returns this custom last error if non-null or the system
+   * dlerror() value if this is null. Must refer to a string constant. */
+  mozilla::Atomic<const char*, mozilla::Relaxed> lastError;
 
 private:
   ElfLoader() : expect_shutdown(true), lastError(nullptr)

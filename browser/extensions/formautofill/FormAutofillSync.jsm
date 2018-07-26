@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["AddressesEngine", "CreditCardsEngine"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-sync/engines.js");
 ChromeUtils.import("resource://services-sync/record.js");
 ChromeUtils.import("resource://services-sync/util.js");

@@ -7,10 +7,7 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-/* exported BaseProcess, PromiseWorker */
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["TextDecoder"]);
 
 ChromeUtils.defineModuleGetter(this, "AsyncShutdown",

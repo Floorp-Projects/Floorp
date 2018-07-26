@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
 import unittest
 
 from compare_locales import parser
@@ -14,7 +15,7 @@ class TestFluentParser(ParserTestMixin, unittest.TestCase):
     filename = 'foo.ftl'
 
     def test_equality_same(self):
-        source = 'progress = Progress: { NUMBER($num, style: "percent") }.'
+        source = b'progress = Progress: { NUMBER($num, style: "percent") }.'
 
         self.parser.readContents(source)
         [ent1] = list(self.parser)
@@ -25,8 +26,8 @@ class TestFluentParser(ParserTestMixin, unittest.TestCase):
         self.assertTrue(ent1.equals(ent2))
 
     def test_equality_different_whitespace(self):
-        source1 = 'foo = { $arg }'
-        source2 = 'foo = {    $arg    }'
+        source1 = b'foo = { $arg }'
+        source2 = b'foo = {    $arg    }'
 
         self.parser.readContents(source1)
         [ent1] = list(self.parser)
@@ -37,7 +38,7 @@ class TestFluentParser(ParserTestMixin, unittest.TestCase):
         self.assertTrue(ent1.equals(ent2))
 
     def test_word_count(self):
-        self.parser.readContents('''\
+        self.parser.readContents(b'''\
 a = One
 b = One two three
 c = One { $arg } two
@@ -76,7 +77,7 @@ h =
         self.assertEqual(h.count_words(), 10)
 
     def test_simple_message(self):
-        self.parser.readContents('a = A')
+        self.parser.readContents(b'a = A')
 
         [a] = list(self.parser)
         self.assertEqual(a.key, 'a')
@@ -86,7 +87,7 @@ h =
         self.assertEqual(len(attributes), 0)
 
     def test_complex_message(self):
-        self.parser.readContents('abc = A { $arg } B { msg } C')
+        self.parser.readContents(b'abc = A { $arg } B { msg } C')
 
         [abc] = list(self.parser)
         self.assertEqual(abc.key, 'abc')
@@ -94,7 +95,7 @@ h =
         self.assertEqual(abc.all, 'abc = A { $arg } B { msg } C')
 
     def test_multiline_message(self):
-        self.parser.readContents('''\
+        self.parser.readContents(b'''\
 abc =
     A
     B
@@ -107,7 +108,7 @@ abc =
         self.assertEqual(abc.all, 'abc =\n    A\n    B\n    C')
 
     def test_message_with_attribute(self):
-        self.parser.readContents('''\
+        self.parser.readContents(b'''\
 abc = ABC
     .attr = Attr
 ''')
@@ -118,7 +119,7 @@ abc = ABC
         self.assertEqual(abc.all, 'abc = ABC\n    .attr = Attr')
 
     def test_message_with_attribute_and_no_value(self):
-        self.parser.readContents('''\
+        self.parser.readContents(b'''\
 abc
     .attr = Attr
 ''')
@@ -134,7 +135,7 @@ abc
         self.assertEqual(attr.val, 'Attr')
 
     def test_non_localizable(self):
-        self.parser.readContents('''\
+        self.parser.readContents(b'''\
 ### Resource Comment
 
 foo = Foo
@@ -209,8 +210,11 @@ baz = Baz
         self.assertTrue(isinstance(entity, parser.Whitespace))
         self.assertEqual(entity.all, '\n')
 
+        with self.assertRaises(StopIteration):
+            next(entities)
+
     def test_non_localizable_syntax_zero_four(self):
-        self.parser.readContents('''\
+        self.parser.readContents(b'''\
 // Resource Comment
 
 foo = Foo
@@ -289,8 +293,11 @@ baz = Baz
         self.assertTrue(isinstance(entity, parser.Whitespace))
         self.assertEqual(entity.all, '\n')
 
+        with self.assertRaises(StopIteration):
+            next(entities)
+
     def test_comments_val(self):
-        self.parser.readContents('''\
+        self.parser.readContents(b'''\
 // Legacy Comment
 
 ### Resource Comment
@@ -332,3 +339,7 @@ baz = Baz
 
         entity = next(entities)
         self.assertTrue(isinstance(entity, parser.Whitespace))
+        self.assertEqual(entity.all, '\n')
+
+        with self.assertRaises(StopIteration):
+            next(entities)

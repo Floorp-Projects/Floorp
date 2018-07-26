@@ -7,8 +7,6 @@
 
 /* eslint-disable mozilla/balanced-listeners */
 
-/* exported SubprocessImpl */
-
 Cu.importGlobalProperties(["TextDecoder"]);
 
 var EXPORTED_SYMBOLS = ["SubprocessImpl"];

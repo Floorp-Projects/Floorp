@@ -1277,15 +1277,17 @@ window._gBrowser = {
     return this._setTabLabel(aTab, title, { isContentTitle });
   },
 
-  _setTabLabel(aTab, aLabel, aOptions) {
+  _setTabLabel(aTab, aLabel, {
+    beforeTabOpen,
+    isContentTitle,
+  } = {}) {
     if (!aLabel) {
       return false;
     }
 
     aTab._fullLabel = aLabel;
 
-    aOptions = aOptions || {};
-    if (!aOptions.isContentTitle) {
+    if (!isContentTitle) {
       // Remove protocol and "www."
       if (!("_regex_shortenURLForTabLabel" in this)) {
         this._regex_shortenURLForTabLabel = /^[^:]+:\/\/(?:www\.)?/;
@@ -1293,7 +1295,7 @@ window._gBrowser = {
       aLabel = aLabel.replace(this._regex_shortenURLForTabLabel, "");
     }
 
-    aTab._labelIsContentTitle = aOptions.isContentTitle;
+    aTab._labelIsContentTitle = isContentTitle;
 
     if (aTab.getAttribute("label") == aLabel) {
       return false;
@@ -1307,7 +1309,7 @@ window._gBrowser = {
 
     // Dispatch TabAttrModified event unless we're setting the label
     // before the TabOpen event was dispatched.
-    if (!aOptions.beforeTabOpen) {
+    if (!beforeTabOpen) {
       this._tabAttrModified(aTab, ["label"]);
     }
 
@@ -1512,8 +1514,12 @@ window._gBrowser = {
     }
   },
 
-  updateBrowserRemoteness(aBrowser, aShouldBeRemote, aOptions) {
-    aOptions = aOptions || {};
+  updateBrowserRemoteness(aBrowser, aShouldBeRemote, {
+    newFrameloader,
+    opener,
+    remoteType,
+    sameProcessAsFrameLoader,
+  } = {}) {
     let isRemote = aBrowser.getAttribute("remote") == "true";
 
     if (!gMultiProcessBrowser && aShouldBeRemote) {
@@ -1522,26 +1528,26 @@ window._gBrowser = {
     }
 
     // Default values for remoteType
-    if (!aOptions.remoteType) {
-      aOptions.remoteType = aShouldBeRemote ? E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
+    if (!remoteType) {
+      remoteType = aShouldBeRemote ? E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
     }
 
     // If we are passed an opener, we must be making the browser non-remote, and
     // if the browser is _currently_ non-remote, we need the openers to match,
     // because it is already too late to change it.
-    if (aOptions.opener) {
+    if (opener) {
       if (aShouldBeRemote) {
         throw new Error("Cannot set an opener on a browser which should be remote!");
       }
-      if (!isRemote && aBrowser.contentWindow.opener != aOptions.opener) {
+      if (!isRemote && aBrowser.contentWindow.opener != opener) {
         throw new Error("Cannot change opener on an already non-remote browser!");
       }
     }
 
     // Abort if we're not going to change anything
-    let currentRemoteType = aBrowser.getAttribute("remoteType");
-    if (isRemote == aShouldBeRemote && !aOptions.newFrameloader &&
-        (!isRemote || currentRemoteType == aOptions.remoteType)) {
+    let oldRemoteType = aBrowser.getAttribute("remoteType");
+    if (isRemote == aShouldBeRemote && !newFrameloader &&
+        (!isRemote || oldRemoteType == remoteType)) {
       return false;
     }
 
@@ -1567,23 +1573,20 @@ window._gBrowser = {
     // We'll be creating a new listener, so destroy the old one.
     listener.destroy();
 
+    let oldDroppedLinkHandler = aBrowser.droppedLinkHandler;
+    let oldSameProcessAsFrameLoader = aBrowser.sameProcessAsFrameLoader;
     let oldUserTypedValue = aBrowser.userTypedValue;
     let hadStartedLoad = aBrowser.didStartLoadSinceLastUserTyping();
 
     // Make sure the browser is destroyed so it unregisters from observer notifications
     aBrowser.destroy();
 
-    // Make sure to restore the original droppedLinkHandler and
-    // sameProcessAsFrameLoader.
-    let droppedLinkHandler = aBrowser.droppedLinkHandler;
-    let sameProcessAsFrameLoader = aBrowser.sameProcessAsFrameLoader;
-
     // Change the "remote" attribute.
     let parent = aBrowser.parentNode;
     aBrowser.remove();
     if (aShouldBeRemote) {
       aBrowser.setAttribute("remote", "true");
-      aBrowser.setAttribute("remoteType", aOptions.remoteType);
+      aBrowser.setAttribute("remoteType", remoteType);
     } else {
       aBrowser.setAttribute("remote", "false");
       aBrowser.removeAttribute("remoteType");
@@ -1591,19 +1594,19 @@ window._gBrowser = {
 
     // NB: This works with the hack in the browser constructor that
     // turns this normal property into a field.
-    if (aOptions.sameProcessAsFrameLoader) {
-      // Always set sameProcessAsFrameLoader when passed in aOptions.
-      aBrowser.sameProcessAsFrameLoader = aOptions.sameProcessAsFrameLoader;
-    } else if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
+    if (sameProcessAsFrameLoader) {
+      // Always set sameProcessAsFrameLoader when passed in explicitly.
+      aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
+    } else if (!aShouldBeRemote || oldRemoteType == remoteType) {
       // Only copy existing sameProcessAsFrameLoader when not switching
       // remote type otherwise it would stop the switch.
-      aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
+      aBrowser.sameProcessAsFrameLoader = oldSameProcessAsFrameLoader;
     }
 
-    if (aOptions.opener) {
+    if (opener) {
       // Set the opener window on the browser, such that when the frame
       // loader is created the opener is set correctly.
-      aBrowser.presetOpenerWindow(aOptions.opener);
+      aBrowser.presetOpenerWindow(opener);
     }
 
     parent.appendChild(aBrowser);
@@ -1613,7 +1616,7 @@ window._gBrowser = {
       aBrowser.urlbarChangeTracker.startedLoad();
     }
 
-    aBrowser.droppedLinkHandler = droppedLinkHandler;
+    aBrowser.droppedLinkHandler = oldDroppedLinkHandler;
 
     // Switching a browser's remoteness will create a new frameLoader.
     // As frameLoaders start out with an active docShell we have to
@@ -1678,18 +1681,18 @@ window._gBrowser = {
     if (!gMultiProcessBrowser)
       return this.updateBrowserRemoteness(aBrowser, false);
 
-    let currentRemoteType = aBrowser.getAttribute("remoteType") || null;
+    let oldRemoteType = aBrowser.getAttribute("remoteType") || null;
 
     aOptions.remoteType =
       E10SUtils.getRemoteTypeForURI(aURL,
         gMultiProcessBrowser,
-        currentRemoteType,
+        oldRemoteType,
         aBrowser.currentURI);
 
     // If this URL can't load in the current browser then flip it to the
     // correct type.
-    if (currentRemoteType != aOptions.remoteType ||
-      aOptions.newFrameloader) {
+    if (oldRemoteType != aOptions.remoteType ||
+        aOptions.newFrameloader) {
       let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
       return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
     }
@@ -1775,12 +1778,19 @@ window._gBrowser = {
     FullZoom.onLocationChange(tabURI, false, browser);
   },
 
-  _createBrowser(aParams) {
-    // Supported parameters:
-    // userContextId, remote, remoteType, isPreloadBrowser,
-    // uriIsAboutBlank, sameProcessAsFrameLoader,
-    // recordExecution, replayExecution
-
+  _createBrowser({
+    isPreloadBrowser,
+    name,
+    nextTabParentId,
+    openerWindow,
+    recordExecution,
+    remote,
+    remoteType,
+    replayExecution,
+    sameProcessAsFrameLoader,
+    uriIsAboutBlank,
+    userContextId,
+  } = {}) {
     let b = document.createElementNS(this._XUL_NS, "browser");
     b.permanentKey = {};
 
@@ -1788,38 +1798,36 @@ window._gBrowser = {
       b.setAttribute(attribute, this._defaultBrowserAttributes[attribute]);
     }
 
-    if (aParams.userContextId) {
-      b.setAttribute("usercontextid", aParams.userContextId);
+    if (userContextId) {
+      b.setAttribute("usercontextid", userContextId);
     }
 
     // remote parameter used by some addons, use default in this case.
-    if (aParams.remote && !aParams.remoteType) {
-      aParams.remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+    if (remote && !remoteType) {
+      remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
     }
 
-    if (aParams.remoteType) {
-      b.setAttribute("remoteType", aParams.remoteType);
+    if (remoteType) {
+      b.setAttribute("remoteType", remoteType);
       b.setAttribute("remote", "true");
     }
 
-    let recordExecution = aParams && aParams.recordExecution;
     if (recordExecution) {
       b.setAttribute("recordExecution", recordExecution);
     }
 
-    let replayExecution = aParams && aParams.replayExecution;
     if (replayExecution) {
       b.setAttribute("replayExecution", replayExecution);
     }
 
-    if (aParams.openerWindow) {
-      if (aParams.remoteType) {
+    if (openerWindow) {
+      if (remoteType) {
         throw new Error("Cannot set opener window on a remote browser!");
       }
-      b.presetOpenerWindow(aParams.openerWindow);
+      b.presetOpenerWindow(openerWindow);
     }
 
-    if (!aParams.isPreloadBrowser) {
+    if (!isPreloadBrowser) {
       b.setAttribute("autocompletepopup", "PopupAutoComplete");
     }
 
@@ -1838,28 +1846,28 @@ window._gBrowser = {
      *      that browser altogether
      * See more details on Bug 1420285.
      */
-    if (aParams.isPreloadBrowser) {
+    if (isPreloadBrowser) {
       b.setAttribute("preloadedState", "preloaded");
     }
 
-    if (aParams.nextTabParentId) {
-      if (!aParams.remoteType) {
+    if (nextTabParentId) {
+      if (!remoteType) {
         throw new Error("Cannot have nextTabParentId without a remoteType");
       }
       // Gecko is going to read this attribute and use it.
-      b.setAttribute("nextTabParentId", aParams.nextTabParentId.toString());
+      b.setAttribute("nextTabParentId", nextTabParentId.toString());
     }
 
-    if (aParams.sameProcessAsFrameLoader) {
-      b.sameProcessAsFrameLoader = aParams.sameProcessAsFrameLoader;
+    if (sameProcessAsFrameLoader) {
+      b.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
     }
 
     // This will be used by gecko to control the name of the opened
     // window.
-    if (aParams.name) {
+    if (name) {
       // XXX: The `name` property is special in HTML and XUL. Should
       // we use a different attribute name for this?
-      b.setAttribute("name", aParams.name);
+      b.setAttribute("name", name);
     }
 
     // Create the browserStack container
@@ -1888,7 +1896,7 @@ window._gBrowser = {
 
     // Prevent the superfluous initial load of a blank document
     // if we're going to load something other than about:blank.
-    if (!aParams.uriIsAboutBlank) {
+    if (!uriIsAboutBlank) {
       b.setAttribute("nodefaultsrc", "true");
     }
 
@@ -2613,13 +2621,11 @@ window._gBrowser = {
     this.removeTab(this.selectedTab, aParams);
   },
 
-  removeTab(aTab, aParams) {
-    if (aParams) {
-      var animate = aParams.animate;
-      var byMouse = aParams.byMouse;
-      var skipPermitUnload = aParams.skipPermitUnload;
-    }
-
+  removeTab(aTab, {
+    animate,
+    byMouse,
+    skipPermitUnload,
+  } = {}) {
     // Telemetry stopwatches may already be running if removeTab gets
     // called again for an already closing tab.
     if (!TelemetryStopwatch.running("FX_TAB_CLOSE_TIME_ANIM_MS", aTab) &&

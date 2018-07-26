@@ -5,7 +5,7 @@ job-defaults:
         by-test-platform:
             windows10-64-ccov/.*: 3
             linux64-ccov/.*: 3
-            default: 3
+            default: 2
     virtualization:
         by-test-platform:
             windows10-64-ccov/.*: virtual

@@ -11,7 +11,6 @@ var EXPORTED_SYMBOLS = [
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://services-common/observers.js", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 

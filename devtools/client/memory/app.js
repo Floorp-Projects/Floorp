@@ -55,7 +55,21 @@ const { app: appModel } = require("./models");
 
 class MemoryApp extends Component {
   static get propTypes() {
-    return appModel;
+    return {
+      allocations: appModel.allocations,
+      censusDisplay: appModel.censusDisplay,
+      diffing: appModel.diffing,
+      dispatch: appModel.dispatch,
+      filter: appModel.filter,
+      front: appModel.front,
+      heapWorker: appModel.heapWorker,
+      individuals: appModel.individuals,
+      labelDisplay: appModel.labelDisplay,
+      sizes: appModel.sizes,
+      snapshots: appModel.snapshots,
+      toolbox: appModel.toolbox,
+      view: appModel.view,
+    };
   }
 
   static get childContextTypes() {
