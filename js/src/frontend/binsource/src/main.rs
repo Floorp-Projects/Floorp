@@ -21,22 +21,6 @@ use clap::{ App, Arg };
 
 use itertools::Itertools;
 
-/// A string or string-like construction that can be appended newline.
-trait NewLineIfNotEmpty {
-    /// Append newline if the string is not empty.
-    fn newline_if_not_empty(&self) -> String;
-}
-impl<T> NewLineIfNotEmpty for T where T: ToStr {
-    fn newline_if_not_empty(&self) -> String {
-        let str = self.to_str();
-        if str.len() == 0 {
-            "".to_string()
-        } else {
-            format!("{}\n", str)
-        }
-    }
-}
-
 /// Rules for generating the code for parsing a single field
 /// of a node.
 ///
