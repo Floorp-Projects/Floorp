@@ -322,12 +322,10 @@ add_task(async function setup_head() {
       // Ignore unknown CSP error.
       return;
     }
-    if (msg.errorMessage.match(/docShell is null.*BrowserUtils.jsm/)) {
+    if (msg.message.match(/docShell is null.*BrowserUtils.jsm/)) {
       // Bug 1478142 - Console spam from the Find Toolbar.
       return;
     }
-    info("message: " + msg.message);
-    info("errorMessage: " + msg.errorMessage);
     ok(false, msg.message || msg.errorMessage);
   });
   await setupFormAutofillStorage();
