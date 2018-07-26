@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -188,6 +189,15 @@ public class CustomTabsActivity extends AppCompatActivity
     public void onRequestPermissionsResult(final int requestCode, final String[] permissions,
                                            final int[] grantResults) {
         Permissions.onRequestPermissionsResult(this, permissions, grantResults);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (mPromptService != null) {
+            mPromptService.changePromptOrientation(newConfig.orientation);
+        }
     }
 
     private void sendTelemetry() {

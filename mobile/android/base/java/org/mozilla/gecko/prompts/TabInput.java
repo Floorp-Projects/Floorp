@@ -13,6 +13,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -95,4 +96,8 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
         notifyListeners(Integer.toString(position));
     }
 
+    @Override
+    public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
+        // No user input to save
+    }
 }

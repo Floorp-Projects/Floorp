@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.ResourceDrawableUtils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -143,6 +144,11 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
             ViewGroup.LayoutParams lp = icon.getLayoutParams();
             lp.width = lp.height = mIconSize;
         }
+    }
+
+    @Override
+    public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
+        // No user input to save
     }
 
     private class IconGridItem {
