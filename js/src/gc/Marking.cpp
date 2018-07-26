@@ -1927,6 +1927,7 @@ TagIsArrayTag(MarkStack::Tag tag)
 static inline void
 CheckValueArray(const MarkStack::ValueArray& array)
 {
+    array.ptr.assertValid();
     MOZ_ASSERT(array.ptr.tag() == MarkStack::ValueArrayTag);
     MOZ_ASSERT(uintptr_t(array.start) <= uintptr_t(array.end));
     MOZ_ASSERT((uintptr_t(array.end) - uintptr_t(array.start)) % sizeof(Value) == 0);
@@ -1935,6 +1936,7 @@ CheckValueArray(const MarkStack::ValueArray& array)
 static inline void
 CheckSavedValueArray(const MarkStack::SavedValueArray& array)
 {
+    array.ptr.assertValid();
     MOZ_ASSERT(array.ptr.tag() == MarkStack::SavedValueArrayTag);
     MOZ_ASSERT(array.kind == HeapSlot::Slot || array.kind == HeapSlot::Element);
 }
@@ -1943,8 +1945,7 @@ inline
 MarkStack::TaggedPtr::TaggedPtr(Tag tag, Cell* ptr)
   : bits(tag | uintptr_t(ptr))
 {
-    MOZ_ASSERT(tag <= LastTag);
-    MOZ_ASSERT((uintptr_t(ptr) & CellAlignMask) == 0);
+    assertValid();
 }
 
 inline MarkStack::Tag
@@ -1959,6 +1960,13 @@ inline Cell*
 MarkStack::TaggedPtr::ptr() const
 {
     return reinterpret_cast<Cell*>(bits & ~TagMask);
+}
+
+inline void
+MarkStack::TaggedPtr::assertValid() const
+{
+    mozilla::Unused << tag();
+    MOZ_ASSERT(IsCellPointerValid(ptr()));
 }
 
 template <typename T>
@@ -2156,6 +2164,7 @@ MarkStack::popPtr()
 {
     MOZ_ASSERT(!isEmpty());
     MOZ_ASSERT(!TagIsArrayTag(peekTag()));
+    peekPtr().assertValid();
     topIndex_--;
     return *topPtr();
 }
