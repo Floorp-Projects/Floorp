@@ -298,6 +298,9 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
     JSObject* getDelegate(JSScript* script) const {
         return nullptr;
     }
+    JSObject* getDelegate(LazyScript* script) const {
+        return nullptr;
+    }
 
   private:
     void exposeGCThingToActiveJS(const JS::Value& v) const { JS::ExposeValueToActiveJS(v); }
@@ -313,6 +316,9 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
     }
 
     bool keyNeedsMark(JSScript* script) const {
+        return false;
+    }
+    bool keyNeedsMark(LazyScript* script) const {
         return false;
     }
 

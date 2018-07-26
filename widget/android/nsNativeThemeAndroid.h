@@ -16,30 +16,30 @@ public:
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext,
-                                  nsIFrame* aFrame, uint8_t aWidgetType,
+                                  nsIFrame* aFrame, WidgetType aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
   MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
                                                      nsIFrame* aFrame,
-                                                     uint8_t aWidgetType) override;
+                                                     WidgetType aWidgetType) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext,
                         nsIFrame* aFrame,
-                        uint8_t aWidgetType,
+                        WidgetType aWidgetType,
                         LayoutDeviceIntMargin* aResult) override;
 
   bool GetWidgetOverflow(nsDeviceContext* aContext,
                          nsIFrame* aFrame,
-                         uint8_t aWidgetType,
+                         WidgetType aWidgetType,
                          nsRect* aOverflowRect) override;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                  nsIFrame* aFrame, uint8_t aWidgetType,
+                                  nsIFrame* aFrame, WidgetType aWidgetType,
                                   mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType,
                                 nsAtom* aAttribute,
                                 bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue) override;
@@ -48,16 +48,16 @@ public:
 
   NS_IMETHOD_(bool) ThemeSupportsWidget(nsPresContext* aPresContext,
                                         nsIFrame* aFrame,
-                                        uint8_t aWidgetType) override;
+                                        WidgetType aWidgetType) override;
 
-  NS_IMETHOD_(bool) WidgetIsContainer(uint8_t aWidgetType) override;
+  NS_IMETHOD_(bool) WidgetIsContainer(WidgetType aWidgetType) override;
 
-  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(uint8_t aWidgetType) override;
+  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(WidgetType aWidgetType) override;
 
   bool ThemeNeedsComboboxDropmarker() override;
 
   Transparency GetWidgetTransparency(nsIFrame* aFrame,
-                                     uint8_t aWidgetType) override;
+                                     WidgetType aWidgetType) override;
 
   nsNativeThemeAndroid() {}
 

@@ -197,7 +197,6 @@ UNIFIED_SOURCES += [
     'builtin/Promise.cpp',
     'builtin/Reflect.cpp',
     'builtin/ReflectParse.cpp',
-    'builtin/SIMD.cpp',
     'builtin/Stream.cpp',
     'builtin/String.cpp',
     'builtin/Symbol.cpp',
@@ -269,7 +268,6 @@ UNIFIED_SOURCES += [
     'jit/CodeGenerator.cpp',
     'jit/CompileWrappers.cpp',
     'jit/Disassembler.cpp',
-    'jit/EagerSimdUnbox.cpp',
     'jit/EdgeCaseAnalysis.cpp',
     'jit/EffectiveAddressAnalysis.cpp',
     'jit/ExecutableAllocator.cpp',
@@ -501,6 +499,7 @@ elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
         'jit/x86-shared/BaselineIC-x86-shared.cpp',
         'jit/x86-shared/CodeGenerator-x86-shared.cpp',
         'jit/x86-shared/Lowering-x86-shared.cpp',
+        'jit/x86-shared/MacroAssembler-x86-shared-SIMD.cpp',
         'jit/x86-shared/MacroAssembler-x86-shared.cpp',
         'jit/x86-shared/MoveEmitter-x86-shared.cpp',
     ]
@@ -700,7 +699,6 @@ FINAL_LIBRARY = 'js'
 
 if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_BINARYDATA'] = True
-    DEFINES['ENABLE_SIMD'] = True
     DEFINES['ENABLE_WASM_BULKMEM_OPS'] = True
     DEFINES['ENABLE_WASM_SATURATING_TRUNC_OPS'] = True
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True

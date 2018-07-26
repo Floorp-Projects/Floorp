@@ -2873,10 +2873,8 @@ public:
     // such a compartment is a content XBL scope.
     bool isContentXBLCompartment;
 
-    // True if EnsureAddonCompartment has been called for this compartment.
-    // Note that this is false for extensions that ship with the browser, like
-    // browser/extensions/activity-stream.
-    bool isAddonCompartment;
+    // True if this is a sandbox compartment. See xpc::CreateSandboxObject.
+    bool isSandboxCompartment;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out

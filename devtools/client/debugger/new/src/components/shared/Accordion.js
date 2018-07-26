@@ -32,6 +32,7 @@ class Accordion extends _react.Component {
       }, _react2.default.createElement("h2", {
         className: "_header",
         tabIndex: "0",
+        onKeyDown: e => this.onHandleHeaderKeyDown(e, i),
         onClick: () => this.handleHeaderClick(i)
       }, _react2.default.createElement(_Svg2.default, {
         name: "arrow",
@@ -62,6 +63,12 @@ class Accordion extends _react.Component {
 
 
     this.forceUpdate();
+  }
+
+  onHandleHeaderKeyDown(e, i) {
+    if (e && (e.key === " " || e.key === "Enter")) {
+      this.handleHeaderClick(i);
+    }
   }
 
   render() {

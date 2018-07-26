@@ -517,14 +517,15 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
                                          NS_EVENT_STATE_LOADING)) {
       *aOutChangeHint = nsChangeHint_ReconstructFrame;
     } else {
-      uint8_t app = primaryFrame->StyleDisplay()->mAppearance;
-      if (app) {
+      auto* disp = primaryFrame->StyleDisplay();
+      if (disp->HasAppearance()) {
         nsITheme* theme = PresContext()->GetTheme();
         if (theme &&
-            theme->ThemeSupportsWidget(PresContext(), primaryFrame, app)) {
+            theme->ThemeSupportsWidget(PresContext(), primaryFrame,
+                                       disp->mAppearance)) {
           bool repaint = false;
-          theme->WidgetStateChanged(primaryFrame, app, nullptr, &repaint,
-                                    nullptr);
+          theme->WidgetStateChanged(primaryFrame, disp->mAppearance, nullptr,
+                                    &repaint, nullptr);
           if (repaint) {
             *aOutChangeHint |= nsChangeHint_RepaintFrame;
           }
@@ -3306,7 +3307,7 @@ RestyleManager::AttributeChanged(Element* aElement,
   if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {
     // See if we have appearance information for a theme.
     const nsStyleDisplay* disp = primaryFrame->StyleDisplay();
-    if (disp->mAppearance) {
+    if (disp->HasAppearance()) {
       nsITheme* theme = PresContext()->GetTheme();
       if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame,
                                               disp->mAppearance)) {

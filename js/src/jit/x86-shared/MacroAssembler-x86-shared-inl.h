@@ -420,6 +420,34 @@ MacroAssembler::lshift32(Register shift, Register srcDest)
     shll_cl(srcDest);
 }
 
+inline void
+FlexibleShift32(MacroAssembler& masm, Register shift, Register dest, bool left, bool arithmetic = false)
+{
+    if (shift != ecx) {
+        if (dest != ecx)
+            masm.push(ecx);
+        masm.mov(shift, ecx);
+    }
+
+    if (left) {
+        masm.lshift32(ecx, dest);
+    } else {
+        if (arithmetic)
+            masm.rshift32Arithmetic(ecx, dest);
+        else
+            masm.rshift32(ecx, dest);
+    }
+
+    if (shift != ecx && dest != ecx)
+        masm.pop(ecx);
+}
+
+void
+MacroAssembler::flexibleLshift32(Register shift, Register srcDest)
+{
+    FlexibleShift32(*this, shift, srcDest, true);
+}
+
 void
 MacroAssembler::rshift32(Register shift, Register srcDest)
 {
@@ -428,10 +456,22 @@ MacroAssembler::rshift32(Register shift, Register srcDest)
 }
 
 void
+MacroAssembler::flexibleRshift32(Register shift, Register srcDest)
+{
+    FlexibleShift32(*this, shift, srcDest, false, false);
+}
+
+void
 MacroAssembler::rshift32Arithmetic(Register shift, Register srcDest)
 {
     MOZ_ASSERT(shift == ecx);
     sarl_cl(srcDest);
+}
+
+void
+MacroAssembler::flexibleRshift32Arithmetic(Register shift, Register srcDest)
+{
+    FlexibleShift32(*this, shift, srcDest, false, true);
 }
 
 void
@@ -1107,29 +1147,6 @@ MacroAssembler::spectreZeroRegister(Condition cond, Register scratch, Register d
     // Note: use movl instead of move32/xorl to ensure flags are not clobbered.
     movl(Imm32(0), scratch);
     spectreMovePtr(cond, scratch, dest);
-}
-
-// ========================================================================
-// Canonicalization primitives.
-void
-MacroAssembler::canonicalizeFloat32x4(FloatRegister reg, FloatRegister scratch)
-{
-    ScratchSimd128Scope scratch2(*this);
-
-    MOZ_ASSERT(scratch.asSimd128() != scratch2.asSimd128());
-    MOZ_ASSERT(reg.asSimd128() != scratch2.asSimd128());
-    MOZ_ASSERT(reg.asSimd128() != scratch.asSimd128());
-
-    FloatRegister mask = scratch;
-    vcmpordps(Operand(reg), reg, mask);
-
-    FloatRegister ifFalse = scratch2;
-    float nanf = float(JS::GenericNaN());
-    loadConstantSimd128Float(SimdConstant::SplatX4(nanf), ifFalse);
-
-    bitwiseAndSimd128(Operand(mask), reg);
-    bitwiseAndNotSimd128(Operand(ifFalse), mask);
-    bitwiseOrSimd128(Operand(mask), reg);
 }
 
 // ========================================================================

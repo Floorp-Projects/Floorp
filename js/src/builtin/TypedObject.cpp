@@ -11,7 +11,6 @@
 
 #include "jsutil.h"
 
-#include "builtin/SIMDConstants.h"
 #include "gc/Marking.h"
 #include "js/Vector.h"
 #include "util/StringBuffer.h"
@@ -244,10 +243,6 @@ ScalarTypeDescr::typeName(Type type)
         JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
 #undef NUMERIC_TYPE_TO_STRING
       case Scalar::Int64:
-      case Scalar::Float32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
-      case Scalar::Int32x4:
       case Scalar::MaxTypedArrayViewType:
         break;
     }
@@ -285,10 +280,6 @@ ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
         JS_FOR_EACH_SCALAR_TYPE_REPR(SCALARTYPE_CALL)
 #undef SCALARTYPE_CALL
       case Scalar::Int64:
-      case Scalar::Float32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
-      case Scalar::Int32x4:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH();
     }
@@ -399,50 +390,6 @@ js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
     }
 
     MOZ_CRASH("Unhandled Reference type");
-}
-
-/***************************************************************************
- * SIMD type objects
- *
- * Note: these are partially defined in SIMD.cpp
- */
-
-SimdType
-SimdTypeDescr::type() const {
-    uint32_t t = uint32_t(getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32());
-    MOZ_ASSERT(t < uint32_t(SimdType::Count));
-    return SimdType(t);
-}
-
-uint32_t
-SimdTypeDescr::size(SimdType t)
-{
-    MOZ_ASSERT(unsigned(t) < unsigned(SimdType::Count));
-    switch (t) {
-      case SimdType::Int8x16:
-      case SimdType::Int16x8:
-      case SimdType::Int32x4:
-      case SimdType::Uint8x16:
-      case SimdType::Uint16x8:
-      case SimdType::Uint32x4:
-      case SimdType::Float32x4:
-      case SimdType::Float64x2:
-      case SimdType::Bool8x16:
-      case SimdType::Bool16x8:
-      case SimdType::Bool32x4:
-      case SimdType::Bool64x2:
-        return 16;
-      case SimdType::Count:
-        break;
-    }
-    MOZ_CRASH("unexpected SIMD type");
-}
-
-uint32_t
-SimdTypeDescr::alignment(SimdType t)
-{
-    MOZ_ASSERT(unsigned(t) < unsigned(SimdType::Count));
-    return size(t);
 }
 
 /***************************************************************************
@@ -1666,7 +1613,6 @@ TypeDescr::hasProperty(const JSAtomState& names, jsid id)
     switch (kind()) {
       case type::Scalar:
       case type::Reference:
-      case type::Simd:
         return false;
 
       case type::Array:
@@ -1739,7 +1685,6 @@ TypedObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id, bool*
     switch (typedObj->typeDescr().kind()) {
       case type::Scalar:
       case type::Reference:
-      case type::Simd:
         break;
 
       case type::Array: {
@@ -1791,9 +1736,6 @@ TypedObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue receiv
       case type::Reference:
         break;
 
-      case type::Simd:
-        break;
-
       case type::Array:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             if (!typedObj->isAttached()) {
@@ -1840,7 +1782,6 @@ TypedObject::obj_getElement(JSContext* cx, HandleObject obj, HandleValue receive
     switch (descr->kind()) {
       case type::Scalar:
       case type::Reference:
-      case type::Simd:
       case type::Struct:
         break;
 
@@ -1884,9 +1825,6 @@ TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, Handl
     switch (typedObj->typeDescr().kind()) {
       case type::Scalar:
       case type::Reference:
-        break;
-
-      case type::Simd:
         break;
 
       case type::Array: {
@@ -1956,7 +1894,6 @@ TypedObject::obj_getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, Handl
     switch (descr->kind()) {
       case type::Scalar:
       case type::Reference:
-      case type::Simd:
         break;
 
       case type::Array:
@@ -2010,7 +1947,6 @@ IsOwnId(JSContext* cx, HandleObject obj, HandleId id)
     switch (typedObj->typeDescr().kind()) {
       case type::Scalar:
       case type::Reference:
-      case type::Simd:
         return false;
 
       case type::Array:
@@ -2049,8 +1985,7 @@ TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj, AutoIdVector& pro
     RootedId id(cx);
     switch (descr->kind()) {
       case type::Scalar:
-      case type::Reference:
-      case type::Simd: {
+      case type::Reference: {
         // Nothing to enumerate.
         break;
       }
@@ -2535,22 +2470,6 @@ js::GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-bool
-js::GetSimdTypeDescr(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isInt32());
-    // One of the JS_SIMDTYPEREPR_* constants / a SimdType enum value.
-    // getOrCreateSimdTypeDescr() will do the range check.
-    int32_t simdTypeRepr = args[0].toInt32();
-    Rooted<GlobalObject*> global(cx, cx->global());
-    MOZ_ASSERT(global);
-    auto* obj = GlobalObject::getOrCreateSimdTypeDescr(cx, global, SimdType(simdTypeRepr));
-    args.rval().setObject(*obj);
-    return true;
-}
-
 #define JS_STORE_SCALAR_CLASS_IMPL(_constant, T, _name)                         \
 bool                                                                            \
 js::StoreScalar##T::Func(JSContext* cx, unsigned argc, Value* vp)               \
@@ -2741,7 +2660,6 @@ visitReferences(TypeDescr& descr,
 
     switch (descr.kind()) {
       case type::Scalar:
-      case type::Simd:
         return;
 
       case type::Reference:

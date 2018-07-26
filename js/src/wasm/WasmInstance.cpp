@@ -18,7 +18,6 @@
 
 #include "wasm/WasmInstance.h"
 
-#include "builtin/SIMD.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
@@ -144,13 +143,6 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
             break;
           }
           case ValType::I64:
-          case ValType::I8x16:
-          case ValType::I16x8:
-          case ValType::I32x4:
-          case ValType::F32x4:
-          case ValType::B8x16:
-          case ValType::B16x8:
-          case ValType::B32x4:
             MOZ_CRASH("unhandled type in callImport");
         }
     }
@@ -216,13 +208,6 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           case ValType::Ref:    MOZ_CRASH("case guarded above");
           case ValType::AnyRef: MOZ_CRASH("case guarded above");
           case ValType::I64:    MOZ_CRASH("NYI");
-          case ValType::I8x16:  MOZ_CRASH("NYI");
-          case ValType::I16x8:  MOZ_CRASH("NYI");
-          case ValType::I32x4:  MOZ_CRASH("NYI");
-          case ValType::F32x4:  MOZ_CRASH("NYI");
-          case ValType::B8x16:  MOZ_CRASH("NYI");
-          case ValType::B16x8:  MOZ_CRASH("NYI");
-          case ValType::B32x4:  MOZ_CRASH("NYI");
         }
         if (!TypeScript::ArgTypes(script, i)->hasType(type))
             return true;
@@ -810,12 +795,12 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 
     // The calling convention for an external call into wasm is to pass an
     // array of 16-byte values where each value contains either a coerced int32
-    // (in the low word), a double value (in the low dword) or a SIMD vector
-    // value, with the coercions specified by the wasm signature. The external
-    // entry point unpacks this array into the system-ABI-specified registers
-    // and stack memory and then calls into the internal entry point. The return
-    // value is stored in the first element of the array (which, therefore, must
-    // have length >= 1).
+    // (in the low word), or a double value (in the low dword) value, with the
+    // coercions specified by the wasm signature. The external entry point
+    // unpacks this array into the system-ABI-specified registers and stack
+    // memory and then calls into the internal entry point. The return value is
+    // stored in the first element of the array (which, therefore, must have
+    // length >= 1).
     Vector<ExportArg, 8> exportArgs(cx);
     if (!exportArgs.resize(Max<size_t>(1, func.funcType().args().length())))
         return false;
@@ -842,58 +827,6 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
           case ValType::AnyRef: {
             if (!ToRef(cx, v, &exportArgs[i]))
                 return false;
-            break;
-          }
-          case ValType::I8x16: {
-            SimdConstant simd;
-            if (!ToSimdConstant<Int8x16>(cx, v, &simd))
-                return false;
-            memcpy(&exportArgs[i], simd.asInt8x16(), Simd128DataSize);
-            break;
-          }
-          case ValType::I16x8: {
-            SimdConstant simd;
-            if (!ToSimdConstant<Int16x8>(cx, v, &simd))
-                return false;
-            memcpy(&exportArgs[i], simd.asInt16x8(), Simd128DataSize);
-            break;
-          }
-          case ValType::I32x4: {
-            SimdConstant simd;
-            if (!ToSimdConstant<Int32x4>(cx, v, &simd))
-                return false;
-            memcpy(&exportArgs[i], simd.asInt32x4(), Simd128DataSize);
-            break;
-          }
-          case ValType::F32x4: {
-            SimdConstant simd;
-            if (!ToSimdConstant<Float32x4>(cx, v, &simd))
-                return false;
-            memcpy(&exportArgs[i], simd.asFloat32x4(), Simd128DataSize);
-            break;
-          }
-          case ValType::B8x16: {
-            SimdConstant simd;
-            if (!ToSimdConstant<Bool8x16>(cx, v, &simd))
-                return false;
-            // Bool8x16 uses the same representation as Int8x16.
-            memcpy(&exportArgs[i], simd.asInt8x16(), Simd128DataSize);
-            break;
-          }
-          case ValType::B16x8: {
-            SimdConstant simd;
-            if (!ToSimdConstant<Bool16x8>(cx, v, &simd))
-                return false;
-            // Bool16x8 uses the same representation as Int16x8.
-            memcpy(&exportArgs[i], simd.asInt16x8(), Simd128DataSize);
-            break;
-          }
-          case ValType::B32x4: {
-            SimdConstant simd;
-            if (!ToSimdConstant<Bool32x4>(cx, v, &simd))
-                return false;
-            // Bool32x4 uses the same representation as Int32x4.
-            memcpy(&exportArgs[i], simd.asInt32x4(), Simd128DataSize);
             break;
           }
         }
@@ -949,41 +882,6 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
       case ExprType::AnyRef:
         retObj = *(JSObject**)retAddr;
         expectsObject = true;
-        break;
-      case ExprType::I8x16:
-        retObj = CreateSimd<Int8x16>(cx, (int8_t*)retAddr);
-        if (!retObj)
-            return false;
-        break;
-      case ExprType::I16x8:
-        retObj = CreateSimd<Int16x8>(cx, (int16_t*)retAddr);
-        if (!retObj)
-            return false;
-        break;
-      case ExprType::I32x4:
-        retObj = CreateSimd<Int32x4>(cx, (int32_t*)retAddr);
-        if (!retObj)
-            return false;
-        break;
-      case ExprType::F32x4:
-        retObj = CreateSimd<Float32x4>(cx, (float*)retAddr);
-        if (!retObj)
-            return false;
-        break;
-      case ExprType::B8x16:
-        retObj = CreateSimd<Bool8x16>(cx, (int8_t*)retAddr);
-        if (!retObj)
-            return false;
-        break;
-      case ExprType::B16x8:
-        retObj = CreateSimd<Bool16x8>(cx, (int16_t*)retAddr);
-        if (!retObj)
-            return false;
-        break;
-      case ExprType::B32x4:
-        retObj = CreateSimd<Bool32x4>(cx, (int32_t*)retAddr);
-        if (!retObj)
-            return false;
         break;
       case ExprType::Limit:
         MOZ_CRASH("Limit");

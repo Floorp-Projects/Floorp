@@ -422,7 +422,6 @@ CodeGenerator::CodeGenerator(MIRGenerator* gen, LIRGraph* graph, MacroAssembler*
   : CodeGeneratorSpecific(gen, graph, masm)
   , ionScriptLabels_(gen->alloc())
   , scriptCounts_(nullptr)
-  , simdTemplatesToReadBarrier_(0)
   , realmStubsToReadBarrier_(0)
 {
 }
@@ -6427,82 +6426,6 @@ CodeGenerator::visitNewTypedObject(LNewTypedObject* lir)
     masm.bind(ool->rejoin());
 }
 
-void
-CodeGenerator::visitSimdBox(LSimdBox* lir)
-{
-    FloatRegister in = ToFloatRegister(lir->input());
-    Register object = ToRegister(lir->output());
-    Register temp = ToRegister(lir->temp());
-    InlineTypedObject* templateObject = lir->mir()->templateObject();
-    gc::InitialHeap initialHeap = lir->mir()->initialHeap();
-    MIRType type = lir->mir()->input()->type();
-
-    addSimdTemplateToReadBarrier(lir->mir()->simdType());
-
-    MOZ_ASSERT(lir->safepoint()->liveRegs().has(in), "Save the input register across oolCallVM");
-    OutOfLineCode* ool = oolCallVM(NewTypedObjectInfo, lir,
-                                   ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
-                                   StoreRegisterTo(object));
-
-    TemplateObject templateObj(templateObject);
-    masm.createGCObject(object, temp, templateObj, initialHeap, ool->entry());
-    masm.bind(ool->rejoin());
-
-    Address objectData(object, InlineTypedObject::offsetOfDataStart());
-    switch (type) {
-      case MIRType::Int8x16:
-      case MIRType::Int16x8:
-      case MIRType::Int32x4:
-      case MIRType::Bool8x16:
-      case MIRType::Bool16x8:
-      case MIRType::Bool32x4:
-        masm.storeUnalignedSimd128Int(in, objectData);
-        break;
-      case MIRType::Float32x4:
-        masm.storeUnalignedSimd128Float(in, objectData);
-        break;
-      default:
-        MOZ_CRASH("Unknown SIMD kind when generating code for SimdBox.");
-    }
-}
-
-void
-CodeGenerator::addSimdTemplateToReadBarrier(SimdType simdType)
-{
-    simdTemplatesToReadBarrier_ |= 1 << uint32_t(simdType);
-}
-
-void
-CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
-{
-    Register object = ToRegister(lir->input());
-    FloatRegister simd = ToFloatRegister(lir->output());
-    Register temp = ToRegister(lir->temp());
-    Label bail;
-
-    masm.branchIfNotSimdObject(object, temp, lir->mir()->simdType(), &bail);
-
-    // Load the value from the data of the InlineTypedObject.
-    Address objectData(object, InlineTypedObject::offsetOfDataStart());
-    switch (lir->mir()->type()) {
-      case MIRType::Int8x16:
-      case MIRType::Int16x8:
-      case MIRType::Int32x4:
-      case MIRType::Bool8x16:
-      case MIRType::Bool16x8:
-      case MIRType::Bool32x4:
-        masm.loadUnalignedSimd128Int(objectData, simd);
-        break;
-      case MIRType::Float32x4:
-        masm.loadUnalignedSimd128Float(objectData, simd);
-        break;
-      default:
-        MOZ_CRASH("The impossible happened!");
-    }
-
-    bailoutFrom(&bail, lir->snapshot());
-}
-
 typedef js::NamedLambdaObject* (*NewNamedLambdaObjectFn)(JSContext*, HandleFunction, gc::InitialHeap);
 static const VMFunction NewNamedLambdaObjectInfo =
     FunctionInfo<NewNamedLambdaObjectFn>(NamedLambdaObject::createTemplateObject,
@@ -7233,7 +7156,7 @@ CodeGenerator::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
     MWasmLoadGlobalVar* mir = ins->mir();
 
     MIRType type = mir->type();
-    MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
+    MOZ_ASSERT(IsNumberType(type));
 
     Register tls = ToRegister(ins->tlsPtr());
     Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
@@ -7260,11 +7183,7 @@ CodeGenerator::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
       case MIRType::Bool8x16:
       case MIRType::Bool16x8:
       case MIRType::Bool32x4:
-        masm.loadInt32x4(addr, ToFloatRegister(ins->output()));
-        break;
       case MIRType::Float32x4:
-        masm.loadFloat32x4(addr, ToFloatRegister(ins->output()));
-        break;
       default:
         MOZ_CRASH("unexpected type in visitWasmLoadGlobalVar");
     }
@@ -7276,7 +7195,7 @@ CodeGenerator::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
     MWasmStoreGlobalVar* mir = ins->mir();
 
     MIRType type = mir->value()->type();
-    MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
+    MOZ_ASSERT(IsNumberType(type));
 
     Register tls = ToRegister(ins->tlsPtr());
     Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
@@ -7303,11 +7222,7 @@ CodeGenerator::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
       case MIRType::Bool8x16:
       case MIRType::Bool16x8:
       case MIRType::Bool32x4:
-        masm.storeInt32x4(ToFloatRegister(ins->value()), addr);
-        break;
       case MIRType::Float32x4:
-        masm.storeFloat32x4(ToFloatRegister(ins->value()), addr);
-        break;
       default:
         MOZ_CRASH("unexpected type in visitWasmStoreGlobalVar");
     }
@@ -10362,7 +10277,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     // script, which may have happened off-thread.
     const JitRealm* jr = gen->realm->jitRealm();
     jr->performStubReadBarriers(realmStubsToReadBarrier_);
-    jr->performSIMDTemplateReadBarriers(simdTemplatesToReadBarrier_);
 
     // We finished the new IonScript. Invalidate the current active IonScript,
     // so we can replace it with this new (probably higher optimized) version.
@@ -11586,19 +11500,17 @@ CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir)
     const MLoadUnboxedScalar* mir = lir->mir();
 
     Scalar::Type readType = mir->readType();
-    unsigned numElems = mir->numElems();
-
     int width = Scalar::byteSize(mir->storageType());
     bool canonicalizeDouble = mir->canonicalizeDoubles();
 
     Label fail;
     if (lir->index()->isConstant()) {
         Address source(elements, ToInt32(lir->index()) * width + mir->offsetAdjustment());
-        masm.loadFromTypedArray(readType, source, out, temp, &fail, canonicalizeDouble, numElems);
+        masm.loadFromTypedArray(readType, source, out, temp, &fail, canonicalizeDouble);
     } else {
         BaseIndex source(elements, ToRegister(lir->index()), ScaleFromElemWidth(width),
                          mir->offsetAdjustment());
-        masm.loadFromTypedArray(readType, source, out, temp, &fail, canonicalizeDouble, numElems);
+        masm.loadFromTypedArray(readType, source, out, temp, &fail, canonicalizeDouble);
     }
 
     if (fail.used())
@@ -11877,13 +11789,10 @@ CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir)
 template <typename T>
 static inline void
 StoreToTypedArray(MacroAssembler& masm, Scalar::Type writeType, const LAllocation* value,
-                  const T& dest, unsigned numElems = 0)
+                  const T& dest)
 {
-    if (Scalar::isSimdType(writeType) ||
-        writeType == Scalar::Float32 ||
-        writeType == Scalar::Float64)
-    {
-        masm.storeToTypedFloatArray(writeType, ToFloatRegister(value), dest, numElems);
+    if (writeType == Scalar::Float32 || writeType == Scalar::Float64) {
+        masm.storeToTypedFloatArray(writeType, ToFloatRegister(value), dest);
     } else {
         if (value->isConstant())
             masm.storeToTypedIntArray(writeType, Imm32(ToInt32(value)), dest);
@@ -11901,17 +11810,16 @@ CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir)
     const MStoreUnboxedScalar* mir = lir->mir();
 
     Scalar::Type writeType = mir->writeType();
-    unsigned numElems = mir->numElems();
 
     int width = Scalar::byteSize(mir->storageType());
 
     if (lir->index()->isConstant()) {
         Address dest(elements, ToInt32(lir->index()) * width + mir->offsetAdjustment());
-        StoreToTypedArray(masm, writeType, value, dest, numElems);
+        StoreToTypedArray(masm, writeType, value, dest);
     } else {
         BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width),
                        mir->offsetAdjustment());
-        StoreToTypedArray(masm, writeType, value, dest, numElems);
+        StoreToTypedArray(masm, writeType, value, dest);
     }
 }
 

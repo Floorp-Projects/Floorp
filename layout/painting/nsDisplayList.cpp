@@ -37,7 +37,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "BorderConsts.h"
 #include "LayerTreeInvalidation.h"
 #include "mozilla/MathAlgorithms.h"
@@ -3543,7 +3543,7 @@ static nsIFrame* GetBackgroundComputedStyleFrame(nsIFrame* aFrame)
     // a root, other wise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aFrame->StyleDisplay()->mAppearance) {
+    if (!aFrame->StyleDisplay()->HasAppearance()) {
       return nullptr;
     }
 
@@ -4414,8 +4414,8 @@ nsDisplayThemedBackground::Init(nsDisplayListBuilder* aBuilder)
     RegisterThemeGeometry(aBuilder, this, StyleFrame(), type);
   }
 
-  if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
-      disp->mAppearance == NS_THEME_WIN_GLASS) {
+  if (disp->mAppearance == StyleAppearance::MozWinBorderlessGlass ||
+      disp->mAppearance == StyleAppearance::MozWinGlass) {
     aBuilder->SetGlassDisplayItem(this);
   }
 
@@ -4456,8 +4456,8 @@ nsDisplayThemedBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 Maybe<nscolor>
 nsDisplayThemedBackground::IsUniform(nsDisplayListBuilder* aBuilder) const
 {
-  if (mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
-      mAppearance == NS_THEME_WIN_GLASS) {
+  if (mAppearance == StyleAppearance::MozWinBorderlessGlass ||
+      mAppearance == StyleAppearance::MozWinGlass) {
     return Some(NS_RGBA(0,0,0,0));
   }
   return Nothing();
@@ -4985,7 +4985,7 @@ nsDisplayOutline::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
   if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO && nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
       nsITheme* theme = mFrame->PresContext()->GetTheme();
       if (theme && theme->ThemeSupportsWidget(mFrame->PresContext(), mFrame,
-                                              NS_THEME_FOCUS_OUTLINE)) {
+                                              StyleAppearance::FocusOutline)) {
         return false;
       }
   }

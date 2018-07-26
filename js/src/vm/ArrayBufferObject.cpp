@@ -928,8 +928,8 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
             return true;
 
         // Non-prepared-for-asm.js wasm buffers can be detached at any time.
-        // This error can only be triggered for SIMD.js (which isn't shipping)
-        // on !WASM_HUGE_MEMORY so this error is only visible in testing.
+        // This error can only be triggered for Atomics on !WASM_HUGE_MEMORY
+        // so this error is only visible in testing.
         if (buffer->isWasm() || buffer->isPreparedForAsmJS())
             return false;
 

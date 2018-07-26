@@ -13,7 +13,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "nsDeviceContext.h"
 #include "nsIContent.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 
 using namespace mozilla;
 using mozilla::dom::HTMLInputElement;
@@ -54,7 +54,7 @@ nsCheckboxRadioFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-  result = StyleDisplay()->mAppearance == NS_THEME_NONE ? 0 : DefaultSize();
+  result = StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
   return result;
 }
 
@@ -63,7 +63,7 @@ nsCheckboxRadioFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
-  result = StyleDisplay()->mAppearance == NS_THEME_NONE ? 0 : DefaultSize();
+  result = StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
   return result;
 }
 
@@ -79,7 +79,7 @@ nsCheckboxRadioFrame::ComputeAutoSize(gfxContext*         aRC,
                                       ComputeSizeFlags    aFlags)
 {
   LogicalSize size(aWM, 0, 0);
-  if (StyleDisplay()->mAppearance == NS_THEME_NONE) {
+  if (!StyleDisplay()->HasAppearance()) {
     return size;
   }
 
@@ -99,7 +99,7 @@ nsCheckboxRadioFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 
   // For appearance:none we use a standard CSS baseline, i.e. synthesized from
   // our margin-box.
-  if (StyleDisplay()->mAppearance == NS_THEME_NONE) {
+  if (!StyleDisplay()->HasAppearance()) {
     return nsAtomicContainerFrame::GetLogicalBaseline(aWritingMode);
   }
 

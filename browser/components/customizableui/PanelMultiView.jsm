@@ -1357,17 +1357,29 @@ var PanelView = class extends AssociatedToNode {
   }
 
   /**
-   * Retrieves the button elements that can be used for navigation using the
-   * keyboard, that is all enabled buttons including the back button if visible.
+   * Array of enabled elements that can be selected with the keyboard. This
+   * means all buttons, menulists, and text links including the back button.
    *
-   * @return {Array}
+   * This list is cached until the view is closed, so elements that become
+   * enabled later may not be navigable.
    */
-  _getNavigableElements() {
-    let buttons = Array.from(this.node.querySelectorAll(
-      ".subviewbutton:not([disabled]), .subviewkeynav:not([disabled])"));
+  get _navigableElements() {
+    if (this.__navigableElements) {
+      return this.__navigableElements;
+    }
+
+    let navigableElements = Array.from(this.node.querySelectorAll(
+      ":-moz-any(button,toolbarbutton,menulist,.text-link):not([disabled])"));
     let dwu = this._dwu;
-    return buttons.filter(button => {
-      let bounds = dwu.getBoundsWithoutFlushing(button);
+    return this.__navigableElements = navigableElements.filter(element => {
+      // Set the "tabindex" attribute to make sure the element is focusable.
+      if (!element.hasAttribute("tabindex")) {
+        element.setAttribute("tabindex", "0");
+      }
+      if (element.hasAttribute("disabled")) {
+        return false;
+      }
+      let bounds = dwu.getBoundsWithoutFlushing(element);
       return bounds.width > 0 && bounds.height > 0;
     });
   }
@@ -1377,8 +1389,7 @@ var PanelView = class extends AssociatedToNode {
    * is selected. Since the reference is held weakly, it can become null or
    * undefined at any time.
    *
-   * The element is usually, but not necessarily, in the "buttons" property
-   * which in turn is initialized from the _getNavigableElements list.
+   * The element is usually, but not necessarily, among the _navigableElements.
    */
   get selectedElement() {
     return this._selectedElement && this._selectedElement.get();
@@ -1396,19 +1407,19 @@ var PanelView = class extends AssociatedToNode {
    * This is a no-op if there are no navigable elements.
    */
   focusFirstNavigableElement() {
-    this.selectedElement = this._getNavigableElements()[0];
+    this.selectedElement = this._navigableElements[0];
     this.focusSelectedElement();
   }
 
   /**
-   * Based on going up or down, select the previous or next focusable button.
+   * Based on going up or down, select the previous or next focusable element.
    *
    * @param {Boolean} isDown   whether we're going down (true) or up (false).
    *
-   * @return {DOMNode} the button we selected.
+   * @return {DOMNode} the element we selected.
    */
   moveSelection(isDown) {
-    let buttons = this.buttons;
+    let buttons = this._navigableElements;
     let lastSelected = this.selectedElement;
     let newButton = null;
     let maxIdx = buttons.length - 1;
@@ -1478,19 +1489,10 @@ var PanelView = class extends AssociatedToNode {
       return;
     }
 
-    let buttons = this.buttons;
-    if (!buttons || !buttons.length) {
-      buttons = this.buttons = this._getNavigableElements();
-      // Set the 'tabindex' attribute on the buttons to make sure they're focussable.
-      for (let button of buttons) {
-        if (!button.classList.contains("subviewbutton-back") &&
-            !button.hasAttribute("tabindex")) {
-          button.setAttribute("tabindex", 0);
-        }
-      }
-    }
-    if (!buttons.length)
+    let buttons = this._navigableElements;
+    if (!buttons.length) {
       return;
+    }
 
     let stop = () => {
       event.stopPropagation();
@@ -1559,7 +1561,7 @@ var PanelView = class extends AssociatedToNode {
    * Clear all traces of keyboard navigation happening right now.
    */
   clearNavigation() {
-    delete this.buttons;
+    delete this.__navigableElements;
     let selected = this.selectedElement;
     if (selected) {
       selected.blur();

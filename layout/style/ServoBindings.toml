@@ -52,7 +52,7 @@ headers = [
     "mozilla/StyleAnimationValue.h",
     "gfxFontConstants.h",
     "gfxFontFeatures.h",
-    "nsThemeConstants.h",
+    "nsStyleConsts.h",
     "mozilla/css/Loader.h",
     "mozilla/css/SheetLoadData.h",
     "mozilla/DeclarationBlock.h",

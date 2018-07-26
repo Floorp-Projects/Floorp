@@ -221,9 +221,21 @@ StreamFilterParent::Broken()
 {
   AssertIsActorThread();
 
-  mState = State::Disconnecting;
+  switch (mState) {
+  case State::Initialized:
+  case State::TransferringData:
+  case State::Suspended:
+    mState = State::Disconnecting;
+    if (mChannel) {
+      mChannel->Cancel(NS_ERROR_FAILURE);
+    }
 
-  FinishDisconnect();
+    FinishDisconnect();
+    break;
+
+  default:
+    break;
+  }
 }
 
 /*****************************************************************************

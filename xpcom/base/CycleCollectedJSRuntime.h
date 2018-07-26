@@ -411,10 +411,16 @@ private:
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
 
 // Returns true if the JS::TraceKind is one the cycle collector cares about.
+// Everything used as WeakMap key should be listed here, to represent the key
+// in cycle collector's graph, otherwise the key is considered to be pointed
+// from somewhere unknown, and results in leaking the subgraph which contains
+// the key.
+// See the comments in NoteWeakMapsTracer::trace for more details.
 inline bool AddToCCKind(JS::TraceKind aKind)
 {
   return aKind == JS::TraceKind::Object ||
          aKind == JS::TraceKind::Script ||
+         aKind == JS::TraceKind::LazyScript ||
          aKind == JS::TraceKind::Scope ||
          aKind == JS::TraceKind::RegExpShared;
 }

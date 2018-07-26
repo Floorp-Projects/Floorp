@@ -12,7 +12,7 @@
 #include "nsStyleStruct.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleConsts.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsPresContext.h"
 #include "nsIAppShellService.h"
@@ -3484,7 +3484,7 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   : mDisplay(StyleDisplay::Inline)
   , mOriginalDisplay(StyleDisplay::Inline)
   , mContain(NS_STYLE_CONTAIN_NONE)
-  , mAppearance(NS_THEME_NONE)
+  , mAppearance(StyleAppearance::None)
   , mPosition(NS_STYLE_POSITION_STATIC)
   , mFloat(StyleFloat::None)
   , mOriginalFloat(StyleFloat::None)
@@ -3723,10 +3723,10 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     return nsChangeHint_ReconstructFrame;
   }
 
-  if ((mAppearance == NS_THEME_TEXTFIELD &&
-       aNewData.mAppearance != NS_THEME_TEXTFIELD) ||
-      (mAppearance != NS_THEME_TEXTFIELD &&
-       aNewData.mAppearance == NS_THEME_TEXTFIELD)) {
+  if ((mAppearance == StyleAppearance::Textfield &&
+       aNewData.mAppearance != StyleAppearance::Textfield) ||
+      (mAppearance != StyleAppearance::Textfield &&
+       aNewData.mAppearance == StyleAppearance::Textfield)) {
     // This is for <input type=number> where we allow authors to specify a
     // |-moz-appearance:textfield| to get a control without a spinner. (The
     // spinner is present for |-moz-appearance:number-input| but also other

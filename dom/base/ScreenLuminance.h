@@ -9,6 +9,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
+#include "nsWrapperCache.h"
 
 class nsScreen;
 

@@ -2230,10 +2230,6 @@ pref("network.proxy.proxy_over_tls",        true);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
-pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign
-#ifdef ANDROID
-pref("network.cookie.cookieBehavior",       0); // Keep the old default of accepting all cookies
-#endif
 pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.thirdparty.nonsecureSessionOnly", false);
 pref("network.cookie.leave-secure-alone",   true);
