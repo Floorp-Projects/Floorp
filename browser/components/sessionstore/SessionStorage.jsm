@@ -7,6 +7,7 @@
 var EXPORTED_SYMBOLS = ["SessionStorage"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
               .createInstance(Ci.nsISessionStoreUtils);

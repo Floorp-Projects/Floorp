@@ -4,6 +4,9 @@
 
 "use strict";
 
+ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 var gManagers = new WeakMap();
 
 const kPaletteId = "customization-palette";

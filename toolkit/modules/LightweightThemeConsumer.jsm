@@ -4,7 +4,9 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");

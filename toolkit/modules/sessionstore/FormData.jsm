@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["FormData"];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "CreditCard",
   "resource://gre/modules/CreditCard.jsm");
 

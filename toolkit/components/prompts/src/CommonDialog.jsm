@@ -5,6 +5,7 @@
 var EXPORTED_SYMBOLS = ["CommonDialog"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "EnableDelayHelper",
                                "resource://gre/modules/SharedPromptUtils.jsm");
 

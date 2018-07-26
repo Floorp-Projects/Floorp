@@ -24,6 +24,7 @@ var EXPORTED_SYMBOLS = ["PerformanceStats"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", this);
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",

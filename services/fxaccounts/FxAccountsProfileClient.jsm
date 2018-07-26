@@ -9,6 +9,7 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientError"];
 
+ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.import("resource://services-common/rest.js");

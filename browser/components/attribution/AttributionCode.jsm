@@ -5,6 +5,7 @@
 
 var EXPORTED_SYMBOLS = ["AttributionCode"];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
