@@ -93,7 +93,7 @@ add_task(async function startup() {
       max: 650,
     },
     "extensions.getAddons.cache.enabled": {
-      min: 9,
+      min: 8,
       max: 55,
     },
   };
