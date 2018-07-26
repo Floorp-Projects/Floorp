@@ -2543,7 +2543,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 #ifdef DEBUG
         simpleKind = TokenKind::Limit; // sentinel value for code after switch
 #endif
-        switch (static_cast<CharT>(unit)) {
+
+        // The block a ways above eliminated all non-ASCII, so cast to the
+        // smallest type possible to assist the C++ compiler.
+        switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit)))) {
           case '.':
             unit = getCodeUnit();
             if (IsAsciiDigit(unit)) {
@@ -2752,7 +2755,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             ungetCodeUnit(unit);
             error(JSMSG_ILLEGAL_CHARACTER);
             return badToken();
-        } // switch (static_cast<CharT>(unit))
+        } // switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit))))
 
         MOZ_ASSERT(simpleKind != TokenKind::Limit,
                    "switch-statement should have set |simpleKind| before "
@@ -2865,7 +2868,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 continue;
             }
 
-            switch (static_cast<CharT>(unit)) {
+            // The block above eliminated all non-ASCII, so cast to the
+            // smallest type possible to assist the C++ compiler.
+            switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit)))) {
               case 'b': unit = '\b'; break;
               case 'f': unit = '\f'; break;
               case 'n': unit = '\n'; break;
@@ -3062,7 +3067,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 unit = char16_t(val);
                 break;
               } // default
-            }
+            } // switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit))))
 
             if (!this->charBuffer.append(unit))
                 return false;
