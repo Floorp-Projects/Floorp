@@ -31,12 +31,6 @@
     /** Return count of item elements */
     getRowCount()
 
-    /** Return count of visible item elements */
-    getNumberOfVisibleRows()
-
-    /** Return index of first visible item element */
-    getIndexOfFirstVisibleRow()
-
     /** Return true if item of given index is visible
      * @param aIndex - index of item element
      *
@@ -449,45 +443,6 @@
       </method>
 
     <!-- Private -->
-      <method name="getNextItem">
-        <parameter name="aStartItem"/>
-        <parameter name="aDelta"/>
-        <body>
-        <![CDATA[
-          while (aStartItem) {
-            aStartItem = aStartItem.nextSibling;
-            if (aStartItem && aStartItem instanceof
-                Ci.nsIDOMXULSelectControlItemElement &&
-                (!this._userSelecting || this._canUserSelect(aStartItem))) {
-              --aDelta;
-              if (aDelta == 0)
-                return aStartItem;
-            }
-          }
-          return null;
-        ]]></body>
-      </method>
-
-      <method name="getPreviousItem">
-        <parameter name="aStartItem"/>
-        <parameter name="aDelta"/>
-        <body>
-        <![CDATA[
-          while (aStartItem) {
-            aStartItem = aStartItem.previousSibling;
-            if (aStartItem && aStartItem instanceof
-                Ci.nsIDOMXULSelectControlItemElement &&
-                (!this._userSelecting || this._canUserSelect(aStartItem))) {
-              --aDelta;
-              if (aDelta == 0)
-                return aStartItem;
-            }
-          }
-          return null;
-        ]]>
-        </body>
-      </method>
-
       <method name="_moveByOffsetFromUserEvent">
         <parameter name="aOffset"/>
         <parameter name="aEvent"/>
@@ -658,8 +613,6 @@
 
       <property name="value" onget="return this.getAttribute('value');"
                              onset="this.setAttribute('value', val); return val;"/>
-      <property name="label" onget="return this.getAttribute('label');"
-                             onset="this.setAttribute('label', val); return val;"/>
 
       <property name="selected" onget="return this.getAttribute('selected') == 'true';">
         <setter><![CDATA[
