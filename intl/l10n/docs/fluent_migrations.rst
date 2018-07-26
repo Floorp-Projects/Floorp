@@ -248,10 +248,10 @@ Transform is defined:
           "browser/chrome/browser/preferences/preferences.properties",
           "siteUsage",
           {
-              "%1$S": EXTERNAL_ARGUMENT(
+              "%1$S": VARIABLE_REFERENCE(
                   "value"
               ),
-              "%2$S": EXTERNAL_ARGUMENT(
+              "%2$S": VARIABLE_REFERENCE(
                   "unit"
               )
           }
@@ -280,18 +280,21 @@ needs to be defined as a :python:`TextElement`. For example, to replace
 
 .. note::
 
-  :python:`EXTERNAL_ARGUMENT` and :python:`MESSAGE_REFERENCE` are helper
-  Transforms which can be used to save keystrokes in common cases where using
-  the raw AST is too verbose.
+  :python:`VARIABLE_REFERENCE`, :python:`MESSAGE_REFERENCE`, and
+  :python:`TERM_REFERENCE` are helper Transforms which can be used to save
+  keystrokes in common cases where using the raw AST is too verbose.
 
-  :python:`EXTERNAL_ARGUMENT` is used to create a reference to a variable, e.g.
+  :python:`VARIABLE_REFERENCE` is used to create a reference to a variable, e.g.
   :js:`{ $variable }`.
 
   :python:`MESSAGE_REFERENCE` is used to create a reference to another message,
-  e.g. :js:`{ another-string }`, or a `term`__, e.g. :js:`{ -brand-short-name }`.
+  e.g. :js:`{ another-string }`, e.g. :js:`{ another-string }`.
+
+  :python:`TERM_REFERENCE` is used to create a reference to a `term`__,
+  e.g. :js:`{ -brand-short-name }`.
 
   Both Transforms need to be imported at the beginning of the recipe, e.g.
-  :python:`from fluent.migrate.helpers import EXTERNAL_ARGUMENT`
+  :python:`from fluent.migrate.helpers import VARIABLE_REFERENCE`
 
   __ https://projectfluent.org/fluent/guide/terms.html
 
@@ -348,7 +351,7 @@ concatenate their values with HTML markup. Here’s how the Transform is defined
                       "browser/chrome/browser/preferences/preferences.properties",
                       "searchResults.needHelpSupportLink",
                       {
-                          "%S": MESSAGE_REFERENCE("-brand-short-name"),
+                          "%S": TERM_REFERENCE("-brand-short-name"),
                       }
                   ),
                   FTL.TextElement("</a>")
@@ -415,11 +418,11 @@ This is how the Transform for this string is defined:
       value=PLURALS(
           "browser/chrome/browser/preferences/preferences.properties",
           "disableContainersOkButton",
-          EXTERNAL_ARGUMENT("tabCount"),
+          VARIABLE_REFERENCE("tabCount"),
           lambda text: REPLACE_IN_TEXT(
               text,
               {
-                  "#1": EXTERNAL_ARGUMENT("tabCount")
+                  "#1": VARIABLE_REFERENCE("tabCount")
               }
           )
       )
@@ -429,7 +432,7 @@ This is how the Transform for this string is defined:
 The `PLURALS` Transform will take care of creating the correct number of plural
 categories for each language. Notice how `#1` is replaced for each of these
 variants with :js:`{ $tabCount }`, using :python:`REPLACE_IN_TEXT` and
-:python:`EXTERNAL_ARGUMENT("tabCount")`.
+:python:`VARIABLE_REFERENCE("tabCount")`.
 
 In this case it’s not possible to use :python:`REPLACE` because it takes a file
 path and a message ID as arguments, whereas here the recipe needs to operate on
@@ -473,7 +476,7 @@ category used in plural forms. For these reasons, it’s not possible to use
                   elements=[
                       FTL.Placeable(
                           expression=FTL.SelectExpression(
-                              expression=EXTERNAL_ARGUMENT("tabCount"),
+                              expression=VARIABLE_REFERENCE("tabCount"),
                               variants=[
                                   FTL.Variant(
                                       key=FTL.NumberExpression("1"),
