@@ -16,16 +16,19 @@ const { nsIAboutModule } = Ci;
 function AboutDebugging() {}
 
 AboutDebugging.prototype = {
-  uri: Services.io.newURI("chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml"),
   classDescription: "about:debugging",
   classID: Components.ID("1060afaf-dc9e-43da-8646-23a2faf48493"),
   contractID: "@mozilla.org/network/protocol/about;1?what=debugging",
 
   QueryInterface: ChromeUtils.generateQI([nsIAboutModule]),
 
-  newChannel: function(uri, loadInfo) {
+  newChannel: function(_, loadInfo) {
+    const uri = Services.prefs.getBoolPref("devtools.aboutdebugging.new-enabled")
+                  ? "chrome://devtools/content/aboutdebugging-new/index.html"
+                  : "chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml";
+
     const chan = Services.io.newChannelFromURIWithLoadInfo(
-      this.uri,
+      Services.io.newURI(uri),
       loadInfo
     );
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
