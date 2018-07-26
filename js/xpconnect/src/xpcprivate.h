@@ -2875,7 +2875,7 @@ public:
 
     // True if EnsureAddonCompartment has been called for this compartment.
     // Note that this is false for extensions that ship with the browser, like
-    // browser/components/newtab.
+    // browser/extensions/activity-stream.
     bool isAddonCompartment;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
