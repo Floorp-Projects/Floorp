@@ -13,6 +13,8 @@ const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
+const REGEX_PANEL =
+  /^(?:webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage)$/;
 
 var {Ci, Cc} = require("chrome");
 var promise = require("promise");
@@ -1927,17 +1929,16 @@ Toolbox.prototype = {
     const pending = ["host", "width", "start_state", "panel_name", "cold", "session_id"];
     if (id === "webconsole") {
       pending.push("message_count");
+
+      // Cold webconsole event message_count is handled in
+      // devtools/client/webconsole/webconsole-output-wrapper.js
+      if (!cold) {
+        this.telemetry.addEventProperty(
+          "devtools.main", "enter", "webconsole", null, "message_count", 0);
+      }
     }
-
-    this.telemetry.preparePendingEvent("devtools.main", "enter", panelName, null, pending);
-
-    // Cold webconsole event message_count is handled in
-    // devtools/client/webconsole/webconsole-output-wrapper.js
-    if (!cold && id === "webconsole") {
-      this.telemetry.addEventProperty(
-        "devtools.main", "enter", "webconsole", null, "message_count", 0);
-    }
-
+    this.telemetry.preparePendingEvent(
+      "devtools.main", "enter", panelName, null, pending);
     this.telemetry.addEventProperty(
       "devtools.main", "open", "tools", null, "session_id", this.sessionId
     );
@@ -2909,7 +2910,6 @@ Toolbox.prototype = {
     }
 
     this.browserRequire = null;
-    this._toolNames = null;
 
     // Now that we are closing the toolbox we can re-enable the cache settings
     // and disable the service workers testing settings for the current tab.
@@ -3378,13 +3378,7 @@ Toolbox.prototype = {
   },
 
   getTelemetryPanelNameOrOther: function(id) {
-    if (!this._toolNames) {
-      const definitions = gDevTools.getToolDefinitionArray();
-      const definitionIds = definitions.map(definition => definition.id);
-
-      this._toolNames = new Set(definitionIds);
-    }
-    if (!this._toolNames.has(id)) {
+    if (!REGEX_PANEL.test(id)) {
       return "other";
     }
     return id;
