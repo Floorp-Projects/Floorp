@@ -15,6 +15,7 @@
 
 var EXPORTED_SYMBOLS = [ "FormSubmitObserver" ];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 

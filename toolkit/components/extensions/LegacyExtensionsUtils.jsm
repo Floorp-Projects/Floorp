@@ -14,6 +14,8 @@ var EXPORTED_SYMBOLS = ["LegacyExtensionsUtils"];
  * and exchange messages with the embedded WebExtension.
  */
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionChild",

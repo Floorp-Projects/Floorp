@@ -4,6 +4,7 @@
 
 var EXPORTED_SYMBOLS = [ "BookmarkJSONUtils" ];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
