@@ -113,15 +113,13 @@ public:
   }
 
 protected:
-  void PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates);
   void RecordThebes();
-  bool CanRecordLayer(ReadbackProcessor* aReadback);
   bool HasMaskLayers();
   bool EnsureContentClient();
-  uint32_t GetPaintFlags();
+  uint32_t GetPaintFlags(ReadbackProcessor* aReadback);
   void UpdateContentClient(PaintState& aState);
   bool UpdatePaintRegion(PaintState& aState);
-  void PaintOffMainThread();
+  void FinishPaintState(PaintState& aState);
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
