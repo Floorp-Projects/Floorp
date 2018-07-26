@@ -221,7 +221,7 @@ this.FormAutofillUtils = {
 
   isCCNumber(ccNumber) {
     let card = new CreditCard({number: ccNumber});
-    return !!card.number;
+    return card.isValidNumber();
   },
 
   getCategoryFromFieldName(fieldName) {

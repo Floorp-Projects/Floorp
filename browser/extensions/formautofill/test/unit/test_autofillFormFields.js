@@ -246,7 +246,7 @@ const TESTCASES = [
     focusedInputId: "cc-number",
     profileData: {
       "guid": "123",
-      "cc-number": "1234000056780000",
+      "cc-number": "4111111111111111",
       "cc-name": "test name",
       "cc-exp-month": "06",
       "cc-exp-year": "25",
@@ -257,7 +257,7 @@ const TESTCASES = [
       "country": "",
       "email": "",
       "tel": "",
-      "cc-number": "1234000056780000",
+      "cc-number": "4111111111111111",
       "cc-name": "test name",
       "cc-exp-month": "06",
       "cc-exp-year": "25",
