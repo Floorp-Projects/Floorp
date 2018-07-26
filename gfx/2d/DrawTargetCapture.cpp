@@ -194,6 +194,13 @@ DrawTargetCaptureImpl::CopySurface(SourceSurface* aSurface,
 }
 
 void
+DrawTargetCaptureImpl::CopyRect(const IntRect &aSourceRect,
+                                const IntPoint &aDestination)
+{
+  AppendCommand(CopyRectCommand)(aSourceRect, aDestination);
+}
+
+void
 DrawTargetCaptureImpl::FillRect(const Rect& aRect,
                                 const Pattern& aPattern,
                                 const DrawOptions& aOptions)
