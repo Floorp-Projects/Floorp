@@ -26,6 +26,7 @@ XPIDL_SOURCES += [
     'nsINSSComponent.idl',
     'nsINSSErrorsService.idl',
     'nsINSSVersion.idl',
+    'nsIOSKeyStore.idl',
     'nsIPK11Token.idl',
     'nsIPK11TokenDB.idl',
     'nsIPKCS11Module.idl',
@@ -123,9 +124,11 @@ UNIFIED_SOURCES += [
     'nsSecurityHeaderParser.cpp',
     'NSSErrorsService.cpp',
     'nsSiteSecurityService.cpp',
+    'NSSKeyStore.cpp',
     'nsSSLSocketProvider.cpp',
     'nsSSLStatus.cpp',
     'nsTLSSocketProvider.cpp',
+    'OSKeyStore.cpp',
     'PKCS11ModuleDB.cpp',
     'PSMContentListener.cpp',
     'PSMRunnable.cpp',
@@ -136,6 +139,13 @@ UNIFIED_SOURCES += [
     'SSLServerCertVerification.cpp',
     'TransportSecurityInfo.cpp',
 ]
+
+if CONFIG['MOZ_LIB_SECRET']:
+    UNIFIED_SOURCES += [
+        'LibSecret.cpp',
+    ]
+    CFLAGS += CONFIG['MOZ_LIB_SECRET_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_LIB_SECRET_CFLAGS']
 
 if CONFIG['OS_ARCH'] == 'Darwin':
     OS_LIBS += [
