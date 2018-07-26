@@ -22,7 +22,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using js::GetGlobalForObjectCrossCompartment;
 using js::AssertSameCompartment;
 
 nsresult
@@ -82,7 +81,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // First, start by entering the realm of the XBL scope. This may or may
   // not be the same realm as globalObject.
   JS::Rooted<JSObject*> globalObject(cx,
-    GetGlobalForObjectCrossCompartment(targetClassObject));
+    JS::GetNonCCWObjectGlobal(targetClassObject));
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScopeOrGlobal(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
   MOZ_ASSERT(JS_IsGlobalObject(scopeObject));
