@@ -2182,6 +2182,7 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
     splitCiteNodeResult.GetPreviousNode();
   if (previousNodeOfSplitPoint &&
       previousNodeOfSplitPoint->IsHTMLElement(nsGkAtoms::span) &&
+      previousNodeOfSplitPoint->GetPrimaryFrame() &&
       previousNodeOfSplitPoint->GetPrimaryFrame()->
                                   IsFrameOfType(nsIFrame::eBlockFrame)) {
     nsCOMPtr<nsINode> lastChild =
