@@ -699,6 +699,7 @@ where
         },
         Component::AttributeInNoNamespace {
             ref local_name,
+            ref local_name_lower,
             ref value,
             operator,
             case_sensitivity,
@@ -710,7 +711,7 @@ where
             let is_html = element.is_html_element_in_html_document();
             element.attr_matches(
                 &NamespaceConstraint::Specific(&::parser::namespace_empty_string::<E::Impl>()),
-                local_name,
+                select_name(is_html, local_name, local_name_lower),
                 &AttrSelectorOperation::WithValue {
                     operator: operator,
                     case_sensitivity: case_sensitivity.to_unconditional(is_html),
@@ -723,16 +724,8 @@ where
                 return false;
             }
             let is_html = element.is_html_element_in_html_document();
-            let empty_string;
-            let namespace = match attr_sel.namespace() {
-                Some(ns) => ns,
-                None => {
-                    empty_string = ::parser::namespace_empty_string::<E::Impl>();
-                    NamespaceConstraint::Specific(&empty_string)
-                }
-            };
             element.attr_matches(
-                &namespace,
+                &attr_sel.namespace(),
                 select_name(is_html, &attr_sel.local_name, &attr_sel.local_name_lower),
                 &match attr_sel.operation {
                     ParsedAttrSelectorOperation::Exists => AttrSelectorOperation::Exists,

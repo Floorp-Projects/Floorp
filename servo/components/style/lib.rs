@@ -93,7 +93,6 @@ extern crate string_cache;
 #[macro_use]
 extern crate style_derive;
 extern crate style_traits;
-extern crate thin_slice;
 extern crate time;
 extern crate uluru;
 extern crate unicode_bidi;

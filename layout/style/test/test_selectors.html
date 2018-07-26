@@ -303,14 +303,6 @@ function run() {
     // [attr] selector
     test_parseable("[attr]")
     test_parseable_via_api("[attr");
-    test_parseable("[ATTR]")
-    should_serialize_to("[attr]", "[attr]");
-    should_serialize_to("[ATTR]", "[ATTR]");
-
-    // Whether we should drop the bar is debatable. This matches Edge
-    // and Safari at the time of writing.
-    should_serialize_to("[|attr]", "[attr]");
-    should_serialize_to("[|ATTR]", "[ATTR]");
 
     // [attr= ] selector
     test_parseable("[attr=\"x\"]");
