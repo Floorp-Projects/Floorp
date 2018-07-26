@@ -85,6 +85,20 @@ interface nsISocketTransportService : nsISupports
     nsISocketTransport createUnixDomainTransport(in nsIFile aPath);
 
     /**
+     * Create a transport built on a Unix domain socket that uses abstract
+     * address name.
+     *
+     * If abstract socket address isn't supported on System, this returns
+     * NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED.
+     *
+     * @param aName
+     *        The name of abstract socket adress of the Unix domain socket to
+     *        which we should connect.
+     */
+    nsISocketTransport
+    createUnixDomainAbstractAddressTransport(in ACString aName);
+
+    /**
      * Adds a new socket to the list of controlled sockets.
      *
      * This will fail with the error code NS_ERROR_NOT_AVAILABLE if the maximum
