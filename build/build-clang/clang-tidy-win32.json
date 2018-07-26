@@ -14,6 +14,7 @@
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "patches": [
-      "clang-tidy-cxx14.patch"
+      "clang-tidy-cxx14.patch",
+      "clang-tidy-sync-output.patch"
     ]
 }
