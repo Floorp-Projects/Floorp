@@ -1354,9 +1354,9 @@ struct XrayJitInfo {
     // security checks.
     bool (*isCrossCompartmentXray)(const BaseProxyHandler* handler);
 
-    // Test whether xrays with a global object's compartment have expandos of
-    // their own, instead of sharing them with Xrays from other compartments.
-    bool (*globalHasExclusiveExpandos)(JSObject* obj);
+    // Test whether xrays in |obj|'s compartment have expandos of their own,
+    // instead of sharing them with Xrays from other compartments.
+    bool (*compartmentHasExclusiveExpandos)(JSObject* obj);
 
     // Proxy reserved slot used by xrays in sandboxes to store their holder
     // object.

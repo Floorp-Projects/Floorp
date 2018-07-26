@@ -1213,7 +1213,7 @@ GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(HandleObject obj, ObjOp
     if (!info || !info->isCrossCompartmentXray(GetProxyHandler(obj)))
         return false;
 
-    if (!info->globalHasExclusiveExpandos(cx_->global()))
+    if (!info->compartmentHasExclusiveExpandos(obj))
         return false;
 
     RootedObject target(cx_, UncheckedUnwrap(obj));
