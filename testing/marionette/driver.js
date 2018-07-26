@@ -987,6 +987,7 @@ GeckoDriver.prototype.execute_ = async function(
   }
 
   assert.open(this.getCurrentWindow());
+  this._handleUserPrompts();
 
   assert.string(script, pprint`Expected "script" to be a string: ${script}`);
   assert.array(args, pprint`Expected script args to be an array: ${args}`);
