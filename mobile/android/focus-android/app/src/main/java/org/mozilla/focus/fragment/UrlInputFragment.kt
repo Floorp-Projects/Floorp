@@ -15,6 +15,7 @@ import android.support.v4.content.ContextCompat
 import android.text.SpannableString
 import android.text.TextUtils
 import android.text.style.StyleSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,8 +31,8 @@ import org.mozilla.focus.R
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.menu.home.HomeMenu
+import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
-import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsViewModel
 import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
@@ -137,9 +138,8 @@ class UrlInputFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModelProviders = ViewModelProviders.of(activity!!)
-        model = viewModelProviders.get(MainViewModel::class.java)
-        searchSuggestionsViewModel = viewModelProviders.get(SearchSuggestionsViewModel::class.java)
+        model = ViewModelProviders.of(activity!!).get(MainViewModel::class.java)
+        searchSuggestionsViewModel = ViewModelProviders.of(activity!!, SearchSuggestionsViewModel.Factory(activity!!)).get(SearchSuggestionsViewModel::class.java)
 
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let {
@@ -627,7 +627,7 @@ class UrlInputFragment :
 
             val content = SpannableString(hint.replace(PLACEHOLDER, searchText))
             content.setSpan(StyleSpan(Typeface.BOLD), start, start + searchText.length, 0)
-            searchSuggestionsViewModel.search(searchText)
+            searchSuggestionsViewModel.setSearchQuery(searchText)
             searchViewContainer?.visibility = View.VISIBLE
         }
     }
