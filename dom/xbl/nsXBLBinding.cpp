@@ -1115,7 +1115,7 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::Handle<jsid> aId,
   // This code is only called for content XBL, so we don't have to worry about
   // add-on scopes here.
   JS::Rooted<JSObject*> boundScope(aCx,
-    js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper()));
+    JS::GetNonCCWObjectGlobal(mBoundElement->GetWrapper()));
   MOZ_RELEASE_ASSERT(!xpc::IsInContentXBLScope(boundScope));
   JS::Rooted<JSObject*> xblScope(aCx, xpc::GetXBLScope(aCx, boundScope));
   NS_ENSURE_TRUE(xblScope, false);
