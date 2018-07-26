@@ -107,6 +107,7 @@ class MarkStack
     struct ValueArray
     {
         ValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end);
+        void assertValid() const;
 
         HeapSlot* end;
         HeapSlot* start;
@@ -116,6 +117,7 @@ class MarkStack
     struct SavedValueArray
     {
         SavedValueArray(JSObject* obj, size_t index, HeapSlot::Kind kind);
+        void assertValid() const;
 
         uintptr_t kind;
         uintptr_t index;
@@ -221,7 +223,7 @@ class MarkStackIter
     void nextArray();
 
     // Mutate the current ValueArray to a SavedValueArray.
-    void saveValueArray(NativeObject* obj, uintptr_t index, HeapSlot::Kind kind);
+    void saveValueArray(const MarkStack::SavedValueArray& savedArray);
 
   private:
     size_t position() const;
@@ -355,7 +357,11 @@ class GCMarker : public JSTracer
 
     MOZ_MUST_USE bool restoreValueArray(const gc::MarkStack::SavedValueArray& array,
                                         HeapSlot** vpp, HeapSlot** endp);
+    gc::MarkStack::ValueArray restoreValueArray(const gc::MarkStack::SavedValueArray& savedArray);
+
     void saveValueRanges();
+    gc::MarkStack::SavedValueArray saveValueRange(const gc::MarkStack::ValueArray& array);
+
     inline void processMarkStackTop(SliceBudget& budget);
 
     /* The mark stack. Pointers in this stack are "gray" in the GC sense. */
