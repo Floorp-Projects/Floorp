@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "New Tab Page")
+    BUG_COMPONENT = ("Firefox", "Activity Streams: Newtab")
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'tests/xpcshell/xpcshell.ini',
+    'test/xpcshell/xpcshell.ini',
 ]
 
 XPIDL_SOURCES += [
@@ -23,3 +23,5 @@ EXTRA_COMPONENTS += [
     'aboutNewTabService.js',
     'NewTabComponents.manifest',
 ]
+
+JAR_MANIFESTS += ['jar.mn']
