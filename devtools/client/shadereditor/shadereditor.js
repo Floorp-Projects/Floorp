@@ -9,7 +9,7 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
-const Tooltip = require("devtools/client/shared/widgets/tooltip/Tooltip");
+const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const Editor = require("devtools/client/sourceeditor/editor");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const {extend} = require("devtools/shared/extend");
@@ -36,6 +36,7 @@ const EVENTS = {
 };
 exports.EVENTS = EVENTS;
 
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const STRINGS_URI = "devtools/client/locales/shadereditor.properties";
 const HIGHLIGHT_TINT = [1, 0, 0.25, 1]; // rgba
 const TYPING_MAX_DELAY = 500; // ms
@@ -579,9 +580,21 @@ class ShadersEditorsView {
       return;
     }
 
-    const tooltip = node._markerErrorsTooltip = new Tooltip(document);
-    tooltip.defaultOffsetX = GUTTER_ERROR_PANEL_OFFSET_X;
-    tooltip.setTextContent({ messages: messages });
+    const tooltip = node._markerErrorsTooltip = new HTMLTooltip(document, {
+      type: "arrow",
+      useXulWrapper: true
+    });
+
+    const div = document.createElementNS(XHTML_NS, "div");
+    div.className = "devtools-shader-tooltip-container";
+    for (const message of messages) {
+      const messageDiv = document.createElementNS(XHTML_NS, "div");
+      messageDiv.className = "devtools-tooltip-simple-text";
+      messageDiv.textContent = message;
+      div.appendChild(messageDiv);
+    }
+    tooltip.setContent(div);
+
     tooltip.startTogglingOnHover(node, () => true, {
       toggleDelay: GUTTER_ERROR_PANEL_DELAY
     });
