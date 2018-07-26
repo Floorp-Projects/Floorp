@@ -283,8 +283,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvSetStatus(const uint32_t& aType,
                                                 const nsString& aStatus) override;
 
-  virtual mozilla::ipc::IPCResult RecvIsParentWindowMainWidgetVisible(bool* aIsVisible) override;
-
   virtual mozilla::ipc::IPCResult RecvShowTooltip(const uint32_t& aX,
                                                   const uint32_t& aY,
                                                   const nsString& aTooltip,
