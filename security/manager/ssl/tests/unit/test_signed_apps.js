@@ -460,6 +460,53 @@ add_signature_test(PKCS7WithSHA256,
                         Cr.NS_OK));
 });
 
+var cosePolicies = [
+  COSEAndPKCS7WithSHA1OrSHA256,
+  COSERequiredAndPKCS7WithSHA1OrSHA256
+];
+
+// PS256 is not yet supported.
+var coseTestcasesStage = [
+  { name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-ES256-ES384",
+    expectedResult: Cr.NS_OK,
+    root: Ci.nsIX509CertDB.AddonsStageRoot },
+  { name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-ES256-PS256",
+    expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+    root: Ci.nsIX509CertDB.AddonsStageRoot },
+  { name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-ES256",
+    expectedResult: Cr.NS_OK,
+    root: Ci.nsIX509CertDB.AddonsStageRoot },
+  { name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-PS256",
+    expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+    root: Ci.nsIX509CertDB.AddonsStageRoot },
+];
+
+var coseTestcasesProd = [
+  { name: "autograph-714ba248-prod-tomato-clock-PKCS7-SHA1-ES256-ES384",
+    expectedResult: Cr.NS_OK,
+    root: Ci.nsIX509CertDB.AddonsPublicRoot },
+  { name: "autograph-714ba248-prod-tomato-clock-PKCS7-SHA1-ES256-PS256",
+    expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+    root: Ci.nsIX509CertDB.AddonsPublicRoot },
+  { name: "autograph-714ba248-prod-tomato-clock-PKCS7-SHA1-ES256",
+    expectedResult: Cr.NS_OK,
+    root: Ci.nsIX509CertDB.AddonsPublicRoot },
+  { name: "autograph-714ba248-prod-tomato-clock-PKCS7-SHA1-PS256",
+    expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+    root: Ci.nsIX509CertDB.AddonsPublicRoot },
+];
+
+for (let policy of cosePolicies) {
+  for (let testcase of coseTestcasesStage) {
+    add_signature_test(policy, function () {
+      certdb.openSignedAppFileAsync(
+        testcase.root,
+        original_app_path(testcase.name),
+        check_open_result(testcase.name, testcase.expectedResult));
+    });
+  }
+}
+
 // TODO: tampered MF, tampered SF
 // TODO: too-large MF, too-large RSA, too-large SF
 // TODO: MF and SF that end immediately after the last main header
