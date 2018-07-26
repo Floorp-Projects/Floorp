@@ -989,6 +989,7 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     // according to the bit depth.
     // So we will scale the YUV values by this amount.
     config.SetColorMultiplier(pow(2, paddingBits));
+    config.SetTextureTarget(effectYCbCr->mTexture->AsSourceOGL()->GetTextureTarget());
     break;
   }
   case EffectTypes::NV12:
