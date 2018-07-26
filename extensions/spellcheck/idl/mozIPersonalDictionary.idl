@@ -54,24 +54,4 @@ interface mozIPersonalDictionary : nsISupports {
    * Clear the ignore list
    */
   void endSession();
-
-  /** 
-   * These three functions are here in case we want to store previous 
-   * misspellings and return them at the head of the misspell list.
-   */
- 
-  /**
-   * Add a misspelling to the list of corrections
-   */
-  void addCorrection(in wstring word,in wstring correction, in wstring lang);
-
-  /**
-   * Remove a misspelling from the list of corrections
-   */
-  void removeCorrection(in wstring word,in wstring correction, in wstring lang);
-
-  /**
-   * Get a list of previous corrections for the word
-   */
-  void getCorrection(in wstring word, [array, size_is(count)] out wstring words, out uint32_t count);
 };

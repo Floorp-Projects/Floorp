@@ -444,21 +444,6 @@ NS_IMETHODIMP mozPersonalDictionary::EndSession()
   return NS_OK;
 }
 
-NS_IMETHODIMP mozPersonalDictionary::AddCorrection(const char16_t *word, const char16_t *correction, const char16_t *lang)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP mozPersonalDictionary::RemoveCorrection(const char16_t *word, const char16_t *correction, const char16_t *lang)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP mozPersonalDictionary::GetCorrection(const char16_t *word, char16_t ***words, uint32_t *count)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP mozPersonalDictionary::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData)
 {
   if (!nsCRT::strcmp(aTopic, "profile-do-change")) {

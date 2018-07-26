@@ -28,31 +28,6 @@ interface mozISpellCheckingEngine : nsISupports {
   attribute wstring dictionary;
 
   /**
-   * The language this spellchecker is using when checking
-   */
-  readonly attribute wstring language;
-
-  /**
-   * Does the engine provide its own personal dictionary?
-   */
-  readonly attribute boolean providesPersonalDictionary;
-
-  /**
-   * Does the engine provide its own word utils?
-   */
-  readonly attribute boolean providesWordUtils;
-
-  /**
-   * The name of the engine
-   */
-  readonly attribute wstring name;
-
-  /** 
-   * a string indicating the copyright of the engine
-   */
-  readonly attribute wstring copyright;
-
-  /**
    * the personal dictionary
    */
   attribute mozIPersonalDictionary personalDictionary;
