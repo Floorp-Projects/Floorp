@@ -44,6 +44,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
+  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
@@ -147,7 +148,6 @@ const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
 const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
-const IDB_MIGRATED_PREF_BRANCH = "extensions.webextensions.ExtensionStorageIDB.migrated";
 
 const COMMENT_REGEXP = new RegExp(String.raw`
     ^
@@ -252,8 +252,7 @@ var UninstallObserver = {
       });
       Services.qms.clearStoragesForPrincipal(storagePrincipal);
 
-      // Clear the preference set for the extensions migrated to the IDBBackend.
-      Services.prefs.clearUserPref(`${IDB_MIGRATED_PREF_BRANCH}.${addon.id}`);
+      ExtensionStorageIDB.clearMigratedExtensionPref(addon.id);
 
       // Clear localStorage created by the extension
       let storage = Services.domStorageManager.getStorage(null, principal);
@@ -1772,6 +1771,23 @@ class Extension extends ExtensionData {
       this.policy.extension = this;
 
       this.updatePermissions(this.startupReason);
+
+      // Select the storage.local backend if it is already known,
+      // and start the data migration if needed.
+      if (this.hasPermission("storage")) {
+        if (!ExtensionStorageIDB.isBackendEnabled) {
+          this.setSharedData("storageIDBBackend", false);
+        } else if (ExtensionStorageIDB.isMigratedExtension(this)) {
+          this.setSharedData("storageIDBBackend", true);
+          this.setSharedData("storageIDBPrincipal", ExtensionStorageIDB.getStoragePrincipal(this));
+        } else {
+          // If the extension has to migrate backend, ensure that the data migration
+          // starts once Firefox is idle after the extension has been started.
+          this.once("ready", () => ChromeUtils.idleDispatch(() => {
+            ExtensionStorageIDB.selectBackend({extension: this});
+          }));
+        }
+      }
 
       // The "startup" Management event sent on the extension instance itself
       // is emitted just before the Management "startup" event,

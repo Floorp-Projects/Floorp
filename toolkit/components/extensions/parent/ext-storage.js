@@ -34,12 +34,52 @@ const lookupManagedStorage = async (extensionId, context) => {
 };
 
 this.storage = class extends ExtensionAPI {
+  constructor(extension) {
+    super(extension);
+
+    const messageName = `Extension:StorageLocalOnChanged:${extension.uuid}`;
+    Services.ppmm.addMessageListener(messageName, this);
+    this.clearStorageChangedListener = () => {
+      Services.ppmm.removeMessageListener(messageName, this);
+    };
+  }
+
+  onShutdown() {
+    const {clearStorageChangedListener} = this;
+    this.clearStorageChangedListener = null;
+
+    if (clearStorageChangedListener) {
+      clearStorageChangedListener();
+    }
+  }
+
+  receiveMessage({name, data}) {
+    if (name !== `Extension:StorageLocalOnChanged:${this.extension.uuid}`) {
+      return;
+    }
+
+    ExtensionStorageIDB.notifyListeners(this.extension.id, data);
+  }
+
   getAPI(context) {
     let {extension} = context;
 
     return {
       storage: {
         local: {
+          async callMethodInParentProcess(method, args) {
+            const res = await ExtensionStorageIDB.selectBackend({extension});
+            if (!res.backendEnabled) {
+              return ExtensionStorage[method](extension.id, ...args);
+            }
+
+            const db = await ExtensionStorageIDB.open(res.storagePrincipal.deserialize(this));
+            const changes = await db[method](...args);
+            if (changes) {
+              ExtensionStorageIDB.notifyListeners(extension.id, changes);
+            }
+            return changes;
+          },
           // Private storage.local JSONFile backend methods (used internally by the child
           // ext-storage.js module).
           JSONFileBackend: {
@@ -61,15 +101,6 @@ this.storage = class extends ExtensionAPI {
           IDBBackend: {
             selectBackend() {
               return ExtensionStorageIDB.selectBackend(context);
-            },
-            hasListeners() {
-              return ExtensionStorageIDB.hasListeners(extension.id);
-            },
-            fireOnChanged(changes) {
-              ExtensionStorageIDB.notifyListeners(extension.id, changes);
-            },
-            onceDataMigrated() {
-              return ExtensionStorageIDB.onceDataMigrated(context);
             },
           },
         },
