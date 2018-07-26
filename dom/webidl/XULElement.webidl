@@ -83,14 +83,6 @@ interface XULElement : Element {
   void                      click();
   void                      doCommand();
 
-  // XXXbz this isn't really a nodelist!  See bug 818548
-  NodeList            getElementsByAttribute(DOMString name,
-                                             DOMString value);
-  // XXXbz this isn't really a nodelist!  See bug 818548
-  [Throws]
-  NodeList            getElementsByAttributeNS(DOMString namespaceURI,
-                                               DOMString name,
-                                               DOMString value);
   [Constant]
   readonly attribute CSSStyleDeclaration style;
 };

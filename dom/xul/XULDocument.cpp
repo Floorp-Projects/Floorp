@@ -951,52 +951,6 @@ XULDocument::ResolveForwardReferences()
 // nsIDocument interface
 //
 
-already_AddRefed<nsINodeList>
-XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
-                                    const nsAString& aValue)
-{
-    RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
-    nsAutoPtr<nsString> attrValue(new nsString(aValue));
-    RefPtr<nsContentList> list = new nsContentList(this,
-                                            MatchAttribute,
-                                            nsContentUtils::DestroyMatchString,
-                                            attrValue.forget(),
-                                            true,
-                                            attrAtom,
-                                            kNameSpaceID_Unknown);
-
-    return list.forget();
-}
-
-already_AddRefed<nsINodeList>
-XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
-                                      const nsAString& aAttribute,
-                                      const nsAString& aValue,
-                                      ErrorResult& aRv)
-{
-    RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
-    nsAutoPtr<nsString> attrValue(new nsString(aValue));
-
-    int32_t nameSpaceId = kNameSpaceID_Wildcard;
-    if (!aNamespaceURI.EqualsLiteral("*")) {
-      nsresult rv =
-        nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
-                                                              nameSpaceId);
-      if (NS_FAILED(rv)) {
-          aRv.Throw(rv);
-          return nullptr;
-      }
-    }
-
-    RefPtr<nsContentList> list = new nsContentList(this,
-                                            MatchAttribute,
-                                            nsContentUtils::DestroyMatchString,
-                                            attrValue.forget(),
-                                            true,
-                                            attrAtom,
-                                            nameSpaceId);
-    return list.forget();
-}
 
 void
 XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
@@ -1368,47 +1322,6 @@ XULDocument::StartLayout(void)
     }
 
     return NS_OK;
-}
-
-/* static */
-bool
-XULDocument::MatchAttribute(Element* aElement,
-                            int32_t aNamespaceID,
-                            nsAtom* aAttrName,
-                            void* aData)
-{
-    MOZ_ASSERT(aElement, "Must have content node to work with!");
-    nsString* attrValue = static_cast<nsString*>(aData);
-    if (aNamespaceID != kNameSpaceID_Unknown &&
-        aNamespaceID != kNameSpaceID_Wildcard) {
-        return attrValue->EqualsLiteral("*") ?
-            aElement->HasAttr(aNamespaceID, aAttrName) :
-            aElement->AttrValueIs(aNamespaceID, aAttrName, *attrValue,
-                                  eCaseMatters);
-    }
-
-    // Qualified name match. This takes more work.
-
-    uint32_t count = aElement->GetAttrCount();
-    for (uint32_t i = 0; i < count; ++i) {
-        const nsAttrName* name = aElement->GetAttrNameAt(i);
-        bool nameMatch;
-        if (name->IsAtom()) {
-            nameMatch = name->Atom() == aAttrName;
-        } else if (aNamespaceID == kNameSpaceID_Wildcard) {
-            nameMatch = name->NodeInfo()->Equals(aAttrName);
-        } else {
-            nameMatch = name->NodeInfo()->QualifiedNameEquals(aAttrName);
-        }
-
-        if (nameMatch) {
-            return attrValue->EqualsLiteral("*") ||
-                aElement->AttrValueIs(name->NamespaceID(), name->LocalName(),
-                                      *attrValue, eCaseMatters);
-        }
-    }
-
-    return false;
 }
 
 nsresult

@@ -617,14 +617,6 @@ public:
     already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(mozilla::ErrorResult& rv);
     void Click(mozilla::dom::CallerType aCallerType);
     void DoCommand();
-    already_AddRefed<nsINodeList>
-      GetElementsByAttribute(const nsAString& aAttribute,
-                             const nsAString& aValue);
-    already_AddRefed<nsINodeList>
-      GetElementsByAttributeNS(const nsAString& aNamespaceURI,
-                               const nsAString& aAttribute,
-                               const nsAString& aValue,
-                               mozilla::ErrorResult& rv);
     // Style() inherited from nsStyledElement
 
     nsINode* GetScopeChainParent() const override
