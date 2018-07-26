@@ -674,6 +674,10 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
+    public void onProgressChange(GeckoSession session, int progress) {
+    }
+
+    @Override
     public void onSecurityChange(GeckoSession session, SecurityInformation securityInfo) {
         mSecurityInformation = securityInfo;
         updateActionBar();
