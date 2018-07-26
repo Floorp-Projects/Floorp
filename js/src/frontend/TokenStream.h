@@ -1925,7 +1925,7 @@ class GeneralTokenStreamChars
      */
     int32_t getCodeUnit() {
         if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
-            return this->sourceUnits.getCodeUnit();
+            return CodeUnitValue(this->sourceUnits.getCodeUnit());
 
         anyCharsAccess().flags.isEOF = true;
         return EOF;
