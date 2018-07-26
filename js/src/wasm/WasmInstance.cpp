@@ -467,25 +467,10 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
 
 #ifdef ENABLE_WASM_GC
 /* static */ void
-Instance::postBarrier(Instance* instance, PostBarrierArg arg)
+Instance::postBarrier(Instance* instance, gc::Cell** location)
 {
-    gc::Cell** cell = nullptr;
-    switch (arg.type()) {
-      case PostBarrierArg::Type::Global: {
-        const GlobalDesc& global = instance->metadata().globals[arg.globalIndex()];
-        MOZ_ASSERT(!global.isConstant());
-        MOZ_ASSERT(global.type().isRefOrAnyRef());
-        uint8_t* globalAddr = instance->globalData() + global.offset();
-        if (global.isIndirect())
-            globalAddr = *(uint8_t**)globalAddr;
-        MOZ_ASSERT(*(JSObject**)globalAddr, "shouldn't call postbarrier if null");
-        cell = (gc::Cell**) globalAddr;
-        break;
-      }
-    }
-
-    MOZ_ASSERT(cell);
-    TlsContext.get()->runtime()->gc.storeBuffer().putCell(cell);
+    MOZ_ASSERT(location);
+    TlsContext.get()->runtime()->gc.storeBuffer().putCell(location);
 }
 #endif // ENABLE_WASM_GC
 
