@@ -4413,10 +4413,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
             return false;
         }
 
-        // We cannot touch the gray bits while isHeapBusy, so do this now.
-        for (JSScript** i = scriptVector.begin(); i != scriptVector.end(); ++i)
-            JS::ExposeScriptToActiveJS(*i);
-
         // For most queries, we just accumulate results in 'scriptVector' and
         // 'lazyScriptVector' as we find them. But if this is an 'innermost'
         // query, then we've accumulated the results in the 'innermostForRealm'
