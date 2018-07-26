@@ -99,13 +99,20 @@ FindReservedWord(const CharT* s, size_t length)
     rw = &reservedWords[i];
     chars = rw->chars;
     do {
-        if (*s++ != (unsigned char)(*chars++))
+        if (*s++ != static_cast<unsigned char>(*chars++))
             goto no_match;
     } while (--length != 0);
     return rw;
 
   no_match:
     return nullptr;
+}
+
+template <>
+MOZ_ALWAYS_INLINE const ReservedWordInfo*
+FindReservedWord<Utf8Unit>(const Utf8Unit* units, size_t length)
+{
+    return FindReservedWord(Utf8AsUnsignedChars(units), length);
 }
 
 static const ReservedWordInfo*
