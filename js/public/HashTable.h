@@ -1282,7 +1282,7 @@ class HashTable : private AllocPolicy
 
     static HashNumber prepareHash(const Lookup& l)
     {
-        HashNumber keyHash = ScrambleHashCode(HashPolicy::hash(l));
+        HashNumber keyHash = mozilla::ScrambleHashCode(HashPolicy::hash(l));
 
         // Avoid reserved hash codes.
         if (!isLiveHash(keyHash))

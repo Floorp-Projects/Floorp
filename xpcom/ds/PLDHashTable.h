@@ -33,8 +33,8 @@ struct PLDHashTableOps;
 // structure, for single static initialization per hash table sub-type.
 //
 // Each hash table sub-type should make its entry type a subclass of
-// PLDHashEntryHdr. The mKeyHash member contains the result of multiplying the
-// hash code returned from the hashKey callback (see below) by kGoldenRatio,
+// PLDHashEntryHdr. The mKeyHash member contains the result of suitably
+// scrambling the hash code returned from the hashKey callback (see below),
 // then constraining the result to avoid the magic 0 and 1 values. The stored
 // mKeyHash value is table size invariant, and it is maintained automatically
 // -- users need never access it.
@@ -503,10 +503,6 @@ public:
   }
 
 private:
-  // Multiplicative hash uses an unsigned 32 bit integer and the golden ratio,
-  // expressed as a fixed-point 32-bit fraction.
-  static const uint32_t kGoldenRatio = 0x9E3779B9U;
-
   static uint32_t HashShift(uint32_t aEntrySize, uint32_t aLength);
 
   static const PLDHashNumber kCollisionFlag = 1;

@@ -66,6 +66,42 @@ static const uint32_t kHashNumberBits = 32;
  */
 static const HashNumber kGoldenRatioU32 = 0x9E3779B9U;
 
+/*
+ * Given a raw hash code, h, return a number that can be used to select a hash
+ * bucket.
+ *
+ * This function aims to produce as uniform an output distribution as possible,
+ * especially in the most significant (leftmost) bits, even though the input
+ * distribution may be highly nonrandom, given the constraints that this must
+ * be deterministic and quick to compute.
+ *
+ * Since the leftmost bits of the result are best, the hash bucket index is
+ * computed by doing ScrambleHashCode(h) / (2^32/N) or the equivalent
+ * right-shift, not ScrambleHashCode(h) % N or the equivalent bit-mask.
+ *
+ * FIXME: OrderedHashTable uses a bit-mask; see bug 775896.
+ */
+constexpr HashNumber
+ScrambleHashCode(HashNumber h)
+{
+  /*
+   * Simply returning h would not cause any hash tables to produce wrong
+   * answers. But it can produce pathologically bad performance: The caller
+   * right-shifts the result, keeping only the highest bits. The high bits of
+   * hash codes are very often completely entropy-free. (So are the lowest
+   * bits.)
+   *
+   * So we use Fibonacci hashing, as described in Knuth, The Art of Computer
+   * Programming, 6.4. This mixes all the bits of the input hash code h.
+   *
+   * The value of goldenRatio is taken from the hex expansion of the golden
+   * ratio, which starts 1.9E3779B9.... This value is especially good if
+   * values with consecutive hash codes are stored in a hash table; see Knuth
+   * for details.
+   */
+  return mozilla::WrappingMultiply(h, kGoldenRatioU32);
+}
+
 namespace detail {
 
 MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
