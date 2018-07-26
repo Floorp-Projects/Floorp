@@ -45,10 +45,6 @@
   list-style-image: url("chrome://global/skin/icons/expand.png");
 }
 
-#editBookmarkPanelContent {
-  min-width: 23em;
-}
-
 #editBMPanel_folderTree {
   margin-top: 2px;
   margin-bottom: 2px;
