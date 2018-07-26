@@ -183,7 +183,7 @@ LightweightThemeConsumer.prototype = {
       aData = LightweightThemeImageOptimizer.optimize(aData, this._win.screen);
     }
 
-    let active = this._active = !!aData && aData.id !== DEFAULT_THEME_ID;
+    let active = this._active = aData && aData.id !== DEFAULT_THEME_ID;
 
     if (!aData) {
       aData = {};
