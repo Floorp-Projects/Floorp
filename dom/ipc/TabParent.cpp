@@ -2491,26 +2491,6 @@ TabParent::RecvSetInputContext(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TabParent::RecvIsParentWindowMainWidgetVisible(bool* aIsVisible)
-{
-  // XXXbz This looks unused; can we just remove it?
-  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
-  if (!frame)
-    return IPC_OK();
-  nsGlobalWindowOuter* outer =
-    nsGlobalWindowOuter::Cast(frame->OwnerDoc()->GetWindow());
-  if (!outer)
-    return IPC_OK();
-
-  nsCOMPtr<nsIDOMWindowUtils> windowUtils = outer->WindowUtils();
-  nsresult rv = windowUtils->GetIsParentWindowMainWidgetVisible(aIsVisible);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 already_AddRefed<nsIWidget>
 TabParent::GetTopLevelWidget()
 {
