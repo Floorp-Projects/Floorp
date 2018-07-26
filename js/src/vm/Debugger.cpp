@@ -672,6 +672,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     allocationsLogOverflowed(false),
     frames(cx->zone()),
     scripts(cx),
+    lazyScripts(cx),
     sources(cx),
     objects(cx),
     environments(cx),
@@ -721,6 +722,7 @@ Debugger::init(JSContext* cx)
         !debuggeeZones.init() ||
         !frames.init() ||
         !scripts.init() ||
+        !lazyScripts.init() ||
         !sources.init() ||
         !objects.init() ||
         !observedGCs.init() ||
@@ -3008,6 +3010,7 @@ Debugger::traceCrossCompartmentEdges(JSTracer* trc)
     objects.traceCrossCompartmentEdges<DebuggerObject_trace>(trc);
     environments.traceCrossCompartmentEdges<DebuggerEnv_trace>(trc);
     scripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
+    lazyScripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
     sources.traceCrossCompartmentEdges<DebuggerSource_trace>(trc);
     wasmInstanceScripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
     wasmInstanceSources.traceCrossCompartmentEdges<DebuggerSource_trace>(trc);
@@ -3022,10 +3025,10 @@ Debugger::traceCrossCompartmentEdges(JSTracer* trc)
  * edges in non-GC'd compartments. Since the source may be live, we
  * conservatively assume it is and mark the edge.
  *
- * Each Debugger object keeps four cross-compartment WeakMaps: objects, scripts,
- * script source objects, and environments. They have the property that all
- * their values are in the same compartment as the Debugger object, but we have
- * to mark the keys and the private pointer in the wrapper object.
+ * Each Debugger object keeps five cross-compartment WeakMaps: objects, scripts,
+ * lazy scripts, script source objects, and environments. They have the property
+ * that all their values are in the same compartment as the Debugger object,
+ * but we have to mark the keys and the private pointer in the wrapper object.
  *
  * We must scan all Debugger objects regardless of whether they *currently* have
  * any debuggees in a compartment being GC'd, because the WeakMap entries
@@ -3200,6 +3203,9 @@ Debugger::trace(JSTracer* trc)
     // Trace the weak map from JSScript instances to Debugger.Script objects.
     scripts.trace(trc);
 
+    // Trace the weak map from LazyScript instances to Debugger.Script objects.
+    lazyScripts.trace(trc);
+
     // Trace the referent -> Debugger.Source weak map
     sources.trace(trc);
 
@@ -3275,6 +3281,7 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
             // debuggers and their debuggees are finalized in the same group.
             if (dbg->debuggeeZones.has(zone) ||
                 dbg->scripts.hasKeyInZone(zone) ||
+                dbg->lazyScripts.hasKeyInZone(zone) ||
                 dbg->sources.hasKeyInZone(zone) ||
                 dbg->objects.hasKeyInZone(zone) ||
                 dbg->environments.hasKeyInZone(zone) ||
@@ -5195,6 +5202,11 @@ DebuggerScript_trace(JSTracer* trc, JSObject* obj)
             TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &script,
                                                        "Debugger.Script script referent");
             obj->as<NativeObject>().setPrivateUnbarriered(script);
+        } else if (cell->is<LazyScript>()) {
+            LazyScript* lazyScript = cell->as<LazyScript>();
+            TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &lazyScript,
+                                                       "Debugger.Script lazy script referent");
+            obj->as<NativeObject>().setPrivateUnbarriered(lazyScript);
         } else {
             JSObject* wasm = cell->as<JSObject>();
             TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &wasm,
@@ -5297,9 +5309,38 @@ Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerScriptReferent> refe
     JSObject* obj;
     if (referent.is<JSScript*>()) {
         Handle<JSScript*> untaggedReferent = referent.template as<JSScript*>();
+        if (untaggedReferent->maybeLazyScript()) {
+            // If the JSScript has corresponding LazyScript, wrap the LazyScript
+            // instead.
+            //
+            // This is necessary for Debugger.Script identity.  If we use both
+            // JSScript and LazyScript for same single script, those 2 wrapped
+            // scripts become not identical, while the referent script is
+            // actually identical.
+            //
+            // If a script has corresponding LazyScript and JSScript, the
+            // lifetime of the LazyScript is always longer than the JSScript.
+            // So we can use the LazyScript as a proxy for the JSScript.
+            Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
+            Rooted<DebuggerScriptReferent> lazyScriptReferent(cx, lazyScript.get());
+
+            Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, lazyScript));
+            obj = wrapVariantReferent<DebuggerScriptReferent, LazyScript*, LazyScriptWeakMap>(
+                cx, lazyScripts, key, lazyScriptReferent);
+            MOZ_ASSERT_IF(obj, GetScriptReferent(obj) == lazyScriptReferent);
+            return obj;
+        } else {
+            // If the JSScript doesn't have corresponding LazyScript, the script
+            // is not lazifiable, and we can safely use JSScript as referent.
+            Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent));
+            obj = wrapVariantReferent<DebuggerScriptReferent, JSScript*, ScriptWeakMap>(
+                cx, scripts, key, referent);
+        }
+    } else if (referent.is<LazyScript*>()) {
+        Handle<LazyScript*> untaggedReferent = referent.template as<LazyScript*>();
         Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent));
-        obj = wrapVariantReferent<DebuggerScriptReferent, JSScript*, ScriptWeakMap>(
-            cx, scripts, key, referent);
+        obj = wrapVariantReferent<DebuggerScriptReferent, LazyScript*, LazyScriptWeakMap>(
+            cx, lazyScripts, key, referent);
     } else {
         Handle<WasmInstanceObject*> untaggedReferent = referent.template as<WasmInstanceObject*>();
         Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent,
@@ -5315,6 +5356,13 @@ JSObject*
 Debugger::wrapScript(JSContext* cx, HandleScript script)
 {
     Rooted<DebuggerScriptReferent> referent(cx, script.get());
+    return wrapVariantReferent(cx, referent);
+}
+
+JSObject*
+Debugger::wrapLazyScript(JSContext* cx, Handle<LazyScript*> lazyScript)
+{
+    Rooted<DebuggerScriptReferent> referent(cx, lazyScript.get());
     return wrapVariantReferent(cx, referent);
 }
 
