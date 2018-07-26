@@ -81,12 +81,12 @@ def check_minimum_llvm_config_version(llvm_config):
         '''.format(version, min_version)))
 
 @depends(llvm_config, '--with-libclang-path', '--with-clang-path',
-         host_library_name_info, host)
+         host_library_name_info, host, build_project)
 @imports('os.path')
 @imports('glob')
 @imports(_from='textwrap', _import='dedent')
 def bindgen_config_paths(llvm_config, libclang_path, clang_path,
-                         library_name_info, host):
+                         library_name_info, host, build_project):
     def search_for_libclang(path):
         # Try to ensure that the clang shared library that bindgen is going
         # to look for is actually present.  The files that we search for
@@ -110,9 +110,19 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
         else:
             return (False, list(set(libclang_choices)))
 
+    # XXX: we want this code to be run for both Gecko and JS, but we don't
+    # necessarily want to force a bindgen/Rust dependency on JS just yet.
+    # Actually, we don't want to force an error if we're not building the
+    # browser generally.  We therefore whitelist the projects that require
+    # bindgen facilities at this point and leave it at that.
+    bindgen_projects = ('browser', 'mobile/android')
+
     if not libclang_path and not clang_path:
         # We must have LLVM_CONFIG in this case.
         if not llvm_config:
+            if build_project not in bindgen_projects:
+                return namespace()
+
             die(dedent('''\
             Could not find LLVM/Clang installation for compiling bindgen.
             Please specify the 'LLVM_CONFIG' environment variable
@@ -164,6 +174,9 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
 
     if (not libclang_path and clang_path) or \
        (libclang_path and not clang_path):
+        if build_project not in bindgen_projects:
+            return namespace()
+
         die(dedent('''\
         You must provide both of --with-libclang-path and --with-clang-path
         or neither of them.'''))
