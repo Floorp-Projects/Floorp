@@ -5203,6 +5203,30 @@ DebuggerScript_trace(JSTracer* trc, JSObject* obj)
     }
 }
 
+/* static */ JSScript*
+DelazifyScript(JSContext* cx, Handle<LazyScript*> lazyScript)
+{
+    if (lazyScript->maybeScript())
+        return lazyScript->maybeScript();
+
+    // JSFunction::getOrCreateScript requires the enclosing script not to be
+    // lazified.
+    MOZ_ASSERT(lazyScript->hasEnclosingLazyScript() || lazyScript->hasEnclosingScope());
+    if (lazyScript->hasEnclosingLazyScript()) {
+        Rooted<LazyScript*> enclosingLazyScript(cx, lazyScript->enclosingLazyScript());
+        if (!DelazifyScript(cx, enclosingLazyScript))
+            return nullptr;
+    }
+    MOZ_ASSERT(lazyScript->enclosingScriptHasEverBeenCompiled());
+
+    RootedFunction fun0(cx, lazyScript->functionNonDelazifying());
+    AutoRealm ar(cx, fun0);
+    RootedFunction fun(cx, LazyScript::functionDelazifying(cx, lazyScript));
+    if (!fun)
+        return nullptr;
+    return fun->getOrCreateScript(cx, fun);
+}
+
 class DebuggerScriptSetPrivateMatcher
 {
     NativeObject* obj_;
