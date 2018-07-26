@@ -13,8 +13,8 @@
 
 #include <jni.h>
 
-#include "webrtc/modules/video_capture/device_info_impl.h"
-#include "webrtc/modules/video_capture/video_capture_impl.h"
+#include "modules/video_capture/device_info_impl.h"
+#include "modules/video_capture/video_capture_impl.h"
 
 #define AndroidJavaCaptureDeviceInfoClass "org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid"
 #define AndroidJavaCaptureCapabilityClass "org/webrtc/videoengine/CaptureCapabilityAndroid"
