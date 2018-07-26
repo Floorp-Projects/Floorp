@@ -6,6 +6,7 @@
 
 let {FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {});
 ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
 ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 const TEST_ADDRESS_1 = {

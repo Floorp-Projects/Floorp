@@ -4,6 +4,8 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 var EXPORTED_SYMBOLS = ["Addons"];

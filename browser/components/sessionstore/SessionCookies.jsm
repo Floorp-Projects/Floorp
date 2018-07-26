@@ -7,6 +7,7 @@
 var EXPORTED_SYMBOLS = ["SessionCookies"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "PrivacyLevel",
   "resource://gre/modules/sessionstore/PrivacyLevel.jsm");

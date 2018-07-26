@@ -12,6 +12,8 @@ var EXPORTED_SYMBOLS = [
   "ObjectUtils"
 ];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+
 // Used only to cause test failures.
 
 var pSlice = Array.prototype.slice;

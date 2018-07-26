@@ -6,9 +6,7 @@ module.exports = {
   "env": {
     "mozilla/chrome-worker": true,
   },
-  "plugins": [
-    "mozilla"
-  ],
+
   "rules": {
     "no-console": "off",
   },
