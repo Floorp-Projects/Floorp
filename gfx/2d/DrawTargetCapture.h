@@ -63,6 +63,8 @@ public:
   virtual void CopySurface(SourceSurface *aSurface,
                            const IntRect &aSourceRect,
                            const IntPoint &aDestination) override;
+  virtual void CopyRect(const IntRect &aSourceRect,
+                        const IntPoint &aDestination) override;
 
   virtual void FillRect(const Rect &aRect,
                         const Pattern &aPattern,
