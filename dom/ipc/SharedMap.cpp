@@ -45,6 +45,7 @@ SharedMap::SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor& aMapFile,
 }
 
 bool SharedMap::Has(const nsACString& aName) {
+  Unused << MaybeRebuild();
   return mEntries.Contains(aName);
 }
 
