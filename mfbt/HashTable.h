@@ -4,6 +4,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// A note on the differences between mozilla::HashTable and PLDHashTable (and
+// its subclasses, such as nsTHashtable).
+//
+// - mozilla::HashTable is a lot faster, largely because it uses templates
+//   throughout *and* inlines everything. PLDHashTable inlines operations much
+//   less aggressively, and also uses "virtual ops" for operations like hashing
+//   and matching entries that require function calls.
+//
+// - Correspondingly, mozilla::HashTable use is likely to increase executable
+//   size much more than PLDHashTable.
+//
+// - mozilla::HashTable has a nicer API, with a proper HashSet vs. HashMap
+//   distinction.
+//
+// - mozilla::HashTable requires more explicit OOM checking. Use
+//   mozilla::InfallibleAllocPolicy to make allocations infallible; note that
+//   return values of possibly-allocating methods such as add() will still need
+//   checking in some fashion -- e.g. with MOZ_ALWAYS_TRUE() -- due to the use
+//   of MOZ_MUST_USE.
+//
+// - mozilla::HashTable has a default capacity on creation of 32 and a minimum
+//   capacity of 4. PLDHashTable has a default capacity on creation of 8 and a
+//   minimum capacity of 8.
+//
+// - mozilla::HashTable allocates memory eagerly. PLDHashTable delays
+//   allocating until the first element is inserted.
+
 #ifndef mozilla_HashTable_h
 #define mozilla_HashTable_h
 
