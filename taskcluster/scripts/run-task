@@ -73,6 +73,18 @@ A lesser possibility is that you stumbled upon a TaskCluster platform bug
 where it fails to use new volumes for tasks.
 '''
 
+
+FETCH_CONTENT_NOT_FOUND = '''
+error: fetch-content script not found
+
+The script at `taskcluster/scripts/misc/fetch-content` could not be
+detected in the current environment.
+
+If this task clones gecko, make sure the GECKO_PATH environment variable
+is set to proper location. Otherwise, the script may need to be mounted
+or added to the task's docker image then added to the PATH.
+'''
+
 # The exit code to use when caches should be purged and the task retried.
 # This is EX_OSFILE (from sysexits.h):
 #     Some system file  does not exist, cannot be opened, or has some
@@ -468,6 +480,23 @@ def vcs_checkout(source_repo, dest, store_path,
     return revision
 
 
+def fetch_artifacts(fetches):
+    print_line(b'fetches', b'fetching artifacts\n')
+
+    fetch_content = shutil.which('fetch-content')
+    if not fetch_content and os.environ.get('GECKO_PATH'):
+        fetch_content = os.path.join(os.environ['GECKO_PATH'], 'taskcluster',
+                                     'scripts', 'misc', 'fetch-content')
+
+    if not fetch_content or not os.path.isfile(fetch_content):
+        print(FETCH_CONTENT_NOT_FOUND)
+        sys.exit(1)
+
+    cmd = [fetch_content, 'task-artifacts'] + fetches.split()
+    subprocess.run(cmd, check=True, env=os.environ)
+    print_line(b'fetches', b'finished fetching artifacts\n')
+
+
 def main(args):
     print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
@@ -708,32 +737,18 @@ def main(args):
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
-    use_artifact_path = os.environ.get('USE_ARTIFACT_PATH')
-
-    def prepare_use_artifact(key, url):
-        print_line(b'setup', b'fetching artifact from %s\n' % url.encode('utf-8'))
-        path = os.path.join(use_artifact_path, key)
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        url = url.rstrip('/')
-        path = os.path.join(path, os.path.basename(url))
-        response = urllib.request.urlopen(url)
-        with open(path, 'wb') as fh:
-            fh.write(response.read())
-
-    use_artifacts = os.environ.get('USE_ARTIFACT_URLS')
-    if use_artifacts:
-        use_artifacts = json.loads(use_artifacts)
-        for key, urls in use_artifacts.items():
-            for url in urls:
-                prepare_use_artifact(key, url)
+    fetches = os.environ.get('MOZ_FETCHES')
+    if fetches:
+        fetch_artifacts(fetches)
 
     try:
         return run_and_prefix_output(b'task', task_args)
     finally:
-        if use_artifact_path and os.path.isdir(use_artifact_path):
-            shutil.rmtree(use_artifact_path)
+        fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
+        if fetches_dir and os.path.isdir(fetches_dir):
+            print_line(b'fetches', b'removing %s\n' % fetches_dir.encode('utf-8'))
+            shutil.rmtree(fetches_dir)
+            print_line(b'fetches', b'finished\n')
 
 
 if __name__ == '__main__':
