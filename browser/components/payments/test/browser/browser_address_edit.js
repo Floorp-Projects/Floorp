@@ -48,8 +48,8 @@ add_task(async function test_add_link() {
     });
 
     let testOptions = [
-      { isTemporary: false, expectPersist: true },
-      { isTemporary: true, expectPersist: false },
+      { setPersistCheckedValue: true, expectPersist: true },
+      { setPersistCheckedValue: false, expectPersist: false },
     ];
     let newAddress = PTU.Addresses.TimBL2;
 
@@ -62,7 +62,7 @@ add_task(async function test_add_link() {
       await shippingAddressChangePromise;
       info("got shippingaddresschange event");
 
-      await spawnPaymentDialogTask(frame, async ({address, isTemporary, prefilledGuids}) => {
+      await spawnPaymentDialogTask(frame, async ({address, options, prefilledGuids}) => {
         let {
           PaymentTestUtils: PTU,
         } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -70,7 +70,7 @@ add_task(async function test_add_link() {
         let newAddresses = await PTU.DialogContentUtils.waitForState(content, (state) => {
           return state.tempAddresses && state.savedAddresses;
         });
-        let colnName = isTemporary ? "tempAddresses" : "savedAddresses";
+        let colnName = options.expectPersist ? "savedAddresses" : "tempAddresses";
         // remove any pre-filled entries
         delete newAddresses[colnName][prefilledGuids.address1GUID];
 
@@ -80,7 +80,7 @@ add_task(async function test_add_link() {
         for (let [key, val] of Object.entries(address)) {
           is(resultAddress[key], val, "Check " + key);
         }
-      }, {address: newAddress, isTemporary: options.isTemporary, prefilledGuids});
+      }, {address: newAddress, options, prefilledGuids});
     }
 
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
