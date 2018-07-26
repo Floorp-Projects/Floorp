@@ -13,8 +13,7 @@ impl Importer {
     /// extern crate webidl;
     /// use webidl;
     ///
-    /// let parser = webidl::Parser::new();
-    /// let ast = parser.parse_string("
+    /// let ast = webidl::parse_string("
     ///    [Skippable] interface SkippableFoo {
     ///       attribute EagerFoo eager;
     ///    };

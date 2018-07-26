@@ -1041,8 +1041,8 @@ nsAppStartup::CreateInstanceWithProfile(nsIToolkitProfile* aProfile)
     return rv;
   }
 
-  const char *args[] = { "-P", profileName.get() };
-  rv = process->Run(false, args, 2);
+  const char *args[] = { "-no-remote", "-P", profileName.get() };
+  rv = process->Run(false, args, 3);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

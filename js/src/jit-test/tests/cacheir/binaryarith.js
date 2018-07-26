@@ -177,6 +177,9 @@ warmup(funURsh1, [[1,1,0], [5,1,2], [63,31,0], [4294967295,2147483647,1], [-2,10
 var funURsh2 = (a, b) => { return a >>> b; }
 warmup(funURsh2, [[true,1,0], [5,true,2], [63,false,63], [false, 20, 0]]);
 
+//URsh Int32
+var funURsh3 = (a, b) => { return a >>> b; }
+warmup(funURsh3, [[4294967295, 0, 4294967295]]);
 
 // Other Test cases that Have been useful:
 for (var k=0; k < 30; k++) {

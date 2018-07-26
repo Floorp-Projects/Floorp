@@ -49,6 +49,30 @@ IDWriteFactory* sk_get_dwrite_factory() {
     return gDWriteFactory;
 }
 
+static IDWriteRenderingParams* gDWriteRenderingParams = nullptr;
+
+static void release_dwrite_rendering_params() {
+    if (gDWriteRenderingParams) {
+        gDWriteRenderingParams->Release();
+    }
+}
+
+static void create_dwrite_rendering_params(IDWriteRenderingParams** params) {
+    IDWriteFactory* factory = sk_get_dwrite_factory();
+    if (!factory) {
+        return;
+    }
+    HRVM(factory->CreateRenderingParams(params),
+        "Could not create DWrite default rendering params");
+    atexit(release_dwrite_rendering_params);
+}
+
+IDWriteRenderingParams* sk_get_dwrite_default_rendering_params() {
+    static SkOnce once;
+    once(create_dwrite_rendering_params, &gDWriteRenderingParams);
+    return gDWriteRenderingParams;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // String conversion
 

@@ -823,6 +823,40 @@ class MacroAssembler : public MacroAssemblerSpecific
     // On ARM, the chip must have hardware division instructions.
     inline void remainder32(Register rhs, Register srcDest, bool isUnsigned) PER_SHARED_ARCH;
 
+    // Perform an integer division, returning the integer part rounded toward zero.
+    // rhs must not be zero, and the division must not overflow.
+    //
+    // This variant preserves registers, and doesn't require hardware division
+    // instructions on ARM (will call out to a runtime routine).
+    //
+    // rhs is preserved, srdDest is clobbered.
+    void flexibleRemainder32(Register rhs, Register srcDest, bool isUnsigned,
+                             const LiveRegisterSet& volatileLiveRegs)
+                             DEFINED_ON(mips_shared, arm, arm64, x86_shared);
+
+    // Perform an integer division, returning the integer part rounded toward zero.
+    // rhs must not be zero, and the division must not overflow.
+    //
+    // This variant preserves registers, and doesn't require hardware division
+    // instructions on ARM (will call out to a runtime routine).
+    //
+    // rhs is preserved, srdDest is clobbered.
+    void flexibleQuotient32(Register rhs, Register srcDest, bool isUnsigned,
+                            const LiveRegisterSet& volatileLiveRegs)
+                            DEFINED_ON(mips_shared, arm, arm64, x86_shared);
+
+    // Perform an integer division, returning the integer part rounded toward zero.
+    // rhs must not be zero, and the division must not overflow. The remainder
+    // is stored into the third argument register here.
+    //
+    // This variant preserves registers, and doesn't require hardware division
+    // instructions on ARM (will call out to a runtime routine).
+    //
+    // rhs is preserved, srdDest and remOutput are clobbered.
+    void flexibleDivMod32(Register rhs, Register srcDest, Register remOutput,
+                          bool isUnsigned, const LiveRegisterSet& volatileLiveRegs)
+                          DEFINED_ON(mips_shared, arm, arm64, x86_shared);
+
     inline void divFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
     inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
@@ -878,6 +912,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void lshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
+
+    // These variants may use the stack, but do not have the above constraint.
+    inline void flexibleLshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
+    inline void flexibleRshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
+    inline void flexibleRshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
 
     inline void lshift64(Register shift, Register64 srcDest) PER_ARCH;
     inline void rshift64(Register shift, Register64 srcDest) PER_ARCH;
@@ -1158,8 +1197,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchIfInlineTypedObject(Register obj, Register scratch, Label* label);
 
-    void branchIfNotSimdObject(Register obj, Register scratch, SimdType simdType, Label* label);
-
     inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
 
     inline void branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label);
@@ -1375,9 +1412,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void canonicalizeFloat(FloatRegister reg);
     inline void canonicalizeFloatIfDeterministic(FloatRegister reg);
-
-    inline void canonicalizeFloat32x4(FloatRegister reg, FloatRegister scratch)
-        DEFINED_ON(x86_shared);
 
   public:
     // ========================================================================
@@ -2153,7 +2187,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template<typename T>
     void loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegister dest, Register temp, Label* fail,
-                            bool canonicalizeDoubles = true, unsigned numElems = 0);
+                            bool canonicalizeDoubles = true);
 
     template<typename T>
     void loadFromTypedArray(Scalar::Type arrayType, const T& src, const ValueOperand& dest, bool allowDouble,
@@ -2180,10 +2214,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex& dest,
-                                unsigned numElems = 0);
-    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address& dest,
-                                unsigned numElems = 0);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex& dest);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address& dest);
 
     void memoryBarrierBefore(const Synchronization& sync);
     void memoryBarrierAfter(const Synchronization& sync);

@@ -434,6 +434,11 @@ public class GeckoViewActivity extends AppCompatActivity {
         }
 
         @Override
+        public void onProgressChange(GeckoSession session, int progress) {
+            Log.i(LOGTAG, "onProgressChange " + progress);
+        }
+
+        @Override
         public void onSecurityChange(GeckoSession session, SecurityInformation securityInfo) {
             Log.i(LOGTAG, "Security status changed to " + securityInfo.securityMode);
         }

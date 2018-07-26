@@ -1024,6 +1024,14 @@ VARCACHE_PREF(
   bool, false
 )
 
+// 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign
+// Keep the old default of accepting all cookies
+VARCACHE_PREF(
+  "network.cookie.cookieBehavior",
+  network_cookie_cookieBehavior,
+  int32_t, 0
+)
+
 // Enables the predictive service.
 VARCACHE_PREF(
   "network.predictor.enabled",

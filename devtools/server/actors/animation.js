@@ -930,13 +930,6 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * @param {Object} player
    */
   pauseSync(player) {
-    // Gecko includes an optimization that means that if the animation is play-pending
-    // and we set the startTime to null, the change will be ignored and the animation
-    // will continue to be play-pending. This violates the spec but until the spec is
-    // clarified[1] on this point we work around this by ensuring the animation's
-    // startTime is set to something non-null before setting it to null.
-    // [1] https://github.com/w3c/csswg-drafts/issues/2691
-    this.playSync(player);
     player.startTime = null;
   },
 

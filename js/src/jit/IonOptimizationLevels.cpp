@@ -27,7 +27,6 @@ OptimizationInfo::initNormalOptimizationInfo()
 
     autoTruncate_ = true;
     eaa_ = true;
-    eagerSimdUnbox_ = true;
     edgeCaseAnalysis_ = true;
     eliminateRedundantChecks_ = true;
     inlineInterpreted_ = true;
@@ -69,7 +68,6 @@ OptimizationInfo::initWasmOptimizationInfo()
 
     ama_ = true;
     autoTruncate_ = false;
-    eagerSimdUnbox_ = false;           // wasm has no boxing / unboxing.
     edgeCaseAnalysis_ = false;
     eliminateRedundantChecks_ = false;
     scalarReplacement_ = false;        // wasm has no objects.

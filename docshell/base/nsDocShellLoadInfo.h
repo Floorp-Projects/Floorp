@@ -45,6 +45,10 @@ public:
 
   void SetResultPrincipalURIIsSome(bool aIsSome);
 
+  bool KeepResultPrincipalURIIfSet() const;
+
+  void SetKeepResultPrincipalURIIfSet(bool aKeep);
+
   bool LoadReplace() const;
 
   void SetLoadReplace(bool aLoadReplace);
@@ -139,6 +143,10 @@ protected:
   // load to occur. In most cases the referrer and the triggeringPrincipal's URI
   // will be identical.
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+
+  // if http-equiv="refresh" cause reload we do not want to replace
+  // ResultPrinicpalURI if it was already set.
+  bool mKeepResultPrincipalURIIfSet;
 
   // loadReplace flag to be passed to nsIDocShell.internalLoad.
   bool mLoadReplace;

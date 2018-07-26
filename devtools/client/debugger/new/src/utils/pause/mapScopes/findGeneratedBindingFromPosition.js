@@ -196,7 +196,12 @@ async function mapImportReferenceToDescriptor({
   //       ^^^           // binding
   // vs
   //
-  //   Object(foo.bar)() // Webpack
+  //   __webpack_require__.i(foo.bar)() // Webpack 2
+  //   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   // mapping
+  //                         ^^^        // binding
+  // vs
+  //
+  //   Object(foo.bar)() // Webpack >= 3
   //   ^^^^^^^^^^^^^^^   // mapping
   //          ^^^        // binding
   //
@@ -210,6 +215,13 @@ async function mapImportReferenceToDescriptor({
 
 
   if (!(0, _mappingContains.mappingContains)(range, binding.loc)) {
+    return null;
+  } // Webpack 2's import declarations wrap calls with an identity fn, so we
+  // need to make sure to skip that binding because it is mapped to the
+  // location of the original binding usage.
+
+
+  if (binding.name === "__webpack_require__" && binding.loc.meta && binding.loc.meta.type === "member" && binding.loc.meta.property === "i") {
     return null;
   }
 

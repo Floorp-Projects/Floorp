@@ -572,6 +572,16 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
             'searchfox-macosx64-searchfox/debug']
 
 
+@_target_task('pipfile_update')
+def target_tasks_pipfile_update(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to perform nightly in-tree pipfile updates
+    """
+    def filter(task):
+        # For now any task in the repo-update kind is ok
+        return task.kind in ['pipfile-update']
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
 @_target_task('file_update')
 def target_tasks_file_update(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform nightly in-tree file updates

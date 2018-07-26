@@ -185,8 +185,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
@@ -195,6 +197,7 @@
 #include <algorithm>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "jspubtd.h"
@@ -969,6 +972,156 @@ IsLineTerminator(char16_t unit)
     return IsLineTerminator(static_cast<char32_t>(unit));
 }
 
+template<typename CharT>
+struct SourceUnitTraits;
+
+template<>
+struct SourceUnitTraits<char16_t>
+{
+  public:
+    static constexpr uint8_t maxUnitsLength = 2;
+
+    static constexpr size_t lengthInUnits(char32_t codePoint) {
+        return codePoint < unicode::NonBMPMin ? 1 : 2;
+    }
+};
+
+template<>
+struct SourceUnitTraits<mozilla::Utf8Unit>
+{
+  public:
+    static constexpr uint8_t maxUnitsLength = 4;
+
+    static constexpr size_t lengthInUnits(char32_t codePoint) {
+        return codePoint < 0x80
+               ? 1
+               : codePoint < 0x800
+               ? 2
+               : codePoint < 0x10000
+               ? 3
+               : 4;
+    }
+};
+
+/**
+ * PeekedCodePoint represents the result of peeking ahead in some source text
+ * to determine the next validly-encoded code point.
+ *
+ * If there isn't a valid code point, then |isNone()|.
+ *
+ * But if there *is* a valid code point, then |!isNone()|, the code point has
+ * value |codePoint()| and its length in code units is |lengthInUnits()|.
+ *
+ * Conceptually, this class is |Maybe<struct { char32_t v; uint8_t len; }>|.
+ */
+template<typename CharT>
+class PeekedCodePoint final
+{
+    char32_t codePoint_ = 0;
+    uint8_t lengthInUnits_ = 0;
+
+  private:
+    using SourceUnitTraits = frontend::SourceUnitTraits<CharT>;
+
+    PeekedCodePoint() = default;
+
+  public:
+    /**
+     * Create a peeked code point with the given value and length in code
+     * units.
+     *
+     * While the latter value is computable from the former for both UTF-8 and
+     * JS's version of UTF-16, the caller likely computed a length in units in
+     * the course of determining the peeked value.  Passing both here avoids
+     * recomputation and lets us do a consistency-checking assertion.
+     */
+    PeekedCodePoint(char32_t codePoint, uint8_t lengthInUnits)
+      : codePoint_(codePoint),
+        lengthInUnits_(lengthInUnits)
+    {
+        MOZ_ASSERT(codePoint <= unicode::NonBMPMax);
+        MOZ_ASSERT(lengthInUnits != 0, "bad code point length");
+        MOZ_ASSERT(lengthInUnits == SourceUnitTraits::lengthInUnits(codePoint));
+    }
+
+    /** Create a PeekedCodeUnit that represents no valid code point. */
+    static PeekedCodePoint none() {
+        return PeekedCodePoint();
+    }
+
+    /** True if no code point was found, false otherwise. */
+    bool isNone() const {
+        return lengthInUnits_ == 0;
+    }
+
+    /** If a code point was found, its value. */
+    char32_t codePoint() const {
+        MOZ_ASSERT(!isNone());
+        return codePoint_;
+    }
+
+    /** If a code point was found, its length in code units. */
+    uint8_t lengthInUnits() const {
+        MOZ_ASSERT(!isNone());
+        return lengthInUnits_;
+    }
+};
+
+inline PeekedCodePoint<char16_t>
+PeekCodePoint(const char16_t* const ptr, const char16_t* const end)
+{
+    if (MOZ_UNLIKELY(ptr >= end))
+        return PeekedCodePoint<char16_t>::none();
+
+    char16_t lead = ptr[0];
+
+    char32_t c;
+    uint8_t len;
+    if (MOZ_LIKELY(!unicode::IsLeadSurrogate(lead)) ||
+        MOZ_UNLIKELY(ptr + 1 >= end ||
+                     !unicode::IsTrailSurrogate(ptr[1])))
+    {
+        c = lead;
+        len = 1;
+    } else {
+        c = unicode::UTF16Decode(lead, ptr[1]);
+        len = 2;
+    }
+
+    return PeekedCodePoint<char16_t>(c, len);
+}
+
+inline PeekedCodePoint<mozilla::Utf8Unit>
+PeekCodePoint(const mozilla::Utf8Unit* const ptr, const mozilla::Utf8Unit* const end)
+{
+    if (MOZ_UNLIKELY(ptr >= end))
+        return PeekedCodePoint<mozilla::Utf8Unit>::none();
+
+    const mozilla::Utf8Unit lead = ptr[0];
+    if (mozilla::IsAscii(lead))
+        return PeekedCodePoint<mozilla::Utf8Unit>(lead.toUint8(), 1);
+
+    const mozilla::Utf8Unit* afterLead = ptr + 1;
+    mozilla::Maybe<char32_t> codePoint = mozilla::DecodeOneUtf8CodePoint(lead, &afterLead, end);
+    if (codePoint.isNothing())
+        return PeekedCodePoint<mozilla::Utf8Unit>::none();
+
+    auto len = mozilla::AssertedCast<uint8_t>(mozilla::PointerRangeSize(ptr, afterLead));
+    MOZ_ASSERT(len <= 4);
+
+    return PeekedCodePoint<mozilla::Utf8Unit>(codePoint.value(), len);
+}
+
+inline bool
+IsSingleUnitLineTerminator(mozilla::Utf8Unit unit)
+{
+    // BEWARE: The Unicode line/paragraph separators don't fit in a single
+    //         UTF-8 code unit, so this test is exact for Utf8Unit but inexact
+    //         for UTF-8 as a whole.  Users must handle |unit| as start of a
+    //         Unicode LineTerminator themselves!
+    return unit == mozilla::Utf8Unit('\n') || unit == mozilla::Utf8Unit('\r');
+}
+
 // This is the low-level interface to the JS source code buffer.  It just gets
 // raw Unicode code units -- 16-bit char16_t units of source text that are not
 // (always) full code points, and 8-bit units of UTF-8 source text soon.
@@ -1021,6 +1174,10 @@ class SourceUnits
         return base_ + (offset - startOffset_);
     }
 
+    const CharT* current() const {
+        return ptr;
+    }
+
     const CharT* limit() const {
         return limit_;
     }
@@ -1037,6 +1194,47 @@ class SourceUnits
 
     CharT peekCodeUnit() const {
         return *ptr;        // this will nullptr-crash if poisoned
+    }
+
+    /**
+     * Determine the next code point in source text.  The code point is not
+     * normalized: '\r', '\n', '\u2028', and '\u2029' are returned literally.
+     * If there is no next code point because |atEnd()|, or if an encoding
+     * error is encountered, return a |PeekedCodePoint| that |isNone()|.
+     *
+     * This function does not report errors: code that attempts to get the next
+     * code point must report any error.
+     *
+     * If a next code point is found, it may be consumed by passing it to
+     * |consumeKnownCodePoint|.
+     */
+    PeekedCodePoint<CharT> peekCodePoint() const {
+        return PeekCodePoint(ptr, limit_);
+    }
+
+  private:
+#ifdef DEBUG
+    void assertNextCodePoint(const PeekedCodePoint<CharT>& peeked);
+#endif
+
+  public:
+    /**
+     * Consume a peeked code point that |!isNone()|.
+     *
+     * This call DOES NOT UPDATE LINE-STATUS.  You may need to call
+     * |updateLineInfoForEOL()| and |updateFlagsForEOL()| if this consumes a
+     * LineTerminator.  Note that if this consumes '\r', you also must consume
+     * an optional '\n' (i.e. a full LineTerminatorSequence) before doing so.
+     */
+    void consumeKnownCodePoint(const PeekedCodePoint<CharT>& peeked) {
+        MOZ_ASSERT(!peeked.isNone());
+        MOZ_ASSERT(peeked.lengthInUnits() <= remaining());
+
+#ifdef DEBUG
+        assertNextCodePoint(peeked);
+#endif
+
+        ptr += peeked.lengthInUnits();
     }
 
     /** Match |n| hexadecimal digits and store their value in |*out|. */
@@ -1153,6 +1351,28 @@ class SourceUnits
     }
 
     /**
+     * Consume the rest of a single-line comment (but not the EOL/EOF that
+     * terminates it).
+     *
+     * If an encoding error is encountered -- possible only for UTF-8 because
+     * JavaScript's conception of UTF-16 encompasses any sequence of 16-bit
+     * code units -- valid code points prior to the encoding error are consumed
+     * and subsequent invalid code units are not consumed.  For example, given
+     * these UTF-8 code units:
+     *
+     *   'B'   'A'  'D'  ':'   <bad code unit sequence>
+     *   0x42  0x41 0x44 0x3A  0xD0 0x00 ...
+     *
+     * the first four code units are consumed, but 0xD0 and 0x00 are not
+     * consumed because 0xD0 encodes a two-byte lead unit but 0x00 is not a
+     * valid trailing code unit.
+     *
+     * It is expected that the caller will report such an encoding error when
+     * it attempts to consume the next code point.
+     */
+    void consumeRestOfSingleLineComment();
+
+    /**
      * The maximum radius of code around the location of an error that should
      * be included in a syntax error message -- this many code units to either
      * side.  The resulting window of data is then accordinngly trimmed so that
@@ -1170,7 +1390,7 @@ class SourceUnits
      * away from |offset|, such that all code points from that offset to
      * |offset| are valid, non-LineTerminator code points.
      */
-    size_t findWindowStart(size_t offset);
+    size_t findWindowStart(size_t offset) const;
 
     /**
      * From absolute offset |offset|, find an absolute offset within source
@@ -1178,7 +1398,7 @@ class SourceUnits
      * that all code units from |offset| to that offset are valid,
      * non-LineTerminator code points.
      */
-    size_t findWindowEnd(size_t offset);
+    size_t findWindowEnd(size_t offset) const;
 
   private:
     /** Base of buffer. */
@@ -1265,6 +1485,26 @@ class TokenStreamCharsShared
     CharBuffer& getCharBuffer() { return charBuffer; }
 };
 
+inline mozilla::Span<const char>
+ToCharSpan(mozilla::Span<const mozilla::Utf8Unit> codeUnits)
+{
+    static_assert(alignof(char) == alignof(mozilla::Utf8Unit),
+                  "must have equal alignment to reinterpret_cast<>");
+    static_assert(sizeof(char) == sizeof(mozilla::Utf8Unit),
+                  "must have equal size to reinterpret_cast<>");
+
+    // This cast is safe for two reasons.
+    //
+    // First, per C++11 [basic.lval]p10 it is permitted to access any object's
+    // memory through |char|.
+    //
+    // Second, Utf8Unit *contains* a |char|.  Examining that memory as |char|
+    // is simply, per C++11 [basic.lval]p10, to access the memory according to
+    // the dynamic type of the object: essentially trivially safe.
+    return mozilla::MakeSpan(reinterpret_cast<const char*>(codeUnits.data()),
+                             codeUnits.size());
+}
+
 template<typename CharT>
 class TokenStreamCharsBase
   : public TokenStreamCharsShared
@@ -1286,7 +1526,7 @@ class TokenStreamCharsBase
     }
 
     static MOZ_ALWAYS_INLINE JSAtom*
-    atomizeSourceChars(JSContext* cx, const CharT* chars, size_t length);
+    atomizeSourceChars(JSContext* cx, mozilla::Span<const CharT> units);
 
     using SourceUnits = frontend::SourceUnits<CharT>;
 
@@ -1379,10 +1619,19 @@ TokenStreamCharsBase<CharT>::consumeKnownCodeUnit(int32_t unit)
 
 template<>
 /* static */ MOZ_ALWAYS_INLINE JSAtom*
-TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx, const char16_t* chars,
-                                                   size_t length)
+TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx,
+                                                   mozilla::Span<const char16_t> units)
 {
-    return AtomizeChars(cx, chars, length);
+    return AtomizeChars(cx, units.data(), units.size());
+}
+
+template<>
+/* static */ MOZ_ALWAYS_INLINE JSAtom*
+TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(JSContext* cx,
+                                                            mozilla::Span<const mozilla::Utf8Unit> units)
+{
+    auto chars = ToCharSpan(units);
+    return AtomizeUTF8Chars(cx, chars.data(), chars.size());
 }
 
 template<typename CharT>
@@ -1402,13 +1651,6 @@ class SpecializedTokenStreamCharsBase<char16_t>
 
   protected:
     // These APIs are only usable by UTF-16-specific code.
-
-    /**
-     * Consume the rest of a single-line comment (but not the EOL/EOF that
-     * terminates it) -- infallibly because no 16-bit code unit sequence in a
-     * comment is an error.
-     */
-    void infallibleConsumeRestOfSingleLineComment();
 
     /**
      * Given |lead| already consumed, consume and return the code point encoded
@@ -1451,12 +1693,101 @@ class SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>
   protected:
     // These APIs are only usable by UTF-8-specific code.
 
+    using typename CharsBase::SourceUnits;
+
+    /**
+     * A mutable iterator-wrapper around |SourceUnits| that translates
+     * operators to calls to |SourceUnits::getCodeUnit()| and similar.
+     *
+     * This class is expected to be used in concert with |SourceUnitsEnd|.
+     */
+    class SourceUnitsIterator
+    {
+        SourceUnits& sourceUnits_;
+#ifdef DEBUG
+        // In iterator copies created by the post-increment operator, a pointer
+        // at the next source text code unit when the post-increment operator
+        // was called, cleared when the iterator is dereferenced.
+        mutable mozilla::Maybe<const mozilla::Utf8Unit*> currentBeforePostIncrement_;
+#endif
+
+      public:
+        explicit SourceUnitsIterator(SourceUnits& sourceUnits)
+          : sourceUnits_(sourceUnits)
+        {}
+
+        mozilla::Utf8Unit operator*() const {
+            // operator* is expected to get the *next* value from an iterator
+            // not pointing at the end of the underlying range.  However, the
+            // sole use of this is in the context of an expression of the form
+            // |*iter++|, that performed the |sourceUnits_.getCodeUnit()| in
+            // the |operator++(int)| below -- so dereferencing acts on a
+            // |sourceUnits_| already advanced.  Therefore the correct unit to
+            // return is the previous one.
+            MOZ_ASSERT(currentBeforePostIncrement_.value() + 1 == sourceUnits_.current());
+#ifdef DEBUG
+            currentBeforePostIncrement_.reset();
+#endif
+            return sourceUnits_.previousCodeUnit();
+        }
+
+        SourceUnitsIterator operator++(int) {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+
+            SourceUnitsIterator copy = *this;
+#ifdef DEBUG
+            copy.currentBeforePostIncrement_.emplace(sourceUnits_.current());
+#endif
+
+            sourceUnits_.getCodeUnit();
+            return copy;
+        }
+
+        void operator-=(size_t n) {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+            sourceUnits_.unskipCodeUnits(n);
+        }
+
+        mozilla::Utf8Unit operator[](ptrdiff_t index) {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+            MOZ_ASSERT(index == -1,
+                       "must only be called to verify the value of the "
+                       "previous code unit");
+            return sourceUnits_.previousCodeUnit();
+        }
+
+        size_t remaining() const {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+            return sourceUnits_.remaining();
+        }
+    };
+
+    /** A sentinel representing the end of |SourceUnits| data. */
+    class SourceUnitsEnd {};
+
+    friend inline size_t operator-(const SourceUnitsEnd& aEnd, const SourceUnitsIterator& aIter);
+
   protected:
     // These APIs are in both SpecializedTokenStreamCharsBase specializations
     // and so are usable in subclasses no matter what CharT is.
 
     using CharsBase::CharsBase;
 };
+
+inline size_t
+operator-(const SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>::SourceUnitsEnd& aEnd,
+          const SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>::SourceUnitsIterator& aIter)
+{
+    return aIter.remaining();
+}
 
 /** A small class encapsulating computation of the start-offset of a Token. */
 class TokenStart
@@ -1710,15 +2041,12 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
   protected:
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCodeUnit;
-    using SpecializedCharsBase::infallibleConsumeRestOfSingleLineComment;
     using SpecializedCharsBase::infallibleGetNonAsciiCodePointDontNormalize;
     using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::matchLineTerminator;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
     using GeneralCharsBase::ungetCodeUnit;
     using GeneralCharsBase::updateLineInfoForEOL;
-
-    using typename GeneralCharsBase::SourceUnits;
 
   protected:
     using GeneralCharsBase::GeneralCharsBase;
@@ -1736,14 +2064,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     }
 
     /**
-     * Get the next code point, converting LineTerminatorSequences to '\n' and
-     * updating internal line-counter state if needed.  Return true on success
-     * and store the code point in |*c|.  Return false and leave |*c| undefined
-     * on failure.
-     */
-    MOZ_MUST_USE bool getCodePoint(int32_t* cp);
-
-    /**
      * Given a just-consumed non-ASCII code unit |lead| (which may also be a
      * full code point, for UTF-16), consume a full code point or
      * LineTerminatorSequence (normalizing it to '\n') and store it in
@@ -1755,47 +2075,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      * This may change the current |sourceUnits| offset.
      */
     MOZ_MUST_USE bool getNonAsciiCodePoint(int32_t lead, int32_t* codePoint);
-
-    /**
-     * Unget a full code point (ASCII or not) without altering line/column
-     * state.  If line/column state must be updated, this must happen manually.
-     * This method ungets a single code point, not a LineTerminatorSequence
-     * that is multiple code points.  (Generally you shouldn't be in a state
-     * where you've just consumed "\r\n" and want to unget that full sequence.)
-     *
-     * This function ordinarily should be used to unget code points that have
-     * been consumed *without* line/column state having been updated.
-     */
-    void ungetCodePointIgnoreEOL(uint32_t codePoint);
-
-    /**
-     * Unget an originally non-ASCII, normalized code point, including undoing
-     * line/column updates that were performed for it.  Don't use this if the
-     * code point was gotten *without* line/column state being updated!
-     */
-    void ungetNonAsciiNormalizedCodePoint(int32_t codePoint) {
-        MOZ_ASSERT_IF(isAsciiCodePoint(codePoint),
-                      codePoint == '\n');
-        MOZ_ASSERT(codePoint != unicode::LINE_SEPARATOR,
-                   "should not be ungetting un-normalized code points");
-        MOZ_ASSERT(codePoint != unicode::PARA_SEPARATOR,
-                   "should not be ungetting un-normalized code points");
-
-        ungetCodePointIgnoreEOL(codePoint);
-        if (codePoint == '\n')
-            anyCharsAccess().undoInternalUpdateLineInfoForEOL();
-    }
-
-    /**
-     * Consume code points til EOL/EOF following the start of a single-line
-     * comment, without consuming the EOL/EOF.
-     */
-    MOZ_MUST_USE bool consumeRestOfSingleLineComment() {
-        // This operation is infallible for UTF-16 -- and this implementation
-        // approach lets the compiler boil away call-side fallibility handling.
-        infallibleConsumeRestOfSingleLineComment();
-        return true;
-    }
 };
 
 template<class AnyCharsAccess>
@@ -1807,11 +2086,135 @@ class TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
     using GeneralCharsBase = GeneralTokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
     using Self = TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
 
+    using typename SpecializedCharsBase::SourceUnitsEnd;
+    using typename SpecializedCharsBase::SourceUnitsIterator;
+
   protected:
+    using GeneralCharsBase::anyCharsAccess;
+    using GeneralCharsBase::internalComputeLineOfContext;
+    using TokenStreamCharsShared::isAsciiCodePoint;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
+    using GeneralCharsBase::updateLineInfoForEOL;
+
+  private:
+    static char toHexChar(uint8_t nibble) {
+        MOZ_ASSERT(nibble < 16);
+        return "0123456789ABCDEF"[nibble];
+    }
+
+    static void byteToString(uint8_t n, char* str) {
+        str[0] = '0';
+        str[1] = 'x';
+        str[2] = toHexChar(n >> 4);
+        str[3] = toHexChar(n & 0xF);
+    }
+
+    static void byteToTerminatedString(uint8_t n, char* str) {
+        byteToString(n, str);
+        str[4] = '\0';
+    }
+
+    /**
+     * Report a UTF-8 encoding-related error for a code point starting AT THE
+     * CURRENT OFFSET.
+     *
+     * |relevantUnits| indicates how many code units from the current offset
+     * are potentially relevant to the reported error, such that they may be
+     * included in the error message.  For example, if at the current offset we
+     * have
+     *
+     *   0b1111'1111 ...
+     *
+     * a code unit never allowed in UTF-8, then |relevantUnits| might be 1
+     * because only that unit is relevant.  Or if we have
+     *
+     *   0b1111'0111 0b1011'0101 0b0000'0000 ...
+     *
+     * where the first two code units are a valid prefix to a four-unit code
+     * point but the third unit *isn't* a valid trailing code unit, then
+     * |relevantUnits| might be 3.
+     */
+    MOZ_COLD void internalEncodingError(uint8_t relevantUnits, unsigned errorNumber, ...);
+
+    // Don't use |internalEncodingError|!  Use one of the elaborated functions
+    // that calls it, below -- all of which should be used to indicate an error
+    // in a code point starting AT THE CURRENT OFFSET as with
+    // |internalEncodingError|.
+
+    /** Report an error for an invalid lead code unit |lead|. */
+    MOZ_COLD void badLeadUnit(mozilla::Utf8Unit lead);
+
+    /**
+     * Report an error when there aren't enough code units remaining to
+     * constitute a full code point after |lead|: only |remaining| code units
+     * were available for a code point starting with |lead|, when at least
+     * |required| code units were required.
+     */
+    MOZ_COLD void notEnoughUnits(mozilla::Utf8Unit lead, uint8_t remaining, uint8_t required);
+
+    /**
+     * Report an error for a bad trailing UTF-8 code unit, where the bad
+     * trailing unit was the last of |unitsObserved| units examined from the
+     * current offset.
+     */
+    MOZ_COLD void badTrailingUnit(mozilla::Utf8Unit badUnit, uint8_t unitsObserved);
+
+    // Helper used for both |badCodePoint| and |notShortestForm| for code units
+    // that have all the requisite high bits set/unset in a manner that *could*
+    // encode a valid code point, but the remaining bits encoding its actual
+    // value do not define a permitted value.
+    MOZ_COLD void badStructurallyValidCodePoint(uint32_t codePoint, uint8_t codePointLength,
+                                                const char* reason);
+
+    /**
+     * Report an error for UTF-8 that encodes a UTF-16 surrogate or a number
+     * outside the Unicode range.
+     */
+    MOZ_COLD void badCodePoint(uint32_t codePoint, uint8_t codePointLength) {
+        MOZ_ASSERT(unicode::IsSurrogate(codePoint) || codePoint > unicode::NonBMPMax);
+
+        badStructurallyValidCodePoint(codePoint, codePointLength,
+                                      unicode::IsSurrogate(codePoint)
+                                      ? "it's a UTF-16 surrogate"
+                                      : "the maximum code point is U+10FFFF");
+    }
+
+    /**
+     * Report an error for UTF-8 that encodes a code point not in its shortest
+     * form.
+     */
+    MOZ_COLD void notShortestForm(uint32_t codePoint, uint8_t codePointLength) {
+        MOZ_ASSERT(!unicode::IsSurrogate(codePoint));
+        MOZ_ASSERT(codePoint <= unicode::NonBMPMax);
+
+        badStructurallyValidCodePoint(codePoint, codePointLength,
+                                      "it wasn't encoded in shortest possible form");
+    }
 
   protected:
     using GeneralCharsBase::GeneralCharsBase;
+
+    /**
+     * Given the non-ASCII |lead| code unit just consumed, consume the rest of
+     * a non-ASCII code point.  The code point is not normalized: on success
+     * |*codePoint| may be U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR.
+     *
+     * Report an error if an invalid code point is encountered.
+     */
+    MOZ_MUST_USE bool
+    getNonAsciiCodePointDontNormalize(mozilla::Utf8Unit lead, char32_t* codePoint);
+
+    /**
+     * Given a just-consumed non-ASCII code unit |lead|, consume a full code
+     * point or LineTerminatorSequence (normalizing it to '\n') and store it in
+     * |*codePoint|.  Return true on success, otherwise return false and leave
+     * |*codePoint| undefined on failure.
+     *
+     * If a LineTerminatorSequence was consumed, also update line/column info.
+     *
+     * This function will change the current |sourceUnits| offset.
+     */
+    MOZ_MUST_USE bool getNonAsciiCodePoint(int32_t lead, int32_t* codePoint);
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
@@ -1892,11 +2295,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::badToken;
     // Deliberately don't |using| |charBuffer| because of bug 1472569.  :-(
     using CharsBase::consumeKnownCodeUnit;
-    using SpecializedChars::consumeRestOfSingleLineComment;
     using TokenStreamCharsShared::copyCharBufferTo;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
     using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
-    using SpecializedChars::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
     using GeneralCharsBase::getFullAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePoint;
@@ -1914,9 +2315,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::newSimpleToken;
     using CharsBase::peekCodeUnit;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
-    using SpecializedChars::ungetCodePointIgnoreEOL;
     using GeneralCharsBase::ungetCodeUnit;
-    using SpecializedChars::ungetNonAsciiNormalizedCodePoint;
     using GeneralCharsBase::updateLineInfoForEOL;
 
     template<typename CharU> friend class TokenStreamPosition;
@@ -1924,6 +2323,14 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
                         const CharT* base, size_t length);
+
+    /**
+     * Get the next code point, converting LineTerminatorSequences to '\n' and
+     * updating internal line-counter state if needed.  Return true on success
+     * and store the code point in |*cp|.  Return false and leave |*cp|
+     * undefined on failure.
+     */
+    MOZ_MUST_USE bool getCodePoint(int32_t* cp);
 
     // If there is an invalid escape in a template, report it and return false,
     // otherwise return true.

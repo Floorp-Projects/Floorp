@@ -86,7 +86,7 @@ getId(const char *bin_name)
   auto_wasteful_vector<uint8_t, sizeof(MDGUID)> identifier(&allocator);
 
 #if defined(GP_OS_android)
-  if (nsCString(bin_name).Find("!/") != kNotFound) {
+  if (nsDependentCString(bin_name).Find("!/") != kNotFound) {
     AutoObjectMapperFaultyLib mapper(outputMapperLog);
     void* image = nullptr;
     size_t size = 0;

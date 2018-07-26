@@ -305,18 +305,14 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
         fTextSizeMeasure = realTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
 
-        IDWriteFactory* factory = sk_get_dwrite_factory();
-        if (factory != nullptr) {
-            HRVM(factory->CreateRenderingParams(&fDefaultRenderingParams),
-            "Could not create default rendering params");
-        }
-
+        IDWriteRenderingParams* params = sk_get_dwrite_default_rendering_params();
         DWriteFontTypeface* typeface = static_cast<DWriteFontTypeface*>(getTypeface());
-        if (!SUCCEEDED(typeface->fDWriteFontFace->GetRecommendedRenderingMode(
+        if (params &&
+            !SUCCEEDED(typeface->fDWriteFontFace->GetRecommendedRenderingMode(
                 fTextSizeRender,
                 1.0f,
                 fMeasuringMode,
-                fDefaultRenderingParams.get(),
+                params,
                 &fRenderingMode))) {
             fRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
         }

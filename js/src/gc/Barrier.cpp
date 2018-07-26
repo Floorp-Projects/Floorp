@@ -221,6 +221,7 @@ template struct JS_PUBLIC_API(MovableCellHasher<SavedFrame*>);
 template struct JS_PUBLIC_API(MovableCellHasher<EnvironmentObject*>);
 template struct JS_PUBLIC_API(MovableCellHasher<WasmInstanceObject*>);
 template struct JS_PUBLIC_API(MovableCellHasher<JSScript*>);
+template struct JS_PUBLIC_API(MovableCellHasher<LazyScript*>);
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
 #pragma GCC diagnostic pop
