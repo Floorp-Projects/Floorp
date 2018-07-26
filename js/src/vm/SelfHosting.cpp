@@ -29,7 +29,6 @@
 #include "builtin/Reflect.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/SIMD.h"
 #include "builtin/Stream.h"
 #include "builtin/String.h"
 #include "builtin/TypedObject.h"
@@ -2404,19 +2403,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("std_TypedArray_buffer",               js::TypedArray_bufferGetter,  1,0),
 
-    JS_FN("std_SIMD_Int8x16_extractLane",        simd_int8x16_extractLane,     2,0),
-    JS_FN("std_SIMD_Int16x8_extractLane",        simd_int16x8_extractLane,     2,0),
-    JS_INLINABLE_FN("std_SIMD_Int32x4_extractLane",   simd_int32x4_extractLane,  2,0, SimdInt32x4_extractLane),
-    JS_FN("std_SIMD_Uint8x16_extractLane",       simd_uint8x16_extractLane,    2,0),
-    JS_FN("std_SIMD_Uint16x8_extractLane",       simd_uint16x8_extractLane,    2,0),
-    JS_FN("std_SIMD_Uint32x4_extractLane",       simd_uint32x4_extractLane,    2,0),
-    JS_INLINABLE_FN("std_SIMD_Float32x4_extractLane", simd_float32x4_extractLane,2,0, SimdFloat32x4_extractLane),
-    JS_FN("std_SIMD_Float64x2_extractLane",      simd_float64x2_extractLane,   2,0),
-    JS_FN("std_SIMD_Bool8x16_extractLane",       simd_bool8x16_extractLane,    2,0),
-    JS_FN("std_SIMD_Bool16x8_extractLane",       simd_bool16x8_extractLane,    2,0),
-    JS_FN("std_SIMD_Bool32x4_extractLane",       simd_bool32x4_extractLane,    2,0),
-    JS_FN("std_SIMD_Bool64x2_extractLane",       simd_bool64x2_extractLane,    2,0),
-
     // Helper funtions after this point.
     JS_INLINABLE_FN("ToObject",      intrinsic_ToObject,                1,0, IntrinsicToObject),
     JS_INLINABLE_FN("IsObject",      intrinsic_IsObject,                1,0, IntrinsicIsObject),
@@ -2613,7 +2599,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("TypedObjectTypeDescr",           js::TypedObjectTypeDescr, 1, 0),
     JS_FN("ClampToUint8",                   js::ClampToUint8, 1, 0),
     JS_FN("GetTypedObjectModule",           js::GetTypedObjectModule, 0, 0),
-    JS_FN("GetSimdTypeDescr",               js::GetSimdTypeDescr, 1, 0),
 
     JS_INLINABLE_FN("ObjectIsTypeDescr"    ,          js::ObjectIsTypeDescr, 1, 0,
                     IntrinsicObjectIsTypeDescr),

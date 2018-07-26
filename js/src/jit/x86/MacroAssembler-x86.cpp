@@ -645,34 +645,6 @@ MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, 
       case Scalar::Float64:
         vmovsd(srcAddr, out.fpu());
         break;
-      case Scalar::Float32x4:
-        switch (access.numSimdElems()) {
-          // In memory-to-register mode, movss zeroes out the high lanes.
-          case 1: vmovss(srcAddr, out.fpu()); break;
-          // See comment above, which also applies to movsd.
-          case 2: vmovsd(srcAddr, out.fpu()); break;
-          case 4: vmovups(srcAddr, out.fpu()); break;
-          default: MOZ_CRASH("unexpected size for partial load");
-        }
-        break;
-      case Scalar::Int32x4:
-        switch (access.numSimdElems()) {
-          // In memory-to-register mode, movd zeroes out the high lanes.
-          case 1: vmovd(srcAddr, out.fpu()); break;
-          // See comment above, which also applies to movq.
-          case 2: vmovq(srcAddr, out.fpu()); break;
-          case 4: vmovdqu(srcAddr, out.fpu()); break;
-          default: MOZ_CRASH("unexpected size for partial load");
-        }
-        break;
-      case Scalar::Int8x16:
-        MOZ_ASSERT(access.numSimdElems() == 16, "unexpected partial load");
-        vmovdqu(srcAddr, out.fpu());
-        break;
-      case Scalar::Int16x8:
-        MOZ_ASSERT(access.numSimdElems() == 8, "unexpected partial load");
-        vmovdqu(srcAddr, out.fpu());
-        break;
       case Scalar::Int64:
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
@@ -687,7 +659,6 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
 {
     // Atomic i64 load must use lock_cmpxchg8b.
     MOZ_ASSERT_IF(access.isAtomic(), access.byteSize() <= 4);
-    MOZ_ASSERT(!access.isSimd());
     MOZ_ASSERT(srcAddr.kind() == Operand::MEM_REG_DISP || srcAddr.kind() == Operand::MEM_SCALE);
 
     memoryBarrierBefore(access.sync());
@@ -744,10 +715,6 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
       }
       case Scalar::Float32:
       case Scalar::Float64:
-      case Scalar::Float32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
-      case Scalar::Int32x4:
         MOZ_CRASH("non-int64 loads should use load()");
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
@@ -785,34 +752,6 @@ MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister valu
       case Scalar::Float64:
         vmovsd(value.fpu(), dstAddr);
         break;
-      case Scalar::Float32x4:
-        switch (access.numSimdElems()) {
-          // In memory-to-register mode, movss zeroes out the high lanes.
-          case 1: vmovss(value.fpu(), dstAddr); break;
-          // See comment above, which also applies to movsd.
-          case 2: vmovsd(value.fpu(), dstAddr); break;
-          case 4: vmovups(value.fpu(), dstAddr); break;
-          default: MOZ_CRASH("unexpected size for partial load");
-        }
-        break;
-      case Scalar::Int32x4:
-        switch (access.numSimdElems()) {
-          // In memory-to-register mode, movd zeroes out the high lanes.
-          case 1: vmovd(value.fpu(), dstAddr); break;
-          // See comment above, which also applies to movsd.
-          case 2: vmovq(value.fpu(), dstAddr); break;
-          case 4: vmovdqu(value.fpu(), dstAddr); break;
-          default: MOZ_CRASH("unexpected size for partial load");
-        }
-        break;
-      case Scalar::Int8x16:
-        MOZ_ASSERT(access.numSimdElems() == 16, "unexpected partial store");
-        vmovdqu(value.fpu(), dstAddr);
-        break;
-      case Scalar::Int16x8:
-        MOZ_ASSERT(access.numSimdElems() == 8, "unexpected partial store");
-        vmovdqu(value.fpu(), dstAddr);
-        break;
       case Scalar::Int64:
         MOZ_CRASH("Should be handled in storeI64.");
       case Scalar::MaxTypedArrayViewType:
@@ -827,7 +766,6 @@ MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 va
 {
     // Atomic i64 store must use lock_cmpxchg8b.
     MOZ_ASSERT(!access.isAtomic());
-    MOZ_ASSERT(!access.isSimd());
     MOZ_ASSERT(dstAddr.kind() == Operand::MEM_REG_DISP || dstAddr.kind() == Operand::MEM_SCALE);
 
     append(access, size());

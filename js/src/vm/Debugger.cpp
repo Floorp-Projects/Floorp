@@ -672,6 +672,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     allocationsLogOverflowed(false),
     frames(cx->zone()),
     scripts(cx),
+    lazyScripts(cx),
     sources(cx),
     objects(cx),
     environments(cx),
@@ -721,6 +722,7 @@ Debugger::init(JSContext* cx)
         !debuggeeZones.init() ||
         !frames.init() ||
         !scripts.init() ||
+        !lazyScripts.init() ||
         !sources.init() ||
         !objects.init() ||
         !observedGCs.init() ||
@@ -3008,6 +3010,7 @@ Debugger::traceCrossCompartmentEdges(JSTracer* trc)
     objects.traceCrossCompartmentEdges<DebuggerObject_trace>(trc);
     environments.traceCrossCompartmentEdges<DebuggerEnv_trace>(trc);
     scripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
+    lazyScripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
     sources.traceCrossCompartmentEdges<DebuggerSource_trace>(trc);
     wasmInstanceScripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
     wasmInstanceSources.traceCrossCompartmentEdges<DebuggerSource_trace>(trc);
@@ -3022,10 +3025,10 @@ Debugger::traceCrossCompartmentEdges(JSTracer* trc)
  * edges in non-GC'd compartments. Since the source may be live, we
  * conservatively assume it is and mark the edge.
  *
- * Each Debugger object keeps four cross-compartment WeakMaps: objects, scripts,
- * script source objects, and environments. They have the property that all
- * their values are in the same compartment as the Debugger object, but we have
- * to mark the keys and the private pointer in the wrapper object.
+ * Each Debugger object keeps five cross-compartment WeakMaps: objects, scripts,
+ * lazy scripts, script source objects, and environments. They have the property
+ * that all their values are in the same compartment as the Debugger object,
+ * but we have to mark the keys and the private pointer in the wrapper object.
  *
  * We must scan all Debugger objects regardless of whether they *currently* have
  * any debuggees in a compartment being GC'd, because the WeakMap entries
@@ -3200,6 +3203,9 @@ Debugger::trace(JSTracer* trc)
     // Trace the weak map from JSScript instances to Debugger.Script objects.
     scripts.trace(trc);
 
+    // Trace the weak map from LazyScript instances to Debugger.Script objects.
+    lazyScripts.trace(trc);
+
     // Trace the referent -> Debugger.Source weak map
     sources.trace(trc);
 
@@ -3275,6 +3281,7 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
             // debuggers and their debuggees are finalized in the same group.
             if (dbg->debuggeeZones.has(zone) ||
                 dbg->scripts.hasKeyInZone(zone) ||
+                dbg->lazyScripts.hasKeyInZone(zone) ||
                 dbg->sources.hasKeyInZone(zone) ||
                 dbg->objects.hasKeyInZone(zone) ||
                 dbg->environments.hasKeyInZone(zone) ||
@@ -4209,7 +4216,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         line(0),
         innermost(false),
         innermostForRealm(cx->zone()),
-        vector(cx, ScriptVector(cx)),
+        scriptVector(cx, ScriptVector(cx)),
+        lazyScriptVector(cx, LazyScriptVector(cx)),
         wasmInstanceVector(cx, WasmInstanceObjectVector(cx)),
         oom(false)
     {}
@@ -4376,40 +4384,47 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
     /*
      * Search all relevant realms and the stack for scripts matching
-     * this query, and append the matching scripts to |vector|.
+     * this query, and append the matching scripts to |scriptVector|.
      */
     bool findScripts() {
-        if (!prepareQuery() || !delazifyScripts())
+        if (!prepareQuery())
             return false;
+
+        bool delazified = false;
+        if (needsDelazifyBeforeQuery()) {
+            if (!delazifyScripts())
+                return false;
+            delazified = true;
+        }
 
         Realm* singletonRealm = nullptr;
         if (realms.count() == 1)
             singletonRealm = realms.all().front();
 
         // Search each realm for debuggee scripts.
-        MOZ_ASSERT(vector.empty());
+        MOZ_ASSERT(scriptVector.empty());
+        MOZ_ASSERT(lazyScriptVector.empty());
         oom = false;
         IterateScripts(cx, singletonRealm, this, considerScript);
+        if (!delazified)
+            IterateLazyScripts(cx, singletonRealm, this, considerLazyScript);
         if (oom) {
             ReportOutOfMemory(cx);
             return false;
         }
 
-        // We cannot touch the gray bits while isHeapBusy, so do this now.
-        for (JSScript** i = vector.begin(); i != vector.end(); ++i)
-            JS::ExposeScriptToActiveJS(*i);
-
-        // For most queries, we just accumulate results in 'vector' as we find
-        // them. But if this is an 'innermost' query, then we've accumulated the
-        // results in the 'innermostForRealm' map. In that case, we now need to
-        // walk that map and populate 'vector'.
+        // For most queries, we just accumulate results in 'scriptVector' and
+        // 'lazyScriptVector' as we find them. But if this is an 'innermost'
+        // query, then we've accumulated the results in the 'innermostForRealm'
+        // map. In that case, we now need to walk that map and
+        // populate 'scriptVector'.
         if (innermost) {
             for (RealmToScriptMap::Range r = innermostForRealm.all();
                  !r.empty();
                  r.popFront())
             {
                 JS::ExposeScriptToActiveJS(r.front().value());
-                if (!vector.append(r.front().value())) {
+                if (!scriptVector.append(r.front().value())) {
                     ReportOutOfMemory(cx);
                     return false;
                 }
@@ -4432,7 +4447,10 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     }
 
     Handle<ScriptVector> foundScripts() const {
-        return vector;
+        return scriptVector;
+    }
+    Handle<LazyScriptVector> foundLazyScripts() const {
+        return lazyScriptVector;
     }
 
     Handle<WasmInstanceObjectVector> foundWasmInstances() const {
@@ -4491,11 +4509,12 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     RealmToScriptMap innermostForRealm;
 
     /*
-     * Accumulate the scripts in an Rooted<ScriptVector>, instead of creating
-     * the JS array as we go, because we mustn't allocate JS objects or GC
-     * while we use the CellIter.
+     * Accumulate the scripts in an Rooted<ScriptVector> and
+     * Rooted<LazyScriptVector>, instead of creating the JS array as we go,
+     * because we mustn't allocate JS objects or GC while we use the CellIter.
      */
-    Rooted<ScriptVector> vector;
+    Rooted<ScriptVector> scriptVector;
+    Rooted<LazyScriptVector> lazyScriptVector;
 
     /*
      * Like above, but for wasm modules.
@@ -4567,21 +4586,23 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         self->consider(script, nogc);
     }
 
-    /*
-     * If |script| matches this query, append it to |vector| or place it in
-     * |innermostForRealm|, as appropriate. Set |oom| if an out of memory
-     * condition occurred.
-     */
-    void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
-        // We check for presence of script->isUncompleted() because it is
-        // possible that the script was created and thus exposed to GC, but
-        // *not* fully initialized from fullyInit{FromEmitter,Trivial} due to
-        // errors.
-        if (oom || script->selfHosted() || script->isUncompleted())
-            return;
-        Realm* realm = script->realm();
-        if (!realms.has(realm))
-            return;
+    static void considerLazyScript(JSRuntime* rt, void* data, LazyScript* lazyScript,
+                                   const JS::AutoRequireNoGC& nogc) {
+        ScriptQuery* self = static_cast<ScriptQuery*>(data);
+        self->consider(lazyScript, nogc);
+    }
+
+    bool needsDelazifyBeforeQuery() const {
+        // * innermost
+        //   Currently not supported, since this is not used outside of test.
+        //
+        // * hasLine
+        //   Only JSScript supports GetScriptLineExtent.
+        return innermost || hasLine;
+    }
+
+    template <typename T>
+    MOZ_MUST_USE bool commonFilter(T script, const JS::AutoRequireNoGC& nogc) {
         if (urlCString.ptr()) {
             bool gotFilename = false;
             if (script->filename() && strcmp(script->filename(), urlCString.ptr()) == 0)
@@ -4594,33 +4615,49 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
                 gotSourceURL = true;
             }
             if (!gotFilename && !gotSourceURL)
-                return;
-        }
-        if (hasLine) {
-            if (line < script->lineno() || script->lineno() + GetScriptLineExtent(script) < line)
-                return;
+                return false;
         }
         if (displayURLString) {
             if (!script->scriptSource() || !script->scriptSource()->hasDisplayURL())
-                return;
+                return false;
 
             const char16_t* s = script->scriptSource()->displayURL();
             if (CompareChars(s, js_strlen(s), displayURLString) != 0)
-                return;
+                return false;
         }
         if (hasSource && !(source.is<ScriptSourceObject*>() &&
                            source.as<ScriptSourceObject*>()->source() == script->scriptSource()))
         {
-            return;
+            return false;
         }
+        return true;
+    }
+
+    /*
+     * If |script| matches this query, append it to |scriptVector| or place it
+     * in |innermostForRealm|, as appropriate. Set |oom| if an out of memory
+     * condition occurred.
+     */
+    void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
+        if (oom || script->selfHosted())
+            return;
+        Realm* realm = script->realm();
+        if (!realms.has(realm))
+            return;
+        if (hasLine) {
+            if (line < script->lineno() || script->lineno() + GetScriptLineExtent(script) < line)
+                return;
+        }
+        if (!commonFilter(script, nogc))
+            return;
 
         if (innermost) {
-            // For 'innermost' queries, we don't place scripts in |vector| right
-            // away; we may later find another script that is nested inside this
-            // one. Instead, we record the innermost script we've found so far
-            // for each realm in innermostForRealm, and only populate |vector|
-            // at the bottom of findScripts, when we've traversed all the
-            // scripts.
+            // For 'innermost' queries, we don't place scripts in
+            // |scriptVector| right away; we may later find another script that
+            // is nested inside this one. Instead, we record the innermost
+            // script we've found so far for each realm in innermostForRealm,
+            // and only populate |scriptVector| at the bottom of findScripts,
+            // when we've traversed all the scripts.
             //
             // So: check this script against the innermost one we've found so
             // far (if any), as recorded in innermostForRealm, and replace that
@@ -4643,12 +4680,33 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
                 }
             }
         } else {
-            // Record this matching script in the results vector.
-            if (!vector.append(script)) {
+            // Record this matching script in the results scriptVector.
+            if (!scriptVector.append(script)) {
                 oom = true;
                 return;
             }
         }
+    }
+
+    void consider(LazyScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
+        MOZ_ASSERT(!needsDelazifyBeforeQuery());
+
+        if (oom)
+            return;
+        Realm* realm = lazyScript->realm();
+        if (!realms.has(realm))
+            return;
+
+        // If the script is already delazified, it should be in scriptVector.
+        if (lazyScript->maybeScript())
+            return;
+
+        if (!commonFilter(lazyScript, nogc))
+            return;
+
+        /* Record this matching script in the results lazyScriptVector. */
+        if (!lazyScriptVector.append(lazyScript))
+            oom = true;
     }
 
     /*
@@ -4694,9 +4752,10 @@ Debugger::findScripts(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     Handle<ScriptVector> scripts(query.foundScripts());
+    Handle<LazyScriptVector> lazyScripts(query.foundLazyScripts());
     Handle<WasmInstanceObjectVector> wasmInstances(query.foundWasmInstances());
 
-    size_t resultLength = scripts.length() + wasmInstances.length();
+    size_t resultLength = scripts.length() + lazyScripts.length() + wasmInstances.length();
     RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, resultLength));
     if (!result)
         return false;
@@ -4710,7 +4769,15 @@ Debugger::findScripts(JSContext* cx, unsigned argc, Value* vp)
         result->setDenseElement(i, ObjectValue(*scriptObject));
     }
 
-    size_t wasmStart = scripts.length();
+    size_t lazyStart = scripts.length();
+    for (size_t i = 0; i < lazyScripts.length(); i++) {
+        JSObject* scriptObject = dbg->wrapLazyScript(cx, lazyScripts[i]);
+        if (!scriptObject)
+            return false;
+        result->setDenseElement(lazyStart + i, ObjectValue(*scriptObject));
+    }
+
+    size_t wasmStart = scripts.length() + lazyScripts.length();
     for (size_t i = 0; i < wasmInstances.length(); i++) {
         JSObject* scriptObject = dbg->wrapWasmScript(cx, wasmInstances[i]);
         if (!scriptObject)
@@ -5180,6 +5247,8 @@ GetScriptReferent(JSObject* obj)
     if (gc::Cell* cell = GetScriptReferentCell(obj)) {
         if (cell->is<JSScript>())
             return AsVariant(cell->as<JSScript>());
+        if (cell->is<LazyScript>())
+            return AsVariant(cell->as<LazyScript>());
         MOZ_ASSERT(cell->is<JSObject>());
         return AsVariant(&static_cast<NativeObject*>(cell)->as<WasmInstanceObject>());
     }
@@ -5197,6 +5266,11 @@ DebuggerScript_trace(JSTracer* trc, JSObject* obj)
             TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &script,
                                                        "Debugger.Script script referent");
             obj->as<NativeObject>().setPrivateUnbarriered(script);
+        } else if (cell->is<LazyScript>()) {
+            LazyScript* lazyScript = cell->as<LazyScript>();
+            TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &lazyScript,
+                                                       "Debugger.Script lazy script referent");
+            obj->as<NativeObject>().setPrivateUnbarriered(lazyScript);
         } else {
             JSObject* wasm = cell->as<JSObject>();
             TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &wasm,
@@ -5207,6 +5281,30 @@ DebuggerScript_trace(JSTracer* trc, JSObject* obj)
     }
 }
 
+static JSScript*
+DelazifyScript(JSContext* cx, Handle<LazyScript*> lazyScript)
+{
+    if (lazyScript->maybeScript())
+        return lazyScript->maybeScript();
+
+    // JSFunction::getOrCreateScript requires the enclosing script not to be
+    // lazified.
+    MOZ_ASSERT(lazyScript->hasEnclosingLazyScript() || lazyScript->hasEnclosingScope());
+    if (lazyScript->hasEnclosingLazyScript()) {
+        Rooted<LazyScript*> enclosingLazyScript(cx, lazyScript->enclosingLazyScript());
+        if (!DelazifyScript(cx, enclosingLazyScript))
+            return nullptr;
+    }
+    MOZ_ASSERT(lazyScript->enclosingScriptHasEverBeenCompiled());
+
+    RootedFunction fun0(cx, lazyScript->functionNonDelazifying());
+    AutoRealm ar(cx, fun0);
+    RootedFunction fun(cx, LazyScript::functionDelazifying(cx, lazyScript));
+    if (!fun)
+        return nullptr;
+    return fun->getOrCreateScript(cx, fun);
+}
+
 class DebuggerScriptSetPrivateMatcher
 {
     NativeObject* obj_;
@@ -5214,6 +5312,7 @@ class DebuggerScriptSetPrivateMatcher
     explicit DebuggerScriptSetPrivateMatcher(NativeObject* obj) : obj_(obj) { }
     using ReturnType = void;
     ReturnType match(HandleScript script) { obj_->setPrivateGCThing(script); }
+    ReturnType match(Handle<LazyScript*> lazyScript) { obj_->setPrivateGCThing(lazyScript); }
     ReturnType match(Handle<WasmInstanceObject*> instance) { obj_->setPrivateGCThing(instance); }
 };
 
@@ -5274,9 +5373,38 @@ Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerScriptReferent> refe
     JSObject* obj;
     if (referent.is<JSScript*>()) {
         Handle<JSScript*> untaggedReferent = referent.template as<JSScript*>();
+        if (untaggedReferent->maybeLazyScript()) {
+            // If the JSScript has corresponding LazyScript, wrap the LazyScript
+            // instead.
+            //
+            // This is necessary for Debugger.Script identity.  If we use both
+            // JSScript and LazyScript for same single script, those 2 wrapped
+            // scripts become not identical, while the referent script is
+            // actually identical.
+            //
+            // If a script has corresponding LazyScript and JSScript, the
+            // lifetime of the LazyScript is always longer than the JSScript.
+            // So we can use the LazyScript as a proxy for the JSScript.
+            Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
+            Rooted<DebuggerScriptReferent> lazyScriptReferent(cx, lazyScript.get());
+
+            Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, lazyScript));
+            obj = wrapVariantReferent<DebuggerScriptReferent, LazyScript*, LazyScriptWeakMap>(
+                cx, lazyScripts, key, lazyScriptReferent);
+            MOZ_ASSERT_IF(obj, GetScriptReferent(obj) == lazyScriptReferent);
+            return obj;
+        } else {
+            // If the JSScript doesn't have corresponding LazyScript, the script
+            // is not lazifiable, and we can safely use JSScript as referent.
+            Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent));
+            obj = wrapVariantReferent<DebuggerScriptReferent, JSScript*, ScriptWeakMap>(
+                cx, scripts, key, referent);
+        }
+    } else if (referent.is<LazyScript*>()) {
+        Handle<LazyScript*> untaggedReferent = referent.template as<LazyScript*>();
         Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent));
-        obj = wrapVariantReferent<DebuggerScriptReferent, JSScript*, ScriptWeakMap>(
-            cx, scripts, key, referent);
+        obj = wrapVariantReferent<DebuggerScriptReferent, LazyScript*, LazyScriptWeakMap>(
+            cx, lazyScripts, key, referent);
     } else {
         Handle<WasmInstanceObject*> untaggedReferent = referent.template as<WasmInstanceObject*>();
         Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent,
@@ -5292,6 +5420,13 @@ JSObject*
 Debugger::wrapScript(JSContext* cx, HandleScript script)
 {
     Rooted<DebuggerScriptReferent> referent(cx, script.get());
+    return wrapVariantReferent(cx, referent);
+}
+
+JSObject*
+Debugger::wrapLazyScript(JSContext* cx, Handle<LazyScript*> lazyScript)
+{
+    Rooted<DebuggerScriptReferent> referent(cx, lazyScript.get());
     return wrapVariantReferent(cx, referent);
 }
 
@@ -5325,18 +5460,18 @@ DebuggerScript_check(JSContext* cx, const Value& v, const char* fnname)
     return thisobj;
 }
 
-template <typename ReferentT>
 static JSObject*
-DebuggerScript_checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
-                         const char* refname)
+DebuggerScript_checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
 {
     JSObject* thisobj = DebuggerScript_check(cx, args.thisv(), fnname);
     if (!thisobj)
         return nullptr;
 
-    if (!GetScriptReferent(thisobj).is<ReferentT>()) {
+    if (!GetScriptReferent(thisobj).is<JSScript*>() &&
+        !GetScriptReferent(thisobj).is<LazyScript*>())
+    {
         ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, args.thisv(), nullptr,
-                         refname);
+                         "a JS script");
         return nullptr;
     }
 
@@ -5350,37 +5485,68 @@ DebuggerScript_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
         return false;                                                               \
     Rooted<DebuggerScriptReferent> referent(cx, GetScriptReferent(obj))
 
-#define THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, fnname, args, obj, script)            \
-    CallArgs args = CallArgsFromVp(argc, vp);                                       \
-    RootedObject obj(cx, DebuggerScript_checkThis<JSScript*>(cx, args, fnname,      \
-                                                             "a JS script"));       \
-    if (!obj)                                                                       \
-        return false;                                                               \
-    RootedScript script(cx, GetScriptReferent(obj).as<JSScript*>())
+#define THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, fnname, args, obj)   \
+    CallArgs args = CallArgsFromVp(argc, vp);                                 \
+    RootedObject obj(cx, DebuggerScript_checkThis(cx, args, fnname));         \
+    if (!obj)                                                                 \
+        return false;
+
+#define THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, fnname, args, obj, script) \
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, fnname, args, obj);            \
+    RootedScript script(cx);                                                  \
+    if (GetScriptReferent(obj).is<JSScript*>()) {                             \
+        script = GetScriptReferent(obj).as<JSScript*>();                      \
+    } else {                                                                  \
+        Rooted<LazyScript*> lazyScript(cx, GetScriptReferent(obj).as<LazyScript*>()); \
+        script = DelazifyScript(cx, lazyScript);                              \
+        if (!script)                                                          \
+            return false;                                                     \
+    }
+
+template <typename Result>
+Result
+CallScriptMethod(HandleObject obj,
+                 Result (JSScript::*ifJSScript)() const,
+                 Result (LazyScript::*ifLazyScript)() const)
+{
+    if (GetScriptReferent(obj).is<JSScript*>()) {
+        JSScript* script = GetScriptReferent(obj).as<JSScript*>();
+        return (script->*ifJSScript)();
+    }
+
+    LazyScript* lazyScript = GetScriptReferent(obj).as<LazyScript*>();
+    return (lazyScript->*ifLazyScript)();
+}
 
 static bool
 DebuggerScript_getIsGeneratorFunction(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get isGeneratorFunction)", args, obj, script);
-    args.rval().setBoolean(script->isGenerator());
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isGeneratorFunction)", args, obj);
+    args.rval().setBoolean(CallScriptMethod(obj,
+                                            &JSScript::isGenerator,
+                                            &LazyScript::isGenerator));
     return true;
 }
 
 static bool
 DebuggerScript_getIsAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get isAsyncFunction)", args, obj, script);
-    args.rval().setBoolean(script->isAsync());
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isAsyncFunction)", args, obj);
+    args.rval().setBoolean(CallScriptMethod(obj,
+                                            &JSScript::isAsync,
+                                            &LazyScript::isAsync));
     return true;
 }
 
 static bool
 DebuggerScript_getDisplayName(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get displayName)", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get displayName)", args, obj);
+    JSFunction* func = CallScriptMethod(obj,
+                                        &JSScript::functionNonDelazifying,
+                                        &LazyScript::functionNonDelazifying);
     Debugger* dbg = Debugger::fromChildJSObject(obj);
 
-    JSFunction* func = script->functionNonDelazifying();
     JSString* name = func ? func->displayAtom() : nullptr;
     if (!name) {
         args.rval().setUndefined();
@@ -5394,11 +5560,10 @@ DebuggerScript_getDisplayName(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+template <typename T>
 static bool
-DebuggerScript_getUrl(JSContext* cx, unsigned argc, Value* vp)
+DebuggerScript_getUrlImpl(JSContext* cx, CallArgs& args, Handle<T*> script)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get url)", args, obj, script);
-
     if (script->filename()) {
         JSString* str;
         if (script->scriptSource()->introducerFilename())
@@ -5414,12 +5579,28 @@ DebuggerScript_getUrl(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+DebuggerScript_getUrl(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get url)", args, obj);
+    if (GetScriptReferent(obj).is<JSScript*>()) {
+        RootedScript script(cx, GetScriptReferent(obj).as<JSScript*>());
+        return DebuggerScript_getUrlImpl<JSScript>(cx, args, script);
+    }
+
+    Rooted<LazyScript*> lazyScript(cx, GetScriptReferent(obj).as<LazyScript*>());
+    return DebuggerScript_getUrlImpl<LazyScript>(cx, args, lazyScript);
+}
+
 struct DebuggerScriptGetStartLineMatcher
 {
     using ReturnType = uint32_t;
 
     ReturnType match(HandleScript script) {
         return script->lineno();
+    }
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        return lazyScript->lineno();
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         return 1;
@@ -5449,6 +5630,12 @@ struct DebuggerScriptGetLineCountMatcher
     ReturnType match(HandleScript script) {
         totalLines = double(GetScriptLineExtent(script));
         return true;
+    }
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         uint32_t result;
@@ -5483,11 +5670,18 @@ class DebuggerScriptGetSourceMatcher
     using ReturnType = JSObject*;
 
     ReturnType match(HandleScript script) {
+        // JSScript holds the refefence to possibly wrapped ScriptSourceObject.
+        // It's wrapped when the script is cloned.
+        // See CreateEmptyScriptForClone for more info.
         RootedScriptSourceObject source(cx_,
             &UncheckedUnwrap(script->sourceObject())->as<ScriptSourceObject>());
         return dbg_->wrapSource(cx_, source);
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        // LazyScript holds the reference to the unwrapped ScriptSourceObject.
+        RootedScriptSourceObject source(cx_, &lazyScript->sourceObject());
+        return dbg_->wrapSource(cx_, source);
+    }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         return dbg_->wrapWasmSource(cx_, wasmInstance);
     }
@@ -5511,23 +5705,27 @@ DebuggerScript_getSource(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerScript_getSourceStart(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceStart)", args, obj, script);
-    args.rval().setNumber(uint32_t(script->sourceStart()));
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get sourceStart)", args, obj);
+    args.rval().setNumber(uint32_t(CallScriptMethod(obj,
+                                                    &JSScript::sourceStart,
+                                                    &LazyScript::sourceStart)));
     return true;
 }
 
 static bool
 DebuggerScript_getSourceLength(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceEnd)", args, obj, script);
-    args.rval().setNumber(uint32_t(script->sourceEnd() - script->sourceStart()));
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get sourceEnd)", args, obj);
+    args.rval().setNumber(uint32_t(CallScriptMethod(obj,
+                                                    &JSScript::sourceLength,
+                                                    &LazyScript::sourceLength)));
     return true;
 }
 
 static bool
 DebuggerScript_getMainOffset(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get mainOffset)", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "(get mainOffset)", args, obj, script);
     args.rval().setNumber(uint32_t(script->mainOffset()));
     return true;
 }
@@ -5535,7 +5733,7 @@ DebuggerScript_getMainOffset(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerScript_getGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get global)", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "(get global)", args, obj, script);
     Debugger* dbg = Debugger::fromChildJSObject(obj);
 
     RootedValue v(cx, ObjectValue(script->global()));
@@ -5552,6 +5750,7 @@ class DebuggerScriptGetFormatMatcher
     explicit DebuggerScriptGetFormatMatcher(const JSAtomState& names) : names_(names) { }
     using ReturnType = JSAtom*;
     ReturnType match(HandleScript script) { return names_.js; }
+    ReturnType match(Handle<LazyScript*> lazyScript) { return names_.js; }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) { return names_.wasm; }
 };
 
@@ -5567,7 +5766,7 @@ DebuggerScript_getFormat(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerScript_getChildScripts(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getChildScripts", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getChildScripts", args, obj, script);
     Debugger* dbg = Debugger::fromChildJSObject(obj);
 
     RootedObject result(cx, NewDenseEmptyArray(cx));
@@ -5870,7 +6069,12 @@ class DebuggerScriptGetOffsetLocationMatcher
 
         return true;
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
+    }
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         size_t lineno;
         size_t column;
@@ -5960,7 +6164,12 @@ class DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher
         }
         return true;
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
+    }
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         JS_ReportErrorASCII(cx_, "getSuccessorOrPredecessorOffsets NYI on wasm instances");
         return false;
@@ -5972,6 +6181,7 @@ DebuggerScript_getSuccessorOrPredecessorOffsets(JSContext* cx, unsigned argc, Va
                                                 const char* name, bool successor)
 {
     THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, name, args, obj, referent);
+
     if (!args.requireAtLeast(cx, name, 1))
         return false;
     size_t offset;
@@ -6004,7 +6214,7 @@ DebuggerScript_getPredecessorOffsets(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerScript_getAllOffsets(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getAllOffsets", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getAllOffsets", args, obj, script);
 
     // First pass: determine which offsets in this script are jump targets and
     // which line numbers jump to them.
@@ -6128,7 +6338,12 @@ class DebuggerScriptGetAllColumnOffsetsMatcher
         }
         return true;
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
+    }
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         Vector<wasm::ExprLoc> offsets(cx_);
         if (!instance->instance().debug().getAllColumnOffsets(cx_, &offsets))
@@ -6203,7 +6418,12 @@ class DebuggerScriptGetLineOffsetsMatcher
 
         return true;
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
+    }
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         Vector<uint32_t> offsets(cx_);
         if (!instance->instance().debug().getLineOffsets(cx_, lineno_, &offsets))
@@ -6502,7 +6722,12 @@ struct DebuggerScriptSetBreakpointMatcher
         site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
         return false;
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
+    }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         wasm::Instance& instance = wasmInstance->instance();
         if (!instance.debug().hasBreakpointTrapAtOffset(offset_)) {
@@ -6547,7 +6772,7 @@ DebuggerScript_setBreakpoint(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerScript_getBreakpoints(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getBreakpoints", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getBreakpoints", args, obj, script);
     Debugger* dbg = Debugger::fromChildJSObject(obj);
 
     jsbytecode* pc;
@@ -6597,7 +6822,12 @@ class DebuggerScriptClearBreakpointMatcher
         script->clearBreakpointsIn(cx_->runtime()->defaultFreeOp(), dbg_, handler_);
         return true;
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
+    }
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         return instance->instance().debug().clearBreakpointsIn(cx_, instance, dbg_, handler_);
     }
@@ -6677,7 +6907,12 @@ class DebuggerScriptIsInCatchScopeMatcher
         isInCatch_ = false;
         return true;
     }
-
+    ReturnType match(Handle<LazyScript*> lazyScript) {
+        RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+        if (!script)
+            return false;
+        return match(script);
+    }
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         isInCatch_ = false;
         return true;
@@ -6705,7 +6940,7 @@ DebuggerScript_isInCatchScope(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerScript_getOffsetsCoverage(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getOffsetsCoverage", args, obj, script);
+    THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getOffsetsCoverage", args, obj, script);
 
     // If the script has no coverage information, then skip this and return null
     // instead.
@@ -7830,7 +8065,6 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     options.setIsRunOnce(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno)
-           .setCanLazilyParse(false)
            .setIntroductionType("debugger eval")
            .maybeMakeStrictMode(frame && frame.hasScript() ? frame.script()->strict() : false);
     RootedScript callerScript(cx, frame && frame.hasScript() ? frame.script() : nullptr);
@@ -11461,6 +11695,12 @@ CheckDebuggeeThingRealm(Realm* realm, bool invisibleOk)
 
 void
 js::CheckDebuggeeThing(JSScript* script, bool invisibleOk)
+{
+    CheckDebuggeeThingRealm(script->realm(), invisibleOk);
+}
+
+void
+js::CheckDebuggeeThing(LazyScript* script, bool invisibleOk)
 {
     CheckDebuggeeThingRealm(script->realm(), invisibleOk);
 }

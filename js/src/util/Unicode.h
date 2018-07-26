@@ -582,6 +582,19 @@ IsTrailSurrogate(uint32_t codePoint)
     return codePoint >= TrailSurrogateMin && codePoint <= TrailSurrogateMax;
 }
 
+/**
+ * True iff the given value is a UTF-16 surrogate.
+ *
+ * This function is intended for use in contexts where 32-bit values may need
+ * to be tested to see if they reside in the surrogate range, so it doesn't
+ * just take char16_t.
+ */
+inline bool
+IsSurrogate(uint32_t codePoint)
+{
+    return LeadSurrogateMin <= codePoint && codePoint <= TrailSurrogateMax;
+}
+
 inline char16_t
 LeadSurrogate(uint32_t codePoint)
 {

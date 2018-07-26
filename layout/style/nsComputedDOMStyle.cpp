@@ -21,7 +21,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 
 #include "nsDOMCSSRect.h"
 #include "nsDOMCSSRGBColor.h"
@@ -1149,7 +1149,7 @@ nsComputedDOMStyle::SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
 void
 nsComputedDOMStyle::SetValueForWidgetColor(nsROCSSPrimitiveValue* aValue,
                                            const StyleComplexColor& aColor,
-                                           uint8_t aWidgetType)
+                                           StyleAppearance aWidgetType)
 {
   if (!aColor.IsAuto()) {
     SetToRGBAColor(aValue, aColor.CalcColor(mComputedStyle));
@@ -2987,7 +2987,7 @@ nsComputedDOMStyle::DoGetScrollbarFaceColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueForWidgetColor(val, StyleUserInterface()->mScrollbarFaceColor,
-                         NS_THEME_SCROLLBARTHUMB_VERTICAL);
+                         StyleAppearance::ScrollbarthumbVertical);
   return val.forget();
 }
 
@@ -2996,7 +2996,7 @@ nsComputedDOMStyle::DoGetScrollbarTrackColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueForWidgetColor(val, StyleUserInterface()->mScrollbarTrackColor,
-                         NS_THEME_SCROLLBAR_VERTICAL);
+                         StyleAppearance::ScrollbarVertical);
   return val.forget();
 }
 

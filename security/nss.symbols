@@ -309,6 +309,7 @@ PK11_ChangePW
 PK11_CheckUserPassword
 PK11_CipherOp
 PK11_ConfigurePKCS11
+PK11_ConvertSessionSymKeyToTokenSymKey
 PK11_CreateContextBySymKey
 PK11_CreateDigestContext
 PK11_CreateGenericObject
@@ -318,6 +319,7 @@ PK11_Decrypt
 PK11_DeleteTokenCertAndKey
 PK11_DeleteTokenPrivateKey
 PK11_DeleteTokenPublicKey
+PK11_DeleteTokenSymKey
 PK11_DEREncodePublicKey
 PK11_Derive
 PK11_DeriveWithTemplate

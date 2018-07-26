@@ -601,7 +601,7 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
     return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
   }
 
-  nsIGlobalObject* global = xpc::NativeGlobal(aObj);
+  nsIGlobalObject* global = xpc::NativeGlobal(js::UncheckedUnwrap(aObj));
 
   if (!JSStreamConsumer::Start(body, aConsumer, global, aMaybeWorker)) {
     return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);

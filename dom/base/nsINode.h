@@ -456,6 +456,12 @@ public:
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   /**
+  * Hook for constructing JS::ubi::Concrete specializations for memory reporting.
+  * Specializations are defined in NodeUbiReporting.h.
+  */
+  virtual void ConstructUbiNode(void* storage) = 0;
+
+  /**
    * returns true if we are in priviliged code or
    * layout.css.getBoxQuads.enabled == true.
    */

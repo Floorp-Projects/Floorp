@@ -51,13 +51,6 @@ class StackType
           case TypeCode::I64:
           case TypeCode::F32:
           case TypeCode::F64:
-          case TypeCode::I8x16:
-          case TypeCode::I16x8:
-          case TypeCode::I32x4:
-          case TypeCode::F32x4:
-          case TypeCode::B8x16:
-          case TypeCode::B16x8:
-          case TypeCode::B32x4:
           case TypeCode::AnyRef:
           case TypeCode::Ref:
           case TypeCode::Limit:
@@ -74,14 +67,6 @@ class StackType
         I64    = uint8_t(ValType::I64),
         F32    = uint8_t(ValType::F32),
         F64    = uint8_t(ValType::F64),
-
-        I8x16  = uint8_t(ValType::I8x16),
-        I16x8  = uint8_t(ValType::I16x8),
-        I32x4  = uint8_t(ValType::I32x4),
-        F32x4  = uint8_t(ValType::F32x4),
-        B8x16  = uint8_t(ValType::B8x16),
-        B16x8  = uint8_t(ValType::B16x8),
-        B32x4  = uint8_t(ValType::B32x4),
 
         AnyRef = uint8_t(ValType::AnyRef),
         Ref    = uint8_t(ValType::Ref),
@@ -158,13 +143,6 @@ enum class OpKind {
     I64,
     F32,
     F64,
-    I8x16,
-    I16x8,
-    I32x4,
-    F32x4,
-    B8x16,
-    B16x8,
-    B32x4,
     Br,
     BrIf,
     BrTable,
@@ -209,11 +187,6 @@ enum class OpKind {
     Swizzle,
     Shuffle,
     Splat,
-    SimdSelect,
-    SimdCtor,
-    SimdBooleanReduction,
-    SimdShiftByScalar,
-    SimdComparison,
     MemCopy,
     MemFill,
     RefNull,
@@ -405,18 +378,6 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readFixedF64(double* out) {
         return d_.readFixedF64(out);
     }
-    MOZ_MUST_USE bool readFixedI8x16(I8x16* out) {
-        return d_.readFixedI8x16(out);
-    }
-    MOZ_MUST_USE bool readFixedI16x8(I16x8* out) {
-        return d_.readFixedI16x8(out);
-    }
-    MOZ_MUST_USE bool readFixedI32x4(I32x4* out) {
-        return d_.readFixedI32x4(out);
-    }
-    MOZ_MUST_USE bool readFixedF32x4(F32x4* out) {
-        return d_.readFixedF32x4(out);
-    }
 
     MOZ_MUST_USE bool readAtomicViewType(Scalar::Type* viewType) {
         uint8_t x;
@@ -592,13 +553,6 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readI64Const(int64_t* i64);
     MOZ_MUST_USE bool readF32Const(float* f32);
     MOZ_MUST_USE bool readF64Const(double* f64);
-    MOZ_MUST_USE bool readI8x16Const(I8x16* i8x16);
-    MOZ_MUST_USE bool readI16x8Const(I16x8* i16x8);
-    MOZ_MUST_USE bool readI32x4Const(I32x4* i32x4);
-    MOZ_MUST_USE bool readF32x4Const(F32x4* f32x4);
-    MOZ_MUST_USE bool readB8x16Const(I8x16* i8x16);
-    MOZ_MUST_USE bool readB16x8Const(I16x8* i16x8);
-    MOZ_MUST_USE bool readB32x4Const(I32x4* i32x4);
     MOZ_MUST_USE bool readRefNull(ValType* type);
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
     MOZ_MUST_USE bool readCallIndirect(uint32_t* funcTypeIndex, Value* callee, ValueVector* argValues);
@@ -643,24 +597,6 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readOldAtomicExchange(LinearMemoryAddress<Value>* addr,
                                             Scalar::Type* viewType,
                                             Value* newValue);
-    MOZ_MUST_USE bool readSimdComparison(ValType simdType, Value* lhs,
-                                         Value* rhs);
-    MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType, Value* lhs,
-                                            Value* rhs);
-    MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType, Value* input);
-    MOZ_MUST_USE bool readExtractLane(ValType simdType, uint8_t* lane,
-                                      Value* vector);
-    MOZ_MUST_USE bool readReplaceLane(ValType simdType, uint8_t* lane,
-                                      Value* vector, Value* scalar);
-    MOZ_MUST_USE bool readSplat(ValType simdType, Value* scalar);
-    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector);
-    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[16],
-                                  Value* lhs, Value* rhs);
-    MOZ_MUST_USE bool readSimdSelect(ValType simdType, Value* trueValue,
-                                     Value* falseValue,
-                                     Value* condition);
-    MOZ_MUST_USE bool readSimdCtor(ValType elementType, uint32_t numElements, ValType simdType,
-                                   ValueVector* argValues);
     MOZ_MUST_USE bool readMemCopy(Value* dest, Value* src, Value* len);
     MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
 
@@ -1006,13 +942,6 @@ OpIter<Policy>::readBlockType(ExprType* type)
       case uint8_t(ExprType::I64):
       case uint8_t(ExprType::F32):
       case uint8_t(ExprType::F64):
-      case uint8_t(ExprType::I8x16):
-      case uint8_t(ExprType::I16x8):
-      case uint8_t(ExprType::I32x4):
-      case uint8_t(ExprType::F32x4):
-      case uint8_t(ExprType::B8x16):
-      case uint8_t(ExprType::B16x8):
-      case uint8_t(ExprType::B32x4):
         known = true;
         break;
       case uint8_t(ExprType::Ref):
@@ -1693,76 +1622,6 @@ OpIter<Policy>::readF64Const(double* f64)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readI8x16Const(I8x16* i8x16)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::I8x16);
-
-    return readFixedI8x16(i8x16) &&
-           push(ValType::I8x16);
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readI16x8Const(I16x8* i16x8)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::I16x8);
-
-    return readFixedI16x8(i16x8) &&
-           push(ValType::I16x8);
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readI32x4Const(I32x4* i32x4)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::I32x4);
-
-    return readFixedI32x4(i32x4) &&
-           push(ValType::I32x4);
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readF32x4Const(F32x4* f32x4)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::F32x4);
-
-    return readFixedF32x4(f32x4) &&
-           push(ValType::F32x4);
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readB8x16Const(I8x16* i8x16)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::B8x16);
-
-    return readFixedI8x16(i8x16) &&
-           push(ValType::B8x16);
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readB16x8Const(I16x8* i16x8)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::B16x8);
-
-    return readFixedI16x8(i16x8) &&
-           push(ValType::B16x8);
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readB32x4Const(I32x4* i32x4)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::B32x4);
-
-    return readFixedI32x4(i32x4) &&
-           push(ValType::B32x4);
-}
-
-template <typename Policy>
-inline bool
 OpIter<Policy>::readRefNull(ValType* type)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
@@ -2141,203 +2000,6 @@ OpIter<Policy>::readOldAtomicExchange(LinearMemoryAddress<Value>* addr, Scalar::
         return false;
 
     infalliblePush(ValType::I32);
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readSimdComparison(ValType simdType, Value* lhs, Value* rhs)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::SimdComparison);
-
-    if (!popWithType(simdType, rhs))
-        return false;
-
-    if (!popWithType(simdType, lhs))
-        return false;
-
-    infalliblePush(SimdBoolType(simdType));
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readSimdShiftByScalar(ValType simdType, Value* lhs, Value* rhs)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::SimdShiftByScalar);
-
-    if (!popWithType(ValType::I32, rhs))
-        return false;
-
-    if (!popWithType(simdType, lhs))
-        return false;
-
-    infalliblePush(simdType);
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readSimdBooleanReduction(ValType simdType, Value* input)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::SimdBooleanReduction);
-
-    if (!popWithType(simdType, input))
-        return false;
-
-    infalliblePush(ValType::I32);
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readExtractLane(ValType simdType, uint8_t* lane, Value* vector)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::ExtractLane);
-
-    uint32_t laneBits;
-    if (!readVarU32(&laneBits))
-        return false;
-
-    if (laneBits >= NumSimdElements(simdType))
-        return fail("simd lane out of bounds for simd type");
-
-    *lane = uint8_t(laneBits);
-
-    if (!popWithType(simdType, vector))
-        return false;
-
-    infalliblePush(SimdElementType(simdType));
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readReplaceLane(ValType simdType, uint8_t* lane, Value* vector, Value* scalar)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::ReplaceLane);
-
-    uint32_t laneBits;
-    if (!readVarU32(&laneBits))
-        return false;
-
-    if (laneBits >= NumSimdElements(simdType))
-        return fail("simd lane out of bounds for simd type");
-
-    *lane = uint8_t(laneBits);
-
-    if (!popWithType(SimdElementType(simdType), scalar))
-        return false;
-
-    if (!popWithType(simdType, vector))
-        return false;
-
-    infalliblePush(simdType);
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readSplat(ValType simdType, Value* scalar)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::Splat);
-
-    if (!popWithType(SimdElementType(simdType), scalar))
-        return false;
-
-    infalliblePush(simdType);
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::Swizzle);
-
-    uint32_t numSimdLanes = NumSimdElements(simdType);
-    MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(*lanes));
-    for (uint32_t i = 0; i < numSimdLanes; ++i) {
-        if (!readFixedU8(&(*lanes)[i]))
-            return fail("unable to read swizzle lane");
-        if ((*lanes)[i] >= numSimdLanes)
-            return fail("swizzle index out of bounds");
-    }
-
-    if (!popWithType(simdType, vector))
-        return false;
-
-    infalliblePush(simdType);
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[16], Value* lhs, Value* rhs)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::Shuffle);
-
-    uint32_t numSimdLanes = NumSimdElements(simdType);
-    MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(*lanes));
-    for (uint32_t i = 0; i < numSimdLanes; ++i) {
-        if (!readFixedU8(&(*lanes)[i]))
-            return fail("unable to read shuffle lane");
-        if ((*lanes)[i] >= numSimdLanes * 2)
-            return fail("shuffle index out of bounds");
-    }
-
-    if (!popWithType(simdType, rhs))
-        return false;
-
-    if (!popWithType(simdType, lhs))
-        return false;
-
-    infalliblePush(simdType);
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readSimdSelect(ValType simdType, Value* trueValue, Value* falseValue,
-                               Value* condition)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::SimdSelect);
-
-    if (!popWithType(simdType, falseValue))
-        return false;
-    if (!popWithType(simdType, trueValue))
-        return false;
-    if (!popWithType(SimdBoolType(simdType), condition))
-        return false;
-
-    infalliblePush(simdType);
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readSimdCtor(ValType elementType, uint32_t numElements, ValType simdType,
-                             ValueVector* argValues)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::SimdCtor);
-
-    if (!argValues->resize(numElements))
-        return false;
-
-    for (int32_t i = numElements - 1; i >= 0; i--) {
-        if (!popWithType(elementType, &(*argValues)[i]))
-            return false;
-    }
-
-    infalliblePush(simdType);
-
     return true;
 }
 

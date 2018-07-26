@@ -19,6 +19,8 @@
 #include "nsINode.h"
 #include "nsIPrincipal.h"
 
+#include "js/Wrapper.h"
+
 using namespace mozilla::dom;
 
 namespace mozilla {
@@ -184,6 +186,7 @@ nsBrowserElement::Download(const nsAString& aUrl,
   RefPtr<DOMRequest> req;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(mBrowserElementAPI);
   MOZ_ASSERT(wrappedObj, "Failed to get wrapped JS from XPCOM component.");
+  MOZ_RELEASE_ASSERT(!js::IsWrapper(wrappedObj->GetJSObject()));
   AutoJSAPI jsapi;
   if (!jsapi.Init(wrappedObj->GetJSObject())) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -403,6 +406,7 @@ nsBrowserElement::ExecuteScript(const nsAString& aScript,
   RefPtr<DOMRequest> req;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(mBrowserElementAPI);
   MOZ_ASSERT(wrappedObj, "Failed to get wrapped JS from XPCOM component.");
+  MOZ_RELEASE_ASSERT(!js::IsWrapper(wrappedObj->GetJSObject()));
   AutoJSAPI jsapi;
   if (!jsapi.Init(wrappedObj->GetJSObject())) {
     aRv.Throw(NS_ERROR_UNEXPECTED);

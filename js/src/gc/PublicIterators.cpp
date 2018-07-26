@@ -84,8 +84,69 @@ js::IterateChunks(JSContext* cx, void* data, IterateChunkCallback chunkCallback)
         chunkCallback(cx->runtime(), data, chunk);
 }
 
-void
-js::IterateScripts(JSContext* cx, Realm* realm, void* data, IterateScriptCallback scriptCallback)
+static void
+TraverseInnerLazyScriptsForLazyScript(JSContext* cx, void* data, LazyScript* enclosingLazyScript,
+                                      IterateLazyScriptCallback lazyScriptCallback,
+                                      const JS::AutoRequireNoGC& nogc)
+{
+    GCPtrFunction* innerFunctions = enclosingLazyScript->innerFunctions();
+    for (size_t i = 0, len = enclosingLazyScript->numInnerFunctions(); i < len; i++) {
+        JSFunction* fun = innerFunctions[i];
+
+        // LazyScript::CreateForXDR temporarily initializes innerFunctions with
+        // its own function, but it should be overwritten with correct
+        // inner functions before getting inserted into parent's innerFunctions.
+        MOZ_ASSERT(fun != enclosingLazyScript->functionNonDelazifying());
+
+        if (!fun->isInterpretedLazy())
+            return;
+
+        LazyScript* lazyScript = fun->lazyScript();
+        MOZ_ASSERT(lazyScript->hasEnclosingScope() || lazyScript->hasEnclosingLazyScript());
+        MOZ_ASSERT_IF(lazyScript->hasEnclosingLazyScript(),
+                      lazyScript->enclosingLazyScript() == enclosingLazyScript);
+
+        lazyScriptCallback(cx->runtime(), data, lazyScript, nogc);
+
+        TraverseInnerLazyScriptsForLazyScript(cx, data, lazyScript, lazyScriptCallback, nogc);
+    }
+}
+
+static inline void
+DoScriptCallback(JSContext* cx,  void* data, LazyScript* lazyScript,
+                 IterateLazyScriptCallback lazyScriptCallback,
+                 const JS::AutoRequireNoGC& nogc)
+{
+    // We call the callback only for the LazyScript that:
+    //   (a) its enclosing script has ever been fully compiled and
+    //       itself is delazifyable (handled in this function)
+    //   (b) it is contained in the (a)'s inner function tree
+    //       (handled in TraverseInnerLazyScriptsForLazyScript)
+    if (!lazyScript->enclosingScriptHasEverBeenCompiled())
+        return;
+
+    lazyScriptCallback(cx->runtime(), data, lazyScript, nogc);
+
+    TraverseInnerLazyScriptsForLazyScript(cx, data, lazyScript, lazyScriptCallback, nogc);
+}
+
+static inline void
+DoScriptCallback(JSContext* cx,  void* data, JSScript* script,
+                 IterateScriptCallback scriptCallback,
+                 const JS::AutoRequireNoGC& nogc)
+{
+    // We check for presence of script->isUncompleted() because it is
+    // possible that the script was created and thus exposed to GC, but *not*
+    // fully initialized from fullyInit{FromEmitter,Trivial} due to errors.
+    if (script->isUncompleted())
+        return;
+
+    scriptCallback(cx->runtime(), data, script, nogc);
+}
+
+template <typename T, typename Callback>
+static void
+IterateScriptsImpl(JSContext* cx, Realm* realm, void* data, Callback scriptCallback)
 {
     MOZ_ASSERT(!cx->suppressGC);
     AutoEmptyNursery empty(cx);
@@ -94,16 +155,29 @@ js::IterateScripts(JSContext* cx, Realm* realm, void* data, IterateScriptCallbac
 
     if (realm) {
         Zone* zone = realm->zone();
-        for (auto script = zone->cellIter<JSScript>(empty); !script.done(); script.next()) {
+        for (auto script = zone->cellIter<T>(empty); !script.done(); script.next()) {
             if (script->realm() == realm)
-                scriptCallback(cx->runtime(), data, script, nogc);
+                DoScriptCallback(cx, data, script, scriptCallback, nogc);
         }
     } else {
         for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-            for (auto script = zone->cellIter<JSScript>(empty); !script.done(); script.next())
-                scriptCallback(cx->runtime(), data, script, nogc);
+            for (auto script = zone->cellIter<T>(empty); !script.done(); script.next())
+                DoScriptCallback(cx, data, script, scriptCallback, nogc);
         }
     }
+}
+
+void
+js::IterateScripts(JSContext* cx, Realm* realm, void* data, IterateScriptCallback scriptCallback)
+{
+    IterateScriptsImpl<JSScript>(cx, realm, data, scriptCallback);
+}
+
+void
+js::IterateLazyScripts(JSContext* cx, Realm* realm, void* data,
+                       IterateLazyScriptCallback scriptCallback)
+{
+    IterateScriptsImpl<LazyScript>(cx, realm, data, scriptCallback);
 }
 
 static void

@@ -490,6 +490,7 @@ AutoJSAPI::Init(nsIGlobalObject* aGlobalObject)
 bool
 AutoJSAPI::Init(JSObject* aObject)
 {
+  MOZ_ASSERT(!js::IsCrossCompartmentWrapper(aObject));
   return Init(xpc::NativeGlobal(aObject));
 }
 

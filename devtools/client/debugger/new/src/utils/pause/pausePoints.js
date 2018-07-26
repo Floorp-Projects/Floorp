@@ -48,10 +48,8 @@ function formatPausePoints(text, pausePoints) {
       break: breakPoint,
       step
     } = node.types;
-    const num = nodes.length - index;
     const types = `${breakPoint ? "b" : ""}${step ? "s" : ""}`;
-    const spacer = breakPoint || step ? " " : "";
-    lines[line - 1] = insertStrtAt(lines[line - 1], column, `/*${types}${spacer}${num}*/`);
+    lines[line - 1] = insertStrtAt(lines[line - 1], column, `/*${types}*/`);
   });
   return lines.join("\n");
 }

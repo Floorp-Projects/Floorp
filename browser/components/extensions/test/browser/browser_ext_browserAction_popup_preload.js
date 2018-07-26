@@ -202,9 +202,11 @@ add_task(async function testBrowserActionTabPopulation() {
   let widget = getBrowserActionWidget(extension).forWindow(win);
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, win);
 
-  await extension.awaitMessage("tabTitle");
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, win);
+
+  await extension.awaitMessage("tabTitle");
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);

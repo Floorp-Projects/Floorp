@@ -92,6 +92,7 @@ class MarkStack
         Cell* ptr() const;
 
       public:
+        TaggedPtr() {}
         TaggedPtr(Tag tag, Cell* ptr);
         Tag tag() const;
         template <typename T> T* as() const;
@@ -99,11 +100,14 @@ class MarkStack
         JSObject* asValueArrayObject() const;
         JSObject* asSavedValueArrayObject() const;
         JSRope* asTempRope() const;
+
+        void assertValid() const;
     };
 
     struct ValueArray
     {
         ValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end);
+        void assertValid() const;
 
         HeapSlot* end;
         HeapSlot* start;
@@ -113,6 +117,7 @@ class MarkStack
     struct SavedValueArray
     {
         SavedValueArray(JSObject* obj, size_t index, HeapSlot::Kind kind);
+        void assertValid() const;
 
         uintptr_t kind;
         uintptr_t index;
@@ -124,19 +129,16 @@ class MarkStack
 
     static const size_t DefaultCapacity = SIZE_MAX;
 
-    size_t capacity() { return end_ - stack_; }
+    size_t capacity() { return stack().length(); }
 
     size_t position() const {
-        auto result = tos_ - stack_;
-        MOZ_ASSERT(result >= 0);
-        return size_t(result);
+        return topIndex_;
     }
-
-    void setStack(TaggedPtr* stack, size_t tosIndex, size_t capacity);
 
     MOZ_MUST_USE bool init(JSGCMode gcMode);
 
-    void setBaseCapacity(JSGCMode mode);
+    MOZ_MUST_USE bool setCapacityForMode(JSGCMode mode);
+
     size_t maxCapacity() const { return maxCapacity_; }
     void setMaxCapacity(size_t maxCapacity);
 
@@ -152,7 +154,7 @@ class MarkStack
     MOZ_MUST_USE bool pushTempRope(JSRope* ptr);
 
     bool isEmpty() const {
-        return tos_ == stack_;
+        return topIndex_ == 0;
     }
 
     Tag peekTag() const;
@@ -160,28 +162,41 @@ class MarkStack
     ValueArray popValueArray();
     SavedValueArray popSavedValueArray();
 
-    void reset();
+    void clear() {
+        topIndex_ = 0;
+    }
 
     void setGCMode(JSGCMode gcMode);
+
+    void poisonUnused();
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   private:
+    using StackVector = Vector<TaggedPtr, 0, SystemAllocPolicy>;
+    const StackVector& stack() const { return stack_.ref(); }
+    StackVector& stack() { return stack_.ref(); }
+
     MOZ_MUST_USE bool ensureSpace(size_t count);
 
     /* Grow the stack, ensuring there is space for at least count elements. */
     MOZ_MUST_USE bool enlarge(size_t count);
 
+    MOZ_MUST_USE bool resize(size_t newCapacity);
+
+    TaggedPtr* topPtr();
+
     const TaggedPtr& peekPtr() const;
     MOZ_MUST_USE bool pushTaggedPtr(Tag tag, Cell* ptr);
 
-    MainThreadData<TaggedPtr*> stack_;
-    MainThreadData<TaggedPtr*> tos_;
-    MainThreadData<TaggedPtr*> end_;
+    // Index of the top of the stack.
+    MainThreadData<size_t> topIndex_;
 
-    // The capacity we start with and reset() to.
-    MainThreadData<size_t> baseCapacity_;
+    // The maximum stack capacity to grow to.
     MainThreadData<size_t> maxCapacity_;
+
+    // Vector containing allocated stack memory. Unused beyond topIndex_.
+    MainThreadData<StackVector> stack_;
 
 #ifdef DEBUG
     mutable size_t iteratorCount_;
@@ -192,11 +207,11 @@ class MarkStack
 
 class MarkStackIter
 {
-    const MarkStack& stack_;
-    MarkStack::TaggedPtr* pos_;
+    MarkStack& stack_;
+    size_t pos_;
 
   public:
-    explicit MarkStackIter(const MarkStack& stack);
+    explicit MarkStackIter(MarkStack& stack);
     ~MarkStackIter();
 
     bool done() const;
@@ -208,7 +223,7 @@ class MarkStackIter
     void nextArray();
 
     // Mutate the current ValueArray to a SavedValueArray.
-    void saveValueArray(NativeObject* obj, uintptr_t index, HeapSlot::Kind kind);
+    void saveValueArray(const MarkStack::SavedValueArray& savedArray);
 
   private:
     size_t position() const;
@@ -287,7 +302,7 @@ class GCMarker : public JSTracer
 
     bool shouldCheckCompartments() { return strictCompartmentChecking; }
 
-    JS::Zone* stackContainsCrossZonePointerTo(const gc::Cell* cell) const;
+    JS::Zone* stackContainsCrossZonePointerTo(const gc::Cell* cell);
 
 #endif
 
@@ -342,7 +357,11 @@ class GCMarker : public JSTracer
 
     MOZ_MUST_USE bool restoreValueArray(const gc::MarkStack::SavedValueArray& array,
                                         HeapSlot** vpp, HeapSlot** endp);
+    gc::MarkStack::ValueArray restoreValueArray(const gc::MarkStack::SavedValueArray& savedArray);
+
     void saveValueRanges();
+    gc::MarkStack::SavedValueArray saveValueRange(const gc::MarkStack::ValueArray& array);
+
     inline void processMarkStackTop(SliceBudget& budget);
 
     /* The mark stack. Pointers in this stack are "gray" in the GC sense. */

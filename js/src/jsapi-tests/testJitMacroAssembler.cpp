@@ -29,7 +29,7 @@ typedef void (*EnterTest)();
 
 static bool Prepare(MacroAssembler& masm)
 {
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    AllocatableRegisterSet regs(RegisterSet::All());
     LiveRegisterSet save(regs.asLiveSet());
     masm.PushRegsInMask(save);
     return true;
@@ -37,7 +37,7 @@ static bool Prepare(MacroAssembler& masm)
 
 static bool Execute(JSContext* cx, MacroAssembler& masm)
 {
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    AllocatableRegisterSet regs(RegisterSet::All());
     LiveRegisterSet save(regs.asLiveSet());
     masm.PopRegsInMask(save);
     masm.ret(); // Add return statement to be sure.
@@ -57,6 +57,153 @@ static bool Execute(JSContext* cx, MacroAssembler& masm)
     test();
     return true;
 }
+
+BEGIN_TEST(testJitMacroAssembler_flexibleDivMod)
+{
+    StackMacroAssembler masm(cx);
+
+    if (!Prepare(masm))
+        return false;
+
+    // Test case divides 9/2;
+    const uintptr_t quotient_result = 4;
+    const uintptr_t remainder_result = 1;
+    const uintptr_t dividend = 9;
+    const uintptr_t divisor = 2;
+
+    AllocatableGeneralRegisterSet leftOutputHandSides(GeneralRegisterSet::All());
+
+    while (!leftOutputHandSides.empty()) {
+        Register lhsOutput = leftOutputHandSides.takeAny();
+
+        AllocatableGeneralRegisterSet rightHandSides(GeneralRegisterSet::All());
+        while (!rightHandSides.empty()) {
+            Register rhs = rightHandSides.takeAny();
+
+            AllocatableGeneralRegisterSet remainders(GeneralRegisterSet::All());
+            while (!remainders.empty()) {
+                Register remainderOutput = remainders.takeAny();
+                if (lhsOutput == rhs || lhsOutput == remainderOutput || rhs == remainderOutput)
+                    continue;
+
+                AllocatableRegisterSet regs(RegisterSet::Volatile());
+                LiveRegisterSet save(regs.asLiveSet());
+
+                Label next, fail;
+                masm.mov(ImmWord(dividend), lhsOutput);
+                masm.mov(ImmWord(divisor), rhs);
+                masm.flexibleDivMod32(rhs, lhsOutput, remainderOutput, false, save);
+                masm.branch32(Assembler::NotEqual, AbsoluteAddress(&quotient_result), lhsOutput, &fail);
+                masm.branch32(Assembler::NotEqual, AbsoluteAddress(&remainder_result), remainderOutput, &fail);
+                // Ensure RHS was not clobbered
+                masm.branch32(Assembler::NotEqual, AbsoluteAddress(&divisor), rhs, &fail);
+                masm.jump(&next);
+                masm.bind(&fail);
+                masm.printf("Failed");
+                masm.breakpoint();
+
+                masm.bind(&next);
+            }
+        }
+    }
+
+    return Execute(cx, masm);
+}
+END_TEST(testJitMacroAssembler_flexibleDivMod)
+
+BEGIN_TEST(testJitMacroAssembler_flexibleRemainder)
+{
+    StackMacroAssembler masm(cx);
+
+    if (!Prepare(masm))
+        return false;
+
+    // Test case divides 9/2;
+    const uintptr_t dividend = 9;
+    const uintptr_t divisor = 2;
+    const uintptr_t remainder_result  = 1;
+
+    AllocatableGeneralRegisterSet leftOutputHandSides(GeneralRegisterSet::All());
+
+    while (!leftOutputHandSides.empty()) {
+        Register lhsOutput = leftOutputHandSides.takeAny();
+
+        AllocatableGeneralRegisterSet rightHandSides(GeneralRegisterSet::All());
+        while (!rightHandSides.empty()) {
+            Register rhs = rightHandSides.takeAny();
+
+            if (lhsOutput == rhs)
+                continue;
+
+            AllocatableRegisterSet regs(RegisterSet::Volatile());
+            LiveRegisterSet save(regs.asLiveSet());
+
+            Label next, fail;
+            masm.mov(ImmWord(dividend), lhsOutput);
+            masm.mov(ImmWord(divisor), rhs);
+            masm.flexibleRemainder32(rhs, lhsOutput, false, save);
+            masm.branch32(Assembler::NotEqual, AbsoluteAddress(&remainder_result), lhsOutput, &fail);
+            // Ensure RHS was not clobbered
+            masm.branch32(Assembler::NotEqual, AbsoluteAddress(&divisor), rhs, &fail);
+            masm.jump(&next);
+            masm.bind(&fail);
+            masm.printf("Failed\n");
+            masm.breakpoint();
+
+            masm.bind(&next);
+        }
+    }
+
+    return Execute(cx, masm);
+}
+END_TEST(testJitMacroAssembler_flexibleRemainder)
+
+BEGIN_TEST(testJitMacroAssembler_flexibleQuotient)
+{
+    StackMacroAssembler masm(cx);
+
+    if (!Prepare(masm))
+        return false;
+
+    // Test case divides 9/2;
+    const uintptr_t dividend = 9;
+    const uintptr_t divisor = 2;
+    const uintptr_t quotient_result  = 4;
+
+    AllocatableGeneralRegisterSet leftOutputHandSides(GeneralRegisterSet::All());
+
+    while (!leftOutputHandSides.empty()) {
+        Register lhsOutput = leftOutputHandSides.takeAny();
+
+        AllocatableGeneralRegisterSet rightHandSides(GeneralRegisterSet::All());
+        while (!rightHandSides.empty()) {
+            Register rhs = rightHandSides.takeAny();
+
+            if (lhsOutput == rhs)
+                continue;
+
+            AllocatableRegisterSet regs(RegisterSet::Volatile());
+            LiveRegisterSet save(regs.asLiveSet());
+
+            Label next, fail;
+            masm.mov(ImmWord(dividend), lhsOutput);
+            masm.mov(ImmWord(divisor), rhs);
+            masm.flexibleQuotient32(rhs, lhsOutput, false, save);
+            masm.branch32(Assembler::NotEqual, AbsoluteAddress(&quotient_result), lhsOutput, &fail);
+            // Ensure RHS was not clobbered
+            masm.branch32(Assembler::NotEqual, AbsoluteAddress(&divisor), rhs, &fail);
+            masm.jump(&next);
+            masm.bind(&fail);
+            masm.printf("Failed\n");
+            masm.breakpoint();
+
+            masm.bind(&next);
+        }
+    }
+
+    return Execute(cx, masm);
+}
+END_TEST(testJitMacroAssembler_flexibleQuotient)
 
 BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64)
 {
