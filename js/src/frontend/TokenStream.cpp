@@ -2113,9 +2113,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int32_t unit, TokenSta
 
         ungetCodeUnit(unit);
 
-        const CharT* dummy;
-        if (!js_strtod(anyCharsAccess().cx, numStart, this->sourceUnits.addressOfNextCodeUnit(),
-                       &dummy, &dval))
+        // "0." and "0e..." numbers parse "." or "e..." here.  Neither range
+        // contains a number, so we can't use |FullStringToDouble|.  (Parse
+        // failures return 0.0, so we'll still get the right result.)
+        if (!StringToDouble(anyCharsAccess().cx,
+                            numStart, this->sourceUnits.addressOfNextCodeUnit(), &dval))
         {
            return false;
         }
@@ -2527,13 +2529,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             }
 
             double dval;
-            const char16_t* dummy;
-            if (!GetPrefixInteger(anyCharsAccess().cx, numStart,
-                                  this->sourceUnits.addressOfNextCodeUnit(), radix, &dummy, &dval))
+            if (!GetFullInteger(anyCharsAccess().cx, numStart,
+                                this->sourceUnits.addressOfNextCodeUnit(), radix, &dval))
             {
                 return badToken();
             }
-
             newNumberToken(dval, NoDecimal, start, modifier, ttp);
             return true;
         }
