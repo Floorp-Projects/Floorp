@@ -666,10 +666,6 @@ typedef mozilla::UniquePtr<char16_t[], JS::FreePolicy> UniqueTwoByteChars;
 
 namespace js {
 
-/* Integral types for all hash functions. */
-typedef uint32_t HashNumber;
-const unsigned HashNumberSizeBits = 32;
-
 namespace detail {
 
 /*
@@ -687,8 +683,8 @@ namespace detail {
  *
  * FIXME: OrderedHashTable uses a bit-mask; see bug 775896.
  */
-inline HashNumber
-ScrambleHashCode(HashNumber h)
+inline uint32_t
+ScrambleHashCode(uint32_t h)
 {
     /*
      * Simply returning h would not cause any hash tables to produce wrong
@@ -705,7 +701,7 @@ ScrambleHashCode(HashNumber h)
      * This value is especially good if values with consecutive hash codes
      * are stored in a hash table; see Knuth for details.
      */
-    static const HashNumber goldenRatio = 0x9E3779B9U;
+    static const uint32_t goldenRatio = 0x9E3779B9U;
     return mozilla::WrappingMultiply(h, goldenRatio);
 }
 

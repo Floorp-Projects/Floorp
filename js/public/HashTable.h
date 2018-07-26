@@ -18,13 +18,15 @@
 #include "mozilla/Opaque.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ReentrancyGuard.h"
-#include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
 #include "js/Utility.h"
 
 namespace js {
+
+using HashNumber = mozilla::HashNumber;
+static const uint32_t kHashNumberBits = mozilla::kHashNumberBits;
 
 class TempAllocPolicy;
 template <class> struct DefaultHasher;
@@ -1257,7 +1259,6 @@ class HashTable : private AllocPolicy
     static const uint32_t sMinCapacity  = 4;
     static const uint32_t sMaxInit      = JS_BIT(CAP_BITS - 1);
     static const uint32_t sMaxCapacity  = JS_BIT(CAP_BITS);
-    static const uint32_t sHashBits     = mozilla::tl::BitSize<HashNumber>::value;
 
     // Hash-table alpha is conceptually a fraction, but to avoid floating-point
     // math we implement it as a ratio of integers.
@@ -1271,7 +1272,7 @@ class HashTable : private AllocPolicy
 
     void setTableSizeLog2(uint32_t sizeLog2)
     {
-        hashShift = sHashBits - sizeLog2;
+        hashShift = js::kHashNumberBits - sizeLog2;
     }
 
     static bool isLiveHash(HashNumber hash)
@@ -1326,7 +1327,7 @@ class HashTable : private AllocPolicy
     explicit HashTable(AllocPolicy ap)
       : AllocPolicy(ap)
       , gen(0)
-      , hashShift(sHashBits)
+      , hashShift(js::kHashNumberBits)
       , table(nullptr)
       , entryCount(0)
       , removedCount(0)
@@ -1402,7 +1403,7 @@ class HashTable : private AllocPolicy
 
     DoubleHash hash2(HashNumber curKeyHash) const
     {
-        uint32_t sizeLog2 = sHashBits - hashShift;
+        uint32_t sizeLog2 = js::kHashNumberBits - hashShift;
         DoubleHash dh = {
             ((curKeyHash << sizeLog2) >> hashShift) | 1,
             (HashNumber(1) << sizeLog2) - 1
@@ -1552,7 +1553,7 @@ class HashTable : private AllocPolicy
         // Look, but don't touch, until we succeed in getting new entry store.
         Entry* oldTable = table;
         uint32_t oldCap = capacity();
-        uint32_t newLog2 = sHashBits - hashShift + deltaLog2;
+        uint32_t newLog2 = js::kHashNumberBits - hashShift + deltaLog2;
         uint32_t newCapacity = JS_BIT(newLog2);
         if (MOZ_UNLIKELY(newCapacity > sMaxCapacity)) {
             if (reportFailure)
@@ -1791,7 +1792,7 @@ class HashTable : private AllocPolicy
     uint32_t capacity() const
     {
         MOZ_ASSERT(table);
-        return JS_BIT(sHashBits - hashShift);
+        return JS_BIT(js::kHashNumberBits - hashShift);
     }
 
     Generation generation() const
