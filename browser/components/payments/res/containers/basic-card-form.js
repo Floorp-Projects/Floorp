@@ -153,9 +153,17 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       if (!record.billingAddressGUID && selectedShippingAddress) {
         record.billingAddressGUID = selectedShippingAddress;
       }
-      // Adding a new record: default persistence to checked when in a not-private session
+
+      let defaults = PaymentDialogUtils.getDefaultPreferences();
+      // Adding a new record: default persistence to pref value when in a not-private session
       this.persistCheckbox.hidden = false;
-      this.persistCheckbox.checked = !state.isPrivate;
+      if (basicCardPage.hasOwnProperty("persistCheckboxValue")) {
+        // returning to this page, use previous checked state
+        this.persistCheckbox.checked = basicCardPage.persistCheckboxValue;
+      } else {
+        this.persistCheckbox.checked = state.isPrivate ? false :
+                                                         defaults.saveCreditCardDefaultChecked;
+      }
     }
 
     this.formHandler.loadRecord(record, addresses, basicCardPage.preserveFieldValues);
@@ -217,6 +225,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
           "basic-card-page": {
             preserveFieldValues: true,
             guid: basicCardPage.guid,
+            persistCheckboxValue: this.persistCheckbox.checked,
           },
         };
         let billingAddressGUID = this.form.querySelector("#billingAddressGUID");
@@ -255,6 +264,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
           }
 
           let basicCardPageState = Object.assign({}, basicCardPage, {preserveFieldValues: true});
+          delete basicCardPageState.persistCheckboxValue;
 
           Object.assign(nextState, {
             "address-page": addressPageState,

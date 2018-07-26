@@ -11,6 +11,8 @@
 const BLANK_PAGE_PATH = "/browser/browser/components/payments/test/browser/blank_page.html";
 const BLANK_PAGE_URL = "https://example.com" + BLANK_PAGE_PATH;
 const RESPONSE_TIMEOUT_PREF = "dom.payments.response.timeout";
+const SAVE_CREDITCARD_DEFAULT_PREF = "dom.payments.defaults.saveCreditCard";
+const SAVE_ADDRESS_DEFAULT_PREF = "dom.payments.defaults.saveAddress";
 
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
@@ -333,6 +335,8 @@ add_task(async function setup_head() {
     paymentSrv.cleanup();
     cleanupFormAutofillStorage();
     Services.prefs.clearUserPref(RESPONSE_TIMEOUT_PREF);
+    Services.prefs.clearUserPref(SAVE_CREDITCARD_DEFAULT_PREF);
+    Services.prefs.clearUserPref(SAVE_ADDRESS_DEFAULT_PREF);
     SpecialPowers.postConsoleSentinel();
   });
 });
@@ -390,9 +394,10 @@ async function fillInAddressForm(frame, aAddress, aOptions = {}) {
     let persistCheckbox = Cu.waiveXrays(
         content.document.querySelector(options.checkboxSelector));
     // only touch the checked state if explicitly told to in the options
-    if (options.hasOwnProperty("isTemporary")) {
-      info(`fillInAddressForm: toggling persistCheckbox as isTemporary is: ${options.isTemporary}`);
-      persistCheckbox.checked = !options.isTemporary;
+    if (options.hasOwnProperty("setPersistCheckedValue")) {
+      info("fillInCardForm: Manually setting the persist checkbox checkedness to: " +
+            options.setPersistCheckedValue);
+      Cu.waiveXrays(persistCheckbox).checked = options.setPersistCheckedValue;
     }
     info(`fillInAddressForm, persistCheckbox.checked: ${persistCheckbox.checked}`);
   }, {address: aAddress, options: aOptions});
@@ -402,16 +407,16 @@ async function verifyPersistCheckbox(frame, aOptions = {}) {
   await spawnPaymentDialogTask(frame, async (args) => {
     let {options = {}} = args;
     // ensure card/address is persisted or not based on the temporary option given
-    info("verifyPersistCheckbox");
+    info("verifyPersistCheckbox, got options: " + JSON.stringify(options));
     let persistCheckbox = Cu.waiveXrays(
         content.document.querySelector(options.checkboxSelector));
 
     if (options.isEditing) {
-      ok(persistCheckbox.hidden, "checkbox should be hidden when editing an existing address");
+      ok(persistCheckbox.hidden, "checkbox should be hidden when editing a record");
     } else {
-      ok(!persistCheckbox.hidden, "checkbox should be visible when adding a new address");
+      ok(!persistCheckbox.hidden, "checkbox should be visible when adding a new record");
       is(persistCheckbox.checked, options.expectPersist,
-         "persist checkbox is in the expected state");
+         `persist checkbox state is expected to be ${options.expectPersist}`);
     }
   }, {options: aOptions});
 }
@@ -458,7 +463,9 @@ async function manuallyAddAddress(frame, aAddress, aOptions = {}) {
     checkboxSelector: "#address-page .persist-checkbox",
   });
   await navigateToAddAddressPage(frame);
+  info("manuallyAddAddress, fill in address form with options: " + JSON.stringify(options));
   await fillInAddressForm(frame, aAddress, options);
+  info("manuallyAddAddress, verifyPersistCheckbox with options: " + JSON.stringify(options));
   await verifyPersistCheckbox(frame, options);
   await submitAddressForm(frame, aAddress, options);
 }
@@ -511,8 +518,10 @@ async function fillInCardForm(frame, aCard, aOptions = {}) {
 
     let persistCheckbox = content.document.querySelector(options.checkboxSelector);
     // only touch the checked state if explicitly told to in the options
-    if (options.hasOwnProperty("isTemporary")) {
-      Cu.waiveXrays(persistCheckbox).checked = !options.isTemporary;
+    if (options.hasOwnProperty("setPersistCheckedValue")) {
+      info("fillInCardForm: Manually setting the persist checkbox checkedness to: " +
+            options.setPersistCheckedValue);
+      Cu.waiveXrays(persistCheckbox).checked = options.setPersistCheckedValue;
     }
   }, {card: aCard, options: aOptions});
 }
