@@ -51,13 +51,15 @@ def llvm_config_paths(host):
 
     return llvm_config_progs
 
-llvm_config = check_prog('LLVM_CONFIG', llvm_config_paths,
+js_option(env='LLVM_CONFIG', nargs=1, help='Path to llvm-config')
+
+llvm_config = check_prog('LLVM_CONFIG', llvm_config_paths, input='LLVM_CONFIG',
                          what='llvm-config', allow_missing=True)
 
-option('--with-libclang-path', nargs=1,
-       help='Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)')
-option('--with-clang-path', nargs=1,
-       help='Absolute path to a Clang binary for bindgen (version 3.9.x or above)')
+js_option('--with-libclang-path', nargs=1,
+          help='Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)')
+js_option('--with-clang-path', nargs=1,
+          help='Absolute path to a Clang binary for bindgen (version 3.9.x or above)')
 
 def invoke_llvm_config(llvm_config, *options):
     '''Invoke llvm_config with the given options and return the first line of
