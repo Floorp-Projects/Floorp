@@ -156,14 +156,14 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
     return NS_ERROR_NULL_POINTER;
   }
   *aIsMisspelled = false;
-  result = mSpellCheckingEngine->Check(PromiseFlatString(aWord).get(), &correct);
+  result = mSpellCheckingEngine->Check(aWord, &correct);
   NS_ENSURE_SUCCESS(result, result);
   if(!correct){
     if(aSuggestions){
       uint32_t count,i;
       char16_t **words;
 
-      result = mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
+      result = mSpellCheckingEngine->Suggest(aWord, &words, &count);
       NS_ENSURE_SUCCESS(result, result);
       nsString* suggestions = aSuggestions->AppendElements(count);
       for(i=0;i<count;i++){
@@ -272,8 +272,8 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, b
 NS_IMETHODIMP
 mozSpellChecker::IgnoreAll(const nsAString &aWord)
 {
-  if(mPersonalDictionary){
-    mPersonalDictionary->IgnoreWord(PromiseFlatString(aWord).get());
+  if (mPersonalDictionary) {
+    mPersonalDictionary->IgnoreWord(aWord);
   }
   return NS_OK;
 }
@@ -282,10 +282,10 @@ NS_IMETHODIMP
 mozSpellChecker::AddWordToPersonalDictionary(const nsAString &aWord)
 {
   nsresult res;
-  char16_t empty=0;
-  if (!mPersonalDictionary)
-    return NS_ERROR_NULL_POINTER;
-  res = mPersonalDictionary->AddWord(PromiseFlatString(aWord).get(),&empty);
+  if (NS_WARN_IF(!mPersonalDictionary)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  res = mPersonalDictionary->AddWord(aWord);
   return res;
 }
 
@@ -293,10 +293,10 @@ NS_IMETHODIMP
 mozSpellChecker::RemoveWordFromPersonalDictionary(const nsAString &aWord)
 {
   nsresult res;
-  char16_t empty=0;
-  if (!mPersonalDictionary)
-    return NS_ERROR_NULL_POINTER;
-  res = mPersonalDictionary->RemoveWord(PromiseFlatString(aWord).get(),&empty);
+  if (NS_WARN_IF(!mPersonalDictionary)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  res = mPersonalDictionary->RemoveWord(aWord);
   return res;
 }
 
@@ -379,10 +379,7 @@ mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
     return NS_OK;
   }
 
-  nsAutoString dictname;
-  mSpellCheckingEngine->GetDictionary(getter_Copies(dictname));
-  aDictionary = dictname;
-  return NS_OK;
+  return mSpellCheckingEngine->GetDictionary(aDictionary);
 }
 
 NS_IMETHODIMP
@@ -421,7 +418,7 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
     // dictionary was set
     mSpellCheckingEngine = spellCheckingEngines[i];
 
-    rv = mSpellCheckingEngine->SetDictionary(PromiseFlatString(aDictionary).get());
+    rv = mSpellCheckingEngine->SetDictionary(aDictionary);
 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<mozIPersonalDictionary> personalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");

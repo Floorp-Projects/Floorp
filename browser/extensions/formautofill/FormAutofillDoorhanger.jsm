@@ -7,15 +7,12 @@
  * the doorhager UI for formautofill related features.
  */
 
-/* exported FormAutofillDoorhanger */
-
 "use strict";
 
 var EXPORTED_SYMBOLS = ["FormAutofillDoorhanger"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 

@@ -313,6 +313,9 @@ pref("devtools.responsive.reloadConditions.userAgent", false);
 // Whether to show the notification about reloading to apply emulation
 pref("devtools.responsive.reloadNotification.enabled", true);
 
+// Enable new about:debugging.
+pref("devtools.aboutdebugging.new-enabled", false);
+
 // about:debugging: only show system add-ons in local builds by default.
 #ifdef MOZILLA_OFFICIAL
   pref("devtools.aboutdebugging.showSystemAddons", false);

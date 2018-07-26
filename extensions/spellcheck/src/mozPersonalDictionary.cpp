@@ -313,7 +313,7 @@ void mozPersonalDictionary::SyncLoadInternal()
         word.Append(c);
         if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) done = true;
       }
-      mDictionaryTable.PutEntry(word.get());
+      mDictionaryTable.PutEntry(word);
     }
   } while(!done);
 }
@@ -396,9 +396,9 @@ NS_IMETHODIMP mozPersonalDictionary::GetWordList(nsIStringEnumerator **aWords)
   return NS_NewAdoptingStringEnumerator(aWords, array);
 }
 
-NS_IMETHODIMP mozPersonalDictionary::Check(const char16_t *aWord, const char16_t *aLanguage, bool *aResult)
+NS_IMETHODIMP
+mozPersonalDictionary::Check(const nsAString& aWord, bool* aResult)
 {
-  NS_ENSURE_ARG_POINTER(aWord);
   NS_ENSURE_ARG_POINTER(aResult);
 
   WaitForLoad();
@@ -407,7 +407,8 @@ NS_IMETHODIMP mozPersonalDictionary::Check(const char16_t *aWord, const char16_t
   return NS_OK;
 }
 
-NS_IMETHODIMP mozPersonalDictionary::AddWord(const char16_t *aWord, const char16_t *aLang)
+NS_IMETHODIMP
+mozPersonalDictionary::AddWord(const nsAString& aWord)
 {
   nsresult res;
   WaitForLoad();
@@ -417,7 +418,8 @@ NS_IMETHODIMP mozPersonalDictionary::AddWord(const char16_t *aWord, const char16
   return res;
 }
 
-NS_IMETHODIMP mozPersonalDictionary::RemoveWord(const char16_t *aWord, const char16_t *aLang)
+NS_IMETHODIMP
+mozPersonalDictionary::RemoveWord(const nsAString& aWord)
 {
   nsresult res;
   WaitForLoad();
@@ -427,10 +429,11 @@ NS_IMETHODIMP mozPersonalDictionary::RemoveWord(const char16_t *aWord, const cha
   return res;
 }
 
-NS_IMETHODIMP mozPersonalDictionary::IgnoreWord(const char16_t *aWord)
+NS_IMETHODIMP
+mozPersonalDictionary::IgnoreWord(const nsAString& aWord)
 {
   // avoid adding duplicate words to the ignore list
-  if (aWord && !mIgnoreTable.GetEntry(aWord))
+  if (!mIgnoreTable.GetEntry(aWord))
     mIgnoreTable.PutEntry(aWord);
   return NS_OK;
 }
@@ -442,21 +445,6 @@ NS_IMETHODIMP mozPersonalDictionary::EndSession()
   WaitForSave();
   mIgnoreTable.Clear();
   return NS_OK;
-}
-
-NS_IMETHODIMP mozPersonalDictionary::AddCorrection(const char16_t *word, const char16_t *correction, const char16_t *lang)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP mozPersonalDictionary::RemoveCorrection(const char16_t *word, const char16_t *correction, const char16_t *lang)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP mozPersonalDictionary::GetCorrection(const char16_t *word, char16_t ***words, uint32_t *count)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP mozPersonalDictionary::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData)

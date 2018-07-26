@@ -325,11 +325,6 @@ TaggingService.prototype = {
     return this.__tagFolders;
   },
 
-  // nsITaggingService
-  get hasTags() {
-    return this._tagFolders.length > 0;
-  },
-
   // nsIObserver
   observe: function TS_observe(aSubject, aTopic, aData) {
     if (aTopic == TOPIC_SHUTDOWN) {

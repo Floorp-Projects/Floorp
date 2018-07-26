@@ -22,13 +22,13 @@ translations being migrated. For instance,
 is equivalent to:
 
     FTL.Pattern([
-        FTL.TextElement(Source('file.dtd', 'hello'))
+        Source('file.dtd', 'hello')
     ])
 
 Sometimes it's useful to work with text rather than (path, key) source
-definitions.  This is the case when the migrated translation requires some
+definitions. This is the case when the migrated translation requires some
 hardcoded text, e.g. <a> and </a> when multiple translations become a single
-one with a DOM overlay. In such cases it's best to use the AST nodes:
+one with a DOM overlay. In such cases it's best to use FTL.TextElements:
 
     FTL.Message(
         id=FTL.Identifier('update-failed'),
@@ -41,22 +41,21 @@ one with a DOM overlay. In such cases it's best to use the AST nodes:
         )
     )
 
-The REPLACE_IN_TEXT Transform also takes text as input, making in possible to
-pass it as the foreach function of the PLURALS Transform.  In this case, each
-slice of the plural string will be run through a REPLACE_IN_TEXT operation.
-Those slices are strings, so a REPLACE(path, key, …) wouldn't be suitable for
-them.
+The REPLACE_IN_TEXT Transform also takes TextElements as input, making it
+possible to pass it as the foreach function of the PLURALS Transform. In the
+example below, each slice of the plural string is converted into a
+TextElement by PLURALS and then run through the REPLACE_IN_TEXT transform.
 
     FTL.Message(
         FTL.Identifier('delete-all'),
         value=PLURALS(
             'aboutDownloads.dtd',
             'deleteAll',
-            EXTERNAL_ARGUMENT('num'),
+            VARIABLE_REFERENCE('num'),
             lambda text: REPLACE_IN_TEXT(
                 text,
                 {
-                    '#1': EXTERNAL_ARGUMENT('num')
+                    '#1': VARIABLE_REFERENCE('num')
                 }
             )
         )
@@ -64,16 +63,11 @@ them.
 """
 
 from __future__ import unicode_literals
-import itertools
+from __future__ import absolute_import
+import re
 
 import fluent.syntax.ast as FTL
 from .errors import NotSupportedError
-
-
-def pattern_from_text(value):
-    return FTL.Pattern([
-        FTL.TextElement(value)
-    ])
 
 
 def evaluate(ctx, node):
@@ -86,48 +80,113 @@ def evaluate(ctx, node):
     return node.traverse(eval_node)
 
 
+def get_text(element):
+    '''Get text content of a PatternElement.'''
+    if isinstance(element, FTL.TextElement):
+        return element.value
+    if isinstance(element, FTL.Placeable):
+        if isinstance(element.expression, FTL.StringLiteral):
+            return element.expression.value
+        else:
+            return None
+    raise RuntimeError('Expected PatternElement')
+
+
+def chain_elements(elements):
+    '''Flatten a list of FTL nodes into an iterator over PatternElements.'''
+    for element in elements:
+        if isinstance(element, FTL.Pattern):
+            # PY3 yield from element.elements
+            for child in element.elements:
+                yield child
+        elif isinstance(element, FTL.PatternElement):
+            yield element
+        elif isinstance(element, FTL.Expression):
+            yield FTL.Placeable(element)
+        else:
+            raise RuntimeError(
+                'Expected Pattern, PatternElement or Expression')
+
+
+re_leading_ws = re.compile(r'^(?P<whitespace>\s+)(?P<text>.*?)$')
+re_trailing_ws = re.compile(r'^(?P<text>.*?)(?P<whitespace>\s+)$')
+
+
+def extract_whitespace(regex, element):
+    '''Extract leading or trailing whitespace from a TextElement.
+
+    Return a tuple of (Placeable, TextElement) in which the Placeable
+    encodes the extracted whitespace as a StringLiteral and the
+    TextElement has the same amount of whitespace removed. The
+    Placeable with the extracted whitespace is always returned first.
+    '''
+    match = re.search(regex, element.value)
+    if match:
+        whitespace = match.group('whitespace')
+        placeable = FTL.Placeable(FTL.StringLiteral(whitespace))
+        if whitespace == element.value:
+            return placeable, None
+        else:
+            return placeable, FTL.TextElement(match.group('text'))
+    else:
+        return None, element
+
+
 class Transform(FTL.BaseNode):
     def __call__(self, ctx):
         raise NotImplementedError
 
     @staticmethod
-    def flatten_elements(elements):
-        '''Flatten a list of FTL nodes into valid Pattern's elements'''
-        flattened = []
-        for element in elements:
-            if isinstance(element, FTL.Pattern):
-                flattened.extend(element.elements)
-            elif isinstance(element, FTL.PatternElement):
-                flattened.append(element)
-            elif isinstance(element, FTL.Expression):
-                flattened.append(FTL.Placeable(element))
-            else:
-                raise RuntimeError(
-                    'Expected Pattern, PatternElement or Expression')
-        return flattened
+    def pattern_of(*elements):
+        normalized = []
 
-    @staticmethod
-    def prune_text_elements(elements):
-        '''Join adjacent TextElements and remove empty ones'''
-        pruned = []
-        # Group elements in contiguous sequences of the same type.
-        for elem_type, elems in itertools.groupby(elements, key=type):
-            if elem_type is FTL.TextElement:
-                # Join adjacent TextElements.
-                text = FTL.TextElement(''.join(elem.value for elem in elems))
-                # And remove empty ones.
-                if len(text.value) > 0:
-                    pruned.append(text)
+        # Normalize text content: convert all text to TextElements, join
+        # adjacent text and prune empty.
+        for current in chain_elements(elements):
+            current_text = get_text(current)
+            if current_text is None:
+                normalized.append(current)
+                continue
+
+            previous = normalized[-1] if len(normalized) else None
+            if isinstance(previous, FTL.TextElement):
+                # Join adjacent TextElements
+                previous.value += current_text
+            elif len(current_text) > 0:
+                # Normalize non-empty text to a TextElement
+                normalized.append(FTL.TextElement(current_text))
             else:
-                pruned.extend(elems)
-        return pruned
+                # Prune empty text
+                pass
+
+        # Handle empty values
+        if len(normalized) == 0:
+            empty = FTL.Placeable(FTL.StringLiteral(''))
+            return FTL.Pattern([empty])
+
+        # Handle explicit leading whitespace
+        if isinstance(normalized[0], FTL.TextElement):
+            ws, text = extract_whitespace(re_leading_ws, normalized[0])
+            normalized[:1] = [ws, text]
+
+        # Handle explicit trailing whitespace
+        if isinstance(normalized[-1], FTL.TextElement):
+            ws, text = extract_whitespace(re_trailing_ws, normalized[-1])
+            normalized[-1:] = [text, ws]
+
+        return FTL.Pattern([
+            element
+            for element in normalized
+            if element is not None
+        ])
 
 
 class Source(Transform):
     """Declare the source translation to be migrated with other transforms.
 
-    When evaluated, `Source` returns a simple string value. Escaped characters
-    are unescaped by the compare-locales parser according to the file format:
+    When evaluated, `Source` returns a TextElement with the content from the
+    source translation. Escaped characters are unescaped by the
+    compare-locales parser according to the file format:
 
       - in properties files: \\uXXXX,
       - in DTD files: known named, decimal, and hexadecimal HTML entities.
@@ -149,48 +208,48 @@ class Source(Transform):
         self.key = key
 
     def __call__(self, ctx):
-        return ctx.get_source(self.path, self.key)
+        text = ctx.get_source(self.path, self.key)
+        return FTL.TextElement(text)
 
 
 class COPY(Source):
     """Create a Pattern with the translation value from the given source."""
 
     def __call__(self, ctx):
-        source = super(self.__class__, self).__call__(ctx)
-        return pattern_from_text(source)
+        element = super(COPY, self).__call__(ctx)
+        return Transform.pattern_of(element)
 
 
 class REPLACE_IN_TEXT(Transform):
-    """Replace various placeables in the translation with FTL.
+    """Create a Pattern from a TextElement and replace legacy placeables.
 
     The original placeables are defined as keys on the `replacements` dict.
     For each key the value is defined as a FTL Pattern, Placeable,
     TextElement or Expressions to be interpolated.
     """
 
-    def __init__(self, value, replacements):
-        self.value = value
+    def __init__(self, element, replacements):
+        self.element = element
         self.replacements = replacements
 
     def __call__(self, ctx):
-
         # Only replace placeables which are present in the translation.
         replacements = {
             key: evaluate(ctx, repl)
-            for key, repl in self.replacements.iteritems()
-            if key in self.value
+            for key, repl in self.replacements.items()
+            if key in self.element.value
         }
 
         # Order the original placeables by their position in the translation.
         keys_in_order = sorted(
             replacements.keys(),
-            lambda x, y: self.value.find(x) - self.value.find(y)
+            key=lambda x: self.element.value.find(x)
         )
 
         # A list of PatternElements built from the legacy translation and the
         # FTL replacements. It may contain empty or adjacent TextElements.
         elements = []
-        tail = self.value
+        tail = self.element.value
 
         # Convert original placeables and text into FTL Nodes. For each
         # original placeable the translation will be partitioned around it and
@@ -203,10 +262,7 @@ class REPLACE_IN_TEXT(Transform):
 
         # Dont' forget about the tail after the loop ends.
         elements.append(FTL.TextElement(tail))
-
-        elements = self.flatten_elements(elements)
-        elements = self.prune_text_elements(elements)
-        return FTL.Pattern(elements)
+        return Transform.pattern_of(*elements)
 
 
 class REPLACE(Source):
@@ -217,63 +273,81 @@ class REPLACE(Source):
     """
 
     def __init__(self, path, key, replacements):
-        super(self.__class__, self).__init__(path, key)
+        super(REPLACE, self).__init__(path, key)
         self.replacements = replacements
 
     def __call__(self, ctx):
-        value = super(self.__class__, self).__call__(ctx)
-        return REPLACE_IN_TEXT(value, self.replacements)(ctx)
+        element = super(REPLACE, self).__call__(ctx)
+        return REPLACE_IN_TEXT(element, self.replacements)(ctx)
 
 
 class PLURALS(Source):
     """Create a Pattern with plurals from given source.
 
     Build an `FTL.SelectExpression` with the supplied `selector` and variants
-    extracted from the source.  The source needs to be a semicolon-separated
-    list of variants.  Each variant will be run through the `foreach` function,
-    which should return an `FTL.Node` or a `Transform`. By default, the
-    `foreach` function transforms the source text into a Pattern with a single
-    TextElement.
+    extracted from the source. The original translation should be a
+    semicolon-separated list of plural forms. Each form will be converted
+    into a TextElement and run through the `foreach` function, which should
+    return an `FTL.Node` or a `Transform`. By default, the `foreach` function
+    creates a valid Pattern from the TextElement passed into it.
     """
     DEFAULT_ORDER = ('zero', 'one', 'two', 'few', 'many', 'other')
 
-    def __init__(self, path, key, selector, foreach=pattern_from_text):
-        super(self.__class__, self).__init__(path, key)
+    def __init__(self, path, key, selector, foreach=Transform.pattern_of):
+        super(PLURALS, self).__init__(path, key)
         self.selector = selector
         self.foreach = foreach
 
     def __call__(self, ctx):
-        value = super(self.__class__, self).__call__(ctx)
+        element = super(PLURALS, self).__call__(ctx)
         selector = evaluate(ctx, self.selector)
-        variants = value.split(';')
         keys = ctx.plural_categories
+        forms = [
+            FTL.TextElement(part)
+            for part in element.value.split(';')
+        ]
 
-        # A special case for languages with one plural category. We don't need
-        # to insert a SelectExpression at all for them.
-        if len(keys) == len(variants) == 1:
-            variant, = variants
-            return evaluate(ctx, self.foreach(variant))
-
-        # The default CLDR form should be the last we have in
-        # DEFAULT_ORDER, usually `other`, but in some cases `many`.
-        # If we don't have a variant for that, we'll append one,
-        # using the, in CLDR order, last existing variant in the legacy
-        # translation. That may or may not be the last variant.
+        # The default CLDR form should be the last we have in DEFAULT_ORDER,
+        # usually `other`, but in some cases `many`. If we don't have a variant
+        # for that, we'll append one, using the, in CLDR order, last existing
+        # variant in the legacy translation. That may or may not be the last
+        # variant.
         default_key = [
             key for key in reversed(self.DEFAULT_ORDER) if key in keys
         ][0]
 
-        keys_and_variants = zip(keys, variants)
-        keys_and_variants.sort(key=lambda (k, v): self.DEFAULT_ORDER.index(k))
-        last_key, last_variant = keys_and_variants[-1]
-        if last_key != default_key:
-            keys_and_variants.append((default_key, last_variant))
+        # Match keys to legacy forms in the order they are defined in Gecko's
+        # PluralForm.jsm. Filter out empty forms.
+        pairs = [
+            (key, var)
+            for key, var in zip(keys, forms)
+            if var.value
+        ]
 
-        def createVariant(key, variant):
-            # Run the legacy variant through `foreach` which returns an
+        # A special case for legacy translations which don't define any
+        # plural forms.
+        if len(pairs) == 0:
+            return Transform.pattern_of()
+
+        # A special case for languages with one plural category or one legacy
+        # variant. We don't need to insert a SelectExpression for them.
+        if len(pairs) == 1:
+            _, only_form = pairs[0]
+            only_variant = evaluate(ctx, self.foreach(only_form))
+            return Transform.pattern_of(only_variant)
+
+        # Make sure the default key is defined. If it's missing, use the last
+        # form (in CLDR order) found in the legacy translation.
+        pairs.sort(key=lambda pair: self.DEFAULT_ORDER.index(pair[0]))
+        last_key, last_form = pairs[-1]
+        if last_key != default_key:
+            pairs.append((default_key, last_form))
+
+        def createVariant(key, form):
+            # Run the legacy plural form through `foreach` which returns an
             # `FTL.Node` describing the transformation required for each
-            # variant.  Then evaluate it to a migrated FTL node.
-            value = evaluate(ctx, self.foreach(variant))
+            # variant. Then evaluate it to a migrated FTL node.
+            value = evaluate(ctx, self.foreach(form))
             return FTL.Variant(
                 key=FTL.VariantName(key),
                 value=value,
@@ -281,15 +355,14 @@ class PLURALS(Source):
             )
 
         select = FTL.SelectExpression(
-            expression=selector,
+            selector=selector,
             variants=[
-                createVariant(key, variant)
-                for key, variant in keys_and_variants
+                createVariant(key, form)
+                for key, form in pairs
             ]
         )
 
-        placeable = FTL.Placeable(select)
-        return FTL.Pattern([placeable])
+        return Transform.pattern_of(select)
 
 
 class CONCAT(Transform):
@@ -303,6 +376,4 @@ class CONCAT(Transform):
         self.elements = list(kwargs.get('elements', elements))
 
     def __call__(self, ctx):
-        elements = self.flatten_elements(self.elements)
-        elements = self.prune_text_elements(elements)
-        return FTL.Pattern(elements)
+        return Transform.pattern_of(*self.elements)

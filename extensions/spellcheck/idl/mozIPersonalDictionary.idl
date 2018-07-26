@@ -33,45 +33,25 @@ interface mozIPersonalDictionary : nsISupports {
   /**
    * Check a unicode string
    */
-  boolean check(in wstring word, in wstring lang);
+  boolean check(in AString word);
 
   /**
    * Add a word to the personal dictionary
    */
-  void addWord(in wstring word, in wstring lang);
+  void addWord(in AString word);
 
   /**
    * Remove a word from the personal dictionary
    */
-  void removeWord(in wstring word, in wstring lang);
+  void removeWord(in AString word);
 
   /**
    * Add a word to the ignore all list
    */
-  void ignoreWord(in wstring word);
+  void ignoreWord(in AString word);
 
   /**
    * Clear the ignore list
    */
   void endSession();
-
-  /** 
-   * These three functions are here in case we want to store previous 
-   * misspellings and return them at the head of the misspell list.
-   */
- 
-  /**
-   * Add a misspelling to the list of corrections
-   */
-  void addCorrection(in wstring word,in wstring correction, in wstring lang);
-
-  /**
-   * Remove a misspelling from the list of corrections
-   */
-  void removeCorrection(in wstring word,in wstring correction, in wstring lang);
-
-  /**
-   * Get a list of previous corrections for the word
-   */
-  void getCorrection(in wstring word, [array, size_is(count)] out wstring words, out uint32_t count);
 };

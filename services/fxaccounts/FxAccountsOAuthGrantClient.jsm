@@ -10,7 +10,6 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsOAuthGrantClient", "FxAccountsOAuthGrantClientError"];
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.import("resource://services-common/rest.js");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

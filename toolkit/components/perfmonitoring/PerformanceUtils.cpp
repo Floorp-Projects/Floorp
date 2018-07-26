@@ -22,12 +22,15 @@ CollectPerformanceInfo(nsTArray<PerformanceInfo>& aMetrics)
    // collecting ReportPerformanceInfo from all DocGroup instances
    LinkedList<TabGroup>* tabGroups = TabGroup::GetTabGroupList();
 
-   for (TabGroup* tabGroup = tabGroups->getFirst(); tabGroup;
-       tabGroup =
-         static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
-    for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
-      DocGroup* docGroup = iter.Get()->mDocGroup;
-      aMetrics.AppendElement(docGroup->ReportPerformanceInfo());
+   // if GetTabGroupList() returns null, we don't have any tab group
+   if (tabGroups) {
+     for (TabGroup* tabGroup = tabGroups->getFirst(); tabGroup;
+         tabGroup =
+           static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
+      for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
+        DocGroup* docGroup = iter.Get()->mDocGroup;
+        aMetrics.AppendElement(docGroup->ReportPerformanceInfo());
+      }
     }
   }
 

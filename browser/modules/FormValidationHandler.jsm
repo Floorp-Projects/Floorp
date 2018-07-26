@@ -10,8 +10,6 @@
 
 var EXPORTED_SYMBOLS = [ "FormValidationHandler" ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var FormValidationHandler =
 {
   _panel: null,
