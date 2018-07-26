@@ -170,6 +170,8 @@ add_task(async function test_add_selectedShippingAddress() {
 
   let address1 = deepClone(PTU.Addresses.TimBL);
   address1.guid = "TimBLGUID";
+  let address2 = deepClone(PTU.Addresses.TimBL2);
+  address2.guid = "TimBL2GUID";
 
   await form.requestStore.setState({
     page: {
@@ -177,15 +179,16 @@ add_task(async function test_add_selectedShippingAddress() {
     },
     savedAddresses: {
       [address1.guid]: deepClone(address1),
+      [address2.guid]: deepClone(address2),
     },
     savedBasicCards: {
       [card1.guid]: deepClone(card1),
     },
-    selectedShippingAddress: address1.guid,
+    selectedShippingAddress: address2.guid,
   });
   await asyncElementRendered();
   checkCCForm(form, {
-    billingAddressGUID: address1.guid,
+    billingAddressGUID: address2.guid,
   });
 
   form.remove();

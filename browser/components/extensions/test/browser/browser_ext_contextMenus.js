@@ -24,14 +24,14 @@ add_task(async function() {
         id: "clickme-page",
         title: "Click me!",
         contexts: ["page"],
+      }, () => {
+        browser.test.sendMessage("ready");
       });
-      browser.contextMenus.onClicked.addListener(() => {});
-      browser.test.notifyPass();
     },
   });
 
   await extension.startup();
-  await extension.awaitFinish();
+  await extension.awaitMessage("ready");
 
   let contentAreaContextMenu = await openContextMenu("#img1");
   let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
@@ -137,12 +137,12 @@ add_task(async function() {
         /cannot be an ancestor/,
         "Should not be able to reparent an item as descendent of itself");
 
-      browser.test.notifyPass("contextmenus");
+      browser.test.sendMessage("contextmenus");
     },
   });
 
   await extension.startup();
-  await extension.awaitFinish("contextmenus");
+  await extension.awaitMessage("contextmenus");
 
   let expectedClickInfo = {
     menuItemId: "ext-image",
@@ -530,10 +530,6 @@ add_task(async function test_bookmark_contextmenu() {
         title,
         parentId: "toolbar_____",
       });
-      await browser.contextMenus.create({
-        title: "Get bookmark",
-        contexts: ["bookmark"],
-      });
       browser.contextMenus.onClicked.addListener(async (info) => {
         browser.test.assertEq(newBookmark.id, info.bookmarkId, "Bookmark ID matches");
 
@@ -544,7 +540,12 @@ add_task(async function test_bookmark_contextmenu() {
         await browser.bookmarks.remove(info.bookmarkId);
         browser.test.sendMessage("test-finish");
       });
-      browser.test.sendMessage("bookmark-created");
+      browser.contextMenus.create({
+        title: "Get bookmark",
+        contexts: ["bookmark"],
+      }, () => {
+        browser.test.sendMessage("bookmark-created");
+      });
     },
   });
   await extension.startup();
@@ -569,12 +570,13 @@ add_task(async function test_bookmark_context_requires_permission() {
     manifest: {
       permissions: ["contextMenus"],
     },
-    async background() {
-      await browser.contextMenus.create({
+    background() {
+      browser.contextMenus.create({
         title: "Get bookmark",
         contexts: ["bookmark"],
+      }, () => {
+        browser.test.sendMessage("bookmark-created");
       });
-      browser.test.sendMessage("bookmark-created");
     },
   });
   await extension.startup();

@@ -23,7 +23,8 @@
       "matches": ["*://*/Speedometer/index.html*",
                   "*://*/StyleBench/*",
                   "*://*/MotionMark/*",
-                  "*://*/SunSpider/*"],
+                  "*://*/SunSpider/*",
+                  "*://*/webaudio/*"],
       "js": ["benchmark-relay.js"]
     }
   ],

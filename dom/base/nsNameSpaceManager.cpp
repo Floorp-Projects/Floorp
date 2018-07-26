@@ -274,9 +274,6 @@ nsNameSpaceManager::AddDisabledNameSpace(already_AddRefed<nsAtom> aURI,
   return NS_OK;
 }
 
-// nsISupports
-NS_IMPL_ISUPPORTS0(nsNameSpaceManager)
-
 void
 nsNameSpaceManager::PrefChanged(const char* aPref)
 {
