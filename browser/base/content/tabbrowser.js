@@ -1775,12 +1775,19 @@ window._gBrowser = {
     FullZoom.onLocationChange(tabURI, false, browser);
   },
 
-  _createBrowser(aParams) {
-    // Supported parameters:
-    // userContextId, remote, remoteType, isPreloadBrowser,
-    // uriIsAboutBlank, sameProcessAsFrameLoader,
-    // recordExecution, replayExecution
-
+  _createBrowser({
+    isPreloadBrowser,
+    name,
+    nextTabParentId,
+    openerWindow,
+    recordExecution,
+    remote,
+    remoteType,
+    replayExecution,
+    sameProcessAsFrameLoader,
+    uriIsAboutBlank,
+    userContextId,
+  } = {}) {
     let b = document.createElementNS(this._XUL_NS, "browser");
     b.permanentKey = {};
 
@@ -1788,38 +1795,36 @@ window._gBrowser = {
       b.setAttribute(attribute, this._defaultBrowserAttributes[attribute]);
     }
 
-    if (aParams.userContextId) {
-      b.setAttribute("usercontextid", aParams.userContextId);
+    if (userContextId) {
+      b.setAttribute("usercontextid", userContextId);
     }
 
     // remote parameter used by some addons, use default in this case.
-    if (aParams.remote && !aParams.remoteType) {
-      aParams.remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+    if (remote && !remoteType) {
+      remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
     }
 
-    if (aParams.remoteType) {
-      b.setAttribute("remoteType", aParams.remoteType);
+    if (remoteType) {
+      b.setAttribute("remoteType", remoteType);
       b.setAttribute("remote", "true");
     }
 
-    let recordExecution = aParams && aParams.recordExecution;
     if (recordExecution) {
       b.setAttribute("recordExecution", recordExecution);
     }
 
-    let replayExecution = aParams && aParams.replayExecution;
     if (replayExecution) {
       b.setAttribute("replayExecution", replayExecution);
     }
 
-    if (aParams.openerWindow) {
-      if (aParams.remoteType) {
+    if (openerWindow) {
+      if (remoteType) {
         throw new Error("Cannot set opener window on a remote browser!");
       }
-      b.presetOpenerWindow(aParams.openerWindow);
+      b.presetOpenerWindow(openerWindow);
     }
 
-    if (!aParams.isPreloadBrowser) {
+    if (!isPreloadBrowser) {
       b.setAttribute("autocompletepopup", "PopupAutoComplete");
     }
 
@@ -1838,28 +1843,28 @@ window._gBrowser = {
      *      that browser altogether
      * See more details on Bug 1420285.
      */
-    if (aParams.isPreloadBrowser) {
+    if (isPreloadBrowser) {
       b.setAttribute("preloadedState", "preloaded");
     }
 
-    if (aParams.nextTabParentId) {
-      if (!aParams.remoteType) {
+    if (nextTabParentId) {
+      if (!remoteType) {
         throw new Error("Cannot have nextTabParentId without a remoteType");
       }
       // Gecko is going to read this attribute and use it.
-      b.setAttribute("nextTabParentId", aParams.nextTabParentId.toString());
+      b.setAttribute("nextTabParentId", nextTabParentId.toString());
     }
 
-    if (aParams.sameProcessAsFrameLoader) {
-      b.sameProcessAsFrameLoader = aParams.sameProcessAsFrameLoader;
+    if (sameProcessAsFrameLoader) {
+      b.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
     }
 
     // This will be used by gecko to control the name of the opened
     // window.
-    if (aParams.name) {
+    if (name) {
       // XXX: The `name` property is special in HTML and XUL. Should
       // we use a different attribute name for this?
-      b.setAttribute("name", aParams.name);
+      b.setAttribute("name", name);
     }
 
     // Create the browserStack container
@@ -1888,7 +1893,7 @@ window._gBrowser = {
 
     // Prevent the superfluous initial load of a blank document
     // if we're going to load something other than about:blank.
-    if (!aParams.uriIsAboutBlank) {
+    if (!uriIsAboutBlank) {
       b.setAttribute("nodefaultsrc", "true");
     }
 
