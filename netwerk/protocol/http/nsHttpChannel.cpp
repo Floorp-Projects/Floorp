@@ -6895,6 +6895,21 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
                 mozilla::MutexAutoLock lock(mRCWNLock);
                 mFirstResponseSource = RESPONSE_FROM_NETWORK;
                 mOnStartRequestTimestamp = TimeStamp::Now();
+
+                // Conditional or byte range header could be added in
+                // OnCacheEntryCheck. We need to remove them because the
+                // request might be sent again due to auth retry and we must
+                // not send these headers without having the entry.
+                if (mDidReval) {
+                    LOG(("  Removing conditional request headers"));
+                    UntieValidationRequest();
+                    mDidReval = false;
+                }
+                if (mCachedContentIsPartial) {
+                    LOG(("  Removing byte range request headers"));
+                    UntieByteRangeRequest();
+                    mCachedContentIsPartial = false;
+                }
             }
             mAvailableCachedAltDataType.Truncate();
         } else if (WRONG_RACING_RESPONSE_SOURCE(request)) {
