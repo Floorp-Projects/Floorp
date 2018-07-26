@@ -122,6 +122,14 @@ public:
     return true;
   }
 
+#if defined(_M_IX86)
+  bool WriteAtomic(void* aDestPtr, const uint16_t aValue) const
+  {
+    *static_cast<uint16_t*>(aDestPtr) = aValue;
+    return true;
+  }
+#endif // defined(_M_IX86)
+
   bool Protect(void* aVAddress, size_t aSize, uint32_t aProtFlags,
                uint32_t* aPrevProtFlags) const
   {

@@ -177,6 +177,9 @@ public:
     }
 
     mMMPolicy.FlushInstructionCache();
+
+    mStartWriteOffset += mLocalBytes.length();
+
     mLocalBytes.clear();
     return true;
   }
@@ -227,6 +230,53 @@ public:
 
     mOffset += sizeof(uint16_t);
   }
+
+#if defined(_M_IX86)
+private:
+  template <typename T>
+  bool CommitAndWriteShortInternal(const T& aMMPolicy, void* aDest, uint16_t aValue);
+
+  template <>
+  bool CommitAndWriteShortInternal<MMPolicyInProcess>(const MMPolicyInProcess& aMMPolicy,
+                                                      void* aDest, uint16_t aValue)
+  {
+    return aMMPolicy.WriteAtomic(aDest, aValue);
+  }
+
+  template <>
+  bool CommitAndWriteShortInternal<MMPolicyOutOfProcess>(const MMPolicyOutOfProcess& aMMPolicy,
+                                                         void* aDest, uint16_t aValue)
+  {
+    return aMMPolicy.Write(aDest, &aValue, sizeof(uint16_t));
+  }
+
+public:
+  /**
+   * Commits any dirty writes, and then writes a short, atomically if possible.
+   * This call may succeed in both inproc and outproc cases, but atomicity
+   * is only guaranteed in the inproc case.
+   */
+  bool CommitAndWriteShort(const uint16_t aValue)
+  {
+    // First, commit everything that has been written until now
+    if (!Commit()) {
+      return false;
+    }
+
+    // Now immediately write the short, atomically if inproc
+    bool ok = CommitAndWriteShortInternal(mMMPolicy,
+                                          reinterpret_cast<void*>(mFunc +
+                                                                  mStartWriteOffset),
+                                          aValue);
+    if (!ok) {
+      return false;
+    }
+
+    mMMPolicy.FlushInstructionCache();
+    mStartWriteOffset += sizeof(uint16_t);
+    return true;
+  }
+#endif // defined(_M_IX86)
 
   void WriteDisp32(const uintptr_t aAbsTarget)
   {
