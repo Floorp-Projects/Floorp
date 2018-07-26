@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[features/activity-stream@mozilla.org] chrome.jar:
+% resource activity-stream %content/ contentaccessible=yes
+  content/lib/ (./lib/*)
+  content/common/ (./common/*)
+  content/vendor/Redux.jsm (./vendor/Redux.jsm)
+  content/vendor/react.js (./vendor/react.js)
+  content/vendor/react-dom.js (./vendor/react-dom.js)
+#ifndef RELEASE_OR_BETA
+  content/vendor/react-dev.js (./vendor/react-dev.js)
+  content/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
+#endif
+  content/vendor/prop-types.js (./vendor/prop-types.js)
+  content/vendor/react-intl.js (./vendor/react-intl.js)
+  content/vendor/redux.js (./vendor/redux.js)
+  content/vendor/react-redux.js (./vendor/react-redux.js)
+  content/data/content/assets/ (./data/content/assets/*)
+  content/data/content/tippytop/ (./data/content/tippytop/*)
+  content/data/content/activity-stream.bundle.js (./data/content/activity-stream.bundle.js)
+#ifndef RELEASE_OR_BETA
+  content/data/content/activity-stream.bundle.js.map (./data/content/activity-stream.bundle.js.map)
+#endif
+#ifdef XP_MACOSX
+  content/css/activity-stream.css (./css/activity-stream-mac.css)
+#ifndef RELEASE_OR_BETA
+  content/css/activity-stream-mac.css.map (./css/activity-stream-mac.css.map)
+#endif
+#elifdef XP_WIN
+  content/css/activity-stream.css (./css/activity-stream-windows.css)
+#ifndef RELEASE_OR_BETA
+  content/css/activity-stream-windows.css.map (./css/activity-stream-windows.css.map)
+#endif
+#else
+  content/css/activity-stream.css (./css/activity-stream-linux.css)
+#ifndef RELEASE_OR_BETA
+  content/css/activity-stream-linux.css.map (./css/activity-stream-linux.css.map)
+#endif
+#endif
+  content/prerendered/static/activity-stream-initial-state.js (./prerendered/static/activity-stream-initial-state.js)
+#ifndef RELEASE_OR_BETA
+  content/prerendered/static/activity-stream-debug.html (./prerendered/static/activity-stream-debug.html)
+  content/prerendered/static/activity-stream-prerendered-debug.html (./prerendered/static/activity-stream-prerendered-debug.html)
+#endif
+  content/prerendered/ (./prerendered/locales/*)
