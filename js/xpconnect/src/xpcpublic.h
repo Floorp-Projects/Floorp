@@ -11,6 +11,7 @@
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"
 #include "js/Proxy.h"
+#include "js/Wrapper.h"
 
 #include "nsAtom.h"
 #include "nsISupports.h"
@@ -103,8 +104,9 @@ GetXBLScope(JSContext* cx, JSObject* contentScope);
 inline JSObject*
 GetXBLScopeOrGlobal(JSContext* cx, JSObject* obj)
 {
+    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
     if (IsInContentXBLScope(obj))
-        return js::GetGlobalForObjectCrossCompartment(obj);
+        return JS::GetNonCCWObjectGlobal(obj);
     return GetXBLScope(cx, obj);
 }
 

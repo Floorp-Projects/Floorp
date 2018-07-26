@@ -892,7 +892,8 @@ GetOrCreateMapEntryForPrototype(JSContext *cx, JS::Handle<JSObject*> proto)
   // Now, enter the XBL scope, since that's where we need to operate, and wrap
   // the proto accordingly. We hang the map off of the content XBL scope for
   // content, and the Window for chrome (whether add-ons are involved or not).
-  JS::Rooted<JSObject*> scope(cx, xpc::GetXBLScopeOrGlobal(cx, proto));
+  JS::Rooted<JSObject*> scope(cx,
+    xpc::GetXBLScopeOrGlobal(cx, JS::CurrentGlobalOrNull(cx)));
   NS_ENSURE_TRUE(scope, nullptr);
   MOZ_ASSERT(JS_IsGlobalObject(scope));
 
@@ -959,6 +960,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   // but we need to make sure never to assume that the the reflector and
   // prototype are same-compartment with the bound document.
   JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(obj));
+
+  // We must be in obj's realm.
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(cx) == global);
 
   // We never store class objects in add-on scopes.
   JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScopeOrGlobal(cx, global));
