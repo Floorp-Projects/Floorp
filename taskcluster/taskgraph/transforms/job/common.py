@@ -9,8 +9,7 @@ consistency.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import json
-from taskgraph.util.taskcluster import get_artifact_url, get_artifact_prefix
+from taskgraph.util.taskcluster import get_artifact_prefix
 
 SECRET_SCOPE = 'secrets:get:project/releng/gecko/{}/level-{}/{}'
 
@@ -193,26 +192,3 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
         taskdesc['scopes'].extend([
             'docker-worker:relengapi-proxy:tooltool.download.internal',
         ])
-
-
-def support_use_artifacts(config, job, taskdesc, use_artifacts):
-    """Set a JSON object of artifact URLs in an environment variable.
-
-    This will tell the run-task script to download the artifacts.
-    """
-    urls = {}
-    prefix = get_artifact_prefix(taskdesc)
-    for kind, artifacts in use_artifacts.items():
-        if kind not in taskdesc['dependencies']:
-            raise Exception("{label} can't use '{kind}' artifacts because it has no '{kind}' "
-                            "dependency!".format(label=job['label'], kind=kind))
-        task_id = '<{}>'.format(kind)
-        urls[kind] = []
-
-        for artifact in artifacts:
-            path = '/'.join([prefix, artifact])
-            urls[kind].append(get_artifact_url(task_id, path))
-
-    env = taskdesc['worker'].setdefault('env', {})
-    env['USE_ARTIFACT_URLS'] = {'task-reference': json.dumps(urls)}
-    env['USE_ARTIFACT_PATH'] = '{workdir}/use-artifacts'.format(**job['run'])

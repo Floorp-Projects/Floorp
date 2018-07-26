@@ -49,8 +49,8 @@ def runtests(setup_test_harness, binary, parser):
             'utilityPath': os.path.join(package_root, 'bin'),
         })
 
-        if 'USE_ARTIFACT_PATH' in os.environ:
-            options['sandboxReadWhitelist'].append(os.environ['USE_ARTIFACT_PATH'])
+        if 'MOZ_FETCHES_DIR' in os.environ:
+            options['sandboxReadWhitelist'].append(os.environ['MOZ_FETCHES_DIR'])
     else:
         options.update({
             'extraProfileFiles': [os.path.join(build.topobjdir, 'dist', 'plugins')],
