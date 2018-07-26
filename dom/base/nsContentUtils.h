@@ -3167,6 +3167,12 @@ public:
   static uint64_t GenerateTabId();
 
   /**
+   * Generate an id for a BrowsingContext using a range of serial
+   * numbers reserved for the current process.
+   */
+  static uint64_t GenerateBrowsingContextId();
+
+  /**
    * Check whether we should skip moving the cursor for a same-value .value set
    * on a text input or textarea.
    */

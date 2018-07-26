@@ -10800,13 +10800,11 @@ nsContentUtils::IsLocalRefURL(const nsACString& aString)
   return ::IsLocalRefURL(aString);
 }
 
-// Tab ID is composed in a similar manner of Window ID.
-static uint64_t gNextTabId = 0;
-static const uint64_t kTabIdProcessBits = 32;
-static const uint64_t kTabIdTabBits = 64 - kTabIdProcessBits;
+static const uint64_t kIdProcessBits = 32;
+static const uint64_t kIdBits = 64 - kIdProcessBits;
 
 /* static */ uint64_t
-nsContentUtils::GenerateTabId()
+GenerateProcessSpecificId(uint64_t aId)
 {
   uint64_t processId = 0;
   if (XRE_IsContentProcess()) {
@@ -10814,14 +10812,32 @@ nsContentUtils::GenerateTabId()
     processId = cc->GetID();
   }
 
-  MOZ_RELEASE_ASSERT(processId < (uint64_t(1) << kTabIdProcessBits));
-  uint64_t processBits = processId & ((uint64_t(1) << kTabIdProcessBits) - 1);
+  MOZ_RELEASE_ASSERT(processId < (uint64_t(1) << kIdProcessBits));
+  uint64_t processBits = processId & ((uint64_t(1) << kIdProcessBits) - 1);
 
-  uint64_t tabId = ++gNextTabId;
-  MOZ_RELEASE_ASSERT(tabId < (uint64_t(1) << kTabIdTabBits));
-  uint64_t tabBits = tabId & ((uint64_t(1) << kTabIdTabBits) - 1);
+  uint64_t id = aId;
+  MOZ_RELEASE_ASSERT(id < (uint64_t(1) << kIdBits));
+  uint64_t bits = id & ((uint64_t(1) << kIdBits) - 1);
 
-  return (processBits << kTabIdTabBits) | tabBits;
+  return (processBits << kIdBits) | bits;
+}
+
+// Tab ID is composed in a similar manner of Window ID.
+static uint64_t gNextTabId = 0;
+
+/* static */ uint64_t
+nsContentUtils::GenerateTabId()
+{
+  return GenerateProcessSpecificId(++gNextTabId);
+}
+
+// Browsing context ID is composed in a similar manner of Window ID.
+static uint64_t gNextBrowsingContextId = 0;
+
+/* static */ uint64_t
+nsContentUtils::GenerateBrowsingContextId()
+{
+  return GenerateProcessSpecificId(++gNextBrowsingContextId);
 }
 
 /* static */ bool
