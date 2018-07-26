@@ -2,9 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.app {
-  font-size: 15px;
-  height: 100vh;
-  overflow: hidden;
-  width: 100vw;
+.runtime-item {
+  align-items: center;
+  display: flex;
+  font-size: 20px;
+  margin-inline-start: 24px;
+}
+
+.runtime-item__icon {
+  height: 24px;
+  margin-inline-end: 9px;
+  width: 24px;
 }

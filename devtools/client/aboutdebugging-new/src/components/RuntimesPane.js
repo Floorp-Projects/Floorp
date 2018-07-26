@@ -10,9 +10,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const ThisFirefox = require("../runtimes/this-firefox");
 
-const RuntimesPane = createFactory(require("./RuntimesPane"));
+const RuntimeItem = createFactory(require("./runtime/RuntimeItem"));
 
-class App extends PureComponent {
+class RuntimesPane extends PureComponent {
   static get propTypes() {
     return {
       thisFirefox: PropTypes.instanceOf(ThisFirefox).isRequired,
@@ -22,13 +22,19 @@ class App extends PureComponent {
   render() {
     const { thisFirefox } = this.props;
 
-    return dom.div(
+    return dom.section(
       {
-        className: "app",
+        className: "runtimes-pane",
       },
-      RuntimesPane({ thisFirefox })
+      dom.ul(
+        {},
+        RuntimeItem({
+          icon: thisFirefox.getIcon(),
+          name: thisFirefox.getName(),
+        })
+      )
     );
   }
 }
 
-module.exports = App;
+module.exports = RuntimesPane;
