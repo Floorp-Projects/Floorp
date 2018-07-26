@@ -724,10 +724,10 @@ Instance::tracePrivate(JSTracer* trc)
 #ifdef ENABLE_WASM_GC
     for (const GlobalDesc& global : code().metadata().globals) {
         // Indirect anyref global get traced by the owning WebAssembly.Global.
-        if (global.type() != ValType::AnyRef || global.isConstant() || global.isIndirect())
+        if (!global.type().isRefOrAnyRef() || global.isConstant() || global.isIndirect())
             continue;
         GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
-        TraceNullableEdge(trc, obj, "wasm anyref global");
+        TraceNullableEdge(trc, obj, "wasm ref/anyref global");
     }
 #endif
 
