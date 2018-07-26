@@ -115,6 +115,11 @@ public class WebAppActivity extends AppCompatActivity
             }
 
             @Override
+            public void onProgressChange(GeckoSession session, int progress) {
+
+            }
+
+            @Override
             public void onSecurityChange(GeckoSession session, SecurityInformation security) {
                 // We want to ignore the extraneous first about:blank load
                 if (mIsFirstLoad && security.origin.startsWith("moz-nullprincipal:")) {
