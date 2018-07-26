@@ -15,6 +15,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/dom/ChildSHistory.h"
@@ -378,6 +379,9 @@ public:
   // Returns true if the current load is a force reload (started by holding
   // shift while triggering reload)
   bool IsForceReloading();
+
+  already_AddRefed<mozilla::dom::BrowsingContext>
+  GetBrowsingContext() const;
 
 private: // member functions
   friend class nsDSURIContentListener;
@@ -907,7 +911,6 @@ private: // data members
 #endif /* DEBUG */
 
   nsID mHistoryID;
-  nsString mName;
   nsString mTitle;
   nsString mCustomUserAgent;
   nsCString mOriginalUriString;
@@ -932,6 +935,7 @@ private: // data members
   RefPtr<mozilla::dom::ChildSHistory> mSessionHistory;
   nsCOMPtr<nsIWebBrowserFind> mFind;
   nsCOMPtr<nsICommandManager> mCommandManager;
+  RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
   // Dimensions of the docshell
   nsIntRect mBounds;
