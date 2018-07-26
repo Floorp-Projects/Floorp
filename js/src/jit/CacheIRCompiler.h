@@ -30,6 +30,7 @@ namespace jit {
     _(GuardClass)                         \
     _(GuardGroupHasUnanalyzedNewScript)   \
     _(GuardIsNativeFunction)              \
+    _(GuardFunctionPrototype)             \
     _(GuardIsNativeObject)                \
     _(GuardIsProxy)                       \
     _(GuardNotDOMProxy)                   \
