@@ -9442,9 +9442,7 @@ nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame)
   }
 
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
-  bool isTableElement = disp->IsInnerTableStyle() &&
-    disp->mDisplay != StyleDisplay::TableCell &&
-    disp->mDisplay != StyleDisplay::TableCaption;
+  bool isTableElement = disp->IsInternalTableStyleExceptCell();
   if (isTableElement) {
     return NS_STYLE_TOUCH_ACTION_AUTO;
   }
