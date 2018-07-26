@@ -1813,7 +1813,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 69;
+    const UI_VERSION = 70;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2123,6 +2123,17 @@ BrowserGlue.prototype = {
           Services.prefs.clearUserPref("social." + item);
         }
       }
+    }
+
+    if (currentUIVersion < 70) {
+      // Migrate old ctrl-tab pref to new one in existing profiles. (This code
+      // doesn't run at all in new profiles.)
+      Services.prefs.setBoolPref("browser.ctrlTab.recentlyUsedOrder",
+        Services.prefs.getBoolPref("browser.ctrlTab.previews", false));
+      Services.prefs.clearUserPref("browser.ctrlTab.previews");
+      // Remember that we migrated the pref in case we decide to flip it for
+      // these users.
+      Services.prefs.setBoolPref("browser.ctrlTab.migrated", true);
     }
 
     // Update the migration version.
