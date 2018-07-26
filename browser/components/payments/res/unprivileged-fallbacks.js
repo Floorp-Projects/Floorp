@@ -47,4 +47,11 @@ var PaymentDialogUtils = {
       "postalCodePattern": country == "US" ? "(\\d{5})(?:[ \\-](\\d{4}))?" : "[ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z] ?\\d[ABCEGHJ-NPRSTV-Z]\\d",
     };
   },
+  getDefaultPreferences() {
+    let prefValues = {
+      saveCreditCardDefaultChecked: false,
+      saveAddressDefaultChecked: true,
+    };
+    return prefValues;
+  },
 };
