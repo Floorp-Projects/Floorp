@@ -482,6 +482,8 @@ nsWindow::nsWindow()
     mPendingConfigures = 0;
     mCSDSupportLevel = CSD_SUPPORT_NONE;
     mDrawInTitlebar = false;
+
+    mHasAlphaVisual = false;
 }
 
 nsWindow::~nsWindow()
@@ -2134,7 +2136,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     bool shaped = false;
     if (eTransparencyTransparent == GetTransparencyMode()) {
-        if (IsComposited()) {
+        if (mHasAlphaVisual) {
             // Remove possible shape mask from when window manger was not
             // previously compositing.
             static_cast<nsWindow*>(GetTopLevelWidget())->
@@ -2237,7 +2239,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
       if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
         if (GetTransparencyMode() == eTransparencyTransparent &&
             layerBuffering == BufferMode::BUFFER_NONE &&
-            IsComposited()) {
+            mHasAlphaVisual) {
           // If our draw target is unbuffered and we use an alpha channel,
           // clear the image beforehand to ensure we don't get artifacts from a
           // reused SHM image. See bug 1258086.
@@ -3661,8 +3663,8 @@ nsWindow::Create(nsIWidget* aParent,
     nsWindow       *parentnsWindow = nullptr;
     GtkWidget      *eventWidget = nullptr;
     bool            drawToContainer = false;
-    bool            useAlphaVisual = (mWindowType == eWindowType_popup &&
-                                     aInitData->mSupportTranslucency);
+    bool            needsAlphaVisual = (mWindowType == eWindowType_popup &&
+                                       aInitData->mSupportTranslucency);
 
     if (aParent) {
         parentnsWindow = static_cast<nsWindow*>(aParent);
@@ -3731,22 +3733,28 @@ nsWindow::Create(nsIWidget* aParent,
             int screenNumber = GDK_SCREEN_XNUMBER(screen);
             int visualId = 0;
             if (GLContextGLX::FindVisual(display, screenNumber,
-                                         useWebRender, useAlphaVisual,
+                                         useWebRender, needsAlphaVisual,
                                          &visualId)) {
                 // If we're using CSD, rendering will go through mContainer, but
                 // it will inherit this visual as it is a child of mShell.
                 gtk_widget_set_visual(mShell,
                                       gdk_x11_screen_lookup_visual(screen,
                                                                    visualId));
+                mHasAlphaVisual = true;
+            } else {
+                NS_WARNING("We're missing X11 Visual for WebRender!");
             }
         } else
 #endif // MOZ_X11
         {
-            if (useAlphaVisual) {
+            if (needsAlphaVisual) {
                 GdkScreen *screen = gtk_widget_get_screen(mShell);
                 if (gdk_screen_is_composited(screen)) {
                     GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-                    gtk_widget_set_visual(mShell, visual);
+                    if (visual) {
+                        gtk_widget_set_visual(mShell, visual);
+                        mHasAlphaVisual = true;
+                    }
                 }
             }
         }
@@ -4130,7 +4138,7 @@ nsWindow::Create(nsIWidget* aParent,
       GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
       mXVisual = gdk_x11_visual_get_xvisual(gdkVisual);
       mXDepth = gdk_visual_get_depth(gdkVisual);
-      bool shaped = useAlphaVisual && !IsComposited();
+      bool shaped = needsAlphaVisual && !mHasAlphaVisual;
 
       mSurfaceProvider.Initialize(mXDisplay, mXWindow, mXVisual, mXDepth,
                                   shaped);
@@ -7190,22 +7198,8 @@ void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInit
   *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
                                 (mXWindow != X11None) ? mXWindow : (uintptr_t)nullptr,
                                 mXDisplay ? nsCString(XDisplayString(mXDisplay)) : nsCString(),
-                                mIsTransparent && !IsComposited(),
+                                mIsTransparent && !mHasAlphaVisual,
                                 GetClientSize());
-}
-
-bool
-nsWindow::IsComposited() const
-{
-  if (!mGdkWindow) {
-    NS_WARNING("nsWindow::HasARGBVisual called before realization!");
-    return false;
-  }
-
-  GdkScreen* gdkScreen = gdk_window_get_screen(mGdkWindow);
-  return gdk_screen_is_composited(gdkScreen) &&
-         (gdk_window_get_visual(mGdkWindow)
-            == gdk_screen_get_rgba_visual(gdkScreen));
 }
 
 #ifdef MOZ_WAYLAND
