@@ -569,6 +569,36 @@ SourceUnits<char16_t>::assertNextCodePoint(const PeekedCodePoint<char16_t>& peek
     }
 }
 
+template<>
+inline void
+SourceUnits<Utf8Unit>::assertNextCodePoint(const PeekedCodePoint<Utf8Unit>& peeked)
+{
+    char32_t c = peeked.codePoint();
+
+    // This is all roughly indulgence of paranoia only for assertions, so the
+    // reimplementation of UTF-8 encoding a code point is (we think) a virtue.
+    uint8_t expectedUnits[4] = {};
+    if (c < 0x80) {
+        expectedUnits[0] = AssertedCast<uint8_t>(c);
+    } else if (c < 0x800) {
+        expectedUnits[0] = 0b1100'0000 | (c >> 6);
+        expectedUnits[1] = 0b1000'0000 | (c & 0b11'1111);
+    } else if (c < 0x10000) {
+        expectedUnits[0] = 0b1110'0000 | (c >> 12);
+        expectedUnits[1] = 0b1000'0000 | ((c >> 6) & 0b11'1111);
+        expectedUnits[2] = 0b1000'0000 | (c & 0b11'1111);
+    } else {
+        expectedUnits[0] = 0b1110'0000 | (c >> 18);
+        expectedUnits[2] = 0b1000'0000 | ((c >> 12) & 0b11'1111);
+        expectedUnits[2] = 0b1000'0000 | ((c >> 6) & 0b11'1111);
+        expectedUnits[3] = 0b1000'0000 | (c & 0b11'1111);
+    }
+
+    MOZ_ASSERT(peeked.lengthInUnits() <= 4);
+    for (uint8_t i = 0; i < peeked.lengthInUnits(); i++)
+        MOZ_ASSERT(expectedUnits[i] == ptr[i].toUint8());
+}
+
 #endif // DEBUG
 
 template<class AnyCharsAccess>
