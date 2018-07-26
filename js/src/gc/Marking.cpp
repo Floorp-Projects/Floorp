@@ -460,6 +460,8 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(JSTracer
                                                                         JSObject**, const char*);
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSScript*>(JSTracer*, JSObject*,
                                                                         JSScript**, const char*);
+template void js::TraceManuallyBarrieredCrossCompartmentEdge<LazyScript*>(JSTracer*, JSObject*,
+                                                                          LazyScript**, const char*);
 
 void
 js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<Value>* dst,
@@ -1795,6 +1797,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
  * pointers are replaced with slot indexes, and slot array end pointers are
  * replaced with the kind of index (properties vs. elements).
  */
+
 void
 GCMarker::saveValueRanges()
 {
@@ -1802,37 +1805,9 @@ GCMarker::saveValueRanges()
     while (!iter.done()) {
         auto tag = iter.peekTag();
         if (tag == MarkStack::ValueArrayTag) {
-            auto array = iter.peekValueArray();
-
-            NativeObject* obj = &array.ptr.asValueArrayObject()->as<NativeObject>();
-            MOZ_ASSERT(obj->isNative());
-
-            uintptr_t index;
-            HeapSlot::Kind kind;
-            HeapSlot* vp = obj->getDenseElementsAllowCopyOnWrite();
-            if (array.end == vp + obj->getDenseInitializedLength()) {
-                MOZ_ASSERT(array.start >= vp);
-                // Add the number of shifted elements here (and subtract in
-                // restoreValueArray) to ensure shift() calls on the array
-                // are handled correctly.
-                index = obj->unshiftedIndex(array.start - vp);
-                kind = HeapSlot::Element;
-            } else {
-                HeapSlot* vp = obj->fixedSlots();
-                unsigned nfixed = obj->numFixedSlots();
-                if (array.start == array.end) {
-                    index = obj->slotSpan();
-                } else if (array.start >= vp && array.start < vp + nfixed) {
-                    MOZ_ASSERT(array.end == vp + Min(nfixed, obj->slotSpan()));
-                    index = array.start - vp;
-                } else {
-                    MOZ_ASSERT(array.start >= obj->slots_ &&
-                               array.end == obj->slots_ + obj->slotSpan() - nfixed);
-                    index = (array.start - obj->slots_) + nfixed;
-                }
-                kind = HeapSlot::Slot;
-            }
-            iter.saveValueArray(obj, index, kind);
+            const auto& array = iter.peekValueArray();
+            auto savedArray = saveValueRange(array);
+            iter.saveValueArray(savedArray);
             iter.nextArray();
         } else if (tag == MarkStack::SavedValueArrayTag) {
             iter.nextArray();
@@ -1840,54 +1815,103 @@ GCMarker::saveValueRanges()
             iter.nextPtr();
         }
     }
+
+    // This is also a convenient point to poison unused stack memory.
+    stack.poisonUnused();
 }
 
 bool
-GCMarker::restoreValueArray(const MarkStack::SavedValueArray& array,
+GCMarker::restoreValueArray(const MarkStack::SavedValueArray& savedArray,
                             HeapSlot** vpp, HeapSlot** endp)
 {
-    JSObject* objArg = array.ptr.asSavedValueArrayObject();
+    JSObject* objArg = savedArray.ptr.asSavedValueArrayObject();
     if (!objArg->isNative())
         return false;
-    NativeObject* obj = &objArg->as<NativeObject>();
 
-    uintptr_t start = array.index;
-    if (array.kind == HeapSlot::Element) {
+    auto array = restoreValueArray(savedArray);
+    *vpp = array.start;
+    *endp = array.end;
+    return true;
+}
+
+MarkStack::SavedValueArray
+GCMarker::saveValueRange(const MarkStack::ValueArray& array)
+{
+    NativeObject* obj = &array.ptr.asValueArrayObject()->as<NativeObject>();
+    MOZ_ASSERT(obj->isNative());
+
+    uintptr_t index;
+    HeapSlot::Kind kind;
+    HeapSlot* vp = obj->getDenseElementsAllowCopyOnWrite();
+    if (array.end == vp + obj->getDenseInitializedLength()) {
+        MOZ_ASSERT(array.start >= vp);
+        // Add the number of shifted elements here (and subtract in
+        // restoreValueArray) to ensure shift() calls on the array
+        // are handled correctly.
+        index = obj->unshiftedIndex(array.start - vp);
+        kind = HeapSlot::Element;
+    } else {
+        HeapSlot* vp = obj->fixedSlots();
+        unsigned nfixed = obj->numFixedSlots();
+        if (array.start == array.end) {
+            index = obj->slotSpan();
+        } else if (array.start >= vp && array.start < vp + nfixed) {
+            MOZ_ASSERT(array.end == vp + Min(nfixed, obj->slotSpan()));
+            index = array.start - vp;
+        } else {
+            MOZ_ASSERT(array.start >= obj->slots_ &&
+                       array.end == obj->slots_ + obj->slotSpan() - nfixed);
+            index = (array.start - obj->slots_) + nfixed;
+        }
+        kind = HeapSlot::Slot;
+    }
+
+    return MarkStack::SavedValueArray(obj, index, kind);
+}
+
+MarkStack::ValueArray
+GCMarker::restoreValueArray(const MarkStack::SavedValueArray& savedArray)
+{
+    NativeObject* obj = &savedArray.ptr.asSavedValueArrayObject()->as<NativeObject>();
+    HeapSlot* start = nullptr;
+    HeapSlot* end = nullptr;
+
+    uintptr_t index = savedArray.index;
+    if (savedArray.kind == HeapSlot::Element) {
         uint32_t initlen = obj->getDenseInitializedLength();
 
         // Account for shifted elements.
         uint32_t numShifted = obj->getElementsHeader()->numShiftedElements();
-        start = (numShifted < start) ? start - numShifted : 0;
+        index = (numShifted < index) ? index - numShifted : 0;
 
         HeapSlot* vp = obj->getDenseElementsAllowCopyOnWrite();
-        if (start < initlen) {
-            *vpp = vp + start;
-            *endp = vp + initlen;
+        if (index < initlen) {
+            start = vp + index;
+            end = vp + initlen;
         } else {
             /* The object shrunk, in which case no scanning is needed. */
-            *vpp = *endp = vp;
+            start = end = vp;
         }
     } else {
-        MOZ_ASSERT(array.kind == HeapSlot::Slot);
+        MOZ_ASSERT(savedArray.kind == HeapSlot::Slot);
         HeapSlot* vp = obj->fixedSlots();
         unsigned nfixed = obj->numFixedSlots();
         unsigned nslots = obj->slotSpan();
-        if (start < nslots) {
-            if (start < nfixed) {
-                *vpp = vp + start;
-                *endp = vp + Min(nfixed, nslots);
+        if (index < nslots) {
+            if (index < nfixed) {
+                start = vp + index;
+                end = vp + Min(nfixed, nslots);
             } else {
-                *vpp = obj->slots_ + start - nfixed;
-                *endp = obj->slots_ + nslots - nfixed;
+                start = obj->slots_ + index - nfixed;
+                end = obj->slots_ + nslots - nfixed;
             }
         } else {
             /* The object shrunk, in which case no scanning is needed. */
-            *vpp = *endp = vp;
+            start = end = vp;
         }
     }
 
-    MOZ_ASSERT(*vpp <= *endp);
-    return true;
+    return MarkStack::ValueArray(obj, start, end);
 }
 
 
@@ -1919,27 +1943,11 @@ TagIsArrayTag(MarkStack::Tag tag)
     return tag == MarkStack::ValueArrayTag || tag == MarkStack::SavedValueArrayTag;
 }
 
-static inline void
-CheckValueArray(const MarkStack::ValueArray& array)
-{
-    MOZ_ASSERT(array.ptr.tag() == MarkStack::ValueArrayTag);
-    MOZ_ASSERT(uintptr_t(array.start) <= uintptr_t(array.end));
-    MOZ_ASSERT((uintptr_t(array.end) - uintptr_t(array.start)) % sizeof(Value) == 0);
-}
-
-static inline void
-CheckSavedValueArray(const MarkStack::SavedValueArray& array)
-{
-    MOZ_ASSERT(array.ptr.tag() == MarkStack::SavedValueArrayTag);
-    MOZ_ASSERT(array.kind == HeapSlot::Slot || array.kind == HeapSlot::Element);
-}
-
 inline
 MarkStack::TaggedPtr::TaggedPtr(Tag tag, Cell* ptr)
   : bits(tag | uintptr_t(ptr))
 {
-    MOZ_ASSERT(tag <= LastTag);
-    MOZ_ASSERT((uintptr_t(ptr) & CellAlignMask) == 0);
+    assertValid();
 }
 
 inline MarkStack::Tag
@@ -1954,6 +1962,13 @@ inline Cell*
 MarkStack::TaggedPtr::ptr() const
 {
     return reinterpret_cast<Cell*>(bits & ~TagMask);
+}
+
+inline void
+MarkStack::TaggedPtr::assertValid() const
+{
+    mozilla::Unused << tag();
+    MOZ_ASSERT(IsCellPointerValid(ptr()));
 }
 
 template <typename T>
@@ -1995,18 +2010,38 @@ MarkStack::TaggedPtr::asTempRope() const
 inline
 MarkStack::ValueArray::ValueArray(JSObject* obj, HeapSlot* startArg, HeapSlot* endArg)
   : end(endArg), start(startArg), ptr(ValueArrayTag, obj)
-{}
+{
+    assertValid();
+}
+
+inline void
+MarkStack::ValueArray::assertValid() const
+{
+    ptr.assertValid();
+    MOZ_ASSERT(ptr.tag() == MarkStack::ValueArrayTag);
+    MOZ_ASSERT(start);
+    MOZ_ASSERT(end);
+    MOZ_ASSERT(uintptr_t(start) <= uintptr_t(end));
+    MOZ_ASSERT((uintptr_t(end) - uintptr_t(start)) % sizeof(Value) == 0);
+}
 
 inline
 MarkStack::SavedValueArray::SavedValueArray(JSObject* obj, size_t indexArg, HeapSlot::Kind kindArg)
   : kind(kindArg), index(indexArg), ptr(SavedValueArrayTag, obj)
-{}
+{
+    assertValid();
+}
+
+inline void
+MarkStack::SavedValueArray::assertValid() const
+{
+    ptr.assertValid();
+    MOZ_ASSERT(ptr.tag() == MarkStack::SavedValueArrayTag);
+    MOZ_ASSERT(kind == HeapSlot::Slot || kind == HeapSlot::Element);
+}
 
 MarkStack::MarkStack(size_t maxCapacity)
-  : stack_(nullptr)
-  , tos_(nullptr)
-  , end_(nullptr)
-  , baseCapacity_(0)
+  : topIndex_(0)
   , maxCapacity_(maxCapacity)
 #ifdef DEBUG
   , iteratorCount_(0)
@@ -2015,50 +2050,46 @@ MarkStack::MarkStack(size_t maxCapacity)
 
 MarkStack::~MarkStack()
 {
+    MOZ_ASSERT(isEmpty());
     MOZ_ASSERT(iteratorCount_ == 0);
-    js_free(stack_);
 }
 
 bool
 MarkStack::init(JSGCMode gcMode)
 {
-    setBaseCapacity(gcMode);
+    MOZ_ASSERT(isEmpty());
 
-    MOZ_ASSERT(!stack_);
-    auto newStack = js_pod_malloc<TaggedPtr>(baseCapacity_);
-    if (!newStack)
-        return false;
-
-    setStack(newStack, 0, baseCapacity_);
-    return true;
-}
-
-inline void
-MarkStack::setStack(TaggedPtr* stack, size_t tosIndex, size_t capacity)
-{
-    MOZ_ASSERT(iteratorCount_ == 0);
-    stack_ = stack;
-    tos_ = stack + tosIndex;
-    end_ = stack + capacity;
+    return setCapacityForMode(gcMode);
 }
 
 void
-MarkStack::setBaseCapacity(JSGCMode mode)
+MarkStack::setGCMode(JSGCMode gcMode)
 {
+    // Ignore failure to resize the stack and keep using the existing stack.
+    mozilla::Unused << setCapacityForMode(gcMode);
+}
+
+bool
+MarkStack::setCapacityForMode(JSGCMode mode)
+{
+    size_t capacity;
+
     switch (mode) {
       case JSGC_MODE_GLOBAL:
       case JSGC_MODE_ZONE:
-        baseCapacity_ = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+        capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
         break;
       case JSGC_MODE_INCREMENTAL:
-        baseCapacity_ = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+        capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
         break;
       default:
         MOZ_CRASH("bad gc mode");
     }
 
-    if (baseCapacity_ > maxCapacity_)
-        baseCapacity_ = maxCapacity_;
+    if (capacity > maxCapacity_)
+        capacity = maxCapacity_;
+
+    return resize(capacity);
 }
 
 void
@@ -2066,11 +2097,19 @@ MarkStack::setMaxCapacity(size_t maxCapacity)
 {
     MOZ_ASSERT(maxCapacity != 0);
     MOZ_ASSERT(isEmpty());
-    maxCapacity_ = maxCapacity;
-    if (baseCapacity_ > maxCapacity_)
-        baseCapacity_ = maxCapacity_;
 
-    reset();
+    maxCapacity_ = maxCapacity;
+    if (capacity() > maxCapacity_) {
+        // If the realloc fails, just keep using the existing stack; it's
+        // not ideal but better than failing.
+        mozilla::Unused << resize(maxCapacity_);
+    }
+}
+
+inline MarkStack::TaggedPtr*
+MarkStack::topPtr()
+{
+    return &stack()[topIndex_];
 }
 
 inline bool
@@ -2079,8 +2118,8 @@ MarkStack::pushTaggedPtr(Tag tag, Cell* ptr)
     if (!ensureSpace(1))
         return false;
 
-    MOZ_ASSERT(tos_ < end_);
-    *tos_++ = TaggedPtr(tag, ptr);
+    *topPtr() = TaggedPtr(tag, ptr);
+    topIndex_++;
     return true;
 }
 
@@ -2106,14 +2145,14 @@ MarkStack::push(JSObject* obj, HeapSlot* start, HeapSlot* end)
 inline bool
 MarkStack::push(const ValueArray& array)
 {
-    CheckValueArray(array);
+    array.assertValid();
 
     if (!ensureSpace(ValueArrayWords))
         return false;
 
-    *reinterpret_cast<ValueArray*>(tos_.ref()) = array;
-    tos_ += ValueArrayWords;
-    MOZ_ASSERT(tos_ <= end_);
+    *reinterpret_cast<ValueArray*>(topPtr()) = array;
+    topIndex_ += ValueArrayWords;
+    MOZ_ASSERT(position() <= capacity());
     MOZ_ASSERT(peekTag() == ValueArrayTag);
     return true;
 }
@@ -2121,14 +2160,14 @@ MarkStack::push(const ValueArray& array)
 inline bool
 MarkStack::push(const SavedValueArray& array)
 {
-    CheckSavedValueArray(array);
+    array.assertValid();
 
     if (!ensureSpace(ValueArrayWords))
         return false;
 
-    *reinterpret_cast<SavedValueArray*>(tos_.ref()) = array;
-    tos_ += ValueArrayWords;
-    MOZ_ASSERT(tos_ <= end_);
+    *reinterpret_cast<SavedValueArray*>(topPtr()) = array;
+    topIndex_ += ValueArrayWords;
+    MOZ_ASSERT(position() <= capacity());
     MOZ_ASSERT(peekTag() == SavedValueArrayTag);
     return true;
 }
@@ -2136,8 +2175,7 @@ MarkStack::push(const SavedValueArray& array)
 inline const MarkStack::TaggedPtr&
 MarkStack::peekPtr() const
 {
-    MOZ_ASSERT(!isEmpty());
-    return tos_[-1];
+    return stack()[topIndex_ - 1];
 }
 
 inline MarkStack::Tag
@@ -2151,8 +2189,9 @@ MarkStack::popPtr()
 {
     MOZ_ASSERT(!isEmpty());
     MOZ_ASSERT(!TagIsArrayTag(peekTag()));
-    tos_--;
-    return *tos_;
+    peekPtr().assertValid();
+    topIndex_--;
+    return *topPtr();
 }
 
 inline MarkStack::ValueArray
@@ -2161,9 +2200,9 @@ MarkStack::popValueArray()
     MOZ_ASSERT(peekTag() == ValueArrayTag);
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    tos_ -= ValueArrayWords;
-    const auto& array = *reinterpret_cast<ValueArray*>(tos_.ref());
-    CheckValueArray(array);
+    topIndex_ -= ValueArrayWords;
+    const auto& array = *reinterpret_cast<ValueArray*>(topPtr());
+    array.assertValid();
     return array;
 }
 
@@ -2173,36 +2212,16 @@ MarkStack::popSavedValueArray()
     MOZ_ASSERT(peekTag() == SavedValueArrayTag);
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    tos_ -= ValueArrayWords;
-    const auto& array = *reinterpret_cast<SavedValueArray*>(tos_.ref());
-    CheckSavedValueArray(array);
+    topIndex_ -= ValueArrayWords;
+    const auto& array = *reinterpret_cast<SavedValueArray*>(topPtr());
+    array.assertValid();
     return array;
-}
-
-void
-MarkStack::reset()
-{
-    if (capacity() == baseCapacity_) {
-        // No size change; keep the current stack.
-        setStack(stack_, 0, baseCapacity_);
-        return;
-    }
-
-    MOZ_ASSERT(baseCapacity_ != 0);
-    auto newStack = js_pod_realloc<TaggedPtr>(stack_, capacity(), baseCapacity_);
-    if (!newStack) {
-        // If the realloc fails, just keep using the existing stack; it's
-        // not ideal but better than failing.
-        newStack = stack_;
-        baseCapacity_ = capacity();
-    }
-    setStack(newStack, 0, baseCapacity_);
 }
 
 inline bool
 MarkStack::ensureSpace(size_t count)
 {
-    if ((tos_ + count) <= end_)
+    if ((topIndex_ + count) <= capacity())
         return !js::oom::ShouldFailWithOOM();
 
     return enlarge(count);
@@ -2215,34 +2234,41 @@ MarkStack::enlarge(size_t count)
     if (newCapacity < capacity() + count)
         return false;
 
-    size_t tosIndex = position();
+    return resize(newCapacity);
+}
 
+bool
+MarkStack::resize(size_t newCapacity)
+{
     MOZ_ASSERT(newCapacity != 0);
-    auto newStack = js_pod_realloc<TaggedPtr>(stack_, capacity(), newCapacity);
-    if (!newStack)
+    if (!stack().resize(newCapacity))
         return false;
 
-    setStack(newStack, tosIndex, newCapacity);
+    poisonUnused();
     return true;
 }
 
-void
-MarkStack::setGCMode(JSGCMode gcMode)
+inline void
+MarkStack::poisonUnused()
 {
-    // The mark stack won't be resized until the next call to reset(), but
-    // that will happen at the end of the next GC.
-    setBaseCapacity(gcMode);
+    static_assert((JS_FRESH_MARK_STACK_PATTERN & TagMask) > LastTag,
+                  "The mark stack poison pattern must not look like a valid tagged pointer");
+
+    JS_POISON(&stack()[topIndex_],
+              JS_FRESH_MARK_STACK_PATTERN,
+              stack().capacity() - topIndex_,
+              MemCheckKind::MakeUndefined);
 }
 
 size_t
 MarkStack::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(stack_);
+    return stack().sizeOfExcludingThis(mallocSizeOf);
 }
 
-MarkStackIter::MarkStackIter(const MarkStack& stack)
+MarkStackIter::MarkStackIter(MarkStack& stack)
   : stack_(stack),
-    pos_(stack.tos_)
+    pos_(stack.position())
 {
 #ifdef DEBUG
     stack.iteratorCount_++;
@@ -2260,7 +2286,7 @@ MarkStackIter::~MarkStackIter()
 inline size_t
 MarkStackIter::position() const
 {
-    return pos_ - stack_.stack_;
+    return pos_;
 }
 
 inline bool
@@ -2273,7 +2299,7 @@ inline MarkStack::TaggedPtr
 MarkStackIter::peekPtr() const
 {
     MOZ_ASSERT(!done());
-    return pos_[-1];
+    return stack_.stack()[pos_ - 1];
 }
 
 inline MarkStack::Tag
@@ -2288,8 +2314,9 @@ MarkStackIter::peekValueArray() const
     MOZ_ASSERT(peekTag() == MarkStack::ValueArrayTag);
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    const auto& array = *reinterpret_cast<MarkStack::ValueArray*>(pos_ - ValueArrayWords);
-    CheckValueArray(array);
+    const MarkStack::TaggedPtr* ptr = &stack_.stack()[pos_ - ValueArrayWords];
+    const auto& array = *reinterpret_cast<const MarkStack::ValueArray*>(ptr);
+    array.assertValid();
     return array;
 }
 
@@ -2319,15 +2346,15 @@ MarkStackIter::nextArray()
 }
 
 void
-MarkStackIter::saveValueArray(NativeObject* obj, uintptr_t index, HeapSlot::Kind kind)
+MarkStackIter::saveValueArray(const MarkStack::SavedValueArray& savedArray)
 {
     MOZ_ASSERT(peekTag() == MarkStack::ValueArrayTag);
-    MOZ_ASSERT(peekPtr().asValueArrayObject() == obj);
+    MOZ_ASSERT(peekPtr().asValueArrayObject() == savedArray.ptr.asSavedValueArrayObject());
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    auto& array = *reinterpret_cast<MarkStack::SavedValueArray*>(pos_ - ValueArrayWords);
-    array = MarkStack::SavedValueArray(obj, index, kind);
-    CheckSavedValueArray(array);
+    MarkStack::TaggedPtr* ptr = &stack_.stack()[pos_ - ValueArrayWords];
+    auto dest = reinterpret_cast<MarkStack::SavedValueArray*>(ptr);
+    *dest = savedArray;
     MOZ_ASSERT(peekTag() == MarkStack::SavedValueArrayTag);
 }
 
@@ -2387,7 +2414,7 @@ GCMarker::stop()
 #endif
 
     /* Free non-ballast stack memory. */
-    stack.reset();
+    stack.clear();
     AutoEnterOOMUnsafeRegion oomUnsafe;
     for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
         if (!zone->gcWeakKeys().clear())
@@ -2400,7 +2427,7 @@ GCMarker::reset()
 {
     color = MarkColor::Black;
 
-    stack.reset();
+    stack.clear();
     MOZ_ASSERT(isMarkStackEmpty());
 
     while (unmarkedArenaStackTop) {
@@ -2433,6 +2460,10 @@ void
 GCMarker::pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end)
 {
     checkZone(obj);
+
+    if (start == end)
+        return;
+
     if (!stack.push(obj, start, end))
         delayMarkingChildren(obj);
 }
@@ -2581,7 +2612,7 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 
 #ifdef DEBUG
 Zone*
-GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
+GCMarker::stackContainsCrossZonePointerTo(const Cell* target)
 {
     MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 

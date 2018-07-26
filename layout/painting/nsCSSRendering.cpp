@@ -39,7 +39,7 @@
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsITheme.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "nsLayoutUtils.h"
 #include "nsBlockFrame.h"
 #include "nsStyleStructInlines.h"
@@ -906,7 +906,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   // renderer draw the border.  DO not get the data from aForFrame, since the
   // passed in ComputedStyle may be different!  Always use |aComputedStyle|!
   const nsStyleDisplay* displayData = aComputedStyle->StyleDisplay();
-  if (displayData->mAppearance) {
+  if (displayData->HasAppearance()) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme &&
         theme->ThemeSupportsWidget(aPresContext, aForFrame,
@@ -994,7 +994,7 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
                                                     Sides aSkipSides)
 {
   const nsStyleDisplay* displayData = aComputedStyle->StyleDisplay();
-  if (displayData->mAppearance) {
+  if (displayData->HasAppearance()) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme &&
         theme->ThemeSupportsWidget(aPresContext, aForFrame,
@@ -1114,9 +1114,9 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
     if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
       nsITheme* theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
-                                              NS_THEME_FOCUS_OUTLINE)) {
+                                              StyleAppearance::FocusOutline)) {
         theme->DrawWidgetBackground(aRenderingContext, aForFrame,
-                                    NS_THEME_FOCUS_OUTLINE, innerRect,
+                                    StyleAppearance::FocusOutline, innerRect,
                                     aDirtyRect);
         return Nothing();
       }
@@ -2030,7 +2030,7 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
     // a root, otherwise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aParams.frame->StyleDisplay()->mAppearance) {
+    if (!aParams.frame->StyleDisplay()->HasAppearance()) {
       return ImgDrawResult::SUCCESS;
     }
 
@@ -2063,7 +2063,7 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aM
 
   // We cannot draw native themed backgrounds
   const nsStyleDisplay* displayData = aFrame->StyleDisplay();
-  if (displayData->mAppearance) {
+  if (displayData->HasAppearance()) {
     nsITheme *theme = aPresCtx.GetTheme();
     if (theme && theme->ThemeSupportsWidget(&aPresCtx,
                                             aFrame,
@@ -2123,7 +2123,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
     // a root, otherwise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aParams.frame->StyleDisplay()->mAppearance) {
+    if (!aParams.frame->StyleDisplay()->HasAppearance()) {
       return ImgDrawResult::SUCCESS;
     }
 
@@ -2627,7 +2627,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   // renderer draw the background and bail out.
   // XXXzw this ignores aParams.bgClipRect.
   const nsStyleDisplay* displayData = aParams.frame->StyleDisplay();
-  if (displayData->mAppearance) {
+  if (displayData->HasAppearance()) {
     nsITheme *theme = aParams.presCtx.GetTheme();
     if (theme && theme->ThemeSupportsWidget(&aParams.presCtx,
                                             aParams.frame,

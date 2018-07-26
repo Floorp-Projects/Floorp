@@ -14,7 +14,6 @@
 #include "jstypes.h"
 
 #include "builtin/Eval.h"
-#include "builtin/SIMDConstants.h"
 #include "gc/Policy.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineDebugModeOSR.h"
@@ -2013,71 +2012,6 @@ TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, 
     return true;
 }
 
-// Check if target is a native SIMD operation which returns a SIMD type.
-// If so, set res to a template object matching the SIMD type produced and return true.
-static bool
-GetTemplateObjectForSimd(JSContext* cx, JSFunction* target, MutableHandleObject res)
-{
-    if (!target->hasJitInfo())
-        return false;
-
-    const JSJitInfo* jitInfo = target->jitInfo();
-    if (jitInfo->type() != JSJitInfo::InlinableNative)
-        return false;
-
-    // Check if this is a native inlinable SIMD operation.
-    SimdType ctrlType;
-    switch (jitInfo->inlinableNative) {
-      case InlinableNative::SimdInt8x16:   ctrlType = SimdType::Int8x16;   break;
-      case InlinableNative::SimdUint8x16:  ctrlType = SimdType::Uint8x16;  break;
-      case InlinableNative::SimdInt16x8:   ctrlType = SimdType::Int16x8;   break;
-      case InlinableNative::SimdUint16x8:  ctrlType = SimdType::Uint16x8;  break;
-      case InlinableNative::SimdInt32x4:   ctrlType = SimdType::Int32x4;   break;
-      case InlinableNative::SimdUint32x4:  ctrlType = SimdType::Uint32x4;  break;
-      case InlinableNative::SimdFloat32x4: ctrlType = SimdType::Float32x4; break;
-      case InlinableNative::SimdBool8x16:  ctrlType = SimdType::Bool8x16;  break;
-      case InlinableNative::SimdBool16x8:  ctrlType = SimdType::Bool16x8;  break;
-      case InlinableNative::SimdBool32x4:  ctrlType = SimdType::Bool32x4;  break;
-      // This is not an inlinable SIMD operation.
-      default: return false;
-    }
-
-    // The controlling type is not necessarily the return type.
-    // Check the actual operation.
-    SimdOperation simdOp = SimdOperation(jitInfo->nativeOp);
-    SimdType retType;
-
-    switch(simdOp) {
-      case SimdOperation::Fn_allTrue:
-      case SimdOperation::Fn_anyTrue:
-      case SimdOperation::Fn_extractLane:
-        // These operations return a scalar. No template object needed.
-        return false;
-
-      case SimdOperation::Fn_lessThan:
-      case SimdOperation::Fn_lessThanOrEqual:
-      case SimdOperation::Fn_equal:
-      case SimdOperation::Fn_notEqual:
-      case SimdOperation::Fn_greaterThan:
-      case SimdOperation::Fn_greaterThanOrEqual:
-        // These operations return a boolean vector with the same shape as the
-        // controlling type.
-        retType = GetBooleanSimdType(ctrlType);
-        break;
-
-      default:
-        // All other operations return the controlling type.
-        retType = ctrlType;
-        break;
-    }
-
-    // Create a template object based on retType.
-    RootedGlobalObject global(cx, cx->global());
-    Rooted<SimdTypeDescr*> descr(cx, GlobalObject::getOrCreateSimdTypeDescr(cx, global, retType));
-    res.set(cx->realm()->jitRealm()->getSimdTemplateObjectFor(cx, descr));
-    return true;
-}
-
 static bool
 GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs& args,
                            MutableHandleObject res, bool* skipAttach)
@@ -2161,9 +2095,6 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
         return !!res;
     }
 
-    if (JitSupportsSimd() && GetTemplateObjectForSimd(cx, target, res))
-       return !!res;
-
     return true;
 }
 
@@ -2177,12 +2108,6 @@ GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
     if (hook == TypedObject::construct) {
         Rooted<TypeDescr*> descr(cx, &args.callee().as<TypeDescr>());
         templateObject.set(TypedObject::createZeroed(cx, descr, gc::TenuredHeap));
-        return !!templateObject;
-    }
-
-    if (hook == SimdTypeDescr::call && JitSupportsSimd()) {
-        Rooted<SimdTypeDescr*> descr(cx, &args.callee().as<SimdTypeDescr>());
-        templateObject.set(cx->realm()->jitRealm()->getSimdTemplateObjectFor(cx, descr));
         return !!templateObject;
     }
 
@@ -4957,6 +4882,11 @@ DoCacheIRBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_
       case JSOP_BITXOR:
       case JSOP_BITAND:
       case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
+      case JSOP_URSH:
+      case JSOP_RSH:
+      case JSOP_LSH:
         break;
       default:
         return false; // Fallback to shared IC.

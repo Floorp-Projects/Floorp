@@ -53,7 +53,7 @@
 #include "mozilla/Attributes.h"
 #include "ScrollbarActivity.h"
 #include "nsRefreshDriver.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsIScrollPositionListener.h"
 #include "StickyScrollContainer.h"
@@ -1273,13 +1273,13 @@ ScrollFrameHelper::GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState,
         theme->ThemeSupportsWidget(aState->PresContext(),
                                    verticalWM ? mHScrollbarBox
                                               : mVScrollbarBox,
-                                   NS_THEME_SCROLLBAR_NON_DISAPPEARING)) {
+                                   StyleAppearance::ScrollbarNonDisappearing)) {
       LayoutDeviceIntSize size;
       bool canOverride = true;
       theme->GetMinimumWidgetSize(aState->PresContext(),
                                   verticalWM ? mHScrollbarBox
                                              : mVScrollbarBox,
-                                  NS_THEME_SCROLLBAR_NON_DISAPPEARING,
+                                  StyleAppearance::ScrollbarNonDisappearing,
                                   &size,
                                   &canOverride);
       return aState->PresContext()->

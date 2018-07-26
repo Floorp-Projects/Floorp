@@ -1640,9 +1640,9 @@ class Extension extends ExtensionData {
     sharedData.set("extensions/activeIDs", activeExtensionIDs);
 
     Services.ppmm.sharedData.flush();
-    return this.broadcast("Extension:Startup", this.id).then(() => {
-      return Promise.all(promises);
-    });
+    this.broadcast("Extension:Startup", this.id);
+
+    return Promise.all(promises);
   }
 
   /**

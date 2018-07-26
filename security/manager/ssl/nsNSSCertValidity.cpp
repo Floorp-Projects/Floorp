@@ -12,6 +12,8 @@
 
 NS_IMPL_ISUPPORTS(nsX509CertValidity, nsIX509CertValidity)
 
+using namespace mozilla;
+
 nsX509CertValidity::nsX509CertValidity(const mozilla::UniqueCERTCertificate& cert)
   : mNotBefore(0)
   , mNotAfter(0)

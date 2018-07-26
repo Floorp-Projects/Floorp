@@ -1213,7 +1213,7 @@ GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(HandleObject obj, ObjOp
     if (!info || !info->isCrossCompartmentXray(GetProxyHandler(obj)))
         return false;
 
-    if (!info->globalHasExclusiveExpandos(cx_->global()))
+    if (!info->compartmentHasExclusiveExpandos(obj))
         return false;
 
     RootedObject target(cx_, UncheckedUnwrap(obj));
@@ -5108,6 +5108,8 @@ BinaryArithIRGenerator::tryAttachStub()
         return true;
     if (tryAttachDouble())
         return true;
+    if (tryAttachDoubleWithInt32())
+        return true;
     if (tryAttachBooleanWithInt32())
         return true;
 
@@ -5116,10 +5118,51 @@ BinaryArithIRGenerator::tryAttachStub()
 }
 
 bool
+BinaryArithIRGenerator::tryAttachDoubleWithInt32()
+{
+    if (op_ != JSOP_BITOR && op_ != JSOP_BITXOR && op_ != JSOP_BITAND)
+        return false;
+
+    if (!(lhs_.isInt32() && rhs_.isDouble()) ||
+        !(lhs_.isDouble() && rhs_.isInt32()) ||
+        !res_.isInt32())
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+
+    // Operations below commute, so we don't care about ordering.
+    Int32OperandId IntId = writer.guardIsInt32(lhs_.isInt32() ? lhsId : rhsId);
+    writer.guardType(lhs_.isDouble() ? lhsId : rhsId, JSVAL_TYPE_DOUBLE);
+    Int32OperandId truncatedId = writer.truncateDoubleToUInt32(lhs_.isDouble() ? lhsId : rhsId);
+    switch (op_) {
+      case JSOP_BITOR:
+        writer.int32BitOrResult(IntId, truncatedId);
+        trackAttached("BinaryArith.Int32Double.BitOr");
+        break;
+      case JSOP_BITXOR:
+        writer.int32BitXOrResult(IntId, truncatedId);
+        trackAttached("BinaryArith.Int32Double.BitXOr");
+        break;
+      case JSOP_BITAND:
+        writer.int32BitAndResult(IntId, truncatedId);
+        trackAttached("BinaryArith.Int32Double.BitAnd");
+        break;
+      default:
+        MOZ_CRASH("Unhandled op in tryAttachInt32");
+    }
+
+    writer.returnFromIC();
+    return true;
+}
+
+bool
 BinaryArithIRGenerator::tryAttachDouble()
 {
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
-        op_ != JSOP_MUL)
+        op_ != JSOP_MUL && op_ != JSOP_DIV &&
+        op_ != JSOP_MOD)
         return false;
 
     if (!lhs_.isDouble() || !rhs_.isDouble() || !res_.isDouble())
@@ -5147,6 +5190,14 @@ BinaryArithIRGenerator::tryAttachDouble()
         writer.doubleMulResult(lhsId, rhsId);
         trackAttached("BinaryArith.Double.Mul");
         break;
+      case JSOP_DIV:
+        writer.doubleDivResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Div");
+        break;
+      case JSOP_MOD:
+        writer.doubleModResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Mod");
+        break;
       default:
         MOZ_CRASH("Unhandled Op");
     }
@@ -5157,14 +5208,7 @@ BinaryArithIRGenerator::tryAttachDouble()
 bool
 BinaryArithIRGenerator::tryAttachInt32()
 {
-    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
-        op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR && op_ != JSOP_MUL)
-    {
-        return false;
-    }
-
-    if (!lhs_.isInt32() || !rhs_.isInt32())
+    if (!lhs_.isInt32() || !rhs_.isInt32() || op_ == JSOP_POW)
         return false;
 
     ValOperandId lhsId(writer.setInputOperandId(0));
@@ -5186,6 +5230,14 @@ BinaryArithIRGenerator::tryAttachInt32()
         writer.int32MulResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Mul");
         break;
+      case JSOP_DIV:
+        writer.int32DivResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Div");
+        break;
+      case JSOP_MOD:
+        writer.int32ModResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Mod");
+        break;
       case JSOP_BITOR:
         writer.int32BitOrResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.BitOr");
@@ -5197,6 +5249,18 @@ BinaryArithIRGenerator::tryAttachInt32()
       case JSOP_BITAND:
         writer.int32BitAndResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.BitAnd");
+        break;
+      case JSOP_LSH:
+        writer.int32LeftShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.LeftShift");
+        break;
+      case JSOP_RSH:
+        writer.int32RightShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.RightShift");
+        break;
+      case JSOP_URSH:
+        writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
+        trackAttached("BinaryArith.Int32.UnsignedRightShift");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");
@@ -5211,7 +5275,7 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
 {
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR && op_!= JSOP_MUL)
+        op_ != JSOP_BITXOR && op_ != JSOP_MUL && op_ != JSOP_DIV)
         return false;
 
     if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
@@ -5240,6 +5304,10 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
         writer.int32MulResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.BooleanInt32.Mul");
         break;
+      case JSOP_DIV:
+        writer.int32DivResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Div");
+        break;
       case JSOP_BITOR:
         writer.int32BitOrResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.BooleanInt32.BitOr");
@@ -5251,6 +5319,18 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
       case JSOP_BITAND:
         writer.int32BitAndResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.BooleanInt32.BitAnd");
+        break;
+      case JSOP_LSH:
+        writer.int32LeftShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.LeftShift");
+        break;
+      case JSOP_RSH:
+        writer.int32RightShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.RightShift");
+        break;
+      case JSOP_URSH:
+        writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
+        trackAttached("BinaryArith.BooleanInt32.UnsignedRightShift");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");

@@ -791,39 +791,29 @@ class MemoryAccessDesc
     uint32_t offset_;
     uint32_t align_;
     Scalar::Type type_;
-    unsigned numSimdElems_;
     jit::Synchronization sync_;
     wasm::BytecodeOffset trapOffset_;
 
   public:
     explicit MemoryAccessDesc(Scalar::Type type, uint32_t align, uint32_t offset,
-                              BytecodeOffset trapOffset, unsigned numSimdElems = 0,
+                              BytecodeOffset trapOffset,
                               const jit::Synchronization& sync = jit::Synchronization::None())
       : offset_(offset),
         align_(align),
         type_(type),
-        numSimdElems_(numSimdElems),
         sync_(sync),
         trapOffset_(trapOffset)
     {
-        MOZ_ASSERT(Scalar::isSimdType(type) == (numSimdElems > 0));
-        MOZ_ASSERT(numSimdElems <= jit::ScalarTypeToLength(type));
         MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
     }
 
     uint32_t offset() const { return offset_; }
     uint32_t align() const { return align_; }
     Scalar::Type type() const { return type_; }
-    unsigned byteSize() const {
-        return Scalar::isSimdType(type())
-               ? Scalar::scalarByteSize(type()) * numSimdElems()
-               : Scalar::byteSize(type());
-    }
-    unsigned numSimdElems() const { MOZ_ASSERT(isSimd()); return numSimdElems_; }
+    unsigned byteSize() const { return Scalar::byteSize(type()); }
     const jit::Synchronization& sync() const { return sync_; }
     BytecodeOffset trapOffset() const { return trapOffset_; }
     bool isAtomic() const { return !sync_.isNone(); }
-    bool isSimd() const { return Scalar::isSimdType(type_); }
 
     void clearOffset() { offset_ = 0; }
     void setOffset(uint32_t offset) { offset_ = offset; }

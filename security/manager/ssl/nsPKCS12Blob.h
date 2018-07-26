@@ -34,13 +34,14 @@ private:
 
   // local helper functions
   nsresult getPKCS12FilePassword(uint32_t& passwordBufferLength,
-                                 UniquePtr<uint8_t[]>& passwordBuffer);
+                                 mozilla::UniquePtr<uint8_t[]>& passwordBuffer);
   nsresult newPKCS12FilePassword(uint32_t& passwordBufferLength,
-                                 UniquePtr<uint8_t[]>& passwordBuffer);
-  nsresult inputToDecoder(UniqueSEC_PKCS12DecoderContext& dcx, nsIFile* file,
+                                 mozilla::UniquePtr<uint8_t[]>& passwordBuffer);
+  nsresult inputToDecoder(mozilla::UniqueSEC_PKCS12DecoderContext& dcx,
+                          nsIFile* file,
                           PRErrorCode& nssError);
-  UniquePtr<uint8_t[]> stringToBigEndianBytes(const nsString& uni,
-                                              uint32_t& bytesLength);
+  mozilla::UniquePtr<uint8_t[]> stringToBigEndianBytes(const nsString& uni,
+                                                       uint32_t& bytesLength);
   void handleError(int myerr, PRErrorCode prerr);
 
   // RetryReason and ImportMode are used when importing a PKCS12 file.

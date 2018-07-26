@@ -22,7 +22,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using js::GetGlobalForObjectCrossCompartment;
 using js::AssertSameCompartment;
 
 nsresult
@@ -82,7 +81,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // First, start by entering the realm of the XBL scope. This may or may
   // not be the same realm as globalObject.
   JS::Rooted<JSObject*> globalObject(cx,
-    GetGlobalForObjectCrossCompartment(targetClassObject));
+    JS::GetNonCCWObjectGlobal(targetClassObject));
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScopeOrGlobal(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
   MOZ_ASSERT(JS_IsGlobalObject(scopeObject));
@@ -217,6 +216,10 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
 
   JS::Rooted<JSObject*> value(cx, &v.toObject());
   JSAutoRealm ar2(cx, value);
+
+  // We passed aAllowWrapping = false to nsContentUtils::WrapNative so we
+  // should not have a wrapper.
+  MOZ_ASSERT(!js::IsWrapper(value));
 
   // All of the above code was just obtaining the bound element's script object and its immediate
   // concrete base class.  We need to alter the object so that our concrete class is interposed

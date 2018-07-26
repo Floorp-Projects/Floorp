@@ -94,6 +94,9 @@ extern void
 CheckDebuggeeThing(JSScript* script, bool invisibleOk);
 
 extern void
+CheckDebuggeeThing(LazyScript* script, bool invisibleOk);
+
+extern void
 CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
 #endif
 
@@ -284,7 +287,7 @@ class MOZ_RAII EvalOptions {
  */
 typedef JSObject Env;
 
-// Either a real JSScript or synthesized.
+// One of a real JSScript, a real LazyScript, or synthesized.
 //
 // If synthesized, the referent is one of the following:
 //
@@ -292,7 +295,7 @@ typedef JSObject Env;
 //      script.
 //   2. A wasm JSFunction, denoting a synthesized wasm function script.
 //      NYI!
-typedef mozilla::Variant<JSScript*, WasmInstanceObject*> DebuggerScriptReferent;
+typedef mozilla::Variant<JSScript*, LazyScript*, WasmInstanceObject*> DebuggerScriptReferent;
 
 // Either a ScriptSourceObject, for ordinary JS, or a WasmInstanceObject,
 // denoting the synthesized source of a wasm module.
@@ -531,6 +534,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     /* An ephemeral map from JSScript* to Debugger.Script instances. */
     typedef DebuggerWeakMap<JSScript*> ScriptWeakMap;
     ScriptWeakMap scripts;
+
+    using LazyScriptWeakMap = DebuggerWeakMap<LazyScript*>;
+    LazyScriptWeakMap lazyScripts;
+
+    using LazyScriptVector = JS::GCVector<LazyScript*>;
 
     /* The map from debuggee source script objects to their Debugger.Source instances. */
     typedef DebuggerWeakMap<JSObject*, true> SourceWeakMap;
@@ -1112,6 +1120,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * a script in a debuggee realm.
      */
     JSObject* wrapScript(JSContext* cx, HandleScript script);
+
+    JSObject* wrapLazyScript(JSContext* cx, Handle<LazyScript*> script);
 
     /*
      * Return the Debugger.Script object for |wasmInstance| (the toplevel

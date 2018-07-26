@@ -46,14 +46,6 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void lowerForMulInt64(LMulI64*, MMul*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
     template <typename T>
     void lowerForShiftInt64(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) { MOZ_CRASH(); }
-    void lowerForCompIx4(LSimdBinaryCompIx4* ins, MSimdBinaryComp* mir,
-                         MDefinition* lhs, MDefinition* rhs) {
-        MOZ_CRASH();
-    }
-    void lowerForCompFx4(LSimdBinaryCompFx4* ins, MSimdBinaryComp* mir,
-                         MDefinition* lhs, MDefinition* rhs) {
-        MOZ_CRASH();
-    }
     void lowerForBitAndAndBranch(LBitAndAndBranch*, MInstruction*,
                                  MDefinition*, MDefinition*) {
         MOZ_CRASH();

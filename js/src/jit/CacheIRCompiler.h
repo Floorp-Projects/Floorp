@@ -55,12 +55,19 @@ namespace jit {
     _(DoubleAddResult)                    \
     _(DoubleSubResult)                    \
     _(DoubleMulResult)                    \
+    _(DoubleDivResult)                    \
+    _(DoubleModResult)                    \
     _(Int32AddResult)                     \
     _(Int32SubResult)                     \
     _(Int32MulResult)                     \
+    _(Int32DivResult)                     \
+    _(Int32ModResult)                     \
     _(Int32BitOrResult)                   \
     _(Int32BitXorResult)                  \
     _(Int32BitAndResult)                  \
+    _(Int32LeftShiftResult)               \
+    _(Int32RightShiftResult)              \
+    _(Int32URightShiftResult)             \
     _(Int32NegationResult)                \
     _(Int32NotResult)                     \
     _(DoubleNegationResult)               \

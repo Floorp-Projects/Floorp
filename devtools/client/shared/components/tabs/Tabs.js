@@ -325,7 +325,7 @@ define(function(require, exports, module) {
       // Display the menu only if there is not enough horizontal
       // space for all tabs (and overflow happened).
       const allTabsMenu = this.state.overflow ? (
-        dom.div({
+        dom.button({
           className: "all-tabs-menu",
           onClick: this.props.onAllTabsMenuClick,
         })

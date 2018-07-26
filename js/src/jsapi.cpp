@@ -42,9 +42,6 @@
 #include "builtin/Stream.h"
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
-#ifdef ENABLE_SIMD
-# include "builtin/SIMDConstants.h"
-#endif
 #ifdef ENABLE_BINARYDATA
 # include "builtin/TypedObject.h"
 #endif

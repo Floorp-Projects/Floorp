@@ -33,10 +33,12 @@ class CrossCompartmentKey
                                         DebuggerWasmScript, DebuggerWasmSource };
     using DebuggerAndObject = mozilla::Tuple<NativeObject*, JSObject*, DebuggerObjectKind>;
     using DebuggerAndScript = mozilla::Tuple<NativeObject*, JSScript*>;
+    using DebuggerAndLazyScript = mozilla::Tuple<NativeObject*, LazyScript*>;
     using WrappedType = mozilla::Variant<
         JSObject*,
         JSString*,
         DebuggerAndScript,
+        DebuggerAndLazyScript,
         DebuggerAndObject>;
 
     explicit CrossCompartmentKey(JSObject* obj) : wrapped(obj) { MOZ_RELEASE_ASSERT(obj); }
@@ -56,6 +58,12 @@ class CrossCompartmentKey
         MOZ_RELEASE_ASSERT(debugger);
         MOZ_RELEASE_ASSERT(script);
     }
+    explicit CrossCompartmentKey(NativeObject* debugger, LazyScript* lazyScript)
+      : wrapped(DebuggerAndLazyScript(debugger, lazyScript))
+    {
+        MOZ_RELEASE_ASSERT(debugger);
+        MOZ_RELEASE_ASSERT(lazyScript);
+    }
 
     bool operator==(const CrossCompartmentKey& other) const { return wrapped == other.wrapped; }
     bool operator!=(const CrossCompartmentKey& other) const { return wrapped != other.wrapped; }
@@ -72,6 +80,7 @@ class CrossCompartmentKey
             ReturnType match(JSObject*& obj) { return f_(&obj); }
             ReturnType match(JSString*& str) { return f_(&str); }
             ReturnType match(DebuggerAndScript& tpl) { return f_(&mozilla::Get<1>(tpl)); }
+            ReturnType match(DebuggerAndLazyScript& tpl) { return f_(&mozilla::Get<1>(tpl)); }
             ReturnType match(DebuggerAndObject& tpl) { return f_(&mozilla::Get<1>(tpl)); }
         } matcher(f);
         return wrapped.match(matcher);
@@ -86,6 +95,7 @@ class CrossCompartmentKey
             ReturnType match(JSObject*& obj) { return ReturnType(); }
             ReturnType match(JSString*& str) { return ReturnType(); }
             ReturnType match(DebuggerAndScript& tpl) { return f_(&mozilla::Get<0>(tpl)); }
+            ReturnType match(DebuggerAndLazyScript& tpl) { return f_(&mozilla::Get<0>(tpl)); }
             ReturnType match(DebuggerAndObject& tpl) { return f_(&mozilla::Get<0>(tpl)); }
         } matcher(f);
         return wrapped.match(matcher);
@@ -95,6 +105,7 @@ class CrossCompartmentKey
         struct GetCompartmentFunctor {
             JS::Compartment* operator()(JSObject** tp) const { return (*tp)->compartment(); }
             JS::Compartment* operator()(JSScript** tp) const { return (*tp)->compartment(); }
+            JS::Compartment* operator()(LazyScript** tp) const { return (*tp)->compartment(); }
             JS::Compartment* operator()(JSString** tp) const { return nullptr; }
         };
         return applyToWrapped(GetCompartmentFunctor());
@@ -108,6 +119,10 @@ class CrossCompartmentKey
             HashNumber match(const DebuggerAndScript& tpl) {
                 return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
                        DefaultHasher<JSScript*>::hash(mozilla::Get<1>(tpl));
+            }
+            HashNumber match(const DebuggerAndLazyScript& tpl) {
+                return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
+                       DefaultHasher<LazyScript*>::hash(mozilla::Get<1>(tpl));
             }
             HashNumber match(const DebuggerAndObject& tpl) {
                 return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
@@ -129,6 +144,7 @@ class CrossCompartmentKey
             using ReturnType = bool;
             ReturnType operator()(JSObject** tp) { return !IsInsideNursery(*tp); }
             ReturnType operator()(JSScript** tp) { return true; }
+            ReturnType operator()(LazyScript** tp) { return true; }
             ReturnType operator()(JSString** tp) { return !IsInsideNursery(*tp); }
         };
         return const_cast<CrossCompartmentKey*>(this)->applyToWrapped(IsTenuredFunctor());

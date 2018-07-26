@@ -261,8 +261,6 @@ WasmHandleTrap()
         return ReportError(cx, JSMSG_WASM_IND_CALL_TO_NULL);
       case Trap::IndirectCallBadSig:
         return ReportError(cx, JSMSG_WASM_IND_CALL_BAD_SIG);
-      case Trap::ImpreciseSimdConversion:
-        return ReportError(cx, JSMSG_SIMD_FAILED_CONVERSION);
       case Trap::OutOfBounds:
         return ReportError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
       case Trap::UnalignedAccess:

@@ -168,7 +168,7 @@ class Editor extends _react.PureComponent {
         continueToHere
       } = this.props; // ignore right clicks in the gutter
 
-      if (ev.ctrlKey && ev.button === 0 || ev.which === 3 || selectedSource && selectedSource.isBlackBoxed || !selectedSource) {
+      if (ev.ctrlKey && ev.button === 0 || ev.button === 2 || selectedSource && selectedSource.isBlackBoxed || !selectedSource) {
         return;
       }
 
@@ -343,6 +343,11 @@ class Editor extends _react.PureComponent {
     const {
       selectedSource
     } = this.props;
+
+    if (!selectedSource) {
+      return;
+    }
+
     const line = (0, _editor.getCursorLine)(codeMirror);
     return (0, _editor.toSourceLine)(selectedSource.id, line);
   }
@@ -382,8 +387,9 @@ class Editor extends _react.PureComponent {
     const {
       setContextMenu
     } = this.props;
+    const target = event.target;
 
-    if (event.target.classList.contains("CodeMirror-linenumber")) {
+    if (target.classList.contains("CodeMirror-linenumber")) {
       return setContextMenu("Gutter", event);
     }
 
@@ -396,7 +402,7 @@ class Editor extends _react.PureComponent {
       jumpToMappedLocation
     } = this.props;
 
-    if (e.metaKey && e.altKey) {
+    if (selectedLocation && e.metaKey && e.altKey) {
       const sourceLocation = (0, _editor.getSourceLocationFromMouseEvent)(this.state.editor, selectedLocation, e);
       jumpToMappedLocation(sourceLocation);
     }
@@ -411,7 +417,7 @@ class Editor extends _react.PureComponent {
       editor
     } = this.state;
 
-    if (!editor || !nextProps.selectedSource || !nextProps.selectedLocation || !(0, _source.isLoaded)(nextProps.selectedSource)) {
+    if (!editor || !nextProps.selectedSource || !nextProps.selectedLocation || !nextProps.selectedLocation.line || !(0, _source.isLoaded)(nextProps.selectedSource)) {
       return false;
     }
 
@@ -424,15 +430,19 @@ class Editor extends _react.PureComponent {
     const {
       editor
     } = this.state;
+    const {
+      selectedLocation,
+      selectedSource
+    } = nextProps;
 
-    if (this.shouldScrollToLocation(nextProps)) {
+    if (selectedLocation && this.shouldScrollToLocation(nextProps)) {
       let {
         line,
         column
-      } = (0, _editor.toEditorPosition)(nextProps.selectedLocation);
+      } = (0, _editor.toEditorPosition)(selectedLocation);
 
-      if ((0, _editor.hasDocument)(nextProps.selectedSource.id)) {
-        const doc = (0, _editor.getDocument)(nextProps.selectedSource.id);
+      if (selectedSource && (0, _editor.hasDocument)(selectedSource.id)) {
+        const doc = (0, _editor.getDocument)(selectedSource.id);
         const lineText = doc.getLine(line);
         column = Math.max(column, (0, _indentation.getIndentation)(lineText));
       }
