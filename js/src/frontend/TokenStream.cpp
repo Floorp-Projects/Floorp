@@ -2165,7 +2165,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
         return this->appendCodePointToCharBuffer(codePoint);
     };
 
-    auto ReportUnterminatedRegExp = [this](CharT unit) {
+    auto ReportUnterminatedRegExp = [this](int32_t unit) {
         this->ungetCodeUnit(unit);
         this->error(JSMSG_UNTERMINATED_REGEXP);
     };
