@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use attr::{AttrSelectorOperator, AttrSelectorWithOptionalNamespace};
-use attr::{NamespaceConstraint, ParsedAttrSelectorOperation};
-use attr::{ParsedCaseSensitivity, SELECTOR_WHITESPACE};
+use attr::{AttrSelectorOperator, AttrSelectorWithNamespace, ParsedAttrSelectorOperation};
+use attr::{NamespaceConstraint, ParsedCaseSensitivity, SELECTOR_WHITESPACE};
 use bloom::BLOOM_HASH_MASK;
 use builder::{SelectorBuilder, SpecificityAndFlags};
 use context::QuirksMode;
@@ -20,7 +19,6 @@ use std::borrow::{Borrow, Cow};
 use std::fmt::{self, Debug, Display, Write};
 use std::iter::Rev;
 use std::slice;
-use thin_slice::ThinBoxedSlice;
 pub use visitor::{SelectorVisitor, Visit};
 
 /// A trait that represents a pseudo-element.
@@ -47,8 +45,6 @@ pub trait NonTSPseudoClass: Sized + ToCss {
     fn is_active_or_hover(&self) -> bool;
 }
 
-/// Returns a Cow::Borrowed if `s` is already ASCII lowercase, and a
-/// Cow::Owned if `s` had to be converted into ASCII lowercase.
 fn to_ascii_lowercase(s: &str) -> Cow<str> {
     if let Some(first_uppercase) = s.bytes().position(|byte| byte >= b'A' && byte <= b'Z') {
         let mut string = s.to_owned();
@@ -432,6 +428,7 @@ where
             },
             AttributeInNoNamespace {
                 ref local_name,
+                ref local_name_lower,
                 never_matches,
                 ..
             } if !never_matches =>
@@ -439,22 +436,14 @@ where
                 if !visitor.visit_attribute_selector(
                     &NamespaceConstraint::Specific(&namespace_empty_string::<Impl>()),
                     local_name,
-                    local_name,
+                    local_name_lower,
                 ) {
                     return false;
                 }
             },
             AttributeOther(ref attr_selector) if !attr_selector.never_matches => {
-                let empty_string;
-                let namespace = match attr_selector.namespace() {
-                    Some(ns) => ns,
-                    None => {
-                        empty_string = ::parser::namespace_empty_string::<Impl>();
-                        NamespaceConstraint::Specific(&empty_string)
-                    }
-                };
                 if !visitor.visit_attribute_selector(
-                    &namespace,
+                    &attr_selector.namespace(),
                     &attr_selector.local_name,
                     &attr_selector.local_name_lower,
                 ) {
@@ -826,16 +815,16 @@ pub enum Component<Impl: SelectorImpl> {
         local_name: Impl::LocalName,
         local_name_lower: Impl::LocalName,
     },
-    // Used only when local_name is already lowercase.
     AttributeInNoNamespace {
         local_name: Impl::LocalName,
+        local_name_lower: Impl::LocalName,
         operator: AttrSelectorOperator,
         value: Impl::AttrValue,
         case_sensitivity: ParsedCaseSensitivity,
         never_matches: bool,
     },
     // Use a Box in the less common cases with more data to keep size_of::<Component>() small.
-    AttributeOther(Box<AttrSelectorWithOptionalNamespace<Impl>>),
+    AttributeOther(Box<AttrSelectorWithNamespace<Impl>>),
 
     /// Pseudo-classes
     ///
@@ -847,7 +836,7 @@ pub enum Component<Impl: SelectorImpl> {
     /// need to think about how this should interact with
     /// visit_complex_selector, and what the consumers of those APIs should do
     /// about the presence of combinators in negation.
-    Negation(ThinBoxedSlice<Component<Impl>>),
+    Negation(Box<[Component<Impl>]>),
     FirstChild,
     LastChild,
     OnlyChild,
@@ -959,7 +948,7 @@ impl<Impl: SelectorImpl> Debug for Component<Impl> {
         self.to_css(f)
     }
 }
-impl<Impl: SelectorImpl> Debug for AttrSelectorWithOptionalNamespace<Impl> {
+impl<Impl: SelectorImpl> Debug for AttrSelectorWithNamespace<Impl> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_css(f)
     }
@@ -1249,19 +1238,18 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
     }
 }
 
-impl<Impl: SelectorImpl> ToCss for AttrSelectorWithOptionalNamespace<Impl> {
+impl<Impl: SelectorImpl> ToCss for AttrSelectorWithNamespace<Impl> {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
     where
         W: fmt::Write,
     {
         dest.write_char('[')?;
         match self.namespace {
-            Some(NamespaceConstraint::Specific((ref prefix, _))) => {
+            NamespaceConstraint::Specific((ref prefix, _)) => {
                 display_to_css_identifier(prefix, dest)?;
                 dest.write_char('|')?
             },
-            Some(NamespaceConstraint::Any) => dest.write_str("*|")?,
-            None => {}
+            NamespaceConstraint::Any => dest.write_str("*|")?,
         }
         display_to_css_identifier(&self.local_name, dest)?;
         match self.operation {
@@ -1640,8 +1628,8 @@ where
             let local_name = local_name.as_ref().into();
             if let Some(namespace) = namespace {
                 return Ok(Component::AttributeOther(Box::new(
-                    AttrSelectorWithOptionalNamespace {
-                        namespace: Some(namespace),
+                    AttrSelectorWithNamespace {
+                        namespace: namespace,
                         local_name: local_name,
                         local_name_lower: local_name_lower,
                         operation: ParsedAttrSelectorOperation::Exists,
@@ -1697,7 +1685,6 @@ where
 
     let value = value.as_ref().into();
     let local_name_lower;
-    let local_name_is_ascii_lowercase;
     {
         let local_name_lower_cow = to_ascii_lowercase(&local_name);
         if let ParsedCaseSensitivity::CaseSensitive = case_sensitivity {
@@ -1712,16 +1699,15 @@ where
             }
         }
         local_name_lower = local_name_lower_cow.as_ref().into();
-        local_name_is_ascii_lowercase = matches!(local_name_lower_cow, Cow::Borrowed(..));
     }
     let local_name = local_name.as_ref().into();
-    if namespace.is_some() || !local_name_is_ascii_lowercase {
+    if let Some(namespace) = namespace {
         Ok(Component::AttributeOther(Box::new(
-            AttrSelectorWithOptionalNamespace {
-                namespace,
-                local_name,
-                local_name_lower,
-                never_matches,
+            AttrSelectorWithNamespace {
+                namespace: namespace,
+                local_name: local_name,
+                local_name_lower: local_name_lower,
+                never_matches: never_matches,
                 operation: ParsedAttrSelectorOperation::WithValue {
                     operator: operator,
                     case_sensitivity: case_sensitivity,
@@ -1732,6 +1718,7 @@ where
     } else {
         Ok(Component::AttributeInNoNamespace {
             local_name: local_name,
+            local_name_lower: local_name_lower,
             operator: operator,
             value: value,
             case_sensitivity: case_sensitivity,
@@ -1798,7 +1785,7 @@ where
     }
 
     // Success.
-    Ok(Component::Negation(sequence.into_vec().into_boxed_slice().into()))
+    Ok(Component::Negation(sequence.into_vec().into_boxed_slice()))
 }
 
 /// simple_selector_sequence
@@ -2689,6 +2676,7 @@ pub mod tests {
                     vec![
                         Component::AttributeInNoNamespace {
                             local_name: DummyAtom::from("attr"),
+                            local_name_lower: DummyAtom::from("attr"),
                             operator: AttrSelectorOperator::DashMatch,
                             value: DummyAtom::from("foo"),
                             never_matches: false,
