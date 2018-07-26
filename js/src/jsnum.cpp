@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 
 #ifdef HAVE_LOCALECONV
 #include <locale.h>
@@ -47,11 +48,14 @@ using mozilla::Abs;
 using mozilla::ArrayLength;
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::IsAsciiAlphanumeric;
+using mozilla::IsAsciiDigit;
 using mozilla::Maybe;
 using mozilla::MinNumberValue;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
 using mozilla::RangedPtr;
+using mozilla::Utf8AsUnsignedChars;
+using mozilla::Utf8Unit;
 
 using JS::AutoCheckCannotGC;
 using JS::GenericNaN;
@@ -261,24 +265,29 @@ js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end, int ba
     return true;
 }
 
-template bool
-js::GetPrefixInteger(JSContext* cx, const char16_t* start, const char16_t* end, int base,
-                     const char16_t** endp, double* dp);
+namespace js {
 
 template bool
-js::GetPrefixInteger(JSContext* cx, const Latin1Char* start, const Latin1Char* end,
-                     int base, const Latin1Char** endp, double* dp);
+GetPrefixInteger(JSContext* cx, const char16_t* start, const char16_t* end, int base,
+                 const char16_t** endp, double* dp);
 
+template bool
+GetPrefixInteger(JSContext* cx, const Latin1Char* start, const Latin1Char* end, int base,
+                 const Latin1Char** endp, double* dp);
+
+} // namespace js
+
+template <typename CharT>
 bool
-js::GetDecimalInteger(JSContext* cx, const char16_t* start, const char16_t* end, double* dp)
+js::GetDecimalInteger(JSContext* cx, const CharT* start, const CharT* end, double* dp)
 {
     MOZ_ASSERT(start <= end);
 
-    const char16_t* s = start;
+    const CharT* s = start;
     double d = 0.0;
     for (; s < end; s++) {
-        char16_t c = *s;
-        MOZ_ASSERT('0' <= c && c <= '9');
+        CharT c = *s;
+        MOZ_ASSERT(IsAsciiDigit(c));
         int digit = c - '0';
         d = d * 10 + digit;
     }
@@ -292,6 +301,23 @@ js::GetDecimalInteger(JSContext* cx, const char16_t* start, const char16_t* end,
     // Otherwise compute the correct integer from the prefix of valid digits.
     return ComputeAccurateDecimalInteger(cx, start, s, dp);
 }
+
+namespace js {
+
+template bool
+GetDecimalInteger(JSContext* cx, const char16_t* start, const char16_t* end, double* dp);
+
+template bool
+GetDecimalInteger(JSContext* cx, const Latin1Char* start, const Latin1Char* end, double* dp);
+
+template <>
+bool
+GetDecimalInteger<Utf8Unit>(JSContext* cx, const Utf8Unit* start, const Utf8Unit* end, double* dp)
+{
+    return GetDecimalInteger(cx, Utf8AsUnsignedChars(start), Utf8AsUnsignedChars(end), dp);
+}
+
+} // namespace js
 
 static bool
 num_parseFloat(JSContext* cx, unsigned argc, Value* vp)
