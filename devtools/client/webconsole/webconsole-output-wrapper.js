@@ -429,13 +429,8 @@ WebConsoleOutputWrapper.prototype = {
         store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
 
         const length = this.queuedMessageAdds.length;
-
-        // This telemetry event is only useful when we have a toolbox so only
-        // send it when we have one.
-        if (this.toolbox) {
-          this.telemetry.addEventProperty(
-            "devtools.main", "enter", "webconsole", null, "message_count", length);
-        }
+        this.telemetry.addEventProperty(
+          "devtools.main", "enter", "webconsole", null, "message_count", length);
 
         this.queuedMessageAdds = [];
 
