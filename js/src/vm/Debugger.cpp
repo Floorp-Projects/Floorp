@@ -4216,7 +4216,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         line(0),
         innermost(false),
         innermostForRealm(cx->zone()),
-        vector(cx, ScriptVector(cx)),
+        scriptVector(cx, ScriptVector(cx)),
         wasmInstanceVector(cx, WasmInstanceObjectVector(cx)),
         oom(false)
     {}
@@ -4383,7 +4383,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
     /*
      * Search all relevant realms and the stack for scripts matching
-     * this query, and append the matching scripts to |vector|.
+     * this query, and append the matching scripts to |scriptVector|.
      */
     bool findScripts() {
         if (!prepareQuery() || !delazifyScripts())
@@ -4394,7 +4394,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
             singletonRealm = realms.all().front();
 
         // Search each realm for debuggee scripts.
-        MOZ_ASSERT(vector.empty());
+        MOZ_ASSERT(scriptVector.empty());
         oom = false;
         IterateScripts(cx, singletonRealm, this, considerScript);
         if (oom) {
@@ -4403,20 +4403,20 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         }
 
         // We cannot touch the gray bits while isHeapBusy, so do this now.
-        for (JSScript** i = vector.begin(); i != vector.end(); ++i)
+        for (JSScript** i = scriptVector.begin(); i != scriptVector.end(); ++i)
             JS::ExposeScriptToActiveJS(*i);
 
-        // For most queries, we just accumulate results in 'vector' as we find
-        // them. But if this is an 'innermost' query, then we've accumulated the
-        // results in the 'innermostForRealm' map. In that case, we now need to
-        // walk that map and populate 'vector'.
+        // For most queries, we just accumulate results in 'scriptVector' as we
+        // find them. But if this is an 'innermost' query, then we've
+        // accumulated the results in the 'innermostForRealm' map. In that case,
+        // we now need to walk that map and populate 'scriptVector'.
         if (innermost) {
             for (RealmToScriptMap::Range r = innermostForRealm.all();
                  !r.empty();
                  r.popFront())
             {
                 JS::ExposeScriptToActiveJS(r.front().value());
-                if (!vector.append(r.front().value())) {
+                if (!scriptVector.append(r.front().value())) {
                     ReportOutOfMemory(cx);
                     return false;
                 }
@@ -4439,7 +4439,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     }
 
     Handle<ScriptVector> foundScripts() const {
-        return vector;
+        return scriptVector;
     }
 
     Handle<WasmInstanceObjectVector> foundWasmInstances() const {
@@ -4502,7 +4502,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
      * the JS array as we go, because we mustn't allocate JS objects or GC
      * while we use the CellIter.
      */
-    Rooted<ScriptVector> vector;
+    Rooted<ScriptVector> scriptVector;
 
     /*
      * Like above, but for wasm modules.
@@ -4575,8 +4575,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     }
 
     /*
-     * If |script| matches this query, append it to |vector| or place it in
-     * |innermostForRealm|, as appropriate. Set |oom| if an out of memory
+     * If |script| matches this query, append it to |scriptVector| or place it
+     * in |innermostForRealm|, as appropriate. Set |oom| if an out of memory
      * condition occurred.
      */
     void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
@@ -4618,12 +4618,12 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         }
 
         if (innermost) {
-            // For 'innermost' queries, we don't place scripts in |vector| right
-            // away; we may later find another script that is nested inside this
-            // one. Instead, we record the innermost script we've found so far
-            // for each realm in innermostForRealm, and only populate |vector|
-            // at the bottom of findScripts, when we've traversed all the
-            // scripts.
+            // For 'innermost' queries, we don't place scripts in
+            // |scriptVector| right away; we may later find another script that
+            // is nested inside this one. Instead, we record the innermost
+            // script we've found so far for each realm in innermostForRealm,
+            // and only populate |scriptVector| at the bottom of findScripts,
+            // when we've traversed all the scripts.
             //
             // So: check this script against the innermost one we've found so
             // far (if any), as recorded in innermostForRealm, and replace that
@@ -4646,8 +4646,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
                 }
             }
         } else {
-            // Record this matching script in the results vector.
-            if (!vector.append(script)) {
+            // Record this matching script in the results scriptVector.
+            if (!scriptVector.append(script)) {
                 oom = true;
                 return;
             }
