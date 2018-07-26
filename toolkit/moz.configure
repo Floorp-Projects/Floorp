@@ -399,7 +399,7 @@ def av1(value, target, milestone):
     if value.origin == 'default':
         if target.os == 'WINNT' and target.cpu == 'x86':
             enabled = False
-        else:
+        elif milestone.is_nightly:
             enabled = target.os != 'Android'
     if enabled:
         return True
