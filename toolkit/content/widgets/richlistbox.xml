@@ -25,21 +25,9 @@
       </field>
       <constructor>
         <![CDATA[
-          // add a template build listener
-          if (this.builder)
-            this.builder.addListener(this._builderListener);
-          else
-            this._refreshSelection();
+          this._refreshSelection();
         ]]>
       </constructor>
-
-      <destructor>
-        <![CDATA[
-          // remove the template build listener
-          if (this.builder)
-            this.builder.removeListener(this._builderListener);
-        ]]>
-      </destructor>
 
     <!-- Overriding baselistbox -->
       <method name="_fireOnSelect">
@@ -215,21 +203,6 @@
         </body>
       </method>
 
-      <method name="getNumberOfVisibleRows">
-        <!-- returns the number of currently visible rows                -->
-        <!-- don't rely on this function, if the items' height can vary! -->
-        <body>
-          <![CDATA[
-            var children = this.children;
-
-            for (var top = 0; top < children.length && !this._isItemVisible(children[top]); top++);
-            for (var ix = top; ix < children.length && this._isItemVisible(children[ix]); ix++);
-
-            return ix - top;
-          ]]>
-        </body>
-      </method>
-
       <method name="getIndexOfFirstVisibleRow">
         <body>
           <![CDATA[
@@ -310,19 +283,6 @@
           ]]>
         </getter>
       </property>
-
-      <field name="_builderListener" readonly="true">
-        <![CDATA[
-          ({
-            mOuter: this,
-            item: null,
-            willRebuild(builder) { },
-            didRebuild(builder) {
-              this.mOuter._refreshSelection();
-            }
-          });
-        ]]>
-      </field>
 
       <method name="_refreshSelection">
         <body>
@@ -431,17 +391,6 @@
       <field name="_currentIndex">null</field>
 
       <!-- For backwards-compatibility and for convenience.
-        Use getIndexOfItem instead. -->
-      <method name="getIndexOf">
-        <parameter name="aElement"/>
-        <body>
-          <![CDATA[
-            return this.getIndexOfItem(aElement);
-          ]]>
-        </body>
-      </method>
-
-      <!-- For backwards-compatibility and for convenience.
         Use ensureElementIsVisible instead -->
       <method name="ensureSelectedElementIsVisible">
         <body>
@@ -450,30 +399,6 @@
           ]]>
         </body>
       </method>
-
-      <!-- For backwards-compatibility and for convenience.
-        Use moveByOffset instead. -->
-      <method name="goUp">
-        <body>
-          <![CDATA[
-            var index = this.currentIndex;
-            this.moveByOffset(-1, true, false);
-            return index != this.currentIndex;
-          ]]>
-        </body>
-      </method>
-      <method name="goDown">
-        <body>
-          <![CDATA[
-            var index = this.currentIndex;
-            this.moveByOffset(1, true, false);
-            return index != this.currentIndex;
-          ]]>
-        </body>
-      </method>
-
-      <!-- deprecated (is implied by currentItem and selectItem) -->
-      <method name="fireActiveItemEvent"><body/></method>
     </implementation>
 
     <handlers>
