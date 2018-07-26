@@ -20,7 +20,6 @@ export let requestStore = new PaymentsStore({
   },
   "address-page": {
     guid: null,
-    selectedStateKey: null,
     title: "",
   },
   "payment-summary": {
@@ -30,6 +29,7 @@ export let requestStore = new PaymentsStore({
     previousId: null,
     // onboardingWizard: true,
     // error: "",
+    // selectedStateKey: "",
   },
   request: {
     completeStatus: "",
