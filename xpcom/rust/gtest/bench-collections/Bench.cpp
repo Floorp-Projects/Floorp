@@ -38,7 +38,7 @@
 //   callgrind_annotate --auto=yes clgout > clgann
 //
 // where $IMPL is part of an implementation name in a test (e.g. "PLDHash",
-// "JSHash") and $OBJDIR is an objdir containing a --enable-release build.
+// "MozHash") and $OBJDIR is an objdir containing a --enable-release build.
 //
 // Note that multiple processes are spawned, so `clgout` gets overwritten
 // multiple times, but the last process to write its profiling data to file is
@@ -47,9 +47,9 @@
 
 #include "gtest/gtest.h"
 #include "gtest/MozGTestBench.h" // For MOZ_GTEST_BENCH
-#include "js/HashTable.h"
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/TimeStamp.h"
 #include "PLDHashTable.h"
@@ -171,9 +171,9 @@ Bench_Cpp_PLDHashTable(const Params* aParams, void** aVals, size_t aLen)
 
 // Keep this in sync with all the other Bench_*() functions.
 void
-Bench_Cpp_JSHashSet(const Params* aParams, void** aVals, size_t aLen)
+Bench_Cpp_MozHashSet(const Params* aParams, void** aVals, size_t aLen)
 {
-  js::HashSet<void*, js::DefaultHasher<void*>, MallocAllocPolicy> hs;
+  mozilla::HashSet<void*, mozilla::DefaultHasher<void*>, MallocAllocPolicy> hs;
   MOZ_RELEASE_ASSERT(hs.init());
 
   for (size_t j = 0; j < aParams->mNumInserts; j++) {
@@ -295,8 +295,8 @@ MOZ_GTEST_BENCH_F(BenchCollections, PLDHash, [this] {
   BenchImpl(Bench_Cpp_PLDHashTable);
 });
 
-MOZ_GTEST_BENCH_F(BenchCollections, JSHash, [this] {
-  BenchImpl(Bench_Cpp_JSHashSet);
+MOZ_GTEST_BENCH_F(BenchCollections, MozHash, [this] {
+  BenchImpl(Bench_Cpp_MozHashSet);
 });
 
 MOZ_GTEST_BENCH_F(BenchCollections, RustHash, [this] {
