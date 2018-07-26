@@ -143,7 +143,7 @@ Preferences.addAll([
   { id: "browser.tabs.warnOnClose", type: "bool" },
   { id: "browser.tabs.warnOnOpen", type: "bool" },
   { id: "browser.sessionstore.restore_on_demand", type: "bool" },
-  { id: "browser.ctrlTab.previews", type: "bool" },
+  { id: "browser.ctrlTab.recentlyUsedOrder", type: "bool" },
 
   // Fonts
   { id: "font.language.group", type: "wstring" },

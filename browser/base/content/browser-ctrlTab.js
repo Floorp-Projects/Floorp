@@ -220,7 +220,7 @@ var ctrlTab = {
     }
   },
 
-  prefName: "browser.ctrlTab.previews",
+  prefName: "browser.ctrlTab.recentlyUsedOrder",
   readPref: function ctrlTab_readPref() {
     var enable =
       Services.prefs.getBoolPref(this.prefName) &&
