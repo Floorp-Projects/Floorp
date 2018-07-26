@@ -1633,6 +1633,18 @@ public:
     CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
 
   /**
+   * Create a DrawTarget that captures the drawing commands to eventually be replayed
+   * onto the DrawTarget provided. An optional byte size can be provided as a limit
+   * for the CaptureCommandList. When the limit is reached, the CaptureCommandList
+   * will be replayed to the target and then cleared.
+   *
+   * @param aSize Size of the area this DT will capture.
+   * @param aFlushBytes The byte limit at which to flush the CaptureCommandList
+   */
+  static already_AddRefed<DrawTargetCapture>
+    CreateCaptureDrawTargetForTarget(gfx::DrawTarget* aTarget, size_t aFlushBytes = 0);
+
+  /**
    * Create a DrawTarget that captures the drawing commands and can be replayed
    * onto a compatible DrawTarget afterwards.
    *
