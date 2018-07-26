@@ -474,7 +474,7 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 // This should match Chromium's audio indicator delay.
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
-pref("browser.ctrlTab.recentlyUsedOrder", true);
+pref("browser.ctrlTab.previews", false);
 
 // By default, do not export HTML at shutdown.
 // If true, at shutdown the bookmarks in your menu and toolbar will
@@ -1150,7 +1150,7 @@ pref("services.sync.prefs.sync.addons.ignoreUserEnabledChanges", true);
 // could weaken the pref locally, install an add-on from an untrusted
 // source, and this would propagate automatically to other,
 // uncompromised Sync-connected devices.
-pref("services.sync.prefs.sync.browser.ctrlTab.recentlyUsedOrder", true);
+pref("services.sync.prefs.sync.browser.ctrlTab.previews", true);
 pref("services.sync.prefs.sync.browser.download.useDownloadDir", true);
 pref("services.sync.prefs.sync.browser.formfill.enable", true);
 pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
