@@ -569,12 +569,8 @@ class MOZ_STACK_CLASS PerHandlerParser
     bool isValidSimpleAssignmentTarget(Node node,
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 
-    Node newPropertyName(PropertyName* key, const TokenPos& pos) {
-        return handler.newPropertyName(key, pos);
-    }
-
-    Node newPropertyAccess(Node expr, Node key) {
-        return handler.newPropertyAccess(expr, key);
+    Node newPropertyAccess(Node expr, PropertyName* key, uint32_t end) {
+        return handler.newPropertyAccess(expr, key, end);
     }
 
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
@@ -1159,7 +1155,7 @@ class MOZ_STACK_CLASS GeneralParser
 
     Node condition(InHandling inHandling, YieldHandling yieldHandling);
 
-    Node argumentList(YieldHandling yieldHandling, bool* isSpread,
+    bool argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread,
                       PossibleError* possibleError = nullptr);
     Node destructuringDeclaration(DeclarationKind kind, YieldHandling yieldHandling,
                                   TokenKind tt);

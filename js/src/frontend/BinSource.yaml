@@ -428,8 +428,9 @@ CallExpression:
                 op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
             }
         }
-
-        BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
+        auto result = arguments;
+        result->setKind(ParseNodeKind::Call);
+        result->prepend(callee);
         result->setOp(op);
 
 
@@ -830,7 +831,10 @@ LiteralStringExpression:
 
 NewExpression:
     build: |
-        BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
+        auto result = arguments;
+        result->setKind(ParseNodeKind::New);
+        result->prepend(callee);
+        result->setOp(JSOP_NEW);
 
 ObjectExpression:
     build:
@@ -918,28 +922,12 @@ SwitchStatementWithDefault:
         BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
 
 StaticMemberAssignmentTarget:
-    init:
-        TokenPos namePos;
-    fields:
-        property:
-            block:
-                before: |
-                    namePos = tokenizer_->pos();
     build: |
-        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), namePos));
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
 
 StaticMemberExpression:
-    init:
-        TokenPos namePos;
-    fields:
-        property:
-            block:
-                before: |
-                    namePos = tokenizer_->pos();
     build: |
-        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), namePos));
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
 
 ThisExpression:
     build: |

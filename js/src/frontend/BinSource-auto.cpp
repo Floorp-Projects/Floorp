@@ -3462,8 +3462,9 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
             op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
         }
     }
-
-    BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
+    auto result = arguments;
+    result->setKind(ParseNodeKind::Call);
+    result->prepend(callee);
     result->setOp(op);
     return result;
 }
@@ -5676,7 +5677,10 @@ BinASTParser<Tok>::parseInterfaceNewExpression(const size_t start, const BinKind
 
     BINJS_MOZ_TRY_DECL(arguments, parseArguments());
 
-    BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
+    auto result = arguments;
+    result->setKind(ParseNodeKind::New);
+    result->prepend(callee);
+    result->setOp(JSOP_NEW);
     return result;
 }
 
@@ -6193,18 +6197,13 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(const size_t start
     const BinField expected_fields[2] = { BinField::Object, BinField::Property };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
-    TokenPos namePos;
 
     BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper());
+
     RootedAtom property(cx_);
-    {
-        namePos = tokenizer_->pos();
-        MOZ_TRY_VAR(property, tokenizer_->readAtom());
+    MOZ_TRY_VAR(property, tokenizer_->readAtom());
 
-    }
-
-    BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), namePos));
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
     return result;
 }
 
@@ -6243,18 +6242,13 @@ BinASTParser<Tok>::parseInterfaceStaticMemberExpression(const size_t start, cons
     const BinField expected_fields[2] = { BinField::Object, BinField::Property };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
-    TokenPos namePos;
 
     BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper());
+
     RootedAtom property(cx_);
-    {
-        namePos = tokenizer_->pos();
-        MOZ_TRY_VAR(property, tokenizer_->readAtom());
+    MOZ_TRY_VAR(property, tokenizer_->readAtom());
 
-    }
-
-    BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), namePos));
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
     return result;
 }
 
