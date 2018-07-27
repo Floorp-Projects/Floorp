@@ -185,7 +185,12 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
             // a srcdoc iframe.  To ensure that it stays unresolvable, we pretend
             // that it doesn't exist.
             rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-        } else {
+        } else if (!path.EqualsLiteral("blank") &&
+                   !path.EqualsLiteral("neterror") &&
+                   !path.EqualsLiteral("home") &&
+                   !path.EqualsLiteral("welcome") &&
+                   !path.EqualsLiteral("newtab") &&
+                   !path.EqualsLiteral("certerror")) {
             nsCOMPtr<nsIEnterprisePolicies> policyManager =
                 do_GetService("@mozilla.org/browser/enterprisepolicies;1", &rv2);
             if (NS_SUCCEEDED(rv2)) {

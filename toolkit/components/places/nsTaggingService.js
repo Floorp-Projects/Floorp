@@ -230,42 +230,6 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  getURIsForTag: function TS_getURIsForTag(aTagName) {
-    if (!aTagName || aTagName.length == 0) {
-      throw Components.Exception("Invalid tag name", Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    if (/^\s|\s$/.test(aTagName)) {
-      throw Components.Exception("Tag passed to getURIsForTag was not trimmed",
-                                 Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    let uris = [];
-    let tagId = this._getItemIdForTag(aTagName);
-    if (tagId == -1)
-      return uris;
-
-    let db = PlacesUtils.history.DBConnection;
-    let stmt = db.createStatement(
-      `SELECT h.url FROM moz_places h
-       JOIN moz_bookmarks b ON b.fk = h.id
-       WHERE b.parent = :tag_id`
-    );
-    stmt.params.tag_id = tagId;
-    try {
-      while (stmt.executeStep()) {
-        try {
-          uris.push(Services.io.newURI(stmt.row.url));
-        } catch (ex) {}
-      }
-    } finally {
-      stmt.finalize();
-    }
-
-    return uris;
-  },
-
-  // nsITaggingService
   getTagsForURI: function TS_getTagsForURI(aURI, aCount) {
     if (!aURI) {
       throw Components.Exception("Invalid uri", Cr.NS_ERROR_INVALID_ARG);

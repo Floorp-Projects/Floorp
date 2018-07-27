@@ -553,6 +553,10 @@ class Telemetry {
   toolOpened(id) {
     const charts = getChartsFromToolId(id);
 
+    if (!charts) {
+      return;
+    }
+
     if (charts.timerHist) {
       this.start(charts.timerHist, this);
     }
@@ -577,7 +581,7 @@ class Telemetry {
   toolClosed(id) {
     const charts = getChartsFromToolId(id);
 
-    if (charts.timerHist) {
+    if (charts && charts.timerHist) {
       this.finish(charts.timerHist, this);
     }
   }

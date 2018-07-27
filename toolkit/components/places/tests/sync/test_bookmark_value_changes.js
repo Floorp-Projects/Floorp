@@ -961,12 +961,12 @@ add_task(async function test_rewrite_tag_queries() {
 
   deepEqual(changesToUpload, {}, "Should not reupload any local records");
 
-  let urisWithTaggy = PlacesUtils.tagging.getURIsForTag("taggy");
-  deepEqual(urisWithTaggy.map(uri => uri.spec).sort(), ["http://example.com/e"],
+  let bmWithTaggy = await PlacesUtils.bookmarks.fetch({tags: ["taggy"]});
+  equal(bmWithTaggy.url.href, "http://example.com/e",
     "Should insert bookmark with new tag");
 
-  let urisWithKitty = PlacesUtils.tagging.getURIsForTag("kitty");
-  deepEqual(urisWithKitty.map(uri => uri.spec).sort(), ["http://example.com/d"],
+  let bmWithKitty = await PlacesUtils.bookmarks.fetch({tags: ["kitty"]});
+  equal(bmWithKitty.url.href, "http://example.com/d",
     "Should retain existing tag");
 
   let { root: toolbarContainer } = PlacesUtils.getFolderContents(
@@ -1098,4 +1098,185 @@ add_task(async function test_date_added() {
   equal(bInfo.title, "B (remote)", "Should change local title for B");
   deepEqual(bInfo.dateAdded, bNewDateAdded,
     "Should take older date added for B");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
+// Bug 1472435.
+add_task(async function test_duplicate_url_rows() {
+  let buf = await openMirror("test_duplicate_url_rows");
+
+  let placesToInsert = [{
+    guid: "placeAAAAAAA",
+    href: "http://example.com",
+  }, {
+    guid: "placeBBBBBBB",
+    href: "http://example.com",
+  }, {
+    guid: "placeCCCCCCC",
+    href: "http://example.com/c",
+  }];
+
+  let itemsToInsert = [{
+    guid: "bookmarkAAAA",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    placeGuid: "placeAAAAAAA",
+    localTitle: "A",
+    remoteTitle: "A (remote)",
+  }, {
+    guid: "bookmarkBBBB",
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    placeGuid: "placeBBBBBBB",
+    localTitle: "B",
+    remoteTitle: "B (remote)",
+  }, {
+    guid: "bookmarkCCCC",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    placeGuid: "placeCCCCCCC",
+    localTitle: "C",
+    remoteTitle: "C (remote)",
+  }];
+
+  info("Manually insert local and remote items with duplicate URLs");
+  await buf.db.executeTransaction(async function() {
+    for (let { guid, href } of placesToInsert) {
+      let url = new URL(href);
+      await buf.db.executeCached(`
+        INSERT INTO moz_places(url, url_hash, rev_host, hidden, frecency, guid)
+        VALUES(:url, hash(:url), :revHost, 0, -1, :guid)`,
+        { url: url.href, revHost: PlacesUtils.getReversedHost(url), guid });
+
+      await buf.db.executeCached(`
+        INSERT INTO urls(guid, url, hash, revHost)
+        VALUES(:guid, :url, hash(:url), :revHost)`,
+        { guid, url: url.href, revHost: PlacesUtils.getReversedHost(url) });
+    }
+
+    for (let { guid, parentGuid, placeGuid, localTitle, remoteTitle } of itemsToInsert) {
+      await buf.db.executeCached(`
+        INSERT INTO moz_bookmarks(guid, parent, fk, position, type, title,
+                                  syncStatus, syncChangeCounter)
+        VALUES(:guid, (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
+               (SELECT id FROM moz_places WHERE guid = :placeGuid),
+               (SELECT count(*) FROM moz_bookmarks b
+                JOIN moz_bookmarks p ON p.id = b.parent
+                WHERE p.guid = :parentGuid), :type, :localTitle,
+                :syncStatus, 1)`,
+        { guid, parentGuid, placeGuid,
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK, localTitle,
+          syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW });
+
+      await buf.db.executeCached(`
+        INSERT INTO items(guid, needsMerge, kind, title, urlId)
+        VALUES(:guid, 1, :kind, :remoteTitle,
+               (SELECT id FROM urls WHERE guid = :placeGuid))`,
+        { guid, placeGuid, kind: SyncedBookmarksMirror.KIND.BOOKMARK,
+          remoteTitle });
+
+      await buf.db.executeCached(`
+        INSERT INTO structure(guid, parentGuid, position)
+        VALUES(:guid, :parentGuid,
+               IFNULL((SELECT count(*) FROM structure
+                       WHERE parentGuid = :parentGuid), 0))`,
+        { guid, parentGuid });
+    }
+  });
+
+  info("Apply mirror");
+  let observer = expectBookmarkChangeNotifications();
+  await buf.apply();
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [{
+        guid: "bookmarkAAAA",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "A (remote)",
+        url: "http://example.com/",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: BookmarksToolbarTitle,
+      children: [{
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "B (remote)",
+        url: "http://example.com/",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: UnfiledBookmarksTitle,
+      children: [{
+        guid: "bookmarkCCCC",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "C (remote)",
+        url: "http://example.com/c",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: MobileBookmarksTitle,
+    }],
+  }, "Should update titles for items with duplicate URLs");
+
+  let localItemIds = await PlacesUtils.promiseManyItemIds(["bookmarkAAAA",
+    "bookmarkBBBB", "bookmarkCCCC"]);
+  observer.check([{
+    name: "onItemChanged",
+    params: { itemId: localItemIds.get("bookmarkAAAA"), property: "title",
+              isAnnoProperty: false, newValue: "A (remote)",
+              type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              parentId: PlacesUtils.bookmarksMenuFolderId, guid: "bookmarkAAAA",
+              parentGuid: PlacesUtils.bookmarks.menuGuid, oldValue: "A",
+              source: PlacesUtils.bookmarks.SOURCES.SYNC },
+  }, {
+    name: "onItemChanged",
+    params: { itemId: localItemIds.get("bookmarkBBBB"), property: "title",
+              isAnnoProperty: false, newValue: "B (remote)",
+              type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              parentId: PlacesUtils.toolbarFolderId, guid: "bookmarkBBBB",
+              parentGuid: PlacesUtils.bookmarks.toolbarGuid, oldValue: "B",
+              source: PlacesUtils.bookmarks.SOURCES.SYNC },
+  }, {
+    name: "onItemChanged",
+    params: { itemId: localItemIds.get("bookmarkCCCC"), property: "title",
+              isAnnoProperty: false, newValue: "C (remote)",
+              type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              parentId: PlacesUtils.unfiledBookmarksFolderId,
+              guid: "bookmarkCCCC",
+              parentGuid: PlacesUtils.bookmarks.unfiledGuid, oldValue: "C",
+              source: PlacesUtils.bookmarks.SOURCES.SYNC },
+  }]);
+
+  info("Remove duplicate URLs from Places to avoid tripping debug asserts");
+  await buf.db.executeTransaction(async function() {
+    for (let { guid } of placesToInsert) {
+      await buf.db.executeCached(`
+        DELETE FROM moz_places WHERE guid = :guid`,
+        { guid });
+    }
+  });
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
 });

@@ -34,11 +34,9 @@ var gTabsPanel = {
 
     this.initElements();
 
-    let hiddenTabsMenuButton = document.getElementById("allTabsMenu-hiddenTabsButton");
-    let hiddenTabsSeparator = document.getElementById("allTabsMenu-hiddenTabsSeparator");
     this.hiddenAudioTabsPopup = new TabsPanel({
       view: this.allTabsView,
-      insertBefore: hiddenTabsSeparator,
+      insertBefore: document.getElementById("allTabsMenu-tabsSeparator"),
       filterFn: (tab) => tab.hidden && tab.soundPlaying,
     });
     this.allTabsPanel = new TabsPanel({
@@ -47,8 +45,6 @@ var gTabsPanel = {
       filterFn: (tab) => !tab.pinned && !tab.hidden,
     });
 
-    let containerTabsButton = document.getElementById("allTabsMenu-containerTabsButton");
-    let containerTabsSeparator = document.getElementById("allTabsMenu-containerTabsSeparator");
     this.allTabsView.addEventListener("ViewShowing", (e) => {
       PanelUI._ensureShortcutsShown(this.allTabsView);
       e.target.querySelector(".undo-close-tab").disabled =
@@ -56,12 +52,16 @@ var gTabsPanel = {
 
       let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled")
                                 && !PrivateBrowsingUtils.isWindowPrivate(window);
-      containerTabsButton.hidden = !containersEnabled;
-      containerTabsSeparator.hidden = !containersEnabled;
+      document.getElementById("allTabsMenu-containerTabsButton")
+        .hidden = !containersEnabled;
+      document.getElementById("allTabsMenu-containerTabsSeparator")
+        .hidden = !containersEnabled;
 
       let hasHiddenTabs = gBrowser.visibleTabs.length < gBrowser.tabs.length;
-      hiddenTabsMenuButton.hidden = !hasHiddenTabs;
-      hiddenTabsSeparator.hidden = !hasHiddenTabs;
+      document.getElementById("allTabsMenu-hiddenTabsButton")
+        .hidden = !hasHiddenTabs;
+      document.getElementById("allTabsMenu-hiddenTabsSeparator")
+        .hidden = !hasHiddenTabs;
     });
 
     this.allTabsView.addEventListener("ViewShown", (e) => {

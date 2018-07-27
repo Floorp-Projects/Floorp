@@ -453,6 +453,7 @@ DevTools.prototype = {
    */
   async showToolbox(target, toolId, hostType, hostOptions, startTime) {
     let toolbox = this._toolboxes.get(target);
+
     if (toolbox) {
       if (hostType != null && toolbox.hostType != hostType) {
         await toolbox.switchHost(hostType);
@@ -477,14 +478,18 @@ DevTools.prototype = {
       this._creatingToolboxes.delete(target);
 
       if (startTime) {
-        this.logToolboxOpenTime(toolbox.currentToolId, startTime);
+        this.logToolboxOpenTime(toolbox, startTime);
       }
       this._firstShowToolbox = false;
     }
 
+    // We send the "enter" width here to ensure it is always sent *after*
+    // the "open" event.
     const width = Math.ceil(toolbox.win.outerWidth / 50) * 50;
+    const panelName = this.makeToolIdHumanReadable(toolId || toolbox.defaultToolId);
     this._telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "width", width);
+      "devtools.main", "enter", panelName, null, "width", width
+    );
 
     return toolbox;
   },
@@ -496,22 +501,24 @@ DevTools.prototype = {
    * subsequent toolbox opening, which should all be faster.
    * These two probes are indexed by Tool ID.
    *
-   * @param {String} toolId
-   *        The id of the opened tool.
+   * @param {String} toolbox
+   *        Toolbox instance.
    * @param {Number} startTime
    *        Indicates the time at which the user event related to the toolbox
    *        opening started. This is a `Cu.now()` timing.
    */
-  logToolboxOpenTime(toolId, startTime) {
+  logToolboxOpenTime(toolbox, startTime) {
+    const toolId = toolbox.currentToolId || toolbox.defaultToolId;
     const delay = Cu.now() - startTime;
+    const panelName = this.makeToolIdHumanReadable(toolId);
 
     const telemetryKey = this._firstShowToolbox ?
       "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS" : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
     this._telemetry.getKeyedHistogramById(telemetryKey).add(toolId, delay);
 
     this._telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "first_panel",
-      this.makeToolIdHumanReadable(toolId));
+      "devtools.main", "open", "tools", null, "first_panel", panelName
+    );
   },
 
   makeToolIdHumanReadable(toolId) {

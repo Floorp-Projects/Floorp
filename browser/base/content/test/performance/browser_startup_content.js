@@ -20,7 +20,6 @@ const kDumpAllStacks = false;
 const whitelist = {
   components: new Set([
     "ContentProcessSingleton.js",
-    "EnterprisePoliciesContent.js", // bug 1470324
     "extension-process-script.js",
   ]),
   modules: new Set([
@@ -56,7 +55,6 @@ const whitelist = {
     "resource:///modules/ContentLinkHandler.jsm",
     "resource:///modules/ContentMetaHandler.jsm",
     "resource:///modules/PageStyleHandler.jsm",
-    "resource:///modules/LightweightThemeChildListener.jsm",
     "resource://gre/modules/BrowserUtils.jsm",
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/PrivateBrowsingUtils.jsm",

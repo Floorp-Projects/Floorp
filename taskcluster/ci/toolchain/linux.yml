@@ -125,6 +125,28 @@ linux64-clang-tidy:
     toolchains:
         - linux64-gcc-4.9
 
+linux64-infer:
+    description: "infer build"
+    index:
+        product: static-analysis
+        job-name: linux64-infer
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(infer)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: infer-build}
+        max-run-time: 3600
+    run:
+        using: toolchain-script
+        script: build-infer-linux.sh
+        resources:
+            - 'build/build-infer/build-infer.py'
+            - 'build/build-infer/infer-linux64.json'
+        toolchain-artifact: public/build/infer.tar.xz
+
 linux64-gcc-4.9:
     description: "GCC 4.9 toolchain build"
     treeherder:

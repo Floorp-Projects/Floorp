@@ -30,7 +30,6 @@ class Output(object):
 
     def summarize(self):
         suites = []
-        vals = []
         test_results = {
             'framework': {
                 'name': 'raptor',
@@ -44,6 +43,7 @@ class Output(object):
             return
 
         for test in self.results:
+            vals = []
             subtests = []
             suite = {
                 'name': test.name,
@@ -71,10 +71,10 @@ class Output(object):
                 # u'https://www.amazon.com/s/url=search-alias%3Daps&field-keywords=laptop',
                 # u'unit': u'ms', u'alert_threshold': 2}
 
-                for key, values in test.measurements.iteritems():
+                for measurement_name, replicates in test.measurements.iteritems():
                     new_subtest = {}
-                    new_subtest['name'] = test.name + "-" + key
-                    new_subtest['replicates'] = values
+                    new_subtest['name'] = test.name + "-" + measurement_name
+                    new_subtest['replicates'] = replicates
                     new_subtest['lowerIsBetter'] = test.lower_is_better
                     new_subtest['alertThreshold'] = float(test.alert_threshold)
                     new_subtest['value'] = 0
@@ -82,8 +82,8 @@ class Output(object):
 
                     filtered_values = filter.ignore_first(new_subtest['replicates'], 1)
                     new_subtest['value'] = filter.median(filtered_values)
-                    vals.append(new_subtest['value'])
 
+                    vals.append([new_subtest['value'], new_subtest['name']])
                     subtests.append(new_subtest)
 
             elif test.type == "benchmark":
@@ -97,13 +97,21 @@ class Output(object):
                     subtests, vals = self.parseWebaudioOutput(test)
                 suite['subtests'] = subtests
 
-                # if there is more than one subtest, calculate a summary result
-                if len(subtests) > 1:
-                    suite['value'] = self.construct_summary(vals, testname=test.name)
-
             else:
                 LOG.error("output.summarize received unsupported test results type")
                 return
+
+            # for pageload tests, if there are > 1 subtests here, that means there
+            # were multiple measurements captured in each single pageload; we want
+            # to get the mean of those values and report 1 overall 'suite' value
+            # for the page; so that each test page/URL only has 1 line output
+            # on treeherder/perfherder (all replicates available in the JSON)
+
+            # for benchmarks there is generally  more than one subtest in each cycle
+            # and a benchmark-specific formula is needed to calculate the final score
+
+            if len(subtests) > 1:
+                suite['value'] = self.construct_summary(vals, testname=test.name)
 
         self.summarized_results = test_results
 
@@ -401,6 +409,6 @@ class Output(object):
         elif testname.startswith('raptor-webaudio'):
             return self.webaudio_score(vals)
         elif len(vals) > 1:
-            return filter.geometric_mean([i for i, j in vals])
+            return round(filter.geometric_mean([i for i, j in vals]), 2)
         else:
-            return filter.mean([i for i, j in vals])
+            return round(filter.mean([i for i, j in vals]), 2)

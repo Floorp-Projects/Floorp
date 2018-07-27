@@ -21,3 +21,4 @@ exclude =
     security/nss/,
     testing/mochitest/pywebsocket,
     tools/lint/test/files,
+    build/build-infer/build-infer.py,
