@@ -1019,4 +1019,17 @@ interface nsIAccessibleRole : nsISupports
    * A section of content that is quoted from another source.
    */
   const unsigned long ROLE_BLOCKQUOTE = 175;
+
+  /**
+   * Content previously deleted or proposed for deletion, e.g. in revision
+   * history or a content view providing suggestions from reviewers.
+   */
+  const unsigned long ROLE_CONTENT_DELETION = 176;
+
+  /**
+   * Content previously inserted or proposed for insertion, e.g. in revision
+   * history or a content view providing suggestions from reviewers.
+   */
+  const unsigned long ROLE_CONTENT_INSERTION = 177;
+
 };
