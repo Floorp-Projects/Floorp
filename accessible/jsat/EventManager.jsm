@@ -25,9 +25,8 @@ ChromeUtils.defineModuleGetter(this, "setTimeout",
 
 var EXPORTED_SYMBOLS = ["EventManager"];
 
-function EventManager(aContentScope, aContentControl) {
+function EventManager(aContentScope) {
   this.contentScope = aContentScope;
-  this.contentControl = aContentControl;
   this.addEventListener = this.contentScope.addEventListener.bind(
     this.contentScope);
   this.removeEventListener = this.contentScope.removeEventListener.bind(
@@ -83,6 +82,10 @@ this.EventManager.prototype = {
     } finally {
       this._started = false;
     }
+  },
+
+  get contentControl() {
+    return this.contentScope._jsat_contentControl;
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -247,7 +250,7 @@ this.EventManager.prototype = {
 
         this.present(Presentation.focused(acc));
 
-       if (this.inTest) {
+       if (Utils.inTest) {
         this.sendMsgFunc("AccessFu:Focused");
        }
        break;
