@@ -262,7 +262,7 @@ var gHomePane = {
           startupPref.value = gMainPane.STARTUP_PREF_HOMEPAGE;
         }
         if (homePref.value !== homePref.defaultValue) {
-          homePref.value = homePref.defaultValue;
+          Services.prefs.clearUserPref(homePref.id);
         } else {
           this._renderCustomSettings({shouldShow: false});
         }
