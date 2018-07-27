@@ -66,12 +66,6 @@ public:
   // Initialize this as a wrapper for the current PRThread.
   nsresult InitCurrentThread();
 
-private:
-  // Initializes the mThreadId and stack base/size members, and adds the thread
-  // to the ThreadList().
-  void InitCommon();
-
-public:
   // The PRThread corresponding to this thread.
   PRThread* GetPRThread()
   {
@@ -176,11 +170,8 @@ protected:
 
   struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
 
-  friend class nsThreadManager;
-
   static mozilla::OffTheBooksMutex& ThreadListMutex();
   static mozilla::LinkedList<nsThread>& ThreadList();
-  static void ClearThreadList();
 
   RefPtr<mozilla::SynchronizedEventQueue> mEvents;
   RefPtr<mozilla::ThreadEventTarget> mEventTarget;
@@ -213,8 +204,6 @@ protected:
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
-
-  bool mHasTLSEntry = false;
 
   // Used to track which event is being executed by ProcessNextEvent
   nsCOMPtr<nsIRunnable> mCurrentEvent;
