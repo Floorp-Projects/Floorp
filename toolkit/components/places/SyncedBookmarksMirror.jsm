@@ -1628,19 +1628,13 @@ class SyncedBookmarksMirror {
       WITH RECURSIVE
       ${LocalItemsSQLFragment}
       INSERT INTO itemsToUpload(id, guid, syncChangeCounter, parentGuid,
-                                parentTitle, dateAdded, type, title, isQuery,
-                                url, tags, keyword, feedURL, siteURL,
+                                parentTitle, dateAdded, type, title, placeId,
+                                isQuery, url, keyword, feedURL, siteURL,
                                 position, tagFolderName)
       SELECT s.id, s.guid, s.syncChangeCounter, s.parentGuid, s.parentTitle,
-             s.dateAdded / 1000, s.type, s.title,
+             s.dateAdded / 1000, s.type, s.title, s.placeId,
              IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0) AS isQuery,
              h.url,
-             (SELECT GROUP_CONCAT(t.title, ',') FROM moz_bookmarks e
-              JOIN moz_bookmarks t ON t.id = e.parent
-              JOIN moz_bookmarks r ON r.id = t.parent
-              WHERE s.type = :bookmarkType AND
-                    r.guid = :tagsGuid AND
-                    e.fk = h.id),
              (SELECT keyword FROM moz_keywords WHERE place_id = h.id),
              (SELECT a.content FROM moz_items_annos a
               JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
@@ -1660,9 +1654,7 @@ class SyncedBookmarksMirror {
       LEFT JOIN idsToWeaklyUpload w ON w.id = s.id
       WHERE s.syncChangeCounter >= 1 OR
             w.id NOT NULL`,
-      { bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        tagsGuid: PlacesUtils.bookmarks.tagsGuid,
-        folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      { folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
         feedURLAnno: PlacesUtils.LMANNO_FEEDURI,
         siteURLAnno: PlacesUtils.LMANNO_SITEURI });
 
@@ -1672,6 +1664,13 @@ class SyncedBookmarksMirror {
       INSERT INTO structureToUpload(guid, parentId, position)
       SELECT b.guid, b.parent, b.position FROM moz_bookmarks b
       JOIN itemsToUpload o ON o.id = b.parent`);
+
+    // Stage tags for outgoing bookmarks.
+    await this.db.execute(`
+      INSERT INTO tagsToUpload(id, tag)
+      SELECT o.id, t.tag
+      FROM localTags t
+      JOIN itemsToUpload o ON o.placeId = t.placeId`);
 
     // Finally, stage tombstones for deleted items. Ignore conflicts if we have
     // tombstones for undeleted items; Places Maintenance should clean these up.
@@ -1690,6 +1689,7 @@ class SyncedBookmarksMirror {
   async fetchLocalChangeRecords() {
     let changeRecords = {};
     let childRecordIdsByLocalParentId = new Map();
+    let tagsByLocalId = new Map();
 
     let childGuidRows = await this.db.execute(`
       SELECT parentId, guid FROM structureToUpload
@@ -1699,17 +1699,31 @@ class SyncedBookmarksMirror {
       let localParentId = row.getResultByName("parentId");
       let childRecordId = PlacesSyncUtils.bookmarks.guidToRecordId(
         row.getResultByName("guid"));
-      if (childRecordIdsByLocalParentId.has(localParentId)) {
-        let childRecordIds = childRecordIdsByLocalParentId.get(localParentId);
+      let childRecordIds = childRecordIdsByLocalParentId.get(localParentId);
+      if (childRecordIds) {
         childRecordIds.push(childRecordId);
       } else {
         childRecordIdsByLocalParentId.set(localParentId, [childRecordId]);
       }
     }
 
+    let tagRows = await this.db.execute(`
+      SELECT id, tag FROM tagsToUpload`);
+
+    for await (let row of yieldingIterator(tagRows)) {
+      let localId = row.getResultByName("id");
+      let tag = row.getResultByName("tag");
+      let tags = tagsByLocalId.get(localId);
+      if (tags) {
+        tags.push(tag);
+      } else {
+        tagsByLocalId.set(localId, [tag]);
+      }
+    }
+
     let itemRows = await this.db.execute(`
       SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
-             tagFolderName, keyword, tags, url, IFNULL(title, "") AS title,
+             tagFolderName, keyword, url, IFNULL(title, "") AS title,
              feedURL, siteURL, position, parentGuid,
              IFNULL(parentTitle, "") AS parentTitle, dateAdded
       FROM itemsToUpload`);
@@ -1779,9 +1793,10 @@ class SyncedBookmarksMirror {
           if (keyword) {
             bookmarkCleartext.keyword = keyword;
           }
-          let tags = row.getResultByName("tags");
+          let localId = row.getResultByName("id");
+          let tags = tagsByLocalId.get(localId);
           if (tags) {
-            bookmarkCleartext.tags = tags.split(",");
+            bookmarkCleartext.tags = tags;
           }
           changeRecords[recordId] = new BookmarkChangeRecord(
             syncChangeCounter, bookmarkCleartext);
@@ -2720,9 +2735,9 @@ async function initializeTempMirrorEntities(db) {
     dateAdded INTEGER, /* In milliseconds. */
     type INTEGER,
     title TEXT,
+    placeId INTEGER,
     isQuery BOOLEAN NOT NULL DEFAULT 0,
     url TEXT,
-    tags TEXT,
     tagFolderName TEXT,
     keyword TEXT,
     feedURL TEXT,
@@ -2735,6 +2750,13 @@ async function initializeTempMirrorEntities(db) {
     parentId INTEGER NOT NULL REFERENCES itemsToUpload(id)
                               ON DELETE CASCADE,
     position INTEGER NOT NULL
+  ) WITHOUT ROWID`);
+
+  await db.execute(`CREATE TEMP TABLE tagsToUpload(
+    id INTEGER REFERENCES itemsToUpload(id)
+               ON DELETE CASCADE,
+    tag TEXT,
+    PRIMARY KEY(id, tag)
   ) WITHOUT ROWID`);
 }
 
