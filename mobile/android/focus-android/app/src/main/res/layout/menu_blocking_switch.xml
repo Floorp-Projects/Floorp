@@ -3,10 +3,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="80dp"
-    android:background="#272727"
+    android:layout_height="64dp"
+    android:background="@color/browser_menu_blocking_switch_bg"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingEnd="0dp"
@@ -17,7 +18,42 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="center_vertical"
-        android:orientation="vertical">
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:src="@drawable/ic_trackers_blocked"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/content_description_trackers_blocked"/>
+
+            <TextView
+                android:id="@+id/trackers_count"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:textColor="#ffffff"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="12sp"
+                app:autoSizeMaxTextSize="16sp"
+                tools:text="378"
+                tools:ignore="MissingPrefix" />
+
+        </FrameLayout>
+
+        <ImageButton
+            android:id="@+id/help_trackers"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="-16dp"
+            android:layout_marginStart="-12dp"
+            android:src="@drawable/ic_info"
+            android:contentDescription="@string/menu_help"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -25,33 +61,8 @@
             android:layout_marginBottom="2dp"
             android:ellipsize="end"
             android:text="@string/menu_trackers_blocked_title"
-            android:textColor="@color/colorTextInactive"
+            android:textColor="@color/browser_menu_trackers_blocked_label"
             android:textSize="16sp" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-        <TextView
-            android:id="@+id/trackers_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#ffffff"
-            android:textSize="24sp"
-            tools:text="0" />
-
-            <ImageButton
-                android:id="@+id/help_trackers"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:padding="4dp"
-                android:src="@drawable/ic_info"
-                android:contentDescription="@string/menu_help"
-                android:background="?android:attr/selectableItemBackgroundBorderless" />
-
-        </LinearLayout>
 
     </LinearLayout>
 

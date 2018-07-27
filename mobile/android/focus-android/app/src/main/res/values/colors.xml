@@ -78,4 +78,10 @@
 
     <color name="contextMenuTitleTextColor">#99F9F9FA</color>
     <color name="contextMenuSeparatorBackground">#1AF9F9FA</color>
+
+    <!-- Browser Menu items color palette -->
+    <color name="browser_menu_bg">@color/photonInk80</color>
+    <color name="browser_menu_blocking_switch_bg">#1Af9f9fa</color>
+    <color name="browser_menu_trackers_blocked_label">@android:color/white</color>
+    <color name="browser_menu_request_desktop_separator">#1Af9f9fa</color>
 </resources>

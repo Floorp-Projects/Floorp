@@ -21,10 +21,12 @@ import org.mozilla.focus.R;
         menuItemView = (TextView) itemView;
     }
 
+
     /* package-private */ void bind(BrowserMenuAdapter.MenuItem.Default menuItem) {
         menuItemView.setId(menuItem.getId());
         menuItemView.setText(menuItem.getLabel());
-
+        menuItemView.setCompoundDrawablesRelativeWithIntrinsicBounds(menuItem.getDrawableResId(), 0, 0, 0);
+    
         final boolean isLoading = browserFragment.getSession().getLoading().getValue();
 
         if ((menuItem.getId() == R.id.add_to_homescreen || menuItem.getId() == R.id.find_in_page) && isLoading) {

@@ -175,6 +175,7 @@ dependencies {
     implementation "com.android.support:design:$support_libraries_version"
     implementation "com.android.support:cardview-v7:$support_libraries_version"
     implementation "com.android.support:recyclerview-v7:$support_libraries_version"
+    implementation "com.android.support:support-v4:$support_libraries_version"
     implementation 'io.sentry:sentry-android:1.7.3'
 
     implementation "android.arch.lifecycle:extensions:$architecture_components_version"

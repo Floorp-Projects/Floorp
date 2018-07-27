@@ -29,11 +29,11 @@ class BrowserMenuAdapter(
     sealed class MenuItem {
         open val viewType = 0
 
-        open class Default(val id: Int, val label: String) : MenuItem() {
+        open class Default(val id: Int, val label: String, val drawableResId: Int) : MenuItem() {
             override val viewType = MenuItemViewHolder.LAYOUT_ID
         }
 
-        class Custom(id: Int, label: String, val pendingIntent: PendingIntent) : Default(id, label) {
+        class Custom(id: Int, label: String, drawableResId: Int, val pendingIntent: PendingIntent) : Default(id, label, drawableResId) {
             override val viewType = CustomTabMenuItemViewHolder.LAYOUT_ID
         }
 
@@ -69,22 +69,22 @@ class BrowserMenuAdapter(
         items.add(MenuItem.BlockingSwitch)
 
         if (customTabConfig == null || customTabConfig.showShareMenuItem) {
-            items.add(MenuItem.Default(R.id.share, resources.getString(R.string.menu_share)))
+            items.add(MenuItem.Default(R.id.share, resources.getString(R.string.menu_share), R.drawable.ic_share_menu_item))
         }
 
-        items.add(MenuItem.Default(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)))
-        items.add(MenuItem.Default(R.id.find_in_page, resources.getString(R.string.find_in_page)))
+        items.add(MenuItem.Default(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen), R.drawable.ic_add_to_home_menu_item))
+        items.add(MenuItem.Default(R.id.find_in_page, resources.getString(R.string.find_in_page), 0))
 
         if (browsers.hasMultipleThirdPartyBrowsers(context)) {
             items.add(MenuItem.Default(R.id.open_select_browser, resources.getString(
-                    R.string.menu_open_with_a_browser2)))
+                    R.string.menu_open_with_a_browser2), R.drawable.ic_open_in_menu_item))
         }
 
         if (customTabConfig != null) {
             // "Open in Firefox Focus" to switch from a custom tab to the full-featured browser
             val appName = resources.getString(R.string.app_name)
             val label = resources.getString(R.string.menu_open_with_default_browser2, appName)
-            val menuItem = MenuItem.Default(R.id.open_in_firefox_focus, label)
+            val menuItem = MenuItem.Default(R.id.open_in_firefox_focus, label, 0)
 
             items.add(menuItem)
         }
@@ -92,25 +92,25 @@ class BrowserMenuAdapter(
         if (browsers.hasThirdPartyDefaultBrowser(context)) {
             items.add(MenuItem.Default(R.id.open_default, resources.getString(
                     R.string.menu_open_with_default_browser2, browsers.defaultBrowser!!.loadLabel(
-                    context.packageManager))))
-        }
-
-        if (customTabConfig == null) {
-            // There’s no need for Settings in a custom tab.
-            // The user can go to the browser app itself in order to do this.
-            items.add(MenuItem.Default(R.id.settings, resources.getString(R.string.menu_settings)))
+                    context.packageManager)), 0))
         }
 
         items.add(MenuItem.RequestDesktopCheck)
 
+        if (customTabConfig == null) {
+            // There’s no need for Settings in a custom tab.
+            // The user can go to the browser app itself in order to do this.
+            items.add(MenuItem.Default(R.id.settings, resources.getString(R.string.menu_settings), R.drawable.ic_settings_menu_item))
+        }
+
         if (AppConstants.isGeckoBuild(context)) {
             // "Report Site Issue" is available for builds using GeckoView only
-            items.add(MenuItem.Default(R.id.report_site_issue, resources.getString(R.string.menu_report_site_issue)))
+            items.add(MenuItem.Default(R.id.report_site_issue, resources.getString(R.string.menu_report_site_issue), 0))
         }
 
         if (customTabConfig != null) {
             val customTabItems = customTabConfig.menuItems
-                    .map { MenuItem.Custom(R.id.custom_tab_menu_item, it.name, it.pendingIntent) }
+                    .map { MenuItem.Custom(R.id.custom_tab_menu_item, it.name, 0, it.pendingIntent) }
             items.addAll(customTabItems)
         }
     }

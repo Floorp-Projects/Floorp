@@ -9,6 +9,7 @@
     android:paddingEnd="16dp"
     android:clickable="true"
     android:textSize="16sp"
+    android:drawablePadding="16dp"
     android:gravity="center_vertical"
     android:background="?android:attr/selectableItemBackground"
     android:lines="1"
