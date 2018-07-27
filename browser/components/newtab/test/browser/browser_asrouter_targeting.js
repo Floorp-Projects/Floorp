@@ -1,5 +1,7 @@
-ChromeUtils.defineModuleGetter(this, "ASRouterTargeting",
-"resource://activity-stream/lib/ASRouterTargeting.jsm");
+const {ASRouterTargeting, TopFrecentSitesCache} =
+  ChromeUtils.import("resource://activity-stream/lib/ASRouterTargeting.jsm", {});
+const {AddonTestUtils} =
+  ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
@@ -10,8 +12,6 @@ ChromeUtils.defineModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
-
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
 
 // ASRouterTargeting.isMatch
 add_task(async function should_do_correct_targeting() {
@@ -226,4 +226,8 @@ add_task(async function checkFrecentSites() {
   message = {id: "foo", targeting: `(topFrecentSites[.frecency >= 900 && .lastVisitDate >= ${timeDaysAgo(1) - 1}]|mapToProperty('host') intersect ['mozilla3.com', 'mozilla2.com', 'mozilla1.com'])|length > 0`};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
     "should select correct item when filtering by frecency and lastVisitDate with multiple candidate domains");
+
+  // Cleanup
+  await clearHistoryAndBookmarks();
+  TopFrecentSitesCache.expire();
 });

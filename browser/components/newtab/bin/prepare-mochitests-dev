@@ -26,7 +26,7 @@ else
   FIREFOX_PATH=${AS_PINE_TEST_DIR}/mozilla-central
 fi
 
-MC_MODULE_PATH="$FIREFOX_PATH/browser/extensions/activity-stream"
+MC_MODULE_PATH="$FIREFOX_PATH/browser/components/newtab"
 
 # By default, just use mozilla-central + the export.  If ENABLE_MC_AS is set to
 # 1, patch on top of mozilla-central + the export to turn on the AS pref and

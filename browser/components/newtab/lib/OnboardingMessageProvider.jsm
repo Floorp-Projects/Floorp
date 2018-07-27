@@ -8,6 +8,7 @@ const ONBOARDING_MESSAGES = [
     id: "ONBOARDING_1",
     template: "onboarding",
     bundled: 3,
+    order: 2,
     content: {
       title: "Private Browsing",
       text: "Browse by yourself. Private Browsing with Tracking Protection blocks online trackers that follow you around the web.",
@@ -21,6 +22,7 @@ const ONBOARDING_MESSAGES = [
     id: "ONBOARDING_2",
     template: "onboarding",
     bundled: 3,
+    order: 3,
     content: {
       title: "Screenshots",
       text: "Take, save and share screenshots - without leaving Firefox. Capture a region or an entire page as you browse. Then save to the web for easy access and sharing.",
@@ -35,6 +37,7 @@ const ONBOARDING_MESSAGES = [
     id: "ONBOARDING_3",
     template: "onboarding",
     bundled: 3,
+    order: 1,
     content: {
       title: "Add-ons",
       text: "Add even more features that make Firefox work harder for you. Compare prices, check the weather or express your personality with a custom theme.",
@@ -50,11 +53,12 @@ const ONBOARDING_MESSAGES = [
     id: "ONBOARDING_4",
     template: "onboarding",
     bundled: 3,
+    order: 1,
     content: {
-      title: "Extensions",
-      text: "Make browsing faster, smarter, or safer with browser apps. Protect passwords, find deals, download videos, and much more. You can even block annoying ads with extensions like Ghostery.",
+      title: "Block Ads with Ghostery",
+      text: "Browse faster, smarter, or safer with extensions like Ghostery, which lets you block annoying ads.",
       icon: "gift",
-      button_label: "Get Ghostery",
+      button_label: "Try It Now",
       button_action: "OPEN_URL",
       button_action_params: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/"
     },
