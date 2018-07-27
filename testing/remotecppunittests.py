@@ -14,7 +14,7 @@ import mozfile
 import mozinfo
 import mozlog
 import posixpath
-from mozdevice import ADBAndroid, ADBProcessError
+from mozdevice import ADBAndroid, ADBProcessError, ADBTimeoutError
 
 try:
     from mozbuild.base import MozbuildObject
@@ -139,6 +139,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                                               cwd=self.remote_home_dir,
                                               timeout=test_timeout)
             returncode = 0
+        except ADBTimeoutError:
+            raise
         except ADBProcessError as e:
             output = e.adb_process.stdout
             returncode = e.adb_process.exitcode

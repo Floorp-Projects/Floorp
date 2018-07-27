@@ -2813,10 +2813,13 @@ toolbar#nav-bar {
         except KeyboardInterrupt:
             self.log.info("runtests.py | Received keyboard interrupt.\n")
             status = -1
-        except Exception:
+        except Exception as e:
             traceback.print_exc()
             self.log.error(
                 "Automation Error: Received unexpected exception while running application\n")
+            if 'ADBTimeoutError' in repr(e):
+                self.log.info("runtests.py | Device disconnected. Aborting test.\n")
+                raise
             status = 1
         finally:
             self.stopServers()

@@ -13,6 +13,7 @@ import shutil
 import sys
 
 from automation import Automation
+from mozdevice import ADBTimeoutError
 from mozlog import get_default_logger
 from mozscreenshot import dump_screen
 import mozcrash
@@ -294,6 +295,8 @@ class RemoteAutomation(Automation):
             try:
                 newLogContent = self.device.get_file(
                     self.proc, offset=self.stdoutlen)
+            except ADBTimeoutError:
+                raise
             except Exception:
                 return False
             if not newLogContent:
@@ -344,6 +347,8 @@ class RemoteAutomation(Automation):
                                         self.counts['fail'] += val
                                     elif "Todo:" in line:
                                         self.counts['todo'] += val
+                                except ADBTimeoutError:
+                                    raise
                                 except Exception:
                                     pass
 
@@ -412,12 +417,16 @@ class RemoteAutomation(Automation):
                 # Trigger an ANR report with "kill -3" (SIGQUIT)
                 try:
                     self.device.pkill(self.procName, sig=3, attempts=1)
+                except ADBTimeoutError:
+                    raise
                 except:  # NOQA: E722
                     pass
                 time.sleep(3)
                 # Trigger a breakpad dump with "kill -6" (SIGABRT)
                 try:
                     self.device.pkill(self.procName, sig=6, attempts=1)
+                except ADBTimeoutError:
+                    raise
                 except:  # NOQA: E722
                     pass
                 # Wait for process to end
@@ -431,6 +440,8 @@ class RemoteAutomation(Automation):
                     retries += 1
                 try:
                     self.device.pkill(self.procName, sig=9, attempts=1)
+                except ADBTimeoutError:
+                    raise
                 except:  # NOQA: E722
                     print("%s still alive after SIGKILL!" % self.procName)
                 if self.device.process_exist(self.procName):
