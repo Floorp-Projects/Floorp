@@ -63,11 +63,13 @@ class GeckoWebViewProvider : IWebViewProvider {
     }
 
     private fun createGeckoRuntime(context: Context) {
-        val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
-        runtimeSettingsBuilder.useContentProcessHint(true)
-        runtimeSettingsBuilder.nativeCrashReportingEnabled(true)
-        geckoRuntime =
-                GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
+        if (geckoRuntime == null) {
+            val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
+            runtimeSettingsBuilder.useContentProcessHint(true)
+            runtimeSettingsBuilder.nativeCrashReportingEnabled(true)
+            geckoRuntime =
+                    GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
+        }
     }
 
     override fun requestMobileSite(context: Context, webSettings: WebSettings) {
@@ -191,9 +193,9 @@ class GeckoWebViewProvider : IWebViewProvider {
                 updateBlocking()
                 applyAppSettings()
             } else {
-                geckoRuntime.settings.javaScriptEnabled = true
-                geckoRuntime.settings.webFontsEnabled = true
-                geckoRuntime.settings.cookieBehavior = GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
+                geckoRuntime!!.settings.javaScriptEnabled = true
+                geckoRuntime!!.settings.webFontsEnabled = true
+                geckoRuntime!!.settings.cookieBehavior = GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
             }
             callback?.onBlockingStateChanged(enabled)
         }
@@ -215,11 +217,11 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         private fun applyAppSettings() {
-            geckoRuntime.settings.javaScriptEnabled =
+            geckoRuntime!!.settings.javaScriptEnabled =
                     !Settings.getInstance(context).shouldBlockJavaScript()
-            geckoRuntime.settings.webFontsEnabled =
+            geckoRuntime!!.settings.webFontsEnabled =
                     !Settings.getInstance(context).shouldBlockWebFonts()
-            geckoRuntime.settings.remoteDebuggingEnabled = false
+            geckoRuntime!!.settings.remoteDebuggingEnabled = false
             val cookiesValue = if (Settings.getInstance(context).shouldBlockCookies() &&
                 Settings.getInstance(context).shouldBlockThirdPartyCookies()
             ) {
@@ -229,7 +231,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             } else {
                 GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
             }
-            geckoRuntime.settings.cookieBehavior = cookiesValue
+            geckoRuntime!!.settings.cookieBehavior = cookiesValue
         }
 
         private fun updateBlocking() {
@@ -249,7 +251,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_CONTENT
             }
 
-            geckoRuntime.settings.trackingProtectionCategories = categories
+            geckoRuntime!!.settings.trackingProtectionCategories = categories
         }
 
         @Suppress("ComplexMethod")
@@ -318,7 +320,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     geckoSession.close()
                     geckoSession = createGeckoSession()
                     applySettingsAndSetDelegates()
-                    geckoSession.open(geckoRuntime)
+                    geckoSession.open(geckoRuntime!!)
                     setSession(geckoSession)
                     geckoSession.loadUri(currentUrl)
                 }
@@ -568,7 +570,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 }
             }
 
-            geckoRuntime.telemetry.getSnapshots(true, response)
+            geckoRuntime!!.telemetry.getSnapshots(true, response)
         }
 
         override fun onDetachedFromWindow() {
@@ -584,7 +586,7 @@ class GeckoWebViewProvider : IWebViewProvider {
 
     companion object {
         @Volatile
-        private lateinit var geckoRuntime: GeckoRuntime
+        private var geckoRuntime: GeckoRuntime? = null
         private var internalAboutData: String? = null
         private var internalRightsData: String? = null
         private const val firstProgress = 10
