@@ -24,6 +24,7 @@ job-defaults:
         implementation: treescript
         tags: ['buildN']
         bump: false
+        dontbuild: true
         push:
             by-project:
                 mozilla-beta: true
