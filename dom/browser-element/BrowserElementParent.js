@@ -796,7 +796,7 @@ BrowserElementParent.prototype = {
     this._nextPaintListeners = [];
     for (let listener of listeners) {
       try {
-        listener.recvNextPaint();
+        listener();
       } catch (e) {
         // If a listener throws we'll continue.
       }
