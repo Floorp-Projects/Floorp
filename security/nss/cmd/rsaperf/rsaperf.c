@@ -21,8 +21,8 @@
 #define DEFAULT_THREADS 1
 #define DEFAULT_EXPONENT 0x10001
 
-extern NSSLOWKEYPrivateKey *getDefaultRSAPrivateKey(void);
-extern NSSLOWKEYPublicKey *getDefaultRSAPublicKey(void);
+extern NSSLOWKEYPrivateKey *getDefaultRSAPrivateKey(int);
+extern NSSLOWKEYPublicKey *getDefaultRSAPublicKey(int);
 
 secuPWData pwData = { PW_NONE, NULL };
 
@@ -580,9 +580,9 @@ main(int argc, char **argv)
             /* use a hardcoded key */
             printf("Using hardcoded %ld bits key.\n", keybits);
             if (doPub) {
-                pubKey = getDefaultRSAPublicKey();
+                pubKey = getDefaultRSAPublicKey(keybits);
             } else {
-                privKey = getDefaultRSAPrivateKey();
+                privKey = getDefaultRSAPrivateKey(keybits);
             }
         }
 

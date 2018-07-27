@@ -161,7 +161,7 @@ verifyPKCS1DigestInfo(const VFYContext *cx, const SECItem *digest)
     pkcs1DigestInfo.len = cx->pkcs1RSADigestInfoLen;
     return _SGN_VerifyPKCS1DigestInfo(
         cx->hashAlg, digest, &pkcs1DigestInfo,
-        PR_TRUE /*XXX: unsafeAllowMissingParameters*/);
+        PR_FALSE /*XXX: unsafeAllowMissingParameters*/);
 }
 
 /*
