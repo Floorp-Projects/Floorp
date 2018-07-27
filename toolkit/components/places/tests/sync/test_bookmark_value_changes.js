@@ -961,12 +961,12 @@ add_task(async function test_rewrite_tag_queries() {
 
   deepEqual(changesToUpload, {}, "Should not reupload any local records");
 
-  let urisWithTaggy = PlacesUtils.tagging.getURIsForTag("taggy");
-  deepEqual(urisWithTaggy.map(uri => uri.spec).sort(), ["http://example.com/e"],
+  let bmWithTaggy = await PlacesUtils.bookmarks.fetch({tags: ["taggy"]});
+  equal(bmWithTaggy.url.href, "http://example.com/e",
     "Should insert bookmark with new tag");
 
-  let urisWithKitty = PlacesUtils.tagging.getURIsForTag("kitty");
-  deepEqual(urisWithKitty.map(uri => uri.spec).sort(), ["http://example.com/d"],
+  let bmWithKitty = await PlacesUtils.bookmarks.fetch({tags: ["kitty"]});
+  equal(bmWithKitty.url.href, "http://example.com/d",
     "Should retain existing tag");
 
   let { root: toolbarContainer } = PlacesUtils.getFolderContents(
