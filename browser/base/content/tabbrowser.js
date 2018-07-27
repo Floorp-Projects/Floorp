@@ -1780,7 +1780,6 @@ window._gBrowser = {
     nextTabParentId,
     openerWindow,
     recordExecution,
-    remote,
     remoteType,
     replayExecution,
     sameProcessAsFrameLoader,
@@ -1796,11 +1795,6 @@ window._gBrowser = {
 
     if (userContextId) {
       b.setAttribute("usercontextid", userContextId);
-    }
-
-    // remote parameter used by some addons, use default in this case.
-    if (remote && !remoteType) {
-      remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
     }
 
     if (remoteType) {
