@@ -101,7 +101,7 @@ var Policies = {
   "BlockAboutConfig": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        blockAboutPage(manager, "about:config", true);
+        blockAboutPage(manager, "about:config");
         setAndLockPref("devtools.chrome.enabled", false);
       }
     }
@@ -110,7 +110,7 @@ var Policies = {
   "BlockAboutProfiles": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        blockAboutPage(manager, "about:profiles", true);
+        blockAboutPage(manager, "about:profiles");
       }
     }
   },
@@ -118,7 +118,7 @@ var Policies = {
   "BlockAboutSupport": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        blockAboutPage(manager, "about:support", true);
+        blockAboutPage(manager, "about:support");
       }
     }
   },
@@ -339,7 +339,7 @@ var Policies = {
   "DisableSetDesktopBackground": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        manager.disallowFeature("setDesktopBackground", true);
+        manager.disallowFeature("setDesktopBackground");
       }
     }
   },
