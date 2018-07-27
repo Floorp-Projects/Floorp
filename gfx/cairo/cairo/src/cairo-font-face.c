@@ -156,7 +156,13 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     if (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&font_face->ref_count))
 	return;
 
+    if (font_face->backend->lock)
+	font_face->backend->lock (font_face);
+
     _cairo_user_data_array_fini (&font_face->user_data);
+
+    if (font_face->backend->unlock)
+	font_face->backend->unlock (font_face);
 
     free (font_face);
 }
@@ -235,8 +241,14 @@ void *
 cairo_font_face_get_user_data (cairo_font_face_t	   *font_face,
 			       const cairo_user_data_key_t *key)
 {
-    return _cairo_user_data_array_get_data (&font_face->user_data,
-					    key);
+    void *result;
+    if (font_face->backend->lock)
+	font_face->backend->lock (font_face);
+    result = _cairo_user_data_array_get_data (&font_face->user_data,
+					      key);
+    if (font_face->backend->unlock)
+	font_face->backend->unlock (font_face);
+    return result;
 }
 slim_hidden_def (cairo_font_face_get_user_data);
 
@@ -265,8 +277,14 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&font_face->ref_count))
 	return font_face->status;
 
-    return _cairo_user_data_array_set_data (&font_face->user_data,
-					    key, user_data, destroy);
+    cairo_status_t status;
+    if (font_face->backend->lock)
+	font_face->backend->lock (font_face);
+    status = _cairo_user_data_array_set_data (&font_face->user_data,
+					      key, user_data, destroy);
+    if (font_face->backend->unlock)
+	font_face->backend->unlock (font_face);
+    return status;
 }
 slim_hidden_def (cairo_font_face_set_user_data);
 

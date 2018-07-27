@@ -23,6 +23,8 @@ namespace interceptor {
 template <typename VMPolicy>
 class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy>
 {
+  typedef typename VMPolicy::MMPolicyT MMPolicyT;
+
 public:
   template <typename... Args>
   explicit WindowsDllDetourPatcher(Args... aArgs)

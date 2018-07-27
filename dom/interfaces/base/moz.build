@@ -20,7 +20,6 @@ XPIDL_SOURCES += [
     'nsIDOMWindow.idl',
     'nsIDOMWindowUtils.idl',
     'nsIFocusManager.idl',
-    'nsIIdleObserver.idl',
     'nsIQueryContentEventResult.idl',
     'nsIRemoteBrowser.idl',
     'nsIServiceWorkerManager.idl',

@@ -368,11 +368,9 @@ nsBrowserElement::AddNextPaintListener(BrowserElementNextPaintEventCallback& aLi
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
-  CallbackObjectHolder<BrowserElementNextPaintEventCallback,
-                       nsIBrowserElementNextPaintListener> holder(&aListener);
-  nsCOMPtr<nsIBrowserElementNextPaintListener> listener = holder.ToXPCOMCallback();
-
-  nsresult rv = mBrowserElementAPI->AddNextPaintListener(listener);
+  JS::Rooted<JS::Value> val(RootingCx(),
+                            JS::ObjectOrNullValue(aListener.CallbackOrNull()));
+  nsresult rv = mBrowserElementAPI->AddNextPaintListener(val);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -385,11 +383,9 @@ nsBrowserElement::RemoveNextPaintListener(BrowserElementNextPaintEventCallback& 
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
-  CallbackObjectHolder<BrowserElementNextPaintEventCallback,
-                       nsIBrowserElementNextPaintListener> holder(&aListener);
-  nsCOMPtr<nsIBrowserElementNextPaintListener> listener = holder.ToXPCOMCallback();
-
-  nsresult rv = mBrowserElementAPI->RemoveNextPaintListener(listener);
+  JS::Rooted<JS::Value> val(RootingCx(),
+                            JS::ObjectOrNullValue(aListener.CallbackOrNull()));
+  nsresult rv = mBrowserElementAPI->RemoveNextPaintListener(val);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);

@@ -9,12 +9,6 @@
 webidl DOMRequest;
 webidl FrameLoader;
 
-[scriptable, function, uuid(00d0e19d-bd67-491f-8e85-b9905224d3bb)]
-interface nsIBrowserElementNextPaintListener : nsISupports
-{
-  void recvNextPaint();
-};
-
 %{C++
 #define BROWSER_ELEMENT_API_CONTRACTID "@mozilla.org/dom/browser-element-api;1"
 #define BROWSER_ELEMENT_API_CID                                 \
@@ -77,8 +71,8 @@ interface nsIBrowserElementAPI : nsISupports
   void findNext(in long direction);
   void clearMatch();
 
-  void addNextPaintListener(in nsIBrowserElementNextPaintListener listener);
-  void removeNextPaintListener(in nsIBrowserElementNextPaintListener listener);
+  void addNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
+  void removeNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
 
   DOMRequest executeScript(in DOMString script, in jsval options);
 

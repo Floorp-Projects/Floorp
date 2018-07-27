@@ -108,6 +108,8 @@ _cairo_array_fini (cairo_array_t *array)
     if (array->elements) {
 	free (* array->elements);
 	free (array->elements);
+	array->elements = NULL;
+	array->num_elements = 0;
     }
 }
 

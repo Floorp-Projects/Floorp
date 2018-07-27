@@ -541,6 +541,9 @@ struct _cairo_font_face_backend {
 			   const cairo_matrix_t		*font_matrix,
 			   const cairo_matrix_t		*ctm,
 			   const cairo_font_options_t	*options);
+
+    void (*lock) (void *font_face);
+    void (*unlock) (void *font_face);
 };
 
 extern const cairo_private struct _cairo_font_face_backend _cairo_user_font_face_backend;

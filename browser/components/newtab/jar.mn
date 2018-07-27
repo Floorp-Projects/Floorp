@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+% resource activity-stream %res/activity-stream/ contentaccessible=yes
+  res/activity-stream/lib/ (./lib/*)
+  res/activity-stream/common/ (./common/*)
+  res/activity-stream/vendor/Redux.jsm (./vendor/Redux.jsm)
+  res/activity-stream/vendor/react.js (./vendor/react.js)
+  res/activity-stream/vendor/react-dom.js (./vendor/react-dom.js)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/vendor/react-dev.js (./vendor/react-dev.js)
+  res/activity-stream/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
+#endif
+  res/activity-stream/vendor/prop-types.js (./vendor/prop-types.js)
+  res/activity-stream/vendor/react-intl.js (./vendor/react-intl.js)
+  res/activity-stream/vendor/redux.js (./vendor/redux.js)
+  res/activity-stream/vendor/react-redux.js (./vendor/react-redux.js)
+  res/activity-stream/data/content/assets/ (./data/content/assets/*)
+  res/activity-stream/data/content/tippytop/ (./data/content/tippytop/*)
+  res/activity-stream/data/content/activity-stream.bundle.js (./data/content/activity-stream.bundle.js)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/data/content/activity-stream.bundle.js.map (./data/content/activity-stream.bundle.js.map)
+#endif
+#ifdef XP_MACOSX
+  res/activity-stream/css/activity-stream.css (./css/activity-stream-mac.css)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/css/activity-stream-mac.css.map (./css/activity-stream-mac.css.map)
+#endif
+#elifdef XP_WIN
+  res/activity-stream/css/activity-stream.css (./css/activity-stream-windows.css)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/css/activity-stream-windows.css.map (./css/activity-stream-windows.css.map)
+#endif
+#else
+  res/activity-stream/css/activity-stream.css (./css/activity-stream-linux.css)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/css/activity-stream-linux.css.map (./css/activity-stream-linux.css.map)
+#endif
+#endif
+  res/activity-stream/prerendered/static/activity-stream-initial-state.js (./prerendered/static/activity-stream-initial-state.js)
+#ifndef RELEASE_OR_BETA
+  res/activity-stream/prerendered/static/activity-stream-debug.html (./prerendered/static/activity-stream-debug.html)
+  res/activity-stream/prerendered/static/activity-stream-prerendered-debug.html (./prerendered/static/activity-stream-prerendered-debug.html)
+#endif
+  res/activity-stream/prerendered/ (./prerendered/locales/*)
