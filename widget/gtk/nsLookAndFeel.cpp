@@ -670,6 +670,17 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         EnsureInit();
         aResult = mCSDCloseButton;
         break;
+    case eIntID_PrefersReducedMotion: {
+        GtkSettings *settings;
+        gboolean enableAnimations;
+
+        settings = gtk_settings_get_default();
+        g_object_get(settings,
+                     "gtk-enable-animations",
+                     &enableAnimations, nullptr);
+        aResult = enableAnimations ? 0 : 1;
+        break;
+    }
     default:
         aResult = 0;
         res     = NS_ERROR_FAILURE;
