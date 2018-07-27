@@ -616,7 +616,8 @@ let BrowserUsageTelemetry = {
     win.addEventListener("TabOpen", this, true);
 
     // Don't include URI and domain counts when in private mode.
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (PrivateBrowsingUtils.isWindowPrivate(win) &&
+        !Services.prefs.getBoolPref("browser.engagement.total_uri_count.pbm", false)) {
       return;
     }
     win.gBrowser.tabContainer.addEventListener(TAB_RESTORING_TOPIC, this);
@@ -631,7 +632,8 @@ let BrowserUsageTelemetry = {
     win.removeEventListener("TabOpen", this, true);
 
     // Don't include URI and domain counts when in private mode.
-    if (PrivateBrowsingUtils.isWindowPrivate(win.defaultView)) {
+    if (PrivateBrowsingUtils.isWindowPrivate(win.defaultView) &&
+        !Services.prefs.getBoolPref("browser.engagement.total_uri_count.pbm", false)) {
       return;
     }
     win.defaultView.gBrowser.tabContainer.removeEventListener(TAB_RESTORING_TOPIC, this);
