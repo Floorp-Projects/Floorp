@@ -31,6 +31,7 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsThreadUtils.h"
 #include "SpecialSystemDirectory.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
@@ -663,6 +664,10 @@ SandboxBroker::SymlinkPermissions(const char* aPath, const size_t aPathLen)
 void
 SandboxBroker::ThreadMain(void)
 {
+  // Create a nsThread wrapper for the current platform thread, and register it
+  // with the thread manager.
+  (void) NS_GetCurrentThread();
+
   char threadName[16];
   SprintfLiteral(threadName, "FS Broker %d", mChildPid);
   PlatformThread::SetName(threadName);

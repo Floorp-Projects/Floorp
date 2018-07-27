@@ -237,6 +237,10 @@ SandboxReporter::AddOne(const SandboxReport& aReport)
 void
 SandboxReporter::ThreadMain(void)
 {
+  // Create a nsThread wrapper for the current platform thread, and register it
+  // with the thread manager.
+  (void) NS_GetCurrentThread();
+
   for (;;) {
     SandboxReport rep;
     struct iovec iov;
