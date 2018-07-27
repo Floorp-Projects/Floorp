@@ -2222,18 +2222,16 @@ async function initializeTempMirrorEntities(db) {
               "v.dateAdded" is in milliseconds. */
            (CASE WHEN b.dateAdded / 1000 < v.dateAdded THEN b.dateAdded
                  ELSE v.dateAdded * 1000 END),
-           v.title, h.id, u.newPlaceId, v.keyword, v.description,
-           v.loadInSidebar, v.smartBookmarkName, v.feedURL, v.siteURL
+           v.title, h.id, (SELECT n.id FROM moz_places n
+                           WHERE n.url_hash = u.hash AND
+                                 n.url = u.url),
+           v.keyword, v.description, v.loadInSidebar, v.smartBookmarkName,
+           v.feedURL, v.siteURL
     FROM items v
     JOIN mergeStates r ON r.mergedGuid = v.guid
     LEFT JOIN moz_bookmarks b ON b.guid = r.localGuid
     LEFT JOIN moz_places h ON h.id = b.fk
-    LEFT JOIN (
-      SELECT h.id AS newPlaceId, u.id AS urlId
-      FROM urls u
-      JOIN moz_places h ON h.url_hash = u.hash AND
-                           h.url = u.url
-    ) u ON u.urlId = v.urlId
+    LEFT JOIN urls u ON u.id = v.urlId
     WHERE r.mergedGuid <> '${PlacesUtils.bookmarks.rootGuid}'`);
 
   // Changes local GUIDs to remote GUIDs, drops local tombstones for revived
