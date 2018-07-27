@@ -52,7 +52,9 @@ linux64/opt:
         - awsy
         - mochitest-headless
         - linux-talos-flex
-        - raptor
+        - raptor-firefox
+        - raptor-chrome
+
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
     test-sets:
@@ -77,7 +79,7 @@ linux64-pgo/opt:
         - common-tests
         - web-platform-tests
         - talos
-        - raptor
+        - raptor-firefox
 
 linux64-asan/opt:
     build-platform: linux64-asan/opt
@@ -99,7 +101,8 @@ linux64-qr/opt:
         - talos
         - awsy
         - web-platform-tests
-        - raptor
+        - raptor-firefox
+
 linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:
@@ -142,7 +145,8 @@ windows7-32/opt:
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
-        - raptor
+        - raptor-firefox
+        - raptor-chrome
 
 windows7-32-pgo/opt:
     build-platform: win32-pgo/opt
@@ -152,7 +156,7 @@ windows7-32-pgo/opt:
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
-        - raptor
+        - raptor-firefox
 
 windows7-32-nightly/opt:
     build-platform: win32-nightly/opt
@@ -208,7 +212,8 @@ windows10-64/opt:
         - windows-talos
         - windows-tests
         - mochitest-headless
-        - raptor
+        - raptor-firefox
+        - raptor-chrome
 
 windows10-64-pgo/opt:
     build-platform: win64-pgo/opt
@@ -217,7 +222,7 @@ windows10-64-pgo/opt:
         - desktop-screenshot-capture
         - windows-talos
         - windows-tests
-        - raptor
+        - raptor-firefox
 
 windows10-64-nightly/opt:
     build-platform: win64-nightly/opt
@@ -259,7 +264,7 @@ windows10-64-qr/opt:
     test-sets:
         - windows-qr-tests
         - windows-talos
-        - raptor
+        - raptor-firefox
 
 
 ##
@@ -277,7 +282,8 @@ macosx64/opt:
         - macosx64-tests
         - desktop-screenshot-capture
         - awsy
-        - raptor
+        - raptor-firefox
+        - raptor-chrome
 
 macosx64-nightly/opt:
     build-platform: macosx64-nightly/opt
