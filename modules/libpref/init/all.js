@@ -4969,6 +4969,9 @@ pref("extensions.webextensions.background-delayed-startup", false);
 // Whether or not the installed extensions should be migrated to the storage.local IndexedDB backend.
 pref("extensions.webextensions.ExtensionStorageIDB.enabled", false);
 
+// if enabled, store execution times for API calls
+pref("extensions.webextensions.enablePerformanceCounters", false);
+
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
