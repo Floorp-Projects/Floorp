@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const TEST_URL = "http://www.example.com/browser/toolkit/modules/tests/browser/testremotepagemanager.html";
+const TEST_URL = "http://www.example.com/browser/toolkit/components/remotepagemanager/tests/browser/testremotepagemanager.html";
 
 var { RemotePages, RemotePageManager } =
   ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm", {});
