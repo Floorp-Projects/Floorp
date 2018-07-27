@@ -117,11 +117,6 @@ class MozharnessRunner(MozbuildObject):
                 "config": desktop_unittest_config + [
                     "--jittest-suite", "jittest"]
             },
-            "mozbase": {
-                "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--mozbase-suite", "mozbase"]
-            },
             "marionette": {
                 "script": "marionette.py",
                 "config": ["--config-file", self.config_path("marionette",
