@@ -547,6 +547,7 @@ ArrayMetaTypeDescr::create(JSContext* cx,
     obj->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(elementType->opaque()));
     obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE, ObjectValue(*elementType));
     obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH, Int32Value(length));
+    obj->initReservedSlot(JS_DESCR_SLOT_FLAGS, Int32Value(0));
 
     RootedValue elementTypeVal(cx, ObjectValue(*elementType));
     if (!DefineDataProperty(cx, obj, cx->names().elementType, elementTypeVal,
@@ -767,6 +768,8 @@ StructMetaTypeDescr::create(JSContext* cx,
     AutoValueVector fieldTypeObjs(cx); // Type descriptor of each field.
     bool opaque = false;               // Opacity of struct.
 
+    Vector<bool> fieldMutabilities(cx);
+
     RootedValue fieldTypeVal(cx);
     RootedId id(cx);
     Rooted<TypeDescr*> fieldType(cx);
@@ -796,6 +799,10 @@ StructMetaTypeDescr::create(JSContext* cx,
         if (!fieldTypeObjs.append(ObjectValue(*fieldType)))
             return nullptr;
 
+        // Along this path everything is mutable
+        if (!fieldMutabilities.append(true))
+            return nullptr;
+
         // Struct is opaque if any field is opaque
         if (fieldType->opaque())
             opaque = true;
@@ -805,7 +812,7 @@ StructMetaTypeDescr::create(JSContext* cx,
     if (!structTypePrototype)
         return nullptr;
 
-    return createFromArrays(cx, structTypePrototype, opaque, ids, fieldTypeObjs);
+    return createFromArrays(cx, structTypePrototype, opaque, ids, fieldTypeObjs, fieldMutabilities);
 }
 
 /* static */ StructTypeDescr*
@@ -813,11 +820,13 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
                                       HandleObject structTypePrototype,
                                       bool opaque,
                                       AutoIdVector& ids,
-                                      AutoValueVector& fieldTypeObjs)
+                                      AutoValueVector& fieldTypeObjs,
+                                      Vector<bool>& fieldMutabilities)
 {
     StringBuffer stringBuffer(cx);     // Canonical string repr
     AutoValueVector fieldNames(cx);    // Name of each field.
     AutoValueVector fieldOffsets(cx);  // Offset of each field field.
+    AutoValueVector fieldMuts(cx);     // Mutability of each field.
     RootedObject userFieldOffsets(cx); // User-exposed {f:offset} object
     RootedObject userFieldTypes(cx);   // User-exposed {f:descr} object.
     Layout layout;                     // Field offsetter
@@ -872,6 +881,9 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
         if (!fieldOffsets.append(Int32Value(offset.value())))
             return nullptr;
 
+        if (!fieldMuts.append(BooleanValue(fieldMutabilities[i])))
+            return nullptr;
+
         // userFieldOffsets[id] = offset
         RootedValue offsetValue(cx, Int32Value(offset.value()));
         if (!DefineDataProperty(cx, userFieldOffsets, id, offsetValue,
@@ -908,6 +920,7 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
     descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(AssertedCast<int32_t>(alignment)));
     descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(totalSize.value()));
     descr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(opaque));
+    descr->initReservedSlot(JS_DESCR_SLOT_FLAGS, Int32Value(0));
 
     // Construct for internal use an array with the name for each field.
     {
@@ -940,7 +953,19 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
         descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS, ObjectValue(*fieldOffsetsVec));
     }
 
+    // Construct for internal use an array with the mutability for each field.
+    {
+        RootedObject fieldMutsVec(cx);
+        fieldMutsVec = NewDenseCopiedArray(cx, fieldMuts.length(),
+                                           fieldMuts.begin(), nullptr,
+                                           TenuredObject);
+        if (!fieldMutsVec)
+            return nullptr;
+        descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_MUTS, ObjectValue(*fieldMutsVec));
+    }
+
     // Create data properties fieldOffsets and fieldTypes
+    // TODO: Probably also want to track mutability here, but not important yet.
     if (!FreezeObject(cx, userFieldOffsets))
         return nullptr;
     if (!FreezeObject(cx, userFieldTypes))
@@ -1041,6 +1066,14 @@ StructTypeDescr::fieldOffset(size_t index) const
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
+bool
+StructTypeDescr::fieldIsMutable(size_t index) const
+{
+    ArrayObject& fieldMuts = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_MUTS);
+    MOZ_ASSERT(index < fieldMuts.getDenseInitializedLength());
+    return fieldMuts.getDenseElement(index).toBoolean();
+}
+
 TypeDescr&
 StructTypeDescr::fieldDescr(size_t index) const
 {
@@ -1133,6 +1166,7 @@ DefineSimpleTypeDescr(JSContext* cx,
     descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(AssertedCast<int32_t>(T::size(type))));
     descr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(T::Opaque));
     descr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(int32_t(type)));
+    descr->initReservedSlot(JS_DESCR_SLOT_FLAGS, Int32Value(0));
 
     if (!CreateUserSizeAndAlignmentProperties(cx, descr))
         return false;
@@ -1873,6 +1907,12 @@ TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, Handl
         size_t fieldIndex;
         if (!descr->fieldIndex(id, &fieldIndex))
             break;
+
+        if (!descr->fieldIsMutable(fieldIndex)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_TYPEDOBJECT_SETTING_IMMUTABLE);
+            return false;
+        }
 
         if (!receiver.isObject() || obj != &receiver.toObject())
             return SetPropertyByDefining(cx, id, v, receiver, result);

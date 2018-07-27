@@ -417,7 +417,8 @@ class StructMetaTypeDescr : public NativeObject
                                              HandleObject structTypePrototype,
                                              bool opaque,
                                              AutoIdVector& ids,
-                                             AutoValueVector& fieldTypeObjs);
+                                             AutoValueVector& fieldTypeObjs,
+                                             Vector<bool>& fieldMutabilities);
 
     // Properties and methods to be installed on StructType.prototype,
     // and hence inherited by all struct type objects:
@@ -475,6 +476,9 @@ class StructTypeDescr : public ComplexTypeDescr
 
     // Return the offset of the field at index `index`.
     size_t fieldOffset(size_t index) const;
+
+    // Return the mutability of the field at index `index`.
+    bool fieldIsMutable(size_t index) const;
 
     static bool call(JSContext* cx, unsigned argc, Value* vp);
 
