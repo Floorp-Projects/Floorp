@@ -177,33 +177,33 @@ ChannelEventSinkFactory.getService = function() {
   return Cc[SINK_CONTRACT_ID].getService(Ci.nsIChannelEventSink).wrappedJSObject;
 };
 
-function StackTraceCollector(filters, messageManager) {
+function StackTraceCollector(filters, netmonitors) {
   this.filters = filters;
   this.stacktracesById = new Map();
-  this.messageManager = messageManager;
+  this.netmonitors = netmonitors;
 }
 
 StackTraceCollector.prototype = {
   init() {
     Services.obs.addObserver(this, "http-on-opening-request");
     ChannelEventSinkFactory.getService().registerCollector(this);
-    if (this.messageManager) {
-      this.onGetStack = this.onGetStack.bind(this);
-      this.messageManager.addMessageListener("debug:request-stack", this.onGetStack);
+    this.onGetStack = this.onGetStack.bind(this);
+    for (const { messageManager } of this.netmonitors) {
+      messageManager.addMessageListener("debug:request-stack", this.onGetStack);
     }
   },
 
   destroy() {
     Services.obs.removeObserver(this, "http-on-opening-request");
     ChannelEventSinkFactory.getService().unregisterCollector(this);
-    if (this.messageManager) {
-      this.messageManager.removeMessageListener("debug:request-stack", this.onGetStack);
+    for (const { messageManager } of this.netmonitors) {
+      messageManager.removeMessageListener("debug:request-stack", this.onGetStack);
     }
   },
 
   _saveStackTrace(channel, stacktrace) {
-    if (this.messageManager) {
-      this.messageManager.sendAsyncMessage("debug:request-stack-available", {
+    for (const { messageManager } of this.netmonitors) {
+      messageManager.sendAsyncMessage("debug:request-stack-available", {
         channelId: channel.channelId,
         stacktrace: stacktrace && stacktrace.length > 0
       });
@@ -263,9 +263,10 @@ StackTraceCollector.prototype = {
   },
 
   onGetStack(msg) {
+    const messageManager = msg.target;
     const channelId = msg.data;
     const stack = this.getStackTrace(channelId);
-    this.messageManager.sendAsyncMessage("debug:request-stack", {
+    messageManager.sendAsyncMessage("debug:request-stack", {
       channelId,
       stack,
     });
