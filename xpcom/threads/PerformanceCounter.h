@@ -113,6 +113,19 @@ public:
    */
   uint64_t GetTotalDispatchCount();
 
+  /**
+   * Returns the unique id for the instance.
+   *
+   * Used to distinguish instances since the lifespan of
+   * a PerformanceCounter can be shorter than the
+   * host it's tracking. That leads to edge cases
+   * where a counter appears to have values that go
+   * backwards. Having this id let the consumers
+   * detect that they are dealing with a new counter
+   * when it happens.
+   */
+  uint64_t GetID() const;
+
 private:
   ~PerformanceCounter() {}
 
@@ -120,6 +133,7 @@ private:
   Atomic<uint64_t> mTotalDispatchCount;
   DispatchCounter mDispatchCounter;
   nsCString mName;
+  const uint64_t mID;
 };
 
 } // namespace mozilla

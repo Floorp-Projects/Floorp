@@ -71,9 +71,13 @@ add_task(async function test() {
     let subFrameIds = [];
     let topLevelIds = [];
     let sharedWorker = false;
+    let counterIds = [];
 
     function exploreResults(data) {
       for (let entry of data) {
+        if (!counterIds.includes(entry.pid + ":" + entry.counterId)) {
+          counterIds.push(entry.pid + ":" + entry.counterId);
+        }
         sharedWorker = entry.host.endsWith("shared_worker.js") || sharedWorker;
 
         Assert.ok(entry.host != "" || entry.windowId !=0,
@@ -123,6 +127,8 @@ add_task(async function test() {
     Assert.ok(isTopLevel, "example.com as a top level window");
     Assert.ok(aboutMemoryFound, "about:memory");
     Assert.ok(sharedWorker, "We got some info from a shared worker");
+    let numCounters = counterIds.length;
+    Assert.ok(numCounters > 10, "This test generated at least " + numCounters + " unique ounters");
 
     // checking that subframes are not orphans
     for (let frameId of subFrameIds) {
