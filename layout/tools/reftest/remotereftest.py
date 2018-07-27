@@ -13,7 +13,7 @@ import traceback
 import urllib2
 from contextlib import closing
 
-from mozdevice import ADBAndroid
+from mozdevice import ADBAndroid, ADBTimeoutError
 import mozinfo
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
@@ -349,6 +349,8 @@ class RemoteReftest(RefTest):
                 else:
                     print "  %s: %s" % (category, devinfo[category])
             print "Test root: %s" % self.device.test_root
+        except ADBTimeoutError:
+            raise
         except Exception as e:
             print "WARNING: Error getting device information: %s" % str(e)
 

@@ -381,7 +381,7 @@ def find_tests(substring=None):
 
 
 def run_test_remote(test, device, prefix, options):
-    from mozdevice import ADBDevice, ADBProcessError
+    from mozdevice import ADBDevice, ADBProcessError, ADBTimeoutError
 
     if options.test_reflect_stringify:
         raise ValueError("can't run Reflect.stringify tests remotely")
@@ -405,6 +405,8 @@ def run_test_remote(test, device, prefix, options):
                                   cwd=options.remote_test_root,
                                   timeout=int(options.timeout))
         returncode = 0
+    except ADBTimeoutError:
+        raise
     except ADBProcessError as e:
         out = e.adb_process.stdout
         print("exception output: %s" % str(out))

@@ -12,11 +12,15 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "base/file_util.h"
+#ifdef ANDROID
+#include <linux/ashmem.h>
+#endif
+
+#include "base/eintr_wrapper.h"
 #include "base/logging.h"
-#include "base/platform_thread.h"
 #include "base/string_util.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Atomics.h"
+#include "prenv.h"
 
 namespace base {
 
@@ -49,20 +53,28 @@ SharedMemoryHandle SharedMemory::NULLHandle() {
   return SharedMemoryHandle();
 }
 
-namespace {
-
-// A class to handle auto-closing of FILE*'s.
-class ScopedFILEClose {
- public:
-  inline void operator()(FILE* x) const {
-    if (x) {
-      fclose(x);
-    }
+// static
+bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid)
+{
+#if defined(ANDROID) || defined(SHM_ANON)
+  return false;
+#else
+  *str += '/';
+#ifdef OS_LINUX
+  // The Snap package environment doesn't provide a private /dev/shm
+  // (it's used for communication with services like PulseAudio);
+  // instead AppArmor is used to restrict access to it.  Anything with
+  // this prefix is allowed:
+  static const char* const kSnap = PR_GetEnv("SNAP_NAME");
+  if (kSnap) {
+    StringAppendF(str, "snap.%s.", kSnap);
   }
-};
-
-typedef mozilla::UniquePtr<FILE, ScopedFILEClose> ScopedFILE;
-
+#endif // OS_LINUX
+  // Hopefully the "implementation defined" name length limit is long
+  // enough for this.
+  StringAppendF(str, "org.mozilla.ipc.%d.", static_cast<int>(pid));
+  return true;
+#endif // !ANDROID && !SHM_ANON
 }
 
 bool SharedMemory::Create(size_t size) {
@@ -71,37 +83,62 @@ bool SharedMemory::Create(size_t size) {
   DCHECK(size > 0);
   DCHECK(mapped_file_ == -1);
 
-  ScopedFILE file_closer;
-  FILE *fp;
+  int fd;
+  bool needs_truncate = true;
 
-  FilePath path;
-  fp = file_util::CreateAndOpenTemporaryShmemFile(&path);
-
-  // Deleting the file prevents anyone else from mapping it in
-  // (making it private), and prevents the need for cleanup (once
-  // the last fd is closed, it is truly freed).
-  file_util::Delete(path);
-
-  if (fp == NULL)
+#ifdef ANDROID
+  // Android has its own shared memory facility:
+  fd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
+  if (fd < 0) {
+    CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
     return false;
-  file_closer.reset(fp);  // close when we go out of scope
-
-  // Set the file size.
-  //
-  // According to POSIX, (f)truncate can be used to extend files;
-  // previously this required the XSI option but as of the 2008
-  // edition it's required for everything.  (Linux documents that this
-  // may fail on non-"native" filesystems like FAT, but /dev/shm
-  // should always be tmpfs.)
-  if (ftruncate(fileno(fp), size) != 0)
+  }
+  if (ioctl(fd, ASHMEM_SET_SIZE, size) != 0) {
+    CHROMIUM_LOG(WARNING) << "failed to set shm size: " << strerror(errno);
+    close(fd);
     return false;
-  // This probably isn't needed.
-  if (fseeko(fp, size, SEEK_SET) != 0)
+  }
+  needs_truncate = false;
+#elif defined(SHM_ANON)
+  // FreeBSD (or any other Unix that might decide to implement this
+  // nice, simple API):
+  fd = shm_open(SHM_ANON, O_RDWR, 0600);
+#else
+  // Generic Unix: shm_open + shm_unlink
+  do {
+    // The names don't need to be unique, but it saves time if they
+    // usually are.
+    static mozilla::Atomic<size_t> sNameCounter;
+    std::string name;
+    CHECK(AppendPosixShmPrefix(&name, getpid()));
+    StringAppendF(&name, "%zu", sNameCounter++);
+    // O_EXCL means the names being predictable shouldn't be a problem.
+    fd = HANDLE_EINTR(shm_open(name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600));
+    if (fd >= 0) {
+      if (shm_unlink(name.c_str()) != 0) {
+        // This shouldn't happen, but if it does: assume the file is
+        // in fact leaked, and bail out now while it's still 0-length.
+        DLOG(FATAL) << "failed to unlink shm: " << strerror(errno);
+        return false;
+      }
+    }
+  } while (fd < 0 && errno == EEXIST);
+#endif
+
+  if (fd < 0) {
+    CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
     return false;
+  }
 
-  mapped_file_ = dup(fileno(fp));
-  DCHECK(mapped_file_ >= 0);
+  if (needs_truncate) {
+    if (HANDLE_EINTR(ftruncate(fd, static_cast<off_t>(size))) != 0) {
+      CHROMIUM_LOG(WARNING) << "failed to set shm size: " << strerror(errno);
+      close(fd);
+      return false;
+    }
+  }
 
+  mapped_file_ = fd;
   max_size_ = size;
   return true;
 }

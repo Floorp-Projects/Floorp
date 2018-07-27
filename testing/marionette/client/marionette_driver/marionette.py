@@ -26,7 +26,6 @@ from .timeout import Timeouts
 
 CHROME_ELEMENT_KEY = "chromeelement-9fc5-4b51-a3c8-01716eedeb04"
 FRAME_KEY = "frame-075b-4da1-b6ba-e579c2d3230a"
-LEGACY_ELEMENT_KEY = "ELEMENT"
 WEB_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
 WINDOW_KEY = "window-fcc6-11e5-b4f8-330a88ab9d7f"
 
@@ -34,8 +33,7 @@ WINDOW_KEY = "window-fcc6-11e5-b4f8-330a88ab9d7f"
 class HTMLElement(object):
     """Represents a DOM Element."""
 
-    identifiers = (CHROME_ELEMENT_KEY, FRAME_KEY, WINDOW_KEY,
-                   LEGACY_ELEMENT_KEY, WEB_ELEMENT_KEY)
+    identifiers = (CHROME_ELEMENT_KEY, FRAME_KEY, WINDOW_KEY, WEB_ELEMENT_KEY)
 
     def __init__(self, marionette, id):
         self.marionette = marionette
@@ -187,8 +185,6 @@ class HTMLElement(object):
         if isinstance(json, dict):
             if WEB_ELEMENT_KEY in json:
                 return cls(marionette, json[WEB_ELEMENT_KEY])
-            elif LEGACY_ELEMENT_KEY in json:
-                return cls(marionette, json[LEGACY_ELEMENT_KEY])
             elif CHROME_ELEMENT_KEY in json:
                 return cls(marionette, json[CHROME_ELEMENT_KEY])
             elif FRAME_KEY in json:
@@ -1611,7 +1607,7 @@ class Marionette(object):
                 wrapped[arg] = self._to_json(args[arg])
         elif type(args) == HTMLElement:
             wrapped = {WEB_ELEMENT_KEY: args.id,
-                       LEGACY_ELEMENT_KEY: args.id}
+                       CHROME_ELEMENT_KEY: args.id}
         elif (isinstance(args, bool) or isinstance(args, basestring) or
               isinstance(args, int) or isinstance(args, float) or args is None):
             wrapped = args
