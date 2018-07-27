@@ -47,12 +47,6 @@ add_task(async function testSources() {
 
       browser.pageAction.onClicked.addListener(() => request("bookmarks"));
       browser.browserAction.onClicked.addListener(() => request("tabs"));
-
-      browser.contextMenus.create({
-        id: "menu",
-        title: "test user events",
-        contexts: ["page"],
-      });
       browser.contextMenus.onClicked.addListener(() => request("webNavigation"));
 
       browser.test.onMessage.addListener(msg => {
@@ -61,7 +55,13 @@ add_task(async function testSources() {
         }
       });
 
-      browser.test.sendMessage("actions-ready");
+      browser.contextMenus.create({
+        id: "menu",
+        title: "test user events",
+        contexts: ["page"],
+      }, () => {
+        browser.test.sendMessage("actions-ready");
+      });
     },
 
     files: {
