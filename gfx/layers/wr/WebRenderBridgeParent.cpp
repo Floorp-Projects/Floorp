@@ -898,7 +898,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     sendDidComposite = false;
   }
 
-  HoldPendingTransactionId(WrEpoch(), aTransactionId, aRefreshStartTime, aTxnStartTime, aFwdTime);
+  HoldPendingTransactionId(mWrEpoch, aTransactionId, aRefreshStartTime, aTxnStartTime, aFwdTime);
 
   if (scheduleComposite) {
     ScheduleGenerateFrame();
@@ -908,7 +908,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     MOZ_ASSERT(mPendingTransactionIds.size() == 1);
     if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
       TimeStamp now = TimeStamp::Now();
-      cbp->NotifyPipelineRendered(mPipelineId, WrEpoch(), now, now);
+      cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, now, now);
     }
   }
 
