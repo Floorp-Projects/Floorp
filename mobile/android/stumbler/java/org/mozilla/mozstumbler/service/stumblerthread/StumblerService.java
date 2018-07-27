@@ -7,6 +7,7 @@ package org.mozilla.mozstumbler.service.stumblerthread;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -19,8 +20,9 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.Prefs;
 import org.mozilla.mozstumbler.service.stumblerthread.blocklist.WifiBlockListInterface;
@@ -142,9 +144,12 @@ public class StumblerService extends PersistentIntentService
     @SuppressLint("NewApi")
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (!AppConstants.Versions.preO) {
-            final Notification notification = new NotificationCompat.Builder(this, GeckoApplication.getDefaultNotificationChannel().getId())
+            final Notification notification = new NotificationCompat.Builder(this,
+                    NotificationHelper.getInstance(this)
+                            .getNotificationChannel(NotificationHelper.Channel.MLS).getId())
                     .setSmallIcon(R.drawable.ic_status_logo)
                     .setContentTitle(getString(R.string.datareporting_stumbler_notification_title))
+                    .setContentIntent(createContentIntent())
                     .setOngoing(true)
                     .setShowWhen(false)
                     .setWhen(0)
@@ -273,5 +278,10 @@ public class StumblerService extends PersistentIntentService
 
     private boolean hasLocationPermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private PendingIntent createContentIntent() {
+        Intent intent = IntentHelper.getPrivacySettingsIntent();
+        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }

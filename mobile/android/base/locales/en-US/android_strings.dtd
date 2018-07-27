@@ -892,3 +892,7 @@ Picture-in-picture mini window -->
 <!ENTITY pip_play_button_description "Resume playing">
 <!ENTITY pip_pause_button_title "Pause">
 <!ENTITY pip_pause_button_description "Pause playing">
+
+<!-- Notification channels names -->
+<!ENTITY default_notification_channel "&brandShortName;">
+<!ENTITY mls_notification_channel "&vendorShortName; Location Service">

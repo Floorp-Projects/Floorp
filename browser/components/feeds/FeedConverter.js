@@ -20,17 +20,14 @@ const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
 const TYPE_ANY = "*/*";
 
 const PREF_SELECTED_APP = "browser.feeds.handlers.application";
-const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_SELECTED_ACTION = "browser.feeds.handler";
 const PREF_SELECTED_READER = "browser.feeds.handler.default";
 
 const PREF_VIDEO_SELECTED_APP = "browser.videoFeeds.handlers.application";
-const PREF_VIDEO_SELECTED_WEB = "browser.videoFeeds.handlers.webservice";
 const PREF_VIDEO_SELECTED_ACTION = "browser.videoFeeds.handler";
 const PREF_VIDEO_SELECTED_READER = "browser.videoFeeds.handler.default";
 
 const PREF_AUDIO_SELECTED_APP = "browser.audioFeeds.handlers.application";
-const PREF_AUDIO_SELECTED_WEB = "browser.audioFeeds.handlers.webservice";
 const PREF_AUDIO_SELECTED_ACTION = "browser.audioFeeds.handler";
 const PREF_AUDIO_SELECTED_READER = "browser.audioFeeds.handler.default";
 
@@ -44,19 +41,6 @@ function getPrefAppForType(t) {
 
     default:
       return PREF_SELECTED_APP;
-  }
-}
-
-function getPrefWebForType(t) {
-  switch (t) {
-    case Ci.nsIFeed.TYPE_VIDEO:
-      return PREF_VIDEO_SELECTED_WEB;
-
-    case Ci.nsIFeed.TYPE_AUDIO:
-      return PREF_AUDIO_SELECTED_WEB;
-
-    default:
-      return PREF_SELECTED_WEB;
   }
 }
 
@@ -170,8 +154,7 @@ FeedConverter.prototype = {
     // generic feed content, the system will prevent them from setting an auto-
     // handler for other stream types. In those cases, the user will always see
     // the preview page and have to select a handler. We can guess and show
-    // a client handler, but will not be able to show web handlers for those
-    // types.
+    // a client handler.
     //
     // If this is just a feed, not some kind of specialized application, then
     // auto-handlers can be set and we should obey them.
@@ -186,35 +169,12 @@ FeedConverter.prototype = {
         if (handler != "ask") {
           if (handler == "reader")
             handler = Services.prefs.getCharPref(getPrefReaderForType(feed.type), "bookmarks");
-          switch (handler) {
-            case "web":
-              let wccr =
-                  Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
-                  getService(Ci.nsIWebContentConverterService);
-              if ((feed.type == Ci.nsIFeed.TYPE_FEED &&
-                   wccr.getAutoHandler(TYPE_MAYBE_FEED)) ||
-                  (feed.type == Ci.nsIFeed.TYPE_VIDEO &&
-                   wccr.getAutoHandler(TYPE_MAYBE_VIDEO_FEED)) ||
-                  (feed.type == Ci.nsIFeed.TYPE_AUDIO &&
-                   wccr.getAutoHandler(TYPE_MAYBE_AUDIO_FEED))) {
-                wccr.loadPreferredHandler(this._request);
-                return;
-              }
-              break;
-
-            default:
-              LOG("unexpected handler: " + handler);
-              // fall through -- let feed service handle error
-            case "bookmarks":
-            case "client":
-            case "default":
-              try {
-                let title = feed.title ? feed.title.plainText() : "";
-                let desc = feed.subtitle ? feed.subtitle.plainText() : "";
-                feedService.addToClientReader(result.uri.spec, title, desc, feed.type, handler);
-                return;
-              } catch (ex) { /* fallback to preview mode */ }
-          }
+          try {
+            let title = feed.title ? feed.title.plainText() : "";
+            let desc = feed.subtitle ? feed.subtitle.plainText() : "";
+            feedService.addToClientReader(result.uri.spec, title, desc, feed.type, handler);
+            return;
+          } catch (ex) { /* fallback to preview mode */ }
         }
       }
 
@@ -382,8 +342,6 @@ FeedResultService.prototype = {
                                        feedHandler: "default" });
       break;
     default:
-      // "web" should have been handled elsewhere
-      LOG("unexpected handler: " + handler);
       // fall through
     case "bookmarks":
       Services.cpmm.sendAsyncMessage("FeedConverter:addLiveBookmark",

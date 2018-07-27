@@ -112,8 +112,6 @@ var gAppManagerDialog = {
       address = app.executable.path;
     else if (app instanceof Ci.nsIWebHandlerApp)
       address = app.uriTemplate;
-    else if (app instanceof Ci.nsIWebContentHandlerInfo)
-      address = app.uri;
     document.getElementById("appLocation").value = address;
     const l10nId = app instanceof Ci.nsILocalHandlerApp ? "app-manager-local-app-info"
                                                         : "app-manager-web-app-info";
