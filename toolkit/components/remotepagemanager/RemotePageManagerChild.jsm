@@ -88,38 +88,3 @@ ChildMessagePort.prototype.destroy = function() {
   this.window = null;
   MessagePort.prototype.destroy.call(this);
 };
-
-
-// Listen for pages in any process we're loaded in
-var registeredURLs = new Set(Services.cpmm.initialProcessData["RemotePageManager:urls"]);
-
-var observer = (window) => {
-  // Strip the hash from the URL, because it's not part of the origin.
-  let url = window.document.documentURI.replace(/[\#|\?].*$/, "");
-
-  if (!registeredURLs.has(url))
-    return;
-
-  // Get the frame message manager for this window so we can associate this
-  // page with a browser element
-  let messageManager = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDocShell)
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIContentFrameMessageManager);
-  // Set up the child side of the message port
-  new ChildMessagePort(messageManager, window);
-};
-Services.obs.addObserver(observer, "chrome-document-global-created");
-Services.obs.addObserver(observer, "content-document-global-created");
-
-// A message from chrome telling us what pages to listen for
-Services.cpmm.addMessageListener("RemotePage:Register", ({ data }) => {
-  for (let url of data.urls)
-    registeredURLs.add(url);
-});
-
-// A message from chrome telling us what pages to stop listening for
-Services.cpmm.addMessageListener("RemotePage:Unregister", ({ data }) => {
-  for (let url of data.urls)
-    registeredURLs.delete(url);
-});
