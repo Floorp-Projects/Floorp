@@ -514,19 +514,21 @@ WorkerDebugger::ReportPerformanceInfo()
   FallibleTArray<CategoryDispatch> items;
   uint64_t duration = 0;
   uint16_t count = 0;
+  uint64_t perfId = 0;
 
   RefPtr<PerformanceCounter> perf = mWorkerPrivate->GetPerformanceCounter();
   if (perf) {
+    perfId = perf->GetID();
     count =  perf->GetTotalDispatchCount();
     duration = perf->GetExecutionDuration();
     CategoryDispatch item = CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
     if (!items.AppendElement(item, fallible)) {
       NS_ERROR("Could not complete the operation");
-      return PerformanceInfo(url, pid, windowID, duration, true, isTopLevel, items);
+      return PerformanceInfo(url, pid, windowID, duration, perfId, true, isTopLevel, items);
     }
   }
 
-  return PerformanceInfo(url, pid, windowID, duration, true, isTopLevel, items);
+  return PerformanceInfo(url, pid, windowID, duration, perfId, true, isTopLevel, items);
 }
 
 } // dom namespace
