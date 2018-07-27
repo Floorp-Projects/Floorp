@@ -239,8 +239,7 @@
       </html:div>
       <box id="editBookmarkPanelImage"/>
 #include ../../components/places/content/editBookmarkPanel.inc.xul
-      <hbox id="editBookmarkPanelBottomButtons"
-            style="min-width: 30em;">
+      <hbox id="editBookmarkPanelBottomButtons" pack="end">
 #ifndef XP_UNIX
         <button id="editBookmarkPanelDoneButton"
                 class="editBookmarkPanelBottomButton"
