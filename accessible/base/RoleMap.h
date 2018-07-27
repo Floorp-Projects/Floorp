@@ -1426,3 +1426,19 @@ ROLE(BLOCKQUOTE,
      ROLE_SYSTEM_GROUPING,
      IA2_ROLE_BLOCK_QUOTE,
      eNoNameRule)
+
+ROLE(CONTENT_DELETION,
+     "content deletion",
+     ATK_ROLE_SECTION,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_CONTENT_DELETION,
+     eNoNameRule)
+
+ROLE(CONTENT_INSERTION,
+     "content insertion",
+     ATK_ROLE_SECTION,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_CONTENT_INSERTION,
+     eNoNameRule)
