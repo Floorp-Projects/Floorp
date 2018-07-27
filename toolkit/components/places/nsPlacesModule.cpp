@@ -51,7 +51,6 @@ const mozilla::Module::ContractIDEntry kPlacesContracts[] = {
   { NS_FAVICONSERVICE_CONTRACTID, &kNS_FAVICONSERVICE_CID },
   { "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1", &kNS_NAVHISTORYSERVICE_CID },
   { NS_IHISTORY_CONTRACTID, &kNS_HISTORYSERVICE_CID },
-  { NS_DOWNLOADHISTORY_CONTRACTID, &kNS_HISTORYSERVICE_CID },
   { nullptr }
 };
 
