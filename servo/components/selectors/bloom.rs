@@ -5,7 +5,7 @@
 //! Counting and non-counting Bloom filters tuned for use as ancestor filters
 //! for selector matching.
 
-use fxhash::FxHasher;
+use fnv::FnvHasher;
 use std::fmt::{self, Debug};
 use std::hash::{Hash, Hasher};
 
@@ -297,7 +297,7 @@ impl Clone for BloomStorageBool {
 }
 
 fn hash<T: Hash>(elem: &T) -> u32 {
-    let mut hasher = FxHasher::default();
+    let mut hasher = FnvHasher::default();
     elem.hash(&mut hasher);
     let hash: u64 = hasher.finish();
     (hash >> 32) as u32 ^ (hash as u32)
