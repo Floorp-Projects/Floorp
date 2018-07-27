@@ -35,7 +35,7 @@ class Actions(object):
             "type": "pointer"
         }]}
 
-        return self.marionette._send_message("performActions", params=params)
+        return self.marionette._send_message("WebDriver:PerformActions", params=params)
 
     def move(self, element, x=0, y=0, duration=250):
         self.action_chain.append({
