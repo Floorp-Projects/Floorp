@@ -363,7 +363,8 @@
 <!ENTITY pref_use_system_font_size_summary "Scale web content according to the system font size">
 
 <!ENTITY pref_media_autoplay_enabled "Allow autoplay">
-<!ENTITY pref_media_autoplay_enabled_summary "Control if websites can autoplay videos and other media content">
+<!ENTITY pref_media_autoplay_allow "Allow autoplay">
+<!ENTITY pref_media_autoplay_block "Block autoplay">
 <!ENTITY pref_zoom_force_enabled "Always enable zoom">
 <!ENTITY pref_zoom_force_enabled_summary "Force override so you can zoom any page">
 <!ENTITY pref_voice_input "Voice input">
