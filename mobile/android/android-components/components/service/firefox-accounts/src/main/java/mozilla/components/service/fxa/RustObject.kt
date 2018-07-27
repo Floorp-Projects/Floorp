@@ -52,16 +52,21 @@ abstract class RustObject<T> : Closeable {
             }
         }
 
+        @Suppress("TooGenericExceptionCaught")
         fun <U> safeAsync(callback: (Error.ByReference) -> U): FxaResult<U> {
             val result = FxaResult<U>()
             val e = Error.ByReference()
             launch {
                 synchronized(FxaClient.INSTANCE) {
-                    val ret = callback(e)
-                    if (e.isFailure()) {
-                        result.completeExceptionally(FxaException.fromConsuming(e))
-                    } else {
-                        result.complete(ret)
+                    try {
+                        val ret = callback(e)
+                        if (e.isFailure()) {
+                            result.completeExceptionally(FxaException.fromConsuming(e))
+                        } else {
+                            result.complete(ret)
+                        }
+                    } catch (e: Exception) {
+                        result.completeExceptionally(e)
                     }
                 }
             }
