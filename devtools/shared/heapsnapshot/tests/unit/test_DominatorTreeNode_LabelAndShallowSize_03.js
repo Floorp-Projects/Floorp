@@ -23,10 +23,6 @@ const breakdown = {
     by: "internalType",
     then: { by: "count", count: true, bytes: true },
   },
-  domNode: {
-    by: "descriptiveType",
-    then: { by: "count", count: true, bytes: true },
-  },
 };
 
 const description = {
@@ -37,8 +33,7 @@ const description = {
     "JSString": { count: 1, bytes: 42 },
   },
   scripts: {},
-  other: {},
-  domNode: {}
+  other: {}
 };
 
 const expected = [
