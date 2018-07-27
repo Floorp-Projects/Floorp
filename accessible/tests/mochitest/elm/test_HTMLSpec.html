@@ -359,13 +359,9 @@
 
       obj = {
         role: ROLE_PARAGRAPH,
-        textAttrs: {
-          0: { },
-          6: { "text-line-through-style": "solid" }
-        },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:del text
+          { role: ROLE_CONTENT_DELETION  }
         ]
       };
       testElm("del_container", obj);
@@ -880,13 +876,9 @@
 
       obj = {
         role: ROLE_PARAGRAPH,
-        textAttrs: {
-          0: { },
-          6: { "text-underline-style": "solid" }
-        },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:ins text
+          { role: ROLE_CONTENT_INSERTION  }
         ]
       };
       testElm("ins_container", obj);

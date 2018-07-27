@@ -34,6 +34,10 @@ MARKUPMAP(dd,
           New_HTMLDtOrDd<HyperTextAccessibleWrap>,
           roles::DEFINITION)
 
+MARKUPMAP(del,
+          New_HyperText,
+          roles::CONTENT_DELETION)
+
 MARKUPMAP(details,
           New_HyperText,
           roles::DETAILS)
@@ -98,6 +102,10 @@ MARKUPMAP(h6,
 MARKUPMAP(input,
           New_HTMLInput,
           0)
+
+MARKUPMAP(ins,
+          New_HyperText,
+          roles::CONTENT_INSERTION)
 
 MARKUPMAP(label,
           New_HTMLLabel,

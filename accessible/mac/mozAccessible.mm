@@ -929,6 +929,12 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
         return @"AXApplicationGroup";
       break;
 
+    case roles::CONTENT_DELETION:
+      return @"AXDeleteStyleGroup";
+
+    case roles::CONTENT_INSERTION:
+      return @"AXInsertStyleGroup";
+
     default:
       break;
   }
