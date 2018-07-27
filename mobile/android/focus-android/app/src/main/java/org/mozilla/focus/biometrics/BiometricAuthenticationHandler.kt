@@ -59,7 +59,6 @@ class BiometricAuthenticationHandler(
                 is NoSuchAlgorithmException,
                 is NoSuchProviderException ->
                     throw RuntimeException("Failed to get an instance of KeyGenerator", err)
-                else -> throw err
             }
         }
 
@@ -86,22 +85,13 @@ class BiometricAuthenticationHandler(
     }
 
     private fun initCipher(cipher: Cipher, keyName: String): Boolean {
-        try {
+        return try {
             keyStore?.load(null)
             val key = keyStore?.getKey(keyName, null) as SecretKey
-            cipher.init(Cipher.ENCRYPT_MODE, key)
-            return true
-        } catch (err: Exception) {
-            when (err) {
-                is KeyPermanentlyInvalidatedException -> return false
-                is KeyStoreException,
-                is CertificateException,
-                is UnrecoverableKeyException,
-                is IOException,
-                is NoSuchAlgorithmException,
-                is InvalidKeyException -> throw RuntimeException("Failed to init cipher", err)
-                else -> throw err
-            }
+            cipher.init(Cipher.*ENCRYPT_MODE*, key)
+            true
+        } catch (err: KeyPermanentlyInvalidatedException) {
+            false
         }
     }
 
@@ -127,7 +117,6 @@ class BiometricAuthenticationHandler(
                 is InvalidAlgorithmParameterException,
                 is CertificateException,
                 is IOException -> throw RuntimeException(err)
-                else -> throw err
             }
         }
     }
