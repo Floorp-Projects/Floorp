@@ -140,22 +140,13 @@ add_task(async function test_saveButton() {
   synthesizeMouseAtCenter(form.saveButton, {});
 
   let details = await messagePromise;
+  ok(typeof(details.messageID) == "number" && details.messageID > 0, "Check messageID type");
+  delete details.messageID;
   is(details.collectionName, "addresses", "Check collectionName");
   isDeeply(details, {
     collectionName: "addresses",
-    errorStateChange: {
-      page: {
-        id: "address-page",
-        error: "Generic error",
-        onboardingWizard: undefined,
-      },
-      "address-page": {
-        title: "Sample page title",
-      },
-    },
     guid: undefined,
     messageType: "updateAutofillRecord",
-    preserveOldProperties: true,
     record: {
       "given-name": "Jaws",
       "family-name": "Swaj",
@@ -168,13 +159,6 @@ add_task(async function test_saveButton() {
       "country": "US",
       "email": "test@example.com",
       "tel": "+15555551212",
-    },
-    selectedStateKey: undefined,
-    successStateChange: {
-      page: {
-        id: "payment-summary",
-        onboardingWizard: undefined,
-      },
     },
   }, "Check event details for the message to chrome");
   form.remove();

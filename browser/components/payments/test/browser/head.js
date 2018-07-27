@@ -322,7 +322,7 @@ add_task(async function setup_head() {
       // Ignore unknown CSP error.
       return;
     }
-    if (msg.errorMessage.match(/docShell is null.*BrowserUtils.jsm/)) {
+    if (msg.message.match(/docShell is null.*BrowserUtils.jsm/)) {
       // Bug 1478142 - Console spam from the Find Toolbar.
       return;
     }
@@ -498,8 +498,17 @@ async function fillInCardForm(frame, aCard, aOptions = {}) {
       if (!field) {
         ok(false, `${key} field not found`);
       }
-      field.value = val;
+      ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+      field.value = "";
+      field.focus();
+      // cc-exp-* fields are numbers so convert to strings and pad left with 0
+      let fillValue = val.toString().padStart(2, "0");
+      EventUtils.synthesizeKey(fillValue, {}, content.window);
+      ok(field.value, fillValue, `${key} value is correct after synthesizeKey`);
     }
+
+    info([...content.document.getElementById("cc-exp-year").options].map(op => op.label).join(","));
+
     let persistCheckbox = content.document.querySelector(options.checkboxSelector);
     // only touch the checked state if explicitly told to in the options
     if (options.hasOwnProperty("isTemporary")) {

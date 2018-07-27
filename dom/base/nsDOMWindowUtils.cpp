@@ -3551,6 +3551,10 @@ nsDOMWindowUtils::AllowScriptsToClose()
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsParentWindowMainWidgetVisible(bool* aIsVisible)
 {
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH("IsParentWindowMainWidgetVisible is only available in the parent process");
+  }
+
   // this should reflect the "is parent window visible" logic in
   // nsWindowWatcher::OpenWindowInternal()
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
@@ -3559,12 +3563,6 @@ nsDOMWindowUtils::GetIsParentWindowMainWidgetVisible(bool* aIsVisible)
   nsCOMPtr<nsIWidget> parentWidget;
   nsIDocShell *docShell = window->GetDocShell();
   if (docShell) {
-    if (TabChild *tabChild = TabChild::GetFrom(docShell)) {
-      if (!tabChild->SendIsParentWindowMainWidgetVisible(aIsVisible))
-        return NS_ERROR_FAILURE;
-      return NS_OK;
-    }
-
     nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
     docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
     nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));

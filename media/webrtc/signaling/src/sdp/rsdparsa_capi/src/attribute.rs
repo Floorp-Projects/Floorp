@@ -514,8 +514,9 @@ pub unsafe extern "C" fn sdp_get_sctp_port(attributes: *const Vec<SdpAttribute>)
 pub struct RustSdpAttributeFlags {
     pub ice_lite: bool,
     pub rtcp_mux: bool,
+    pub rtcp_rsize: bool,
     pub bundle_only: bool,
-    pub end_of_candidates: bool
+    pub end_of_candidates: bool,
 }
 
 
@@ -524,6 +525,7 @@ pub unsafe extern "C" fn sdp_get_attribute_flags(attributes: *const Vec<SdpAttri
     let mut ret = RustSdpAttributeFlags {
         ice_lite: false,
         rtcp_mux: false,
+        rtcp_rsize: false,
         bundle_only: false,
         end_of_candidates: false
     };
@@ -532,6 +534,8 @@ pub unsafe extern "C" fn sdp_get_attribute_flags(attributes: *const Vec<SdpAttri
             ret.ice_lite = true;
         } else if let SdpAttribute::RtcpMux = *attribute {
             ret.rtcp_mux = true;
+        } else if let SdpAttribute::RtcpRsize = *attribute {
+            ret.rtcp_rsize = true;
         } else if let SdpAttribute::BundleOnly = *attribute {
             ret.bundle_only = true;
         } else if let SdpAttribute::EndOfCandidates = *attribute {

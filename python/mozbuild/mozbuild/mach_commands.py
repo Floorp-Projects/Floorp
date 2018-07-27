@@ -2477,3 +2477,25 @@ class Repackage(MachCommandBase):
     def repackage_mar(self, input, mar, output):
         from mozbuild.repackaging.mar import repackage_mar
         repackage_mar(self.topsrcdir, input, mar, output)
+
+@CommandProvider
+class Analyze(MachCommandBase):
+    """ Get information about a file in the build graph """
+    @Command('summarize', category='misc',
+        description='Get incremental build cost for a file (or files) from the tup database.')
+    @CommandArgument('--path', help='Path to tup db',
+        default=None)
+    @CommandArgument('files', nargs='*', help='Files to summarize')
+    def summarize(self, path, files):
+        from mozbuild.analyze.graph import Graph
+        if path is None:
+            path = mozpath.join(self.topsrcdir, '.tup', 'db')
+        if os.path.isfile(path):
+            g = Graph(path)
+            g.file_summaries(files)
+            g.close()
+        else:
+            res = 'Please make sure you have a local tup db *or* specify the location with --path.'
+            print ('Could not find a valid tup db in ' + path, res, sep='\n')
+            return 1
+

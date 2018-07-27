@@ -173,15 +173,19 @@ class EditCreditCardDialog extends AutofillEditDialog {
 
   async handleSubmit() {
     let creditCard = this._elements.fieldContainer.buildFormObject();
-    if (!this._elements.fieldContainer._elements.form.checkValidity()) {
+    if (!this._elements.fieldContainer._elements.form.reportValidity()) {
       return;
     }
 
     // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
     // APIs are refactored to be async functions (bug 1399367).
     if (await MasterPassword.ensureLoggedIn()) {
-      await this.saveRecord(creditCard, this._record ? this._record.guid : null);
+      try {
+        await this.saveRecord(creditCard, this._record ? this._record.guid : null);
+        window.close();
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
     }
-    window.close();
   }
 }

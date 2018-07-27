@@ -2584,6 +2584,28 @@ gfxPlatform::InitWebRenderConfig()
       featureWebRenderQualified.Disable(FeatureStatus::Blocked,
                                          "Has battery",
                                          NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
+    } else {
+      nsAutoString adapterVendorID;
+      gfxInfo->GetAdapterVendorID(adapterVendorID);
+      if (adapterVendorID != u"0x10de") {
+        featureWebRenderQualified.Disable(FeatureStatus::Blocked,
+                                         "Not Nvidia",
+                                         NS_LITERAL_CSTRING("FEATURE_FAILURE_NOT_NVIDIA"));
+      } else {
+        nsAutoString adapterDeviceID;
+        gfxInfo->GetAdapterDeviceID(adapterDeviceID);
+        nsresult valid;
+        int32_t deviceID = adapterDeviceID.ToInteger(&valid, 16);
+        if (valid != NS_OK) {
+          featureWebRenderQualified.Disable(FeatureStatus::Blocked,
+                                            "Bad device id",
+                                            NS_LITERAL_CSTRING("FEATURE_FAILURE_BAD_DEVICE_ID"));
+        } else if (deviceID < 1000) { // > 1000 or 0x3e8 roughly corresponds to Tesla and newer
+          featureWebRenderQualified.Disable(FeatureStatus::Blocked,
+                                            "Device too old",
+                                            NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
+        }
+      }
     }
   } else {
     featureWebRenderQualified.Disable(FeatureStatus::Blocked,

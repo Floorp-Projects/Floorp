@@ -34,6 +34,36 @@ using namespace mozilla;
 #define MISC_STR_PTR(_cont) \
   reinterpret_cast<void*>((_cont)->mStringBits & NS_ATTRVALUE_POINTERVALUE_MASK)
 
+/* static */ MiscContainer*
+nsAttrValue::AllocMiscContainer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MiscContainer* cont = nullptr;
+  Swap(cont, sMiscContainerCache);
+
+  if (cont) {
+    return new (cont) MiscContainer;
+  }
+
+  return new MiscContainer;
+}
+
+/* static */ void
+nsAttrValue::DeallocMiscContainer(MiscContainer* aCont)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!aCont) {
+    return;
+  }
+
+  if (!sMiscContainerCache) {
+    aCont->~MiscContainer();
+    sMiscContainerCache = aCont;
+  } else {
+    delete aCont;
+  }
+}
+
 bool
 MiscContainer::GetString(nsAString& aString) const
 {
@@ -122,6 +152,7 @@ MiscContainer::Evict()
 }
 
 nsTArray<const nsAttrValue::EnumTable*>* nsAttrValue::sEnumTableArray = nullptr;
+MiscContainer* nsAttrValue::sMiscContainerCache = nullptr;
 
 nsAttrValue::nsAttrValue()
     : mBits(0)
@@ -177,8 +208,14 @@ nsAttrValue::Init()
 void
 nsAttrValue::Shutdown()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   delete sEnumTableArray;
   sEnumTableArray = nullptr;
+  // The MiscContainer pointed to by sMiscContainerCache has already
+  // be destructed so `delete sMiscContainerCache` is
+  // dangerous. Invoke `operator delete` to free the memory.
+  ::operator delete(sMiscContainerCache);
+  sMiscContainerCache = nullptr;
 }
 
 void
@@ -202,7 +239,7 @@ nsAttrValue::Reset()
         break;
       }
 
-      delete ClearMiscContainer();
+      DeallocMiscContainer(ClearMiscContainer());
 
       break;
     }
@@ -262,7 +299,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
 
   MiscContainer* otherCont = aOther.GetMiscContainer();
   if (otherCont->IsRefCounted()) {
-    delete ClearMiscContainer();
+    DeallocMiscContainer(ClearMiscContainer());
     NS_ADDREF(otherCont);
     SetPtrValueAndType(otherCont, eOtherBase);
     return;
@@ -1811,7 +1848,7 @@ nsAttrValue::ClearMiscContainer()
       // This MiscContainer is shared, we need a new one.
       NS_RELEASE(cont);
 
-      cont = new MiscContainer;
+      cont = AllocMiscContainer();
       SetPtrValueAndType(cont, eOtherBase);
     }
     else {
@@ -1864,7 +1901,7 @@ nsAttrValue::EnsureEmptyMiscContainer()
     cont = GetMiscContainer();
   }
   else {
-    cont = new MiscContainer;
+    cont = AllocMiscContainer();
     SetPtrValueAndType(cont, eOtherBase);
   }
 

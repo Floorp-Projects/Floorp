@@ -42,6 +42,7 @@ class nsIAnimationObserver;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
+class nsIHTMLCollection;
 class nsIMutationObserver;
 class nsINode;
 class nsINodeList;
@@ -1858,6 +1859,16 @@ public:
   // ParentNode methods
   mozilla::dom::Element* GetFirstElementChild() const;
   mozilla::dom::Element* GetLastElementChild() const;
+
+  already_AddRefed<nsIHTMLCollection>
+    GetElementsByAttribute(const nsAString& aAttribute,
+                           const nsAString& aValue);
+  already_AddRefed<nsIHTMLCollection>
+    GetElementsByAttributeNS(const nsAString& aNamespaceURI,
+                             const nsAString& aAttribute,
+                             const nsAString& aValue,
+                             ErrorResult& aRv);
+
 
   MOZ_CAN_RUN_SCRIPT void Prepend(const Sequence<OwningNodeOrString>& aNodes,
                                   ErrorResult& aRv);

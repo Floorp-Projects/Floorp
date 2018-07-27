@@ -44,13 +44,14 @@ async function sendOptionsKeyEvent(toolbox) {
 
 async function clickSettingsMenu(toolbox) {
   const onPopupShown = () => {
-    toolbox.doc.removeEventListener("popuphidden", onPopupShown);
+    toolbox.doc.removeEventListener("popupshown", onPopupShown);
     const menuItem = toolbox.doc.getElementById("toolbox-meatball-menu-settings");
     EventUtils.synthesizeMouseAtCenter(menuItem, {}, menuItem.ownerGlobal);
   };
   toolbox.doc.addEventListener("popupshown", onPopupShown);
 
   const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
+  await waitUntil(() => button.style.pointerEvents !== "none");
   EventUtils.synthesizeMouseAtCenter(button, {}, button.ownerGlobal);
 
   await toolbox.once("select");

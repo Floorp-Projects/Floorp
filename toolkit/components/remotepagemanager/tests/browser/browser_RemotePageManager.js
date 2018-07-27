@@ -2,9 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const TEST_URL = "http://www.example.com/browser/toolkit/modules/tests/browser/testremotepagemanager.html";
+const TEST_URL = "http://www.example.com/browser/toolkit/components/remotepagemanager/tests/browser/testremotepagemanager.html";
 
-var { RemotePages, RemotePageManager } = ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm", {});
+var { RemotePages, RemotePageManager } =
+  ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm", {});
 
 function failOnMessage(message) {
   ok(false, "Should not have seen message " + message.name);
@@ -59,9 +60,9 @@ function swapDocShells(browser1, browser2) {
   browser2.permanentKey = tmp;
 }
 
-add_task(async function initialProcessData() {
+add_task(async function sharedData_aka_initialProcessData() {
   const includesTest = () => Services.cpmm.
-    initialProcessData["RemotePageManager:urls"].includes(TEST_URL);
+    sharedData.get("RemotePageManager:urls").has(TEST_URL);
   is(includesTest(), false, "Shouldn't have test url in initial process data yet");
 
   const loadedPort = waitForPort(TEST_URL);

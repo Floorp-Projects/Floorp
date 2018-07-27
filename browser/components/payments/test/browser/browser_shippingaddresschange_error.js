@@ -37,7 +37,7 @@ add_task(async function test_show_error_on_addresschange() {
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
 
     await spawnPaymentDialogTask(frame, expectedText => {
-      let errorText = content.document.querySelector("#error-text");
+      let errorText = content.document.querySelector("header .page-error");
       is(errorText.textContent, expectedText, "Error text should be on dialog");
       ok(content.isVisible(errorText), "Error text should be visible");
     }, PTU.Details.genericShippingError.error);
@@ -59,7 +59,7 @@ add_task(async function test_show_error_on_addresschange() {
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
 
     await spawnPaymentDialogTask(frame, () => {
-      let errorText = content.document.querySelector("#error-text");
+      let errorText = content.document.querySelector("header .page-error");
       is(errorText.textContent, "", "Error text should not be on dialog");
       ok(content.isHidden(errorText), "Error text should not be visible");
     });
@@ -112,7 +112,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
         return Object.keys(state.request.paymentDetails.shippingAddressErrors).length;
       }, "Check that there are shippingAddressErrors");
 
-      is(content.document.querySelector("#error-text").textContent,
+      is(content.document.querySelector("header .page-error").textContent,
          PTU.Details.fieldSpecificErrors.error,
          "Error text should be present on dialog");
 
@@ -165,7 +165,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
         return !Object.keys(state.request.paymentDetails.shippingAddressErrors).length;
       }, "Check that there are no more shippingAddressErrors");
 
-      is(content.document.querySelector("#error-text").textContent,
+      is(content.document.querySelector("header .page-error").textContent,
          "", "Error text should not be present on dialog");
 
       info("click the Edit link again");

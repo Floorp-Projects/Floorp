@@ -94,6 +94,7 @@
 
   <template id="payment-dialog-template">
     <header>
+      <div class="page-error" aria-live="polite"></div>
       <div id="total">
         <currency-amount display-code="display-code"></currency-amount>
         <div>&header.payTo; <span id="host-name"></span></div>
@@ -106,7 +107,6 @@
     <div id="main-container">
       <payment-request-page id="payment-summary">
         <div class="page-body">
-          <div id="error-text"></div>
           <address-picker class="shipping-related"
                           data-add-link-label="&address.addLink.label;"
                           data-edit-link-label="&address.editLink.label;"
@@ -128,7 +128,6 @@
                           data-add-link-label="&payer.addLink.label;"
                           data-edit-link-label="&payer.editLink.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>
-          <div id="error-text"></div>
         </div>
 
         <footer>

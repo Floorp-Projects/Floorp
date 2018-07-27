@@ -61,7 +61,6 @@ const whitelist = {
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/PrivateBrowsingUtils.jsm",
     "resource://gre/modules/ReaderMode.jsm",
-    "resource://gre/modules/RemotePageManager.jsm",
 
     // Pocket
     "chrome://pocket/content/AboutPocket.jsm",

@@ -10,6 +10,7 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const Services = require("Services");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button } = dom;
 const {
@@ -167,6 +168,22 @@ class MenuButton extends PureComponent {
 
   onHidden() {
     this.setState({ expanded: false });
+    // While the menu is open, if we click _anywhere_ outside the menu, it will
+    // automatically close. This is performed by the XUL wrapper before we get
+    // any chance to see any event. To avoid immediately re-opening the menu
+    // when we process the subsequent click event on this button, we set
+    // 'pointer-events: none' on the button while the menu is open.
+    //
+    // After the menu is closed we need to remove the pointer-events style (so
+    // the button works again) but we don't want to do it immediately since the
+    // "popuphidden" event which triggers this callback might be dispatched
+    // before the "click" event that we want to ignore.  As a result, we queue
+    // up a task using setTimeout() to run after the "click" event.
+    this.state.win.setTimeout(() => {
+      if (this.buttonRef) {
+        this.buttonRef.style.pointerEvents = "auto";
+      }
+    }, 0);
   }
 
   async onClick(e) {
@@ -177,6 +194,18 @@ class MenuButton extends PureComponent {
 
       if (!e.defaultPrevented) {
         const wasKeyboardEvent = e.screenX === 0 && e.screenY === 0;
+        // If the popup menu will be shown, disable this button in order to
+        // prevent reopening the popup menu. See extended comment in onHidden().
+        // above.
+        //
+        // Also, we should _not_ set 'pointer-events: none' if
+        // ui.popup.disable_autohide pref is in effect since, in that case,
+        // there's no redundant hiding behavior and we actually want clicking
+        // the button to close the menu.
+        if (!this.state.expanded &&
+            !Services.prefs.getBoolPref("ui.popup.disable_autohide", false)) {
+          this.buttonRef.style.pointerEvents = "none";
+        }
         await this.toggleMenu(e.target);
         // If the menu was activated by keyboard, focus the first item.
         if (wasKeyboardEvent && this.tooltip) {
