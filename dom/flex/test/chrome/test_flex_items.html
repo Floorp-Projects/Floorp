@@ -66,6 +66,12 @@ function testItemMatchesExpectedValues(item, values, index) {
 
   if (typeof(values.mainMaxSize) != "undefined") {
     is(item.mainMaxSize, values.mainMaxSize, "Item index " + index + " has expected mainMaxSize.");
+  } else {
+    // If we didn't specify an expected mainMaxSize, then it's implied
+    // that the max main-size property (max-width/max-height) is at its
+    // default "none" value, which our FlexItem API represents as +infinity.
+    is(item.mainMaxSize, Number.POSITIVE_INFINITY,
+       "Item index " + index + " has expected (default) mainMaxSize.");
   }
 
   if (typeof(values.crossMinSize) != "undefined") {
@@ -74,6 +80,10 @@ function testItemMatchesExpectedValues(item, values, index) {
 
   if (typeof(values.crossMaxSize) != "undefined") {
     is(item.crossMaxSize, values.crossMaxSize, "Item index " + index + " has expected crossMaxSize.");
+  } else {
+    // As above for mainMaxSize, no-expected-value implies we expect +infinity.
+    is(item.crossMaxSize, Number.POSITIVE_INFINITY,
+       "Item index " + index + " has expected (default) crossMaxSize.");
   }
 }
 
