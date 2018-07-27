@@ -47,8 +47,7 @@ WebGLFBAttachPoint::~WebGLFBAttachPoint()
 void
 WebGLFBAttachPoint::Unlink()
 {
-    const char funcName[] = "WebGLFramebuffer::GC";
-    Clear(funcName);
+    Clear();
 }
 
 bool
@@ -115,7 +114,7 @@ WebGLFBAttachPoint::IsReadableFloat() const
 }
 
 void
-WebGLFBAttachPoint::Clear(const char* funcName)
+WebGLFBAttachPoint::Clear()
 {
     if (mRenderbufferPtr) {
         MOZ_ASSERT(!mTexturePtr);
@@ -127,14 +126,14 @@ WebGLFBAttachPoint::Clear(const char* funcName)
     mTexturePtr = nullptr;
     mRenderbufferPtr = nullptr;
 
-    OnBackingStoreRespecified(funcName);
+    OnBackingStoreRespecified();
 }
 
 void
-WebGLFBAttachPoint::SetTexImage(const char* funcName, WebGLTexture* tex,
+WebGLFBAttachPoint::SetTexImage(WebGLTexture* tex,
                                 TexImageTarget target, GLint level, GLint layer)
 {
-    Clear(funcName);
+    Clear();
 
     mTexturePtr = tex;
     mTexImageTarget = target;
@@ -147,9 +146,9 @@ WebGLFBAttachPoint::SetTexImage(const char* funcName, WebGLTexture* tex,
 }
 
 void
-WebGLFBAttachPoint::SetRenderbuffer(const char* funcName, WebGLRenderbuffer* rb)
+WebGLFBAttachPoint::SetRenderbuffer(WebGLRenderbuffer* rb)
 {
-    Clear(funcName);
+    Clear();
 
     mRenderbufferPtr = rb;
 
@@ -227,9 +226,9 @@ WebGLFBAttachPoint::Size(uint32_t* const out_width, uint32_t* const out_height) 
 }
 
 void
-WebGLFBAttachPoint::OnBackingStoreRespecified(const char* funcName) const
+WebGLFBAttachPoint::OnBackingStoreRespecified() const
 {
-    mFB->InvalidateFramebufferStatus(funcName);
+    mFB->InvalidateFramebufferStatus();
 }
 
 void
@@ -402,7 +401,7 @@ WebGLFBAttachPoint::Resolve(gl::GLContext* gl) const
 }
 
 JS::Value
-WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSContext* cx,
+WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
                                  GLenum target, GLenum attachment, GLenum pname,
                                  ErrorResult* const out_error) const
 {
@@ -435,10 +434,10 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
         nsCString attachmentName;
         WebGLContext::EnumName(attachment, &attachmentName);
         if (webgl->IsWebGL2()) {
-            webgl->ErrorInvalidOperation("%s: No attachment at %s.", funcName,
+            webgl->ErrorInvalidOperation("No attachment at %s.",
                                          attachmentName.BeginReading());
         } else {
-            webgl->ErrorInvalidEnum("%s: No attachment at %s.", funcName,
+            webgl->ErrorInvalidEnum("No attachment at %s.",
                                     attachmentName.BeginReading());
         }
         return JS::NullValue();
@@ -506,7 +505,7 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
     }
 
     if (!isPNameValid) {
-        webgl->ErrorInvalidEnum("%s: Invalid pname: 0x%04x", funcName, pname);
+        webgl->ErrorInvalidEnum("Invalid pname: 0x%04x", pname);
         return JS::NullValue();
     }
 
@@ -643,16 +642,14 @@ WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)
 void
 WebGLFramebuffer::Delete()
 {
-    const char funcName[] = "WebGLFramebuffer::Delete";
+    InvalidateFramebufferStatus();
 
-    InvalidateFramebufferStatus(funcName);
-
-    mDepthAttachment.Clear(funcName);
-    mStencilAttachment.Clear(funcName);
-    mDepthStencilAttachment.Clear(funcName);
+    mDepthAttachment.Clear();
+    mStencilAttachment.Clear();
+    mDepthStencilAttachment.Clear();
 
     for (auto& cur : mColorAttachments) {
-        cur.Clear(funcName);
+        cur.Clear();
     }
 
     mContext->gl->fDeleteFramebuffers(1, &mGLName);
@@ -712,11 +709,11 @@ WebGLFramebuffer::GetAttachPoint(GLenum attachPoint)
     }
 
 void
-WebGLFramebuffer::DetachTexture(const char* funcName, const WebGLTexture* tex)
+WebGLFramebuffer::DetachTexture(const WebGLTexture* tex)
 {
     const auto fnDetach = [&](WebGLFBAttachPoint& attach) {
         if (attach.Texture() == tex) {
-            attach.Clear(funcName);
+            attach.Clear();
         }
     };
 
@@ -724,11 +721,11 @@ WebGLFramebuffer::DetachTexture(const char* funcName, const WebGLTexture* tex)
 }
 
 void
-WebGLFramebuffer::DetachRenderbuffer(const char* funcName, const WebGLRenderbuffer* rb)
+WebGLFramebuffer::DetachRenderbuffer(const WebGLRenderbuffer* rb)
 {
     const auto fnDetach = [&](WebGLFBAttachPoint& attach) {
         if (attach.Renderbuffer() == rb) {
-            attach.Clear(funcName);
+            attach.Clear();
         }
     };
 
@@ -889,23 +886,21 @@ WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
 // Validation
 
 bool
-WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName) const
+WebGLFramebuffer::ValidateAndInitAttachments() const
 {
     MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
                mContext->mBoundReadFramebuffer == this);
 
-    const auto fbStatus = CheckFramebufferStatus(funcName);
+    const auto fbStatus = CheckFramebufferStatus();
     if (fbStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return true;
 
-    mContext->ErrorInvalidFramebufferOperation("%s: Framebuffer must be"
-                                               " complete.",
-                                               funcName);
+    mContext->ErrorInvalidFramebufferOperation("Framebuffer must be complete.");
     return false;
 }
 
 bool
-WebGLFramebuffer::ValidateClearBufferType(const char* funcName, GLenum buffer,
+WebGLFramebuffer::ValidateClearBufferType(GLenum buffer,
                                           uint32_t drawBuffer, GLenum funcType) const
 {
     if (buffer != LOCAL_GL_COLOR)
@@ -932,9 +927,9 @@ WebGLFramebuffer::ValidateClearBufferType(const char* funcName, GLenum buffer,
     }
 
     if (attachType != funcType) {
-        mContext->ErrorInvalidOperation("%s: This attachment is of type 0x%04x, but"
+        mContext->ErrorInvalidOperation("This attachment is of type 0x%04x, but"
                                         " this function is of type 0x%04x.",
-                                        funcName, attachType, funcType);
+                                        attachType, funcType);
         return false;
     }
 
@@ -942,25 +937,22 @@ WebGLFramebuffer::ValidateClearBufferType(const char* funcName, GLenum buffer,
 }
 
 bool
-WebGLFramebuffer::ValidateForColorRead(const char* funcName,
-                                       const webgl::FormatUsageInfo** const out_format,
+WebGLFramebuffer::ValidateForColorRead(const webgl::FormatUsageInfo** const out_format,
                                        uint32_t* const out_width,
                                        uint32_t* const out_height) const
 {
     if (!mColorReadBuffer) {
-        mContext->ErrorInvalidOperation("%s: READ_BUFFER must not be NONE.", funcName);
+        mContext->ErrorInvalidOperation("READ_BUFFER must not be NONE.");
         return false;
     }
 
     if (!mColorReadBuffer->IsDefined()) {
-        mContext->ErrorInvalidOperation("%s: The READ_BUFFER attachment is not defined.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("The READ_BUFFER attachment is not defined.");
         return false;
     }
 
     if (mColorReadBuffer->Samples()) {
-        mContext->ErrorInvalidOperation("%s: The READ_BUFFER attachment is multisampled.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("The READ_BUFFER attachment is multisampled.");
         return false;
     }
 
@@ -1003,7 +995,7 @@ WebGLFramebuffer::ResolveAttachments() const
 }
 
 bool
-WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
+WebGLFramebuffer::ResolveAttachmentData() const
 {
     //////
     // Check if we need to initialize anything
@@ -1056,7 +1048,7 @@ WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
 
     for (const auto& attach : tex3DAttachmentsToInit) {
         const auto& tex = attach->Texture();
-        if (!tex->InitializeImageData(funcName, attach->ImageTarget(),
+        if (!tex->InitializeImageData(attach->ImageTarget(),
                                       attach->MipLevel()))
         {
             return false;
@@ -1157,14 +1149,14 @@ WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
 }
 
 void
-WebGLFramebuffer::InvalidateFramebufferStatus(const char* funcName)
+WebGLFramebuffer::InvalidateFramebufferStatus()
 {
     if (mResolvedCompleteData) {
         mNumFBStatusInvals++;
         if (mNumFBStatusInvals > mContext->mMaxAcceptableFBStatusInvals) {
-            mContext->GeneratePerfWarning("%s: FB was invalidated after being complete %u"
+            mContext->GeneratePerfWarning("FB was invalidated after being complete %u"
                                           " times.",
-                                          funcName, uint32_t(mNumFBStatusInvals));
+                                          uint32_t(mNumFBStatusInvals));
         }
     }
 
@@ -1183,7 +1175,7 @@ WebGLFramebuffer::RefreshResolvedData()
 // Entrypoints
 
 FBStatus
-WebGLFramebuffer::CheckFramebufferStatus(const char* const funcName) const
+WebGLFramebuffer::CheckFramebufferStatus() const
 {
     if (IsResolvedComplete())
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
@@ -1219,7 +1211,7 @@ WebGLFramebuffer::CheckFramebufferStatus(const char* const funcName) const
             break;
         }
 
-        if (!ResolveAttachmentData(funcName)) {
+        if (!ResolveAttachmentData()) {
             ret = LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
             statusInfo.AssignLiteral("Failed to lazily-initialize attachment data.");
             break;
@@ -1230,8 +1222,8 @@ WebGLFramebuffer::CheckFramebufferStatus(const char* const funcName) const
     } while (false);
 
     MOZ_ASSERT(ret != LOCAL_GL_FRAMEBUFFER_COMPLETE);
-    mContext->GenerateWarning("%s: Framebuffer not complete. (status: 0x%04x) %s",
-                              funcName, ret.get(), statusInfo.BeginReading());
+    mContext->GenerateWarning("Framebuffer not complete. (status: 0x%04x) %s",
+                              ret.get(), statusInfo.BeginReading());
     return ret;
 }
 
@@ -1281,12 +1273,12 @@ WebGLFramebuffer::RefreshReadBuffer() const
 ////
 
 void
-WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>& buffers)
+WebGLFramebuffer::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 {
     if (buffers.Length() > mContext->mGLMaxDrawBuffers) {
         // "An INVALID_VALUE error is generated if `n` is greater than MAX_DRAW_BUFFERS."
-        mContext->ErrorInvalidValue("%s: `buffers` must have a length <="
-                                    " MAX_DRAW_BUFFERS.", funcName);
+        mContext->ErrorInvalidValue("`buffers` must have a length <="
+                                    " MAX_DRAW_BUFFERS.");
         return;
     }
 
@@ -1314,13 +1306,12 @@ WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>&
             if (cur != LOCAL_GL_BACK &&
                 !isColorEnum)
             {
-                mContext->ErrorInvalidEnum("%s: Unexpected enum in buffers.", funcName);
+                mContext->ErrorInvalidEnum("Unexpected enum in buffers.");
                 return;
             }
 
-            mContext->ErrorInvalidOperation("%s: `buffers[i]` must be NONE or"
-                                            " COLOR_ATTACHMENTi.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("`buffers[i]` must be NONE or"
+                                            " COLOR_ATTACHMENTi.");
             return;
         }
     }
@@ -1333,16 +1324,16 @@ WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>&
 }
 
 void
-WebGLFramebuffer::ReadBuffer(const char* funcName, GLenum attachPoint)
+WebGLFramebuffer::ReadBuffer(GLenum attachPoint)
 {
     const auto& maybeAttach = GetColorAttachPoint(attachPoint);
     if (!maybeAttach) {
-        const char text[] = "%s: `mode` must be a COLOR_ATTACHMENTi, for 0 <= i <"
+        const char text[] = "`mode` must be a COLOR_ATTACHMENTi, for 0 <= i <"
                             " MAX_DRAW_BUFFERS.";
         if (attachPoint == LOCAL_GL_BACK) {
-            mContext->ErrorInvalidOperation(text, funcName);
+            mContext->ErrorInvalidOperation(text);
         } else {
-            mContext->ErrorInvalidEnum(text, funcName);
+            mContext->ErrorInvalidEnum(text);
         }
         return;
     }
@@ -1358,7 +1349,7 @@ WebGLFramebuffer::ReadBuffer(const char* funcName, GLenum attachPoint)
 ////
 
 void
-WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnum,
+WebGLFramebuffer::FramebufferRenderbuffer(GLenum attachEnum,
                                           GLenum rbtarget, WebGLRenderbuffer* rb)
 {
     MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
@@ -1367,26 +1358,26 @@ WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnu
     // `attachment`
     const auto maybeAttach = GetAttachPoint(attachEnum);
     if (!maybeAttach || !maybeAttach.value()) {
-        mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
+        mContext->ErrorInvalidEnum("Bad `attachment`: 0x%x.", attachEnum);
         return;
     }
     const auto& attach = maybeAttach.value();
 
     // `rbTarget`
     if (rbtarget != LOCAL_GL_RENDERBUFFER) {
-        mContext->ErrorInvalidEnumInfo("framebufferRenderbuffer: rbtarget:", rbtarget);
+        mContext->ErrorInvalidEnumInfo("rbtarget", rbtarget);
         return;
     }
 
     // `rb`
     if (rb) {
-        if (!mContext->ValidateObject("framebufferRenderbuffer: rb", *rb))
+        if (!mContext->ValidateObject("rb", *rb))
             return;
 
         if (!rb->mHasBeenBound) {
-            mContext->ErrorInvalidOperation("%s: bindRenderbuffer must be called before"
+            mContext->ErrorInvalidOperation("bindRenderbuffer must be called before"
                                             " attachment to %04x",
-                                            funcName, attachEnum);
+                                            attachEnum);
             return;
       }
     }
@@ -1394,17 +1385,17 @@ WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnu
     // End of validation.
 
     if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        mDepthAttachment.SetRenderbuffer(funcName, rb);
-        mStencilAttachment.SetRenderbuffer(funcName, rb);
+        mDepthAttachment.SetRenderbuffer(rb);
+        mStencilAttachment.SetRenderbuffer(rb);
     } else {
-        attach->SetRenderbuffer(funcName, rb);
+        attach->SetRenderbuffer(rb);
     }
 
-    InvalidateFramebufferStatus(funcName);
+    InvalidateFramebufferStatus();
 }
 
 void
-WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
+WebGLFramebuffer::FramebufferTexture2D(GLenum attachEnum,
                                        GLenum texImageTarget, WebGLTexture* tex,
                                        GLint level)
 {
@@ -1414,7 +1405,7 @@ WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
     // `attachment`
     const auto maybeAttach = GetAttachPoint(attachEnum);
     if (!maybeAttach || !maybeAttach.value()) {
-        mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
+        mContext->ErrorInvalidEnum("Bad `attachment`: 0x%x.", attachEnum);
         return;
     }
     const auto& attach = maybeAttach.value();
@@ -1424,33 +1415,31 @@ WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
         (texImageTarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
          texImageTarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
     {
-        mContext->ErrorInvalidEnumInfo("framebufferTexture2D: texImageTarget:",
+        mContext->ErrorInvalidEnumInfo("texImageTarget",
                                        texImageTarget);
         return;
     }
 
     // `texture`
     if (tex) {
-        if (!mContext->ValidateObject("framebufferTexture2D: texture", *tex))
+        if (!mContext->ValidateObject("texture", *tex))
             return;
 
         if (!tex->HasEverBeenBound()) {
-            mContext->ErrorInvalidOperation("%s: `texture` has never been bound.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("`texture` has never been bound.");
             return;
         }
 
         const TexTarget destTexTarget = TexImageTargetToTexTarget(texImageTarget);
         if (tex->Target() != destTexTarget) {
-            mContext->ErrorInvalidOperation("%s: Mismatched texture and texture target.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("Mismatched texture and texture target.");
             return;
         }
     }
 
     // `level`
     if (level < 0)
-        return mContext->ErrorInvalidValue("%s: `level` must not be negative.", funcName);
+        return mContext->ErrorInvalidValue("`level` must not be negative.");
 
     if (mContext->IsWebGL2()) {
         /* GLES 3.0.4 p208:
@@ -1467,32 +1456,32 @@ WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
 
         if (texImageTarget == LOCAL_GL_TEXTURE_2D) {
             if (uint32_t(level) > FloorLog2(mContext->mGLMaxTextureSize))
-                return mContext->ErrorInvalidValue("%s: `level` is too large.", funcName);
+                return mContext->ErrorInvalidValue("`level` is too large.");
         } else {
             MOZ_ASSERT(texImageTarget >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
                        texImageTarget <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
 
             if (uint32_t(level) > FloorLog2(mContext->mGLMaxCubeMapTextureSize))
-                return mContext->ErrorInvalidValue("%s: `level` is too large.", funcName);
+                return mContext->ErrorInvalidValue("`level` is too large.");
         }
     } else if (level != 0) {
-        return mContext->ErrorInvalidValue("%s: `level` must be 0.", funcName);
+        return mContext->ErrorInvalidValue("`level` must be 0.");
     }
 
     // End of validation.
 
     if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        mDepthAttachment.SetTexImage(funcName, tex, texImageTarget, level);
-        mStencilAttachment.SetTexImage(funcName, tex, texImageTarget, level);
+        mDepthAttachment.SetTexImage(tex, texImageTarget, level);
+        mStencilAttachment.SetTexImage(tex, texImageTarget, level);
     } else {
-        attach->SetTexImage(funcName, tex, texImageTarget, level);
+        attach->SetTexImage(tex, texImageTarget, level);
     }
 
-    InvalidateFramebufferStatus(funcName);
+    InvalidateFramebufferStatus();
 }
 
 void
-WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnum,
+WebGLFramebuffer::FramebufferTextureLayer(GLenum attachEnum,
                                           WebGLTexture* tex, GLint level, GLint layer)
 {
     MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
@@ -1501,27 +1490,26 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
     // `attachment`
     const auto maybeAttach = GetAttachPoint(attachEnum);
     if (!maybeAttach || !maybeAttach.value()) {
-        mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
+        mContext->ErrorInvalidEnum("Bad `attachment`: 0x%x.", attachEnum);
         return;
     }
     const auto& attach = maybeAttach.value();
 
     // `level`, `layer`
     if (layer < 0)
-        return mContext->ErrorInvalidValue("%s: `layer` must be >= 0.", funcName);
+        return mContext->ErrorInvalidValue("`layer` must be >= 0.");
 
     if (level < 0)
-        return mContext->ErrorInvalidValue("%s: `level` must be >= 0.", funcName);
+        return mContext->ErrorInvalidValue("`level` must be >= 0.");
 
     // `texture`
     GLenum texImageTarget = LOCAL_GL_TEXTURE_3D;
     if (tex) {
-        if (!mContext->ValidateObject("framebufferTextureLayer: texture", *tex))
+        if (!mContext->ValidateObject("texture", *tex))
             return;
 
         if (!tex->HasEverBeenBound()) {
-            mContext->ErrorInvalidOperation("%s: `texture` has never been bound.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("`texture` has never been bound.");
             return;
         }
 
@@ -1529,13 +1517,13 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
         switch (texImageTarget) {
         case LOCAL_GL_TEXTURE_3D:
             if (uint32_t(layer) >= mContext->mGLMax3DTextureSize) {
-                mContext->ErrorInvalidValue("%s: `layer` must be < %s.", funcName,
+                mContext->ErrorInvalidValue("`layer` must be < %s.",
                                             "MAX_3D_TEXTURE_SIZE");
                 return;
             }
 
             if (uint32_t(level) > FloorLog2(mContext->mGLMax3DTextureSize)) {
-                mContext->ErrorInvalidValue("%s: `level` must be <= log2(%s).", funcName,
+                mContext->ErrorInvalidValue("`level` must be <= log2(%s).",
                                             "MAX_3D_TEXTURE_SIZE");
                 return;
             }
@@ -1543,22 +1531,21 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
 
         case LOCAL_GL_TEXTURE_2D_ARRAY:
             if (uint32_t(layer) >= mContext->mGLMaxArrayTextureLayers) {
-                mContext->ErrorInvalidValue("%s: `layer` must be < %s.", funcName,
+                mContext->ErrorInvalidValue("`layer` must be < %s.",
                                             "MAX_ARRAY_TEXTURE_LAYERS");
                 return;
             }
 
             if (uint32_t(level) > FloorLog2(mContext->mGLMaxTextureSize)) {
-                mContext->ErrorInvalidValue("%s: `level` must be <= log2(%s).", funcName,
+                mContext->ErrorInvalidValue("`level` must be <= log2(%s).",
                                             "MAX_TEXTURE_SIZE");
                 return;
             }
             break;
 
         default:
-            mContext->ErrorInvalidOperation("%s: `texture` must be a TEXTURE_3D or"
-                                            " TEXTURE_2D_ARRAY.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("`texture` must be a TEXTURE_3D or"
+                                            " TEXTURE_2D_ARRAY.");
             return;
         }
     }
@@ -1566,26 +1553,25 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
     // End of validation.
 
     if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        mDepthAttachment.SetTexImage(funcName, tex, texImageTarget, level, layer);
-        mStencilAttachment.SetTexImage(funcName, tex, texImageTarget, level, layer);
+        mDepthAttachment.SetTexImage(tex, texImageTarget, level, layer);
+        mStencilAttachment.SetTexImage(tex, texImageTarget, level, layer);
     } else {
-        attach->SetTexImage(funcName, tex, texImageTarget, level, layer);
+        attach->SetTexImage(tex, texImageTarget, level, layer);
     }
 
-    InvalidateFramebufferStatus(funcName);
+    InvalidateFramebufferStatus();
 }
 
 JS::Value
-WebGLFramebuffer::GetAttachmentParameter(const char* funcName, JSContext* cx,
+WebGLFramebuffer::GetAttachmentParameter(JSContext* cx,
                                          GLenum target, GLenum attachEnum, GLenum pname,
                                          ErrorResult* const out_error)
 {
     const auto maybeAttach = GetAttachPoint(attachEnum);
     if (!maybeAttach || attachEnum == LOCAL_GL_NONE) {
-        mContext->ErrorInvalidEnum("%s: Can only query COLOR_ATTACHMENTi,"
+        mContext->ErrorInvalidEnum("Can only query COLOR_ATTACHMENTi,"
                                    " DEPTH_ATTACHMENT, DEPTH_STENCIL_ATTACHMENT, or"
-                                   " STENCIL_ATTACHMENT for a framebuffer.",
-                                   funcName);
+                                   " STENCIL_ATTACHMENT for a framebuffer.");
         return JS::NullValue();
     }
     auto attach = maybeAttach.value();
@@ -1594,27 +1580,25 @@ WebGLFramebuffer::GetAttachmentParameter(const char* funcName, JSContext* cx,
         // There are a couple special rules for this one.
 
         if (pname == LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) {
-            mContext->ErrorInvalidOperation("%s: Querying"
+            mContext->ErrorInvalidOperation("Querying"
                                             " FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE"
                                             " against DEPTH_STENCIL_ATTACHMENT is an"
-                                            " error.",
-                                            funcName);
+                                            " error.");
             return JS::NullValue();
         }
 
         if (mDepthAttachment.Renderbuffer() != mStencilAttachment.Renderbuffer() ||
             mDepthAttachment.Texture() != mStencilAttachment.Texture())
         {
-            mContext->ErrorInvalidOperation("%s: DEPTH_ATTACHMENT and STENCIL_ATTACHMENT"
-                                            " have different objects bound.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("DEPTH_ATTACHMENT and STENCIL_ATTACHMENT"
+                                            " have different objects bound.");
             return JS::NullValue();
         }
 
         attach = &mDepthAttachment;
     }
 
-    return attach->GetParameter(funcName, mContext, cx, target, attachEnum, pname,
+    return attach->GetParameter(mContext, cx, target, attachEnum, pname,
                                 out_error);
 }
 
@@ -1653,7 +1637,6 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
                                   GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                                   GLbitfield mask, GLenum filter)
 {
-    const char funcName[] = "blitFramebuffer";
     const auto& gl = webgl->gl;
 
     const auto& srcFB = webgl->mBoundReadFramebuffer;
@@ -1803,17 +1786,15 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
             if (type == webgl::ComponentType::Int ||
                 type == webgl::ComponentType::UInt)
             {
-                webgl->ErrorInvalidOperation("%s: `filter` is LINEAR and READ_BUFFER"
-                                             " contains integer data.",
-                                             funcName);
+                webgl->ErrorInvalidOperation("`filter` is LINEAR and READ_BUFFER"
+                                             " contains integer data.");
                 return;
             }
         }
 
         if (!colorTypesMatch) {
-            webgl->ErrorInvalidOperation("%s: Color component types (fixed/float/uint/"
-                                         "int) must match.",
-                                         funcName);
+            webgl->ErrorInvalidOperation("Color component types (fixed/float/uint/"
+                                         "int) must match.");
             return;
         }
     }
@@ -1823,9 +1804,8 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
     if (bool(mask & depthAndStencilBits) &&
         filter != LOCAL_GL_NEAREST)
     {
-        webgl->ErrorInvalidOperation("%s: DEPTH_BUFFER_BIT and STENCIL_BUFFER_BIT can"
-                                     " only be used with NEAREST filtering.",
-                                     funcName);
+        webgl->ErrorInvalidOperation("DEPTH_BUFFER_BIT and STENCIL_BUFFER_BIT can"
+                                     " only be used with NEAREST filtering.");
         return;
     }
 
@@ -1841,25 +1821,22 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
     if (mask & LOCAL_GL_DEPTH_BUFFER_BIT &&
         dstDepthFormat && dstDepthFormat != srcDepthFormat)
     {
-        webgl->ErrorInvalidOperation("%s: Depth buffer formats must match if selected.",
-                                     funcName);
+        webgl->ErrorInvalidOperation("Depth buffer formats must match if selected.");
         return;
     }
 
     if (mask & LOCAL_GL_STENCIL_BUFFER_BIT &&
         dstStencilFormat && dstStencilFormat != srcStencilFormat)
     {
-        webgl->ErrorInvalidOperation("%s: Stencil buffer formats must match if selected.",
-                                     funcName);
+        webgl->ErrorInvalidOperation("Stencil buffer formats must match if selected.");
         return;
     }
 
     ////
 
     if (dstHasSamples) {
-        webgl->ErrorInvalidOperation("%s: DRAW_FRAMEBUFFER may not have multiple"
-                                     " samples.",
-                                     funcName);
+        webgl->ErrorInvalidOperation("DRAW_FRAMEBUFFER may not have multiple"
+                                     " samples.");
         return;
     }
 
@@ -1867,10 +1844,9 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
         if (mask & LOCAL_GL_COLOR_BUFFER_BIT &&
             dstHasColor && !colorFormatsMatch)
         {
-            webgl->ErrorInvalidOperation("%s: Color buffer formats must match if"
+            webgl->ErrorInvalidOperation("Color buffer formats must match if"
                                          " selected, when reading from a multisampled"
-                                         " source.",
-                                         funcName);
+                                         " source.");
             return;
         }
 
@@ -1879,9 +1855,8 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
             dstY0 != srcY0 ||
             dstY1 != srcY1)
         {
-            webgl->ErrorInvalidOperation("%s: If the source is multisampled, then the"
-                                         " source and dest regions must match exactly.",
-                                         funcName);
+            webgl->ErrorInvalidOperation("If the source is multisampled, then the"
+                                         " source and dest regions must match exactly.");
             return;
         }
     }
@@ -1915,13 +1890,13 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
         }
 
         if (feedback) {
-            webgl->ErrorInvalidOperation("%s: Feedback detected into DRAW_FRAMEBUFFER's"
+            webgl->ErrorInvalidOperation("Feedback detected into DRAW_FRAMEBUFFER's"
                                          " 0x%04x attachment.",
-                                         funcName, feedback->mAttachmentPoint);
+                                         feedback->mAttachmentPoint);
             return;
         }
     } else if (!srcFB && !dstFB) {
-        webgl->ErrorInvalidOperation("%s: Feedback with default framebuffer.", funcName);
+        webgl->ErrorInvalidOperation("Feedback with default framebuffer.");
         return;
     }
 

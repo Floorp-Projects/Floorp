@@ -50,7 +50,7 @@ WebGLSampler::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 }
 
 static bool
-ValidateSamplerParameterParams(WebGLContext* webgl, const char* funcName, GLenum pname,
+ValidateSamplerParameterParams(WebGLContext* webgl, GLenum pname,
                                const FloatOrInt& param)
 {
     const auto& paramInt = param.i;
@@ -129,19 +129,18 @@ ValidateSamplerParameterParams(WebGLContext* webgl, const char* funcName, GLenum
         break;
 
     default:
-        webgl->ErrorInvalidEnumArg(funcName, "pname", pname);
+        webgl->ErrorInvalidEnumInfo("pname", pname);
         return false;
     }
 
-    webgl->ErrorInvalidEnumArg(funcName, "param", paramInt);
+    webgl->ErrorInvalidEnumInfo("param", paramInt);
     return false;
 }
 
 void
-WebGLSampler::SamplerParameter(const char* funcName, GLenum pname,
-                               const FloatOrInt& param)
+WebGLSampler::SamplerParameter(GLenum pname, const FloatOrInt& param)
 {
-    if (!ValidateSamplerParameterParams(mContext, funcName, pname, param))
+    if (!ValidateSamplerParameterParams(mContext, pname, param))
         return;
 
     switch (pname) {

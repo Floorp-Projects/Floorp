@@ -26,7 +26,7 @@ class WebGLTransformFeedback final
     friend class WebGLProgram;
 
     friend const webgl::CachedDrawFetchLimits*
-        ValidateDraw(WebGLContext*, const char*, GLenum, uint32_t);
+        ValidateDraw(WebGLContext*, GLenum, uint32_t);
 
 public:
     const GLuint mGLName;
