@@ -1642,53 +1642,6 @@ nsDiscriminatedUnion::Traverse(nsCycleCollectionTraversalCallback& aCb) const
 nsVariantBase::nsVariantBase()
   : mWritable(true)
 {
-#ifdef DEBUG
-  {
-    // Assert that the nsIDataType consts match the values #defined in
-    // xptinfo.h. Bad things happen somewhere if they don't.
-    struct THE_TYPES
-    {
-      uint16_t a;
-      uint16_t b;
-    };
-    static const THE_TYPES array[] = {
-      {nsIDataType::VTYPE_INT8              , TD_INT8             },
-      {nsIDataType::VTYPE_INT16             , TD_INT16            },
-      {nsIDataType::VTYPE_INT32             , TD_INT32            },
-      {nsIDataType::VTYPE_INT64             , TD_INT64            },
-      {nsIDataType::VTYPE_UINT8             , TD_UINT8            },
-      {nsIDataType::VTYPE_UINT16            , TD_UINT16           },
-      {nsIDataType::VTYPE_UINT32            , TD_UINT32           },
-      {nsIDataType::VTYPE_UINT64            , TD_UINT64           },
-      {nsIDataType::VTYPE_FLOAT             , TD_FLOAT            },
-      {nsIDataType::VTYPE_DOUBLE            , TD_DOUBLE           },
-      {nsIDataType::VTYPE_BOOL              , TD_BOOL             },
-      {nsIDataType::VTYPE_CHAR              , TD_CHAR             },
-      {nsIDataType::VTYPE_WCHAR             , TD_WCHAR            },
-      {nsIDataType::VTYPE_VOID              , TD_VOID             },
-      {nsIDataType::VTYPE_ID                , TD_PNSIID           },
-      {nsIDataType::VTYPE_DOMSTRING         , TD_DOMSTRING        },
-      {nsIDataType::VTYPE_CHAR_STR          , TD_PSTRING          },
-      {nsIDataType::VTYPE_WCHAR_STR         , TD_PWSTRING         },
-      {nsIDataType::VTYPE_INTERFACE         , TD_INTERFACE_TYPE   },
-      {nsIDataType::VTYPE_INTERFACE_IS      , TD_INTERFACE_IS_TYPE},
-      {nsIDataType::VTYPE_ARRAY             , TD_ARRAY            },
-      {nsIDataType::VTYPE_STRING_SIZE_IS    , TD_PSTRING_SIZE_IS  },
-      {nsIDataType::VTYPE_WSTRING_SIZE_IS   , TD_PWSTRING_SIZE_IS },
-      {nsIDataType::VTYPE_UTF8STRING        , TD_UTF8STRING       },
-      {nsIDataType::VTYPE_CSTRING           , TD_CSTRING          },
-      {nsIDataType::VTYPE_ASTRING           , TD_ASTRING          }
-    };
-    static const int length = sizeof(array) / sizeof(array[0]);
-    static bool inited = false;
-    if (!inited) {
-      for (int i = 0; i < length; ++i) {
-        NS_ASSERTION(array[i].a == array[i].b, "bad const declaration");
-      }
-      inited = true;
-    }
-  }
-#endif
 }
 
 // For all the data getters we just forward to the static (and sharable)

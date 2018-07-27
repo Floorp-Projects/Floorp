@@ -171,23 +171,6 @@ static bool isAxisAligned(const SkScalerContextRec& rec) {
 
 class SkCairoFTTypeface : public SkTypeface {
 public:
-    static SkTypeface* CreateTypeface(cairo_font_face_t* fontFace, FT_Face face,
-                                      FcPattern* pattern = nullptr) {
-        SkASSERT(fontFace != nullptr);
-        SkASSERT(cairo_font_face_get_type(fontFace) == CAIRO_FONT_TYPE_FT);
-        SkASSERT(face != nullptr);
-
-        SkFontStyle style(face->style_flags & FT_STYLE_FLAG_BOLD ?
-                              SkFontStyle::kBold_Weight : SkFontStyle::kNormal_Weight,
-                          SkFontStyle::kNormal_Width,
-                          face->style_flags & FT_STYLE_FLAG_ITALIC ?
-                              SkFontStyle::kItalic_Slant : SkFontStyle::kUpright_Slant);
-
-        bool isFixedWidth = face->face_flags & FT_FACE_FLAG_FIXED_WIDTH;
-
-        return new SkCairoFTTypeface(style, isFixedWidth, fontFace, pattern);
-    }
-
     virtual SkStreamAsset* onOpenStream(int*) const override { return nullptr; }
 
     virtual std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override
@@ -271,11 +254,8 @@ public:
         return 0;
     }
 
-private:
-
-    SkCairoFTTypeface(const SkFontStyle& style, bool isFixedWidth,
-                      cairo_font_face_t* fontFace, FcPattern* pattern)
-        : SkTypeface(style, isFixedWidth)
+    SkCairoFTTypeface(cairo_font_face_t* fontFace, FcPattern* pattern)
+        : SkTypeface(SkFontStyle::Normal())
         , fFontFace(fontFace)
         , fPattern(pattern)
     {
@@ -288,6 +268,7 @@ private:
 #endif
     }
 
+private:
     ~SkCairoFTTypeface()
     {
         cairo_font_face_set_user_data(fFontFace, &kSkTypefaceKey, nullptr, nullptr);
@@ -307,16 +288,14 @@ SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* s
 {
     cairo_font_face_t* fontFace = cairo_scaled_font_get_font_face(scaledFont);
     SkASSERT(cairo_font_face_status(fontFace) == CAIRO_STATUS_SUCCESS);
+    SkASSERT(cairo_font_face_get_type(fontFace) == CAIRO_FONT_TYPE_FT);
 
     SkTypeface* typeface = reinterpret_cast<SkTypeface*>(cairo_font_face_get_user_data(fontFace, &kSkTypefaceKey));
     if (typeface) {
         typeface->ref();
     } else {
-        CairoLockedFTFace faceLock(scaledFont);
-        if (FT_Face face = faceLock.getFace()) {
-            typeface = SkCairoFTTypeface::CreateTypeface(fontFace, face, pattern);
-            SkTypefaceCache::Add(typeface);
-        }
+        typeface = new SkCairoFTTypeface(fontFace, pattern);
+        SkTypefaceCache::Add(typeface);
     }
 
     return typeface;

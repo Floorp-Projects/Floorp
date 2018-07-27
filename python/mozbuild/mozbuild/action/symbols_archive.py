@@ -12,12 +12,11 @@ from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
 import mozpack.path as mozpath
 
-def make_archive(archive_name, base, exclude, include, compress):
+def make_archive(archive_name, base, exclude, include):
+    compress = ['**/*.sym']
     finder = FileFinder(base, ignore=exclude)
     if not include:
         include = ['*']
-    if not compress:
-        compress = ['**/*.sym']
     archive_basename = os.path.basename(archive_name)
     with open(archive_name, 'wb') as fh:
         with JarWriter(fileobj=fh, optimize=False, compress_level=5) as writer:
@@ -32,13 +31,21 @@ def main(argv):
     parser = argparse.ArgumentParser(description='Produce a symbols archive')
     parser.add_argument('archive', help='Which archive to generate')
     parser.add_argument('base', help='Base directory to package')
-    parser.add_argument('--exclude', default=[], action='append', help='File patterns to exclude')
-    parser.add_argument('--include', default=[], action='append', help='File patterns to include')
-    parser.add_argument('--compress', default=[], action='append', help='File patterns to compress')
+    parser.add_argument('--full-archive', action='store_true', help='Generate a full symbol archive')
 
     args = parser.parse_args(argv)
 
-    make_archive(args.archive, args.base, args.exclude, args.include, args.compress)
+    excludes = []
+    includes = []
+
+    if args.full_archive:
+        # We allow symbols for tests to be included when building on try
+        if os.environ.get('MH_BRANCH', 'unknown') != 'try':
+            excludes = ['*test*', '*Test*']
+    else:
+        includes = ['**/*.sym']
+
+    make_archive(args.archive, args.base, excludes, includes)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

@@ -65,20 +65,20 @@ namespace net {
 HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
                                      nsILoadContext* aLoadContext,
                                      PBOverrideStatus aOverrideStatus)
-  : mIPCClosed(false)
+  : mLoadContext(aLoadContext)
+  , mNestedFrameId(0)
+  , mIPCClosed(false)
+  , mPBOverride(aOverrideStatus)
+  , mStatus(NS_OK)
   , mIgnoreProgress(false)
   , mSentRedirect1BeginFailed(false)
   , mReceivedRedirect2Verify(false)
-  , mPBOverride(aOverrideStatus)
-  , mLoadContext(aLoadContext)
-  , mStatus(NS_OK)
   , mPendingDiversion(false)
   , mDivertingFromChild(false)
   , mDivertedOnStartRequest(false)
   , mSuspendedForDiversion(false)
   , mSuspendAfterSynthesizeResponse(false)
   , mWillSynthesizeResponse(false)
-  , mNestedFrameId(0)
 {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
 

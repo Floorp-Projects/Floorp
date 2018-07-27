@@ -657,7 +657,10 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 	 */
 	if (unscaled->faces && unscaled->faces->unscaled == NULL) {
 	    assert (unscaled->faces->next == NULL);
+	    // Guard user-data destruction with the unscaled font mutex.
+	    CAIRO_MUTEX_LOCK (unscaled->mutex);
 	    cairo_font_face_destroy (&unscaled->faces->base);
+	    CAIRO_MUTEX_UNLOCK (unscaled->mutex);
 	}
     } else {
 	_font_map_release_face_lock_held (font_map, unscaled);
@@ -2758,6 +2761,9 @@ _cairo_ft_font_face_destroy (void *abstract_face)
 	    last_face = tmp_face;
 	}
 
+	// Ensure user-data destruction happens within the unscaled font mutex.
+	_cairo_user_data_array_fini (&font_face->base.user_data);
+
 	CAIRO_MUTEX_UNLOCK (font_face->unscaled->mutex);
 	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
 	font_face->unscaled = NULL;
@@ -2828,6 +2834,24 @@ _cairo_ft_font_face_get_implementation (void                     *abstract_face,
     return abstract_face;
 }
 
+static void
+_cairo_ft_font_face_lock (void *abstract_face)
+{
+    cairo_ft_font_face_t *font_face = abstract_face;
+    if (font_face->unscaled) {
+	CAIRO_MUTEX_LOCK (font_face->unscaled->mutex);
+    }
+}
+
+static void
+_cairo_ft_font_face_unlock (void *abstract_face)
+{
+    cairo_ft_font_face_t *font_face = abstract_face;
+    if (font_face->unscaled) {
+	CAIRO_MUTEX_UNLOCK (font_face->unscaled->mutex);
+    }
+}
+
 const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
     CAIRO_FONT_TYPE_FT,
 #if CAIRO_HAS_FC_FONT
@@ -2837,7 +2861,9 @@ const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
 #endif
     _cairo_ft_font_face_destroy,
     _cairo_ft_font_face_scaled_font_create,
-    _cairo_ft_font_face_get_implementation
+    _cairo_ft_font_face_get_implementation,
+    _cairo_ft_font_face_lock,
+    _cairo_ft_font_face_unlock
 };
 
 #if CAIRO_HAS_FC_FONT
@@ -2925,6 +2951,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 	/* This "zombie" font_face (from _cairo_ft_font_face_destroy)
 	 * is no longer needed. */
 	assert (unscaled->from_face && unscaled->faces->next == NULL);
+	// The unscaled font mutex is held, so destroying user data is safe inside here.
 	cairo_font_face_destroy (&unscaled->faces->base);
 	unscaled->faces = NULL;
     }

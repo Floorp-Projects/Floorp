@@ -195,19 +195,6 @@ protected:
   NS_IMETHOD LogBlockedCORSRequest(const nsAString & aMessage, const nsACString& aCategory) override;
 
 private:
-  // this section is for main-thread-only object
-  // all the references need to be proxy released on main thread.
-  uint32_t mCacheKey;
-  nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
-  RefPtr<InterceptStreamListener> mInterceptListener;
-  // Needed to call AsyncOpen in FinishInterceptedRedirect
-  nsCOMPtr<nsIStreamListener> mInterceptedRedirectListener;
-  nsCOMPtr<nsISupports> mInterceptedRedirectContext;
-
-  // Proxy release all members above on main thread.
-  void ReleaseMainThreadOnlyReferences();
-
-private:
 
   class OverrideRunnable : public Runnable {
   public:
@@ -299,77 +286,28 @@ private:
   void
   MaybeCallSynthesizedCallback();
 
+private:
+  // this section is for main-thread-only object
+  // all the references need to be proxy released on main thread.
+  nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
+  RefPtr<InterceptStreamListener> mInterceptListener;
+  // Needed to call AsyncOpen in FinishInterceptedRedirect
+  nsCOMPtr<nsIStreamListener> mInterceptedRedirectListener;
+  nsCOMPtr<nsISupports> mInterceptedRedirectContext;
+
+  // Proxy release all members above on main thread.
+  void ReleaseMainThreadOnlyReferences();
+
+private:
+  nsCString mCachedCharset;
+  nsCString mProtocolVersion;
+
   RequestHeaderTuples mClientSetRequestHeaders;
   RefPtr<nsInputStreamPump> mSynthesizedResponsePump;
   nsCOMPtr<nsIInputStream> mSynthesizedInput;
   nsCOMPtr<nsIInterceptedBodyCallback> mSynthesizedCallback;
-  int64_t mSynthesizedStreamLength;
-
-  bool mIsFromCache;
-  bool mCacheEntryAvailable;
-  uint64_t mCacheEntryId;
-  bool mAltDataCacheEntryAvailable;
-  int32_t      mCacheFetchCount;
-  uint32_t     mCacheExpirationTime;
-  nsCString    mCachedCharset;
-
   nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
-
-  nsCString mProtocolVersion;
-
-  TimeStamp mLastStatusReported;
-
-  // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
-  bool mSendResumeAt;
-
-  // To ensure only one SendDeletingChannel is triggered.
-  Atomic<bool> mDeletingChannelSent;
-
-  Atomic<bool> mIPCOpen;
-  bool mKeptAlive;            // IPC kept open, but only for security info
   RefPtr<ChannelEventQueue> mEventQ;
-
-  // If nsUnknownDecoder is involved OnStartRequest call will be delayed and
-  // this queue keeps OnDataAvailable data until OnStartRequest is finally
-  // called.
-  nsTArray<UniquePtr<ChannelEvent>> mUnknownDecoderEventQ;
-  Atomic<bool, ReleaseAcquire> mUnknownDecoderInvolved;
-
-  // Once set, OnData and possibly OnStop will be diverted to the parent.
-  Atomic<bool, ReleaseAcquire> mDivertingToParent;
-  // Once set, no OnStart/OnData/OnStop callbacks should be received from the
-  // parent channel, nor dequeued from the ChannelEventQueue.
-  Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
-  // Set if SendSuspend is called. Determines if SendResume is needed when
-  // diverting callbacks to parent.
-  bool mSuspendSent;
-
-  // Set if a response was synthesized, indicating that any forthcoming redirects
-  // should be intercepted.
-  bool mSynthesizedResponse;
-
-  // Set if a synthesized response should cause us to explictly allows intercepting
-  // an expected forthcoming redirect.
-  bool mShouldInterceptSubsequentRedirect;
-  // Set if a redirection is being initiated to facilitate providing a synthesized
-  // response to a channel using a different principal than the current one.
-  bool mRedirectingForSubsequentSynthesizedResponse;
-
-  // Set if a manual redirect mode channel needs to be intercepted in the
-  // parent.
-  bool mPostRedirectChannelShouldIntercept;
-  // Set if a manual redirect mode channel needs to be upgraded to a secure URI
-  // when it's being considered for interception.  Can only be true if
-  // mPostRedirectChannelShouldIntercept is true.
-  bool mPostRedirectChannelShouldUpgrade;
-
-  // Set if the corresponding parent channel should force an interception to occur
-  // before the network transaction is initiated.
-  bool mShouldParentIntercept;
-
-  // Set if the corresponding parent channel should suspend after a response
-  // is synthesized.
-  bool mSuspendParentAfterSynthesizeResponse;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
   Mutex mBgChildMutex;
@@ -393,6 +331,77 @@ private:
   nsCOMPtr<nsIEventTarget> mODATarget;
   // Used to ensure atomicity of mNeckoTarget / mODATarget;
   Mutex mEventTargetMutex;
+
+  // If nsUnknownDecoder is involved OnStartRequest call will be delayed and
+  // this queue keeps OnDataAvailable data until OnStartRequest is finally
+  // called.
+  nsTArray<UniquePtr<ChannelEvent>> mUnknownDecoderEventQ;
+
+  TimeStamp mLastStatusReported;
+
+  int64_t mSynthesizedStreamLength;
+  uint64_t mCacheEntryId;
+
+  // The result of RetargetDeliveryTo for this channel.
+  // |notRequested| represents OMT is not requested by the channel owner.
+  LABELS_HTTP_CHILD_OMT_STATS mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::notRequested;
+
+  uint32_t mCacheKey;
+  int32_t mCacheFetchCount;
+  uint32_t mCacheExpirationTime;
+
+  // To ensure only one SendDeletingChannel is triggered.
+  Atomic<bool> mDeletingChannelSent;
+
+  Atomic<bool> mIPCOpen;
+
+  Atomic<bool, ReleaseAcquire> mUnknownDecoderInvolved;
+
+  // Once set, OnData and possibly OnStop will be diverted to the parent.
+  Atomic<bool, ReleaseAcquire> mDivertingToParent;
+  // Once set, no OnStart/OnData/OnStop callbacks should be received from the
+  // parent channel, nor dequeued from the ChannelEventQueue.
+  Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
+
+  uint8_t mIsFromCache : 1;
+  uint8_t mCacheEntryAvailable : 1;
+  uint8_t mAltDataCacheEntryAvailable : 1;
+
+  // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
+  uint8_t mSendResumeAt : 1;
+
+  uint8_t mKeptAlive : 1; // IPC kept open, but only for security info
+
+  // Set if SendSuspend is called. Determines if SendResume is needed when
+  // diverting callbacks to parent.
+  uint8_t mSuspendSent : 1;
+
+  // Set if a response was synthesized, indicating that any forthcoming redirects
+  // should be intercepted.
+  uint8_t mSynthesizedResponse : 1;
+
+  // Set if a synthesized response should cause us to explictly allows intercepting
+  // an expected forthcoming redirect.
+  uint8_t mShouldInterceptSubsequentRedirect : 1;
+  // Set if a redirection is being initiated to facilitate providing a synthesized
+  // response to a channel using a different principal than the current one.
+  uint8_t mRedirectingForSubsequentSynthesizedResponse : 1;
+
+  // Set if a manual redirect mode channel needs to be intercepted in the
+  // parent.
+  uint8_t mPostRedirectChannelShouldIntercept : 1;
+  // Set if a manual redirect mode channel needs to be upgraded to a secure URI
+  // when it's being considered for interception.  Can only be true if
+  // mPostRedirectChannelShouldIntercept is true.
+  uint8_t mPostRedirectChannelShouldUpgrade : 1;
+
+  // Set if the corresponding parent channel should force an interception to occur
+  // before the network transaction is initiated.
+  uint8_t mShouldParentIntercept : 1;
+
+  // Set if the corresponding parent channel should suspend after a response
+  // is synthesized.
+  uint8_t mSuspendParentAfterSynthesizeResponse : 1;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
@@ -465,10 +474,6 @@ private:
 
   // Collect telemetry for the successful rate of OMT.
   void CollectOMTTelemetry();
-
-  // The result of RetargetDeliveryTo for this channel.
-  // |notRequested| represents OMT is not requested by the channel owner.
-  LABELS_HTTP_CHILD_OMT_STATS mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::notRequested;
 
   friend class AssociateApplicationCacheEvent;
   friend class StartRequestEvent;

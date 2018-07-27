@@ -33,7 +33,7 @@ add_task(function test_URI_with_resolved() {
     is(gBrowser._isLocalAboutURI(URI, resolvedURI), expect, description);
   };
   check("about:newtab",
-    "jar:file:///Applications/Firefox.app/Contents/Resources/browser/features/activity-stream@mozilla.org.xpi!/chrome/content/data/content/activity-stream.html",
+    "jar:file:///Applications/Firefox.app/Contents/Resources/browser/omni.ja!/chrome/browser/res/activity-stream/prerendered/en-US/activity-stream.html",
     true,
     "about:newtab with jar is local");
   check("about:newtab",
