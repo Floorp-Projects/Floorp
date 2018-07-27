@@ -185,6 +185,10 @@ ifdef NSS_SEED_ONLY_DEV_URANDOM
 DEFINES += -DSEED_ONLY_DEV_URANDOM
 endif
 
+ifdef NSS_PKCS1_AllowMissingParameters
+DEFINES += -DNSS_PKCS1_AllowMissingParameters
+endif
+
 # Avoid building object leak test code for optimized library
 ifndef BUILD_OPT
 ifdef PKIX_OBJECT_LEAK_TEST
