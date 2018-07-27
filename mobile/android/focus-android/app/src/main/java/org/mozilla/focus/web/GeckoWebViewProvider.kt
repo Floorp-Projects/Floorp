@@ -180,7 +180,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         override fun loadUrl(url: String) {
             currentUrl = url
             geckoSession.loadUri(currentUrl)
-            callback?.onProgress(firstProgress)
+            callback?.onProgress(TEN_PROGRESS)
         }
 
         override fun cleanup() {
@@ -254,7 +254,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoRuntime!!.settings.trackingProtectionCategories = categories
         }
 
-        @Suppress("ComplexMethod")
+        @Suppress("ComplexMethod", "ReturnCount")
         private fun createContentDelegate(): GeckoSession.ContentDelegate {
             return object : GeckoSession.ContentDelegate {
                 override fun onTitleChange(session: GeckoSession, title: String) {
@@ -307,7 +307,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     }
 
                     val download = Download(
-                        response.uri, userAgent,
+                        response.uri, USER_AGENT,
                         response.filename, response.contentType, response.contentLength,
                         Environment.DIRECTORY_DOWNLOADS
                     )
@@ -338,7 +338,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 override fun onPageStart(session: GeckoSession, url: String) {
                     callback?.onPageStarted(url)
                     callback?.resetBlockedTrackers()
-                    callback?.onProgress(quarterProgress)
+                    callback?.onProgress(QUARTER_PROGRESS)
                     isSecure = false
                 }
 
@@ -349,7 +349,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                             isSecure = true
                         }
 
-                        callback?.onProgress(finalProgress)
+                        callback?.onProgress(FINAL_PROGRESS)
                         callback?.onPageFinished(isSecure)
                     }
                 }
@@ -589,10 +589,10 @@ class GeckoWebViewProvider : IWebViewProvider {
         private var geckoRuntime: GeckoRuntime? = null
         private var internalAboutData: String? = null
         private var internalRightsData: String? = null
-        private const val firstProgress = 10
-        private const val quarterProgress = 25
-        private const val finalProgress = 100
-        private const val userAgent =
+        private const val TEN_PROGRESS = 10
+        private const val QUARTER_PROGRESS = 25
+        private const val FINAL_PROGRESS = 100
+        private const val USER_AGENT =
             "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0"
     }
 }
