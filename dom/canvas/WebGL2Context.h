@@ -82,8 +82,12 @@ public:
     void GetInternalformatParameter(JSContext*, GLenum target, GLenum internalformat,
                                     GLenum pname, JS::MutableHandleValue retval,
                                     ErrorResult& rv);
-    void RenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat,
-                                        GLsizei width, GLsizei height);
+    void RenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalFormat,
+                                        GLsizei width, GLsizei height)
+    {
+        const FuncScope funcScope(*this, "renderbufferStorageMultisample");
+        RenderbufferStorage_base(target, samples, internalFormat, width, height);
+    }
 
 
     // -------------------------------------------------------------------------
@@ -92,24 +96,22 @@ public:
     void TexStorage2D(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width,
                       GLsizei height)
     {
-        const char funcName[] = "TexStorage2D";
+        const FuncScope funcScope(*this, "TexStorage2D");
         const uint8_t funcDims = 2;
         const GLsizei depth = 1;
-        TexStorage(funcName, funcDims, target, levels, internalFormat, width, height,
-                   depth);
+        TexStorage(funcDims, target, levels, internalFormat, width, height, depth);
     }
 
     void TexStorage3D(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width,
                       GLsizei height, GLsizei depth)
     {
-        const char funcName[] = "TexStorage3D";
+        const FuncScope funcScope(*this, "TexStorage3D");
         const uint8_t funcDims = 3;
-        TexStorage(funcName, funcDims, target, levels, internalFormat, width, height,
-                   depth);
+        TexStorage(funcDims, target, levels, internalFormat, width, height, depth);
     }
 
 protected:
-    void TexStorage(const char* funcName, uint8_t funcDims, GLenum target, GLsizei levels,
+    void TexStorage(uint8_t funcDims, GLenum target, GLsizei levels,
                     GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth);
 
     ////////////////////////////////////
@@ -119,10 +121,10 @@ public:
                               GLsizei width, GLsizei height, GLsizei depth, GLint border,
                               GLsizei imageSize, WebGLintptr offset)
     {
-        const char funcName[] = "compressedTexImage3D";
+        const FuncScope funcScope(*this, "compressedTexImage3D");
         const uint8_t funcDims = 3;
         const TexImageSourceAdapter src(&offset, 0, 0);
-        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
+        CompressedTexImage(funcDims, target, level, internalFormat, width,
                            height, depth, border, src, Some(imageSize));
     }
 
@@ -132,10 +134,10 @@ public:
                               const T& anySrc, GLuint viewElemOffset = 0,
                               GLuint viewElemLengthOverride = 0)
     {
-        const char funcName[] = "compressedTexImage3D";
+        const FuncScope funcScope(*this, "compressedTexImage3D");
         const uint8_t funcDims = 3;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
-        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
+        CompressedTexImage(funcDims, target, level, internalFormat, width,
                            height, depth, border, src, Nothing());
     }
 
@@ -144,10 +146,10 @@ public:
                                  GLsizei depth, GLenum unpackFormat,
                                  GLsizei imageSize, WebGLintptr offset)
     {
-        const char funcName[] = "compressedTexSubImage3D";
+        const FuncScope funcScope(*this, "compressedTexSubImage3D");
         const uint8_t funcDims = 3;
         const TexImageSourceAdapter src(&offset, 0, 0);
-        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
+        CompressedTexSubImage(funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src, Some(imageSize));
     }
 
@@ -158,10 +160,10 @@ public:
                                  GLuint viewElemOffset = 0,
                                  GLuint viewElemLengthOverride = 0)
     {
-        const char funcName[] = "compressedTexSubImage3D";
+        const FuncScope funcScope(*this, "compressedTexSubImage3D");
         const uint8_t funcDims = 3;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
-        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
+        CompressedTexSubImage(funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src, Nothing());
     }
 
@@ -171,9 +173,9 @@ public:
                            GLint zOffset, GLint x, GLint y, GLsizei width,
                            GLsizei height)
     {
-        const char funcName[] = "copyTexSubImage3D";
+        const FuncScope funcScope(*this, "copyTexSubImage3D");
         const uint8_t funcDims = 3;
-        CopyTexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset,
+        CopyTexSubImage(funcDims, target, level, xOffset, yOffset, zOffset,
                         x, y, width, height);
     }
 
@@ -204,9 +206,9 @@ protected:
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
                     GLenum unpackType, const TexImageSource& src)
     {
-        const char funcName[] = "texImage3D";
+        const FuncScope funcScope(*this, "texImage3D");
         const uint8_t funcDims = 3;
-        TexImage(funcName, funcDims, target, level, internalFormat, width, height, depth,
+        TexImage(funcDims, target, level, internalFormat, width, height, depth,
                  border, unpackFormat, unpackType, src);
     }
 
@@ -230,10 +232,11 @@ public:
                        const dom::Nullable<dom::ArrayBufferView>& maybeSrcView,
                        GLuint srcElemOffset, ErrorResult&)
     {
+        const FuncScope funcScope(*this, "texSubImage3D");
         if (IsContextLost())
             return;
 
-        if (!ValidateNonNull("texSubImage3D", maybeSrcView))
+        if (!ValidateNonNull("src", maybeSrcView))
             return;
         const auto& srcView = maybeSrcView.Value();
 
@@ -247,9 +250,9 @@ protected:
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLenum unpackFormat, GLenum unpackType, const TexImageSource& src)
     {
-        const char funcName[] = "texSubImage3D";
+        const FuncScope funcScope(*this, "texSubImage3D");
         const uint8_t funcDims = 3;
-        TexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset, width,
+        TexSubImage(funcDims, target, level, xOffset, yOffset, zOffset, width,
                     height, depth, unpackFormat, unpackType, src);
     }
 
@@ -265,24 +268,23 @@ public:
     void VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride,
                               WebGLintptr byteOffset)
     {
-        const char funcName[] = "vertexAttribIPointer";
+        const FuncScope funcScope(*this, "vertexAttribIPointer");
         const bool isFuncInt = true;
         const bool normalized = false;
-        VertexAttribAnyPointer(funcName, isFuncInt, index, size, type, normalized, stride,
+        VertexAttribAnyPointer(isFuncInt, index, size, type, normalized, stride,
                                byteOffset);
     }
 
     ////////////////
 
     // GL 3.0 & ES 3.0
-    void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w,
-                         const char* funcName = nullptr);
-    void VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w,
-                          const char* funcName = nullptr);
+    void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
+    void VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
 
     void VertexAttribI4iv(GLuint index, const Int32ListU& list) {
+        const FuncScope funcScope(*this, "VertexAttribI4iv");
         const auto& arr = Int32Arr::From(list);
-        if (!ValidateAttribArraySetter("vertexAttribI4iv", 4, arr.elemCount))
+        if (!ValidateAttribArraySetter(4, arr.elemCount))
             return;
 
         const auto& itr = arr.elemBytes;
@@ -290,8 +292,9 @@ public:
     }
 
     void VertexAttribI4uiv(GLuint index, const Uint32ListU& list) {
+        const FuncScope funcScope(*this, "vertexAttribI4uiv");
         const auto& arr = Uint32Arr::From(list);
-        if (!ValidateAttribArraySetter("vertexAttribI4uiv", 4, arr.elemCount))
+        if (!ValidateAttribArraySetter(4, arr.elemCount))
             return;
 
         const auto& itr = arr.elemBytes;
@@ -310,16 +313,16 @@ public:
     void DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
                            GLenum type, WebGLintptr byteOffset)
     {
-        const char funcName[] = "drawRangeElements";
+        const FuncScope funcScope(*this, "drawRangeElements");
         if (IsContextLost())
             return;
 
         if (end < start) {
-            ErrorInvalidValue("%s: end must be >= start.", funcName);
+            ErrorInvalidValue("end must be >= start.");
             return;
         }
 
-        DrawElements(mode, count, type, byteOffset, funcName);
+        DrawElements(mode, count, type, byteOffset);
     }
 
     // ------------------------------------------------------------------------
@@ -329,7 +332,7 @@ public:
     */
 
 private:
-    bool ValidateClearBuffer(const char* funcName, GLenum buffer, GLint drawBuffer,
+    bool ValidateClearBuffer(GLenum buffer, GLint drawBuffer,
                              size_t availElemCount, GLuint elemOffset, GLenum funcType);
 
     void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32Arr& src,

@@ -16,16 +16,17 @@ namespace mozilla {
 already_AddRefed<WebGLSync>
 WebGL2Context::FenceSync(GLenum condition, GLbitfield flags)
 {
+    const FuncScope funcScope(*this, "fenceSync");
     if (IsContextLost())
         return nullptr;
 
     if (condition != LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE) {
-        ErrorInvalidEnum("fenceSync: condition must be SYNC_GPU_COMMANDS_COMPLETE");
+        ErrorInvalidEnum("condition must be SYNC_GPU_COMMANDS_COMPLETE");
         return nullptr;
     }
 
     if (flags != 0) {
-        ErrorInvalidValue("fenceSync: flags must be 0");
+        ErrorInvalidValue("flags must be 0");
         return nullptr;
     }
 
@@ -38,18 +39,17 @@ WebGL2Context::FenceSync(GLenum condition, GLbitfield flags)
 }
 
 bool
-WebGL2Context::IsSync(const WebGLSync* sync)
+WebGL2Context::IsSync(const WebGLSync* const sync)
 {
-    if (!ValidateIsObject("isSync", sync))
-        return false;
-
-    return true;
+    const FuncScope funcScope(*this, "isSync");
+    return ValidateIsObject(sync);
 }
 
 void
 WebGL2Context::DeleteSync(WebGLSync* sync)
 {
-    if (!ValidateDeleteObject("deleteSync", sync))
+    const FuncScope funcScope(*this, "deleteSync");
+    if (!ValidateDeleteObject(sync))
         return;
 
     sync->RequestDelete();
@@ -58,20 +58,20 @@ WebGL2Context::DeleteSync(WebGLSync* sync)
 GLenum
 WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 timeout)
 {
-    const char funcName[] = "clientWaitSync";
+    const FuncScope funcScope(*this, "clientWaitSync");
     if (IsContextLost())
         return LOCAL_GL_WAIT_FAILED;
 
-    if (!ValidateObject(funcName, sync))
+    if (!ValidateObject("sync", sync))
         return LOCAL_GL_WAIT_FAILED;
 
     if (flags != 0 && flags != LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT) {
-        ErrorInvalidValue("%s: `flags` must be SYNC_FLUSH_COMMANDS_BIT or 0.", funcName);
+        ErrorInvalidValue("`flags` must be SYNC_FLUSH_COMMANDS_BIT or 0.");
         return LOCAL_GL_WAIT_FAILED;
     }
 
     if (timeout > kMaxClientWaitSyncTimeoutNS) {
-        ErrorInvalidOperation("%s: `timeout` must not exceed %s nanoseconds.", funcName,
+        ErrorInvalidOperation("`timeout` must not exceed %s nanoseconds.",
                               "MAX_CLIENT_WAIT_TIMEOUT_WEBGL");
         return LOCAL_GL_WAIT_FAILED;
     }
@@ -80,9 +80,8 @@ WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 
                                  gfxPrefs::WebGLImmediateQueries());
     if (!canBeAvailable) {
         if (timeout) {
-            GenerateWarning("%s: Sync object not yet queryable. Please wait for the event"
-                            " loop.",
-                            funcName);
+            GenerateWarning("Sync object not yet queryable. Please wait for the event"
+                            " loop.");
         }
         return LOCAL_GL_WAIT_FAILED;
     }
@@ -101,20 +100,20 @@ WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 
 void
 WebGL2Context::WaitSync(const WebGLSync& sync, GLbitfield flags, GLint64 timeout)
 {
-    const char funcName[] = "waitSync";
+    const FuncScope funcScope(*this, "waitSync");
     if (IsContextLost())
         return;
 
-    if (!ValidateObject(funcName, sync))
+    if (!ValidateObject("sync", sync))
         return;
 
     if (flags != 0) {
-        ErrorInvalidValue("%s: `flags` must be 0.", funcName);
+        ErrorInvalidValue("`flags` must be 0.");
         return;
     }
 
     if (timeout != -1) {
-        ErrorInvalidValue("%s: `timeout` must be TIMEOUT_IGNORED.", funcName);
+        ErrorInvalidValue("`timeout` must be TIMEOUT_IGNORED.");
         return;
     }
 
@@ -125,12 +124,12 @@ void
 WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
                                 JS::MutableHandleValue retval)
 {
-    const char funcName[] = "getSyncParameter";
+    const FuncScope funcScope(*this, "getSyncParameter");
     retval.setNull();
     if (IsContextLost())
         return;
 
-    if (!ValidateObject(funcName, sync))
+    if (!ValidateObject("sync", sync))
         return;
 
     ////
@@ -160,7 +159,7 @@ WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
         return;
 
     default:
-        ErrorInvalidEnum("%s: Invalid pname 0x%04x", funcName, pname);
+        ErrorInvalidEnumInfo("pname", pname);
         return;
     }
 }
