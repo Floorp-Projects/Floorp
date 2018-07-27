@@ -58,9 +58,9 @@ UNIFIED_SOURCES += [
     'nsLookAndFeel.cpp',
     'nsNativeThemeAndroid.cpp',
     'nsPrintSettingsServiceAndroid.cpp',
-    'nsScreenManagerAndroid.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
+    'ScreenHelperAndroid.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

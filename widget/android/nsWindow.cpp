@@ -78,6 +78,7 @@ using mozilla::Unused;
 #include "GeckoEditableSupport.h"
 #include "KeyEvent.h"
 #include "MotionEvent.h"
+#include "ScreenHelperAndroid.h"
 
 #include "imgIEncoder.h"
 
@@ -1519,19 +1520,27 @@ nsWindow::GetParent()
 float
 nsWindow::GetDPI()
 {
-    if (AndroidBridge::Bridge())
-        return AndroidBridge::Bridge()->GetDPI();
-    return 160.0f;
+    float dpi = 160.0f;
+
+    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+    if (screen) {
+        screen->GetDpi(&dpi);
+    }
+
+    return dpi;
 }
 
 double
 nsWindow::GetDefaultScaleInternal()
 {
+    double scale = 1.0f;
 
     nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
-    MOZ_ASSERT(screen);
-    RefPtr<nsScreenAndroid> screenAndroid = (nsScreenAndroid*) screen.get();
-    return screenAndroid->GetDensity();
+    if (screen) {
+        screen->GetContentsScaleFactor(&scale);
+    }
+
+    return scale;
 }
 
 void
@@ -2269,13 +2278,8 @@ nsWindow::GetCompositorBridgeChild() const
 already_AddRefed<nsIScreen>
 nsWindow::GetWidgetScreen()
 {
-    nsCOMPtr<nsIScreenManager> screenMgr =
-        do_GetService("@mozilla.org/gfx/screenmanager;1");
-    MOZ_ASSERT(screenMgr, "Failed to get nsIScreenManager");
-
-    RefPtr<nsScreenManagerAndroid> screenMgrAndroid =
-        (nsScreenManagerAndroid*) screenMgr.get();
-    return screenMgrAndroid->ScreenForId(mScreenId);
+    RefPtr<nsIScreen> screen = ScreenHelperAndroid::GetSingleton()->ScreenForId(mScreenId);
+    return screen.forget();
 }
 
 void
