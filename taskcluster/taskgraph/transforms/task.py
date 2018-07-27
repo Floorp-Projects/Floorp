@@ -587,6 +587,7 @@ task_description_schema = Schema({
         Required('bump'): bool,
         Optional('bump-files'): [basestring],
         Optional('repo-param-prefix'): basestring,
+        Optional('dontbuild'): bool,
         Required('force-dry-run', default=True): bool,
         Required('push', default=False): bool
     }),
@@ -1214,6 +1215,9 @@ def build_treescript_payload(config, task, task_def):
 
     if worker.get('force-dry-run'):
         task_def['payload']['dry_run'] = True
+
+    if worker.get('dontbuild'):
+        task_def['payload']['dont_build'] = True
 
 
 @payload_builder('invalid')
