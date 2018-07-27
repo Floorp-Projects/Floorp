@@ -9,7 +9,7 @@
 extern crate bitflags;
 #[macro_use]
 extern crate cssparser;
-extern crate fxhash;
+extern crate fnv;
 #[macro_use]
 extern crate log;
 #[macro_use]

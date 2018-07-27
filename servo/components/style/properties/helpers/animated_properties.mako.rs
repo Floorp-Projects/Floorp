@@ -25,7 +25,7 @@ use servo_arc::Arc;
 use smallvec::SmallVec;
 use std::{cmp, ptr};
 use std::mem::{self, ManuallyDrop};
-use hash::FxHashMap;
+use hash::FnvHashMap;
 use super::ComputedValues;
 use values::CSSFloat;
 use values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
@@ -232,7 +232,7 @@ impl AnimatedProperty {
 /// A collection of AnimationValue that were composed on an element.
 /// This HashMap stores the values that are the last AnimationValue to be
 /// composed for each TransitionProperty.
-pub type AnimationValueMap = FxHashMap<LonghandId, AnimationValue>;
+pub type AnimationValueMap = FnvHashMap<LonghandId, AnimationValue>;
 
 #[cfg(feature = "gecko")]
 unsafe impl HasFFI for AnimationValueMap {
