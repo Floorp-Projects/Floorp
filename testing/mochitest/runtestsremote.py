@@ -17,7 +17,7 @@ from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import MochitestDesktop, MessageLogger
 from mochitest_options import MochitestArgumentParser
 
-from mozdevice import ADBAndroid
+from mozdevice import ADBAndroid, ADBTimeoutError
 import mozinfo
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -283,6 +283,8 @@ class MochiRemote(MochitestDesktop):
                 else:
                     self.log.info("  %s: %s" % (category, devinfo[category]))
             self.log.info("Test root: %s" % self.device.test_root)
+        except ADBTimeoutError:
+            raise
         except Exception as e:
             self.log.warning("Error getting device information: %s" % str(e))
 
@@ -344,21 +346,26 @@ def run_test_harness(parser, options):
         mochitest.printDeviceInfo()
 
     try:
+        device_exception = False
         if options.verify:
             retVal = mochitest.verifyTests(options)
         else:
             retVal = mochitest.runTests(options)
-    except Exception:
+    except Exception as e:
         mochitest.log.error("Automation Error: Exception caught while running tests")
         traceback.print_exc()
-        try:
-            mochitest.cleanup(options)
-        except Exception:
-            # device error cleaning up... oh well!
-            traceback.print_exc()
+        if isinstance(e, ADBTimeoutError):
+            mochitest.log.info("Device disconnected. Will not run mochitest.cleanup().")
+            device_exception = True
+        else:
+            try:
+                mochitest.cleanup(options)
+            except Exception:
+                # device error cleaning up... oh well!
+                traceback.print_exc()
         retVal = 1
 
-    if options.log_mach is None and not options.verify:
+    if not device_exception and options.log_mach is None and not options.verify:
         mochitest.printDeviceInfo(printLogcat=True)
 
     mochitest.message_logger.finish()
