@@ -373,54 +373,6 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsINodeList>
-nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
-                                     const nsAString& aValue)
-{
-    RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
-    void* attrValue = new nsString(aValue);
-    RefPtr<nsContentList> list =
-        new nsContentList(this,
-                          XULDocument::MatchAttribute,
-                          nsContentUtils::DestroyMatchString,
-                          attrValue,
-                          true,
-                          attrAtom,
-                          kNameSpaceID_Unknown);
-    return list.forget();
-}
-
-already_AddRefed<nsINodeList>
-nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
-                                       const nsAString& aAttribute,
-                                       const nsAString& aValue,
-                                       ErrorResult& rv)
-{
-    RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
-
-    int32_t nameSpaceId = kNameSpaceID_Wildcard;
-    if (!aNamespaceURI.EqualsLiteral("*")) {
-      rv =
-        nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
-                                                              nameSpaceId);
-      if (rv.Failed()) {
-          return nullptr;
-      }
-    }
-
-    void* attrValue = new nsString(aValue);
-    RefPtr<nsContentList> list =
-        new nsContentList(this,
-                          XULDocument::MatchAttribute,
-                          nsContentUtils::DestroyMatchString,
-                          attrValue,
-                          true,
-                          attrAtom,
-                          nameSpaceId);
-
-    return list.forget();
-}
-
 EventListenerManager*
 nsXULElement::GetEventListenerManagerForAttr(nsAtom* aAttrName, bool* aDefer)
 {

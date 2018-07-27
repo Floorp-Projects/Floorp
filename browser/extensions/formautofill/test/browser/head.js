@@ -13,6 +13,7 @@
 "use strict";
 
 ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
+ChromeUtils.import("resource://formautofill/MasterPassword.jsm", this);
 
 const MANAGE_ADDRESSES_DIALOG_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const MANAGE_CREDIT_CARDS_DIALOG_URL = "chrome://formautofill/content/manageCreditCards.xhtml";
@@ -344,6 +345,11 @@ async function waitForFocusAndFormReady(win) {
 }
 
 async function testDialog(url, testFn, arg = undefined) {
+  if (url == EDIT_CREDIT_CARD_DIALOG_URL && arg) {
+    arg = Object.assign({}, arg, {
+      "cc-number": await MasterPassword.decrypt(arg["cc-number-encrypted"]),
+    });
+  }
   let win = window.openDialog(url, null, "width=600,height=600", arg);
   await waitForFocusAndFormReady(win);
   let unloadPromise = BrowserTestUtils.waitForEvent(win, "unload");

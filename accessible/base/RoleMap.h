@@ -1424,5 +1424,5 @@ ROLE(BLOCKQUOTE,
      ATK_ROLE_BLOCK_QUOTE,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_GROUPING,
-     IA2_ROLE_SECTION,
+     IA2_ROLE_BLOCK_QUOTE,
      eNoNameRule)

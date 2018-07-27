@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1171903 - Storage Inspector endless scrolling
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector endless scrolling test</title>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+
+window.setup = async function() {
+  await new Promise(resolve => {
+    const open = indexedDB.open("database", 1);
+    open.onupgradeneeded = function() {
+      const db = open.result;
+      const store = db.createObjectStore("store", {keyPath: "id"});
+      store.transaction.oncomplete = () => {
+        const transaction = db.transaction(["store"], "readwrite");
+        for (let i = 1; i < 150; i++) {
+          transaction.objectStore("store").add({id: i});
+        }
+
+        transaction.oncomplete = function() {
+          db.close();
+          resolve();
+        };
+      };
+    };
+  });
+};
+
+function deleteDB(dbName, storage) {
+  return new Promise(resolve => {
+    indexedDB.deleteDatabase(dbName, { storage: storage }).onsuccess = resolve;
+  });
+}
+
+window.clear = async function() {
+  await deleteDB("database", "temporary");
+  await deleteDB("database", "default");
+  await deleteDB("database", "persistent");
+
+  dump(`removed indexedDB data from ${document.location}\n`);
+};
+
+</script>
+</body>
+</html>

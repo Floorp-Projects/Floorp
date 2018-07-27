@@ -1788,7 +1788,7 @@ Accessible::RelationByType(RelationType aType) const
         nsCOMPtr<nsIDOMXULButtonElement> buttonEl;
         if (doc->IsXULDocument()) {
           dom::XULDocument* xulDoc = doc->AsXULDocument();
-          nsCOMPtr<nsINodeList> possibleDefaultButtons =
+          nsCOMPtr<nsIHTMLCollection> possibleDefaultButtons =
             xulDoc->GetElementsByAttribute(NS_LITERAL_STRING("default"),
                                            NS_LITERAL_STRING("true"));
           if (possibleDefaultButtons) {
