@@ -1524,19 +1524,25 @@ nsWindow::GetParent()
 float
 nsWindow::GetDPI()
 {
-    if (AndroidBridge::Bridge())
-        return AndroidBridge::Bridge()->GetDPI();
-    return 160.0f;
+    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+    if (!screen) {
+        return 160.0f;
+    }
+
+    float dpi;
+    screen->GetDpi(&dpi);
+    return dpi;
 }
 
 double
 nsWindow::GetDefaultScaleInternal()
 {
-
     nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
     MOZ_ASSERT(screen);
-    RefPtr<nsScreenAndroid> screenAndroid = (nsScreenAndroid*) screen.get();
-    return screenAndroid->GetDensity();
+
+    double scale;
+    screen->GetContentsScaleFactor(&scale);
+    return scale;
 }
 
 void
@@ -2278,9 +2284,9 @@ nsWindow::GetWidgetScreen()
         do_GetService("@mozilla.org/gfx/screenmanager;1");
     MOZ_ASSERT(screenMgr, "Failed to get nsIScreenManager");
 
-    RefPtr<nsScreenManagerAndroid> screenMgrAndroid =
-        (nsScreenManagerAndroid*) screenMgr.get();
-    return screenMgrAndroid->ScreenForId(mScreenId);
+    nsCOMPtr<nsIScreen> screen;
+    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+    return screen.forget();
 }
 
 void
