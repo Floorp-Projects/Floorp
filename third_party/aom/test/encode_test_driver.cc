@@ -217,6 +217,7 @@ void EncoderTest::RunLoop(VideoSource *video) {
       // Set dec_cfg.tile_row = -1 and dec_cfg.tile_col = -1 so that the whole
       // frame is decoded.
       decoder->Control(AV1_SET_TILE_MODE, cfg_.large_scale_tile);
+      decoder->Control(AV1D_EXT_TILE_DEBUG, 1);
       decoder->Control(AV1_SET_DECODE_TILE_ROW, -1);
       decoder->Control(AV1_SET_DECODE_TILE_COL, -1);
     }

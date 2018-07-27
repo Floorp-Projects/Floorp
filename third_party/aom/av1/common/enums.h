@@ -557,6 +557,7 @@ typedef uint8_t TXFM_CONTEXT;
 #define BWDREF_FRAME 5
 #define ALTREF2_FRAME 6
 #define ALTREF_FRAME 7
+#define EXTREF_FRAME REF_FRAMES
 #define LAST_REF_FRAMES (LAST3_FRAME - LAST_FRAME + 1)
 
 #define INTER_REFS_PER_FRAME (ALTREF_FRAME - LAST_FRAME + 1)
@@ -607,6 +608,7 @@ typedef enum ATTRIBUTE_PACKED {
 
 // In large_scale_tile coding, external references are used.
 #define MAX_EXTERNAL_REFERENCES 128
+#define MAX_TILES 512
 
 #ifdef __cplusplus
 }  // extern "C"

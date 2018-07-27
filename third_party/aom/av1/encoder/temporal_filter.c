@@ -535,10 +535,10 @@ static void adjust_arnr_filter(AV1_COMP *cpi, int distance, int group_boost,
   // Adjust the strength based on active max q.
   if (cpi->common.current_video_frame > 1)
     q = ((int)av1_convert_qindex_to_q(cpi->rc.avg_frame_qindex[INTER_FRAME],
-                                      cpi->common.bit_depth));
+                                      cpi->common.seq_params.bit_depth));
   else
     q = ((int)av1_convert_qindex_to_q(cpi->rc.avg_frame_qindex[KEY_FRAME],
-                                      cpi->common.bit_depth));
+                                      cpi->common.seq_params.bit_depth));
   if (q > 16) {
     strength = oxcf->arnr_strength;
   } else {

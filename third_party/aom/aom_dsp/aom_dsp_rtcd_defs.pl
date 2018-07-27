@@ -377,7 +377,7 @@ add_proto qw/void aom_lpf_vertical_14_dual/, "uint8_t *s, int pitch, const uint8
 specialize qw/aom_lpf_vertical_14_dual sse2/;
 
 add_proto qw/void aom_lpf_vertical_6/, "uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh";
-specialize qw/aom_lpf_vertical_6 sse2/;
+specialize qw/aom_lpf_vertical_6 sse2 neon/;
 
 add_proto qw/void aom_lpf_vertical_8/, "uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh";
 specialize qw/aom_lpf_vertical_8 sse2 neon/;
@@ -386,13 +386,13 @@ add_proto qw/void aom_lpf_vertical_8_dual/, "uint8_t *s, int pitch, const uint8_
 specialize qw/aom_lpf_vertical_8_dual sse2/;
 
 add_proto qw/void aom_lpf_vertical_4/, "uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh";
-specialize qw/aom_lpf_vertical_4 sse2/;
+specialize qw/aom_lpf_vertical_4 sse2 neon/;
 
 add_proto qw/void aom_lpf_vertical_4_dual/, "uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1";
 specialize qw/aom_lpf_vertical_4_dual sse2/;
 
 add_proto qw/void aom_lpf_horizontal_14/, "uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh";
-specialize qw/aom_lpf_horizontal_14 sse2/;
+specialize qw/aom_lpf_horizontal_14 sse2 neon/;
 
 add_proto qw/void aom_lpf_horizontal_14_dual/, "uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1";
 specialize qw/aom_lpf_horizontal_14_dual sse2/;
@@ -410,7 +410,7 @@ add_proto qw/void aom_lpf_horizontal_8_dual/, "uint8_t *s, int pitch, const uint
 specialize qw/aom_lpf_horizontal_8_dual sse2/;
 
 add_proto qw/void aom_lpf_horizontal_4/, "uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh";
-specialize qw/aom_lpf_horizontal_4 sse2/;
+specialize qw/aom_lpf_horizontal_4 sse2 neon/;
 
 add_proto qw/void aom_lpf_horizontal_4_dual/, "uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1";
 specialize qw/aom_lpf_horizontal_4_dual sse2/;
@@ -564,7 +564,7 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
   # Block subtraction
   #
   add_proto qw/void aom_subtract_block/, "int rows, int cols, int16_t *diff_ptr, ptrdiff_t diff_stride, const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr, ptrdiff_t pred_stride";
-  specialize qw/aom_subtract_block neon msa sse2/;
+  specialize qw/aom_subtract_block neon msa sse2 avx2/;
 
   add_proto qw/void aom_highbd_subtract_block/, "int rows, int cols, int16_t *diff_ptr, ptrdiff_t diff_stride, const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr, ptrdiff_t pred_stride, int bd";
   specialize qw/aom_highbd_subtract_block sse2/;
@@ -732,14 +732,14 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
   foreach (@block_sizes) {
     ($w, $h) = @$_;
     add_proto qw/unsigned int/, "aom_masked_sad${w}x${h}", "const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, const uint8_t *second_pred, const uint8_t *msk, int msk_stride, int invert_mask";
-    specialize "aom_masked_sad${w}x${h}", qw/ssse3/;
+    specialize "aom_masked_sad${w}x${h}", qw/ssse3 avx2/;
   }
 
 
     foreach (@block_sizes) {
       ($w, $h) = @$_;
       add_proto qw/unsigned int/, "aom_highbd_masked_sad${w}x${h}", "const uint8_t *src8, int src_stride, const uint8_t *ref8, int ref_stride, const uint8_t *second_pred8, const uint8_t *msk, int msk_stride, int invert_mask";
-      specialize "aom_highbd_masked_sad${w}x${h}", qw/ssse3/;
+      specialize "aom_highbd_masked_sad${w}x${h}", qw/ssse3 avx2/;
     }
 
 
@@ -750,7 +750,7 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
     ($w, $h) = @$_;
     add_proto qw/unsigned int/, "aom_obmc_sad${w}x${h}", "const uint8_t *pre, int pre_stride, const int32_t *wsrc, const int32_t *mask";
     if (! (($w == 128 && $h == 32) || ($w == 32 && $h == 128))) {
-       specialize "aom_obmc_sad${w}x${h}", qw/sse4_1/;
+       specialize "aom_obmc_sad${w}x${h}", qw/sse4_1 avx2/;
     }
   }
 
@@ -759,7 +759,7 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
       ($w, $h) = @$_;
       add_proto qw/unsigned int/, "aom_highbd_obmc_sad${w}x${h}", "const uint8_t *pre, int pre_stride, const int32_t *wsrc, const int32_t *mask";
       if (! (($w == 128 && $h == 32) || ($w == 32 && $h == 128))) {
-        specialize "aom_highbd_obmc_sad${w}x${h}", qw/sse4_1/;
+        specialize "aom_highbd_obmc_sad${w}x${h}", qw/sse4_1 avx2/;
       }
     }
 
@@ -1102,6 +1102,7 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
     add_proto qw/unsigned int/, "aom_obmc_variance${w}x${h}", "const uint8_t *pre, int pre_stride, const int32_t *wsrc, const int32_t *mask, unsigned int *sse";
     add_proto qw/unsigned int/, "aom_obmc_sub_pixel_variance${w}x${h}", "const uint8_t *pre, int pre_stride, int xoffset, int yoffset, const int32_t *wsrc, const int32_t *mask, unsigned int *sse";
     specialize "aom_obmc_variance${w}x${h}", q/sse4_1/;
+    specialize "aom_obmc_sub_pixel_variance${w}x${h}", q/sse4_1/;
   }
 
 
@@ -1539,9 +1540,7 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
   specialize qw/aom_comp_mask_pred ssse3 avx2/;
 
   add_proto qw/void aom_highbd_comp_mask_pred/, "uint16_t *comp_pred, const uint8_t *pred8, int width, int height, const uint8_t *ref8, int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask";
-  add_proto qw/void aom_highbd_comp_mask_upsampled_pred/, "MACROBLOCKD *xd, const struct AV1Common *const cm, int mi_row, int mi_col, const MV *const mv, uint16_t *comp_pred, const uint8_t *pred8, int width,
-                                                           int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref8, int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask, int bd";
-
+  specialize qw/aom_highbd_comp_mask_pred avx2/;
 
 }  # CONFIG_AV1_ENCODER
 

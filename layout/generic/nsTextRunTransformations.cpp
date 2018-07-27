@@ -556,7 +556,14 @@ nsCaseTransformTextRunFactory::TransformString(
         break;
       }
 
-      ch = ToUpperCase(ch);
+      // Bug 1476304: we exclude Georgian letters U+10D0..10FF because of lack
+      // of widespread font support for the corresponding Mtavruli characters
+      // at this time (July 2018).
+      // This condition is to be removed once the major platforms ship with
+      // fonts that support U+1C90..1CBF.
+      if (ch < 0x10D0 || ch > 0x10FF) {
+        ch = ToUpperCase(ch);
+      }
       break;
 
     case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:

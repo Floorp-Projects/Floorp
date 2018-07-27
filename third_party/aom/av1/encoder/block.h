@@ -224,6 +224,7 @@ struct macroblock {
   int sadperbit4;
   int rdmult;
   int mb_energy;
+  int sb_energy_level;
   int *m_search_count_ptr;
   int *ex_search_count_ptr;
 
@@ -258,7 +259,6 @@ struct macroblock {
   MvLimits mv_limits;
 
   uint8_t blk_skip[MAX_MIB_SIZE * MAX_MIB_SIZE];
-  uint8_t blk_skip_drl[MAX_MIB_SIZE * MAX_MIB_SIZE];
 
   int skip;
   int skip_chroma_rd;
