@@ -96,4 +96,32 @@
   <string name="search_add_manually_example">ਉਦਾਹਰਨ: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">ਨਵਾਂ ਖੋਜ ਇੰਜਣ ਜੋੜਿਆ ਗਿਆ।</string>
   <string name="search_add_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂਮ ਦਰਜ ਕਰੋ</string>
+  <string name="search_add_error_empty_search">ਖੋਜ ਸਤਰ ਦਾਖਲ ਕਰੋ</string>
+  <string name="content_description_clear_input">ਇਨਪੁਟ ਨੂੰ ਹਟਾਓ</string>
+  <string name="content_description_dismiss_input">ਰੱਦ ਕਰੋ</string>
+  <string name="content_description_erase">ਬਰਾਊਜ਼ ਕਰਨ ਦਾ ਅਤੀਤ ਮਿਟਾਓ</string>
+  <string name="content_description_tab_counter">ਟੈਬ ਖੋਲੋ: %1$s</string>
+  <string name="content_description_lock">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
+  <string name="accessibility_announcement_loading">ਲੋਡ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
+  <string name="accessibility_announcement_loading_finished">ਵੈੱਬਸਾਈਟ ਲੋਡ ਕੀਤੀ ਗਈ</string>
+  <string name="content_description_menu">ਹੋਰ ਚੋਣਾਂ</string>
+  <string name="content_description_forward">ਅੱਗੇ ਵੱਲ ਨੈਵੀਗੇਟ ਕਰੋ</string>
+  <string name="content_description_reload">ਵੈੱਬਸਾਈਟ ਨੂੰ ਰੀਲੋਡ ਕਰੋ</string>
+  <string name="content_description_back">ਪਿੱਛੇ ਵੱਲ ਨੈਵੀਗੇਟ ਕਰੋ</string>
+  <string name="content_description_stop">ਵੈੱਬਸਾਈਟ ਨੂੰ ਲੋਡ ਕਰਨਾ ਬੰਦ ਕਰੋ</string>
+  <string name="content_description_customtab_exit">ਪਿਛਲੇ ਐਪ \'ਤੇ ਜਾਓ</string>
+  <string name="content_description_blocking_switch">ਟ੍ਰੈਕਰਾਂ ਨੂੰ ਬਲੌਕ ਕਰੋ</string>
+  <string name="your_rights">ਤੁਹਾਡੇ ਹੱਕ</string>
+  <string name="external_app_prompt_title">ਲਿੰਕ ਨੂੰ ਹੋਰ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
+  <string name="external_app_prompt_no_app_title">ਅਜਿਹੀ ਐਪ ਲੱਭੋ ਜੋ ਲਿੰਕ ਨੂੰ ਖੋਲ੍ਹ ਸਕੇ</string>
+  <string name="external_app_prompt_no_app">ਤੁਹਾਡੇ ਯੰਤਰ ਉੱਪਰਲੀ ਕੋਈ ਵੀ ਐਪ ਇਸ ਤੰਦ ਨੂੰ ਖੋਲ੍ਹਣ ਦੇ ਕਾਬਲ ਨਹੀਂ ਹੈ। ਤੁਸੀਂ %2$s ਦੇ ਲਈ ਕਿਸੇ ਕਾਬਲ ਐਪ ਨੂੰ ਲੱਭਣ ਲਈ %1$s ਛੱਡ ਸਕਦੇ ਹੋ।</string>
+  <string name="external_multiple_apps_matched_exit">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਤੋਂ ਬਾਹਰ ਨਿਕਲੋ?</string>
+  <string name="download_snackbar_finished">%1$s ਮੁਕੰਮਲ</string>
+  <string name="download_snackbar_open">ਖੋਲ੍ਹੋ</string>
+  <string name="download_dialog_title">ਫਾਈਲ ਡਾਊਨਲੋਡ ਕੀਤੀ</string>
+  <string name="download_dialog_action_cancel">ਰੱਦ ਕਰੋ</string>
+  <string name="download_dialog_action_download">ਡਾਊਨਲੋਡ</string>
+  <string name="errorpage_title">ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਦੌਰਾਨ ਸਮੱਸਿਆ</string>
+  <string name="errorpage_refresh">ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
+  <string name="error_connectionfailure_title">ਕੁਨੈਕਟ ਕਰਨ ਲਈ ਅਸਮਰੱਥ</string>
 </resources>
