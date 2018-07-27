@@ -878,7 +878,7 @@ ifeq (neon,$(MOZ_FPU))
 rustflags_neon += -C target_feature=+neon
 endif
 
-rustflags_override = RUSTFLAGS='$(MOZ_RUST_DEFAULT_FLAGS) $(RUSTFLAGS) $(rustflags_neon)'
+rustflags_override = $(MOZ_RUST_DEFAULT_FLAGS) $(rustflags_neon)
 
 ifdef MOZ_MSVCBITS
 # If we are building a MozillaBuild shell, we want to clear out the
@@ -942,8 +942,9 @@ endif # WINNT
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
 define RUN_CARGO
-$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) $(sccache_wrap) \
+$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleaner) $(rust_unlock_unstable) $(sccache_wrap) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
+	RUSTFLAGS='$(2)' \
 	RUSTC=$(RUSTC) \
 	RUSTDOC=$(RUSTDOC) \
 	RUSTFMT=$(RUSTFMT) \
@@ -956,7 +957,7 @@ $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleane
 	RUST_BACKTRACE=full \
 	MOZ_TOPOBJDIR=$(topobjdir) \
 	$(cargo_incremental) \
-	$(2) \
+	$(3) \
 	$(CARGO) $(1) $(cargo_build_flags)
 endef
 
@@ -967,12 +968,20 @@ endef
 # but, given the idiosyncracies of make, can also be called without arguments:
 #
 #   $(call CARGO_BUILD)
+define CARGO_BUILD_HOST
+$(call RUN_CARGO,rustc,$(rustflags_override),$(1))
+endef
+
+define CARGO_CHECK_HOST
+$(call RUN_CARGO,check,$(rustflags_override),$(1))
+endef
+
 define CARGO_BUILD
-$(call RUN_CARGO,rustc,$(1))
+$(call RUN_CARGO,rustc,$(rustflags_override) $(RUSTFLAGS),$(1))
 endef
 
 define CARGO_CHECK
-$(call RUN_CARGO,check,$(1))
+$(call RUN_CARGO,check,$(rustflags_override) $(RUSTFLAGS),$(1))
 endef
 
 cargo_linker_env_var := CARGO_TARGET_$(RUST_TARGET_ENV_NAME)_LINKER
@@ -1037,7 +1046,7 @@ endif
 rust_test_flag := --no-fail-fast
 
 force-cargo-test-run:
-	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(target_cargo_env_vars))
+	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(rustflags_override) $(RUSTFLAGS),$(target_cargo_env_vars))
 
 check:: force-cargo-test-run
 endif
@@ -1050,12 +1059,12 @@ endif
 
 force-cargo-host-library-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD) --lib $(cargo_host_flag) $(host_rust_features_flag)
+	$(call CARGO_BUILD_HOST) --lib $(cargo_host_flag) $(host_rust_features_flag)
 
 $(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build
 
 force-cargo-host-library-check:
-	$(call CARGO_CHECK) --lib $(cargo_host_flag) $(host_rust_features_flag)
+	$(call CARGO_CHECK_HOST) --lib $(cargo_host_flag) $(host_rust_features_flag)
 else
 force-cargo-host-library-check:
 	@true
@@ -1077,13 +1086,13 @@ endif # RUST_PROGRAMS
 ifdef HOST_RUST_PROGRAMS
 force-cargo-host-program-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
+	$(call CARGO_BUILD_HOST) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 
 $(HOST_RUST_PROGRAMS): force-cargo-host-program-build
 
 force-cargo-host-program-check:
 	$(REPORT_BUILD)
-	$(call CARGO_CHECK) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
+	$(call CARGO_CHECK_HOST) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 else
 force-cargo-host-program-check:
 	@true
