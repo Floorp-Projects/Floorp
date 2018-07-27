@@ -37,9 +37,11 @@ function shuffle(array) {
   return results;
 }
 
-function assertTagForURLs(tag, urls, message) {
-  let taggedURLs = PlacesUtils.tagging.getURIsForTag(tag).map(uri => uri.spec);
-  deepEqual(taggedURLs.sort(compareAscending), urls.sort(compareAscending), message);
+async function assertTagForURLs(tag, urls, message) {
+  let taggedURLs = new Set();
+  await PlacesUtils.bookmarks.fetch({tags: [tag]}, b => taggedURLs.add(b.url.href));
+  deepEqual(Array.from(taggedURLs).sort(compareAscending),
+            urls.sort(compareAscending), message);
 }
 
 function assertURLHasTags(url, tags, message) {
@@ -581,7 +583,7 @@ add_task(async function test_update_tags() {
     deepEqual(updatedItem.tags, ["foo", "baz"], "Should return updated tags");
     assertURLHasTags("https://mozilla.org", ["baz", "foo"],
       "Should update tags for URL");
-    assertTagForURLs("bar", [], "Should remove existing tag");
+    await assertTagForURLs("bar", [], "Should remove existing tag");
   }
 
   info("Tags with whitespace");
@@ -666,7 +668,7 @@ add_task(async function test_pullChanges_tags() {
     deepEqual(Object.keys(changes).sort(),
       [firstItem.recordId, secondItem.recordId, taggedItem.recordId].sort(),
       "Should include tagged bookmarks after changing case");
-    assertTagForURLs("TaGgY", ["https://example.org/", "https://mozilla.org/"],
+    await assertTagForURLs("TaGgY", ["https://example.org/", "https://mozilla.org/"],
       "Should add tag for new URL");
     await setChangesSynced(changes);
   }
@@ -715,17 +717,17 @@ add_task(async function test_pullChanges_tags() {
     deepEqual(Object.keys(changes).sort(),
       [firstItem.recordId, secondItem.recordId, untaggedItem.recordId].sort(),
       "Should include tagged bookmarks after changing tag entry URI");
-    assertTagForURLs("tricky", ["https://bugzilla.org/", "https://mozilla.org/"],
+    await assertTagForURLs("tricky", ["https://bugzilla.org/", "https://mozilla.org/"],
       "Should remove tag entry for old URI");
     await setChangesSynced(changes);
 
-    bm.url = "https://example.com/";
+    bm.url = "https://example.org/";
     await PlacesUtils.bookmarks.update(bm);
     changes = await PlacesSyncUtils.bookmarks.pullChanges();
     deepEqual(Object.keys(changes).sort(),
-      [untaggedItem.recordId].sort(),
+      [firstItem.recordId, secondItem.recordId, untaggedItem.recordId].sort(),
       "Should include tagged bookmarks after changing tag entry URL");
-    assertTagForURLs("tricky", ["https://example.com/", "https://mozilla.org/"],
+    await assertTagForURLs("tricky", ["https://example.org/", "https://mozilla.org/"],
       "Should remove tag entry for old URL");
     await setChangesSynced(changes);
   }
@@ -1313,13 +1315,13 @@ add_task(async function test_insert_tags() {
     title: "bar",
   }].map(info => PlacesSyncUtils.bookmarks.insert(info)));
 
-  assertTagForURLs("foo", ["https://example.com/", "https://example.org/"],
+  await assertTagForURLs("foo", ["https://example.com/", "https://example.org/"],
     "2 URLs with new tag");
-  assertTagForURLs("bar", ["https://example.com/"], "1 URL with existing tag");
-  assertTagForURLs("baz", ["https://example.org/",
+  await assertTagForURLs("bar", ["https://example.com/"], "1 URL with existing tag");
+  await assertTagForURLs("baz", ["https://example.org/",
     "place:queryType=1&sort=12&maxResults=10"],
     "Should support tagging URLs and tag queries");
-  assertTagForURLs("qux", ["place:queryType=1&sort=12&maxResults=10"],
+  await assertTagForURLs("qux", ["place:queryType=1&sort=12&maxResults=10"],
     "Should support tagging tag queries");
 
   await PlacesUtils.bookmarks.eraseEverything();
@@ -1353,7 +1355,7 @@ add_task(async function test_insert_tags_whitespace() {
   assertURLHasTags("https://example.net/", ["taggy"],
     "Should ignore dupes when setting tags");
 
-  assertTagForURLs("taggy", ["https://example.net/", "https://example.org/"],
+  await assertTagForURLs("taggy", ["https://example.net/", "https://example.org/"],
     "Should exclude falsy tags");
 
   PlacesUtils.tagging.untagURI(uri("https://example.org"), ["untrimmed", "taggy"]);
