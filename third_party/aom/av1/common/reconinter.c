@@ -627,9 +627,7 @@ void av1_make_masked_inter_predictor(
                   tmp_buf[INTER_PRED_BYTES_PER_PIXEL * MAX_SB_SQUARE]);
 #undef INTER_PRED_BYTES_PER_PIXEL
 
-  uint8_t *tmp_dst = (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH)
-                         ? CONVERT_TO_BYTEPTR(tmp_buf)
-                         : tmp_buf;
+  uint8_t *tmp_dst = get_buf_by_bd(xd, tmp_buf);
 
   const int tmp_buf_stride = MAX_SB_SIZE;
   CONV_BUF_TYPE *org_dst = conv_params->dst;
@@ -1002,8 +1000,8 @@ void av1_build_inter_predictors_sby(const AV1_COMMON *cm, MACROBLOCKD *xd,
     BUFFER_SET default_ctx = { { xd->plane[0].dst.buf, NULL, NULL },
                                { xd->plane[0].dst.stride, 0, 0 } };
     if (!ctx) ctx = &default_ctx;
-    av1_build_interintra_predictors_sby(cm, xd, xd->plane[0].dst.buf,
-                                        xd->plane[0].dst.stride, ctx, bsize);
+    av1_build_interintra_predictors_sbp(cm, xd, xd->plane[0].dst.buf,
+                                        xd->plane[0].dst.stride, ctx, 0, bsize);
   }
 }
 
@@ -1609,10 +1607,10 @@ void av1_build_intra_predictors_for_interintra(const AV1_COMMON *cm,
   const int ssy = xd->plane[plane].subsampling_y;
   BLOCK_SIZE plane_bsize = get_plane_block_size(bsize, ssx, ssy);
   PREDICTION_MODE mode = interintra_to_intra_mode[xd->mi[0]->interintra_mode];
-  xd->mi[0]->angle_delta[PLANE_TYPE_Y] = 0;
-  xd->mi[0]->angle_delta[PLANE_TYPE_UV] = 0;
-  xd->mi[0]->filter_intra_mode_info.use_filter_intra = 0;
-  xd->mi[0]->use_intrabc = 0;
+  assert(xd->mi[0]->angle_delta[PLANE_TYPE_Y] == 0);
+  assert(xd->mi[0]->angle_delta[PLANE_TYPE_UV] == 0);
+  assert(xd->mi[0]->filter_intra_mode_info.use_filter_intra == 0);
+  assert(xd->mi[0]->use_intrabc == 0);
 
   av1_predict_intra_block(cm, xd, pd->width, pd->height,
                           max_txsize_rect_lookup[plane_bsize], mode, 0, 0,
@@ -1642,42 +1640,23 @@ void av1_combine_interintra(MACROBLOCKD *xd, BLOCK_SIZE bsize, int plane,
       inter_pred, inter_stride, intra_pred, intra_stride);
 }
 
-void av1_build_interintra_predictors_sby(const AV1_COMMON *cm, MACROBLOCKD *xd,
-                                         uint8_t *ypred, int ystride,
-                                         BUFFER_SET *ctx, BLOCK_SIZE bsize) {
-  if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    DECLARE_ALIGNED(16, uint16_t, intrapredictor[MAX_SB_SQUARE]);
-    av1_build_intra_predictors_for_interintra(
-        cm, xd, bsize, 0, ctx, CONVERT_TO_BYTEPTR(intrapredictor), MAX_SB_SIZE);
-    av1_combine_interintra(xd, bsize, 0, ypred, ystride,
-                           CONVERT_TO_BYTEPTR(intrapredictor), MAX_SB_SIZE);
-    return;
-  }
-  {
-    DECLARE_ALIGNED(16, uint8_t, intrapredictor[MAX_SB_SQUARE]);
-    av1_build_intra_predictors_for_interintra(cm, xd, bsize, 0, ctx,
-                                              intrapredictor, MAX_SB_SIZE);
-    av1_combine_interintra(xd, bsize, 0, ypred, ystride, intrapredictor,
-                           MAX_SB_SIZE);
-  }
-}
-
-void av1_build_interintra_predictors_sbc(const AV1_COMMON *cm, MACROBLOCKD *xd,
-                                         uint8_t *upred, int ustride,
+// build interintra_predictors for one plane
+void av1_build_interintra_predictors_sbp(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                         uint8_t *pred, int stride,
                                          BUFFER_SET *ctx, int plane,
                                          BLOCK_SIZE bsize) {
   if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    DECLARE_ALIGNED(16, uint16_t, uintrapredictor[MAX_SB_SQUARE]);
+    DECLARE_ALIGNED(16, uint16_t, intrapredictor[MAX_SB_SQUARE]);
     av1_build_intra_predictors_for_interintra(
-        cm, xd, bsize, plane, ctx, CONVERT_TO_BYTEPTR(uintrapredictor),
+        cm, xd, bsize, plane, ctx, CONVERT_TO_BYTEPTR(intrapredictor),
         MAX_SB_SIZE);
-    av1_combine_interintra(xd, bsize, plane, upred, ustride,
-                           CONVERT_TO_BYTEPTR(uintrapredictor), MAX_SB_SIZE);
+    av1_combine_interintra(xd, bsize, plane, pred, stride,
+                           CONVERT_TO_BYTEPTR(intrapredictor), MAX_SB_SIZE);
   } else {
-    DECLARE_ALIGNED(16, uint8_t, uintrapredictor[MAX_SB_SQUARE]);
+    DECLARE_ALIGNED(16, uint8_t, intrapredictor[MAX_SB_SQUARE]);
     av1_build_intra_predictors_for_interintra(cm, xd, bsize, plane, ctx,
-                                              uintrapredictor, MAX_SB_SIZE);
-    av1_combine_interintra(xd, bsize, plane, upred, ustride, uintrapredictor,
+                                              intrapredictor, MAX_SB_SIZE);
+    av1_combine_interintra(xd, bsize, plane, pred, stride, intrapredictor,
                            MAX_SB_SIZE);
   }
 }
@@ -1686,8 +1665,8 @@ void av1_build_interintra_predictors_sbuv(const AV1_COMMON *cm, MACROBLOCKD *xd,
                                           uint8_t *upred, uint8_t *vpred,
                                           int ustride, int vstride,
                                           BUFFER_SET *ctx, BLOCK_SIZE bsize) {
-  av1_build_interintra_predictors_sbc(cm, xd, upred, ustride, ctx, 1, bsize);
-  av1_build_interintra_predictors_sbc(cm, xd, vpred, vstride, ctx, 2, bsize);
+  av1_build_interintra_predictors_sbp(cm, xd, upred, ustride, ctx, 1, bsize);
+  av1_build_interintra_predictors_sbp(cm, xd, vpred, vstride, ctx, 2, bsize);
 }
 
 void av1_build_interintra_predictors(const AV1_COMMON *cm, MACROBLOCKD *xd,
@@ -1695,7 +1674,7 @@ void av1_build_interintra_predictors(const AV1_COMMON *cm, MACROBLOCKD *xd,
                                      uint8_t *vpred, int ystride, int ustride,
                                      int vstride, BUFFER_SET *ctx,
                                      BLOCK_SIZE bsize) {
-  av1_build_interintra_predictors_sby(cm, xd, ypred, ystride, ctx, bsize);
+  av1_build_interintra_predictors_sbp(cm, xd, ypred, ystride, ctx, 0, bsize);
   av1_build_interintra_predictors_sbuv(cm, xd, upred, vpred, ustride, vstride,
                                        ctx, bsize);
 }
@@ -1713,9 +1692,7 @@ static void build_inter_predictors_single_buf(MACROBLOCKD *xd, int plane,
 
   const struct scale_factors *const sf = &xd->block_refs[ref]->sf;
   struct buf_2d *const pre_buf = &pd->pre[ref];
-  const int hbd = xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH;
-  uint8_t *const dst =
-      (hbd ? CONVERT_TO_BYTEPTR(ext_dst) : ext_dst) + ext_dst_stride * y + x;
+  uint8_t *const dst = get_buf_by_bd(xd, ext_dst) + ext_dst_stride * y + x;
   const MV mv = mi->mv[ref].as_mv;
 
   ConvolveParams conv_params = get_conv_params(ref, 0, plane, xd->bd);

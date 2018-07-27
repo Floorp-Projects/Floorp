@@ -98,7 +98,7 @@ class HeaderChanger {
     });
   }
 
-  applyChanges(headers) {
+  applyChanges(headers, opts = {}) {
     if (!this.validateHeaders(headers)) {
       /* globals uneval */
       Cu.reportError(`Invalid header array: ${uneval(headers)}`);
@@ -136,7 +136,7 @@ class HeaderChanger {
 
       if (!original || value !== original.value) {
         let shouldMerge = headersAlreadySet.has(lowerCaseName);
-        this.setHeader(name, value, shouldMerge);
+        this.setHeader(name, value, shouldMerge, opts);
       }
 
       headersAlreadySet.add(lowerCaseName);
@@ -144,9 +144,25 @@ class HeaderChanger {
   }
 }
 
+const checkRestrictedHeaderValue = (value, opts = {}) => {
+  let uri = Services.io.newURI(`https://${value}/`);
+  let {extension} = opts;
+
+  if (extension && !extension.allowedOrigins.matches(uri)) {
+    throw new Error(`Unable to set host header, url missing from permissions.`);
+  }
+
+  if (WebExtensionPolicy.isRestrictedURI(uri)) {
+    throw new Error(`Unable to set host header to restricted url.`);
+  }
+};
+
 class RequestHeaderChanger extends HeaderChanger {
-  setHeader(name, value, merge) {
+  setHeader(name, value, merge, opts = {}) {
     try {
+      if (name === "host") {
+        checkRestrictedHeaderValue(value, opts);
+      }
       this.channel.setRequestHeader(name, value, merge);
     } catch (e) {
       Cu.reportError(new Error(`Error setting request header ${name}: ${e}`));
@@ -159,7 +175,7 @@ class RequestHeaderChanger extends HeaderChanger {
 }
 
 class ResponseHeaderChanger extends HeaderChanger {
-  setHeader(name, value, merge) {
+  setHeader(name, value, merge, opts = {}) {
     try {
       this.channel.setResponseHeader(name, value, merge);
     } catch (e) {
@@ -865,11 +881,11 @@ HttpObserverManager = {
         }
 
         if (opts.requestHeaders && result.requestHeaders && requestHeaders) {
-          requestHeaders.applyChanges(result.requestHeaders);
+          requestHeaders.applyChanges(result.requestHeaders, opts);
         }
 
         if (opts.responseHeaders && result.responseHeaders && responseHeaders) {
-          responseHeaders.applyChanges(result.responseHeaders);
+          responseHeaders.applyChanges(result.responseHeaders, opts);
         }
       }
 

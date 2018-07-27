@@ -546,12 +546,6 @@ TEST_P(ResizeRealtimeTest, DISABLED_TestInternalResizeDownUpChangeBitRate) {
 #endif
 }
 
-aom_img_fmt_t CspForFrameNumber(int frame) {
-  if (frame < 10) return AOM_IMG_FMT_I420;
-  if (frame < 20) return AOM_IMG_FMT_I444;
-  return AOM_IMG_FMT_I420;
-}
-
 class ResizeCspTest : public ResizeTest {
  protected:
 #if WRITE_COMPRESSED_STREAM
@@ -578,20 +572,6 @@ class ResizeCspTest : public ResizeTest {
       outfile_ = NULL;
     }
 #endif
-  }
-
-  virtual void PreEncodeFrameHook(libaom_test::VideoSource *video,
-                                  libaom_test::Encoder *encoder) {
-    if (CspForFrameNumber(video->frame()) != AOM_IMG_FMT_I420 &&
-        cfg_.g_profile != 1) {
-      cfg_.g_profile = 1;
-      encoder->Config(&cfg_);
-    }
-    if (CspForFrameNumber(video->frame()) == AOM_IMG_FMT_I420 &&
-        cfg_.g_profile != 0) {
-      cfg_.g_profile = 0;
-      encoder->Config(&cfg_);
-    }
   }
 
   virtual void PSNRPktHook(const aom_codec_cx_pkt_t *pkt) {
@@ -621,19 +601,13 @@ class ResizeCspTest : public ResizeTest {
 
 class ResizingCspVideoSource : public ::libaom_test::DummyVideoSource {
  public:
-  ResizingCspVideoSource() {
+  explicit ResizingCspVideoSource(aom_img_fmt_t image_format) {
     SetSize(kInitialWidth, kInitialHeight);
+    SetImageFormat(image_format);
     limit_ = 30;
   }
 
   virtual ~ResizingCspVideoSource() {}
-
- protected:
-  virtual void Next() {
-    ++frame_;
-    SetImageFormat(CspForFrameNumber(frame_));
-    FillFrame();
-  }
 };
 
 #if (defined(DISABLE_TRELLISQ_SEARCH) && DISABLE_TRELLISQ_SEARCH)
@@ -641,14 +615,19 @@ TEST_P(ResizeCspTest, DISABLED_TestResizeCspWorks) {
 #else
 TEST_P(ResizeCspTest, TestResizeCspWorks) {
 #endif
-  ResizingCspVideoSource video;
-  init_flags_ = AOM_CODEC_USE_PSNR;
-  cfg_.rc_min_quantizer = cfg_.rc_max_quantizer = 48;
-  cfg_.g_lag_in_frames = 0;
-  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  const aom_img_fmt_t image_formats[] = { AOM_IMG_FMT_I420, AOM_IMG_FMT_I444 };
+  for (size_t i = 0; i < GTEST_ARRAY_SIZE_(image_formats); ++i) {
+    ResizingCspVideoSource video(image_formats[i]);
+    init_flags_ = AOM_CODEC_USE_PSNR;
+    cfg_.rc_min_quantizer = cfg_.rc_max_quantizer = 48;
+    cfg_.g_lag_in_frames = 0;
+    cfg_.g_profile = (image_formats[i] == AOM_IMG_FMT_I420) ? 0 : 1;
+    ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 
-  // Check we decoded the same number of frames as we attempted to encode
-  ASSERT_EQ(frame_info_list_.size(), video.limit());
+    // Check we decoded the same number of frames as we attempted to encode
+    ASSERT_EQ(frame_info_list_.size(), video.limit());
+    frame_info_list_.clear();
+  }
 }
 
 AV1_INSTANTIATE_TEST_CASE(ResizeTest,

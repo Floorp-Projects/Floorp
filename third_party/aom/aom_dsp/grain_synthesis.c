@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "aom_dsp/grain_synthesis.h"
 #include "aom_mem/aom_mem.h"
 
@@ -237,7 +238,7 @@ static int grain_max;
 
 static uint16_t random_register = 0;  // random number generator register
 
-static void init_arrays(aom_film_grain_t *params, int luma_stride,
+static void init_arrays(const aom_film_grain_t *params, int luma_stride,
                         int chroma_stride, int ***pred_pos_luma_p,
                         int ***pred_pos_chroma_p, int **luma_grain_block,
                         int **cb_grain_block, int **cr_grain_block,
@@ -331,7 +332,7 @@ static void init_arrays(aom_film_grain_t *params, int luma_stride,
       (int *)aom_malloc(sizeof(**cr_grain_block) * chroma_grain_samples);
 }
 
-static void dealloc_arrays(aom_film_grain_t *params, int ***pred_pos_luma,
+static void dealloc_arrays(const aom_film_grain_t *params, int ***pred_pos_luma,
                            int ***pred_pos_chroma, int **luma_grain_block,
                            int **cb_grain_block, int **cr_grain_block,
                            int **y_line_buf, int **cb_line_buf,
@@ -396,10 +397,14 @@ static void init_random_generator(int luma_line, uint16_t seed) {
 }
 
 static void generate_luma_grain_block(
-    aom_film_grain_t *params, int **pred_pos_luma, int *luma_grain_block,
+    const aom_film_grain_t *params, int **pred_pos_luma, int *luma_grain_block,
     int luma_block_size_y, int luma_block_size_x, int luma_grain_stride,
     int left_pad, int top_pad, int right_pad, int bottom_pad) {
-  if (params->num_y_points == 0) return;
+  if (params->num_y_points == 0) {
+    memset(luma_grain_block, 0,
+           sizeof(*luma_grain_block) * luma_block_size_y * luma_grain_stride);
+    return;
+  }
 
   int bit_depth = params->bit_depth;
   int gauss_sec_shift = 12 - bit_depth + params->grain_scale_shift;
@@ -431,7 +436,7 @@ static void generate_luma_grain_block(
 }
 
 static void generate_chroma_grain_blocks(
-    aom_film_grain_t *params,
+    const aom_film_grain_t *params,
     //                                  int** pred_pos_luma,
     int **pred_pos_chroma, int *luma_grain_block, int *cb_grain_block,
     int *cr_grain_block, int luma_grain_stride, int chroma_block_size_y,
@@ -443,7 +448,7 @@ static void generate_chroma_grain_blocks(
   int num_pos_chroma = 2 * params->ar_coeff_lag * (params->ar_coeff_lag + 1);
   if (params->num_y_points > 0) ++num_pos_chroma;
   int rounding_offset = (1 << (params->ar_coeff_shift - 1));
-  int chroma_grain_samples = chroma_block_size_y * chroma_block_size_x;
+  int chroma_grain_block_size = chroma_block_size_y * chroma_grain_stride;
 
   if (params->num_cb_points || params->chroma_scaling_from_luma) {
     init_random_generator(7 << 5, params->random_seed);
@@ -455,7 +460,8 @@ static void generate_chroma_grain_blocks(
              ((1 << gauss_sec_shift) >> 1)) >>
             gauss_sec_shift;
   } else {
-    memset(cr_grain_block, 0, sizeof(*cr_grain_block) * chroma_grain_samples);
+    memset(cb_grain_block, 0,
+           sizeof(*cb_grain_block) * chroma_grain_block_size);
   }
 
   if (params->num_cr_points || params->chroma_scaling_from_luma) {
@@ -468,7 +474,8 @@ static void generate_chroma_grain_blocks(
              ((1 << gauss_sec_shift) >> 1)) >>
             gauss_sec_shift;
   } else {
-    memset(cb_grain_block, 0, sizeof(*cb_grain_block) * chroma_grain_samples);
+    memset(cr_grain_block, 0,
+           sizeof(*cr_grain_block) * chroma_grain_block_size);
   }
 
   for (int i = top_pad; i < chroma_block_size_y - bottom_pad; i++)
@@ -522,7 +529,7 @@ static void generate_chroma_grain_blocks(
     }
 }
 
-static void init_scaling_function(int scaling_points[][2], int num_points,
+static void init_scaling_function(const int scaling_points[][2], int num_points,
                                   int scaling_lut[]) {
   if (num_points == 0) return;
 
@@ -559,7 +566,7 @@ static int scale_LUT(int *scaling_lut, int index, int bit_depth) {
                              (bit_depth - 8));
 }
 
-static void add_noise_to_block(aom_film_grain_t *params, uint8_t *luma,
+static void add_noise_to_block(const aom_film_grain_t *params, uint8_t *luma,
                                uint8_t *cb, uint8_t *cr, int luma_stride,
                                int chroma_stride, int *luma_grain,
                                int *cb_grain, int *cr_grain,
@@ -675,7 +682,7 @@ static void add_noise_to_block(aom_film_grain_t *params, uint8_t *luma,
 }
 
 static void add_noise_to_block_hbd(
-    aom_film_grain_t *params, uint16_t *luma, uint16_t *cb, uint16_t *cr,
+    const aom_film_grain_t *params, uint16_t *luma, uint16_t *cb, uint16_t *cr,
     int luma_stride, int chroma_stride, int *luma_grain, int *cb_grain,
     int *cr_grain, int luma_grain_stride, int chroma_grain_stride,
     int half_luma_height, int half_luma_width, int bit_depth,
@@ -903,7 +910,7 @@ static void hor_boundary_overlap(int *top_block, int top_stride,
   }
 }
 
-void av1_add_film_grain(aom_film_grain_t *params, aom_image_t *src,
+void av1_add_film_grain(const aom_film_grain_t *params, const aom_image_t *src,
                         aom_image_t *dst) {
   uint8_t *luma, *cb, *cr;
   int height, width, luma_stride, chroma_stride;
@@ -949,6 +956,11 @@ void av1_add_film_grain(aom_film_grain_t *params, aom_image_t *src,
       printf("Film grain error: input format is not supported!");
       exit(1);
   }
+
+  assert(params->bit_depth == src->bit_depth);
+
+  dst->fmt = src->fmt;
+  dst->bit_depth = src->bit_depth;
 
   dst->r_w = src->r_w;
   dst->r_h = src->r_h;
@@ -999,15 +1011,13 @@ void av1_add_film_grain(aom_film_grain_t *params, aom_image_t *src,
   luma_stride = dst->stride[AOM_PLANE_Y] >> use_high_bit_depth;
   chroma_stride = dst->stride[AOM_PLANE_U] >> use_high_bit_depth;
 
-  params->bit_depth = dst->bit_depth;
-
   av1_add_film_grain_run(params, luma, cb, cr, height, width, luma_stride,
                          chroma_stride, use_high_bit_depth, chroma_subsamp_y,
                          chroma_subsamp_x, mc_identity);
   return;
 }
 
-void av1_add_film_grain_run(aom_film_grain_t *params, uint8_t *luma,
+void av1_add_film_grain_run(const aom_film_grain_t *params, uint8_t *luma,
                             uint8_t *cb, uint8_t *cr, int height, int width,
                             int luma_stride, int chroma_stride,
                             int use_high_bit_depth, int chroma_subsamp_y,

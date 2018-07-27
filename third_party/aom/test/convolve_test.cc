@@ -490,9 +490,9 @@ TEST(ConvolveTest, FiltersWontSaturateWhenAddedPairwise) {
     const InterpFilter filter = (InterpFilter)filter_bank;
     const InterpKernel *filters =
         (const InterpKernel *)av1_get_interp_filter_kernel(filter);
-    const InterpFilterParams filter_params =
+    const InterpFilterParams *filter_params =
         av1_get_interp_filter_params_with_block_size(filter, 8);
-    if (filter_params.taps != SUBPEL_TAPS) continue;
+    if (filter_params->taps != SUBPEL_TAPS) continue;
     for (int i = 0; i < kNumFilters; i++) {
       const int p0 = filters[i][0] + filters[i][1];
       const int p1 = filters[i][2] + filters[i][3];
@@ -528,9 +528,9 @@ TEST_P(ConvolveTest, MatchesReferenceSubpixelFilter) {
     const InterpFilter filter = (InterpFilter)filter_bank;
     const InterpKernel *filters =
         (const InterpKernel *)av1_get_interp_filter_kernel(filter);
-    const InterpFilterParams filter_params =
+    const InterpFilterParams *filter_params =
         av1_get_interp_filter_params_with_block_size(filter, 8);
-    if (filter_params.taps != SUBPEL_TAPS) continue;
+    if (filter_params->taps != SUBPEL_TAPS) continue;
 
     for (int filter_x = 0; filter_x < kNumFilters; ++filter_x) {
       for (int filter_y = 0; filter_y < kNumFilters; ++filter_y) {
@@ -614,9 +614,9 @@ TEST_P(ConvolveTest, FilterExtremes) {
         const InterpFilter filter = (InterpFilter)filter_bank;
         const InterpKernel *filters =
             (const InterpKernel *)av1_get_interp_filter_kernel(filter);
-        const InterpFilterParams filter_params =
+        const InterpFilterParams *filter_params =
             av1_get_interp_filter_params_with_block_size(filter, 8);
-        if (filter_params.taps != SUBPEL_TAPS) continue;
+        if (filter_params->taps != SUBPEL_TAPS) continue;
         for (int filter_x = 0; filter_x < kNumFilters; ++filter_x) {
           for (int filter_y = 0; filter_y < kNumFilters; ++filter_y) {
             wrapper_filter_block2d_8_c(in, kInputStride, filters[filter_x],
@@ -713,9 +713,9 @@ TEST_P(ConvolveTest, DISABLED_Speed) {
       const InterpFilter filter = (InterpFilter)filter_bank;
       const InterpKernel *filters =
           (const InterpKernel *)av1_get_interp_filter_kernel(filter);
-      const InterpFilterParams filter_params =
+      const InterpFilterParams *filter_params =
           av1_get_interp_filter_params_with_block_size(filter, 8);
-      if (filter_params.taps != SUBPEL_TAPS) continue;
+      if (filter_params->taps != SUBPEL_TAPS) continue;
 
       for (int filter_x = 0; filter_x < kNumFilters; ++filter_x) {
         for (int filter_y = 0; filter_y < kNumFilters; ++filter_y) {
@@ -832,20 +832,25 @@ INSTANTIATE_TEST_CASE_P(SSSE3, ConvolveTest,
 #endif
 
 #if HAVE_AVX2
-const ConvolveFunctions convolve8_avx2(wrap_convolve_copy_avx2_8,
-                                       wrap_convolve8_horiz_avx2_8,
-                                       wrap_convolve8_vert_avx2_8, 8);
-const ConvolveFunctions convolve10_avx2(wrap_convolve_copy_avx2_10,
-                                        wrap_convolve8_horiz_avx2_10,
-                                        wrap_convolve8_vert_avx2_10, 10);
-const ConvolveFunctions convolve12_avx2(wrap_convolve_copy_avx2_12,
-                                        wrap_convolve8_horiz_avx2_12,
-                                        wrap_convolve8_vert_avx2_12, 12);
-const ConvolveParam kArrayConvolve8_avx2[] = { ALL_SIZES_64(convolve8_avx2),
-                                               ALL_SIZES_64(convolve10_avx2),
-                                               ALL_SIZES_64(convolve12_avx2) };
+const ConvolveFunctions convolve8_avx2(aom_convolve_copy_c,
+                                       aom_convolve8_horiz_avx2,
+                                       aom_convolve8_vert_avx2, 0);
+
+const ConvolveFunctions wrap_convolve8_avx2(wrap_convolve_copy_avx2_8,
+                                            wrap_convolve8_horiz_avx2_8,
+                                            wrap_convolve8_vert_avx2_8, 8);
+const ConvolveFunctions wrap_convolve10_avx2(wrap_convolve_copy_avx2_10,
+                                             wrap_convolve8_horiz_avx2_10,
+                                             wrap_convolve8_vert_avx2_10, 10);
+const ConvolveFunctions wrap_convolve12_avx2(wrap_convolve_copy_avx2_12,
+                                             wrap_convolve8_horiz_avx2_12,
+                                             wrap_convolve8_vert_avx2_12, 12);
+const ConvolveParam kArray_Convolve8_avx2[] = {
+  ALL_SIZES_64(wrap_convolve8_avx2), ALL_SIZES_64(wrap_convolve10_avx2),
+  ALL_SIZES_64(wrap_convolve12_avx2), ALL_SIZES(convolve8_avx2)
+};
 INSTANTIATE_TEST_CASE_P(AVX2, ConvolveTest,
-                        ::testing::ValuesIn(kArrayConvolve8_avx2));
+                        ::testing::ValuesIn(kArray_Convolve8_avx2));
 #endif  // HAVE_AVX2
 
 }  // namespace

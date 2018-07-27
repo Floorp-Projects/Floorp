@@ -44,7 +44,7 @@ aomenc_available() {
 
 encode_test_file() {
   if [ "$(aomenc_available)" = "yes" ]; then
-    local readonly encoder="$(aom_tool_path aomenc)"
+    local encoder="$(aom_tool_path aomenc)"
 
     eval "${encoder}" \
       $(aomenc_encode_test_fast_params) \

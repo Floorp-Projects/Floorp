@@ -245,7 +245,7 @@ build_framework() {
 # Trap function. Cleans up the subtree used to build all targets contained in
 # $TARGETS.
 cleanup() {
-  local readonly res=$?
+  local res=$?
   cd "${ORIG_PWD}"
 
   if [ $res -ne 0 ]; then
