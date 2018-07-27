@@ -205,26 +205,48 @@ async function installAddon({document, path, name, isWebExtension}) {
   await waitUntilAddonContainer(name, document);
 }
 
-async function uninstallAddon({document, id, name}) {
+async function uninstallAddon({document, id, name, allowUndo}) {
   // Now uninstall this addon
   await new Promise(async done => {
     const addon = await AddonManager.getAddonByID(id);
+    const eventName = allowUndo ? "onUninstalling" : "onUninstalled";
     const listener = {
-      onUninstalled: function(uninstalledAddon) {
+      [eventName]: function(uninstalledAddon) {
         if (uninstalledAddon != addon) {
           return;
         }
-        AddonManager.removeAddonListener(listener);
 
+        AddonManager.removeAddonListener(listener);
         done();
-      }
+      },
     };
     AddonManager.addAddonListener(listener);
-    addon.uninstall();
+    addon.uninstall(allowUndo);
   });
 
   info("Wait until the addon is removed from about:debugging");
   await waitUntil(() => !getAddonContainer(name, document), 100);
+}
+
+async function cancelUninstallAddon({document, id, name}) {
+  await new Promise(async done => {
+    const addon = await AddonManager.getAddonByID(id);
+    const listener = {
+      onOperationCancelled: function(cancelledAddon) {
+        if (cancelledAddon != addon) {
+          return;
+        }
+
+        AddonManager.removeAddonListener(listener);
+        done();
+      },
+    };
+    AddonManager.addAddonListener(listener);
+    addon.cancelUninstall();
+  });
+
+  info("Wait for the addon to appear in the UI");
+  await waitUntil(() => getAddonContainer(name, document), 100);
 }
 
 function getAddonCount(document) {
