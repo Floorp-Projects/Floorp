@@ -4951,28 +4951,28 @@ MWasmLoadGlobalVar::mightAlias(const MDefinition* def) const
 {
     if (def->isWasmStoreGlobalVar()) {
         const MWasmStoreGlobalVar* store = def->toWasmStoreGlobalVar();
-
-        // If they are both indirect, then we don't know what the
-        // indirections point at, so we must be conservative.
-        if (isIndirect_ && store->isIndirect())
-            return AliasType::MayAlias;
-
-        // If they are both direct, then we can disambiguate them by
-        // inspecting their offsets.
-        if (!isIndirect_ && !store->isIndirect())
-            return store->globalDataOffset() == globalDataOffset_
-                      ? AliasType::MayAlias : AliasType::NoAlias;
-
-        // Otherwise, one is indirect and the other isn't, so they can't
-        // alias.
-        return AliasType::NoAlias;
-
-        // We could do better here, in that: if both variables are indirect,
-        // but at least one of them is created in this module, then they
-        // can't alias.  That would require having a flag on globals to
-        // indicate which are imported.  See bug 1467415 comment 3,
-        // 4th rule.
+        return store->globalDataOffset() == globalDataOffset_
+                   ? AliasType::MayAlias : AliasType::NoAlias;
     }
+
+    return AliasType::MayAlias;
+}
+
+MDefinition::AliasType
+MWasmLoadGlobalCell::mightAlias(const MDefinition* def) const
+{
+    if (def->isWasmStoreGlobalCell()) {
+        // No globals of different type can alias.  See bug 1467415 comment 3.
+        if (type() != def->toWasmStoreGlobalCell()->value()->type())
+            return AliasType::NoAlias;
+
+        // We could do better here.  We're dealing with two indirect globals.
+        // If at at least one of them is created in this module, then they
+        // can't alias -- in other words they can only alias if they are both
+        // imported.  That would require having a flag on globals to indicate
+        // which are imported.  See bug 1467415 comment 3, 4th rule.
+    }
+
     return AliasType::MayAlias;
 }
 
@@ -4988,11 +4988,21 @@ MWasmLoadGlobalVar::valueHash() const
 bool
 MWasmLoadGlobalVar::congruentTo(const MDefinition* ins) const
 {
-    // We don't need to consider the isIndirect_ markings here, because
-    // equivalence of offsets implies equivalence of indirectness.
-    if (ins->isWasmLoadGlobalVar())
-        return globalDataOffset_ == ins->toWasmLoadGlobalVar()->globalDataOffset_;
-    return false;
+    if (!ins->isWasmLoadGlobalVar())
+        return false;
+
+    const MWasmLoadGlobalVar* other = ins->toWasmLoadGlobalVar();
+
+    // We don't need to consider the isConstant_ markings here, because
+    // equivalence of offsets implies equivalence of constness.
+    bool sameOffsets = globalDataOffset_ == other->globalDataOffset_;
+    MOZ_ASSERT_IF(sameOffsets, isConstant_ == other->isConstant_);
+
+    // We omit checking congruence of the operands.  There is only one
+    // operand, the TLS pointer, and it only ever has one value within the
+    // domain of optimization.  If that should ever change then operand
+    // congruence checking should be reinstated.
+    return sameOffsets /* && congruentIfOperandsEqual(other) */;
 }
 
 MDefinition*
@@ -5012,6 +5022,15 @@ MWasmLoadGlobalVar::foldsTo(TempAllocator& alloc)
         return this;
 
     return store->value();
+}
+
+bool
+MWasmLoadGlobalCell::congruentTo(const MDefinition* ins) const
+{
+    if (!ins->isWasmLoadGlobalCell())
+        return false;
+    const MWasmLoadGlobalCell* other = ins->toWasmLoadGlobalCell();
+    return congruentIfOperandsEqual(other);
 }
 
 MDefinition::AliasType

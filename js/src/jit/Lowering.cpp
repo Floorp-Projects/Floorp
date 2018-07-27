@@ -4642,17 +4642,32 @@ LIRGenerator::visitWasmAlignmentCheck(MWasmAlignmentCheck* ins)
 void
 LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins)
 {
-    LDefinition addrTemp = ins->isIndirect() ? temp() : LDefinition::BogusTemp();
     if (ins->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
         LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
 #else
         LAllocation tlsPtr = useRegister(ins->tlsPtr());
 #endif
-        defineInt64(new(alloc()) LWasmLoadGlobalVarI64(tlsPtr, addrTemp), ins);
+        defineInt64(new(alloc()) LWasmLoadGlobalVarI64(tlsPtr), ins);
     } else {
         LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
-        define(new(alloc()) LWasmLoadGlobalVar(tlsPtr, addrTemp), ins);
+        define(new(alloc()) LWasmLoadGlobalVar(tlsPtr), ins);
+    }
+}
+
+void
+LIRGenerator::visitWasmLoadGlobalCell(MWasmLoadGlobalCell* ins)
+{
+    if (ins->type() == MIRType::Int64) {
+#ifdef JS_PUNBOX64
+        LAllocation cellPtr = useRegisterAtStart(ins->cellPtr());
+#else
+        LAllocation cellPtr = useRegister(ins->cellPtr());
+#endif
+        defineInt64(new(alloc()) LWasmLoadGlobalCellI64(cellPtr), ins);
+    } else {
+        LAllocation cellPtr = useRegisterAtStart(ins->cellPtr());
+        define(new(alloc()) LWasmLoadGlobalCell(cellPtr), ins);
     }
 }
 
@@ -4660,7 +4675,6 @@ void
 LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
 {
     MDefinition* value = ins->value();
-    LDefinition addrTemp = ins->isIndirect() ? temp() : LDefinition::BogusTemp();
     if (value->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
         LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
@@ -4669,11 +4683,31 @@ LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
         LAllocation tlsPtr = useRegister(ins->tlsPtr());
         LInt64Allocation valueAlloc = useInt64Register(value);
 #endif
-        add(new(alloc()) LWasmStoreGlobalVarI64(valueAlloc, tlsPtr, addrTemp), ins);
+        add(new(alloc()) LWasmStoreGlobalVarI64(valueAlloc, tlsPtr), ins);
     } else {
         LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
         LAllocation valueAlloc = useRegisterAtStart(value);
-        add(new(alloc()) LWasmStoreGlobalVar(valueAlloc, tlsPtr, addrTemp), ins);
+        add(new(alloc()) LWasmStoreGlobalVar(valueAlloc, tlsPtr), ins);
+    }
+}
+
+void
+LIRGenerator::visitWasmStoreGlobalCell(MWasmStoreGlobalCell* ins)
+{
+    MDefinition* value = ins->value();
+    if (value->type() == MIRType::Int64) {
+#ifdef JS_PUNBOX64
+        LAllocation cellPtr = useRegisterAtStart(ins->cellPtr());
+        LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
+#else
+        LAllocation cellPtr = useRegister(ins->cellPtr());
+        LInt64Allocation valueAlloc = useInt64Register(value);
+#endif
+        add(new(alloc()) LWasmStoreGlobalCellI64(valueAlloc, cellPtr), ins);
+    } else {
+        LAllocation cellPtr = useRegisterAtStart(ins->cellPtr());
+        LAllocation valueAlloc = useRegisterAtStart(value);
+        add(new(alloc()) LWasmStoreGlobalCell(valueAlloc, cellPtr), ins);
     }
 }
 
