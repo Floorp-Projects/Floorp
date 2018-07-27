@@ -2405,13 +2405,16 @@ add_task(async function test_history() {
   let download = await promiseStartDownload(sourceUrl);
 
   // The history and annotation notifications should be received before the download completes.
-  let [time, transitionType] = await promiseVisit;
+  let [time, transitionType, lastKnownTitle] = await promiseVisit;
   await promiseAnnotation;
+
+  let expectedFile = new FileUtils.File(download.target.path);
 
   Assert.equal(time, download.startTime.getTime());
   Assert.equal(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
+  Assert.equal(lastKnownTitle, expectedFile.leafName);
 
-  let expectedFileURI = Services.io.newFileURI(new FileUtils.File(download.target.path));
+  let expectedFileURI = Services.io.newFileURI(expectedFile);
   let destFileURI = PlacesUtils.annotations.getPageAnnotation(
     Services.io.newURI(sourceUrl),
     "downloads/destinationFileURI");
