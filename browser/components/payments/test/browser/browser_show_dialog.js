@@ -122,6 +122,9 @@ add_task(async function test_show_completePayment2() {
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
     info("got shippingoptionchange event");
 
+    info("select the shipping address");
+    await selectPaymentDialogShippingAddressByCountry(frame, "US");
+
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
 

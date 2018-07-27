@@ -48,4 +48,9 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
       this.labelElement.textContent = newValue;
     }
   }
+
+  get value() {
+    return this.dropdown &&
+           this.dropdown.selectedOption;
+  }
 }
