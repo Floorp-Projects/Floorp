@@ -13,8 +13,6 @@ const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const REGEX_PANEL =
-  /^(?:webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage)$/;
 
 var {Ci, Cc} = require("chrome");
 var promise = require("promise");
@@ -244,6 +242,10 @@ Toolbox.prototype = {
   set currentToolId(id) {
     this._currentToolId = id;
     this.component.setCurrentToolId(id);
+  },
+
+  get defaultToolId() {
+    return this._defaultToolId;
   },
 
   get panelDefinitions() {
@@ -1903,15 +1905,7 @@ Toolbox.prototype = {
     const panelName = this.getTelemetryPanelNameOrOther(id);
     const prevPanelName = this.getTelemetryPanelNameOrOther(this.currentToolId);
     const cold = !this.getPanel(id);
-
-    this.telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
-      "host": this._hostType,
-      "width": width,
-      "start_state": reason,
-      "panel_name": panelName,
-      "cold": cold,
-      // "session_id" is included at the end of this method.
-    });
+    const pending = ["host", "width", "start_state", "panel_name", "cold", "session_id"];
 
     // On first load this.currentToolId === undefined so we need to skip sending
     // a devtools.main.exit telemetry event.
@@ -1926,27 +1920,38 @@ Toolbox.prototype = {
       });
     }
 
-    const pending = ["host", "width", "start_state", "panel_name", "cold", "session_id"];
+    this.telemetry.addEventProperties("devtools.main", "open", "tools", null, {
+      "width": width,
+      "session_id": this.sessionId
+    });
+
     if (id === "webconsole") {
       pending.push("message_count");
-
-      // Cold webconsole event message_count is handled in
-      // devtools/client/webconsole/webconsole-output-wrapper.js
-      if (!cold) {
-        this.telemetry.addEventProperty(
-          "devtools.main", "enter", "webconsole", null, "message_count", 0);
-      }
     }
-    this.telemetry.preparePendingEvent(
-      "devtools.main", "enter", panelName, null, pending);
-    this.telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "session_id", this.sessionId
-    );
-    // We send the "enter" session ID here to ensure it is always sent *after*
-    // the "open" session ID.
-    this.telemetry.addEventProperty(
-      "devtools.main", "enter", panelName, null, "session_id", this.sessionId
-    );
+
+    this.telemetry.preparePendingEvent("devtools.main", "enter", panelName, null, pending);
+
+    this.telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
+      "host": this._hostType,
+      "start_state": reason,
+      "panel_name": panelName,
+      "cold": cold,
+      "session_id": this.sessionId
+    });
+
+    if (reason !== "initial_panel") {
+      const width = Math.ceil(this.win.outerWidth / 50) * 50;
+      this.telemetry.addEventProperty(
+        "devtools.main", "enter", panelName, null, "width", width
+      );
+    }
+
+    // Cold webconsole event message_count is handled in
+    // devtools/client/webconsole/webconsole-output-wrapper.js
+    if (!cold && id === "webconsole") {
+      this.telemetry.addEventProperty(
+        "devtools.main", "enter", "webconsole", null, "message_count", 0);
+    }
 
     this.telemetry.toolOpened(id);
   },
@@ -2910,6 +2915,7 @@ Toolbox.prototype = {
     }
 
     this.browserRequire = null;
+    this._toolNames = null;
 
     // Now that we are closing the toolbox we can re-enable the cache settings
     // and disable the service workers testing settings for the current tab.
@@ -2963,17 +2969,17 @@ Toolbox.prototype = {
     const prevPanelName = this.getTelemetryPanelNameOrOther(this.currentToolId);
 
     this.telemetry.toolClosed("toolbox");
-    this.telemetry.recordEvent("devtools.main", "close", "tools", null, {
-      "host": host,
-      "width": width,
-      "session_id": this.sessionId
-    });
     this.telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
       "host": host,
       "width": width,
       "panel_name": this.getTelemetryPanelNameOrOther(this.currentToolId),
       "next_panel": "none",
       "reason": "toolbox_close",
+      "session_id": this.sessionId
+    });
+    this.telemetry.recordEvent("devtools.main", "close", "tools", null, {
+      "host": host,
+      "width": width,
       "session_id": this.sessionId
     });
 
@@ -3378,7 +3384,13 @@ Toolbox.prototype = {
   },
 
   getTelemetryPanelNameOrOther: function(id) {
-    if (!REGEX_PANEL.test(id)) {
+    if (!this._toolNames) {
+      const definitions = gDevTools.getToolDefinitionArray();
+      const definitionIds = definitions.map(definition => definition.id);
+
+      this._toolNames = new Set(definitionIds);
+    }
+    if (!this._toolNames.has(id)) {
       return "other";
     }
     return id;

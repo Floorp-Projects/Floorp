@@ -80,7 +80,8 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG3(("Http2Stream::Http2Stream %p", this));
+  nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
+  LOG3(("Http2Stream::Http2Stream %p trans=%p atrans=%p", this, trans, httpTransaction));
 
   mServerReceiveWindow = session->GetServerInitialStreamWindow();
   mClientReceiveWindow = session->PushAllowance();
@@ -104,7 +105,6 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   MOZ_ASSERT(httpPriority >= 0);
   SetPriority(static_cast<uint32_t>(httpPriority));
 
-  nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
   if (trans) {
     mTransactionTabId = trans->TopLevelOuterContentWindowId();
   }
