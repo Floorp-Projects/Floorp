@@ -24,6 +24,9 @@ ac_add_options --with-gradle="$topsrcdir/android-gradle-dependencies/gradle-dist
 export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/android-gradle-dependencies/jcenter","file://$topsrcdir/android-gradle-dependencies/google"
 
 if [ -z "$NO_NDK" ]; then
+    # We use our own clang instead of the NDK's clang.
+    CC="$topsrcdir/clang/bin/clang"
+    CXX="$topsrcdir/clang/bin/clang++"
     ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
 fi
 
