@@ -424,6 +424,9 @@ nsThread::ThreadFunc(void* aArg)
   ThreadInitData* initData = static_cast<ThreadInitData*>(aArg);
   nsThread* self = initData->thread;  // strong reference
 
+  MOZ_ASSERT(self->mEventTarget);
+  MOZ_ASSERT(self->mEvents);
+
   self->mThread = PR_GetCurrentThread();
   self->mVirtualThread = GetCurrentVirtualThread();
   self->mEventTarget->SetCurrentThread();
@@ -616,6 +619,27 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
 {
 }
 
+
+nsThread::nsThread()
+  : mEvents(nullptr)
+  , mEventTarget(nullptr)
+  , mShutdownContext(nullptr)
+  , mScriptObserver(nullptr)
+  , mThread(nullptr)
+  , mStackSize(0)
+  , mNestedEventLoopDepth(0)
+  , mCurrentEventLoopDepth(-1)
+  , mShutdownRequired(false)
+  , mPriority(PRIORITY_NORMAL)
+  , mIsMainThread(NOT_MAIN_THREAD)
+  , mCanInvokeJS(false)
+  , mCurrentEvent(nullptr)
+  , mCurrentEventStart(TimeStamp::Now())
+  , mCurrentPerformanceCounter(nullptr)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+}
+
 nsThread::~nsThread()
 {
   NS_ASSERTION(mRequestedShutdownContexts.IsEmpty(),
@@ -647,6 +671,9 @@ nsThread::~nsThread()
 nsresult
 nsThread::Init(const nsACString& aName)
 {
+  MOZ_ASSERT(mEvents);
+  MOZ_ASSERT(mEventTarget);
+
   // spawn thread and wait until it is fully setup
   RefPtr<nsThreadStartupEvent> startup = new nsThreadStartupEvent();
 
@@ -695,6 +722,9 @@ nsThread::InitCurrentThread()
 NS_IMETHODIMP
 nsThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 {
+  MOZ_ASSERT(mEventTarget);
+  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
+
   nsCOMPtr<nsIRunnable> event(aEvent);
   return mEventTarget->Dispatch(event.forget(), aFlags);
 }
@@ -702,6 +732,9 @@ nsThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 NS_IMETHODIMP
 nsThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
+  MOZ_ASSERT(mEventTarget);
+  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
+
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, /* XXX aEvent */nullptr, aFlags));
 
   return mEventTarget->Dispatch(std::move(aEvent), aFlags);
@@ -710,13 +743,20 @@ nsThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 NS_IMETHODIMP
 nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayMs)
 {
+  MOZ_ASSERT(mEventTarget);
+  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
+
   return mEventTarget->DelayedDispatch(std::move(aEvent), aDelayMs);
 }
 
 NS_IMETHODIMP
 nsThread::IsOnCurrentThread(bool* aResult)
 {
-  return mEventTarget->IsOnCurrentThread(aResult);
+  if (mEventTarget) {
+    return mEventTarget->IsOnCurrentThread(aResult);
+  }
+  *aResult = GetCurrentVirtualThread() == mVirtualThread;
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
@@ -768,6 +808,8 @@ nsThread::AsyncShutdown()
 nsThreadShutdownContext*
 nsThread::ShutdownInternal(bool aSync)
 {
+  MOZ_ASSERT(mEvents);
+  MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread != PR_GetCurrentThread());
   if (NS_WARN_IF(mThread == PR_GetCurrentThread())) {
@@ -809,6 +851,8 @@ nsThread::ShutdownInternal(bool aSync)
 void
 nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
 {
+  MOZ_ASSERT(mEvents);
+  MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(aContext->mTerminatingThread == this);
 
@@ -1032,6 +1076,9 @@ nsThread::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 NS_IMETHODIMP
 nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 {
+  MOZ_ASSERT(mEvents);
+  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
+
   LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, aMayWait,
        mNestedEventLoopDepth));
 
@@ -1264,6 +1311,9 @@ nsThread::AdjustPriority(int32_t aDelta)
 NS_IMETHODIMP
 nsThread::GetObserver(nsIThreadObserver** aObs)
 {
+  MOZ_ASSERT(mEvents);
+  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
+
   nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();
   obs.forget(aObs);
   return NS_OK;
@@ -1272,6 +1322,9 @@ nsThread::GetObserver(nsIThreadObserver** aObs)
 NS_IMETHODIMP
 nsThread::SetObserver(nsIThreadObserver* aObs)
 {
+  MOZ_ASSERT(mEvents);
+  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
+
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
@@ -1290,6 +1343,9 @@ nsThread::RecursionDepth() const
 NS_IMETHODIMP
 nsThread::AddObserver(nsIThreadObserver* aObserver)
 {
+  MOZ_ASSERT(mEvents);
+  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
+
   if (NS_WARN_IF(!aObserver)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1305,6 +1361,9 @@ nsThread::AddObserver(nsIThreadObserver* aObserver)
 NS_IMETHODIMP
 nsThread::RemoveObserver(nsIThreadObserver* aObserver)
 {
+  MOZ_ASSERT(mEvents);
+  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
+
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
