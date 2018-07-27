@@ -822,8 +822,10 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   if (mIdNamespace != aIdNamespace) {
     // Pretend we composited since someone is wating for this event,
     // though DisplayList was not pushed to webrender.
-    TimeStamp now = TimeStamp::Now();
-    mCompositorBridge->DidComposite(GetLayersId(), now, now);
+    if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+      TimeStamp now = TimeStamp::Now();
+      cbp->NotifyPipelineRendered(mPipelineId, wrEpoch, now, now);
+    }
   }
 
   if (ShouldParentObserveEpoch()) {
@@ -901,8 +903,13 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
   if (scheduleComposite) {
     ScheduleGenerateFrame();
   } else if (sendDidComposite) {
-    TimeStamp now = TimeStamp::Now();
-    mCompositorBridge->DidComposite(GetLayersId(), now, now);
+    // The only thing in the pending transaction id queue should be the entry
+    // we just added, and now we're going to pretend we rendered it
+    MOZ_ASSERT(mPendingTransactionIds.size() == 1);
+    if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+      TimeStamp now = TimeStamp::Now();
+      cbp->NotifyPipelineRendered(mPipelineId, WrEpoch(), now, now);
+    }
   }
 
   if (ShouldParentObserveEpoch()) {
@@ -1246,7 +1253,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
   return IPC_OK();
 }
 
-void
+wr::Epoch
 WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                                        wr::WebRenderAPI* aApi,
                                        AsyncImagePipelineManager* aImageMgr,
@@ -1260,7 +1267,7 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
   MOZ_ASSERT(aAnimStorage);
 
   if (mDestroyed) {
-    return;
+    return mWrEpoch;
   }
 
   // Update id name space to identify obsoleted keys.
@@ -1284,9 +1291,10 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
   mAsyncImageManager = aImageMgr;
   mAnimStorage = aAnimStorage;
 
-  Unused << GetNextWrEpoch(); // Update webrender epoch
   // Register pipeline to updated AsyncImageManager.
   mAsyncImageManager->AddPipeline(mPipelineId);
+
+  return GetNextWrEpoch(); // Update webrender epoch
 }
 
 mozilla::ipc::IPCResult
@@ -1607,17 +1615,6 @@ WebRenderBridgeParent::LastPendingTransactionId()
   TransactionId id{0};
   if (!mPendingTransactionIds.empty()) {
     id = mPendingTransactionIds.back().mId;
-  }
-  return id;
-}
-
-TransactionId
-WebRenderBridgeParent::FlushPendingTransactionIds()
-{
-  TransactionId id{0};
-  if (!mPendingTransactionIds.empty()) {
-    id = mPendingTransactionIds.back().mId;
-    std::queue<PendingTransactionId>().swap(mPendingTransactionIds); // clear queue
   }
   return id;
 }
