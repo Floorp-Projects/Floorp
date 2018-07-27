@@ -128,6 +128,22 @@ describe("ASRouter", () => {
       assert.lengthOf(Router.state.providers, length);
       assert.isDefined(provider);
     });
+    it("should load additional whitelisted hosts", async () => {
+      getStringPrefStub.returns("[\"whitelist.com\"]");
+      await createRouterAndInit();
+
+      assert.propertyVal(Router.WHITELIST_HOSTS, "whitelist.com", "preview");
+      // Should still include the defaults
+      assert.lengthOf(Object.keys(Router.WHITELIST_HOSTS), 3);
+    });
+    it("should fallback to defaults if pref parsing fails", async () => {
+      getStringPrefStub.returns("err");
+      await createRouterAndInit();
+
+      assert.lengthOf(Object.keys(Router.WHITELIST_HOSTS), 2);
+      assert.propertyVal(Router.WHITELIST_HOSTS, "snippets-admin.mozilla.org", "preview");
+      assert.propertyVal(Router.WHITELIST_HOSTS, "activity-stream-icons.services.mozilla.com", "production");
+    });
   });
 
   describe("#loadMessagesFromAllProviders", () => {
@@ -143,8 +159,10 @@ describe("ASRouter", () => {
       getStringPrefStub.returns("example.com");
       await createRouterAndInit();
 
-      assert.calledOnce(getStringPrefStub);
+      // Get snippets endpoint url, get the whitelisted hosts for endpoints
+      assert.calledTwice(getStringPrefStub);
       assert.calledWithExactly(getStringPrefStub, "remotePref", "");
+      assert.calledWithExactly(getStringPrefStub, "browser.newtab.activity-stream.asrouter.whitelistHosts", "");
       assert.isDefined(Router.state.providers.find(p => p.url === "example.com"));
     });
     it("should not trigger an update if not enough time has passed for a provider", async () => {
@@ -247,6 +265,18 @@ describe("ASRouter", () => {
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME);
       assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].type, "SET_BUNDLED_MESSAGES");
       assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[0].content, currentMessage.content);
+    });
+    it("should properly order the message's bundle if specified", async () => {
+      // force the only messages to be a bundled messages so getRandomItemFromArray picks one of them
+      const firstMessage = {id: "foo2", template: "simple_template", bundled: 2, order: 1, content: {title: "Foo2", body: "Foo123-2"}};
+      const secondMessage = {id: "foo1", template: "simple_template", bundled: 2, order: 2, content: {title: "Foo1", body: "Foo123-1"}};
+      await Router.setState({messages: [secondMessage, firstMessage]});
+      const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
+      await Router.onMessage(msg);
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME);
+      assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].type, "SET_BUNDLED_MESSAGES");
+      assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[0].content, firstMessage.content);
+      assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[1].content, secondMessage.content);
     });
     it("should return a null bundle if we do not have enough messages to fill the bundle", async () => {
       // force the only message to be a bundled message that needs 2 messages in the bundle
@@ -419,7 +449,7 @@ describe("ASRouter", () => {
       const expectedObj = {
         template: testMessage1.template,
         provider: testMessage1.provider,
-        bundle: [{content: testMessage1.content, id: testMessage1.id}, {content: testMessage2.content, id: testMessage2.id}]
+        bundle: [{content: testMessage1.content, id: testMessage1.id, order: 1}, {content: testMessage2.content, id: testMessage2.id}]
       };
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
     });
@@ -434,7 +464,7 @@ describe("ASRouter", () => {
       const expectedObj = {
         template: testMessage1.template,
         provider: testMessage1.provider,
-        bundle: [{content: testMessage1.content, id: testMessage1.id}, {content: testMessage2.content, id: testMessage2.id}]
+        bundle: [{content: testMessage1.content, id: testMessage1.id, order: 1}, {content: testMessage2.content, id: testMessage2.id, order: 2}]
       };
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
     });

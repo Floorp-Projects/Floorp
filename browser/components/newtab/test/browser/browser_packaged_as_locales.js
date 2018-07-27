@@ -59,7 +59,7 @@ add_task(async function test_all_packaged_locales() {
       const locale = file.replace("/", "");
       if (locale !== "static") {
         const url = await getUrlForLocale(locale);
-        Assert[locale === "en-US" ? "equal" : "notEqual"](url, DEFAULT_URL, `can reference "${locale}" files`);
+        Assert.equal(url, DEFAULT_URL.replace("en-US", locale), `can reference "${locale}" files`);
 
         // Specially remember if we saw an ID locale packaged as it can be
         // easily ignored by source control, e.g., .gitignore

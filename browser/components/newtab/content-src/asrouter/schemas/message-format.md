@@ -7,6 +7,8 @@ Field name | Type     | Required | Description | Example / Note
 `publish_start` | `date` | No | When to start showing the message | `1524474850876`
 `publish_end` | `date` | No | When to stop showing the message | `1524474850876`
 `content` | `object` | Yes | An object containing all variables/props to be rendered in the template. Subset of allowed tags detailed below. | [See example below](#html-subset)
+`bundled` | `integer` | No | The number of messages of the same template this one should be shown with | [See example below](#a-bundled-message-example)
+`order` | `integer` | No | If bundled with other messages of the same template, which order should this one be placed in? Defaults to 0 if no order is desired | [See example below](#a-bundled-message-example)
 `campaign` | `string` | No | Campaign id that the message belongs to | `RustWebAssembly`
 `targeting` | `string` `JEXL` | No | A [JEXL expression](http://normandy.readthedocs.io/en/latest/user/filter_expressions.html#jexl-basics) with all targeting information needed in order to decide if the message is shown | Not yet implemented, [Examples](#targeting-attributes)
 `trigger` | `string` | No | An event or condition upon which the message will be immediately shown. This can be combined with `targeting`. Messages that define a trigger will not be shown during non-trigger-based passive message rotation.
@@ -28,6 +30,35 @@ Field name | Type     | Required | Description | Example / Note
     lifetime: 20,
     custom: [{period: "daily", cap: 5}, {period: 3600000, cap: 1}]
   }
+}
+```
+
+### A Bundled Message example
+The following 2 messages have a `bundled` property, indicating that they should be shown together, since they have the same template. The number `2` indicates that this message should be shown in a bundle of 2 messages of the same template. The order property defines that ONBOARDING_2 should be shown after ONBOARDING_3 in the bundle.
+```javascript
+{
+  id: "ONBOARDING_2",
+  template: "onboarding",
+  bundled: 2,
+  order: 2,
+  content: {
+    title: "Private Browsing",
+    body: "Browse by yourself. Private Browsing with Tracking Protection blocks online trackers that follow you around the web."
+  },
+  targeting: "",
+  trigger: "firstRun"
+}
+{
+  id: "ONBOARDING_3",
+  template: "onboarding",
+  bundled: 2,
+  order: 1,
+  content: {
+    title: "Find it faster",
+    body: "Access all of your favorite search engines with a click. Search the whole Web or just one website from the search box."
+  },
+  targeting: "",
+  trigger: "firstRun"
 }
 ```
 

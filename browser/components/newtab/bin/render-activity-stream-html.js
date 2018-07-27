@@ -245,8 +245,11 @@ function main() { // eslint-disable-line max-statements
     console.log("\x1b[33m", `Skipped the following locales because they are not in CENTRAL_LOCALES: ${extraLocales.join(", ")}`, "\x1b[0m");
   }
 
+  // Convert ja-JP-mac lang tag to ja-JP-macos bcp47 to work around bug 1478930
+  const bcp47String = localizedLocales.join(" ").replace(/(ja-JP-mac)/, "$1os");
+
   // Provide some help to copy/paste locales if tests are failing
-  console.log(`\nIf aboutNewTabService tests are failing for unexpected locales, make sure its list is updated:\nconst ACTIVITY_STREAM_LOCALES = "${localizedLocales.join(" ")}".split(" ");`);
+  console.log(`\nIf aboutNewTabService tests are failing for unexpected locales, make sure its list is updated:\nconst ACTIVITY_STREAM_BCP47 = "${bcp47String}".split(" ");`);
 }
 
 main();

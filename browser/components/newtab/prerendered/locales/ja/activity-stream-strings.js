@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "メールアドレスを入力してください",
   "firstrun_form_sub_header": "Firefox Sync の利用を続けるために必要です",
   "firstrun_email_input_placeholder": "メールアドレス",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "メールアドレスを正しく入力してください",
   "firstrun_extra_legal_links": "続行すると、{terms} と {privacy} に同意したものとみなします。",
   "firstrun_terms_of_service": "サービス利用規約",
   "firstrun_privacy_notice": "プライバシーに関する通知",

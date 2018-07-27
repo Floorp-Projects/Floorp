@@ -51,7 +51,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_options_download_label": "Son Endirmələr",
   "prefs_highlights_options_pocket_label": "Pocket-ə Saxlanılan Səhifələr",
   "prefs_snippets_description": "Mozilla və Firefoxdan yeniliklər",
-  "settings_pane_button_label": "Yeni Vərəq səhifənizi özəlləşdirin",
+  "settings_pane_button_label": "Yeni Vərəq səhifənizi fərdiləşdirin",
   "settings_pane_topsites_header": "Qabaqcıl Saytlar",
   "settings_pane_highlights_header": "Seçilmişlər",
   "settings_pane_highlights_options_bookmarks": "Əlfəcinlər",
