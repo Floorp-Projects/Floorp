@@ -221,20 +221,12 @@ class MachCommands(MachCommandBase):
         return 0
 
     def _process_jacoco_reports(self):
-        def download_grcov(parent_dir):
-            fetch_script_path = os.path.join(self.topsrcdir, 'taskcluster', 'scripts', 'misc',
-                                             'fetch-content')
-            args = [fetch_script_path, 'task-artifacts', os.environ['MOZ_FETCHES'],
-                    '-d', parent_dir]
-            self.run_process(args, ensure_exit_code=True)
-            return os.path.join(parent_dir, 'grcov')
-
         def run_grcov(grcov_path, input_path):
             args = [grcov_path, input_path, '-t', 'lcov']
             return subprocess.check_output(args)
 
-        with TemporaryDirectory() as xml_dir, TemporaryDirectory() as grcov_dir:
-            grcov = download_grcov(grcov_dir)
+        with TemporaryDirectory() as xml_dir:
+            grcov = os.path.join(os.environ['MOZ_FETCHES_DIR'], 'grcov')
 
             report_xml_template = self.topobjdir + '/gradle/build/mobile/android/%s/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'  # NOQA: E501
             shutil.copy(report_xml_template % 'app', os.path.join(xml_dir, 'app.xml'))
