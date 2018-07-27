@@ -863,7 +863,7 @@ AudioInputProcessing::UpdateAGCSettings(bool aEnable,
             ("Invalid AGC mode kAgcAdaptiveAnalog on mobile"));
     MOZ_ASSERT_UNREACHABLE("Bad pref set in all.js or in about:config"
                            " for the auto gain, on mobile.");
-    aMode = GainControl::Mode::kDefaultAgcMode;
+    aMode = GainControl::Mode::kFixedDigital;
   }
 #endif
   HANDLE_APM_ERROR(mAudioProcessing->gain_control()->set_mode(aMode));
