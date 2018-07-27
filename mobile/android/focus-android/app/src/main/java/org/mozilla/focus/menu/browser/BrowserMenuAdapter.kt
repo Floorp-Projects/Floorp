@@ -33,7 +33,12 @@ class BrowserMenuAdapter(
             override val viewType = MenuItemViewHolder.LAYOUT_ID
         }
 
-        class Custom(id: Int, label: String, drawableResId: Int, val pendingIntent: PendingIntent) : Default(id, label, drawableResId) {
+        class Custom(
+            id: Int,
+            label: String,
+            drawableResId: Int,
+            val pendingIntent: PendingIntent
+        ) : Default(id, label, drawableResId) {
             override val viewType = CustomTabMenuItemViewHolder.LAYOUT_ID
         }
 
@@ -69,10 +74,12 @@ class BrowserMenuAdapter(
         items.add(MenuItem.BlockingSwitch)
 
         if (customTabConfig == null || customTabConfig.showShareMenuItem) {
-            items.add(MenuItem.Default(R.id.share, resources.getString(R.string.menu_share), R.drawable.ic_share_menu_item))
+            items.add(MenuItem.Default(R.id.share, resources.getString(R.string.menu_share),
+                    R.drawable.ic_share_menu_item))
         }
 
-        items.add(MenuItem.Default(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen), R.drawable.ic_add_to_home_menu_item))
+        items.add(MenuItem.Default(R.id.add_to_homescreen,
+                resources.getString(R.string.menu_add_to_home_screen), R.drawable.ic_add_to_home_menu_item))
         items.add(MenuItem.Default(R.id.find_in_page, resources.getString(R.string.find_in_page), 0))
 
         if (browsers.hasMultipleThirdPartyBrowsers(context)) {
@@ -100,7 +107,8 @@ class BrowserMenuAdapter(
         if (customTabConfig == null) {
             // There’s no need for Settings in a custom tab.
             // The user can go to the browser app itself in order to do this.
-            items.add(MenuItem.Default(R.id.settings, resources.getString(R.string.menu_settings), R.drawable.ic_settings_menu_item))
+            items.add(MenuItem.Default(R.id.settings, resources.getString(R.string.menu_settings),
+                    R.drawable.ic_settings_menu_item))
         }
 
         if (AppConstants.isGeckoBuild(context)) {
