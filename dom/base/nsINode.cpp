@@ -2935,7 +2935,10 @@ nsINode::Localize(JSContext* aCx,
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
     }
-    domElements.AppendElement(domElement, fallible);
+    if (!domElements.AppendElement(domElement, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
 
     domElement->GetNamespaceURI(element->mNamespaceURI);
     element->mLocalName = domElement->LocalName();
