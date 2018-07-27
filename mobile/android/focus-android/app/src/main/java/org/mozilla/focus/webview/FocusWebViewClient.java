@@ -23,6 +23,9 @@ import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.IWebView;
 
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO;
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES;
+
 /**
  * WebViewClient layer that handles browser specific WebViewClient functionality, such as error pages
  * and external URL handling.
@@ -35,6 +38,7 @@ import org.mozilla.focus.web.IWebView;
     private String restoredUrl;
     private SslCertificate restoredCertificate;
     private boolean errorReceived;
+    private boolean shouldReadURL = true; // Flag to ensure URL is only read once per load
 
     /* package */ FocusWebViewClient(Context context) {
         super(context);
@@ -143,6 +147,11 @@ import org.mozilla.focus.web.IWebView;
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
+
+        /* Temporarily disable TalkBack on WebView so it doesn't grab the focus before we can
+        read out the URL. */
+        view.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+
         if (errorReceived) {
             // When dealing with error pages, WebView sometimes sends onPageStarted()
             // without a matching onPageFinished(). We hack around that by using
@@ -154,7 +163,15 @@ import org.mozilla.focus.web.IWebView;
             errorReceived = false;
         } else if (callback != null) {
             callback.onPageStarted(url);
+
+            if (shouldReadURL) {
+                view.announceForAccessibility("Loading " + url);
+                shouldReadURL = false;
+            }
         }
+
+        // Enable TalkBack again for WebView now that we've announced the URL
+        view.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
         super.onPageStarted(view, url, favicon);
     }
@@ -177,6 +194,7 @@ import org.mozilla.focus.web.IWebView;
     @Override
     public void onPageFinished(WebView view, final String url) {
         SslCertificate certificate = view.getCertificate();
+        shouldReadURL = true;
 
         if (!TextUtils.isEmpty(restoredUrl)) {
             if (restoredUrl.equals(url) && certificate == null) {
