@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the payment-dialog custom element
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the payment-dialog element</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+  <script src="../../res/unprivileged-fallbacks.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/containers/rich-picker.css"/>
+</head>
+<body>
+  <p id="display">
+    <iframe id="templateFrame" src="../../res/paymentRequest.xhtml" width="0" height="0"></iframe>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="module">
+/** Test the payment-dialog element **/
+
+/* global sinon */
+
+import PaymentDialog from "../../res/containers/payment-dialog.js";
+
+let el1;
+
+add_task(async function setupOnce() {
+  let templateFrame = document.getElementById("templateFrame");
+  await SimpleTest.promiseFocus(templateFrame.contentWindow);
+
+  let displayEl = document.getElementById("display");
+  // Import the templates from the real shipping dialog to avoid duplication.
+  for (let template of templateFrame.contentDocument.querySelectorAll("template")) {
+    let imported = document.importNode(template, true);
+    displayEl.appendChild(imported);
+  }
+
+  el1 = new PaymentDialog();
+  displayEl.appendChild(el1);
+});
+
+async function setup({shippingRequired, payerRequired}) {
+  let state = deepClone(el1.requestStore.getState());
+  state.request.paymentDetails.shippingOptions = shippingRequired ? [{
+    id: "123",
+    label: "Carrier Pigeon",
+    amount: {
+      currency: "USD",
+      value: 10,
+    },
+    selected: false,
+  }, {
+    id: "456",
+    label: "Lightspeed (default)",
+    amount: {
+      currency: "USD",
+      value: 20,
+    },
+    selected: false,
+  }] : null;
+  state.request.paymentOptions.requestShipping = shippingRequired;
+  state.request.paymentOptions.requestPayerName = payerRequired;
+  state.savedAddresses = shippingRequired || payerRequired ? {
+    "48bnds6854t": {
+      "address-level1": "MI",
+      "address-level2": "Some City",
+      "country": "US",
+      "guid": "48bnds6854t",
+      "name": "Mr. Foo",
+      "postal-code": "90210",
+      "street-address": "123 Sesame Street,\nApt 40",
+      "tel": "+1 519 555-5555",
+    },
+    "68gjdh354j": {
+      "address-level1": "CA",
+      "address-level2": "Mountain View",
+      "country": "US",
+      "guid": "68gjdh354j",
+      "name": "Mrs. Bar",
+      "postal-code": "94041",
+      "street-address": "P.O. Box 123",
+      "tel": "+1 650 555-5555",
+    },
+  } : {};
+  state.savedBasicCards = {
+    "john-doe": Object.assign({methodName: "basic-card"}, deepClone(PTU.BasicCards.JohnDoe)),
+  };
+  state.selectedPayerAddress = null;
+  state.selectedPaymentCard = null;
+  state.selectedShippingAddress = null;
+  state.selectedShippingOption = null;
+  await el1.requestStore.setState(state);
+  await asyncElementRendered();
+}
+
+function selectFirstItemOfPicker(picker) {
+  picker.dropdown.popupBox.focus();
+  let options = picker.dropdown.popupBox.children;
+  synthesizeKey(options[0].textContent, {});
+  ok(picker.dropdown.selectedOption, `Option should be selected for ${picker.localName}`);
+}
+
+add_task(async function runTests() {
+  let allPickers = {
+    shippingAddress: el1._shippingAddressPicker,
+    shippingOption: el1._shippingOptionPicker,
+    paymentMethod: el1._paymentMethodPicker,
+    payerAddress: el1._payerAddressPicker,
+  };
+  let testCases = [
+    {
+      label: "shippingAndPayerRequired",
+      setup: { shippingRequired: true, payerRequired: true },
+      pickers: Object.values(allPickers),
+    }, {
+      label: "payerRequired",
+      setup: { payerRequired: true },
+      pickers: [allPickers.paymentMethod, allPickers.payerAddress],
+    }, {
+      label: "shippingRequired",
+      setup: { shippingRequired: true },
+      pickers: [
+        allPickers.shippingAddress,
+        allPickers.shippingOption,
+        allPickers.paymentMethod,
+      ],
+    },
+  ];
+
+  for (let testCase of testCases) {
+    info(`Starting testcase ${testCase.label}`);
+    await setup(testCase.setup);
+
+    for (let picker of testCase.pickers) {
+      ok(!picker.dropdown.selectedOption, `No option selected for ${picker.localName}`);
+    }
+    let hiddenPickers = Object.values(allPickers).filter(p => !testCase.pickers.includes(p));
+    for (let hiddenPicker of hiddenPickers) {
+      ok(hiddenPicker.hidden, `${hiddenPicker.localName} should be hidden`);
+    }
+
+    let payButton = document.getElementById("pay");
+    ok(payButton.disabled, "Button is disabled when required options are not selected");
+
+    let stateChangedPromise = promiseStateChange(el1.requestStore);
+    testCase.pickers.forEach(selectFirstItemOfPicker);
+    await stateChangedPromise;
+
+    ok(!payButton.disabled, "Button is enabled when required options are selected");
+  }
+});
+</script>
+
+</body>
+</html>

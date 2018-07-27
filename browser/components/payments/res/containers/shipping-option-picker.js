@@ -21,7 +21,9 @@ export default class ShippingOptionPicker extends RichPicker {
     this.addLink.hidden = true;
     this.editLink.hidden = true;
 
-    let {shippingOptions} = state.request.paymentDetails;
+    // If requestShipping is true but paymentDetails.shippingOptions isn't defined
+    // then use an empty array as a fallback.
+    let shippingOptions = state.request.paymentDetails.shippingOptions || [];
     let desiredOptions = [];
     for (let option of shippingOptions) {
       let optionEl = this.dropdown.getOptionByValue(option.id);
