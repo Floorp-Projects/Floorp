@@ -15,14 +15,13 @@ namespace mozilla {
 void
 WebGLContext::Clear(GLbitfield mask)
 {
-    const char funcName[] = "clear";
-
+    const FuncScope funcScope(*this, "clear");
     if (IsContextLost())
         return;
 
     uint32_t m = mask & (LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
     if (mask != m)
-        return ErrorInvalidValue("%s: invalid mask bits", funcName);
+        return ErrorInvalidValue("Invalid mask bits.");
 
     if (mask == 0) {
         GenerateWarning("Calling gl.clear(0) has no effect.");
@@ -43,16 +42,15 @@ WebGLContext::Clear(GLbitfield mask)
                     break;
 
                 default:
-                    ErrorInvalidOperation("%s: Color draw buffers must be floating-point"
-                                          " or fixed-point. (normalized (u)ints)",
-                                          funcName);
+                    ErrorInvalidOperation("Color draw buffers must be floating-point"
+                                          " or fixed-point. (normalized (u)ints)");
                     return;
                 }
             }
         }
     }
 
-    if (!BindCurFBForDraw(funcName))
+    if (!BindCurFBForDraw())
         return;
 
     auto driverMask = mask;
@@ -84,6 +82,7 @@ GLClampFloat(GLfloat val)
 void
 WebGLContext::ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 {
+    const FuncScope funcScope(*this, "clearColor");
     if (IsContextLost())
         return;
 
@@ -108,6 +107,7 @@ WebGLContext::ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 void
 WebGLContext::ClearDepth(GLclampf v)
 {
+    const FuncScope funcScope(*this, "clearDepth");
     if (IsContextLost())
         return;
 
@@ -118,6 +118,7 @@ WebGLContext::ClearDepth(GLclampf v)
 void
 WebGLContext::ClearStencil(GLint v)
 {
+    const FuncScope funcScope(*this, "clearStencil");
     if (IsContextLost())
         return;
 
@@ -128,6 +129,7 @@ WebGLContext::ClearStencil(GLint v)
 void
 WebGLContext::ColorMask(WebGLboolean r, WebGLboolean g, WebGLboolean b, WebGLboolean a)
 {
+    const FuncScope funcScope(*this, "colorMask");
     if (IsContextLost())
         return;
 
@@ -140,6 +142,7 @@ WebGLContext::ColorMask(WebGLboolean r, WebGLboolean g, WebGLboolean b, WebGLboo
 void
 WebGLContext::DepthMask(WebGLboolean b)
 {
+    const FuncScope funcScope(*this, "depthMask");
     if (IsContextLost())
         return;
 
@@ -150,12 +153,12 @@ WebGLContext::DepthMask(WebGLboolean b)
 void
 WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 {
-    const char funcName[] = "drawBuffers";
+    const FuncScope funcScope(*this, "drawBuffers");
     if (IsContextLost())
         return;
 
     if (mBoundDrawFramebuffer) {
-        mBoundDrawFramebuffer->DrawBuffers(funcName, buffers);
+        mBoundDrawFramebuffer->DrawBuffers(buffers);
         return;
     }
 
@@ -165,9 +168,8 @@ WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
     //  constant other than BACK and NONE, or with a value of `n` other than 1, the
     //  error INVALID_OPERATION is generated."
     if (buffers.Length() != 1) {
-        ErrorInvalidOperation("%s: For the default framebuffer, `buffers` must have a"
-                              " length of 1.",
-                              funcName);
+        ErrorInvalidOperation("For the default framebuffer, `buffers` must have a"
+                              " length of 1.");
         return;
     }
 
@@ -177,9 +179,8 @@ WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
         break;
 
     default:
-        ErrorInvalidOperation("%s: For the default framebuffer, `buffers[0]` must be"
-                              " BACK or NONE.",
-                              funcName);
+        ErrorInvalidOperation("For the default framebuffer, `buffers[0]` must be"
+                              " BACK or NONE.");
         return;
     }
 
@@ -190,6 +191,7 @@ WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 void
 WebGLContext::StencilMask(GLuint mask)
 {
+    const FuncScope funcScope(*this, "stencilMask");
     if (IsContextLost())
         return;
 
@@ -202,10 +204,11 @@ WebGLContext::StencilMask(GLuint mask)
 void
 WebGLContext::StencilMaskSeparate(GLenum face, GLuint mask)
 {
+    const FuncScope funcScope(*this, "stencilMaskSeparate");
     if (IsContextLost())
         return;
 
-    if (!ValidateFaceEnum(face, "stencilMaskSeparate: face"))
+    if (!ValidateFaceEnum(face))
         return;
 
     switch (face) {
