@@ -7,7 +7,7 @@
 // Creates a new PageListener for this process. This will listen for page loads
 // and for those that match URLs provided by the parent process will set up
 // a dedicated message port and notify the parent process.
-ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm");
+ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const gInContentProcess = Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;

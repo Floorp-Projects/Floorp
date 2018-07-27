@@ -821,7 +821,8 @@ var AddonManagerInternal = {
 
       // Support for remote about:plugins. Note that this module isn't loaded
       // at the top because Services.appinfo is defined late in tests.
-      let { RemotePages } = ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm", {});
+      let { RemotePages } =
+        ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm", {});
 
       gPluginPageListener = new RemotePages("about:plugins");
       gPluginPageListener.addMessageListener("RequestPlugins", this.requestPlugins);
