@@ -224,7 +224,9 @@ PaintThread::InitPaintWorkers()
 {
   MOZ_ASSERT(NS_IsMainThread());
   int32_t count = PaintThread::CalculatePaintWorkerCount();
-  mPaintWorkers = SharedThreadPool::Get(NS_LITERAL_CSTRING("PaintWorker"), count);
+  if (count != 1) {
+    mPaintWorkers = SharedThreadPool::Get(NS_LITERAL_CSTRING("PaintWorker"), count);
+  }
 }
 
 void
@@ -273,7 +275,8 @@ PaintThread::IsOnPaintThread()
 bool
 PaintThread::IsOnPaintWorkerThread()
 {
-  return mPaintWorkers && mPaintWorkers->IsOnCurrentThread();
+  return (mPaintWorkers && mPaintWorkers->IsOnCurrentThread()) ||
+    (sThreadId == PlatformThread::CurrentId());
 }
 
 void
@@ -419,7 +422,6 @@ PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aState);
-  MOZ_ASSERT(mPaintWorkers);
 
   if (gfxPrefs::LayersOMTPDumpCapture() && aState->mCapture) {
     aState->mCapture->Dump();
@@ -437,10 +439,14 @@ PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
     self->AsyncPaintTiledContents(cbc, state);
   });
 
+  nsIEventTarget* paintThread = mPaintWorkers ?
+    static_cast<nsIEventTarget*>(mPaintWorkers.get()) :
+    static_cast<nsIEventTarget*>(sThread.get());
+
 #ifndef OMTP_FORCE_SYNC
-  mPaintWorkers->Dispatch(task.forget());
+  paintThread->Dispatch(task.forget());
 #else
-  SyncRunnable::DispatchToThread(mPaintWorkers, task);
+  SyncRunnable::DispatchToThread(paintThread, task);
 #endif
 }
 

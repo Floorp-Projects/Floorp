@@ -9,7 +9,7 @@
 // tool is not supported.
 
 const testToolDefinition = {
-  id: "test-tool",
+  id: "testTool",
   isTargetSupported: () => true,
   visibilityswitch: "devtools.test-tool.enabled",
   url: "about:blank",
@@ -31,7 +31,7 @@ add_task(async function() {
   let target = TargetFactory.forTab(tab);
 
   let toolbox = await gDevTools.showToolbox(target, testToolDefinition.id);
-  is(toolbox.currentToolId, "test-tool", "test-tool was selected");
+  is(toolbox.currentToolId, "testTool", "test-tool was selected");
   await gDevTools.closeToolbox(target);
 
   // Make the previously selected tool unavailable.

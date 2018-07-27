@@ -421,9 +421,10 @@ add_task(async function test_bookmark_change_during_sync() {
       "Folder 1 should have 3 children after first sync");
     await assertChildGuids(folder2_guid, [bmk4_guid, tagQuery_guid],
       "Folder 2 should have 2 children after first sync");
-    let taggedURIs = PlacesUtils.tagging.getURIsForTag("taggy");
+    let taggedURIs = [];
+    await PlacesUtils.bookmarks.fetch({tags: ["taggy"]}, b => taggedURIs.push(b.url));
     equal(taggedURIs.length, 1, "Should have 1 tagged URI");
-    equal(taggedURIs[0].spec, "https://example.org/",
+    equal(taggedURIs[0].href, "https://example.org/",
       "Synced tagged bookmark should appear in tagged URI list");
 
     changes = await PlacesSyncUtils.bookmarks.pullChanges();
