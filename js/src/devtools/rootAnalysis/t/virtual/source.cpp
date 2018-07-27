@@ -17,7 +17,7 @@ typedef void (*func_t)();
 class Base {
   public:
     int ANNOTATE("field annotation") dummy;
-    virtual void someGC() = 0;
+    virtual void someGC() ANNOTATE("Base pure virtual method") = 0;
     func_t functionField;
 
     // For now, this is just to verify that the plugin doesn't crash. The
@@ -52,9 +52,14 @@ void bar() {
 class Sub1 : public Super {
   public:
     void noneGC() override { foo(); }
-    void someGC() override { foo(); }
+    void someGC() override
+      ANNOTATE("Sub1 override")
+      ANNOTATE("second attr")
+    {
+        foo();
+    }
     void allGC() override { foo(); bar(); }
-};
+} ANNOTATE("CSU1") ANNOTATE("CSU2");
 
 class Sub2 : public Super {
   public:
