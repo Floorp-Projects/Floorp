@@ -8,8 +8,12 @@
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
 #include "nsPrintfCString.h"
+#include "nsThread.h"
+#include "nsThreadManager.h"
 #include "nsThreadUtils.h"
+#include "mozilla/EventQueue.h"
 #include "mozilla/IOInterposer.h"
+#include "mozilla/ThreadEventQueue.h"
 #include "GeckoProfiler.h"
 
 #ifdef XP_WIN
@@ -132,7 +136,7 @@ BlockingIOWatcher::BlockingIOWatcher()
 
   mCancelSynchronousIo = reinterpret_cast<TCancelSynchronousIo>(ptr);
 
-  mEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+  mEvent = ::CreateEventW(NULL, TRUE, FALSE, NULL);
 }
 
 BlockingIOWatcher::~BlockingIOWatcher()
@@ -461,8 +465,10 @@ void CacheIOThread::ThreadFunc()
     MOZ_ASSERT(mBlockingIOWatcher);
     mBlockingIOWatcher->InitThread();
 
-    // This creates nsThread for this PRThread
-    nsCOMPtr<nsIThread> xpcomThread = NS_GetCurrentThread();
+    auto queue = MakeRefPtr<ThreadEventQueue<mozilla::EventQueue>>(
+      MakeUnique<mozilla::EventQueue>());
+    nsCOMPtr<nsIThread> xpcomThread =
+      nsThreadManager::get().CreateCurrentThread(queue, nsThread::NOT_MAIN_THREAD);
 
     threadInternal = do_QueryInterface(xpcomThread);
     if (threadInternal)
