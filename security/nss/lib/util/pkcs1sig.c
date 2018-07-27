@@ -15,13 +15,6 @@ struct pkcs1PrefixStr {
     PRUint8 *data;
 };
 
-typedef struct pkcs1PrefixesStr pkcs1Prefixes;
-struct pkcs1PrefixesStr {
-    unsigned int digestLen;
-    pkcs1Prefix prefixWithParams;
-    pkcs1Prefix prefixWithoutParams;
-};
-
 /* The value for SGN_PKCS1_DIGESTINFO_MAX_PREFIX_LEN_EXCLUDING_OID is based on
  * the possible prefix encodings as explained below.
  */
@@ -101,9 +94,8 @@ _SGN_VerifyPKCS1DigestInfo(SECOidTag digestAlg,
                            PRBool unsafeAllowMissingParameters)
 {
     SECOidData *hashOid;
-    pkcs1Prefixes pp;
-    const pkcs1Prefix *expectedPrefix;
-    SECStatus rv, rv2, rv3;
+    pkcs1Prefix prefix;
+    SECStatus rv;
 
     if (!digest || !digest->data ||
         !dataRecoveredFromSignature || !dataRecoveredFromSignature->data) {
@@ -117,17 +109,9 @@ _SGN_VerifyPKCS1DigestInfo(SECOidTag digestAlg,
         return SECFailure;
     }
 
-    pp.digestLen = digest->len;
-    pp.prefixWithParams.data = NULL;
-    pp.prefixWithoutParams.data = NULL;
+    prefix.data = NULL;
 
-    rv2 = encodePrefix(hashOid, pp.digestLen, &pp.prefixWithParams, PR_TRUE);
-    rv3 = encodePrefix(hashOid, pp.digestLen, &pp.prefixWithoutParams, PR_FALSE);
-
-    rv = SECSuccess;
-    if (rv2 != SECSuccess || rv3 != SECSuccess) {
-        rv = SECFailure;
-    }
+    rv = encodePrefix(hashOid, digest->len, &prefix, PR_TRUE);
 
     if (rv == SECSuccess) {
         /* We don't attempt to avoid timing attacks on these comparisons because
@@ -135,34 +119,39 @@ _SGN_VerifyPKCS1DigestInfo(SECOidTag digestAlg,
          * operation.
          */
 
-        if (dataRecoveredFromSignature->len ==
-            pp.prefixWithParams.len + pp.digestLen) {
-            expectedPrefix = &pp.prefixWithParams;
-        } else if (unsafeAllowMissingParameters &&
-                   dataRecoveredFromSignature->len ==
-                       pp.prefixWithoutParams.len + pp.digestLen) {
-            expectedPrefix = &pp.prefixWithoutParams;
-        } else {
-            PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-            rv = SECFailure;
+        if (dataRecoveredFromSignature->len != prefix.len + digest->len) {
+            PRBool lengthMismatch = PR_TRUE;
+#ifdef NSS_PKCS1_AllowMissingParameters
+            if (unsafeAllowMissingParameters) {
+                if (prefix.data) {
+                    PORT_Free(prefix.data);
+                    prefix.data = NULL;
+                }
+                rv = encodePrefix(hashOid, digest->len, &prefix, PR_FALSE);
+                if (rv != SECSuccess ||
+                    dataRecoveredFromSignature->len == prefix.len + digest->len) {
+                    lengthMismatch = PR_FALSE;
+                }
+            }
+#endif
+            if (lengthMismatch) {
+                PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+                rv = SECFailure;
+            }
         }
     }
 
     if (rv == SECSuccess) {
-        if (memcmp(dataRecoveredFromSignature->data, expectedPrefix->data,
-                   expectedPrefix->len) ||
-            memcmp(dataRecoveredFromSignature->data + expectedPrefix->len,
-                   digest->data, digest->len)) {
+        if (memcmp(dataRecoveredFromSignature->data, prefix.data, prefix.len) ||
+            memcmp(dataRecoveredFromSignature->data + prefix.len, digest->data,
+                   digest->len)) {
             PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
             rv = SECFailure;
         }
     }
 
-    if (pp.prefixWithParams.data) {
-        PORT_Free(pp.prefixWithParams.data);
-    }
-    if (pp.prefixWithoutParams.data) {
-        PORT_Free(pp.prefixWithoutParams.data);
+    if (prefix.data) {
+        PORT_Free(prefix.data);
     }
 
     return rv;
