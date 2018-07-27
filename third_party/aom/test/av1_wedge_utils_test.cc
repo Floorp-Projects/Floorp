@@ -217,14 +217,6 @@ TEST_P(WedgeUtilsSSEOptTest, ExtremeValues) {
   }
 }
 
-#if HAVE_SSE2
-INSTANTIATE_TEST_CASE_P(
-    SSE2, WedgeUtilsSSEOptTest,
-    ::testing::Values(TestFuncsFSSE(av1_wedge_sse_from_residuals_c,
-                                    av1_wedge_sse_from_residuals_sse2)));
-
-#endif  // HAVE_SSE2
-
 //////////////////////////////////////////////////////////////////////////////
 // av1_wedge_sign_from_residuals
 //////////////////////////////////////////////////////////////////////////////
@@ -325,15 +317,6 @@ TEST_P(WedgeUtilsSignOptTest, ExtremeValues) {
   }
 }
 
-#if HAVE_SSE2
-
-INSTANTIATE_TEST_CASE_P(
-    SSE2, WedgeUtilsSignOptTest,
-    ::testing::Values(TestFuncsFSign(av1_wedge_sign_from_residuals_c,
-                                     av1_wedge_sign_from_residuals_sse2)));
-
-#endif  // HAVE_SSE2
-
 //////////////////////////////////////////////////////////////////////////////
 // av1_wedge_compute_delta_squares
 //////////////////////////////////////////////////////////////////////////////
@@ -371,12 +354,37 @@ TEST_P(WedgeUtilsDeltaSquaresOptTest, RandomValues) {
 }
 
 #if HAVE_SSE2
+INSTANTIATE_TEST_CASE_P(
+    SSE2, WedgeUtilsSSEOptTest,
+    ::testing::Values(TestFuncsFSSE(av1_wedge_sse_from_residuals_c,
+                                    av1_wedge_sse_from_residuals_sse2)));
+
+INSTANTIATE_TEST_CASE_P(
+    SSE2, WedgeUtilsSignOptTest,
+    ::testing::Values(TestFuncsFSign(av1_wedge_sign_from_residuals_c,
+                                     av1_wedge_sign_from_residuals_sse2)));
 
 INSTANTIATE_TEST_CASE_P(
     SSE2, WedgeUtilsDeltaSquaresOptTest,
     ::testing::Values(TestFuncsFDS(av1_wedge_compute_delta_squares_c,
                                    av1_wedge_compute_delta_squares_sse2)));
-
 #endif  // HAVE_SSE2
+
+#if HAVE_AVX2
+INSTANTIATE_TEST_CASE_P(
+    AVX2, WedgeUtilsSSEOptTest,
+    ::testing::Values(TestFuncsFSSE(av1_wedge_sse_from_residuals_sse2,
+                                    av1_wedge_sse_from_residuals_avx2)));
+
+INSTANTIATE_TEST_CASE_P(
+    AVX2, WedgeUtilsSignOptTest,
+    ::testing::Values(TestFuncsFSign(av1_wedge_sign_from_residuals_sse2,
+                                     av1_wedge_sign_from_residuals_avx2)));
+
+INSTANTIATE_TEST_CASE_P(
+    AVX2, WedgeUtilsDeltaSquaresOptTest,
+    ::testing::Values(TestFuncsFDS(av1_wedge_compute_delta_squares_sse2,
+                                   av1_wedge_compute_delta_squares_avx2)));
+#endif  // HAVE_AVX2
 
 }  // namespace

@@ -289,6 +289,15 @@ SIMD_INLINE v256 v256_shr_u32(v256 a, unsigned int c) {
 SIMD_INLINE v256 v256_shr_s32(v256 a, unsigned int c) {
   return c_v256_shr_s32(a, c);
 }
+SIMD_INLINE v256 v256_shl_64(v256 a, unsigned int c) {
+  return c_v256_shl_64(a, c);
+}
+SIMD_INLINE v256 v256_shr_u64(v256 a, unsigned int c) {
+  return c_v256_shr_u64(a, c);
+}
+SIMD_INLINE v256 v256_shr_s64(v256 a, unsigned int c) {
+  return c_v256_shr_s64(a, c);
+}
 
 SIMD_INLINE v256 v256_shr_n_byte(v256 a, unsigned int n) {
   return c_v256_shr_n_byte(a, n);

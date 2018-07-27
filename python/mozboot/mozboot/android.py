@@ -43,9 +43,10 @@ output as packages are downloaded and installed.
 '''
 
 MOBILE_ANDROID_MOZCONFIG_TEMPLATE = '''
-Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
+Paste the lines between the chevrons (>>> and <<<) into your
+$topsrcdir/mozconfig file, or create the file if it does not exist:
 
-<<<
+>>>
 # Build Firefox for Android:
 ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
@@ -54,13 +55,14 @@ ac_add_options --target=arm-linux-androideabi
 # With the following Android SDK and NDK:
 ac_add_options --with-android-sdk="{sdk_path}"
 ac_add_options --with-android-ndk="{ndk_path}"
->>>
+<<<
 '''
 
 MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE = '''
-Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
+Paste the lines between the chevrons (>>> and <<<) into your
+$topsrcdir/mozconfig file, or create the file if it does not exist:
 
-<<<
+>>>
 # Build Firefox for Android Artifact Mode:
 ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
@@ -72,7 +74,7 @@ ac_add_options --with-android-sdk="{sdk_path}"
 
 # Write build artifacts to:
 mk_add_options MOZ_OBJDIR=./objdir-frontend
->>>
+<<<
 '''
 
 

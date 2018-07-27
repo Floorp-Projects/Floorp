@@ -369,7 +369,8 @@ typedef enum {
 } AVxWorkerStatus;
 
 // Function to be called by the worker thread. Takes two opaque pointers as
-// arguments (data1 and data2), and should return false in case of error.
+// arguments (data1 and data2). Should return true on success and return false
+// in case of error.
 typedef int (*AVxWorkerHook)(void *, void *);
 
 // Platform-dependent implementation details for the worker.
@@ -382,7 +383,7 @@ typedef struct {
   AVxWorkerHook hook;  // hook to call
   void *data1;         // first argument passed to 'hook'
   void *data2;         // second argument passed to 'hook'
-  int had_error;       // return value of the last call to 'hook'
+  int had_error;       // true if a call to 'hook' returned false
 } AVxWorker;
 
 // The interface for all thread-worker related functions. All these functions

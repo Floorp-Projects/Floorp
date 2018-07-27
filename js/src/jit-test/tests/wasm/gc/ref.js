@@ -20,12 +20,6 @@ var bin = wasmTextToBinary(
                    (field $x i32)
                    (field $to_odd (ref $odd))))
 
-      ;; No globals of reference type yet.
-      ;;
-      ;;(import "m" "g" (global (ref $cons)))
-      ;;
-      ;;(global $glob (ref $cons) (ref.null $cons))
-
       (import "m" "f" (func $imp (param (ref $cons)) (result (ref $odd))))
 
       ;; The bodies do nothing since we have no operations on structs yet.

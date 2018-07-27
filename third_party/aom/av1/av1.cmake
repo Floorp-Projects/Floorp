@@ -45,7 +45,6 @@ list(APPEND AOM_AV1_COMMON_SOURCES
             "${AOM_ROOT}/av1/common/entropymv.c"
             "${AOM_ROOT}/av1/common/entropymv.h"
             "${AOM_ROOT}/av1/common/enums.h"
-            "${AOM_ROOT}/av1/common/filter.c"
             "${AOM_ROOT}/av1/common/filter.h"
             "${AOM_ROOT}/av1/common/frame_buffers.c"
             "${AOM_ROOT}/av1/common/frame_buffers.h"
@@ -274,7 +273,10 @@ list(APPEND AOM_AV1_ENCODER_INTRIN_SSE4_1
 list(APPEND AOM_AV1_ENCODER_INTRIN_AVX2
             "${AOM_ROOT}/av1/encoder/x86/av1_quantize_avx2.c"
             "${AOM_ROOT}/av1/encoder/x86/av1_highbd_quantize_avx2.c"
-            "${AOM_ROOT}/av1/encoder/x86/error_intrin_avx2.c")
+            "${AOM_ROOT}/av1/encoder/x86/error_intrin_avx2.c"
+            "${AOM_ROOT}/av1/encoder/x86/av1_fwd_txfm_avx2.h"
+            "${AOM_ROOT}/av1/encoder/x86/av1_fwd_txfm2d_avx2.c"
+            "${AOM_ROOT}/av1/encoder/x86/wedge_utils_avx2.c")
 
 list(APPEND AOM_AV1_ENCODER_INTRIN_NEON
             "${AOM_ROOT}/av1/encoder/arm/neon/quantize_neon.c")
@@ -296,7 +298,9 @@ list(APPEND AOM_AV1_COMMON_INTRIN_NEON
             "${AOM_ROOT}/av1/common/arm/blend_a64_vmask_neon.c"
             "${AOM_ROOT}/av1/common/arm/reconinter_neon.c"
             "${AOM_ROOT}/av1/common/arm/wiener_convolve_neon.c"
-            "${AOM_ROOT}/av1/common/arm/intrapred_neon.c"
+            "${AOM_ROOT}/av1/common/arm/selfguided_neon.c"
+            "${AOM_ROOT}/av1/common/arm/av1_inv_txfm_neon.c"
+            "${AOM_ROOT}/av1/common/arm/av1_inv_txfm_neon.h"
             "${AOM_ROOT}/av1/common/cdef_block_neon.c")
 
 list(APPEND AOM_AV1_ENCODER_INTRIN_SSE4_2
