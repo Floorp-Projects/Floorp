@@ -12,7 +12,6 @@ const CENSUS_BREAKDOWN = {
   strings: COUNT,
   scripts: COUNT,
   other: COUNT,
-  domNode: COUNT,
 };
 
 const LABEL_BREAKDOWN = {

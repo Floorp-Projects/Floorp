@@ -28,10 +28,6 @@ function run_test() {
       by: "internalType",
       then: { by: "count", count: true, bytes: true },
     },
-    domNode: {
-      by: "descriptiveType",
-      then: { by: "count", count: true, bytes: true },
-    },
   };
 
   const REPORT = {
@@ -57,7 +53,6 @@ function run_test() {
       "js::Shape": { count: 7, bytes: 70 },
       "js::BaseShape": { count: 1, bytes: 10 },
     },
-    domNode: { },
   };
 
   const root = censusReportToCensusTreeNode(BREAKDOWN, REPORT);

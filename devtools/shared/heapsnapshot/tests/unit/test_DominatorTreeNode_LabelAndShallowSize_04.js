@@ -27,10 +27,6 @@ const breakdown = {
     by: "internalType",
     then: { by: "count", count: true, bytes: true },
   },
-  domNode: {
-    by: "descriptiveType",
-    then: { by: "count", count: true, bytes: true },
-  },
 };
 
 const stack = saveStack();
@@ -42,8 +38,7 @@ const description = {
   },
   strings: {},
   scripts: {},
-  other: {},
-  domNode: {}
+  other: {}
 };
 
 const expected = [
