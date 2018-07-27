@@ -47,26 +47,16 @@ test_end() {
 
 # Echoes the target configuration being tested.
 test_configuration_target() {
-  aom_config_mk="${LIBAOM_CONFIG_PATH}/config.mk"
-  # TODO(tomfinegan): Remove the parts requiring config.mk when the configure
-  # script is removed from the repository.
-  if [ ! -f "${aom_config_mk}" ]; then
-    aom_config_c="${LIBAOM_CONFIG_PATH}/aom_config.c"
-    # Clean up the cfg pointer line from aom_config.c for easier re-use by
-    # someone examining a failure in the example tests.
-    # 1. Run grep on aom_config.c for cfg and limit the results to 1.
-    # 2. Split the line using ' = ' as separator.
-    # 3. Abuse sed to consume the leading " and trailing "; from the assignment
-    #    to the cfg pointer.
-    cmake_config=$(awk -F ' = ' '/cfg/ { print $NF; exit }' "${aom_config_c}" \
-      | sed -e s/\"// -e s/\"\;//)
-    echo cmake generated via command: cmake path/to/aom ${cmake_config}
-    return
-  fi
-  # Find the TOOLCHAIN line, split it using ':=' as the field separator, and
-  # print the last field to get the value. Then pipe the value to tr to consume
-  # any leading/trailing spaces while allowing tr to echo the output to stdout.
-  awk -F ':=' '/TOOLCHAIN/ { print $NF }' "${aom_config_mk}" | tr -d ' '
+  aom_config_c="${LIBAOM_CONFIG_PATH}/config/aom_config.c"
+  # Clean up the cfg pointer line from aom_config.c for easier re-use by
+  # someone examining a failure in the example tests.
+  # 1. Run grep on aom_config.c for cfg and limit the results to 1.
+  # 2. Split the line using ' = ' as separator.
+  # 3. Abuse sed to consume the leading " and trailing "; from the assignment
+  #    to the cfg pointer.
+  cmake_config=$(awk -F ' = ' '/cfg/ { print $NF; exit }' "${aom_config_c}" \
+    | sed -e s/\"// -e s/\"\;//)
+  echo cmake generated via command: cmake path/to/aom ${cmake_config}
 }
 
 # Trap function used for failure reports and tool output directory removal.
@@ -163,10 +153,10 @@ is_windows_target() {
 # included in $tool_paths, or an empty string. Caller is responsible for testing
 # the string once the function returns.
 aom_tool_path() {
-  local readonly tool_name="$1"
-  local readonly root_path="${LIBAOM_BIN_PATH}"
-  local readonly suffix="${AOM_TEST_EXE_SUFFIX}"
-  local readonly tool_paths="\
+  local tool_name="$1"
+  local root_path="${LIBAOM_BIN_PATH}"
+  local suffix="${AOM_TEST_EXE_SUFFIX}"
+  local tool_paths="\
     ${root_path}/${tool_name}${suffix} \
     ${root_path}/../${tool_name}${suffix} \
     ${root_path}/tools/${tool_name}${suffix} \
@@ -348,8 +338,8 @@ yuv_raw_input() {
 # Do a small encode for testing decoders.
 encode_yuv_raw_input_av1() {
   if [ "$(av1_encode_available)" = "yes" ]; then
-    local readonly output="$1"
-    local readonly encoder="$(aom_tool_path aomenc)"
+    local output="$1"
+    local encoder="$(aom_tool_path aomenc)"
     shift
     eval "${encoder}" $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \

@@ -41,6 +41,9 @@
 #include "aom_dsp/ssim.h"
 #endif
 #include "aom_dsp/variance.h"
+#if CONFIG_DENOISE
+#include "aom_dsp/noise_model.h"
+#endif
 #include "aom/internal/aom_codec_internal.h"
 #include "aom_util/aom_thread.h"
 
@@ -277,7 +280,7 @@ typedef struct AV1EncoderConfig {
   aom_timing_info_t timing_info;
   int decoder_model_info_present_flag;
   int display_model_info_present_flag;
-  int buffer_removal_delay_present;
+  int buffer_removal_time_present;
   aom_dec_model_info_t buffer_model;
   aom_dec_model_op_parameters_t op_params[MAX_NUM_OPERATING_POINTS + 1];
   aom_op_timing_info_t op_frame_timing[MAX_NUM_OPERATING_POINTS + 1];
@@ -301,6 +304,11 @@ typedef struct AV1EncoderConfig {
   int allow_warped_motion;
   int enable_superres;
   unsigned int save_as_annexb;
+
+#if CONFIG_DENOISE
+  float noise_level;
+  int noise_block_size;
+#endif
 } AV1EncoderConfig;
 
 static INLINE int is_lossless_requested(const AV1EncoderConfig *cfg) {
@@ -472,6 +480,7 @@ typedef struct AV1_COMP {
   AV1EncoderConfig oxcf;
   struct lookahead_ctx *lookahead;
   struct lookahead_entry *alt_ref_source;
+  int no_show_kf;
 
   int optimize_speed_feature;
   int optimize_seg_arr[MAX_SEGMENTS];
@@ -504,6 +513,9 @@ typedef struct AV1_COMP {
   int refresh_bwd_ref_frame;
   int refresh_alt2_ref_frame;
   int refresh_alt_ref_frame;
+#if USE_SYMM_MULTI_LAYER
+  int new_bwdref_update_rule;
+#endif
 
   int ext_refresh_frame_flags_pending;
   int ext_refresh_last_frame;
@@ -666,7 +678,6 @@ typedef struct AV1_COMP {
   int existing_fb_idx_to_show;
   int is_arf_filter_off[MAX_EXT_ARFS + 1];
   int num_extra_arfs;
-  int arf_map[MAX_EXT_ARFS + 1];
   int arf_pos_in_gf[MAX_EXT_ARFS + 1];
   int arf_pos_for_ovrly[MAX_EXT_ARFS + 1];
   int global_motion_search_done;
@@ -687,6 +698,11 @@ typedef struct AV1_COMP {
   AV1LfSync lf_row_sync;
   AV1LrSync lr_row_sync;
   AV1LrStruct lr_ctxt;
+
+  aom_film_grain_table_t *film_grain_table;
+#if CONFIG_DENOISE
+  struct aom_denoise_and_model_t *denoise_and_model;
+#endif
 } AV1_COMP;
 
 void av1_initialize_enc(void);

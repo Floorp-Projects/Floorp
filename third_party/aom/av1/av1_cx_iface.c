@@ -94,6 +94,10 @@ struct av1_extracfg {
   int enable_warped_motion;  // sequence level
   int allow_warped_motion;   // frame level
   int enable_superres;
+#if CONFIG_DENOISE
+  float noise_level;
+  int noise_block_size;
+#endif
 };
 
 static struct av1_extracfg default_extra_cfg = {
@@ -160,6 +164,10 @@ static struct av1_extracfg default_extra_cfg = {
   1,                            // enable_warped_motion at sequence level
   1,                            // allow_warped_motion at frame level
   1,                            // superres
+#if CONFIG_DENOISE
+  0,   // noise_level
+  32,  // noise_block_size
+#endif
 };
 
 struct aom_codec_alg_priv {
@@ -464,7 +472,7 @@ static aom_codec_err_t set_encoder_config(
     oxcf->buffer_model.num_units_in_decoding_tick = cfg->g_timebase.num;
     oxcf->timing_info.equal_picture_interval = 0;
     oxcf->decoder_model_info_present_flag = 1;
-    oxcf->buffer_removal_delay_present = 1;
+    oxcf->buffer_removal_time_present = 1;
     oxcf->display_model_info_present_flag = 1;
   }
   if (oxcf->init_framerate > 180) {
@@ -612,6 +620,10 @@ static aom_codec_err_t set_encoder_config(
     oxcf->film_grain_test_vector = extra_cfg->film_grain_test_vector;
     oxcf->film_grain_table_filename = extra_cfg->film_grain_table_filename;
   }
+#if CONFIG_DENOISE
+  oxcf->noise_level = extra_cfg->noise_level;
+  oxcf->noise_block_size = extra_cfg->noise_block_size;
+#endif
   oxcf->large_scale_tile = cfg->large_scale_tile;
   oxcf->single_tile_decoding =
       (oxcf->large_scale_tile) ? extra_cfg->single_tile_decoding : 0;
@@ -710,7 +722,7 @@ static aom_codec_err_t encoder_set_config(aom_codec_alg_priv_t *ctx,
     ctx->cfg = *cfg;
     set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
     // On profile change, request a key frame
-    force_key |= ctx->cpi->common.profile != ctx->oxcf.profile;
+    force_key |= ctx->cpi->common.seq_params.profile != ctx->oxcf.profile;
     av1_change_config(ctx->cpi, &ctx->oxcf);
   }
 
@@ -1055,6 +1067,23 @@ static aom_codec_err_t ctrl_set_film_grain_table(aom_codec_alg_priv_t *ctx,
   return update_extra_cfg(ctx, &extra_cfg);
 }
 
+#if CONFIG_DENOISE
+static aom_codec_err_t ctrl_set_denoise_noise_level(aom_codec_alg_priv_t *ctx,
+                                                    va_list args) {
+  struct av1_extracfg extra_cfg = ctx->extra_cfg;
+  extra_cfg.noise_level =
+      ((float)CAST(AV1E_SET_DENOISE_NOISE_LEVEL, args)) / 10.0f;
+  return update_extra_cfg(ctx, &extra_cfg);
+}
+
+static aom_codec_err_t ctrl_set_denoise_block_size(aom_codec_alg_priv_t *ctx,
+                                                   va_list args) {
+  struct av1_extracfg extra_cfg = ctx->extra_cfg;
+  extra_cfg.noise_block_size = CAST(AV1E_SET_DENOISE_BLOCK_SIZE, args);
+  return update_extra_cfg(ctx, &extra_cfg);
+}
+#endif
+
 static aom_codec_err_t ctrl_set_deltaq_mode(aom_codec_alg_priv_t *ctx,
                                             va_list args) {
   struct av1_extracfg extra_cfg = ctx->extra_cfg;
@@ -1119,7 +1148,7 @@ static aom_codec_err_t encoder_init(aom_codec_ctx_t *ctx,
     }
 
     priv->extra_cfg = default_extra_cfg;
-    once(av1_initialize_enc);
+    aom_once(av1_initialize_enc);
 
     res = validate_config(priv, &priv->cfg, &priv->extra_cfg);
 
@@ -1200,6 +1229,9 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
 
   volatile aom_enc_frame_flags_t flags = enc_flags;
 
+  // The jmp_buf is valid only for the duration of the function that calls
+  // setjmp(). Therefore, this function must reset the 'setjmp' field to 0
+  // before it returns.
   if (setjmp(cpi->common.error.jmp)) {
     cpi->common.error.setjmp = 0;
     res = update_error_state(ctx, &cpi->common.error);
@@ -1259,7 +1291,6 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
       if (cx_data_sz < ctx->cx_data_sz / 2) {
         aom_internal_error(&cpi->common.error, AOM_CODEC_ERROR,
                            "Compressed data buffer too small");
-        return AOM_CODEC_ERROR;
       }
     }
 
@@ -1275,8 +1306,8 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
                                          !img, timebase)) {
       if (cpi->common.seq_params.frame_id_numbers_present_flag) {
         if (cpi->common.invalid_delta_frame_id_minus_1) {
-          ctx->base.err_detail = "Invalid delta_frame_id_minus_1";
-          return AOM_CODEC_ERROR;
+          aom_internal_error(&cpi->common.error, AOM_CODEC_ERROR,
+                             "Invalid delta_frame_id_minus_1");
         }
       }
       cpi->seq_params_locked = 1;
@@ -1305,7 +1336,7 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
           // OBUs are preceded/succeeded by an unsigned leb128 coded integer.
           if (write_uleb_obu_size(obu_header_size, obu_payload_size,
                                   ctx->pending_cx_data) != AOM_CODEC_OK) {
-            return AOM_CODEC_ERROR;
+            aom_internal_error(&cpi->common.error, AOM_CODEC_ERROR, NULL);
           }
 
           frame_size += obu_header_size + obu_payload_size + length_field_size;
@@ -1315,7 +1346,7 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
           size_t curr_frame_size = frame_size;
           if (av1_convert_sect5obus_to_annexb(cx_data, &curr_frame_size) !=
               AOM_CODEC_OK) {
-            return AOM_CODEC_ERROR;
+            aom_internal_error(&cpi->common.error, AOM_CODEC_ERROR, NULL);
           }
           frame_size = curr_frame_size;
 
@@ -1327,7 +1358,7 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
           }
           if (write_uleb_obu_size(0, (uint32_t)frame_size, cx_data) !=
               AOM_CODEC_OK) {
-            return AOM_CODEC_ERROR;
+            aom_internal_error(&cpi->common.error, AOM_CODEC_ERROR, NULL);
           }
           frame_size += length_field_size;
         }
@@ -1358,7 +1389,7 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
         }
         if (write_uleb_obu_size(0, (uint32_t)tu_size, ctx->pending_cx_data) !=
             AOM_CODEC_OK) {
-          return AOM_CODEC_ERROR;
+          aom_internal_error(&cpi->common.error, AOM_CODEC_ERROR, NULL);
         }
         ctx->pending_cx_data_sz += length_field_size;
       }
@@ -1710,6 +1741,10 @@ static aom_codec_ctrl_fn_map_t encoder_ctrl_maps[] = {
   { AV1E_SET_SINGLE_TILE_DECODING, ctrl_set_single_tile_decoding },
   { AV1E_SET_FILM_GRAIN_TEST_VECTOR, ctrl_set_film_grain_test_vector },
   { AV1E_SET_FILM_GRAIN_TABLE, ctrl_set_film_grain_table },
+#if CONFIG_DENOISE
+  { AV1E_SET_DENOISE_NOISE_LEVEL, ctrl_set_denoise_noise_level },
+  { AV1E_SET_DENOISE_BLOCK_SIZE, ctrl_set_denoise_block_size },
+#endif  // CONFIG_FILM_GRAIN
   { AV1E_ENABLE_MOTION_VECTOR_UNIT_TEST, ctrl_enable_motion_vector_unit_test },
 
   // Getters
@@ -1728,7 +1763,7 @@ static aom_codec_enc_cfg_map_t encoder_usage_cfg_map[] = {
     {
         // NOLINT
         0,  // g_usage
-        8,  // g_threads
+        0,  // g_threads
         0,  // g_profile
 
         320,         // g_width
@@ -1810,7 +1845,7 @@ CODEC_INTERFACE(aom_codec_av1_cx) = {
       NULL,  // aom_codec_peek_si_fn_t
       NULL,  // aom_codec_get_si_fn_t
       NULL,  // aom_codec_decode_fn_t
-      NULL,  // aom_codec_frame_get_fn_t
+      NULL,  // aom_codec_get_frame_fn_t
       NULL   // aom_codec_set_fb_fn_t
   },
   {

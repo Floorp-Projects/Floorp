@@ -548,8 +548,9 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // We check both nativeGlobal and nativeGlobal->GetGlobalJSObject() even
     // though we have derived nativeGlobal from the JS global, because we know
     // there are cases where this can happen. See bug 1094953.
+    RootedObject obj(RootingCx(), self->GetJSObject());
     nsIGlobalObject* nativeGlobal =
-      NativeGlobal(js::GetGlobalForObjectCrossCompartment(self->GetJSObject()));
+      NativeGlobal(JS::GetNonCCWObjectGlobal(js::UncheckedUnwrap(obj)));
     NS_ENSURE_TRUE(nativeGlobal, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(nativeGlobal->GetGlobalJSObject(), NS_ERROR_FAILURE);
     AutoEntryScript aes(nativeGlobal, "XPCWrappedJS QueryInterface",
@@ -559,6 +560,12 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         *aInstancePtr = nullptr;
         return NS_NOINTERFACE;
     }
+
+    // We passed the unwrapped object's global to AutoEntryScript so we now need
+    // to enter the (maybe wrapper) object's realm. We will have to revisit this
+    // later because CCWs are not associated with a single realm so this
+    // doesn't make much sense. See bug 1478359.
+    JSAutoRealm ar(aes.cx(), obj);
 
     // We support nsISupportsWeakReference iff the root wrapped JSObject
     // claims to support it in its QueryInterface implementation.
@@ -594,7 +601,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
     if (info && info->IsFunction()) {
         RefPtr<nsXPCWrappedJS> wrapper;
-        RootedObject obj(RootingCx(), self->GetJSObject());
         nsresult rv = nsXPCWrappedJS::GetNewOrUsed(obj, aIID, getter_AddRefs(wrapper));
 
         // Do the same thing we do for the "check for any existing wrapper" case above.
@@ -607,8 +613,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // else we do the more expensive stuff...
 
     // check if the JSObject claims to implement this interface
-    RootedObject jsobj(ccx, CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(),
-                                                         aIID));
+    RootedObject jsobj(ccx, CallQueryInterfaceOnJSObject(ccx, obj, aIID));
     if (jsobj) {
         // We can't use XPConvert::JSObject2NativeInterface() here
         // since that can find a XPCWrappedNative directly on the
@@ -635,7 +640,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // If we're asked to QI to nsINamed, we pretend that this is possible. We'll
     // try to return a name that makes sense for the wrapped JS value.
     if (aIID.Equals(NS_GET_IID(nsINamed))) {
-        RootedObject obj(RootingCx(), self->GetJSObject());
         nsCString name = GetFunctionName(ccx, obj);
         RefPtr<WrappedJSNamed> named = new WrappedJSNamed(name);
         *aInstancePtr = named.forget().take();
@@ -940,8 +944,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // We're about to call into script via an XPCWrappedJS, so we need an
     // AutoEntryScript. This is probably Gecko-specific at this point, and
     // definitely will be when we turn off XPConnect for the web.
+    RootedObject obj(RootingCx(), wrapper->GetJSObject());
     nsIGlobalObject* nativeGlobal =
-      NativeGlobal(js::GetGlobalForObjectCrossCompartment(wrapper->GetJSObject()));
+      NativeGlobal(JS::GetNonCCWObjectGlobal(js::UncheckedUnwrap(obj)));
     AutoEntryScript aes(nativeGlobal, "XPCWrappedJS method call",
                         /* aIsMainThread = */ true);
     XPCCallContext ccx(aes.cx());
@@ -952,6 +957,12 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
     if (!cx || !IsReflectable(methodIndex))
         return NS_ERROR_FAILURE;
+
+    // We passed the unwrapped object's global to AutoEntryScript so we now need
+    // to enter the (maybe wrapper) object's realm. We will have to revisit this
+    // later because CCWs are not associated with a single realm so this
+    // doesn't make much sense. See bug 1478359.
+    JSAutoRealm ar(cx, obj);
 
     // [optional_argc] has a different calling convention, which we don't
     // support for JS-implemented components.
@@ -965,10 +976,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     }
 
     RootedValue fval(cx);
-    RootedObject obj(cx, wrapper->GetJSObject());
     RootedObject thisObj(cx, obj);
-
-    JSAutoRealm ar(cx, obj);
 
     AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);

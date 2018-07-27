@@ -43,6 +43,9 @@ extern "C" {
 #define RD_THRESH_MAX_FACT 64
 #define RD_THRESH_INC 1
 
+// Factor to weigh the rate for switchable interp filters.
+#define SWITCHABLE_INTERP_RATE_FACTOR 1
+
 // This enumerator type needs to be kept aligned with the mode order in
 // const MODE_DEFINITION av1_mode_order[MAX_MODES] used in the rd code.
 typedef enum {

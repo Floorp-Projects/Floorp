@@ -197,16 +197,16 @@ endfunction()
 # include file, $source is the C source file, and $symbol is used for the symbol
 # argument passed to rtcd.pl.
 function(add_rtcd_build_step config output source symbol)
-  add_custom_command(
-    OUTPUT ${output}
-    COMMAND ${PERL_EXECUTABLE} ARGS "${AOM_ROOT}/build/make/rtcd.pl"
-            --arch=${AOM_TARGET_CPU}
-            --sym=${symbol} ${AOM_RTCD_FLAGS}
-            --config=${AOM_CONFIG_DIR}/${AOM_TARGET_CPU}_rtcd_config.rtcd
-            ${config} > ${output}
-    DEPENDS ${config}
-    COMMENT "Generating ${output}"
-    WORKING_DIRECTORY ${AOM_CONFIG_DIR} VERBATIM)
+  add_custom_command(OUTPUT ${output}
+                     COMMAND ${PERL_EXECUTABLE} ARGS
+                             "${AOM_ROOT}/build/make/rtcd.pl"
+                             --arch=${AOM_TARGET_CPU}
+                             --sym=${symbol} ${AOM_RTCD_FLAGS}
+                             --config=${AOM_CONFIG_DIR}/config/aom_config.h
+                             ${config} > ${output}
+                     DEPENDS ${config}
+                     COMMENT "Generating ${output}"
+                     WORKING_DIRECTORY ${AOM_CONFIG_DIR} VERBATIM)
   set_property(SOURCE ${source} PROPERTY OBJECT_DEPENDS ${output})
   set_property(SOURCE ${output} PROPERTY GENERATED)
 endfunction()

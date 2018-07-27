@@ -290,7 +290,7 @@ static int read_segment_id(AV1_COMMON *const cm, const MACROBLOCKD *const xd,
       av1_neg_deinterleave(coded_id, pred, seg->last_active_segid + 1);
 
   if (segment_id < 0 || segment_id > seg->last_active_segid) {
-    aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
+    aom_internal_error(xd->error_info, AOM_CODEC_CORRUPT_FRAME,
                        "Corrupted segment_ids");
   }
   return segment_id;
@@ -573,7 +573,7 @@ static void read_palette_mode_info(AV1_COMMON *const cm, MACROBLOCKD *const xd,
           aom_read_symbol(r, xd->tile_ctx->palette_y_size_cdf[bsize_ctx],
                           PALETTE_SIZES, ACCT_STR) +
           2;
-      read_palette_colors_y(xd, cm->bit_depth, pmi, r);
+      read_palette_colors_y(xd, cm->seq_params.bit_depth, pmi, r);
     }
   }
   if (num_planes > 1 && mbmi->uv_mode == UV_DC_PRED &&
@@ -587,7 +587,7 @@ static void read_palette_mode_info(AV1_COMMON *const cm, MACROBLOCKD *const xd,
           aom_read_symbol(r, xd->tile_ctx->palette_uv_size_cdf[bsize_ctx],
                           PALETTE_SIZES, ACCT_STR) +
           2;
-      read_palette_colors_uv(xd, cm->bit_depth, pmi, r);
+      read_palette_colors_uv(xd, cm->seq_params.bit_depth, pmi, r);
     }
   }
 }
@@ -1299,7 +1299,7 @@ static void read_inter_block_mode_info(AV1Decoder *const pbi,
   }
 
   if (is_compound != is_inter_compound_mode(mbmi->mode)) {
-    aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
+    aom_internal_error(xd->error_info, AOM_CODEC_CORRUPT_FRAME,
                        "Prediction mode %d invalid with ref frame %d %d",
                        mbmi->mode, mbmi->ref_frame[0], mbmi->ref_frame[1]);
   }
@@ -1480,8 +1480,9 @@ static void read_inter_block_mode_info(AV1Decoder *const pbi,
     }
   }
 
-  xd->cfl.is_chroma_reference = is_chroma_reference(
-      mi_row, mi_col, bsize, cm->subsampling_x, cm->subsampling_y);
+  xd->cfl.is_chroma_reference =
+      is_chroma_reference(mi_row, mi_col, bsize, cm->seq_params.subsampling_x,
+                          cm->seq_params.subsampling_y);
   xd->cfl.store_y = store_cfl_required(cm, xd);
 
 #if DEC_MISMATCH_DEBUG

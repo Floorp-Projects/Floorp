@@ -58,11 +58,15 @@ open CONFIG_FILE, $opts{config} or
 
 my %config = ();
 while (<CONFIG_FILE>) {
-  next if !/^(?:CONFIG_|HAVE_)/;
+  next if !/^#define\s+(?:CONFIG_|HAVE_)/;
   chomp;
-  s/\r$//;
-  my @pair = split /=/;
-  $config{$pair[0]} = $pair[1];
+  my @line_components = split /\s/;
+  scalar @line_components > 2 or
+    die "Invalid input passed to rtcd.pl via $opts{config}.";
+  # $line_components[0] = #define
+  # $line_components[1] = flag name (CONFIG_SOMETHING or HAVE_SOMETHING)
+  # $line_components[2] = flag value (0 or 1)
+  $config{$line_components[1]} = "$line_components[2]" eq "1" ? "yes" : "";
 }
 close CONFIG_FILE;
 
@@ -415,19 +419,11 @@ if ($opts{arch} eq 'x86') {
   x86;
 } elsif ($opts{arch} eq 'mips32' || $opts{arch} eq 'mips64') {
   @ALL_ARCHS = filter("$opts{arch}");
-  open CONFIG_FILE, $opts{config} or
-    die "Error opening config file '$opts{config}': $!\n";
-  while (<CONFIG_FILE>) {
-    if (/HAVE_DSPR2=yes/) {
-      @ALL_ARCHS = filter("$opts{arch}", qw/dspr2/);
-      last;
-    }
-    if (/HAVE_MSA=yes/) {
-      @ALL_ARCHS = filter("$opts{arch}", qw/msa/);
-      last;
-    }
+  if (aom_config("HAVE_DSPR2") eq "yes") {
+    @ALL_ARCHS = filter("$opts{arch}", qw/dspr2/);
+  } elsif (aom_config("HAVE_MSA") eq "yes") {
+    @ALL_ARCHS = filter("$opts{arch}", qw/msa/);
   }
-  close CONFIG_FILE;
   mips;
 } elsif ($opts{arch} =~ /armv7\w?/) {
   @ALL_ARCHS = filter(qw/neon/);
@@ -466,4 +462,4 @@ Options:
   --disable-EXT     Disable support for EXT extensions
   --require-EXT     Require support for EXT extensions
   --sym=SYMBOL      Unique symbol to use for RTCD initialization function
-  --config=FILE     File with CONFIG_FOO=yes lines to parse
+  --config=FILE     Path to file containing C preprocessor directives to parse

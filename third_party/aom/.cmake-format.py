@@ -1,3 +1,4 @@
+# Generated with cmake-format 0.3.6
 # How wide to allow formatted cmake files
 line_width = 80
 

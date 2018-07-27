@@ -44,9 +44,6 @@
 
 #define RD_THRESH_POW 1.25
 
-// Factor to weigh the rate for switchable interp filters.
-#define SWITCHABLE_INTERP_RATE_FACTOR 1
-
 // The baseline rd thresholds for breaking out of the rd loop for
 // certain modes are assumed to be based on 8x8 blocks.
 // This table is used to correct for block size.
@@ -357,9 +354,10 @@ static const int rd_frame_type_factor[FRAME_UPDATE_TYPES] = {
 };
 
 int av1_compute_rd_mult(const AV1_COMP *cpi, int qindex) {
-  const int64_t q = av1_dc_quant_Q3(qindex, 0, cpi->common.bit_depth);
+  const int64_t q =
+      av1_dc_quant_Q3(qindex, 0, cpi->common.seq_params.bit_depth);
   int64_t rdmult = 0;
-  switch (cpi->common.bit_depth) {
+  switch (cpi->common.seq_params.bit_depth) {
     case AOM_BITS_8: rdmult = 88 * q * q / 24; break;
     case AOM_BITS_10: rdmult = ROUND_POWER_OF_TWO(88 * q * q / 24, 4); break;
     case AOM_BITS_12: rdmult = ROUND_POWER_OF_TWO(88 * q * q / 24, 8); break;
@@ -394,7 +392,7 @@ static int compute_rd_thresh_factor(int qindex, aom_bit_depth_t bit_depth) {
 }
 
 void av1_initialize_me_consts(const AV1_COMP *cpi, MACROBLOCK *x, int qindex) {
-  switch (cpi->common.bit_depth) {
+  switch (cpi->common.seq_params.bit_depth) {
     case AOM_BITS_8:
       x->sadperbit16 = sad_per_bit16lut_8[qindex];
       x->sadperbit4 = sad_per_bit4lut_8[qindex];
@@ -420,7 +418,7 @@ static void set_block_thresholds(const AV1_COMMON *cm, RD_OPT *rd) {
         clamp(av1_get_qindex(&cm->seg, segment_id, cm->base_qindex) +
                   cm->y_dc_delta_q,
               0, MAXQ);
-    const int q = compute_rd_thresh_factor(qindex, cm->bit_depth);
+    const int q = compute_rd_thresh_factor(qindex, cm->seq_params.bit_depth);
 
     for (bsize = 0; bsize < BLOCK_SIZES_ALL; ++bsize) {
       // Threshold here seems unnecessarily harsh but fine given actual

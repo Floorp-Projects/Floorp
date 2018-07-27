@@ -363,15 +363,16 @@ class AliasSet {
         FixedSlot         = 1 << 4, // A Value member of obj->fixedSlots().
         DOMProperty       = 1 << 5, // A DOM property
         FrameArgument     = 1 << 6, // An argument kept on the stack frame
-        WasmGlobalVar     = 1 << 7, // An asm.js/wasm global var
+        WasmGlobalVar     = 1 << 7, // An asm.js/wasm private global var
         WasmHeap          = 1 << 8, // An asm.js/wasm heap load
         WasmHeapMeta      = 1 << 9, // The asm.js/wasm heap base pointer and
                                     // bounds check limit, in Tls.
         TypedArrayLength  = 1 << 10,// A typed array's length
-        Last              = TypedArrayLength,
+        WasmGlobalCell    = 1 << 11,// A wasm global cell
+        Last              = WasmGlobalCell,
         Any               = Last | (Last - 1),
 
-        NumCategories     = 11,
+        NumCategories     = 12,
 
         // Indicates load or store.
         Store_            = 1 << 31
@@ -13636,21 +13637,19 @@ class MWasmLoadGlobalVar
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    MWasmLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant, bool isIndirect,
-                       MDefinition* tlsPtr)
+    MWasmLoadGlobalVar(MIRType type, unsigned globalDataOffset,
+                       bool isConstant, MDefinition* tlsPtr)
       : MUnaryInstruction(classOpcode, tlsPtr),
         globalDataOffset_(globalDataOffset),
-        isConstant_(isConstant),
-        isIndirect_(isIndirect)
+        isConstant_(isConstant)
     {
-        MOZ_ASSERT(IsNumberType(type));
+        MOZ_ASSERT(IsNumberType(type) || IsSimdType(type) || type == MIRType::Pointer);
         setResultType(type);
         setMovable();
     }
 
     unsigned globalDataOffset_;
     bool isConstant_;
-    bool isIndirect_;
 
   public:
     INSTRUCTION_HEADER(WasmLoadGlobalVar)
@@ -13658,7 +13657,6 @@ class MWasmLoadGlobalVar
     NAMED_OPERANDS((0, tlsPtr))
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
-    bool isIndirect() const { return isIndirect_; }
 
     HashNumber valueHash() const override;
     bool congruentTo(const MDefinition* ins) const override;
@@ -13671,19 +13669,44 @@ class MWasmLoadGlobalVar
     AliasType mightAlias(const MDefinition* def) const override;
 };
 
+class MWasmLoadGlobalCell
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+    MWasmLoadGlobalCell(MIRType type, MDefinition* cellPtr)
+      : MUnaryInstruction(classOpcode, cellPtr)
+    {
+        setResultType(type);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(WasmLoadGlobalCell)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, cellPtr))
+
+    // The default valueHash is good enough, because there are no non-operand
+    // fields.
+    bool congruentTo(const MDefinition* ins) const override;
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::Load(AliasSet::WasmGlobalCell);
+    }
+
+    AliasType mightAlias(const MDefinition* def) const override;
+};
+
 class MWasmStoreGlobalVar
   : public MBinaryInstruction,
     public NoTypePolicy::Data
 {
-    MWasmStoreGlobalVar(unsigned globalDataOffset, bool isIndirect, MDefinition* value,
+    MWasmStoreGlobalVar(unsigned globalDataOffset, MDefinition* value,
                         MDefinition* tlsPtr)
       : MBinaryInstruction(classOpcode, value, tlsPtr),
-        globalDataOffset_(globalDataOffset),
-        isIndirect_(isIndirect)
+        globalDataOffset_(globalDataOffset)
     { }
 
     unsigned globalDataOffset_;
-    bool isIndirect_;
 
   public:
     INSTRUCTION_HEADER(WasmStoreGlobalVar)
@@ -13691,10 +13714,27 @@ class MWasmStoreGlobalVar
     NAMED_OPERANDS((0, value), (1, tlsPtr))
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
-    bool isIndirect() const { return isIndirect_; }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::WasmGlobalVar);
+    }
+};
+
+class MWasmStoreGlobalCell
+  : public MBinaryInstruction,
+    public NoTypePolicy::Data
+{
+    MWasmStoreGlobalCell(MDefinition* value, MDefinition* cellPtr)
+      : MBinaryInstruction(classOpcode, value, cellPtr)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(WasmStoreGlobalCell)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, value), (1, cellPtr))
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::Store(AliasSet::WasmGlobalCell);
     }
 };
 

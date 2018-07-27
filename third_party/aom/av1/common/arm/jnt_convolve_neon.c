@@ -515,8 +515,8 @@ static INLINE void jnt_convolve_2d_vert_neon(
 
 void av1_jnt_convolve_2d_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
                               int dst8_stride, int w, int h,
-                              InterpFilterParams *filter_params_x,
-                              InterpFilterParams *filter_params_y,
+                              const InterpFilterParams *filter_params_x,
+                              const InterpFilterParams *filter_params_y,
                               const int subpel_x_q4, const int subpel_y_q4,
                               ConvolveParams *conv_params) {
   assert(!(w % 4));
@@ -532,9 +532,9 @@ void av1_jnt_convolve_2d_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
   const int round_0 = conv_params->round_0 - 1;
   const uint8_t *src_ptr = src - vert_offset * src_stride - horiz_offset;
   const int16_t *x_filter = av1_get_interp_filter_subpel_kernel(
-      *filter_params_x, subpel_x_q4 & SUBPEL_MASK);
+      filter_params_x, subpel_x_q4 & SUBPEL_MASK);
   const int16_t *y_filter = av1_get_interp_filter_subpel_kernel(
-      *filter_params_y, subpel_y_q4 & SUBPEL_MASK);
+      filter_params_y, subpel_y_q4 & SUBPEL_MASK);
 
   int16_t x_filter_tmp[8];
   int16x8_t filter_x_coef = vld1q_s16(x_filter);
@@ -553,8 +553,8 @@ void av1_jnt_convolve_2d_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
 
 void av1_jnt_convolve_2d_copy_neon(const uint8_t *src, int src_stride,
                                    uint8_t *dst8, int dst8_stride, int w, int h,
-                                   InterpFilterParams *filter_params_x,
-                                   InterpFilterParams *filter_params_y,
+                                   const InterpFilterParams *filter_params_x,
+                                   const InterpFilterParams *filter_params_y,
                                    const int subpel_x_q4, const int subpel_y_q4,
                                    ConvolveParams *conv_params) {
   uint8x8_t res0_8, res1_8, res2_8, res3_8, tmp_shift0, tmp_shift1, tmp_shift2,
@@ -679,8 +679,8 @@ void av1_jnt_convolve_2d_copy_neon(const uint8_t *src, int src_stride,
 
 void av1_jnt_convolve_x_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
                              int dst8_stride, int w, int h,
-                             InterpFilterParams *filter_params_x,
-                             InterpFilterParams *filter_params_y,
+                             const InterpFilterParams *filter_params_x,
+                             const InterpFilterParams *filter_params_y,
                              const int subpel_x_q4, const int subpel_y_q4,
                              ConvolveParams *conv_params) {
   assert(!(w % 4));
@@ -705,7 +705,7 @@ void av1_jnt_convolve_x_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
 
   // horizontal filter
   const int16_t *x_filter = av1_get_interp_filter_subpel_kernel(
-      *filter_params_x, subpel_x_q4 & SUBPEL_MASK);
+      filter_params_x, subpel_x_q4 & SUBPEL_MASK);
 
   const uint8_t *src_ptr = src - horiz_offset;
 
@@ -1013,8 +1013,8 @@ void av1_jnt_convolve_x_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
 
 void av1_jnt_convolve_y_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
                              int dst8_stride, int w, int h,
-                             InterpFilterParams *filter_params_x,
-                             InterpFilterParams *filter_params_y,
+                             const InterpFilterParams *filter_params_x,
+                             const InterpFilterParams *filter_params_y,
                              const int subpel_x_q4, const int subpel_y_q4,
                              ConvolveParams *conv_params) {
   assert(!(w % 4));
@@ -1040,7 +1040,7 @@ void av1_jnt_convolve_y_neon(const uint8_t *src, int src_stride, uint8_t *dst8,
 
   // vertical filter
   const int16_t *y_filter = av1_get_interp_filter_subpel_kernel(
-      *filter_params_y, subpel_y_q4 & SUBPEL_MASK);
+      filter_params_y, subpel_y_q4 & SUBPEL_MASK);
 
   const uint8_t *src_ptr = src - (vert_offset * src_stride);
 

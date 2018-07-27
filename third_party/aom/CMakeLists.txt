@@ -186,11 +186,9 @@ list(APPEND AOM_ENCODER_APP_UTIL_SOURCES
             "${AOM_ROOT}/examples/encoder_util.h"
             "${AOM_ROOT}/examples/encoder_util.c")
 
-if (ENABLE_EXAMPLES)
-  list(APPEND AOM_ENCODER_STATS_SOURCES "${AOM_ROOT}/stats/aomstats.c"
-              "${AOM_ROOT}/stats/aomstats.h" "${AOM_ROOT}/stats/rate_hist.c"
-              "${AOM_ROOT}/stats/rate_hist.h")
-endif ()
+list(APPEND AOM_ENCODER_STATS_SOURCES "${AOM_ROOT}/stats/aomstats.c"
+            "${AOM_ROOT}/stats/aomstats.h" "${AOM_ROOT}/stats/rate_hist.c"
+            "${AOM_ROOT}/stats/rate_hist.h")
 
 list(APPEND AOM_PKG_CONFIG_SOURCES "${AOM_CONFIG_DIR}/aom.pc")
 
@@ -257,7 +255,10 @@ add_rtcd_build_step("${AOM_ROOT}/av1/common/av1_rtcd_defs.pl"
 add_library(aom_rtcd OBJECT ${AOM_RTCD_SOURCES})
 add_dependencies(aom_rtcd aom_version)
 
+if (ENABLE_EXAMPLES)
 add_library(aom_encoder_stats OBJECT ${AOM_ENCODER_STATS_SOURCES})
+endif ()
+
 add_library(aom ${AOM_SOURCES} $<TARGET_OBJECTS:aom_rtcd>)
 
 if(NOT MSVC AND NOT APPLE)

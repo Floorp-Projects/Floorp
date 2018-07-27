@@ -24,6 +24,20 @@ extern "C" {
 // Bits Per MB at different Q (Multiplied by 512)
 #define BPER_MB_NORMBITS 9
 
+#define CUSTOMIZED_GF 1
+#define FIX_GF_INTERVAL_LENGTH 0
+
+#if FIX_GF_INTERVAL_LENGTH
+#define FIXED_GF_LENGTH 16
+#define USE_SYMM_MULTI_LAYER 1
+#else
+#define USE_SYMM_MULTI_LAYER 0
+#endif
+
+#if USE_SYMM_MULTI_LAYER
+#define USE_MANUAL_GF4_STRUCT 0
+#endif
+
 #define MIN_GF_INTERVAL 4
 #define MAX_GF_INTERVAL 16
 #define FIXED_GF_INTERVAL 8  // Used in some testing modes only

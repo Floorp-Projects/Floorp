@@ -184,7 +184,10 @@ typedef struct BitstreamLevel {
   uint8_t minor;
 } BitstreamLevel;
 
-/* Initial version of sequence header structure */
+// Sequence header structure.
+// Note: All syntax elements of sequence_header_obu that need to be
+// bit-identical across multiple sequence headers must be part of this struct,
+// so that consistency is checked by are_seq_headers_consistent() function.
 typedef struct SequenceHeader {
   int num_bits_width;
   int num_bits_height;
@@ -205,7 +208,6 @@ typedef struct SequenceHeader {
                                    // 2 - adaptive
   int still_picture;               // Video is a single frame still picture
   int reduced_still_picture_hdr;   // Use reduced header for still picture
-  int monochrome;                  // Monochorme video
   int enable_filter_intra;         // enables/disables filterintra
   int enable_intra_edge_filter;    // enables/disables corner/edge/upsampling
   int enable_interintra_compound;  // enables/disables interintra_compound
@@ -229,6 +231,9 @@ typedef struct SequenceHeader {
                            //     enabled for that frame.
   int enable_cdef;         // To turn on/off CDEF
   int enable_restoration;  // To turn on/off loop restoration
+  BITSTREAM_PROFILE profile;
+
+  // Operating point info.
   int operating_points_cnt_minus_1;
   int operating_point_idc[MAX_NUM_OPERATING_POINTS];
   int display_model_info_present_flag;
@@ -236,15 +241,26 @@ typedef struct SequenceHeader {
   BitstreamLevel level[MAX_NUM_OPERATING_POINTS];
   uint8_t tier[MAX_NUM_OPERATING_POINTS];  // seq_tier in the spec. One bit: 0
                                            // or 1.
+
+  // Color config.
+  aom_bit_depth_t bit_depth;  // AOM_BITS_8 in profile 0 or 1,
+                              // AOM_BITS_10 or AOM_BITS_12 in profile 2 or 3.
+  int use_highbitdepth;       // If true, we need to use 16bit frame buffers.
+  int monochrome;             // Monochorme video
+  aom_color_primaries_t color_primaries;
+  aom_transfer_characteristics_t transfer_characteristics;
+  aom_matrix_coefficients_t matrix_coefficients;
+  int color_range;
+  int subsampling_x;          // Chroma subsampling for x
+  int subsampling_y;          // Chroma subsampling for y
+  aom_chroma_sample_position_t chroma_sample_position;
+  int separate_uv_delta_q;
+
+  int film_grain_params_present;
 } SequenceHeader;
 
 typedef struct AV1Common {
   struct aom_internal_error_info error;
-  aom_color_primaries_t color_primaries;
-  aom_transfer_characteristics_t transfer_characteristics;
-  aom_matrix_coefficients_t matrix_coefficients;
-  aom_chroma_sample_position_t chroma_sample_position;
-  int color_range;
   int width;
   int height;
   int render_width;
@@ -253,18 +269,11 @@ typedef struct AV1Common {
   int last_height;
   int timing_info_present;
   aom_timing_info_t timing_info;
-  int buffer_removal_delay_present;
+  int buffer_removal_time_present;
   aom_dec_model_info_t buffer_model;
   aom_dec_model_op_parameters_t op_params[MAX_NUM_OPERATING_POINTS + 1];
   aom_op_timing_info_t op_frame_timing[MAX_NUM_OPERATING_POINTS + 1];
-  int tu_presentation_delay_flag;
-  int64_t tu_presentation_delay;
-
-  // TODO(jkoleszar): this implies chroma ss right now, but could vary per
-  // plane. Revisit as part of the future change to YV12_BUFFER_CONFIG to
-  // support additional planes.
-  int subsampling_x;
-  int subsampling_y;
+  uint32_t frame_presentation_time;
 
   int largest_tile_id;
   size_t largest_tile_size;
@@ -273,8 +282,6 @@ typedef struct AV1Common {
   // Scale of the current frame with respect to itself.
   struct scale_factors sf_identity;
 
-  // Marks if we need to use 16bit frame buffers (1: yes, 0: no).
-  int use_highbitdepth;
   YV12_BUFFER_CONFIG *frame_to_show;
   RefCntBuffer *prev_frame;
 
@@ -341,8 +348,6 @@ typedef struct AV1Common {
   int v_dc_delta_q;
   int u_ac_delta_q;
   int v_ac_delta_q;
-
-  int separate_uv_delta_q;
 
   // The dequantizers below are true dequntizers used only in the
   // dequantization process.  They have the same coefficient
@@ -447,10 +452,7 @@ typedef struct AV1Common {
   unsigned int frame_offset;
 
   unsigned int current_video_frame;
-  BITSTREAM_PROFILE profile;
 
-  // AOM_BITS_8 in profile 0 or 1, AOM_BITS_10 or AOM_BITS_12 in profile 2 or 3.
-  aom_bit_depth_t bit_depth;
   aom_bit_depth_t dequant_bit_depth;  // bit_depth of current dequantizer
 
   int error_resilient_mode;
@@ -494,9 +496,8 @@ typedef struct AV1Common {
   ENTROPY_CONTEXT **above_context[MAX_MB_PLANE];
   TXFM_CONTEXT **above_txfm_context;
   WarpedMotionParams global_motion[REF_FRAMES];
-  aom_film_grain_table_t *film_grain_table;
-  int film_grain_params_present;
   aom_film_grain_t film_grain_params;
+
   int cdef_pri_damping;
   int cdef_sec_damping;
   int nb_cdef_strengths;
@@ -590,7 +591,7 @@ static INLINE int get_free_fb(AV1_COMMON *cm) {
     if (frame_bufs[i].ref_count == 0) break;
 
   if (i != FRAME_BUFFERS) {
-    if (frame_bufs[i].buf.use_external_refernce_buffers) {
+    if (frame_bufs[i].buf.use_external_reference_buffers) {
       // If this frame buffer's y_buffer, u_buffer, and v_buffer point to the
       // external reference buffers. Restore the buffer pointers to point to the
       // internally allocated memory.
@@ -598,7 +599,7 @@ static INLINE int get_free_fb(AV1_COMMON *cm) {
       ybf->y_buffer = ybf->store_buf_adr[0];
       ybf->u_buffer = ybf->store_buf_adr[1];
       ybf->v_buffer = ybf->store_buf_adr[2];
-      ybf->use_external_refernce_buffers = 0;
+      ybf->use_external_reference_buffers = 0;
     }
 
     frame_bufs[i].ref_count = 1;
@@ -683,15 +684,7 @@ static INLINE void ensure_mv_buffer(RefCntBuffer *buf, AV1_COMMON *cm) {
   }
 }
 
-static INLINE int mi_cols_aligned_to_sb(const AV1_COMMON *cm) {
-  return ALIGN_POWER_OF_TWO(cm->mi_cols, cm->seq_params.mib_size_log2);
-}
-
-static INLINE int mi_rows_aligned_to_sb(const AV1_COMMON *cm) {
-  return ALIGN_POWER_OF_TWO(cm->mi_rows, cm->seq_params.mib_size_log2);
-}
-
-void cfl_init(CFL_CTX *cfl, AV1_COMMON *cm);
+void cfl_init(CFL_CTX *cfl, const SequenceHeader *seq_params);
 
 static INLINE int av1_num_planes(const AV1_COMMON *cm) {
   return cm->seq_params.monochrome ? 1 : MAX_MB_PLANE;
@@ -734,7 +727,7 @@ static INLINE void av1_init_macroblockd(AV1_COMMON *cm, MACROBLOCKD *xd,
   }
   xd->mi_stride = cm->mi_stride;
   xd->error_info = &cm->error;
-  cfl_init(&xd->cfl, cm);
+  cfl_init(&xd->cfl, &cm->seq_params);
 }
 
 static INLINE void set_skip_context(MACROBLOCKD *xd, int mi_row, int mi_col,
@@ -1066,17 +1059,18 @@ static INLINE int max_intra_block_height(const MACROBLOCKD *xd,
   return ALIGN_POWER_OF_TWO(max_blocks_high, tx_size_high_log2[tx_size]);
 }
 
-static INLINE void av1_zero_above_context(AV1_COMMON *const cm,
+static INLINE void av1_zero_above_context(AV1_COMMON *const cm, const MACROBLOCKD *xd,
   int mi_col_start, int mi_col_end, const int tile_row) {
+  const SequenceHeader *const seq_params = &cm->seq_params;
   const int num_planes = av1_num_planes(cm);
   const int width = mi_col_end - mi_col_start;
   const int aligned_width =
-    ALIGN_POWER_OF_TWO(width, cm->seq_params.mib_size_log2);
+    ALIGN_POWER_OF_TWO(width, seq_params->mib_size_log2);
 
   const int offset_y = mi_col_start;
   const int width_y = aligned_width;
-  const int offset_uv = offset_y >> cm->subsampling_x;
-  const int width_uv = width_y >> cm->subsampling_x;
+  const int offset_uv = offset_y >> seq_params->subsampling_x;
+  const int width_uv = width_y >> seq_params->subsampling_x;
 
   av1_zero_array(cm->above_context[0][tile_row] + offset_y, width_y);
   if (num_planes > 1) {
@@ -1084,7 +1078,7 @@ static INLINE void av1_zero_above_context(AV1_COMMON *const cm,
       av1_zero_array(cm->above_context[1][tile_row] + offset_uv, width_uv);
       av1_zero_array(cm->above_context[2][tile_row] + offset_uv, width_uv);
     } else {
-      aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
+      aom_internal_error(xd->error_info, AOM_CODEC_CORRUPT_FRAME,
                          "Invalid value of planes");
     }
   }

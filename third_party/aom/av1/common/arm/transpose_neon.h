@@ -419,4 +419,42 @@ static INLINE void transpose_s16_4x4d(int16x4_t *a0, int16x4_t *a1,
   *a3 = vreinterpret_s16_s32(c1.val[1]);
 }
 
+static INLINE int32x4x2_t aom_vtrnq_s64_to_s32(int32x4_t a0, int32x4_t a1) {
+  int32x4x2_t b0;
+  b0.val[0] = vcombine_s32(vget_low_s32(a0), vget_low_s32(a1));
+  b0.val[1] = vcombine_s32(vget_high_s32(a0), vget_high_s32(a1));
+  return b0;
+}
+
+static INLINE void transpose_s32_4x4(int32x4_t *a0, int32x4_t *a1,
+                                     int32x4_t *a2, int32x4_t *a3) {
+  // Swap 32 bit elements. Goes from:
+  // a0: 00 01 02 03
+  // a1: 10 11 12 13
+  // a2: 20 21 22 23
+  // a3: 30 31 32 33
+  // to:
+  // b0.val[0]: 00 10 02 12
+  // b0.val[1]: 01 11 03 13
+  // b1.val[0]: 20 30 22 32
+  // b1.val[1]: 21 31 23 33
+
+  const int32x4x2_t b0 = vtrnq_s32(*a0, *a1);
+  const int32x4x2_t b1 = vtrnq_s32(*a2, *a3);
+
+  // Swap 64 bit elements resulting in:
+  // c0.val[0]: 00 10 20 30
+  // c0.val[1]: 02 12 22 32
+  // c1.val[0]: 01 11 21 31
+  // c1.val[1]: 03 13 23 33
+
+  const int32x4x2_t c0 = aom_vtrnq_s64_to_s32(b0.val[0], b1.val[0]);
+  const int32x4x2_t c1 = aom_vtrnq_s64_to_s32(b0.val[1], b1.val[1]);
+
+  *a0 = c0.val[0];
+  *a1 = c1.val[0];
+  *a2 = c0.val[1];
+  *a3 = c1.val[1];
+}
+
 #endif  // AV1_COMMON_ARM_TRANSPOSE_NEON_H_

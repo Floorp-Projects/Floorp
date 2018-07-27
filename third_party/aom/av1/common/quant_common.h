@@ -42,7 +42,6 @@ int16_t av1_dc_quant_Q3(int qindex, int delta, aom_bit_depth_t bit_depth);
 int16_t av1_ac_quant_Q3(int qindex, int delta, aom_bit_depth_t bit_depth);
 int16_t av1_dc_quant_QTX(int qindex, int delta, aom_bit_depth_t bit_depth);
 int16_t av1_ac_quant_QTX(int qindex, int delta, aom_bit_depth_t bit_depth);
-int16_t av1_qindex_from_ac_Q3(int ac_Q3, aom_bit_depth_t bit_depth);
 
 int av1_get_qindex(const struct segmentation *seg, int segment_id,
                    int base_qindex);

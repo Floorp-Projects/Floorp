@@ -94,7 +94,7 @@ void DecoderTest::RunLoop(CompressedVideoSource *video,
     const aom_image_t *img = NULL;
 
     // Get decompressed data
-    while ((img = dec_iter.Next()))
+    while (!::testing::Test::HasFailure() && (img = dec_iter.Next()))
       DecompressedFrameHook(*img, video->frame_number());
   }
   delete decoder;

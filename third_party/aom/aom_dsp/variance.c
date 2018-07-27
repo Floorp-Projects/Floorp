@@ -386,7 +386,7 @@ void aom_upsampled_pred_c(MACROBLOCKD *xd, const AV1_COMMON *const cm,
     }
   }
 
-  const InterpFilterParams filter =
+  const InterpFilterParams *filter =
       av1_get_interp_filter_params_with_block_size(EIGHTTAP_REGULAR, 8);
 
   if (!subpel_x_q3 && !subpel_y_q3) {
@@ -413,12 +413,12 @@ void aom_upsampled_pred_c(MACROBLOCKD *xd, const AV1_COMMON *const cm,
     const int16_t *const kernel_y =
         av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
     const int intermediate_height =
-        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter.taps;
+        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter->taps;
     assert(intermediate_height <= (MAX_SB_SIZE * 2 + 16) + 16);
-    aom_convolve8_horiz(ref - ref_stride * ((filter.taps >> 1) - 1), ref_stride,
-                        temp, MAX_SB_SIZE, kernel_x, 16, NULL, -1, width,
-                        intermediate_height);
-    aom_convolve8_vert(temp + MAX_SB_SIZE * ((filter.taps >> 1) - 1),
+    aom_convolve8_horiz(ref - ref_stride * ((filter->taps >> 1) - 1),
+                        ref_stride, temp, MAX_SB_SIZE, kernel_x, 16, NULL, -1,
+                        width, intermediate_height);
+    aom_convolve8_vert(temp + MAX_SB_SIZE * ((filter->taps >> 1) - 1),
                        MAX_SB_SIZE, comp_pred, width, NULL, -1, kernel_y, 16,
                        width, height);
   }
@@ -974,7 +974,7 @@ void aom_highbd_upsampled_pred_c(MACROBLOCKD *xd,
     }
   }
 
-  const InterpFilterParams filter =
+  const InterpFilterParams *filter =
       av1_get_interp_filter_params_with_block_size(EIGHTTAP_REGULAR, 8);
 
   if (!subpel_x_q3 && !subpel_y_q3) {
@@ -1004,14 +1004,14 @@ void aom_highbd_upsampled_pred_c(MACROBLOCKD *xd,
     const int16_t *const kernel_y =
         av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
     const int intermediate_height =
-        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter.taps;
+        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter->taps;
     assert(intermediate_height <= (MAX_SB_SIZE * 2 + 16) + 16);
-    aom_highbd_convolve8_horiz(ref8 - ref_stride * ((filter.taps >> 1) - 1),
+    aom_highbd_convolve8_horiz(ref8 - ref_stride * ((filter->taps >> 1) - 1),
                                ref_stride, CONVERT_TO_BYTEPTR(temp),
                                MAX_SB_SIZE, kernel_x, 16, NULL, -1, width,
                                intermediate_height, bd);
     aom_highbd_convolve8_vert(
-        CONVERT_TO_BYTEPTR(temp + MAX_SB_SIZE * ((filter.taps >> 1) - 1)),
+        CONVERT_TO_BYTEPTR(temp + MAX_SB_SIZE * ((filter->taps >> 1) - 1)),
         MAX_SB_SIZE, CONVERT_TO_BYTEPTR(comp_pred), width, NULL, -1, kernel_y,
         16, width, height, bd);
   }
@@ -1185,29 +1185,18 @@ void aom_highbd_comp_mask_pred_c(uint16_t *comp_pred, const uint8_t *pred8,
   }
 }
 
-void aom_highbd_comp_mask_upsampled_pred_c(
+void aom_highbd_comp_mask_upsampled_pred(
     MACROBLOCKD *xd, const struct AV1Common *const cm, int mi_row, int mi_col,
     const MV *const mv, uint16_t *comp_pred, const uint8_t *pred8, int width,
     int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref8,
     int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask,
     int bd) {
-  int i, j;
-
-  uint16_t *pred = CONVERT_TO_SHORTPTR(pred8);
   aom_highbd_upsampled_pred(xd, cm, mi_row, mi_col, mv, comp_pred, width,
                             height, subpel_x_q3, subpel_y_q3, ref8, ref_stride,
                             bd);
-  for (i = 0; i < height; ++i) {
-    for (j = 0; j < width; ++j) {
-      if (!invert_mask)
-        comp_pred[j] = AOM_BLEND_A64(mask[j], comp_pred[j], pred[j]);
-      else
-        comp_pred[j] = AOM_BLEND_A64(mask[j], pred[j], comp_pred[j]);
-    }
-    comp_pred += width;
-    pred += width;
-    mask += mask_stride;
-  }
+  aom_highbd_comp_mask_pred(comp_pred, pred8, width, height,
+                            CONVERT_TO_BYTEPTR(comp_pred), width, mask,
+                            mask_stride, invert_mask);
 }
 
 #define HIGHBD_MASK_SUBPIX_VAR(W, H)                                           \

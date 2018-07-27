@@ -26,13 +26,14 @@ namespace {
 static const int kNumMultiThreadDecoders = 3;
 
 class AV1DecodeMultiThreadedTest
-    : public ::libaom_test::CodecTestWith4Params<int, int, int, int>,
+    : public ::libaom_test::CodecTestWith5Params<int, int, int, int, int>,
       public ::libaom_test::EncoderTest {
  protected:
   AV1DecodeMultiThreadedTest()
       : EncoderTest(GET_PARAM(0)), md5_single_thread_(), md5_multi_thread_(),
         n_tile_cols_(GET_PARAM(1)), n_tile_rows_(GET_PARAM(2)),
-        n_tile_groups_(GET_PARAM(3)), set_cpu_used_(GET_PARAM(4)) {
+        n_tile_groups_(GET_PARAM(3)), set_cpu_used_(GET_PARAM(4)),
+        row_mt_(GET_PARAM(5)) {
     init_flags_ = AOM_CODEC_USE_PSNR;
     aom_codec_dec_cfg_t cfg = aom_codec_dec_cfg_t();
     cfg.w = 704;
@@ -45,14 +46,17 @@ class AV1DecodeMultiThreadedTest
     for (int i = 0; i < kNumMultiThreadDecoders; ++i) {
       cfg.threads <<= 1;
       multi_thread_dec_[i] = codec_->CreateDecoder(cfg, 0);
+      multi_thread_dec_[i]->Control(AV1D_SET_ROW_MT, row_mt_);
     }
 
     if (single_thread_dec_->IsAV1()) {
+      single_thread_dec_->Control(AV1D_EXT_TILE_DEBUG, 1);
       single_thread_dec_->Control(AV1_SET_DECODE_TILE_ROW, -1);
       single_thread_dec_->Control(AV1_SET_DECODE_TILE_COL, -1);
     }
     for (int i = 0; i < kNumMultiThreadDecoders; ++i) {
       if (multi_thread_dec_[i]->IsAV1()) {
+        multi_thread_dec_[i]->Control(AV1D_EXT_TILE_DEBUG, 1);
         multi_thread_dec_[i]->Control(AV1_SET_DECODE_TILE_ROW, -1);
         multi_thread_dec_[i]->Control(AV1_SET_DECODE_TILE_COL, -1);
       }
@@ -128,6 +132,7 @@ class AV1DecodeMultiThreadedTest
   int n_tile_rows_;
   int n_tile_groups_;
   int set_cpu_used_;
+  int row_mt_;
 };
 
 // run an encode and do the decode both in single thread
@@ -154,16 +159,17 @@ TEST_P(AV1DecodeMultiThreadedTestLarge, MD5Match) {
 // TODO(ranjit): More tests have to be added using pre-generated MD5.
 AV1_INSTANTIATE_TEST_CASE(AV1DecodeMultiThreadedTest, ::testing::Values(1, 2),
                           ::testing::Values(1, 2), ::testing::Values(1),
-                          ::testing::Values(3));
+                          ::testing::Values(3), ::testing::Values(0, 1));
 AV1_INSTANTIATE_TEST_CASE(AV1DecodeMultiThreadedTestLarge,
                           ::testing::Values(0, 1, 2, 6),
                           ::testing::Values(0, 1, 2, 6),
-                          ::testing::Values(1, 4), ::testing::Values(0));
+                          ::testing::Values(1, 4), ::testing::Values(0),
+                          ::testing::Values(0, 1));
 
 class AV1DecodeMultiThreadedLSTestLarge
     : public AV1DecodeMultiThreadedTestLarge {};
 
-TEST_P(AV1DecodeMultiThreadedLSTestLarge, DISABLED_MD5Match) {
+TEST_P(AV1DecodeMultiThreadedLSTestLarge, MD5Match) {
   cfg_.large_scale_tile = 1;
   single_thread_dec_->Control(AV1_SET_TILE_MODE, 1);
   for (int i = 0; i < kNumMultiThreadDecoders; ++i)
@@ -172,8 +178,8 @@ TEST_P(AV1DecodeMultiThreadedLSTestLarge, DISABLED_MD5Match) {
 }
 
 AV1_INSTANTIATE_TEST_CASE(AV1DecodeMultiThreadedLSTestLarge,
-                          ::testing::Values(1, 2, 32),
-                          ::testing::Values(1, 2, 32), ::testing::Values(1),
-                          ::testing::Values(0, 3));
+                          ::testing::Values(6), ::testing::Values(6),
+                          ::testing::Values(1), ::testing::Values(0, 3),
+                          ::testing::Values(0, 1));
 
 }  // namespace

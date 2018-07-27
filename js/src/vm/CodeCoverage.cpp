@@ -457,6 +457,12 @@ LCovRealm::LCovRealm()
     MOZ_ASSERT(alloc_.isEmpty());
 }
 
+LCovRealm::~LCovRealm()
+{
+    if (sources_)
+        sources_->~LCovSourceVector();
+}
+
 void
 LCovRealm::collectCodeCoverageInfo(JS::Realm* realm, JSScript* script, const char* name)
 {
