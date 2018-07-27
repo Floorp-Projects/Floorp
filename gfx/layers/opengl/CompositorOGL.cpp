@@ -967,7 +967,7 @@ CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
 
 ShaderConfigOGL
 CompositorOGL::GetShaderConfigFor(Effect *aEffect,
-                                  TextureSourceOGL *aSourceMask,
+                                  MaskType aMask,
                                   gfx::CompositionOp aOp,
                                   bool aColorMatrix,
                                   bool aDEAAEnabled) const
@@ -989,7 +989,6 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     // according to the bit depth.
     // So we will scale the YUV values by this amount.
     config.SetColorMultiplier(pow(2, paddingBits));
-    config.SetTextureTarget(effectYCbCr->mTexture->AsSourceOGL()->GetTextureTarget());
     break;
   }
   case EffectTypes::NV12:
@@ -1037,10 +1036,7 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
   }
   }
   config.SetColorMatrix(aColorMatrix);
-  config.SetMask(!!aSourceMask);
-  if (aSourceMask) {
-    config.SetMaskTextureTarget(aSourceMask->GetTextureTarget());
-  }
+  config.SetMask(aMask == MaskType::Mask);
   config.SetDEAA(aDEAAEnabled);
   config.SetCompositionOp(aOp);
   return config;
@@ -1302,7 +1298,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   bool colorMatrix = aEffectChain.mSecondaryEffects[EffectTypes::COLOR_MATRIX];
   ShaderConfigOGL config = GetShaderConfigFor(aEffectChain.mPrimaryEffect,
-                                              sourceMask, blendMode, colorMatrix,
+                                              maskType, blendMode, colorMatrix,
                                               bEnableAA);
 
   config.SetOpacity(aOpacity != 1.f);
@@ -1358,11 +1354,6 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     }
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
     program->SetTexCoordMultiplier(source->GetSize().width, source->GetSize().height);
-  }
-
-  if (sourceMask && config.mFeatures & ENABLE_MASK_TEXTURE_RECT) {
-    program->SetMaskCoordMultiplier(sourceMask->GetSize().width,
-                                    sourceMask->GetSize().height);
   }
 
   // XXX kip - These calculations could be performed once per layer rather than

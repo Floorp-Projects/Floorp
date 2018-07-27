@@ -44,7 +44,6 @@ class CompositingRenderTargetOGL;
 class DataTextureSource;
 class GLManagerCompositor;
 class TextureSource;
-class TextureSourceOGL;
 class BufferTextureHost;
 struct Effect;
 struct EffectChain;
@@ -356,7 +355,7 @@ private:
                           gfx::IntRect *aRenderBoundsOut = nullptr) override;
 
   ShaderConfigOGL GetShaderConfigFor(Effect *aEffect,
-                                     TextureSourceOGL *aSourceMask = nullptr,
+                                     MaskType aMask = MaskType::MaskNone,
                                      gfx::CompositionOp aOp = gfx::CompositionOp::OP_OVER,
                                      bool aColorMatrix = false,
                                      bool aDEAAEnabled = false) const;
