@@ -104,7 +104,7 @@ public:
    * Return the amount of overscroll on this axis, in ParentLayer pixels.
    *
    * If this amount is nonzero, the relevant component of
-   * mAsyncPanZoomController->mFrameMetrics.mScrollOffset must be at its
+   * mAsyncPanZoomController->Metrics().mScrollOffset must be at its
    * extreme allowed value in the relevant direction (that is, it must be at
    * its maximum value if we are overscrolled at our composition length, and
    * at its minimum value if we are overscrolled at the origin).

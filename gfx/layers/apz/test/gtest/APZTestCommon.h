@@ -227,6 +227,7 @@ protected:
     return mcc->Time();
   }
 
+
 private:
   RefPtr<MockContentControllerDelayed> mcc;
 };
@@ -269,12 +270,12 @@ public:
 
   void SetFrameMetrics(const FrameMetrics& metrics) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    mFrameMetrics = metrics;
+    Metrics() = metrics;
   }
 
   FrameMetrics& GetFrameMetrics() {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return mFrameMetrics;
+    return mScrollMetadata.GetMetrics();
   }
 
   ScrollMetadata& GetScrollMetadata() {
@@ -284,7 +285,7 @@ public:
 
   const FrameMetrics& GetFrameMetrics() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return mFrameMetrics;
+    return mScrollMetadata.GetMetrics();
   }
 
   using AsyncPanZoomController::GetVelocityVector;
