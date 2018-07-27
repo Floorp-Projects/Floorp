@@ -444,11 +444,6 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
     // was freed. To prevent this, we must bind the NativeFontResource to the font face so that
     // it stays alive at least as long as the font face.
     aNativeFontResource->AddRef();
-    // Bug 1412545 - Setting Cairo font user data is not thread-safe. If Fontconfig patterns match,
-    // cairo_ft_font_face_create_for_pattern may share Cairo faces. We need to lock setting user data
-    // to prevent races if multiple threads are thus sharing the same Cairo face.
-    FT_Library library = face ? face->glyph->library : Factory::GetFTLibrary();
-    Factory::LockFTLibrary(library);
     cairo_status_t err = CAIRO_STATUS_SUCCESS;
     bool cleanupFace = false;
     if (varFace) {
@@ -465,7 +460,6 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
                                           aNativeFontResource,
                                           ReleaseNativeFontResource);
     }
-    Factory::UnlockFTLibrary(library);
     if (err != CAIRO_STATUS_SUCCESS) {
       gfxWarning() << "Failed binding NativeFontResource to Cairo font face";
       if (varFace && cleanupFace) {
