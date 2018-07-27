@@ -158,8 +158,9 @@ private:
   // Tracks the set of declarations that the current expression/statement is
   // nested inside of.
   struct AutoSetContext {
-    AutoSetContext(IndexConsumer *Self, NamedDecl *Context)
+    AutoSetContext(IndexConsumer *Self, NamedDecl *Context, bool VisitImplicit = false)
         : Self(Self), Prev(Self->CurDeclContext), Decl(Context) {
+      this->VisitImplicit = VisitImplicit || (Prev ? Prev->VisitImplicit : false);
       Self->CurDeclContext = this;
     }
 
@@ -168,6 +169,7 @@ private:
     IndexConsumer *Self;
     AutoSetContext *Prev;
     NamedDecl *Decl;
+    bool VisitImplicit;
   };
   AutoSetContext *CurDeclContext;
 
@@ -571,7 +573,7 @@ public:
     return Super::TraverseCXXMethodDecl(D);
   }
   bool TraverseCXXConstructorDecl(CXXConstructorDecl *D) {
-    AutoSetContext Asc(this, D);
+    AutoSetContext Asc(this, D, true);
     const FunctionDecl *Def;
     // See TraverseFunctionDecl.
     if (TemplateStack && D->isDefined(Def) && Def && D != Def) {
@@ -794,6 +796,11 @@ public:
       return TemplateStack->shouldVisitTemplateInstantiations();
     }
     return false;
+  }
+
+  bool shouldVisitImplicitCode() const {
+    AutoSetContext *Ctxt = CurDeclContext;
+    return Ctxt ? Ctxt->VisitImplicit : false;
   }
 
   bool TraverseClassTemplateDecl(ClassTemplateDecl *D) {
