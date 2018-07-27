@@ -487,15 +487,10 @@ class CompileFlags(BaseCompileFlags):
     def _warnings_as_errors(self):
         warnings_as_errors = self._context.config.substs.get('WARNINGS_AS_ERRORS')
         if self._context.config.substs.get('MOZ_PGO'):
-            # Don't use warnings-as-errors in Windows PGO builds because it is suspected of
+            # Don't use warnings-as-errors in MSVC PGO builds because it is suspected of
             # causing problems in that situation. (See bug 437002.)
-            if self._context.config.substs['OS_ARCH'] == 'WINNT':
+            if self._context.config.substs.get('CC_TYPE') == 'msvc':
                 warnings_as_errors = None
-
-        if self._context.config.substs.get('CC_TYPE') == 'clang-cl':
-            # Don't use warnings-as-errors in clang-cl because it warns about many more
-            # things than MSVC does.
-            warnings_as_errors = None
 
         if warnings_as_errors:
             return [warnings_as_errors]

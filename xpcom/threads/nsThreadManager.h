@@ -36,7 +36,7 @@ public:
 
   // Called by nsThread to inform the ThreadManager it is going away.  This
   // method must be called when the given thread is the current thread.
-  void UnregisterCurrentThread(nsThread& aThread);
+  void UnregisterCurrentThread(nsThread& aThread, bool aIfExists = false);
 
   // Returns the current thread.  Returns null if OOM or if ThreadManager isn't
   // initialized.  Creates the nsThread if one does not exist yet.
@@ -84,6 +84,8 @@ private:
   nsresult
   SpinEventLoopUntilInternal(nsINestedEventLoopCondition* aCondition,
                              bool aCheckingShutdown);
+
+  static void ReleaseThread(void* aData);
 
   nsRefPtrHashtable<nsPtrHashKey<PRThread>, nsThread> mThreadsByPRThread;
   unsigned            mCurThreadIndex;  // thread-local-storage index
