@@ -60,9 +60,9 @@ function swapDocShells(browser1, browser2) {
   browser2.permanentKey = tmp;
 }
 
-add_task(async function initialProcessData() {
+add_task(async function sharedData_aka_initialProcessData() {
   const includesTest = () => Services.cpmm.
-    initialProcessData["RemotePageManager:urls"].includes(TEST_URL);
+    sharedData.get("RemotePageManager:urls").has(TEST_URL);
   is(includesTest(), false, "Shouldn't have test url in initial process data yet");
 
   const loadedPort = waitForPort(TEST_URL);

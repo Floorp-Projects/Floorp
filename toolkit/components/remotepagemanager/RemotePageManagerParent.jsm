@@ -290,7 +290,8 @@ var RemotePageManagerInternal = {
   },
 
   updateProcessUrls() {
-    Services.ppmm.initialProcessData["RemotePageManager:urls"] = Array.from(this.pages.keys());
+    Services.ppmm.sharedData.set("RemotePageManager:urls", new Set(this.pages.keys()));
+    Services.ppmm.sharedData.flush();
   },
 
   // Registers interest in a remote page. A callback is called with a port for
@@ -303,9 +304,6 @@ var RemotePageManagerInternal = {
 
     this.pages.set(url, callback);
     this.updateProcessUrls();
-
-    // Notify all the frame scripts of the new registration
-    Services.ppmm.broadcastAsyncMessage("RemotePage:Register", { urls: [url] });
   },
 
   // Removes any interest in a remote page.
@@ -314,8 +312,6 @@ var RemotePageManagerInternal = {
       throw new Error("Remote page is not registered: " + url);
     }
 
-    // Notify all the frame scripts of the removed registration
-    Services.ppmm.broadcastAsyncMessage("RemotePage:Unregister", { urls: [url] });
     this.pages.delete(url);
     this.updateProcessUrls();
   },
