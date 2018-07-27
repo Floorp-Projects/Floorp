@@ -10,7 +10,7 @@
 // right state, and that it works for an input inside of a panel.
 
 const URL = "data:text/html;charset=utf8,test for textbox context menu";
-const textboxToolId = "test-tool-1";
+const textboxToolId = "testtool1";
 
 registerCleanupFunction(() => {
   gDevTools.unregisterTool(textboxToolId);

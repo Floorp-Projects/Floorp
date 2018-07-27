@@ -145,3 +145,16 @@ jobs:
               mozilla-esr60:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
+
+    - name: pipfile-update
+      job:
+          type: decision-task
+          treeherder-symbol: Nfile
+          target-tasks-method: pipfile_update
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              # No default branch
+              mozilla-central:
+                  - {weekday: 'Monday', hour: 10, minute: 0}

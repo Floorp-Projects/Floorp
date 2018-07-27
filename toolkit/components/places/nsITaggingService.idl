@@ -49,15 +49,6 @@ interface nsITaggingService : nsISupports
                 [optional] in unsigned short aSource);
 
   /**
-   * Retrieves all URLs tagged with the given tag.
-   *
-   * @param aTag
-   *        tag name
-   * @returns Array of uris tagged with aTag.
-   */
-  nsIVariant getURIsForTag(in AString aTag);
-
-  /**
    * Retrieves all tags set for the given URL.
    *
    * @param aURI

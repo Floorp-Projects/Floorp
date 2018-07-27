@@ -1597,8 +1597,10 @@ PT.RenameTag.prototype = {
     // For now this is implemented by untagging and tagging all the bookmarks.
     // We should create a specialized bookmarking API to just rename the tag.
     let onUndo = [], onRedo = [];
-    let urls = PlacesUtils.tagging.getURIsForTag(oldTag);
-    if (urls.length > 0) {
+    let urls = new Set();
+    await PlacesUtils.bookmarks.fetch({tags: [oldTag]}, b => urls.add(b.url));
+    if (urls.size > 0) {
+      urls = Array.from(urls);
       let tagTxn = TransactionsHistory.getRawTransaction(
         PT.Tag({ urls, tags: [tag] })
       );

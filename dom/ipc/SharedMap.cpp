@@ -514,6 +514,14 @@ SharedMapChangeEvent::Constructor(EventTarget* aEventTarget,
   return event.forget();
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WritableSharedMap, SharedMap, mReadOnly)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WritableSharedMap)
+NS_INTERFACE_MAP_END_INHERITING(SharedMap)
+
+NS_IMPL_ADDREF_INHERITED(WritableSharedMap, SharedMap)
+NS_IMPL_RELEASE_INHERITED(WritableSharedMap, SharedMap)
+
 } // ipc
 } // dom
 } // mozilla

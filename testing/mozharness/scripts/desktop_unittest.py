@@ -39,7 +39,7 @@ from mozharness.mozilla.testing.codecoverage import (
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
 SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell',
-                    'mozbase', 'mozmill']
+                    'mozmill']
 SUITE_DEFAULT_E10S = ['mochitest', 'reftest']
 SUITE_NO_E10S = ['xpcshell']
 
@@ -95,14 +95,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             "help": "Specify which jit-test suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'jittest'"}
-         ],
-        [['--mozbase-suite', ], {
-            "action": "extend",
-            "dest": "specified_mozbase_suites",
-            "type": "string",
-            "help": "Specify which mozbase suite to run. "
-                    "Suites are defined in the config file\n."
-                    "Examples: 'mozbase'"}
          ],
         [['--mozmill-suite', ], {
             "action": "extend",
@@ -217,7 +209,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             ('specified_cppunittest_suites', 'cppunit'),
             ('specified_gtest_suites', 'gtest'),
             ('specified_jittest_suites', 'jittest'),
-            ('specified_mozbase_suites', 'mozbase'),
             ('specified_mozmill_suites', 'mozmill'),
         )
         for s, prefix in suites:
@@ -274,7 +265,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                                                    'blobber_upload_dir')
         dirs['abs_jittest_dir'] = os.path.join(dirs['abs_test_install_dir'],
                                                "jit-test", "jit-test")
-        dirs['abs_mozbase_dir'] = os.path.join(dirs['abs_test_install_dir'], "mozbase")
         dirs['abs_mozmill_dir'] = os.path.join(dirs['abs_test_install_dir'], "mozmill")
 
         if os.path.isabs(c['virtualenv_path']):
