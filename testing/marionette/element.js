@@ -1443,7 +1443,6 @@ class WebElement {
     for (let key of keys) {
       switch (key) {
         case ContentWebElement.Identifier:
-        case ContentWebElement.LegacyIdentifier:
           return ContentWebElement.fromJSON(json);
 
         case ContentWebWindow.Identifier:
@@ -1502,8 +1501,7 @@ class WebElement {
 
   /**
    * Checks if <var>ref<var> is a {@link WebElement} reference,
-   * i.e. if it has {@link ContentWebElement.Identifier},
-   * {@link ContentWebElement.LegacyIdentifier}, or
+   * i.e. if it has {@link ContentWebElement.Identifier}, or
    * {@link ChromeWebElement.Identifier} as properties.
    *
    * @param {Object.<string, string>} obj
@@ -1517,7 +1515,6 @@ class WebElement {
     }
 
     if ((ContentWebElement.Identifier in obj) ||
-        (ContentWebElement.LegacyIdentifier in obj) ||
         (ContentWebWindow.Identifier in obj) ||
         (ContentWebFrame.Identifier in obj) ||
         (ChromeWebElement.Identifier in obj)) {
@@ -1545,26 +1542,22 @@ this.WebElement = WebElement;
  */
 class ContentWebElement extends WebElement {
   toJSON() {
-    return {
-      [ContentWebElement.Identifier]: this.uuid,
-      [ContentWebElement.LegacyIdentifier]: this.uuid,
-    };
+    return {[ContentWebElement.Identifier]: this.uuid};
   }
 
   static fromJSON(json) {
-    const {Identifier, LegacyIdentifier} = ContentWebElement;
+    const {Identifier} = ContentWebElement;
 
-    if (!(Identifier in json) && !(LegacyIdentifier in json)) {
+    if (!(Identifier in json)) {
       throw new InvalidArgumentError(
           pprint`Expected web element reference, got: ${json}`);
     }
 
-    let uuid = json[Identifier] || json[LegacyIdentifier];
+    let uuid = json[Identifier];
     return new ContentWebElement(uuid);
   }
 }
 ContentWebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
-ContentWebElement.LegacyIdentifier = "ELEMENT";
 this.ContentWebElement = ContentWebElement;
 
 /**
@@ -1574,10 +1567,7 @@ this.ContentWebElement = ContentWebElement;
  */
 class ContentWebWindow extends WebElement {
   toJSON() {
-    return {
-      [ContentWebWindow.Identifier]: this.uuid,
-      [ContentWebElement.LegacyIdentifier]: this.uuid,
-    };
+    return {[ContentWebWindow.Identifier]: this.uuid};
   }
 
   static fromJSON(json) {
@@ -1599,10 +1589,7 @@ this.ContentWebWindow = ContentWebWindow;
  */
 class ContentWebFrame extends WebElement {
   toJSON() {
-    return {
-      [ContentWebFrame.Identifier]: this.uuid,
-      [ContentWebElement.LegacyIdentifier]: this.uuid,
-    };
+    return {[ContentWebFrame.Identifier]: this.uuid};
   }
 
   static fromJSON(json) {
@@ -1623,10 +1610,7 @@ this.ContentWebFrame = ContentWebFrame;
  */
 class ChromeWebElement extends WebElement {
   toJSON() {
-    return {
-      [ChromeWebElement.Identifier]: this.uuid,
-      [ContentWebElement.LegacyIdentifier]: this.uuid,
-    };
+    return {[ChromeWebElement.Identifier]: this.uuid};
   }
 
   static fromJSON(json) {

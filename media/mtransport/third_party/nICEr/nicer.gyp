@@ -207,6 +207,7 @@
               # Windows, clang-cl build
               [ 'clang_cl == 1', {
                 'cflags_mozilla': [
+                    '-Xclang',
                     '-Wall',
                     '-Wno-parentheses',
                     '-Wno-strict-prototypes',

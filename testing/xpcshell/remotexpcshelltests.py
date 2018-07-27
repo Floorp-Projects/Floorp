@@ -16,7 +16,7 @@ import runxpcshelltests as xpcshell
 import tempfile
 from zipfile import ZipFile
 
-from mozdevice import ADBAndroid, ADBDevice
+from mozdevice import ADBAndroid, ADBDevice, ADBTimeoutError
 import mozfile
 import mozinfo
 from mozlog import commandline
@@ -156,6 +156,8 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             adb_process = self.device.shell(cmd, timeout=timeout+10, root=True)
             output_file = adb_process.stdout_file
             self.shellReturnCode = adb_process.exitcode
+        except ADBTimeoutError:
+            raise
         except Exception as e:
             if self.timedout:
                 # If the test timed out, there is a good chance the shell
@@ -214,6 +216,8 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
     def removeDir(self, dirname):
         try:
             self.device.rm(dirname, recursive=True, root=True)
+        except ADBTimeoutError:
+            raise
         except Exception as e:
             self.log.warning(str(e))
 
