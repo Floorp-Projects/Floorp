@@ -14,7 +14,6 @@
 #include "nsWindow.h"
 #include "nsLookAndFeel.h"
 #include "nsAppShellSingleton.h"
-#include "nsScreenManagerAndroid.h"
 
 #include "nsIdleServiceAndroid.h"
 #include "nsClipboard.h"
@@ -31,8 +30,13 @@
 #include "AndroidAlerts.h"
 #include "nsNativeThemeAndroid.h"
 
+#include "mozilla/widget/ScreenManager.h"
+
+using namespace mozilla;
+using namespace mozilla::widget;
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerAndroid)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ScreenManager, ScreenManager::GetAddRefedSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceAndroid, nsIdleServiceAndroid::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -95,7 +99,8 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
   { &kNS_CHILD_CID, false, nullptr, nsWindowConstructor },
   { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
-  { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerAndroidConstructor },
+  { &kNS_SCREENMANAGER_CID, false, nullptr, ScreenManagerConstructor,
+    mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeAndroidConstructor },
   { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceAndroidConstructor },
   { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
@@ -116,7 +121,8 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widgets/window/android;1", &kNS_WINDOW_CID },
   { "@mozilla.org/widgets/child_window/android;1", &kNS_CHILD_CID },
   { "@mozilla.org/widget/appshell/android;1", &kNS_APPSHELL_CID },
-  { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
+  { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
+    mozilla::Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
   { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
   { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
