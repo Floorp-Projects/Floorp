@@ -1375,6 +1375,9 @@ var gBrowserInit = {
       // make sure it has a docshell
       gBrowser.docShell;
 
+      // Remove the speculative focus from the urlbar to let the url be formatted.
+      gURLBar.removeAttribute("focused");
+
       try {
         gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToAdopt);
       } catch (e) {
