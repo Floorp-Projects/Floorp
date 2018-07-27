@@ -13,8 +13,6 @@ DevToolsModules(
     'SwatchColorPickerTooltip.js',
     'SwatchCubicBezierTooltip.js',
     'SwatchFilterTooltip.js',
-    'Tooltip.js',
     'TooltipToggle.js',
-    'VariableContentHelper.js',
     'VariableTooltipHelper.js'
 )
