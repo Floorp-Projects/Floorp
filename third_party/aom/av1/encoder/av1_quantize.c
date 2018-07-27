@@ -613,9 +613,9 @@ void av1_init_quantizer(AV1_COMP *cpi) {
   AV1_COMMON *const cm = &cpi->common;
   QUANTS *const quants = &cpi->quants;
   Dequants *const dequants = &cpi->dequants;
-  av1_build_quantizer(cm->bit_depth, cm->y_dc_delta_q, cm->u_dc_delta_q,
-                      cm->u_ac_delta_q, cm->v_dc_delta_q, cm->v_ac_delta_q,
-                      quants, dequants);
+  av1_build_quantizer(cm->seq_params.bit_depth, cm->y_dc_delta_q,
+                      cm->u_dc_delta_q, cm->u_ac_delta_q, cm->v_dc_delta_q,
+                      cm->v_ac_delta_q, quants, dequants);
 }
 
 void av1_init_plane_quantizers(const AV1_COMP *cpi, MACROBLOCK *x,
@@ -713,7 +713,7 @@ void av1_set_quantizer(AV1_COMMON *cm, int q) {
   cm->qm_u = aom_get_qmlevel(cm->base_qindex + cm->u_ac_delta_q,
                              cm->min_qmlevel, cm->max_qmlevel);
 
-  if (!cm->separate_uv_delta_q)
+  if (!cm->seq_params.separate_uv_delta_q)
     cm->qm_v = cm->qm_u;
   else
     cm->qm_v = aom_get_qmlevel(cm->base_qindex + cm->v_ac_delta_q,

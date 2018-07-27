@@ -72,7 +72,7 @@ typedef struct {
 
   int clip_to_restricted_range;
 
-  int bit_depth;  // video bit depth
+  unsigned int bit_depth;  // video bit depth
 
   int chroma_scaling_from_luma;
 
@@ -94,7 +94,7 @@ typedef struct {
  * \param[in]    luma_stride      luma plane stride
  * \param[in]    chroma_stride    chroma plane stride
  */
-void av1_add_film_grain_run(aom_film_grain_t *grain_params, uint8_t *luma,
+void av1_add_film_grain_run(const aom_film_grain_t *grain_params, uint8_t *luma,
                             uint8_t *cb, uint8_t *cr, int height, int width,
                             int luma_stride, int chroma_stride,
                             int use_high_bit_depth, int chroma_subsamp_y,
@@ -106,10 +106,10 @@ void av1_add_film_grain_run(aom_film_grain_t *grain_params, uint8_t *luma,
  *
  * \param[in]    grain_params     Grain parameters
  * \param[in]    src              Source image
- * \param[in]    dst              Resulting image with grain
+ * \param[out]   dst              Resulting image with grain
  */
-void av1_add_film_grain(aom_film_grain_t *grain_params, aom_image_t *src,
-                        aom_image_t *dst);
+void av1_add_film_grain(const aom_film_grain_t *grain_params,
+                        const aom_image_t *src, aom_image_t *dst);
 
 #ifdef __cplusplus
 }  // extern "C"

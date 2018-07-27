@@ -20,12 +20,14 @@
 
 namespace {
 class AVxEncoderThreadTest
-    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+    : public ::libaom_test::CodecTestWith4Params<libaom_test::TestMode, int,
+                                                 int, int>,
       public ::libaom_test::EncoderTest {
  protected:
   AVxEncoderThreadTest()
       : EncoderTest(GET_PARAM(0)), encoder_initialized_(false),
-        encoding_mode_(GET_PARAM(1)), set_cpu_used_(GET_PARAM(2)) {
+        encoding_mode_(GET_PARAM(1)), set_cpu_used_(GET_PARAM(2)),
+        tile_cols_(GET_PARAM(3)), tile_rows_(GET_PARAM(4)) {
     init_flags_ = AOM_CODEC_USE_PSNR;
     aom_codec_dec_cfg_t cfg = aom_codec_dec_cfg_t();
     cfg.w = 1280;
@@ -84,9 +86,8 @@ class AVxEncoderThreadTest
   }
 
   virtual void SetTileSize(libaom_test::Encoder *encoder) {
-    // Encode 4 tile columns.
-    encoder->Control(AV1E_SET_TILE_COLUMNS, 2);
-    encoder->Control(AV1E_SET_TILE_ROWS, 0);
+    encoder->Control(AV1E_SET_TILE_COLUMNS, tile_cols_);
+    encoder->Control(AV1E_SET_TILE_ROWS, tile_rows_);
   }
 
   virtual void FramePktHook(const aom_codec_cx_pkt_t *pkt) {
@@ -153,6 +154,8 @@ class AVxEncoderThreadTest
   bool encoder_initialized_;
   ::libaom_test::TestMode encoding_mode_;
   int set_cpu_used_;
+  int tile_cols_;
+  int tile_rows_;
   ::libaom_test::Decoder *decoder_;
   std::vector<size_t> size_enc_;
   std::vector<std::string> md5_enc_;
@@ -177,42 +180,46 @@ TEST_P(AVxEncoderThreadTestLarge, EncoderResultTest) {
 AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadTest,
                           ::testing::Values(::libaom_test::kTwoPassGood,
                                             ::libaom_test::kOnePassGood),
-                          ::testing::Range(2, 4));
+                          ::testing::Range(2, 4), ::testing::Values(1, 2),
+                          ::testing::Values(0, 1));
 
 AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadTestLarge,
                           ::testing::Values(::libaom_test::kTwoPassGood,
                                             ::libaom_test::kOnePassGood),
-                          ::testing::Range(0, 2));
+                          ::testing::Range(0, 2), ::testing::Values(0, 1, 2, 6),
+                          ::testing::Values(0, 1, 2, 6));
 
 class AVxEncoderThreadLSTest : public AVxEncoderThreadTest {
   virtual void SetTileSize(libaom_test::Encoder *encoder) {
-    encoder->Control(AV1E_SET_TILE_COLUMNS, 1);
-    // TODO(geza): Start using multiple tile rows when the multi-threaded
-    // encoder can handle them
-    encoder->Control(AV1E_SET_TILE_ROWS, 32);
+    encoder->Control(AV1E_SET_TILE_COLUMNS, tile_cols_);
+    encoder->Control(AV1E_SET_TILE_ROWS, tile_rows_);
   }
 };
 
-TEST_P(AVxEncoderThreadLSTest, DISABLED_EncoderResultTest) {
+TEST_P(AVxEncoderThreadLSTest, EncoderResultTest) {
   cfg_.large_scale_tile = 1;
   decoder_->Control(AV1_SET_TILE_MODE, 1);
+  decoder_->Control(AV1D_EXT_TILE_DEBUG, 1);
   DoTest();
 }
 
 class AVxEncoderThreadLSTestLarge : public AVxEncoderThreadLSTest {};
 
-TEST_P(AVxEncoderThreadLSTestLarge, DISABLED_EncoderResultTest) {
+TEST_P(AVxEncoderThreadLSTestLarge, EncoderResultTest) {
   cfg_.large_scale_tile = 1;
   decoder_->Control(AV1_SET_TILE_MODE, 1);
+  decoder_->Control(AV1D_EXT_TILE_DEBUG, 1);
   DoTest();
 }
 
 AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadLSTest,
                           ::testing::Values(::libaom_test::kTwoPassGood,
                                             ::libaom_test::kOnePassGood),
-                          ::testing::Range(2, 4));
+                          ::testing::Range(2, 4), ::testing::Values(6),
+                          ::testing::Values(0, 6));
 AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadLSTestLarge,
                           ::testing::Values(::libaom_test::kTwoPassGood,
                                             ::libaom_test::kOnePassGood),
-                          ::testing::Range(0, 2));
+                          ::testing::Range(0, 2), ::testing::Values(6),
+                          ::testing::Values(0, 6));
 }  // namespace

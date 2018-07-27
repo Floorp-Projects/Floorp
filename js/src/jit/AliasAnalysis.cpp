@@ -186,7 +186,9 @@ GetObject(const MDefinition* ins)
       case MDefinition::Opcode::WasmAtomicBinopHeap:
       case MDefinition::Opcode::WasmAtomicExchangeHeap:
       case MDefinition::Opcode::WasmLoadGlobalVar:
+      case MDefinition::Opcode::WasmLoadGlobalCell:
       case MDefinition::Opcode::WasmStoreGlobalVar:
+      case MDefinition::Opcode::WasmStoreGlobalCell:
       case MDefinition::Opcode::ArrayJoin:
         return nullptr;
       default:

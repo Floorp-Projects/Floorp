@@ -1458,3 +1458,189 @@ int aom_wiener_denoise_2d(const uint8_t *const data[3], uint8_t *denoised[3],
   }
   return init_success;
 }
+
+struct aom_denoise_and_model_t {
+  int block_size;
+  int bit_depth;
+  float noise_level;
+
+  // Size of current denoised buffer and flat_block buffer
+  int width;
+  int height;
+  int y_stride;
+  int uv_stride;
+  int num_blocks_w;
+  int num_blocks_h;
+
+  // Buffers for image and noise_psd allocated on the fly
+  float *noise_psd[3];
+  uint8_t *denoised[3];
+  uint8_t *flat_blocks;
+
+  aom_flat_block_finder_t flat_block_finder;
+  aom_noise_model_t noise_model;
+};
+
+struct aom_denoise_and_model_t *aom_denoise_and_model_alloc(int bit_depth,
+                                                            int block_size,
+                                                            float noise_level) {
+  struct aom_denoise_and_model_t *ctx =
+      (struct aom_denoise_and_model_t *)aom_malloc(
+          sizeof(struct aom_denoise_and_model_t));
+  if (!ctx) {
+    fprintf(stderr, "Unable to allocate denoise_and_model struct\n");
+    return NULL;
+  }
+  memset(ctx, 0, sizeof(*ctx));
+
+  ctx->block_size = block_size;
+  ctx->noise_level = noise_level;
+  ctx->bit_depth = bit_depth;
+
+  ctx->noise_psd[0] =
+      aom_malloc(sizeof(*ctx->noise_psd[0]) * block_size * block_size);
+  ctx->noise_psd[1] =
+      aom_malloc(sizeof(*ctx->noise_psd[1]) * block_size * block_size);
+  ctx->noise_psd[2] =
+      aom_malloc(sizeof(*ctx->noise_psd[2]) * block_size * block_size);
+  if (!ctx->noise_psd[0] || !ctx->noise_psd[1] || !ctx->noise_psd[2]) {
+    fprintf(stderr, "Unable to allocate noise PSD buffers\n");
+    aom_denoise_and_model_free(ctx);
+    return NULL;
+  }
+  return ctx;
+}
+
+void aom_denoise_and_model_free(struct aom_denoise_and_model_t *ctx) {
+  aom_free(ctx->flat_blocks);
+  for (int i = 0; i < 3; ++i) {
+    aom_free(ctx->denoised[i]);
+    aom_free(ctx->noise_psd[i]);
+  }
+  aom_noise_model_free(&ctx->noise_model);
+  aom_flat_block_finder_free(&ctx->flat_block_finder);
+  aom_free(ctx);
+}
+
+static int denoise_and_model_realloc_if_necessary(
+    struct aom_denoise_and_model_t *ctx, YV12_BUFFER_CONFIG *sd) {
+  if (ctx->width == sd->y_width && ctx->height == sd->y_height &&
+      ctx->y_stride == sd->y_stride && ctx->uv_stride == sd->uv_stride)
+    return 1;
+  const int use_highbd = (sd->flags & YV12_FLAG_HIGHBITDEPTH) != 0;
+  const int block_size = ctx->block_size;
+
+  ctx->width = sd->y_width;
+  ctx->height = sd->y_height;
+  ctx->y_stride = sd->y_stride;
+  ctx->uv_stride = sd->uv_stride;
+
+  for (int i = 0; i < 3; ++i) {
+    aom_free(ctx->denoised[i]);
+    ctx->denoised[i] = NULL;
+  }
+  aom_free(ctx->flat_blocks);
+  ctx->flat_blocks = NULL;
+
+  ctx->denoised[0] = aom_malloc((sd->y_stride * sd->y_height) << use_highbd);
+  ctx->denoised[1] = aom_malloc((sd->uv_stride * sd->uv_height) << use_highbd);
+  ctx->denoised[2] = aom_malloc((sd->uv_stride * sd->uv_height) << use_highbd);
+  if (!ctx->denoised[0] || !ctx->denoised[1] || !ctx->denoised[2]) {
+    fprintf(stderr, "Unable to allocate denoise buffers\n");
+    return 0;
+  }
+  ctx->num_blocks_w = (sd->y_width + ctx->block_size - 1) / ctx->block_size;
+  ctx->num_blocks_h = (sd->y_height + ctx->block_size - 1) / ctx->block_size;
+  ctx->flat_blocks = aom_malloc(ctx->num_blocks_w * ctx->num_blocks_h);
+
+  aom_flat_block_finder_free(&ctx->flat_block_finder);
+  if (!aom_flat_block_finder_init(&ctx->flat_block_finder, ctx->block_size,
+                                  ctx->bit_depth, use_highbd)) {
+    fprintf(stderr, "Unable to init flat block finder\n");
+    return 0;
+  }
+
+  const aom_noise_model_params_t params = { AOM_NOISE_SHAPE_SQUARE, 3,
+                                            ctx->bit_depth, use_highbd };
+  aom_noise_model_free(&ctx->noise_model);
+  if (!aom_noise_model_init(&ctx->noise_model, params)) {
+    fprintf(stderr, "Unable to init noise model\n");
+    return 0;
+  }
+
+  // Simply use a flat PSD (although we could use the flat blocks to estimate
+  // PSD) those to estimate an actual noise PSD)
+  const float y_noise_level =
+      aom_noise_psd_get_default_value(ctx->block_size, ctx->noise_level);
+  const float uv_noise_level = aom_noise_psd_get_default_value(
+      ctx->block_size >> sd->subsampling_x, ctx->noise_level);
+  for (int i = 0; i < block_size * block_size; ++i) {
+    ctx->noise_psd[0][i] = y_noise_level;
+    ctx->noise_psd[1][i] = ctx->noise_psd[2][i] = uv_noise_level;
+  }
+  return 1;
+}
+
+int aom_denoise_and_model_run(struct aom_denoise_and_model_t *ctx,
+                              YV12_BUFFER_CONFIG *sd,
+                              aom_film_grain_t *film_grain) {
+  const int block_size = ctx->block_size;
+  const int use_highbd = (sd->flags & YV12_FLAG_HIGHBITDEPTH) != 0;
+  uint8_t *raw_data[3] = {
+    use_highbd ? (uint8_t *)CONVERT_TO_SHORTPTR(sd->y_buffer) : sd->y_buffer,
+    use_highbd ? (uint8_t *)CONVERT_TO_SHORTPTR(sd->u_buffer) : sd->u_buffer,
+    use_highbd ? (uint8_t *)CONVERT_TO_SHORTPTR(sd->v_buffer) : sd->v_buffer,
+  };
+  const uint8_t *const data[3] = { raw_data[0], raw_data[1], raw_data[2] };
+  int strides[3] = { sd->y_stride, sd->uv_stride, sd->uv_stride };
+  int chroma_sub_log2[2] = { sd->subsampling_x, sd->subsampling_y };
+
+  if (!denoise_and_model_realloc_if_necessary(ctx, sd)) {
+    fprintf(stderr, "Unable to realloc buffers\n");
+    return 0;
+  }
+
+  aom_flat_block_finder_run(&ctx->flat_block_finder, data[0], sd->y_width,
+                            sd->y_height, strides[0], ctx->flat_blocks);
+
+  if (!aom_wiener_denoise_2d(data, ctx->denoised, sd->y_width, sd->y_height,
+                             strides, chroma_sub_log2, ctx->noise_psd,
+                             block_size, ctx->bit_depth, use_highbd)) {
+    fprintf(stderr, "Unable to denoise image\n");
+    return 0;
+  }
+
+  const aom_noise_status_t status = aom_noise_model_update(
+      &ctx->noise_model, data, (const uint8_t *const *)ctx->denoised,
+      sd->y_width, sd->y_height, strides, chroma_sub_log2, ctx->flat_blocks,
+      block_size);
+  int have_noise_estimate = 0;
+  if (status == AOM_NOISE_STATUS_OK) {
+    have_noise_estimate = 1;
+  } else if (status == AOM_NOISE_STATUS_DIFFERENT_NOISE_TYPE) {
+    aom_noise_model_save_latest(&ctx->noise_model);
+    have_noise_estimate = 1;
+  } else {
+    // Unable to update noise model; proceed if we have a previous estimate.
+    have_noise_estimate =
+        (ctx->noise_model.combined_state[0].strength_solver.num_equations > 0);
+  }
+
+  film_grain->apply_grain = 0;
+  if (have_noise_estimate) {
+    if (!aom_noise_model_get_grain_parameters(&ctx->noise_model, film_grain)) {
+      fprintf(stderr, "Unable to get grain parameters.\n");
+      return 0;
+    }
+    if (!film_grain->random_seed) {
+      film_grain->random_seed = 1071;
+    }
+    memcpy(raw_data[0], ctx->denoised[0],
+           (strides[0] * sd->y_height) << use_highbd);
+    memcpy(raw_data[1], ctx->denoised[1],
+           (strides[1] * sd->uv_height) << use_highbd);
+    memcpy(raw_data[2], ctx->denoised[2],
+           (strides[2] * sd->uv_height) << use_highbd);
+  }
+  return 1;
+}

@@ -274,11 +274,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    fun loadDataHelper(assetPath: String, mimeType: String? = null, baseUri: String? = null) {
+    fun loadDataHelper(assetPath: String, mimeType: String? = null) {
         val bytes = getTestBytes(assetPath)
         assertThat("test data should have bytes", bytes.size, greaterThan(0))
 
-        sessionRule.session.loadData(bytes, mimeType, baseUri);
+        sessionRule.session.loadData(bytes, mimeType);
         sessionRule.waitForPageStop();
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {

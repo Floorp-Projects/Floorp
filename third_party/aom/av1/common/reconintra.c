@@ -1071,13 +1071,6 @@ static void filter_intra_edge_corner_high(uint16_t *p_above, uint16_t *p_left) {
   p_left[-1] = s;
 }
 
-static int use_intra_edge_upsample(int bs0, int bs1, int delta, int type) {
-  const int d = abs(delta);
-  const int blk_wh = bs0 + bs1;
-  if (d <= 0 || d >= 40) return 0;
-  return type ? (blk_wh <= 8) : (blk_wh <= 16);
-}
-
 void av1_upsample_intra_edge_c(uint8_t *p, int sz) {
   // interpolate half-sample positions
   assert(sz <= MAX_UPSAMPLE_SZ);
@@ -1284,13 +1277,13 @@ static void build_intra_predictors_high(
         }
       }
       upsample_above =
-          use_intra_edge_upsample(txwpx, txhpx, p_angle - 90, filt_type);
+          av1_use_intra_edge_upsample(txwpx, txhpx, p_angle - 90, filt_type);
       if (need_above && upsample_above) {
         const int n_px = txwpx + (need_right ? txhpx : 0);
         av1_upsample_intra_edge_high(above_row, n_px, xd->bd);
       }
       upsample_left =
-          use_intra_edge_upsample(txhpx, txwpx, p_angle - 180, filt_type);
+          av1_use_intra_edge_upsample(txhpx, txwpx, p_angle - 180, filt_type);
       if (need_left && upsample_left) {
         const int n_px = txhpx + (need_bottom ? txwpx : 0);
         av1_upsample_intra_edge_high(left_col, n_px, xd->bd);
@@ -1467,13 +1460,13 @@ static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
         }
       }
       upsample_above =
-          use_intra_edge_upsample(txwpx, txhpx, p_angle - 90, filt_type);
+          av1_use_intra_edge_upsample(txwpx, txhpx, p_angle - 90, filt_type);
       if (need_above && upsample_above) {
         const int n_px = txwpx + (need_right ? txhpx : 0);
         av1_upsample_intra_edge(above_row, n_px);
       }
       upsample_left =
-          use_intra_edge_upsample(txhpx, txwpx, p_angle - 180, filt_type);
+          av1_use_intra_edge_upsample(txhpx, txwpx, p_angle - 180, filt_type);
       if (need_left && upsample_left) {
         const int n_px = txhpx + (need_bottom ? txwpx : 0);
         av1_upsample_intra_edge(left_col, n_px);
@@ -1642,4 +1635,6 @@ void av1_predict_intra_block_facade(const AV1_COMMON *cm, MACROBLOCKD *xd,
                           dst_stride, dst, dst_stride, blk_col, blk_row, plane);
 }
 
-void av1_init_intra_predictors(void) { once(init_intra_predictors_internal); }
+void av1_init_intra_predictors(void) {
+  aom_once(init_intra_predictors_internal);
+}

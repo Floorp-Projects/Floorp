@@ -89,9 +89,27 @@ static void set_good_speed_feature_framesize_dependent(AV1_COMP *cpi,
                                                        SPEED_FEATURES *sf,
                                                        int speed) {
   AV1_COMMON *const cm = &cpi->common;
+  const int is_720p_or_larger = AOMMIN(cm->width, cm->height) >= 720;
+  const int is_480p_or_larger = AOMMIN(cm->width, cm->height) >= 480;
+
+  if (is_480p_or_larger) {
+    sf->use_square_partition_only_threshold = BLOCK_128X128;
+  } else {
+    sf->use_square_partition_only_threshold = BLOCK_64X64;
+  }
+
+  if (speed >= 1) {
+    if (is_720p_or_larger) {
+      sf->use_square_partition_only_threshold = BLOCK_128X128;
+    } else if (is_480p_or_larger) {
+      sf->use_square_partition_only_threshold = BLOCK_64X64;
+    } else {
+      sf->use_square_partition_only_threshold = BLOCK_32X32;
+    }
+  }
 
   if (speed >= 2) {
-    if (AOMMIN(cm->width, cm->height) >= 720) {
+    if (is_720p_or_larger) {
       sf->disable_split_mask =
           cm->show_frame ? DISABLE_ALL_SPLIT : DISABLE_ALL_INTER_SPLIT;
       sf->adaptive_pred_interp_filter = 0;
@@ -106,7 +124,7 @@ static void set_good_speed_feature_framesize_dependent(AV1_COMP *cpi,
   }
 
   if (speed >= 3) {
-    if (AOMMIN(cm->width, cm->height) >= 720) {
+    if (is_720p_or_larger) {
       sf->disable_split_mask = DISABLE_ALL_SPLIT;
       sf->schedule_mode_search = cm->base_qindex < 220 ? 1 : 0;
       sf->partition_search_breakout_dist_thr = (1 << 25);
@@ -130,7 +148,7 @@ static void set_good_speed_feature_framesize_dependent(AV1_COMP *cpi,
   }
 
   if (speed >= 4) {
-    if (AOMMIN(cm->width, cm->height) >= 720) {
+    if (is_720p_or_larger) {
       sf->partition_search_breakout_dist_thr = (1 << 26);
     } else {
       sf->partition_search_breakout_dist_thr = (1 << 24);
@@ -149,6 +167,7 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
   sf->reduce_inter_modes = 1;
   sf->prune_ext_partition_types_search_level = 1;
   sf->ml_prune_ab_partition = 1;
+  sf->ml_prune_4_partition = 1;
   sf->adaptive_txb_search_level = 1;
   sf->jnt_comp_skip_mv_search = 1;
   sf->model_based_prune_tx_search_level = 1;
@@ -195,7 +214,9 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
     sf->comp_inter_joint_search_thresh = BLOCK_SIZES_ALL;
 
     sf->partition_search_breakout_rate_thr = 80;
-    sf->auto_min_max_partition_size = RELAXED_NEIGHBORING_MIN_MAX;
+    // Note: This speed feature is disable as it seems to be worse in
+    // compression/quality and is also slower.
+    // sf->auto_min_max_partition_size = RELAXED_NEIGHBORING_MIN_MAX;
     sf->allow_partition_search_skip = 1;
     sf->disable_wedge_search_var_thresh = 100;
     sf->fast_wedge_sign_estimate = 1;
@@ -221,7 +242,8 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
   if (speed >= 4) {
     sf->tx_type_search.fast_intra_tx_type_search = 1;
     sf->tx_type_search.fast_inter_tx_type_search = 1;
-    sf->use_square_partition_only = !boosted;
+    sf->use_square_partition_only_threshold =
+        boosted ? BLOCK_128X128 : BLOCK_4X4;
     sf->tx_size_search_method =
         frame_is_intra_only(cm) ? USE_FULL_RD : USE_LARGESTALL;
     sf->mv.subpel_search_method = SUBPEL_TREE_PRUNED;
@@ -242,7 +264,7 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
     sf->intra_uv_mode_mask[TX_32X32] = UV_INTRA_DC_H_V_CFL;
     sf->intra_y_mode_mask[TX_16X16] = INTRA_DC_H_V;
     sf->intra_uv_mode_mask[TX_16X16] = UV_INTRA_DC_H_V_CFL;
-    sf->use_square_partition_only = 1;
+    sf->use_square_partition_only_threshold = BLOCK_4X4;
     sf->tx_size_search_method = USE_LARGESTALL;
     sf->mv.search_method = BIGDIA;
     sf->mv.subpel_search_method = SUBPEL_TREE_PRUNED_MORE;
@@ -363,9 +385,11 @@ static void set_dev_sf(AV1_COMP *cpi, SPEED_FEATURES *sf, int speed) {
   if (speed & PARTITION_SF) {
     if ((cpi->twopass.fr_content_type == FC_GRAPHICS_ANIMATION) ||
         has_internal_image_edge(cpi)) {
-      sf->use_square_partition_only = !frame_is_boosted(cpi);
+      sf->use_square_partition_only_threshold =
+          frame_is_boosted(cpi) ? BLOCK_128X128 : BLOCK_4X4;
     } else {
-      sf->use_square_partition_only = !frame_is_intra_only(cm);
+      sf->use_square_partition_only_threshold =
+          frame_is_intra_only(cm) ? BLOCK_128X128 : BLOCK_4X4;
     }
     sf->less_rectangular_check = 1;
     sf->prune_ext_partition_types_search_level = 2;
@@ -438,7 +462,7 @@ void av1_set_speed_features_framesize_independent(AV1_COMP *cpi) {
   sf->tx_type_search.skip_tx_search = 0;
   sf->selective_ref_frame = 0;
   sf->less_rectangular_check = 0;
-  sf->use_square_partition_only = 0;
+  sf->use_square_partition_only_threshold = BLOCK_128X128;
   sf->auto_min_max_partition_size = NOT_IN_USE;
   sf->rd_auto_partition_min_limit = BLOCK_4X4;
   sf->default_max_partition_size = BLOCK_LARGEST;
@@ -493,6 +517,7 @@ void av1_set_speed_features_framesize_independent(AV1_COMP *cpi) {
   sf->simple_model_rd_from_var = 0;
   sf->prune_ext_partition_types_search_level = 0;
   sf->ml_prune_ab_partition = 0;
+  sf->ml_prune_4_partition = 0;
   sf->fast_cdef_search = 0;
 
   // Set this at the appropriate speed levels

@@ -208,6 +208,11 @@ INSTANTIATE_TEST_CASE_P(AVX2, AV1SelfguidedFilterTest,
                         ::testing::Values(apply_selfguided_restoration_avx2));
 #endif
 
+#if HAVE_NEON
+INSTANTIATE_TEST_CASE_P(NEON, AV1SelfguidedFilterTest,
+                        ::testing::Values(apply_selfguided_restoration_neon));
+#endif
+
 // Test parameter list:
 //  <tst_fun_, bit_depth>
 typedef tuple<SgrFunc, int> HighbdFilterTestParam;
@@ -395,5 +400,11 @@ INSTANTIATE_TEST_CASE_P(
     ::testing::Combine(::testing::Values(apply_selfguided_restoration_avx2),
                        ::testing::ValuesIn(highbd_params_avx2)));
 #endif
-
+#if HAVE_NEON
+const int highbd_params_neon[] = { 8, 10, 12 };
+INSTANTIATE_TEST_CASE_P(
+    NEON, AV1HighbdSelfguidedFilterTest,
+    ::testing::Combine(::testing::Values(apply_selfguided_restoration_neon),
+                       ::testing::ValuesIn(highbd_params_neon)));
+#endif
 }  // namespace

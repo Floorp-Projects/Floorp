@@ -1891,6 +1891,7 @@ class BaseCompiler final : public BaseCompilerInterface
     ValTypeVector               SigF_;
     MIRTypeVector               SigP_;
     MIRTypeVector               SigPI_;
+    MIRTypeVector               SigPL_;
     MIRTypeVector               SigPII_;
     MIRTypeVector               SigPIII_;
     MIRTypeVector               SigPIIL_;
@@ -5616,6 +5617,97 @@ class BaseCompiler final : public BaseCompilerInterface
 
     ////////////////////////////////////////////////////////////
     //
+    // Object support.
+
+#ifdef ENABLE_WASM_GC
+    // This emits a GC pre-write barrier.  The pre-barrier is needed when we
+    // replace a member field with a new value, and the previous field value
+    // might have no other referents, and incremental GC is ongoing. The field
+    // might belong to an object or be a stack slot or a register or a heap
+    // allocated value.
+    //
+    // let obj = { field: previousValue };
+    // obj.field = newValue; // previousValue must be marked with a pre-barrier.
+    //
+    // The `valueAddr` is the address of the location that we are about to
+    // update.  This function preserves that register.
+
+    void emitPreBarrier(RegPtr valueAddr) {
+        Label skipBarrier;
+
+        MOZ_ASSERT(valueAddr == PreBarrierReg);
+
+        ScratchPtr scratch(*this);
+
+        // If no incremental GC has started, we don't need the barrier.
+        masm.loadWasmTlsRegFromFrame(scratch);
+        masm.loadPtr(Address(scratch, offsetof(TlsData, addressOfNeedsIncrementalBarrier)), scratch);
+        masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1), &skipBarrier);
+
+        // If the previous value is null, we don't need the barrier.
+        masm.loadPtr(Address(valueAddr, 0), scratch);
+        masm.branchTestPtr(Assembler::Zero, scratch, scratch, &skipBarrier);
+
+        // Call the barrier. This assumes PreBarrierReg contains the address of
+        // the stored value.
+        //
+        // PreBarrierReg is volatile and is preserved by the barrier.
+        masm.loadWasmTlsRegFromFrame(scratch);
+        masm.loadPtr(Address(scratch, offsetof(TlsData, instance)), scratch);
+        masm.loadPtr(Address(scratch, Instance::offsetOfPreBarrierCode()), scratch);
+        masm.call(scratch);
+
+        masm.bind(&skipBarrier);
+    }
+
+    // This emits a GC post-write barrier. This is needed to ensure that the GC
+    // is aware of slots of tenured things containing references to nursery
+    // values. Pass None for object when the field's owner object is known to
+    // be tenured or heap-allocated.
+    //
+    // This frees the register `valueAddr`.
+
+    void emitPostBarrier(const Maybe<RegPtr>& object, RegPtr otherScratch, RegPtr valueAddr, RegPtr setValue) {
+        Label skipBarrier;
+
+        // If the pointer being stored is null, no barrier.
+        masm.branchTestPtr(Assembler::Zero, setValue, setValue, &skipBarrier);
+
+        // If there is a containing object and it is in the nursery, no barrier.
+        if (object)
+            masm.branchPtrInNurseryChunk(Assembler::Equal, *object, otherScratch, &skipBarrier);
+
+        // If the pointer being stored is to a tenured object, no barrier.
+        masm.branchPtrInNurseryChunk(Assembler::NotEqual, setValue, otherScratch, &skipBarrier);
+
+        // Need a barrier.
+        uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
+
+        // The `valueAddr` is a raw pointer to the cell within some GC object or
+        // TLS area, and we guarantee that the GC will not run while the
+        // postbarrier call is active, so push a uintptr_t value.
+# ifdef JS_64BIT
+        pushI64(RegI64(Register64(valueAddr)));
+        emitInstanceCall(bytecodeOffset, SigPL_, ExprType::Void, SymbolicAddress::PostBarrier);
+# else
+        pushI32(RegI32(valueAddr));
+        emitInstanceCall(bytecodeOffset, SigPI_, ExprType::Void, SymbolicAddress::PostBarrier);
+# endif
+
+        masm.bind(&skipBarrier);
+    }
+#endif
+
+    void emitBarrieredStore(const Maybe<RegPtr>& object, RegPtr valueAddr, RegPtr value) {
+        emitPreBarrier(valueAddr); // Preserves valueAddr
+        masm.storePtr(value, Address(valueAddr, 0));
+        RegPtr otherScratch = needRef();
+        emitPostBarrier(object, otherScratch, valueAddr, value); // Consumes valueAddr
+        freeRef(otherScratch);
+    }
+
+    ////////////////////////////////////////////////////////////
+    //
     // Machinery for optimized conditional branches.
     //
     // To disable this optimization it is enough always to return false from
@@ -5720,81 +5812,6 @@ class BaseCompiler final : public BaseCompilerInterface
     void branchTo(Assembler::Condition c, RegI64 lhs, Imm64 rhs, Label* l) {
         masm.branch64(c, lhs, rhs, l);
     }
-
-#ifdef ENABLE_WASM_GC
-    // The following couple of functions emit a GC pre-write barrier. This is
-    // needed when we replace a member field with a new value, and the previous
-    // field value might have no other referents. The field might belong to an
-    // object or be a stack slot or a register or a heap allocated value.
-    //
-    // let obj = { field: previousValue };
-    // obj.field = newValue; // previousValue must be marked with a pre-barrier.
-    //
-    // Implementing a pre-barrier looks like this:
-    // - call `testNeedPreBarrier` with a fresh label.
-    // - user code must put the address of the field we're about to clobber in
-    // PreBarrierReg (to avoid explicit pushing/popping).
-    // - call `emitPreBarrier`, which binds the label.
-
-    void testNeedPreBarrier(Label* skipBarrier) {
-        MOZ_ASSERT(!skipBarrier->used());
-        MOZ_ASSERT(!skipBarrier->bound());
-
-        // If no incremental GC has started, we don't need the barrier.
-        ScratchPtr scratch(*this);
-        masm.loadWasmTlsRegFromFrame(scratch);
-        masm.loadPtr(Address(scratch, offsetof(TlsData, addressOfNeedsIncrementalBarrier)), scratch);
-        masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1), skipBarrier);
-    }
-
-    void emitPreBarrier(RegPtr valueAddr, Label* skipBarrier) {
-        MOZ_ASSERT(valueAddr == PreBarrierReg);
-
-        // If the previous value is null, we don't need the barrier.
-        ScratchPtr scratch(*this);
-        masm.loadPtr(Address(valueAddr, 0), scratch);
-        masm.branchTestPtr(Assembler::Zero, scratch, scratch, skipBarrier);
-
-        // Call the barrier. This assumes PreBarrierReg contains the address of
-        // the stored value.
-        masm.loadWasmTlsRegFromFrame(scratch);
-        masm.loadPtr(Address(scratch, offsetof(TlsData, instance)), scratch);
-        masm.loadPtr(Address(scratch, Instance::offsetOfPreBarrierCode()), scratch);
-        masm.call(scratch);
-
-        masm.bind(skipBarrier);
-    }
-
-    // This emits a GC post-write barrier. This is needed to ensure that the GC
-    // is aware of slots of tenured things containing references to nursery
-    // values. Pass None for object when the field's owner object is known to
-    // be tenured or heap-allocated.
-
-    void emitPostBarrier(const Maybe<RegPtr>& object, RegPtr setValue, PostBarrierArg arg) {
-        Label skipBarrier;
-
-        // If the set value is null, no barrier.
-        masm.branchTestPtr(Assembler::Zero, setValue, setValue, &skipBarrier);
-
-        RegPtr scratch = needRef();
-        if (object) {
-            // If the object value isn't tenured, no barrier.
-            masm.branchPtrInNurseryChunk(Assembler::Equal, *object, scratch, &skipBarrier);
-        }
-
-        // If the set value is tenured, no barrier.
-        masm.branchPtrInNurseryChunk(Assembler::NotEqual, setValue, scratch, &skipBarrier);
-
-        freeRef(scratch);
-
-        // Need a barrier.
-        uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
-        pushI32(arg.rawPayload());
-        emitInstanceCall(bytecodeOffset, SigPI_, ExprType::Void, SymbolicAddress::PostBarrier);
-
-        masm.bind(&skipBarrier);
-    }
-#endif
 
     // Emit a conditional branch that optionally and optimally cleans up the CPU
     // stack before we branch.
@@ -8342,6 +8359,7 @@ BaseCompiler::emitGetGlobal()
           case ValType::F64:
             pushF64(value.f64());
             break;
+          case ValType::Ref:
           case ValType::AnyRef:
             pushRef(intptr_t(value.ptr()));
             break;
@@ -8380,6 +8398,7 @@ BaseCompiler::emitGetGlobal()
         pushF64(rv);
         break;
       }
+      case ValType::Ref:
       case ValType::AnyRef: {
         RegPtr rv = needRef();
         ScratchI32 tmp(*this);
@@ -8437,28 +8456,16 @@ BaseCompiler::emitSetGlobal()
         break;
       }
 #ifdef ENABLE_WASM_GC
+      case ValType::Ref:
       case ValType::AnyRef: {
-        Label skipBarrier;
-        testNeedPreBarrier(&skipBarrier);
-
         RegPtr valueAddr(PreBarrierReg);
         needRef(valueAddr);
         {
             ScratchI32 tmp(*this);
             masm.computeEffectiveAddress(addressOfGlobalVar(global, tmp), valueAddr);
         }
-        emitPreBarrier(valueAddr, &skipBarrier);
-        freeRef(valueAddr);
-
         RegPtr rv = popRef();
-        {
-            // Actual store.
-            ScratchI32 tmp(*this);
-            masm.storePtr(rv, addressOfGlobalVar(global, tmp));
-        }
-
-        emitPostBarrier(Nothing(), rv, PostBarrierArg::Global(id));
-
+        emitBarrieredStore(Nothing(), valueAddr, rv); // Consumes valueAddr
         freeRef(rv);
         break;
       }
@@ -10259,6 +10266,8 @@ BaseCompiler::init()
     if (!SigP_.append(MIRType::Pointer))
         return false;
     if (!SigPI_.append(MIRType::Pointer) || !SigPI_.append(MIRType::Int32))
+        return false;
+    if (!SigPL_.append(MIRType::Pointer) || !SigPL_.append(MIRType::Int64))
         return false;
     if (!SigPII_.append(MIRType::Pointer) || !SigPII_.append(MIRType::Int32) ||
         !SigPII_.append(MIRType::Int32))

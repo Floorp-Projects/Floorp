@@ -180,7 +180,7 @@ class Instance
     static int32_t memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteOffset, uint32_t len);
     static int32_t memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint32_t len);
 #ifdef ENABLE_WASM_GC
-    static void postBarrier(Instance* instance, PostBarrierArg arg);
+    static void postBarrier(Instance* instance, gc::Cell** location);
 #endif
 };
 

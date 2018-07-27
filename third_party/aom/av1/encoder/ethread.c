@@ -44,7 +44,7 @@ static int enc_worker_hook(EncWorkerData *const thread_data, void *unused) {
     av1_encode_tile(cpi, thread_data->td, tile_row, tile_col);
   }
 
-  return 0;
+  return 1;
 }
 
 void av1_encode_tiles_mt(AV1_COMP *cpi) {
@@ -126,12 +126,11 @@ void av1_encode_tiles_mt(AV1_COMP *cpi) {
 
   for (i = 0; i < num_workers; i++) {
     AVxWorker *const worker = &cpi->workers[i];
-    EncWorkerData *thread_data;
+    EncWorkerData *const thread_data = &cpi->tile_thr_data[i];
 
     worker->hook = (AVxWorkerHook)enc_worker_hook;
-    worker->data1 = &cpi->tile_thr_data[i];
+    worker->data1 = thread_data;
     worker->data2 = NULL;
-    thread_data = (EncWorkerData *)worker->data1;
 
     // Before encoding a frame, copy the thread data from cpi.
     if (thread_data->td != &cpi->td) {

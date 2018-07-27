@@ -133,12 +133,13 @@ tool or package manager on your system, or directly from https://rust-lang.org/
 '''
 
 BROWSER_ARTIFACT_MODE_MOZCONFIG = '''
-Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
+Paste the lines between the chevrons (>>> and <<<) into your
+$topsrcdir/mozconfig file, or create the file if it does not exist:
 
-<<<
+>>>
 # Automatically download and use compiled C++ components:
 ac_add_options --enable-artifact-builds
->>>
+<<<
 '''
 
 # Upgrade Mercurial older than this.

@@ -346,7 +346,7 @@ void av1_foreach_rest_unit_in_plane(const struct AV1Common *cm, int plane,
 int av1_loop_restoration_corners_in_sb(const struct AV1Common *cm, int plane,
                                        int mi_row, int mi_col, BLOCK_SIZE bsize,
                                        int *rcol0, int *rcol1, int *rrow0,
-                                       int *rrow1, int *tile_tl_idx);
+                                       int *rrow1);
 
 void av1_loop_restoration_save_boundary_lines(const YV12_BUFFER_CONFIG *frame,
                                               struct AV1Common *cm,

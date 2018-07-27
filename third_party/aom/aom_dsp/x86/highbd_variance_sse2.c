@@ -676,7 +676,7 @@ void aom_highbd_upsampled_pred_sse2(MACROBLOCKD *xd,
     }
   }
 
-  const InterpFilterParams filter =
+  const InterpFilterParams *filter =
       av1_get_interp_filter_params_with_block_size(EIGHTTAP_REGULAR, 8);
 
   if (!subpel_x_q3 && !subpel_y_q3) {
@@ -726,14 +726,14 @@ void aom_highbd_upsampled_pred_sse2(MACROBLOCKD *xd,
     const int16_t *const kernel_y =
         av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
     const int intermediate_height =
-        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter.taps;
+        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter->taps;
     assert(intermediate_height <= (MAX_SB_SIZE * 2 + 16) + 16);
-    aom_highbd_convolve8_horiz(ref8 - ref_stride * ((filter.taps >> 1) - 1),
+    aom_highbd_convolve8_horiz(ref8 - ref_stride * ((filter->taps >> 1) - 1),
                                ref_stride, CONVERT_TO_BYTEPTR(temp),
                                MAX_SB_SIZE, kernel_x, 16, NULL, -1, width,
                                intermediate_height, bd);
     aom_highbd_convolve8_vert(
-        CONVERT_TO_BYTEPTR(temp + MAX_SB_SIZE * ((filter.taps >> 1) - 1)),
+        CONVERT_TO_BYTEPTR(temp + MAX_SB_SIZE * ((filter->taps >> 1) - 1)),
         MAX_SB_SIZE, CONVERT_TO_BYTEPTR(comp_pred), width, NULL, -1, kernel_y,
         16, width, height, bd);
   }

@@ -822,8 +822,22 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        auto* load = MWasmLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst, isIndirect,
-                                             tlsPointer_);
+        MInstruction* load;
+        if (isIndirect) {
+            // Pull a pointer to the value out of TlsData::globalArea, then
+            // load from that pointer.  Note that the pointer is immutable
+            // even though the value it points at may change, hence the use of
+            // |true| for the first node's |isConst| value, irrespective of
+            // the |isConst| formal parameter to this method.  The latter
+            // applies to the denoted value as a whole.
+            auto* cellPtr = MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
+                                                    /*isConst=*/true, tlsPointer_);
+            curBlock_->add(cellPtr);
+            load = MWasmLoadGlobalCell::New(alloc(), type, cellPtr);
+        } else {
+            // Pull the value directly out of TlsData::globalArea.
+            load = MWasmLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst, tlsPointer_);
+        }
         curBlock_->add(load);
         return load;
     }
@@ -832,8 +846,20 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return;
-        curBlock_->add(MWasmStoreGlobalVar::New(alloc(), globalDataOffset, isIndirect, v,
-                                                tlsPointer_));
+
+        MInstruction* store;
+        if (isIndirect) {
+            // Pull a pointer to the value out of TlsData::globalArea, then
+            // store through that pointer.
+            auto* cellPtr = MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
+                                                    /*isConst=*/true, tlsPointer_);
+            curBlock_->add(cellPtr);
+            store = MWasmStoreGlobalCell::New(alloc(), v, cellPtr);
+        } else {
+            // Store the value directly in TlsData::globalArea.
+            store = MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
+        }
+        curBlock_->add(store);
     }
 
     void addInterruptCheck()

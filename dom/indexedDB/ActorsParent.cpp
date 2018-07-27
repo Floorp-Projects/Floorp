@@ -547,6 +547,10 @@ MakeSchemaVersion(uint32_t aMajorSchemaVersion,
   return int32_t((aMajorSchemaVersion << 4) + aMinorSchemaVersion);
 }
 
+// WARNING: the hash function used for the database name must not change.
+// That's why this function exists separately from mozilla::HashString(), even
+// though it is (at the time of writing) equivalent. See bug 780408 and bug
+// 940315 for details.
 uint32_t
 HashName(const nsAString& aName)
 {
@@ -607,6 +611,8 @@ GetDatabaseFilename(const nsAString& aName,
 {
   MOZ_ASSERT(aDatabaseFilename.IsEmpty());
 
+  // WARNING: do not change this hash function. See the comment in HashName()
+  // for details.
   aDatabaseFilename.AppendInt(HashName(aName));
 
   nsCString escapedName;

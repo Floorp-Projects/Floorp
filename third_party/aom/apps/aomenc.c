@@ -475,6 +475,13 @@ static const arg_def_t film_grain_test =
 static const arg_def_t film_grain_table =
     ARG_DEF(NULL, "film-grain-table", 1,
             "Path to file containing film grain parameters");
+#if CONFIG_DENOISE
+static const arg_def_t denoise_noise_level =
+    ARG_DEF(NULL, "denoise-noise-level", 1,
+            "Amount of noise (from 0 = don't denoise, to 50)");
+static const arg_def_t denoise_block_size =
+    ARG_DEF(NULL, "denoise-block-size", 1, "Denoise block size (default = 32)");
+#endif
 static const arg_def_t enable_ref_frame_mvs =
     ARG_DEF(NULL, "enable-ref-frame-mvs", 1,
             "Enable temporal mv prediction (default is 1)");
@@ -656,6 +663,10 @@ static const arg_def_t *av1_args[] = { &cpu_used_av1,
                                        &timing_info,
                                        &film_grain_test,
                                        &film_grain_table,
+#if CONFIG_DENOISE
+                                       &denoise_noise_level,
+                                       &denoise_block_size,
+#endif
                                        &enable_ref_frame_mvs,
                                        &bitdeptharg,
                                        &inbitdeptharg,
@@ -708,6 +719,10 @@ static const int av1_arg_ctrl_map[] = { AOME_SET_CPUUSED,
                                         AV1E_SET_TIMING_INFO_TYPE,
                                         AV1E_SET_FILM_GRAIN_TEST_VECTOR,
                                         AV1E_SET_FILM_GRAIN_TABLE,
+#if CONFIG_DENOISE
+                                        AV1E_SET_DENOISE_NOISE_LEVEL,
+                                        AV1E_SET_DENOISE_BLOCK_SIZE,
+#endif
                                         AV1E_SET_ENABLE_REF_FRAME_MVS,
                                         AV1E_SET_ENABLE_DF,
                                         AV1E_SET_ENABLE_ORDER_HINT,

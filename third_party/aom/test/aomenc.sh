@@ -60,8 +60,8 @@ y4m_input_720p() {
 # input file path and shifted away. All remaining parameters are passed through
 # to aomenc.
 aomenc_pipe() {
-  local readonly encoder="$(aom_tool_path aomenc)"
-  local readonly input="$1"
+  local encoder="$(aom_tool_path aomenc)"
+  local input="$1"
   shift
   cat "${input}" | eval "${AOM_TEST_PREFIX}" "${encoder}" - \
     --test-decode=fatal \
@@ -72,8 +72,8 @@ aomenc_pipe() {
 # the directory containing aomenc. $1 one is used as the input file path and
 # shifted away. All remaining parameters are passed through to aomenc.
 aomenc() {
-  local readonly encoder="$(aom_tool_path aomenc)"
-  local readonly input="$1"
+  local encoder="$(aom_tool_path aomenc)"
+  local input="$1"
   shift
   eval "${AOM_TEST_PREFIX}" "${encoder}" "${input}" \
     --test-decode=fatal \
@@ -156,7 +156,7 @@ aomenc_av1_webm() {
 aomenc_av1_webm_1pass() {
   if [ "$(aomenc_can_encode_av1)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
-    local readonly output="${AOM_TEST_OUTPUT_DIR}/av1_test.webm"
+    local output="${AOM_TEST_OUTPUT_DIR}/av1_test.webm"
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
       --passes=1 \
@@ -171,7 +171,7 @@ aomenc_av1_webm_1pass() {
 
 aomenc_av1_ivf_lossless() {
   if [ "$(aomenc_can_encode_av1)" = "yes" ]; then
-    local readonly output="${AOM_TEST_OUTPUT_DIR}/av1_lossless.ivf"
+    local output="${AOM_TEST_OUTPUT_DIR}/av1_lossless.ivf"
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
       --ivf \
@@ -187,7 +187,7 @@ aomenc_av1_ivf_lossless() {
 
 aomenc_av1_ivf_minq0_maxq0() {
   if [ "$(aomenc_can_encode_av1)" = "yes" ]; then
-    local readonly output="${AOM_TEST_OUTPUT_DIR}/av1_lossless_minq0_maxq0.ivf"
+    local output="${AOM_TEST_OUTPUT_DIR}/av1_lossless_minq0_maxq0.ivf"
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
       --ivf \
@@ -205,9 +205,9 @@ aomenc_av1_ivf_minq0_maxq0() {
 aomenc_av1_webm_lag5_frames10() {
   if [ "$(aomenc_can_encode_av1)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
-    local readonly lag_total_frames=10
-    local readonly lag_frames=5
-    local readonly output="${AOM_TEST_OUTPUT_DIR}/av1_lag5_frames10.webm"
+    local lag_total_frames=10
+    local lag_frames=5
+    local output="${AOM_TEST_OUTPUT_DIR}/av1_lag5_frames10.webm"
     aomenc $(yuv_raw_input) \
       $(aomenc_encode_test_fast_params) \
       --limit=${lag_total_frames} \
@@ -225,7 +225,7 @@ aomenc_av1_webm_lag5_frames10() {
 aomenc_av1_webm_non_square_par() {
   if [ "$(aomenc_can_encode_av1)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
-    local readonly output="${AOM_TEST_OUTPUT_DIR}/av1_non_square_par.webm"
+    local output="${AOM_TEST_OUTPUT_DIR}/av1_non_square_par.webm"
     aomenc $(y4m_input_non_square_par) \
       $(aomenc_encode_test_fast_params) \
       --output="${output}"
@@ -241,7 +241,7 @@ aomenc_av1_webm_cdf_update_mode() {
   if [ "$(aomenc_can_encode_av1)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
     for mode in 0 1 2; do
-      local readonly output="${AOM_TEST_OUTPUT_DIR}/cdf_mode_${mode}.webm"
+      local output="${AOM_TEST_OUTPUT_DIR}/cdf_mode_${mode}.webm"
       aomenc $(yuv_raw_input) \
         $(aomenc_encode_test_fast_params) \
         --cdf-update-mode=${mode} \
