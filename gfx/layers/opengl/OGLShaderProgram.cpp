@@ -51,6 +51,7 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uRenderColor",
         "uTexCoordMultiplier",
         "uCbCrTexCoordMultiplier",
+        "uMaskCoordMultiplier",
         "uTexturePass2",
         "uColorMatrix",
         "uColorMatrixVector",
@@ -88,6 +89,17 @@ ShaderConfigOGL::SetTextureTarget(GLenum aTarget)
   case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
     SetFeature(ENABLE_TEXTURE_RECT, true);
     break;
+  }
+}
+
+void
+ShaderConfigOGL::SetMaskTextureTarget(GLenum aTarget)
+{
+  if (aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB) {
+    SetFeature(ENABLE_MASK_TEXTURE_RECT, true);
+  } else {
+    MOZ_ASSERT(aTarget == LOCAL_GL_TEXTURE_2D);
+    SetFeature(ENABLE_MASK_TEXTURE_RECT, false);
   }
 }
 
@@ -384,6 +396,16 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     texture2D = "texture2DRect";
   }
 
+  const char *maskSampler2D = "sampler2D";
+  const char *maskTexture2D = "texture2D";
+
+  if (aConfig.mFeatures & ENABLE_MASK &&
+      aConfig.mFeatures & ENABLE_MASK_TEXTURE_RECT) {
+    fs << "uniform vec2 uMaskCoordMultiplier;" << endl;
+    maskSampler2D = "sampler2DRect";
+    maskTexture2D = "texture2DRect";
+  }
+
   if (aConfig.mFeatures & ENABLE_TEXTURE_EXTERNAL) {
     sampler2D = "samplerExternalOES";
   }
@@ -413,7 +435,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
   if (aConfig.mFeatures & ENABLE_MASK) {
     fs << "varying vec3 vMaskCoord;" << endl;
-    fs << "uniform " << sampler2D << " uMaskTexture;" << endl;
+    fs << "uniform " << maskSampler2D << " uMaskTexture;" << endl;
   }
 
   if (aConfig.mFeatures & ENABLE_DEAA) {
@@ -543,10 +565,10 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
   if (aConfig.mFeatures & ENABLE_MASK) {
     fs << "  vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;" << endl;
-    if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
-      fs << "  COLOR_PRECISION float mask = " << texture2D << "(uMaskTexture, maskCoords * uTexCoordMultiplier).r;" << endl;
+    if (aConfig.mFeatures & ENABLE_MASK_TEXTURE_RECT) {
+      fs << "  COLOR_PRECISION float mask = " << maskTexture2D << "(uMaskTexture, maskCoords * uMaskCoordMultiplier).r;" << endl;
     } else {
-      fs << "  COLOR_PRECISION float mask = " << texture2D << "(uMaskTexture, maskCoords).r;" << endl;
+      fs << "  COLOR_PRECISION float mask = " << maskTexture2D << "(uMaskTexture, maskCoords).r;" << endl;
     }
     fs << "  color *= mask;" << endl;
   } else {
