@@ -5231,7 +5231,7 @@ nsGlobalWindowInner::FireOfflineStatusEventIfChanged()
 class NotifyIdleObserverRunnable : public Runnable
 {
 public:
-  NotifyIdleObserverRunnable(nsIIdleObserver* aIdleObserver,
+  NotifyIdleObserverRunnable(MozIdleObserver& aIdleObserver,
                              uint32_t aTimeInS,
                              bool aCallOnidle,
                              nsGlobalWindowInner* aIdleWindow)
@@ -5245,13 +5245,17 @@ public:
   NS_IMETHOD Run() override
   {
     if (mIdleWindow->ContainsIdleObserver(mIdleObserver, mTimeInS)) {
-      return mCallOnidle ? mIdleObserver->Onidle() : mIdleObserver->Onactive();
+      if (mCallOnidle) {
+        mIdleObserver->Onidle(IgnoreErrors());
+      } else {
+        mIdleObserver->Onactive(IgnoreErrors());
+      }
     }
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<nsIIdleObserver> mIdleObserver;
+  OwningNonNull<MozIdleObserver> mIdleObserver;
   uint32_t mTimeInS;
   RefPtr<nsGlobalWindowInner> mIdleWindow;
 
@@ -5276,14 +5280,14 @@ nsGlobalWindowInner::NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
 }
 
 bool
-nsGlobalWindowInner::ContainsIdleObserver(nsIIdleObserver* aIdleObserver, uint32_t aTimeInS)
+nsGlobalWindowInner::ContainsIdleObserver(MozIdleObserver& aIdleObserver,
+                                          uint32_t aTimeInS)
 {
-  MOZ_ASSERT(aIdleObserver, "Idle observer not instantiated.");
   bool found = false;
   nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
   while (iter.HasMore()) {
     IdleObserverHolder& idleObserver = iter.GetNext();
-    if (idleObserver.mIdleObserver == aIdleObserver &&
+    if (idleObserver.mIdleObserver.ref() == aIdleObserver &&
         idleObserver.mTimeInS == aTimeInS) {
       found = true;
       break;
@@ -5677,7 +5681,7 @@ nsGlobalWindowInner::FindInsertionIndex(IdleObserverHolder* aIdleObserver)
 }
 
 nsresult
-nsGlobalWindowInner::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
+nsGlobalWindowInner::RegisterIdleObserver(MozIdleObserver& aIdleObserver)
 {
   nsresult rv;
   if (mIdleObservers.IsEmpty()) {
@@ -5700,8 +5704,11 @@ nsGlobalWindowInner::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
 
   IdleObserverHolder tmpIdleObserver;
   tmpIdleObserver.mIdleObserver = aIdleObserver;
-  rv = aIdleObserver->GetTime(&tmpIdleObserver.mTimeInS);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult err;
+  tmpIdleObserver.mTimeInS = aIdleObserver.GetTime(err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
   NS_ENSURE_ARG_MAX(tmpIdleObserver.mTimeInS, UINT32_MAX / 1000);
   NS_ENSURE_ARG_MIN(tmpIdleObserver.mTimeInS, MIN_IDLE_NOTIFICATION_TIME_S);
 
@@ -5746,26 +5753,26 @@ nsGlobalWindowInner::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
 }
 
 nsresult
-nsGlobalWindowInner::FindIndexOfElementToRemove(nsIIdleObserver* aIdleObserver,
+nsGlobalWindowInner::FindIndexOfElementToRemove(MozIdleObserver& aIdleObserver,
                                                 int32_t* aRemoveElementIndex)
 {
-  MOZ_ASSERT(aIdleObserver, "Idle observer not instantiated.");
-
   *aRemoveElementIndex = 0;
   if (mIdleObservers.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t aIdleObserverTimeInS;
-  nsresult rv = aIdleObserver->GetTime(&aIdleObserverTimeInS);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult rv;
+  uint32_t aIdleObserverTimeInS = aIdleObserver.GetTime(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
   NS_ENSURE_ARG_MIN(aIdleObserverTimeInS, MIN_IDLE_NOTIFICATION_TIME_S);
 
   nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
   while (iter.HasMore()) {
     IdleObserverHolder& idleObserver = iter.GetNext();
     if (idleObserver.mTimeInS == aIdleObserverTimeInS &&
-        idleObserver.mIdleObserver == aIdleObserver ) {
+        idleObserver.mIdleObserver.ref() == aIdleObserver ) {
       break;
     }
     (*aRemoveElementIndex)++;
@@ -5775,7 +5782,7 @@ nsGlobalWindowInner::FindIndexOfElementToRemove(nsIIdleObserver* aIdleObserver,
 }
 
 nsresult
-nsGlobalWindowInner::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
+nsGlobalWindowInner::UnregisterIdleObserver(MozIdleObserver& aIdleObserver)
 {
   int32_t removeElementIndex;
   nsresult rv = FindIndexOfElementToRemove(aIdleObserver, &removeElementIndex);

@@ -37,6 +37,7 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
+#include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -44,10 +45,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/OwningNonNull.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/webgpu/InstanceProvider.h"
 #include "nsWrapperCacheInlines.h"
-#include "nsIIdleObserver.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -155,7 +156,7 @@ extern const js::Class OuterWindowProxyClass;
 
 struct IdleObserverHolder
 {
-  nsCOMPtr<nsIIdleObserver> mIdleObserver;
+  mozilla::OwningNonNull<mozilla::dom::MozIdleObserver> mIdleObserver;
   uint32_t mTimeInS;
   bool mPrevNotificationIdle;
 
@@ -174,7 +175,7 @@ struct IdleObserverHolder
 
   bool operator==(const IdleObserverHolder& aOther) const {
     return
-      mIdleObserver == aOther.mIdleObserver &&
+      mIdleObserver.ref() == aOther.mIdleObserver &&
       mTimeInS == aOther.mTimeInS;
   }
 
@@ -524,7 +525,8 @@ public:
   void NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
                           bool aCallOnidle);
   nsresult HandleIdleActiveEvent();
-  bool ContainsIdleObserver(nsIIdleObserver* aIdleObserver, uint32_t timeInS);
+  bool ContainsIdleObserver(mozilla::dom::MozIdleObserver& aIdleObserver,
+                            uint32_t timeInS);
   void HandleIdleObserverCallback();
 
   enum SlowScriptResponse {
@@ -1187,10 +1189,13 @@ public:
   uint32_t GetFuzzTimeMS();
   nsresult ScheduleActiveTimerCallback();
   uint32_t FindInsertionIndex(IdleObserverHolder* aIdleObserver);
-  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) override;
-  nsresult FindIndexOfElementToRemove(nsIIdleObserver* aIdleObserver,
-                                      int32_t* aRemoveElementIndex);
-  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) override;
+  nsresult RegisterIdleObserver(
+    mozilla::dom::MozIdleObserver& aIdleObserverPtr) override;
+  nsresult FindIndexOfElementToRemove(
+    mozilla::dom::MozIdleObserver& aIdleObserver,
+    int32_t* aRemoveElementIndex);
+  nsresult UnregisterIdleObserver(
+    mozilla::dom::MozIdleObserver& aIdleObserverPtr) override;
 
   // Inner windows only.
   nsresult FireHashchange(const nsAString &aOldURL, const nsAString &aNewURL);
