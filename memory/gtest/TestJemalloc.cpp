@@ -436,6 +436,8 @@ TEST(Jemalloc, InPlace)
   // moz_dispose_arena(arena);
 }
 
+// Bug 1474254: disable this test for windows ccov builds because it leads to timeout.
+#if !defined(XP_WIN) || !defined(MOZ_CODE_COVERAGE)
 TEST(Jemalloc, JunkPoison)
 {
   jemalloc_stats_t stats;
@@ -622,3 +624,4 @@ TEST(Jemalloc, JunkPoison)
   // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
   // moz_dispose_arena(buf_arena);
 }
+#endif
