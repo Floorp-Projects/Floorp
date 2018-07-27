@@ -24,10 +24,6 @@ function run_test() {
       by: "internalType",
       then: { by: "count", count: true, bytes: true },
     },
-    domNode: {
-      by: "descriptiveType",
-      then: { by: "count", count: true, bytes: true },
-    },
   };
 
   const REPORT = {
@@ -45,8 +41,7 @@ function run_test() {
     },
     other: {
       "js::Shape": { bytes: 80, count: 8 },
-    },
-    domNode: {}
+    }
   };
 
   const EXPECTED = {
@@ -70,8 +65,8 @@ function run_test() {
             count: 32,
             totalCount: 32,
             children: undefined,
-            id: 16,
-            parent: 15,
+            id: 15,
+            parent: 14,
             reportLeafIndex: 4,
           },
           {
@@ -81,8 +76,8 @@ function run_test() {
             count: 8,
             totalCount: 8,
             children: undefined,
-            id: 17,
-            parent: 15,
+            id: 16,
+            parent: 14,
             reportLeafIndex: 3,
           },
           {
@@ -92,17 +87,17 @@ function run_test() {
             count: 5,
             totalCount: 5,
             children: undefined,
-            id: 18,
-            parent: 15,
+            id: 17,
+            parent: 14,
             reportLeafIndex: 2,
           }
         ],
-        id: 15,
-        parent: 14,
+        id: 14,
+        parent: 13,
         reportLeafIndex: undefined,
       }
     ],
-    id: 14,
+    id: 13,
     parent: undefined,
     reportLeafIndex: undefined,
   };

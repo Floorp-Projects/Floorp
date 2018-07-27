@@ -20,7 +20,6 @@ function run_test() {
     },
     strings: { by: "count", count: true, bytes: true },
     scripts: { by: "count", count: true, bytes: true },
-    domNode: { by: "count", count: true, bytes: true },
   };
 
   const REPORT = {
@@ -32,7 +31,6 @@ function run_test() {
     },
     strings: { count: 0, bytes: 0 },
     scripts: { count: 0, bytes: 0 },
-    domNode: {count: 0, bytes: 0 },
   };
 
   const node = censusReportToCensusTreeNode(BREAKDOWN, REPORT, { invert: true });
