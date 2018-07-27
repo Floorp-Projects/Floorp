@@ -39,9 +39,6 @@ const startupPhases = {
       "resource://gre/modules/AppConstants.jsm",
       "resource://gre/modules/XPCOMUtils.jsm",
       "resource://gre/modules/Services.jsm",
-
-      // Bugs to fix: Probably loaded too early, needs investigation.
-      "resource://gre/modules/RemotePageManager.jsm", // bug 1369466
     ])
   }},
 
