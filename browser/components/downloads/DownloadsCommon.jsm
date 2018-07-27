@@ -749,7 +749,7 @@ DownloadsDataCtor.prototype = {
 
         // This state transition code should actually be located in a Downloads
         // API module (bug 941009).
-        DownloadHistory.updateMetaData(download);
+        DownloadHistory.updateMetaData(download).catch(Cu.reportError);
       }
 
       if (download.succeeded ||
