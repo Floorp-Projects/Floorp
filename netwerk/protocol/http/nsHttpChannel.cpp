@@ -5421,7 +5421,6 @@ nsHttpChannel::InstallCacheListener(int64_t offset)
     }
     if (rv == NS_ERROR_FILE_TOO_BIG) {
         LOG(("  entry would exceed max allowed size, not writing it [channel=%p]", this));
-        CloseCacheEntry(false);
         return NS_OK;
     }
     if (NS_FAILED(rv)) return rv;
