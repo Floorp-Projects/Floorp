@@ -22,6 +22,7 @@
         android:gravity="center_vertical"
         android:hint="@string/find_in_page_input"
         android:inputType="textNoSuggestions"
+        android:imeOptions="flagNoPersonalizedLearning"
         android:lines="1"
         android:maxLines="1"
         android:textCursorDrawable="@drawable/cursor"
