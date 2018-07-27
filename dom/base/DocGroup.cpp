@@ -126,11 +126,12 @@ DocGroup::ReportPerformanceInfo()
     CategoryDispatch item = CategoryDispatch(index, count);
     if (!items.AppendElement(item, fallible)) {
       NS_ERROR("Could not complete the operation");
-      return PerformanceInfo(host, pid, windowID, duration, false, isTopLevel, items);
+      break;
     }
   }
 
-  return PerformanceInfo(host, pid, windowID, duration, false, isTopLevel, items);
+  return PerformanceInfo(host, pid, windowID, duration, mPerformanceCounter->GetID(),
+                         false, isTopLevel, items);
 }
 
 nsresult
