@@ -8,41 +8,51 @@
 
 #include "nsISupports.idl"
 
-[scriptable,uuid(4d12e540-83d7-11d5-90ed-0010a4e73d9a)]
-interface nsIDataType : nsISupports
+%{C++
+#include "xptinfo.h"
+
+// This enum class used to be a const-only XPIDL interface, containing literal
+// integer descriptions of the different fields. Instead, it now directly
+// references the nsXPTTypeTag variants VTYPE_ are intended to match.
+struct nsIDataType
 {
-    // These MUST match the declarations in xptinfo.h.
-    // Otherwise the world is likely to explode.
-                                                   // From xptinfo.h ...
-    const uint16_t VTYPE_INT8                =  0; // TD_INT8              = 0,
-    const uint16_t VTYPE_INT16               =  1; // TD_INT16             = 1,
-    const uint16_t VTYPE_INT32               =  2; // TD_INT32             = 2,
-    const uint16_t VTYPE_INT64               =  3; // TD_INT64             = 3,
-    const uint16_t VTYPE_UINT8               =  4; // TD_UINT8             = 4,
-    const uint16_t VTYPE_UINT16              =  5; // TD_UINT16            = 5,
-    const uint16_t VTYPE_UINT32              =  6; // TD_UINT32            = 6,
-    const uint16_t VTYPE_UINT64              =  7; // TD_UINT64            = 7,
-    const uint16_t VTYPE_FLOAT               =  8; // TD_FLOAT             = 8, 
-    const uint16_t VTYPE_DOUBLE              =  9; // TD_DOUBLE            = 9,
-    const uint16_t VTYPE_BOOL                = 10; // TD_BOOL              = 10,
-    const uint16_t VTYPE_CHAR                = 11; // TD_CHAR              = 11,
-    const uint16_t VTYPE_WCHAR               = 12; // TD_WCHAR             = 12,
-    const uint16_t VTYPE_VOID                = 13; // TD_VOID              = 13,
-    const uint16_t VTYPE_ID                  = 14; // TD_PNSIID            = 14,
-    const uint16_t VTYPE_DOMSTRING           = 15; // TD_DOMSTRING         = 15,
-    const uint16_t VTYPE_CHAR_STR            = 16; // TD_PSTRING           = 16,
-    const uint16_t VTYPE_WCHAR_STR           = 17; // TD_PWSTRING          = 17,
-    const uint16_t VTYPE_INTERFACE           = 18; // TD_INTERFACE_TYPE    = 18,
-    const uint16_t VTYPE_INTERFACE_IS        = 19; // TD_INTERFACE_IS_TYPE = 19,
-    const uint16_t VTYPE_ARRAY               = 20; // TD_ARRAY             = 20,
-    const uint16_t VTYPE_STRING_SIZE_IS      = 21; // TD_PSTRING_SIZE_IS   = 21,
-    const uint16_t VTYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22,
-    const uint16_t VTYPE_UTF8STRING          = 23; // TD_UTF8STRING        = 23,
-    const uint16_t VTYPE_CSTRING             = 24; // TD_CSTRING           = 24,
-    const uint16_t VTYPE_ASTRING             = 25; // TD_ASTRING           = 25,
-    const uint16_t VTYPE_EMPTY_ARRAY         = 254;
-    const uint16_t VTYPE_EMPTY               = 255;
+    enum {
+        // These MUST match the declarations in xptinfo.h.
+        // Otherwise the world is likely to explode.
+        VTYPE_INT8              = TD_INT8             ,
+        VTYPE_INT16             = TD_INT16            ,
+        VTYPE_INT32             = TD_INT32            ,
+        VTYPE_INT64             = TD_INT64            ,
+        VTYPE_UINT8             = TD_UINT8            ,
+        VTYPE_UINT16            = TD_UINT16           ,
+        VTYPE_UINT32            = TD_UINT32           ,
+        VTYPE_UINT64            = TD_UINT64           ,
+        VTYPE_FLOAT             = TD_FLOAT            ,
+        VTYPE_DOUBLE            = TD_DOUBLE           ,
+        VTYPE_BOOL              = TD_BOOL             ,
+        VTYPE_CHAR              = TD_CHAR             ,
+        VTYPE_WCHAR             = TD_WCHAR            ,
+        VTYPE_VOID              = TD_VOID             ,
+        VTYPE_ID                = TD_PNSIID           ,
+        VTYPE_DOMSTRING         = TD_DOMSTRING        ,
+        VTYPE_CHAR_STR          = TD_PSTRING          ,
+        VTYPE_WCHAR_STR         = TD_PWSTRING         ,
+        VTYPE_INTERFACE         = TD_INTERFACE_TYPE   ,
+        VTYPE_INTERFACE_IS      = TD_INTERFACE_IS_TYPE,
+        VTYPE_ARRAY             = TD_ARRAY            ,
+        VTYPE_STRING_SIZE_IS    = TD_PSTRING_SIZE_IS  ,
+        VTYPE_WSTRING_SIZE_IS   = TD_PWSTRING_SIZE_IS ,
+        VTYPE_UTF8STRING        = TD_UTF8STRING       ,
+        VTYPE_CSTRING           = TD_CSTRING          ,
+        VTYPE_ASTRING           = TD_ASTRING          ,
+
+        // Non-xpt variant types
+        VTYPE_EMPTY_ARRAY       = 254                 ,
+        VTYPE_EMPTY             = 255
+    };
 };
+%}
+
 
 /**
  * XPConnect has magic to transparently convert between nsIVariant and JS types.

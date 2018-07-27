@@ -26,6 +26,7 @@ gyp_vars.update({
     # basic stuff for everything
     'include_internal_video_render': 0,
     'clang': 1 if CONFIG['CC_TYPE'] == 'clang' else 0,
+    'clang_cl': 1 if CONFIG['CC_TYPE'] == 'clang-cl' else 0,
     'clang_use_chrome_plugins': 0,
     'enable_protobuf': 0,
     'include_tests': 0,

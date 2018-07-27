@@ -33,7 +33,6 @@ class nsICSSDeclaration;
 class nsIDocShell;
 class nsDocShellLoadInfo;
 class nsIDocument;
-class nsIIdleObserver;
 class nsIPrincipal;
 class nsIScriptTimeoutHandler;
 class nsISerialEventTarget;
@@ -55,6 +54,7 @@ class ClientState;
 class DocGroup;
 class TabGroup;
 class Element;
+class MozIdleObserver;
 class Navigator;
 class Performance;
 class Selection;
@@ -370,8 +370,10 @@ public:
     return mChromeEventHandler;
   }
 
-  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
-  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
+  virtual nsresult RegisterIdleObserver(
+    mozilla::dom::MozIdleObserver& aIdleObserver) = 0;
+  virtual nsresult UnregisterIdleObserver(
+    mozilla::dom::MozIdleObserver& aIdleObserver) = 0;
 
   virtual bool IsTopLevelWindowActive() = 0;
 
