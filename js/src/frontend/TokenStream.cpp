@@ -3171,6 +3171,10 @@ template class
 TokenStreamChars<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
 
 template class
+TokenStreamSpecific<Utf8Unit, ParserAnyCharsAccess<GeneralParser<FullParseHandler, Utf8Unit>>>;
+template class
+TokenStreamSpecific<Utf8Unit, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, Utf8Unit>>>;
+template class
 TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
 template class
 TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
