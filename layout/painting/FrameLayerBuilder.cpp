@@ -4518,6 +4518,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     MOZ_ASSERT(item);
     DisplayItemType itemType = item->GetType();
 
+    const bool inEffect = InTransform() || InOpacity();
+
     if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
       nsDisplayCompositorHitTestInfo* hitTestInfo =
         static_cast<nsDisplayCompositorHitTestInfo*>(item);
@@ -4526,7 +4528,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         continue;
       }
 
-      if (InTransform() || InOpacity()) {
+      if (inEffect) {
         // If this item is inside a flattened effect, everything below is
         // unnecessary processing.
         MOZ_ASSERT(selectedLayer);
@@ -4565,7 +4567,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     const ActiveScrolledRoot* itemASR = nullptr;
     const DisplayItemClipChain* layerClipChain = nullptr;
 
-    if (mManager->IsWidgetLayerManager() && !InTransform()) {
+    if (mManager->IsWidgetLayerManager() && !inEffect) {
       animatedGeometryRoot = item->GetAnimatedGeometryRoot();
       itemASR = item->GetActiveScrolledRoot();
       const DisplayItemClipChain* itemClipChain = item->GetClipChain();
@@ -4575,7 +4577,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       } else {
         layerClipChain = itemClipChain;
       }
-    } else if (InTransform()) {
+    } else if (inEffect) {
       animatedGeometryRoot = containerAGR;
       itemASR = containerASR;
 
@@ -4586,6 +4588,16 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       animatedGeometryRoot = mContainerAnimatedGeometryRoot;
       itemASR = mContainerASR;
       item->FuseClipChainUpTo(mBuilder, mContainerASR);
+    }
+
+    const DisplayItemClip& itemClip = item->GetClip();
+
+    if (inEffect && marker == DisplayItemEntryType::ITEM) {
+      MOZ_ASSERT(selectedLayer);
+      selectedLayer->Accumulate(this, item, nsIntRect(), nsRect(),
+                                itemClip, layerState, aList, marker,
+                                opacityIndices, transformNode);
+      continue;
     }
 
     if (animatedGeometryRoot == lastAnimatedGeometryRoot) {
@@ -4612,7 +4624,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
 
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
-    const DisplayItemClip& itemClip = item->GetClip();
     ParentLayerIntRect clipRect;
     if (itemClip.HasClip()) {
       const nsRect& itemClipRect = itemClip.GetClipRect();
@@ -4645,8 +4656,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
 #ifdef DEBUG
     nsRect bounds = itemContent;
-
-    const bool inEffect = InTransform() || InOpacity();
 
     if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO || inEffect) {
       bounds.SetEmpty();
