@@ -30,7 +30,6 @@ config = {
         "cppunittest": "runcppunittests.py",
         "gtest": "rungtests.py",
         "jittest": "jit_test.py",
-        "mozbase": "test.py",
         "mozmill": "runtestlist.py",
     },
     "minimum_tests_zip_dirs": [
@@ -83,14 +82,6 @@ config = {
             ],
             "run_filename": "runtests.py",
             "testsdir": "mochitest"
-        },
-        "mozbase": {
-            "options": [
-                "-b",
-                "%(binary_path)s"
-            ],
-            "run_filename": "test.py",
-            "testsdir": "mozbase"
         },
         "mozmill": {
             "options": [
@@ -220,9 +211,6 @@ config = {
     "all_jittest_suites": {
         "jittest": []
     },
-    "all_mozbase_suites": {
-        "mozbase": []
-    },
     "run_cmd_checks_enabled": True,
     "preflight_run_cmd_suites": [
         # NOTE 'enabled' is only here while we have unconsolidated configs
@@ -254,7 +242,6 @@ config = {
                              "mozmill": [],
                              "cppunittest": [],
                              "jittest": [],
-                             "mozbase": [],
                              },
     "download_minidump_stackwalk": True,
     "minidump_stackwalk_path": "win32-minidump_stackwalk.exe",
