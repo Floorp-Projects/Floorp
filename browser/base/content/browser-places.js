@@ -609,7 +609,8 @@ HistoryMenu.prototype = {
   },
 
   toggleHiddenTabs() {
-    if (gBrowser.visibleTabs.length < gBrowser.tabs.length) {
+    if (window.gBrowser &&
+        gBrowser.visibleTabs.length < gBrowser.tabs.length) {
       this.hiddenTabsMenu.removeAttribute("hidden");
     } else {
       this.hiddenTabsMenu.setAttribute("hidden", "true");
