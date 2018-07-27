@@ -40,7 +40,9 @@ GtkCompositorWidget::GtkCompositorWidget(const GtkCompositorWidgetInitData& aIni
 
     // Grab the window's visual and depth
     XWindowAttributes windowAttrs;
-    XGetWindowAttributes(mXDisplay, mXWindow, &windowAttrs);
+    if (!XGetWindowAttributes(mXDisplay, mXWindow, &windowAttrs)) {
+      NS_WARNING("GtkCompositorWidget(): XGetWindowAttributes() failed!");
+    }
 
     Visual*   visual = windowAttrs.visual;
     int       depth = windowAttrs.depth;

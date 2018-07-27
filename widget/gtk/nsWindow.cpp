@@ -7200,6 +7200,12 @@ nsWindow::RoundsWidgetCoordinatesTo()
 
 void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
 {
+  // Make sure the window XID is propagated to X server, we can fail otherwise
+  // in GPU process (Bug 1401634).
+  if (mXDisplay && mXWindow != X11None) {
+    XFlush(mXDisplay);
+  }
+
   *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
                                 (mXWindow != X11None) ? mXWindow : (uintptr_t)nullptr,
                                 mXDisplay ? nsCString(XDisplayString(mXDisplay)) : nsCString(),
