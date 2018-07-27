@@ -16,11 +16,11 @@ var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
 var _selectors = require("../../selectors/index");
 
+var _sources = require("../../reducers/sources");
+
 var _actions = require("../../actions/index");
 
 var _actions2 = _interopRequireDefault(_actions);
-
-var _source = require("../../utils/source");
 
 var _SourcesTreeItem = require("./SourcesTreeItem");
 
@@ -35,6 +35,8 @@ var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
 var _Svg2 = _interopRequireDefault(_Svg);
 
 var _sourcesTree = require("../../utils/sources-tree/index");
+
+var _source = require("../../utils/source");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -88,21 +90,10 @@ class SourcesTree extends _react.Component {
     }
 
     if (nextProps.shownSource && nextProps.shownSource != shownSource) {
-      const matchingSources = Object.keys(sources).filter(sourceId => {
-        return (0, _source.getRawSourceURL)(sources[sourceId].url) === nextProps.shownSource;
+      const listItems = (0, _sourcesTree.getDirectories)(nextProps.shownSource, sourceTree);
+      return this.setState({
+        listItems
       });
-
-      if (matchingSources.length) {
-        const listItems = (0, _sourcesTree.getDirectories)(sources[matchingSources[0]], sourceTree);
-
-        if (listItems && listItems.length) {
-          this.selectItem(listItems[0]);
-        }
-
-        return this.setState({
-          listItems
-        });
-      }
     }
 
     if (nextProps.selectedSource && nextProps.selectedSource != selectedSource) {
@@ -250,9 +241,7 @@ var _initialiseProps = function () {
   };
 
   this.selectItem = item => {
-    if (!(0, _sourcesTree.isDirectory)(item) && // This second check isn't strictly necessary, but it ensures that Flow
-    // knows that we are doing the correct thing.
-    !Array.isArray(item.contents)) {
+    if (item.type == "source" && !Array.isArray(item.contents)) {
       this.props.selectSource(item.contents.id);
     }
   };
@@ -336,10 +325,20 @@ var _initialiseProps = function () {
   };
 };
 
+function getSourceForTree(state, source) {
+  if (!source || !source.isPrettyPrinted) {
+    return source;
+  }
+
+  return (0, _sources.getSourceByURL)(state, (0, _source.getRawSourceURL)(source.url));
+}
+
 const mapStateToProps = state => {
+  const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const shownSource = (0, _selectors.getShownSource)(state);
   return {
-    shownSource: (0, _selectors.getShownSource)(state),
-    selectedSource: (0, _selectors.getSelectedSource)(state),
+    shownSource: getSourceForTree(state, shownSource),
+    selectedSource: getSourceForTree(state, selectedSource),
     debuggeeUrl: (0, _selectors.getDebuggeeUrl)(state),
     expanded: (0, _selectors.getExpandedState)(state),
     projectRoot: (0, _selectors.getProjectDirectoryRoot)(state),
