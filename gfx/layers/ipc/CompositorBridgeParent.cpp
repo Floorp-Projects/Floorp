@@ -1805,16 +1805,14 @@ CompositorBridgeParent::RecvAdoptChild(const LayersId& child)
     MOZ_ASSERT(mWrBridge);
     RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
     api = api->Clone();
-    childWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
+    wr::Epoch newEpoch = childWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
                                    api,
                                    mWrBridge->AsyncImageManager(),
                                    GetAnimationStorage(),
                                    mWrBridge->GetTextureFactoryIdentifier());
     // Pretend we composited, since parent CompositorBridgeParent was replaced.
-    if (cpcp) {
-      TimeStamp now = TimeStamp::Now();
-      cpcp->DidComposite(child, now, now);
-    }
+    TimeStamp now = TimeStamp::Now();
+    NotifyPipelineRendered(childWrBridge->PipelineId(), newEpoch, now, now);
   }
 
   if (oldApzUpdater) {
@@ -2132,7 +2130,7 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
                                      TimeStamp& aCompositeEnd)
 {
   if (mWrBridge) {
-    NotifyDidComposite(mWrBridge->FlushPendingTransactionIds(), aCompositeStart, aCompositeEnd);
+    MOZ_ASSERT(false); // This should never get called for a WR compositor
   } else {
     NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
 #if defined(ENABLE_FRAME_LATENCY_LOG)
@@ -2206,19 +2204,13 @@ CompositorBridgeParent::GetAsyncImagePipelineManager() const
 void
 CompositorBridgeParent::NotifyDidComposite(TransactionId aTransactionId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
 {
+  MOZ_ASSERT(!mWrBridge); // We should be going through NotifyPipelineRendered instead
+
   Unused << SendDidComposite(LayersId{0}, aTransactionId, aCompositeStart, aCompositeEnd);
 
   if (mLayerManager) {
     nsTArray<ImageCompositeNotificationInfo> notifications;
     mLayerManager->ExtractImageCompositeNotifications(&notifications);
-    if (!notifications.IsEmpty()) {
-      Unused << ImageBridgeParent::NotifyImageComposites(notifications);
-    }
-  }
-
-  if (mWrBridge) {
-    nsTArray<ImageCompositeNotificationInfo> notifications;
-    mWrBridge->ExtractImageCompositeNotifications(&notifications);
     if (!notifications.IsEmpty()) {
       Unused << ImageBridgeParent::NotifyImageComposites(notifications);
     }
