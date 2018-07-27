@@ -810,8 +810,9 @@ PlacesController.prototype = {
         // child of the "Tags" query in the library, in all other places we
         // must only remove the query node.
         let tag = node.title;
-        let URIs = PlacesUtils.tagging.getURIsForTag(tag);
-        transactions.push(PlacesTransactions.Untag({ tag, urls: URIs }));
+        let urls = new Set();
+        await PlacesUtils.bookmarks.fetch({tags: [tag]}, b => urls.add(b.url));
+        transactions.push(PlacesTransactions.Untag({ tag, urls: Array.from(urls) }));
       } else if (PlacesUtils.nodeIsURI(node) &&
                  PlacesUtils.nodeIsQuery(node.parent) &&
                  PlacesUtils.asQuery(node.parent).queryOptions.queryType ==

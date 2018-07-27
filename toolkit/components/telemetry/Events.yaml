@@ -447,7 +447,7 @@ devtools.main:
       width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   enter:
-    objects: ["webconsole", "inspector", "jsdebugger", "styleeditor", "netmonitor", "storage", "other"]
+    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1441070]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
@@ -459,11 +459,11 @@ devtools.main:
       width: Toolbox width rounded up to the nearest 50px.
       message_count: The number of cached console messages.
       start_state: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, unknown etc.
-      panel_name: The name of the panel opened, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other
+      panel_name: The name of the panel opened or other
       cold: Is this the first time the current panel has been opened in this toolbox?
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   exit:
-    objects: ["webconsole", "inspector", "jsdebugger", "styleeditor", "netmonitor", "storage", "other"]
+    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
     bug_numbers: [1455270]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
@@ -473,8 +473,8 @@ devtools.main:
     extra_keys:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
-      next_panel: The name of the panel closed, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other.
-      panel_name: The name of the panel opened, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other
+      next_panel: The name of the panel closed or other.
+      panel_name: The name of the panel opened or other
       reason: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, toolbox_closed, unknown etc.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   activate:
@@ -642,4 +642,14 @@ devtools.main:
       trigger: "The cause of the filter change: error, warn, log, info, debug, css, netxhr, net, text or reset"
       active: Comma separated list of active filters.
       inactive: Comma separated list of inactive filters.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  jump_to_definition:
+    objects: ["webconsole"]
+    bug_numbers: [1463101]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has clicked "Jump to definition" icon (next to logged functions) in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.

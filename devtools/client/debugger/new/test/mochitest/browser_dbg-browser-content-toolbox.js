@@ -49,8 +49,8 @@ add_task(async function() {
   info("Open the Browser Content Toolbox");
   let toolbox = await gDevToolsBrowser.openContentProcessToolbox(gBrowser);
 
-  info("Wait for the debugger to be ready");
-  await toolbox.getPanelWhenReady("jsdebugger");
+  info("Select the debugger");
+  await toolbox.selectTool("jsdebugger");
 
   let dbg = createDebuggerContext(toolbox);
   ok(dbg, "Debugger context is available");
