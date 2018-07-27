@@ -16,7 +16,7 @@ def get_title(session):
     ("prompt", ""),
 ])
 def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
-    session.url = inline("<title>WD doc title</title>")
+    session.url = inline("<title>Foo</title>")
     expected_title = session.title
 
     create_dialog(dialog_type, text=dialog_type)
@@ -38,7 +38,7 @@ def test_handle_prompt_accept_and_notify():
     ("prompt", None),
 ])
 def test_handle_prompt_dismiss(session, create_dialog, dialog_type, retval):
-    session.url = inline("<title>WD doc title</title>")
+    session.url = inline("<title>Foo</title>")
     expected_title = session.title
 
     create_dialog(dialog_type, text=dialog_type)
@@ -63,7 +63,7 @@ def test_handle_prompt_ignore():
     ("prompt", None),
 ])
 def test_handle_prompt_default(session, create_dialog, dialog_type, retval):
-    session.url = inline("<title>WD doc title</title>")
+    session.url = inline("<title>Foo</title>")
 
     create_dialog(dialog_type, text=dialog_type)
 

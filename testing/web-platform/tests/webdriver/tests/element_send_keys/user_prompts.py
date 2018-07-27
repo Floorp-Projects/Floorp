@@ -19,7 +19,7 @@ def element_send_keys(session, element, text):
     ("prompt", ""),
 ])
 def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
-    session.url = inline("<input>")
+    session.url = inline("<input type=text>")
     element = session.find.css("input", all=False)
 
     create_dialog(dialog_type, text=dialog_type)
@@ -28,6 +28,8 @@ def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
     assert_success(response)
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert element.property("value") == "foo"
 
 
 def test_handle_prompt_accept_and_notify():
@@ -52,7 +54,7 @@ def test_handle_prompt_ignore():
     ("prompt", None),
 ])
 def test_handle_prompt_default(session, create_dialog, dialog_type, retval):
-    session.url = inline("<input>")
+    session.url = inline("<input type=text>")
     element = session.find.css("input", all=False)
 
     create_dialog(dialog_type, text=dialog_type)
@@ -61,3 +63,5 @@ def test_handle_prompt_default(session, create_dialog, dialog_type, retval):
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert element.property("value") == ""

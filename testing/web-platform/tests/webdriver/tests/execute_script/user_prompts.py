@@ -25,10 +25,12 @@ def execute_script(session, script, args=None):
 def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
     create_dialog(dialog_type, text=dialog_type)
 
-    response = execute_script(session, "return 1;")
-    assert_success(response)
+    response = execute_script(session, "window.result = 1; return 1;")
+    assert_success(response, 1)
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.execute_script("return window.result;") == 1
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept and notify"})
@@ -40,10 +42,12 @@ def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
 def test_handle_prompt_accept_and_notify(session, create_dialog, dialog_type, retval):
     create_dialog(dialog_type, text=dialog_type)
 
-    response = execute_script(session, "return 1;")
+    response = execute_script(session, "window.result = 1; return 1;")
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.execute_script("return window.result;") is None
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
@@ -55,10 +59,12 @@ def test_handle_prompt_accept_and_notify(session, create_dialog, dialog_type, re
 def test_handle_prompt_dismiss(session, create_dialog, dialog_type, retval):
     create_dialog(dialog_type, text=dialog_type)
 
-    response = execute_script(session, "return 1;")
-    assert_success(response)
+    response = execute_script(session, "window.result = 1; return 1;")
+    assert_success(response, 1)
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.execute_script("return window.result;") == 1
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss and notify"})
@@ -70,10 +76,12 @@ def test_handle_prompt_dismiss(session, create_dialog, dialog_type, retval):
 def test_handle_prompt_dissmiss_and_notify(session, create_dialog, dialog_type, retval):
     create_dialog(dialog_type, text=dialog_type)
 
-    response = execute_script(session, "return 1;")
+    response = execute_script(session, "window.result = 1; return 1;")
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.execute_script("return window.result;") is None
 
 
 def test_handle_prompt_ignore():
@@ -88,7 +96,9 @@ def test_handle_prompt_ignore():
 def test_handle_prompt_default(session, create_dialog, dialog_type, retval):
     create_dialog(dialog_type, text=dialog_type)
 
-    response = execute_script(session, "return 1;")
+    response = execute_script(session, "window.result = 1; return 1;")
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.execute_script("return window.result;") is None
