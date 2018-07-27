@@ -70,14 +70,14 @@
     <PreferenceCategory android:title="@string/preference_category_switching_apps">
         <SwitchPreference
             android:defaultValue="false"
-            android:key="@string/pref_key_secure"
-            android:summary="@string/preference_privacy_stealth_summary"
-            android:title="@string/preference_privacy_secure_mode" />
-        <SwitchPreference
-            android:defaultValue="false"
             android:key="@string/pref_key_biometric"
             android:summary="@string/preference_security_biometric_summary"
             android:title="@string/preference_security_biometric" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_secure"
+            android:summary="@string/preference_privacy_stealth_summary"
+            android:title="@string/preference_privacy_secure_mode" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preference_category_data_choices">

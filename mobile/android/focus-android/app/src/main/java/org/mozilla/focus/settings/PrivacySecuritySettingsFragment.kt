@@ -21,7 +21,7 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
 
         // Remove the biometric toggle if the software or hardware do not support it
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !Biometrics.hasFingerprintHardware(context)) {
-            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_biometric))
+            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_biometric)))
         }
 
         updateStealthToggleAvailability()

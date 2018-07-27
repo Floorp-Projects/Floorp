@@ -242,6 +242,13 @@
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Block 3rd-party cookies only</string>
     <string name="preference_privacy_should_block_cookies_yes_option">Yes</string>
 
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Use fingerprint to unlock app</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session. -->
+    <string name="preference_security_biometric_summary">Your fingerprint can unlock Firefox Focus if a URL is already opened in the app.
+    Stealth will be turned on.</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">Stealth</string>
@@ -249,13 +256,9 @@
      app's content (in our case especially the content of webpages) to show up in the "recent apps"
      screen. Additionally Android will prevent the user from taking screenshots or casting the app
      to other displays. However we try to keep this description short and brief to avoid confusion. -->
-    <string name="preference_privacy_stealth_summary">Hide webpages when switching apps</string>
+    <string name="preference_privacy_stealth_summary">Hide webpages when switching apps and block taking screenshots.</string>
 
-    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
-    <string name="preference_security_biometric">Use fingerprint to unlock app</string>
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session. -->
-    <string name="preference_security_biometric_summary">Your fingerprint can unlock Firefox Focus if a URL is already opened in the app.</string>
+
 
     <string name="preference_category_security">Security</string>
 
