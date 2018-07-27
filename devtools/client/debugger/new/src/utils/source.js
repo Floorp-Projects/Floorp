@@ -44,6 +44,8 @@ var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vend
 
 var _sourcesTree = require("./sources-tree/index");
 
+var _prefs = require("./prefs");
+
 const sourceTypes = exports.sourceTypes = {
   coffee: "coffeescript",
   js: "javascript",
@@ -67,18 +69,7 @@ function trimUrlQuery(url) {
 }
 
 function shouldPrettyPrint(source) {
-  if (!source) {
-    return false;
-  }
-
-  const _isPretty = isPretty(source);
-
-  const _isJavaScript = isJavaScript(source);
-
-  const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
-  const hasSourceMap = source.sourceMapURL;
-
-  if (_isPretty || isOriginal || hasSourceMap || !_isJavaScript) {
+  if (!source || isPretty(source) || !isJavaScript(source) || (0, _devtoolsSourceMap.isOriginalId)(source.id) || source.sourceMapURL || !_prefs.prefs.clientSourceMapsEnabled) {
     return false;
   }
 

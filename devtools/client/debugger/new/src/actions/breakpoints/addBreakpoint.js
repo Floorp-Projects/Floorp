@@ -17,6 +17,8 @@ var _sourceMaps = require("../../utils/source-maps");
 
 var _source = require("../../utils/source");
 
+var _telemetry = require("../../utils/telemetry");
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -149,6 +151,7 @@ function addBreakpoint(location, {
     sourceMaps,
     client
   }) => {
+    (0, _telemetry.recordEvent)("add_breakpoint");
     return dispatch({
       type: "ADD_BREAKPOINT",
       breakpoint,
