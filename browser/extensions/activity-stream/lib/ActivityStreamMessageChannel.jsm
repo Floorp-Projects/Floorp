@@ -5,7 +5,7 @@
 "use strict";
 
 ChromeUtils.import("resource:///modules/AboutNewTab.jsm");
-ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm");
+ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
 
 const {actionCreators: ac, actionTypes: at, actionUtils: au} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 

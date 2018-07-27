@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   CrashSubmit: "resource://gre/modules/CrashSubmit.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
-  RemotePages: "resource://gre/modules/RemotePageManager.jsm",
+  RemotePages: "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm"
 });
