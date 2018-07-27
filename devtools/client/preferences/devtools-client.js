@@ -279,12 +279,8 @@ pref("devtools.webconsole.sidebarToggle", true);
 pref("devtools.webconsole.sidebarToggle", false);
 #endif
 
-// Enable CodeMirror in the JsTerm in Nightly builds
-#if defined(NIGHTLY_BUILD)
-pref("devtools.webconsole.jsterm.codeMirror", true);
-#else
+// Enable CodeMirror in the JsTerm: |false|
 pref("devtools.webconsole.jsterm.codeMirror", false);
-#endif
 
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
