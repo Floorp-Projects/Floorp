@@ -150,6 +150,8 @@ public:
 
   static nsThreadEnumerator Enumerate();
 
+  static uint32_t MaxActiveThreads();
+
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);
 
@@ -177,6 +179,15 @@ protected:
   static mozilla::OffTheBooksMutex& ThreadListMutex();
   static mozilla::LinkedList<nsThread>& ThreadList();
   static void ClearThreadList();
+
+  // The current number of active threads.
+  static uint32_t sActiveThreads;
+  // The maximum current number of active threads we've had in this session.
+  static uint32_t sMaxActiveThreads;
+
+  void AddToThreadList();
+  void MaybeRemoveFromThreadList();
+
 
   // Whether or not these members have a value determines whether the nsThread
   // is treated as a full XPCOM thread or as a thin wrapper.
