@@ -28,8 +28,6 @@ if (gInContentProcess) {
   TOPICS.push("xpcom-shutdown");
 }
 
-let registeredURLs = new Set(Services.cpmm.initialProcessData["RemotePageManager:urls"]);
-
 let ProcessObserver = {
   init() {
     for (let topic of TOPICS) {
@@ -51,6 +49,8 @@ let ProcessObserver = {
         // Strip the hash from the URL, because it's not part of the origin.
         let window = subject;
         let url = window.document.documentURI.replace(/[\#|\?].*$/, "");
+
+        let registeredURLs = Services.cpmm.sharedData.get("RemotePageManager:urls");
 
         if (!registeredURLs.has(url))
           return;
@@ -87,15 +87,3 @@ let ProcessObserver = {
 };
 
 ProcessObserver.init();
-
-// A message from chrome telling us what pages to listen for
-Services.cpmm.addMessageListener("RemotePage:Register", ({ data }) => {
-  for (let url of data.urls)
-    registeredURLs.add(url);
-});
-
-// A message from chrome telling us what pages to stop listening for
-Services.cpmm.addMessageListener("RemotePage:Unregister", ({ data }) => {
-  for (let url of data.urls)
-    registeredURLs.delete(url);
-});
