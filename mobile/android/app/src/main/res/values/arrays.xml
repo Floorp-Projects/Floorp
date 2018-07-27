@@ -147,4 +147,13 @@
         <item>2</item> <!-- Wifi-only -->
         <item>0</item> <!-- Blocked -->
     </string-array>
+    <!-- media.autoplay.default -->
+    <string-array name="pref_media_autoplay_default_entries">
+        <item>@string/pref_media_autoplay_allow</item>
+        <item>@string/pref_media_autoplay_block</item>
+    </string-array>
+    <string-array name="pref_media_autoplay_default_values">
+        <item>0</item> <!-- Allowed -->
+        <item>1</item> <!-- Blocked -->
+    </string-array>
 </resources>
