@@ -137,6 +137,18 @@ def add_event_listeners(session):
     return add_event_listeners
 
 
+def create_cookie(session, url):
+    """Create a cookie"""
+    def create_cookie(name, value, **kwargs):
+        if kwargs.get("path", None) is not None:
+            session.url = url(kwargs["path"])
+
+        session.set_cookie(name, value, **kwargs)
+        return session.cookies(name)
+
+    return create_cookie
+
+
 def create_frame(session):
     """Create an `iframe` element in the current browsing context and insert it
     into the document. Return a reference to the newly-created element."""

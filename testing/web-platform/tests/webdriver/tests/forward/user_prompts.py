@@ -37,6 +37,8 @@ def test_handle_prompt_accept(session, create_dialog, dialog_type, pages):
     # retval not testable for confirm and prompt because window is gone
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=None)
 
+    assert session.url == pages[1]
+
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept and notify"})
 @pytest.mark.parametrize("dialog_type, retval", [
@@ -52,6 +54,8 @@ def test_handle_prompt_accept_and_notify(session, create_dialog, dialog_type, re
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
 
+    assert session.url == pages[0]
+
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
 @pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
@@ -63,6 +67,8 @@ def test_handle_prompt_dismiss(session, create_dialog, dialog_type, pages):
 
     # retval not testable for confirm and prompt because window is gone
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=None)
+
+    assert session.url == pages[1]
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss and notify"})
@@ -78,6 +84,8 @@ def test_handle_prompt_dissmiss_and_notify(session, create_dialog, dialog_type, 
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.url == pages[0]
 
 
 def test_handle_prompt_ignore():
@@ -96,3 +104,5 @@ def test_handle_prompt_default(session, create_dialog, dialog_type, retval, page
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.url == pages[0]

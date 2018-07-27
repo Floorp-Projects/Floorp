@@ -15,10 +15,12 @@ def get_window_rect(session):
     ("prompt", ""),
 ])
 def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
+    original_rect = session.window.rect
+
     create_dialog(dialog_type, text=dialog_type)
 
     response = get_window_rect(session)
-    assert_success(response)
+    assert_success(response, original_rect)
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
 
@@ -45,9 +47,13 @@ def test_handle_prompt_ignore():
     ("prompt", None),
 ])
 def test_handle_prompt_default(session, create_dialog, dialog_type, retval):
+    original_rect = session.window.rect
+
     create_dialog(dialog_type, text=dialog_type)
 
     response = get_window_rect(session)
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.window.rect == original_rect

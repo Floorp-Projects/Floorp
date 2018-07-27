@@ -15,12 +15,16 @@ def maximize(session):
     ("prompt", ""),
 ])
 def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
+    original_size = session.window.size
+
     create_dialog(dialog_type, text=dialog_type)
 
     response = maximize(session)
     assert_success(response)
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.window.size != original_size
 
 
 def test_handle_prompt_accept_and_notify():
@@ -45,9 +49,13 @@ def test_handle_prompt_ignore():
     ("prompt", None),
 ])
 def test_handle_prompt_default(session, create_dialog, dialog_type, retval):
+    original_size = session.window.size
+
     create_dialog(dialog_type, text=dialog_type)
 
     response = maximize(session)
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert session.window.size == original_size
