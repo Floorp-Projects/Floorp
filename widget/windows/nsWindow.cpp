@@ -5313,8 +5313,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_SETTINGCHANGE:
     {
-      if (wParam == SPI_SETKEYBOARDDELAY) {
-        // CaretBlinkTime is cached in nsLookAndFeel
+      if (wParam == SPI_SETCLIENTAREAANIMATION ||
+          // CaretBlinkTime is cached in nsLookAndFeel
+          wParam == SPI_SETKEYBOARDDELAY) {
         NotifyThemeChanged();
         break;
       }

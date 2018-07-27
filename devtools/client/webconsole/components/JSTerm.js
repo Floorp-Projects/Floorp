@@ -309,15 +309,6 @@ class JSTerm extends Component {
               return "CodeMirror.Pass";
             },
 
-            "Esc": () => {
-              if (this.autocompletePopup.isOpen) {
-                this.clearCompletion();
-                return null;
-              }
-
-              return "CodeMirror.Pass";
-            },
-
             "PageUp": () => {
               if (this.autocompletePopup.isOpen) {
                 this.complete(this.COMPLETE_PAGEUP);
@@ -353,7 +344,9 @@ class JSTerm extends Component {
               }
 
               return "CodeMirror.Pass";
-            }
+            },
+
+            "Esc": false,
           }
         });
 
@@ -362,6 +355,14 @@ class JSTerm extends Component {
         const cm = this.editor.codeMirror;
         cm.on("paste", (_, event) => this.props.onPaste(event));
         cm.on("drop", (_, event) => this.props.onPaste(event));
+
+        this.node.addEventListener("keydown", event => {
+          if (event.keyCode === KeyCodes.DOM_VK_ESCAPE && this.autocompletePopup.isOpen) {
+            this.clearCompletion();
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        });
       }
     } else if (this.inputNode) {
       this.inputNode.addEventListener("keypress", this._keyPress);

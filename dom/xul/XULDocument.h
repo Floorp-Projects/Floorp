@@ -132,12 +132,6 @@ public:
 
     NS_IMETHOD OnScriptCompileComplete(JSScript* aScript, nsresult aStatus) override;
 
-    static bool
-    MatchAttribute(Element* aContent,
-                   int32_t aNameSpaceID,
-                   nsAtom* aAttrName,
-                   void* aData);
-
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULDocument, XMLDocument)
 
     void TraceProtos(JSTracer* aTrc);
@@ -153,14 +147,6 @@ public:
     {
         return mCommandDispatcher;
     }
-    already_AddRefed<nsINodeList>
-      GetElementsByAttribute(const nsAString& aAttribute,
-                             const nsAString& aValue);
-    already_AddRefed<nsINodeList>
-      GetElementsByAttributeNS(const nsAString& aNamespaceURI,
-                               const nsAString& aAttribute,
-                               const nsAString& aValue,
-                               ErrorResult& aRv);
     void AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                  const nsAString& aAttr, ErrorResult& aRv);
     void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,

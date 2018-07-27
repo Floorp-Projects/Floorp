@@ -359,8 +359,6 @@ parent:
     nested(inside_cpow) async SetInputContext(InputContext context,
                                               InputContextAction action);
 
-    sync IsParentWindowMainWidgetVisible() returns (bool visible);
-
     /**
      * Set the native cursor.
      * @param value

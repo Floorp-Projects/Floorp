@@ -45,9 +45,23 @@ payment-dialog > header,
 payment-dialog > header {
   border-bottom: 1px solid rgba(0,0,0,0.1);
   display: flex;
+  /* Wrap so that the error text appears full-width above the rest of the contents */
+  flex-wrap: wrap;
   /* from visual spec: */
   padding-bottom: 19px;
   padding-top: 19px;
+}
+
+payment-dialog > header > .page-error:empty {
+  display: none;
+}
+
+payment-dialog > header > .page-error {
+  background: #D70022;
+  border-radius: 3px;
+  color: white;
+  padding: 6px;
+  width: 100%;
 }
 
 #main-container {
@@ -78,6 +92,10 @@ payment-dialog > header {
   display: none;
 }
 
+.page-error {
+  color: #D70022;
+}
+
 .page > footer {
   align-items: center;
   background-color: #eaeaee;
@@ -85,10 +103,6 @@ payment-dialog > header {
   /* from visual spec: */
   padding-top: 20px;
   padding-bottom: 18px;
-}
-
-#error-text {
-  text-align: center;
 }
 
 #order-details-overlay {
