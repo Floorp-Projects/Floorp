@@ -256,7 +256,7 @@ class TestExecuteContent(MarionetteTestCase):
     def test_lasting_side_effects(self):
         def send(script):
             return self.marionette._send_message(
-                "executeScript", {"script": script}, key="value")
+                "WebDriver:ExecuteScript", {"script": script}, key="value")
 
         send("window.foo = 1")
         foo = send("return window.foo")
@@ -351,7 +351,7 @@ class TestExecuteContent(MarionetteTestCase):
 
     @skip_if_mobile("Modal dialogs not supported in Fennec")
     def test_return_value_on_alert(self):
-        res = self.marionette._send_message("executeScript", {"script": "alert()"})
+        res = self.marionette._send_message("WebDriver:ExecuteScript", {"script": "alert()"})
         self.assertIn("value", res)
         self.assertIsNone(res["value"])
 
