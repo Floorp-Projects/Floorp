@@ -108,12 +108,13 @@ nsThreadManager::ReleaseThread(void* aData)
   }
 
   auto* thread = static_cast<nsThread*>(aData);
-  MOZ_ASSERT(thread->mHasTLSEntry);
 
   get().UnregisterCurrentThread(*thread, true);
 
-  thread->mHasTLSEntry = false;
-  thread->Release();
+  if (thread->mHasTLSEntry) {
+    thread->mHasTLSEntry = false;
+    thread->Release();
+  }
 }
 
 // statically allocated instance
