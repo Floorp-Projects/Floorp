@@ -15,7 +15,7 @@ def get_current_url(session):
     ("prompt", ""),
 ])
 def test_handle_prompt_accept(session, create_dialog, dialog_type, retval):
-    session.url = inline("<title>WD doc title</title>")
+    session.url = inline("<p id=1>")
     expected_url = session.url
 
     create_dialog(dialog_type, text=dialog_type)
@@ -48,7 +48,7 @@ def test_handle_prompt_ignore():
     ("prompt", None),
 ])
 def test_handle_prompt_default(session, create_dialog, dialog_type, retval):
-    session.url = inline("<title>WD doc title</title>")
+    session.url = inline("<p id=1>")
 
     create_dialog(dialog_type, text=dialog_type)
 

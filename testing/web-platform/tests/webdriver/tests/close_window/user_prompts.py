@@ -12,8 +12,9 @@ def close(session):
 @pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
 def test_handle_prompt_accept(session, create_dialog, create_window, dialog_type):
     original_handle = session.window_handle
+    new_handle = create_window()
+    session.window_handle = new_handle
 
-    session.window_handle = create_window()
     create_dialog(dialog_type, text=dialog_type)
 
     response = close(session)
@@ -25,6 +26,8 @@ def test_handle_prompt_accept(session, create_dialog, create_window, dialog_type
 
     # retval not testable for confirm and prompt because window is gone
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=None)
+
+    assert new_handle not in session.handles
 
 
 def test_handle_prompt_accept_and_notify():
@@ -49,7 +52,8 @@ def test_handle_prompt_ignore():
     ("prompt", None),
 ])
 def test_handle_prompt_default(session, create_dialog, create_window, dialog_type, retval):
-    session.window_handle = create_window()
+    new_handle = create_window()
+    session.window_handle = new_handle
 
     create_dialog(dialog_type, text=dialog_type)
 
@@ -57,3 +61,5 @@ def test_handle_prompt_default(session, create_dialog, create_window, dialog_typ
     assert_error(response, "unexpected alert open")
 
     assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+    assert new_handle in session.handles
