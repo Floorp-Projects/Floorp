@@ -60,7 +60,6 @@ const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_MODULES = "webextension-modules";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
-const TIMING_ENABLED_PREF = "extensions.webextensions.enablePerformanceCounters";
 
 let schemaURLs = new Set();
 
@@ -750,9 +749,6 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
 }
 
 ParentAPIManager = {
-  // stores dispatches counts per web extension and API
-  performanceCounters: new DefaultMap(() => new DefaultMap(() => ({duration: 0, calls: 0}))),
-
   proxyContexts: new Map(),
 
   init() {
@@ -763,7 +759,6 @@ ParentAPIManager = {
     Services.mm.addMessageListener("API:Call", this);
     Services.mm.addMessageListener("API:AddListener", this);
     Services.mm.addMessageListener("API:RemoveListener", this);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "_timingEnabled", TIMING_ENABLED_PREF, false);
   },
 
   attachMessageManager(extension, processMessageManager) {
@@ -881,26 +876,6 @@ ParentAPIManager = {
     }
   },
 
-  storeExecutionTime(webExtensionId, apiPath, duration) {
-    let apiCounter = this.performanceCounters.get(webExtensionId).get(apiPath);
-    apiCounter.duration += duration;
-    apiCounter.calls += 1;
-  },
-
-  async withTiming(data, callable) {
-    if (!this._timingEnabled) {
-      return callable();
-    }
-    let webExtId = data.childId.split(".")[0];
-    let start = Cu.now();
-    try {
-      return callable();
-    } finally {
-      let end = Cu.now();
-      this.storeExecutionTime(webExtId, data.path, end - start);
-    }
-  },
-
   async call(data, target) {
     let context = this.getContextById(data.childId);
     if (context.parentMessageManager !== target.messageManager) {
@@ -926,11 +901,8 @@ ParentAPIManager = {
       let args = data.args;
       let pendingBrowser = context.pendingEventBrowser;
       let fun = await context.apiCan.asyncFindAPIPath(data.path);
-      let result = this.withTiming(data, () => {
-        return context.withPendingBrowser(pendingBrowser,
-                                          () => fun(...args));
-      });
-
+      let result = context.withPendingBrowser(pendingBrowser,
+                                              () => fun(...args));
       if (data.callId) {
         result = result || Promise.resolve();
 
