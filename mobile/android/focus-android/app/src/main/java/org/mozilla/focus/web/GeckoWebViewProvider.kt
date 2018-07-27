@@ -66,7 +66,8 @@ class GeckoWebViewProvider : IWebViewProvider {
         val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
         runtimeSettingsBuilder.useContentProcessHint(true)
         runtimeSettingsBuilder.nativeCrashReportingEnabled(true)
-        geckoRuntime = GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
+        geckoRuntime =
+                GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
     }
 
     override fun requestMobileSite(context: Context, webSettings: WebSettings) {
@@ -75,7 +76,11 @@ class GeckoWebViewProvider : IWebViewProvider {
     override fun requestDesktopSite(webSettings: WebSettings) {
     }
 
-    override fun applyAppSettings(context: Context, webSettings: WebSettings, systemWebView: SystemWebView) {
+    override fun applyAppSettings(
+        context: Context,
+        webSettings: WebSettings,
+        systemWebView: SystemWebView
+    ) {
     }
 
     override fun disableBlocking(webSettings: WebSettings, systemWebView: SystemWebView) {
@@ -87,9 +92,9 @@ class GeckoWebViewProvider : IWebViewProvider {
 
     @Suppress("LargeClass", "TooManyFunctions")
     class GeckoWebView(context: Context, attrs: AttributeSet?) :
-            NestedGeckoView(context, attrs),
-            IWebView,
-            SharedPreferences.OnSharedPreferenceChangeListener {
+        NestedGeckoView(context, attrs),
+        IWebView,
+        SharedPreferences.OnSharedPreferenceChangeListener {
         private var callback: IWebView.Callback? = null
         private var findListener: IFindListener? = null
         private var currentUrl: String = "about:blank"
@@ -103,7 +108,7 @@ class GeckoWebViewProvider : IWebViewProvider {
 
         init {
             PreferenceManager.getDefaultSharedPreferences(context)
-                    .registerOnSharedPreferenceChangeListener(this)
+                .registerOnSharedPreferenceChangeListener(this)
             geckoSession = createGeckoSession()
             applySettingsAndSetDelegates()
             setSession(geckoSession, geckoRuntime)
@@ -119,7 +124,6 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
             geckoSession.promptDelegate = createPromptDelegate()
             finder = geckoSession.finder
-            // TODO #2998
             finder.displayFlags = GeckoSession.FINDER_DISPLAY_HIGHLIGHT_ALL
         }
 
@@ -131,7 +135,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             return GeckoSession(settings)
         }
 
-        override fun setCallback(callback: IWebView.Callback) {
+        override fun setCallback(callback: IWebView.Callback?) {
             this.callback = callback
         }
 
@@ -187,7 +191,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                 updateBlocking()
                 applyAppSettings()
             } else {
-                geckoRuntime.settings.trackingProtectionCategories = 0
                 geckoRuntime.settings.javaScriptEnabled = true
                 geckoRuntime.settings.webFontsEnabled = true
                 geckoRuntime.settings.cookieBehavior = GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
@@ -196,21 +199,30 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun setRequestDesktop(shouldRequestDesktop: Boolean) {
-            geckoSession.settings.setBoolean(GeckoSessionSettings.USE_DESKTOP_MODE, shouldRequestDesktop)
+            geckoSession.settings.setBoolean(
+                GeckoSessionSettings.USE_DESKTOP_MODE,
+                shouldRequestDesktop
+            )
             callback?.onRequestDesktopStateChanged(shouldRequestDesktop)
         }
 
-        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, prefName: String) {
+        override fun onSharedPreferenceChanged(
+            sharedPreferences: SharedPreferences,
+            prefName: String
+        ) {
             updateBlocking()
             applyAppSettings()
         }
 
         private fun applyAppSettings() {
-            geckoRuntime.settings.javaScriptEnabled = !Settings.getInstance(context).shouldBlockJavaScript()
-            geckoRuntime.settings.webFontsEnabled = !Settings.getInstance(context).shouldBlockWebFonts()
+            geckoRuntime.settings.javaScriptEnabled =
+                    !Settings.getInstance(context).shouldBlockJavaScript()
+            geckoRuntime.settings.webFontsEnabled =
+                    !Settings.getInstance(context).shouldBlockWebFonts()
             geckoRuntime.settings.remoteDebuggingEnabled = false
             val cookiesValue = if (Settings.getInstance(context).shouldBlockCookies() &&
-                    Settings.getInstance(context).shouldBlockThirdPartyCookies()) {
+                Settings.getInstance(context).shouldBlockThirdPartyCookies()
+            ) {
                 GeckoRuntimeSettings.COOKIE_ACCEPT_NONE
             } else if (Settings.getInstance(context).shouldBlockThirdPartyCookies()) {
                 GeckoRuntimeSettings.COOKIE_ACCEPT_FIRST_PARTY
@@ -265,7 +277,8 @@ class GeckoWebViewProvider : IWebViewProvider {
                     elementSrc: String?
                 ) {
                     if (elementSrc != null && uri != null &&
-                            elementType == GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE) {
+                        elementType == GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
+                    ) {
                         callback?.onLongPress(IWebView.HitTarget(true, uri, true, elementSrc))
                     } else if (elementSrc != null && elementType == GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE) {
                         callback?.onLongPress(IWebView.HitTarget(false, null, true, elementSrc))
@@ -291,10 +304,11 @@ class GeckoWebViewProvider : IWebViewProvider {
                         return
                     }
 
-                    // TODO: get user agent from GeckoView #2470
-                    val download = Download(response.uri, userAgent,
-                            response.filename, response.contentType, response.contentLength,
-                            Environment.DIRECTORY_DOWNLOADS)
+                    val download = Download(
+                        response.uri, userAgent,
+                        response.filename, response.contentType, response.contentLength,
+                        Environment.DIRECTORY_DOWNLOADS
+                    )
                     callback?.onDownloadStart(download)
                 }
 
@@ -309,10 +323,10 @@ class GeckoWebViewProvider : IWebViewProvider {
                     geckoSession.loadUri(currentUrl)
                 }
 
-                override fun onFocusRequest(geckoSession: GeckoSession) { }
+                override fun onFocusRequest(geckoSession: GeckoSession) {}
 
                 override fun onCloseRequest(geckoSession: GeckoSession) {
-                    // TODO: #2150
+                    // Ignore this callback
                 }
             }
         }
@@ -349,7 +363,11 @@ class GeckoWebViewProvider : IWebViewProvider {
                         isSecure = true
                     }
 
-                    callback?.onSecurityChanged(isSecure, securityInfo.host, securityInfo.issuerOrganization)
+                    callback?.onSecurityChanged(
+                        isSecure,
+                        securityInfo.host,
+                        securityInfo.issuerOrganization
+                    )
                 }
             }
         }
@@ -357,6 +375,49 @@ class GeckoWebViewProvider : IWebViewProvider {
         @Suppress("ComplexMethod")
         private fun createNavigationDelegate(): GeckoSession.NavigationDelegate {
             return object : GeckoSession.NavigationDelegate {
+                override fun onLoadRequest(
+                    session: GeckoSession,
+                    uri: String,
+                    target: Int,
+                    flags: Int
+                ): GeckoResult<Boolean>? {
+                    val response: GeckoResult<Boolean> = GeckoResult()
+                    val urlToURI = Uri.parse(uri)
+                    // If this is trying to load in a new tab, just load it in the current one
+                    if (target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
+                        geckoSession.loadUri(uri)
+                        response.complete(true)
+                    } else if (LocalizedContent.handleInternalContent(
+                            uri,
+                            this@GeckoWebView,
+                            context
+                        )
+                    ) {
+                        response.complete(true)
+                    } else if (!UrlUtils.isSupportedProtocol(urlToURI.scheme) && callback != null &&
+                        IntentUtils.handleExternalUri(context, this@GeckoWebView, uri)
+                    ) {
+                        response.complete(true)
+                    } else if (uri == "about:neterror" || uri == "about:certerror") {
+                        response.complete(true)
+                        TODO("Error Page handling with Components ErrorPages #2471")
+                    } else {
+                        callback?.onRequest(flags == GeckoSession.NavigationDelegate.LOAD_REQUEST_IS_USER_TRIGGERED)
+
+                        // Otherwise allow the load to continue normally
+                        response.complete(false)
+                    }
+                    return response
+                }
+
+                override fun onNewSession(
+                    session: GeckoSession,
+                    uri: String
+                ): GeckoResult<GeckoSession>? {
+                    // Prevent new sessions to be created from onLoadRequest
+                    throw IllegalStateException()
+                }
+
                 override fun onLocationChange(session: GeckoSession, url: String) {
                     var desiredUrl = url
                     // Save internal data: urls we should override to present focus:about, focus:rights
@@ -387,50 +448,6 @@ class GeckoWebViewProvider : IWebViewProvider {
 
                 override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                     this@GeckoWebView.canGoForward = canGoForward
-                }
-
-                override fun onLoadRequest(
-                    session: GeckoSession,
-                    uri: String,
-                    target: Int,
-                    flags: Int,
-                    response: GeckoResponse<Boolean>
-                ) {
-                    // If this is trying to load in a new tab, just load it in the current one
-                    if (target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
-                        geckoSession.loadUri(uri)
-                        response.respond(true)
-                    }
-
-                    // Check if we should handle an internal link
-                    if (LocalizedContent.handleInternalContent(uri, this@GeckoWebView, context)) {
-                        response.respond(true)
-                    }
-
-                    // Check if we should handle an external link
-                    val urlToURI = Uri.parse(uri)
-                    if (!UrlUtils.isSupportedProtocol(urlToURI.scheme) && callback != null &&
-                            IntentUtils.handleExternalUri(context, this@GeckoWebView, uri)) {
-                        response.respond(true)
-                    }
-
-                    if (uri == "about:neterror" || uri == "about:certerror") {
-                        // TODO: Error Page handling with Components ErrorPages #2471
-                        response.respond(true)
-                    }
-
-                    callback?.onRequest(flags == GeckoSession.NavigationDelegate.LOAD_REQUEST_IS_USER_TRIGGERED)
-
-                    // Otherwise allow the load to continue normally
-                    response.respond(false)
-                }
-
-                override fun onNewSession(
-                    session: GeckoSession,
-                    uri: String,
-                    response: GeckoResponse<GeckoSession>
-                ) {
-                    // TODO: #2151
                 }
             }
         }
@@ -508,14 +525,14 @@ class GeckoWebViewProvider : IWebViewProvider {
 
         override fun findNext(forward: Boolean) {
             finder.find(null, if (forward) 0 else GeckoSession.FINDER_FIND_BACKWARDS)
-                    .then({ result ->
-                if (result != null) {
-                    findListener?.onFindResultReceived(result.current, result.total, true)
-                }
-                GeckoResult<Void>()
-            }, { _ ->
-                GeckoResult<Void>()
-            })
+                .then({ result ->
+                    if (result != null) {
+                        findListener?.onFindResultReceived(result.current, result.total, true)
+                    }
+                    GeckoResult<Void>()
+                }, { _ ->
+                    GeckoResult<Void>()
+                })
         }
 
         override fun clearMatches() {
@@ -535,7 +552,8 @@ class GeckoWebViewProvider : IWebViewProvider {
         ) {
             geckoSession.loadData(data.toByteArray(Charsets.UTF_8), mimeType, baseURL)
             currentUrl = baseURL
-            isLoadingInternalUrl = currentUrl == LocalizedContent.URL_RIGHTS || currentUrl == LocalizedContent.URL_ABOUT
+            isLoadingInternalUrl = currentUrl == LocalizedContent.URL_RIGHTS || currentUrl ==
+                    LocalizedContent.URL_ABOUT
         }
 
         private fun sendTelemetrySnapshots() {
@@ -555,7 +573,7 @@ class GeckoWebViewProvider : IWebViewProvider {
 
         override fun onDetachedFromWindow() {
             PreferenceManager.getDefaultSharedPreferences(context)
-                    .unregisterOnSharedPreferenceChangeListener(this)
+                .unregisterOnSharedPreferenceChangeListener(this)
             super.onDetachedFromWindow()
         }
 
@@ -572,6 +590,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         private const val firstProgress = 10
         private const val quarterProgress = 25
         private const val finalProgress = 100
-        private const val userAgent = "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0"
+        private const val userAgent =
+            "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0"
     }
 }
