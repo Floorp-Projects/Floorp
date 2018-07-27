@@ -878,18 +878,6 @@ Navigator::RegisterContentHandler(const nsAString& aMIMEType,
                                   const nsAString& aTitle,
                                   ErrorResult& aRv)
 {
-  if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
-    return;
-  }
-
-  nsCOMPtr<nsIWebContentHandlerRegistrar> registrar =
-    do_GetService(NS_WEBCONTENTHANDLERREGISTRAR_CONTRACTID);
-  if (!registrar) {
-    return;
-  }
-
-  aRv = registrar->RegisterContentHandler(aMIMEType, aURI, aTitle,
-                                          mWindow->GetOuterWindow());
 }
 
 void

@@ -575,26 +575,9 @@ FeedWriter.prototype = {
     }
   },
 
-  _getWebHandlerElementsForURL(aURL) {
-    return this._handlersList.querySelectorAll('[webhandlerurl="' + aURL + '"]');
-  },
-
-  _setSelectedHandlerResponse(handler, url) {
-    LOG(`Selecting handler response ${handler} ${url}`);
+  _setSelectedHandlerResponse(handler) {
+    LOG(`Selecting handler response ${handler}`);
     switch (handler) {
-      case "web": {
-        if (this._handlersList) {
-          let handlers =
-            this._getWebHandlerElementsForURL(url);
-          if (handlers.length == 0) {
-            LOG(`Selected web handler isn't in the menulist ${url}`);
-            return;
-          }
-
-          handlers[0].selected = true;
-        }
-        break;
-      }
       case "client":
       case "default":
         // do nothing, these are handled by the onchange event
@@ -663,26 +646,7 @@ FeedWriter.prototype = {
 
     this._handlersList.appendChild(menuItem);
 
-    // separator
-    let chooseAppSep = liveBookmarksMenuItem.nextElementSibling.cloneNode(false);
-    chooseAppSep.textContent = liveBookmarksMenuItem.nextElementSibling.textContent;
-    this._handlersList.appendChild(chooseAppSep);
-
-    for (let handler of setupMessage.handlers) {
-      if (!handler.uri) {
-        LOG("Handler with name " + handler.name + " has no URI!? Skipping...");
-        continue;
-      }
-      menuItem = liveBookmarksMenuItem.cloneNode(false);
-      menuItem.removeAttribute("selected");
-      menuItem.className = "menuitem-iconic";
-      menuItem.textContent = handler.name;
-      menuItem.setAttribute("handlerType", "web");
-      menuItem.setAttribute("webhandlerurl", handler.uri);
-      this._handlersList.appendChild(menuItem);
-    }
-
-    this._setSelectedHandlerResponse(setupMessage.reader.handler, setupMessage.reader.url);
+    this._setSelectedHandlerResponse(setupMessage.reader.handler);
 
     if (setupMessage.defaultMenuItem) {
       LOG(`Setting default menu item ${setupMessage.defaultMenuItem}`);
@@ -800,7 +764,6 @@ FeedWriter.prototype = {
     this._mm.addMessageListener("FeedWriter:PreferenceUpdated", this);
     this._mm.addMessageListener("FeedWriter:SetApplicationLauncherMenuItem", this);
     this._mm.addMessageListener("FeedWriter:GetSubscriptionUIResponse", this);
-    this._mm.addMessageListener("FeedWriter:SetFeedPrefsAndSubscribeResponse", this);
 
     const feedType = this._getFeedType();
     this._mm.sendAsyncMessage("FeedWriter:GetSubscriptionUI",
@@ -830,12 +793,8 @@ FeedWriter.prototype = {
         }
         LOG(`Got pref ${JSON.stringify(feedTypePref)}`);
         this._setCheckboxCheckedState(feedTypePref.alwaysUse);
-        this._setSelectedHandlerResponse(feedTypePref.handler, feedTypePref.url);
+        this._setSelectedHandlerResponse(feedTypePref.handler);
         this._setAlwaysUseLabel();
-        break;
-      case "FeedWriter:SetFeedPrefsAndSubscribeResponse":
-        LOG(`FeedWriter:SetFeedPrefsAndSubscribeResponse - Redirecting ${msg.data.redirect}`);
-        this._window.location.href = msg.data.redirect;
         break;
       case "FeedWriter:GetSubscriptionUIResponse":
         // Set up the subscription UI
@@ -933,27 +892,22 @@ FeedWriter.prototype = {
         feedSubtitle: this._document.getElementById(SUBTITLE_ID).textContent,
         feedLocation: this._window.location.href
       };
-      if (selectedItem.hasAttribute("webhandlerurl")) {
-        feedReader = "web";
-        settings.uri = selectedItem.getAttribute("webhandlerurl");
-      } else {
-        switch (selectedItem.id) {
-          case "selectedAppMenuItem":
-            feedReader = "client";
-            break;
-          case "defaultHandlerMenuItem":
-            feedReader = "default";
-            break;
-          case "liveBookmarksMenuItem":
-            defaultHandler = "bookmarks";
-            feedReader = "bookmarks";
-            break;
-        }
+      switch (selectedItem.id) {
+        case "selectedAppMenuItem":
+          feedReader = "client";
+          break;
+        case "defaultHandlerMenuItem":
+          feedReader = "default";
+          break;
+        case "liveBookmarksMenuItem":
+          defaultHandler = "bookmarks";
+          feedReader = "bookmarks";
+          break;
       }
       settings.reader = feedReader;
 
       // If "Always use..." is checked, we should set PREF_*SELECTED_ACTION
-      // to either "reader" (If a web reader or if an application is selected),
+      // to either "reader" (If an application is selected),
       // or to "bookmarks" (if the live bookmarks option is selected).
       // Otherwise, we should set it to "ask"
       if (!useAsDefault) {

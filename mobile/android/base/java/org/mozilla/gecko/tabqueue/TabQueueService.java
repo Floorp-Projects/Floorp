@@ -7,7 +7,6 @@ package org.mozilla.gecko.tabqueue;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -23,7 +22,6 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -35,13 +33,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import java.util.List;
@@ -264,7 +262,8 @@ public class TabQueueService extends Service {
                 .addAction(R.drawable.ic_action_settings, getString(R.string.tab_queue_prompt_settings_button), pendingIntent);
 
         if (!AppConstants.Versions.preO) {
-            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            notificationBuilder.setChannelId(NotificationHelper.getInstance(this)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);

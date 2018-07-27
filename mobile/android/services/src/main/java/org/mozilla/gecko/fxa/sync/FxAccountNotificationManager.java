@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.fxa.sync;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -12,7 +11,6 @@ import android.content.Intent;
 import android.support.v7.app.NotificationCompat;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -22,6 +20,7 @@ import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.Action;
+import org.mozilla.gecko.notifications.NotificationHelper;
 
 /**
  * Abstraction that manages notifications shown or hidden for a Firefox Account.
@@ -113,7 +112,8 @@ public class FxAccountNotificationManager {
     .setContentIntent(pendingIntent);
 
     if (!AppConstants.Versions.preO) {
-      builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+      builder.setChannelId(NotificationHelper.getInstance(context)
+              .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
     }
 
     notificationManager.notify(notificationId, builder.build());

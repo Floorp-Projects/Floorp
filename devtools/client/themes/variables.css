@@ -96,10 +96,10 @@
   /* Doorhangers */
   /* These colors are based on the colors used for doorhangers elsewhere in
    * Firefox. */
-  --theme-arrowpanel-background: white;
+  --theme-arrowpanel-background: -moz-field;
   --theme-arrowpanel-color: -moz-fieldText;
-  --theme-arrowpanel-border-color: var(--grey-90-a20);
-  --theme-arrowpanel-separator: var(--grey-90-a20);
+  --theme-arrowpanel-border-color: ThreeDShadow;
+  --theme-arrowpanel-separator: ThreeDShadow;
   --theme-arrowpanel-dimmed: hsla(0,0%,80%,.3);
   --theme-arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
   --theme-arrowpanel-disabled-color: GrayText;
@@ -113,13 +113,14 @@
 }
 
 /*
- * For doorhangers elsewhere in Fireflox, Mac uses a fixed color different to
- * -moz-fieldText and a slightly lighter border color (presumably since it
- * combines with the platform shadow).
+ * For doorhangers elsewhere in Firefox, Mac uses fixed colors rather than
+ * system colors.
  */
 :root[platform="mac"].theme-light {
-  --theme-arrowpanel-color: rgb(26,26,26);
+  --theme-arrowpanel-background: hsla(0,0%,99%,.975);
+  --theme-arrowpanel-color: hsl(0,0%,10%);
   --theme-arrowpanel-border-color: hsla(210,4%,10%,.05);
+  --theme-arrowpanel-separator: hsla(210,4%,10%,.14);
 }
 
 :root.theme-dark {
@@ -284,6 +285,5 @@
   --grey-80: #2a2a2e;
   --grey-90: #0c0c0d;
   --grey-90-a10: rgba(12, 12, 13, 0.1);
-  --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a80: rgba(12, 12, 13, 0.8);
 }

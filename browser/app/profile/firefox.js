@@ -741,26 +741,6 @@ pref("layout.spellcheckDefault", 1);
 
 pref("browser.send_pings", false);
 
-/* initial web feed readers list */
-pref("browser.contentHandlers.types.0.title", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.0.uri", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.0.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.1.title", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.1.uri", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.1.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.2.title", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.2.uri", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.2.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.3.title", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.3.uri", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.4.title", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.4.uri", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.4.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.5.title", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.5.uri", "chrome://browser-region/locale/region.properties");
-pref("browser.contentHandlers.types.5.type", "application/vnd.mozilla.maybe.feed");
-
 pref("browser.feeds.handler", "ask");
 pref("browser.videoFeeds.handler", "ask");
 pref("browser.audioFeeds.handler", "ask");

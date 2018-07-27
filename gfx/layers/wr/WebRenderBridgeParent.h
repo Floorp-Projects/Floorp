@@ -61,7 +61,6 @@ public:
 
   wr::PipelineId PipelineId() { return mPipelineId; }
   already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() { return do_AddRef(mApi); }
-  wr::Epoch WrEpoch() const { return mWrEpoch; }
   AsyncImagePipelineManager* AsyncImageManager() { return mAsyncImageManager; }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
@@ -158,7 +157,6 @@ public:
                                 const TimeStamp& aTxnStartTime,
                                 const TimeStamp& aFwdTime);
   TransactionId LastPendingTransactionId();
-  TransactionId FlushPendingTransactionIds();
   TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
@@ -186,11 +184,11 @@ public:
    */
   void ScheduleGenerateFrame();
 
-  void UpdateWebRender(CompositorVsyncScheduler* aScheduler,
-                       wr::WebRenderAPI* aApi,
-                       AsyncImagePipelineManager* aImageMgr,
-                       CompositorAnimationStorage* aAnimStorage,
-                       const TextureFactoryIdentifier& aTextureFactoryIdentifier);
+  wr::Epoch UpdateWebRender(CompositorVsyncScheduler* aScheduler,
+                            wr::WebRenderAPI* aApi,
+                            AsyncImagePipelineManager* aImageMgr,
+                            CompositorAnimationStorage* aAnimStorage,
+                            const TextureFactoryIdentifier& aTextureFactoryIdentifier);
 
   void RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch);
 

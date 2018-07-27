@@ -31,7 +31,6 @@ const startupPhases = {
       "MainProcessSingleton.js",
 
       // Bugs to fix: The following components shouldn't be initialized that early.
-      "WebContentConverter.js", // bug 1369443
       "nsSessionStartup.js", // bug 1369456
       "PushComponents.js", // bug 1369436
     ]),

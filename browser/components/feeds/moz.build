@@ -12,7 +12,6 @@ JAR_MANIFESTS += ['jar.mn']
 
 XPIDL_SOURCES += [
     'nsIFeedResultService.idl',
-    'nsIWebContentConverterRegistrar.idl',
 ]
 
 XPIDL_MODULE = 'browser-feeds'
