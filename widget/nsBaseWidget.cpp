@@ -1833,18 +1833,6 @@ nsBaseWidget::NotifyWindowDestroyed()
 }
 
 void
-nsBaseWidget::NotifySizeMoveDone()
-{
-  if (!mWidgetListener || mWidgetListener->GetXULWindow())
-    return;
-
-  nsIPresShell* presShell = mWidgetListener->GetPresShell();
-  if (presShell) {
-    presShell->WindowSizeMoveDone();
-  }
-}
-
-void
 nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY)
 {
   if (mWidgetListener) {
@@ -1857,27 +1845,34 @@ nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY)
 }
 
 void
-nsBaseWidget::NotifySysColorChanged()
+nsBaseWidget::NotifyPresShell(NotificationFunc aNotificationFunc)
 {
-  if (!mWidgetListener || mWidgetListener->GetXULWindow())
+  if (!mWidgetListener || mWidgetListener->GetXULWindow()) {
     return;
+  }
 
   nsIPresShell* presShell = mWidgetListener->GetPresShell();
   if (presShell) {
-    presShell->SysColorChanged();
+    (presShell->*aNotificationFunc)();
   }
+}
+
+void
+nsBaseWidget::NotifySizeMoveDone()
+{
+  NotifyPresShell(&nsIPresShell::WindowSizeMoveDone);
+}
+
+void
+nsBaseWidget::NotifySysColorChanged()
+{
+  NotifyPresShell(&nsIPresShell::SysColorChanged);
 }
 
 void
 nsBaseWidget::NotifyThemeChanged()
 {
-  if (!mWidgetListener || mWidgetListener->GetXULWindow())
-    return;
-
-  nsIPresShell* presShell = mWidgetListener->GetPresShell();
-  if (presShell) {
-    presShell->ThemeChanged();
-  }
+  NotifyPresShell(&nsIPresShell::ThemeChanged);
 }
 
 void
