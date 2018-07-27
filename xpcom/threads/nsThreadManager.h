@@ -9,7 +9,6 @@
 
 #include "mozilla/Mutex.h"
 #include "nsIThreadManager.h"
-#include "nsRefPtrHashtable.h"
 #include "nsThread.h"
 
 class nsIRunnable;
@@ -36,7 +35,7 @@ public:
 
   // Called by nsThread to inform the ThreadManager it is going away.  This
   // method must be called when the given thread is the current thread.
-  void UnregisterCurrentThread(nsThread& aThread, bool aIfExists = false);
+  void UnregisterCurrentThread(nsThread& aThread);
 
   // Returns the current thread.  Returns null if OOM or if ThreadManager isn't
   // initialized.  Creates the nsThread if one does not exist yet.
@@ -74,10 +73,7 @@ private:
   nsThreadManager()
     : mCurThreadIndex(0)
     , mMainPRThread(nullptr)
-    , mLock("nsThreadManager.mLock")
     , mInitialized(false)
-    , mCurrentNumberOfThreads(1)
-    , mHighestNumberOfThreads(1)
   {
   }
 
@@ -87,19 +83,12 @@ private:
 
   static void ReleaseThread(void* aData);
 
-  nsRefPtrHashtable<nsPtrHashKey<PRThread>, nsThread> mThreadsByPRThread;
   unsigned            mCurThreadIndex;  // thread-local-storage index
   RefPtr<nsThread>  mMainThread;
   PRThread*         mMainPRThread;
-  mozilla::OffTheBooksMutex mLock;  // protects tables
   mozilla::Atomic<bool,
                   mozilla::SequentiallyConsistent,
                   mozilla::recordreplay::Behavior::DontPreserve> mInitialized;
-
-  // The current number of threads
-  uint32_t            mCurrentNumberOfThreads;
-  // The highest number of threads encountered so far during the session
-  uint32_t            mHighestNumberOfThreads;
 };
 
 #define NS_THREADMANAGER_CID                       \
