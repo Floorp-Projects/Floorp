@@ -117,7 +117,7 @@ struct LinkedProgramInfo final
     mutable CacheMap<const WebGLVertexArray*,
                      CachedDrawFetchLimits> mDrawFetchCache;
 
-    const CachedDrawFetchLimits* GetDrawFetchLimits(const char* funcName) const;
+    const CachedDrawFetchLimits* GetDrawFetchLimits() const;
 
     //////
 

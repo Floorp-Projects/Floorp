@@ -148,26 +148,6 @@ WebGLContext::ValidateBlendFuncEnumsCompatibility(GLenum sfactor,
 }
 
 bool
-WebGLContext::ValidateComparisonEnum(GLenum target, const char* info)
-{
-    switch (target) {
-    case LOCAL_GL_NEVER:
-    case LOCAL_GL_LESS:
-    case LOCAL_GL_LEQUAL:
-    case LOCAL_GL_GREATER:
-    case LOCAL_GL_GEQUAL:
-    case LOCAL_GL_EQUAL:
-    case LOCAL_GL_NOTEQUAL:
-    case LOCAL_GL_ALWAYS:
-        return true;
-
-    default:
-        ErrorInvalidEnumInfo(info, target);
-        return false;
-    }
-}
-
-bool
 WebGLContext::ValidateStencilOpEnum(GLenum action, const char* info)
 {
     switch (action) {
@@ -188,7 +168,7 @@ WebGLContext::ValidateStencilOpEnum(GLenum action, const char* info)
 }
 
 bool
-WebGLContext::ValidateFaceEnum(GLenum face, const char* info)
+WebGLContext::ValidateFaceEnum(const GLenum face)
 {
     switch (face) {
     case LOCAL_GL_FRONT:
@@ -197,32 +177,13 @@ WebGLContext::ValidateFaceEnum(GLenum face, const char* info)
         return true;
 
     default:
-        ErrorInvalidEnumInfo(info, face);
+        ErrorInvalidEnumInfo("face", face);
         return false;
     }
 }
 
 bool
-WebGLContext::ValidateDrawModeEnum(GLenum mode, const char* info)
-{
-    switch (mode) {
-    case LOCAL_GL_TRIANGLES:
-    case LOCAL_GL_TRIANGLE_STRIP:
-    case LOCAL_GL_TRIANGLE_FAN:
-    case LOCAL_GL_POINTS:
-    case LOCAL_GL_LINE_STRIP:
-    case LOCAL_GL_LINE_LOOP:
-    case LOCAL_GL_LINES:
-        return true;
-
-    default:
-        ErrorInvalidEnumInfo(info, mode);
-        return false;
-    }
-}
-
-bool
-WebGLContext::ValidateUniformLocation(WebGLUniformLocation* loc, const char* funcName)
+WebGLContext::ValidateUniformLocation(WebGLUniformLocation* loc)
 {
     /* GLES 2.0.25, p38:
      *   If the value of location is -1, the Uniform* commands will silently
@@ -232,27 +193,25 @@ WebGLContext::ValidateUniformLocation(WebGLUniformLocation* loc, const char* fun
     if (!loc)
         return false;
 
-    if (!ValidateObjectAllowDeleted(funcName, *loc))
+    if (!ValidateObjectAllowDeleted("loc", *loc))
         return false;
 
     if (!mCurrentProgram) {
-        ErrorInvalidOperation("%s: No program is currently bound.", funcName);
+        ErrorInvalidOperation("No program is currently bound.");
         return false;
     }
 
-    return loc->ValidateForProgram(mCurrentProgram, funcName);
+    return loc->ValidateForProgram(mCurrentProgram);
 }
 
 bool
-WebGLContext::ValidateAttribArraySetter(const char* name, uint32_t setterElemSize,
-                                        uint32_t arrayLength)
+WebGLContext::ValidateAttribArraySetter(uint32_t setterElemSize, uint32_t arrayLength)
 {
     if (IsContextLost())
         return false;
 
     if (arrayLength < setterElemSize) {
-        ErrorInvalidValue("%s: Array must have >= %d elements.", name,
-                          setterElemSize);
+        ErrorInvalidValue("Array must have >= %d elements.", setterElemSize);
         return false;
     }
 
@@ -261,16 +220,15 @@ WebGLContext::ValidateAttribArraySetter(const char* name, uint32_t setterElemSiz
 
 bool
 WebGLContext::ValidateUniformSetter(WebGLUniformLocation* loc,
-                                    uint8_t setterElemSize, GLenum setterType,
-                                    const char* funcName)
+                                    uint8_t setterElemSize, GLenum setterType)
 {
     if (IsContextLost())
         return false;
 
-    if (!ValidateUniformLocation(loc, funcName))
+    if (!ValidateUniformLocation(loc))
         return false;
 
-    if (!loc->ValidateSizeAndType(setterElemSize, setterType, funcName))
+    if (!loc->ValidateSizeAndType(setterElemSize, setterType))
         return false;
 
     return true;
@@ -281,19 +239,18 @@ WebGLContext::ValidateUniformArraySetter(WebGLUniformLocation* loc,
                                          uint8_t setterElemSize,
                                          GLenum setterType,
                                          uint32_t setterArraySize,
-                                         const char* funcName,
                                          uint32_t* const out_numElementsToUpload)
 {
     if (IsContextLost())
         return false;
 
-    if (!ValidateUniformLocation(loc, funcName))
+    if (!ValidateUniformLocation(loc))
         return false;
 
-    if (!loc->ValidateSizeAndType(setterElemSize, setterType, funcName))
+    if (!loc->ValidateSizeAndType(setterElemSize, setterType))
         return false;
 
-    if (!loc->ValidateArrayLength(setterElemSize, setterArraySize, funcName))
+    if (!loc->ValidateArrayLength(setterElemSize, setterArraySize))
         return false;
 
     const auto& elemCount = loc->mInfo->mActiveInfo->mElemCount;
@@ -312,7 +269,6 @@ WebGLContext::ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
                                                GLenum setterType,
                                                uint32_t setterArraySize,
                                                bool setterTranspose,
-                                               const char* funcName,
                                                uint32_t* const out_numElementsToUpload)
 {
     const uint8_t setterElemSize = setterCols * setterRows;
@@ -320,17 +276,17 @@ WebGLContext::ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
     if (IsContextLost())
         return false;
 
-    if (!ValidateUniformLocation(loc, funcName))
+    if (!ValidateUniformLocation(loc))
         return false;
 
-    if (!loc->ValidateSizeAndType(setterElemSize, setterType, funcName))
+    if (!loc->ValidateSizeAndType(setterElemSize, setterType))
         return false;
 
-    if (!loc->ValidateArrayLength(setterElemSize, setterArraySize, funcName))
+    if (!loc->ValidateArrayLength(setterElemSize, setterArraySize))
         return false;
 
     if (setterTranspose && !IsWebGL2()) {
-        ErrorInvalidValue("%s: `transpose` must be false.", funcName);
+        ErrorInvalidValue("`transpose` must be false.");
         return false;
     }
 
@@ -341,28 +297,6 @@ WebGLContext::ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
     *out_numElementsToUpload = std::min(uniformElemCount,
                                         setterArraySize / setterElemSize);
     return true;
-}
-
-bool
-WebGLContext::ValidateAttribIndex(GLuint index, const char* info)
-{
-    bool valid = (index < MaxVertexAttribs());
-
-    if (!valid) {
-        if (index == GLuint(-1)) {
-            ErrorInvalidValue("%s: -1 is not a valid `index`. This value"
-                              " probably comes from a getAttribLocation()"
-                              " call, where this return value -1 means"
-                              " that the passed name didn't correspond to"
-                              " an active attribute in the specified"
-                              " program.", info);
-        } else {
-            ErrorInvalidValue("%s: `index` must be less than"
-                              " MAX_VERTEX_ATTRIBS.", info);
-        }
-    }
-
-    return valid;
 }
 
 bool
@@ -755,8 +689,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 }
 
 bool
-WebGLContext::ValidateFramebufferTarget(GLenum target,
-                                        const char* const info)
+WebGLContext::ValidateFramebufferTarget(GLenum target)
 {
     bool isValid = true;
     switch (target) {
@@ -777,7 +710,7 @@ WebGLContext::ValidateFramebufferTarget(GLenum target,
         return true;
     }
 
-    ErrorInvalidEnumArg(info, "target", target);
+    ErrorInvalidEnumArg("target", target);
     return false;
 }
 

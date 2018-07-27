@@ -262,7 +262,7 @@ WebGLContext::GetExtension(JSContext* cx,
                            ErrorResult& rv)
 {
     retval.set(nullptr);
-
+    const FuncScope funcScope(*this, "getExtension");
     if (IsContextLost())
         return;
 
@@ -430,6 +430,7 @@ WebGLContext::GetSupportedExtensions(dom::Nullable< nsTArray<nsString> >& retval
                                      dom::CallerType callerType)
 {
     retval.SetNull();
+    const FuncScope funcScope(*this, "getSupportedExtensions");
     if (IsContextLost())
         return;
 

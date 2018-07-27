@@ -65,10 +65,8 @@ TargetForDriver(const gl::GLContext* gl, GLenum target)
 void
 WebGLQuery::BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot)
 {
-    const char funcName[] = "beginQuery";
-
     if (mTarget && target != mTarget) {
-        mContext->ErrorInvalidOperation("%s: Queries cannot change targets.", funcName);
+        mContext->ErrorInvalidOperation("Queries cannot change targets.");
         return;
     }
 
@@ -109,25 +107,23 @@ WebGLQuery::EndQuery()
 void
 WebGLQuery::GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const
 {
-    const char funcName[] = "getQueryParameter";
-
     switch (pname) {
     case LOCAL_GL_QUERY_RESULT_AVAILABLE:
     case LOCAL_GL_QUERY_RESULT:
         break;
 
     default:
-        mContext->ErrorInvalidEnumArg(funcName, "pname", pname);
+        mContext->ErrorInvalidEnumInfo("pname", pname);
         return;
     }
 
     if (!mTarget) {
-        mContext->ErrorInvalidOperation("%s: Query has never been active.", funcName);
+        mContext->ErrorInvalidOperation("Query has never been active.");
         return;
     }
 
     if (mActiveSlot)
-        return mContext->ErrorInvalidOperation("%s: Query is still active.", funcName);
+        return mContext->ErrorInvalidOperation("Query is still active.");
 
     // End of validation
     ////
@@ -208,15 +204,15 @@ WebGLQuery::DeleteQuery()
 }
 
 void
-WebGLQuery::QueryCounter(const char* funcName, GLenum target)
+WebGLQuery::QueryCounter(GLenum target)
 {
     if (target != LOCAL_GL_TIMESTAMP_EXT) {
-        mContext->ErrorInvalidEnum("%s: `target` must be TIMESTAMP_EXT.", funcName);
+        mContext->ErrorInvalidEnum("`target` must be TIMESTAMP_EXT.");
         return;
     }
 
     if (mTarget && target != mTarget) {
-        mContext->ErrorInvalidOperation("%s: Queries cannot change targets.", funcName);
+        mContext->ErrorInvalidOperation("Queries cannot change targets.");
         return;
     }
 
