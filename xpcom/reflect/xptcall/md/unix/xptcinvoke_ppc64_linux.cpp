@@ -42,8 +42,8 @@ invoke_copy_to_stack(uint64_t* gpregs,
     uint64_t tempu64;
 
     for(uint32_t i = 0; i < paramCount; i++, s++) {
-        if(s->IsPtrData())
-            tempu64 = (uint64_t) s->ptr;
+        if(s->IsIndirect())
+            tempu64 = (uint64_t) &s->val;
         else {
             switch(s->type) {
             case nsXPTType::T_FLOAT:                                  break;
@@ -63,13 +63,13 @@ invoke_copy_to_stack(uint64_t* gpregs,
             }
         }
 
-        if (!s->IsPtrData() && s->type == nsXPTType::T_DOUBLE) {
+        if (!s->IsIndirect() && s->type == nsXPTType::T_DOUBLE) {
             if (i < FPR_COUNT)
                 fpregs[i]    = s->val.d;
             else
                 *(double *)d = s->val.d;
         }
-        else if (!s->IsPtrData() && s->type == nsXPTType::T_FLOAT) {
+        else if (!s->IsIndirect() && s->type == nsXPTType::T_FLOAT) {
             if (i < FPR_COUNT) {
                 fpregs[i]   = s->val.f; // if passed in registers, floats are promoted to doubles
             } else {

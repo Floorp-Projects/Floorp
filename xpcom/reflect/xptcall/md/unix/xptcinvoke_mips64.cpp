@@ -25,11 +25,11 @@ invoke_copy_to_stack(uint64_t* d, uint32_t paramCount,
 
     for (uint32_t i = 0; i < paramCount; i++, s++)
     {
-        if (s->IsPtrData()) {
+        if (s->IsIndirect()) {
             if (i < N_ARG_REGS)
-                regs[i] = (uint64_t)s->ptr;
+                regs[i] = (uint64_t) &s->val;
             else
-                *d++ = (uint64_t)s->ptr;
+                *d++ = (uint64_t) &s->val;
             continue;
         }
         switch (s->type) {
