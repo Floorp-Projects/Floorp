@@ -228,32 +228,36 @@ public:
                                std::forward<ValueInput>(aValue));
   }
 
-  // |all()| returns a Range containing |count()| elements. E.g.:
+  // |iter()| returns an Iterator:
   //
-  //   using HM = HashMap<int,char>;
-  //   HM h;
-  //   for (HM::Range r = h.all(); !r.empty(); r.popFront()) {
-  //     char c = r.front().value();
+  //   HashMap<int, char> h;
+  //   for (auto iter = h.iter(); !iter.done(); iter.next()) {
+  //     char c = iter.get().value();
   //   }
   //
-  // Also see the definition of Range in HashTable above (with T = Entry).
-  using Range = typename Impl::Range;
-  Range all() const { return mImpl.all(); }
+  // Also see the definition of Iterator in HashTable above (with T = Entry).
+  using Iterator = typename Impl::Iterator;
+  Iterator iter() const { return mImpl.iter(); }
 
-  // Typedef for the enumeration class. An Enum may be used to examine and
-  // remove table entries:
+  // |modIter()| returns a ModIterator:
   //
-  //   using HM = HashMap<int,char>;
-  //   HM s;
-  //   for (HM::Enum e(s); !e.empty(); e.popFront()) {
-  //     if (e.front().value() == 'l') {
-  //       e.removeFront();
+  //   HashMap<int, char> h;
+  //   for (auto iter = h.modIter(); !iter.done(); iter.next()) {
+  //     if (iter.get().value() == 'l') {
+  //       iter.remove();
   //     }
   //   }
   //
-  // Table resize may occur in Enum's destructor. Also see the definition of
-  // Enum in HashTable above (with T = Entry).
+  // Table resize may occur in ModIterator's destructor. Also see the
+  // definition of ModIterator in HashTable above (with T = Entry).
+  using ModIterator = typename Impl::ModIterator;
+  ModIterator modIter() { return mImpl.modIter(); }
+
+  // These are similar to Iterator/ModIterator/iter(), but use less common
+  // terminology.
+  using Range = typename Impl::Range;
   using Enum = typename Impl::Enum;
+  Range all() const { return mImpl.all(); }
 
   // Remove all entries. This does not shrink the table. For that consider
   // using the finish() method.
@@ -517,32 +521,36 @@ public:
     return mImpl.relookupOrAdd(aPtr, aLookup, std::forward<U>(aU));
   }
 
-  // |all()| returns a Range containing |count()| elements:
+  // |iter()| returns an Iterator:
   //
-  //   using HS = HashSet<int>;
-  //   HS h;
-  //   for (HS::Range r = h.all(); !r.empty(); r.popFront()) {
-  //     int i = r.front();
+  //   HashSet<int> h;
+  //   for (auto iter = h.iter(); !iter.done(); iter.next()) {
+  //     int i = iter.get();
   //   }
   //
-  // Also see the definition of Range in HashTable above.
-  using Range = typename Impl::Range;
-  Range all() const { return mImpl.all(); }
+  // Also see the definition of Iterator in HashTable above.
+  typedef typename Impl::Iterator Iterator;
+  Iterator iter() const { return mImpl.iter(); }
 
-  // Typedef for the enumeration class. An Enum may be used to examine and
-  // remove table entries:
+  // |modIter()| returns a ModIterator:
   //
-  //   using HS = HashSet<int>;
-  //   HS s;
-  //   for (HS::Enum e(s); !e.empty(); e.popFront()) {
-  //     if (e.front() == 42) {
-  //       e.removeFront();
+  //   HashSet<int> h;
+  //   for (auto iter = h.modIter(); !iter.done(); iter.next()) {
+  //     if (iter.get() == 42) {
+  //       iter.remove();
   //     }
   //   }
   //
-  // Table resize may occur in Enum's destructor. Also see the definition of
-  // Enum in HashTable above.
+  // Table resize may occur in ModIterator's destructor. Also see the
+  // definition of ModIterator in HashTable above.
+  typedef typename Impl::ModIterator ModIterator;
+  ModIterator modIter() { return mImpl.modIter(); }
+
+  // These are similar to Iterator/ModIterator/iter(), but use different
+  // terminology.
+  using Range = typename Impl::Range;
   using Enum = typename Impl::Enum;
+  Range all() const { return mImpl.all(); }
 
   // Remove all entries. This does not shrink the table. For that consider
   // using the finish() method.
@@ -1195,10 +1203,167 @@ public:
     }
   };
 
-  // A collection of hash table entries. The collection is enumerated by
-  // calling |front()| followed by |popFront()| as long as |!empty()|. As
-  // with Ptr/AddPtr, Range objects must not be used after any mutating hash
-  // table operation unless the |generation()| is tested.
+  // A hash table iterator that (mostly) doesn't allow table modifications.
+  // As with Ptr/AddPtr, Iterator objects must not be used after any mutating
+  // hash table operation unless the |generation()| is tested.
+  class Iterator
+  {
+  protected:
+    friend class HashTable;
+
+    explicit Iterator(const HashTable& aTable)
+      : mCur(aTable.mTable)
+      , mEnd(aTable.mTable + aTable.capacity())
+#ifdef DEBUG
+      , mTable(aTable)
+      , mMutationCount(aTable.mMutationCount)
+      , mGeneration(aTable.generation())
+      , mValidEntry(true)
+#endif
+    {
+      while (mCur < mEnd && !mCur->isLive()) {
+        ++mCur;
+      }
+    }
+
+    Entry* mCur;
+    Entry* mEnd;
+#ifdef DEBUG
+    const HashTable& mTable;
+    uint64_t mMutationCount;
+    Generation mGeneration;
+    bool mValidEntry;
+#endif
+
+  public:
+    bool done() const
+    {
+#ifdef DEBUG
+      MOZ_ASSERT(mGeneration == mTable.generation());
+      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
+#endif
+      return mCur == mEnd;
+    }
+
+    T& get() const
+    {
+      MOZ_ASSERT(!done());
+#ifdef DEBUG
+      MOZ_ASSERT(mValidEntry);
+      MOZ_ASSERT(mGeneration == mTable.generation());
+      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
+#endif
+      return mCur->get();
+    }
+
+    void next()
+    {
+      MOZ_ASSERT(!done());
+#ifdef DEBUG
+      MOZ_ASSERT(mGeneration == mTable.generation());
+      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
+#endif
+      while (++mCur < mEnd && !mCur->isLive()) {
+        continue;
+      }
+#ifdef DEBUG
+      mValidEntry = true;
+#endif
+    }
+  };
+
+  // A hash table iterator that permits modification, removal and rekeying.
+  // Since rehashing when elements were removed during enumeration would be
+  // bad, it is postponed until the ModIterator is destructed. Since the
+  // ModIterator's destructor touches the hash table, the user must ensure
+  // that the hash table is still alive when the destructor runs.
+  class ModIterator : public Iterator
+  {
+    friend class HashTable;
+
+    HashTable& mTable;
+    bool mRekeyed;
+    bool mRemoved;
+
+    // ModIterator is movable but not copyable.
+    ModIterator(const ModIterator&) = delete;
+    void operator=(const ModIterator&) = delete;
+
+  protected:
+    explicit ModIterator(HashTable& aTable)
+      : Iterator(aTable)
+      , mTable(aTable)
+      , mRekeyed(false)
+      , mRemoved(false)
+    {
+    }
+
+  public:
+    MOZ_IMPLICIT ModIterator(ModIterator&& aOther)
+      : Iterator(aOther)
+      , mTable(aOther.mTable)
+      , mRekeyed(aOther.mRekeyed)
+      , mRemoved(aOther.mRemoved)
+    {
+      aOther.mRekeyed = false;
+      aOther.mRemoved = false;
+    }
+
+    // Removes the current element from the table, leaving |get()|
+    // invalid until the next call to |next()|.
+    void remove()
+    {
+      mTable.remove(*this->mCur);
+      mRemoved = true;
+#ifdef DEBUG
+      this->mValidEntry = false;
+      this->mMutationCount = mTable.mMutationCount;
+#endif
+    }
+
+    NonConstT& getMutable()
+    {
+      MOZ_ASSERT(!this->done());
+#ifdef DEBUG
+      MOZ_ASSERT(this->mValidEntry);
+      MOZ_ASSERT(this->mGeneration == this->Iterator::mTable.generation());
+      MOZ_ASSERT(this->mMutationCount == this->Iterator::mTable.mMutationCount);
+#endif
+      return this->mCur->getMutable();
+    }
+
+    // Removes the current element and re-inserts it into the table with
+    // a new key at the new Lookup position.  |get()| is invalid after
+    // this operation until the next call to |next()|.
+    void rekey(const Lookup& l, const Key& k)
+    {
+      MOZ_ASSERT(&k != &HashPolicy::getKey(this->mCur->get()));
+      Ptr p(*this->mCur, mTable);
+      mTable.rekeyWithoutRehash(p, l, k);
+      mRekeyed = true;
+#ifdef DEBUG
+      this->mValidEntry = false;
+      this->mMutationCount = mTable.mMutationCount;
+#endif
+    }
+
+    void rekey(const Key& k) { rekey(k, k); }
+
+    // Potentially rehashes the table.
+    ~ModIterator()
+    {
+      if (mRekeyed) {
+        mTable.mGen++;
+        mTable.checkOverRemoved();
+      }
+
+      if (mRemoved) {
+        mTable.compactIfUnderloaded();
+      }
+    }
+  };
+
+  // Range is similar to Iterator, but uses different terminology.
   class Range
   {
   protected:
@@ -1265,11 +1430,7 @@ public:
     }
   };
 
-  // A Range whose lifetime delimits a mutating enumeration of a hash table.
-  // Since rehashing when elements were removed during enumeration would be
-  // bad, it is postponed until the Enum is destructed.  Since the Enum's
-  // destructor touches the hash table, the user must ensure that the hash
-  // table is still alive when the destructor runs.
+  // Enum is similar to ModIterator, but uses different terminology.
   class Enum : public Range
   {
     friend class HashTable;
@@ -1302,15 +1463,6 @@ public:
       aOther.mRemoved = false;
     }
 
-    // Removes the |front()| element from the table, leaving |front()|
-    // invalid until the next call to |popFront()|. For example:
-    //
-    //   HashSet<int> s;
-    //   for (HashSet<int>::Enum e(s); !e.empty(); e.popFront()) {
-    //     if (e.front() == 42) {
-    //       e.removeFront();
-    //     }
-    //   }
     void removeFront()
     {
       mTable.remove(*this->mCur);
@@ -1332,9 +1484,6 @@ public:
       return this->mCur->getMutable();
     }
 
-    // Removes the |front()| element and re-inserts it into the table with
-    // a new key at the new Lookup position.  |front()| is invalid after
-    // this operation until the next call to |popFront()|.
     void rekeyFront(const Lookup& aLookup, const Key& aKey)
     {
       MOZ_ASSERT(&aKey != &HashPolicy::getKey(this->mCur->get()));
@@ -1349,7 +1498,6 @@ public:
 
     void rekeyFront(const Key& aKey) { rekeyFront(aKey, aKey); }
 
-    // Potentially rehashes the table.
     ~Enum()
     {
       if (mRekeyed) {
@@ -1952,6 +2100,18 @@ public:
 #ifdef DEBUG
     mMutationCount++;
 #endif
+  }
+
+  Iterator iter() const
+  {
+    MOZ_ASSERT(mTable);
+    return Iterator(*this);
+  }
+
+  ModIterator modIter()
+  {
+    MOZ_ASSERT(mTable);
+    return ModIterator(*this);
   }
 
   Range all() const
