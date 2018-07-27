@@ -447,7 +447,6 @@ nsThreadManager::CreateCurrentThread(SynchronizedEventQueue* aQueue,
     return nullptr;
   }
 
-  // OK, that's fine.  We'll dynamically create one :-)
   RefPtr<nsThread> thread = new nsThread(WrapNotNull(aQueue), aMainThread, 0);
   if (!thread || NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
@@ -470,9 +469,11 @@ nsThreadManager::GetCurrentThread()
   }
 
   // OK, that's fine.  We'll dynamically create one :-)
-  RefPtr<ThreadEventQueue<EventQueue>> queue =
-    new ThreadEventQueue<EventQueue>(MakeUnique<EventQueue>());
-  RefPtr<nsThread> thread = new nsThread(WrapNotNull(queue), nsThread::NOT_MAIN_THREAD, 0);
+  //
+  // We assume that if we're implicitly creating a thread here that it doesn't
+  // want an event queue. Any thread which wants an event queue should
+  // explicitly create its nsThread wrapper.
+  RefPtr<nsThread> thread = new nsThread();
   if (!thread || NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
   }
@@ -487,7 +488,7 @@ nsThreadManager::IsNSThread() const
     return false;
   }
   if (auto* thread = (nsThread*)PR_GetThreadPrivate(mCurThreadIndex)) {
-    return thread->mShutdownRequired;
+    return thread->EventQueue();
   }
   return false;
 }
