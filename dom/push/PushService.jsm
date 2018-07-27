@@ -296,7 +296,7 @@ var PushService = {
                                   CHANGING_SERVICE_EVENT)
           );
 
-        } else if (aData == "dom.push.connection.enabled") {
+        } else if (aData == "dom.push.connection.enabled" || aData == "dom.push.alwaysConnect") {
           this._stateChangeProcessEnqueue(_ =>
             this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
           );
@@ -501,6 +501,8 @@ var PushService = {
 
     // Used to monitor if the user wishes to disable Push.
     prefs.observe("connection.enabled", this);
+    // Used to load-test the server-side infrastructure for broadcast.
+    prefs.observe("alwaysConnect", this);
 
     // Prunes expired registrations and notifies dormant service workers.
     Services.obs.addObserver(this, "idle-daily");
@@ -584,6 +586,7 @@ var PushService = {
     }
 
     prefs.ignore("connection.enabled", this);
+    prefs.ignore("alwaysConnect", this);
 
     Services.obs.removeObserver(this, "network:offline-status-changed");
     Services.obs.removeObserver(this, "clear-origin-attributes-data");

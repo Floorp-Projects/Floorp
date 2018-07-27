@@ -54,9 +54,15 @@ class TestUnhandledPromptBehavior(MarionetteTestCase):
 
         self.assertEqual(self.alert_present, not expected_close)
 
-        prompt_result = self.marionette.execute_script(
-            "return window.return_value", new_sandbox=False)
-        self.assertEqual(prompt_result, expected_result)
+        # Close an expected left-over user prompt
+        if not expected_close:
+            alert = self.marionette.switch_to_alert()
+            alert.dismiss()
+
+        else:
+            prompt_result = self.marionette.execute_script(
+                "return window.return_value", new_sandbox=False)
+            self.assertEqual(prompt_result, expected_result)
 
     @parameterized("alert", "alert", None)
     @parameterized("confirm", "confirm", True)

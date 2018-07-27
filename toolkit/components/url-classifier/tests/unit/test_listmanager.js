@@ -276,7 +276,7 @@ function run_test() {
       // This falls to the case where test_partialUpdateV4 is running.
       // We are supposed to have verified the update request contains
       // the state we set in the previous request.
-      run_next_test();
+      waitForUpdateSuccess(run_next_test);
       return;
     }
 
@@ -296,6 +296,13 @@ function run_test() {
 
   gHttpServV4.start(5555);
 
+  registerCleanupFunction(function() {
+    return (async function() {
+      await Promise.all([gHttpServ.stop(),
+                         gHttpServV4.stop()]);
+    })();
+  });
+
   run_next_test();
 }
 
@@ -314,16 +321,11 @@ function disableAllUpdates() {
   gListManager.disableUpdate(TEST_TABLE_DATA_V4.tableName);
 }
 
-// Since there's no public interface on listmanager to know the update success,
-// we could only rely on the refresh of "nextupdatetime".
 function waitForUpdateSuccess(callback) {
-  let nextupdatetime = parseInt(Services.prefs.getCharPref(PREF_NEXTUPDATETIME));
-  info("nextupdatetime: " + nextupdatetime);
-  if (nextupdatetime !== 1) {
+  Services.obs.addObserver(function listener() {
+    Services.obs.removeObserver(listener, "safebrowsing-update-finished");
     callback();
-    return;
-  }
-  do_timeout(1000, waitForUpdateSuccess.bind(null, callback));
+  }, "safebrowsing-update-finished");
 }
 
 // Construct an update from a file.

@@ -31,12 +31,12 @@ import android.util.Log;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -396,7 +396,8 @@ public class GeckoMediaControlAgent {
                 .setVisibility(visibility);
 
         if (!AppConstants.Versions.preO) {
-            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            notificationBuilder.setChannelId(NotificationHelper.getInstance(mContext)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         currentNotification = notificationBuilder.build();

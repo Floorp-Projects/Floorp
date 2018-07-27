@@ -32,13 +32,11 @@ async function ifWebGLSupported() {
   const tooltip = marker._markerErrorsTooltip;
   ok(tooltip, "A tooltip was created successfully.");
 
-  const content = tooltip.content;
-  ok(tooltip.content,
-    "Some tooltip's content was set.");
-  ok(tooltip.content.className.includes("devtools-tooltip-simple-text-container"),
-    "The tooltip's content container was created correctly.");
+  const containerClass = ".devtools-shader-tooltip-container";
+  const container = tooltip.panel.querySelector(containerClass);
+  ok(container, "The tooltip's content container was created correctly.");
 
-  const messages = content.childNodes;
+  const messages = container.childNodes;
   is(messages.length, 3,
     "There are three messages displayed in the tooltip.");
   ok(messages[0].className.includes("devtools-tooltip-simple-text"),

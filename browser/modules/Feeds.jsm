@@ -26,21 +26,6 @@ var Feeds = {
         break;
       }
 
-      case "WCCR:registerContentHandler": {
-        let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
-                          getService(Ci.nsIWebContentHandlerRegistrar);
-        registrar.registerContentHandler(data.contentType, data.uri, data.title,
-                                         aMessage.target);
-        break;
-      }
-
-      case "WCCR:setAutoHandler": {
-        let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
-                          getService(Ci.nsIWebContentConverterService);
-        registrar.setAutoHandler(data.contentType, data.handler);
-        break;
-      }
-
       case "FeedConverter:addLiveBookmark": {
         let topWindow = BrowserWindowTracker.getTopWindow();
         topWindow.PlacesCommandHook.addLiveBookmark(data.spec, data.title)

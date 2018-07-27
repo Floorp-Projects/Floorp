@@ -398,11 +398,8 @@ CrossProcessCompositorBridgeParent::DidCompositeLocked(
     if (transactionId.IsValid()) {
       Unused << SendDidComposite(aId, transactionId, aCompositeStart, aCompositeEnd);
     }
-  } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWrBridge) {
-    TransactionId transactionId = wrbridge->FlushPendingTransactionIds();
-    if (transactionId.IsValid()) {
-      Unused << SendDidComposite(aId, transactionId, aCompositeStart, aCompositeEnd);
-    }
+  } else if (sIndirectLayerTrees[aId].mWrBridge) {
+    MOZ_ASSERT(false); // this should never get called for a WR compositor
   }
 }
 
