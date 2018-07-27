@@ -110,7 +110,8 @@ class TypedObjectPrediction {
                              jsid id,
                              size_t* fieldOffset,
                              TypedObjectPrediction* out,
-                             size_t* index) const;
+                             size_t* index,
+                             bool* isMutable) const;
 
   public:
 
@@ -192,7 +193,8 @@ class TypedObjectPrediction {
     bool hasFieldNamed(jsid id,
                        size_t* fieldOffset,
                        TypedObjectPrediction* fieldType,
-                       size_t* fieldIndex) const;
+                       size_t* fieldIndex,
+                       bool* fieldMutable) const;
 };
 
 } // namespace jit

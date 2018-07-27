@@ -357,7 +357,8 @@ class IonBuilder
                              PropertyName* name,
                              size_t* fieldOffset,
                              TypedObjectPrediction* fieldTypeReprs,
-                             size_t* fieldIndex);
+                             size_t* fieldIndex,
+                             bool* fieldMutable);
     MDefinition* loadTypedObjectType(MDefinition* value);
     AbortReasonOr<Ok> loadTypedObjectData(MDefinition* typedObj,
                                           MDefinition** owner,
