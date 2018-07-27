@@ -854,6 +854,12 @@ enum aome_enc_control_id {
   /*!\brief Codec control function to set the path to the film grain parameters
    */
   AV1E_SET_FILM_GRAIN_TABLE,
+
+  /*!\brief Sets the noise level */
+  AV1E_SET_DENOISE_NOISE_LEVEL,
+
+  /*!\brief Sets the denoisers block size */
+  AV1E_SET_DENOISE_BLOCK_SIZE,
 };
 
 /*!\brief aom 1-D scaling mode
@@ -1164,6 +1170,14 @@ AOM_CTRL_USE_TYPE(AV1E_SET_FILM_GRAIN_TABLE, const char *)
 
 AOM_CTRL_USE_TYPE(AV1E_SET_CDF_UPDATE_MODE, int)
 #define AOM_CTRL_AV1E_SET_CDF_UPDATE_MODE
+
+#ifdef CONFIG_DENOISE
+AOM_CTRL_USE_TYPE(AV1E_SET_DENOISE_NOISE_LEVEL, int);
+#define AOM_CTRL_AV1E_SET_DENOISE_NOISE_LEVEL
+
+AOM_CTRL_USE_TYPE(AV1E_SET_DENOISE_BLOCK_SIZE, unsigned int);
+#define AOM_CTRL_AV1E_SET_DENOISE_BLOCK_SIZE
+#endif
 
 /*!\endcond */
 /*! @} - end defgroup aom_encoder */

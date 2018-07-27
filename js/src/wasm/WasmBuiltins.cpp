@@ -678,7 +678,6 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
 #ifdef ENABLE_WASM_GC
       case SymbolicAddress::PostBarrier:
         *abiType = Args_General2;
-        static_assert(sizeof(PostBarrierArg) == sizeof(uint32_t), "passed arg is a u32");
         return FuncCast(Instance::postBarrier, *abiType);
 #endif
 #if defined(JS_CODEGEN_MIPS32)

@@ -19,8 +19,8 @@
 
 void av1_highbd_jnt_convolve_y_sse4_1(
     const uint16_t *src, int src_stride, uint16_t *dst0, int dst_stride0, int w,
-    int h, InterpFilterParams *filter_params_x,
-    InterpFilterParams *filter_params_y, const int subpel_x_q4,
+    int h, const InterpFilterParams *filter_params_x,
+    const InterpFilterParams *filter_params_y, const int subpel_x_q4,
     const int subpel_y_q4, ConvolveParams *conv_params, int bd) {
   CONV_BUF_TYPE *dst = conv_params->dst;
   int dst_stride = conv_params->dst_stride;
@@ -259,8 +259,8 @@ void av1_highbd_jnt_convolve_y_sse4_1(
 
 void av1_highbd_jnt_convolve_x_sse4_1(
     const uint16_t *src, int src_stride, uint16_t *dst0, int dst_stride0, int w,
-    int h, InterpFilterParams *filter_params_x,
-    InterpFilterParams *filter_params_y, const int subpel_x_q4,
+    int h, const InterpFilterParams *filter_params_x,
+    const InterpFilterParams *filter_params_y, const int subpel_x_q4,
     const int subpel_y_q4, ConvolveParams *conv_params, int bd) {
   CONV_BUF_TYPE *dst = conv_params->dst;
   int dst_stride = conv_params->dst_stride;

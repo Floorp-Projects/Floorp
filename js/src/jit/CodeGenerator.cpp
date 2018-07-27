@@ -7150,30 +7150,22 @@ CodeGenerator::visitWasmCallI64(LWasmCallI64* ins)
     emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
 }
 
-void
-CodeGenerator::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
+static void
+LoadPrimitiveValue(MacroAssembler& masm,
+                   MIRType type, const Address& addr, AnyRegister dst)
 {
-    MWasmLoadGlobalVar* mir = ins->mir();
-
-    MIRType type = mir->type();
-    MOZ_ASSERT(IsNumberType(type));
-
-    Register tls = ToRegister(ins->tlsPtr());
-    Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
-    if (mir->isIndirect()) {
-        Register tmp = ToRegister(ins->addrTemp());
-        masm.loadPtr(addr, tmp);
-        addr = Address(tmp, 0);
-    }
     switch (type) {
       case MIRType::Int32:
-        masm.load32(addr, ToRegister(ins->output()));
+        masm.load32(addr, dst.gpr());
         break;
       case MIRType::Float32:
-        masm.loadFloat32(addr, ToFloatRegister(ins->output()));
+        masm.loadFloat32(addr, dst.fpu());
         break;
       case MIRType::Double:
-        masm.loadDouble(addr, ToFloatRegister(ins->output()));
+        masm.loadDouble(addr, dst.fpu());
+        break;
+      case MIRType::Pointer:
+        masm.loadPtr(addr, dst.gpr());
         break;
       // Aligned access: code is aligned on PageSize + there is padding
       // before the global data section.
@@ -7185,7 +7177,59 @@ CodeGenerator::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
       case MIRType::Bool32x4:
       case MIRType::Float32x4:
       default:
-        MOZ_CRASH("unexpected type in visitWasmLoadGlobalVar");
+        MOZ_CRASH("unexpected type in LoadPrimitiveValue");
+    }
+}
+
+void
+CodeGenerator::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
+{
+    MWasmLoadGlobalVar* mir = ins->mir();
+
+    MIRType type = mir->type();
+    Register tls = ToRegister(ins->tlsPtr());
+    Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
+    LoadPrimitiveValue(masm, type, addr, ToAnyRegister(ins->output()));
+}
+
+void
+CodeGenerator::visitWasmLoadGlobalCell(LWasmLoadGlobalCell* ins)
+{
+    MWasmLoadGlobalCell* mir = ins->mir();
+
+    MIRType type = mir->type();
+    MOZ_ASSERT(type != MIRType::Pointer);
+
+    Register cell = ToRegister(ins->cellPtr());
+    Address addr(cell, 0);
+    LoadPrimitiveValue(masm, type, addr, ToAnyRegister(ins->output()));
+}
+
+static void
+StorePrimitiveValue(MacroAssembler& masm,
+                    MIRType type, const Address& addr, AnyRegister src)
+{
+    switch (type) {
+      case MIRType::Int32:
+        masm.store32(src.gpr(), addr);
+        break;
+      case MIRType::Float32:
+        masm.storeFloat32(src.fpu(), addr);
+        break;
+      case MIRType::Double:
+        masm.storeDouble(src.fpu(), addr);
+        break;
+      // Aligned access: code is aligned on PageSize + there is padding
+      // before the global data section.
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
+      case MIRType::Int32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+      case MIRType::Float32x4:
+      default:
+        MOZ_CRASH("unexpected type in StorePrimitiveValue");
     }
 }
 
@@ -7195,54 +7239,54 @@ CodeGenerator::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
     MWasmStoreGlobalVar* mir = ins->mir();
 
     MIRType type = mir->value()->type();
-    MOZ_ASSERT(IsNumberType(type));
-
     Register tls = ToRegister(ins->tlsPtr());
     Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
-    if (mir->isIndirect()) {
-        Register tmp = ToRegister(ins->addrTemp());
-        masm.loadPtr(addr, tmp);
-        addr = Address(tmp, 0);
-    }
-    switch (type) {
-      case MIRType::Int32:
-        masm.store32(ToRegister(ins->value()), addr);
-        break;
-      case MIRType::Float32:
-        masm.storeFloat32(ToFloatRegister(ins->value()), addr);
-        break;
-      case MIRType::Double:
-        masm.storeDouble(ToFloatRegister(ins->value()), addr);
-        break;
-      // Aligned access: code is aligned on PageSize + there is padding
-      // before the global data section.
-      case MIRType::Int8x16:
-      case MIRType::Int16x8:
-      case MIRType::Int32x4:
-      case MIRType::Bool8x16:
-      case MIRType::Bool16x8:
-      case MIRType::Bool32x4:
-      case MIRType::Float32x4:
-      default:
-        MOZ_CRASH("unexpected type in visitWasmStoreGlobalVar");
-    }
+
+    StorePrimitiveValue(masm, type, addr, ToAnyRegister(ins->value()));
+}
+
+void
+CodeGenerator::visitWasmStoreGlobalCell(LWasmStoreGlobalCell* ins)
+{
+    MWasmStoreGlobalCell* mir = ins->mir();
+
+    MIRType type = mir->value()->type();
+    Register cell = ToRegister(ins->cellPtr());
+    Address addr(cell, 0);
+
+    StorePrimitiveValue(masm, type, addr, ToAnyRegister(ins->value()));
 }
 
 void
 CodeGenerator::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
 {
     MWasmLoadGlobalVar* mir = ins->mir();
-    MOZ_ASSERT(mir->type() == MIRType::Int64);
+
+    MIRType type = mir->type();
+    MOZ_ASSERT(type == MIRType::Int64);
 
     Register tls = ToRegister(ins->tlsPtr());
     Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
 
-    Register64 output = ToOutRegister64(ins);
-    if (mir->isIndirect()) {
-        Register tmp = ToRegister(ins->addrTemp());
-        masm.loadPtr(addr, tmp);
-        addr = Address(tmp, 0);
+    if (type == MIRType::Int64) {
+        Register64 output = ToOutRegister64(ins);
+        masm.load64(addr, output);
+    } else {
+        masm.loadPtr(addr, ToRegister(ins->output()));
     }
+}
+
+void
+CodeGenerator::visitWasmLoadGlobalCellI64(LWasmLoadGlobalCellI64* ins)
+{
+    DebugOnly<MWasmLoadGlobalCell*> mir = ins->mir();
+
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+
+    Register cell = ToRegister(ins->cellPtr());
+    Address addr(cell, 0);
+
+    Register64 output = ToOutRegister64(ins);
     masm.load64(addr, output);
 }
 
@@ -7256,11 +7300,21 @@ CodeGenerator::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
     Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
 
     Register64 value = ToRegister64(ins->value());
-    if (mir->isIndirect()) {
-        Register tmp = ToRegister(ins->addrTemp());
-        masm.loadPtr(addr, tmp);
-        addr = Address(tmp, 0);
-    }
+    masm.store64(value, addr);
+}
+
+void
+CodeGenerator::visitWasmStoreGlobalCellI64(LWasmStoreGlobalCellI64* ins)
+{
+    MWasmStoreGlobalCell* mir = ins->mir();
+
+    DebugOnly<MIRType> type = mir->value()->type();
+    MOZ_ASSERT(type.value == MIRType::Int64);
+
+    Register cell = ToRegister(ins->cellPtr());
+    Address addr(cell, 0);
+
+    Register64 value = ToRegister64(ins->value());
     masm.store64(value, addr);
 }
 

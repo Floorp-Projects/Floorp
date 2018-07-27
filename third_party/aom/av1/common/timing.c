@@ -53,8 +53,8 @@ int64_t max_level_bitrate(BITSTREAM_PROFILE seq_profile, int seq_level_idx,
 
 void set_aom_dec_model_info(aom_dec_model_info_t *decoder_model) {
   decoder_model->encoder_decoder_buffer_delay_length = 16;
-  decoder_model->buffer_removal_delay_length = 10;
-  decoder_model->frame_presentation_delay_length = 10;
+  decoder_model->buffer_removal_time_length = 10;
+  decoder_model->frame_presentation_time_length = 10;
 }
 
 void set_dec_model_op_parameters(aom_dec_model_op_parameters_t *op_params) {

@@ -171,53 +171,6 @@ static INLINE void set_flip_cfg(TX_TYPE tx_type, TXFM_2D_FLIP_CFG *cfg) {
   get_flip_cfg(tx_type, &cfg->ud_flip, &cfg->lr_flip);
 }
 
-static INLINE TX_SIZE av1_rotate_tx_size(TX_SIZE tx_size) {
-  switch (tx_size) {
-    case TX_4X4: return TX_4X4;
-    case TX_8X8: return TX_8X8;
-    case TX_16X16: return TX_16X16;
-    case TX_32X32: return TX_32X32;
-    case TX_64X64: return TX_64X64;
-    case TX_32X64: return TX_64X32;
-    case TX_64X32: return TX_32X64;
-    case TX_4X8: return TX_8X4;
-    case TX_8X4: return TX_4X8;
-    case TX_8X16: return TX_16X8;
-    case TX_16X8: return TX_8X16;
-    case TX_16X32: return TX_32X16;
-    case TX_32X16: return TX_16X32;
-    case TX_4X16: return TX_16X4;
-    case TX_16X4: return TX_4X16;
-    case TX_8X32: return TX_32X8;
-    case TX_32X8: return TX_8X32;
-    case TX_16X64: return TX_64X16;
-    case TX_64X16: return TX_16X64;
-    default: assert(0); return TX_INVALID;
-  }
-}
-
-static INLINE TX_TYPE av1_rotate_tx_type(TX_TYPE tx_type) {
-  switch (tx_type) {
-    case DCT_DCT: return DCT_DCT;
-    case ADST_DCT: return DCT_ADST;
-    case DCT_ADST: return ADST_DCT;
-    case ADST_ADST: return ADST_ADST;
-    case FLIPADST_DCT: return DCT_FLIPADST;
-    case DCT_FLIPADST: return FLIPADST_DCT;
-    case FLIPADST_FLIPADST: return FLIPADST_FLIPADST;
-    case ADST_FLIPADST: return FLIPADST_ADST;
-    case FLIPADST_ADST: return ADST_FLIPADST;
-    case IDTX: return IDTX;
-    case V_DCT: return H_DCT;
-    case H_DCT: return V_DCT;
-    case V_ADST: return H_ADST;
-    case H_ADST: return V_ADST;
-    case V_FLIPADST: return H_FLIPADST;
-    case H_FLIPADST: return V_FLIPADST;
-    default: assert(0); return TX_TYPES;
-  }
-}
-
 // Utility function that returns the log of the ratio of the col and row
 // sizes.
 static INLINE int get_rect_tx_log_ratio(int col, int row) {

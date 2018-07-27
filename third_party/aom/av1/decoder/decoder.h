@@ -33,6 +33,20 @@
 extern "C" {
 #endif
 
+typedef void (*decode_block_visitor_fn_t)(const AV1_COMMON *const cm,
+                                          MACROBLOCKD *const xd,
+                                          aom_reader *const r, const int plane,
+                                          const int row, const int col,
+                                          const TX_SIZE tx_size);
+
+typedef void (*predict_inter_block_visitor_fn_t)(AV1_COMMON *const cm,
+                                                 MACROBLOCKD *const xd,
+                                                 int mi_row, int mi_col,
+                                                 BLOCK_SIZE bsize);
+
+typedef void (*cfl_store_inter_block_visitor_fn_t)(AV1_COMMON *const cm,
+                                                   MACROBLOCKD *const xd);
+
 typedef struct ThreadData {
   aom_reader *bit_reader;
   DECLARE_ALIGNED(32, MACROBLOCKD, xd);
@@ -41,12 +55,54 @@ typedef struct ThreadData {
   CB_BUFFER cb_buffer_base;
   uint8_t *mc_buf[2];
   int32_t mc_buf_size;
+
+  decode_block_visitor_fn_t read_coeffs_tx_intra_block_visit;
+  decode_block_visitor_fn_t predict_and_recon_intra_block_visit;
+  decode_block_visitor_fn_t read_coeffs_tx_inter_block_visit;
+  decode_block_visitor_fn_t inverse_tx_inter_block_visit;
+  predict_inter_block_visitor_fn_t predict_inter_block_visit;
+  cfl_store_inter_block_visitor_fn_t cfl_store_inter_block_visit;
 } ThreadData;
+
+typedef struct AV1DecRowMTJobInfo {
+  int tile_row;
+  int tile_col;
+  int mi_row;
+} AV1DecRowMTJobInfo;
+
+typedef struct AV1DecRowMTSyncData {
+#if CONFIG_MULTITHREAD
+  pthread_mutex_t *mutex_;
+  pthread_cond_t *cond_;
+#endif
+  int allocated_sb_rows;
+  int *cur_sb_col;
+  int sync_range;
+  int mi_rows;
+  int mi_cols;
+  int mi_rows_parse_done;
+  int mi_rows_decode_started;
+  int num_threads_working;
+} AV1DecRowMTSync;
+
+typedef struct AV1DecRowMTInfo {
+  int tile_rows_start;
+  int tile_rows_end;
+  int tile_cols_start;
+  int tile_cols_end;
+  int start_tile;
+  int end_tile;
+  int mi_rows_parse_done;
+  int mi_rows_decode_started;
+  int mi_rows_to_decode;
+  int row_mt_exit;
+} AV1DecRowMTInfo;
 
 typedef struct TileDataDec {
   TileInfo tile_info;
   aom_reader bit_reader;
   DECLARE_ALIGNED(16, FRAME_CONTEXT, tctx);
+  AV1DecRowMTSync dec_row_mt_sync;
 } TileDataDec;
 
 typedef struct TileBufferDec {
@@ -139,9 +195,8 @@ typedef struct AV1Decoder {
   int acct_enabled;
   Accounting accounting;
 #endif
-  size_t uncomp_hdr_size;  // Size of the uncompressed header
-  int tg_size;             // Number of tiles in the current tilegroup
-  int tg_start;            // First tile in the current tilegroup
+  int tg_size;   // Number of tiles in the current tilegroup
+  int tg_start;  // First tile in the current tilegroup
   int tg_size_bit_offset;
   int sequence_header_ready;
 #if CONFIG_INSPECTION
@@ -162,12 +217,27 @@ typedef struct AV1Decoder {
   int tile_count_minus_1;
   uint32_t coded_tile_data_size;
   unsigned int ext_tile_debug;  // for ext-tile software debug & testing
+  unsigned int row_mt;
   EXTERNAL_REFERENCES ext_refs;
   size_t tile_list_size;
   uint8_t *tile_list_output;
   size_t buffer_sz;
+
+  CB_BUFFER *cb_buffer_base;
+  int cb_buffer_alloc_size;
+
+  int allocated_row_mt_sync_rows;
+
+#if CONFIG_MULTITHREAD
+  pthread_mutex_t *row_mt_mutex_;
+  pthread_cond_t *row_mt_cond_;
+#endif
+
+  AV1DecRowMTInfo frame_row_mt_info;
 } AV1Decoder;
 
+// Returns 0 on success. Sets pbi->common.error.error_code to a nonzero error
+// code and returns a nonzero value on failure.
 int av1_receive_compressed_data(struct AV1Decoder *pbi, size_t size,
                                 const uint8_t **dest);
 
@@ -192,6 +262,10 @@ struct AV1Decoder *av1_decoder_create(BufferPool *const pool);
 void av1_decoder_remove(struct AV1Decoder *pbi);
 void av1_dealloc_dec_jobs(struct AV1DecTileMTData *tile_jobs_sync);
 
+void av1_dec_row_mt_dealloc(AV1DecRowMTSync *dec_row_mt_sync);
+
+void av1_dec_free_cb_buf(AV1Decoder *pbi);
+
 static INLINE void decrease_ref_count(int idx, RefCntBuffer *const frame_bufs,
                                       BufferPool *const pool) {
   if (idx >= 0) {
@@ -205,18 +279,6 @@ static INLINE void decrease_ref_count(int idx, RefCntBuffer *const frame_bufs,
       pool->release_fb_cb(pool->cb_priv, &frame_bufs[idx].raw_frame_buffer);
     }
   }
-}
-
-static INLINE int dec_is_ref_frame_buf(AV1Decoder *const pbi,
-                                       RefCntBuffer *frame_buf) {
-  AV1_COMMON *const cm = &pbi->common;
-  int i;
-  for (i = 0; i < INTER_REFS_PER_FRAME; ++i) {
-    RefBuffer *const ref_frame = &cm->frame_refs[i];
-    if (ref_frame->idx == INVALID_IDX) continue;
-    if (frame_buf == &cm->buffer_pool->frame_bufs[ref_frame->idx]) break;
-  }
-  return (i < INTER_REFS_PER_FRAME);
 }
 
 #define ACCT_STR __func__
@@ -237,6 +299,10 @@ typedef void (*palette_visitor_fn_t)(MACROBLOCKD *const xd, int plane,
 void av1_visit_palette(AV1Decoder *const pbi, MACROBLOCKD *const xd, int mi_row,
                        int mi_col, aom_reader *r, BLOCK_SIZE bsize,
                        palette_visitor_fn_t visit);
+
+typedef void (*block_visitor_fn_t)(AV1Decoder *const pbi, ThreadData *const td,
+                                   int mi_row, int mi_col, aom_reader *r,
+                                   PARTITION_TYPE partition, BLOCK_SIZE bsize);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -1308,7 +1308,7 @@ static int compare_ref_dst(AV1_COMMON *const cm, uint8_t *ref_buf,
   end <<= MI_SIZE_LOG2;
   uint8_t *ref0 = ref_buf;
   uint8_t *dst0 = dst_buf;
-  if (cm->use_highbitdepth) {
+  if (cm->seq_params.use_highbitdepth) {
     const uint16_t *ref16 = CONVERT_TO_SHORTPTR(ref_buf);
     const uint16_t *dst16 = CONVERT_TO_SHORTPTR(dst_buf);
     for (int j = 0; j < 4; ++j) {
@@ -1404,11 +1404,11 @@ void av1_filter_block_plane_ver(AV1_COMMON *const cm,
       uint64_t mask_8x8_1 = (mask_8x8 >> shift_next) & mask_cutoff;
       uint64_t mask_4x4_1 = (mask_4x4 >> shift_next) & mask_cutoff;
 
-      if (cm->use_highbitdepth)
+      if (cm->seq_params.use_highbitdepth)
         highbd_filter_selectively_vert_row2(
             ssx, CONVERT_TO_SHORTPTR(dst->buf), dst->stride, pl, mask_16x16_0,
             mask_8x8_0, mask_4x4_0, mask_16x16_1, mask_8x8_1, mask_4x4_1,
-            &cm->lf_info, lfl, lfl2, (int)cm->bit_depth);
+            &cm->lf_info, lfl, lfl2, (int)cm->seq_params.bit_depth);
       else
         filter_selectively_vert_row2(ssx, dst->buf, dst->stride, pl,
                                      mask_16x16_0, mask_8x8_0, mask_4x4_0,
@@ -1474,10 +1474,11 @@ void av1_filter_block_plane_hor(AV1_COMMON *const cm,
       mask_8x8 = (mask_8x8 >> shift) & mask_cutoff;
       mask_4x4 = (mask_4x4 >> shift) & mask_cutoff;
 
-      if (cm->use_highbitdepth)
-        highbd_filter_selectively_horiz(
-            CONVERT_TO_SHORTPTR(dst->buf), dst->stride, pl, ssx, mask_16x16,
-            mask_8x8, mask_4x4, &cm->lf_info, lfl, (int)cm->bit_depth);
+      if (cm->seq_params.use_highbitdepth)
+        highbd_filter_selectively_horiz(CONVERT_TO_SHORTPTR(dst->buf),
+                                        dst->stride, pl, ssx, mask_16x16,
+                                        mask_8x8, mask_4x4, &cm->lf_info, lfl,
+                                        (int)cm->seq_params.bit_depth);
       else
         filter_selectively_horiz(dst->buf, dst->stride, pl, ssx, mask_16x16,
                                  mask_8x8, mask_4x4, &cm->lf_info, lfl);
@@ -1652,6 +1653,8 @@ void av1_filter_block_plane_vert(const AV1_COMMON *const cm,
   const int dst_stride = plane_ptr->dst.stride;
   const int y_range = (MAX_MIB_SIZE >> scale_vert);
   const int x_range = (MAX_MIB_SIZE >> scale_horz);
+  const int use_highbitdepth = cm->seq_params.use_highbitdepth;
+  const aom_bit_depth_t bit_depth = cm->seq_params.bit_depth;
   for (int y = 0; y < y_range; y += row_step) {
     uint8_t *p = dst_ptr + y * MI_SIZE * dst_stride;
     for (int x = 0; x < x_range;) {
@@ -1677,40 +1680,40 @@ void av1_filter_block_plane_vert(const AV1_COMMON *const cm,
       switch (params.filter_length) {
         // apply 4-tap filtering
         case 4:
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_vertical_4(CONVERT_TO_SHORTPTR(p), dst_stride,
                                       params.mblim, params.lim, params.hev_thr,
-                                      cm->bit_depth);
+                                      bit_depth);
           else
             aom_lpf_vertical_4(p, dst_stride, params.mblim, params.lim,
                                params.hev_thr);
           break;
         case 6:  // apply 6-tap filter for chroma plane only
           assert(plane != 0);
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_vertical_6(CONVERT_TO_SHORTPTR(p), dst_stride,
                                       params.mblim, params.lim, params.hev_thr,
-                                      cm->bit_depth);
+                                      bit_depth);
           else
             aom_lpf_vertical_6(p, dst_stride, params.mblim, params.lim,
                                params.hev_thr);
           break;
         // apply 8-tap filtering
         case 8:
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_vertical_8(CONVERT_TO_SHORTPTR(p), dst_stride,
                                       params.mblim, params.lim, params.hev_thr,
-                                      cm->bit_depth);
+                                      bit_depth);
           else
             aom_lpf_vertical_8(p, dst_stride, params.mblim, params.lim,
                                params.hev_thr);
           break;
         // apply 14-tap filtering
         case 14:
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_vertical_14(CONVERT_TO_SHORTPTR(p), dst_stride,
                                        params.mblim, params.lim, params.hev_thr,
-                                       cm->bit_depth);
+                                       bit_depth);
           else
             aom_lpf_vertical_14(p, dst_stride, params.mblim, params.lim,
                                 params.hev_thr);
@@ -1737,6 +1740,8 @@ void av1_filter_block_plane_horz(const AV1_COMMON *const cm,
   const int dst_stride = plane_ptr->dst.stride;
   const int y_range = (MAX_MIB_SIZE >> scale_vert);
   const int x_range = (MAX_MIB_SIZE >> scale_horz);
+  const int use_highbitdepth = cm->seq_params.use_highbitdepth;
+  const aom_bit_depth_t bit_depth = cm->seq_params.bit_depth;
   for (int x = 0; x < x_range; x += col_step) {
     uint8_t *p = dst_ptr + x * MI_SIZE;
     for (int y = 0; y < y_range;) {
@@ -1762,10 +1767,10 @@ void av1_filter_block_plane_horz(const AV1_COMMON *const cm,
       switch (params.filter_length) {
         // apply 4-tap filtering
         case 4:
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_horizontal_4(CONVERT_TO_SHORTPTR(p), dst_stride,
                                         params.mblim, params.lim,
-                                        params.hev_thr, cm->bit_depth);
+                                        params.hev_thr, bit_depth);
           else
             aom_lpf_horizontal_4(p, dst_stride, params.mblim, params.lim,
                                  params.hev_thr);
@@ -1773,30 +1778,30 @@ void av1_filter_block_plane_horz(const AV1_COMMON *const cm,
         // apply 6-tap filtering
         case 6:
           assert(plane != 0);
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_horizontal_6(CONVERT_TO_SHORTPTR(p), dst_stride,
                                         params.mblim, params.lim,
-                                        params.hev_thr, cm->bit_depth);
+                                        params.hev_thr, bit_depth);
           else
             aom_lpf_horizontal_6(p, dst_stride, params.mblim, params.lim,
                                  params.hev_thr);
           break;
         // apply 8-tap filtering
         case 8:
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_horizontal_8(CONVERT_TO_SHORTPTR(p), dst_stride,
                                         params.mblim, params.lim,
-                                        params.hev_thr, cm->bit_depth);
+                                        params.hev_thr, bit_depth);
           else
             aom_lpf_horizontal_8(p, dst_stride, params.mblim, params.lim,
                                  params.hev_thr);
           break;
         // apply 14-tap filtering
         case 14:
-          if (cm->use_highbitdepth)
+          if (use_highbitdepth)
             aom_highbd_lpf_horizontal_14(CONVERT_TO_SHORTPTR(p), dst_stride,
                                          params.mblim, params.lim,
-                                         params.hev_thr, cm->bit_depth);
+                                         params.hev_thr, bit_depth);
           else
             aom_lpf_horizontal_14(p, dst_stride, params.mblim, params.lim,
                                   params.hev_thr);

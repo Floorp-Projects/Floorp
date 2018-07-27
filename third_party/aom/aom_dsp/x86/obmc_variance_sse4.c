@@ -26,6 +26,16 @@
 // 8 bit
 ////////////////////////////////////////////////////////////////////////////////
 
+void aom_var_filter_block2d_bil_first_pass_ssse3(
+    const uint8_t *a, uint16_t *b, unsigned int src_pixels_per_line,
+    unsigned int pixel_step, unsigned int output_height,
+    unsigned int output_width, const uint8_t *filter);
+
+void aom_var_filter_block2d_bil_second_pass_ssse3(
+    const uint16_t *a, uint8_t *b, unsigned int src_pixels_per_line,
+    unsigned int pixel_step, unsigned int output_height,
+    unsigned int output_width, const uint8_t *filter);
+
 static INLINE void obmc_variance_w4(const uint8_t *pre, const int pre_stride,
                                     const int32_t *wsrc, const int32_t *mask,
                                     unsigned int *const sse, int *const sum,
@@ -151,6 +161,46 @@ OBMCVARWXH(8, 32)
 OBMCVARWXH(32, 8)
 OBMCVARWXH(16, 64)
 OBMCVARWXH(64, 16)
+
+#include "config/aom_dsp_rtcd.h"
+
+#define OBMC_SUBPIX_VAR(W, H)                                                \
+  uint32_t aom_obmc_sub_pixel_variance##W##x##H##_sse4_1(                    \
+      const uint8_t *pre, int pre_stride, int xoffset, int yoffset,          \
+      const int32_t *wsrc, const int32_t *mask, unsigned int *sse) {         \
+    uint16_t fdata3[(H + 1) * W];                                            \
+    uint8_t temp2[H * W];                                                    \
+                                                                             \
+    aom_var_filter_block2d_bil_first_pass_ssse3(                             \
+        pre, fdata3, pre_stride, 1, H + 1, W, bilinear_filters_2t[xoffset]); \
+    aom_var_filter_block2d_bil_second_pass_ssse3(                            \
+        fdata3, temp2, W, W, H, W, bilinear_filters_2t[yoffset]);            \
+                                                                             \
+    return aom_obmc_variance##W##x##H##_sse4_1(temp2, W, wsrc, mask, sse);   \
+  }
+
+OBMC_SUBPIX_VAR(128, 128)
+OBMC_SUBPIX_VAR(128, 64)
+OBMC_SUBPIX_VAR(64, 128)
+OBMC_SUBPIX_VAR(64, 64)
+OBMC_SUBPIX_VAR(64, 32)
+OBMC_SUBPIX_VAR(32, 64)
+OBMC_SUBPIX_VAR(32, 32)
+OBMC_SUBPIX_VAR(32, 16)
+OBMC_SUBPIX_VAR(16, 32)
+OBMC_SUBPIX_VAR(16, 16)
+OBMC_SUBPIX_VAR(16, 8)
+OBMC_SUBPIX_VAR(8, 16)
+OBMC_SUBPIX_VAR(8, 8)
+OBMC_SUBPIX_VAR(8, 4)
+OBMC_SUBPIX_VAR(4, 8)
+OBMC_SUBPIX_VAR(4, 4)
+OBMC_SUBPIX_VAR(4, 16)
+OBMC_SUBPIX_VAR(16, 4)
+OBMC_SUBPIX_VAR(8, 32)
+OBMC_SUBPIX_VAR(32, 8)
+OBMC_SUBPIX_VAR(16, 64)
+OBMC_SUBPIX_VAR(64, 16)
 
 ////////////////////////////////////////////////////////////////////////////////
 // High bit-depth

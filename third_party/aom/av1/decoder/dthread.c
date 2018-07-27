@@ -157,8 +157,8 @@ void av1_frameworker_copy_context(AVxWorker *const dst_worker,
   dst_worker_data->pbi->need_resync = src_worker_data->pbi->need_resync;
   av1_frameworker_unlock_stats(src_worker);
 
-  dst_cm->bit_depth = src_cm->bit_depth;
-  dst_cm->use_highbitdepth = src_cm->use_highbitdepth;
+  dst_cm->seq_params.bit_depth = src_cm->seq_params.bit_depth;
+  dst_cm->seq_params.use_highbitdepth = src_cm->seq_params.use_highbitdepth;
   // TODO(zoeliu): To handle parallel decoding
   dst_cm->prev_frame =
       src_cm->show_existing_frame ? src_cm->prev_frame : src_cm->cur_frame;
@@ -166,8 +166,8 @@ void av1_frameworker_copy_context(AVxWorker *const dst_worker,
       !src_cm->show_existing_frame ? src_cm->width : src_cm->last_width;
   dst_cm->last_height =
       !src_cm->show_existing_frame ? src_cm->height : src_cm->last_height;
-  dst_cm->subsampling_x = src_cm->subsampling_x;
-  dst_cm->subsampling_y = src_cm->subsampling_y;
+  dst_cm->seq_params.subsampling_x = src_cm->seq_params.subsampling_x;
+  dst_cm->seq_params.subsampling_y = src_cm->seq_params.subsampling_y;
   dst_cm->frame_type = src_cm->frame_type;
   dst_cm->last_show_frame = !src_cm->show_existing_frame
                                 ? src_cm->show_frame

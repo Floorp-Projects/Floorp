@@ -137,11 +137,11 @@ void av1_alloc_restoration_buffers(AV1_COMMON *cm) {
   // Now we need to allocate enough space to store the line buffers for the
   // stripes
   const int frame_w = cm->superres_upscaled_width;
-  const int use_highbd = cm->use_highbitdepth ? 1 : 0;
+  const int use_highbd = cm->seq_params.use_highbitdepth ? 1 : 0;
 
   for (int p = 0; p < num_planes; ++p) {
     const int is_uv = p > 0;
-    const int ss_x = is_uv && cm->subsampling_x;
+    const int ss_x = is_uv && cm->seq_params.subsampling_x;
     const int plane_w = ((frame_w + ss_x) >> ss_x) + 2 * RESTORATION_EXTRA_HORZ;
     const int stride = ALIGN_POWER_OF_TWO(plane_w, 5);
     const int buf_size = num_stripes * stride * RESTORATION_CTX_VERT

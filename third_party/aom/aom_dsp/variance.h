@@ -76,6 +76,13 @@ void aom_comp_mask_upsampled_pred(
     int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref,
     int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask);
 
+void aom_highbd_comp_mask_upsampled_pred(
+    MACROBLOCKD *xd, const struct AV1Common *const cm, int mi_row, int mi_col,
+    const MV *const mv, uint16_t *comp_pred, const uint8_t *pred8, int width,
+    int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref8,
+    int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask,
+    int bd);
+
 typedef unsigned int (*aom_obmc_sad_fn_t)(const uint8_t *pred, int pred_stride,
                                           const int32_t *wsrc,
                                           const int32_t *msk);
