@@ -28,6 +28,7 @@ devtools.jar:
     content/sourceeditor/codemirror/old-debugger.css (sourceeditor/codemirror/old-debugger.css)
     content/debugger/new/index.html (debugger/new/index.html)
 *   content/debugger/index.xul (debugger/index.xul)
+    content/debugger/content/tooltip/tooltips-old.css (debugger/content/tooltip/tooltips-old.css)
     content/debugger/debugger.css (debugger/debugger.css)
     content/debugger/debugger-controller.js (debugger/debugger-controller.js)
     content/debugger/debugger-view.js (debugger/debugger-view.js)
