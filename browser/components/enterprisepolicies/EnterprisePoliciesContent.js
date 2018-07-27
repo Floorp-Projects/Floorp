@@ -36,16 +36,6 @@ const EnterprisePoliciesFactory = {
 
 
 function EnterprisePoliciesManagerContent() {
-  let policies = Services.cpmm.initialProcessData.policies;
-  if (policies) {
-    this._status = policies.status;
-    // make a copy of the array so that we can keep adding to it
-    // in a way that is not confusing.
-    this._disallowedFeatures = policies.disallowedFeatures.slice();
-  }
-
-  Services.cpmm.addMessageListener("EnterprisePolicies:DisallowFeature", this);
-  Services.cpmm.addMessageListener("EnterprisePolicies:Restart", this);
 }
 
 EnterprisePoliciesManagerContent.prototype = {
@@ -56,28 +46,15 @@ EnterprisePoliciesManagerContent.prototype = {
   // redefine the default factory for XPCOMUtils
   _xpcom_factory: EnterprisePoliciesFactory,
 
-  _status: Ci.nsIEnterprisePolicies.INACTIVE,
-
-  _disallowedFeatures: [],
-
-  receiveMessage({name, data}) {
-    switch (name) {
-      case "EnterprisePolicies:DisallowFeature":
-        this._disallowedFeatures.push(data.feature);
-        break;
-
-      case "EnterprisePolicies:Restart":
-        this._disallowedFeatures = [];
-        break;
-    }
-  },
 
   get status() {
-    return this._status;
+    return Services.cpmm.sharedData.get("EnterprisePolicies:Status") ||
+           Ci.nsIEnterprisePolicies.INACTIVE;
   },
 
   isAllowed(feature) {
-    return !this._disallowedFeatures.includes(feature);
+    let disallowedFeatures = Services.cpmm.sharedData.get("EnterprisePolicies:DisallowedFeatures");
+    return !(disallowedFeatures && disallowedFeatures.has(feature));
   },
 
   getActivePolicies() {
