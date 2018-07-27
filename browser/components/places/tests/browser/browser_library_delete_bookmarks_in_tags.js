@@ -87,7 +87,7 @@ add_task(async function test_tags() {
   }
 
   // The tag should now not exist.
-  Assert.deepEqual(PlacesUtils.tagging.getURIsForTag("test"), [],
+  Assert.equal(await PlacesUtils.bookmarks.fetch({tags: ["test"]}), null,
                    "There should be no URIs remaining for the tag");
 
   tagsNode.containerOpen = false;

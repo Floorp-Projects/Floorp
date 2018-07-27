@@ -39,7 +39,7 @@ add_task(async function() {
 
 function registerNewTool() {
   const toolDefinition = {
-    id: "test-tool",
+    id: "testTool",
     isTargetSupported: () => true,
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
@@ -47,11 +47,11 @@ function registerNewTool() {
   };
 
   ok(gDevTools, "gDevTools exists");
-  ok(!gDevTools.getToolDefinitionMap().has("test-tool"),
+  ok(!gDevTools.getToolDefinitionMap().has("testTool"),
     "The tool is not registered");
 
   gDevTools.registerTool(toolDefinition);
-  ok(gDevTools.getToolDefinitionMap().has("test-tool"),
+  ok(gDevTools.getToolDefinitionMap().has("testTool"),
     "The tool is registered");
 }
 
@@ -476,7 +476,7 @@ async function lookupButtonForToolId(toolId) {
 }
 
 async function cleanup() {
-  gDevTools.unregisterTool("test-tool");
+  gDevTools.unregisterTool("testTool");
   await toolbox.destroy();
   gBrowser.removeCurrentTab();
   for (const pref of modifiedPrefs) {

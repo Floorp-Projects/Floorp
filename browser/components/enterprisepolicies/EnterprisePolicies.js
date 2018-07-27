@@ -43,22 +43,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-// ==== Start XPCOM Boilerplate ==== \\
-
-// Factory object
-const EnterprisePoliciesFactory = {
-  _instance: null,
-  createInstance: function BGSF_createInstance(outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return this._instance == null ?
-      this._instance = new EnterprisePoliciesManager() : this._instance;
-  }
-};
-
-// ==== End XPCOM Boilerplate ==== //
-
-// Constructor
 function EnterprisePoliciesManager() {
   Services.obs.addObserver(this, "profile-after-change", true);
   Services.obs.addObserver(this, "final-ui-startup", true);
@@ -67,14 +51,11 @@ function EnterprisePoliciesManager() {
 }
 
 EnterprisePoliciesManager.prototype = {
-  // for XPCOM
-  classID:          Components.ID("{ea4e1414-779b-458b-9d1f-d18e8efbc145}"),
+  classID:        Components.ID("{ea4e1414-779b-458b-9d1f-d18e8efbc145}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference,
                                           Ci.nsIEnterprisePolicies]),
-
-  // redefine the default factory for XPCOMUtils
-  _xpcom_factory: EnterprisePoliciesFactory,
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(EnterprisePoliciesManager),
 
   _initialize() {
     let provider = this._chooseProvider();
@@ -195,16 +176,16 @@ EnterprisePoliciesManager.prototype = {
 
     DisallowedFeatures = {};
 
+    Services.ppmm.sharedData.delete("EnterprisePolicies:Status");
+    Services.ppmm.sharedData.delete("EnterprisePolicies:DisallowedFeatures");
+
     this._status = Ci.nsIEnterprisePolicies.UNINITIALIZED;
     for (let timing of Object.keys(this._callbacks)) {
       this._callbacks[timing] = [];
     }
-    delete Services.ppmm.initialProcessData.policies;
-    Services.ppmm.broadcastAsyncMessage("EnterprisePolicies:Restart", null);
 
     let { PromiseUtils } = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm",
                                               {});
-
     // Simulate the startup process. This step-by-step is a bit ugly but it
     // tries to emulate the same behavior as of a normal startup.
 
@@ -259,21 +240,13 @@ EnterprisePoliciesManager.prototype = {
   },
 
   disallowFeature(feature, neededOnContentProcess = false) {
-    DisallowedFeatures[feature] = true;
+    DisallowedFeatures[feature] = neededOnContentProcess;
 
     // NOTE: For optimization purposes, only features marked as needed
     // on content process will be passed onto the child processes.
     if (neededOnContentProcess) {
-      Services.ppmm.initialProcessData.policies
-                                      .disallowedFeatures.push(feature);
-
-      if (Services.ppmm.childCount > 1) {
-        // If there has been a content process already initialized, let's
-        // broadcast the newly disallowed feature.
-        Services.ppmm.broadcastAsyncMessage(
-          "EnterprisePolicies:DisallowFeature", {feature}
-        );
-      }
+      Services.ppmm.sharedData.set("EnterprisePolicies:DisallowedFeatures",
+        new Set(Object.keys(DisallowedFeatures).filter(key => DisallowedFeatures[key])));
     }
   },
 
@@ -286,10 +259,7 @@ EnterprisePoliciesManager.prototype = {
   set status(val) {
     this._status = val;
     if (val != Ci.nsIEnterprisePolicies.INACTIVE) {
-      Services.ppmm.initialProcessData.policies = {
-        status: val,
-        disallowedFeatures: [],
-      };
+      Services.ppmm.sharedData.set("EnterprisePolicies:Status", val);
     }
     return val;
   },

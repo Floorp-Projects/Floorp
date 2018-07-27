@@ -252,7 +252,8 @@ const BOOKMARK_VALIDATORS = Object.freeze({
   keyword: simpleValidateFunc(v => (typeof(v) == "string") && v.length),
   charset: simpleValidateFunc(v => (typeof(v) == "string") && v.length),
   postData: simpleValidateFunc(v => (typeof(v) == "string") && v.length),
-  tags: simpleValidateFunc(v => Array.isArray(v) && v.length),
+  tags: simpleValidateFunc(v => Array.isArray(v) && v.length &&
+                                v.every(item => item && typeof item == "string")),
 });
 
 // Sync bookmark records can contain additional properties.
