@@ -8,6 +8,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/MockDocument.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
@@ -17,9 +19,8 @@ ChromeUtils.defineModuleGetter(this, "DownloadPaths",
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "resProto",
-                                   "@mozilla.org/network/protocol;1?name=resource",
-                                   "nsISubstitutingProtocolHandler");
+ChromeUtils.defineModuleGetter(this, "ExtensionParent",
+                               "resource://gre/modules/ExtensionParent.jsm");
 
 do_get_profile();
 
@@ -31,26 +32,38 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", 
 /* globals sinon */
 // ================================================
 
-// Load our bootstrap extension manifest so we can access our chrome/resource URIs.
 const EXTENSION_ID = "formautofill@mozilla.org";
-let extensionDir = Services.dirsvc.get("GreD", Ci.nsIFile);
-extensionDir.append("browser");
-extensionDir.append("features");
-extensionDir.append(EXTENSION_ID);
-let bootstrapFile = extensionDir.clone();
-bootstrapFile.append("bootstrap.js");
-let bootstrapURI = Services.io.newFileURI(bootstrapFile).spec;
-// If the unpacked extension doesn't exist, use the packed version.
-if (!extensionDir.exists()) {
-  extensionDir = extensionDir.parent;
-  extensionDir.append(EXTENSION_ID + ".xpi");
-  let jarURI = Services.io.newFileURI(extensionDir);
-  bootstrapURI = "jar:" + jarURI.spec + "!/bootstrap.js";
-}
-Components.manager.addBootstrappedManifestLocation(extensionDir);
 
-let resURI = Services.io.newURI("chrome/res/", null, Services.io.newURI(bootstrapURI));
-resProto.setSubstitution("formautofill", resURI);
+AddonTestUtils.init(this);
+
+async function loadExtension() {
+  AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  await AddonTestUtils.promiseStartupManager();
+
+  let extensionPath = Services.dirsvc.get("GreD", Ci.nsIFile);
+  extensionPath.append("browser");
+  extensionPath.append("features");
+  extensionPath.append(EXTENSION_ID);
+
+  if (!extensionPath.exists()) {
+    extensionPath.leafName = `${EXTENSION_ID}.xpi`;
+  }
+
+  let startupPromise = new Promise(resolve => {
+    const {apiManager} = ExtensionParent;
+    function onReady(event, extension) {
+      if (extension.id == EXTENSION_ID) {
+        apiManager.off("ready", onReady);
+        resolve();
+      }
+    }
+
+    apiManager.on("ready", onReady);
+  });
+
+  await AddonManager.installTemporaryAddon(extensionPath);
+  await startupPromise;
+}
 
 // Returns a reference to a temporary file that is guaranteed not to exist and
 // is cleaned up later. See FileTestUtils.getTempFile for details.
@@ -63,6 +76,15 @@ async function initProfileStorage(fileName, records, collectionName = "addresses
   let path = getTempFile(fileName).path;
   let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
+
+  // AddonTestUtils inserts its own directory provider that manages TmpD.
+  // It removes that directory at shutdown, which races with shutdown
+  // handing in JSONFile/DeferredTask (which is used by FormAutofillStorage).
+  // Avoid the race by explicitly finalizing any formautofill JSONFile
+  // instances created manually by individual tests when the test finishes.
+  registerCleanupFunction(function finalizeAutofillStorage() {
+    return profileStorage._finalize();
+  });
 
   if (!records || !Array.isArray(records)) {
     return profileStorage;
@@ -99,9 +121,11 @@ function verifySectionFieldDetails(sections, expectedResults) {
   });
 }
 
-function runHeuristicsTest(patterns, fixturePathPrefix) {
-  ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm");
-  ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+async function runHeuristicsTest(patterns, fixturePathPrefix) {
+  add_task(async function setup() {
+    ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm");
+    ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+  });
 
   patterns.forEach(testPattern => {
     add_task(async function() {
@@ -194,4 +218,6 @@ add_task(async function head_initialize() {
     Services.prefs.clearUserPref("extensions.formautofill.section.enabled");
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
   });
+
+  await loadExtension();
 });
