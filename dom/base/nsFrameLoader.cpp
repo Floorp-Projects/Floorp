@@ -689,6 +689,8 @@ nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
   // Now that we have our type set, add ourselves to the parent, as needed.
   if (aParentNode) {
     aParentNode->AddChild(aItem);
+  } else if (nsCOMPtr<nsIDocShell> childAsDocShell = do_QueryInterface(aItem)) {
+    childAsDocShell->AttachBrowsingContext(aParentNode);
   }
 
   bool retval = false;

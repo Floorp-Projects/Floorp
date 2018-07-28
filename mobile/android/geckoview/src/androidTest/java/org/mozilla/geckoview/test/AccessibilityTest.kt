@@ -106,6 +106,13 @@ class AccessibilityTest : BaseSessionTest() {
         sessionRule.session.accessibility.view = null
     }
 
+    private fun waitForInitialFocus() {
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onFocused(event: AccessibilityEvent) { }
+        })
+    }
+
     @Test fun testRootNode() {
         assertThat("provider is not null", provider, notNullValue())
         val node = provider.createAccessibilityNodeInfo(AccessibilityNodeProvider.HOST_VIEW_ID)
@@ -125,7 +132,7 @@ class AccessibilityTest : BaseSessionTest() {
     @Test fun testAccessibilityFocus() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(INPUTS_PATH)
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
             AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
@@ -154,7 +161,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testTextEntryNode() {
         sessionRule.session.loadString("<input aria-label='Name' value='Tobias'>", "text/html")
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         mainSession.evaluateJS("$('input').focus()")
 
@@ -233,7 +240,7 @@ class AccessibilityTest : BaseSessionTest() {
     @Test fun testClipboard() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
         sessionRule.session.loadString("<input value='hello cruel world' id='input'>", "text/html")
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         mainSession.evaluateJS("$('input').focus()")
 
@@ -284,7 +291,7 @@ class AccessibilityTest : BaseSessionTest() {
     @Test fun testMoveByCharacter() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
                 AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
@@ -317,7 +324,7 @@ class AccessibilityTest : BaseSessionTest() {
     @Test fun testMoveByWord() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
                 AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
@@ -350,7 +357,7 @@ class AccessibilityTest : BaseSessionTest() {
     @Test fun testMoveByLine() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
                 AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
@@ -383,7 +390,7 @@ class AccessibilityTest : BaseSessionTest() {
     @Test fun testCheckbox() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
         sessionRule.session.loadString("<label><input id='checkbox' type='checkbox'>many option</label>", "text/html")
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         mainSession.evaluateJS("$('#checkbox').focus()")
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -413,7 +420,7 @@ class AccessibilityTest : BaseSessionTest() {
                         <li id="li" role="option" onclick="this.setAttribute('aria-selected',
                             this.getAttribute('aria-selected') == 'true' ? 'false' : 'true')">1</li>
                 </ul>""","text/html")
-        sessionRule.waitForPageStop()
+        waitForInitialFocus()
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
         sessionRule.waitUntilCalled(object : EventDelegate {

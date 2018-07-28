@@ -102,6 +102,7 @@
     macro(direction, direction, "direction") \
     macro(displayURL, displayURL, "displayURL") \
     macro(do, do_, "do") \
+    macro(domNode, domNode, "domNode") \
     macro(done, done, "done") \
     macro(dotGenerator, dotGenerator, ".generator") \
     macro(dotThis, dotThis, ".this") \

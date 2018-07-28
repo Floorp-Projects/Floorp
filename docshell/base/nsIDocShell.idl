@@ -22,6 +22,7 @@ namespace mozilla {
 class Encoding;
 class HTMLEditor;
 namespace dom {
+class BrowsingContext;
 class ClientSource;
 } // namespace dom
 }
@@ -1180,6 +1181,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   mozilla::HTMLEditor* GetHTMLEditor();
   nsresult SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
+
+  void AttachBrowsingContext(nsIDocShell* aParentDocShell);
+  void DetachBrowsingContext();
 %}
 
   /**

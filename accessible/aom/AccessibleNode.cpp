@@ -47,6 +47,7 @@ AccessibleNode::AccessibleNode(nsINode* aNode) :
     mIntProperties(3),
     mUIntProperties(6),
     mBooleanProperties(0),
+    mRelationProperties(3),
     mStringProperties(16),
     mDOMNode(aNode)
 {

@@ -13,6 +13,7 @@
 #include "Units.h"                      // for ParentLayerIntRect
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils
+#include "mozilla/ArrayUtils.h"         // for ArrayEqual
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/mozalloc.h"           // for operator new, etc

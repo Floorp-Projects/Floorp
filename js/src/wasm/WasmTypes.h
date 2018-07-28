@@ -20,6 +20,7 @@
 #define wasm_types_h
 
 #include "mozilla/Alignment.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/HashFunctions.h"
@@ -75,6 +76,7 @@ typedef Rooted<WasmGlobalObject*> RootedWasmGlobalObject;
 
 namespace wasm {
 
+using mozilla::ArrayEqual;
 using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;
@@ -83,7 +85,6 @@ using mozilla::MallocSizeOf;
 using mozilla::Nothing;
 using mozilla::PodZero;
 using mozilla::PodCopy;
-using mozilla::PodEqual;
 using mozilla::Some;
 using mozilla::Unused;
 

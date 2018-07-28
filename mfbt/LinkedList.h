@@ -99,6 +99,11 @@ struct LinkedListElementTraits
   // to a list.
   static void enterList(LinkedListElement<T>* elt) {}
   static void exitList(LinkedListElement<T>* elt) {}
+
+  // This method is called when AutoCleanLinkedList cleans itself
+  // during destruction. It can be used to call delete on elements if
+  // the list is the sole owner.
+  static void cleanElement(LinkedListElement<T>* elt) { delete elt->asT(); }
 };
 
 template<typename T>
@@ -111,6 +116,7 @@ struct LinkedListElementTraits<RefPtr<T>>
 
   static void enterList(LinkedListElement<RefPtr<T>>* elt) { elt->asT()->AddRef(); }
   static void exitList(LinkedListElement<RefPtr<T>>* elt) { elt->asT()->Release(); }
+  static void cleanElement(LinkedListElement<RefPtr<T>>* elt) {}
 };
 
 } /* namespace detail */
@@ -655,6 +661,9 @@ private:
 template <typename T>
 class AutoCleanLinkedList : public LinkedList<T>
 {
+private:
+  using Traits = detail::LinkedListElementTraits<T>;
+  using ClientType = typename detail::LinkedListElementTraits<T>::ClientType;
 public:
   ~AutoCleanLinkedList()
   {
@@ -669,8 +678,8 @@ public:
 
   void clear()
   {
-    while (T* element = this->popFirst()) {
-      delete element;
+    while (ClientType element = this->popFirst()) {
+      Traits::cleanElement(element);
     }
   }
 };

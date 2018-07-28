@@ -105,7 +105,7 @@ var AccessFuTest = {
 
   finish: function AccessFuTest_finish() {
     // Disable the console service logging.
-    Logger.test = false;
+    Logger.useConsoleService = false;
     Logger.logLevel = Logger.INFO;
     // Finish through idle callback to let AccessFu._disable complete.
     SimpleTest.executeSoon(function() {
@@ -116,13 +116,15 @@ var AccessFuTest = {
   },
 
   nextTest: function AccessFuTest_nextTest() {
-    var result = gIterator.next();
-    if (result.done) {
-      this.finish();
-      return;
-    }
-    var testFunc = result.value;
-    testFunc();
+    SimpleTest.executeSoon(() => {
+      var result = gIterator.next();
+      if (result.done) {
+        this.finish();
+        return;
+      }
+      var testFunc = result.value;
+      testFunc();
+    });
   },
 
   runTests: function AccessFuTest_runTests(aAdditionalPrefs) {
@@ -139,14 +141,11 @@ var AccessFuTest = {
       }
     })();
 
+    Logger.useConsoleService = true;
+    Logger.logLevel = Logger.DEBUG;
+
     // Start AccessFu and put it in stand-by.
     ChromeUtils.import("resource://gre/modules/accessibility/AccessFu.jsm");
-
-    AccessFu.readyCallback = function readyCallback() {
-      // Enable logging to the console service.
-      Logger.test = true;
-      Logger.logLevel = Logger.DEBUG;
-    };
 
     var prefs = [["accessibility.accessfu.notify_output", 1]];
     prefs.push.apply(prefs, aAdditionalPrefs);
@@ -216,6 +215,10 @@ class AccessFuContentTestRunner {
 
   async setupMessageManager(aMessageManager) {
     function contentScript() {
+      ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+      Logger.logLevel = "DEBUG";
+      Utils.inTest = true;
+
       addMessageListener("AccessFuTest:Focus", aMessage => {
         var elem = content.document.querySelector(aMessage.data.selector);
         if (elem) {
@@ -231,22 +234,11 @@ class AccessFuContentTestRunner {
     aMessageManager.loadFrameScript(
       "data:,(" + contentScript.toString() + ")();", false);
 
-    let readyPromise = new Promise(resolve =>
-      aMessageManager.addMessageListener("AccessFu:Ready", resolve));
-
     aMessageManager.loadFrameScript(
       "chrome://global/content/accessibility/content-script.js", false);
 
-    await readyPromise;
-
     let startedPromise = new Promise(resolve =>
       aMessageManager.addMessageListener("AccessFu:ContentStarted", resolve));
-
-    aMessageManager.sendAsyncMessage("AccessFu:Start",
-      { buildApp: "browser",
-        androidSdkVersion: Utils.AndroidSdkVersion,
-        logLevel: "DEBUG",
-        inTest: true });
 
     await startedPromise;
 
