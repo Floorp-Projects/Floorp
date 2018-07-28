@@ -7872,7 +7872,7 @@ class CGPerSignatureCall(CGThing):
                 """
                 {
                   JS::Rooted<JSObject*> conversionScope(cx, ${conversionScope});
-                  JSAutoRealm ar(cx, conversionScope);
+                  JSAutoRealmAllowCCW ar(cx, conversionScope);
                   do { // block we break out of when done wrapping
                     $*{wrapCode}
                   } while (false);
@@ -15276,7 +15276,7 @@ class CGJSImplClass(CGBindingImplClass):
             }
 
             // Now define it on our chrome object
-            JSAutoRealm ar(aCx, mImpl->CallbackOrNull());
+            JSAutoRealmAllowCCW ar(aCx, mImpl->CallbackOrNull());
             if (!JS_WrapObject(aCx, &obj)) {
               return nullptr;
             }

@@ -448,7 +448,7 @@ nsCString
 GetFunctionName(JSContext* cx, HandleObject obj)
 {
     RootedObject inner(cx, js::UncheckedUnwrap(obj));
-    JSAutoRealm ar(cx, inner);
+    JSAutoRealmAllowCCW ar(cx, inner);
 
     RootedFunction fun(cx, JS_GetObjectFunction(inner));
     if (!fun) {
@@ -565,7 +565,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // to enter the (maybe wrapper) object's realm. We will have to revisit this
     // later because CCWs are not associated with a single realm so this
     // doesn't make much sense. See bug 1478359.
-    JSAutoRealm ar(aes.cx(), obj);
+    JSAutoRealmAllowCCW ar(aes.cx(), obj);
 
     // We support nsISupportsWeakReference iff the root wrapped JSObject
     // claims to support it in its QueryInterface implementation.
@@ -962,7 +962,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // to enter the (maybe wrapper) object's realm. We will have to revisit this
     // later because CCWs are not associated with a single realm so this
     // doesn't make much sense. See bug 1478359.
-    JSAutoRealm ar(cx, obj);
+    JSAutoRealmAllowCCW ar(cx, obj);
 
     // [optional_argc] has a different calling convention, which we don't
     // support for JS-implemented components.

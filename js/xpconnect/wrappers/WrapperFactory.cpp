@@ -73,7 +73,7 @@ WrapperFactory::CreateXrayWaiver(JSContext* cx, HandleObject obj)
     MOZ_ASSERT(!GetXrayWaiver(obj));
     XPCWrappedNativeScope* scope = ObjectScope(obj);
 
-    JSAutoRealm ar(cx, obj);
+    JSAutoRealmAllowCCW ar(cx, obj);
     JSObject* waiver = Wrapper::New(cx, obj, &XrayWaiver);
     if (!waiver)
         return nullptr;
@@ -228,7 +228,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
 
     XPCWrappedNative* wn = XPCWrappedNative::Get(obj);
 
-    JSAutoRealm ar(cx, obj);
+    JSAutoRealmAllowCCW ar(cx, obj);
     XPCCallContext ccx(cx, obj);
     RootedObject wrapScope(cx, scope);
 

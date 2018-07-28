@@ -976,7 +976,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
     MOZ_ASSERT(iid, "bad param");
 
     AutoJSContext cx;
-    JSAutoRealm ar(cx, src);
+    JSAutoRealmAllowCCW ar(cx, src);
 
     *dest = nullptr;
      if (pErr)

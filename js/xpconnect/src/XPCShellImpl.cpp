@@ -542,7 +542,7 @@ XPCShellInterruptCallback(JSContext* cx)
     if (callback.isUndefined())
         return true;
 
-    JSAutoRealm ar(cx, &callback.toObject());
+    JSAutoRealmAllowCCW ar(cx, &callback.toObject());
     RootedValue rv(cx);
     if (!JS_CallFunctionValue(cx, nullptr, callback, JS::HandleValueArray::empty(), &rv) ||
         !rv.isBoolean())
@@ -1338,7 +1338,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
             backstagePass->SetGlobalObject(glob);
 
-            JSAutoRealm ar(cx, glob);
+            JSAutoRealmAllowCCW ar(cx, glob);
 
             // Even if we're building in a configuration where source is
             // discarded, there's no reason to do that on XPCShell, and doing so
