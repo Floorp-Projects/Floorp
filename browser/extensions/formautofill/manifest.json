@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "Form Autofill",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "formautofill@mozilla.org"
+    }
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "experiment_apis": {
+    "formautofill": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

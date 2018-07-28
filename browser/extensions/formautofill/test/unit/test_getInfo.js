@@ -1,6 +1,8 @@
 "use strict";
 
-ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm");
+add_task(async function() {
+  ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm");
+});
 
 const TESTCASES = [
   {
