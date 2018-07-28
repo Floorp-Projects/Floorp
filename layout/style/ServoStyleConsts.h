@@ -129,13 +129,14 @@ enum class StyleAppearance : uint8_t {
   // A scrollbar button (up/down/left/right).
   // Keep these in order (some code casts these values to `int` in order to
   // compare them against each other).
+  ScrollbarbuttonUp,
   ScrollbarbuttonDown,
   ScrollbarbuttonLeft,
   ScrollbarbuttonRight,
-  ScrollbarbuttonUp,
   // The scrollbar thumb.
   ScrollbarthumbHorizontal,
   ScrollbarthumbVertical,
+  // The scrollbar track.
   ScrollbartrackHorizontal,
   ScrollbartrackVertical,
   // The scroll corner
