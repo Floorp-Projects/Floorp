@@ -106,7 +106,7 @@ class Logging
             JS::RootedObject obj(cx);
             obj = shared->objects_.find(id);
             if (obj) {
-                JSAutoRealm ar(cx, obj);
+                JSAutoRealmAllowCCW ar(cx, obj);
                 objDesc = js::ObjectClassName(cx, obj);
             } else {
                 objDesc = "<dead object>";

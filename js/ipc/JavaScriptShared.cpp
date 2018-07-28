@@ -536,10 +536,10 @@ JavaScriptShared::findObjectById(JSContext* cx, const ObjectId& objId)
     // from the other process point to objects in this scope. From there, they
     // can access objects in other compartments using cross-compartment
     // wrappers.
-    JSAutoRealm ar(cx, scopeForTargetObjects());
+    JSAutoRealmAllowCCW ar(cx, scopeForTargetObjects());
     if (objId.hasXrayWaiver()) {
         {
-            JSAutoRealm ar2(cx, obj);
+            JSAutoRealmAllowCCW ar2(cx, obj);
             obj = js::ToWindowProxyIfWindow(obj);
             MOZ_ASSERT(obj);
         }

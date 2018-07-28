@@ -279,7 +279,7 @@ PromiseDebugging::FlushUncaughtRejectionsInternal()
 
       obs->OnLeftUncaught(promise, IgnoreErrors());
     }
-    JSAutoRealm ar(cx, promise);
+    JSAutoRealmAllowCCW ar(cx, promise);
     Promise::ReportRejectedPromise(cx, promise);
   }
   storage->mUncaughtRejections.clear();

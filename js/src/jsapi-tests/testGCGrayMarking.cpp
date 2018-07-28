@@ -56,7 +56,7 @@ BEGIN_TEST(testGCGrayMarking)
 #endif /* JS_GC_ZEAL */
 
     CHECK(InitGlobals());
-    JSAutoRealm ar(cx, global1);
+    JSAutoRealmAllowCCW ar(cx, global1);
 
     InitGrayRootTracer();
 
@@ -668,7 +668,7 @@ GetCrossCompartmentWrapper(JSObject* target)
 {
     MOZ_ASSERT(target->compartment() == global1->compartment());
     JS::RootedObject obj(cx, target);
-    JSAutoRealm ar(cx, global2);
+    JSAutoRealmAllowCCW ar(cx, global2);
     if (!JS_WrapObject(cx, &obj))
         return nullptr;
 

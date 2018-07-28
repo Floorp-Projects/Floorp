@@ -686,8 +686,8 @@ JS::LeaveRealm(JSContext* cx, JS::Realm* oldRealm)
     cx->leaveRealm(oldRealm);
 }
 
-JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
-                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoRealmAllowCCW::JSAutoRealmAllowCCW(JSContext* cx, JSObject* target
+                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldRealm_(cx->realm())
 {
@@ -696,8 +696,8 @@ JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
     cx_->enterRealmOf(target);
 }
 
-JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
-                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoRealmAllowCCW::JSAutoRealmAllowCCW(JSContext* cx, JSScript* target
+                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldRealm_(cx->realm())
 {
@@ -706,7 +706,7 @@ JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
     cx_->enterRealmOf(target);
 }
 
-JSAutoRealm::~JSAutoRealm()
+JSAutoRealmAllowCCW::~JSAutoRealmAllowCCW()
 {
     cx_->leaveRealm(oldRealm_);
 }
