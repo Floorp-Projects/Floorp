@@ -19,7 +19,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
                                               JS::FireOnNewGlobalHook, options));
     CHECK(g);
     {
-        JSAutoRealm ae(cx, g);
+        JSAutoRealm ar(cx, g);
         CHECK(JS::InitRealmStandardClasses(cx));
     }
 
@@ -43,17 +43,17 @@ BEGIN_TEST(testDebugger_newScriptHook)
     return testIndirectEval(g, "Math.abs(0)");
 }
 
-bool testIndirectEval(JS::HandleObject scope, const char* code)
+bool testIndirectEval(JS::HandleObject global, const char* code)
 {
     EXEC("hits = 0;");
 
     {
-        JSAutoRealm ae(cx, scope);
+        JSAutoRealm ar(cx, global);
         JSString* codestr = JS_NewStringCopyZ(cx, code);
         CHECK(codestr);
         JS::RootedValue arg(cx, JS::StringValue(codestr));
         JS::RootedValue v(cx);
-        CHECK(JS_CallFunctionName(cx, scope, "eval", HandleValueArray(arg), &v));
+        CHECK(JS_CallFunctionName(cx, global, "eval", HandleValueArray(arg), &v));
     }
 
     JS::RootedValue hitsv(cx);

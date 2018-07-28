@@ -152,7 +152,7 @@ NS_IMETHODIMP
 EventListenerInfo::GetListenerObject(JSContext* aCx,
                                      JS::MutableHandle<JS::Value> aObject)
 {
-  Maybe<JSAutoRealm> ar;
+  Maybe<JSAutoRealmAllowCCW> ar;
   GetJSVal(aCx, ar, aObject);
   return NS_OK;
 }
@@ -165,7 +165,7 @@ NS_IMPL_ISUPPORTS(EventListenerService, nsIEventListenerService)
 
 bool
 EventListenerInfo::GetJSVal(JSContext* aCx,
-                            Maybe<JSAutoRealm>& aAr,
+                            Maybe<JSAutoRealmAllowCCW>& aAr,
                             JS::MutableHandle<JS::Value> aJSVal)
 {
   if (mScriptedListener) {
@@ -184,7 +184,7 @@ EventListenerInfo::ToSource(nsAString& aResult)
   aResult.SetIsVoid(true);
 
   AutoSafeJSContext cx;
-  Maybe<JSAutoRealm> ar;
+  Maybe<JSAutoRealmAllowCCW> ar;
   JS::Rooted<JS::Value> v(cx);
   if (GetJSVal(cx, ar, &v)) {
     JSString* str = JS_ValueToSource(cx, v);

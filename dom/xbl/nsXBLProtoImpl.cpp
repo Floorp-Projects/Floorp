@@ -85,7 +85,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScopeOrGlobal(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
   MOZ_ASSERT(JS_IsGlobalObject(scopeObject));
-  JSAutoRealm ar(cx, scopeObject);
+  JSAutoRealmAllowCCW ar(cx, scopeObject);
 
   // Determine the appropriate property holder.
   //
@@ -162,7 +162,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   }
 
   // From here on out, work in the scope of the bound element.
-  JSAutoRealm ar2(cx, targetClassObject);
+  JSAutoRealmAllowCCW ar2(cx, targetClassObject);
 
   // Install all of our field accessors.
   for (nsXBLProtoImplField* curr = mFields;
@@ -204,7 +204,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
   JS::Rooted<JS::Value> v(cx);
 
-  JSAutoRealm ar(cx, global);
+  JSAutoRealmAllowCCW ar(cx, global);
   // Make sure the interface object is created before the prototype object
   // so that XULElement is hidden from content. See bug 909340.
   bool defineOnGlobal = dom::XULElement_Binding::ConstructorEnabled(cx, global);
@@ -215,7 +215,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> value(cx, &v.toObject());
-  JSAutoRealm ar2(cx, value);
+  JSAutoRealmAllowCCW ar2(cx, value);
 
   // We passed aAllowWrapping = false to nsContentUtils::WrapNative so we
   // should not have a wrapper.

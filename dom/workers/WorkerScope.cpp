@@ -1019,7 +1019,7 @@ WorkerDebuggerGlobalScope::LoadSubScript(JSContext* aCx,
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  Maybe<JSAutoRealm> ar;
+  Maybe<JSAutoRealmAllowCCW> ar;
   if (aSandbox.WasPassed()) {
     JS::Rooted<JSObject*> sandbox(aCx, js::CheckedUnwrap(aSandbox.Value()));
     if (!IsWorkerDebuggerSandbox(sandbox)) {

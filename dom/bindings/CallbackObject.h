@@ -340,7 +340,7 @@ protected:
     // Put mAr after mAutoEntryScript so that we exit the realm before we
     // pop the script settings stack. Though in practice we'll often manually
     // order those two things.
-    Maybe<JSAutoRealm> mAr;
+    Maybe<JSAutoRealmAllowCCW> mAr;
 
     // An ErrorResult to possibly re-throw exceptions on and whether
     // we should re-throw them.

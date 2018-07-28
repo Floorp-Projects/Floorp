@@ -4498,7 +4498,7 @@ JSScript::AutoDelazify::holdScript(JS::HandleFunction fun)
             // to delazify.
             script_ = fun->nonLazyScript();
         } else {
-            JSAutoRealm ar(cx_, fun);
+            JSAutoRealmAllowCCW ar(cx_, fun);
             script_ = JSFunction::getOrCreateScript(cx_, fun);
             if (script_) {
                 oldDoNotRelazify_ = script_->bitFields_.doNotRelazify_;

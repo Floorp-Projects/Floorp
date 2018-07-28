@@ -464,24 +464,17 @@ class Capabilities extends Map {
     for (let [k, v] of Object.entries(json)) {
       switch (k) {
         case "acceptInsecureCerts":
-          assert.boolean(v,
-              pprint`Expected ${k} to be a boolean, got ${v}`);
+          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("acceptInsecureCerts", v);
           break;
 
         case "pageLoadStrategy":
-          if (v === null) {
-            matched.set("pageLoadStrategy", PageLoadStrategy.Normal);
-          } else {
-            assert.string(v,
-                pprint`Expected ${k} to be a string, got ${v}`);
+          assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
 
-            if (Object.values(PageLoadStrategy).includes(v)) {
-              matched.set("pageLoadStrategy", v);
-            } else {
-              throw new InvalidArgumentError(
-                  "Unknown page load strategy: " + v);
-            }
+          if (Object.values(PageLoadStrategy).includes(v)) {
+            matched.set("pageLoadStrategy", v);
+          } else {
+            throw new InvalidArgumentError("Unknown page load strategy: " + v);
           }
 
           break;
@@ -497,8 +490,7 @@ class Capabilities extends Map {
           break;
 
         case "unhandledPromptBehavior":
-          assert.string(v,
-              pprint`Expected ${k} to be a string, got ${v}`);
+          assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
 
           if (Object.values(UnhandledPromptBehavior).includes(v)) {
             matched.set("unhandledPromptBehavior", v);
@@ -510,20 +502,17 @@ class Capabilities extends Map {
           break;
 
         case "moz:accessibilityChecks":
-          assert.boolean(v,
-              pprint`Expected ${k} to be a boolean, got ${v}`);
+          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("moz:accessibilityChecks", v);
           break;
 
         case "moz:useNonSpecCompliantPointerOrigin":
-          assert.boolean(v,
-              pprint`Expected ${k} to be a boolean, got ${v}`);
+          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("moz:useNonSpecCompliantPointerOrigin", v);
           break;
 
         case "moz:webdriverClick":
-          assert.boolean(v,
-              pprint`Expected ${k} to be a boolean, got ${v}`);
+          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
           matched.set("moz:webdriverClick", v);
           break;
       }
