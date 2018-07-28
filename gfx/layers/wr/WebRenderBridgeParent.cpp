@@ -1667,7 +1667,7 @@ WebRenderBridgeParent::ScheduleGenerateFrame()
 }
 
 void
-WebRenderBridgeParent::FlushRendering()
+WebRenderBridgeParent::FlushRendering(bool aWaitForPresent)
 {
   if (mDestroyed) {
     return;
@@ -1677,17 +1677,9 @@ WebRenderBridgeParent::FlushRendering()
   // scene (which has the display list at the new window size).
   FlushSceneBuilds();
   FlushFrameGeneration();
-  FlushFramePresentation();
-}
-
-void
-WebRenderBridgeParent::FlushRenderingAsync()
-{
-  if (mDestroyed) {
-    return;
+  if (aWaitForPresent) {
+    FlushFramePresentation();
   }
-
-  mCompositorScheduler->FlushPendingComposite();
 }
 
 void
