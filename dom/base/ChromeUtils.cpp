@@ -217,7 +217,7 @@ ChromeUtils::ShallowClone(GlobalObject& aGlobal,
       return;
     }
 
-    JSAutoRealm ar(cx, obj);
+    JSAutoRealmAllowCCW ar(cx, obj);
 
     if (!JS_Enumerate(cx, obj, &ids) ||
         !values.reserve(ids.length())) {
@@ -240,7 +240,7 @@ ChromeUtils::ShallowClone(GlobalObject& aGlobal,
 
   JS::RootedObject obj(cx);
   {
-    Maybe<JSAutoRealm> ar;
+    Maybe<JSAutoRealmAllowCCW> ar;
     if (aTarget) {
       JS::RootedObject target(cx, js::CheckedUnwrap(aTarget));
       if (!target) {
@@ -483,7 +483,7 @@ namespace module_getter {
 
     JS::RootedValue value(aCx);
     {
-      JSAutoRealm ar(aCx, moduleExports);
+      JSAutoRealmAllowCCW ar(aCx, moduleExports);
 
       if (!JS_GetPropertyById(aCx, moduleExports, id, &value)) {
         return false;
@@ -726,7 +726,7 @@ ChromeUtils::CreateError(const GlobalObject& aGlobal, const nsAString& aMessage,
     uint32_t line = 0;
     uint32_t column = 0;
 
-    Maybe<JSAutoRealm> ar;
+    Maybe<JSAutoRealmAllowCCW> ar;
     JS::RootedObject stack(cx);
     if (aStack) {
       stack = UncheckedUnwrap(aStack);

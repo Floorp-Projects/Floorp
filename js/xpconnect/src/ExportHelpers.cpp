@@ -213,7 +213,7 @@ StackScopedClone(JSContext* cx, StackScopedCloneOptions& options,
     {
         // For parsing val we have to enter its realm.
         // (unless it's a primitive)
-        Maybe<JSAutoRealm> ar;
+        Maybe<JSAutoRealmAllowCCW> ar;
         if (val.isObject()) {
             ar.emplace(cx, &val.toObject());
         } else if (val.isString() && !JS_WrapValue(cx, val)) {
@@ -300,7 +300,7 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
         // We manually implement the contents of CrossCompartmentWrapper::call
         // here, because certain function wrappers (notably content->nsEP) are
         // not callable.
-        JSAutoRealm ar(cx, unwrappedFun);
+        JSAutoRealmAllowCCW ar(cx, unwrappedFun);
         if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapValue(cx, &thisVal))
             return false;
 
@@ -400,7 +400,7 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
     {
         // We need to operate in the target scope from here on, let's enter
         // its realm.
-        JSAutoRealm ar(cx, targetScope);
+        JSAutoRealmAllowCCW ar(cx, targetScope);
 
         // Unwrapping to see if we have a callable.
         funObj = UncheckedUnwrap(funObj);
@@ -483,7 +483,7 @@ CreateObjectIn(JSContext* cx, HandleValue vobj, CreateObjectInOptions& options,
 
     RootedObject obj(cx);
     {
-        JSAutoRealm ar(cx, scope);
+        JSAutoRealmAllowCCW ar(cx, scope);
         JS_MarkCrossZoneId(cx, options.defineAs);
 
         obj = JS_NewPlainObject(cx);

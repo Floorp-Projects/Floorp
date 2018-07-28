@@ -3569,7 +3569,7 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
   // so make sure to enter the realm of aObject.
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
 
-  JSAutoRealm ar(aCx, aObject);
+  JSAutoRealmAllowCCW ar(aCx, aObject);
 
   RefPtr<nsNPAPIPluginInstance> pi;
   nsresult rv = ScriptRequestPluginInstance(aCx, getter_AddRefs(pi));
@@ -3702,7 +3702,7 @@ nsObjectLoadingContent::TeardownProtoChain()
   MOZ_ASSERT(obj);
 
   JS::Rooted<JSObject*> proto(cx);
-  JSAutoRealm ar(cx, obj);
+  JSAutoRealmAllowCCW ar(cx, obj);
 
   // Loop over the DOM element's JS object prototype chain and remove
   // all JS objects of the class sNPObjectJSWrapperClass
