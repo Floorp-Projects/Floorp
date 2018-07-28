@@ -151,6 +151,14 @@ window._gBrowser = {
 
   _clearMultiSelectionLockedOnce: false,
 
+  _multiSelectChangeStarted: false,
+
+  _multiSelectChangeAdditions: new Set(),
+
+  _multiSelectChangeRemovals: new Set(),
+
+  _multiSelectChangeSelected: false,
+
   /**
    * Tab close requests are ignored if the window is closing anyway,
    * e.g. when holding Ctrl+W.
@@ -3670,6 +3678,12 @@ window._gBrowser = {
 
     aTab.setAttribute("multiselected", "true");
     this._multiSelectedTabsSet.add(aTab);
+    this._startMultiSelectChange();
+    if (this._multiSelectChangeRemovals.has(aTab)) {
+      this._multiSelectChangeRemovals.delete(aTab);
+    } else {
+      this._multiSelectChangeAdditions.add(aTab);
+    }
 
     if (!skipPositionalAttributes) {
       this.tabContainer._setPositionalAttributes();
@@ -3697,13 +3711,21 @@ window._gBrowser = {
     this.tabContainer._setPositionalAttributes();
   },
 
-  removeFromMultiSelectedTabs(aTab) {
+  removeFromMultiSelectedTabs(aTab, updatePositionalAttributes) {
     if (!aTab.multiselected) {
       return;
     }
     aTab.removeAttribute("multiselected");
-    this.tabContainer._setPositionalAttributes();
     this._multiSelectedTabsSet.delete(aTab);
+    this._startMultiSelectChange();
+    if (this._multiSelectChangeAdditions.has(aTab)) {
+      this._multiSelectChangeAdditions.delete(aTab);
+    } else {
+      this._multiSelectChangeRemovals.add(aTab);
+    }
+    if (updatePositionalAttributes) {
+      this.tabContainer._setPositionalAttributes();
+    }
   },
 
   clearMultiSelectedTabs(updatePositionalAttributes) {
@@ -3720,9 +3742,8 @@ window._gBrowser = {
     }
 
     for (let tab of this.selectedTabs) {
-      tab.removeAttribute("multiselected");
+      this.removeFromMultiSelectedTabs(tab, false);
     }
-    this._multiSelectedTabsSet = new WeakSet();
     this._lastMultiSelectedTabRef = null;
     if (updatePositionalAttributes) {
       this.tabContainer._setPositionalAttributes();
@@ -3826,6 +3847,26 @@ window._gBrowser = {
 
   set lastMultiSelectedTab(aTab) {
     this._lastMultiSelectedTabRef = Cu.getWeakReference(aTab);
+  },
+
+  _startMultiSelectChange() {
+    if (!this._multiSelectChangeStarted) {
+      this._multiSelectChangeStarted = true;
+      Promise.resolve().then(() => this._endMultiSelectChange());
+    }
+  },
+
+  _endMultiSelectChange() {
+    this._multiSelectChangeStarted = false;
+    let noticeable = this._multiSelectChangeSelected ||
+                     this._multiSelectChangeAdditions.size ||
+                     this._multiSelectChangeRemovals.size;
+    if (noticeable) {
+      this._multiSelectChangeSelected = false;
+      this._multiSelectChangeAdditions.clear();
+      this._multiSelectChangeRemovals.clear();
+      this.dispatchEvent(new CustomEvent("TabMultiSelect", {bubbles: true}));
+    }
   },
 
   toggleMuteAudioOnMultiSelectedTabs(aTab) {
@@ -4488,6 +4529,11 @@ window._gBrowser = {
 
       Services.obs.notifyObservers(tab, "AudibleAutoplayMediaOccurred");
     });
+
+    this.ownerGlobal.addEventListener("TabSelect", (event) => {
+      this._startMultiSelectChange();
+      this._multiSelectChangeSelected = true;
+    }, {passive: true});
   },
 };
 

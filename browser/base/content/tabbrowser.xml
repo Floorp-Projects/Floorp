@@ -2082,7 +2082,7 @@
           if (accelKey) {
             // Ctrl (Cmd for mac) key is pressed
             if (this.multiselected) {
-              gBrowser.removeFromMultiSelectedTabs(this);
+              gBrowser.removeFromMultiSelectedTabs(this, true);
               if (this == gBrowser.selectedTab) {
                 gBrowser.switchToNextMultiSelectedTab();
               }
