@@ -588,7 +588,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
-  JSAutoRealm ar(cx, aBuffer.Obj());
+  JSAutoRealmAllowCCW ar(cx, aBuffer.Obj());
 
   promise = Promise::Create(parentObject, aRv);
   if (aRv.Failed()) {

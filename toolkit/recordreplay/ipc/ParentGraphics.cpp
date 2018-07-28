@@ -96,7 +96,7 @@ InitGraphicsSandbox()
   gGraphicsSandbox = new JS::PersistentRootedObject(cx);
   *gGraphicsSandbox = ::js::UncheckedUnwrap(&v.toObject());
 
-  JSAutoRealm ac(cx, *gGraphicsSandbox);
+  JSAutoRealmAllowCCW ac(cx, *gGraphicsSandbox);
 
   ErrorResult er;
   dom::GlobalObject global(cx, *gGraphicsSandbox);
@@ -126,7 +126,7 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
   }
 
   AutoSafeJSContext cx;
-  JSAutoRealm ac(cx, *gGraphicsSandbox);
+  JSAutoRealmAllowCCW ac(cx, *gGraphicsSandbox);
 
   size_t width = gLastPaint.ref().mWidth;
   size_t height = gLastPaint.ref().mHeight;

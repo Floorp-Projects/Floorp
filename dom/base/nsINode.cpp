@@ -1296,7 +1296,7 @@ CheckForOutdatedParent(nsINode* aParent, nsINode* aNode, ErrorResult& aError)
 
     if (JS::GetNonCCWObjectGlobal(existingObj) !=
         global->GetGlobalJSObject()) {
-      JSAutoRealm ar(cx, existingObj);
+      JSAutoRealmAllowCCW ar(cx, existingObj);
       ReparentWrapper(cx, existingObj, aError);
     }
   }
@@ -1316,7 +1316,7 @@ ReparentWrappersInSubtree(nsIContent* aRoot)
   JS::Rooted<JSObject*> reflector(cx);
   for (nsIContent* cur = aRoot; cur; cur = cur->GetNextNode(aRoot)) {
     if ((reflector = cur->GetWrapper())) {
-      JSAutoRealm ar(cx, reflector);
+      JSAutoRealmAllowCCW ar(cx, reflector);
       ReparentWrapper(cx, reflector, rv);
       rv.WouldReportJSException();
       if (rv.Failed()) {

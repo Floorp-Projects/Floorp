@@ -198,7 +198,7 @@ OpenWindow(const ClientOpenWindowArgs& aArgs,
       return NS_ERROR_TYPE_ERR;
     }
 
-    JSAutoRealm ar(cx, sandbox);
+    JSAutoRealmAllowCCW ar(cx, sandbox);
 
     // ContentProcess
     nsCOMPtr<nsIWindowWatcher> wwatch =

@@ -9481,7 +9481,7 @@ DebuggerObject::promiseDependentPromisesGetter(JSContext* cx, unsigned argc, Val
 
     Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
     {
-        JSAutoRealm ar(cx, promise);
+        JSAutoRealmAllowCCW ar(cx, promise);
         if (!promise->dependentPromises(cx, &values))
             return false;
     }
