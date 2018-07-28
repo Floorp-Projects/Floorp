@@ -188,7 +188,7 @@ MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
 
   aRv = MediaManager::Get()->GetUserMedia(GetOwner(), aConstraints,
                                           std::move(resolver),
-					  std::move(rejecter),
+                                          std::move(rejecter),
                                           aCallerType);
   return p.forget();
 }

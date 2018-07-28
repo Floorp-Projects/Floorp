@@ -217,8 +217,7 @@ public:
 
   nsresult GetUserMediaDevices(nsPIDOMWindowInner* aWindow,
                                const dom::MediaStreamConstraints& aConstraints,
-                               nsIGetUserMediaDevicesSuccessCallback* onSuccess,
-                               nsIDOMGetUserMediaErrorCallback* onError,
+                               dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                                uint64_t aInnerWindowID = 0,
                                const nsAString& aCallID = nsString());
 
