@@ -52,7 +52,7 @@ jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals)
     if (!newGlobal)
         return nullptr;
 
-    JSAutoRealm ar(cx, newGlobal);
+    JSAutoRealmAllowCCW ar(cx, newGlobal);
 
     // Populate the global object with the standard globals like Object and
     // Array.

@@ -1037,14 +1037,14 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * the JSAutoRealm.
  */
 
-class MOZ_RAII JS_PUBLIC_API(JSAutoRealm)
+class MOZ_RAII JS_PUBLIC_API(JSAutoRealmAllowCCW)
 {
     JSContext* cx_;
     JS::Realm* oldRealm_;
   public:
-    JSAutoRealm(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    JSAutoRealm(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~JSAutoRealm();
+    JSAutoRealmAllowCCW(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    JSAutoRealmAllowCCW(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~JSAutoRealmAllowCCW();
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

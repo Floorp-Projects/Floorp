@@ -2243,7 +2243,7 @@ private:
     JSContext* mJSContext;
     mozilla::Maybe<JS::AutoSaveExceptionState> mState;
     bool mEvaluated;
-    mozilla::Maybe<JSAutoRealm> mAutoRealm;
+    mozilla::Maybe<JSAutoRealmAllowCCW> mAutoRealm;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // No copying or assignment allowed
