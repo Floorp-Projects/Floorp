@@ -51,6 +51,17 @@ struct ParentObject;
     SetProperty(AOMStringProperty::e##name, a##name);        \
   }                                                          \
 
+#define ANODE_RELATION_FUNC(name)                       \
+  already_AddRefed<AccessibleNode> Get##name()          \
+  {                                                     \
+    return GetProperty(AOMRelationProperty::e##name);   \
+  }                                                     \
+                                                        \
+  void Set##name(AccessibleNode* a##name)               \
+  {                                                     \
+    SetProperty(AOMRelationProperty::e##name, a##name); \
+  }                                                     \
+
 #define ANODE_PROPS(typeName, type, ...)                     \
   enum class AOM##typeName##Property {                       \
     MOZ_FOR_EACH(ANODE_ENUM, (), (__VA_ARGS__))              \
@@ -62,6 +73,12 @@ struct ParentObject;
     MOZ_FOR_EACH(ANODE_ENUM, (), (__VA_ARGS__))               \
   };                                                          \
   MOZ_FOR_EACH(ANODE_STRING_FUNC, (), (__VA_ARGS__))          \
+
+#define ANODE_RELATION_PROPS(...)                               \
+  enum class AOMRelationProperty {                              \
+    MOZ_FOR_EACH(ANODE_ENUM, (), (__VA_ARGS__))                 \
+  };                                                            \
+  MOZ_FOR_EACH(ANODE_RELATION_FUNC, (), (__VA_ARGS__))          \
 
 #define ANODE_ACCESSOR_MUTATOR(typeName, type, defVal)                          \
   nsDataHashtable<nsUint32HashKey, type> m##typeName##Properties;               \
@@ -164,6 +181,12 @@ public:
     ValueNow
   )
 
+  ANODE_RELATION_PROPS(
+    ActiveDescendant,
+    Details,
+    ErrorMessage
+  )
+
 protected:
   AccessibleNode(const AccessibleNode& aCopy) = delete;
   AccessibleNode& operator=(const AccessibleNode& aCopy) = delete;
@@ -213,9 +236,29 @@ protected:
   ANODE_ACCESSOR_MUTATOR(Int, int32_t, 0)
   ANODE_ACCESSOR_MUTATOR(UInt, uint32_t, 0)
 
+  already_AddRefed<AccessibleNode> GetProperty(AOMRelationProperty aProperty)
+  {
+    RefPtr<AccessibleNode> data;
+    if (mRelationProperties.Get(static_cast<int>(aProperty), &data)) {
+      return data.forget();
+    }
+    return nullptr;
+  }
+
+  void SetProperty(AOMRelationProperty aProperty,
+                   AccessibleNode* aValue)
+  {
+    if (!aValue) {
+      mRelationProperties.Remove(static_cast<int>(aProperty));
+    } else {
+      mRelationProperties.Put(static_cast<int>(aProperty), aValue);
+    }
+  }
+
   // The 2k'th bit indicates whether the k'th boolean property is used(1) or not(0)
   // and 2k+1'th bit contains the property's value(1:true, 0:false)
   uint32_t mBooleanProperties;
+  nsDataHashtable<nsUint32HashKey, RefPtr<AccessibleNode> > mRelationProperties;
   nsDataHashtable<nsUint32HashKey, nsString> mStringProperties;
 
   RefPtr<a11y::Accessible> mIntl;

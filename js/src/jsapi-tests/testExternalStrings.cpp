@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/PodOperations.h"
 
 #include "jsapi-tests/tests.h"
 
+using mozilla::ArrayEqual;
 using mozilla::ArrayLength;
-using mozilla::PodEqual;
 
 static const char16_t arr[] = {
     'h', 'i', ',', 'd', 'o', 'n', '\'', 't', ' ', 'd', 'e', 'l', 'e', 't', 'e', ' ', 'm', 'e', '\0'
@@ -27,7 +26,7 @@ static const JSStringFinalizer finalizer2 = { finalize_str };
 static void
 finalize_str(const JSStringFinalizer* fin, char16_t* chars)
 {
-    if (chars && PodEqual(const_cast<const char16_t*>(chars), arr, arrlen)) {
+    if (chars && ArrayEqual(chars, arr, arrlen)) {
         if (fin == &finalizer1) {
             ++finalized1;
         } else if (fin == &finalizer2) {

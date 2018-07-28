@@ -1250,6 +1250,7 @@ nsWebBrowser::Create()
     mDocShell->SetItemType(nsIDocShellTreeItem::typeContent);
   }
   mDocShell->SetTreeOwner(mDocShellTreeOwner);
+  mDocShell->AttachBrowsingContext(nullptr);
 
   // If the webbrowser is a content docshell item then we won't hear any
   // events from subframes. To solve that we install our own chrome event

@@ -605,6 +605,12 @@ class Node : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(
     SCRIPTFILENAMEORREF_NOT_SET = 0,
   };
 
+  enum DescriptiveTypeNameOrRefCase {
+    kDescriptiveTypeName = 12,
+    kDescriptiveTypeNameRef = 13,
+    DESCRIPTIVETYPENAMEORREF_NOT_SET = 0,
+  };
+
   static inline const Node* internal_default_instance() {
     return reinterpret_cast<const Node*>(
                &_Node_default_instance_);
@@ -764,9 +770,32 @@ class Node : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(
   ::google::protobuf::uint64 scriptfilenameref() const;
   void set_scriptfilenameref(::google::protobuf::uint64 value);
 
+  // optional bytes descriptiveTypeName = 12;
+  bool has_descriptivetypename() const;
+  void clear_descriptivetypename();
+  static const int kDescriptiveTypeNameFieldNumber = 12;
+  const ::std::string& descriptivetypename() const;
+  void set_descriptivetypename(const ::std::string& value);
+  #if LANG_CXX11
+  void set_descriptivetypename(::std::string&& value);
+  #endif
+  void set_descriptivetypename(const char* value);
+  void set_descriptivetypename(const void* value, size_t size);
+  ::std::string* mutable_descriptivetypename();
+  ::std::string* release_descriptivetypename();
+  void set_allocated_descriptivetypename(::std::string* descriptivetypename);
+
+  // optional uint64 descriptiveTypeNameRef = 13;
+  bool has_descriptivetypenameref() const;
+  void clear_descriptivetypenameref();
+  static const int kDescriptiveTypeNameRefFieldNumber = 13;
+  ::google::protobuf::uint64 descriptivetypenameref() const;
+  void set_descriptivetypenameref(::google::protobuf::uint64 value);
+
   TypeNameOrRefCase TypeNameOrRef_case() const;
   JSObjectClassNameOrRefCase JSObjectClassNameOrRef_case() const;
   ScriptFilenameOrRefCase ScriptFilenameOrRef_case() const;
+  DescriptiveTypeNameOrRefCase descriptiveTypeNameOrRef_case() const;
   // @@protoc_insertion_point(class_scope:mozilla.devtools.protobuf.Node)
  private:
   void set_has_id();
@@ -783,6 +812,8 @@ class Node : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(
   void clear_has_coarsetype();
   void set_has_scriptfilename();
   void set_has_scriptfilenameref();
+  void set_has_descriptivetypename();
+  void set_has_descriptivetypenameref();
 
   inline bool has_TypeNameOrRef() const;
   void clear_TypeNameOrRef();
@@ -795,6 +826,10 @@ class Node : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(
   inline bool has_ScriptFilenameOrRef() const;
   void clear_ScriptFilenameOrRef();
   inline void clear_has_ScriptFilenameOrRef();
+
+  inline bool has_descriptiveTypeNameOrRef() const;
+  void clear_descriptiveTypeNameOrRef();
+  inline void clear_has_descriptiveTypeNameOrRef();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -819,7 +854,12 @@ class Node : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(
     ::google::protobuf::internal::ArenaStringPtr scriptfilename_;
     ::google::protobuf::uint64 scriptfilenameref_;
   } ScriptFilenameOrRef_;
-  ::google::protobuf::uint32 _oneof_case_[3];
+  union DescriptiveTypeNameOrRefUnion {
+    DescriptiveTypeNameOrRefUnion() {}
+    ::google::protobuf::internal::ArenaStringPtr descriptivetypename_;
+    ::google::protobuf::uint64 descriptivetypenameref_;
+  } descriptiveTypeNameOrRef_;
+  ::google::protobuf::uint32 _oneof_case_[4];
 
   friend struct protobuf_CoreDump_2eproto::TableStruct;
 };
@@ -2057,6 +2097,130 @@ inline void Node::set_scriptfilenameref(::google::protobuf::uint64 value) {
   // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Node.scriptFilenameRef)
 }
 
+// optional bytes descriptiveTypeName = 12;
+inline bool Node::has_descriptivetypename() const {
+  return descriptiveTypeNameOrRef_case() == kDescriptiveTypeName;
+}
+inline void Node::set_has_descriptivetypename() {
+  _oneof_case_[3] = kDescriptiveTypeName;
+}
+inline void Node::clear_descriptivetypename() {
+  if (has_descriptivetypename()) {
+    descriptiveTypeNameOrRef_.descriptivetypename_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    clear_has_descriptiveTypeNameOrRef();
+  }
+}
+inline const ::std::string& Node::descriptivetypename() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+  if (has_descriptivetypename()) {
+    return descriptiveTypeNameOrRef_.descriptivetypename_.GetNoArena();
+  }
+  return *&::google::protobuf::internal::GetEmptyStringAlreadyInited();
+}
+inline void Node::set_descriptivetypename(const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+  if (!has_descriptivetypename()) {
+    clear_descriptiveTypeNameOrRef();
+    set_has_descriptivetypename();
+    descriptiveTypeNameOrRef_.descriptivetypename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  descriptiveTypeNameOrRef_.descriptivetypename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+}
+#if LANG_CXX11
+inline void Node::set_descriptivetypename(::std::string&& value) {
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+  if (!has_descriptivetypename()) {
+    clear_descriptiveTypeNameOrRef();
+    set_has_descriptivetypename();
+    descriptiveTypeNameOrRef_.descriptivetypename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  descriptiveTypeNameOrRef_.descriptivetypename_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+}
+#endif
+inline void Node::set_descriptivetypename(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  if (!has_descriptivetypename()) {
+    clear_descriptiveTypeNameOrRef();
+    set_has_descriptivetypename();
+    descriptiveTypeNameOrRef_.descriptivetypename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  descriptiveTypeNameOrRef_.descriptivetypename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+}
+inline void Node::set_descriptivetypename(const void* value, size_t size) {
+  if (!has_descriptivetypename()) {
+    clear_descriptiveTypeNameOrRef();
+    set_has_descriptivetypename();
+    descriptiveTypeNameOrRef_.descriptivetypename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  descriptiveTypeNameOrRef_.descriptivetypename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+}
+inline ::std::string* Node::mutable_descriptivetypename() {
+  if (!has_descriptivetypename()) {
+    clear_descriptiveTypeNameOrRef();
+    set_has_descriptivetypename();
+    descriptiveTypeNameOrRef_.descriptivetypename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_mutable:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+  return descriptiveTypeNameOrRef_.descriptivetypename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* Node::release_descriptivetypename() {
+  // @@protoc_insertion_point(field_release:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+  if (has_descriptivetypename()) {
+    clear_has_descriptiveTypeNameOrRef();
+    return descriptiveTypeNameOrRef_.descriptivetypename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  } else {
+    return NULL;
+  }
+}
+inline void Node::set_allocated_descriptivetypename(::std::string* descriptivetypename) {
+  if (!has_descriptivetypename()) {
+    descriptiveTypeNameOrRef_.descriptivetypename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  clear_descriptiveTypeNameOrRef();
+  if (descriptivetypename != NULL) {
+    set_has_descriptivetypename();
+    descriptiveTypeNameOrRef_.descriptivetypename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+        descriptivetypename);
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.Node.descriptiveTypeName)
+}
+
+// optional uint64 descriptiveTypeNameRef = 13;
+inline bool Node::has_descriptivetypenameref() const {
+  return descriptiveTypeNameOrRef_case() == kDescriptiveTypeNameRef;
+}
+inline void Node::set_has_descriptivetypenameref() {
+  _oneof_case_[3] = kDescriptiveTypeNameRef;
+}
+inline void Node::clear_descriptivetypenameref() {
+  if (has_descriptivetypenameref()) {
+    descriptiveTypeNameOrRef_.descriptivetypenameref_ = GOOGLE_ULONGLONG(0);
+    clear_has_descriptiveTypeNameOrRef();
+  }
+}
+inline ::google::protobuf::uint64 Node::descriptivetypenameref() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.Node.descriptiveTypeNameRef)
+  if (has_descriptivetypenameref()) {
+    return descriptiveTypeNameOrRef_.descriptivetypenameref_;
+  }
+  return GOOGLE_ULONGLONG(0);
+}
+inline void Node::set_descriptivetypenameref(::google::protobuf::uint64 value) {
+  if (!has_descriptivetypenameref()) {
+    clear_descriptiveTypeNameOrRef();
+    set_has_descriptivetypenameref();
+  }
+  descriptiveTypeNameOrRef_.descriptivetypenameref_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Node.descriptiveTypeNameRef)
+}
+
 inline bool Node::has_TypeNameOrRef() const {
   return TypeNameOrRef_case() != TYPENAMEORREF_NOT_SET;
 }
@@ -2075,6 +2239,12 @@ inline bool Node::has_ScriptFilenameOrRef() const {
 inline void Node::clear_has_ScriptFilenameOrRef() {
   _oneof_case_[2] = SCRIPTFILENAMEORREF_NOT_SET;
 }
+inline bool Node::has_descriptiveTypeNameOrRef() const {
+  return descriptiveTypeNameOrRef_case() != DESCRIPTIVETYPENAMEORREF_NOT_SET;
+}
+inline void Node::clear_has_descriptiveTypeNameOrRef() {
+  _oneof_case_[3] = DESCRIPTIVETYPENAMEORREF_NOT_SET;
+}
 inline Node::TypeNameOrRefCase Node::TypeNameOrRef_case() const {
   return Node::TypeNameOrRefCase(_oneof_case_[0]);
 }
@@ -2083,6 +2253,9 @@ inline Node::JSObjectClassNameOrRefCase Node::JSObjectClassNameOrRef_case() cons
 }
 inline Node::ScriptFilenameOrRefCase Node::ScriptFilenameOrRef_case() const {
   return Node::ScriptFilenameOrRefCase(_oneof_case_[2]);
+}
+inline Node::DescriptiveTypeNameOrRefCase Node::descriptiveTypeNameOrRef_case() const {
+  return Node::DescriptiveTypeNameOrRefCase(_oneof_case_[3]);
 }
 // -------------------------------------------------------------------
 

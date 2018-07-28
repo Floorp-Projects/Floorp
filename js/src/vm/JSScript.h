@@ -9,10 +9,10 @@
 #ifndef vm_JSScript_h
 #define vm_JSScript_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Variant.h"
 
 #include "jstypes.h"
@@ -886,7 +886,7 @@ struct ScriptBytecodeHasher
             return false;
         if (entry->numNotes() != data->numNotes())
             return false;
-        return mozilla::PodEqual<uint8_t>(entry->data(), data->data(), data->dataLength());
+        return mozilla::ArrayEqual<uint8_t>(entry->data(), data->data(), data->dataLength());
     }
 };
 

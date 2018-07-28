@@ -541,7 +541,7 @@ Assumptions::operator==(const Assumptions& rhs) const
 {
     return cpuId == rhs.cpuId &&
            buildId.length() == rhs.buildId.length() &&
-           PodEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
+           ArrayEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
 }
 
 size_t

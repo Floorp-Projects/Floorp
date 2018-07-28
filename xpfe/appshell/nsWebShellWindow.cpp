@@ -199,6 +199,8 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   docShellAsItem->SetTreeOwner(mChromeTreeOwner);
   docShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
 
+  mDocShell->AttachBrowsingContext(nullptr);
+
   r.MoveTo(0, 0);
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
   NS_ENSURE_SUCCESS(docShellAsWin->InitWindow(nullptr, mWindow,

@@ -8,6 +8,7 @@
 
 #include "vm/Iteration.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
@@ -47,10 +48,10 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::ArrayEqual;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::PodCopy;
-using mozilla::PodEqual;
 
 typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
 
@@ -793,8 +794,8 @@ IteratorHashPolicy::match(PropertyIteratorObject* obj, const Lookup& lookup)
     if (ni->guardKey() != lookup.key || ni->guardCount() != lookup.numGuards)
         return false;
 
-    return PodEqual(reinterpret_cast<ReceiverGuard*>(ni->guardsBegin()), lookup.guards,
-                    ni->guardCount());
+    return ArrayEqual(reinterpret_cast<ReceiverGuard*>(ni->guardsBegin()), lookup.guards,
+                      ni->guardCount());
 }
 
 static inline bool

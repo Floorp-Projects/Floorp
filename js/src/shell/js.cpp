@@ -127,14 +127,13 @@ using namespace js::shell;
 
 using js::shell::RCFile;
 
+using mozilla::ArrayEqual;
 using mozilla::ArrayLength;
 using mozilla::Atomic;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::NumberEqualsInt32;
-using mozilla::PodCopy;
-using mozilla::PodEqual;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
@@ -2074,7 +2073,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
 
-            if (!PodEqual(loadBuffer.begin(), saveBuffer.begin(), loadBuffer.length())) {
+            if (!ArrayEqual(loadBuffer.begin(), saveBuffer.begin(), loadBuffer.length())) {
                 JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
                                           JSSMSG_CACHE_EQ_CONTENT_FAILED);
                 return false;
@@ -5582,7 +5581,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
     // Only append the stack if it differs from the last stack.
     if (sc->stacks.empty() ||
         sc->stacks.back().length() != stack.length() ||
-        !PodEqual(sc->stacks.back().begin(), stack.begin(), stack.length()))
+        !ArrayEqual(sc->stacks.back().begin(), stack.begin(), stack.length()))
     {
         if (!sc->stacks.append(std::move(stack)))
             oomUnsafe.crash("stacks.append");

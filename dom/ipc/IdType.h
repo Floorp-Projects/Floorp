@@ -15,9 +15,9 @@ template<typename T> struct ParamTraits;
 
 namespace mozilla {
 namespace dom {
+class BrowsingContext;
 class ContentParent;
 class TabParent;
-
 
 template<typename T>
 class IdType
@@ -46,7 +46,7 @@ private:
 
 typedef IdType<TabParent> TabId;
 typedef IdType<ContentParent> ContentParentId;
-
+typedef IdType<BrowsingContext> BrowsingContextId;
 } // namespace dom
 } // namespace mozilla
 

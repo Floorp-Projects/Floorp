@@ -19,6 +19,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 
+#include <algorithm>
 #include <stdint.h>
 #include <string.h>
 
@@ -158,38 +159,9 @@ PodMove(T* aDst, const T* aSrc, size_t aNElem)
 }
 
 /**
- * Determine whether the |len| elements at |one| are memory-identical to the
- * |len| elements at |two|.
+ * Looking for a PodEqual? Use ArrayEqual from ArrayUtils.h.
+ * Note that we *cannot* use memcmp for this, due to padding bytes, etc..
  */
-template<typename T>
-static MOZ_ALWAYS_INLINE bool
-PodEqual(const T* one, const T* two, size_t len)
-{
-  if (len < 128) {
-    const T* p1end = one + len;
-    const T* p1 = one;
-    const T* p2 = two;
-    for (; p1 < p1end; p1++, p2++) {
-      if (*p1 != *p2) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  return !memcmp(one, two, len * sizeof(T));
-}
-
-/*
- * Determine whether the |N| elements at |one| are memory-identical to the
- * |N| elements at |two|.
- */
-template <class T, size_t N>
-static MOZ_ALWAYS_INLINE bool
-PodEqual(const T (&one)[N], const T (&two)[N])
-{
-  return PodEqual(one, two, N);
-}
 
 } // namespace mozilla
 

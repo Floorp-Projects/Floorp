@@ -8,8 +8,8 @@
 
 #include "gtest/gtest.h"
 #include "md4.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
-#include "mozilla/PodOperations.h"
 
 struct RFC1320TestParams
 {
@@ -68,7 +68,7 @@ TEST_P(psm_MD4, RFC1320TestValues)
   uint8_t actualHash[16];
   md4sum(mozilla::BitwiseCast<const uint8_t*, const char*>(params.data),
          strlen(params.data), actualHash);
-  EXPECT_TRUE(mozilla::PodEqual(actualHash, params.expectedHash))
+  EXPECT_TRUE(mozilla::ArrayEqual(actualHash, params.expectedHash))
     << "MD4 hashes aren't equal for input: '" << params.data << "'";
 }
 
