@@ -411,23 +411,17 @@ this.tabs = class extends ExtensionAPI {
           },
         }).api(),
 
-        /**
-         * Since multiple tabs currently can't be highlighted, onHighlighted
-         * essentially acts an alias for self.tabs.onActivated but returns
-         * the tabId in an array to match the API.
-         * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
-        */
         onHighlighted: new EventManager({
           context,
           name: "tabs.onHighlighted",
           register: fire => {
             let listener = (eventName, event) => {
-              fire.async({tabIds: [event.tabId], windowId: event.windowId});
+              fire.async(event);
             };
 
-            tabTracker.on("tab-activated", listener);
+            tabTracker.on("tabs-highlighted", listener);
             return () => {
-              tabTracker.off("tab-activated", listener);
+              tabTracker.off("tabs-highlighted", listener);
             };
           },
         }).api(),

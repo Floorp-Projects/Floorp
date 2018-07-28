@@ -215,6 +215,17 @@ class EventEmitter {
   }
 
   /**
+   * Checks whether there is some listener for the given event.
+   *
+   * @param {string} event
+   *       The name of the event to listen for.
+   * @returns {boolean}
+   */
+  has(event) {
+    return this[LISTENERS].has(event);
+  }
+
+  /**
    * Adds the given function as a listener for the given event.
    *
    * The listener function may optionally return a Promise which
