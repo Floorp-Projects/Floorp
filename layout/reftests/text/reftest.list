@@ -323,6 +323,7 @@ pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.h
 == hyphenation-control-4.html hyphenation-control-4-ref.html
 fuzzy-if(winWidget,47,6) == hyphenation-control-5.html hyphenation-control-5-ref.html
 fails == hyphenation-control-6.html hyphenation-control-6-ref.html # bug 1476437
+fails == hyphenation-control-7.html hyphenation-control-7-ref.html # bug 1476437
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
 fails-if(!cocoaWidget) != osx-font-smoothing.html osx-font-smoothing-ref.html
