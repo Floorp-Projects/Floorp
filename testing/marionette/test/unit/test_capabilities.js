@@ -456,6 +456,7 @@ add_test(function test_Capabilities_fromJSON() {
     equal(strategy, caps.get("pageLoadStrategy"));
   }
   Assert.throws(() => fromJSON({pageLoadStrategy: "foo"}), InvalidArgumentError);
+  Assert.throws(() => fromJSON({pageLoadStrategy: null}), InvalidArgumentError);
 
   let proxyConfig = {proxyType: "manual"};
   caps = fromJSON({proxy: proxyConfig});

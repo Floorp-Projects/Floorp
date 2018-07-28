@@ -573,7 +573,7 @@ public:
     return Super::TraverseCXXMethodDecl(D);
   }
   bool TraverseCXXConstructorDecl(CXXConstructorDecl *D) {
-    AutoSetContext Asc(this, D, true);
+    AutoSetContext Asc(this, D, /*VisitImplicit=*/true);
     const FunctionDecl *Def;
     // See TraverseFunctionDecl.
     if (TemplateStack && D->isDefined(Def) && Def && D != Def) {
@@ -799,8 +799,7 @@ public:
   }
 
   bool shouldVisitImplicitCode() const {
-    AutoSetContext *Ctxt = CurDeclContext;
-    return Ctxt ? Ctxt->VisitImplicit : false;
+    return CurDeclContext && CurDeclContext->VisitImplicit;
   }
 
   bool TraverseClassTemplateDecl(ClassTemplateDecl *D) {

@@ -478,7 +478,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (stack.isObject()) {
-        JSAutoRealm ar(cx, &stack.toObject());
+        JSAutoRealmAllowCCW ar(cx, &stack.toObject());
 
         StructuredCloneData data;
         ErrorResult err;

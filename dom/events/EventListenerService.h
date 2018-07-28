@@ -61,7 +61,7 @@ protected:
  virtual ~EventListenerInfo();
 
   bool GetJSVal(JSContext* aCx,
-                Maybe<JSAutoRealm>& aAr,
+                Maybe<JSAutoRealmAllowCCW>& aAr,
                 JS::MutableHandle<JS::Value> aJSVal);
 
   nsString mType;

@@ -3640,10 +3640,13 @@ PropertyProvider::GetHyphenationBreaks(Range aRange, HyphenType* aBreakBefore) c
   }
 
   if (mTextStyle->mHyphens == StyleHyphens::Auto) {
-    uint32_t currentFragOffset = mStart.GetOriginalOffset();
+    gfxSkipCharsIterator skipIter(mStart);
     for (uint32_t i = 0; i < aRange.Length(); ++i) {
-      if (IS_HYPHEN(mFrag->CharAt(currentFragOffset + i))) {
-        aBreakBefore[i] = HyphenType::Explicit;
+      if (IS_HYPHEN(mFrag->
+          CharAt(skipIter.ConvertSkippedToOriginal(aRange.start + i)))) {
+        if (i < aRange.Length() - 1) {
+          aBreakBefore[i + 1] = HyphenType::Explicit;
+        }
         continue;
       }
 

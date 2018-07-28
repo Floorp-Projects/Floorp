@@ -31,7 +31,7 @@ TextEncoder::Encode(JSContext* aCx,
     return;
   }
 
-  JSAutoRealm ar(aCx, aObj);
+  JSAutoRealmAllowCCW ar(aCx, aObj);
   JSObject* outView = Uint8Array::Create(
     aCx, utf8.Length(), reinterpret_cast<const uint8_t*>(utf8.BeginReading()));
   if (!outView) {

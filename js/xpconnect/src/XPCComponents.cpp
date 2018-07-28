@@ -2528,7 +2528,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(HandleValue vobj, JSContext* cx)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     RootedObject obj(cx, js::UncheckedUnwrap(&vobj.toObject()));
-    JSAutoRealm ar(cx, obj);
+    JSAutoRealmAllowCCW ar(cx, obj);
     Rooted<IdVector> ida(cx, IdVector(cx));
     if (!JS_Enumerate(cx, obj, &ida))
         return NS_ERROR_FAILURE;
@@ -2659,7 +2659,7 @@ nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
 {
     RootedValue runnable(cx, runnableArg);
     // Enter the given realm, if any, and rewrap runnable.
-    Maybe<JSAutoRealm> ar;
+    Maybe<JSAutoRealmAllowCCW> ar;
     if (scope.isObject()) {
         JSObject* scopeObj = js::UncheckedUnwrap(&scope.toObject());
         if (!scopeObj)
@@ -2900,7 +2900,7 @@ nsXPCComponents_Utils::GenerateXPCWrappedJS(HandleValue aObj, HandleValue aScope
     RootedObject obj(aCx, &aObj.toObject());
     RootedObject scope(aCx, aScope.isObject() ? js::UncheckedUnwrap(&aScope.toObject())
                                               : CurrentGlobalOrNull(aCx));
-    JSAutoRealm ar(aCx, scope);
+    JSAutoRealmAllowCCW ar(aCx, scope);
     if (!JS_WrapObject(aCx, &obj))
         return NS_ERROR_FAILURE;
 
@@ -2968,7 +2968,7 @@ xpc::CloneInto(JSContext* aCx, HandleValue aValue, HandleValue aScope,
         return false;
 
     {
-        JSAutoRealm ar(aCx, scope);
+        JSAutoRealmAllowCCW ar(aCx, scope);
         aCloned.set(aValue);
         if (!StackScopedClone(aCx, options, aCloned))
             return false;
