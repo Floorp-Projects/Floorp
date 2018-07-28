@@ -97,7 +97,7 @@ BEGIN_TEST(test_ubiNodeZone)
     {
         // ... and then enter global2's zone and create a string and script
         // there, too.
-        JSAutoRealmAllowCCW ar(cx, global2);
+        JSAutoRealm ar(cx, global2);
 
         RootedString string2(cx, JS_NewStringCopyZ(cx, "A million household uses!"));
         CHECK(string2);
@@ -142,7 +142,7 @@ BEGIN_TEST(test_ubiNodeCompartment)
     {
         // ... and then enter global2's realm and create a script
         // there, too.
-        JSAutoRealmAllowCCW ar(cx, global2);
+        JSAutoRealm ar(cx, global2);
 
         RootedScript script2(cx);
         CHECK(JS::Compile(cx, options, "", 0, &script2));
