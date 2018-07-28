@@ -132,6 +132,10 @@ public:
     // even when its buffer is still being used.
     virtual void WaitForBufferOwnership() {}
 
+    // Returns true if the buffer is available.
+    // You can call WaitForBufferOwnership to wait for availability.
+    virtual bool IsBufferAvailable() const { return true; }
+
     // For use when AttachType is correct.
     virtual GLenum ProdTextureTarget() const {
         MOZ_ASSERT(mAttachType == AttachmentType::GLTexture);

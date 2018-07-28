@@ -429,6 +429,11 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
 
   SharedSurface* surf = mShSurfClient->Surf();
 
+  if (!surf->IsBufferAvailable()) {
+    NS_WARNING("SharedSurface buffer not available, skip update");
+    return;
+  }
+  
   // Readback if needed.
   mReadbackClient = nullptr;
 

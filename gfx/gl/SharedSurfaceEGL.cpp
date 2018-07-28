@@ -273,6 +273,11 @@ SharedSurface_SurfaceTexture::WaitForBufferOwnership()
 }
 
 bool
+SharedSurface_SurfaceTexture::IsBufferAvailable() const {
+    return mSurface->GetAvailable();
+}
+
+bool
 SharedSurface_SurfaceTexture::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
 {
     *out_descriptor =
