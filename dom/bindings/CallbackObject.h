@@ -433,9 +433,23 @@ public:
 
   void operator=(const CallbackObjectHolder& aOther) = delete;
 
+  void Reset()
+  {
+    UnlinkSelf();
+  }
+
   nsISupports* GetISupports() const
   {
     return reinterpret_cast<nsISupports*>(mPtrBits & ~XPCOMCallbackFlag);
+  }
+
+  already_AddRefed<nsISupports> Forget()
+  {
+    // This can be called from random threads.  Make sure to not refcount things
+    // in here!
+    nsISupports* supp = GetISupports();
+    mPtrBits = 0;
+    return dont_AddRef(supp);
   }
 
   // Boolean conversion operator so people can use this in boolean tests

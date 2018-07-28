@@ -755,10 +755,14 @@ SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
   } else {
     AutoNoJSAPI();
     MediaManager* manager = MediaManager::Get();
+    MediaManager::GetUserMediaSuccessCallback onsuccess(
+      new GetUserMediaSuccessCallback(this));
+    MediaManager::GetUserMediaErrorCallback onerror(
+      new GetUserMediaErrorCallback(this));
     manager->GetUserMedia(GetOwner(),
                           constraints,
-                          new GetUserMediaSuccessCallback(this),
-                          new GetUserMediaErrorCallback(this),
+                          std::move(onsuccess),
+                          std::move(onerror),
                           aCallerType);
   }
 
