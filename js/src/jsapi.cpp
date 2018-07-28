@@ -686,29 +686,44 @@ JS::LeaveRealm(JSContext* cx, JS::Realm* oldRealm)
     cx->leaveRealm(oldRealm);
 }
 
-JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
-                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoRealmAllowCCW::JSAutoRealmAllowCCW(JSContext* cx, JSObject* target
+                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldRealm_(cx->realm())
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     cx_->enterRealmOf(target);
+}
+
+JSAutoRealmAllowCCW::JSAutoRealmAllowCCW(JSContext* cx, JSScript* target
+                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : cx_(cx),
+    oldRealm_(cx->realm())
+{
+    AssertHeapIsIdleOrIterating();
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    cx_->enterRealmOf(target);
+}
+
+JSAutoRealmAllowCCW::~JSAutoRealmAllowCCW()
+{
+    cx_->leaveRealm(oldRealm_);
+}
+
+JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : JSAutoRealmAllowCCW(cx, target)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(target));
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx_(cx),
-    oldRealm_(cx->realm())
+  : JSAutoRealmAllowCCW(cx, target)
 {
-    AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx_->enterRealmOf(target);
-}
-
-JSAutoRealm::~JSAutoRealm()
-{
-    cx_->leaveRealm(oldRealm_);
 }
 
 JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,

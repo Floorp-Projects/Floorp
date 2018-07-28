@@ -160,7 +160,7 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
 
             if (obj) {
                 mozilla::AutoJSContext cx;
-                JSAutoRealm ar(cx, obj);
+                JSAutoRealmAllowCCW ar(cx, obj);
 
                 if (JS_HasExtensibleLexicalEnvironment(obj)) {
                     JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalEnvironment(obj));
