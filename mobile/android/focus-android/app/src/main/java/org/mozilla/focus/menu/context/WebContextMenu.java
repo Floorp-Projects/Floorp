@@ -93,6 +93,7 @@ public class WebContextMenu {
 
         final TextView warningView = (TextView) view.findViewById(R.id.warning);
         if (hitTarget.isImage) {
+            menu.setBackgroundResource(R.drawable.no_corners_context_menu_navigation_view_background);
             //noinspection deprecation -- Mew API is only available on 24+
             warningView.setText(Html.fromHtml(
                     context.getString(R.string.contextmenu_image_warning, context.getString(R.string.app_name))));

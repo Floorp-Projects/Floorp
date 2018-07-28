@@ -33,7 +33,7 @@
         android:id="@+id/warning"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#ff262626"
+        android:background="@drawable/images_removal_warning_background"
         android:textColor="#66ffffff"
         android:textSize="12sp"
         android:fontFamily="@string/font_roboto_regular"
