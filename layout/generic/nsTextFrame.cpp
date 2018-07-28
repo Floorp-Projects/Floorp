@@ -3643,7 +3643,9 @@ PropertyProvider::GetHyphenationBreaks(Range aRange, HyphenType* aBreakBefore) c
     uint32_t currentFragOffset = mStart.GetOriginalOffset();
     for (uint32_t i = 0; i < aRange.Length(); ++i) {
       if (IS_HYPHEN(mFrag->CharAt(currentFragOffset + i))) {
-        aBreakBefore[i] = HyphenType::Explicit;
+        if (i < aRange.Length() - 1) {
+          aBreakBefore[i + 1] = HyphenType::Explicit;
+        }
         continue;
       }
 
