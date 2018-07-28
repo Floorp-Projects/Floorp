@@ -38,7 +38,7 @@ eval(const char16_t* chars, size_t len, JS::MutableHandleValue rval)
 						   JS::FireOnNewGlobalHook, globalOptions));
     CHECK(global);
 
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
     JS::CompileOptions options(cx);
     return JS::Evaluate(cx, options, chars, len, rval);
 }
