@@ -616,7 +616,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRenderingAsync()
 {
   if (mWrBridge) {
-    mWrBridge->FlushRenderingAsync();
+    mWrBridge->FlushRendering(false);
     return IPC_OK();
   }
 
