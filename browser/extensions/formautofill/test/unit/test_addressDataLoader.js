@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
-
 const SUPPORT_COUNTRIES_TESTCASES = [
   {
     country: "US",
@@ -16,6 +14,10 @@ const SUPPORT_COUNTRIES_TESTCASES = [
     properties: ["name"],
   },
 ];
+
+add_task(async function setup() {
+  ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+});
 
 add_task(async function test_initalState() {
   // addressData should not exist

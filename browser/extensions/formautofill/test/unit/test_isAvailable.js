@@ -4,13 +4,10 @@
 
 "use strict";
 
-// Load bootstrap.js into a sandbox to be able to test `isAvailable`
-let sandbox = {};
-Services.scriptloader.loadSubScript(bootstrapURI, sandbox, "utf-8");
-info("bootstrapURI: " + bootstrapURI);
+const DOM_ENABLED_PREF = "dom.forms.autocomplete.formautofill";
 
 add_task(async function test_defaultTestEnvironment() {
-  Assert.ok(sandbox.isAvailable());
+  Assert.ok(Services.prefs.getBoolPref(DOM_ENABLED_PREF));
 });
 
 add_task(async function test_unsupportedRegion() {
@@ -19,7 +16,11 @@ add_task(async function test_unsupportedRegion() {
   registerCleanupFunction(function cleanupRegion() {
     Services.prefs.clearUserPref("browser.search.region");
   });
-  Assert.ok(!sandbox.isAvailable());
+
+  let addon = await AddonManager.getAddonByID(EXTENSION_ID);
+  await addon.reload();
+
+  Assert.ok(!Services.prefs.getBoolPref(DOM_ENABLED_PREF));
 });
 
 add_task(async function test_supportedRegion() {
@@ -28,5 +29,9 @@ add_task(async function test_supportedRegion() {
   registerCleanupFunction(function cleanupRegion() {
     Services.prefs.clearUserPref("browser.search.region");
   });
-  Assert.ok(sandbox.isAvailable());
+
+  let addon = await AddonManager.getAddonByID(EXTENSION_ID);
+  await addon.reload();
+
+  Assert.ok(Services.prefs.getBoolPref(DOM_ENABLED_PREF));
 });
