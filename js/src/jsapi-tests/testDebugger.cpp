@@ -19,7 +19,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
                                               JS::FireOnNewGlobalHook, options));
     CHECK(g);
     {
-        JSAutoRealm ae(cx, g);
+        JSAutoRealmAllowCCW ae(cx, g);
         CHECK(JS::InitRealmStandardClasses(cx));
     }
 
@@ -48,7 +48,7 @@ bool testIndirectEval(JS::HandleObject scope, const char* code)
     EXEC("hits = 0;");
 
     {
-        JSAutoRealm ae(cx, scope);
+        JSAutoRealmAllowCCW ae(cx, scope);
         JSString* codestr = JS_NewStringCopyZ(cx, code);
         CHECK(codestr);
         JS::RootedValue arg(cx, JS::StringValue(codestr));

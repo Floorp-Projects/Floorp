@@ -316,7 +316,7 @@ IDBRequest::SetResultCallback(ResultCallback* aCallback)
   }
 
   AutoJSAPI autoJS;
-  Maybe<JSAutoRealm> ar;
+  Maybe<JSAutoRealmAllowCCW> ar;
 
   if (GetScriptOwner()) {
     // If we have a script owner we want the SafeJSContext and then to enter the

@@ -755,7 +755,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       // enter the (maybe wrapper) object's realm. We will have to revisit this
       // later because CCWs are not associated with a single realm so this
       // doesn't make much sense. See bug 1477923.
-      JSAutoRealm ar(cx, object);
+      JSAutoRealmAllowCCW ar(cx, object);
 
       RootedDictionary<ReceiveMessageArgument> argument(cx);
 
@@ -1001,7 +1001,7 @@ nsFrameMessageManager::GetInitialProcessData(JSContext* aCx,
     // We create the initial object in the junk scope. If we created it in a
     // normal realm, that realm would leak until shutdown.
     JS::RootedObject global(aCx, xpc::PrivilegedJunkScope());
-    JSAutoRealm ar(aCx, global);
+    JSAutoRealmAllowCCW ar(aCx, global);
 
     JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
     if (!obj) {

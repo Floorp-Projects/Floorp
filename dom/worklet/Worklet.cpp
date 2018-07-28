@@ -402,7 +402,7 @@ ExecutionRunnable::RunOnWorkletThread()
   compileOptions.setIsRunOnce(true);
   compileOptions.setNoScriptRval(true);
 
-  JSAutoRealm ar(cx, globalObj);
+  JSAutoRealmAllowCCW ar(cx, globalObj);
 
   JS::SourceBufferHolder buffer(mScriptBuffer.release(), mScriptLength,
                                 JS::SourceBufferHolder::GiveOwnership);
@@ -540,7 +540,7 @@ Worklet::CreateGlobalScope(JSContext* aCx, WorkletType aWorkletType)
   JS::Rooted<JSObject*> global(aCx);
   NS_ENSURE_TRUE(scope->WrapGlobalObject(aCx, &global), nullptr);
 
-  JSAutoRealm ar(aCx, global);
+  JSAutoRealmAllowCCW ar(aCx, global);
 
   // Init Web IDL bindings
   if (!RegisterWorkletBindings(aCx, global)) {

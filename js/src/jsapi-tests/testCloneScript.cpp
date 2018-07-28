@@ -31,7 +31,7 @@ BEGIN_TEST(test_cloneScript)
 
     // compile for A
     {
-        JSAutoRealm a(cx, A);
+        JSAutoRealmAllowCCW a(cx, A);
         JS::RootedFunction fun(cx);
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, 1);
@@ -43,7 +43,7 @@ BEGIN_TEST(test_cloneScript)
 
     // clone into B
     {
-        JSAutoRealm b(cx, B);
+        JSAutoRealmAllowCCW b(cx, B);
         CHECK(JS::CloneFunctionObject(cx, obj));
     }
 
@@ -112,7 +112,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
 
     // Compile in A
     {
-        JSAutoRealm a(cx, A);
+        JSAutoRealmAllowCCW a(cx, A);
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, 1);
         JS::RootedFunction fun(cx);
@@ -131,7 +131,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
 
     // Clone into B
     {
-        JSAutoRealm b(cx, B);
+        JSAutoRealmAllowCCW b(cx, B);
         JS::RootedObject cloned(cx);
         CHECK(cloned = JS::CloneFunctionObject(cx, obj));
 

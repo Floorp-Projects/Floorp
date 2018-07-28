@@ -1192,7 +1192,7 @@ WrapperOwner::fromRemoteObjectVariant(JSContext* cx, const RemoteObject& objVar)
 
         // All CPOWs live in the privileged junk scope.
         RootedObject junkScope(cx, xpc::PrivilegedJunkScope());
-        JSAutoRealm ar(cx, junkScope);
+        JSAutoRealmAllowCCW ar(cx, junkScope);
         RootedValue v(cx, UndefinedValue());
         // We need to setLazyProto for the getPrototype/getPrototypeIfOrdinary
         // hooks.

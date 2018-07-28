@@ -291,7 +291,7 @@ JSObject*
 GetXBLScope(JSContext* cx, JSObject* contentScopeArg)
 {
     JS::RootedObject contentScope(cx, contentScopeArg);
-    JSAutoRealm ar(cx, contentScope);
+    JSAutoRealmAllowCCW ar(cx, contentScope);
     XPCWrappedNativeScope* nativeScope = RealmPrivate::Get(contentScope)->scope;
 
     RootedObject scope(cx, nativeScope->EnsureContentXBLScope(cx));
