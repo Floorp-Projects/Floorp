@@ -4,7 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
+add_task(async function() {
+  ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
+});
 
 const DEFAULT_ADDRESS_RECORD = {
   "guid": "123",

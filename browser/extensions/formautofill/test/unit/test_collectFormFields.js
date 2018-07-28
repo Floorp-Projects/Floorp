@@ -4,7 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
+add_task(async function setup() {
+  ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
+});
 
 const TESTCASES = [
   {

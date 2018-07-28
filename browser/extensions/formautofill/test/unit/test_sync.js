@@ -13,8 +13,11 @@ ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://testing-common/services/sync/utils.js");
 
-let {sanitizeStorageObject, AutofillRecord, AddressesEngine} =
-  ChromeUtils.import("resource://formautofill/FormAutofillSync.jsm", {});
+let sanitizeStorageObject, AutofillRecord, AddressesEngine;
+add_task(async function() {
+  ({sanitizeStorageObject, AutofillRecord, AddressesEngine} =
+    ChromeUtils.import("resource://formautofill/FormAutofillSync.jsm", {}));
+});
 
 
 Services.prefs.setCharPref("extensions.formautofill.loglevel", "Trace");
