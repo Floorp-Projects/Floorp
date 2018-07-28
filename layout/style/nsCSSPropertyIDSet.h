@@ -8,7 +8,6 @@
 #define nsCSSPropertyIDSet_h__
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/PodOperations.h"
 
 #include "nsCSSPropertyID.h"
 #include <limits.h> // for CHAR_BIT
@@ -64,7 +63,7 @@ public:
     }
 
     bool Equals(const nsCSSPropertyIDSet& aOther) const {
-      return mozilla::PodEqual(mProperties, aOther.mProperties);
+      return mozilla::ArrayEqual(mProperties, aOther.mProperties);
     }
 
     bool IsEmpty() const {

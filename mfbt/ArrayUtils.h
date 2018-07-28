@@ -14,6 +14,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
+#include <algorithm>
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -96,6 +97,24 @@ constexpr const T*
 ArrayEnd(const Array<T, N>& aArr)
 {
   return &aArr[0] + ArrayLength(aArr);
+}
+
+/**
+ * std::equal has subpar ergonomics.
+ */
+
+template<typename T, typename U, size_t N>
+bool
+ArrayEqual(const T (&a)[N], const U (&b)[N])
+{
+  return std::equal(a, a + N, b);
+}
+
+template<typename T, typename U>
+bool
+ArrayEqual(const T* const a, const U* const b, const size_t n)
+{
+  return std::equal(a, a + n, b);
 }
 
 namespace detail {

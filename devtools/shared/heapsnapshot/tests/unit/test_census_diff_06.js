@@ -31,6 +31,10 @@ const BREAKDOWN = {
     by: "internalType",
     then: { by: "count", count: false, bytes: true }
   },
+  domNode: {
+    by: "internalType",
+    then: { by: "count", count: false, bytes: true }
+  },
 };
 
 const stack1 = saveStack();
@@ -59,7 +63,8 @@ const REPORT1 = {
   },
   other: {
     "mozilla::dom::Thing": { bytes: 1 },
-  }
+  },
+  domNode: {}
 };
 
 const REPORT2 = {
@@ -85,7 +90,8 @@ const REPORT2 = {
   },
   other: {
     "mozilla::dom::OtherThing": { bytes: 1 },
-  }
+  },
+  domNode: {}
 };
 
 const EXPECTED = {
@@ -130,7 +136,8 @@ const EXPECTED = {
     "mozilla::dom::OtherThing": {
       "bytes": 1
     }
-  }
+  },
+  "domNode": {},
 };
 
 function run_test() {

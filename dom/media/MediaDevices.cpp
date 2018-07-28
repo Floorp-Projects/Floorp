@@ -6,6 +6,7 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaDeviceInfo.h"
 #include "mozilla/dom/MediaDevicesBinding.h"
+#include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/MediaManager.h"
 #include "MediaTrackConstraints.h"
@@ -182,11 +183,12 @@ MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  RefPtr<GumResolver> resolver = new GumResolver(p);
-  RefPtr<GumRejecter> rejecter = new GumRejecter(p);
+  MediaManager::GetUserMediaSuccessCallback resolver(new GumResolver(p));
+  MediaManager::GetUserMediaErrorCallback rejecter(new GumRejecter(p));
 
   aRv = MediaManager::Get()->GetUserMedia(GetOwner(), aConstraints,
-                                          resolver, rejecter,
+                                          std::move(resolver),
+                                          std::move(rejecter),
                                           aCallerType);
   return p.forget();
 }

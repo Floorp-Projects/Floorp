@@ -36,6 +36,7 @@
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -1895,6 +1896,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 #if defined(XP_WIN32) && defined(ACCESSIBILITY)
   a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
 #endif
+
+  BrowsingContext::CleanupContexts(ChildID());
 }
 
 bool
@@ -5975,5 +5978,116 @@ ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aPar
                                                                                  aTrackingOrigin,
                                                                                  aGrantedOrigin,
                                                                                  std::move(aResolver));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvAttachBrowsingContext(
+  const BrowsingContextId& aParentId,
+  const BrowsingContextId& aChildId,
+  const nsString& aName)
+{
+  RefPtr<BrowsingContext> parent = BrowsingContext::Get(aParentId);
+  if (aParentId && !parent) {
+    // Unless 'aParentId' is 0 (which it is when the child is a root
+    // BrowsingContext) there should always be a corresponding
+    // 'parent'. The only reason for there not beeing one is if the
+    // parent has already been detached, in which case the
+    // BrowsingContext that tries to attach itself to the context with
+    // 'aParentId' is surely doomed and we can safely do nothing.
+
+    // TODO(farre): When we start syncing/moving BrowsingContexts to
+    // other child processes is it possible to get into races where
+    // constructive operations on already detached BrowsingContexts
+    // are requested? This needs to be answered/handled, but for now
+    // return early. [Bug 1471598]
+    MOZ_LOG(
+      BrowsingContext::GetLog(),
+      LogLevel::Debug,
+      ("ParentIPC: Trying to attach to already detached parent 0x%08" PRIx64,
+       (uint64_t)aParentId));
+    return IPC_OK();
+  }
+
+  if (parent && parent->OwnerProcessId() != ChildID()) {
+    // Where trying attach a child BrowsingContext to a parent
+    // BrowsingContext in another process. This is illegal since the
+    // only thing that could create that child BrowsingContext is a
+    // parent docshell in the same process as that BrowsingContext.
+
+    // TODO(farre): We're doing nothing now, but is that exactly what
+    // we want? Maybe we want to crash the child currently calling
+    // SendAttachBrowsingContext and/or the child that originally
+    // called SendAttachBrowsingContext or possibly all children that
+    // has a BrowsingContext connected to the child that currently
+    // called SendAttachBrowsingContext? [Bug 1471598]
+    MOZ_LOG(BrowsingContext::GetLog(),
+            LogLevel::Warning,
+            ("ParentIPC: Trying to attach to out of process parent context "
+             "0x%08" PRIx64,
+             parent->Id()));
+    return IPC_OK();
+  }
+
+  RefPtr<BrowsingContext> child = BrowsingContext::Get(aChildId);
+  if (child && !child->IsCached()) {
+    // This is highly suspicious. BrowsingContexts should only be
+    // attached at most once, but finding one indicates that someone
+    // is doing something they shouldn't.
+
+    // TODO(farre): To crash or not to crash. Same reasoning as in
+    // above TODO. [Bug 1471598]
+    MOZ_LOG(BrowsingContext::GetLog(),
+            LogLevel::Warning,
+            ("ParentIPC: Trying to attach already attached 0x%08" PRIx64
+             " to 0x%08" PRIx64,
+             child->Id(),
+             (uint64_t)aParentId));
+    return IPC_OK();
+  }
+
+  if (!child) {
+    child = new BrowsingContext(aChildId, aName, Some(ChildID()));
+  }
+  child->Attach(parent);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvDetachBrowsingContext(const BrowsingContextId& aContextId,
+                                         const bool& aMoveToBFCache)
+{
+  RefPtr<BrowsingContext> context = BrowsingContext::Get(aContextId);
+
+  if (!context) {
+    MOZ_LOG(BrowsingContext::GetLog(),
+            LogLevel::Debug,
+            ("ParentIPC: Trying to detach already detached 0x%08" PRIx64,
+             (uint64_t)aContextId));
+    return IPC_OK();
+  }
+
+  if (context->OwnerProcessId() != ChildID()) {
+    // Where trying to detach a child BrowsingContext in another child
+    // process. This is illegal since the owner of the BrowsingContext
+    // is the proccess with the in-process docshell, which is tracked
+    // by OwnerProcessId.
+
+    // TODO(farre): To crash or not to crash. Same reasoning as in
+    // above TODO. [Bug 1471598]
+    MOZ_LOG(BrowsingContext::GetLog(),
+            LogLevel::Warning,
+            ("ParentIPC: Trying to detach out of process context 0x%08" PRIx64,
+             context->Id()));
+    return IPC_OK();
+  }
+
+  if (aMoveToBFCache) {
+    context->CacheChildren();
+  } else {
+    context->Detach();
+  }
+
   return IPC_OK();
 }

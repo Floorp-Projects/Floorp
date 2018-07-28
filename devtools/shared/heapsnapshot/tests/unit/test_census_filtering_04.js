@@ -19,6 +19,7 @@ function run_test() {
       noFilename: INTERNAL_TYPE
     },
     other: INTERNAL_TYPE,
+    domNode: { by: "descriptiveType", then: COUNT, other: COUNT },
   };
 
   const REPORT = {
@@ -49,7 +50,8 @@ function run_test() {
         count: 1,
         bytes: 10
       }
-    }
+    },
+    domNode: {}
   };
 
   const EXPECTED = {
@@ -73,8 +75,8 @@ function run_test() {
             totalBytes: 70,
             count: 7,
             totalCount: 7,
-            id: 13,
-            parent: 12,
+            id: 14,
+            parent: 13,
             children: undefined,
             reportLeafIndex: 2,
           },
@@ -84,18 +86,18 @@ function run_test() {
             totalBytes: 60,
             count: 6,
             totalCount: 6,
-            id: 14,
-            parent: 12,
+            id: 15,
+            parent: 13,
             children: undefined,
             reportLeafIndex: 3,
           },
         ],
-        id: 12,
-        parent: 11,
+        id: 13,
+        parent: 12,
         reportLeafIndex: undefined,
       }
     ],
-    id: 11,
+    id: 12,
     reportLeafIndex: undefined,
   };
 
