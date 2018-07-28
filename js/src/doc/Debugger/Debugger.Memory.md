@@ -275,13 +275,15 @@ Function Properties of the `Debugger.Memory.prototype` Object
 
         { "count": 1616, "bytes": 93240 }
 
-    Here is a breakdown that groups JavaScript objects by their class name, and
-    non-string, non-script items by their C++ type name:
+    Here is a breakdown that groups JavaScript objects by their class name,
+    non-string, non-script items by their C++ type name, and DOM nodes with
+    their node name:
 
         {
           by: "coarseType",
           objects: { by: "objectClass" },
-          other:   { by: "internalType" }
+          other:   { by: "internalType" },
+          domNode: { by: "descriptiveType" }
         }
 
     which produces a result like this:
@@ -300,6 +302,9 @@ Function Properties of the `Debugger.Memory.prototype` Object
             "js::Shape":        { "count": 450, "bytes": 0 },
             "js::BaseShape":    { "count": 21,  "bytes": 0 },
             "js::ObjectGroup":  { "count": 17,  "bytes": 0 }
+          },
+          "domNode": {
+            "#text":            { "count": 1,   "bytes": 12 }
           }
         }
 
@@ -370,7 +375,7 @@ Function Properties of the `Debugger.Memory.prototype` Object
         The results for non-object items appear as the value of the property
         named `"other"`.
 
-    <code>{ by: "coarseType", objects:<i>objects</i>, scripts:<i>scripts</i>, strings:<i>strings</i>, other:<i>other</i> }</code>
+    <code>{ by: "coarseType", objects:<i>objects</i>, scripts:<i>scripts</i>, strings:<i>strings</i>, domNode:<i>domNode</i>, other:<i>other</i> }</code>
     :   Group items by their coarse type.
 
         Use the breakdown value <i>objects</i> for items that are JavaScript
@@ -381,6 +386,8 @@ Function Properties of the `Debugger.Memory.prototype` Object
         machine code, and saved source code.
 
         Use the breakdown value <i>strings</i> for JavaScript strings.
+
+        Use the breakdown value <i>domNode</i> for DOM nodes.
 
         Use the breakdown value <i>other</i> for items that don't fit into any of
         the above categories.
@@ -393,6 +400,7 @@ Function Properties of the `Debugger.Memory.prototype` Object
           "objects": <i>result</i>,
           "scripts": <i>result</i>,
           "strings": <i>result</i>,
+          "domNode:" <i>result</i>,
           "other": <i>result</i>
         }
         </code></pre>
@@ -438,6 +446,7 @@ Function Properties of the `Debugger.Memory.prototype` Object
     {
       by: "coarseType",
       objects: { by: "objectClass" },
+      domNode: { by: "descriptiveType" },
       other:   { by: "internalType" }
     }
     </code></pre>
@@ -449,6 +458,7 @@ Function Properties of the `Debugger.Memory.prototype` Object
       objects: { <i>class</i>: <i>count</i>, ... },
       scripts: <i>count</i>,
       strings: <i>count</i>,
+      domNode: { <i>node name</i>: <i>count</i>, ... },
       other:   { <i>type name</i>: <i>count</i>, ... }
     }
     </code></pre>

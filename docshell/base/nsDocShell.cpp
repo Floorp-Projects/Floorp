@@ -475,6 +475,8 @@ nsDocShell::Init()
   rv = nsDocLoader::AddDocLoaderAsChildOfRoot(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mBrowsingContext = new BrowsingContext(this);
+
   // Add as |this| a progress listener to itself.  A little weird, but
   // simpler than reproducing all the listener-notification logic in
   // overrides of the various methods via which nsDocLoader can be
@@ -505,7 +507,8 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDocShell,
                                    mSessionStorageManager,
                                    mScriptGlobal,
                                    mInitialClientSource,
-                                   mSessionHistory)
+                                   mSessionHistory,
+                                   mBrowsingContext)
 
 NS_IMPL_ADDREF_INHERITED(nsDocShell, nsDocLoader)
 NS_IMPL_RELEASE_INHERITED(nsDocShell, nsDocLoader)
@@ -2539,14 +2542,14 @@ nsDocShell::NotifyScrollObservers()
 NS_IMETHODIMP
 nsDocShell::GetName(nsAString& aName)
 {
-  aName = mName;
+  mBrowsingContext->GetName(aName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetName(const nsAString& aName)
 {
-  mName = aName;
+  mBrowsingContext->SetName(aName);
   return NS_OK;
 }
 
@@ -2554,7 +2557,7 @@ NS_IMETHODIMP
 nsDocShell::NameEquals(const nsAString& aName, bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mName.Equals(aName);
+  *aResult = mBrowsingContext->NameEquals(aName);
   return NS_OK;
 }
 
@@ -2851,6 +2854,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
   bool value;
   nsString customUserAgent;
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
+
   if (parentAsDocShell) {
     if (mAllowPlugins && NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value))) {
       SetAllowPlugins(value);
@@ -3259,7 +3263,7 @@ nsDocShell::DoFindItemWithName(const nsAString& aName,
                                nsIDocShellTreeItem** aResult)
 {
   // First we check our name.
-  if (mName.Equals(aName) && ItemIsActive(this) &&
+  if (mBrowsingContext->NameEquals(aName) && ItemIsActive(this) &&
       CanAccessItem(this, aOriginalRequestor)) {
     NS_ADDREF(*aResult = this);
     return NS_OK;
@@ -3550,6 +3554,8 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
     return NS_OK;
   }
 
+  childAsDocShell->AttachBrowsingContext(this);
+
   // charset, style-disabling, and zoom will be inherited in SetupNewViewer()
 
   // Now take this document's charset and set the child's parentCharset field
@@ -3611,6 +3617,11 @@ nsDocShell::RemoveChild(nsIDocShellTreeItem* aChild)
 
   nsresult rv = RemoveChildLoader(childAsDocLoader);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
+  if (childAsDocShell) {
+    childAsDocShell->DetachBrowsingContext();
+  }
 
   aChild->SetTreeOwner(nullptr);
 
@@ -5289,6 +5300,8 @@ nsDocShell::Destroy()
     mSessionHistory->EvictLocalContentViewers();
     mSessionHistory = nullptr;
   }
+
+  mBrowsingContext->Detach();
 
   SetTreeOwner(nullptr);
 
@@ -7749,6 +7762,8 @@ nsDocShell::CaptureState()
 
     mOSHE->AddChildShell(childShell);
   }
+
+  mBrowsingContext->CacheChildren();
 
   return NS_OK;
 }
@@ -14222,4 +14237,32 @@ bool
 nsDocShell::IsForceReloading()
 {
   return IsForceReloadType(mLoadType);
+}
+
+already_AddRefed<BrowsingContext>
+nsDocShell::GetBrowsingContext() const
+{
+  RefPtr<BrowsingContext> browsingContext = mBrowsingContext;
+  return browsingContext.forget();
+}
+
+void
+nsIDocShell::AttachBrowsingContext(nsIDocShell* aParentDocShell)
+{
+  RefPtr<BrowsingContext> childContext =
+    nsDocShell::Cast(this)->GetBrowsingContext();
+  RefPtr<BrowsingContext> parentContext;
+  if (aParentDocShell) {
+    parentContext =
+      nsDocShell::Cast(aParentDocShell)->GetBrowsingContext();
+  }
+  childContext->Attach(parentContext);
+}
+
+void
+nsIDocShell::DetachBrowsingContext()
+{
+  RefPtr<BrowsingContext> browsingContext =
+    nsDocShell::Cast(this)->GetBrowsingContext();
+  browsingContext->Detach();
 }

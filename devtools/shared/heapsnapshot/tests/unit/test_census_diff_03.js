@@ -10,6 +10,7 @@ const BREAKDOWN = {
   scripts: { by: "count", count: true, bytes: true },
   strings: { by: "count", count: true, bytes: true },
   other: { by: "count", count: true, bytes: true },
+  domNode: { by: "count", count: true, bytes: true },
 };
 
 const REPORT1 = {
@@ -28,6 +29,10 @@ const REPORT1 = {
   other: {
     count: 3,
     bytes: 30,
+  },
+  domNode: {
+    count: 0,
+    bytes: 0,
   },
 };
 
@@ -48,6 +53,10 @@ const REPORT2 = {
     count: 4,
     bytes: 40,
   },
+  domNode: {
+    count: 0,
+    bytes: 0,
+  },
 };
 
 const EXPECTED = {
@@ -66,6 +75,10 @@ const EXPECTED = {
   other: {
     count: 1,
     bytes: 10,
+  },
+  domNode: {
+    count: 0,
+    bytes: 0,
   },
 };
 

@@ -29,6 +29,7 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaStreamError.h"
+#include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Logging.h"
@@ -202,17 +203,21 @@ public:
   void RemoveFromWindowList(uint64_t aWindowID,
     GetUserMediaWindowListener *aListener);
 
+  typedef dom::CallbackObjectHolder<dom::NavigatorUserMediaSuccessCallback,
+    nsIDOMGetUserMediaSuccessCallback> GetUserMediaSuccessCallback;
+  typedef dom::CallbackObjectHolder<dom::NavigatorUserMediaErrorCallback,
+    nsIDOMGetUserMediaErrorCallback> GetUserMediaErrorCallback;
+
   nsresult GetUserMedia(
     nsPIDOMWindowInner* aWindow,
     const dom::MediaStreamConstraints& aConstraints,
-    nsIDOMGetUserMediaSuccessCallback* onSuccess,
-    nsIDOMGetUserMediaErrorCallback* onError,
+    GetUserMediaSuccessCallback&& onSuccess,
+    GetUserMediaErrorCallback&& onError,
     dom::CallerType aCallerType);
 
   nsresult GetUserMediaDevices(nsPIDOMWindowInner* aWindow,
                                const dom::MediaStreamConstraints& aConstraints,
-                               nsIGetUserMediaDevicesSuccessCallback* onSuccess,
-                               nsIDOMGetUserMediaErrorCallback* onError,
+                               dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                                uint64_t aInnerWindowID = 0,
                                const nsAString& aCallID = nsString());
 

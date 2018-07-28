@@ -513,7 +513,7 @@ public:
   // contents start at rightside also cause their horizontal scrollbars, if any,
   // initially start at rightside. So we can also learn about the initial side
   // of the horizontal scrollbar for the frame by calling this function.
-  bool IsHorizontalContentRightToLeft() {
+  bool IsHorizontalContentRightToLeft() const {
     return mScrollableRect.x < 0;
   }
 
