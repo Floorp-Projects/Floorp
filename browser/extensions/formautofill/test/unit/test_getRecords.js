@@ -4,9 +4,13 @@
 
 "use strict";
 
-let {FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {});
-ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
 ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
+
+let FormAutofillParent;
+add_task(async function setup() {
+  ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {}));
+  ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
+});
 
 const TEST_ADDRESS_1 = {
   "given-name": "Timothy",

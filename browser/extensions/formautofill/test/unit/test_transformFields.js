@@ -4,7 +4,10 @@
 
 "use strict";
 
-const {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
+let FormAutofillStorage;
+add_task(async function setup() {
+  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {}));
+});
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
@@ -901,6 +904,8 @@ add_task(async function test_computeAddressFields() {
 
     profileStorage.addresses.remove(guid);
   });
+
+  await profileStorage._finalize();
 });
 
 add_task(async function test_normalizeAddressFields() {
@@ -918,6 +923,8 @@ add_task(async function test_normalizeAddressFields() {
 
     profileStorage.addresses.remove(guid);
   });
+
+  await profileStorage._finalize();
 });
 
 add_task(async function test_computeCreditCardFields() {
@@ -935,6 +942,8 @@ add_task(async function test_computeCreditCardFields() {
 
     profileStorage.creditCards.remove(guid);
   });
+
+  await profileStorage._finalize();
 });
 
 add_task(async function test_normalizeCreditCardFields() {
@@ -952,4 +961,6 @@ add_task(async function test_normalizeCreditCardFields() {
 
     profileStorage.creditCards.remove(guid);
   });
+
+  await profileStorage._finalize();
 });
