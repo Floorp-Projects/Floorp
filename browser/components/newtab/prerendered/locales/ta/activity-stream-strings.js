@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "உங்களின் மின்னஞ்சலை உள்ளிடுக",
   "firstrun_form_sub_header": "பயர்பாக்சு ஒத்திசையைத் தொடர.",
   "firstrun_email_input_placeholder": "மின்னஞ்சல்",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "நம்பகரமான மின்னஞ்சல் தேவை",
   "firstrun_extra_legal_links": "தொடர்வதன் மூலம், தாங்கள் {terms} மற்றும் {privacy} ஒப்புக்கொள்கின்றீர்கள்.",
   "firstrun_terms_of_service": "சேவையின் விதிமுறைகள்",
   "firstrun_privacy_notice": "தனியுரிமை அறிவிப்பு",

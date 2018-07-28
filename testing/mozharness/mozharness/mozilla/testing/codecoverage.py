@@ -112,19 +112,23 @@ class CodeCoverageMixin(SingleTestMixin):
         self.url_to_gcno = self.query_build_dir_url('target.code-coverage-gcno.zip')
         self.url_to_chrome_map = self.query_build_dir_url('chrome-map.json')
 
-        # Create the grcov directory, then download it.
-        # TODO: use the fetch-content script to download artifacts.
-        self.grcov_dir = tempfile.mkdtemp()
-        ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task}/artifacts/{artifact}'
-        for word in os.getenv('MOZ_FETCHES').split():
-            artifact, task = word.split('@', 1)
-            filename = os.path.basename(artifact)
-            url = ARTIFACT_URL.format(artifact=artifact, task=task)
-            self.download_file(url, parent_dir=self.grcov_dir)
+        fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
+        if fetches_dir and os.path.isfile(os.path.join(fetches_dir, 'grcov')):
+            self.grcov_dir = fetches_dir
+        else:
+            # Create the grcov directory, then download it.
+            # TODO: use the fetch-content script to download artifacts.
+            self.grcov_dir = tempfile.mkdtemp()
+            ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task}/artifacts/{artifact}'
+            for word in os.getenv('MOZ_FETCHES').split():
+                artifact, task = word.split('@', 1)
+                filename = os.path.basename(artifact)
+                url = ARTIFACT_URL.format(artifact=artifact, task=task)
+                self.download_file(url, parent_dir=self.grcov_dir)
 
-            with tarfile.open(os.path.join(self.grcov_dir, filename), 'r') as tar:
-                tar.extractall(self.grcov_dir)
-            os.remove(os.path.join(self.grcov_dir, filename))
+                with tarfile.open(os.path.join(self.grcov_dir, filename), 'r') as tar:
+                    tar.extractall(self.grcov_dir)
+                os.remove(os.path.join(self.grcov_dir, filename))
 
         # Download the gcno archive from the build machine.
         self.download_file(self.url_to_gcno, parent_dir=self.grcov_dir)

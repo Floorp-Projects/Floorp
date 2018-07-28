@@ -4,8 +4,8 @@ export const EXPERIMENT_PREF = "asrouterExperimentEnabled";
 
 export const FAKE_LOCAL_MESSAGES = [
   {id: "foo", template: "simple_template", content: {title: "Foo", body: "Foo123"}},
-  {id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}},
-  {id: "foo2", template: "simple_template", bundled: 2, content: {title: "Foo2", body: "Foo123-2"}},
+  {id: "foo1", template: "simple_template", bundled: 2, order: 1, content: {title: "Foo1", body: "Foo123-1"}},
+  {id: "foo2", template: "simple_template", bundled: 2, order: 2, content: {title: "Foo2", body: "Foo123-2"}},
   {id: "bar", template: "fancy_template", content: {title: "Foo", body: "Foo123"}},
   {id: "baz", content: {title: "Foo", body: "Foo123"}}
 ];

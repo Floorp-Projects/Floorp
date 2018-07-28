@@ -316,7 +316,7 @@ DirectMapTextureSource::DirectMapTextureSource(TextureSourceProvider* aProvider,
                                                gfx::DataSourceSurface* aSurface)
   : GLTextureSource(aProvider,
                     0,
-                    LOCAL_GL_TEXTURE_2D,
+                    LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                     aSurface->GetSize(),
                     aSurface->GetFormat())
 {
@@ -361,16 +361,19 @@ DirectMapTextureSource::UpdateInternal(gfx::DataSourceSurface* aSurface,
 
   if (aInit) {
     gl()->fGenTextures(1, &mTextureHandle);
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTextureHandle);
 
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                          LOCAL_GL_TEXTURE_STORAGE_HINT_APPLE,
                          LOCAL_GL_STORAGE_CACHED_APPLE);
+    gl()->fTextureRangeAPPLE(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                             aSurface->Stride() * aSurface->GetSize().height,
+                             aSurface->GetData());
 
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                          LOCAL_GL_TEXTURE_WRAP_S,
                          LOCAL_GL_CLAMP_TO_EDGE);
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                          LOCAL_GL_TEXTURE_WRAP_T,
                          LOCAL_GL_CLAMP_TO_EDGE);
   }
@@ -395,7 +398,7 @@ DirectMapTextureSource::UpdateInternal(gfx::DataSourceSurface* aSurface,
                                        aInit,
                                        srcPoint,
                                        LOCAL_GL_TEXTURE0,
-                                       LOCAL_GL_TEXTURE_2D);
+                                       LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
   gl()->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE, LOCAL_GL_FALSE);
   return true;

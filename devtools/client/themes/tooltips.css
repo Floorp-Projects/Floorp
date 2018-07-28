@@ -24,78 +24,11 @@
   --onboarding-link-active-color: var(--blue-70);
 }
 
-/* Tooltip widget (see devtools/client/shared/widgets/tooltip/Tooltip.js) */
-
-.devtools-tooltip .panel-arrowcontent {
-  padding: 4px;
-}
-
-.devtools-tooltip .panel-arrowcontainer {
-  /* Reseting the transition used when panels are shown */
-  transition: none;
-  /* Panels slide up/down/left/right when they appear using a transform.
-  Since we want to remove the transition, we don't need to transform anymore
-  plus it can interfeer by causing mouseleave events on the underlying nodes */
-  transform: none;
-}
-
-.devtools-tooltip[clamped-dimensions] {
-  min-height: 100px;
-  max-height: 400px;
-  min-width: 100px;
-  max-width: 400px;
-}
-.devtools-tooltip[clamped-dimensions-no-min-height] {
-  min-height: 0;
-  max-height: 400px;
-  min-width: 100px;
-  max-width: 400px;
-}
-.devtools-tooltip[clamped-dimensions-no-max-or-min-height] {
-  min-width: 400px;
-  max-width: 400px;
-}
-.devtools-tooltip[clamped-dimensions] .panel-arrowcontent,
-.devtools-tooltip[clamped-dimensions-no-min-height] .panel-arrowcontent,
-.devtools-tooltip[clamped-dimensions-no-max-or-min-height] .panel-arrowcontent {
-  overflow: hidden;
-}
-.devtools-tooltip[wide] {
-  max-width: 600px;
-}
-
 /* Tooltip: CSS variables tooltip */
 
 .devtools-tooltip-css-variable {
   color: var(--theme-body-color);
   padding: 2px;
-}
-
-/* Tooltip: Simple Text */
-
-.devtools-tooltip-simple-text {
-  max-width: 400px;
-  margin: 0 -4px; /* Compensate for the .panel-arrowcontent padding. */
-  padding: 8px 12px;
-  white-space: pre-wrap;
-}
-
-.devtools-tooltip-simple-text:first-child {
-  margin-top: -4px;
-}
-
-.devtools-tooltip-simple-text:last-child {
-  margin-bottom: -4px;
-}
-
-/* Tooltip: Variables View */
-
-.devtools-tooltip-variables-view-box {
-  margin: -4px; /* Compensate for the .panel-arrowcontent padding. */
-}
-
-.devtools-tooltip-variables-view-box .variable-or-property > .title {
-  padding-inline-end: 6px;
 }
 
 /* Tooltip: Tiles */
@@ -106,11 +39,6 @@
     linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
   background-size: 20px 20px;
   background-position: 0 0, 10px 10px;
-}
-
-.devtools-tooltip-iframe {
-  border: none;
-  background: transparent;
 }
 
 .tooltip-container {
@@ -611,72 +539,6 @@
   margin: 0;
   font-size: 9px;
   padding-top: 2px;
-}
-
-/*
- * Tooltip: JS stack traces
- */
-
-.stack-trace-tooltip {
-  direction: ltr;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.stack-trace-tooltip > .stack-frame {
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
-.stack-trace-tooltip > .stack-frame:first-child {
-  margin-top: 5px;
-}
-
-.stack-trace-tooltip > .stack-frame:last-child {
-  margin-bottom: 5px;
-}
-
-.stack-frame-call {
-  color: var(--theme-body-color-alt);
-  cursor: pointer;
-  display: flex;
-}
-
-.stack-frame-call:hover {
-  background-color: var(--theme-selection-background-hover);
-}
-
-.stack-frame-async {
-  color: var(--theme-body-color-inactive);
-}
-
-.stack-frame-function-name {
-  color: var(--theme-highlight-blue);
-  max-width: 50%;
-  margin-inline-end: 1em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stack-frame-source-name {
-  flex: 1 1;
-  /* Makes the file name truncated (and ellipsis shown) on the left side */
-  direction: rtl;
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Enforce LTR direction for the file name - fixes bug 1290056 */
-.stack-frame-source-name-inner {
-  direction: ltr;
-  unicode-bidi: embed;
-}
-
-.stack-frame-line {
-  color: var(--theme-highlight-orange);
 }
 
 /* Tooltip: HTML Search */

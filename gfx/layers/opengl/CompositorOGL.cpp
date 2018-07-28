@@ -967,7 +967,7 @@ CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
 
 ShaderConfigOGL
 CompositorOGL::GetShaderConfigFor(Effect *aEffect,
-                                  MaskType aMask,
+                                  TextureSourceOGL *aSourceMask,
                                   gfx::CompositionOp aOp,
                                   bool aColorMatrix,
                                   bool aDEAAEnabled) const
@@ -989,6 +989,7 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     // according to the bit depth.
     // So we will scale the YUV values by this amount.
     config.SetColorMultiplier(pow(2, paddingBits));
+    config.SetTextureTarget(effectYCbCr->mTexture->AsSourceOGL()->GetTextureTarget());
     break;
   }
   case EffectTypes::NV12:
@@ -1036,7 +1037,10 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
   }
   }
   config.SetColorMatrix(aColorMatrix);
-  config.SetMask(aMask == MaskType::Mask);
+  config.SetMask(!!aSourceMask);
+  if (aSourceMask) {
+    config.SetMaskTextureTarget(aSourceMask->GetTextureTarget());
+  }
   config.SetDEAA(aDEAAEnabled);
   config.SetCompositionOp(aOp);
   return config;
@@ -1298,7 +1302,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   bool colorMatrix = aEffectChain.mSecondaryEffects[EffectTypes::COLOR_MATRIX];
   ShaderConfigOGL config = GetShaderConfigFor(aEffectChain.mPrimaryEffect,
-                                              maskType, blendMode, colorMatrix,
+                                              sourceMask, blendMode, colorMatrix,
                                               bEnableAA);
 
   config.SetOpacity(aOpacity != 1.f);
@@ -1354,6 +1358,11 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     }
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
     program->SetTexCoordMultiplier(source->GetSize().width, source->GetSize().height);
+  }
+
+  if (sourceMask && config.mFeatures & ENABLE_MASK_TEXTURE_RECT) {
+    program->SetMaskCoordMultiplier(sourceMask->GetSize().width,
+                                    sourceMask->GetSize().height);
   }
 
   // XXX kip - These calculations could be performed once per layer rather than
@@ -1487,6 +1496,11 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
       sourceY->BindTexture(LOCAL_GL_TEXTURE0, effectYCbCr->mSamplingFilter);
       sourceCb->BindTexture(LOCAL_GL_TEXTURE1, effectYCbCr->mSamplingFilter);
       sourceCr->BindTexture(LOCAL_GL_TEXTURE2, effectYCbCr->mSamplingFilter);
+
+      if (config.mFeatures & ENABLE_TEXTURE_RECT) {
+        // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
+        program->SetCbCrTexCoordMultiplier(sourceCb->GetSize().width, sourceCb->GetSize().height);
+      }
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
       program->SetTextureTransform(Matrix4x4());

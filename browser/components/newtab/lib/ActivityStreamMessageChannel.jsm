@@ -5,6 +5,7 @@
 "use strict";
 
 ChromeUtils.import("resource:///modules/AboutNewTab.jsm");
+/* globals RemotePages */ // Remove when updating eslint-plugin-mozilla 0.14.0+
 ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
 
 const {actionCreators: ac, actionTypes: at, actionUtils: au} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
