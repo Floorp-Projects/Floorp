@@ -421,8 +421,14 @@ pref("media.navigator.audio.use_fec", true);
 pref("media.navigator.video.red_ulpfec_enabled", false);
 
 pref("media.peerconnection.dtmf.enabled", true);
+
+#ifdef NIGHTLY_BUILD
+pref("media.peerconnection.sdp.rust.enabled", true);
+pref("media.peerconnection.sdp.rust.compare", true);
+#else
 pref("media.peerconnection.sdp.rust.enabled", false);
 pref("media.peerconnection.sdp.rust.compare", false);
+#endif
 
 pref("media.webrtc.debug.trace_mask", 0);
 pref("media.webrtc.debug.multi_log", false);
