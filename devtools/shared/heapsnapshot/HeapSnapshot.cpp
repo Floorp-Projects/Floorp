@@ -284,11 +284,21 @@ HeapSnapshot::saveNode(const protobuf::Node& node, NodeIdSet& edgeReferents)
       return false;
   }
 
+  const char16_t* descriptiveTypeName = nullptr;
+  if (node.descriptiveTypeNameOrRef_case() != protobuf::Node::DESCRIPTIVETYPENAMEORREF_NOT_SET) {
+    Maybe<StringOrRef> descriptiveTypeNameOrRef = GET_STRING_OR_REF(node, descriptivetypename);
+    descriptiveTypeName = getOrInternString<char16_t>(internedTwoByteStrings, descriptiveTypeNameOrRef);
+    if (NS_WARN_IF(!descriptiveTypeName))
+        return false;
+  }
+
   if (NS_WARN_IF(!nodes.putNew(id, DeserializedNode(id, coarseType, typeName,
                                                     size, std::move(edges),
                                                     allocationStack,
                                                     jsObjectClassName,
-                                                    scriptFilename, *this))))
+                                                    scriptFilename,
+                                                    descriptiveTypeName,
+                                                     *this))))
   {
     return false;
   };
@@ -1335,6 +1345,16 @@ public:
       if (NS_WARN_IF(!attachOneByteString(scriptFilename,
                                           [&] (std::string* name) { protobufNode.set_allocated_scriptfilename(name); },
                                           [&] (uint64_t ref) { protobufNode.set_scriptfilenameref(ref); })))
+      {
+        return false;
+      }
+    }
+
+    if (ubiNode.descriptiveTypeName()) {
+      auto descriptiveTypeName = TwoByteString(ubiNode.descriptiveTypeName());
+      if (NS_WARN_IF(!attachTwoByteString(descriptiveTypeName,
+                                          [&] (std::string* name) { protobufNode.set_allocated_descriptivetypename(name); },
+                                          [&] (uint64_t ref) { protobufNode.set_descriptivetypenameref(ref); })))
       {
         return false;
       }

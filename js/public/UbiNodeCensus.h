@@ -30,6 +30,8 @@
 //       - objects with a specific [[Class]] *
 //     - strings
 //     - scripts
+//     - DOM nodes
+//       - nsINodes with a specific name (found in nsINode::NodeName()) *
 //     - all other Node types
 //       - nodes with a specific ubi::Node::typeName *
 //
@@ -47,7 +49,8 @@
 //    {
 //      by: "coarseType",
 //      objects: { by: "objectClass" },
-//      other:    { by: "internalType" }
+//      other:    { by: "internalType" },
+//      domNode: { by: "descriptiveType" }
 //    }
 //
 // we would build the following tree of CountType subclasses:
@@ -58,6 +61,8 @@
 //      scripts: SimpleCount
 //      strings: SimpleCount
 //      other: ByUbinodeType
+//        each type: SimpleCount
+//      domNode: ByDomObjectClass
 //        each type: SimpleCount
 //
 // The interior nodes are all breakdown types that categorize nodes according to

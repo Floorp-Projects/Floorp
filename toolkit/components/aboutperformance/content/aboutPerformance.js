@@ -603,7 +603,7 @@ var State = {
                dispatchesSincePrevious: prev ? dispatches - prev.dispatchCount : NaN,
                dispatchesSinceStartOfBuffer: oldest ? dispatches - oldest.dispatchCount : NaN,
                children: tab.children});
-    }).sort((a, b) => b.dispatchesSinceStartOfBuffer - a.dispatchesSinceStartOfBuffer);
+    });
   }
 };
 
@@ -954,7 +954,7 @@ var Control = {
       // Make sure that we do not keep obsolete stuff around.
       View.DOMCache.trimTo(state.deltas);
     } else {
-      let counters = State.getCounters();
+      let counters = this._sortCounters(State.getCounters());
       for (let {name, image, totalDispatches, dispatchesSincePrevious,
                 totalDuration, durationSincePrevious, children} of counters) {
         function dispatchesAndDuration(dispatches, duration) {
@@ -994,6 +994,15 @@ var Control = {
 
     // Inform watchers
     Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, mode);
+  },
+  _sortCounters(counters) {
+    return counters.sort((a, b) => {
+      if (a.dispatchesSinceStartOfBuffer != b.dispatchesSinceStartOfBuffer)
+        return b.dispatchesSinceStartOfBuffer - a.dispatchesSinceStartOfBuffer;
+      if (a.totalDispatches != b.totalDispatches)
+        return b.totalDispatches - a.totalDispatches;
+      return a.name.localeCompare(b.name);
+    });
   },
   _setOptions(options) {
     dump(`about:performance _setOptions ${JSON.stringify(options)}\n`);

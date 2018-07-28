@@ -82,41 +82,6 @@ var Utils = { // jshint ignore:line
     return win.document.querySelector("browser[type=content][primary=true]");
   },
 
-  getAllMessageManagers: function getAllMessageManagers(aWindow) {
-    let messageManagers = new Set();
-
-    function collectLeafMessageManagers(mm) {
-      for (let i = 0; i < mm.childCount; i++) {
-        let childMM = mm.getChildAt(i);
-
-        if ("sendAsyncMessage" in childMM) {
-          messageManagers.add(childMM);
-        } else {
-          collectLeafMessageManagers(childMM);
-        }
-      }
-    }
-
-    collectLeafMessageManagers(aWindow.messageManager);
-
-    let browser = this.getCurrentBrowser(aWindow);
-    let document = browser ? browser.contentDocument : null;
-
-    if (document) {
-      let remoteframes = document.querySelectorAll("iframe");
-
-      for (let i = 0; i < remoteframes.length; ++i) {
-        let mm = this.getMessageManager(remoteframes[i]);
-        if (mm) {
-          messageManagers.add(mm);
-        }
-      }
-
-    }
-
-    return messageManagers;
-  },
-
   get isContentProcess() {
     delete this.isContentProcess;
     this.isContentProcess =
@@ -418,7 +383,8 @@ var Logger = { // jshint ignore:line
 
   logLevel: 1, // INFO;
 
-  test: false,
+  // Note: used for testing purposes. If true, also log to the console service.
+  useConsoleService: false,
 
   log: function log(aLogLevel) {
     if (aLogLevel < this.logLevel) {
@@ -430,9 +396,7 @@ var Logger = { // jshint ignore:line
     message = "[" + Utils.ScriptName + "] " + this._LEVEL_NAMES[aLogLevel + 1] +
       " " + message + "\n";
     dump(message);
-    // Note: used for testing purposes. If |this.test| is true, also log to
-    // the console service.
-    if (this.test) {
+    if (this.useConsoleService) {
       try {
         Services.console.logStringMessage(message);
       } catch (ex) {
