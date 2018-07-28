@@ -174,6 +174,8 @@ public:
     virtual void Commit() override;
 
     virtual void WaitForBufferOwnership() override;
+
+    virtual bool IsBufferAvailable() const override;
 };
 
 
