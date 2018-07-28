@@ -23,7 +23,7 @@ We encourage you to participate in this open source project. We love Pull Reques
 
 Before you attempt to make a contribution please read the [Community Participation Guidelines](https://www.mozilla.org/en-US/about/governance/policies/participation/).
 
-* [Guide to Contributing](https://github.com/mozilla-mobile/focus-android/wiki/Contributing) (**New contributors start here!**)
+* [Guide to Contributing](https://github.com/mozilla-mobile/shared-docs/blob/master/android/CONTRIBUTING.md) (**New contributors start here!**)
 
 * [View current Issues](https://github.com/mozilla-mobile/focus-android/issues) or [View current Pull Requests](https://github.com/mozilla-mobile/focus-android/pulls).
 
