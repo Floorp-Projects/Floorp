@@ -3388,14 +3388,11 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
 nsresult
 MediaManager::GetUserMediaDevices(nsPIDOMWindowInner* aWindow,
                                   const MediaStreamConstraints& aConstraints,
-                                  nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-                                  nsIDOMGetUserMediaErrorCallback* aOnFailure,
+                                  dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                                   uint64_t aWindowId,
                                   const nsAString& aCallID)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> onSuccess(aOnSuccess);
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure(aOnFailure);
   if (!aWindowId) {
     aWindowId = aWindow->WindowID();
   }
@@ -3412,7 +3409,7 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindowInner* aWindow,
     if (!aCallID.Length() || aCallID == callID) {
       if (mActiveCallbacks.Get(callID, getter_AddRefs(task))) {
         nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*task->mMediaDeviceSet);
-        onSuccess->OnSuccess(array);
+        aOnSuccess.Call(array);
         return NS_OK;
       }
     }
