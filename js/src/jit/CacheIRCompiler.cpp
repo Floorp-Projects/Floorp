@@ -6,6 +6,7 @@
 
 #include "jit/CacheIRCompiler.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
 
 #include <utility>
@@ -1165,7 +1166,7 @@ CacheIRStubKey::match(const CacheIRStubKey& entry, const CacheIRStubKey::Lookup&
     if (entry.stubInfo->codeLength() != l.length)
         return false;
 
-    if (!mozilla::PodEqual(entry.stubInfo->code(), l.code, l.length))
+    if (!mozilla::ArrayEqual(entry.stubInfo->code(), l.code, l.length))
         return false;
 
     return true;

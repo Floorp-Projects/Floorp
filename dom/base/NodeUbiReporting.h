@@ -36,7 +36,8 @@ public:
   js::UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
 
   nsINode& get() const { return *static_cast<nsINode*>(ptr); }
-  CoarseType coarseType() const final { return CoarseType::Other; }
+  CoarseType coarseType() const final { return CoarseType::DOMNode; }
+  const char16_t* descriptiveTypeName() const override;
 };
 
 template<>

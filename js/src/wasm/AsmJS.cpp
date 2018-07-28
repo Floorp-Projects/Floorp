@@ -18,6 +18,7 @@
 
 #include "wasm/AsmJS.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compression.h"
 #include "mozilla/MathAlgorithms.h"
@@ -58,6 +59,7 @@ using namespace js::frontend;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::ArrayEqual;
 using mozilla::CeilingLog2;
 using mozilla::Compression::LZ4;
 using mozilla::HashGeneric;
@@ -65,7 +67,6 @@ using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
 using mozilla::IsPowerOfTwo;
-using mozilla::PodEqual;
 using mozilla::PodZero;
 using mozilla::PositiveInfinity;
 using mozilla::Unused;
@@ -6827,7 +6828,7 @@ class ModuleCharsForLookup : ModuleChars
         MOZ_ASSERT(parseLimit >= parseBegin);
         if (uint32_t(parseLimit - parseBegin) < chars_.length())
             return false;
-        if (!PodEqual(chars_.begin(), parseBegin, chars_.length()))
+        if (!ArrayEqual(chars_.begin(), parseBegin, chars_.length()))
             return false;
         if (isFunCtor_ != parser.pc->isStandaloneFunctionBody())
             return false;

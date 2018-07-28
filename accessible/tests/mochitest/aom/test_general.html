@@ -84,6 +84,13 @@
     is(anode[prop], null, `anode.${prop} was assigned null`);
   }
 
+  function testRelationProp(anode, node, prop) {
+    is(anode[prop], null, `anode.${prop} should be null`);
+    anode[prop] = node.accessibleNode;
+    is(anode[prop], node.accessibleNode, `anode.${prop} was assigned AccessibleNode`);
+    anode[prop] = null;
+    is(anode[prop], null, `anode.${prop} was assigned null`);
+  }
   // Check that the WebIDL is as expected.
   function checkImplementation(ifrDoc) {
     let anode = ifrDoc.accessibleNode;
@@ -187,6 +194,12 @@
     let anotherDoc = document.implementation.createDocument("", "", null);
     let adopted_node = anotherDoc.adoptNode(node);
     is(anode, adopted_node.accessibleNode, "adopting node to another document doesn't change node.accessibleNode");
+
+    const relationProps = ["activeDescendant", "details", "errorMessage"];
+
+    for (const relationProp of relationProps) {
+      testRelationProp(anode, node, relationProp);
+    }
 
     finish();
   }

@@ -24,6 +24,10 @@ function run_test() {
       by: "internalType",
       then: { by: "count", count: true, bytes: true },
     },
+    domNode: {
+      by: "descriptiveType",
+      then: { by: "count", count: true, bytes: true },
+    },
   };
 
   const REPORT = {
@@ -41,7 +45,8 @@ function run_test() {
     },
     other: {
       "js::Shape": { bytes: 80, count: 8 },
-    }
+    },
+    domNode: {}
   };
 
   const EXPECTED = {
@@ -51,7 +56,7 @@ function run_test() {
     count: 0,
     totalCount: 62,
     children: undefined,
-    id: 13,
+    id: 14,
     parent: undefined,
     reportLeafIndex: undefined,
   };
