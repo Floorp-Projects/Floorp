@@ -2587,7 +2587,7 @@ window._gBrowser = {
   removeTabs(tabs) {
     let tabsWithBeforeUnload = [];
     let lastToClose;
-    let aParams = {animation: true};
+    let aParams = { animate: true };
     for (let tab of tabs) {
       if (tab.selected)
         lastToClose = tab;
