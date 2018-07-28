@@ -3769,7 +3769,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
               return true;
             }
 
-            JSAutoRealmAllowCCW ar(aCx, global);
+            JSAutoRealm ar(aCx, global);
             $*{declareProto}
 
             $*{createObject}
@@ -3933,7 +3933,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
 
             // aReflector is a new global, so has a new realm.  Enter it
             // before doing anything with it.
-            JSAutoRealmAllowCCW ar(aCx, aReflector);
+            JSAutoRealm ar(aCx, aReflector);
 
             if (!DefineProperties(aCx, aReflector, ${properties}, ${chromeProperties})) {
               $*{failureCode}
@@ -4018,7 +4018,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
                 """
                 JS::Rooted<JS::Value> temp(aCx);
                 JSJitGetterCallArgs args(&temp);
-                JSAutoRealmAllowCCW ar(aCx, obj);
+                JSAutoRealm ar(aCx, obj);
                 if (!get_${name}(aCx, obj, aObject, args)) {
                   js::SetReservedSlot(obj, ${slotIndex}, oldValue);
                   return false;
@@ -5418,7 +5418,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
               JS::Rooted<JSObject*> globalObj(cx);
               $*{getPromiseGlobal}
-              JSAutoRealmAllowCCW ar(cx, globalObj);
+              JSAutoRealm ar(cx, globalObj);
               GlobalObject promiseGlobal(cx, globalObj);
               if (promiseGlobal.Failed()) {
                 $*{exceptionCode}
@@ -7661,7 +7661,7 @@ class CGPerSignatureCall(CGThing):
                 # JSAPI types, present.  Effectively, we're emulating a
                 # CrossCompartmentWrapper, but working with the C++ types, not the
                 # original list of JS::Values.
-                cgThings.append(CGGeneric("Maybe<JSAutoRealmAllowCCW> ar;\n"))
+                cgThings.append(CGGeneric("Maybe<JSAutoRealm> ar;\n"))
                 xraySteps.append(CGGeneric("ar.emplace(cx, obj);\n"))
                 xraySteps.append(CGGeneric(dedent(
                     """
@@ -7879,7 +7879,7 @@ class CGPerSignatureCall(CGThing):
                   $*{postConversionSteps}
                 }
                 { // And now store things in the realm of our slotStorage.
-                  JSAutoRealmAllowCCW ar(cx, slotStorage);
+                  JSAutoRealm ar(cx, slotStorage);
                   $*{slotStorageSteps}
                 }
                 // And now make sure args.rval() is in the caller realm.
@@ -10866,7 +10866,7 @@ class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
               // then use the fact that it created the objects as a flag
               // to avoid re-resolving the properties if someone deletes
               // them.
-              JSAutoRealmAllowCCW ar(cx, obj);
+              JSAutoRealm ar(cx, obj);
               JS_MarkCrossZoneId(cx, id);
               JS::Rooted<JS::PropertyDescriptor> objDesc(cx);
               if (!self->DoResolve(cx, obj, id, &objDesc)) {
@@ -11561,7 +11561,7 @@ class CGDeleteNamedProperty(CGAbstractStaticMethod):
             MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(xray));
             MOZ_ASSERT(js::IsProxy(proxy));
             MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy));
-            JSAutoRealmAllowCCW ar(cx, proxy);
+            JSAutoRealm ar(cx, proxy);
             bool deleteSucceeded = false;
             bool found = false;
             $*{namedBody}
@@ -12756,7 +12756,7 @@ class CGDictionary(CGThing):
                 // side-effects, followed by a call to JS::ToJSONMaybeSafely,
                 // which likewise guarantees no side-effects for the sorts of
                 // things we will pass it.
-                JSAutoRealmAllowCCW ar(cx, UnprivilegedJunkScopeOrWorkerGlobal());
+                JSAutoRealm ar(cx, UnprivilegedJunkScopeOrWorkerGlobal());
                 JS::Rooted<JS::Value> val(cx);
                 if (!ToObjectInternal(cx, &val)) {
                   return false;
@@ -16654,7 +16654,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
             // all we want is to wrap into _some_ scope and then unwrap to find
             // the reflector, and wrapping has no side-effects.
-            JSAutoRealmAllowCCW tempRealm(cx, UnprivilegedJunkScopeOrWorkerGlobal());
+            JSAutoRealm tempRealm(cx, UnprivilegedJunkScopeOrWorkerGlobal());
             JS::Rooted<JS::Value> v(cx);
             if(!ToJSValue(cx, self, &v)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -16664,7 +16664,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             // similarly across method generators, it's called obj here.
             JS::Rooted<JSObject*> obj(cx);
             obj = js::UncheckedUnwrap(&v.toObject(), /* stopAtWindowProxy = */ false);
-            JSAutoRealmAllowCCW reflectorRealm(cx, obj);
+            JSAutoRealm reflectorRealm(cx, obj);
             """ % self.getDefaultRetval())
 
     def getArgs(self, returnType, argList):
