@@ -1178,24 +1178,18 @@ Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
                            CallerType aCallerType,
                            ErrorResult& aRv)
 {
-  CallbackObjectHolder<NavigatorUserMediaSuccessCallback,
-                       nsIDOMGetUserMediaSuccessCallback> holder1(&aOnSuccess);
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onsuccess =
-    holder1.ToXPCOMCallback();
-
-  CallbackObjectHolder<NavigatorUserMediaErrorCallback,
-                       nsIDOMGetUserMediaErrorCallback> holder2(&aOnError);
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onerror = holder2.ToXPCOMCallback();
-
   if (!mWindow || !mWindow->GetOuterWindow() ||
       mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
   }
 
+  MediaManager::GetUserMediaSuccessCallback onsuccess(&aOnSuccess);
+  MediaManager::GetUserMediaErrorCallback onerror(&aOnError);
+
   MediaManager* manager = MediaManager::Get();
-  aRv = manager->GetUserMedia(mWindow, aConstraints, onsuccess, onerror,
-                              aCallerType);
+  aRv = manager->GetUserMedia(mWindow, aConstraints, std::move(onsuccess),
+                              std::move(onerror), aCallerType);
 }
 
 void
