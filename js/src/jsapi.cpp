@@ -711,6 +711,21 @@ JSAutoRealmAllowCCW::~JSAutoRealmAllowCCW()
     cx_->leaveRealm(oldRealm_);
 }
 
+JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : JSAutoRealmAllowCCW(cx, target)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(target));
+}
+
+JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : JSAutoRealmAllowCCW(cx, target)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
 JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,
                                          JSObject* targetOrNull
                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
