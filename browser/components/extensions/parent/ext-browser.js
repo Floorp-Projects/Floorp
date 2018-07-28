@@ -285,6 +285,7 @@ class TabTracker extends TabTrackerBase {
     windowTracker.addListener("TabClose", this);
     windowTracker.addListener("TabOpen", this);
     windowTracker.addListener("TabSelect", this);
+    windowTracker.addListener("TabMultiSelect", this);
     windowTracker.addOpenListener(this._handleWindowOpen);
     windowTracker.addCloseListener(this._handleWindowClose);
 
@@ -456,6 +457,16 @@ class TabTracker extends TabTrackerBase {
           this.emitActivated(nativeTab);
         });
         break;
+
+      case "TabMultiSelect":
+        if (this.has("tabs-highlighted")) {
+          // Because we are delaying calling emitCreated above, we also need to
+          // delay sending this event because it shouldn't fire before onCreated.
+          Promise.resolve().then(() => {
+            this.emitHighlighted(event.target.ownerGlobal);
+          });
+        }
+        break;
     }
   }
 
@@ -514,6 +525,9 @@ class TabTracker extends TabTrackerBase {
 
       // emitActivated to trigger tab.onActivated/tab.onHighlighted for a newly opened window.
       this.emitActivated(window.gBrowser.tabs[0]);
+      if (this.has("tabs-highlighted")) {
+        this.emitHighlighted(window);
+      }
     }
   }
 
@@ -546,6 +560,19 @@ class TabTracker extends TabTrackerBase {
     this.emit("tab-activated", {
       tabId: this.getId(nativeTab),
       windowId: windowTracker.getId(nativeTab.ownerGlobal)});
+  }
+
+  /**
+   * Emits a "tabs-highlighted" event for the given tab element.
+   *
+   * @param {ChromeWindow} window
+   *        The window in which the active tab or the set of multiselected tabs changed.
+   * @private
+   */
+  emitHighlighted(window) {
+    let tabIds = window.gBrowser.selectedTabs.map(tab => this.getId(tab));
+    let windowId = windowTracker.getId(window);
+    this.emit("tabs-highlighted", {tabIds, windowId});
   }
 
   /**
