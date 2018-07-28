@@ -41,6 +41,11 @@
   --in-content-table-background: #ebebeb;
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
+  --grey-20: #ededf0;
+  --grey-90: #0c0c0d;
+  --grey-90-a10: rgba(12, 12, 13, 0.1);
+  --grey-90-a20: rgba(12, 12, 13, 0.2);
+  --grey-90-a30: rgba(12, 12, 13, 0.3);
 }
 
 html|html,
@@ -844,4 +849,42 @@ xul|treechildren::-moz-tree-image {
 xul|treechildren::-moz-tree-cell-text(selected),
 xul|treechildren::-moz-tree-image(selected) {
   color: var(--in-content-selected-text);
+}
+
+/* Message bars */
+.message-bar {
+  background-color: var(--grey-20);
+  border-radius: 4px;
+  color: var(--grey-90);
+  min-height: 32px;
+  padding: 0 4px;
+}
+
+/* The message-bar-button styles have extra specificity to override
+ * the defaults for buttons. */
+.message-bar > hbox > .message-bar-button {
+  background-color: var(--grey-90-a10);
+  border: none;
+  border-radius: 2px;
+  height: 24px;
+  margin-inline-start: 8px;
+  padding: 0 8px;
+}
+
+.message-bar > hbox > .message-bar-button:hover {
+  background-color: var(--grey-90-a20);
+}
+
+.message-bar > hbox > .message-bar-button:active {
+  background-color: var(--grey-90-a30);
+}
+
+.message-bar-icon {
+  list-style-image: url("chrome://browser/skin/identity-icon.svg");
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  margin-inline-end: 4px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }

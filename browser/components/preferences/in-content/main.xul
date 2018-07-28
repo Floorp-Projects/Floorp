@@ -283,6 +283,20 @@
 <groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
   <caption><label data-l10n-id="language-header"/></caption>
 
+  <vbox id="browserLanguagesBox" align="start" hidden="true">
+    <description flex="1" controls="chooseBrowserLanguage" data-l10n-id="choose-browser-language-description"/>
+    <menulist id="defaultBrowserLanguage" class="accessory-button" oncommand="gMainPane.onBrowserLanguageChange(event)" flex="1">
+      <menupopup/>
+    </menulist>
+  </vbox>
+  <hbox id="confirmBrowserLanguage" class="message-bar" align="center" hidden="true">
+    <image class="message-bar-icon"/>
+    <hbox class="message-bar-content" align="center" flex="1">
+      <description flex="1"/>
+      <button class="message-bar-button" oncommand="gMainPane.confirmBrowserLanguageChange()"/>
+    </hbox>
+  </hbox>
+
   <hbox id="languagesBox" align="center">
     <description flex="1" control="chooseLanguage" data-l10n-id="choose-language-description"/>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->

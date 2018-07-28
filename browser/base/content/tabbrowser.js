@@ -1403,29 +1403,19 @@ window._gBrowser = {
     return tab;
   },
 
-  loadTabs(aURIs, aLoadInBackground, aReplace) {
-    let aTriggeringPrincipal;
-    let aAllowThirdPartyFixup;
-    let aTargetTab;
-    let aNewIndex = -1;
-    let aPostDatas = [];
-    let aUserContextId;
-    if (arguments.length == 2 &&
-        typeof arguments[1] == "object") {
-      let params = arguments[1];
-      aLoadInBackground = params.inBackground;
-      aReplace = params.replace;
-      aAllowThirdPartyFixup = params.allowThirdPartyFixup;
-      aTargetTab = params.targetTab;
-      aNewIndex = typeof params.newIndex === "number" ?
-        params.newIndex : aNewIndex;
-      aPostDatas = params.postDatas || aPostDatas;
-      aUserContextId = params.userContextId;
-      aTriggeringPrincipal = params.triggeringPrincipal;
-    }
-
-    if (!aURIs.length)
+  loadTabs(aURIs, {
+    allowThirdPartyFixup,
+    inBackground,
+    newIndex,
+    postDatas,
+    replace,
+    targetTab,
+    triggeringPrincipal,
+    userContextId,
+  } = {}) {
+    if (!aURIs.length) {
       return;
+    }
 
     // The tab selected after this new tab is closed (i.e. the new tab's
     // "owner") is the next adjacent tab (i.e. not the previously viewed tab)
@@ -1439,36 +1429,42 @@ window._gBrowser = {
     //    == 1              true                      NO
     //    > 1               false/true                NO
     var multiple = aURIs.length > 1;
-    var owner = multiple || aLoadInBackground ? null : this.selectedTab;
+    var owner = multiple || inBackground ? null : this.selectedTab;
     var firstTabAdded = null;
     var targetTabIndex = -1;
+
+    if (typeof newIndex != "number") {
+      newIndex = -1;
+    }
 
     // When bulk opening tabs, such as from a bookmark folder, we want to insertAfterCurrent
     // if necessary, but we also will set the bulkOrderedOpen flag so that the bookmarks
     // open in the same order they are in the folder.
-    if (multiple && aNewIndex < 0 && Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
-      aNewIndex = this.selectedTab._tPos + 1;
+    if (multiple &&
+        newIndex < 0 &&
+        Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
+      newIndex = this.selectedTab._tPos + 1;
     }
 
-    if (aReplace) {
+    if (replace) {
       let browser;
-      if (aTargetTab) {
-        browser = this.getBrowserForTab(aTargetTab);
-        targetTabIndex = aTargetTab._tPos;
+      if (targetTab) {
+        browser = this.getBrowserForTab(targetTab);
+        targetTabIndex = targetTab._tPos;
       } else {
         browser = this.selectedBrowser;
         targetTabIndex = this.tabContainer.selectedIndex;
       }
       let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      if (aAllowThirdPartyFixup) {
+      if (allowThirdPartyFixup) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
           Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
       }
       try {
         browser.loadURI(aURIs[0], {
           flags,
-          postData: aPostDatas[0],
-          triggeringPrincipal: aTriggeringPrincipal,
+          postData: postDatas && postDatas[0],
+          triggeringPrincipal,
         });
       } catch (e) {
         // Ignore failure in case a URI is wrong, so we can continue
@@ -1478,17 +1474,17 @@ window._gBrowser = {
       let params = {
         ownerTab: owner,
         skipAnimation: multiple,
-        allowThirdPartyFixup: aAllowThirdPartyFixup,
-        postData: aPostDatas[0],
-        userContextId: aUserContextId,
-        triggeringPrincipal: aTriggeringPrincipal,
+        allowThirdPartyFixup,
+        postData: postDatas && postDatas[0],
+        userContextId,
+        triggeringPrincipal,
         bulkOrderedOpen: multiple,
       };
-      if (aNewIndex > -1) {
-        params.index = aNewIndex;
+      if (newIndex > -1) {
+        params.index = newIndex;
       }
       firstTabAdded = this.addTab(aURIs[0], params);
-      if (aNewIndex > -1) {
+      if (newIndex > -1) {
         targetTabIndex = firstTabAdded._tPos;
       }
     }
@@ -1497,10 +1493,10 @@ window._gBrowser = {
     for (let i = 1; i < aURIs.length; ++i) {
       let params = {
         skipAnimation: true,
-        allowThirdPartyFixup: aAllowThirdPartyFixup,
-        postData: aPostDatas[i],
-        userContextId: aUserContextId,
-        triggeringPrincipal: aTriggeringPrincipal,
+        allowThirdPartyFixup,
+        postData: postDatas && postDatas[i],
+        userContextId,
+        triggeringPrincipal,
         bulkOrderedOpen: true,
       };
       if (targetTabIndex > -1) {
@@ -1509,7 +1505,7 @@ window._gBrowser = {
       this.addTab(aURIs[i], params);
     }
 
-    if (firstTabAdded && !aLoadInBackground) {
+    if (firstTabAdded && !inBackground) {
       this.selectedTab = firstTabAdded;
     }
   },
@@ -1784,7 +1780,6 @@ window._gBrowser = {
     nextTabParentId,
     openerWindow,
     recordExecution,
-    remote,
     remoteType,
     replayExecution,
     sameProcessAsFrameLoader,
@@ -1800,11 +1795,6 @@ window._gBrowser = {
 
     if (userContextId) {
       b.setAttribute("usercontextid", userContextId);
-    }
-
-    // remote parameter used by some addons, use default in this case.
-    if (remote && !remoteType) {
-      remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
     }
 
     if (remoteType) {
@@ -2597,7 +2587,7 @@ window._gBrowser = {
   removeTabs(tabs) {
     let tabsWithBeforeUnload = [];
     let lastToClose;
-    let aParams = {animation: true};
+    let aParams = { animate: true };
     for (let tab of tabs) {
       if (tab.selected)
         lastToClose = tab;

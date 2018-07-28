@@ -5,12 +5,12 @@
 
 scripts:
   # Run the activity-stream mochitests
-  mochitest: (cd $npm_package_config_mc_dir && ./mach mochitest browser/extensions/activity-stream/test/functional/mochitest --headless)
+  mochitest: (cd $npm_package_config_mc_dir && ./mach mochitest browser/components/newtab/test/browser --headless)
 
   # Run the activity-stream mochitests with the browser toolbox debugger.
   # Often handy in combination with adding a "debugger" statement in your
   # mochitest somewhere.
-  mochitest-debug: (cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/extensions/activity-stream/test/functional/mochitest)
+  mochitest-debug: (cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/components/newtab/test/browser)
 
 # bundle: Build all assets for activity stream
   bundle:
@@ -21,10 +21,9 @@ scripts:
 
 # buildmc: Export the bootstraped add-on to mozilla central
   buildmc:
-    pre: rimraf $npm_package_config_mc_dir/browser/extensions/activity-stream/
+    pre: rimraf $npm_package_config_mc_dir/browser/components/newtab/
     bundle: => bundle
-    copy: rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/extensions/activity-stream/
-    version: node ./bin/update-version.js $npm_package_config_mc_dir/browser/extensions/activity-stream
+    copy: rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/
     stringsExport: cp locales/en-US/strings.properties $npm_package_config_mc_dir/browser/locales/en-US/chrome/browser/activity-stream/newtab.properties
     copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
 
@@ -33,13 +32,13 @@ scripts:
     _parallel: true
     pre: =>buildmc
     # This copies only the system addon sub-folder; changing anything outside of it will need a full rebuild.
-    copy: cpx "{{,.}*,!(node_modules)/**/{,.}*}" $npm_package_config_mc_dir/browser/extensions/activity-stream/ -w
+    copy: cpx "{{,.}*,!(node_modules)/**/{,.}*}" $npm_package_config_mc_dir/browser/components/newtab/ -w
     copyPingCentre: =>buildmc:copyPingCentre -- -w
     webpack: =>bundle:webpack -- -w
     css: =>bundle:css && =>bundle:css -- -w
 
   # importmc: Import changes from mc to github repo
-  importmc: rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/extensions/activity-stream/ .
+  importmc: rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .
 
   testmc:
     lint: =>lint
