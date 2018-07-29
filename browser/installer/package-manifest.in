@@ -369,6 +369,10 @@
 @RESPATH@/components/extension-process-script.js
 @RESPATH@/browser/components/extensions-browser.manifest
 
+; [PDF Viewer]
+@RESPATH@/browser/components/pdfjs.manifest
+@RESPATH@/browser/components/pdfjs.js
+
 ; Modules
 @RESPATH@/browser/modules/*
 @RESPATH@/modules/*
