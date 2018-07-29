@@ -64,10 +64,6 @@ const whitelist = {
     "resource://gre/modules/TelemetrySession.jsm", // bug 1470339
     "resource://gre/modules/TelemetryUtils.jsm", // bug 1470339
 
-    // PDF.js
-    "resource://pdf.js/PdfJsRegistration.jsm",
-    "resource://pdf.js/PdfjsContentUtils.jsm",
-
     // Extensions
     "resource://gre/modules/ExtensionUtils.jsm",
     "resource://gre/modules/MessageChannel.jsm",

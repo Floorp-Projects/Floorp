@@ -91,25 +91,6 @@ var PdfjsChromeUtils = {
   },
 
   /*
-   * Called by the main module when preference changes are picked up
-   * in the parent process. Observers don't propagate so we need to
-   * instruct the child to refresh its configuration and (possibly)
-   * the module's registration.
-   */
-  notifyChildOfSettingsChange(enabled) {
-    if (Services.appinfo.processType ===
-        Services.appinfo.PROCESS_TYPE_DEFAULT && this._ppmm) {
-      // XXX kinda bad, we want to get the parent process mm associated
-      // with the content process. _ppmm is currently the global process
-      // manager, which means this is going to fire to every child process
-      // we have open. Unfortunately I can't find a way to get at that
-      // process specific mm from js.
-      this._ppmm.broadcastAsyncMessage("PDFJS:Child:updateSettings",
-                                       { enabled, });
-    }
-  },
-
-  /*
    * Events
    */
 
