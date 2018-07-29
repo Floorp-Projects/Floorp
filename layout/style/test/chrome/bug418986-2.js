@@ -104,10 +104,13 @@ var testToggles = function (resisting) {
   suppressed_toggles.forEach(
     function (key) {
       var exists = keyValMatches(key, 0) || keyValMatches(key, 1);
-      if (resisting || (!toggles_enabled_in_content.includes(key) && !is_chrome_window)) {
+      if (!toggles_enabled_in_content.includes(key) && !is_chrome_window) {
          ok(!exists, key + " should not exist.");
       } else {
          ok(exists, key + " should exist.");
+        if (resisting) {
+          ok(keyValMatches(key, 0) && !keyValMatches(key, 1), "Should always match as false");
+        }
       }
     });
 };
@@ -214,7 +217,7 @@ var generateCSSLines = function (resisting) {
       if (!toggles_enabled_in_content.includes(key) && !resisting && !is_chrome_window) {
         lines += "#" + key + " { background-color: green; }\n";
       } else {
-        lines += suppressedMediaQueryCSSLine(key, resisting ? "red" : "green");
+        lines += suppressedMediaQueryCSSLine(key, "green");
       }
     });
   if (OS === "WINNT") {
