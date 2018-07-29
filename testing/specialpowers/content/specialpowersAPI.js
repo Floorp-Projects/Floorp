@@ -1415,12 +1415,7 @@ SpecialPowersAPI.prototype = {
   // XXX: these APIs really ought to be removed, they're not e10s-safe.
   // (also they're pretty Firefox-specific)
   _getTopChromeWindow(window) {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShellTreeItem)
-                 .rootTreeItem
-                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindow)
+    return window.docShell.rootTreeItem.domWindow
                  .QueryInterface(Ci.nsIDOMChromeWindow);
   },
   _getAutoCompletePopup(window) {

@@ -14,12 +14,7 @@
 
 <script class="testbody" type="text/javascript">
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                    .rootTreeItem
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindow);
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 
 const tests = [
   // DNT turned on and TP turned off, DNT signal sent in both private browsing

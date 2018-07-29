@@ -16,12 +16,7 @@
 
 <script class="testbody" type="text/javascript">
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                    .rootTreeItem
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindow);
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 var contentPage1 = "http://www.itisatrap.org/tests/toolkit/components/url-classifier/tests/mochitest/whitelistFrame.html";
 var contentPage2 = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/whitelistFrame.html";
 

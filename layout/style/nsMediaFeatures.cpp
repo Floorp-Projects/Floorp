@@ -520,31 +520,23 @@ GetIsGlyph(nsIDocument* aDocument, const nsMediaFeature* aFeature,
   aResult.SetIntValue(aDocument->IsSVGGlyphsDocument() ? 1 : 0, eCSSUnit_Integer);
 }
 
+static bool
+PrefersReducedMotion(nsIDocument* aDocument)
+{
+  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+    return false;
+  }
+  return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
+}
+
 static void
 GetPrefersReducedMotion(nsIDocument* aDocument,
-                        const nsMediaFeature* aFeature,
+                        const nsMediaFeature*,
                         nsCSSValue& aResult)
 {
-  const bool isAccessibleFromContentPages =
-    !(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
-  if (isAccessibleFromContentPages &&
-      nsContentUtils::ShouldResistFingerprinting(aDocument)) {
-    return;
-  }
-
-  StylePrefersReducedMotion prefersReducedMotion =
-    StylePrefersReducedMotion::NoPreference;
-
-  switch (LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0)) {
-    case 0:
-      prefersReducedMotion = StylePrefersReducedMotion::NoPreference;
-      break;
-    case 1:
-      prefersReducedMotion = StylePrefersReducedMotion::Reduce;
-      break;
-    default:
-      return;
-  }
+  auto prefersReducedMotion = PrefersReducedMotion(aDocument)
+    ? StylePrefersReducedMotion::Reduce
+    : StylePrefersReducedMotion::NoPreference;
 
   aResult.SetEnumValue(prefersReducedMotion);
 }

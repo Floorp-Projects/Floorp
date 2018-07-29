@@ -13,12 +13,13 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 
 ChromeUtils.defineModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-  "resource://gre/modules/NetUtil.jsm");
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
+
+const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
+                                                 "nsIBinaryInputStream", "setInputStream");
 
 const SIZES_TELEMETRY_ENUM = {
   NO_SIZES: 0,
@@ -69,16 +70,15 @@ class FaviconLoad {
     this.buffers = [];
     this.icon = iconInfo;
 
-    this.channel = NetUtil.newChannel({
-      uri: iconInfo.iconUri,
-      loadingNode: iconInfo.node,
-      loadingPrincipal: iconInfo.node.nodePrincipal,
-      triggeringPrincipal: iconInfo.node.nodePrincipal,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                     Ci.nsILoadInfo.SEC_ALLOW_CHROME |
-                     Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT,
-    });
+    this.channel = Services.io.newChannelFromURI2(
+      iconInfo.iconUri,
+      iconInfo.node,
+      iconInfo.node.nodePrincipal,
+      iconInfo.node.nodePrincipal,
+      (Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+       Ci.nsILoadInfo.SEC_ALLOW_CHROME |
+       Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT),
+      Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON);
 
     this.channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND;
     // Sometimes node is a document and sometimes it is an element. This is
@@ -121,8 +121,10 @@ class FaviconLoad {
   }
 
   onDataAvailable(request, context, inputStream, offset, count) {
-    let data = NetUtil.readInputStreamToString(inputStream, count);
-    this.buffers.push(Uint8Array.from(data, c => c.charCodeAt(0)));
+    let stream = new BinaryInputStream(inputStream);
+    let buffer = new ArrayBuffer(count);
+    stream.readArrayBuffer(buffer.byteLength, buffer);
+    this.buffers.push(new Uint8Array(buffer));
   }
 
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {

@@ -3298,6 +3298,11 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
   MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  // Make sure we have a nsThread wrapper for the current thread, and that NSPR
+  // knows its name.
+  (void) NS_GetCurrentThread();
+  NS_SetCurrentThreadName(aName);
+
   PSAutoLock lock(gPSMutex);
 
   void* stackTop = GetStackTop(aGuessStackTop);

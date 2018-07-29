@@ -9,7 +9,7 @@
 <body>
 <style id="testbench"></style>
 <script>
-  SpecialPowers.wrap(document).docShell.cssErrorReportingEnabled = true;
+  SpecialPowers.wrap(window).docShell.cssErrorReportingEnabled = true;
   var tests = [
     { css: "@unknown {}", error: "Unrecognized at-rule or error parsing at-rule ‘@unknown’." },
 

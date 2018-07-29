@@ -9,6 +9,8 @@
 #include "base/logging.h"
 #include "base/win_util.h"
 
+#include "nsThreadUtils.h"
+
 namespace {
 
 // The information on how to set the thread name comes from
@@ -23,6 +25,10 @@ typedef struct tagTHREADNAME_INFO {
 } THREADNAME_INFO;
 
 DWORD __stdcall ThreadFunc(void* closure) {
+  // Create a nsThread wrapper for the current platform thread, and register it
+  // with the thread manager.
+  (void) NS_GetCurrentThread();
+
   PlatformThread::Delegate* delegate =
       static_cast<PlatformThread::Delegate*>(closure);
   delegate->ThreadMain();
@@ -48,24 +54,10 @@ void PlatformThread::Sleep(int duration_ms) {
 
 // static
 void PlatformThread::SetName(const char* name) {
-#ifdef HAVE_SEH_EXCEPTIONS
-  // The debugger needs to be around to catch the name in the exception.  If
-  // there isn't a debugger, we are just needlessly throwing an exception.
-  if (!::IsDebuggerPresent())
-    return;
-
-  THREADNAME_INFO info;
-  info.dwType = 0x1000;
-  info.szName = name;
-  info.dwThreadID = CurrentId();
-  info.dwFlags = 0;
-
-  MOZ_SEH_TRY {
-    RaiseException(kVCThreadNameException, 0, sizeof(info)/sizeof(DWORD),
-                   reinterpret_cast<DWORD_PTR*>(&info));
-  } MOZ_SEH_EXCEPT(EXCEPTION_CONTINUE_EXECUTION) {
-  }
-#endif
+  // Using NS_SetCurrentThreadName, as opposed to using platform APIs directly,
+  // also sets the thread name on the PRThread wrapper, and allows us to
+  // retrieve it using PR_GetThreadName.
+  NS_SetCurrentThreadName(name);
 }
 
 // static

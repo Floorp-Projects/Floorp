@@ -302,7 +302,8 @@ add_task(async function checkAdvancedDetails() {
     is(message.tagName, "a", "Error message is a link");
 
     message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      let win = frame ? content.document.querySelector("iframe").contentWindow : content;
+      let doc = win.document;
 
       let errorCode = doc.getElementById("errorCode");
       errorCode.click();
@@ -311,7 +312,7 @@ add_task(async function checkAdvancedDetails() {
 
       let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                        .getService(Ci.nsISerializationHelper);
-      let serializable =  doc.docShell.failedChannel.securityInfo
+      let serializable =  win.docShell.failedChannel.securityInfo
                                       .QueryInterface(Ci.nsITransportSecurityInfo)
                                       .QueryInterface(Ci.nsISerializable);
       let serializedSecurityInfo = serhelper.serializeToString(serializable);
@@ -388,7 +389,8 @@ add_task(async function checkAdvancedDetailsForHSTS() {
     is(message.cdlTagName, "a", "cert_domain_link is a link");
 
     message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      let win = frame ? content.document.querySelector("iframe").contentWindow : content;
+      let doc = win.document;
 
       let errorCode = doc.getElementById("errorCode");
       errorCode.click();
@@ -397,7 +399,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
 
       let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                        .getService(Ci.nsISerializationHelper);
-      let serializable =  doc.docShell.failedChannel.securityInfo
+      let serializable =  win.docShell.failedChannel.securityInfo
                                       .QueryInterface(Ci.nsITransportSecurityInfo)
                                       .QueryInterface(Ci.nsISerializable);
       let serializedSecurityInfo = serhelper.serializeToString(serializable);
