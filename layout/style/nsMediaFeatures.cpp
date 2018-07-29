@@ -520,27 +520,23 @@ GetIsGlyph(nsIDocument* aDocument, const nsMediaFeature* aFeature,
   aResult.SetIntValue(aDocument->IsSVGGlyphsDocument() ? 1 : 0, eCSSUnit_Integer);
 }
 
-static void
-GetPrefersReducedMotion(nsIDocument* aDocument,
-                        const nsMediaFeature* aFeature,
-                        nsCSSValue& aResult)
+static bool
+PrefersReducedMotion(nsIDocument* aDocument)
 {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
-    return;
+    return false;
   }
+  return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
+}
 
-  auto prefersReducedMotion = StylePrefersReducedMotion::NoPreference;
-
-  switch (LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0)) {
-    case 0:
-      prefersReducedMotion = StylePrefersReducedMotion::NoPreference;
-      break;
-    case 1:
-      prefersReducedMotion = StylePrefersReducedMotion::Reduce;
-      break;
-    default:
-      return;
-  }
+static void
+GetPrefersReducedMotion(nsIDocument* aDocument,
+                        const nsMediaFeature*,
+                        nsCSSValue& aResult)
+{
+  auto prefersReducedMotion = PrefersReducedMotion(aDocument)
+    ? StylePrefersReducedMotion::Reduce
+    : StylePrefersReducedMotion::NoPreference;
 
   aResult.SetEnumValue(prefersReducedMotion);
 }
