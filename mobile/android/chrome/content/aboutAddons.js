@@ -16,7 +16,12 @@ const UPDATE_INDICATOR = "chrome://browser/skin/images/extension-update.svg";
 var gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutAddons.properties");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function() {
-  return window.docShell.rootTreeItem.domWindow
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIWebNavigation)
+           .QueryInterface(Ci.nsIDocShellTreeItem)
+           .rootTreeItem
+           .QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIDOMWindow)
            .QueryInterface(Ci.nsIDOMChromeWindow);
 });
 ChromeUtils.defineModuleGetter(window, "Preferences",

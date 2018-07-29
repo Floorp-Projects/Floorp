@@ -314,7 +314,8 @@ ContentRestoreInternal.prototype = {
     let {formdata, scrollPositions} = this._restoringDocument;
     this._restoringDocument = null;
 
-    let window = this.docShell.domWindow;
+    let window = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindow);
 
     // Restore form data.
     restoreFrameTreeData(window, formdata, (frame, data) => {

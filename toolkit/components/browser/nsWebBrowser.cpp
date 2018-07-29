@@ -553,14 +553,6 @@ nsWebBrowser::GetWindow()
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetDomWindow(mozIDOMWindowProxy** aWindow)
-{
-  if (!mDocShell)
-    return NS_ERROR_NOT_INITIALIZED;
-  return mDocShell->GetDomWindow(aWindow);
-}
-
-NS_IMETHODIMP
 nsWebBrowser::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 {
   NS_ENSURE_ARG_POINTER(aTreeOwner);

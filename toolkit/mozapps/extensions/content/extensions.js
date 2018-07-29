@@ -278,7 +278,12 @@ function isDiscoverEnabled() {
  * Obtain the main DOMWindow for the current context.
  */
 function getMainWindow() {
-  return window.docShell.rootTreeItem.domWindow;
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsIDocShellTreeItem)
+               .rootTreeItem
+               .QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindow);
 }
 
 function getBrowserElement() {
@@ -1905,7 +1910,8 @@ var gHeader = {
     if (docshellItem.rootTreeItem == docshellItem)
       return true;
 
-    var outerWin = docshellItem.rootTreeItem.domWindow;
+    var outerWin = docshellItem.rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
+                                            .getInterface(Ci.nsIDOMWindow);
     var outerDoc = outerWin.document;
     var node = outerDoc.getElementById("back-button");
     // If the outer frame has no back-button then make the buttons visible
@@ -3450,7 +3456,7 @@ var gDragDrop = {
 // (See Bug 1385548 for rationale).
 var gBrowser = {
   getTabModalPromptBox(browser) {
-    const parentWindow = window.docShell.chromeEventHandler.ownerGlobal;
+    const parentWindow = document.docShell.chromeEventHandler.ownerGlobal;
 
     if (parentWindow.gBrowser) {
       return parentWindow.gBrowser.getTabModalPromptBox(browser);

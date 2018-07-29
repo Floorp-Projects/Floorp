@@ -43,8 +43,13 @@ var onSpellCheck =
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   script = SpecialPowers.loadChromeScript(function() {
-    var chromeWin = browserElement.ownerGlobal.docShell
-                    .rootTreeItem.domWindow
+    var chromeWin = browserElement.ownerDocument.defaultView
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow)
                     .QueryInterface(Ci.nsIDOMChromeWindow);
     var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     contextMenu.addEventListener("popupshown",

@@ -20,7 +20,12 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-var mainWindow = window.docShell.rootTreeItem.domWindow;
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow);
 
 var testDatas = [
   { url: "itisaphishingsite.org/phishing.html",
