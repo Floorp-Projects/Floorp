@@ -224,7 +224,7 @@ ARCHIVE_FILES = {
             'source': buildconfig.topsrcdir,
             'base': 'testing/web-platform/tests/tools/third_party',
             'pattern': '**',
-            'dest': 'tools/third_party',
+            'dest': 'tools/wpt_third_party',
         },
         {
             'source': buildconfig.topsrcdir,
