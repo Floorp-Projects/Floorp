@@ -525,15 +525,11 @@ GetPrefersReducedMotion(nsIDocument* aDocument,
                         const nsMediaFeature* aFeature,
                         nsCSSValue& aResult)
 {
-  const bool isAccessibleFromContentPages =
-    !(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
-  if (isAccessibleFromContentPages &&
-      nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return;
   }
 
-  StylePrefersReducedMotion prefersReducedMotion =
-    StylePrefersReducedMotion::NoPreference;
+  auto prefersReducedMotion = StylePrefersReducedMotion::NoPreference;
 
   switch (LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0)) {
     case 0:
