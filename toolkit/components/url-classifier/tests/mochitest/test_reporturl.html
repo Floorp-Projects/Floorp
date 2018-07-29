@@ -21,12 +21,7 @@ ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/ContentTask.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                    .rootTreeItem
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindow);
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 const SJS = "mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs";
 const BASE_URL = "http://" + SJS + "?";
 

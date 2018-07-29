@@ -470,7 +470,7 @@ Finder.prototype = {
   _getWindow() {
     if (!this._docShell)
       return null;
-    return this._docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    return this._docShell.domWindow;
   },
 
   /**

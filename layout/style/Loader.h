@@ -443,10 +443,6 @@ public:
   // Measure our size.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  // Marks all the sheets at the given URI obsolete, and removes them from the
-  // cache.
-  nsresult ObsoleteSheet(nsIURI* aURI);
-
 private:
   friend class SheetLoadData;
   friend class StreamLoader;

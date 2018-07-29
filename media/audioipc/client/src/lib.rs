@@ -37,12 +37,14 @@ pub struct AudioIpcInitParams {
     pub server_connection: c_int,
     pub pool_size: usize,
     pub stack_size: usize,
+    pub thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
 }
 
 #[derive(Clone, Copy, Debug)]
 struct CpuPoolInitParams {
     pub pool_size: usize,
     pub stack_size: usize,
+    pub thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
 }
 
 impl CpuPoolInitParams {
@@ -50,6 +52,7 @@ impl CpuPoolInitParams {
         CpuPoolInitParams {
             pool_size: params.pool_size,
             stack_size: params.stack_size,
+            thread_create_callback: params.thread_create_callback,
         }
     }
 }

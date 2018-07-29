@@ -46,12 +46,7 @@ function doSearch() {
 
   window.removeEventListener("unload", recordPageClosed);
 
-  let win = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsIDocShellTreeItem)
-                  .rootTreeItem
-                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindow);
+  let win = window.docShell.rootTreeItem.domWindow;
   win.openTrustedLinkIn(submission.uri.spec, "current", {
     allowThirdPartyFixup: false,
     postData: submission.postData,

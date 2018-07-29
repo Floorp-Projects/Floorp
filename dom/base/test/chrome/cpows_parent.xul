@@ -247,7 +247,7 @@
         // as an XPCOM interface.  But elements are losing all their XPCOM
         // interfaces, so let's use an object that will likely stay an XPCOM
         // one.
-        let docshell = savedElement.ownerDocument.docShell;
+        let docshell = savedElement.ownerGlobal.docShell;
         ok(docshell, "We should have a docshell here!");
 
         let secureUI = Cc['@mozilla.org/secure_browser_ui;1']

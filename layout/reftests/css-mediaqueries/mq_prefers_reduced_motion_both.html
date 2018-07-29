@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>prefers-reduced-motion</title>
+<style>
+div {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  div { background-color: green; }
+}
+
+@media (prefers-reduced-motion) {
+  div { background-color: green; }
+}
+</style>
+<div></div>

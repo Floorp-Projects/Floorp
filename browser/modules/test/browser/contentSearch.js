@@ -52,8 +52,8 @@ var webProgressListener;
 
 function waitForLoadAndStopIt(expectedURL) {
   return new Promise(resolve => {
-    let webProgress = content.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                               .getInterface(Ci.nsIWebProgress);
+    let webProgress = content.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIWebProgress);
     webProgressListener = {
       onStateChange(webProg, req, flags, status) {
         if (req instanceof Ci.nsIChannel) {

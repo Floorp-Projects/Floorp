@@ -64,8 +64,8 @@ var WindowListener = {
     }
   },
 
-  onOpenWindow(win) {
-    win = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+  onOpenWindow(xulWin) {
+    let win = xulWin.docShell.domWindow;
 
     win.addEventListener("load", function() {
       if (win.document.documentElement.getAttribute("windowtype") == "navigator:browser") {
