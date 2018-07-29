@@ -21,14 +21,7 @@ var EXPORTED_SYMBOLS = ["AboutPages"];
 
 const SHIELD_LEARN_MORE_URL_PREF = "app.normandy.shieldLearnMoreUrl";
 
-// Due to bug 1051238 frame scripts are cached forever, so we can't update them
-// as a restartless add-on. The Math.random() is the work around for this.
-const PROCESS_SCRIPT = (
-  `resource://normandy-content/shield-content-process.js?${Math.random()}`
-);
-const FRAME_SCRIPT = (
-  `resource://normandy-content/shield-content-frame.js?${Math.random()}`
-);
+const PROCESS_SCRIPT = "resource://normandy-content/shield-content-process.js";
 
 /**
  * Class for managing an about: page that Normandy provides. Adapted from
@@ -99,7 +92,6 @@ var AboutPages = {
   async init() {
     // Load scripts in content processes and tabs
     Services.ppmm.loadProcessScript(PROCESS_SCRIPT, true);
-    Services.mm.loadFrameScript(FRAME_SCRIPT, true);
 
     // Register about: pages and their listeners
     this.aboutStudies.register();
@@ -109,7 +101,6 @@ var AboutPages = {
       // Stop loading processs scripts and notify existing scripts to clean up.
       Services.ppmm.removeDelayedProcessScript(PROCESS_SCRIPT);
       Services.ppmm.broadcastAsyncMessage("Shield:ShuttingDown");
-      Services.mm.removeDelayedFrameScript(FRAME_SCRIPT);
       Services.mm.broadcastAsyncMessage("Shield:ShuttingDown");
 
       // Clean up about pages
