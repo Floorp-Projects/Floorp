@@ -493,7 +493,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
     def structured_output(self, suite_category, flavor=None):
         unstructured_flavors = self.config.get('unstructured_flavors')
         if not unstructured_flavors:
-            return False
+            return True
         if suite_category not in unstructured_flavors:
             return True
         if not unstructured_flavors.get(suite_category) or \
