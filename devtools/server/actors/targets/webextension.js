@@ -165,8 +165,7 @@ webExtensionTargetPrototype._createFallbackWindow = function() {
   this.fallbackWebNav = Services.appShell.createWindowlessBrowser(true);
 
   // Save the reference to the fallback DOMWindow.
-  this.fallbackWindow = this.fallbackWebNav.QueryInterface(Ci.nsIInterfaceRequestor)
-                                           .getInterface(Ci.nsIDOMWindow);
+  this.fallbackWindow = this.fallbackWebNav.document.defaultView;
 
   // Insert the fallback doc message.
   this.fallbackWindow.document.body.innerText = FALLBACK_DOC_MESSAGE;
@@ -273,11 +272,8 @@ webExtensionTargetPrototype._docShellToWindow = function(docShell) {
   // Collect the addonID from the document origin attributes and its sameType top level
   // frame.
   const addonID = window.document.nodePrincipal.addonId;
-  const sameTypeRootAddonID = docShell.QueryInterface(Ci.nsIDocShellTreeItem)
-                                    .sameTypeRootTreeItem
-                                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIDOMWindow)
-                                    .document.nodePrincipal.addonId;
+  const sameTypeRootAddonID = docShell.sameTypeRootTreeItem.domWindow
+                                      .document.nodePrincipal.addonId;
 
   return Object.assign(baseWindowDetails, {
     addonID,
@@ -304,10 +300,7 @@ webExtensionTargetPrototype.isExtensionWindow = function(window) {
 
 webExtensionTargetPrototype.isExtensionWindowDescendent = function(window) {
   // Check if the source is coming from a descendant docShell of an extension window.
-  const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
-  const rootWin = docShell.sameTypeRootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-                                             .getInterface(Ci.nsIDOMWindow);
+  const rootWin = window.docShell.sameTypeRootTreeItem.domWindow;
   return this.isExtensionWindow(rootWin);
 };
 

@@ -259,7 +259,7 @@ var GeckoViewUtils = {
    */
   getChromeWindow: function(aWin) {
     const docShell = this.getRootDocShell(aWin);
-    return docShell && docShell.getInterface(Ci.nsIDOMWindow);
+    return docShell && docShell.domWindow;
   },
 
   /**

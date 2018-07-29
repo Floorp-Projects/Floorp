@@ -788,7 +788,7 @@ class WindowBase {
    *        @readonly
    */
   get xulWindow() {
-    return this.window.document.docShell.treeOwner
+    return this.window.docShell.treeOwner
                .QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIXULWindow);
   }

@@ -37,7 +37,7 @@ var testframe = document.getElementById("testframe");
 function checkResults() {
   testframe.removeEventListener('load', checkResults);
 
-  var channel = SpecialPowers.wrap(testframe.contentDocument).docShell.currentDocumentChannel;
+  var channel = SpecialPowers.wrap(testframe.contentWindow).docShell.currentDocumentChannel;
   var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
   var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
 

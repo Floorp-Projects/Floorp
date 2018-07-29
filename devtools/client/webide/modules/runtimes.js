@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {Ci} = require("chrome");
 const Services = require("Services");
 const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const {DebuggerServer} = require("devtools/server/main");
@@ -391,8 +390,7 @@ WiFiRuntime.prototype = {
     let promptWindow;
     const windowListener = {
       onOpenWindow(xulWindow) {
-        const win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindow);
+        const win = xulWindow.docShell.domWindow;
         win.addEventListener("load", function() {
           if (win.document.documentElement.getAttribute("id") != WINDOW_ID) {
             return;

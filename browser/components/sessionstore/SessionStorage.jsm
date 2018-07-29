@@ -150,7 +150,7 @@ var SessionStorageInternal = {
       }
 
       let storageManager = aDocShell.QueryInterface(Ci.nsIDOMStorageManager);
-      let window = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+      let window = aDocShell.domWindow;
 
       // There is no need to pass documentURI, it's only used to fill documentURI property of
       // domstorage event, which in this case has no consumer. Prevention of events in case
@@ -179,7 +179,7 @@ var SessionStorageInternal = {
     let hostData = {};
     let storage;
 
-    let window = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    let window = aDocShell.domWindow;
 
     try {
       let storageManager = aDocShell.QueryInterface(Ci.nsIDOMStorageManager);

@@ -46,8 +46,8 @@
   }
 
   var browserListener = {
-    onOpenWindow: function(aWindow) {
-        var win = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    onOpenWindow: function(aXulWin) {
+        var win = aXulWin.docShell.domWindow;
         win.addEventListener("UIReady", function(aEvent) {
             attachTo(win);
         }, {once: true});
