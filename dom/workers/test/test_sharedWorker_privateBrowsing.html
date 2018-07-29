@@ -32,12 +32,7 @@ function testOnWindow(aIsPrivate, aCallback) {
 }
 
 function setupWindow() {
-  mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .QueryInterface(Ci.nsIDocShellTreeItem)
-                     .rootTreeItem
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindow);
+  mainWindow = window.docShell.rootTreeItem.domWindow;
   runTest();
 }
 

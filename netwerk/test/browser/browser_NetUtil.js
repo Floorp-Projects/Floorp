@@ -72,8 +72,7 @@ function WindowListener(aURL, aCallback) {
 }
 WindowListener.prototype = {
   onOpenWindow: function(aXULWindow) {
-    var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindow);
+    var domwindow = aXULWindow.docShell.domWindow;
     var self = this;
     domwindow.addEventListener("load", function() {
       if (domwindow.document.location.href != self.url)

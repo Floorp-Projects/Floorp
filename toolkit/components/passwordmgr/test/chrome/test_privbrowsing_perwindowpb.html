@@ -194,12 +194,7 @@ function checkTest() {
   }
 }
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                    .rootTreeItem
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindow);
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 var contentPage = "http://mochi.test:8888/chrome/toolkit/components/passwordmgr/test/chrome/privbrowsing_perwindowpb_iframe.html";
 var testWindows = [];
 

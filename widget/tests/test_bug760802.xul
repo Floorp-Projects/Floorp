@@ -58,7 +58,7 @@ $("display").innerHTML = "found nativeHandle for this window: "+nativeHandle;
 
 var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
 var win = wm.getMostRecentWindow("navigator:browser");
-var docShell = getBaseWindowInterfaceFromDocShell(win);
+let docShell = getBaseWindowInterfaceFromDocShell(win);
 
 ok(
   shouldThrowException(function(){docShell.nativeHandle;},

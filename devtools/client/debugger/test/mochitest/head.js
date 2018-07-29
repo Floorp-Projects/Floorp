@@ -75,10 +75,7 @@ function addWindow(aUrl) {
 }
 
 function getChromeWindow(aWindow) {
-  return aWindow
-    .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation)
-    .QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
-    .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+  return aWindow.docShell.rootTreeItem.domWindow;
 }
 
 // Override addTab/removeTab as defined by shared-head, since these have

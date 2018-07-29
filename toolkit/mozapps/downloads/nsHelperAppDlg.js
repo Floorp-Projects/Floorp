@@ -156,10 +156,7 @@ nsUnknownContentTypeDialog.prototype = {
     try {
       let ir = this.mContext.QueryInterface(Ci.nsIInterfaceRequestor);
       let docShell = ir.getInterface(Ci.nsIDocShell);
-      let rootWin = docShell.QueryInterface(Ci.nsIDocShellTreeItem)
-                                 .rootTreeItem
-                                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindow);
+      let rootWin = docShell.rootTreeItem.domWindow;
       this.mDialog = Services.ww.openWindow(rootWin,
                                             "chrome://mozapps/content/downloads/unknownContentType.xul",
                                             null,

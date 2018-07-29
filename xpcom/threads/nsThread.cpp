@@ -405,6 +405,13 @@ nsThread::ThreadList()
   return sList;
 }
 
+/* static */ void
+nsThread::ClearThreadList()
+{
+  OffTheBooksMutexAutoLock mal(ThreadListMutex());
+  while (ThreadList().popFirst()) {}
+}
+
 /* static */ nsThreadEnumerator
 nsThread::Enumerate()
 {
@@ -420,7 +427,6 @@ nsThread::ThreadFunc(void* aArg)
   nsThread* self = initData->thread;  // strong reference
 
   self->mThread = PR_GetCurrentThread();
-  self->mThreadId = uint32_t(PlatformThread::CurrentId());
   self->mVirtualThread = GetCurrentVirtualThread();
   self->mEventTarget->SetCurrentThread();
   SetupCurrentThreadForChaosMode();
@@ -429,71 +435,7 @@ nsThread::ThreadFunc(void* aArg)
     NS_SetCurrentThreadName(initData->name.BeginReading());
   }
 
-  {
-#if defined(XP_LINUX)
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_getattr_np(pthread_self(), &attr);
-
-    size_t stackSize;
-    pthread_attr_getstack(&attr, &self->mStackBase, &stackSize);
-
-    // Glibc prior to 2.27 reports the stack size and base including the guard
-    // region, so we need to compensate for it to get accurate accounting.
-    // Also, this behavior difference isn't guarded by a versioned symbol, so we
-    // actually need to check the runtime glibc version, not the version we were
-    // compiled against.
-    static bool sAdjustForGuardSize = ({
-#ifdef __GLIBC__
-      unsigned major, minor;
-      sscanf(gnu_get_libc_version(), "%u.%u", &major, &minor) < 2 ||
-        major < 2 || (major == 2 && minor < 27);
-#else
-      false;
-#endif
-    });
-    if (sAdjustForGuardSize) {
-      size_t guardSize;
-      pthread_attr_getguardsize(&attr, &guardSize);
-
-      // Note: This assumes that the stack grows down, as is the case on all of
-      // our tier 1 platforms. On platforms where the stack grows up, the
-      // mStackBase adjustment is unnecessary, but doesn't cause any harm other
-      // than under-counting stack memory usage by one page.
-      self->mStackBase = reinterpret_cast<char*>(self->mStackBase) + guardSize;
-      stackSize -= guardSize;
-    }
-
-    self->mStackSize = stackSize;
-
-    // This is a bit of a hack.
-    //
-    // We really do want the NOHUGEPAGE flag on our thread stacks, since we
-    // don't expect any of them to need anywhere near 2MB of space. But setting
-    // it here is too late to have an effect, since the first stack page has
-    // already been faulted in existence, and NSPR doesn't give us a way to set
-    // it beforehand.
-    //
-    // What this does get us, however, is a different set of VM flags on our
-    // thread stacks compared to normal heap memory. Which makes the Linux
-    // kernel report them as separate regions, even when they are adjacent to
-    // heap memory. This allows us to accurately track the actual memory
-    // consumption of our allocated stacks.
-    madvise(self->mStackBase, stackSize, MADV_NOHUGEPAGE);
-
-    pthread_attr_destroy(&attr);
-#elif defined(XP_WIN)
-    static const DynamicallyLinkedFunctionPtr<GetCurrentThreadStackLimitsFn>
-      sGetStackLimits(L"kernel32.dll", "GetCurrentThreadStackLimits");
-
-    if (sGetStackLimits) {
-      ULONG_PTR stackBottom, stackTop;
-      sGetStackLimits(&stackBottom, &stackTop);
-      self->mStackBase = reinterpret_cast<void*>(stackBottom);
-      self->mStackSize = stackTop - stackBottom;
-    }
-#endif
-  }
+  self->InitCommon();
 
   // Inform the ThreadManager
   nsThreadManager::get().RegisterCurrentThread(*self);
@@ -572,6 +514,81 @@ nsThread::ThreadFunc(void* aArg)
 #endif
 
   NS_RELEASE(self);
+}
+
+void
+nsThread::InitCommon()
+{
+  mThreadId = uint32_t(PlatformThread::CurrentId());
+
+  {
+#if defined(XP_LINUX)
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_getattr_np(pthread_self(), &attr);
+
+    size_t stackSize;
+    pthread_attr_getstack(&attr, &mStackBase, &stackSize);
+
+    // Glibc prior to 2.27 reports the stack size and base including the guard
+    // region, so we need to compensate for it to get accurate accounting.
+    // Also, this behavior difference isn't guarded by a versioned symbol, so we
+    // actually need to check the runtime glibc version, not the version we were
+    // compiled against.
+    static bool sAdjustForGuardSize = ({
+#ifdef __GLIBC__
+      unsigned major, minor;
+      sscanf(gnu_get_libc_version(), "%u.%u", &major, &minor) < 2 ||
+        major < 2 || (major == 2 && minor < 27);
+#else
+      false;
+#endif
+    });
+    if (sAdjustForGuardSize) {
+      size_t guardSize;
+      pthread_attr_getguardsize(&attr, &guardSize);
+
+      // Note: This assumes that the stack grows down, as is the case on all of
+      // our tier 1 platforms. On platforms where the stack grows up, the
+      // mStackBase adjustment is unnecessary, but doesn't cause any harm other
+      // than under-counting stack memory usage by one page.
+      mStackBase = reinterpret_cast<char*>(mStackBase) + guardSize;
+      stackSize -= guardSize;
+    }
+
+    mStackSize = stackSize;
+
+    // This is a bit of a hack.
+    //
+    // We really do want the NOHUGEPAGE flag on our thread stacks, since we
+    // don't expect any of them to need anywhere near 2MB of space. But setting
+    // it here is too late to have an effect, since the first stack page has
+    // already been faulted in existence, and NSPR doesn't give us a way to set
+    // it beforehand.
+    //
+    // What this does get us, however, is a different set of VM flags on our
+    // thread stacks compared to normal heap memory. Which makes the Linux
+    // kernel report them as separate regions, even when they are adjacent to
+    // heap memory. This allows us to accurately track the actual memory
+    // consumption of our allocated stacks.
+    madvise(mStackBase, stackSize, MADV_NOHUGEPAGE);
+
+    pthread_attr_destroy(&attr);
+#elif defined(XP_WIN)
+    static const DynamicallyLinkedFunctionPtr<GetCurrentThreadStackLimitsFn>
+      sGetStackLimits(L"kernel32.dll", "GetCurrentThreadStackLimits");
+
+    if (sGetStackLimits) {
+      ULONG_PTR stackBottom, stackTop;
+      sGetStackLimits(&stackBottom, &stackTop);
+      mStackBase = reinterpret_cast<void*>(stackBottom);
+      mStackSize = stackTop - stackBottom;
+    }
+#endif
+  }
+
+  OffTheBooksMutexAutoLock mal(ThreadListMutex());
+  ThreadList().insertBack(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -670,7 +687,17 @@ nsThread::~nsThread()
 {
   NS_ASSERTION(mRequestedShutdownContexts.IsEmpty(),
                "shouldn't be waiting on other threads to shutdown");
-  MOZ_ASSERT(!isInList());
+
+  // We shouldn't need to lock before checking isInList at this point. We're
+  // destroying the last reference to this object, so there's no way for anyone
+  // else to remove it in the middle of our check. And the not-in-list state is
+  // determined the element's next and previous members pointing to itself, so a
+  // non-atomic update to an adjacent member won't affect the outcome either.
+  if (isInList()) {
+    OffTheBooksMutexAutoLock mal(ThreadListMutex());
+    removeFrom(ThreadList());
+  }
+
 #ifdef DEBUG
   // We deliberately leak these so they can be tracked by the leak checker.
   // If you're having nsThreadShutdownContext leaks, you can set:
@@ -704,11 +731,6 @@ nsThread::Init(const nsACString& aName)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  {
-    OffTheBooksMutexAutoLock mal(ThreadListMutex());
-    ThreadList().insertBack(this);
-  }
-
   // ThreadFunc will wait for this event to be run before it tries to access
   // mThread.  By delaying insertion of this event into the queue, we ensure
   // that mThread is set properly.
@@ -728,6 +750,7 @@ nsThread::InitCurrentThread()
   mThread = PR_GetCurrentThread();
   mVirtualThread = GetCurrentVirtualThread();
   SetupCurrentThreadForChaosMode();
+  InitCommon();
 
   nsThreadManager::get().RegisterCurrentThread(*this);
   return NS_OK;
@@ -855,6 +878,13 @@ nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
 {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(aContext->mTerminatingThread == this);
+
+  {
+    OffTheBooksMutexAutoLock mal(ThreadListMutex());
+    if (isInList()) {
+      removeFrom(ThreadList());
+    }
+  }
 
   if (aContext->mAwaitingShutdownAck) {
     // We're in a synchronous shutdown, so tell whatever is up the stack that

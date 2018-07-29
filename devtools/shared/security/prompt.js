@@ -6,7 +6,6 @@
 
 "use strict";
 
-var { Ci } = require("chrome");
 var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "AuthenticationResult",
@@ -60,8 +59,7 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
   let promptWindow;
   const windowListener = {
     onOpenWindow(xulWindow) {
-      const win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindow);
+      const win = xulWindow.docShell.domWindow;
       win.addEventListener("load", function() {
         if (win.document.documentElement.getAttribute("id") != "commonDialog") {
           return;

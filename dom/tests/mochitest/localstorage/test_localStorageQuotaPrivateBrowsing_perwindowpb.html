@@ -161,12 +161,7 @@ function whenDelayedStartupFinished(aCallback) {
 }
 
 function testOnWindow(aIsPrivate, callback) {
-  var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShellTreeItem)
-                         .rootTreeItem
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindow);
+  var mainWindow = window.docShell.rootTreeItem.domWindow;
 
   mainWindow.openWebLinkIn(CONTENT_PAGE, "window", {
                                   private: aIsPrivate });

@@ -1056,7 +1056,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType,
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight: {
       aPart = SP_BUTTON;
-      aState = (int(aWidgetType) - int(StyleAppearance::ScrollbarbuttonDown))*4;
+      aState = (int(aWidgetType) - int(StyleAppearance::ScrollbarbuttonUp))*4;
       EventStates eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
         aState += TS_NORMAL;
@@ -1071,7 +1071,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType,
         else if (eventState.HasState(NS_EVENT_STATE_HOVER))
           aState += TS_HOVER;
         else if (parentState.HasState(NS_EVENT_STATE_HOVER))
-          aState = (int(aWidgetType) - int(StyleAppearance::ScrollbarbuttonDown)) + SP_BUTTON_IMPLICIT_HOVER_BASE;
+          aState = (int(aWidgetType) - int(StyleAppearance::ScrollbarbuttonUp)) + SP_BUTTON_IMPLICIT_HOVER_BASE;
         else
           aState += TS_NORMAL;
       }

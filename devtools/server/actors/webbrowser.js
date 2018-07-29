@@ -657,8 +657,9 @@ DevToolsUtils.makeInfallible(function(window) {
 
 BrowserTabList.prototype.onCloseWindow =
 DevToolsUtils.makeInfallible(function(window) {
-  window = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindow);
+  if (window instanceof Ci.nsIXULWindow) {
+    window = window.docShell.domWindow;
+  }
 
   if (appShellDOMWindowType(window) !== DebuggerServer.chromeWindowType) {
     return;

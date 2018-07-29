@@ -18,12 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829383
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation)
-                       .QueryInterface(Ci.nsIDocShellTreeItem)
-                       .rootTreeItem
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindow);
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 
 // We need to wait for the hidden window to load, but can't access
 // an event target for a regular event listener.

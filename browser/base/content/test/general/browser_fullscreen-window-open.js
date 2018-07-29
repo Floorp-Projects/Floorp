@@ -317,8 +317,7 @@ WindowListener.prototype = {
   onOpenWindow(aXULWindow) {
     Services.wm.removeListener(this);
 
-    let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindow);
+    let domwindow = aXULWindow.docShell.domWindow;
     let onLoad = aEvent => {
       is(domwindow.document.location.href, this.test_url,
         "Opened Window is expected: " + this.test_title);
