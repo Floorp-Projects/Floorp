@@ -37,6 +37,18 @@ XPCOMUtils.defineLazyProxy(this, "PopupBlocking", () => {
   return new tmp.PopupBlocking(global);
 });
 
+XPCOMUtils.defineLazyProxy(this, "ShieldFrameListener", () => {
+  let tmp = {};
+  ChromeUtils.import("resource://normandy-content/ShieldFrameListener.jsm", tmp);
+  return new tmp.ShieldFrameListener(global);
+});
+
+XPCOMUtils.defineLazyProxy(this, "UITourListener", () => {
+  let tmp = {};
+  ChromeUtils.import("resource:///modules/ContentUITour.jsm", tmp);
+  return new tmp.UITourListener(global);
+});
+
 XPCOMUtils.defineLazyProxy(this, "SelectionSourceContent",
   "resource://gre/modules/SelectionSourceContent.jsm");
 
@@ -433,3 +445,7 @@ let ExtFind = {
 };
 
 ExtFind.init();
+
+addEventListener("ShieldPageEvent", ShieldFrameListener, false, true);
+
+addEventListener("mozUITour", UITourListener, false, true);
