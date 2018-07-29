@@ -21,3 +21,4 @@ test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion_no_preference.
 test-pref(ui.prefersReducedMotion,0) == mq_prefers_reduced_motion_reduce.html about:blank
 test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion_reduce.html greenbox.html
 test-pref(privacy.resistFingerprinting,true) test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion_reduce.html about:blank
+test-pref(privacy.resistFingerprinting,true) == mq_prefers_reduced_motion_both.html greenbox.html
