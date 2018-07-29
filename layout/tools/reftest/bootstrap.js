@@ -18,10 +18,10 @@ function processTerminated() {
 }
 
 var WindowListener = {
-  onOpenWindow: function(win) {
+  onOpenWindow: function(xulWin) {
     Services.wm.removeListener(WindowListener);
 
-    win = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    let win = xulWin.docShell.domWindow;
     win.addEventListener("load", function listener() {
       // Load into any existing windows.
       let windows = Services.wm.getEnumerator("navigator:browser");

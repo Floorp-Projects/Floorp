@@ -10,7 +10,7 @@ function waitForDocshellActivated() {
     // "visibilitychange" event rather than polling the docShell.isActive.
     await ContentTaskUtils.waitForEvent(content.document, "visibilitychange",
                                         true /* capture */, (aEvent) => {
-      return content.document.docShell.isActive;
+      return content.docShell.isActive;
     });
   });
 }

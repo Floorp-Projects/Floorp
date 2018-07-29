@@ -94,12 +94,27 @@ AssertIsOnMainThread()
 
 typedef nsTArray<NotNull<RefPtr<nsThread>>> nsThreadArray;
 
+static bool sShutdownComplete;
+
 //-----------------------------------------------------------------------------
 
-static void
-ReleaseObject(void* aData)
+/* static */ void
+nsThreadManager::ReleaseThread(void* aData)
 {
-  static_cast<nsISupports*>(aData)->Release();
+  if (sShutdownComplete) {
+    // We've already completed shutdown and released the references to all or
+    // our TLS wrappers. Don't try to release them again.
+    return;
+  }
+
+  auto* thread = static_cast<nsThread*>(aData);
+
+  get().UnregisterCurrentThread(*thread, true);
+
+  if (thread->mHasTLSEntry) {
+    thread->mHasTLSEntry = false;
+    thread->Release();
+  }
 }
 
 // statically allocated instance
@@ -236,7 +251,7 @@ nsThreadManager::Init()
 
   Scheduler::EventLoopActivation::Init();
 
-  if (PR_NewThreadPrivateIndex(&mCurThreadIndex, ReleaseObject) == PR_FAILURE) {
+  if (PR_NewThreadPrivateIndex(&mCurThreadIndex, ReleaseThread) == PR_FAILURE) {
     return NS_ERROR_FAILURE;
   }
 
@@ -304,32 +319,34 @@ nsThreadManager::Shutdown()
   // Empty the main thread event queue before we begin shutting down threads.
   NS_ProcessPendingEvents(mMainThread);
 
-  // We gather the threads from the hashtable into a list, so that we avoid
-  // holding the hashtable lock while calling nsIThread::Shutdown.
-  nsThreadArray threads;
   {
-    OffTheBooksMutexAutoLock lock(mLock);
-    for (auto iter = mThreadsByPRThread.Iter(); !iter.Done(); iter.Next()) {
-      RefPtr<nsThread>& thread = iter.Data();
-      threads.AppendElement(WrapNotNull(thread));
-      iter.Remove();
+    // We gather the threads from the hashtable into a list, so that we avoid
+    // holding the hashtable lock while calling nsIThread::Shutdown.
+    nsThreadArray threads;
+    {
+      OffTheBooksMutexAutoLock lock(mLock);
+      for (auto iter = mThreadsByPRThread.Iter(); !iter.Done(); iter.Next()) {
+        RefPtr<nsThread>& thread = iter.Data();
+        threads.AppendElement(WrapNotNull(thread));
+        iter.Remove();
+      }
     }
-  }
 
-  // It's tempting to walk the list of threads here and tell them each to stop
-  // accepting new events, but that could lead to badness if one of those
-  // threads is stuck waiting for a response from another thread.  To do it
-  // right, we'd need some way to interrupt the threads.
-  //
-  // Instead, we process events on the current thread while waiting for threads
-  // to shutdown.  This means that we have to preserve a mostly functioning
-  // world until such time as the threads exit.
+    // It's tempting to walk the list of threads here and tell them each to stop
+    // accepting new events, but that could lead to badness if one of those
+    // threads is stuck waiting for a response from another thread.  To do it
+    // right, we'd need some way to interrupt the threads.
+    //
+    // Instead, we process events on the current thread while waiting for threads
+    // to shutdown.  This means that we have to preserve a mostly functioning
+    // world until such time as the threads exit.
 
-  // Shutdown all threads that require it (join with threads that we created).
-  for (uint32_t i = 0; i < threads.Length(); ++i) {
-    NotNull<nsThread*> thread = threads[i];
-    if (thread->ShutdownRequired()) {
-      thread->Shutdown();
+    // Shutdown all threads that require it (join with threads that we created).
+    for (uint32_t i = 0; i < threads.Length(); ++i) {
+      NotNull<nsThread*> thread = threads[i];
+      if (thread->ShutdownRequired()) {
+        thread->Shutdown();
+      }
     }
   }
 
@@ -360,6 +377,24 @@ nsThreadManager::Shutdown()
 
   // Remove the TLS entry for the main thread.
   PR_SetThreadPrivate(mCurThreadIndex, nullptr);
+
+  {
+    // Cleanup the last references to any threads which haven't shut down yet.
+    nsTArray<RefPtr<nsThread>> threads;
+    for (auto* thread : nsThread::Enumerate()) {
+      if (thread->mHasTLSEntry) {
+        threads.AppendElement(dont_AddRef(thread));
+        thread->mHasTLSEntry = false;
+      }
+    }
+  }
+
+  // xpcshell tests sometimes leak the main thread. They don't enable leak
+  // checking, so that doesn't cause the test to fail, but leaving the entry in
+  // the thread list triggers an assertion, which does.
+  nsThread::ClearThreadList();
+
+  sShutdownComplete = true;
 }
 
 void
@@ -377,21 +412,28 @@ nsThreadManager::RegisterCurrentThread(nsThread& aThread)
   mThreadsByPRThread.Put(aThread.GetPRThread(), &aThread);  // XXX check OOM?
 
   aThread.AddRef();  // for TLS entry
+  aThread.mHasTLSEntry = true;
   PR_SetThreadPrivate(mCurThreadIndex, &aThread);
 }
 
 void
-nsThreadManager::UnregisterCurrentThread(nsThread& aThread)
+nsThreadManager::UnregisterCurrentThread(nsThread& aThread, bool aIfExists)
 {
-  MOZ_ASSERT(aThread.GetPRThread() == PR_GetCurrentThread(), "bad aThread");
+  {
+    OffTheBooksMutexAutoLock lock(mLock);
 
-  OffTheBooksMutexAutoLock lock(mLock);
+    if (aIfExists && !mThreadsByPRThread.GetWeak(aThread.GetPRThread())) {
+      return;
+    }
 
-  --mCurrentNumberOfThreads;
-  mThreadsByPRThread.Remove(aThread.GetPRThread());
+    MOZ_ASSERT(aThread.GetPRThread() == PR_GetCurrentThread(), "bad aThread");
+
+    --mCurrentNumberOfThreads;
+    mThreadsByPRThread.Remove(aThread.GetPRThread());
+  }
 
   PR_SetThreadPrivate(mCurThreadIndex, nullptr);
-  // Ref-count balanced via ReleaseObject
+  // Ref-count balanced via ReleaseThread
 }
 
 nsThread*
@@ -441,7 +483,13 @@ nsThreadManager::GetCurrentThread()
 bool
 nsThreadManager::IsNSThread() const
 {
-  return mInitialized && !!PR_GetThreadPrivate(mCurThreadIndex);
+  if (!mInitialized) {
+    return false;
+  }
+  if (auto* thread = (nsThread*)PR_GetThreadPrivate(mCurThreadIndex)) {
+    return thread->mShutdownRequired;
+  }
+  return false;
 }
 
 NS_IMETHODIMP

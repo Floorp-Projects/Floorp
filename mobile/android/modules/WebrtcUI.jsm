@@ -283,12 +283,7 @@ var WebrtcUI = {
   },
 
   getChromeWindow: function getChromeWindow(aWindow) {
-     let chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
-                            .QueryInterface(Ci.nsIDocShellTreeItem)
-                            .rootTreeItem
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindow)
+     let chromeWin = aWindow.docShell.rootTreeItem.domWindow
                             .QueryInterface(Ci.nsIDOMChromeWindow);
      return chromeWin;
   },

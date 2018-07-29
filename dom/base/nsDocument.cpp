@@ -10005,30 +10005,6 @@ nsIDocument::IsScrollingElement(Element* aElement)
   return !IsPotentiallyScrollable(strongBody);
 }
 
-void
-nsIDocument::ObsoleteSheet(nsIURI *aSheetURI, ErrorResult& rv)
-{
-  nsresult res = CSSLoader()->ObsoleteSheet(aSheetURI);
-  if (NS_FAILED(res)) {
-    rv.Throw(res);
-  }
-}
-
-void
-nsIDocument::ObsoleteSheet(const nsAString& aSheetURI, ErrorResult& rv)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult res = NS_NewURI(getter_AddRefs(uri), aSheetURI);
-  if (NS_FAILED(res)) {
-    rv.Throw(res);
-    return;
-  }
-  res = CSSLoader()->ObsoleteSheet(uri);
-  if (NS_FAILED(res)) {
-    rv.Throw(res);
-  }
-}
-
 class UnblockParsingPromiseHandler final : public PromiseNativeHandler
 {
 public:
