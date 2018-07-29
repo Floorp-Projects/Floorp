@@ -290,12 +290,10 @@ var BrowserUtils = {
    *
    * @param elt
    *        The element that is focused
-   * @param win
-   *        The window that is focused
-   *
    */
-  shouldFastFind(elt, win) {
+  shouldFastFind(elt) {
     if (elt) {
+      let win = elt.ownerGlobal;
       if (elt instanceof win.HTMLInputElement && elt.mozIsTextField(false))
         return false;
 
