@@ -1925,7 +1925,7 @@ class GeneralTokenStreamChars
      */
     int32_t getCodeUnit() {
         if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
-            return CodeUnitValue(this->sourceUnits.getCodeUnit());
+            return this->sourceUnits.getCodeUnit();
 
         anyCharsAccess().flags.isEOF = true;
         return EOF;
@@ -2315,7 +2315,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::newSimpleToken;
     using CharsBase::peekCodeUnit;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
-    using CharsBase::toCharT;
     using GeneralCharsBase::ungetCodeUnit;
     using GeneralCharsBase::updateLineInfoForEOL;
 

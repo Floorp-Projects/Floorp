@@ -23,7 +23,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
-#include "mozilla/Utf8.h"
 
 #include <memory>
 #include <new>
@@ -61,7 +60,6 @@ using mozilla::PodCopy;
 using mozilla::PodZero;
 using mozilla::Some;
 using mozilla::Unused;
-using mozilla::Utf8Unit;
 
 using JS::AutoGCRooter;
 
@@ -4116,9 +4114,9 @@ Parser<SyntaxParseHandler, CharT>::asmJS(Node list)
     return false;
 }
 
-template <>
+template <typename CharT>
 bool
-Parser<FullParseHandler, char16_t>::asmJS(Node list)
+Parser<FullParseHandler, CharT>::asmJS(Node list)
 {
     // Disable syntax parsing in anything nested inside the asm.js module.
     disableSyntaxParser();
@@ -4151,16 +4149,6 @@ Parser<FullParseHandler, char16_t>::asmJS(Node list)
         return false;
     }
 
-    return true;
-}
-
-template <>
-bool
-Parser<FullParseHandler, Utf8Unit>::asmJS(Node list)
-{
-    // Just succeed without setting the asm.js directive flag.  Given Web
-    // Assembly's rapid advance, it's probably not worth the trouble to really
-    // support UTF-8 asm.js.
     return true;
 }
 
@@ -9131,6 +9119,9 @@ Parser<FullParseHandler, CharT>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
+    static_assert(mozilla::IsSame<CharT, char16_t>::value,
+                  "code below will need changing for UTF-8 handling");
+
     // Create the regexp and check its syntax.
     const auto& chars = tokenStream.getCharBuffer();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
@@ -9150,11 +9141,14 @@ Parser<SyntaxParseHandler, CharT>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
+    static_assert(mozilla::IsSame<CharT, char16_t>::value,
+                  "code below will need changing for UTF-8 handling");
+
     // Only check the regexp's syntax, but don't create a regexp object.
     const auto& chars = tokenStream.getCharBuffer();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
 
-    mozilla::Range<const char16_t> source(chars.begin(), chars.length());
+    mozilla::Range<const CharT> source(chars.begin(), chars.length());
     if (!js::irregexp::ParsePatternSyntax(anyChars, alloc, source, flags & UnicodeFlag))
         return null();
 
@@ -10159,12 +10153,8 @@ GeneralParser<ParseHandler, CharT>::exprInParens(InHandling inHandling,
 
 template class PerHandlerParser<FullParseHandler>;
 template class PerHandlerParser<SyntaxParseHandler>;
-template class GeneralParser<FullParseHandler, Utf8Unit>;
-template class GeneralParser<SyntaxParseHandler, Utf8Unit>;
 template class GeneralParser<FullParseHandler, char16_t>;
 template class GeneralParser<SyntaxParseHandler, char16_t>;
-template class Parser<FullParseHandler, Utf8Unit>;
-template class Parser<SyntaxParseHandler, Utf8Unit>;
 template class Parser<FullParseHandler, char16_t>;
 template class Parser<SyntaxParseHandler, char16_t>;
 

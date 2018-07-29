@@ -289,8 +289,10 @@ JSONParser<CharT>::readNumber()
         }
 
         double d;
-        if (!GetFullInteger(cx, digitStart.get(), current.get(), 10, &d))
+        const CharT* dummy;
+        if (!GetPrefixInteger(cx, digitStart.get(), current.get(), 10, &dummy, &d))
             return token(OOM);
+        MOZ_ASSERT(current == dummy);
         return numberToken(negative ? -d : d);
     }
 
@@ -333,8 +335,10 @@ JSONParser<CharT>::readNumber()
     }
 
     double d;
-    if (!FullStringToDouble(cx, digitStart.get(), current.get(), &d))
+    const CharT* finish;
+    if (!js_strtod(cx, digitStart.get(), current.get(), &finish, &d))
         return token(OOM);
+    MOZ_ASSERT(current == finish);
     return numberToken(negative ? -d : d);
 }
 
