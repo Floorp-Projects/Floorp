@@ -1,0 +1,3 @@
+component {d0c5195d-e798-49d4-b1d3-9324328b2291} pdfjs.js
+contract @mozilla.org/streamconv;1?from=application/pdf&to=*/* {d0c5195d-e798-49d4-b1d3-9324328b2291}
+contract @mozilla.org/streamconv;1?from=application/pdf&to=text/html {d0c5195d-e798-49d4-b1d3-9324328b2291}
