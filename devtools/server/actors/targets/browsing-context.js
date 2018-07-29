@@ -62,7 +62,8 @@ function getDocShellChromeEventHandler(docShell) {
     try {
       // Toplevel xul window's docshell doesn't have chromeEventHandler
       // attribute. The chrome event handler is just the global window object.
-      handler = docShell.domWindow;
+      handler = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindow);
     } catch (e) {
       // ignore
     }
@@ -79,7 +80,8 @@ function getChildDocShells(parentDocShell) {
   const docShells = [];
   while (docShellsEnum.hasMoreElements()) {
     const docShell = docShellsEnum.getNext();
-    docShell.QueryInterface(Ci.nsIDocShell);
+    docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIWebProgress);
     docShells.push(docShell);
   }
   return docShells;
@@ -343,7 +345,9 @@ const browsingContextTargetPrototype = {
   get window() {
     // On xpcshell, there is no document
     if (this.docShell) {
-      return this.docShell.domWindow;
+      return this.docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindow);
     }
     return null;
   },
@@ -377,7 +381,8 @@ const browsingContextTargetPrototype = {
    */
   get windows() {
     return this.docShells.map(docShell => {
-      return docShell.domWindow;
+      return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindow);
     });
   },
 
@@ -1483,7 +1488,8 @@ DebuggerProgressListener.prototype = {
     // Add the docshell to the watched set. We're actually adding the window,
     // because docShell objects are not wrappercached and would be rejected
     // by the WeakSet.
-    const docShellWindow = docShell.domWindow;
+    const docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindow);
     this._watchedDocShells.add(docShellWindow);
 
     const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1505,7 +1511,8 @@ DebuggerProgressListener.prototype = {
   },
 
   unwatch(docShell) {
-    const docShellWindow = docShell.domWindow;
+    const docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindow);
     if (!this._watchedDocShells.has(docShellWindow)) {
       return;
     }
@@ -1532,7 +1539,8 @@ DebuggerProgressListener.prototype = {
 
   _getWindowsInDocShell(docShell) {
     return getChildDocShells(docShell).map(d => {
-      return d.domWindow;
+      return d.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDOMWindow);
     });
   },
 

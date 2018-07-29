@@ -17,7 +17,8 @@ function promiseDialogOpened() {
       onOpenWindow(xulWin) {
         Services.wm.removeListener(this);
 
-        let win = xulWin.docShell.domWindow;
+        let win = xulWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindow);
         waitForFocus(() => {
           if (win.location == "chrome://global/content/commonDialog.xul")
             resolve(win);

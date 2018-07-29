@@ -2459,7 +2459,9 @@ Engine.prototype = {
     let attrs = options.originAttributes;
 
     if (!attrs) {
-      attrs = options.window.docShell.getOriginAttributes();
+      attrs = options.window.document
+                            .docShell
+                            .getOriginAttributes();
     }
 
     let principal = Services.scriptSecurityManager

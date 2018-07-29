@@ -183,7 +183,8 @@ const backgroundPageThumbsContent = {
         this._loadAboutBlank();
       });
     };
-    let win = docShell.domWindow;
+    let win = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindow);
     win.requestIdleCallback(() => doCapture().catch(ex => this._failCurrentCapture(ex.message)));
   },
 

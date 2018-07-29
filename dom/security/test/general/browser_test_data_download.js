@@ -9,7 +9,8 @@ function addWindowListener(aURL, aCallback) {
     onOpenWindow(aXULWindow) {
       info("window opened, waiting for focus");
       Services.wm.removeListener(this);
-      var domwindow = aXULWindow.docShell.domWindow;
+      var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindow);
       waitForFocus(function() {
         is(domwindow.document.location.href, aURL, "should have seen the right window open");
         aCallback(domwindow);

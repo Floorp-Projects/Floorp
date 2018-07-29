@@ -12,7 +12,8 @@ function waitForNewWindow() {
           resolve(domwindow);
         }
 
-        var domwindow = aXULWindow.docShell.domWindow;
+        var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDOMWindow);
         domwindow.addEventListener("load", downloadOnLoad, true);
       },
       onCloseWindow: aXULWindow => {},

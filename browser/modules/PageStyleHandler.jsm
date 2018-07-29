@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["PageStyleHandler"];
 
 var PageStyleHandler = {
   getViewer(content) {
-    return content.docShell.contentViewer;
+    return content.document.docShell.contentViewer;
   },
 
   sendStyleSheetInfo(mm) {
@@ -50,7 +50,7 @@ var PageStyleHandler = {
       return;
     }
 
-    let mm = win.docShell
+    let mm = win.document.docShell
                 .QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(Ci.nsIContentFrameMessageManager);
     this.sendStyleSheetInfo(mm);

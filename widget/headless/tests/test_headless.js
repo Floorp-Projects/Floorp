@@ -37,7 +37,8 @@ function loadContentWindow(webNavigation, uri) {
         }
         let docShell = webNavigation.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDocShell);
-        let contentWindow = docShell.domWindow;
+        let contentWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindow);
         webProgress.removeProgressListener(progressListener);
         progressListeners.delete(progressListener);
         contentWindow.addEventListener("load", (event) => {

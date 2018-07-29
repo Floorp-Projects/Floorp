@@ -89,7 +89,7 @@ var contentScripts = new DefaultWeakMap(matcher => {
 });
 
 function getMessageManager(window) {
-  let docShell = window.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
+  let docShell = window.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
   try {
     return docShell.getInterface(Ci.nsIContentFrameMessageManager);
   } catch (e) {
@@ -283,8 +283,8 @@ DocumentManager = {
       let enum_ = docShell.getDocShellEnumerator(docShell.typeContent,
                                                  docShell.ENUMERATE_FORWARDS);
 
-      for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIDocShell)) {
-        yield docShell.domWindow;
+      for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIInterfaceRequestor)) {
+        yield docShell.getInterface(Ci.nsIDOMWindow);
       }
     } else {
       for (let global of this.globals.keys()) {

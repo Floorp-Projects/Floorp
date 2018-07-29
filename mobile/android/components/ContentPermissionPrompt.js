@@ -51,7 +51,12 @@ ContentPermissionPrompt.prototype = {
   },
 
   getChromeWindow: function getChromeWindow(aWindow) {
-     let chromeWin = aWindow.docShell.rootTreeItem.domWindow
+     let chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsIDocShellTreeItem)
+                            .rootTreeItem
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindow)
                             .QueryInterface(Ci.nsIDOMChromeWindow);
      return chromeWin;
   },

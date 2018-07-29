@@ -9,6 +9,17 @@ const EXPORTED_SYMBOLS = ["WebNavigationFrames"];
 /* exported WebNavigationFrames */
 
 /**
+ * Retrieve the DOMWindow associated to the docShell passed as parameter.
+ *
+ * @param    {nsIDocShell}  docShell - the docShell that we want to get the DOMWindow from.
+ * @returns  {nsIDOMWindow}          - the DOMWindow associated to the docShell.
+ */
+function docShellToWindow(docShell) {
+  return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindow);
+}
+
+/**
  * The FrameDetail object which represents a frame in WebExtensions APIs.
  *
  * @typedef  {Object}  FrameDetail
@@ -30,7 +41,7 @@ function* iterateDocShellTree(docShell) {
     docShell.typeContent, docShell.ENUMERATE_FORWARDS);
 
   while (docShellsEnum.hasMoreElements()) {
-    yield docShellsEnum.getNext().QueryInterface(Ci.nsIDocShell);
+    yield docShellsEnum.getNext();
   }
 }
 
@@ -70,7 +81,8 @@ function getDocShellFrameId(docShell) {
     return undefined;
   }
 
-  return getFrameId(docShell.domWindow);
+  return getFrameId(docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindow));
 }
 
 /**
@@ -80,7 +92,7 @@ function getDocShellFrameId(docShell) {
  * @returns  {FrameDetail} the FrameDetail JSON object which represents the docShell.
  */
 function convertDocShellToFrameDetail(docShell) {
-  let window = docShell.domWindow;
+  let window = docShellToWindow(docShell);
 
   return {
     frameId: getFrameId(window),
@@ -101,7 +113,7 @@ function convertDocShellToFrameDetail(docShell) {
  */
 function findDocShell(frameId, rootDocShell) {
   for (let docShell of iterateDocShellTree(rootDocShell)) {
-    if (frameId == getFrameId(docShell.domWindow)) {
+    if (frameId == getFrameId(docShellToWindow(docShell))) {
       return docShell;
     }
   }

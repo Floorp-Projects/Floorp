@@ -29,7 +29,11 @@
   // When the round begins, this will be initialized.
   var testsleftinround = 0;
   var currentround = "";
-  var mainWindow = window.docShell.rootTreeItem.domWindow;
+  var mainWindow =
+    window.QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).
+    rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIDOMWindow);
 
   SpecialPowers.Services.prefs.setIntPref("browser.startup.page", 0);
 

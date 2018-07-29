@@ -89,7 +89,7 @@ class ClickEventHandler {
       // Only when the owner doc has |mixedContentChannel| and the same origin
       // should we allow mixed content.
       json.allowMixedContent = false;
-      let docshell = ownerDoc.defaultView.docShell;
+      let docshell = ownerDoc.docShell;
       if (this.mm.docShell.mixedContentChannel) {
         const sm = Services.scriptSecurityManager;
         try {

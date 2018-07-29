@@ -670,7 +670,12 @@ function handURIToExistingBrowser(uri, location, cmdLine, forcePrivate, triggeri
     return;
   }
 
-  var bwin = navWin.docShell.rootTreeItem.domWindow;
+  var navNav = navWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation);
+  var rootItem = navNav.QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem;
+  var rootWin = rootItem.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindow);
+  var bwin = rootWin.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
   bwin.openURI(uri, null, location,
                Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL, triggeringPrincipal);
 }

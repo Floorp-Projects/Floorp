@@ -35,7 +35,12 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
 }
 
 function testOnWindow(options, callback) {
-  var mainWindow = window.docShell.rootTreeItem.domWindow;
+  var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow);
 
   var win = mainWindow.OpenBrowserWindow(options);
   windowsToClose.push(win);

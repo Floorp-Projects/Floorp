@@ -183,7 +183,9 @@ CustomizedReload.prototype = {
     if (window == this.window) {
       this.customizedReloadWindows.add(window);
     } else if (subjectDocShell.sameTypeParent) {
-      const parentWindow = subjectDocShell.sameTypeParent.domWindow;
+      const parentWindow = subjectDocShell.sameTypeParent
+                                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                                        .getInterface(Ci.nsIDOMWindow);
       if (parentWindow && this.customizedReloadWindows.has(parentWindow)) {
         this.customizedReloadWindows.add(window);
       }

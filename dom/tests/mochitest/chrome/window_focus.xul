@@ -274,7 +274,11 @@ function checkSelection(node, testid)
 
 function getTopWindow(win)
 {
-  return win.docShell.rootTreeItem.domWindow;
+  return win.QueryInterface(Ci.nsIInterfaceRequestor).
+             getInterface(Ci.nsIWebNavigation).
+             QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem.
+             QueryInterface(Ci.nsIInterfaceRequestor).
+             getInterface(Ci.nsIDOMWindow);
 }
 
 function mouseWillTriggerFocus(element)
