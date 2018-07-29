@@ -29,12 +29,7 @@ function finish() {
   SimpleTest.finish();
 }
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation)
-                       .QueryInterface(Ci.nsIDocShellTreeItem)
-                       .rootTreeItem
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindow);
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 
 var offscreenWindow = mainWindow.openDialog("window_bug593307_offscreen.xul", "",
                                             "dialog=no,chrome,width=200,height=200,screenX=-3000,screenY=-3000",

@@ -21,12 +21,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                    .rootTreeItem
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindow);
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 
 var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                     getService(Ci.nsIUrlListManager);
@@ -197,7 +192,7 @@ function testOnWindow(aTestData) {
 
       let expected;
       let browser = win.gBrowser.selectedBrowser;
-      let wp = win.gBrowser.contentDocument.docShell.QueryInterface(Ci.nsIWebProgress);
+      let wp = win.gBrowser.contentWindow.docShell.QueryInterface(Ci.nsIWebProgress);
       let progressListener = {
         onSecurityChange(aWebProgress, aRequest, aState) {
           expected = aTestData.reportUrl;

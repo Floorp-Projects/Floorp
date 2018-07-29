@@ -26,6 +26,8 @@
 #include <pthread_np.h>
 #endif
 
+#include "nsThreadUtils.h"
+
 #if defined(OS_MACOSX)
 namespace base {
 void InitThreading();
@@ -33,6 +35,10 @@ void InitThreading();
 #endif
 
 static void* ThreadFunc(void* closure) {
+  // Create a nsThread wrapper for the current platform thread, and register it
+  // with the thread manager.
+  (void) NS_GetCurrentThread();
+
   PlatformThread::Delegate* delegate =
       static_cast<PlatformThread::Delegate*>(closure);
   delegate->ThreadMain();
@@ -92,21 +98,10 @@ void PlatformThread::SetName(const char* name) {
   if (PlatformThread::CurrentId() == getpid())
     return;
 
-  // http://0pointer.de/blog/projects/name-your-threads.html
-  // Set the name for the LWP (which gets truncated to 15 characters).
-  // Note that glibc also has a 'pthread_setname_np' api, but it may not be
-  // available everywhere and it's only benefit over using prctl directly is
-  // that it can set the name of threads other than the current thread.
-#if defined(OS_LINUX)
-  prctl(PR_SET_NAME, reinterpret_cast<uintptr_t>(name), 0, 0, 0); 
-#elif defined(OS_NETBSD)
-  pthread_setname_np(pthread_self(), "%s", (void *)name);
-#elif defined(OS_BSD) && !defined(__GLIBC__)
-  pthread_set_name_np(pthread_self(), name);
-#elif defined(OS_SOLARIS)
-  pthread_setname_np(pthread_self(), name);
-#else
-#endif
+  // Using NS_SetCurrentThreadName, as opposed to using platform APIs directly,
+  // also sets the thread name on the PRThread wrapper, and allows us to
+  // retrieve it using PR_GetThreadName.
+  NS_SetCurrentThreadName(name);
 }
 #endif // !OS_MACOSX
 
@@ -129,8 +124,9 @@ bool CreateThread(size_t stack_size, bool joinable,
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
   }
 
-  if (stack_size > 0)
-    pthread_attr_setstacksize(&attributes, stack_size);
+  if (stack_size == 0)
+    stack_size = nsIThreadManager::DEFAULT_STACK_SIZE;
+  pthread_attr_setstacksize(&attributes, stack_size);
 
   success = !pthread_create(thread_handle, &attributes, ThreadFunc, delegate);
 
