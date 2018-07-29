@@ -921,9 +921,9 @@ var ExtensionContent = {
     let enum_ = docShell.getDocShellEnumerator(docShell.typeContent,
                                                docShell.ENUMERATE_FORWARDS);
 
-    for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIDocShell)) {
+    for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIInterfaceRequestor)) {
       try {
-        yield docShell.domWindow;
+        yield docShell.getInterface(Ci.nsIDOMWindow);
       } catch (e) {
         // This can fail if the docShell is being destroyed, so just
         // ignore the error.

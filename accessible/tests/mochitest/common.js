@@ -857,7 +857,12 @@ function shortenString(aString, aMaxLength) {
  * Return main chrome window (crosses chrome boundary)
  */
 function getMainChromeWindow(aWindow) {
-  return aWindow.docShell.rootTreeItem.domWindow;
+  return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIWebNavigation)
+                .QueryInterface(Ci.nsIDocShellTreeItem)
+                .rootTreeItem
+                .QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIDOMWindow);
 }
 
 /** Sets the test plugin(s) initially expected enabled state.

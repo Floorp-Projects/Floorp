@@ -321,8 +321,9 @@ var Harness = {
 
   // nsIWindowMediatorListener
 
-  onOpenWindow(xulWin) {
-    var domwindow = xulWin.docShell.domWindow;
+  onOpenWindow(window) {
+    var domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindow);
     var self = this;
     waitForFocus(function() {
       self.windowReady(domwindow);

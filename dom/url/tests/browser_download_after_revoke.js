@@ -20,7 +20,8 @@ function test () {
 	  finish();
         }
 
-        var domwindow = aXULWindow.docShell.domWindow;
+        var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDOMWindow);
         domwindow.addEventListener("load", downloadOnLoad, true);
       },
       onCloseWindow: function(aXULWindow) {},
