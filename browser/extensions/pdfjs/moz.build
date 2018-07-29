@@ -10,3 +10,8 @@ with Files("**"):
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 JAR_MANIFESTS += ['jar.mn']
+
+EXTRA_COMPONENTS += [
+    'pdfjs.js',
+    'pdfjs.manifest',
+]

@@ -45,12 +45,8 @@ XPCOMUtils.defineLazyServiceGetter(Svc, "pluginHost",
                                    "nsIPluginHost");
 ChromeUtils.defineModuleGetter(this, "PdfjsChromeUtils",
                                "resource://pdf.js/PdfjsChromeUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PdfjsContentUtils",
-                               "resource://pdf.js/PdfjsContentUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PdfJsDefaultPreferences",
   "resource://pdf.js/PdfJsDefaultPreferences.jsm");
-ChromeUtils.defineModuleGetter(this, "PdfJsRegistration",
-  "resource://pdf.js/PdfJsRegistration.jsm");
 
 function getBoolPref(aPref, aDefaultValue) {
   try {
@@ -106,11 +102,9 @@ var PdfJs = {
                       "in the parent process.");
     }
     PdfjsChromeUtils.init();
-    if (!remote) {
-      PdfjsContentUtils.init();
-    }
     this.initPrefs();
-    this.updateRegistration();
+
+    Services.ppmm.sharedData.set("pdfjs.enabled", this.checkEnabled());
   },
 
   initPrefs: function initPrefs() {
@@ -134,14 +128,6 @@ var PdfJs = {
     initializeDefaultPreferences();
   },
 
-  updateRegistration: function updateRegistration() {
-    if (this.checkEnabled()) {
-      this.ensureRegistered();
-    } else {
-      this.ensureUnregistered();
-    }
-  },
-
   uninit: function uninit() {
     if (this._initialized) {
       Services.prefs.removeObserver(PREF_DISABLED, this);
@@ -151,7 +137,6 @@ var PdfJs = {
       Services.obs.removeObserver(this, TOPIC_PLUGIN_INFO_UPDATED);
       this._initialized = false;
     }
-    this.ensureUnregistered();
   },
 
   _migrate: function migrate() {
@@ -270,11 +255,7 @@ var PdfJs = {
                       "handler changes.");
     }
 
-    this.updateRegistration();
-    let jsm = "resource://pdf.js/PdfjsChromeUtils.jsm";
-    // eslint-disable-next-line no-shadow
-    let PdfjsChromeUtils = ChromeUtils.import(jsm, {}).PdfjsChromeUtils;
-    PdfjsChromeUtils.notifyChildOfSettingsChange(this.enabled);
+    Services.ppmm.sharedData.set("pdfjs.enabled", this.checkEnabled());
   },
 
   /**
@@ -298,14 +279,6 @@ var PdfJs = {
       Services.prefs.setBoolPref(PREF_ENABLED_CACHE_INITIALIZED, true);
     }
     return Services.prefs.getBoolPref(PREF_ENABLED_CACHE_STATE, true);
-  },
-
-  ensureRegistered: function ensureRegistered() {
-    PdfJsRegistration.ensureRegistered();
-  },
-
-  ensureUnregistered: function ensureUnregistered() {
-    PdfJsRegistration.ensureUnregistered();
   },
 };
 
