@@ -18,11 +18,11 @@
 @keyframes opacity {
   to { opacity: 0 }
 }
-@keyframes background_and_translate {
-  to { background-color: red; transform: translate(100px); }
+@keyframes zIndex_and_translate {
+  to { z-index: 999; transform: translate(100px); }
 }
-@keyframes background {
-  to { background-color: red; }
+@keyframes z-index {
+  to { z-index: 999; }
 }
 @keyframes rotate {
   from { transform: rotate(0deg); }
@@ -95,18 +95,18 @@ promise_test(async t => {
 }, '');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'animation: background 100s' });
+  var div = addDiv(t, { style: 'animation: z-index 100s' });
   var animation = div.getAnimations()[0];
 
   await waitForPaints();
 
   assert_animation_is_not_running_on_compositor(animation,
      'Animation reports that it is NOT running on the compositor'
-     + ' for animation of "background"');
-}, 'isRunningOnCompositor is false for animation of "background"');
+     + ' for animation of "z-index"');
+}, 'isRunningOnCompositor is false for animation of "z-index"');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'animation: background_and_translate 100s' });
+  var div = addDiv(t, { style: 'animation: zIndex_and_translate 100s' });
   var animation = div.getAnimations()[0];
 
   await waitForPaints();
