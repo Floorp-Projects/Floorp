@@ -8,7 +8,6 @@ const Cm = Components.manager;
 
 const CONTRACT_ID = "@mozilla.org/content-permission/prompt;1";
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
