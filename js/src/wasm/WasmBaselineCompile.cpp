@@ -6023,6 +6023,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void emitCompareI64(Assembler::Condition compareOp, ValType compareType);
     void emitCompareF32(Assembler::DoubleCondition compareOp, ValType compareType);
     void emitCompareF64(Assembler::DoubleCondition compareOp, ValType compareType);
+    void emitCompareRef(Assembler::Condition compareOp, ValType compareType);
 
     void emitAddI32();
     void emitAddI64();
@@ -7383,6 +7384,11 @@ BaseCompiler::sniffConditionalControlCmp(Cond compareOp, ValType operandType)
         return false;
     }
 #endif
+
+    // No optimization for pointer compares yet.
+    if (operandType.isRefOrAnyRef()) {
+        return false;
+    }
 
     OpBytes op;
     iter_.peekOp(&op);
@@ -9170,6 +9176,20 @@ BaseCompiler::emitCompareF64(Assembler::DoubleCondition compareOp, ValType compa
 }
 
 void
+BaseCompiler::emitCompareRef(Assembler::Condition compareOp, ValType compareType)
+{
+    MOZ_ASSERT(!sniffConditionalControlCmp(compareOp, compareType));
+
+    RegPtr rs1, rs2;
+    pop2xRef(&rs1, &rs2);
+    RegI32 rd = needI32();
+    masm.cmpPtrSet(compareOp, rs1, rs2, rd);
+    freeRef(rs1);
+    freeRef(rs2);
+    pushI32(rd);
+}
+
+void
 BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode, const MIRTypeVector& sig,
                                ExprType retType, SymbolicAddress builtin)
 {
@@ -9639,11 +9659,13 @@ BaseCompiler::emitMemOrTableDrop(bool isMem)
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     uint32_t segIndex = 0;
-    if (!iter_.readMemOrTableDrop(isMem, &segIndex))
+    if (!iter_.readMemOrTableDrop(isMem, &segIndex)) {
         return false;
+    }
 
-    if (deadCode_)
+    if (deadCode_) {
         return true;
+    }
 
     // Despite the cast to int32_t, the callee regards the value as unsigned.
     pushI32(int32_t(segIndex));
@@ -9690,11 +9712,13 @@ BaseCompiler::emitMemOrTableInit(bool isMem)
 
     uint32_t segIndex = 0;
     Nothing nothing;
-    if (!iter_.readMemOrTableInit(isMem, &segIndex, &nothing, &nothing, &nothing))
+    if (!iter_.readMemOrTableInit(isMem, &segIndex, &nothing, &nothing, &nothing)) {
         return false;
+    }
 
-    if (deadCode_)
+    if (deadCode_) {
         return true;
+    }
 
     pushI32(int32_t(segIndex));
     SymbolicAddress callee = isMem ? SymbolicAddress::MemInit
@@ -10275,6 +10299,11 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitCurrentMemory());
 
 #ifdef ENABLE_WASM_GC
+          case uint16_t(Op::RefEq):
+            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+                return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(emitComparison(emitCompareRef, ValType::AnyRef, Assembler::Equal));
           case uint16_t(Op::RefNull):
             if (env_.gcTypesEnabled() == HasGcTypes::False) {
                 return iter_.unrecognizedOpcode(&op);
