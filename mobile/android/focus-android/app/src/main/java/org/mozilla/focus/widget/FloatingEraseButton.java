@@ -9,6 +9,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 import android.view.animation.AnimationUtils;
 
 import org.mozilla.focus.R;
@@ -31,11 +32,17 @@ public class FloatingEraseButton extends FloatingActionButton {
     public void updateSessionsCount(int tabCount) {
         final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) getLayoutParams();
         final FloatingActionButtonBehavior behavior = (FloatingActionButtonBehavior) params.getBehavior();
+        AccessibilityManager accessibilityManager = (AccessibilityManager) getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
 
         keepHidden = tabCount != 1;
 
         if (behavior != null) {
-            behavior.setEnabled(!keepHidden);
+            if (accessibilityManager != null && accessibilityManager.isTouchExplorationEnabled()) {
+                // Always display erase button if Talk Back is enabled
+                behavior.setEnabled(false);
+            } else {
+                behavior.setEnabled(!keepHidden);
+            }
         }
 
         if (keepHidden) {

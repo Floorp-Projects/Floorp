@@ -43,6 +43,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.CookieManager;
 import android.webkit.URLUtil;
@@ -926,6 +928,21 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     public void erase() {
         final IWebView webView = getWebView();
+        final Context context = getContext();
+
+        // Notify the user their session has been erased if Talk Back is enabled:
+        if (context != null) {
+            final AccessibilityManager manager = (AccessibilityManager) context
+                    .getSystemService(Context.ACCESSIBILITY_SERVICE);
+            if (manager != null && manager.isEnabled()) {
+                AccessibilityEvent event = AccessibilityEvent.obtain();
+                event.setEventType(AccessibilityEvent.TYPE_ANNOUNCEMENT);
+                event.setClassName(getClass().getName());
+                event.setPackageName(getContext().getPackageName());
+                event.getText().add(getString(R.string.feedback_erase));
+            }
+        }
+
         if (webView != null) {
             webView.cleanup();
         }
