@@ -804,6 +804,10 @@
   box-shadow: inset -4px 0 var(--blue-40);
 }
 
+.all-tabs-button {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+}
+
 .all-tabs-secondary-button > label {
   display: none;
   margin: 0 5.5px;
