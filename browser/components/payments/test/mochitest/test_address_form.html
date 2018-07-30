@@ -108,7 +108,7 @@ add_task(async function test_backButton() {
 
 add_task(async function test_saveButton() {
   let form = new AddressForm();
-  form.dataset.saveButtonLabel = "Save";
+  form.dataset.addButtonLabel = "Add";
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);
@@ -135,7 +135,7 @@ add_task(async function test_saveButton() {
   sendString("+15555551212");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
-  is(form.saveButton.textContent, "Save", "Check label");
+  is(form.saveButton.textContent, "Add", "Check label");
   form.saveButton.scrollIntoView();
   synthesizeMouseAtCenter(form.saveButton, {});
 
@@ -183,6 +183,7 @@ add_task(async function test_genericError() {
 
 add_task(async function test_edit() {
   let form = new AddressForm();
+  form.dataset.updateButtonLabel = "Update";
   await form.promiseReady;
   display.appendChild(form);
   await asyncElementRendered();
@@ -221,6 +222,7 @@ add_task(async function test_edit() {
     },
   });
   await asyncElementRendered();
+  is(form.saveButton.textContent, "Update", "Check label");
   checkAddressForm(form, minimalAddress);
 
   info("change to no selected address");
@@ -238,7 +240,7 @@ add_task(async function test_edit() {
 
 add_task(async function test_restricted_address_fields() {
   let form = new AddressForm();
-  form.dataset.saveButtonLabel = "Save";
+  form.dataset.addButtonLabel = "Add";
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);

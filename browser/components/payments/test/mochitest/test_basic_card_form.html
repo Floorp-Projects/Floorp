@@ -90,7 +90,7 @@ add_task(async function test_backButton() {
 
 add_task(async function test_saveButton() {
   let form = new BasicCardForm();
-  form.dataset.saveButtonLabel = "Save";
+  form.dataset.addButtonLabel = "Add";
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);
@@ -113,7 +113,7 @@ add_task(async function test_saveButton() {
      "Save button should be enabled since the required fields are filled");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
-  is(form.saveButton.textContent, "Save", "Check label");
+  is(form.saveButton.textContent, "Add", "Check label");
   synthesizeMouseAtCenter(form.saveButton, {});
 
   let details = await messagePromise;
@@ -236,6 +236,7 @@ add_task(async function test_add_noSelectedShippingAddress() {
 
 add_task(async function test_edit() {
   let form = new BasicCardForm();
+  form.dataset.updateButtonLabel = "Update";
   await form.promiseReady;
   display.appendChild(form);
   await asyncElementRendered();
@@ -257,6 +258,7 @@ add_task(async function test_edit() {
     },
   });
   await asyncElementRendered();
+  is(form.saveButton.textContent, "Update", "Check label");
   checkCCForm(form, card1);
 
   info("test future year");
