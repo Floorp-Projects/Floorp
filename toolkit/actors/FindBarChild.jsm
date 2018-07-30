@@ -12,8 +12,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "RemoteFinder",
-                               "resource://gre/modules/RemoteFinder.jsm");
 
 class FindBarChild extends ActorChild {
   constructor(mm) {
@@ -73,13 +71,19 @@ class FindBarChild extends ActorChild {
 
     if (event.charCode && BrowserUtils.shouldFastFind(event.target)) {
       let key = String.fromCharCode(event.charCode);
-      if ((key == "/" || key == "'") && RemoteFinder._manualFAYT) {
+      if ((key == "/" || key == "'") && FindBarChild.manualFAYT) {
         return FindBarContent.startQuickFind(event);
       }
-      if (key != " " && RemoteFinder._findAsYouType) {
+      if (key != " " && FindBarChild.findAsYouType) {
         return FindBarContent.startQuickFind(event, true);
       }
     }
     return null;
   }
 }
+
+XPCOMUtils.defineLazyPreferenceGetter(FindBarChild, "findAsYouType",
+  "accessibility.typeaheadfind");
+XPCOMUtils.defineLazyPreferenceGetter(FindBarChild, "manualFAYT",
+  "accessibility.typeaheadfind.manual");
+

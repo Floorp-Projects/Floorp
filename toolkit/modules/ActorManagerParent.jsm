@@ -140,6 +140,15 @@ let ACTORS = {
     },
   },
 
+  Finder: {
+    child: {
+      module: "resource://gre/actors/FinderChild.jsm",
+      messages: [
+        "Finder:Initialize",
+      ],
+    },
+  },
+
   ManifestMessages: {
     child: {
       module: "resource://gre/modules/ManifestMessagesChild.jsm",

@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["FindBarContent"];
 
-ChromeUtils.defineModuleGetter(this, "RemoteFinder",
-                               "resource://gre/modules/RemoteFinder.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
@@ -35,7 +35,7 @@ class FindBarContent {
   startQuickFind(event, autostart = false) {
     let mode = FIND_TYPEAHEAD;
     if (event.charCode == "'".charAt(0) ||
-        autostart && RemoteFinder._typeAheadLinksOnly) {
+        autostart && FindBarContent.typeAheadLinksOnly) {
       mode = FIND_LINKS;
     }
 
@@ -97,3 +97,6 @@ class FindBarContent {
       this.mm.sendAsyncMessage("Findbar:Mouseup");
   }
 }
+
+XPCOMUtils.defineLazyPreferenceGetter(FindBarContent, "typeAheadLinksOnly",
+  "accessibility.typeaheadfind.linksonly");

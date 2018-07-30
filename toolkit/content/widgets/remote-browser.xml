@@ -63,9 +63,9 @@
             if (!this.messageManager)
               return null;
 
-            let jsm = "resource://gre/modules/RemoteFinder.jsm";
-            let { RemoteFinder } = ChromeUtils.import(jsm, {});
-            this._remoteFinder = new RemoteFinder(this);
+            let jsm = "resource://gre/modules/FinderParent.jsm";
+            let { FinderParent } = ChromeUtils.import(jsm, {});
+            this._remoteFinder = new FinderParent(this);
           }
           return this._remoteFinder;
         ]]></getter>
