@@ -39,7 +39,8 @@ const INITIAL_STATE = {
   },
   // CSS font properties defined on the selected rule.
   properties: {},
-
+  // Unique identifier for the selected element.
+  id: "",
   // Warning message with the reason why the font editor cannot be shown.
   warning: getStr("fontinspector.noFontsOnSelectedElement"),
 };
@@ -82,7 +83,7 @@ const reducers = {
     return newState;
   },
 
-  [UPDATE_EDITOR_STATE](state, { fonts, families, properties }) {
+  [UPDATE_EDITOR_STATE](state, { fonts, families, properties, id }) {
     const axes = parseFontVariationAxes(properties["font-variation-settings"]);
 
     // If not defined in font-variation-settings, setup "wght" axis with the value of
@@ -102,7 +103,7 @@ const reducers = {
       axes.wdth = match[1];
     }
 
-    return { ...state, axes, fonts, families, properties };
+    return { ...state, axes, fonts, families, properties, id };
   },
 
   [UPDATE_PROPERTY_VALUE](state, { property, value }) {
