@@ -4,19 +4,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FindBarChild"];
+var EXPORTED_SYMBOLS = ["FindBarContent"];
 
 ChromeUtils.defineModuleGetter(this, "RemoteFinder",
                                "resource://gre/modules/RemoteFinder.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
-/* Please keep in sync with toolkit/this.mm.content/widgets/findbar.xml */
+/* Please keep in sync with toolkit/content/widgets/findbar.xml */
 const FIND_NORMAL = 0;
 const FIND_TYPEAHEAD = 1;
 const FIND_LINKS = 2;
 
-class FindBarChild {
+class FindBarContent {
   constructor(mm) {
     this.mm = mm;
 
