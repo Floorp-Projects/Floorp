@@ -261,7 +261,7 @@ nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 
   MutexAutoLock lock(mLock);
 
-  StreamData* streamData = mStreams.AppendElement();
+  StreamData* streamData = mStreams.AppendElement(fallible);
   if (NS_WARN_IF(!streamData)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -317,7 +317,10 @@ nsMultiplexInputStream::Close()
     MutexAutoLock lock(mLock);
     uint32_t len = mStreams.Length();
     for (uint32_t i = 0; i < len; ++i) {
-      streams.AppendElement(mStreams[i].mStream);
+      if (NS_WARN_IF(!streams.AppendElement(mStreams[i].mStream, fallible))) {
+        mStatus = NS_BASE_STREAM_CLOSED;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
     mStatus = NS_BASE_STREAM_CLOSED;
   }
@@ -1265,10 +1268,10 @@ public:
     , mNegativeSize(false)
   {}
 
-  void
+  bool
   AddStream(nsIAsyncInputStreamLength* aStream)
   {
-    mPendingStreams.AppendElement(aStream);
+    return mPendingStreams.AppendElement(aStream, fallible);
   }
 
   bool
@@ -1410,7 +1413,9 @@ nsMultiplexInputStream::AsyncLengthWait(nsIInputStreamLengthCallback* aCallback,
     nsCOMPtr<nsIAsyncInputStreamLength> asyncStream =
       do_QueryInterface(mStreams[i].mStream);
     if (asyncStream) {
-      helper->AddStream(asyncStream);
+      if (NS_WARN_IF(!helper->AddStream(asyncStream))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       continue;
     }
 
