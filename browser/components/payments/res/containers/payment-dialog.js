@@ -47,9 +47,11 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
 
     this._shippingAddressPicker = contents.querySelector("address-picker.shipping-related");
+    this._shippingOptionPicker = contents.querySelector("shipping-option-picker");
     this._shippingRelatedEls = contents.querySelectorAll(".shipping-related");
     this._payerRelatedEls = contents.querySelectorAll(".payer-related");
     this._payerAddressPicker = contents.querySelector("address-picker.payer-related");
+    this._paymentMethodPicker = contents.querySelector("payment-method-picker");
 
     this._header = contents.querySelector("header");
 
@@ -111,6 +113,12 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     paymentRequest.changeShippingOption({
       optionID,
     });
+  }
+
+  _isPayerRequested(paymentOptions) {
+    return paymentOptions.requestPayerName ||
+           paymentOptions.requestPayerEmail ||
+           paymentOptions.requestPayerPhone;
   }
 
   _getAdditionalDisplayItems(state) {
@@ -227,16 +235,28 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       case "processing":
       case "success":
       case "unknown": {
-        this._payButton.disabled = state.changesPrevented;
+        this._payButton.disabled = true;
         this._payButton.textContent = this._payButton.dataset[completeStatus + "Label"];
         break;
       }
-      case "": // initial/default state
+      case "": {
+        // initial/default state
+        this._payButton.textContent = this._payButton.dataset.label;
+        this._payButton.disabled =
+          (state.request.paymentOptions.requestShipping &&
+           (!this._shippingAddressPicker.value ||
+            !this._shippingOptionPicker.value)) ||
+          (this._isPayerRequested(state.request.paymentOptions) &&
+            !this._payerAddressPicker.value) ||
+          !this._paymentMethodPicker.value ||
+          state.changesPrevented;
+        break;
+      }
       case "fail":
       case "timeout": {
         // pay button is hidden in fail/timeout states.
         this._payButton.textContent = this._payButton.dataset.label;
-        this._payButton.disabled = completeStatus !== "" || state.changesPrevented;
+        this._payButton.disabled = true;
         break;
       }
       default: {
@@ -297,9 +317,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     for (let element of this._shippingRelatedEls) {
       element.hidden = !paymentOptions.requestShipping;
     }
-    let payerRequested = paymentOptions.requestPayerName ||
-                         paymentOptions.requestPayerEmail ||
-                         paymentOptions.requestPayerPhone;
+    let payerRequested = this._isPayerRequested(paymentOptions);
     for (let element of this._payerRelatedEls) {
       element.hidden = !payerRequested;
     }

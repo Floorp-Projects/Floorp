@@ -141,7 +141,7 @@ add_task(async function test_initial_completeStatus() {
   is(payButton, document.querySelector(`#${page.id} button.primary`),
      "Primary button is the pay button in the initial state");
   is(payButton.textContent, "Pay", "Check default label");
-  ok(!payButton.disabled, "Button is enabled");
+  ok(payButton.disabled, "Button is disabled by default");
 });
 
 add_task(async function test_processing_completeStatus() {
@@ -184,7 +184,7 @@ add_task(async function test_success_unknown_completeStatus() {
     if (completeStatus == "unknown") {
       is(payButton.textContent, "Unknown", "Check button label");
     }
-    ok(!payButton.disabled, "Button is enabled");
+    ok(payButton.disabled, "Button is disabled by default");
   }
 });
 

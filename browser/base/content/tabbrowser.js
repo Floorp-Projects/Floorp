@@ -147,6 +147,8 @@ window._gBrowser = {
 
   _lastMultiSelectedTabRef: null,
 
+  _clearMultiSelectionLocked: false,
+
   /**
    * Tab close requests are ignored if the window is closing anyway,
    * e.g. when holding Ctrl+W.
@@ -3691,7 +3693,16 @@ window._gBrowser = {
   },
 
   clearMultiSelectedTabs(updatePositionalAttributes) {
-    for (let tab of this.selectedTabs) {
+    if (this._clearMultiSelectionLocked) {
+      return;
+    }
+
+    let selectedTabs = this.selectedTabs;
+    if (selectedTabs.length < 2) {
+      return;
+    }
+
+    for (let tab of selectedTabs) {
       tab.removeAttribute("multiselected");
     }
     this._multiSelectedTabsSet = new WeakSet();
@@ -3711,15 +3722,21 @@ window._gBrowser = {
   },
 
   switchToNextMultiSelectedTab() {
-    let lastMultiSelectedTab = gBrowser.lastMultiSelectedTab;
-    if (lastMultiSelectedTab != gBrowser.selectedTab) {
-      gBrowser.selectedTab = lastMultiSelectedTab;
-      return;
+    this._clearMultiSelectionLocked = true;
+    try {
+      let lastMultiSelectedTab = gBrowser.lastMultiSelectedTab;
+      if (lastMultiSelectedTab != gBrowser.selectedTab) {
+        gBrowser.selectedTab = lastMultiSelectedTab;
+      } else {
+        let selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet)
+          .filter(tab => tab.isConnected && !tab.closing);
+        let length = selectedTabs.length;
+        gBrowser.selectedTab = selectedTabs[length - 1];
+      }
+    } catch (e) {
+      Cu.reportError(e);
     }
-    let selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(this._multiSelectedTabsSet)
-                                  .filter(tab => tab.isConnected && !tab.closing);
-    let length = selectedTabs.length;
-    gBrowser.selectedTab = selectedTabs[length - 1];
+    this._clearMultiSelectionLocked = false;
   },
 
   set selectedTabs(tabs) {
