@@ -39,6 +39,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
+import java.io.ByteArrayOutputStream;
 
 import static org.mozilla.gecko.BuildConfig.DEBUG;
 
@@ -49,9 +50,10 @@ public class GeckoMediaControlAgent {
     private static GeckoMediaControlAgent instance;
     private Context mContext;
 
-    public static final String ACTION_RESUME         = "action_resume";
-    public static final String ACTION_PAUSE          = "action_pause";
-    public static final String ACTION_STOP           = "action_stop";
+    public static final String ACTION_RESUME          = "action_resume";
+    public static final String ACTION_PAUSE           = "action_pause";
+    public static final String ACTION_STOP            = "action_stop";
+    /* package */ static final String ACTION_SHUTDOWN = "action_shutdown";
     /* package */ static final String ACTION_RESUME_BY_AUDIO_FOCUS = "action_resume_audio_focus";
     /* package */ static final String ACTION_PAUSE_BY_AUDIO_FOCUS  = "action_pause_audio_focus";
     /* package */ static final String ACTION_START_AUDIO_DUCK      = "action_start_audio_duck";
@@ -60,6 +62,9 @@ public class GeckoMediaControlAgent {
     /* package */ static final String ACTION_TAB_STATE_STOPPED = "action_tab_state_stopped";
     /* package */ static final String ACTION_TAB_STATE_RESUMED = "action_tab_state_resumed";
     /* package */ static final String ACTION_TAB_STATE_FAVICON = "action_tab_state_favicon";
+
+    /* package */ static final String EXTRA_NOTIFICATION_DATA = "notification_data";
+
     private static final String MEDIA_CONTROL_PREF = "dom.audiochannel.mediaControl";
 
     // This is maximum volume level difference when audio ducking. The number is arbitrary.
@@ -80,8 +85,6 @@ public class GeckoMediaControlAgent {
 
     private int minCoverSize;
     private int coverSize;
-
-    private Notification currentNotification;
 
     /**
      * Internal state of MediaControlService, to indicate it is playing media, or paused...etc.
@@ -273,7 +276,7 @@ public class GeckoMediaControlAgent {
         Log.d(LOGTAG, "onStateChanged, state = " + sMediaState);
 
         if (isNeedToRemoveControlInterface(sMediaState)) {
-            stopForegroundService();
+            toggleForegroundService(false);
             NotificationManagerCompat.from(mContext).cancel(R.id.mediaControlNotification);
             release();
             return;
@@ -376,50 +379,49 @@ public class GeckoMediaControlAgent {
         }
     }
 
+    private void updateNotification(Tab tab) {
+        ThreadUtils.assertNotOnUiThread();
+
+        final boolean isPlaying = isMediaPlaying();
+        final int visibility = tab.isPrivate() ? Notification.VISIBILITY_PRIVATE : Notification.VISIBILITY_PUBLIC;
+
+        final MediaNotification mediaNotification = new MediaNotification(isPlaying, visibility, tab.getId(),
+                tab.getTitle(), tab.getURL(), generateCoverArt(tab.getFavicon()));
+
+        if (isPlaying) {
+            toggleForegroundService(true, mediaNotification);
+        } else {
+            toggleForegroundService(false);
+            NotificationManagerCompat.from(mContext).notify(R.id.mediaControlNotification, createNotification(mediaNotification));
+        }
+    }
+
     @SuppressLint("NewApi")
-    private void setCurrentNotification(Tab tab, boolean onGoing, int visibility) {
+    /* package */ Notification createNotification(MediaNotification mediaNotification) {
         final Notification.MediaStyle style = new Notification.MediaStyle();
         style.setShowActionsInCompactView(0);
 
         final Notification.Builder notificationBuilder = new Notification.Builder(mContext)
                 .setSmallIcon(R.drawable.ic_status_logo)
-                .setLargeIcon(generateCoverArt(tab))
-                .setContentTitle(tab.getTitle())
-                .setContentText(tab.getURL())
-                .setContentIntent(createContentIntent(tab))
+                .setLargeIcon(BitmapFactory.decodeByteArray(mediaNotification.getBitmapBytes(),
+                        0, mediaNotification.getBitmapBytes().length))
+                .setContentTitle(mediaNotification.getTitle())
+                .setContentText(mediaNotification.getText())
+                .setContentIntent(createContentIntent(mediaNotification.getTabId()))
                 .setDeleteIntent(createDeleteIntent())
                 .setStyle(style)
                 .addAction(createNotificationAction())
-                .setOngoing(onGoing)
+                .setOngoing(mediaNotification.isOnGoing())
                 .setShowWhen(false)
                 .setWhen(0)
-                .setVisibility(visibility);
+                .setVisibility(mediaNotification.getVisibility());
 
         if (!AppConstants.Versions.preO) {
             notificationBuilder.setChannelId(NotificationHelper.getInstance(mContext)
                     .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
-        currentNotification = notificationBuilder.build();
-    }
-
-    /* package */ Notification getCurrentNotification() {
-        return currentNotification;
-    }
-
-    private void updateNotification(Tab tab) {
-        ThreadUtils.assertNotOnUiThread();
-
-        final boolean isPlaying = isMediaPlaying();
-        final int visibility = tab.isPrivate() ? Notification.VISIBILITY_PRIVATE : Notification.VISIBILITY_PUBLIC;
-        setCurrentNotification(tab, isPlaying, visibility);
-
-        if (isPlaying) {
-            startForegroundService();
-        } else {
-            stopForegroundService();
-            NotificationManagerCompat.from(mContext).notify(R.id.mediaControlNotification, getCurrentNotification());
-        }
+        return notificationBuilder.build();
     }
 
     private Notification.Action createNotificationAction() {
@@ -448,8 +450,8 @@ public class GeckoMediaControlAgent {
         return intent;
     }
 
-    private PendingIntent createContentIntent(Tab tab) {
-        Intent intent = IntentHelper.getTabSwitchIntent(tab);
+    private PendingIntent createContentIntent(int tabId) {
+        Intent intent = IntentHelper.getTabSwitchIntent(tabId);
         return PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
@@ -459,18 +461,19 @@ public class GeckoMediaControlAgent {
         return PendingIntent.getService(mContext, 1, intent, 0);
     }
 
-    private Bitmap generateCoverArt(Tab tab) {
-        final Bitmap favicon = tab.getFavicon();
+    private byte[] generateCoverArt(Bitmap tabFavicon) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         // If we do not have a favicon or if it's smaller than 72 pixels then just use the default icon.
-        if (favicon == null || favicon.getWidth() < minCoverSize || favicon.getHeight() < minCoverSize) {
+        if (tabFavicon == null || tabFavicon.getWidth() < minCoverSize || tabFavicon.getHeight() < minCoverSize) {
             // Use the launcher icon as fallback
-            return BitmapFactory.decodeResource(mContext.getResources(), R.drawable.notification_media);
+            BitmapFactory.decodeResource(mContext.getResources(), R.drawable.notification_media).compress(Bitmap.CompressFormat.PNG, 100, stream);
+            return stream.toByteArray();
         }
 
         // Favicon should at least have half of the size of the cover
-        int width = Math.max(favicon.getWidth(), coverSize / 2);
-        int height = Math.max(favicon.getHeight(), coverSize / 2);
+        int width = Math.max(tabFavicon.getWidth(), coverSize / 2);
+        int height = Math.max(tabFavicon.getHeight(), coverSize / 2);
 
         final Bitmap coverArt = Bitmap.createBitmap(coverSize, coverSize, Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(coverArt);
@@ -484,27 +487,35 @@ public class GeckoMediaControlAgent {
         final Paint paint = new Paint();
         paint.setAntiAlias(true);
 
-        canvas.drawBitmap(favicon,
-                new Rect(0, 0, favicon.getWidth(), favicon.getHeight()),
+        canvas.drawBitmap(tabFavicon,
+                new Rect(0, 0, tabFavicon.getWidth(), tabFavicon.getHeight()),
                 new Rect(left, top, right, bottom),
                 paint);
 
-        return coverArt;
+        coverArt.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        return stream.toByteArray();
+    }
+
+    private void toggleForegroundService(boolean startService) {
+        toggleForegroundService(startService, null);
     }
 
     @SuppressLint("NewApi")
-    private void startForegroundService() {
+    private void toggleForegroundService(boolean startService, MediaNotification mediaNotification) {
         Intent intent = new Intent(mContext, MediaControlService.class);
+        if (!startService) {
+            intent.setAction(GeckoMediaControlAgent.ACTION_SHUTDOWN);
+        }
+
+        if (mediaNotification != null) {
+            intent.putExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA, mediaNotification);
+        }
 
         if (AppConstants.Versions.preO) {
             mContext.startService(intent);
         } else {
             mContext.startForegroundService(intent);
         }
-    }
-
-    private void stopForegroundService() {
-        mContext.stopService(new Intent(mContext, MediaControlService.class));
     }
 
     private void release() {
