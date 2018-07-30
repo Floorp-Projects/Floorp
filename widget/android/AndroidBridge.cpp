@@ -323,23 +323,6 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 }
 
 int
-AndroidBridge::GetDPI()
-{
-    static int sDPI = 0;
-    if (sDPI)
-        return sDPI;
-
-    const int DEFAULT_DPI = 160;
-
-    sDPI = GeckoAppShell::GetDpi();
-    if (!sDPI) {
-        return DEFAULT_DPI;
-    }
-
-    return sDPI;
-}
-
-int
 AndroidBridge::GetScreenDepth()
 {
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
@@ -358,6 +341,7 @@ AndroidBridge::GetScreenDepth()
 
     return sDepth;
 }
+
 void
 AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
 {

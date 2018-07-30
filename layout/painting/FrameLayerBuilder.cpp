@@ -6778,7 +6778,7 @@ private:
 
 /**
  * Returns a clip for the given |aItem|. If the clip can be simplified to not
- * include rounded rects, |aOutClip| is used to store the new clip.
+ * include rounded rects, |aOutClip| is used to store the simplified clip.
  */
 static const DisplayItemClip*
 GetItemClip(const nsDisplayItem* aItem, DisplayItemClip& aOutClip)
@@ -6799,7 +6799,7 @@ GetItemClip(const nsDisplayItem* aItem, DisplayItemClip& aOutClip)
 }
 
 /**
- * Sets the clip chain and starts a new opacity group.
+ * Pushes a new opacity group for |aContext| based on |aItem|.
  */
 static void
 PushOpacity(gfxContext* aContext,
@@ -6818,6 +6818,10 @@ PushOpacity(gfxContext* aContext,
   }
 }
 
+/**
+ * Pushes the transformation matrix of |aItem| into |aMatrixStack| and sets the
+ * accumulated transform as the current transformation matrix for |aContext|.
+ */
 static void
 PushTransform(gfxContext* aContext,
               AssignedDisplayItem& aItem,
@@ -6880,7 +6884,7 @@ FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
 {
   DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
 
-  int32_t appUnitsPerDevPixel  = aPresContext->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
   nsRect boundRect = ToAppUnits(aRect, appUnitsPerDevPixel);
   boundRect.MoveBy(NSIntPixelsToAppUnits(aOffset.x, appUnitsPerDevPixel),
                    NSIntPixelsToAppUnits(aOffset.y, appUnitsPerDevPixel));
@@ -6897,19 +6901,21 @@ FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
   // when the effect display item does not intersect with the invalidated area.
   int emptyEffectLevel = 0;
 
-  // Stores the simplified version of the clip, if needed.
+  // Stores a simplified version of the item clip, if needed.
   DisplayItemClip temporaryClip;
 
   // Two types of clips are used during PaintItems(): clips for items and clips
-  // for effects. Item clips are always at the top and they are never nested.
-  // Item clips are removed whenever an effect starts or ends.
+  // for effects. Item clips are always the most recent clip set, and they are
+  // never nested. The previous item clip is reused, if the next item has the
+  // same clip. Item clips are removed when an effect starts or ends.
   ItemClipTracker itemClipTracker(aContext, appUnitsPerDevPixel);
 
   // Since effects can be nested, the effect clips need to be nested as well.
-  // They are pushed whenever an effect start or end marker is processed.
-  // Pushing and popping possibly the same clip for each and every transform is
-  // expensive. This is why |effectClipStack| tracks the clips for effects and
-  // tries to reuse them, if consecutive effects are processed.
+  // They are pushed for effect start marker, and popped for effect end marker.
+  // Effect clips are tracked by |effectClipStack|. If there are consecutive
+  // effects with the same clip, |effectClipStack| defers popping the clip for
+  // the first end marker, and tries to reuse the previously set clip, when
+  // processing the start marker for the next effect.
   ClipStack effectClipStack(aContext, appUnitsPerDevPixel);
 
   MatrixStack4x4 matrixStack;
@@ -6979,6 +6985,8 @@ FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
 
     if (cdi.mType == DisplayItemEntryType::PUSH_OPACITY ||
         cdi.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG) {
+      // To avoid pushing large temporary surfaces, it is important to clip
+      // opacity group with both the paint rect and the actual opacity clip.
       DisplayItemClip effectClip;
       effectClip.SetTo(item->GetPaintRect());
       effectClip.IntersectWith(item->GetClip());

@@ -228,9 +228,13 @@ InterpreterFrame::prologue(JSContext* cx)
             lexicalEnv = &cx->global()->lexicalEnvironment();
             varObjRoot = cx->global();
         }
-        if (!probes::EnterScript(cx, script, nullptr, this))
+        if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv, varObjRoot)) {
+            // Treat this as a script entry, for consistency with Ion.
+            if (script->trackRecordReplayProgress())
+                mozilla::recordreplay::AdvanceExecutionProgressCounter();
             return false;
-        return CheckGlobalDeclarationConflicts(cx, script, lexicalEnv, varObjRoot);
+        }
+        return probes::EnterScript(cx, script, nullptr, this);
     }
 
     if (isModuleFrame())

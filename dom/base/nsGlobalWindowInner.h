@@ -1095,7 +1095,6 @@ protected:
   virtual ~nsGlobalWindowInner();
 
   void FreeInnerObjects();
-  nsGlobalWindowInner *CallerInnerWindow();
 
   // Only to be called on an inner window.
   // aDocument must not be null.

@@ -11,7 +11,6 @@ ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
