@@ -158,6 +158,8 @@ struct PerformanceInfo
   uint64_t windowId;
   // Execution time in microseconds
   uint64_t duration;
+  // Counter ID (unique across processes)
+  uint64_t counterId;
   // True if the data is collected in a worker
   bool isWorker;
   // True if the document window is the top window

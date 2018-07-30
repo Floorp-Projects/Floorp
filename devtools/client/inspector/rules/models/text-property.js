@@ -122,8 +122,8 @@ TextProperty.prototype = {
       store.userProperties.setProperty(this.rule.domRule, this.name, value);
     }
 
-    this.rule.setPropertyValue(this, value, priority);
-    this.updateEditor();
+    return this.rule.setPropertyValue(this, value, priority)
+      .then(() => this.updateEditor());
   },
 
   /**

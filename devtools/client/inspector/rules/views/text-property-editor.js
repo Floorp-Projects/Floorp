@@ -423,7 +423,13 @@ TextPropertyEditor.prototype = {
     this.valueSpan.innerHTML = "";
     this.valueSpan.appendChild(frag);
 
-    this.ruleView.emit("property-value-updated", { property: name, value: val });
+    this.ruleView.emit("property-value-updated",
+      {
+        rule: this.prop.rule,
+        property: name,
+        value: val,
+      }
+    );
 
     // Highlight the currently used font in font-family properties.
     // If we cannot find a match, highlight the first generic family instead.

@@ -143,29 +143,31 @@ class App extends Component {
         ref: node => {
           this.node = node;
         }},
-        FilterBar({
-          hidePersistLogsCheckbox: hud.isBrowserConsole,
-          serviceContainer: {
-            attachRefToHud
-          },
-          closeSplitConsole
-        }),
-        ConsoleOutput({
-          serviceContainer,
-          onFirstMeaningfulPaint,
-        }),
+        div({className: "webconsole-flex-wrapper"},
+          FilterBar({
+            hidePersistLogsCheckbox: hud.isBrowserConsole,
+            serviceContainer: {
+              attachRefToHud
+            },
+            closeSplitConsole
+          }),
+          ConsoleOutput({
+            serviceContainer,
+            onFirstMeaningfulPaint,
+          }),
+          NotificationBox({
+            id: "webconsole-notificationbox",
+            notifications,
+          }),
+          JSTerm({
+            hud,
+            serviceContainer,
+            onPaste: this.onPaste,
+            codeMirrorEnabled: jstermCodeMirror,
+          }),
+        ),
         SideBar({
           serviceContainer,
-        }),
-        NotificationBox({
-          id: "webconsole-notificationbox",
-          notifications,
-        }),
-        JSTerm({
-          hud,
-          serviceContainer,
-          onPaste: this.onPaste,
-          codeMirrorEnabled: jstermCodeMirror,
         }),
       )
     );
