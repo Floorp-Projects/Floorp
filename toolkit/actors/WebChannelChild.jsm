@@ -5,9 +5,10 @@
 
 /* eslint no-unused-vars: ["error", {args: "none"}] */
 
-var EXPORTED_SYMBOLS = ["WebChannelContent"];
+var EXPORTED_SYMBOLS = ["WebChannelChild"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 function getMessageManager(event) {
   let window = Cu.getGlobalForObject(event.target);
@@ -15,40 +16,40 @@ function getMessageManager(event) {
   return window.docShell.messageManager;
 }
 
-var WebChannelContent = {
-  // Preference containing the list (space separated) of origins that are
-  // allowed to send non-string values through a WebChannel, mainly for
-  // backwards compatability. See bug 1238128 for more information.
-  URL_WHITELIST_PREF: "webchannel.allowObject.urlWhitelist",
+// Preference containing the list (space separated) of origins that are
+// allowed to send non-string values through a WebChannel, mainly for
+// backwards compatability. See bug 1238128 for more information.
+const URL_WHITELIST_PREF = "webchannel.allowObject.urlWhitelist";
 
-  // Cached list of whitelisted principals, we avoid constructing this if the
-  // value in `_lastWhitelistValue` hasn't changed since we constructed it last.
-  _cachedWhitelist: [],
-  _lastWhitelistValue: "",
+// Cached list of whitelisted principals, we avoid constructing this if the
+// value in `_lastWhitelistValue` hasn't changed since we constructed it last.
+let _cachedWhitelist = [];
+let _lastWhitelistValue = "";
 
+class WebChannelChild extends ActorChild {
   handleEvent(event) {
     if (event.type === "WebChannelMessageToChrome") {
       return this._onMessageToChrome(event);
     }
     return undefined;
-  },
+  }
 
   receiveMessage(msg) {
     if (msg.name === "WebChannelMessageToContent") {
       return this._onMessageToContent(msg);
     }
     return undefined;
-  },
+  }
 
   _getWhitelistedPrincipals() {
-    let whitelist = Services.prefs.getCharPref(this.URL_WHITELIST_PREF);
-    if (whitelist != this._lastWhitelistValue) {
+    let whitelist = Services.prefs.getCharPref(URL_WHITELIST_PREF);
+    if (whitelist != _lastWhitelistValue) {
       let urls = whitelist.split(/\s+/);
-      this._cachedWhitelist = urls.map(origin =>
+      _cachedWhitelist = urls.map(origin =>
         Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin));
     }
-    return this._cachedWhitelist;
-  },
+    return _cachedWhitelist;
+  }
 
   _onMessageToChrome(e) {
     // If target is window then we want the document principal, otherwise fallback to target itself.
@@ -74,7 +75,7 @@ var WebChannelContent = {
     } else {
       Cu.reportError("WebChannel message failed. No message detail.");
     }
-  },
+  }
 
   _onMessageToContent(msg) {
     if (msg.data) {
@@ -104,5 +105,5 @@ var WebChannelContent = {
     } else {
       Cu.reportError("WebChannel message failed. No message data.");
     }
-  },
-};
+  }
+}

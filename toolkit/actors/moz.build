@@ -12,5 +12,6 @@ FINAL_TARGET_FILES.actors += [
     'SelectChild.jsm',
     'SelectionSourceChild.jsm',
     'ThumbnailsChild.jsm',
+    'WebChannelChild.jsm',
     'ZoomChild.jsm',
 ]
