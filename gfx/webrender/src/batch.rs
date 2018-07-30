@@ -497,6 +497,9 @@ impl AlphaBatchBuilder {
         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
             let prim_index = PrimitiveIndex(poly.anchor);
+            if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
+                println!("\t\tsplit polygon {:?}", poly.points);
+            }
             debug!("process sorted poly {:?} {:?}", prim_index, poly.points);
             let pp = &poly.points;
             let gpu_blocks = [
@@ -654,14 +657,18 @@ impl AlphaBatchBuilder {
             transform_id,
         };
 
+        if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
+            println!("\ttask target {:?}", self.target_rect);
+            println!("\t{:?}", prim_header);
+        }
+
         match prim_metadata.prim_kind {
             PrimitiveKind::Brush => {
                 let brush = &ctx.prim_store.cpu_brushes[prim_metadata.cpu_prim_index.0];
 
                 match brush.kind {
                     BrushKind::Picture { pic_index, .. } => {
-                        let picture =
-                            &ctx.prim_store.pictures[pic_index.0];
+                        let picture = &ctx.prim_store.pictures[pic_index.0];
 
                         // If this picture is participating in a 3D rendering context,
                         // then don't add it to any batches here. Instead, create a polygon
@@ -1056,8 +1063,13 @@ impl AlphaBatchBuilder {
                                 ctx.resource_cache,
                                 gpu_cache,
                                 deferred_resolves,
+                                ctx.prim_store.chase_id == Some(prim_index),
                         ) {
                             let prim_header_index = prim_headers.push(&prim_header, user_data);
+                            if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
+                                println!("\t{:?} {:?}, task relative bounds {:?}",
+                                    batch_kind, prim_header_index, task_relative_bounding_rect);
+                            }
 
                             self.add_brush_to_batch(
                                 brush,
@@ -1385,6 +1397,7 @@ impl BrushPrimitive {
         resource_cache: &ResourceCache,
         gpu_cache: &mut GpuCache,
         deferred_resolves: &mut Vec<DeferredResolve>,
+        is_chased: bool,
     ) -> Option<(BrushBatchKind, BatchTextures, [i32; 3])> {
         match self.kind {
             BrushKind::Image { request, ref source, .. } => {
@@ -1406,6 +1419,9 @@ impl BrushPrimitive {
                         resource_cache.get_texture_cache_item(&rt_cache_entry.handle)
                     }
                 };
+                if cfg!(debug_assertions) && is_chased {
+                    println!("\tsource {:?}", cache_item);
+                }
 
                 if cache_item.texture_id == SourceTexture::Invalid {
                     None
@@ -1751,7 +1767,7 @@ impl ClipBatcher {
     ) {
         let instance = ClipMaskInstance {
             render_task_address: task_address,
-            transform_id: TransformPaletteId::identity(),
+            transform_id: TransformPaletteId::IDENTITY,
             segment: 0,
             clip_data_address,
             resource_address: GpuCacheAddress::invalid(),
@@ -1772,16 +1788,14 @@ impl ClipBatcher {
     ) {
         let mut coordinate_system_id = coordinate_system_id;
         for work_item in clips.iter() {
+            let info = clip_store.get(work_item.clip_sources_index);
             let instance = ClipMaskInstance {
                 render_task_address: task_address,
-                transform_id: transforms.get_id(work_item.spatial_node_index),
+                transform_id: transforms.get_id(info.spatial_node_index),
                 segment: 0,
                 clip_data_address: GpuCacheAddress::invalid(),
                 resource_address: GpuCacheAddress::invalid(),
             };
-            let info = clip_store
-                .get_opt(&work_item.clip_sources)
-                .expect("bug: clip handle should be valid");
 
             for &(ref source, ref handle) in &info.clips {
                 let gpu_address = gpu_cache.get_address(handle);

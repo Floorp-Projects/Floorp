@@ -182,23 +182,18 @@ impl WindowWrapper {
     }
 
     fn get_inner_size(&self) -> DeviceUintSize {
-        //HACK: `winit` needs to figure out its hidpi story...
-        #[cfg(target_os = "macos")]
-        fn inner_size(window: &winit::Window) -> LogicalSize {
-            let LogicalSize { width, height } = window.get_inner_size().unwrap();
-            let factor = window.get_hidpi_factor();
-            LogicalSize::new(width * factor, height * factor)
+        fn inner_size(window: &winit::Window) -> DeviceUintSize {
+            let size = window
+                .get_inner_size()
+                .unwrap()
+                .to_physical(window.get_hidpi_factor());
+            DeviceUintSize::new(size.width as u32, size.height as u32)
         }
-        #[cfg(not(target_os = "macos"))]
-        fn inner_size(window: &winit::Window) -> LogicalSize {
-            window.get_inner_size().unwrap()
-        }
-        let LogicalSize { width, height } = match *self {
+        match *self {
             WindowWrapper::Window(ref window, _) => inner_size(window.window()),
             WindowWrapper::Angle(ref window, ..) => inner_size(window),
-            WindowWrapper::Headless(ref context, _) => LogicalSize::new(context.width as f64, context.height as f64),
-        };
-        DeviceUintSize::new(width as u32, height as u32)
+            WindowWrapper::Headless(ref context, _) => DeviceUintSize::new(context.width, context.height),
+        }
     }
 
     fn hidpi_factor(&self) -> f32 {

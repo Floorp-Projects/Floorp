@@ -13,10 +13,11 @@ use std::sync::Arc;
 /// re-submitting the display list itself.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone)]
 pub struct SceneProperties {
     transform_properties: FastHashMap<PropertyBindingId, LayoutTransform>,
     float_properties: FastHashMap<PropertyBindingId, f32>,
+    current_properties: DynamicProperties,
+    pending_properties: Option<DynamicProperties>,
 }
 
 impl SceneProperties {
@@ -24,27 +25,60 @@ impl SceneProperties {
         SceneProperties {
             transform_properties: FastHashMap::default(),
             float_properties: FastHashMap::default(),
+            current_properties: DynamicProperties::default(),
+            pending_properties: None,
         }
     }
 
     /// Set the current property list for this display list.
     pub fn set_properties(&mut self, properties: DynamicProperties) {
-        self.transform_properties.clear();
-        self.float_properties.clear();
-        self.add_properties(properties);
+        self.pending_properties = Some(properties);
     }
 
     /// Add to the current property list for this display list.
     pub fn add_properties(&mut self, properties: DynamicProperties) {
-        for property in properties.transforms {
-            self.transform_properties
-                .insert(property.key.id, property.value);
+        let mut pending_properties = self.pending_properties
+            .take()
+            .unwrap_or_default();
+
+        pending_properties.transforms.extend(properties.transforms);
+        pending_properties.floats.extend(properties.floats);
+
+        self.pending_properties = Some(pending_properties);
+    }
+
+    /// Flush any pending updates to the scene properties. Returns
+    /// true if the properties have changed since the last flush
+    /// was called. This code allows properties to be changed by
+    /// multiple set_properties and add_properties calls during a
+    /// single transaction, and still correctly determine if any
+    /// properties have changed. This can have significant power
+    /// saving implications, allowing a frame build to be skipped
+    /// if the properties haven't changed in many cases.
+    pub fn flush_pending_updates(&mut self) -> bool {
+        let mut properties_changed = false;
+
+        if let Some(pending_properties) = self.pending_properties.take() {
+            if pending_properties != self.current_properties {
+                self.transform_properties.clear();
+                self.float_properties.clear();
+
+                for property in &pending_properties.transforms {
+                    self.transform_properties
+                        .insert(property.key.id, property.value);
+                }
+
+                for property in &pending_properties.floats {
+                    self.float_properties
+                        .insert(property.key.id, property.value);
+                }
+
+                self.current_properties = pending_properties;
+                properties_changed = true;
+            }
         }
 
-        for property in properties.floats {
-            self.float_properties
-                .insert(property.key.id, property.value);
-        }
+        properties_changed
     }
 
     /// Get the current value for a transform property.
