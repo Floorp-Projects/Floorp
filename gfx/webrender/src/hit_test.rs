@@ -34,6 +34,29 @@ pub struct HitTestClipNode {
     regions: Vec<HitTestRegion>,
 }
 
+impl HitTestClipNode {
+    fn new(node: &ClipNode, clip_store: &ClipStore) -> Self {
+        let clips = clip_store.get(node.clip_sources_index);
+        let regions = clips.clips().iter().map(|source| {
+            match source.0 {
+                ClipSource::Rectangle(ref rect, mode) => HitTestRegion::Rectangle(*rect, mode),
+                ClipSource::RoundedRectangle(ref rect, ref radii, ref mode) =>
+                    HitTestRegion::RoundedRectangle(*rect, *radii, *mode),
+                ClipSource::Image(ref mask) => HitTestRegion::Rectangle(mask.rect, ClipMode::Clip),
+                ClipSource::LineDecoration(_) |
+                ClipSource::BoxShadow(_) => {
+                    unreachable!("Didn't expect to hit test against BorderCorner / BoxShadow / LineDecoration");
+                }
+            }
+        }).collect();
+
+        HitTestClipNode {
+            spatial_node: clips.spatial_node_index,
+            regions,
+        }
+    }
+}
+
 /// A description of a clip chain in the HitTester. This is used to describe
 /// hierarchical clip scroll nodes as well as ClipChains, so that they can be
 /// handled the same way during hit testing. Once we represent all ClipChains
@@ -148,15 +171,11 @@ impl HitTester {
         }
 
         for (index, node) in clip_scroll_tree.clip_nodes.iter().enumerate() {
-            self.clip_nodes.push(HitTestClipNode {
-                spatial_node: node.spatial_node,
-                regions: get_regions_for_clip_node(node, clip_store),
-            });
-
-             let clip_chain = self.clip_chains.get_mut(node.clip_chain_index.0).unwrap();
-             clip_chain.parent =
-                 clip_scroll_tree.get_clip_chain(node.clip_chain_index).parent_index;
-             clip_chain.clips = vec![ClipNodeIndex(index)];
+            self.clip_nodes.push(HitTestClipNode::new(node, clip_store));
+            let clip_chain = self.clip_chains.get_mut(node.clip_chain_index.0).unwrap();
+            clip_chain.parent =
+                clip_scroll_tree.get_clip_chain(node.clip_chain_index).parent_index;
+            clip_chain.clips = vec![ClipNodeIndex(index)];
         }
 
         for descriptor in &clip_scroll_tree.clip_chains_descriptors {
@@ -344,33 +363,6 @@ impl HitTester {
     pub fn get_pipeline_root(&self, pipeline_id: PipelineId) -> &HitTestSpatialNode {
         &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0]
     }
-}
-
-fn get_regions_for_clip_node(
-    node: &ClipNode,
-    clip_store: &ClipStore
-) -> Vec<HitTestRegion> {
-    let handle = match node.handle.as_ref() {
-        Some(handle) => handle,
-        None => {
-            warn!("Encountered an empty clip node unexpectedly.");
-            return Vec::new()
-        }
-    };
-
-    let clips = clip_store.get(handle).clips();
-    clips.iter().map(|source| {
-        match source.0 {
-            ClipSource::Rectangle(ref rect, mode) => HitTestRegion::Rectangle(*rect, mode),
-            ClipSource::RoundedRectangle(ref rect, ref radii, ref mode) =>
-                HitTestRegion::RoundedRectangle(*rect, *radii, *mode),
-            ClipSource::Image(ref mask) => HitTestRegion::Rectangle(mask.rect, ClipMode::Clip),
-            ClipSource::LineDecoration(_) |
-            ClipSource::BoxShadow(_) => {
-                unreachable!("Didn't expect to hit test against BorderCorner / BoxShadow / LineDecoration");
-            }
-        }
-    }).collect()
 }
 
 #[derive(Clone, Copy, PartialEq)]
