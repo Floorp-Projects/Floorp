@@ -11,8 +11,8 @@ nsHtml5AtomEntry::nsHtml5AtomEntry(KeyTypePointer aStr)
 {
 }
 
-nsHtml5AtomEntry::nsHtml5AtomEntry(const nsHtml5AtomEntry& aOther)
-  : nsStringHashKey(aOther)
+nsHtml5AtomEntry::nsHtml5AtomEntry(nsHtml5AtomEntry&& aOther)
+  : nsStringHashKey(std::move(aOther))
   , mAtom(nullptr)
 {
   MOZ_ASSERT_UNREACHABLE("nsHtml5AtomTable is broken; tried to copy an entry");
