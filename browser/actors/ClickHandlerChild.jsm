@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["ClickEventHandler"];
+var EXPORTED_SYMBOLS = ["ClickHandlerChild"];
 
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BlockedSiteContent",
@@ -18,11 +19,7 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
                                "resource://gre/modules/WebNavigationFrames.jsm");
 
-class ClickEventHandler {
-  constructor(mm) {
-    this.mm = mm;
-  }
-
+class ClickHandlerChild extends ActorChild {
   handleEvent(event) {
     if (!event.isTrusted || event.defaultPrevented || event.button == 2) {
       return;
