@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+div {
+  width: 200px;
+  height: 200px;
+}
+</style>
+
+<div style="position:fixed;">
+  <div style="transform:translateX(50px);">
+    <div id="resize" style="background-color:blue;">
+    </div>
+  </div>
+</div>
+
+<script>
+  function doTest() {
+    document.getElementById("resize").style.width = "300px";
+    document.documentElement.removeAttribute("class");
+  }
+  window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>
