@@ -37,7 +37,6 @@
 // 2 == downgrade to session
 // 3 == limit lifetime to N days
 static const uint32_t ACCEPT_NORMALLY = 0;
-static const uint32_t ASK_BEFORE_ACCEPT = 1;
 static const uint32_t ACCEPT_SESSION = 2;
 static const uint32_t ACCEPT_FOR_N_DAYS = 3;
 

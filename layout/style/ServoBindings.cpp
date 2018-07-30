@@ -2144,6 +2144,49 @@ Gecko_nsIURI_Debug(nsIURI* aURI, nsCString* aOut)
   }
 }
 
+template <typename ElementLike>
+void
+DebugListAttributes(const ElementLike& aElement, nsCString& aOut)
+{
+  const uint32_t kMaxAttributeLength = 40;
+
+  uint32_t i = 0;
+  while (BorrowedAttrInfo info = aElement.GetAttrInfoAt(i++)) {
+    aOut.AppendLiteral(" ");
+    if (nsAtom* prefix = info.mName->GetPrefix()) {
+      aOut.Append(NS_ConvertUTF16toUTF8(nsDependentAtomString(prefix)));
+      aOut.AppendLiteral(":");
+    }
+    aOut.Append(
+        NS_ConvertUTF16toUTF8(nsDependentAtomString(info.mName->LocalName())));
+    if (!info.mValue) {
+      continue;
+    }
+    aOut.AppendLiteral("=\"");
+    nsAutoString value;
+    info.mValue->ToString(value);
+    if (value.Length() > kMaxAttributeLength) {
+      value.Truncate(kMaxAttributeLength - 3);
+      value.AppendLiteral("...");
+    }
+    aOut.Append(NS_ConvertUTF16toUTF8(value));
+    aOut.AppendLiteral("\"");
+  }
+}
+
+void
+Gecko_Element_DebugListAttributes(RawGeckoElementBorrowed aElement, nsCString* aOut)
+{
+  DebugListAttributes(*aElement, *aOut);
+}
+
+void
+Gecko_Snapshot_DebugListAttributes(const ServoElementSnapshot* aSnapshot,
+                                   nsCString* aOut)
+{
+  DebugListAttributes(*aSnapshot, *aOut);
+}
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(css::URLValue, CSSURLValue);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);
