@@ -32,7 +32,6 @@ def element_send_keys(session, element, text):
 
 def test_file_upload(session, create_file, add_event_listeners, tracked_events):
     expected_events = [
-        "focus",
         "input",
         "change",
     ]

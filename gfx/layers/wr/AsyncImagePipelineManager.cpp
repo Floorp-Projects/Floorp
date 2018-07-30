@@ -71,6 +71,17 @@ AsyncImagePipelineManager::GetAndResetWillGenerateFrame()
   return ret;
 }
 
+wr::ExternalImageId
+AsyncImagePipelineManager::GetNextExternalImageId()
+{
+  static uint32_t sNextId = 0;
+  ++sNextId;
+  MOZ_RELEASE_ASSERT(sNextId != UINT32_MAX);
+  // gecko allocates external image id as (IdNamespace:32bit + ResourceId:32bit).
+  // And AsyncImagePipelineManager uses IdNamespace = 0.
+  return wr::ToExternalImageId((uint64_t)sNextId);
+}
+
 void
 AsyncImagePipelineManager::AddPipeline(const wr::PipelineId& aPipelineId)
 {

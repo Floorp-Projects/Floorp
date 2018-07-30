@@ -1331,11 +1331,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         if (mWithDevTools) {
             if (sRDPConnection == null) {
-                final String dataDir = InstrumentationRegistry.getTargetContext()
-                                                              .getApplicationInfo().dataDir;
+                final String packageName = InstrumentationRegistry.getTargetContext()
+                                                                  .getPackageName();
                 final LocalSocketAddress address = new LocalSocketAddress(
-                        dataDir + "/firefox-debugger-socket",
-                        LocalSocketAddress.Namespace.FILESYSTEM);
+                        packageName + "/firefox-debugger-socket",
+                        LocalSocketAddress.Namespace.ABSTRACT);
                 sRDPConnection = new RDPConnection(address);
                 sRDPConnection.setTimeout(mTimeoutMillis);
             }

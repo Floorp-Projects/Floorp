@@ -27,14 +27,16 @@
     document.body.appendChild(observingFrame);
     observingFrame.src = 'resources/subframe-observing-longtask.html'
 
-    /* Create a cross-origin iframe that generates a long task. */
-    const longtaskFrame = document.createElement('iframe');
-    longtaskFrame.id = 'longtask-iframe-id';
-    longtaskFrame.name = 'longtask-iframe-name';
-    // Simulate cross-origin by using sandbox.
-    longtaskFrame.sandbox = "allow-scripts";
-    document.body.appendChild(longtaskFrame);
-    longtaskFrame.src = 'resources/subframe-with-longtask.html'
+    observingFrame.onload = () => {
+      /* Create a cross-origin iframe that generates a long task. */
+      const longtaskFrame = document.createElement('iframe');
+      longtaskFrame.id = 'longtask-iframe-id';
+      longtaskFrame.name = 'longtask-iframe-name';
+      // Simulate cross-origin by using sandbox.
+      longtaskFrame.sandbox = "allow-scripts";
+      document.body.appendChild(longtaskFrame);
+      longtaskFrame.src = 'resources/subframe-with-longtask.html'
+    };
 }, 'Performance longtask entries from cross-origin iframe are observable in its sibling.');
 </script>
 </body>

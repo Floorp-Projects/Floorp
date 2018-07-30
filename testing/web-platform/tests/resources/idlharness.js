@@ -70,6 +70,11 @@ function constValue (cnt)
 function minOverloadLength(overloads)
 //@{
 {
+    // "The value of the Function object’s “length” property is
+    // a Number determined as follows:
+    // ". . .
+    // "Return the length of the shortest argument list of the
+    // entries in S."
     if (!overloads.length) {
         return 0;
     }
@@ -365,7 +370,8 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls, options)
 
     parsed_idls.forEach(function(parsed_idl)
     {
-        if (parsed_idl.partial && ["interface", "dictionary"].includes(parsed_idl.type))
+        if (parsed_idl.partial
+            && ["interface", "dictionary", "namespace"].includes(parsed_idl.type))
         {
             if (should_skip(parsed_idl.name))
             {
@@ -457,6 +463,10 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls, options)
         case "callback interface":
             this.members[parsed_idl.name] =
                 new IdlInterface(parsed_idl, /* is_callback = */ true, /* is_mixin = */ false);
+            break;
+
+        case "namespace":
+            this.members[parsed_idl.name] = new IdlNamespace(parsed_idl);
             break;
 
         default:
@@ -845,7 +855,8 @@ IdlArray.prototype.collapse_partials = function()
     {
         const originalExists = parsed_idl.name in this.members
             && (this.members[parsed_idl.name] instanceof IdlInterface
-                || this.members[parsed_idl.name] instanceof IdlDictionary);
+                || this.members[parsed_idl.name] instanceof IdlDictionary
+                || this.members[parsed_idl.name] instanceof IdlNamespace);
 
         let partialTestName = parsed_idl.name;
         if (!parsed_idl.untested) {
@@ -859,6 +870,16 @@ IdlArray.prototype.collapse_partials = function()
 
             test(function () {
                 assert_true(originalExists, `Original ${parsed_idl.type} should be defined`);
+
+                var expected = IdlInterface;
+                switch (parsed_idl.type) {
+                    case 'interface': expected = IdlInterface; break;
+                    case 'dictionary': expected = IdlDictionary; break;
+                    case 'namespace': expected = IdlNamespace; break;
+                }
+                assert_true(
+                    expected.prototype.isPrototypeOf(this.members[parsed_idl.name]),
+                    `Original ${parsed_idl.name} definition should have type ${parsed_idl.type}`);
             }.bind(this), `Partial ${parsed_idl.type} ${partialTestName}: original ${parsed_idl.type} defined`);
         }
         if (!originalExists) {
@@ -2254,15 +2275,13 @@ IdlInterface.prototype.do_member_operation_asserts = function(memberHolderObject
     // behavior is as follows . . ."
     assert_equals(typeof memberHolderObject[member.name], "function",
                   "property must be a function");
-    // "The value of the Function object’s “length” property is
-    // a Number determined as follows:
-    // ". . .
-    // "Return the length of the shortest argument list of the
-    // entries in S."
-    assert_equals(memberHolderObject[member.name].length,
-        minOverloadLength(this.members.filter(function(m) {
-            return m.type == "operation" && m.name == member.name;
-        })),
+
+    const ctors = this.members.filter(function(m) {
+        return m.type == "operation" && m.name == member.name;
+    });
+    assert_equals(
+        memberHolderObject[member.name].length,
+        minOverloadLength(ctors),
         "property has wrong .length");
 
     // Make some suitable arguments
@@ -3011,6 +3030,136 @@ function IdlTypedef(obj)
 
 IdlTypedef.prototype = Object.create(IdlObject.prototype);
 
+/// IdlNamespace ///
+function IdlNamespace(obj)
+//@{
+{
+    this.name = obj.name;
+    this.extAttrs = obj.extAttrs;
+    this.untested = obj.untested;
+    /** A back-reference to our IdlArray. */
+    this.array = obj.array;
+
+    /** An array of IdlInterfaceMembers. */
+    this.members = obj.members.map(m => new IdlInterfaceMember(m));
+}
+//@}
+
+IdlNamespace.prototype = Object.create(IdlObject.prototype);
+
+IdlNamespace.prototype.do_member_operation_asserts = function (memberHolderObject, member, a_test)
+//@{
+{
+    var desc = Object.getOwnPropertyDescriptor(memberHolderObject, member.name);
+
+    assert_false("get" in desc, "property should not have a getter");
+    assert_false("set" in desc, "property should not have a setter");
+    assert_equals(
+        desc.writable,
+        !member.isUnforgeable,
+        "property should be writable if and only if not unforgeable");
+    assert_true(desc.enumerable, "property should be enumerable");
+    assert_equals(
+        desc.configurable,
+        !member.isUnforgeable,
+        "property should be configurable if and only if not unforgeable");
+
+    assert_equals(
+        typeof memberHolderObject[member.name],
+        "function",
+         "property must be a function");
+
+    assert_equals(
+        memberHolderObject[member.name].length,
+        minOverloadLength(this.members.filter(function(m) {
+            return m.type == "operation" && m.name == member.name;
+        })),
+        "operation has wrong .length");
+    a_test.done();
+}
+//@}
+
+IdlNamespace.prototype.test_member_operation = function(member)
+//@{
+{
+    if (!shouldRunSubTest(this.name)) {
+        return;
+    }
+    var args = member.arguments.map(function(a) {
+        var s = a.idlType.idlType;
+        if (a.variadic) {
+            s += '...';
+        }
+        return s;
+    }).join(", ");
+    var a_test = subsetTestByKey(
+        this.name,
+        async_test,
+        this.name + ' namespace: operation ' + member.name + '(' + args + ')');
+    a_test.step(function() {
+        assert_own_property(
+            self[this.name],
+            member.name,
+            'namespace object missing operation ' + format_value(member.name));
+
+        this.do_member_operation_asserts(self[this.name], member, a_test);
+    }.bind(this));
+};
+//@}
+
+IdlNamespace.prototype.test_member_attribute = function (member)
+//@{
+{
+    if (!shouldRunSubTest(this.name)) {
+        return;
+    }
+    var a_test = subsetTestByKey(
+        this.name,
+        async_test,
+        this.name + ' namespace: attribute ' + member.name);
+    a_test.step(function()
+    {
+        assert_own_property(
+            self[this.name],
+            member.name,
+            this.name + ' does not have property ' + format_value(member.name));
+
+        var desc = Object.getOwnPropertyDescriptor(self[this.name], member.name);
+        assert_equals(desc.set, undefined, "setter must be undefined for namespace members");
+        a_test.done();
+    }.bind(this));
+};
+//@}
+
+IdlNamespace.prototype.test = function ()
+//@{
+{
+    /**
+     * TODO(lukebjerring): Assert:
+     * - "Note that unlike interfaces or dictionaries, namespaces do not create types."
+     * - "Of the extended attributes defined in this specification, only the
+     *     [Exposed] and [SecureContext] extended attributes are applicable to namespaces."
+     * - "Namespaces must be annotated with the [Exposed] extended attribute."
+     */
+
+    for (const v of Object.values(this.members)) {
+        switch (v.type) {
+
+        case 'operation':
+            this.test_member_operation(v);
+            break;
+
+        case 'attribute':
+            this.test_member_attribute(v);
+            break;
+
+        default:
+            throw 'Invalid namespace member ' + v.name + ': ' + v.type + ' not supported';
+        }
+    };
+};
+//@}
+
 }());
 
 /**
@@ -3027,27 +3176,34 @@ IdlTypedef.prototype = Object.create(IdlObject.prototype);
  *      as adding objects. Do not call idl_array.test() in the setup; it is
  *      called by this function (idl_test).
  */
-function idl_test(srcs, deps, setup_func, test_name) {
+function idl_test(srcs, deps, idl_setup_func, test_name) {
     return promise_test(function (t) {
         var idl_array = new IdlArray();
         srcs = (srcs instanceof Array) ? srcs : [srcs] || [];
         deps = (deps instanceof Array) ? deps : [deps] || [];
         return Promise.all(
-            srcs.concat(deps).map(function(i) {
-                return fetch('/interfaces/' + i + '.idl').then(function(r) {
+            srcs.concat(deps).map(function(spec) {
+                return fetch('/interfaces/' + spec + '.idl').then(function(r) {
                     return r.text();
                 });
-            })).then(function(idls) {
+            }))
+            .then(function(idls) {
                 for (var i = 0; i < srcs.length; i++) {
                     idl_array.add_idls(idls[i]);
                 }
                 for (var i = srcs.length; i < srcs.length + deps.length; i++) {
                     idl_array.add_dependency_idls(idls[i]);
                 }
-                if (setup_func) {
-                    setup_func(idl_array)
-                };
-                idl_array.test();
+            })
+            .then(function() {
+                if (idl_setup_func) {
+                    return idl_setup_func(idl_array, t);
+                }
+            })
+            .then(function() { idl_array.test(); })
+            .catch(function (reason) {
+                idl_array.test(); // Test what we can.
+                return Promise.reject(reason || 'IDL setup failed.');
             });
     }, test_name);
 }
