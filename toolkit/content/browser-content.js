@@ -38,12 +38,6 @@ XPCOMUtils.defineLazyProxy(this, "UITourListener", () => {
   return new tmp.UITourListener(global);
 });
 
-XPCOMUtils.defineLazyProxy(this, "DateTimePickerContent", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/DateTimePickerContent.jsm", tmp);
-  return new tmp.DateTimePickerContent(this);
-});
-
 // Lazily load the finder code
 addMessageListener("Finder:Initialize", function() {
   let {RemoteFinderListener} = ChromeUtils.import("resource://gre/modules/RemoteFinder.jsm", {});
@@ -63,8 +57,6 @@ var AutoScrollListener = {
   }
 };
 Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
-
-addEventListener("MozOpenDateTimePicker", DateTimePickerContent);
 
 var UnselectedTabHoverObserver = {
   init() {
