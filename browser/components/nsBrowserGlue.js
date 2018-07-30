@@ -12,6 +12,23 @@ ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
                                "resource://gre/modules/ActorManagerParent.jsm");
 
 let ACTORS = {
+  AboutReader: {
+    child: {
+      module: "resource:///actors/AboutReaderChild.jsm",
+      group: "browsers",
+      events: {
+        "AboutReaderContentLoaded": {wantUntrusted: true},
+        "DOMContentLoaded": {},
+        "pageshow": {},
+        "pagehide": {},
+      },
+      messages: [
+        "Reader:ToggleReaderMode",
+        "Reader:PushState",
+      ],
+    },
+  },
+
   BrowserTab: {
     child: {
       module: "resource:///actors/BrowserTabChild.jsm",
