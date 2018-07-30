@@ -132,6 +132,18 @@ let ACTORS = {
     },
   },
 
+  OfflineApps: {
+    child: {
+      module: "resource:///actors/OfflineAppsChild.jsm",
+      events: {
+        "MozApplicationManifest": {},
+      },
+      messages: [
+        "OfflineApps:StartFetching",
+      ],
+    },
+  },
+
   PageInfo: {
     child: {
       module: "resource:///actors/PageInfoChild.jsm",
