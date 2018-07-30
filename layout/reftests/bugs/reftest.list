@@ -2078,3 +2078,4 @@ test-pref(layout.css.prefixes.gradients,false) == 1451874.html 1451874-ref.html
 test-pref(layout.css.contain.enabled,false) == 1466008.html 1466008-ref.html
 fuzzy(1,625) == 1466638-1.html 1466638-1-ref.html
 == bug1472465-1.html bug1472465-1-ref.html
+== 1475971-1.html 1475971-1-ref.html
