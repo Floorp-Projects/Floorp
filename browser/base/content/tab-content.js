@@ -54,64 +54,6 @@ addEventListener("pageshow", function({ originalTarget }) {
   }
 }, false, true);
 
-
-var ContentSearchMediator = {
-
-  whitelist: new Set([
-    "about:home",
-    "about:newtab",
-    "about:welcome",
-  ]),
-
-  init(chromeGlobal) {
-    chromeGlobal.addEventListener("ContentSearchClient", this, true, true);
-    addMessageListener("ContentSearch", this);
-    this.init = null;
-  },
-
-  handleEvent(event) {
-    if (this._contentWhitelisted) {
-      this._sendMsg(event.detail.type, event.detail.data);
-    }
-  },
-
-  receiveMessage(msg) {
-    if (msg.data.type == "AddToWhitelist") {
-      for (let uri of msg.data.data) {
-        this.whitelist.add(uri);
-      }
-      this._sendMsg("AddToWhitelistAck");
-      return;
-    }
-    if (this._contentWhitelisted) {
-      this._fireEvent(msg.data.type, msg.data.data);
-    }
-  },
-
-  get _contentWhitelisted() {
-    return this.whitelist.has(content.document.documentURI);
-  },
-
-  _sendMsg(type, data = null) {
-    sendAsyncMessage("ContentSearch", {
-      type,
-      data,
-    });
-  },
-
-  _fireEvent(type, data = null) {
-    let event = Cu.cloneInto({
-      detail: {
-        type,
-        data,
-      },
-    }, content);
-    content.dispatchEvent(new content.CustomEvent("ContentSearchService",
-                                                  event));
-  },
-};
-ContentSearchMediator.init(this);
-
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
 var trHandler = null;
 if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
