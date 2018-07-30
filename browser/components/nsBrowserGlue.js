@@ -230,6 +230,16 @@ let ACTORS = {
     },
   },
 
+  UITour: {
+    child: {
+      module: "resource:///modules/UITourChild.jsm",
+      events: {
+        "mozUITour": {wantUntrusted: true},
+      },
+      permissions: ["uitour"],
+    },
+  },
+
   URIFixup: {
     child: {
       module: "resource:///actors/URIFixupChild.jsm",

@@ -26,12 +26,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "formFill",
 
 var global = this;
 
-XPCOMUtils.defineLazyProxy(this, "UITourListener", () => {
-  let tmp = {};
-  ChromeUtils.import("resource:///modules/ContentUITour.jsm", tmp);
-  return new tmp.UITourListener(global);
-});
-
 // Lazily load the finder code
 addMessageListener("Finder:Initialize", function() {
   let {RemoteFinderListener} = ChromeUtils.import("resource://gre/modules/RemoteFinder.jsm", {});
@@ -181,5 +175,3 @@ let ExtFind = {
 };
 
 ExtFind.init();
-
-addEventListener("mozUITour", UITourListener, false, true);
