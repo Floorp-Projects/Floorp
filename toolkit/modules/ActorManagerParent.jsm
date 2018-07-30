@@ -112,6 +112,21 @@ let ACTORS = {
     },
   },
 
+  Browser: {
+    child: {
+      module: "resource://gre/actors/BrowserChild.jsm",
+      events: {
+        "DOMWindowClose": {},
+      },
+
+      messages: [
+        "Browser:CreateAboutBlank",
+        "InPermitUnload",
+        "PermitUnload",
+      ],
+    },
+  },
+
   Controllers: {
     child: {
       module: "resource://gre/actors/ControllersChild.jsm",
