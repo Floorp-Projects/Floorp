@@ -16,7 +16,6 @@ var EXPORTED_SYMBOLS = [
   "Assert"
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Promise",
