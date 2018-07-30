@@ -44,9 +44,6 @@ XPCOMUtils.defineLazyProxy(this, "UITourListener", () => {
   return new tmp.UITourListener(global);
 });
 
-XPCOMUtils.defineLazyProxy(this, "SelectionSourceContent",
-  "resource://gre/modules/SelectionSourceContent.jsm");
-
 XPCOMUtils.defineLazyProxy(this, "WebChannelContent",
   "resource://gre/modules/WebChannelContent.jsm");
 
@@ -137,8 +134,6 @@ addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory()
     sessionHistory.legacySHistory.PurgeHistory(purge);
   }
 });
-
-addMessageListener("ViewSource:GetSelection", SelectionSourceContent);
 
 let AutoComplete = {
   _connected: false,
