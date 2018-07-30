@@ -13,7 +13,6 @@
 
 #include "SkAdvancedTypefaceMetrics.h"
 #include "SkFDot6.h"
-#include "SkMutex.h"
 #include "SkPath.h"
 #include "SkScalerContext.h"
 #include "SkTypefaceCache.h"
@@ -170,8 +169,6 @@ static bool isAxisAligned(const SkScalerContextRec& rec) {
             bothZero(rec.fPost2x2[0][0], rec.fPost2x2[1][1]));
 }
 
-SK_DECLARE_STATIC_MUTEX(gTypefaceMutex);
-
 class SkCairoFTTypeface : public SkTypeface {
 public:
     virtual SkStreamAsset* onOpenStream(int*) const override { return nullptr; }
@@ -272,19 +269,9 @@ public:
     }
 
 private:
-
-    void internal_dispose() const override
-    {
-        SkAutoMutexAcquire lock(gTypefaceMutex);
-        internal_dispose_restore_refcnt_to_1();
-        delete this;
-    }
-
     ~SkCairoFTTypeface()
     {
-        if (cairo_font_face_get_user_data(fFontFace, &kSkTypefaceKey) == this) {
-            cairo_font_face_set_user_data(fFontFace, &kSkTypefaceKey, nullptr, nullptr);
-        }
+        cairo_font_face_set_user_data(fFontFace, &kSkTypefaceKey, nullptr, nullptr);
         cairo_font_face_destroy(fFontFace);
 #ifdef CAIRO_HAS_FC_FONT
         if (fPattern) {
@@ -303,13 +290,12 @@ SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* s
     SkASSERT(cairo_font_face_status(fontFace) == CAIRO_STATUS_SUCCESS);
     SkASSERT(cairo_font_face_get_type(fontFace) == CAIRO_FONT_TYPE_FT);
 
-    SkAutoMutexAcquire lock(gTypefaceMutex);
-
     SkTypeface* typeface = reinterpret_cast<SkTypeface*>(cairo_font_face_get_user_data(fontFace, &kSkTypefaceKey));
-    if (typeface && typeface->getRefCnt() > 0) {
+    if (typeface) {
         typeface->ref();
     } else {
         typeface = new SkCairoFTTypeface(fontFace, pattern);
+        SkTypefaceCache::Add(typeface);
     }
 
     return typeface;
