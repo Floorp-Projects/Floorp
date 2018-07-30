@@ -1421,14 +1421,14 @@ protected: // May be called by friends.
   /**
    * Returns true if aNode is our root node.
    */
-  bool IsRoot(nsINode* inNode);
-  bool IsEditorRoot(nsINode* aNode);
+  bool IsRoot(nsINode* inNode) const;
+  bool IsEditorRoot(nsINode* aNode) const;
 
   /**
    * Returns true if aNode is a descendant of our root node.
    */
-  bool IsDescendantOfRoot(nsINode* inNode);
-  bool IsDescendantOfEditorRoot(nsINode* aNode);
+  bool IsDescendantOfRoot(nsINode* inNode) const;
+  bool IsDescendantOfEditorRoot(nsINode* aNode) const;
 
   /**
    * Returns true if aNode is a container.
@@ -1560,13 +1560,13 @@ protected: // May be called by friends.
    * Likewise, but gets the editor's root instead, which is different for HTML
    * editors.
    */
-  virtual Element* GetEditorRoot();
+  virtual Element* GetEditorRoot() const;
 
   /**
    * Likewise, but gets the text control element instead of the root for
    * plaintext editors.
    */
-  Element* GetExposedRoot();
+  Element* GetExposedRoot() const;
 
   /**
    * Whether the editor is active on the DOM window.  Note that when this
