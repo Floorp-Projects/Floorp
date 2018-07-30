@@ -148,6 +148,17 @@ let ACTORS = {
     },
   },
 
+  Thumbnails: {
+    child: {
+      module: "resource://gre/actors/ThumbnailsChild.jsm",
+      messages: [
+        "Browser:Thumbnail:Request",
+        "Browser:Thumbnail:CheckState",
+        "Browser:Thumbnail:GetOriginalURL",
+      ],
+    },
+  },
+
   Zoom: {
     child: {
       module: "resource://gre/actors/ZoomChild.jsm",
