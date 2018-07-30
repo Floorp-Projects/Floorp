@@ -1361,6 +1361,25 @@ WebRenderBridgeParent::RecvLeaveTestMode()
 }
 
 mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvGetAnimationValue(const uint64_t& aCompositorAnimationsId,
+                                             OMTAValue* aValue)
+{
+  if (mDestroyed) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  MOZ_ASSERT(mAnimStorage);
+  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
+    root->AdvanceAnimations();
+  } else {
+    AdvanceAnimations();
+  }
+
+  *aValue = mAnimStorage->GetOMTAValue(aCompositorAnimationsId);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvGetAnimationOpacity(const uint64_t& aCompositorAnimationsId,
                                                float* aOpacity,
                                                bool* aHasAnimationOpacity)
