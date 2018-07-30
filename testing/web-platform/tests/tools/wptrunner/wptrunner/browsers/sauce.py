@@ -233,7 +233,7 @@ class SauceBrowser(Browser):
         Browser.__init__(self, logger)
         self.sauce_config = sauce_config
 
-    def start(self):
+    def start(self, **kwargs):
         pass
 
     def stop(self, force=False):
