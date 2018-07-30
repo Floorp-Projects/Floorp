@@ -38,9 +38,6 @@ XPCOMUtils.defineLazyProxy(this, "UITourListener", () => {
   return new tmp.UITourListener(global);
 });
 
-XPCOMUtils.defineLazyProxy(this, "WebChannelContent",
-  "resource://gre/modules/WebChannelContent.jsm");
-
 XPCOMUtils.defineLazyProxy(this, "DateTimePickerContent", () => {
   let tmp = {};
   ChromeUtils.import("resource://gre/modules/DateTimePickerContent.jsm", tmp);
@@ -68,10 +65,6 @@ var AutoScrollListener = {
 Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
 
 addEventListener("MozOpenDateTimePicker", DateTimePickerContent);
-
-addEventListener("WebChannelMessageToChrome", WebChannelContent,
-                 true, true);
-addMessageListener("WebChannelMessageToContent", WebChannelContent);
 
 var UnselectedTabHoverObserver = {
   init() {
