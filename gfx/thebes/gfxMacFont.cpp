@@ -56,11 +56,12 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
 
         // Because of a Core Text bug, we need to ensure that if the font has
         // an 'opsz' axis, it is always explicitly set, and NOT to the font's
-        // default value. (See bug 1457417.)
+        // default value. (See bug 1457417, bug 1478720.)
         // We record the result of searching the font's axes in the font entry,
         // so that this only has to be done by the first instance created for
         // a given font resource.
         const uint32_t kOpszTag = HB_TAG('o','p','s','z');
+        const float kOpszFudgeAmount = 0.01f;
 
         if (!aFontEntry->mCheckedForOpszAxis) {
             aFontEntry->mCheckedForOpszAxis = true;
@@ -79,8 +80,8 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
                 // to explicitly set the default value.
                 aFontEntry->mAdjustedDefaultOpsz =
                     axis.mDefaultValue == axis.mMinValue
-                        ? axis.mDefaultValue + 0.001f
-                        : axis.mDefaultValue - 0.001f;
+                        ? axis.mDefaultValue + kOpszFudgeAmount
+                        : axis.mDefaultValue - kOpszFudgeAmount;
             }
         }
 
@@ -97,7 +98,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
                 auto& value = vars[index].mValue;
                 auto& axis = aFontEntry->mOpszAxis;
                 value = fmin(fmax(value, axis.mMinValue), axis.mMaxValue);
-                if (std::abs(value - axis.mDefaultValue) < 0.001f) {
+                if (std::abs(value - axis.mDefaultValue) < kOpszFudgeAmount) {
                     value = aFontEntry->mAdjustedDefaultOpsz;
                 }
             }
