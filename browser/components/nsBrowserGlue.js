@@ -12,6 +12,29 @@ ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
                                "resource://gre/modules/ActorManagerParent.jsm");
 
 let ACTORS = {
+  BrowserTab: {
+    child: {
+      module: "resource:///actors/BrowserTabChild.jsm",
+      group: "browsers",
+
+      events: {
+        "DOMWindowCreated": {once: true},
+        "MozAfterPaint": {once: true},
+        "MozDOMPointerLock:Entered": {},
+        "MozDOMPointerLock:Exited": {},
+      },
+
+      messages: [
+        "AllowScriptsToClose",
+        "Browser:AppTab",
+        "Browser:HasSiblings",
+        "Browser:Reload",
+        "MixedContent:ReenableProtection",
+        "SwitchDocumentDirection",
+        "UpdateCharacterSet",
+      ],
+    },
+  },
 };
 
 (function earlyBlankFirstPaint() {

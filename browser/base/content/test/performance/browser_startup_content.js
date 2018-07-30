@@ -48,6 +48,7 @@ const whitelist = {
     "resource://formautofill/FormAutofillContent.jsm",
 
     // Browser front-end
+    "resource:///actors/BrowserTabChild.jsm",
     "resource:///modules/ContentLinkHandler.jsm",
     "resource:///modules/ContentMetaHandler.jsm",
     "resource:///modules/PageStyleHandler.jsm",

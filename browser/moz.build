@@ -12,6 +12,7 @@ with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
 DIRS += [
+    'actors',
     'base',
     'components',
     'fonts',
