@@ -143,6 +143,7 @@ void
 WorkerGlobalScope::NoteTerminating()
 {
   DisconnectEventTargetObjects();
+  StartDying();
 }
 
 already_AddRefed<Console>
