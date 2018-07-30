@@ -213,9 +213,9 @@
   height: 30px;
 }
 
-:not(#pageActionSeparator):not([hidden]) ~ #pageActionSeparator {
+#page-action-buttons > :not([hidden]) ~ #pageActionSeparator {
   /* Show the separator between the page actions and other elements when at
-     least of the latter is shown. */
+     least one of the latter is shown. */
   visibility: visible;
   margin-left: 6px;
   margin-right: 6px;

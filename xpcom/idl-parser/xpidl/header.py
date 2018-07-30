@@ -134,6 +134,15 @@ def paramlistAsNative(m, empty='void'):
     return ", ".join(l)
 
 
+def memberCanRunScript(member):
+    # This can only happen if the member is scriptable and its interface is not builtinclass.
+    return member.isScriptable() and not member.iface.attributes.builtinclass
+
+
+def runScriptAnnotation(member):
+    return "JS_HAZ_CAN_RUN_SCRIPT " if memberCanRunScript(member) else ""
+
+
 def paramAsNative(p):
     default_spec = ''
     if p.default_value:
@@ -184,6 +193,10 @@ infallible_includes = """
 #include "mozilla/DebugOnly.h"
 """
 
+can_run_script_includes = """
+#include "js/GCAnnotations.h"
+"""
+
 header_end = """/* For IDL files that don't want to include root IDL files. */
 #ifndef NS_NO_VTABLE
 #define NS_NO_VTABLE
@@ -219,11 +232,22 @@ def print_header(idl, fd, filename):
         fd.write(jsvalue_include)
 
     # Include some extra files if any attributes are infallible.
-    for iface in [p for p in idl.productions if p.kind == 'interface']:
-        for attr in [m for m in iface.members if isinstance(m, xpidl.Attribute)]:
+    interfaces = [p for p in idl.productions if p.kind == 'interface']
+    wroteRunScriptIncludes = False
+    for iface in interfaces:
+        attrs = [m for m in iface.members if isinstance(m, xpidl.Attribute)]
+        for attr in attrs:
             if attr.infallible:
                 fd.write(infallible_includes)
                 break
+
+        if not wroteRunScriptIncludes:
+            methods = [m for m in iface.members if isinstance(m, xpidl.Method)]
+            for member in itertools.chain(attrs, methods):
+                if memberCanRunScript(member):
+                    fd.write(can_run_script_includes)
+                    wroteRunScriptIncludes = True
+                    break
 
     fd.write('\n')
     fd.write(header_end)
@@ -370,14 +394,16 @@ def write_interface(iface, fd):
         printComments(fd, m.doccomments, '  ')
 
         fd.write("  /* %s */\n" % m.toIDL())
-        fd.write("  %s = 0;\n\n" % methodAsNative(m))
+        fd.write("  %s%s = 0;\n\n" % (runScriptAnnotation(m),
+                                      methodAsNative(m)))
 
     def write_attr_decl(a):
         printComments(fd, a.doccomments, '  ')
 
         fd.write("  /* %s */\n" % a.toIDL())
 
-        fd.write("  %s = 0;\n" % attributeAsNative(a, True))
+        fd.write("  %s%s = 0;\n" % (runScriptAnnotation(a),
+                                    attributeAsNative(a, True)))
         if a.infallible:
             realtype = a.realtype.nativeType('in')
             tmpl = attr_builtin_infallible_tmpl
@@ -393,7 +419,8 @@ def write_interface(iface, fd):
                              'argnames': '' if not a.implicit_jscontext else 'cx, '})
 
         if not a.readonly:
-            fd.write("  %s = 0;\n" % attributeAsNative(a, False))
+            fd.write("  %s%s = 0;\n" % (runScriptAnnotation(a),
+                                        attributeAsNative(a, False)))
         fd.write("\n")
 
     defname = iface.name.upper()
