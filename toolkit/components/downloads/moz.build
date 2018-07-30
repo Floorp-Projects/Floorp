@@ -47,4 +47,4 @@ if CONFIG['MOZ_PLACES']:
 FINAL_LIBRARY = 'xul'
 
 with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Download Manager')
+    BUG_COMPONENT = ('Toolkit', 'Downloads API')
