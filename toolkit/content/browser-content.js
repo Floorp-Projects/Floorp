@@ -46,30 +46,6 @@ var AutoScrollListener = {
 };
 Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
 
-addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory() {
-  let sessionHistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
-  if (!sessionHistory) {
-    return;
-  }
-
-  // place the entry at current index at the end of the history list, so it won't get removed
-  if (sessionHistory.index < sessionHistory.count - 1) {
-    let legacy = sessionHistory.legacySHistory;
-    legacy.QueryInterface(Ci.nsISHistoryInternal);
-    let indexEntry = legacy.getEntryAtIndex(sessionHistory.index, false);
-    indexEntry.QueryInterface(Ci.nsISHEntry);
-    legacy.addEntry(indexEntry, true);
-  }
-
-  let purge = sessionHistory.count;
-  if (global.content.location.href != "about:blank") {
-    --purge; // Don't remove the page the user's staring at from shistory
-  }
-
-  if (purge > 0) {
-    sessionHistory.legacySHistory.PurgeHistory(purge);
-  }
-});
 
 let AutoComplete = {
   _connected: false,

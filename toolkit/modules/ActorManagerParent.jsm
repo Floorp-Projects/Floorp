@@ -156,6 +156,15 @@ let ACTORS = {
     },
   },
 
+  PurgeSessionHistory: {
+    child: {
+      module: "resource://gre/actors/PurgeSessionHistoryChild.jsm",
+      messages: [
+        "Browser:PurgeSessionHistory",
+      ],
+    },
+  },
+
   Select: {
     child: {
       module: "resource://gre/actors/SelectChild.jsm",
