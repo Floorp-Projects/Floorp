@@ -5805,7 +5805,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     aState.mHavePendingPopupgroup = true;
   }
   item->mIsPopup = isPopup;
-  item->mIsForSVGAElement = aContent->IsSVGElement(nsGkAtoms::a);
 
   if (canHavePageBreak && display.mBreakAfter) {
     AddPageBreakItem(aContent, aItems);
@@ -11280,7 +11279,8 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
   if (aItemIsWithinSVGText) {
     flags |= ITEM_IS_WITHIN_SVG_TEXT;
   }
-  if (aItemAllowsTextPathChild && aParentItem.mIsForSVGAElement) {
+  if (aItemAllowsTextPathChild &&
+      aParentItem.mContent->IsSVGElement(nsGkAtoms::a)) {
     flags |= ITEM_ALLOWS_TEXT_PATH_CHILD;
   }
 

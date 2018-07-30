@@ -1155,7 +1155,7 @@ private:
       mIsAnonymousContentCreatorContent(false),
       mIsRootPopupgroup(false), mIsAllInline(false), mIsBlock(false),
       mHasInlineEnds(false), mIsPopup(false),
-      mIsLineParticipant(false), mIsForSVGAElement(false)
+      mIsLineParticipant(false)
     {
       MOZ_COUNT_CTOR(FrameConstructionItem);
     }
@@ -1246,8 +1246,6 @@ private:
     bool mIsPopup:1;
     // Whether this item should be treated as a line participant
     bool mIsLineParticipant:1;
-    // Whether this item is for an SVG <a> element
-    bool mIsForSVGAElement:1;
 
   private:
     // Not allocated from the general heap - instead, use the new/Delete APIs
