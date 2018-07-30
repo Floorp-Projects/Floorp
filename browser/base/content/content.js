@@ -16,7 +16,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 var global = this;
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BlockedSiteContent: "resource:///modules/BlockedSiteContent.jsm",
   ContentLinkHandler: "resource:///modules/ContentLinkHandler.jsm",
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
   ContentWebRTC: "resource:///modules/ContentWebRTC.jsm",
@@ -64,39 +63,6 @@ addEventListener("DOMInputPasswordAdded", function(event) {
 addEventListener("DOMAutoComplete", function(event) {
   LoginManagerContent.onUsernameInput(event);
 });
-
-var AboutBlockedSiteListener = {
-  init(chromeGlobal) {
-    addMessageListener("DeceptiveBlockedDetails", this);
-    chromeGlobal.addEventListener("AboutBlockedLoaded", this, false, true);
-    this.init = null;
-  },
-
-  get isBlockedSite() {
-    return content.document.documentURI.startsWith("about:blocked");
-  },
-
-  receiveMessage(msg) {
-    if (!this.isBlockedSite) {
-      return;
-    }
-
-    BlockedSiteContent.receiveMessage(global, msg);
-  },
-
-  handleEvent(aEvent) {
-    if (!this.isBlockedSite) {
-      return;
-    }
-
-    if (aEvent.type != "AboutBlockedLoaded") {
-      return;
-    }
-
-    BlockedSiteContent.handleEvent(global, aEvent);
-  },
-};
-AboutBlockedSiteListener.init(this);
 
 this.AboutNetAndCertErrorListener = {
   init(chromeGlobal) {

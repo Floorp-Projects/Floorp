@@ -5,7 +5,9 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["BlockedSiteContent"];
+var EXPORTED_SYMBOLS = ["BlockedSiteChild"];
+
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.defineModuleGetter(this, "SafeBrowsing",
                                "resource://gre/modules/SafeBrowsing.jsm");
@@ -35,21 +37,26 @@ function getSiteBlockedErrorDetails(docShell) {
   return blockedInfo;
 }
 
-var BlockedSiteContent = {
-  receiveMessage(global, msg) {
+class BlockedSiteChild extends ActorChild {
+  receiveMessage(msg) {
     if (msg.name == "DeceptiveBlockedDetails") {
-      global.sendAsyncMessage("DeceptiveBlockedDetails:Result", {
-        blockedInfo: getSiteBlockedErrorDetails(global.docShell),
+      this.mm.sendAsyncMessage("DeceptiveBlockedDetails:Result", {
+        blockedInfo: getSiteBlockedErrorDetails(this.mm.docShell),
       });
     }
-  },
+  }
 
-  handleEvent(global, aEvent) {
-    if (aEvent.type != "AboutBlockedLoaded") {
-      return;
+  handleEvent(event) {
+    if (event.type == "AboutBlockedLoaded") {
+      this.onAboutBlockedLoaded(event);
+    } else if (event.type == "click" && event.button == 0) {
+      this.onClick(event);
     }
+  }
 
-    let {content} = global;
+  onAboutBlockedLoaded(aEvent) {
+    let global = this.mm;
+    let content = aEvent.target.ownerGlobal;
 
     let blockedInfo = getSiteBlockedErrorDetails(global.docShell);
     let provider = blockedInfo.provider || "";
@@ -120,9 +127,14 @@ var BlockedSiteContent = {
     let anchorEl = content.document.getElementById("advisory_provider");
     anchorEl.setAttribute("href", advisoryUrl);
     anchorEl.textContent = advisoryLinkText;
-  },
+  }
 
-  onAboutBlocked(global, targetElement, ownerDoc) {
+  onClick(event) {
+    let ownerDoc = event.target.ownerDocument;
+    if (!ownerDoc) {
+      return;
+    }
+
     var reason = "phishing";
     if (/e=malwareBlocked/.test(ownerDoc.documentURI)) {
       reason = "malware";
@@ -132,14 +144,12 @@ var BlockedSiteContent = {
       reason = "harmful";
     }
 
-    let docShell = ownerDoc.defaultView.docShell;
-
-    global.sendAsyncMessage("Browser:SiteBlockedError", {
+    this.mm.sendAsyncMessage("Browser:SiteBlockedError", {
       location: ownerDoc.location.href,
       reason,
-      elementId: targetElement.getAttribute("id"),
+      elementId: event.target.getAttribute("id"),
       isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView),
-      blockedInfo: getSiteBlockedErrorDetails(docShell),
+      blockedInfo: getSiteBlockedErrorDetails(ownerDoc.defaultView.docShell),
     });
-  },
-};
+  }
+}
