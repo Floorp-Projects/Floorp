@@ -30,12 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContextMenuChild: "resource:///actors/ContextMenuChild.jsm",
 });
 
-XPCOMUtils.defineLazyProxy(this, "ClickEventHandler", () => {
-  let tmp = {};
-  ChromeUtils.import("resource:///modules/ClickEventHandler.jsm", tmp);
-  return new tmp.ClickEventHandler(global);
-});
-
 XPCOMUtils.defineLazyGetter(this, "LoginManagerContent", () => {
   let tmp = {};
   ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm", tmp);
@@ -168,8 +162,6 @@ this.AboutNetAndCertErrorListener = {
   },
 };
 AboutNetAndCertErrorListener.init(this);
-
-Services.els.addSystemEventListener(global, "click", ClickEventHandler, true);
 
 new ContentLinkHandler(this);
 ContentMetaHandler.init(this);
