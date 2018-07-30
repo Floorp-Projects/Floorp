@@ -67,9 +67,6 @@ with Files("LaterRun.jsm"):
 with Files("LightweightThemeChildHelper.jsm"):
     BUG_COMPONENT = ("WebExtensions", "Themes")
 
-with Files("LightWeightThemeWebInstallListener.jsm"):
-    BUG_COMPONENT = ("Firefox", "Theme")
-
 with Files("OpenInTabsUtils.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
@@ -146,7 +143,6 @@ EXTRA_JS_MODULES += [
     'HomePage.jsm',
     'LaterRun.jsm',
     'LightweightThemeChildHelper.jsm',
-    'LightWeightThemeWebInstallListener.jsm',
     'NetErrorContent.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',

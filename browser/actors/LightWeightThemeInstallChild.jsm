@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["LightWeightThemeWebInstallListener"];
+var EXPORTED_SYMBOLS = ["LightWeightThemeInstallChild"];
 
-var LightWeightThemeWebInstallListener = {
-  _previewWindow: null,
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
+class LightWeightThemeInstallChild extends ActorChild {
   handleEvent(event) {
-    let mm = getMessageManagerForContent(event.target.ownerGlobal);
+    let {mm} = this;
     switch (event.type) {
       case "InstallBrowserTheme": {
         mm.sendAsyncMessage("LightWeightThemeWebInstaller:Install", {
@@ -42,14 +42,10 @@ var LightWeightThemeWebInstallListener = {
         break;
       }
     }
-  },
+  }
 
   _resetPreviewWindow() {
     this._previewWindow.removeEventListener("pagehide", this, true);
     this._previewWindow = null;
   }
-};
-
-function getMessageManagerForContent(content) {
-  return content.docShell.messageManager;
 }
