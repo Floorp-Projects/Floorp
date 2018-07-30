@@ -81,7 +81,8 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr
     }
 
     nsCertOverrideEntry(nsCertOverrideEntry&& toMove)
-      : mSettings(std::move(toMove.mSettings))
+      : PLDHashEntryHdr(std::move(toMove))
+      , mSettings(std::move(toMove.mSettings))
       , mHostWithPort(std::move(toMove.mHostWithPort))
     {
     }
