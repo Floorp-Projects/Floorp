@@ -141,6 +141,11 @@ fretboard.clearAllOverrides(context)
 ### Filters
 Fretboard allows you to specify the following filters:
 - Buckets: Every user is in one of 100 buckets (0-99). For every experiment you can set up a min and max value (0 <= min <= max <= 100). The bounds are [min, max).
+    - Both max and min are optional. For example, specifying only min = 0 or only max = 100 includes all users
+    - 0-100 includes all users (as opposed to 0-99)
+    - 0-0 includes no users (as opposed to just bucket 0)
+    - 0-1 includes just bucket 0
+    - Users will always stay in the same bucket. An experiment targeting 0-25 will always target the same 25% of users
 - appId (regex): The app ID (package name)
 - version (regex): The app version
 - country (regex): country, pulled from the default locale
