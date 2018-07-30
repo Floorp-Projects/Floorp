@@ -147,6 +147,21 @@ let ACTORS = {
       },
     },
   },
+
+  Zoom: {
+    child: {
+      module: "resource://gre/actors/ZoomChild.jsm",
+      events: {
+        "FullZoomChange": {},
+        "TextZoomChange": {},
+        "ZoomChangeUsingMouseWheel": {},
+      },
+      messages: [
+        "FullZoom",
+        "TextZoom",
+      ],
+    },
+  },
 };
 
 class ActorSet {
