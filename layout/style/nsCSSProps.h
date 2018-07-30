@@ -14,7 +14,7 @@
 
 #include <limits>
 #include <type_traits>
-#include "nsStringFwd.h"
+#include "nsString.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"
@@ -36,6 +36,7 @@ class ComputedStyle;
 extern "C" {
   nsCSSPropertyID Servo_ResolveLogicalProperty(nsCSSPropertyID,
                                                const mozilla::ComputedStyle*);
+  nsCSSPropertyID Servo_Property_LookupEnabledForAllContent(const nsACString*);
 }
 
 struct nsCSSKTableEntry
@@ -80,8 +81,20 @@ public:
   // Looks up the property with name aProperty and returns its corresponding
   // nsCSSPropertyID value.  If aProperty is the name of a custom property,
   // then eCSSPropertyExtra_variable will be returned.
-  static nsCSSPropertyID LookupProperty(const nsAString& aProperty,
-                                      EnabledState aEnabled);
+  //
+  // This only returns properties enabled for all content, and resolves aliases
+  // to return the aliased property.
+  static nsCSSPropertyID LookupProperty(const nsACString& aProperty)
+  {
+    return Servo_Property_LookupEnabledForAllContent(&aProperty);
+  }
+
+  static nsCSSPropertyID LookupProperty(const nsAString& aProperty)
+  {
+    NS_ConvertUTF16toUTF8 utf8(aProperty);
+    return LookupProperty(utf8);
+  }
+
   // As above, but looked up using a property's IDL name.
   // eCSSPropertyExtra_variable won't be returned from these methods.
   static nsCSSPropertyID LookupPropertyByIDLName(

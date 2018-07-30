@@ -163,40 +163,6 @@ nsCSSProps::IsCustomPropertyName(const nsAString& aProperty)
 }
 
 nsCSSPropertyID
-nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
-{
-  if (IsCustomPropertyName(aProperty)) {
-    return eCSSPropertyExtra_variable;
-  }
-
-  // This is faster than converting and calling
-  // LookupProperty(nsACString&).  The table will do its own
-  // converting and avoid a PromiseFlatCString() call.
-  MOZ_ASSERT(gPropertyTable, "no lookup table, needs addref");
-  nsCSSPropertyID res = nsCSSPropertyID(gPropertyTable->Lookup(aProperty));
-  if (MOZ_LIKELY(res < eCSSProperty_COUNT)) {
-    if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
-      res = eCSSProperty_UNKNOWN;
-    }
-    return res;
-  }
-  MOZ_ASSERT(eCSSAliasCount != 0,
-             "'res' must be an alias at this point so we better have some!");
-  // We intentionally don't support CSSEnabledState::eInUASheets or
-  // CSSEnabledState::eInChrome for aliases yet because it's unlikely
-  // there will be a need for it.
-  if (IsEnabled(res) || aEnabled == CSSEnabledState::eIgnoreEnabledState) {
-    res = gAliases[res - eCSSProperty_COUNT];
-    MOZ_ASSERT(0 <= res && res < eCSSProperty_COUNT,
-               "aliases must not point to other aliases");
-    if (IsEnabled(res) || aEnabled == CSSEnabledState::eIgnoreEnabledState) {
-      return res;
-    }
-  }
-  return eCSSProperty_UNKNOWN;
-}
-
-nsCSSPropertyID
 nsCSSProps::LookupPropertyByIDLName(const nsACString& aPropertyIDLName,
                                     EnabledState aEnabled)
 {
