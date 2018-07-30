@@ -286,6 +286,19 @@ def clear_all_cookies(session):
     session.transport.send("DELETE", "session/%s/cookie" % session.session_id)
 
 
+def closed_window(session, create_window):
+    new_handle = create_window()
+    original_handle = session.window_handle
+
+    session.window_handle = new_handle
+    session.close()
+    assert new_handle not in session.handles, "Unable to close window {}".format(new_handle)
+
+    yield new_handle
+
+    session.window_handle = original_handle
+
+
 def is_element_in_viewport(session, element):
     """Check if element is outside of the viewport"""
     return session.execute_script("""

@@ -1,5 +1,4 @@
 from tests.support.asserts import assert_error, assert_success
-from tests.support.inline import inline
 
 
 def maximize(session):
@@ -18,9 +17,7 @@ def is_fullscreen(session):
         """)
 
 
-def test_no_browsing_context(session, create_window):
-    session.window_handle = create_window()
-    session.close()
+def test_no_browsing_context(session, closed_window):
     response = maximize(session)
     assert_error(response, "no such window")
 

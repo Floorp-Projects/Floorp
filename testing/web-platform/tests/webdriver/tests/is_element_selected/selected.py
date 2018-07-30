@@ -21,12 +21,9 @@ def is_element_selected(session, element_id):
             element_id=element_id))
 
 
-def test_no_browsing_context(session, create_window):
-    session.window_handle = create_window()
-    session.close()
-
-    result = is_element_selected(session, "foo")
-    assert_error(result, "no such window")
+def test_no_browsing_context(session, closed_window):
+    response = is_element_selected(session, "foo")
+    assert_error(response, "no such window")
 
 
 def test_element_stale(session):
