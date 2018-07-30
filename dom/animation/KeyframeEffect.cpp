@@ -1609,12 +1609,10 @@ KeyframeEffect::CalculateCumulativeChangeHint(const ComputedStyle* aComputedStyl
         // segment that needs composing with the underlying value, we just add
         // all the change hints a transform animation is known to be able to
         // generate.
-        mCumulativeChangeHint |= nsChangeHint_AddOrRemoveTransform |
-                                 nsChangeHint_RepaintFrame |
-                                 nsChangeHint_UpdateContainingBlock |
-                                 nsChangeHint_UpdateOverflow |
-                                 nsChangeHint_UpdatePostTransformOverflow |
-                                 nsChangeHint_UpdateTransformLayer;
+        mCumulativeChangeHint |=
+          nsChangeHint_ComprehensiveAddOrRemoveTransform |
+          nsChangeHint_UpdatePostTransformOverflow |
+          nsChangeHint_UpdateTransformLayer;
         continue;
       }
 

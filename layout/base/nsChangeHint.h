@@ -468,6 +468,21 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
                nsChangeHint_UpdateUsesOpacity |            \
                nsChangeHint_VisibilityChange)
 
+// Change hints for added or removed transform style.
+//
+// If we've added or removed the transform property, we need to reconstruct the
+// frame to add or remove the view object, and also to handle abs-pos and
+// fixed-pos containers.
+//
+// We do not need to apply nsChangeHint_UpdateTransformLayer since
+// nsChangeHint_RepaintFrame will forcibly invalidate the frame area and
+// ensure layers are rebuilt (or removed).
+#define nsChangeHint_ComprehensiveAddOrRemoveTransform \
+  nsChangeHint(nsChangeHint_UpdateContainingBlock |    \
+               nsChangeHint_AddOrRemoveTransform |     \
+               nsChangeHint_UpdateOverflow |           \
+               nsChangeHint_RepaintFrame)
+
 // NB: Once we drop support for the old style system, this logic should be
 // inlined in the Servo style system to eliminate the FFI call.
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
