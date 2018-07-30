@@ -165,7 +165,11 @@ function generateOffer(options={}) {
 function generateAnswer(offer) {
   const pc = new RTCPeerConnection();
   return pc.setRemoteDescription(offer)
-  .then(() => pc.createAnswer());
+  .then(() => pc.createAnswer())
+  .then((answer) => {
+    pc.close();
+    return answer;
+  });
 }
 
 // Run a test function that return a promise that should
