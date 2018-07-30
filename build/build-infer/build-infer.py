@@ -27,13 +27,13 @@ def run_in(path, args, extra_env=None):
     subprocess.run(args, cwd=path)
 
 
-def build_tar_package(tar, name, base, directory):
+def build_tar_package(tar, name, base, directories):
     name = os.path.realpath(name)
     run_in(base, [tar,
                   '-c',
                   '-%s' % ('J' if '.xz' in name else 'j'),
                   '-f',
-                  name, directory])
+                  name] + directories)
 
 
 def is_git_repo(dir):
@@ -113,4 +113,5 @@ if __name__ == '__main__':
     package_name = 'infer'
     if not args.skip_tar:
         build_tar_package('tar', '%s.tar.xz' % (package_name),
-                          source_dir, os.path.join('infer', 'bin'))
+                          source_dir, [os.path.join('infer', 'bin'),
+                                       os.path.join('infer', 'lib')])
