@@ -1154,7 +1154,7 @@ private:
       mIsText(false), mIsGeneratedContent(false),
       mIsAnonymousContentCreatorContent(false),
       mIsRootPopupgroup(false), mIsAllInline(false), mIsBlock(false),
-      mHasInlineEnds(false), mIsPopup(false),
+      mIsPopup(false),
       mIsLineParticipant(false)
     {
       MOZ_COUNT_CTOR(FrameConstructionItem);
@@ -1236,11 +1236,6 @@ private:
     // they might still be blocks (and in particular, out-of-flows that didn't
     // find a containing block).
     bool mIsBlock:1;
-    // Whether construction from this item will give leading and trailing
-    // inline frames.  This is equal to mIsAllInline, except for inline frame
-    // items, where it's always true, whereas mIsAllInline might be false due
-    // to {ib} splits.
-    bool mHasInlineEnds:1;
     // Whether construction from this item will create a popup that needs to
     // go into the global popup items.
     bool mIsPopup:1;
