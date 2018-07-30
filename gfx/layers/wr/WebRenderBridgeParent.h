@@ -118,6 +118,8 @@ public:
 
   mozilla::ipc::IPCResult RecvSetTestSampleTime(const TimeStamp& aTime) override;
   mozilla::ipc::IPCResult RecvLeaveTestMode() override;
+  mozilla::ipc::IPCResult RecvGetAnimationValue(const uint64_t& aCompositorAnimationsId,
+                                                OMTAValue* aValue) override;
   mozilla::ipc::IPCResult RecvGetAnimationOpacity(const uint64_t& aCompositorAnimationsId,
                                                   float* aOpacity,
                                                   bool* aHasAnimationOpacity) override;
