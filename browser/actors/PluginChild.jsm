@@ -4,12 +4,17 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "PluginContent" ];
+var EXPORTED_SYMBOLS = ["PluginChild"];
+
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
+
+ChromeUtils.defineModuleGetter(this, "ContextMenuChild",
+                               "resource:///actors/ContextMenuChild.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
   const url = "chrome://browser/locale/browser.properties";
@@ -18,10 +23,6 @@ XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-
-var PluginContent = function(global) {
-  this.init(global);
-};
 
 const OVERLAY_DISPLAY = {
   HIDDEN: 0, // The overlay will be transparent
@@ -32,19 +33,18 @@ const OVERLAY_DISPLAY = {
   FULL: 5, // The full overlay: 48x48 plugin icon, close button and label
 };
 
-PluginContent.prototype = {
-  init(global) {
-    this.global = global;
-    // Need to hold onto the content window or else it'll get destroyed
-    this.content = this.global.content;
+class PluginChild extends ActorChild {
+  constructor(mm) {
+    super(mm);
+
     // Cache of plugin actions for the current page.
     this.pluginData = new Map();
     // Cache of plugin crash information sent from the parent
     this.pluginCrashData = new Map();
 
-    global.addEventListener("pagehide", this, true);
-    global.addEventListener("pageshow", this, true);
-  },
+    this.mm.addEventListener("pagehide", this, true);
+    this.mm.addEventListener("pageshow", this, true);
+  }
 
   receiveMessage(msg) {
     switch (msg.name) {
@@ -55,14 +55,12 @@ PluginContent.prototype = {
         setTimeout(() => this.updateNotificationUI(), 0);
         break;
       case "BrowserPlugins:ContextMenuCommand":
-        let contextMenu = this.global.contextMenu;
-
         switch (msg.data.command) {
           case "play":
-            this._showClickToPlayNotification(contextMenu.getTarget(msg, "plugin"), true);
+            this._showClickToPlayNotification(ContextMenuChild.getTarget(this.mm, msg, "plugin"), true);
             break;
           case "hide":
-            this.hideClickToPlayOverlay(contextMenu.getTarget(msg, "plugin"));
+            this.hideClickToPlayOverlay(ContextMenuChild.getTarget(this.mm, msg, "plugin"));
             break;
         }
         break;
@@ -85,9 +83,9 @@ PluginContent.prototype = {
           this.pluginCrashData.clear();
         }
     }
-  },
+  }
 
-  observe: function observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "decoder-doctor-notification":
         let data = JSON.parse(aData);
@@ -96,11 +94,11 @@ PluginContent.prototype = {
             this.haveShownNotification &&
             aSubject.top.document == this.content.document &&
             data.formats.toLowerCase().includes("application/x-mpegurl", 0)) {
-          this.global.content.pluginRequiresReload = true;
+          this.content.pluginRequiresReload = true;
           this.updateNotificationUI(this.content.document);
         }
     }
-  },
+  }
 
   onPageShow(event) {
     // Ignore events that aren't from the main document.
@@ -114,7 +112,7 @@ PluginContent.prototype = {
     if (event.persisted) {
       this.reshowClickToPlayNotification();
     }
-  },
+  }
 
   onPageHide(event) {
     // Ignore events that aren't from the main document.
@@ -124,12 +122,12 @@ PluginContent.prototype = {
 
     this.clearPluginCaches();
     this.haveShownNotification = false;
-  },
+  }
 
   getPluginUI(plugin, anonid) {
     return plugin.ownerDocument.
            getAnonymousElementByAttribute(plugin, "anonid", anonid);
-  },
+  }
 
   _getPluginInfo(pluginElement) {
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -178,7 +176,7 @@ PluginContent.prototype = {
              fallbackType,
              blocklistState,
            };
-  },
+  }
 
   /**
    * _getPluginInfoForTag is called when iterating the plugins for a document,
@@ -227,7 +225,7 @@ PluginContent.prototype = {
              fallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
              blocklistState,
            };
-  },
+  }
 
   /**
    * Update the visibility of the plugin overlay.
@@ -237,7 +235,7 @@ PluginContent.prototype = {
     if (overlayDisplayState != OVERLAY_DISPLAY.HIDDEN) {
       overlay.removeAttribute("dismissed");
     }
-  },
+  }
 
   /**
    * Adjust the style in which the overlay will be displayed. It might be adjusted
@@ -338,7 +336,7 @@ PluginContent.prototype = {
 
     overlay.setAttribute("sizing", "blank");
     return OVERLAY_DISPLAY.BLANK;
-  },
+  }
 
   addLinkClickCallback(linkNode, callbackName /* callbackArgs...*/) {
     // XXX just doing (callback)(arg) was giving a same-origin error. bug?
@@ -368,7 +366,7 @@ PluginContent.prototype = {
                                 }
                               },
                               true);
-  },
+  }
 
   // Helper to get the binding handler type from a plugin object
   _getBindingType(plugin) {
@@ -395,7 +393,7 @@ PluginContent.prototype = {
         // Not all states map to a handler
         return null;
     }
-  },
+  }
 
   handleEvent(event) {
     let eventType = event.type;
@@ -538,12 +536,12 @@ PluginContent.prototype = {
     if (shouldShowNotification) {
       this._showClickToPlayNotification(plugin, false);
     }
-  },
+  }
 
   isKnownPlugin(objLoadingContent) {
     return (objLoadingContent.getContentTypeForMIMEType(objLoadingContent.actualType) ==
             Ci.nsIObjectLoadingContent.TYPE_PLUGIN);
-  },
+  }
 
   canActivatePlugin(objLoadingContent) {
     // if this isn't a known plugin, we can't activate it
@@ -564,22 +562,22 @@ PluginContent.prototype = {
     return !objLoadingContent.activated &&
            pluginPermission != Ci.nsIPermissionManager.DENY_ACTION &&
            isFallbackTypeValid;
-  },
+  }
 
   hideClickToPlayOverlay(plugin) {
     let overlay = this.getPluginUI(plugin, "main");
     if (overlay) {
       overlay.classList.remove("visible");
     }
-  },
+  }
 
   // Forward a link click callback to the chrome process.
   forwardCallback(name, pluginTag) {
-    this.global.sendAsyncMessage("PluginContent:LinkClickCallback",
+    this.mm.sendAsyncMessage("PluginContent:LinkClickCallback",
       { name, pluginTag });
-  },
+  }
 
-  submitReport: function submitReport(plugin) {
+  submitReport(plugin) {
     if (!AppConstants.MOZ_CRASHREPORTER) {
       return;
     }
@@ -602,13 +600,13 @@ PluginContent.prototype = {
     if (submitURLOptIn)
       keyVals.PluginContentURL = plugin.ownerDocument.URL;
 
-    this.global.sendAsyncMessage("PluginContent:SubmitReport",
+    this.mm.sendAsyncMessage("PluginContent:SubmitReport",
                                  { runID, keyVals, submitURLOptIn });
-  },
+  }
 
   reloadPage() {
-    this.global.content.location.reload();
-  },
+    this.content.location.reload();
+  }
 
   // Event listener for click-to-play plugins.
   _handleClickToPlayEvent(plugin) {
@@ -636,7 +634,7 @@ PluginContent.prototype = {
     if (overlay) {
       overlay.addEventListener("click", this, true);
     }
-  },
+  }
 
   onOverlayClick(event) {
     let document = event.target.ownerDocument;
@@ -652,10 +650,10 @@ PluginContent.prototype = {
     event.stopPropagation();
     event.preventDefault();
     }
-  },
+  }
 
   reshowClickToPlayNotification() {
-    let contentWindow = this.global.content;
+    let contentWindow = this.content;
     let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
     for (let plugin of plugins) {
@@ -667,13 +665,13 @@ PluginContent.prototype = {
         this._handleClickToPlayEvent(plugin);
     }
     this._showClickToPlayNotification(null, false);
-  },
+  }
 
   /**
    * Activate the plugins that the user has specified.
    */
   activatePlugins(pluginInfo, newState) {
-    let contentWindow = this.global.content;
+    let contentWindow = this.content;
     let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -710,7 +708,7 @@ PluginContent.prototype = {
       this.reloadPage();
     }
     this.updateNotificationUI();
-  },
+  }
 
   _showClickToPlayNotification(plugin, showNow) {
     let plugins = [];
@@ -768,12 +766,12 @@ PluginContent.prototype = {
 
     this.haveShownNotification = true;
 
-    this.global.sendAsyncMessage("PluginContent:ShowClickToPlayNotification", {
+    this.mm.sendAsyncMessage("PluginContent:ShowClickToPlayNotification", {
       plugins: [...this.pluginData.values()],
       showNow,
       location,
     }, null, principal);
-  },
+  }
 
   /**
    * Updates the "hidden plugin" notification bar UI.
@@ -851,25 +849,25 @@ PluginContent.prototype = {
 
     // If there are any items remaining in `actions` now, they are hidden
     // plugins that need a notification bar.
-    this.global.sendAsyncMessage("PluginContent:UpdateHiddenPluginUI", {
+    this.mm.sendAsyncMessage("PluginContent:UpdateHiddenPluginUI", {
       haveInsecure,
       actions: [...actions.values()],
       location,
     }, null, principal);
-  },
+  }
 
   removeNotification(name) {
-    this.global.sendAsyncMessage("PluginContent:RemoveNotification", { name });
-  },
+    this.mm.sendAsyncMessage("PluginContent:RemoveNotification", { name });
+  }
 
   clearPluginCaches() {
     this.pluginData.clear();
     this.pluginCrashData.clear();
-  },
+  }
 
   hideNotificationBar(name) {
-    this.global.sendAsyncMessage("PluginContent:HideNotificationBar", { name });
-  },
+    this.mm.sendAsyncMessage("PluginContent:HideNotificationBar", { name });
+  }
 
   /**
    * Determines whether or not the crashed plugin is contained within current
@@ -910,7 +908,7 @@ PluginContent.prototype = {
       return this.isWithinFullScreenElement(fullScreenElement, parentIframe);
     }
     return false;
-  },
+  }
 
   /**
    * The PluginCrashed event handler. Note that the PluginCrashed event is
@@ -954,14 +952,14 @@ PluginContent.prototype = {
       state: crashData.state,
       message: crashData.message,
     });
-  },
+  }
 
   NPAPIPluginProcessCrashed({pluginName, runID, state}) {
     let message =
       gNavigatorBundle.formatStringFromName("crashedpluginsMessage.title",
                                             [pluginName], 1);
 
-    let contentWindow = this.global.content;
+    let contentWindow = this.content;
     let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
 
@@ -994,7 +992,7 @@ PluginContent.prototype = {
         }
       }
     }
-  },
+  }
 
   setCrashedNPAPIPluginState({plugin, state, message}) {
     // Force a layout flush so the binding is attached.
@@ -1053,18 +1051,18 @@ PluginContent.prototype = {
     } else if (!doc.mozNoPluginCrashedNotification) {
       // If another plugin on the page was large enough to show our UI, we don't
       // want to show a notification bar.
-      this.global.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
+      this.mm.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
                                    { messageString: message, pluginID: runID });
       // Remove the notification when the page is reloaded.
       doc.defaultView.top.addEventListener("unload", event => {
         this.hideNotificationBar("plugin-crashed");
       });
     }
-  },
+  }
 
   NPAPIPluginCrashReportSubmitted({ runID, state }) {
     this.pluginCrashData.delete(runID);
-    let contentWindow = this.global.content;
+    let contentWindow = this.content;
     let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
 
@@ -1075,7 +1073,7 @@ PluginContent.prototype = {
         statusDiv.setAttribute("status", state);
       }
     }
-  },
+  }
 
   GMPCrashed(aEvent) {
     let target          = aEvent.target;
@@ -1093,12 +1091,12 @@ PluginContent.prototype = {
       gNavigatorBundle.formatStringFromName("crashedpluginsMessage.title",
                                             [pluginName], 1);
 
-    this.global.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
+    this.mm.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
                                  { messageString, pluginID });
 
     // Remove the notification when the page is reloaded.
     doc.defaultView.top.addEventListener("unload", event => {
       this.hideNotificationBar("plugin-crashed");
     });
-  },
-};
+  }
+}

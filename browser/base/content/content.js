@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContentWebRTC: "resource:///modules/ContentWebRTC.jsm",
   LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
-  PluginContent: "resource:///modules/PluginContent.jsm",
   FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
   NetErrorContent: "resource:///modules/NetErrorContent.jsm",
   PageMetadata: "resource://gre/modules/PageMetadata.jsm",
@@ -157,69 +156,6 @@ AboutNetAndCertErrorListener.init(this);
 
 new ContentLinkHandler(this);
 ContentMetaHandler.init(this);
-
-var PluginContentStub = {
-  EVENTS: [
-    "PluginCrashed",
-    "PluginOutdated",
-    "PluginInstantiated",
-    "PluginRemoved",
-    "HiddenPlugin",
-  ],
-
-  MESSAGES: [
-    "BrowserPlugins:ActivatePlugins",
-    "BrowserPlugins:NotificationShown",
-    "BrowserPlugins:ContextMenuCommand",
-    "BrowserPlugins:NPAPIPluginProcessCrashed",
-    "BrowserPlugins:CrashReportSubmitted",
-    "BrowserPlugins:Test:ClearCrashData",
-  ],
-
-  _pluginContent: null,
-  get pluginContent() {
-    if (!this._pluginContent) {
-      this._pluginContent = new PluginContent(global);
-    }
-    return this._pluginContent;
-  },
-
-  init() {
-    addEventListener("unload", this);
-
-    addEventListener("PluginBindingAttached", this, true, true);
-
-    for (let event of this.EVENTS) {
-      addEventListener(event, this, true);
-    }
-    for (let msg of this.MESSAGES) {
-      addMessageListener(msg, this);
-    }
-    Services.obs.addObserver(this, "decoder-doctor-notification");
-    this.init = null;
-  },
-
-  uninit() {
-    Services.obs.removeObserver(this, "decoder-doctor-notification");
-  },
-
-  observe(subject, topic, data) {
-    return this.pluginContent.observe(subject, topic, data);
-  },
-
-  handleEvent(event) {
-    if (event.type === "unload") {
-      return this.uninit();
-    }
-    return this.pluginContent.handleEvent(event);
-  },
-
-  receiveMessage(msg) {
-    return this.pluginContent.receiveMessage(msg);
-  },
-};
-
-PluginContentStub.init();
 
 // This is a temporary hack to prevent regressions (bug 1471327).
 void content;
