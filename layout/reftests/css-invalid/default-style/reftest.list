@@ -1,5 +1,5 @@
 == input.html input-ref.html
-fuzzy-if(isDebugBuild&&gtkWidget,1,1) == button.html button-ref.html
+== button.html button-ref.html
 == textarea.html textarea-ref.html
 == select.html select-ref.html
 == fieldset.html fieldset-ref.html
