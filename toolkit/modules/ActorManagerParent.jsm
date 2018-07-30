@@ -120,6 +120,16 @@ let ACTORS = {
       },
     },
   },
+
+  Select: {
+    child: {
+      module: "resource://gre/actors/SelectChild.jsm",
+      events: {
+        "mozshowdropdown": {},
+        "mozshowdropdown-sourcetouch": {},
+      },
+    },
+  },
 };
 
 class ActorSet {

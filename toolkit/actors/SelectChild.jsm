@@ -1,9 +1,12 @@
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
+var EXPORTED_SYMBOLS = ["SelectChild"];
+
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
@@ -27,10 +30,6 @@ const SUPPORTED_PROPERTIES = [
 // entirely within this module, and is read-only accessible
 // via SelectContentHelper.open.
 var gOpen = false;
-
-var EXPORTED_SYMBOLS = [
-  "SelectContentHelper"
-];
 
 var SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.element = aElement;
@@ -421,4 +420,22 @@ function buildOptionListForChildren(node) {
     }
   }
   return result;
+}
+
+class SelectChild extends ActorChild {
+  handleEvent(event) {
+    if (SelectContentHelper.open) {
+      return;
+    }
+
+    switch (event.type) {
+    case "mozshowdropdown":
+      new SelectContentHelper(event.target, {isOpenedViaTouch: false}, this.mm);
+      break;
+
+    case "mozshowdropdown-sourcetouch":
+      new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this.mm);
+      break;
+    }
+  }
 }

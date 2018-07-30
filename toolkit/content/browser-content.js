@@ -17,8 +17,6 @@ ChromeUtils.defineModuleGetter(this, "AutoCompletePopup",
   "resource://gre/modules/AutoCompletePopupContent.jsm");
 ChromeUtils.defineModuleGetter(this, "AutoScrollController",
   "resource://gre/modules/AutoScrollController.jsm");
-ChromeUtils.defineModuleGetter(this, "SelectContentHelper",
-  "resource://gre/modules/SelectContentHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "FindContent",
   "resource://gre/modules/FindContent.jsm");
 ChromeUtils.defineModuleGetter(this, "PrintingContent",
@@ -210,24 +208,6 @@ let AutoComplete = {
 };
 
 AutoComplete.init();
-
-addEventListener("mozshowdropdown", event => {
-  if (!event.isTrusted)
-    return;
-
-  if (!SelectContentHelper.open) {
-    new SelectContentHelper(event.target, {isOpenedViaTouch: false}, this);
-  }
-});
-
-addEventListener("mozshowdropdown-sourcetouch", event => {
-  if (!event.isTrusted)
-    return;
-
-  if (!SelectContentHelper.open) {
-    new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this);
-  }
-});
 
 let ExtFind = {
   init() {
