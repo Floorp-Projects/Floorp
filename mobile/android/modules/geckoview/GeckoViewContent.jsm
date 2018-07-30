@@ -270,10 +270,7 @@ class GeckoViewContent extends GeckoViewModule {
 
     finder.caseSensitive = !!aData.matchCase;
     finder.entireWord = !!aData.wholeWord;
-
-    if (aCallback) {
-      finder.addResultListener(this._finderListener);
-    }
+    finder.addResultListener(this._finderListener);
 
     const drawOutline = this._matchDisplayOptions &&
                         !!this._matchDisplayOptions.drawOutline;
@@ -292,9 +289,21 @@ class GeckoViewContent extends GeckoViewModule {
   }
 
   _clearMatches() {
+    debug `clearMatches`;
+
+    let finder;
     try {
-      this.browser.finder.removeSelection();
+      finder = this.browser.finder;
     } catch (e) {
+      return;
+    }
+
+    finder.removeSelection();
+    finder.highlight(false);
+
+    if (this._finderListener) {
+      finder.removeResultListener(this._finderListener);
+      this._finderListener = null;
     }
   }
 
@@ -312,15 +321,15 @@ class GeckoViewContent extends GeckoViewModule {
     finder.onModalHighlightChange(!!aData.dimPage);
     finder.onHighlightAllChange(!!aData.highlightAll);
 
-    if (!finder.searchString) {
-      return;
-    }
     if (!aData.highlightAll && !aData.dimPage) {
       finder.highlight(false);
       return;
     }
-    const linksOnly = this._finderListener &&
-                      this._finderListener.response.linksOnly;
+
+    if (!this._finderListener || !finder.searchString) {
+      return;
+    }
+    const linksOnly = this._finderListener.response.linksOnly;
     finder.highlight(true, finder.searchString, linksOnly, !!aData.drawOutline);
   }
 }
