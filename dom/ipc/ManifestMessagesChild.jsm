@@ -13,8 +13,9 @@
  */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ManifestMessages"];
+var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
@@ -24,11 +25,7 @@ ChromeUtils.defineModuleGetter(this, "ManifestFinder",
 ChromeUtils.defineModuleGetter(this, "ManifestIcons",
                                "resource://gre/modules/ManifestIcons.jsm");
 
-class ManifestMessages {
-  constructor(mm) {
-    this.mm = mm;
-  }
-
+class ManifestMessagesChild extends ActorChild {
   receiveMessage(message) {
     switch (message.name) {
     case "DOM:WebManifest:hasManifestLink":

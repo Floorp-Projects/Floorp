@@ -140,6 +140,19 @@ let ACTORS = {
     },
   },
 
+  ManifestMessages: {
+    child: {
+      module: "resource://gre/modules/ManifestMessagesChild.jsm",
+      group: "browsers",
+      messages: [
+        "DOM:Manifest:FireAppInstalledEvent",
+        "DOM:ManifestObtainer:Obtain",
+        "DOM:WebManifest:fetchIcon",
+        "DOM:WebManifest:hasManifestLink",
+      ],
+    },
+  },
+
   PopupBlocking: {
     child: {
       module: "resource://gre/actors/PopupBlockingChild.jsm",
