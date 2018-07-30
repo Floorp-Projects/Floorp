@@ -818,7 +818,7 @@ void
 DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
 {
   for (auto& p : aAnimationProperties) {
-    printf("%s\n", nsCSSProps::GetStringValue(p.mProperty).get());
+    printf("%s\n", nsCString(nsCSSProps::GetStringValue(p.mProperty)).get());
     for (auto& s : p.mSegments) {
       nsString fromValue, toValue;
       s.mFromValue.SerializeSpecifiedValue(p.mProperty, fromValue);
