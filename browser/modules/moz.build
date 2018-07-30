@@ -139,7 +139,6 @@ EXTRA_JS_MODULES += [
     'HomePage.jsm',
     'LaterRun.jsm',
     'LightweightThemeChildHelper.jsm',
-    'NetErrorContent.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',

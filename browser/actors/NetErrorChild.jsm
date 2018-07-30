@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["NetErrorContent"];
+var EXPORTED_SYMBOLS = ["NetErrorChild"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
@@ -70,14 +71,14 @@ function getSerializedSecurityInfo(docShell) {
   return serhelper.serializeToString(securityInfo);
 }
 
-var NetErrorContent = {
+class NetErrorChild extends ActorChild {
   isAboutNetError(doc) {
     return doc.documentURI.startsWith("about:neterror");
-  },
+  }
 
   isAboutCertError(doc) {
     return doc.documentURI.startsWith("about:certerror");
-  },
+  }
 
   _getCertValidityRange(docShell) {
     let {securityInfo} = docShell.failedChannel;
@@ -95,7 +96,7 @@ var NetErrorContent = {
     notBefore /= 1000;
     notAfter /= 1000;
     return {notBefore, notAfter};
-  },
+  }
 
   _setTechDetails(input, doc) {
     // CSS class and error code are set from nsDocShell.
@@ -329,15 +330,15 @@ var NetErrorContent = {
         debugInfo.scrollIntoView({block: "start", behavior: "smooth"});
       });
     }
-  },
+  }
 
-  onCertErrorDetails(global, msg, docShell) {
+  onCertErrorDetails(msg, docShell) {
     let doc = docShell.document;
 
-  function updateContainerPosition() {
-    let textContainer = doc.getElementById("text-container");
-    textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight / 2}px)`;
-  }
+    function updateContainerPosition() {
+      let textContainer = doc.getElementById("text-container");
+      textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight / 2}px)`;
+    }
 
     let div = doc.getElementById("certificateErrorText");
     div.textContent = msg.data.info;
@@ -484,27 +485,59 @@ var NetErrorContent = {
         }
         break;
     }
-  },
+  }
 
-  handleEvent(aGlobal, aEvent) {
+  handleEvent(aEvent) {
     // Documents have a null ownerDocument.
     let doc = aEvent.originalTarget.ownerDocument || aEvent.originalTarget;
 
     switch (aEvent.type) {
     case "AboutNetErrorLoad":
-      this.onPageLoad(aGlobal, aEvent.originalTarget, doc.defaultView);
+      this.onPageLoad(aEvent.originalTarget, doc.defaultView);
       break;
     case "AboutNetErrorOpenCaptivePortal":
-      this.openCaptivePortalPage(aGlobal, aEvent);
+      this.openCaptivePortalPage(aEvent);
       break;
     case "AboutNetErrorSetAutomatic":
-      this.onSetAutomatic(aGlobal, aEvent);
+      this.onSetAutomatic(aEvent);
       break;
     case "AboutNetErrorResetPreferences":
-      this.onResetPreferences(aGlobal, aEvent);
+      this.onResetPreferences(aEvent);
       break;
+    case "click":
+      if (aEvent.button == 0) {
+        if (this.isAboutCertError(doc)) {
+          this.onCertError(aEvent.originalTarget, doc.defaultView);
+        } else {
+          this.onClick(aEvent);
+        }
+      }
     }
-  },
+  }
+
+  receiveMessage(msg) {
+    if (msg.name == "CertErrorDetails") {
+      let frameDocShell = WebNavigationFrames.findDocShell(msg.data.frameId, this.docShell);
+      // We need nsIWebNavigation to access docShell.document.
+      frameDocShell && frameDocShell.QueryInterface(Ci.nsIWebNavigation);
+      if (!frameDocShell || !this.isAboutCertError(frameDocShell.document)) {
+        return;
+      }
+
+      this.onCertErrorDetails(msg, frameDocShell);
+    } else if (msg.name == "Browser:CaptivePortalFreed") {
+      // TODO: This check is not correct for frames.
+      if (!this.isAboutCertError(this.content.document)) {
+        return;
+      }
+
+      this.onCaptivePortalFreed(msg);
+    }
+  }
+
+  onCaptivePortalFreed(msg) {
+    this.content.dispatchEvent(new this.content.CustomEvent("AboutNetErrorCaptivePortalFreed"));
+  }
 
   changedCertPrefs() {
     let prefSSLImpact = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
@@ -517,58 +550,58 @@ var NetErrorContent = {
     }
 
     return false;
-  },
+  }
 
-   _getErrorMessageFromCode(securityInfo, doc) {
-     let uri = Services.io.newURI(doc.location);
-     let hostString = uri.host;
-     if (uri.port != 443 && uri.port != -1) {
-       hostString = uri.hostPort;
-     }
+  _getErrorMessageFromCode(securityInfo, doc) {
+    let uri = Services.io.newURI(doc.location);
+    let hostString = uri.host;
+    if (uri.port != 443 && uri.port != -1) {
+      hostString = uri.hostPort;
+    }
 
-     let id_str = "";
-     switch (securityInfo.errorCode) {
-       case SSL_ERROR_SSL_DISABLED:
-         id_str = "PSMERR_SSL_Disabled";
-         break;
-       case SSL_ERROR_SSL2_DISABLED:
-         id_str = "PSMERR_SSL2_Disabled";
-         break;
-       case SEC_ERROR_REUSED_ISSUER_AND_SERIAL:
-         id_str = "PSMERR_HostReusedIssuerSerial";
-         break;
-     }
-     let nss_error_id_str = securityInfo.errorCodeString;
-     let msg2 = "";
-     if (id_str) {
-       msg2 = gPipNSSBundle.GetStringFromName(id_str) + "\n";
-     } else if (nss_error_id_str) {
-       msg2 = gNSSErrorsBundle.GetStringFromName(nss_error_id_str) + "\n";
-     }
+    let id_str = "";
+    switch (securityInfo.errorCode) {
+      case SSL_ERROR_SSL_DISABLED:
+        id_str = "PSMERR_SSL_Disabled";
+        break;
+      case SSL_ERROR_SSL2_DISABLED:
+        id_str = "PSMERR_SSL2_Disabled";
+        break;
+      case SEC_ERROR_REUSED_ISSUER_AND_SERIAL:
+        id_str = "PSMERR_HostReusedIssuerSerial";
+        break;
+    }
+    let nss_error_id_str = securityInfo.errorCodeString;
+    let msg2 = "";
+    if (id_str) {
+      msg2 = gPipNSSBundle.GetStringFromName(id_str) + "\n";
+    } else if (nss_error_id_str) {
+      msg2 = gNSSErrorsBundle.GetStringFromName(nss_error_id_str) + "\n";
+    }
 
-     if (!msg2) {
-       // We couldn't get an error message. Use the error string.
-       // Note that this is different from before where we used PR_ErrorToString.
-       msg2 = nss_error_id_str;
-     }
-     let msg = gPipNSSBundle.formatStringFromName("SSLConnectionErrorPrefix2",
-                                                  [hostString, msg2], 2);
+    if (!msg2) {
+      // We couldn't get an error message. Use the error string.
+      // Note that this is different from before where we used PR_ErrorToString.
+      msg2 = nss_error_id_str;
+    }
+    let msg = gPipNSSBundle.formatStringFromName("SSLConnectionErrorPrefix2",
+                                                 [hostString, msg2], 2);
 
-     if (nss_error_id_str) {
-       msg += gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
-                                                 [nss_error_id_str], 1) + "\n";
-     }
-     return msg;
-   },
+    if (nss_error_id_str) {
+      msg += gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
+                                                [nss_error_id_str], 1) + "\n";
+    }
+    return msg;
+  }
 
-  onPageLoad(global, originalTarget, win) {
+  onPageLoad(originalTarget, win) {
     // Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
     const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
 
     let hideAddExceptionButton = false;
 
     if (this.isAboutCertError(win.document)) {
-      this.onCertError(global, originalTarget, win);
+      this.onCertError(originalTarget, win);
       hideAddExceptionButton =
         Services.prefs.getBoolPref("security.certerror.hideAddException", false);
     }
@@ -597,21 +630,21 @@ var NetErrorContent = {
       })
     }));
 
-    global.sendAsyncMessage("Browser:SSLErrorReportTelemetry",
+    this.mm.sendAsyncMessage("Browser:SSLErrorReportTelemetry",
                             {reportStatus: TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN});
-  },
+  }
 
-  openCaptivePortalPage(global, evt) {
-    global.sendAsyncMessage("Browser:OpenCaptivePortalPage");
-  },
+  openCaptivePortalPage(evt) {
+    this.mm.sendAsyncMessage("Browser:OpenCaptivePortalPage");
+  }
 
 
-  onResetPreferences(global, evt) {
-    global.sendAsyncMessage("Browser:ResetSSLPreferences");
-  },
+  onResetPreferences(evt) {
+    this.mm.sendAsyncMessage("Browser:ResetSSLPreferences");
+  }
 
-  onSetAutomatic(global, evt) {
-    global.sendAsyncMessage("Browser:SetSSLErrorReportAuto", {
+  onSetAutomatic(evt) {
+    this.mm.sendAsyncMessage("Browser:SetSSLErrorReportAuto", {
       automatic: evt.detail
     });
 
@@ -628,23 +661,24 @@ var NetErrorContent = {
                             .getService(Ci.nsISecurityReporter);
       errorReporter.reportTLSError(securityInfo, host, port);
     }
-  },
+  }
 
-  onCertError(global, targetElement, win) {
-    let docShell = win.docShell;
-    global.sendAsyncMessage("Browser:CertExceptionError", {
+  onCertError(target, win) {
+    this.mm.sendAsyncMessage("Browser:CertExceptionError", {
       frameId: WebNavigationFrames.getFrameId(win),
       location: win.document.location.href,
-      elementId: targetElement.getAttribute("id"),
+      elementId: target.getAttribute("id"),
       isTopFrame: (win.parent === win),
-      securityInfoAsString: getSerializedSecurityInfo(docShell),
+      securityInfoAsString: getSerializedSecurityInfo(win.docShell),
     });
-  },
+  }
 
-  onAboutNetError(global, event, documentURI) {
+  onClick(event) {
+    let {documentURI} = event.target.ownerDocument;
+
     let elmId = event.originalTarget.getAttribute("id");
     if (elmId == "returnButton") {
-      global.sendAsyncMessage("Browser:SSLErrorGoBack", {});
+      this.mm.sendAsyncMessage("Browser:SSLErrorGoBack", {});
       return;
     }
     if (elmId != "errorTryAgain" || !/e=netOffline/.test(documentURI)) {
@@ -655,7 +689,7 @@ var NetErrorContent = {
     // handle the click.
     if (Services.io.offline) {
       event.preventDefault();
-      global.sendAsyncMessage("Browser:EnableOnlineMode", {});
+      this.mm.sendAsyncMessage("Browser:EnableOnlineMode", {});
     }
-  },
-};
+  }
+}
