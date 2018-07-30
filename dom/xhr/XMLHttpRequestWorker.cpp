@@ -1529,7 +1529,7 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
 
 XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
   : mWorkerPrivate(aWorkerPrivate)
-  , mResponseType(XMLHttpRequestResponseType::Text)
+  , mResponseType(XMLHttpRequestResponseType::_empty)
   , mTimeout(0)
   , mBackgroundRequest(false)
   , mWithCredentials(false)
