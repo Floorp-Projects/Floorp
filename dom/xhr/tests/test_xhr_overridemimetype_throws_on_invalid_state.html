@@ -17,10 +17,10 @@ function onWindowLoad() {
 
 function runTest() {
   var testFunctions = [
-    function() { testOverMimeTypeThrowsDuringReadyState(3, "application/xml"); },
-    function() { testOverMimeTypeThrowsDuringReadyState(3, "application/xml;charset=Shift-JIS"); },
-    function() { testOverMimeTypeThrowsDuringReadyState(4, "application/xml"); },
-    function() { testOverMimeTypeThrowsDuringReadyState(4, "application/xml;charset=Shift-JIS"); },
+    function() { testOverMimeTypeThrowsDuringReadyState(3, "text/plain"); },
+    function() { testOverMimeTypeThrowsDuringReadyState(3, "text/plain;charset=Shift-JIS"); },
+    function() { testOverMimeTypeThrowsDuringReadyState(4, "text/plain"); },
+    function() { testOverMimeTypeThrowsDuringReadyState(4, "text/plain;charset=Shift-JIS"); },
   ];
 
   function nextTest() {
@@ -47,8 +47,9 @@ function runTest() {
         }
       }
       if (xhr.readyState === 4) {
-        is(xhr.responseXML, null, "responseXML was not null" +
-                                  " for readyState=" + readyState + ", mimeType=" + mimeType);
+        isnot(xhr.responseXML, null, "responseXML was null" +
+                                     " for readyState=" + readyState +
+                                     ", mimeType=" + mimeType);
         nextTest();
       }
     }
