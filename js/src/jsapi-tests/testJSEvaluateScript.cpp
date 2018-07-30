@@ -17,9 +17,8 @@ BEGIN_TEST(testJSEvaluateScript)
     JS::CompileOptions opts(cx);
     JS::AutoObjectVector scopeChain(cx);
     CHECK(scopeChain.append(obj));
-    JS::SourceBufferHolder srcBuf(src, ArrayLength(src) - 1, JS::SourceBufferHolder::NoOwnership);
     CHECK(JS::Evaluate(cx, scopeChain, opts.setFileAndLine(__FILE__, __LINE__),
-                       srcBuf, &retval));
+                       src, ArrayLength(src) - 1, &retval));
 
     bool hasProp = true;
     CHECK(JS_AlreadyHasOwnProperty(cx, obj, "x", &hasProp));

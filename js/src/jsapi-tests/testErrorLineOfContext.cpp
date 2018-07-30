@@ -40,8 +40,7 @@ eval(const char16_t* chars, size_t len, JS::MutableHandleValue rval)
 
     JSAutoRealm ar(cx, global);
     JS::CompileOptions options(cx);
-    JS::SourceBufferHolder srcBuf(chars, len, JS::SourceBufferHolder::NoOwnership);
-    return JS::Evaluate(cx, options, srcBuf, rval);
+    return JS::Evaluate(cx, options, chars, len, rval);
 }
 
 template<size_t N>

@@ -38,7 +38,7 @@ using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
 
-class SourceBufferHolder;
+class MOZ_STACK_CLASS SourceBufferHolder;
 
 class HandleValueArray;
 
