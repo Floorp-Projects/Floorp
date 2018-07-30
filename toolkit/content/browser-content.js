@@ -17,8 +17,6 @@ ChromeUtils.defineModuleGetter(this, "AutoCompletePopup",
   "resource://gre/modules/AutoCompletePopupContent.jsm");
 ChromeUtils.defineModuleGetter(this, "AutoScrollController",
   "resource://gre/modules/AutoScrollController.jsm");
-ChromeUtils.defineModuleGetter(this, "FindContent",
-  "resource://gre/modules/FindContent.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "formFill",
                                    "@mozilla.org/satchel/form-fill-controller;1",
@@ -81,38 +79,3 @@ let AutoComplete = {
 };
 
 AutoComplete.init();
-
-let ExtFind = {
-  init() {
-    addMessageListener("ext-Finder:CollectResults", this);
-    addMessageListener("ext-Finder:HighlightResults", this);
-    addMessageListener("ext-Finder:clearHighlighting", this);
-    this.init = null;
-  },
-
-  _findContent: null,
-
-  async receiveMessage(message) {
-    if (!this._findContent) {
-      this._findContent = new FindContent(docShell);
-    }
-
-    let data;
-    switch (message.name) {
-      case "ext-Finder:CollectResults":
-        this.finderInited = true;
-        data = await this._findContent.findRanges(message.data);
-        sendAsyncMessage("ext-Finder:CollectResultsFinished", data);
-        break;
-      case "ext-Finder:HighlightResults":
-        data = this._findContent.highlightResults(message.data);
-        sendAsyncMessage("ext-Finder:HighlightResultsFinished", data);
-        break;
-      case "ext-Finder:clearHighlighting":
-        this._findContent.highlighter.highlight(false);
-        break;
-    }
-  },
-};
-
-ExtFind.init();

@@ -38,10 +38,10 @@ function waitForMessage(messageManager, topic) {
 
 add_task(async function testDuplicatePinnedTab() {
   async function background() {
-    function awaitLoad(tabId) {
+    function awaitLoad(tabId, url) {
       return new Promise(resolve => {
         browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
-          if (tabId == tabId_ && changed.status == "complete") {
+          if (tabId == tabId_ && changed.status == "complete" && tab.url == url) {
             browser.tabs.onUpdated.removeListener(listener);
             resolve();
           }
@@ -51,7 +51,7 @@ add_task(async function testDuplicatePinnedTab() {
 
     let url = "http://example.com/browser/browser/components/extensions/test/browser/file_find_frames.html";
     let tab = await browser.tabs.update({url});
-    await awaitLoad(tab.id);
+    await awaitLoad(tab.id, url);
 
     let data = await browser.find.find("banana", {includeRangeData: true});
     let rangeData = data.rangeData;
