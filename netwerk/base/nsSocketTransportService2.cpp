@@ -846,6 +846,30 @@ nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
 }
 
 NS_IMETHODIMP
+nsSocketTransportService::CreateUnixDomainAbstractAddressTransport(
+                              const nsACString& aName,
+                              nsISocketTransport **result)
+{
+    // Abstract socket address is supported on Linux only
+#ifdef XP_LINUX
+    RefPtr<nsSocketTransport> trans = new nsSocketTransport();
+    // First character of Abstract socket address is null
+    UniquePtr<char[]> name(new char[aName.Length() + 1]);
+    *(name.get()) = 0;
+    memcpy(name.get() + 1, aName.BeginReading(), aName.Length());
+    nsresult rv = trans->InitWithName(name.get(), aName.Length() + 1);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    trans.forget(result);
+    return NS_OK;
+#else
+    return NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED;
+#endif
+}
+
+NS_IMETHODIMP
 nsSocketTransportService::OnDispatchedEvent()
 {
 #ifndef XP_WIN

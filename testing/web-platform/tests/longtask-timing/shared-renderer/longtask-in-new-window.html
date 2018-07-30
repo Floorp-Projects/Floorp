@@ -38,12 +38,14 @@ async_test(t => {
   );
   observer.observe({entryTypes: ['mark', 'longtask']});
 
-  // Open a window with a longtask.
-  const other_window = window.open('resources/frame-with-longtask.html');
-  window.addEventListener('message', t.step_func(e => {
-    // Do a mark (after the other window's longtask) to fire the callback.
-    self.performance.mark('mark1');
-  }));
+  window.onload = () => {
+    // Open a window with a longtask.
+    const other_window = window.open('resources/frame-with-longtask.html');
+    window.addEventListener('message', t.step_func(e => {
+      // Do a mark (after the other window's longtask) to fire the callback.
+      self.performance.mark('mark1');
+    }));
+  };
 }, 'A longtask in a frame from window.open is not reported in original frame');
 </script>
 </body>

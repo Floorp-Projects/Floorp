@@ -521,6 +521,9 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
   }
   auto it = mRenderTextures.find(aExternalImageId);
   MOZ_ASSERT(it != mRenderTextures.end());
+  if (it == mRenderTextures.end()) {
+    return;
+  }
   if (!IsInRenderThread()) {
     // The RenderTextureHost should be released in render thread. So, post the
     // deletion task here.
@@ -567,7 +570,7 @@ RenderThread::UpdateRenderTextureHost(uint64_t aSrcExternalImageId, uint64_t aWr
     MOZ_ASSERT(wrapper->IsInited());
   } else {
     Loop()->PostTask(NewRunnableMethod<RenderTextureHost*>(
-      "RenderThread::DeferredRenderTextureHostDestroy",
+      "RenderTextureHostWrapper::UpdateRenderTextureHost",
       wrapper, &RenderTextureHostWrapper::UpdateRenderTextureHost, wrapped->second
     ));
   }
