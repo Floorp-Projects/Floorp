@@ -17,16 +17,12 @@ ChromeUtils.defineModuleGetter(this, "AutoCompletePopup",
   "resource://gre/modules/AutoCompletePopupContent.jsm");
 ChromeUtils.defineModuleGetter(this, "AutoScrollController",
   "resource://gre/modules/AutoScrollController.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "SelectContentHelper",
   "resource://gre/modules/SelectContentHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "FindContent",
   "resource://gre/modules/FindContent.jsm");
 ChromeUtils.defineModuleGetter(this, "PrintingContent",
   "resource://gre/modules/PrintingContent.jsm");
-ChromeUtils.defineModuleGetter(this, "RemoteFinder",
-  "resource://gre/modules/RemoteFinder.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "formFill",
                                    "@mozilla.org/satchel/form-fill-controller;1",
@@ -63,13 +59,6 @@ XPCOMUtils.defineLazyProxy(this, "DateTimePickerContent", () => {
   ChromeUtils.import("resource://gre/modules/DateTimePickerContent.jsm", tmp);
   return new tmp.DateTimePickerContent(this);
 });
-
-XPCOMUtils.defineLazyProxy(this, "FindBarChild", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/FindBarChild.jsm", tmp);
-  return new tmp.FindBarChild(this);
-}, {inQuickFind: false, inPassThrough: false});
-
 
 // Lazily load the finder code
 addMessageListener("Finder:Initialize", function() {
@@ -120,71 +109,6 @@ var Printing = {
   },
 };
 Printing.init();
-
-var FindBar = {
-  /**
-   * _findKey and _findModifiers are used to determine whether a keypress
-   * is a user attempting to use the find shortcut, after which we'll
-   * route keypresses to the parent until we know the findbar has focus
-   * there. To do this, we need shortcut data from the parent.
-   */
-  _findKey: null,
-
-  init() {
-    Services.els.addSystemEventListener(global, "keypress",
-                                        this.onKeypress.bind(this), false);
-    this.init = null;
-  },
-
-  /**
-   * Check whether this key event will start the findbar in the parent,
-   * in which case we should pass any further key events to the parent to avoid
-   * them being lost.
-   * @param aEvent the key event to check.
-   */
-  eventMatchesFindShortcut(aEvent) {
-    if (!this._findKey) {
-      this._findKey = Services.cpmm.sharedData.get("Findbar:Shortcut");
-      if (!this._findKey) {
-          return false;
-      }
-    }
-    for (let k in this._findKey) {
-      if (this._findKey[k] != aEvent[k]) {
-        return false;
-      }
-    }
-    return true;
-  },
-
-  onKeypress(event) {
-    if (!FindBarChild.inPassThrough &&
-        this.eventMatchesFindShortcut(event)) {
-      return FindBarChild.start(event);
-    }
-
-    if (event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented ||
-        !BrowserUtils.canFastFind(content)) {
-      return null;
-    }
-
-    if (FindBarChild.inPassThrough || FindBarChild.inQuickFind) {
-      return FindBarChild.onKeypress(event);
-    }
-
-    if (event.charCode && BrowserUtils.shouldFastFind(event.target)) {
-      let key = String.fromCharCode(event.charCode);
-      if ((key == "/" || key == "'") && RemoteFinder._manualFAYT) {
-        return FindBarChild.startQuickFind(event);
-      }
-      if (key != " " && RemoteFinder._findAsYouType) {
-        return FindBarChild.startQuickFind(event, true);
-      }
-    }
-    return null;
-  },
-};
-FindBar.init();
 
 addEventListener("WebChannelMessageToChrome", WebChannelContent,
                  true, true);
