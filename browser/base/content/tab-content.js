@@ -14,8 +14,6 @@ ChromeUtils.defineModuleGetter(this, "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PageStyleHandler",
-  "resource:///modules/PageStyleHandler.jsm");
 
 ChromeUtils.import("resource://gre/modules/ActorManagerChild.jsm");
 
@@ -113,10 +111,6 @@ var ContentSearchMediator = {
   },
 };
 ContentSearchMediator.init(this);
-
-addMessageListener("PageStyle:Switch", PageStyleHandler);
-addMessageListener("PageStyle:Disable", PageStyleHandler);
-addEventListener("pageshow", PageStyleHandler);
 
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
 var trHandler = null;
