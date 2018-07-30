@@ -13,7 +13,7 @@ const ThisFirefox = require("../runtimes/this-firefox");
 const Runtime = require("../runtimes/runtime");
 const RuntimeItem = createFactory(require("./runtime/RuntimeItem"));
 
-class RuntimesPane extends PureComponent {
+class Sidebar extends PureComponent {
   static get propTypes() {
     return {
       selectedRuntime: PropTypes.instanceOf(Runtime),
@@ -26,7 +26,7 @@ class RuntimesPane extends PureComponent {
 
     return dom.section(
       {
-        className: "runtimes-pane",
+        className: "sidebar",
       },
       dom.ul(
         {},
@@ -40,4 +40,4 @@ class RuntimesPane extends PureComponent {
   }
 }
 
-module.exports = RuntimesPane;
+module.exports = Sidebar;

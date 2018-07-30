@@ -12,7 +12,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Runtime = require("../runtimes/runtime");
 const ThisFirefox = require("../runtimes/this-firefox");
 
-const RuntimesPane = createFactory(require("./RuntimesPane"));
+const Sidebar = createFactory(require("./Sidebar"));
 
 class App extends PureComponent {
   static get propTypes() {
@@ -29,7 +29,7 @@ class App extends PureComponent {
       {
         className: "app",
       },
-      RuntimesPane({ selectedRuntime, thisFirefox })
+      Sidebar({ selectedRuntime, thisFirefox })
     );
   }
 }
