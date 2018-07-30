@@ -3655,6 +3655,33 @@ GetTargetFrame(const Element* aElement, const nsAString& aPseudoElement)
   return frame;
 }
 
+OMTAValue
+nsDOMWindowUtils::GetOMTAValue(nsIFrame* aFrame,
+                               DisplayItemType aDisplayItemKey)
+{
+  OMTAValue value = mozilla::null_t();
+
+  Layer* layer =
+    FrameLayerBuilder::GetDedicatedLayer(aFrame, aDisplayItemKey);
+  if (layer) {
+    ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
+    if (forwarder && forwarder->HasShadowManager()) {
+      forwarder->GetShadowManager()->
+        SendGetAnimationValue(layer->GetCompositorAnimationsId(), &value);
+    }
+  } else if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
+    RefPtr<WebRenderAnimationData> animationData =
+      GetWebRenderUserData<WebRenderAnimationData>(aFrame,
+                                                   (uint32_t)aDisplayItemKey);
+    if (animationData) {
+      wrbc->SendGetAnimationValue(
+        animationData->GetAnimationInfo().GetCompositorAnimationsId(),
+        &value);
+    }
+  }
+  return value;
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::GetOMTAStyle(Element* aElement,
                                const nsAString& aProperty,
@@ -3679,49 +3706,13 @@ nsDOMWindowUtils::GetOMTAStyle(Element* aElement,
     }
 
     if (aProperty.EqualsLiteral("opacity")) {
-      OMTAValue value;
-
-      Layer* layer =
-        FrameLayerBuilder::GetDedicatedLayer(frame, DisplayItemType::TYPE_OPACITY);
-      if (layer) {
-        ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
-        if (forwarder && forwarder->HasShadowManager()) {
-          forwarder->GetShadowManager()->
-            SendGetAnimationValue(layer->GetCompositorAnimationsId(), &value);
-        }
-      } else if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
-        RefPtr<WebRenderAnimationData> animationData =
-            GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_OPACITY);
-        if (animationData) {
-          wrbc->SendGetAnimationValue(
-              animationData->GetAnimationInfo().GetCompositorAnimationsId(),
-              &value);
-        }
-      }
+      OMTAValue value = GetOMTAValue(frame, DisplayItemType::TYPE_OPACITY);
       if (value.type() == OMTAValue::Tfloat) {
         cssValue = new nsROCSSPrimitiveValue;
         cssValue->SetNumber(value.get_float());
       }
     } else if (aProperty.EqualsLiteral("transform")) {
-      OMTAValue value;
-
-      Layer* layer =
-        FrameLayerBuilder::GetDedicatedLayer(frame, DisplayItemType::TYPE_TRANSFORM);
-      if (layer) {
-        ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
-        if (forwarder && forwarder->HasShadowManager()) {
-          forwarder->GetShadowManager()->
-            SendGetAnimationValue(layer->GetCompositorAnimationsId(), &value);
-        }
-      } else if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
-        RefPtr<WebRenderAnimationData> animationData =
-            GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_TRANSFORM);
-        if (animationData) {
-          wrbc->SendGetAnimationValue(
-              animationData->GetAnimationInfo().GetCompositorAnimationsId(),
-              &value);
-        }
-      }
+      OMTAValue value = GetOMTAValue(frame, DisplayItemType::TYPE_TRANSFORM);
       if (value.type() == OMTAValue::TMatrix4x4) {
         cssValue = nsComputedDOMStyle::MatrixToCSSValue(value.get_Matrix4x4());
       }
