@@ -7,5 +7,6 @@
 FINAL_TARGET_FILES.actors += [
     'AudioPlaybackChild.jsm',
     'FindBarChild.jsm',
+    'PrintingChild.jsm',
     'SelectChild.jsm',
 ]

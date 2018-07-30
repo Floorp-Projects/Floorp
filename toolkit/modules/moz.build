@@ -229,7 +229,6 @@ EXTRA_JS_MODULES += [
     'PopupBlocking.jsm',
     'PopupNotifications.jsm',
     'Preferences.jsm',
-    'PrintingContent.jsm',
     'PrivateBrowsingUtils.jsm',
     'ProfileAge.jsm',
     'Promise-backend.js',
