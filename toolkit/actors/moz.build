@@ -9,6 +9,7 @@ with Files('Finder*.jsm'):
 
 FINAL_TARGET_FILES.actors += [
     'AudioPlaybackChild.jsm',
+    'BrowserChild.jsm',
     'ControllersChild.jsm',
     'DateTimePickerChild.jsm',
     'ExtFindChild.jsm',
