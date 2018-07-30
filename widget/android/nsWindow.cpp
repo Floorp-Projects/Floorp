@@ -1264,11 +1264,6 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
             [compositor = LayerSession::Compositor::GlobalRef(compositor)] {
                 compositor->OnCompositorAttached();
             });
-
-    // Set the first-paint flag so that we refresh viewports, etc.
-    if (RefPtr<CompositorBridgeChild> bridge = window.GetCompositorBridgeChild()) {
-        bridge->SendForceIsFirstPaint();
-    }
 }
 
 void
