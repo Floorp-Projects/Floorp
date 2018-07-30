@@ -3,6 +3,8 @@ macosx64/debug:
     index:
         product: firefox
         job-name: macosx64-debug
+    attributes:
+        enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/debug
         symbol: B
@@ -37,6 +39,8 @@ macosx64/opt:
     index:
         product: firefox
         job-name: macosx64-opt
+    attributes:
+        enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/opt
         symbol: B
@@ -139,6 +143,7 @@ macosx64-devedition-nightly/opt:
     description: "MacOS X Dev Edition x64 Nightly"
     attributes:
         nightly: true
+        enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: devedition
     index:
@@ -251,6 +256,7 @@ macosx64-nightly/opt:
     description: "MacOS X x64 Cross-compile Nightly"
     attributes:
         nightly: true
+        enable-full-crashsymbols: true
     shipping-phase: build
     shipping-product: firefox
     index:
