@@ -536,6 +536,23 @@ def start_https_server(host, port, paths, routes, bind_address, config, **kwargs
                                  latency=kwargs.get("latency"))
 
 
+def start_http2_server(host, port, paths, routes, bind_address, config, **kwargs):
+    return wptserve.WebTestHttpd(host=host,
+                                 port=port,
+                                 handler_cls=wptserve.Http2WebTestRequestHandler,
+                                 doc_root=paths["doc_root"],
+                                 routes=routes,
+                                 rewrites=rewrites,
+                                 bind_address=bind_address,
+                                 config=config,
+                                 use_ssl=True,
+                                 key_file=config.ssl_config["key_path"],
+                                 certificate=config.ssl_config["cert_path"],
+                                 encrypt_after_connect=config.ssl_config["encrypt_after_connect"],
+                                 latency=kwargs.get("latency"),
+                                 http2=True)
+
+
 class WebSocketDaemon(object):
     def __init__(self, host, port, doc_root, handlers_root, log_level, bind_address,
                  ssl_config):
