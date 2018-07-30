@@ -1,5 +1,5 @@
 == input.html input-ref.html
-fuzzy-if(cocoaWidget,2,32) == button.html button-ref.html
+fuzzy-if(isDebugBuild&&gtkWidget,1,1) fuzzy-if(cocoaWidget,2,32) == button.html button-ref.html
 == textarea.html textarea-ref.html
 == select.html select-ref.html
 == fieldset.html fieldset-ref.html

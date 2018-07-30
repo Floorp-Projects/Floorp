@@ -153,15 +153,41 @@ function getAbbreviatedMimeType(mimeType) {
 }
 
 /**
+ * Helpers for retrieving a URL object from a string
+ *
+ * @param {string} url - unvalidated url string
+ * @return {URL} The URL object
+ */
+function getUrl(url) {
+  try {
+    return new URL(url);
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Helpers for retrieving the value of a URL object property
+ *
+ * @param {string} input - unvalidated url string
+ * @param {string} string - desired property in the URL object
+ * @return {string} unicode query of a url
+ */
+function getUrlProperty(input, property) {
+  const url = getUrl(input);
+  return url && url[property] ? url[property] : "";
+}
+
+/**
  * Helpers for getting the last portion of a url.
  * For example helper returns "basename" from http://domain.com/path/basename
  * If basename portion is empty, it returns the url pathname.
  *
- * @param {string} url - url string
+ * @param {string} input - unvalidated url string
  * @return {string} unicode basename of a url
  */
 function getUrlBaseName(url) {
-  const pathname = (new URL(url)).pathname;
+  const pathname = getUrlProperty(url, "pathname");
   return getUnicodeUrlPath(
     pathname.replace(/\S*\//, "") || pathname || "/");
 }
@@ -169,52 +195,55 @@ function getUrlBaseName(url) {
 /**
  * Helpers for getting the query portion of a url.
  *
- * @param {string} url - url string
+ * @param {string} url - unvalidated url string
  * @return {string} unicode query of a url
  */
 function getUrlQuery(url) {
-  return (new URL(url)).search.replace(/^\?/, "");
+  return getUrlProperty(url, "search").replace(/^\?/, "");
 }
 
 /**
  * Helpers for getting unicode name and query portions of a url.
  *
- * @param {string} url - url string
+ * @param {string} url - unvalidated url string
  * @return {string} unicode basename and query portions of a url
  */
 function getUrlBaseNameWithQuery(url) {
-  return getUrlBaseName(url) + getUnicodeUrlPath((new URL(url)).search);
+  const basename = getUrlBaseName(url);
+  const search = getUrlProperty(url, "search");
+  return basename + getUnicodeUrlPath(search);
 }
 
 /**
  * Helpers for getting hostname portion of an URL.
  *
- * @param {string} url - url string
+ * @param {string} url - unvalidated url string
  * @return {string} unicode hostname of a url
  */
 function getUrlHostName(url) {
-  return new URL(url).hostname;
+  return getUrlProperty(url, "hostname");
 }
 
 /**
  * Helpers for getting host portion of an URL.
  *
- * @param {string} url - url string
+ * @param {string} url - unvalidated url string
  * @return {string} unicode host of a url
  */
 function getUrlHost(url) {
-  return new URL(url).host;
+  return getUrlProperty(url, "host");
 }
 
 /**
  * Helpers for getting the shceme portion of a url.
  * For example helper returns "http" from http://domain.com/path/basename
  *
- * @param {string} url - url string
+ * @param {string}  url - unvalidated url string
  * @return {string} string scheme of a url
  */
 function getUrlScheme(url) {
-  return (new URL(url)).protocol.replace(":", "").toLowerCase();
+  const protocol = getUrlProperty(url, "protocol");
+  return protocol.replace(":", "").toLowerCase();
 }
 
 /**
