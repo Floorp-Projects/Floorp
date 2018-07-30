@@ -2146,16 +2146,17 @@ NativeKey::DispatchCommandEvent(uint32_t aEventCommand) const
          "event", this));
       return false;
   }
-  WidgetCommandEvent commandEvent(true, nsGkAtoms::onAppCommand,
-                                  command, mWidget);
+  WidgetCommandEvent appCommandEvent(true, command, mWidget);
 
-  mWidget->InitEvent(commandEvent);
+  mWidget->InitEvent(appCommandEvent);
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-    ("%p   NativeKey::DispatchCommandEvent(), dispatching %s command event...",
+    ("%p   NativeKey::DispatchCommandEvent(), dispatching "
+     "%s app command event...",
      this, nsAtomCString(command).get()));
-  bool ok = mWidget->DispatchWindowEvent(&commandEvent) || mWidget->Destroyed();
+  bool ok =
+    mWidget->DispatchWindowEvent(&appCommandEvent) || mWidget->Destroyed();
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-    ("%p   NativeKey::DispatchCommandEvent(), dispatched command event, "
+    ("%p   NativeKey::DispatchCommandEvent(), dispatched app command event, "
      "result=%s, mWidget->Destroyed()=%s",
      this, GetBoolName(ok), GetBoolName(mWidget->Destroyed())));
   return ok;
