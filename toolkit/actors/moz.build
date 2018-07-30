@@ -4,11 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('Finder*.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
+
 FINAL_TARGET_FILES.actors += [
     'AudioPlaybackChild.jsm',
     'ControllersChild.jsm',
     'DateTimePickerChild.jsm',
     'FindBarChild.jsm',
+    'FinderChild.jsm',
     'PopupBlockingChild.jsm',
     'PrintingChild.jsm',
     'PurgeSessionHistoryChild.jsm',
