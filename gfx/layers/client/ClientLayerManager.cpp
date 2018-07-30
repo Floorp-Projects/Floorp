@@ -932,9 +932,9 @@ ClientLayerManager::AsyncPanZoomEnabled() const
 }
 
 void
-ClientLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
+ClientLayerManager::SetLayersObserverEpoch(LayersObserverEpoch aEpoch)
 {
-  mForwarder->SetLayerObserverEpoch(aLayerObserverEpoch);
+  mForwarder->SetLayersObserverEpoch(aEpoch);
 }
 
 void

@@ -343,7 +343,7 @@ public:
    */
   void SetFocusTarget(const FocusTarget& aFocusTarget) { mFocusTarget = aFocusTarget; }
 
-  void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch);
+  void SetLayersObserverEpoch(LayersObserverEpoch aEpoch);
 
   static void PlatformSyncBeforeUpdate();
 

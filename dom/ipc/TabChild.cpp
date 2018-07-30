@@ -419,7 +419,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDidLoadURLInit(false)
   , mAwaitingLA(false)
   , mSkipKeyPress(false)
-  , mLayerObserverEpoch(1)
+  , mLayersObserverEpoch{1}
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   , mNativeWindowHandle(0)
 #endif
@@ -430,7 +430,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mPendingDocShellReceivedMessage(false)
   , mPendingRenderLayers(false)
   , mPendingRenderLayersReceivedMessage(false)
-  , mPendingLayerObserverEpoch(0)
+  , mPendingLayersObserverEpoch{0}
   , mPendingDocShellBlockers(0)
   , mWidgetNativeData(0)
 {
@@ -2551,7 +2551,7 @@ TabChild::RemovePendingDocShellBlocker()
     mPendingRenderLayersReceivedMessage = false;
     RecvRenderLayers(mPendingRenderLayers,
                      false /* aForceRepaint */,
-                     mPendingLayerObserverEpoch);
+                     mPendingLayersObserverEpoch);
   }
 }
 
@@ -2582,12 +2582,12 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, const uint64_t& aLayerObserverEpoch)
+TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, const layers::LayersObserverEpoch& aEpoch)
 {
   if (mPendingDocShellBlockers > 0) {
     mPendingRenderLayersReceivedMessage = true;
     mPendingRenderLayers = aEnabled;
-    mPendingLayerObserverEpoch = aLayerObserverEpoch;
+    mPendingLayersObserverEpoch = aEpoch;
     return IPC_OK();
   }
 
@@ -2595,10 +2595,10 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, cons
   // monitor channel and the PContent channel, we have an ordering problem. This
   // code ensures that we respect the order in which the requests were made and
   // ignore stale requests.
-  if (mLayerObserverEpoch >= aLayerObserverEpoch) {
+  if (mLayersObserverEpoch >= aEpoch) {
     return IPC_OK();
   }
-  mLayerObserverEpoch = aLayerObserverEpoch;
+  mLayersObserverEpoch = aEpoch;
 
   auto clearPaintWhileInterruptingJS = MakeScopeExit([&] {
     // We might force a paint, or we might already have painted and this is a
@@ -2607,7 +2607,7 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, cons
     // been a request to force paint. This is so that the BackgroundHangMonitor
     // for force painting can be made to wait again.
     if (aEnabled) {
-      ProcessHangMonitor::ClearPaintWhileInterruptingJS(mLayerObserverEpoch);
+      ProcessHangMonitor::ClearPaintWhileInterruptingJS(mLayersObserverEpoch);
     }
   });
 
@@ -2623,7 +2623,7 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, cons
     // We send the current layer observer epoch to the compositor so that
     // TabParent knows whether a layer update notification corresponds to the
     // latest RecvRenderLayers request that was made.
-    lm->SetLayerObserverEpoch(mLayerObserverEpoch);
+    lm->SetLayersObserverEpoch(mLayersObserverEpoch);
   }
 
   if (aEnabled) {
@@ -2632,7 +2632,7 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, cons
       // notification to fire in the parent (so that it knows that the child has
       // updated its epoch). PaintWhileInterruptingJSNoOp does that.
       if (IPCOpen()) {
-        Unused << SendPaintWhileInterruptingJSNoOp(mLayerObserverEpoch);
+        Unused << SendPaintWhileInterruptingJSNoOp(mLayersObserverEpoch);
         return IPC_OK();
       }
     }
@@ -2838,7 +2838,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       InitAPZState();
       RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
       MOZ_ASSERT(lm);
-      lm->SetLayerObserverEpoch(mLayerObserverEpoch);
+      lm->SetLayersObserverEpoch(mLayersObserverEpoch);
     } else {
       NS_WARNING("Fallback to BasicLayerManager");
       mLayersConnected = Some(false);
@@ -3233,7 +3233,7 @@ TabChild::ReinitRendering()
   InitAPZState();
   RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
   MOZ_ASSERT(lm);
-  lm->SetLayerObserverEpoch(mLayerObserverEpoch);
+  lm->SetLayersObserverEpoch(mLayersObserverEpoch);
 
   nsCOMPtr<nsIDocument> doc(GetDocument());
   doc->NotifyLayerManagerRecreated();
@@ -3466,7 +3466,7 @@ TabChild::GetOuterRect()
 }
 
 void
-TabChild::PaintWhileInterruptingJS(uint64_t aLayerObserverEpoch,
+TabChild::PaintWhileInterruptingJS(const layers::LayersObserverEpoch& aEpoch,
                                    bool aForceRepaint)
 {
   if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasLayerManager()) {
@@ -3476,7 +3476,7 @@ TabChild::PaintWhileInterruptingJS(uint64_t aLayerObserverEpoch,
   }
 
   nsAutoScriptBlocker scriptBlocker;
-  RecvRenderLayers(true /* aEnabled */, aForceRepaint, aLayerObserverEpoch);
+  RecvRenderLayers(true /* aEnabled */, aForceRepaint, aEpoch);
 }
 
 void
