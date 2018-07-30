@@ -4787,9 +4787,9 @@ HTMLEditor::IsActiveInDOMWindow()
 }
 
 Element*
-HTMLEditor::GetActiveEditingHost()
+HTMLEditor::GetActiveEditingHost() const
 {
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  nsIDocument* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
@@ -4798,8 +4798,10 @@ HTMLEditor::GetActiveEditingHost()
   }
 
   // We're HTML editor for contenteditable
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, nullptr);
+  Selection* selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return nullptr;
+  }
   nsINode* focusNode = selection->GetFocusNode();
   if (NS_WARN_IF(!focusNode) || NS_WARN_IF(!focusNode->IsContent())) {
     return nullptr;
@@ -5033,7 +5035,7 @@ HTMLEditor::GetInputEventTargetContent()
 }
 
 Element*
-HTMLEditor::GetEditorRoot()
+HTMLEditor::GetEditorRoot() const
 {
   return GetActiveEditingHost();
 }
