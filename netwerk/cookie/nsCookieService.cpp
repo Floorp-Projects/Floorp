@@ -2898,7 +2898,7 @@ nsCookieService::Read()
 
     nsCookieKey key(baseDomain, attrs);
     CookieDomainTuple* tuple = mReadArray.AppendElement();
-    tuple->key = key;
+    tuple->key = std::move(key);
     tuple->cookie = GetCookieFromRow(stmt, attrs);
   }
 
