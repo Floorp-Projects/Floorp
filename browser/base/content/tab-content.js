@@ -61,36 +61,6 @@ if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
   trHandler = new TranslationContentHandler(global, docShell);
 }
 
-function gKeywordURIFixup(fixupInfo) {
-  fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
-  if (!fixupInfo.consumer) {
-    return;
-  }
-
-  // Ignore info from other docshells
-  let parent = fixupInfo.consumer.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeRootTreeItem;
-  if (parent != docShell)
-    return;
-
-  let data = {};
-  for (let f of Object.keys(fixupInfo)) {
-    if (f == "consumer" || typeof fixupInfo[f] == "function")
-      continue;
-
-    if (fixupInfo[f] && fixupInfo[f] instanceof Ci.nsIURI) {
-      data[f] = fixupInfo[f].spec;
-    } else {
-      data[f] = fixupInfo[f];
-    }
-  }
-
-  sendAsyncMessage("Browser:URIFixup", data);
-}
-Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup");
-addEventListener("unload", () => {
-  Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
-}, false);
-
 var WebBrowserChrome = {
   onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
     return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);

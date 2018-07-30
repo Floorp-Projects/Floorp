@@ -30,4 +30,5 @@ FINAL_TARGET_FILES.actors += [
     'PageInfoChild.jsm',
     'PageStyleChild.jsm',
     'PluginChild.jsm',
+    'URIFixupChild.jsm',
 ]
