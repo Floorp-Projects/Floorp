@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["PageInfoListener"];
+var EXPORTED_SYMBOLS = ["PageInfoChild"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Feeds: "resource:///modules/Feeds.jsm",
@@ -13,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm"
 });
 
-var PageInfoListener = {
+class PageInfoChild extends ActorChild {
   /* nsIMessageListener */
   receiveMessage(message) {
     let strings = message.data.strings;
@@ -39,7 +41,7 @@ var PageInfoListener = {
 
     // Separate step so page info dialog isn't blank while waiting for this to finish.
     this.getMediaInfo(document, window, strings, message.target);
-  },
+  }
 
   getMetaInfo(document) {
     let metaViewRows = [];
@@ -53,7 +55,7 @@ var PageInfoListener = {
     }
 
     return metaViewRows;
-  },
+  }
 
   getWindowInfo(window) {
     let windowInfo = {};
@@ -66,7 +68,7 @@ var PageInfoListener = {
 
     windowInfo.hostName = hostName;
     return windowInfo;
-  },
+  }
 
   getDocumentInfo(document) {
     let docInfo = {};
@@ -94,7 +96,7 @@ var PageInfoListener = {
     docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(document.ownerGlobal);
 
     return docInfo;
-  },
+  }
 
   getFeedsInfo(document, strings) {
     let feeds = [];
@@ -124,13 +126,13 @@ var PageInfoListener = {
       }
     }
     return feeds;
-  },
+  }
 
   // Only called once to get the media tab's media elements from the content page.
   getMediaInfo(document, window, strings, mm) {
     let frameList = this.goThroughFrames(document, window);
     this.processFrames(document, frameList, strings, mm);
-  },
+  }
 
   goThroughFrames(document, window) {
     let frameList = [document];
@@ -143,7 +145,7 @@ var PageInfoListener = {
       }
     }
     return frameList;
-  },
+  }
 
   async processFrames(document, frameList, strings, mm) {
     let nodeCount = 0;
@@ -168,7 +170,7 @@ var PageInfoListener = {
     }
     // Send that page info media fetching has finished.
     mm.sendAsyncMessage("PageInfo:mediaData", {isComplete: true});
-  },
+  }
 
   getMediaItems(document, strings, elem) {
     // Check for images defined in CSS (e.g. background, borders)
@@ -233,7 +235,7 @@ var PageInfoListener = {
     }
 
     return mediaItems;
-  },
+  }
 
   /**
    * Set up a JSON element object with all the instanceOf and other infomation that
@@ -316,7 +318,7 @@ var PageInfoListener = {
     result.baseURI = item.baseURI;
 
     return result;
-  },
+  }
 
   // Other Misc Stuff
   // Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
@@ -355,7 +357,7 @@ var PageInfoListener = {
     }
 
     return this.stripWS(valueText);
-  },
+  }
 
   // Copied from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html.
   // Traverse the tree in search of an img or area element and grab its alt tag.
@@ -372,7 +374,7 @@ var PageInfoListener = {
       }
     }
     return "";
-  },
+  }
 
   // Copied from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html.
   // Strip leading and trailing whitespace, and replace multiple consecutive whitespace characters with a single space.
@@ -383,4 +385,4 @@ var PageInfoListener = {
     text = text.replace(middleRE, " ");
     return text.replace(endRE, "");
   }
-};
+}

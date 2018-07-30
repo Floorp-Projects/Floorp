@@ -44,15 +44,10 @@ XPCOMUtils.defineLazyProxy(this, "formSubmitObserver", () => {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver, Ci.nsISupportsWeakReference])
 });
 
-XPCOMUtils.defineLazyProxy(this, "PageInfoListener",
-                           "resource:///modules/PageInfoListener.jsm");
-
 XPCOMUtils.defineLazyProxy(this, "LightWeightThemeWebInstallListener",
                            "resource:///modules/LightWeightThemeWebInstallListener.jsm");
 
 Services.obs.addObserver(formSubmitObserver, "invalidformsubmit", true);
-
-addMessageListener("PageInfo:getData", PageInfoListener);
 
 // NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.
 addMessageListener("RemoteLogins:fillForm", function(message) {
