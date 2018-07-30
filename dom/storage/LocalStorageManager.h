@@ -66,10 +66,8 @@ private:
       , mCache(new LocalStorageCache(aKey))
     {}
 
-    LocalStorageCacheHashKey(LocalStorageCacheHashKey&& aOther)
-      : nsCStringHashKey(std::move(aOther))
-      , mCache(std::move(aOther.mCache))
-      , mCacheRef(std::move(aOther.mCacheRef))
+    LocalStorageCacheHashKey(const LocalStorageCacheHashKey& aOther)
+      : nsCStringHashKey(aOther)
     {
       NS_ERROR("Shouldn't be called");
     }

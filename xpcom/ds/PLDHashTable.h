@@ -38,13 +38,6 @@ struct PLDHashTableOps;
 // -- users need never access it.
 struct PLDHashEntryHdr
 {
-  PLDHashEntryHdr() = default;
-  PLDHashEntryHdr(const PLDHashEntryHdr&) = delete;
-  PLDHashEntryHdr(const PLDHashEntryHdr&&) = delete;
-  PLDHashEntryHdr& operator=(const PLDHashEntryHdr&) = delete;
-  PLDHashEntryHdr(PLDHashEntryHdr&&) = default;
-  PLDHashEntryHdr& operator=(PLDHashEntryHdr&&) = default;
-
 private:
   friend class PLDHashTable;
 

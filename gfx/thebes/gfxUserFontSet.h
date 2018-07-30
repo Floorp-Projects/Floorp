@@ -394,8 +394,7 @@ public:
             { }
 
             Entry(Entry&& aOther)
-                : PLDHashEntryHdr(std::move(aOther))
-                , mURI(std::move(aOther.mURI))
+                : mURI(std::move(aOther.mURI))
                 , mPrincipal(std::move(aOther.mPrincipal))
                 , mFontEntry(std::move(aOther.mFontEntry))
                 , mPrivate(std::move(aOther.mPrivate))

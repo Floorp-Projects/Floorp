@@ -9,7 +9,6 @@
 
 #include "mozilla/IHistory.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "mozIAsyncHistory.h"
 #include "nsIDownloadHistory.h"
@@ -213,10 +212,8 @@ private:
     : nsURIHashKey(aURI)
     {
     }
-    KeyClass(KeyClass&& aOther)
-      : nsURIHashKey(std::move(aOther))
-      , array(std::move(aOther.array))
-      , mVisited(std::move(aOther.mVisited))
+    KeyClass(const KeyClass& aOther)
+    : nsURIHashKey(aOther)
     {
       MOZ_ASSERT_UNREACHABLE("Do not call me!");
     }
@@ -240,7 +237,7 @@ private:
     explicit RecentURIKey(const nsIURI* aURI) : nsURIHashKey(aURI)
     {
     }
-    RecentURIKey(RecentURIKey&& aOther) : nsURIHashKey(std::move(aOther))
+    RecentURIKey(const RecentURIKey& aOther) : nsURIHashKey(aOther)
     {
       MOZ_ASSERT_UNREACHABLE("Do not call me!");
     }

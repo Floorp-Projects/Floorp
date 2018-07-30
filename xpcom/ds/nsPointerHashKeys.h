@@ -27,10 +27,7 @@ public:
   typedef const T* KeyTypePointer;
 
   explicit nsPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
-  nsPtrHashKey(nsPtrHashKey<T>&& aToMove)
-    : PLDHashEntryHdr(std::move(aToMove))
-    , mKey(std::move(aToMove.mKey))
-  {}
+  nsPtrHashKey(const nsPtrHashKey<T>& aToCopy) : mKey(aToCopy.mKey) {}
   ~nsPtrHashKey() {}
 
   KeyType GetKey() const { return mKey; }
