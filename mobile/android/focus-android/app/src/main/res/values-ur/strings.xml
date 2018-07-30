@@ -25,7 +25,10 @@
   <string name="shortcut_erase_short_label">مٹائيں</string>
   <string name="shortcut_erase_long_label">برائوزنگ سابقات مٹائیں</string>
   <string name="text_selection_search_action">نجی طور پر طلاش کرے</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s &#1570;&#1662; &#1705;&#1608; &#1705;&#1606;&#1657;&#1585;&#1608;&#1604; &#1583;&#1740;&#1578;&#1740; &#1729;&#1746; "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#1575;&#1587;&#1705;&#1608; &#1606;&#1580;&#1740; &#1576;&#1585;&#1575;&#1574;&#1608;&#1586;&#1585; &#1705;&#1740; &#1591;&#1585;&#1581; &#1575;&#1587;&#1578;&#1593;&#1605;&#1575;&#1604; &#1705;&#1585;&#1740;&#1722;:\n  "<ul>" \n    "<li>" &#1575;&#1662;&#1604;&#1740; &#1705;&#1740;&#1588;&#1606; &#1605;&#1740;&#1722; &#1729;&#1740; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586; &#1705;&#1585;&#1740;&#1722; "</li>"\n    "<li>"&#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1576;&#1604;&#1575;&#1705; &#1705;&#1585;&#1740;&#1722; (&#1740;&#1575; &#1587;&#1657;&#1740;&#1606;&#1711;&#1608;&#1722; &#1705;&#1740; &#1578;&#1575;&#1586;&#1729; &#1705;&#1575;&#1585;&#1740; &#1705;&#1585; &#1705;&#1746; &#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1575;&#1580;&#1575;&#1586;&#1578; &#1583;&#1740;&#1722;)&#1748; "</li>"\n    "<li>" &#1705;&#1608;&#1705;&#1740;&#1586; &#1705;&#1746; &#1587;&#1575;&#1578;&#1726; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586;&#1606;&#1711; &#1587;&#1575;&#1576;&#1602;&#1575;&#1578; &#1705;&#1608; &#1576;&#1726;&#1740; &#1581;&#1584;&#1601; &#1705;&#1585;&#1606;&#1746; &#1705;&#1740;&#1604;&#1740;&#1746; &#1605;&#1657;&#1575;&#1574;&#1740;&#1722; "</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1705;&#1740; &#1662;&#1740;&#1583;&#1575;&#1608;&#1575;&#1585; &#1729;&#1746;&#1748; &#1726;&#1605;&#1575;&#1585;&#1740; &#1605;&#1729;&#1605; &#1575;&#1740;&#1705; &#1589;&#1581;&#1578; &#1605;&#1606;&#1583; &#1705;&#1726;&#1604;&#1746; &#1575;&#1606;&#1657;&#1585;&#1606;&#1740;&#1657; &#1705;&#1608; &#1601;&#1585;&#1608;&#1593;&#1648; &#1583;&#1740;&#1606;&#1575; &#1729;&#1746;&#1748; Mozilla<br/>\n<a href="%2$s">" &#1605;&#1586;&#1740;&#1583; &#1580;&#1575;&#1606;&#1740;&#1746; "</a></p>]]></string>
   <string name="preference_privacy_and_security_header">رازداری اور سلامتی</string>
+  <string name="preference_privacy_and_security_summary">سراغ راہ، کوکیاں، کوائف پسند</string>
+  <string name="preference_search_summary">طے شدہ سیٹ کریں، خودکار مکمل</string>
   <string name="preference_mozilla_summary">%1$s کے بارے میں، مدد</string>
   <string name="preference_category_tracking_protection">سراغ کاری حفاظت</string>
   <string name="preference_category_web_content">ویب مواد</string>
@@ -43,6 +46,7 @@
   <string name="preference_autocomplete_title_add">تخصیصی URL کا اظافہ کریں</string>
   <string name="custom_autocomplete_quick_add">تخصیصی URL کا اظافہ کریں</string>
   <string name="preference_category_cookies">کوکیاں اور سائٹ کے کواِئف</string>
+  <string name="preference_category_data_choices">کوائف پسند</string>
   <string name="preference_autocomplete_title_remove">مخصوص URL ہٹائیں</string>
   <string name="preference_autocomplete_learn_more">مزید سیکھیں</string>
   <string name="preference_autocomplete_add_title">URL اظافہ کرنے کے لیئے</string>
@@ -65,6 +69,7 @@
   <string name="preference_privacy_block_content_summary2">اہل بنانے کی وجہ سے شاید چند صفحات غیر متوقع برتائو کر سکتے ہیں</string>
   <string name="preference_privacy_category_cookies">کوکیز بلاک کری٘ں</string>
   <string name="preference_privacy_should_block_cookies_no_option">نہیں</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">صرف 3-فریق کی کوکیاں بلاک کریں</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ہاں</string>
   <string name="preference_privacy_secure_mode">سٹلتھ</string>
   <string name="preference_privacy_stealth_summary">اہپس تبدیل کرنے وقت ویب صفحات کو چھپائیں</string>
@@ -156,6 +161,7 @@
   <string name="dialog_addtohomescreen_action_add">اظافہ کریں</string>
   <string name="dialog_addtohomescreen_action_cancel">منسوخ کریں</string>
   <string name="notification_browsing_session_channel_name">نجی برائوزنگ سیشن</string>
+  <string name="notification_browsing_session_channel_description">اطلاعات آپ کو %1$s سیشن ایک تھاپ سے مٹا سکتے ہیں۔ آپ کو ایپلیکیشن کھولنے یا برائوزر میں کیا چل رہا ہے کی ظرورت نہیں۔</string>
   <string name="tabs_tray_action_erase">برائوزنگ سابقات مٹائیں</string>
   <string name="download_firefox">Firefox ڈائونلوڈ کریں</string>
   <string name="gv_prompt_username_hint">صارف کا نام</string>

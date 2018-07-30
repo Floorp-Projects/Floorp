@@ -26,6 +26,7 @@
   <string name="shortcut_erase_short_label">ਮਿਟਾਓ</string>
   <string name="shortcut_erase_long_label">ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਨੂੰ ਮਿਟਾਓ</string>
   <string name="text_selection_search_action">ਨਿੱਜੀ ਤੌਰ \'ਤੇ ਖੋਜੋ</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2596;&#2625;&#2617;&#2622;&#2593;&#2631; &#2581;&#2622;&#2604;&#2626; &#2617;&#2631;&#2592; &#2581;&#2608;&#2600; &#2610;&#2568; &#2596;&#2625;&#2622;&#2617;&#2600;&#2626;&#2672; &#2607;&#2635;&#2583; &#2581;&#2608;&#2598;&#2622; &#2617;&#2632;&#2404;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2567;&#2616; &#2600;&#2626;&#2672; &#2600;&#2623;&#2673;&#2588;&#2624; &#2604;&#2608;&#2622;&#2570;&#2588;&#2620;&#2608; &#2598;&#2624; &#2596;&#2608;&#2637;&#2617;&#2622;&#2562; &#2613;&#2608;&#2596;&#2635;:\n  "<ul>"\n    "<li>&#2616;&#2623;&#2673;&#2599;&#2622; &#2576;&#2602; &#2613;&#2623;&#2673;&#2586;&#2635;&#2562; &#2617;&#2624; &#2610;&#2673;&#2605;&#2635; &#2596;&#2631; &#2604;&#2608;&#2622;&#2570;&#2588;&#2620; &#2581;&#2608;&#2635;</li>"\n    "<li>&#2602;&#2632;&#2652;&#2637;&#2617; &#2600;&#2673;&#2602;&#2595; &#2613;&#2622;&#2610;&#2623;&#2566;&#2562; &#2596;&#2631; &#2602;&#2622;&#2604;&#2672;&#2598;&#2624; &#2610;&#2622;&#2569; (&#2588;&#2622;&#2562; &#2602;&#2632;&#2652;&#2637;&#2617; &#2600;&#2673;&#2602;&#2595; &#2613;&#2622;&#2610;&#2623;&#2566;&#2562; &#2600;&#2626;&#2672; &#2606;&#2600;&#2588;&#2626;&#2608;&#2624; &#2598;&#2631;&#2595; &#2610;&#2568; &#2616;&#2632;&#2591;&#2623;&#2672;&#2583;&#2622;&#2562; &#2604;&#2598;&#2610;&#2635;)</li>"\n    "<li>&#2581;&#2625;&#2581;&#2624;&#2588;&#2620; &#2598;&#2631; &#2600;&#2622;&#2610; &#2600;&#2622;&#2610; &#2610;&#2673;&#2605;&#2631; &#2583;&#2575; &#2565;&#2596;&#2631; &#2604;&#2608;&#2622;&#2570;&#2588;&#2620; &#2581;&#2624;&#2596;&#2631; &#2583;&#2623;&#2566;&#2562; &#2600;&#2626;&#2672; &#2613;&#2624; &#2606;&#2623;&#2591;&#2622;&#2569;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2600;&#2626;&#2672; &#2606;&#2636;&#2588;&#2620;&#2623;&#2610;&#2622; &#2613;&#2673;&#2610;&#2635;&#2562; &#2604;&#2595;&#2622;&#2567;&#2566; &#2583;&#2623;&#2566; &#2617;&#2632;&#2404; &#2616;&#2622;&#2593;&#2622; &#2591;&#2624;&#2586;&#2622; &#2567;&#2673;&#2581; &#2616;&#2623;&#2617;&#2596;&#2606;&#2672;&#2598; &#2565;&#2596;&#2631; &#2582;&#2625;&#2673;&#2610;&#2637;&#2617;&#2631; &#2593;&#2625;&#2673;&#2610;&#2637;&#2617;&#2631; &#2567;&#2672;&#2591;&#2608;&#2600;&#2632;&#2673;&#2591; &#2600;&#2626;&#2672; &#2613;&#2599;&#2622;&#2569;&#2595;&#2622; &#2617;&#2632;&#2404;<br/>\n<a href="%2$s">&#2617;&#2635;&#2608; &#2616;&#2623;&#2673;&#2582;&#2635;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">ਨਿੱਜੀ ਤੇ ਸੁਰੱਖਿਆ</string>
   <string name="preference_privacy_and_security_summary">ਟਰੈਕਿੰਗ, ਕੂਕੀਜ਼, ਡਾਟਾ ਚੋਣਾਂ</string>
   <string name="preference_search_summary">ਮੂਲ ਸੈੱਟ ਕਰੋ, ਆਪੇ-ਪੂਰਨ ਕਰੋ</string>
@@ -42,6 +43,7 @@
   <string name="preference_subitem_autocomplete">URL ਆਪੇ-ਪੂਰਨ</string>
   <string name="preference_switch_autocomplete">ਆਪੇ-ਪੂਰਨ</string>
   <string name="preference_category_autocomplete_preinstalled">ਮੂਲ URL ਸੂਚੀ</string>
+  <string name="preference_autocomplete_preinstalled_summary">ਐਡਰੈੱਸ ਬਾਰ ਵਿੱਚ 450 ਤੋਂ ਵੱਧ ਪ੍ਰਸਿੱਧ ਯੂਆਰਐਲ %1$s ਆਟੋ-ਪੂਰਨ ਹੋਣ ਦੇ ਯੋਗ ਬਣਾਓ।</string>
   <string name="preference_category_autocomplete_custom_urls">ਕਸਟਮ URL</string>
   <string name="preference_autocomplete_subitem_customlist">ਕਸਟਮ URL</string>
   <string name="preference_autocomplete_action_add">+ ਕਸਟਮ URL ਜੋੜੋ</string>
@@ -64,9 +66,12 @@
   <string name="preference_language_systemdefault">ਸਿਸਟਮ ਮੂਲ</string>
   <string name="preference_category_privacy">ਪਰਦੇਦਾਰੀ</string>
   <string name="preference_privacy_block_ads">ਬਲਾਕ ਵਿਗਿਆਪਨ ਟਰੈਕਰਜ</string>
+  <string name="preference_privacy_block_ads_summary">ਕੁਝ ਵਿਗਿਆਪਨ ਸਾਈਟ ਦੇ ਦੌਰੇ ਨੂੰ ਟਰੈਕ ਕਰਦੇ ਹਨ, ਭਾਵੇਂ ਤੁਸੀਂ ਇਸ਼ਤਿਹਾਰਾਂ ਤੇ ਨਹੀਂ ਕਲਿਕ ਕਰਦੇ</string>
   <string name="preference_privacy_block_analytics">ਵਿਸ਼ਲੇਸ਼ਣ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_block_analytics_summary">ਟੇਪਿੰਗ ਅਤੇ ਸਕ੍ਰੌਲਿੰਗ ਵਰਗੀਆਂ ਗਤੀਵਿਧੀਆਂ ਇਕੱਤਰ ਕਰਨ, ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਅਤੇ ਮਾਪਣ ਲਈ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ</string>
   <string name="preference_privacy_block_social">ਸਮਾਜਿਕ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
   <string name="preference_privacy_block_content">ਹੋਰ ਸਮੱਗਰੀ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_block_content_summary2">ਸਮਰੱਥ ਬਣਾਉਣ ਨਾਲ ਕੁਝ ਪੰਨੇ ਅਚਾਨਕ ਵਿਹਾਰ ਕਰ ਸਕਦੇ ਹਨ</string>
   <string name="preference_privacy_category_cookies">ਕੂਕੀਜ਼ ਬਲਾੱਕ ਕਰੋ</string>
   <string name="preference_privacy_should_block_cookies_no_option">ਨਹੀਂ</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">ਸਿਰਫ ਤੀਜੀ ਪਾਰਟੀ ਕੂਕੀਜ਼ ਬਲਾੱਕ ਕਰੋ</string>
@@ -77,6 +82,7 @@
   <string name="preference_performance_block_webfonts">ਵੈੱਬ ਅੱਖਰ ਬਲਾੱਕ ਕਰੋ</string>
   <string name="preference_performance_block_webfonts_summary">ਨਤੀਜੇ ਵਜੋਂ ਆਈਕਾਨ ਜਾਂ ਚਿੱਤਰ ਲਾਪਤਾ ਹੋ ਸਕਦੇ ਹਨ</string>
   <string name="preference_performance_block_javascript">JavaScript ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_performance_block_javascript_summary">ਪੰਨੇ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੋ ਸਕਦੇ ਹਨ, ਪਰ ਅਚਾਨਕ ਹੀ ਵਿਵਹਾਰ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ</string>
   <string name="preference_default_browser2">%1$s ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
   <string name="preference_category_mozilla">ਮੋਜ਼ੀਲਾ</string>
   <string name="preference_mozilla_telemetry2">ਵਰਤੋਂ ਸਬੰਧੀ ਡੇਟਾ ਭੇਜੋ</string>
@@ -96,7 +102,9 @@
   <string name="search_add_manually_example">ਉਦਾਹਰਨ: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">ਨਵਾਂ ਖੋਜ ਇੰਜਣ ਜੋੜਿਆ ਗਿਆ।</string>
   <string name="search_add_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂਮ ਦਰਜ ਕਰੋ</string>
+  <string name="search_add_error_duplicate_name">ਇੱਕ ਇੰਸਟੌਲ ਕੀਤੇ ਖੋਜ ਇੰਜਣ ਪਹਿਲਾਂ ਹੀ ਉਹ ਨਾਂ ਵਰਤ ਰਿਹਾ ਹੈ।</string>
   <string name="search_add_error_empty_search">ਖੋਜ ਸਤਰ ਦਾਖਲ ਕਰੋ</string>
+  <string name="search_add_error_format">ਜਾਂਚ ਕਰੋ ਕਿ ਖੋਜ ਲਾਈਨ ਮਿਲਦੀ ਹੈ ਉਦਾਹਰਨ ਫਾਰਮੈਟ</string>
   <string name="content_description_clear_input">ਇਨਪੁਟ ਨੂੰ ਹਟਾਓ</string>
   <string name="content_description_dismiss_input">ਰੱਦ ਕਰੋ</string>
   <string name="content_description_erase">ਬਰਾਊਜ਼ ਕਰਨ ਦਾ ਅਤੀਤ ਮਿਟਾਓ</string>
@@ -113,15 +121,68 @@
   <string name="content_description_blocking_switch">ਟ੍ਰੈਕਰਾਂ ਨੂੰ ਬਲੌਕ ਕਰੋ</string>
   <string name="your_rights">ਤੁਹਾਡੇ ਹੱਕ</string>
   <string name="external_app_prompt_title">ਲਿੰਕ ਨੂੰ ਹੋਰ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
+  <string name="external_app_prompt">ਤੁਸੀਂ %2$s ਵਿੱਚ ਇਹ ਲਿੰਕ ਖੋਲ੍ਹਣ ਲਈ %1$s ਨੂੰ ਛੱਡ ਸਕਦੇ ਹੋ।</string>
   <string name="external_app_prompt_no_app_title">ਅਜਿਹੀ ਐਪ ਲੱਭੋ ਜੋ ਲਿੰਕ ਨੂੰ ਖੋਲ੍ਹ ਸਕੇ</string>
   <string name="external_app_prompt_no_app">ਤੁਹਾਡੇ ਯੰਤਰ ਉੱਪਰਲੀ ਕੋਈ ਵੀ ਐਪ ਇਸ ਤੰਦ ਨੂੰ ਖੋਲ੍ਹਣ ਦੇ ਕਾਬਲ ਨਹੀਂ ਹੈ। ਤੁਸੀਂ %2$s ਦੇ ਲਈ ਕਿਸੇ ਕਾਬਲ ਐਪ ਨੂੰ ਲੱਭਣ ਲਈ %1$s ਛੱਡ ਸਕਦੇ ਹੋ।</string>
   <string name="external_multiple_apps_matched_exit">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਤੋਂ ਬਾਹਰ ਨਿਕਲੋ?</string>
   <string name="download_snackbar_finished">%1$s ਮੁਕੰਮਲ</string>
   <string name="download_snackbar_open">ਖੋਲ੍ਹੋ</string>
+  <string name="download_dialog_warning"><![CDATA["ਡਾਊਨਲੋਡ ਕੀਤੀਆਂ ਫਾਈਲਾਂ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#2606;&#2623;&#2591;&#2622; &#2598;&#2623;&#2673;&#2596;&#2624;&#2566;&#2562; &#2588;&#2622;&#2595;&#2583;&#2624;&#2566;&#2562; "</b>" ਜਦੋਂ ਤੁਸੀਂ %1$s ਇਤਿਹਾਸ ਨੂੰ ਮਿਟਾਉਂਦੇ ਹੋ।"]]></string>
   <string name="download_dialog_title">ਫਾਈਲ ਡਾਊਨਲੋਡ ਕੀਤੀ</string>
   <string name="download_dialog_action_cancel">ਰੱਦ ਕਰੋ</string>
   <string name="download_dialog_action_download">ਡਾਊਨਲੋਡ</string>
   <string name="errorpage_title">ਸਫ਼ਾ ਲੋਡ ਕਰਨ ਦੌਰਾਨ ਸਮੱਸਿਆ</string>
   <string name="errorpage_refresh">ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
   <string name="error_connectionfailure_title">ਕੁਨੈਕਟ ਕਰਨ ਲਈ ਅਸਮਰੱਥ</string>
+  <string name="error_timeout_title">ਕੁਨੈਕਸ਼ਨ ਲਈ ਸਮਾਂ ਸਮਾਪਤ</string>
+  <string name="error_hostLookup_title">ਸਰਵਰ ਨਹੀਂ ਲੱਭਿਆ</string>
+  <string name="error_malformedURI_title">ਐਡਰੈੱਸ ਠੀਕ ਨਹੀਂ ਹੈ</string>
+  <string name="error_redirectLoop_title">ਸਫ਼ਾ ਠੀਕ ਤਰ੍ਹਾਂ ਰੀ-ਡਾਇਰੈਕਟ ਨਹੀਂ ਕੀਤਾ ਗਿਆ ਹੈ</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"                                                                                                                                                                                                                                                                                                                                                                                  "<li>&#2567;&#2617; &#2616;&#2606;&#2673;&#2616;&#2623;&#2566; &#2581;&#2625;&#2589; &#2613;&#2622;&#2608; &#2581;&#2626;&#2581;&#2624;&#2588;&#2620; &#2600;&#2626;&#2672; &#2566;&#2607;&#2635;&#2583; &#2581;&#2608;&#2600; &#2588;&#2622;&#2562; &#2610;&#2632;&#2595; &#2596;&#2635;&#2562; &#2567;&#2600;&#2581;&#2622;&#2608; &#2581;&#2608;&#2581;&#2631; &#2566; &#2616;&#2581;&#2598;&#2624; &#2617;&#2632;&#2404;</li>\n</ul>\n]]></string>
+  <string name="error_unsupportedprotocol_title">ਐਡਰੈਸ ਦੀ ਸਮਝ ਨਹੀਂ ਆਈ</string>
+  <string name="error_sslhandshake_title">ਸੁਰੱਖਿਅਤ ਕੁਨੈਕਸ਼ਨ ਫੇਲ੍ਹ ਹੋਇਆ</string>
+  <string name="error_generic_title">ਓ ਹੋ</string>
+  <string name="error_generic_message">ਅਸੀਂ ਕੁਝ ਕਾਰਣਾਂ ਲਈ ਇਸ ਸਫੇ ਨੂੰ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕਦੇ।</string>
+  <string name="contextmenu_link_share">ਲਿੰਕ ਸਾਂਝਾ ਕਰੋ</string>
+  <string name="contextmenu_link_copy">ਲਿੰਕ ਦੇ ਐਡਰੈਸ ਨੂੰ ਕਾਪੀ ਕਰੋ</string>
+  <string name="contextmenu_image_share">ਚਿੱਤਰ ਸਾਂਝਾ ਕਰੋ</string>
+  <string name="contextmenu_image_copy">ਚਿੱਤਰ ਦਾ ਪਤਾ ਕਾਪੀ ਕਰੋ</string>
+  <string name="contextmenu_image_save">ਚਿੱਤਰ ਨੂੰ ਸੰਭਾਲੋ</string>
+  <string name="contextmenu_open_in_new_tab">ਨਵੀਂ ਟੈਬ ਚ ਖੋਲ੍ਹੋ</string>
+  <string name="firstrun_defaultbrowser_title">ਆਪਣੀ ਪਰਦੇਦਾਰੀ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ</string>
+  <string name="firstrun_search_title">ਤੁਹਾਡੀ ਖੋਜ, ਤੁਹਾਡਾ ਢੰਗ</string>
+  <string name="firstrun_search_text">ਕੁਝ ਵੱਖਰਾ ਲੱਭ ਰਹੇ ਹੋ? ਸੈਟਿੰਗਾਂ ਵਿੱਚੋ ਹੋਰ ਮੂਲ ਖੋਜ ਇੰਜਣ ਨੂੰ ਚੁਣੋ।</string>
+  <string name="firstrun_shortcut_title">ਆਪਣੀ ਮੁੱਖ ਸਕਰੀਨ ਲਈ ਸ਼ਾਰਟਕਟ ਜੋੜੋ</string>
+  <string name="firstrun_privacy_title">ਪਰਦੇਦਾਰੀ ਨੂੰ ਆਦਤ ਬਣਾਓ</string>
+  <string name="firstrun_close_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ!</string>
+  <string name="firstrun_skip_button">ਛੱਡੋ</string>
+  <string name="firstrun_next_button">ਅੱਗੇ</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_action_add">ਜੋੜੋ</string>
+  <string name="dialog_addtohomescreen_action_cancel">ਰੱਦ ਕਰੋ</string>
+  <string name="notification_browsing_session_channel_name">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਰਿੰਗ ਕਾਰਜਕਾਲ</string>
+  <string name="tabs_tray_action_erase">ਬਰਾਊਜ਼ ਕਰਨ ਦਾ ਅਤੀਤ ਮਿਟਾਓ</string>
+  <string name="download_firefox">ਫਾਇਰਫਾਕਸ ਡਾਊਨਲੋਡ ਕਰੋ</string>
+  <string name="your_rights_content1">ਮੋਜ਼ੀਲਾ ਅਤੇ ਹੋਰ ਯੋਗਦਾਨੀਆਂ ਦੁਆਰਾ ਬਣਾਏ ਗਏ %1$s ਮੁਫ਼ਤ ਅਤੇ ਓਪਨ ਸੋਰਸ ਸਾਫਟਵੇਅਰ ਹੈ।</string>
+  <string name="your_rights_content2"><![CDATA["%1$s ਤੁਹਾਨੂੰ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2606;&#2636;&#2588;&#2620;&#2624;&#2610;&#2622; &#2588;&#2600;&#2596;&#2581; &#2610;&#2616;&#2672;&#2616;</a>" ਅਤੇ ਹੋਰ ਖੁੱਲ੍ਹੇ ਵਸੀਲਿਆਂ ਦੇ ਲਸੰਸਾਂ ਦੀਆਂ ਸ਼ਰਤਾਂ ਹੇਠ ਮੁਹੱਈਆ ਕਰਵਾਇਆ ਗਿਆ ਹੈ।"]]></string>
+  <string name="gv_prompt_username_hint">ਯੂਜ਼ਰ ਨਾਂ</string>
+  <string name="gv_prompt_password_hint">ਪਾਸਵਰਡ</string>
+  <string name="gv_prompt_clear">ਸਾਫ ਕਰੋ</string>
+  <string name="security_popup_secure_connection">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
+  <string name="security_popup_insecure_connection">ਅਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
+  <string name="security_popup_security_verified">ਜਾਂਚਿਆ: %1$s</string>
+  <string name="site_security_icon_content_description">ਸਾਈਟ ਦੀ ਸੁਰੱਖਿਆ</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ</string>
+  <string name="find_in_page">ਸਫ਼ੇ ਵਿੱਚ ਲੱਭੋ</string>
+  <string name="find_in_page_input">ਸਫ਼ੇ ਵਿੱਚ ਲੱਭੋ</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%2$d ਵਿੱਚੋ %1$d ਬਾਹਰ</string>
+  <string name="accessibility_next_result">ਅਗਲਾ ਨਤੀਜਾ ਲੱਭੋ</string>
+  <string name="accessibility_previous_result">ਪਿਛਲਾ ਨਤੀਜਾ ਲੱਭੋ</string>
+  <string name="accessibility_dismiss_find_in_page">ਸਫ਼ੇ ਵਿੱਚ ਲੱਭਣ ਨੂੰ ਖਾਰਜ ਕਰੋ</string>
+  <string name="http_auth_dialog_title">ਪ੍ਰਮਾਣਿਕਤਾ ਲੋੜੀਂਦੀ ਹੈ</string>
+  <string name="http_auth_dialog_username">ਯੂਜ਼ਰ ਨਾਂ</string>
+  <string name="http_auth_dialog_password">ਪਾਸਵਰਡ</string>
+  <string name="preference_performance_request_desktop_site">ਡੈਸਕਟਾਪ ਸਾਈਟ ਦੀ ਮੰਗ</string>
+  <string name="custom_tab_copy_url_action">URL ਕਾਪੀ ਕੀਤਾ</string>
 </resources>

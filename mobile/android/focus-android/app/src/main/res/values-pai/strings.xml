@@ -96,8 +96,13 @@
   <string name="preference_search_remove_title">Motor chŕmeechu ujiñ</string>
   <string name="preference_search_remove">Ujiiñ</string>
   <string name="action_option_add_search_engine">Chŕmeechu sal chmii</string>
+  <string name="search_add_manually_name_hint">Motor chŕmechu muul</string>
+  <string name="search_add_manually_string">Caden ŕmee ñum trchech hi kyawa</string>
   <string name="search_add_manually_save">Chkwaach</string>
   <string name="search_add_manually_example">Yabwika: example.com/search/?q=%s</string>
+  <string name="search_add_confirmation">Motor chŕmeechu jkaay kur sal chmiich.</string>
+  <string name="search_add_error_empty_name">Motor sal amchu muul sal chmiich</string>
+  <string name="search_add_error_duplicate_name">Motor chŕmechu kur sal chmiichum sal yak muul ñu mul.</string>
   <string name="content_description_dismiss_input">Kos ñul uuten</string>
   <string name="content_description_erase">Sal amchu mujiñ</string>
   <string name="content_description_lock">Tublich chu jan</string>
