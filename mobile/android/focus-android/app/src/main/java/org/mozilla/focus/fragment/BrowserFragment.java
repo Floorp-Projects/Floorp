@@ -1140,6 +1140,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             case R.id.find_in_page:
                 showFindInPage();
+                ViewUtils.showKeyboard(findInPageQuery);
                 TelemetryWrapper.findInPageMenuEvent();
                 break;
 
