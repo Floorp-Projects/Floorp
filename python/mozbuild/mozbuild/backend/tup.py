@@ -726,6 +726,13 @@ class TupBackend(CommonBackend):
             'RUSTFLAGS': '%s %s' % (' '.join(self.environment.substs['MOZ_RUST_DEFAULT_FLAGS']),
                                     ' '.join(self.environment.substs['RUSTFLAGS'])),
         })
+
+        if os.environ.get('MOZ_AUTOMATION'):
+            # Build scripts generally read environment variables that are set
+            # by cargo, however, some may rely on MOZ_AUTOMATION. We may need
+            # to audit for others as well.
+            env['MOZ_AUTOMATION'] = os.environ['MOZ_AUTOMATION']
+
         return env
 
     def _gen_cargo_rules(self, backend_file, build_plan, cargo_env):
