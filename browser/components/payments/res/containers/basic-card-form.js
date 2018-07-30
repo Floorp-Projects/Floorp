@@ -115,9 +115,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       return;
     }
 
+    let editing = !!basicCardPage.guid;
     this.cancelButton.textContent = this.dataset.cancelButtonLabel;
     this.backButton.textContent = this.dataset.backButtonLabel;
-    this.saveButton.textContent = this.dataset.saveButtonLabel;
+    this.saveButton.textContent = editing ? this.dataset.updateButtonLabel :
+                                            this.dataset.addButtonLabel;
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
     this.addressAddLink.textContent = this.dataset.addressAddLinkLabel;
     this.addressEditLink.textContent = this.dataset.addressEditLinkLabel;
@@ -133,7 +135,6 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
 
     this.genericErrorText.textContent = page.error;
 
-    let editing = !!basicCardPage.guid;
     this.form.querySelector("#cc-number").disabled = editing;
 
     // If a card is selected we want to edit it.
