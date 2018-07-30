@@ -808,12 +808,12 @@ ShadowLayerForwarder::FindCompositable(const CompositableHandle& aHandle)
 }
 
 void
-ShadowLayerForwarder::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
+ShadowLayerForwarder::SetLayersObserverEpoch(LayersObserverEpoch aEpoch)
 {
   if (!IPCOpen()) {
     return;
   }
-  Unused << mShadowManager->SendSetLayerObserverEpoch(aLayerObserverEpoch);
+  Unused << mShadowManager->SendSetLayersObserverEpoch(aEpoch);
 }
 
 void

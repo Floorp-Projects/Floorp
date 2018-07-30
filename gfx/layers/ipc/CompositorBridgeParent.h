@@ -138,7 +138,7 @@ public:
 
   mozilla::ipc::IPCResult Recv__delete__() override { return IPC_OK(); }
 
-  virtual void ObserveLayerUpdate(LayersId aLayersId, uint64_t aEpoch, bool aActive) = 0;
+  virtual void ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive) = 0;
 
   virtual void DidComposite(LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) = 0;
 
@@ -283,7 +283,7 @@ public:
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
 
-  void ObserveLayerUpdate(LayersId aLayersId, uint64_t aEpoch, bool aActive) override { }
+  void ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive) override { }
 
   /**
    * This forces the is-first-paint flag to true. This is intended to

@@ -863,9 +863,9 @@ CompositorBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessa
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvObserveLayerUpdate(const LayersId& aLayersId,
-                                              const uint64_t& aEpoch,
-                                              const bool& aActive)
+CompositorBridgeChild::RecvObserveLayersUpdate(const LayersId& aLayersId,
+                                               const LayersObserverEpoch& aEpoch,
+                                               const bool& aActive)
 {
   // This message is sent via the window compositor, not the tab compositor -
   // however it still has a layers id.

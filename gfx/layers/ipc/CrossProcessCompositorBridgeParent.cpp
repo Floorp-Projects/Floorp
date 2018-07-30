@@ -370,7 +370,7 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
   if (aLayerTree->ShouldParentObserveEpoch()) {
     // Note that we send this through the window compositor, since this needs
     // to reach the widget owning the tab.
-    Unused << state->mParent->SendObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), true);
+    Unused << state->mParent->SendObserveLayersUpdate(id, aLayerTree->GetChildEpoch(), true);
   }
 
   aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.refreshStart(), aInfo.transactionStart(), aInfo.fwdTime());
@@ -429,7 +429,7 @@ CrossProcessCompositorBridgeParent::NotifyClearCachedResources(LayerTransactionP
   if (state && state->mParent) {
     // Note that we send this through the window compositor, since this needs
     // to reach the widget owning the tab.
-    Unused << state->mParent->SendObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), false);
+    Unused << state->mParent->SendObserveLayersUpdate(id, aLayerTree->GetChildEpoch(), false);
   }
 }
 
@@ -648,7 +648,7 @@ CrossProcessCompositorBridgeParent::UpdatePaintTime(LayerTransactionParent* aLay
 }
 
 void
-CrossProcessCompositorBridgeParent::ObserveLayerUpdate(LayersId aLayersId, uint64_t aEpoch, bool aActive)
+CrossProcessCompositorBridgeParent::ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive)
 {
   MOZ_ASSERT(aLayersId.IsValid());
 
@@ -658,7 +658,7 @@ CrossProcessCompositorBridgeParent::ObserveLayerUpdate(LayersId aLayersId, uint6
     return;
   }
 
-  Unused << state->mParent->SendObserveLayerUpdate(aLayersId, aEpoch, aActive);
+  Unused << state->mParent->SendObserveLayersUpdate(aLayersId, aEpoch, aActive);
 }
 
 } // namespace layers

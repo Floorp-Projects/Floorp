@@ -42,6 +42,7 @@ using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::ZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 using FrameMetrics::ViewID from "FrameMetrics.h";
@@ -542,7 +543,7 @@ parent:
     /**
      * Child informs the parent that the layer tree is already available.
      */
-    async PaintWhileInterruptingJSNoOp(uint64_t aLayerObserverEpoch);
+    async PaintWhileInterruptingJSNoOp(LayersObserverEpoch aEpoch);
 
     /**
      * Sent by the child to the parent to inform it that an update to the
@@ -752,12 +753,12 @@ child:
      * @param aForceRepaint
      *        True if the child should force a paint even if it's already
      *        visible.
-     * @param aLayerObserverEpoch
+     * @param aEpoch
      *        The layer observer epoch for this activation. This message should be
      *        ignored if this epoch has already been observed (via
      *        PaintWhileInterruptingJS).
      */
-    async RenderLayers(bool aEnabled, bool aForceRepaint, uint64_t aLayerObserverEpoch);
+    async RenderLayers(bool aEnabled, bool aForceRepaint, LayersObserverEpoch aEpoch);
 
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.

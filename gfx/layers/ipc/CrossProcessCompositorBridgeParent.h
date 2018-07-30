@@ -151,7 +151,7 @@ public:
                                                       wr::IdNamespace* aIdNamespace) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
-  void ObserveLayerUpdate(LayersId aLayersId, uint64_t aEpoch, bool aActive) override;
+  void ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive) override;
 
   bool IsRemote() const override {
     return true;

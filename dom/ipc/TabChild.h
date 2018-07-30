@@ -656,10 +656,10 @@ public:
                   const uint32_t& aFlags);
 
   // Request that the docshell be marked as active.
-  void PaintWhileInterruptingJS(uint64_t aLayerObserverEpoch,
+  void PaintWhileInterruptingJS(const layers::LayersObserverEpoch& aEpoch,
                                 bool aForceRepaint);
 
-  uint64_t LayerObserverEpoch() const { return mLayerObserverEpoch; }
+  layers::LayersObserverEpoch LayersObserverEpoch() const { return mLayersObserverEpoch; }
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   uintptr_t GetNativeWindowHandle() const { return mNativeWindowHandle; }
@@ -732,7 +732,7 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive) override;
 
-  virtual mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled, const bool& aForce, const uint64_t& aLayerObserverEpoch) override;
+  virtual mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled, const bool& aForce, const layers::LayersObserverEpoch& aEpoch) override;
 
   virtual mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                                     const bool& aForDocumentNavigation) override;
@@ -895,7 +895,7 @@ private:
   RefPtr<layers::IAPZCTreeManager> mApzcTreeManager;
 
   // The most recently seen layer observer epoch in RecvSetDocShellIsActive.
-  uint64_t mLayerObserverEpoch;
+  layers::LayersObserverEpoch mLayersObserverEpoch;
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   // The handle associated with the native window that contains this tab
@@ -918,7 +918,7 @@ private:
   bool mPendingDocShellReceivedMessage;
   bool mPendingRenderLayers;
   bool mPendingRenderLayersReceivedMessage;
-  uint64_t mPendingLayerObserverEpoch;
+  layers::LayersObserverEpoch mPendingLayersObserverEpoch;
   // When mPendingDocShellBlockers is greater than 0, the DocShell is blocked,
   // and once it reaches 0, it is no longer blocked.
   uint32_t mPendingDocShellBlockers;

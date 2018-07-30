@@ -43,6 +43,7 @@ using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using base::ProcessId from "base/process.h";
 using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::WebRenderError from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
@@ -133,7 +134,7 @@ child:
 
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
 
-  async ObserveLayerUpdate(LayersId aLayersId, uint64_t aEpoch, bool aActive);
+  async ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive);
 
 parent:
   async __delete__();

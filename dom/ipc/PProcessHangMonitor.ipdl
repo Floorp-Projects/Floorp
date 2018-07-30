@@ -7,6 +7,7 @@
 
 using base::ProcessId from "base/process.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 
@@ -41,7 +42,7 @@ child:
   async BeginStartingDebugger();
   async EndStartingDebugger();
 
-  async PaintWhileInterruptingJS(TabId tabId, bool forceRepaint, uint64_t aLayerObserverEpoch);
+  async PaintWhileInterruptingJS(TabId tabId, bool forceRepaint, LayersObserverEpoch aEpoch);
 };
 
 } // namespace mozilla

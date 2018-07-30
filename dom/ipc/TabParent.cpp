@@ -169,7 +169,7 @@ TabParent::TabParent(nsIContentParent* aManager,
 #ifdef DEBUG
   , mActiveSupressDisplayportCount(0)
 #endif
-  , mLayerTreeEpoch(1)
+  , mLayerTreeEpoch{1}
   , mPreserveLayers(false)
   , mRenderLayers(true)
   , mHasLayers(false)
@@ -2897,7 +2897,7 @@ TabParent::SetRenderLayers(bool aEnabled)
       // event will not naturally arrive, which can confuse the front-end
       // layer. So we fire the event here.
       RefPtr<TabParent> self = this;
-      uint64_t epoch = mLayerTreeEpoch;
+      LayersObserverEpoch epoch = mLayerTreeEpoch;
       NS_DispatchToMainThread(NS_NewRunnableFunction(
         "dom::TabParent::RenderLayers",
         [self, epoch] () {
@@ -2948,7 +2948,7 @@ TabParent::SetRenderLayersInternal(bool aEnabled, bool aForceRepaint)
 {
   // Increment the epoch so that layer tree updates from previous
   // RenderLayers requests are ignored.
-  mLayerTreeEpoch++;
+  mLayerTreeEpoch = mLayerTreeEpoch.Next();
 
   Unused << SendRenderLayers(aEnabled, aForceRepaint, mLayerTreeEpoch);
 
@@ -3059,7 +3059,7 @@ TabParent::GetHasBeforeUnload(bool* aResult)
 }
 
 void
-TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
+TabParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch, bool aActive)
 {
   // Ignore updates from old epochs. They might tell us that layers are
   // available when we've already sent a message to clear them. We can't trust
@@ -3089,12 +3089,12 @@ TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvPaintWhileInterruptingJSNoOp(const uint64_t& aLayerObserverEpoch)
+TabParent::RecvPaintWhileInterruptingJSNoOp(const LayersObserverEpoch& aEpoch)
 {
   // We sent a PaintWhileInterruptingJS message when layers were already visible. In this
   // case, we should act as if an update occurred even though we already have
   // the layers.
-  LayerTreeUpdate(aLayerObserverEpoch, true);
+  LayerTreeUpdate(aEpoch, true);
   return IPC_OK();
 }
 

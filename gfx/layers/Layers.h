@@ -686,7 +686,7 @@ public:
     return count;
   }
 
-  virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) {}
+  virtual void SetLayersObserverEpoch(LayersObserverEpoch aEpoch) {}
 
   virtual void DidComposite(TransactionId aTransactionId,
                             const mozilla::TimeStamp& aCompositeStart,

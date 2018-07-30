@@ -558,7 +558,7 @@ public:
   bool SendLoadRemoteScript(const nsString& aURL,
                             const bool& aRunInGlobalScope);
 
-  void LayerTreeUpdate(uint64_t aEpoch, bool aActive);
+  void LayerTreeUpdate(const LayersObserverEpoch& aEpoch, bool aActive);
 
   virtual mozilla::ipc::IPCResult
   RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
@@ -620,7 +620,7 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents() override;
 
-  virtual mozilla::ipc::IPCResult RecvPaintWhileInterruptingJSNoOp(const uint64_t& aLayerObserverEpoch) override;
+  virtual mozilla::ipc::IPCResult RecvPaintWhileInterruptingJSNoOp(const LayersObserverEpoch& aEpoch) override;
 
   virtual mozilla::ipc::IPCResult RecvSetDimensions(const uint32_t& aFlags,
                                                     const int32_t& aX, const int32_t& aY,
@@ -757,7 +757,7 @@ private:
 
   static void RemoveTabParentFromTable(layers::LayersId aLayersId);
 
-  uint64_t mLayerTreeEpoch;
+  LayersObserverEpoch mLayerTreeEpoch;
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.

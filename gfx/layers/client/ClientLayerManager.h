@@ -242,7 +242,7 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
-  virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
+  virtual void SetLayersObserverEpoch(LayersObserverEpoch aEpoch) override;
 
   virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
   virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
