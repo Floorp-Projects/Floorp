@@ -3811,17 +3811,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
    * or remove the view object, and also to handle abs-pos and fixed-pos containers.
    */
   if (HasTransformStyle() != aNewData.HasTransformStyle()) {
-    // We do not need to apply nsChangeHint_UpdateTransformLayer since
-    // nsChangeHint_RepaintFrame will forcibly invalidate the frame area and
-    // ensure layers are rebuilt (or removed).
-    //
-    // Note: If we add a new change hint for transform changes here or in
-    // CompareTransformValues(), we have to modify
-    // KeyframeEffect::CalculateCumulativeChangeHint too!
-    hint |= nsChangeHint_UpdateContainingBlock |
-            nsChangeHint_AddOrRemoveTransform |
-            nsChangeHint_UpdateOverflow |
-            nsChangeHint_RepaintFrame;
+    hint |= nsChangeHint_ComprehensiveAddOrRemoveTransform;
   } else {
     /* Otherwise, if we've kept the property lying around and we already had a
      * transform, we need to see whether or not we've changed the transform.

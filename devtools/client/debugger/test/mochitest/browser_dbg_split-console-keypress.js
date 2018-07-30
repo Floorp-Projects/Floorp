@@ -64,7 +64,8 @@ function test() {
     // (Must happen after generateMouseClickInTab() call)
     let consoleLostFocus = false;
     jsterm.focus();
-    jsterm.inputNode.addEventListener("blur", () => {consoleLostFocus = true;});
+    const node = jsterm.inputNode || jsterm.node;
+    node.addEventListener("blur", () => {consoleLostFocus = true;});
 
     is(gThreadClient.paused, true,
       "Should be paused at debugger statement.");

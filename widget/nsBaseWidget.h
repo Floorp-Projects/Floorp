@@ -319,6 +319,9 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
+  typedef void (nsIPresShell::*NotificationFunc)(void);
+  void NotifyPresShell(NotificationFunc aNotificationFunc);
+
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
   void NotifyWindowMoved(int32_t aX, int32_t aY);

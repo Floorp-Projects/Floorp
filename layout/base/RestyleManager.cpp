@@ -11,6 +11,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/Unused.h"
@@ -1748,6 +1749,7 @@ RestyleManager::IncrementAnimationGeneration()
 /* static */ void
 RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
                                             nsIContent* aContent,
+                                            nsChangeHint aHintForThisFrame,
                                             nsStyleChangeList&
                                               aChangeListToProcess)
 {
@@ -1761,25 +1763,46 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
   nsChangeHint hint = nsChangeHint(0);
   for (const LayerAnimationInfo::Record& layerInfo :
          LayerAnimationInfo::sRecords) {
-    layers::Layer* layer =
-      FrameLayerBuilder::GetDedicatedLayer(aFrame, layerInfo.mLayerType);
-    if (layer && frameGeneration != layer->GetAnimationGeneration()) {
-      // If we have a transform layer but don't have any transform style, we
+    Maybe<uint64_t> generation =
+      layers::AnimationInfo::GetGenerationFromFrame(aFrame,
+                                                    layerInfo.mLayerType);
+    if (generation && frameGeneration != *generation) {
+      // If we have a transform layer bug don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
-      // yet. In this case we will add the appropriate change hint
-      // (nsChangeHint_UpdateContainingBlock) when we compare styles so we can
-      // skip adding any change hint here. (If we *were* to add
-      // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
-      // complain that we're updating a transform layer without a transform).
+      // yet. In this case we will typically add the appropriate change hint
+      // (nsChangeHint_UpdateContainingBlock) when we compare styles so in
+      // theory we could skip adding any change hint here.
+      //
+      // However, sometimes when we compare styles we'll get no change. For
+      // example, if the transform style was 'none' when we sent the transform
+      // animation to the compositor and the current transform style is now
+      // 'none' we'll think nothing changed but actually we still need to
+      // trigger an update to clear whatever style the transform animation set
+      // on the compositor. To handle this case we simply set all the change
+      // hints relevant to removing transform style (since we don't know exactly
+      // what changes happened while the animation was running on the
+      // compositor).
+      //
+      // Note that we *don't* add nsChangeHint_UpdateTransformLayer since if we
+      // did, ApplyRenderingChangeToTree would complain that we're updating a
+      // transform layer without a transform.
       if (layerInfo.mLayerType == DisplayItemType::TYPE_TRANSFORM &&
           !aFrame->StyleDisplay()->HasTransformStyle()) {
+        // Add all the hints for a removing a transform if they are not already
+        // set for this frame.
+        if (!(NS_IsHintSubset(
+                nsChangeHint_ComprehensiveAddOrRemoveTransform,
+                aHintForThisFrame))) {
+          hint |= nsChangeHint_ComprehensiveAddOrRemoveTransform;
+        }
         continue;
       }
       hint |= layerInfo.mChangeHint;
     }
 
     // We consider it's the first paint for the frame if we have an animation
-    // for the property but have no layer.
+    // for the property but have no layer, for the case of WebRender,  no
+    // corresponding animation info.
     // Note that in case of animations which has properties preventing running
     // on the compositor, e.g., width or height, corresponding layer is not
     // created at all, but even in such cases, we normally set valid change
@@ -1790,7 +1813,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
     // not have those properies just before. e.g, setting transform by
     // setKeyframes or changing target element from other target which prevents
     // running on the compositor, etc.
-    if (!layer &&
+    if (!generation &&
         nsLayoutUtils::HasEffectiveAnimation(aFrame, layerInfo.mProperty)) {
       hint |= layerInfo.mChangeHint;
     }
@@ -2749,7 +2772,7 @@ RestyleManager::ProcessPostTraversal(
     // style or not, we need to call it *after* setting |newStyle| to
     // |styleFrame| to ensure the animated transform has been removed first.
     AddLayerChangesForAnimation(
-      styleFrame, aElement, aRestyleState.ChangeList());
+      styleFrame, aElement, changeHint, aRestyleState.ChangeList());
 
     childrenFlags |= SendA11yNotifications(mPresContext,
                                            aElement,
