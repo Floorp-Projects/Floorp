@@ -45,46 +45,6 @@ CompositorAnimationStorage::GetAnimatedValue(const uint64_t& aId) const
   return mAnimatedValues.Get(aId);
 }
 
-Maybe<float>
-CompositorAnimationStorage::GetAnimationOpacity(const uint64_t& aId) const
-{
-  auto value = GetAnimatedValue(aId);
-  if (!value || value->mType != AnimatedValue::OPACITY) {
-    return Nothing();
-  }
-
-  return Some(value->mOpacity);
-}
-
-Maybe<gfx::Matrix4x4>
-CompositorAnimationStorage::GetAnimationTransform(const uint64_t& aId) const
-{
-  auto value = GetAnimatedValue(aId);
-  if (!value || value->mType != AnimatedValue::TRANSFORM) {
-    return Nothing();
-  }
-
-  gfx::Matrix4x4 transform = value->mTransform.mFrameTransform;
-  const TransformData& data = value->mTransform.mData;
-  float scale = data.appUnitsPerDevPixel();
-  gfx::Point3D transformOrigin = data.transformOrigin();
-
-  // Undo the rebasing applied by
-  // nsDisplayTransform::GetResultingTransformMatrixInternal
-  transform.ChangeBasis(-transformOrigin);
-
-  // Convert to CSS pixels (this undoes the operations performed by
-  // nsStyleTransformMatrix::ProcessTranslatePart which is called from
-  // nsDisplayTransform::GetResultingTransformMatrix)
-  double devPerCss =
-    double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
-  transform._41 *= devPerCss;
-  transform._42 *= devPerCss;
-  transform._43 *= devPerCss;
-
-  return Some(transform);
-}
-
 OMTAValue
 CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const
 {
