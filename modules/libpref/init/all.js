@@ -3016,7 +3016,7 @@ pref("layout.display-list.dump-content", false);
 pref("layout.display-list.dump-parent", false);
 
 // Toggle retaining display lists between paints
-pref("layout.display-list.retain", false);
+pref("layout.display-list.retain", true);
 pref("layout.display-list.retain.chrome", false);
 
 // Set the maximum amount of modified frames allowed before doing a full
