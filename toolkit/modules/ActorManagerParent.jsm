@@ -148,6 +148,15 @@ let ACTORS = {
     },
   },
 
+  SelectionSource: {
+    child: {
+      module: "resource://gre/actors/SelectionSourceChild.jsm",
+      messages: [
+        "ViewSource:GetSelection",
+      ],
+    },
+  },
+
   Thumbnails: {
     child: {
       module: "resource://gre/actors/ThumbnailsChild.jsm",
