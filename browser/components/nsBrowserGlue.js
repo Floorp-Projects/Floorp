@@ -87,6 +87,13 @@ let ACTORS = {
     },
   },
 
+  PageInfo: {
+    child: {
+      module: "resource:///actors/PageInfoChild.jsm",
+      messages: ["PageInfo:getData"],
+    },
+  },
+
   PageStyle: {
     child: {
       module: "resource:///actors/PageStyleChild.jsm",
