@@ -1,38 +1,37 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-var EXPORTED_SYMBOLS = ["PrintingContent"];
+var EXPORTED_SYMBOLS = ["PrintingChild"];
 
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 
-var PrintingContent = {
+class PrintingChild extends ActorChild {
   // Bug 1088061: nsPrintJob's DoCommonPrint currently expects the
   // progress listener passed to it to QI to an nsIPrintingPromptService
   // in order to know that a printing progress dialog has been shown. That's
   // really all the interface is used for, hence the fact that I don't actually
   // implement the interface here. Bug 1088061 has been filed to remove
   // this hackery.
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrintingPromptService]),
 
   get shouldSavePrintSettings() {
     return Services.prefs.getBoolPref("print.use_global_printsettings") &&
            Services.prefs.getBoolPref("print.save_print_settings");
-  },
+  }
 
-  printPreviewInitializingInfo: null,
-
-  handleEvent(global, event) {
+  handleEvent(event) {
     switch (event.type) {
       case "PrintingError": {
         let win = event.target.defaultView;
         let wbp = win.getInterface(Ci.nsIWebBrowserPrint);
         let nsresult = event.detail;
-        global.sendAsyncMessage("Printing:Error", {
+        this.mm.sendAsyncMessage("Printing:Error", {
           isPrinting: wbp.doingPrint,
           nsresult,
         });
@@ -51,7 +50,7 @@ var PrintingContent = {
         // by printPreviewInitializingInfo.entered not being set.
         if (!info.entered) {
           info.entered = true;
-          global.sendAsyncMessage("Printing:Preview:Entered", {
+          this.mm.sendAsyncMessage("Printing:Preview:Entered", {
             failed: false,
             changingBrowsers: info.changingBrowsers
           });
@@ -63,18 +62,17 @@ var PrintingContent = {
         }
 
         // Always send page count update.
-        this.updatePageCount(global);
+        this.updatePageCount(this.mm);
         break;
       }
     }
-  },
+  }
 
-  receiveMessage(global, message) {
+  receiveMessage(message) {
     let data = message.data;
     switch (message.name) {
       case "Printing:Preview:Enter": {
-        this.enterPrintPreview(global,
-                               Services.wm.getOuterWindowWithId(data.windowID),
+        this.enterPrintPreview(Services.wm.getOuterWindowWithId(data.windowID),
                                data.simplifiedMode,
                                data.changingBrowsers,
                                data.defaultPrinterName);
@@ -82,29 +80,28 @@ var PrintingContent = {
       }
 
       case "Printing:Preview:Exit": {
-        this.exitPrintPreview(global);
+        this.exitPrintPreview();
         break;
       }
 
       case "Printing:Preview:Navigate": {
-        this.navigate(global, data.navType, data.pageNum);
+        this.navigate(data.navType, data.pageNum);
         break;
       }
 
       case "Printing:Preview:ParseDocument": {
-        this.parseDocument(global, data.URL, Services.wm.getOuterWindowWithId(data.windowID));
+        this.parseDocument(data.URL, Services.wm.getOuterWindowWithId(data.windowID));
         break;
       }
 
       case "Printing:Print": {
-        this.print(global,
-                   Services.wm.getOuterWindowWithId(data.windowID),
+        this.print(Services.wm.getOuterWindowWithId(data.windowID),
                    data.simplifiedMode,
                    data.defaultPrinterName);
         break;
       }
     }
-  },
+  }
 
   getPrintSettings(defaultPrinterName) {
     try {
@@ -128,16 +125,17 @@ var PrintingContent = {
     }
 
     return null;
-  },
+  }
 
-  parseDocument(global, URL, contentWindow) {
+  parseDocument(URL, contentWindow) {
     // By using ReaderMode primitives, we parse given document and place the
     // resulting JS object into the DOM of current browser.
     let articlePromise = ReaderMode.parseDocument(contentWindow.document).catch(Cu.reportError);
-    articlePromise.then(function(article) {
+    articlePromise.then((article) => {
       // We make use of a web progress listener in order to know when the content we inject
       // into the DOM has finished rendering. If our layout engine is still painting, we
       // will wait for MozAfterPaint event to be fired.
+      let {mm} = this;
       let webProgressListener = {
         onStateChange(webProgress, req, flags, status) {
           if (flags & Ci.nsIWebProgressListener.STATE_STOP) {
@@ -147,17 +145,17 @@ var PrintingContent = {
             // using ReaderMode primitives and we are able to enter on preview mode.
             if (domUtils.isMozAfterPaintPending) {
               let onPaint = function() {
-                global.removeEventListener("MozAfterPaint", onPaint);
-                global.sendAsyncMessage("Printing:Preview:ReaderModeReady");
+                mm.removeEventListener("MozAfterPaint", onPaint);
+                mm.sendAsyncMessage("Printing:Preview:ReaderModeReady");
               };
               contentWindow.addEventListener("MozAfterPaint", onPaint);
               // This timer need when display list invalidation doesn't invalidate.
-              global.setTimeout(() => {
-                global.removeEventListener("MozAfterPaint", onPaint);
-                global.sendAsyncMessage("Printing:Preview:ReaderModeReady");
+              mm.setTimeout(() => {
+                mm.removeEventListener("MozAfterPaint", onPaint);
+                mm.sendAsyncMessage("Printing:Preview:ReaderModeReady");
               }, 100);
             } else {
-              global.sendAsyncMessage("Printing:Preview:ReaderModeReady");
+              mm.sendAsyncMessage("Printing:Preview:ReaderModeReady");
             }
           }
         },
@@ -169,7 +167,7 @@ var PrintingContent = {
         ]),
       };
 
-      const {content, docShell} = global;
+      const {content, docShell} = this.mm;
 
       // Here we QI the docShell into a nsIWebProgress passing our web progress listener in.
       let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -269,10 +267,10 @@ var PrintingContent = {
         readerMessageElement.style.display = "block";
       }
     });
-  },
+  }
 
-  enterPrintPreview(global, contentWindow, simplifiedMode, changingBrowsers, defaultPrinterName) {
-    const {docShell} = global;
+  enterPrintPreview(contentWindow, simplifiedMode, changingBrowsers, defaultPrinterName) {
+    const {docShell} = this;
     try {
       let printSettings = this.getPrintSettings(defaultPrinterName);
 
@@ -287,7 +285,7 @@ var PrintingContent = {
       // touching a different TabGroup in our own runnable.
       let printPreviewInitialize = () => {
         try {
-          let listener = new PrintingListener(global);
+          let listener = new PrintingListener(this.mm);
 
           this.printPreviewInitializingInfo = { changingBrowsers };
           docShell.printPreview.printPreview(printSettings, contentWindow, listener);
@@ -296,7 +294,7 @@ var PrintingContent = {
           // In that case, we inform the parent to bail out of print preview.
           Cu.reportError(error);
           this.printPreviewInitializingInfo = null;
-          global.sendAsyncMessage("Printing:Preview:Entered", { failed: true });
+          this.mm.sendAsyncMessage("Printing:Preview:Entered", { failed: true });
         }
       };
 
@@ -314,16 +312,16 @@ var PrintingContent = {
       // This might fail if we, for example, attempt to print a XUL document.
       // In that case, we inform the parent to bail out of print preview.
       Cu.reportError(error);
-      global.sendAsyncMessage("Printing:Preview:Entered", { failed: true });
+      this.mm.sendAsyncMessage("Printing:Preview:Entered", { failed: true });
     }
-  },
+  }
 
-  exitPrintPreview(global) {
+  exitPrintPreview(glo) {
     this.printPreviewInitializingInfo = null;
-    global.docShell.printPreview.exitPrintPreview();
-  },
+    this.docShell.printPreview.exitPrintPreview();
+  }
 
-  print(global, contentWindow, simplifiedMode, defaultPrinterName) {
+  print(contentWindow, simplifiedMode, defaultPrinterName) {
     let printSettings = this.getPrintSettings(defaultPrinterName);
 
     // If we happen to be on simplified mode, we need to set docURL in order
@@ -359,7 +357,7 @@ var PrintingContent = {
       if (e.result != Cr.NS_ERROR_ABORT) {
         Cu.reportError(`In Printing:Print:Done handler, got unexpected rv
                         ${e.result}.`);
-        global.sendAsyncMessage("Printing:Error", {
+        this.mm.sendAsyncMessage("Printing:Error", {
           isPrinting: true,
           nsresult: e.result,
         });
@@ -375,24 +373,27 @@ var PrintingContent = {
       PSSVC.savePrintSettingsToPrefs(printSettings, false,
                                      printSettings.kInitSavePrinterName);
     }
-  },
+  }
 
   logKeyedTelemetry(id, key) {
     let histogram = Services.telemetry.getKeyedHistogramById(id);
     histogram.add(key);
-  },
+  }
 
-  updatePageCount(global) {
-    let numPages = global.docShell.printPreview.printPreviewNumPages;
-    global.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
+  updatePageCount() {
+    let numPages = this.docShell.printPreview.printPreviewNumPages;
+    this.mm.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
       numPages,
     });
-  },
+  }
 
-  navigate(global, navType, pageNum) {
-    global.docShell.printPreview.printPreviewNavigate(navType, pageNum);
-  },
-};
+  navigate(navType, pageNum) {
+    this.docShell.printPreview.printPreviewNavigate(navType, pageNum);
+  }
+}
+
+PrintingChild.prototype.QueryInterface =
+  ChromeUtils.generateQI([Ci.nsIPrintingPromptService]);
 
 function PrintingListener(global) {
   this.global = global;
