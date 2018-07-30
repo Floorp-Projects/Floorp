@@ -29,6 +29,21 @@ let ACTORS = {
     },
   },
 
+  BlockedSite: {
+    child: {
+      module: "resource:///actors/BlockedSiteChild.jsm",
+      events: {
+        "AboutBlockedLoaded": {wantUntrusted: true},
+        "click": {},
+      },
+      matches: ["about:blocked?*"],
+      allFrames: true,
+      messages: [
+        "DeceptiveBlockedDetails",
+      ],
+    },
+  },
+
   BrowserTab: {
     child: {
       module: "resource:///actors/BrowserTabChild.jsm",
