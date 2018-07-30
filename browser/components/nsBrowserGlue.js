@@ -102,6 +102,24 @@ let ACTORS = {
     },
   },
 
+  DOMFullscreen: {
+    child: {
+      module: "resource:///actors/DOMFullscreenChild.jsm",
+      group: "browsers",
+      events: {
+        "MozDOMFullscreen:Request": {},
+        "MozDOMFullscreen:Entered": {},
+        "MozDOMFullscreen:NewOrigin": {},
+        "MozDOMFullscreen:Exit": {},
+        "MozDOMFullscreen:Exited": {},
+      },
+      messages: [
+        "DOMFullscreen:Entered",
+        "DOMFullscreen:CleanUp",
+      ]
+    },
+  },
+
   LightWeightThemeInstall: {
     child: {
       module: "resource:///actors/LightWeightThemeInstallChild.jsm",
