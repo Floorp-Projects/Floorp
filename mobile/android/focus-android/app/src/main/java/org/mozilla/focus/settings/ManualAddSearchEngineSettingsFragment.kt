@@ -7,6 +7,7 @@ package org.mozilla.focus.settings
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.Handler
 import android.support.annotation.VisibleForTesting
 import android.support.annotation.WorkerThread
 import android.support.design.widget.Snackbar
@@ -14,6 +15,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.ViewGroup
 import android.widget.EditText
 import org.mozilla.focus.R
 import org.mozilla.focus.search.CustomSearchEngineStore
@@ -38,6 +40,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
      */
     private var activeAsyncTask: AsyncTask<Void, Void, Boolean>? = null
     private var menuItemForActiveAsyncTask: MenuItem? = null
+    private val handler = Handler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,9 +126,35 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     private fun setUiIsValidatingAsync(isValidating: Boolean, saveMenuItem: MenuItem?) {
         val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
-        pref.setProgressViewShown(isValidating)
+
+        if (isValidating) {
+            view.alpha = 0.5f
+            // Delay showing the loading indicator to prevent it flashing on the screen
+            handler.postDelayed({
+                pref.setProgressViewShown(isValidating)
+            }, 1000)
+        } else {
+            view.alpha = 1f
+            handler.removeCallbacksAndMessages(null)
+            pref.setProgressViewShown(isValidating)
+        }
+
+        // Disable text entry until done validating
+        val viewGroup = view as ViewGroup
+        enableAllSubviews(!isValidating, viewGroup)
 
         saveMenuItem!!.isEnabled = !isValidating
+    }
+
+    private fun enableAllSubviews(shouldEnable: Boolean, viewGroup: ViewGroup) {
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+            if (child is ViewGroup) {
+                enableAllSubviews(shouldEnable, child)
+            } else {
+                child.isEnabled = shouldEnable
+            }
+        }
     }
 
     private fun findManualAddSearchEnginePreference(id: Int): ManualAddSearchEnginePreference {
