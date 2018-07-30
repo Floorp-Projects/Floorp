@@ -220,6 +220,16 @@ let ACTORS = {
     },
   },
 
+  ShieldFrame: {
+    child: {
+      module: "resource://normandy-content/ShieldFrameChild.jsm",
+      events: {
+        "ShieldPageEvent": {wantUntrusted: true},
+      },
+      matches: ["about:studies"],
+    },
+  },
+
   URIFixup: {
     child: {
       module: "resource:///actors/URIFixupChild.jsm",
