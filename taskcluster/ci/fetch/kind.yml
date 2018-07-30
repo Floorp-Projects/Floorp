@@ -5,10 +5,20 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - taskgraph.transforms.fetch:transforms
     - taskgraph.transforms.try_job:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
+
+job-defaults:
+    run-on-projects: []
+    treeherder:
+        kind: build
+        platform: fetch/opt
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-images
+    worker:
+        docker-image: {in-tree: fetch}
+        max-run-time: 900
 
 jobs-from:
     - toolchains.yml
