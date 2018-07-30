@@ -143,7 +143,6 @@ EXTRA_JS_MODULES += [
     'ContentObservers.js',
     'ContentSearch.jsm',
     'ContentWebRTC.jsm',
-    'ContextMenu.jsm',
     'ExtensionsUI.jsm',
     'Feeds.jsm',
     'FormSubmitObserver.jsm',

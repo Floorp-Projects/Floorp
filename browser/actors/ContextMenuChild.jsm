@@ -6,10 +6,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ContextMenu"];
+var EXPORTED_SYMBOLS = ["ContextMenuChild"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -34,14 +36,14 @@ const messageListeners = {
   "ContextMenu:BookmarkFrame": function(aMessage) {
     let frame = this.getTarget(aMessage).ownerDocument;
 
-    this.global.sendAsyncMessage("ContextMenu:BookmarkFrame:Result",
-                                 { title: frame.title });
+    this.mm.sendAsyncMessage("ContextMenu:BookmarkFrame:Result",
+                             { title: frame.title });
   },
 
   "ContextMenu:Canvas:ToBlobURL": function(aMessage) {
     this.getTarget(aMessage).toBlob((blob) => {
       let blobURL = URL.createObjectURL(blob);
-      this.global.sendAsyncMessage("ContextMenu:Canvas:ToBlobURL:Result", { blobURL });
+      this.mm.sendAsyncMessage("ContextMenu:Canvas:ToBlobURL:Result", { blobURL });
     });
   },
 
@@ -168,8 +170,8 @@ const messageListeners = {
       spec += separator + formData.join("&");
     }
 
-    this.global.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData:Result",
-                                 { spec, title, postData, charset });
+    this.mm.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData:Result",
+                             { spec, title, postData, charset });
   },
 
   "ContextMenu:SaveVideoFrameAsImage": function(aMessage) {
@@ -182,7 +184,7 @@ const messageListeners = {
     let ctxDraw = canvas.getContext("2d");
     ctxDraw.drawImage(video, 0, 0);
 
-    this.global.sendAsyncMessage("ContextMenu:SaveVideoFrameAsImage:Result", {
+    this.mm.sendAsyncMessage("ContextMenu:SaveVideoFrameAsImage:Result", {
       dataURL: canvas.toDataURL("image/jpeg", ""),
     });
   },
@@ -206,8 +208,8 @@ const messageListeners = {
         let dataUrl = canvas.toDataURL();
         let url = (new URL(target.ownerDocument.location.href)).pathname;
         let imageName = url.substr(url.lastIndexOf("/") + 1);
-        this.global.sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result",
-                                     { dataUrl, imageName });
+        this.mm.sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result",
+                                 { dataUrl, imageName });
       } catch (e) {
         Cu.reportError(e);
         disable = true;
@@ -215,24 +217,37 @@ const messageListeners = {
     }
 
     if (disable) {
-      this.global.sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result",
-                                   { disable });
+      this.mm.sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result",
+                               { disable });
     }
   },
 };
 
-class ContextMenu {
+let contextMenus = new WeakMap();
+
+class ContextMenuChild extends ActorChild {
   // PUBLIC
   constructor(global) {
+    super(global);
+
+    contextMenus.set(global, this);
+
     this.target = null;
     this.context = null;
-    this.global = global;
-    this.content = global.content;
     this.lastMenuTarget = null;
 
     Object.keys(messageListeners).forEach(key =>
       global.addMessageListener(key, messageListeners[key].bind(this))
     );
+  }
+
+  static getTarget(global, message, key) {
+    return contextMenus.get(global).getTarget(message, key);
+  }
+
+  static getLastTarget(global) {
+    let contextMenu = contextMenus.get(global);
+    return contextMenu && contextMenu.lastMenuTarget;
   }
 
   /**
@@ -489,7 +504,7 @@ class ContextMenu {
     let loginFillInfo = LoginManagerContent.getFieldContext(aEvent.composedTarget);
 
     // The same-origin check will be done in nsContextMenu.openLinkInTab.
-    let parentAllowsMixedContent = !!this.global.docShell.mixedContentChannel;
+    let parentAllowsMixedContent = !!this.docShell.mixedContentChannel;
 
     // Get referrer attribute from clicked link and parse it
     let referrerAttrValue =
@@ -528,7 +543,7 @@ class ContextMenu {
     }
 
     let selectionInfo = BrowserUtils.getSelectionDetails(this.content);
-    let loadContext = this.global.docShell.QueryInterface(Ci.nsILoadContext);
+    let loadContext = this.docShell.QueryInterface(Ci.nsILoadContext);
     let userContextId = loadContext.originAttributes.userContextId;
     let popupNodeSelectors = findAllCssSelectors(aEvent.composedTarget);
 
@@ -552,14 +567,14 @@ class ContextMenu {
       editFlags = SpellCheckHelper.isEditable(aEvent.composedTarget, this.content);
 
       if (editFlags & SpellCheckHelper.SPELLCHECKABLE) {
-        spellInfo = InlineSpellCheckerContent.initContextMenu(aEvent, editFlags, this.global);
+        spellInfo = InlineSpellCheckerContent.initContextMenu(aEvent, editFlags, this.mm);
       }
 
       // Set the event target first as the copy image command needs it to
       // determine what was context-clicked on. Then, update the state of the
       // commands on the context menu.
-      this.global.docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
-                          .setCommandNode(aEvent.composedTarget);
+      this.docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
+                   .setCommandNode(aEvent.composedTarget);
       aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");
 
       customMenuItems = PageMenuChild.build(aEvent.composedTarget);
@@ -590,11 +605,11 @@ class ContextMenu {
     };
 
     if (isRemote) {
-      this.global.sendAsyncMessage("contextmenu", data, {
+      this.mm.sendAsyncMessage("contextmenu", data, {
         targetAsCPOW,
       });
     } else {
-      let browser = this.global.docShell.chromeEventHandler;
+      let browser = this.docShell.chromeEventHandler;
       let mainWin = browser.ownerGlobal;
 
       data.documentURIObject = doc.documentURIObject;

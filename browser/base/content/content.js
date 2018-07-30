@@ -27,11 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetErrorContent: "resource:///modules/NetErrorContent.jsm",
   PageMetadata: "resource://gre/modules/PageMetadata.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
-  ContextMenu: "resource:///modules/ContextMenu.jsm",
-});
-
-XPCOMUtils.defineLazyProxy(this, "contextMenu", () => {
-  return new ContextMenu(global);
+  ContextMenuChild: "resource:///actors/ContextMenuChild.jsm",
 });
 
 XPCOMUtils.defineLazyProxy(this, "ClickEventHandler", () => {
@@ -60,8 +56,6 @@ XPCOMUtils.defineLazyProxy(this, "PageInfoListener",
 XPCOMUtils.defineLazyProxy(this, "LightWeightThemeWebInstallListener",
                            "resource:///modules/LightWeightThemeWebInstallListener.jsm");
 
-Services.els.addSystemEventListener(global, "contextmenu", contextMenu, false);
-
 Services.obs.addObserver(formSubmitObserver, "invalidformsubmit", true);
 
 addMessageListener("PageInfo:getData", PageInfoListener);
@@ -69,7 +63,7 @@ addMessageListener("PageInfo:getData", PageInfoListener);
 // NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.
 addMessageListener("RemoteLogins:fillForm", function(message) {
   // intercept if ContextMenu.jsm had sent a plain object for remote targets
-  message.objects.inputElement = contextMenu.getTarget(message, "inputElement");
+  message.objects.inputElement = ContextMenuChild.getTarget(global, message, "inputElement");
   LoginManagerContent.receiveMessage(message, content);
 });
 addEventListener("DOMFormHasPassword", function(event) {
@@ -269,13 +263,13 @@ var PageMetadataMessenger = {
   receiveMessage(message) {
     switch (message.name) {
       case "PageMetadata:GetPageData": {
-        let target = contextMenu.getTarget(message);
+        let target = ContextMenuChild.getTarget(global, message);
         let result = PageMetadata.getData(content.document, target);
         sendAsyncMessage("PageMetadata:PageDataResult", result);
         break;
       }
       case "PageMetadata:GetMicroformats": {
-        let target = contextMenu.getTarget(message);
+        let target = ContextMenuChild.getTarget(global, message);
         let result = PageMetadata.getMicroformats(content.document, target);
         sendAsyncMessage("PageMetadata:MicroformatsResult", result);
         break;
