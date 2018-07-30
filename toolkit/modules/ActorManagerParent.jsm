@@ -252,6 +252,21 @@ let ACTORS = {
     },
   },
 
+  WebNavigation: {
+    child: {
+      module: "resource://gre/actors/WebNavigationChild.jsm",
+      messages: [
+        "WebNavigation:GoBack",
+        "WebNavigation:GoForward",
+        "WebNavigation:GotoIndex",
+        "WebNavigation:LoadURI",
+        "WebNavigation:Reload",
+        "WebNavigation:SetOriginAttributes",
+        "WebNavigation:Stop",
+      ],
+    },
+  },
+
   Zoom: {
     child: {
       module: "resource://gre/actors/ZoomChild.jsm",
