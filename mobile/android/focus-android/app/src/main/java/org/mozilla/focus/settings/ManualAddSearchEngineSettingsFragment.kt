@@ -165,8 +165,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         private val LOGTAG = "ManualAddSearchEngine"
         private val SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS = 4000
         private val VALID_RESPONSE_CODE_UPPER_BOUND = 300
-        private val DISABLED_ALPHA = 0.5f
-        private val LOADING_INDICATOR_DELAY = 1000
+        private const val DISABLED_ALPHA = 0.5f
+        private const val LOADING_INDICATOR_DELAY: Long = 1000
 
         @SuppressWarnings("DE_MIGHT_IGNORE")
         @WorkerThread
