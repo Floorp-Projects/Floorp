@@ -1,6 +1,7 @@
 "use strict";
 
 /* global AddressResult, CreditCardResult */
+// eslint-disable-next-line no-unused-vars
 ChromeUtils.import("resource://formautofill/ProfileAutoCompleteResult.jsm");
 
 let matchingProfiles = [{
