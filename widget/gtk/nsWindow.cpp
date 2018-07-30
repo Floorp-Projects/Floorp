@@ -211,7 +211,7 @@ static void     hierarchy_changed_cb      (GtkWidget *widget,
                                            GtkWidget *previous_toplevel);
 static gboolean window_state_event_cb     (GtkWidget *widget,
                                            GdkEventWindowState *event);
-static void     theme_changed_cb          (GtkSettings *settings,
+static void     settings_changed_cb       (GtkSettings *settings,
                                            GParamSpec *pspec,
                                            nsWindow *data);
 static void     check_resize_cb           (GtkContainer* container,
@@ -734,7 +734,7 @@ nsWindow::Destroy()
     ClearCachedResources();
 
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
-                                         FuncToGpointer(theme_changed_cb),
+                                         FuncToGpointer(settings_changed_cb),
                                          this);
 
     nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
@@ -3443,6 +3443,8 @@ nsWindow::ThemeChanged()
 
         children = children->next;
     }
+
+    IMContextWrapper::OnThemeChanged();
 }
 
 void
@@ -4017,10 +4019,13 @@ nsWindow::Create(nsIWidget* aParent,
         GtkSettings* default_settings = gtk_settings_get_default();
         g_signal_connect_after(default_settings,
                                "notify::gtk-theme-name",
-                               G_CALLBACK(theme_changed_cb), this);
+                               G_CALLBACK(settings_changed_cb), this);
         g_signal_connect_after(default_settings,
                                "notify::gtk-font-name",
-                               G_CALLBACK(theme_changed_cb), this);
+                               G_CALLBACK(settings_changed_cb), this);
+        g_signal_connect_after(default_settings,
+                               "notify::gtk-enable-animations",
+                               G_CALLBACK(settings_changed_cb), this);
     }
 
     if (mContainer) {
@@ -6049,7 +6054,7 @@ window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
 }
 
 static void
-theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
+settings_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
 {
     RefPtr<nsWindow> window = data;
     window->ThemeChanged();

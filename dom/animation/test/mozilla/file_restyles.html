@@ -28,9 +28,9 @@ SimpleTest.finish = function finish() {
 @keyframes opacity-without-end-value {
   from { opacity: 0; }
 }
-@keyframes background-color {
-  from { background-color: red; }
-  to { background-color: blue; }
+@keyframes on-main-thread {
+  from { z-index: 0; }
+  to { z-index: 999; }
 }
 @keyframes rotate {
   from { transform: rotate(0deg); }
@@ -153,7 +153,7 @@ function add_task_if_omta_enabled(test) {
 // from styling of this document itself.
 waitForAllPaints(() => {
   add_task(async function restyling_for_main_thread_animations() {
-    const div = addDiv(null, { style: 'animation: background-color 100s' });
+    const div = addDiv(null, { style: 'animation: on-main-thread 100s' });
     const animation = div.getAnimations()[0];
 
     await waitForAnimationReadyToRestyle(animation);
@@ -315,7 +315,7 @@ waitForAllPaints(() => {
 
   add_task(async function no_restyling_main_thread_animations_out_of_view_element() {
     const div = addDiv(null,
-      { style: 'animation: background-color 100s; transform: translateY(-400px);' });
+      { style: 'animation: on-main-thread 100s; transform: translateY(-400px);' });
     const animation = div.getAnimations()[0];
 
     await waitForAnimationReadyToRestyle(animation);
@@ -483,7 +483,7 @@ waitForAllPaints(() => {
     const parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     const div = addDiv(null,
-      { style: 'animation: background-color 100s; position: relative; top: 20px;' });
+      { style: 'animation: on-main-thread 100s; position: relative; top: 20px;' });
     parentElement.appendChild(div);
     const animation = div.getAnimations()[0];
 
@@ -514,7 +514,7 @@ waitForAllPaints(() => {
     const parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 100px;' });
     const div = addDiv(null,
-      { style: 'animation: background-color 100s; ' +
+      { style: 'animation: on-main-thread 100s; ' +
                'position: relative; ' +
                'top: 20px;' }); // This element is in-view in the parent, but
                                 // out of view in the grandparent.
@@ -562,7 +562,7 @@ waitForAllPaints(() => {
     const parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 200px;' });
     const div = addDiv(null,
-      { style: 'animation: background-color 100s;' });
+      { style: 'animation: on-main-thread 100s;' });
     const pad = addDiv(null,
       { style: 'height: 400px;' });
     parentElement.appendChild(div);
@@ -589,7 +589,7 @@ waitForAllPaints(() => {
     const parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     const div = addDiv(null,
-      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+      { style: 'animation: on-main-thread 100s; position: relative; top: 100px;' });
     parentElement.appendChild(div);
     const animation = div.getAnimations()[0];
 
@@ -614,7 +614,7 @@ waitForAllPaints(() => {
   add_task(
     async function restyling_animations_on_visibility_changed_element_having_child() {
       const div = addDiv(null,
-       { style: 'animation: background-color 100s;' });
+       { style: 'animation: on-main-thread 100s;' });
       const childElement = addDiv(null);
       div.appendChild(childElement);
 
@@ -641,7 +641,7 @@ waitForAllPaints(() => {
   add_task(
     async function restyling_animations_on_visibility_hidden_element_which_gets_visible() {
       const div = addDiv(null,
-       { style: 'animation: background-color 100s; visibility: hidden' });
+       { style: 'animation: on-main-thread 100s; visibility: hidden' });
       const animation = div.getAnimations()[0];
 
 
@@ -666,7 +666,7 @@ waitForAllPaints(() => {
 
   add_task(async function restyling_animations_in_visibility_changed_parent() {
     const parentDiv = addDiv(null, { style: 'visibility: hidden' });
-    const div = addDiv(null, { style: 'animation: background-color 100s;' });
+    const div = addDiv(null, { style: 'animation: on-main-thread 100s;' });
     parentDiv.appendChild(div);
 
     const animation = div.getAnimations()[0];
@@ -700,7 +700,7 @@ waitForAllPaints(() => {
   add_task(
     async function restyling_animations_on_visibility_hidden_element_with_visibility_changed_children() {
       const div = addDiv(null,
-       { style: 'animation: background-color 100s; visibility: hidden' });
+       { style: 'animation: on-main-thread 100s; visibility: hidden' });
       const animation = div.getAnimations()[0];
 
       await waitForAnimationReadyToRestyle(animation);
@@ -750,7 +750,7 @@ waitForAllPaints(() => {
   add_task(
     async function restyling_animations_on_visiblity_hidden_element_having_oof_child() {
       const div = addDiv(null,
-        { style: 'animation: background-color 100s; position: absolute' });
+        { style: 'animation: on-main-thread 100s; position: absolute' });
       const childElement = addDiv(null,
         { style: 'float: left; visibility: hidden' });
       div.appendChild(childElement);
@@ -785,7 +785,7 @@ waitForAllPaints(() => {
       //  AA       AB             BA        BB
 
       const div = addDiv(null,
-       { style: 'animation: background-color 100s; visibility: hidden' });
+       { style: 'animation: on-main-thread 100s; visibility: hidden' });
 
       const childA = addDiv(null);
       div.appendChild(childA);
@@ -925,7 +925,7 @@ waitForAllPaints(() => {
   });
 
   add_task(async function no_restyling_main_thread_animations_after_pause_is_called() {
-    const div = addDiv(null, { style: 'animation: background-color 100s' });
+    const div = addDiv(null, { style: 'animation: on-main-thread 100s' });
     const animation = div.getAnimations()[0];
 
     await waitForAnimationReadyToRestyle(animation);
@@ -986,7 +986,7 @@ waitForAllPaints(() => {
 
   add_task(async function script_animation_on_display_none_element() {
     const div = addDiv(null);
-    const animation = div.animate({ backgroundColor: [ 'red', 'blue' ] },
+    const animation = div.animate({ zIndex: [ '0', '999' ] },
                                 100 * MS_PER_SEC);
 
     await waitForAnimationReadyToRestyle(animation);
@@ -1066,7 +1066,7 @@ waitForAllPaints(() => {
     is(markers.length, 0,
        'Animations with no keyframes should not cause restyles');
 
-    animation.effect.setKeyframes({ backgroundColor: ['red', 'blue'] });
+    animation.effect.setKeyframes({ zIndex: ['0', '999'] });
     markers = await observeStyling(5);
 
     is(markers.length, 5,
@@ -1098,12 +1098,12 @@ waitForAllPaints(() => {
   });
 
   add_task(async function necessary_update_should_be_invoked() {
-    const div = addDiv(null, { style: 'animation: background-color 100s' });
+    const div = addDiv(null, { style: 'animation: on-main-thread 100s' });
     const animation = div.getAnimations()[0];
     await waitForAnimationReadyToRestyle(animation);
     await waitForAnimationFrames(5);
     // Apply another animation style
-    div.style.animation = 'background-color 110s';
+    div.style.animation = 'on-main-thread 110s';
     const markers = await observeStyling(1);
     // There should be two restyles.
     // 1) Animation-only restyle for before applying the new animation style
@@ -1116,18 +1116,18 @@ waitForAllPaints(() => {
 
   add_task_if_omta_enabled(
     async function changing_cascading_result_for_main_thread_animation() {
-      const div = addDiv(null, { style: 'background-color: blue' });
+      const div = addDiv(null, { style: 'on-main-thread: blue' });
       const animation = div.animate({ opacity: [0, 1],
-                                    backgroundColor: ['green', 'red'] },
+                                    zIndex: ['0', '999'] },
                                   100 * MS_PER_SEC);
       await waitForAnimationReadyToRestyle(animation);
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation is running on the compositor');
-      // Make the background-color style as !important to cause an update
+      // Make the z-index style as !important to cause an update
       // to the cascade.
-      // Bug 1300982: The background-color animation should be no longer
+      // Bug 1300982: The z-index animation should be no longer
       // running on the main thread.
-      div.style.setProperty('background-color', '1', 'important');
+      div.style.setProperty('z-index', '0', 'important');
       const markers = await observeStyling(5);
       todo_is(markers.length, 0,
          'Changing cascading result for the property running on the main ' +
@@ -1269,9 +1269,9 @@ waitForAllPaints(() => {
 
   add_task(async function no_restyling_while_computed_timing_is_not_changed() {
     const div = addDiv(null);
-    const animation = div.animate({ backgroundColor: [ 'red', 'blue' ] },
-                                { duration: 100 * MS_PER_SEC,
-                                  easing: 'step-end' });
+    const animation = div.animate({ zIndex: [ '0', '999' ] },
+                                  { duration: 100 * MS_PER_SEC,
+                                    easing: 'step-end' });
 
     await waitForAnimationReadyToRestyle(animation);
 
@@ -1352,7 +1352,7 @@ waitForAllPaints(() => {
     const scrollDiv = addDiv(null, { style: 'overflow: scroll; ' +
                                           'height: 100px; width: 100px;' });
     const targetDiv = addDiv(null,
-                           { style: 'animation: background-color 100s;' +
+                           { style: 'animation: on-main-thread 100s;' +
                                     'transform: translate(-50px, -50px);' });
     scrollDiv.appendChild(targetDiv);
 
@@ -1371,7 +1371,7 @@ waitForAllPaints(() => {
     const scrollDiv = addDiv(null, { style: 'overflow: scroll;' +
                                           'height: 100px; width: 100px;' });
     const targetDiv = addDiv(null,
-                           { style: 'animation: background-color 100s;' +
+                           { style: 'animation: on-main-thread 100s;' +
                                     'transform: translate(100px, 100px);' });
     scrollDiv.appendChild(targetDiv);
 
@@ -1391,7 +1391,7 @@ waitForAllPaints(() => {
       const parentDiv = addDiv(null,
                              { style: 'position: absolute; top: -1000px;' });
       const targetDiv = addDiv(null,
-                             { style: 'animation: background-color 100s;' });
+                             { style: 'animation: on-main-thread 100s;' });
       parentDiv.appendChild(targetDiv);
 
       const animation = targetDiv.getAnimations()[0];
@@ -1409,7 +1409,7 @@ waitForAllPaints(() => {
   add_task(
     async function throttling_animations_on_out_of_view_position_absolute_element() {
       const div = addDiv(null,
-                       { style: 'animation: background-color 100s; ' +
+                       { style: 'animation: on-main-thread 100s; ' +
                                 'position: absolute; top: -1000px;' });
 
       const animation = div.getAnimations()[0];
@@ -1429,7 +1429,7 @@ waitForAllPaints(() => {
       const parentDiv = addDiv(null,
                              { style: 'position: fixed; top: -1000px;' });
       const targetDiv = addDiv(null,
-                             { style: 'animation: background-color 100s;' });
+                             { style: 'animation: on-main-thread 100s;' });
       parentDiv.appendChild(targetDiv);
 
       const animation = targetDiv.getAnimations()[0];
@@ -1447,7 +1447,7 @@ waitForAllPaints(() => {
   add_task(
     async function throttling_animations_on_out_of_view_position_fixed_element() {
       const div = addDiv(null,
-                       { style: 'animation: background-color 100s; ' +
+                       { style: 'animation: on-main-thread 100s; ' +
                                 'position: fixed; top: -1000px;' });
 
       const animation = div.getAnimations()[0];
@@ -1496,7 +1496,7 @@ waitForAllPaints(() => {
     async function position_absolute_animations_in_collapsed_element() {
       const parent = addDiv(null, { style: 'overflow: scroll; height: 0px;' });
       const target = addDiv(null,
-                          { style: 'animation: background-color 100s infinite;' +
+                          { style: 'animation: on-main-thread 100s infinite;' +
                                    'position: absolute; top: 50%;' +
                                    'width: 100px; height: 100px;' });
       parent.appendChild(target);
@@ -1517,7 +1517,7 @@ waitForAllPaints(() => {
     async function throttling_position_absolute_animations_in_collapsed_element() {
       const parent = addDiv(null, { style: 'overflow: scroll; height: 0px;' });
       const target = addDiv(null,
-                          { style: 'animation: background-color 100s infinite;' +
+                          { style: 'animation: on-main-thread 100s infinite;' +
                                    'position: absolute; top: 50%;' });
       parent.appendChild(target);
 
@@ -1827,7 +1827,7 @@ waitForAllPaints(() => {
     const target = iframe.contentDocument.getElementById("target");
     target.style= 'width: 100px; height: 100px;';
 
-    const animation = target.animate({ backgroundColor: [ 'blue', 'green' ] },
+    const animation = target.animate({ zIndex: [ '0', '999' ] },
                                      100 * MS_PER_SEC);
     await waitForAnimationReadyToRestyle(animation);
 

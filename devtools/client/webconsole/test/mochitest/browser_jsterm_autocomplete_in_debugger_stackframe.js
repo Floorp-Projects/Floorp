@@ -13,6 +13,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 add_task(async function() {
   // Run test with legacy JsTerm
+  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
   await performTests();
   // And then run it with the CodeMirror-powered one.
   await pushPref("devtools.webconsole.jsterm.codeMirror", true);

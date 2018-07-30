@@ -24,7 +24,7 @@ pref("devtools.webconsole.inputHistoryCount", 50);
 pref("devtools.webconsole.persistlog", false);
 pref("devtools.webconsole.timestampMessages", false);
 pref("devtools.webconsole.sidebarToggle", true);
-pref("devtools.webconsole.jsterm.codeMirror", false);
+pref("devtools.webconsole.jsterm.codeMirror", true);
 
 global.loader = {
   lazyServiceGetter: () => {},
