@@ -5696,7 +5696,6 @@ class BaseCompiler final : public BaseCompilerInterface
 
         masm.bind(&skipBarrier);
     }
-#endif
 
     void emitBarrieredStore(const Maybe<RegPtr>& object, RegPtr valueAddr, RegPtr value) {
         emitPreBarrier(valueAddr); // Preserves valueAddr
@@ -5705,6 +5704,7 @@ class BaseCompiler final : public BaseCompilerInterface
         emitPostBarrier(object, otherScratch, valueAddr, value); // Consumes valueAddr
         freeRef(otherScratch);
     }
+#endif // ENABLE_WASM_GC
 
     ////////////////////////////////////////////////////////////
     //
