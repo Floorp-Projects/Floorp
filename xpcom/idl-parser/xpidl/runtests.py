@@ -102,6 +102,7 @@ attribute long bar;
 void getBar();
 };""", filename='f')
         self.assertTrue(isinstance(i, xpidl.IDL))
+        i.resolve([], self.p, {})
 
         class FdMock:
             def write(self, s):
