@@ -128,11 +128,11 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
 
         if (isValidating) {
-            view.alpha = 0.5f
+            view.alpha = DISABLED_ALPHA
             // Delay showing the loading indicator to prevent it flashing on the screen
             handler.postDelayed({
                 pref.setProgressViewShown(isValidating)
-            }, 1000)
+            }, LOADING_INDICATOR_DELAY)
         } else {
             view.alpha = 1f
             handler.removeCallbacksAndMessages(null)
@@ -165,6 +165,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         private val LOGTAG = "ManualAddSearchEngine"
         private val SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS = 4000
         private val VALID_RESPONSE_CODE_UPPER_BOUND = 300
+        private val DISABLED_ALPHA = 0.5f
+        private val LOADING_INDICATOR_DELAY = 1000
 
         @SuppressWarnings("DE_MIGHT_IGNORE")
         @WorkerThread
