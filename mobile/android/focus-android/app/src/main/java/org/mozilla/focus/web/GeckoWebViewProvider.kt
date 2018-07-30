@@ -66,7 +66,9 @@ class GeckoWebViewProvider : IWebViewProvider {
         if (geckoRuntime == null) {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
             runtimeSettingsBuilder.useContentProcessHint(true)
-            runtimeSettingsBuilder.nativeCrashReportingEnabled(true)
+            if (TelemetryWrapper.isTelemetryEnabled(context)) {
+                runtimeSettingsBuilder.nativeCrashReportingEnabled(true)
+            }
             geckoRuntime =
                     GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
         }
