@@ -19,8 +19,6 @@ ChromeUtils.defineModuleGetter(this, "AutoScrollController",
   "resource://gre/modules/AutoScrollController.jsm");
 ChromeUtils.defineModuleGetter(this, "FindContent",
   "resource://gre/modules/FindContent.jsm");
-ChromeUtils.defineModuleGetter(this, "PrintingContent",
-  "resource://gre/modules/PrintingContent.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "formFill",
                                    "@mozilla.org/satchel/form-fill-controller;1",
@@ -81,32 +79,6 @@ Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, tru
 addEventListener("MozOpenDateTimePicker", DateTimePickerContent);
 
 addEventListener("DOMPopupBlocked", PopupBlocking, true);
-
-var Printing = {
-  MESSAGES: [
-    "Printing:Preview:Enter",
-    "Printing:Preview:Exit",
-    "Printing:Preview:Navigate",
-    "Printing:Preview:ParseDocument",
-    "Printing:Print",
-  ],
-
-  init() {
-    this.MESSAGES.forEach(msgName => addMessageListener(msgName, this));
-    addEventListener("PrintingError", this, true);
-    addEventListener("printPreviewUpdate", this, true);
-    this.init = null;
-  },
-
-  handleEvent(event) {
-    return PrintingContent.handleEvent(global, event);
-  },
-
-  receiveMessage(message) {
-    return PrintingContent.receiveMessage(global, message);
-  },
-};
-Printing.init();
 
 addEventListener("WebChannelMessageToChrome", WebChannelContent,
                  true, true);

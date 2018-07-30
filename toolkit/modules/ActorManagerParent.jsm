@@ -121,6 +121,23 @@ let ACTORS = {
     },
   },
 
+  Printing: {
+    child: {
+      module: "resource://gre/actors/PrintingChild.jsm",
+      events: {
+        "PrintingError": {capture: true},
+        "printPreviewUpdate": {capture: true},
+      },
+      messages: [
+        "Printing:Preview:Enter",
+        "Printing:Preview:Exit",
+        "Printing:Preview:Navigate",
+        "Printing:Preview:ParseDocument",
+        "Printing:Print",
+      ],
+    },
+  },
+
   Select: {
     child: {
       module: "resource://gre/actors/SelectChild.jsm",
