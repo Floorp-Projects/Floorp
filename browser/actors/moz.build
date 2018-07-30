@@ -10,5 +10,6 @@ with Files("PageStyleChild.jsm"):
 FINAL_TARGET_FILES.actors += [
     'AboutReaderChild.jsm',
     'BrowserTabChild.jsm',
+    'ContentSearchChild.jsm',
     'PageStyleChild.jsm',
 ]

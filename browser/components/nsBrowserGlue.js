@@ -53,6 +53,21 @@ let ACTORS = {
     },
   },
 
+  ContentSearch: {
+    child: {
+      module: "resource:///actors/ContentSearchChild.jsm",
+      group: "browsers",
+      matches: ["about:home", "about:newtab", "about:welcome",
+                "chrome://mochitests/content/*"],
+      events: {
+        "ContentSearchClient": {capture: true, wantUntrusted: true},
+      },
+      messages: [
+        "ContentSearch",
+      ]
+    },
+  },
+
   PageStyle: {
     child: {
       module: "resource:///actors/PageStyleChild.jsm",
