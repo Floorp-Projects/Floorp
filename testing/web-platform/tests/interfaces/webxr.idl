@@ -18,14 +18,14 @@ partial interface Navigator {
 };
 
 dictionary XRSessionCreationOptions {
-  boolean exclusive = false;
+  boolean immersive = false;
   XRPresentationContext outputContext;
 };
 
 [SecureContext, Exposed=Window] interface XRSession : EventTarget {
   // Attributes
   readonly attribute XRDevice device;
-  readonly attribute boolean exclusive;
+  readonly attribute boolean immersive;
   readonly attribute XRPresentationContext outputContext;
 
   attribute double depthNear;

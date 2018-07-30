@@ -434,7 +434,7 @@ def check_subdomains(config):
     aliases = config.aliases
 
     host = config.server_host
-    port = get_port(host)
+    port = get_port()
     logger.debug("Going to use port %d to check subdomains" % port)
 
     wrapper = ServerProc()
@@ -789,7 +789,7 @@ def run(**kwargs):
 
     stash_address = None
     if bind_address:
-        stash_address = (config.server_host, get_port(config.server_host))
+        stash_address = (config.server_host, get_port())
         logger.debug("Going to use port %d for stash" % stash_address[1])
 
     with stash.StashServer(stash_address, authkey=str(uuid.uuid4())):

@@ -365,7 +365,7 @@ pref("dom.max_script_run_time", 20);
 
 // Absolute path to the devtools unix domain socket file used
 // to communicate with a usb cable via adb forward.
-pref("devtools.debugger.unix-domain-socket", "/data/data/@ANDROID_PACKAGE_NAME@/firefox-debugger-socket");
+pref("devtools.debugger.unix-domain-socket", "@ANDROID_PACKAGE_NAME@/firefox-debugger-socket");
 
 pref("devtools.remote.usb.enabled", false);
 pref("devtools.remote.wifi.enabled", false);

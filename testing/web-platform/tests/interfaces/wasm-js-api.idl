@@ -8,19 +8,17 @@ dictionary WebAssemblyInstantiatedSource {
     required Instance instance;
 };
 
-// Commented out until namespace is supported.
-// See https://github.com/web-platform-tests/wpt/issues/7583
-// [Exposed=(Window,Worker,Worklet)]
-// namespace WebAssembly {
-//     boolean validate(BufferSource bytes);
-//     Promise<Module> compile(BufferSource bytes);
-//
-//     Promise<WebAssemblyInstantiatedSource> instantiate(
-//         BufferSource bytes, optional object importObject);
-//
-//     Promise<Instance> instantiate(
-//         Module moduleObject, optional object importObject);
-// };
+[Exposed=(Window,Worker,Worklet)]
+namespace WebAssembly {
+    boolean validate(BufferSource bytes);
+    Promise<Module> compile(BufferSource bytes);
+
+    Promise<WebAssemblyInstantiatedSource> instantiate(
+        BufferSource bytes, optional object importObject);
+
+    Promise<Instance> instantiate(
+        Module moduleObject, optional object importObject);
+};
 
 enum ImportExportKind {
   "function",
