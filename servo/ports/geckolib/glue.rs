@@ -925,7 +925,6 @@ pub extern "C" fn Servo_ResolveLogicalProperty(
     longhand.to_physical(style.writing_mode).to_nscsspropertyid()
 }
 
-
 #[no_mangle]
 pub unsafe extern "C" fn Servo_Property_LookupEnabledForAllContent(
     prop: *const nsACString,
@@ -934,6 +933,25 @@ pub unsafe extern "C" fn Servo_Property_LookupEnabledForAllContent(
         Ok(p) => p.to_nscsspropertyid_resolving_aliases(),
         Err(..) => nsCSSPropertyID::eCSSProperty_UNKNOWN,
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_Property_GetName(
+    prop: nsCSSPropertyID,
+    out_length: *mut u32,
+) -> *const u8 {
+    use style::properties::NonCustomPropertyId;
+
+    let (ptr, len) = match NonCustomPropertyId::from_nscsspropertyid(prop) {
+        Ok(p) => {
+            let name = p.name();
+            (name.as_bytes().as_ptr(), name.len())
+        }
+        Err(..) => (ptr::null(), 0),
+    };
+
+    *out_length = len as u32;
+    ptr
 }
 
 macro_rules! parse_enabled_property_name {

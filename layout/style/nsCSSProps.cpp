@@ -34,24 +34,9 @@ using namespace mozilla;
 
 typedef nsCSSProps::KTableEntry KTableEntry;
 
-// required to make the symbol external, so that TestCSSPropertyLookup.cpp can link with it
-extern const char* const kCSSRawProperties[];
-
-// define an array of all CSS properties
-const char* const kCSSRawProperties[eCSSProperty_COUNT_with_aliases] = {
-#define CSS_PROP_LONGHAND(name_, ...) #name_,
-#define CSS_PROP_SHORTHAND(name_, ...) #name_,
-#define CSS_PROP_ALIAS(name_, ...) #name_,
-#include "mozilla/ServoCSSPropList.h"
-#undef CSS_PROP_ALIAS
-#undef CSS_PROP_SHORTHAND
-#undef CSS_PROP_LONGHAND
-};
-
 using namespace mozilla;
 
 static int32_t gPropertyTableRefCount;
-static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
 static nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>* gPropertyIDLNameTable;
@@ -66,20 +51,6 @@ static const char* const kCSSRawCounterDescs[] = {
 #define CSS_COUNTER_DESC(name_, method_) #name_,
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC
-};
-
-// We need eCSSAliasCount so we can make gAliases nonzero size when there
-// are no aliases.
-enum {
-  eCSSAliasCount = eCSSProperty_COUNT_with_aliases - eCSSProperty_COUNT
-};
-
-// The names are in kCSSRawProperties.
-static nsCSSPropertyID gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
-#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_)  \
-  eCSSProperty_##propid_ ,
-#include "mozilla/ServoCSSPropList.h"
-#undef CSS_PROP_ALIAS
 };
 
 static nsStaticCaseInsensitiveNameTable*
@@ -101,13 +72,10 @@ void
 nsCSSProps::AddRefTable(void)
 {
   if (0 == gPropertyTableRefCount++) {
-    MOZ_ASSERT(!gPropertyTable, "pre existing array!");
     MOZ_ASSERT(!gFontDescTable, "pre existing array!");
     MOZ_ASSERT(!gCounterDescTable, "pre existing array!");
     MOZ_ASSERT(!gPropertyIDLNameTable, "pre existing array!");
 
-    gPropertyTable = CreateStaticTable(
-        kCSSRawProperties, eCSSProperty_COUNT_with_aliases);
     gFontDescTable = CreateStaticTable(kCSSRawFontDescs, eCSSFontDesc_COUNT);
     gCounterDescTable = CreateStaticTable(
         kCSSRawCounterDescs, eCSSCounterDesc_COUNT);
@@ -141,9 +109,6 @@ void
 nsCSSProps::ReleaseTable(void)
 {
   if (0 == --gPropertyTableRefCount) {
-    delete gPropertyTable;
-    gPropertyTable = nullptr;
-
     delete gFontDescTable;
     gFontDescTable = nullptr;
 
@@ -197,18 +162,6 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
     which = eCSSFontDesc_UNKNOWN;
   }
   return which;
-}
-
-const nsCString&
-nsCSSProps::GetStringValue(nsCSSPropertyID aProperty)
-{
-  MOZ_ASSERT(gPropertyTable, "no lookup table, needs addref");
-  if (gPropertyTable) {
-    return gPropertyTable->GetStringValue(int32_t(aProperty));
-  } else {
-    static nsDependentCString sNullStr("");
-    return sNullStr;
-  }
 }
 
 const nsCString&
