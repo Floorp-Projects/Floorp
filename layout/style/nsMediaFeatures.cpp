@@ -428,34 +428,6 @@ GetSystemMetric(nsIDocument* aDocument, const nsMediaFeature* aFeature,
 }
 
 static void
-GetWindowsTheme(nsIDocument* aDocument, const nsMediaFeature* aFeature,
-                nsCSSValue& aResult)
-{
-  aResult.Reset();
-
-  MOZ_ASSERT(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
-  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
-    return;
-  }
-
-#ifdef XP_WIN
-  uint8_t windowsThemeId = GetWindowsThemeIdentifier();
-
-  // Classic mode should fail to match.
-  if (windowsThemeId == LookAndFeel::eWindowsTheme_Classic)
-    return;
-
-  // Look up the appropriate theme string
-  for (const auto& theme : kThemeStrings) {
-    if (windowsThemeId == theme.mId) {
-      aResult.SetAtomIdentValue((*theme.mName)->ToAddRefed());
-      break;
-    }
-  }
-#endif
-}
-
-static void
 GetOperatingSystemVersion(nsIDocument* aDocument, const nsMediaFeature* aFeature,
                          nsCSSValue& aResult)
 {
