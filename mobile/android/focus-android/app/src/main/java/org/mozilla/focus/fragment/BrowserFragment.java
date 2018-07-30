@@ -229,6 +229,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         super.onPause();
         getContext().unregisterReceiver(downloadBroadcastReceiver);
 
+        if (isFullscreen) {
+            IWebView webView = getWebView();
+            if (webView != null) {
+                webView.exitFullscreen();
+            }
+        }
+
         final BrowserMenu menu = menuWeakReference.get();
         if (menu != null) {
             menu.dismiss();
