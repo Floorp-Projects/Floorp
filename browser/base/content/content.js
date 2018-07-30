@@ -22,9 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
   FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
-  NetErrorContent: "resource:///modules/NetErrorContent.jsm",
   PageMetadata: "resource://gre/modules/PageMetadata.jsm",
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   ContextMenuChild: "resource:///actors/ContextMenuChild.jsm",
 });
 
@@ -63,62 +61,6 @@ addEventListener("DOMInputPasswordAdded", function(event) {
 addEventListener("DOMAutoComplete", function(event) {
   LoginManagerContent.onUsernameInput(event);
 });
-
-this.AboutNetAndCertErrorListener = {
-  init(chromeGlobal) {
-    addMessageListener("CertErrorDetails", this);
-    addMessageListener("Browser:CaptivePortalFreed", this);
-    chromeGlobal.addEventListener("AboutNetErrorLoad", this, false, true);
-    chromeGlobal.addEventListener("AboutNetErrorOpenCaptivePortal", this, false, true);
-    chromeGlobal.addEventListener("AboutNetErrorSetAutomatic", this, false, true);
-    chromeGlobal.addEventListener("AboutNetErrorResetPreferences", this, false, true);
-    this.init = null;
-  },
-
-  isAboutNetError(doc) {
-    return doc.documentURI.startsWith("about:neterror");
-  },
-
-  isAboutCertError(doc) {
-    return doc.documentURI.startsWith("about:certerror");
-  },
-
-  receiveMessage(msg) {
-    if (msg.name == "CertErrorDetails") {
-      let frameDocShell = WebNavigationFrames.findDocShell(msg.data.frameId, docShell);
-      // We need nsIWebNavigation to access docShell.document.
-      frameDocShell && frameDocShell.QueryInterface(Ci.nsIWebNavigation);
-      if (!frameDocShell || !this.isAboutCertError(frameDocShell.document)) {
-        return;
-      }
-
-      NetErrorContent.onCertErrorDetails(global, msg, frameDocShell);
-    } else if (msg.name == "Browser:CaptivePortalFreed") {
-      // TODO: This check is not correct for frames.
-      if (!this.isAboutCertError(content.document)) {
-        return;
-      }
-
-      this.onCaptivePortalFreed(msg);
-    }
-  },
-
-  onCaptivePortalFreed(msg) {
-    content.dispatchEvent(new content.CustomEvent("AboutNetErrorCaptivePortalFreed"));
-  },
-
-  handleEvent(aEvent) {
-    // Documents have a null ownerDocument.
-    let doc = aEvent.originalTarget.ownerDocument || aEvent.originalTarget;
-
-    if (!this.isAboutNetError(doc) && !this.isAboutCertError(doc)) {
-      return;
-    }
-
-    NetErrorContent.handleEvent(global, aEvent);
-  },
-};
-AboutNetAndCertErrorListener.init(this);
 
 new ContentLinkHandler(this);
 ContentMetaHandler.init(this);
