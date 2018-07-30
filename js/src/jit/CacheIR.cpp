@@ -5104,14 +5104,25 @@ bool
 BinaryArithIRGenerator::tryAttachStub()
 {
 
+    // Attempt common case first
     if (tryAttachInt32())
-        return true;
-    if (tryAttachDouble())
-        return true;
-    if (tryAttachDoubleWithInt32())
         return true;
     if (tryAttachBooleanWithInt32())
         return true;
+    if (tryAttachDoubleWithInt32())
+        return true;
+
+    // This attempt must come after tryAttachDoubleWithInt32
+    // and tryAttachInt32, as it will attach for those cases
+    if (tryAttachDouble())
+        return true;
+
+
+    if (tryAttachStringConcat())
+        return true;
+    if (tryAttachStringObjectConcat())
+        return true;
+
 
     trackAttached(IRGenerator::NotAttached);
     return false;
@@ -5120,13 +5131,17 @@ BinaryArithIRGenerator::tryAttachStub()
 bool
 BinaryArithIRGenerator::tryAttachDoubleWithInt32()
 {
+    // ONLY bit-wise
     if (op_ != JSOP_BITOR && op_ != JSOP_BITXOR && op_ != JSOP_BITAND)
         return false;
 
-    if (!(lhs_.isInt32() && rhs_.isDouble()) ||
-        !(lhs_.isDouble() && rhs_.isInt32()) ||
-        !res_.isInt32())
+    // Check guard conditions
+    if ((!(lhs_.isInt32()  && rhs_.isDouble()) &&
+         !(lhs_.isDouble() && rhs_.isInt32())))
         return false;
+
+    // output always int
+    MOZ_ASSERT(res_.isInt32());
 
     ValOperandId lhsId(writer.setInputOperandId(0));
     ValOperandId rhsId(writer.setInputOperandId(1));
@@ -5150,7 +5165,7 @@ BinaryArithIRGenerator::tryAttachDoubleWithInt32()
         trackAttached("BinaryArith.Int32Double.BitAnd");
         break;
       default:
-        MOZ_CRASH("Unhandled op in tryAttachInt32");
+        MOZ_CRASH("Unhandled op in tryAttachDoubleWithInt32");
     }
 
     writer.returnFromIC();
@@ -5160,12 +5175,14 @@ BinaryArithIRGenerator::tryAttachDoubleWithInt32()
 bool
 BinaryArithIRGenerator::tryAttachDouble()
 {
+    // Check valid opcodes
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_MUL && op_ != JSOP_DIV &&
         op_ != JSOP_MOD)
         return false;
 
-    if (!lhs_.isDouble() || !rhs_.isDouble() || !res_.isDouble())
+    // Check guard conditions
+    if (!lhs_.isNumber() || !rhs_.isNumber())
         return false;
 
     if (!cx_->runtime()->jitSupportsFloatingPoint)
@@ -5208,7 +5225,17 @@ BinaryArithIRGenerator::tryAttachDouble()
 bool
 BinaryArithIRGenerator::tryAttachInt32()
 {
-    if (!lhs_.isInt32() || !rhs_.isInt32() || op_ == JSOP_POW)
+    // Check guard conditions
+    if (!lhs_.isInt32() || !rhs_.isInt32())
+        return false;
+
+    // These ICs will failure() if result can't be encoded in an Int32:
+    // If sample result is not Int32, we should avoid IC.
+    if (!res_.isInt32())
+        return false;
+
+    // Unsupported OP
+    if (op_ == JSOP_POW)
         return false;
 
     ValOperandId lhsId(writer.setInputOperandId(0));
@@ -5271,13 +5298,72 @@ BinaryArithIRGenerator::tryAttachInt32()
 }
 
 bool
+BinaryArithIRGenerator::tryAttachStringConcat()
+{
+    // Only Addition
+    if (op_ != JSOP_ADD)
+        return false;
+
+    // Check guards
+    if (!lhs_.isString() || !rhs_.isString())
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    StringOperandId lhsStrId = writer.guardIsString(lhsId);
+    StringOperandId rhsStrId = writer.guardIsString(rhsId);
+
+    writer.callStringConcatResult(lhsStrId, rhsStrId);
+
+    writer.returnFromIC();
+    trackAttached("BinaryArith.StringConcat");
+    return true;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachStringObjectConcat()
+{
+    // Only Addition
+    if (op_ != JSOP_ADD)
+        return false;
+
+    // Check Guards
+    if (!(lhs_.isObject() && rhs_.isString()) &&
+        !(lhs_.isString() && rhs_.isObject()))
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    // This guard is actually overly tight, as the runtime
+    // helper can handle lhs or rhs being a string, so long
+    // as the other is an object.
+    if (lhs_.isString()) {
+        writer.guardIsString(lhsId);
+        writer.guardIsObject(rhsId);
+    } else {
+        writer.guardIsObject(lhsId);
+        writer.guardIsString(rhsId);
+    }
+
+    writer.callStringObjectConcatResult(lhsId, rhsId);
+
+    writer.returnFromIC();
+    trackAttached("BinaryArith.StringObjectConcat");
+    return true;
+}
+
+bool
 BinaryArithIRGenerator::tryAttachBooleanWithInt32()
 {
+    // Check operation
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
         op_ != JSOP_BITXOR && op_ != JSOP_MUL && op_ != JSOP_DIV)
         return false;
 
+    // Check guards
     if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
         !(rhs_.isBoolean() && (lhs_.isBoolean() || lhs_.isInt32())))
         return false;

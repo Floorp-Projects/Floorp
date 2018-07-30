@@ -66,18 +66,6 @@ for (let i = 0; i < TOGGLES.length; ++i) {
   testToggle(TOGGLES[i])
 }
 
-expectParseable("(-moz-windows-theme: aero)");
-expectParseable("(-moz-windows-theme: aero-lite)");
-expectParseable("(-moz-windows-theme: luna-blue)");
-expectParseable("(-moz-windows-theme: luna-olive)");
-expectParseable("(-moz-windows-theme: luna-silver)");
-expectParseable("(-moz-windows-theme: royale)");
-expectParseable("(-moz-windows-theme: generic)");
-expectParseable("(-moz-windows-theme: zune)");
-expectParseable("(-moz-windows-theme: garbage)");
-expectNonParseable("(-moz-windows-theme: '')");
-expectNonParseable("(-moz-windows-theme: )");
-
 expectParseable("(-moz-os-version: windows-win7)");
 expectParseable("(-moz-os-version: windows-win8)");
 expectParseable("(-moz-os-version: windows-win10)");

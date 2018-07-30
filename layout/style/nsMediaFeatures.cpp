@@ -27,11 +27,6 @@ using namespace mozilla;
 
 static nsTArray<RefPtr<nsAtom>>* sSystemMetrics = nullptr;
 
-#ifdef XP_WIN
-// Cached theme identifier for the moz-windows-theme media query.
-static uint8_t sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
-#endif
-
 static const nsCSSKTableEntry kOrientationKeywords[] = {
   { eCSSKeyword_portrait,                 StyleOrientation::Portrait },
   { eCSSKeyword_landscape,                StyleOrientation::Landscape },
@@ -60,23 +55,6 @@ static const nsCSSKeywordAndBoolTableEntry kPrefersReducedMotionKeywords[] = {
 };
 
 #ifdef XP_WIN
-struct WindowsThemeName {
-  LookAndFeel::WindowsTheme mId;
-  nsStaticAtom** mName;
-};
-
-// Windows theme identities used in the -moz-windows-theme media query.
-const WindowsThemeName kThemeStrings[] = {
-  { LookAndFeel::eWindowsTheme_Aero,       &nsGkAtoms::aero },
-  { LookAndFeel::eWindowsTheme_AeroLite,   &nsGkAtoms::aero_lite },
-  { LookAndFeel::eWindowsTheme_LunaBlue,   &nsGkAtoms::luna_blue },
-  { LookAndFeel::eWindowsTheme_LunaOlive,  &nsGkAtoms::luna_olive },
-  { LookAndFeel::eWindowsTheme_LunaSilver, &nsGkAtoms::luna_silver },
-  { LookAndFeel::eWindowsTheme_Royale,     &nsGkAtoms::royale },
-  { LookAndFeel::eWindowsTheme_Zune,       &nsGkAtoms::zune },
-  { LookAndFeel::eWindowsTheme_Generic,    &nsGkAtoms::generic_ }
-};
-
 struct OperatingSystemVersionInfo {
   LookAndFeel::OperatingSystemVersion mId;
   nsStaticAtom** mName;
@@ -421,15 +399,6 @@ HasSystemMetric(nsAtom* aMetric)
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
 }
 
-#ifdef XP_WIN
-static uint8_t
-GetWindowsThemeIdentifier()
-{
-  nsMediaFeatures::InitSystemMetrics();
-  return sWinThemeId;
-}
-#endif
-
 static void
 GetSystemMetric(nsIDocument* aDocument, const nsMediaFeature* aFeature,
                 nsCSSValue& aResult)
@@ -456,34 +425,6 @@ GetSystemMetric(nsIDocument* aDocument, const nsMediaFeature* aFeature,
   nsAtom* metricAtom = *aFeature->mData.mMetric;
   bool hasMetric = HasSystemMetric(metricAtom);
   aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
-}
-
-static void
-GetWindowsTheme(nsIDocument* aDocument, const nsMediaFeature* aFeature,
-                nsCSSValue& aResult)
-{
-  aResult.Reset();
-
-  MOZ_ASSERT(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
-  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
-    return;
-  }
-
-#ifdef XP_WIN
-  uint8_t windowsThemeId = GetWindowsThemeIdentifier();
-
-  // Classic mode should fail to match.
-  if (windowsThemeId == LookAndFeel::eWindowsTheme_Classic)
-    return;
-
-  // Look up the appropriate theme string
-  for (const auto& theme : kThemeStrings) {
-    if (windowsThemeId == theme.mId) {
-      aResult.SetAtomIdentValue((*theme.mName)->ToAddRefed());
-      break;
-    }
-  }
-#endif
 }
 
 static void
@@ -664,40 +605,6 @@ nsMediaFeatures::InitSystemMetrics()
   if (metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::system_dark_theme);
   }
-
-#ifdef XP_WIN
-  if (NS_SUCCEEDED(
-        LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsThemeIdentifier,
-                            &metricResult))) {
-    sWinThemeId = metricResult;
-    switch (metricResult) {
-      case LookAndFeel::eWindowsTheme_Aero:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_aero);
-        break;
-      case LookAndFeel::eWindowsTheme_AeroLite:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_aero_lite);
-        break;
-      case LookAndFeel::eWindowsTheme_LunaBlue:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_blue);
-        break;
-      case LookAndFeel::eWindowsTheme_LunaOlive:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_olive);
-        break;
-      case LookAndFeel::eWindowsTheme_LunaSilver:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_silver);
-        break;
-      case LookAndFeel::eWindowsTheme_Royale:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_royale);
-        break;
-      case LookAndFeel::eWindowsTheme_Zune:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_zune);
-        break;
-      case LookAndFeel::eWindowsTheme_Generic:
-        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_generic);
-        break;
-    }
-  }
-#endif
 }
 
 /* static */ void
@@ -1011,14 +918,6 @@ nsMediaFeatures::features[] = {
     nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::menubar_drag },
     GetSystemMetric
-  },
-  {
-    &nsGkAtoms::_moz_windows_theme,
-    nsMediaFeature::eMinMaxNotAllowed,
-    nsMediaFeature::eIdent,
-    nsMediaFeature::eUserAgentAndChromeOnly,
-    { nullptr },
-    GetWindowsTheme
   },
   {
     &nsGkAtoms::_moz_os_version,

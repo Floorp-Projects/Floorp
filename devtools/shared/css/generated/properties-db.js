@@ -9093,10 +9093,6 @@ exports.PSEUDO_ELEMENTS = [
  */
 exports.PREFERENCES = [
   [
-    "background-blend-mode",
-    "layout.css.background-blend-mode.enabled"
-  ],
-  [
     "box-decoration-break",
     "layout.css.box-decoration-break.enabled"
   ],
@@ -9114,10 +9110,6 @@ exports.PREFERENCES = [
   ],
   [
     "font-optical-sizing",
-    "layout.css.font-variations.enabled"
-  ],
-  [
-    "font-variation-settings",
     "layout.css.font-variations.enabled"
   ],
   [
@@ -9141,12 +9133,20 @@ exports.PREFERENCES = [
     "layout.css.osx-font-smoothing.enabled"
   ],
   [
-    "overflow-clip-box-block",
-    "layout.css.overflow-clip-box.enabled"
+    "scroll-behavior",
+    "layout.css.scroll-behavior.property-enabled"
   ],
   [
-    "overflow-clip-box-inline",
-    "layout.css.overflow-clip-box.enabled"
+    "text-justify",
+    "layout.css.text-justify.enabled"
+  ],
+  [
+    "touch-action",
+    "layout.css.touch_action.enabled"
+  ],
+  [
+    "transform-box",
+    "svg.transform-box.enabled"
   ],
   [
     "overscroll-behavior-x",
@@ -9157,6 +9157,26 @@ exports.PREFERENCES = [
     "layout.css.overscroll-behavior.enabled"
   ],
   [
+    "scroll-snap-type-x",
+    "layout.css.scroll-snap.enabled"
+  ],
+  [
+    "scroll-snap-type-y",
+    "layout.css.scroll-snap.enabled"
+  ],
+  [
+    "shape-image-threshold",
+    "layout.css.shape-outside.enabled"
+  ],
+  [
+    "background-blend-mode",
+    "layout.css.background-blend-mode.enabled"
+  ],
+  [
+    "font-variation-settings",
+    "layout.css.font-variations.enabled"
+  ],
+  [
     "rotate",
     "layout.css.individual-transform.enabled"
   ],
@@ -9165,16 +9185,24 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
-    "scroll-behavior",
-    "layout.css.scroll-behavior.property-enabled"
-  ],
-  [
     "scroll-snap-coordinate",
     "layout.css.scroll-snap.enabled"
   ],
   [
-    "scroll-snap-destination",
-    "layout.css.scroll-snap.enabled"
+    "shape-outside",
+    "layout.css.shape-outside.enabled"
+  ],
+  [
+    "translate",
+    "layout.css.individual-transform.enabled"
+  ],
+  [
+    "overflow-clip-box-block",
+    "layout.css.overflow-clip-box.enabled"
+  ],
+  [
+    "overflow-clip-box-inline",
+    "layout.css.overflow-clip-box.enabled"
   ],
   [
     "scroll-snap-points-x",
@@ -9185,11 +9213,7 @@ exports.PREFERENCES = [
     "layout.css.scroll-snap.enabled"
   ],
   [
-    "scroll-snap-type-x",
-    "layout.css.scroll-snap.enabled"
-  ],
-  [
-    "scroll-snap-type-y",
+    "scroll-snap-destination",
     "layout.css.scroll-snap.enabled"
   ],
   [
@@ -9201,215 +9225,35 @@ exports.PREFERENCES = [
     "layout.css.scrollbar-colors.enabled"
   ],
   [
-    "shape-image-threshold",
-    "layout.css.shape-outside.enabled"
-  ],
-  [
     "shape-margin",
     "layout.css.shape-outside.enabled"
-  ],
-  [
-    "shape-outside",
-    "layout.css.shape-outside.enabled"
-  ],
-  [
-    "-webkit-text-fill-color",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "text-justify",
-    "layout.css.text-justify.enabled"
-  ],
-  [
-    "-webkit-text-stroke-color",
-    "layout.css.prefixes.webkit"
   ],
   [
     "-webkit-text-stroke-width",
     "layout.css.prefixes.webkit"
   ],
   [
-    "touch-action",
-    "layout.css.touch_action.enabled"
+    "-webkit-text-fill-color",
+    "layout.css.prefixes.webkit"
   ],
   [
-    "transform-box",
-    "svg.transform-box.enabled"
-  ],
-  [
-    "translate",
-    "layout.css.individual-transform.enabled"
+    "-webkit-text-stroke-color",
+    "layout.css.prefixes.webkit"
   ],
   [
     "overflow-clip-box",
     "layout.css.overflow-clip-box.enabled"
   ],
   [
-    "overscroll-behavior",
-    "layout.css.overscroll-behavior.enabled"
-  ],
-  [
     "scroll-snap-type",
     "layout.css.scroll-snap.enabled"
   ],
   [
+    "overscroll-behavior",
+    "layout.css.overscroll-behavior.enabled"
+  ],
+  [
     "-webkit-text-stroke",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-moz-animation",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-delay",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-direction",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-duration",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-fill-mode",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-iteration-count",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-name",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-play-state",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-animation-timing-function",
-    "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-backface-visibility",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-border-image",
-    "layout.css.prefixes.border-image"
-  ],
-  [
-    "-moz-box-sizing",
-    "layout.css.prefixes.box-sizing"
-  ],
-  [
-    "-moz-column-span",
-    "layout.css.column-span.enabled"
-  ],
-  [
-    "-moz-font-feature-settings",
-    "layout.css.prefixes.font-features"
-  ],
-  [
-    "-moz-font-language-override",
-    "layout.css.prefixes.font-features"
-  ],
-  [
-    "-moz-perspective",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-perspective-origin",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-transform",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-transform-origin",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-transform-style",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-transition",
-    "layout.css.prefixes.transitions"
-  ],
-  [
-    "-moz-transition-delay",
-    "layout.css.prefixes.transitions"
-  ],
-  [
-    "-moz-transition-duration",
-    "layout.css.prefixes.transitions"
-  ],
-  [
-    "-moz-transition-property",
-    "layout.css.prefixes.transitions"
-  ],
-  [
-    "-moz-transition-timing-function",
-    "layout.css.prefixes.transitions"
-  ],
-  [
-    "-webkit-align-content",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-align-items",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-align-self",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-delay",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-direction",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-duration",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-fill-mode",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-iteration-count",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-name",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-play-state",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-animation-timing-function",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-appearance",
-    "layout.css.webkit-appearance.enabled"
-  ],
-  [
-    "-webkit-backface-visibility",
     "layout.css.prefixes.webkit"
   ],
   [
@@ -9425,7 +9269,11 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-border-bottom-left-radius",
+    "-webkit-border-top-left-radius",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-border-top-right-radius",
     "layout.css.prefixes.webkit"
   ],
   [
@@ -9433,19 +9281,279 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-border-image",
+    "-webkit-border-bottom-left-radius",
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-border-radius",
+    "-moz-transition-duration",
+    "layout.css.prefixes.transitions"
+  ],
+  [
+    "-webkit-transition-duration",
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-border-top-left-radius",
+    "-moz-transition-timing-function",
+    "layout.css.prefixes.transitions"
+  ],
+  [
+    "-webkit-transition-timing-function",
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-border-top-right-radius",
+    "-moz-transition-property",
+    "layout.css.prefixes.transitions"
+  ],
+  [
+    "-webkit-transition-property",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-transition-delay",
+    "layout.css.prefixes.transitions"
+  ],
+  [
+    "-webkit-transition-delay",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-name",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-name",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-duration",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-duration",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-timing-function",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-timing-function",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-iteration-count",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-iteration-count",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-direction",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-direction",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-play-state",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-play-state",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-fill-mode",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-fill-mode",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-animation-delay",
+    "layout.css.prefixes.animations"
+  ],
+  [
+    "-webkit-animation-delay",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-transform",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-webkit-transform",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-perspective",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-webkit-perspective",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-perspective-origin",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-webkit-perspective-origin",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-backface-visibility",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-webkit-backface-visibility",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-transform-style",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-webkit-transform-style",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-transform-origin",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-webkit-transform-origin",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-appearance",
+    "layout.css.webkit-appearance.enabled"
+  ],
+  [
+    "-moz-column-span",
+    "layout.css.column-span.enabled"
+  ],
+  [
+    "-webkit-box-shadow",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-filter",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-font-feature-settings",
+    "layout.css.prefixes.font-features"
+  ],
+  [
+    "-moz-font-language-override",
+    "layout.css.prefixes.font-features"
+  ],
+  [
+    "-webkit-text-size-adjust",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "offset-block-start",
+    "layout.css.offset-logical-properties.enabled"
+  ],
+  [
+    "offset-block-end",
+    "layout.css.offset-logical-properties.enabled"
+  ],
+  [
+    "offset-inline-start",
+    "layout.css.offset-logical-properties.enabled"
+  ],
+  [
+    "offset-inline-end",
+    "layout.css.offset-logical-properties.enabled"
+  ],
+  [
+    "-webkit-flex-direction",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-flex-wrap",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-justify-content",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-align-content",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-align-items",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-flex-grow",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-flex-shrink",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-align-self",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-order",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-flex-basis",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-moz-box-sizing",
+    "layout.css.prefixes.box-sizing"
+  ],
+  [
+    "-webkit-box-sizing",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-user-select",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-repeat",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-position-x",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-position-y",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-clip",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-origin",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-size",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-composite",
+    "layout.css.prefixes.webkit"
+  ],
+  [
+    "-webkit-mask-image",
     "layout.css.prefixes.webkit"
   ],
   [
@@ -9461,10 +9569,6 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-box-ordinal-group",
-    "layout.css.prefixes.webkit"
-  ],
-  [
     "-webkit-box-orient",
     "layout.css.prefixes.webkit"
   ],
@@ -9473,27 +9577,35 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-box-shadow",
+    "-webkit-box-ordinal-group",
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-box-sizing",
+    "-webkit-border-radius",
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-filter",
+    "-moz-border-image",
+    "layout.css.prefixes.border-image"
+  ],
+  [
+    "-webkit-border-image",
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-flex",
+    "-moz-transition",
+    "layout.css.prefixes.transitions"
+  ],
+  [
+    "-webkit-transition",
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-flex-basis",
-    "layout.css.prefixes.webkit"
+    "-moz-animation",
+    "layout.css.prefixes.animations"
   ],
   [
-    "-webkit-flex-direction",
+    "-webkit-animation",
     "layout.css.prefixes.webkit"
   ],
   [
@@ -9501,19 +9613,7 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-flex-grow",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-flex-shrink",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-flex-wrap",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-justify-content",
+    "-webkit-flex",
     "layout.css.prefixes.webkit"
   ],
   [
@@ -9521,107 +9621,7 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
-    "-webkit-mask-clip",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-mask-composite",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-mask-image",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-mask-origin",
-    "layout.css.prefixes.webkit"
-  ],
-  [
     "-webkit-mask-position",
     "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-mask-position-x",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-mask-position-y",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-mask-repeat",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-mask-size",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-order",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-perspective",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-perspective-origin",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-text-size-adjust",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transform",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transform-origin",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transform-style",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transition",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transition-delay",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transition-duration",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transition-property",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-transition-timing-function",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "-webkit-user-select",
-    "layout.css.prefixes.webkit"
-  ],
-  [
-    "offset-block-end",
-    "layout.css.offset-logical-properties.enabled"
-  ],
-  [
-    "offset-block-start",
-    "layout.css.offset-logical-properties.enabled"
-  ],
-  [
-    "offset-inline-end",
-    "layout.css.offset-logical-properties.enabled"
-  ],
-  [
-    "offset-inline-start",
-    "layout.css.offset-logical-properties.enabled"
   ]
 ];
