@@ -11,6 +11,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/Unused.h"
@@ -1762,9 +1763,10 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
   nsChangeHint hint = nsChangeHint(0);
   for (const LayerAnimationInfo::Record& layerInfo :
          LayerAnimationInfo::sRecords) {
-    layers::Layer* layer =
-      FrameLayerBuilder::GetDedicatedLayer(aFrame, layerInfo.mLayerType);
-    if (layer && frameGeneration != layer->GetAnimationGeneration()) {
+    Maybe<uint64_t> generation =
+      layers::AnimationInfo::GetGenerationFromFrame(aFrame,
+                                                    layerInfo.mLayerType);
+    if (generation && frameGeneration != *generation) {
       // If we have a transform layer bug don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
       // yet. In this case we will typically add the appropriate change hint
@@ -1799,7 +1801,8 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
     }
 
     // We consider it's the first paint for the frame if we have an animation
-    // for the property but have no layer.
+    // for the property but have no layer, for the case of WebRender,  no
+    // corresponding animation info.
     // Note that in case of animations which has properties preventing running
     // on the compositor, e.g., width or height, corresponding layer is not
     // created at all, but even in such cases, we normally set valid change
@@ -1810,7 +1813,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
     // not have those properies just before. e.g, setting transform by
     // setKeyframes or changing target element from other target which prevents
     // running on the compositor, etc.
-    if (!layer &&
+    if (!generation &&
         nsLayoutUtils::HasEffectiveAnimation(aFrame, layerInfo.mProperty)) {
       hint |= layerInfo.mChangeHint;
     }
