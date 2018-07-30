@@ -418,8 +418,7 @@ InspectorUtils::GetSubpropertiesForCSSProperty(GlobalObject& aGlobal,
                                                nsTArray<nsString>& aResult,
                                                ErrorResult& aRv)
 {
-  nsCSSPropertyID propertyID =
-    nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
+  nsCSSPropertyID propertyID = nsCSSProps::LookupProperty(aProperty);
 
   if (propertyID == eCSSProperty_UNKNOWN) {
     aRv.Throw(NS_ERROR_FAILURE);

@@ -925,6 +925,17 @@ pub extern "C" fn Servo_ResolveLogicalProperty(
     longhand.to_physical(style.writing_mode).to_nscsspropertyid()
 }
 
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_Property_LookupEnabledForAllContent(
+    prop: *const nsACString,
+) -> nsCSSPropertyID {
+    match PropertyId::parse_enabled_for_all_content((*prop).as_str_unchecked()) {
+        Ok(p) => p.to_nscsspropertyid_resolving_aliases(),
+        Err(..) => nsCSSPropertyID::eCSSProperty_UNKNOWN,
+    }
+}
+
 macro_rules! parse_enabled_property_name {
     ($prop_name:ident, $found:ident, $default:expr) => {{
         let prop_name = $prop_name.as_ref().unwrap().as_str_unchecked();
