@@ -26,12 +26,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "formFill",
 
 var global = this;
 
-XPCOMUtils.defineLazyProxy(this, "PopupBlocking", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/PopupBlocking.jsm", tmp);
-  return new tmp.PopupBlocking(global);
-});
-
 XPCOMUtils.defineLazyProxy(this, "ShieldFrameListener", () => {
   let tmp = {};
   ChromeUtils.import("resource://normandy-content/ShieldFrameListener.jsm", tmp);
@@ -74,8 +68,6 @@ var AutoScrollListener = {
 Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
 
 addEventListener("MozOpenDateTimePicker", DateTimePickerContent);
-
-addEventListener("DOMPopupBlocked", PopupBlocking, true);
 
 addEventListener("WebChannelMessageToChrome", WebChannelContent,
                  true, true);

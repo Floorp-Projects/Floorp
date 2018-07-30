@@ -5,11 +5,13 @@
 
 /* eslint no-unused-vars: ["error", {args: "none"}] */
 
-var EXPORTED_SYMBOLS = ["PopupBlocking"];
+var EXPORTED_SYMBOLS = ["PopupBlockingChild"];
 
-class PopupBlocking {
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+
+class PopupBlockingChild extends ActorChild {
   constructor(mm) {
-    this.mm = mm;
+    super(mm);
 
     this.popupData = null;
     this.popupDataInternal = null;

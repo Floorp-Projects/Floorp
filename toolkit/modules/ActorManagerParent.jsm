@@ -121,6 +121,15 @@ let ACTORS = {
     },
   },
 
+  PopupBlocking: {
+    child: {
+      module: "resource://gre/actors/PopupBlockingChild.jsm",
+      events: {
+        "DOMPopupBlocked": {capture: true},
+      },
+    },
+  },
+
   Printing: {
     child: {
       module: "resource://gre/actors/PrintingChild.jsm",
