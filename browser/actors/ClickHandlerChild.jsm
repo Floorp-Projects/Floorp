@@ -10,8 +10,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetErrorContent",
-                               "resource:///modules/NetErrorContent.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
@@ -31,13 +29,7 @@ class ClickHandlerChild extends ActorChild {
 
     // Handle click events from about pages
     if (event.button == 0) {
-      if (this.mm.AboutNetAndCertErrorListener.isAboutCertError(ownerDoc)) {
-        NetErrorContent.onCertError(this.mm, originalTarget, ownerDoc.defaultView);
-        return;
-      } else if (ownerDoc.documentURI.startsWith("about:blocked")) {
-        return;
-      } else if (this.mm.AboutNetAndCertErrorListener.isAboutNetError(ownerDoc)) {
-        NetErrorContent.onAboutNetError(this.mm, event, ownerDoc.documentURI);
+      if (ownerDoc.documentURI.startsWith("about:blocked")) {
         return;
       }
     }

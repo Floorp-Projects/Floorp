@@ -113,6 +113,25 @@ let ACTORS = {
     },
   },
 
+  NetError: {
+    child: {
+      module: "resource:///actors/NetErrorChild.jsm",
+      events: {
+        "AboutNetErrorLoad": {wantUntrusted: true},
+        "AboutNetErrorOpenCaptivePortal": {wantUntrusted: true},
+        "AboutNetErrorSetAutomatic": {wantUntrusted: true},
+        "AboutNetErrorResetPreferences": {wantUntrusted: true},
+        "click": {},
+      },
+      matches: ["about:certerror?*", "about:neterror?*"],
+      allFrames: true,
+      messages: [
+        "Browser:CaptivePortalFreed",
+        "CertErrorDetails",
+      ],
+    },
+  },
+
   PageInfo: {
     child: {
       module: "resource:///actors/PageInfoChild.jsm",
