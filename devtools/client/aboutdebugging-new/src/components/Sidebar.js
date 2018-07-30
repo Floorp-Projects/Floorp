@@ -11,7 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ThisFirefox = require("../runtimes/this-firefox");
 
 const Runtime = require("../runtimes/runtime");
-const RuntimeItem = createFactory(require("./runtime/RuntimeItem"));
+const SidebarItem = createFactory(require("./SidebarItem"));
 
 class Sidebar extends PureComponent {
   static get propTypes() {
@@ -30,7 +30,7 @@ class Sidebar extends PureComponent {
       },
       dom.ul(
         {},
-        RuntimeItem({
+        SidebarItem({
           icon: thisFirefox.getIcon(),
           isSelected: thisFirefox === selectedRuntime,
           name: thisFirefox.getName(),

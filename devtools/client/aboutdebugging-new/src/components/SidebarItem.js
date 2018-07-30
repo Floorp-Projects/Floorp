@@ -9,9 +9,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 /**
- * This component shows the runtime as item in RuntimesPane.
+ * This component displays an item of the Sidebar component.
  */
-class RuntimeItem extends PureComponent {
+class SidebarItem extends PureComponent {
   static get propTypes() {
     return {
       icon: PropTypes.string.isRequired,
@@ -25,11 +25,11 @@ class RuntimeItem extends PureComponent {
 
     return dom.li(
       {
-        className: "runtime-item" + (isSelected ? " runtime-item--selected" : ""),
+        className: "sidebar-item" + (isSelected ? " sidebar-item--selected" : ""),
       },
       dom.img({
-        className: "runtime-item__icon" +
-                   (isSelected ? " runtime-item__icon--selected" : ""),
+        className: "sidebar-item__icon" +
+                   (isSelected ? " sidebar-item__icon--selected" : ""),
         src: icon,
       }),
       name
@@ -37,4 +37,4 @@ class RuntimeItem extends PureComponent {
   }
 }
 
-module.exports = RuntimeItem;
+module.exports = SidebarItem;
