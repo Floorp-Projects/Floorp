@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["SelectionSourceContent"];
+var EXPORTED_SYMBOLS = ["SelectionSourceChild"];
 
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var SelectionSourceContent = {
+class SelectionSourceChild extends ActorChild {
   receiveMessage(message) {
     const global = message.target;
 
@@ -19,7 +20,7 @@ var SelectionSourceContent = {
         global.sendAsyncMessage("ViewSource:GetSelectionDone", selectionDetails);
       }
     }
-  },
+  }
 
   /**
    * A helper to get a path like FIXptr, but with an array instead of the
@@ -45,7 +46,7 @@ var SelectionSourceContent = {
       p = n.parentNode;
     } while (n != ancestor && p);
     return path;
-  },
+  }
 
   getSelection(global) {
     const {content} = global;
@@ -177,9 +178,9 @@ var SelectionSourceContent = {
                   + encodeURIComponent(tmpNode.innerHTML),
              drawSelection: canDrawSelection,
              baseURI: doc.baseURI };
-  },
+  }
 
   get wrapLongLines() {
     return Services.prefs.getBoolPref("view_source.wrap_long_lines");
-  },
-};
+  }
+}
