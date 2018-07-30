@@ -109,9 +109,7 @@ public:
   void SetWillGenerateFrame();
   bool GetAndResetWillGenerateFrame();
 
-  wr::ExternalImageId GetNextExternalImageId() {
-    return wr::ToExternalImageId(GetNextResourceId());
-  }
+  wr::ExternalImageId GetNextExternalImageId();
 
 private:
   void ProcessPipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
