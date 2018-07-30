@@ -8,7 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const UNITS = ["px", "%", "em", "rem", "vh", "vw", "pt"];
+const UNITS = ["em", "rem", "%", "px", "vh", "vw"];
 
 class FontPropertyValue extends PureComponent {
   static get propTypes() {

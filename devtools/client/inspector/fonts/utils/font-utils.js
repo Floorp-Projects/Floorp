@@ -15,9 +15,18 @@ module.exports = {
    *         Amount by which to increment.
    */
   getStepForUnit(unit) {
-    let step = 1;
-    if (unit === "em" || unit === "rem") {
-      step = 0.1;
+    let step;
+    switch (unit) {
+      case "em":
+      case "rem":
+      case "vw":
+      case "vh":
+      case "vmin":
+      case "vmax":
+        step = 0.1;
+        break;
+      default:
+        step = 1;
     }
 
     return step;
