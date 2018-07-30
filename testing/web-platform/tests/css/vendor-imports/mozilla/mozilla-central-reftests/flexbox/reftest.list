@@ -101,6 +101,7 @@
 # Tests for "row gap" and "column gap"
 == flexbox-column-row-gap-001.html flexbox-column-row-gap-001-ref.html
 == flexbox-column-row-gap-002.html flexbox-column-row-gap-002-ref.html
+== flexbox-column-row-gap-003.html flexbox-column-row-gap-003-ref.html
 
 # Tests for "flex-basis: content"
 == flexbox-flex-basis-content-001a.html flexbox-flex-basis-content-001-ref.html
@@ -212,6 +213,9 @@
 # Tests for "display:flex" on root node
 == flexbox-root-node-001a.html flexbox-root-node-001-ref.html
 == flexbox-root-node-001b.html flexbox-root-node-001-ref.html
+
+# Tests for <overflow-position> "safe" keyword in CSS Alignment properties
+== flexbox-safe-overflow-position-001.html flexbox-safe-overflow-position-001-ref.html
 
 # Tests for sizing of flex containers, e.g. under min/max size constraints
 == flexbox-sizing-horiz-001.xhtml flexbox-sizing-horiz-001-ref.xhtml

@@ -5,7 +5,6 @@
 
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="resources/makelongtask.js"></script>
 
 <h1>Long Task: External Script</h1>
 <div id="log"></div>
@@ -41,7 +40,11 @@
         })
     );
     observer.observe({entryTypes: ['longtask']});
+    window.onload = () => {
+        const script = document.createElement('script');
+        script.src = 'resources/makelongtask.js';
+        document.body.appendChild(script);
+    }
 }, 'Performance longtask entries are observable.');
 </script>
-
 </body>

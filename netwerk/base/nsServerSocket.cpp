@@ -320,6 +320,29 @@ nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions, int32_t 
 }
 
 NS_IMETHODIMP
+nsServerSocket::InitWithAbstractAddress(const nsACString& aName,
+                                        int32_t aBacklog)
+{
+  // Abstract socket address is supported on Linux and Android only.
+  // If not Linux, we should return error.
+#if defined(XP_LINUX)
+  // Create an abstract socket address PRNetAddr referring to the name
+  PRNetAddr addr;
+  if (aName.Length() > sizeof(addr.local.path) - 2) {
+    return NS_ERROR_FILE_NAME_TOO_LONG;
+  }
+  addr.local.family = PR_AF_LOCAL;
+  addr.local.path[0] = 0;
+  memcpy(addr.local.path + 1, aName.BeginReading(), aName.Length());
+  addr.local.path[aName.Length() + 1] = 0;
+
+  return InitWithAddress(&addr, aBacklog);
+#else
+  return NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED;
+#endif
+}
+
+NS_IMETHODIMP
 nsServerSocket::InitSpecialConnection(int32_t aPort, nsServerSocketFlag aFlags,
                                       int32_t aBackLog)
 {
