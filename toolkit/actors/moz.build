@@ -9,4 +9,5 @@ FINAL_TARGET_FILES.actors += [
     'FindBarChild.jsm',
     'PrintingChild.jsm',
     'SelectChild.jsm',
+    'ZoomChild.jsm',
 ]
