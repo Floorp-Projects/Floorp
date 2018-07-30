@@ -206,32 +206,42 @@ var PreferenceExperiments = {
   },
 
   /**
-   * Save in-progress preference experiments in a sub-branch of the shield
-   * prefs. On startup, we read these to set the experimental values.
+   * Save in-progress, default-branch preference experiments in a sub-branch of
+   * the normandy preferences. On startup, we read these to set the
+   * experimental values.
+   *
+   * This is needed because the default branch does not persist between Firefox
+   * restarts. To compensate for that, Normandy sets the default branch to the
+   * experiment values again every startup. The values to set the preferences
+   * to are stored in user-branch preferences because preferences have minimal
+   * impact on the performance of startup.
    */
   async saveStartupPrefs() {
     const prefBranch = Services.prefs.getBranch(STARTUP_EXPERIMENT_PREFS_BRANCH);
     prefBranch.deleteBranch("");
 
-    for (const experiment of await this.getAllActive()) {
-      const name = experiment.preferenceName;
-      const value = experiment.preferenceValue;
-
-      switch (typeof value) {
+    // Filter out non-default-branch experiments (user-branch), because they
+    // don't need to be set on the default branch during early startup. Doing so
+    // would make the user branch and the default branch the same, which would
+    // cause the user branch to not be saved, and the user branch preference
+    // would be erased.
+    const defaultBranchExperiments = (await this.getAllActive()).filter(exp => exp.preferenceBranchType === "default");
+    for (const {preferenceName, preferenceValue} of defaultBranchExperiments) {
+      switch (typeof preferenceValue) {
         case "string":
-          prefBranch.setCharPref(name, value);
+          prefBranch.setCharPref(preferenceName, preferenceValue);
           break;
 
         case "number":
-          prefBranch.setIntPref(name, value);
+          prefBranch.setIntPref(preferenceName, preferenceValue);
           break;
 
         case "boolean":
-          prefBranch.setBoolPref(name, value);
+          prefBranch.setBoolPref(preferenceName, preferenceValue);
           break;
 
         default:
-          throw new Error(`Invalid preference type ${typeof value}`);
+          throw new Error(`Invalid preference type ${typeof preferenceValue}`);
       }
     }
   },
@@ -463,7 +473,7 @@ var PreferenceExperiments = {
    * @param {Object} options
    * @param {boolean} [options.resetValue = true]
    *   If true, reset the preference to its original value prior to
-   *   the experiment. Optional, defauls to true.
+   *   the experiment. Optional, defaults to true.
    * @param {String} [options.reason = "unknown"]
    *   Reason that the experiment is ending. Optional, defaults to
    *   "unknown".
