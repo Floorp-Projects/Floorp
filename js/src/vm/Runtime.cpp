@@ -191,6 +191,9 @@ JSRuntime::~JSRuntime()
     MOZ_ASSERT(oldCount > 0);
 
     MOZ_ASSERT(wasmInstances.lock()->empty());
+
+    MOZ_ASSERT(offThreadParsesRunning_ == 0);
+    MOZ_ASSERT(!offThreadParsingBlocked_);
 }
 
 bool
@@ -783,16 +786,21 @@ JSRuntime::setUsedByHelperThread(Zone* zone)
     MOZ_ASSERT(!zone->usedByHelperThread());
     MOZ_ASSERT(!zone->wasGCStarted());
     MOZ_ASSERT(!isOffThreadParsingBlocked());
+
     zone->setUsedByHelperThread();
-    numActiveHelperThreadZones++;
+    if (numActiveHelperThreadZones++ == 0)
+        gc.setParallelAtomsAllocEnabled(true);
 }
 
 void
 JSRuntime::clearUsedByHelperThread(Zone* zone)
 {
     MOZ_ASSERT(zone->usedByHelperThread());
+
     zone->clearUsedByHelperThread();
-    numActiveHelperThreadZones--;
+    if (--numActiveHelperThreadZones == 0)
+        gc.setParallelAtomsAllocEnabled(false);
+
     JSContext* cx = mainContextFromOwnThread();
     if (gc.fullGCForAtomsRequested() && cx->canCollectAtoms())
         gc.triggerFullGCForAtoms(cx);

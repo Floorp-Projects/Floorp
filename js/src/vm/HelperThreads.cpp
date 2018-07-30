@@ -2099,7 +2099,10 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
     ParseTask* task = parseTask();
 
     JSRuntime* runtime = task->parseGlobal->runtimeFromAnyThread();
+
+#ifdef DEBUG
     runtime->incOffThreadParsesRunning();
+#endif
 
     {
         AutoUnlockHelperThreadState unlock(locked);
@@ -2128,7 +2131,9 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
     // migrate it into the correct compartment.
     HelperThreadState().parseFinishedList(locked).insertBack(task);
 
+#ifdef DEBUG
     runtime->decOffThreadParsesRunning();
+#endif
 
     currentTask.reset();
 

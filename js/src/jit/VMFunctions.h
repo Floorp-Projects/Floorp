@@ -953,6 +953,13 @@ CloseIteratorFromIon(JSContext* cx, JSObject* obj);
 
 extern const VMFunction SetObjectElementInfo;
 
+bool
+DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                     MutableHandleValue res);
+
+// This is the tailcall version of DoConcatStringObject
+extern const VMFunction DoConcatStringObjectInfo;
+
 extern const VMFunction StringsEqualInfo;
 extern const VMFunction StringsNotEqualInfo;
 

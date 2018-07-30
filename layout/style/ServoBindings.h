@@ -139,6 +139,10 @@ struct MediumFeaturesChangedResult {
   bool mUsesViewportUnits;
 };
 
+// Debugging stuff.
+void Gecko_Element_DebugListAttributes(RawGeckoElementBorrowed, nsCString*);
+void Gecko_Snapshot_DebugListAttributes(const ServoElementSnapshot*, nsCString*);
+
 bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node, bool whitespace_is_significant);
 RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed node);

@@ -509,6 +509,10 @@ Arena::arenaAllocatedDuringGC()
 void
 GCRuntime::setParallelAtomsAllocEnabled(bool enabled)
 {
+    // This can only be changed on the main thread otherwise we could race.
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    MOZ_ASSERT(enabled == rt->hasHelperThreadZones());
+
     atomsZone->arenas.setParallelAllocEnabled(enabled);
 }
 

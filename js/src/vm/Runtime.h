@@ -857,8 +857,8 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
                     mozilla::recordreplay::Behavior::DontPreserve> parallelParsingEnabled_;
 
-    mozilla::Atomic<uint32_t> offThreadParsesRunning_;
 #ifdef DEBUG
+    mozilla::Atomic<uint32_t> offThreadParsesRunning_;
     mozilla::Atomic<bool> offThreadParsingBlocked_;
 #endif
 
@@ -881,21 +881,17 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         return parallelParsingEnabled_;
     }
 
+#ifdef DEBUG
+
     void incOffThreadParsesRunning() {
         MOZ_ASSERT(!isOffThreadParsingBlocked());
-        if (!offThreadParsesRunning_)
-            gc.setParallelAtomsAllocEnabled(true);
         offThreadParsesRunning_++;
     }
 
     void decOffThreadParsesRunning() {
         MOZ_ASSERT(isOffThreadParseRunning());
         offThreadParsesRunning_--;
-        if (!offThreadParsesRunning_)
-            gc.setParallelAtomsAllocEnabled(false);
     }
-
-#ifdef DEBUG
 
     bool isOffThreadParseRunning() const {
         return offThreadParsesRunning_;

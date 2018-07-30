@@ -1893,5 +1893,63 @@ typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue,
 const VMFunction SetObjectElementInfo =
     FunctionInfo<SetObjectElementFn>(js::SetObjectElement, "SetObjectElement");
 
+
+static JSString*
+ConvertObjectToStringForConcat(JSContext* cx, HandleValue obj)
+{
+    MOZ_ASSERT(obj.isObject());
+    RootedValue rootedObj(cx, obj);
+    if (!ToPrimitive(cx, &rootedObj))
+        return nullptr;
+    return ToString<CanGC>(cx, rootedObj);
+}
+
+bool
+DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                     MutableHandleValue res)
+{
+    JSString* lstr = nullptr;
+    JSString* rstr = nullptr;
+
+    if (lhs.isString()) {
+        // Convert rhs first.
+        MOZ_ASSERT(lhs.isString() && rhs.isObject());
+        rstr = ConvertObjectToStringForConcat(cx, rhs);
+        if (!rstr)
+            return false;
+
+        // lhs is already string.
+        lstr = lhs.toString();
+    } else {
+        MOZ_ASSERT(rhs.isString() && lhs.isObject());
+        // Convert lhs first.
+        lstr = ConvertObjectToStringForConcat(cx, lhs);
+        if (!lstr)
+            return false;
+
+        // rhs is already string.
+        rstr = rhs.toString();
+    }
+
+    JSString* str = ConcatStrings<NoGC>(cx, lstr, rstr);
+    if (!str) {
+        RootedString nlstr(cx, lstr), nrstr(cx, rstr);
+        str = ConcatStrings<CanGC>(cx, nlstr, nrstr);
+        if (!str)
+            return false;
+    }
+
+    // Technically, we need to call TypeScript::MonitorString for this PC, however
+    // it was called when this stub was attached so it's OK.
+
+    res.setString(str);
+    return true;
+}
+
+typedef bool (*DoConcatStringObjectFn)(JSContext*, HandleValue, HandleValue,
+                                       MutableHandleValue);
+const VMFunction DoConcatStringObjectInfo =
+    FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject, "DoConcatStringObject", TailCall, PopValues(2));
+
 } // namespace jit
 } // namespace js
