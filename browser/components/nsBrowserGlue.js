@@ -209,6 +209,14 @@ let ACTORS = {
       ],
     },
   },
+
+  URIFixup: {
+    child: {
+      module: "resource:///actors/URIFixupChild.jsm",
+      group: "browsers",
+      observers: ["keyword-uri-fixup"],
+    },
+  },
 };
 
 (function earlyBlankFirstPaint() {
