@@ -131,6 +131,17 @@ let ACTORS = {
     },
   },
 
+  ExtFind: {
+    child: {
+      module: "resource://gre/actors/ExtFindChild.jsm",
+      messages: [
+        "ext-Finder:CollectResults",
+        "ext-Finder:HighlightResults",
+        "ext-Finder:clearHighlighting",
+      ]
+    },
+  },
+
   FindBar: {
     child: {
       module: "resource://gre/actors/FindBarChild.jsm",
