@@ -26,19 +26,19 @@ class FontSize extends PureComponent {
     switch (unit) {
       case "em":
       case "rem":
-        max = 10;
+        max = 4;
         break;
       case "vh":
       case "vw":
       case "vmin":
       case "vmax":
-        max = 100;
+        max = 10;
         break;
       case "%":
-        max = 500;
+        max = 200;
         break;
       default:
-        max = 300;
+        max = 72;
         break;
     }
 
