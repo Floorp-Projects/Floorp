@@ -487,9 +487,8 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS::CompileOptions options(cx);
   options.setFileAndLine("typein", 0);
   JS::Rooted<JSScript*> script(cx);
-  JS::SourceBufferHolder srcBuf(aString.get(), aString.Length(),
-                                JS::SourceBufferHolder::NoOwnership);
-  if (!JS_CompileUCScript(cx, srcBuf, options, &script))
+  if (!JS_CompileUCScript(cx, aString.get(), aString.Length(), options,
+                          &script))
   {
      return false;
   }

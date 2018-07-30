@@ -482,21 +482,22 @@ ParseTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
            errors.sizeOfExcludingThis(mallocSizeOf);
 }
 
-ScriptParseTask::ScriptParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+ScriptParseTask::ScriptParseTask(JSContext* cx, const char16_t* chars, size_t length,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
   : ParseTask(ParseTaskKind::Script, cx, callback, callbackData),
-    data(std::move(srcBuf))
+    data(TwoByteChars(chars, length))
 {}
 
 void
 ScriptParseTask::parse(JSContext* cx)
 {
+    SourceBufferHolder srcBuf(data.begin().get(), data.length(), SourceBufferHolder::NoOwnership);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
     ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
     JSScript* script = frontend::CompileGlobalScript(cx, alloc, scopeKind,
-                                                     options, data,
+                                                     options, srcBuf,
                                                      /* sourceObjectOut = */ &sourceObject.get());
     if (script)
         scripts.infallibleAppend(script);
@@ -504,18 +505,19 @@ ScriptParseTask::parse(JSContext* cx)
         sourceObjects.infallibleAppend(sourceObject);
 }
 
-ModuleParseTask::ModuleParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+ModuleParseTask::ModuleParseTask(JSContext* cx, const char16_t* chars, size_t length,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
   : ParseTask(ParseTaskKind::Module, cx, callback, callbackData),
-    data(std::move(srcBuf))
+    data(TwoByteChars(chars, length))
 {}
 
 void
 ModuleParseTask::parse(JSContext* cx)
 {
+    SourceBufferHolder srcBuf(data.begin().get(), data.length(), SourceBufferHolder::NoOwnership);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    ModuleObject* module = frontend::CompileModule(cx, options, data, alloc, &sourceObject.get());
+    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject.get());
     if (module) {
         scripts.infallibleAppend(module->script());
         if (sourceObject)
@@ -823,10 +825,10 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
 
 bool
 js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              JS::SourceBufferHolder& srcBuf,
+                              const char16_t* chars, size_t length,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
-    auto task = cx->make_unique<ScriptParseTask>(cx, srcBuf, callback, callbackData);
+    auto task = cx->make_unique<ScriptParseTask>(cx, chars, length, callback, callbackData);
     if (!task || !StartOffThreadParseTask(cx, task.get(), options))
         return false;
 
@@ -836,10 +838,10 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
 
 bool
 js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              JS::SourceBufferHolder& srcBuf,
+                              const char16_t* chars, size_t length,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
-    auto task = cx->make_unique<ModuleParseTask>(cx, srcBuf, callback, callbackData);
+    auto task = cx->make_unique<ModuleParseTask>(cx, chars, length, callback, callbackData);
     if (!task || !StartOffThreadParseTask(cx, task.get(), options))
         return false;
 
