@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .sidebar-item {
+  --sidebar-item-icon-color: var(--grey-30);
+  --sidebar-item-selected-color: var(--blue-55);
+}
+
+.sidebar-item {
   align-items: center;
   display: flex;
   font-size: 20px;
