@@ -18,19 +18,16 @@ def test_null_response_value(session, url):
     assert value is None
 
 
+def test_no_browsing_context(session, closed_window):
+    response = send_alert_text(session, "foo")
+    assert_error(response, "no such window")
+
+
 @pytest.mark.parametrize("text", [None, {}, [], 42, True])
 def test_invalid_input(session, text):
     session.url = inline("<script>window.result = window.prompt('Enter Your Name: ', 'Name');</script>")
     response = send_alert_text(session, text)
     assert_error(response, "invalid argument")
-
-
-def test_no_browsing_context(session, create_window):
-    session.window_handle = create_window()
-    session.close()
-
-    response = send_alert_text(session, "Federer")
-    assert_error(response, "no such window")
 
 
 def test_no_user_prompt(session):

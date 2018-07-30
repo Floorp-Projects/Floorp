@@ -17,9 +17,7 @@ def is_fullscreen(session):
         """)
 
 
-def test_no_browsing_context(session, create_window):
-    session.window_handle = create_window()
-    session.close()
+def test_no_browsing_context(session, closed_window):
     response = fullscreen(session)
     assert_error(response, "no such window")
 
