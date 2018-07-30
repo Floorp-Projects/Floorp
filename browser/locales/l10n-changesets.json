@@ -492,7 +492,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "6c4e03dd8462"
+        "revision": "c50642febc27"
     }, 
     "fi": {
         "platforms": [
@@ -917,7 +917,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "28762e5bb0a7"
+        "revision": "222b62f9ebea"
     }, 
     "mai": {
         "platforms": [
