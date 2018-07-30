@@ -10,13 +10,10 @@
 #include "nsWeakReference.h"
 
 #include "nsIDOMWindowUtils.h"
-#include "nsDisplayItemTypes.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
-#include "mozilla/layers/LayersMessages.h" // For OMTAValue
 
 class nsGlobalWindowOuter;
-class nsIFrame;
 class nsIPresShell;
 class nsIWidget;
 class nsPresContext;
@@ -121,9 +118,6 @@ protected:
                                   bool aIgnoreRootScrollFrame,
                                   bool aToWindow,
                                   bool* aPreventDefault);
-
-  mozilla::layers::OMTAValue GetOMTAValue(nsIFrame* aFrame,
-                                          DisplayItemType aDisplayItemKey);
 };
 
 #endif
