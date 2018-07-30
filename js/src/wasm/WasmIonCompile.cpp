@@ -3559,6 +3559,7 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitReinterpret(f, ValType::F64, ValType::I64, MIRType::Double));
 
           // GC types are NYI in Ion.
+          case uint16_t(Op::RefEq):
           case uint16_t(Op::RefNull):
           case uint16_t(Op::RefIsNull):
             return f.iter().unrecognizedOpcode(&op);

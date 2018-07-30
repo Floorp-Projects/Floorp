@@ -937,6 +937,13 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
             break;
           }
 #ifdef ENABLE_WASM_GC
+          case uint16_t(Op::RefEq): {
+            if (env.gcTypesEnabled() == HasGcTypes::False) {
+                return iter.unrecognizedOpcode(&op);
+            }
+            CHECK(iter.readComparison(ValType::AnyRef, &nothing, &nothing));
+            break;
+          }
           case uint16_t(Op::RefNull): {
             if (env.gcTypesEnabled() == HasGcTypes::False) {
                 return iter.unrecognizedOpcode(&op);

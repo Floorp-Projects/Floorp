@@ -58,6 +58,11 @@ var bin = wasmTextToBinary(
        (call $imp (get_local 0))
        drop)
 
+      (func (param (ref $cons))
+       (drop (ref.eq (get_local 0) (ref.null (ref $cons))))
+       (drop (ref.eq (ref.null (ref $cons)) (get_local 0)))
+       (drop (ref.eq (get_local 0) (ref.null anyref)))
+       (drop (ref.eq (ref.null anyref) (get_local 0))))
      )`);
 
 // Validation
