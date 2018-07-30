@@ -265,7 +265,7 @@ def link_to_cpp(interfaces, fd):
 
     def describe_type(type):  # Create the type's documentation comment.
         tag = type['tag'][3:].lower()
-        if tag == 'legacy_array':
+        if tag == 'array':
             return '%s[size_is=%d]' % (
                 describe_type(type['element']), type['size_is'])
         elif tag == 'interface_type' or tag == 'domobject':
@@ -280,14 +280,9 @@ def link_to_cpp(interfaces, fd):
         tag = type['tag']
         d1 = d2 = 0
 
-        if tag == 'TD_LEGACY_ARRAY':
+        if tag == 'TD_ARRAY':
             d1 = type['size_is']
             d2 = lower_extra_type(type['element'])
-
-        elif tag == 'TD_ARRAY':
-            # NOTE: TD_ARRAY can hold 16 bits of type index, while
-            # TD_LEGACY_ARRAY can only hold 8.
-            d1, d2 = splitint(lower_extra_type(type['element']))
 
         elif tag == 'TD_INTERFACE_TYPE':
             d1, d2 = splitint(interface_idx(type['name']))

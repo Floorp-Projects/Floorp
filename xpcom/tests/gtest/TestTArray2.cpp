@@ -382,25 +382,6 @@ TEST(TArray, test_move_array) {
   differentAllocatorMoveableArray2 = std::move(autoMoveableArray2);
 
   ASSERT_EQ(Moveable::Count(), 8);
-
-  AutoTArray<Moveable, 8> moveableAutoArray;
-  for (uint32_t i = 0; i < 4; ++i) {
-    ASSERT_TRUE(moveableAutoArray.AppendElement(Moveable()));
-  }
-
-  ASSERT_EQ(Moveable::Count(), 12);
-
-  const AutoTArray<Moveable, 8>& constRefMoveableAutoArray = moveableAutoArray;
-
-  ASSERT_EQ(Moveable::Count(), 12);
-
-  AutoTArray<Moveable, 8> copyMoveableAutoArray(constRefMoveableAutoArray);
-
-  ASSERT_EQ(Moveable::Count(), 16);
-
-  AutoTArray<Moveable, 8> movedMoveableAutoArray(std::move(moveableAutoArray));
-
-  ASSERT_EQ(Moveable::Count(), 16);
 }
 
 //----
