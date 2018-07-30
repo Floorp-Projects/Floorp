@@ -46,35 +46,6 @@ var AutoScrollListener = {
 };
 Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
 
-var UnselectedTabHoverObserver = {
-  init() {
-    addMessageListener("Browser:UnselectedTabHover", this);
-    addEventListener("UnselectedTabHover:Enable", this);
-    addEventListener("UnselectedTabHover:Disable", this);
-    this.init = null;
-  },
-  receiveMessage(message) {
-    Services.obs.notifyObservers(content.window, "unselected-tab-hover",
-                                 message.data.hovered);
-  },
-  handleEvent(event) {
-    sendAsyncMessage("UnselectedTabHover:Toggle",
-                     { enable: event.type == "UnselectedTabHover:Enable" });
-  }
-};
-UnselectedTabHoverObserver.init();
-
-
-var AudibleAutoplayObserver = {
-  init() {
-    addEventListener("AudibleAutoplayMediaOccurred", this);
-  },
-  handleEvent(event) {
-    sendAsyncMessage("AudibleAutoplayMediaOccurred");
-  }
-};
-AudibleAutoplayObserver.init();
-
 addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory() {
   let sessionHistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
   if (!sessionHistory) {

@@ -186,6 +186,19 @@ let ACTORS = {
     },
   },
 
+  UnselectedTabHover: {
+    child: {
+      module: "resource://gre/actors/UnselectedTabHoverChild.jsm",
+      events: {
+        "UnselectedTabHover:Enable": {},
+        "UnselectedTabHover:Disable": {},
+      },
+      messages: [
+        "Browser:UnselectedTabHover",
+      ],
+    },
+  },
+
   WebChannel: {
     child: {
       module: "resource://gre/actors/WebChannelChild.jsm",
