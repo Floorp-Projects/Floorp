@@ -62,7 +62,7 @@ public:
   LayersId GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
 
-  uint64_t GetChildEpoch() const { return mChildEpoch; }
+  LayersObserverEpoch GetChildEpoch() const { return mChildEpoch; }
   bool ShouldParentObserveEpoch();
 
   ShmemAllocator* AsShmemAllocator() override { return this; }
@@ -115,7 +115,7 @@ protected:
 
   mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo) override;
 
-  mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
+  mozilla::ipc::IPCResult RecvSetLayersObserverEpoch(const LayersObserverEpoch& aChildEpoch) override;
   mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
                                               const TextureInfo& aInfo) override;
   mozilla::ipc::IPCResult RecvReleaseLayer(const LayerHandle& aHandle) override;
@@ -198,8 +198,8 @@ private:
   // parent. mChildEpoch is the latest epoch value received from the child.
   // mParentEpoch is the latest epoch value that we have told TabParent about
   // (via ObserveLayerUpdate).
-  uint64_t mChildEpoch;
-  uint64_t mParentEpoch;
+  LayersObserverEpoch mChildEpoch;
+  LayersObserverEpoch mParentEpoch;
 
   TimeDuration mVsyncRate;
 

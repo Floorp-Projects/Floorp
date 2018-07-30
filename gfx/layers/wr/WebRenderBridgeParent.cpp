@@ -194,8 +194,8 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mCompositorScheduler(aScheduler)
   , mAnimStorage(aAnimStorage)
   , mVsyncRate(aVsyncRate)
-  , mChildLayerObserverEpoch(0)
-  , mParentLayerObserverEpoch(0)
+  , mChildLayersObserverEpoch{0}
+  , mParentLayersObserverEpoch{0}
   , mWrEpoch{0}
   , mIdNamespace(aApi->GetNamespace())
   , mPaused(false)
@@ -215,8 +215,8 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
 WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
   : mCompositorBridge(nullptr)
   , mPipelineId(aPipelineId)
-  , mChildLayerObserverEpoch(0)
-  , mParentLayerObserverEpoch(0)
+  , mChildLayersObserverEpoch{0}
+  , mParentLayersObserverEpoch{0}
   , mWrEpoch{0}
   , mIdNamespace{0}
   , mPaused(false)
@@ -829,7 +829,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   }
 
   if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
+    mCompositorBridge->ObserveLayersUpdate(GetLayersId(), mChildLayersObserverEpoch, true);
   }
 
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
@@ -913,7 +913,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
   }
 
   if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
+    mCompositorBridge->ObserveLayersUpdate(GetLayersId(), mChildLayersObserverEpoch, true);
   }
 
   return IPC_OK();
@@ -1221,12 +1221,12 @@ WebRenderBridgeParent::ReleaseTextureOfImage(const wr::ImageKey& aKey)
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch)
+WebRenderBridgeParent::RecvSetLayersObserverEpoch(const LayersObserverEpoch& aChildEpoch)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  mChildLayerObserverEpoch = aLayerObserverEpoch;
+  mChildLayersObserverEpoch = aChildEpoch;
   return IPC_OK();
 }
 
@@ -1236,7 +1236,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
   if (mDestroyed) {
     return IPC_OK();
   }
-  mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), false);
+  mCompositorBridge->ObserveLayersUpdate(GetLayersId(), mChildLayersObserverEpoch, false);
 
   // Clear resources
   wr::TransactionBuilder txn;
@@ -1781,11 +1781,11 @@ WebRenderBridgeParent::ClearResources()
 bool
 WebRenderBridgeParent::ShouldParentObserveEpoch()
 {
-  if (mParentLayerObserverEpoch == mChildLayerObserverEpoch) {
+  if (mParentLayersObserverEpoch == mChildLayersObserverEpoch) {
     return false;
   }
 
-  mParentLayerObserverEpoch = mChildLayerObserverEpoch;
+  mParentLayersObserverEpoch = mChildLayersObserverEpoch;
   return true;
 }
 

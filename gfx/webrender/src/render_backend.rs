@@ -169,6 +169,97 @@ impl Document {
         !self.view.window_size.is_empty_or_negative()
     }
 
+    fn process_frame_msg(
+        &mut self,
+        message: FrameMsg,
+    ) -> DocumentOps {
+        match message {
+            FrameMsg::UpdateEpoch(pipeline_id, epoch) => {
+                self.current.scene.update_epoch(pipeline_id, epoch);
+
+                DocumentOps::nop()
+            }
+            FrameMsg::EnableFrameOutput(pipeline_id, enable) => {
+                if enable {
+                    self.output_pipelines.insert(pipeline_id);
+                } else {
+                    self.output_pipelines.remove(&pipeline_id);
+                }
+                DocumentOps::nop()
+            }
+            FrameMsg::Scroll(delta, cursor) => {
+                profile_scope!("Scroll");
+
+                let mut should_render = true;
+                let node_index = match self.hit_tester {
+                    Some(ref hit_tester) => {
+                        // Ideally we would call self.scroll_nearest_scrolling_ancestor here, but
+                        // we need have to avoid a double-borrow.
+                        let test = HitTest::new(None, cursor, HitTestFlags::empty());
+                        hit_tester.find_node_under_point(test)
+                    }
+                    None => {
+                        should_render = false;
+                        None
+                    }
+                };
+
+                let should_render =
+                    should_render &&
+                    self.scroll_nearest_scrolling_ancestor(delta, node_index) &&
+                    self.render_on_scroll == Some(true);
+                DocumentOps {
+                    scroll: true,
+                    render: should_render,
+                    composite: should_render,
+                    ..DocumentOps::nop()
+                }
+            }
+            FrameMsg::HitTest(pipeline_id, point, flags, tx) => {
+
+                let result = match self.hit_tester {
+                    Some(ref hit_tester) => {
+                        hit_tester.hit_test(HitTest::new(pipeline_id, point, flags))
+                    }
+                    None => HitTestResult { items: Vec::new() },
+                };
+
+                tx.send(result).unwrap();
+                DocumentOps::nop()
+            }
+            FrameMsg::SetPan(pan) => {
+                self.view.pan = pan;
+                DocumentOps::nop()
+            }
+            FrameMsg::ScrollNodeWithId(origin, id, clamp) => {
+                profile_scope!("ScrollNodeWithScrollId");
+
+                let should_render = self.scroll_node(origin, id, clamp)
+                    && self.render_on_scroll == Some(true);
+
+                DocumentOps {
+                    scroll: true,
+                    render: should_render,
+                    composite: should_render,
+                    ..DocumentOps::nop()
+                }
+            }
+            FrameMsg::GetScrollNodeState(tx) => {
+                profile_scope!("GetScrollNodeState");
+                tx.send(self.get_scroll_node_state()).unwrap();
+                DocumentOps::nop()
+            }
+            FrameMsg::UpdateDynamicProperties(property_bindings) => {
+                self.dynamic_properties.set_properties(property_bindings);
+                DocumentOps::nop()
+            }
+            FrameMsg::AppendDynamicProperties(property_bindings) => {
+                self.dynamic_properties.add_properties(property_bindings);
+                DocumentOps::nop()
+            }
+        }
+    }
+
     // TODO: We will probably get rid of this soon and always forward to the scene building thread.
     fn build_scene(&mut self, resource_cache: &mut ResourceCache, scene_id: u64) {
         let max_texture_size = resource_cache.max_texture_size();
@@ -601,100 +692,6 @@ impl RenderBackend {
         }
     }
 
-    fn process_frame_msg(
-        &mut self,
-        document_id: DocumentId,
-        message: FrameMsg,
-    ) -> DocumentOps {
-        let doc = self.documents.get_mut(&document_id).expect("No document?");
-
-        match message {
-            FrameMsg::UpdateEpoch(pipeline_id, epoch) => {
-                doc.current.scene.update_epoch(pipeline_id, epoch);
-
-                DocumentOps::nop()
-            }
-            FrameMsg::EnableFrameOutput(pipeline_id, enable) => {
-                if enable {
-                    doc.output_pipelines.insert(pipeline_id);
-                } else {
-                    doc.output_pipelines.remove(&pipeline_id);
-                }
-                DocumentOps::nop()
-            }
-            FrameMsg::Scroll(delta, cursor) => {
-                profile_scope!("Scroll");
-
-                let mut should_render = true;
-                let node_index = match doc.hit_tester {
-                    Some(ref hit_tester) => {
-                        // Ideally we would call doc.scroll_nearest_scrolling_ancestor here, but
-                        // we need have to avoid a double-borrow.
-                        let test = HitTest::new(None, cursor, HitTestFlags::empty());
-                        hit_tester.find_node_under_point(test)
-                    }
-                    None => {
-                        should_render = false;
-                        None
-                    }
-                };
-
-                let should_render =
-                    should_render &&
-                    doc.scroll_nearest_scrolling_ancestor(delta, node_index) &&
-                    doc.render_on_scroll == Some(true);
-                DocumentOps {
-                    scroll: true,
-                    render: should_render,
-                    composite: should_render,
-                    ..DocumentOps::nop()
-                }
-            }
-            FrameMsg::HitTest(pipeline_id, point, flags, tx) => {
-
-                let result = match doc.hit_tester {
-                    Some(ref hit_tester) => {
-                        hit_tester.hit_test(HitTest::new(pipeline_id, point, flags))
-                    }
-                    None => HitTestResult { items: Vec::new() },
-                };
-
-                tx.send(result).unwrap();
-                DocumentOps::nop()
-            }
-            FrameMsg::SetPan(pan) => {
-                doc.view.pan = pan;
-                DocumentOps::nop()
-            }
-            FrameMsg::ScrollNodeWithId(origin, id, clamp) => {
-                profile_scope!("ScrollNodeWithScrollId");
-
-                let should_render = doc.scroll_node(origin, id, clamp)
-                    && doc.render_on_scroll == Some(true);
-
-                DocumentOps {
-                    scroll: true,
-                    render: should_render,
-                    composite: should_render,
-                    ..DocumentOps::nop()
-                }
-            }
-            FrameMsg::GetScrollNodeState(tx) => {
-                profile_scope!("GetScrollNodeState");
-                tx.send(doc.get_scroll_node_state()).unwrap();
-                DocumentOps::nop()
-            }
-            FrameMsg::UpdateDynamicProperties(property_bindings) => {
-                doc.dynamic_properties.set_properties(property_bindings);
-                DocumentOps::render()
-            }
-            FrameMsg::AppendDynamicProperties(property_bindings) => {
-                doc.dynamic_properties.add_properties(property_bindings);
-                DocumentOps::render()
-            }
-        }
-    }
-
     fn next_namespace_id(&self) -> IdNamespace {
         IdNamespace(NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed) as u32)
     }
@@ -1070,12 +1067,16 @@ impl RenderBackend {
             }
         }
 
+        let doc = self.documents.get_mut(&document_id).unwrap();
+
         for frame_msg in transaction_msg.frame_ops {
             let _timer = profile_counters.total_time.timer();
-            op.combine(self.process_frame_msg(document_id, frame_msg));
+            op.combine(doc.process_frame_msg(frame_msg));
         }
 
-        let doc = self.documents.get_mut(&document_id).unwrap();
+        if doc.dynamic_properties.flush_pending_updates() {
+            op.render = true;
+        }
 
         if transaction_msg.generate_frame {
             if let Some(ref mut ros) = doc.render_on_scroll {

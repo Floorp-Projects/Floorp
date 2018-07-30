@@ -4,13 +4,8 @@
 
 @import "resource://devtools/client/themes/variables.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/App.css";
-@import "resource://devtools/client/aboutdebugging-new/src/components/RuntimesPane.css";
-@import "resource://devtools/client/aboutdebugging-new/src/components/runtime/RuntimeItem.css";
-
-:root {
-  --runtime-item-icon-color: var(--grey-30);
-  --runtime-item-selected-color: var(--blue-55);
-}
+@import "resource://devtools/client/aboutdebugging-new/src/components/Sidebar.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/SidebarItem.css";
 
 html, body {
   margin: 0;

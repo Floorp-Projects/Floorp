@@ -66,7 +66,7 @@ def assert_success(response, value=None):
     return response.body.get("value")
 
 
-def assert_dialog_handled(session, expected_text):
+def assert_dialog_handled(session, expected_text, expected_retval):
     # If there were any existing dialogs prior to the creation of this
     # fixture's dialog, then the "Get Alert Text" command will return
     # successfully. In that case, the text must be different than that
@@ -76,7 +76,9 @@ def assert_dialog_handled(session, expected_text):
             "User prompt with text '%s' was not handled." % expected_text)
 
     except NoSuchAlertException:
-        pass
+        # If dialog has been closed and no other one is open, check its return value
+        prompt_retval = session.execute_script(" return window.dialog_return_value;")
+        assert prompt_retval == expected_retval
 
 
 def assert_files_uploaded(session, element, files):

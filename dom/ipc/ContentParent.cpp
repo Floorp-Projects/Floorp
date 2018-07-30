@@ -5548,7 +5548,7 @@ ContentParent::SendGetFilesResponseAndForget(const nsID& aUUID,
 void
 ContentParent::PaintTabWhileInterruptingJS(TabParent* aTabParent,
                                            bool aForceRepaint,
-                                           uint64_t aLayerObserverEpoch)
+                                           const layers::LayersObserverEpoch& aEpoch)
 {
   if (!mHangMonitorActor) {
     return;
@@ -5556,7 +5556,7 @@ ContentParent::PaintTabWhileInterruptingJS(TabParent* aTabParent,
   ProcessHangMonitor::PaintWhileInterruptingJS(mHangMonitorActor,
                                                aTabParent,
                                                aForceRepaint,
-                                               aLayerObserverEpoch);
+                                               aEpoch);
 }
 
 void

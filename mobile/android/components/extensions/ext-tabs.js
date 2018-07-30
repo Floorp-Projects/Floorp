@@ -274,9 +274,13 @@ this.tabs = class extends ExtensionAPI {
             options.tabIndex = createProperties.index;
           }
 
-          // Make sure things like about:blank and data: URIs never inherit,
+          // Make sure things like about:blank URIs never inherit,
           // and instead always get a NullPrincipal.
-          options.disallowInheritPrincipal = true;
+          if (url && url.startsWith("about:")) {
+            options.disallowInheritPrincipal = true;
+          } else {
+            options.triggeringPrincipal = context.principal;
+          }
 
           options.parentId = BrowserApp.selectedTab.id;
 

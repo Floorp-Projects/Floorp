@@ -18,6 +18,10 @@ def is_fullscreen(session):
         """)
 
 
+def is_minimized(session):
+    return session.execute_script("return document.hidden")
+
+
 def test_no_browsing_context(session, create_window):
     session.window_handle = create_window()
     session.close()
@@ -27,29 +31,28 @@ def test_no_browsing_context(session, create_window):
 
 def test_fully_exit_fullscreen(session):
     session.window.fullscreen()
-    assert is_fullscreen(session) is True
+    assert is_fullscreen(session)
 
     response = minimize(session)
     assert_success(response)
-    assert is_fullscreen(session) is False
-    assert session.execute_script("return document.hidden") is True
+    assert not is_fullscreen(session)
+    assert is_minimized(session)
 
 
 def test_minimize(session):
-    assert not session.execute_script("return document.hidden")
+    assert not is_minimized(session)
 
     response = minimize(session)
     assert_success(response)
-    assert session.execute_script("return document.hidden")
+    assert is_minimized(session)
 
 
 def test_payload(session):
-    assert not session.execute_script("return document.hidden")
+    assert not is_minimized(session)
 
     response = minimize(session)
-
-    assert response.status == 200
-    assert isinstance(response.body["value"], dict)
+    value = assert_success(response)
+    assert isinstance(value, dict)
 
     value = response.body["value"]
     assert "width" in value
@@ -61,16 +64,16 @@ def test_payload(session):
     assert isinstance(value["x"], int)
     assert isinstance(value["y"], int)
 
-    assert session.execute_script("return document.hidden")
+    assert is_minimized(session)
 
 
 def test_minimize_twice_is_idempotent(session):
-    assert not session.execute_script("return document.hidden")
+    assert not is_minimized(session)
 
     first_response = minimize(session)
     assert_success(first_response)
-    assert session.execute_script("return document.hidden")
+    assert is_minimized(session)
 
     second_response = minimize(session)
     assert_success(second_response)
-    assert session.execute_script("return document.hidden")
+    assert is_minimized(session)

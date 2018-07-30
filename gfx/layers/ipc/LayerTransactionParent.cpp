@@ -55,8 +55,8 @@ LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
   , mCompositorBridge(aBridge)
   , mAnimStorage(aAnimStorage)
   , mId(aId)
-  , mChildEpoch(0)
-  , mParentEpoch(0)
+  , mChildEpoch{0}
+  , mParentEpoch{0}
   , mVsyncRate(aVsyncRate)
   , mPendingTransaction{0}
   , mDestroyed(false)
@@ -647,9 +647,9 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch)
+LayerTransactionParent::RecvSetLayersObserverEpoch(const LayersObserverEpoch& aChildEpoch)
 {
-  mChildEpoch = aLayerObserverEpoch;
+  mChildEpoch = aChildEpoch;
   return IPC_OK();
 }
 
