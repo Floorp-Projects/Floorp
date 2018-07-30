@@ -13,43 +13,6 @@ ChromeUtils.import("resource://gre/modules/WebProgressChild.jsm");
 this.WebProgress = new WebProgressChild(this);
 this.WebNavigation = new WebNavigationChild(this);
 
-
-var ControllerCommands = {
-  init() {
-    addMessageListener("ControllerCommands:Do", this);
-    addMessageListener("ControllerCommands:DoWithParams", this);
-    this.init = null;
-  },
-
-  receiveMessage(message) {
-    switch (message.name) {
-      case "ControllerCommands:Do":
-        if (docShell.isCommandEnabled(message.data))
-          docShell.doCommand(message.data);
-        break;
-
-      case "ControllerCommands:DoWithParams":
-        var data = message.data;
-        if (docShell.isCommandEnabled(data.cmd)) {
-          var params = Cc["@mozilla.org/embedcomp/command-params;1"].
-                       createInstance(Ci.nsICommandParams);
-          for (var name in data.params) {
-            var value = data.params[name];
-            if (value.type == "long") {
-              params.setLongValue(name, parseInt(value.value));
-            } else {
-              throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-            }
-          }
-          docShell.doCommandWithParams(data.cmd, params);
-        }
-        break;
-    }
-  }
-};
-
-ControllerCommands.init();
-
 addEventListener("DOMTitleChanged", function(aEvent) {
   if (!aEvent.isTrusted || aEvent.target.defaultView != content)
     return;
