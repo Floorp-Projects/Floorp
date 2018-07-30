@@ -2086,7 +2086,7 @@
               if (this == gBrowser.selectedTab) {
                 gBrowser.switchToNextMultiSelectedTab();
               }
-              gBrowser.updateActiveTabMultiSelectState();
+              gBrowser.avoidSingleSelectedTab();
             } else if (this != gBrowser.selectedTab) {
               for (let tab of [this, gBrowser.selectedTab]) {
                 gBrowser.addToMultiSelectedTabs(tab, true);
