@@ -328,17 +328,6 @@ addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory()
 
 addMessageListener("ViewSource:GetSelection", SelectionSourceContent);
 
-addEventListener("MozApplicationManifest", function(e) {
-  let doc = e.target;
-  let info = {
-    uri: doc.documentURI,
-    characterSet: doc.characterSet,
-    manifest: doc.documentElement.getAttribute("manifest"),
-    principal: doc.nodePrincipal,
-  };
-  sendAsyncMessage("MozApplicationManifest", info);
-}, false);
-
 let AutoComplete = {
   _connected: false,
 
