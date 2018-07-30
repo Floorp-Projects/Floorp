@@ -35,8 +35,7 @@ public:
      mForceCompositing(false)
   { }
   nsSMILCompositor(nsSMILCompositor&& toMove)
-    : PLDHashEntryHdr(std::move(toMove)),
-      mKey(std::move(toMove.mKey)),
+    : mKey(std::move(toMove.mKey)),
       mAnimationFunctions(std::move(toMove.mAnimationFunctions)),
       mForceCompositing(false)
   { }

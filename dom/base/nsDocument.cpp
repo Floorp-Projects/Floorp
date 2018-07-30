@@ -386,8 +386,7 @@ nsIdentifierMapEntry::~nsIdentifierMapEntry()
 {}
 
 nsIdentifierMapEntry::nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther)
-  : PLDHashEntryHdr(std::move(aOther))
-  , mKey(std::move(aOther.mKey))
+  : mKey(std::move(aOther.mKey))
   , mIdContentList(std::move(aOther.mIdContentList))
   , mNameContentList(std::move(aOther.mNameContentList))
   , mChangeCallbacks(std::move(aOther.mChangeCallbacks))

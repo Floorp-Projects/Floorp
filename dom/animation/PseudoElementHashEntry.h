@@ -24,7 +24,7 @@ public:
   explicit PseudoElementHashEntry(KeyTypePointer aKey)
     : mElement(aKey->mElement)
     , mPseudoType(aKey->mPseudoType) { }
-  PseudoElementHashEntry(PseudoElementHashEntry&& aOther) = default;
+  explicit PseudoElementHashEntry(const PseudoElementHashEntry& aCopy)=default;
 
   ~PseudoElementHashEntry() = default;
 

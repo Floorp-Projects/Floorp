@@ -65,8 +65,7 @@ class nsClientAuthRememberEntry final : public PLDHashEntryHdr
     }
 
     nsClientAuthRememberEntry(nsClientAuthRememberEntry&& aToMove)
-      : PLDHashEntryHdr(std::move(aToMove))
-      , mSettings(std::move(aToMove.mSettings))
+      : mSettings(std::move(aToMove.mSettings))
       , mEntryKey(std::move(aToMove.mEntryKey))
     {
     }

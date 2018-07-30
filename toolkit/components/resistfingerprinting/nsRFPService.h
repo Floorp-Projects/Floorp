@@ -108,12 +108,11 @@ public:
     , mKey(aOther->mKey)
   {}
 
-  KeyboardHashKey(KeyboardHashKey&& aOther)
-    : PLDHashEntryHdr(std::move(aOther))
-    , mLang(std::move(aOther.mLang))
-    , mRegion(std::move(aOther.mRegion))
-    , mKeyIdx(std::move(aOther.mKeyIdx))
-    , mKey(std::move(aOther.mKey))
+  KeyboardHashKey(KeyType aOther)
+    : mLang(aOther.mLang)
+    , mRegion(aOther.mRegion)
+    , mKeyIdx(aOther.mKeyIdx)
+    , mKey(aOther.mKey)
   {}
 
   ~KeyboardHashKey()

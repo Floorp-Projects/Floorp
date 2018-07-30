@@ -28,7 +28,7 @@ public:
 
   explicit DisplayItemHashEntry(KeyTypePointer aKey)
     : mKey(*aKey) {}
-  DisplayItemHashEntry(DisplayItemHashEntry&&) = default;
+  explicit DisplayItemHashEntry(const DisplayItemHashEntry& aCopy)=default;
 
   ~DisplayItemHashEntry() = default;
 
