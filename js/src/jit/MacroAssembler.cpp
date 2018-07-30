@@ -972,7 +972,7 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     void* nurseryPosAddr = zone->addressOfStringNurseryPosition();
     const void* nurseryEndAddr = zone->addressOfStringNurseryCurrentEnd();
 
-    movePtr(ImmPtr(zone->addressOfNurseryPosition()), temp);
+    movePtr(ImmPtr(nurseryPosAddr), temp);
     loadPtr(Address(temp, 0), result);
     addPtr(Imm32(totalSize), result);
     const ptrdiff_t endOffset =
