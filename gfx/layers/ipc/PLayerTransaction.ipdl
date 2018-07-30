@@ -16,6 +16,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
@@ -75,6 +76,9 @@ parent:
   sync SetTestSampleTime(TimeStamp sampleTime);
   // Leave test mode and resume normal compositing
   sync LeaveTestMode();
+
+  // Returns |OMTAValue| applied to the layer.
+  sync GetAnimationValue(uint64_t aCompositorAnimationId) returns (OMTAValue value);
 
   // Returns the value of the opacity applied to the layer by animation.
   // |hasAnimationOpacity| is true if the layer has an opacity value

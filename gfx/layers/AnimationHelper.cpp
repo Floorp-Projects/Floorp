@@ -85,6 +85,47 @@ CompositorAnimationStorage::GetAnimationTransform(const uint64_t& aId) const
   return Some(transform);
 }
 
+OMTAValue
+CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const
+{
+  OMTAValue omtaValue = mozilla::null_t();
+  auto animatedValue = GetAnimatedValue(aId);
+  if (!animatedValue) {
+    return omtaValue;
+  }
+
+  switch (animatedValue->mType) {
+    case AnimatedValue::OPACITY:
+      omtaValue = animatedValue->mOpacity;
+      break;
+    case AnimatedValue::TRANSFORM: {
+      gfx::Matrix4x4 transform = animatedValue->mTransform.mFrameTransform;
+      const TransformData& data = animatedValue->mTransform.mData;
+      float scale = data.appUnitsPerDevPixel();
+      gfx::Point3D transformOrigin = data.transformOrigin();
+
+      // Undo the rebasing applied by
+      // nsDisplayTransform::GetResultingTransformMatrixInternal
+      transform.ChangeBasis(-transformOrigin);
+
+      // Convert to CSS pixels (this undoes the operations performed by
+      // nsStyleTransformMatrix::ProcessTranslatePart which is called from
+      // nsDisplayTransform::GetResultingTransformMatrix)
+      double devPerCss =
+        double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
+      transform._41 *= devPerCss;
+      transform._42 *= devPerCss;
+      transform._43 *= devPerCss;
+      omtaValue = transform;
+      break;
+    }
+    case AnimatedValue::NONE:
+      break;
+  }
+
+  return omtaValue;
+}
+
 void
 CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                              gfx::Matrix4x4&& aTransformInDevSpace,
