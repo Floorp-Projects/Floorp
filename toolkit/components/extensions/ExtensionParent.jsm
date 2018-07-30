@@ -1125,7 +1125,7 @@ class HiddenXULWindow {
 
     const chromeDoc = this.chromeDocument;
 
-    const browser = chromeDoc.createElement("browser");
+    const browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
     browser.sameProcessAsFrameLoader = groupFrameLoader;
