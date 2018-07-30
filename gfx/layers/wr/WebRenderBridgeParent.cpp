@@ -1361,8 +1361,9 @@ WebRenderBridgeParent::RecvLeaveTestMode()
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvGetAnimationValue(const uint64_t& aCompositorAnimationsId,
-                                             OMTAValue* aValue)
+WebRenderBridgeParent::RecvGetAnimationOpacity(const uint64_t& aCompositorAnimationsId,
+                                               float* aOpacity,
+                                               bool* aHasAnimationOpacity)
 {
   if (mDestroyed) {
     return IPC_FAIL_NO_REASON(this);
@@ -1375,7 +1376,37 @@ WebRenderBridgeParent::RecvGetAnimationValue(const uint64_t& aCompositorAnimatio
     AdvanceAnimations();
   }
 
-  *aValue = mAnimStorage->GetOMTAValue(aCompositorAnimationsId);
+  Maybe<float> opacity = mAnimStorage->GetAnimationOpacity(aCompositorAnimationsId);
+  if (opacity) {
+    *aOpacity = *opacity;
+    *aHasAnimationOpacity = true;
+  } else {
+    *aHasAnimationOpacity = false;
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvGetAnimationTransform(const uint64_t& aCompositorAnimationsId,
+                                                 MaybeTransform* aTransform)
+{
+  if (mDestroyed) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  MOZ_ASSERT(mAnimStorage);
+  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
+    root->AdvanceAnimations();
+  } else {
+    AdvanceAnimations();
+  }
+
+  Maybe<Matrix4x4> transform = mAnimStorage->GetAnimationTransform(aCompositorAnimationsId);
+  if (transform) {
+    *aTransform = *transform;
+  } else {
+    *aTransform = mozilla::void_t();
+  }
   return IPC_OK();
 }
 
