@@ -292,12 +292,12 @@ function originQuery(conditions = "", bookmarkedFragment = "NULL") {
   return `${SQL_AUTOFILL_WITH}
           SELECT :query_type,
                  fixed_up_host || '/',
-                 prefix || moz_origins.host || '/',
+                 IFNULL(:prefix, prefix) || moz_origins.host || '/',
                  frecency,
                  bookmarked,
                  id
           FROM (
-            SELECT host AS host,
+            SELECT host,
                    host AS fixed_up_host,
                    TOTAL(frecency) AS host_frecency,
                    ${bookmarkedFragment} AS bookmarked
@@ -307,7 +307,7 @@ function originQuery(conditions = "", bookmarkedFragment = "NULL") {
             GROUP BY host
             HAVING host_frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
             UNION ALL
-            SELECT host AS host,
+            SELECT host,
                    fixup_url(host) AS fixed_up_host,
                    TOTAL(frecency) AS host_frecency,
                    ${bookmarkedFragment} AS bookmarked
@@ -2436,7 +2436,6 @@ Search.prototype = {
 
     let bookmarked = this.hasBehavior("bookmark") &&
                      !this.hasBehavior("history");
-
     if (this._strippedPrefix) {
       opts.prefix = this._strippedPrefix;
       if (bookmarked) {
