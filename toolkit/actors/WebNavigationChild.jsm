@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["WebNavigationChild"];
 
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -18,23 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
                                    "@mozilla.org/xre/app-info;1",
                                    "nsICrashReporter");
 
-class WebNavigationChild {
-  constructor(mm) {
-    this.mm = mm;
-
-    this.mm.addMessageListener("WebNavigation:GoBack", this);
-    this.mm.addMessageListener("WebNavigation:GoForward", this);
-    this.mm.addMessageListener("WebNavigation:GotoIndex", this);
-    this.mm.addMessageListener("WebNavigation:LoadURI", this);
-    this.mm.addMessageListener("WebNavigation:SetOriginAttributes", this);
-    this.mm.addMessageListener("WebNavigation:Reload", this);
-    this.mm.addMessageListener("WebNavigation:Stop", this);
-    // This message is used for measuring this.mm.content process startup performance.
-    this.mm.sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
-
-    this.inLoadURI = false;
-  }
-
+class WebNavigationChild extends ActorChild {
   get webNavigation() {
     return this.mm.docShell.QueryInterface(Ci.nsIWebNavigation);
   }
@@ -73,11 +58,11 @@ class WebNavigationChild {
   }
 
   _wrapURIChangeCall(fn) {
-    this.inLoadURI = true;
+    this.mm.WebProgress.inLoadURI = true;
     try {
       fn();
     } finally {
-      this.inLoadURI = false;
+      this.mm.WebProgress.inLoadURI = false;
       this.mm.WebProgress.sendLoadCallResult();
     }
   }

@@ -7,11 +7,9 @@
 ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/WebNavigationChild.jsm");
 ChromeUtils.import("resource://gre/modules/WebProgressChild.jsm");
 
 this.WebProgress = new WebProgressChild(this);
-this.WebNavigation = new WebNavigationChild(this);
 
 addEventListener("DOMTitleChanged", function(aEvent) {
   if (!aEvent.isTrusted || aEvent.target.defaultView != content)
