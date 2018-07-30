@@ -1,0 +1,2 @@
+This is the readme for the test extension.
+This app was created by unzipping only_cose_signed.zip and adding this line (thus invalidating the COSE signature).
