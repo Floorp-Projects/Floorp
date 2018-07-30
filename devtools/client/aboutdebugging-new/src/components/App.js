@@ -4,40 +4,20 @@
 
 "use strict";
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-
-const Runtime = require("../runtimes/runtime");
-const ThisFirefox = require("../runtimes/this-firefox");
 
 const Sidebar = createFactory(require("./Sidebar"));
 
 class App extends PureComponent {
-  static get propTypes() {
-    return {
-      selectedRuntime: PropTypes.instanceOf(Runtime),
-      thisFirefox: PropTypes.instanceOf(ThisFirefox).isRequired,
-    };
-  }
-
   render() {
-    const { selectedRuntime, thisFirefox } = this.props;
-
     return dom.div(
       {
         className: "app",
       },
-      Sidebar({ selectedRuntime, thisFirefox })
+      Sidebar()
     );
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    selectedRuntime: state.runtimes.selectedRuntime,
-  };
-};
-
-module.exports = connect(mapStateToProps)(App);
+module.exports = App;
