@@ -153,18 +153,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     this.formHandler.loadRecord(record);
 
     // Add validation to some address fields
-    for (let formElement of this.form.elements) {
-      let container = formElement.closest(`#${formElement.id}-container`);
-      if (formElement.localName == "button" || !container) {
-        continue;
-      }
-      let required = formElement.required && !formElement.disabled;
-      if (required) {
-        container.setAttribute("required", "true");
-      } else {
-        container.removeAttribute("required");
-      }
-    }
+    this.updateRequiredState();
 
     let shippingAddressErrors = request.paymentDetails.shippingAddressErrors;
     for (let [errorName, errorSelector] of Object.entries(this._errorFieldMap)) {
@@ -205,6 +194,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       }
     }
   }
+
   handleEvent(event) {
     switch (event.type) {
       case "click": {
@@ -242,6 +232,21 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       }
       default: {
         throw new Error("Unexpected click target");
+      }
+    }
+  }
+
+  updateRequiredState() {
+    for (let formElement of this.form.elements) {
+      let container = formElement.closest(`#${formElement.id}-container`);
+      if (formElement.localName == "button" || !container) {
+        continue;
+      }
+      let required = formElement.required && !formElement.disabled;
+      if (required) {
+        container.setAttribute("required", "true");
+      } else {
+        container.removeAttribute("required");
       }
     }
   }

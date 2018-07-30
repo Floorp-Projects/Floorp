@@ -181,6 +181,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       }
     }
 
+    this.updateRequiredState();
     this.updateSaveButtonState();
   }
 
@@ -297,6 +298,18 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
 
   updateSaveButtonState() {
     this.saveButton.disabled = !this.form.checkValidity();
+  }
+
+  updateRequiredState() {
+    for (let formElement of this.form.elements) {
+      let container = formElement.closest("label") || formElement.closest("div");
+      let required = formElement.required && !formElement.disabled;
+      if (required) {
+        container.setAttribute("required", "true");
+      } else {
+        container.removeAttribute("required");
+      }
+    }
   }
 
   async saveRecord() {
