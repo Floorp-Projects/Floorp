@@ -139,6 +139,34 @@ struct TransactionId {
   }
 };
 
+struct LayersObserverEpoch {
+  uint64_t mId;
+
+  MOZ_MUST_USE LayersObserverEpoch Next() const {
+    return LayersObserverEpoch{mId + 1};
+  }
+
+  bool operator<=(const LayersObserverEpoch& aOther) const
+  {
+    return mId <= aOther.mId;
+  }
+
+  bool operator>=(const LayersObserverEpoch& aOther) const
+  {
+    return mId >= aOther.mId;
+  }
+
+  bool operator==(const LayersObserverEpoch& aOther) const
+  {
+    return mId == aOther.mId;
+  }
+
+  bool operator!=(const LayersObserverEpoch& aOther) const
+  {
+    return mId != aOther.mId;
+  }
+};
+
 enum class LayersBackend : int8_t {
   LAYERS_NONE = 0,
   LAYERS_BASIC,
