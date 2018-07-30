@@ -319,6 +319,79 @@ BaselineInspector::dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** pseco
     return true;
 }
 
+// Process the type guards in the stub in order to reveal the
+// underlying operation.
+static void
+SkipBinaryGuards(CacheIRReader& reader)
+{
+    while (true) {
+        // Two skip opcodes
+        if (reader.matchOp(CacheOp::GuardIsInt32) ||
+            reader.matchOp(CacheOp::GuardType) ||
+            reader.matchOp(CacheOp::TruncateDoubleToUInt32) ||
+            reader.matchOp(CacheOp::GuardIsBoolean))
+        {
+            reader.skip(); // Skip over operandId
+            reader.skip(); // Skip over result/type.
+            continue;
+        }
+
+        // One skip
+        if (reader.matchOp(CacheOp::GuardIsNumber) ||
+            reader.matchOp(CacheOp::GuardIsString) ||
+            reader.matchOp(CacheOp::GuardIsObject))
+        {
+            reader.skip(); // Skip over operandId
+            continue;
+        }
+        return;
+    }
+}
+
+static MIRType
+ParseCacheIRStub(ICStub* stub)
+{
+    ICCacheIR_Regular* cacheirStub = stub->toCacheIR_Regular();
+    CacheIRReader reader(cacheirStub->stubInfo());
+    SkipBinaryGuards(reader);
+    switch (reader.readOp()) {
+      case CacheOp::LoadUndefinedResult:
+        return MIRType::Undefined;
+      case CacheOp::LoadBooleanResult:
+        return MIRType::Boolean;
+      case CacheOp::LoadStringResult:
+      case CacheOp::CallStringConcatResult:
+      case CacheOp::CallStringObjectConcatResult:
+        return MIRType::String;
+      case CacheOp::DoubleAddResult:
+      case CacheOp::DoubleSubResult:
+      case CacheOp::DoubleMulResult:
+      case CacheOp::DoubleDivResult:
+      case CacheOp::DoubleModResult:
+      case CacheOp::DoubleNegationResult:
+        return MIRType::Double;
+      case CacheOp::Int32AddResult:
+      case CacheOp::Int32SubResult:
+      case CacheOp::Int32MulResult:
+      case CacheOp::Int32DivResult:
+      case CacheOp::Int32ModResult:
+      case CacheOp::Int32BitOrResult:
+      case CacheOp::Int32BitXorResult:
+      case CacheOp::Int32BitAndResult:
+      case CacheOp::Int32LeftShiftResult:
+      case CacheOp::Int32RightShiftResult:
+      case CacheOp::Int32URightShiftResult:
+      case CacheOp::Int32NotResult:
+      case CacheOp::Int32NegationResult:
+        return MIRType::Int32;
+      case CacheOp::LoadValueResult:
+        return MIRType::Value;
+      default:
+        MOZ_CRASH("Unknown op");
+        return MIRType::None;
+    }
+}
+
 MIRType
 BaselineInspector::expectedResultType(jsbytecode* pc)
 {
@@ -344,6 +417,8 @@ BaselineInspector::expectedResultType(jsbytecode* pc)
       case ICStub::BinaryArith_StringConcat:
       case ICStub::BinaryArith_StringObjectConcat:
         return MIRType::String;
+      case ICStub::CacheIR_Regular:
+        return ParseCacheIRStub(stub);
       default:
         return MIRType::None;
     }
@@ -434,6 +509,19 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
             break;
           case ICStub::BinaryArith_DoubleWithInt32:
             sawDouble = true;
+            break;
+          case ICStub::CacheIR_Regular:
+            switch (ParseCacheIRStub(stubs[i])) {
+              case MIRType::Double:
+                sawDouble = true;
+                break;
+              case MIRType::Int32:
+                sawInt32 = true;
+                break;
+              default:
+                sawOther = true;
+                break;
+            }
             break;
           default:
             sawOther = true;

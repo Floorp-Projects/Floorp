@@ -2351,6 +2351,7 @@ class LazyScript : public gc::TenuredCell
     }
 
     JS::Compartment* compartment() const;
+    JS::Compartment* maybeCompartment() const { return compartment(); }
     Realm* realm() const;
 
     void initScript(JSScript* script);

@@ -47,6 +47,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     bool makesGCCalls_;
 
     MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
+    MOZ_MUST_USE bool tailCallVM(MacroAssembler& masm, const VMFunction& fun);
 
     MOZ_MUST_USE bool callTypeUpdateIC(Register obj, ValueOperand val, Register scratch,
                                        LiveGeneralRegisterSet saveRegs);
@@ -155,6 +156,20 @@ BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
     MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
 
     EmitBaselineCallVM(code, masm);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm, const VMFunction& fun)
+{
+    MOZ_ASSERT(!inStubFrame_);
+
+    TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
+    MOZ_ASSERT(fun.expectTailCall == TailCall);
+    MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
+    size_t argSize = fun.explicitStackSlots() * sizeof(void*);
+
+    EmitBaselineTailCallVM(code, masm, argSize);
     return true;
 }
 
@@ -2394,4 +2409,53 @@ ICCacheIR_Updated::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitor
 
     stubInfo->copyStubData(&other, res);
     return res;
+}
+
+typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
+static const VMFunction ConcatStringsInfo =
+    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>, "ConcatStrings", NonTailCall);
+
+bool
+BaselineCacheIRCompiler::emitCallStringConcatResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.stringOperandId());
+    Register rhs = allocator.useRegister(masm, reader.stringOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.push(rhs);
+    masm.push(lhs);
+
+    if (!callVM(masm, ConcatStringsInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_STRING, ReturnReg, output.valueReg());
+
+    stubFrame.leave(masm);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitCallStringObjectConcatResult()
+{
+    ValueOperand lhs = allocator.useValueRegister(masm, reader.valOperandId());
+    ValueOperand rhs = allocator.useValueRegister(masm, reader.valOperandId());
+
+    allocator.discardStack(masm);
+
+    // For the expression decompiler
+    EmitRestoreTailCallReg(masm);
+    masm.pushValue(lhs);
+    masm.pushValue(rhs);
+
+    masm.pushValue(rhs);
+    masm.pushValue(lhs);
+
+    if (!tailCallVM(masm, DoConcatStringObjectInfo))
+        return false;
+
+    return true;
 }
