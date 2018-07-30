@@ -52,6 +52,20 @@ let ACTORS = {
       ],
     },
   },
+
+  PageStyle: {
+    child: {
+      module: "resource:///actors/PageStyleChild.jsm",
+      group: "browsers",
+      events: {
+        "pageshow": {},
+      },
+      messages: [
+        "PageStyle:Switch",
+        "PageStyle:Disable",
+      ]
+    },
+  },
 };
 
 (function earlyBlankFirstPaint() {

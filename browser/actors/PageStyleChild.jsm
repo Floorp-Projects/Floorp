@@ -4,12 +4,14 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["PageStyleHandler"];
+var EXPORTED_SYMBOLS = ["PageStyleChild"];
 
-var PageStyleHandler = {
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+
+class PageStyleChild extends ActorChild {
   getViewer(content) {
     return content.docShell.contentViewer;
-  },
+  }
 
   sendStyleSheetInfo(mm) {
     let content = mm.content;
@@ -20,13 +22,13 @@ var PageStyleHandler = {
       authorStyleDisabled: this.getViewer(content).authorStyleDisabled,
       preferredStyleSheetSet: content.document.preferredStyleSheetSet
     });
-  },
+  }
 
   getAllStyleSheets(frameset) {
     let selfSheets = Array.slice(frameset.document.styleSheets);
     let subSheets = Array.map(frameset.frames, frame => this.getAllStyleSheets(frame));
     return selfSheets.concat(...subSheets);
-  },
+  }
 
   receiveMessage(msg) {
     let content = msg.target.content;
@@ -42,7 +44,7 @@ var PageStyleHandler = {
     }
 
     this.sendStyleSheetInfo(msg.target);
-  },
+  }
 
   handleEvent(event) {
     let win = event.target.ownerGlobal;
@@ -52,7 +54,7 @@ var PageStyleHandler = {
 
     let mm = win.docShell.messageManager;
     this.sendStyleSheetInfo(mm);
-  },
+  }
 
   _stylesheetSwitchAll(frameset, title) {
     if (!title || this._stylesheetInFrame(frameset, title)) {
@@ -63,7 +65,7 @@ var PageStyleHandler = {
       // Recurse into sub-frames.
       this._stylesheetSwitchAll(frameset.frames[i], title);
     }
-  },
+  }
 
   _stylesheetSwitchFrame(frame, title) {
     var docStyleSheets = frame.document.styleSheets;
@@ -76,11 +78,11 @@ var PageStyleHandler = {
         docStyleSheet.disabled = false;
       }
     }
-  },
+  }
 
   _stylesheetInFrame(frame, title) {
     return Array.some(frame.document.styleSheets, (styleSheet) => styleSheet.title == title);
-  },
+  }
 
   _filterStyleSheets(styleSheets, content) {
     let result = [];
@@ -123,5 +125,5 @@ var PageStyleHandler = {
     }
 
     return result;
-  },
-};
+  }
+}

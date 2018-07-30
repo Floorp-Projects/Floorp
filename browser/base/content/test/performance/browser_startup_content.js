@@ -52,7 +52,7 @@ const whitelist = {
     "resource:///actors/BrowserTabChild.jsm",
     "resource:///modules/ContentLinkHandler.jsm",
     "resource:///modules/ContentMetaHandler.jsm",
-    "resource:///modules/PageStyleHandler.jsm",
+    "resource:///actors/PageStyleChild.jsm",
     "resource://gre/modules/ActorChild.jsm",
     "resource://gre/modules/ActorManagerChild.jsm",
     "resource://gre/modules/BrowserUtils.jsm",
