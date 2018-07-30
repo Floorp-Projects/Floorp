@@ -5816,7 +5816,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     BuildInlineChildItems(aState, *item,
                           aFlags & ITEM_IS_WITHIN_SVG_TEXT,
                           aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD);
-    item->mHasInlineEnds = true;
     item->mIsBlock = false;
   } else {
     // Compute a boolean isInline which is guaranteed to be false for blocks
@@ -5837,7 +5836,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     // that has mIsAllInline false doesn't need an {ib} split.  So this is just
     // an optimization to keep from doing too much work in cases when we can
     // show that mIsAllInline is true..
-    item->mIsAllInline = item->mHasInlineEnds = isInline ||
+    item->mIsAllInline = isInline ||
       // Figure out whether we're guaranteed this item will be out of flow.
       // This is not a precise test, since one of our ancestor inlines might add
       // an absolute containing block (if it's relatively positioned) when there
@@ -5849,8 +5848,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       //
       // If we make this test precise, we can remove some of the code dealing
       // with the imprecision in ConstructInline and adjust the comments on
-      // mIsAllInline and mIsBlock in the header.  And probably remove mIsBlock
-      // altogether, since then it will always be equal to !mHasInlineEnds.
+      // mIsAllInline and mIsBlock in the header.
       (!(bits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
        aState.GetGeometricParent(display, nullptr));
 
@@ -9344,7 +9342,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
                                 wrapperStyle,
                                 true);
 
-    newItem->mIsAllInline = newItem->mHasInlineEnds =
+    newItem->mIsAllInline =
       newItem->mComputedStyle->StyleDisplay()->IsInlineOutsideStyle();
     newItem->mIsBlock = !newItem->mIsAllInline;
 
@@ -9852,8 +9850,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
   // inline-table in the end, so it'll all work out.  In any case, arguably
   // we don't need to maintain this state at this point... but it's better
   // to, I guess.
-  newItem->mIsAllInline = newItem->mHasInlineEnds =
-    disp->IsInlineOutsideStyle();
+  newItem->mIsAllInline = disp->IsInlineOutsideStyle();
 
   bool isRuby = disp->IsRubyDisplayType();
   // All types of ruby frames need a block frame to provide line layout,
