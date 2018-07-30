@@ -13,7 +13,7 @@ use api::{LineOrientation, LineStyle, LocalClip, NinePatchBorderSource, Pipeline
 use api::{PropertyBinding, ReferenceFrame, RepeatMode, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
 use api::{TransformStyle, YuvColorSpace, YuvData};
-use clip::{ClipRegion, ClipSource, ClipSources, ClipStore};
+use clip::{ClipRegion, ClipSource, ClipSources, ClipSourcesIndex, ClipStore};
 use clip_scroll_tree::{ClipChainIndex, ClipNodeIndex, ClipScrollTree, SpatialNodeIndex};
 use euclid::vec2;
 use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
@@ -33,7 +33,7 @@ use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
 use scene_builder::{BuiltScene, SceneRequest};
 use spatial_node::{SpatialNodeType, StickyFrameInfo};
-use std::{f32, mem, usize};
+use std::{f32, mem};
 use tiling::{CompositeOps, ScrollbarPrimitive};
 use util::{MaxRect, RectHelpers, recycle_vec};
 
@@ -44,52 +44,20 @@ static DEFAULT_SCROLLBAR_COLOR: ColorF = ColorF {
     a: 0.6,
 };
 
-#[derive(Clone, Copy)]
-pub struct PipelineOffset {
-    pipeline: PipelineId,
-    spatial_offset: usize,
-    clip_offset: usize,
-}
-
 /// A data structure that keeps track of mapping between API ClipIds and the indices used
 /// internally in the ClipScrollTree to avoid having to do HashMap lookups. ClipIdToIndexMapper is
-/// responsible for mapping both ClipId to ClipChainIndex and ClipId to SpatialNodeIndex.  We
-/// also include two small LRU caches. Currently the caches are small (1 entry), but in the future
-/// we could use uluru here to do something more involved.
+/// responsible for mapping both ClipId to ClipChainIndex and ClipId to SpatialNodeIndex.
 #[derive(Default)]
 pub struct ClipIdToIndexMapper {
-    /// A map which converts a ClipId for a clipping node or an API-defined ClipChain into
-    /// a ClipChainIndex, which is the index used internally in the ClipScrollTree to
-    /// identify ClipChains.
     clip_chain_map: FastHashMap<ClipId, ClipChainIndex>,
-
-    /// The last mapped ClipChainIndex, used to avoid having to do lots of consecutive
-    /// HashMap lookups.
-    cached_clip_chain_index: Option<(ClipId, ClipChainIndex)>,
-
-    /// The offset in the ClipScrollTree's array of SpatialNodes and ClipNodes for a particular
-    /// pipeline.  This is used to convert ClipIds into SpatialNodeIndex or ClipNodeIndex.
-    pipeline_offsets: FastHashMap<PipelineId, PipelineOffset>,
-
-    /// The last mapped pipeline offset for this mapper. This is used to avoid having to
-    /// consult `pipeline_offsets` repeatedly when flattening the display list.
-    cached_pipeline_offset: Option<PipelineOffset>,
-
-    /// The next available pipeline offset for ClipNodeIndex. When we encounter a pipeline
-    /// we will use this value and increment it by the total number of clip nodes in the
-    /// pipeline's display list.
-    next_available_clip_offset: usize,
-
-    /// The next available pipeline offset for SpatialNodeIndex. When we encounter a pipeline
-    /// we will use this value and increment it by the total number of spatial nodes in the
-    /// pipeline's display list.
-    next_available_spatial_offset: usize,
+    clip_node_map: FastHashMap<ClipId, ClipNodeIndex>,
+    spatial_node_map: FastHashMap<ClipId, SpatialNodeIndex>,
 }
 
 impl ClipIdToIndexMapper {
     pub fn add_clip_chain(&mut self, id: ClipId, index: ClipChainIndex) {
-        debug_assert!(!self.clip_chain_map.contains_key(&id));
-        self.clip_chain_map.insert(id, index);
+        let _old_value = self.clip_chain_map.insert(id, index);
+        debug_assert!(_old_value.is_none());
     }
 
     pub fn map_to_parent_clip_chain(&mut self, id: ClipId, parent_id: &ClipId) {
@@ -97,59 +65,40 @@ impl ClipIdToIndexMapper {
         self.add_clip_chain(id, parent_chain_index);
     }
 
-    pub fn get_clip_chain_index(&mut self, id: &ClipId) -> ClipChainIndex {
-        match self.cached_clip_chain_index {
-            Some((cached_id, cached_clip_chain_index)) if cached_id == *id =>
-                return cached_clip_chain_index,
-            _ => {}
-        }
+    pub fn map_spatial_node(&mut self, id: ClipId, index: SpatialNodeIndex) {
+        let _old_value = self.spatial_node_map.insert(id, index);
+        debug_assert!(_old_value.is_none());
+    }
 
+    pub fn map_clip_node(&mut self, id: ClipId, index: ClipNodeIndex) {
+        let _old_value = self.clip_node_map.insert(id, index);
+        debug_assert!(_old_value.is_none());
+    }
+
+    pub fn get_clip_chain_index(&self, id: &ClipId) -> ClipChainIndex {
         self.clip_chain_map[id]
     }
 
-    pub fn get_clip_chain_index_and_cache_result(&mut self, id: &ClipId) -> ClipChainIndex {
-        let index = self.get_clip_chain_index(id);
-        self.cached_clip_chain_index = Some((*id, index));
-        index
-    }
-
-    pub fn initialize_for_pipeline(&mut self, pipeline: &ScenePipeline) {
-        debug_assert!(!self.pipeline_offsets.contains_key(&pipeline.pipeline_id));
-        self.pipeline_offsets.insert(
-            pipeline.pipeline_id,
-            PipelineOffset {
-                pipeline: pipeline.pipeline_id,
-                spatial_offset: self.next_available_spatial_offset,
-                clip_offset: self.next_available_clip_offset,
-            }
-        );
-
-        self.next_available_clip_offset += pipeline.display_list.total_clip_nodes();
-        self.next_available_spatial_offset += pipeline.display_list.total_spatial_nodes();
-    }
-
-    pub fn get_pipeline_offet<'a>(&'a mut self, id: PipelineId) -> &'a PipelineOffset {
-        match self.cached_pipeline_offset {
-            Some(ref offset) if offset.pipeline == id => offset,
-            _ => {
-                let offset = &self.pipeline_offsets[&id];
-                self.cached_pipeline_offset = Some(*offset);
-                offset
-            }
-        }
-    }
-
-    pub fn get_clip_node_index(&mut self, id: ClipId) -> ClipNodeIndex {
+    pub fn get_clip_node_index(&self, id: ClipId) -> ClipNodeIndex {
         match id {
-            ClipId::Clip(index, pipeline_id) => {
-                let pipeline_offset = self.get_pipeline_offet(pipeline_id);
-                ClipNodeIndex(pipeline_offset.clip_offset + index)
+            ClipId::Clip(..) => {
+                self.clip_node_map[&id]
             }
             ClipId::Spatial(..) => {
                 // We could theoretically map back to the containing clip node with the current
                 // design, but we will eventually fully separate out clipping from spatial nodes
                 // in the display list. We don't ever need to do this anyway.
                 panic!("Tried to use positioning node as clip node.");
+            }
+            ClipId::ClipChain(_) => panic!("Tried to use ClipChain as scroll node."),
+        }
+    }
+
+    pub fn get_spatial_node_index(&self, id: ClipId) -> SpatialNodeIndex {
+        match id {
+            ClipId::Clip(..) |
+            ClipId::Spatial(..) => {
+                self.spatial_node_map[&id]
             }
             ClipId::ClipChain(_) => panic!("Tried to use ClipChain as scroll node."),
         }
@@ -248,7 +197,6 @@ impl<'a> DisplayListFlattener<'a> {
             clip_store: old_builder.clip_store.recycle(),
         };
 
-        flattener.id_to_index_mapper.initialize_for_pipeline(root_pipeline);
         flattener.push_root(
             root_pipeline_id,
             &root_pipeline.viewport_size,
@@ -401,13 +349,12 @@ impl<'a> DisplayListFlattener<'a> {
             info.previously_applied_offset,
         );
 
-        let index = self.get_spatial_node_index_for_clip_id(info.id);
-        self.clip_scroll_tree.add_sticky_frame(
-            index,
+        let index = self.clip_scroll_tree.add_sticky_frame(
             clip_and_scroll.spatial_node_index, /* parent id */
             sticky_frame_info,
             info.id.pipeline_id(),
         );
+        self.id_to_index_mapper.map_spatial_node(info.id, index);
         self.id_to_index_mapper.map_to_parent_clip_chain(info.id, parent_id);
     }
 
@@ -531,8 +478,6 @@ impl<'a> DisplayListFlattener<'a> {
                 return
             },
         };
-
-        self.id_to_index_mapper.initialize_for_pipeline(pipeline);
 
         //TODO: use or assert on `clip_and_scroll_ids.clip_node_id` ?
         let clip_chain_index = self.add_clip_node(
@@ -791,22 +736,28 @@ impl<'a> DisplayListFlattener<'a> {
         None
     }
 
+    fn add_clip_sources(
+        &mut self,
+        clip_sources: Vec<ClipSource>,
+        spatial_node_index: SpatialNodeIndex,
+    ) -> Option<ClipSourcesIndex> {
+        if clip_sources.is_empty() {
+            None
+        } else {
+            Some(self.clip_store.insert(ClipSources::new(clip_sources, spatial_node_index)))
+        }
+    }
+
     /// Create a primitive and add it to the prim store. This method doesn't
     /// add the primitive to the draw list, so can be used for creating
     /// sub-primitives.
     pub fn create_primitive(
         &mut self,
         info: &LayoutPrimitiveInfo,
-        clip_sources: Vec<ClipSource>,
+        clip_sources: Option<ClipSourcesIndex>,
         container: PrimitiveContainer,
     ) -> PrimitiveIndex {
         let stacking_context = self.sc_stack.last().expect("bug: no stacking context!");
-
-        let clip_sources = if clip_sources.is_empty() {
-            None
-        } else {
-            Some(self.clip_store.insert(ClipSources::new(clip_sources)))
-        };
 
         self.prim_store.add_primitive(
             &info.rect,
@@ -877,6 +828,10 @@ impl<'a> DisplayListFlattener<'a> {
                     .iter()
                     .map(|cs| cs.offset(&shadow.offset))
                     .collect();
+                let clip_sources = self.add_clip_sources(
+                    clip_sources,
+                    clip_and_scroll.spatial_node_index,
+                );
 
                 // Construct and add a primitive for the given shadow.
                 let shadow_prim_index = self.create_primitive(
@@ -893,6 +848,10 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         if container.is_visible() {
+            let clip_sources = self.add_clip_sources(
+                clip_sources,
+                clip_and_scroll.spatial_node_index,
+            );
             let prim_index = self.create_primitive(info, clip_sources, container);
             if cfg!(debug_assertions) && ChasePrimitive::LocalRect(info.rect) == self.config.chase_primitive {
                 println!("Chasing {:?}", prim_index);
@@ -919,7 +878,7 @@ impl<'a> DisplayListFlattener<'a> {
             None => ClipChainIndex::NO_CLIP,
         };
         let clip_and_scroll = ScrollNodeAndClipChain::new(
-            self.get_spatial_node_index_for_clip_id(spatial_node),
+            self.id_to_index_mapper.get_spatial_node_index(spatial_node),
             clip_chain_id
         );
 
@@ -1219,10 +1178,8 @@ impl<'a> DisplayListFlattener<'a> {
         source_perspective: Option<LayoutTransform>,
         origin_in_parent_reference_frame: LayoutVector2D,
     ) -> SpatialNodeIndex {
-        let index = self.get_spatial_node_index_for_clip_id(reference_frame_id);
-        let parent_index = parent_id.map(|id| self.get_spatial_node_index_for_clip_id(id));
-        self.clip_scroll_tree.add_reference_frame(
-            index,
+        let parent_index = parent_id.map(|id| self.id_to_index_mapper.get_spatial_node_index(id));
+        let index = self.clip_scroll_tree.add_reference_frame(
             parent_index,
             source_transform,
             source_perspective,
@@ -1230,6 +1187,7 @@ impl<'a> DisplayListFlattener<'a> {
             pipeline_id,
         );
         self.reference_frame_stack.push((reference_frame_id, index));
+        self.id_to_index_mapper.map_spatial_node(reference_frame_id, index);
 
         match parent_id {
             Some(ref parent_id) =>
@@ -1289,19 +1247,18 @@ impl<'a> DisplayListFlattener<'a> {
         parent_id: ClipId,
         clip_region: ClipRegion,
     ) -> ClipChainIndex {
-        let clip_sources = ClipSources::from(clip_region);
+        let parent_clip_chain_index = self.id_to_index_mapper.get_clip_chain_index(&parent_id);
+        let spatial_node = self.id_to_index_mapper.get_spatial_node_index(parent_id);
+
+        let clip_sources = ClipSources::from_region(clip_region, spatial_node);
         let handle = self.clip_store.insert(clip_sources);
 
-        let node_index = self.id_to_index_mapper.get_clip_node_index(new_node_id);
-        let parent_clip_chain_index =
-            self.id_to_index_mapper.get_clip_chain_index_and_cache_result(&parent_id);
-        let spatial_node = self.get_spatial_node_index_for_clip_id(parent_id);
-        let clip_chain_index = self.clip_scroll_tree.add_clip_node(
-            node_index,
+        let (node_index, clip_chain_index) = self.clip_scroll_tree.add_clip_node(
             parent_clip_chain_index,
-            spatial_node,
             handle,
         );
+        self.id_to_index_mapper.map_spatial_node(new_node_id, spatial_node);
+        self.id_to_index_mapper.map_clip_node(new_node_id, node_index);
         self.id_to_index_mapper.add_clip_chain(new_node_id, clip_chain_index);
         clip_chain_index
     }
@@ -1316,10 +1273,8 @@ impl<'a> DisplayListFlattener<'a> {
         content_size: &LayoutSize,
         scroll_sensitivity: ScrollSensitivity,
     ) -> SpatialNodeIndex {
-        let node_index = self.get_spatial_node_index_for_clip_id(new_node_id);
-        let parent_node_index = self.get_spatial_node_index_for_clip_id(parent_id);
-        self.clip_scroll_tree.add_scroll_frame(
-            node_index,
+        let parent_node_index = self.id_to_index_mapper.get_spatial_node_index(parent_id);
+        let node_index = self.clip_scroll_tree.add_scroll_frame(
             parent_node_index,
             external_id,
             pipeline_id,
@@ -1327,6 +1282,7 @@ impl<'a> DisplayListFlattener<'a> {
             content_size,
             scroll_sensitivity,
         );
+        self.id_to_index_mapper.map_spatial_node(new_node_id, node_index);
         self.id_to_index_mapper.map_to_parent_clip_chain(new_node_id, &parent_id);
         node_index
     }
@@ -1455,7 +1411,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         let prim_index = self.create_primitive(
             info,
-            Vec::new(),
+            None,
             PrimitiveContainer::Brush(prim),
         );
 
@@ -1967,27 +1923,13 @@ impl<'a> DisplayListFlattener<'a> {
 
     pub fn map_clip_and_scroll(&mut self, info: &ClipAndScrollInfo) -> ScrollNodeAndClipChain {
         ScrollNodeAndClipChain::new(
-            self.get_spatial_node_index_for_clip_id(info.scroll_node_id),
-            self.id_to_index_mapper.get_clip_chain_index_and_cache_result(&info.clip_node_id())
+            self.id_to_index_mapper.get_spatial_node_index(info.scroll_node_id),
+            self.id_to_index_mapper.get_clip_chain_index(&info.clip_node_id())
         )
     }
 
     pub fn simple_scroll_and_clip_chain(&mut self, id: &ClipId) -> ScrollNodeAndClipChain {
         self.map_clip_and_scroll(&ClipAndScrollInfo::simple(*id))
-    }
-
-    pub fn get_spatial_node_index_for_clip_id(&mut self, id: ClipId,) -> SpatialNodeIndex {
-        match id {
-            ClipId::Spatial(index, pipeline_id) => {
-                let pipeline_offset = self.id_to_index_mapper.get_pipeline_offet(pipeline_id);
-                SpatialNodeIndex(pipeline_offset.spatial_offset + index)
-            }
-            ClipId::Clip(..) => {
-                let clip_node_index = self.id_to_index_mapper.get_clip_node_index(id);
-                self.clip_scroll_tree.clip_nodes[clip_node_index.0].spatial_node
-            }
-            ClipId::ClipChain(_) => panic!("Tried to use ClipChain as scroll node."),
-        }
     }
 }
 

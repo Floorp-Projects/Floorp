@@ -44,7 +44,8 @@ public:
         mSessionVersion(0),
         mUuidGen(std::move(uuidgen)),
         mSdpHelper(&mLastError),
-        mRunRustParser(false)
+        mRunRustParser(false),
+        mRunSdpComparer(false)
   {
   }
 
@@ -293,6 +294,7 @@ private:
   SdpHelper mSdpHelper;
   SsrcGenerator mSsrcGenerator;
   bool mRunRustParser;
+  bool mRunSdpComparer;
   RsdparsaSdpParser mRsdparsaParser;
 };
 

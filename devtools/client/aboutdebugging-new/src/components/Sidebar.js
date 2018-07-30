@@ -7,17 +7,26 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const Sidebar = createFactory(require("./Sidebar"));
+const SidebarItem = createFactory(require("./SidebarItem"));
 
-class App extends PureComponent {
+const FIREFOX_ICON = "chrome://devtools/skin/images/firefox-logo-glyph.svg";
+
+class Sidebar extends PureComponent {
   render() {
-    return dom.div(
+    return dom.section(
       {
-        className: "app",
+        className: "sidebar",
       },
-      Sidebar()
+      dom.ul(
+        {},
+        SidebarItem({
+          icon: FIREFOX_ICON,
+          isSelected: true,
+          name: "This Firefox",
+        })
+      )
     );
   }
 }
 
-module.exports = App;
+module.exports = Sidebar;

@@ -91,7 +91,7 @@ public:
 
   virtual bool NeedsWidgetInvalidation() override { return false; }
 
-  virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
+  virtual void SetLayersObserverEpoch(LayersObserverEpoch aEpoch) override;
 
   virtual void DidComposite(TransactionId aTransactionId,
                             const mozilla::TimeStamp& aCompositeStart,

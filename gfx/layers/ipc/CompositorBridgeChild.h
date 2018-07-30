@@ -316,9 +316,9 @@ private:
   virtual mozilla::ipc::IPCResult
   RecvRemotePaintIsReady() override;
 
-  mozilla::ipc::IPCResult RecvObserveLayerUpdate(const LayersId& aLayersId,
-                                                 const uint64_t& aEpoch,
-                                                 const bool& aActive) override;
+  mozilla::ipc::IPCResult RecvObserveLayersUpdate(const LayersId& aLayersId,
+                                                  const LayersObserverEpoch& aEpoch,
+                                                  const bool& aActive) override;
 
   virtual mozilla::ipc::IPCResult
   RecvNotifyWebRenderError(const WebRenderError& aError) override;

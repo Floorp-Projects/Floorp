@@ -195,6 +195,7 @@ impl PrimitiveHeaders {
 
 // This is a convenience type used to make it easier to pass
 // the common parts around during batching.
+#[derive(Debug)]
 pub struct PrimitiveHeader {
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
@@ -349,12 +350,15 @@ impl From<BrushInstance> for PrimitiveInstance {
 pub struct TransformPaletteId(pub u32);
 
 impl TransformPaletteId {
-    // Get the palette ID for an identity transform.
-    pub fn identity() -> TransformPaletteId {
-        TransformPaletteId(0)
+    /// Identity transform ID.
+    pub const IDENTITY: Self = TransformPaletteId(0);
+
+    /// Extract the spatial node index from the id.
+    pub fn _spatial_node_index(&self) -> SpatialNodeIndex {
+        SpatialNodeIndex(self.0 as usize & 0xFFFFFF)
     }
 
-    // Extract the transform kind from the id.
+    /// Extract the transform kind from the id.
     pub fn transform_kind(&self) -> TransformedRectKind {
         if (self.0 >> 24) == 0 {
             TransformedRectKind::AxisAligned

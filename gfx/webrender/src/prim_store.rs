@@ -13,7 +13,7 @@ use border::{BorderCacheKey, BorderRenderTaskInfo};
 use box_shadow::BLUR_SAMPLE_SCALE;
 use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId, SpatialNodeIndex};
 use clip::{ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipSource};
-use clip::{ClipSourcesHandle, ClipWorkItem};
+use clip::{ClipSourcesIndex, ClipWorkItem};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use frame_builder::PrimitiveRunContext;
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
@@ -188,7 +188,7 @@ pub struct ScreenRect {
 #[derive(Debug)]
 pub struct PrimitiveMetadata {
     pub opacity: PrimitiveOpacity,
-    pub clip_sources: Option<ClipSourcesHandle>,
+    pub clip_sources_index: Option<ClipSourcesIndex>,
     pub prim_kind: PrimitiveKind,
     pub cpu_prim_index: SpecificPrimitiveIndex,
     pub gpu_location: GpuCacheHandle,
@@ -1281,14 +1281,14 @@ impl PrimitiveStore {
         local_rect: &LayoutRect,
         local_clip_rect: &LayoutRect,
         is_backface_visible: bool,
-        clip_sources: Option<ClipSourcesHandle>,
+        clip_sources_index: Option<ClipSourcesIndex>,
         tag: Option<ItemTag>,
         container: PrimitiveContainer,
     ) -> PrimitiveIndex {
         let prim_index = self.cpu_metadata.len();
 
         let base_metadata = PrimitiveMetadata {
-            clip_sources,
+            clip_sources_index,
             gpu_location: GpuCacheHandle::new(),
             clip_task_id: None,
             local_rect: *local_rect,
@@ -1983,6 +1983,9 @@ impl PrimitiveStore {
                     match brush.segment_desc {
                         Some(ref segment_desc) => {
                             for segment in &segment_desc.segments {
+                                if cfg!(debug_assertions) && self.chase_id == Some(prim_index) {
+                                    println!("\t\t{:?}", segment);
+                                }
                                 // has to match VECS_PER_SEGMENT
                                 request.write_segment(
                                     segment.local_rect,
@@ -2059,7 +2062,7 @@ impl PrimitiveStore {
                 continue;
             }
 
-            let local_clips = frame_state.clip_store.get_opt(&clip_item.clip_sources).expect("bug");
+            let local_clips = frame_state.clip_store.get(clip_item.clip_sources_index);
             rect_clips_only = rect_clips_only && local_clips.only_rectangular_clips;
 
             // TODO(gw): We can easily extend the segment builder to support these clip sources in
@@ -2074,7 +2077,7 @@ impl PrimitiveStore {
             // of doing that, only segment with clips that have the same positioning node.
             // TODO(mrobinson, #2858): It may make sense to include these nodes, resegmenting only
             // when necessary while scrolling.
-            if clip_item.spatial_node_index != prim_run_context.spatial_node_index {
+            if local_clips.spatial_node_index != prim_run_context.spatial_node_index {
                 // We don't need to generate a global clip mask for rectangle clips because we are
                 // in the same coordinate system and rectangular clips are handled by the local
                 // clip chain rectangle.
@@ -2285,8 +2288,8 @@ impl PrimitiveStore {
         let transform = &prim_run_context.scroll_node.world_content_transform;
         let extra_clip =  {
             let metadata = &self.cpu_metadata[prim_index.0];
-            metadata.clip_sources.as_ref().map(|clip_sources| {
-                let prim_clips = frame_state.clip_store.get_mut(clip_sources);
+            metadata.clip_sources_index.map(|clip_sources_index| {
+                let prim_clips = frame_state.clip_store.get_mut(clip_sources_index);
                 prim_clips.update(
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
@@ -2307,8 +2310,7 @@ impl PrimitiveStore {
 
                 Arc::new(ClipChainNode {
                     work_item: ClipWorkItem {
-                        spatial_node_index: prim_run_context.spatial_node_index,
-                        clip_sources: clip_sources.weak(),
+                        clip_sources_index,
                         coordinate_system_id: prim_coordinate_system_id,
                     },
                     // The local_clip_rect a property of ClipChain nodes that are ClipNodes.
@@ -2643,10 +2645,6 @@ impl PrimitiveStore {
         };
 
         for run in &pic_context.prim_runs {
-            if run.is_chasing(self.chase_id) {
-                println!("\tpreparing a run of length {} in pipeline {:?}",
-                    run.count, pic_context.pipeline_id);
-            }
             // TODO(gw): Perhaps we can restructure this to not need to create
             //           a new primitive context for every run (if the hash
             //           lookups ever show up in a profile).
@@ -2655,6 +2653,13 @@ impl PrimitiveStore {
                 .spatial_nodes[run.clip_and_scroll.spatial_node_index.0];
             let clip_chain = &frame_context
                 .clip_chains[run.clip_and_scroll.clip_chain_index.0];
+
+            if run.is_chasing(self.chase_id) {
+                println!("\tpreparing a run of length {} in pipeline {:?}",
+                    run.count, pic_context.pipeline_id);
+                println!("\trun {:?}", run.clip_and_scroll);
+                println!("\ttransform {:?}", scroll_node.world_content_transform.to_transform());
+            }
 
             // Mark whether this picture contains any complex coordinate
             // systems, due to either the scroll node or the clip-chain.
@@ -2716,7 +2721,12 @@ impl PrimitiveStore {
             };
 
             let local_clip_chain_rect = match clip_chain_rect {
-                Some(rect) if rect.is_empty() => continue,
+                Some(rect) if rect.is_empty() => {
+                    if run.is_chasing(self.chase_id) {
+                        println!("\tculled by empty chain rect");
+                    }
+                    continue
+                },
                 Some(rect) => rect,
                 None => frame_context.max_local_clip,
             };
@@ -2749,7 +2759,12 @@ impl PrimitiveStore {
                     let clipped_rect = match clip_chain_rect {
                         Some(ref chain_rect) => match prim_local_rect.intersection(chain_rect) {
                             Some(rect) => rect,
-                            None => continue,
+                            None => {
+                                if cfg!(debug_assertions) && self.chase_id == Some(prim_index) {
+                                    println!("\tculled by chain rect {:?}", chain_rect);
+                                }
+                                continue
+                            },
                         },
                         None => prim_local_rect,
                     };

@@ -26,11 +26,6 @@ pub enum SpatialNodeType {
 
     /// A reference frame establishes a new coordinate space in the tree.
     ReferenceFrame(ReferenceFrameInfo),
-
-    /// An empty node, used to pad the ClipScrollTree's array of nodes so that
-    /// we can immediately use each assigned SpatialNodeIndex. After display
-    /// list flattening this node type should never be used.
-    Empty,
 }
 
 /// Contains information common among all types of ClipScrollTree nodes.
@@ -92,10 +87,6 @@ impl SpatialNode {
             coordinate_system_id: CoordinateSystemId(0),
             coordinate_system_relative_transform: LayoutFastTransform::identity(),
         }
-    }
-
-    pub fn empty() -> SpatialNode {
-        Self::new(PipelineId::dummy(), None, SpatialNodeType::Empty)
     }
 
     pub fn new_scroll_frame(
@@ -494,7 +485,6 @@ impl SpatialNode {
                     state.nearest_scrolling_ancestor_viewport
                        .translate(&translation);
             }
-            SpatialNodeType::Empty => unreachable!("Empty node remaining in ClipScrollTree."),
         }
     }
 

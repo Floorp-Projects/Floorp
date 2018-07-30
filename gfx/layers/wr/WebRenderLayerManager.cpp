@@ -480,10 +480,10 @@ WebRenderLayerManager::DiscardLocalImages()
 }
 
 void
-WebRenderLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
+WebRenderLayerManager::SetLayersObserverEpoch(LayersObserverEpoch aEpoch)
 {
   if (WrBridge()->IPCOpen()) {
-    WrBridge()->SendSetLayerObserverEpoch(aLayerObserverEpoch);
+    WrBridge()->SendSetLayersObserverEpoch(aEpoch);
   }
 }
 
