@@ -73,9 +73,6 @@ with Files("OpenInTabsUtils.jsm"):
 with Files("PermissionUI.jsm"):
    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
-with Files("PluginContent.jsm"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
-
 with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
@@ -148,7 +145,6 @@ EXTRA_JS_MODULES += [
     'PageActions.jsm',
     'PermissionUI.jsm',
     'PingCentre.jsm',
-    'PluginContent.jsm',
     'ProcessHangMonitor.jsm',
     'ReaderParent.jsm',
     'RemotePrompt.jsm',

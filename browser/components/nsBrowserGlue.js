@@ -118,6 +118,33 @@ let ACTORS = {
       ]
     },
   },
+
+  Plugin: {
+    child: {
+      module: "resource:///actors/PluginChild.jsm",
+      events: {
+        "PluginBindingAttached": {capture: true, wantUntrusted: true},
+        "PluginCrashed": {capture: true},
+        "PluginOutdated": {capture: true},
+        "PluginInstantiated": {capture: true},
+        "PluginRemoved": {capture: true},
+        "HiddenPlugin": {capture: true},
+      },
+
+      messages: [
+        "BrowserPlugins:ActivatePlugins",
+        "BrowserPlugins:NotificationShown",
+        "BrowserPlugins:ContextMenuCommand",
+        "BrowserPlugins:NPAPIPluginProcessCrashed",
+        "BrowserPlugins:CrashReportSubmitted",
+        "BrowserPlugins:Test:ClearCrashData",
+      ],
+
+      observers: [
+        "decoder-doctor-notification",
+      ],
+    },
+  },
 };
 
 (function earlyBlankFirstPaint() {
