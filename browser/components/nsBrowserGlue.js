@@ -53,6 +53,15 @@ let ACTORS = {
     },
   },
 
+  ContextMenu: {
+    child: {
+      module: "resource:///actors/ContextMenuChild.jsm",
+      events: {
+        "contextmenu": {mozSystemGroup: true},
+      },
+    },
+  },
+
   ContentSearch: {
     child: {
       module: "resource:///actors/ContentSearchChild.jsm",
