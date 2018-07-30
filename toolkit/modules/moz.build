@@ -242,7 +242,6 @@ EXTRA_JS_MODULES += [
     'RemoteWebProgress.jsm',
     'ResetProfile.jsm',
     'ResponsivenessMonitor.jsm',
-    'SelectContentHelper.jsm',
     'SelectionSourceContent.jsm',
     'SelectParentHelper.jsm',
     'ServiceRequest.jsm',
