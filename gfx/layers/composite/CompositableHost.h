@@ -48,6 +48,7 @@ class CompositableParentManager;
 class WebRenderImageHost;
 class ContentHost;
 class ContentHostTexture;
+class HostLayerManager;
 struct EffectChain;
 
 struct ImageCompositeNotificationInfo {
