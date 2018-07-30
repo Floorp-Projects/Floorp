@@ -2254,7 +2254,7 @@ MarkStack::poisonUnused()
     static_assert((JS_FRESH_MARK_STACK_PATTERN & TagMask) > LastTag,
                   "The mark stack poison pattern must not look like a valid tagged pointer");
 
-    JS_POISON(&stack()[topIndex_],
+    JS_POISON(stack().begin() + topIndex_,
               JS_FRESH_MARK_STACK_PATTERN,
               stack().capacity() - topIndex_,
               MemCheckKind::MakeUndefined);
