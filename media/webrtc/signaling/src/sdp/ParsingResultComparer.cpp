@@ -247,6 +247,20 @@ ParsingResultComparer::CompareAttrLists(const SdpAttributeList& rustAttrlist,
   return result;
 }
 
+void
+ParsingResultComparer::TrackRustParsingFailed(size_t sipccErrorCount) const {
+
+  if (sipccErrorCount) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
+                         NS_LITERAL_STRING("rsdparsa_failed__sipcc_has_errors"),
+                         1);
+  } else {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
+                         NS_LITERAL_STRING("rsdparsa_failed__sipcc_succeeded"),
+                         1);
+  }
+}
+
 std::vector<std::string>
 SplitLines(const std::string& sdp)
 {

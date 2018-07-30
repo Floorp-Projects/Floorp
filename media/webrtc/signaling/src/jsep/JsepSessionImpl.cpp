@@ -1295,18 +1295,23 @@ nsresult
 JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
 {
   UniquePtr<Sdp> parsed = mSipccParser.Parse(sdp);
-  if (mRunRustParser) {
-    UniquePtr<Sdp> rustParsed = mRsdparsaParser.Parse(sdp);
-    if (mRunSdpComparer) {
-    	ParsingResultComparer comparer;
-    	comparer.Compare(*rustParsed, *parsed, sdp);
-    }
-  }
   if (!parsed) {
     std::string error = "Failed to parse SDP: ";
     mSdpHelper.appendSdpParseErrors(mSipccParser.GetParseErrors(), &error);
     JSEP_SET_ERROR(error);
     return NS_ERROR_INVALID_ARG;
+  }
+
+  if (mRunRustParser) {
+    UniquePtr<Sdp> rustParsed = mRsdparsaParser.Parse(sdp);
+    if (mRunSdpComparer) {
+      ParsingResultComparer comparer;
+      if (rustParsed) {
+        comparer.Compare(*rustParsed, *parsed, sdp);
+      } else {
+        comparer.TrackRustParsingFailed(mSipccParser.GetParseErrors().size());
+      }
+    }
   }
 
   // Verify that the JSEP rules for all SDP are followed
