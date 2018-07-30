@@ -3,13 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'actions',
     'components',
-    'runtimes',
-    'reducers',
 ]
-
-DevToolsModules(
-    'constants.js',
-    'create-store.js'
-)

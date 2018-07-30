@@ -6,24 +6,13 @@
 
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const ThisFirefox = require("../runtimes/this-firefox");
-
-const Runtime = require("../runtimes/runtime");
 const SidebarItem = createFactory(require("./SidebarItem"));
 
+const FIREFOX_ICON = "chrome://devtools/skin/images/firefox-logo-glyph.svg";
+
 class Sidebar extends PureComponent {
-  static get propTypes() {
-    return {
-      selectedRuntime: PropTypes.instanceOf(Runtime),
-      thisFirefox: PropTypes.instanceOf(ThisFirefox).isRequired,
-    };
-  }
-
   render() {
-    const { selectedRuntime, thisFirefox } = this.props;
-
     return dom.section(
       {
         className: "sidebar",
@@ -31,9 +20,9 @@ class Sidebar extends PureComponent {
       dom.ul(
         {},
         SidebarItem({
-          icon: thisFirefox.getIcon(),
-          isSelected: thisFirefox === selectedRuntime,
-          name: thisFirefox.getName(),
+          icon: FIREFOX_ICON,
+          isSelected: true,
+          name: "This Firefox",
         })
       )
     );
