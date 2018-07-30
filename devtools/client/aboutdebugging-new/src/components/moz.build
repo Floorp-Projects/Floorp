@@ -9,6 +9,6 @@ DIRS += [
 DevToolsModules(
     'App.css',
     'App.js',
-    'RuntimesPane.css',
-    'RuntimesPane.js'
+    'Sidebar.css',
+    'Sidebar.js'
 )
