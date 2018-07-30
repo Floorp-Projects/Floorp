@@ -397,8 +397,20 @@ public:
   // such as changes made through the Web Animations API.
   void IncrementAnimationGeneration();
 
+  // Apply change hints for animations on the compositor.
+  //
+  // There are some cases where we forcibly apply change hints for animations
+  // even if there is no change hint produced in order to synchronize with
+  // animations running on the compositor.
+  //
+  // For example:
+  //
+  // a) Pausing animations via the Web Animations API
+  // b) When the style before sending the animation to the compositor exactly
+  // the same as the current style
   static void AddLayerChangesForAnimation(nsIFrame* aFrame,
                                           nsIContent* aContent,
+                                          nsChangeHint aHintForThisFrame,
                                           nsStyleChangeList&
                                             aChangeListToProcess);
 
