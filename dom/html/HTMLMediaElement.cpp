@@ -3704,10 +3704,15 @@ HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv)
 class MediaElementSetForURI : public nsURIHashKey
 {
 public:
-  explicit MediaElementSetForURI(const nsIURI* aKey) : nsURIHashKey(aKey) {}
-  MediaElementSetForURI(MediaElementSetForURI&& aOther)
-    : nsURIHashKey(std::move(aOther))
-    , mElements(std::move(aOther.mElements)) {}
+  explicit MediaElementSetForURI(const nsIURI* aKey)
+    : nsURIHashKey(aKey)
+  {
+  }
+  MediaElementSetForURI(const MediaElementSetForURI& toCopy)
+    : nsURIHashKey(toCopy)
+    , mElements(toCopy.mElements)
+  {
+  }
   nsTArray<HTMLMediaElement*> mElements;
 };
 

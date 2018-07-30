@@ -43,8 +43,7 @@ MoveEntry(PLDHashTable *           /* table */,
           const PLDHashEntryHdr *     src,
           PLDHashEntryHdr       *     dst)
 {
-    new (KnownNotNull, dst) HashTableEntry(std::move(*(HashTableEntry*)src));
-    // No need to delete `src`.
+    ((HashTableEntry *)dst)->mBinding = ((HashTableEntry *)src)->mBinding;
 }
 
 

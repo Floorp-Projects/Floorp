@@ -86,7 +86,7 @@ protected:
       Reset(mEntryType);
     }
 
-    explicit HashEntry(const HashEntry& aRHS)
+    HashEntry(const HashEntry& aRHS)
       : mEntryType(aRHS.mEntryType)
     {
       Reset(mEntryType);

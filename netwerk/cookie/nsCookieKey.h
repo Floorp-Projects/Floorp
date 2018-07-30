@@ -28,8 +28,10 @@ public:
     , mOriginAttributes(other->mOriginAttributes)
   {}
 
-  nsCookieKey(nsCookieKey&& other) = default;
-  nsCookieKey& operator=(nsCookieKey&&) = default;
+  nsCookieKey(KeyType other)
+    : mBaseDomain(other.mBaseDomain)
+    , mOriginAttributes(other.mOriginAttributes)
+  {}
 
   bool KeyEquals(KeyTypePointer other) const
   {
