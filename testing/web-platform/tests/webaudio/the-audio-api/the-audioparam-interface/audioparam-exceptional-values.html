@@ -144,7 +144,7 @@
 
             // Test the time parameter
             let curve = new Float32Array(3);
-            doTests(should, gain, 'RangeError', [-1], [
+            doTests(should, gain, RangeError, [-1], [
               {automationName: 'setValueAtTime', funcArg: defaultFuncArg},
               {
                 automationName: 'linearRampToValueAtTime',
@@ -178,7 +178,7 @@
             should(
                 () => gain.gain.setValueCurveAtTime(curve, 1, 0),
                 'gain.gain.setValueCurveAtTime(curve, 1, 0)')
-                .throw('RangeError');
+                .throw(RangeError);
 
             task.done();
           });
@@ -191,7 +191,7 @@
           (task, should) => {
             let gain = context.createGain();
 
-            doTests(should, gain, 'RangeError', [0, -1e-100, 1e-100], [{
+            doTests(should, gain, RangeError, [0, -1e-100, 1e-100], [{
                       automationName: 'exponentialRampToValueAtTime',
                       funcArg: (value) => [value, 1]
                     }]);

@@ -4,12 +4,11 @@
 // See: https://w3c.github.io/page-visibility/
 
 enum VisibilityState {
-    "hidden",
-    "visible",
-    "prerender"
+  "hidden", "visible", "prerender"
 };
+
 partial interface Document {
-    readonly attribute boolean         hidden;
-    readonly attribute VisibilityState visibilityState;
-             attribute EventHandler    onvisibilitychange;
+  readonly attribute boolean hidden;
+  readonly attribute VisibilityState visibilityState;
+  attribute EventHandler onvisibilitychange;
 };

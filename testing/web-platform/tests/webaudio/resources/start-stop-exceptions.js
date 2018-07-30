@@ -17,7 +17,7 @@ function testStartStop(should, node, options) {
 
   should(() => {
     node.start(-1);
-  }, 'start(-1)').throw('RangeError');
+  }, 'start(-1)').throw(RangeError);
 
   if (options) {
     options.forEach(test => {
@@ -32,7 +32,7 @@ function testStartStop(should, node, options) {
   }, 'Calling start() twice').throw('InvalidStateError');
   should(() => {
     node.stop(-1);
-  }, 'stop(-1)').throw('RangeError');
+  }, 'stop(-1)').throw(RangeError);
 
   // Test non-finite stop times
   nonFiniteValues.forEach(time => {
