@@ -17,6 +17,7 @@ Test the address-form element
 
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/containers/form.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/containers/address-form.css"/>
 </head>
 <body>
@@ -298,8 +299,8 @@ add_task(async function test_field_validation() {
   for (let field of requiredFields) {
     let container = field.closest("label");
     ok(container.hasAttribute("required"), "Container should have required attribute");
-    let label = field.closest("label").querySelector("span");
-    is(getComputedStyle(label, "::after").content, "\"*\"", "Asterisk should be on " + field.id);
+    let span = container.querySelector("span");
+    is(getComputedStyle(span, "::after").content, "\"*\"", "Asterisk should be on " + field.id);
   }
 
   countrySelect.selectedIndex = [...countrySelect.options].findIndex(o => o.value == "US");
