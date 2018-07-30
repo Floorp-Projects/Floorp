@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Task.jsm");
-
 ChromeUtils.defineModuleGetter(this, "Sanitizer",
                                "resource://gre/modules/Sanitizer.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
