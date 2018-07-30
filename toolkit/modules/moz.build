@@ -127,9 +127,6 @@ with Files('Promise*.jsm'):
 with Files('RemoteController.js'):
     BUG_COMPONENT = ('Core', 'Widget')
 
-with Files('RemoteFinder.jsm'):
-    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
-
 with Files('RemoteSecurityUI.jsm'):
     BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
 
@@ -206,6 +203,7 @@ EXTRA_JS_MODULES += [
     'Finder.jsm',
     'FinderHighlighter.jsm',
     'FinderIterator.jsm',
+    'FinderParent.jsm',
     'FormLikeFactory.jsm',
     'Geometry.jsm',
     'GMPExtractorWorker.js',
@@ -234,7 +232,6 @@ EXTRA_JS_MODULES += [
     'PromiseMessage.jsm',
     'PromiseUtils.jsm',
     'RemoteController.js',
-    'RemoteFinder.jsm',
     'RemoteSecurityUI.jsm',
     'RemoteWebProgress.jsm',
     'ResetProfile.jsm',

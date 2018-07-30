@@ -4,26 +4,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-var EXPORTED_SYMBOLS = ["RemoteFinder", "RemoteFinderListener"];
+var EXPORTED_SYMBOLS = ["FinderParent"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+ChromeUtils.defineModuleGetter(this, "GetClipboardSearchString",
+                               "resource://gre/modules/Finder.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "GetClipboardSearchString",
-  () => ChromeUtils.import("resource://gre/modules/Finder.jsm", {}).GetClipboardSearchString
-);
-XPCOMUtils.defineLazyGetter(this, "Rect",
-  () => ChromeUtils.import("resource://gre/modules/Geometry.jsm", {}).Rect
-);
+ChromeUtils.defineModuleGetter(this, "Rect",
+                               "resource://gre/modules/Geometry.jsm");
 
-function RemoteFinder(browser) {
+function FinderParent(browser) {
   this._listeners = new Set();
   this._searchString = null;
 
   this.swapBrowser(browser);
 }
 
-RemoteFinder.prototype = {
+FinderParent.prototype = {
   destroy() {},
 
   swapBrowser(aBrowser) {
@@ -204,136 +200,3 @@ RemoteFinder.prototype = {
                                                     linksOnly: aLinksOnly });
   }
 };
-
-function RemoteFinderListener(global) {
-  let {Finder} = ChromeUtils.import("resource://gre/modules/Finder.jsm", {});
-  this._finder = new Finder(global.docShell);
-  this._finder.addResultListener(this);
-  this._global = global;
-
-  for (let msg of this.MESSAGES) {
-    global.addMessageListener(msg, this);
-  }
-}
-
-RemoteFinderListener.prototype = {
-  MESSAGES: [
-    "Finder:CaseSensitive",
-    "Finder:EntireWord",
-    "Finder:FastFind",
-    "Finder:FindAgain",
-    "Finder:SetSearchStringToSelection",
-    "Finder:GetInitialSelection",
-    "Finder:Highlight",
-    "Finder:HighlightAllChange",
-    "Finder:EnableSelection",
-    "Finder:RemoveSelection",
-    "Finder:FocusContent",
-    "Finder:FindbarClose",
-    "Finder:FindbarOpen",
-    "Finder:KeyPress",
-    "Finder:MatchesCount",
-    "Finder:ModalHighlightChange"
-  ],
-
-  onFindResult(aData) {
-    this._global.sendAsyncMessage("Finder:Result", aData);
-  },
-
-  // When the child receives messages with results of requestMatchesCount,
-  // it passes them forward to the parent.
-  onMatchesCountResult(aData) {
-    this._global.sendAsyncMessage("Finder:MatchesResult", aData);
-  },
-
-  onHighlightFinished(aData) {
-    this._global.sendAsyncMessage("Finder:HighlightFinished", aData);
-  },
-
-  receiveMessage(aMessage) {
-    let data = aMessage.data;
-
-    switch (aMessage.name) {
-      case "Finder:CaseSensitive":
-        this._finder.caseSensitive = data.caseSensitive;
-        break;
-
-      case "Finder:EntireWord":
-        this._finder.entireWord = data.entireWord;
-        break;
-
-      case "Finder:SetSearchStringToSelection": {
-        let selection = this._finder.setSearchStringToSelection();
-        this._global.sendAsyncMessage("Finder:CurrentSelectionResult",
-                                      { selection,
-                                        initial: false });
-        break;
-      }
-
-      case "Finder:GetInitialSelection": {
-        let selection = this._finder.getActiveSelectionText();
-        this._global.sendAsyncMessage("Finder:CurrentSelectionResult",
-                                      { selection,
-                                        initial: true });
-        break;
-      }
-
-      case "Finder:FastFind":
-        this._finder.fastFind(data.searchString, data.linksOnly, data.drawOutline);
-        break;
-
-      case "Finder:FindAgain":
-        this._finder.findAgain(data.findBackwards, data.linksOnly, data.drawOutline);
-        break;
-
-      case "Finder:Highlight":
-        this._finder.highlight(data.highlight, data.word, data.linksOnly);
-        break;
-
-      case "Finder:HighlightAllChange":
-        this._finder.onHighlightAllChange(data.highlightAll);
-        break;
-
-      case "Finder:EnableSelection":
-        this._finder.enableSelection();
-        break;
-
-      case "Finder:RemoveSelection":
-        this._finder.removeSelection();
-        break;
-
-      case "Finder:FocusContent":
-        this._finder.focusContent();
-        break;
-
-      case "Finder:FindbarClose":
-        this._finder.onFindbarClose();
-        break;
-
-      case "Finder:FindbarOpen":
-        this._finder.onFindbarOpen();
-        break;
-
-      case "Finder:KeyPress":
-        var KeyboardEvent = this._finder._getWindow().KeyboardEvent;
-        this._finder.keyPress(new KeyboardEvent("keypress", data));
-        break;
-
-      case "Finder:MatchesCount":
-        this._finder.requestMatchesCount(data.searchString, data.linksOnly);
-        break;
-
-      case "Finder:ModalHighlightChange":
-        this._finder.onModalHighlightChange(data.useModalHighlight);
-        break;
-    }
-  }
-};
-
-XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_typeAheadLinksOnly",
-  "accessibility.typeaheadfind.linksonly");
-XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_findAsYouType",
-  "accessibility.typeaheadfind");
-XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_manualFAYT",
-  "accessibility.typeaheadfind.manual");
-
