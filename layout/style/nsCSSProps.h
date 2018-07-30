@@ -37,6 +37,7 @@ extern "C" {
   nsCSSPropertyID Servo_ResolveLogicalProperty(nsCSSPropertyID,
                                                const mozilla::ComputedStyle*);
   nsCSSPropertyID Servo_Property_LookupEnabledForAllContent(const nsACString*);
+  const uint8_t* Servo_Property_GetName(nsCSSPropertyID, uint32_t* aLength);
 }
 
 struct nsCSSKTableEntry
@@ -119,7 +120,15 @@ public:
   static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
 
   // Given a property enum, get the string value
-  static const nsCString& GetStringValue(nsCSSPropertyID aProperty);
+  //
+  // This string is static.
+  static const nsDependentCSubstring GetStringValue(nsCSSPropertyID aProperty)
+  {
+    uint32_t len;
+    const uint8_t* chars = Servo_Property_GetName(aProperty, &len);
+    return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
+  }
+
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
