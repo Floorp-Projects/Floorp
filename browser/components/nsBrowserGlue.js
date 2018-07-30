@@ -87,6 +87,17 @@ let ACTORS = {
     },
   },
 
+  LightWeightThemeInstall: {
+    child: {
+      module: "resource:///actors/LightWeightThemeInstallChild.jsm",
+      events: {
+        "InstallBrowserTheme": {wantUntrusted: true},
+        "PreviewBrowserTheme": {wantUntrusted: true},
+        "ResetBrowserThemePreview": {wantUntrusted: true},
+      },
+    },
+  },
+
   PageInfo: {
     child: {
       module: "resource:///actors/PageInfoChild.jsm",
