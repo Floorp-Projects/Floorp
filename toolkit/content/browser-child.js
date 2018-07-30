@@ -10,9 +10,6 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/WebNavigationChild.jsm");
 ChromeUtils.import("resource://gre/modules/WebProgressChild.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PageThumbUtils",
-  "resource://gre/modules/PageThumbUtils.jsm");
-
 this.WebProgress = new WebProgressChild(this);
 this.WebNavigation = new WebNavigationChild(this);
 
@@ -74,59 +71,6 @@ addEventListener("ImageContentLoaded", function(aEvent) {
                                               height: req.image.height });
   }
 }, false);
-
-/**
- * Remote thumbnail request handler for PageThumbs thumbnails.
- */
-addMessageListener("Browser:Thumbnail:Request", function(aMessage) {
-  let snapshot;
-  let args = aMessage.data.additionalArgs;
-  let fullScale = args ? args.fullScale : false;
-  if (fullScale) {
-    snapshot = PageThumbUtils.createSnapshotThumbnail(content, null, args);
-  } else {
-    let snapshotWidth = aMessage.data.canvasWidth;
-    let snapshotHeight = aMessage.data.canvasHeight;
-    snapshot =
-      PageThumbUtils.createCanvas(content, snapshotWidth, snapshotHeight);
-    PageThumbUtils.createSnapshotThumbnail(content, snapshot, args);
-  }
-
-  snapshot.toBlob(function(aBlob) {
-    sendAsyncMessage("Browser:Thumbnail:Response", {
-      thumbnail: aBlob,
-      id: aMessage.data.id
-    });
-  });
-});
-
-/**
- * Remote isSafeForCapture request handler for PageThumbs.
- */
-addMessageListener("Browser:Thumbnail:CheckState", function(aMessage) {
-  Services.tm.idleDispatchToMainThread(() => {
-    let result = PageThumbUtils.shouldStoreContentThumbnail(content, docShell);
-    sendAsyncMessage("Browser:Thumbnail:CheckState:Response", {
-      result
-    });
-  });
-});
-
-/**
- * Remote GetOriginalURL request handler for PageThumbs.
- */
-addMessageListener("Browser:Thumbnail:GetOriginalURL", function(aMessage) {
-  let channel = docShell.currentDocumentChannel;
-  let channelError = PageThumbUtils.isChannelErrorResponse(channel);
-  let originalURL;
-  try {
-    originalURL = channel.originalURI.spec;
-  } catch (ex) {}
-  sendAsyncMessage("Browser:Thumbnail:GetOriginalURL:Response", {
-    channelError,
-    originalURL,
-  });
-});
 
 /**
  * Remote createAboutBlankContentViewer request handler.
