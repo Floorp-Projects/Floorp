@@ -241,6 +241,7 @@ function dumpLogin(label, login) {
 }
 
 function getRecipeParent() {
+  // eslint-disable-next-line no-shadow
   var { LoginManagerParent } = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
   if (!LoginManagerParent.recipeParentPromise) {
     return null;
@@ -457,6 +458,7 @@ if (this.addMessageListener) {
   });
 
 
+  // eslint-disable-next-line no-shadow
   let { LoginHelper } = SpecialPowers.Cu.import("resource://gre/modules/LoginHelper.jsm", {});
   /**
    * Proxy for Services.logins (nsILoginManager).
