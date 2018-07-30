@@ -229,10 +229,11 @@ mingw32-rust-1.28:
         arguments: [
             # 1.28.0-beta.6
             '--channel', 'beta-2018-06-30',
-            '--host', 'i686-unknown-linux-gnu',
-            '--target', 'i686-pc-windows-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
+            '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
+            '--target', 'i686-pc-windows-gnu',
+            '--target', 'x86_64-pc-windows-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
         ]
         toolchain-alias: mingw32-rust
         toolchain-artifact: public/build/rustc.tar.xz
