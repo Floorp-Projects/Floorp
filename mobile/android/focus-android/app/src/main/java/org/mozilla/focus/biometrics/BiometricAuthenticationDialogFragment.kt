@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.biometrics
 
-import android.app.Dialog
 import android.app.DialogFragment
 import android.arch.lifecycle.LifecycleObserver
 import android.content.DialogInterface
@@ -17,14 +16,14 @@ import android.support.v7.app.AppCompatDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.new_session_button
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.biometric_error_text
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.fingerprint_icon
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.description
 import org.mozilla.focus.R
 
 @RequiresApi(api = Build.VERSION_CODES.M)
 class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), LifecycleObserver {
-    private var mErrorTextView: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,32 +38,37 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         startActivity(startMain)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
 
-        val v = inflater.inflate(R.layout.biometric_prompt_dialog_content, container,
-                false)
+        val v = inflater.inflate(
+            R.layout.biometric_prompt_dialog_content,
+            container,
+            false
+        )
 
         val biometricDialog = dialog
         this.isCancelable = true
         biometricDialog.setCanceledOnTouchOutside(false)
-        biometricDialog.setTitle(context!!.getString(R.string.biometric_auth_title,
-                context!!.getString(R.string.app_name)))
+        biometricDialog.setTitle(
+            context!!.getString(
+                R.string.biometric_auth_title,
+                context!!.getString(R.string.app_name)
+            )
+        )
 
-        val description = v.findViewById<TextView>(R.id.description)
         description.setText(R.string.biometric_auth_description)
 
-        val mNewSessionButton = v.findViewById<Button>(R.id.new_session_button)
-        mNewSessionButton.setText(R.string.biometric_auth_new_session)
-        mNewSessionButton.setOnClickListener {
+        new_session_button.setText(R.string.biometric_auth_new_session)
+        new_session_button.setOnClickListener {
             newSessionButtonClicked()
             dismiss()
         }
 
-        val mFingerprintContent = v.findViewById<ImageView>(R.id.fingerprint_icon)
-        mFingerprintContent.setImageResource(R.drawable.ic_fingerprint)
-        mErrorTextView = v.findViewById(R.id.biometric_error_text)
-
+        fingerprint_icon.setImageResource(R.drawable.ic_fingerprint)
         return v
     }
 
@@ -86,8 +90,13 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
 
     fun displayError(errorText: String) {
         // Display the error text
-        mErrorTextView!!.text = errorText
-        mErrorTextView!!.setTextColor(ContextCompat.getColor(mErrorTextView!!.context, R.color.photonRed50))
+        biometric_error_text.text = errorText
+        biometric_error_text.setTextColor(
+            ContextCompat.getColor(
+                biometric_error_text.context,
+                R.color.photonRed50
+            )
+        )
     }
 
     fun onAuthenticated() {
@@ -103,7 +112,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     private fun resetErrorText() {
-        mErrorTextView!!.text = ""
+        biometric_error_text.text = ""
     }
 
     companion object {
