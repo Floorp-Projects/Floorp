@@ -779,6 +779,11 @@ def get_parser():
                         help="Path to document root. Overrides config.")
     parser.add_argument("--ws_doc_root", action="store", dest="ws_doc_root",
                         help="Path to WebSockets document root. Overrides config.")
+    parser.add_argument("--alias_file", action="store", dest="alias_file",
+                        help="File with entries for aliases/multiple doc roots. In form of `/ALIAS_NAME/, DOC_ROOT\\n`")
+    parser.add_argument("--h2", action="store_true", dest="h2",
+                        help="Flag for enabling the HTTP/2.0 server")
+    parser.set_defaults(h2=False)
     return parser
 
 
@@ -790,6 +795,15 @@ def run(**kwargs):
         set_logger(logger)
 
         bind_address = config["bind_address"]
+
+        if kwargs.get("alias_file"):
+            with open(kwargs["alias_file"], 'r') as alias_file:
+                for line in alias_file:
+                    alias, doc_root = [x.strip() for x in line.split(',')]
+                    config["aliases"].append({
+                        'url-path': alias,
+                        'local-dir': doc_root,
+                    })
 
         if config["check_subdomains"]:
             check_subdomains(config)
