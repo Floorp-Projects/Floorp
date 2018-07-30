@@ -29,8 +29,16 @@ EventTarget::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 
 bool
 EventTarget::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
+                                   const AddEventListenerOptionsOrBoolean* aOptions,
                                    ErrorResult& aRv)
 {
+  if (aOptions && aOptions->IsAddEventListenerOptions()) {
+    const auto& options = aOptions->GetAsAddEventListenerOptions();
+    if (options.mWantUntrusted.WasPassed()) {
+      return options.mWantUntrusted.Value();
+    }
+  }
+
   if (!aWantsUntrusted.IsNull()) {
     return aWantsUntrusted.Value();
   }
@@ -50,7 +58,7 @@ EventTarget::AddEventListener(const nsAString& aType,
                               const Nullable<bool>& aWantsUntrusted,
                               ErrorResult& aRv)
 {
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, aRv);
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, &aOptions, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -71,7 +79,7 @@ EventTarget::AddEventListener(const nsAString& aType,
                               const Nullable<bool>& aWantsUntrusted)
 {
   ErrorResult rv;
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, rv);
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, nullptr, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
@@ -112,7 +120,7 @@ EventTarget::AddSystemEventListener(const nsAString& aType,
                                     const Nullable<bool>& aWantsUntrusted)
 {
   ErrorResult rv;
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, rv);
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, nullptr, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
