@@ -11,7 +11,7 @@ add_task(async function test_speculative_connect() {
       browser.test.log(`onRequest ${JSON.stringify(details)}`);
       browser.test.assertEq(details.type, "speculative", "Should have seen a speculative proxy request.");
       return [{type: "direct"}];
-    }, {urls: ["<all_urls>"]}, ["requestHeaders"]);
+    }, {urls: ["<all_urls>"], types: ["speculative"]});
   }
 
   let handlingExt = ExtensionTestUtils.loadExtension({
