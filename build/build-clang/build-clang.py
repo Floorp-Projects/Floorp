@@ -134,21 +134,6 @@ def install_import_library(build_dir, clang_dir):
                  os.path.join(clang_dir, "lib"))
 
 
-def install_asan_symbols(build_dir, clang_dir):
-    lib_path_pattern = os.path.join("lib", "clang", "*.*.*", "lib", "windows")
-    src_path = glob.glob(os.path.join(build_dir, lib_path_pattern,
-                                      "clang_rt.asan_dynamic-x86_64.pdb"))
-    dst_path = glob.glob(os.path.join(clang_dir, lib_path_pattern))
-
-    if len(src_path) != 1:
-        raise Exception("Source path pattern did not resolve uniquely")
-
-    if len(src_path) != 1:
-        raise Exception("Destination path pattern did not resolve uniquely")
-
-    shutil.copy2(src_path[0], dst_path[0])
-
-
 def svn_co(source_dir, url, directory, revision):
     run_in(source_dir, ["svn", "co", "-q", "-r", revision, url, directory])
 
@@ -241,7 +226,6 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
     # installed, so we copy it by ourselves.
     if is_windows():
         install_import_library(build_dir, inst_dir)
-        install_asan_symbols(build_dir, inst_dir)
 
 
 # Return the absolute path of a build tool.  We first look to see if the

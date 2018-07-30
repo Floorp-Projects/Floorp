@@ -50,7 +50,6 @@ OBJDIR_FILES += ['!/dist/bin/.gdbinit_python']
 # Install the clang-cl runtime library for ASAN next to the binaries we produce.
 if CONFIG['MOZ_ASAN'] and CONFIG['CC_TYPE'] == 'clang-cl':
     FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
-    FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH'].replace(".dll", ".pdb")]
 
 if CONFIG['LLVM_SYMBOLIZER']:
     FINAL_TARGET_FILES += ['/' + CONFIG['LLVM_SYMBOLIZER']]
