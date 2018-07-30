@@ -56,9 +56,11 @@ class Git(object):
         return self.git("show", "HEAD:%s" % path)
 
     def __iter__(self):
-        cmd = ["ls-tree", "-r", "-z", "--name-only", "HEAD"]
+        cmd = ["ls-tree", "-r", "-z", "HEAD"]
         local_changes = self._local_changes()
-        for rel_path in self.git(*cmd).split("\0")[:-1]:
+        for result in self.git(*cmd).split("\0")[:-1]:
+            rel_path = result.split("\t")[-1]
+            hash = result.split()[2]
             if not os.path.isdir(os.path.join(self.root, rel_path)):
                 if rel_path in local_changes:
                     contents = self._show_file(rel_path)
@@ -67,6 +69,7 @@ class Git(object):
                 yield SourceFile(self.root,
                                  rel_path,
                                  self.url_base,
+                                 hash,
                                  contents=contents)
 
 
