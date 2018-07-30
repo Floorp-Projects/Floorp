@@ -382,6 +382,7 @@
 @RESPATH@/browser/modules/*
 @RESPATH@/modules/*
 @RESPATH@/browser/actors/*
+@RESPATH@/actors/*
 
 ; Safe Browsing
 @RESPATH@/components/nsURLClassifier.manifest

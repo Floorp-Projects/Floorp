@@ -100,6 +100,17 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {DefaultMap} = ExtensionUtils;
 
 let ACTORS = {
+  AudioPlayback: {
+    child: {
+      module: "resource://gre/actors/AudioPlaybackChild.jsm",
+      messages: [
+        "AudioPlayback",
+      ],
+      observers: [
+        "audio-playback",
+      ],
+    },
+  },
 };
 
 class ActorSet {
