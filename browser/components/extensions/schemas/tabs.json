@@ -584,7 +584,19 @@
               },
               "openInReaderMode": {
                 "type": "boolean",
-                "optional": true, "description": "Whether the document in the tab should be opened in reader mode."}
+                "optional": true,
+                "description": "Whether the document in the tab should be opened in reader mode."
+              },
+              "discarded": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the tab is marked as 'discarded' when created."
+              },
+              "title": {
+                "type": "string",
+                "optional": true,
+                "description": "The title used for display if the tab is created in discarded mode."
+              }
             }
           },
           {

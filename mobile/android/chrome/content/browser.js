@@ -3765,11 +3765,13 @@ Tab.prototype = {
 
     // Always initialise new tabs with basic session store data to avoid
     // problems with functions that always expect it to be present
+    let triggeringPrincipal_base64 = aParams.triggeringPrincipal ?
+      Utils.serializePrincipal(aParams.triggeringPrincipal) : Utils.SERIALIZED_SYSTEMPRINCIPAL;
     this.browser.__SS_data = {
       entries: [{
         url: uri,
         title: truncate(title, MAX_TITLE_LENGTH),
-        triggeringPrincipal_base64: Utils.SERIALIZED_SYSTEMPRINCIPAL
+        triggeringPrincipal_base64,
       }],
       index: 1,
       desktopMode: this.desktopMode,
@@ -3791,6 +3793,10 @@ Tab.prototype = {
       this.browser.setAttribute("pending", "true");
     } else {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+      if (aParams.disallowInheritPrincipal) {
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+      }
+
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
@@ -3805,6 +3811,7 @@ Tab.prototype = {
           referrerURI,
           charset,
           postData,
+          triggeringPrincipal: aParams.triggeringPrincipal,
         });
       } catch(e) {
         let message = {
