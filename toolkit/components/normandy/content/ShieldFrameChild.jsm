@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ShieldFrameListener"];
+var EXPORTED_SYMBOLS = ["ShieldFrameChild"];
 
 /**
  * Listen for DOM events bubbling up from the about:studies page, and perform
@@ -15,6 +15,7 @@ var EXPORTED_SYMBOLS = ["ShieldFrameListener"];
  * is opened.
  */
 
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -36,17 +37,8 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
  * @implements nsIMessageListener
  * @implements EventListener
  */
-class ShieldFrameListener {
-  constructor(mm) {
-    this.mm = mm;
-  }
-
+class ShieldFrameChild extends ActorChild {
   handleEvent(event) {
-    // Abort if the current page isn't about:studies.
-    if (!this.ensureTrustedOrigin()) {
-      return;
-    }
-
     // We waited until after we received an event to register message listeners
     // in order to save resources for tabs that don't ever load about:studies.
     this.mm.addMessageListener("Shield:ShuttingDown", this);
@@ -93,14 +85,6 @@ class ShieldFrameListener {
   }
 
   /**
-   * Check that the current webpage's origin is about:studies.
-   * @return {Boolean}
-   */
-  ensureTrustedOrigin() {
-    return this.mm.content.document.documentURI.startsWith("about:studies");
-  }
-
-  /**
    * Handle messages from the parent process.
    * @param {Object} message
    *   See the nsIMessageListener docs.
@@ -125,11 +109,6 @@ class ShieldFrameListener {
    * @param {Object} detail
    */
   triggerPageCallback(type, detail) {
-    // Do not communicate with untrusted pages.
-    if (!this.ensureTrustedOrigin()) {
-      return;
-    }
-
     let {content} = this.mm;
 
     // Clone details and use the event class from the unprivileged context.
