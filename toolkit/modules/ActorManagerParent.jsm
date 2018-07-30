@@ -111,6 +111,15 @@ let ACTORS = {
       ],
     },
   },
+
+  FindBar: {
+    child: {
+      module: "resource://gre/actors/FindBarChild.jsm",
+      events: {
+        "keypress": {mozSystemGroup: true},
+      },
+    },
+  },
 };
 
 class ActorSet {
