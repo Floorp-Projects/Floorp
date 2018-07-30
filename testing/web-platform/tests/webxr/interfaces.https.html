@@ -11,10 +11,8 @@
 
 idl_test(
   ['webxr'],
-  ['html', 'dom'],
+  ['webgl1', 'html', 'dom'],
   idl_array => {
-    idl_array.add_untested_idls("dictionary WebGLContextAttributes {};");
-    idl_array.add_untested_idls("interface WebGLRenderingContextBase {};");
     idl_array.add_objects({
       Navigator:['navigator'],
     });
