@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["RuntimePermissions"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
                                "resource://gre/modules/Messaging.jsm");
 
