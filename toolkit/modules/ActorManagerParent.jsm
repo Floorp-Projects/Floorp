@@ -112,6 +112,16 @@ let ACTORS = {
     },
   },
 
+  Controllers: {
+    child: {
+      module: "resource://gre/actors/ControllersChild.jsm",
+      messages: [
+        "ControllerCommands:Do",
+        "ControllerCommands:DoWithParams",
+      ],
+    },
+  },
+
   DateTimePicker: {
     child: {
       module: "resource://gre/actors/DateTimePickerChild.jsm",
