@@ -4,10 +4,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "ContentWebRTC" ];
+var EXPORTED_SYMBOLS = ["WebRTCChild"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
                                    "@mozilla.org/mediaManagerService;1",
@@ -15,9 +16,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
 
 const kBrowserURL = AppConstants.BROWSER_CHROME_URL;
 
-var ContentWebRTC = {
+class WebRTCChild extends ActorChild {
   // Called only for 'unload' to remove pending gUM prompts in reloaded frames.
-  handleEvent(aEvent) {
+  static handleEvent(aEvent) {
     let contentWindow = aEvent.target.defaultView;
     let mm = getMessageManagerForWindow(contentWindow);
     for (let key of contentWindow.pendingGetUserMediaRequests.keys()) {
@@ -26,11 +27,11 @@ var ContentWebRTC = {
     for (let key of contentWindow.pendingPeerConnectionRequests.keys()) {
       mm.sendAsyncMessage("rtcpeer:CancelRequest", key);
     }
-  },
+  }
 
   // This observer is registered in ContentObservers.js to avoid
   // loading this .jsm when WebRTC is not in use.
-  observe(aSubject, aTopic, aData) {
+  static observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "getUserMedia:request":
         handleGUMRequest(aSubject, aTopic, aData);
@@ -48,7 +49,7 @@ var ContentWebRTC = {
         removeBrowserSpecificIndicator(aSubject, aTopic, aData);
         break;
     }
-  },
+  }
 
   receiveMessage(aMessage) {
     switch (aMessage.name) {
@@ -84,7 +85,7 @@ var ContentWebRTC = {
         break;
     }
   }
-};
+}
 
 function handlePCRequest(aSubject, aTopic, aData) {
   let { windowID, innerWindowID, callID, isSecure } = aSubject;
@@ -264,7 +265,7 @@ function setupPendingListsInitially(aContentWindow) {
   }
   aContentWindow.pendingGetUserMediaRequests = new Map();
   aContentWindow.pendingPeerConnectionRequests = new Set();
-  aContentWindow.addEventListener("unload", ContentWebRTC);
+  aContentWindow.addEventListener("unload", WebRTCChild.handleEvent);
 }
 
 function forgetPendingListsEventually(aContentWindow) {
@@ -274,7 +275,7 @@ function forgetPendingListsEventually(aContentWindow) {
   }
   aContentWindow.pendingGetUserMediaRequests = null;
   aContentWindow.pendingPeerConnectionRequests = null;
-  aContentWindow.removeEventListener("unload", ContentWebRTC);
+  aContentWindow.removeEventListener("unload", WebRTCChild.handleEvent);
 }
 
 function updateIndicators(aSubject, aTopic, aData) {
