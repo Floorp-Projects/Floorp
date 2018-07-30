@@ -1235,26 +1235,10 @@ impl ResourceCache {
     }
 
     #[inline]
-    pub fn get_cached_image(
-        &self,
-        request: ImageRequest,
-    ) -> Result<CacheItem, ()> {
+    pub fn get_cached_image(&self, request: ImageRequest) -> Result<CacheItem, ()> {
         debug_assert_eq!(self.state, State::QueryResources);
-
-        // TODO(Jerry): add a debug option to visualize the corresponding area for
-        // the Err() case of CacheItem.
-        match *self.cached_images.get(&request.key) {
-            ImageResult::UntiledAuto(ref image_info) => {
-                Ok(self.texture_cache.get(&image_info.texture_cache_handle))
-            }
-            ImageResult::Multi(ref entries) => {
-                let image_info = entries.get(&request.into());
-                Ok(self.texture_cache.get(&image_info.texture_cache_handle))
-            }
-            ImageResult::Err(_) => {
-                Err(())
-            }
-        }
+        let image_info = self.get_image_info(request)?;
+        Ok(self.get_texture_cache_item(&image_info.texture_cache_handle))
     }
 
     pub fn get_cached_render_task(
@@ -1264,6 +1248,18 @@ impl ResourceCache {
         self.cached_render_tasks.get_cache_entry(handle)
     }
 
+    #[inline]
+    fn get_image_info(&self, request: ImageRequest) -> Result<&CachedImageInfo, ()> {
+        // TODO(Jerry): add a debug option to visualize the corresponding area for
+        // the Err() case of CacheItem.
+        match *self.cached_images.get(&request.key) {
+            ImageResult::UntiledAuto(ref image_info) => Ok(image_info),
+            ImageResult::Multi(ref entries) => Ok(entries.get(&request.into())),
+            ImageResult::Err(_) => Err(()),
+        }
+    }
+
+    #[inline]
     pub fn get_texture_cache_item(&self, handle: &TextureCacheHandle) -> CacheItem {
         self.texture_cache.get(handle)
     }
