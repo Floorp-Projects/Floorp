@@ -201,6 +201,7 @@ class FontEditor extends PureComponent {
 
   renderFontSize(value) {
     return value && FontSize({
+      key: this.props.fontEditor.id,
       onChange: this.props.onPropertyChange,
       value,
     });
