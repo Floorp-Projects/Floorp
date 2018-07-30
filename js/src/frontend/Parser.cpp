@@ -10178,6 +10178,8 @@ GeneralParser<ParseHandler, CharT>::exprInParens(InHandling inHandling,
 
 template class PerHandlerParser<FullParseHandler>;
 template class PerHandlerParser<SyntaxParseHandler>;
+template class GeneralParser<FullParseHandler, Utf8Unit>;
+template class GeneralParser<SyntaxParseHandler, Utf8Unit>;
 template class GeneralParser<FullParseHandler, char16_t>;
 template class GeneralParser<SyntaxParseHandler, char16_t>;
 template class Parser<FullParseHandler, char16_t>;
