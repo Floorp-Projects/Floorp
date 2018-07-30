@@ -6,18 +6,21 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 
-var EXPORTED_SYMBOLS = ["DateTimePickerContent"];
+var EXPORTED_SYMBOLS = ["DateTimePickerChild"];
+
+ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 /**
- * DateTimePickerContent is the communication channel between the input box
+ * DateTimePickerChild is the communication channel between the input box
  * (content) for date/time input types and its picker (chrome).
  */
-class DateTimePickerContent {
+class DateTimePickerChild extends ActorChild {
   /**
    * On init, just listen for the event to open the picker, once the picker is
    * opened, we'll listen for update and close events.
    */
   constructor(global) {
+    super(global);
     this._inputElement = null;
     this._global = global;
   }

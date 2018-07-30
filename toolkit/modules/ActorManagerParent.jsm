@@ -112,6 +112,15 @@ let ACTORS = {
     },
   },
 
+  DateTimePicker: {
+    child: {
+      module: "resource://gre/actors/DateTimePickerChild.jsm",
+      events: {
+        "MozOpenDateTimePicker": {},
+      },
+    },
+  },
+
   FindBar: {
     child: {
       module: "resource://gre/actors/FindBarChild.jsm",
