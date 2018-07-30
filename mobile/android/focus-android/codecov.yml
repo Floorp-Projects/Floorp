@@ -13,7 +13,7 @@ coverage:
        if_not_found: success
     patch:
       default:
-        enabled: yes
+        enabled: no
         threshold: 0.1
         if_not_found: success
     changes:
