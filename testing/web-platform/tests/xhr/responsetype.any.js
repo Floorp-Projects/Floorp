@@ -85,6 +85,8 @@ types.forEach(function(type) {
     xhr.open('get', '/');
     xhr.onreadystatechange = this.step_func(function() {
       if (xhr.readyState === XMLHttpRequest.DONE) {
+        var text = xhr.responseText;
+        assert_not_equals(text, "");
         if (isIgnoredType(type)) {
           xhr.responseType = type;
         } else {
@@ -93,6 +95,7 @@ types.forEach(function(type) {
           });
         }
         assert_equals(xhr.responseType, "");
+        assert_equals(xhr.responseText, text);
         this.done();
       }
     });
