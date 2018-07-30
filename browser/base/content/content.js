@@ -18,7 +18,6 @@ var global = this;
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentLinkHandler: "resource:///modules/ContentLinkHandler.jsm",
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
-  ContentWebRTC: "resource:///modules/ContentWebRTC.jsm",
   LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
   FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
@@ -70,13 +69,3 @@ void content;
 addEventListener("DOMWindowFocus", function(event) {
   sendAsyncMessage("DOMWindowFocus", {});
 }, false);
-
-// We use this shim so that ContentWebRTC.jsm will not be loaded until
-// it is actually needed.
-var ContentWebRTCShim = message => ContentWebRTC.receiveMessage(message);
-
-addMessageListener("rtcpeer:Allow", ContentWebRTCShim);
-addMessageListener("rtcpeer:Deny", ContentWebRTCShim);
-addMessageListener("webrtc:Allow", ContentWebRTCShim);
-addMessageListener("webrtc:Deny", ContentWebRTCShim);
-addMessageListener("webrtc:StopSharing", ContentWebRTCShim);

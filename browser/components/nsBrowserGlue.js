@@ -247,6 +247,19 @@ let ACTORS = {
       observers: ["keyword-uri-fixup"],
     },
   },
+
+  WebRTC: {
+    child: {
+      module: "resource:///actors/WebRTCChild.jsm",
+      messages: [
+        "rtcpeer:Allow",
+        "rtcpeer:Deny",
+        "webrtc:Allow",
+        "webrtc:Deny",
+        "webrtc:StopSharing",
+      ],
+    },
+  },
 };
 
 (function earlyBlankFirstPaint() {
