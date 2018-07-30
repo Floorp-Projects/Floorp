@@ -969,13 +969,15 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     // The nursery position (allocation pointer) and the nursery end are stored
     // very close to each other -- specifically, easily within a 32 bit offset.
     // Use relative offsets between them, to avoid 64-bit immediate loads.
-    auto nurseryPosAddr = intptr_t(zone->addressOfStringNurseryPosition());
-    auto nurseryEndAddr = intptr_t(zone->addressOfStringNurseryCurrentEnd());
+    void* nurseryPosAddr = zone->addressOfStringNurseryPosition();
+    const void* nurseryEndAddr = zone->addressOfStringNurseryCurrentEnd();
 
     movePtr(ImmPtr(zone->addressOfNurseryPosition()), temp);
     loadPtr(Address(temp, 0), result);
     addPtr(Imm32(totalSize), result);
-    branchPtr(Assembler::Below, Address(temp, nurseryEndAddr - nurseryPosAddr), result, fail);
+    const ptrdiff_t endOffset =
+        uintptr_t(nurseryEndAddr) - uintptr_t(nurseryPosAddr);
+    branchPtr(Assembler::Below, Address(temp, endOffset), result, fail);
     storePtr(result, Address(temp, 0));
     subPtr(Imm32(thingSize), result);
     storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
