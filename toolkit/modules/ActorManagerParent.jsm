@@ -177,6 +177,18 @@ let ACTORS = {
     },
   },
 
+  WebChannel: {
+    child: {
+      module: "resource://gre/actors/WebChannelChild.jsm",
+      events: {
+        "WebChannelMessageToChrome": {capture: true, wantUntrusted: true},
+      },
+      messages: [
+        "WebChannelMessageToContent",
+      ],
+    },
+  },
+
   Zoom: {
     child: {
       module: "resource://gre/actors/ZoomChild.jsm",

@@ -252,7 +252,6 @@ EXTRA_JS_MODULES += [
     'Troubleshoot.jsm',
     'UpdateUtils.jsm',
     'WebChannel.jsm',
-    'WebChannelContent.jsm',
     'WebNavigationChild.jsm',
     'WebProgressChild.jsm',
     'WindowDraggingUtils.jsm',
