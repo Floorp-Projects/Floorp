@@ -169,6 +169,16 @@ let ACTORS = {
     },
   },
 
+  PageMetadata: {
+    child: {
+      module: "resource:///actors/PageMetadataChild.jsm",
+      messages: [
+        "PageMetadata:GetPageData",
+        "PageMetadata:GetMicroformats",
+      ],
+    },
+  },
+
   PageStyle: {
     child: {
       module: "resource:///actors/PageStyleChild.jsm",

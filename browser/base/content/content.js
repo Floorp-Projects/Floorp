@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
   FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
-  PageMetadata: "resource://gre/modules/PageMetadata.jsm",
   ContextMenuChild: "resource:///actors/ContextMenuChild.jsm",
 });
 
@@ -81,28 +80,3 @@ addMessageListener("rtcpeer:Deny", ContentWebRTCShim);
 addMessageListener("webrtc:Allow", ContentWebRTCShim);
 addMessageListener("webrtc:Deny", ContentWebRTCShim);
 addMessageListener("webrtc:StopSharing", ContentWebRTCShim);
-
-var PageMetadataMessenger = {
-  init() {
-    addMessageListener("PageMetadata:GetPageData", this);
-    addMessageListener("PageMetadata:GetMicroformats", this);
-    this.init = null;
-  },
-  receiveMessage(message) {
-    switch (message.name) {
-      case "PageMetadata:GetPageData": {
-        let target = ContextMenuChild.getTarget(global, message);
-        let result = PageMetadata.getData(content.document, target);
-        sendAsyncMessage("PageMetadata:PageDataResult", result);
-        break;
-      }
-      case "PageMetadata:GetMicroformats": {
-        let target = ContextMenuChild.getTarget(global, message);
-        let result = PageMetadata.getMicroformats(content.document, target);
-        sendAsyncMessage("PageMetadata:MicroformatsResult", result);
-        break;
-      }
-    }
-  }
-};
-PageMetadataMessenger.init();
