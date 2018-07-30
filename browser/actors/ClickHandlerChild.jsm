@@ -8,8 +8,6 @@ var EXPORTED_SYMBOLS = ["ClickHandlerChild"];
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BlockedSiteContent",
-                               "resource:///modules/BlockedSiteContent.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "NetErrorContent",
@@ -37,7 +35,6 @@ class ClickHandlerChild extends ActorChild {
         NetErrorContent.onCertError(this.mm, originalTarget, ownerDoc.defaultView);
         return;
       } else if (ownerDoc.documentURI.startsWith("about:blocked")) {
-        BlockedSiteContent.onAboutBlocked(this.mm, originalTarget, ownerDoc);
         return;
       } else if (this.mm.AboutNetAndCertErrorListener.isAboutNetError(ownerDoc)) {
         NetErrorContent.onAboutNetError(this.mm, event, ownerDoc.documentURI);
