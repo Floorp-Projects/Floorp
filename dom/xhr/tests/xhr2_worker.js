@@ -84,7 +84,7 @@ onmessage = function(event) {
   // Make sure "document" works, but returns text.
   xhr = new XMLHttpRequest();
 
-  if (xhr.responseType != "text") {
+  if (xhr.responseType != "") {
     throw new Error("Default value for responseType is wrong!");
   }
 
