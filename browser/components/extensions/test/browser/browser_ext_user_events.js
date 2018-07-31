@@ -61,8 +61,6 @@ add_task(async function testSources() {
         }
       });
 
-      browser.commands.onCommand.addListener(() => request("downloads"));
-
       browser.test.sendMessage("actions-ready");
     },
 
@@ -113,16 +111,9 @@ add_task(async function testSources() {
       browser_action: {default_title: "test"},
       page_action: {default_title: "test"},
       permissions: ["contextMenus"],
-      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest", "downloads"],
+      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest"],
       options_ui: {page: "options.html"},
       content_security_policy: "script-src 'self' https://example.com; object-src 'none';",
-      commands: {
-        command: {
-          suggested_key: {
-            "default": "Alt+Shift+J",
-          },
-        },
-      },
     },
 
     useAddonManager: "temporary",
@@ -172,12 +163,6 @@ add_task(async function testSources() {
     panel.button.click();
   });
   await check("options page link click");
-
-  EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
-  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
-    panel.button.click();
-  });
-  await check("commands shortcut");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await BrowserTestUtils.removeTab(tab);
