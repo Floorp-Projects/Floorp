@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "podmienkami používania služby",
   "firstrun_privacy_notice": "zásadami ochrany súkromia",
   "firstrun_continue_to_login": "Pokračovať",
-  "firstrun_skip_login": "Preskočiť tento krok"
+  "firstrun_skip_login": "Preskočiť tento krok",
+  "firstrun_invalid_input": "Vyžaduje sa platná e-mailová adresa"
 };

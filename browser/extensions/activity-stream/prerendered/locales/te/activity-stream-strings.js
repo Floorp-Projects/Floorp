@@ -4,7 +4,7 @@ window.gActivityStreamStrings = {
   "header_top_sites": "మేటి సైట్లు",
   "header_highlights": "విశేషాలు",
   "header_recommended_by": "{provider}చే సిఫార్సు చేయబడినది",
-  "context_menu_button_sr": "{title} కోసం సందర్భోచిత మెనుని తెరవండి",
+  "context_menu_button_sr": "{title} కోసం సందర్భోచిత మెనూని తెరవు",
   "section_context_menu_button_sr": "విభాగపు కంటెక్స్టు మెనూ తెరువు",
   "type_label_visited": "సందర్శించారు",
   "type_label_bookmarked": "ఇష్టాంశంగా గుర్తుపెట్టారు",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "సేవా నియమాలు",
   "firstrun_privacy_notice": "అంతరంగికత గమనిక",
   "firstrun_continue_to_login": "కొనసాగు",
-  "firstrun_skip_login": "ఈ అంచెను దాటవేయి"
+  "firstrun_skip_login": "ఈ అంచెను దాటవేయి",
+  "firstrun_invalid_input": "సరైన ఈమెయిలు తప్పనిసరి"
 };

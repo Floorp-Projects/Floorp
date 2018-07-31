@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Умови надання послуги",
   "firstrun_privacy_notice": "Повідомлення про приватність",
   "firstrun_continue_to_login": "Продовжити",
-  "firstrun_skip_login": "Пропустити цей крок"
+  "firstrun_skip_login": "Пропустити цей крок",
+  "firstrun_invalid_input": "Необхідна адреса електронної пошти"
 };

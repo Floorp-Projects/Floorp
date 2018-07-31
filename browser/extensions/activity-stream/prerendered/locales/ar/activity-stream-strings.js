@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "بنود الخدمة",
   "firstrun_privacy_notice": "تنويه الخصوصية",
   "firstrun_continue_to_login": "تابِع",
-  "firstrun_skip_login": "تجاوز هذه الخطوة"
+  "firstrun_skip_login": "تجاوز هذه الخطوة",
+  "firstrun_invalid_input": "مطلوب بريد إلكتروني صالح"
 };

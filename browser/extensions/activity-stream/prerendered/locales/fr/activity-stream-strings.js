@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Conditions d’utilisation",
   "firstrun_privacy_notice": "Politique de confidentialité",
   "firstrun_continue_to_login": "Continuer",
-  "firstrun_skip_login": "Ignorer cette étape"
+  "firstrun_skip_login": "Ignorer cette étape",
+  "firstrun_invalid_input": "Adresse électronique valide requise"
 };

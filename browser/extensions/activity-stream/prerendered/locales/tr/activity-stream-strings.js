@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Kullanım Koşullarını",
   "firstrun_privacy_notice": "Gizlilik Bildirimini",
   "firstrun_continue_to_login": "Devam et",
-  "firstrun_skip_login": "Bu adımı atla"
+  "firstrun_skip_login": "Bu adımı atla",
+  "firstrun_invalid_input": "Geçerli bir e-posta gerekiyor"
 };

@@ -2,7 +2,7 @@
 window.gActivityStreamStrings = {
   "newtab_page_title": "ახალი ჩანართი",
   "header_top_sites": "რჩეული საიტები",
-  "header_highlights": "მნიშვნელოვანი საიტები",
+  "header_highlights": "მნიშვნელოვანი",
   "header_recommended_by": "{provider}-ის შემოთავაზებული",
   "context_menu_button_sr": "კონტექსტური მენიუს გახსნა {title}",
   "section_context_menu_button_sr": "გვერდის ნაწილების პარამეტრები",
@@ -74,7 +74,7 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "სურათი ვერ ჩაიტვირთა. სცადეთ სხვა URL ბმული.",
   "pocket_read_more": "პოპულარული თემები:",
   "pocket_read_even_more": "მეტი სიახლის ნახვა",
-  "highlights_empty_state": "დაიწყეთ გვერდების დათვალიერება და აქ გამოჩნდება თქვენი რჩეული სტატიები, ვიდეოები და ბოლოს მონახულებული ან ჩანიშნული საიტები.",
+  "highlights_empty_state": "დაიწყეთ გვერდების დათვალიერება და აქ გამოჩნდება თქვენთვის სასურველი სტატიები, ვიდეოები და ბოლოს მონახულებული ან ჩანიშნული საიტები.",
   "topstories_empty_state": "უკვე ყველაფერი წაკითხული გაქვთ. {provider}-იდან ახალი რჩეული სტატიების მისაღებად, მოგვიანებით შემოიარეთ. თუ ვერ ითმენთ, აირჩიეთ რომელიმე მოთხოვნადი თემა, ახალი საინტერესო სტატიების მოსაძიებლად.",
   "manual_migration_explanation2": "გადმოიტანეთ სხვა ბრაუზერებიდან თქვენი სანიშნები, ისტორია და პაროლები Firefox-ში.",
   "manual_migration_cancel_button": "არა, გმადლობთ",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "გამოყენების პირობებსა",
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",
   "firstrun_continue_to_login": "გაგრძელება",
-  "firstrun_skip_login": "გამოტოვება"
+  "firstrun_skip_login": "გამოტოვება",
+  "firstrun_invalid_input": "მართებული ელფოსტის მითითება აუცილებელია"
 };

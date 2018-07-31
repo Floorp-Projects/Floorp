@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "услове коришћења",
   "firstrun_privacy_notice": "обавештење о приватности",
   "firstrun_continue_to_login": "Настави",
-  "firstrun_skip_login": "Прескочи овај корак"
+  "firstrun_skip_login": "Прескочи овај корак",
+  "firstrun_invalid_input": "Исправна е-пошта се захтева"
 };

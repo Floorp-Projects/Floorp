@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Cundiziuns d'utilisaziun",
   "firstrun_privacy_notice": "Infurmaziuns davart la protecziun da datas",
   "firstrun_continue_to_login": "Cuntinuar",
-  "firstrun_skip_login": "Sursiglir quest pass"
+  "firstrun_skip_login": "Sursiglir quest pass",
+  "firstrun_invalid_input": "Adressa dad e-mail valida è obligatorica"
 };

@@ -94,11 +94,12 @@ window.gActivityStreamStrings = {
   "firstrun_content": "Bereik uw bladwijzers, geschiedenis, wachtwoorden en andere instellingen op al uw apparaten.",
   "firstrun_learn_more_link": "Meer info over Firefox Accounts",
   "firstrun_form_header": "Voer uw e-mailadres in",
-  "firstrun_form_sub_header": "om door te gaan naar Firefox Sync.",
+  "firstrun_form_sub_header": "om door te gaan naar Firefox Sync",
   "firstrun_email_input_placeholder": "E-mailadres",
   "firstrun_extra_legal_links": "Door verder te gaan, gaat u akkoord met de {terms} en {privacy}.",
   "firstrun_terms_of_service": "Servicevoorwaarden",
   "firstrun_privacy_notice": "Privacyverklaring",
   "firstrun_continue_to_login": "Doorgaan",
-  "firstrun_skip_login": "Deze stap overslaan"
+  "firstrun_skip_login": "Deze stap overslaan",
+  "firstrun_invalid_input": "Geldig e-mailadres vereist"
 };

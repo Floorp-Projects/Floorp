@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "قوانین سرویس",
   "firstrun_privacy_notice": "نکات حریم‌خصوصی",
   "firstrun_continue_to_login": "ادامه",
-  "firstrun_skip_login": "پرش از این مرحله"
+  "firstrun_skip_login": "پرش از این مرحله",
+  "firstrun_invalid_input": "رایانامهٔ معتبر لازم است"
 };

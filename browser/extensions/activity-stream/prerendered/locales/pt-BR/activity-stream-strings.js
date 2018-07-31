@@ -39,7 +39,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_linktext": "Saiba como funciona.",
   "section_disclaimer_topstories_buttontext": "Ok, entendi",
   "prefs_home_header": "Conteúdo inicial do Firefox",
-  "prefs_home_description": "Escolha qual conteúdo você quer na sua tela inicial do Firefox.",
+  "prefs_home_description": "Escolha que conteúdo você quer na sua tela inicial do Firefox.",
   "prefs_section_rows_option": "{num} linha;{num} linhas",
   "prefs_search_header": "Pesquisa na web",
   "prefs_topsites_description": "Os sites que você mais visita",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Termos de serviço",
   "firstrun_privacy_notice": "Política de privacidade",
   "firstrun_continue_to_login": "Continuar",
-  "firstrun_skip_login": "Pular essa etapa"
+  "firstrun_skip_login": "Pular essa etapa",
+  "firstrun_invalid_input": "Necessário e-mail válido"
 };

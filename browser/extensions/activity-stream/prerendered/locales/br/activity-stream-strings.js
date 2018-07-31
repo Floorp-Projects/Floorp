@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "divizoù arver",
   "firstrun_privacy_notice": "evezhiadennoù a-fet buhez prevez",
   "firstrun_continue_to_login": "Kenderc'hel",
-  "firstrun_skip_login": "Tremen ar bazenn-mañ"
+  "firstrun_skip_login": "Tremen ar bazenn-mañ",
+  "firstrun_invalid_input": "Postel talvoudek azgoulennet"
 };
