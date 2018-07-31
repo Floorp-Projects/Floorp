@@ -926,43 +926,33 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
   // Initialize the PRCList (this).
   PR_INIT_CLIST(this);
 
-  if (aOuterWindow) {
-    // |this| is an inner window, add this inner window to the outer
-    // window list of inners.
-    PR_INSERT_AFTER(this, aOuterWindow);
+  // add this inner window to the outer window list of inners.
+  PR_INSERT_AFTER(this, aOuterWindow);
 
-    mTimeoutManager =
-      MakeUnique<mozilla::dom::TimeoutManager>(*nsGlobalWindowInner::Cast(AsInner()));
+  mTimeoutManager = MakeUnique<TimeoutManager>(*this);
 
-    mObserver = new nsGlobalWindowObserver(this);
-    if (mObserver) {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os) {
-        // Watch for online/offline status changes so we can fire events. Use
-        // a strong reference.
-        os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                        false);
+  mObserver = new nsGlobalWindowObserver(this);
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    // Watch for online/offline status changes so we can fire events. Use
+    // a strong reference.
+    os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
+                    false);
 
-        os->AddObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC, false);
+    os->AddObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC, false);
 
-        if (aOuterWindow->IsTopLevelWindow()) {
-          os->AddObserver(mObserver, "clear-site-data-reload-needed", false);
-        }
-      }
-
-      Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
-
-      // Watch for storage notifications so we can fire storage events.
-      RefPtr<StorageNotifierService> sns =
-        StorageNotifierService::GetOrCreate();
-      if (sns) {
-        sns->Register(mObserver);
-      }
+    if (aOuterWindow->IsTopLevelWindow()) {
+      os->AddObserver(mObserver, "clear-site-data-reload-needed", false);
     }
-  } else {
-    // |this| is an outer window. Outer windows start out frozen and
-    // remain frozen until they get an inner window.
-    MOZ_ASSERT(IsFrozen());
+  }
+
+  Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
+
+  // Watch for storage notifications so we can fire storage events.
+  RefPtr<StorageNotifierService> sns =
+    StorageNotifierService::GetOrCreate();
+  if (sns) {
+    sns->Register(mObserver);
   }
 
   if (XRE_IsContentProcess()) {
@@ -2018,18 +2008,6 @@ nsGlobalWindowInner::DialogsAreBeingAbused()
   return false;
 }
 
-void
-nsGlobalWindowInner::DisableDialogs()
-{
-  FORWARD_TO_OUTER_VOID(DisableDialogs, ());
-}
-
-void
-nsGlobalWindowInner::EnableDialogs()
-{
-  FORWARD_TO_OUTER_VOID(EnableDialogs, ());
-}
-
 nsresult
 nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
@@ -2313,18 +2291,6 @@ nsPIDOMWindowInner::Resume()
 }
 
 void
-nsPIDOMWindowInner::Freeze()
-{
-  nsGlobalWindowInner::Cast(this)->Freeze();
-}
-
-void
-nsPIDOMWindowInner::Thaw()
-{
-  nsGlobalWindowInner::Cast(this)->Thaw();
-}
-
-void
 nsPIDOMWindowInner::SyncStateFromParentWindow()
 {
   nsGlobalWindowInner::Cast(this)->SyncStateFromParentWindow();
@@ -2346,12 +2312,6 @@ Maybe<ServiceWorkerDescriptor>
 nsPIDOMWindowInner::GetController() const
 {
   return nsGlobalWindowInner::Cast(this)->GetController();
-}
-
-RefPtr<mozilla::dom::ServiceWorker>
-nsPIDOMWindowInner::GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor)
-{
-  return nsGlobalWindowInner::Cast(this)->GetOrCreateServiceWorker(aDescriptor);
 }
 
 void
@@ -2750,16 +2710,6 @@ nsPIDOMWindowOuter*
 nsGlobalWindowInner::GetScriptableParent()
 {
   FORWARD_TO_OUTER(GetScriptableParent, (), nullptr);
-}
-
-/**
- * Behavies identically to GetScriptableParent extept that it returns null
- * if GetScriptableParent would return this window.
- */
-nsPIDOMWindowOuter*
-nsGlobalWindowInner::GetScriptableParentOrNull()
-{
-  FORWARD_TO_OUTER(GetScriptableParentOrNull, (), nullptr);
 }
 
 /**
@@ -4189,12 +4139,6 @@ nsresult
 nsGlobalWindowInner::Close()
 {
   FORWARD_TO_OUTER(Close, (), NS_ERROR_UNEXPECTED);
-}
-
-void
-nsGlobalWindowInner::ReallyCloseWindow()
-{
-  FORWARD_TO_OUTER_VOID(ReallyCloseWindow, ());
 }
 
 bool
