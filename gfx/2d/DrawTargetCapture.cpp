@@ -419,6 +419,12 @@ DrawTargetCaptureImpl::CreateFilter(FilterType aType)
   }
 }
 
+bool
+DrawTargetCaptureImpl::IsEmpty() const
+{
+  return mCommands.IsEmpty();
+}
+
 void
 DrawTargetCaptureImpl::Dump()
 {

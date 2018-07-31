@@ -151,6 +151,7 @@ public:
 
   void ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform);
 
+  bool IsEmpty() const override;
   void Dump() override;
 
 protected:

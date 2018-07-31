@@ -281,10 +281,19 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 
     // Dispatch to the paint thread
     if (aFlags & TilePaintFlags::Async) {
+      bool queuedTask = false;
+
       for (const auto& state : mPaintTasks) {
-        PaintThread::Get()->QueuePaintTask(state);
+        if (!state->mCapture->IsEmpty()) {
+          PaintThread::Get()->QueuePaintTask(state);
+          queuedTask = true;
+        }
       }
-      mManager->SetQueuedAsyncPaints();
+
+      if (queuedTask) {
+        mManager->SetQueuedAsyncPaints();
+      }
+
       mPaintTasks.clear();
     }
 
