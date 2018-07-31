@@ -4886,26 +4886,6 @@ nsGlobalWindowInner::DispatchSyncPopState()
   return err.StealNSResult();
 }
 
-// Find an nsICanvasFrame under aFrame.  Only search the principal
-// child lists.  aFrame must be non-null.
-static nsCanvasFrame*
-FindCanvasFrame(nsIFrame* aFrame)
-{
-    nsCanvasFrame* canvasFrame = do_QueryFrame(aFrame);
-    if (canvasFrame) {
-        return canvasFrame;
-    }
-
-    for (nsIFrame* kid : aFrame->PrincipalChildList()) {
-        canvasFrame = FindCanvasFrame(kid);
-        if (canvasFrame) {
-            return canvasFrame;
-        }
-    }
-
-    return nullptr;
-}
-
 //-------------------------------------------------------
 // Tells the HTMLFrame/CanvasFrame that is now has focus
 void
@@ -4927,26 +4907,19 @@ nsGlobalWindowInner::UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewConte
 
   Element *rootElement = mDoc->GetRootElement();
   if (rootElement) {
-      if ((mHasFocus || aFocusChanged) &&
-          (mFocusedElement == rootElement || aNewContent == rootElement)) {
-          nsIFrame* frame = rootElement->GetPrimaryFrame();
-          if (frame) {
-              frame = frame->GetParent();
-              nsCanvasFrame* canvasFrame = do_QueryFrame(frame);
-              if (canvasFrame) {
-                  canvasFrame->SetHasFocus(mHasFocus && rootElement == aNewContent);
-              }
-          }
+    if ((mHasFocus || aFocusChanged) &&
+        (mFocusedElement == rootElement || aNewContent == rootElement)) {
+      nsCanvasFrame* canvasFrame = presShell->GetCanvasFrame();
+      if (canvasFrame) {
+        canvasFrame->SetHasFocus(mHasFocus && rootElement == aNewContent);
       }
+    }
   } else {
-      // Look for the frame the hard way
-      nsIFrame* frame = presShell->GetRootFrame();
-      if (frame) {
-          nsCanvasFrame* canvasFrame = FindCanvasFrame(frame);
-          if (canvasFrame) {
-              canvasFrame->SetHasFocus(false);
-          }
-      }
+    // XXXbz I would expect that there is never a canvasFrame in this case...
+    nsCanvasFrame* canvasFrame = presShell->GetCanvasFrame();
+    if (canvasFrame) {
+      canvasFrame->SetHasFocus(false);
+    }
   }
 }
 
