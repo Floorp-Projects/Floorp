@@ -58,6 +58,9 @@ with Files("Channel*"):
 with Files("Client*"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
+with Files("Clipboard.webidl"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
 with Files("ClipboardEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -419,6 +422,7 @@ WEBIDL_FILES = [
     'ChromeNodeList.webidl',
     'Client.webidl',
     'Clients.webidl',
+    'Clipboard.webidl',
     'ClipboardEvent.webidl',
     'CommandEvent.webidl',
     'Comment.webidl',
