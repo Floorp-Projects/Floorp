@@ -809,7 +809,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     // layout would require it to move, so we look at the end of the relhack
     // code section instead, comparing it to where the first executable
     // section used to start.
-    if (relhackcode->getOffset() + relhackcode->getSize() >= old_exec) {
+    if (!force && relhackcode->getOffset() + relhackcode->getSize() >= old_exec) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
     }
