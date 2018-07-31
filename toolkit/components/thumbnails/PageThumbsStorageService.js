@@ -18,9 +18,6 @@ function PageThumbsStorageService() {}
 PageThumbsStorageService.prototype = {
     classID: Components.ID("{97943eec-0e48-49ef-b7b7-cf4aa0109bb6}"),
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPageThumbsStorageService]),
-    _xpcom_categories: [{
-      service: true
-    }],
     // The path for the storage
     _path: null,
     get path() {

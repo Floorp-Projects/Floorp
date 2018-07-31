@@ -670,7 +670,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .webconsole-output-wrapper .message-flex-body > .message-body {
-  overflow-x: auto;
+  overflow: hidden;
 }
 
 .webconsole-output-wrapper .message-body > * {

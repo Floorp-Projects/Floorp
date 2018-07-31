@@ -1013,17 +1013,21 @@ Proxy::HandleEvent(Event* aEvent)
 
     RefPtr<EventRunnable> runnable;
     if (progressEvent) {
-      runnable = new EventRunnable(this, isUploadTarget, type,
-                                   progressEvent->LengthComputable(),
-                                   progressEvent->Loaded(),
-                                   progressEvent->Total(),
-                                   scope);
+      if (!mIsSyncXHR || !type.EqualsASCII(sEventStrings[STRING_progress])) {
+        runnable = new EventRunnable(this, isUploadTarget, type,
+                                     progressEvent->LengthComputable(),
+                                     progressEvent->Loaded(),
+                                     progressEvent->Total(),
+                                     scope);
+      }
     }
     else {
       runnable = new EventRunnable(this, isUploadTarget, type, scope);
     }
 
-    runnable->Dispatch();
+    if (runnable) {
+      runnable->Dispatch();
+    }
   }
 
   if (!isUploadTarget) {
@@ -1741,6 +1745,11 @@ XMLHttpRequestWorker::DispatchPrematureAbortEvent(EventTarget* aTarget,
     event->InitEvent(aEventType, false, false);
   }
   else {
+    if (mProxy->mIsSyncXHR &&
+        aEventType.EqualsASCII(sEventStrings[STRING_progress])) {
+      return;
+    }
+
     ProgressEventInit init;
     init.mBubbles = false;
     init.mCancelable = false;
