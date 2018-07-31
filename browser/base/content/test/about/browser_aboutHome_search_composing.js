@@ -76,16 +76,6 @@ add_task(async function() {
     }, browser);
     await loadPromise;
 
-    await ContentTask.spawn(browser, null, async function() {
-      let input = content.document.querySelector(["#searchText", "#newtab-search-text"]);
-      ok(input.value == "x", "Input value did not change");
-
-      let row = content.document.getElementById("TEMPID");
-      if (row) {
-        row.removeAttribute("id");
-      }
-    });
-
     Services.search.currentEngine = currEngine;
     try {
       Services.search.removeEngine(engine);

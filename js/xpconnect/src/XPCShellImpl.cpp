@@ -1338,7 +1338,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
             backstagePass->SetGlobalObject(glob);
 
-            JSAutoRealmAllowCCW ar(cx, glob);
+            JSAutoRealm ar(cx, glob);
 
             // Even if we're building in a configuration where source is
             // discarded, there's no reason to do that on XPCShell, and doing so

@@ -18,10 +18,6 @@ matrix:
       env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
     - rust: nightly
       env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
-    - install: rustup component add rustfmt-preview
-      script:
-        - cargo fmt -- --write-mode diff
-        - (cd cc-test && cargo fmt -- --write-mode diff)
 
     - rust: nightly
       before_script:

@@ -78,7 +78,7 @@ class Popover extends _react.Component {
       });
     }
 
-    this.props.onPopoverCoords(this.state.coords);
+    this.props.onPopoverCoords(coords);
   }
 
   calculateLeft(target, editor, popover, orientation) {

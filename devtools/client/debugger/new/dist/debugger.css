@@ -1196,9 +1196,9 @@ html .toggle-button.end.vertical svg {
 }
 
 .project-text-search .result {
-  display: flex;
+  display: contents;
   cursor: default;
-  padding: 4px 0 4px 30px;
+  padding: 4px 0 4px 5px;
   line-height: 16px;
   font-size: 10px;
   width: 100%;
@@ -1221,9 +1221,20 @@ html .toggle-button.end.vertical svg {
 }
 
 .project-text-search .result .line-number {
-  margin-right: 1em;
-  width: 2em;
-  margin-left: 0.8em;
+  padding-left: 5px;
+  min-width: 33px;
+  width: 100%;
+  text-align: right;
+  grid-column: 1/2;
+}
+
+.project-text-search .result .line-value {
+  grid-column: 2/3;
+  padding-left: 5px;
+}
+
+.project-text-search .tree-indent {
+  display: none;
 }
 
 .project-text-search .no-result-msg {
@@ -1241,6 +1252,7 @@ html .toggle-button.end.vertical svg {
   cursor: default;
   padding: 2px 0 2px 5px;
   font-size: 12px;
+  grid-column: 1/3;
 }
 
 .project-text-search .file-result .arrow {
@@ -1269,17 +1281,24 @@ html .toggle-button.end.vertical svg {
 
 .project-text-search .managed-tree .tree {
   height: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+
+.project-text-search .managed-tree .tree .tree-node {
+  display: contents;
 }
 
 /* Focus values */
 
 .project-text-search .file-result.focused,
-.project-text-search .result.focused {
+.project-text-search .result.focused .line-value {
   background-color: var(--theme-selection-background);
 }
 
 .project-text-search .result.focused .line-number {
   font-weight: bolder;
+  background-color: var(--theme-selection-background);
 }
 
 .project-text-search .result.focused .query-match {
@@ -2111,12 +2130,6 @@ menuseparator {
   display: inline-grid;
   grid-template-columns: auto auto;
   margin-top: 3px;
-}
-
-.objectBox-stackTrace-fn::before {
-  content: "\3BB"; /* The "lambda" symbol */
-  display: inline-block;
-  margin: 0 0.3em;
 }
 
 .objectBox-stackTrace-fn {
@@ -4030,12 +4043,19 @@ html[dir="rtl"] .object-node {
 }
 
 .shortcutFunction {
-  flex: 1;
+  margin: 0 auto;
   color: var(--theme-comment);
+  display: table;
 }
 
 .shortcutFunction p {
-  display: flex;
+  display: table-row;
+}
+
+.shortcutFunction .shortcutKey,
+.shortcutFunction .shortcutLabel {
+  padding: 10px 5px;
+  display: table-cell;
 }
 
 html .welcomebox .toggle-button-end.collapsed {
