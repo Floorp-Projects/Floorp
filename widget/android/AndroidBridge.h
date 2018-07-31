@@ -116,6 +116,7 @@ public:
 
     bool GetClipboardText(nsAString& aText);
 
+    int GetDPI();
     int GetScreenDepth();
 
     void Vibrate(const nsTArray<uint32_t>& aPattern);
