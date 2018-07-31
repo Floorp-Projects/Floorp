@@ -47,8 +47,7 @@ public:
   EventStates IntrinsicState() const override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                               nsIContent* aBindingParent,
-                               bool aCompileEventHandlers) override;
+                               nsIContent* aBindingParent) override;
 
   // This function is called when a callback function from nsIMutationObserver
   // has to be used to update the defaultValue attribute.

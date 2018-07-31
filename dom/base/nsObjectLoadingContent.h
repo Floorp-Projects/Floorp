@@ -337,9 +337,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     void DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner);
 
-    nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                        nsIContent* aBindingParent,
-                        bool aCompileEventHandler);
+    nsresult BindToTree(nsIDocument* aDocument,
+                        nsIContent* aParent,
+                        nsIContent* aBindingParent);
     void UnbindFromTree(bool aDeep = true,
                         bool aNullParent = true);
 

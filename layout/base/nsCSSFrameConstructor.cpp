@@ -1876,8 +1876,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     aOriginatingElement.HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
   rv = container->BindToTree(bindDocument,
                              &aOriginatingElement,
-                             &aOriginatingElement,
-                             true);
+                             &aOriginatingElement);
   if (NS_FAILED(rv)) {
     container->UnbindFromTree();
     return;
@@ -4106,7 +4105,7 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     // are not in document.
     nsIDocument* bindDocument =
       aParent->HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
-    rv = content->BindToTree(bindDocument, aParent, aParent, true);
+    rv = content->BindToTree(bindDocument, aParent, aParent);
     // If the anonymous content creator requested that the content should be
     // editable, honor its request.
     // We need to set the flag on the whole subtree, because existing

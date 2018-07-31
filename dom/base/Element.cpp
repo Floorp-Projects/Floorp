@@ -1602,8 +1602,7 @@ EditableInclusiveDescendantCount(nsIContent* aContent)
 
 nsresult
 Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                    nsIContent* aBindingParent,
-                    bool aCompileEventHandlers)
+                    nsIContent* aBindingParent)
 {
   MOZ_ASSERT(aParent || aDocument, "Must have document if no parent!");
   MOZ_ASSERT((NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc()),
@@ -1767,8 +1766,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsresult rv;
   for (nsIContent* child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    rv = child->BindToTree(aDocument, this, aBindingParent,
-                           aCompileEventHandlers);
+    rv = child->BindToTree(aDocument, this, aBindingParent);
     NS_ENSURE_SUCCESS(rv, rv);
 
     editableDescendantCount += EditableInclusiveDescendantCount(child);
@@ -1815,11 +1813,10 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // Call BindToTree on shadow root children.
   if (ShadowRoot* shadowRoot = GetShadowRoot()) {
     shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
+    MOZ_ASSERT(shadowRoot->GetBindingParent() == this);
     for (nsIContent* child = shadowRoot->GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      rv = child->BindToTree(nullptr, shadowRoot,
-                             shadowRoot->GetBindingParent(),
-                             aCompileEventHandlers);
+      rv = child->BindToTree(nullptr, shadowRoot, this);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

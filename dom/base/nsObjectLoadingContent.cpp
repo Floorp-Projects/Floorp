@@ -600,11 +600,9 @@ nsObjectLoadingContent::SetupDocShell(nsIURI* aRecursionCheckURI)
 nsresult
 nsObjectLoadingContent::BindToTree(nsIDocument* aDocument,
                                    nsIContent* aParent,
-                                   nsIContent* aBindingParent,
-                                   bool aCompileEventHandlers)
+                                   nsIContent* aBindingParent)
 {
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
-                                    aCompileEventHandlers);
+  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
 
   if (aDocument) {
     aDocument->AddPlugin(this);
