@@ -2063,6 +2063,7 @@ nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor)
     // forwards, navigating backwards, and on page reload.
     for (const auto& display : mVRDisplays) {
       if (display->IsPresenting()) {
+        display->StartVRNavigation();
         // Save this VR display ID to trigger vrdisplayactivate event
         // after the next load event.
         nsGlobalWindowOuter* outer = GetOuterWindowInternal();

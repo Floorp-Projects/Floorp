@@ -345,6 +345,18 @@ VRDisplayHost::CheckClearDisplayInfoDirty()
   return true;
 }
 
+void
+VRDisplayHost::StartVRNavigation()
+{
+  
+}
+
+void
+VRDisplayHost::StopVRNavigation(const TimeDuration& aTimeout)
+{
+  
+}
+
 VRControllerHost::VRControllerHost(VRDeviceType aType, dom::GamepadHand aHand,
                                    uint32_t aDisplayID)
  : mControllerInfo{}
@@ -422,3 +434,4 @@ VRControllerHost::GetVibrateIndex()
 {
   return mVibrateIndex;
 }
+
