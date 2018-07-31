@@ -1547,6 +1547,7 @@ class DrawTargetCapture : public DrawTarget
 public:
   virtual bool IsCaptureDT() const override { return true; }
 
+  virtual bool IsEmpty() const = 0;
   virtual void Dump() = 0;
 };
 
