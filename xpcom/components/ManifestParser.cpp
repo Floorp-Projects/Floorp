@@ -48,8 +48,6 @@ struct ManifestDirective
 
   bool ischrome;
 
-  bool allowbootstrap;
-
   // The contentaccessible flags only apply to content/resource directives.
   bool contentflags;
 
@@ -64,41 +62,41 @@ struct ManifestDirective
 };
 static const ManifestDirective kParsingTable[] = {
   {
-    "manifest",         1, true, true, false,
+    "manifest",         1, true, false,
     &nsComponentManagerImpl::ManifestManifest, nullptr,
   },
   {
-    "component",        2, false, false, false,
+    "component",        2, false, false,
     &nsComponentManagerImpl::ManifestComponent, nullptr,
   },
   {
-    "contract",         2, false, false, false,
+    "contract",         2, false, false,
     &nsComponentManagerImpl::ManifestContract, nullptr,
   },
   {
-    "category",         3, false, false, false,
+    "category",         3, false, false,
     &nsComponentManagerImpl::ManifestCategory, nullptr,
   },
   {
-    "content",          2, true, true,  true,
+    "content",          2, true,  true,
     nullptr, &nsChromeRegistry::ManifestContent,
   },
   {
-    "locale",           3, true, true, false,
+    "locale",           3, true, false,
     nullptr, &nsChromeRegistry::ManifestLocale,
   },
   {
-    "skin",             3, true, true, false,
+    "skin",             3, true, false,
     nullptr, &nsChromeRegistry::ManifestSkin,
   },
   {
     // NB: note that while skin manifests can use this, they are only allowed
     // to use it for chrome://../skin/ URLs
-    "override",         2, true, true, false,
+    "override",         2, true, false,
     nullptr, &nsChromeRegistry::ManifestOverride,
   },
   {
-    "resource",         2, true, false, true,
+    "resource",         2, false, true,
     nullptr, &nsChromeRegistry::ManifestResource,
   }
 };
@@ -573,7 +571,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       continue;
     }
 
-    if (!directive->allowbootstrap && NS_BOOTSTRAPPED_LOCATION == aType) {
+    if (!directive->ischrome && NS_BOOTSTRAPPED_LOCATION == aType) {
       LogMessageWithContext(aFile, line,
                             "Bootstrapped manifest not allowed to use '%s' directive.",
                             token);
