@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * nsIURIWithSpecialOrigin is implemented by URIs need to supply an origin that
+ * does not match the spec. This is exclusively used in comm-central's Mailnews module.
+ */
+[scriptable, builtinclass, uuid(4f65569b-d6fc-4580-94d9-21e775658a2a)]
+interface nsIURIWithSpecialOrigin : nsISupports
+{
+    /**
+     * Special origin.
+     */
+    readonly attribute nsIURI origin;
+};
