@@ -106,6 +106,7 @@ public:
       ::InitializeCriticalSectionEx(&sCS, 4000, flags);
       return true;
     }();
+    Unused << isAlloc;
   }
 
   explicit operator bool() const
