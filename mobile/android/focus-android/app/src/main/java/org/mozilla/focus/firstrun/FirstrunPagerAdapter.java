@@ -22,11 +22,13 @@ public class FirstrunPagerAdapter extends PagerAdapter {
         public final String title;
         public final String text;
         public final int imageResource;
+        public final String contentDescription;
 
         private FirstrunPage(String title, String text, int imageResource) {
             this.title = title;
             this.text = text;
             this.imageResource = imageResource;
+            this.contentDescription = title + text;
         }
     }
 
@@ -88,6 +90,10 @@ public class FirstrunPagerAdapter extends PagerAdapter {
         return view;
     }
 
+    public String getPageAccessibilityDescription(int position) {
+        return pages[position].contentDescription;
+    }
+
     @Override
     public boolean isViewFromObject(View view, Object object) {
         return view == object;
@@ -101,8 +107,8 @@ public class FirstrunPagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         ViewPager pager = (ViewPager) container;
-        View view = getView(position, pager);
 
+        View view = getView(position, pager);
         pager.addView(view);
 
         return view;
