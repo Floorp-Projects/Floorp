@@ -1,28 +1,35 @@
 package org.mozilla.focus.searchsuggestions
 
-import android.app.Application
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.Transformations.map
 import android.arch.lifecycle.ViewModel
 import android.content.Context
-import android.util.Log
+import android.graphics.Typeface
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.StyleSpan
 
-class SearchSuggestionsViewModelFactory(application: Application): ViewModelProvider.AndroidViewModelFactory(application) {
 
-}
-
-
-class SearchSuggestionsViewModel(private val repository: SearchSuggestionsRepository) : ViewModel() {
+class SearchSuggestionsViewModel(private val service: SearchSuggestionsService) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
-    val selectedSearchSuggestion: LiveData<String>
-        get() = _selectedSearchSuggestion
-
-    val suggestions = repository.suggestions
-
     private val _searchQuery = MutableLiveData<String>()
-    val searchQuery: LiveData<String>
-        get() = _searchQuery
+
+    val selectedSearchSuggestion get() = _selectedSearchSuggestion
+    val searchQuery get() = _searchQuery
+    val suggestions = map(service.suggestions) { suggestionList ->
+        val style = StyleSpan(Typeface.BOLD)
+        val endIndex = searchQuery.value?.length ?: 0
+
+        val foo = inner@suggestionList.map {
+            val ssb = SpannableStringBuilder(it)
+            ssb.setSpan(style, 0, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            ssb
+        }
+
+        foo
+    }
 
     fun selectSearchSuggestion(suggestion: String) {
         _selectedSearchSuggestion.value = suggestion
@@ -33,14 +40,12 @@ class SearchSuggestionsViewModel(private val repository: SearchSuggestionsReposi
     }
 
     fun fetchSuggestions(query: String) {
-        repository.getSuggestions(query)
+        service.getSuggestions(query)
     }
 
     class Factory(private val context: Context) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-
-            Log.e("WAT", "FOOBAR")
-            val repository = SearchSuggestionsRepository(context)
+            val repository = SearchSuggestionsService(context)
 
             @Suppress("UNCHECKED_CAST")
             return SearchSuggestionsViewModel(repository) as T
