@@ -872,14 +872,11 @@ public:
     return mParentTarget;
   }
 
-  virtual void MaybeUpdateTouchState() {}
-
   nsIDocument* GetExtantDoc() const
   {
     return mDoc;
   }
   nsIURI* GetDocumentURI() const;
-  nsIURI* GetDocBaseURI() const;
 
   nsIDocument* GetDoc()
   {
@@ -1178,7 +1175,6 @@ protected:
   nsCOMPtr<nsIDocument> mDoc; // strong
   // Cache the URI when mDoc is cleared.
   nsCOMPtr<nsIURI> mDocumentURI; // strong
-  nsCOMPtr<nsIURI> mDocBaseURI; // strong
 
   nsCOMPtr<mozilla::dom::EventTarget> mParentTarget; // strong
 
