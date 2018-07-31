@@ -1472,13 +1472,15 @@ XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   // Step 8
   nsAutoCString host;
   parsedURL->GetHost(host);
-  if (!host.IsEmpty()) {
-    if (!aUsername.IsVoid() || !aPassword.IsVoid()) {
-      Unused << NS_MutateURI(parsedURL)
-                  .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
-                  .SetPassword(NS_ConvertUTF16toUTF8(aPassword))
-                  .Finalize(parsedURL);
+  if (!host.IsEmpty() && (!aUsername.IsVoid() || !aPassword.IsVoid())) {
+    auto mutator = NS_MutateURI(parsedURL);
+    if (!aUsername.IsVoid()) {
+      mutator.SetUsername(NS_ConvertUTF16toUTF8(aUsername));
     }
+    if (!aPassword.IsVoid()) {
+      mutator.SetPassword(NS_ConvertUTF16toUTF8(aPassword));
+    }
+    Unused << mutator.Finalize(parsedURL);
   }
 
   // Step 9
