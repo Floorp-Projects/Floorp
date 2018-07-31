@@ -370,6 +370,10 @@
 @RESPATH@/components/extension-process-script.js
 @RESPATH@/browser/components/extensions-browser.manifest
 
+; [Normandy]
+@RESPATH@/components/shield.manifest
+@RESPATH@/components/shield-content-process.js
+
 ; [PDF Viewer]
 @RESPATH@/browser/components/pdfjs.manifest
 @RESPATH@/browser/components/pdfjs.js
