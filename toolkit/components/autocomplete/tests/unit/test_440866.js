@@ -69,7 +69,7 @@ function AutoCompleteResult(aValues, aComments, aStyles) {
   if (this._values.length > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
   } else {
-    this.searchResult = Ci.nsIAutoCompleteResult.NOMATCH;
+    this.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
   }
 }
 AutoCompleteResult.prototype = {
@@ -256,4 +256,3 @@ function run_test() {
 
   controller.startSearch("test");
 }
-
