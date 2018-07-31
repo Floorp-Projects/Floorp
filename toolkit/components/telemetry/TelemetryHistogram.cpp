@@ -184,7 +184,7 @@ public:
   nsresult GetHistogram(const nsCString& name, Histogram** histogram);
   Histogram* GetHistogram(const nsCString& name);
   uint32_t GetHistogramType() const { return mHistogramInfo.histogramType; }
-  nsresult GetJSKeys(JSContext* cx, JS::CallArgs& args);
+  nsresult GetKeys(const StaticMutexAutoLock& aLock, nsTArray<nsCString>& aKeys);
   // Note: unlike other methods, GetJSSnapshot is thread safe.
   nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
                          bool clearSubsession);
@@ -1050,27 +1050,18 @@ KeyedHistogram::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 }
 
 nsresult
-KeyedHistogram::GetJSKeys(JSContext* cx, JS::CallArgs& args)
+KeyedHistogram::GetKeys(const StaticMutexAutoLock& aLock, nsTArray<nsCString>& aKeys)
 {
-  JS::AutoValueVector keys(cx);
-  if (!keys.reserve(mHistogramMap.Count())) {
+  if (!aKeys.SetCapacity(mHistogramMap.Count(), mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   for (auto iter = mHistogramMap.Iter(); !iter.Done(); iter.Next()) {
-    JS::RootedValue jsKey(cx);
-    jsKey.setString(ToJSString(cx, iter.Get()->GetKey()));
-    if (!keys.append(jsKey)) {
+    if (!aKeys.AppendElement(iter.Get()->GetKey(), mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
-  JS::RootedObject jsKeys(cx, JS_NewArrayObject(cx, keys));
-  if (!jsKeys) {
-    return NS_ERROR_FAILURE;
-  }
-
-  args.rval().setObject(*jsKeys);
   return NS_OK;
 }
 
@@ -1839,7 +1830,7 @@ internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
 
-  KeyedHistogram* keyed = nullptr;
+  nsTArray<nsCString> keys;
   {
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
     MOZ_ASSERT(internal_IsHistogramEnumId(id));
@@ -1847,15 +1838,39 @@ internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
     // This is not good standard behavior given that we have histogram instances
     // covering multiple processes.
     // However, changing this requires some broader changes to callers.
-    keyed = internal_GetKeyedHistogramById(id, ProcessID::Parent);
+    KeyedHistogram* keyed = internal_GetKeyedHistogramById(id, ProcessID::Parent);
+
+    MOZ_ASSERT(keyed);
+    if (!keyed) {
+      return false;
+    }
+
+    if (NS_FAILED(keyed->GetKeys(locker, keys))) {
+      return false;
+    }
   }
 
-  MOZ_ASSERT(keyed);
-  if (!keyed) {
+  // Convert keys from nsTArray<nsCString> to JS array.
+  JS::AutoValueVector autoKeys(cx);
+  if (!autoKeys.reserve(keys.Length())) {
     return false;
   }
 
-  return NS_SUCCEEDED(keyed->GetJSKeys(cx, args));
+  for (const auto& key : keys) {
+    JS::RootedValue jsKey(cx);
+    jsKey.setString(ToJSString(cx, key));
+    if (!autoKeys.append(jsKey)) {
+      return false;
+    }
+  }
+
+  JS::RootedObject jsKeys(cx, JS_NewArrayObject(cx, autoKeys));
+  if (!jsKeys) {
+    return false;
+  }
+
+  args.rval().setObject(*jsKeys);
+  return true;
 }
 
 bool
