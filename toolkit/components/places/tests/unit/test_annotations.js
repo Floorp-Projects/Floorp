@@ -95,8 +95,6 @@ add_task(async function test_execute() {
 
   // get annotation info
   var value = {}, flags = {}, exp = {}, storageType = {};
-  annosvc.getPageAnnotationInfo(testURI, testAnnoName, flags, exp, storageType);
-  Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
   annosvc.getItemAnnotationInfo(testItemId, testAnnoName, value, flags, exp, storageType);
   Assert.equal(value.value, testAnnoVal);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
@@ -111,8 +109,6 @@ add_task(async function test_execute() {
   var int32Val = 23;
   annosvc.setPageAnnotation(testURI, int32Key, int32Val, 0, annosvc.EXPIRE_NEVER);
   value = {}, flags = {}, exp = {}, storageType = {};
-  annosvc.getPageAnnotationInfo(testURI, int32Key, flags, exp, storageType);
-  Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_INT32);
   var storedVal = annosvc.getPageAnnotation(testURI, int32Key);
   Assert.ok(int32Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int32Key, int32Val, 0, annosvc.EXPIRE_NEVER);
@@ -126,7 +122,6 @@ add_task(async function test_execute() {
   var int64Key = testAnnoName + "/types/Int64";
   var int64Val = 4294967296;
   annosvc.setPageAnnotation(testURI, int64Key, int64Val, 0, annosvc.EXPIRE_NEVER);
-  annosvc.getPageAnnotationInfo(testURI, int64Key, flags, exp, storageType);
   storedVal = annosvc.getPageAnnotation(testURI, int64Key);
   Assert.ok(int64Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int64Key, int64Val, 0, annosvc.EXPIRE_NEVER);
@@ -140,7 +135,6 @@ add_task(async function test_execute() {
   var doubleKey = testAnnoName + "/types/Double";
   var doubleVal = 0.000002342;
   annosvc.setPageAnnotation(testURI, doubleKey, doubleVal, 0, annosvc.EXPIRE_NEVER);
-  annosvc.getPageAnnotationInfo(testURI, doubleKey, flags, exp, storageType);
   storedVal = annosvc.getPageAnnotation(testURI, doubleKey);
   Assert.ok(doubleVal === storedVal);
   annosvc.setItemAnnotation(testItemId, doubleKey, doubleVal, 0, annosvc.EXPIRE_NEVER);
