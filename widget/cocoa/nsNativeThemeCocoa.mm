@@ -3327,7 +3327,6 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
     }
 
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
       return Some(WidgetInfo::Button(
         ButtonParams{ComputeControlParams(aFrame, eventState),
                      ButtonType::eArrowButton}));
@@ -3869,7 +3868,6 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
     case StyleAppearance::Groupbox:
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput:
@@ -4035,7 +4033,6 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
 
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
       result = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
@@ -4163,7 +4160,6 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
@@ -4294,7 +4290,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
     {
       SInt32 popupHeight = 0;
       ::GetThemeMetric(kThemeMetricPopupButtonHeight, &popupHeight);
@@ -4621,8 +4616,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
                                       WidgetType aWidgetType)
 {
   // if this is a dropdown button in a combobox the answer is always no
-  if (aWidgetType == StyleAppearance::MenulistButton ||
-      aWidgetType == StyleAppearance::MozMenulistButton) {
+  if (aWidgetType == StyleAppearance::MenulistButton) {
     nsIFrame* parentFrame = aFrame->GetParent();
     if (parentFrame && parentFrame->IsComboboxControlFrame())
       return false;
@@ -4632,7 +4626,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     // Combobox dropdowns don't support native theming in vertical mode.
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
-    case StyleAppearance::MozMenulistButton:
     case StyleAppearance::MenulistText:
     case StyleAppearance::MenulistTextfield:
       if (aFrame && aFrame->GetWritingMode().IsVertical()) {
@@ -4762,7 +4755,6 @@ nsNativeThemeCocoa::WidgetIsContainer(WidgetType aWidgetType)
   // flesh this out at some point
   switch (aWidgetType) {
    case StyleAppearance::MenulistButton:
-   case StyleAppearance::MozMenulistButton:
    case StyleAppearance::Radio:
    case StyleAppearance::Checkbox:
    case StyleAppearance::Progressbar:
