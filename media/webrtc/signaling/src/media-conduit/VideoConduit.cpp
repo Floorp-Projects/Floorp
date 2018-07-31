@@ -29,11 +29,6 @@
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 
-#ifdef WEBRTC_MAC
-#include <AvailabilityMacros.h>
-#include "webrtc/common_video/include/corevideo_frame_buffer.h"
-#endif
-
 #include "mozilla/Unused.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
