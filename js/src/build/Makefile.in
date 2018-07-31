@@ -10,7 +10,7 @@ ifeq (Linux,$(OS_TARGET))
 
 symverscript: symverscript.in
 	$(call py_action,preprocessor, \
-		-DVERSION='$(subst -,_,$(LIBRARY_NAME))' $< -o $@)
+		-DVERSION='$(subst -,_,$(JS_LIBRARY_NAME))' $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
