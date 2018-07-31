@@ -1366,78 +1366,28 @@ public:
   // Range is similar to Iterator, but uses different terminology.
   class Range
   {
-  protected:
     friend class HashTable;
 
-    Range(const HashTable& aTable, Entry* aCur, Entry* aEnd)
-      : mCur(aCur)
-      , mEnd(aEnd)
-#ifdef DEBUG
-      , mTable(aTable)
-      , mMutationCount(aTable.mMutationCount)
-      , mGeneration(aTable.generation())
-      , mValidEntry(true)
-#endif
-    {
-      while (mCur < mEnd && !mCur->isLive()) {
-        ++mCur;
-      }
-    }
+    Iterator mIter;
 
-    Entry* mCur;
-    Entry* mEnd;
-#ifdef DEBUG
-    const HashTable& mTable;
-    uint64_t mMutationCount;
-    Generation mGeneration;
-    bool mValidEntry;
-#endif
+  protected:
+    explicit Range(const HashTable& table)
+      : mIter(table)
+    {
+    }
 
   public:
-    bool empty() const
-    {
-#ifdef DEBUG
-      MOZ_ASSERT(mGeneration == mTable.generation());
-      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
-#endif
-      return mCur == mEnd;
-    }
+    bool empty() const { return mIter.done(); }
 
-    T& front() const
-    {
-      MOZ_ASSERT(!empty());
-#ifdef DEBUG
-      MOZ_ASSERT(mValidEntry);
-      MOZ_ASSERT(mGeneration == mTable.generation());
-      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
-#endif
-      return mCur->get();
-    }
+    T& front() const { return mIter.get(); }
 
-    void popFront()
-    {
-      MOZ_ASSERT(!empty());
-#ifdef DEBUG
-      MOZ_ASSERT(mGeneration == mTable.generation());
-      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
-#endif
-      while (++mCur < mEnd && !mCur->isLive()) {
-        continue;
-      }
-#ifdef DEBUG
-      mValidEntry = true;
-#endif
-    }
+    void popFront() { return mIter.next(); }
   };
 
   // Enum is similar to ModIterator, but uses different terminology.
-  class Enum : public Range
+  class Enum
   {
-    friend class HashTable;
-
-    HashTable& mTable;
-    bool mRekeyed;
-    bool mRemoved;
+    ModIterator mIter;
 
     // Enum is movable but not copyable.
     Enum(const Enum&) = delete;
@@ -1446,69 +1396,31 @@ public:
   public:
     template<class Map>
     explicit Enum(Map& map)
-      : Range(map.all())
-      , mTable(map.mImpl)
-      , mRekeyed(false)
-      , mRemoved(false)
+      : mIter(map.mImpl)
     {
     }
 
-    MOZ_IMPLICIT Enum(Enum&& aOther)
-      : Range(aOther)
-      , mTable(aOther.mTable)
-      , mRekeyed(aOther.mRekeyed)
-      , mRemoved(aOther.mRemoved)
+    MOZ_IMPLICIT Enum(Enum&& other)
+      : mIter(std::move(other.mIter))
     {
-      aOther.mRekeyed = false;
-      aOther.mRemoved = false;
     }
 
-    void removeFront()
-    {
-      mTable.remove(*this->mCur);
-      mRemoved = true;
-#ifdef DEBUG
-      this->mValidEntry = false;
-      this->mMutationCount = mTable.mMutationCount;
-#endif
-    }
+    bool empty() const { return mIter.done(); }
 
-    NonConstT& mutableFront()
-    {
-      MOZ_ASSERT(!this->empty());
-#ifdef DEBUG
-      MOZ_ASSERT(this->mValidEntry);
-      MOZ_ASSERT(this->mGeneration == this->Range::mTable.generation());
-      MOZ_ASSERT(this->mMutationCount == this->Range::mTable.mMutationCount);
-#endif
-      return this->mCur->getMutable();
-    }
+    T& front() const { return mIter.get(); }
+
+    void popFront() { return mIter.next(); }
+
+    void removeFront() { mIter.remove(); }
+
+    NonConstT& mutableFront() { return mIter.getMutable(); }
 
     void rekeyFront(const Lookup& aLookup, const Key& aKey)
     {
-      MOZ_ASSERT(&aKey != &HashPolicy::getKey(this->mCur->get()));
-      Ptr p(*this->mCur, mTable);
-      mTable.rekeyWithoutRehash(p, aLookup, aKey);
-      mRekeyed = true;
-#ifdef DEBUG
-      this->mValidEntry = false;
-      this->mMutationCount = mTable.mMutationCount;
-#endif
+      mIter.rekey(aLookup, aKey);
     }
 
-    void rekeyFront(const Key& aKey) { rekeyFront(aKey, aKey); }
-
-    ~Enum()
-    {
-      if (mRekeyed) {
-        mTable.mGen++;
-        mTable.checkOverRemoved();
-      }
-
-      if (mRemoved) {
-        mTable.compactIfUnderloaded();
-      }
-    }
+    void rekeyFront(const Key& aKey) { mIter.rekey(aKey); }
   };
 
   // HashTable is movable
@@ -2117,7 +2029,7 @@ public:
   Range all() const
   {
     MOZ_ASSERT(mTable);
-    return Range(*this, mTable, mTable + capacity());
+    return Range(*this);
   }
 
   bool empty() const
