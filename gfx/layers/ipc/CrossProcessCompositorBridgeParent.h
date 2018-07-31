@@ -41,7 +41,6 @@ public:
   mozilla::ipc::IPCResult RecvWillClose() override { return IPC_OK(); }
   mozilla::ipc::IPCResult RecvPause() override { return IPC_OK(); }
   mozilla::ipc::IPCResult RecvResume() override { return IPC_OK(); }
-  mozilla::ipc::IPCResult RecvForceIsFirstPaint() override { return IPC_OK(); }
   mozilla::ipc::IPCResult RecvNotifyChildCreated(const LayersId& child, CompositorOptions* aOptions) override;
   mozilla::ipc::IPCResult RecvMapAndNotifyChildCreated(const LayersId& child, const base::ProcessId& pid, CompositorOptions* aOptions) override;
   mozilla::ipc::IPCResult RecvNotifyChildRecreated(const LayersId& child, CompositorOptions* aOptions) override { return IPC_FAIL_NO_REASON(this); }

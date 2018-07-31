@@ -454,11 +454,10 @@ CompositorBridgeParent::~CompositorBridgeParent()
   }
 }
 
-mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvForceIsFirstPaint()
+void
+CompositorBridgeParent::ForceIsFirstPaint()
 {
   mCompositionManager->ForceIsFirstPaint();
-  return IPC_OK();
 }
 
 void
