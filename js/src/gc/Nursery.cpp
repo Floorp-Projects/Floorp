@@ -156,6 +156,11 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
     if (!freeMallocedBuffersTask || !freeMallocedBuffersTask->init())
         return false;
 
+    // The nursery is permanently disabled when recording or replaying. Nursery
+    // collections may occur at non-deterministic points in execution.
+    if (mozilla::recordreplay::IsRecordingOrReplaying())
+        maxNurseryBytes = 0;
+
     /* maxNurseryBytes parameter is rounded down to a multiple of chunk size. */
     chunkCountLimit_ = maxNurseryBytes >> ChunkShift;
 
