@@ -93,7 +93,7 @@ ClientPaintedLayer::UpdatePaintRegion(PaintState& aState)
 void
 ClientPaintedLayer::FinishPaintState(PaintState& aState)
 {
-  if (aState.mAsyncTask) {
+  if (aState.mAsyncTask && !aState.mAsyncTask->mCapture->IsEmpty()) {
     ClientManager()->SetQueuedAsyncPaints();
     PaintThread::Get()->QueuePaintTask(aState.mAsyncTask);
   }
