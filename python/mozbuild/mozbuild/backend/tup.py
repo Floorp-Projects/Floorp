@@ -291,6 +291,8 @@ class TupBackend(CommonBackend):
         args = [self.environment.substs['TUP'], 'upd'] + what
         if self.environment.substs.get('MOZ_AUTOMATION'):
             args += ['--quiet']
+        else:
+            args += ['--debug-logging']
         if verbose:
             args += ['--verbose']
         if jobs > 0:
@@ -671,7 +673,7 @@ class TupBackend(CommonBackend):
         # Run 'tup init' if necessary.
         if not os.path.exists(mozpath.join(self.environment.topsrcdir, ".tup")):
             tup = self.environment.substs.get('TUP', 'tup')
-            self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init'])
+            self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init', '--no-sync'])
 
 
     def _get_cargo_flags(self, obj):
