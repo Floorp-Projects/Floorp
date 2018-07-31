@@ -371,11 +371,7 @@ function runTests()
   SimpleTest.finish();
 }
 
-function runTestsWithPref() {
-  SpecialPowers.pushPrefEnv({ 'set': [['svg.marker-improvements.enabled', true]] }, runTests);
-}
-
-window.addEventListener("load", runTestsWithPref);
+window.addEventListener("load", runTests);
 </script>
 </pre>
 </body>
