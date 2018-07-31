@@ -18,7 +18,6 @@ var testServices = [
     ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged", "onDeleteURI"]
   ],
   ["browser/livemark-service;2", ["mozIAsyncLivemarks"], ["reloadLivemarks"]],
-  ["browser/annotation-service;1", ["nsIAnnotationService"], ["getObservers"]],
   ["browser/favicon-service;1", ["nsIFaviconService"], []],
   ["browser/tagging-service;1", ["nsITaggingService"], []],
 ];

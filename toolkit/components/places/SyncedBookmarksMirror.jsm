@@ -2704,8 +2704,7 @@ async function initializeTempMirrorEntities(db) {
     isUntagging BOOLEAN NOT NULL DEFAULT 0
   ) WITHOUT ROWID`);
 
-  // Stores properties to pass to `onItemAnnotation{Set, Removed}` anno
-  // observers.
+  // Stores properties to pass to `onItemChanged` bookmark observers.
   await db.execute(`CREATE TEMP TABLE annosChanged(
     itemId INTEGER NOT NULL,
     annoName TEXT NOT NULL,
@@ -4583,7 +4582,6 @@ class BookmarkObserverRecorder {
     this.db = db;
     this.maxFrecenciesToRecalculate = maxFrecenciesToRecalculate;
     this.bookmarkObserverNotifications = [];
-    this.annoObserverNotifications = [];
     this.shouldInvalidateKeywords = false;
   }
 
@@ -4597,7 +4595,6 @@ class BookmarkObserverRecorder {
       await PlacesUtils.keywords.invalidateCachedKeywords();
     }
     await this.notifyBookmarkObservers();
-    await this.notifyAnnoObservers();
     await PlacesUtils.livemarks.invalidateCachedLivemarks();
     await this.updateFrecencies();
   }
@@ -4686,18 +4683,6 @@ class BookmarkObserverRecorder {
         info.name != PlacesUtils.LMANNO_SITEURI) {
       throw new TypeError("Can't record change for unsupported anno");
     }
-    if (info.wasRemoved) {
-      this.annoObserverNotifications.push({
-        name: "onItemAnnotationRemoved",
-        args: [info.id, info.name, PlacesUtils.bookmarks.SOURCES.SYNC],
-      });
-    } else {
-      this.annoObserverNotifications.push({
-        name: "onItemAnnotationSet",
-        args: [info.id, info.name, PlacesUtils.bookmarks.SOURCES.SYNC,
-               /* dontUpdateLastModified */ true],
-      });
-    }
     this.bookmarkObserverNotifications.push({
       name: "onItemChanged",
       isTagging: false,
@@ -4720,17 +4705,6 @@ class BookmarkObserverRecorder {
         this.notifyObserver(observer, info.name, info.args);
       }
       this.notifyObserver(observer, "onEndUpdateBatch");
-    }
-  }
-
-  async notifyAnnoObservers() {
-    MirrorLog.trace("Notifying anno observers");
-    let observers = PlacesUtils.annotations.getObservers();
-    for (let observer of observers) {
-      let wrapped = yieldingIterator(this.annoObserverNotifications);
-      for await (let { name, args } of wrapped) {
-        this.notifyObserver(observer, name, args);
-      }
     }
   }
 
