@@ -90,7 +90,10 @@ add_task(async function testSources() {
         addEventListener("load", async () => {
           let link = document.getElementById("link");
           link.onclick = async event => {
+            link.onclick = null;
             event.preventDefault();
+
+            browser.test.log("Calling permission.request from options page.");
 
             try {
               let result = await browser.permissions.request({
@@ -107,12 +110,12 @@ add_task(async function testSources() {
           // we don't really have a reliable way to detect this from the
           // options page side, and synthetic click events won't work
           // until it is.
-          for (let i = 0; i < 10; i++) {
+          do {
+            browser.test.log("Waiting for the options browser to be visible...");
             await new Promise(resolve => setTimeout(resolve, 0));
-          }
-
-          synthesizeMouseAtCenter(link, {});
-        }, {once: true});
+            synthesizeMouseAtCenter(link, {});
+          } while (link.onclick !== null);
+        });
       },
     },
 
@@ -175,10 +178,10 @@ add_task(async function testSources() {
   EventUtils.synthesizeMouseAtCenter(items[0], {});
   await check("context menu in onClicked");
 
-  extension.sendMessage("openOptionsPage");
   promisePopupNotificationShown("addon-webext-permissions").then(panel => {
     panel.button.click();
   });
+  extension.sendMessage("openOptionsPage");
   await check("options page link click");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
