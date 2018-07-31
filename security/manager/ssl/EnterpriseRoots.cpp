@@ -12,6 +12,7 @@
 
 #ifdef XP_MACOSX
 #include <Security/Security.h>
+#include "KeychainSecret.h" // for ScopedCFType
 #endif // XP_MACOSX
 
 extern LazyLogModule gPIPNSSLog;
@@ -194,23 +195,6 @@ GatherEnterpriseRootsWindows(UniqueCERTCertList& roots)
 #endif // XP_WIN
 
 #ifdef XP_MACOSX
-template<typename T>
-class ScopedCFType
-{
-public:
-  explicit ScopedCFType(T value)
-  : mValue(value)
-  {
-  }
-
-  ~ScopedCFType() { CFRelease((CFTypeRef)mValue); }
-
-  T get() { return mValue; }
-
-private:
-  T mValue;
-};
-
 OSStatus
 GatherEnterpriseRootsOSX(UniqueCERTCertList& roots)
 {
