@@ -276,6 +276,7 @@ add_task(async function test_restricted_address_fields() {
 
 add_task(async function test_field_validation() {
   let form = new AddressForm();
+  form.dataset.fieldRequiredSymbol = "*";
   await form.promiseReady;
   display.appendChild(form);
   await asyncElementRendered();
@@ -300,7 +301,10 @@ add_task(async function test_field_validation() {
     let container = field.closest("label");
     ok(container.hasAttribute("required"), "Container should have required attribute");
     let span = container.querySelector("span");
-    is(getComputedStyle(span, "::after").content, "\"*\"", "Asterisk should be on " + field.id);
+    is(span.getAttribute("fieldRequiredSymbol"), "*",
+       "span should have asterisk as fieldRequiredSymbol");
+    is(getComputedStyle(span, "::after").content, "attr(fieldRequiredSymbol)",
+       "Asterisk should be on " + field.id);
   }
 
   countrySelect.selectedIndex = [...countrySelect.options].findIndex(o => o.value == "US");

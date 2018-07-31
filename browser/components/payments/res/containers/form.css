@@ -3,6 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :-moz-any(label, div)[required] > span:first-of-type::after {
-  /* The asterisk should be localized, bug 1472278 */
-  content: "*";
+  content: attr(fieldRequiredSymbol);
 }
