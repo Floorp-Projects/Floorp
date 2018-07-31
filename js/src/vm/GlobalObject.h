@@ -16,7 +16,6 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/ErrorObject.h"
 #include "vm/JSFunction.h"
-#include "vm/Realm.h"
 #include "vm/RegExpStatics.h"
 #include "vm/Runtime.h"
 
