@@ -2589,23 +2589,24 @@ window._gBrowser = {
   removeTabs(tabs) {
     let tabsWithBeforeUnload = [];
     let lastToClose;
-    let aParams = { animate: true };
+    let params = { animate: true };
     for (let tab of tabs) {
-      if (tab.selected)
+      if (tab.selected) {
         lastToClose = tab;
-      else if (this._hasBeforeUnload(tab))
+      } else if (this._hasBeforeUnload(tab)) {
         tabsWithBeforeUnload.push(tab);
-      else
-        this.removeTab(tab, aParams);
+      } else {
+        this.removeTab(tab, params);
+      }
     }
     for (let tab of tabsWithBeforeUnload) {
-      this.removeTab(tab, aParams);
+      this.removeTab(tab, params);
     }
 
     // Avoid changing the selected browser several times by removing it,
     // if appropriate, lastly.
     if (lastToClose) {
-      this.removeTab(lastToClose, aParams);
+      this.removeTab(lastToClose, params);
     }
   },
 
