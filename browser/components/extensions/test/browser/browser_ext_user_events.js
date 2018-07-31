@@ -175,10 +175,10 @@ add_task(async function testSources() {
   EventUtils.synthesizeMouseAtCenter(items[0], {});
   await check("context menu in onClicked");
 
-  extension.sendMessage("openOptionsPage");
   promisePopupNotificationShown("addon-webext-permissions").then(panel => {
     panel.button.click();
   });
+  extension.sendMessage("openOptionsPage");
   await check("options page link click");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
