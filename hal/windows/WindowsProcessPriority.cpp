@@ -5,7 +5,7 @@
 #include "Hal.h"
 #include "HalLog.h"
 
-#include <Windows.h>
+#include <windows.h>
 
 using namespace mozilla::hal;
 
