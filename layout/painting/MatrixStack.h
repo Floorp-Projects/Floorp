@@ -7,8 +7,11 @@
 #ifndef MOZILLA_PAINTING_MATRIXSTACK_H
 #define MOZILLA_PAINTING_MATRIXSTACK_H
 
+#include "nsISupports.h"
 #include "nsTArray.h"
 #include "mozilla/gfx/MatrixFwd.h"
+#include "mozilla/Maybe.h"
+#include "DisplayItemClip.h"
 
 namespace mozilla {
 
@@ -66,6 +69,62 @@ private:
 };
 
 typedef MatrixStack<gfx::Matrix4x4Flagged> MatrixStack4x4;
+
+
+/**
+ * TransformClipNode stores a transformation matrix and a post-transform
+ * clip rect.
+ * They can be used to transform and clip a display item inside a flattened
+ * nsDisplayTransform to the coordinate space of that nsDisplayTransform.
+ */
+class TransformClipNode {
+  NS_INLINE_DECL_REFCOUNTING(TransformClipNode);
+public:
+  TransformClipNode(const RefPtr<TransformClipNode>& aParent,
+                    const gfx::Matrix4x4Flagged& aTransform,
+                    const Maybe<nsRect>& aClip)
+  : mParent(aParent)
+  , mTransform(aTransform)
+  , mClip(aClip)
+  {
+    MOZ_COUNT_CTOR(TransformClipNode);
+  }
+
+  /*
+   * Returns the parent node, or nullptr if this is the root node.
+   */
+  const RefPtr<TransformClipNode>& Parent() const
+  {
+    return mParent;
+  }
+
+  /*
+   * Returns the post-transform clip, if there is one.
+   */
+  const Maybe<nsRect>& Clip() const
+  {
+    return mClip;
+  }
+
+  /*
+   * Returns the matrix that transforms the item bounds to the coordinate space
+   * of the flattened nsDisplayTransform.
+   */
+  const gfx::Matrix4x4Flagged& Transform() const
+  {
+    return mTransform;
+  }
+
+private:
+  ~TransformClipNode()
+  {
+    MOZ_COUNT_DTOR(TransformClipNode);
+  }
+
+  const RefPtr<TransformClipNode> mParent;
+  const gfx::Matrix4x4Flagged mTransform;
+  const Maybe<nsRect> mClip;
+};
 
 } // namespace mozilla
 
