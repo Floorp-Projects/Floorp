@@ -24,6 +24,8 @@ var _breakpoints = require("../breakpoints/index");
 
 var _prefs = require("../../utils/prefs");
 
+var _telemetry = require("../../utils/telemetry");
+
 /* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -117,6 +119,7 @@ function resume() {
     getState
   }) => {
     if ((0, _selectors.isPaused)(getState())) {
+      (0, _telemetry.recordEvent)("continue");
       return dispatch(command("resume"));
     }
   };

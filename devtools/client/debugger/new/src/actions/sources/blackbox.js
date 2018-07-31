@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.toggleBlackBox = toggleBlackBox;
 
+var _telemetry = require("../../utils/telemetry");
+
 var _promise = require("../utils/middleware/promise");
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26,6 +28,11 @@ function toggleBlackBox(source) {
       isBlackBoxed,
       id
     } = source;
+
+    if (!isBlackBoxed) {
+      (0, _telemetry.recordEvent)("blackbox");
+    }
+
     return dispatch({
       type: "BLACKBOX",
       source,

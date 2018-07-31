@@ -311,7 +311,7 @@ struct ExpectedEdge
     { }
 };
 
-namespace js {
+namespace mozilla {
 
 template <>
 struct DefaultHasher<ExpectedEdge>
@@ -327,7 +327,7 @@ struct DefaultHasher<ExpectedEdge>
     }
 };
 
-} // namespace js
+} // namespace mozilla
 
 BEGIN_TEST(test_ubiPostOrder)
 {

@@ -1763,7 +1763,7 @@ DecodeGlobalSection(Decoder& d, ModuleEnvironment* env)
     return d.finishSection(*range, "global");
 }
 
-typedef HashSet<const char*, CStringHasher, SystemAllocPolicy> CStringSet;
+typedef HashSet<const char*, mozilla::CStringHasher, SystemAllocPolicy> CStringSet;
 
 static UniqueChars
 DecodeExportName(Decoder& d, CStringSet* dupSet)

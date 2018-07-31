@@ -466,7 +466,7 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
                                            JS::DontFireOnNewGlobalHook, aOptions));
     if (!global)
         return nullptr;
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
 
     // The constructor automatically attaches the scope to the compartment private
     // of |global|.
@@ -531,7 +531,7 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
 {
     // Immediately enter the global's realm so that everything we create
     // ends up there.
-    JSAutoRealmAllowCCW ar(aJSContext, aGlobal);
+    JSAutoRealm ar(aJSContext, aGlobal);
 
     // Stuff coming through this path always ends up as a DOM global.
     MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL);

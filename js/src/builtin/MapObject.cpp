@@ -1719,7 +1719,7 @@ CallObjFunc(RetT(*ObjFunc)(JSContext*, HandleObject), JSContext* cx, HandleObjec
 
     // Enter the realm of the backing object before calling functions on
     // it.
-    JSAutoRealmAllowCCW ar(cx, unwrappedObj);
+    JSAutoRealm ar(cx, unwrappedObj);
     return ObjFunc(cx, unwrappedObj);
 }
 
@@ -1734,7 +1734,7 @@ CallObjFunc(bool(*ObjFunc)(JSContext *cx, HandleObject obj, HandleValue key, boo
     // Always unwrap, in case this is an xray or cross-compartment wrapper.
     RootedObject unwrappedObj(cx);
     unwrappedObj = UncheckedUnwrap(obj);
-    JSAutoRealmAllowCCW ar(cx, unwrappedObj);
+    JSAutoRealm ar(cx, unwrappedObj);
 
     // If we're working with a wrapped map/set, rewrap the key into the
     // compartment of the unwrapped map/set.
@@ -1762,7 +1762,7 @@ CallObjFunc(bool(*ObjFunc)(JSContext* cx, Iter kind,
     {
         // Retrieve the iterator while in the unwrapped map/set's compartment,
         // otherwise we'll crash on a compartment assert.
-        JSAutoRealmAllowCCW ar(cx, unwrappedObj);
+        JSAutoRealm ar(cx, unwrappedObj);
         if (!ObjFunc(cx, iterType, unwrappedObj, rval))
             return false;
     }
@@ -1801,7 +1801,7 @@ JS::MapGet(JSContext* cx, HandleObject obj, HandleValue key, MutableHandleValue 
     RootedObject unwrappedObj(cx);
     unwrappedObj = UncheckedUnwrap(obj);
     {
-        JSAutoRealmAllowCCW ar(cx, unwrappedObj);
+        JSAutoRealm ar(cx, unwrappedObj);
         RootedValue wrappedKey(cx, key);
 
         // If we passed in a wrapper, wrap our key into its compartment now.
@@ -1832,7 +1832,7 @@ JS::MapSet(JSContext *cx, HandleObject obj, HandleValue key, HandleValue val)
     RootedObject unwrappedObj(cx);
     unwrappedObj = UncheckedUnwrap(obj);
     {
-        JSAutoRealmAllowCCW ar(cx, unwrappedObj);
+        JSAutoRealm ar(cx, unwrappedObj);
 
         // If we passed in a wrapper, wrap both key and value before adding to
         // the map
@@ -1913,7 +1913,7 @@ JS::SetAdd(JSContext *cx, HandleObject obj, HandleValue key)
     RootedObject unwrappedObj(cx);
     unwrappedObj = UncheckedUnwrap(obj);
     {
-        JSAutoRealmAllowCCW ar(cx, unwrappedObj);
+        JSAutoRealm ar(cx, unwrappedObj);
 
         // If we passed in a wrapper, wrap key before adding to the set
         RootedValue wrappedKey(cx, key);

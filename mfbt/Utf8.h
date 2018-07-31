@@ -198,6 +198,40 @@ public:
   // that other code.
 };
 
+/**
+ * Reinterpret the address of a UTF-8 code unit as |const unsigned char*|.
+ *
+ * Assuming proper backing has been set up, the resulting |const unsigned char*|
+ * may validly be dereferenced.
+ *
+ * No access is provided to mutate this underlying memory as |unsigned char|.
+ * Presently memory inside |Utf8Unit| is *only* stored as |char|, and we are
+ * loath to offer a way to write non-|char| data until absolutely necessary.
+ */
+inline const unsigned char*
+Utf8AsUnsignedChars(const Utf8Unit* aUnits)
+{
+  static_assert(sizeof(Utf8Unit) == sizeof(unsigned char),
+                "sizes must match to permissibly reinterpret_cast<>");
+  static_assert(alignof(Utf8Unit) == alignof(unsigned char),
+                "alignment must match to permissibly reinterpret_cast<>");
+
+  // The static_asserts above only enable the reinterpret_cast<> to occur.
+  //
+  // Dereferencing the resulting pointer is a separate question.  Any object's
+  // memory may be interpreted as |unsigned char| per C++11 [basic.lval]p10, but
+  // this doesn't guarantee what values will be observed.  If |char| is
+  // implemented to act like |unsigned char|, we're good to go: memory for the
+  // |char| in |Utf8Unit| acts as we need.  But if |char| is implemented to act
+  // like |signed char|, dereferencing produces the right value only if the
+  // |char| types all use two's-complement representation.  Every modern
+  // compiler does this, and there's a C++ proposal to standardize it.
+  // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0907r0.html   So
+  // *technically* this is implementation-defined -- but everyone does it and
+  // this behavior is being standardized.
+  return reinterpret_cast<const unsigned char*>(aUnits);
+}
+
 /** Returns true iff |aUnit| is an ASCII value. */
 inline bool
 IsAscii(Utf8Unit aUnit)
