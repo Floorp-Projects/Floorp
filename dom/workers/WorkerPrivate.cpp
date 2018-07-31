@@ -405,7 +405,7 @@ private:
     // that point yet.  So we need to enter the realm of our global,
     // because setting a pending exception on aCx involves wrapping into its
     // current compartment.  Luckily we have a global now.
-    JSAutoRealmAllowCCW ar(aCx, globalScope->GetGlobalJSObject());
+    JSAutoRealm ar(aCx, globalScope->GetGlobalJSObject());
     if (rv.MaybeSetPendingException(aCx)) {
       return false;
     }
@@ -3178,8 +3178,6 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
   InitializeGCTimers();
 
-  Maybe<JSAutoRealmAllowCCW> workerCompartment;
-
   for (;;) {
     WorkerStatus currentStatus;
     bool debuggerRunnablesPending = false;
@@ -3291,7 +3289,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
         MOZ_ASSERT(globalScope);
 
         // Now *might* be a good time to GC. Let the JS engine make the decision.
-        JSAutoRealmAllowCCW ar(aCx, globalScope->GetGlobalJSObject());
+        JSAutoRealm ar(aCx, globalScope->GetGlobalJSObject());
         JS_MaybeGC(aCx);
       }
     } else if (normalRunnablesPending) {
@@ -3301,7 +3299,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       normalRunnablesPending = NS_HasPendingEvents(mThread);
       if (normalRunnablesPending && GlobalScope()) {
         // Now *might* be a good time to GC. Let the JS engine make the decision.
-        JSAutoRealmAllowCCW ar(aCx, GlobalScope()->GetGlobalJSObject());
+        JSAutoRealm ar(aCx, GlobalScope()->GetGlobalJSObject());
         JS_MaybeGC(aCx);
       }
     }
@@ -5297,7 +5295,7 @@ WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
     JS::Rooted<JSObject*> global(aCx);
     NS_ENSURE_TRUE(globalScope->WrapGlobalObject(aCx, &global), nullptr);
 
-    JSAutoRealmAllowCCW ar(aCx, global);
+    JSAutoRealm ar(aCx, global);
 
     // RegisterBindings() can spin a nested event loop so we have to set mScope
     // before calling it, and we have to make sure to unset mScope if it fails.
@@ -5327,7 +5325,7 @@ WorkerPrivate::CreateDebuggerGlobalScope(JSContext* aCx)
   JS::Rooted<JSObject*> global(aCx);
   NS_ENSURE_TRUE(globalScope->WrapGlobalObject(aCx, &global), nullptr);
 
-  JSAutoRealmAllowCCW ar(aCx, global);
+  JSAutoRealm ar(aCx, global);
 
   // RegisterDebuggerBindings() can spin a nested event loop so we have to set
   // mDebuggerScope before calling it, and we have to make sure to unset
