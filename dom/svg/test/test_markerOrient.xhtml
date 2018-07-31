@@ -88,11 +88,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=892372
     SimpleTest.finish();
   }
 
-  function runTestsWithPref() {
-    SpecialPowers.pushPrefEnv({ 'set': [['svg.marker-improvements.enabled', true]] }, run);
-  }
-
-  window.addEventListener("load", runTestsWithPref);
+  window.addEventListener("load", run);
 
   ]]>
 </script>

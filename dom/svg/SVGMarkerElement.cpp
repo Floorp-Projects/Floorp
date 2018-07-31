@@ -14,7 +14,6 @@
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/FloatingPoint.h"
 #include "SVGContentUtils.h"
@@ -69,11 +68,6 @@ nsresult
 nsSVGOrientType::SetBaseValue(uint16_t aValue,
                               nsSVGElement *aSVGElement)
 {
-  if (aValue == SVG_MARKER_ORIENT_AUTO_START_REVERSE &&
-      !SVGMarkerElement::MarkerImprovementsPrefEnabled()) {
-    return NS_ERROR_DOM_TYPE_ERR;
-  }
-
   if (aValue == SVG_MARKER_ORIENT_AUTO ||
       aValue == SVG_MARKER_ORIENT_ANGLE ||
       aValue == SVG_MARKER_ORIENT_AUTO_START_REVERSE) {
@@ -226,8 +220,7 @@ SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
                                             this, false);
       return true;
     }
-    if (aValue.EqualsLiteral("auto-start-reverse") &&
-        MarkerImprovementsPrefEnabled()) {
+    if (aValue.EqualsLiteral("auto-start-reverse")) {
       mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO_START_REVERSE);
       aResult.SetTo(aValue);
       mAngleAttributes[ORIENT].SetBaseValue(0.f, SVG_ANGLETYPE_UNSPECIFIED,
@@ -384,12 +377,6 @@ SVGMarkerElement::GetViewBoxTransform()
   }
 
   return *mViewBoxToViewportTransform;
-}
-
-/* static */ bool
-SVGMarkerElement::MarkerImprovementsPrefEnabled()
-{
-  return Preferences::GetBool("svg.marker-improvements.enabled", false);
 }
 
 } // namespace dom
