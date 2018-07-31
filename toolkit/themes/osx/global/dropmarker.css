@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 dropmarker {
-  -moz-appearance: -moz-menulist-button;
+  -moz-appearance: menulist-button;
   width: 16px;
   -moz-box-align: center;
   -moz-box-pack: center;
