@@ -575,7 +575,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     std::vector<Rel_Type> new_rels;
     Elf_RelHack relhack_entry;
     relhack_entry.r_offset = relhack_entry.r_info = 0;
-    size_t init_array_reloc = 0;
+    std::vector<Rel_Type> init_array_relocs;
+    size_t init_array_insert = 0;
     for (typename std::vector<Rel_Type>::iterator i = section->rels.begin();
          i != section->rels.end(); ++i) {
         // We don't need to keep R_*_NONE relocations
@@ -612,14 +613,11 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
                 }
             }
         }
-        // Keep track of the relocation associated with the first init_array entry.
-        if (init_array && i->r_offset == init_array->getAddr()) {
-            if (init_array_reloc) {
-                fprintf(stderr, "Found multiple relocations for the first init_array entry. Skipping\n");
-                return -1;
-            }
-            new_rels.push_back(*i);
-            init_array_reloc = new_rels.size();
+        // Keep track of the relocations associated with the init_array section.
+        if (init_array && i->r_offset >= init_array->getAddr() &&
+            i->r_offset < init_array->getAddr() + init_array->getSize()) {
+            init_array_relocs.push_back(*i);
+            init_array_insert = new_rels.size();
         } else if (!(loc.getSection()->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type)) {
             // Don't pack relocations happening in non writable sections.
             // Our injected code is likely not to be allowed to write there.
@@ -656,49 +654,75 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
 
-    if (init_array && !init_array_reloc) {
+    if (init_array) {
         // Some linkers create a DT_INIT_ARRAY section that, for all purposes,
         // is empty: it only contains 0x0 or 0xffffffff pointers with no relocations.
+        // In some other cases, there can be null pointers with no relocations in
+        // the middle of the section. Example: crtend_so.o in the Android NDK contains
+        // a sized .init_array with a null pointer and no relocation, which ends up
+        // in all Android libraries, and in some cases it ends up in the middle of
+        // the final .init_array section.
+        // If we have such a reusable slot at the beginning of .init_array, we just
+        // use it. It we have one in the middle of .init_array, we slide its content
+        // to move the "hole" at the beginning and use it there (we need our injected
+        // code to run before any other).
+        // Otherwise, replace the first entry and keep the original pointer.
+        std::sort(init_array_relocs.begin(), init_array_relocs.end(),
+                  [](Rel_Type& a, Rel_Type& b) { return a.r_offset < b.r_offset; });
+        size_t expected = init_array->getAddr();
         const size_t zero = 0;
         const size_t all = SIZE_MAX;
         const char *data = init_array->getData();
         size_t length = Elf_Addr::size(elf->getClass());
-        bool empty = true;
-        for (size_t off = 0; off < init_array->getSize(); off += length) {
-            if (memcmp(data + off, &zero, length) &&
-                memcmp(data + off, &all, length)) {
-                empty = false;
+	size_t off = 0;
+	for (; off < init_array_relocs.size(); off++) {
+            auto& r = init_array_relocs[off];
+            if (r.r_offset >= expected + length &&
+                (memcmp(data + off * length, &zero, length) == 0 ||
+                 memcmp(data + off * length, &all, length) == 0)) {
+                // We found a hole, move the preceding entries.
+                while (off) {
+                    auto& p = init_array_relocs[--off];
+                    if (ELF32_R_TYPE(p.r_info) == rel_type) {
+                        unsigned int addend = get_addend(&p, elf);
+                        p.r_offset += length;
+                        set_relative_reloc(&p, elf, addend);
+                    } else {
+                        fprintf(stderr, "Unsupported relocation type in DT_INIT_ARRAY. Skipping\n");
+                        return -1;
+                    }
+                }
                 break;
             }
+            expected = r.r_offset + length;
         }
-	// If we encounter such an empty DT_INIT_ARRAY section, we add a
-	// relocation for its first entry to point to our init. Code further
-	// below will take care of actually setting the right r_info and
-	// r_addend for the relocation, as if we had a normal DT_INIT_ARRAY
-	// section.
-        if (empty) {
-            new_rels.emplace_back();
-            init_array_reloc = new_rels.size();
-            Rel_Type *rel = &new_rels[init_array_reloc - 1];
-            rel->r_offset = init_array->getAddr();
+
+        if (off == 0) {
+            // We either found a hole above, and can now use the first entry,
+            // or the init_array section is effectively empty (see further above)
+            // and we also can use the first entry.
+            // Either way, code further below will take care of actually setting
+            // the right r_info and r_added for the relocation.
+            Rel_Type rel;
+            rel.r_offset = init_array->getAddr();
+            init_array_relocs.insert(init_array_relocs.begin(), rel);
         } else {
-            fprintf(stderr, "Didn't find relocation for DT_INIT_ARRAY's first entry. Skipping\n");
-            return -1;
+            // Use relocated value of DT_INIT_ARRAY's first entry for the
+            // function to be called by the injected code.
+            auto& rel = init_array_relocs[0];
+            unsigned int addend = get_addend(&rel, elf);
+            if (ELF32_R_TYPE(rel.r_info) == rel_type) {
+                original_init = addend;
+            } else if (ELF32_R_TYPE(rel.r_info) == rel_type2) {
+                ElfSymtab_Section *symtab = (ElfSymtab_Section *)section->getLink();
+                original_init = symtab->syms[ELF32_R_SYM(rel.r_info)].value.getValue() + addend;
+            } else {
+                fprintf(stderr, "Unsupported relocation type for DT_INIT_ARRAY's first entry. Skipping\n");
+                return -1;
+            }
         }
-    } else if (init_array) {
-        Rel_Type *rel = &new_rels[init_array_reloc - 1];
-        unsigned int addend = get_addend(rel, elf);
-        // Use relocated value of DT_INIT_ARRAY's first entry for the
-        // function to be called by the injected code.
-        if (ELF32_R_TYPE(rel->r_info) == rel_type) {
-            original_init = addend;
-        } else if (ELF32_R_TYPE(rel->r_info) == rel_type2) {
-            ElfSymtab_Section *symtab = (ElfSymtab_Section *)section->getLink();
-            original_init = symtab->syms[ELF32_R_SYM(rel->r_info)].value.getValue() + addend;
-        } else {
-            fprintf(stderr, "Unsupported relocation type for DT_INIT_ARRAY's first entry. Skipping\n");
-            return -1;
-        }
+
+        new_rels.insert(std::next(new_rels.begin(), init_array_insert), init_array_relocs.begin(), init_array_relocs.end());
     }
 
     unsigned int mprotect_cb = 0;
@@ -826,9 +850,9 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         // Adjust the first DT_INIT_ARRAY entry to point at the injected code
         // by transforming its relocation into a relative one pointing to the
         // address of the injected code.
-        Rel_Type *rel = &section->rels[init_array_reloc - 1];
+        Rel_Type *rel = &section->rels[init_array_insert];
         rel->r_info = ELF32_R_INFO(0, rel_type); // Set as a relative relocation
-        set_relative_reloc(&section->rels[init_array_reloc - 1], elf, init->getValue());
+        set_relative_reloc(rel, elf, init->getValue());
     } else if (!dyn->setValueForType(DT_INIT, init)) {
         fprintf(stderr, "Can't grow .dynamic section to set DT_INIT. Skipping\n");
         return -1;
