@@ -48,29 +48,20 @@ add_task(async function testSources() {
       browser.pageAction.onClicked.addListener(() => request("bookmarks"));
       browser.browserAction.onClicked.addListener(() => request("tabs"));
 
+      browser.contextMenus.create({
+        id: "menu",
+        title: "test user events",
+        contexts: ["page"],
+      });
+      browser.contextMenus.onClicked.addListener(() => request("webNavigation"));
+
       browser.test.onMessage.addListener(msg => {
-        if (msg === "contextMenus.update") {
-          browser.contextMenus.onClicked.addListener(() => request("webNavigation"));
-          browser.contextMenus.update("menu", {
-            title: "test user events in onClicked",
-            onclick: null,
-          }, () => browser.test.sendMessage("contextMenus.update-done"));
-        }
         if (msg === "openOptionsPage") {
           browser.runtime.openOptionsPage();
         }
       });
 
-      browser.contextMenus.create({
-        id: "menu",
-        title: "test user events in onclick",
-        contexts: ["page"],
-        onclick() {
-          request("cookies");
-        },
-      }, () => {
-        browser.test.sendMessage("actions-ready");
-      });
+      browser.test.sendMessage("actions-ready");
     },
 
     files: {
@@ -120,7 +111,7 @@ add_task(async function testSources() {
       browser_action: {default_title: "test"},
       page_action: {default_title: "test"},
       permissions: ["contextMenus"],
-      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest", "cookies"],
+      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest"],
       options_ui: {page: "options.html"},
       content_security_policy: "script-src 'self' https://example.com; object-src 'none';",
     },
@@ -162,18 +153,10 @@ add_task(async function testSources() {
   gBrowser.selectedTab = tab;
 
   let menu = await openContextMenu("body");
-  let items = menu.getElementsByAttribute("label", "test user events in onclick");
+  let items = menu.getElementsByAttribute("label", "test user events");
   is(items.length, 1, "Found context menu item");
   EventUtils.synthesizeMouseAtCenter(items[0], {});
-  await check("context menu in onclick");
-
-  extension.sendMessage("contextMenus.update");
-  await extension.awaitMessage("contextMenus.update-done");
-  menu = await openContextMenu("body");
-  items = menu.getElementsByAttribute("label", "test user events in onClicked");
-  is(items.length, 1, "Found context menu item again");
-  EventUtils.synthesizeMouseAtCenter(items[0], {});
-  await check("context menu in onClicked");
+  await check("context menu click");
 
   extension.sendMessage("openOptionsPage");
   promisePopupNotificationShown("addon-webext-permissions").then(panel => {
