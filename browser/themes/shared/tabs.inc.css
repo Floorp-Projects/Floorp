@@ -800,6 +800,10 @@
   box-shadow: inset 4px 0 var(--blue-40);
 }
 
+.all-tabs-item[selected]:-moz-locale-dir(rtl) {
+  box-shadow: inset -4px 0 var(--blue-40);
+}
+
 .all-tabs-secondary-button > label {
   display: none;
   margin: 0 5.5px;
