@@ -270,13 +270,13 @@ struct JS_PUBLIC_API(ShortestPaths)
     }
 
     /**
-     * Get a range that iterates over each target node we searched for retaining
-     * paths for. The returned range must not outlive the `ShortestPaths`
+     * Get an iterator over each target node we searched for retaining paths
+     * for. The returned iterator must not outlive the `ShortestPaths`
      * instance.
      */
-    NodeSet::Range eachTarget() const {
+    NodeSet::Iterator targetIter() const {
         MOZ_ASSERT(initialized());
-        return targets_.all();
+        return targets_.iter();
     }
 
     /**

@@ -462,8 +462,8 @@ HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
   // Check the set of node ids referred to by edges we found and ensure that we
   // have the node corresponding to each id. If we don't have all of them, it is
   // unsafe to perform analyses of this heap snapshot.
-  for (auto range = edgeReferents.all(); !range.empty(); range.popFront()) {
-    if (NS_WARN_IF(!nodes.has(range.front())))
+  for (auto iter = edgeReferents.iter(); !iter.done(); iter.next()) {
+    if (NS_WARN_IF(!nodes.has(iter.get())))
       return false;
   }
 
@@ -653,11 +653,11 @@ HeapSnapshot::ComputeShortestPaths(JSContext*cx, uint64_t start,
     return;
   }
 
-  for (auto range = shortestPaths.eachTarget(); !range.empty(); range.popFront()) {
-    JS::RootedValue key(cx, JS::NumberValue(range.front().identifier()));
+  for (auto iter = shortestPaths.targetIter(); !iter.done(); iter.next()) {
+    JS::RootedValue key(cx, JS::NumberValue(iter.get().identifier()));
     JS::AutoValueVector paths(cx);
 
-    bool ok = shortestPaths.forEachPath(range.front(), [&](JS::ubi::Path& path) {
+    bool ok = shortestPaths.forEachPath(iter.get(), [&](JS::ubi::Path& path) {
       JS::AutoValueVector pathValues(cx);
 
       for (JS::ubi::BackEdge* edge : path) {
