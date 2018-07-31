@@ -273,6 +273,10 @@ partial interface Window {
 
   [Throws] attribute boolean fullScreen;
 
+  [Throws, ChromeOnly] void back();
+  [Throws, ChromeOnly] void forward();
+  [Throws, ChromeOnly, NeedsSubjectPrincipal] void home();
+
   // XXX Should this be in nsIDOMChromeWindow?
   void                      updateCommands(DOMString action,
                                            optional Selection? sel = null,
