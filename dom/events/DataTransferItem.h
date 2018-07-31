@@ -103,6 +103,7 @@ public:
   }
 
   already_AddRefed<nsIVariant> DataNoSecurityCheck();
+  // Data may return null if the clipboard state has changed since the type was detected.
   already_AddRefed<nsIVariant> Data(nsIPrincipal* aPrincipal, ErrorResult& aRv);
 
   // Note: This can modify the mKind.  Callers of this method must let the

@@ -23,37 +23,12 @@ const ERRORS = {
 async function installAddon(file) {
   let install = await AddonManager.getInstallForFile(file);
 
-  return new Promise(resolve => {
-    if (install.error) {
-      throw new UnknownError(ERRORS[install.error]);
-    }
+  if (install.error) {
+    throw new UnknownError(ERRORS[install.error]);
+  }
 
-    let addonId = install.addon.id;
-
-    let success = install => {
-      if (install.addon.id === addonId) {
-        install.removeListener(listener);
-        resolve(install.addon);
-      }
-    };
-
-    let fail = install => {
-      if (install.addon.id === addonId) {
-        install.removeListener(listener);
-        throw new UnknownError(ERRORS[install.error]);
-      }
-    };
-
-    let listener = {
-      onDownloadCancelled: fail,
-      onDownloadFailed: fail,
-      onInstallCancelled: fail,
-      onInstallFailed: fail,
-      onInstallEnded: success,
-    };
-
-    install.addListener(listener);
-    install.install();
+  return install.install().catch(err => {
+    throw new UnknownError(ERRORS[install.error]);
   });
 }
 

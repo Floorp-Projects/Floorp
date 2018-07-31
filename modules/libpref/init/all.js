@@ -5853,3 +5853,9 @@ pref("browser.fastblock.enabled", false);
 // The timeout (ms) since navigation start, all tracker connections been made
 // after this timeout will be canceled.
 pref("browser.fastblock.timeout", 5000);
+
+// Disables clipboard reads and writes by default.
+pref("dom.events.asyncClipboard", false);
+pref("dom.events.asyncClipboard.dataTransfer", false);
+// Should only be enabled in tests
+pref("dom.events.testing.asyncClipboard", false);

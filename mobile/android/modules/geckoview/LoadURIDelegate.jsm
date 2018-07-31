@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-var LoadURIDelegate = {
+const LoadURIDelegate = {
   // Delegate URI loading to the app.
   // Return whether the loading has been handled.
   load: function(aWindow, aEventDispatcher, aUri, aWhere, aFlags) {
@@ -29,6 +29,37 @@ var LoadURIDelegate = {
 
     let handled = undefined;
     aEventDispatcher.sendRequestForResult(message).then(response => {
+      handled = response;
+    }, () => {
+      // There was an error or listener was not registered in GeckoSession,
+      // treat as unhandled.
+      handled = false;
+    });
+    Services.tm.spinEventLoopUntil(() =>
+        aWindow.closed || handled !== undefined);
+
+    return handled || false;
+  },
+
+  handleLoadError: function(aWindow, aEventDispatcher, aUri, aError,
+                            aErrorModule) {
+    let errorClass = 0;
+    try {
+      let nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
+                             .getService(Ci.nsINSSErrorsService);
+      errorClass = nssErrorsService.getErrorClass(aError);
+    } catch (e) {}
+
+    const msg = {
+      type: "GeckoView:OnLoadError",
+      uri: aUri.spec,
+      error: aError,
+      errorModule: aErrorModule,
+      errorClass
+    };
+
+    let handled = undefined;
+    aEventDispatcher.sendRequestForResult(msg).then(response => {
       handled = response;
     }, () => {
       // There was an error or listener was not registered in GeckoSession,

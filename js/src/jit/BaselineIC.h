@@ -1506,6 +1506,55 @@ class ICUnaryArith_Fallback : public ICFallbackStub
     };
 };
 
+// BinaryArith
+//      JSOP_ADD, JSOP_SUB, JSOP_MUL, JOP_DIV, JSOP_MOD
+//      JSOP_BITAND, JSOP_BITXOR, JSOP_BITOR
+//      JSOP_LSH, JSOP_RSH, JSOP_URSH
+
+class ICBinaryArith_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    explicit ICBinaryArith_Fallback(JitCode* stubCode)
+      : ICFallbackStub(BinaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
+
+    static const uint16_t SAW_DOUBLE_RESULT_BIT = 0x1;
+    static const uint16_t UNOPTIMIZABLE_OPERANDS_BIT = 0x2;
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    bool sawDoubleResult() const {
+        return extra_ & SAW_DOUBLE_RESULT_BIT;
+    }
+    void setSawDoubleResult() {
+        extra_ |= SAW_DOUBLE_RESULT_BIT;
+    }
+    bool hadUnoptimizableOperands() const {
+        return extra_ & UNOPTIMIZABLE_OPERANDS_BIT;
+    }
+    void noteUnoptimizableOperands() {
+        extra_ |= UNOPTIMIZABLE_OPERANDS_BIT;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback, engine) {}
+
+        ICStub* getStub(ICStubSpace* space) override {
+            return newStub<ICBinaryArith_Fallback>(space, getStubCode());
+        }
+    };
+};
+
 inline bool
 IsCacheableDOMProxy(JSObject* obj)
 {

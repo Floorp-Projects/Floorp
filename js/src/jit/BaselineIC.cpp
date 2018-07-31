@@ -4861,40 +4861,103 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 // BinaryArith_Fallback
 //
-// This currently is fused with the SharedIC DoBinaryArithFallback, however,
-// as we deprecate the SharedIC, this will be able to eventually take over.
-//
-// At that point the stub argument will go away, and instead be generated here.
-bool
-DoCacheIRBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub_,
-                             HandleValue lhs, HandleValue rhs, MutableHandleValue ret,
-                             DebugModeOSRVolatileStub<ICBinaryArith_Fallback*>& stub)
+
+static bool
+DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub_,
+                      HandleValue lhs, HandleValue rhs, MutableHandleValue ret)
 {
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICBinaryArith_Fallback*> stub(ICStubEngine::Baseline, frame, stub_);
+
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-
-    // Ensure we're only generating for an enabled opcode.
-    switch(op) {
-      case JSOP_ADD:
-      case JSOP_SUB:
-      case JSOP_BITOR:
-      case JSOP_BITXOR:
-      case JSOP_BITAND:
-      case JSOP_MUL:
-      case JSOP_DIV:
-      case JSOP_MOD:
-      case JSOP_URSH:
-      case JSOP_RSH:
-      case JSOP_LSH:
-        break;
-      default:
-        return false; // Fallback to shared IC.
-    }
-
     FallbackICSpew(cx, stub, "CacheIRBinaryArith(%s,%d,%d)", CodeName[op],
             int(lhs.isDouble() ? JSVAL_TYPE_DOUBLE : lhs.extractNonDoubleType()),
             int(rhs.isDouble() ? JSVAL_TYPE_DOUBLE : rhs.extractNonDoubleType()));
+
+    // Don't pass lhs/rhs directly, we need the original values when
+    // generating stubs.
+    RootedValue lhsCopy(cx, lhs);
+    RootedValue rhsCopy(cx, rhs);
+
+    // Perform the compare operation.
+    switch(op) {
+      case JSOP_ADD:
+        // Do an add.
+        if (!AddValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_SUB:
+        if (!SubValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_MUL:
+        if (!MulValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_DIV:
+        if (!DivValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_MOD:
+        if (!ModValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_POW:
+        if (!PowValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_BITOR: {
+        int32_t result;
+        if (!BitOr(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITXOR: {
+        int32_t result;
+        if (!BitXor(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITAND: {
+        int32_t result;
+        if (!BitAnd(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_LSH: {
+        int32_t result;
+        if (!BitLsh(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_RSH: {
+        int32_t result;
+        if (!BitRsh(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_URSH: {
+        if (!UrshOperation(cx, lhs, rhs, ret))
+            return false;
+        break;
+      }
+      default:
+        MOZ_CRASH("Unhandled baseline arith op");
+    }
+
+    // Check if debug mode toggling made the stub invalid.
+    if (stub.invalid())
+        return true;
+
+    if (ret.isDouble())
+        stub->setSawDoubleResult();
 
     // Check if debug mode toggling made the stub invalid.
     if (stub.invalid())
@@ -4916,11 +4979,39 @@ DoCacheIRBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_
                                                         ICStubEngine::Baseline, script, stub, &attached);
             if (newStub)
                 JitSpew(JitSpew_BaselineIC, "  Attached BinaryArith CacheIR stub for %s", CodeName[op]);
+
         } else {
-            return false; // Fallback to shared IC.
+            stub->noteUnoptimizableOperands();
         }
     }
     return true;
+}
+
+typedef bool (*DoBinaryArithFallbackFn)(JSContext*, BaselineFrame*, ICBinaryArith_Fallback*,
+                                        HandleValue, HandleValue, MutableHandleValue);
+static const VMFunction DoBinaryArithFallbackInfo =
+    FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback, "DoBinaryArithFallback",
+                                          TailCall, PopValues(2));
+
+bool
+ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    MOZ_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(ICStubReg);
+    pushStubPayload(masm, R0.scratchReg());
+
+    return tailCallVM(DoBinaryArithFallbackInfo, masm);
 }
 
 

@@ -13,7 +13,7 @@ from six import binary_type, text_type
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 from . import routes as default_routes
-from .config import Config
+from .config import ConfigBuilder
 from .logger import get_logger
 from .request import Server, Request
 from .response import Response
@@ -169,8 +169,11 @@ class WebTestServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
             Server.config = config
         else:
             self.logger.debug("Using default configuration")
-            Server.config = Config(browser_host=server_address[0],
-                                   ports={"http": [self.server_address[1]]})
+            with ConfigBuilder(browser_host=server_address[0],
+                               ports={"http": [self.server_address[1]]}) as config:
+                assert config["ssl_config"] is None
+                Server.config = config
+
 
 
         self.key_file = key_file

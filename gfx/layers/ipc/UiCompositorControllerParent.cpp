@@ -75,7 +75,7 @@ UiCompositorControllerParent::RecvResumeAndResize(const int32_t& aWidth,
   CompositorBridgeParent* parent = CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(mRootLayerTreeId);
   if (parent) {
     // Front-end expects a first paint callback upon resume/resize.
-    parent->RecvForceIsFirstPaint();
+    parent->ForceIsFirstPaint();
     parent->ResumeCompositionAndResize(aWidth, aHeight);
   }
   return IPC_OK();

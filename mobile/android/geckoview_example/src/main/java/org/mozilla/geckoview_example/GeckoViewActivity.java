@@ -589,6 +589,13 @@ public class GeckoViewActivity extends AppCompatActivity {
 
             return GeckoResult.fromValue(newSession);
         }
+
+        public void onLoadError(final GeckoSession session, final String uri,
+                                final int category, final int error) {
+            Log.d(LOGTAG, "onLoadError=" + uri +
+                  " error category=" + category +
+                  " error=" + error);
+        }
     }
 
     private class ExampleTrackingProtectionDelegate implements GeckoSession.TrackingProtectionDelegate {

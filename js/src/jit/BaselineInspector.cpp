@@ -405,18 +405,6 @@ BaselineInspector::expectedResultType(jsbytecode* pc)
         return MIRType::None;
 
     switch (stub->kind()) {
-      case ICStub::BinaryArith_Int32:
-        if (stub->toBinaryArith_Int32()->allowDouble())
-            return MIRType::Double;
-        return MIRType::Int32;
-      case ICStub::BinaryArith_BooleanWithInt32:
-      case ICStub::BinaryArith_DoubleWithInt32:
-        return MIRType::Int32;
-      case ICStub::BinaryArith_Double:
-        return MIRType::Double;
-      case ICStub::BinaryArith_StringConcat:
-      case ICStub::BinaryArith_StringObjectConcat:
-        return MIRType::String;
       case ICStub::CacheIR_Regular:
         return ParseCacheIRStub(stub);
       default:
@@ -498,18 +486,6 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
 
     for (uint32_t i = 0; i < nstubs; i++) {
         switch (stubs[i]->kind()) {
-          case ICStub::BinaryArith_Int32:
-            sawInt32 = true;
-            break;
-          case ICStub::BinaryArith_BooleanWithInt32:
-            sawInt32 = true;
-            break;
-          case ICStub::BinaryArith_Double:
-            sawDouble = true;
-            break;
-          case ICStub::BinaryArith_DoubleWithInt32:
-            sawDouble = true;
-            break;
           case ICStub::CacheIR_Regular:
             switch (ParseCacheIRStub(stubs[i])) {
               case MIRType::Double:
