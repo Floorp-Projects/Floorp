@@ -19,7 +19,7 @@ XULMenuitemAccessibleWrap::
 }
 
 ENameValueFlag
-XULMenuitemAccessibleWrap::Name(nsString& aName)
+XULMenuitemAccessibleWrap::Name(nsString& aName) const
 {
   // XXX This should be done in MSAA's get_accName() so that Accessible::Name()]
   // provides the same results on all platforms
