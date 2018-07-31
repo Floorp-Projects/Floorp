@@ -12,26 +12,11 @@ try {
 }
 
 var annoObserver = {
-  PAGE_lastSet_URI: "",
-  PAGE_lastSet_AnnoName: "",
-
-  onPageAnnotationSet(aURI, aName) {
-    this.PAGE_lastSet_URI = aURI.spec;
-    this.PAGE_lastSet_AnnoName = aName;
-  },
-
   ITEM_lastSet_Id: -1,
   ITEM_lastSet_AnnoName: "",
   onItemAnnotationSet(aItemId, aName) {
     this.ITEM_lastSet_Id = aItemId;
     this.ITEM_lastSet_AnnoName = aName;
-  },
-
-  PAGE_lastRemoved_URI: "",
-  PAGE_lastRemoved_AnnoName: "",
-  onPageAnnotationRemoved(aURI, aName) {
-    this.PAGE_lastRemoved_URI = aURI.spec;
-    this.PAGE_lastRemoved_AnnoName = aName;
   },
 
   ITEM_lastRemoved_Id: -1,
@@ -61,8 +46,6 @@ add_task(async function test_execute() {
   } catch (ex) {
     do_throw("unable to add page-annotation");
   }
-  Assert.equal(annoObserver.PAGE_lastSet_URI, testURI.spec);
-  Assert.equal(annoObserver.PAGE_lastSet_AnnoName, testAnnoName);
 
   // get string annotation
   var storedAnnoVal = annosvc.getPageAnnotation(testURI, testAnnoName);
@@ -191,8 +174,6 @@ add_task(async function test_execute() {
   info("lastModified4 = " + lastModified4);
   Assert.ok(is_time_ordered(lastModified3, lastModified4));
 
-  Assert.equal(annoObserver.PAGE_lastRemoved_URI, testURI.spec);
-  Assert.equal(annoObserver.PAGE_lastRemoved_AnnoName, int32Key);
   Assert.equal(annoObserver.ITEM_lastRemoved_Id, testItemId);
   Assert.equal(annoObserver.ITEM_lastRemoved_AnnoName, int32Key);
 
