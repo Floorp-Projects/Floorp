@@ -46,9 +46,6 @@ struct ManifestDirective
   const char* directive;
   int argc;
 
-  // Binary components are only allowed for APP locations.
-  bool apponly;
-
   bool ischrome;
 
   bool allowbootstrap;
@@ -69,41 +66,41 @@ struct ManifestDirective
 };
 static const ManifestDirective kParsingTable[] = {
   {
-    "manifest",         1, false, true, true, false,
+    "manifest",         1, true, true, false,
     &nsComponentManagerImpl::ManifestManifest, nullptr,
   },
   {
-    "component",        2, false, false, false, false,
+    "component",        2, false, false, false,
     &nsComponentManagerImpl::ManifestComponent, nullptr,
   },
   {
-    "contract",         2, false, false, false, false,
+    "contract",         2, false, false, false,
     &nsComponentManagerImpl::ManifestContract, nullptr,
   },
   {
-    "category",         3, false, false, false, false,
+    "category",         3, false, false, false,
     &nsComponentManagerImpl::ManifestCategory, nullptr,
   },
   {
-    "content",          2, false, true, true,  true,
+    "content",          2, true, true,  true,
     nullptr, &nsChromeRegistry::ManifestContent,
   },
   {
-    "locale",           3, false, true, true, false,
+    "locale",           3, true, true, false,
     nullptr, &nsChromeRegistry::ManifestLocale,
   },
   {
-    "skin",             3, false, true, true, false,
+    "skin",             3, true, true, false,
     nullptr, &nsChromeRegistry::ManifestSkin,
   },
   {
     // NB: note that while skin manifests can use this, they are only allowed
     // to use it for chrome://../skin/ URLs
-    "override",         2, false, true, true, false,
+    "override",         2, true, true, false,
     nullptr, &nsChromeRegistry::ManifestOverride,
   },
   {
-    "resource",         2, false, true, false, true,
+    "resource",         2, true, false, true,
     nullptr, &nsChromeRegistry::ManifestResource,
   }
 };
@@ -584,14 +581,6 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
                             token);
       continue;
     }
-
-#ifndef MOZ_BINARY_EXTENSIONS
-    if (directive->apponly && NS_APP_LOCATION != aType) {
-      LogMessageWithContext(aFile, line,
-                            "Only application manifests may use the '%s' directive.", token);
-      continue;
-    }
-#endif
 
     NS_ASSERTION(directive->argc < 4, "Need to reset argv array length");
     char* argv[4];
