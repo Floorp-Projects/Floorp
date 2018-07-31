@@ -52,8 +52,8 @@ public:
 
 #ifdef DEBUG
     inline bool HasWrapper(nsXPCWrappedJS* wrapper) {
-        for (auto r = mTable.all(); !r.empty(); r.popFront()) {
-            if (r.front().value() == wrapper)
+        for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
+            if (iter.get().value() == wrapper)
                 return true;
         }
         return false;
@@ -79,8 +79,8 @@ public:
     inline uint32_t Count() {return mTable.count();}
 
     inline void Dump(int16_t depth) {
-        for (Map::Range r = mTable.all(); !r.empty(); r.popFront())
-            r.front().value()->DebugDump(depth);
+        for (auto iter = mTable.iter(); !iter.done(); iter.next())
+            iter.get().value()->DebugDump(depth);
     }
 
     void UpdateWeakPointersAfterGC();
