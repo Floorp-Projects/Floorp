@@ -61,6 +61,11 @@ public class TestRunnerActivity extends Activity {
         public GeckoResult<GeckoSession> onNewSession(GeckoSession session, String uri) {
             return GeckoResult.fromValue(createBackgroundSession(session.getSettings()));
         }
+
+        @Override
+        public void onLoadError(GeckoSession session, String uri, int category, int error) {
+
+        }
     };
 
     private GeckoSession.ContentDelegate mContentDelegate = new GeckoSession.ContentDelegate() {

@@ -3293,7 +3293,7 @@ IonBuilder::jsop_bitnot()
             return Ok();
     }
 
-    MOZ_TRY(arithTrySharedStub(&emitted, JSOP_BITNOT, nullptr, input));
+    MOZ_TRY(arithTryBinaryStub(&emitted, JSOP_BITNOT, nullptr, input));
     if (emitted)
         return Ok();
 
@@ -3544,21 +3544,20 @@ IonBuilder::binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op,
 }
 
 AbortReasonOr<Ok>
-IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
+IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
                                MDefinition* left, MDefinition* right)
 {
     MOZ_ASSERT(*emitted == false);
     JSOp actualOp = JSOp(*pc);
 
-    // Try to emit a shared stub cache.
-
-    if (JitOptions.disableSharedStubs)
+    // Try to emit a binary arith stub cache.
+    if (JitOptions.disableCacheIRBinaryArith)
         return Ok();
 
     // The actual jsop 'jsop_pos' is not supported yet.
-    if (actualOp == JSOP_POS)
+    // There's no IC support for JSOP_POW either.
+    if (actualOp == JSOP_POS || actualOp == JSOP_POW)
         return Ok();
-
 
     MInstruction* stub = nullptr;
     switch (actualOp) {
@@ -3574,14 +3573,7 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
-        // If not disabled, prefer the cache IR stub.
-        if (!JitOptions.disableCacheIRBinaryArith) {
-            stub = MBinaryCache::New(alloc(), left, right);
-            break;
-        }
-        MOZ_FALLTHROUGH;
-      case JSOP_POW:
-        stub = MBinarySharedStub::New(alloc(), left, right);
+        stub = MBinaryCache::New(alloc(), left, right);
         break;
       default:
         MOZ_CRASH("unsupported arith");
@@ -3624,7 +3616,7 @@ IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left, MDefinition* right)
             return Ok();
     }
 
-    MOZ_TRY(arithTrySharedStub(&emitted, op, left, right));
+    MOZ_TRY(arithTryBinaryStub(&emitted, op, left, right));
     if (emitted)
         return Ok();
 
@@ -3669,7 +3661,7 @@ IonBuilder::jsop_pow()
             return Ok();
     }
 
-    MOZ_TRY(arithTrySharedStub(&emitted, JSOP_POW, base, exponent));
+    MOZ_TRY(arithTryBinaryStub(&emitted, JSOP_POW, base, exponent));
     if (emitted)
         return Ok();
 
