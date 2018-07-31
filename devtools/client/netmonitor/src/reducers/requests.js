@@ -196,7 +196,7 @@ function requestsReducer(state = Requests(), action) {
  * Remove the currently selected custom request.
  */
 function closeCustomRequest(state) {
-  const { requests, selectedId, preselectedId } = state;
+  const { requests, selectedId } = state;
 
   if (!selectedId) {
     return state;
@@ -209,14 +209,10 @@ function closeCustomRequest(state) {
     return state;
   }
 
-  // If the custom request is already in the Map, select it immediately,
-  // and reset `preselectedId` attribute.
-  const hasPreselectedId = preselectedId && requests.has(preselectedId);
   return {
     ...state,
-    requests: mapDelete(requests, selectedId),
-    preselectedId: hasPreselectedId ? null : preselectedId,
-    selectedId: hasPreselectedId ? preselectedId : null,
+    requests: mapDelete(state.requests, selectedId),
+    selectedId: null,
   };
 }
 

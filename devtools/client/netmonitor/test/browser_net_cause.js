@@ -109,7 +109,7 @@ add_task(async function() {
   is(store.getState().requests.requests.size, EXPECTED_REQUESTS.length,
     "All the page events should be recorded.");
 
-  EXPECTED_REQUESTS.forEach((spec, i) => {
+  EXPECTED_REQUESTS.forEach(async (spec, i) => {
     const { method, url, causeType, causeUri, stack } = spec;
 
     const requestItem = getSortedRequests(store.getState()).get(i);
@@ -124,6 +124,8 @@ add_task(async function() {
 
     const stacktrace = requestItem.stacktrace;
     const stackLen = stacktrace ? stacktrace.length : 0;
+
+    await waitUntil(() => !!requestItem.stacktrace);
 
     if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);
