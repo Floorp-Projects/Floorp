@@ -779,6 +779,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         }
     }
 
+    size_t old_size = section->getSize();
+
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
 
@@ -800,16 +802,13 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         return -1;
     }
 
-    unsigned int old_exec = first_executable->getOffset();
-
     relhack->insertBefore(section);
     relhackcode->insertBefore(first_executable);
 
-    // Trying to get first_executable->getOffset() now may throw if the new
-    // layout would require it to move, so we look at the end of the relhack
-    // code section instead, comparing it to where the first executable
-    // section used to start.
-    if (!force && relhackcode->getOffset() + relhackcode->getSize() >= old_exec) {
+    // Don't try further if we can't gain from the relocation section size change.
+    size_t align = first_executable->getSegmentByType(PT_LOAD)->getAlign();
+    size_t new_size = relhack->getSize() + relhackcode->getSize();
+    if (!force && (new_size >= old_size || old_size - new_size < align)) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
     }
