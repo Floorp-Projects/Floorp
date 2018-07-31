@@ -292,7 +292,7 @@ public:
    * The information refresh happens because the compositor will call
    * SetFirstPaintViewport on the next frame of composition.
    */
-  mozilla::ipc::IPCResult RecvForceIsFirstPaint() override;
+  void ForceIsFirstPaint();
 
   static void SetShadowProperties(Layer* aLayer);
 
