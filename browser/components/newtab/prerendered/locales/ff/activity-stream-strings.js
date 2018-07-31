@@ -97,7 +97,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_sub_header": "ngam jokkude to Firefox Sync",
   "firstrun_email_input_placeholder": "Iimeel",
   "firstrun_invalid_input": "Iimeel gollotooɗo hatojinaa",
-  "firstrun_extra_legal_links": "Fuɗɗaade, woni a jaɓii {kuule} ɗee kam e {suturo}oo.",
+  "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
   "firstrun_terms_of_service": "Laabi Carwol",
   "firstrun_privacy_notice": "Tintinol Suturo",
   "firstrun_continue_to_login": "Jokku",

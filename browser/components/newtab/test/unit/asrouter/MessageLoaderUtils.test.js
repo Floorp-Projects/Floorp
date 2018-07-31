@@ -1,3 +1,4 @@
+import {GlobalOverrider} from "test/unit/utils";
 import {MessageLoaderUtils} from "lib/ASRouter.jsm";
 
 describe("MessageLoaderUtils", () => {
@@ -133,6 +134,44 @@ describe("MessageLoaderUtils", () => {
     it("should return false if the time since .lastUpdated is less than .updateCycleInMs", () => {
       clock.tick(299);
       assert.isFalse(MessageLoaderUtils.shouldProviderUpdate({id: "foo", lastUpdated: 0,  updateCycleInMs: 300}));
+    });
+  });
+
+  describe("#installAddonFromURL", () => {
+    let globals;
+    let sandbox;
+    let getInstallStub;
+    let installAddonStub;
+    beforeEach(() => {
+      globals = new GlobalOverrider();
+      sandbox = sinon.sandbox.create();
+      getInstallStub = sandbox.stub();
+      installAddonStub = sandbox.stub();
+      globals.set("AddonManager", {
+        getInstallForURL: getInstallStub,
+        installAddonFromWebpage: installAddonStub
+      });
+    });
+    afterEach(() => {
+      sandbox.restore();
+      globals.restore();
+    });
+    it("should call the Addons API when passed a valid URL", async () => {
+      getInstallStub.resolves(null);
+      installAddonStub.resolves(null);
+
+      await MessageLoaderUtils.installAddonFromURL({}, "foo.com");
+
+      assert.calledOnce(getInstallStub);
+      assert.calledOnce(installAddonStub);
+    });
+    it("should not call the Addons API on invalid URLs", async () => {
+      sandbox.stub(global.Services.scriptSecurityManager, "getSystemPrincipal").throws();
+
+      await MessageLoaderUtils.installAddonFromURL({}, "https://foo.com");
+
+      assert.notCalled(getInstallStub);
+      assert.notCalled(installAddonStub);
     });
   });
 });
