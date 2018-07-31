@@ -3273,9 +3273,6 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
 pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);
 
-// Is support for the <marker orient="auto-start-reverse"> feature enabled?
-pref("svg.marker-improvements.enabled", true);
-
 // Is support for the new getBBox method from SVG 2 enabled?
 // See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
 pref("svg.new-getBBox.enabled", false);
