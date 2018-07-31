@@ -53,3 +53,6 @@ if CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
     DEFINES['MOZ_REPLACE_MALLOC_STATIC'] = True
 
 DisableStlWrapping()
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497
