@@ -209,8 +209,7 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
   }
 
   // In the common (and fast) cases we can use the property id
-  nsCSSPropertyID propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
+  nsCSSPropertyID propID = nsCSSProps::LookupProperty(aPropertyName);
   if (propID == eCSSProperty_UNKNOWN) {
     return NS_OK;
   }

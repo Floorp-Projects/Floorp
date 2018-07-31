@@ -45,10 +45,10 @@ label.findbar-find-fast:-moz-lwtheme {
 
 .findbar-button {
   -moz-appearance: none;
+  border-width: @roundButtonBorderWidth@;
   margin-inline-end: 5px;
-  padding: 0;
-  color: inherit;
-  background: none;
+  padding: 2px 9px;
+  border-radius: 10000px;
 }
 
 .findbar-find-next:-moz-lwtheme,

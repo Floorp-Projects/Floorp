@@ -14,7 +14,7 @@
 
 #include <limits>
 #include <type_traits>
-#include "nsStringFwd.h"
+#include "nsString.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"
@@ -36,6 +36,8 @@ class ComputedStyle;
 extern "C" {
   nsCSSPropertyID Servo_ResolveLogicalProperty(nsCSSPropertyID,
                                                const mozilla::ComputedStyle*);
+  nsCSSPropertyID Servo_Property_LookupEnabledForAllContent(const nsACString*);
+  const uint8_t* Servo_Property_GetName(nsCSSPropertyID, uint32_t* aLength);
 }
 
 struct nsCSSKTableEntry
@@ -80,8 +82,20 @@ public:
   // Looks up the property with name aProperty and returns its corresponding
   // nsCSSPropertyID value.  If aProperty is the name of a custom property,
   // then eCSSPropertyExtra_variable will be returned.
-  static nsCSSPropertyID LookupProperty(const nsAString& aProperty,
-                                      EnabledState aEnabled);
+  //
+  // This only returns properties enabled for all content, and resolves aliases
+  // to return the aliased property.
+  static nsCSSPropertyID LookupProperty(const nsACString& aProperty)
+  {
+    return Servo_Property_LookupEnabledForAllContent(&aProperty);
+  }
+
+  static nsCSSPropertyID LookupProperty(const nsAString& aProperty)
+  {
+    NS_ConvertUTF16toUTF8 utf8(aProperty);
+    return LookupProperty(utf8);
+  }
+
   // As above, but looked up using a property's IDL name.
   // eCSSPropertyExtra_variable won't be returned from these methods.
   static nsCSSPropertyID LookupPropertyByIDLName(
@@ -106,7 +120,15 @@ public:
   static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
 
   // Given a property enum, get the string value
-  static const nsCString& GetStringValue(nsCSSPropertyID aProperty);
+  //
+  // This string is static.
+  static const nsDependentCSubstring GetStringValue(nsCSSPropertyID aProperty)
+  {
+    uint32_t len;
+    const uint8_t* chars = Servo_Property_GetName(aProperty, &len);
+    return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
+  }
+
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 

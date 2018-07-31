@@ -393,8 +393,15 @@ GetTransform3d(nsIDocument* aDocument, const nsMediaFeature*,
 }
 
 static bool
-HasSystemMetric(nsAtom* aMetric)
+HasSystemMetric(nsIDocument* aDocument,
+                nsAtom* aMetric,
+                bool aIsAccessibleFromContent)
 {
+  if (aIsAccessibleFromContent &&
+      nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+    return false;
+  }
+
   nsMediaFeatures::InitSystemMetrics();
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
 }
@@ -403,27 +410,17 @@ static void
 GetSystemMetric(nsIDocument* aDocument, const nsMediaFeature* aFeature,
                 nsCSSValue& aResult)
 {
-  aResult.Reset();
-
   const bool isAccessibleFromContentPages =
     !(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
 
   MOZ_ASSERT(!isAccessibleFromContentPages ||
              *aFeature->mName == nsGkAtoms::_moz_touch_enabled);
-
-  if (isAccessibleFromContentPages &&
-      nsContentUtils::ShouldResistFingerprinting(aDocument)) {
-    // If "privacy.resistFingerprinting" is enabled, then we simply don't
-    // return any system-backed media feature values. (No spoofed values
-    // returned.)
-    return;
-  }
-
   MOZ_ASSERT(aFeature->mValueType == nsMediaFeature::eBoolInteger,
              "unexpected type");
 
   nsAtom* metricAtom = *aFeature->mData.mMetric;
-  bool hasMetric = HasSystemMetric(metricAtom);
+  bool hasMetric =
+    HasSystemMetric(aDocument, metricAtom, isAccessibleFromContentPages);
   aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
 }
 
