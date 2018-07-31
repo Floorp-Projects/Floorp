@@ -65,6 +65,8 @@ parent:
   async NewAxisMoveEventToMockController(uint32_t aDeviceID, long aAxis,
                                          double aValue);
   async NewPoseMoveToMockController(uint32_t aDeviceID, GamepadPoseState aPose);
+  async StartVRNavigation(uint32_t aDeviceID);
+  async StopVRNavigation(uint32_t aDeviceID, TimeDuration aDuration);
 
 child:
   // Notify children of updated VR display enumeration and details.  This will
