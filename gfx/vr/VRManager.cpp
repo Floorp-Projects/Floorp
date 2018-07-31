@@ -599,5 +599,23 @@ VRManager::DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameRes
   }
 }
 
+void
+VRManager::StartVRNavigation(const uint32_t& aDisplayID)
+{
+  RefPtr<VRDisplayHost> display = GetDisplay(aDisplayID);
+  if (display) {
+    display->StartVRNavigation();
+  }
+}
+
+void
+VRManager::StopVRNavigation(const uint32_t& aDisplayID, const TimeDuration& aTimeout)
+{
+  RefPtr<VRDisplayHost> display = GetDisplay(aDisplayID);
+  if (display) {
+    display->StopVRNavigation(aTimeout);
+  }
+}
+
 } // namespace gfx
 } // namespace mozilla

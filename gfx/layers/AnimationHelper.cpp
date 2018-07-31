@@ -45,44 +45,45 @@ CompositorAnimationStorage::GetAnimatedValue(const uint64_t& aId) const
   return mAnimatedValues.Get(aId);
 }
 
-Maybe<float>
-CompositorAnimationStorage::GetAnimationOpacity(const uint64_t& aId) const
+OMTAValue
+CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const
 {
-  auto value = GetAnimatedValue(aId);
-  if (!value || value->mType != AnimatedValue::OPACITY) {
-    return Nothing();
+  OMTAValue omtaValue = mozilla::null_t();
+  auto animatedValue = GetAnimatedValue(aId);
+  if (!animatedValue) {
+    return omtaValue;
   }
 
-  return Some(value->mOpacity);
-}
+  switch (animatedValue->mType) {
+    case AnimatedValue::OPACITY:
+      omtaValue = animatedValue->mOpacity;
+      break;
+    case AnimatedValue::TRANSFORM: {
+      gfx::Matrix4x4 transform = animatedValue->mTransform.mFrameTransform;
+      const TransformData& data = animatedValue->mTransform.mData;
+      float scale = data.appUnitsPerDevPixel();
+      gfx::Point3D transformOrigin = data.transformOrigin();
 
-Maybe<gfx::Matrix4x4>
-CompositorAnimationStorage::GetAnimationTransform(const uint64_t& aId) const
-{
-  auto value = GetAnimatedValue(aId);
-  if (!value || value->mType != AnimatedValue::TRANSFORM) {
-    return Nothing();
+      // Undo the rebasing applied by
+      // nsDisplayTransform::GetResultingTransformMatrixInternal
+      transform.ChangeBasis(-transformOrigin);
+
+      // Convert to CSS pixels (this undoes the operations performed by
+      // nsStyleTransformMatrix::ProcessTranslatePart which is called from
+      // nsDisplayTransform::GetResultingTransformMatrix)
+      double devPerCss =
+        double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
+      transform._41 *= devPerCss;
+      transform._42 *= devPerCss;
+      transform._43 *= devPerCss;
+      omtaValue = transform;
+      break;
+    }
+    case AnimatedValue::NONE:
+      break;
   }
 
-  gfx::Matrix4x4 transform = value->mTransform.mFrameTransform;
-  const TransformData& data = value->mTransform.mData;
-  float scale = data.appUnitsPerDevPixel();
-  gfx::Point3D transformOrigin = data.transformOrigin();
-
-  // Undo the rebasing applied by
-  // nsDisplayTransform::GetResultingTransformMatrixInternal
-  transform.ChangeBasis(-transformOrigin);
-
-  // Convert to CSS pixels (this undoes the operations performed by
-  // nsStyleTransformMatrix::ProcessTranslatePart which is called from
-  // nsDisplayTransform::GetResultingTransformMatrix)
-  double devPerCss =
-    double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
-  transform._41 *= devPerCss;
-  transform._42 *= devPerCss;
-  transform._43 *= devPerCss;
-
-  return Some(transform);
+  return omtaValue;
 }
 
 void

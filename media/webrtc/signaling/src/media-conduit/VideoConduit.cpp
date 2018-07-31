@@ -602,7 +602,6 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
   // the full-resolution stream (which also happens to handle the
   // non-simulcast usage case). NOTE: we make an assumption here, not in the
   // spec, that the first stream is the full-resolution stream.
-  auto& simulcastEncoding = mConduit->mCurSendCodecConfig->mSimulcastEncodings[0];
 #if 0
   // XXX What we'd like to do for each simulcast stream...
   if (simulcastEncoding.constraints.scaleDownBy > 1.0) {
@@ -639,7 +638,7 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
     // We want to ensure this picks up the current framerate, so indirect
     video_stream.max_framerate = mConduit->mSendingFramerate;
 
-    simulcastEncoding = mConduit->mCurSendCodecConfig->mSimulcastEncodings[idx];
+    auto& simulcastEncoding = mConduit->mCurSendCodecConfig->mSimulcastEncodings[idx];
     MOZ_ASSERT(simulcastEncoding.constraints.scaleDownBy >= 1.0);
 
     // Calculate these first
@@ -1631,6 +1630,7 @@ static ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
   {MB_OF(1920, 1200), KBPS(1500), KBPS(2000), KBPS(10000)}, // >HD (3K, 4K, etc)
   {MB_OF(1280, 720), KBPS(1200), KBPS(1500), KBPS(5000)}, // HD ~1080-1200
   {MB_OF(800, 480), KBPS(600), KBPS(800), KBPS(2500)}, // HD ~720
+  {MB_OF(480, 270), KBPS(300), KBPS(500), KBPS(2000)},
   {tl::Max<MB_OF(400, 240), MB_OF(352, 288)>::value, KBPS(200), KBPS(300), KBPS(1300)}, // VGA, WVGA
   {MB_OF(176, 144), KBPS(100), KBPS(150), KBPS(500)}, // WQVGA, CIF
   {0 , KBPS(40), KBPS(80), KBPS(250)} // QCIF and below

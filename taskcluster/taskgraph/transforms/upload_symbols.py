@@ -10,6 +10,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 
+import logging
+logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
 
@@ -21,6 +23,12 @@ def fill_template(config, tasks):
 
         # Fill out the dynamic fields in the task description
         task['label'] = dep.label + '-upload-symbols'
+
+        # Skip tasks where we don't have the full crashsymbols enabled
+        if not dep.attributes.get('enable-full-crashsymbols'):
+            logger.debug("Skipping upload symbols task for %s", task['label'])
+            continue
+
         task['dependencies'] = {'build': dep.label}
         task['worker']['env']['GECKO_HEAD_REPOSITORY'] = config.params['head_repository']
         task['worker']['env']['GECKO_HEAD_REV'] = config.params['head_rev']

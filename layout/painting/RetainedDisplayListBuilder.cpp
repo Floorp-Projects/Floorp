@@ -289,7 +289,18 @@ public:
                             oldItem->Frame() == aNewItem->Frame());
       if (!mOldItems[oldIndex.val].IsChanged()) {
         MOZ_DIAGNOSTIC_ASSERT(!mOldItems[oldIndex.val].IsUsed());
-        nsDisplayItem* destItem = ShouldUseNewItem(aNewItem) ? aNewItem : oldItem;
+        nsDisplayItem* destItem;
+        if (ShouldUseNewItem(aNewItem)) {
+          destItem = aNewItem;
+        } else {
+          destItem = oldItem;
+          // The building rect can depend on the overflow rect (when the parent
+          // frame is position:fixed), which can change without invalidating
+          // the frame/items. If we're using the old item, copy the building
+          // rect across from the new item.
+          oldItem->SetBuildingRect(aNewItem->GetBuildingRect());
+        }
+
         if (aNewItem->GetChildren()) {
           Maybe<const ActiveScrolledRoot*> containerASRForChildren;
           if (mBuilder->MergeDisplayLists(aNewItem->GetChildren(),

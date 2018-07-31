@@ -507,6 +507,182 @@ for (let policy of cosePolicies) {
   }
 }
 
+add_signature_test(COSEAndPKCS7WithSHA256, function testCOSESigTampered() {
+  let tampered = tampered_app_path("cose_sig_tampered");
+  tamper(original_app_path("cose_signed_with_pkcs7"), tampered,
+         { "META-INF/cose.sig": truncateEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("cose_sig_tampered",
+                      Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY));
+});
+
+// PKCS7 is processed before COSE, so if a COSE signature file is removed or
+// tampered with, this appears as a PKCS7 signature verification failure.
+add_signature_test(COSEAndPKCS7WithSHA256, function testCOSESigRemoved() {
+  let tampered = tampered_app_path("cose_sig_removed");
+  tamper(original_app_path("cose_signed_with_pkcs7"), tampered,
+         { "META-INF/cose.sig": removeEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("cose_sig_removed",
+                      Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING));
+});
+
+add_signature_test(COSEAndPKCS7WithSHA256, function testCOSEManifestTampered() {
+  let tampered = tampered_app_path("cose_manifest_tampered");
+  tamper(original_app_path("cose_signed_with_pkcs7"), tampered,
+         { "META-INF/cose.manifest": truncateEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("cose_manifest_tampered",
+                      Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY));
+});
+
+add_signature_test(COSEAndPKCS7WithSHA256, function testCOSEManifestRemoved() {
+  let tampered = tampered_app_path("cose_manifest_removed");
+  tamper(original_app_path("cose_signed_with_pkcs7"), tampered,
+         { "META-INF/cose.manifest": removeEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("cose_manifest_removed",
+                      Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING));
+});
+
+add_signature_test(COSEAndPKCS7WithSHA256, function testCOSEFileAdded() {
+  let tampered = tampered_app_path("cose_file_added");
+  tamper(original_app_path("cose_signed_with_pkcs7"), tampered, {},
+         [ { "name": "unsigned.txt", "content": "unsigned content!" } ]);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("cose_file_added",
+                      Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY));
+});
+
+add_signature_test(COSEAndPKCS7WithSHA256, function testCOSEFileRemoved() {
+  let tampered = tampered_app_path("cose_file_removed");
+  tamper(original_app_path("cose_signed_with_pkcs7"), tampered,
+         { "manifest.json": removeEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("cose_file_removed",
+                      Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING));
+});
+
+add_signature_test(COSEAndPKCS7WithSHA256, function testCOSEFileTampered() {
+  let tampered = tampered_app_path("cose_file_tampered");
+  tamper(original_app_path("cose_signed_with_pkcs7"), tampered,
+         { "manifest.json": truncateEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("cose_file_tampered",
+                      Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY));
+});
+
+add_signature_test(COSEOnly, function testOnlyCOSESigTampered() {
+  let tampered = tampered_app_path("only_cose_sig_tampered");
+  tamper(original_app_path("only_cose_signed"), tampered,
+         { "META-INF/cose.sig": truncateEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("only_cose_sig_tampered",
+                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
+});
+
+
+add_signature_test(COSEOnly, function testOnlyCOSESigRemoved() {
+  let tampered = tampered_app_path("only_cose_sig_removed");
+  tamper(original_app_path("only_cose_signed"), tampered,
+         { "META-INF/cose.sig": removeEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("only_cose_sig_removed",
+                      Cr.NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE));
+});
+
+add_signature_test(COSEOnly, function testOnlyCOSEManifestTampered() {
+  let tampered = tampered_app_path("only_cose_manifest_tampered");
+  tamper(original_app_path("only_cose_signed"), tampered,
+         { "META-INF/cose.manifest": truncateEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("only_cose_manifest_tampered",
+                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
+});
+
+
+add_signature_test(COSEOnly, function testOnlyCOSEManifestRemoved() {
+  let tampered = tampered_app_path("only_cose_manifest_removed");
+  tamper(original_app_path("only_cose_signed"), tampered,
+         { "META-INF/cose.manifest": removeEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("only_cose_manifest_removed",
+                      Cr.NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE));
+});
+
+add_signature_test(COSEOnly, function testOnlyCOSEFileAdded() {
+  let tampered = tampered_app_path("only_cose_file_added");
+  tamper(original_app_path("only_cose_signed"), tampered, {},
+         [ { "name": "unsigned.txt", "content": "unsigned content!" } ]);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("only_cose_file_added",
+                      Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY));
+});
+
+add_signature_test(COSEOnly, function testOnlyCOSEFileRemoved() {
+  let tampered = tampered_app_path("only_cose_file_removed");
+  tamper(original_app_path("only_cose_signed"), tampered,
+         { "manifest.json": removeEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("only_cose_file_removed",
+                      Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING));
+});
+
+add_signature_test(COSEOnly, function testOnlyCOSEFileTampered() {
+  let tampered = tampered_app_path("only_cose_file_tampered");
+  tamper(original_app_path("only_cose_signed"), tampered,
+         { "manifest.json": truncateEntry }, []);
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
+    check_open_result("only_cose_file_tampered",
+                      Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY));
+});
+
+// This was signed with only COSE first, and then the contents were tampered
+// with (making the signature invalid). Then, the file was signed with
+// PKCS7/SHA1. We need to ensure that if we're configured to process COSE, this
+// verification fails.
+add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("cose_tampered_good_pkcs7"),
+    check_open_result("tampered COSE with good PKCS7 signature should fail " +
+                      "when COSE and PKCS7 is processed",
+                      Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY));
+});
+
+add_signature_test(COSEOnly, function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("cose_tampered_good_pkcs7"),
+    check_open_result("tampered COSE with good PKCS7 signature should fail " +
+                      "when only COSE is processed",
+                      Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY));
+});
+
+// If we're not processing COSE, this should verify successfully.
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("cose_tampered_good_pkcs7"),
+    check_open_result("tampered COSE with good PKCS7 signature should succeed" +
+                      "when COSE is not processed",
+                      Cr.NS_OK));
+});
+
 // TODO: tampered MF, tampered SF
 // TODO: too-large MF, too-large RSA, too-large SF
 // TODO: MF and SF that end immediately after the last main header

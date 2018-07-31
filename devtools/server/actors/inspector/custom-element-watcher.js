@@ -107,7 +107,7 @@ class CustomElementWatcher extends EventEmitter {
   _onCustomElementDefined(event) {
     const doc = event.target;
     const registry = doc.defaultView.customElements;
-    const registryMap = this.watchedRegistries.get(registry);
+    const registryMap = this._getMapForRegistry(registry);
 
     const name = event.detail;
     const nodeActors = registryMap.get(name);

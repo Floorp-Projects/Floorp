@@ -1415,10 +1415,10 @@ MouseScrollHandler::Device::Elantech::HandleKeyMessage(nsWindowBase* aWidget,
          "%s command event",
          aWParam == VK_NEXT ? "Forward" : "Back"));
 
-      WidgetCommandEvent commandEvent(true, nsGkAtoms::onAppCommand,
+      WidgetCommandEvent appCommandEvent(true,
         (aWParam == VK_NEXT) ? nsGkAtoms::Forward : nsGkAtoms::Back, aWidget);
-      InitEvent(aWidget, commandEvent);
-      aWidget->DispatchWindowEvent(&commandEvent);
+      InitEvent(aWidget, appCommandEvent);
+      aWidget->DispatchWindowEvent(&appCommandEvent);
     }
     else {
       MOZ_LOG(gMouseScrollLog, LogLevel::Info,

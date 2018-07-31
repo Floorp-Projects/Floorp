@@ -5,16 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
-def SignedAppFile(name, flags):
+def SignedAppFile(name, flags, app_directory='app/'):
     if not CONFIG['COMPILE_ENVIRONMENT']:
         return
 
     GENERATED_FILES += [name]
     props = GENERATED_FILES[name]
     props.script = '/security/manager/ssl/tests/unit/sign_app.py'
-    props.inputs = ['app/']
-    if flags:
-        props.flags = flags
+    props.inputs = [app_directory]
+    props.flags = flags
     # Turn RELATIVEDIR into list entry: like
     # 'security/manager/ssl/tests/unit/test_signed_apps' ->
     # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_signed_apps.
@@ -67,3 +66,4 @@ def SignedAppFile(name, flags):
 #SignedAppFile('cose_multiple_signed_with_pkcs7.zip', ['-c', 'ES256', '-c', 'ES384', '-p', 'sha256'])
 #SignedAppFile('only_cose_signed.zip', ['-c', 'ES256'])
 #SignedAppFile('only_cose_multiple_signed.zip', ['-c', 'ES384', '-c', 'ES256'])
+#SignedAppFile('cose_tampered_good_pkcs7.zip', ['-m', 'sha1', '-s', 'sha1', '-p', 'sha1'], 'app_cose_tampered/')

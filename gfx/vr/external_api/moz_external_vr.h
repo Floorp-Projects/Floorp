@@ -29,7 +29,7 @@ namespace dom {
 #endif //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 1;
+static const int32_t kVRExternalVersion = 2;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -359,6 +359,8 @@ struct VRBrowserState
 #if defined(__ANDROID__)
   bool shutdown;
 #endif // defined(__ANDROID__)
+  bool presentationActive;
+  bool navigationTransitionActive;
   VRLayerState layerState[kVRLayerMaxCount];
 };
 

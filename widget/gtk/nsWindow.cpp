@@ -2933,8 +2933,8 @@ bool
 nsWindow::DispatchCommandEvent(nsAtom* aCommand)
 {
     nsEventStatus status;
-    WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, aCommand, this);
-    DispatchEvent(&event, status);
+    WidgetCommandEvent appCommandEvent(true, aCommand, this);
+    DispatchEvent(&appCommandEvent, status);
     return TRUE;
 }
 

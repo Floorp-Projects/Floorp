@@ -125,11 +125,8 @@ protected:
   mozilla::ipc::IPCResult RecvScheduleComposite() override;
   mozilla::ipc::IPCResult RecvSetTestSampleTime(const TimeStamp& aTime) override;
   mozilla::ipc::IPCResult RecvLeaveTestMode() override;
-  mozilla::ipc::IPCResult RecvGetAnimationOpacity(const uint64_t& aCompositorAnimationsId,
-                                                  float* aOpacity,
-                                                  bool* aHasAnimationOpacity) override;
-  mozilla::ipc::IPCResult RecvGetAnimationTransform(const uint64_t& aCompositorAnimationsId,
-                                                    MaybeTransform* aTransform) override;
+  mozilla::ipc::IPCResult RecvGetAnimationValue(const uint64_t& aCompositorAnimationsId,
+                                                OMTAValue* aValue) override;
   mozilla::ipc::IPCResult RecvGetTransform(const LayerHandle& aHandle,
                                            MaybeTransform* aTransform) override;
   mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,

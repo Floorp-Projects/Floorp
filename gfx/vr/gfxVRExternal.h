@@ -37,6 +37,8 @@ protected:
   VRHMDSensorState GetSensorState() override;
   void StartPresentation() override;
   void StopPresentation() override;
+  void StartVRNavigation() override;
+  void StopVRNavigation(const TimeDuration& aTimeout) override;
 
   bool SubmitFrame(const layers::SurfaceDescriptor& aTexture,
                    uint64_t aFrameId,
@@ -55,9 +57,16 @@ private:
   bool PopulateLayerTexture(const layers::SurfaceDescriptor& aTexture,
                             VRLayerTextureType* aTextureType,
                             VRLayerTextureHandle* aTextureHandle);
+  void PushState(bool aNotifyCond = false);
+#if defined(MOZ_WIDGET_ANDROID)
+  bool PullState(const std::function<bool()>& aWaitCondition = nullptr);
+#else
+  bool PullState();
+#endif
 
   VRTelemetry mTelemetry;
-  bool mIsPresenting;
+  TimeStamp mVRNavigationTransitionEnd;
+  VRBrowserState mBrowserState;
   VRHMDSensorState mLastSensorState;
 };
 

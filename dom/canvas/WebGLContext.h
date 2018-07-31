@@ -100,6 +100,7 @@ class MozFramebuffer;
 
 namespace webgl {
 class AvailabilityRunnable;
+struct CachedDrawFetchLimits;
 struct LinkedProgramInfo;
 class ShaderValidator;
 class TexUnpackBlob;
@@ -280,8 +281,8 @@ class WebGLContext
     , public nsWrapperCache
 {
     friend class ScopedDrawCallWrapper;
-    friend class ScopedDrawHelper;
     friend class ScopedDrawWithTransformFeedback;
+    friend class ScopedFakeVertexAttrib0;
     friend class ScopedFBRebinder;
     friend class WebGL2Context;
     friend class WebGLContextUserData;
@@ -301,6 +302,9 @@ class WebGLContext
     friend class webgl::AvailabilityRunnable;
     friend struct webgl::LinkedProgramInfo;
     friend struct webgl::UniformBlockInfo;
+
+    friend const webgl::CachedDrawFetchLimits*
+        ValidateDraw(WebGLContext*, const char*, GLenum, uint32_t);
 
     enum {
         UNPACK_FLIP_Y_WEBGL = 0x9240,
@@ -1411,11 +1415,8 @@ public:
     void VertexAttribDivisor(GLuint index, GLuint divisor);
 
 private:
-    bool DrawArrays_check(const char* funcName, GLint first, GLsizei vertCount,
-                          GLsizei instanceCount, Maybe<uint32_t>* out_lastVert);
-    bool DrawElements_check(const char* funcName, GLsizei indexCount, GLenum type,
-                            WebGLintptr byteOffset, GLsizei instanceCount,
-                            Maybe<uint32_t>* out_lastVert);
+    WebGLBuffer* DrawElements_check(const char* funcName, GLsizei indexCount, GLenum type,
+                                    WebGLintptr byteOffset, GLsizei instanceCount);
     void Draw_cleanup(const char* funcName);
 
     void VertexAttrib1fv_base(GLuint index, uint32_t arrayLength,
@@ -1433,7 +1434,7 @@ private:
 // PROTECTED
 protected:
     WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need() const;
-    bool DoFakeVertexAttrib0(const char* funcName, GLuint vertexCount);
+    bool DoFakeVertexAttrib0(const char* funcName, uint64_t vertexCount);
     void UndoFakeVertexAttrib0();
 
     CheckedUint32 mGeneration;
