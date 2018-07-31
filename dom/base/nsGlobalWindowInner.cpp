@@ -3766,24 +3766,6 @@ nsGlobalWindowInner::Blur(ErrorResult& aError)
 }
 
 void
-nsGlobalWindowInner::Back(ErrorResult& aError)
-{
-  FORWARD_TO_OUTER_OR_THROW(BackOuter, (aError), aError, );
-}
-
-void
-nsGlobalWindowInner::Forward(ErrorResult& aError)
-{
-  FORWARD_TO_OUTER_OR_THROW(ForwardOuter, (aError), aError, );
-}
-
-void
-nsGlobalWindowInner::Home(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
-{
-  FORWARD_TO_OUTER_OR_THROW(HomeOuter, (aSubjectPrincipal, aError), aError, );
-}
-
-void
 nsGlobalWindowInner::Stop(ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(StopOuter, (aError), aError, );
