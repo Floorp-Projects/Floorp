@@ -361,7 +361,6 @@ this.commands = class extends ExtensionAPI {
         onCommand: new EventManager({
           context,
           name: "commands.onCommand",
-          inputHandling: true,
           register: fire => {
             let listener = (eventName, commandName) => {
               fire.async(commandName);
