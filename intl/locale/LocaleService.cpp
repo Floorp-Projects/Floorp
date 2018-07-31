@@ -315,6 +315,11 @@ LocaleService::GetRequestedLocales(nsTArray<nsCString>& aRetVal)
 bool
 LocaleService::GetAvailableLocales(nsTArray<nsCString>& aRetVal)
 {
+  MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
+  if (!mIsServer) {
+    return false;
+  }
+
   if (mAvailableLocales.IsEmpty()) {
     // If there are no available locales set, it means that L10nRegistry
     // did not register its locale pool yet. The best course of action
@@ -903,6 +908,11 @@ NS_IMETHODIMP
 LocaleService::SetRequestedLocales(const char** aRequested,
                                    uint32_t aRequestedCount)
 {
+  MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
+  if (!mIsServer) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsAutoCString str;
 
   for (uint32_t i = 0; i < aRequestedCount; i++) {
@@ -949,6 +959,11 @@ NS_IMETHODIMP
 LocaleService::SetAvailableLocales(const char** aAvailable,
                                    uint32_t aAvailableCount)
 {
+  MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
+  if (!mIsServer) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsTArray<nsCString> newLocales;
 
   for (uint32_t i = 0; i < aAvailableCount; i++) {
