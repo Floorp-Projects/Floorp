@@ -72,6 +72,32 @@ fn gnu_warnings() {
 }
 
 #[test]
+fn gnu_extra_warnings0() {
+    let test = Test::gnu();
+    test.gcc()
+        .warnings(true)
+        .extra_warnings(false)
+        .flag("-Wno-missing-field-initializers")
+        .file("foo.c")
+        .compile("foo");
+
+    test.cmd(0).must_have("-Wall").must_not_have("-Wextra");
+}
+
+#[test]
+fn gnu_extra_warnings1() {
+    let test = Test::gnu();
+    test.gcc()
+        .warnings(false)
+        .extra_warnings(true)
+        .flag("-Wno-missing-field-initializers")
+        .file("foo.c")
+        .compile("foo");
+
+    test.cmd(0).must_not_have("-Wall").must_have("-Wextra");
+}
+
+#[test]
 fn gnu_warnings_overridable() {
     let test = Test::gnu();
     test.gcc()

@@ -2340,23 +2340,23 @@ BytecodeEmitter::emitNumberOp(double dval)
  * into emitTree which is recursive and uses relatively little stack space.
  */
 MOZ_NEVER_INLINE bool
-BytecodeEmitter::emitSwitch(ParseNode* pn)
+BytecodeEmitter::emitSwitch(SwitchStatement* pn)
 {
-    ParseNode* lexical = pn->pn_right;
-    MOZ_ASSERT(lexical->isKind(ParseNodeKind::LexicalScope));
-    ParseNode* cases = lexical->scopeBody();
+    ParseNode& lexical = pn->lexicalForCaseList();
+    MOZ_ASSERT(lexical.isKind(ParseNodeKind::LexicalScope));
+    ParseNode* cases = lexical.scopeBody();
     MOZ_ASSERT(cases->isKind(ParseNodeKind::StatementList));
 
     SwitchEmitter se(this);
     if (!se.emitDiscriminant(Some(pn->pn_pos.begin)))
         return false;
-    if (!emitTree(pn->pn_left))
+    if (!emitTree(&pn->discriminant()))
         return false;
 
     // Enter the scope before pushing the switch BreakableControl since all
     // breaks are under this scope.
-    if (!lexical->isEmptyScope()) {
-        if (!se.emitLexical(lexical->scopeBindings()))
+    if (!lexical.isEmptyScope()) {
+        if (!se.emitLexical(lexical.scopeBindings()))
             return false;
 
         // A switch statement may contain hoisted functions inside its
@@ -2375,34 +2375,26 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     }
 
     SwitchEmitter::TableGenerator tableGen(this);
-    uint32_t caseCount = cases->pn_count;
+    uint32_t caseCount = cases->pn_count - (pn->hasDefault() ? 1 : 0);
     CaseClause* firstCase = cases->pn_head ? &cases->pn_head->as<CaseClause>() : nullptr;
     if (caseCount == 0) {
         tableGen.finish(0);
-    } else if (caseCount == 1 && firstCase->isDefault()) {
-        caseCount = 0;
-        tableGen.finish(0);
     } else {
         for (CaseClause* caseNode = firstCase; caseNode; caseNode = caseNode->next()) {
-            if (caseNode->isDefault()) {
-                caseCount--;  // one of the "cases" was the default
-                continue;
-            }
-
-            if (tableGen.isInvalid())
+            if (caseNode->isDefault())
                 continue;
 
             ParseNode* caseValue = caseNode->caseExpression();
 
             if (caseValue->getKind() != ParseNodeKind::Number) {
                 tableGen.setInvalid();
-                continue;
+                break;
             }
 
             int32_t i;
             if (!NumberEqualsInt32(caseValue->pn_dval, &i)) {
                 tableGen.setInvalid();
-                continue;
+                break;
             }
 
             if (!tableGen.addNumber(i))
@@ -8315,7 +8307,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::Switch:
-        if (!emitSwitch(pn))
+        if (!emitSwitch(&pn->as<SwitchStatement>()))
             return false;
         break;
 

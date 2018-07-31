@@ -81,11 +81,14 @@ function setupHelper(obj) {
     },
     formatters: {
       pausePoints: url => _formatPausePoints(dbg, url)
+    },
+    _telemetry: {
+      events: {}
     }
   };
   window.dbg = dbg;
 
-  if ((0, _devtoolsEnvironment.isDevelopment)()) {
+  if ((0, _devtoolsEnvironment.isDevelopment)() && !(0, _devtoolsEnvironment.isTesting)()) {
     console.group("Development Notes");
     const baseUrl = "https://devtools-html.github.io/debugger.html";
     const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;

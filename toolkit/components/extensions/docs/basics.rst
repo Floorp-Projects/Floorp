@@ -180,7 +180,7 @@ WebExtension's ``manifest.json`` file.  For example:
         "child": {
           "scopes": ["addon_child"],
           "paths": [["myapi"]],
-          "script" "child-implementation.js"
+          "script": "child-implementation.js"
         }
       }
     }
