@@ -368,7 +368,7 @@ var gSync = {
     if (!createDeviceNodeFn) {
       createDeviceNodeFn = (clientId, name, clientType, lastModified) => {
         let eltName = name ? "menuitem" : "menuseparator";
-        return document.createXULElement(eltName);
+        return document.createElement(eltName);
       };
     }
 

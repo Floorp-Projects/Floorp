@@ -236,7 +236,7 @@ var ctrlTab = {
   },
 
   makePreview: function ctrlTab_makePreview(aIsShowAllButton) {
-    let preview = document.createXULElement("button");
+    let preview = document.createElement("button");
     preview.setAttribute("class", "ctrlTab-preview");
     preview.setAttribute("pack", "center");
     if (!aIsShowAllButton) {
@@ -253,7 +253,7 @@ var ctrlTab = {
       }
     });
 
-    let previewInner = document.createXULElement("vbox");
+    let previewInner = document.createElement("vbox");
     previewInner.setAttribute("class", "ctrlTab-preview-inner");
     preview.appendChild(previewInner);
 
@@ -261,7 +261,7 @@ var ctrlTab = {
       let canvasWidth = this.canvasWidth;
       let canvasHeight = this.canvasHeight;
 
-      let canvas = preview._canvas = document.createXULElement("hbox");
+      let canvas = preview._canvas = document.createElement("hbox");
       canvas.setAttribute("class", "ctrlTab-canvas");
       canvas.setAttribute("width", canvasWidth);
       canvas.style.minWidth = canvasWidth + "px";
@@ -270,16 +270,16 @@ var ctrlTab = {
       canvas.style.maxHeight = canvasHeight + "px";
       previewInner.appendChild(canvas);
 
-      let faviconContainer = document.createXULElement("hbox");
+      let faviconContainer = document.createElement("hbox");
       faviconContainer.setAttribute("class", "ctrlTab-favicon-container");
       previewInner.appendChild(faviconContainer);
 
-      let favicon = preview._favicon = document.createXULElement("image");
+      let favicon = preview._favicon = document.createElement("image");
       favicon.setAttribute("class", "ctrlTab-favicon");
       faviconContainer.appendChild(favicon);
     }
 
-    let label = preview._label = document.createXULElement("label");
+    let label = preview._label = document.createElement("label");
     label.setAttribute("class", "ctrlTab-label plain");
     label.setAttribute("crop", "end");
     previewInner.appendChild(label);

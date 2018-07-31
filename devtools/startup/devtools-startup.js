@@ -432,9 +432,9 @@ DevToolsStartup.prototype = {
         if (doc.getElementById("PanelUI-developerItems")) {
           return;
         }
-        const view = doc.createXULElement("panelview");
+        const view = doc.createElement("panelview");
         view.id = "PanelUI-developerItems";
-        const panel = doc.createXULElement("vbox");
+        const panel = doc.createElement("vbox");
         panel.setAttribute("class", "panel-subview-body");
         view.appendChild(panel);
         doc.getElementById("PanelUI-multiView").appendChild(view);
@@ -471,7 +471,7 @@ DevToolsStartup.prototype = {
     const {document} = window;
 
     // Create the menu item.
-    const item = document.createXULElement("menuitem");
+    const item = document.createElement("menuitem");
     item.id = "enableDeveloperTools";
     item.setAttribute("label", StartupBundle.GetStringFromName("enableDevTools.label"));
     item.setAttribute("accesskey",
@@ -569,7 +569,7 @@ DevToolsStartup.prototype = {
       return;
     }
 
-    const keyset = doc.createXULElement("keyset");
+    const keyset = doc.createElement("keyset");
     keyset.setAttribute("id", "devtoolsKeyset");
 
     for (const key of KeyShortcuts) {
@@ -601,7 +601,7 @@ DevToolsStartup.prototype = {
 
   // Create a <xul:key> DOM Element
   createKey(doc, { id, toolId, shortcut, modifiers: mod }, oncommand) {
-    const k = doc.createXULElement("key");
+    const k = doc.createElement("key");
     k.id = "key_" + (id || toolId);
 
     if (shortcut.startsWith("VK_")) {
