@@ -606,7 +606,7 @@ public:
   SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
     size_t n = 0;
-    n += mSet.sizeOfExcludingThis(aMallocSizeOf);
+    n += mSet.shallowSizeOfExcludingThis(aMallocSizeOf);
     for (auto r = mSet.all(); !r.empty(); r.popFront()) {
       n += aMallocSizeOf(r.front());
     }
@@ -1672,11 +1672,13 @@ SizeOfInternal(Sizes* aSizes)
   }
 
   aSizes->mStackTraceTable =
-    gStackTraceTable->sizeOfIncludingThis(MallocSizeOf);
+    gStackTraceTable->shallowSizeOfIncludingThis(MallocSizeOf);
 
-  aSizes->mLiveBlockTable = gLiveBlockTable->sizeOfIncludingThis(MallocSizeOf);
+  aSizes->mLiveBlockTable =
+    gLiveBlockTable->shallowSizeOfIncludingThis(MallocSizeOf);
 
-  aSizes->mDeadBlockTable = gDeadBlockTable->sizeOfIncludingThis(MallocSizeOf);
+  aSizes->mDeadBlockTable =
+    gDeadBlockTable->shallowSizeOfIncludingThis(MallocSizeOf);
 }
 
 void
@@ -1732,7 +1734,7 @@ public:
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return mIdMap.sizeOfExcludingThis(aMallocSizeOf);
+    return mIdMap.shallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
 private:
@@ -2047,9 +2049,10 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
     StatusMsg("      Location service:      %10s bytes\n",
       Show(locService->SizeOfIncludingThis(MallocSizeOf), buf1, kBufLen));
     StatusMsg("      Used stack traces set: %10s bytes\n",
-      Show(usedStackTraces.sizeOfExcludingThis(MallocSizeOf), buf1, kBufLen));
+      Show(usedStackTraces.shallowSizeOfExcludingThis(MallocSizeOf), buf1,
+           kBufLen));
     StatusMsg("      Used PCs set:          %10s bytes\n",
-      Show(usedPcs.sizeOfExcludingThis(MallocSizeOf), buf1, kBufLen));
+      Show(usedPcs.shallowSizeOfExcludingThis(MallocSizeOf), buf1, kBufLen));
     StatusMsg("      Pointer ID map:        %10s bytes\n",
       Show(iscSize, buf1, kBufLen));
 

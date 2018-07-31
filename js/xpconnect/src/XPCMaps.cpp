@@ -88,7 +88,7 @@ size_t
 JSObject2WrappedJSMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
-    n += mTable.sizeOfExcludingThis(mallocSizeOf);
+    n += mTable.shallowSizeOfExcludingThis(mallocSizeOf);
     return n;
 }
 

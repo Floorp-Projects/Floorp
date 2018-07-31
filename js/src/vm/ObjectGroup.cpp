@@ -1747,10 +1747,10 @@ ObjectGroupRealm::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
         *allocationSiteTables += allocationSiteTable->sizeOfIncludingThis(mallocSizeOf);
 
     if (arrayObjectTable)
-        *arrayObjectGroupTables += arrayObjectTable->sizeOfIncludingThis(mallocSizeOf);
+        *arrayObjectGroupTables += arrayObjectTable->shallowSizeOfIncludingThis(mallocSizeOf);
 
     if (plainObjectTable) {
-        *plainObjectGroupTables += plainObjectTable->sizeOfIncludingThis(mallocSizeOf);
+        *plainObjectGroupTables += plainObjectTable->shallowSizeOfIncludingThis(mallocSizeOf);
 
         for (PlainObjectTable::Enum e(*plainObjectTable);
              !e.empty();

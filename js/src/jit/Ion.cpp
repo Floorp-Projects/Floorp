@@ -650,7 +650,7 @@ JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
     if (stubCodes_)
-        n += stubCodes_->sizeOfIncludingThis(mallocSizeOf);
+        n += stubCodes_->shallowSizeOfIncludingThis(mallocSizeOf);
     return n;
 }
 
@@ -661,8 +661,8 @@ JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* cachedCFG) const
 {
     *jitZone += mallocSizeOf(this);
-    *jitZone += baselineCacheIRStubCodes_.sizeOfExcludingThis(mallocSizeOf);
-    *jitZone += ionCacheIRStubInfoSet_.sizeOfExcludingThis(mallocSizeOf);
+    *jitZone += baselineCacheIRStubCodes_.shallowSizeOfExcludingThis(mallocSizeOf);
+    *jitZone += ionCacheIRStubInfoSet_.shallowSizeOfExcludingThis(mallocSizeOf);
 
     *baselineStubsOptimized += optimizedStubSpace_.sizeOfExcludingThis(mallocSizeOf);
     *cachedCFG += cfgSpace_.sizeOfExcludingThis(mallocSizeOf);

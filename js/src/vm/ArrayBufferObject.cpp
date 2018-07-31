@@ -1636,7 +1636,7 @@ InnerViewTable::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
         vectorSize += e.front().value().sizeOfExcludingThis(mallocSizeOf);
 
     return vectorSize
-         + map.sizeOfExcludingThis(mallocSizeOf)
+         + map.shallowSizeOfExcludingThis(mallocSizeOf)
          + nurseryKeys.sizeOfExcludingThis(mallocSizeOf);
 }
 
