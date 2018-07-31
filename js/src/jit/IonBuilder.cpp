@@ -9765,8 +9765,8 @@ AbortReasonOr<Ok>
 IonBuilder::jsop_getelem_super()
 {
     MDefinition* obj = current->pop();
-    MDefinition* receiver = current->pop();
     MDefinition* id = current->pop();
+    MDefinition* receiver = current->pop();
 
 #if defined(JS_CODEGEN_X86)
     if (instrumentedProfiling())
