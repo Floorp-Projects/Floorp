@@ -36,3 +36,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
 TEST_DIRS += ['test']
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

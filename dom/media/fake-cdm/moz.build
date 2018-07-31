@@ -30,3 +30,6 @@ NoVisibilityFlags()
 # Don't use STL wrappers; this isn't Gecko code
 DisableStlWrapping()
 NO_PGO = True
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497
