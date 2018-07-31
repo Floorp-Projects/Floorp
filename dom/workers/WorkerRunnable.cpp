@@ -348,7 +348,7 @@ WorkerRunnable::Run()
   // situation described above when globalObject is null.  Make sure to enter
   // the realm of the worker's reflector if there is one.  There might
   // not be one if we're just starting to compile the script for this worker.
-  Maybe<JSAutoRealmAllowCCW> ar;
+  Maybe<JSAutoRealm> ar;
   if (!targetIsWorkerThread &&
       mWorkerPrivate->IsDedicatedWorker() &&
       mWorkerPrivate->ParentEventTargetRef()->GetWrapper()) {
