@@ -268,7 +268,6 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
   gParentArgv.append(nullptr);
 
   MOZ_RELEASE_ASSERT(*aArgc >= 1);
-  MOZ_RELEASE_ASSERT(!strcmp((*aArgv)[0], gParentArgv[0]));
   MOZ_RELEASE_ASSERT(gParentArgv.back() == nullptr);
 
   *aArgc = gParentArgv.length() - 1; // For the trailing null.
