@@ -13,6 +13,8 @@
 
 #ifdef MOZ_LIB_SECRET
 #include "LibSecret.h"
+#elif defined(XP_MACOSX)
+#include "KeychainSecret.h"
 #else
 #include "NSSKeyStore.h"
 #endif
@@ -29,6 +31,8 @@ OSKeyStore::OSKeyStore()
 {
 #ifdef MOZ_LIB_SECRET
   mKs.reset(new LibSecret());
+#elif defined(XP_MACOSX)
+  mKs.reset(new KeychainSecret());
 #else
   mKs.reset(new NSSKeyStore());
 #endif
@@ -754,4 +758,37 @@ bool
 AbstractOSKeyStore::IsNSSKeyStore()
 {
   return false;
+}
+
+bool
+AbstractOSKeyStore::SecretAvailable(const nsACString& aLabel)
+{
+  nsAutoCString secret;
+  nsresult rv = RetrieveSecret(aLabel, secret);
+  if (NS_FAILED(rv) || secret.Length() == 0) {
+    return false;
+  }
+  return true;
+}
+
+nsresult
+AbstractOSKeyStore::EncryptDecrypt(const nsACString& aLabel,
+                                   const std::vector<uint8_t>& inBytes,
+                                   std::vector<uint8_t>& outBytes,
+                                   bool encrypt)
+{
+  nsAutoCString secret;
+  nsresult rv = RetrieveSecret(aLabel, secret);
+  if (NS_FAILED(rv) || secret.Length() == 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint8_t* p = BitwiseCast<uint8_t*, const char*>(secret.BeginReading());
+  std::vector<uint8_t> buf(p, p + secret.Length());
+  UniquePK11SymKey symKey;
+  rv = BuildAesGcmKey(buf, symKey);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+  return DoCipher(symKey, inBytes, outBytes, encrypt);
 }
