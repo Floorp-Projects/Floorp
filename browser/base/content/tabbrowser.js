@@ -3726,6 +3726,7 @@ window._gBrowser = {
     }
 
     aTab.setAttribute("multiselected", "true");
+    aTab.setAttribute("aria-selected", "true");
     this._multiSelectedTabsSet.add(aTab);
     this._startMultiSelectChange();
     if (this._multiSelectChangeRemovals.has(aTab)) {
@@ -3765,6 +3766,7 @@ window._gBrowser = {
       return;
     }
     aTab.removeAttribute("multiselected");
+    aTab.removeAttribute("aria-selected");
     this._multiSelectedTabsSet.delete(aTab);
     this._startMultiSelectChange();
     if (this._multiSelectChangeAdditions.has(aTab)) {
