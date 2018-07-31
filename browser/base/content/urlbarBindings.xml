@@ -115,7 +115,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                insertLocation.getAttribute("cmd") != "cmd_paste")
           insertLocation = insertLocation.nextSibling;
         if (insertLocation) {
-          pasteAndGo = document.createXULElement("menuitem");
+          pasteAndGo = document.createElement("menuitem");
           let label = Services.strings.createBundle("chrome://browser/locale/browser.properties").
                                    GetStringFromName("pasteAndGo.label");
           pasteAndGo.setAttribute("label", label);

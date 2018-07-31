@@ -75,7 +75,7 @@ var gTabsPanel = {
       let frag = document.createDocumentFragment();
 
       ContextualIdentityService.getPublicIdentities().forEach(identity => {
-        let menuitem = document.createXULElement("toolbarbutton");
+        let menuitem = document.createElement("toolbarbutton");
         menuitem.setAttribute("class", "subviewbutton subviewbutton-iconic");
         menuitem.setAttribute("label", ContextualIdentityService.getUserContextLabel(identity.userContextId));
         // The styles depend on this.

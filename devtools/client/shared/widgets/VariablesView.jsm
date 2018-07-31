@@ -76,7 +76,7 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
   this._onViewKeyDown = this._onViewKeyDown.bind(this);
 
   // Create an internal scrollbox container.
-  this._list = this.document.createXULElement("scrollbox");
+  this._list = this.document.createElement("scrollbox");
   this._list.setAttribute("orient", "vertical");
   this._list.addEventListener("keydown", this._onViewKeyDown);
   this._parent.appendChild(this._list);
@@ -178,7 +178,7 @@ VariablesView.prototype = {
    */
   _emptySoon: function(aTimeout) {
     const prevList = this._list;
-    const currList = this._list = this.document.createXULElement("scrollbox");
+    const currList = this._list = this.document.createElement("scrollbox");
 
     this.window.setTimeout(() => {
       prevList.removeEventListener("keydown", this._onViewKeyDown);
@@ -431,14 +431,14 @@ VariablesView.prototype = {
     const document = this.document;
     const ownerNode = this._parent.parentNode;
 
-    const container = this._searchboxContainer = document.createXULElement("hbox");
+    const container = this._searchboxContainer = document.createElement("hbox");
     container.className = "devtools-toolbar";
 
     // Hide the variables searchbox container if there are no variables or
     // properties to display.
     container.hidden = !this._store.length;
 
-    const searchbox = this._searchboxNode = document.createXULElement("textbox");
+    const searchbox = this._searchboxNode = document.createElement("textbox");
     searchbox.className = "variables-view-searchinput devtools-filterinput";
     searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
     searchbox.setAttribute("type", "search");
@@ -913,7 +913,7 @@ VariablesView.prototype = {
       return;
     }
 
-    const label = this.document.createXULElement("label");
+    const label = this.document.createElement("label");
     label.className = "variables-view-empty-notice";
     label.setAttribute("value", this._emptyTextValue);
 
@@ -1783,24 +1783,24 @@ Scope.prototype = {
   _displayScope: function(aName = "", aTargetClassName, aTitleClassName = "") {
     const document = this.document;
 
-    const element = this._target = document.createXULElement("vbox");
+    const element = this._target = document.createElement("vbox");
     element.id = this._idString;
     element.className = aTargetClassName;
 
-    const arrow = this._arrow = document.createXULElement("hbox");
+    const arrow = this._arrow = document.createElement("hbox");
     arrow.className = "arrow theme-twisty";
 
-    const name = this._name = document.createXULElement("label");
+    const name = this._name = document.createElement("label");
     name.className = "plain name";
     name.setAttribute("value", aName.trim());
     name.setAttribute("crop", "end");
 
-    const title = this._title = document.createXULElement("hbox");
+    const title = this._title = document.createElement("hbox");
     title.className = "title " + aTitleClassName;
     title.setAttribute("align", "center");
 
-    const enumerable = this._enum = document.createXULElement("vbox");
-    const nonenum = this._nonenum = document.createXULElement("vbox");
+    const enumerable = this._enum = document.createElement("vbox");
+    const nonenum = this._nonenum = document.createElement("vbox");
     enumerable.className = "variables-view-element-details enum";
     nonenum.className = "variables-view-element-details nonenum";
 
@@ -2522,11 +2522,11 @@ Variable.prototype = extend(Scope.prototype, {
     const document = this.document;
     const descriptor = this._initialDescriptor;
 
-    const separatorLabel = this._separatorLabel = document.createXULElement("label");
+    const separatorLabel = this._separatorLabel = document.createElement("label");
     separatorLabel.className = "plain separator";
     separatorLabel.setAttribute("value", this.separatorStr + " ");
 
-    const valueLabel = this._valueLabel = document.createXULElement("label");
+    const valueLabel = this._valueLabel = document.createElement("label");
     valueLabel.className = "plain value";
     valueLabel.setAttribute("flex", "1");
     valueLabel.setAttribute("crop", "center");
@@ -2583,21 +2583,21 @@ Variable.prototype = extend(Scope.prototype, {
     const descriptor = this._initialDescriptor;
 
     if (ownerView.eval && this.getter || this.setter) {
-      const editNode = this._editNode = this.document.createXULElement("toolbarbutton");
+      const editNode = this._editNode = this.document.createElement("toolbarbutton");
       editNode.className = "plain variables-view-edit";
       editNode.addEventListener("mousedown", this._onEdit.bind(this));
       this._title.insertBefore(editNode, this._spacer);
     }
 
     if (ownerView.delete) {
-      const deleteNode = this._deleteNode = this.document.createXULElement("toolbarbutton");
+      const deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
       deleteNode.className = "plain variables-view-delete";
       deleteNode.addEventListener("click", this._onDelete.bind(this));
       this._title.appendChild(deleteNode);
     }
 
     if (ownerView.new) {
-      const addPropertyNode = this._addPropertyNode = this.document.createXULElement("toolbarbutton");
+      const addPropertyNode = this._addPropertyNode = this.document.createElement("toolbarbutton");
       addPropertyNode.className = "plain variables-view-add-property";
       addPropertyNode.addEventListener("mousedown", this._onAddProperty.bind(this));
       this._title.appendChild(addPropertyNode);
@@ -2617,28 +2617,28 @@ Variable.prototype = extend(Scope.prototype, {
     }
 
     if (!descriptor.writable && !ownerView.getter && !ownerView.setter) {
-      const nonWritableIcon = this.document.createXULElement("hbox");
+      const nonWritableIcon = this.document.createElement("hbox");
       nonWritableIcon.className = "plain variable-or-property-non-writable-icon";
       nonWritableIcon.setAttribute("optional-visibility", "");
       this._title.appendChild(nonWritableIcon);
     }
     if (descriptor.value && typeof descriptor.value == "object") {
       if (descriptor.value.frozen) {
-        const frozenLabel = this.document.createXULElement("label");
+        const frozenLabel = this.document.createElement("label");
         frozenLabel.className = "plain variable-or-property-frozen-label";
         frozenLabel.setAttribute("optional-visibility", "");
         frozenLabel.setAttribute("value", "F");
         this._title.appendChild(frozenLabel);
       }
       if (descriptor.value.sealed) {
-        const sealedLabel = this.document.createXULElement("label");
+        const sealedLabel = this.document.createElement("label");
         sealedLabel.className = "plain variable-or-property-sealed-label";
         sealedLabel.setAttribute("optional-visibility", "");
         sealedLabel.setAttribute("value", "S");
         this._title.appendChild(sealedLabel);
       }
       if (!descriptor.value.extensible) {
-        const nonExtensibleLabel = this.document.createXULElement("label");
+        const nonExtensibleLabel = this.document.createElement("label");
         nonExtensibleLabel.className = "plain variable-or-property-non-extensible-label";
         nonExtensibleLabel.setAttribute("optional-visibility", "");
         nonExtensibleLabel.setAttribute("value", "N");
@@ -2665,7 +2665,7 @@ Variable.prototype = extend(Scope.prototype, {
       return;
     }
 
-    const tooltip = this.document.createXULElement("tooltip");
+    const tooltip = this.document.createElement("tooltip");
     tooltip.id = "tooltip-" + this._idString;
     tooltip.setAttribute("orient", "horizontal");
 
@@ -2674,7 +2674,7 @@ Variable.prototype = extend(Scope.prototype, {
       "frozen", "sealed", "extensible", "overridden", "WebIDL"];
 
     for (const type of labels) {
-      const labelElement = this.document.createXULElement("label");
+      const labelElement = this.document.createElement("label");
       labelElement.className = type;
       labelElement.setAttribute("value", L10N.getStr(type + "Tooltip"));
       tooltip.appendChild(labelElement);
@@ -2734,7 +2734,7 @@ Variable.prototype = extend(Scope.prototype, {
     this._valueLabel.addEventListener("mouseout", this.unhighlightDomNode);
 
     // Add a button to open the node in the inspector
-    this._openInspectorNode = this.document.createXULElement("toolbarbutton");
+    this._openInspectorNode = this.document.createElement("toolbarbutton");
     this._openInspectorNode.className = "plain variables-view-open-inspector";
     this._openInspectorNode.addEventListener("mousedown", this.openNodeInInspector);
     this._title.appendChild(this._openInspectorNode);
@@ -3968,7 +3968,7 @@ Editable.prototype = {
 
     // Create a texbox input element which will be shown in the current
     // element's specified label location.
-    const input = this._input = this._variable.document.createXULElement("textbox");
+    const input = this._input = this._variable.document.createElement("textbox");
     input.className = "plain " + this.className;
     input.setAttribute("value", initialString);
     input.setAttribute("flex", "1");

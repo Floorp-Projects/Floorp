@@ -311,12 +311,12 @@ class Tooltip {
     messagesClass = messagesClass || "default-tooltip-simple-text-colors";
     containerClass = containerClass || "default-tooltip-simple-text-colors";
 
-    const vbox = this.doc.createXULElement("vbox");
+    const vbox = this.doc.createElement("vbox");
     vbox.className = "devtools-tooltip-simple-text-container " + containerClass;
     vbox.setAttribute("flex", "1");
 
     for (const text of messages) {
-      const description = this.doc.createXULElement("description");
+      const description = this.doc.createElement("description");
       description.setAttribute("flex", "1");
       description.className = "devtools-tooltip-simple-text " + messagesClass;
       description.textContent = text;
@@ -324,7 +324,7 @@ class Tooltip {
     }
 
     for (const { label, className, command } of extraButtons) {
-      const button = this.doc.createXULElement("button");
+      const button = this.doc.createElement("button");
       button.className = className;
       button.setAttribute("label", label);
       button.addEventListener("command", command);
@@ -390,7 +390,7 @@ class Tooltip {
    * Create the tooltip panel
    */
   _createPanel() {
-    const panel = this.doc.createXULElement("panel");
+    const panel = this.doc.createElement("panel");
     panel.setAttribute("hidden", true);
     panel.setAttribute("ignorekeys", true);
     panel.setAttribute("animate", false);

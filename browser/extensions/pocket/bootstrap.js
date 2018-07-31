@@ -64,7 +64,7 @@ function setDefaultPrefs() {
 }
 
 function createElementWithAttrs(document, type, attrs) {
-  let element = document.createXULElement(type);
+  let element = document.createElement(type);
   Object.keys(attrs).forEach(function(attr) {
     element.setAttribute(attr, attrs[attr]);
   });
@@ -104,18 +104,18 @@ var PocketPageAction = {
             return;
           }
 
-          let wrapper = doc.createXULElement("hbox");
+          let wrapper = doc.createElement("hbox");
           wrapper.id = "pocket-button-box";
           wrapper.classList.add("urlbar-icon-wrapper", "urlbar-page-action");
-          let animatableBox = doc.createXULElement("hbox");
+          let animatableBox = doc.createElement("hbox");
           animatableBox.id = "pocket-animatable-box";
-          let animatableImage = doc.createXULElement("image");
+          let animatableImage = doc.createElement("image");
           animatableImage.id = "pocket-animatable-image";
           animatableImage.setAttribute("role", "presentation");
           let tooltip =
             gPocketBundle.GetStringFromName("pocket-button.tooltiptext");
           animatableImage.setAttribute("tooltiptext", tooltip);
-          let pocketButton = doc.createXULElement("image");
+          let pocketButton = doc.createElement("image");
           pocketButton.id = "pocket-button";
           pocketButton.classList.add("urlbar-icon");
           pocketButton.setAttribute("role", "button");

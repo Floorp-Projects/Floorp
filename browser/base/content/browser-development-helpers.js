@@ -24,13 +24,13 @@ var DevelopmentHelpers = {
   },
 
   addRestartShortcut() {
-    let command = document.createXULElement("command");
+    let command = document.createElement("command");
     command.setAttribute("id", "cmd_quickRestart");
     command.addEventListener("command", this.quickRestart, true);
     command.setAttribute("oncommand", "void 0;"); // Needed - bug 371900
     document.getElementById("mainCommandSet").prepend(command);
 
-    let key = document.createXULElement("key");
+    let key = document.createElement("key");
     key.setAttribute("id", "key_quickRestart");
     key.setAttribute("key", "r");
     key.setAttribute("modifiers", "accel,alt");
@@ -38,7 +38,7 @@ var DevelopmentHelpers = {
     key.setAttribute("oncommand", "void 0;"); // Needed - bug 371900
     document.getElementById("mainKeyset").prepend(key);
 
-    let menuitem = document.createXULElement("menuitem");
+    let menuitem = document.createElement("menuitem");
     menuitem.setAttribute("id", "menu_FileRestartItem");
     menuitem.setAttribute("key", "key_quickRestart");
     menuitem.setAttribute("label", "Restart (Developer)");
