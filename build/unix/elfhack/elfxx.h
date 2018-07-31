@@ -383,7 +383,7 @@ public:
         insertInSegments(section->segments);
     }
 
-    void insertBefore(ElfSection *section, bool dirty = true) {
+    virtual void insertBefore(ElfSection *section, bool dirty = true) {
         if (previous != nullptr)
             previous->next = next;
         if (next != nullptr)
