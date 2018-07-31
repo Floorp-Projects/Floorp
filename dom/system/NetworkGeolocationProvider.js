@@ -371,7 +371,9 @@ WifiGeoPositionProvider.prototype = {
 
     if (useCached) {
       gCachedRequest.location.timestamp = Date.now();
-      this.listener.update(gCachedRequest.location);
+      if (this.listener) {
+        this.listener.update(gCachedRequest.location);
+      }
       return;
     }
 
