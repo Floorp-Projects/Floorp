@@ -683,7 +683,7 @@ static const ClassOps StructTypeDescrClassOps = {
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     TypeDescr::finalize,
-    nullptr, /* call */
+    StructTypeDescr::call,
     nullptr, /* hasInstance */
     TypedObject::construct
 };
@@ -1047,6 +1047,15 @@ StructTypeDescr::fieldDescr(size_t index) const
     ArrayObject& fieldDescrs = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     return fieldDescrs.getDenseElement(index).toObject().as<TypeDescr>();
+}
+
+bool
+StructTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
+{
+    // A structure type is a constructor and hence callable, but at present the
+    // call always throws.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_STRUCTTYPE_NOT_CALLABLE);
+    return false;
 }
 
 /******************************************************************************
