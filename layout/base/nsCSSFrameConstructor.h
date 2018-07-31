@@ -46,6 +46,7 @@ class ComputedStyle;
 namespace dom {
 
 class CharacterData;
+class Text;
 class FlattenedChildIterator;
 
 } // namespace dom
@@ -57,6 +58,7 @@ public:
   typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
   typedef mozilla::dom::Element Element;
+  typedef mozilla::dom::Text Text;
 
   // FIXME(emilio): Is this really needed?
   friend class mozilla::RestyleManager;
@@ -808,6 +810,26 @@ private:
                                             ComputedStyle&,
                                             uint32_t aFlags);
 
+  const FrameConstructionData* FindDataForContent(nsIContent&,
+                                                  ComputedStyle&,
+                                                  nsIFrame* aParentFrame,
+                                                  nsAtom* aTag,
+                                                  uint32_t aFlags);
+
+  // aParentFrame might be null.  If it is, that means it was an inline frame.
+  static const FrameConstructionData* FindTextData(const Text&,
+                                                   nsIFrame* aParentFrame);
+  const FrameConstructionData* FindElementData(const Element&,
+                                               ComputedStyle&,
+                                               nsIFrame* aParentFrame,
+                                               nsAtom* aTag,
+                                               uint32_t aFlags);
+  const FrameConstructionData* FindElementTagData(const Element&,
+                                                  ComputedStyle&,
+                                                  nsIFrame* aParentFrame,
+                                                  nsAtom* aTag,
+                                                  uint32_t aFlags);
+
   /* A function that takes an integer, content, style, and array of
      FrameConstructionDataByInts and finds the appropriate frame construction
      data to use and returns it.  This can return null if none of the integers
@@ -1413,11 +1435,6 @@ private:
                                   const nsStyleDisplay* aStyleDisplay,
                                   nsFrameItems& aFrameItems);
 
-  // aParentFrame might be null.  If it is, that means it was an
-  // inline frame.
-  static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame,
-                                                   nsIContent* aTextContent);
-
   void ConstructTextFrame(const FrameConstructionData* aData,
                           nsFrameConstructorState& aState,
                           nsIContent*              aContent,
@@ -1537,7 +1554,6 @@ private:
   // be overriden by extends="" in XBL.
   static const FrameConstructionData* FindXULTagData(const Element&,
                                                      nsAtom* aTag,
-                                                     int32_t aNameSpaceID,
                                                      ComputedStyle&);
   // XUL data-finding helper functions and structures
 #ifdef MOZ_XUL
