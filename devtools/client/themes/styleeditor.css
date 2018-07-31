@@ -183,11 +183,6 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   opacity: 0.3;
 }
 
-.splitview-nav > li > .stylesheet-enabled:focus,
-.splitview-nav > li:hover > .stylesheet-enabled {
-  outline: 0;
-}
-
 .stylesheet-linked-file:not(:empty){
   margin-inline-end: 0.4em;
 }
@@ -261,12 +256,7 @@ h3 {
 
   .stylesheet-enabled {
     padding: 0;
-    background-position: 0 0;
     height: 24px;
-  }
-
-  .disabled > .stylesheet-enabled {
-    background-position: -24px 0;
   }
 
   .splitview-nav > li > hgroup.stylesheet-info {
