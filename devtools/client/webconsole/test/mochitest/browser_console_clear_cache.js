@@ -21,6 +21,12 @@ add_task(async function() {
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
   await onBrowserConsoleOutputCleared;
 
+  // Check that there are no other messages logged (see Bug 1457478).
+  // Log a message to make sure the console handled any prior log.
+  await logTextToConsole(hud, "after clear");
+  const messages = hud.ui.outputNode.querySelectorAll(".message");
+  is(messages.length, 1, "There is only the new message in the output");
+
   info("Close and re-open the browser console");
   await HUDService.toggleBrowserConsole();
   hud = await HUDService.toggleBrowserConsole();
