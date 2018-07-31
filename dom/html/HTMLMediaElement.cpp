@@ -4538,11 +4538,10 @@ HTMLMediaElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
 nsresult
 HTMLMediaElement::BindToTree(nsIDocument* aDocument,
                              nsIContent* aParent,
-                             nsIContent* aBindingParent,
-                             bool aCompileEventHandlers)
+                             nsIContent* aBindingParent)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(
-    aDocument, aParent, aBindingParent, aCompileEventHandlers);
+    aDocument, aParent, aBindingParent);
 
   mUnboundFromTree = false;
 

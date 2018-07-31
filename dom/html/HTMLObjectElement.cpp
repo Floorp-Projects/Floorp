@@ -230,17 +230,14 @@ HTMLObjectElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 nsresult
 HTMLObjectElement::BindToTree(nsIDocument *aDocument,
                               nsIContent *aParent,
-                              nsIContent *aBindingParent,
-                              bool aCompileEventHandlers)
+                              nsIContent *aBindingParent)
 {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
-                                                     aBindingParent,
-                                                     aCompileEventHandlers);
+                                                     aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsObjectLoadingContent::BindToTree(aDocument, aParent,
-                                          aBindingParent,
-                                          aCompileEventHandlers);
+                                          aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't kick off load from being bound to a plugin document - the plugin

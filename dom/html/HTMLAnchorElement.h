@@ -48,8 +48,7 @@ public:
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
+                              nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
   virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) override;

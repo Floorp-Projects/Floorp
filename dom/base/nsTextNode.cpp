@@ -47,8 +47,7 @@ public:
   }
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
+                              nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
 
@@ -137,11 +136,10 @@ nsTextNode::AppendTextForNormalize(const char16_t* aBuffer, uint32_t aLength,
 
 nsresult
 nsTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                       nsIContent* aBindingParent, bool aCompileEventHandlers)
+                       nsIContent* aBindingParent)
 {
   nsresult rv = CharacterData::BindToTree(aDocument, aParent,
-                                          aBindingParent,
-                                          aCompileEventHandlers);
+                                          aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetDirectionFromNewTextNode(this);
@@ -236,14 +234,13 @@ NS_IMPL_ISUPPORTS_INHERITED(nsAttributeTextNode, nsTextNode,
 
 nsresult
 nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+                                nsIContent* aBindingParent)
 {
   MOZ_ASSERT(aParent && aParent->GetParent(),
              "This node can't be a child of the document or of the document root");
 
   nsresult rv = nsTextNode::BindToTree(aDocument, aParent,
-                                       aBindingParent, aCompileEventHandlers);
+                                       aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(!mGrandparent, "We were already bound!");

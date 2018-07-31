@@ -49,8 +49,7 @@ public:
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
+                              nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
