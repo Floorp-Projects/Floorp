@@ -854,13 +854,6 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
   // remain frozen until they get an inner window.
   MOZ_ASSERT(IsFrozen());
 
-  if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIDocShell> docShell = GetDocShell();
-    if (docShell) {
-      mTabChild = docShell->GetTabChild();
-    }
-  }
-
   // We could have failed the first time through trying
   // to create the entropy collector, so we should
   // try to get one until we succeed.
@@ -1146,7 +1139,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleService)
 
@@ -1174,7 +1166,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleService)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleObservers)
@@ -1254,12 +1245,6 @@ JSObject *
 nsGlobalWindowOuter::GetGlobalJSObject()
 {
   return FastGetGlobalJSObject();
-}
-
-void
-nsGlobalWindowOuter::TraceGlobalJSObject(JSTracer* aTrc)
-{
-  TraceWrapper(aTrc, "active window global");
 }
 
 bool
@@ -2183,7 +2168,6 @@ nsGlobalWindowOuter::DetachFromDocShell()
     // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
     mDocumentURI = mDoc->GetDocumentURI();
-    mDocBaseURI = mDoc->GetDocBaseURI();
 
     // Release our document reference
     DropOuterWindowDocs();
@@ -6656,12 +6640,6 @@ nsGlobalWindowOuter::SetIsBackgroundInternal(bool aIsBackground)
 }
 
 void
-nsGlobalWindowOuter::MaybeUpdateTouchState()
-{
-  FORWARD_TO_INNER_VOID(MaybeUpdateTouchState, ());
-}
-
-void
 nsGlobalWindowOuter::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 {
   SetChromeEventHandlerInternal(aChromeEventHandler);
@@ -7244,13 +7222,6 @@ nsGlobalWindowOuter::SecurityCheckURL(const char *aURL, nsIURI** aURI)
   return NS_OK;
 }
 
-bool
-nsGlobalWindowOuter::IsPrivateBrowsing()
-{
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(GetDocShell());
-  return loadContext && loadContext->UsePrivateBrowsing();
-}
-
 void
 nsGlobalWindowOuter::FlushPendingNotifications(FlushType aType)
 {
@@ -7336,27 +7307,10 @@ nsGlobalWindowOuter::RestoreWindowState(nsISupports *aState)
   return NS_OK;
 }
 
-// XXX(nika): Can we remove these?
-void
-nsGlobalWindowOuter::EventListenerAdded(nsAtom* aType)
-{
-}
-
-void
-nsGlobalWindowOuter::EventListenerRemoved(nsAtom* aType)
-{
-}
-
 void
 nsGlobalWindowOuter::AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
 {
   aWindowSizes.mDOMOtherSize += aWindowSizes.mState.mMallocSizeOf(this);
-}
-
-bool
-nsGlobalWindowOuter::UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDevices)
-{
-  FORWARD_TO_INNER(UpdateVRDisplays, (aDevices), false);
 }
 
 uint32_t
@@ -7737,12 +7691,6 @@ nsPIDOMWindowOuter::GetDocumentURI() const
   return mDoc ? mDoc->GetDocumentURI() : mDocumentURI.get();
 }
 
-
-nsIURI*
-nsPIDOMWindowOuter::GetDocBaseURI() const
-{
-  return mDoc ? mDoc->GetDocBaseURI() : mDocBaseURI.get();
-}
 
 void
 nsPIDOMWindowOuter::MaybeCreateDoc()
