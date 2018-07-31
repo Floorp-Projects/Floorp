@@ -17,34 +17,48 @@
     <img src="img_request" />
     <script type="text/javascript">
       "use strict";
-
+      
       function performXhrRequest() {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", "xhr_request", true);
-        xhr.send();
+        return new Promise(function performXhrRequestCallback(resolve) {
+          xhr.onload = resolve;
+          xhr.send();
+        });
       }
 
       function performFetchRequest() {
-        fetch("fetch_request");
+        return fetch("fetch_request");
+      }
+
+      // Perform some requests with async stacks
+      function performPromiseFetchRequest() {
+        return Promise.resolve().then(function performPromiseFetchRequestCallback() {
+          return fetch("promise_fetch_request");
+        });
+      }
+
+      function performTimeoutFetchRequest() {
+        return new Promise(function performTimeoutFetchRequestCallback1(resolve) {
+          setTimeout(function performTimeoutFetchRequestCallback2() {
+            resolve(fetch("timeout_fetch_request"));
+          }, 0);
+        });
       }
 
       function performBeaconRequest() {
         navigator.sendBeacon("beacon_request");
       }
 
-      performXhrRequest();
-      performFetchRequest();
+      (async function() {
+        await performXhrRequest();
+        await performFetchRequest();
+        await performPromiseFetchRequest();
+        await performTimeoutFetchRequest();
 
-      // Perform some requests with async stacks
-      Promise.resolve().then(function performPromiseFetchRequest() {
-        fetch("promise_fetch_request");
-        setTimeout(function performTimeoutFetchRequest() {
-          fetch("timeout_fetch_request");
-
-          // Finally, send a beacon request
-          performBeaconRequest();
-        }, 0);
-      });
+        // Finally, send a beacon request
+        performBeaconRequest();
+      })();
     </script>
   </body>
 </html>
