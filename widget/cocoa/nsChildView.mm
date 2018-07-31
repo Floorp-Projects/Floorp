@@ -2095,6 +2095,10 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 {
   PrepareWindowEffects();
 
+  if (!mIsCoveringTitlebar || mIsFullscreen || mTitlebarRect.IsEmpty()) {
+    return;
+  }
+
   bool needUpdate = mUpdatedTitlebarRegion.Intersects(mTitlebarRect);
   mUpdatedTitlebarRegion.SetEmpty();
 
