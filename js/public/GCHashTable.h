@@ -521,7 +521,7 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
         return map.sizeOfExcludingThis(mallocSizeOf);
     }
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mallocSizeOf(this) + map.sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + map.shallowSizeOfExcludingThis(mallocSizeOf);
     }
 
     bool init(uint32_t len = 16) {
@@ -730,10 +730,10 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return set.sizeOfExcludingThis(mallocSizeOf);
+        return set.shallowSizeOfExcludingThis(mallocSizeOf);
     }
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mallocSizeOf(this) + set.sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + set.shallowSizeOfExcludingThis(mallocSizeOf);
     }
 
     bool init(uint32_t len = 16) {

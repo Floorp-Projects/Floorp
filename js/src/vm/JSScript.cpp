@@ -1575,7 +1575,7 @@ UncompressedSourceCache::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
     if (map_ && !map_->empty()) {
-        n += map_->sizeOfIncludingThis(mallocSizeOf);
+        n += map_->shallowSizeOfIncludingThis(mallocSizeOf);
         for (Map::Range r = map_->all(); !r.empty(); r.popFront())
             n += mallocSizeOf(r.front().value().get());
     }

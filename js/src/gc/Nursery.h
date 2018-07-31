@@ -293,7 +293,7 @@ class Nursery
         size_t total = 0;
         for (MallocedBuffersSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront())
             total += mallocSizeOf(r.front());
-        total += mallocedBuffers.sizeOfExcludingThis(mallocSizeOf);
+        total += mallocedBuffers.shallowSizeOfExcludingThis(mallocSizeOf);
         return total;
     }
 

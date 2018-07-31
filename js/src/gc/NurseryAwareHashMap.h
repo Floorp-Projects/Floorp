@@ -101,11 +101,11 @@ class NurseryAwareHashMap
         explicit Enum(NurseryAwareHashMap& namap) : MapType::Enum(namap.map) {}
     };
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfExcludingThis(mallocSizeOf) +
+        return map.shallowSizeOfExcludingThis(mallocSizeOf) +
                nurseryEntries.sizeOfExcludingThis(mallocSizeOf);
     }
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfIncludingThis(mallocSizeOf) +
+        return map.shallowSizeOfIncludingThis(mallocSizeOf) +
                nurseryEntries.sizeOfIncludingThis(mallocSizeOf);
     }
 

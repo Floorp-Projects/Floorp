@@ -277,15 +277,17 @@ public:
   // happen well before count() == capacity().
   size_t capacity() const { return mImpl.capacity(); }
 
-  // Don't just call |mImpl.sizeOfExcludingThis()| because there's no
-  // guarantee that |mImpl| is the first field in HashMap.
-  size_t sizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  // Measure the size of the HashMap's entry storage. If the entries contain
+  // pointers to other heap blocks, you must iterate over the table and measure
+  // them separately; hence the "shallow" prefix.
+  size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
-    return mImpl.sizeOfExcludingThis(aMallocSizeOf);
+    return mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
   }
-  size_t sizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  size_t shallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
-    return aMallocSizeOf(this) + mImpl.sizeOfExcludingThis(aMallocSizeOf);
+    return aMallocSizeOf(this) +
+           mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   Generation generation() const { return mImpl.generation(); }
@@ -564,15 +566,17 @@ public:
   // happen well before count() == capacity().
   size_t capacity() const { return mImpl.capacity(); }
 
-  // Don't just call |mImpl.sizeOfExcludingThis()| because there's no
-  // guarantee that |mImpl| is the first field in HashSet.
-  size_t sizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  // Measure the size of the HashSet's entry storage. If the entries contain
+  // pointers to other heap blocks, you must iterate over the table and measure
+  // them separately; hence the "shallow" prefix.
+  size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
-    return mImpl.sizeOfExcludingThis(aMallocSizeOf);
+    return mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
   }
-  size_t sizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  size_t shallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
-    return aMallocSizeOf(this) + mImpl.sizeOfExcludingThis(aMallocSizeOf);
+    return aMallocSizeOf(this) +
+           mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   Generation generation() const { return mImpl.generation(); }
@@ -1992,14 +1996,14 @@ public:
     return Generation(mGen);
   }
 
-  size_t sizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     return aMallocSizeOf(mTable);
   }
 
-  size_t sizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  size_t shallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
-    return aMallocSizeOf(this) + sizeOfExcludingThis(aMallocSizeOf);
+    return aMallocSizeOf(this) + shallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   MOZ_ALWAYS_INLINE Ptr lookup(const Lookup& aLookup) const

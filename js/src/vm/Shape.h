@@ -850,7 +850,8 @@ class Shape : public gc::TenuredCell
         }
 
         if (!inDictionary() && kids.isHash())
-            info->shapesMallocHeapTreeKids += kids.toHash()->sizeOfIncludingThis(mallocSizeOf);
+            info->shapesMallocHeapTreeKids +=
+                kids.toHash()->shallowSizeOfIncludingThis(mallocSizeOf);
     }
 
     bool isAccessorShape() const {

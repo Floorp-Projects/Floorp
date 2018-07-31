@@ -313,13 +313,13 @@ class WrapperMap
     }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-        size_t size = map.sizeOfExcludingThis(mallocSizeOf);
+        size_t size = map.shallowSizeOfExcludingThis(mallocSizeOf);
         for (OuterMap::Enum e(map); !e.empty(); e.popFront())
             size += e.front().value().sizeOfExcludingThis(mallocSizeOf);
         return size;
     }
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-        size_t size = map.sizeOfIncludingThis(mallocSizeOf);
+        size_t size = map.shallowSizeOfIncludingThis(mallocSizeOf);
         for (OuterMap::Enum e(map); !e.empty(); e.popFront())
             size += e.front().value().sizeOfIncludingThis(mallocSizeOf);
         return size;
