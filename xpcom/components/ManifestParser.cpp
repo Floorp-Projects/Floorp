@@ -76,10 +76,6 @@ static const ManifestDirective kParsingTable[] = {
     &nsComponentManagerImpl::ManifestManifest, nullptr,
   },
   {
-    "binary-component", 1, true, true, false, false, false,
-    &nsComponentManagerImpl::ManifestBinaryComponent, nullptr,
-  },
-  {
     "component",        2, false, true, false, false, false,
     &nsComponentManagerImpl::ManifestComponent, nullptr,
   },
