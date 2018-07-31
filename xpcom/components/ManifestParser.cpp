@@ -49,9 +49,6 @@ struct ManifestDirective
   // Binary components are only allowed for APP locations.
   bool apponly;
 
-  // Some directives should only be delivered for APP or EXTENSION locations.
-  bool componentonly;
-
   bool ischrome;
 
   bool allowbootstrap;
@@ -72,41 +69,41 @@ struct ManifestDirective
 };
 static const ManifestDirective kParsingTable[] = {
   {
-    "manifest",         1, false, false, true, true, false,
+    "manifest",         1, false, true, true, false,
     &nsComponentManagerImpl::ManifestManifest, nullptr,
   },
   {
-    "component",        2, false, true, false, false, false,
+    "component",        2, false, false, false, false,
     &nsComponentManagerImpl::ManifestComponent, nullptr,
   },
   {
-    "contract",         2, false, true, false, false, false,
+    "contract",         2, false, false, false, false,
     &nsComponentManagerImpl::ManifestContract, nullptr,
   },
   {
-    "category",         3, false, true, false, false, false,
+    "category",         3, false, false, false, false,
     &nsComponentManagerImpl::ManifestCategory, nullptr,
   },
   {
-    "content",          2, false, true, true, true,  true,
+    "content",          2, false, true, true,  true,
     nullptr, &nsChromeRegistry::ManifestContent,
   },
   {
-    "locale",           3, false, true, true, true, false,
+    "locale",           3, false, true, true, false,
     nullptr, &nsChromeRegistry::ManifestLocale,
   },
   {
-    "skin",             3, false, false, true, true, false,
+    "skin",             3, false, true, true, false,
     nullptr, &nsChromeRegistry::ManifestSkin,
   },
   {
     // NB: note that while skin manifests can use this, they are only allowed
     // to use it for chrome://../skin/ URLs
-    "override",         2, false, false, true, true, false,
+    "override",         2, false, true, true, false,
     nullptr, &nsChromeRegistry::ManifestOverride,
   },
   {
-    "resource",         2, false, true, true, false, true,
+    "resource",         2, false, true, false, true,
     nullptr, &nsChromeRegistry::ManifestResource,
   }
 };
@@ -595,13 +592,6 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       continue;
     }
 #endif
-
-    if (directive->componentonly && NS_SKIN_LOCATION == aType) {
-      LogMessageWithContext(aFile, line,
-                            "Skin manifest not allowed to use '%s' directive.",
-                            token);
-      continue;
-    }
 
     NS_ASSERTION(directive->argc < 4, "Need to reset argv array length");
     char* argv[4];
