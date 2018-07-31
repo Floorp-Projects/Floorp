@@ -17,7 +17,6 @@
       "r318309.patch",
       "r320462.patch",
       "loosen-msvc-detection.patch",
-      "hide-gcda-profiling-symbols.patch",
       "fflush-before-unlocking.patch"
     ]
 }

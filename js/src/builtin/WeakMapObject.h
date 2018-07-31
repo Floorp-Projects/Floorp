@@ -8,7 +8,7 @@
 #define builtin_WeakMapObject_h
 
 #include "gc/WeakMap.h"
-#include "vm/JSObject.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 

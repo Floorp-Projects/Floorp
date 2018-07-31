@@ -49,8 +49,6 @@ using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
 
-extern const char* const kCSSRawProperties[];
-
 namespace mozilla {
 namespace dom {
 
@@ -373,8 +371,8 @@ InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
   auto appendProperty = [enabledState, &aResult](uint32_t prop) {
     nsCSSPropertyID cssProp = nsCSSPropertyID(prop);
     if (nsCSSProps::IsEnabled(cssProp, enabledState)) {
-      nsDependentCString name(kCSSRawProperties[prop]);
-      aResult.AppendElement(NS_ConvertASCIItoUTF16(name));
+      aResult.AppendElement(NS_ConvertASCIItoUTF16(
+        nsCSSProps::GetStringValue(cssProp)));
     }
   };
 
@@ -406,8 +404,7 @@ InspectorUtils::GetCSSPropertyPrefs(GlobalObject& aGlobalObject,
   for (const auto* src = nsCSSProps::kPropertyPrefTable;
        src->mPropID != eCSSProperty_UNKNOWN; src++) {
     PropertyPref& dest = *aResult.AppendElement();
-    const nsCString& name = nsCSSProps::GetStringValue(src->mPropID);
-    dest.mName.Assign(NS_ConvertASCIItoUTF16(name));
+    dest.mName.Assign(NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(src->mPropID)));
     dest.mPref.AssignASCII(src->mPref);
   }
 }
@@ -418,8 +415,7 @@ InspectorUtils::GetSubpropertiesForCSSProperty(GlobalObject& aGlobal,
                                                nsTArray<nsString>& aResult,
                                                ErrorResult& aRv)
 {
-  nsCSSPropertyID propertyID =
-    nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
+  nsCSSPropertyID propertyID = nsCSSProps::LookupProperty(aProperty);
 
   if (propertyID == eCSSProperty_UNKNOWN) {
     aRv.Throw(NS_ERROR_FAILURE);
