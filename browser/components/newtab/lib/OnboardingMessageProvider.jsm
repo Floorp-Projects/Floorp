@@ -16,7 +16,7 @@ const ONBOARDING_MESSAGES = [
       button_label: "Try It Now",
       button_action: "OPEN_PRIVATE_BROWSER_WINDOW"
     },
-    trigger: "firstRun"
+    trigger: {id: "firstRun"}
   },
   {
     id: "ONBOARDING_2",
@@ -31,7 +31,7 @@ const ONBOARDING_MESSAGES = [
       button_action: "OPEN_URL",
       button_action_params: "https://screenshots.firefox.com/#tour"
     },
-    trigger: "firstRun"
+    trigger: {id: "firstRun"}
   },
   {
     id: "ONBOARDING_3",
@@ -47,7 +47,7 @@ const ONBOARDING_MESSAGES = [
       button_action_params: "addons"
     },
     targeting: "isInExperimentCohort == 1",
-    trigger: "firstRun"
+    trigger: {id: "firstRun"}
   },
   {
     id: "ONBOARDING_4",
@@ -63,7 +63,7 @@ const ONBOARDING_MESSAGES = [
       button_action_params: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/"
     },
     targeting: "isInExperimentCohort == 2",
-    trigger: "firstRun"
+    trigger: {id: "firstRun"}
   }
 ];
 

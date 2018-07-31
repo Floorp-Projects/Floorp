@@ -66,7 +66,7 @@ describe("Top Sites Feed", () => {
       _shouldGetScreenshots: sinon.stub().returns(true)
     };
     filterAdultStub = sinon.stub().returns([]);
-    shortURLStub = sinon.stub().callsFake(site => site.url);
+    shortURLStub = sinon.stub().callsFake(site => site.url.replace(".com", ""));
     const fakeDedupe = function() {};
     fakePageThumbs = {
       addExpirationFilter: sinon.stub(),
@@ -1081,6 +1081,51 @@ describe("Top Sites Feed", () => {
       assert.calledTwice(feed.store.dispatch);
       assert.equal(feed.store.dispatch.firstCall.args[0].data.links[0].url, url);
       assert.equal(feed.store.dispatch.secondCall.args[0].data.links[0].url, FAKE_LINKS[0].url);
+    });
+  });
+
+  describe("improvesearch.noDefaultSearchTile experiment", () => {
+    const NO_DEFAULT_SEARCH_TILE_PREF = "improvesearch.noDefaultSearchTile";
+    let cachedDefaultSearch;
+    beforeEach(() => {
+      cachedDefaultSearch = global.Services.search.defaultEngine;
+      global.Services.search.defaultEngine = {identifier: "google"};
+      feed.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
+    });
+    afterEach(() => {
+      global.Services.search.defaultEngine = cachedDefaultSearch;
+    });
+    it("should not filter out google from the query results if the experiment pref is off", async () => {
+      links = [{url: "google.com"}, {url: "foo.com"}];
+      feed.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = false;
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.include(urlsReturned, "google.com");
+    });
+    it("should filter out google from the default sites if it matches the current default search", async () => {
+      feed.onAction({type: at.PREFS_INITIAL_VALUES, data: {"default.sites": "google.com,amazon.com"}});
+      links = [{url: "foo.com"}];
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.include(urlsReturned, "amazon.com");
+      assert.notInclude(urlsReturned, "google.com");
+    });
+    it("should not filter out google from pinned sites even if it matches the current default search", async () => {
+      links = [{url: "foo.com"}];
+      fakeNewTabUtils.pinnedLinks.links = [{url: "google.com"}];
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.include(urlsReturned, "google.com");
+    });
+    it("should call refresh when the the default search engine has been set", () => {
+      sinon.stub(feed, "refresh");
+      feed.observe(null, "browser-search-engine-modified", "engine-default");
+    });
+    it("should call refresh when the experiment pref has changed", () => {
+      sinon.stub(feed, "refresh");
+
+      feed.onAction({type: at.PREF_CHANGED, data: {name: NO_DEFAULT_SEARCH_TILE_PREF, value: true}});
+      assert.calledOnce(feed.refresh);
+
+      feed.onAction({type: at.PREF_CHANGED, data: {name: NO_DEFAULT_SEARCH_TILE_PREF, value: false}});
+      assert.calledTwice(feed.refresh);
     });
   });
 });
