@@ -219,7 +219,9 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
                 e.removeFront();
             }
         }
+#ifdef DEBUG
         Base::assertEntriesNotAboutToBeFinalized();
+#endif
     }
 
     MOZ_MUST_USE bool incZoneCount(JS::Zone* zone) {

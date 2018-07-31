@@ -8,20 +8,24 @@
 #define gc_WeakMap_h
 
 #include "mozilla/LinkedList.h"
-#include "mozilla/Move.h"
 
-#include "jsfriendapi.h"
-
+#include "gc/Barrier.h"
 #include "gc/DeletePolicy.h"
-#include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
-#include "vm/JSObject.h"
-#include "vm/Realm.h"
+
+namespace JS {
+class Zone;
+} // namespace JS
 
 namespace js {
 
 class GCMarker;
 class WeakMapBase;
+struct WeakMapTracer;
+
+namespace gc {
+struct WeakMarkable;
+} // namespace gc
 
 // A subclass template of js::HashMap whose keys and values may be garbage-collected. When
 // a key is collected, the table entry disappears, dropping its reference to the value.
@@ -49,7 +53,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
     WeakMapBase(JSObject* memOf, JS::Zone* zone);
     virtual ~WeakMapBase();
 
-    Zone* zone() const { return zone_; }
+    JS::Zone* zone() const { return zone_; }
 
     // Garbage collector entry points.
 
@@ -107,17 +111,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
     bool marked;
 };
 
-template <typename T>
-static T extractUnbarriered(const WriteBarrieredBase<T>& v)
-{
-    return v.get();
-}
-template <typename T>
-static T* extractUnbarriered(T* v)
-{
-    return v;
-}
-
 template <class Key, class Value,
           class HashPolicy = DefaultHasher<Key> >
 class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
@@ -132,16 +125,9 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
     typedef typename Base::Ptr Ptr;
     typedef typename Base::AddPtr AddPtr;
 
-    explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr)
-        : Base(cx->zone()), WeakMapBase(memOf, cx->zone()) { }
+    explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr);
 
-    bool init(uint32_t len = 16) {
-        if (!Base::init(len))
-            return false;
-        zone()->gcWeakMapList().insertFront(this);
-        marked = JS::IsIncrementalGCInProgress(TlsContext.get());
-        return true;
-    }
+    bool init(uint32_t len = 16);
 
     // Overwritten to add a read barrier to prevent an incorrectly gray value
     // from escaping the weak map. See the UnmarkGrayTracer::onChild comment in
@@ -170,204 +156,46 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
     // Resolve ambiguity with LinkedListElement<>::remove.
     using Base::remove;
 
-    // Trace a WeakMap entry based on 'markedCell' getting marked, where
-    // 'origKey' is the key in the weakmap. These will probably be the same,
-    // but can be different eg when markedCell is a delegate for origKey.
-    //
-    // This implementation does not use 'markedCell'; it looks up origKey and
-    // checks the mark bits on everything it cares about, one of which will be
-    // markedCell. But a subclass might use it to optimize the liveness check.
-    void markEntry(GCMarker* marker, gc::Cell* markedCell, JS::GCCellPtr origKey) override
-    {
-        MOZ_ASSERT(marked);
+    void markEntry(GCMarker* marker, gc::Cell* markedCell, JS::GCCellPtr origKey) override;
 
-        // If this cast fails, then you're instantiating the WeakMap with a
-        // Lookup that can't be constructed from a Cell*. The WeakKeyTable
-        // mechanism is indexed with a GCCellPtr, so that won't work.
-        Ptr p = Base::lookup(static_cast<Lookup>(origKey.asCell()));
-        MOZ_ASSERT(p.found());
-
-        Key key(p->key());
-        MOZ_ASSERT((markedCell == extractUnbarriered(key)) || (markedCell == getDelegate(key)));
-        if (gc::IsMarked(marker->runtime(), &key)) {
-            TraceEdge(marker, &p->value(), "ephemeron value");
-        } else if (keyNeedsMark(key)) {
-            TraceEdge(marker, &p->value(), "WeakMap ephemeron value");
-            TraceEdge(marker, &key, "proxy-preserved WeakMap ephemeron key");
-            MOZ_ASSERT(key == p->key()); // No moving
-        }
-        key.unsafeSet(nullptr); // Prevent destructor from running barriers.
-    }
-
-    void trace(JSTracer* trc) override {
-        MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy(), isInList());
-
-        TraceNullableEdge(trc, &memberOf, "WeakMap owner");
-
-        if (!Base::initialized())
-            return;
-
-        if (trc->isMarkingTracer()) {
-            MOZ_ASSERT(trc->weakMapAction() == ExpandWeakMaps);
-            marked = true;
-            (void) markIteratively(GCMarker::fromTracer(trc));
-            return;
-        }
-
-        if (trc->weakMapAction() == DoNotTraceWeakMaps)
-            return;
-
-        // Trace keys only if weakMapAction() says to.
-        if (trc->weakMapAction() == TraceWeakMapKeysValues) {
-            for (Enum e(*this); !e.empty(); e.popFront())
-                TraceEdge(trc, &e.front().mutableKey(), "WeakMap entry key");
-        }
-
-        // Always trace all values (unless weakMapAction() is
-        // DoNotTraceWeakMaps).
-        for (Range r = Base::all(); !r.empty(); r.popFront())
-            TraceEdge(trc, &r.front().value(), "WeakMap entry value");
-    }
+    void trace(JSTracer* trc) override;
 
   protected:
-    static void addWeakEntry(GCMarker* marker, JS::GCCellPtr key, gc::WeakMarkable markable)
-    {
-        Zone* zone = key.asCell()->asTenured().zone();
+    static void addWeakEntry(GCMarker* marker, JS::GCCellPtr key,
+                             const gc::WeakMarkable& markable);
 
-        auto p = zone->gcWeakKeys().get(key);
-        if (p) {
-            gc::WeakEntryVector& weakEntries = p->value;
-            if (!weakEntries.append(std::move(markable)))
-                marker->abortLinearWeakMarking();
-        } else {
-            gc::WeakEntryVector weakEntries;
-            MOZ_ALWAYS_TRUE(weakEntries.append(std::move(markable)));
-            if (!zone->gcWeakKeys().put(JS::GCCellPtr(key), std::move(weakEntries)))
-                marker->abortLinearWeakMarking();
-        }
-    }
+    bool markIteratively(GCMarker* marker) override;
 
-    bool markIteratively(GCMarker* marker) override {
-        MOZ_ASSERT(marked);
-
-        bool markedAny = false;
-
-        for (Enum e(*this); !e.empty(); e.popFront()) {
-            // If the entry is live, ensure its key and value are marked.
-            bool keyIsMarked = gc::IsMarked(marker->runtime(), &e.front().mutableKey());
-            if (!keyIsMarked && keyNeedsMark(e.front().key())) {
-                TraceEdge(marker, &e.front().mutableKey(), "proxy-preserved WeakMap entry key");
-                keyIsMarked = true;
-                markedAny = true;
-            }
-
-            if (keyIsMarked) {
-                if (!gc::IsMarked(marker->runtime(), &e.front().value())) {
-                    TraceEdge(marker, &e.front().value(), "WeakMap entry value");
-                    markedAny = true;
-                }
-            } else if (marker->isWeakMarkingTracer()) {
-                // Entry is not yet known to be live. Record this weakmap and
-                // the lookup key in the list of weak keys. Also record the
-                // delegate, if any, because marking the delegate also marks
-                // the entry.
-                JS::GCCellPtr weakKey(extractUnbarriered(e.front().key()));
-                gc::WeakMarkable markable(this, weakKey);
-                addWeakEntry(marker, weakKey, markable);
-                if (JSObject* delegate = getDelegate(e.front().key()))
-                    addWeakEntry(marker, JS::GCCellPtr(delegate), markable);
-            }
-        }
-
-        return markedAny;
-    }
-
-    JSObject* getDelegate(JSObject* key) const {
-        JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
-        if (!op)
-            return nullptr;
-
-        JSObject* obj = op(key);
-        if (!obj)
-            return nullptr;
-
-        MOZ_ASSERT(obj->runtimeFromMainThread() == zone()->runtimeFromMainThread());
-        return obj;
-    }
-
-    JSObject* getDelegate(JSScript* script) const {
-        return nullptr;
-    }
-    JSObject* getDelegate(LazyScript* script) const {
-        return nullptr;
-    }
+    JSObject* getDelegate(JSObject* key) const;
+    JSObject* getDelegate(JSScript* script) const;
+    JSObject* getDelegate(LazyScript* script) const;
 
   private:
     void exposeGCThingToActiveJS(const JS::Value& v) const { JS::ExposeValueToActiveJS(v); }
     void exposeGCThingToActiveJS(JSObject* obj) const { JS::ExposeObjectToActiveJS(obj); }
 
-    bool keyNeedsMark(JSObject* key) const {
-        JSObject* delegate = getDelegate(key);
-        /*
-         * Check if the delegate is marked with any color to properly handle
-         * gray marking when the key's delegate is black and the map is gray.
-         */
-        return delegate && gc::IsMarkedUnbarriered(zone()->runtimeFromMainThread(), &delegate);
-    }
-
-    bool keyNeedsMark(JSScript* script) const {
-        return false;
-    }
-    bool keyNeedsMark(LazyScript* script) const {
-        return false;
-    }
+    bool keyNeedsMark(JSObject* key) const;
+    bool keyNeedsMark(JSScript* script) const;
+    bool keyNeedsMark(LazyScript* script) const;
 
     bool findZoneEdges() override {
         // This is overridden by ObjectValueMap.
         return true;
     }
 
-    void sweep() override {
-        /* Remove all entries whose keys remain unmarked. */
-        for (Enum e(*this); !e.empty(); e.popFront()) {
-            if (gc::IsAboutToBeFinalized(&e.front().mutableKey()))
-                e.removeFront();
-        }
-        /*
-         * Once we've swept, all remaining edges should stay within the
-         * known-live part of the graph.
-         */
-        assertEntriesNotAboutToBeFinalized();
-    }
+    void sweep() override;
 
     void finish() override {
         Base::finish();
     }
 
     /* memberOf can be nullptr, which means that the map is not part of a JSObject. */
-    void traceMappings(WeakMapTracer* tracer) override {
-        for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            gc::Cell* key = gc::ToMarkable(r.front().key());
-            gc::Cell* value = gc::ToMarkable(r.front().value());
-            if (key && value) {
-                tracer->trace(memberOf,
-                              JS::GCCellPtr(r.front().key().get()),
-                              JS::GCCellPtr(r.front().value().get()));
-            }
-        }
-    }
+    void traceMappings(WeakMapTracer* tracer) override;
 
   protected:
-    void assertEntriesNotAboutToBeFinalized() {
 #if DEBUG
-        for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            Key k(r.front().key());
-            MOZ_ASSERT(!gc::IsAboutToBeFinalized(&k));
-            MOZ_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value()));
-            MOZ_ASSERT(k == r.front().key());
-        }
+    void assertEntriesNotAboutToBeFinalized();
 #endif
-    }
 };
 
 
