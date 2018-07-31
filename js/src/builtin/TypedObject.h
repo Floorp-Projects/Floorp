@@ -476,6 +476,8 @@ class StructTypeDescr : public ComplexTypeDescr
     // Return the offset of the field at index `index`.
     size_t fieldOffset(size_t index) const;
 
+    static bool call(JSContext* cx, unsigned argc, Value* vp);
+
   private:
     ArrayObject& fieldInfoObject(size_t slot) const {
         return getReservedSlot(slot).toObject().as<ArrayObject>();
