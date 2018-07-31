@@ -2125,27 +2125,24 @@ BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, EmitElemOption opts)
     if (!emitGetThisForSuperBase(pn->pn_left))      // THIS
         return false;
 
-    if (!emitTree(pn->pn_right))                    // THIS KEY
+    if (opts == EmitElemOption::Call) {
+        // We need a second |this| that will be consumed during computation of
+        // the property value. (The original |this| is passed to the call.)
+        if (!emit1(JSOP_DUP))                       // THIS THIS
+            return false;
+    }
+
+    if (!emitTree(pn->pn_right))                    // THIS? THIS KEY
         return false;
 
     // We need to convert the key to an object id first, so that we do not do
     // it inside both the GETELEM and the SETELEM.
     if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
-        if (!emit1(JSOP_TOID))                      // THIS KEY
+        if (!emit1(JSOP_TOID))                      // THIS? THIS KEY
             return false;
     }
 
-    if (opts == EmitElemOption::Call) {
-        // We need a second |this| that will be consumed during computation of
-        // the property value. (The original |this| is passed to the call.)
-        if (!emitDupAt(1))                          // THIS KEY THIS
-            return false;
-    } else {
-        if (!emit1(JSOP_SWAP))                      // KEY THIS
-            return false;
-    }
-
-    if (!emit1(JSOP_SUPERBASE))                     // THIS? KEY THIS SUPERBASE
+    if (!emit1(JSOP_SUPERBASE))                     // THIS? THIS KEY SUPERBASE
         return false;
 
     return true;
@@ -2179,7 +2176,7 @@ BytecodeEmitter::emitSuperGetElem(ParseNode* pn, bool isCall)
 {
     EmitElemOption opts = isCall ? EmitElemOption::Call : EmitElemOption::Get;
 
-    if (!emitSuperElemOperands(pn, opts))           // THIS? KEY THIS SUPERBASE
+    if (!emitSuperElemOperands(pn, opts))           // THIS? THIS KEY SUPERBASE
         return false;
     if (!emitElemOpBase(JSOP_GETELEM_SUPER))        // THIS? VALUE
         return false;
@@ -2215,11 +2212,11 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
     if (isSuper) {
         // There's no such thing as JSOP_DUP3, so we have to be creative.
         // Note that pushing things again is no fewer JSOps.
-        if (!emitDupAt(2))                              // KEY THIS OBJ KEY
+        if (!emitDupAt(2))                              // THIS KEY OBJ THIS
             return false;
-        if (!emitDupAt(2))                              // KEY THIS OBJ KEY THIS
+        if (!emitDupAt(2))                              // THIS KEY OBJ THIS KEY
             return false;
-        if (!emitDupAt(2))                              // KEY THIS OBJ KEY THIS OBJ
+        if (!emitDupAt(2))                              // THIS KEY OBJ THIS KEY OBJ
             return false;
         getOp = JSOP_GETELEM_SUPER;
     } else {
@@ -2232,27 +2229,16 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
         return false;
     if (!emit1(JSOP_POS))                               // OBJ KEY N
         return false;
-    if (post && !emit1(JSOP_DUP))                       // OBJ KEY N? N
-        return false;
-    if (!emit1(JSOP_ONE))                               // OBJ KEY N? N 1
-        return false;
-    if (!emit1(binop))                                  // OBJ KEY N? N+1
-        return false;
-
     if (post) {
-        if (isSuper) {
-            // We have one more value to rotate around, because of |this|
-            // on the stack
-            if (!emit2(JSOP_PICK, 4))
-                return false;
-        }
-        if (!emit2(JSOP_PICK, 3 + isSuper))             // KEY N N+1 OBJ
+        if (!emit1(JSOP_DUP))                           // OBJ KEY N N
             return false;
-        if (!emit2(JSOP_PICK, 3 + isSuper))             // N N+1 OBJ KEY
-            return false;
-        if (!emit2(JSOP_PICK, 2 + isSuper))             // N OBJ KEY N+1
+        if (!emit2(JSOP_UNPICK, 3 + isSuper))           // N OBJ KEY N
             return false;
     }
+    if (!emit1(JSOP_ONE))                               // N? OBJ KEY N 1
+        return false;
+    if (!emit1(binop))                                  // N? OBJ KEY N+1
+        return false;
 
     JSOp setOp = isSuper ? (sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER)
                          : (sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM);
@@ -6759,10 +6745,10 @@ BytecodeEmitter::emitSelfHostedGetPropertySuper(ParseNode* pn)
     ParseNode* idNode = objNode->pn_next;
     ParseNode* receiverNode = idNode->pn_next;
 
-    if (!emitTree(idNode))
+    if (!emitTree(receiverNode))
         return false;
 
-    if (!emitTree(receiverNode))
+    if (!emitTree(idNode))
         return false;
 
     if (!emitTree(objNode))

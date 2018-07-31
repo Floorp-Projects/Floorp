@@ -2303,7 +2303,7 @@ BaselineCompiler::emit_JSOP_GETELEM_SUPER()
     storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
     frame.pop();
 
-    // Keep index and receiver in R0 and R1.
+    // Keep receiver and index in R0 and R1.
     frame.popRegsAndSync(2);
 
     // Keep obj on the stack.
@@ -2356,10 +2356,10 @@ BaselineCompiler::emit_JSOP_SETELEM_SUPER()
 {
     bool strict = IsCheckStrictOp(JSOp(*pc));
 
-    // Incoming stack is |propval, receiver, obj, rval|. We need to shuffle
+    // Incoming stack is |receiver, propval, obj, rval|. We need to shuffle
     // stack to leave rval when operation is complete.
 
-    // Pop rval into R0, then load propval into R1 and replace with rval.
+    // Pop rval into R0, then load receiver into R1 and replace with rval.
     frame.popRegsAndSync(1);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-3)), R1);
     masm.storeValue(R0, frame.addressOfStackValue(frame.peek(-3)));
@@ -2367,10 +2367,10 @@ BaselineCompiler::emit_JSOP_SETELEM_SUPER()
     prepareVMCall();
 
     pushArg(Imm32(strict));
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R2);
-    pushArg(R2); // receiver
+    pushArg(R1); // receiver
     pushArg(R0); // rval
-    pushArg(R1); // propval
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
+    pushArg(R0); // propval
     masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
     pushArg(R0.scratchReg()); // obj
 
