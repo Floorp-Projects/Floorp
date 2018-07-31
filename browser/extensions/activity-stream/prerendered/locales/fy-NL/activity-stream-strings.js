@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Tsjinstbetingsten",
   "firstrun_privacy_notice": "Privacyferklearring",
   "firstrun_continue_to_login": "Trochgean",
-  "firstrun_skip_login": "Dizze stap oerslaan"
+  "firstrun_skip_login": "Dizze stap oerslaan",
+  "firstrun_invalid_input": "Jildich e-mailadres fereaske"
 };

@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Tenestevilkår",
   "firstrun_privacy_notice": "Personvernpraksis",
   "firstrun_continue_to_login": "Fortset",
-  "firstrun_skip_login": "Hopp over dette steget"
+  "firstrun_skip_login": "Hopp over dette steget",
+  "firstrun_invalid_input": "Gyldig e-post påkravd"
 };

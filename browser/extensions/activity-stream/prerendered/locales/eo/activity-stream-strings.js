@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "kondiĉojn de uzo",
   "firstrun_privacy_notice": "rimarkon pri privateco",
   "firstrun_continue_to_login": "Daŭrigi",
-  "firstrun_skip_login": "Pretersalti tiun ĉi paŝon"
+  "firstrun_skip_login": "Pretersalti tiun ĉi paŝon",
+  "firstrun_invalid_input": "Valida retpoŝta adreso postulata"
 };

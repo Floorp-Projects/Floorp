@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "käyttöehdot",
   "firstrun_privacy_notice": "tietosuojakäytännön",
   "firstrun_continue_to_login": "Jatka",
-  "firstrun_skip_login": "Ohita tämä vaihe"
+  "firstrun_skip_login": "Ohita tämä vaihe",
+  "firstrun_invalid_input": "Sähköpostiosoitteen täytyy olla kelvollinen"
 };

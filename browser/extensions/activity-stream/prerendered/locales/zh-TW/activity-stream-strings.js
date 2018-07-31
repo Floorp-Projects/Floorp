@@ -20,7 +20,7 @@ window.gActivityStreamStrings = {
   "menu_action_pin": "釘選",
   "menu_action_unpin": "取消釘選",
   "confirm_history_delete_p1": "您確定要刪除此頁面的所有瀏覽紀錄？",
-  "confirm_history_delete_notice_p2": "無法還原此操作。",
+  "confirm_history_delete_notice_p2": "此動作無法復原。",
   "menu_action_save_to_pocket": "儲存至 Pocket",
   "menu_action_delete_pocket": "從 Pocket 刪除",
   "menu_action_archive_pocket": "在 Pocket 裡封存",
@@ -77,7 +77,7 @@ window.gActivityStreamStrings = {
   "highlights_empty_state": "開始上網，我們就會把您在網路上發現的好文章、影片、剛加入書籤的頁面顯示於此。",
   "topstories_empty_state": "所有文章都讀完啦！晚點再來，{provider} 將提供更多推薦故事。等不及了？選擇熱門主題，看看 Web 上各式精采資訊。",
   "manual_migration_explanation2": "試試將其他瀏覽器的書籤、瀏覽記錄與密碼匯入 Firefox。",
-  "manual_migration_cancel_button": "不必了",
+  "manual_migration_cancel_button": "不要，謝謝",
   "manual_migration_import_button": "立即匯入",
   "error_fallback_default_info": "唉唷，載入內容時發生錯誤。",
   "error_fallback_default_refresh_suggestion": "請重新整理頁面再試一次。",
@@ -94,11 +94,12 @@ window.gActivityStreamStrings = {
   "firstrun_content": "在您的任何裝置上取得書籤、瀏覽紀錄、密碼及其他設定。",
   "firstrun_learn_more_link": "了解 Firefox Accounts 的更多資訊",
   "firstrun_form_header": "輸入您的電子郵件地址",
-  "firstrun_form_sub_header": "繼續前往 Firefox Sync。",
+  "firstrun_form_sub_header": "繼續前往 Firefox Sync",
   "firstrun_email_input_placeholder": "電子郵件",
   "firstrun_extra_legal_links": "若繼續，代表您同意{terms}及{privacy}。",
   "firstrun_terms_of_service": "服務條款",
   "firstrun_privacy_notice": "隱私權公告",
   "firstrun_continue_to_login": "繼續",
-  "firstrun_skip_login": "跳過這步"
+  "firstrun_skip_login": "跳過這步",
+  "firstrun_invalid_input": "必須輸入有效的電子郵件地址"
 };

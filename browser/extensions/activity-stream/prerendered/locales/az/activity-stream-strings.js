@@ -51,7 +51,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_options_download_label": "Son Endirmələr",
   "prefs_highlights_options_pocket_label": "Pocket-ə Saxlanılan Səhifələr",
   "prefs_snippets_description": "Mozilla və Firefoxdan yeniliklər",
-  "settings_pane_button_label": "Yeni Vərəq səhifənizi özəlləşdirin",
+  "settings_pane_button_label": "Yeni Vərəq səhifənizi fərdiləşdirin",
   "settings_pane_topsites_header": "Qabaqcıl Saytlar",
   "settings_pane_highlights_header": "Seçilmişlər",
   "settings_pane_highlights_options_bookmarks": "Əlfəcinlər",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "İstifadə Şərtləri",
   "firstrun_privacy_notice": "Məxfilik Bildirişi",
   "firstrun_continue_to_login": "Davam et",
-  "firstrun_skip_login": "Bu addımı keç"
+  "firstrun_skip_login": "Bu addımı keç",
+  "firstrun_invalid_input": "Doğru e-poçt tələb olunur"
 };

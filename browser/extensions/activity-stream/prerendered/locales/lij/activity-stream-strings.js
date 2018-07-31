@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Termini do serviçio",
   "firstrun_privacy_notice": "Informativa in sciâ privacy",
   "firstrun_continue_to_login": "Continoa",
-  "firstrun_skip_login": "Sata sto passo"
+  "firstrun_skip_login": "Sata sto passo",
+  "firstrun_invalid_input": "Serve 'na email bonn-a"
 };

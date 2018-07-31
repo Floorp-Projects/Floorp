@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ok, faham",
   "prefs_home_header": "Kandungan Halaman Utama Firefox",
   "prefs_home_description": "Pilih kandungan yang mahu dalam skrin Halaman Utama Firefox.",
-  "prefs_section_rows_option": "{num} rows",
+  "prefs_section_rows_option": "{num} baris",
   "prefs_search_header": "Carian Web",
   "prefs_topsites_description": "Laman yang anda kerap lawati",
   "prefs_topstories_description2": "Kandungan hebat dalam seluruh web, khas untuk anda",
@@ -94,11 +94,12 @@ window.gActivityStreamStrings = {
   "firstrun_content": "Dapatkan tandabuku, sejarah, kata laluan dan tetapan lain dalam semua peranti anda.",
   "firstrun_learn_more_link": "Ketahui selanjutnya perihal Akaun Firefox",
   "firstrun_form_header": "Masukkan e-mel anda",
-  "firstrun_form_sub_header": "untuk ke Firefox Sync.",
+  "firstrun_form_sub_header": "untuk ke Firefox Sync",
   "firstrun_email_input_placeholder": "E-mel",
   "firstrun_extra_legal_links": "Dengan meneruskan, anda bersetuju dengan {terms} dan {privacy}.",
   "firstrun_terms_of_service": "Terma Perkhidmatan",
   "firstrun_privacy_notice": "Notis Privasi",
   "firstrun_continue_to_login": "Teruskan",
-  "firstrun_skip_login": "Langkau langkah ini"
+  "firstrun_skip_login": "Langkau langkah ini",
+  "firstrun_invalid_input": "Perlu e-mel yang sah"
 };

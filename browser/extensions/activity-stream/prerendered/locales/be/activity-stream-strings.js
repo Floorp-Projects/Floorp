@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "умовамі абслугоўвання",
   "firstrun_privacy_notice": "паведамленнем аб прыватнасці",
   "firstrun_continue_to_login": "Працягнуць",
-  "firstrun_skip_login": "Прапусціць гэты крок"
+  "firstrun_skip_login": "Прапусціць гэты крок",
+  "firstrun_invalid_input": "Патрабуецца сапраўдны адрас эл.пошты"
 };

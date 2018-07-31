@@ -115,5 +115,6 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_body": "Read short and sweet updates from Mozilla about Firefox, internet culture, and the occasional random meme.",
   "settings_pane_done_button": "Done",
   "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
-  "pocket_description": "Discover high-quality content you might otherwise miss, with help from Pocket, now part of Mozilla."
+  "pocket_description": "Discover high-quality content you might otherwise miss, with help from Pocket, now part of Mozilla.",
+  "firstrun_invalid_input": "Valid email required"
 };

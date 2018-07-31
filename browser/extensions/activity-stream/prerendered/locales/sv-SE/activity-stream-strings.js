@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Användarvillkor",
   "firstrun_privacy_notice": "Sekretesspolicy",
   "firstrun_continue_to_login": "Fortsätt",
-  "firstrun_skip_login": "Hoppa över det här steget"
+  "firstrun_skip_login": "Hoppa över det här steget",
+  "firstrun_invalid_input": "Giltig e-postadress krävs"
 };
