@@ -102,6 +102,7 @@ const TEST_GLOBAL = {
   },
   PluralForm: {get() {}},
   Preferences: FakePrefs,
+  PrivateBrowsingUtils: {isWindowPrivate: () => false},
   DownloadsViewUI: {DownloadElementShell},
   Services: {
     locale: {
@@ -178,7 +179,8 @@ const TEST_GLOBAL = {
       createNullPrincipal() {},
       getSystemPrincipal() {}
     },
-    wm: {getMostRecentWindow: () => window},
+    wm: {getMostRecentWindow: () => window, getEnumerator: () => ({hasMoreElements: () => false})},
+    ww: {registerNotification() {}, unregisterNotification() {}},
     appinfo: {appBuildID: "20180710100040"}
   },
   XPCOMUtils: {
