@@ -115,10 +115,20 @@ const GeckoViewTelemetryController = {
       return;
     }
 
+    let processSnapshots = {};
+    for (let [name, snapshot] of Object.entries(snapshots)) {
+      for (let [processName, processSnapshot] of Object.entries(snapshot)) {
+        if (!(processName in processSnapshots)) {
+          processSnapshots[processName] = {};
+        }
+        processSnapshots[processName][name] = processSnapshot;
+      }
+    }
+
     if (aClear) {
       Services.telemetry.clearProbes();
     }
 
-    aCallback.onSuccess(snapshots);
+    aCallback.onSuccess(processSnapshots);
   },
 };
