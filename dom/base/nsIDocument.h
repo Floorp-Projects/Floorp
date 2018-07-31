@@ -3139,6 +3139,10 @@ public:
                   const nsAString& aQualifiedName,
                   const mozilla::dom::ElementCreationOptionsOrString& aOptions,
                   mozilla::ErrorResult& rv);
+  already_AddRefed<Element>
+  CreateXULElement(const nsAString& aTagName,
+                   const mozilla::dom::ElementCreationOptionsOrString& aOptions,
+                   mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment>
     CreateDocumentFragment() const;
   already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;

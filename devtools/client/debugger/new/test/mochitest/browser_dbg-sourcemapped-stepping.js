@@ -4,9 +4,9 @@
 // Tests for stepping through Babel's compile output.
 requestLongerTimeout(4);
 
-async function breakpointSteps(dbg, fixture, { line, column }, steps) {
-  const filename = `fixtures/${fixture}/input.js`;
-  const fnName = fixture.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
+async function breakpointSteps(dbg, target, fixture, { line, column }, steps) {
+  const filename = `${target}://./${fixture}/input.`;
+  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 
   await invokeWithBreakpoint(
     dbg,
@@ -52,7 +52,8 @@ async function runSteps(dbg, source, steps) {
 function testStepOverForOf(dbg) {
   return breakpointSteps(
     dbg,
-    "babel-step-over-for-of",
+    "webpack3-babel6",
+    "step-over-for-of",
     { line: 4, column: 2 },
     [
       ["stepOver", { line: 6, column: 2 }],
@@ -70,7 +71,8 @@ function testStepOverForOf(dbg) {
 function testStepOverForOfArray(dbg) {
   return breakpointSteps(
     dbg,
-    "babel-step-over-for-of-array",
+    "webpack3-babel6",
+    "step-over-for-of-array",
     { line: 3, column: 2 },
     [
       ["stepOver", { line: 5, column: 2 }],
@@ -90,7 +92,8 @@ function testStepOverForOfArray(dbg) {
 function testStepOveForOfClosure(dbg) {
   return breakpointSteps(
     dbg,
-    "babel-step-over-for-of-closure",
+    "webpack3-babel6",
+    "step-over-for-of-closure",
     { line: 6, column: 2 },
     [
       ["stepOver", { line: 8, column: 2 }],
@@ -105,7 +108,8 @@ function testStepOveForOfClosure(dbg) {
 function testStepOverForOfArrayClosure(dbg) {
   return breakpointSteps(
     dbg,
-    "babel-step-over-for-of-array-closure",
+    "webpack3-babel6",
+    "step-over-for-of-array-closure",
     { line: 3, column: 2 },
     [
       ["stepOver", { line: 5, column: 2 }],
@@ -121,7 +125,8 @@ function testStepOverForOfArrayClosure(dbg) {
 function testStepOverFunctionParams(dbg) {
   return breakpointSteps(
     dbg,
-    "babel-step-over-function-params",
+    "webpack3-babel6",
+    "step-over-function-params",
     { line: 6, column: 2 },
     [["stepOver", { line: 7, column: 2 }], ["stepIn", { line: 2, column: 2 }]]
   );
@@ -130,7 +135,8 @@ function testStepOverFunctionParams(dbg) {
 function testStepOverRegeneratorAwait(dbg) {
   return breakpointSteps(
     dbg,
-    "babel-step-over-regenerator-await",
+    "webpack3-babel6",
+    "step-over-regenerator-await",
     { line: 2, column: 2 },
     [
       // Won't work until a fix to regenerator lands and we rebuild.

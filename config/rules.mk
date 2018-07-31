@@ -894,6 +894,39 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
+ifneq (WINNT,$(OS_ARCH))
+ifndef MOZ_ASAN
+ifndef MOZ_TSAN
+ifndef MOZ_CODE_COVERAGE
+# Pass the compilers and flags in use to cargo for use in build scripts.
+# * Don't do this on Windows because msys path translation makes a mess of the paths, and
+#   we put MSVC in PATH there anyway.
+# * Don't do this for ASAN/TSAN builds because we don't pass our custom linker (see below)
+#   which will muck things up.
+# * Don't do this for code coverage builds because the way rustc invokes the linker doesn't
+#   work with GCC 6: https://bugzilla.mozilla.org/show_bug.cgi?id=1477305
+#
+# We don't pass HOST_{CC,CXX} down in any form because our host value might not match
+# what cargo chooses and there's no way to control cargo's selection, so we just have to
+# hope that if something needs to build a host C source file it can find a usable compiler!
+#
+# We're passing these for consumption by the `cc` crate, which doesn't use the same
+# convention as cargo itself:
+# https://github.com/alexcrichton/cc-rs/blob/baa71c0e298d9ad7ac30f0ad78f20b4b3b3a8fb2/src/lib.rs#L1715
+rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
+
+cargo_c_compiler_envs := \
+ CC_$(rust_cc_env_name)="$(CC)" \
+ CXX_$(rust_cc_env_name)="$(CXX)" \
+ CFLAGS_$(rust_cc_env_name)="$(COMPUTED_CFLAGS)" \
+ CXXFLAGS_$(rust_cc_env_name)="$(COMPUTED_CXXFLAGS)" \
+ AR_$(rust_cc_env_name)="$(AR)" \
+ $(NULL)
+endif # MOZ_CODE_COVERAGE
+endif # MOZ_TSAN
+endif # MOZ_ASAN
+endif # WINNT
+
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
@@ -903,6 +936,7 @@ $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleane
 	RUSTC=$(RUSTC) \
 	RUSTDOC=$(RUSTDOC) \
 	RUSTFMT=$(RUSTFMT) \
+	$(cargo_c_compiler_envs) \
 	MOZ_SRC=$(topsrcdir) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \

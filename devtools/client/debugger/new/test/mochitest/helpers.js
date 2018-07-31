@@ -744,10 +744,15 @@ async function loadAndAddBreakpoint(dbg, filename, line, column) {
   await addBreakpoint(dbg, source, line);
 
   is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
-  ok(
-    getBreakpoint(getState(), { sourceId: source.id, line, column }),
-    `Breakpoint has correct line ${line}, column ${column}`
-  );
+  if (!getBreakpoint(getState(), { sourceId: source.id, line, column })) {
+    const breakpoints = getBreakpoints(getState()).toJS();
+    const id = Object.keys(breakpoints).pop();
+    const loc = breakpoints[id].location;
+    ok(
+      false,
+      `Breakpoint has correct line ${line}, column ${column}, but was line ${loc.line} column ${loc.column}`
+    );
+  }
 
   return source;
 }
@@ -1045,6 +1050,7 @@ const selectors = {
   resume: ".resume.active",
   pause: ".pause.active",
   sourceTabs: ".source-tabs",
+  activeTab: ".source-tab.active",
   stepOver: ".stepOver.active",
   stepOut: ".stepOut.active",
   stepIn: ".stepIn.active",
@@ -1059,7 +1065,7 @@ const selectors = {
   sourceNodes: ".sources-list .tree-node",
   sourceDirectoryLabel: i => `.sources-list .tree-node:nth-child(${i}) .label`,
   resultItems: ".result-list .result-item",
-  fileMatch: ".managed-tree .result",
+  fileMatch: ".project-text-search .line-value",
   popup: ".popover",
   tooltip: ".tooltip",
   previewPopup: ".preview-popup",

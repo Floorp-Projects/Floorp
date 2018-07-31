@@ -22,9 +22,9 @@ exports.setOrientation = setOrientation;
 
 var _selectors = require("../selectors/index");
 
-var _ui = require("../reducers/ui");
+var _select = require("../actions/sources/select");
 
-var _source = require("../utils/source");
+var _ui = require("../reducers/ui");
 
 var _editor = require("../utils/editor/index");
 
@@ -134,11 +134,12 @@ function showSource(sourceId) {
     dispatch(setPrimaryPaneTab("sources"));
     dispatch({
       type: "SHOW_SOURCE",
-      sourceUrl: ""
+      source: null
     });
+    dispatch((0, _select.selectSource)(source.id));
     dispatch({
       type: "SHOW_SOURCE",
-      sourceUrl: (0, _source.getRawSourceURL)(source.url)
+      source
     });
   };
 }
