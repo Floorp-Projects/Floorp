@@ -259,7 +259,6 @@ BookmarkObserver.prototype = {
     });
   },
 
-  onPageAnnotationSet() {},
   onItemAnnotationSet(itemId, name, source, dontUpdateLastModified) {
     this.notifications.push({
       name: "onItemAnnotationSet",
@@ -267,7 +266,6 @@ BookmarkObserver.prototype = {
     });
   },
 
-  onPageAnnotationRemoved() {},
   onItemAnnotationRemoved(itemId, name, source) {
     this.notifications.push({
       name: "onItemAnnotationRemoved",

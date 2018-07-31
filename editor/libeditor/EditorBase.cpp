@@ -3750,39 +3750,49 @@ EditorBase::TagCanContainTag(nsAtom& aParentTag,
 }
 
 bool
-EditorBase::IsRoot(nsINode* inNode)
+EditorBase::IsRoot(nsINode* inNode) const
 {
-  NS_ENSURE_TRUE(inNode, false);
-
-  nsCOMPtr<nsINode> rootNode = GetRoot();
-
+  if (NS_WARN_IF(!inNode)) {
+    return false;
+  }
+  nsINode* rootNode = GetRoot();
   return inNode == rootNode;
 }
 
 bool
-EditorBase::IsEditorRoot(nsINode* aNode)
+EditorBase::IsEditorRoot(nsINode* aNode) const
 {
-  NS_ENSURE_TRUE(aNode, false);
-  nsCOMPtr<nsINode> rootNode = GetEditorRoot();
+  if (NS_WARN_IF(!aNode)) {
+    return false;
+  }
+  nsINode* rootNode = GetEditorRoot();
   return aNode == rootNode;
 }
 
 bool
-EditorBase::IsDescendantOfRoot(nsINode* inNode)
+EditorBase::IsDescendantOfRoot(nsINode* inNode) const
 {
-  NS_ENSURE_TRUE(inNode, false);
-  nsCOMPtr<nsIContent> root = GetRoot();
-  NS_ENSURE_TRUE(root, false);
+  if (NS_WARN_IF(!inNode)) {
+    return false;
+  }
+  nsIContent* root = GetRoot();
+  if (NS_WARN_IF(!root)) {
+    return false;
+  }
 
   return nsContentUtils::ContentIsDescendantOf(inNode, root);
 }
 
 bool
-EditorBase::IsDescendantOfEditorRoot(nsINode* aNode)
+EditorBase::IsDescendantOfEditorRoot(nsINode* aNode) const
 {
-  NS_ENSURE_TRUE(aNode, false);
-  nsCOMPtr<nsIContent> root = GetEditorRoot();
-  NS_ENSURE_TRUE(root, false);
+  if (NS_WARN_IF(!aNode)) {
+    return false;
+  }
+  nsIContent* root = GetEditorRoot();
+  if (NS_WARN_IF(!root)) {
+    return false;
+  }
 
   return nsContentUtils::ContentIsDescendantOf(aNode, root);
 }
@@ -4821,13 +4831,13 @@ EditorBase::ReinitializeSelection(Element& aElement)
 }
 
 Element*
-EditorBase::GetEditorRoot()
+EditorBase::GetEditorRoot() const
 {
   return GetRoot();
 }
 
 Element*
-EditorBase::GetExposedRoot()
+EditorBase::GetExposedRoot() const
 {
   Element* rootElement = GetRoot();
 
