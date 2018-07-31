@@ -328,6 +328,10 @@ class ComplexTypeDescr : public TypeDescr
     TypedProto& instancePrototype() const {
         return getReservedSlot(JS_DESCR_SLOT_TYPROTO).toObject().as<TypedProto>();
     }
+
+    bool allowConstruct() const {
+        return getReservedSlot(JS_DESCR_SLOT_FLAGS).toInt32() & JS_DESCR_FLAG_ALLOW_CONSTRUCT;
+    }
 };
 
 bool IsTypedObjectClass(const Class* clasp); // Defined below
@@ -416,6 +420,7 @@ class StructMetaTypeDescr : public NativeObject
     static StructTypeDescr* createFromArrays(JSContext* cx,
                                              HandleObject structTypePrototype,
                                              bool opaque,
+                                             bool allowConstruct,
                                              AutoIdVector& ids,
                                              AutoValueVector& fieldTypeObjs,
                                              Vector<bool>& fieldMutabilities);

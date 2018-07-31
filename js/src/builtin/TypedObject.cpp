@@ -547,7 +547,7 @@ ArrayMetaTypeDescr::create(JSContext* cx,
     obj->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(elementType->opaque()));
     obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE, ObjectValue(*elementType));
     obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH, Int32Value(length));
-    obj->initReservedSlot(JS_DESCR_SLOT_FLAGS, Int32Value(0));
+    obj->initReservedSlot(JS_DESCR_SLOT_FLAGS, Int32Value(JS_DESCR_FLAG_ALLOW_CONSTRUCT));
 
     RootedValue elementTypeVal(cx, ObjectValue(*elementType));
     if (!DefineDataProperty(cx, obj, cx->names().elementType, elementTypeVal,
@@ -812,13 +812,15 @@ StructMetaTypeDescr::create(JSContext* cx,
     if (!structTypePrototype)
         return nullptr;
 
-    return createFromArrays(cx, structTypePrototype, opaque, ids, fieldTypeObjs, fieldMutabilities);
+    return createFromArrays(cx, structTypePrototype, opaque, /* allowConstruct= */ true, ids,
+                            fieldTypeObjs, fieldMutabilities);
 }
 
 /* static */ StructTypeDescr*
 StructMetaTypeDescr::createFromArrays(JSContext* cx,
                                       HandleObject structTypePrototype,
                                       bool opaque,
+                                      bool allowConstruct,
                                       AutoIdVector& ids,
                                       AutoValueVector& fieldTypeObjs,
                                       Vector<bool>& fieldMutabilities)
@@ -920,7 +922,8 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
     descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(AssertedCast<int32_t>(alignment)));
     descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(totalSize.value()));
     descr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(opaque));
-    descr->initReservedSlot(JS_DESCR_SLOT_FLAGS, Int32Value(0));
+    descr->initReservedSlot(JS_DESCR_SLOT_FLAGS,
+                            Int32Value(allowConstruct ? JS_DESCR_FLAG_ALLOW_CONSTRUCT : 0));
 
     // Construct for internal use an array with the name for each field.
     {
@@ -2284,6 +2287,13 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
 
     MOZ_ASSERT(cx->realm() == callee->realm());
 
+    // Types created by Wasm may not be constructible from JS due to field types
+    // that are not expressible in the current TypedObject system.
+    if (callee->is<ComplexTypeDescr>() && !callee->as<ComplexTypeDescr>().allowConstruct()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_NOT_CONSTRUCTIBLE);
+        return false;
+    }
+
     // Typed object constructors are overloaded in two ways:
     //
     //   new TypeObj()
@@ -2300,6 +2310,7 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
 
     // Data constructor.
     if (args[0].isObject()) {
+
         // Create the typed object.
         Rooted<TypedObject*> obj(cx, createZeroed(cx, callee));
         if (!obj)
