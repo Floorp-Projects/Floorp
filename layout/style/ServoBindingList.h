@@ -889,6 +889,13 @@ SERVO_BINDING_FUNC(Servo_ResolveLogicalProperty,
                    nsCSSPropertyID,
                    nsCSSPropertyID,
                    ComputedStyleBorrowed);
+SERVO_BINDING_FUNC(Servo_Property_LookupEnabledForAllContent,
+                   nsCSSPropertyID,
+                   const nsACString* name);
+SERVO_BINDING_FUNC(Servo_Property_GetName,
+                   const uint8_t*,
+                   nsCSSPropertyID,
+                   uint32_t* out_length);
 SERVO_BINDING_FUNC(Servo_Property_IsShorthand, bool,
                    const nsACString* name, bool* found);
 SERVO_BINDING_FUNC(Servo_Property_IsInherited, bool,

@@ -538,8 +538,7 @@ CSSEditUtils::GetCSSInlinePropertyBase(nsINode* aNode,
   }
 
   nsCSSPropertyID prop =
-    nsCSSProps::LookupProperty(nsDependentAtomString(aProperty),
-                               CSSEnabledState::eForAllContent);
+    nsCSSProps::LookupProperty(nsDependentAtomString(aProperty));
   MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
 
   decl->GetPropertyValueByID(prop, aValue);
