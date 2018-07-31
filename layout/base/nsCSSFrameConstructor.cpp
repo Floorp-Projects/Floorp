@@ -957,12 +957,12 @@ public:
   /**
    * Add a new pending binding to the list
    */
-  void AddPendingBinding(PendingBinding* aPendingBinding)
+  void AddPendingBinding(UniquePtr<PendingBinding> aPendingBinding)
   {
     if (mCurrentPendingBindingInsertionPoint) {
-      mCurrentPendingBindingInsertionPoint->setPrevious(aPendingBinding);
+      mCurrentPendingBindingInsertionPoint->setPrevious(aPendingBinding.release());
     } else {
-      mPendingBindings.insertBack(aPendingBinding);
+      mPendingBindings.insertBack(aPendingBinding.release());
     }
   }
 
@@ -5493,6 +5493,80 @@ ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
   return true;
 }
 
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
+  already_AddRefed<ComputedStyle> aStyle,
+  mozilla::UniquePtr<PendingBinding> aPendingBinding,
+  nsAtom* aTag)
+  : mStyle(aStyle)
+  , mPendingBinding(std::move(aPendingBinding))
+  , mTag(aTag)
+{
+  MOZ_ASSERT(mTag);
+  MOZ_ASSERT(mStyle);
+}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(nsIContent& aContent,
+                                                              ComputedStyle& aStyle)
+  : mStyle(&aStyle)
+  , mPendingBinding(nullptr)
+  , mTag(aContent.NodeInfo()->NameAtom())
+{
+}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo() = default;
+
+nsCSSFrameConstructor::XBLBindingLoadInfo
+nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
+                                              ComputedStyle& aStyle,
+                                              uint32_t aFlags)
+{
+  if (!(aFlags & ITEM_ALLOW_XBL_BASE)) {
+    return { aContent, aStyle };
+  }
+  css::URLValue* binding = aStyle.StyleDisplay()->mBinding;
+  if (!binding) {
+    return { aContent, aStyle };
+  }
+
+  nsXBLService* xblService = nsXBLService::GetInstance();
+  if (!xblService) {
+    return { };
+  }
+
+  auto newPendingBinding = MakeUnique<PendingBinding>();
+
+  bool resolveStyle;
+  nsresult rv = xblService->LoadBindings(aContent.AsElement(),
+                                         binding->GetURI(),
+                                         binding->mExtraData->GetPrincipal(),
+                                         getter_AddRefs(newPendingBinding->mBinding),
+                                         &resolveStyle);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_XBL_BLOCKED) {
+      return { aContent, aStyle };
+    }
+    return { };
+  }
+
+  RefPtr<ComputedStyle> style = resolveStyle
+    ? mPresShell->StyleSet()->ResolveServoStyle(*aContent.AsElement())
+    : do_AddRef(&aStyle);
+
+  nsAtom* tag = aContent.NodeInfo()->NameAtom();
+  if (aContent.IsXULElement()) {
+    int32_t overridenNamespace;
+    nsAtom* overridenTag =
+      mDocument->BindingManager()->ResolveTag(&aContent, &overridenNamespace);
+    // Only allow overriding from & to XUL.
+    if (overridenNamespace == kNameSpaceID_XUL) {
+      tag = overridenTag;
+    }
+  }
+
+  return { style.forget(), std::move(newPendingBinding), tag };
+}
+
+
 void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                                          nsIContent* aContent,
@@ -5508,53 +5582,25 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   MOZ_ASSERT(!aContent->GetPrimaryFrame() || aState.mCreatingExtraFrames ||
              aContent->NodeInfo()->NameAtom() == nsGkAtoms::area);
 
-  // The following code allows the user to specify the base tag of an element
-  // using XBL. XUL elements can then be extended arbitrarily.
-  RefPtr<ComputedStyle> style = aComputedStyle;
   PendingBinding* pendingBinding = nullptr;
-  nsAtom* tag = aContent->NodeInfo()->NameAtom();
-  int32_t namespaceId = aContent->GetNameSpaceID();
-  if (aFlags & ITEM_ALLOW_XBL_BASE) {
-    if (css::URLValue* binding = style->StyleDisplay()->mBinding) {
-      // Ensure that our XBL bindings are installed.
-
-      nsXBLService* xblService = nsXBLService::GetInstance();
-      if (!xblService) {
-        return;
-      }
-
-      auto newPendingBinding = MakeUnique<PendingBinding>();
-      bool resolveStyle;
-
-      nsresult rv = xblService->LoadBindings(
-        aContent->AsElement(), binding->GetURI(),
-        binding->mExtraData->GetPrincipal(),
-        getter_AddRefs(newPendingBinding->mBinding), &resolveStyle);
-      if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
-        return;
-
-      if (newPendingBinding->mBinding) {
-        pendingBinding = newPendingBinding.get();
-        // aState takes over owning newPendingBinding
-        aState.AddPendingBinding(newPendingBinding.release());
-      }
-
-      if (resolveStyle) {
-        style =
-          mPresShell->StyleSet()->ResolveServoStyle(*aContent->AsElement());
-      }
-
-      aComputedStyle = style;
-      if (namespaceId == kNameSpaceID_XUL) {
-        // Only allow overriding from & to XUL.
-        int32_t overridenNamespace;
-        nsAtom* overridenTag =
-          mDocument->BindingManager()->ResolveTag(aContent, &overridenNamespace);
-        if (overridenNamespace == kNameSpaceID_XUL) {
-          tag = overridenTag;
-        }
-      }
+  RefPtr<ComputedStyle> style;
+  nsAtom* tag;
+  {
+    XBLBindingLoadInfo xblInfo =
+      LoadXBLBindingIfNeeded(*aContent, *aComputedStyle, aFlags);
+    if (!xblInfo.mTag) {
+      return;
     }
+
+    if (xblInfo.mPendingBinding && xblInfo.mPendingBinding->mBinding) {
+      pendingBinding = xblInfo.mPendingBinding.get();
+      aState.AddPendingBinding(std::move(xblInfo.mPendingBinding));
+    }
+
+    style = xblInfo.mStyle.forget();
+    aComputedStyle = style.get();
+
+    tag = xblInfo.mTag;
   }
 
   const bool isGeneratedContent = !!(aFlags & ITEM_IS_GENERATED_CONTENT);

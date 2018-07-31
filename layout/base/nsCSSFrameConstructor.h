@@ -780,6 +780,34 @@ private:
      pseudo-frames as needed */
   static const PseudoParentData sPseudoParentData[eParentTypeCount];
 
+  // The information that concerns the frame constructor after loading an XBL
+  // binding.
+  //
+  // This is expected to just be used temporarily to aggregate the different
+  // objects that LoadXBLBindingIfNeeded returns.
+  struct MOZ_STACK_CLASS XBLBindingLoadInfo
+  {
+    RefPtr<ComputedStyle> mStyle;
+    mozilla::UniquePtr<PendingBinding> mPendingBinding;
+    nsAtom* mTag = nullptr;
+
+    // For the 'no binding loaded' case.
+    XBLBindingLoadInfo(nsIContent&, ComputedStyle&);
+
+    // For the case we actually load an XBL binding.
+    XBLBindingLoadInfo(already_AddRefed<ComputedStyle> aStyle,
+                       mozilla::UniquePtr<PendingBinding> aPendingBinding,
+                       nsAtom* aTag);
+
+    // For the error case.
+    XBLBindingLoadInfo();
+  };
+
+  // Returns null mStyle / mTag members to signal an error.
+  XBLBindingLoadInfo LoadXBLBindingIfNeeded(nsIContent&,
+                                            ComputedStyle&,
+                                            uint32_t aFlags);
+
   /* A function that takes an integer, content, style, and array of
      FrameConstructionDataByInts and finds the appropriate frame construction
      data to use and returns it.  This can return null if none of the integers
