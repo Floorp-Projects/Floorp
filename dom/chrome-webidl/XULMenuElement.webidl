@@ -5,10 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Func="IsChromeOrXBL"]
-interface MenuBoxObject : BoxObject {
-
-  void openMenu(boolean openFlag);
+[HTMLConstructor, Func="IsChromeOrXBL"]
+interface XULMenuElement : XULElement {
 
   attribute Element? activeChild;
 

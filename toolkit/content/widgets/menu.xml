@@ -48,15 +48,9 @@
     <implementation implements="nsIDOMXULContainerElement">
       <property name="open" onget="return this.hasAttribute('open');">
         <setter><![CDATA[
-          this.boxObject.openMenu(val);
+          this.openMenu(val);
           return val;
         ]]></setter>
-      </property>
-
-      <property name="openedWithKey" readonly="true">
-        <getter><![CDATA[
-          return this.boxObject.openedWithKey;
-        ]]></getter>
       </property>
 
       <!-- nsIDOMXULContainerElement interface -->

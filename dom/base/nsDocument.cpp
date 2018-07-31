@@ -259,7 +259,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #ifdef MOZ_XUL
-#include "mozilla/dom/MenuBoxObject.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
 #include "nsXULCommandDispatcher.h"
@@ -6546,9 +6545,7 @@ nsIDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
   RefPtr<nsAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
 #ifdef MOZ_XUL
   if (namespaceID == kNameSpaceID_XUL) {
-    if (tag == nsGkAtoms::menu) {
-      boxObject = new MenuBoxObject();
-    } else if (tag == nsGkAtoms::tree) {
+    if (tag == nsGkAtoms::tree) {
       boxObject = new TreeBoxObject();
     } else {
       boxObject = new BoxObject();
