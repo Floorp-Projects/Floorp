@@ -941,9 +941,22 @@ class TupBackend(CommonBackend):
             if not path:
                 raise Exception("Cannot install to " + target)
 
+        js_shell = self.environment.substs.get('JS_SHELL_NAME')
+        if js_shell:
+            js_shell = '%s%s' % (js_shell,
+                                 self.environment.substs['BIN_SUFFIX'])
+
         for path, files in obj.files.walk():
             self._add_features(target, path)
             for f in files:
+
+                if (js_shell and isinstance(obj, ObjdirFiles) and
+                    f.endswith(js_shell)):
+                    # Skip this convenience install for now. Accessing
+                    # !/js/src/js when trying to find headers creates
+                    # an error for tup when !/js/src/js is also a target.
+                    continue
+
                 output_group = None
                 if any(mozpath.match(mozpath.basename(f), p)
                        for p in self._compile_env_files):
