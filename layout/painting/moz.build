@@ -24,7 +24,6 @@ EXPORTS += [
     'nsImageRenderer.h',
     'RetainedDisplayListBuilder.h',
     'RetainedDisplayListHelpers.h',
-    'TransformClipNode.h',
 ]
 
 EXPORTS.mozilla += [
