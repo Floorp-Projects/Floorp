@@ -433,7 +433,7 @@ void CycleCollectedJSContext::IsIdleGCTaskNeeded()
     }
   };
 
-  if (Runtime()->IsIdleGCTaskNeeded() && !recordreplay::IsRecordingOrReplaying()) {
+  if (Runtime()->IsIdleGCTaskNeeded()) {
     nsCOMPtr<nsIRunnable> gc_task = new IdleTimeGCTaskRunnable();
     NS_IdleDispatchToCurrentThread(gc_task.forget());
     Runtime()->SetPendingIdleGCTask();
