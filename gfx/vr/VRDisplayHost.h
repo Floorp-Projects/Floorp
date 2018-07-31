@@ -42,6 +42,8 @@ public:
   virtual void ZeroSensor() = 0;
   virtual void StartPresentation() = 0;
   virtual void StopPresentation() = 0;
+  virtual void StartVRNavigation();
+  virtual void StopVRNavigation(const TimeDuration& aTimeout);
   void NotifyVSync();
 
   void StartFrame();

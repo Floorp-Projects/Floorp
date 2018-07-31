@@ -1404,6 +1404,9 @@ GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
   gfx::FeatureStatus wrQualified = gfxConfig::GetValue(Feature::WEBRENDER_QUALIFIED);
   InitFeatureObject(aCx, aObj, "wrQualified", wrQualified, &obj);
 
+  gfx::FeatureStatus webrender = gfxConfig::GetValue(Feature::WEBRENDER);
+  InitFeatureObject(aCx, aObj, "webrender", webrender, &obj);
+
   // Only include AL if the platform attempted to use it.
   gfx::FeatureStatus advancedLayers = gfxConfig::GetValue(Feature::ADVANCED_LAYERS);
   if (advancedLayers != FeatureStatus::Unused) {

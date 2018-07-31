@@ -208,13 +208,26 @@ public class GeckoView extends FrameLayout {
             return null;
         }
 
+        // Cover the view while we are not drawing to the surface.
+        coverUntilFirstPaint(Color.WHITE);
+
         GeckoSession session = mSession;
         mSession.releaseDisplay(mDisplay.release());
         mSession.getOverscrollEdgeEffect().setInvalidationCallback(null);
         mSession.getCompositorController().setFirstPaintCallback(null);
+
+        if (mSession.getAccessibility().getView() == this) {
+            mSession.getAccessibility().setView(null);
+        }
+
+        if (mSession.getTextInput().getView() == this) {
+            mSession.getTextInput().setView(null);
+        }
+
         if (session.getSelectionActionDelegate() == mSelectionActionDelegate) {
             mSession.setSelectionActionDelegate(null);
         }
+
         mSession = null;
         return session;
     }
@@ -291,6 +304,14 @@ public class GeckoView extends FrameLayout {
             }
         });
 
+        if (session.getTextInput().getView() == null) {
+            session.getTextInput().setView(this);
+        }
+
+        if (session.getAccessibility().getView() == null) {
+            session.getAccessibility().setView(this);
+        }
+
         if (session.getSelectionActionDelegate() == null && mSelectionActionDelegate != null) {
             session.setSelectionActionDelegate(mSelectionActionDelegate);
         }
@@ -322,12 +343,6 @@ public class GeckoView extends FrameLayout {
             mSession.open(mRuntime);
         }
 
-        if (mSession.getTextInput().getView() == null) {
-            mSession.getTextInput().setView(this);
-        }
-
-        mSession.getAccessibility().setView(this);
-
         super.onAttachedToWindow();
     }
 
@@ -337,14 +352,6 @@ public class GeckoView extends FrameLayout {
 
         if (mSession == null) {
             return;
-        }
-
-        if (mSession.getAccessibility().getView() == this) {
-            mSession.getAccessibility().setView(null);
-        }
-
-        if (mSession.getTextInput().getView() == this) {
-            mSession.getTextInput().setView(null);
         }
 
         // If we saved state earlier, we don't want to close the window.

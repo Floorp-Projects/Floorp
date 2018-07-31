@@ -73,7 +73,8 @@ protected:
   virtual mozilla::ipc::IPCResult RecvNewAxisMoveEventToMockController(const uint32_t& aDeviceID, const long& aAxis,
                                                                        const double& aValue) override;
   virtual mozilla::ipc::IPCResult RecvNewPoseMoveToMockController(const uint32_t& aDeviceID, const GamepadPoseState& pose) override;
-
+  virtual mozilla::ipc::IPCResult RecvStartVRNavigation(const uint32_t& aDeviceID) override;
+  virtual mozilla::ipc::IPCResult RecvStopVRNavigation(const uint32_t& aDeviceID, const TimeDuration& aTimeout) override;
 private:
   void RegisterWithManager();
   void UnregisterFromManager();

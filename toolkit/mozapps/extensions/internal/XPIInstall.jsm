@@ -959,6 +959,9 @@ function shouldVerifySignedState(aAddon) {
   if (aAddon.location.name == KEY_APP_SYSTEM_DEFAULTS)
     return false;
 
+  if (aAddon.location.scope & AppConstants.MOZ_UNSIGNED_SCOPES)
+    return false;
+
   // Otherwise only check signatures if the add-on is one of the signed
   // types.
   return XPIDatabase.SIGNED_TYPES.has(aAddon.type);

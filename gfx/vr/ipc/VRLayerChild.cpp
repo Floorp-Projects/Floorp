@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRLayerChild.h"
+#include "gfxPlatform.h"
 #include "GLScreenBuffer.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "SharedSurface.h"                // for SharedSurface

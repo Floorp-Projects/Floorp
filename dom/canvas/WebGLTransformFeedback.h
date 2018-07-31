@@ -11,17 +11,22 @@
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
+namespace webgl {
+struct CachedDrawFetchLimits;
+}
 
 class WebGLTransformFeedback final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLTransformFeedback>
     , public LinkedListElement<WebGLTransformFeedback>
 {
-    friend class ScopedDrawHelper;
     friend class ScopedDrawWithTransformFeedback;
     friend class WebGLContext;
     friend class WebGL2Context;
     friend class WebGLProgram;
+
+    friend const webgl::CachedDrawFetchLimits*
+        ValidateDraw(WebGLContext*, const char*, GLenum, uint32_t);
 
 public:
     const GLuint mGLName;

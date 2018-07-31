@@ -297,3 +297,31 @@ VRDisplayClient::GetSubmitFrameResult(VRSubmitFrameResultInfo& aResult)
 {
   aResult = mSubmitFrameResult;
 }
+
+void
+VRDisplayClient::StartVRNavigation()
+{
+  /**
+   * A VR-to-VR site navigation has started, notify VRManager
+   * so we don't drop out of VR during the transition
+   */
+  VRManagerChild *vm = VRManagerChild::Get();
+  vm->SendStartVRNavigation(mDisplayInfo.mDisplayID);
+}
+
+void
+VRDisplayClient::StopVRNavigation(const TimeDuration& aTimeout)
+{
+  /**
+   * A VR-to-VR site navigation has ended and the new site
+   * has received a vrdisplayactivate event.
+   * Don't actually consider the navigation transition over
+   * until aTimeout has elapsed.
+   * This may be called multiple times, in which case the timeout
+   * should be reset to aTimeout.
+   * When aTimeout is TimeDuration(0), we should consider the
+   * transition immediately ended.
+   */
+  VRManagerChild *vm = VRManagerChild::Get();
+  vm->SendStopVRNavigation(mDisplayInfo.mDisplayID, aTimeout);
+}

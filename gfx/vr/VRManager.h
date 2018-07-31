@@ -60,6 +60,8 @@ public:
   void StopVibrateHaptic(uint32_t aControllerIdx);
   void NotifyVibrateHapticCompleted(const VRManagerPromise& aPromise);
   void DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult);
+  void StartVRNavigation(const uint32_t& aDisplayID);
+  void StopVRNavigation(const uint32_t& aDisplayID, const TimeDuration& aTimeout);
 
 protected:
   VRManager();
