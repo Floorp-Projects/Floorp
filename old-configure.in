@@ -1041,12 +1041,7 @@ case "$target" in
         CXXFLAGS="$CXXFLAGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib secur32.lib"
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
-        # -Werror is disabled on clang-cl until bug 1090497 cleans up the noise.
-        if test -n "$CLANG_CL"; then
-            WARNINGS_AS_ERRORS=''
-        else
-            WARNINGS_AS_ERRORS='-WX'
-        fi
+        WARNINGS_AS_ERRORS='-WX'
         # Use a higher optimization level for clang-cl, so we can come closer
         # to MSVC's performance numbers (see bug 1443590).
         if test -n "$CLANG_CL"; then
