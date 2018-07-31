@@ -83,3 +83,5 @@ LIBRARY_DEFINES['_UNICODE'] = True
 LIBRARY_DEFINES['MOZ_NO_MOZALLOC'] = True
 DisableStlWrapping()
 
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

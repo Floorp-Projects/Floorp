@@ -53,3 +53,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 CFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
 OS_LIBS += CONFIG['TK_LIBS']
+
+if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

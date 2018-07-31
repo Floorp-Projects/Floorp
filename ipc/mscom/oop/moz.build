@@ -37,3 +37,6 @@ FORCE_STATIC_LIB = True
 # This DLL may be loaded into other processes, so we need static libs for
 # Windows 7 and Windows 8.
 USE_STATIC_LIBS = True
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

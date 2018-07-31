@@ -23,3 +23,6 @@ OS_LIBS += [
     'shell32',
     'ws2_32',
 ]
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497
