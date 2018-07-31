@@ -4,8 +4,23 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "OptionalPermission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "search"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "search",
     "description": "Use browser.search to interact with search engines.",
+    "permissions": ["search"],
     "types": [
       {
         "id": "SearchEngine",
