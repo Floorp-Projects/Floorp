@@ -776,8 +776,9 @@ MacroAssembler::nurseryAllocateObject(Register result, Register temp, gc::AllocK
     // No explicit check for nursery.isEnabled() is needed, as the comparison
     // with the nursery's end will always fail in such cases.
     CompileZone* zone = GetJitContext()->realm->zone();
-    int thingSize = int(gc::Arena::thingSize(allocKind));
-    int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
+    size_t thingSize = gc::Arena::thingSize(allocKind);
+    size_t totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
+    MOZ_ASSERT(totalSize < INT32_MAX);
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
     void *ptrNurseryPosition = zone->addressOfNurseryPosition();
     loadPtr(AbsoluteAddress(ptrNurseryPosition), result);
@@ -962,8 +963,10 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     // with the nursery's end will always fail in such cases.
 
     CompileZone* zone = GetJitContext()->realm->zone();
-    int thingSize = int(gc::Arena::thingSize(allocKind));
-    int totalSize = js::Nursery::stringHeaderSize() + thingSize;
+    size_t thingSize = gc::Arena::thingSize(allocKind);
+    size_t totalSize = js::Nursery::stringHeaderSize() + thingSize;
+    MOZ_ASSERT(totalSize < INT32_MAX,
+        "Nursery allocation too large");
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
     // The nursery position (allocation pointer) and the nursery end are stored
@@ -975,9 +978,11 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     movePtr(ImmPtr(nurseryPosAddr), temp);
     loadPtr(Address(temp, 0), result);
     addPtr(Imm32(totalSize), result);
-    const ptrdiff_t endOffset =
-        uintptr_t(nurseryEndAddr) - uintptr_t(nurseryPosAddr);
-    branchPtr(Assembler::Below, Address(temp, endOffset), result, fail);
+    CheckedInt<int32_t> endOffset = (CheckedInt<uintptr_t>(uintptr_t(nurseryEndAddr)) -
+        CheckedInt<uintptr_t>(uintptr_t(nurseryPosAddr))).toChecked<int32_t>();
+    MOZ_ASSERT(endOffset.isValid(),
+        "Position and end pointers must be nearby");
+    branchPtr(Assembler::Below, Address(temp, endOffset.value()), result, fail);
     storePtr(result, Address(temp, 0));
     subPtr(Imm32(thingSize), result);
     storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
