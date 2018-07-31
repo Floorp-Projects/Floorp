@@ -544,8 +544,7 @@ nsTransitionManager::DoUpdateTransitions(
           for (nsCSSPropertyID p = nsCSSPropertyID(0);
                p < eCSSProperty_COUNT_no_shorthands;
                p = nsCSSPropertyID(p + 1)) {
-            p = nsCSSProps::Physicalize(p, aNewStyle);
-            allTransitionProperties.AddProperty(p);
+            allTransitionProperties.AddProperty(nsCSSProps::Physicalize(p, aNewStyle));
           }
         } else if (nsCSSProps::IsShorthand(property)) {
           CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
