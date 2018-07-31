@@ -102,7 +102,6 @@ AboutNewTabService.prototype = {
     Ci.nsIAboutNewTabService,
     Ci.nsIObserver
   ]),
-  _xpcom_categories: [{service: true}],
 
   observe(subject, topic, data) {
     switch (topic) {
