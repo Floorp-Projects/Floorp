@@ -18,6 +18,7 @@ function runTests() {
     print(BUGNUMBER + ": " + summary);
 
     var S = new StructType({x: int32, y: uint8, z: float64});
+    var T = new StructType({x: int32, y: uint8, z: float64});
     assertEq(S.__proto__, StructType.prototype);
     assertEq(S.prototype.__proto__, StructType.prototype.prototype);
     assertEq(S.toSource(), "new StructType({x: int32, y: uint8, z: float64})");
@@ -34,6 +35,8 @@ function runTests() {
     assertEq(S.fieldOffsets.x, 0);
     assertEq(S.fieldOffsets.y, 4);
     assertEq(S.fieldOffsets.z, 8);
+    assertEq((new S({x:10, y:20, z:30})) instanceof S, true);
+    assertEq((new S({x:10, y:20, z:30})) instanceof T, false);
 
     // fieldTypes and fieldOffsets should be frozen
     assertEq(Object.isFrozen(S.fieldTypes), true);
