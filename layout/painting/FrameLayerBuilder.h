@@ -20,7 +20,7 @@
 #include "Layers.h"
 #include "LayerUserData.h"
 #include "nsDisplayItemTypes.h"
-#include "MatrixStack.h"
+#include "TransformClipNode.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
@@ -121,6 +121,7 @@ public:
   }
 
   RefPtr<TransformClipNode> mTransform;
+  RefPtr<TransformClipNode> mOldTransform;
 
 private:
   DisplayItemData(LayerManagerData* aParent,

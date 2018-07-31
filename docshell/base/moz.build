@@ -44,7 +44,6 @@ XPIDL_SOURCES += [
     'nsIDocShellTreeItem.idl',
     'nsIDocShellTreeOwner.idl',
     'nsIDocumentLoaderFactory.idl',
-    'nsIDownloadHistory.idl',
     'nsILoadContext.idl',
     'nsIPrivacyTransitionObserver.idl',
     'nsIReflowObserver.idl',

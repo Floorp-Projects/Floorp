@@ -58,8 +58,8 @@ async function checkEventsForNode(test, inspector, testActor) {
   const evHolder = container.elt.querySelector(".markup-badge[data-event]");
 
   if (expected.length === 0) {
-    // if no event is expected, simply check that the event bubble is hidden
-    is(evHolder.style.display, "none", "event bubble should be hidden");
+    // If no event is expected, check that event bubble is hidden.
+    ok(!evHolder, "event bubble should be hidden");
     return;
   }
 

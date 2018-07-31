@@ -18,6 +18,7 @@
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/HTMLBodyElement.h"
 
 #include "Layers.h"
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
@@ -27,6 +28,7 @@
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
+#include "nsIDocumentInlines.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsImageFrame.h"
@@ -1129,6 +1131,42 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame, nsChangeHint aChange)
   }
 }
 
+static bool
+IsPrimaryFrameOfRootOrBodyElement(nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return false;
+  }
+
+  nsIDocument* document = content->OwnerDoc();
+  Element* root = document->GetRootElement();
+  if (!root) {
+    return false;
+  }
+  nsIFrame* rootFrame = root->GetPrimaryFrame();
+  if (!rootFrame) {
+    return false;
+  }
+  if (aFrame == rootFrame) {
+    return true;
+  }
+
+  Element* body = document->GetBodyElement();
+  if (!body) {
+    return false;
+  }
+  nsIFrame* bodyFrame = body->GetPrimaryFrame();
+  if (!bodyFrame) {
+    return false;
+  }
+  if (aFrame == bodyFrame) {
+    return true;
+  }
+
+  return false;
+}
+
 static void
 ApplyRenderingChangeToTree(nsIPresShell* aPresShell,
                            nsIFrame* aFrame,
@@ -1156,17 +1194,15 @@ ApplyRenderingChangeToTree(nsIPresShell* aPresShell,
   gInApplyRenderingChangeToTree = true;
 #endif
   if (aChange & nsChangeHint_RepaintFrame) {
-    // If the frame's background is propagated to an ancestor, walk up to
-    // that ancestor and apply the RepaintFrame change hint to it.
-    ComputedStyle* bgSC;
-    nsIFrame* propagatedFrame = aFrame;
-    while (!nsCSSRendering::FindBackground(propagatedFrame, &bgSC)) {
-      propagatedFrame = propagatedFrame->GetParent();
-      NS_ASSERTION(aFrame, "root frame must paint");
-    }
-
-    if (propagatedFrame != aFrame) {
-      DoApplyRenderingChangeToTree(propagatedFrame, nsChangeHint_RepaintFrame);
+    // If the frame is the primary frame of either the body element or
+    // the html element, we propagate the repaint change hint to the
+    // viewport. This is necessary for background and scrollbar colors
+    // propagation.
+    if (IsPrimaryFrameOfRootOrBodyElement(aFrame)) {
+      nsIFrame* rootFrame = aFrame->
+        PresShell()->FrameConstructor()->GetRootFrame();
+      MOZ_ASSERT(rootFrame, "No root frame?");
+      DoApplyRenderingChangeToTree(rootFrame, nsChangeHint_RepaintFrame);
       aChange &= ~nsChangeHint_RepaintFrame;
       if (!aChange) {
         return;

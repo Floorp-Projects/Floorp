@@ -12,26 +12,11 @@ try {
 }
 
 var annoObserver = {
-  PAGE_lastSet_URI: "",
-  PAGE_lastSet_AnnoName: "",
-
-  onPageAnnotationSet(aURI, aName) {
-    this.PAGE_lastSet_URI = aURI.spec;
-    this.PAGE_lastSet_AnnoName = aName;
-  },
-
   ITEM_lastSet_Id: -1,
   ITEM_lastSet_AnnoName: "",
   onItemAnnotationSet(aItemId, aName) {
     this.ITEM_lastSet_Id = aItemId;
     this.ITEM_lastSet_AnnoName = aName;
-  },
-
-  PAGE_lastRemoved_URI: "",
-  PAGE_lastRemoved_AnnoName: "",
-  onPageAnnotationRemoved(aURI, aName) {
-    this.PAGE_lastRemoved_URI = aURI.spec;
-    this.PAGE_lastRemoved_AnnoName = aName;
   },
 
   ITEM_lastRemoved_Id: -1,
@@ -61,8 +46,6 @@ add_task(async function test_execute() {
   } catch (ex) {
     do_throw("unable to add page-annotation");
   }
-  Assert.equal(annoObserver.PAGE_lastSet_URI, testURI.spec);
-  Assert.equal(annoObserver.PAGE_lastSet_AnnoName, testAnnoName);
 
   // get string annotation
   var storedAnnoVal = annosvc.getPageAnnotation(testURI, testAnnoName);
@@ -112,8 +95,6 @@ add_task(async function test_execute() {
 
   // get annotation info
   var value = {}, flags = {}, exp = {}, storageType = {};
-  annosvc.getPageAnnotationInfo(testURI, testAnnoName, flags, exp, storageType);
-  Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
   annosvc.getItemAnnotationInfo(testItemId, testAnnoName, value, flags, exp, storageType);
   Assert.equal(value.value, testAnnoVal);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
@@ -128,8 +109,6 @@ add_task(async function test_execute() {
   var int32Val = 23;
   annosvc.setPageAnnotation(testURI, int32Key, int32Val, 0, annosvc.EXPIRE_NEVER);
   value = {}, flags = {}, exp = {}, storageType = {};
-  annosvc.getPageAnnotationInfo(testURI, int32Key, flags, exp, storageType);
-  Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_INT32);
   var storedVal = annosvc.getPageAnnotation(testURI, int32Key);
   Assert.ok(int32Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int32Key, int32Val, 0, annosvc.EXPIRE_NEVER);
@@ -143,7 +122,6 @@ add_task(async function test_execute() {
   var int64Key = testAnnoName + "/types/Int64";
   var int64Val = 4294967296;
   annosvc.setPageAnnotation(testURI, int64Key, int64Val, 0, annosvc.EXPIRE_NEVER);
-  annosvc.getPageAnnotationInfo(testURI, int64Key, flags, exp, storageType);
   storedVal = annosvc.getPageAnnotation(testURI, int64Key);
   Assert.ok(int64Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int64Key, int64Val, 0, annosvc.EXPIRE_NEVER);
@@ -157,7 +135,6 @@ add_task(async function test_execute() {
   var doubleKey = testAnnoName + "/types/Double";
   var doubleVal = 0.000002342;
   annosvc.setPageAnnotation(testURI, doubleKey, doubleVal, 0, annosvc.EXPIRE_NEVER);
-  annosvc.getPageAnnotationInfo(testURI, doubleKey, flags, exp, storageType);
   storedVal = annosvc.getPageAnnotation(testURI, doubleKey);
   Assert.ok(doubleVal === storedVal);
   annosvc.setItemAnnotation(testItemId, doubleKey, doubleVal, 0, annosvc.EXPIRE_NEVER);
@@ -191,8 +168,6 @@ add_task(async function test_execute() {
   info("lastModified4 = " + lastModified4);
   Assert.ok(is_time_ordered(lastModified3, lastModified4));
 
-  Assert.equal(annoObserver.PAGE_lastRemoved_URI, testURI.spec);
-  Assert.equal(annoObserver.PAGE_lastRemoved_AnnoName, int32Key);
   Assert.equal(annoObserver.ITEM_lastRemoved_Id, testItemId);
   Assert.equal(annoObserver.ITEM_lastRemoved_AnnoName, int32Key);
 

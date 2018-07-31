@@ -11,7 +11,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozIAsyncHistory.h"
-#include "nsIDownloadHistory.h"
 #include "Database.h"
 
 #include "mozilla/dom/Link.h"
@@ -47,7 +46,6 @@ class ConcurrentStatementsHolder;
 #define NOTIFY_VISITS_CHUNK_SIZE 100
 
 class History final : public IHistory
-                    , public nsIDownloadHistory
                     , public mozIAsyncHistory
                     , public nsIObserver
                     , public nsIMemoryReporter
@@ -55,7 +53,6 @@ class History final : public IHistory
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_IHISTORY
-  NS_DECL_NSIDOWNLOADHISTORY
   NS_DECL_MOZIASYNCHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER

@@ -47,6 +47,8 @@
   ")" \
 )
 
+// Note: flags, expiration, type, dateAdded and lastModified should be considered
+// deprecated but are kept to ease backwards compatibility.
 #define CREATE_MOZ_ANNOS NS_LITERAL_CSTRING( \
   "CREATE TABLE moz_annos (" \
     "  id INTEGER PRIMARY KEY" \
