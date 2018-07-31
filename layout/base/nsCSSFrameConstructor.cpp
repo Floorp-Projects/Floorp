@@ -5432,7 +5432,7 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
 // XXXbz it's not clear how this should best work with XBL.
 static bool
 ShouldSuppressFrameInSelect(const nsIContent* aParent,
-                            const nsIContent* aChild)
+                            const nsIContent& aChild)
 {
   if (!aParent ||
       !aParent->IsAnyOfHTMLElements(nsGkAtoms::select, nsGkAtoms::optgroup)) {
@@ -5443,23 +5443,23 @@ ShouldSuppressFrameInSelect(const nsIContent* aParent,
   //
   // We can't be regular NAC, since display: contents has no frame to generate
   // them off.
-  if (aChild->GetParent() != aParent) {
+  if (aChild.GetParent() != aParent) {
     return true;
   }
 
   // Option is always fine.
-  if (aChild->IsHTMLElement(nsGkAtoms::option)) {
+  if (aChild.IsHTMLElement(nsGkAtoms::option)) {
     return false;
   }
 
   // <optgroup> is OK in <select> but not in <optgroup>.
-  if (aChild->IsHTMLElement(nsGkAtoms::optgroup) &&
+  if (aChild.IsHTMLElement(nsGkAtoms::optgroup) &&
       aParent->IsHTMLElement(nsGkAtoms::select)) {
     return false;
   }
 
   // Allow native anonymous content no matter what.
-  if (aChild->IsRootOfAnonymousSubtree()) {
+  if (aChild.IsRootOfAnonymousSubtree()) {
     return false;
   }
 
@@ -5468,13 +5468,13 @@ ShouldSuppressFrameInSelect(const nsIContent* aParent,
 
 static bool
 ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
-                                    const nsIContent* aChild)
+                                    const nsIContent& aChild)
 {
   if (!aDetails || aDetails->Open()) {
     return false;
   }
 
-  if (aChild->GetParent() != aDetails) {
+  if (aChild.GetParent() != aDetails) {
     return true;
   }
 
@@ -5484,9 +5484,9 @@ ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
   }
 
   // Don't suppress NAC, unless it's ::before or ::after.
-  if (aChild->IsRootOfAnonymousSubtree() &&
-      !aChild->IsGeneratedContentContainerForBefore() &&
-      !aChild->IsGeneratedContentContainerForAfter()) {
+  if (aChild.IsRootOfAnonymousSubtree() &&
+      !aChild.IsGeneratedContentContainerForBefore() &&
+      !aChild.IsGeneratedContentContainerForAfter()) {
     return false;
   }
 
@@ -5599,8 +5599,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     return;
   }
 
+
   nsIContent* parent = aParentFrame ? aParentFrame->GetContent() : nullptr;
-  if (ShouldSuppressFrameInSelect(parent, aContent)) {
+  if (ShouldSuppressFrameInSelect(parent, *aContent)) {
     return;
   }
 
@@ -5610,7 +5611,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   // ::before and ::after); we always want to create "internal" anonymous
   // content.
   auto* details = HTMLDetailsElement::FromNodeOrNull(parent);
-  if (ShouldSuppressFrameInNonOpenDetails(details, aContent)) {
+  if (ShouldSuppressFrameInNonOpenDetails(details, *aContent)) {
     return;
   }
 
