@@ -12641,7 +12641,8 @@ nsIDocument::HasBeenUserGestureActivated()
 bool
 nsIDocument::IsExtensionPage() const
 {
-  return BasePrincipal::Cast(NodePrincipal())->AddonPolicy();
+  return  Preferences::GetBool("media.autoplay.allow-extension-background-pages", true) &&
+          BasePrincipal::Cast(NodePrincipal())->AddonPolicy();
 }
 
 nsIDocument*
