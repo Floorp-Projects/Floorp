@@ -22,6 +22,7 @@ job-defaults:
       implementation: docker-worker
       os: linux
       docker-image: {in-tree: pipfile-updates}
+      taskcluster-proxy: true
       max-run-time: 2400
       command:
          - /runme.sh
