@@ -79,7 +79,10 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
    * if it matches the highlighted flex container node.
    */
   onFlexboxHighlighterChange: function() {
-    this.editor.displayBadge.classList.toggle("active",
+    if (!this.editor._displayBadge) {
+      return;
+    }
+    this.editor._displayBadge.classList.toggle("active",
       this.markup.highlighters.flexboxHighlighterShown === this.node);
   },
 
@@ -89,7 +92,10 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
    * the highlighted grid node.
    */
   onGridHighlighterChange: function() {
-    this.editor.displayBadge.classList.toggle("active",
+    if (!this.editor._displayBadge) {
+      return;
+    }
+    this.editor._displayBadge.classList.toggle("active",
       this.markup.highlighters.gridHighlighterShown === this.node);
   },
 

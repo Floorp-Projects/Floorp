@@ -9,10 +9,6 @@
 
 ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gDownloadHistory",
-           "@mozilla.org/browser/download-history;1",
-           Ci.nsIDownloadHistory);
-
 let baseDate = new Date("2000-01-01");
 
 /**
@@ -153,12 +149,9 @@ add_task(async function test_DownloadHistory() {
     let promiseFileAnnotation = waitForAnnotation(properties.source.url, "downloads/destinationFileURI");
     let promiseMetaAnnotation = waitForAnnotation(properties.source.url, "downloads/metaData");
     let promiseVisit = promiseWaitForVisit(properties.source.url);
-    gDownloadHistory.addDownload(Services.io.newURI(properties.source.url),
-                                 null,
-                                 properties.startTime.getTime() * 1000,
-                                 NetUtil.newURI(targetFile));
+    await DownloadHistory.addDownloadToHistory(download);
     await promiseVisit;
-    DownloadHistory.updateMetaData(download);
+    await DownloadHistory.updateMetaData(download);
     await Promise.all([promiseFileAnnotation, promiseMetaAnnotation]);
   }
 

@@ -1084,6 +1084,32 @@ var PlacesUtils = {
       }
     }
 
+    if (pageInfo.annotations) {
+      if (typeof pageInfo.annotations != "object" ||
+          pageInfo.annotations.constructor.name != "Map") {
+        throw new TypeError("annotations must be a Map");
+      }
+
+      if (pageInfo.annotations.size == 0) {
+        throw new TypeError("there must be at least one annotation");
+      }
+
+      for (let [key, value] of pageInfo.annotations.entries()) {
+        if (typeof key != "string") {
+          throw new TypeError("all annotation keys must be strings");
+        }
+        if (typeof value != "string" &&
+            typeof value != "number" &&
+            typeof value != "boolean" &&
+            value !== null &&
+            value !== undefined) {
+          throw new TypeError("all annotation values must be Boolean, Numbers or Strings");
+        }
+      }
+
+      info.annotations = pageInfo.annotations;
+    }
+
     if (!validateVisits) {
       return info;
     }

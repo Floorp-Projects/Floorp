@@ -608,7 +608,7 @@ var History = Object.freeze({
    /**
    * Update information for a page.
    *
-   * Currently, it supports updating the description and the preview image URL
+   * Currently, it supports updating the description, preview image URL and annotations
    * for a page, any other fields will be ignored.
    *
    * Note that this function will ignore the update if the target page has not
@@ -634,6 +634,14 @@ var History = Object.freeze({
    *      2). It throws if its length is greater than DB_URL_LENGTH_MAX
    *          defined in PlacesUtils.jsm.
    *
+   *      If a property `annotations` is provided, the annotations will be
+   *      updated. Note that:
+   *      1). It should be a Map containing key/value pairs to be updated.
+   *      2). If the value is falsy, the annotation will be removed.
+   *      3). If the value is non-falsy, the annotation will be added or updated.
+   *      For `annotations` the keys must all be strings, the values should be
+   *      Boolean, Number or Strings. null and undefined are supported as falsy values.
+   *
    * @return (Promise)
    *      A promise resolved once the update is complete.
    * @rejects (Error)
@@ -652,8 +660,9 @@ var History = Object.freeze({
   update(pageInfo) {
     let info = PlacesUtils.validatePageInfo(pageInfo, false);
 
-    if (info.description === undefined && info.previewImageURL === undefined) {
-      throw new TypeError("pageInfo object must at least have either a description or a previewImageURL property");
+    if (info.description === undefined && info.previewImageURL === undefined &&
+        info.annotations === undefined) {
+      throw new TypeError("pageInfo object must at least have either a description, previewImageURL or annotations property.");
     }
 
     return PlacesUtils.withConnectionWrapper("History.jsm: update", db => update(db, info));
@@ -1433,15 +1442,16 @@ var insertMany = function(db, pageInfos, onResult, onError) {
 var update = async function(db, pageInfo) {
   let updateFragments = [];
   let whereClauseFragment = "";
+  let baseParams = {};
   let params = {};
 
   // Prefer GUID over url if it's present
   if (typeof pageInfo.guid === "string") {
     whereClauseFragment = "guid = :guid";
-    params.guid = pageInfo.guid;
+    baseParams.guid = pageInfo.guid;
   } else {
     whereClauseFragment = "url_hash = hash(:url) AND url = :url";
-    params.url = pageInfo.url.href;
+    baseParams.url = pageInfo.url.href;
   }
 
   if (pageInfo.description || pageInfo.description === null) {
@@ -1452,12 +1462,74 @@ var update = async function(db, pageInfo) {
     updateFragments.push("preview_image_url");
     params.preview_image_url = pageInfo.previewImageURL ? pageInfo.previewImageURL.href : null;
   }
-  // Since this data may be written at every visit and is textual, avoid
-  // overwriting the existing record if it didn't change.
-  await db.execute(`
-    UPDATE moz_places
-    SET ${updateFragments.map(v => `${v} = :${v}`).join(", ")}
-    WHERE ${whereClauseFragment}
-      AND (${updateFragments.map(v => `IFNULL(${v}, "") <> IFNULL(:${v}, "")`).join(" OR ")})
-  `, params);
+  if (updateFragments.length > 0) {
+    // Since this data may be written at every visit and is textual, avoid
+    // overwriting the existing record if it didn't change.
+    await db.execute(`
+      UPDATE moz_places
+      SET ${updateFragments.map(v => `${v} = :${v}`).join(", ")}
+      WHERE ${whereClauseFragment}
+        AND (${updateFragments.map(v => `IFNULL(${v}, "") <> IFNULL(:${v}, "")`).join(" OR ")})
+    `, {...baseParams, ...params});
+  }
+
+  if (pageInfo.annotations) {
+    let annosToRemove = [];
+    let annosToUpdate = [];
+
+    for (let anno of pageInfo.annotations) {
+      anno[1] ? annosToUpdate.push(anno[0]) : annosToRemove.push(anno[0]);
+    }
+
+    await db.executeTransaction(async function() {
+      if (annosToUpdate.length) {
+        await db.execute(`
+          INSERT OR IGNORE INTO moz_anno_attributes (name)
+          VALUES ${Array.from(annosToUpdate.keys()).map(k => `(:${k})`).join(", ")}
+        `, Object.assign({}, annosToUpdate));
+
+        for (let anno of annosToUpdate) {
+          let content = pageInfo.annotations.get(anno);
+          // TODO: We only really need to save the type whilst we still support
+          // accessing page annotations via the annotation service.
+          let type = typeof content == "string" ? Ci.nsIAnnotationService.TYPE_STRING :
+            Ci.nsIAnnotationService.TYPE_INT64;
+          let date = PlacesUtils.toPRTime(new Date());
+
+          // This will replace the id every time an annotation is updated. This is
+          // not currently an issue as we're not joining on the id field.
+          await db.execute(`
+            INSERT OR REPLACE INTO moz_annos
+              (place_id, anno_attribute_id, content, flags,
+               expiration, type, dateAdded, lastModified)
+            VALUES ((SELECT id FROM moz_places WHERE ${whereClauseFragment}),
+                    (SELECT id FROM moz_anno_attributes WHERE name = :anno_name),
+                    :content, 0, :expiration, :type, :date_added,
+                    :last_modified)
+          `, {
+            ...baseParams,
+            anno_name: anno,
+            content,
+            expiration: PlacesUtils.annotations.EXPIRE_NEVER,
+            type,
+            // The date fields are unused, so we just set them both to the latest.
+            date_added: date,
+            last_modified: date,
+          });
+        }
+      }
+
+      for (let anno of annosToRemove) {
+        // We don't remove anything from the moz_anno_attributes table. If we
+        // delete the last item of a given name, that item really should go away.
+        // It will be cleaned up by expiration.
+        await db.execute(`
+          DELETE FROM moz_annos
+          WHERE place_id = (SELECT id FROM moz_places WHERE ${whereClauseFragment})
+          AND anno_attribute_id =
+            (SELECT id FROM moz_anno_attributes WHERE name = :anno_name)
+        `, { ...baseParams, anno_name: anno });
+      }
+    });
+  }
 };

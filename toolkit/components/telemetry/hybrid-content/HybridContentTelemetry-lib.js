@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint object-shorthand: ["error", "never"] */
 
 if (typeof Mozilla == "undefined") {
   var Mozilla = {};
@@ -34,7 +35,7 @@ if (typeof Mozilla == "undefined") {
     var event = new CustomEvent("mozTelemetry", {
       bubbles: true,
       detail: {
-        name,
+        name: name,
         data: data || {}
       }
     });
@@ -49,7 +50,7 @@ if (typeof Mozilla == "undefined") {
    */
   function _registerInternalPolicyHandler() {
     // Create a promise to wait on for HCT to be completely initialized.
-    _initPromise = new Promise(resolveInit => {
+    _initPromise = new Promise(function(resolveInit) {
       // Register the handler that will update the policy boolean.
       function policyChangeHandler(updatedPref) {
         if (!("detail" in updatedPref) ||
@@ -78,11 +79,20 @@ if (typeof Mozilla == "undefined") {
   };
 
   Mozilla.ContentTelemetry.registerEvents = function(category, eventData) {
-    _sendMessageToChrome("registerEvents", { category, eventData });
+    _sendMessageToChrome("registerEvents", {
+      category: category,
+      eventData: eventData
+    });
   };
 
   Mozilla.ContentTelemetry.recordEvent = function(category, method, object, value, extra) {
-    _sendMessageToChrome("recordEvent", { category, method, object, value, extra });
+    _sendMessageToChrome("recordEvent", {
+      category: category,
+      method: method,
+      object: object,
+      value: value,
+      extra: extra
+    });
   };
 
   // Register the policy handler so that |canUpload| is always up to date.

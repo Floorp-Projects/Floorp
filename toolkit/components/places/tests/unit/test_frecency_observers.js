@@ -10,10 +10,14 @@ add_task(async function test_InsertVisitedURIs_UpdateFrecency_and_History_Insert
   // two birds with one stone and expect two notifications.  Trigger the path by
   // adding a download.
   let url = Services.io.newURI("http://example.com/a");
-  Cc["@mozilla.org/browser/download-history;1"].
-    getService(Ci.nsIDownloadHistory).
-    addDownload(url);
-  await Promise.all([onFrecencyChanged(url), onFrecencyChanged(url)]);
+  let promises = [onFrecencyChanged(url), onFrecencyChanged(url)];
+  await PlacesUtils.history.insert({
+    url,
+    visits: [{
+      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
+    }],
+  });
+  await Promise.all(promises);
 });
 
 // nsNavHistory::UpdateFrecency

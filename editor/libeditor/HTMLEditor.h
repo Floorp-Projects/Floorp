@@ -298,7 +298,7 @@ public:
     * Get an active editor's editing host in DOM window.  If this editor isn't
     * active in the DOM window, this returns NULL.
     */
-  Element* GetActiveEditingHost();
+  Element* GetActiveEditingHost() const;
 
 protected: // May be called by friends.
   /****************************************************************************
@@ -380,7 +380,7 @@ protected: // May be called by friends.
    */
   nsresult RemoveBlockContainerWithTransaction(Element& aElement);
 
-  virtual Element* GetEditorRoot() override;
+  virtual Element* GetEditorRoot() const override;
   using EditorBase::IsEditable;
   virtual nsresult RemoveAttributeOrEquivalent(
                      Element* aElement,

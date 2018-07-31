@@ -449,7 +449,9 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
 
     public static void log(LogLevel level, String message, Throwable t) {
         if (mLogFile == null) {
-            throw new RuntimeException("No log file specified!");
+            throw new RuntimeException(
+                    "No log file specified!\n" +
+                    "(If you are running this test from an IDE don't forget to before run \"robocop --serve\")");
         }
 
         if (level.isEnabled(mLogLevel)) {

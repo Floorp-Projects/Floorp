@@ -36,6 +36,8 @@ ChromeUtils.defineModuleGetter(this, "FileTestUtils",
                                "resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "MockRegistrar",
                                "resource://testing-common/MockRegistrar.jsm");
+ChromeUtils.defineModuleGetter(this, "TestUtils",
+                               "resource://testing-common/TestUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
            "@mozilla.org/uriloader/external-helper-app-service;1",
@@ -152,7 +154,7 @@ function promiseWaitForVisit(aUrl) {
       Assert.equal(event.type, "page-visited");
       if (event.url == aUrl) {
         PlacesObservers.removeListener(["page-visited"], listener);
-        resolve([event.visitTime, event.transitionType]);
+        resolve([event.visitTime, event.transitionType, event.lastKnownTitle]);
       }
     }
     PlacesObservers.addListener(["page-visited"], listener);
@@ -585,21 +587,10 @@ function isValidDate(aDate) {
  * because the addDownload method will add these to the database asynchronously.
  */
 function waitForAnnotation(sourceUriSpec, annotationName) {
-  let sourceUri = Services.io.newURI(sourceUriSpec);
-  return new Promise(resolve => {
-    PlacesUtils.annotations.addObserver({
-      onPageAnnotationSet(page, name) {
-        if (!page.equals(sourceUri) || name != annotationName) {
-          return;
-        }
-        PlacesUtils.annotations.removeObserver(this);
-        resolve();
-      },
-      onItemAnnotationSet() {},
-      onPageAnnotationRemoved() {},
-      onItemAnnotationRemoved() {},
-    });
-  });
+  return TestUtils.waitForCondition(async () => {
+    let pageInfo = await PlacesUtils.history.fetch(sourceUriSpec, {includeAnnotations: true});
+    return pageInfo.annotations.has(annotationName);
+  }, `Should have found annotation ${annotationName} for ${sourceUriSpec}`);
 }
 
 /**
