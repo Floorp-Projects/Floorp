@@ -61,8 +61,6 @@ struct ManifestDirective
   void (nsChromeRegistry::*regfunc)(
     nsChromeRegistry::ManifestProcessingContext& aCx,
     int aLineNo, char* const* aArgv, int aFlags);
-
-  bool isContract;
 };
 static const ManifestDirective kParsingTable[] = {
   {
@@ -696,15 +694,8 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))(
         chromecx, line, argv, flags);
     } else if (directive->ischrome || !aChromeOnly) {
-      if (directive->isContract) {
-        CachedDirective* cd = contracts.AppendElement();
-        cd->lineno = line;
-        cd->argv[0] = argv[0];
-        cd->argv[1] = argv[1];
-      } else {
-        (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))(
-          mgrcx, line, argv);
-      }
+      (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))(
+        mgrcx, line, argv);
     }
   }
 
