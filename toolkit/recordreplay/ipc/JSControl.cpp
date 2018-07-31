@@ -325,7 +325,7 @@ SetupDevtoolsSandbox()
   gDevtoolsSandbox = new PersistentRootedObject(cx);
   *gDevtoolsSandbox = ::js::UncheckedUnwrap(&v.toObject());
 
-  JSAutoRealmAllowCCW ac(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, *gDevtoolsSandbox);
 
   ErrorResult er;
   dom::GlobalObject global(cx, *gDevtoolsSandbox);
@@ -352,7 +352,7 @@ ProcessRequest(const char16_t* aRequest, size_t aRequestLength, CharBuffer* aRes
 {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealmAllowCCW ac(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, *gDevtoolsSandbox);
 
   RootedValue requestValue(cx);
   if (!JS_ParseJSON(cx, aRequest, aRequestLength, &requestValue)) {
@@ -385,7 +385,7 @@ EnsurePositionHandler(const BreakpointPosition& aPosition)
 {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealmAllowCCW ac(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, *gDevtoolsSandbox);
 
   RootedObject obj(cx, aPosition.Encode(cx));
   if (!obj) {
@@ -405,7 +405,7 @@ ClearPositionHandlers()
 {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealmAllowCCW ac(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, *gDevtoolsSandbox);
 
   RootedValue rval(cx);
   if (!JS_CallFunctionName(cx, *gDevtoolsSandbox, "ClearPositionHandlers",
@@ -419,7 +419,7 @@ ClearPausedState()
 {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealmAllowCCW ac(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, *gDevtoolsSandbox);
 
   RootedValue rval(cx);
   if (!JS_CallFunctionName(cx, *gDevtoolsSandbox, "ClearPausedState",
@@ -433,7 +433,7 @@ GetEntryPosition(const BreakpointPosition& aPosition)
 {
   AutoDisallowThreadEvents disallow;
   AutoSafeJSContext cx;
-  JSAutoRealmAllowCCW ac(cx, *gDevtoolsSandbox);
+  JSAutoRealm ar(cx, *gDevtoolsSandbox);
 
   RootedObject positionObject(cx, aPosition.Encode(cx));
   if (!positionObject) {

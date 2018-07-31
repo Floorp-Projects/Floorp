@@ -1,0 +1,11 @@
+{
+  "name": "sourcemapped-rollup",
+  "private": true,
+  "dependencies": {
+    "lodash": "^4.17.5",
+    "rollup": "^0.63.0",
+    "rollup-plugin-babel": "^3.0.7",
+    "rollup-plugin-typescript2": "^0.16.1",
+    "typescript": "^2.9.2"
+  }
+}

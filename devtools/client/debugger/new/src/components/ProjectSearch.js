@@ -268,6 +268,15 @@ class ProjectSearch extends _react.Component {
     shortcuts.off("Enter", this.onEnterPress);
   }
 
+  componentDidUpdate(prevProps) {
+    // If the query changes in redux, also change it in the UI
+    if (prevProps.query !== this.props.query) {
+      this.setState({
+        inputValue: this.props.query
+      });
+    }
+  }
+
   shouldShowErrorEmoji() {
     return !this.getResultCount() && this.props.status === _projectTextSearch.statusType.done;
   }

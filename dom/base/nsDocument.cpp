@@ -5634,6 +5634,29 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
   return element.forget();
 }
 
+already_AddRefed<Element>
+nsIDocument::CreateXULElement(const nsAString& aTagName,
+                              const ElementCreationOptionsOrString& aOptions,
+                              ErrorResult& aRv)
+{
+  aRv = nsContentUtils::CheckQName(aTagName, false);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  const nsString* is = nullptr;
+  if (CustomElementRegistry::IsCustomElementEnabled(this) &&
+      aOptions.IsElementCreationOptions()) {
+    const ElementCreationOptions& options = aOptions.GetAsElementCreationOptions();
+    if (options.mIs.WasPassed()) {
+      is = &options.mIs.Value();
+    }
+  }
+
+  RefPtr<Element> elem = CreateElem(aTagName, nullptr, kNameSpaceID_XUL, is);
+  return elem.forget();
+}
+
 already_AddRefed<nsTextNode>
 nsIDocument::CreateEmptyTextNode() const
 {

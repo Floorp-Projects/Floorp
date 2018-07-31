@@ -184,7 +184,7 @@ InstallXBLField(JSContext* cx,
   nsXBLPrototypeBinding* protoBinding;
   nsAutoJSString fieldName;
   {
-    JSAutoRealmAllowCCW ar(cx, callee);
+    JSAutoRealm ar(cx, callee);
 
     JS::Rooted<JSObject*> xblProto(cx);
     xblProto = &js::GetFunctionNativeReserved(callee, XBLPROTO_SLOT).toObject();
@@ -199,7 +199,7 @@ InstallXBLField(JSContext* cx,
     // If a separate XBL scope is being used, the callee is not same-realm
     // with the xbl prototype, and the object is a cross-compartment wrapper.
     xblProto = js::UncheckedUnwrap(xblProto);
-    JSAutoRealmAllowCCW ar2(cx, xblProto);
+    JSAutoRealm ar2(cx, xblProto);
     JS::Value slotVal = ::JS_GetReservedSlot(xblProto, 0);
     protoBinding = static_cast<nsXBLPrototypeBinding*>(slotVal.toPrivate());
     MOZ_ASSERT(protoBinding);
@@ -329,7 +329,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   // see through any SOWs on their targets.
 
   // First, enter the XBL scope, and compile the functions there.
-  JSAutoRealmAllowCCW ar(aCx, scopeObject);
+  JSAutoRealm ar(aCx, scopeObject);
   JS::Rooted<JS::Value> wrappedClassObj(aCx, JS::ObjectValue(*aTargetClassObject));
   if (!JS_WrapValue(aCx, &wrappedClassObj))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -356,7 +356,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 
   // Now, re-enter the class object's scope, wrap the getters/setters, and define
   // them there.
-  JSAutoRealmAllowCCW ar2(aCx, aTargetClassObject);
+  JSAutoRealm ar2(aCx, aTargetClassObject);
   if (!JS_WrapObject(aCx, &get) || !JS_WrapObject(aCx, &set)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -455,7 +455,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
 
   // Now, enter the node's realm, wrap the eval result, and define it on
   // the bound node.
-  JSAutoRealmAllowCCW ar2(cx, aBoundNode);
+  JSAutoRealm ar2(cx, aBoundNode);
   nsDependentString name(mName);
   if (!JS_WrapValue(cx, &result) ||
       !::JS_DefineUCProperty(cx, aBoundNode,

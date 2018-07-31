@@ -99,13 +99,20 @@ FindReservedWord(const CharT* s, size_t length)
     rw = &reservedWords[i];
     chars = rw->chars;
     do {
-        if (*s++ != (unsigned char)(*chars++))
+        if (*s++ != static_cast<unsigned char>(*chars++))
             goto no_match;
     } while (--length != 0);
     return rw;
 
   no_match:
     return nullptr;
+}
+
+template <>
+MOZ_ALWAYS_INLINE const ReservedWordInfo*
+FindReservedWord<Utf8Unit>(const Utf8Unit* units, size_t length)
+{
+    return FindReservedWord(Utf8AsUnsignedChars(units), length);
 }
 
 static const ReservedWordInfo*
@@ -1494,13 +1501,13 @@ template<typename CharT, class AnyCharsAccess>
 uint32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscape(uint32_t* codePoint)
 {
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
 
     int32_t unit = getCodeUnit();
     if (unit != 'u') {
         // NOTE: |unit| may be EOF here.
         ungetCodeUnit(unit);
-        MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+        MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
         return 0;
     }
 
@@ -1517,7 +1524,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscape(uint32_t* cod
     // NOTE: |unit| may be EOF here, so this ungets either one or two units.
     ungetCodeUnit(unit);
     ungetCodeUnit('u');
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return 0;
 }
 
@@ -1525,7 +1532,7 @@ template<typename CharT, class AnyCharsAccess>
 uint32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchExtendedUnicodeEscape(uint32_t* codePoint)
 {
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '{');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('{'));
 
     int32_t unit = getCodeUnit();
 
@@ -1556,7 +1563,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchExtendedUnicodeEscape(uint3
     }
 
     this->sourceUnits.unskipCodeUnits(gotten);
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return 0;
 }
 
@@ -1572,7 +1579,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdStart(uint32
         this->sourceUnits.unskipCodeUnits(length);
     }
 
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return 0;
 }
 
@@ -1588,7 +1595,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdent(uint32_t
         this->sourceUnits.unskipCodeUnits(length);
     }
 
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return false;
 }
 
@@ -1828,7 +1835,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInCharBuffer(const CharT* id
             // |restoreNextRawCharAddress| undoes all gets, and this function
             // doesn't update line/column info.
             char32_t cp;
-            if (!getNonAsciiCodePointDontNormalize(unit, &cp))
+            if (!getNonAsciiCodePointDontNormalize(toCharT(unit), &cp))
                 return false;
 
             codePoint = cp;
@@ -2106,9 +2113,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int32_t unit, TokenSta
 
         ungetCodeUnit(unit);
 
-        const CharT* dummy;
-        if (!js_strtod(anyCharsAccess().cx, numStart, this->sourceUnits.addressOfNextCodeUnit(),
-                       &dummy, &dval))
+        // "0." and "0e..." numbers parse "." or "e..." here.  Neither range
+        // contains a number, so we can't use |FullStringToDouble|.  (Parse
+        // failures return 0.0, so we'll still get the right result.)
+        if (!StringToDouble(anyCharsAccess().cx,
+                            numStart, this->sourceUnits.addressOfNextCodeUnit(), &dval))
         {
            return false;
         }
@@ -2143,7 +2152,7 @@ template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, TokenKind* out)
 {
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '/');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('/'));
     this->charBuffer.clear();
 
     auto ProcessNonAsciiCodePoint = [this](int32_t lead) {
@@ -2151,7 +2160,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
         MOZ_ASSERT(!this->isAsciiCodePoint(lead));
 
         char32_t codePoint;
-        if (!this->getNonAsciiCodePointDontNormalize(lead, &codePoint))
+        if (!this->getNonAsciiCodePointDontNormalize(this->toCharT(lead), &codePoint))
             return false;
 
         if (MOZ_UNLIKELY(codePoint == unicode::LINE_SEPARATOR ||
@@ -2165,7 +2174,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
         return this->appendCodePointToCharBuffer(codePoint);
     };
 
-    auto ReportUnterminatedRegExp = [this](CharT unit) {
+    auto ReportUnterminatedRegExp = [this](int32_t unit) {
         this->ungetCodeUnit(unit);
         this->error(JSMSG_UNTERMINATED_REGEXP);
     };
@@ -2520,13 +2529,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             }
 
             double dval;
-            const char16_t* dummy;
-            if (!GetPrefixInteger(anyCharsAccess().cx, numStart,
-                                  this->sourceUnits.addressOfNextCodeUnit(), radix, &dummy, &dval))
+            if (!GetFullInteger(anyCharsAccess().cx, numStart,
+                                this->sourceUnits.addressOfNextCodeUnit(), radix, &dval))
             {
                 return badToken();
             }
-
             newNumberToken(dval, NoDecimal, start, modifier, ttp);
             return true;
         }
@@ -2543,7 +2550,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 #ifdef DEBUG
         simpleKind = TokenKind::Limit; // sentinel value for code after switch
 #endif
-        switch (static_cast<CharT>(unit)) {
+
+        // The block a ways above eliminated all non-ASCII, so cast to the
+        // smallest type possible to assist the C++ compiler.
+        switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit)))) {
           case '.':
             unit = getCodeUnit();
             if (IsAsciiDigit(unit)) {
@@ -2752,7 +2762,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             ungetCodeUnit(unit);
             error(JSMSG_ILLEGAL_CHARACTER);
             return badToken();
-        } // switch (static_cast<CharT>(unit))
+        } // switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit))))
 
         MOZ_ASSERT(simpleKind != TokenKind::Limit,
                    "switch-statement should have set |simpleKind| before "
@@ -2788,8 +2798,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
         // Unicode separators aren't end-of-line in template or (as of
         // recently) string literals, so this assertion doesn't allow them.
         MOZ_ASSERT(this->sourceUnits.atEnd() ||
-                   this->sourceUnits.peekCodeUnit() == '\r' ||
-                   this->sourceUnits.peekCodeUnit() == '\n',
+                   this->sourceUnits.peekCodeUnit() == CharT('\r') ||
+                   this->sourceUnits.peekCodeUnit() == CharT('\n'),
                    "must be parked at EOF or EOL to call this function");
 
         // The various errors reported here include language like "in a ''
@@ -2815,26 +2825,22 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
         // ordinarily LineTerminatorSequences.  (They contribute their literal
         // values to template and [as of recently] string literals, but they're
         // line terminators when computing line/column coordinates.)  Handle
-        // the non-ASCI case early for readability.
+        // the non-ASCII case early for readability.
         if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
-            static_assert(mozilla::IsSame<CharT, char16_t>::value,
-                          "need a getNonAsciiCodePoint that doesn't normalize "
-                          "LineTerminatorSequences to correctly handle UTF-8");
+            char32_t cp;
+            if (!getNonAsciiCodePointDontNormalize(toCharT(unit), &cp))
+                return false;
 
-            int32_t codePoint;
-            if (unit == unicode::LINE_SEPARATOR || unit == unicode::PARA_SEPARATOR) {
+            if (MOZ_UNLIKELY(cp == unicode::LINE_SEPARATOR || cp == unicode::PARA_SEPARATOR)) {
                 if (!updateLineInfoForEOL())
                     return false;
 
                 anyCharsAccess().updateFlagsForEOL();
-
-                codePoint = unit;
             } else {
-                if (!getNonAsciiCodePoint(unit, &codePoint))
-                    return false;
+                MOZ_ASSERT(!IsLineTerminator(cp));
             }
 
-            if (!appendCodePointToCharBuffer(codePoint))
+            if (!appendCodePointToCharBuffer(cp))
                 return false;
 
             continue;
@@ -2869,7 +2875,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 continue;
             }
 
-            switch (static_cast<CharT>(unit)) {
+            // The block above eliminated all non-ASCII, so cast to the
+            // smallest type possible to assist the C++ compiler.
+            switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit)))) {
               case 'b': unit = '\b'; break;
               case 'f': unit = '\f'; break;
               case 'n': unit = '\n'; break;
@@ -3066,7 +3074,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 unit = char16_t(val);
                 break;
               } // default
-            }
+            } // switch (AssertedCast<uint8_t>(CodeUnitValue(toCharT(unit))))
 
             if (!this->charBuffer.append(unit))
                 return false;
@@ -3162,6 +3170,10 @@ TokenStreamChars<char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, 
 template class
 TokenStreamChars<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
 
+template class
+TokenStreamSpecific<Utf8Unit, ParserAnyCharsAccess<GeneralParser<FullParseHandler, Utf8Unit>>>;
+template class
+TokenStreamSpecific<Utf8Unit, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, Utf8Unit>>>;
 template class
 TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
 template class

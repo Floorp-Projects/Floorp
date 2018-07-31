@@ -33,38 +33,18 @@ async function getApplicableBindingsForOriginalPosition(generatedAstBindings, so
   end
 }, bindingType, locationType, sourceMaps) {
   const ranges = await sourceMaps.getGeneratedRanges(start, source);
-  const resultRanges = ranges.reduce((acc, mapRange) => {
-    // Some tooling creates ranges that map a line as a whole, which is useful
-    // for step-debugging, but can easily lead to finding the wrong binding.
-    // To avoid these false-positives, we entirely ignore ranges that cover
-    // full lines.
-    if (locationType === "ref" && mapRange.columnStart === 0 && mapRange.columnEnd === Infinity) {
-      return acc;
+  const resultRanges = ranges.map(mapRange => ({
+    start: {
+      line: mapRange.line,
+      column: mapRange.columnStart
+    },
+    end: {
+      line: mapRange.line,
+      // SourceMapConsumer's 'lastColumn' is inclusive, so we add 1 to make
+      // it exclusive like all other locations.
+      column: mapRange.columnEnd + 1
     }
-
-    const range = {
-      start: {
-        line: mapRange.line,
-        column: mapRange.columnStart
-      },
-      end: {
-        line: mapRange.line,
-        // SourceMapConsumer's 'lastColumn' is inclusive, so we add 1 to make
-        // it exclusive like all other locations.
-        column: mapRange.columnEnd + 1
-      }
-    };
-    const previous = acc[acc.length - 1];
-
-    if (previous && (previous.end.line === range.start.line && previous.end.column === range.start.column || previous.end.line + 1 === range.start.line && previous.end.column === Infinity && range.start.column === 0)) {
-      previous.end.line = range.end.line;
-      previous.end.column = range.end.column;
-    } else {
-      acc.push(range);
-    }
-
-    return acc;
-  }, []); // When searching for imports, we expand the range to up to the next available
+  })); // When searching for imports, we expand the range to up to the next available
   // mapping to allow for import declarations that are composed of multiple
   // variable statements, where the later ones are entirely unmapped.
   // Babel 6 produces imports in this style, e.g.

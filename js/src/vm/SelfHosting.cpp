@@ -2920,7 +2920,7 @@ JSRuntime::initSelfHosting(JSContext* cx)
     if (!shg)
         return false;
 
-    JSAutoRealmAllowCCW ar(cx, shg);
+    JSAutoRealm ar(cx, shg);
 
     /*
      * Set a temporary error reporter printing to stderr because it is too

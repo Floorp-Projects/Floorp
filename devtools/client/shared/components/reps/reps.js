@@ -1944,9 +1944,17 @@ function getStacktraceElements(props, preview) {
   const isStacktraceALongString = isLongString(preview.stack);
   const stackString = isStacktraceALongString ? preview.stack.initial : preview.stack;
 
-  stackString.split("\n").forEach((frame, index) => {
+  stackString.split("\n").forEach((frame, index, frames) => {
     if (!frame) {
       // Skip any blank lines
+      return;
+    }
+
+    // If the stacktrace is a longString, don't include the last frame in the
+    // array, since it is certainly incomplete.
+    // Can be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1448833
+    // is fixed.
+    if (isStacktraceALongString && index === frames.length - 1) {
       return;
     }
 
@@ -1978,6 +1986,7 @@ function getStacktraceElements(props, preview) {
     // Result:
     // ["scriptLocation:2:100", "scriptLocation", "2", "100"]
     const locationParts = location.match(/^(.*):(\d+):(\d+)$/);
+
     if (props.onViewSourceInDebugger && location && locationParts && !IGNORED_SOURCE_URLS.includes(locationParts[1])) {
       const [, url, line, column] = locationParts;
       onLocationClick = e => {
@@ -1991,7 +2000,7 @@ function getStacktraceElements(props, preview) {
       };
     }
 
-    stack.push(span({
+    stack.push("\t", span({
       key: `fn${index}`,
       className: "objectBox-stackTrace-fn"
     }, cleanFunctionName(functionName)), span({
@@ -1999,16 +2008,8 @@ function getStacktraceElements(props, preview) {
       className: "objectBox-stackTrace-location",
       onClick: onLocationClick,
       title: onLocationClick ? `View source in debugger → ${location}` : undefined
-    }, location));
+    }, location), "\n");
   });
-
-  if (isStacktraceALongString) {
-    // Remove the last frame (i.e. 2 last elements in the array, the function
-    // name and the location) which is certainly incomplete.
-    // Can be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1448833
-    // is fixed.
-    stack.splice(-2);
-  }
 
   return span({
     key: "stack",

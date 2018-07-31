@@ -4,9 +4,9 @@
 // Tests for preview through Babel's compile output.
 requestLongerTimeout(3);
 
-async function breakpointPreviews(dbg, fixture, { line, column }, previews) {
-  const filename = `fixtures/${fixture}/input.js`;
-  const fnName = fixture.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
+async function breakpointPreviews(dbg, target, fixture, { line, column }, previews) {
+  const filename = `${target}://./${fixture}/input.`;
+  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 
   log(`Starting ${fixture} tests`);
 
@@ -24,7 +24,7 @@ async function breakpointPreviews(dbg, fixture, { line, column }, previews) {
 }
 
 function testForOf(dbg) {
-  return breakpointPreviews(dbg, "babel-for-of", { line: 5, column: 4 }, [
+  return breakpointPreviews(dbg, "webpack3-babel6", "for-of", { line: 5, column: 4 }, [
     {
       line: 5,
       column: 7,
@@ -49,7 +49,8 @@ function testForOf(dbg) {
 function testShadowing(dbg) {
   return breakpointPreviews(
     dbg,
-    "babel-shadowed-vars",
+    "webpack3-babel6",
+    "shadowed-vars",
     { line: 18, column: 6 },
     [
       // These aren't what the user would expect, but we test them anyway since
@@ -117,66 +118,60 @@ function testShadowing(dbg) {
 }
 
 function testImportedBindings(dbg) {
-  return breakpointPreviews(dbg, "babel-modules-cjs", { line: 20, column: 2 }, [
+  return breakpointPreviews(dbg, "webpack3-babel6", "esmodules-cjs", { line: 20, column: 2 }, [
     {
-      line: 22,
+      line: 20,
       column: 16,
       expression: "_mod2.default;",
       result: '"a-default"'
     },
     {
-      line: 23,
+      line: 21,
       column: 16,
       expression: "_mod4.original;",
       result: '"an-original"'
     },
     {
+      line: 22,
+      column: 16,
+      expression: "_mod3.aNamed;",
+      result: '"a-named"'
+    },
+    {
+      line: 23,
+      column: 16,
+      expression: "_mod3.aNamed;",
+      result: '"a-named"'
+    },
+    {
       line: 24,
-      column: 16,
-      expression: "_mod3.aNamed;",
-      result: '"a-named"'
-    },
-    {
-      line: 25,
-      column: 16,
-      expression: "_mod3.aNamed;",
-      result: '"a-named"'
-    },
-    {
-      line: 26,
       column: 16,
       expression: "aNamespace;",
       fields: [["aNamed", "a-named"], ["default", "a-default"]]
     },
     {
-      line: 31,
+      line: 29,
       column: 20,
       expression: "_mod7.default;",
       result: '"a-default2"'
     },
     {
-      line: 32,
+      line: 30,
       column: 20,
       expression: "_mod9.original;",
       result: '"an-original2"'
     },
     {
-      line: 33,
+      line: 31,
       column: 20,
       expression: "_mod8.aNamed2;",
       result: '"a-named2"'
     },
     {
-      line: 34,
+      line: 32,
       column: 20,
       expression: "_mod8.aNamed2;",
       result: '"a-named2"'
-    },
-    {
-      line: 35,
-      column: 20,
-      expression: "aNamespace2;",
-      fields: [["aNamed", "a-named2"], ["default", "a-default2"]]
     }
   ]);
 }

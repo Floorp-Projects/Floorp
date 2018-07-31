@@ -431,7 +431,7 @@ struct ObjectGroupRealm::NewEntry
     }
 };
 
-namespace js {
+namespace mozilla {
 template <>
 struct FallibleHashMethods<ObjectGroupRealm::NewEntry>
 {
@@ -442,7 +442,7 @@ struct FallibleHashMethods<ObjectGroupRealm::NewEntry>
         return ObjectGroupRealm::NewEntry::ensureHash(std::forward<Lookup>(l));
     }
 };
-} // namespace js
+} // namespace mozilla
 
 class ObjectGroupRealm::NewTable : public JS::WeakCache<js::GCHashSet<NewEntry, NewEntry,
                                                                             SystemAllocPolicy>>

@@ -10,6 +10,8 @@ var _assert = require("../../utils/assert");
 
 var _assert2 = _interopRequireDefault(_assert);
 
+var _telemetry = require("../../utils/telemetry");
+
 var _breakpoints = require("../breakpoints/index");
 
 var _ast = require("../ast");
@@ -100,6 +102,10 @@ function togglePrettyPrint(sourceId) {
 
     if (!source) {
       return {};
+    }
+
+    if (!source.isPrettyPrinted) {
+      (0, _telemetry.recordEvent)("pretty_print");
     }
 
     if (!(0, _source.isLoaded)(source)) {
