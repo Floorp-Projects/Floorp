@@ -1778,9 +1778,11 @@ class Extension extends ExtensionData {
       // and it is used to run code that needs to be executed before
       // any of the "startup" listeners.
       this.emit("startup", this);
-      Management.emit("startup", this);
 
-      await this.runManifest(this.manifest);
+      await Promise.all([
+        Management.emit("startup", this),
+        this.runManifest(this.manifest),
+      ]);
 
       Management.emit("ready", this);
       this.emit("ready");

@@ -38,7 +38,6 @@
 #include "mozilla/Hal.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/intl/OSPreferences.h"
-#include "mozilla/widget/ScreenManager.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
@@ -71,7 +70,6 @@
 #include "fennec/MemoryMonitor.h"
 #include "fennec/Telemetry.h"
 #include "fennec/ThumbnailHelper.h"
-#include "ScreenHelperAndroid.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #define EVLOG(args...)  ALOG(args)
@@ -80,7 +78,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::widget;
 
 nsIGeolocationUpdate *gLocationCallback = nullptr;
 
@@ -417,10 +414,6 @@ nsAppShell::nsAppShell()
         }
         return;
     }
-
-
-    ScreenManager& screenManager = ScreenManager::GetSingleton();
-    screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperAndroid>());
 
     if (jni::IsAvailable()) {
         // Initialize JNI and Set the corresponding state in GeckoThread.
