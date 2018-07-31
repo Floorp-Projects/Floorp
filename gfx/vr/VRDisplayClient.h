@@ -47,6 +47,9 @@ public:
   bool IsPresentationGenerationCurrent() const;
   void MakePresentationGenerationCurrent();
 
+  void StartVRNavigation();
+  void StopVRNavigation(const TimeDuration& aTimeout);
+
 protected:
   virtual ~VRDisplayClient();
 
