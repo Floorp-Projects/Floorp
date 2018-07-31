@@ -67,9 +67,6 @@ const whitelist = {
     // Extensions
     "resource://gre/modules/ExtensionUtils.jsm",
     "resource://gre/modules/MessageChannel.jsm",
-
-    // Shield
-    "resource://normandy-content/AboutPages.jsm",
   ]),
 };
 
