@@ -437,8 +437,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 {
   aReturn.Truncate();
 
-  nsCSSPropertyID prop =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
+  nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
 
   const ComputedStyleMap::Entry* entry = nullptr;
   if (prop != eCSSPropertyExtra_variable) {
@@ -719,7 +718,7 @@ CollectImageURLsForProperty(nsCSSPropertyID aProp,
                             nsTArray<nsString>& aURLs)
 {
   if (nsCSSProps::IsShorthand(aProp)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProp, CSSEnabledState::eInChrome) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProp, CSSEnabledState::eForAllContent) {
       CollectImageURLsForProperty(*p, aStyle, aURLs);
     }
     return;
@@ -761,8 +760,7 @@ nsComputedDOMStyle::GetCSSImageURLs(const nsAString& aPropertyName,
                                     nsTArray<nsString>& aImageURLs,
                                     mozilla::ErrorResult& aRv)
 {
-  nsCSSPropertyID prop =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eInChrome);
+  nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
   if (prop == eCSSProperty_UNKNOWN) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;

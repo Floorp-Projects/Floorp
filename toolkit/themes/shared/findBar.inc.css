@@ -42,12 +42,6 @@ findbar[noanim] {
   padding: 0 8px;
 }
 
-.findbar-button {
-  -moz-appearance: none;
-  padding: 0;
-  color: inherit;
-}
-
 /* Search field */
 
 .findbar-textbox {
