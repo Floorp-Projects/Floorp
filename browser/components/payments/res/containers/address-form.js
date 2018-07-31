@@ -242,6 +242,8 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       if (formElement.localName == "button" || !container) {
         continue;
       }
+      let span = container.querySelector("span");
+      span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
       let required = formElement.required && !formElement.disabled;
       if (required) {
         container.setAttribute("required", "true");

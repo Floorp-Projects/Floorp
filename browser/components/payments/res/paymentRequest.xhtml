@@ -11,6 +11,7 @@
   <!ENTITY viewAllItems               "View All Items">
   <!ENTITY paymentSummaryTitle        "Your Payment">
   <!ENTITY header.payTo               "Pay to">
+  <!ENTITY fieldRequiredSymbol        "*">
 
   <!ENTITY shippingAddressLabel       "Shipping Address">
   <!ENTITY deliveryAddressLabel       "Delivery Address">
@@ -33,6 +34,7 @@
   <!ENTITY billingAddress.editPage.title  "Edit Billing Address">
   <!ENTITY basicCard.addPage.title    "Add Credit Card">
   <!ENTITY basicCard.editPage.title   "Edit Credit Card">
+  <!ENTITY basicCard.cvv.placeholder  "CVV&fieldRequiredSymbol;">
   <!ENTITY payer.addPage.title        "Add Payer Contact">
   <!ENTITY payer.editPage.title       "Edit Payer Contact">
   <!ENTITY payerLabel                 "Contact Information">
@@ -125,6 +127,7 @@
           <payment-method-picker selected-state-key="selectedPaymentCard"
                                  data-add-link-label="&basicCard.addLink.label;"
                                  data-edit-link-label="&basicCard.editLink.label;"
+                                 data-cvv-placeholder="&basicCard.cvv.placeholder;"
                                  label="&paymentMethodsLabel;">
           </payment-method-picker>
           <address-picker class="payer-related"
@@ -163,6 +166,7 @@
                        data-update-button-label="&basicCardPage.updateButton.label;"
                        data-cancel-button-label="&cancelPaymentButton.label;"
                        data-persist-checkbox-label="&basicCardPage.persistCheckbox.label;"
+                       data-field-required-symbol="&fieldRequiredSymbol;"
                        hidden="hidden"></basic-card-form>
 
       <address-form id="address-page"
@@ -172,6 +176,7 @@
                     data-add-button-label="&addressPage.addButton.label;"
                     data-update-button-label="&addressPage.updateButton.label;"
                     data-persist-checkbox-label="&addressPage.persistCheckbox.label;"
+                    data-field-required-symbol="&fieldRequiredSymbol;"
                     hidden="hidden"></address-form>
 
       <completion-error-page id="completion-timeout-error" class="illustrated"
