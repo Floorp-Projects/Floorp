@@ -591,7 +591,16 @@ def split_triplet(triplet, allow_unknown=False):
     # There is also a quartet form:
     #   CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM
     # But we can consider the "KERNEL-OPERATING_SYSTEM" as one.
-    cpu, manufacturer, os = triplet.split('-', 2)
+    # Additionally, some may omit "unknown" when the manufacturer
+    # is not specified and emit
+    #   CPU_TYPE-OPERATING_SYSTEM
+    parts = triplet.split('-', 2)
+    if len(parts) == 3:
+        cpu, _, os = parts
+    elif len(parts) == 2:
+        cpu, os = parts
+    else:
+        die("Unexpected triplet string: %s" % triplet)
 
     # Autoconf uses config.sub to validate and canonicalize those triplets,
     # but the granularity of its results has never been satisfying to our
