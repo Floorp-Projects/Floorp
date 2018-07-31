@@ -950,11 +950,10 @@ panelview .toolbarbutton-1,
 
 #widget-overflow-fixed-list .toolbarbutton-1 > .toolbarbutton-text,
 #widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text,
-.subviewbutton:not(.panel-subview-footer) > .toolbarbutton-text,
-.addon-banner-item > .toolbarbutton-text,
-/* Bookmark items need a more specific selector. */
-.PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-text,
-.PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-iconic-text {
+.addon-banner-item,
+.subviewbutton,
+.subviewbutton-nav,
+.subview-subheader {
   font: menu;
 }
 
@@ -1095,11 +1094,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   color: var(--panel-disabled-color);
 }
 
-.subview-subheader,
-.panel-subview-footer {
-  font: menu;
-}
-
 panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
@@ -1141,11 +1135,6 @@ menuitem.panel-subview-footer@menuStateActive@,
 .subviewbutton.panel-subview-footer@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-even-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
-}
-
-#BMB_bookmarksPopup .subviewbutton {
-  font: menu;
-  font-weight: normal;
 }
 
 #BMB_bookmarksPopup .subviewbutton:not([disabled="true"]) {
