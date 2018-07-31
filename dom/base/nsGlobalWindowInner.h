@@ -883,9 +883,6 @@ public:
   bool GetFullScreen(mozilla::ErrorResult& aError);
   bool GetFullScreen() override;
   void SetFullScreen(bool aFullScreen, mozilla::ErrorResult& aError);
-  void Back(mozilla::ErrorResult& aError);
-  void Forward(mozilla::ErrorResult& aError);
-  void Home(nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aError);
   bool Find(const nsAString& aString, bool aCaseSensitive, bool aBackwards,
             bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
             bool aShowDialog, mozilla::ErrorResult& aError);
