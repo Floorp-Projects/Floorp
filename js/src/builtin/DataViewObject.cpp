@@ -234,7 +234,7 @@ DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallA
 
     RootedObject dv(cx);
     {
-        JSAutoRealmAllowCCW ar(cx, unwrapped);
+        JSAutoRealm ar(cx, unwrapped);
 
         Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
         buffer = &unwrapped->as<ArrayBufferObjectMaybeShared>();
