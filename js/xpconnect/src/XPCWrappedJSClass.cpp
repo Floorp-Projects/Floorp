@@ -448,7 +448,7 @@ nsCString
 GetFunctionName(JSContext* cx, HandleObject obj)
 {
     RootedObject inner(cx, js::UncheckedUnwrap(obj));
-    JSAutoRealmAllowCCW ar(cx, inner);
+    JSAutoRealm ar(cx, inner);
 
     RootedFunction fun(cx, JS_GetObjectFunction(inner));
     if (!fun) {
