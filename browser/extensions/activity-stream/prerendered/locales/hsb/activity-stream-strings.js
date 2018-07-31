@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Wužiwanske wuměnjenja",
   "firstrun_privacy_notice": "Zdźělenka priwatnosće",
   "firstrun_continue_to_login": "Pokročować",
-  "firstrun_skip_login": "Tutón krok přeskočić"
+  "firstrun_skip_login": "Tutón krok přeskočić",
+  "firstrun_invalid_input": "Płaćiwa e-mejlowa adresa trěbna"
 };

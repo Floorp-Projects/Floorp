@@ -52,7 +52,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_options_pocket_label": "Страници, запазени в Pocket",
   "prefs_snippets_description": "Новости от Mozilla и Firefox",
   "settings_pane_button_label": "Настройки на новия раздел",
-  "settings_pane_topsites_header": "Често посещавани",
+  "settings_pane_topsites_header": "Често посещавани страници",
   "settings_pane_highlights_header": "Акценти",
   "settings_pane_highlights_options_bookmarks": "Отметки",
   "settings_pane_snippets_header": "Изрезки",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Условията на услугата",
   "firstrun_privacy_notice": "Политиката за лични данни",
   "firstrun_continue_to_login": "Продължаване",
-  "firstrun_skip_login": "Пропускане"
+  "firstrun_skip_login": "Пропускане",
+  "firstrun_invalid_input": "Необходим е валиден адрес на ел. поща"
 };

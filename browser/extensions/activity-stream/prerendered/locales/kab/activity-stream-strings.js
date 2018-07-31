@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Tiwtilin n useqdec",
   "firstrun_privacy_notice": "Tasertit n tbaḍnit",
   "firstrun_continue_to_login": "Kemmel",
-  "firstrun_skip_login": "Zgel amecwaṛ-agi"
+  "firstrun_skip_login": "Zgel amecwaṛ-agi",
+  "firstrun_invalid_input": "Imayl ameɣtu ilaq"
 };

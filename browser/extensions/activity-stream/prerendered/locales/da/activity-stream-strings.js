@@ -113,5 +113,6 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_body": "Læs korte opdateringer fra Mozilla om Firefox, internet-kultur og lidt underholdning fra tid til anden.",
   "settings_pane_done_button": "Færdig",
   "settings_pane_topstories_options_sponsored": "Vis sponsorerede historier",
-  "pocket_description": "Opdag indhold af høj kvalitet, som du måske ellers ikke ville have opdaget. Indholdet kommer fra Pocket, der nu er en del af Mozilla."
+  "pocket_description": "Opdag indhold af høj kvalitet, som du måske ellers ikke ville have opdaget. Indholdet kommer fra Pocket, der nu er en del af Mozilla.",
+  "firstrun_invalid_input": "En gyldig mailadresse er påkrævet"
 };

@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "이용 약관",
   "firstrun_privacy_notice": "개인 정보 보호 정책",
   "firstrun_continue_to_login": "계속",
-  "firstrun_skip_login": "단계 건너뛰기"
+  "firstrun_skip_login": "단계 건너뛰기",
+  "firstrun_invalid_input": "유효한 이메일 필요함"
 };

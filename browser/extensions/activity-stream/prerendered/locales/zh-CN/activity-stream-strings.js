@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "服务条款",
   "firstrun_privacy_notice": "隐私声明",
   "firstrun_continue_to_login": "继续",
-  "firstrun_skip_login": "跳过此步骤"
+  "firstrun_skip_login": "跳过此步骤",
+  "firstrun_invalid_input": "需要有效的电子邮件地址"
 };

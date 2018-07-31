@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Ketentuan Layanan",
   "firstrun_privacy_notice": "Pernyataan Privasi",
   "firstrun_continue_to_login": "Lanjutkan",
-  "firstrun_skip_login": "Lewati langkah ini"
+  "firstrun_skip_login": "Lewati langkah ini",
+  "firstrun_invalid_input": "Surel harus valid"
 };

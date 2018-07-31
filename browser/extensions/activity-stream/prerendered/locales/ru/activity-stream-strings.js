@@ -38,8 +38,8 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories": "Самые интересные статьи со всего Интернета, выбираемые на основе ваших интересов. От Pocket, который теперь является частью Mozilla.",
   "section_disclaimer_topstories_linktext": "Узнайте, как это работает.",
   "section_disclaimer_topstories_buttontext": "Ок, понятно",
-  "prefs_home_header": "Домашний экран Firefox",
-  "prefs_home_description": "Выберите, какое содержимое вы хотите видеть на домашнем экране Firefox.",
+  "prefs_home_header": "Домашняя страница Firefox",
+  "prefs_home_description": "Выберите, какое содержимое вы хотите видеть на домашней странице Firefox.",
   "prefs_section_rows_option": "{num} столбец;{num} столбца;{num} столбцов",
   "prefs_search_header": "Поиск в Интернете",
   "prefs_topsites_description": "Сайты, которые вы чаще всего посещаете",
@@ -80,7 +80,7 @@ window.gActivityStreamStrings = {
   "manual_migration_cancel_button": "Нет, спасибо",
   "manual_migration_import_button": "Импортировать сейчас",
   "error_fallback_default_info": "К сожалению что-то пошло не так при загрузке этого содержимого.",
-  "error_fallback_default_refresh_suggestion": "Обновите страницу, чтобы повторить попытку.",
+  "error_fallback_default_refresh_suggestion": "Обновить страницу, чтобы попробовать ещё раз.",
   "section_menu_action_remove_section": "Удалить раздел",
   "section_menu_action_collapse_section": "Свернуть раздел",
   "section_menu_action_expand_section": "Развернуть раздел",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "условиями службы",
   "firstrun_privacy_notice": "политикой приватности",
   "firstrun_continue_to_login": "Продолжить",
-  "firstrun_skip_login": "Пропустить этот шаг"
+  "firstrun_skip_login": "Пропустить этот шаг",
+  "firstrun_invalid_input": "Введите действующий адрес электронной почты"
 };

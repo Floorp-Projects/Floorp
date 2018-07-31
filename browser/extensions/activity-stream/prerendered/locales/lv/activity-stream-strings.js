@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Lietošanas noteikumiem",
   "firstrun_privacy_notice": "Privātuma politikai",
   "firstrun_continue_to_login": "Turpināt",
-  "firstrun_skip_login": "Izlaist šo soli"
+  "firstrun_skip_login": "Izlaist šo soli",
+  "firstrun_invalid_input": "Nepieciešams derīgs epasts"
 };

@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Қолдану шарттары",
   "firstrun_privacy_notice": "Жекелік ескертуі",
   "firstrun_continue_to_login": "Жалғастыру",
-  "firstrun_skip_login": "Бұл қадамды аттап кету"
+  "firstrun_skip_login": "Бұл қадамды аттап кету",
+  "firstrun_invalid_input": "Жарамды эл. пошта адресі керек"
 };

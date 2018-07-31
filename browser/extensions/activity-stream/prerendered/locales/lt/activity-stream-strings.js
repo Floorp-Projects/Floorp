@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "paslaugos teikimo nuostatais",
   "firstrun_privacy_notice": "privatumo nuostatais",
   "firstrun_continue_to_login": "Tęsti",
-  "firstrun_skip_login": "Praleisti šį žingsnį"
+  "firstrun_skip_login": "Praleisti šį žingsnį",
+  "firstrun_invalid_input": "Reikalingas galiojantis el. pašto adresas"
 };

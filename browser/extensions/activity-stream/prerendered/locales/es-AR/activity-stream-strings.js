@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Términos del servicio",
   "firstrun_privacy_notice": "Anuncio de privacidad",
   "firstrun_continue_to_login": "Continuar",
-  "firstrun_skip_login": "Saltear este paso"
+  "firstrun_skip_login": "Saltear este paso",
+  "firstrun_invalid_input": "Se requiere un correo electrónico válido"
 };

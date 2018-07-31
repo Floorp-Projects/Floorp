@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Mba'epytyvõrã ñemboguata",
   "firstrun_privacy_notice": "Ñemigua purureko",
   "firstrun_continue_to_login": "Eku'ejey",
-  "firstrun_skip_login": "Ehejánte kóva"
+  "firstrun_skip_login": "Ehejánte kóva",
+  "firstrun_invalid_input": "Eikotevẽ peteĩ ñanduti veve oikóva"
 };

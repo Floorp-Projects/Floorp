@@ -17,8 +17,8 @@ window.gActivityStreamStrings = {
   "menu_action_open_private_window": "Apri in una nuova finestra anonima",
   "menu_action_dismiss": "Rimuovi",
   "menu_action_delete": "Elimina dalla cronologia",
-  "menu_action_pin": "Fissa alla bacheca",
-  "menu_action_unpin": "Rimuovi dalla bacheca",
+  "menu_action_pin": "Appunta",
+  "menu_action_unpin": "Rilascia",
   "confirm_history_delete_p1": "Eliminare tutte le occorrenze di questa pagina dalla cronologia?",
   "confirm_history_delete_notice_p2": "Questa operazione non può essere annullata.",
   "menu_action_save_to_pocket": "Salva in Pocket",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "condizioni di utilizzo del servizio",
   "firstrun_privacy_notice": "informativa sulla privacy",
   "firstrun_continue_to_login": "Continua",
-  "firstrun_skip_login": "Ignora questo passaggio"
+  "firstrun_skip_login": "Ignora questo passaggio",
+  "firstrun_invalid_input": "Inserire un indirizzo email valido"
 };

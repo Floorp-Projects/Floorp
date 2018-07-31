@@ -48,7 +48,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_sponsored_learn_more": "Más información",
   "prefs_highlights_description": "Una selección de sitios que ha guardado o visitado",
   "prefs_highlights_options_visited_label": "Páginas visitadas",
-  "prefs_highlights_options_download_label": "Descargas recientes",
+  "prefs_highlights_options_download_label": "Descargas más recientes",
   "prefs_highlights_options_pocket_label": "Páginas guardadas en Pocket",
   "prefs_snippets_description": "Actualizaciones de Mozilla y Firefox",
   "settings_pane_button_label": "Personalizar la página Nueva pestaña",
@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Términos del servicio",
   "firstrun_privacy_notice": "Aviso de privacidad",
   "firstrun_continue_to_login": "Continuar",
-  "firstrun_skip_login": "Saltar este paso"
+  "firstrun_skip_login": "Saltar este paso",
+  "firstrun_invalid_input": "Se requiere un correo válido"
 };

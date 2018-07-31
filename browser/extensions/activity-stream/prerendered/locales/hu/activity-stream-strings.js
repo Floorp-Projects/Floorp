@@ -100,5 +100,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Felhasználási feltételeket",
   "firstrun_privacy_notice": "Adatvédelmi nyilatkozatot",
   "firstrun_continue_to_login": "Folytatás",
-  "firstrun_skip_login": "Lépés kihagyása"
+  "firstrun_skip_login": "Lépés kihagyása",
+  "firstrun_invalid_input": "Érvényes e-mail szükséges"
 };
