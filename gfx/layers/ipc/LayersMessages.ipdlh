@@ -14,6 +14,7 @@ include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "ImageLayers.h";
 
+using mozilla::gfx::Glyph from "mozilla/gfx/2D.h";
 using mozilla::gfx::SamplingFilter from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Color from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
@@ -45,7 +46,6 @@ using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeLayerClip from "FrameMetrics.h";
-using mozilla::gfx::Glyph from "Layers.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
@@ -568,6 +568,12 @@ struct TransactionInfo
 union MaybeTransform {
   Matrix4x4;
   void_t;
+};
+
+union OMTAValue {
+  null_t;
+  float;
+  Matrix4x4;
 };
 
 } // namespace

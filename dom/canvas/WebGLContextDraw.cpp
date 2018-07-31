@@ -286,151 +286,132 @@ DoSetsIntersect(const std::set<T>& a, const std::set<T>& b)
     return bool(intersection.size());
 }
 
-class ScopedDrawHelper final
+const webgl::CachedDrawFetchLimits*
+ValidateDraw(WebGLContext* const webgl, const char* const funcName, const GLenum mode,
+             const uint32_t instanceCount)
 {
-    WebGLContext* const mWebGL;
-    bool mDidFake;
+    MOZ_ASSERT(webgl->gl->IsCurrent());
 
-public:
-    ScopedDrawHelper(WebGLContext* const webgl, const char* const funcName,
-                     const GLenum mode, const Maybe<uint32_t>& lastRequiredVertex,
-                     const uint32_t instanceCount, bool* const out_error)
-        : mWebGL(webgl)
-        , mDidFake(false)
-    {
-        MOZ_ASSERT(mWebGL->gl->IsCurrent());
+    if (!webgl->BindCurFBForDraw(funcName))
+        return nullptr;
 
-        if (!mWebGL->BindCurFBForDraw(funcName)) {
-            *out_error = true;
-            return;
+    if (!webgl->ValidateDrawModeEnum(mode, funcName))
+        return nullptr;
+
+    if (!webgl->ValidateStencilParamsForDrawCall(funcName))
+        return nullptr;
+
+    if (!webgl->mActiveProgramLinkInfo) {
+        webgl->ErrorInvalidOperation("%s: The current program is not linked.", funcName);
+        return nullptr;
+    }
+    const auto& linkInfo = webgl->mActiveProgramLinkInfo;
+
+    // -
+    // Check UBO sizes.
+
+    for (const auto& cur : linkInfo->uniformBlocks) {
+        const auto& dataSize = cur->mDataSize;
+        const auto& binding = cur->mBinding;
+        if (!binding) {
+            webgl->ErrorInvalidOperation("%s: Buffer for uniform block is null.",
+                                          funcName);
+            return nullptr;
         }
 
-        if (!mWebGL->ValidateDrawModeEnum(mode, funcName)) {
-            *out_error = true;
-            return;
+        const auto availByteCount = binding->ByteCount();
+        if (dataSize > availByteCount) {
+            webgl->ErrorInvalidOperation("%s: Buffer for uniform block is smaller"
+                                         " than UNIFORM_BLOCK_DATA_SIZE.",
+                                         funcName);
+            return nullptr;
         }
 
-        if (!mWebGL->ValidateStencilParamsForDrawCall(funcName)) {
-            *out_error = true;
-            return;
+        if (binding->mBufferBinding->IsBoundForTF()) {
+            webgl->ErrorInvalidOperation("%s: Buffer for uniform block is bound or"
+                                         " in use for transform feedback.",
+                                         funcName);
+            return nullptr;
         }
-
-        if (!mWebGL->mActiveProgramLinkInfo) {
-            mWebGL->ErrorInvalidOperation("%s: The current program is not linked.", funcName);
-            *out_error = true;
-            return;
-        }
-        const auto& linkInfo = mWebGL->mActiveProgramLinkInfo;
-
-        ////
-        // Check UBO sizes.
-
-        for (const auto& cur : linkInfo->uniformBlocks) {
-            const auto& dataSize = cur->mDataSize;
-            const auto& binding = cur->mBinding;
-            if (!binding) {
-                mWebGL->ErrorInvalidOperation("%s: Buffer for uniform block is null.",
-                                              funcName);
-                *out_error = true;
-                return;
-            }
-
-            const auto availByteCount = binding->ByteCount();
-            if (dataSize > availByteCount) {
-                mWebGL->ErrorInvalidOperation("%s: Buffer for uniform block is smaller"
-                                              " than UNIFORM_BLOCK_DATA_SIZE.",
-                                              funcName);
-                *out_error = true;
-                return;
-            }
-
-            if (binding->mBufferBinding->IsBoundForTF()) {
-                mWebGL->ErrorInvalidOperation("%s: Buffer for uniform block is bound or"
-                                              " in use for transform feedback.",
-                                              funcName);
-                *out_error = true;
-                return;
-            }
-        }
-
-        ////
-
-        const auto& tfo = mWebGL->mBoundTransformFeedback;
-        if (tfo && tfo->IsActiveAndNotPaused()) {
-            uint32_t numUsed;
-            switch (linkInfo->transformFeedbackBufferMode) {
-            case LOCAL_GL_INTERLEAVED_ATTRIBS:
-                numUsed = 1;
-                break;
-
-            case LOCAL_GL_SEPARATE_ATTRIBS:
-                numUsed = linkInfo->transformFeedbackVaryings.size();
-                break;
-
-            default:
-                MOZ_CRASH();
-            }
-
-            for (uint32_t i = 0; i < numUsed; ++i) {
-                const auto& buffer = tfo->mIndexedBindings[i].mBufferBinding;
-                if (buffer->IsBoundForNonTF()) {
-                    mWebGL->ErrorInvalidOperation("%s: Transform feedback varying %u's"
-                                                  " buffer is bound for"
-                                                  " non-transform-feedback.",
-                                                  funcName, i);
-                    *out_error = true;
-                    return;
-                }
-
-                // Technically we don't know that this will be updated yet, but we can
-                // speculatively mark it.
-                buffer->ResetLastUpdateFenceId();
-            }
-        }
-
-        ////
-
-        const auto& fetchLimits = linkInfo->GetDrawFetchLimits(funcName);
-        if (!fetchLimits) {
-            *out_error = true;
-            return;
-        }
-
-        if (lastRequiredVertex && instanceCount) {
-            if (lastRequiredVertex.value() >= fetchLimits->maxVerts) {
-                mWebGL->ErrorInvalidOperation("%s: Vertex fetch requires vertex #%u, but"
-                                              " attribs only supply %" PRIu64 ".",
-                                              funcName, lastRequiredVertex.value(),
-                                              fetchLimits->maxVerts);
-                *out_error = true;
-                return;
-            }
-            if (instanceCount > fetchLimits->maxInstances) {
-                mWebGL->ErrorInvalidOperation("%s: Instance fetch requires %u, but"
-                                              " attribs only supply %" PRIu64 ".",
-                                              funcName, instanceCount,
-                                              fetchLimits->maxInstances);
-                *out_error = true;
-                return;
-            }
-        }
-
-        ////
-
-        if (lastRequiredVertex) {
-            if (!mWebGL->DoFakeVertexAttrib0(funcName, lastRequiredVertex.value())) {
-                *out_error = true;
-                return;
-            }
-            mDidFake = true;
-        }
-
-        ////
-
-        mWebGL->RunContextLossTimer();
     }
 
-    ~ScopedDrawHelper() {
+    // -
+
+    const auto& tfo = webgl->mBoundTransformFeedback;
+    if (tfo && tfo->IsActiveAndNotPaused()) {
+        uint32_t numUsed;
+        switch (linkInfo->transformFeedbackBufferMode) {
+        case LOCAL_GL_INTERLEAVED_ATTRIBS:
+            numUsed = 1;
+            break;
+
+        case LOCAL_GL_SEPARATE_ATTRIBS:
+            numUsed = linkInfo->transformFeedbackVaryings.size();
+            break;
+
+        default:
+            MOZ_CRASH();
+        }
+
+        for (uint32_t i = 0; i < numUsed; ++i) {
+            const auto& buffer = tfo->mIndexedBindings[i].mBufferBinding;
+            if (buffer->IsBoundForNonTF()) {
+                webgl->ErrorInvalidOperation("%s: Transform feedback varying %u's buffer"
+                                             " is bound for non-transform-feedback.",
+                                             funcName, i);
+                return nullptr;
+            }
+
+            // Technically we don't know that this will be updated yet, but we can
+            // speculatively mark it.
+            buffer->ResetLastUpdateFenceId();
+        }
+    }
+
+    // -
+
+    const auto fetchLimits = linkInfo->GetDrawFetchLimits(funcName);
+    if (!fetchLimits)
+        return nullptr;
+
+    if (instanceCount > fetchLimits->maxInstances) {
+        webgl->ErrorInvalidOperation("%s: Instance fetch requires %u, but attribs only"
+                                     " supply %u.",
+                                     funcName, instanceCount,
+                                     uint32_t(fetchLimits->maxInstances));
+        return nullptr;
+    }
+
+    // -
+
+    webgl->RunContextLossTimer();
+
+    return fetchLimits;
+}
+
+////////////////////////////////////////
+
+class ScopedFakeVertexAttrib0 final
+{
+    WebGLContext* const mWebGL;
+    bool mDidFake = false;
+
+public:
+    ScopedFakeVertexAttrib0(WebGLContext* const webgl, const char* const funcName,
+                            const uint64_t vertexCount, bool* const out_error)
+        : mWebGL(webgl)
+    {
+        *out_error = false;
+
+        if (!mWebGL->DoFakeVertexAttrib0(funcName, vertexCount)) {
+            *out_error = true;
+            return;
+        }
+        mDidFake = true;
+    }
+
+    ~ScopedFakeVertexAttrib0()
+    {
         if (mDidFake) {
             mWebGL->UndoFakeVertexAttrib0();
         }
@@ -526,16 +507,22 @@ HasInstancedDrawing(const WebGLContext& webgl)
 
 ////////////////////////////////////////
 
-bool
-WebGLContext::DrawArrays_check(const char* const funcName, const GLint first,
-                               const GLsizei vertCount, const GLsizei instanceCount,
-                               Maybe<uint32_t>* const out_lastVert)
+void
+WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
+                                  GLsizei instanceCount, const char* const funcName)
 {
+    AUTO_PROFILER_LABEL("WebGLContext::DrawArraysInstanced", GRAPHICS);
+    if (IsContextLost())
+        return;
+    const gl::GLContext::TlsScope inTls(gl);
+
+    // -
+
     if (!ValidateNonNegative(funcName, "first", first) ||
         !ValidateNonNegative(funcName, "vertCount", vertCount) ||
         !ValidateNonNegative(funcName, "instanceCount", instanceCount))
     {
-        return false;
+        return;
     }
 
     if (IsWebGL2() && !gl->IsSupported(gl::GLFeature::prim_restart_fixed)) {
@@ -548,36 +535,33 @@ WebGLContext::DrawArrays_check(const char* const funcName, const GLint first,
         }
     }
 
-    if (!vertCount) {
-        *out_lastVert = Nothing();
-    } else {
-        const auto lastVert_checked = CheckedInt<uint32_t>(first) + vertCount - 1;
-        if (!lastVert_checked.isValid()) {
-            ErrorOutOfMemory("%s: `first+vertCount` out of range.", funcName);
-            return false;
-        }
-        *out_lastVert = Some(lastVert_checked.value());
+    // -
+
+    const auto fetchLimits = ValidateDraw(this, funcName, mode, instanceCount);
+    if (!fetchLimits)
+        return;
+
+    // -
+
+    const auto totalVertCount_safe = CheckedInt<uint32_t>(first) + vertCount;
+    if (!totalVertCount_safe.isValid()) {
+        ErrorOutOfMemory("%s: `first+vertCount` out of range.", funcName);
+        return;
     }
-    return true;
-}
+    auto totalVertCount = totalVertCount_safe.value();
 
-void
-WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
-                                  GLsizei instanceCount, const char* const funcName)
-{
-    AUTO_PROFILER_LABEL("WebGLContext::DrawArraysInstanced", GRAPHICS);
-    if (IsContextLost())
+    if (vertCount && instanceCount &&
+        totalVertCount > fetchLimits->maxVerts)
+    {
+        ErrorInvalidOperation("%s: Vertex fetch requires %u, but attribs only supply %u.",
+                              funcName, totalVertCount, uint32_t(fetchLimits->maxVerts));
         return;
+    }
 
-    const gl::GLContext::TlsScope inTls(gl);
-
-    Maybe<uint32_t> lastVert;
-    if (!DrawArrays_check(funcName, first, vertCount, instanceCount, &lastVert))
-        return;
+    // -
 
     bool error = false;
-    const ScopedDrawHelper scopedHelper(this, funcName, mode, lastVert, instanceCount,
-                                        &error);
+    const ScopedFakeVertexAttrib0 attrib0(this, funcName, totalVertCount, &error);
     if (error)
         return;
 
@@ -609,11 +593,10 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
 
 ////////////////////////////////////////
 
-bool
+WebGLBuffer*
 WebGLContext::DrawElements_check(const char* const funcName, const GLsizei rawIndexCount,
                                  const GLenum type, const WebGLintptr byteOffset,
-                                 const GLsizei instanceCount,
-                                 Maybe<uint32_t>* const out_lastVert)
+                                 const GLsizei instanceCount)
 {
     if (mBoundTransformFeedback &&
         mBoundTransformFeedback->mIsActive &&
@@ -622,14 +605,14 @@ WebGLContext::DrawElements_check(const char* const funcName, const GLsizei rawIn
         ErrorInvalidOperation("%s: DrawElements* functions are incompatible with"
                               " transform feedback.",
                               funcName);
-        return false;
+        return nullptr;
     }
 
     if (!ValidateNonNegative(funcName, "vertCount", rawIndexCount) ||
         !ValidateNonNegative(funcName, "byteOffset", byteOffset) ||
         !ValidateNonNegative(funcName, "instanceCount", instanceCount))
     {
-        return false;
+        return nullptr;
     }
     const auto indexCount = uint32_t(rawIndexCount);
 
@@ -651,12 +634,12 @@ WebGLContext::DrawElements_check(const char* const funcName, const GLsizei rawIn
     }
     if (!bytesPerIndex) {
         ErrorInvalidEnum("%s: Invalid `type`: 0x%04x", funcName, type);
-        return false;
+        return nullptr;
     }
     if (byteOffset % bytesPerIndex != 0) {
         ErrorInvalidOperation("%s: `byteOffset` must be a multiple of the size of `type`",
                               funcName);
-        return false;
+        return nullptr;
     }
 
     ////
@@ -678,25 +661,19 @@ WebGLContext::DrawElements_check(const char* const funcName, const GLsizei rawIn
     const auto& indexBuffer = mBoundVertexArray->mElementArrayBuffer;
     if (!indexBuffer) {
         ErrorInvalidOperation("%s: Index buffer not bound.", funcName);
-        return false;
+        return nullptr;
     }
     MOZ_ASSERT(!indexBuffer->IsBoundForTF(), "This should be impossible.");
-
-    if (!indexCount || !instanceCount) {
-        *out_lastVert = Nothing();
-        return true;
-    }
 
     const size_t availBytes = indexBuffer->ByteLength();
     const auto availIndices = AvailGroups(availBytes, byteOffset, bytesPerIndex,
                                           bytesPerIndex);
-    if (indexCount > availIndices) {
+    if (instanceCount && indexCount > availIndices) {
         ErrorInvalidOperation("%s: Index buffer too small.", funcName);
-        return false;
+        return nullptr;
     }
 
-    *out_lastVert = indexBuffer->GetIndexedFetchMaxVert(type, byteOffset, indexCount);
-    return true;
+    return indexBuffer.get();
 }
 
 static void
@@ -730,16 +707,70 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
 
     const gl::GLContext::TlsScope inTls(gl);
 
-    Maybe<uint32_t> lastVert;
-    if (!DrawElements_check(funcName, indexCount, type, byteOffset, instanceCount,
-                            &lastVert))
-    {
+    const auto indexBuffer = DrawElements_check(funcName, indexCount, type, byteOffset,
+                                                instanceCount);
+    if (!indexBuffer)
         return;
+
+    // -
+
+    const auto fetchLimits = ValidateDraw(this, funcName, mode, instanceCount);
+    if (!fetchLimits)
+        return;
+
+    bool collapseToDrawArrays = false;
+    auto fakeVertCount = fetchLimits->maxVerts;
+    if (fetchLimits->maxVerts == UINT64_MAX) {
+        // This isn't observable, and keeps FakeVertexAttrib0 sane.
+        collapseToDrawArrays = true;
+        fakeVertCount = 1;
     }
 
+    // -
+
+    {
+        uint64_t indexCapacity = indexBuffer->ByteLength();
+        switch (type) {
+        case LOCAL_GL_UNSIGNED_BYTE:
+            break;
+        case LOCAL_GL_UNSIGNED_SHORT:
+            indexCapacity /= 2;
+            break;
+        case LOCAL_GL_UNSIGNED_INT:
+            indexCapacity /= 4;
+            break;
+        }
+
+        uint32_t maxVertId = 0;
+        const auto isFetchValid = [&]() {
+            if (!indexCount || !instanceCount)
+                return true;
+
+            const auto globalMaxVertId = indexBuffer->GetIndexedFetchMaxVert(type, 0,
+                                                                             indexCapacity);
+            if (!globalMaxVertId)
+                return true;
+            if (globalMaxVertId.value() < fetchLimits->maxVerts)
+                return true;
+
+            const auto exactMaxVertId = indexBuffer->GetIndexedFetchMaxVert(type,
+                                                                            byteOffset,
+                                                                            indexCount);
+            maxVertId = exactMaxVertId.value();
+            return maxVertId < fetchLimits->maxVerts;
+        }();
+        if (!isFetchValid) {
+            ErrorInvalidOperation("%s: Indexed vertex fetch requires %u vertices, but"
+                                  " attribs only supply %u.",
+                                  funcName, maxVertId+1, uint32_t(fetchLimits->maxVerts));
+            return;
+        }
+    }
+
+    // -
+
     bool error = false;
-    const ScopedDrawHelper scopedHelper(this, funcName, mode, lastVert, instanceCount,
-                                        &error);
+    const ScopedFakeVertexAttrib0 attrib0(this, funcName, fakeVertCount, &error);
     if (error)
         return;
 
@@ -762,13 +793,21 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
             if (indexCount && instanceCount) {
                 AUTO_PROFILER_LABEL("glDrawElementsInstanced", GRAPHICS);
                 if (HasInstancedDrawing(*this)) {
-                    gl->fDrawElementsInstanced(mode, indexCount, type,
-                                               reinterpret_cast<GLvoid*>(byteOffset),
-                                               instanceCount);
+                    if (MOZ_UNLIKELY(collapseToDrawArrays)) {
+                        gl->fDrawArraysInstanced(mode, 0, 1, instanceCount);
+                    } else {
+                        gl->fDrawElementsInstanced(mode, indexCount, type,
+                                                   reinterpret_cast<GLvoid*>(byteOffset),
+                                                   instanceCount);
+                    }
                 } else {
                     MOZ_ASSERT(instanceCount == 1);
-                    gl->fDrawElements(mode, indexCount, type,
-                                      reinterpret_cast<GLvoid*>(byteOffset));
+                    if (MOZ_UNLIKELY(collapseToDrawArrays)) {
+                        gl->fDrawArrays(mode, 0, 1);
+                    } else {
+                        gl->fDrawElements(mode, indexCount, type,
+                                          reinterpret_cast<GLvoid*>(byteOffset));
+                    }
                 }
             }
 
@@ -856,7 +895,7 @@ WebGLContext::WhatDoesVertexAttrib0Need() const
 }
 
 bool
-WebGLContext::DoFakeVertexAttrib0(const char* const funcName, const uint32_t lastVert)
+WebGLContext::DoFakeVertexAttrib0(const char* const funcName, const uint64_t vertexCount)
 {
     const auto whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
     if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
@@ -901,12 +940,12 @@ WebGLContext::DoFakeVertexAttrib0(const char* const funcName, const uint32_t las
     ////
 
     const auto bytesPerVert = sizeof(mFakeVertexAttrib0Data);
-    const auto checked_dataSize = (CheckedUint32(lastVert)+1) * bytesPerVert;
+    const auto checked_dataSize = CheckedUint32(vertexCount) * bytesPerVert;
     if (!checked_dataSize.isValid()) {
         ErrorOutOfMemory("Integer overflow trying to construct a fake vertex attrib 0"
                          " array for a draw-operation with %" PRIu64 " vertices. Try"
                          " reducing the number of vertices.",
-                         uint64_t(lastVert) + 1);
+                         vertexCount);
         return false;
     }
     const auto dataSize = checked_dataSize.value();

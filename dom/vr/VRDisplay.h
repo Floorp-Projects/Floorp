@@ -363,6 +363,7 @@ public:
   int32_t RequestAnimationFrame(mozilla::dom::FrameRequestCallback& aCallback,
                                 mozilla::ErrorResult& aError);
   void CancelAnimationFrame(int32_t aHandle, mozilla::ErrorResult& aError);
+  void StartVRNavigation();
   void StartHandlingVRNavigationEvent();
   void StopHandlingVRNavigationEvent();
   bool IsHandlingVRNavigationEvent();
