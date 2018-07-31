@@ -145,4 +145,3 @@ fuzzy-if(d2d,1,5) fuzzy-if(skiaContent,26,208) == table-overflowed-by-animation.
 == translate-rounding-1.html translate-rounding-ref.html
 == translate-rounding-2.html translate-rounding-ref.html
 fails == translate-rounding-3.html translate-rounding-viewport-ref.html # bug 1397146
-== invalidate-transform-1.html invalidate-transform-1-ref.html
