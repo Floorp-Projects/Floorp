@@ -94,6 +94,7 @@ MouseCursorMonitorMac::MouseCursorMonitorMac(
       screen_id_(screen_id),
       callback_(NULL),
       mode_(SHAPE_AND_POSITION),
+      last_cursor_(NULL),
       full_screen_chrome_window_detector_(
           options.full_screen_chrome_window_detector()) {
   assert(window_id == kCGNullWindowID || screen_id == kInvalidScreenId);
@@ -111,6 +112,7 @@ void MouseCursorMonitorMac::Init(Callback* callback, Mode mode) {
 
 void MouseCursorMonitorMac::Stop() {
   callback_ = NULL;
+  last_cursor_ = NULL;
 }
 
 void MouseCursorMonitorMac::Capture() {
@@ -253,7 +255,7 @@ void MouseCursorMonitorMac::CaptureImage(float scale) {
   NSSize nssize = [nsimage size];  // DIP size
 
   // No need to caputre cursor image if it's unchanged since last capture.
-  if ([[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
+  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
   last_cursor_ = nsimage;
 
   DesktopSize size(round(nssize.width * scale),

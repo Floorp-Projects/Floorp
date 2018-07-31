@@ -52,6 +52,10 @@ std::string GetWindowTitle(CFDictionaryRef window);
 // be retrieved, this function returns kNullWindowId.
 WindowId GetWindowId(CFDictionaryRef window);
 
+// Returns the pid of |window|. If |window| is not a window or the window id cannot
+// be retrieved, this function returns 0.
+int GetWindowPID(CFDictionaryRef window);
+
 // Returns the DIP to physical pixel scale at |position|. |position| is in
 // *unscaled* system coordinate, i.e. it's device-independent and the primary
 // monitor starts from (0, 0). If |position| is out of the system display, this
