@@ -145,36 +145,20 @@ class NavigationDelegateTest : BaseSessionTest() {
                    containsString(mobileSubStr))
     }
 
-    fun telemetryTest(process: String) {
+    @Test fun telemetrySnapshots() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         val telemetry = sessionRule.runtime.telemetry
-        val result = sessionRule.waitForResult(telemetry.getSnapshots(true))
-
-        val snapshots = result?.get(process) as GeckoBundle
+        val result = sessionRule.waitForResult(telemetry.getSnapshots(false))
 
         assertThat("Snapshots should not be null",
-                   snapshots, notNullValue())
+                   result?.get("parent"), notNullValue())
 
-        assertThat("Histograms should not be null",
-                   snapshots.get("histograms"), notNullValue())
-        assertThat("Keyed histograms should not be null",
-                   snapshots.get("keyedHistograms"), notNullValue())
-        assertThat("Scalars should not be null",
-                   snapshots.get("scalars"), notNullValue())
-        assertThat("Keyed scalars should not be null",
-                   snapshots.get("keyedScalars"), notNullValue())
-    }
-
-    @Test fun telemetryParent() {
-        telemetryTest("parent")
-    }
-
-
-    @Test fun telemetryContent() {
-        assumeThat(sessionRule.env.isMultiprocess, equalTo(true));
-        telemetryTest("content")
+        if (sessionRule.env.isMultiprocess) {
+            assertThat("Snapshots should not be null",
+                       result?.get("content"), notNullValue())
+        }
     }
 
     @Test fun load() {
