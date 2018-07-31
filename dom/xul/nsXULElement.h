@@ -672,8 +672,7 @@ protected:
     /**
      * Add a listener for the specified attribute, if appropriate.
      */
-    void AddListenerFor(const nsAttrName& aName,
-                        bool aCompileEventHandlers);
+    void AddListenerFor(const nsAttrName& aName);
     void MaybeAddPopupListener(nsAtom* aLocalName);
 
     nsIWidget* GetWindowWidget();

@@ -198,8 +198,7 @@ nsXULElement::CreateFromPrototype(nsXULPrototypeElement* aPrototype,
             // any additional processing and hookup that would otherwise be
             // done 'automagically' by SetAttr().
             for (uint32_t i = 0; i < aPrototype->mNumAttributes; ++i) {
-                element->AddListenerFor(aPrototype->mAttributes[i].mName,
-                                        true);
+                element->AddListenerFor(aPrototype->mAttributes[i].mName);
             }
         }
 
@@ -354,7 +353,7 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                                                            &oldValueSet);
         }
         NS_ENSURE_SUCCESS(rv, rv);
-        element->AddListenerFor(*originalName, true);
+        element->AddListenerFor(*originalName);
         if (originalName->Equals(nsGkAtoms::id) &&
             !originalValue->IsEmptyString()) {
             element->SetHasID();
@@ -574,8 +573,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
 //----------------------------------------------------------------------
 
 void
-nsXULElement::AddListenerFor(const nsAttrName& aName,
-                             bool aCompileEventHandlers)
+nsXULElement::AddListenerFor(const nsAttrName& aName)
 {
     // If appropriate, add a popup listener and/or compile the event
     // handler. Called when we change the element's document, create a
@@ -584,8 +582,7 @@ nsXULElement::AddListenerFor(const nsAttrName& aName,
     if (aName.IsAtom()) {
         nsAtom *attr = aName.Atom();
         MaybeAddPopupListener(attr);
-        if (aCompileEventHandlers &&
-            nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
+        if (nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
             nsAutoString value;
             GetAttr(kNameSpaceID_None, attr, value);
             SetEventHandler(attr, value, true);
