@@ -196,12 +196,22 @@ public:
     }
 
     bool isRelocatable() {
-        return true;
+        return false;
     }
 
     unsigned int getEntryPoint() {
         return entry_point;
     }
+
+    void insertBefore(ElfSection *section, bool dirty = true) override {
+        // Adjust the address so that this section is adjacent to the one it's
+        // being inserted before. This avoids creating holes which subsequently
+        // might lead the PHDR-adjusting code to create unnecessary additional
+        // PT_LOADs.
+        shdr.sh_addr = (section->getAddr() - shdr.sh_size) & ~(shdr.sh_addralign - 1);
+        ElfSection::insertBefore(section, dirty);
+    }
+
 private:
     void add_code_section(ElfSection *section)
     {
