@@ -168,11 +168,11 @@ private:
   struct MOZ_RAII InitOnceContext final
   {
     InitOnceContext(ThisType* aHook, InterceptorT* aInterceptor,
-                    const char* aName, void* aHookDest, bool aForceDetour)
+                    const char* aName, FuncPtrT aHookDest, bool aForceDetour)
       : mHook(aHook)
       , mInterceptor(aInterceptor)
       , mName(aName)
-      , mHookDest(aHookDest)
+      , mHookDest(reinterpret_cast<void*>(aHookDest))
       , mForceDetour(aForceDetour)
     {
     }
