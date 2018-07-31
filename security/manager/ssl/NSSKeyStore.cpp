@@ -226,3 +226,12 @@ NSSKeyStore::EncryptDecrypt(const nsACString& aLabel,
   }
   return DoCipher(symKey, inBytes, outBytes, encrypt);
 }
+
+// Because NSSKeyStore overrides AbstractOSKeyStore's EncryptDecrypt and
+// SecretAvailable functions, this isn't necessary.
+nsresult
+NSSKeyStore::RetrieveSecret(const nsACString& aLabel,
+                  /* out */ nsACString& aSecret)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
