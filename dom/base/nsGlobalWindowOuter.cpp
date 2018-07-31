@@ -306,9 +306,6 @@ using mozilla::TimeStamp;
   return GetCurrentInnerWindowInternal()->method args;                  \
   PR_END_MACRO
 
-#define DEFAULT_HOME_PAGE "www.mozilla.org"
-#define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
-
 static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
 
 static int32_t              gOpenPopupSpamCount               = 0;
@@ -4851,81 +4848,6 @@ nsGlobalWindowOuter::BlurOuter()
       }
     }
   }
-}
-
-void
-nsGlobalWindowOuter::BackOuter(ErrorResult& aError)
-{
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-  if (!webNav) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  aError = webNav->GoBack();
-}
-
-void
-nsGlobalWindowOuter::ForwardOuter(ErrorResult& aError)
-{
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-  if (!webNav) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  aError = webNav->GoForward();
-}
-
-void
-nsGlobalWindowOuter::HomeOuter(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
-{
-  if (!mDocShell) {
-    return;
-  }
-
-  nsAutoString homeURL;
-  Preferences::GetLocalizedString(PREF_BROWSER_STARTUP_HOMEPAGE, homeURL);
-
-  if (homeURL.IsEmpty()) {
-    // if all else fails, use this
-#ifdef DEBUG_seth
-    printf("all else failed.  using %s as the home page\n", DEFAULT_HOME_PAGE);
-#endif
-    homeURL = NS_LITERAL_STRING(DEFAULT_HOME_PAGE);
-  }
-
-#ifdef MOZ_PHOENIX
-  {
-    // Firefox lets the user specify multiple home pages to open in
-    // individual tabs by separating them with '|'. Since we don't
-    // have the machinery in place to easily open new tabs from here,
-    // simply truncate the homeURL at the first '|' character to
-    // prevent any possibilities of leaking the users list of home
-    // pages to the first home page.
-    //
-    // Once bug https://bugzilla.mozilla.org/show_bug.cgi?id=221445 is
-    // fixed we can revisit this.
-    int32_t firstPipe = homeURL.FindChar('|');
-
-    if (firstPipe > 0) {
-      homeURL.Truncate(firstPipe);
-    }
-  }
-#endif
-
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-  if (!webNav) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  aError = webNav->LoadURI(homeURL.get(),
-                           nsIWebNavigation::LOAD_FLAGS_NONE,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           &aSubjectPrincipal);
 }
 
 void
