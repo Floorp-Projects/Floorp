@@ -77,7 +77,7 @@
         var bogus = new mozRTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
            sdpMLineIndex: 0,
-           sdpMid: "sdparta_1"});
+           sdpMid: "1"});
         return test.pcRemote._pc.addIceCandidate(bogus)
         .then(generateErrorCallback("addIceCandidate should have failed."),
               err => is(err.name, "InvalidCandidateError", "Error is InvalidCandidateError"));
@@ -85,7 +85,7 @@
       function PC_REMOTE_ADD_MID_AND_MISSING_INDEX(test) {
         var candidate = new RTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
-           sdpMid: "sdparta_0"});
+           sdpMid: "0"});
         return test.pcRemote._pc.addIceCandidate(candidate)
         .then(() => ok(true, "Successfully added valid ICE candidate"));
       },
@@ -93,7 +93,7 @@
         var candidate = new RTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
            sdpMLineIndex: 0,
-           sdpMid: "sdparta_0"});
+           sdpMid: "0"});
         return test.pcRemote._pc.addIceCandidate(candidate)
         .then(() => ok(true, "Successfully added valid ICE candidate with matching mid and level"));
       }
