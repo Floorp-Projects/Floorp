@@ -28,6 +28,54 @@ import org.junit.runner.RunWith
 @ReuseSession(false)
 class NavigationDelegateTest : BaseSessionTest() {
 
+    fun loadExpectError(testUri: String, expectedCategory: Int,
+                        expectedError: Int) {
+        sessionRule.session.loadUri(testUri);
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+            object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                assertThat("URI should be " + testUri, uri, equalTo(testUri))
+                return null
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onLoadError(session: GeckoSession, uri: String,
+                                     category: Int, error: Int) {
+                assertThat("Error category should match", category,
+                           equalTo(expectedCategory))
+                assertThat("Error should match", error,
+                           equalTo(expectedError))
+            }
+
+            @AssertCalled(count = 1, order = [3])
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Load should fail", success, equalTo(false))
+            }
+        })
+    }
+
+    @Test fun loadFileNotFound() {
+        loadExpectError("file:///test.mozilla",
+                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
+                        GeckoSession.NavigationDelegate.ERROR_FILE_NOT_FOUND)
+    }
+
+    @Test fun loadUnknownHost() {
+        loadExpectError(INVALID_URI,
+                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
+                        GeckoSession.NavigationDelegate.ERROR_UNKNOWN_HOST)
+    }
+
+    @Test fun loadBadPort() {
+        loadExpectError("http://localhost:1/",
+                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_NETWORK,
+                        GeckoSession.NavigationDelegate.ERROR_PORT_BLOCKED)
+    }
+
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Test fun trackingProtectionBasic() {
         val category = TrackingProtectionDelegate.CATEGORY_TEST;

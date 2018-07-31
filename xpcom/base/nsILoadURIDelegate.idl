@@ -26,8 +26,23 @@ interface nsILoadURIDelegate : nsISupports
    * @param aWhere See possible values described in nsIBrowserDOMWindow.
    * @param aFlags Flags which control the behavior of the load.
    * @param aTriggeringPrincipal The principal that triggered the load of aURI.
+   *
+   * Returns whether the load has been successfully handled.
   */
   boolean
   loadURI(in nsIURI aURI, in short aWhere, in long aFlags,
           in nsIPrincipal aTriggeringPrincipal);
+
+  /**
+   * Delegates page load error handling.
+   *
+   * @param aURI The URI that failed to load.
+   * @param aError The error code.
+   * @param aErrorModule The error module code.
+
+   * Returns whether the page load error has been successfully handled.
+   */
+  boolean
+  handleLoadError(in nsIURI aURI, in nsresult aError, in short aErrorModule);
+
 };

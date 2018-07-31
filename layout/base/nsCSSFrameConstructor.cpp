@@ -7512,7 +7512,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     // new nodes, and it has no frame, make a frame construction item for
     // it, because it might need a frame now.  No need to do this if our
     // parent type is not block, though, since WipeContainingBlock
-    // already handles that sitation.
+    // already handles that situation.
     AddTextItemIfNeeded(state, insertion, aStartChild->GetPreviousSibling(),
                         items);
   }
@@ -7534,7 +7534,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     // new nodes, and it has no frame, make a frame construction item for
     // it, because it might need a frame now.  No need to do this if our
     // parent type is not block, though, since WipeContainingBlock
-    // already handles that sitation.
+    // already handles that situation.
     AddTextItemIfNeeded(state, insertion, aEndChild, items);
   }
 

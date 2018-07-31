@@ -42,6 +42,22 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
     return LoadURIDelegate.load(content, this.eventDispatcher,
                                 aUri, aWhere, aFlags);
   }
+
+  // nsILoadURIDelegate.
+  handleLoadError(aUri, aError, aErrorModule) {
+    debug `handleLoadError: uri=${aUri && aUri.spec}
+                             uri2=${aUri && aUri.displaySpec}
+                             error=${aError}`;
+
+    const handled = LoadURIDelegate.handleLoadError(content, this.eventDispatcher,
+                                                    aUri, aError, aErrorModule);
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:PageStop",
+      sucess: false,
+    });
+
+    return handled;
+  }
 }
 
 let {debug, warn} = GeckoViewNavigationContent.initLogging("GeckoViewNavigation");

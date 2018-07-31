@@ -63,7 +63,7 @@ def check_args(**kwargs):
     require_arg(kwargs, "binary")
 
 
-def browser_kwargs(test_type, run_info_data, **kwargs):
+def browser_kwargs(test_type, run_info_data, config, **kwargs):
     return {"binary": kwargs["binary"],
             "prefs_root": kwargs["prefs_root"],
             "extra_prefs": kwargs["extra_prefs"],
@@ -72,7 +72,7 @@ def browser_kwargs(test_type, run_info_data, **kwargs):
             "symbols_path": kwargs["symbols_path"],
             "stackwalk_binary": kwargs["stackwalk_binary"],
             "certutil_binary": kwargs["certutil_binary"],
-            "ca_certificate_path": kwargs["ssl_env"].ca_cert_path(),
+            "ca_certificate_path": config.ssl_config["ca_cert_path"],
             "e10s": kwargs["gecko_e10s"],
             "stackfix_dir": kwargs["stackfix_dir"],
             "binary_args": kwargs["binary_args"],
@@ -83,7 +83,7 @@ def browser_kwargs(test_type, run_info_data, **kwargs):
             "asan": run_info_data.get("asan"),
             "stylo_threads": kwargs["stylo_threads"],
             "chaos_mode_flags": kwargs["chaos_mode_flags"],
-            "config": kwargs["config"]}
+            "config": config}
 
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,

@@ -34,6 +34,7 @@
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
 #include "mozilla/dom/CredentialsContainer.h"
+#include "mozilla/dom/Clipboard.h"
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/WakeLock.h"
@@ -1773,6 +1774,15 @@ Navigator::MediaCapabilities()
       new dom::MediaCapabilities(GetWindow()->AsGlobal());
   }
   return mMediaCapabilities;
+}
+
+Clipboard*
+Navigator::Clipboard()
+{
+  if (!mClipboard) {
+    mClipboard = new dom::Clipboard(GetWindow());
+  }
+  return mClipboard;
 }
 
 /* static */
