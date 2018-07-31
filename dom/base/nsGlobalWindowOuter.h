@@ -662,9 +662,6 @@ public:
   bool GetFullScreen() override;
   void SetFullScreenOuter(bool aFullScreen, mozilla::ErrorResult& aError);
   nsresult SetFullScreen(bool aFullScreen) override;
-  void BackOuter(mozilla::ErrorResult& aError);
-  void ForwardOuter(mozilla::ErrorResult& aError);
-  void HomeOuter(nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aError);
   bool FindOuter(const nsAString& aString, bool aCaseSensitive, bool aBackwards,
                  bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
                  bool aShowDialog, mozilla::ErrorResult& aError);
