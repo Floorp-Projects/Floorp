@@ -9,6 +9,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import android.util.Log
 
 
 class SearchSuggestionsViewModel(private val service: SearchSuggestionsService) : ViewModel() {
@@ -17,19 +18,20 @@ class SearchSuggestionsViewModel(private val service: SearchSuggestionsService) 
 
     val selectedSearchSuggestion get() = _selectedSearchSuggestion
     val searchQuery get() = _searchQuery
-    val suggestions = map(service.suggestions) { suggestionList ->
-        val style = StyleSpan(Typeface.BOLD)
-        val endIndex = searchQuery.value?.length ?: 0
+    val suggestions = map(service.suggestions) {
+        val query = it.first
+        val suggestions = it.second
 
-        val foo = inner@suggestionList.map {
+        val style = StyleSpan(Typeface.BOLD)
+        val endIndex = query.length
+
+        suggestions.map {
             val ssb = SpannableStringBuilder(it)
-            ssb.setSpan(style, 0, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            ssb.setSpan(style, 0, minOf(endIndex, it.length), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             ssb
         }
-
-        foo
-    }
+    }!!
 
     fun selectSearchSuggestion(suggestion: String) {
         _selectedSearchSuggestion.value = suggestion
