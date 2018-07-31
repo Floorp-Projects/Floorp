@@ -60,10 +60,10 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
   await selectNode(selector, inspector);
   const testFront = await getNodeFront(selector, inspector);
   const testContainer = inspector.markup.getContainer(testFront);
-  const customBadge = testContainer.elt.querySelector(".markup-badge[data-custom]");
+  let customBadge = testContainer.elt.querySelector(".markup-badge[data-custom]");
 
   // Verify that the "custom" badge and menu item are hidden.
-  is(customBadge.style.display, "none", "[custom] badge is hidden");
+  ok(!customBadge, "[custom] badge is hidden");
   let menuItem = getMenuItem("node-menu-jumptodefinition", inspector);
   ok(!menuItem, selector + ": The menu item was not found in the contextual menu");
 
@@ -77,7 +77,8 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
   // Test element should now have a custom element definition.
 
   // Check that the badge opens the debugger.
-  is(customBadge.style.display, "inline-block", "[custom] badge is visible");
+  customBadge = testContainer.elt.querySelector(".markup-badge[data-custom]");
+  ok(customBadge, "[custom] badge is visible");
 
   info("Click on the `custom` badge and verify that the debugger opens.");
   let onDebuggerReady = toolbox.getPanelWhenReady("jsdebugger");
