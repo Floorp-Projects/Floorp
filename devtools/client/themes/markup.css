@@ -393,7 +393,7 @@ ul.children + .tag-line::before {
 
 /* Markup Badges */
 .markup-badge {
-  display: none;
+  display: inline-block;
   font-size: 9px;
   font-weight: normal;
   line-height: 11px;

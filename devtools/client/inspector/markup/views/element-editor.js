@@ -176,26 +176,6 @@ ElementEditor.prototype = {
     close.appendChild(this.closeTag);
 
     close.appendChild(this.doc.createTextNode(">"));
-
-    this.eventBadge = this.doc.createElement("div");
-    this.eventBadge.classList.add("markup-badge");
-    this.eventBadge.dataset.event = "true";
-    this.eventBadge.textContent = "event";
-    this.eventBadge.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
-    this.elt.appendChild(this.eventBadge);
-
-    this.displayBadge = this.doc.createElement("div");
-    this.displayBadge.classList.add("markup-badge");
-    this.displayBadge.addEventListener("click", this.onDisplayBadgeClick);
-    this.elt.appendChild(this.displayBadge);
-
-    this.customBadge = this.doc.createElement("div");
-    this.customBadge.classList.add("markup-badge");
-    this.customBadge.dataset.custom = "true";
-    this.customBadge.textContent = "custom…";
-    this.customBadge.title = INSPECTOR_L10N.getStr("markupView.custom.tooltiptext");
-    this.customBadge.addEventListener("click", this.onCustomBadgeClick);
-    this.elt.appendChild(this.customBadge);
   },
 
   set selected(value) {
@@ -286,12 +266,29 @@ ElementEditor.prototype = {
       }
     }
 
-    // Update the event bubble display
-    this.eventBadge.style.display = this.node.hasEventListeners ? "inline-block" : "none";
-
+    this.updateEventBadge();
     this.updateDisplayBadge();
     this.updateCustomBadge();
     this.updateTextEditor();
+  },
+
+  updateEventBadge: function() {
+    const showEventBadge = this.node.hasEventListeners;
+    if (this._eventBadge && !showEventBadge) {
+      this._eventBadge.remove();
+    } else if (showEventBadge && !this._eventBadge) {
+      this._createEventBadge();
+    }
+  },
+
+  _createEventBadge: function() {
+    this._eventBadge = this.doc.createElement("div");
+    this._eventBadge.classList.add("markup-badge");
+    this._eventBadge.dataset.event = "true";
+    this._eventBadge.textContent = "event";
+    this._eventBadge.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
+    // Badges order is [event][display][custom], insert event badge before others.
+    this.elt.insertBefore(this._eventBadge, this._displayBadge || this._customBadge);
   },
 
   /**
@@ -299,15 +296,32 @@ ElementEditor.prototype = {
    */
   updateDisplayBadge: function() {
     const showDisplayBadge = this.node.displayType in DISPLAY_TYPES;
-    this.displayBadge.textContent = this.node.displayType;
-    this.displayBadge.dataset.display = showDisplayBadge ? this.node.displayType : "";
-    this.displayBadge.style.display = showDisplayBadge ? "inline-block" : "none";
-    this.displayBadge.title = showDisplayBadge ?
-      DISPLAY_TYPES[this.node.displayType] : "";
-    this.displayBadge.classList.toggle("active",
+    if (this._displayBadge && !showDisplayBadge) {
+      this._displayBadge.remove();
+    } else if (showDisplayBadge) {
+      if (!this._displayBadge) {
+        this._createDisplayBadge();
+      }
+      this._updateDisplayBadgeContent();
+    }
+  },
+
+  _createDisplayBadge: function() {
+    this._displayBadge = this.doc.createElement("div");
+    this._displayBadge.classList.add("markup-badge");
+    this._displayBadge.addEventListener("click", this.onDisplayBadgeClick);
+    // Badges order is [event][display][custom], insert display badge before custom.
+    this.elt.insertBefore(this._displayBadge, this._customBadge);
+  },
+
+  _updateDisplayBadgeContent: function() {
+    this._displayBadge.textContent = this.node.displayType;
+    this._displayBadge.dataset.display = this.node.displayType;
+    this._displayBadge.title = DISPLAY_TYPES[this.node.displayType];
+    this._displayBadge.classList.toggle("active",
       this.highlighters.flexboxHighlighterShown === this.node ||
       this.highlighters.gridHighlighterShown === this.node);
-    this.displayBadge.classList.toggle("interactive",
+    this._displayBadge.classList.toggle("interactive",
       Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled") &&
       (this.node.displayType === "flex" || this.node.displayType === "inline-flex"));
   },
@@ -317,7 +331,22 @@ ElementEditor.prototype = {
    */
   updateCustomBadge: function() {
     const showCustomBadge = !!this.node.customElementLocation;
-    this.customBadge.style.display = showCustomBadge ? "inline-block" : "none";
+    if (this._customBadge && !showCustomBadge) {
+      this._customBadge.remove();
+    } else if (!this._customBadge && showCustomBadge) {
+      this._createCustomBadge();
+    }
+  },
+
+  _createCustomBadge: function() {
+    this._customBadge = this.doc.createElement("div");
+    this._customBadge.classList.add("markup-badge");
+    this._customBadge.dataset.custom = "true";
+    this._customBadge.textContent = "custom…";
+    this._customBadge.title = INSPECTOR_L10N.getStr("markupView.custom.tooltiptext");
+    this._customBadge.addEventListener("click", this.onCustomBadgeClick);
+    // Badges order is [event][display][custom], insert custom badge at the end.
+    this.elt.appendChild(this._customBadge);
   },
 
   /**
@@ -708,7 +737,12 @@ ElementEditor.prototype = {
   },
 
   destroy: function() {
-    this.displayBadge.removeEventListener("click", this.onDisplayBadgeClick);
+    if (this._displayBadge) {
+      this._displayBadge.removeEventListener("click", this.onDisplayBadgeClick);
+    }
+    if (this._customBadge) {
+      this._customBadge.removeEventListener("click", this.onCustomBadgeClick);
+    }
 
     for (const key in this.animationTimers) {
       clearTimeout(this.animationTimers[key]);
