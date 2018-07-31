@@ -6,7 +6,7 @@
 
 #include "js/WeakMapPtr.h"
 
-#include "gc/WeakMap-inl.h"
+#include "gc/WeakMap.h"
 
 //
 // Machinery for the externally-linkable JS::WeakMapPtr, which wraps js::WeakMap
