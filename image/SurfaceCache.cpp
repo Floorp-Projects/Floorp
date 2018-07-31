@@ -108,7 +108,7 @@ public:
   bool operator<(const CostEntry& aOther) const
   {
     return mCost < aOther.mCost ||
-           (mCost == aOther.mCost && mSurface < aOther.mSurface);
+           (mCost == aOther.mCost && recordreplay::RecordReplayValue(mSurface < aOther.mSurface));
   }
 
 private:
