@@ -230,10 +230,10 @@ var BrowserPageActions = {
 
   _makePanelButtonNodeForAction(action) {
     if (action.__isSeparator) {
-      let node = document.createElement("toolbarseparator");
+      let node = document.createXULElement("toolbarseparator");
       return node;
     }
-    let buttonNode = document.createElement("toolbarbutton");
+    let buttonNode = document.createXULElement("toolbarbutton");
     buttonNode.classList.add(
       "subviewbutton",
       "subviewbutton-iconic",
@@ -252,10 +252,10 @@ var BrowserPageActions = {
   },
 
   _makePanelViewNodeForAction(action, forUrlbar) {
-    let panelViewNode = document.createElement("panelview");
+    let panelViewNode = document.createXULElement("panelview");
     panelViewNode.id = this._panelViewNodeIDForActionID(action.id, forUrlbar);
     panelViewNode.classList.add("PanelUI-subView");
-    let bodyNode = document.createElement("vbox");
+    let bodyNode = document.createXULElement("vbox");
     bodyNode.id = panelViewNode.id + "-body";
     bodyNode.classList.add("panel-subview-body");
     panelViewNode.appendChild(bodyNode);
@@ -308,7 +308,7 @@ var BrowserPageActions = {
   },
 
   _makeActivatedActionPanelForAction(action) {
-    let panelNode = document.createElement("panel");
+    let panelNode = document.createXULElement("panel");
     panelNode.id = this._activatedActionPanelID;
     panelNode.classList.add("cui-widget-panel");
     panelNode.setAttribute("actionID", action.id);
@@ -323,13 +323,13 @@ var BrowserPageActions = {
     let iframeNode = null;
 
     if (action.getWantsSubview(window)) {
-      let multiViewNode = document.createElement("panelmultiview");
+      let multiViewNode = document.createXULElement("panelmultiview");
       panelViewNode = this._makePanelViewNodeForAction(action, true);
       multiViewNode.setAttribute("mainViewId", panelViewNode.id);
       multiViewNode.appendChild(panelViewNode);
       panelNode.appendChild(multiViewNode);
     } else if (action.wantsIframe) {
-      iframeNode = document.createElement("iframe");
+      iframeNode = document.createXULElement("iframe");
       iframeNode.setAttribute("type", "content");
       panelNode.appendChild(iframeNode);
     }
@@ -472,7 +472,7 @@ var BrowserPageActions = {
   },
 
   _makeUrlbarButtonNode(action) {
-    let buttonNode = document.createElement("image");
+    let buttonNode = document.createXULElement("image");
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
     buttonNode.setAttribute("actionid", action.id);
     buttonNode.setAttribute("role", "button");
@@ -1014,7 +1014,7 @@ BrowserPageActions.sendToDevice = {
 
   onSubviewPlaced(panelViewNode) {
     let bodyNode = panelViewNode.querySelector(".panel-subview-body");
-    let notReady = document.createElement("toolbarbutton");
+    let notReady = document.createXULElement("toolbarbutton");
     notReady.classList.add(
       "subviewbutton",
       "subviewbutton-iconic",
@@ -1048,9 +1048,9 @@ BrowserPageActions.sendToDevice = {
     // changes.
     gSync.populateSendTabToDevicesMenu(bodyNode, url, title, (clientId, name, clientType, lastModified) => {
       if (!name) {
-        return document.createElement("toolbarseparator");
+        return document.createXULElement("toolbarseparator");
       }
-      let item = document.createElement("toolbarbutton");
+      let item = document.createXULElement("toolbarbutton");
       item.classList.add("pageAction-sendToDevice-device", "subviewbutton");
       if (clientId) {
         item.classList.add("subviewbutton-iconic");
@@ -1141,7 +1141,7 @@ BrowserPageActions.addSearchEngine = {
       body.firstChild.remove();
     }
     for (let engine of this.engines) {
-      let button = document.createElement("toolbarbutton");
+      let button = document.createXULElement("toolbarbutton");
       button.classList.add("subviewbutton", "subviewbutton-iconic");
       button.setAttribute("label", engine.title);
       button.setAttribute("image", engine.icon);
@@ -1241,7 +1241,7 @@ BrowserPageActions.shareURL = {
     };
 
     shareProviders.forEach(function(share) {
-      let item = document.createElement("toolbarbutton");
+      let item = document.createXULElement("toolbarbutton");
       item.setAttribute("label", share.menuItemTitle);
       item.setAttribute("share-name", share.name);
       item.setAttribute("image", share.image);
