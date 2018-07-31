@@ -68,16 +68,16 @@ public class FirstrunPagerAdapter extends PagerAdapter {
 
         final FirstrunPage page = pages[position];
 
-        final TextView titleView = (TextView) view.findViewById(R.id.title);
+        final TextView titleView = view.findViewById(R.id.title);
         titleView.setText(page.title);
 
-        final TextView textView = (TextView) view.findViewById(R.id.text);
+        final TextView textView = view.findViewById(R.id.text);
         textView.setText(page.text);
 
-        final ImageView imageView = (ImageView) view.findViewById(R.id.image);
+        final ImageView imageView = view.findViewById(R.id.image);
         imageView.setImageResource(page.imageResource);
 
-        final Button buttonView = (Button) view.findViewById(R.id.button);
+        final Button buttonView = view.findViewById(R.id.button);
         buttonView.setOnClickListener(listener);
         if (position == pages.length - 1) {
             buttonView.setText(R.string.firstrun_close_button);

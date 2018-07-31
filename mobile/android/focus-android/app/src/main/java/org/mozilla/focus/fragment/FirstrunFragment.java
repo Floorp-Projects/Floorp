@@ -71,24 +71,14 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
                 page.setAlpha(1 - (0.5f * Math.abs(position)));
             }
         });
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                TelemetryWrapper.showFirstRunPageEvent(position);
-            }
-
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
-
-            @Override
-            public void onPageScrollStateChanged(int state) {}
-        });
 
         viewPager.setClipToPadding(false);
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
+                TelemetryWrapper.showFirstRunPageEvent(position);
+
                 final TransitionDrawable drawable = (TransitionDrawable) background.getBackground();
 
                 if (position == adapter.getCount() - 1) {
