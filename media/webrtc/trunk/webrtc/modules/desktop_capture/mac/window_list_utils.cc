@@ -193,9 +193,10 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
   return GetWindowList(
       [windows](CFDictionaryRef window) {
         WindowId id = GetWindowId(window);
+        int pid = GetWindowPID(window);
         std::string title = GetWindowTitle(window);
         if (id != kNullWindowId && !title.empty()) {
-          windows->push_back(DesktopCapturer::Source{ id, title });
+          windows->push_back(DesktopCapturer::Source{ id, pid, title });
         }
         return true;
       },
@@ -273,6 +274,22 @@ WindowId GetWindowId(CFDictionaryRef window) {
 
   return id;
 }
+
+int GetWindowPID(CFDictionaryRef window) {
+  CFNumberRef window_pid = reinterpret_cast<CFNumberRef>(
+      CFDictionaryGetValue(window, kCGWindowOwnerPID));
+  if (!window_pid) {
+    return 0;
+  }
+
+  int pid;
+  if (!CFNumberGetValue(window_pid, kCFNumberIntType, &pid)) {
+    return 0;
+  }
+
+  return pid;
+}
+
 
 float GetScaleFactorAtPosition(const MacDesktopConfiguration& desktop_config,
                                DesktopVector position) {

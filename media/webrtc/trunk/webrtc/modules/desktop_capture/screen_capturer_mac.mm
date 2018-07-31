@@ -17,7 +17,6 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <Cocoa/Cocoa.h>
 #include <CoreGraphics/CoreGraphics.h>
-#include <dlfcn.h>
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
@@ -311,6 +310,13 @@ class ScreenCapturerMac : public DesktopCapturer {
   // all display streams have been destroyed..
   DisplayStreamManager* display_stream_manager_;
 
+  // Used to force CaptureFrame to update it's screen configuration
+  // and reregister event handlers. This ensure that this
+  // occurs on the ScreenCapture thread. Read and written from
+  // both the VideoCapture thread and ScreenCapture thread.
+  // Protected by desktop_config_monitor_.
+  bool update_screen_configuration_ = false;
+
   RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerMac);
 };
 
@@ -378,15 +384,6 @@ void ScreenCapturerMac::Start(Callback* callback) {
 }
 
 void ScreenCapturerMac::Stop() {
-  if (power_assertion_id_display_ != kIOPMNullAssertionID) {
-    IOPMAssertionRelease(power_assertion_id_display_);
-    power_assertion_id_display_ = kIOPMNullAssertionID;
-  }
-  if (power_assertion_id_user_ != kIOPMNullAssertionID) {
-    IOPMAssertionRelease(power_assertion_id_user_);
-    power_assertion_id_user_ = kIOPMNullAssertionID;
-  }
-
   callback_ = NULL;
 }
 

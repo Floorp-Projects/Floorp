@@ -15,11 +15,11 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <AppKit/AppKit.h>
 
-#include "webrtc/modules/desktop_capture/app_capturer.h"
+#include "modules/desktop_capture/app_capturer.h"
 
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/base/constructormagic.h"
+#include "modules/desktop_capture/desktop_frame.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -158,7 +158,7 @@ void AppCapturerMac::CaptureFrame() {
 
   int bits_per_pixel = CGImageGetBitsPerPixel(app_image);
   if (bits_per_pixel != 32) {
-      LOG(LS_ERROR) << "Unsupported window image depth: " << bits_per_pixel;
+      RTC_LOG(LS_ERROR) << "Unsupported window image depth: " << bits_per_pixel;
       CFRelease(app_image);
       callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
       return;
