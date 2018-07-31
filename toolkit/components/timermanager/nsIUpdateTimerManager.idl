@@ -30,15 +30,11 @@ interface nsIUpdateTimerManager : nsISupports
    *
    * Note: to avoid having to instantiate a component to call registerTimer
    * the component can intead register an update-timer category with comma
-   * separated values as a single string representing the timer as follows.
+   * separated values as a single string:
    *
-   * _xpcom_categories: [{ category: "update-timer",
-   *                       value: "contractID," +
-   *                              "method," +
-   *                              "id," +
-   *                              "preference," +
-   *                              "interval" }],
-   * the values are as follows
+   * contractID,method,id,preference,interval
+   *
+   * via a manifest entry. The values are as follows:
    *   contractID : the contract ID for the component.
    *   method     : the method used to instantiate the interface. This should be
    *                either getService or createInstance depending on your

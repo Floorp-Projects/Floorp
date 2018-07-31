@@ -532,14 +532,8 @@ Marionette.prototype = {
   classID: Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}"),
   contractID: "@mozilla.org/remote/marionette;1",
 
-  /* eslint-disable camelcase */
+  /* eslint-disable-next-line camelcase */
   _xpcom_factory: MarionetteFactory,
-
-  _xpcom_categories: [
-    {category: "command-line-handler", entry: "b-marionette"},
-    {category: "profile-after-change", service: true},
-  ],
-  /* eslint-enable camelcase */
 
   helpInfo: "  --marionette       Enable remote control server.\n",
 };

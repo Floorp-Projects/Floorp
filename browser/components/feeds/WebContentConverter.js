@@ -308,28 +308,12 @@ WebContentConverterRegistrar.prototype = {
       browser.contentWindow == aContentWindow);
   },
 
-  /**
-   * See nsIFactory
-   */
-  createInstance(outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return this.QueryInterface(iid);
-  },
-
   classID: WCCR_CLASSID,
 
   /**
    * See nsISupports
    */
-  QueryInterface: ChromeUtils.generateQI(
-     [Ci.nsIWebContentHandlerRegistrar,
-      Ci.nsIFactory]),
-
-  _xpcom_categories: [{
-    category: "app-startup",
-    service: true
-  }]
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebContentHandlerRegistrar]),
 };
 
 function WebContentConverterRegistrarContent() {
@@ -355,23 +339,12 @@ WebContentConverterRegistrarContent.prototype = {
                                       title: aTitle });
   },
 
-  /**
-   * See nsIFactory
-   */
-  createInstance(outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return this.QueryInterface(iid);
-  },
-
   classID: WCCR_CLASSID,
 
   /**
    * See nsISupports
    */
-  QueryInterface: ChromeUtils.generateQI(
-                     [Ci.nsIWebContentHandlerRegistrar,
-                      Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebContentHandlerRegistrar])
 };
 
 this.NSGetFactory =
