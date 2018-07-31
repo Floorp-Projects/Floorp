@@ -3307,6 +3307,40 @@ Nursery::requestMinorGC(JS::gcreason::Reason reason) const
     runtime()->mainContextFromOwnThread()->requestInterrupt(InterruptReason::GC);
 }
 
+// Return false if a pending GC may not occur because we are recording or
+// replaying. GCs must occur at the same points when replaying as they did
+// while recording, so any trigger reasons whose behavior is non-deterministic
+// between recording and replaying are excluded here.
+//
+// Non-deterministic behaviors here are very narrow: the amount of malloc'ed
+// memory or memory used by GC things may vary between recording or replaying,
+// but other behaviors that would normally be non-deterministic (timers and so
+// forth) are captured in the recording and replayed exactly.
+static bool
+RecordReplayCheckCanGC(JS::gcreason::Reason reason)
+{
+    if (!mozilla::recordreplay::IsRecordingOrReplaying())
+        return true;
+
+    switch (reason) {
+      case JS::gcreason::EAGER_ALLOC_TRIGGER:
+      case JS::gcreason::LAST_DITCH:
+      case JS::gcreason::TOO_MUCH_MALLOC:
+      case JS::gcreason::ALLOC_TRIGGER:
+      case JS::gcreason::DELAYED_ATOMS_GC:
+      case JS::gcreason::TOO_MUCH_WASM_MEMORY:
+        return false;
+
+      default:
+        break;
+    }
+
+    // If the above filter misses a non-deterministically triggered GC, this
+    // assertion will fail.
+    mozilla::recordreplay::RecordReplayAssert("RecordReplayCheckCanGC %d", (int) reason);
+    return true;
+}
+
 bool
 GCRuntime::triggerGC(JS::gcreason::Reason reason)
 {
@@ -3319,6 +3353,10 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
 
     /* GC is already running. */
     if (JS::RuntimeHeapIsCollecting())
+        return false;
+
+    // GCs can only be triggered in certain ways when recording/replaying.
+    if (!RecordReplayCheckCanGC(reason))
         return false;
 
     JS::PrepareForFullGC(rt->mainContextFromOwnThread());
@@ -3383,6 +3421,10 @@ GCRuntime::triggerZoneGC(Zone* zone, JS::gcreason::Reason reason, size_t used, s
 
     /* GC is already running. */
     if (JS::RuntimeHeapIsBusy())
+        return false;
+
+    // GCs can only be triggered in certain ways when recording/replaying.
+    if (!RecordReplayCheckCanGC(reason))
         return false;
 
 #ifdef JS_GC_ZEAL
@@ -5902,6 +5944,10 @@ ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind, SliceBudget& sl
 IncrementalProgress
 GCRuntime::drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
 {
+    // Marked GC things may vary between recording and replaying, so marking
+    // and sweeping should not perform any recorded events.
+    mozilla::recordreplay::AutoDisallowThreadEvents disallow;
+
     /* Run a marking slice and return whether the stack is now empty. */
     gcstats::AutoPhase ap(stats(), phase);
     return marker.drainMarkStack(sliceBudget) ? Finished : NotFinished;
@@ -6569,6 +6615,10 @@ GCRuntime::initSweepActions()
 IncrementalProgress
 GCRuntime::performSweepActions(SliceBudget& budget)
 {
+    // Marked GC things may vary between recording and replaying, so sweep
+    // actions should not perform any recorded events.
+    mozilla::recordreplay::AutoDisallowThreadEvents disallow;
+
     AutoSetThreadIsSweeping threadIsSweeping;
 
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
@@ -7749,9 +7799,9 @@ GCRuntime::defaultBudget(JS::gcreason::Reason reason, int64_t millis)
 void
 GCRuntime::gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
-    // Garbage collection can occur at different points between recording and
-    // replay, so disallow recorded events from occurring during the GC.
-    mozilla::recordreplay::AutoDisallowThreadEvents d;
+    // Watch out for calls to gc() that don't go through triggerGC().
+    if (!RecordReplayCheckCanGC(reason))
+        return;
 
     invocationKind = gckind;
     collect(true, SliceBudget::unlimited(), reason);
