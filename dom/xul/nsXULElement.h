@@ -375,6 +375,9 @@ public:
     }
 #endif
 
+    bool HasMenu();
+    MOZ_CAN_RUN_SCRIPT void OpenMenu(bool aOpenFlag);
+
     virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                   bool aIsTrustedEvent) override;
     void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);

@@ -85,6 +85,14 @@ interface XULElement : Element {
 
   [Constant]
   readonly attribute CSSStyleDeclaration style;
+
+  // Returns true if this is a menu-type element that has a menu
+  // frame associated with it.
+  boolean hasMenu();
+
+  // If this is a menu-type element, opens or closes the menu
+  // depending on the argument passed.
+  void openMenu(boolean open);
 };
 
 XULElement implements GlobalEventHandlers;
