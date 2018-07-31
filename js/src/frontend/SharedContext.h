@@ -14,6 +14,7 @@
 #include "ds/InlineTable.h"
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
+#include "gc/Zone.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSAtom.h"
