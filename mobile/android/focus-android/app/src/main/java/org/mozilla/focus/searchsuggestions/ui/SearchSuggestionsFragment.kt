@@ -30,7 +30,6 @@ class SearchSuggestionsFragment : Fragment() {
         searchSuggestionsViewModel = ViewModelProviders.of(activity!!).get(SearchSuggestionsViewModel::class.java)
         searchSuggestionsViewModel.searchQuery.observe(this, Observer {
             searchView.text = it
-            it?.apply(searchSuggestionsViewModel::fetchSuggestions)
         })
 
         searchSuggestionsViewModel.suggestions.observe(this, Observer { suggestions ->
@@ -60,7 +59,6 @@ class SearchSuggestionsFragment : Fragment() {
     }
 
     inner class SuggestionsAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
         private var suggestions: List<SpannableStringBuilder> = listOf()
 
         fun refresh(suggestions: List<SpannableStringBuilder>) {

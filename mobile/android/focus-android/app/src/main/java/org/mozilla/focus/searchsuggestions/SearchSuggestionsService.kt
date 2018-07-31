@@ -19,10 +19,6 @@ class SearchSuggestionsService(private val context: Context) {
     private var client: SearchSuggestionClient? = null
     private var httpClient = OkHttpClient()
 
-    private val _suggestions = MutableLiveData<Pair<String, List<String>>>()
-    val suggestions: LiveData<Pair<String, List<String>>>
-            get() = _suggestions
-
     private fun fetch(url: String): String? {
         httpClient.dispatcher().queuedCalls().forEach {
             if (it.request().tag() == REQUEST_TAG) {
@@ -38,17 +34,21 @@ class SearchSuggestionsService(private val context: Context) {
         return httpClient.newCall(request).execute().body()?.string() ?: ""
     }
 
-    fun getSuggestions(query: String) {
+    fun getSuggestions(query: String): LiveData<Pair<String, List<String>>> {
+        val result = MutableLiveData<Pair<String, List<String>>>()
+
         if (shouldUpdateclient()) { updateClient() }
-        if (query.isBlank()) { _suggestions.value = Pair(query, listOf()); return }
+        if (query.isBlank()) { result.value = Pair(query, listOf()) }
 
         launch(CommonPool) {
             val suggestions = client?.getSuggestions(query) ?: listOf()
 
             launch(UI) {
-                _suggestions.value = Pair(query, suggestions)
+                result.value = Pair(query, suggestions)
             }
         }
+
+        return result
     }
 
     private fun shouldUpdateclient(): Boolean {
