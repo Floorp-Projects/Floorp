@@ -41,17 +41,17 @@ function setTooltipVariableContent(tooltip, objectActor,
                                    relayEvents = {}, extraButtons = [],
                                    toolbox = null) {
   const doc = tooltip.doc;
-  const vbox = doc.createXULElement("vbox");
+  const vbox = doc.createElement("vbox");
   vbox.className = "devtools-tooltip-variables-view-box";
   vbox.setAttribute("flex", "1");
 
-  const innerbox = doc.createXULElement("vbox");
+  const innerbox = doc.createElement("vbox");
   innerbox.className = "devtools-tooltip-variables-view-innerbox";
   innerbox.setAttribute("flex", "1");
   vbox.appendChild(innerbox);
 
   for (const { label, className, command } of extraButtons) {
-    const button = doc.createXULElement("button");
+    const button = doc.createElement("button");
     button.className = className;
     button.setAttribute("label", label);
     button.addEventListener("command", command);

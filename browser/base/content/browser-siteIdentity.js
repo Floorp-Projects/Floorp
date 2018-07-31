@@ -976,12 +976,12 @@ var gIdentityHandler = {
   },
 
   _createPermissionItem(aPermission) {
-    let container = document.createXULElement("hbox");
+    let container = document.createElement("hbox");
     container.setAttribute("class", "identity-popup-permission-item");
     container.setAttribute("align", "center");
     container.setAttribute("role", "group");
 
-    let img = document.createXULElement("image");
+    let img = document.createElement("image");
     img.classList.add("identity-popup-permission-icon");
     if (aPermission.id == "plugin:flash") {
       img.classList.add("plugin-icon");
@@ -1008,7 +1008,7 @@ var gIdentityHandler = {
       });
     }
 
-    let nameLabel = document.createXULElement("label");
+    let nameLabel = document.createElement("label");
     nameLabel.setAttribute("flex", "1");
     nameLabel.setAttribute("class", "identity-popup-permission-label");
     nameLabel.textContent = SitePermissions.getPermissionLabel(aPermission.id);
@@ -1018,16 +1018,16 @@ var gIdentityHandler = {
     let isPolicyPermission = aPermission.scope == SitePermissions.SCOPE_POLICY;
 
     if (aPermission.id == "popup" && !isPolicyPermission) {
-      let menulist = document.createXULElement("menulist");
-      let menupopup = document.createXULElement("menupopup");
-      let block = document.createXULElement("vbox");
+      let menulist = document.createElement("menulist");
+      let menupopup = document.createElement("menupopup");
+      let block = document.createElement("vbox");
       block.setAttribute("id", "identity-popup-popup-container");
       menulist.setAttribute("sizetopopup", "none");
       menulist.setAttribute("class", "identity-popup-popup-menulist");
       menulist.setAttribute("id", "identity-popup-popup-menulist");
 
       for (let state of SitePermissions.getAvailableStates(aPermission.id)) {
-        let menuitem = document.createXULElement("menuitem");
+        let menuitem = document.createElement("menuitem");
         // We need to correctly display the default/unknown state, which has its
         // own integer value (0) but represents one of the other states.
         if (state == SitePermissions.getDefault(aPermission.id)) {
@@ -1063,7 +1063,7 @@ var gIdentityHandler = {
       return block;
     }
 
-    let stateLabel = document.createXULElement("label");
+    let stateLabel = document.createElement("label");
     stateLabel.setAttribute("flex", "1");
     stateLabel.setAttribute("class", "identity-popup-permission-state-label");
     let stateLabelId = "identity-popup-permission-state-label-" + aPermission.id;
@@ -1089,7 +1089,7 @@ var gIdentityHandler = {
       return container;
     }
 
-    let button = document.createXULElement("button");
+    let button = document.createElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
     let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
     button.setAttribute("tooltiptext", tooltiptext);
@@ -1136,15 +1136,15 @@ var gIdentityHandler = {
   },
 
   _createBlockedPopupIndicator() {
-    let indicator = document.createXULElement("hbox");
+    let indicator = document.createElement("hbox");
     indicator.setAttribute("class", "identity-popup-permission-item");
     indicator.setAttribute("align", "center");
     indicator.setAttribute("id", "blocked-popup-indicator-item");
 
-    let icon = document.createXULElement("image");
+    let icon = document.createElement("image");
     icon.setAttribute("class", "popup-subitem identity-popup-permission-icon");
 
-    let text = document.createXULElement("label");
+    let text = document.createElement("label");
     text.setAttribute("flex", "1");
     text.setAttribute("class", "identity-popup-permission-label text-link");
 
