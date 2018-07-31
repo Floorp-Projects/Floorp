@@ -85,8 +85,6 @@ private:
 protected:
   RefPtr<mozilla::places::Database> mDB;
 
-  nsCOMArray<nsIAnnotationObserver> mObservers;
-
   static nsAnnotationService* gAnnotationService;
 
   static const int kAnnoIndex_ID;
@@ -155,7 +153,7 @@ protected:
 public:
   nsresult GetItemAnnotationNamesTArray(int64_t aItemId,
                                         nsTArray<nsCString>* _result);
-  nsresult RemoveItemAnnotationsWithoutNotifying(int64_t aItemId);
+  nsresult RemoveItemAnnotations(int64_t aItemId);
 };
 
 #endif /* nsAnnotationService_h___ */

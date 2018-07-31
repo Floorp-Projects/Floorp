@@ -640,15 +640,13 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource)
 
   mozStorageTransaction transaction(mDB->MainConn(), false);
 
-  // First, if not a tag, remove item annotations. We remove annos without
-  // notifying to avoid firing `onItemAnnotationRemoved` for an item that
-  // we're about to remove.
+  // First, if not a tag, remove item annotations.
   int64_t tagsRootId = TagsRootId();
   bool isUntagging = bookmark.grandParentId == tagsRootId;
   if (bookmark.parentId != tagsRootId && !isUntagging) {
     nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
     NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-    rv = annosvc->RemoveItemAnnotationsWithoutNotifying(bookmark.id);
+    rv = annosvc->RemoveItemAnnotations(bookmark.id);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
