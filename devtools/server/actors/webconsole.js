@@ -1167,7 +1167,6 @@ WebConsoleActor.prototype =
     });
 
     if (this.parentActor.isRootActor) {
-      Services.console.logStringMessage(null); // for the Error Console
       Services.console.reset();
     }
     return {};

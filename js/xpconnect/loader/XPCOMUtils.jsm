@@ -54,28 +54,6 @@
  *    classDescription: "unique text description",
  *    contractID:       "@example.com/xxx;1",
  *
- *    // [optional] an array of categories to register this component in.
- *    _xpcom_categories: [{
- *      // Each object in the array specifies the parameters to pass to
- *      // nsICategoryManager.addCategoryEntry(). 'true' is passed for
- *      // both aPersist and aReplace params.
- *      category: "some-category",
- *      // optional, defaults to the object's classDescription
- *      entry: "entry name",
- *      // optional, defaults to the object's contractID (unless
- *      // 'service' is specified)
- *      value: "...",
- *      // optional, defaults to false. When set to true, and only if 'value'
- *      // is not specified, the concatenation of the string "service," and the
- *      // object's contractID is passed as aValue parameter of addCategoryEntry.
- *      service: true,
- *      // optional, it can be an array of applications' IDs in the form:
- *      // [ "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}", ... ]
- *      // If defined the component will be registered in this category only for
- *      // the provided applications.
- *      apps: [...]
- *    }],
- *
  *    // ...component implementation...
  *  };
  *
