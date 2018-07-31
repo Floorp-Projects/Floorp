@@ -21,7 +21,7 @@ invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
     uint32_t result = 1;
     for (uint32_t i = 0; i < paramCount; i++, result++, s++)
     {
-        if (s->IsPtrData())
+        if (s->IsIndirect())
             continue;
 
         switch(s->type)
@@ -50,9 +50,9 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount,
 
     for (uint32_t i = 0; i < paramCount; i++, d++, s++)
     {
-        if (s->IsPtrData())
+        if (s->IsIndirect())
         {
-            *((void**)d) = s->ptr;
+            *((void**)d) = (void*) &s->val;
             continue;
         }
 

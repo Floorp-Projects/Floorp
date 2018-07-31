@@ -80,7 +80,7 @@ function debuggeeValueToString(dv, style) {
         return [dvrepr, undefined];
 
     if (dv.class == "Error") {
-        let errval = debuggeeGlobalWrapper.executeInGlobalWithBindings("$" + i + ".toString()", debuggeeValues);
+        let errval = debuggeeGlobalWrapper.executeInGlobalWithBindings("$$.toString()", debuggeeValues);
         return [dvrepr, errval.return];
     }
 
@@ -106,6 +106,7 @@ function debuggeeValueToString(dv, style) {
 function showDebuggeeValue(dv, style={pretty: options.pretty}) {
     var i = nextDebuggeeValueIndex++;
     debuggeeValues["$" + i] = dv;
+    debuggeeValues["$$"] = dv;
     let [brief, full] = debuggeeValueToString(dv, style);
     print("$" + i + " = " + brief);
     if (full !== undefined)

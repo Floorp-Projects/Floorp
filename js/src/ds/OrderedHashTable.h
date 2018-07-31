@@ -40,6 +40,8 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 
+#include "js/HashTable.h"
+
 namespace js {
 
 namespace detail {
@@ -135,7 +137,7 @@ class OrderedHashTable
         dataLength = 0;
         dataCapacity = capacity;
         liveCount = 0;
-        hashShift = HashNumberSizeBits - initialBucketsLog2();
+        hashShift = js::kHashNumberBits - initialBucketsLog2();
         MOZ_ASSERT(hashBuckets() == buckets);
         return true;
     }
@@ -618,13 +620,13 @@ class OrderedHashTable
 
   public:
     HashNumber prepareHash(const Lookup& l) const {
-        return ScrambleHashCode(Ops::hash(l, hcs));
+        return mozilla::ScrambleHashCode(Ops::hash(l, hcs));
     }
 
   private:
     /* The size of hashTable, in elements. Always a power of two. */
     uint32_t hashBuckets() const {
-        return 1 << (HashNumberSizeBits - hashShift);
+        return 1 << (js::kHashNumberBits - hashShift);
     }
 
     static void destroyData(Data* data, uint32_t length) {
@@ -696,7 +698,7 @@ class OrderedHashTable
         }
 
         size_t newHashBuckets =
-            size_t(1) << (HashNumberSizeBits - newHashShift);
+            size_t(1) << (js::kHashNumberBits - newHashShift);
         Data** newHashTable = alloc.template pod_malloc<Data*>(newHashBuckets);
         if (!newHashTable)
             return false;

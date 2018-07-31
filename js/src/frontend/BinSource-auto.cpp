@@ -6407,7 +6407,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatement(const size_t start, const BinKi
     BINJS_MOZ_TRY_DECL(cases, parseListOfSwitchCase());
 
     BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-    BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
+    BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope, false));
     return result;
 }
 
@@ -6467,7 +6467,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(const size_t start, 
         iter = next;
     }
     BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-    BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
+    BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope, true));
     return result;
 }
 

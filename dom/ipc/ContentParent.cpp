@@ -1936,6 +1936,12 @@ ContentParent::ShouldKeepProcessAlive() const
     return false;
   }
 
+  // Recording/replaying content parents cannot be reused and should not be
+  // kept alive.
+  if (this->IsRecordingOrReplaying()) {
+    return false;
+  }
+
   auto contentParents = sBrowserContentParents->Get(mRemoteType);
   if (!contentParents) {
     return false;

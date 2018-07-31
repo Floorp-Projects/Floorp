@@ -2941,6 +2941,11 @@ nsCycleCollector::ForgetSkippable(js::SliceBudget& aBudget,
   // lose track of an object that was mutated during graph building.
   MOZ_ASSERT(IsIdle());
 
+  // The cycle collector does not collect anything when recording/replaying.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return;
+  }
+
   if (mCCJSRuntime) {
     mCCJSRuntime->PrepareForForgetSkippable();
   }
@@ -3718,7 +3723,8 @@ nsCycleCollector::Collect(ccType aCCType,
   CheckThreadSafety();
 
   // This can legitimately happen in a few cases. See bug 383651.
-  if (mActivelyCollecting || mFreeingSnowWhite) {
+  // When recording/replaying we do not collect cycles.
+  if (mActivelyCollecting || mFreeingSnowWhite || recordreplay::IsRecordingOrReplaying()) {
     return false;
   }
   mActivelyCollecting = true;
@@ -4171,7 +4177,9 @@ nsCycleCollector_suspectedCount()
   // We should have started the cycle collector by now.
   MOZ_ASSERT(data);
 
-  if (!data->mCollector) {
+  // When recording/replaying we do not collect cycles. Return zero here so
+  // that callers behave consistently between recording and replaying.
+  if (!data->mCollector || recordreplay::IsRecordingOrReplaying()) {
     return 0;
   }
 

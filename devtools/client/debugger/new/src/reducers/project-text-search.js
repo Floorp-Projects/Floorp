@@ -75,6 +75,7 @@ function update(state = initialProjectTextSearchState(), action) {
 
     case "CLEAR_SEARCH":
     case "CLOSE_PROJECT_SEARCH":
+    case "NAVIGATE":
       return state.merge({
         query: "",
         results: state.get("results").clear(),

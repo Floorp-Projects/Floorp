@@ -43,7 +43,7 @@ function updateTree({
   return {
     uncollapsedTree,
     sourceTree: newSourceTree,
-    parentMap: (0, _utils.createParentMap)(sourceTree),
+    parentMap: (0, _utils.createParentMap)(newSourceTree),
     focusedItem: null
   };
 }

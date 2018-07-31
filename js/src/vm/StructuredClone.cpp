@@ -1147,7 +1147,7 @@ JSStructuredCloneWriter::parseTransferable()
             if (!out.buf.callbacks_ || !out.buf.callbacks_->canTransfer)
                 return reportDataCloneError(JS_SCERR_TRANSFERABLE);
 
-            JSAutoRealmAllowCCW ar(cx, unwrappedObj);
+            JSAutoRealm ar(cx, unwrappedObj);
             if (!out.buf.callbacks_->canTransfer(cx, unwrappedObj, out.buf.closure_))
                 return false;
         }
@@ -1253,7 +1253,7 @@ bool
 JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 {
     Rooted<TypedArrayObject*> tarr(context(), &CheckedUnwrap(obj)->as<TypedArrayObject>());
-    JSAutoRealmAllowCCW ar(context(), tarr);
+    JSAutoRealm ar(context(), tarr);
 
     if (!TypedArrayObject::ensureHasBuffer(context(), tarr))
         return false;
@@ -1276,7 +1276,7 @@ bool
 JSStructuredCloneWriter::writeDataView(HandleObject obj)
 {
     Rooted<DataViewObject*> view(context(), &CheckedUnwrap(obj)->as<DataViewObject>());
-    JSAutoRealmAllowCCW ar(context(), view);
+    JSAutoRealm ar(context(), view);
 
     if (!out.writePair(SCTAG_DATA_VIEW_OBJECT, view->byteLength()))
         return false;
@@ -1293,7 +1293,7 @@ bool
 JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 {
     Rooted<ArrayBufferObject*> buffer(context(), &CheckedUnwrap(obj)->as<ArrayBufferObject>());
-    JSAutoRealmAllowCCW ar(context(), buffer);
+    JSAutoRealm ar(context(), buffer);
 
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer->byteLength()) &&
            out.writeBytes(buffer->dataPointer(), buffer->byteLength());
@@ -1425,7 +1425,7 @@ JSStructuredCloneWriter::traverseMap(HandleObject obj)
         // If there is no wrapper, the compartment munging is a no-op.
         RootedObject unwrapped(context(), CheckedUnwrap(obj));
         MOZ_ASSERT(unwrapped);
-        JSAutoRealmAllowCCW ar(context(), unwrapped);
+        JSAutoRealm ar(context(), unwrapped);
         if (!MapObject::getKeysAndValuesInterleaved(unwrapped, &newEntries))
             return false;
     }
@@ -1455,7 +1455,7 @@ JSStructuredCloneWriter::traverseSet(HandleObject obj)
         // If there is no wrapper, the compartment munging is a no-op.
         RootedObject unwrapped(context(), CheckedUnwrap(obj));
         MOZ_ASSERT(unwrapped);
-        JSAutoRealmAllowCCW ar(context(), unwrapped);
+        JSAutoRealm ar(context(), unwrapped);
         if (!SetObject::keys(context(), unwrapped, &keys))
             return false;
     }
@@ -1766,7 +1766,7 @@ JSStructuredCloneWriter::transferOwnership()
             // The current setup of the array buffer inheritance hierarchy doesn't
             // lend itself well to generic manipulation via proxies.
             Rooted<ArrayBufferObject*> arrayBuffer(cx, &CheckedUnwrap(obj)->as<ArrayBufferObject>());
-            JSAutoRealmAllowCCW ar(cx, arrayBuffer);
+            JSAutoRealm ar(cx, arrayBuffer);
 
             if (arrayBuffer->isDetached()) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);

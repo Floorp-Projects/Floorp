@@ -15,6 +15,8 @@ exports.closeFileSearch = closeFileSearch;
 
 var _editor = require("../utils/editor/index");
 
+var _wasm = require("../utils/wasm");
+
 var _search = require("../workers/search/index");
 
 var _selectors = require("../selectors/index");
@@ -106,7 +108,9 @@ function searchContents(query, editor) {
 
     const _modifiers = modifiers.toJS();
 
-    const matches = await (0, _search.getMatches)(query, selectedSource.text, _modifiers);
+    const sourceId = selectedSource.id;
+    const text = (0, _wasm.isWasm)(sourceId) ? (0, _wasm.renderWasmText)(sourceId, selectedSource.text).join("\n") : selectedSource.text;
+    const matches = await (0, _search.getMatches)(query, text, _modifiers);
     const res = (0, _editor.find)(ctx, query, true, _modifiers);
 
     if (!res) {
@@ -189,9 +193,8 @@ function closeFileSearch(editor) {
     getState,
     dispatch
   }) => {
-    const query = (0, _selectors.getFileSearchQuery)(getState());
-
     if (editor) {
+      const query = (0, _selectors.getFileSearchQuery)(getState());
       const ctx = {
         ed: editor,
         cm: editor.codeMirror

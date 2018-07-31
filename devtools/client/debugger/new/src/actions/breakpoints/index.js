@@ -33,6 +33,8 @@ var _syncBreakpoint = require("./syncBreakpoint");
 
 var _ast = require("../../reducers/ast");
 
+var _telemetry = require("../../utils/telemetry");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -60,10 +62,11 @@ function removeBreakpoint(location) {
 
     if (!bp || bp.loading) {
       return;
-    } // If the breakpoint is already disabled, we don't need to communicate
+    }
+
+    (0, _telemetry.recordEvent)("remove_breakpoint"); // If the breakpoint is already disabled, we don't need to communicate
     // with the server. We just need to dispatch an action
     // simulating a successful server request
-
 
     if (bp.disabled) {
       return dispatch({
@@ -332,11 +335,7 @@ function toggleBreakpointsAtLine(line, column) {
     const bps = (0, _selectors.getBreakpointsAtLine)(state, line);
     const isEmptyLine = (0, _ast.isEmptyLineInSource)(state, line, selectedSource.id);
 
-    if (isEmptyLine) {
-      return;
-    }
-
-    if (bps.size === 0) {
+    if (bps.size === 0 && !isEmptyLine) {
       return dispatch((0, _addBreakpoint.addBreakpoint)({
         sourceId: selectedSource.id,
         sourceUrl: selectedSource.url,

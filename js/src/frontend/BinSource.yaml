@@ -905,7 +905,7 @@ SwitchDefault:
 SwitchStatement:
     build: |
         BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
+        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope, false));
 
 SwitchStatementWithDefault:
     build: |
@@ -919,7 +919,7 @@ SwitchStatementWithDefault:
             iter = next;
         }
         BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
+        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope, true));
 
 StaticMemberAssignmentTarget:
     build: |

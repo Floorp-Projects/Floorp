@@ -638,6 +638,10 @@ CycleCollectedJSRuntime::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 void
 CycleCollectedJSRuntime::UnmarkSkippableJSHolders()
 {
+  // Prevent nsWrapperCaches accessed under CanSkip from adding recorded events
+  // which might not replay in the same order.
+  recordreplay::AutoDisallowThreadEvents disallow;
+
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
     void* holder = iter.Get().mHolder;
     nsScriptObjectTracer* tracer = iter.Get().mTracer;

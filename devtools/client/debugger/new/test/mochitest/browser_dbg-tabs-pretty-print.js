@@ -15,7 +15,10 @@ add_task(async function() {
 
   await waitForSelectedSource(dbg, "math.min.js:formatted");
   ok(true, "Pretty printed source is selected on reload");
-
-  const breakpointTab = findElementWithSelector(dbg, ".source-tab.active .filename");
-  is(breakpointTab.textContent, "math.min.js", ":formatted does not display in tab label");
+  
+  await selectSource(dbg, "math.min.js:formatted");
+  const source = findSource(dbg, "math.min.js:formatted");
+  dbg.actions.showSource(source.id);
+  const focusedTreeElement = findElementWithSelector(dbg, ".sources-list .focused .label");
+  is(focusedTreeElement.textContent.trim(), "math.min.js", "Pretty printed source is selected in tree");
 });

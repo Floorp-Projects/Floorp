@@ -35,7 +35,7 @@ const createUIState = exports.createUIState = (0, _makeRecord2.default)({
   selectedPrimaryPaneTab: "sources",
   activeSearch: null,
   contextMenu: {},
-  shownSource: "",
+  shownSource: null,
   projectDirectoryRoot: _prefs.prefs.projectDirectoryRoot,
   startPanelCollapsed: _prefs.prefs.startPanelCollapsed,
   endPanelCollapsed: _prefs.prefs.endPanelCollapsed,
@@ -70,7 +70,7 @@ function update(state = createUIState(), action) {
 
     case "SHOW_SOURCE":
       {
-        return state.set("shownSource", action.sourceUrl);
+        return state.set("shownSource", action.source);
       }
 
     case "TOGGLE_PANE":
@@ -126,6 +126,11 @@ function update(state = createUIState(), action) {
         }
 
         return state;
+      }
+
+    case "NAVIGATE":
+      {
+        return state.set("activeSearch", null).set("highlightedLineRange", {});
       }
 
     default:

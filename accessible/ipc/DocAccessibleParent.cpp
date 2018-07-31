@@ -406,8 +406,8 @@ DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
 
 #if defined(ANDROID)
   ProxyVirtualCursorChangeEvent(target,
-                                newPosition, aOldStartOffset, aOldEndOffset,
-                                oldPosition, aNewStartOffset, aNewEndOffset,
+                                oldPosition, aOldStartOffset, aOldEndOffset,
+                                newPosition, aNewStartOffset, aNewEndOffset,
                                 aReason, aBoundaryType, aFromUser);
 #endif
 

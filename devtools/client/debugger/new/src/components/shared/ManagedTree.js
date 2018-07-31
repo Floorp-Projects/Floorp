@@ -91,7 +91,7 @@ class ManagedTree extends _react.Component {
       focused
     } = this.props;
 
-    if (nextProps.listItems && nextProps.listItems != listItems && nextProps.listItems.length) {
+    if (nextProps.listItems && nextProps.listItems != listItems) {
       this.expandListItems(nextProps.listItems);
     }
 

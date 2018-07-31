@@ -24,14 +24,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * File Search reducer
  * @module reducers/fileSearch
  */
+const emptySearchResults = Object.freeze({
+  matches: Object.freeze([]),
+  matchIndex: -1,
+  index: -1,
+  count: 0
+});
 const createFileSearchState = exports.createFileSearchState = (0, _makeRecord2.default)({
   query: "",
-  searchResults: {
-    matches: [],
-    matchIndex: -1,
-    index: -1,
-    count: 0
-  },
+  searchResults: emptySearchResults,
   modifiers: (0, _makeRecord2.default)({
     caseSensitive: _prefs.prefs.fileSearchCaseSensitive,
     wholeWord: _prefs.prefs.fileSearchWholeWord,
@@ -68,6 +69,11 @@ function update(state = createFileSearchState(), action) {
         }
 
         return state.setIn(["modifiers", action.modifier], actionVal);
+      }
+
+    case "NAVIGATE":
+      {
+        return state.set("query", "").set("searchResults", emptySearchResults);
       }
 
     default:

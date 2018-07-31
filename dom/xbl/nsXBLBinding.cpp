@@ -739,7 +739,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
         // that was...
 
         // Find the right prototype.
-        JSAutoRealmAllowCCW ar(cx, scriptObject);
+        JSAutoRealm ar(cx, scriptObject);
 
         JS::Rooted<JSObject*> base(cx, scriptObject);
         JS::Rooted<JSObject*> proto(cx);
@@ -898,7 +898,7 @@ GetOrCreateMapEntryForPrototype(JSContext *cx, JS::Handle<JSObject*> proto)
   MOZ_ASSERT(JS_IsGlobalObject(scope));
 
   JS::Rooted<JSObject*> wrappedProto(cx, proto);
-  JSAutoRealmAllowCCW ar(cx, scope);
+  JSAutoRealm ar(cx, scope);
   if (!JS_WrapObject(cx, &wrappedProto)) {
     return nullptr;
   }
@@ -971,7 +971,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   JS::Rooted<JSObject*> parent_proto(cx);
   {
     JS::RootedObject wrapped(cx, obj);
-    JSAutoRealmAllowCCW ar(cx, xblScope);
+    JSAutoRealm ar(cx, xblScope);
     if (!JS_WrapObject(cx, &wrapped)) {
       return NS_ERROR_FAILURE;
     }
@@ -990,7 +990,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   if (parent_proto) {
     holder = GetOrCreateMapEntryForPrototype(cx, parent_proto);
   } else {
-    JSAutoRealmAllowCCW innerAR(cx, xblScope);
+    JSAutoRealm innerAR(cx, xblScope);
     holder = GetOrCreateClassObjectMap(cx, xblScope, "__ContentClassObjectMap__");
   }
   if (NS_WARN_IF(!holder)) {
@@ -1017,7 +1017,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
 
     // We need to create the prototype. First, enter the realm where it's
     // going to live, and create it.
-    JSAutoRealmAllowCCW ar2(cx, global);
+    JSAutoRealm ar2(cx, global);
     proto = JS_NewObjectWithGivenProto(cx, &gPrototypeJSClass, parent_proto);
     if (!proto) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1048,7 +1048,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
 
   // Whew. We have the proto. Wrap it back into the realm of |obj|,
   // splice it in, and return it.
-  JSAutoRealmAllowCCW ar4(cx, obj);
+  JSAutoRealm ar4(cx, obj);
   if (!JS_WrapObject(cx, &proto) || !JS_SetPrototype(cx, obj, proto)) {
     return NS_ERROR_FAILURE;
   }
@@ -1127,7 +1127,7 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::Handle<jsid> aId,
 
   // Enter the xbl scope and invoke the internal version.
   {
-    JSAutoRealmAllowCCW ar(aCx, xblScope);
+    JSAutoRealm ar(aCx, xblScope);
     JS::Rooted<jsid> id(aCx, aId);
     if (!LookupMemberInternal(aCx, name, id, aDesc, xblScope)) {
       return false;

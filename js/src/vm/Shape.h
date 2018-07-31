@@ -668,17 +668,25 @@ HashId(jsid id)
     return mozilla::HashGeneric(JSID_BITS(id));
 }
 
+} // namespace js
+
+namespace mozilla {
+
 template <>
 struct DefaultHasher<jsid>
 {
     typedef jsid Lookup;
     static HashNumber hash(jsid id) {
-        return HashId(id);
+        return js::HashId(id);
     }
     static bool match(jsid id1, jsid id2) {
         return id1 == id2;
     }
 };
+
+} // namespace mozilla
+
+namespace js {
 
 using BaseShapeSet = JS::WeakCache<JS::GCHashSet<ReadBarriered<UnownedBaseShape*>,
                                                  StackBaseShape,
