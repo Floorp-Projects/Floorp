@@ -10,72 +10,46 @@
 const ACTORS_URL = CHROME_URL + "testactors.js";
 const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
-var gClient;
+add_task(async function() {
+  await addTab(TAB_URL);
 
-function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  DebuggerServer.registerModule(ACTORS_URL, {
+  await registerActorInContentProcess(ACTORS_URL, {
     prefix: "testOne",
     constructor: "TestActor1",
     type: { target: true },
   });
 
-  let transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser",
-      "Root actor should identify itself as a browser.");
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
+  const [type] = await client.connect();
+  is(type, "browser",
+    "Root actor should identify itself as a browser.");
 
-    addTab(TAB_URL)
-      .then(() => attachTargetActorForUrl(gClient, TAB_URL))
-      .then(testTargetScopedActor)
-      .then(closeTab)
-      .then(() => gClient.close())
-      .then(finish)
-      .catch(aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-  });
-}
+  const [grip] = await attachTargetActorForUrl(client, TAB_URL);
+  await testTargetScopedActor(client, grip);
+  await closeTab(client, grip);
+  await client.close();
+});
 
-function testTargetScopedActor([aGrip, aResponse]) {
-  let deferred = promise.defer();
-
-  ok(aGrip.testOneActor,
+async function testTargetScopedActor(client, grip) {
+  ok(grip.testOneActor,
     "Found the test target-scoped actor.");
-  ok(aGrip.testOneActor.includes("testOne"),
+  ok(grip.testOneActor.includes("testOne"),
     "testOneActor's actorPrefix should be used.");
 
-  gClient.request({ to: aGrip.testOneActor, type: "ping" }, aResponse => {
-    is(aResponse.pong, "pong",
-      "Actor should respond to requests.");
-
-    deferred.resolve(aResponse.actor);
-  });
-
-  return deferred.promise;
+  const response = await client.request({ to: grip.testOneActor, type: "ping" });
+  is(response.pong, "pong",
+     "Actor should respond to requests.");
 }
 
-function closeTab(aTestActor) {
-  return removeTab(gBrowser.selectedTab).then(() => {
-    let deferred = promise.defer();
-
-    try {
-      gClient.request({ to: aTestActor, type: "ping" }, aResponse => {
-        ok(false, "testTargetScopedActor1 didn't go away with the tab.");
-        deferred.reject(aResponse);
-      });
-    } catch (e) {
-      is(e.message, "'ping' request packet has no destination.", "testOnActor went away.");
-      deferred.resolve();
-    }
-
-    return deferred.promise;
-  });
+async function closeTab(client, grip) {
+  await removeTab(gBrowser.selectedTab);
+  await Assert.rejects(
+    client.request({ to: grip.testOneActor, type: "ping" }),
+    err => err.message === `'ping' active request packet to '${grip.testOneActor}' ` +
+                           `can't be sent as the connection just closed.`,
+    "testOneActor went away.");
 }
-
-registerCleanupFunction(function () {
-  gClient = null;
-});
