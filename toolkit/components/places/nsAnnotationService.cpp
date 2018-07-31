@@ -380,8 +380,6 @@ nsAnnotationService::SetPageAnnotationString(nsIURI* aURI,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnPageAnnotationSet(aURI, aName));
-
   return NS_OK;
 }
 
@@ -453,8 +451,6 @@ nsAnnotationService::SetPageAnnotationInt32(nsIURI* aURI,
   nsresult rv = SetAnnotationInt32Internal(aURI, 0, nullptr, aName, aValue,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  NOTIFY_ANNOS_OBSERVERS(OnPageAnnotationSet(aURI, aName));
 
   return NS_OK;
 }
@@ -528,8 +524,6 @@ nsAnnotationService::SetPageAnnotationInt64(nsIURI* aURI,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnPageAnnotationSet(aURI, aName));
-
   return NS_OK;
 }
 
@@ -601,8 +595,6 @@ nsAnnotationService::SetPageAnnotationDouble(nsIURI* aURI,
   nsresult rv = SetAnnotationDoubleInternal(aURI, 0, nullptr, aName, aValue,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  NOTIFY_ANNOS_OBSERVERS(OnPageAnnotationSet(aURI, aName));
 
   return NS_OK;
 }
@@ -1205,8 +1197,6 @@ nsAnnotationService::RemovePageAnnotation(nsIURI* aURI,
 
   nsresult rv = RemoveAnnotationInternal(aURI, 0, nullptr, aName);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  NOTIFY_ANNOS_OBSERVERS(OnPageAnnotationRemoved(aURI, aName));
 
   return NS_OK;
 }

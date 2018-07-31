@@ -9,8 +9,6 @@ add_task(async function() {
         }
       },
       onItemAnnotationRemoved() {},
-      onPageAnnotationSet() {},
-      onPageAnnotationRemoved() {},
       QueryInterface: ChromeUtils.generateQI([
         Ci.nsIAnnotationObserver
       ]),

@@ -28,8 +28,6 @@ interface nsIAnnotationObserver : nsISupports
      * Called when an annotation value is set. It could be a new annotation,
      * or it could be a new value for an existing annotation.
      */
-    void onPageAnnotationSet(in nsIURI aPage,
-                             in AUTF8String aName);
     void onItemAnnotationSet(in long long aItemId,
                              in AUTF8String aName,
                              in unsigned short aSource,
@@ -40,8 +38,6 @@ interface nsIAnnotationObserver : nsISupports
      * annotations for the given URI have been deleted. This is not called when
      * annotations are expired (normally happens when the app exits).
      */
-    void onPageAnnotationRemoved(in nsIURI aURI,
-                                 in AUTF8String aName);
     void onItemAnnotationRemoved(in long long aItemId,
                                  in AUTF8String aName,
                                  in unsigned short aSource);
