@@ -1208,7 +1208,7 @@ public:
       : mCur(aCur)
       , mEnd(aEnd)
 #ifdef DEBUG
-      , mTable(&aTable)
+      , mTable(aTable)
       , mMutationCount(aTable.mMutationCount)
       , mGeneration(aTable.generation())
       , mValidEntry(true)
@@ -1222,30 +1222,18 @@ public:
     Entry* mCur;
     Entry* mEnd;
 #ifdef DEBUG
-    const HashTable* mTable;
+    const HashTable& mTable;
     uint64_t mMutationCount;
     Generation mGeneration;
     bool mValidEntry;
 #endif
 
   public:
-    Range()
-      : mCur(nullptr)
-      , mEnd(nullptr)
-#ifdef DEBUG
-      , mTable(nullptr)
-      , mMutationCount(0)
-      , mGeneration(0)
-      , mValidEntry(false)
-#endif
-    {
-    }
-
     bool empty() const
     {
 #ifdef DEBUG
-      MOZ_ASSERT(mGeneration == mTable->generation());
-      MOZ_ASSERT(mMutationCount == mTable->mMutationCount);
+      MOZ_ASSERT(mGeneration == mTable.generation());
+      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
 #endif
       return mCur == mEnd;
     }
@@ -1255,8 +1243,8 @@ public:
       MOZ_ASSERT(!empty());
 #ifdef DEBUG
       MOZ_ASSERT(mValidEntry);
-      MOZ_ASSERT(mGeneration == mTable->generation());
-      MOZ_ASSERT(mMutationCount == mTable->mMutationCount);
+      MOZ_ASSERT(mGeneration == mTable.generation());
+      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
 #endif
       return mCur->get();
     }
@@ -1265,8 +1253,8 @@ public:
     {
       MOZ_ASSERT(!empty());
 #ifdef DEBUG
-      MOZ_ASSERT(mGeneration == mTable->generation());
-      MOZ_ASSERT(mMutationCount == mTable->mMutationCount);
+      MOZ_ASSERT(mGeneration == mTable.generation());
+      MOZ_ASSERT(mMutationCount == mTable.mMutationCount);
 #endif
       while (++mCur < mEnd && !mCur->isLive()) {
         continue;
@@ -1338,8 +1326,8 @@ public:
       MOZ_ASSERT(!this->empty());
 #ifdef DEBUG
       MOZ_ASSERT(this->mValidEntry);
-      MOZ_ASSERT(this->mGeneration == this->Range::mTable->generation());
-      MOZ_ASSERT(this->mMutationCount == this->Range::mTable->mMutationCount);
+      MOZ_ASSERT(this->mGeneration == this->Range::mTable.generation());
+      MOZ_ASSERT(this->mMutationCount == this->Range::mTable.mMutationCount);
 #endif
       return this->mCur->getMutable();
     }
