@@ -264,8 +264,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementRegistry)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CustomElementRegistry)
-  for (ConstructorMap::Enum iter(tmp->mConstructors); !iter.empty(); iter.popFront()) {
-    aCallbacks.Trace(&iter.front().mutableKey(),
+  for (auto iter = tmp->mConstructors.iter(); !iter.done(); iter.next()) {
+    aCallbacks.Trace(&iter.get().mutableKey(),
                      "mConstructors key",
                      aClosure);
   }
