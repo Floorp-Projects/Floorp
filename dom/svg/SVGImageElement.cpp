@@ -187,16 +187,13 @@ SVGImageElement::MaybeLoadSVGImage()
 
 nsresult
 SVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                            nsIContent* aBindingParent,
-                            bool aCompileEventHandlers)
+                            nsIContent* aBindingParent)
 {
   nsresult rv = SVGImageElementBase::BindToTree(aDocument, aParent,
-                                                aBindingParent,
-                                                aCompileEventHandlers);
+                                                aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
-                                    aCompileEventHandlers);
+  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
 
   if (mStringAttributes[HREF].IsExplicitlySet() ||
       mStringAttributes[XLINK_HREF].IsExplicitlySet()) {

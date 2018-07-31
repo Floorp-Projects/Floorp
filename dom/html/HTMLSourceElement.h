@@ -36,8 +36,7 @@ public:
   // Override BindToTree() so that we can trigger a load when we add a
   // child source element.
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
+                              nsIContent* aBindingParent) override;
 
   // If this element's media attr matches for its owner document.  Returns true
   // if no media attr was set.
