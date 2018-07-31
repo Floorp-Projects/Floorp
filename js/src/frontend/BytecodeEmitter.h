@@ -688,7 +688,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitLexicalScope(ParseNode* pn);
     MOZ_MUST_USE bool emitLexicalScopeBody(ParseNode* body,
                                            EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
-    MOZ_NEVER_INLINE MOZ_MUST_USE bool emitSwitch(ParseNode* pn);
+    MOZ_NEVER_INLINE MOZ_MUST_USE bool emitSwitch(SwitchStatement* pn);
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitTry(ParseNode* pn);
 
     enum DestructuringFlavor {

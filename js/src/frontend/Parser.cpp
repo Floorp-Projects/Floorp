@@ -6765,7 +6765,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
 
     handler.setEndPosition(caseList, pos().end);
 
-    return handler.newSwitchStatement(begin, discriminant, caseList);
+    return handler.newSwitchStatement(begin, discriminant, caseList, seenDefault);
 }
 
 template <class ParseHandler, typename CharT>
