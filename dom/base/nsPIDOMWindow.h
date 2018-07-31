@@ -280,6 +280,16 @@ public:
   void Suspend();
   void Resume();
 
+  // Calling Freeze() on a window will automatically Suspend() it.  In
+  // addition, the window and its children are further treated as no longer
+  // suitable for interaction with the user.  For example, it may be marked
+  // non-visible, cannot be focused, etc.  All worker threads are also frozen
+  // bringing them to a complete stop.  A window can have Freeze() called
+  // multiple times and will only thaw after a matching number of Thaw()
+  // calls.
+  void Freeze();
+  void Thaw();
+
   // Apply the parent window's suspend, freeze, and modal state to the current
   // window.
   void SyncStateFromParentWindow();
@@ -331,6 +341,9 @@ public:
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
+  RefPtr<mozilla::dom::ServiceWorker>
+  GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor);
+
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
   void NoteDOMContentLoaded();
@@ -345,6 +358,12 @@ public:
   virtual nsPIDOMWindowOuter* GetScriptableTop() = 0;
   virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
+
+  /**
+   * Behavies identically to GetScriptableParent extept that it returns null
+   * if GetScriptableParent would return this window.
+   */
+  virtual nsPIDOMWindowOuter* GetScriptableParentOrNull() = 0;
 
   mozilla::dom::EventTarget* GetChromeEventHandler() const
   {
@@ -843,7 +862,7 @@ public:
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
   /**
-   * Behaves identically to GetScriptableParent except that it returns null
+   * Behavies identically to GetScriptableParent extept that it returns null
    * if GetScriptableParent would return this window.
    */
   virtual nsPIDOMWindowOuter* GetScriptableParentOrNull() = 0;
@@ -872,11 +891,14 @@ public:
     return mParentTarget;
   }
 
+  virtual void MaybeUpdateTouchState() {}
+
   nsIDocument* GetExtantDoc() const
   {
     return mDoc;
   }
   nsIURI* GetDocumentURI() const;
+  nsIURI* GetDocBaseURI() const;
 
   nsIDocument* GetDoc()
   {
@@ -1175,6 +1197,7 @@ protected:
   nsCOMPtr<nsIDocument> mDoc; // strong
   // Cache the URI when mDoc is cleared.
   nsCOMPtr<nsIURI> mDocumentURI; // strong
+  nsCOMPtr<nsIURI> mDocBaseURI; // strong
 
   nsCOMPtr<mozilla::dom::EventTarget> mParentTarget; // strong
 
