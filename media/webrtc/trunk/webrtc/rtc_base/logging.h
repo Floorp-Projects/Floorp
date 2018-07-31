@@ -54,7 +54,7 @@
 #include <utility>
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-#include <CoreServices/CoreServices.h>
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #include "rtc_base/basictypes.h"
