@@ -300,6 +300,8 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       this.dataset[shippingType + "AddressTitleEdit"];
     let addressPickerLabel = this._shippingAddressPicker.dataset[shippingType + "AddressLabel"];
     this._shippingAddressPicker.setAttribute("label", addressPickerLabel);
+    let optionPickerLabel = this._shippingOptionPicker.dataset[shippingType + "OptionsLabel"];
+    this._shippingOptionPicker.setAttribute("label", optionPickerLabel);
 
     let totalItem = paymentRequest.getTotalItem(state);
     let totalAmountEl = this.querySelector("#total > currency-amount");
@@ -311,7 +313,13 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     this._header.hidden = !state.page.onboardingWizard && state.page.id != "payment-summary";
 
     this._orderDetailsOverlay.hidden = !state.orderDetailsShowing;
-    this._errorText.textContent = paymentDetails.error;
+    let genericError = "";
+    if (this._shippingAddressPicker.value &&
+        (!request.paymentDetails.shippingOptions ||
+         !request.paymentDetails.shippingOptions.length)) {
+      genericError = this._errorText.dataset[shippingType + "GenericError"];
+    }
+    this._errorText.textContent = paymentDetails.error || genericError;
 
     let paymentOptions = request.paymentOptions;
     for (let element of this._shippingRelatedEls) {
