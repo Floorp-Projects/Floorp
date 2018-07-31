@@ -70,6 +70,8 @@
 // Maximum number of slots for any descriptor
 #define JS_DESCR_SLOTS                   13
 
+#define JS_DESCR_FLAG_ALLOW_CONSTRUCT    1 // Allow structure to be constructed
+
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer TypeRepresentation::Scalar etc, which allows you to
 // write a switch which will receive a warning if you omit a case.
