@@ -46,6 +46,10 @@ void* AllocateMemoryTryAddress(void* aAddress, size_t aSize, MemoryKind aKind);
 // kind of memory allocation that was performed.
 void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize, MemoryKind aKind);
 
+// Exclude a region of memory from snapshots, before the first checkpoint has
+// been reached.
+void AddInitialUntrackedMemoryRegion(uint8_t* aBase, size_t aSize);
+
 // Initialize the memory snapshots system.
 void InitializeMemorySnapshots();
 

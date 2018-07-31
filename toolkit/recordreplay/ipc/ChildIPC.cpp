@@ -231,6 +231,11 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
 
   gGraphicsShmem = (void*) address;
 
+  // The graphics shared memory contents are excluded from snapshots. We do not
+  // want checkpoint restores in this child to interfere with drawing being
+  // performed by another child.
+  AddInitialUntrackedMemoryRegion((uint8_t*) gGraphicsShmem, parent::GraphicsMemorySize);
+
   pt.reset();
 
   // We are ready to receive initialization messages from the middleman, pause
