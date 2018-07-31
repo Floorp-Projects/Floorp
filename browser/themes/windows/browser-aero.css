@@ -173,7 +173,7 @@
       }
 
       @media (-moz-windows-default-theme) {
-        #main-menubar > menu {
+        #main-menubar > menu[_moz-menuactive="true"] {
           color: inherit;
         }
 
