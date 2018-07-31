@@ -54,3 +54,6 @@ if CONFIG['NECKO_WIFI_DBUS']:
     CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

@@ -17,3 +17,6 @@ if CONFIG['ENABLE_TESTS'] and CONFIG['CPU_ARCH'] == 'x86_64' and CONFIG['OS_ARCH
         WIN32_EXE_LDFLAGS += ['-municode']
 
 NO_PGO = True
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

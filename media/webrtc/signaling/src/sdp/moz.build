@@ -61,3 +61,6 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['ENABLE_CLANG_PLUGIN'] and CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

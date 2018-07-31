@@ -58,3 +58,6 @@ NO_PGO = True
 # Temporary workaround for an issue in upstream breakpad
 if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CXXFLAGS += ['-wd4334']
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497
