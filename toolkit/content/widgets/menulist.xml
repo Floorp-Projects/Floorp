@@ -29,11 +29,11 @@
       <handler event="popupshowing">
         <![CDATA[
           if (event.target.parentNode == this) {
-            this.menuBoxObject.activeChild = null;
+            this.activeChild = null;
             if (this.selectedItem)
               // Not ready for auto-setting the active child in hierarchies yet.
               // For now, only do this when the outermost menupopup opens.
-              this.menuBoxObject.activeChild = this.mSelectedInternal;
+              this.activeChild = this.mSelectedInternal;
           }
         ]]>
       </handler>
@@ -50,9 +50,9 @@
                event.keyCode == KeyEvent.DOM_VK_BACK_SPACE ||
                event.charCode > 0)) {
             // Moving relative to an item: start from the currently selected item
-            this.menuBoxObject.activeChild = this.mSelectedInternal;
-            if (this.menuBoxObject.handleKeyPress(event)) {
-              this.menuBoxObject.activeChild.doCommand();
+            this.activeChild = this.mSelectedInternal;
+            if (this.handleKeyPress(event)) {
+              this.activeChild.doCommand();
               event.preventDefault();
             }
           }
@@ -64,7 +64,6 @@
       <constructor>
         this.mSelectedInternal = null;
         this.mAttributeObserver = null;
-        this.menuBoxObject = this.boxObject;
         this.setInitialSelection();
       </constructor>
 
@@ -121,8 +120,7 @@
       <property name="description" onset="this.setAttribute('description',val); return val;"
                                    onget="return this.getAttribute('description');"/>
 
-      <property name="open" onset="this.menuBoxObject.openMenu(val);
-                                   return val;"
+      <property name="open" onset="this.openMenu(val); return val;"
                             onget="return this.hasAttribute('open');"/>
 
       <property name="itemCount" readonly="true"

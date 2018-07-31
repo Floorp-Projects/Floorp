@@ -8,8 +8,10 @@ add_task(async function() {
     content.history.pushState({}, "2", "2.html");
   });
 
-  var backButton = document.getElementById("back-button");
-  var rect = backButton.getBoundingClientRect();
+  await new Promise(resolve => SessionStore.getSessionHistory(gBrowser.selectedTab, resolve));
+
+  let backButton = document.getElementById("back-button");
+  let rect = backButton.getBoundingClientRect();
 
   info("waiting for the history menu to open");
 

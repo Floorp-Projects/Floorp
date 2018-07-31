@@ -432,7 +432,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
         // may have been removed from the selected item. Since that's normally only
         // set for the initially selected on popupshowing for the menulist, and we
         // don't want to close and re-open the popup, we manually set it here.
-        menulist.menuBoxObject.activeChild = item;
+        menulist.activeChild = item;
       }
 
       item.setAttribute("value", option.index);
@@ -471,7 +471,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
           searchbox.blur();
           if (searchbox.nextElementSibling.localName == "menuitem" &&
               !searchbox.nextElementSibling.hidden) {
-            menulist.menuBoxObject.activeChild = searchbox.nextElementSibling;
+            menulist.activeChild = searchbox.nextElementSibling;
           } else {
             var currentOption = searchbox.nextElementSibling;
             while (currentOption && (currentOption.localName != "menuitem" ||
@@ -479,7 +479,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
               currentOption = currentOption.nextElementSibling;
             }
             if (currentOption) {
-              menulist.menuBoxObject.activeChild = currentOption;
+              menulist.activeChild = currentOption;
             } else {
               searchbox.focus();
             }
@@ -556,7 +556,7 @@ function onSearchInput() {
 function onSearchFocus() {
   let searchObj = this;
   let menupopup = searchObj.parentElement;
-  menupopup.parentElement.menuBoxObject.activeChild = null;
+  menupopup.parentElement.activeChild = null;
   menupopup.setAttribute("ignorekeys", "true");
   currentBrowser.messageManager.sendAsyncMessage("Forms:SearchFocused", {});
 }
