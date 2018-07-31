@@ -206,7 +206,7 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
       }
     }
 
-    paramType::EnvType env;
+    typename paramType::EnvType env;
 
     mozilla::mscom::ProxyStream proxyStream(_IID, buf.get(), length, &env);
     if (!proxyStream.IsValid()) {
