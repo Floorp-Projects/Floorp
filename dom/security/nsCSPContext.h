@@ -10,7 +10,6 @@
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "mozilla/StaticPrefs.h"
-#include "nsDataHashtable.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIClassInfo.h"
@@ -172,7 +171,6 @@ class nsCSPContext : public nsIContentSecurityPolicy
     uint64_t                                   mInnerWindowID; // used for web console logging
     nsTArray<nsCSPPolicy*>                     mPolicies;
     nsCOMPtr<nsIURI>                           mSelfURI;
-    nsDataHashtable<nsCStringHashKey, int16_t> mShouldLoadCache;
     nsCOMPtr<nsILoadGroup>                     mCallingChannelLoadGroup;
     nsWeakPtr                                  mLoadingContext;
     // The CSP hangs off the principal, so let's store a raw pointer of the principal

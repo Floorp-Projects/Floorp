@@ -42,6 +42,10 @@ job-defaults:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
+                jamun:
+                    - "browser/config/version.txt"
+                    - "browser/config/version_display.txt"
+                    - "config/milestone.txt"
         push:
             by-project:
                 mozilla-beta: true
@@ -50,6 +54,7 @@ job-defaults:
                 mozilla-esr60: true
                 maple: true
                 birch: true
+                jamun: true
                 default: false
 
 jobs:

@@ -21,6 +21,7 @@ RELEASE_PROJECTS = {
     'mozilla-esr60',
     'comm-central',
     'comm-beta',
+    'comm-esr60',
 }
 
 RELEASE_PROMOTION_PROJECTS = {

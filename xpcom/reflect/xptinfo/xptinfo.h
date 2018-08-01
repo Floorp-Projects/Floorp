@@ -18,6 +18,7 @@
 #include "mozilla/Assertions.h"
 #include "js/Value.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 // Forward Declarations
 namespace mozilla {
@@ -152,6 +153,14 @@ static_assert(sizeof(nsXPTInterfaceInfo) == 28, "wrong size?");
  */
 enum nsXPTTypeTag : uint8_t
 {
+  // Arithmetic (POD) Types
+  //  - Do not require cleanup,
+  //  - All bit patterns are valid,
+  //  - Outparams may be uninitialized by caller,
+  //  - Directly supported in xptcall.
+  //
+  // NOTE: The name 'Arithmetic' comes from Harbison/Steele. Despite being a tad
+  // unclear, it is used frequently in xptcall, so is unlikely to be changed.
   TD_INT8              = 0,
   TD_INT16             = 1,
   TD_INT32             = 2,
@@ -165,23 +174,41 @@ enum nsXPTTypeTag : uint8_t
   TD_BOOL              = 10,
   TD_CHAR              = 11,
   TD_WCHAR             = 12,
+  _TD_LAST_ARITHMETIC  = TD_WCHAR,
+
+  // Pointer Types
+  //  - Require cleanup unless NULL,
+  //  - All-zeros (NULL) bit pattern is valid,
+  //  - Outparams may be uninitialized by caller,
+  //  - Supported in xptcall as raw pointer.
   TD_VOID              = 13,
   TD_PNSIID            = 14,
-  TD_DOMSTRING         = 15,
-  TD_PSTRING           = 16,
-  TD_PWSTRING          = 17,
-  TD_INTERFACE_TYPE    = 18,
-  TD_INTERFACE_IS_TYPE = 19,
-  TD_ARRAY             = 20,
-  TD_PSTRING_SIZE_IS   = 21,
-  TD_PWSTRING_SIZE_IS  = 22,
-  TD_UTF8STRING        = 23,
-  TD_CSTRING           = 24,
-  TD_ASTRING           = 25,
-  TD_JSVAL             = 26,
-  TD_DOMOBJECT         = 27,
-  TD_PROMISE           = 28
+  TD_PSTRING           = 15,
+  TD_PWSTRING          = 16,
+  TD_INTERFACE_TYPE    = 17,
+  TD_INTERFACE_IS_TYPE = 18,
+  TD_LEGACY_ARRAY      = 19,
+  TD_PSTRING_SIZE_IS   = 20,
+  TD_PWSTRING_SIZE_IS  = 21,
+  TD_DOMOBJECT         = 22,
+  TD_PROMISE           = 23,
+  _TD_LAST_POINTER     = TD_PROMISE,
+
+  // Complex Types
+  //  - Require cleanup,
+  //  - Always passed indirectly,
+  //  - Outparams must be initialized by caller,
+  //  - Supported in xptcall due to indirection.
+  TD_DOMSTRING         = 24,
+  TD_UTF8STRING        = 25,
+  TD_CSTRING           = 26,
+  TD_ASTRING           = 27,
+  TD_JSVAL             = 28,
+  TD_ARRAY             = 29,
+  _TD_LAST_COMPLEX     = TD_ARRAY
 };
+
+static_assert(_TD_LAST_COMPLEX < 32, "nsXPTTypeTag must fit in 5 bits");
 
 
 /*
@@ -193,27 +220,34 @@ enum nsXPTTypeTag : uint8_t
  */
 struct nsXPTType
 {
-  // NOTE: This is uint8_t instead of nsXPTTypeTag so that it can be compared
-  // with the nsXPTType::* re-exports.
-  uint8_t Tag() const { return mTag; }
+  nsXPTTypeTag Tag() const { return static_cast<nsXPTTypeTag>(mTag); }
 
+  // The index in the function argument list which should be used when
+  // determining the iid_is or size_is properties of this dependent type.
   uint8_t ArgNum() const {
     MOZ_ASSERT(Tag() == TD_INTERFACE_IS_TYPE ||
                Tag() == TD_PSTRING_SIZE_IS ||
                Tag() == TD_PWSTRING_SIZE_IS ||
-               Tag() == TD_ARRAY);
+               Tag() == TD_LEGACY_ARRAY);
     return mData1;
   }
 
-  const nsXPTType& ArrayElementType() const {
-    MOZ_ASSERT(Tag() == TD_ARRAY);
-    return xpt::detail::GetType(mData2);
-  }
-
 private:
+  // Helper for reading 16-bit data values split between mData1 and mData2.
   uint16_t Data16() const { return ((uint16_t)mData1 << 8) | mData2; }
 
 public:
+  // Get the type of the element in the current array or sequence. Arrays only
+  // fit 8 bits of type data, while sequences support up to 16 bits of type data
+  // due to not needing to store an ArgNum.
+  const nsXPTType& ArrayElementType() const {
+    if (Tag() == TD_LEGACY_ARRAY) {
+      return xpt::detail::GetType(mData2);
+    }
+    MOZ_ASSERT(Tag() == TD_ARRAY);
+    return xpt::detail::GetType(Data16());
+  }
+
   // We store the 16-bit iface value as two 8-bit values in order to
   // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
   // reduces its size and also the size of XPTParamDescriptor.
@@ -227,41 +261,42 @@ public:
     return xpt::detail::GetDOMObjectInfo(Data16());
   }
 
-  // 'Arithmetic' here roughly means that the value is self-contained and
-  // doesn't depend on anything else in memory (ie: not a pointer, not an
-  // XPCOM object, not a jsval, etc).
-  //
-  // Supposedly this terminology comes from Harbison/Steele, but it's still
-  // a rather crappy name. We'd change it if it wasn't used all over the
-  // place in xptcall. :-(
-  bool IsArithmetic() const { return Tag() <= TD_WCHAR; }
+  // See the comments in nsXPTTypeTag for an explanation as to what each of
+  // these categories mean.
+  bool IsArithmetic() const { return Tag() <= _TD_LAST_ARITHMETIC; }
+  bool IsPointer() const { return !IsArithmetic() && Tag() <= _TD_LAST_POINTER; }
+  bool IsComplex() const { return Tag() > _TD_LAST_POINTER; }
 
   bool IsInterfacePointer() const {
     return Tag() == TD_INTERFACE_TYPE || Tag() == TD_INTERFACE_IS_TYPE;
   }
 
-  bool IsArray() const { return Tag() == TD_ARRAY; }
-
   bool IsDependent() const {
-    return Tag() == TD_INTERFACE_IS_TYPE || Tag() == TD_ARRAY ||
+    return (Tag() == TD_ARRAY && InnermostType().IsDependent()) ||
+           Tag() == TD_INTERFACE_IS_TYPE || Tag() == TD_LEGACY_ARRAY ||
            Tag() == TD_PSTRING_SIZE_IS || Tag() == TD_PWSTRING_SIZE_IS;
   }
 
   // Unwrap a nested type to its innermost value (e.g. through arrays).
   const nsXPTType& InnermostType() const {
-    if (Tag() == TD_ARRAY) {
+    if (Tag() == TD_LEGACY_ARRAY || Tag() == TD_ARRAY) {
       return ArrayElementType().InnermostType();
     }
     return *this;
   }
 
-  // Helper methods for working with the type's native representation.
+  // In-memory size of native type in bytes.
   inline size_t Stride() const;
-  inline bool HasPointerRepr() const;
 
   // Offset the given base pointer to reference the element at the given index.
   void* ElementPtr(const void* aBase, uint32_t aIndex) const {
     return (char*)aBase + (aIndex * Stride());
+  }
+
+  // Zero out a native value of the given type. The type must not be 'complex'.
+  void ZeroValue(void* aValue) const {
+    MOZ_RELEASE_ASSERT(!IsComplex(), "Cannot zero a complex value");
+    memset(aValue, 0, Stride());
   }
 
   // Indexes into the extra types array of a small set of known types.
@@ -289,7 +324,7 @@ public:
   // Helper methods for fabricating nsXPTType values used by xpconnect.
   static nsXPTType MkArrayType(Idx aInner) {
     MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
-    return { TD_ARRAY, false, false, false, 0, (uint8_t)aInner };
+    return { TD_LEGACY_ARRAY, false, false, false, 0, (uint8_t)aInner };
   }
   static const nsXPTType& Get(Idx aInner) {
     MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
@@ -300,42 +335,41 @@ public:
   // nsXPTType backwards compatibility //
   ///////////////////////////////////////
 
-  nsXPTType& operator=(uint8_t aPrefix) { mTag = aPrefix; return *this; }
-  operator uint8_t() const { return TagPart(); };
-  uint8_t TagPart() const { return mTag; };
+  nsXPTType& operator=(nsXPTTypeTag aPrefix) { mTag = aPrefix; return *this; }
+  operator nsXPTTypeTag() const { return Tag(); }
 
-  enum // Re-export TD_ interfaces from nsXPTType
-  {
-    T_I8                = TD_INT8             ,
-    T_I16               = TD_INT16            ,
-    T_I32               = TD_INT32            ,
-    T_I64               = TD_INT64            ,
-    T_U8                = TD_UINT8            ,
-    T_U16               = TD_UINT16           ,
-    T_U32               = TD_UINT32           ,
-    T_U64               = TD_UINT64           ,
-    T_FLOAT             = TD_FLOAT            ,
-    T_DOUBLE            = TD_DOUBLE           ,
-    T_BOOL              = TD_BOOL             ,
-    T_CHAR              = TD_CHAR             ,
-    T_WCHAR             = TD_WCHAR            ,
-    T_VOID              = TD_VOID             ,
-    T_IID               = TD_PNSIID           ,
-    T_DOMSTRING         = TD_DOMSTRING        ,
-    T_CHAR_STR          = TD_PSTRING          ,
-    T_WCHAR_STR         = TD_PWSTRING         ,
-    T_INTERFACE         = TD_INTERFACE_TYPE   ,
-    T_INTERFACE_IS      = TD_INTERFACE_IS_TYPE,
-    T_ARRAY             = TD_ARRAY            ,
-    T_PSTRING_SIZE_IS   = TD_PSTRING_SIZE_IS  ,
-    T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS ,
-    T_UTF8STRING        = TD_UTF8STRING       ,
-    T_CSTRING           = TD_CSTRING          ,
-    T_ASTRING           = TD_ASTRING          ,
-    T_JSVAL             = TD_JSVAL            ,
-    T_DOMOBJECT         = TD_DOMOBJECT        ,
-    T_PROMISE           = TD_PROMISE
-  };
+#define TD_ALIAS_(name_, value_) static constexpr nsXPTTypeTag name_ = value_
+  TD_ALIAS_(T_I8                , TD_INT8             );
+  TD_ALIAS_(T_I16               , TD_INT16            );
+  TD_ALIAS_(T_I32               , TD_INT32            );
+  TD_ALIAS_(T_I64               , TD_INT64            );
+  TD_ALIAS_(T_U8                , TD_UINT8            );
+  TD_ALIAS_(T_U16               , TD_UINT16           );
+  TD_ALIAS_(T_U32               , TD_UINT32           );
+  TD_ALIAS_(T_U64               , TD_UINT64           );
+  TD_ALIAS_(T_FLOAT             , TD_FLOAT            );
+  TD_ALIAS_(T_DOUBLE            , TD_DOUBLE           );
+  TD_ALIAS_(T_BOOL              , TD_BOOL             );
+  TD_ALIAS_(T_CHAR              , TD_CHAR             );
+  TD_ALIAS_(T_WCHAR             , TD_WCHAR            );
+  TD_ALIAS_(T_VOID              , TD_VOID             );
+  TD_ALIAS_(T_IID               , TD_PNSIID           );
+  TD_ALIAS_(T_DOMSTRING         , TD_DOMSTRING        );
+  TD_ALIAS_(T_CHAR_STR          , TD_PSTRING          );
+  TD_ALIAS_(T_WCHAR_STR         , TD_PWSTRING         );
+  TD_ALIAS_(T_INTERFACE         , TD_INTERFACE_TYPE   );
+  TD_ALIAS_(T_INTERFACE_IS      , TD_INTERFACE_IS_TYPE);
+  TD_ALIAS_(T_LEGACY_ARRAY      , TD_LEGACY_ARRAY     );
+  TD_ALIAS_(T_PSTRING_SIZE_IS   , TD_PSTRING_SIZE_IS  );
+  TD_ALIAS_(T_PWSTRING_SIZE_IS  , TD_PWSTRING_SIZE_IS );
+  TD_ALIAS_(T_UTF8STRING        , TD_UTF8STRING       );
+  TD_ALIAS_(T_CSTRING           , TD_CSTRING          );
+  TD_ALIAS_(T_ASTRING           , TD_ASTRING          );
+  TD_ALIAS_(T_JSVAL             , TD_JSVAL            );
+  TD_ALIAS_(T_DOMOBJECT         , TD_DOMOBJECT        );
+  TD_ALIAS_(T_PROMISE           , TD_PROMISE          );
+  TD_ALIAS_(T_ARRAY             , TD_ARRAY            );
+#undef TD_ALIAS_
 
   ////////////////////////////////////////////////////////////////
   // Ensure these fields are in the same order as xptcodegen.py //
@@ -376,15 +410,10 @@ struct nsXPTParamInfo
   const nsXPTType& GetType() const { return Type(); } // XXX remove (backcompat)
 
   // Whether this parameter is passed indirectly on the stack. All out/inout
-  // params are passed indirectly, although some types are passed indirectly
-  // unconditionally.
+  // params are passed indirectly, and complex types are always passed
+  // indirectly.
   bool IsIndirect() const {
-    return IsOut() ||
-      mType.Tag() == TD_JSVAL ||
-      mType.Tag() == TD_ASTRING ||
-      mType.Tag() == TD_DOMSTRING ||
-      mType.Tag() == TD_CSTRING ||
-      mType.Tag() == TD_UTF8STRING;
+    return IsOut() || Type().IsComplex();
   }
 
   ////////////////////////////////////////////////////////////////
@@ -502,6 +531,34 @@ struct nsXPTDOMObjectInfo
 namespace xpt {
 namespace detail {
 
+// The UntypedTArray type allows low-level access from XPConnect to nsTArray
+// internals without static knowledge of the array element type in question.
+class UntypedTArray
+  : public nsTArray_base<nsTArrayFallibleAllocator, nsTArray_CopyWithMemutils>
+{
+public:
+  void* Elements() const {
+    return static_cast<void*>(Hdr() + 1);
+  }
+
+  // Changes the length and capacity to be at least large enough for aTo elements.
+  bool SetLength(const nsXPTType& aEltTy, uint32_t aTo) {
+    if (!EnsureCapacity<nsTArrayFallibleAllocator>(aTo, aEltTy.Stride())) {
+      return false;
+    }
+    mHdr->mLength = aTo;
+    return true;
+  }
+
+  // Free backing memory for the nsTArray object.
+  void Clear() {
+    if (mHdr != EmptyHdr() && !UsesAutoArrayBuffer()) {
+      nsTArrayFallibleAllocator::Free(mHdr);
+    }
+    mHdr = EmptyHdr();
+  }
+};
+
 /**
  * The compressed representation of constants from XPT. Not part of the public
  * interface, as we also need to support Shim interfaces.
@@ -593,39 +650,11 @@ GetString(uint32_t aIndex)
 } // namespace detail
 } // namespace xpt
 
-inline bool
-nsXPTType::HasPointerRepr() const
-{
-  // This method should return `true` if the given type would be represented as
-  // a pointer when not passed indirectly.
-  switch (Tag()) {
-    case TD_VOID:
-    case TD_PNSIID:
-    case TD_PSTRING:
-    case TD_PWSTRING:
-    case TD_INTERFACE_TYPE:
-    case TD_INTERFACE_IS_TYPE:
-    case TD_ARRAY:
-    case TD_PSTRING_SIZE_IS:
-    case TD_PWSTRING_SIZE_IS:
-    case TD_DOMOBJECT:
-    case TD_PROMISE:
-        return true;
-    default:
-        return false;
-  }
-}
-
 inline size_t
 nsXPTType::Stride() const
 {
   // Compute the stride to use when walking an array of the given type.
-  //
-  // NOTE: We cast to nsXPTTypeTag here so we get a warning if a type is missed
-  // in this switch statement. It's important that this method returns a value
-  // for every possible type.
-
-  switch (static_cast<nsXPTTypeTag>(Tag())) {
+  switch (Tag()) {
     case TD_INT8:              return sizeof(int8_t);
     case TD_INT16:             return sizeof(int16_t);
     case TD_INT32:             return sizeof(int32_t);
@@ -639,6 +668,7 @@ nsXPTType::Stride() const
     case TD_BOOL:              return sizeof(bool);
     case TD_CHAR:              return sizeof(char);
     case TD_WCHAR:             return sizeof(char16_t);
+
     case TD_VOID:              return sizeof(void*);
     case TD_PNSIID:            return sizeof(nsIID*);
     case TD_DOMSTRING:         return sizeof(nsString);
@@ -646,15 +676,17 @@ nsXPTType::Stride() const
     case TD_PWSTRING:          return sizeof(char16_t*);
     case TD_INTERFACE_TYPE:    return sizeof(nsISupports*);
     case TD_INTERFACE_IS_TYPE: return sizeof(nsISupports*);
-    case TD_ARRAY:             return sizeof(void*);
+    case TD_LEGACY_ARRAY:      return sizeof(void*);
     case TD_PSTRING_SIZE_IS:   return sizeof(char*);
     case TD_PWSTRING_SIZE_IS:  return sizeof(char16_t*);
+    case TD_DOMOBJECT:         return sizeof(void*);
+    case TD_PROMISE:           return sizeof(void*);
+
     case TD_UTF8STRING:        return sizeof(nsCString);
     case TD_CSTRING:           return sizeof(nsCString);
     case TD_ASTRING:           return sizeof(nsString);
     case TD_JSVAL:             return sizeof(JS::Value);
-    case TD_DOMOBJECT:         return sizeof(void*);
-    case TD_PROMISE:           return sizeof(void*);
+    case TD_ARRAY:             return sizeof(xpt::detail::UntypedTArray);
   }
 
   MOZ_CRASH("Unknown type");

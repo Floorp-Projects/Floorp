@@ -197,7 +197,7 @@ def interfaces(iface):
     interfaces = []
     while iface.base:
         interfaces.append(iface)
-        iface = iface.idl.getName(iface.base, iface.location)
+        iface = iface.idl.getName(xpidl.TypeId(iface.base), iface.location)
     interfaces.append(iface)
     interfaces.reverse()
     return interfaces

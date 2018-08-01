@@ -66,30 +66,6 @@ function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
   });
 }
 
-function promiseHistoryEntryReplacedNonRemote(browser) {
-  let {listeners} = promiseHistoryEntryReplacedNonRemote;
-
-  return new Promise(resolve => {
-    let shistory = browser.webNavigation.sessionHistory.legacySHistory;
-
-    let listener = {
-      OnHistoryReplaceEntry() {
-        shistory.removeSHistoryListener(this);
-        executeSoon(resolve);
-      },
-
-      QueryInterface: ChromeUtils.generateQI([
-        Ci.nsISHistoryListener,
-        Ci.nsISupportsWeakReference
-      ])
-    };
-
-    shistory.addSHistoryListener(listener);
-    listeners.set(browser, listener);
-  });
-}
-promiseHistoryEntryReplacedNonRemote.listeners = new WeakMap();
-
 add_task(async function dont_save_empty_tabs() {
   let {tab, r} = await createTabWithRandomValue("about:blank");
 
@@ -168,8 +144,10 @@ add_task(async function save_worthy_tabs_nonremote_final() {
   await BrowserTestUtils.loadURI(browser, "about:robots");
   ok(!browser.isRemoteBrowser, "browser is not remote anymore");
 
-  // Wait until the new entry replaces about:blank.
-  await promiseHistoryEntryReplacedNonRemote(browser);
+  // Switching remoteness caused a SessionRestore to begin, moving over history
+  // and initiating the load in the target process. Wait for the full restore
+  // and load to complete before trying to close the tab.
+  await promiseTabRestored(tab);
 
   // Remove the tab before the update arrives.
   let promise = promiseRemoveTabAndSessionState(tab);

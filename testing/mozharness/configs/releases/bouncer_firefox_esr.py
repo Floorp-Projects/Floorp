@@ -6,7 +6,8 @@ config = {
         "installer": {
             "product-name": "Firefox-%(version)s",
             "check_uptake": True,
-            "alias": "firefox-esr-latest",
+            # convert to firefox-esr-latest when ESR52 stops
+            "alias": "firefox-esr-next-latest",
             "ssl-only": True,
             "add-locales": True,
             "paths": {
@@ -35,7 +36,8 @@ config = {
         "installer-ssl": {
             "product-name": "Firefox-%(version)s-SSL",
             "check_uptake": True,
-            "alias": "firefox-esr-latest-ssl",
+            # convert to firefox-esr-latest-ssl when ESR52 stops
+            "alias": "firefox-esr-next-latest-ssl",
             "ssl-only": True,
             "add-locales": True,
             "paths": {
