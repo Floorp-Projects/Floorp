@@ -23,6 +23,9 @@ ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingUiEnabled",
                                       "browser.contentblocking.ui.enabled");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled",
+                                      "browser.contentblocking.enabled");
+
 const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 const TRACKING_PROTECTION_KEY = "websites.trackingProtectionMode";
@@ -181,7 +184,9 @@ var gPrivacyPane = {
     function setInputsDisabledState(isControlled) {
       let disabled = isLocked || isControlled;
       if (contentBlockingUiEnabled) {
-        document.getElementById("trackingProtectionMenu").disabled = disabled;
+        // Only enable the TP menu if content blocking is enabled.
+        document.getElementById("trackingProtectionMenu").disabled = disabled ||
+          !contentBlockingEnabled;
       } else {
         document.querySelectorAll("#trackingProtectionRadioGroup > radio")
           .forEach((element) => {
@@ -492,16 +497,45 @@ var gPrivacyPane = {
    * This affects the button to toggle the pref and the disabled state of the dependent controls.
    */
   updateContentBlockingToggle() {
-    let enabled = Services.prefs.getBoolPref("browser.contentblocking.enabled");
-    let onOrOff = enabled ? "on" : "off";
+    let onOrOff = contentBlockingEnabled ? "on" : "off";
     let contentBlockingToggle = document.getElementById("contentBlockingToggle");
     let contentBlockingToggleLabel = document.getElementById("contentBlockingToggleLabel");
 
     document.l10n.setAttributes(contentBlockingToggle,
       "content-blocking-toggle-" + onOrOff);
-    contentBlockingToggle.setAttribute("aria-pressed", enabled);
+    contentBlockingToggle.setAttribute("aria-pressed", contentBlockingEnabled);
     document.l10n.setAttributes(contentBlockingToggleLabel,
       "content-blocking-toggle-label-" + onOrOff);
+
+    this.updateContentBlockingControls();
+  },
+
+  /**
+   * Changes the disabled state of controls that depend on the browser.contentblocking.enabled pref.
+   */
+  updateContentBlockingControls() {
+    let dependentControls = [
+      "#content-blocking-categories-label",
+      ".content-blocking-icon",
+      ".content-blocking-category-menu",
+      ".content-blocking-category-name",
+      "#changeBlockListLink",
+    ];
+
+    for (let selector of dependentControls) {
+      let controls = document.querySelectorAll(selector);
+
+      for (let control of controls) {
+        if (contentBlockingEnabled) {
+          control.removeAttribute("disabled");
+        } else {
+          control.setAttribute("disabled", "true");
+        }
+      }
+    }
+
+    // Need to make sure we account for pref locking/extension overrides when enabling the TP menu.
+    this._updateTrackingProtectionUI();
   },
 
   // TRACKING PROTECTION MODE

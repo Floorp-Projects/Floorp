@@ -146,3 +146,65 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
 
   gBrowser.removeCurrentTab();
 });
+
+// Checks that the granular controls are disabled or enabled depending on the master pref for CB.
+add_task(async function testContentBlockingDependentControls() {
+  SpecialPowers.pushPrefEnv({set: [
+    [CB_UI_PREF, true],
+  ]});
+
+  let dependentControls = [
+    "#content-blocking-categories-label",
+    ".content-blocking-icon",
+    ".content-blocking-category-menu",
+    ".content-blocking-category-name",
+    "#changeBlockListLink",
+  ];
+
+  function checkControlState(doc) {
+    let enabled = Services.prefs.getBoolPref(CB_PREF);
+    for (let selector of dependentControls) {
+      let controls = doc.querySelectorAll(selector);
+      for (let control of controls) {
+        if (enabled) {
+          ok(!control.hasAttribute("disabled"), `${selector} is enabled because CB is on.`);
+        } else {
+          is(control.getAttribute("disabled"), "true", `${selector} is disabled because CB is off`);
+        }
+      }
+    }
+  }
+
+  Services.prefs.setBoolPref(CB_PREF, true);
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
+  checkControlState(doc);
+
+  gBrowser.removeCurrentTab();
+
+  Services.prefs.setBoolPref(CB_PREF, false);
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  doc = gBrowser.contentDocument;
+
+  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
+  checkControlState(doc);
+
+  let contentBlockingToggle = doc.getElementById("contentBlockingToggle");
+  contentBlockingToggle.click();
+
+  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
+  checkControlState(doc);
+
+  contentBlockingToggle.click();
+
+  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
+  checkControlState(doc);
+
+  Services.prefs.clearUserPref("browser.contentblocking.enabled");
+  gBrowser.removeCurrentTab();
+});
+

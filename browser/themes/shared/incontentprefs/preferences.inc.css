@@ -441,6 +441,10 @@ button > hbox > label {
   margin-bottom: 0;
 }
 
+.text-link[disabled="true"] {
+  pointer-events: none;
+}
+
 #showUpdateHistory {
   margin-inline-start: 0;
 }
