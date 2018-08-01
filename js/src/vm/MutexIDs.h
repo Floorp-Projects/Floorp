@@ -18,7 +18,7 @@
   _(TestMutex,                   100) \
   _(ShellContextWatchdog,        100) \
   _(ShellWorkerThreads,          100) \
-  _(ShellArrayBufferMailbox,     100) \
+  _(ShellObjectMailbox,          100) \
                                       \
   _(AtomsTable,                  200) \
                                       \
