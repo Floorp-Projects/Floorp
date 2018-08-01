@@ -7981,6 +7981,10 @@ nsPIDOMWindowInner::MaybeCreateDoc()
 void
 nsGlobalWindowInner::PropagateClearSiteDataReload(const nsACString& aOrigin)
 {
+  if (!IsCurrentInnerWindow()) {
+    return;
+  }
+
   nsIPrincipal* principal = GetPrincipal();
   if (!principal) {
     return;
