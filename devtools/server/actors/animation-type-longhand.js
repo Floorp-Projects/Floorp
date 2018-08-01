@@ -133,6 +133,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "scroll-snap-type-y",
     "shape-rendering",
     "-moz-stack-sizing",
+    "scrollbar-width",
     "stroke-linecap",
     "stroke-linejoin",
     "table-layout",

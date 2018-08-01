@@ -8162,6 +8162,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-width.enabled")) {
+  gCSSProperties["scrollbar-width"] = {
+    domProp: "scrollbarWidth",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "none", "thin" ],
+    invalid_values: [ "1px" ]
+  };
+}
+
 const OVERFLOW_MOZKWS = [
   "-moz-scrollbars-none",
   "-moz-scrollbars-horizontal",

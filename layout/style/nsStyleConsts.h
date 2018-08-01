@@ -178,6 +178,13 @@ enum class StyleImageOrientation : uint8_t {
   FromImage,
 };
 
+// scrollbar-width
+enum class StyleScrollbarWidth : uint8_t {
+  Auto,
+  Thin,
+  None,
+};
+
 // <shape-radius> for <basic-shape>
 enum class StyleShapeRadius : uint8_t {
   ClosestSide,

@@ -3140,6 +3140,7 @@ exports.CSS_PROPERTIES = {
       "text-decoration-color",
       "initial-letter",
       "ime-mode",
+      "scrollbar-width",
       "-moz-user-select",
       "-moz-window-dragging",
       "-moz-force-broken-image-icon",
@@ -9277,6 +9278,10 @@ exports.PREFERENCES = [
   [
     "scroll-behavior",
     "layout.css.scroll-behavior.property-enabled"
+  ],
+  [
+    "scrollbar-width",
+    "layout.css.scrollbar-width.enabled"
   ],
   [
     "text-justify",
