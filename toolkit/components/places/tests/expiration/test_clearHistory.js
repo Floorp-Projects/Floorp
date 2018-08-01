@@ -33,7 +33,10 @@ add_task(async function test_historyClear() {
     // Will persist because it's an EXPIRE_NEVER item anno.
     as.setItemAnnotation(id, "persist", "test", 0, as.EXPIRE_NEVER);
     // Will persist because the page is bookmarked.
-    as.setPageAnnotation(pageURI, "persist", "test", 0, as.EXPIRE_NEVER);
+    await PlacesUtils.history.update({
+      url: pageURI,
+      annotations: new Map([["persist", "test"]]),
+    });
   }
 
   // Add some visited page and annotations for each.
@@ -42,7 +45,10 @@ add_task(async function test_historyClear() {
     // expire as well.
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
     await PlacesTestUtils.addVisits({ uri: pageURI });
-    as.setPageAnnotation(pageURI, "expire", "test", 0, as.EXPIRE_NEVER);
+    await PlacesUtils.history.update({
+      url: pageURI,
+      annotations: new Map([["expire", "test"]]),
+    });
   }
 
   // Expire all visits for the bookmarks

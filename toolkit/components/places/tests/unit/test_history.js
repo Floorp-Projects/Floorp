@@ -117,10 +117,10 @@ add_task(async function test_execute() {
   result.root.containerOpen = false;
 
   // test annotation-based queries
-  var annos = Cc["@mozilla.org/browser/annotation-service;1"].
-              getService(Ci.nsIAnnotationService);
-  annos.setPageAnnotation(uri("http://mozilla.com/"), "testAnno", 0, 0,
-                          Ci.nsIAnnotationService.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: "http://mozilla.com/",
+    annotations: new Map([["testAnno", 123]]),
+  });
   query.annotation = "testAnno";
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;

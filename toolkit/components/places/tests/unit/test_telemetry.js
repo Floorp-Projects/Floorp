@@ -91,8 +91,10 @@ add_task(async function test_execute() {
 
   PlacesUtils.annotations.setItemAnnotation(itemId, "test-anno", content, 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);
-  PlacesUtils.annotations.setPageAnnotation(uri, "test-anno", content, 0,
-                                            PlacesUtils.annotations.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: uri,
+    annotations: new Map([["test-anno", content]]),
+  });
 
   // Request to gather telemetry data.
   Cc["@mozilla.org/places/categoriesStarter;1"]

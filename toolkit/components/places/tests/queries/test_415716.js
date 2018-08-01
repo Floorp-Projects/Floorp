@@ -34,7 +34,7 @@ function modHistoryTypes(val) {
 add_task(async function test_buildTestDatabase() {
   // This is the set of visits that we will match - our min visit is 2 so that's
   // why we add more visits to the same URIs.
-  let testURI = uri("http://www.foo.com");
+  let testURI = "http://www.foo.com";
   let places = [];
 
   for (let i = 0; i < 12; ++i) {
@@ -45,7 +45,7 @@ add_task(async function test_buildTestDatabase() {
     });
   }
 
-  testURI = uri("http://foo.com/youdontseeme.html");
+  testURI = "http://foo.com/youdontseeme.html";
   let testAnnoName = "moz-test-places/testing123";
   let testAnnoVal = "test";
   for (let i = 0; i < 12; ++i) {
@@ -58,8 +58,10 @@ add_task(async function test_buildTestDatabase() {
 
   await PlacesTestUtils.addVisits(places);
 
-  PlacesUtils.annotations.setPageAnnotation(testURI, testAnnoName,
-                                            testAnnoVal, 0, PlacesUtils.annotations.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: testURI,
+    annotations: new Map([[testAnnoName, testAnnoVal]]),
+  });
 });
 
 /**
