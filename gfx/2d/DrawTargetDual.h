@@ -58,7 +58,6 @@ public:
   FORWARD_FUNCTION1(PushClipRect, const Rect &, aRect)
   FORWARD_FUNCTION(PopClip)
   FORWARD_FUNCTION(PopLayer)
-  FORWARD_FUNCTION1(ClearRect, const Rect &, aRect)
 
   virtual void SetTransform(const Matrix &aTransform) override {
     mTransform = aTransform;
@@ -86,6 +85,8 @@ public:
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface, const Point &aDest,
                                      const Color &aColor, const Point &aOffset,
                                      Float aSigma, CompositionOp aOp) override;
+
+  virtual void ClearRect(const Rect &aRect) override;
 
   virtual void CopySurface(SourceSurface *aSurface, const IntRect &aSourceRect,
                            const IntPoint &aDestination) override;
