@@ -117,7 +117,7 @@ public:
 
     FT_Face GetFTFace();
 
-    FT_MM_Var* GetMMVar();
+    FT_MM_Var* GetMMVar() override;
 
     bool HasVariations() override;
     void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes) override;

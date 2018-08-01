@@ -206,6 +206,10 @@ FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
 
 FT2FontEntry::~FT2FontEntry()
 {
+    if (mMMVar) {
+        FT_Done_MM_Var(mFTFace->glyph->library, mMMVar);
+    }
+
     // Do nothing for mFTFace here since FTFontDestroyFunc is called by cairo.
     mFTFace = nullptr;
 
@@ -473,7 +477,7 @@ FT2FontEntry::CairoFontFace(const gfxFontStyle* aStyle)
         AutoTArray<gfxFontVariation,8> settings;
         GetVariationsForStyle(settings, aStyle ? *aStyle : gfxFontStyle());
         AutoTArray<FT_Fixed,8> coords;
-        gfxFT2FontBase::SetupVarCoords(mFTFace, settings, &coords);
+        gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings, &coords);
         // Create a separate FT_Face because we need to apply custom
         // variation settings to it.
         FT_Face ftFace;
@@ -646,16 +650,11 @@ FT2FontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes)
     if (!HasVariations()) {
         return;
     }
-    AutoFTFace face(this);
-    if (!face) {
-        return;
-    }
-    FT_MM_Var* mmVar;
-    if (FT_Err_Ok != (FT_Get_MM_Var(face, &mmVar))) {
+    FT_MM_Var* mmVar = GetMMVar();
+    if (!mmVar) {
         return;
     }
     gfxFT2Utils::GetVariationAxes(mmVar, aAxes);
-    FT_Done_MM_Var(FT_Face(face)->glyph->library, mmVar);
 }
 
 void
@@ -665,16 +664,28 @@ FT2FontEntry::GetVariationInstances(
     if (!HasVariations()) {
         return;
     }
-    AutoFTFace face(this);
-    if (!face) {
-        return;
-    }
-    FT_MM_Var* mmVar;
-    if (FT_Err_Ok != (FT_Get_MM_Var(face, &mmVar))) {
+    FT_MM_Var* mmVar = GetMMVar();
+    if (!mmVar) {
         return;
     }
     gfxFT2Utils::GetVariationInstances(this, mmVar, aInstances);
-    FT_Done_MM_Var(FT_Face(face)->glyph->library, mmVar);
+}
+
+FT_MM_Var*
+FT2FontEntry::GetMMVar()
+{
+    if (mMMVarInitialized) {
+        return mMMVar;
+    }
+    mMMVarInitialized = true;
+    AutoFTFace face(this);
+    if (!face) {
+        return nullptr;
+    }
+    if (FT_Err_Ok != FT_Get_MM_Var(face, &mMMVar)) {
+        mMMVar = nullptr;
+    }
+    return mMMVar;
 }
 
 void

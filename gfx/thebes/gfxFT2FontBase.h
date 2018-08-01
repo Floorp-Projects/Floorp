@@ -37,7 +37,7 @@ public:
 
     virtual FontType GetType() const override { return FONT_TYPE_FT2; }
 
-    static void SetupVarCoords(FT_Face aFace,
+    static void SetupVarCoords(FT_MM_Var* aMMVar,
                                const nsTArray<gfxFontVariation>& aVariations,
                                nsTArray<FT_Fixed>* aCoords);
 
