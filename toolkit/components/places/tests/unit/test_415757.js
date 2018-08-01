@@ -47,19 +47,19 @@ add_task(async function test_execute() {
   var testAnnoDeletedURI = uri("http://www.test.com/1/");
   var testAnnoDeletedName = "foo";
   var testAnnoDeletedValue = "bar";
-  PlacesUtils.annotations.setPageAnnotation(testAnnoDeletedURI,
-                                            testAnnoDeletedName,
-                                            testAnnoDeletedValue, 0,
-                                            PlacesUtils.annotations.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: testAnnoDeletedURI,
+    annotations: new Map([[testAnnoDeletedName, testAnnoDeletedValue]]),
+  });
 
   // set a page annotation on one of the urls that will NOT be removed
   var testAnnoRetainedURI = uri("http://www.test-1.com/");
   var testAnnoRetainedName = "foo";
   var testAnnoRetainedValue = "bar";
-  PlacesUtils.annotations.setPageAnnotation(testAnnoRetainedURI,
-                                            testAnnoRetainedName,
-                                            testAnnoRetainedValue, 0,
-                                            PlacesUtils.annotations.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: testAnnoRetainedURI,
+    annotations: new Map([[testAnnoRetainedName, testAnnoRetainedValue]]),
+  });
 
   // remove pages from www.test.com
   await PlacesUtils.history.removeByFilter({ host: "www.test.com" });
