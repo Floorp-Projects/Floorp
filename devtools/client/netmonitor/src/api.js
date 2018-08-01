@@ -178,6 +178,9 @@ NetMonitorAPI.prototype = {
    */
   async getHarExportConnector() {
     if (this.harExportConnector) {
+      // Ensure waiting for connectBackend completion to prevent "this.connector is null"
+      // exceptions if getHarExportConnector is called twice during its initialization.
+      await this.harExportConnectorReady;
       return this.harExportConnector;
     }
 
@@ -189,7 +192,9 @@ NetMonitorAPI.prototype = {
     };
 
     this.harExportConnector = new Connector();
-    await this.connectBackend(this.harExportConnector, connection);
+    this.harExportConnectorReady =
+      this.connectBackend(this.harExportConnector, connection);
+    await this.harExportConnectorReady;
     return this.harExportConnector;
   },
 };
