@@ -776,16 +776,14 @@ MacroAssembler::nurseryAllocateObject(Register result, Register temp, gc::AllocK
     // No explicit check for nursery.isEnabled() is needed, as the comparison
     // with the nursery's end will always fail in such cases.
     CompileZone* zone = GetJitContext()->realm->zone();
-    int thingSize = int(gc::Arena::thingSize(allocKind));
-    int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
+    size_t thingSize = gc::Arena::thingSize(allocKind);
+    size_t totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
+    MOZ_ASSERT(totalSize < INT32_MAX);
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
-    void *ptrNurseryPosition = zone->addressOfNurseryPosition();
-    loadPtr(AbsoluteAddress(ptrNurseryPosition), result);
-    computeEffectiveAddress(Address(result, totalSize), temp);
-    const void *ptrNurseryCurrentEnd = zone->addressOfNurseryCurrentEnd();
-    branchPtr(Assembler::Below, AbsoluteAddress(ptrNurseryCurrentEnd), temp,
-        fail);
-    storePtr(temp, AbsoluteAddress(ptrNurseryPosition));
+
+    bumpPointerAllocate(result, temp, fail,
+        zone->addressOfNurseryPosition(),
+        zone->addressOfNurseryCurrentEnd(), totalSize, totalSize);
 
     if (nDynamicSlots) {
         computeEffectiveAddress(Address(result, thingSize), temp);
@@ -962,23 +960,39 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     // with the nursery's end will always fail in such cases.
 
     CompileZone* zone = GetJitContext()->realm->zone();
-    int thingSize = int(gc::Arena::thingSize(allocKind));
-    int totalSize = js::Nursery::stringHeaderSize() + thingSize;
+    size_t thingSize = gc::Arena::thingSize(allocKind);
+    size_t totalSize = js::Nursery::stringHeaderSize() + thingSize;
+    MOZ_ASSERT(totalSize < INT32_MAX,
+        "Nursery allocation too large");
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
-    // The nursery position (allocation pointer) and the nursery end are stored
+    bumpPointerAllocate(result, temp, fail,
+        zone->addressOfStringNurseryPosition(),
+        zone->addressOfStringNurseryCurrentEnd(), totalSize, thingSize);
+    storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
+}
+
+void
+MacroAssembler::bumpPointerAllocate(Register result, Register temp, Label* fail,
+    void* posAddr, const void* curEndAddr, uint32_t totalSize, uint32_t size)
+{
+    // The position (allocation pointer) and the end pointer are stored
     // very close to each other -- specifically, easily within a 32 bit offset.
     // Use relative offsets between them, to avoid 64-bit immediate loads.
-    auto nurseryPosAddr = intptr_t(zone->addressOfStringNurseryPosition());
-    auto nurseryEndAddr = intptr_t(zone->addressOfStringNurseryCurrentEnd());
-
-    movePtr(ImmPtr(zone->addressOfNurseryPosition()), temp);
+    //
+    // I tried to optimise this further by using an extra register to avoid
+    // the final subtraction and hopefully get some more instruction
+    // parallelism, but it made no difference.
+    movePtr(ImmPtr(posAddr), temp);
     loadPtr(Address(temp, 0), result);
     addPtr(Imm32(totalSize), result);
-    branchPtr(Assembler::Below, Address(temp, nurseryEndAddr - nurseryPosAddr), result, fail);
+    CheckedInt<int32_t> endOffset = (CheckedInt<uintptr_t>(uintptr_t(curEndAddr)) -
+        CheckedInt<uintptr_t>(uintptr_t(posAddr))).toChecked<int32_t>();
+    MOZ_ASSERT(endOffset.isValid(),
+        "Position and end pointers must be nearby");
+    branchPtr(Assembler::Below, Address(temp, endOffset.value()), result, fail);
     storePtr(result, Address(temp, 0));
-    subPtr(Imm32(thingSize), result);
-    storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
+    subPtr(Imm32(size), result);
 }
 
 // Inlined equivalent of gc::AllocateString, jumping to fail if nursery

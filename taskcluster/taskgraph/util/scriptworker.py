@@ -46,7 +46,9 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [[
     'all-release-branches', set([
         'mozilla-beta',
         'mozilla-release',
+        'mozilla-esr60',
         'comm-beta',
+        'comm-esr60',
     ])
 ]]
 
@@ -76,12 +78,16 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
         'mozilla-central',
         'mozilla-beta',
         'mozilla-release',
+        'mozilla-esr60',
         'comm-central',
     ])
 ], [
     'all-release-branches', set([
         'mozilla-beta',
         'mozilla-release',
+        'mozilla-esr60',
+        'comm-beta',
+        'comm-esr60',
     ])
 ]]
 
@@ -170,10 +176,16 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [[
 ], [
     'beta', set([
         'mozilla-beta',
+        'comm-beta',
     ])
 ], [
     'release', set([
         'mozilla-release',
+    ])
+], [
+    'esr60', set([
+        'mozilla-esr60',
+        'comm-esr60',
     ])
 ], [
     'esr', set([
@@ -189,6 +201,7 @@ BALROG_SERVER_SCOPES = {
     'beta': 'balrog:server:beta',
     'release': 'balrog:server:release',
     'esr': 'balrog:server:esr',
+    'esr60': 'balrog:server:esr',
     'default': 'balrog:server:dep',
 }
 
@@ -442,7 +455,7 @@ def get_release_config(config):
 def get_signing_cert_scope_per_platform(build_platform, is_nightly, config):
     if 'devedition' in build_platform:
         return get_devedition_signing_cert_scope(config)
-    elif is_nightly or build_platform in ('firefox-source', 'fennec-source'):
+    elif is_nightly or build_platform in ('firefox-source', 'fennec-source', 'thunderbird-source'):
         return get_signing_cert_scope(config)
     else:
         return add_scope_prefix(config, 'signing:cert:dep-signing')

@@ -1963,31 +1963,6 @@ public:
     // for the WN case. You probably want UnwrapReflectorToISupports.
     static bool GetISupportsFromJSObject(JSObject* obj, nsISupports** iface);
 
-    /**
-     * Convert a native array into a JS::Value.
-     *
-     * @param d [out] the resulting JS::Value
-     * @param s the native array we're working with
-     * @param type the type of objects in the array
-     * @param iid the interface of each object in the array that we want
-     * @param count the number of items in the array
-     * @param scope the default scope to put on the new JSObjects' parent chain
-     * @param pErr [out] relevant error code, if any.
-     */
-    static bool NativeArray2JS(JS::MutableHandleValue d, const void* const* s,
-                               const nsXPTType& type, const nsID* iid,
-                               uint32_t count, nsresult* pErr);
-
-    static bool JSArray2Native(void** d, JS::HandleValue s,
-                               uint32_t count, const nsXPTType& type,
-                               const nsID* iid, nsresult* pErr);
-
-    static bool JSTypedArray2Native(void** d,
-                                    JSObject* jsarray,
-                                    uint32_t count,
-                                    const nsXPTType& type,
-                                    nsresult* pErr);
-
     static nsresult JSValToXPCException(JS::MutableHandleValue s,
                                         const char* ifaceName,
                                         const char* methodName,
@@ -2002,6 +1977,40 @@ public:
                                        JS::Value* jsExceptionPtr);
 
 private:
+    /**
+     * Convert a native array into a JS::Value.
+     *
+     * @param d [out] the resulting JS::Value
+     * @param buf the native buffer containing input values
+     * @param type the type of objects in the array
+     * @param iid the interface of each object in the array that we want
+     * @param count the number of items in the array
+     * @param scope the default scope to put on the new JSObjects' parent chain
+     * @param pErr [out] relevant error code, if any.
+     */
+    static bool NativeArray2JS(JS::MutableHandleValue d, const void* buf,
+                               const nsXPTType& type, const nsID* iid,
+                               uint32_t count, nsresult* pErr);
+
+    typedef std::function<void* (uint32_t*)> ArrayAllocFixupLen;
+
+    /**
+     * Convert a JS::Value into a native array.
+     *
+     * @param aJSVal the JS::Value to convert
+     * @param aEltType the type of objects in the array
+     * @param aIID the interface of each object in the array
+     * @param pErr [out] relevant error code, if any
+     * @param aAllocFixupLen function called with the JS Array's length to
+     *                       allocate the backing buffer. This function may
+     *                       modify the length of array to be converted.
+     */
+    static bool JSArray2Native(JS::HandleValue aJSVal,
+                               const nsXPTType& aEltType,
+                               const nsIID* aIID,
+                               nsresult* pErr,
+                               const ArrayAllocFixupLen& aAllocFixupLen);
+
     XPCConvert() = delete;
 
 };
@@ -3039,7 +3048,7 @@ nsIPrincipal* GetObjectPrincipal(JSObject* obj);
 //     value : char[16_t]** (free)
 //   TD_INTERFACE_TYPE, TD_INTERFACE_IS_TYPE
 //     value : nsISupports** (release)
-//   TD_ARRAY (NOTE: aArrayLen should be passed)
+//   TD_LEGACY_ARRAY (NOTE: aArrayLen should be passed)
 //     value : void** (cleanup elements & free)
 //   TD_DOMOBJECT
 //     value : T** (cleanup)
@@ -3059,6 +3068,17 @@ inline void CleanupValue(const nsXPTType& aType,
 void InnerCleanupValue(const nsXPTType& aType,
                        void* aValue,
                        uint32_t aArrayLen);
+
+// In order to be able to safely call CleanupValue on a generated value, the
+// data behind it needs to be initialized to a safe value. This method handles
+// initializing the backing data to a safe value to use as an argument to
+// XPCConvert methods, or xpc::CleanupValue.
+//
+// The pointer `aValue` must point to a block of memory at least aType.Stride()
+// bytes large, and correctly aligned.
+//
+// This method accepts the same types as xpc::CleanupValue.
+void InitializeValue(const nsXPTType& aType, void* aValue);
 
 } // namespace xpc
 

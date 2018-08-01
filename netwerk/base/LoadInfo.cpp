@@ -82,6 +82,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mInitialSecurityCheckDone(false)
   , mIsThirdPartyContext(false)
   , mIsDocshellReload(false)
+  , mSendCSPViolationEvents(true)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
@@ -315,6 +316,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mInitialSecurityCheckDone(false)
   , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
   , mIsDocshellReload(false)
+  , mSendCSPViolationEvents(true)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
@@ -401,6 +403,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone)
   , mIsThirdPartyContext(rhs.mIsThirdPartyContext)
   , mIsDocshellReload(rhs.mIsDocshellReload)
+  , mSendCSPViolationEvents(rhs.mSendCSPViolationEvents)
   , mOriginAttributes(rhs.mOriginAttributes)
   , mRedirectChainIncludingInternalRedirects(
       rhs.mRedirectChainIncludingInternalRedirects)
@@ -447,6 +450,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aInitialSecurityCheckDone,
                    bool aIsThirdPartyContext,
                    bool aIsDocshellReload,
+                   bool aSendCSPViolationEvents,
                    const OriginAttributes& aOriginAttributes,
                    RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
                    RedirectHistoryArray& aRedirectChain,
@@ -488,6 +492,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
   , mIsThirdPartyContext(aIsThirdPartyContext)
   , mIsDocshellReload(aIsDocshellReload)
+  , mSendCSPViolationEvents(aSendCSPViolationEvents)
   , mOriginAttributes(aOriginAttributes)
   , mAncestorPrincipals(std::move(aAncestorPrincipals))
   , mAncestorOuterWindowIDs(aAncestorOuterWindowIDs)
@@ -836,6 +841,20 @@ NS_IMETHODIMP
 LoadInfo::SetIsDocshellReload(bool aValue)
 {
   mIsDocshellReload = aValue;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetSendCSPViolationEvents(bool* aResult)
+{
+  *aResult = mSendCSPViolationEvents;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetSendCSPViolationEvents(bool aValue)
+{
+  mSendCSPViolationEvents = aValue;
   return NS_OK;
 }
 
