@@ -57,10 +57,7 @@ async function recordReflows(testPromise, win = window) {
                                             Ci.nsISupportsWeakReference])
   };
 
-  let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell);
-  docShell.addWeakReflowObserver(observer);
+  win.docShell.addWeakReflowObserver(observer);
 
   let dirtyFrameFn = event => {
     if (event.type != "MozAfterPaint") {

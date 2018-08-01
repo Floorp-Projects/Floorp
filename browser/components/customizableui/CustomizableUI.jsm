@@ -1714,11 +1714,8 @@ var CustomizableUIInternal = {
           // Err, we're done.
           break;
         }
-        // Cue some voodoo
-        target = target.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIWebNavigation)
-                                   .QueryInterface(Ci.nsIDocShell)
-                                   .chromeEventHandler;
+        // Find containing browser or iframe element in the parent doc.
+        target = target.defaultView.docShell.chromeEventHandler;
         if (!target) {
           break;
         }
