@@ -387,7 +387,7 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(mozilla::ArrayLength(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
-#define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
     static_assert(sizeof(sizedType) >= SortedArenaList::MinThingSize, \
                   #sizedType " is smaller than SortedArenaList::MinThingSize!"); \
     static_assert(sizeof(sizedType) >= sizeof(FreeSpan), \
@@ -400,7 +400,7 @@ FOR_EACH_ALLOCKIND(CHECK_THING_SIZE);
 #undef CHECK_THING_SIZE
 
 const uint32_t Arena::ThingSizes[] = {
-#define EXPAND_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define EXPAND_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
     sizeof(sizedType),
 FOR_EACH_ALLOCKIND(EXPAND_THING_SIZE)
 #undef EXPAND_THING_SIZE
@@ -414,7 +414,7 @@ FreeSpan FreeLists::emptySentinel;
 #define OFFSET(type) uint32_t(ArenaHeaderSize + (ArenaSize - ArenaHeaderSize) % sizeof(type))
 
 const uint32_t Arena::FirstThingOffsets[] = {
-#define EXPAND_FIRST_THING_OFFSET(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define EXPAND_FIRST_THING_OFFSET(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
     OFFSET(sizedType),
 FOR_EACH_ALLOCKIND(EXPAND_FIRST_THING_OFFSET)
 #undef EXPAND_FIRST_THING_OFFSET
@@ -425,7 +425,7 @@ FOR_EACH_ALLOCKIND(EXPAND_FIRST_THING_OFFSET)
 #define COUNT(type) uint32_t((ArenaSize - ArenaHeaderSize) / sizeof(type))
 
 const uint32_t Arena::ThingsPerArena[] = {
-#define EXPAND_THINGS_PER_ARENA(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define EXPAND_THINGS_PER_ARENA(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
     COUNT(sizedType),
 FOR_EACH_ALLOCKIND(EXPAND_THINGS_PER_ARENA)
 #undef EXPAND_THINGS_PER_ARENA
@@ -690,7 +690,7 @@ FinalizeArenas(FreeOp* fop,
                ArenaLists::KeepArenasEnum keepArenas)
 {
     switch (thingKind) {
-#define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
       case AllocKind::allocKind: \
         return FinalizeTypedArenas<type>(fop, src, dest, thingKind, budget, keepArenas);
 FOR_EACH_ALLOCKIND(EXPAND_CASE)
@@ -1232,7 +1232,7 @@ static const char*
 AllocKindName(AllocKind kind)
 {
     static const char* names[] = {
-#define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5) \
+#define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) \
         #allocKind,
 FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
 #undef EXPAND_THING_NAME
@@ -2170,35 +2170,6 @@ CanRelocateZone(Zone* zone)
     return !zone->isAtomsZone() && !zone->isSelfHostingZone();
 }
 
-static const AllocKind AllocKindsToRelocate[] = {
-    AllocKind::FUNCTION,
-    AllocKind::FUNCTION_EXTENDED,
-    AllocKind::OBJECT0,
-    AllocKind::OBJECT0_BACKGROUND,
-    AllocKind::OBJECT2,
-    AllocKind::OBJECT2_BACKGROUND,
-    AllocKind::OBJECT4,
-    AllocKind::OBJECT4_BACKGROUND,
-    AllocKind::OBJECT8,
-    AllocKind::OBJECT8_BACKGROUND,
-    AllocKind::OBJECT12,
-    AllocKind::OBJECT12_BACKGROUND,
-    AllocKind::OBJECT16,
-    AllocKind::OBJECT16_BACKGROUND,
-    AllocKind::SCRIPT,
-    AllocKind::LAZY_SCRIPT,
-    AllocKind::SHAPE,
-    AllocKind::ACCESSOR_SHAPE,
-    AllocKind::BASE_SHAPE,
-    AllocKind::FAT_INLINE_STRING,
-    AllocKind::STRING,
-    AllocKind::EXTERNAL_STRING,
-    AllocKind::FAT_INLINE_ATOM,
-    AllocKind::ATOM,
-    AllocKind::SCOPE,
-    AllocKind::REGEXP_SHARED
-};
-
 Arena*
 ArenaList::removeRemainingArenas(Arena** arenap)
 {
@@ -2434,6 +2405,17 @@ ShouldRelocateZone(size_t arenaCount, size_t relocCount, JS::gcreason::Reason re
     return (relocCount * 100.0) / arenaCount >= MIN_ZONE_RECLAIM_PERCENT;
 }
 
+static AllocKinds
+CompactingAllocKinds()
+{
+    AllocKinds result;
+    for (AllocKind kind : AllAllocKinds()) {
+        if (IsCompactingKind(kind))
+            result += kind;
+    }
+    return result;
+}
+
 bool
 ArenaLists::relocateArenas(Arena*& relocatedListOut, JS::gcreason::Reason reason,
                            SliceBudget& sliceBudget, gcstats::Statistics& stats)
@@ -2444,12 +2426,15 @@ ArenaLists::relocateArenas(Arena*& relocatedListOut, JS::gcreason::Reason reason
     MOZ_ASSERT(runtime()->gc.isHeapCompacting());
     MOZ_ASSERT(!runtime()->gc.isBackgroundSweeping());
 
+    // Relocate all compatible kinds
+    AllocKinds allocKindsToRelocate = CompactingAllocKinds();
+
     // Clear all the free lists.
     clearFreeLists();
 
     if (ShouldRelocateAllArenas(reason)) {
         zone_->prepareForCompacting();
-        for (auto kind : AllocKindsToRelocate) {
+        for (auto kind : allocKindsToRelocate) {
             ArenaList& al = arenaLists(kind);
             Arena* allArenas = al.head();
             al.clear();
@@ -2460,14 +2445,14 @@ ArenaLists::relocateArenas(Arena*& relocatedListOut, JS::gcreason::Reason reason
         size_t relocCount = 0;
         AllAllocKindArray<Arena**> toRelocate;
 
-        for (auto kind : AllocKindsToRelocate)
+        for (auto kind : allocKindsToRelocate)
             toRelocate[kind] = arenaLists(kind).pickArenasToRelocate(arenaCount, relocCount);
 
         if (!ShouldRelocateZone(arenaCount, relocCount, reason))
             return false;
 
         zone_->prepareForCompacting();
-        for (auto kind : AllocKindsToRelocate) {
+        for (auto kind : allocKindsToRelocate) {
             if (toRelocate[kind]) {
                 ArenaList& al = arenaLists(kind);
                 Arena* arenas = al.removeRemainingArenas(toRelocate[kind]);
@@ -2496,12 +2481,12 @@ GCRuntime::relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& reloc
 #ifdef DEBUG
     // Check that we did as much compaction as we should have. There
     // should always be less than one arena's worth of free cells.
-    for (auto i : AllocKindsToRelocate) {
-        ArenaList& al = zone->arenas.arenaLists(i);
+    for (auto kind : CompactingAllocKinds()) {
+        ArenaList& al = zone->arenas.arenaLists(kind);
         size_t freeCells = 0;
         for (Arena* arena = al.arenaAfterCursor(); arena; arena = arena->next)
             freeCells += arena->countFreeCells();
-        MOZ_ASSERT(freeCells < Arena::thingsPerArena(i));
+        MOZ_ASSERT(freeCells < Arena::thingsPerArena(kind));
     }
 #endif
 
@@ -2601,7 +2586,7 @@ UpdateArenaPointers(MovingTracer* trc, Arena* arena)
     AllocKind kind = arena->getAllocKind();
 
     switch (kind) {
-#define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
       case AllocKind::allocKind: \
         UpdateArenaPointersTyped<type>(trc, arena); \
         return;
@@ -3952,7 +3937,7 @@ static const char*
 AllocKindToAscii(AllocKind kind)
 {
     switch(kind) {
-#define MAKE_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define MAKE_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
       case AllocKind:: allocKind: return #allocKind;
 FOR_EACH_ALLOCKIND(MAKE_CASE)
 #undef MAKE_CASE

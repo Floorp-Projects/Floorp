@@ -202,7 +202,7 @@ js::AllocateString(JSContext* cx, InitialHeap heap)
     return GCRuntime::tryNewTenuredThing<StringAllocT, allowGC>(cx, kind, size);
 }
 
-#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, bgfinal, nursery) \
+#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, bgfinal, nursery, compact) \
     template type* js::AllocateString<type, NoGC>(JSContext* cx, InitialHeap heap);\
     template type* js::AllocateString<type, CanGC>(JSContext* cx, InitialHeap heap);
 FOR_EACH_NURSERY_STRING_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
@@ -228,7 +228,7 @@ js::Allocate(JSContext* cx)
     return GCRuntime::tryNewTenuredThing<T, allowGC>(cx, kind, thingSize);
 }
 
-#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
     template type* js::Allocate<type, NoGC>(JSContext* cx);\
     template type* js::Allocate<type, CanGC>(JSContext* cx);
 FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
