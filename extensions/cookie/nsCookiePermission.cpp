@@ -42,11 +42,6 @@ static const uint32_t ACCEPT_SESSION = 2;
 static const bool kDefaultPolicy = true;
 static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
 
-static const char kCookiesPrefsMigrated[] = "network.cookie.prefsMigrated";
-// obsolete pref names for migration
-static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
-static const char kCookiesLifetimeBehavior[] = "network.cookie.lifetime.behavior";
-
 static const char kPermissionType[] = "cookie";
 
 NS_IMPL_ISUPPORTS(nsCookiePermission,
@@ -71,25 +66,6 @@ nsCookiePermission::Init()
   if (prefBranch) {
     prefBranch->AddObserver(kCookiesLifetimePolicy, this, false);
     PrefChanged(prefBranch, nullptr);
-
-    // migration code for original cookie prefs
-    bool migrated;
-    rv = prefBranch->GetBoolPref(kCookiesPrefsMigrated, &migrated);
-    if (NS_FAILED(rv) || !migrated) {
-      bool lifetimeEnabled = false;
-      prefBranch->GetBoolPref(kCookiesLifetimeEnabled, &lifetimeEnabled);
-
-      // if they're limiting lifetime, use the appropriate limited lifetime pref
-      if (lifetimeEnabled) {
-        int32_t lifetimeBehavior;
-        prefBranch->GetIntPref(kCookiesLifetimeBehavior, &lifetimeBehavior);
-        if (lifetimeBehavior)
-          prefBranch->SetIntPref(kCookiesLifetimePolicy, ACCEPT_NORMALLY);
-        else
-          prefBranch->SetIntPref(kCookiesLifetimePolicy, ACCEPT_SESSION);
-      }
-      prefBranch->SetBoolPref(kCookiesPrefsMigrated, true);
-    }
   }
 
   return true;

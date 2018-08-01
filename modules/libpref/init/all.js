@@ -2251,7 +2251,6 @@ pref("network.cookie.ipc.sync",             false);
 // 3 - deprecated. don't use it.
 pref("network.cookie.lifetimePolicy",       0);
 
-pref("network.cookie.prefsMigrated",        false);
 // The interval in seconds to move the cookies in the child process.
 // Set to 0 to disable moving the cookies.
 pref("network.cookie.move.interval_sec",    10);
