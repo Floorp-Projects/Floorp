@@ -343,6 +343,7 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
         }
 
         // Successfully parsed. Emit the script.
+        AutoGeckoProfilerEntry pseudoFrame(cx, "script emit");
         if (pn) {
             if (sc->isEvalContext() && sc->hasDebuggerStatement() && !cx->helperThread()) {
                 // If the eval'ed script contains any debugger statement, force construction
