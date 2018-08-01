@@ -13,6 +13,10 @@
   fill: currentColor;
 }
 
+.content-blocking-icon[disabled] {
+  fill: GrayText;
+}
+
 .geo-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/geo.svg);
 }
