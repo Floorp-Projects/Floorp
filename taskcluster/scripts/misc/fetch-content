@@ -4,17 +4,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import bz2
 import concurrent.futures
+import gzip
 import hashlib
+import lzma
 import multiprocessing
 import os
 import pathlib
-import re
 import subprocess
 import sys
 import tempfile
 import time
 import urllib.request
+
+try:
+    import zstandard
+except ImportError:
+    zstandard = None
 
 
 ARTIFACT_URL = ('https://queue.taskcluster.net/v1/task/{task}/artifacts/'
@@ -141,22 +148,68 @@ def gpg_verify_path(path: pathlib.Path, public_key_data: bytes,
             subprocess.run(['gpgconf', '--kill', 'gpg-agent'], env=env)
 
 
-def extract_archive(path, dest_dir):
+def archive_type(path: pathlib.Path):
+    """Attempt to identify a path as an extractable archive."""
+    if path.suffixes[-2:-1] == ['.tar']:
+        return 'tar'
+    elif path.suffix == '.zip':
+        return 'zip'
+    else:
+        return None
+
+
+def extract_archive(path, dest_dir, typ):
     """Extract an archive to a destination directory."""
 
-    if re.search('\.tar\..*$', path.name):
-        args = ['tar', 'xaf', str(path)]
-    elif path.name.endswith('.zip'):
+    # We pipe input to the decompressor program so that we can apply
+    # custom decompressors that the program may not know about.
+
+    if typ == 'tar':
+        if path.suffix == '.bz2':
+            ifh = bz2.open(str(path), 'rb')
+        elif path.suffix == '.gz':
+            ifh = gzip.open(str(path), 'rb')
+        elif path.suffix == '.xz':
+            ifh = lzma.open(str(path), 'rb')
+        elif path.suffix == '.zst':
+            if not zstandard:
+                raise ValueError('zstandard Python package not available')
+            dctx = zstandard.ZstdDecompressor()
+            ifh = dctx.stream_reader(path.open('rb'))
+        elif path.suffix == '.tar':
+            ifh = path.open('rb')
+        else:
+            raise ValueError('unknown archive format for tar file: %s' % path)
+
+        args = ['tar', 'xf', '-']
+        pipe_stdin = True
+    elif typ == 'zip':
+        # unzip from stdin has wonky behavior. We don't use a pipe for it.
+        ifh = os.devnull
         args = ['unzip', str(path)]
+        pipe_stdin = False
     else:
-        print('%s is unknown archive format; ignoring' % path)
-        return False
+        raise ValueError('unknown archive format: %s' % path)
 
     print('extracting %s to %s using %r' % (path, dest_dir, args))
     t0 = time.time()
-    subprocess.check_call(args, cwd=str(dest_dir), bufsize=0)
+
+    with ifh, subprocess.Popen(args, cwd=str(dest_dir), bufsize=0,
+                               stdin=subprocess.PIPE) as p:
+        while True:
+            if not pipe_stdin:
+                break
+
+            chunk = ifh.read(131072)
+            if not chunk:
+                break
+
+            p.stdin.write(chunk)
+
+    if p.returncode:
+        raise Exception('%r exited %d' % (args, p.returncode))
+
     print('%s extracted in %.3fs' % (path, time.time() - t0))
-    return True
 
 
 def fetch_and_extract(url, dest_dir, sha256=None, size=None):
@@ -172,7 +225,9 @@ def fetch_and_extract(url, dest_dir, sha256=None, size=None):
 
     download_to_path(url, dest_path, sha256=sha256, size=size)
 
-    if extract_archive(dest_path, dest_dir):
+    typ = archive_type(dest_path)
+    if typ:
+        extract_archive(dest_path, dest_dir, typ)
         print('removing %s' % dest_path)
         dest_path.unlink()
 
