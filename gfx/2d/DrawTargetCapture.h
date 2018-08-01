@@ -106,6 +106,7 @@ public:
                          bool aCopyBackground) override;
   virtual void PopLayer() override;
   virtual void Blur(const AlphaBoxBlur& aBlur) override;
+  virtual void PadEdges(const IntRegion& aRegion) override;
 
   virtual void SetTransform(const Matrix &aTransform) override;
 

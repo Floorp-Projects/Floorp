@@ -1126,6 +1126,40 @@ private:
   AlphaBoxBlur mBlur;
 };
 
+class PadEdgesCommand : public DrawingCommand
+{
+public:
+  explicit PadEdgesCommand(const IntRegion& aRegion)
+   : mRegion(aRegion)
+  {}
+
+  CommandType GetType() const override
+  {
+    return PadEdgesCommand::Type;
+  }
+
+  void CloneInto(CaptureCommandList* aList) override
+  {
+    CLONE_INTO(PadEdgesCommand)(IntRegion(mRegion));
+  }
+
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  {
+    aDT->PadEdges(mRegion);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[PADEDGES]";
+  }
+
+  static const bool AffectsSnapshot = true;
+  static const CommandType Type = CommandType::PADEDGES;
+
+private:
+  IntRegion mRegion;
+};
+
 #undef CLONE_INTO
 
 } // namespace gfx

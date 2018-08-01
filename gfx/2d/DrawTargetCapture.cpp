@@ -344,6 +344,12 @@ DrawTargetCaptureImpl::Blur(const AlphaBoxBlur& aBlur)
 }
 
 void
+DrawTargetCaptureImpl::PadEdges(const IntRegion& aRegion)
+{
+  AppendCommand(PadEdgesCommand)(aRegion);
+}
+
+void
 DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform)
 {
   for (CaptureCommandList::iterator iter(mCommands); !iter.Done(); iter.Next()) {
