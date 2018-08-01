@@ -3,6 +3,7 @@ import pytest
 from tests.support.fixtures import (
     add_event_listeners,
     configuration,
+    closed_window,
     create_cookie,
     create_dialog,
     create_frame,
@@ -43,3 +44,6 @@ pytest.fixture()(http)
 pytest.fixture()(server_config)
 pytest.fixture(scope="function")(session)
 pytest.fixture()(url)
+
+# Fixtures for specific tests
+pytest.fixture()(closed_window)

@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
-
 // This verifies that duplicate plugins are coalesced and maintain their ID
 // across restarts.
 

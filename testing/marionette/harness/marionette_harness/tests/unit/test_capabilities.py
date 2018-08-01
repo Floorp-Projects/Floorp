@@ -154,7 +154,7 @@ class TestCapabilityMatching(MarionetteTestCase):
         self.marionette.start_session(caps)
         self.assertIn("timeouts", self.marionette.session_capabilities)
         self.assertDictEqual(self.marionette.session_capabilities["timeouts"], timeouts)
-        self.assertDictEqual(self.marionette._send_message("getTimeouts"), timeouts)
+        self.assertDictEqual(self.marionette._send_message("WebDriver:GetTimeouts"), timeouts)
 
     def test_unhandled_prompt_behavior(self):
         behaviors = [

@@ -60,6 +60,8 @@ private:
   void PushState(bool aNotifyCond = false);
 #if defined(MOZ_WIDGET_ANDROID)
   bool PullState(const std::function<bool()>& aWaitCondition = nullptr);
+  void PostVRTask();
+  void RunVRTask();
 #else
   bool PullState();
 #endif

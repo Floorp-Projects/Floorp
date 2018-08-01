@@ -460,6 +460,32 @@ var PlacesUIUtils = {
   },
 
   /**
+   * Sets the character-set for a page. The character set will not be saved
+   * if the window is determined to be a private browsing window.
+   *
+   * @param {string|URL|nsIURI} url The URL of the page to set the charset on.
+   * @param {String} charset character-set value.
+   * @param {window} window The window that the charset is being set from.
+   * @return {Promise}
+   */
+  async setCharsetForPage(url, charset, window) {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return;
+    }
+
+    // UTF-8 is the default. If we are passed the value then set it to null,
+    // to ensure any charset is removed from the database.
+    if (charset.toLowerCase() == "utf-8") {
+      charset = null;
+    }
+
+    await PlacesUtils.history.update({
+      url,
+      annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]])
+    });
+  },
+
+  /**
    * Allows opening of javascript/data URI only if the given node is
    * bookmarked (see bug 224521).
    * @param aURINode

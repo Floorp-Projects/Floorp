@@ -89,7 +89,7 @@ class MakeUploadOutputParser(OutputParser):
         # key: property name, value: condition
         ('symbolsUrl', "m.endswith('crashreporter-symbols.zip') or "
                        "m.endswith('crashreporter-symbols-full.zip')"),
-        ('testsUrl', "m.endswith(('tests.tar.bz2', 'tests.zip'))"),
+        ('testsUrl', "m.endswith(('tests.tar.bz2', 'tests.zip', 'tests.tar.gz'))"),
         ('robocopApkUrl', "m.endswith('apk') and 'robocop' in m"),
         ('jsshellUrl', "'jsshell-' in m and m.endswith('.zip')"),
         ('partialMarUrl', "m.endswith('.mar') and '.partial.' in m"),

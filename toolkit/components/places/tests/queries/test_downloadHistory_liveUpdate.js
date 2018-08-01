@@ -39,7 +39,7 @@ add_task(async function test_downloadhistory_query_notifications() {
   // Add more maxResults downloads in order.
   let transitions = Object.values(PlacesUtils.history.TRANSITIONS);
   for (let transition of transitions) {
-    let uri = Services.io.newURI("http://fx-search.com/" + transition);
+    let uri = "http://fx-search.com/" + transition;
     await PlacesTestUtils.addVisits({ uri, transition, title: "test " + transition });
     // For each visit also set apart:
     //  - a bookmark
@@ -49,9 +49,11 @@ add_task(async function test_downloadhistory_query_notifications() {
       url: uri,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     });
-    PlacesUtils.annotations.setPageAnnotation(uri, "test/anno", "testValue", 0,
-                                              PlacesUtils.annotations.EXPIRE_NEVER);
-    await PlacesTestUtils.addFavicons(new Map([[uri.spec, SMALLPNG_DATA_URI.spec]]));
+    await PlacesUtils.history.update({
+      url: uri,
+      annotations: new Map([["test/anno", "testValue"]]),
+    });
+    await PlacesTestUtils.addFavicons(new Map([[uri, SMALLPNG_DATA_URI.spec]]));
   }
   // Remove all the visits one by one.
   for (let transition of transitions) {

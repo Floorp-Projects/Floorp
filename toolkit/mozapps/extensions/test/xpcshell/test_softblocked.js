@@ -4,7 +4,6 @@
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 // Allow insecure updates

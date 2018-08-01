@@ -11,8 +11,6 @@ var EXPORTED_SYMBOLS = [
 ];
 
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"]
     .getService(Ci.nsIPlatformInfo);
 
