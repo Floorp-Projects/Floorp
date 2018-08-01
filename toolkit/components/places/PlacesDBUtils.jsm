@@ -211,6 +211,114 @@ var PlacesDBUtils = {
 
   async _getCoherenceStatements() {
     let cleanupStatements = [
+      // MOZ_PLACES
+      // L.1 remove duplicate URLs.
+      // This task uses a temp table of potential dupes, and a trigger to remove
+      // them. It runs first because it relies on subsequent tasks to clean up
+      // orphaned foreign key references. The task works like this: first, we
+      // insert all rows with the same hash into the temp table. This lets
+      // SQLite use the `url_hash` index for scanning `moz_places`. Hashes
+      // aren't unique, so two different URLs might have the same hash. To find
+      // the actual dupes, we use a unique constraint on the URL in the temp
+      // table. If that fails, we bump the dupe count. Then, we delete all dupes
+      // from the table. This fires the cleanup trigger, which updates all
+      // foreign key references to point to one of the duplicate Places, then
+      // deletes the others.
+      { query:
+        `CREATE TEMP TABLE IF NOT EXISTS moz_places_dupes_temp(
+          id INTEGER PRIMARY KEY
+        , hash INTEGER NOT NULL
+        , url TEXT UNIQUE NOT NULL
+        , count INTEGER NOT NULL DEFAULT 0
+        )`
+      },
+      { query:
+        `CREATE TEMP TRIGGER IF NOT EXISTS moz_places_remove_dupes_temp_trigger
+        AFTER DELETE ON moz_places_dupes_temp
+        FOR EACH ROW
+        BEGIN
+          /* Reassign history visits. */
+          UPDATE moz_historyvisits SET
+            place_id = OLD.id
+          WHERE place_id IN (SELECT id FROM moz_places
+                             WHERE id <> OLD.id AND
+                                   url_hash = OLD.hash AND
+                                   url = OLD.url);
+
+          /* Merge autocomplete history entries. */
+          INSERT INTO moz_inputhistory(place_id, input, use_count)
+          SELECT OLD.id, a.input, a.use_count
+          FROM moz_inputhistory a
+          JOIN moz_places h ON h.id = a.place_id
+          WHERE h.id <> OLD.id AND
+                h.url_hash = OLD.hash AND
+                h.url = OLD.url
+          ON CONFLICT(place_id, input) DO UPDATE SET
+            place_id = excluded.place_id,
+            use_count = use_count + excluded.use_count;
+
+          /* Merge page annos, ignoring annos with the same name that are
+             already set on the destination. */
+          INSERT OR IGNORE INTO moz_annos(id, place_id, anno_attribute_id,
+                                          content, flags, expiration, type,
+                                          dateAdded, lastModified)
+          SELECT (SELECT k.id FROM moz_annos k
+                  WHERE k.place_id = OLD.id AND
+                        k.anno_attribute_id = a.anno_attribute_id), OLD.id,
+                 a.anno_attribute_id, a.content, a.flags, a.expiration, a.type,
+                 a.dateAdded, a.lastModified
+          FROM moz_annos a
+          JOIN moz_places h ON h.id = a.place_id
+          WHERE h.id <> OLD.id AND
+                url_hash = OLD.hash AND
+                url = OLD.url;
+
+          /* Reassign bookmarks, and bump the Sync change counter just in case
+             we have new keywords. */
+          UPDATE moz_bookmarks SET
+            fk = OLD.id,
+            syncChangeCounter = syncChangeCounter + 1
+          WHERE fk IN (SELECT id FROM moz_places
+                       WHERE url_hash = OLD.hash AND
+                             url = OLD.url);
+
+          /* Reassign keywords. */
+          UPDATE moz_keywords SET
+            place_id = OLD.id
+          WHERE place_id IN (SELECT id FROM moz_places
+                             WHERE id <> OLD.id AND
+                                   url_hash = OLD.hash AND
+                                   url = OLD.url);
+
+          /* Now that we've updated foreign key references, drop the
+             conflicting source. */
+          DELETE FROM moz_places
+          WHERE id <> OLD.id AND
+                url_hash = OLD.hash AND
+                url = OLD.url;
+
+          /* Recalculate frecency for the destination. */
+          UPDATE moz_places SET
+            frecency = calculate_frecency(id)
+          WHERE id = OLD.id;
+
+          /* Trigger frecency updates for affected origins. */
+          DELETE FROM moz_updateoriginsupdate_temp;
+        END`
+      },
+      { query:
+        `INSERT INTO moz_places_dupes_temp(id, hash, url, count)
+        SELECT h.id, h.url_hash, h.url, 1
+        FROM moz_places h
+        JOIN (SELECT url_hash FROM moz_places
+              GROUP BY url_hash
+              HAVING count(*) > 1) d ON d.url_hash = h.url_hash
+        ON CONFLICT(url) DO UPDATE SET
+          count = count + 1`
+      },
+      { query: `DELETE FROM moz_places_dupes_temp WHERE count > 1` },
+      { query: `DROP TABLE moz_places_dupes_temp` },
+
       // MOZ_ANNO_ATTRIBUTES
       // A.1 remove obsolete annotations from moz_annos.
       // The 'weave0' idiom exploits character ordering (0 follows /) to
