@@ -75,10 +75,8 @@ add_task(async function test_simple() {
       is(securityContentBG,
          "url(\"chrome://browser/skin/controlcenter/mcb-disabled.svg\")",
          "Using expected icon image in the Control Center subview");
-      is(Array.filter(document.getElementById("identity-popup-securityView")
-                              .querySelectorAll("[observes=identity-popup-insecure-login-forms-learn-more]"),
-                      element => !BrowserTestUtils.is_hidden(element)).length, 1,
-         "The 'Learn more' link should be visible once.");
+      ok(!BrowserTestUtils.is_hidden(document.getElementById("identity-popup-insecure-login-forms-learn-more")),
+         "The 'Learn more' link should be visible.");
     }
 
     // Messages should be visible when the scheme is HTTP, and invisible when
