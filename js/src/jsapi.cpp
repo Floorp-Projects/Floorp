@@ -1266,7 +1266,7 @@ JS::CurrentGlobalOrNull(JSContext* cx)
 JS_PUBLIC_API(JSObject*)
 JS::GetNonCCWObjectGlobal(JSObject* obj)
 {
-    AssertHeapIsIdle();
+    AssertHeapIsIdleOrIterating();
     MOZ_DIAGNOSTIC_ASSERT(!IsCrossCompartmentWrapper(obj));
     return &obj->nonCCWGlobal();
 }
