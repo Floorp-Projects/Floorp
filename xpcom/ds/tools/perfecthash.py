@@ -42,7 +42,7 @@ class PerfectHash(object):
     # Bucket of entries which map into a given intermediate index.
     Bucket = namedtuple('Bucket', 'index entries')
 
-    def __init__(self, entries, size, validate=True, key=lambda (k, _): k):
+    def __init__(self, entries, size, validate=True, key=lambda e: e[0]):
         """Create a new PerfectHash
 
         @param entries  set of entries to generate a PHF for
