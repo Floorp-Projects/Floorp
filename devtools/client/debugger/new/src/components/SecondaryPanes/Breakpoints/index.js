@@ -72,22 +72,32 @@ class Breakpoints extends _react.Component {
     const {
       breakpointSources
     } = this.props;
-    return [...breakpointSources.map(({
+    const sources = [...breakpointSources.map(({
       source,
       breakpoints
-    }) => [_react2.default.createElement("div", {
-      className: "breakpoint-heading",
-      title: (0, _source.getRawSourceURL)(source.url),
-      key: source.url,
-      onClick: () => this.props.selectSource(source.id)
-    }, _react2.default.createElement(_SourceIcon2.default, {
-      source: source,
-      shouldHide: icon => ["file", "javascript"].includes(icon)
-    }), (0, _source.getTruncatedFileName)(source)), ...breakpoints.map(breakpoint => _react2.default.createElement(_Breakpoint2.default, {
-      breakpoint: breakpoint,
-      source: source,
-      key: (0, _breakpoint.makeLocationId)(breakpoint.location)
-    }))])];
+    }) => source)];
+    return [...breakpointSources.map(({
+      source,
+      breakpoints,
+      i
+    }) => {
+      const path = (0, _source.getDisplayPath)(source, sources);
+      return [_react2.default.createElement("div", {
+        className: "breakpoint-heading",
+        title: (0, _source.getRawSourceURL)(source.url),
+        key: source.url,
+        onClick: () => this.props.selectSource(source.id)
+      }, _react2.default.createElement(_SourceIcon2.default, {
+        source: source,
+        shouldHide: icon => ["file", "javascript"].includes(icon)
+      }), _react2.default.createElement("div", {
+        className: "filename"
+      }, (0, _source.getTruncatedFileName)(source), path && _react2.default.createElement("span", null, `../${path}/..`))), ...breakpoints.map(breakpoint => _react2.default.createElement(_Breakpoint2.default, {
+        breakpoint: breakpoint,
+        source: source,
+        key: (0, _breakpoint.makeLocationId)(breakpoint.location)
+      }))];
+    })];
   }
 
   render() {
