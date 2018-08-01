@@ -354,7 +354,6 @@ UNIFIED_SOURCES += [
     'basic/TextureHostBasic.cpp',
     'BSPTree.cpp',
     'BufferTexture.cpp',
-    'BufferUnrotate.cpp',
     'CanvasRenderer.cpp',
     'client/CanvasClient.cpp',
     'client/ClientCanvasLayer.cpp',
