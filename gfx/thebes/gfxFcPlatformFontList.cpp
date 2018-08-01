@@ -784,7 +784,7 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
         if (ftFace) {
             AutoTArray<gfxFontVariation,8> settings;
             GetVariationsForStyle(settings, *aStyle);
-            gfxFT2FontBase::SetupVarCoords(ftFace, settings, &coords);
+            gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings, &coords);
         }
     }
 

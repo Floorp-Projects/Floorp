@@ -27,6 +27,7 @@
 #include <math.h>
 
 typedef struct gr_face gr_face;
+typedef struct FT_MM_Var_ FT_MM_Var;
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -396,6 +397,9 @@ public:
 
     // Get the font's list of features (if any) for DevTools support.
     void GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo);
+
+    // This is only called on platforms where we use FreeType.
+    virtual FT_MM_Var* GetMMVar() { return nullptr; }
 
     nsString         mName;
     nsString         mFamilyName;
