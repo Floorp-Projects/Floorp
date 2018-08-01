@@ -155,11 +155,6 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         '-framework Security'
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    UNIFIED_SOURCES += [
-        'CredentialManagerSecret.cpp',
-    ]
-
 IPDL_SOURCES += [
     'PPSMContentDownloader.ipdl',
 ]
