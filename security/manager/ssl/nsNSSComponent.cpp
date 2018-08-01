@@ -202,8 +202,8 @@ nsNSSComponent::nsNSSComponent()
   , mLoadableRootsLoaded(false)
   , mLoadableRootsLoadedResult(NS_ERROR_FAILURE)
   , mMutex("nsNSSComponent.mMutex")
-  , mNSSInitialized(false)
   , mMitmDetecionEnabled(false)
+  , mNonIdempotentCleanupMustHappen(false)
 {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ctor\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -897,12 +897,6 @@ nsNSSComponent::HasUserCertsInstalled(bool* result)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  MutexAutoLock nsNSSComponentLock(mMutex);
-
-  if (!mNSSInitialized) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   *result = false;
   UniqueCERTCertList certList(
     CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), certUsageSSLClient,
@@ -937,12 +931,6 @@ nsresult
 nsNSSComponent::CheckForSmartCardChanges()
 {
 #ifndef MOZ_NO_SMART_CARDS
-  MutexAutoLock nsNSSComponentLock(mMutex);
-
-  if (!mNSSInitialized) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   // SECMOD_UpdateSlotList attempts to acquire the list lock as well,
   // so we have to do this in two steps. The lock protects the list itself, so
   // if we get our own owned references to the modules we're interested in,
@@ -1979,7 +1967,7 @@ nsNSSComponent::InitializeNSS()
       return rv;
     }
 
-    mNSSInitialized = true;
+    mNonIdempotentCleanupMustHappen = true;
     return NS_OK;
   }
 }
@@ -1998,7 +1986,7 @@ nsNSSComponent::ShutdownNSS()
   // it to fail to find the roots it is expecting. However, if initialization
   // failed, we won't have dispatched the load loadable roots background task.
   // In that case, we don't want to block on an event that will never happen.
-  if (mNSSInitialized) {
+  if (mNonIdempotentCleanupMustHappen) {
     Unused << BlockUntilLoadableRootsLoaded();
 
     // We can only run SSL_ShutdownServerSessionIDCache once (the rest of
@@ -2007,6 +1995,7 @@ nsNSSComponent::ShutdownNSS()
     // TLSServerSocket may be run with the session cache enabled. This ensures
     // those resources are cleaned up.
     Unused << SSL_ShutdownServerSessionIDCache();
+    mNonIdempotentCleanupMustHappen = false;
   }
 
   ::mozilla::psm::UnloadLoadableRoots();
@@ -2026,8 +2015,6 @@ nsNSSComponent::ShutdownNSS()
   // We don't actually shut down NSS - XPCOM does, after all threads have been
   // joined and the component manager has been shut down (and so there shouldn't
   // be any XPCOM objects holding NSS resources).
-
-  mNSSInitialized = false;
 }
 
 nsresult
@@ -2243,7 +2230,6 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool* result)
   }
 
   MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mNSSInitialized);
   if (mTestBuiltInRootHash.IsEmpty()) {
     return NS_OK;
   }
@@ -2273,7 +2259,6 @@ nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool* result)
   }
 
   MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mNSSInitialized);
 
   if (mContentSigningRootHash.IsEmpty()) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("mContentSigningRootHash is empty"));
@@ -2304,7 +2289,6 @@ NS_IMETHODIMP
 nsNSSComponent::GetDefaultCertVerifier(SharedCertVerifier** result)
 {
   MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mNSSInitialized);
   NS_ENSURE_ARG_POINTER(result);
   RefPtr<SharedCertVerifier> certVerifier(mDefaultCertVerifier);
   certVerifier.forget(result);
