@@ -3,7 +3,9 @@
 "use strict";
 
 add_task(async function() {
-  let keyword = "test";
+  // This keyword needs to be unique to prevent history entries from unrelated
+  // tests from appearing in the suggestions list.
+  let keyword = "VeryUniqueKeywordThatDoesNeverMatchAnyTestUrl";
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
