@@ -143,7 +143,7 @@ var gIdentityHandler = {
   get _identityPopupMixedContentLearnMore() {
     delete this._identityPopupMixedContentLearnMore;
     return this._identityPopupMixedContentLearnMore =
-      document.getElementById("identity-popup-mcb-learn-more");
+      [...document.querySelectorAll(".identity-popup-mcb-learn-more")];
   },
   get _identityPopupInsecureLoginFormsLearnMore() {
     delete this._identityPopupInsecureLoginFormsLearnMore;
@@ -626,8 +626,8 @@ var gIdentityHandler = {
 
     // Update "Learn More" for Mixed Content Blocking and Insecure Login Forms.
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    this._identityPopupMixedContentLearnMore
-        .setAttribute("href", baseURL + "mixed-content");
+    this._identityPopupMixedContentLearnMore.forEach(
+      e => e.setAttribute("href", baseURL + "mixed-content"));
     this._identityPopupInsecureLoginFormsLearnMore
         .setAttribute("href", baseURL + "insecure-password");
 
