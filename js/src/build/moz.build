@@ -33,7 +33,7 @@ if CONFIG['JS_SHARED_LIBRARY']:
         GENERATED_FILES['symverscript'].flags = [
             CONFIG['JS_LIBRARY_NAME'].replace('-', '_'),
         ]
-        LDFLAGS += ['-Wl,-version-script,symverscript']
+        SYMBOLS_FILE = '!symverscript'
 else:
     Library('js')
 
