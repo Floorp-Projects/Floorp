@@ -1839,7 +1839,8 @@ var BrowserApp = {
 
       case "Session:Navigate": {
         let index = data.index;
-        let webNav = BrowserApp.selectedTab.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+        let webNav = BrowserApp.selectedTab.window.docShell
+                               .QueryInterface(Ci.nsIWebNavigation);
         let historySize = webNav.sessionHistory.count;
 
         if (index < 0) {
@@ -2222,7 +2223,8 @@ var BrowserApp = {
   // optionally selecting selIndex (if fromIndex <= selIndex <= toIndex)
   getHistory: function(data) {
     let action = data.action;
-    let webNav = BrowserApp.getTabForId(data.tabId).window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    let webNav = BrowserApp.getTabForId(data.tabId).window.docShell
+                           .QueryInterface(Ci.nsIWebNavigation);
     let historyIndex = webNav.sessionHistory.index;
     let historySize = webNav.sessionHistory.count;
     let canGoBack = webNav.canGoBack;
@@ -4502,7 +4504,7 @@ Tab.prototype = {
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI, aFlags) {
     let contentWin = aWebProgress.DOMWindow;
-    let webNav = contentWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    let webNav = contentWin.docShell.QueryInterface(Ci.nsIWebNavigation);
 
     // Browser webapps may load content inside iframes that can not reach across the app/frame boundary
     // i.e. even though the page is loaded in an iframe window.top != webapp
