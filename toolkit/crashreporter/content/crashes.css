@@ -19,7 +19,7 @@ th {
   text-align: left;
   white-space: nowrap;
 }
-th[chromedir="rtl"] {
+th:-moz-locale-dir(rtl) {
   text-align: right;
 }
 /* name */
@@ -51,7 +51,7 @@ td:last-child {
 #clear-reports {
   float: right;
 }
-#clear-reports[chromedir="rtl"] {
+#clear-reports:-moz-locale-dir(rtl) {
   float: left;
 }
 

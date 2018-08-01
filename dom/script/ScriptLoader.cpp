@@ -491,8 +491,7 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
       rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
       if (NS_SUCCEEDED(rv)) {
-        nsAutoString inlineData;
-        SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+        SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
         rv = nsJSUtils::CompileModule(cx, srcBuf, global, options, &module);
       }
     }
@@ -870,13 +869,6 @@ ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest)
   MOZ_ASSERT(aRequest->IsReadyToRun());
 
   if (aRequest->IsTopLevel()) {
-    ModuleScript* moduleScript = aRequest->mModuleScript;
-    if (moduleScript && !moduleScript->HasErrorToRethrow()) {
-      if (!InstantiateModuleTree(aRequest)) {
-        aRequest->mModuleScript = nullptr;
-      }
-    }
-
     if (aRequest->mIsInline &&
         aRequest->mElement->GetParserCreated() == NOT_FROM_PARSER)
     {
@@ -1778,14 +1770,16 @@ OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken, void* aCallbackData)
 }
 
 nsresult
-ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
+ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
+                                        bool* aCouldCompileOut)
 {
   MOZ_ASSERT_IF(!aRequest->IsModuleRequest(), aRequest->IsReadyToRun());
   MOZ_ASSERT(!aRequest->mWasCompiledOMT);
+  MOZ_ASSERT(aCouldCompileOut && !*aCouldCompileOut);
 
   // Don't off-thread compile inline scripts.
   if (aRequest->mIsInline) {
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
@@ -1809,19 +1803,19 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
 
   if (aRequest->IsTextSource()) {
     if (!JS::CanCompileOffThread(cx, options, aRequest->ScriptText().length())) {
-      return NS_ERROR_FAILURE;
+      return NS_OK;
     }
 #ifdef JS_BUILD_BINAST
   } else if (aRequest->IsBinASTSource()) {
     if (!JS::CanDecodeBinASTOffThread(cx, options, aRequest->ScriptBinASTData().length())) {
-      return NS_ERROR_FAILURE;
+      return NS_OK;
     }
 #endif
   } else {
     MOZ_ASSERT(aRequest->IsBytecode());
     size_t length = aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
     if (!JS::CanDecodeOffThread(cx, options, length)) {
-      return NS_ERROR_FAILURE;
+      return NS_OK;
     }
   }
 
@@ -1830,9 +1824,9 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
+    SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
     if (!JS::CompileOffThreadModule(cx, options,
-                                    aRequest->ScriptText().begin(),
-                                    aRequest->ScriptText().length(),
+                                    srcBuf,
                                     OffThreadScriptLoaderCallback,
                                     static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1858,9 +1852,9 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
 #endif
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
+    SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
     if (!JS::CompileOffThread(cx, options,
-                              aRequest->ScriptText().begin(),
-                              aRequest->ScriptText().length(),
+                              srcBuf,
                               OffThreadScriptLoaderCallback,
                               static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1873,6 +1867,7 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
   // to call ScriptLoader::ProcessOffThreadRequest with the same request.
   aRequest->mProgress = ScriptLoadRequest::Progress::eCompiling;
 
+  *aCouldCompileOut = true;
   Unused << runnable.forget();
   return NS_OK;
 }
@@ -1887,33 +1882,42 @@ ScriptLoader::CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest)
   NS_ASSERTION(!aRequest->InCompilingStage(),
                "Candidate for off-thread compile is already in compiling stage.");
 
-  nsresult rv = AttemptAsyncScriptCompile(aRequest);
-  if (NS_SUCCEEDED(rv)) {
+  bool couldCompile = false;
+  nsresult rv = AttemptAsyncScriptCompile(aRequest, &couldCompile);
+  if (NS_FAILED(rv)) {
+    HandleLoadError(aRequest, rv);
     return rv;
+  }
+
+  if (couldCompile) {
+    return NS_OK;
   }
 
   return ProcessRequest(aRequest);
 }
 
 SourceBufferHolder
-ScriptLoader::GetScriptSource(ScriptLoadRequest* aRequest, nsAutoString& inlineData)
+ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 {
   // Return a SourceBufferHolder object holding the script's source text.
-  // |inlineData| is used to hold the text for inline objects.
+  // Ownership of the buffer is transferred to the resulting SourceBufferHolder.
 
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
-    // XXX This is inefficient - GetText makes multiple
-    // copies.
+    nsAutoString inlineData;
     aRequest->mElement->GetScriptText(inlineData);
-    return SourceBufferHolder(inlineData.get(),
-                              inlineData.Length(),
-                              SourceBufferHolder::NoOwnership);
+
+    size_t nbytes = inlineData.Length() * sizeof(char16_t);
+    JS::UniqueTwoByteChars chars(static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
+    MOZ_RELEASE_ASSERT(chars);
+    memcpy(chars.get(), inlineData.get(), nbytes);
+    return SourceBufferHolder(std::move(chars), inlineData.Length());
   }
 
-  return SourceBufferHolder(aRequest->ScriptText().begin(),
-                            aRequest->ScriptText().length(),
-                            SourceBufferHolder::NoOwnership);
+  size_t length = aRequest->ScriptText().length();
+  return SourceBufferHolder(aRequest->ScriptText().extractOrCopyRawBuffer(),
+                            length,
+                            SourceBufferHolder::GiveOwnership);
 }
 
 nsresult
@@ -1928,13 +1932,20 @@ ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest)
 
   NS_ENSURE_ARG(aRequest);
 
-  if (aRequest->IsModuleRequest() &&
-      !aRequest->AsModuleRequest()->mModuleScript)
-  {
-    // There was an error fetching a module script.  Nothing to do here.
-    LOG(("ScriptLoadRequest (%p):   Error loading request, firing error", aRequest));
-    FireScriptAvailable(NS_ERROR_FAILURE, aRequest);
-    return NS_OK;
+  if (aRequest->IsModuleRequest()) {
+    ModuleLoadRequest* request = aRequest->AsModuleRequest();
+    if (request->mModuleScript && !request->mModuleScript->HasErrorToRethrow()) {
+      if (!InstantiateModuleTree(request)) {
+        request->mModuleScript = nullptr;
+      }
+    }
+
+    if (!request->mModuleScript) {
+      // There was an error fetching a module script.  Nothing to do here.
+      LOG(("ScriptLoadRequest (%p):   Error loading request, firing error", aRequest));
+      FireScriptAvailable(NS_ERROR_FAILURE, aRequest);
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsINode> scriptElem = do_QueryInterface(aRequest->mElement);
@@ -2186,7 +2197,7 @@ ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest)
     size_t sourceLength;
     size_t minLength;
     if (aRequest->IsTextSource()) {
-      sourceLength = aRequest->ScriptText().length();
+      sourceLength = aRequest->mScriptTextLength;
       minLength = sourceLengthMin;
     } else {
       MOZ_ASSERT(aRequest->IsBinASTSource());
@@ -2358,8 +2369,7 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
                                               &script);
               } else {
                 MOZ_ASSERT(aRequest->IsTextSource());
-                nsAutoString inlineData;
-                SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+                SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
 
                 if (recordreplay::IsRecordingOrReplaying()) {
                   recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
@@ -3194,11 +3204,12 @@ ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
       channel->GetURI(getter_AddRefs(request->mBaseURL));
     }
 
-
     // Attempt to compile off main thread.
-    rv = AttemptAsyncScriptCompile(request);
-    if (NS_SUCCEEDED(rv)) {
-      return rv;
+    bool couldCompile = false;
+    rv = AttemptAsyncScriptCompile(request, &couldCompile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (couldCompile) {
+      return NS_OK;
     }
 
     // Otherwise compile it right away and start fetching descendents.
@@ -3211,16 +3222,13 @@ ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   // If this is currently blocking the parser, attempt to compile it off-main-thread.
   if (aRequest == mParserBlockingRequest && NumberOfProcessors() > 1) {
     MOZ_ASSERT(!aRequest->IsModuleRequest());
-    nsresult rv = AttemptAsyncScriptCompile(aRequest);
-    if (rv == NS_OK) {
+    bool couldCompile = false;
+    nsresult rv = AttemptAsyncScriptCompile(aRequest, &couldCompile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (couldCompile) {
       MOZ_ASSERT(aRequest->mProgress == ScriptLoadRequest::Progress::eCompiling,
                  "Request should be off-thread compiling now.");
       return NS_OK;
-    }
-
-    // If off-thread compile errored, return the error.
-    if (rv != NS_ERROR_FAILURE) {
-      return rv;
     }
 
     // If off-thread compile was rejected, continue with regular processing.

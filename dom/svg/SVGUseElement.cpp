@@ -116,10 +116,9 @@ SVGUseElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
 nsresult
 SVGUseElement::BindToTree(nsIDocument* aDocument,
                           nsIContent* aParent,
-                          nsIContent* aBindingParent,
-                          bool aCompileEventHandlers)
+                          nsIContent* aBindingParent)
 {
-  nsresult rv = SVGUseElementBase::BindToTree(aDocument, aParent, aBindingParent, aCompileEventHandlers);
+  nsresult rv = SVGUseElementBase::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   TriggerReclone();

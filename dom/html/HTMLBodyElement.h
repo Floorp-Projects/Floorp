@@ -136,8 +136,7 @@ public:
 
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
+                              nsIContent* aBindingParent) override;
   /**
    * Called when an attribute has just been changed
    */
