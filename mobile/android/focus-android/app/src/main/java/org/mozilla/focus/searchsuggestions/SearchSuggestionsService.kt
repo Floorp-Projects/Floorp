@@ -14,10 +14,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class SearchSuggestionsService(private val context: Context) {
-
     private var searchEngine: SearchEngine? = null
     private var client: SearchSuggestionClient? = null
     private var httpClient = OkHttpClient()
+
+    private val _canProvideSearchSuggestions = MutableLiveData<Boolean>()
+    val canProvideSearchSuggestions: LiveData<Boolean>
+        get() = _canProvideSearchSuggestions
 
     private fun fetch(url: String): String? {
         httpClient.dispatcher().queuedCalls().forEach {
@@ -62,6 +65,7 @@ class SearchSuggestionsService(private val context: Context) {
         searchEngine = Components.searchEngineManager
                 .getDefaultSearchEngine(context, defaultIdentifier)
 
+        _canProvideSearchSuggestions.value = searchEngine?.canProvideSearchSuggestions ?: false
 
         client = SearchSuggestionClient(searchEngine!!, { fetch(it) })
     }

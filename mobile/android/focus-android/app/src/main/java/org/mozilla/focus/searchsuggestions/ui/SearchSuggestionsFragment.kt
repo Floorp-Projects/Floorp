@@ -6,16 +6,12 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.android.synthetic.main.fragment_search_suggestions.*
-import kotlinx.android.synthetic.main.item_suggestion.*
 
 import org.mozilla.focus.R
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
@@ -34,6 +30,10 @@ class SearchSuggestionsFragment : Fragment() {
 
         searchSuggestionsViewModel.suggestions.observe(this, Observer { suggestions ->
             suggestions?.apply { (suggestionList.adapter as SuggestionsAdapter).refresh(this) }
+        })
+
+        searchSuggestionsViewModel.promptUserToEnableSearchSuggestions.observe(this, Observer {
+            enable_search_suggestions_container.visibility = if (it == true)  View.VISIBLE else View.GONE
         })
     }
 

@@ -4,7 +4,30 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment">
+    <LinearLayout
+        android:id="@+id/enable_search_suggestions_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
 
+        <TextView
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="@string/enable_search_suggestion_label"
+            android:maxLines="2" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/enable_search_suggestions_no"  />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/enable_search_suggestions_yes"  />
+    </LinearLayout>
     <TextView
         android:id="@+id/searchView"
         android:layout_width="match_parent"

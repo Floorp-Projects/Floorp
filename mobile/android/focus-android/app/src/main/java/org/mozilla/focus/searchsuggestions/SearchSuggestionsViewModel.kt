@@ -16,12 +16,18 @@ import android.text.style.StyleSpan
 class SearchSuggestionsViewModel(private val service: SearchSuggestionsService) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
     private val _searchQuery = MutableLiveData<String>()
+    private val _promptUserToEnableSearchSuggestions = MutableLiveData<Boolean>()
+
+    val canRequestSearchSuggestions = service.canProvideSearchSuggestions
 
     val selectedSearchSuggestion: LiveData<String>
         get() = _selectedSearchSuggestion
 
     val searchQuery: LiveData<String>
         get() = _searchQuery
+
+    val promptUserToEnableSearchSuggestions: LiveData<Boolean>
+        get() = _promptUserToEnableSearchSuggestions
 
     val suggestions = switchMap(searchQuery) {
         val data = service.getSuggestions(it)
