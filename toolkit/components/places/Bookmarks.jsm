@@ -1395,7 +1395,7 @@ var Bookmarks = Object.freeze({
       JOIN moz_bookmarks c ON c.parent = b.id
       WHERE p.guid = :tagsGuid
       GROUP BY name
-      ORDER BY name COLLATE nocase ASC 
+      ORDER BY name COLLATE nocase ASC
     `, { tagsGuid: this.tagsGuid });
     return rows.map(r => ({
       name: r.getResultByName("name"),
@@ -1947,7 +1947,17 @@ async function handleBookmarkItemSpecialData(itemId, item) {
   }
   if ("charset" in item && item.charset) {
     try {
-      await PlacesUtils.setCharsetForURI(NetUtil.newURI(item.url), item.charset);
+      // UTF-8 is the default. If we are passed the value then set it to null,
+      // to ensure any charset is removed from the database.
+      let charset = item.charset;
+      if (item.charset.toLowerCase() == "utf-8") {
+        charset = null;
+      }
+
+      await PlacesUtils.history.update({
+        url: item.url,
+        annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]])
+      });
     } catch (ex) {
       Cu.reportError(`Failed to set charset "${item.charset}" for ${item.url}: ${ex}`);
     }
