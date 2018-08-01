@@ -983,14 +983,6 @@ EditorBase::EndPlaceholderTransaction()
 }
 
 NS_IMETHODIMP
-EditorBase::ShouldTxnSetSelection(bool* aResult)
-{
-  NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
-  *aResult = mShouldTxnSetSelection;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EditorBase::SetShouldTxnSetSelection(bool aShould)
 {
   mShouldTxnSetSelection = aShould;
