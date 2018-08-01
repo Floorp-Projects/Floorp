@@ -9,7 +9,6 @@
 #include <algorithm>                    // for max
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayersImpl.h"            // for ToData
-#include "BufferUnrotate.h"             // for BufferUnrotate
 #include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
 #include "Layers.h"                     // for PaintedLayer, Layer, etc
 #include "gfxPlatform.h"                // for gfxPlatform

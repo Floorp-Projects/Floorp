@@ -115,6 +115,12 @@ public:
                          const IntRect& aBounds = IntRect(),
                          bool aCopyBackground = false) override;
 
+  virtual bool Unrotate(IntPoint aRotation) override
+  {
+    return mA->Unrotate(aRotation) &&
+           mB->Unrotate(aRotation);
+  }
+
   virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromData(unsigned char *aData,
                                 const IntSize &aSize,
