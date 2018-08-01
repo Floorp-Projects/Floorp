@@ -60,6 +60,7 @@ class CompositionTransaction;
 class CreateElementTransaction;
 class CSSEditUtils;
 class DeleteNodeTransaction;
+class DeleteRangeTransaction;
 class DeleteTextTransaction;
 class EditAggregateTransaction;
 class EditorEventListener;
@@ -1971,6 +1972,7 @@ protected:
   friend class CreateElementTransaction;
   friend class CSSEditUtils;
   friend class DeleteNodeTransaction;
+  friend class DeleteRangeTransaction;
   friend class DeleteTextTransaction;
   friend class HTMLEditRules;
   friend class HTMLEditUtils;
