@@ -63,10 +63,7 @@ add_task(async function() {
   await promise;
 
   let iframe = document.getElementById("testframe");
-  let docShell = SpecialPowers.wrap(iframe.contentWindow)
-                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShell);
+  let docShell = SpecialPowers.wrap(iframe.contentWindow).docShell;
 
   ok(docShell.hasEditingSession, "Should have editing session");
 

@@ -679,9 +679,7 @@ function emitTouchEvent(type, touch) {
       `${touch.clientY}) relative to the viewport`);
 
   const win = curContainer.frame;
-  let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShell);
+  let docShell = win.docShell;
   if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
     let ev = {
       index: 0,

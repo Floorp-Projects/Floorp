@@ -34,9 +34,8 @@ function test() {
               return;
 
             iframe.removeEventListener('load', listener, true);
-            let shistory = content
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
+            let shistory = content.docShell
+                            .QueryInterface(Ci.nsIWebNavigation)
                             .sessionHistory;
 
             Assert.equal(shistory.count, 1, "shistory count should be 1.");

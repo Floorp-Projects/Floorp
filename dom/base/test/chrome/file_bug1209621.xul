@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
   }
 
   function run() {
-    var docshell = window.getInterface(Ci.nsIDocShell);
+    var docshell = window.docShell;
     ok(docshell, "Active window should have a DocShell");
     var treeOwner = docshell.treeOwner;
     ok(treeOwner, "Active docshell should have a TreeOwner!");

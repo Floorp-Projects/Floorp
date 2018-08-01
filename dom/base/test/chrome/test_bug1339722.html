@@ -34,9 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
     }
   }, TOPIC);
 
-  let docShell = SpecialPowers.wrap(window)
-                              .QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDocShell);
+  let docShell = SpecialPowers.wrap(window).docShell;
   docShell.chromeEventHandler.addEventListener('DOMWindowCreated', function handler(e) {
     docShell.chromeEventHandler.removeEventListener('DOMWindowCreated', handler);
     let iframe = document.getElementById('testFrame');

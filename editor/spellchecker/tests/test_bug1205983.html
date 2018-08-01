@@ -66,11 +66,7 @@ function deFocus() {
 
   onSpellCheck(elem_de, function () {
     var Ci = SpecialPowers.Ci;
-    var editingSession = SpecialPowers.wrap(window)
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIEditingSession);
+    var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
     editor_de = editingSession.getEditorForWindow(window);
     selcon_de = editor_de.selectionController;
     var sel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
