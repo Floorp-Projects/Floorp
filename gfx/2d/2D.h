@@ -1761,6 +1761,9 @@ public:
   static already_AddRefed<DrawTarget>
     CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB);
 
+  static already_AddRefed<SourceSurface>
+    CreateDualSourceSurface(SourceSurface *sourceA, SourceSurface *sourceB);
+
   /*
    * This creates a new tiled DrawTarget. When a tiled drawtarget is used the
    * drawing is distributed over number of tiles which may each hold an
