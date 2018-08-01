@@ -314,6 +314,10 @@ endif
 else
 ifdef CLANG_CL
 maybe_clobber_profiledbuild: clean
+# 32-bit PGO is currently blocked by bug 1479800
+ifeq ($(CPU_ARCH),x86_64)
+	$(LLVM_PROFDATA) merge -o $(DEPTH)/merged.profdata $(DEPTH)/*.profraw
+endif
 else
 maybe_clobber_profiledbuild:
 	$(RM) $(DIST)/bin/*.pgc
