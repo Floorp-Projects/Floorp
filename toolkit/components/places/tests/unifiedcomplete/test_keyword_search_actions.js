@@ -32,8 +32,10 @@ add_task(async function test_keyword_search() {
   await addBookmark({ uri: uri5, title: "Keyword", keyword: "key2"});
   await addBookmark({ uri: uri6, title: "Charset-history", keyword: "charset_history"});
 
-  PlacesUtils.annotations.setPageAnnotation(Services.io.newURI(uri6),
-    PlacesUtils.CHARSET_ANNO, "ISO-8859-1", 0, PlacesUtils.annotations.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: uri6,
+    annotations: new Map([[PlacesUtils.CHARSET_ANNO, "ISO-8859-1"]]),
+  });
 
   info("Plain keyword query");
   await check_autocomplete({

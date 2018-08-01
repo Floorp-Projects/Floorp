@@ -2153,7 +2153,10 @@ tests.push({
                                  null,
                                  Services.scriptSecurityManager.getSystemPrincipal());
     await PlacesUtils.keywords.insert({ url: this._uri1.spec, keyword: "testkeyword" });
-    as.setPageAnnotation(this._uri2, "anno", "anno", 0, as.EXPIRE_NEVER);
+    await PlacesUtils.history.update({
+      url: this._uri2,
+      annotations: new Map([["anno", "anno"]]),
+    });
     as.setItemAnnotation(this._bookmarkId, "anno", "anno", 0, as.EXPIRE_NEVER);
   },
 
