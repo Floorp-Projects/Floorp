@@ -152,7 +152,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
                         'mozbase/*',
                         'tools/mozterm/*',
                         'tools/wptserve/*',
-                        'tools/wpt_third_party/*',
                         'mozpack/*',
                         'mozbuild/*',
                         ]
