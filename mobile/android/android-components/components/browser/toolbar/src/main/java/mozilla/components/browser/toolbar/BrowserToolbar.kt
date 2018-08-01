@@ -151,8 +151,8 @@ class BrowserToolbar @JvmOverloads constructor(
             child.layout(
                     0 + paddingLeft,
                     0 + paddingTop,
-                    child.measuredWidth - paddingRight,
-                    child.measuredHeight - paddingBottom)
+                    paddingLeft + child.measuredWidth,
+                    paddingTop + child.measuredHeight)
         }
     }
 
@@ -169,7 +169,7 @@ class BrowserToolbar @JvmOverloads constructor(
 
         setMeasuredDimension(width, height)
 
-        // Let the children measure themselves using our fixed size (with padding substraced)
+        // Let the children measure themselves using our fixed size (with padding subtracted)
         val childWidth = width - paddingLeft - paddingRight
         val childHeight = height - paddingTop - paddingBottom
 

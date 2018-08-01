@@ -19,6 +19,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
@@ -381,5 +382,40 @@ class BrowserToolbarTest {
         toolbar.onUrlClicked = { false }
 
         assertFalse(displayToolbar.onUrlClicked())
+    }
+
+    @Test
+    fun `layout of children will factor in padding`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        toolbar.setPadding(50, 20, 60, 15)
+        toolbar.removeAllViews()
+
+        val displayToolbar = spy(DisplayToolbar(RuntimeEnvironment.application, toolbar)).also {
+            toolbar.displayToolbar = it
+        }
+
+        val editToolbar = spy(EditToolbar(RuntimeEnvironment.application, toolbar)).also {
+            toolbar.editToolbar = it
+        }
+
+        listOf(displayToolbar, editToolbar).forEach {
+            toolbar.addView(it)
+        }
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.EXACTLY)
+        toolbar.measure(widthSpec, heightSpec)
+
+        assertEquals(1000, toolbar.measuredWidth)
+        assertEquals(200, toolbar.measuredHeight)
+
+        toolbar.layout(0, 0, 1000, 1000)
+
+        listOf(displayToolbar, editToolbar).forEach {
+            assertEquals(890, it.measuredWidth)
+            assertEquals(165, it.measuredHeight)
+
+            verify(it).layout(50, 20, 940, 185)
+        }
     }
 }
