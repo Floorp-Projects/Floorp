@@ -166,9 +166,7 @@ var ContentPolicy = {
         }
       }
 
-      let ir = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDocShell)
-                     .QueryInterface(Ci.nsIInterfaceRequestor);
+      let ir = window.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
       try {
         // If e10s is disabled, this throws NS_NOINTERFACE for closed tabs.
         mm = ir.getInterface(Ci.nsIContentFrameMessageManager);
