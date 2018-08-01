@@ -146,10 +146,13 @@ function bootstrapApp(store) {
   }
 }
 
-function updatePrefs(state) {
-  const pendingBreakpoints = selectors.getPendingBreakpoints(state);
+let currentPendingBreakpoints;
 
-  if (_prefs.prefs.pendingBreakpoints !== pendingBreakpoints) {
-    _prefs.prefs.pendingBreakpoints = pendingBreakpoints;
+function updatePrefs(state) {
+  let previousPendingBreakpoints = currentPendingBreakpoints;
+  currentPendingBreakpoints = selectors.getPendingBreakpoints(state);
+
+  if (previousPendingBreakpoints && currentPendingBreakpoints !== previousPendingBreakpoints) {
+    _prefs.prefs.pendingBreakpoints = currentPendingBreakpoints;
   }
 }
