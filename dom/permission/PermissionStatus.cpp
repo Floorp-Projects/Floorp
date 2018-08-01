@@ -35,6 +35,7 @@ PermissionStatus::PermissionStatus(nsPIDOMWindowInner* aWindow,
   , mName(aName)
   , mState(PermissionState::Denied)
 {
+  KeepAliveIfHasListenersFor(NS_LITERAL_STRING("change"));
 }
 
 nsresult
@@ -123,6 +124,19 @@ PermissionStatus::PermissionChanged()
       new AsyncEventDispatcher(this, NS_LITERAL_STRING("change"), CanBubble::eNo);
     eventDispatcher->PostDOMEvent();
   }
+}
+
+void
+PermissionStatus::DisconnectFromOwner()
+{
+  IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("change"));
+
+  if (mObserver) {
+    mObserver->RemoveSink(this);
+    mObserver = nullptr;
+  }
+
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 } // namespace dom
