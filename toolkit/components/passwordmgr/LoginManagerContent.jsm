@@ -154,9 +154,7 @@ observer.onPrefChange(); // read initial values
 
 
 function messageManagerFromWindow(win) {
-  return win.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIWebNavigation)
-            .QueryInterface(Ci.nsIDocShell)
+  return win.docShell
             .QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIContentFrameMessageManager);
 }
@@ -362,9 +360,7 @@ var LoginManagerContent = {
     }
 
     try {
-      let webProgress = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                        getInterface(Ci.nsIWebNavigation).
-                        QueryInterface(Ci.nsIDocShell).
+      let webProgress = window.docShell.
                         QueryInterface(Ci.nsIInterfaceRequestor).
                         getInterface(Ci.nsIWebProgress);
       webProgress.addProgressListener(observer,

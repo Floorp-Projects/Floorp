@@ -282,9 +282,7 @@ function getMainWindow() {
 }
 
 function getBrowserElement() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDocShell)
-               .chromeEventHandler;
+  return window.docShell.chromeEventHandler;
 }
 
 /**
@@ -293,20 +291,20 @@ function getBrowserElement() {
  */
 var HTML5History = {
   get index() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
+    return window.docShell
+                 .QueryInterface(Ci.nsIWebNavigation)
                  .sessionHistory.index;
   },
 
   get canGoBack() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
+    return window.docShell
+                 .QueryInterface(Ci.nsIWebNavigation)
                  .canGoBack;
   },
 
   get canGoForward() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
+    return window.docShell
+                 .QueryInterface(Ci.nsIWebNavigation)
                  .canGoForward;
   },
 
@@ -409,8 +407,8 @@ var FakeHistory = {
 
 // If the window has a session history then use the HTML5 History wrapper
 // otherwise use our fake history implementation
-if (window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
+if (window.docShell
+          .QueryInterface(Ci.nsIWebNavigation)
           .sessionHistory) {
   var gHistory = HTML5History;
 } else {
@@ -1897,9 +1895,7 @@ var gHeader = {
   },
 
   get shouldShowNavButtons() {
-    var docshellItem = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIWebNavigation)
-                             .QueryInterface(Ci.nsIDocShellTreeItem);
+    var docshellItem = window.docShell;
 
     // If there is no outer frame then make the buttons visible
     if (docshellItem.rootTreeItem == docshellItem)

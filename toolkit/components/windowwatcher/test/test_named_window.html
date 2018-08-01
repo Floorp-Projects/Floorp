@@ -56,11 +56,7 @@ window.
       let win1 = window.open(TARGET_URL, "my_window");
       await promiseEvent(win1, "load");
 
-      let name = SpecialPowers.wrap(win1)
-                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                 .QueryInterface(SpecialPowers.Ci.nsIDocShellTreeItem)
-                 .name;
+      let name = SpecialPowers.wrap(win1).docShell.name;
 
       is(name, NAME, "Should have the expected name");
       is(win1.location.href, new URL(TARGET_URL).href,
