@@ -124,6 +124,7 @@ private:
            bool aInitialSecurityCheckDone,
            bool aIsThirdPartyRequest,
            bool aIsDocshellReload,
+           bool aSendCSPViolationEvents,
            const OriginAttributes& aOriginAttributes,
            RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
            RedirectHistoryArray& aRedirectChain,
@@ -194,6 +195,7 @@ private:
   bool                             mInitialSecurityCheckDone;
   bool                             mIsThirdPartyContext;
   bool                             mIsDocshellReload;
+  bool                             mSendCSPViolationEvents;
   OriginAttributes                 mOriginAttributes;
   RedirectHistoryArray             mRedirectChainIncludingInternalRedirects;
   RedirectHistoryArray             mRedirectChain;
