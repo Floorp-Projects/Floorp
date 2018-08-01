@@ -1,5 +1,5 @@
 const TEST_DOMAIN = "http://example.net/";
-const TEST_3RD_PARTY_DOMAIN = "https://tracking.example.com/";
+const TEST_3RD_PARTY_DOMAIN = "https://tracking.example.org/";
 
 const TEST_PATH = "browser/toolkit/components/antitracking/test/browser/";
 
