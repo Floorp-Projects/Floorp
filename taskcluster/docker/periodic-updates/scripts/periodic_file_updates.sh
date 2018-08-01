@@ -498,15 +498,15 @@ if [ "${USE_MC}" == "true" ]; then
 fi
 
 BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.common.tests.zip"
+TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.common.tests.tar.gz"
 if [ "${USE_MC}" == "true" ]; then
   BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-  TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.zip"
+  TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.tar.gz"
 fi
 # Simple name builds on >=53.0.0
 if [ "${MAJOR_VERSION}" -ge 53 ] ; then
   BROWSER_ARCHIVE="target.${PLATFORM_EXT}"
-  TESTS_ARCHIVE="target.common.tests.zip"
+  TESTS_ARCHIVE="target.common.tests.tar.gz"
 fi
 # End 'remove once 52esr is off support'
 

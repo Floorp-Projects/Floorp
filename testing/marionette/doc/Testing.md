@@ -186,7 +186,7 @@ possibly to run the Marionette tests _without_ a local build and
 with a downloaded test archive from <Taskcluster.html>.
 
 If you want to run tests from a downloaded test archive, you will
-need to download the `target.common.tests.zip` artifact attached to
+need to download the `target.common.tests.tar.gz` artifact attached to
 Treeherder [build jobs] `B` for your system.  Extract the archive
 and set up the Python Marionette client and harness by executing
 the following command in a virtual environment:
