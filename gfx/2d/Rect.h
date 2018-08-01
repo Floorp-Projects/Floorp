@@ -293,6 +293,13 @@ IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)
 }
 
 template<class units>
+bool RectIsInt32Safe(const RectTyped<units>& aRect) {
+  float min = (float)std::numeric_limits<std::int32_t>::min();
+  float max = (float)std::numeric_limits<std::int32_t>::max();
+  return aRect.x > min && aRect.y > min && aRect.XMost() < max && aRect.YMost() < max;
+}
+
+template<class units>
 IntRectTyped<units> RoundedIn(const RectTyped<units>& aRect)
 {
   return IntRectTyped<units>::RoundIn(aRect);
