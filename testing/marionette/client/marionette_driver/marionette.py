@@ -542,8 +542,7 @@ class Alert(object):
 
     def accept(self):
         """Accept a currently displayed modal dialog."""
-        # TODO: Switch to "WebDriver:AcceptAlert" in Firefox 62
-        self.marionette._send_message("WebDriver:AcceptDialog")
+        self.marionette._send_message("WebDriver:AcceptAlert")
 
     def dismiss(self):
         """Dismiss a currently displayed modal dialog."""
