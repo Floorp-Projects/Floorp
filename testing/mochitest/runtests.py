@@ -1927,6 +1927,7 @@ toolbar#nav-bar {
             prefs['media.audio_loopback_dev'] = self.mediaDevices['audio']
             prefs['media.video_loopback_dev'] = self.mediaDevices['video']
             prefs['media.cubeb.output_device'] = "Null Output"
+            prefs['media.volume_scale'] = "1.0"
 
         # Disable web replay rewinding by default if recordings are being saved.
         if options.recordingPath:
