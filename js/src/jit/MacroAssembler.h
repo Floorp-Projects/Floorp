@@ -2279,6 +2279,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     bool shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap initialHeap);
     void nurseryAllocateObject(Register result, Register temp, gc::AllocKind allocKind,
                                size_t nDynamicSlots, Label* fail);
+    void bumpPointerAllocate(Register result, Register temp, Label* fail,
+        void* posAddr, const void* curEddAddr,
+        uint32_t totalSize, uint32_t size);
+
     void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind, Label* fail);
     void allocateObject(Register result, Register temp, gc::AllocKind allocKind,
                         uint32_t nDynamicSlots, gc::InitialHeap initialHeap, Label* fail);
