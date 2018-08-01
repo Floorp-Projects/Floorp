@@ -115,7 +115,7 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable)
                                           &len)) &&
       (bestFlavor.EqualsLiteral(kUnicodeMime) ||
        bestFlavor.EqualsLiteral(kMozTextInternal))) {
-    AutoTransactionsConserveSelection dontChangeMySelection(this);
+    AutoTransactionsConserveSelection dontChangeMySelection(*this);
     nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
     if (textDataObj && len > 0) {
       nsAutoString stuffToPaste;

@@ -572,29 +572,24 @@ protected:
 class MOZ_RAII AutoTransactionsConserveSelection final
 {
 public:
-  explicit AutoTransactionsConserveSelection(EditorBase* aEditorBase
+  explicit AutoTransactionsConserveSelection(EditorBase& aEditorBase
                                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mEditorBase(aEditorBase)
-    , mAllowedTransactionsToChangeSelection(true)
+    , mAllowedTransactionsToChangeSelection(
+        aEditorBase.AllowsTransactionsToChangeSelection())
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (mEditorBase) {
-      mAllowedTransactionsToChangeSelection =
-        mEditorBase->AllowsTransactionsToChangeSelection();
-      mEditorBase->MakeThisAllowTransactionsToChangeSelection(false);
-    }
+    mEditorBase.MakeThisAllowTransactionsToChangeSelection(false);
   }
 
   ~AutoTransactionsConserveSelection()
   {
-    if (mEditorBase) {
-      mEditorBase->MakeThisAllowTransactionsToChangeSelection(
-                     mAllowedTransactionsToChangeSelection);
-    }
+    mEditorBase.MakeThisAllowTransactionsToChangeSelection(
+                  mAllowedTransactionsToChangeSelection);
   }
 
 protected:
-  EditorBase* mEditorBase;
+  EditorBase& mEditorBase;
   bool mAllowedTransactionsToChangeSelection;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
