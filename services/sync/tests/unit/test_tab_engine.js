@@ -16,33 +16,6 @@ async function getMocks() {
   return [engine, store];
 }
 
-add_task(async function test_getOpenURLs() {
-  _("Test getOpenURLs.");
-  let [engine, store] = await getMocks();
-
-  let superLongURL = "http://" + (new Array(URI_LENGTH_MAX).join("w")) + ".com/";
-  let urls = ["http://bar.com", "http://foo.com", "http://foobar.com", superLongURL];
-  function fourURLs() {
-    return urls.pop();
-  }
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, fourURLs, 1, 4);
-
-  let matches;
-
-  _("  test matching works (true)");
-  let openurlsset = engine.getOpenURLs();
-  matches = openurlsset.has("http://foo.com");
-  ok(matches);
-
-  _("  test matching works (false)");
-  matches = openurlsset.has("http://barfoo.com");
-  ok(!matches);
-
-  _("  test matching works (too long)");
-  matches = openurlsset.has(superLongURL);
-  ok(!matches);
-});
-
 add_task(async function test_tab_engine_skips_incoming_local_record() {
   _("Ensure incoming records that match local client ID are never applied.");
   let [engine, store] = await getMocks();
