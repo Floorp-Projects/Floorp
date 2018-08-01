@@ -26,9 +26,6 @@ ChromeUtils.defineModuleGetter(this, "FormAutofill",
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
 
-const SAVE_CREDITCARD_DEFAULT_PREF = "dom.payments.defaults.saveCreditCard";
-const SAVE_ADDRESS_DEFAULT_PREF = "dom.payments.defaults.saveAddress";
-
 let PaymentFrameScript = {
   init() {
     XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -86,16 +83,6 @@ let PaymentFrameScript = {
       getFormFormat(country) {
         let format = FormAutofillUtils.getFormFormat(country);
         return Cu.cloneInto(format, waivedContent);
-      },
-
-      getDefaultPreferences() {
-        let prefValues = {
-          saveCreditCardDefaultChecked:
-            Services.prefs.getBoolPref(SAVE_CREDITCARD_DEFAULT_PREF, false),
-          saveAddressDefaultChecked:
-            Services.prefs.getBoolPref(SAVE_ADDRESS_DEFAULT_PREF, false),
-        };
-        return prefValues;
       },
     };
     waivedContent.PaymentDialogUtils = Cu.cloneInto(PaymentDialogUtils, waivedContent, {
