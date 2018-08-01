@@ -1304,6 +1304,11 @@ public:
   virtual void PadEdges(const IntRegion& aRegion);
 
   /**
+   * Performs an in-place buffer unrotation operation.
+   */
+  virtual bool Unrotate(IntPoint aRotation);
+
+  /**
    * Create a SourceSurface optimized for use with this DrawTarget from
    * existing bitmap data in memory.
    *
