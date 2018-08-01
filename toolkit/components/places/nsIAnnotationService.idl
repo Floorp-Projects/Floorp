@@ -21,28 +21,6 @@ interface mozIAnnotatedResult;
  *
  */
 
-[scriptable, uuid(63fe98e0-6889-4c2c-ac9f-703e4bc25027)]
-interface nsIAnnotationObserver : nsISupports
-{
-    /**
-     * Called when an annotation value is set. It could be a new annotation,
-     * or it could be a new value for an existing annotation.
-     */
-    void onItemAnnotationSet(in long long aItemId,
-                             in AUTF8String aName,
-                             in unsigned short aSource,
-                             in boolean aDontUpdateLastModified);
-
-    /**
-     * Called when an annotation is deleted. If aName is empty, then ALL
-     * annotations for the given URI have been deleted. This is not called when
-     * annotations are expired (normally happens when the app exits).
-     */
-    void onItemAnnotationRemoved(in long long aItemId,
-                                 in AUTF8String aName,
-                                 in unsigned short aSource);
-};
-
 [scriptable, uuid(D4CDAAB1-8EEC-47A8-B420-AD7CB333056A)]
 interface nsIAnnotationService : nsISupports
 {
@@ -185,24 +163,6 @@ interface nsIAnnotationService : nsISupports
     void removeItemAnnotation(in long long aItemId,
                               in AUTF8String aName,
                               [optional] in unsigned short aSource);
-
-    /**
-     * Adds an annotation observer. The annotation service will keep an owning
-     * reference to the observer object.
-     */
-    void addObserver(in nsIAnnotationObserver aObserver);
-
-
-    /**
-     * Removes an annotaton observer previously registered by addObserver.
-     */
-    void removeObserver(in nsIAnnotationObserver aObserver);
-
-    /**
-     * Gets an array of registered nsIAnnotationObserver objects.
-     */
-    void getObservers([optional] out unsigned long count,
-                      [retval, array, size_is(count)] out nsIAnnotationObserver observers);
 };
 
 /**

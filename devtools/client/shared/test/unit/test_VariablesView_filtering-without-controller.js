@@ -14,6 +14,7 @@ const { require } =
 const { globals } = require("devtools/shared/builtin-modules");
 
 const DOMParser = new globals.DOMParser();
+DOMParser.forceEnableXULXBL();
 
 function run_test() {
   const doc = DOMParser.parseFromString("<div>", "text/html");

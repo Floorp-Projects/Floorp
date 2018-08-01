@@ -30,6 +30,7 @@ public:
   bool CompareAttrLists(const SdpAttributeList& rustAttrlist,
                         const SdpAttributeList& sipccAttrlist,
                         int level) const;
+  void TrackRustParsingFailed(size_t sipccErrorCount) const;
 
 private:
 

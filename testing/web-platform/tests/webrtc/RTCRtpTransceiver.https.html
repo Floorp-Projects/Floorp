@@ -1995,6 +1995,7 @@
     await pc2.setRemoteDescription(offer);
 
     // answerer stops transceiver to reject m-section
+    const stoppedMid0 = pc2.getTransceivers()[0].mid;
     pc2.getTransceivers()[0].stop();
 
     let answer = await pc2.createAnswer();
@@ -2038,6 +2039,7 @@
         }
       ]);
 
+    assert_not_equals(pc1.getTransceivers()[1].mid, stoppedMid0);
 
     pc2.addTrack(track, stream);
     offer = await pc2.createOffer();
@@ -2052,6 +2054,8 @@
           sender: {track}
         }
       ]);
+
+    assert_not_equals(pc2.getTransceivers()[1].mid, stoppedMid0);
 
     await pc2.setLocalDescription(offer);
     await pc1.setRemoteDescription(offer);
@@ -2086,6 +2090,7 @@
     // stop the transceiver, and add a track. Verify that we don't reuse
     // prematurely in our offer. (There should be one rejected m-section, and a
     // new one for the new track)
+    const stoppedMid1 = pc1.getTransceivers()[1].mid;
     pc1.getTransceivers()[1].stop();
     const stream3 = await navigator.mediaDevices.getUserMedia({audio: true});
     t.add_cleanup(() => stopTracks(stream3));
@@ -2129,7 +2134,9 @@
         }
       ]);
 
-    const mid1 = pc1.getTransceivers()[2].mid;
+    // Verify that we don't reuse the mid from the stopped transceiver
+    const mid1 = pc2.getTransceivers()[2].mid;
+    assert_not_equals(mid1, stoppedMid1);
 
     pc2.addTrack(track3, stream3);
     // There are two ways to handle this new track; reuse the recvonly
@@ -2174,9 +2181,13 @@
         },
         {
           sender: {track: track4},
-          mid: mid0
         }
       ]);
+
+    // Fourth transceiver should have a new mid
+    assert_not_equals(pc2.getTransceivers()[3].mid, stoppedMid0);
+    assert_not_equals(pc2.getTransceivers()[3].mid, stoppedMid1);
+
     assert_equals(offer.sdp.match(/m=/g).length, 2,
                   "Exactly 2 m-lines in offer, because m-section was reused");
     assert_equals(offer.sdp.match(/m=audio 0 /g), null,

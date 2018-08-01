@@ -32,7 +32,7 @@ class ContextMenusClickPropHandler {
       // No need for runSafe or anything because we are already being run inside
       // an event handler -- the event is just being forwarded to the actual
       // handler.
-      withHandlingUserInput(this.context.contentWindow, () => onclick(info, tab));
+      onclick(info, tab);
     }
   }
 

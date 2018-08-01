@@ -7,8 +7,7 @@ WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
 UPLOAD_DIR=$HOME/artifacts
 
-# Do not define root_dir so we build everything to a tmpdir
-#root_dir=$HOME_DIR
+root_dir=$HOME_DIR
 data_dir=$HOME_DIR/src/build/unix/build-gcc
 
 . $data_dir/build-gcc.sh
