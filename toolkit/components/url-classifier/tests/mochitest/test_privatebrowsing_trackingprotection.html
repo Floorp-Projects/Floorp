@@ -56,6 +56,7 @@ function checkLoads(aWindow, aBlocked) {
   is(win.document.getElementById("badscript").dataset.touched, aBlocked ? "no" : "yes", "Should not load tracking javascript");
   is(win.document.getElementById("badimage").dataset.touched, aBlocked ? "no" : "yes", "Should not load tracking images");
   is(win.document.getElementById("goodscript").dataset.touched, "yes", "Should load whitelisted tracking javascript");
+  is(win.document.getElementById("goodimage").dataset.touched, "yes", "Should load non-blacklisted image");
 
   var elt = win.document.getElementById("styleCheck");
   var style = win.document.defaultView.getComputedStyle(elt);
@@ -97,10 +98,8 @@ function checkLoads(aWindow, aBlocked) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
-            ["privacy.trackingprotection.enabled", false],
-            ["privacy.trackingprotection.pbmode.enabled", true],
-            ["channelclassifier.allowlist_example", true]]},
+  {"set": [["privacy.trackingprotection.enabled", false],
+           ["privacy.trackingprotection.pbmode.enabled", true]]},
   test);
 
 function test() {
