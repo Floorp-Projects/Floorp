@@ -1685,7 +1685,7 @@ FunctionRep.propTypes = {
 };
 
 function FunctionRep(props) {
-  const { object: grip, onViewSourceInDebugger } = props;
+  const { object: grip, onViewSourceInDebugger, recordTelemetryEvent } = props;
 
   let jumpToDefinitionButton;
   if (onViewSourceInDebugger && grip.location && grip.location.url && !IGNORED_SOURCE_URLS.includes(grip.location.url)) {
@@ -1697,6 +1697,9 @@ function FunctionRep(props) {
         // Stop the event propagation so we don't trigger ObjectInspector
         // expand/collapse.
         e.stopPropagation();
+        if (recordTelemetryEvent) {
+          recordTelemetryEvent("jump_to_definition");
+        }
         onViewSourceInDebugger(grip.location);
       }
     });
@@ -2003,7 +2006,7 @@ function getStacktraceElements(props, preview) {
     stack.push("\t", span({
       key: `fn${index}`,
       className: "objectBox-stackTrace-fn"
-    }, cleanFunctionName(functionName)), span({
+    }, cleanFunctionName(functionName)), " ", span({
       key: `location${index}`,
       className: "objectBox-stackTrace-location",
       onClick: onLocationClick,

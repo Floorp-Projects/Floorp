@@ -1512,6 +1512,7 @@ html .toggle-button.end.vertical svg {
 
 .source-outline-panel {
   flex: 1;
+  overflow: auto;
 }
 
 .sources-list .managed-tree .tree .node img.blackBox {
@@ -3005,6 +3006,11 @@ debug-expression-error {
   align-items: center;
 }
 
+.breakpoints-list .breakpoint-heading .filename span {
+  opacity: 0.7;
+  padding-left: 4px;
+}
+
 /* temporary until we refactor the sources tree and tab icon styles */
 .breakpoints-list .breakpoint-heading .source-icon.file {
   top: 0;
@@ -4192,6 +4198,11 @@ html[dir="rtl"] img.moreTabs {
   overflow: hidden;
   padding: 0 4px;
   align-self: center;
+}
+
+.source-tab .filename span {
+  opacity: 0.7;
+  padding-left: 4px;
 }
 
 .source-tab .close-btn {
