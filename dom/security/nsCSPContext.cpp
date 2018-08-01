@@ -123,6 +123,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          nsISupports*        aRequestContext,
                          const nsACString&   aMimeTypeGuess,
                          nsIURI*             aOriginalURIIfRedirect,
+                         bool                aSendViolationReports,
                          int16_t*            outDecision)
 {
   if (CSPCONTEXTLOGENABLED()) {
@@ -182,7 +183,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                                    nonce,
                                    isPreload,
                                    false,     // allow fallback to default-src
-                                   true,      // send violation reports
+                                   aSendViolationReports,
                                    true,     // send blocked URI in violation reports
                                    parserCreated);
 

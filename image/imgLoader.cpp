@@ -616,7 +616,8 @@ static bool
 ShouldLoadCachedImage(imgRequest* aImgRequest,
                       nsISupports* aLoadingContext,
                       nsIPrincipal* aTriggeringPrincipal,
-                      nsContentPolicyType aPolicyType)
+                      nsContentPolicyType aPolicyType,
+                      bool aSendCSPViolationReports)
 {
   /* Call content policies on cached images - Bug 1082837
    * Cached images are keyed off of the first uri in a redirect chain.
@@ -649,6 +650,8 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
                  requestingNode,
                  nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
                  aPolicyType);
+
+  secCheckLoadInfo->SetSendCSPViolationEvents(aSendCSPViolationReports);
 
   int16_t decision = nsIContentPolicy::REJECT_REQUEST;
   rv = NS_CheckContentLoadPolicy(contentLocation,
@@ -746,7 +749,8 @@ ValidateSecurityInfo(imgRequest* request, bool forcePrincipalCheck,
   }
 
   // Content Policy Check on Cached Images
-  return ShouldLoadCachedImage(request, aCX, triggeringPrincipal, aPolicyType);
+  return ShouldLoadCachedImage(request, aCX, triggeringPrincipal, aPolicyType,
+                               /* aSendCSPViolationReports */ false);
 }
 
 static nsresult
@@ -1797,7 +1801,8 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
                                          nsContentPolicyType aLoadPolicyType,
                                          imgRequestProxy** aProxyRequest,
                                          nsIPrincipal* aTriggeringPrincipal,
-                                         int32_t aCORSMode)
+                                         int32_t aCORSMode,
+                                         bool* aNewChannelCreated)
 {
   // now we need to insert a new channel request object inbetween the real
   // request and the proxy that basically delays loading the image until it
@@ -1851,6 +1856,10 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
                        mRespectPrivacy);
   if (NS_FAILED(rv)) {
     return false;
+  }
+
+  if (aNewChannelCreated) {
+    *aNewChannelCreated = true;
   }
 
   RefPtr<imgRequestProxy> req;
@@ -1917,6 +1926,7 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
                          nsLoadFlags aLoadFlags,
                          nsContentPolicyType aLoadPolicyType,
                          bool aCanMakeNewChannel,
+                         bool* aNewChannelCreated,
                          imgRequestProxy** aProxyRequest,
                          nsIPrincipal* aTriggeringPrincipal,
                          int32_t aCORSMode)
@@ -2036,7 +2046,7 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
                                          aCX, aLoadingDocument,
                                          aLoadFlags, aLoadPolicyType,
                                          aProxyRequest, aTriggeringPrincipal,
-                                         aCORSMode);
+                                         aCORSMode, aNewChannelCreated);
   }
 
   return !validateRequest;
@@ -2341,10 +2351,12 @@ imgLoader::LoadImage(nsIURI* aURI,
   imgCacheTable& cache = GetCache(key);
 
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
+    bool newChannelCreated = false;
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
                       aReferrerPolicy, aLoadGroup, aObserver, aLoadingDocument,
                       aLoadingDocument, requestFlags, aContentPolicyType, true,
-                      _retval, aTriggeringPrincipal, corsmode)) {
+                      &newChannelCreated, _retval, aTriggeringPrincipal,
+                      corsmode)) {
       request = entry->GetRequest();
 
       // If this entry has no proxies, its request has no reference to the
@@ -2363,6 +2375,18 @@ imgLoader::LoadImage(nsIURI* aURI,
 
       entry->Touch();
 
+      if (!newChannelCreated) {
+        // This is ugly but it's needed to report CSP violations. We have 3
+        // scenarios:
+        // - we don't have cache. We are not in this if() stmt. A new channel is
+        //   created and that triggers the CSP checks.
+        // - We have a cache entry and this is blocked by CSP directives.
+        DebugOnly<bool> shouldLoad =
+          ShouldLoadCachedImage(request, aLoadingDocument, aTriggeringPrincipal,
+                                aContentPolicyType,
+                                /* aSendCSPViolationReports */ true);
+        MOZ_ASSERT(shouldLoad);
+      }
     } else {
       // We can't use this entry. We'll try to load it off the network, and if
       // successful, overwrite the old entry in the cache with a new one.
@@ -2613,7 +2637,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
       if (ValidateEntry(entry, uri, nullptr, nullptr, RP_Unset,
                         nullptr, aObserver, aCX, doc, requestFlags,
-                        policyType, false, nullptr,
+                        policyType, false, nullptr, nullptr,
                         nullptr, imgIRequest::CORS_NONE)) {
         request = entry->GetRequest();
       } else {

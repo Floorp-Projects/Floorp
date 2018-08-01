@@ -502,6 +502,12 @@ interface nsILoadInfo : nsISupports
    */
   readonly attribute nsContentPolicyType externalContentPolicyType;
 
+  /**
+   * CSP uses this parameter to send or not CSP violation events.
+   * Default value: true.
+   */
+  [infallible] attribute boolean sendCSPViolationEvents;
+
 %{ C++
   inline nsContentPolicyType GetExternalContentPolicyType()
   {
