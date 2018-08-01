@@ -419,17 +419,10 @@ function getInnerWindowIDForWindow(aContentWindow) {
 }
 
 function getMessageManagerForWindow(aContentWindow) {
-  aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-
-  let docShell;
-  try {
-    // This throws NS_NOINTERFACE for closed tabs.
-    docShell = aContentWindow.getInterface(Ci.nsIDocShell);
-  } catch (e) {
-    if (e.result == Cr.NS_NOINTERFACE) {
-      return null;
-    }
-    throw e;
+  let docShell = aContentWindow.docShell;
+  if (!docShell) {
+    // Closed tab.
+    return null;
   }
 
   let ir = docShell.sameTypeRootTreeItem
