@@ -94,6 +94,8 @@ public:
     // accordingly so that we avoid using bad font tables
     void CheckForBrokenFont(gfxFontFamily *aFamily);
 
+    FT_MM_Var* GetMMVar() override;
+
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontListSizes* aSizes) const override;
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -102,6 +104,8 @@ public:
     FT_Face mFTFace;
     cairo_font_face_t *mFontFace;
 
+    FT_MM_Var* mMMVar = nullptr;
+
     nsCString mFilename;
     uint8_t   mFTFontIndex;
 
@@ -109,6 +113,7 @@ public:
 
     bool mHasVariations = false;
     bool mHasVariationsInitialized = false;
+    bool mMMVarInitialized = false;
 };
 
 class FT2FontFamily : public gfxFontFamily
