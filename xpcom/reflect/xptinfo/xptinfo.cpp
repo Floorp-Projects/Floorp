@@ -18,47 +18,6 @@ using namespace xpt::detail;
 // Constant Lookup Helper Methods //
 ////////////////////////////////////
 
-// XXX: Remove when shims are gone.
-// This method either looks for the ConstantSpec at aIndex, or counts the
-// number of constants for a given shim.
-// NOTE: Only one of the aSpec and aCount outparameters should be provided.
-// NOTE: If aSpec is not passed, aIndex is ignored.
-// NOTE: aIndex must be in range if aSpec is passed.
-static void
-GetWebIDLConst(uint16_t aHookIdx, uint16_t aIndex,
-               const ConstantSpec** aSpec, uint16_t* aCount)
-{
-  MOZ_ASSERT((aSpec && !aCount) || (aCount && !aSpec),
-             "Only one of aSpec and aCount should be provided");
-
-  const NativePropertyHooks* propHooks = sPropHooks[aHookIdx];
-
-  uint16_t idx = 0;
-  do {
-    const NativeProperties* props[] = {
-      propHooks->mNativeProperties.regular,
-      propHooks->mNativeProperties.chromeOnly
-    };
-    for (size_t i = 0; i < ArrayLength(props); ++i) {
-      auto prop = props[i];
-      if (prop && prop->HasConstants()) {
-        for (auto cs = prop->Constants()->specs; cs->name; ++cs) {
-          // We have found one constant here.  We explicitly do not bother
-          // calling isEnabled() here because it's OK to define potentially
-          // extra constants on these shim interfaces.
-          if (aSpec && idx == aIndex) {
-            *aSpec = cs;
-            return;
-          }
-          ++idx;
-        }
-      }
-    }
-  } while ((propHooks = propHooks->mProtoHooks));
-
-  MOZ_ASSERT(aCount, "aIndex is out of bounds!");
-  *aCount = idx;
-}
 
 bool
 nsXPTInterfaceInfo::HasAncestor(const nsIID& aIID) const
@@ -71,48 +30,19 @@ nsXPTInterfaceInfo::HasAncestor(const nsIID& aIID) const
   return false;
 }
 
-uint16_t
-nsXPTInterfaceInfo::ConstantCount() const
+const nsXPTConstantInfo&
+nsXPTInterfaceInfo::Constant(uint16_t aIndex) const
 {
-  if (!mIsShim) {
-    return mNumConsts;
+  MOZ_ASSERT(aIndex < ConstantCount());
+
+  if (const nsXPTInterfaceInfo* pi = GetParent()) {
+    if (aIndex < pi->ConstantCount()) {
+      return pi->Constant(aIndex);
+    }
+    aIndex -= pi->ConstantCount();
   }
 
-  // Get the number of WebIDL constants.
-  uint16_t num = 0;
-  GetWebIDLConst(mConsts, 0, nullptr, &num);
-  return num;
-}
-
-const char*
-nsXPTInterfaceInfo::Constant(uint16_t aIndex, JS::MutableHandleValue aValue) const
-{
-  if (!mIsShim) {
-    MOZ_ASSERT(aIndex < mNumConsts);
-
-    if (const nsXPTInterfaceInfo* pi = GetParent()) {
-      MOZ_ASSERT(!pi->mIsShim);
-      if (aIndex < pi->mNumConsts) {
-        return pi->Constant(aIndex, aValue);
-      }
-      aIndex -= pi->mNumConsts;
-    }
-
-    // Extract the value and name from the Constant Info.
-    const ConstInfo& info = sConsts[mConsts + aIndex];
-    if (info.mSigned || info.mValue <= (uint32_t)INT32_MAX) {
-      aValue.set(JS::Int32Value((int32_t)info.mValue));
-    } else {
-      aValue.set(JS::DoubleValue(info.mValue));
-    }
-    return GetString(info.mName);
-  }
-
-  // Get a single WebIDL constant.
-  const ConstantSpec* spec;
-  GetWebIDLConst(mConsts, aIndex, &spec, nullptr);
-  aValue.set(spec->value);
-  return spec->name;
+  return xpt::detail::GetConstant(mConsts + aIndex);
 }
 
 const nsXPTMethodInfo&
@@ -189,10 +119,12 @@ nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
                                 JS::MutableHandleValue aConstant,
                                 char** aName) const
 {
-  *aName = aIndex < ConstantCount()
-    ? moz_xstrdup(Constant(aIndex, aConstant))
-    : nullptr;
-  return *aName ? NS_OK : NS_ERROR_FAILURE;
+  if (aIndex < ConstantCount()) {
+    aConstant.set(Constant(aIndex).JSValue());
+    *aName = moz_xstrdup(Constant(aIndex).Name());
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
