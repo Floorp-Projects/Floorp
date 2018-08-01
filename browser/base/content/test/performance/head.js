@@ -71,7 +71,7 @@ async function recordReflows(testPromise, win = window) {
     await testPromise;
   } finally {
     Services.els.removeListenerForAllEvents(win, dirtyFrameFn, true);
-    docShell.removeWeakReflowObserver(observer);
+    win.docShell.removeWeakReflowObserver(observer);
   }
 
   return reflows;
