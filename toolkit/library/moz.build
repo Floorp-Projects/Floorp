@@ -343,8 +343,11 @@ if CONFIG['COMPILE_ENVIRONMENT']:
 
     if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
         GENERATED_FILES += ['symverscript']
-        GENERATED_FILES['symverscript'].script = 'gen_symverscript.py'
+        GENERATED_FILES['symverscript'].script = '/build/gen_symverscript.py'
         GENERATED_FILES['symverscript'].inputs = ['symverscript.in']
+        GENERATED_FILES['symverscript'].flags = [
+            'xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']
+        ]
         SYMBOLS_FILE = '!symverscript'
 
 # This library is entirely composed of Rust code, and needs to come after
