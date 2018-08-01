@@ -1555,35 +1555,30 @@ Element::GetElementsByClassName(const nsAString& aClassNames)
 void
 Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements)
 {
-  // This helper function is passed to GetElementsByMatching()
-  // to identify elements with styling which will cause them to
-  // generate a nsGridContainerFrame during layout.
-  auto IsDisplayGrid = [](Element* aElement) -> bool
-  {
-    RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
-    if (computedStyle) {
-      const nsStyleDisplay* display = computedStyle->StyleDisplay();
-      return (display->mDisplay == StyleDisplay::Grid ||
-              display->mDisplay == StyleDisplay::InlineGrid);
-    }
-    return false;
-  };
+  nsINode* cur = this;
+  while (cur) {
+    if (cur->IsElement()) {
+      Element* elem = cur->AsElement();
 
-  GetElementsByMatching(IsDisplayGrid, aElements);
-}
+      if (elem->GetPrimaryFrame()) {
+        // See if this has a GridContainerFrame. Use the same method that
+        // nsGridContainerFrame uses, which deals with some edge cases.
+        if (nsGridContainerFrame::GetGridContainerFrame(elem->GetPrimaryFrame())) {
+          aElements.AppendElement(elem);
+        }
 
-void
-Element::GetElementsByMatching(nsElementMatchFunc aFunc,
-                               nsTArray<RefPtr<Element>>& aElements)
-{
-  for (nsINode* cur = this; cur; cur = cur->GetNextNode(this)) {
-    if (cur->IsElement() && aFunc(cur->AsElement())) {
-      aElements.AppendElement(cur->AsElement());
+        // This element has a frame, so allow the traversal to go through
+        // the children.
+        cur = cur->GetNextNode(this);
+        continue;
+      }
     }
+
+    // Either this isn't an element, or it has no frame. Continue with the
+    // traversal but ignore all the children.
+    cur = cur->GetNextNonChildNode(this);
   }
 }
-
 
 /**
  * Returns the count of descendants (inclusive of aContent) in
