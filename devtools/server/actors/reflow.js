@@ -430,20 +430,14 @@ class ReflowObserver extends Observable {
 
   _startListeners(windows) {
     for (const window of windows) {
-      const docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .QueryInterface(Ci.nsIDocShell);
-      docshell.addWeakReflowObserver(this);
+      window.docShell.addWeakReflowObserver(this);
     }
   }
 
   _stopListeners(windows) {
     for (const window of windows) {
       try {
-        const docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation)
-                       .QueryInterface(Ci.nsIDocShell);
-        docshell.removeWeakReflowObserver(this);
+        window.docShell.removeWeakReflowObserver(this);
       } catch (e) {
         // Corner cases where a global has already been freed may happen, in
         // which case, no need to remove the observer.

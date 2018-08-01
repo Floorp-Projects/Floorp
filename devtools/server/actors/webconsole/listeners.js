@@ -379,9 +379,7 @@ ConsoleAPIListener.prototype =
  */
 
 function ConsoleReflowListener(window, listener) {
-  this.docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell);
+  this.docshell = window.docShell;
   this.listener = listener;
   this.docshell.addWeakReflowObserver(this);
 }
