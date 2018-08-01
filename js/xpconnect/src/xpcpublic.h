@@ -503,10 +503,12 @@ JSObject*
 CompilationScope();
 
 /**
- * Returns the nsIGlobalObject corresponding to |aObj|'s JS global.
+ * Returns the nsIGlobalObject corresponding to |obj|'s JS global. |obj| must
+ * not be a cross-compartment wrapper: CCWs are not associated with a single
+ * global.
  */
 nsIGlobalObject*
-NativeGlobal(JSObject* aObj);
+NativeGlobal(JSObject* obj);
 
 /**
  * Returns the nsIGlobalObject corresponding to |cx|'s JS global. Must not be
