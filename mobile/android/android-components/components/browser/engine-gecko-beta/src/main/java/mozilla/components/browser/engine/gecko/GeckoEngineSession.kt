@@ -8,7 +8,6 @@ import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
 import org.mozilla.gecko.util.ThreadUtils
-import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoResult
@@ -117,13 +116,12 @@ class GeckoEngineSession(
         }
 
         override fun onLoadRequest(
-            session: GeckoSession?,
-            uri: String?,
+            session: GeckoSession,
+            uri: String,
             target: Int,
-            flags: Int,
-            response: GeckoResponse<Boolean>
-        ) {
-            response.respond(false)
+            flags: Int
+        ): GeckoResult<Boolean> {
+            return GeckoResult.fromValue(false)
         }
 
         override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {
@@ -135,10 +133,11 @@ class GeckoEngineSession(
         }
 
         override fun onNewSession(
-            session: GeckoSession?,
-            uri: String?,
-            response: GeckoResponse<GeckoSession>
-        ) {}
+            session: GeckoSession,
+            uri: String
+        ): GeckoResult<GeckoSession> {
+            return GeckoResult.fromValue(null)
+        }
     }
 
     /**

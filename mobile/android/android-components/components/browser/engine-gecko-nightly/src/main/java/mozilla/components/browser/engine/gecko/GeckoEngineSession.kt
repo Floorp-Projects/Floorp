@@ -106,6 +106,8 @@ class GeckoEngineSession(
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
+        override fun onLoadError(session: GeckoSession?, uri: String?, category: Int, error: Int) = Unit
+
         override fun onLocationChange(session: GeckoSession?, url: String) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
             if (initialLoad && url == ABOUT_BLANK) {
@@ -143,6 +145,10 @@ class GeckoEngineSession(
     * ProgressDelegate implementation for forwarding callbacks to observers of the session.
     */
     private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
+        override fun onProgressChange(session: GeckoSession?, progress: Int) {
+            notifyObservers { onProgress(progress) }
+        }
+
         override fun onSecurityChange(
             session: GeckoSession?,
             securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
