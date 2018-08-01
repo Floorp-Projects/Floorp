@@ -300,12 +300,10 @@ HTMLMenuItemElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
 nsresult
 HTMLMenuItemElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+                                nsIContent* aBindingParent)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent,
-                                                 aCompileEventHandlers);
+                                                 aBindingParent);
 
   if (NS_SUCCEEDED(rv) && aDocument && mType == CMD_TYPE_RADIO) {
     AddedToRadioGroup();

@@ -22,6 +22,7 @@
 #endif
 @BINPATH@/dictionaries/*
 @BINPATH@/hyphenation/*
+@BINPATH@/localization/*
 
 [assets destdir="assets/@ANDROID_CPU_ARCH@"]
 #ifndef MOZ_STATIC_JS

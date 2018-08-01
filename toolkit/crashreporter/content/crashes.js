@@ -130,12 +130,11 @@ function populateReportList() {
 }
 
 var clearReports = async function() {
-  let bundle = Services.strings.createBundle("chrome://global/locale/crashes.properties");
-
-  if (!Services.
-         prompt.confirm(window,
-                        bundle.GetStringFromName("deleteconfirm.title"),
-                        bundle.GetStringFromName("deleteconfirm.description"))) {
+  const [title, description] = await document.l10n.formatValues([
+    {id: "delete-confirm-title"},
+    {id: "delete-confirm-description"},
+  ]);
+  if (!Services.prompt.confirm(window, title, description)) {
     return;
   }
 

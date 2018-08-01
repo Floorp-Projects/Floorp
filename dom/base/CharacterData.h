@@ -143,8 +143,7 @@ public:
   // Implementation for nsIContent
   nsresult BindToTree(nsIDocument* aDocument,
                       nsIContent* aParent,
-                      nsIContent* aBindingParent,
-                      bool aCompileEventHandlers) override;
+                      nsIContent* aBindingParent) override;
 
   void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;
 

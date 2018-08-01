@@ -2417,67 +2417,54 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
  * @resolves { url, postData, mayInheritPrincipal }. If it's not possible
  *           to discern a keyword or an alias, url will be the input string.
  */
-function getShortcutOrURIAndPostData(url, callback = null) {
-  if (callback) {
-    Deprecated.warning("Please use the Promise returned by " +
-                       "getShortcutOrURIAndPostData() instead of passing a " +
-                       "callback",
-                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1100294");
-  }
-  return (async function() {
-    let mayInheritPrincipal = false;
-    let postData = null;
-    // Split on the first whitespace.
-    let [keyword, param = ""] = url.trim().split(/\s(.+)/, 2);
+async function getShortcutOrURIAndPostData(url) {
+  let mayInheritPrincipal = false;
+  let postData = null;
+  // Split on the first whitespace.
+  let [keyword, param = ""] = url.trim().split(/\s(.+)/, 2);
 
-    if (!keyword) {
-      return { url, postData, mayInheritPrincipal };
-    }
-
-    let engine = Services.search.getEngineByAlias(keyword);
-    if (engine) {
-      let submission = engine.getSubmission(param, null, "keyword");
-      return { url: submission.uri.spec,
-               postData: submission.postData,
-               mayInheritPrincipal };
-    }
-
-    // A corrupt Places database could make this throw, breaking navigation
-    // from the location bar.
-    let entry = null;
-    try {
-      entry = await PlacesUtils.keywords.fetch(keyword);
-    } catch (ex) {
-      Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
-    }
-    if (!entry || !entry.url) {
-      // This is not a Places keyword.
-      return { url, postData, mayInheritPrincipal };
-    }
-
-    try {
-      [url, postData] =
-        await BrowserUtils.parseUrlAndPostData(entry.url.href,
-                                               entry.postData,
-                                               param);
-      if (postData) {
-        postData = getPostDataStream(postData);
-      }
-
-      // Since this URL came from a bookmark, it's safe to let it inherit the
-      // current document's principal.
-      mayInheritPrincipal = true;
-    } catch (ex) {
-      // It was not possible to bind the param, just use the original url value.
-    }
-
+  if (!keyword) {
     return { url, postData, mayInheritPrincipal };
-  })().then(data => {
-    if (callback) {
-      callback(data);
+  }
+
+  let engine = Services.search.getEngineByAlias(keyword);
+  if (engine) {
+    let submission = engine.getSubmission(param, null, "keyword");
+    return { url: submission.uri.spec,
+             postData: submission.postData,
+             mayInheritPrincipal };
+  }
+
+  // A corrupt Places database could make this throw, breaking navigation
+  // from the location bar.
+  let entry = null;
+  try {
+    entry = await PlacesUtils.keywords.fetch(keyword);
+  } catch (ex) {
+    Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
+  }
+  if (!entry || !entry.url) {
+    // This is not a Places keyword.
+    return { url, postData, mayInheritPrincipal };
+  }
+
+  try {
+    [url, postData] =
+      await BrowserUtils.parseUrlAndPostData(entry.url.href,
+                                             entry.postData,
+                                             param);
+    if (postData) {
+      postData = getPostDataStream(postData);
     }
-    return data;
-  });
+
+    // Since this URL came from a bookmark, it's safe to let it inherit the
+    // current document's principal.
+    mayInheritPrincipal = true;
+  } catch (ex) {
+    // It was not possible to bind the param, just use the original url value.
+  }
+
+  return { url, postData, mayInheritPrincipal };
 }
 
 function getPostDataStream(aPostDataString,

@@ -38,16 +38,9 @@
 // 3 == limit lifetime to N days
 static const uint32_t ACCEPT_NORMALLY = 0;
 static const uint32_t ACCEPT_SESSION = 2;
-static const uint32_t ACCEPT_FOR_N_DAYS = 3;
 
 static const bool kDefaultPolicy = true;
 static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
-static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
-
-static const char kCookiesPrefsMigrated[] = "network.cookie.prefsMigrated";
-// obsolete pref names for migration
-static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
-static const char kCookiesLifetimeBehavior[] = "network.cookie.lifetime.behavior";
 
 static const char kPermissionType[] = "cookie";
 
@@ -72,27 +65,7 @@ nsCookiePermission::Init()
       do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
     prefBranch->AddObserver(kCookiesLifetimePolicy, this, false);
-    prefBranch->AddObserver(kCookiesLifetimeDays, this, false);
     PrefChanged(prefBranch, nullptr);
-
-    // migration code for original cookie prefs
-    bool migrated;
-    rv = prefBranch->GetBoolPref(kCookiesPrefsMigrated, &migrated);
-    if (NS_FAILED(rv) || !migrated) {
-      bool lifetimeEnabled = false;
-      prefBranch->GetBoolPref(kCookiesLifetimeEnabled, &lifetimeEnabled);
-
-      // if they're limiting lifetime, use the appropriate limited lifetime pref
-      if (lifetimeEnabled) {
-        int32_t lifetimeBehavior;
-        prefBranch->GetIntPref(kCookiesLifetimeBehavior, &lifetimeBehavior);
-        if (lifetimeBehavior)
-          prefBranch->SetIntPref(kCookiesLifetimePolicy, ACCEPT_FOR_N_DAYS);
-        else
-          prefBranch->SetIntPref(kCookiesLifetimePolicy, ACCEPT_SESSION);
-      }
-      prefBranch->SetBoolPref(kCookiesPrefsMigrated, true);
-    }
   }
 
   return true;
@@ -108,16 +81,11 @@ nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
 
   if (PREF_CHANGED(kCookiesLifetimePolicy) &&
       NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimePolicy, &val))) {
-    if (val != static_cast<int32_t>(ACCEPT_SESSION) && val != static_cast<int32_t>(ACCEPT_FOR_N_DAYS)) {
+    if (val != static_cast<int32_t>(ACCEPT_SESSION)) {
       val = ACCEPT_NORMALLY;
     }
     mCookiesLifetimePolicy = val;
   }
-
-  if (PREF_CHANGED(kCookiesLifetimeDays) &&
-      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimeDays, &val)))
-    // save cookie lifetime in seconds instead of days
-    mCookiesLifetimeSec = (int64_t)val * 24 * 60 * 60;
 }
 
 NS_IMETHODIMP
@@ -247,9 +215,6 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       if (mCookiesLifetimePolicy == ACCEPT_SESSION) {
         // limit lifetime to session
         *aIsSession = true;
-      } else if (delta > mCookiesLifetimeSec) {
-        // limit lifetime to specified time
-        *aExpiry = currentTime + mCookiesLifetimeSec;
       }
     }
   }

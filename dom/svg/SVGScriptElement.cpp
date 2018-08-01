@@ -214,12 +214,10 @@ SVGScriptElement::GetStringInfo()
 
 nsresult
 SVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                             nsIContent* aBindingParent,
-                             bool aCompileEventHandlers)
+                             nsIContent* aBindingParent)
 {
   nsresult rv = SVGScriptElementBase::BindToTree(aDocument, aParent,
-                                                 aBindingParent,
-                                                 aCompileEventHandlers);
+                                                 aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {

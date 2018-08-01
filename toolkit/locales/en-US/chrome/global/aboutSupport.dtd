@@ -13,7 +13,7 @@
 
 <!ENTITY aboutSupport.crashes.title "Crash Reports">
 <!-- LOCALIZATION NOTE (aboutSupport.crashes.id):
-This is likely the same like id.heading in crashes.dtd. -->
+This is likely the same like id.heading in aboutcrashes.ftl. -->
 <!ENTITY aboutSupport.crashes.id "Report ID">
 <!ENTITY aboutSupport.crashes.sendDate "Submitted">
 <!ENTITY aboutSupport.crashes.allReports "All Crash Reports">

@@ -169,11 +169,6 @@ whitelist = new Set(whitelist.filter(item =>
 ).map(item => item.file));
 
 const ignorableWhitelist = new Set([
-  // These 2 files are unreferenced only when building without the crash
-  // reporter (eg. Linux x64 asan builds on treeherder)
-  "chrome://global/locale/crashes.dtd",
-  "chrome://global/locale/crashes.properties",
-
   // The following files are outside of the omni.ja file, so we only catch them
   // when testing on a non-packaged build.
 
