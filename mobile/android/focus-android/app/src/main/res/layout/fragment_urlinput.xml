@@ -29,6 +29,7 @@
             android:focusable="false" />
 
         <TextView
+            android:id="@+id/homeViewTipsLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"

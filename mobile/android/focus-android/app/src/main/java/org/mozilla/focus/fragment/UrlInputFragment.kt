@@ -22,11 +22,13 @@ import android.view.ViewTreeObserver
 import android.webkit.URLUtil
 import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.fragment_urlinput.*
+import kotlinx.android.synthetic.main.fragment_urlinput.view.homeViewTipsLabel
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import org.mozilla.focus.R
+import org.mozilla.focus.R.string.teaser
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.menu.home.HomeMenu
@@ -36,6 +38,7 @@ import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
@@ -73,6 +76,7 @@ class UrlInputFragment :
         private val PLACEHOLDER = "5981086f-9d45-4f64-be99-7d2ffa03befb"
 
         private val ANIMATION_DURATION = 200
+        private val TIPS_ALPHA = 0.65f
 
         private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
@@ -175,6 +179,30 @@ class UrlInputFragment :
         }
     }
 
+    private fun updateTipsLabel() {
+        val context = context
+
+        if (context == null) {
+            return
+        }
+
+        keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
+
+        val tip = TipManager.getNextTip(context)
+
+        if (tip != null) {
+            keyboardLinearLayout.homeViewTipsLabel.text = tip.text
+            keyboardLinearLayout.homeViewTipsLabel.setOnClickListener { tip.deepLink() }
+        } else {
+            showFocusSubtitle()
+        }
+    }
+
+    private fun showFocusSubtitle() {
+        keyboardLinearLayout.homeViewTipsLabel.text = getString(teaser)
+        keyboardLinearLayout.homeViewTipsLabel.alpha = 1f
+    }
+
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
         val inputHeight = resources.getDimension(R.dimen.urlinput_height)
         if (keyboardLinearLayout.layoutParams is ViewGroup.MarginLayoutParams) {
@@ -233,6 +261,8 @@ class UrlInputFragment :
             clearView?.visibility = View.VISIBLE
             searchViewContainer?.visibility = View.GONE
         }
+
+        updateTipsLabel()
     }
 
     override fun applyLocale() {

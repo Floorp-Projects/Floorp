@@ -63,7 +63,7 @@ public class DefaultBrowserPreference extends Preference {
     }
 
     @Override
-    protected void onClick() {
+    public void onClick() {
         final Context context = getContext();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

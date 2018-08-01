@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
@@ -100,6 +101,9 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
                 HomeScreen.installShortCut(getContext(), IconGenerator.generateLauncherIcon(getContext(), url), url,
                         editableTitle.getText().toString().trim(), blockingEnabled, requestDesktop);
                 TelemetryWrapper.addToHomescreenShortcutEvent();
+                PreferenceManager.getDefaultSharedPreferences(getContext()).edit()
+                        .putBoolean(getContext().getString(R.string.pref_key_has_added_to_home_screen),
+                                true).apply();
                 dismiss();
             }
         });

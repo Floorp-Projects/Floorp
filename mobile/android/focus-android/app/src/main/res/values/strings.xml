@@ -678,4 +678,26 @@ be temporary, and you can try again later.</li>
 
     <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
     <string name="dismiss_no_suggestions_prompt_button">Dismiss</string>
+
+    <!-- Tips displayed on the home view -->
+    <!-- Tip displayed on home view explaining how to disable tracking protection -->
+    <string name="tip_disable_tracking_protection">Sites not working as intended?\n
+        Turn off Tracking Protection</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen -->
+    <string name="tip_add_to_homescreen">Open your favorite site in one tap:\n
+        Menu -> Add to homescreen</string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).-->
+    <string name="tip_set_default_browser">Open links in %1$s by default:\n
+        Set as default browser"
+    </string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL-->
+    <string name="tip_autocomplete_url">Autocomplete your favorite web addresses"</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL-->
+    <string name="tip_open_in_new_tab">Open links in a new tab"</string>
+
 </resources>

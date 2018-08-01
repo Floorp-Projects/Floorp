@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v7.app.AlertDialog;
@@ -89,7 +90,7 @@ public class WebContextMenu {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         final NavigationView menu = (NavigationView) view.findViewById(R.id.context_menu);
-        setupMenuForHitTarget(dialog, menu, callback, hitTarget);
+        setupMenuForHitTarget(dialog, menu, callback, hitTarget, context);
 
         final TextView warningView = (TextView) view.findViewById(R.id.warning);
         if (hitTarget.isImage) {
@@ -112,7 +113,8 @@ public class WebContextMenu {
     private static void setupMenuForHitTarget(final @NonNull Dialog dialog,
                                               final @NonNull NavigationView navigationView,
                                               final @NonNull IWebView.Callback callback,
-                                              final @NonNull IWebView.HitTarget hitTarget) {
+                                              final @NonNull IWebView.HitTarget hitTarget,
+                                              final Context context) {
         navigationView.inflateMenu(R.menu.menu_browser_context);
 
         navigationView.getMenu().findItem(R.id.menu_new_tab).setVisible(hitTarget.isLink);
@@ -133,6 +135,10 @@ public class WebContextMenu {
                     case R.id.menu_new_tab: {
                         SessionManager.getInstance().createSession(Source.MENU, hitTarget.linkURL);
                         TelemetryWrapper.openLinkInNewTabEvent();
+                        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                                .putBoolean(context.getString(R.string.pref_key_has_opened_new_tab),
+                                        true).apply();
+
                         return true;
                     }
                     case R.id.menu_link_share: {

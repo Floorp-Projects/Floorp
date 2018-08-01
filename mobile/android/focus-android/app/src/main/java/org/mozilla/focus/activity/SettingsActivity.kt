@@ -8,9 +8,11 @@ import android.os.Bundle
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_settings.*
 import org.mozilla.focus.R
+import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.settings.PrivacySecuritySettingsFragment
 
 class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.ActionBarUpdater {
 
@@ -30,7 +32,18 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.Ac
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                     .add(R.id.container, SettingsFragment.newInstance())
+        }
+
+        if (intent.extras != null) {
+            if (intent.extras.getBoolean("privacy")) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.container, PrivacySecuritySettingsFragment())
                     .commit()
+            } else if (intent.extras.getBoolean("autocompleteUrl")) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.container, AutocompleteSettingsFragment())
+                    .commit()
+            }
         }
 
         // Ensure all locale specific Strings are initialised on first run, we don't set the title

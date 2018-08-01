@@ -73,6 +73,8 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
     }
 
     companion object {
+        const val FRAGMENT_TAG = "PrivacySecuritySettings"
+
         fun newInstance(): PrivacySecuritySettingsFragment {
             return PrivacySecuritySettingsFragment()
         }
