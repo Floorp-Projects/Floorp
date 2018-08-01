@@ -31,9 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489202
   var utils = SpecialPowers.getDOMWindowUtils(window);
 
 function getLoadContext() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsILoadContext);
+  return window.docShell.QueryInterface(Ci.nsILoadContext);
 }
 
 function runTest() {
@@ -47,9 +45,7 @@ function runTest() {
   cstr.data = test_data;
   trans.setTransferData("text/html", cstr, test_data.length*2);
 
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-     .getInterface(Ci.nsIWebNavigation)
-     .QueryInterface(Ci.nsIDocShellTreeItem)
+  window.docShell
      .rootTreeItem
      .QueryInterface(Ci.nsIDocShell)
      .appType = Ci.nsIDocShell.APP_TYPE_EDITOR; 

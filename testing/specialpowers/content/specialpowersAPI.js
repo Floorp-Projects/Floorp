@@ -1405,9 +1405,7 @@ SpecialPowersAPI.prototype = {
   },
 
   _getDocShell(window) {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShell);
+    return window.docShell;
   },
   _getMUDV(window) {
     return this._getDocShell(window).contentViewer;
@@ -1749,10 +1747,9 @@ SpecialPowersAPI.prototype = {
     var mm = global;
     if (aWindow) {
       try {
-        mm = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIDocShell)
-                                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIContentFrameMessageManager);
+        mm = aWindow.docShell
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIContentFrameMessageManager);
       } catch (ex) {
         /* Ignore exceptions for e.g. XUL chrome windows from mochitest-chrome
          * which won't have a message manager */

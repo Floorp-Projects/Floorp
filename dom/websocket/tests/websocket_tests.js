@@ -991,8 +991,7 @@ function test41() {
           // clean up the STS state
           const Ci = SpecialPowers.Ci;
           var loadContext = SpecialPowers.wrap(window)
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
+                            .docShell
                             .QueryInterface(Ci.nsILoadContext);
           var flags = 0;
           if (loadContext.usePrivateBrowsing)

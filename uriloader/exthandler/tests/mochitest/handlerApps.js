@@ -24,10 +24,7 @@ function test() {
 
   // create a window, and launch the handler in it
   var newWindow = window.open("", "handlerWindow", "height=300,width=300");
-  var windowContext = 
-    SpecialPowers.wrap(newWindow).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-    getInterface(SpecialPowers.Ci.nsIWebNavigation).
-    QueryInterface(SpecialPowers.Ci.nsIDocShell);
+  var windowContext = SpecialPowers.wrap(newWindow).docShell;
  
   webHandler.launchWithURI(uri, windowContext);
 

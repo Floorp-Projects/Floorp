@@ -95,9 +95,7 @@ function step3() {
     Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
     for (var i = 0; i < content.frames.length; i++) {
       info("step 3, frame " + i + " info: " + content.frames[i].location);
-      let docshell = content.frames[i].QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIWebNavigation)
-                                      .QueryInterface(Ci.nsIDocShell);
+      let docshell = content.frames[i].docShell;
 
       Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
     }
@@ -115,9 +113,7 @@ function step4() {
   function checkTab2Active(expected) {
     return ContentTask.spawn(ctx.tab2Browser, expected, async function(expected) {
       function isActive(aWindow) {
-        var docshell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebNavigation)
-                              .QueryInterface(Ci.nsIDocShell);
+        var docshell = aWindow.docShell;
         return docshell.isActive;
       }
 
@@ -165,9 +161,7 @@ function step5() {
   ok(ctx.tab2Browser.docShellIsActive, "Tab 2 should be active");
   ContentTask.spawn(ctx.tab2Browser, null, async function() {
     for (var i = 0; i < content.frames.length; i++) {
-      let docshell = content.frames[i].QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIWebNavigation)
-                                      .QueryInterface(Ci.nsIDocShell);
+      let docshell = content.frames[i].docShell;
 
       Assert.ok(docShell.isActive, `Tab2 iframe ${i} should be active`);
     }
@@ -191,9 +185,7 @@ function step6() {
   ok(ctx.tab1Browser.docShellIsActive, "Tab 1 should be active");
   ContentTask.spawn(ctx.tab1Browser, null, async function() {
     function isActive(aWindow) {
-      var docshell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
-                            .QueryInterface(Ci.nsIDocShell);
+      var docshell = aWindow.docShell;
       return docshell.isActive;
     }
 
@@ -204,9 +196,7 @@ function step6() {
     ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
     return ContentTask.spawn(ctx.tab2Browser, null, async function() {
       for (var i = 0; i < content.frames.length; i++) {
-        let docshell = content.frames[i].QueryInterface(Ci.nsIInterfaceRequestor)
-                                        .getInterface(Ci.nsIWebNavigation)
-                                        .QueryInterface(Ci.nsIDocShell);
+        let docshell = content.frames[i].docShell;
 
         Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
       }
@@ -223,9 +213,7 @@ function step7() {
     return ContentTask.spawn(browser, { tabNum, active },
                              async function({ tabNum, active }) {
              function isActive(aWindow) {
-               var docshell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIWebNavigation)
-                                     .QueryInterface(Ci.nsIDocShell);
+               var docshell = aWindow.docShell;
                return docshell.isActive;
              }
 

@@ -8,9 +8,7 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
                          .getInterface(Ci.nsIDocShell);
     let listener = {
       observe(contentWindow, topic, data) {
-        let observedDocShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                            .getInterface(Ci.nsIWebNavigation)
-                                            .QueryInterface(Ci.nsIDocShellTreeItem)
+        let observedDocShell = contentWindow.docShell
                                             .sameTypeRootTreeItem
                                             .QueryInterface(Ci.nsIDocShell);
           if (docShell === observedDocShell) {

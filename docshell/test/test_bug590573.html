@@ -96,8 +96,8 @@ function page2PageShow()
 
 function dumpSHistory(theWindow)
 {
-  let sh = SpecialPowers.wrap(theWindow).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                    .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+  let sh = SpecialPowers.wrap(theWindow).docShell
+                    .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
                     .sessionHistory;
   if (!sh) {
     dump(" window has no shistory.\n");
