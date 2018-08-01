@@ -408,6 +408,23 @@ void Elf::normalize()
             }
         }
     }
+
+    ElfSegment* prevLoad = nullptr;
+    for (auto& it : segments) {
+        if (it->getType() == PT_LOAD) {
+            if (prevLoad) {
+                size_t alignedPrevEnd =
+                    (prevLoad->getAddr() + prevLoad->getMemSize() + prevLoad->getAlign() - 1)
+                    & ~(prevLoad->getAlign() - 1);
+                size_t alignedStart = it->getAddr() & ~(it->getAlign() - 1);
+                if (alignedPrevEnd > alignedStart) {
+                    throw std::runtime_error("Segments overlap");
+                }
+            }
+            prevLoad = it;
+        }
+    }
+
     // fixup ehdr before writing
     if (ehdr->e_phnum != segments.size()) {
         ehdr->e_phnum = segments.size();
@@ -552,14 +569,6 @@ unsigned int ElfSection::getOffset()
     }
     if ((getType() != SHT_NOBITS) && (offset & (getAddrAlign() - 1)))
         offset = (offset | (getAddrAlign() - 1)) + 1;
-
-    // Two subsequent sections can't be mapped in the same page in memory
-    // if they aren't in the same 4K block on disk.
-    if ((getType() != SHT_NOBITS) && getAddr()) {
-        if (((offset >> 12) != (previous->getOffset() >> 12)) &&
-            ((getAddr() >> 12) == (previous->getAddr() >> 12)))
-            throw std::runtime_error("Moving section would require overlapping segments");
-    }
 
     return (shdr.sh_offset = offset);
 }
