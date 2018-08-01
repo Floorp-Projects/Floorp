@@ -2,6 +2,11 @@
 
 var EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
 
+const ANNOTATION_TABLE_NAME = "mochitest-track-simple";
+const ANNOTATION_TABLE_PREF = "urlclassifier.trackingAnnotationTable";
+const ANNOTATION_WHITELIST_TABLE_NAME = "mochitest-trackwhite-simple";
+const ANNOTATION_WHITELIST_TABLE_PREF = "urlclassifier.trackingAnnotationWhitelistTable";
+
 const TRACKING_TABLE_NAME = "mochitest-track-simple";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const WHITELIST_TABLE_NAME = "mochitest-trackwhite-simple";
@@ -20,6 +25,7 @@ var UrlClassifierTestUtils = {
     let trackingURL3 = "trackertest.org/";
     let whitelistedURL = "itisatrap.org/?resource=itisatracker.org";
 
+    // TODO: use different lists for annotations and TP
     let trackingUpdate =
           "n:1000\ni:" + TRACKING_TABLE_NAME + "\nad:3\n" +
           "a:1:32:" + trackingURL1.length + "\n" +
@@ -34,6 +40,16 @@ var UrlClassifierTestUtils = {
           whitelistedURL + "\n";
 
     var tables = [
+      {
+        pref: ANNOTATION_TABLE_PREF,
+        name: ANNOTATION_TABLE_NAME,
+        update: trackingUpdate
+      },
+      {
+        pref: ANNOTATION_WHITELIST_TABLE_PREF,
+        name: ANNOTATION_WHITELIST_TABLE_NAME,
+        update: whitelistUpdate
+      },
       {
         pref: TRACKING_TABLE_PREF,
         name: TRACKING_TABLE_NAME,
@@ -68,6 +84,8 @@ var UrlClassifierTestUtils = {
   },
 
   cleanupTestTrackers() {
+    Services.prefs.clearUserPref(ANNOTATION_TABLE_PREF);
+    Services.prefs.clearUserPref(ANNOTATION_WHITELIST_TABLE_PREF);
     Services.prefs.clearUserPref(TRACKING_TABLE_PREF);
     Services.prefs.clearUserPref(WHITELIST_TABLE_PREF);
   },

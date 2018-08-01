@@ -88,7 +88,7 @@ function endTest() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
+  {"set": [["privacy.trackingprotection.enabled", false],
            ["privacy.trackingprotection.annotate_channels", true],
            ["privacy.trackingprotection.lower_network_priority", true],
            ["channelclassifier.allowlist_example", true]]},
