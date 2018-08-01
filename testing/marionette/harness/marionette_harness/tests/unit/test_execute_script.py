@@ -349,6 +349,9 @@ class TestExecuteContent(MarionetteTestCase):
             sandbox=None)
         self.assert_is_web_element(el)
 
+    def test_comment_in_last_line(self):
+        self.marionette.execute_script(" // comment ")
+
     @skip_if_mobile("Modal dialogs not supported in Fennec")
     def test_return_value_on_alert(self):
         res = self.marionette._send_message("WebDriver:ExecuteScript", {"script": "alert()"})
