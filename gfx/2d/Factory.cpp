@@ -698,6 +698,17 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
   return retVal.forget();
 }
 
+already_AddRefed<SourceSurface>
+Factory::CreateDualSourceSurface(SourceSurface *sourceA, SourceSurface *sourceB)
+{
+  MOZ_ASSERT(sourceA && sourceB);
+
+  RefPtr<SourceSurface> newSource =
+    new SourceSurfaceDual(sourceA, sourceB);
+
+  return newSource.forget();
+}
+
 
 #ifdef MOZ_ENABLE_FREETYPE
 void
