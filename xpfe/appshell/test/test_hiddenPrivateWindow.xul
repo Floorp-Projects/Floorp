@@ -36,16 +36,14 @@ ok(!PrivateBrowsingUtils.isWindowPrivate(
   Services.appShell
           .hiddenWindow
           .docShell
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindow)),
+          .domWindow,
    "hiddenWindow should not be private");
 ok(!PrivateBrowsingUtils.isWindowPrivate(Services.appShell.hiddenDOMWindow), "hiddenDOMWindow should not be private");
 ok(PrivateBrowsingUtils.isWindowPrivate(
   Services.appShell
           .hiddenPrivateWindow
           .docShell
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindow)),
+          .domWindow,
    "hiddenPrivateWindow should be private");
 ok(PrivateBrowsingUtils.isWindowPrivate(Services.appShell.hiddenPrivateDOMWindow), "hiddenPrivateDOMWindow should be private");
 
