@@ -261,7 +261,7 @@
 )
 
 #define CREATE_KEYWORDS_FOREIGNCOUNT_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
-  "CREATE TEMP TRIGGER moz_keywords_foreign_count_afterinsert_trigger " \
+  "CREATE TEMP TRIGGER moz_keyords_foreign_count_afterinsert_trigger " \
   "AFTER INSERT ON moz_keywords FOR EACH ROW " \
   "BEGIN " \
     "UPDATE moz_places " \
