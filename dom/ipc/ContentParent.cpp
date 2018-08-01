@@ -3169,7 +3169,7 @@ ContentParent::Observe(nsISupports* aSubject,
   }
   else if (!strcmp(aTopic, "intl:app-locales-changed")) {
     nsTArray<nsCString> appLocales;
-    LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
+    LocaleService::GetInstance()->GetAppLocalesAsBCP47(appLocales);
     Unused << SendUpdateAppLocales(appLocales);
   }
   else if (!strcmp(aTopic, "intl:requested-locales-changed")) {

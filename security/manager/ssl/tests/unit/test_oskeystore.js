@@ -114,6 +114,10 @@ add_task(async function() {
   await encrypt_decrypt_test();
   await delete_all_secrets();
 
+  if (AppConstants.platform == "macosx") {
+    ok(!keystore.isNSSKeyStore, "OS X should use the non-NSS implementation");
+  }
+
   if (keystore.isNSSKeyStore) {
     // If we use the NSS key store implementation test that everything works
     // when a master password is set.

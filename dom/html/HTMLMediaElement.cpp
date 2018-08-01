@@ -4013,7 +4013,7 @@ HTMLMediaElement::AudioChannelAgentDelayingPlayback()
 }
 
 void
-HTMLMediaElement::ReportAutoplayTelemetry() const
+HTMLMediaElement::UpdateHadAudibleAutoplayState() const
 {
   // If we're audible, and autoplaying...
   if ((Volume() > 0.0 && !Muted()) &&
@@ -4086,7 +4086,7 @@ HTMLMediaElement::Play(ErrorResult& aRv)
     return promise.forget();
   }
 
-  ReportAutoplayTelemetry();
+  UpdateHadAudibleAutoplayState();
 
   const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
   switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
@@ -6245,7 +6245,7 @@ HTMLMediaElement::CheckAutoplayDataReady()
     return;
   }
 
-  ReportAutoplayTelemetry();
+  UpdateHadAudibleAutoplayState();
   switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
     case nsIAutoplay::BLOCKED:
       return;

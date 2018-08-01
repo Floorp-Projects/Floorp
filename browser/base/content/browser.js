@@ -735,7 +735,7 @@ var gPopupBlockerObserver = {
           // one usable popup URI and thus we'll turn on the separator later.
           foundUsablePopupURI = true;
 
-          var menuitem = document.createElement("menuitem");
+          var menuitem = document.createXULElement("menuitem");
           var label = gNavigatorBundle.getFormattedString("popupShowPopupPrefix",
                                                           [popupURIspec]);
           menuitem.setAttribute("label", label);
@@ -2807,7 +2807,7 @@ function UpdateUrlbarSearchSplitterState() {
 
   if (ibefore) {
     if (!splitter) {
-      splitter = document.createElement("splitter");
+      splitter = document.createXULElement("splitter");
       splitter.id = "urlbar-search-splitter";
       splitter.setAttribute("resizebefore", "flex");
       splitter.setAttribute("resizeafter", "flex");
@@ -4191,7 +4191,7 @@ function FillHistoryMenu(aParent) {
       let uri = entry.url;
 
       let item = existingIndex < children.length ?
-                   children[existingIndex] : document.createElement("menuitem");
+                   children[existingIndex] : document.createXULElement("menuitem");
 
       item.setAttribute("uri", uri);
       item.setAttribute("label", entry.title || uri);
@@ -5551,7 +5551,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
       continue;
     }
 
-    let menuItem = document.createElement("menuitem");
+    let menuItem = document.createXULElement("menuitem");
     let hidingAttribute = toolbar.getAttribute("type") == "menubar" ?
                           "autohide" : "collapsed";
     menuItem.setAttribute("id", "toggle_" + toolbar.id);
@@ -6383,7 +6383,7 @@ var gPageStyleMenu = {
         lastWithSameTitle = currentStyleSheets[currentStyleSheet.title];
 
       if (!lastWithSameTitle) {
-        let menuItem = document.createElement("menuitem");
+        let menuItem = document.createXULElement("menuitem");
         menuItem.setAttribute("type", "radio");
         menuItem.setAttribute("label", currentStyleSheet.title);
         menuItem.setAttribute("data", currentStyleSheet.title);

@@ -14,10 +14,10 @@ use style::values::computed;
 use style::values::specified;
 
 size_of_test!(size_of_selector, selectors::parser::Selector<SelectorImpl>, 8);
-size_of_test!(size_of_pseudo_element, selector_parser::PseudoElement, 24);
+size_of_test!(size_of_pseudo_element, selector_parser::PseudoElement, 16);
 
-size_of_test!(size_of_component, selectors::parser::Component<SelectorImpl>, 32);
-size_of_test!(size_of_pseudo_class, selector_parser::NonTSPseudoClass, 24);
+size_of_test!(size_of_component, selectors::parser::Component<SelectorImpl>, 24);
+size_of_test!(size_of_pseudo_class, selector_parser::NonTSPseudoClass, 16);
 
 // The size of this is critical to performance on the bloom-basic microbenchmark.
 // When iterating over a large Rule array, we want to be able to fast-reject

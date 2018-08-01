@@ -39,13 +39,19 @@ export default class CompletionErrorPage extends PaymentStateSubscriberMixin(Pay
       return;
     }
 
+    let {request} = this.requestStore.getState();
+    let {displayHost} = request.topLevelPrincipal.URI;
+    for (let key of ["pageTitle", "suggestion-1", "suggestion-2", "suggestion-3"]) {
+      this.dataset[key] = this.dataset[key].replace("**host-name**", displayHost);
+    }
+
     this.pageTitleHeading.textContent = this.dataset.pageTitle;
     this.doneButton.textContent = this.dataset.doneButtonLabel;
 
     this.suggestionsList.textContent = "";
-
-     // FIXME: should come from this.dataset.suggestionN when those strings are created
-    this.suggestions[0] = "First suggestion";
+    this.suggestions[0] = this.dataset["suggestion-1"];
+    this.suggestions[1] = this.dataset["suggestion-2"];
+    this.suggestions[2] = this.dataset["suggestion-3"];
 
     let suggestionsFragment = document.createDocumentFragment();
     for (let suggestionText of this.suggestions) {

@@ -291,6 +291,8 @@ class TupBackend(CommonBackend):
         args = [self.environment.substs['TUP'], 'upd'] + what
         if self.environment.substs.get('MOZ_AUTOMATION'):
             args += ['--quiet']
+        else:
+            args += ['--debug-logging']
         if verbose:
             args += ['--verbose']
         if jobs > 0:
@@ -671,7 +673,7 @@ class TupBackend(CommonBackend):
         # Run 'tup init' if necessary.
         if not os.path.exists(mozpath.join(self.environment.topsrcdir, ".tup")):
             tup = self.environment.substs.get('TUP', 'tup')
-            self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init'])
+            self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init', '--no-sync'])
 
 
     def _get_cargo_flags(self, obj):
@@ -726,6 +728,13 @@ class TupBackend(CommonBackend):
             'RUSTFLAGS': '%s %s' % (' '.join(self.environment.substs['MOZ_RUST_DEFAULT_FLAGS']),
                                     ' '.join(self.environment.substs['RUSTFLAGS'])),
         })
+
+        if os.environ.get('MOZ_AUTOMATION'):
+            # Build scripts generally read environment variables that are set
+            # by cargo, however, some may rely on MOZ_AUTOMATION. We may need
+            # to audit for others as well.
+            env['MOZ_AUTOMATION'] = os.environ['MOZ_AUTOMATION']
+
         return env
 
     def _gen_cargo_rules(self, backend_file, build_plan, cargo_env):

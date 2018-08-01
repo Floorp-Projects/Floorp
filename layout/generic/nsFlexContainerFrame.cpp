@@ -1059,6 +1059,8 @@ public:
     return mMainGapSize;
   }
 
+  inline void SetMainGapSize (nscoord aNewSize) { mMainGapSize = aNewSize; }
+
   // Runs the "Resolving Flexible Lengths" algorithm from section 9.7 of the
   // CSS flexbox spec to distribute aFlexContainerMainSize among our flex items.
   void ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
@@ -1107,7 +1109,7 @@ private:
   nscoord mLastBaselineOffset;
 
   // Maintain size of each {row,column}-gap in the main axis
-  const nscoord mMainGapSize;
+  nscoord mMainGapSize;
 };
 
 // Information about a strut left behind by a FlexItem that's been collapsed
@@ -2309,6 +2311,8 @@ public:
 
   // Advances past the given FlexLine
   void TraverseLine(FlexLine& aLine) { mPosition += aLine.GetLineCrossSize(); }
+
+  inline void SetCrossGapSize(nscoord aNewSize) { mCrossGapSize = aNewSize; }
 
 private:
   // Redeclare the frame-related methods from PositionTracker as private with
@@ -4854,6 +4858,25 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     ConvertLegacyStyleToJustifyContent(StyleXUL()) :
     aReflowInput.mStylePosition->mJustifyContent;
 
+  // Recalculate the gap sizes if necessary now that the container size has
+  // been determined.
+  if (aReflowInput.ComputedBSize() == NS_INTRINSICSIZE &&
+      aReflowInput.mStylePosition->mRowGap.HasPercent()) {
+    bool rowIsCross = aAxisTracker.IsRowOriented();
+    nscoord newBlockGapSize =
+      nsLayoutUtils::ResolveGapToLength(aReflowInput.mStylePosition->mRowGap,
+                                        rowIsCross
+                                        ? contentBoxCrossSize
+                                        : aContentBoxMainSize);
+    if (rowIsCross) {
+      crossAxisPosnTracker.SetCrossGapSize(newBlockGapSize);
+    } else {
+      for (FlexLine* line = lines.getFirst(); line; line = line->getNext(),
+                                                    ++lineIndex) {
+        line->SetMainGapSize(newBlockGapSize);
+      }
+    }
+  }
 
   lineIndex = 0;
   for (FlexLine* line = lines.getFirst(); line; line = line->getNext(),

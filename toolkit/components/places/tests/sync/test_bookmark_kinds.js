@@ -359,43 +359,6 @@ add_task(async function test_livemarks() {
                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                 oldValue: "",
                 source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationRemoved",
-      params: { itemId: livemarkA.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkA.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkC.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationRemoved",
-      params: { itemId: livemarkB.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationRemoved",
-      params: { itemId: livemarkB.id, name: PlacesUtils.LMANNO_SITEURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkB.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkE.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkE.id, name: PlacesUtils.LMANNO_SITEURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
     }]);
 
     await buf.finalize();

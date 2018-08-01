@@ -18,12 +18,13 @@
 class AbstractOSKeyStore
 {
 public:
+
+  // Retrieve a secret with the given label.
+  virtual nsresult RetrieveSecret(const nsACString& aLabel,
+                        /* out */ nsACString& aSecret) = 0;
   // Store a new secret with the given label.
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) = 0;
-  // Returns true if the secret with the given label is available in the key
-  // store, false otherwise.
-  virtual bool SecretAvailable(const nsACString& label) = 0;
   // Delete the secret with the given label.
   virtual nsresult DeleteSecret(const nsACString& label) = 0;
   // Lock the key store.
@@ -34,13 +35,16 @@ public:
   virtual bool IsNSSKeyStore();
   virtual ~AbstractOSKeyStore() {}
 
+  // Returns true if the secret with the given label is available in the key
+  // store, false otherwise.
+  virtual bool SecretAvailable(const nsACString& label);
   // Perform encryption or decryption operation with the given secret and input
   // bytes. The output is written in outBytes. This function can make use of the
   // AesGcm class to use NSS for encryption and decryption.
   virtual nsresult EncryptDecrypt(const nsACString& label,
                                   const std::vector<uint8_t>& inBytes,
                                   std::vector<uint8_t>& outBytes,
-                                  bool encrypt) = 0;
+                                  bool encrypt);
 
   size_t GetKeyByteLength() { return mKeyByteLength; }
 

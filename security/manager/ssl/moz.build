@@ -148,6 +148,9 @@ if CONFIG['MOZ_LIB_SECRET']:
     CXXFLAGS += CONFIG['MOZ_LIB_SECRET_CFLAGS']
 
 if CONFIG['OS_ARCH'] == 'Darwin':
+    UNIFIED_SOURCES += [
+        'KeychainSecret.cpp',
+    ]
     OS_LIBS += [
         '-framework Security'
     ]

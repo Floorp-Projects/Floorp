@@ -11,22 +11,6 @@ try {
   do_throw("Could not get annotation service\n");
 }
 
-var annoObserver = {
-  ITEM_lastSet_Id: -1,
-  ITEM_lastSet_AnnoName: "",
-  onItemAnnotationSet(aItemId, aName) {
-    this.ITEM_lastSet_Id = aItemId;
-    this.ITEM_lastSet_AnnoName = aName;
-  },
-
-  ITEM_lastRemoved_Id: -1,
-  ITEM_lastRemoved_AnnoName: "",
-  onItemAnnotationRemoved(aItemId, aName) {
-    this.ITEM_lastRemoved_Id = aItemId;
-    this.ITEM_lastRemoved_AnnoName = aName;
-  }
-};
-
 add_task(async function test_execute() {
   let testURI = uri("http://mozilla.com/");
   let testItem = await PlacesUtils.bookmarks.insert({
@@ -39,7 +23,6 @@ add_task(async function test_execute() {
   let testAnnoVal = "test";
   let earlierDate = new Date(Date.now() - 1000);
 
-  annosvc.addObserver(annoObserver);
   // create new string annotation
   try {
     annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
@@ -72,8 +55,6 @@ add_task(async function test_execute() {
 
   // verify that setting the annotation updates the last modified time
   Assert.ok(updatedItem.lastModified > item.lastModified);
-  Assert.equal(annoObserver.ITEM_lastSet_Id, testItemId);
-  Assert.equal(annoObserver.ITEM_lastSet_AnnoName, testAnnoName);
 
   try {
     var annoVal = annosvc.getItemAnnotation(testItemId, testAnnoName);
@@ -168,9 +149,6 @@ add_task(async function test_execute() {
   info("lastModified4 = " + lastModified4);
   Assert.ok(is_time_ordered(lastModified3, lastModified4));
 
-  Assert.equal(annoObserver.ITEM_lastRemoved_Id, testItemId);
-  Assert.equal(annoObserver.ITEM_lastRemoved_AnnoName, int32Key);
-
   // test that getItems/PagesWithAnnotation returns an empty array after
   // removing all items/pages which had the annotation set, see bug 380317.
   Assert.equal((await getItemsWithAnnotation(int32Key)).length, 0);
@@ -191,8 +169,6 @@ add_task(async function test_execute() {
     title: "",
     url: testURI,
   });
-
-  annosvc.removeObserver(annoObserver);
 });
 
 add_task(async function test_getAnnotationsHavingName() {

@@ -31,12 +31,6 @@ using namespace mozilla::places;
   NS_ENSURE_TRUE(type == nsIAnnotationService::_type, NS_ERROR_INVALID_ARG);   \
   PR_END_MACRO
 
-#define NOTIFY_ANNOS_OBSERVERS(_notification)                                  \
-  PR_BEGIN_MACRO                                                               \
-  for (int32_t i = 0; i < mObservers.Count(); i++)                             \
-    mObservers[i]->_notification;                                              \
-  PR_END_MACRO
-
 const int32_t nsAnnotationService::kAnnoIndex_ID = 0;
 const int32_t nsAnnotationService::kAnnoIndex_PageOrItem = 1;
 const int32_t nsAnnotationService::kAnnoIndex_NameID = 2;
@@ -369,7 +363,6 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource, aDontUpdateLastModified));
   NotifyItemChanged(bookmark, aName, aSource, aDontUpdateLastModified);
 
   return NS_OK;
@@ -863,7 +856,6 @@ nsAnnotationService::RemoveItemAnnotation(int64_t aItemId,
   nsresult rv = RemoveAnnotationInternal(nullptr, aItemId, &bookmark, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationRemoved(aItemId, aName, aSource));
   NotifyItemChanged(bookmark, aName, aSource, false);
 
   return NS_OK;
@@ -871,7 +863,7 @@ nsAnnotationService::RemoveItemAnnotation(int64_t aItemId,
 
 
 nsresult
-nsAnnotationService::RemoveItemAnnotationsWithoutNotifying(int64_t aItemId)
+nsAnnotationService::RemoveItemAnnotations(int64_t aItemId)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -891,50 +883,6 @@ nsAnnotationService::RemoveItemAnnotationsWithoutNotifying(int64_t aItemId)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsAnnotationService::AddObserver(nsIAnnotationObserver* aObserver)
-{
-  NS_ENSURE_ARG(aObserver);
-
-  if (mObservers.IndexOfObject(aObserver) >= 0)
-    return NS_ERROR_INVALID_ARG; // Already registered.
-  if (!mObservers.AppendObject(aObserver))
-    return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::RemoveObserver(nsIAnnotationObserver* aObserver)
-{
-  NS_ENSURE_ARG(aObserver);
-
-  if (!mObservers.RemoveObject(aObserver))
-    return NS_ERROR_INVALID_ARG;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAnnotationService::GetObservers(uint32_t* _count,
-                                  nsIAnnotationObserver*** _observers)
-{
-  NS_ENSURE_ARG_POINTER(_count);
-  NS_ENSURE_ARG_POINTER(_observers);
-
-  *_count = 0;
-  *_observers = nullptr;
-
-  nsCOMArray<nsIAnnotationObserver> observers(mObservers);
-
-  if (observers.Count() == 0)
-    return NS_OK;
-
-  *_count = observers.Count();
-  observers.Forget(_observers);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsAnnotationService::ItemHasAnnotation(int64_t aItemId,

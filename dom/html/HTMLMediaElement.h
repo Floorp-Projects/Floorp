@@ -1780,7 +1780,7 @@ private:
 
   already_AddRefed<PlayPromise> CreatePlayPromise(ErrorResult& aRv) const;
 
-  void ReportAutoplayTelemetry() const;
+  void UpdateHadAudibleAutoplayState() const;
 
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.

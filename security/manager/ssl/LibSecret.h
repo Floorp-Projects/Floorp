@@ -58,19 +58,15 @@ class LibSecret final : public AbstractOSKeyStore
 {
 public:
   LibSecret();
+
+  virtual nsresult RetrieveSecret(const nsACString& label,
+                        /* out */ nsACString& secret) override;
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) override;
   virtual nsresult DeleteSecret(const nsACString& label) override;
   virtual nsresult Lock() override;
   virtual nsresult Unlock() override;
-  virtual nsresult EncryptDecrypt(const nsACString& label,
-                                  const std::vector<uint8_t>& inBytes,
-                                  std::vector<uint8_t>& outBytes,
-                                  bool encrypt) override;
-  virtual bool SecretAvailable(const nsACString& label) override;
 
-  nsresult RetrieveSecret(const nsACString& label,
-                          /* out */ nsACString& secret);
   virtual ~LibSecret();
 };
 
