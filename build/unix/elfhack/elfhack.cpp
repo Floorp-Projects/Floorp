@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "elfxx.h"
+#include "mozilla/CheckedInt.h"
 
 #define ver "0"
 #define elfhack_data ".elfhack.data.v" ver
@@ -527,6 +528,238 @@ void maybe_split_segment(Elf *elf, ElfSegment *segment, bool fill)
     }
 }
 
+// EH_FRAME constants
+static const char DW_EH_PE_absptr = 0x00;
+static const char DW_EH_PE_omit = 0xff;
+
+// Data size
+static const char DW_EH_PE_LEB128 = 0x01;
+static const char DW_EH_PE_data2 = 0x02;
+static const char DW_EH_PE_data4 = 0x03;
+static const char DW_EH_PE_data8 = 0x04;
+
+// Data signedness
+static const char DW_EH_PE_signed = 0x08;
+
+// Modifiers
+static const char DW_EH_PE_pcrel = 0x10;
+
+
+// Return the data size part of the encoding value
+static char encoding_data_size(char encoding)
+{
+    return encoding & 0x07;
+}
+
+// Advance `step` bytes in the buffer at `data` with size `size`, returning
+// the advanced buffer pointer and remaining size.
+// Returns true if step <= size.
+static bool advance_buffer(char** data, size_t* size, size_t step)
+{
+    if (step > *size)
+        return false;
+
+    *data += step;
+    *size -= step;
+    return true;
+}
+
+// Advance in the given buffer, skipping the full length of the variable-length
+// encoded LEB128 type in CIE/FDE data.
+static bool skip_LEB128(char** data, size_t* size)
+{
+    if (!*size)
+        return false;
+
+    while (*size && (*(*data)++ & (char)0x80)) {
+        (*size)--;
+    }
+    return true;
+}
+
+// Advance in the given buffer, skipping the full length of a pointer encoded
+// with the given encoding.
+static bool skip_eh_frame_pointer(char** data, size_t* size, char encoding)
+{
+    switch (encoding_data_size(encoding)) {
+    case DW_EH_PE_data2:
+        return advance_buffer(data, size, 2);
+    case DW_EH_PE_data4:
+        return advance_buffer(data, size, 4);
+    case DW_EH_PE_data8:
+        return advance_buffer(data, size, 8);
+    case DW_EH_PE_LEB128:
+        return skip_LEB128(data, size);
+    }
+    throw std::runtime_error("unreachable");
+}
+
+// Specialized implementations for adjust_eh_frame_pointer().
+template <typename T>
+static bool adjust_eh_frame_sized_pointer(char** data, size_t* size, ElfSection* eh_frame,
+                                          unsigned int origAddr, Elf* elf)
+{
+    if (*size < sizeof(T))
+        return false;
+
+    serializable<FixedSizeData<T>> pointer(*data, *size, elf->getClass(), elf->getData());
+    mozilla::CheckedInt<T> value = pointer.value;
+    if (origAddr < eh_frame->getAddr()) {
+        unsigned int diff = eh_frame->getAddr() - origAddr;
+        value -= diff;
+    } else {
+        unsigned int diff = origAddr - eh_frame->getAddr();
+        value += diff;
+    }
+    if (!value.isValid())
+        throw std::runtime_error("Overflow while adjusting eh_frame");
+    pointer.value = value.value();
+    pointer.serialize(*data, *size, elf->getClass(), elf->getData());
+    return advance_buffer(data, size, sizeof(T));
+}
+
+// In the given eh_frame section, adjust the pointer with the given encoding, pointed to
+// by the given buffer (`data`, `size`), considering the eh_frame section was originally
+// at `origAddr`.
+// Also advances in the buffer.
+static bool adjust_eh_frame_pointer(char** data, size_t* size, char encoding, ElfSection* eh_frame,
+                                    unsigned int origAddr, Elf* elf)
+{
+    if ((encoding & 0x70) != DW_EH_PE_pcrel)
+        return skip_eh_frame_pointer(data, size, encoding);
+
+    if (encoding & DW_EH_PE_signed) {
+        switch (encoding_data_size(encoding)) {
+        case DW_EH_PE_data2:
+             return adjust_eh_frame_sized_pointer<int16_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data4:
+             return adjust_eh_frame_sized_pointer<int32_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data8:
+             return adjust_eh_frame_sized_pointer<int64_t>(data, size, eh_frame, origAddr, elf);
+        }
+    } else {
+        switch (encoding_data_size(encoding)) {
+        case DW_EH_PE_data2:
+             return adjust_eh_frame_sized_pointer<uint16_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data4:
+             return adjust_eh_frame_sized_pointer<uint32_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data8:
+             return adjust_eh_frame_sized_pointer<uint64_t>(data, size, eh_frame, origAddr, elf);
+        }
+    }
+
+    throw std::runtime_error("Unsupported eh_frame pointer encoding");
+}
+
+// The eh_frame section may contain "PC"-relative pointers. If we move the section,
+// those need to be adjusted. Other type of pointers are relative to sections we
+// don't touch.
+static void adjust_eh_frame(ElfSection* eh_frame, unsigned int origAddr, Elf* elf)
+{
+    if (eh_frame->getAddr() == origAddr) // nothing to do;
+        return;
+
+    char* data = const_cast<char*>(eh_frame->getData());
+    size_t size = eh_frame->getSize();
+    char LSDAencoding = DW_EH_PE_omit;
+    char FDEencoding = DW_EH_PE_absptr;
+    bool hasZ = false;
+
+    // Decoding of eh_frame based on https://www.airs.com/blog/archives/460
+    while (size) {
+        if (size < 2 * sizeof(uint32_t)) goto malformed;
+
+        serializable<FixedSizeData<uint32_t>> entryLength(data, size, elf->getClass(), elf->getData());
+        if (!advance_buffer(&data, &size, sizeof(uint32_t))) goto malformed;
+
+        char* cursor = data;
+        size_t length = entryLength.value;
+
+        serializable<FixedSizeData<uint32_t>> id(data, size, elf->getClass(), elf->getData());
+        if (!advance_buffer(&cursor, &length, sizeof(uint32_t))) goto malformed;
+
+        if (id.value == 0) {
+            // This is a Common Information Entry
+            if (length < 2) goto malformed;
+            // Reset LSDA and FDE encodings, and hasZ for subsequent FDEs.
+            LSDAencoding = DW_EH_PE_omit;
+            FDEencoding = DW_EH_PE_absptr;
+            hasZ = false;
+            // CIE version. Should only be 1 or 3.
+            char version = *cursor++; length--;
+            if (version != 1 && version != 3) {
+                throw std::runtime_error("Unsupported eh_frame version");
+            }
+            // NUL terminated string.
+            const char* augmentationString = cursor;
+            size_t l = strnlen(augmentationString, length - 1);
+            if (l == length - 1) goto malformed;
+            if (!advance_buffer(&cursor, &length, l + 1)) goto malformed;
+            // Skip code alignment factor (LEB128)
+            if (!skip_LEB128(&cursor, &length)) goto malformed;
+            // Skip data alignment factor (LEB128)
+            if (!skip_LEB128(&cursor, &length)) goto malformed;
+            // Skip return address register (single byte in CIE version 1, LEB128
+            // in CIE version 3)
+            if (version == 1) {
+                if (!advance_buffer(&cursor, &length, 1)) goto malformed;
+            } else {
+                if (!skip_LEB128(&cursor, &length)) goto malformed;
+            }
+            // Past this, it's data driven by the contents of the augmentation string.
+            for (size_t i = 0; i < l; i++) {
+                if (!length) goto malformed;
+                switch (augmentationString[i]) {
+                case 'z':
+                    if (!skip_LEB128(&cursor, &length)) goto malformed;
+                    hasZ = true;
+                    break;
+                case 'L':
+                    LSDAencoding = *cursor++;
+                    length--;
+                    break;
+                case 'R':
+                    FDEencoding = *cursor++;
+                    length--;
+                    break;
+                case 'P':
+                    {
+                        char encoding = *cursor++;
+                        length--;
+                        if (!adjust_eh_frame_pointer(&cursor, &length, encoding, eh_frame, origAddr, elf))
+                            goto malformed;
+                    }
+                    break;
+                default:
+                    goto malformed;
+                }
+            }
+        } else {
+            // This is a Frame Description Entry
+            // Starting address
+            if (!adjust_eh_frame_pointer(&cursor, &length, FDEencoding, eh_frame, origAddr, elf))
+                goto malformed;
+
+            if (LSDAencoding != DW_EH_PE_omit) {
+                // Skip number of bytes, same size as the starting address.
+                if (!skip_eh_frame_pointer(&cursor, &length, FDEencoding)) goto malformed;
+                if (hasZ) {
+                    if (!skip_LEB128(&cursor, &length)) goto malformed;
+                }
+                // pointer to the LSDA.
+                if (!adjust_eh_frame_pointer(&cursor, &length, LSDAencoding, eh_frame, origAddr, elf))
+                    goto malformed;
+            }
+        }
+
+        data += entryLength.value; size -= entryLength.value;
+    }
+    return;
+
+malformed:
+    throw std::runtime_error("malformed .eh_frame");
+}
+
 template <typename Rel_Type>
 int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type2, bool force, bool fill)
 {
@@ -845,6 +1078,37 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     if (!force && (new_size >= old_size || old_size - new_size < align)) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
+    }
+
+    // .eh_frame/.eh_frame_hdr may be between the relocation sections and the
+    // executable sections. When that happens, we may end up creating a separate
+    // PT_LOAD for just both of them because they are not considered relocatable.
+    // But they are, in fact, kind of relocatable, albeit with some manual work.
+    // Which we'll do here.
+    ElfSegment* eh_frame_segment = elf->getSegmentByType(PT_GNU_EH_FRAME);
+    ElfSection* eh_frame_hdr = eh_frame_segment ? eh_frame_segment->getFirstSection() : nullptr;
+    // The .eh_frame section usually follows the eh_frame_hdr section.
+    ElfSection* eh_frame = eh_frame_hdr ? eh_frame_hdr->getNext() : nullptr;
+    if (eh_frame_hdr && !eh_frame) {
+        throw std::runtime_error("Expected to find an .eh_frame section after .eh_frame_hdr");
+    }
+    if (eh_frame && strcmp(eh_frame->getName(), ".eh_frame") == 0) {
+        // The distance between both sections needs to be preserved because eh_frame_hdr
+        // contains relative offsets to eh_frame. Well, they could be relocated too, but
+        // it's not worth the effort for the few number of bytes this would save.
+        size_t distance = eh_frame->getAddr() - eh_frame_hdr->getAddr();
+        ElfSection* previous = eh_frame_hdr->getPrevious();
+        eh_frame_hdr->getShdr().sh_addr =
+            (previous->getAddr() + previous->getSize() + eh_frame_hdr->getAddrAlign() - 1)
+            & ~(eh_frame_hdr->getAddrAlign() - 1);
+        unsigned int origAddr = eh_frame->getAddr();
+        eh_frame->getShdr().sh_addr =
+            (eh_frame_hdr->getAddr() + eh_frame_hdr->getSize() + eh_frame->getAddrAlign() - 1)
+            & ~(eh_frame->getAddrAlign() - 1);
+        // Re-adjust the eh_frame_hdr address to keep the original distance.
+        eh_frame_hdr->getShdr().sh_addr = eh_frame->getAddr() - distance;
+        eh_frame_hdr->markDirty();
+        adjust_eh_frame(eh_frame, origAddr, elf);
     }
 
     // Adjust PT_LOAD segments
