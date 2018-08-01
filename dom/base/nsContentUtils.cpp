@@ -179,6 +179,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
+#include "nsIURIWithSpecialOrigin.h"
 #include "nsIURL.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowMediator.h"
@@ -6344,9 +6345,22 @@ nsresult
 nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin)
 {
   MOZ_ASSERT(aURI, "missing uri");
+  nsresult rv;
+
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  // Check if either URI has a special origin.
+  nsCOMPtr<nsIURIWithSpecialOrigin> uriWithSpecialOrigin = do_QueryInterface(aURI);
+  if (uriWithSpecialOrigin) {
+    nsCOMPtr<nsIURI> origin;
+    rv = uriWithSpecialOrigin->GetOrigin(getter_AddRefs(origin));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return GetUTFOrigin(origin, aOrigin);
+  }
+#endif
 
   bool isBlobURL = false;
-  nsresult rv = aURI->SchemeIs(BLOBURI_SCHEME, &isBlobURL);
+  rv = aURI->SchemeIs(BLOBURI_SCHEME, &isBlobURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // For Blob URI, the path is the URL of the owning page.

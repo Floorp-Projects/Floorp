@@ -454,7 +454,8 @@ private:
 
   void ReportErrorToConsole(ScriptLoadRequest *aRequest, nsresult aResult) const;
 
-  nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest);
+  nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
+                                     bool* aCouldCompileOut);
   nsresult ProcessRequest(ScriptLoadRequest* aRequest);
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,
@@ -504,8 +505,8 @@ private:
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
-  JS::SourceBufferHolder GetScriptSource(ScriptLoadRequest* aRequest,
-                                         nsAutoString& inlineData);
+  JS::SourceBufferHolder GetScriptSource(JSContext* aCx,
+                                         ScriptLoadRequest* aRequest);
 
   void SetModuleFetchStarted(ModuleLoadRequest *aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* aRequest,

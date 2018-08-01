@@ -55,6 +55,10 @@ CreateCacheStorage(JSContext* aCx, nsIPrincipal* aPrincipal, ErrorResult& aRv)
     return nullptr;
   }
 
+  // This is called when the JSContext is not in a realm, so CreateSandbox
+  // returned an unwrapped global.
+  MOZ_ASSERT(JS_IsGlobalObject(sandbox));
+
   nsCOMPtr<nsIGlobalObject> sandboxGlobalObject = xpc::NativeGlobal(sandbox);
   if (!sandboxGlobalObject) {
     aRv.Throw(NS_ERROR_FAILURE);

@@ -14,6 +14,7 @@
 
 #include "ExpandedPrincipal.h"
 #include "nsNetUtil.h"
+#include "nsIURIWithSpecialOrigin.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 
@@ -411,6 +412,21 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI,
   }
 
   // Check whether the URI knows what its principal is supposed to be.
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  nsCOMPtr<nsIURIWithSpecialOrigin> uriWithSpecialOrigin = do_QueryInterface(aURI);
+  if (uriWithSpecialOrigin) {
+    nsCOMPtr<nsIURI> origin;
+    rv = uriWithSpecialOrigin->GetOrigin(getter_AddRefs(origin));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+    MOZ_ASSERT(origin);
+    OriginAttributes attrs;
+    RefPtr<BasePrincipal> principal = CreateCodebasePrincipal(origin, attrs);
+    return principal.forget();
+  }
+#endif
+
   nsCOMPtr<nsIPrincipal> blobPrincipal;
   if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(aURI,
                                                        getter_AddRefs(blobPrincipal))) {

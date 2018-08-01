@@ -620,7 +620,7 @@ FreeOp::isDefaultFreeOp() const
     return runtime_ && runtime_->defaultFreeOp() == this;
 }
 
-JSObject*
+GlobalObject*
 JSRuntime::getIncumbentGlobal(JSContext* cx)
 {
     // If the embedding didn't set a callback for getting the incumbent
@@ -631,16 +631,21 @@ JSRuntime::getIncumbentGlobal(JSContext* cx)
         return cx->global();
     }
 
-    return cx->getIncumbentGlobalCallback(cx);
+    if (JSObject* obj = cx->getIncumbentGlobalCallback(cx)) {
+        MOZ_ASSERT(obj->is<GlobalObject>(),
+                   "getIncumbentGlobalCallback must return a global!");
+        return &obj->as<GlobalObject>();
+    }
+
+    return nullptr;
 }
 
 bool
 JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject promise,
-                             HandleObject incumbentGlobal)
+                             Handle<GlobalObject*> incumbentGlobal)
 {
     MOZ_ASSERT(cx->enqueuePromiseJobCallback,
                "Must set a callback using JS::SetEnqueuePromiseJobCallback before using Promises");
-    MOZ_ASSERT_IF(incumbentGlobal, !IsWrapper(incumbentGlobal) && !IsWindowProxy(incumbentGlobal));
 
     void* data = cx->enqueuePromiseJobCallbackData;
     RootedObject allocationSite(cx);

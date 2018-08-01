@@ -4,23 +4,35 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import bz2
 import concurrent.futures
+import gzip
 import hashlib
+import lzma
 import multiprocessing
 import os
 import pathlib
-import re
 import subprocess
 import sys
 import tempfile
 import time
 import urllib.request
 
+try:
+    import zstandard
+except ImportError:
+    zstandard = None
+
 
 ARTIFACT_URL = ('https://queue.taskcluster.net/v1/task/{task}/artifacts/'
                 '{artifact}')
 
 CONCURRENCY = multiprocessing.cpu_count()
+
+
+def log(msg):
+    print(msg, file=sys.stderr)
+    sys.stderr.flush()
 
 
 class IntegrityError(Exception):
@@ -40,7 +52,7 @@ def stream_download(url, sha256=None, size=None):
     content, it should be streamed to a file or memory and only operated
     on after the generator is exhausted without raising.
     """
-    print('downloading %s' % url)
+    log('Downloading %s' % url)
 
     h = hashlib.sha256()
     length = 0
@@ -60,19 +72,19 @@ def stream_download(url, sha256=None, size=None):
     duration = time.time() - t0
     digest = h.hexdigest()
 
-    print('%s resolved to %d bytes with sha256 %s in %.3fs' % (
+    log('%s resolved to %d bytes with sha256 %s in %.3fs' % (
         url, length, digest, duration))
 
     if size:
         if size == length:
-            print('verified size of %s' % url)
+            log('Verified size of %s' % url)
         else:
             raise IntegrityError('size mismatch on %s: wanted %d; got %d' % (
                 url, size, length))
 
     if sha256:
         if digest == sha256:
-            print('verified sha256 integrity of %s' % url)
+            log('Verified sha256 integrity of %s' % url)
         else:
             raise IntegrityError('sha256 mismatch on %s: wanted %s; got %s' % (
                 url, sha256, digest))
@@ -91,14 +103,14 @@ def download_to_path(url, path, sha256=None, size=None):
 
     tmp = path.with_name('%s.tmp' % path.name)
 
-    print('downloading %s to %s' % (url, tmp))
+    log('Downloading %s to %s' % (url, tmp))
 
     try:
         with tmp.open('wb') as fh:
             for chunk in stream_download(url, sha256=sha256, size=size):
                 fh.write(chunk)
 
-        print('renaming to %s' % path)
+        log('Renaming to %s' % path)
         tmp.rename(path)
     except IntegrityError:
         tmp.unlink()
@@ -113,25 +125,25 @@ def gpg_verify_path(path: pathlib.Path, public_key_data: bytes,
     bytes with GPG public key data. ``signature_data`` contains a signed
     GPG document to use with ``gpg --verify``.
     """
-    print('validating GPG signature of %s' % path)
-    print('GPG key data:\n%s' % public_key_data.decode('ascii'))
+    log('Validating GPG signature of %s' % path)
+    log('GPG key data:\n%s' % public_key_data.decode('ascii'))
 
     with tempfile.TemporaryDirectory() as td:
         try:
             # --batch since we're running unattended.
             gpg_args = ['gpg', '--homedir', td, '--batch']
 
-            print('importing GPG key...')
+            log('Importing GPG key...')
             subprocess.run(gpg_args + ['--import'],
                            input=public_key_data,
                            check=True)
 
-            print('verifying GPG signature...')
+            log('Verifying GPG signature...')
             subprocess.run(gpg_args + ['--verify', '-', '%s' % path],
                            input=signature_data,
                            check=True)
 
-            print('GPG signature verified!')
+            log('GPG signature verified!')
         finally:
             # There is a race between the agent self-terminating and
             # shutil.rmtree() from the temporary directory cleanup that can
@@ -141,22 +153,68 @@ def gpg_verify_path(path: pathlib.Path, public_key_data: bytes,
             subprocess.run(['gpgconf', '--kill', 'gpg-agent'], env=env)
 
 
-def extract_archive(path, dest_dir):
+def archive_type(path: pathlib.Path):
+    """Attempt to identify a path as an extractable archive."""
+    if path.suffixes[-2:-1] == ['.tar']:
+        return 'tar'
+    elif path.suffix == '.zip':
+        return 'zip'
+    else:
+        return None
+
+
+def extract_archive(path, dest_dir, typ):
     """Extract an archive to a destination directory."""
 
-    if re.search('\.tar\..*$', path.name):
-        args = ['tar', 'xaf', str(path)]
-    elif path.name.endswith('.zip'):
-        args = ['unzip', str(path)]
-    else:
-        print('%s is unknown archive format; ignoring' % path)
-        return False
+    # We pipe input to the decompressor program so that we can apply
+    # custom decompressors that the program may not know about.
 
-    print('extracting %s to %s using %r' % (path, dest_dir, args))
+    if typ == 'tar':
+        if path.suffix == '.bz2':
+            ifh = bz2.open(str(path), 'rb')
+        elif path.suffix == '.gz':
+            ifh = gzip.open(str(path), 'rb')
+        elif path.suffix == '.xz':
+            ifh = lzma.open(str(path), 'rb')
+        elif path.suffix == '.zst':
+            if not zstandard:
+                raise ValueError('zstandard Python package not available')
+            dctx = zstandard.ZstdDecompressor()
+            ifh = dctx.stream_reader(path.open('rb'))
+        elif path.suffix == '.tar':
+            ifh = path.open('rb')
+        else:
+            raise ValueError('unknown archive format for tar file: %s' % path)
+
+        args = ['tar', 'xf', '-']
+        pipe_stdin = True
+    elif typ == 'zip':
+        # unzip from stdin has wonky behavior. We don't use a pipe for it.
+        ifh = os.devnull
+        args = ['unzip', str(path)]
+        pipe_stdin = False
+    else:
+        raise ValueError('unknown archive format: %s' % path)
+
+    log('Extracting %s to %s using %r' % (path, dest_dir, args))
     t0 = time.time()
-    subprocess.check_call(args, cwd=str(dest_dir), bufsize=0)
-    print('%s extracted in %.3fs' % (path, time.time() - t0))
-    return True
+
+    with ifh, subprocess.Popen(args, cwd=str(dest_dir), bufsize=0,
+                               stdin=subprocess.PIPE) as p:
+        while True:
+            if not pipe_stdin:
+                break
+
+            chunk = ifh.read(131072)
+            if not chunk:
+                break
+
+            p.stdin.write(chunk)
+
+    if p.returncode:
+        raise Exception('%r exited %d' % (args, p.returncode))
+
+    log('%s extracted in %.3fs' % (path, time.time() - t0))
 
 
 def fetch_and_extract(url, dest_dir, sha256=None, size=None):
@@ -172,8 +230,10 @@ def fetch_and_extract(url, dest_dir, sha256=None, size=None):
 
     download_to_path(url, dest_path, sha256=sha256, size=size)
 
-    if extract_archive(dest_path, dest_dir):
-        print('removing %s' % dest_path)
+    typ = archive_type(dest_path)
+    if typ:
+        extract_archive(dest_path, dest_dir, typ)
+        log('Removing %s' % dest_path)
         dest_path.unlink()
 
 

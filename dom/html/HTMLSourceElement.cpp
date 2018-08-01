@@ -143,13 +143,11 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 nsresult
 HTMLSourceElement::BindToTree(nsIDocument *aDocument,
                               nsIContent *aParent,
-                              nsIContent *aBindingParent,
-                              bool aCompileEventHandlers)
+                              nsIContent *aBindingParent)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument,
                                                  aParent,
-                                                 aBindingParent,
-                                                 aCompileEventHandlers);
+                                                 aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (auto* media = HTMLMediaElement::FromNodeOrNull(aParent)) {

@@ -3,33 +3,28 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"
-[
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  <!ENTITY % crashesDTD SYSTEM "chrome://global/locale/crashes.dtd">
-  %globalDTD;
-  %crashesDTD;
-]>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
 <link rel="stylesheet" type="text/css" href="chrome://global/content/crashes.css"/>
 <link rel="stylesheet" media="screen, projection" type="text/css"
       href="chrome://global/skin/in-content/common.css"/>
 <script type="application/javascript" src="chrome://global/content/crashes.js"/>
+<script type="text/javascript" src="chrome://global/content/l10n.js"/>
 
-<title>&crashReports.title;</title>
-</head><body dir="&locale.dir;">
-<button chromedir="&locale.dir;" id="clear-reports">&clearAllReports.label;</button>
+<title data-l10n-id="crash-reports-title"></title>
+</head><body>
+<button id="clear-reports" data-l10n-id="clear-all-reports-label"></button>
 <div id="reportList">
   <div id="reportListUnsubmitted">
-    <h1>&crashesUnsubmitted.label;</h1>
+    <h1 data-l10n-id="crashes-unsubmitted-label"></h1>
     <table>
       <thead>
         <tr>
-          <th chromedir="&locale.dir;">&id.heading;</th>
-          <th chromedir="&locale.dir;" colspan="2">&dateCrashed.heading;</th>
+          <th data-l10n-id="id-heading"></th>
+          <th colspan="2" data-l10n-id="date-crashed-heading"></th>
         </tr>
       </thead>
       <tbody id="unsubmitted">
@@ -37,12 +32,12 @@
     </table>
   </div>
   <div id="reportListSubmitted">
-    <h1>&crashesSubmitted.label;</h1>
+    <h1 data-l10n-id="crashes-submitted-label"></h1>
     <table>
       <thead>
         <tr>
-          <th chromedir="&locale.dir;">&id.heading;</th>
-          <th chromedir="&locale.dir;" colspan="2">&dateSubmitted.heading;</th>
+          <th data-l10n-id="id-heading"></th>
+          <th colspan="2" data-l10n-id="date-submitted-heading"></th>
         </tr>
       </thead>
       <tbody id="submitted">
@@ -50,7 +45,7 @@
     </table>
   </div>
 </div>
-<p id="noReports" style="display: none">&noReports.label;</p>
-<p id="noConfig" style="display: none">&noConfig.label;</p>
+<p id="noReports" style="display: none" data-l10n-id="no-reports-label"></p>
+<p id="noConfig" style="display: none" data-l10n-id="no-config-label"></p>
 </body>
 </html>

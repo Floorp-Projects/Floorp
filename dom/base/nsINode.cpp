@@ -1386,8 +1386,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
 
   bool wasInXBLScope = ShouldUseXBLScope(aKid);
   rv = aKid->BindToTree(doc, parent,
-                        parent ? parent->GetBindingParent() : nullptr,
-                        true);
+                        parent ? parent->GetBindingParent() : nullptr);
   if (NS_SUCCEEDED(rv) && !wasInXBLScope && ShouldUseXBLScope(aKid)) {
     MOZ_ASSERT(ShouldUseXBLScope(this),
                "Why does the kid need to use an XBL scope?");
