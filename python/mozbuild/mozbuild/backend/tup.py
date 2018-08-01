@@ -383,9 +383,9 @@ class TupBackend(CommonBackend):
             static_libs += rust_linked
 
         symbols_file = []
-        if shlib.symbols_file:
+        if (shlib.symbols_file and
+            backend_file.environment.substs.get('GCC_USE_GNU_LD')):
             inputs.append(shlib.symbols_file)
-            # TODO: Assumes GNU LD
             symbols_file = ['-Wl,--version-script,%s' % shlib.symbols_file]
 
         cmd = (
