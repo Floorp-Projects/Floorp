@@ -90,18 +90,18 @@ DeleteRangeTransaction::DoTransaction()
     return rv;
   }
 
-  // only set selection to deletion point if editor gives permission
-  if (mEditorBase->GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditorBase->GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    rv = selection->Collapse(startRef.AsRaw());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
+    return NS_OK;
   }
-  // else do nothing - dom range gravity will adjust selection
+
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  rv = selection->Collapse(startRef.AsRaw());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
