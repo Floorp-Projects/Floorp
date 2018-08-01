@@ -111,7 +111,7 @@ function posecheck() {
 
 function setFrameVisible(f, visible) {
   var Ci = SpecialPowers.Ci;
-  var docshell = SpecialPowers.wrap(f.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
+  var docshell = SpecialPowers.wrap(f.contentWindow).docShell;
   docshell.isActive = visible;
 }
 

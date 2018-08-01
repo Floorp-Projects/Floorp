@@ -13,10 +13,7 @@
   var Ci = SpecialPowers.Ci;
 
 function getLoadContext() {
-  return SpecialPowers.wrap(window)
-               .QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsILoadContext);
+  return SpecialPowers.wrap(window).docShell.QueryInterface(Ci.nsILoadContext);
 }
 
 async function runTest() {

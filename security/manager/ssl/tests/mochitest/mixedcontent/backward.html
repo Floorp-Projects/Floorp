@@ -7,8 +7,8 @@
   {
     window.setTimeout(function()
     {
-      SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-        .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+      SpecialPowers.wrap(window).docShell
+        .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
         .goBack();
     }, 100);
   };

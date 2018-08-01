@@ -10,20 +10,6 @@ applicationCache.onerror = function() {
 
 applicationCache.oncached = function() {
   parent.frameOnUpdate("diff", true, applicationCache.status);
-
-  /* This code tries to figure out what cache is really
-     associated to this document, but hangs on getter2.getInterface
-     from for now unknown reasons. Commenting this out.
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var getter1 = window.QueryInterface(Ci.nsIInterfaceRequestor);
-  var webnav = getter1.getInterface(Ci.nsIWebNavigation);
-  var getter2 = webnav.QueryInterface(Ci.nsIInterfaceRequestor);
-  var cacheCont = getter2.getInterface(Ci.nsIApplicationCacheContainer);
-  var cache = cacheCont.applicationCache;
-  dump(cache.groupID);
-  */
 }
 
 </script>

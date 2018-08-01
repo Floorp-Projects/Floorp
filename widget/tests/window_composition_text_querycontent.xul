@@ -135,10 +135,7 @@ function getEditor(aNode)
 
 function getHTMLEditorIMESupport(aWindow)
 {
-  return aWindow.QueryInterface(nsIInterfaceRequestor).
-                 getInterface(nsIWebNavigation).
-                 QueryInterface(nsIDocShell).
-                 editor;
+  return aWindow.docShell.editor;
 }
 
 const kIsWin = (navigator.platform.indexOf("Win") == 0);

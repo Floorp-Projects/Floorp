@@ -14,12 +14,7 @@ var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var ok = window.opener.wrappedJSObject.ok;
 var info = window.opener.wrappedJSObject.info;
 
-var viewer =
-  SpecialPowers.wrap(ourFrame).contentWindow
-               .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-               .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-               .QueryInterface(SpecialPowers.Ci.nsIDocShell)
-               .contentViewer;
+var viewer = SpecialPowers.wrap(ourFrame).contentWindow.docShell.contentViewer;
 viewer.fullZoom = 2;
 
 SimpleTest.waitForExplicitFinish();

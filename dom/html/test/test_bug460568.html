@@ -36,10 +36,7 @@ function runTest()
     range.selectNodeContents(editor);
     var prevStr = range.toString();
 
-    var docShell = SpecialPowers.wrap(window)
-            .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-            .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-            .QueryInterface(SpecialPowers.Ci.nsIDocShell);
+    var docShell = SpecialPowers.wrap(window).docShell;
     var controller =
           docShell.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
                   .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
