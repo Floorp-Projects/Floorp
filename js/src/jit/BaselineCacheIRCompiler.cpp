@@ -2082,6 +2082,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
     AllocatableGeneralRegisterSet available(ICStubCompiler::availableGeneralRegs(numInputsInRegs));
 
     switch (kind) {
+      case CacheKind::NewObject:
       case CacheKind::GetIntrinsic:
         MOZ_ASSERT(numInputs == 0);
         break;

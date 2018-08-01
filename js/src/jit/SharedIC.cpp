@@ -1240,28 +1240,41 @@ DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHan
         if (obj && !obj->isSingleton() &&
             !obj->group()->maybePreliminaryObjectsDontCheckGeneration())
         {
-            JSObject* templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
+            templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
             if (!templateObject)
                 return false;
 
-            if (!stub->invalid() &&
-                (templateObject->is<UnboxedPlainObject>() ||
-                 !templateObject->as<PlainObject>().hasDynamicSlots()))
-            {
-                JitCode* code = GenerateNewObjectWithTemplateCode(cx, templateObject);
-                if (!code)
-                    return false;
+            ICStubCompiler::Engine engine = info.engine();
+            if (engine ==  ICStubEngine::Baseline && !JitOptions.disableCacheIR) {
+                bool attached = false;
+                RootedScript script(cx, info.outerScript(cx));
+                NewObjectIRGenerator gen(cx, script, pc, stub->state().mode(), JSOp(*pc), templateObject);
+                if (gen.tryAttachStub()) {
+                    ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                                BaselineCacheIRStubKind::Regular,
+                                                                ICStubEngine::Baseline , script, stub, &attached);
+                    if (newStub)
+                        JitSpew(JitSpew_BaselineIC, "  NewObject Attached CacheIR stub");
+                }
+            } else {
+                if (!stub->invalid() &&
+                    (templateObject->is<UnboxedPlainObject>() ||
+                    !templateObject->as<PlainObject>().hasDynamicSlots()))
+                {
+                    JitCode* code = GenerateNewObjectWithTemplateCode(cx, templateObject);
+                    if (!code)
+                        return false;
 
-                ICStubSpace* space =
-                    ICStubCompiler::StubSpaceForStub(/* makesGCCalls = */ false, script,
-                                                     ICStubCompiler::Engine::Baseline);
-                ICStub* templateStub = ICStub::New<ICNewObject_WithTemplate>(cx, space, code);
-                if (!templateStub)
-                    return false;
+                    ICStubSpace* space =
+                        ICStubCompiler::StubSpaceForStub(/* makesGCCalls = */ false, script,
+                                                        ICStubCompiler::Engine::Baseline);
+                    ICStub* templateStub = ICStub::New<ICNewObject_WithTemplate>(cx, space, code);
+                    if (!templateStub)
+                        return false;
 
-                stub->addNewStub(templateStub);
+                    stub->addNewStub(templateStub);
+                }
             }
-
             stub->setTemplateObject(templateObject);
         }
     }
