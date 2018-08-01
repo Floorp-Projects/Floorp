@@ -1240,10 +1240,14 @@ set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
 
-@depends(c_compiler)
+@depends(c_compiler, check_build_environment, target)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
-def pgo_flags(compiler):
+def pgo_flags(compiler, build_env, target):
+    topobjdir = build_env.topobjdir
+    if topobjdir.endswith('/js/src'):
+        topobjdir = topobjdir[:-7]
+
     if compiler.type in ('gcc', 'clang'):
         return namespace(
             gen_cflags=['-fprofile-generate'],
@@ -1252,6 +1256,18 @@ def pgo_flags(compiler):
                         '-Wcoverage-mismatch'],
             use_ldflags=['-fprofile-use'],
         )
+
+    if compiler.type == 'clang-cl':
+        profdata = os.path.join(topobjdir, 'merged.profdata')
+        # 32-bit PGO is currently blocked by bug 1479800
+        if target.cpu == 'x86_64':
+          return namespace(
+              gen_cflags=['-fprofile-instr-generate'],
+              gen_ldflags=['clang_rt.profile-x86_64.lib'],
+              use_cflags=['-fprofile-instr-use=%s' % profdata,
+                          '-Wno-error=profile-instr-unprofiled'],
+              use_ldflags=[],
+          )
 
     if compiler.type == 'msvc':
         num_cores = min(8, multiprocessing.cpu_count())
@@ -1281,6 +1297,11 @@ set_config('PROFILE_GEN_CFLAGS', pgo_flags.gen_cflags)
 set_config('PROFILE_GEN_LDFLAGS', pgo_flags.gen_ldflags)
 set_config('PROFILE_USE_CFLAGS', pgo_flags.use_cflags)
 set_config('PROFILE_USE_LDFLAGS', pgo_flags.use_ldflags)
+
+llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
+                           allow_missing=True)
+
+add_old_configure_assignment('LLVM_PROFDATA', llvm_profdata)
 
 
 @depends(c_compiler)
