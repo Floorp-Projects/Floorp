@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// See the comment at the top of mfbt/HashTable.h for a comparison between
+// PLDHashTable and mozilla::HashTable.
+
 #ifndef nsTHashtable_h__
 #define nsTHashtable_h__
 

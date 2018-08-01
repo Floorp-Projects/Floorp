@@ -33,6 +33,9 @@ public:
 
   IMPL_EVENT_HANDLER(change)
 
+  void
+  DisconnectFromOwner() override;
+
 private:
   ~PermissionStatus();
 

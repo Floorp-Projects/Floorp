@@ -152,7 +152,7 @@ function run_test() {
         // shouldLoad creates and sends out the report here.
         csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SCRIPT,
                       NetUtil.newURI("http://blocked.test/foo.js"),
-                      null, null, null, null);
+                      null, null, null, null, true);
       });
 
   // test that inline script violations cause a report in report-only policy
@@ -202,7 +202,7 @@ function run_test() {
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_IMAGE,
                      NetUtil.newURI("data:image/png;base64," + base64data),
-                     null, null, null, null);
+                     null, null, null, null, true);
       });
 
   // test that only the uri's scheme is reported for globally unique identifiers
@@ -211,7 +211,7 @@ function run_test() {
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
                      NetUtil.newURI("intent://mymaps.com/maps?um=1&ie=UTF-8&fb=1&sll"),
-                     null, null, null, null);
+                     null, null, null, null, true);
       });
 
   // test fragment removal
@@ -222,7 +222,7 @@ function run_test() {
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SCRIPT,
                      NetUtil.newURI(selfSpec + "#bar"),
-                     null, null, null, null);
+                     null, null, null, null, true);
       });
 
   // test scheme of ftp:
@@ -231,6 +231,6 @@ function run_test() {
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SCRIPT,
                     NetUtil.newURI("ftp://blocked.test/profile.png"),
-                    null, null, null, null);
+                    null, null, null, null, true);
     });
 }

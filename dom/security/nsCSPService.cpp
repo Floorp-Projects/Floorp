@@ -188,6 +188,7 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
                                   requestContext,
                                   aMimeTypeGuess,
                                   nullptr, // no redirect, aOriginal URL is null.
+                                  aLoadInfo->GetSendCSPViolationEvents(),
                                   aDecision);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -212,6 +213,7 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
                          requestContext,
                          aMimeTypeGuess,
                          nullptr, // no redirect, aOriginal URL is null.
+                         aLoadInfo->GetSendCSPViolationEvents(),
                          aDecision);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -324,6 +326,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                              requestContext, // nsISupports
                              EmptyCString(), // ACString - MIME guess
                              originalUri,    // Original nsIURI
+                             true,           // aSendViolationReports
                              &aDecision);
 
       // if the preload policy already denied the load, then there
@@ -348,6 +351,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                     requestContext, // nsISupports
                     EmptyCString(), // ACString - MIME guess
                     originalUri,    // Original nsIURI
+                    true,           // aSendViolationReports
                     &aDecision);
   }
 

@@ -30,8 +30,10 @@ jobs:
             by-project:
                maple: [32]
                birch: [145]
+               jamun: [724]
                mozilla-beta: [32]
                mozilla-release: [145]
+               mozilla-esr60: [806]
                default: []
       treeherder:
          platform: firefox-release/opt

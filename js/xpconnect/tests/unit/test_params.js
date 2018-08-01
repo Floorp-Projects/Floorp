@@ -163,6 +163,8 @@ function test_component(contractid) {
                                ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator(standardComparator));
   doIsTest("testInterfaceArray", [makeA(), makeA()], 2,
                                  [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], 6, arrayComparator(interfaceComparator));
+  doIsTest("testJsvalArray", [{ cheese: 'whiz', apple: 8 }, [1, 5, '3'], /regex/], 3,
+                             ['apple', 2.2e10, 3.3e30, { only: "wheedle", except: {} }], 4, arrayComparator(standardComparator));
 
   // Test typed arrays and ArrayBuffer aliasing.
   var arrayBuffer = new ArrayBuffer(16);
@@ -195,4 +197,24 @@ function test_component(contractid) {
   // Test type mismatch (int16 <-> uint16); this should throw BAD_CONVERT_JS.
   doTypedArrayMismatchTest("testShortArray", new Uint16Array([0, 7, 4, 3]), 4,
                                              new Uint16Array([1, 5, 6]), 3);
+
+  // Test Sequence<T> types.
+  doTest("testShortSequence", [2, 4, 6], [1, 3, 5, 7], arrayComparator(standardComparator));
+  doTest("testDoubleSequence", [-10, -0.5], [1, 3, 1e11, -8e-5 ], arrayComparator(fuzzComparator));
+  doTest("testACStringSequence", ["mary", "hat", "hey", "lid", "tell", "lam"],
+                                 ["ids", "fleas", "woes", "wide", "has", "know", "!"],
+                                 arrayComparator(standardComparator));
+  doTest("testAStringSequence", ["沒有語言", "的偉大嗎?]"],
+                                ["we", "are", "being", "sooo", "international", "right", "now"],
+                                arrayComparator(standardComparator));
+
+  doTest("testInterfaceSequence", [makeA(), makeA()],
+                                  [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], arrayComparator(interfaceComparator));
+
+  doTest("testJsvalSequence", [{ cheese: 'whiz', apple: 8 }, [1, 5, '3'], /regex/],
+                              ['apple', 2.2e10, 3.3e30, { only: "wheedle", except: {} }], arrayComparator(standardComparator));
+
+  doIsTest("testInterfaceIsSequence", [makeA(), makeA(), makeA(), makeA(), makeA()], Ci['nsIXPCTestInterfaceA'],
+                                      [makeB(), makeB(), makeB()], Ci['nsIXPCTestInterfaceB'],
+                                      arrayComparator(interfaceComparator), dotEqualsComparator);
 }

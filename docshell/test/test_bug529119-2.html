@@ -60,10 +60,12 @@ function windowLoaded()
     ok(succeeded, "Waiting for error page succeeded");
     /* 3. now, while we are on the error page, navigate back */
     try {
-      SpecialPowers.wrap(w).back();
+      // We need the SpecialPowers bit, because this is a cross-origin window
+      // and we normally can't touch .history on those.
+      SpecialPowers.wrap(w).history.back();
     }
     catch(ex) {
-      ok(false, "w.back() threw " + ex);
+      ok(false, "w.history.back() threw " + ex);
     }
 
     pollForPage(false, function(succeeded) {

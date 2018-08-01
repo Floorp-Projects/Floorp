@@ -284,7 +284,7 @@ select > button {
   background-image: url("arrow.gif") !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
-  -moz-appearance: menulist-button;
+  -moz-appearance: -moz-menulist-button;
 
   /* Make sure to size correctly if the combobox has a non-auto height. */
   block-size: 100% ! important;
