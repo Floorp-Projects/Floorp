@@ -697,6 +697,9 @@ JitRuntime::getVMWrapper(const VMFunction& f) const
 void
 JitCodeHeader::init(JitCode* jitCode)
 {
+    // As long as JitCode isn't moveable, we can avoid tracing this and
+    // mutating executable data.
+    MOZ_ASSERT(!gc::IsMovableKind(gc::AllocKind::JITCODE));
     jitCode_ = jitCode;
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)

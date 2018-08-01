@@ -43,7 +43,7 @@ struct Cell;
  * The AllocKind is available as MapTypeToFinalizeKind<SomeType>::kind.
  */
 template <typename T> struct MapTypeToFinalizeKind {};
-#define EXPAND_MAPTYPETOFINALIZEKIND(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
+#define EXPAND_MAPTYPETOFINALIZEKIND(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
     template <> struct MapTypeToFinalizeKind<type> { \
         static const AllocKind kind = AllocKind::allocKind; \
     };
