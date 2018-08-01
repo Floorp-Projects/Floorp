@@ -869,13 +869,6 @@ ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest)
   MOZ_ASSERT(aRequest->IsReadyToRun());
 
   if (aRequest->IsTopLevel()) {
-    ModuleScript* moduleScript = aRequest->mModuleScript;
-    if (moduleScript && !moduleScript->HasErrorToRethrow()) {
-      if (!InstantiateModuleTree(aRequest)) {
-        aRequest->mModuleScript = nullptr;
-      }
-    }
-
     if (aRequest->mIsInline &&
         aRequest->mElement->GetParserCreated() == NOT_FROM_PARSER)
     {
@@ -1939,13 +1932,20 @@ ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest)
 
   NS_ENSURE_ARG(aRequest);
 
-  if (aRequest->IsModuleRequest() &&
-      !aRequest->AsModuleRequest()->mModuleScript)
-  {
-    // There was an error fetching a module script.  Nothing to do here.
-    LOG(("ScriptLoadRequest (%p):   Error loading request, firing error", aRequest));
-    FireScriptAvailable(NS_ERROR_FAILURE, aRequest);
-    return NS_OK;
+  if (aRequest->IsModuleRequest()) {
+    ModuleLoadRequest* request = aRequest->AsModuleRequest();
+    if (request->mModuleScript && !request->mModuleScript->HasErrorToRethrow()) {
+      if (!InstantiateModuleTree(request)) {
+        request->mModuleScript = nullptr;
+      }
+    }
+
+    if (!request->mModuleScript) {
+      // There was an error fetching a module script.  Nothing to do here.
+      LOG(("ScriptLoadRequest (%p):   Error loading request, firing error", aRequest));
+      FireScriptAvailable(NS_ERROR_FAILURE, aRequest);
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsINode> scriptElem = do_QueryInterface(aRequest->mElement);
