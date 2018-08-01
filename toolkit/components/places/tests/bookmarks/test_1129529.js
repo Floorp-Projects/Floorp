@@ -24,7 +24,7 @@ add_task(async function() {
           guid: "___guid1____",
           index: 0,
           id: 3,
-          charset: "UTF-8",
+          charset: "UTF-16",
           tags: "tag0",
           type: "text/x-moz-place",
           dateAdded: now,
@@ -35,7 +35,7 @@ add_task(async function() {
           guid: "___guid2____",
           index: 1,
           id: 4,
-          charset: "UTF-8",
+          charset: "UTF-16",
           tags: "tag1,a" + "0123456789".repeat(10), // 101 chars
           type: "text/x-moz-place",
           dateAdded: now,
@@ -46,7 +46,7 @@ add_task(async function() {
           guid: "___guid3____",
           index: 2,
           id: 5,
-          charset: "UTF-8",
+          charset: "UTF-16",
           tags: "tag2",
           type: "text/x-moz-place",
           dateAdded: now,
@@ -67,7 +67,7 @@ add_task(async function() {
 
   for (let i = 0; i < unsortedBookmarks.length; ++i) {
     let bookmark = unsortedBookmarks[i];
-    Assert.equal(bookmark.charset, "UTF-8");
+    Assert.equal(bookmark.charset, "UTF-16");
     Assert.equal(bookmark.dateAdded, now);
     Assert.equal(bookmark.lastModified, now);
     Assert.equal(bookmark.uri, "http://test" + i + ".com/");
