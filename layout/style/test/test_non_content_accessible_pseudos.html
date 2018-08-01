@@ -32,6 +32,10 @@ const NON_CONTENT_ACCESIBLE_PSEUDOS = [
   ":-moz-autofill-preview",
 ];
 
+if (!SpecialPowers.getBoolPref("layout.css.xul-tree-pseudos.content.enabled")) {
+  NON_CONTENT_ACCESIBLE_PSEUDOS.push("::-moz-tree-row", "::-moz-tree-row(foo)");
+}
+
 test(function() {
   sheet.textContent = `div { color: initial }`;
   assert_equals(sheet.sheet.cssRules.length, 1);
