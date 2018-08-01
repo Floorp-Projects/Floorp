@@ -203,7 +203,6 @@ nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
   nsIDocument* doc = aElement->GetUncomposedDoc();
-  bool allowScripts = AllowScripts();
 
   nsAutoScriptBlocker scriptBlocker;
   for (nsIContent* child = aAnonParent->GetFirstChild();
@@ -216,7 +215,7 @@ nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
     }
     child->SetFlags(NODE_IS_ANONYMOUS_ROOT);
     nsresult rv =
-      child->BindToTree(doc, aElement, mBoundElement, allowScripts);
+      child->BindToTree(doc, aElement, mBoundElement);
     if (NS_FAILED(rv)) {
       // Oh, well... Just give up.
       // XXXbz This really shouldn't be a void method!

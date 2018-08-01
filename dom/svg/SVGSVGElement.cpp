@@ -466,8 +466,7 @@ SVGSVGElement::GetTimedDocumentRoot()
 nsresult
 SVGSVGElement::BindToTree(nsIDocument* aDocument,
                           nsIContent* aParent,
-                          nsIContent* aBindingParent,
-                          bool aCompileEventHandlers)
+                          nsIContent* aBindingParent)
 {
   nsSMILAnimationController* smilController = nullptr;
 
@@ -491,8 +490,7 @@ SVGSVGElement::BindToTree(nsIDocument* aDocument,
   }
 
   nsresult rv = SVGGraphicsElement::BindToTree(aDocument, aParent,
-                                              aBindingParent,
-                                              aCompileEventHandlers);
+                                              aBindingParent);
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (mTimedDocumentRoot && smilController) {

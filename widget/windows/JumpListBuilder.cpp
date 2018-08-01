@@ -185,9 +185,7 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(JSContext* aCx,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsIGlobalObject* globalObject =
-    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
   if (NS_WARN_IF(!globalObject)) {
     return NS_ERROR_FAILURE;
   }

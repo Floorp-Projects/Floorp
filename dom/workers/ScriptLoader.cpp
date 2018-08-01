@@ -1514,12 +1514,18 @@ CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal)
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   MOZ_ASSERT(xpc, "This should never be null!");
 
-  mozilla::AutoSafeJSContext cx;
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> sandbox(cx);
   nsresult rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  // The JSContext is not in a realm, so CreateSandbox returned an unwrapped
+  // global.
+  MOZ_ASSERT(JS_IsGlobalObject(sandbox));
 
   mSandboxGlobalObject = xpc::NativeGlobal(sandbox);
   if (NS_WARN_IF(!mSandboxGlobalObject)) {

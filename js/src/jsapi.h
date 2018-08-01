@@ -378,7 +378,7 @@ namespace JS {
  *    JS::SourceBufferHolder srcBuf(chars, length, JS::SourceBufferHolder::GiveOwnership);
  *    JS::Compile(cx, options, srcBuf);
  */
-class MOZ_STACK_CLASS SourceBufferHolder final
+class SourceBufferHolder final
 {
   public:
     enum Ownership {
@@ -391,14 +391,15 @@ class MOZ_STACK_CLASS SourceBufferHolder final
         length_(dataLength),
         ownsChars_(ownership == GiveOwnership)
     {
-        // Ensure that null buffers properly return an unowned, empty,
-        // null-terminated string.
-        static const char16_t NullChar_ = 0;
-        if (!get()) {
-            data_ = &NullChar_;
-            length_ = 0;
-            ownsChars_ = false;
-        }
+        fixEmptyBuffer();
+    }
+
+    SourceBufferHolder(UniqueTwoByteChars&& data, size_t dataLength)
+      : data_(data.release()),
+        length_(dataLength),
+        ownsChars_(true)
+    {
+        fixEmptyBuffer();
     }
 
     SourceBufferHolder(SourceBufferHolder&& other)
@@ -447,6 +448,17 @@ class MOZ_STACK_CLASS SourceBufferHolder final
   private:
     SourceBufferHolder(SourceBufferHolder&) = delete;
     SourceBufferHolder& operator=(SourceBufferHolder&) = delete;
+
+    void fixEmptyBuffer() {
+        // Ensure that null buffers properly return an unowned, empty,
+        // null-terminated string.
+        static const char16_t NullChar_ = 0;
+        if (!get()) {
+            data_ = &NullChar_;
+            length_ = 0;
+            ownsChars_ = false;
+        }
+    }
 
     const char16_t* data_;
     size_t length_;
@@ -1316,6 +1328,24 @@ JS_freeop(JSFreeOp* fop, void* p);
 
 extern JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext* cx, size_t nbytes);
+
+/*
+ * A replacement for MallocAllocPolicy that allocates in the JS heap and adds no
+ * extra behaviours.
+ *
+ * This is currently used for allocating source buffers for parsing. Since these
+ * are temporary and will not be freed by GC, the memory is not tracked by the
+ * usual accounting.
+ */
+class JS_PUBLIC_API(JSMallocAllocPolicy) : public js::AllocPolicyBase
+{
+public:
+    void reportAllocOverflow() const {}
+
+    MOZ_MUST_USE bool checkSimulatedOOM() const {
+        return true;
+    }
+};
 
 /**
  * Set the size of the native stack that should not be exceed. To disable
@@ -3186,7 +3216,7 @@ JS_CompileScript(JSContext* cx, const char* ascii, size_t length,
  * |script| will always be set. On failure, it will be set to nullptr.
  */
 extern JS_PUBLIC_API(bool)
-JS_CompileUCScript(JSContext* cx, const char16_t* chars, size_t length,
+JS_CompileUCScript(JSContext* cx, JS::SourceBufferHolder& srcBuf,
                    const JS::CompileOptions& options,
                    JS::MutableHandleScript script);
 
@@ -3601,10 +3631,6 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
 
 extern JS_PUBLIC_API(bool)
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        const char16_t* chars, size_t length, JS::MutableHandleScript script);
-
-extern JS_PUBLIC_API(bool)
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
         FILE* file, JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(bool)
@@ -3618,10 +3644,6 @@ CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options
 extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
                             const char* bytes, size_t length, JS::MutableHandleScript script);
-
-extern JS_PUBLIC_API(bool)
-CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            const char16_t* chars, size_t length, JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -3656,7 +3678,7 @@ CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t 
 
 extern JS_PUBLIC_API(bool)
 CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
-                 const char16_t* chars, size_t length,
+                 JS::SourceBufferHolder& srcBuf,
                  OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSScript*)
@@ -3667,7 +3689,7 @@ CancelOffThreadScript(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(bool)
 CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       const char16_t* chars, size_t length,
+                       JS::SourceBufferHolder& srcBuf,
                        OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSObject*)
@@ -3710,15 +3732,6 @@ CancelMultiOffThreadScriptsDecoder(JSContext* cx, OffThreadToken* token);
  * scope chain used for the function will consist of With wrappers for those
  * objects, followed by the current global of the compartment cx is in.  This
  * global must not be explicitly included in the scope chain.
- */
-extern JS_PUBLIC_API(bool)
-CompileFunction(JSContext* cx, AutoObjectVector& envChain,
-                const ReadOnlyCompileOptions& options,
-                const char* name, unsigned nargs, const char* const* argnames,
-                const char16_t* chars, size_t length, JS::MutableHandleFunction fun);
-
-/**
- * Same as above, but taking a SourceBufferHolder for the function body.
  */
 extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext* cx, AutoObjectVector& envChain,
@@ -3836,22 +3849,6 @@ Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
 extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOptions& options,
          SourceBufferHolder& srcBuf, JS::MutableHandleValue rval);
-
-/**
- * Evaluate the given character buffer in the scope of the current global of cx.
- */
-extern JS_PUBLIC_API(bool)
-Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
-         const char16_t* chars, size_t length, JS::MutableHandleValue rval);
-
-/**
- * As above, but providing an explicit scope chain.  envChain must not include
- * the global object on it; that's implicit.  It needs to contain the other
- * objects that should end up on the script's scope chain.
- */
-extern JS_PUBLIC_API(bool)
-Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOptions& options,
-         const char16_t* chars, size_t length, JS::MutableHandleValue rval);
 
 /**
  * Evaluate the given byte buffer in the scope of the current global of cx.

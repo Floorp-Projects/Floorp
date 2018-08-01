@@ -115,8 +115,9 @@ ElementDeletionObserver::ParentChainChanged(nsIContent* aContent)
     // We're staying in the same document, just rebind the native anonymous
     // node so that the subtree root points to the right object etc.
     mNativeAnonNode->UnbindFromTree();
-    mNativeAnonNode->BindToTree(mObservedNode->GetUncomposedDoc(), mObservedNode,
-                                mObservedNode, true);
+    mNativeAnonNode->BindToTree(mObservedNode->GetUncomposedDoc(),
+                                mObservedNode,
+                                mObservedNode);
   }
 }
 
@@ -194,7 +195,7 @@ HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
     // establish parenthood of the element
     newContentRaw->SetIsNativeAnonymousRoot();
     nsresult rv =
-      newContentRaw->BindToTree(doc, &aParentContent, &aParentContent, true);
+      newContentRaw->BindToTree(doc, &aParentContent, &aParentContent);
     if (NS_FAILED(rv)) {
       newContentRaw->UnbindFromTree();
       return nullptr;

@@ -968,8 +968,8 @@ function run() {
     should_serialize_to("input::placeholder", "input::placeholder");
     should_serialize_to("input:placeholder-shown", "input:placeholder-shown");
 
-    // Test serialization of non CSS2 pseudo-element.
-    should_serialize_to("input::-moz-placeholder", "input::-moz-placeholder");
+    // Test serialization of ::-moz-placeholder.
+    should_serialize_to("input::-moz-placeholder", "input::placeholder");
 
     // Test default namespaces, including inside :not().
     var html_default_ns = "@namespace url(http://www.w3.org/1999/xhtml);";

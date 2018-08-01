@@ -90,8 +90,6 @@ CSS_PSEUDO_ELEMENT(mozRangeThumb, ":-moz-range-thumb",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
 CSS_PSEUDO_ELEMENT(mozMeterBar, ":-moz-meter-bar",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
-CSS_PSEUDO_ELEMENT(mozPlaceholder, ":-moz-placeholder",
-                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
 CSS_PSEUDO_ELEMENT(placeholder, ":placeholder",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
 CSS_PSEUDO_ELEMENT(mozColorSwatch, ":-moz-color-swatch",

@@ -5,8 +5,10 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  FileSource: "resource://gre/modules/L10nRegistry.jsm",
   GeckoViewTelemetryController: "resource://gre/modules/GeckoViewTelemetryController.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -111,6 +113,11 @@ GeckoViewStartup.prototype = {
         // The Telemetry initialization for the content process is performed in
         // ContentProcessSingleton.js for consistency with Desktop Telemetry.
         GeckoViewTelemetryController.setup();
+
+        // Initialize the default l10n resource sources for L10nRegistry.
+        let locales = Services.locale.getPackagedLocales();
+        const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
+        L10nRegistry.registerSource(greSource);
         break;
       }
     }

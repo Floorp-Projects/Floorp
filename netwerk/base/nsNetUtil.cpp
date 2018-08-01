@@ -61,6 +61,7 @@
 #include "nsStringStream.h"
 #include "nsISyncStreamListener.h"
 #include "nsITransport.h"
+#include "nsIURIWithSpecialOrigin.h"
 #include "nsIURLParser.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIViewSourceChannel.h"
@@ -2463,6 +2464,8 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
                        nsIURI *aTargetURI,
                        bool    aStrictFileOriginPolicy)
 {
+    nsresult rv;
+
     // Note that this is not an Equals() test on purpose -- for URIs that don't
     // support host/port, we want equality to basically be object identity, for
     // security purposes.  Otherwise, for example, two javascript: URIs that
@@ -2482,11 +2485,34 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
     nsCOMPtr<nsIURI> sourceBaseURI = NS_GetInnermostURI(aSourceURI);
     nsCOMPtr<nsIURI> targetBaseURI = NS_GetInnermostURI(aTargetURI);
 
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+    // Check if either URI has a special origin.
+    nsCOMPtr<nsIURI> origin;
+    nsCOMPtr<nsIURIWithSpecialOrigin> uriWithSpecialOrigin = do_QueryInterface(sourceBaseURI);
+    if (uriWithSpecialOrigin) {
+      rv = uriWithSpecialOrigin->GetOrigin(getter_AddRefs(origin));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+      MOZ_ASSERT(origin);
+      sourceBaseURI = origin;
+    }
+    uriWithSpecialOrigin = do_QueryInterface(targetBaseURI);
+    if (uriWithSpecialOrigin) {
+      rv = uriWithSpecialOrigin->GetOrigin(getter_AddRefs(origin));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+      MOZ_ASSERT(origin);
+      targetBaseURI = origin;
+    }
+#endif
+
     nsCOMPtr<nsIPrincipal> sourceBlobPrincipal;
     if (BlobURLProtocolHandler::GetBlobURLPrincipal(sourceBaseURI,
                                                     getter_AddRefs(sourceBlobPrincipal))) {
       nsCOMPtr<nsIURI> sourceBlobOwnerURI;
-      nsresult rv = sourceBlobPrincipal->GetURI(getter_AddRefs(sourceBlobOwnerURI));
+      rv = sourceBlobPrincipal->GetURI(getter_AddRefs(sourceBlobOwnerURI));
       if (NS_SUCCEEDED(rv)) {
         sourceBaseURI = sourceBlobOwnerURI;
       }
@@ -2496,7 +2522,7 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
     if (BlobURLProtocolHandler::GetBlobURLPrincipal(targetBaseURI,
                                                     getter_AddRefs(targetBlobPrincipal))) {
       nsCOMPtr<nsIURI> targetBlobOwnerURI;
-      nsresult rv = targetBlobPrincipal->GetURI(getter_AddRefs(targetBlobOwnerURI));
+      rv = targetBlobPrincipal->GetURI(getter_AddRefs(targetBlobOwnerURI));
       if (NS_SUCCEEDED(rv)) {
         targetBaseURI = targetBlobOwnerURI;
       }
@@ -2540,7 +2566,7 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
 
         // Otherwise they had better match
         bool filesAreEqual = false;
-        nsresult rv = sourceFile->Equals(targetFile, &filesAreEqual);
+        rv = sourceFile->Equals(targetFile, &filesAreEqual);
         return NS_SUCCEEDED(rv) && filesAreEqual;
     }
 
