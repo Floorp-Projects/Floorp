@@ -491,7 +491,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
                          (aEditSubAction == EditSubAction::eRedo))) {
     // don't let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     // expand the "changed doc range" as needed
     PromoteRange(*mDocChangeRange, aEditSubAction);
@@ -1449,7 +1449,7 @@ HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   AutoLockListener lockit(&mListenerEnabled);
 
   // don't change my selection in subtransactions
-  AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
   nsAutoString tString(*inString);
   const char16_t *unicodeBuf = tString.get();
   int32_t pos = 0;
@@ -2967,7 +2967,7 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
   // Figure out if the endpoints are in nodes that can be merged.  Adjust
   // surrounding whitespace in preparation to delete selection.
   if (!IsPlaintextEditor()) {
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
     rv = WSRunObject::PrepareToDeleteRange(&HTMLEditorRef(),
                                            address_of(startNode), &startOffset,
                                            address_of(endNode), &endOffset);
@@ -3383,7 +3383,7 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
     }
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
   // offset below is where you find yourself in rightBlock when you traverse
   // upwards from leftBlock
@@ -4506,7 +4506,7 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
   }
 
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
-  AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
   // Contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -5921,7 +5921,7 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDocument)
 
   {
     // Transactions may set selection, but we will set selection if necessary.
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     while (item && node != rootElement) {
       // XXX If we redesign ClearStyle(), we can use EditorDOMPoint in this
@@ -7548,7 +7548,7 @@ HTMLEditRules::GetListActionNodes(
 
   {
     // We don't like other people messing with our selection!
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     // contruct a list of nodes to act on.
     nsresult rv = GetNodesFromSelection(EditSubAction::eCreateOrChangeList,

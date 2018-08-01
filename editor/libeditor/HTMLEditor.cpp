@@ -3612,7 +3612,7 @@ nsresult
 HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
 {
   NS_ENSURE_TRUE(aInRange, NS_ERROR_NULL_POINTER);
-  AutoTransactionsConserveSelection dontChangeMySelection(this);
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
   nsTArray<nsCOMPtr<nsINode>> textNodes;
   // we can't actually do anything during iteration, so store the text nodes in an array
   // don't bother ref counting them because we know we can hold them for the
@@ -4276,7 +4276,7 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
                                       *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
-  AutoTransactionsConserveSelection dontChangeMySelection(this);
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // XXX Although, this method may set background color of ancestor block
   //     element, using EditSubAction::eSetTextProperty.
