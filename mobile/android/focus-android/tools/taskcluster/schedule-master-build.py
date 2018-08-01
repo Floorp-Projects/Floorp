@@ -52,7 +52,7 @@ def generate_webview_X86_ui_test_task(dependencies):
 			command = ('echo "--" > .adjust_token'
 					   ' && ./gradlew --no-daemon clean assembleFocusX86Debug assembleFocusX86DebugAndroidTest'
 					   ' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-					   ' && tools/taskcluster/execute-firebase-test.sh focusX86 app-focus-x86-debug model=model=Nexus9,version=23'),
+					   ' && tools/taskcluster/execute-firebase-test.sh focusX86 app-focus-x86-debug model=Nexus9,version=23'),
 			dependencies = dependencies,
 			scopes = [ 'secrets:get:project/focus/firebase' ],
 			artifacts = {
