@@ -7291,7 +7291,7 @@ nsIDocument::UpdateViewportOverflowType(nscoord aScrolledWidth,
 #ifdef DEBUG
   MOZ_ASSERT(mPresShell);
   nsPresContext* pc = GetPresContext();
-  MOZ_ASSERT(pc->GetViewportScrollbarStylesOverride().mHorizontal ==
+  MOZ_ASSERT(pc->GetViewportScrollStylesOverride().mHorizontal ==
              NS_STYLE_OVERFLOW_HIDDEN,
              "Should only be called when viewport has overflow-x: hidden");
   MOZ_ASSERT(aScrolledWidth > aScrollportWidth,
@@ -10696,7 +10696,7 @@ static void
 UpdateViewportScrollbarOverrideForFullscreen(nsIDocument* aDoc)
 {
   if (nsPresContext* presContext = aDoc->GetPresContext()) {
-    presContext->UpdateViewportScrollbarStylesOverride();
+    presContext->UpdateViewportScrollStylesOverride();
   }
 }
 

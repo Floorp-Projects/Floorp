@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/ScrollStyles.h"
 
 #include "nsCOMPtr.h"
 #include "nsILayoutHistoryState.h"
@@ -23,7 +24,6 @@
 #include "nsCounterManager.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
-#include "ScrollbarStyles.h"
 
 struct nsFrameItems;
 struct nsStyleDisplay;
