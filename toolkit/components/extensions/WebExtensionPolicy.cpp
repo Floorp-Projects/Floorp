@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/extensions/DocumentObserver.h"
 #include "mozilla/extensions/WebExtensionContentScript.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
@@ -579,6 +580,74 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MozDocumentMatcher)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MozDocumentMatcher)
 
+/*****************************************************************************
+ * MozDocumentObserver
+ *****************************************************************************/
+
+/* static */ already_AddRefed<DocumentObserver>
+DocumentObserver::Constructor(GlobalObject& aGlobal,
+                              dom::MozDocumentCallback& aCallbacks,
+                              ErrorResult& aRv)
+{
+  RefPtr<DocumentObserver> matcher = new DocumentObserver(aGlobal.GetAsSupports(), aCallbacks);
+  return matcher.forget();
+}
+
+
+void
+DocumentObserver::Observe(const dom::Sequence<OwningNonNull<MozDocumentMatcher>>& matchers, ErrorResult& aRv)
+{
+  if (!EPS().RegisterObserver(*this)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  mMatchers.Clear();
+  for (auto& matcher : matchers) {
+    if (!mMatchers.AppendElement(matcher, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+  }
+}
+
+void
+DocumentObserver::Disconnect()
+{
+  Unused << EPS().UnregisterObserver(*this);
+}
+
+
+void
+DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher, nsPIDOMWindowOuter* aWindow)
+{
+  IgnoredErrorResult rv;
+  mCallbacks->OnNewDocument(aMatcher, aWindow, rv);
+}
+
+void
+DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher, nsILoadInfo* aLoadInfo)
+{
+  IgnoredErrorResult rv;
+  mCallbacks->OnPreloadDocument(aMatcher, aLoadInfo, rv);
+}
+
+
+JSObject*
+DocumentObserver::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
+{
+  return MozDocumentObserver_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DocumentObserver, mCallbacks, mMatchers, mParent)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentObserver)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DocumentObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DocumentObserver)
 
 /*****************************************************************************
  * DocInfo
