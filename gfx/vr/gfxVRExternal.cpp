@@ -117,10 +117,44 @@ VRDisplayExternal::StartPresentation()
   mBrowserState.layerState[0].type = VRLayerType::LayerType_Stereo_Immersive;
   PushState();
 
+#if defined(MOZ_WIDGET_ANDROID)
+  /**
+   * Android compositor is paused when presentation starts. That causes VRManager::NotifyVsync() not to be called.
+   * We post a VRTask to call VRManager::NotifyVsync() while the compositor is paused on Android.
+   * VRManager::NotifyVsync() should be called constinuosly while the compositor is paused because Gecko WebVR Architecture
+   * relies on that to act as a "watchdog" in order to avoid render loop stalls and recover from SubmitFrame call timeouts.
+   */
+  PostVRTask();
+#endif
   // TODO - Implement telemetry:
 
   // mTelemetry.mLastDroppedFrameCount = stats.m_nNumReprojectedFrames;
 }
+
+#if defined(MOZ_WIDGET_ANDROID)
+void
+VRDisplayExternal::PostVRTask() {
+  MessageLoop * vrLoop = VRListenerThreadHolder::Loop();
+  if (!vrLoop || !mBrowserState.presentationActive) {
+    return;
+  }
+  RefPtr<Runnable> task = NewRunnableMethod(
+    "VRDisplayExternal::RunVRTask",
+    this,
+    &VRDisplayExternal::RunVRTask);
+  VRListenerThreadHolder::Loop()->PostDelayedTask(task.forget(), 50);
+}
+
+void
+VRDisplayExternal::RunVRTask() {
+  if (mBrowserState.presentationActive) {
+    VRManager *vm = VRManager::Get();
+    vm->NotifyVsync(TimeStamp::Now());
+    PostVRTask();
+  }
+}
+
+#endif // defined(MOZ_WIDGET_ANDROID)
 
 void
 VRDisplayExternal::StopPresentation()

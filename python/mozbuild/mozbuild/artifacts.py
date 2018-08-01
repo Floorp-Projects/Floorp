@@ -144,7 +144,8 @@ class ArtifactJob(object):
 
     # We can tell our input is a test archive by this suffix, which happens to
     # be the same across platforms.
-    _test_archive_suffixes = ('.common.tests.zip', '.common.tests.tar.gz')
+    _test_zip_archive_suffix = '.common.tests.zip'
+    _test_tar_archive_suffix = '.common.tests.tar.gz'
 
     def __init__(self, package_re, tests_re, log=None,
                  download_symbols=False,
@@ -190,8 +191,10 @@ class ArtifactJob(object):
                              'found none!'.format(re=self._tests_re))
 
     def process_artifact(self, filename, processed_filename):
-        if filename.endswith(ArtifactJob._test_archive_suffixes) and self._tests_re:
-            return self.process_tests_artifact(filename, processed_filename)
+        if filename.endswith(ArtifactJob._test_zip_archive_suffix) and self._tests_re:
+            return self.process_tests_zip_artifact(filename, processed_filename)
+        if filename.endswith(ArtifactJob._test_tar_archive_suffix) and self._tests_re:
+            return self.process_tests_tar_artifact(filename, processed_filename)
         if self._symbols_archive_suffix and filename.endswith(self._symbols_archive_suffix):
             return self.process_symbols_archive(filename, processed_filename)
         if self._host_bins_re:
@@ -206,7 +209,7 @@ class ArtifactJob(object):
     def process_package_artifact(self, filename, processed_filename):
         raise NotImplementedError("Subclasses must specialize process_package_artifact!")
 
-    def process_tests_artifact(self, filename, processed_filename):
+    def process_tests_zip_artifact(self, filename, processed_filename):
         from mozbuild.action.test_archive import OBJDIR_TEST_FILES
         added_entry = False
 
@@ -236,6 +239,43 @@ class ArtifactJob(object):
                         destpath = mozpath.join('..', files_entry['base'], leaf_filename)
                         mode = entry['external_attr'] >> 16
                         writer.add(destpath.encode('utf-8'), reader[filename], mode=mode)
+
+        if not added_entry:
+            raise ValueError('Archive format changed! No pattern from "{patterns}"'
+                             'matched an archive path.'.format(
+                                 patterns=LinuxArtifactJob.test_artifact_patterns))
+
+    def process_tests_tar_artifact(self, filename, processed_filename):
+        from mozbuild.action.test_archive import OBJDIR_TEST_FILES
+        added_entry = False
+
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            with tarfile.open(filename) as reader:
+                for filename, entry in TarFinder(filename, reader):
+                    for pattern, (src_prefix, dest_prefix) in self.test_artifact_patterns:
+                        if not mozpath.match(filename, pattern):
+                            continue
+
+                        destpath = mozpath.relpath(filename, src_prefix)
+                        destpath = mozpath.join(dest_prefix, destpath)
+                        self.log(logging.INFO, 'artifact',
+                                 {'destpath': destpath},
+                                 'Adding {destpath} to processed archive')
+                        mode = entry.mode
+                        writer.add(destpath.encode('utf-8'), entry.open(), mode=mode)
+                        added_entry = True
+                        break
+                    for files_entry in OBJDIR_TEST_FILES.values():
+                        origin_pattern = files_entry['pattern']
+                        leaf_filename = filename
+                        if 'dest' in files_entry:
+                            dest = files_entry['dest']
+                            origin_pattern = mozpath.join(dest, origin_pattern)
+                            leaf_filename = filename[len(dest) + 1:]
+                        if mozpath.match(filename, origin_pattern):
+                            destpath = mozpath.join('..', files_entry['base'], leaf_filename)
+                            mode = entry.mode
+                            writer.add(destpath.encode('utf-8'), entry.open(), mode=mode)
 
         if not added_entry:
             raise ValueError('Archive format changed! No pattern from "{patterns}"'

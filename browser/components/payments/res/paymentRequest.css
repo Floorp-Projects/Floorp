@@ -174,3 +174,16 @@ payment-dialog[changes-prevented][complete-status="success"] #pay {
   bottom: 0;
   left: 0;
 }
+
+#branding {
+  background-image: url(chrome://branding/content/icon32.png);
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: left center;
+  padding-inline-start: 20px;
+  line-height: 20px;
+}
+
+body[dir="rtl"] #branding {
+  background-position: right center;
+}

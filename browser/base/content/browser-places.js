@@ -399,9 +399,8 @@ var PlacesCommandHook = {
 
       info.guid = await PlacesTransactions.NewBookmark(info).transact();
 
-      // Set the character-set
-      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-        PlacesUtils.setCharsetForURI(makeURI(url.href), charset);
+      if (charset) {
+        PlacesUIUtils.setCharsetForPage(url, charset, window).catch(Cu.reportError);
       }
     }
 

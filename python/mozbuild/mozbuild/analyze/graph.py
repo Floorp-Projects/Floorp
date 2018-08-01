@@ -2,9 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sqlite3 as lite
 import os
-import time
+import sqlite3 as lite
 
 class Node(object):
 
@@ -57,6 +56,7 @@ class Graph(object):
             print ('\n Tup db does not have the necessary tables.')
             raise Exception
         self.node_dict = {}
+        self.results = None
 
     def table_check(self):
         tables = [x[0] for x in self.query_arg('SELECT name \
@@ -113,4 +113,19 @@ class Graph(object):
                 print ("\n------ Summary for %s ------\
                     \nTotal cost (mm:ss) = %d:%d\nNum Downstream Commands = %d"
                     % (f, m, s, node.num_cmds))
+
+    def populate(self):
+        # make nodes for files with downstream commands
+        files = self.query('SELECT id FROM node WHERE type=0 AND id in \
+            (SELECT DISTINCT from_id FROM normal_link)').fetchall()
+        res = []
+        for (i,) in files:
+            node = self.get_node(i)
+            res.append((node.path, node.cost))
+        self.results = res
+
+    def get_cost_dict(self):
+        if self.results is None:
+            self.populate()
+        return {k:v for k,v in self.results if v > 0}
 

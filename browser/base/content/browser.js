@@ -6225,8 +6225,9 @@ function BrowserSetForcedCharacterSet(aCharset) {
   if (aCharset) {
     gBrowser.selectedBrowser.characterSet = aCharset;
     // Save the forced character-set
-    if (!PrivateBrowsingUtils.isWindowPrivate(window))
-      PlacesUtils.setCharsetForURI(getWebNavigation().currentURI, aCharset);
+    PlacesUIUtils.setCharsetForPage(getWebNavigation().currentURI,
+                                    aCharset,
+                                    window).catch(Cu.reportError);
   }
   BrowserCharsetReload();
 }
@@ -8244,4 +8245,3 @@ var ConfirmationHint = {
     return this._message = document.getElementById("confirmation-hint-message");
   },
 };
-

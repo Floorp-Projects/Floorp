@@ -653,3 +653,13 @@ devtools.main:
     expiry_version: never
     extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  object_expanded:
+    objects: ["webconsole"]
+    bug_numbers: [1463104]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has expanded an object in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.

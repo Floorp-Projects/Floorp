@@ -41,6 +41,8 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
   },
 
   _onKeyDown: function(event) {
+    MarkupContainer.prototype._onKeyDown.call(this, event);
+
     const isActionKey = event.code == "Enter" || event.code == "Space";
     if (event.target.classList.contains("reveal-link") && isActionKey) {
       this._revealFromSlot();

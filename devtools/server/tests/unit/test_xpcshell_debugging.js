@@ -7,7 +7,9 @@
 // Test the xpcshell-test debug support.  Ideally we should have this test
 // next to the xpcshell support code, but that's tricky...
 
-function run_test() {
+const {getDeviceFront} = require("devtools/shared/fronts/device");
+
+add_task(async function() {
   const testFile = do_get_file("xpcshell_debugging_script.js");
 
   // _setupDebuggerServer is from xpcshell-test's head.js
@@ -18,37 +20,45 @@ function run_test() {
   });
   const transport = DebuggerServer.connectPipe();
   const client = new DebuggerClient(transport);
-  client.connect().then(() => {
-    // Even though we have no tabs, listTabs gives us the chromeDebugger.
-    client.getProcess().then(response => {
-      const actor = response.form.actor;
-      client.attachTab(actor).then(([response, tabClient]) => {
-        tabClient.attachThread(null).then(([response, threadClient]) => {
-          threadClient.addOneTimeListener("paused", (event, packet) => {
-            equal(packet.why.type, "breakpoint",
-                "yay - hit the breakpoint at the first line in our script");
-            // Resume again - next stop should be our "debugger" statement.
-            threadClient.addOneTimeListener("paused", (event, packet) => {
-              equal(packet.why.type, "debuggerStatement",
-                    "yay - hit the 'debugger' statement in our script");
-              threadClient.resume(() => {
-                finishClient(client);
-              });
-            });
-            threadClient.resume();
-          });
-          // tell the thread to do the initial resume.  This would cause the
-          // xpcshell test harness to resume and load the file under test.
-          threadClient.resume(response => {
-            // should have been told to resume the test itself.
-            ok(testResumed);
-            // Now load our test script.
-            load(testFile.path);
-            // and our "paused" listener above should get hit.
-          });
-        });
+  await client.connect();
+
+  // Ensure that global actors are available. Just test the device actor.
+  const rootForm = await client.mainRoot.getRoot();
+  const deviceFront = await getDeviceFront(client, rootForm);
+  const desc = await deviceFront.getDescription();
+  equal(desc.geckobuildid, Services.appinfo.platformBuildID, "device actor works");
+
+  // Even though we have no tabs, getProcess gives us the chromeDebugger.
+  const response = await client.getProcess();
+
+  const actor = response.form.actor;
+  const [, tabClient] = await client.attachTab(actor);
+  const [, threadClient] = await tabClient.attachThread(null);
+  const onResumed = new Promise(resolve => {
+    threadClient.addOneTimeListener("paused", (event, packet) => {
+      equal(packet.why.type, "breakpoint",
+          "yay - hit the breakpoint at the first line in our script");
+      // Resume again - next stop should be our "debugger" statement.
+      threadClient.addOneTimeListener("paused", (event, packet) => {
+        equal(packet.why.type, "debuggerStatement",
+              "yay - hit the 'debugger' statement in our script");
+        threadClient.resume(resolve);
       });
+      threadClient.resume();
     });
   });
-  do_test_pending();
-}
+
+  // tell the thread to do the initial resume.  This would cause the
+  // xpcshell test harness to resume and load the file under test.
+  threadClient.resume(() => {
+    // should have been told to resume the test itself.
+    ok(testResumed);
+    // Now load our test script.
+    load(testFile.path);
+    // and our "paused" listener above should get hit.
+  });
+
+  await onResumed;
+
+  finishClient(client);
+});

@@ -19,8 +19,6 @@ var EXPORTED_SYMBOLS = ["PdfJsRegistration"];
 
 const Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "PdfStreamConverter",
   "resource://pdf.js/PdfStreamConverter.jsm");
 

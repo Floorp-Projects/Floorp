@@ -28,6 +28,7 @@ win32/debug:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32/opt:
     description: "Win32 Opt"
@@ -65,6 +66,7 @@ win32/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32-dmd/opt:
     description: "Win32 DMD Opt"
@@ -97,6 +99,7 @@ win32-dmd/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32/pgo:
     description: "Win32 Opt PGO"
@@ -128,6 +131,7 @@ win32/pgo:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64/debug:
     description: "Win64 Debug"
@@ -159,6 +163,7 @@ win64/debug:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-plain/debug:
     description: "Win64 Debug Plain"
@@ -188,6 +193,7 @@ win64-plain/debug:
     toolchains:
         - win64-clang-cl
         - win64-rust
+        - win64-node
 
 win64/opt:
     description: "Win64 Opt"
@@ -219,6 +225,7 @@ win64/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-plain/opt:
     description: "Win64 Opt Plain"
@@ -248,6 +255,7 @@ win64-plain/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
+        - win64-node
 
 win64-dmd/opt:
     description: "Win64 DMD Opt"
@@ -280,6 +288,7 @@ win64-dmd/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32-nightly/opt:
     description: "Win32 Nightly"
@@ -324,6 +333,7 @@ win32-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-nightly/opt:
     description: "Win64 Nightly"
@@ -361,6 +371,7 @@ win64-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64/pgo:
     description: "Win64 Opt PGO"
@@ -392,6 +403,7 @@ win64/pgo:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32-add-on-devel/opt:
     description: "Windows32 add-on-devel"
@@ -422,6 +434,7 @@ win32-add-on-devel/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-add-on-devel/opt:
     description: "Windows64 add-on-devel"
@@ -452,6 +465,7 @@ win64-add-on-devel/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-noopt/debug:
     description: "Win64 No-optimize Debug"
@@ -482,6 +496,7 @@ win64-noopt/debug:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32-noopt/debug:
     description: "Win32 No-optimize Debug"
@@ -512,6 +527,7 @@ win32-noopt/debug:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32-rusttests/opt:
     description: "Win32 Opt Rust tests"
@@ -542,6 +558,7 @@ win32-rusttests/opt:
         - win64-clang-cl
         - win64-rust
         - win64-sccache
+        - win64-node
 
 win64-rusttests/opt:
     description: "Win64 Opt Rust tests"
@@ -572,6 +589,7 @@ win64-rusttests/opt:
         - win64-clang-cl
         - win64-rust
         - win64-sccache
+        - win64-node
 
 win64-ccov/debug:
     description: "Win64 Debug Code Coverage"
@@ -602,6 +620,7 @@ win64-ccov/debug:
         - win64-rust-nightly
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-asan/debug:
     description: "Win64 Debug ASAN"
@@ -633,6 +652,7 @@ win64-asan/debug:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-asan/opt:
     description: "Win64 Opt ASAN"
@@ -664,6 +684,7 @@ win64-asan/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-asan-reporter-nightly/opt:
     description: "Win64 Opt ASAN Reporter Nightly"
@@ -743,6 +764,7 @@ win32-devedition-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win64-devedition-nightly/opt:
     description: "Win64 Dev Edition Nightly"
@@ -781,6 +803,7 @@ win64-devedition-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32-mingw32/opt:
     description: "Win32 MinGW Opt"
@@ -814,6 +837,7 @@ win32-mingw32/opt:
         - linux64-mingw32-gcc
         - linux64-mingw32-nsis
         - linux64-mingw32-fxc2
+        - linux64-node
 
 win32-msvc/debug:
     description: "Win32 MSVC Debug"
@@ -846,6 +870,7 @@ win32-msvc/debug:
         - win64-clang-cl
         - win64-rust
         - win64-sccache
+        - win64-node
 
 win32-msvc/opt:
     description: "Win32 MSVC PGO"
@@ -884,6 +909,7 @@ win32-msvc/opt:
         - win64-clang-cl
         - win64-rust
         - win64-sccache
+        - win64-node
 
 win64-msvc/debug:
     description: "Win64 MSVC Debug"
@@ -916,6 +942,7 @@ win64-msvc/debug:
         - win64-clang-cl
         - win64-rust
         - win64-sccache
+        - win64-node
 
 win64-msvc/opt:
     description: "Win64 MSVC PGO"
@@ -948,6 +975,7 @@ win64-msvc/opt:
         - win64-clang-cl
         - win64-rust
         - win64-sccache
+        - win64-node
 
 win32-mingw32/debug:
     description: "Win32 MinGW Debug"
@@ -982,3 +1010,4 @@ win32-mingw32/debug:
         - linux64-mingw32-gcc
         - linux64-mingw32-nsis
         - linux64-mingw32-fxc2
+        - linux64-node

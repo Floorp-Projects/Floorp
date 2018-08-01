@@ -53,4 +53,4 @@ def test_crash_is_recorded_as_error(empty_marionette_test,
 
 
 if __name__ == '__main__':
-    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-')
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-', '--capture', 'no')

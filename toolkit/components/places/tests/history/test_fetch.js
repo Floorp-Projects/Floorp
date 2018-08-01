@@ -118,13 +118,10 @@ add_task(async function test_fetch_annotations() {
   Assert.equal(pageInfo.annotations.size, 0,
     "fetch should return an empty annotation map");
 
-  PlacesUtils.annotations.setPageAnnotation(
-    Services.io.newURI(TEST_URI),
-    "test/annotation",
-    "testContent",
-    0,
-    PlacesUtils.annotations.EXPIRE_NEVER
-  );
+  await PlacesUtils.history.update({
+    url: TEST_URI,
+    annotations: new Map([["test/annotation", "testContent"]]),
+  });
 
   pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeAnnotations});
   Assert.equal(pageInfo.annotations.size, 1,
@@ -133,13 +130,10 @@ add_task(async function test_fetch_annotations() {
   Assert.equal(pageInfo.annotations.get("test/annotation"), "testContent",
     "fetch should return the expected annotation");
 
-  PlacesUtils.annotations.setPageAnnotation(
-    Services.io.newURI(TEST_URI),
-    "test/annotation2",
-    123,
-    0,
-    PlacesUtils.annotations.EXPIRE_NEVER
-  );
+  await PlacesUtils.history.update({
+    url: TEST_URI,
+    annotations: new Map([["test/annotation2", 123]]),
+  });
 
   pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeAnnotations});
   Assert.equal(pageInfo.annotations.size, 2,
