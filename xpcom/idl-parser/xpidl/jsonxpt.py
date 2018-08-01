@@ -236,12 +236,14 @@ def build_typelib(idl):
     return [build_interface(p) for p in idl.productions
             if p.kind == 'interface' and p.attributes.scriptable]
 
+
 def link(typelibs):
     """Link a list of typelibs together into a single typelib"""
     linked = list(itertools.chain.from_iterable(typelibs))
     assert len(set(iface['name'] for iface in linked)) == len(linked), \
         "Multiple typelibs containing the same interface were linked together"
     return linked
+
 
 def write(typelib, fd):
     """Write typelib into fd"""
