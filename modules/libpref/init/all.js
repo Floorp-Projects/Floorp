@@ -4840,7 +4840,7 @@ pref("layers.max-active", -1);
 // 0  -> full-tilt mode: Recomposite even if not transaction occured.
 pref("layers.offmainthreadcomposition.frame-rate", -1);
 
-#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
+#if defined(XP_MACOSX)
 pref("layers.enable-tiles", true);
 #else
 pref("layers.enable-tiles", false);
