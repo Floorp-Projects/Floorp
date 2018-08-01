@@ -581,14 +581,14 @@ public:
     if (mEditorBase) {
       mAllowedTransactionsToChangeSelection =
         mEditorBase->AllowsTransactionsToChangeSelection();
-      mEditorBase->SetShouldTxnSetSelection(false);
+      mEditorBase->MakeThisAllowTransactionsToChangeSelection(false);
     }
   }
 
   ~AutoTransactionsConserveSelection()
   {
     if (mEditorBase) {
-      mEditorBase->SetShouldTxnSetSelection(
+      mEditorBase->MakeThisAllowTransactionsToChangeSelection(
                      mAllowedTransactionsToChangeSelection);
     }
   }

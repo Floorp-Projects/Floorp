@@ -985,7 +985,7 @@ EditorBase::EndPlaceholderTransaction()
 NS_IMETHODIMP
 EditorBase::SetShouldTxnSetSelection(bool aShould)
 {
-  mAllowsTransactionsToChangeSelection = aShould;
+  MakeThisAllowTransactionsToChangeSelection(aShould);
   return NS_OK;
 }
 
