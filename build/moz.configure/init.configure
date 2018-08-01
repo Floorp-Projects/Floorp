@@ -872,6 +872,7 @@ add_old_configure_assignment('CPU_ARCH', target.cpu)
 set_config('INTEL_ARCHITECTURE', target_variables.INTEL_ARCHITECTURE)
 set_config('TARGET_CPU', target.raw_cpu)
 set_config('TARGET_OS', target.raw_os)
+set_config('TARGET_ENDIANNESS', target.endianness)
 
 
 @depends(host)
