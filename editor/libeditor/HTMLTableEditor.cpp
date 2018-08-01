@@ -139,7 +139,7 @@ HTMLEditor::InsertCell(Element* aCell,
   }
 
   // Don't let Rules System change the selection.
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
   return InsertNodeWithTransaction(*newCell, pointToInsert);
 }
 
@@ -199,7 +199,7 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
                                              newCellIndex, ePreviousColumn,
                                              false);
   //...so suppress Rules System selection munging
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   for (int32_t i = 0; i < aNumber; i++) {
     RefPtr<Element> newCell;
@@ -400,7 +400,7 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
                                              startColIndex, ePreviousRow,
                                              false);
   //.. so suppress Rules System selection munging
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   // If we are inserting after all existing columns
   // Make sure table is "well formed"
@@ -532,7 +532,7 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
                                              startColIndex, ePreviousColumn,
                                              false);
   //...so suppress Rules System selection munging
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   RefPtr<Element> cellForRowParent;
   int32_t cellsInRow = 0;
@@ -749,7 +749,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
     AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                                startColIndex, ePreviousColumn,
                                                false);
-    AutoTransactionsConserveSelection dontChangeSelection(this);
+    AutoTransactionsConserveSelection dontChangeSelection(*this);
 
     bool    checkToDeleteRow = true;
     bool    checkToDeleteColumn = true;
@@ -878,7 +878,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
         AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                                    startColIndex, ePreviousColumn,
                                                    false);
-        AutoTransactionsConserveSelection dontChangeSelection(this);
+        AutoTransactionsConserveSelection dontChangeSelection(*this);
         rv = DeleteNodeWithTransaction(*cell);
         // If we fail, don't try to delete any more cells???
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -913,7 +913,7 @@ HTMLEditor::DeleteTableCellContents()
                                       *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
   //Don't let Rules System change the selection
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
 
 
   RefPtr<Element> firstCell;
@@ -1177,7 +1177,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
                                              startColIndex, ePreviousRow,
                                              false);
   // Don't change selection during deletions
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   if (firstCell && rangeCount > 1) {
     // Use selected cells to determine what rows to delete
@@ -1688,7 +1688,7 @@ HTMLEditor::SplitTableCell()
                                              startColIndex, ePreviousColumn,
                                              false);
   //...so suppress Rules System selection munging
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   RefPtr<Element> newCell;
   int32_t rowIndex = startRowIndex;
@@ -1973,7 +1973,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
   AutoPlaceholderBatch beginBatching(this);
   //Don't let Rules System change the selection
-  AutoTransactionsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   // Note: We dont' use AutoSelectionSetterAfterTableEdit here so the selection
   //  is retained after joining. This leaves the target cell selected

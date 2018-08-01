@@ -1724,7 +1724,7 @@ EditorBase::ReplaceContainerWithTransactionInternal(
   AutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, &aOldContainer,
                                                newContainer);
   {
-    AutoTransactionsConserveSelection conserveSelection(this);
+    AutoTransactionsConserveSelection conserveSelection(*this);
     // Move all children from the old container to the new container.
     while (aOldContainer.HasChildren()) {
       nsCOMPtr<nsIContent> child = aOldContainer.GetFirstChild();
@@ -1853,7 +1853,7 @@ EditorBase::InsertContainerWithTransactionInternal(
   }
 
   {
-    AutoTransactionsConserveSelection conserveSelection(this);
+    AutoTransactionsConserveSelection conserveSelection(*this);
     rv = InsertNodeWithTransaction(aContent,
                                    EditorRawDOMPoint(newContainer, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2653,9 +2653,10 @@ EditorBase::InsertTextWithTransaction(
               const EditorRawDOMPoint& aPointToInsert,
               EditorRawDOMPoint* aPointAfterInsertedString)
 {
-  // NOTE: caller *must* have already used AutoTransactionsConserveSelection
-  // stack-based class to turn off txn selection updating.  Caller also turned
-  // on rules sniffing if desired.
+  MOZ_ASSERT(ShouldHandleIMEComposition() ||
+             !AllowsTransactionsToChangeSelection(),
+             "caller must have already used AutoTransactionsConserveSelection "
+             "if this is not for updating composition string");
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return NS_ERROR_INVALID_ARG;
