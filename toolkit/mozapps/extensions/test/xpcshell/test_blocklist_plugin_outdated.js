@@ -5,7 +5,6 @@
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 const nsIBLS = Ci.nsIBlocklistService;
 

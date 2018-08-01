@@ -28,6 +28,7 @@ const AUTHENTICATE_PATH = new URL("authenticate.sjs", window.location.href).path
 let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 runInParent(() => {
+  // eslint-disable-next-line no-shadow
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
   let login3A, login3B, login4;

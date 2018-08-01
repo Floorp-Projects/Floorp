@@ -165,8 +165,7 @@ nsAnnotationService::Init()
 }
 
 nsresult
-nsAnnotationService::SetAnnotationStringInternal(nsIURI* aURI,
-                                                 int64_t aItemId,
+nsAnnotationService::SetAnnotationStringInternal(int64_t aItemId,
                                                  BookmarkData* aBookmark,
                                                  const nsACString& aName,
                                                  const nsAString& aValue,
@@ -176,7 +175,7 @@ nsAnnotationService::SetAnnotationStringInternal(nsIURI* aURI,
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
 
-  nsresult rv = StartSetAnnotation(aURI, aItemId, aBookmark, aName, aFlags,
+  nsresult rv = StartSetAnnotation(aItemId, aBookmark, aName, aFlags,
                                    aExpiration,
                                    nsIAnnotationService::TYPE_STRING,
                                    statement);
@@ -194,87 +193,6 @@ nsAnnotationService::SetAnnotationStringInternal(nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
-                                       const nsACString& aName,
-                                       nsIVariant* aValue,
-                                       int32_t aFlags,
-                                       uint16_t aExpiration)
-{
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG(aValue);
-
-  uint16_t dataType;
-  nsresult rv = aValue->GetDataType(&dataType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch (dataType) {
-    case nsIDataType::VTYPE_INT8:
-    case nsIDataType::VTYPE_UINT8:
-    case nsIDataType::VTYPE_INT16:
-    case nsIDataType::VTYPE_UINT16:
-    case nsIDataType::VTYPE_INT32:
-    case nsIDataType::VTYPE_UINT32:
-    case nsIDataType::VTYPE_BOOL: {
-      int32_t valueInt;
-      rv = aValue->GetAsInt32(&valueInt);
-      if (NS_SUCCEEDED(rv)) {
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetAnnotationInt32Internal(aURI, 0, nullptr, aName, valueInt,
-                                        aFlags, aExpiration);
-        NS_ENSURE_SUCCESS(rv, rv);
-        return NS_OK;
-      }
-      // Fall through int64_t case otherwise.
-      MOZ_FALLTHROUGH;
-    }
-    case nsIDataType::VTYPE_INT64:
-    case nsIDataType::VTYPE_UINT64: {
-      int64_t valueLong;
-      rv = aValue->GetAsInt64(&valueLong);
-      if (NS_SUCCEEDED(rv)) {
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetAnnotationInt64Internal(aURI, 0, nullptr, aName, valueLong,
-                                        aFlags, aExpiration);
-        NS_ENSURE_SUCCESS(rv, rv);
-        return NS_OK;
-      }
-      // Fall through double case otherwise.
-      MOZ_FALLTHROUGH;
-    }
-    case nsIDataType::VTYPE_FLOAT:
-    case nsIDataType::VTYPE_DOUBLE: {
-      double valueDouble;
-      rv = aValue->GetAsDouble(&valueDouble);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetAnnotationDoubleInternal(aURI, 0, nullptr, aName, valueDouble,
-                                       aFlags, aExpiration);
-      NS_ENSURE_SUCCESS(rv, rv);
-      return NS_OK;
-    }
-    case nsIDataType::VTYPE_CHAR:
-    case nsIDataType::VTYPE_WCHAR:
-    case nsIDataType::VTYPE_DOMSTRING:
-    case nsIDataType::VTYPE_CHAR_STR:
-    case nsIDataType::VTYPE_WCHAR_STR:
-    case nsIDataType::VTYPE_STRING_SIZE_IS:
-    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-    case nsIDataType::VTYPE_UTF8STRING:
-    case nsIDataType::VTYPE_CSTRING:
-    case nsIDataType::VTYPE_ASTRING: {
-      nsAutoString stringValue;
-      rv = aValue->GetAsAString(stringValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetAnnotationStringInternal(aURI, 0, nullptr, aName, stringValue, aFlags, aExpiration);
-      NS_ENSURE_SUCCESS(rv, rv);
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -309,7 +227,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       rv = aValue->GetAsInt32(&valueInt);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetAnnotationInt32Internal(nullptr, aItemId, &bookmark, aName,
+        rv = SetAnnotationInt32Internal(aItemId, &bookmark, aName,
                                         valueInt, aFlags, aExpiration);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
@@ -323,7 +241,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       rv = aValue->GetAsInt64(&valueLong);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetAnnotationInt64Internal(nullptr, aItemId, &bookmark, aName,
+        rv = SetAnnotationInt64Internal(aItemId, &bookmark, aName,
                                         valueLong, aFlags, aExpiration);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
@@ -336,7 +254,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       double valueDouble;
       rv = aValue->GetAsDouble(&valueDouble);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetAnnotationDoubleInternal(nullptr, aItemId, &bookmark,
+      rv = SetAnnotationDoubleInternal(aItemId, &bookmark,
                                        aName, valueDouble, aFlags, aExpiration);
       NS_ENSURE_SUCCESS(rv, rv);
       break;
@@ -354,7 +272,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       nsAutoString stringValue;
       rv = aValue->GetAsAString(stringValue);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetAnnotationStringInternal(nullptr, aItemId, &bookmark, aName,
+      rv = SetAnnotationStringInternal(aItemId, &bookmark, aName,
                                        stringValue, aFlags, aExpiration);
       NS_ENSURE_SUCCESS(rv, rv);
       break;
@@ -370,8 +288,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
 
 
 nsresult
-nsAnnotationService::SetAnnotationInt32Internal(nsIURI* aURI,
-                                                int64_t aItemId,
+nsAnnotationService::SetAnnotationInt32Internal(int64_t aItemId,
                                                 BookmarkData* aBookmark,
                                                 const nsACString& aName,
                                                 int32_t aValue,
@@ -380,7 +297,7 @@ nsAnnotationService::SetAnnotationInt32Internal(nsIURI* aURI,
 {
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartSetAnnotation(aURI, aItemId, aBookmark, aName, aFlags,
+  nsresult rv = StartSetAnnotation(aItemId, aBookmark, aName, aFlags,
                                    aExpiration,
                                    nsIAnnotationService::TYPE_INT32,
                                    statement);
@@ -402,8 +319,7 @@ nsAnnotationService::SetAnnotationInt32Internal(nsIURI* aURI,
 
 
 nsresult
-nsAnnotationService::SetAnnotationInt64Internal(nsIURI* aURI,
-                                                int64_t aItemId,
+nsAnnotationService::SetAnnotationInt64Internal(int64_t aItemId,
                                                 BookmarkData* aBookmark,
                                                 const nsACString& aName,
                                                 int64_t aValue,
@@ -412,7 +328,7 @@ nsAnnotationService::SetAnnotationInt64Internal(nsIURI* aURI,
 {
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartSetAnnotation(aURI, aItemId, aBookmark, aName, aFlags,
+  nsresult rv = StartSetAnnotation(aItemId, aBookmark, aName, aFlags,
                                    aExpiration,
                                    nsIAnnotationService::TYPE_INT64,
                                    statement);
@@ -434,8 +350,7 @@ nsAnnotationService::SetAnnotationInt64Internal(nsIURI* aURI,
 
 
 nsresult
-nsAnnotationService::SetAnnotationDoubleInternal(nsIURI* aURI,
-                                                 int64_t aItemId,
+nsAnnotationService::SetAnnotationDoubleInternal(int64_t aItemId,
                                                  BookmarkData* aBookmark,
                                                  const nsACString& aName,
                                                  double aValue,
@@ -444,7 +359,7 @@ nsAnnotationService::SetAnnotationDoubleInternal(nsIURI* aURI,
 {
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartSetAnnotation(aURI, aItemId, aBookmark, aName, aFlags,
+  nsresult rv = StartSetAnnotation(aItemId, aBookmark, aName, aFlags,
                                    aExpiration,
                                    nsIAnnotationService::TYPE_DOUBLE,
                                    statement);
@@ -778,38 +693,22 @@ nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
  *       It will be cleaned up by expiration.
  */
 nsresult
-nsAnnotationService::RemoveAnnotationInternal(nsIURI* aURI,
-                                              int64_t aItemId,
+nsAnnotationService::RemoveAnnotationInternal(int64_t aItemId,
                                               BookmarkData* aBookmark,
                                               const nsACString& aName)
 {
-  bool isItemAnnotation = (aItemId > 0);
   nsCOMPtr<mozIStorageStatement> statement;
-  if (isItemAnnotation) {
-    statement = mDB->GetStatement(
-      "DELETE FROM moz_items_annos "
-      "WHERE item_id = :item_id "
-        "AND anno_attribute_id = "
-          "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"
-    );
-  }
-  else {
-    statement = mDB->GetStatement(
-      "DELETE FROM moz_annos "
-      "WHERE place_id = "
-          "(SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url) "
-        "AND anno_attribute_id = "
-          "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"
-    );
-  }
+  statement = mDB->GetStatement(
+    "DELETE FROM moz_items_annos "
+    "WHERE item_id = :item_id "
+      "AND anno_attribute_id = "
+        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"
+  );
   NS_ENSURE_STATE(statement);
   mozStorageStatementScoper scoper(statement);
 
   nsresult rv;
-  if (isItemAnnotation)
-    rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
-  else
-    rv = URIBinder::Bind(statement, NS_LITERAL_CSTRING("page_url"), aURI);
+  rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
@@ -818,28 +717,13 @@ nsAnnotationService::RemoveAnnotationInternal(nsIURI* aURI,
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (isItemAnnotation) {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    if (bookmarks) {
-      MOZ_ASSERT(aBookmark);
-      if (NS_FAILED(bookmarks->FetchItemInfo(aItemId, *aBookmark))) {
-        aBookmark->id = -1;
-      }
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  if (bookmarks) {
+    MOZ_ASSERT(aBookmark);
+    if (NS_FAILED(bookmarks->FetchItemInfo(aItemId, *aBookmark))) {
+      aBookmark->id = -1;
     }
   }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::RemovePageAnnotation(nsIURI* aURI,
-                                          const nsACString& aName)
-{
-  NS_ENSURE_ARG(aURI);
-
-  nsresult rv = RemoveAnnotationInternal(aURI, 0, nullptr, aName);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -853,7 +737,7 @@ nsAnnotationService::RemoveItemAnnotation(int64_t aItemId,
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
   BookmarkData bookmark;
-  nsresult rv = RemoveAnnotationInternal(nullptr, aItemId, &bookmark, aName);
+  nsresult rv = RemoveAnnotationInternal(aItemId, &bookmark, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NotifyItemChanged(bookmark, aName, aSource, false);
@@ -1002,8 +886,7 @@ nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
  *       The caller must take care of resetting the statement if this succeeds.
  */
 nsresult
-nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
-                                        int64_t aItemId,
+nsAnnotationService::StartSetAnnotation(int64_t aItemId,
                                         BookmarkData* aBookmark,
                                         const nsACString& aName,
                                         int32_t aFlags,
@@ -1013,8 +896,6 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
 {
   MOZ_ASSERT(aExpiration == EXPIRE_NEVER, "Only EXPIRE_NEVER is supported");
   NS_ENSURE_ARG(aExpiration == EXPIRE_NEVER);
-
-  bool isItemAnnotation = (aItemId > 0);
 
   // Ensure the annotation name exists.
   nsCOMPtr<mozIStorageStatement> addNameStmt = mDB->GetStatement(
@@ -1036,39 +917,22 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   // - whether the annotation already exists.
   // - the nameID associated with the annotation name.
   // - the id and dateAdded of the old annotation, if it exists.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (isItemAnnotation) {
-    stmt = mDB->GetStatement(
-      "SELECT b.id, "
-             "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS nameid, "
-             "a.id, a.dateAdded, b.parent, b.type, b.lastModified, b.guid, p.guid "
-      "FROM moz_bookmarks b "
-      "JOIN moz_bookmarks p ON p.id = b.parent "
-      "LEFT JOIN moz_items_annos a ON a.item_id = b.id "
-                                 "AND a.anno_attribute_id = nameid "
-      "WHERE b.id = :item_id"
-    );
-  }
-  else {
-    stmt = mDB->GetStatement(
-      "SELECT h.id, "
-             "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS nameid, "
-             "a.id, a.dateAdded "
-      "FROM moz_places h "
-      "LEFT JOIN moz_annos a ON a.place_id = h.id "
-                           "AND a.anno_attribute_id = nameid "
-      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
-    );
-  }
+  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+    "SELECT b.id, "
+           "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS nameid, "
+           "a.id, a.dateAdded, b.parent, b.type, b.lastModified, b.guid, p.guid "
+    "FROM moz_bookmarks b "
+    "JOIN moz_bookmarks p ON p.id = b.parent "
+    "LEFT JOIN moz_items_annos a ON a.item_id = b.id "
+                               "AND a.anno_attribute_id = nameid "
+    "WHERE b.id = :item_id"
+  );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper checkAnnoScoper(stmt);
 
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (isItemAnnotation)
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
-  else
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasResult;
@@ -1085,36 +949,25 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   int64_t oldAnnoId = stmt->AsInt64(2);
   int64_t oldAnnoDate = stmt->AsInt64(3);
 
-  if (isItemAnnotation) {
-    aStatement = mDB->GetStatement(
-      "INSERT OR REPLACE INTO moz_items_annos "
-        "(id, item_id, anno_attribute_id, content, flags, "
-         "expiration, type, dateAdded, lastModified) "
-      "VALUES (:id, :fk, :name_id, :content, :flags, "
-      ":expiration, :type, :date_added, :last_modified)"
-    );
+  aStatement = mDB->GetStatement(
+    "INSERT OR REPLACE INTO moz_items_annos "
+      "(id, item_id, anno_attribute_id, content, flags, "
+       "expiration, type, dateAdded, lastModified) "
+    "VALUES (:id, :fk, :name_id, :content, :flags, "
+    ":expiration, :type, :date_added, :last_modified)"
+  );
 
-    // Since we're already querying `moz_bookmarks`, we fetch the changed
-    // bookmark's info here, instead of using `FetchItemInfo`.
-    MOZ_ASSERT(aBookmark);
-    aBookmark->id = fkId;
-    aBookmark->parentId = stmt->AsInt64(4);
-    aBookmark->type = stmt->AsInt64(5);
+  // Since we're already querying `moz_bookmarks`, we fetch the changed
+  // bookmark's info here, instead of using `FetchItemInfo`.
+  MOZ_ASSERT(aBookmark);
+  aBookmark->id = fkId;
+  aBookmark->parentId = stmt->AsInt64(4);
+  aBookmark->type = stmt->AsInt64(5);
 
-    aBookmark->lastModified = static_cast<PRTime>(stmt->AsInt64(6));
-    if (NS_FAILED(stmt->GetUTF8String(7, aBookmark->guid)) ||
-        NS_FAILED(stmt->GetUTF8String(8, aBookmark->parentGuid))) {
-      aBookmark->id = -1;
-    }
-  }
-  else {
-    aStatement = mDB->GetStatement(
-      "INSERT OR REPLACE INTO moz_annos "
-        "(id, place_id, anno_attribute_id, content, flags, "
-         "expiration, type, dateAdded, lastModified) "
-      "VALUES (:id, :fk, :name_id, :content, :flags, "
-      ":expiration, :type, :date_added, :last_modified)"
-    );
+  aBookmark->lastModified = static_cast<PRTime>(stmt->AsInt64(6));
+  if (NS_FAILED(stmt->GetUTF8String(7, aBookmark->guid)) ||
+      NS_FAILED(stmt->GetUTF8String(8, aBookmark->parentGuid))) {
+    aBookmark->id = -1;
   }
   NS_ENSURE_STATE(aStatement);
   mozStorageStatementScoper setAnnoScoper(aStatement);

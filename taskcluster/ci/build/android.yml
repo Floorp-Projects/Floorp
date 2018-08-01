@@ -46,6 +46,7 @@ android-api-16/debug:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node
 
 android-x86/opt:
     description: "Android 4.2 x86 Opt"
@@ -95,6 +96,7 @@ android-x86/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node
 
 android-x86-nightly/opt:
     description: "Android 4.2 x86 Nightly"
@@ -150,6 +152,7 @@ android-x86-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node
 
 android-api-16/opt:
     description: "Android 4.0 api-16+ Opt"
@@ -199,6 +202,7 @@ android-api-16/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node
 
 android-api-16-without-google-play-services/opt:
     description: "Android 4.0 api-16+ (without Google Play Services) Opt"
@@ -247,6 +251,7 @@ android-api-16-without-google-play-services/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node
 
 android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
@@ -302,6 +307,7 @@ android-api-16-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node
 
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
@@ -351,6 +357,7 @@ android-aarch64/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node
 
 android-aarch64-nightly/opt:
     description: "Android 5.0 AArch64 Nightly"
@@ -406,3 +413,4 @@ android-aarch64-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
+        - linux64-node

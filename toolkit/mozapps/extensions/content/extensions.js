@@ -11,9 +11,7 @@
 ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
 

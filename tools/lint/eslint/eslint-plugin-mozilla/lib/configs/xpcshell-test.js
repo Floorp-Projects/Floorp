@@ -64,6 +64,20 @@ module.exports = {
     "uneval": false
   },
 
+  "overrides": [{
+    // If it is a head file, we turn off global unused variable checks, as it
+    // would require searching the other test files to know if they are used or not.
+    // This would be expensive and slow, and it isn't worth it for head files.
+    // We could get developers to declare as exported, but that doesn't seem worth it.
+    "files": "head*.js",
+    "rules": {
+      "no-unused-vars": ["error", {
+        "args": "none",
+        "vars": "local"
+      }]
+    }
+  }],
+
   rules: {
     "mozilla/import-headjs-globals": "error",
     "mozilla/mark-test-function-used": "error",

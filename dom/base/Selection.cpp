@@ -2104,6 +2104,10 @@ Selection::RemoveAllRangesTemporarily()
   RemoveAllRanges(result);
   if (result.Failed()) {
     mCachedRange = nullptr;
+  } else if (mCachedRange) {
+    // To save the computing cost to keep valid DOM point against DOM tree
+    // changes, we should clear the range temporarily.
+    mCachedRange->ResetTemporarily();
   }
   return result.StealNSResult();
 }

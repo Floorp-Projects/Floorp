@@ -47,6 +47,7 @@ jobs:
             - linux64-clang
             - linux64-rust
             - linux64-sccache
+            - linux64-node
 
     linux64-st-an/opt:
         description: "Linux64 Opt Static Analysis"
@@ -72,6 +73,7 @@ jobs:
             - linux64-clang
             - linux64-rust
             - linux64-sccache
+            - linux64-node
 
     win32-st-an/debug:
         description: "Win32 Static Analysis Debug (clang-cl)"
@@ -101,6 +103,7 @@ jobs:
             - win32-clang-cl-st-an
             - win32-rust
             - win64-sccache
+            - win64-node
 
     win32-st-an/opt:
         description: "Win32 Static Analysis Opt (clang-cl)"
@@ -130,6 +133,7 @@ jobs:
             - win32-clang-cl-st-an
             - win32-rust
             - win64-sccache
+            - win64-node
 
     win64-st-an/debug:
         description: "Win64 Static Analysis Debug (clang-cl)"
@@ -159,6 +163,7 @@ jobs:
             - win64-clang-cl-st-an
             - win64-rust
             - win64-sccache
+            - win64-node
 
     win64-st-an/opt:
         description: "Win64 Static Analysis Opt (clang-cl)"
@@ -188,3 +193,4 @@ jobs:
             - win64-clang-cl-st-an
             - win64-rust
             - win64-sccache
+            - win64-node

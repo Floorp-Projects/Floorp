@@ -787,25 +787,29 @@ add_task(async function test_onPageAnnoChanged() {
     await tracker.stop();
 
     _("Insert a bookmark without an annotation");
-    let pageURI = CommonUtils.makeURI("http://getfirefox.com");
-    PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      pageURI,
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!");
+    let pageURI = "http://getfirefox.com";
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: pageURI,
+      title: "Get Firefox!",
+    });
 
     await startTracking();
 
     _("Add a page annotation");
-    PlacesUtils.annotations.setPageAnnotation(pageURI, "URIProperties/characterSet",
-      "UTF-8", 0, PlacesUtils.annotations.EXPIRE_NEVER);
+    await PlacesUtils.history.update({
+      url: pageURI,
+      annotations: new Map([[PlacesUtils.CHARSET_ANNO, "UTF-16"]]),
+    });
     await verifyTrackedItems([]);
     Assert.equal(tracker.score, 0);
     await resetTracker();
 
     _("Remove the page annotation");
-    PlacesUtils.annotations.removePageAnnotation(pageURI,
-      "URIProperties/characterSet");
+    await PlacesUtils.history.update({
+      url: pageURI,
+      annotations: new Map([[PlacesUtils.CHARSET_ANNO, null]]),
+    });
     await verifyTrackedItems([]);
     Assert.equal(tracker.score, 0);
   } finally {

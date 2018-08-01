@@ -10,9 +10,7 @@ def get_window_rect(session):
         "GET", "session/{session_id}/window/rect".format(**vars(session)))
 
 
-def test_no_browsing_context(session, create_window):
-    session.window_handle = create_window()
-    session.close()
+def test_no_browsing_context(session, closed_window):
     response = get_window_rect(session)
     assert_error(response, "no such window")
 

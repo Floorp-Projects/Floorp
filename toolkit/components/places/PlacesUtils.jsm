@@ -1485,31 +1485,6 @@ var PlacesUtils = {
   },
 
   /**
-   * Sets the character-set for a URI.
-   *
-   * @param {nsIURI} aURI
-   * @param {String} aCharset character-set value.
-   * @return {Promise}
-   */
-  setCharsetForURI: function PU_setCharsetForURI(aURI, aCharset) {
-    return new Promise(resolve => {
-      // Delaying to catch issues with asynchronous behavior while waiting
-      // to implement asynchronous annotations in bug 699844.
-      Services.tm.dispatchToMainThread(function() {
-        if (aCharset && aCharset.length > 0) {
-          PlacesUtils.annotations.setPageAnnotation(
-            aURI, PlacesUtils.CHARSET_ANNO, aCharset, 0,
-            Ci.nsIAnnotationService.EXPIRE_NEVER);
-        } else {
-          PlacesUtils.annotations.removePageAnnotation(
-            aURI, PlacesUtils.CHARSET_ANNO);
-        }
-        resolve();
-      });
-    });
-  },
-
-  /**
    * Gets favicon data for a given page url.
    *
    * @param aPageUrl url of the page to look favicon for.
