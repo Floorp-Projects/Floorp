@@ -161,7 +161,8 @@
     "en-CA": {
         "platforms": [
             "android", 
-            "android-api-16"
+            "android-api-16", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
@@ -454,7 +455,8 @@
     "lij": {
         "platforms": [
             "android", 
-            "android-api-16"
+            "android-api-16", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
