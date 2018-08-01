@@ -7,6 +7,8 @@
 #ifndef MOZILLA_GFX_FONTVARIATION_H_
 #define MOZILLA_GFX_FONTVARIATION_H_
 
+#include <stdint.h>
+
 namespace mozilla {
 namespace gfx {
 
