@@ -43,10 +43,7 @@ function test_dimensions({ width, height}) {
       Assert.equal(rect.height, height, "Should have the requested height");
     }
 
-    let treeOwner = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell)
-                       .QueryInterface(Ci.nsIDocShellTreeItem)
-                       .treeOwner;
+    let treeOwner = win.docShell.treeOwner;
     let persistPosition = {};
     let persistSize = {};
     let persistSizeMode = {};

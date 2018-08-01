@@ -205,8 +205,7 @@ class WebAPI extends APIObject {
 
   init(window) {
     let mm = window
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDocShell)
+        .docShell
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIContentFrameMessageManager);
     let broker = new APIBroker(mm);

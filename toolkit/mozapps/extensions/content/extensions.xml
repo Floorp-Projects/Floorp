@@ -460,8 +460,7 @@
               }
               let subject = {
                 wrappedJSObject: {
-                  target: window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDocShell).chromeEventHandler,
+                  target: window.docShell.chromeEventHandler,
                   info: {
                     addon: info.addon,
                     source: "AMO",
