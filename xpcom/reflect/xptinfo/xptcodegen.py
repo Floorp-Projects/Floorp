@@ -205,7 +205,6 @@ def link_to_cpp(interfaces, fd):
     param_cache = {}
     methods = []
     consts = []
-    prophooks = []
     domobjects = []
     domobject_cache = {}
     strings = OrderedDict()
