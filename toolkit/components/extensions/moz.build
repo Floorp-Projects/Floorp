@@ -59,6 +59,7 @@ EXPORTS.mozilla = [
 ]
 
 EXPORTS.mozilla.extensions = [
+    'DocumentObserver.h',
     'MatchGlob.h',
     'MatchPattern.h',
     'WebExtensionContentScript.h',

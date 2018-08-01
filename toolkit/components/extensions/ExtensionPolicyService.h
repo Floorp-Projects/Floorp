@@ -28,6 +28,7 @@ class nsIPIDOMWindowOuter;
 namespace mozilla {
 namespace extensions {
   class DocInfo;
+  class DocumentObserver;
 }
 
 using extensions::DocInfo;
@@ -76,6 +77,9 @@ public:
   bool RegisterExtension(WebExtensionPolicy& aPolicy);
   bool UnregisterExtension(WebExtensionPolicy& aPolicy);
 
+  bool RegisterObserver(extensions::DocumentObserver& aPolicy);
+  bool UnregisterObserver(extensions::DocumentObserver& aPolicy);
+
   void BaseCSP(nsAString& aDefaultCSP) const;
   void DefaultCSP(nsAString& aDefaultCSP) const;
 
@@ -99,6 +103,9 @@ private:
 
   nsRefPtrHashtable<nsPtrHashKey<const nsAtom>, WebExtensionPolicy> mExtensions;
   nsRefPtrHashtable<nsCStringHashKey, WebExtensionPolicy> mExtensionHosts;
+
+  nsRefPtrHashtable<nsPtrHashKey<const extensions::DocumentObserver>,
+                    extensions::DocumentObserver> mObservers;
 
   nsCOMPtr<nsIObserverService> mObs;
 

@@ -62,6 +62,14 @@ public:
     return nullptr;
   }
 
+  nsILoadInfo* GetLoadInfo() const
+  {
+    if (mObj.is<LoadInfo>()) {
+      return mObj.as<LoadInfo>();
+    }
+    return nullptr;
+  }
+
 private:
   void SetURL(const URLInfo& aURL);
 
