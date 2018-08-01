@@ -126,6 +126,13 @@ DrawTargetDual::MaskSurface(const Pattern &aSource,
 }
 
 void
+DrawTargetDual::ClearRect(const Rect &aRect)
+{
+  mA->FillRect(aRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
+  mB->FillRect(aRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+}
+
+void
 DrawTargetDual::CopySurface(SourceSurface *aSurface, const IntRect &aSourceRect,
                             const IntPoint &aDestination)
 {
