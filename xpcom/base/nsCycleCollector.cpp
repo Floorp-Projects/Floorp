@@ -1353,6 +1353,7 @@ public:
   void ForgetSkippable(js::SliceBudget& aBudget, bool aRemoveChildlessNodes,
                        bool aAsyncSnowWhiteFreeing);
   bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
+  bool FreeSnowWhiteWithBudget(js::SliceBudget& aBudget);
 
   // This method assumes its argument is already canonicalized.
   void RemoveObjectFromGraph(void* aPtr);
@@ -2715,40 +2716,66 @@ class SnowWhiteKiller : public TraceCallbacks
     ObjectsVector;
 
 public:
-  explicit SnowWhiteKiller(nsCycleCollector* aCollector)
+  SnowWhiteKiller(nsCycleCollector* aCollector, js::SliceBudget* aBudget)
     : mCollector(aCollector)
     , mObjects(kSegmentSize)
+    , mBudget(aBudget)
+    , mSawSnowWhiteObjects(false)
   {
     MOZ_ASSERT(mCollector, "Calling SnowWhiteKiller after nsCC went away");
+  }
+
+  explicit SnowWhiteKiller(nsCycleCollector* aCollector)
+    : SnowWhiteKiller(aCollector, nullptr)
+  {
   }
 
   ~SnowWhiteKiller()
   {
     for (auto iter = mObjects.Iter(); !iter.Done(); iter.Next()) {
       SnowWhiteObject& o = iter.Get();
-      if (!o.mRefCnt->get() && !o.mRefCnt->IsInPurpleBuffer()) {
-        mCollector->RemoveObjectFromGraph(o.mPointer);
-        o.mRefCnt->stabilizeForDeletion();
-        {
-          JS::AutoEnterCycleCollection autocc(mCollector->Runtime()->Runtime());
-          o.mParticipant->Trace(o.mPointer, *this, nullptr);
-        }
-        o.mParticipant->DeleteCycleCollectable(o.mPointer);
+      MaybeKillObject(o);
+    }
+  }
+
+  void
+  MaybeKillObject(SnowWhiteObject& aObject)
+  {
+    if (!aObject.mRefCnt->get() && !aObject.mRefCnt->IsInPurpleBuffer()) {
+      mCollector->RemoveObjectFromGraph(aObject.mPointer);
+      aObject.mRefCnt->stabilizeForDeletion();
+      {
+        JS::AutoEnterCycleCollection autocc(mCollector->Runtime()->Runtime());
+        aObject.mParticipant->Trace(aObject.mPointer, *this, nullptr);
       }
+      aObject.mParticipant->DeleteCycleCollectable(aObject.mPointer);
     }
   }
 
   bool
   Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
   {
+    if (mBudget) {
+      if (mBudget->isOverBudget()) {
+        return false;
+      }
+      mBudget->step();
+    }
+
     MOZ_ASSERT(aEntry->mObject, "Null object in purple buffer");
     if (!aEntry->mRefCnt->get()) {
+      mSawSnowWhiteObjects = true;
       void* o = aEntry->mObject;
       nsCycleCollectionParticipant* cp = aEntry->mParticipant;
       ToParticipant(o, &cp);
       SnowWhiteObject swo = { o, cp, aEntry->mRefCnt };
-      mObjects.InfallibleAppend(swo);
+      if (!mBudget) {
+        mObjects.InfallibleAppend(swo);
+      }
       aBuffer.Remove(aEntry);
+      if (mBudget) {
+        MaybeKillObject(swo);
+      }
     }
     return true;
   }
@@ -2756,6 +2783,11 @@ public:
   bool HasSnowWhiteObjects() const
   {
     return !mObjects.IsEmpty();
+  }
+
+  bool SawSnowWhiteObjects() const
+  {
+    return mSawSnowWhiteObjects;
   }
 
   virtual void Trace(JS::Heap<JS::Value>* aValue, const char* aName,
@@ -2817,6 +2849,8 @@ public:
 private:
   RefPtr<nsCycleCollector> mCollector;
   ObjectsVector mObjects;
+  js::SliceBudget* mBudget;
+  bool mSawSnowWhiteObjects;
 };
 
 class RemoveSkippableVisitor : public SnowWhiteKiller
@@ -2923,6 +2957,23 @@ nsCycleCollector::FreeSnowWhite(bool aUntilNoSWInPurpleBuffer)
     }
   } while (aUntilNoSWInPurpleBuffer);
   return hadSnowWhiteObjects;
+}
+
+bool
+nsCycleCollector::FreeSnowWhiteWithBudget(js::SliceBudget& aBudget)
+{
+  CheckThreadSafety();
+
+  if (mFreeingSnowWhite) {
+    return false;
+  }
+
+  AutoRestore<bool> ar(mFreeingSnowWhite);
+  mFreeingSnowWhite = true;
+
+  SnowWhiteKiller visitor(this, &aBudget);
+  mPurpleBuf.VisitEntries(visitor);
+  return visitor.SawSnowWhiteObjects();;
 }
 
 void
@@ -4318,6 +4369,19 @@ nsCycleCollector_doDeferredDeletion()
   MOZ_ASSERT(data->mContext);
 
   return data->mCollector->FreeSnowWhite(false);
+}
+
+bool
+nsCycleCollector_doDeferredDeletionWithBudget(js::SliceBudget& aBudget)
+{
+  CollectorData* data = sCollectorData.get();
+
+  // We should have started the cycle collector by now.
+  MOZ_ASSERT(data);
+  MOZ_ASSERT(data->mCollector);
+  MOZ_ASSERT(data->mContext);
+
+  return data->mCollector->FreeSnowWhiteWithBudget(aBudget);
 }
 
 already_AddRefed<nsICycleCollectorLogSink>
