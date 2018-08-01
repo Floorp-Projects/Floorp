@@ -162,6 +162,7 @@ elif CONFIG['CPU_ARCH'].startswith('mips'):
 UNIFIED_SOURCES += [
     'BezierUtils.cpp',
     'Blur.cpp',
+    'BufferEdgePad.cpp',
     'CaptureCommandList.cpp',
     'DataSourceSurface.cpp',
     'DataSurfaceHelpers.cpp',

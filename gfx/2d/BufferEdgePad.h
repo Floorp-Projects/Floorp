@@ -4,18 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_LAYERS_BUFFER_EDGE_PAD_H
-#define MOZILLA_LAYERS_BUFFER_EDGE_PAD_H
+#ifndef MOZILLA_GFX_BUFFER_EDGE_PAD_H
+#define MOZILLA_GFX_BUFFER_EDGE_PAD_H
 
-#include "mozilla/gfx/2D.h"
-#include "nsRegion.h"
+#include "nsRegionFwd.h"
 
 namespace mozilla {
-namespace layers {
+namespace gfx {
 
-void PadDrawTargetOutFromRegion(RefPtr<gfx::DrawTarget> aDrawTarget, nsIntRegion &aRegion);
+class DrawTarget;
+
+void PadDrawTargetOutFromRegion(DrawTarget* aDrawTarget, const nsIntRegion &aRegion);
 
 } // namespace layers
 } // namespace mozilla
 
-#endif // MOZILLA_LAYERS_BUFFER_EDGE_PAD_H
+#endif // MOZILLA_GFX_BUFFER_EDGE_PAD_H

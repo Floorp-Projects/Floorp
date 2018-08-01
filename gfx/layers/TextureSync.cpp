@@ -8,6 +8,7 @@
 
 #include <unordered_set>
 
+#include "base/process_util.h"
 #include "chrome/common/mach_ipc_mac.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -211,7 +212,7 @@ TextureSync::Shutdown()
 void
 TextureSync::UpdateTextureLocks(base::ProcessId aProcessId)
 {
-  if (aProcessId == getpid()) {
+  if (aProcessId == base::GetCurrentProcId()) {
     DispatchCheckTexturesForUnlock();
     return;
   }
@@ -224,7 +225,7 @@ TextureSync::UpdateTextureLocks(base::ProcessId aProcessId)
 bool
 TextureSync::WaitForTextures(base::ProcessId aProcessId, const nsTArray<uint64_t>& textureIds)
 {
-  if (aProcessId == getpid()) {
+  if (aProcessId == base::GetCurrentProcId()) {
     bool success = WaitForTextureIdsToUnlock(aProcessId, MakeSpan<uint64_t>(textureIds));
     if (!success) {
       LOG_ERROR("Failed waiting for textures to unlock.\n");
@@ -243,7 +244,7 @@ TextureSync::WaitForTextures(base::ProcessId aProcessId, const nsTArray<uint64_t
     reqTextureIds[i] = textureIds[i];
   }
 
-  req->pid = getpid();
+  req->pid = base::GetCurrentProcId();
   bool dataWasSet = smsg.SetData(req, messageSize);
 
   if (!dataWasSet) {
