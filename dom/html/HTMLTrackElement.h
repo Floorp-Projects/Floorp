@@ -102,8 +102,7 @@ public:
   // the child of a media element.
   virtual nsresult BindToTree(nsIDocument* aDocument,
                               nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
+                              nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
   void DispatchTrackRunnable(const nsString& aEventName);

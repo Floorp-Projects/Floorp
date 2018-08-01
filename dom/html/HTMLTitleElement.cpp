@@ -82,13 +82,11 @@ HTMLTitleElement::ContentRemoved(nsIContent* aChild,
 nsresult
 HTMLTitleElement::BindToTree(nsIDocument *aDocument,
                              nsIContent *aParent,
-                             nsIContent *aBindingParent,
-                             bool aCompileEventHandlers)
+                             nsIContent *aBindingParent)
 {
   // Let this fall through.
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent,
-                                                 aCompileEventHandlers);
+                                                 aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SendTitleChangeEvent(true);

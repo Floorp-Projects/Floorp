@@ -9083,7 +9083,6 @@ exports.PSEUDO_ELEMENTS = [
   ":-moz-range-progress",
   ":-moz-range-thumb",
   ":-moz-meter-bar",
-  ":-moz-placeholder",
   ":placeholder",
   ":-moz-color-swatch"
 ];

@@ -418,12 +418,10 @@ nsGenericHTMLElement::EditableInclusiveDescendantCount()
 
 nsresult
 nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                 nsIContent* aBindingParent,
-                                 bool aCompileEventHandlers)
+                                 nsIContent* aBindingParent)
 {
   nsresult rv = nsGenericHTMLElementBase::BindToTree(aDocument, aParent,
-                                                     aBindingParent,
-                                                     aCompileEventHandlers);
+                                                     aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
@@ -1751,12 +1749,10 @@ nsGenericHTMLFormElement::GetDesiredIMEState()
 nsresult
 nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
                                      nsIContent* aParent,
-                                     nsIContent* aBindingParent,
-                                     bool aCompileEventHandlers)
+                                     nsIContent* aBindingParent)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent,
-                                                 aCompileEventHandlers);
+                                                 aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // An autofocus event has to be launched if the autofocus attribute is

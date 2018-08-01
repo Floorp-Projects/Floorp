@@ -22,8 +22,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsCookiePermission()
-    : mCookiesLifetimeSec(INT64_MAX)
-    , mCookiesLifetimePolicy(0) // ACCEPT_NORMALLY
+    : mCookiesLifetimePolicy(0) // ACCEPT_NORMALLY
     {}
 
   bool Init();
@@ -37,7 +36,6 @@ private:
   nsCOMPtr<nsIPermissionManager> mPermMgr;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
 
-  int64_t      mCookiesLifetimeSec;            // lifetime limit specified in seconds
   uint8_t      mCookiesLifetimePolicy;         // pref for how long cookies are stored
 };
 

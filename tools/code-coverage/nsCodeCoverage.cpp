@@ -44,7 +44,7 @@ nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType)
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(cx);
   if (NS_WARN_IF(!global)) {
     return NS_ERROR_FAILURE;
   }

@@ -52,8 +52,7 @@ public:
 
   // nsIContent specializations:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
+                              nsIContent* aBindingParent) override;
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
