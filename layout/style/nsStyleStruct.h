@@ -2745,6 +2745,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset
   nsChangeHint CalcDifference(const nsStyleUIReset& aNewData) const;
 
   mozilla::StyleUserSelect     mUserSelect;     // [reset](selection-style)
+  mozilla::StyleScrollbarWidth mScrollbarWidth;
   uint8_t mForceBrokenImageIcon; // (0 if not forcing, otherwise forcing)
   uint8_t                      mIMEMode;
   mozilla::StyleWindowDragging mWindowDragging;
