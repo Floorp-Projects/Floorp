@@ -15,6 +15,8 @@
 #include "LibSecret.h"
 #elif defined(XP_MACOSX)
 #include "KeychainSecret.h"
+#elif defined(XP_WIN)
+#include "CredentialManagerSecret.h"
 #else
 #include "NSSKeyStore.h"
 #endif
@@ -33,6 +35,8 @@ OSKeyStore::OSKeyStore()
   mKs.reset(new LibSecret());
 #elif defined(XP_MACOSX)
   mKs.reset(new KeychainSecret());
+#elif defined(XP_WIN)
+  mKs.reset(new CredentialManagerSecret());
 #else
   mKs.reset(new NSSKeyStore());
 #endif
