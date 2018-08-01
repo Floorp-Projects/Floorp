@@ -5654,6 +5654,10 @@ nsIDocument::CreateXULElement(const nsAString& aTagName,
   }
 
   RefPtr<Element> elem = CreateElem(aTagName, nullptr, kNameSpaceID_XUL, is);
+  if (!elem) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
   return elem.forget();
 }
 
