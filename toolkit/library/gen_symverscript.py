@@ -8,10 +8,10 @@ import sys
 import buildconfig
 from mozbuild.preprocessor import Preprocessor
 
-def main(output, input_file, version=None):
+def main(output, input_file):
     pp = Preprocessor()
     pp.context.update({
-        'VERSION': version,
+        'VERSION': 'xul%s' % buildconfig.substs['MOZILLA_SYMBOLVERSION'],
     })
     pp.out = output
     pp.do_include(input_file)
