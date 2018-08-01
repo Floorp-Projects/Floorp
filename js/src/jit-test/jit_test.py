@@ -266,6 +266,11 @@ def main(argv):
         # to be off when it starts.
         options.exclude += [os.path.join('debug', 'Script-getOffsetsCoverage-02.js')]
 
+        # These tests expect functions to be parsed lazily, but lazy parsing
+        # is disabled on coverage build.
+        options.exclude += [os.path.join('debug', 'Debugger-findScripts-uncompleted-01.js')]
+        options.exclude += [os.path.join('debug', 'Debugger-findScripts-uncompleted-02.js')]
+
     if options.exclude_from:
         with open(options.exclude_from) as fh:
             for line in fh:
