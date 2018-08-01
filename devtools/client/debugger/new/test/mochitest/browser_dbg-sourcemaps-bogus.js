@@ -7,7 +7,11 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  const dbg = await initDebugger("doc-sourcemap-bogus.html", "bogus-map.js");
+  const dbg = await initDebugger("doc-sourcemap-bogus.html");
+  const {
+    selectors: { getSourceCount },
+    getState
+  } = dbg;
 
   await selectSource(dbg, "bogus-map.js");
 
@@ -20,5 +24,5 @@ add_task(async function() {
 
   // Make sure that only the single generated source exists. The
   // sourcemap failed to download.
-  is(dbg.selectors.getSourceCount(dbg.getState()), 1, "Only 1 source exists");
+  is(getSourceCount(getState()), 1, "Only 1 source exists");
 });
