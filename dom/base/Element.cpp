@@ -805,7 +805,7 @@ Element::Scroll(const CSSIntPoint& aScroll, const ScrollOptions& aOptions)
     if (aOptions.mBehavior == ScrollBehavior::Smooth) {
       scrollMode = nsIScrollableFrame::SMOOTH_MSD;
     } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
-      ScrollbarStyles styles = sf->GetScrollbarStyles();
+      ScrollStyles styles = sf->GetScrollStyles();
       if (styles.mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
         scrollMode = nsIScrollableFrame::SMOOTH_MSD;
       }
@@ -902,7 +902,7 @@ Element::SetScrollTop(int32_t aScrollTop)
   nsIScrollableFrame* sf = GetScrollFrame(nullptr, flushType);
   if (sf) {
     nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
-    if (sf->GetScrollbarStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+    if (sf->GetScrollStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
       scrollMode = nsIScrollableFrame::SMOOTH_MSD;
     }
     sf->ScrollToCSSPixels(CSSIntPoint(sf->GetScrollPositionCSSPixels().x,
@@ -927,7 +927,7 @@ Element::SetScrollLeft(int32_t aScrollLeft)
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
     nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
-    if (sf->GetScrollbarStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+    if (sf->GetScrollStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
       scrollMode = nsIScrollableFrame::SMOOTH_MSD;
     }
 
@@ -1970,7 +1970,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     nsPresContext* presContext = document->GetPresContext();
     if (presContext) {
       MOZ_ASSERT(this !=
-                 presContext->GetViewportScrollbarStylesOverrideElement(),
+                 presContext->GetViewportScrollStylesOverrideElement(),
                  "Leaving behind a raw pointer to this element (as having "
                  "propagated scrollbar styles) - that's dangerous...");
     }
