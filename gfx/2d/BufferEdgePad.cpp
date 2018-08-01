@@ -1,15 +1,22 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "BufferEdgePad.h"
 
-#include "mozilla/gfx/Point.h" // for IntSize
-#include "mozilla/gfx/Types.h" // for SurfaceFormat
+#include "2D.h" // for DrawTarget
+#include "Point.h" // for IntSize
+#include "Types.h" // for SurfaceFormat
+
+#include "nsRegion.h"
 
 namespace mozilla {
-namespace layers {
-
-using namespace gfx;
+namespace gfx {
 
 void
-PadDrawTargetOutFromRegion(RefPtr<DrawTarget> aDrawTarget, nsIntRegion &aRegion)
+PadDrawTargetOutFromRegion(DrawTarget* aDrawTarget, const nsIntRegion &aRegion)
 {
   struct LockedBits {
     uint8_t *data;
@@ -89,5 +96,5 @@ PadDrawTargetOutFromRegion(RefPtr<DrawTarget> aDrawTarget, nsIntRegion &aRegion)
   }
 }
 
-} // namespace layers
+} // namespace gfx
 } // namespace mozilla

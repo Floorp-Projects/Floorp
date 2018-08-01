@@ -10,6 +10,8 @@
 
 #include "DrawTargetCapture.h"
 
+#include "BufferEdgePad.h"
+
 #ifdef BUILD_ARM_NEON
 #include "mozilla/arm.h"
 #include "LuminanceNEON.h"
@@ -286,6 +288,12 @@ DrawTarget::Blur(const AlphaBoxBlur& aBlur)
   aBlur.Blur(data);
 
   ReleaseBits(data);
+}
+
+void
+DrawTarget::PadEdges(const IntRegion& aRegion)
+{
+  PadDrawTargetOutFromRegion(this, aRegion);
 }
 
 } // namespace gfx
