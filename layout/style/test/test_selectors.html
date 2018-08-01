@@ -16,7 +16,9 @@ SimpleTest.requestLongerTimeout(2);
 var cloneiframe;
 
 function run() {
-
+  SpecialPowers.pushPrefEnv({ set: [["layout.css.xul-tree-pseudos.content.enabled", true]] }, runTests);
+}
+function runTests() {
     var iframe = document.getElementById("iframe");
     var ifwin = iframe.contentWindow;
     var ifdoc = iframe.contentDocument;
