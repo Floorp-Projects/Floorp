@@ -200,27 +200,10 @@ public final class GeckoRuntimeSettings implements Parcelable {
          *
          * @param lifetime The enforced cookie lifetime.
          *                 Use one of the {@link #COOKIE_LIFETIME_NORMAL COOKIE_LIFETIME_*} flags.
-         *                 Use {@link #cookieLifetimeDays} to set expiration
-         *                 days for {@link #COOKIE_LIFETIME_DAYS}.
          * @return The Builder instance.
          */
         public @NonNull Builder cookieLifetime(@CookieLifetime int lifetime) {
             mSettings.mCookieLifetime.set(lifetime);
-            return this;
-        }
-
-        /**
-         * Set the expiration days for {@link #COOKIE_LIFETIME_DAYS}.
-         *
-         * @param days Limit lifetime to N days. Only enforced for {@link #COOKIE_LIFETIME_DAYS}.
-         * @return The Builder instance.
-         */
-        public @NonNull Builder cookieLifetimeDays(int days) {
-            if (mSettings.mCookieLifetime.get() != COOKIE_LIFETIME_DAYS) {
-                throw new IllegalStateException(
-                    "Setting expiration days for incompatible cookie lifetime");
-            }
-            mSettings.mCookieLifetimeDays.set(days);
             return this;
         }
 
@@ -302,8 +285,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
         "network.cookie.cookieBehavior", COOKIE_ACCEPT_ALL);
     /* package */ Pref<Integer> mCookieLifetime = new Pref<Integer>(
         "network.cookie.lifetimePolicy", COOKIE_LIFETIME_NORMAL);
-    /* package */ Pref<Integer> mCookieLifetimeDays = new Pref<Integer>(
-        "network.cookie.lifetime.days", 90);
     /* package */ Pref<String> mTrackingProtection = new Pref<String>(
         "urlclassifier.trackingTable",
         TrackingProtection.buildPrefValue(
@@ -320,7 +301,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ boolean mDebugPause;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
-        mCookieBehavior, mCookieLifetime, mCookieLifetimeDays, mConsoleOutput,
+        mCookieBehavior, mCookieLifetime, mConsoleOutput,
         mJavaScript, mRemoteDebugging, mTrackingProtection, mWebFonts
     };
 
@@ -561,43 +542,15 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /**
-     * Get the enforced lifetime expiration days.
-     *
-     * Note: This is only enforced for {@link #COOKIE_LIFETIME_DAYS}.
-     *
-     * @return The enforced expiration days.
-     */
-    public int getCookieLifetimeDays() {
-        return mCookieLifetimeDays.get();
-    }
-
-    /**
      * Set the cookie lifetime.
      *
      * @param lifetime The enforced cookie lifetime.
      *                 Use one of the {@link #COOKIE_LIFETIME_NORMAL COOKIE_LIFETIME_*} flags.
-     *                 Use {@link #setCookieLifetimeDays} to set expiration
-     *                 days for {@link #COOKIE_LIFETIME_DAYS}.
      * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setCookieLifetime(
             @CookieLifetime int lifetime) {
         mCookieLifetime.set(lifetime);
-        return this;
-    }
-
-    /**
-     * Set the expiration days for {@link #COOKIE_LIFETIME_DAYS}.
-     *
-     * @param days Limit lifetime to N days. Only enforced for {@link #COOKIE_LIFETIME_DAYS}.
-     * @return This GeckoRuntimeSettings instance.
-     */
-    public @NonNull GeckoRuntimeSettings setCookieLifetimeDays(int days) {
-        if (mCookieLifetime.get() != COOKIE_LIFETIME_DAYS) {
-            throw new IllegalStateException(
-                "Setting expiration days for incompatible cookie lifetime");
-        }
-        mCookieLifetimeDays.set(days);
         return this;
     }
 
