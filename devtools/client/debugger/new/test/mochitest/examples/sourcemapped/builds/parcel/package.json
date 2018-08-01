@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "convert-source-map": "^1.5.1",
-    "parcel-bundler": "^1.9.7"
-  }
-}

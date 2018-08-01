@@ -116,8 +116,7 @@ function checkSelectedSource(sourceId) {
 
     if (rawPendingUrl === source.url) {
       if ((0, _source.isPrettyURL)(pendingUrl)) {
-        const prettySource = await dispatch((0, _prettyPrint.togglePrettyPrint)(source.id));
-        return dispatch(checkPendingBreakpoints(prettySource.id));
+        return await dispatch((0, _prettyPrint.togglePrettyPrint)(source.id));
       }
 
       await dispatch((0, _sources.selectLocation)({ ...pendingLocation,
@@ -136,13 +135,14 @@ function checkPendingBreakpoints(sourceId) {
     const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
     const pendingBreakpoints = (0, _selectors.getPendingBreakpointsForSource)(getState(), source.url);
 
-    if (pendingBreakpoints.length === 0) {
+    if (!pendingBreakpoints.size) {
       return;
     } // load the source text if there is a pending breakpoint for it
 
 
     await dispatch((0, _loadSourceText.loadSourceText)(source));
-    await Promise.all(pendingBreakpoints.map(bp => dispatch((0, _breakpoints.syncBreakpoint)(sourceId, bp))));
+    const breakpoints = pendingBreakpoints.valueSeq().toJS();
+    await Promise.all(breakpoints.map(bp => dispatch((0, _breakpoints.syncBreakpoint)(sourceId, bp))));
   };
 }
 
