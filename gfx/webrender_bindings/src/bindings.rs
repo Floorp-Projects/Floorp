@@ -950,6 +950,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         scene_builder_hooks: Some(Box::new(APZCallbacks::new(window_id))),
         sampler: Some(Box::new(SamplerCallback::new(window_id))),
         max_texture_size: Some(8192), // Moz2D doesn't like textures bigger than this
+        clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
         ..Default::default()
     };
 

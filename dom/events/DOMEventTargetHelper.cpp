@@ -295,20 +295,22 @@ DOMEventTargetHelper::MaybeUpdateKeepAlive()
 {
   bool shouldBeKeptAlive = false;
 
-  if (!mKeepingAliveTypes.mAtoms.IsEmpty()) {
-    for (uint32_t i = 0; i < mKeepingAliveTypes.mAtoms.Length(); ++i) {
-      if (HasListenersFor(mKeepingAliveTypes.mAtoms[i])) {
-        shouldBeKeptAlive = true;
-        break;
+  if (NS_SUCCEEDED(CheckInnerWindowCorrectness())) {
+    if (!mKeepingAliveTypes.mAtoms.IsEmpty()) {
+      for (uint32_t i = 0; i < mKeepingAliveTypes.mAtoms.Length(); ++i) {
+        if (HasListenersFor(mKeepingAliveTypes.mAtoms[i])) {
+          shouldBeKeptAlive = true;
+          break;
+        }
       }
     }
-  }
 
-  if (!shouldBeKeptAlive && !mKeepingAliveTypes.mStrings.IsEmpty()) {
-    for (uint32_t i = 0; i < mKeepingAliveTypes.mStrings.Length(); ++i) {
-      if (HasListenersFor(mKeepingAliveTypes.mStrings[i])) {
-        shouldBeKeptAlive = true;
-        break;
+    if (!shouldBeKeptAlive && !mKeepingAliveTypes.mStrings.IsEmpty()) {
+      for (uint32_t i = 0; i < mKeepingAliveTypes.mStrings.Length(); ++i) {
+        if (HasListenersFor(mKeepingAliveTypes.mStrings[i])) {
+          shouldBeKeptAlive = true;
+          break;
+        }
       }
     }
   }

@@ -60,7 +60,7 @@ void bar();
         m = iface.members[0]
         self.assertTrue(isinstance(m, xpidl.Method))
         self.assertEqual("bar", m.name)
-        self.assertEqual("void", m.type)
+        self.assertEqual(xpidl.TypeId("void"), m.type)
 
     def testMethodParams(self):
         i = self.p.parse("""[uuid(abc)] interface foo {
@@ -73,15 +73,15 @@ long bar(in long a, in float b, [array] in long c);
         m = iface.members[0]
         self.assertTrue(isinstance(m, xpidl.Method))
         self.assertEqual("bar", m.name)
-        self.assertEqual("long", m.type)
+        self.assertEqual(xpidl.TypeId("long"), m.type)
         self.assertEqual(3, len(m.params))
-        self.assertEqual("long", m.params[0].type)
+        self.assertEqual(xpidl.TypeId("long"), m.params[0].type)
         self.assertEqual("in", m.params[0].paramtype)
-        self.assertEqual("float", m.params[1].type)
+        self.assertEqual(xpidl.TypeId("float"), m.params[1].type)
         self.assertEqual("in", m.params[1].paramtype)
-        self.assertEqual("long", m.params[2].type)
+        self.assertEqual(xpidl.TypeId("long"), m.params[2].type)
         self.assertEqual("in", m.params[2].paramtype)
-        self.assertTrue(isinstance(m.params[2].realtype, xpidl.Array))
+        self.assertTrue(isinstance(m.params[2].realtype, xpidl.LegacyArray))
         self.assertEqual("long", m.params[2].realtype.type.name)
 
     def testAttribute(self):
@@ -94,7 +94,7 @@ attribute long bar;
         a = iface.members[0]
         self.assertTrue(isinstance(a, xpidl.Attribute))
         self.assertEqual("bar", a.name)
-        self.assertEqual("long", a.type)
+        self.assertEqual(xpidl.TypeId("long"), a.type)
 
     def testOverloadedVirtual(self):
         i = self.p.parse("""[uuid(abc)] interface foo {

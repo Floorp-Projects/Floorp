@@ -87,7 +87,7 @@ PER_PROJECT_PARAMETERS = {
     },
 
     'comm-esr60': {
-        'target_tasks_method': 'mozilla_beta_tasks',
+        'target_tasks_method': 'mozilla_esr60_tasks',
         'optimize_target_tasks': True,
         'include_nightly': True,
     },

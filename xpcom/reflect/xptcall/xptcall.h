@@ -45,8 +45,6 @@ static_assert(offsetof(nsXPTCMiniVariant, val) == 0,
 
 struct nsXPTCVariant
 {
-// No ctors or dtors so that we can use arrays of these on the stack with no
-// penalty.
     union ExtendedVal
     {
     // ExtendedVal is an extension on nsXPTCMiniVariant. It contains types
@@ -60,6 +58,7 @@ struct nsXPTCVariant
         nsCString  nscstr;
         nsString   nsstr;
         JS::Value  jsval;
+        xpt::detail::UntypedTArray array;
 
         // This type contains non-standard-layout types, so needs an explicit
         // Ctor/Dtor - we'll just delete them.
@@ -79,6 +78,12 @@ struct nsXPTCVariant
     nsXPTType type;
     uint8_t   flags;
 
+    // Clear to a valid, null state.
+    nsXPTCVariant() {
+        memset(this, 0, sizeof(nsXPTCVariant));
+        type = nsXPTType::T_VOID;
+    }
+
     enum
     {
         //
@@ -88,22 +93,12 @@ struct nsXPTCVariant
         // Indicates that we &val.p should be passed n the stack, i.e. that
         // val should be passed by reference.
         IS_INDIRECT    = 0x1,
-
-        // Indicates that the value we hold requires some sort of cleanup (memory
-        // deallocation, interface release, JS::Value unrooting, etc). The precise
-        // cleanup that is performed depends on the 'type' field above.
-        // If the value is an array, this flag specifies whether the elements
-        // within the array require cleanup (we always clean up the array itself,
-        // so this flag would be redundant for that purpose).
-        VAL_NEEDS_CLEANUP = 0x2
     };
 
     void ClearFlags()         {flags = 0;}
     void SetIndirect()        {flags |= IS_INDIRECT;}
-    void SetValNeedsCleanup() {flags |= VAL_NEEDS_CLEANUP;}
 
     bool IsIndirect()         const  {return 0 != (flags & IS_INDIRECT);}
-    bool DoesValNeedCleanup() const  {return 0 != (flags & VAL_NEEDS_CLEANUP);}
 
     // Implicitly convert to nsXPTCMiniVariant.
     operator nsXPTCMiniVariant&() {
@@ -113,9 +108,8 @@ struct nsXPTCVariant
         return *(const nsXPTCMiniVariant*) &val;
     }
 
-    // As this type contains an anonymous union, we need to provide explicit
-    // constructors & destructors.
-    nsXPTCVariant() { }
+    // As this type contains an anonymous union, we need to provide an explicit
+    // destructor.
     ~nsXPTCVariant() { }
 };
 

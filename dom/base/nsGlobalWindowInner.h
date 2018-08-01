@@ -275,9 +275,6 @@ public:
   static already_AddRefed<nsGlobalWindowInner>
   Create(nsGlobalWindowOuter* aOuter, bool aIsChrome);
 
-  // callback for close event
-  void ReallyCloseWindow();
-
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -352,6 +349,14 @@ public:
   void Suspend();
   void Resume();
   virtual bool IsSuspended() const override;
+
+  // Calling Freeze() on a window will automatically Suspend() it.  In
+  // addition, the window and its children are further treated as no longer
+  // suitable for interaction with the user.  For example, it may be marked
+  // non-visible, cannot be focused, etc.  All worker threads are also frozen
+  // bringing them to a complete stop.  A window can have Freeze() called
+  // multiple times and will only thaw after a matching number of Thaw()
+  // calls.
   void Freeze();
   void Thaw();
   virtual bool IsFrozen() const override;
@@ -448,14 +453,6 @@ public:
   // automatically.
   // Inner windows only.
   bool DialogsAreBeingAbused();
-
-  // These functions are used for controlling and determining whether dialogs
-  // (alert, prompt, confirm) are currently allowed in this window.  If you want
-  // to temporarily disable dialogs, please use TemporarilyDisableDialogs, not
-  // EnableDialogs/DisableDialogs, because correctly determining whether to
-  // re-enable dialogs is actually quite difficult.
-  void EnableDialogs();
-  void DisableDialogs();
 
   nsIScriptContext *GetContextInternal();
 
@@ -676,7 +673,6 @@ public:
   void GetEvent(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
   already_AddRefed<nsPIDOMWindowOuter> GetParent(mozilla::ErrorResult& aError);
   nsPIDOMWindowOuter* GetScriptableParent() override;
-  nsPIDOMWindowOuter* GetScriptableParentOrNull() override;
   mozilla::dom::Element*
   GetFrameElement(nsIPrincipal& aSubjectPrincipal,
                   mozilla::ErrorResult& aError);
@@ -887,9 +883,6 @@ public:
   bool GetFullScreen(mozilla::ErrorResult& aError);
   bool GetFullScreen() override;
   void SetFullScreen(bool aFullScreen, mozilla::ErrorResult& aError);
-  void Back(mozilla::ErrorResult& aError);
-  void Forward(mozilla::ErrorResult& aError);
-  void Home(nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aError);
   bool Find(const nsAString& aString, bool aCaseSensitive, bool aBackwards,
             bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
             bool aShowDialog, mozilla::ErrorResult& aError);
