@@ -34,6 +34,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "nsRegionFwd.h"
+
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
   #ifndef MOZ_ENABLE_FREETYPE
   #define MOZ_ENABLE_FREETYPE
@@ -1295,6 +1297,11 @@ public:
    * targets.
    */
   virtual void Blur(const AlphaBoxBlur& aBlur);
+
+  /**
+   * Performs an in-place edge padding operation.
+   */
+  virtual void PadEdges(const IntRegion& aRegion);
 
   /**
    * Create a SourceSurface optimized for use with this DrawTarget from
