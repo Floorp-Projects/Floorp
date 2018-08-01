@@ -7,6 +7,7 @@
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/DelayedInit.jsm");
+ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -388,6 +389,11 @@ var BrowserApp = {
       "Session:Stop",
       "Telemetry:CustomTabsPing",
     ]);
+
+    // Initialize the default l10n resource sources for L10nRegistry.
+    let locales = Services.locale.getPackagedLocales();
+    const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
+    L10nRegistry.registerSource(greSource);
 
     // Provide compatibility for add-ons like QuitNow that send "Browser:Quit"
     // as an observer notification.
