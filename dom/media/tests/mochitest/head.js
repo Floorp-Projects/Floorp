@@ -426,12 +426,6 @@ function setupEnvironment() {
     ]
   };
 
-  if (!WANT_FAKE_AUDIO) {
-    defaultMochitestPrefs.set.push(
-      ["media.volume_scale", "1"],
-    );
-  }
-
   const isAndroid = !!navigator.userAgent.includes("Android");
 
   if (isAndroid) {
