@@ -527,5 +527,78 @@ add_task(async function test_show_hide_editable_selection() {
   });
 });
 
-// TODO(robwu): Add test coverage for contexts audio, video (bug 1398542).
+add_task(async function test_show_hide_video() {
+  const VIDEO_URL = "data:video/webm,xxx";
+  await testShowHideEvent({
+    menuCreateParams: {
+      title: "video item",
+      contexts: ["video"],
+    },
+    expectedShownEvent: {
+      contexts: ["video", "all"],
+      mediaType: "video",
+      editable: false,
+      frameId: 0,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["video", "all"],
+      mediaType: "video",
+      editable: false,
+      frameId: 0,
+      srcUrl: VIDEO_URL,
+      pageUrl: PAGE,
+    },
+    async doOpenMenu() {
+      await ContentTask.spawn(gBrowser.selectedBrowser, VIDEO_URL, function(VIDEO_URL) {
+        let video = content.document.createElement("video");
+        video.controls = true;
+        video.src = VIDEO_URL;
+        content.document.body.appendChild(video);
+        video.focus();
+      });
 
+      await openContextMenu("video");
+    },
+    async doCloseMenu() {
+      await closeExtensionContextMenu();
+    },
+  });
+});
+
+add_task(async function test_show_hide_audio() {
+  const AUDIO_URL = "data:audio/ogg,xxx";
+  await testShowHideEvent({
+    menuCreateParams: {
+      title: "audio item",
+      contexts: ["audio"],
+    },
+    expectedShownEvent: {
+      contexts: ["audio", "all"],
+      mediaType: "audio",
+      editable: false,
+      frameId: 0,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["audio", "all"],
+      mediaType: "audio",
+      editable: false,
+      frameId: 0,
+      srcUrl: AUDIO_URL,
+      pageUrl: PAGE,
+    },
+    async doOpenMenu() {
+      await ContentTask.spawn(gBrowser.selectedBrowser, AUDIO_URL, function(AUDIO_URL) {
+        let audio = content.document.createElement("audio");
+        audio.controls = true;
+        audio.src = AUDIO_URL;
+        content.document.body.appendChild(audio);
+        audio.focus();
+      });
+
+      await openContextMenu("audio");
+    },
+    async doCloseMenu() {
+      await closeExtensionContextMenu();
+    },
+  });
+});
