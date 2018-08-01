@@ -9578,6 +9578,13 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
           }
         }
       }
+
+      // Font faces created with the JS API will not be reflected in the
+      // stylesheets and need to be copied over to the cloned document.
+      if (const FontFaceSet* set = GetFonts()) {
+        set->CopyNonRuleFacesTo(clonedDoc->Fonts());
+      }
+
     }
   }
   mCreatingStaticClone = false;

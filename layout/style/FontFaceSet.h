@@ -177,6 +177,8 @@ public:
 
   void RefreshStandardFontLoadPrincipal();
 
+  void CopyNonRuleFacesTo(FontFaceSet* aFontFaceSet) const;
+
   nsIDocument* Document() const { return mDocument; }
 
   // -- Web IDL --------------------------------------------------------------
