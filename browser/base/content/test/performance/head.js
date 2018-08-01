@@ -57,7 +57,8 @@ async function recordReflows(testPromise, win = window) {
                                             Ci.nsISupportsWeakReference])
   };
 
-  win.docShell.addWeakReflowObserver(observer);
+  let docShell = win.docShell;
+  docShell.addWeakReflowObserver(observer);
 
   let dirtyFrameFn = event => {
     if (event.type != "MozAfterPaint") {
@@ -71,7 +72,7 @@ async function recordReflows(testPromise, win = window) {
     await testPromise;
   } finally {
     Services.els.removeListenerForAllEvents(win, dirtyFrameFn, true);
-    win.docShell.removeWeakReflowObserver(observer);
+    docShell.removeWeakReflowObserver(observer);
   }
 
   return reflows;
