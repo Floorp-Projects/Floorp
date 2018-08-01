@@ -14,6 +14,9 @@ class NSSKeyStore final : public AbstractOSKeyStore
 {
 public:
   NSSKeyStore();
+
+  virtual nsresult RetrieveSecret(const nsACString& aLabel,
+                        /* out */ nsACString& aSecret) override;
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) override;
   virtual nsresult DeleteSecret(const nsACString& label) override;

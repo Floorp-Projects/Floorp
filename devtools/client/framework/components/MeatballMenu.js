@@ -73,9 +73,9 @@ class MeatballMenu extends PureComponent {
     //
     // - The "Disable pop-up autohide" menu item being added after the Browser
     //   Toolbox is connected.
-    // - The split console label changing between "Show split console" and "Hide
-    //   split console".
-    // - The "Show/Hide split console" entry being added removed or removed.
+    // - The split console label changing between "Show Split Console" and "Hide
+    //   Split Console".
+    // - The "Show/Hide Split Console" entry being added removed or removed.
     //
     // The latter two cases are only likely to be noticed when "Disable pop-up
     // autohide" is active, but for completeness we handle them here.

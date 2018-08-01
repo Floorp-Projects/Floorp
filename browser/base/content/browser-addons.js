@@ -134,15 +134,15 @@ var gXPInstallObserver = {
             addonList.firstChild.remove();
 
           for (let install of installInfo.installs) {
-            let container = document.createElement("hbox");
+            let container = document.createXULElement("hbox");
 
-            let name = document.createElement("label");
+            let name = document.createXULElement("label");
             name.setAttribute("value", install.addon.name);
             name.setAttribute("class", "addon-install-confirmation-name");
             container.appendChild(name);
 
             if (someUnsigned && install.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-              let unsignedLabel = document.createElement("label");
+              let unsignedLabel = document.createXULElement("label");
               unsignedLabel.setAttribute("value",
                 gNavigatorBundle.getString("addonInstall.unsigned"));
               unsignedLabel.setAttribute("class",
@@ -483,7 +483,7 @@ var gExtensionsNotifications = {
   },
 
   _createAddonButton(text, icon, callback) {
-    let button = document.createElement("toolbarbutton");
+    let button = document.createXULElement("toolbarbutton");
     button.setAttribute("label", text);
     button.setAttribute("tooltiptext", text);
     const DEFAULT_EXTENSION_ICON =

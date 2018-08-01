@@ -42,6 +42,7 @@ public:
         mBundlePolicy(kBundleBalanced),
         mSessionId(0),
         mSessionVersion(0),
+        mMidCounter(0),
         mUuidGen(std::move(uuidgen)),
         mSdpHelper(&mLastError),
         mRunRustParser(false),
@@ -178,9 +179,9 @@ private:
   // Non-const so it can set mLastError
   nsresult CreateGenericSDP(UniquePtr<Sdp>* sdp);
   void AddExtmap(SdpMediaSection* msection);
-  void AddMid(const std::string& mid, SdpMediaSection* msection) const;
   std::vector<SdpExtmapAttributeList::Extmap> GetRtpExtensions(
       const SdpMediaSection& msection);
+  std::string GetNewMid();
 
   void AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                         SdpMediaSection* msection);
@@ -276,6 +277,8 @@ private:
   std::vector<JsepDtlsFingerprint> mDtlsFingerprints;
   uint64_t mSessionId;
   uint64_t mSessionVersion;
+  size_t mMidCounter;
+  std::set<std::string> mUsedMids;
   std::vector<JsepExtmapMediaType> mRtpExtensions;
   UniquePtr<JsepUuidGenerator> mUuidGen;
   std::string mDefaultRemoteStreamId;

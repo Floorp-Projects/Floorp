@@ -113,9 +113,11 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       return;
     }
 
+    let editing = !!addressPage.guid;
     this.cancelButton.textContent = this.dataset.cancelButtonLabel;
     this.backButton.textContent = this.dataset.backButtonLabel;
-    this.saveButton.textContent = this.dataset.saveButtonLabel;
+    this.saveButton.textContent = editing ? this.dataset.updateButtonLabel :
+                                            this.dataset.addButtonLabel;
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
 
     this.backButton.hidden = page.onboardingWizard;
@@ -130,7 +132,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     this.pageTitleHeading.textContent = addressPage.title;
     this.genericErrorText.textContent = page.error;
 
-    let editing = !!addressPage.guid;
     let addresses = paymentRequest.getAddresses(state);
 
     // If an address is selected we want to edit it.
