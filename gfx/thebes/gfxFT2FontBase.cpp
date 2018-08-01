@@ -233,7 +233,7 @@ gfxFT2FontBase::InitMetrics()
         // Resolve variations from entry (descriptor) and style (property)
         AutoTArray<gfxFontVariation,8> settings;
         mFontEntry->GetVariationsForStyle(settings, mStyle);
-        SetupVarCoords(face, settings, &mCoords);
+        SetupVarCoords(mFontEntry->GetMMVar(), settings, &mCoords);
         if (!mCoords.IsEmpty()) {
 #if MOZ_TREE_FREETYPE
             FT_Set_Var_Design_Coordinates(face, mCoords.Length(), mCoords.Elements());
@@ -638,45 +638,24 @@ gfxFT2FontBase::SetupCairoFont(DrawTarget* aDrawTarget)
 // axes in mStyle.variationSettings, so we need to search by axis tag).
 /*static*/
 void
-gfxFT2FontBase::SetupVarCoords(FT_Face aFace,
+gfxFT2FontBase::SetupVarCoords(FT_MM_Var* aMMVar,
                                const nsTArray<gfxFontVariation>& aVariations,
                                nsTArray<FT_Fixed>* aCoords)
 {
     aCoords->TruncateLength(0);
-    if (aFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-        typedef FT_Error (*GetVarFunc)(FT_Face, FT_MM_Var**);
-        typedef FT_Error (*DoneVarFunc)(FT_Library, FT_MM_Var*);
-#if MOZ_TREE_FREETYPE
-        GetVarFunc getVar = &FT_Get_MM_Var;
-        DoneVarFunc doneVar = &FT_Done_MM_Var;
-#else
-        static GetVarFunc getVar;
-        static DoneVarFunc doneVar;
-        static bool firstTime = true;
-        if (firstTime) {
-            firstTime = false;
-            getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
-            doneVar = (DoneVarFunc)dlsym(RTLD_DEFAULT, "FT_Done_MM_Var");
-        }
-#endif
-        FT_MM_Var* ftVar;
-        if (getVar && FT_Err_Ok == (*getVar)(aFace, &ftVar)) {
-            for (unsigned i = 0; i < ftVar->num_axis; ++i) {
-                aCoords->AppendElement(ftVar->axis[i].def);
-                for (const auto& v : aVariations) {
-                    if (ftVar->axis[i].tag == v.mTag) {
-                        FT_Fixed val = v.mValue * 0x10000;
-                        val = std::min(val, ftVar->axis[i].maximum);
-                        val = std::max(val, ftVar->axis[i].minimum);
-                        (*aCoords)[i] = val;
-                        break;
-                    }
-                }
-            }
-            if (doneVar) {
-                (*doneVar)(aFace->glyph->library, ftVar);
-            } else {
-                free(ftVar);
+    if (!aMMVar) {
+        return;
+    }
+
+    for (unsigned i = 0; i < aMMVar->num_axis; ++i) {
+        aCoords->AppendElement(aMMVar->axis[i].def);
+        for (const auto& v : aVariations) {
+            if (aMMVar->axis[i].tag == v.mTag) {
+                FT_Fixed val = v.mValue * 0x10000;
+                val = std::min(val, aMMVar->axis[i].maximum);
+                val = std::max(val, aMMVar->axis[i].minimum);
+                (*aCoords)[i] = val;
+                break;
             }
         }
     }
