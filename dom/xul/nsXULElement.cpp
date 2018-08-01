@@ -198,8 +198,7 @@ nsXULElement::CreateFromPrototype(nsXULPrototypeElement* aPrototype,
             // any additional processing and hookup that would otherwise be
             // done 'automagically' by SetAttr().
             for (uint32_t i = 0; i < aPrototype->mNumAttributes; ++i) {
-                element->AddListenerFor(aPrototype->mAttributes[i].mName,
-                                        true);
+                element->AddListenerFor(aPrototype->mAttributes[i].mName);
             }
         }
 
@@ -354,7 +353,7 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                                                            &oldValueSet);
         }
         NS_ENSURE_SUCCESS(rv, rv);
-        element->AddListenerFor(*originalName, true);
+        element->AddListenerFor(*originalName);
         if (originalName->Equals(nsGkAtoms::id) &&
             !originalValue->IsEmptyString()) {
             element->SetHasID();
@@ -574,8 +573,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
 //----------------------------------------------------------------------
 
 void
-nsXULElement::AddListenerFor(const nsAttrName& aName,
-                             bool aCompileEventHandlers)
+nsXULElement::AddListenerFor(const nsAttrName& aName)
 {
     // If appropriate, add a popup listener and/or compile the event
     // handler. Called when we change the element's document, create a
@@ -584,8 +582,7 @@ nsXULElement::AddListenerFor(const nsAttrName& aName,
     if (aName.IsAtom()) {
         nsAtom *attr = aName.Atom();
         MaybeAddPopupListener(attr);
-        if (aCompileEventHandlers &&
-            nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
+        if (nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
             nsAutoString value;
             GetAttr(kNameSpaceID_None, attr, value);
             SetEventHandler(attr, value, true);
@@ -679,8 +676,7 @@ NeedTooltipSupport(const nsXULElement& aXULElement)
 nsresult
 nsXULElement::BindToTree(nsIDocument* aDocument,
                          nsIContent* aParent,
-                         nsIContent* aBindingParent,
-                         bool aCompileEventHandlers)
+                         nsIContent* aBindingParent)
 {
   if (!aBindingParent &&
       aDocument &&
@@ -690,9 +686,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
     nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(aDocument));
   }
 
-  nsresult rv = nsStyledElement::BindToTree(aDocument, aParent,
-                                            aBindingParent,
-                                            aCompileEventHandlers);
+  nsresult rv = nsStyledElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIDocument* doc = GetComposedDoc();
@@ -2257,7 +2251,7 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
 
     if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aSrcBuf.length())) {
         if (!JS::CompileOffThread(cx, options,
-                                  aSrcBuf.get(), aSrcBuf.length(),
+                                  aSrcBuf,
                                   OffThreadScriptReceiverCallback,
                                   static_cast<void*>(aOffThreadReceiver))) {
             return NS_ERROR_OUT_OF_MEMORY;

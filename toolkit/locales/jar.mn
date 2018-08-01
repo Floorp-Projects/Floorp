@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [localization] @AB_CD@.jar:
+  crashreporter                                    (%crashreporter/**/*.ftl)
   toolkit                                          (%toolkit/**/*.ftl)
 
 @AB_CD@.jar:
@@ -76,8 +77,6 @@
   locale/@AB_CD@/global/viewSource.properties           (%chrome/global/viewSource.properties)
   locale/@AB_CD@/global/wizard.dtd                      (%chrome/global/wizard.dtd)
   locale/@AB_CD@/global/wizard.properties               (%chrome/global/wizard.properties)
-  locale/@AB_CD@/global/crashes.dtd                     (%crashreporter/crashes.dtd)
-  locale/@AB_CD@/global/crashes.properties              (%crashreporter/crashes.properties)
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/unix/ os=LikeUnix os=Android
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/mac/ os=Darwin
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/win/ os=WINNT

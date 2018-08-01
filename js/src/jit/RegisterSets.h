@@ -916,7 +916,10 @@ class SpecializedRegSet<Accessors, RegisterSet> : public Accessors
     }
 
     void take(Register reg) {
-        MOZ_ASSERT(this->has(reg));
+#ifdef DEBUG
+        bool hasReg = this->has(reg);
+        MOZ_ASSERT(hasReg);
+#endif
         takeUnchecked(reg);
     }
     void take(FloatRegister reg) {

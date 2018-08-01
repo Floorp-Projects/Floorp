@@ -126,6 +126,7 @@ XPIDL_SOURCES += [
     'nsIURI.idl',
     'nsIURIClassifier.idl',
     'nsIURIMutator.idl',
+    'nsIURIWithSpecialOrigin.idl',
     'nsIURL.idl',
     'nsIURLParser.idl',
     'nsPILoadGroupInternal.idl',

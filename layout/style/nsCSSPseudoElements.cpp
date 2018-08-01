@@ -87,15 +87,11 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom *aAtom)
 }
 
 /* static */ CSSPseudoElementType
-nsCSSPseudoElements::GetPseudoType(nsAtom *aAtom, EnabledState aEnabledState)
+nsCSSPseudoElements::GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState)
 {
   Maybe<uint32_t> index = nsStaticAtomUtils::Lookup(aAtom, sAtoms, sAtomsLen);
   if (index.isSome()) {
     auto type = static_cast<Type>(*index);
-    // ::moz-placeholder is an alias for ::placeholder
-    if (type == CSSPseudoElementType::mozPlaceholder) {
-      type = CSSPseudoElementType::placeholder;
-    }
     return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
   }
 

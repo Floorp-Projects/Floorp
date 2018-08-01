@@ -443,8 +443,7 @@ CharacterData::ToCString(nsAString& aBuf, int32_t aOffset,
 nsresult
 CharacterData::BindToTree(nsIDocument* aDocument,
                           nsIContent* aParent,
-                          nsIContent* aBindingParent,
-                          bool aCompileEventHandlers)
+                          nsIContent* aBindingParent)
 {
   MOZ_ASSERT(aParent || aDocument, "Must have document if no parent!");
   MOZ_ASSERT(NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc(),

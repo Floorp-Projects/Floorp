@@ -82,14 +82,12 @@ SVGMPathElement::Href()
 nsresult
 SVGMPathElement::BindToTree(nsIDocument* aDocument,
                             nsIContent* aParent,
-                            nsIContent* aBindingParent,
-                            bool aCompileEventHandlers)
+                            nsIContent* aBindingParent)
 {
   MOZ_ASSERT(!mPathTracker.get(),
              "Shouldn't have href-target yet (or it should've been cleared)");
   nsresult rv = SVGMPathElementBase::BindToTree(aDocument, aParent,
-                                                aBindingParent,
-                                                aCompileEventHandlers);
+                                                aBindingParent);
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (aDocument) {
