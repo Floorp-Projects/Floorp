@@ -45,7 +45,8 @@ enum class CommandType : int8_t {
   SETTRANSFORM,
   SETPERMITSUBPIXELAA,
   FLUSH,
-  BLUR
+  BLUR,
+  PADEDGES,
 };
 
 class DrawingCommand

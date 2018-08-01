@@ -12,7 +12,6 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "GeckoProfiler.h"
-#include "mozilla/layers/BufferEdgePad.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/SyncObject.h"
