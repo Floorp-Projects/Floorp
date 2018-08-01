@@ -991,7 +991,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // unwrapping and then getting the global. This is very convoluted, but
     // much better than having to store the original global as a private value
     // because we couldn't wrap it to store it as a normal JS value.
-    RootedObject global(cx);
+    Rooted<GlobalObject*> global(cx);
     if (JSObject* objectFromIncumbentGlobal = reaction->getAndClearIncumbentGlobalObject()) {
         objectFromIncumbentGlobal = CheckedUnwrap(objectFromIncumbentGlobal);
         MOZ_ASSERT(objectFromIncumbentGlobal);
@@ -1724,7 +1724,7 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
     // compartment.
     RootedObject promise(cx, &promiseToResolve.toObject());
 
-    RootedObject incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
+    Rooted<GlobalObject*> incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
     return cx->runtime()->enqueuePromiseJob(cx, job, promise, incumbentGlobal);
 }
 
@@ -1752,7 +1752,7 @@ EnqueuePromiseResolveThenableBuiltinJob(JSContext* cx, HandleObject promiseToRes
     job->setExtendedSlot(BuiltinThenableJobSlot_Promise, ObjectValue(*promiseToResolve));
     job->setExtendedSlot(BuiltinThenableJobSlot_Thenable, ObjectValue(*thenable));
 
-    RootedObject incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
+    Rooted<GlobalObject*> incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
     return cx->runtime()->enqueuePromiseJob(cx, job, promiseToResolve, incumbentGlobal);
 }
 
