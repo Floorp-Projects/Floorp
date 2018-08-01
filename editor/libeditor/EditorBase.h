@@ -1546,7 +1546,15 @@ protected: // May be called by friends.
 
   static bool IsPreformatted(nsINode* aNode);
 
-  bool GetShouldTxnSetSelection();
+  /**
+   * AllowsTransactionsToChangeSelection() returns true if editor allows any
+   * transactions to change Selection.  Otherwise, transactions shouldn't
+   * change Selection.
+   */
+  inline bool AllowsTransactionsToChangeSelection() const
+  {
+    return mAllowsTransactionsToChangeSelection;
+  }
 
   nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
                                   Selection& aSelection,
@@ -1947,8 +1955,9 @@ protected:
   // A Tristate value.
   uint8_t mSpellcheckCheckboxState;
 
-  // Turn off for conservative selection adjustment by transactions.
-  bool mShouldTxnSetSelection;
+  // If false, transactions should not change Selection even after modifying
+  // the DOM tree.
+  bool mAllowsTransactionsToChangeSelection;
   // Whether PreDestroy has been called.
   bool mDidPreDestroy;
   // Whether PostCreate has been called.

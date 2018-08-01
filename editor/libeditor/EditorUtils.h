@@ -575,11 +575,12 @@ public:
   explicit AutoTransactionsConserveSelection(EditorBase* aEditorBase
                                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mEditorBase(aEditorBase)
-    , mOldState(true)
+    , mAllowedTransactionsToChangeSelection(true)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (mEditorBase) {
-      mOldState = mEditorBase->GetShouldTxnSetSelection();
+      mAllowedTransactionsToChangeSelection =
+        mEditorBase->AllowsTransactionsToChangeSelection();
       mEditorBase->SetShouldTxnSetSelection(false);
     }
   }
@@ -587,13 +588,14 @@ public:
   ~AutoTransactionsConserveSelection()
   {
     if (mEditorBase) {
-      mEditorBase->SetShouldTxnSetSelection(mOldState);
+      mEditorBase->SetShouldTxnSetSelection(
+                     mAllowedTransactionsToChangeSelection);
     }
   }
 
 protected:
   EditorBase* mEditorBase;
-  bool mOldState;
+  bool mAllowedTransactionsToChangeSelection;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
