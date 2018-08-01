@@ -164,12 +164,12 @@
         <setter><![CDATA[
           let changed = val.toFixed(2) != this._fullZoom.toFixed(2);
 
-          this._fullZoom = val;
-          try {
-            this.messageManager.sendAsyncMessage("FullZoom", {value: val});
-          } catch (ex) {}
-
           if (changed) {
+            this._fullZoom = val;
+            try {
+              this.messageManager.sendAsyncMessage("FullZoom", {value: val});
+            } catch (ex) {}
+
             let event = new Event("FullZoomChange", {bubbles: true});
             this.dispatchEvent(event);
           }
@@ -184,12 +184,12 @@
         <setter><![CDATA[
           let changed = val.toFixed(2) != this._textZoom.toFixed(2);
 
-          this._textZoom = val;
-          try {
-            this.messageManager.sendAsyncMessage("TextZoom", {value: val});
-          } catch (ex) {}
-
           if (changed) {
+            this._textZoom = val;
+            try {
+              this.messageManager.sendAsyncMessage("TextZoom", {value: val});
+            } catch (ex) {}
+
             let event = new Event("TextZoomChange", {bubbles: true});
             this.dispatchEvent(event);
           }
