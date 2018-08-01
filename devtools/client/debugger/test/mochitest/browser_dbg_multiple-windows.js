@@ -47,45 +47,33 @@ async function testNewWindow(client, win) {
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   is(topWindow, win, "The second window is on top.");
 
-  const isActive = promise.defer();
-  const isLoaded = promise.defer();
-
   if (Services.focus.activeWindow != win) {
-    win.addEventListener("activate", function onActivate(event) {
-      if (event.target != win) {
-        return;
-      }
-      win.removeEventListener("activate", onActivate, true);
-      isActive.resolve();
-    }, true);
-  } else {
-    isActive.resolve();
+    await new Promise(resolve => {
+      win.addEventListener("activate", function onActivate(event) {
+        if (event.target != win) {
+          return;
+        }
+        win.removeEventListener("activate", onActivate, true);
+        resolve();
+      }, true);
+    });
   }
 
-  const contentLocation = win.content.location.href;
-  if (contentLocation != TAB2_URL) {
-    win.document.addEventListener("load", function onLoad(event) {
-      if (event.target.documentURI != TAB2_URL) {
-        return;
-      }
-      win.document.removeEventListener("load", onLoad, true);
-      isLoaded.resolve();
-    }, true);
-  } else {
-    isLoaded.resolve();
-  }
+  const tab = win.gBrowser.selectedTab;
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await isActive.promise;
-  await isLoaded.promise;
   const response = await client.listTabs();
   is(response.selected, 2, "The second tab is selected.");
 }
 
 async function testFocusFirst(client) {
-  const onFocus = once(window.content, "focus");
-
-  window.content.focus();
-  await onFocus;
+  const tab = window.gBrowser.selectedTab;
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    const onFocus = new Promise(resolve => {
+      content.addEventListener("focus", resolve, { once: true });
+    });
+    await onFocus;
+  });
 
   const response = await client.listTabs();
   is(response.selected, 1, "The first tab is selected after focusing on it.");
@@ -105,8 +93,8 @@ async function continue_remove_tab(client, tab)
 
   const response = await client.listTabs();
   // Verify that tabs are no longer included in listTabs.
-  let foundTab1 = response.tabs.some(grip => grip.url == TAB1_URL);
-  let foundTab2 = response.tabs.some(grip => grip.url == TAB2_URL);
+  const foundTab1 = response.tabs.some(grip => grip.url == TAB1_URL);
+  const foundTab2 = response.tabs.some(grip => grip.url == TAB2_URL);
   ok(!foundTab1, "Tab1 should be gone.");
   ok(!foundTab2, "Tab2 should be gone.");
 
