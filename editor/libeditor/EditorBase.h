@@ -1556,6 +1556,16 @@ protected: // May be called by friends.
     return mAllowsTransactionsToChangeSelection;
   }
 
+  /**
+   * MakeThisAllowTransactionsToChangeSelection() with true makes this editor
+   * allow transactions to change Selection.  Otherwise, i.e., with false,
+   * makes this editor not allow transactions to change Selection.
+   */
+  inline void MakeThisAllowTransactionsToChangeSelection(bool aAllow)
+  {
+    mAllowsTransactionsToChangeSelection = aAllow;
+  }
+
   nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
                                   Selection& aSelection,
                                   nsINode* previousSelectedNode,
