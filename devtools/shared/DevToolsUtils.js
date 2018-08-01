@@ -546,8 +546,7 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
 
   if (aOptions.window) {
     // Respect private browsing.
-    channel.loadGroup = aOptions.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
+    channel.loadGroup = aOptions.window.docShell
                           .QueryInterface(Ci.nsIDocumentLoader)
                           .loadGroup;
   }
