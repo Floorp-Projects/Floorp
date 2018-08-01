@@ -209,6 +209,7 @@ public:
     :mCallback(
        new PromiseJobCallback(aCallback, aAllocationSite, aIncumbentGlobal))
   {
+    MOZ_ASSERT(js::IsFunctionObject(aCallback));
   }
 
   virtual ~PromiseJobRunnable()

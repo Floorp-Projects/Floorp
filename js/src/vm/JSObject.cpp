@@ -2174,7 +2174,7 @@ JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
 bool
 js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
 {
-    RootedObject globalObj(cx, cx->runtime()->getIncumbentGlobal(cx));
+    Rooted<GlobalObject*> globalObj(cx, cx->runtime()->getIncumbentGlobal(cx));
     if (!globalObj) {
         obj.set(nullptr);
         return true;
@@ -2182,8 +2182,7 @@ js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
 
     {
         AutoRealm ar(cx, globalObj);
-        Handle<GlobalObject*> global = globalObj.as<GlobalObject>();
-        obj.set(GlobalObject::getOrCreateObjectPrototype(cx, global));
+        obj.set(GlobalObject::getOrCreateObjectPrototype(cx, globalObj));
         if (!obj)
             return false;
     }
