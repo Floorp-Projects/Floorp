@@ -1,8 +1,11 @@
 if test -d "$topsrcdir/clang/bin"; then
     CLANG_DIR=`cd "$topsrcdir/clang/bin" ; pwd`
     export PATH="${CLANG_DIR}:${PATH}"
-
     mk_export_correct_style PATH
+
+    CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
+    export LIB=$LIB:$CLANG_LIB_DIR
+    mk_export_correct_style LIB
 fi
 
 export CC=clang-cl
