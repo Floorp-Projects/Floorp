@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/CSSMozDocumentRule.h"
 #include "mozilla/dom/CSSMozDocumentRuleBinding.h"
+#include "mozilla/ServoBindings.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
