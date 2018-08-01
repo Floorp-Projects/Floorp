@@ -6019,7 +6019,7 @@ nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
   nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
-  if (sf->GetScrollbarStyles().mScrollBehavior ==
+  if (sf->GetScrollStyles().mScrollBehavior ==
         NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
     scrollMode = nsIScrollableFrame::SMOOTH_MSD;
   }

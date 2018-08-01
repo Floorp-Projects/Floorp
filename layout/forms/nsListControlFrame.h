@@ -102,7 +102,7 @@ public:
   virtual nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
   virtual void SetFocus(bool aOn = true, bool aRepaint = false) override;
 
-  virtual mozilla::ScrollbarStyles GetScrollbarStyles() const override;
+  virtual mozilla::ScrollStyles GetScrollStyles() const override;
   virtual bool ShouldPropagateComputedBSizeToScrolledContent() const override;
 
     // for accessibility purposes
