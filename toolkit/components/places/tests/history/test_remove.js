@@ -218,8 +218,10 @@ add_task(async function test_orphans() {
     uri, faviconURI, true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     null, Services.scriptSecurityManager.getSystemPrincipal());
 
-  PlacesUtils.annotations.setPageAnnotation(uri, "test", "restval", 0,
-                                            PlacesUtils.annotations.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: uri,
+    annotations: new Map([["test", "restval"]]),
+  });
 
   await PlacesUtils.history.remove(uri);
   Assert.ok(!(await PlacesTestUtils.isPageInDB(uri)), "Page should have been removed");

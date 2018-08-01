@@ -1,6 +1,4 @@
 
-ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
-
 let profileDir;
 add_task(async function setup() {
   profileDir = gProfD.clone();

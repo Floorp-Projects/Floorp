@@ -1,6 +1,5 @@
 
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 let global = this;
@@ -52,4 +51,3 @@ add_task(async function test_non_ascii_path() {
   Assert.ok(data.addons[1].path.startsWith(profileDir),
             "path property for extension installed at runtime has the proper profile directory");
 });
-

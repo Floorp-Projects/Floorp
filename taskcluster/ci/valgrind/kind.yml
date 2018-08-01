@@ -47,3 +47,4 @@ jobs:
             - linux64-gcc
             - linux64-rust
             - linux64-sccache
+            - linux64-node

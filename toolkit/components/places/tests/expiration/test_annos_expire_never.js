@@ -30,8 +30,10 @@ add_task(async function test_annos_expire_never() {
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
     await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
-    as.setPageAnnotation(pageURI, "page_expire1", "test", 0, as.EXPIRE_NEVER);
-    as.setPageAnnotation(pageURI, "page_expire2", "test", 0, as.EXPIRE_NEVER);
+    await PlacesUtils.history.update({
+      url: pageURI,
+      annotations: new Map([["page_expire1", "test"], ["page_expire2", "test"]]),
+    });
   }
 
   let pages = await getPagesWithAnnotation("page_expire1");
@@ -64,8 +66,10 @@ add_task(async function test_annos_expire_never() {
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://persist_page_anno." + i + ".mozilla.org/");
     await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
-    as.setPageAnnotation(pageURI, "page_persist1", "test", 0, as.EXPIRE_NEVER);
-    as.setPageAnnotation(pageURI, "page_persist2", "test", 0, as.EXPIRE_NEVER);
+    await PlacesUtils.history.update({
+      url: pageURI,
+      annotations: new Map([["page_persist1", "test"], ["page_persist2", "test"]]),
+    });
   }
 
   pages = await getPagesWithAnnotation("page_persist1");

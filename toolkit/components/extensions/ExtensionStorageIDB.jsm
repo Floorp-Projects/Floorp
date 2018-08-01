@@ -373,8 +373,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
   let dataMigrateCompleted = false;
   let hasOldData = false;
 
-  const isMigratedExtension = Services.prefs.getBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${extension.id}`, false);
-  if (isMigratedExtension) {
+  if (ExtensionStorageIDB.isMigratedExtension(extension)) {
     return;
   }
 
@@ -387,7 +386,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
       // there is no "going back": any data that has not been migrated will be still on disk
       // but it is not going to be migrated anymore, it could be eventually used to allow
       // a user to manually retrieve the old data file).
-      Services.prefs.setBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${extension.id}`, true);
+      ExtensionStorageIDB.setMigratedExtensionPref(extension, true);
       return;
     }
   } catch (err) {
@@ -485,7 +484,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     }
   }
 
-  Services.prefs.setBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${extension.id}`, true);
+  ExtensionStorageIDB.setMigratedExtensionPref(extension, true);
 
   DataMigrationTelemetry.recordResult({
     backend: "IndexedDB",
@@ -519,6 +518,18 @@ this.ExtensionStorageIDB = {
 
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(this, "isBackendEnabled", BACKEND_ENABLED_PREF, false);
+  },
+
+  isMigratedExtension(extension) {
+    return Services.prefs.getBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${extension.id}`, false);
+  },
+
+  setMigratedExtensionPref(extension, val) {
+    Services.prefs.setBoolPref(`${IDB_MIGRATED_PREF_BRANCH}.${extension.id}`, !!val);
+  },
+
+  clearMigratedExtensionPref(extensionId) {
+    Services.prefs.clearUserPref(`${IDB_MIGRATED_PREF_BRANCH}.${extensionId}`);
   },
 
   getStoragePrincipal(extension) {

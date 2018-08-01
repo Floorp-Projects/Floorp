@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["PeerConnectionIdp"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "IdpSandbox",
   "resource://gre/modules/media/IdpSandbox.jsm");
 
@@ -344,4 +342,3 @@ PeerConnectionIdp.prototype = {
     return this._win.Promise.race([ timeout, p ]);
   }
 };
-

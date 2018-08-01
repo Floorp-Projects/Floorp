@@ -15,6 +15,8 @@ mk_add_options AUTOCLOBBER=
 
 # Global options
 ac_add_options --disable-tests
+ac_add_options --disable-nodejs
+unset NODEJS
 
 ac_add_options --enable-updater
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}

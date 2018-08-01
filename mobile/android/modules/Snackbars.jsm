@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Snackbars"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 
 const LENGTH_INDEFINITE = -2;

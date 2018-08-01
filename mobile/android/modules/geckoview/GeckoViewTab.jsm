@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["GeckoViewTab"];
 
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Stub BrowserApp implementation for WebExtensions support.
 class GeckoViewTab extends GeckoViewModule {

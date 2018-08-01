@@ -14,6 +14,9 @@ const HISTOGRAM_IDB_IDS = [
 
 const HISTOGRAM_IDS = [].concat(HISTOGRAM_JSON_IDS, HISTOGRAM_IDB_IDS);
 
+const EXTENSION_ID1 = "@test-extension1";
+const EXTENSION_ID2 = "@test-extension2";
+
 async function test_telemetry_background() {
   const expectedEmptyHistograms = ExtensionStorageIDB.isBackendEnabled ?
           HISTOGRAM_JSON_IDS : HISTOGRAM_IDB_IDS;
@@ -32,16 +35,17 @@ async function test_telemetry_background() {
     browser.runtime.sendMessage("contentDone");
   }
 
-  let extInfo = {
-    manifest: {
-      permissions: ["storage"],
-      content_scripts: [
-        {
-          "matches": ["http://*/*/file_sample.html"],
-          "js": ["content_script.js"],
-        },
-      ],
-    },
+  let baseManifest = {
+    permissions: ["storage"],
+    content_scripts: [
+      {
+        "matches": ["http://*/*/file_sample.html"],
+        "js": ["content_script.js"],
+      },
+    ],
+  };
+
+  let baseExtInfo = {
     async background() {
       browser.runtime.onMessage.addListener(msg => {
         browser.test.sendMessage(msg);
@@ -56,8 +60,27 @@ async function test_telemetry_background() {
     },
   };
 
-  let extension1 = ExtensionTestUtils.loadExtension(extInfo);
-  let extension2 = ExtensionTestUtils.loadExtension(extInfo);
+  let extInfo1 = {
+    ...baseExtInfo,
+    manifest: {
+      ...baseManifest,
+      applications: {
+        gecko: {id: EXTENSION_ID1},
+      },
+    },
+  };
+  let extInfo2 = {
+    ...baseExtInfo,
+    manifest: {
+      ...baseManifest,
+      applications: {
+        gecko: {id: EXTENSION_ID2},
+      },
+    },
+  };
+
+  let extension1 = ExtensionTestUtils.loadExtension(extInfo1);
+  let extension2 = ExtensionTestUtils.loadExtension(extInfo2);
 
   clearHistograms();
 
@@ -129,6 +152,13 @@ add_task(function test_telemetry_background_file_backend() {
 });
 
 add_task(function test_telemetry_background_idb_backend() {
-  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
-                      test_telemetry_background);
+  return runWithPrefs([
+    [ExtensionStorageIDB.BACKEND_ENABLED_PREF, true],
+    // Set the migrated preference for the two test extension, because the
+    // first storage.local call fallbacks to run in the parent process when we
+    // don't know which is the selected backend during the extension startup
+    // and so we can't choose the telemetry histogram to use.
+    [`${ExtensionStorageIDB.IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID1}`, true],
+    [`${ExtensionStorageIDB.IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID2}`, true],
+  ], test_telemetry_background);
 });

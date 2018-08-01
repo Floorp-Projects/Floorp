@@ -11,153 +11,92 @@
 const TAB1_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 const TAB2_URL = EXAMPLE_URL + "doc_script-switching-02.html";
 
-var gNewTab, gNewWindow;
-var gClient;
-
-function test() {
+add_task(async function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  let transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser",
-      "Root actor should identify itself as a browser.");
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
+  const [type] = await client.connect();
+  is(type, "browser", "Root actor should identify itself as a browser.");
 
-    promise.resolve(null)
-      .then(() => addTab(TAB1_URL))
-      .then(testFirstTab)
-      .then(() => addWindow(TAB2_URL))
-      .then(testNewWindow)
-      .then(testFocusFirst)
-      .then(testRemoveTab)
-      .then(() => gClient.close())
-      .then(finish)
-      .catch(aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-  });
+  const tab = await addTab(TAB1_URL);
+  await testFirstTab(client, tab);
+  const win = await addWindow(TAB2_URL);
+  await testNewWindow(client, win);
+  testFocusFirst(client);
+  await testRemoveTab(client, win, tab);
+  await client.close();
+});
+
+async function testFirstTab(client, tab) {
+  ok(!!tab, "Second tab created.");
+
+  const response = await client.listTabs();
+  const targetActor = response.tabs.filter(grip => grip.url == TAB1_URL).pop();
+  ok(targetActor, "Should find a target actor for the first tab.");
+
+  is(response.selected, 1, "The first tab is selected.");
 }
 
-function testFirstTab(aTab) {
-  let deferred = promise.defer();
+async function testNewWindow(client, win) {
+  ok(!!win, "Second window created.");
 
-  gNewTab = aTab;
-  ok(!!gNewTab, "Second tab created.");
+  win.focus();
 
-  gClient.listTabs().then(aResponse => {
-    let targetActor = aResponse.tabs.filter(aGrip => aGrip.url == TAB1_URL).pop();
-    ok(targetActor,
-      "Should find a target actor for the first tab.");
+  const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
+  is(topWindow, win, "The second window is on top.");
 
-    is(aResponse.selected, 1,
-      "The first tab is selected.");
-
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
-function testNewWindow(aWindow) {
-  let deferred = promise.defer();
-
-  gNewWindow = aWindow;
-  ok(!!gNewWindow, "Second window created.");
-
-  gNewWindow.focus();
-
-  let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  is(topWindow, gNewWindow,
-    "The second window is on top.");
-
-  let isActive = promise.defer();
-  let isLoaded = promise.defer();
-
-  promise.all([isActive.promise, isLoaded.promise]).then(() => {
-    gClient.listTabs().then(aResponse => {
-      is(aResponse.selected, 2,
-        "The second tab is selected.");
-
-      deferred.resolve();
+  if (Services.focus.activeWindow != win) {
+    await new Promise(resolve => {
+      win.addEventListener("activate", function onActivate(event) {
+        if (event.target != win) {
+          return;
+        }
+        win.removeEventListener("activate", onActivate, true);
+        resolve();
+      }, true);
     });
-  });
-
-  if (Services.focus.activeWindow != gNewWindow) {
-    gNewWindow.addEventListener("activate", function onActivate(aEvent) {
-      if (aEvent.target != gNewWindow) {
-        return;
-      }
-      gNewWindow.removeEventListener("activate", onActivate, true);
-      isActive.resolve();
-    }, true);
-  } else {
-    isActive.resolve();
   }
 
-  let contentLocation = gNewWindow.content.location.href;
-  if (contentLocation != TAB2_URL) {
-    gNewWindow.document.addEventListener("load", function onLoad(aEvent) {
-      if (aEvent.target.documentURI != TAB2_URL) {
-        return;
-      }
-      gNewWindow.document.removeEventListener("load", onLoad, true);
-      isLoaded.resolve();
-    }, true);
-  } else {
-    isLoaded.resolve();
-  }
+  const tab = win.gBrowser.selectedTab;
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  return deferred.promise;
+  const response = await client.listTabs();
+  is(response.selected, 2, "The second tab is selected.");
 }
 
-function testFocusFirst() {
-  let deferred = promise.defer();
-
-  once(window.content, "focus").then(() => {
-    gClient.listTabs().then(aResponse => {
-      is(aResponse.selected, 1,
-        "The first tab is selected after focusing on it.");
-
-      deferred.resolve();
+async function testFocusFirst(client) {
+  const tab = window.gBrowser.selectedTab;
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    const onFocus = new Promise(resolve => {
+      content.addEventListener("focus", resolve, { once: true });
     });
+    await onFocus;
   });
 
-  window.content.focus();
-
-  return deferred.promise;
+  const response = await client.listTabs();
+  is(response.selected, 1, "The first tab is selected after focusing on it.");
 }
 
-function testRemoveTab() {
-  let deferred = promise.defer();
-
-  gNewWindow.close();
+async function testRemoveTab(client, win, tab) {
+  win.close();
 
   // give it time to close
-  executeSoon(function () { continue_remove_tab(deferred); });
-  return deferred.promise;
+  await new Promise(resolve => executeSoon(resolve));
+  await continue_remove_tab(client, tab);
 }
 
-function continue_remove_tab(deferred)
+async function continue_remove_tab(client, tab)
 {
-  removeTab(gNewTab);
+  removeTab(tab);
 
-  gClient.listTabs().then(aResponse => {
-    // Verify that tabs are no longer included in listTabs.
-    let foundTab1 = aResponse.tabs.some(aGrip => aGrip.url == TAB1_URL);
-    let foundTab2 = aResponse.tabs.some(aGrip => aGrip.url == TAB2_URL);
-    ok(!foundTab1, "Tab1 should be gone.");
-    ok(!foundTab2, "Tab2 should be gone.");
+  const response = await client.listTabs();
+  // Verify that tabs are no longer included in listTabs.
+  const foundTab1 = response.tabs.some(grip => grip.url == TAB1_URL);
+  const foundTab2 = response.tabs.some(grip => grip.url == TAB2_URL);
+  ok(!foundTab1, "Tab1 should be gone.");
+  ok(!foundTab2, "Tab2 should be gone.");
 
-    is(aResponse.selected, 0,
-      "The original tab is selected.");
-
-    deferred.resolve();
-  });
+  is(response.selected, 0, "The original tab is selected.");
 }
-
-registerCleanupFunction(function () {
-  gNewTab = null;
-  gNewWindow = null;
-  gClient = null;
-});

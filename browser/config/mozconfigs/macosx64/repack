@@ -4,4 +4,5 @@
 export MKFSHFS=$topsrcdir/hfsplus-tools/newfs_hfs
 export DMG_TOOL=$topsrcdir/dmg/dmg
 export HFS_TOOL=$topsrcdir/dmg/hfsplus
+export NODEJS=$topsrcdir/node/bin/node
 ac_add_options --disable-compile-environment

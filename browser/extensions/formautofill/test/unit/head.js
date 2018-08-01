@@ -2,25 +2,18 @@
  * Provides infrastructure for automated formautofill components tests.
  */
 
-/* exported getTempFile, loadFormAutofillContent, runHeuristicsTest, sinon,
- *          initProfileStorage, getSyncChangeCounter, objectMatches, bootstrapURI
- */
-
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
 ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/MockDocument.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
-// eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "DownloadPaths",
                                "resource://gre/modules/DownloadPaths.jsm");
-// eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 

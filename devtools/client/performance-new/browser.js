@@ -111,7 +111,9 @@ async function getRecordingPreferences(preferenceFront, defaultSettings = {}) {
     ),
   ]);
 
-  return { entries, interval, features, threads };
+  // The pref stores the value in usec.
+  const newInterval = interval / 1000;
+  return { entries, interval: newInterval, features, threads };
 }
 
 /**
@@ -130,7 +132,8 @@ async function setRecordingPreferences(preferenceFront, settings) {
     ),
     preferenceFront.setIntPref(
       `devtools.performance.recording.interval`,
-      settings.interval
+      // The pref stores the value in usec.
+      settings.interval * 1000
     ),
     preferenceFront.setCharPref(
       `devtools.performance.recording.features`,

@@ -10,7 +10,6 @@ var EXPORTED_SYMBOLS = [
 
 const Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 var logger = Log.repository.getLogger("MockRegistrar");
 

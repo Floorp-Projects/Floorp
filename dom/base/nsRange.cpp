@@ -491,9 +491,15 @@ void
 nsRange::CharacterDataChanged(nsIContent* aContent,
                               const CharacterDataChangeInfo& aInfo)
 {
+  // If this is called when this is not positioned, it means that this range
+  // will be initialized again or destroyed soon.  See Selection::mCachedRange.
+  if (!mIsPositioned) {
+    MOZ_ASSERT(mRoot);
+    return;
+  }
+
   MOZ_ASSERT(!mNextEndRef);
   MOZ_ASSERT(!mNextStartRef);
-  MOZ_ASSERT(mIsPositioned, "shouldn't be notified if not positioned");
 
   nsINode* newRoot = nullptr;
   RawRangeBoundary newStart;
@@ -645,7 +651,12 @@ nsRange::CharacterDataChanged(nsIContent* aContent,
 void
 nsRange::ContentAppended(nsIContent*  aFirstNewContent)
 {
-  NS_ASSERTION(mIsPositioned, "shouldn't be notified if not positioned");
+  // If this is called when this is not positioned, it means that this range
+  // will be initialized again or destroyed soon.  See Selection::mCachedRange.
+  if (!mIsPositioned) {
+    MOZ_ASSERT(mRoot);
+    return;
+  }
 
   nsINode* container = aFirstNewContent->GetParentNode();
   MOZ_ASSERT(container);
@@ -680,7 +691,12 @@ nsRange::ContentAppended(nsIContent*  aFirstNewContent)
 void
 nsRange::ContentInserted(nsIContent* aChild)
 {
-  MOZ_ASSERT(mIsPositioned, "shouldn't be notified if not positioned");
+  // If this is called when this is not positioned, it means that this range
+  // will be initialized again or destroyed soon.  See Selection::mCachedRange.
+  if (!mIsPositioned) {
+    MOZ_ASSERT(mRoot);
+    return;
+  }
 
   bool updateBoundaries = false;
   nsINode* container = aChild->GetParentNode();
@@ -730,7 +746,13 @@ nsRange::ContentInserted(nsIContent* aChild)
 void
 nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
-  MOZ_ASSERT(mIsPositioned, "shouldn't be notified if not positioned");
+  // If this is called when this is not positioned, it means that this range
+  // will be initialized again or destroyed soon.  See Selection::mCachedRange.
+  if (!mIsPositioned) {
+    MOZ_ASSERT(mRoot);
+    return;
+  }
+
   nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
 
@@ -937,17 +959,17 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
                     nsINode* aRoot, bool aNotInsertedYet)
 {
   MOZ_ASSERT((aStart.IsSet() && aEnd.IsSet() && aRoot) ||
-             (!aStart.IsSet() && !aEnd.IsSet() && !aRoot),
+             (!aStart.IsSet() && !aEnd.IsSet()),
              "Set all or none");
 
-  MOZ_ASSERT(!aRoot || aNotInsertedYet ||
+  MOZ_ASSERT(!aRoot || (!aStart.IsSet() && !aEnd.IsSet()) || aNotInsertedYet ||
              (nsContentUtils::ContentIsDescendantOf(aStart.Container(), aRoot) &&
               nsContentUtils::ContentIsDescendantOf(aEnd.Container(), aRoot) &&
               aRoot == IsValidBoundary(aStart.Container()) &&
               aRoot == IsValidBoundary(aEnd.Container())),
              "Wrong root");
 
-  MOZ_ASSERT(!aRoot ||
+  MOZ_ASSERT(!aRoot || (!aStart.IsSet() && !aEnd.IsSet()) ||
              (aStart.Container()->IsContent() &&
               aEnd.Container()->IsContent() &&
               aRoot ==
