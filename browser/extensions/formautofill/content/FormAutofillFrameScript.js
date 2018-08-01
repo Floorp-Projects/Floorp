@@ -88,7 +88,7 @@ var FormAutofillFrameScript = {
     }
 
     const doc = content.document;
-    const {chromeEventHandler} = doc.ownerGlobal.getInterface(Ci.nsIDocShell);
+    const {chromeEventHandler} = doc.ownerGlobal.docShell;
 
     switch (message.name) {
       case "FormAutofill:PreviewProfile": {

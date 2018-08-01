@@ -522,10 +522,7 @@ SubDialog.prototype = {
   },
 
   _getBrowser() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShell)
-                 .chromeEventHandler;
+    return window.docShell.chromeEventHandler;
   },
 };
 

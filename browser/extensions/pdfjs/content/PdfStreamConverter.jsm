@@ -268,9 +268,7 @@ class ChromeActions {
       var listener = {
         extListener: null,
         onStartRequest(aRequest, aContext) {
-          var loadContext = self.domWindow
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
+          var loadContext = self.domWindow.docShell
                                 .QueryInterface(Ci.nsILoadContext);
           this.extListener = extHelperAppSvc.doContent(
             (data.isAttachment ? "application/octet-stream" :
@@ -414,8 +412,7 @@ class ChromeActions {
       getLocalizedString(strings, "open_with_different_viewer"),
       getLocalizedString(strings, "open_with_different_viewer", "accessKey"));
 
-    let winmm = domWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell)
+    let winmm = domWindow.docShell
                          .QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIContentFrameMessageManager);
 
@@ -442,8 +439,7 @@ class ChromeActions {
       return;
     }
 
-    var winmm = this.domWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDocShell)
+    var winmm = this.domWindow.docShell
                               .QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIContentFrameMessageManager);
 
@@ -759,8 +755,7 @@ class RequestListener {
 class FindEventManager {
   constructor(contentWindow) {
     this.contentWindow = contentWindow;
-    this.winmm = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDocShell)
+    this.winmm = contentWindow.docShell
                               .QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIContentFrameMessageManager);
   }

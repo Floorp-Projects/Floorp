@@ -36,10 +36,8 @@ FormSubmitObserver.prototype =
     this._content = aWindow;
     this._tab = aTabChildGlobal;
     this._mm =
-      this._content.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDocShell)
+      this._content.docShell
                    .sameTypeRootTreeItem
-                   .QueryInterface(Ci.nsIDocShell)
                    .QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIContentFrameMessageManager);
 
