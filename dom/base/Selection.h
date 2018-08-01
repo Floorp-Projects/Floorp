@@ -662,6 +662,12 @@ private:
   // released by Clear(), RemoveAllRangesTemporarily() stores it with this.
   // If Collapse() is called without existing ranges, it'll reuse this range
   // for saving the creation cost.
+  // Note that while the range is cached by this, we keep the range being
+  // a mutation observer because it is not so cheap to register the range
+  // as a mutation observer again.  On the other hand, we make it not
+  // positioned because it is not so cheap to keep valid DOM point against
+  // mutations.  This does not cause any problems because we will set new
+  // DOM point when we treat it as a range of Selection again.
   RefPtr<nsRange> mCachedRange;
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
