@@ -1936,6 +1936,17 @@ FontFaceSet::RefreshStandardFontLoadPrincipal()
   }
 }
 
+void
+FontFaceSet::CopyNonRuleFacesTo(FontFaceSet* aFontFaceSet) const
+{
+  for (const FontFaceRecord& rec : mNonRuleFaces) {
+    ErrorResult rv;
+    RefPtr<FontFace> f = rec.mFontFace;
+    aFontFaceSet->Add(*f, rv);
+    MOZ_ASSERT(!rv.Failed());
+  }
+}
+
 // -- FontFaceSet::UserFontSet ------------------------------------------------
 
 /* virtual */ bool

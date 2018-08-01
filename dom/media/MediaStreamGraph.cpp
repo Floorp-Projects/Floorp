@@ -2331,6 +2331,11 @@ MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
       // TrackUnionStream guarantees that each of its tracks has an input track.
       // Other types do not implement GetInputStreamFor() and will return null.
       inputStream = ps->GetInputStreamFor(it->GetID());
+      if (!inputStream && it->IsEnded()) {
+        // If this track has no input anymore we assume there's no data for the
+        // current iteration either and thus no need to expose it to a listener.
+        continue;
+      }
       MOZ_ASSERT(inputStream);
       inputTrackID = ps->GetInputTrackIDFor(it->GetID());
       MOZ_ASSERT(IsTrackIDExplicit(inputTrackID));

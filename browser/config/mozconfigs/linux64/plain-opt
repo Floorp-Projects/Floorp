@@ -6,6 +6,8 @@ RUSTC="${TOOLTOOL_DIR}/rustc/bin/rustc"
 RUSTDOC="${TOOLTOOL_DIR}/rustc/bin/rustdoc"
 RUSTFMT="${TOOLTOOL_DIR}/rustc/bin/rustfmt"
 
+export NODEJS="${TOOLTOOL_DIR}/node/bin/node"
+
 CC="${TOOLTOOL_DIR}/gcc/bin/gcc"
 CXX="${TOOLTOOL_DIR}/gcc/bin/g++"
 

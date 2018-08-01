@@ -1,5 +1,4 @@
 from tests.support.asserts import assert_error, assert_success
-from tests.support.inline import inline
 
 
 def minimize(session):
@@ -22,9 +21,7 @@ def is_minimized(session):
     return session.execute_script("return document.hidden")
 
 
-def test_no_browsing_context(session, create_window):
-    session.window_handle = create_window()
-    session.close()
+def test_no_browsing_context(session, closed_window):
     response = minimize(session)
     assert_error(response, "no such window")
 

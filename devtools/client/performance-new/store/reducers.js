@@ -55,10 +55,10 @@ function isSupportedPlatform(state = null, action) {
 // is opened. These should be persisted between sessions. See Bug 1453014.
 
 /**
- * The setting for the recording interval.
+ * The setting for the recording interval. Defaults to 1ms.
  * @param {number} state
  */
-function interval(state = 1, action) {
+function interval(state = 1000, action) {
   switch (action.type) {
     case "CHANGE_INTERVAL":
       return action.interval;

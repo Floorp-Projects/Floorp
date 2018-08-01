@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-
 const ID = "webextension1@tests.mozilla.org";
 
 const profileDir = gProfD.clone();
