@@ -468,8 +468,9 @@ var BookmarkPropertiesPanel = {
       if (this._postData)
         info.postData = this._postData;
 
-      if (this._charSet && !PrivateBrowsingUtils.isWindowPrivate(window))
-        PlacesUtils.setCharsetForURI(this._uri, this._charSet);
+      if (this._charSet) {
+        PlacesUIUtils.setCharsetForPage(this._uri, this._charSet, window).catch(Cu.reportError);
+      }
 
       itemGuid = await PlacesTransactions.NewBookmark(info).transact();
     } else if (this._itemType == LIVEMARK_CONTAINER) {

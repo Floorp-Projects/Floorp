@@ -15,10 +15,7 @@ def test_null_response_value(session, url):
     assert value is None
 
 
-def test_no_browsing_context(session, create_window):
-    session.window_handle = create_window()
-    session.close()
-
+def test_no_browsing_context(session, closed_window):
     response = dismiss_alert(session)
     assert_error(response, "no such window")
 

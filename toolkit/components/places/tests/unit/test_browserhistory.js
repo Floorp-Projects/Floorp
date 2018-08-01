@@ -35,17 +35,19 @@ add_task(async function test_removePages() {
   const ANNO_NAME = "testAnno";
   const ANNO_VALUE = "foo";
   const BOOKMARK_INDEX = 2;
-  PlacesUtils.annotations.setPageAnnotation(pages[ANNO_INDEX],
-                                            ANNO_NAME, ANNO_VALUE, 0,
-                                            Ci.nsIAnnotationService.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: pages[ANNO_INDEX],
+    annotations: new Map([[ANNO_NAME, ANNO_VALUE]]),
+  });
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: pages[BOOKMARK_INDEX],
     title: "test bookmark"
   });
-  PlacesUtils.annotations.setPageAnnotation(pages[BOOKMARK_INDEX],
-                                            ANNO_NAME, ANNO_VALUE, 0,
-                                            Ci.nsIAnnotationService.EXPIRE_NEVER);
+  await PlacesUtils.history.update({
+    url: pages[BOOKMARK_INDEX],
+    annotations: new Map([[ANNO_NAME, ANNO_VALUE]]),
+  });
 
   await PlacesUtils.history.remove(pages);
   Assert.ok(await checkEmptyHistory(), "History is empty");

@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+import gzip
 import itertools
 import json
 import sys
@@ -12,6 +13,7 @@ import shutil
 
 import mozpack.path as mozpath
 from mozbuild import shellutil
+from mozbuild.analyze.graph import Graph
 from mozbuild.base import MozbuildObject
 from mozbuild.backend.base import PartialBackend, HybridBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
@@ -303,12 +305,14 @@ class TupBackend(CommonBackend):
                                   line_handler=output.on_line,
                                   ensure_exit_code=False,
                                   append_env=self._get_mozconfig_env(config))
-        # upload Tup db
-        if (not status and
-            self.environment.substs.get('MOZ_AUTOMATION') and self.environment.substs.get('UPLOAD_TUP_DB')):
+        if not status and self.environment.substs.get('MOZ_AUTOMATION'):
             src = mozpath.join(self.environment.topsrcdir, '.tup')
-            dst = mozpath.join(os.environ['UPLOAD_PATH'], 'tup_db')
-            shutil.make_archive(dst, 'zip', src)
+            dst = os.environ['UPLOAD_PATH']
+            if self.environment.substs.get('UPLOAD_TUP_DB'):
+                shutil.make_archive(mozpath.join(dst, 'tup_db'), 'zip', src)
+            g = Graph(mozpath.join(src, 'db'))
+            with gzip.open(mozpath.join(dst, 'cost_dict.gz'), 'wt') as outfile:
+                json.dump(g.get_cost_dict(), outfile)
         return status
 
     def _get_backend_file(self, relobjdir):

@@ -168,6 +168,23 @@ win64-rust-nightly:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
+win64-node:
+    description: "Node repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(node)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: toolchain-build}
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: repack-node.sh
+        arguments: ['win64']
+        toolchain-artifact: public/build/node.tar.bz2
+
 win32-rust-1.28:
     description: "rust repack"
     treeherder:

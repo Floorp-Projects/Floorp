@@ -8,9 +8,6 @@ const Cm = Components.manager;
 
 const CONTRACT_ID = "@mozilla.org/colorpicker;1";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
 // would crash if used outside of automation.
 Cu.forcePermissiveCOWs();

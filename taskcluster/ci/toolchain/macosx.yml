@@ -34,6 +34,7 @@ macosx64-clang:
         - linux64-cctools-port
         - linux64-clang-6
         - linux64-gcc-4.9
+        - linux64-node
 
 macosx64-clang-tidy:
     description: "Clang-tidy build"
@@ -64,6 +65,7 @@ macosx64-clang-tidy:
         - linux64-cctools-port
         - linux64-clang-6
         - linux64-gcc-4.9
+        - linux64-node
 
 macosx64-cctools-port:
     description: "cctools-port toolchain build"
@@ -87,6 +89,7 @@ macosx64-cctools-port:
     toolchains:
         - linux64-cctools-port
         - linux64-clang-6
+        - linux64-node
 
 macosx64-gn:
     description: "gn toolchain build"
@@ -111,3 +114,21 @@ macosx64-gn:
     toolchains:
         - linux64-cctools-port
         - linux64-clang-6
+        - linux64-node
+
+macosx64-node:
+    description: "Node repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(node)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: toolchain-build}
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: repack-node.sh
+        arguments: ['macosx64']
+        toolchain-artifact: public/build/node.tar.xz
