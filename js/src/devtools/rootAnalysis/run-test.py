@@ -76,21 +76,24 @@ def binpath(prog):
     return os.path.join(cfg.sixgill_bin, prog)
 
 
-outroot = os.path.join(testdir, 'out')
+def make_dir(dirname, exist_ok=True):
+    try:
+        os.mkdir(dirname)
+    except OSError as e:
+        if exist_ok and e.strerror == 'File exists':
+            pass
+        else:
+            raise
 
-try:
-    os.mkdir(outroot)
-except OSError:
-    pass
+
+outroot = os.path.join(testdir, 'out')
+make_dir(outroot)
 
 for name in cfg.tests:
     name = os.path.basename(name)
     indir = os.path.join(testdir, name)
     outdir = os.path.join(outroot, name)
-    try:
-        os.mkdir(outdir)
-    except OSError:
-        pass
+    make_dir(outdir)
 
     test = Test(indir, outdir, cfg, verbose=cfg.verbose)
 
