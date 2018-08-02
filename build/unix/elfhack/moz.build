@@ -16,6 +16,7 @@ if not CONFIG['CROSS_COMPILE']:
 
     for f in CONFIG['OS_CFLAGS']:
         if f.startswith('-flto'):
+            SOURCES['dummy.c'].flags += ['-fno-lto']
             SOURCES['test-array.c'].flags += ['-fno-lto']
             SOURCES['test-ctors.c'].flags += ['-fno-lto']
 
