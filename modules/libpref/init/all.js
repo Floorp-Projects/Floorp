@@ -3254,7 +3254,7 @@ pref("dom.ipc.processCount.privileged", 1);
 pref("dom.ipc.keepProcessesAlive.privileged", 1);
 
 // Whether a native event loop should be used in the content process.
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("dom.ipc.useNativeEventProcessing.content", false);
 #else
 pref("dom.ipc.useNativeEventProcessing.content", true);
