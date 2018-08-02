@@ -67,10 +67,10 @@ public:
   void UnregisterContentScript(const WebExtensionContentScript& script,
                                ErrorResult& aRv);
 
-  bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false) const
+  bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false, bool aCheckRestricted = true) const
   {
-    return (!IsRestrictedURI(aURI) &&
-            mHostPermissions && mHostPermissions->Matches(aURI, aExplicit));
+    return (!aCheckRestricted || !IsRestrictedURI(aURI)) &&
+            mHostPermissions && mHostPermissions->Matches(aURI, aExplicit);
   }
 
   bool IsPathWebAccessible(const nsAString& aPath) const
