@@ -1,10 +1,11 @@
 use {Line, Plane, is_zero};
 
-use std::{fmt, mem, ops};
 use euclid::{Point2D, TypedTransform3D, TypedPoint3D, TypedVector3D, TypedRect};
 use euclid::approxeq::ApproxEq;
 use euclid::Trig;
 use num_traits::{Float, One, Zero};
+
+use std::{fmt, mem, ops};
 
 
 /// The projection of a `Polygon` on a line.
@@ -122,9 +123,24 @@ impl<T, U> Polygon<T, U> where
         points: [TypedPoint3D<T, U>; 4],
         anchor: usize,
     ) -> Self {
-        let normal = (points[1] - points[0])
-            .cross(points[2] - points[0])
-            .normalize();
+        let edge1 = points[1] - points[0];
+        let edge2 = points[2] - points[0];
+        let edge3 = points[3] - points[0];
+
+        // one of them can be zero for redundant polygons produced by plane splitting
+        //Note: this would be nicer if we used triangles instead of quads in the first place...
+        // see https://github.com/servo/plane-split/issues/17
+        debug_assert!(edge2.square_length() > T::approx_epsilon());
+        let normal_rough1 = edge1.cross(edge2);
+        let normal_rough2 = edge2.cross(edge3);
+        let square_length1 = normal_rough1.square_length();
+        let square_length2 = normal_rough2.square_length();
+        let normal = if square_length1 > square_length2 {
+            normal_rough1 / square_length1.sqrt()
+        } else {
+            normal_rough2 / square_length2.sqrt()
+        };
+
         let offset = -points[0].to_vector()
             .dot(normal);
 
@@ -136,6 +152,19 @@ impl<T, U> Polygon<T, U> where
             },
             anchor,
         }
+    }
+
+    /// Construct a polygon from a non-transformed rectangle.
+    pub fn from_rect(rect: TypedRect<T, U>, anchor: usize) -> Self {
+        Self::from_points(
+            [
+                rect.origin.to_3d(),
+                rect.top_right().to_3d(),
+                rect.bottom_right().to_3d(),
+                rect.bottom_left().to_3d(),
+            ],
+            anchor,
+        )
     }
 
     /// Construct a polygon from a rectangle with 3D transform.
@@ -179,6 +208,27 @@ impl<T, U> Polygon<T, U> where
         let x = ab * cb - b2 * ca;
         let y = ab * ca - a2 * cb;
         Point2D::new(x, y) / denom
+    }
+
+    /// Transform a polygon by an affine transform (preserving straight lines).
+    pub fn transform<V>(
+        &self, transform: &TypedTransform3D<T, U, V>
+    ) -> Option<Polygon<T, V>>
+    where
+        T: Trig,
+        V: fmt::Debug,
+    {
+        let mut points = [TypedPoint3D::origin(); 4];
+        for (out, point) in points.iter_mut().zip(self.points.iter()) {
+            let mut homo = transform.transform_point3d_homogeneous(point);
+            homo.w = homo.w.max(T::approx_epsilon());
+            *out = homo.to_point3d()?;
+        }
+
+        //Note: this code path could be more efficient if we had inverse-transpose
+        //let n4 = transform.transform_point4d(&TypedPoint4D::new(T::zero(), T::zero(), T::one(), T::zero()));
+        //let normal = TypedPoint3D::new(n4.x, n4.y, n4.z);
+        Some(Polygon::from_points(points, self.anchor))
     }
 
     /// Check if all the points are indeed placed on the plane defined by

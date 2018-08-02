@@ -15,10 +15,10 @@ pub const AU_PER_PX: i32 = 60;
 
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Eq, Ord)]
 /// An App Unit, the fundamental unit of length in Servo. Usually
-/// 1/60th of a pixel (see AU_PER_PX)
+/// 1/60th of a pixel (see `AU_PER_PX`)
 ///
-/// Please ensure that the values are between MIN_AU and MAX_AU.
-/// It is safe to construct invalid Au values, but it may lead to
+/// Please ensure that the values are between `MIN_AU` and `MAX_AU`.
+/// It is safe to construct invalid `Au` values, but it may lead to
 /// panics and overflows.
 pub struct Au(pub i32);
 
@@ -83,6 +83,21 @@ impl Sub for Au {
 
 }
 
+impl Mul<Au> for i32 {
+    type Output = Au;
+
+    #[inline]
+    fn mul(self, other: Au) -> Au {
+        if let Some(new) = other.0.checked_mul(self) {
+            Au(new).clamp()
+        } else if (self > 0) ^ (other.0 > 0) {
+            MIN_AU
+        } else {
+            MAX_AU
+        }
+    }
+}
+
 impl Mul<i32> for Au {
     type Output = Au;
 
@@ -98,12 +113,30 @@ impl Mul<i32> for Au {
     }
 }
 
+impl Div for Au {
+    type Output = i32;
+
+    #[inline]
+    fn div(self, other: Au) -> i32 {
+        self.0 / other.0
+    }
+}
+
 impl Div<i32> for Au {
     type Output = Au;
 
     #[inline]
     fn div(self, other: i32) -> Au {
         Au(self.0 / other)
+    }
+}
+
+impl Rem for Au {
+    type Output = Au;
+
+    #[inline]
+    fn rem(self, other: Au) -> Au {
+        Au(self.0 % other.0)
     }
 }
 
@@ -273,11 +306,20 @@ fn operations() {
     assert_eq!(MIN_AU - Au(1), MIN_AU);
 
     assert_eq!(Au(7) * 5, Au(35));
+    assert_eq!(5 * Au(7), Au(35));
     assert_eq!(MAX_AU * -1, MIN_AU);
     assert_eq!(MIN_AU * -1, MAX_AU);
+    assert_eq!(-1 * MAX_AU, MIN_AU);
+    assert_eq!(-1 * MIN_AU, MAX_AU);
+
+    assert_eq!((Au(14) / 5) * 5 + Au(14) % 5, Au(14));
+    assert_eq!((Au(14) / Au(5)) * Au(5) + Au(14) % Au(5), Au(14));
 
     assert_eq!(Au(35) / 5, Au(7));
     assert_eq!(Au(35) % 6, Au(5));
+
+    assert_eq!(Au(35) / Au(5), 7);
+    assert_eq!(Au(35) / Au(5), 7);
 
     assert_eq!(-Au(7), Au(-7));
 }

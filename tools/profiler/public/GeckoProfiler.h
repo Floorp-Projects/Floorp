@@ -281,7 +281,7 @@ void profiler_ensure_started(uint32_t aEntries, double aInterval,
   do { char stackTop; profiler_register_thread(name, &stackTop); } while (0)
 #define PROFILER_UNREGISTER_THREAD() \
   profiler_unregister_thread()
-void profiler_register_thread(const char* name, void* guessStackTop);
+ProfilingStack* profiler_register_thread(const char* name, void* guessStackTop);
 void profiler_unregister_thread();
 
 // Register and unregister a thread within a scope.

@@ -1,42 +1,42 @@
-'use strict';
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout('Test for guarantee not firing async event');
+SimpleTest.requestFlakyTimeout("Test for guarantee not firing async event");
 
 function debug(str) {
   // info(str);
 }
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript1UA.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_wentaway.html');
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript1UA.js"));
+var receiverUrl = SimpleTest.getTestFileURL("file_presentation_1ua_wentaway.html");
 var request;
 var connection;
 var receiverIframe;
 
 function setup() {
-  gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-    debug('Got message: device-prompt');
-    gScript.removeMessageListener('device-prompt', devicePromptHandler);
-    gScript.sendAsyncMessage('trigger-device-prompt-select');
+  gScript.addMessageListener("device-prompt", function devicePromptHandler() {
+    debug("Got message: device-prompt");
+    gScript.removeMessageListener("device-prompt", devicePromptHandler);
+    gScript.sendAsyncMessage("trigger-device-prompt-select");
   });
 
-  gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-    gScript.removeMessageListener('control-channel-established',
+  gScript.addMessageListener("control-channel-established", function controlChannelEstablishedHandler() {
+    gScript.removeMessageListener("control-channel-established",
                                   controlChannelEstablishedHandler);
     gScript.sendAsyncMessage("trigger-control-channel-open");
   });
 
-  gScript.addMessageListener('sender-launch', function senderLaunchHandler(url) {
-    debug('Got message: sender-launch');
-    gScript.removeMessageListener('sender-launch', senderLaunchHandler);
-    is(url, receiverUrl, 'Receiver: should receive the same url');
-    receiverIframe = document.createElement('iframe');
+  gScript.addMessageListener("sender-launch", function senderLaunchHandler(url) {
+    debug("Got message: sender-launch");
+    gScript.removeMessageListener("sender-launch", senderLaunchHandler);
+    is(url, receiverUrl, "Receiver: should receive the same url");
+    receiverIframe = document.createElement("iframe");
     receiverIframe.setAttribute("mozbrowser", "true");
     receiverIframe.setAttribute("mozpresentation", receiverUrl);
-    var oop = !location.pathname.includes('_inproc');
+    var oop = !location.pathname.includes("_inproc");
     receiverIframe.setAttribute("remote", oop);
 
-    receiverIframe.setAttribute('src', receiverUrl);
+    receiverIframe.setAttribute("src", receiverUrl);
     receiverIframe.addEventListener("mozbrowserloadend", function() {
       info("Receiver loaded.");
     }, {once: true});
@@ -65,16 +65,15 @@ function setup() {
       aResolve(receiverIframe);
     });
 
-    var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-                           .getService(SpecialPowers.Ci.nsIObserverService);
-    obs.notifyObservers(promise, 'setup-request-promise');
+    var obs = SpecialPowers.Services.obs;
+    obs.notifyObservers(promise, "setup-request-promise");
   });
 
-  gScript.addMessageListener('promise-setup-ready', function promiseSetupReadyHandler() {
-    debug('Got message: promise-setup-ready');
-    gScript.removeMessageListener('promise-setup-ready',
+  gScript.addMessageListener("promise-setup-ready", function promiseSetupReadyHandler() {
+    debug("Got message: promise-setup-ready");
+    gScript.removeMessageListener("promise-setup-ready",
                                   promiseSetupReadyHandler);
-    gScript.sendAsyncMessage('trigger-on-session-request', receiverUrl);
+    gScript.sendAsyncMessage("trigger-on-session-request", receiverUrl);
   });
 
   return Promise.resolve();
@@ -82,7 +81,7 @@ function setup() {
 
 function testCreateRequest() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testCreateRequest ---');
+    info("Sender: --- testCreateRequest ---");
     request = new PresentationRequest(receiverUrl);
     request.getAvailability().then((aAvailability) => {
       is(aAvailability.value, false, "Sender: should have no available device after setup");
@@ -90,9 +89,9 @@ function testCreateRequest() {
         aAvailability.onchange = null;
         ok(aAvailability.value, "Sender: Device should be available.");
         aResolve();
-      }
+      };
 
-      gScript.sendAsyncMessage('trigger-device-add');
+      gScript.sendAsyncMessage("trigger-device-add");
     }).catch((aError) => {
       ok(false, "Sender: Error occurred when getting availability: " + aError);
       teardown();
@@ -123,32 +122,32 @@ function testStartConnection() {
 
 function testConnectionWentaway() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testConnectionWentaway ---');
+    info("Sender: --- testConnectionWentaway ---");
     connection.onclose = function() {
       connection.onclose = null;
       is(connection.state, "closed", "Sender: Connection should be closed.");
-      receiverIframe.addEventListener('mozbrowserclose', function closeHandler() {
-        ok(false, 'wentaway should not trigger receiver close');
+      receiverIframe.addEventListener("mozbrowserclose", function closeHandler() {
+        ok(false, "wentaway should not trigger receiver close");
         aResolve();
       });
       setTimeout(aResolve, 3000);
     };
-    gScript.addMessageListener('ready-to-remove-receiverFrame', function onReadyToRemove() {
-      gScript.removeMessageListener('ready-to-remove-receiverFrame', onReadyToRemove);
+    gScript.addMessageListener("ready-to-remove-receiverFrame", function onReadyToRemove() {
+      gScript.removeMessageListener("ready-to-remove-receiverFrame", onReadyToRemove);
       receiverIframe.src = "http://example.com";
     });
   });
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    debug('Got message: teardown-complete');
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    debug("Got message: teardown-complete");
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
@@ -159,10 +158,10 @@ function runTests() {
 }
 
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: "presentation-device-manage", allow: false, context: document},
   {type: "browser", allow: true, context: document},
 ], () => {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.controller.enabled", true],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.test.enabled", true],

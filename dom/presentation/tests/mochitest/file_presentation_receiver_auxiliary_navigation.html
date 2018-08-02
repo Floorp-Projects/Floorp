@@ -11,23 +11,23 @@
 "use strict";
 
 function is(a, b, msg) {
-  alert((a === b ? 'OK ' : 'KO ') + msg);
+  alert((a === b ? "OK " : "KO ") + msg);
 }
 
 function ok(a, msg) {
-  alert((a ? 'OK ' : 'KO ') + msg);
+  alert((a ? "OK " : "KO ") + msg);
 }
 
 function info(msg) {
-  alert('INFO ' + msg);
+  alert("INFO " + msg);
 }
 
 function command(msg) {
-  alert('COMMAND ' + JSON.stringify(msg));
+  alert("COMMAND " + JSON.stringify(msg));
 }
 
 function finish() {
-  alert('DONE');
+  alert("DONE");
 }
 
 function testConnectionAvailable() {
@@ -44,7 +44,7 @@ function testOpenWindow() {
     try {
       window.open("http://example.com");
       ok(false, "receiver page should not be able to open a new window.");
-    } catch(e) {
+    } catch (e) {
       ok(true, "receiver page should not be able to open a new window.");
       aResolve();
     }

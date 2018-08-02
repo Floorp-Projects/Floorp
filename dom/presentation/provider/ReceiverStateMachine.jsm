@@ -113,7 +113,7 @@ ReceiverStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.TERMINATE,
-        presentationId: presentationId,
+        presentationId,
       });
     }
   },
@@ -122,7 +122,7 @@ ReceiverStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.TERMINATE_ACK,
-        presentationId: presentationId,
+        presentationId,
       });
     }
   },
@@ -140,7 +140,7 @@ ReceiverStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.ANSWER,
-        answer: answer,
+        answer,
       });
     }
   },
@@ -149,7 +149,7 @@ ReceiverStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.ICE_CANDIDATE,
-        candidate: candidate,
+        candidate,
       });
     }
   },
@@ -173,7 +173,7 @@ ReceiverStateMachine.prototype = {
         } else {
           this._sendCommand({
             type: CommandType.DISCONNECT,
-            reason: reason
+            reason
           });
           this.state = State.CLOSING;
           this._closeReason = reason;

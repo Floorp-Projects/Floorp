@@ -4,8 +4,8 @@
 <script>
 /* global SimpleTest SpecialPowers */
 
-const gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript1UA.js'));
-const kReceiverFile = 'file_presentation_fingerprinting_resistance_receiver.html';
+const gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript1UA.js"));
+const kReceiverFile = "file_presentation_fingerprinting_resistance_receiver.html";
 const kReceiverUrl = SimpleTest.getTestFileURL(kReceiverFile);
 
 let runTests = async () => {
@@ -21,84 +21,84 @@ let runTests = async () => {
 let setup = async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ['dom.presentation.enabled', true],
-      ['dom.presentation.controller.enabled', true],
-      ['dom.presentation.receiver.enabled', true],
-      ['dom.presentation.test.enabled', true],
-      ['dom.presentation.test.stage', 0],
-      ['dom.mozBrowserFramesEnabled', true],
-      ['network.disable.ipc.security', true]
+      ["dom.presentation.enabled", true],
+      ["dom.presentation.controller.enabled", true],
+      ["dom.presentation.receiver.enabled", true],
+      ["dom.presentation.test.enabled", true],
+      ["dom.presentation.test.stage", 0],
+      ["dom.mozBrowserFramesEnabled", true],
+      ["network.disable.ipc.security", true]
     ]
   });
 
-  gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-    gScript.removeMessageListener('device-prompt', devicePromptHandler);
-    gScript.sendAsyncMessage('trigger-device-prompt-select');
+  gScript.addMessageListener("device-prompt", function devicePromptHandler() {
+    gScript.removeMessageListener("device-prompt", devicePromptHandler);
+    gScript.sendAsyncMessage("trigger-device-prompt-select");
   });
 
-  gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-    gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
-    gScript.sendAsyncMessage('trigger-control-channel-open');
+  gScript.addMessageListener("control-channel-established", function controlChannelEstablishedHandler() {
+    gScript.removeMessageListener("control-channel-established", controlChannelEstablishedHandler);
+    gScript.sendAsyncMessage("trigger-control-channel-open");
   });
 
-  gScript.addMessageListener('promise-setup-ready', function promiseSetupReadyHandler() {
-    gScript.removeMessageListener('promise-setup-ready', promiseSetupReadyHandler);
-    gScript.sendAsyncMessage('trigger-on-session-request', kReceiverUrl);
+  gScript.addMessageListener("promise-setup-ready", function promiseSetupReadyHandler() {
+    gScript.removeMessageListener("promise-setup-ready", promiseSetupReadyHandler);
+    gScript.sendAsyncMessage("trigger-on-session-request", kReceiverUrl);
   });
 };
 
 let createRequest = () => new Promise((resolve, reject) => {
   let request = new PresentationRequest(kReceiverFile);
   request.getAvailability().then((availability) => {
-    SimpleTest.ok(availability, 'PresentationRequest.getAvailability');
+    SimpleTest.ok(availability, "PresentationRequest.getAvailability");
     availability.onchange = () => {
       availability.onchange = null;
       resolve(request);
     };
-    gScript.sendAsyncMessage('trigger-device-add');
+    gScript.sendAsyncMessage("trigger-device-add");
   }).catch((error) => {
-    SimpleTest.ok(false, 'PresentationRequest.getAvailability: ' + error);
+    SimpleTest.ok(false, "PresentationRequest.getAvailability: " + error);
     teardown();
     reject(error);
   });
 });
 
 let testRequestAndReceiver = (request) => new Promise((resolve, reject) => {
-  gScript.addMessageListener('sender-launch', function senderLaunchHandler(url) {
+  gScript.addMessageListener("sender-launch", function senderLaunchHandler(url) {
     // SimpleTest.is(url, kReceiverUrl, 'sender-launch');
-    gScript.removeMessageListener('sender-launch', senderLaunchHandler);
+    gScript.removeMessageListener("sender-launch", senderLaunchHandler);
 
-    let iframe = document.createElement('iframe');
-    iframe.setAttribute('src', kReceiverUrl);
-    iframe.setAttribute('mozbrowser', 'true');
-    iframe.setAttribute('mozpresentation', kReceiverUrl);
-    iframe.setAttribute('remote', 'false');
-    iframe.addEventListener('mozbrowsershowmodalprompt', (event) => {
-      SimpleTest.is(event.detail.message, 'true', 'navigator.presentation.receiver');
+    let iframe = document.createElement("iframe");
+    iframe.setAttribute("src", kReceiverUrl);
+    iframe.setAttribute("mozbrowser", "true");
+    iframe.setAttribute("mozpresentation", kReceiverUrl);
+    iframe.setAttribute("remote", "false");
+    iframe.addEventListener("mozbrowsershowmodalprompt", (event) => {
+      SimpleTest.is(event.detail.message, "true", "navigator.presentation.receiver");
       resolve(iframe);
     }, {once: true});
 
-    let promise = new Promise((resolve) => {
+    let promise = new Promise((aInnerResolve) => {
       document.body.appendChild(iframe);
-      resolve(iframe);
+      aInnerResolve(iframe);
     });
 
-    let obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"].getService(SpecialPowers.Ci.nsIObserverService);
-    obs.notifyObservers(promise, 'setup-request-promise');
+    let obs = SpecialPowers.Services.obs;
+    obs.notifyObservers(promise, "setup-request-promise");
   });
 
   request.start().then((connection) => {
-    SimpleTest.ok(connection, 'PresentationRequest.start');
+    SimpleTest.ok(connection, "PresentationRequest.start");
   }).catch((error) => {
-    SimpleTest.ok(false, 'PresentationRequest.start: ' + error);
+    SimpleTest.ok(false, "PresentationRequest.start: " + error);
     teardown();
     reject(error);
   });
 });
 
 let enableResistFingerprinting = () => {
-  const kPref = 'privacy.resistFingerprinting';
-  SimpleTest.info(kPref + ' = true');
+  const kPref = "privacy.resistFingerprinting";
+  SimpleTest.info(kPref + " = true");
   return SpecialPowers.pushPrefEnv({
     set: [
       [kPref, true]
@@ -108,38 +108,38 @@ let enableResistFingerprinting = () => {
 
 let testRequestResistFingerprinting = (request) => {
   return request.getAvailability()
-      .then(() => SimpleTest.ok(false, 'PresentationRequest.getAvailability'))
-      .catch((error) => SimpleTest.is(error.name, 'SecurityError', 'PresentationRequest.getAvailability'))
+      .then(() => SimpleTest.ok(false, "PresentationRequest.getAvailability"))
+      .catch((error) => SimpleTest.is(error.name, "SecurityError", "PresentationRequest.getAvailability"))
       .then(() => request.start())
-      .then(() => SimpleTest.ok(false, 'PresentationRequest.start'))
-      .catch((error) => SimpleTest.is(error.name, 'SecurityError', 'PresentationRequest.start'))
+      .then(() => SimpleTest.ok(false, "PresentationRequest.start"))
+      .catch((error) => SimpleTest.is(error.name, "SecurityError", "PresentationRequest.start"))
       .then(() => request.reconnect(kReceiverUrl))
-      .then(() => SimpleTest.ok(false, 'PresentationRequest.reconnect'))
-      .catch((error) => SimpleTest.is(error.name, 'SecurityError', 'PresentationRequest.reconnect'));
+      .then(() => SimpleTest.ok(false, "PresentationRequest.reconnect"))
+      .catch((error) => SimpleTest.is(error.name, "SecurityError", "PresentationRequest.reconnect"));
 };
 
 let testReceiverResistFingerprinting = (iframe) => new Promise((resolve) => {
-  iframe.addEventListener('mozbrowsershowmodalprompt', (event) => {
-    SimpleTest.is(event.detail.message, 'false', 'navigator.presentation.receiver');
+  iframe.addEventListener("mozbrowsershowmodalprompt", (event) => {
+    SimpleTest.is(event.detail.message, "false", "navigator.presentation.receiver");
     resolve();
   }, {once: true});
-  iframe.setAttribute('src', kReceiverUrl + '#privacy.resistFingerprinting');
+  iframe.setAttribute("src", kReceiverUrl + "#privacy.resistFingerprinting");
 });
 
 let teardown = () => {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 };
 
 SimpleTest.waitForExplicitFinish();
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   SpecialPowers.pushPermissions([
-    {type: 'presentation-device-manage', allow: false, context: document},
-    {type: 'browser', allow: true, context: document},
+    {type: "presentation-device-manage", allow: false, context: document},
+    {type: "browser", allow: true, context: document},
   ], runTests);
 });
 </script>

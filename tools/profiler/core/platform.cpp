@@ -2343,7 +2343,7 @@ FindCurrentThreadRegisteredThread(PSLockRef aLock)
   return nullptr;
 }
 
-static void
+static ProfilingStack*
 locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -2353,7 +2353,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
   VTUNE_REGISTER_THREAD(aName);
 
   if (!TLSRegisteredThread::Init(aLock)) {
-    return;
+    return nullptr;
   }
 
   RefPtr<ThreadInfo> info =
@@ -2384,7 +2384,12 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
     }
   }
 
+  ProfilingStack* profilingStack =
+    &registeredThread->RacyRegisteredThread().ProfilingStack();
+
   CorePS::AppendRegisteredThread(aLock, std::move(registeredThread));
+
+  return profilingStack;
 }
 
 static void
@@ -3290,7 +3295,7 @@ profiler_feature_active(uint32_t aFeature)
   return RacyFeatures::IsActiveWithFeature(aFeature);
 }
 
-void
+ProfilingStack*
 profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
   DEBUG_LOG("profiler_register_thread(%s)", aName);
@@ -3306,7 +3311,7 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
   PSAutoLock lock(gPSMutex);
 
   void* stackTop = GetStackTop(aGuessStackTop);
-  locked_register_thread(lock, aName, stackTop);
+  return locked_register_thread(lock, aName, stackTop);
 }
 
 void

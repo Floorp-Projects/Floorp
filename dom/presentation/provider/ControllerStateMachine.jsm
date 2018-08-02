@@ -96,8 +96,8 @@ ControllerStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.LAUNCH,
-        presentationId: presentationId,
-        url: url,
+        presentationId,
+        url,
       });
     }
   },
@@ -106,7 +106,7 @@ ControllerStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.TERMINATE,
-        presentationId: presentationId,
+        presentationId,
       });
     }
   },
@@ -115,7 +115,7 @@ ControllerStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.TERMINATE_ACK,
-        presentationId: presentationId,
+        presentationId,
       });
     }
   },
@@ -124,8 +124,8 @@ ControllerStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.RECONNECT,
-        presentationId: presentationId,
-        url: url,
+        presentationId,
+        url,
       });
     }
   },
@@ -134,7 +134,7 @@ ControllerStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.OFFER,
-        offer: offer,
+        offer,
       });
     }
   },
@@ -148,7 +148,7 @@ ControllerStateMachine.prototype = {
     if (this.state === State.CONNECTED) {
       this._sendCommand({
         type: CommandType.ICE_CANDIDATE,
-        candidate: candidate,
+        candidate,
       });
     }
   },
@@ -176,7 +176,7 @@ ControllerStateMachine.prototype = {
         } else {
           this._sendCommand({
             type: CommandType.DISCONNECT,
-            reason: reason
+            reason
           });
           this.state = State.CLOSING;
           this._closeReason = reason;
@@ -203,7 +203,7 @@ ControllerStateMachine.prototype = {
   },
 
   _notifyDeviceConnected: function _notifyDeviceConnected() {
-    //XXX trigger following command
+    // XXX trigger following command
     this._channel.notifyDeviceConnected();
   },
 

@@ -12,9 +12,9 @@
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for B2G Presentation API at sender side</a>
 <script type="application/javascript">
 
-'use strict';
+"use strict";
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
 var request;
 var connection;
 
@@ -29,8 +29,8 @@ function testSetup() {
           aAvailability.onchange = null;
           ok(aAvailability.value, "Device should be available.");
           aResolve();
-        }
-        gScript.sendAsyncMessage('trigger-device-add');
+        };
+        gScript.sendAsyncMessage("trigger-device-add");
       },
       function(aError) {
         ok(false, "Error occurred when getting availability: " + aError);
@@ -44,47 +44,47 @@ function testSetup() {
 
 function testStartConnection() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
+    gScript.addMessageListener("device-prompt", function devicePromptHandler() {
+      gScript.removeMessageListener("device-prompt", devicePromptHandler);
       info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-select');
+      gScript.sendAsyncMessage("trigger-device-prompt-select");
     });
 
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+    gScript.addMessageListener("control-channel-established", function controlChannelEstablishedHandler() {
+      gScript.removeMessageListener("control-channel-established", controlChannelEstablishedHandler);
       info("A control channel is established.");
-      gScript.sendAsyncMessage('trigger-control-channel-open');
+      gScript.sendAsyncMessage("trigger-control-channel-open");
     });
 
-    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+    gScript.addMessageListener("control-channel-opened", function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener("control-channel-opened", controlChannelOpenedHandler);
       info("The control channel is opened.");
     });
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+    gScript.addMessageListener("control-channel-closed", function controlChannelClosedHandler(aReason) {
+      gScript.removeMessageListener("control-channel-closed", controlChannelClosedHandler);
       info("The control channel is closed. " + aReason);
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
+    gScript.addMessageListener("offer-sent", function offerSentHandler(aIsValid) {
+      gScript.removeMessageListener("offer-sent", offerSentHandler);
       ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-transport');
+      gScript.sendAsyncMessage("trigger-incoming-transport");
     });
 
-    gScript.addMessageListener('answer-received', function answerReceivedHandler() {
-      gScript.removeMessageListener('answer-received', answerReceivedHandler);
+    gScript.addMessageListener("answer-received", function answerReceivedHandler() {
+      gScript.removeMessageListener("answer-received", answerReceivedHandler);
       info("An answer is received.");
     });
 
-    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
-      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+    gScript.addMessageListener("data-transport-initialized", function dataTransportInitializedHandler() {
+      gScript.removeMessageListener("data-transport-initialized", dataTransportInitializedHandler);
       info("Data transport channel is initialized.");
-      gScript.sendAsyncMessage('trigger-incoming-answer');
+      gScript.sendAsyncMessage("trigger-incoming-answer");
     });
 
-    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
-      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
+    gScript.addMessageListener("data-transport-notification-enabled", function dataTransportNotificationEnabledHandler() {
+      gScript.removeMessageListener("data-transport-notification-enabled", dataTransportNotificationEnabledHandler);
       info("Data notification is enabled for data transport channel.");
     });
 
@@ -128,8 +128,8 @@ function testSend() {
   return new Promise(function(aResolve, aReject) {
     const outgoingMessage = "test outgoing message";
 
-    gScript.addMessageListener('message-sent', function messageSentHandler(aMessage) {
-      gScript.removeMessageListener('message-sent', messageSentHandler);
+    gScript.addMessageListener("message-sent", function messageSentHandler(aMessage) {
+      gScript.removeMessageListener("message-sent", messageSentHandler);
       is(aMessage, outgoingMessage, "The message is sent out.");
       aResolve();
     });
@@ -142,19 +142,19 @@ function testIncomingMessage() {
   return new Promise(function(aResolve, aReject) {
     const incomingMessage = "test incoming message";
 
-    connection.addEventListener('message', function(aEvent) {
+    connection.addEventListener("message", function(aEvent) {
       is(aEvent.data, incomingMessage, "An incoming message should be received.");
       aResolve();
     }, {once: true});
 
-    gScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
+    gScript.sendAsyncMessage("trigger-incoming-message", incomingMessage);
   });
 }
 
 function testCloseConnection() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+    gScript.addMessageListener("data-transport-closed", function dataTransportClosedHandler(aReason) {
+      gScript.removeMessageListener("data-transport-closed", dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
@@ -170,36 +170,36 @@ function testCloseConnection() {
 
 function testReconnect() {
   return new Promise(function(aResolve, aReject) {
-    info('--- testReconnect ---');
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablished() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablished);
+    info("--- testReconnect ---");
+    gScript.addMessageListener("control-channel-established", function controlChannelEstablished() {
+      gScript.removeMessageListener("control-channel-established", controlChannelEstablished);
       gScript.sendAsyncMessage("trigger-control-channel-open");
     });
 
-    gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
-      gScript.removeMessageListener('start-reconnect', startReconnectHandler);
-      is(url, "https://example.com/", "URLs should be the same.")
-      gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+    gScript.addMessageListener("start-reconnect", function startReconnectHandler(url) {
+      gScript.removeMessageListener("start-reconnect", startReconnectHandler);
+      is(url, "https://example.com/", "URLs should be the same.");
+      gScript.sendAsyncMessage("trigger-reconnected-acked", url);
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler() {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      gScript.sendAsyncMessage('trigger-incoming-transport');
+    gScript.addMessageListener("offer-sent", function offerSentHandler() {
+      gScript.removeMessageListener("offer-sent", offerSentHandler);
+      gScript.sendAsyncMessage("trigger-incoming-transport");
     });
 
-    gScript.addMessageListener('answer-received', function answerReceivedHandler() {
-      gScript.removeMessageListener('answer-received', answerReceivedHandler);
+    gScript.addMessageListener("answer-received", function answerReceivedHandler() {
+      gScript.removeMessageListener("answer-received", answerReceivedHandler);
       info("An answer is received.");
     });
 
-    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
-      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+    gScript.addMessageListener("data-transport-initialized", function dataTransportInitializedHandler() {
+      gScript.removeMessageListener("data-transport-initialized", dataTransportInitializedHandler);
       info("Data transport channel is initialized.");
-      gScript.sendAsyncMessage('trigger-incoming-answer');
+      gScript.sendAsyncMessage("trigger-incoming-answer");
     });
 
-    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
-      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
+    gScript.addMessageListener("data-transport-notification-enabled", function dataTransportNotificationEnabledHandler() {
+      gScript.removeMessageListener("data-transport-notification-enabled", dataTransportNotificationEnabledHandler);
       info("Data notification is enabled for data transport channel.");
     });
 
@@ -226,13 +226,13 @@ function testReconnect() {
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
@@ -249,7 +249,7 @@ function runTests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                     ["dom.presentation.controller.enabled", true],
                                     ["dom.presentation.session_transport.data_channel.enable", false]]},
                           runTests);

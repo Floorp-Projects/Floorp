@@ -63,8 +63,8 @@ impl ScrollNodeAndClipChain {
 // the information in the clip-scroll tree. However, if we decide
 // to rasterize a picture in local space, then this will be the
 // transform relative to that picture's coordinate system.
-pub struct Transform {
-    pub m: LayoutToWorldTransform,
+pub struct Transform<'a> {
+    pub m: &'a LayoutToWorldTransform,
     pub backface_is_visible: bool,
     pub transform_kind: TransformedRectKind,
 }
@@ -1495,7 +1495,9 @@ impl PrimitiveStore {
                 //           scale factor from the world transform to get an appropriately
                 //           sized border task.
                 let world_scale = LayoutToWorldScale::new(1.0);
-                let scale = world_scale * frame_context.device_pixel_scale;
+                let mut scale = world_scale * frame_context.device_pixel_scale;
+                let max_scale = BorderRenderTaskInfo::get_max_scale(&border.radius);
+                scale.0 = scale.0.min(max_scale.0);
                 let scale_au = Au::from_f32_px(scale.0);
                 let needs_update = scale_au != cache_key.scale;
                 let mut new_segments = Vec::new();
@@ -1572,7 +1574,7 @@ impl PrimitiveStore {
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
                 // The transform only makes sense for screen space rasterization
-                let transform = prim_run_context.scroll_node.world_content_transform.into();
+                let transform = prim_run_context.scroll_node.world_content_transform.to_transform();
                 text.prepare_for_render(
                     frame_context.device_pixel_scale,
                     &transform,
@@ -2062,7 +2064,7 @@ impl PrimitiveStore {
                 continue;
             }
 
-            let local_clips = frame_state.clip_store.get(clip_item.clip_sources_index);
+            let local_clips = &frame_state.clip_store[clip_item.clip_sources_index];
             rect_clips_only = rect_clips_only && local_clips.only_rectangular_clips;
 
             // TODO(gw): We can easily extend the segment builder to support these clip sources in
@@ -2289,7 +2291,7 @@ impl PrimitiveStore {
         let extra_clip =  {
             let metadata = &self.cpu_metadata[prim_index.0];
             metadata.clip_sources_index.map(|clip_sources_index| {
-                let prim_clips = frame_state.clip_store.get_mut(clip_sources_index);
+                let prim_clips = &mut frame_state.clip_store[clip_sources_index];
                 prim_clips.update(
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
@@ -2964,8 +2966,8 @@ fn get_local_clip_rect_for_nodes(
                 })
             }
         )
-        .and_then(|local_rect| {
-            scroll_node.coordinate_system_relative_transform.unapply(&local_rect)
+        .map(|local_rect| {
+            local_rect.translate(&-scroll_node.coordinate_system_relative_offset)
         })
 }
 

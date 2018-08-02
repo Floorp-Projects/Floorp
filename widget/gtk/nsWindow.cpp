@@ -3742,7 +3742,7 @@ nsWindow::Create(nsIWidget* aParent,
                 gtk_widget_set_visual(mShell,
                                       gdk_x11_screen_lookup_visual(screen,
                                                                    visualId));
-                mHasAlphaVisual = true;
+                mHasAlphaVisual = needsAlphaVisual;
             } else {
                 NS_WARNING("We're missing X11 Visual for WebRender!");
             }

@@ -1,28 +1,30 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-'use strict';
+"use strict";
 
-const { XPCOMUtils } = ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
+/* eslint-env mozilla/frame-script */
 
-const manager = Cc['@mozilla.org/presentation-device/manager;1']
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+
+const manager = Cc["@mozilla.org/presentation-device/manager;1"]
                   .getService(Ci.nsIPresentationDeviceManager);
 
 var testProvider = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceProvider]),
-  forceDiscovery: function() {
-    sendAsyncMessage('force-discovery');
+  forceDiscovery() {
+    sendAsyncMessage("force-discovery");
   },
   listener: null,
 };
 
 var testDevice = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
-  establishControlChannel: function() {
+  establishControlChannel() {
     return null;
   },
-  disconnect: function() {},
-  isRequestedUrlSupported: function(requestedUrl) {
+  disconnect() {},
+  isRequestedUrlSupported(requestedUrl) {
     return true;
   },
   id: null,
@@ -33,56 +35,56 @@ var testDevice = {
 
 var testDevice1 = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
-  id: 'dummyid',
-  name: 'dummyName',
-  type: 'dummyType',
-  establishControlChannel: function(url, presentationId) {
+  id: "dummyid",
+  name: "dummyName",
+  type: "dummyType",
+  establishControlChannel(url, presentationId) {
     return null;
   },
-  disconnect: function() {},
-  isRequestedUrlSupported: function(requestedUrl) {
+  disconnect() {},
+  isRequestedUrlSupported(requestedUrl) {
     return true;
   },
 };
 
 var testDevice2 = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
-  id: 'dummyid',
-  name: 'dummyName',
-  type: 'dummyType',
-  establishControlChannel: function(url, presentationId) {
+  id: "dummyid",
+  name: "dummyName",
+  type: "dummyType",
+  establishControlChannel(url, presentationId) {
     return null;
   },
-  disconnect: function() {},
-  isRequestedUrlSupported: function(requestedUrl) {
+  disconnect() {},
+  isRequestedUrlSupported(requestedUrl) {
     return true;
   },
 };
 
 var mockedDeviceWithoutSupportedURL = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
-  id: 'dummyid',
-  name: 'dummyName',
-  type: 'dummyType',
-  establishControlChannel: function(url, presentationId) {
+  id: "dummyid",
+  name: "dummyName",
+  type: "dummyType",
+  establishControlChannel(url, presentationId) {
     return null;
   },
-  disconnect: function() {},
-  isRequestedUrlSupported: function(requestedUrl) {
+  disconnect() {},
+  isRequestedUrlSupported(requestedUrl) {
     return false;
   },
 };
 
 var mockedDeviceSupportHttpsURL = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
-  id: 'dummyid',
-  name: 'dummyName',
-  type: 'dummyType',
-  establishControlChannel: function(url, presentationId) {
+  id: "dummyid",
+  name: "dummyName",
+  type: "dummyType",
+  establishControlChannel(url, presentationId) {
     return null;
   },
-  disconnect: function() {},
-  isRequestedUrlSupported: function(requestedUrl) {
+  disconnect() {},
+  isRequestedUrlSupported(requestedUrl) {
     if (requestedUrl.includes("https://")) {
       return true;
     }
@@ -90,57 +92,57 @@ var mockedDeviceSupportHttpsURL = {
   },
 };
 
-addMessageListener('setup', function() {
+addMessageListener("setup", function() {
   manager.addDeviceProvider(testProvider);
 
-  sendAsyncMessage('setup-complete');
+  sendAsyncMessage("setup-complete");
 });
 
-addMessageListener('trigger-device-add', function(device) {
+addMessageListener("trigger-device-add", function(device) {
   testDevice.id = device.id;
   testDevice.name = device.name;
   testDevice.type = device.type;
   manager.addDevice(testDevice);
 });
 
-addMessageListener('trigger-add-unsupport-url-device', function() {
+addMessageListener("trigger-add-unsupport-url-device", function() {
   manager.addDevice(mockedDeviceWithoutSupportedURL);
 });
 
-addMessageListener('trigger-add-multiple-devices', function() {
+addMessageListener("trigger-add-multiple-devices", function() {
   manager.addDevice(testDevice1);
   manager.addDevice(testDevice2);
 });
 
-addMessageListener('trigger-add-https-devices', function() {
+addMessageListener("trigger-add-https-devices", function() {
   manager.addDevice(mockedDeviceSupportHttpsURL);
 });
 
 
-addMessageListener('trigger-device-update', function(device) {
+addMessageListener("trigger-device-update", function(device) {
   testDevice.id = device.id;
   testDevice.name = device.name;
   testDevice.type = device.type;
   manager.updateDevice(testDevice);
 });
 
-addMessageListener('trigger-device-remove', function() {
+addMessageListener("trigger-device-remove", function() {
   manager.removeDevice(testDevice);
 });
 
-addMessageListener('trigger-remove-unsupported-device', function() {
+addMessageListener("trigger-remove-unsupported-device", function() {
   manager.removeDevice(mockedDeviceWithoutSupportedURL);
 });
 
-addMessageListener('trigger-remove-multiple-devices', function() {
+addMessageListener("trigger-remove-multiple-devices", function() {
   manager.removeDevice(testDevice1);
   manager.removeDevice(testDevice2);
 });
 
-addMessageListener('trigger-remove-https-devices', function() {
+addMessageListener("trigger-remove-https-devices", function() {
   manager.removeDevice(mockedDeviceSupportHttpsURL);
 });
 
-addMessageListener('teardown', function() {
+addMessageListener("teardown", function() {
   manager.removeDeviceProvider(testProvider);
 });

@@ -61,8 +61,8 @@ add_task(async function() {
   await waitUntil(() => {
     sentItem = getSelectedRequest(store.getState());
     origItem = getSortedRequests(store.getState()).get(0);
-    return sentItem.requestHeaders && sentItem.requestPostData &&
-      origItem.requestHeaders && origItem.requestPostData;
+    return sentItem && sentItem.requestHeaders && sentItem.requestPostData &&
+      origItem && origItem.requestHeaders && origItem.requestPostData;
   });
 
   await testSentRequest(sentItem, origItem);

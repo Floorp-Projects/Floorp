@@ -224,22 +224,22 @@ impl<'a> DisplayListFlattener<'a> {
         &self,
         pipeline_id: PipelineId,
         complex_clips: ItemRange<ComplexClipRegion>,
-    ) -> Vec<ComplexClipRegion> {
-        if complex_clips.is_empty() {
-            return vec![];
-        }
-        self.scene.get_display_list_for_pipeline(pipeline_id).get(complex_clips).collect()
+    ) -> impl 'a + Iterator<Item = ComplexClipRegion> {
+        //Note: we could make this a bit more complex to early out
+        // on `complex_clips.is_empty()` if it's worth it
+        self.scene
+            .get_display_list_for_pipeline(pipeline_id)
+            .get(complex_clips)
     }
 
     fn get_clip_chain_items(
         &self,
         pipeline_id: PipelineId,
         items: ItemRange<ClipId>,
-    ) -> Vec<ClipId> {
-        if items.is_empty() {
-            return vec![];
-        }
-        self.scene.get_display_list_for_pipeline(pipeline_id).get(items).collect()
+    ) -> impl 'a + Iterator<Item = ClipId> {
+        self.scene
+            .get_display_list_for_pipeline(pipeline_id)
+            .get(items)
     }
 
     fn flatten_root(&mut self, pipeline: &'a ScenePipeline, frame_size: &LayoutSize) {
@@ -685,8 +685,7 @@ impl<'a> DisplayListFlattener<'a> {
             }
             SpecificDisplayItem::ClipChain(ref info) => {
                 let items = self.get_clip_chain_items(pipeline_id, item.clip_chain_items())
-                    .iter()
-                    .map(|id| self.id_to_index_mapper.get_clip_node_index(*id))
+                    .map(|id| self.id_to_index_mapper.get_clip_node_index(id))
                     .collect();
                 let parent = match info.parent {
                     Some(id) => Some(
@@ -1241,12 +1240,15 @@ impl<'a> DisplayListFlattener<'a> {
         );
     }
 
-    pub fn add_clip_node(
+    pub fn add_clip_node<I>(
         &mut self,
         new_node_id: ClipId,
         parent_id: ClipId,
-        clip_region: ClipRegion,
-    ) -> ClipChainIndex {
+        clip_region: ClipRegion<I>,
+    ) -> ClipChainIndex
+    where
+        I: IntoIterator<Item = ComplexClipRegion>
+    {
         let parent_clip_chain_index = self.id_to_index_mapper.get_clip_chain_index(&parent_id);
         let spatial_node = self.id_to_index_mapper.get_spatial_node_index(parent_id);
 

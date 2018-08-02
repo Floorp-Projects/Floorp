@@ -1,3 +1,3 @@
 # app-units
 
-[Documentation](http://doc.servo.org/app_units/index.html)
+[Documentation](https://docs.rs/app_units/)

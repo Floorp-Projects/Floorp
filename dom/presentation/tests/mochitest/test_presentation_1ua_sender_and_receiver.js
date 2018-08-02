@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 function debug(str) {
   // info(str);
 }
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript1UA.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_receiver.html');
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript1UA.js"));
+var receiverUrl = SimpleTest.getTestFileURL("file_presentation_1ua_receiver.html");
 var request;
 var connection;
 var receiverIframe;
@@ -27,33 +27,33 @@ function postMessageToIframe(aType) {
 
 function setup() {
 
-  gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-    debug('Got message: device-prompt');
-    gScript.removeMessageListener('device-prompt', devicePromptHandler);
-    gScript.sendAsyncMessage('trigger-device-prompt-select');
+  gScript.addMessageListener("device-prompt", function devicePromptHandler() {
+    debug("Got message: device-prompt");
+    gScript.removeMessageListener("device-prompt", devicePromptHandler);
+    gScript.sendAsyncMessage("trigger-device-prompt-select");
   });
 
-  gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-    gScript.removeMessageListener('control-channel-established',
+  gScript.addMessageListener("control-channel-established", function controlChannelEstablishedHandler() {
+    gScript.removeMessageListener("control-channel-established",
                                   controlChannelEstablishedHandler);
     gScript.sendAsyncMessage("trigger-control-channel-open");
   });
 
-  gScript.addMessageListener('sender-launch', function senderLaunchHandler(url) {
-    debug('Got message: sender-launch');
-    gScript.removeMessageListener('sender-launch', senderLaunchHandler);
-    is(url, receiverUrl, 'Receiver: should receive the same url');
-    receiverIframe = document.createElement('iframe');
-    receiverIframe.setAttribute('src', receiverUrl);
+  gScript.addMessageListener("sender-launch", function senderLaunchHandler(url) {
+    debug("Got message: sender-launch");
+    gScript.removeMessageListener("sender-launch", senderLaunchHandler);
+    is(url, receiverUrl, "Receiver: should receive the same url");
+    receiverIframe = document.createElement("iframe");
+    receiverIframe.setAttribute("src", receiverUrl);
     receiverIframe.setAttribute("mozbrowser", "true");
     receiverIframe.setAttribute("mozpresentation", receiverUrl);
-    var oop = !location.pathname.includes('_inproc');
+    var oop = !location.pathname.includes("_inproc");
     receiverIframe.setAttribute("remote", oop);
 
     // This event is triggered when the iframe calls "alert".
     receiverIframe.addEventListener("mozbrowsershowmodalprompt", function receiverListener(evt) {
       var message = evt.detail.message;
-      debug('Got iframe message: ' + message);
+      debug("Got iframe message: " + message);
       if (/^OK /.exec(message)) {
         ok(true, message.replace(/^OK /, ""));
       } else if (/^KO /.exec(message)) {
@@ -74,15 +74,14 @@ function setup() {
       aResolve(receiverIframe);
     });
 
-    var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-                           .getService(SpecialPowers.Ci.nsIObserverService);
-    obs.notifyObservers(promise, 'setup-request-promise');
+    var obs = SpecialPowers.Services.obs;
+    obs.notifyObservers(promise, "setup-request-promise");
   });
 
-  gScript.addMessageListener('promise-setup-ready', function promiseSetupReadyHandler() {
-    debug('Got message: promise-setup-ready');
-    gScript.removeMessageListener('promise-setup-ready', promiseSetupReadyHandler);
-    gScript.sendAsyncMessage('trigger-on-session-request', receiverUrl);
+  gScript.addMessageListener("promise-setup-ready", function promiseSetupReadyHandler() {
+    debug("Got message: promise-setup-ready");
+    gScript.removeMessageListener("promise-setup-ready", promiseSetupReadyHandler);
+    gScript.sendAsyncMessage("trigger-on-session-request", receiverUrl);
   });
 
   return Promise.resolve();
@@ -90,7 +89,7 @@ function setup() {
 
 function testCreateRequest() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testCreateRequest ---');
+    info("Sender: --- testCreateRequest ---");
     request = new PresentationRequest("file_presentation_1ua_receiver.html");
     request.getAvailability().then((aAvailability) => {
       is(aAvailability.value, false, "Sender: should have no available device after setup");
@@ -98,9 +97,9 @@ function testCreateRequest() {
         aAvailability.onchange = null;
         ok(aAvailability.value, "Sender: Device should be available.");
         aResolve();
-      }
+      };
 
-      gScript.sendAsyncMessage('trigger-device-add');
+      gScript.sendAsyncMessage("trigger-device-add");
     }).catch((aError) => {
       ok(false, "Sender: Error occurred when getting availability: " + aError);
       teardown();
@@ -140,17 +139,17 @@ function testStartConnection() {
 
 function testSendMessage() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testSendMessage ---');
-    gScript.addMessageListener('trigger-message-from-sender', function triggerMessageFromSenderHandler() {
-      debug('Got message: trigger-message-from-sender');
-      gScript.removeMessageListener('trigger-message-from-sender', triggerMessageFromSenderHandler);
-      info('Send message to receiver');
-      connection.send('msg-sender-to-receiver');
+    info("Sender: --- testSendMessage ---");
+    gScript.addMessageListener("trigger-message-from-sender", function triggerMessageFromSenderHandler() {
+      debug("Got message: trigger-message-from-sender");
+      gScript.removeMessageListener("trigger-message-from-sender", triggerMessageFromSenderHandler);
+      info("Send message to receiver");
+      connection.send("msg-sender-to-receiver");
     });
 
-    gScript.addMessageListener('message-from-sender-received', function messageFromSenderReceivedHandler() {
-      debug('Got message: message-from-sender-received');
-      gScript.removeMessageListener('message-from-sender-received', messageFromSenderReceivedHandler);
+    gScript.addMessageListener("message-from-sender-received", function messageFromSenderReceivedHandler() {
+      debug("Got message: message-from-sender-received");
+      gScript.removeMessageListener("message-from-sender-received", messageFromSenderReceivedHandler);
       aResolve();
     });
   });
@@ -158,24 +157,24 @@ function testSendMessage() {
 
 function testIncomingMessage() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testIncomingMessage ---');
-    connection.addEventListener('message', function(evt) {
+    info("Sender: --- testIncomingMessage ---");
+    connection.addEventListener("message", function(evt) {
       let msg = evt.data;
       is(msg, "msg-receiver-to-sender", "Sender: Sender should receive message from Receiver");
-      postMessageToIframe('message-from-receiver-received');
+      postMessageToIframe("message-from-receiver-received");
       aResolve();
     }, {once: true});
-    postMessageToIframe('trigger-message-from-receiver');
+    postMessageToIframe("trigger-message-from-receiver");
   });
 }
 
 function testSendBlobMessage() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testSendBlobMessage ---');
-    connection.addEventListener('message', function(evt) {
+    info("Sender: --- testSendBlobMessage ---");
+    connection.addEventListener("message", function(evt) {
       let msg = evt.data;
       is(msg, "testIncomingBlobMessage", "Sender: Sender should receive message from Receiver");
-      let blob = new Blob(["Hello World"], {type : 'text/plain'});
+      let blob = new Blob(["Hello World"], {type: "text/plain"});
       connection.send(blob);
       aResolve();
     }, {once: true});
@@ -184,8 +183,8 @@ function testSendBlobMessage() {
 
 function testSendArrayBuffer() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testSendArrayBuffer ---');
-    connection.addEventListener('message', function(evt) {
+    info("Sender: --- testSendArrayBuffer ---");
+    connection.addEventListener("message", function(evt) {
       let msg = evt.data;
       is(msg, "testIncomingArrayBuffer", "Sender: Sender should receive message from Receiver");
       connection.send(DATA_ARRAY_BUFFER);
@@ -196,8 +195,8 @@ function testSendArrayBuffer() {
 
 function testSendArrayBufferView() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testSendArrayBufferView ---');
-    connection.addEventListener('message', function(evt) {
+    info("Sender: --- testSendArrayBufferView ---");
+    connection.addEventListener("message", function(evt) {
       let msg = evt.data;
       is(msg, "testIncomingArrayBufferView", "Sender: Sender should receive message from Receiver");
       connection.send(TYPED_DATA_ARRAY);
@@ -207,19 +206,18 @@ function testSendArrayBufferView() {
 }
 
 function testCloseConnection() {
-  info('Sender: --- testCloseConnection ---');
+  info("Sender: --- testCloseConnection ---");
   // Test terminate immediate after close.
-  function controlChannelEstablishedHandler()
-  {
-    gScript.removeMessageListener('control-channel-established',
+  function controlChannelEstablishedHandler() {
+    gScript.removeMessageListener("control-channel-established",
                                   controlChannelEstablishedHandler);
     ok(false, "terminate after close should do nothing");
   }
-  gScript.addMessageListener('ready-to-close', function onReadyToClose() {
-    gScript.removeMessageListener('ready-to-close', onReadyToClose);
+  gScript.addMessageListener("ready-to-close", function onReadyToClose() {
+    gScript.removeMessageListener("ready-to-close", onReadyToClose);
     connection.close();
 
-    gScript.addMessageListener('control-channel-established', controlChannelEstablishedHandler);
+    gScript.addMessageListener("control-channel-established", controlChannelEstablishedHandler);
     connection.terminate();
   });
 
@@ -227,34 +225,34 @@ function testCloseConnection() {
     new Promise(function(aResolve, aReject) {
       connection.onclose = function() {
         connection.onclose = null;
-        is(connection.state, 'closed', 'Sender: Connection should be closed.');
-        gScript.removeMessageListener('control-channel-established',
+        is(connection.state, "closed", "Sender: Connection should be closed.");
+        gScript.removeMessageListener("control-channel-established",
                                       controlChannelEstablishedHandler);
         aResolve();
       };
     }),
     new Promise(function(aResolve, aReject) {
       let timeout = setTimeout(function() {
-        gScript.removeMessageListener('device-disconnected',
+        gScript.removeMessageListener("device-disconnected",
                                       deviceDisconnectedHandler);
         ok(true, "terminate after close should not trigger device.disconnect");
         aResolve();
       }, 3000);
 
       function deviceDisconnectedHandler() {
-        gScript.removeMessageListener('device-disconnected',
+        gScript.removeMessageListener("device-disconnected",
                                       deviceDisconnectedHandler);
         ok(false, "terminate after close should not trigger device.disconnect");
         clearTimeout(timeout);
         aResolve();
       }
 
-      gScript.addMessageListener('device-disconnected', deviceDisconnectedHandler);
+      gScript.addMessageListener("device-disconnected", deviceDisconnectedHandler);
     }),
     new Promise(function(aResolve, aReject) {
-      gScript.addMessageListener('receiver-closed', function onReceiverClosed() {
-        gScript.removeMessageListener('receiver-closed', onReceiverClosed);
-        gScript.removeMessageListener('control-channel-established',
+      gScript.addMessageListener("receiver-closed", function onReceiverClosed() {
+        gScript.removeMessageListener("receiver-closed", onReceiverClosed);
+        gScript.removeMessageListener("control-channel-established",
                                       controlChannelEstablishedHandler);
         aResolve();
       });
@@ -263,19 +261,19 @@ function testCloseConnection() {
 }
 
 function testTerminateAfterClose() {
-  info('Sender: --- testTerminateAfterClose ---');
+  info("Sender: --- testTerminateAfterClose ---");
   return Promise.race([
       new Promise(function(aResolve, aReject) {
         connection.onterminate = function() {
           connection.onterminate = null;
-          ok(false, 'terminate after close should do nothing');
+          ok(false, "terminate after close should do nothing");
           aResolve();
         };
         connection.terminate();
       }),
       new Promise(function(aResolve, aReject) {
         setTimeout(function() {
-          is(connection.state, 'closed', 'Sender: Connection should be closed.');
+          is(connection.state, "closed", "Sender: Connection should be closed.");
           aResolve();
         }, 3000);
       }),
@@ -284,21 +282,21 @@ function testTerminateAfterClose() {
 
 function testReconnect() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testReconnect ---');
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablished() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablished);
+    info("Sender: --- testReconnect ---");
+    gScript.addMessageListener("control-channel-established", function controlChannelEstablished() {
+      gScript.removeMessageListener("control-channel-established", controlChannelEstablished);
       gScript.sendAsyncMessage("trigger-control-channel-open");
     });
 
-    gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
-      debug('Got message: start-reconnect');
-      gScript.removeMessageListener('start-reconnect', startReconnectHandler);
-      is(url, receiverUrl, "URLs should be the same.")
-      gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+    gScript.addMessageListener("start-reconnect", function startReconnectHandler(url) {
+      debug("Got message: start-reconnect");
+      gScript.removeMessageListener("start-reconnect", startReconnectHandler);
+      is(url, receiverUrl, "URLs should be the same.");
+      gScript.sendAsyncMessage("trigger-reconnected-acked", url);
     });
 
-    gScript.addMessageListener('ready-to-reconnect', function onReadyToReconnect() {
-      gScript.removeMessageListener('ready-to-reconnect', onReadyToReconnect);
+    gScript.addMessageListener("ready-to-reconnect", function onReadyToReconnect() {
+      gScript.removeMessageListener("ready-to-reconnect", onReadyToReconnect);
       request.reconnect(presentationId).then((aConnection) => {
         connection = aConnection;
         ok(connection, "Sender: Connection should be available.");
@@ -316,19 +314,19 @@ function testReconnect() {
       });
     });
 
-    postMessageToIframe('prepare-for-reconnect');
+    postMessageToIframe("prepare-for-reconnect");
   });
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    debug('Got message: teardown-complete');
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    debug("Got message: teardown-complete");
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
@@ -347,12 +345,12 @@ function runTests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout('Test for guarantee not firing async event');
+SimpleTest.requestFlakyTimeout("Test for guarantee not firing async event");
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: "presentation-device-manage", allow: false, context: document},
   {type: "browser", allow: true, context: document},
 ], () => {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       /* Mocked TCP session transport builder in the test */
                                       ["dom.presentation.session_transport.data_channel.enable", true],
                                       ["dom.presentation.controller.enabled", true],

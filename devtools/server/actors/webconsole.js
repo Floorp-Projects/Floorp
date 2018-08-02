@@ -19,9 +19,7 @@ const { createValueGrip, stringIsLong } = require("devtools/server/actors/object
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
 
-loader.lazyRequireGetter(this, "NetworkMonitor", "devtools/shared/webconsole/network-monitor", true);
-loader.lazyRequireGetter(this, "NetworkMonitorChild", "devtools/shared/webconsole/network-monitor", true);
-loader.lazyRequireGetter(this, "NetworkEventActor", "devtools/server/actors/network-event", true);
+loader.lazyRequireGetter(this, "NetworkMonitorActor", "devtools/server/actors/network-monitor", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
@@ -75,8 +73,6 @@ function WebConsoleActor(connection, parentActor) {
 
   this.dbg = this.parentActor.makeDebugger();
 
-  this._netEvents = new Map();
-  this._networkEventActorsByURL = new Map();
   this._gripDepth = 0;
   this._listeners = new Set();
   this._lastConsoleInputEvaluation = undefined;
@@ -130,25 +126,6 @@ WebConsoleActor.prototype =
    * @type object
    */
   _prefs: null,
-
-  /**
-   * Holds a map between nsIChannel objects and NetworkEventActors for requests
-   * created with sendHTTPRequest or found via the network listener.
-   *
-   * @private
-   * @type Map
-   */
-  _netEvents: null,
-
-  /**
-   * Holds a map from URL to NetworkEventActors for requests noticed by the network
-   * listener.  Requests are added when they start, so the actor might not yet have all
-   * data for the request until it has completed.
-   *
-   * @private
-   * @type Map
-   */
-  _networkEventActorsByURL: null,
 
   /**
    * Holds a set of all currently registered listeners.
@@ -289,16 +266,6 @@ WebConsoleActor.prototype =
   consoleAPIListener: null,
 
   /**
-   * The NetworkMonitor instance.
-   */
-  networkMonitor: null,
-
-  /**
-   * The NetworkMonitor instance living in the same (child) process.
-   */
-  networkMonitorChild: null,
-
-  /**
    * The ConsoleProgressListener instance.
    */
   consoleProgressListener: null,
@@ -354,17 +321,26 @@ WebConsoleActor.prototype =
       this.consoleServiceListener.destroy();
       this.consoleServiceListener = null;
     }
+    if (this.networkMonitorActor) {
+      this.networkMonitorActor.destroy();
+      this.networkMonitorActor = null;
+    }
+    if (this.networkMonitorActorId) {
+      const messageManager = this.parentActor.messageManager;
+      if (messageManager) {
+        messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
+          actorId: this.networkMonitorActorId
+        });
+      }
+      this.networkMonitorActorId = null;
+    }
+    if (this.networkMonitorChildActor) {
+      this.networkMonitorChildActor.destroy();
+      this.networkMonitorChildActor = null;
+    }
     if (this.consoleAPIListener) {
       this.consoleAPIListener.destroy();
       this.consoleAPIListener = null;
-    }
-    if (this.networkMonitor) {
-      this.networkMonitor.destroy();
-      this.networkMonitor = null;
-    }
-    if (this.networkMonitorChild) {
-      this.networkMonitorChild.destroy();
-      this.networkMonitorChild = null;
     }
     if (this.stackTraceCollector) {
       this.stackTraceCollector.destroy();
@@ -397,7 +373,6 @@ WebConsoleActor.prototype =
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalWindow = null;
-    this._netEvents.clear();
     this.dbg.enabled = false;
     this.dbg = null;
     this.conn = null;
@@ -575,7 +550,7 @@ WebConsoleActor.prototype =
    * @return object
    *         The response object which holds the startedListeners array.
    */
-  startListeners: function(request) {
+  startListeners: async function(request) {
     const startedListeners = [];
     const window = !this.parentActor.isRootActor ? this.window : null;
     let messageManager = null;
@@ -623,27 +598,37 @@ WebConsoleActor.prototype =
           if (isWorker) {
             break;
           }
-          if (!this.networkMonitor) {
+          if (!this.networkMonitorActorId && !this.networkMonitorActor) {
             // Create a StackTraceCollector that's going to be shared both by
-            // the NetworkMonitorChild (getting messages about requests from
-            // parent) and by the NetworkMonitor that directly watches service
-            // workers requests.
-            this.stackTraceCollector = new StackTraceCollector({ window });
+            // the NetworkMonitorActor running in the same process for service worker
+            // requests, as well with the NetworkMonitorActor running in the parent
+            // process. It will communicate via message manager for this one.
+            this.stackTraceCollector = new StackTraceCollector({ window },
+              messageManager);
             this.stackTraceCollector.init();
 
             if (messageManager && processBoundary) {
               // Start a network monitor in the parent process to listen to
               // most requests than happen in parent
-              this.networkMonitor =
-                new NetworkMonitorChild(this.parentActor.outerWindowID,
-                                        messageManager, this.conn, this);
-              this.networkMonitor.init();
+              this.networkMonitorActorId = await this.conn.spawnActorInParentProcess(
+                this.actorID, {
+                  module: "devtools/server/actors/network-monitor",
+                  constructor: "NetworkMonitorActor",
+                  args: [
+                    { outerWindowID: this.parentActor.outerWindowID },
+                    this.actorID
+                  ],
+                });
+
               // Spawn also one in the child to listen to service workers
-              this.networkMonitorChild = new NetworkMonitor({ window }, this);
-              this.networkMonitorChild.init();
+              this.networkMonitorChildActor = new NetworkMonitorActor(this.conn,
+                { window },
+                this.actorID,
+                null,
+                this.stackTraceCollector);
             } else {
-              this.networkMonitor = new NetworkMonitor({ window }, this);
-              this.networkMonitor.init();
+              this.networkMonitorActor = new NetworkMonitorActor(this.conn, { window },
+                this.actorID, null, this.stackTraceCollector);
             }
           }
           startedListeners.push(listener);
@@ -743,13 +728,22 @@ WebConsoleActor.prototype =
           stoppedListeners.push(listener);
           break;
         case "NetworkActivity":
-          if (this.networkMonitor) {
-            this.networkMonitor.destroy();
-            this.networkMonitor = null;
+          if (this.networkMonitorActor) {
+            this.networkMonitorActor.destroy();
+            this.networkMonitorActor = null;
           }
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.destroy();
-            this.networkMonitorChild = null;
+          if (this.networkMonitorActorId) {
+            const messageManager = this.parentActor.messageManager;
+            if (messageManager) {
+              messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
+                actorId: this.networkMonitorActorId
+              });
+            }
+            this.networkMonitorActorId = null;
+          }
+          if (this.networkMonitorChildActor) {
+            this.networkMonitorChildActor.destroy();
+            this.networkMonitorChildActor = null;
           }
           if (this.stackTraceCollector) {
             this.stackTraceCollector.destroy();
@@ -1198,18 +1192,31 @@ WebConsoleActor.prototype =
     for (const key in request.preferences) {
       this._prefs[key] = request.preferences[key];
 
-      if (this.networkMonitor) {
-        if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
-          this.networkMonitor.saveRequestAndResponseBodies = this._prefs[key];
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.saveRequestAndResponseBodies =
-              this._prefs[key];
-          }
-        } else if (key == "NetworkMonitor.throttleData") {
-          this.networkMonitor.throttleData = this._prefs[key];
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.throttleData = this._prefs[key];
-          }
+      if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
+        if (this.networkMonitorActor) {
+          this.networkMonitorActor.netMonitor.saveRequestAndResponseBodies =
+            this._prefs[key];
+        }
+        if (this.networkMonitorChildActor) {
+          this.networkMonitorChildActor.netMonitor.saveRequestAndResponseBodies =
+            this._prefs[key];
+        }
+        if (this.networkMonitorActorId) {
+          const messageManager = this.parentActor.messageManager;
+          messageManager.sendAsyncMessage("debug:netmonitor-preference",
+            { saveRequestAndResponseBodies: this._prefs[key] });
+        }
+      } else if (key == "NetworkMonitor.throttleData") {
+        if (this.networkMonitorActor) {
+          this.networkMonitorActor.netMonitor.throttleData = this._prefs[key];
+        }
+        if (this.networkMonitorChildActor) {
+          this.networkMonitorChildActor.netMonitor.throttleData = this._prefs[key];
+        }
+        if (this.networkMonitorActorId) {
+          const messageManager = this.parentActor.messageManager;
+          messageManager.sendAsyncMessage("debug:netmonitor-preference",
+            { throttleData: this._prefs[key] });
         }
       }
     }
@@ -1719,58 +1726,6 @@ WebConsoleActor.prototype =
   },
 
   /**
-   * Handler for network events. This method is invoked when a new network event
-   * is about to be recorded.
-   *
-   * @see NetworkEventActor
-   * @see NetworkMonitor from webconsole/utils.js
-   *
-   * @param object event
-   *        The initial network request event information.
-   * @return object
-   *         A new NetworkEventActor is returned. This is used for tracking the
-   *         network request and response.
-   */
-  onNetworkEvent: function(event) {
-    const actor = this.getNetworkEventActor(event.channelId);
-    actor.init(event);
-
-    this._networkEventActorsByURL.set(actor._request.url, actor);
-
-    const packet = {
-      from: this.actorID,
-      type: "networkEvent",
-      eventActor: actor.form()
-    };
-
-    this.conn.send(packet);
-
-    return actor;
-  },
-
-  /**
-   * Get the NetworkEventActor for a nsIHttpChannel, if it exists,
-   * otherwise create a new one.
-   *
-   * @param string channelId
-   *        The id of the channel for the network event.
-   * @return object
-   *         The NetworkEventActor for the given channel.
-   */
-  getNetworkEventActor: function(channelId) {
-    let actor = this._netEvents.get(channelId);
-    if (actor) {
-      // delete from map as we should only need to do this check once
-      this._netEvents.delete(channelId);
-      return actor;
-    }
-
-    actor = new NetworkEventActor(this);
-    this._actorPool.addActor(actor);
-    return actor;
-  },
-
-  /**
    * Get the NetworkEventActor for a given URL that may have been noticed by the network
    * listener.  Requests are added when they start, so the actor might not yet have all
    * data for the request until it has completed.
@@ -1778,8 +1733,27 @@ WebConsoleActor.prototype =
    * @param string url
    *        The URL of the request to search for.
    */
-  getNetworkEventActorForURL(url) {
-    return this._networkEventActorsByURL.get(url);
+  getRequestContentForURL(url) {
+    // When running in Parent Process, call the NetworkMonitorActor directly.
+    if (this.networkMonitorActor) {
+      return this.networkMonitorActor.getRequestContentForURL(url);
+    } else if (this.networkMonitorActorId) {
+      // Otherwise, if the netmonitor is started, but on the parent process,
+      // pipe the data through the message manager
+      const messageManager = this.parentActor.messageManager;
+      return new Promise(resolve => {
+        const onMessage = ({ data }) => {
+          if (data.url == url) {
+            messageManager.removeMessageListener("debug:request-content", onMessage);
+            resolve(data.content);
+          }
+        };
+        messageManager.addMessageListener("debug:request-content", onMessage);
+        messageManager.sendAsyncMessage("debug:request-content", { url });
+      });
+    }
+    // Finally, if the netmonitor is not started at all, return null
+    return null;
   },
 
   /**
@@ -1788,8 +1762,8 @@ WebConsoleActor.prototype =
    * @param object message
    *        Object with 'request' - the HTTP request details.
    */
-  sendHTTPRequest(message) {
-    const { url, method, headers, body } = message.request;
+  async sendHTTPRequest({ request }) {
+    const { url, method, headers, body } = request;
 
     // Set the loadingNode and loadGroup to the target document - otherwise the
     // request won't show up in the opened netmonitor.
@@ -1825,15 +1799,30 @@ WebConsoleActor.prototype =
 
     NetUtil.asyncFetch(channel, () => {});
 
-    const actor = this.getNetworkEventActor(channel.channelId);
-
-    // map channel to actor so we can associate future events with it
-    this._netEvents.set(channel.channelId, actor);
-
-    return {
-      from: this.actorID,
-      eventActor: actor.form()
-    };
+    // When running in Parent Process, call the NetworkMonitorActor directly.
+    const { channelId } = channel;
+    if (this.networkMonitorActor) {
+      const actor = this.networkMonitorActor.getNetworkEventActor(channelId);
+      return {
+        eventActor: actor.form()
+      };
+    } else if (this.networkMonitorActorId) {
+      // Otherwise, if the netmonitor is started, but on the parent process,
+      // pipe the data through the message manager
+      const messageManager = this.parentActor.messageManager;
+      return new Promise(resolve => {
+        const onMessage = ({ data }) => {
+          messageManager.removeMessageListener("debug:get-network-event-actor",
+            onMessage);
+          resolve({
+            eventActor: data
+          });
+        };
+        messageManager.addMessageListener("debug:get-network-event-actor", onMessage);
+        messageManager.sendAsyncMessage("debug:get-network-event-actor", { channelId });
+      });
+    }
+    return null;
   },
 
   /**
