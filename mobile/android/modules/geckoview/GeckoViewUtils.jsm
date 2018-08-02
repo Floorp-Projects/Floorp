@@ -14,44 +14,36 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
 
-var {Appender, BasicFormatter} = Log;
-
 /**
  * A formatter that does not prepend time/name/level information to messages,
  * because those fields are logged separately when using the Android logger.
  */
-function AndroidFormatter() {
-  BasicFormatter.call(this);
-}
-AndroidFormatter.prototype = Object.freeze({
-  __proto__: BasicFormatter.prototype,
-
+class AndroidFormatter extends Log.BasicFormatter {
   format(message) {
     return this.formatText(message);
-  },
-});
+  }
+}
 
 /*
  * AndroidAppender
  * Logs to Android logcat using AndroidLog.jsm
  */
-function AndroidAppender(aFormatter) {
-  Appender.call(this, aFormatter || new AndroidFormatter());
-  this._name = "AndroidAppender";
-}
-AndroidAppender.prototype = {
-  __proto__: Appender.prototype,
+class AndroidAppender extends Log.Appender {
+  constructor(aFormatter) {
+    super(aFormatter || new AndroidFormatter());
+    this._name = "AndroidAppender";
 
-  // Map log level to AndroidLog.foo method.
-  _mapping: {
-    [Log.Level.Fatal]:  "e",
-    [Log.Level.Error]:  "e",
-    [Log.Level.Warn]:   "w",
-    [Log.Level.Info]:   "i",
-    [Log.Level.Config]: "d",
-    [Log.Level.Debug]:  "d",
-    [Log.Level.Trace]:  "v",
-  },
+    // Map log level to AndroidLog.foo method.
+    this._mapping = {
+      [Log.Level.Fatal]:  "e",
+      [Log.Level.Error]:  "e",
+      [Log.Level.Warn]:   "w",
+      [Log.Level.Info]:   "i",
+      [Log.Level.Config]: "d",
+      [Log.Level.Debug]:  "d",
+      [Log.Level.Trace]:  "v",
+    };
+  }
 
   append(aMessage) {
     if (!aMessage) {
@@ -63,8 +55,8 @@ AndroidAppender.prototype = {
     const tag = aMessage.loggerName.replace(/^Gecko|\./g, "");
     const msg = this._formatter.format(aMessage);
     AndroidLog[this._mapping[aMessage.level]](tag, msg);
-  },
-};
+  }
+}
 
 var GeckoViewUtils = {
   /**
