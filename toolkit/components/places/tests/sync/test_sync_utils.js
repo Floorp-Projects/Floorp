@@ -2188,7 +2188,7 @@ add_task(async function test_pushChanges() {
   }
 
   await PlacesSyncUtils.bookmarks.pushChanges(changes);
-  equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 3);
+  equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 4);
 
   {
     let fields = await PlacesTestUtils.fetchBookmarkSyncFields(
