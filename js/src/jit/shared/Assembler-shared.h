@@ -322,8 +322,7 @@ struct Address
     { }
 #endif
 
-    Address() : base(RegisterOrSP(Registers::Invalid)), offset(0)
-    { }
+    Address() = delete;
 };
 
 #if JS_BITS_PER_WORD == 32
@@ -363,12 +362,7 @@ struct BaseIndex
     { }
 #endif
 
-    BaseIndex()
-      : base(RegisterOrSP(Registers::Invalid))
-      , index(Registers::Invalid)
-      , scale(TimesOne)
-      , offset(0)
-    {}
+    BaseIndex() = delete;
 };
 
 #if JS_BITS_PER_WORD == 32

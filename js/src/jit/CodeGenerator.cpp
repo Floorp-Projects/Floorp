@@ -9277,7 +9277,7 @@ CodeGenerator::emitStoreHoleCheck(Register elements, const LAllocation* index,
         Address dest(elements, ToInt32(index) * sizeof(js::Value) + offsetAdjustment);
         masm.branchTestMagic(Assembler::Equal, dest, &bail);
     } else {
-        BaseIndex dest(elements, ToRegister(index), TimesEight, offsetAdjustment);
+        BaseObjectElementIndex dest(elements, ToRegister(index), offsetAdjustment);
         masm.branchTestMagic(Assembler::Equal, dest, &bail);
     }
     bailoutFrom(&bail, snapshot);
@@ -9302,7 +9302,7 @@ CodeGenerator::emitStoreElementTyped(const LAllocation* value,
         Address dest(elements, ToInt32(index) * sizeof(js::Value) + offsetAdjustment);
         masm.storeUnboxedValue(v, valueType, dest, elementType);
     } else {
-        BaseIndex dest(elements, ToRegister(index), TimesEight, offsetAdjustment);
+        BaseObjectElementIndex dest(elements, ToRegister(index), offsetAdjustment);
         masm.storeUnboxedValue(v, valueType, dest, elementType);
     }
 }
@@ -9342,8 +9342,8 @@ CodeGenerator::visitStoreElementV(LStoreElementV* lir)
                      ToInt32(lir->index()) * sizeof(js::Value) + lir->mir()->offsetAdjustment());
         masm.storeValue(value, dest);
     } else {
-        BaseIndex dest(elements, ToRegister(lir->index()), TimesEight,
-                       lir->mir()->offsetAdjustment());
+        BaseObjectElementIndex dest(elements, ToRegister(lir->index()),
+                                    lir->mir()->offsetAdjustment());
         masm.storeValue(value, dest);
     }
 }
@@ -9375,7 +9375,7 @@ CodeGenerator::emitStoreElementHoleT(T* lir)
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
                           ool->callStub());
         if (lir->toFallibleStoreElementT()->mir()->needsHoleCheck()) {
-            masm.branchTestMagic(Assembler::Equal, BaseValueIndex(elements, index),
+            masm.branchTestMagic(Assembler::Equal, BaseObjectElementIndex(elements, index),
                                  ool->callStub());
         }
     }
@@ -9418,7 +9418,7 @@ CodeGenerator::emitStoreElementHoleV(T* lir)
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
                           ool->callStub());
         if (lir->toFallibleStoreElementV()->mir()->needsHoleCheck()) {
-            masm.branchTestMagic(Assembler::Equal, BaseValueIndex(elements, index),
+            masm.branchTestMagic(Assembler::Equal, BaseObjectElementIndex(elements, index),
                                  ool->callStub());
         }
     }
@@ -9427,7 +9427,7 @@ CodeGenerator::emitStoreElementHoleV(T* lir)
         emitPreBarrier(elements, lir->index(), 0);
 
     masm.bind(ool->rejoinStore());
-    masm.storeValue(value, BaseIndex(elements, index, TimesEight));
+    masm.storeValue(value, BaseObjectElementIndex(elements, index));
 
     masm.bind(ool->rejoin());
 }
@@ -9700,7 +9700,7 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
     masm.sub32(Imm32(1), lengthTemp);
 
     if (mir->mode() == MArrayPopShift::Pop) {
-        BaseIndex addr(elementsTemp, lengthTemp, TimesEight);
+        BaseObjectElementIndex addr(elementsTemp, lengthTemp);
         masm.loadElementTypedOrValue(addr, out, mir->needsHoleCheck(), ool->entry());
     } else {
         MOZ_ASSERT(mir->mode() == MArrayPopShift::Shift);
@@ -9783,7 +9783,7 @@ CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
     masm.spectreBoundsCheck32(length, capacity, spectreTemp, ool->entry());
 
     // Do the store.
-    masm.storeConstantOrRegister(value, BaseIndex(elementsTemp, length, TimesEight));
+    masm.storeConstantOrRegister(value, BaseObjectElementIndex(elementsTemp, length));
 
     masm.add32(Imm32(1), length);
 
@@ -11438,8 +11438,8 @@ CodeGenerator::visitLoadElementT(LLoadElementT* lir)
         int32_t offset = ToInt32(index) * sizeof(js::Value) + lir->mir()->offsetAdjustment();
         emitLoadElementT(lir, Address(elements, offset));
     } else {
-        emitLoadElementT(lir, BaseIndex(elements, ToRegister(index), TimesEight,
-                                        lir->mir()->offsetAdjustment()));
+        emitLoadElementT(lir, BaseObjectElementIndex(elements, ToRegister(index),
+                                                     lir->mir()->offsetAdjustment()));
     }
 }
 
@@ -12068,7 +12068,7 @@ CodeGenerator::visitInArray(LInArray* lir)
 
         masm.branch32(Assembler::BelowOrEqual, initLength, index, failedInitLength);
         if (mir->needsHoleCheck()) {
-            BaseIndex address = BaseIndex(elements, ToRegister(lir->index()), TimesEight);
+            BaseObjectElementIndex address(elements, ToRegister(lir->index()));
             masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
         }
         masm.jump(&trueBranch);

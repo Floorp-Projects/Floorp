@@ -1497,13 +1497,14 @@ CodeGeneratorShared::omitOverRecursedCheck() const
 }
 
 void
-CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment)
+CodeGeneratorShared::emitPreBarrier(Register elements, const LAllocation* index,
+                                    int32_t offsetAdjustment)
 {
     if (index->isConstant()) {
-        Address address(base, ToInt32(index) * sizeof(Value) + offsetAdjustment);
+        Address address(elements, ToInt32(index) * sizeof(Value) + offsetAdjustment);
         masm.guardedCallPreBarrier(address, MIRType::Value);
     } else {
-        BaseIndex address(base, ToRegister(index), TimesEight, offsetAdjustment);
+        BaseObjectElementIndex address(elements, ToRegister(index), offsetAdjustment);
         masm.guardedCallPreBarrier(address, MIRType::Value);
     }
 }

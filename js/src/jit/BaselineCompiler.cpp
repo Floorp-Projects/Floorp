@@ -2727,7 +2727,6 @@ BaselineCompiler::getEnvironmentCoordinateAddressFromObject(Register objReg, Reg
     EnvironmentCoordinate ec(pc);
     Shape* shape = EnvironmentCoordinateToEnvironmentShape(script, pc);
 
-    Address addr;
     if (shape->numFixedSlots() <= ec.slot()) {
         masm.loadPtr(Address(objReg, NativeObject::offsetOfSlots()), reg);
         return Address(reg, (ec.slot() - shape->numFixedSlots()) * sizeof(Value));
