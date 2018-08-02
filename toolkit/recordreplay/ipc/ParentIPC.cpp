@@ -777,7 +777,8 @@ static bool
 IsUserBreakpoint(js::BreakpointPosition::Kind aKind)
 {
   MOZ_RELEASE_ASSERT(aKind != js::BreakpointPosition::Invalid);
-  return aKind != js::BreakpointPosition::NewScript;
+  return aKind != js::BreakpointPosition::NewScript
+      && aKind != js::BreakpointPosition::ConsoleMessage;
 }
 
 static void

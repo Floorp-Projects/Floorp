@@ -57,6 +57,9 @@ struct BreakpointPosition
     // Break when a new top-level script is created.
     NewScript,
 
+    // Break when a message is logged to the web console.
+    ConsoleMessage,
+
     // Break when NewTimeWarpTarget() is called.
     WarpTarget,
 
@@ -114,6 +117,7 @@ struct BreakpointPosition
     case OnPop: return "OnPop";
     case EnterFrame: return "EnterFrame";
     case NewScript: return "NewScript";
+    case ConsoleMessage: return "ConsoleMessage";
     case WarpTarget: return "WarpTarget";
     case ForcedPause: return "ForcedPause";
     }
