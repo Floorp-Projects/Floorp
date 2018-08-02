@@ -3079,6 +3079,17 @@ void InnerCleanupValue(const nsXPTType& aType,
 // This method accepts the same types as xpc::CleanupValue.
 void InitializeValue(const nsXPTType& aType, void* aValue);
 
+// If a value was initialized with InitializeValue, it should be destroyed with
+// DestructValue. This method acts like CleanupValue, except that destructors
+// for complex types are also invoked, leaving them in an invalid state.
+//
+// This method should be called when destroying types initialized with
+// InitializeValue.
+//
+// The pointer 'aValue' must point to a valid value of type 'aType'.
+void DestructValue(const nsXPTType& aType, void* aValue,
+                   uint32_t aArrayLen = 0);
+
 } // namespace xpc
 
 namespace mozilla {
