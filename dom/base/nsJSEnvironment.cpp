@@ -485,7 +485,7 @@ public:
       JS::Rooted<JSObject*> stackGlobal(rootingCx);
       xpc::FindExceptionStackForConsoleReport(win, mError,
                                               &stack, &stackGlobal);
-      mReport->LogToConsoleWithStack(stack, stackGlobal);
+      mReport->LogToConsoleWithStack(stack, stackGlobal, JS::ExceptionTimeWarpTarget(mError));
     }
 
     return NS_OK;
