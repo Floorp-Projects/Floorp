@@ -2175,10 +2175,6 @@ public abstract class GeckoApp extends GeckoActivity
             onLocaleChanged(Locales.getLanguageTag(changed));
         }
 
-        if (mPromptService != null) {
-            mPromptService.changePromptOrientation(newConfig.orientation);
-        }
-
         super.onConfigurationChanged(newConfig);
     }
 
