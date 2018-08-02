@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
+import org.mozilla.gecko.GeckoScreenOrientation.ScreenOrientation;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.health.HealthRecorder;
@@ -112,6 +113,7 @@ public abstract class GeckoApp extends GeckoActivity
                                           BundleEventListener,
                                           GeckoMenu.Callback,
                                           GeckoMenu.MenuPresenter,
+                                          GeckoScreenOrientation.OrientationChangeListener,
                                           GeckoSession.ContentDelegate,
                                           ScreenOrientationDelegate,
                                           Tabs.OnTabsChangedListener,
@@ -981,6 +983,7 @@ public abstract class GeckoApp extends GeckoActivity
         } catch (ClassNotFoundException e) { }
 
         GeckoAppShell.setScreenOrientationDelegate(this);
+        GeckoScreenOrientation.getInstance().addListener(this);
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
         // We do this via intents since we can't easily access Stumbler directly,
@@ -1929,11 +1932,6 @@ public abstract class GeckoApp extends GeckoActivity
 
         GeckoAppShell.setScreenOrientationDelegate(this);
 
-        int newOrientation = getResources().getConfiguration().orientation;
-        if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
-            refreshChrome();
-        }
-
         // We use two times: a pseudo-unique wall-clock time to identify the
         // current session across power cycles, and the elapsed realtime to
         // track the duration of the session.
@@ -2133,6 +2131,8 @@ public abstract class GeckoApp extends GeckoActivity
         Tabs.unregisterOnTabsChangedListener(this);
         Tabs.getInstance().detachFromContext();
 
+        GeckoScreenOrientation.getInstance().removeListener(this);
+
         if (mShutdownOnDestroy) {
             GeckoApplication.shutdown(!mRestartOnShutdown ? null : new Intent(
                     Intent.ACTION_MAIN, /* uri */ null, getApplicationContext(), getClass()));
@@ -2180,11 +2180,7 @@ public abstract class GeckoApp extends GeckoActivity
         // onConfigurationChanged is not called for 180 degree orientation changes,
         // we will miss such rotations and the screen orientation will not be
         // updated.
-        if (GeckoScreenOrientation.getInstance().update(newConfig.orientation)) {
-            if (mFormAssistPopup != null)
-                mFormAssistPopup.hide();
-            refreshChrome();
-        }
+        GeckoScreenOrientation.getInstance().update(newConfig.orientation);
 
         if (mPromptService != null) {
             mPromptService.changePromptOrientation(newConfig.orientation);
@@ -2526,5 +2522,13 @@ public abstract class GeckoApp extends GeckoActivity
         }
         setRequestedOrientation(requestedActivityInfoOrientation);
         return true;
+    }
+
+    @Override
+    public void onScreenOrientationChanged(ScreenOrientation newOrientation) {
+        if (mFormAssistPopup != null) {
+            mFormAssistPopup.hide();
+        }
+        refreshChrome();
     }
 }
