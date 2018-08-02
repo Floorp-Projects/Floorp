@@ -127,7 +127,7 @@
     overflow: hidden;
     padding-bottom: 4px;
     text-overflow: ellipsis;
-    text-transform: uppercase;
+    text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
     white-space: nowrap;
   }
 

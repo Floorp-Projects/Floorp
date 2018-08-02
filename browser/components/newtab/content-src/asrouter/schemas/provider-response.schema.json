@@ -36,11 +36,27 @@
           },
           "targeting": {
             "type": "string",
-            "description": "a JEXL expression representing targeting information"
+            "description": "A JEXL expression representing targeting information"
           },
           "trigger": {
-            "type": "string",
-            "description": "A string representing what the trigger to show this message is."
+            "type": "object",
+            "description": "An action to trigger potentially showing the message",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "A string identifying the trigger action",
+                "enum": ["firstRun", "openURL"]
+              },
+              "params": {
+                "type": "array",
+                "description": "An optional array of string parameters for the trigger action",
+                "items": {
+                  "type": "string",
+                  "description": "A parameter for the trigger action"
+                }
+              }
+            },
+            "required": ["id"]
           },
           "frequency": {
             "type": "object",

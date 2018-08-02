@@ -622,17 +622,17 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
   nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }
 
-ScrollbarStyles
-nsListControlFrame::GetScrollbarStyles() const
+ScrollStyles
+nsListControlFrame::GetScrollStyles() const
 {
   // We can't express this in the style system yet; when we can, this can go away
-  // and GetScrollbarStyles can be devirtualized
+  // and GetScrollStyles can be devirtualized
   int32_t style = IsInDropDownMode() ? NS_STYLE_OVERFLOW_AUTO
                                      : NS_STYLE_OVERFLOW_SCROLL;
   if (GetWritingMode().IsVertical()) {
-    return ScrollbarStyles(style, NS_STYLE_OVERFLOW_HIDDEN);
+    return ScrollStyles(style, NS_STYLE_OVERFLOW_HIDDEN);
   } else {
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, style);
+    return ScrollStyles(NS_STYLE_OVERFLOW_HIDDEN, style);
   }
 }
 

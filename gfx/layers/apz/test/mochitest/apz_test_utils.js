@@ -237,6 +237,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         return;
       }
 
+      SimpleTest.ok(true, "Starting subtest " + test.file);
+
       if (typeof test.dp_suppression != 'undefined') {
         // Normally during a test, the displayport will get suppressed during page
         // load, and unsuppressed at a non-deterministic time during the test. The

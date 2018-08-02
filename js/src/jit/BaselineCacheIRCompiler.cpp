@@ -489,34 +489,6 @@ BaselineCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
 }
 
 bool
-BaselineCacheIRCompiler::emitGuardFunctionPrototype()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Register prototypeObject = allocator.useRegister(masm, reader.objOperandId());
-
-    // Allocate registers before the failure path to make sure they're registered
-    // by addFailurePath.
-    AutoScratchRegister scratch1(allocator, masm);
-    AutoScratchRegister scratch2(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-     // Guard on the .prototype object.
-    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
-    masm.load32(Address(stubAddress(reader.stubOffset())), scratch2);
-    BaseValueIndex prototypeSlot(scratch1, scratch2);
-    masm.branchTestObject(Assembler::NotEqual, prototypeSlot, failure->label());
-    masm.unboxObject(prototypeSlot, scratch1);
-    masm.branchPtr(Assembler::NotEqual,
-                   prototypeObject,
-                   scratch1, failure->label());
-
-    return true;
-}
-
-bool
 BaselineCacheIRCompiler::emitLoadValueResult()
 {
     AutoOutputRegister output(*this);

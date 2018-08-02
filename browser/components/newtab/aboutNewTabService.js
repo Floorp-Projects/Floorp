@@ -308,7 +308,9 @@ AboutNewTabService.prototype = {
   get activityStreamLocale() {
     // Pick the best available locale to match the app locales
     return Services.locale.negotiateLanguages(
-      Services.locale.getAppLocalesAsBCP47(),
+      // Fix up incorrect BCP47 that are actually lang tags as a workaround for
+      // bug 1479606 returning the wrong values in the content process
+      Services.locale.getAppLocalesAsBCP47().map(l => l.replace(/^(ja-JP-mac)$/, "$1os")),
       ACTIVITY_STREAM_BCP47,
       // defaultLocale's strings aren't necessarily packaged, but en-US' are
       "en-US",

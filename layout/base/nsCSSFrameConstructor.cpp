@@ -2409,12 +2409,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     GetRootFrame()->SetComputedStyleWithoutNotification(sc);
   }
 
-  // Make sure to call UpdateViewportScrollbarStylesOverride before
+  // Make sure to call UpdateViewportScrollStylesOverride before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
   // properly.
   DebugOnly<nsIContent*> propagatedScrollFrom;
   if (nsPresContext* presContext = mPresShell->GetPresContext()) {
-    propagatedScrollFrom = presContext->UpdateViewportScrollbarStylesOverride();
+    propagatedScrollFrom = presContext->UpdateViewportScrollStylesOverride();
   }
 
   SetUpDocElementContainingBlock(aDocElement);
@@ -4529,7 +4529,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
   if (aElement.IsHTMLElement(nsGkAtoms::body)) {
     if (nsPresContext* presContext = mPresShell->GetPresContext()) {
       propagatedScrollToViewport =
-        presContext->UpdateViewportScrollbarStylesOverride() == &aElement;
+        presContext->UpdateViewportScrollStylesOverride() == &aElement;
     }
   }
 
@@ -4565,7 +4565,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       // scrollframe so that it paginates correctly, but we don't want to set
       // the bit on the block that tells it to clip at paint time.
       if (mPresShell->GetPresContext()->
-            ElementWouldPropagateScrollbarStyles(aElement)) {
+            ElementWouldPropagateScrollStyles(aElement)) {
         suppressScrollFrame = false;
       }
     }
@@ -7688,7 +7688,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
   // <body> child of the root element.  So we can only be removing the stored
   // override element if the thing being removed is either the override element
   // itself or the root element (which can be a parent of the override element).
-  if (aChild == presContext->GetViewportScrollbarStylesOverrideElement() ||
+  if (aChild == presContext->GetViewportScrollStylesOverrideElement() ||
       (aChild->IsElement() && !aChild->GetParent())) {
     // We might be removing the element that we propagated viewport scrollbar
     // styles from.  Recompute those. (This clause covers two of the three
@@ -7700,7 +7700,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     // We don't handle the fullscreen case here, because it doesn't change the
     // scrollbar styles override element stored on the prescontext.)
     Element* newOverrideElement =
-      presContext->UpdateViewportScrollbarStylesOverride();
+      presContext->UpdateViewportScrollStylesOverride();
 
     // If aChild is the root, then we don't need to do any reframing of
     // newOverrideElement, because we're about to tear down the whole frame tree

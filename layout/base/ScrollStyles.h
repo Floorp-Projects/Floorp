@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ScrollbarStyles_h
-#define ScrollbarStyles_h
+#ifndef mozilla_ScrollStyles_h
+#define mozilla_ScrollStyles_h
 
 #include <stdint.h>
 #include "nsStyleConsts.h" // for NS_STYLE_SCROLL_SNAP_*
@@ -17,7 +17,7 @@ struct nsStyleDisplay;
 
 namespace mozilla {
 
-struct ScrollbarStyles
+struct ScrollStyles
 {
   // Always one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
   // or NS_STYLE_OVERFLOW_AUTO.
@@ -37,7 +37,7 @@ struct ScrollbarStyles
   nsStyleCoord::CalcValue mScrollSnapDestinationX;
   nsStyleCoord::CalcValue mScrollSnapDestinationY;
 
-  ScrollbarStyles(uint8_t aH, uint8_t aV)
+  ScrollStyles(uint8_t aH, uint8_t aV)
     : mHorizontal(aH), mVertical(aV),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
@@ -55,9 +55,9 @@ struct ScrollbarStyles
     mScrollSnapDestinationY.mHasPercent = false;
   }
 
-  explicit ScrollbarStyles(const nsStyleDisplay* aDisplay);
-  ScrollbarStyles(uint8_t aH, uint8_t aV, const nsStyleDisplay* aDisplay);
-  bool operator==(const ScrollbarStyles& aStyles) const {
+  explicit ScrollStyles(const nsStyleDisplay* aDisplay);
+  ScrollStyles(uint8_t aH, uint8_t aV, const nsStyleDisplay* aDisplay);
+  bool operator==(const ScrollStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical &&
            aStyles.mScrollBehavior == mScrollBehavior &&
            aStyles.mOverscrollBehaviorX == mOverscrollBehaviorX &&
@@ -69,7 +69,7 @@ struct ScrollbarStyles
            aStyles.mScrollSnapDestinationX == mScrollSnapDestinationX &&
            aStyles.mScrollSnapDestinationY == mScrollSnapDestinationY;
   }
-  bool operator!=(const ScrollbarStyles& aStyles) const {
+  bool operator!=(const ScrollStyles& aStyles) const {
     return !(*this == aStyles);
   }
   bool IsHiddenInBothDirections() const {
@@ -85,4 +85,4 @@ struct ScrollbarStyles
 
 } // namespace mozilla
 
-#endif
+#endif // mozilla_ScrollStyles_h

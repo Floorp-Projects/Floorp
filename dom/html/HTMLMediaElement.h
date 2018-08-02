@@ -640,6 +640,12 @@ public:
     mIsCasting = aShow;
   }
 
+  // Returns whether a call to Play() would be rejected with NotAllowedError.
+  // This assumes "worst case" for unknowns. So if prompting for permission is
+  // enabled and no permission is stored, this behaves as if the user would
+  // opt to block.
+  bool AllowedToPlay() const;
+
   already_AddRefed<MediaSource> GetMozMediaSourceObject() const;
   // Returns a string describing the state of the media player internal
   // data. Used for debugging purposes.
