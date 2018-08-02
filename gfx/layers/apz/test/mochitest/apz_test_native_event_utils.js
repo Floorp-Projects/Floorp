@@ -345,8 +345,12 @@ function moveMouseAndScrollWheelOver(element, dx, dy, testDriver, waitForScroll 
 
 // Synthesizes events to drag |element|'s vertical scrollbar by the distance
 // specified, synthesizing a mousemove for each increment as specified.
-// Returns false if the element doesn't have a vertical scrollbar, or true after
-// all the events have been synthesized.
+// Returns false if the element doesn't have a vertical scrollbar. Otherwise,
+// returns a generator that should be invoked after the mousemoves have been
+// processed by the widget code, to end the scrollbar drag. Mousemoves being
+// processed by the widget code can be detected by listening for the mousemove
+// events in the caller, or for some other event that is triggered by the
+// mousemove, such as the scroll event resulting from the scrollbar drag.
 function* dragVerticalScrollbar(element, testDriver, distance = 20, increment = 5) {
   var boundingClientRect = element.getBoundingClientRect();
   var verticalScrollbarWidth = boundingClientRect.width - element.clientWidth;
@@ -369,8 +373,10 @@ function* dragVerticalScrollbar(element, testDriver, distance = 20, increment = 
     yield synthesizeNativeMouseEvent(element, mouseX, mouseY + y, nativeMouseMoveEventMsg(), testDriver);
   }
   yield synthesizeNativeMouseEvent(element, mouseX, mouseY + distance, nativeMouseMoveEventMsg(), testDriver);
-  // and release
-  yield synthesizeNativeMouseEvent(element, mouseX, mouseY + distance, nativeMouseUpEventMsg(), testDriver);
 
-  return true;
+  // and return a generator to call afterwards to finish up the drag
+  return function*() {
+    dump("Finishing drag of #" + element.id + "\n");
+    yield synthesizeNativeMouseEvent(element, mouseX, mouseY + distance, nativeMouseUpEventMsg(), testDriver);
+  };
 }
