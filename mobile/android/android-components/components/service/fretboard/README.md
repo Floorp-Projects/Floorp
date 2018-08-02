@@ -9,7 +9,7 @@ An Android framework for segmenting users in order to run A/B tests and rollout 
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:fretboard:{latest-version}
+implementation "org.mozilla.components:fretboard:{latest-version}"
 ```
 
 ### Creating Fretboard instance
@@ -153,8 +153,9 @@ Fretboard allows you to specify the following filters:
 - device (regex): Android device name
 - manufacturer (regex): Android device manufacturer
 - region: custom region, different from the one from the default locale (like a GeoIP, or something similar).
-For this to work you must provide a RegionProvider implementation when creating the `Fretboard` instance.
 - release channel: release channel of the app (alpha, beta, etc)
+
+For region and release channel to work you must provide a `ValuesProvider` implementation when creating the `Fretboard` instance, as detailed below
 
 ### Specifying custom values for filters
 Additionally, Fretboard allows you to specify a custom `ValuesProvider` object in order to return a custom region,
