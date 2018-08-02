@@ -366,6 +366,9 @@ public:
   // of how much time has elapsed.
   bool mAlwaysSaveTemporaryCheckpoints;
 
+  // Checkpoints for all time warp targets that have been generated.
+  InfallibleVector<std::pair<ProgressCounter, size_t>, 0, UntrackedAllocPolicy> mTimeWarpTargetCheckpoints;
+
   // Note: NavigationState is initially zeroed.
   NavigationState()
     : mPhase(&mForwardPhase)
@@ -1138,8 +1141,8 @@ RecordReplayInterface_ExecutionProgressCounter()
 
 } // extern "C"
 
-static ExecutionPoint
-NewExecutionPoint(const BreakpointPosition& aPosition)
+ExecutionPoint
+CurrentExecutionPoint(const BreakpointPosition& aPosition)
 {
   return ExecutionPoint(gNavigation->LastCheckpoint().mNormal,
                         gProgressCounter, aPosition);
@@ -1149,7 +1152,57 @@ void
 PositionHit(const BreakpointPosition& position)
 {
   AutoDisallowThreadEvents disallow;
-  gNavigation->PositionHit(NewExecutionPoint(position));
+  gNavigation->PositionHit(CurrentExecutionPoint(position));
+}
+
+extern "C" {
+
+MOZ_EXPORT ProgressCounter
+RecordReplayInterface_NewTimeWarpTarget()
+{
+  // NewTimeWarpTarget() must be called at consistent points between recording
+  // and replaying.
+  recordreplay::RecordReplayAssert("NewTimeWarpTarget");
+
+  if (!gNavigation) {
+    return 0;
+  }
+
+  // Advance the progress counter for each time warp target. This can be called
+  // at any place and any number of times where recorded events are allowed.
+  ProgressCounter progress = ++gProgressCounter;
+
+  PositionHit(BreakpointPosition(BreakpointPosition::WarpTarget));
+
+  // Remember the checkpoint associated with each time warp target we have
+  // generated, so we can convert them to ExecutionPoints later. Ignore warp
+  // targets we have already encountered.
+  if (gNavigation->mTimeWarpTargetCheckpoints.empty() ||
+      progress > gNavigation->mTimeWarpTargetCheckpoints.back().first)
+  {
+    size_t checkpoint = gNavigation->LastCheckpoint().mNormal;
+    gNavigation->mTimeWarpTargetCheckpoints.emplaceBack(progress, checkpoint);
+  }
+
+  return progress;
+}
+
+} // extern "C"
+
+ExecutionPoint
+TimeWarpTargetExecutionPoint(ProgressCounter aTarget)
+{
+  Maybe<size_t> checkpoint;
+  for (auto entry : gNavigation->mTimeWarpTargetCheckpoints) {
+    if (entry.first == aTarget) {
+      checkpoint.emplace(entry.second);
+      break;
+    }
+  }
+  MOZ_RELEASE_ASSERT(checkpoint.isSome());
+
+  return ExecutionPoint(checkpoint.ref(), aTarget,
+                        BreakpointPosition(BreakpointPosition::WarpTarget));
 }
 
 bool

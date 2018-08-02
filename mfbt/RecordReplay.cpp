@@ -36,6 +36,7 @@ namespace recordreplay {
   Macro(InternalThingIndex, size_t, (void* aThing), (aThing))   \
   Macro(InternalVirtualThingName, const char*, (void* aThing), (aThing)) \
   Macro(ExecutionProgressCounter, ProgressCounter*, (), ())     \
+  Macro(NewTimeWarpTarget, ProgressCounter, (), ())             \
   Macro(IsInternalScript, bool, (const char* aURL), (aURL))     \
   Macro(DefineRecordReplayControlObject, bool, (JSContext* aCx, JSObject* aObj), (aCx, aObj))
 

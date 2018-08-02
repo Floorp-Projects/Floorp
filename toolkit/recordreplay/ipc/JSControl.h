@@ -55,7 +55,10 @@ struct BreakpointPosition
     EnterFrame,
 
     // Break when a new top-level script is created.
-    NewScript
+    NewScript,
+
+    // Break when NewTimeWarpTarget() is called.
+    WarpTarget
   ));
 
   Kind mKind;
@@ -106,6 +109,7 @@ struct BreakpointPosition
     case OnPop: return "OnPop";
     case EnterFrame: return "EnterFrame";
     case NewScript: return "NewScript";
+    case WarpTarget: return "WarpTarget";
     }
     MOZ_CRASH("Bad BreakpointPosition kind");
   }
