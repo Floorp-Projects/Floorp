@@ -17,6 +17,18 @@ const { hr } = dom;
 const { openDocLink } = require("devtools/client/shared/link");
 const { assert } = require("devtools/shared/DevToolsUtils");
 
+const openDevToolsDocsLink = () => {
+  openDocLink(
+    "https://developer.mozilla.org/docs/Tools?utm_source=devtools&utm_medium=tabbar-menu"
+  );
+};
+
+const openCommunityLink = () => {
+  openDocLink(
+    "https://discourse.mozilla.org/c/devtools?utm_source=devtools&utm_medium=tabbar-menu"
+  );
+};
+
 class MeatballMenu extends PureComponent {
   static get propTypes() {
     return {
@@ -125,7 +137,7 @@ class MeatballMenu extends PureComponent {
           id: `toolbox-meatball-menu-dock-${hostType.position}`,
           key: `dock-${hostType.position}`,
           label: this.props.L10N.getStr(l10nkey),
-          onClick: () => hostType.switchHost(),
+          onClick: hostType.switchHost,
           checked: hostType.position === this.props.currentHostType,
           className: "iconic",
         })
@@ -180,7 +192,7 @@ class MeatballMenu extends PureComponent {
         key: "settings",
         label: this.props.L10N.getStr("toolbox.meatballMenu.settings.label"),
         accelerator: this.props.L10N.getStr("toolbox.help.key"),
-        onClick: () => this.props.toggleOptions(),
+        onClick: this.props.toggleOptions,
         className: "iconic",
       })
     );
@@ -195,11 +207,7 @@ class MeatballMenu extends PureComponent {
         label: this.props.L10N.getStr(
           "toolbox.meatballMenu.documentation.label"
         ),
-        onClick: () => {
-          openDocLink(
-            "https://developer.mozilla.org/docs/Tools?utm_source=devtools&utm_medium=tabbar-menu"
-          );
-        },
+        onClick: openDevToolsDocsLink,
       })
     );
 
@@ -209,11 +217,7 @@ class MeatballMenu extends PureComponent {
         id: "toolbox-meatball-menu-community",
         key: "community",
         label: this.props.L10N.getStr("toolbox.meatballMenu.community.label"),
-        onClick: () => {
-          openDocLink(
-            "https://discourse.mozilla.org/c/devtools?utm_source=devtools&utm_medium=tabbar-menu"
-          );
-        },
+        onClick: openCommunityLink,
       })
     );
 
