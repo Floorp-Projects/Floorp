@@ -38,4 +38,11 @@ js::ErrorObject::stack() const
     return getReservedSlotRef(STACK_SLOT).toObjectOrNull();
 }
 
+inline uint64_t
+js::ErrorObject::timeWarpTarget() const
+{
+    const HeapSlot& slot = getReservedSlotRef(TIME_WARP_SLOT);
+    return slot.isDouble() ? slot.toDouble() : 0;
+}
+
 #endif /* vm_ErrorObject_inl_h */
