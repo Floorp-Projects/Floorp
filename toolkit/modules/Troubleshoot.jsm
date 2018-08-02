@@ -189,9 +189,7 @@ var dataProviders = {
     let winEnumer = Services.wm.getEnumerator("navigator:browser");
     while (winEnumer.hasMoreElements()) {
       data.numTotalWindows++;
-      let remote = winEnumer.getNext().
-                   QueryInterface(Ci.nsIInterfaceRequestor).
-                   getInterface(Ci.nsIWebNavigation).
+      let remote = winEnumer.getNext().docShell.
                    QueryInterface(Ci.nsILoadContext).
                    useRemoteTabs;
       if (remote) {

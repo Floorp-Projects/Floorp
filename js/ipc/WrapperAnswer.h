@@ -22,9 +22,6 @@ class WrapperAnswer : public virtual JavaScriptShared
 {
   public:
     bool RecvPreventExtensions(const ObjectId& objId, ReturnStatus* rs);
-    bool RecvGetPropertyDescriptor(const ObjectId& objId, const JSIDVariant& id,
-                                   ReturnStatus* rs,
-                                   PPropertyDescriptor* out);
     bool RecvGetOwnPropertyDescriptor(const ObjectId& objId,
                                       const JSIDVariant& id,
                                       ReturnStatus* rs,

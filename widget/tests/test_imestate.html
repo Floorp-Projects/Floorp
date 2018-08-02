@@ -1031,10 +1031,7 @@ function runComplexContenteditableTests()
      description + "IME isn't enabled on HTML editor");
   const kReadonly =
     Ci.nsIPlaintextEditor.eEditorReadonlyMask;
-  var editor =
-    window.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIWebNavigation).
-      QueryInterface(Ci.nsIDocShell).editor;
+  var editor = window.docShell.editor;
   var flags = editor.flags;
   editor.flags = flags | kReadonly;
   is(gFM.focusedElement, container,
@@ -1063,10 +1060,7 @@ function runComplexContenteditableTests()
      description + "The button loses focus, the container is editable now");
   todo_is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
           description + "IME is still disabled on the button, the container is editable now");
-  editor =
-    window.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIWebNavigation).
-      QueryInterface(Ci.nsIDocShell).editor;
+  editor = window.docShell.editor;
   flags = editor.flags;
   editor.flags = flags | kReadonly;
   is(gFM.focusedElement, button,
@@ -1105,10 +1099,7 @@ function runComplexContenteditableTests()
     is(gUtils.IMEStatus, expectedState,
        description + "IME becomes " + unexpectedStateDescription +
          " on the " + aEditorDescription + ", the container is editable now");
-    editor =
-      window.QueryInterface(Ci.nsIInterfaceRequestor).
-        getInterface(Ci.nsIWebNavigation).
-        QueryInterface(Ci.nsIDocShell).editor;
+    editor = window.docShell.editor;
     flags = editor.flags;
     editor.flags = flags | kReadonly;
     is(gFM.focusedElement, aEditor,
@@ -1173,10 +1164,7 @@ function runComplexContenteditableTests()
        description + "IME becomes " + unexpectedStateDescription +
          " on the " + aFocusNodeDescription +
          ", the HTML editor is editable now");
-    editor =
-      window.QueryInterface(Ci.nsIInterfaceRequestor).
-        getInterface(Ci.nsIWebNavigation).
-        QueryInterface(Ci.nsIDocShell).editor;
+    editor = window.docShell.editor;
     flags = editor.flags;
     editor.flags = flags | kReadonly;
     is(gFM.focusedElement, aFocusNode,
@@ -1244,10 +1232,7 @@ function runEditorFlagChangeTests()
     Ci.nsIPlaintextEditor.eEditorPasswordMask |
     Ci.nsIPlaintextEditor.eEditorReadonlyMask |
     Ci.nsIPlaintextEditor.eEditorDisabledMask;
-  var editor =
-    window.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIWebNavigation).
-      QueryInterface(Ci.nsIDocShell).editor;
+  var editor = window.docShell.editor;
   var flags = editor.flags;
 
   // input characters

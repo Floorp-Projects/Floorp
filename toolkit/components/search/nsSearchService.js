@@ -2449,8 +2449,7 @@ Engine.prototype = {
 
     let searchURI = this.getSubmission("dummy").uri;
 
-    let callbacks = options.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
+    let callbacks = options.window.docShell
                            .QueryInterface(Ci.nsILoadContext);
 
     // Using the codebase principal which is constructed by the search URI

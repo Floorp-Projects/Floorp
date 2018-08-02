@@ -41,9 +41,7 @@ function utilsFor(win) {
  * @return {DOMWindow}
  */
 function getTopWindow(win) {
-  const docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell);
+  const docShell = win.docShell;
 
   if (!docShell.isMozBrowser) {
     return win.top;
@@ -102,9 +100,7 @@ function getParentWindow(win) {
     return null;
   }
 
-  const docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShell);
+  const docShell = win.docShell;
 
   if (!docShell.isMozBrowser) {
     return win.parent;

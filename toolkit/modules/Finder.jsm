@@ -130,8 +130,7 @@ Finder.prototype = {
 
   get clipboardSearchString() {
     return GetClipboardSearchString(this._getWindow()
-                                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                                        .getInterface(Ci.nsIWebNavigation)
+                                        .docShell
                                         .QueryInterface(Ci.nsILoadContext));
   },
 
@@ -571,9 +570,7 @@ Finder.prototype = {
     }
 
     // Yuck. See bug 138068.
-    let docShell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
+    let docShell = aWindow.docShell;
 
     let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsISelectionDisplay)

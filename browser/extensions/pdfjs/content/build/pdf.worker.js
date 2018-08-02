@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.694';
-var pdfjsBuild = '1aaeaf33';
+var pdfjsVersion = '2.0.719';
+var pdfjsBuild = '35214245';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.694';
+    let workerVersion = '2.0.719';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -5226,11 +5226,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFDocument = exports.Page = undefined;
 
+var _util = __w_pdfjs_require__(2);
+
 var _obj = __w_pdfjs_require__(11);
 
 var _primitives = __w_pdfjs_require__(12);
-
-var _util = __w_pdfjs_require__(2);
 
 var _stream = __w_pdfjs_require__(14);
 
@@ -5492,6 +5492,7 @@ var PDFDocument = function PDFDocumentClosure() {
       xref: this.xref,
       isEvalSupported: evaluatorOptions.isEvalSupported
     });
+    this._pagePromises = [];
   }
   function find(stream, needle, limit, backwards) {
     var pos = stream.pos;
@@ -5512,20 +5513,16 @@ var PDFDocument = function PDFDocumentClosure() {
     stream.pos += index;
     return true;
   }
-  var DocumentInfoValidators = {
-    get entries() {
-      return (0, _util.shadow)(this, 'entries', {
-        Title: _util.isString,
-        Author: _util.isString,
-        Subject: _util.isString,
-        Keywords: _util.isString,
-        Creator: _util.isString,
-        Producer: _util.isString,
-        CreationDate: _util.isString,
-        ModDate: _util.isString,
-        Trapped: _primitives.isName
-      });
-    }
+  const DocumentInfoValidators = {
+    Title: _util.isString,
+    Author: _util.isString,
+    Subject: _util.isString,
+    Keywords: _util.isString,
+    Creator: _util.isString,
+    Producer: _util.isString,
+    CreationDate: _util.isString,
+    ModDate: _util.isString,
+    Trapped: _primitives.isName
   };
   PDFDocument.prototype = {
     parse: function PDFDocument_parse(recoveryMode) {
@@ -5552,16 +5549,14 @@ var PDFDocument = function PDFDocumentClosure() {
       }
     },
     get linearization() {
-      var linearization = null;
-      if (this.stream.length) {
-        try {
-          linearization = _parser.Linearization.create(this.stream);
-        } catch (err) {
-          if (err instanceof _util.MissingDataException) {
-            throw err;
-          }
-          (0, _util.info)(err);
+      let linearization = null;
+      try {
+        linearization = _parser.Linearization.create(this.stream);
+      } catch (err) {
+        if (err instanceof _util.MissingDataException) {
+          throw err;
         }
+        (0, _util.info)(err);
       }
       return (0, _util.shadow)(this, 'linearization', linearization);
     },
@@ -5639,21 +5634,7 @@ var PDFDocument = function PDFDocumentClosure() {
     },
     setup: function PDFDocument_setup(recoveryMode) {
       this.xref.parse(recoveryMode);
-      var pageFactory = {
-        createPage: (pageIndex, dict, ref, fontCache, builtInCMapCache) => {
-          return new Page({
-            pdfManager: this.pdfManager,
-            xref: this.xref,
-            pageIndex,
-            pageDict: dict,
-            ref,
-            fontCache,
-            builtInCMapCache,
-            pdfFunctionFactory: this.pdfFunctionFactory
-          });
-        }
-      };
-      this.catalog = new _obj.Catalog(this.pdfManager, this.xref, pageFactory);
+      this.catalog = new _obj.Catalog(this.pdfManager, this.xref);
     },
     get numPages() {
       var linearization = this.linearization;
@@ -5661,12 +5642,13 @@ var PDFDocument = function PDFDocumentClosure() {
       return (0, _util.shadow)(this, 'numPages', num);
     },
     get documentInfo() {
-      var docInfo = {
+      const docInfo = {
         PDFFormatVersion: this.pdfFormatVersion,
+        IsLinearized: !!this.linearization,
         IsAcroFormPresent: !!this.acroForm,
         IsXFAPresent: !!this.xfa
       };
-      var infoDict;
+      let infoDict;
       try {
         infoDict = this.xref.trailer.get('Info');
       } catch (err) {
@@ -5675,12 +5657,11 @@ var PDFDocument = function PDFDocumentClosure() {
         }
         (0, _util.info)('The document information dictionary is invalid.');
       }
-      if (infoDict) {
-        var validEntries = DocumentInfoValidators.entries;
-        for (var key in validEntries) {
+      if ((0, _primitives.isDict)(infoDict)) {
+        for (let key in DocumentInfoValidators) {
           if (infoDict.has(key)) {
-            var value = infoDict.get(key);
-            if (validEntries[key](value)) {
+            const value = infoDict.get(key);
+            if (DocumentInfoValidators[key](value)) {
               docInfo[key] = typeof value !== 'string' ? value : (0, _util.stringToPDFString)(value);
             } else {
               (0, _util.info)('Bad value in document info for "' + key + '"');
@@ -5709,8 +5690,41 @@ var PDFDocument = function PDFDocumentClosure() {
       }
       return (0, _util.shadow)(this, 'fingerprint', fileID);
     },
-    getPage: function PDFDocument_getPage(pageIndex) {
-      return this.catalog.getPage(pageIndex);
+    _getLinearizationPage(pageIndex) {
+      const { catalog, linearization } = this;
+      (0, _util.assert)(linearization && linearization.pageFirst === pageIndex);
+      const ref = new _primitives.Ref(linearization.objectNumberFirst, 0);
+      return this.xref.fetchAsync(ref).then(obj => {
+        if ((0, _primitives.isDict)(obj, 'Page') || (0, _primitives.isDict)(obj) && !obj.has('Type') && obj.has('Contents')) {
+          if (ref && !catalog.pageKidsCountCache.has(ref)) {
+            catalog.pageKidsCountCache.put(ref, 1);
+          }
+          return [obj, ref];
+        }
+        throw new _util.FormatError('The Linearization dictionary doesn\'t point ' + 'to a valid Page dictionary.');
+      }).catch(reason => {
+        (0, _util.info)(reason);
+        return catalog.getPageDict(pageIndex);
+      });
+    },
+    getPage(pageIndex) {
+      if (this._pagePromises[pageIndex] !== undefined) {
+        return this._pagePromises[pageIndex];
+      }
+      const { catalog, linearization } = this;
+      const promise = linearization && linearization.pageFirst === pageIndex ? this._getLinearizationPage(pageIndex) : catalog.getPageDict(pageIndex);
+      return this._pagePromises[pageIndex] = promise.then(([pageDict, ref]) => {
+        return new Page({
+          pdfManager: this.pdfManager,
+          xref: this.xref,
+          pageIndex,
+          pageDict,
+          ref,
+          fontCache: catalog.fontCache,
+          builtInCMapCache: catalog.builtInCMapCache,
+          pdfFunctionFactory: this.pdfFunctionFactory
+        });
+      });
     },
     cleanup: function PDFDocument_cleanup() {
       return this.catalog.cleanup();
@@ -5746,7 +5760,7 @@ var _crypto = __w_pdfjs_require__(24);
 var _colorspace = __w_pdfjs_require__(25);
 
 var Catalog = function CatalogClosure() {
-  function Catalog(pdfManager, xref, pageFactory) {
+  function Catalog(pdfManager, xref) {
     this.pdfManager = pdfManager;
     this.xref = xref;
     this.catDict = xref.getCatalogObj();
@@ -5754,10 +5768,8 @@ var Catalog = function CatalogClosure() {
       throw new _util.FormatError('catalog object is not a dictionary');
     }
     this.fontCache = new _primitives.RefSetCache();
-    this.builtInCMapCache = Object.create(null);
+    this.builtInCMapCache = new Map();
     this.pageKidsCountCache = new _primitives.RefSetCache();
-    this.pageFactory = pageFactory;
-    this.pagePromises = [];
   }
   Catalog.prototype = {
     get metadata() {
@@ -6133,16 +6145,8 @@ var Catalog = function CatalogClosure() {
           delete font.translated;
         }
         this.fontCache.clear();
-        this.builtInCMapCache = Object.create(null);
+        this.builtInCMapCache.clear();
       });
-    },
-    getPage: function Catalog_getPage(pageIndex) {
-      if (!(pageIndex in this.pagePromises)) {
-        this.pagePromises[pageIndex] = this.getPageDict(pageIndex).then(([dict, ref]) => {
-          return this.pageFactory.createPage(pageIndex, dict, ref, this.fontCache, this.builtInCMapCache);
-        });
-      }
-      return this.pagePromises[pageIndex];
     },
     getPageDict: function Catalog_getPageDict(pageIndex) {
       var capability = (0, _util.createPromiseCapability)();
@@ -8639,6 +8643,7 @@ var StringStream = function StringStreamClosure() {
 var DecodeStream = function DecodeStreamClosure() {
   var emptyBuffer = new Uint8Array(0);
   function DecodeStream(maybeMinBufferLength) {
+    this._rawMinBufferLength = maybeMinBufferLength || 0;
     this.pos = 0;
     this.bufferLength = 0;
     this.eof = false;
@@ -8756,7 +8761,16 @@ var DecodeStream = function DecodeStreamClosure() {
 var StreamsSequenceStream = function StreamsSequenceStreamClosure() {
   function StreamsSequenceStream(streams) {
     this.streams = streams;
-    DecodeStream.call(this, null);
+    let maybeLength = 0;
+    for (let i = 0, ii = streams.length; i < ii; i++) {
+      const stream = streams[i];
+      if (stream instanceof DecodeStream) {
+        maybeLength += stream._rawMinBufferLength;
+      } else {
+        maybeLength += stream.length;
+      }
+    }
+    DecodeStream.call(this, maybeLength);
   }
   StreamsSequenceStream.prototype = Object.create(DecodeStream.prototype);
   StreamsSequenceStream.prototype.readBlock = function streamSequenceStreamReadBlock() {
@@ -19008,13 +19022,12 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     this.options = options || DefaultPartialEvaluatorOptions;
     this.pdfFunctionFactory = pdfFunctionFactory;
     this.fetchBuiltInCMap = name => {
-      var cachedCMap = this.builtInCMapCache[name];
-      if (cachedCMap) {
-        return Promise.resolve(cachedCMap);
+      if (this.builtInCMapCache.has(name)) {
+        return Promise.resolve(this.builtInCMapCache.get(name));
       }
       return this.handler.sendWithPromise('FetchBuiltInCMap', { name }).then(data => {
         if (data.compressionType !== _util.CMapCompressionType.NONE) {
-          this.builtInCMapCache[name] = data;
+          this.builtInCMapCache.set(name, data);
         }
         return data;
       });

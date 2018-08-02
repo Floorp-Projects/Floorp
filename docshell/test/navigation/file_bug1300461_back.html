@@ -9,8 +9,8 @@
     <script>
       let Ci = SpecialPowers.Ci;
       let webNav = SpecialPowers.wrap(window)
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation);
+                     .docShell
+                     .QueryInterface(Ci.nsIWebNavigation);
       let shistory = webNav.sessionHistory;
       function test() {
         if (opener) {

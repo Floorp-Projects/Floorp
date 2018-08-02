@@ -315,9 +315,7 @@ Timeline.prototype = {
    */
   _onWindowReady: function({ window }) {
     if (this._isRecording) {
-      const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
-                           .QueryInterface(Ci.nsIDocShell);
+      const docShell = window.docShell;
       docShell.recordProfileTimelineMarkers = true;
     }
   },

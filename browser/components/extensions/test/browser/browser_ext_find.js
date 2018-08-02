@@ -4,9 +4,7 @@
 function frameScript() {
   function getSelectedText() {
     let frame = this.content.frames[0].frames[1];
-    let docShell = frame.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell);
+    let docShell = frame.docShell;
     let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsISelectionDisplay)
                              .QueryInterface(Ci.nsISelectionController);

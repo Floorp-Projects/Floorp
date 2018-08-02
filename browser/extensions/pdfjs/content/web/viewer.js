@@ -231,7 +231,8 @@ function getViewerConfiguration() {
         'producer': document.getElementById('producerField'),
         'version': document.getElementById('versionField'),
         'pageCount': document.getElementById('pageCountField'),
-        'pageSize': document.getElementById('pageSizeField')
+        'pageSize': document.getElementById('pageSizeField'),
+        'linearized': document.getElementById('linearizedField')
       }
     },
     errorWrapper: {
@@ -386,6 +387,9 @@ let PDFViewerApplication = {
     }).then(() => {
       return this._initializeL10n();
     }).then(() => {
+      if (this.isViewerEmbedded && _app_options.AppOptions.get('externalLinkTarget') === _pdfjsLib.LinkTarget.NONE) {
+        _app_options.AppOptions.set('externalLinkTarget', _pdfjsLib.LinkTarget.TOP);
+      }
       return this._initializeViewerComponents();
     }).then(() => {
       this.bindEvents();
@@ -394,74 +398,27 @@ let PDFViewerApplication = {
       this.l10n.translate(appContainer).then(() => {
         this.eventBus.dispatch('localized');
       });
-      if (this.isViewerEmbedded && _app_options.AppOptions.get('externalLinkTarget') === _pdfjsLib.LinkTarget.NONE) {
-        _app_options.AppOptions.set('externalLinkTarget', _pdfjsLib.LinkTarget.TOP);
-      }
       this.initialized = true;
     });
   },
   _readPreferences() {
-    let { preferences } = this;
-    return Promise.all([preferences.get('enableWebGL').then(function resolved(value) {
-      _app_options.AppOptions.set('enableWebGL', value);
-    }), preferences.get('sidebarViewOnLoad').then(function resolved(value) {
-      _app_options.AppOptions.set('sidebarViewOnLoad', value);
-    }), preferences.get('cursorToolOnLoad').then(function resolved(value) {
-      _app_options.AppOptions.set('cursorToolOnLoad', value);
-    }), preferences.get('pdfBugEnabled').then(function resolved(value) {
-      _app_options.AppOptions.set('pdfBugEnabled', value);
-    }), preferences.get('showPreviousViewOnLoad').then(function resolved(value) {
-      _app_options.AppOptions.set('showPreviousViewOnLoad', value);
-    }), preferences.get('defaultZoomValue').then(function resolved(value) {
-      _app_options.AppOptions.set('defaultZoomValue', value);
-    }), preferences.get('textLayerMode').then(function resolved(value) {
-      if (_app_options.AppOptions.get('textLayerMode') === _ui_utils.TextLayerMode.DISABLE) {
-        return;
+    const OVERRIDES = {
+      disableFontFace: true,
+      disableRange: true,
+      disableStream: true,
+      textLayerMode: _ui_utils.TextLayerMode.DISABLE
+    };
+    return this.preferences.getAll().then(function (prefs) {
+      for (let name in prefs) {
+        if (name in OVERRIDES && _app_options.AppOptions.get(name) === OVERRIDES[name]) {
+          continue;
+        }
+        _app_options.AppOptions.set(name, prefs[name]);
       }
-      _app_options.AppOptions.set('textLayerMode', value);
-    }), preferences.get('disableRange').then(function resolved(value) {
-      if (_app_options.AppOptions.get('disableRange') === true) {
-        return;
-      }
-      _app_options.AppOptions.set('disableRange', value);
-    }), preferences.get('disableStream').then(function resolved(value) {
-      if (_app_options.AppOptions.get('disableStream') === true) {
-        return;
-      }
-      _app_options.AppOptions.set('disableStream', value);
-    }), preferences.get('disableAutoFetch').then(function resolved(value) {
-      _app_options.AppOptions.set('disableAutoFetch', value);
-    }), preferences.get('disableFontFace').then(function resolved(value) {
-      if (_app_options.AppOptions.get('disableFontFace') === true) {
-        return;
-      }
-      _app_options.AppOptions.set('disableFontFace', value);
-    }), preferences.get('useOnlyCssZoom').then(function resolved(value) {
-      _app_options.AppOptions.set('useOnlyCssZoom', value);
-    }), preferences.get('externalLinkTarget').then(function resolved(value) {
-      if (_app_options.AppOptions.get('externalLinkTarget') !== _pdfjsLib.LinkTarget.NONE) {
-        return;
-      }
-      _app_options.AppOptions.set('externalLinkTarget', value);
-    }), preferences.get('renderer').then(function resolved(value) {
-      _app_options.AppOptions.set('renderer', value);
-    }), preferences.get('renderInteractiveForms').then(function resolved(value) {
-      _app_options.AppOptions.set('renderInteractiveForms', value);
-    }), preferences.get('disablePageMode').then(function resolved(value) {
-      _app_options.AppOptions.set('disablePageMode', value);
-    }), preferences.get('disablePageLabels').then(function resolved(value) {
-      _app_options.AppOptions.set('disablePageLabels', value);
-    }), preferences.get('enablePrintAutoRotate').then(function resolved(value) {
-      _app_options.AppOptions.set('enablePrintAutoRotate', value);
-    }), preferences.get('scrollModeOnLoad').then(function resolved(value) {
-      _app_options.AppOptions.set('scrollModeOnLoad', value);
-    }), preferences.get('spreadModeOnLoad').then(function resolved(value) {
-      _app_options.AppOptions.set('spreadModeOnLoad', value);
-    })]).catch(function (reason) {});
+    }, function (reason) {});
   },
   _parseHashParameters() {
-    let { appConfig } = this;
-    let waitOn = [];
+    const waitOn = [];
     if (_app_options.AppOptions.get('pdfBugEnabled')) {
       let hash = document.location.hash.substring(1);
       let hashParams = (0, _ui_utils.parseQueryString)(hash);
@@ -500,7 +457,7 @@ let PDFViewerApplication = {
           case 'visible':
           case 'shadow':
           case 'hover':
-            let viewer = appConfig.viewerContainer;
+            let viewer = this.appConfig.viewerContainer;
             viewer.classList.add('textLayer-' + hashParams['textlayer']);
             break;
         }
@@ -781,7 +738,6 @@ let PDFViewerApplication = {
   open(file, args) {
     if (this.pdfLoadingTask) {
       return this.close().then(() => {
-        this.preferences.reload();
         return this.open(file, args);
       });
     }
@@ -3821,8 +3777,8 @@ class PDFDocumentProperties {
       this.pdfDocument.getMetadata().then(({ info, metadata, contentDispositionFilename }) => {
         return Promise.all([info, metadata, contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url), this._parseFileSize(this.maybeFileSize), this._parseDate(info.CreationDate), this._parseDate(info.ModDate), this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
           return this._parsePageSize((0, _ui_utils.getPageSizeInches)(pdfPage), pagesRotation);
-        })]);
-      }).then(([info, metadata, fileName, fileSize, creationDate, modDate, pageSize]) => {
+        }), this._parseLinearization(info.IsLinearized)]);
+      }).then(([info, metadata, fileName, fileSize, creationDate, modDate, pageSize, isLinearized]) => {
         freezeFieldData({
           'fileName': fileName,
           'fileSize': fileSize,
@@ -3837,6 +3793,7 @@ class PDFDocumentProperties {
           'version': info.PDFFormatVersion,
           'pageCount': this.pdfDocument.numPages,
           'pageSize': pageSize,
+          'linearized': isLinearized,
           '_currentPageNumber': currentPageNumber,
           '_pagesRotation': pagesRotation
         });
@@ -4000,6 +3957,9 @@ class PDFDocumentProperties {
       date: dateString,
       time: timeString
     }, '{{date}}, {{time}}');
+  }
+  _parseLinearization(isLinearized) {
+    return this.l10n.get('document_properties_linearized_' + (isLinearized ? 'yes' : 'no'), null, isLinearized ? 'Yes' : 'No');
   }
 }
 exports.PDFDocumentProperties = PDFDocumentProperties;
@@ -9113,9 +9073,17 @@ class BasePreferences {
       });
       this.prefs = Object.assign(Object.create(null), defaults);
       return this._readFromStorage(defaults);
-    }).then(prefObj => {
-      if (prefObj) {
-        this.prefs = prefObj;
+    }).then(prefs => {
+      if (!prefs) {
+        return;
+      }
+      for (let name in prefs) {
+        const defaultValue = this.defaults[name],
+              prefValue = prefs[name];
+        if (defaultValue === undefined || typeof prefValue !== typeof defaultValue) {
+          continue;
+        }
+        this.prefs[name] = prefValue;
       }
     });
   }
@@ -9129,15 +9097,6 @@ class BasePreferences {
     return this._initializedPromise.then(() => {
       this.prefs = Object.assign(Object.create(null), this.defaults);
       return this._writeToStorage(this.defaults);
-    });
-  }
-  reload() {
-    return this._initializedPromise.then(() => {
-      return this._readFromStorage(this.defaults);
-    }).then(prefObj => {
-      if (prefObj) {
-        this.prefs = prefObj;
-      }
     });
   }
   set(name, value) {
@@ -9176,6 +9135,11 @@ class BasePreferences {
         }
       }
       return defaultValue;
+    });
+  }
+  getAll() {
+    return this._initializedPromise.then(() => {
+      return Object.assign(Object.create(null), this.defaults, this.prefs);
     });
   }
 }

@@ -44,11 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=974309
 
 function getEditor() {
   const Ci = SpecialPowers.Ci;
-  var editingSession = SpecialPowers.wrap(window)
-                                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIWebNavigation)
-                                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIEditingSession);
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
   return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
 }
 

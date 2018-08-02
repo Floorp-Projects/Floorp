@@ -67,10 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
     }
 
     function isCaretVisible() {
-      window.QueryInterface(Ci.nsIInterfaceRequestor);
-      var docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
-                            .QueryInterface(Ci.nsIDocShell);
+      var docShell = window.docShell;
       var selCon = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsISelectionDisplay)
         .QueryInterface(Ci.nsISelectionController);

@@ -786,9 +786,7 @@ var ActionBarHandler = {
       return element.editor;
     }
 
-    return win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).
-               QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIEditingSession).
-               getEditorForWindow(win);
+    return win.docShell.editingSession.getEditorForWindow(win);
   },
 
   /**
@@ -799,7 +797,7 @@ var ActionBarHandler = {
       return this._getEditor(element, win).selectionController;
     }
 
-    return win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).
+    return win.docShell.
                QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).
                QueryInterface(Ci.nsISelectionController);
   },

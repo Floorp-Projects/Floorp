@@ -87,9 +87,7 @@ function isModifierKeyEvent(aEvent)
  */
 function clearInfobars()
 {
-  var browser = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsIDocShell).chromeEventHandler;
+  var browser = window.top.docShell.chromeEventHandler;
   var chromeWin = browser.ownerGlobal;
   var nb = chromeWin.gBrowser.getNotificationBox(browser);
   for (let n of nb.allNotifications) {

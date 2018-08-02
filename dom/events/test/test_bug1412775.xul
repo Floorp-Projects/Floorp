@@ -30,8 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1412775
       b.addEventListener("foo", function(e) {
         didCallChromeSide = true;
         var path = e.composedPath();
-        var mm = d.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebNavigation)
+        var mm = d.defaultView.docShell
                               .QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIContentFrameMessageManager);
         is(path.length, 5, "Should have 5 items in composedPath in chrome.");

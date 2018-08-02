@@ -183,11 +183,7 @@ function runTests()
       Ci.nsIPlaintextEditor.eEditorReadonlyMask;
     var description = "testOnEditorFlagChange: " + aDescription;
     resetFocusToParentHTML(description);
-    var htmlEditor =
-      iframe.contentWindow.
-        QueryInterface(Ci.nsIInterfaceRequestor).
-        getInterface(Ci.nsIWebNavigation).
-        QueryInterface(Ci.nsIDocShell).editor;
+    var htmlEditor = iframe.contentWindow.docShell.editor;
     var e = aIsInDesignMode ? root : editor;
     e.focus();
     is(fm.focusedElement, e,

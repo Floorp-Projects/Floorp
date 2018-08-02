@@ -37,11 +37,7 @@ addLoadEvent(function() {
      "got " + str1 + " but expected " + str2);
 
   var viewer =
-    SpecialPowers.wrap($("ourFrame")).contentWindow
-                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                 .QueryInterface(SpecialPowers.Ci.nsIDocShell)
-                 .contentViewer;
+    SpecialPowers.wrap($("ourFrame")).contentWindow.docShell.contentViewer;
   viewer.fullZoom = 2;
   
   s3 = snapshotWindow(window);

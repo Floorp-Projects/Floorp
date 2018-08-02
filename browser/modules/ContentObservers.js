@@ -37,8 +37,7 @@ var gDecoderDoctorObserver = function(subject, topic, data) {
 };
 
 function getMessageManagerForWindow(aContentWindow) {
-  let ir = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell)
+  let ir = aContentWindow.docShell
                          .sameTypeRootTreeItem
                          .QueryInterface(Ci.nsIInterfaceRequestor);
   try {

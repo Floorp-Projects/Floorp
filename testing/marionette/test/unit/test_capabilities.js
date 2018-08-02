@@ -388,6 +388,7 @@ add_test(function test_Capabilities_ctor() {
   equal(false, caps.get("acceptInsecureCerts"));
   ok(caps.get("timeouts") instanceof Timeouts);
   ok(caps.get("proxy") instanceof Proxy);
+  equal(caps.get("setWindowRect"), false); // xpcshell does not populate appinfo
 
   ok(caps.has("rotatable"));
 
@@ -418,6 +419,7 @@ add_test(function test_Capabilities_toJSON() {
   equal(caps.get("acceptInsecureCerts"), json.acceptInsecureCerts);
   deepEqual(caps.get("timeouts").toJSON(), json.timeouts);
   equal(undefined, json.proxy);
+  equal(caps.get("setWindowRect"), json.setWindowRect);
 
   equal(caps.get("rotatable"), json.rotatable);
 
@@ -465,6 +467,10 @@ add_test(function test_Capabilities_fromJSON() {
   let timeoutsConfig = {implicit: 123};
   caps = fromJSON({timeouts: timeoutsConfig});
   equal(123, caps.get("timeouts").implicit);
+
+  caps = fromJSON({setWindowRect: false});
+  equal(false, caps.get("setWindowRect"));
+  Assert.throws(() => fromJSON({setWindowRect: true}), InvalidArgumentError);
 
   caps = fromJSON({"moz:accessibilityChecks": true});
   equal(true, caps.get("moz:accessibilityChecks"));

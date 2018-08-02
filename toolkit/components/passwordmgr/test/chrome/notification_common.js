@@ -22,11 +22,8 @@ function getPopupNotifications(aWindow) {
     ok(Ci != null, "Access Ci");
     ok(Cc != null, "Access Cc");
 
-    var chromeWin = SpecialPowers.wrap(aWindow)
-                                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell)
-                                 .chromeEventHandler.ownerGlobal;
+    var chromeWin =
+        SpecialPowers.wrap(aWindow).docShell.chromeEventHandler.ownerGlobal;
 
     var popupNotifications = chromeWin.PopupNotifications;
     return popupNotifications;
@@ -96,11 +93,8 @@ function dumpNotifications() {
     }
 
     // Notification bars
-    var chromeWin = SpecialPowers.wrap(window.top)
-                           .QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
-                           .QueryInterface(Ci.nsIDocShell)
-                           .chromeEventHandler.ownerGlobal;
+    var chromeWin =
+        SpecialPowers.wrap(window.top).docShell.chromeEventHandler.ownerGlobal;
     var nb = chromeWin.getNotificationBox(window.top);
     notes = nb.allNotifications;
     ok(true, "Found " + notes.length + " notification bars.");

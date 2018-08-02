@@ -11,54 +11,52 @@
  *
  * BUG: https://bugzilla.mozilla.org/show_bug.cgi?id=1083410
  */
-/*globals Task, ManifestObtainer, ManifestFinder, content, sendAsyncMessage, addMessageListener, Components*/
 "use strict";
-const {
-  utils: Cu,
-} = Components;
+
+var EXPORTED_SYMBOLS = ["ManifestMessages"];
+
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
-				  "resource://gre/modules/ManifestObtainer.jsm");
+                               "resource://gre/modules/ManifestObtainer.jsm");
 ChromeUtils.defineModuleGetter(this, "ManifestFinder",
-				  "resource://gre/modules/ManifestFinder.jsm");
+                               "resource://gre/modules/ManifestFinder.jsm");
 ChromeUtils.defineModuleGetter(this, "ManifestIcons",
-				  "resource://gre/modules/ManifestIcons.jsm");
+                               "resource://gre/modules/ManifestIcons.jsm");
 
-const MessageHandler = {
-  registerListeners() {
-    addMessageListener(
-      "DOM:WebManifest:hasManifestLink",
-      this.hasManifestLink.bind(this)
-    );
-    addMessageListener(
-      "DOM:ManifestObtainer:Obtain",
-      this.obtainManifest.bind(this)
-    );
-    addMessageListener(
-      "DOM:Manifest:FireAppInstalledEvent",
-      this.fireAppInstalledEvent.bind(this)
-    );
-    addMessageListener(
-      "DOM:WebManifest:fetchIcon",
-      this.fetchIcon.bind(this)
-    );
-  },
+class ManifestMessages {
+  constructor(mm) {
+    this.mm = mm;
+  }
+
+  receiveMessage(message) {
+    switch (message.name) {
+    case "DOM:WebManifest:hasManifestLink":
+      return this.hasManifestLink(message);
+    case "DOM:ManifestObtainer:Obtain":
+      return this.obtainManifest(message);
+    case "DOM:Manifest:FireAppInstalledEvent":
+      return this.fireAppInstalledEvent(message);
+    case "DOM:WebManifest:fetchIcon":
+      return this.fetchIcon(message);
+    }
+    return undefined;
+  }
 
   /**
-   * Check if the content document includes a link to a web manifest.
+   * Check if the this.mm.content document includes a link to a web manifest.
    * @param {Object} aMsg The IPC message, which is destructured to just
    *                      get the id.
    */
   hasManifestLink({data: {id}}) {
     const response = makeMsgResponse(id);
-    response.result = ManifestFinder.contentHasManifestLink(content);
+    response.result = ManifestFinder.contentHasManifestLink(this.mm.content);
     response.success = true;
-    sendAsyncMessage("DOM:WebManifest:hasManifestLink", response);
-  },
+    this.mm.sendAsyncMessage("DOM:WebManifest:hasManifestLink", response);
+  }
 
   /**
-   * Asynchronously obtains a web manifest from content by using the
+   * Asynchronously obtains a web manifest from this.mm.content by using the
    * ManifestObtainer and messages back the result.
    * @param {Object} aMsg The IPC message, which is destructured to just
    *                      get the id.
@@ -66,26 +64,26 @@ const MessageHandler = {
   async obtainManifest({data: {id}}) {
     const response = makeMsgResponse(id);
     try {
-      response.result = await ManifestObtainer.contentObtainManifest(content);
+      response.result = await ManifestObtainer.contentObtainManifest(this.mm.content);
       response.success = true;
     } catch (err) {
       response.result = serializeError(err);
     }
-    sendAsyncMessage("DOM:ManifestObtainer:Obtain", response);
-  },
+    this.mm.sendAsyncMessage("DOM:ManifestObtainer:Obtain", response);
+  }
 
-  fireAppInstalledEvent({data: {id}}){
+  fireAppInstalledEvent({data: {id}}) {
     const ev = new Event("appinstalled");
     const response = makeMsgResponse(id);
-    if (!content || content.top !== content) {
+    if (!this.mm.content || this.mm.content.top !== this.mm.content) {
       const msg = "Can only dispatch install event on top-level browsing contexts.";
       response.result = serializeError(new Error(msg));
     } else {
       response.success = true;
-      content.dispatchEvent(ev);
+      this.mm.content.dispatchEvent(ev);
     }
-    sendAsyncMessage("DOM:Manifest:FireAppInstalledEvent", response);
-  },
+    this.mm.sendAsyncMessage("DOM:Manifest:FireAppInstalledEvent", response);
+  }
 
   /**
    * Given a manifest and an expected icon size, ask ManifestIcons
@@ -95,15 +93,15 @@ const MessageHandler = {
     const response = makeMsgResponse(id);
     try {
       response.result =
-        await ManifestIcons.contentFetchIcon(content, manifest, iconSize);
+        await ManifestIcons.contentFetchIcon(this.mm.content, manifest, iconSize);
       response.success = true;
     } catch (err) {
       response.result = serializeError(err);
     }
-    sendAsyncMessage("DOM:WebManifest:fetchIcon", response);
-  },
+    this.mm.sendAsyncMessage("DOM:WebManifest:fetchIcon", response);
+  }
+}
 
-};
 /**
  * Utility function to Serializes an JS Error, so it can be transferred over
  * the message channel.
@@ -124,11 +122,9 @@ function serializeError(aError) {
 }
 
 function makeMsgResponse(aId) {
-    return {
-      id: aId,
-      success: false,
-      result: undefined
-    };
-  }
-
-MessageHandler.registerListeners();
+  return {
+    id: aId,
+    success: false,
+    result: undefined
+  };
+}

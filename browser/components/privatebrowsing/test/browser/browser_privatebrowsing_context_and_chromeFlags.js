@@ -12,10 +12,8 @@
  * @return Promise
  */
 function assertWindowIsPrivate(win) {
-  let winDocShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
-  let chromeFlags = winDocShell.QueryInterface(Ci.nsIDocShellTreeItem)
-                               .treeOwner
+  let winDocShell = win.docShell;
+  let chromeFlags = winDocShell.treeOwner
                                .QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIXULWindow)
                                .chromeFlags;

@@ -210,8 +210,7 @@ function openBrowserWindow(cmdLine, urlOrUrlList, postData = null,
       win.document.documentElement.removeAttribute("windowtype");
 
       if (forcePrivate) {
-        win.QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIWebNavigation)
+        win.docShell
            .QueryInterface(Ci.nsILoadContext)
            .usePrivateBrowsing = true;
       }
@@ -420,8 +419,7 @@ nsBrowserContentHandler.prototype = {
       if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
         let win = Services.wm.getMostRecentWindow("navigator:blank");
         if (win) {
-          win.QueryInterface(Ci.nsIInterfaceRequestor)
-             .getInterface(Ci.nsIWebNavigation)
+          win.docShell
              .QueryInterface(Ci.nsILoadContext)
              .usePrivateBrowsing = true;
         }

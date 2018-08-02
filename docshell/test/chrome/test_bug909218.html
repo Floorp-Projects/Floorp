@@ -30,7 +30,7 @@ var TEST_URL = "http://mochi.test:8888/chrome/docshell/test/chrome/bug909218.htm
 function test() {
   var iframe = document.createElement("iframe");
   document.body.appendChild(iframe);
-  var docShell = docshellForWindow(iframe.contentWindow);
+  var docShell = iframe.contentWindow.docShell;
   // Add our progress listener - when it notices the top-level document is
   // complete, the test will end.
   RequestWatcher.init(docShell, SimpleTest.finish);
@@ -113,13 +113,6 @@ RequestWatcher = {
     Ci.nsIWebProgressListener,
     Ci.nsISupportsWeakReference,
   ])
-}
-
-function docshellForWindow(win) {
-  return win.
-         QueryInterface(Ci.nsIInterfaceRequestor).
-         getInterface(Ci.nsIWebNavigation).
-         QueryInterface(Ci.nsIDocShell);
 }
 
 </script>

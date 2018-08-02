@@ -91,10 +91,7 @@ var UI = {
 
     this.setupDeck();
 
-    this.contentViewer = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIDocShell)
-                               .contentViewer;
+    this.contentViewer = window.docShell.contentViewer;
     this.contentViewer.fullZoom = Services.prefs.getCharPref("devtools.webide.zoom");
 
     gDevToolsBrowser.isWebIDEInitialized.resolve();

@@ -184,12 +184,11 @@ var ViewSourceContent = {
 
     if (outerWindowID) {
       let contentWindow = Services.wm.getOuterWindowWithId(outerWindowID);
-      let requestor = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+      let otherDocShell = contentWindow.docShell;
 
       try {
-        let otherWebNav = requestor.getInterface(Ci.nsIWebNavigation);
-        pageDescriptor = otherWebNav.QueryInterface(Ci.nsIWebPageDescriptor)
-                                    .currentDescriptor;
+        pageDescriptor = otherDocShell.QueryInterface(Ci.nsIWebPageDescriptor)
+                                      .currentDescriptor;
       } catch (e) {
         // We couldn't get the page descriptor, so we'll probably end up re-retrieving
         // this document off of the network.
