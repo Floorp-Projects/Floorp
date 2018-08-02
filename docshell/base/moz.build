@@ -62,12 +62,12 @@ XPIDL_MODULE = 'docshell'
 
 EXPORTS += [
     'nsCTooltipTextProvider.h',
+    'nsDocShell.h',
     'nsDocShellLoadInfo.h',
     'nsDocShellLoadTypes.h',
     'nsDocShellTreeOwner.h',
     'nsILinkHandler.h',
     'nsIScrollObserver.h',
-    'nsIWebShellServices.h',
     'SerializedLoadContext.h',
 ]
 
