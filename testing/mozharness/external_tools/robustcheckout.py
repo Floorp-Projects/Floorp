@@ -49,7 +49,7 @@ except ImportError:
 # Causes worker to purge caches on process exit and for task to retry.
 EXIT_PURGE_CACHE = 72
 
-testedwith = '3.7 3.8 3.9 4.0 4.1 4.2 4.3 4.4 4.5'
+testedwith = '3.7 3.8 3.9 4.0 4.1 4.2 4.3 4.4 4.5 4.6 4.7'
 minimumhgversion = '3.7'
 
 cmdtable = {}
@@ -84,6 +84,17 @@ def getvfs():
 def getsparse():
     from mercurial import sparse
     return sparse
+
+
+def supported_hg():
+    '''Returns True if the Mercurial version is supported for robustcheckout'''
+    return util.versiontuple(n=2) in (
+        (4, 3),
+        (4, 4),
+        (4, 5),
+        (4, 6),
+        (4, 7),
+    )
 
 
 if os.name == 'nt':
@@ -228,7 +239,7 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     # However, given that sparse has performance implications, we want to fail
     # fast if we can't satisfy the desired checkout request.
     if sparseprofile:
-        if util.versiontuple(n=2) not in ((4, 3), (4, 4), (4, 5)):
+        if not supported_hg():
             raise error.Abort('sparse profile support only available for '
                               'Mercurial versions greater than 4.3 (using %s)' % util.version())
 
@@ -575,16 +586,21 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
     # We only pull if we are using symbolic names or the requested revision
     # doesn't exist.
     havewantedrev = False
-    if revision and revision in repo:
-        ctx = repo[revision]
 
-        if not ctx.hex().startswith(revision):
-            raise error.Abort('--revision argument is ambiguous',
-                              hint='must be the first 12+ characters of a '
-                                   'SHA-1 fragment')
+    if revision:
+        try:
+            ctx = scmutil.revsingle(repo, revision)
+        except error.RepoLookupError:
+            ctx = None
 
-        checkoutrevision = ctx.hex()
-        havewantedrev = True
+        if ctx:
+            if not ctx.hex().startswith(revision):
+                raise error.Abort('--revision argument is ambiguous',
+                                  hint='must be the first 12+ characters of a '
+                                       'SHA-1 fragment')
+
+            checkoutrevision = ctx.hex()
+            havewantedrev = True
 
     if not havewantedrev:
         ui.write('(pulling to obtain %s)\n' % (revision or branch,))
@@ -635,7 +651,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         try:
             old_sparse_fn = getattr(repo.dirstate, '_sparsematchfn', None)
             if old_sparse_fn is not None:
-                assert util.versiontuple(n=2) in ((4, 3), (4, 4), (4, 5))
+                assert supported_hg(), 'Mercurial version not supported (must be 4.3+)'
                 repo.dirstate._sparsematchfn = lambda: matchmod.always(repo.root, '')
 
             with timeit('purge'):
