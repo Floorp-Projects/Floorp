@@ -3744,7 +3744,7 @@ Element::Animate(const Nullable<ElementOrCSSPseudoElement>& aTarget,
 
   // Animation constructor follows the standard Xray calling convention and
   // needs to be called in the target element's realm.
-  Maybe<JSAutoRealmAllowCCW> ar;
+  Maybe<JSAutoRealm> ar;
   if (js::GetContextCompartment(aContext) !=
       js::GetObjectCompartment(ownerGlobal->GetGlobalJSObject())) {
     ar.emplace(aContext, ownerGlobal->GetGlobalJSObject());
