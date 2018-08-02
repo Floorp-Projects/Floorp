@@ -408,12 +408,7 @@ var PermissionPromptForRequestPrototype = {
     if (this.request.element) {
       return this.request.element;
     }
-    return this.request
-               .window
-               .QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsIDocShell)
-               .chromeEventHandler;
+    return this.request.window.docShell.chromeEventHandler;
   },
 
   get principal() {

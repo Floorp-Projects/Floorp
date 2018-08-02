@@ -30,9 +30,7 @@ function test()
   var cwu = SpecialPowers.getDOMWindowUtils(window);
   cwu.sendMouseEventToWindow("mousedown", rect.left + rect.width/2, rect.top + rect.height/2, 0, 0, 0, true);
   cwu.sendMouseEventToWindow("mouseup",   rect.left + rect.width/2, rect.top + rect.height/2, 0, 0, 0, true);
-  var selectionController = SpecialPowers.wrap(window).
-                              QueryInterface(Ci.nsIInterfaceRequestor).
-                              getInterface(Ci.nsIWebNavigation).
+  var selectionController = SpecialPowers.wrap(window).docShell.
                               QueryInterface(Ci.nsIInterfaceRequestor).
                               getInterface(Ci.nsISelectionDisplay).
                               QueryInterface(Ci.nsISelectionController);

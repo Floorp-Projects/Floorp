@@ -5,8 +5,8 @@
 "use strict";
 
 add_task(async function() {
-  const scale = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIBaseWindow)
+  const scale = window.docShell
+                      .QueryInterface(Ci.nsIBaseWindow)
                       .devicePixelsPerDesktopPixel;
   let {bounds, rects} = TestRunner._findBoundingBox(["#tabbrowser-tabs"]);
   let element = document.querySelector("#tabbrowser-tabs");

@@ -47,9 +47,7 @@ this.finish = function() {
  */
 this.timelineContentTest = function(tests) {
   (async function() {
-    let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
+    let docShell = content.docShell;
 
     info("Start recording");
     docShell.recordProfileTimelineMarkers = true;

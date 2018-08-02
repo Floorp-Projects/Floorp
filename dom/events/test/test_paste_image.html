@@ -71,11 +71,7 @@
   function copyImage(aImageId) {
     // selection of the node
     var node = document.getElementById(aImageId);
-    var webnav = SpecialPowers.wrap(window)
-                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-
-    var docShell = webnav.QueryInterface(SpecialPowers.Ci.nsIDocShell);
+    var docShell = SpecialPowers.wrap(window).docShell;
 
     // let's copy the node
     var documentViewer = docShell.contentViewer

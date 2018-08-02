@@ -13,10 +13,7 @@ function init(aTest)
   var leftSpacer = document.getElementById("leftspacer");
   var rightSpacer = document.getElementById("rightspacer");
 
-  var docShell =
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShell);
+  var docShell = window.docShell;
   var controller =
     docShell.QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsISelectionDisplay)

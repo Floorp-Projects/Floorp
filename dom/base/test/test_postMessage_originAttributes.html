@@ -20,8 +20,7 @@ add_task(async function() {
   let iframe = document.querySelector("#target-iframe");
 
   let win = SpecialPowers.wrap(iframe).contentWindow;
-  let docShell = win.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                    .getInterface(SpecialPowers.Ci.nsIDocShell);
+  let docShell = win.docShell;
 
   // Add private browsing ID to docShell origin and load document.
   docShell.setOriginAttributes({privateBrowsingId: 1});

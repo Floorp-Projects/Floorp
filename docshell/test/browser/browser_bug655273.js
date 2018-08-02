@@ -19,8 +19,8 @@ add_task(async function test() {
         ok(oldTitle, 'Content window should initially have a title.');
         cw.history.pushState('', '', 'new_page');
 
-        let shistory = cw.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
+        let shistory = cw.docShell
+                         .QueryInterface(Ci.nsIWebNavigation)
                          .sessionHistory;
 
         is(shistory.legacySHistory.getEntryAtIndex(shistory.index, false).title,

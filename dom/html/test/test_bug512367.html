@@ -24,12 +24,7 @@ var frame = document.getElementById("i");
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  var viewer =
-    SpecialPowers.wrap(frame.contentWindow)
-                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                 .QueryInterface(SpecialPowers.Ci.nsIDocShell)
-                 .contentViewer;
+  var viewer = SpecialPowers.wrap(frame.contentWindow).docShell.contentViewer;
 
   viewer.fullZoom = 1.5;
 

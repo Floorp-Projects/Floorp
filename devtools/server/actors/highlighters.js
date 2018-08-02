@@ -640,9 +640,7 @@ HighlighterEnvironment.prototype = {
 
   get docShell() {
     return this.window &&
-           this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebNavigation)
-                      .QueryInterface(Ci.nsIDocShell);
+           this.window.docShell;
   },
 
   get webProgress() {

@@ -71,8 +71,7 @@ function handleDialog(doc, testNum) {
         // be null).
         var win = doc.defaultView;
         var Ci = SpecialPowers.Ci;
-        var treeOwner = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).
-                            QueryInterface(Ci.nsIDocShellTreeItem).treeOwner;
+        var treeOwner = win.docShell.treeOwner;
         treeOwner.QueryInterface(Ci.nsIInterfaceRequestor);
         var flags = treeOwner.getInterface(Ci.nsIXULWindow).chromeFlags;
         var wbc = treeOwner.getInterface(Ci.nsIWebBrowserChrome);

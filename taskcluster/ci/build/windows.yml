@@ -719,6 +719,7 @@ win64-asan-reporter-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-sccache
+        - win64-node
 
 win32-devedition-nightly/opt:
     description: "Win32 Dev Edition Nightly"

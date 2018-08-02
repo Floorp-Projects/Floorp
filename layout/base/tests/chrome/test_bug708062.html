@@ -28,8 +28,7 @@ function isBoundingClientRect(e, r, msg) {
 function doTest() {
   var f = document.getElementById('f');
 
-  var navigator1 = f.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-  var docShell = navigator1.QueryInterface(Ci.nsIDocShell);
+  var docShell = f.contentWindow.docShell;
   var docviewer = docShell.contentViewer;
 
   var d = f.contentDocument.getElementById('d');

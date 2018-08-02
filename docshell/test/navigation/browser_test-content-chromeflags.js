@@ -25,9 +25,7 @@ add_task(async function() {
     BrowserTestUtils.synthesizeMouse("a", 0, 0, {}, browser);
     let win = await openedPromise;
 
-    let chromeFlags = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShellTreeItem)
+    let chromeFlags = win.docShell
                          .treeOwner
                          .QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIXULWindow)

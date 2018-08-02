@@ -88,8 +88,7 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
       offset.left += currentRect.left;
       offset.top += currentRect.top;
 
-      let targetDocShell = currentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                        .getInterface(Ci.nsIWebNavigation);
+      let targetDocShell = currentWindow.docShell;
       if (targetDocShell.isMozBrowser) {
         break;
       }

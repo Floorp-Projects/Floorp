@@ -110,8 +110,7 @@ interface nsITransferable : nsISupports
    * to the document that the transferable corresponds to, and then get the load
    * context from the document like this:
    *
-   * var loadContext = doc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-   *                                  .getInterface(Ci.nsIWebNavigation)
+   * var loadContext = doc.defaultView.docShell
    *                                  .QueryInterface(Ci.nsILoadContext);
    *
    * In C++ callers, if you have the corresponding document, you can just call

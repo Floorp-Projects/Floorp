@@ -84,8 +84,7 @@ function isContentPrefEnabled() {
 var gDownloadLastDirFile = readLastDirPref();
 
 function DownloadLastDir(aWindow) {
-  let loadContext = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
+  let loadContext = aWindow.docShell
                            .QueryInterface(Ci.nsILoadContext);
   // Need this in case the real thing has gone away by the time we need it.
   // We only care about the private browsing state. All the rest of the

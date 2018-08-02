@@ -660,10 +660,7 @@ window._gBrowser = {
     // directly from the content window to the browser without looping
     // over all browsers.
     if (!gMultiProcessBrowser) {
-      let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
-                           .QueryInterface(Ci.nsIDocShell)
-                           .chromeEventHandler;
+      let browser = aWindow.docShell.chromeEventHandler;
       return this.getTabForBrowser(browser);
     }
 
@@ -3070,11 +3067,7 @@ window._gBrowser = {
       win.windowUtils.suppressAnimation(true);
       // Only suppressing window animations isn't enough to avoid
       // an empty content area being painted.
-      let baseWin = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell)
-                       .QueryInterface(Ci.nsIDocShellTreeItem)
-                       .treeOwner
-                       .QueryInterface(Ci.nsIBaseWindow);
+      let baseWin = win.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
       baseWin.visibility = false;
     }
 

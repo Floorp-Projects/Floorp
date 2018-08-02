@@ -5,8 +5,7 @@
 <script><![CDATA[
 var docviewer;
 function do_onload() {
-  var navigator1 = SpecialPowers.wrap(parent).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(SpecialPowers.Ci.nsIWebNavigation);
-  var docShell = navigator1.QueryInterface(SpecialPowers.Ci.nsIDocShell);
+  var docShell = SpecialPowers.wrap(parent).docShell;
   docviewer = docShell.contentViewer;
 
   setTimeout(function() {

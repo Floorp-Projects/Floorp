@@ -93,10 +93,7 @@ talos-damp:
     description: "Talos devtools (damp)"
     try-name: damp
     treeherder-symbol: T(damp)
-    max-run-time:
-        by-test-platform:
-            linux64.*: 2700
-            default: 5400
+    max-run-time: 5400
     run-on-projects:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593

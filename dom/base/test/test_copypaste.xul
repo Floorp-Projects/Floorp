@@ -19,9 +19,7 @@ function runTest() {
 
   let expected = "\n    hello\n    world\n  ";
   SimpleTest.waitForClipboard(expected, function() {
-    let webnav = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation);
-    webnav.QueryInterface(Ci.nsIDocShell)
+    window.docShell
           .contentViewer
           .QueryInterface(Ci.nsIContentViewerEdit)
           .copySelection();

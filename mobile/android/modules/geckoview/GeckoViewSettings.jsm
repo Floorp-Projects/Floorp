@@ -101,14 +101,10 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 
   get displayMode() {
-    return this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDocShell)
-                      .displayMode;
+    return this.window.docShell.displayMode;
   }
 
   set displayMode(aMode) {
-    this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDocShell)
-               .displayMode = aMode;
+    this.window.docShell.displayMode = aMode;
   }
 }

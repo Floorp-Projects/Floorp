@@ -102,10 +102,8 @@ function starttest(){
   is(SpecialPowers.wrap(document).getElementsByTagName('details').length, 0, "Should work with proxy-based DOM bindings.");
 
   // Play with the window object.
-  var webnav = SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                                         .getInterface(SpecialPowers.Ci.nsIWebNavigation);
-  webnav.QueryInterface(SpecialPowers.Ci.nsIDocShell);
-  ok(webnav.allowJavascript, "Able to pull properties off of docshell!");
+  var docShell = SpecialPowers.wrap(window).docShell;
+  ok(docShell.allowJavascript, "Able to pull properties off of docshell!");
 
   // Make sure Xray-wrapped functions work.
   try {

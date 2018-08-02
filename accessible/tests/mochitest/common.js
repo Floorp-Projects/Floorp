@@ -712,9 +712,7 @@ function relationTypeToString(aRelationType) {
 }
 
 function getLoadContext() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsILoadContext);
+  return window.docShell.QueryInterface(Ci.nsILoadContext);
 }
 
 /**

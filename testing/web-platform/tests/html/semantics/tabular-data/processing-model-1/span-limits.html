@@ -23,6 +23,12 @@
   <!-- We'll add another 65533 rows later -->
 </table>
 
+<table border=1>
+  <!-- The first column must go one cell below the bottom -->
+  <tr><td rowspan=65535 id=d1>a<td>
+  <!-- We'll add another 65534 rows later -->
+</table>
+
 <script>
 var $ = document.querySelector.bind(document);
 
@@ -47,5 +53,14 @@ test(() => {
                   $("#c2").getBoundingClientRect().bottom);
 }, "rowspan of 65534 must work");
 
-// See span-limits-2.html too. This test was split into two due to slowness.
+test(() => {
+    var s = "";
+    for (var i = 0; i < 65532; i++) {
+      s += "<tr><td>";
+    }
+    s += "<tr><td id=d2><tr><td>a<td>";
+    document.querySelectorAll("table")[3].firstElementChild.innerHTML += s;
+    assert_equals($("#d1").getBoundingClientRect().bottom,
+                  $("#d2").getBoundingClientRect().bottom);
+}, "rowspan of 65535 must be treated as 65534");
 </script>

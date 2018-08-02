@@ -95,8 +95,8 @@ function testInit() {
       // Window is the [ChromeWindow] for messageManager, so we need content.window
       // Currently chrome tests are run in a content window instead of a ChromeWindow
       // eslint-disable-next-line no-undef
-      var webNav = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation);
+      var webNav = content.window.docShell
+                          .QueryInterface(Ci.nsIWebNavigation);
       webNav.loadURI(url, null, null, null, null);
     };
 
