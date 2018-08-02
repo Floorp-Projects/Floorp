@@ -134,7 +134,7 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
       return nullptr;
     }
 
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
 
     // It's important to create the nsIGlobalObject for our new global before we
     // start trying to wrap things like the prototype into its compartment,
