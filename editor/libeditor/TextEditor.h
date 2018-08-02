@@ -115,7 +115,8 @@ public:
   /**
    * InsertTextAsAction() inserts aStringToInsert at selection.
    * Although this method is implementation of nsIPlaintextEditor.insertText(),
-   * this treats the input is an edit action.
+   * this treats the input is an edit action.  If you'd like to insert text
+   * as part of edit action, you probably should use InsertTextAsSubAction().
    *
    * @param aStringToInsert     The string to insert.
    */
@@ -158,6 +159,17 @@ public:
    * @ param aString   the string to be set
    */
   nsresult SetText(const nsAString& aString);
+
+  /**
+   * Replace text in aReplaceRange or all text in this editor with aString and
+   * treat the change as inserting the string.
+   *
+   * @param aString             The string to set.
+   * @param aReplaceRange       The range to be replaced.
+   *                            If nullptr, all contents will be replaced.
+   */
+  nsresult ReplaceTextAsAction(const nsAString& aString,
+                               nsRange* aReplaceRange = nullptr);
 
   /**
    * OnInputParagraphSeparator() is called when user tries to separate current
@@ -231,6 +243,14 @@ protected: // May be called by friends.
   using EditorBase::SetAttributeOrEquivalent;
 
   /**
+   * InsertTextAsSubAction() inserts aStringToInsert at selection.  This
+   * should be used for handling it as an edit sub-action.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  nsresult InsertTextAsSubAction(const nsAString& aStringToInsert);
+
+  /**
    * DeleteSelectionAsSubAction() removes selection content or content around
    * caret with transactions.  This should be used for handling it as an
    * edit sub-action.
@@ -253,6 +273,21 @@ protected: // May be called by friends.
   virtual nsresult
   DeleteSelectionWithTransaction(EDirection aAction,
                                  EStripWrappers aStripWrappers);
+
+  /**
+   * Replace existed string with aString.  Caller must guarantee that there
+   * is a placeholder transaction which will have the transaction.
+   *
+   * @ param aString   The string to be set.
+   */
+  nsresult SetTextAsSubAction(const nsAString& aString);
+
+  /**
+   * ReplaceSelectionAsSubAction() replaces selection with aString.
+   *
+   * @param aString    The string to replace.
+   */
+  nsresult ReplaceSelectionAsSubAction(const nsAString& aString);
 
   /**
    * InsertBrElementWithTransaction() creates a <br> element and inserts it

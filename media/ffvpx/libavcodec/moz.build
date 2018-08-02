@@ -72,6 +72,13 @@ if not CONFIG['MOZ_FFVPX_FLACONLY']:
         'vp9recon.c'
     ]
 
+if CONFIG['MOZ_LIBAV_FFT']:
+    SOURCES += [
+        'avfft.c',
+        'fft_float.c',
+        'rdft.c',
+    ]
+
 SYMBOLS_FILE = 'avcodec.symbols'
 NoVisibilityFlags()
 

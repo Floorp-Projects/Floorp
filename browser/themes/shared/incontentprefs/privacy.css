@@ -2,12 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Permissions */
+
+.content-blocking-icon,
 .permission-icon {
   height: 20px;
   width: 20px;
   vertical-align: middle;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+.content-blocking-icon[disabled] {
+  fill: GrayText;
 }
 
 .geo-icon {
@@ -28,4 +35,108 @@
 
 .midi-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
+}
+
+/* Content Blocking */
+
+#contentBlockingLearnMore {
+  margin-top: 4px !important;
+}
+
+#contentBlockingCheckboxContainer {
+  margin: 16px 0;
+}
+
+#contentBlockingToggleLabel {
+  line-height: 34px;
+}
+
+#contentBlockingCheckbox {
+  visibility: collapse;
+}
+
+/* If shown, the button-box takes up some space that results
+ * in unwanted changes in right-hand margin when toggling
+ * this button. We just hide it since we don't need it. */
+#contentBlockingToggle > .button-box {
+  display: none;
+}
+
+#contentBlockingToggle {
+  -moz-appearance: none;
+  box-sizing: border-box;
+  min-width: 48px;
+  max-width: 48px;
+  min-height: 30px;
+  max-height: 30px;
+  border-radius: 20px;
+  background-color: #d7d7db;
+  border: 1px solid transparent;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-inline-start: 1px;
+  margin-inline-end: 7px;
+  padding: 5px;
+  transition: padding .2s ease;
+}
+
+#contentBlockingToggle::before {
+  position: relative;
+  display: block;
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 10px;
+  background: white;
+}
+
+#contentBlockingCheckbox[checked="true"] + #contentBlockingToggle {
+  background-color: #2292d0;
+  border: 1px solid #2292d0;
+  /* Push the toggle to the right. */
+  padding-inline-start: 23px;
+}
+
+#contentBlockingToggle:hover,
+#contentBlockingToggle:-moz-focusring {
+  border: 1px solid #b1b1b3;
+}
+
+#contentBlockingCheckbox[checked] + #contentBlockingToggle:hover,
+#contentBlockingCheckbox[checked] + #contentBlockingToggle:-moz-focusring {
+  background-color: #0a84ff;
+}
+
+.content-blocking-category {
+  margin: 8px 0;
+}
+
+.content-blocking-category-icon {
+  padding: 4px;
+}
+
+.content-blocking-category-labels {
+  padding-inline-start: 4px;
+}
+
+#changeBlockListLink {
+  font-size: 90%;
+}
+
+.content-blocking-category-description {
+  font-size: 90%;
+  opacity: 0.6;
+}
+
+.content-blocking-category-menu {
+  margin-top: -2px;
+  min-width: 250px;
+}
+
+.fastblock-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/slowtrackers.svg);
+}
+
+.tracking-protection-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
 }
