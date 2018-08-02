@@ -83,7 +83,6 @@ function MarkupView(inspector, frame, controllerWindow) {
   // The popup will be attached to the toolbox document.
   this.popup = new AutocompletePopup(inspector.toolbox.doc, {
     autoSelect: true,
-    theme: "auto",
   });
 
   this.undo = new UndoStack();

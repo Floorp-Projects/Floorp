@@ -154,7 +154,6 @@ class JSTerm extends Component {
       onClick: this.acceptProposedCompletion.bind(this),
       listId: "webConsole_autocompletePopupListBox",
       position: "top",
-      theme: "auto",
       autoSelect: true
     };
 
