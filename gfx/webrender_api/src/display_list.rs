@@ -123,7 +123,7 @@ pub struct AuxIter<'a, T> {
 impl BuiltDisplayListDescriptor {}
 
 impl BuiltDisplayList {
-    pub fn from_data(data: Vec<u8>, descriptor: BuiltDisplayListDescriptor) -> BuiltDisplayList {
+    pub fn from_data(data: Vec<u8>, descriptor: BuiltDisplayListDescriptor) -> Self {
         BuiltDisplayList { data, descriptor }
     }
 

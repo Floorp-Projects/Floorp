@@ -71,16 +71,18 @@ pub struct GpuFrameProfile<T> {
     samplers: QuerySet<GpuSampler<T>>,
     frame_id: FrameId,
     inside_frame: bool,
+    ext_debug_marker: bool
 }
 
 impl<T> GpuFrameProfile<T> {
-    fn new(gl: Rc<gl::Gl>) -> Self {
+    fn new(gl: Rc<gl::Gl>, ext_debug_marker: bool) -> Self {
         GpuFrameProfile {
             gl,
             timers: QuerySet::new(),
             samplers: QuerySet::new(),
             frame_id: FrameId::new(0),
             inside_frame: false,
+            ext_debug_marker
         }
     }
 
@@ -140,7 +142,7 @@ impl<T: NamedTag> GpuFrameProfile<T> {
     fn start_timer(&mut self, tag: T) -> GpuTimeQuery {
         self.finish_timer();
 
-        let marker = GpuMarker::new(&self.gl, tag.get_label());
+        let marker = GpuMarker::new(&self.gl, tag.get_label(), self.ext_debug_marker);
 
         if let Some(query) = self.timers.add(GpuTimer { tag, time_ns: 0 }) {
             self.gl.begin_query(gl::TIME_ELAPSED, query);
@@ -187,19 +189,21 @@ pub struct GpuProfiler<T> {
     gl: Rc<gl::Gl>,
     frames: Vec<GpuFrameProfile<T>>,
     next_frame: usize,
+    ext_debug_marker: bool
 }
 
 impl<T> GpuProfiler<T> {
-    pub fn new(gl: Rc<gl::Gl>) -> Self {
+    pub fn new(gl: Rc<gl::Gl>, ext_debug_marker: bool) -> Self {
         const MAX_PROFILE_FRAMES: usize = 4;
         let frames = (0 .. MAX_PROFILE_FRAMES)
-            .map(|_| GpuFrameProfile::new(Rc::clone(&gl)))
+            .map(|_| GpuFrameProfile::new(Rc::clone(&gl), ext_debug_marker))
             .collect();
 
         GpuProfiler {
             gl,
             next_frame: 0,
             frames,
+            ext_debug_marker
         }
     }
 
@@ -263,33 +267,42 @@ impl<T: NamedTag> GpuProfiler<T> {
     }
 
     pub fn start_marker(&mut self, label: &str) -> GpuMarker {
-        GpuMarker::new(&self.gl, label)
+        GpuMarker::new(&self.gl, label, self.ext_debug_marker)
     }
 
     pub fn place_marker(&mut self, label: &str) {
-        GpuMarker::fire(&self.gl, label)
+        GpuMarker::fire(&self.gl, label, self.ext_debug_marker)
     }
 }
 
 #[must_use]
 pub struct GpuMarker {
-    gl: Rc<gl::Gl>,
+    gl: Option<Rc<gl::Gl>>
 }
 
 impl GpuMarker {
-    fn new(gl: &Rc<gl::Gl>, message: &str) -> Self {
-        gl.push_group_marker_ext(message);
-        GpuMarker { gl: Rc::clone(gl) }
+    fn new(gl: &Rc<gl::Gl>, message: &str, ext_debug_marker: bool) -> Self {
+        let gl = if ext_debug_marker {
+            gl.push_group_marker_ext(message);            
+            Some(Rc::clone(gl))
+        } else {
+            None
+        };
+        GpuMarker { gl }
     }
 
-    fn fire(gl: &Rc<gl::Gl>, message: &str) {
-        gl.insert_event_marker_ext(message);
+    fn fire(gl: &Rc<gl::Gl>, message: &str, ext_debug_marker: bool) {
+        if ext_debug_marker {
+            gl.insert_event_marker_ext(message);
+        }
     }
 }
 
 impl Drop for GpuMarker {
     fn drop(&mut self) {
-        self.gl.pop_group_marker_ext();
+        if let Some(ref gl) = self.gl {
+            gl.pop_group_marker_ext();
+        }
     }
 }
 

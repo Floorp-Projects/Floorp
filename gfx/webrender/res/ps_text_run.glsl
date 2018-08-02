@@ -73,37 +73,33 @@ VertexInfo write_text_vertex(vec2 clamped_local_pos,
     // Convert the world positions to device pixel space.
     float device_scale = uDevicePixelRatio / world_pos.w;
     vec2 device_pos = world_pos.xy * device_scale;
-
-    // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_pos -
-                     task.content_origin +
-                     task.common_data.task_rect.p0;
+    vec2 snap_offset = vec2(0.0);
 
 #if defined(WR_FEATURE_GLYPH_TRANSFORM)
     bool remove_subpx_offset = true;
 #else
-    // Compute the snapping offset only if the scroll node transform is axis-aligned.
     bool remove_subpx_offset = transform.is_axis_aligned;
 #endif
+    // Compute the snapping offset only if the scroll node transform is axis-aligned.
     if (remove_subpx_offset) {
         // Ensure the transformed text offset does not contain a subpixel translation
         // such that glyph snapping is stable for equivalent glyph subpixel positions.
         vec2 world_text_offset = mat2(transform.m) * text_offset;
         vec2 device_text_pos = (transform.m[3].xy + world_text_offset) * device_scale;
-        final_pos += floor(device_text_pos + 0.5) - device_text_pos;
+        snap_offset += floor(device_text_pos + 0.5) - device_text_pos;
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
         // For transformed subpixels, we just need to align the glyph origin to a device pixel.
         // The transformed text offset has already been snapped, so remove it from the glyph
         // origin when snapping the glyph.
-        vec2 snap_offset = snap_rect.p0 - world_text_offset * device_scale;
-        final_pos += floor(snap_offset + snap_bias) - snap_offset;
+        vec2 rough_offset = snap_rect.p0 - world_text_offset * device_scale;
+        snap_offset += floor(rough_offset + snap_bias) - rough_offset;
 #else
         // The transformed text offset has already been snapped, so remove it from the transform
         // when snapping the glyph.
         mat4 snap_transform = transform.m;
         snap_transform[3].xy = -world_text_offset;
-        final_pos += compute_snap_offset(
+        snap_offset += compute_snap_offset(
             clamped_local_pos,
             snap_transform,
             snap_rect,
@@ -112,13 +108,17 @@ VertexInfo write_text_vertex(vec2 clamped_local_pos,
 #endif
     }
 
+    // Apply offsets for the render task to get correct screen location.
+    vec2 final_pos = device_pos + snap_offset -
+                     task.content_origin +
+                     task.common_data.task_rect.p0;
+
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
     VertexInfo vi = VertexInfo(
         clamped_local_pos,
-        device_pos,
-        world_pos.w,
-        final_pos
+        snap_offset,
+        world_pos
     );
 
     return vi;
@@ -223,7 +223,7 @@ void main(void) {
     vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
 
-    write_clip(vi.screen_pos, clip_area);
+    write_clip(vi.world_pos, clip_area);
 
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
