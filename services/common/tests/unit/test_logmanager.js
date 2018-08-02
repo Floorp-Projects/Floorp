@@ -15,7 +15,7 @@ function getAppenders(log) {
   equal(capps.length, 1, "should only have one console appender");
   let dapps = log.appenders.filter(app => app instanceof Log.DumpAppender);
   equal(dapps.length, 1, "should only have one dump appender");
-  let fapps = log.appenders.filter(app => app instanceof Log.StorageStreamAppender);
+  let fapps = log.appenders.filter(app => app instanceof LogManager.StorageStreamAppender);
   return [capps[0], dapps[0], fapps];
 }
 
