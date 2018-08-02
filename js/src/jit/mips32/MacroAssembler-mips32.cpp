@@ -2023,7 +2023,7 @@ MacroAssemblerMIPSCompat::toggledCall(JitCode* target, bool enabled)
 {
     BufferOffset bo = nextOffset();
     CodeOffset offset(bo.getOffset());
-    addPendingJump(bo, ImmPtr(target->raw()), Relocation::JITCODE);
+    addPendingJump(bo, ImmPtr(target->raw()), RelocationKind::JITCODE);
     ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
     if (enabled) {
         as_jalr(ScratchRegister);

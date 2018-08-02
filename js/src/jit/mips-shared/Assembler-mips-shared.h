@@ -861,9 +861,9 @@ class AssemblerMIPSShared : public AssemblerShared
         // we want to fix-up
         BufferOffset offset;
         void* target;
-        Relocation::Kind kind;
+        RelocationKind kind;
 
-        RelativePatch(BufferOffset offset, void* target, Relocation::Kind kind)
+        RelativePatch(BufferOffset offset, void* target, RelocationKind kind)
           : offset(offset),
             target(target),
             kind(kind)
@@ -911,7 +911,7 @@ class AssemblerMIPSShared : public AssemblerShared
 #ifdef DEBUG
         MOZ_ASSERT(dataRelocations_.length() == 0);
         for (auto& j : jumps_)
-            MOZ_ASSERT(j.kind == Relocation::HARDCODED);
+            MOZ_ASSERT(j.kind == RelocationKind::HARDCODED);
 #endif
     }
 
@@ -1285,9 +1285,9 @@ class AssemblerMIPSShared : public AssemblerShared
 
   protected:
     InstImm invertBranch(InstImm branch, BOffImm16 skipOffset);
-    void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
+    void addPendingJump(BufferOffset src, ImmPtr target, RelocationKind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
-        if (kind == Relocation::JITCODE)
+        if (kind == RelocationKind::JITCODE)
             writeRelocation(src);
     }
 

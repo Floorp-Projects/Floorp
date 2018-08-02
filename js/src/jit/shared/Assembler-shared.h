@@ -445,17 +445,14 @@ struct BaseObjectSlotIndex : BaseValueIndex
 #endif
 };
 
-class Relocation {
-  public:
-    enum Kind {
-        // The target is immovable, so patching is only needed if the source
-        // buffer is relocated and the reference is relative.
-        HARDCODED,
+enum class RelocationKind {
+    // The target is immovable, so patching is only needed if the source
+    // buffer is relocated and the reference is relative.
+    HARDCODED,
 
-        // The target is the start of a JitCode buffer, which must be traced
-        // during garbage collection. Relocations and patching may be needed.
-        JITCODE
-    };
+    // The target is the start of a JitCode buffer, which must be traced
+    // during garbage collection. Relocations and patching may be needed.
+    JITCODE
 };
 
 class RepatchLabel

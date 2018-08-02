@@ -499,7 +499,7 @@ class BailoutJump {
     { }
 #ifdef JS_CODEGEN_X86
     void operator()(MacroAssembler& masm, uint8_t* code) const {
-        masm.j(cond_, ImmPtr(code), Relocation::HARDCODED);
+        masm.j(cond_, ImmPtr(code), RelocationKind::HARDCODED);
     }
 #endif
     void operator()(MacroAssembler& masm, Label* label) const {
@@ -515,7 +515,7 @@ class BailoutLabel {
     { }
 #ifdef JS_CODEGEN_X86
     void operator()(MacroAssembler& masm, uint8_t* code) const {
-        masm.retarget(label_, ImmPtr(code), Relocation::HARDCODED);
+        masm.retarget(label_, ImmPtr(code), RelocationKind::HARDCODED);
     }
 #endif
     void operator()(MacroAssembler& masm, Label* label) const {

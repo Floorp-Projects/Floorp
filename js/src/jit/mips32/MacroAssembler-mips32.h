@@ -244,7 +244,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
+        addPendingJump(bo, ImmPtr(c->raw()), RelocationKind::JITCODE);
         ma_liPatchable(ScratchRegister, ImmPtr(c->raw()));
         as_jr(ScratchRegister);
         as_nop();
@@ -347,7 +347,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     {
         auto target = ImmPtr(code.value);
         BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, target, Relocation::HARDCODED);
+        addPendingJump(bo, target, RelocationKind::HARDCODED);
         ma_jump(target);
     }
 

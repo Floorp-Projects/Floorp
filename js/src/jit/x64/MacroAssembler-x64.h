@@ -546,7 +546,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label) {
         JmpSrc src = jmpSrc(label);
-        return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
+        return CodeOffsetJump(size(), addPatchableJump(src, RelocationKind::HARDCODED));
     }
 
     void movePtr(Register src, Register dest) {
