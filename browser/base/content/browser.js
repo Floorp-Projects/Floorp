@@ -5891,9 +5891,9 @@ function hrefAndLinkNodeForClickEvent(event) {
             aNode instanceof HTMLLinkElement);
   }
 
-  let node = event.target;
+  let node = event.composedTarget;
   while (node && !isHTMLLink(node)) {
-    node = node.parentNode;
+    node = node.flattenedTreeParentNode;
   }
 
   if (node)
@@ -5901,7 +5901,7 @@ function hrefAndLinkNodeForClickEvent(event) {
 
   // If there is no linkNode, try simple XLink.
   let href, baseURI;
-  node = event.target;
+  node = event.composedTarget;
   while (node && !href) {
     if (node.nodeType == Node.ELEMENT_NODE &&
         (node.localName == "a" ||
@@ -5914,7 +5914,7 @@ function hrefAndLinkNodeForClickEvent(event) {
         break;
       }
     }
-    node = node.parentNode;
+    node = node.flattenedTreeParentNode;
   }
 
   // In case of XLink, we don't return the node we got href from since
