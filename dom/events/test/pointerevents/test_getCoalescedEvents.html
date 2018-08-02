@@ -45,13 +45,11 @@ function runTests() {
         is(coalescedEvent.cancelable, false, "getCoalescedEvents()[" + i + "].cancelable");
         is(coalescedEvent.bubbles, false, "getCoalescedEvents()[" + i + "].bubbles");
 
-        let offsetX = 20 - (length - i - 1) * 5;
-        let offsetY = 20 - (length - i - 1) * 5;
-        ok(coalescedEvent.offsetX > prevOffsetX, "getCoalescedEvents()[" + i + "].offsetX = " + coalescedEvent.offsetX);
+        ok(coalescedEvent.offsetX >= prevOffsetX, "getCoalescedEvents()[" + i + "].offsetX = " + coalescedEvent.offsetX);
         ok(coalescedEvent.offsetX == 5 || coalescedEvent.offsetX == 10 ||
            coalescedEvent.offsetX == 15 || coalescedEvent.offsetX == 20, "expected offsetX");
 
-        ok(coalescedEvent.offsetY > prevOffsetY, "getCoalescedEvents()[" + i + "].offsetY = " + coalescedEvent.offsetY);
+        ok(coalescedEvent.offsetY >= prevOffsetY, "getCoalescedEvents()[" + i + "].offsetY = " + coalescedEvent.offsetY);
         ok(coalescedEvent.offsetY == 5 || coalescedEvent.offsetY == 10 ||
            coalescedEvent.offsetY == 15 || coalescedEvent.offsetY == 20, "expected offsetY");
 
