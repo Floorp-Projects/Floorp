@@ -4619,14 +4619,26 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
              mComposition.EndOffset() ==
                mContentForTSF.LatestCompositionEndOffset());
 
-  bool dontReturnNoLayoutError = false;
-  const Selection& selectionForTSF = SelectionForTSFRef();
   // The bug of Microsoft Office IME 2010 for Japanese is similar to
   // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
   // released yet.  So, we can hack it without prefs  because there must be
   // no developers who want to disable this hack for tests.
   const bool kIsMSOfficeJapaneseIME2010 =
     TSFStaticSink::IsMSOfficeJapaneseIME2010Active();
+
+  // If TSF does not have the bug, we need to hack only with a few TIPs.
+  // XXX We have not tested with Microsoft Office IME 2010 since it's
+  //     installable only with Win7 and Win8 (i.e., cannot install Win8.1 and
+  //     Win10), and requires upgrade to Win10.
+  static const bool sTSFHasTheBug = !IsWindows10BuildOrLater(17643);
+  if (!sTSFHasTheBug &&
+      !kIsMSOfficeJapaneseIME2010 &&
+      !TSFStaticSink::IsJapanist10Active()) {
+    return false;
+  }
+
+  bool dontReturnNoLayoutError = false;
+  const Selection& selectionForTSF = SelectionForTSFRef();
   // MS IME for Japanese doesn't support asynchronous handling at deciding
   // its suggest list window position.  The feature was implemented
   // starting from Windows 8.  And also we may meet same trouble in e10s
@@ -4683,7 +4695,8 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
   // Japanist 10 fails to handle TS_E_NOLAYOUT when it decides the position of
   // candidate window.  In such case, Japanist shows candidate window at
   // top-left of the screen.  So, we should return the nearest caret rect
-  // where we know.
+  // where we know.  This is Japanist's bug.  So, even after build 17643,
+  // we need this hack.
   else if (
     TSFPrefs::DoNotReturnNoLayoutErrorToJapanist10OfCompositionString() &&
     TSFStaticSink::IsJapanist10Active() &&
@@ -4694,8 +4707,8 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     dontReturnNoLayoutError = true;
   }
   // Free ChangJie 2010 doesn't handle ITfContextView::GetTextExt() properly.
-  // Prehaps, it's due to the bug of TSF.  We need to check if this is
-  // necessary on Windows 10 before disabling this on Windows 10.
+  // This must be caused by the bug of TSF since Free ChangJie works fine on
+  // build 17643 and later.
   else if (TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
            TSFStaticSink::IsFreeChangJieActive()) {
     aACPEnd = mContentForTSF.LatestCompositionStartOffset();
