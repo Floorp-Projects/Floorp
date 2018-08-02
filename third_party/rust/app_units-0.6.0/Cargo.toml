@@ -11,27 +11,15 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-name = "euclid"
-version = "0.19.0"
+name = "app_units"
+version = "0.6.0"
 authors = ["The Servo Project Developers"]
-description = "Geometry primitives"
-documentation = "https://docs.rs/euclid/"
-keywords = ["matrix", "vector", "linear-algebra", "geometry"]
-categories = ["science"]
-license = "MIT / Apache-2.0"
-repository = "https://github.com/servo/euclid"
+description = "Servo app units type (Au)"
+documentation = "http://doc.servo.org/app_units/"
+license = "MPL-2.0"
+repository = "https://github.com/servo/app_units"
 [dependencies.num-traits]
-version = "0.2"
+version = "0.1.32"
 
 [dependencies.serde]
 version = "1.0"
-features = ["serde_derive"]
-optional = true
-[dev-dependencies.rand]
-version = "0.4"
-
-[dev-dependencies.serde_test]
-version = "1.0"
-
-[features]
-unstable = []
