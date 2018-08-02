@@ -176,7 +176,7 @@ public class GeckoScreenOrientation {
                                             aScreenOrientation.value, getAngle());
             }
         }
-        GeckoAppShell.resetScreenSize();
+        ScreenManagerHelper.refreshScreenInfo();
         return true;
     }
 

@@ -238,8 +238,6 @@ public class GeckoAppShell
     @WrapForJNI(dispatchTo = "gecko")
     public static native void notifyUriVisited(String uri);
 
-    private static Rect sScreenSize;
-
     @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "gecko")
     private static native void nativeNotifyObservers(String topic, String data);
 
@@ -1839,19 +1837,12 @@ public class GeckoAppShell
         return 0;
     }
 
-    public static synchronized void resetScreenSize() {
-        sScreenSize = null;
-    }
-
     @WrapForJNI(calledFrom = "gecko")
-    private static synchronized Rect getScreenSize() {
-        if (sScreenSize == null) {
-            final WindowManager wm = (WindowManager)
-                    getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-            final Display disp = wm.getDefaultDisplay();
-            sScreenSize = new Rect(0, 0, disp.getWidth(), disp.getHeight());
-        }
-        return sScreenSize;
+    private static Rect getScreenSize() {
+        final WindowManager wm = (WindowManager)
+                getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+        final Display disp = wm.getDefaultDisplay();
+        return new Rect(0, 0, disp.getWidth(), disp.getHeight());
     }
 
     @WrapForJNI(calledFrom = "any")
