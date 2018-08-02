@@ -613,8 +613,10 @@ class ErrorReport : public ErrorBase {
     // the sort that JS::CaptureCurrentStack produces).  aStack is allowed to be
     // null. If aStack is non-null, aStackGlobal must be a non-null global
     // object that's same-compartment with aStack. Note that aStack might be a
-    // CCW.
-    void LogToConsoleWithStack(JS::HandleObject aStack, JS::HandleObject aStackGlobal);
+    // CCW. When recording/replaying, aTimeWarpTarget optionally indicates
+    // where the error occurred in the process' execution.
+    void LogToConsoleWithStack(JS::HandleObject aStack, JS::HandleObject aStackGlobal,
+                               uint64_t aTimeWarpTarget = 0);
 
     // Produce an error event message string from the given JSErrorReport.  Note
     // that this may produce an empty string if aReport doesn't have a
