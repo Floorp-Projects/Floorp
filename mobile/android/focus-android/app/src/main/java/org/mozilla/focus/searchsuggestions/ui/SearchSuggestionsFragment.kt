@@ -16,6 +16,9 @@ import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 import org.mozilla.focus.R
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 
+
+
+
 class SearchSuggestionsFragment : Fragment() {
 
     private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
@@ -44,7 +47,9 @@ class SearchSuggestionsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         suggestionList.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
-        suggestionList.adapter = SuggestionsAdapter()
+        suggestionList.adapter = SuggestionsAdapter {
+            searchSuggestionsViewModel.selectSearchSuggestion(it)
+        }
 
         searchView.setOnClickListener {
             val textView = it
@@ -58,7 +63,7 @@ class SearchSuggestionsFragment : Fragment() {
         fun create() = SearchSuggestionsFragment()
     }
 
-    inner class SuggestionsAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class SuggestionsAdapter(private val clickListener: (String) -> Unit): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private var suggestions: List<SpannableStringBuilder> = listOf()
 
         fun refresh(suggestions: List<SpannableStringBuilder>) {
@@ -79,7 +84,7 @@ class SearchSuggestionsFragment : Fragment() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            return SuggestionViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false))
+            return SuggestionViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false), clickListener)
         }
     }
 }
@@ -88,7 +93,7 @@ class SearchSuggestionsFragment : Fragment() {
 /**
  * ViewHolder implementation for a suggestion item in the list.
  */
-private class SuggestionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+private class SuggestionViewHolder(itemView: View, private val clickListener: (String) -> Unit) : RecyclerView.ViewHolder(itemView) {
     companion object {
         val LAYOUT_ID = R.layout.item_suggestion
     }
@@ -97,5 +102,6 @@ private class SuggestionViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
     fun bind(suggestion: SpannableStringBuilder) {
         suggestionText.text = suggestion
+        itemView.setOnClickListener { clickListener(suggestion.toString()) }
     }
 }

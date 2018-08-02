@@ -49,6 +49,11 @@ class Settings private constructor(context: Context) {
                     getPreferenceKey(R.string.pref_key_remote_debugging),
                     false)
 
+    fun shouldShowSearchSuggestions(): Boolean =
+            preferences.getBoolean(
+                    getPreferenceKey(R.string.pref_key_show_search_suggestions),
+                    false)
+
     fun shouldBlockWebFonts(): Boolean =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_performance_block_webfonts),

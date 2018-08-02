@@ -13,7 +13,9 @@ import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 
 
-class SearchSuggestionsViewModel(private val service: SearchSuggestionsService) : ViewModel() {
+class SearchSuggestionsViewModel(
+        private val service: SearchSuggestionsService,
+        private val searchSuggestionsPreferences: SearchSuggestionsPreferences) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
     private val _searchQuery = MutableLiveData<String>()
     private val _promptUserToEnableSearchSuggestions = MutableLiveData<Boolean>()
@@ -58,10 +60,11 @@ class SearchSuggestionsViewModel(private val service: SearchSuggestionsService) 
 
     class Factory(private val context: Context) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            val repository = SearchSuggestionsService(context)
+            val preferences = SearchSuggestionsPreferences(context)
+            val service = SearchSuggestionsService(preferences.searchEngine.value!!)
 
             @Suppress("UNCHECKED_CAST")
-            return SearchSuggestionsViewModel(repository) as T
+            return SearchSuggestionsViewModel(service, preferences) as T
         }
     }
 }
