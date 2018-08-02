@@ -24,6 +24,11 @@ address-form[address-fields]:not([address-fields~='tel']) #tel-container {
   display: none !important;
 }
 
+label[required] > span:first-of-type::after {
+  /* The asterisk should be localized, bug 1472278 */
+  content: "*";
+}
+
 .error-text:not(:empty) {
   color: #fff;
   background-color: #d70022;
