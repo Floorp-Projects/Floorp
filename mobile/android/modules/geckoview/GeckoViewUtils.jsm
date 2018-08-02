@@ -6,12 +6,65 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AndroidLog: "resource://gre/modules/AndroidLog.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Log: "resource://gre/modules/Log.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
+
+var {Appender, BasicFormatter} = Log;
+
+/**
+ * A formatter that does not prepend time/name/level information to messages,
+ * because those fields are logged separately when using the Android logger.
+ */
+function AndroidFormatter() {
+  BasicFormatter.call(this);
+}
+AndroidFormatter.prototype = Object.freeze({
+  __proto__: BasicFormatter.prototype,
+
+  format(message) {
+    return this.formatText(message);
+  },
+});
+
+/*
+ * AndroidAppender
+ * Logs to Android logcat using AndroidLog.jsm
+ */
+function AndroidAppender(aFormatter) {
+  Appender.call(this, aFormatter || new AndroidFormatter());
+  this._name = "AndroidAppender";
+}
+AndroidAppender.prototype = {
+  __proto__: Appender.prototype,
+
+  // Map log level to AndroidLog.foo method.
+  _mapping: {
+    [Log.Level.Fatal]:  "e",
+    [Log.Level.Error]:  "e",
+    [Log.Level.Warn]:   "w",
+    [Log.Level.Info]:   "i",
+    [Log.Level.Config]: "d",
+    [Log.Level.Debug]:  "d",
+    [Log.Level.Trace]:  "v",
+  },
+
+  append(aMessage) {
+    if (!aMessage) {
+      return;
+    }
+
+    // AndroidLog.jsm always prepends "Gecko" to the tag, so we strip any
+    // leading "Gecko" here. Also strip dots to save space.
+    const tag = aMessage.loggerName.replace(/^Gecko|\./g, "");
+    const msg = this._formatter.format(aMessage);
+    AndroidLog[this._mapping[aMessage.level]](tag, msg);
+  },
+};
 
 var GeckoViewUtils = {
   /**
@@ -355,7 +408,7 @@ var GeckoViewUtils = {
   get rootLogger() {
     if (!this._rootLogger) {
       this._rootLogger = Log.repository.getLogger("GeckoView");
-      this._rootLogger.addAppender(new Log.AndroidAppender());
+      this._rootLogger.addAppender(new AndroidAppender());
     }
     return this._rootLogger;
   },
