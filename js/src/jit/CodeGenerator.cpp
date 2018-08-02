@@ -11569,7 +11569,7 @@ CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir)
     const MLoadUnboxedScalar* mir = lir->mir();
 
     Scalar::Type readType = mir->readType();
-    int width = Scalar::byteSize(mir->storageType());
+    size_t width = Scalar::byteSize(mir->storageType());
     bool canonicalizeDouble = mir->canonicalizeDoubles();
 
     Label fail;
@@ -11606,7 +11606,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
     masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
 
     Scalar::Type arrayType = lir->mir()->arrayType();
-    int width = Scalar::byteSize(arrayType);
+    size_t width = Scalar::byteSize(arrayType);
     Label fail;
     BaseIndex source(scratch, index, ScaleFromElemWidth(width));
     masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(),
@@ -11880,7 +11880,7 @@ CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir)
 
     Scalar::Type writeType = mir->writeType();
 
-    int width = Scalar::byteSize(mir->storageType());
+    size_t width = Scalar::byteSize(mir->storageType());
 
     if (lir->index()->isConstant()) {
         Address dest(elements, ToInt32(lir->index()) * width + mir->offsetAdjustment());
@@ -11899,7 +11899,7 @@ CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole* lir)
     const LAllocation* value = lir->value();
 
     Scalar::Type arrayType = lir->mir()->arrayType();
-    int width = Scalar::byteSize(arrayType);
+    size_t width = Scalar::byteSize(arrayType);
 
     Register index = ToRegister(lir->index());
     const LAllocation* length = lir->length();
