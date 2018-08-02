@@ -214,8 +214,8 @@ struct String
     static const uint32_t PERMANENT_ATOM_MASK    = NON_ATOM_BIT | JS_BIT(5);
     static const uint32_t PERMANENT_ATOM_FLAGS   = JS_BIT(5);
 
-    uint32_t flags;
-    uint32_t length;
+    uint32_t flags_;
+    uint32_t length_;
     union {
         const JS::Latin1Char* nonInlineCharsLatin1;
         const char16_t* nonInlineCharsTwoByte;
@@ -224,13 +224,20 @@ struct String
     };
     const JSStringFinalizer* externalFinalizer;
 
+    inline uint32_t flags() const {
+        return flags_;
+    }
+    inline uint32_t length() const {
+        return length_;
+    }
+
     static bool nurseryCellIsString(const js::gc::Cell* cell) {
         MOZ_ASSERT(IsInsideNursery(cell));
-        return reinterpret_cast<const String*>(cell)->flags & NON_ATOM_BIT;
+        return reinterpret_cast<const String*>(cell)->flags() & NON_ATOM_BIT;
     }
 
     static bool isPermanentAtom(const js::gc::Cell* cell) {
-        uint32_t flags = reinterpret_cast<const String*>(cell)->flags;
+        uint32_t flags = reinterpret_cast<const String*>(cell)->flags();
         return (flags & PERMANENT_ATOM_MASK) == PERMANENT_ATOM_FLAGS;
     }
 };
