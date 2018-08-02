@@ -57,9 +57,7 @@ async function recordReflows(testPromise, win = window) {
                                             Ci.nsISupportsWeakReference])
   };
 
-  let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell);
+  let docShell = win.docShell;
   docShell.addWeakReflowObserver(observer);
 
   let dirtyFrameFn = event => {

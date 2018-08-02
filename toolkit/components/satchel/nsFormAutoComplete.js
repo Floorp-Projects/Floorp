@@ -40,8 +40,7 @@ function isAutocompleteDisabled(aField) {
 function FormHistoryClient({ formField, inputName }) {
   if (formField && inputName != this.SEARCHBAR_ID) {
     let window = formField.ownerGlobal;
-    let topDocShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDocShell)
+    let topDocShell = window.docShell
                             .sameTypeRootTreeItem
                             .QueryInterface(Ci.nsIDocShell);
     this.mm = topDocShell.QueryInterface(Ci.nsIInterfaceRequestor)

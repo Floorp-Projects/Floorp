@@ -1892,10 +1892,7 @@ var AddonManagerInternal = {
     // main tab's browser). Check this by seeing if the browser we've been
     // passed is in a content type docshell and if so get the outer-browser.
     let topBrowser = aBrowser;
-    let docShell = aBrowser.ownerGlobal
-                           .QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDocShell)
-                           .QueryInterface(Ci.nsIDocShellTreeItem);
+    let docShell = aBrowser.ownerGlobal.docShell;
     if (docShell.itemType == Ci.nsIDocShellTreeItem.typeContent)
       topBrowser = docShell.chromeEventHandler;
 
@@ -2590,10 +2587,7 @@ var AddonManagerInternal = {
           let parentWindow = null;
           if (browser) {
             // Find the outer browser
-            let docShell = browser.ownerGlobal
-                                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIDocShell)
-                                  .QueryInterface(Ci.nsIDocShellTreeItem);
+            let docShell = browser.ownerGlobal.docShell;
             if (docShell.itemType == Ci.nsIDocShellTreeItem.typeContent)
               browser = docShell.chromeEventHandler;
 

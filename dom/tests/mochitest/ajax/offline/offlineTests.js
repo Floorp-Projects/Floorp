@@ -306,10 +306,8 @@ manifestURL: function(overload)
 
 loadContext: function()
 {
-  return SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                                   .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                                   .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                                   .getInterface(SpecialPowers.Ci.nsILoadContext);
+  return SpecialPowers.wrap(window).docShell
+                                   .QueryInterface(SpecialPowers.Ci.nsILoadContext);
 },
 
 loadContextInfo: function()

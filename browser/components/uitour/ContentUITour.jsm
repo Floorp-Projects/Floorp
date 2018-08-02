@@ -2,14 +2,18 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env mozilla/frame-script */
+var EXPORTED_SYMBOLS = ["UITourListener"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PREF_TEST_WHITELIST = "browser.uitour.testingOrigins";
 const UITOUR_PERMISSION   = "uitour";
 
-var UITourListener = {
+class UITourListener {
+  constructor(mm) {
+    this.mm = mm;
+  }
+
   handleEvent(event) {
     if (!Services.prefs.getBoolPref("browser.uitour.enabled")) {
       return;
@@ -17,14 +21,14 @@ var UITourListener = {
     if (!this.ensureTrustedOrigin()) {
       return;
     }
-    addMessageListener("UITour:SendPageCallback", this);
-    addMessageListener("UITour:SendPageNotification", this);
-    sendAsyncMessage("UITour:onPageEvent", {
+    this.mm.addMessageListener("UITour:SendPageCallback", this);
+    this.mm.addMessageListener("UITour:SendPageNotification", this);
+    this.mm.sendAsyncMessage("UITour:onPageEvent", {
       detail: event.detail,
       type: event.type,
-      pageVisibilityState: content.document.visibilityState,
+      pageVisibilityState: this.mm.content.document.visibilityState,
     });
-  },
+  }
 
   isTestingOrigin(aURI) {
     if (Services.prefs.getPrefType(PREF_TEST_WHITELIST) != Services.prefs.PREF_STRING) {
@@ -43,7 +47,7 @@ var UITourListener = {
       }
     }
     return false;
-  },
+  }
 
   // This function is copied from UITour.jsm.
   isSafeScheme(aURI) {
@@ -55,9 +59,11 @@ var UITourListener = {
       return false;
 
     return true;
-  },
+  }
 
   ensureTrustedOrigin() {
+    let {content} = this.mm;
+
     if (content.top != content)
       return false;
 
@@ -74,7 +80,7 @@ var UITourListener = {
       return true;
 
     return this.isTestingOrigin(uri);
-  },
+  }
 
   receiveMessage(aMessage) {
     switch (aMessage.name) {
@@ -85,21 +91,19 @@ var UITourListener = {
         this.sendPageEvent("Notification", aMessage.data);
         break;
       }
-  },
+  }
 
   sendPageEvent(type, detail) {
     if (!this.ensureTrustedOrigin()) {
       return;
     }
 
-    let doc = content.document;
+    let win = this.mm.content;
     let eventName = "mozUITour" + type;
-    let event = new doc.defaultView.CustomEvent(eventName, {
+    let event = new win.CustomEvent(eventName, {
       bubbles: true,
-      detail: Cu.cloneInto(detail, doc.defaultView)
+      detail: Cu.cloneInto(detail, win),
     });
-    doc.dispatchEvent(event);
+    win.document.dispatchEvent(event);
   }
-};
-
-addEventListener("mozUITour", UITourListener, false, true);
+}

@@ -132,10 +132,7 @@
 
         focus_content_editable: function(value) {
           getEditor = function() {
-            return SpecialPowers.wrap(window).QueryInterface(
-                SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
-                SpecialPowers.Ci.nsIWebNavigation).QueryInterface(
-                SpecialPowers.Ci.nsIDocShell).editor;
+            return SpecialPowers.wrap(window).docShell.editor;
           };
           setValue = function(val) {
             // eslint-disable-next-line no-unsanitized/property
@@ -150,10 +147,7 @@
 
         focus_design_mode: function(value) {
           getEditor = function() {
-            return SpecialPowers.wrap(designMode.contentWindow).QueryInterface(
-                SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
-                SpecialPowers.Ci.nsIWebNavigation).QueryInterface(
-                SpecialPowers.Ci.nsIDocShell).editor;
+            return SpecialPowers.wrap(designMode.contentWindow).docShell.editor;
           };
           setValue = function(val) {
           // eslint-disable-next-line no-unsanitized/property

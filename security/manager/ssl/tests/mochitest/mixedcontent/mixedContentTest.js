@@ -139,11 +139,7 @@ function isSecurityState(expectedState, message, test) {
     test = ok;
   }
 
-  let ui = SpecialPowers.wrap(window)
-    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-    .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-    .QueryInterface(SpecialPowers.Ci.nsIDocShell)
-    .securityUI;
+  let ui = SpecialPowers.wrap(window).docShell.securityUI;
 
   let isInsecure = !ui ||
     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_INSECURE);

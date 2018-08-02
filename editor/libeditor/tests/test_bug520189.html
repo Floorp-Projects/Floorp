@@ -550,10 +550,7 @@ function doNextTest() {
 
 function getLoadContext() {
   const Ci = SpecialPowers.Ci;
-  return SpecialPowers.wrap(window)
-               .QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsILoadContext);
+  return SpecialPowers.wrap(window).docShell.QueryInterface(Ci.nsILoadContext);
 }
 
 function runTest(test) {
@@ -581,10 +578,7 @@ function runTest(test) {
       getSelection().collapse(elem, 0);
       win = window;
     }
-    editor = SpecialPowers.wrap(win).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                          .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                          .QueryInterface(SpecialPowers.Ci.nsIDocShell)
-                          .editor;
+    editor = SpecialPowers.wrap(win).docShell.editor;
     editor.pasteTransferable(trans);
   } else {
     var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]

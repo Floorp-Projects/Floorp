@@ -395,9 +395,7 @@ const browsingContextTargetPrototype = {
       return this.docShell;
     }
 
-    return this._originalWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIDocShell);
+    return this._originalWindow.docShell;
   },
 
   /**
@@ -424,9 +422,7 @@ const browsingContextTargetPrototype = {
    * Getter for the nsIWebNavigation for the target.
    */
   get webNavigation() {
-    return this.docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation);
+    return this.docShell.QueryInterface(Ci.nsIWebNavigation);
   },
 
   /**
@@ -1216,9 +1212,7 @@ const browsingContextTargetPrototype = {
   },
 
   _setWindow(window) {
-    const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell);
+    const docShell = window.docShell;
     // Here is the very important call where we switch the currently targeted
     // browsing context (it will indirectly update this.window and many other
     // attributes defined from docShell).

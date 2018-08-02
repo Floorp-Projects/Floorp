@@ -51,11 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
 
       // pageshow events don't fire on the iframe element, so we need to use the
       // chrome event handler for the docshell.
-      var browser = ifr.contentWindow
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation)
-                       .QueryInterface(Ci.nsIDocShell)
-                       .chromeEventHandler;
+      var browser = ifr.contentWindow.docShell.chromeEventHandler;
       function onpageshow(evt) {
         info("Navigated back. Persisted: " + evt.persisted);
         browser.removeEventListener('pageshow', onpageshow);
@@ -89,9 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   }
 
   function setScriptEnabledForDocShell(win, enabled) {
-    win.QueryInterface(Ci.nsIInterfaceRequestor)
-       .getInterface(Ci.nsIDocShell)
-       .allowJavascript = enabled;
+    win.docShell.allowJavascript = enabled;
   }
 
   function testList(expectEnabled, win, list, idx) {

@@ -323,9 +323,7 @@ WebContentConverterRegistrarContent.prototype = {
   registerProtocolHandler(aProtocol, aURIString, aTitle, aBrowserOrWindow) {
     aProtocol = (aProtocol || "").toLowerCase();
     // aBrowserOrWindow must be a window.
-    let messageManager = aBrowserOrWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                         .getInterface(Ci.nsIWebNavigation)
-                                         .QueryInterface(Ci.nsIDocShell)
+    let messageManager = aBrowserOrWindow.docShell
                                          .QueryInterface(Ci.nsIInterfaceRequestor)
                                          .getInterface(Ci.nsITabChild)
                                          .messageManager;

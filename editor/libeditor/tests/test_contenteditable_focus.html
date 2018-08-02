@@ -56,9 +56,7 @@ function runTestsInternal()
   // XXX using selCon for checking the visibility of the caret, however,
   // selCon is shared in document, cannot get the element of owner of the
   // caret from javascript?
-  var selCon = SpecialPowers.wrap(window).
-        QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-        getInterface(SpecialPowers.Ci.nsIWebNavigation).
+  var selCon = SpecialPowers.wrap(window).docShell.
         QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
         getInterface(SpecialPowers.Ci.nsISelectionDisplay).
         QueryInterface(SpecialPowers.Ci.nsISelectionController);

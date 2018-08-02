@@ -8,6 +8,7 @@ import imp
 import os
 import re
 import sys
+from make_dafsa import words_to_cxx
 
 """
 Processes a file containing effective TLD data.  See the following URL for a
@@ -104,14 +105,6 @@ def main(output, effective_tld_filename):
   eTLD file is then printed to output.
   """
 
-  # Find and load the `make_dafsa.py` script under xpcom/ds.
-  tld_dir = os.path.dirname(effective_tld_filename)
-  make_dafsa_py = os.path.join(tld_dir, '../../xpcom/ds/make_dafsa.py')
-  sys.path.append(os.path.dirname(make_dafsa_py))
-  with open(make_dafsa_py, 'r') as fh:
-    make_dafsa = imp.load_module('script', fh, make_dafsa_py,
-                                 ('.py', 'r', imp.PY_SOURCE))
-
   def typeEnum(etld):
     """
     Maps the flags to the DAFSA's enum types.
@@ -130,7 +123,7 @@ def main(output, effective_tld_filename):
     for etld in getEffectiveTLDs(effective_tld_filename):
       yield "%s%d" % (etld.domain(), typeEnum(etld))
 
-  output.write(make_dafsa.words_to_cxx(dafsa_words()))
+  output.write(words_to_cxx(dafsa_words()))
 
 if __name__ == '__main__':
     main(sys.stdout, sys.argv[1])

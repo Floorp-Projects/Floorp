@@ -19,10 +19,7 @@ that is opened reports itself as being modal.
 
   add_task(async function() {
     BrowserTestUtils.domWindowOpened().then((win) => {
-      let treeOwner = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShellTreeItem)
-                         .treeOwner;
+      let treeOwner = win.docShell.treeOwner;
       let chromeFlags = treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIXULWindow)
                                  .chromeFlags;

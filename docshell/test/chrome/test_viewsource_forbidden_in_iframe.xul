@@ -63,8 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
                                                 Ci.nsISupportsWeakReference])
       };
 
-      frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
+      frame.contentWindow.docShell
                          .QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebProgress)
                          .addProgressListener(progressListener,

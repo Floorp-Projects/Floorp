@@ -131,41 +131,6 @@ EmptyDesc(PPropertyDescriptor* desc)
 }
 
 bool
-WrapperAnswer::RecvGetPropertyDescriptor(const ObjectId& objId, const JSIDVariant& idVar,
-                                         ReturnStatus* rs, PPropertyDescriptor* out)
-{
-    if (!IsInAutomation())
-        return false;
-
-    MaybeForceDebugGC();
-
-    AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
-        return false;
-    JSContext* cx = jsapi.cx();
-    EmptyDesc(out);
-
-    RootedObject obj(cx, findObjectById(cx, objId));
-    if (!obj)
-        return deadCPOW(jsapi, rs);
-
-    LOG("%s.getPropertyDescriptor(%s)", ReceiverObj(objId), Identifier(idVar));
-
-    RootedId id(cx);
-    if (!fromJSIDVariant(cx, idVar, &id))
-        return fail(jsapi, rs);
-
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc))
-        return fail(jsapi, rs);
-
-    if (!fromDescriptor(cx, desc, out))
-        return fail(jsapi, rs);
-
-    return ok(rs);
-}
-
-bool
 WrapperAnswer::RecvGetOwnPropertyDescriptor(const ObjectId& objId, const JSIDVariant& idVar,
                                             ReturnStatus* rs, PPropertyDescriptor* out)
 {
