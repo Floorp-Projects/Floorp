@@ -29,6 +29,7 @@ public:
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual Relation RelationByType(RelationType aType) const override;
+  virtual void ApplyARIAState(uint64_t* aState) const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
@@ -48,6 +49,7 @@ public:
   // Accessible
   virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
+  virtual void ApplyARIAState(uint64_t* aState) const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
