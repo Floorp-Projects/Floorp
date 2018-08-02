@@ -131,9 +131,9 @@ class ClickEventHandler {
               aNode instanceof content.HTMLLinkElement);
     }
 
-    let node = event.target;
+    let node = event.composedTarget;
     while (node && !isHTMLLink(node)) {
-      node = node.parentNode;
+      node = node.flattenedTreeParentNode;
     }
 
     if (node)
@@ -141,7 +141,7 @@ class ClickEventHandler {
 
     // If there is no linkNode, try simple XLink.
     let href, baseURI;
-    node = event.target;
+    node = event.composedTarget;
     while (node && !href) {
       if (node.nodeType == content.Node.ELEMENT_NODE &&
           (node.localName == "a" ||
@@ -153,7 +153,7 @@ class ClickEventHandler {
           break;
         }
       }
-      node = node.parentNode;
+      node = node.flattenedTreeParentNode;
     }
 
     // In case of XLink, we don't return the node we got href from since
