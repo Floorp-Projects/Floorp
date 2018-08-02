@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-chrome.jar:
+geckoview.jar:
     content/schemas/browser_action.json
     content/schemas/browsing_data.json
     content/schemas/page_action.json

@@ -71,6 +71,11 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
     return true;
   }
 
+  if (approver->IsExtensionPage()) {
+    // Always allow extension page to autoplay.
+    return true;
+  }
+
   return false;
 }
 

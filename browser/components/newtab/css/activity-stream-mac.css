@@ -628,7 +628,6 @@ main {
     margin-inline-start: 32px;
     pointer-events: none; }
   .topsite-form .form-input-container .section-title {
-    text-transform: none;
     font-size: 16px;
     margin: 0 0 16px; }
 
@@ -1572,8 +1571,7 @@ a.firstrun-link {
   .collapsible-section .section-title {
     font-size: 13px;
     font-weight: bold;
-    margin: 0;
-    text-transform: uppercase; }
+    margin: 0; }
     .collapsible-section .section-title span {
       color: var(--newtab-section-header-text-color);
       display: inline-block;

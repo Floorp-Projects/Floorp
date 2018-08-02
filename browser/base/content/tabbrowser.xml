@@ -557,7 +557,8 @@
           if (this.getAttribute("movingtab") != "true") {
             this.setAttribute("movingtab", "true");
             this.parentNode.setAttribute("movingtab", "true");
-            this.selectedItem = draggedTab;
+            if (!draggedTab.multiselected)
+              this.selectedItem = draggedTab;
           }
 
           if (!("animLastScreenX" in draggedTab._dragData))
@@ -567,6 +568,9 @@
           if (screenX == draggedTab._dragData.animLastScreenX)
             return;
 
+          // Direction of the mouse movement.
+          let ltrMove = screenX > draggedTab._dragData.animLastScreenX;
+
           draggedTab._dragData.animLastScreenX = screenX;
 
           let rtl = (window.getComputedStyle(this).direction == "rtl");
@@ -575,46 +579,61 @@
           let tabs = this._getVisibleTabs()
                          .slice(pinned ? 0 : numPinned,
                                 pinned ? numPinned : undefined);
+          let movingTabs = draggedTab._dragData.movingTabs;
           if (rtl) {
             tabs.reverse();
+            // Copy moving tabs array to avoid infinite reversing.
+            movingTabs = [...movingTabs].reverse();
           }
           let tabWidth = draggedTab.getBoundingClientRect().width;
+          let shiftWidth = tabWidth * movingTabs.length;
           draggedTab._dragData.tabWidth = tabWidth;
 
           // Move the dragged tab based on the mouse position.
 
           let leftTab = tabs[0];
           let rightTab = tabs[tabs.length - 1];
-          let tabScreenX = draggedTab.boxObject.screenX;
+          let rightMovingTabScreenX = movingTabs[movingTabs.length - 1].boxObject.screenX;
+          let leftMovingTabScreenX = movingTabs[0].boxObject.screenX;
           let translateX = screenX - draggedTab._dragData.screenX;
           if (!pinned) {
             translateX += this.arrowScrollbox._scrollbox.scrollLeft - draggedTab._dragData.scrollX;
           }
-          let leftBound = leftTab.boxObject.screenX - tabScreenX;
+          let leftBound = leftTab.boxObject.screenX - leftMovingTabScreenX;
           let rightBound = (rightTab.boxObject.screenX + rightTab.boxObject.width) -
-                           (tabScreenX + tabWidth);
-          translateX = Math.max(translateX, leftBound);
-          translateX = Math.min(translateX, rightBound);
-          draggedTab.style.transform = "translateX(" + translateX + "px)";
+                           (rightMovingTabScreenX + tabWidth);
+          translateX = Math.min(Math.max(translateX, leftBound), rightBound);
+
+          for (let tab of movingTabs) {
+            tab.style.transform = "translateX(" + translateX + "px)";
+          }
+
           draggedTab._dragData.translateX = translateX;
 
           // Determine what tab we're dragging over.
-          // * Point of reference is the center of the dragged tab. If that
+          // * Single tab dragging: Point of reference is the center of the dragged tab. If that
           //   point touches a background tab, the dragged tab would take that
           //   tab's position when dropped.
+          // * Multiple tabs dragging: All dragged tabs are one "giant" tab with two
+          //   points of reference (center of tabs on the extremities). When
+          //   mouse is moving from left to right, the right reference gets activated,
+          //   otherwise the left reference will be used. Everything else works the same
+          //   as single tab dragging.
           // * We're doing a binary search in order to reduce the amount of
           //   tabs we need to check.
 
-          let tabCenter = tabScreenX + translateX + tabWidth / 2;
+          tabs = tabs.filter(t => !movingTabs.includes(t) || t == draggedTab);
+          let leftTabCenter = leftMovingTabScreenX + translateX + tabWidth / 2;
+          let rightTabCenter = rightMovingTabScreenX + translateX + tabWidth / 2;
+          let tabCenter = ltrMove ? rightTabCenter : leftTabCenter;
           let newIndex = -1;
           let oldIndex = "animDropIndex" in draggedTab._dragData ?
-                         draggedTab._dragData.animDropIndex : draggedTab._tPos;
+                         draggedTab._dragData.animDropIndex : movingTabs[0]._tPos;
           let low = 0;
           let high = tabs.length - 1;
           while (low <= high) {
             let mid = Math.floor((low + high) / 2);
-            if (tabs[mid] == draggedTab &&
-                ++mid > high)
+            if (tabs[mid] == draggedTab && ++mid > high)
               break;
             let boxObject = tabs[mid].boxObject;
             screenX = boxObject.screenX + getTabShift(tabs[mid], oldIndex);
@@ -645,9 +664,9 @@
 
           function getTabShift(tab, dropIndex) {
             if (tab._tPos < draggedTab._tPos && tab._tPos >= dropIndex)
-              return rtl ? -tabWidth : tabWidth;
+              return (rtl ? -shiftWidth : shiftWidth);
             if (tab._tPos > draggedTab._tPos && tab._tPos < dropIndex)
-              return rtl ? tabWidth : -tabWidth;
+              return (rtl ? shiftWidth : -shiftWidth);
             return 0;
           }
         ]]></body>
@@ -1168,6 +1187,29 @@
         // node to deliver the `dragend` event.  See bug 1345473.
         dt.addElement(tab);
 
+        // Regroup all selected tabs around the dragged tab
+        // for multiple tabs dragging
+        if (tab.multiselected) {
+          let selectedTabs = gBrowser.selectedTabs;
+          let draggedTabPos = tab._tPos;
+
+          // Move left selected tabs
+          let insertAtPos = draggedTabPos - 1;
+          for (let i = selectedTabs.indexOf(tab) - 1; i > -1; i--) {
+            let movingTab = selectedTabs[i];
+            gBrowser.moveTabTo(movingTab, insertAtPos);
+            insertAtPos--;
+          }
+
+          // Move right selected tabs
+          insertAtPos = draggedTabPos + 1;
+          for (let i = selectedTabs.indexOf(tab) + 1; i < selectedTabs.length; i++) {
+            let movingTab = selectedTabs[i];
+            gBrowser.moveTabTo(movingTab, insertAtPos);
+            insertAtPos++;
+          }
+        }
+
         // Create a canvas to which we capture the current tab.
         // Until canvas is HiDPI-aware (bug 780362), we need to scale the desired
         // canvas size (in CSS pixels) to the window's backing resolution in order
@@ -1241,7 +1283,9 @@
           offsetX: event.screenX - window.screenX - tabOffsetX,
           offsetY: event.screenY - window.screenY,
           scrollX: this.arrowScrollbox._scrollbox.scrollLeft,
-          screenX: event.screenX
+          screenX: event.screenX,
+          movingTabs: (tab.multiselected ? gBrowser.selectedTabs : [tab])
+                      .filter(t => t.pinned == tab.pinned)
         };
 
         event.stopPropagation();
@@ -1344,11 +1388,13 @@
         var dt = event.dataTransfer;
         var dropEffect = dt.dropEffect;
         var draggedTab;
+        let movingTabs;
         if (dt.mozTypesAt(0)[0] == TAB_DROP_TYPE) { // tab copy or move
           draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
           // not our drop then
           if (!draggedTab)
             return;
+          movingTabs = draggedTab._dragData.movingTabs;
         }
 
         this._tabDropIndicator.collapsed = true;
@@ -1374,34 +1420,45 @@
 
           let dropIndex = "animDropIndex" in draggedTab._dragData &&
                           draggedTab._dragData.animDropIndex;
-          if (dropIndex && dropIndex > draggedTab._tPos)
+          let incrementDropIndex = true;
+          if (dropIndex && dropIndex > movingTabs[0]._tPos) {
             dropIndex--;
+            incrementDropIndex = false;
+          }
 
           let animate = gBrowser.animationsEnabled;
           if (oldTranslateX && oldTranslateX != newTranslateX && animate) {
-            draggedTab.setAttribute("tabdrop-samewindow", "true");
-            draggedTab.style.transform = "translateX(" + newTranslateX + "px)";
-            let onTransitionEnd = transitionendEvent => {
-              if (transitionendEvent.propertyName != "transform" ||
-                  transitionendEvent.originalTarget != draggedTab) {
-                return;
-              }
-              draggedTab.removeEventListener("transitionend", onTransitionEnd);
+            for (let tab of movingTabs) {
+              tab.setAttribute("tabdrop-samewindow", "true");
+              tab.style.transform = "translateX(" + newTranslateX + "px)";
+              let onTransitionEnd = transitionendEvent => {
+                if (transitionendEvent.propertyName != "transform" ||
+                    transitionendEvent.originalTarget != tab) {
+                  return;
+                }
+                tab.removeEventListener("transitionend", onTransitionEnd);
 
-              draggedTab.removeAttribute("tabdrop-samewindow");
+                tab.removeAttribute("tabdrop-samewindow");
 
-              this._finishAnimateTabMove();
-              if (dropIndex !== false) {
-                gBrowser.moveTabTo(draggedTab, dropIndex);
-              }
+                this._finishAnimateTabMove();
+                if (dropIndex !== false) {
+                  gBrowser.moveTabTo(tab, dropIndex);
+                  if (incrementDropIndex)
+                    dropIndex++;
+                }
 
-              gBrowser.syncThrobberAnimations(draggedTab);
-            };
-            draggedTab.addEventListener("transitionend", onTransitionEnd);
+                gBrowser.syncThrobberAnimations(tab);
+              };
+              tab.addEventListener("transitionend", onTransitionEnd);
+            }
           } else {
             this._finishAnimateTabMove();
             if (dropIndex !== false) {
-              gBrowser.moveTabTo(draggedTab, dropIndex);
+              for (let tab of movingTabs) {
+                gBrowser.moveTabTo(tab, dropIndex);
+                if (incrementDropIndex)
+                  dropIndex++;
+              }
             }
           }
         } else if (draggedTab) {
@@ -1973,6 +2030,10 @@
 
       <handler event="mousedown" phase="capturing">
       <![CDATA[
+        if (event.button == 0 && !this.selected && this.multiselected) {
+          gBrowser.lockClearMultiSelectionOnce();
+        }
+
         let tabContainer = this.parentNode;
         if (tabContainer._closeTabByDblclick &&
             event.button == 0 &&

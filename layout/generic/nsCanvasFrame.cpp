@@ -12,6 +12,7 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "nsContainerFrame.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
 #include "nsPopupSetFrame.h"

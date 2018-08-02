@@ -157,3 +157,20 @@ async function test_mute_tab(tab, icon, expectMuted) {
 
   return mutedPromise;
 }
+
+async function dragAndDrop(tab1, tab2, copy) {
+  let rect = tab2.getBoundingClientRect();
+  let event = {
+    ctrlKey: copy,
+    altKey: copy,
+    clientX: rect.left + rect.width / 2 + 10,
+    clientY: rect.top + rect.height / 2,
+  };
+
+  let originalTPos = tab1._tPos;
+  EventUtils.synthesizeDrop(tab1, tab2, null, copy ? "copy" : "move", window, window, event);
+  if (!copy) {
+    await BrowserTestUtils.waitForCondition(() => tab1._tPos != originalTPos,
+      "Waiting for tab position to be updated");
+  }
+}

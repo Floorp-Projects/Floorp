@@ -140,7 +140,8 @@ module.exports = function(config) {
             exclude: [
               path.resolve("test"),
               path.resolve("vendor"),
-              path.resolve("lib/ASRouterTargeting.jsm")
+              path.resolve("lib/ASRouterTargeting.jsm"),
+              path.resolve("lib/ASRouterTriggerListeners.jsm")
             ]
           }
         ]

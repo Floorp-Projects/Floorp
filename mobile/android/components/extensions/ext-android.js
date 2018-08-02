@@ -67,8 +67,8 @@ global.openOptionsPage = (extension) => {
 
 extensions.registerModules({
   browserAction: {
-    url: "chrome://browser/content/ext-browserAction.js",
-    schema: "chrome://browser/content/schemas/browser_action.json",
+    url: "chrome://geckoview/content/ext-browserAction.js",
+    schema: "chrome://geckoview/content/schemas/browser_action.json",
     scopes: ["addon_parent"],
     manifest: ["browser_action"],
     paths: [
@@ -76,8 +76,8 @@ extensions.registerModules({
     ],
   },
   browsingData: {
-    url: "chrome://browser/content/ext-browsingData.js",
-    schema: "chrome://browser/content/schemas/browsing_data.json",
+    url: "chrome://geckoview/content/ext-browsingData.js",
+    schema: "chrome://geckoview/content/schemas/browsing_data.json",
     scopes: ["addon_parent"],
     manifest: ["browsing_data"],
     paths: [
@@ -85,8 +85,8 @@ extensions.registerModules({
     ],
   },
   pageAction: {
-    url: "chrome://browser/content/ext-pageAction.js",
-    schema: "chrome://browser/content/schemas/page_action.json",
+    url: "chrome://geckoview/content/ext-pageAction.js",
+    schema: "chrome://geckoview/content/schemas/page_action.json",
     scopes: ["addon_parent"],
     manifest: ["page_action"],
     paths: [
@@ -94,8 +94,8 @@ extensions.registerModules({
     ],
   },
   tabs: {
-    url: "chrome://browser/content/ext-tabs.js",
-    schema: "chrome://browser/content/schemas/tabs.json",
+    url: "chrome://geckoview/content/ext-tabs.js",
+    schema: "chrome://geckoview/content/schemas/tabs.json",
     scopes: ["addon_parent"],
     paths: [
       ["tabs"],
