@@ -8,7 +8,10 @@ import site
 import subprocess
 import argparse
 
+from glob import glob
+
 testdir = os.path.abspath(os.path.join(os.path.dirname(__file__), 't'))
+
 site.addsitedir(testdir)
 from testlib import Test, equal
 
@@ -86,7 +89,8 @@ for name in cfg.tests:
     test = Test(indir, outdir, cfg, verbose=cfg.verbose)
 
     os.chdir(outdir)
-    subprocess.call(["sh", "-c", "rm *.xdb"])
+    for xdb in glob("*.xdb"):
+        os.unlink(xdb)
     if cfg.verbose:
         print("Running test %s" % name)
     testpath = os.path.join(indir, "test.py")

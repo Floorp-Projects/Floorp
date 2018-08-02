@@ -161,23 +161,27 @@ function check_hazards () {
     echo "TinderboxPrint: (unnecessary roots)<br/>$NUM_UNNECESSARY"
     echo "TinderboxPrint: heap write hazards<br/>$NUM_WRITE_HAZARDS"
 
+    # Display errors in a way that will get picked up by the taskcluster scraper.
+    perl -le 'print "TEST-UNEXPECTED-FAIL | hazards | $ENV{NUM_HAZARDS} rooting hazards" if $ENV{NUM_HAZARDS}'
+    perl -lne 'print "TEST-UNEXPECTED-FAIL | hazards | $1 $2" if /^Function.* has (unrooted .*live across GC call).* (at .*)$/' "$1"/hazards.txt
+
     exit_status=0
 
     if [ $NUM_HAZARDS -gt 0 ]; then
-        echo "TEST-UNEXPECTED-FAIL $NUM_HAZARDS rooting hazards detected" >&2
+        echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_HAZARDS rooting hazards detected" >&2
         echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_rooting_hazards_failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status=1
     fi
 
     NUM_ALLOWED_WRITE_HAZARDS=0
     if [ $NUM_WRITE_HAZARDS -gt $NUM_ALLOWED_WRITE_HAZARDS ]; then
-        echo "TEST-UNEXPECTED-FAIL $NUM_WRITE_HAZARDS heap write hazards detected out of $NUM_ALLOWED_WRITE_HAZARDS allowed" >&2
+        echo "TEST-UNEXPECTED-FAIL | heap-write-hazards | $NUM_WRITE_HAZARDS heap write hazards detected out of $NUM_ALLOWED_WRITE_HAZARDS allowed" >&2
         echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_heap_write_hazard_failure'>heap write hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status = 1
     fi
 
     if [ $NUM_DROPPED -gt 0 ]; then
-        echo "TEST-UNEXPECTED-FAIL $NUM_DROPPED CFGs dropped" >&2
+        echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_DROPPED CFGs dropped" >&2
         echo "TinderboxPrint: sixgill unable to handle constructs<br/>$NUM_DROPPED"
         exit_status=1
     fi
