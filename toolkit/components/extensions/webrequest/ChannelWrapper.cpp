@@ -521,13 +521,14 @@ ChannelWrapper::Matches(const dom::MozRequestFilter& aFilter,
   }
 
   if (aExtension) {
-    if (!aExtension->CanAccessURI(urlInfo)) {
+    bool isProxy = aOptions.mIsProxy && aExtension->HasPermission(nsGkAtoms::proxy);
+    // Proxies are allowed access to all urls, including restricted urls.
+    if (!aExtension->CanAccessURI(urlInfo, false, !isProxy)) {
       return false;
     }
 
     // If this isn't the proxy phase of the request, check that the extension
     // has origin permissions for origin that originated the request.
-    bool isProxy = aOptions.mIsProxy && aExtension->HasPermission(nsGkAtoms::proxy);
     if (!isProxy) {
       if (IsSystemLoad()) {
         return false;
