@@ -4108,7 +4108,7 @@ HTMLMediaElement::Play(ErrorResult& aRv)
       break;
     }
     case nsIAutoplay::BLOCKED: {
-      LOG(LogLevel::Debug, ("%p play not blocked.", this));
+      AUTOPLAY_LOG("%p play blocked.", this);
       promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
       if (StaticPrefs::MediaBlockEventEnabled()) {
         DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
@@ -4133,8 +4133,7 @@ HTMLMediaElement::EnsureAutoplayRequested(bool aHandlingUserInput)
     // Await for the previous request to be approved or denied. This
     // play request's promise will be fulfilled with all other pending
     // promises when the permission prompt is resolved.
-    LOG(LogLevel::Debug,
-        ("%p EnsureAutoplayRequested() existing request, bailing.", this));
+    AUTOPLAY_LOG("%p EnsureAutoplayRequested() existing request, bailing.", this);
     return;
   }
 
@@ -4151,19 +4150,17 @@ HTMLMediaElement::EnsureAutoplayRequested(bool aHandlingUserInput)
            [ self, handlingUserInput = aHandlingUserInput, request ](
              bool aApproved) {
              self->mAutoplayPermissionRequest.Complete();
-             LOG(LogLevel::Debug,
-                 ("%p Autoplay request approved request=%p",
-                  self.get(),
-                  request.get()));
+             AUTOPLAY_LOG("%p Autoplay request approved request=%p",
+                          self.get(),
+                          request.get());
              self->PlayInternal(handlingUserInput);
              self->UpdateCustomPolicyAfterPlayed();
            },
            [self, request](nsresult aError) {
              self->mAutoplayPermissionRequest.Complete();
-             LOG(LogLevel::Debug,
-                 ("%p Autoplay request denied request=%p",
-                  self.get(),
-                  request.get()));
+             AUTOPLAY_LOG("%p Autoplay request denied request=%p",
+                          self.get(),
+                          request.get());
              LOG(LogLevel::Debug, ("%s rejecting play promimses", __func__));
              self->AsyncRejectPendingPlayPromises(
                NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);

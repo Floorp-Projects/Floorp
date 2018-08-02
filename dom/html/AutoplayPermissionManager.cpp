@@ -12,10 +12,10 @@
 #include "mozilla/Logging.h"
 #include "nsContentPermissionHelper.h"
 
-extern mozilla::LazyLogModule gMediaElementLog;
+extern mozilla::LazyLogModule gAutoplayPermissionLog;
 
 #define PLAY_REQUEST_LOG(msg, ...)                                             \
-  MOZ_LOG(gMediaElementLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+  MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
 
