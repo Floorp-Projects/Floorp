@@ -644,7 +644,7 @@ private:
     // don't need a proxy here.
     global = js::UncheckedUnwrap(global);
 
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
 
     // We don't need to set a parent object in mCallData bacause there are not
     // DOM objects exposed to worklet.
@@ -762,7 +762,7 @@ protected:
     // We don't need a proxy here.
     global = js::UncheckedUnwrap(global);
 
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
 
     RunConsole(cx, aWorkerPrivate, nullptr, nullptr);
   }
@@ -928,7 +928,7 @@ private:
     // don't need a proxy here.
     global = js::UncheckedUnwrap(global);
 
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
 
     // We don't need to set a parent object in mCallData bacause there are not
     // DOM objects exposed to worklet.
@@ -2726,7 +2726,7 @@ Console::RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
     JS::Rooted<JS::Value> value(aCx);
 
     JS::Rooted<JSObject*> sequenceScope(aCx, mCallDataStorage[i]->mGlobal);
-    JSAutoRealmAllowCCW ar(aCx, sequenceScope);
+    JSAutoRealm ar(aCx, sequenceScope);
 
     Sequence<JS::Value> sequence;
     SequenceRooter<JS::Value> arguments(aCx, &sequence);

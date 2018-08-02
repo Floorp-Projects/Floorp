@@ -379,7 +379,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
       // particular, we do not expose this data to anyone, which is very
       // important; otherwise it could be a cross-origin information leak.
       exnObj = js::UncheckedUnwrap(exnObj);
-      JSAutoRealmAllowCCW ar(aCx, exnObj);
+      JSAutoRealm ar(aCx, exnObj);
 
       nsAutoJSString stack, filename, name, message;
       int32_t line;
@@ -570,7 +570,7 @@ AutoJSAPI::ReportException()
     }
   }
   MOZ_ASSERT(JS_IsGlobalObject(errorGlobal));
-  JSAutoRealmAllowCCW ar(cx(), errorGlobal);
+  JSAutoRealm ar(cx(), errorGlobal);
   JS::Rooted<JS::Value> exn(cx());
   js::ErrorReport jsReport(cx());
   if (StealException(&exn) &&
@@ -826,7 +826,7 @@ AutoSlowOperation::CheckForInterrupt()
   // For now we support only main thread!
   if (mIsMainThread) {
     // JS_CheckForInterrupt expects us to be in a realm.
-    JSAutoRealmAllowCCW ar(cx(), xpc::UnprivilegedJunkScope());
+    JSAutoRealm ar(cx(), xpc::UnprivilegedJunkScope());
     JS_CheckForInterrupt(cx());
   }
 }
