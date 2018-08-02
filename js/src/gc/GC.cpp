@@ -224,6 +224,7 @@
 #include "jit/IonCode.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
+#include "jit/MacroAssembler.h"
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Windows.h"
@@ -383,6 +384,17 @@ const AllocKind gc::slotsToThingKind[] = {
     /* 12 */ AllocKind::OBJECT12, AllocKind::OBJECT16, AllocKind::OBJECT16, AllocKind::OBJECT16,
     /* 16 */ AllocKind::OBJECT16
 };
+
+// Check that reserved bits of a Cell are compatible with our typical allocators
+// since most derived classes will store a pointer in the first word.
+static_assert(js::detail::LIFO_ALLOC_ALIGN > JS_BITMASK(Cell::ReservedBits),
+              "Cell::ReservedBits should support LifoAlloc");
+static_assert(CellAlignBytes > JS_BITMASK(Cell::ReservedBits),
+              "Cell::ReservedBits should support gc::Cell");
+static_assert(sizeof(uintptr_t) > JS_BITMASK(Cell::ReservedBits),
+              "Cell::ReservedBits should support small malloc / aligned globals");
+static_assert(js::jit::CodeAlignment > JS_BITMASK(Cell::ReservedBits),
+              "Cell::ReservedBits should support JIT code");
 
 static_assert(mozilla::ArrayLength(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
@@ -2344,7 +2356,7 @@ RelocateArena(Arena* arena, SliceBudget& sliceBudget)
 #ifdef DEBUG
     for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
         TenuredCell* src = i.getCell();
-        MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
+        MOZ_ASSERT(src->isForwarded());
         TenuredCell* dest = Forwarded(src);
         MOZ_ASSERT(src->isMarkedBlack() == dest->isMarkedBlack());
         MOZ_ASSERT(src->isMarkedGray() == dest->isMarkedGray());
@@ -8472,8 +8484,8 @@ js::gc::AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind)
     MOZ_ASSERT(IsCellPointerValid(cell));
 
     if (IsInsideNursery(cell)) {
-        MOZ_ASSERT(kind == (JSString::nurseryCellIsString(cell) ? JS::TraceKind::String
-                                                                : JS::TraceKind::Object));
+        MOZ_ASSERT(kind == (cell->nurseryCellIsString() ? JS::TraceKind::String
+                                                        : JS::TraceKind::Object));
         return;
     }
 

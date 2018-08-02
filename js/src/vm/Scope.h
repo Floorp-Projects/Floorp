@@ -305,18 +305,11 @@ class Scope : public js::gc::TenuredCell
 {
     friend class GCMarker;
 
-    // The kind determines data_.
-    //
-    // The memory here must be fully initialized, since otherwise the magic_
-    // value for gc::RelocationOverlay will land in the padding and may be
-    // stale.
-    union {
-        ScopeKind kind_;
-        uintptr_t paddedKind_;
-    };
-
     // The enclosing scope or nullptr.
     GCPtrScope enclosing_;
+
+    // The kind determines data_.
+    ScopeKind kind_;
 
     // If there are any aliased bindings, the shape for the
     // EnvironmentObject. Otherwise nullptr.
@@ -327,12 +320,9 @@ class Scope : public js::gc::TenuredCell
 
     Scope(ScopeKind kind, Scope* enclosing, Shape* environmentShape)
       : enclosing_(enclosing),
+        kind_(kind),
         environmentShape_(environmentShape),
-        data_(nullptr)
-    {
-        paddedKind_ = 0;
-        kind_ = kind;
-    }
+        data_(nullptr) { }
 
     static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
                          HandleShape envShape);

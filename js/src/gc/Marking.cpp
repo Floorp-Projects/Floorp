@@ -2862,7 +2862,7 @@ js::gc::StoreBuffer::CellPtrEdge::trace(TenuringTracer& mover) const
     if (!IsInsideNursery(*edge))
         return;
 
-    if (JSString::nurseryCellIsString(*edge))
+    if ((*edge)->nurseryCellIsString())
         mover.traverse(reinterpret_cast<JSString**>(edge));
     else
         mover.traverse(reinterpret_cast<JSObject**>(edge));
