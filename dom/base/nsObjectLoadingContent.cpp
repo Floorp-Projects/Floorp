@@ -3700,7 +3700,7 @@ nsObjectLoadingContent::TeardownProtoChain()
   MOZ_ASSERT(obj);
 
   JS::Rooted<JSObject*> proto(cx);
-  JSAutoRealmAllowCCW ar(cx, obj);
+  JSAutoRealm ar(cx, obj);
 
   // Loop over the DOM element's JS object prototype chain and remove
   // all JS objects of the class sNPObjectJSWrapperClass

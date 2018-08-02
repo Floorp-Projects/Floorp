@@ -401,7 +401,7 @@ protected:
   {
     *aOutTramp = nullptr;
 
-    Trampoline<MMPolicyT> tramp(mVMPolicy.GetNextTrampoline());
+    Trampoline<MMPolicyT> tramp(this->mVMPolicy.GetNextTrampoline());
     if (!tramp) {
       return;
     }

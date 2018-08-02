@@ -414,8 +414,8 @@ js::intl::SharedIntlData::trace(JSTracer* trc)
 size_t
 js::intl::SharedIntlData::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    return availableTimeZones.sizeOfExcludingThis(mallocSizeOf) +
-           ianaZonesTreatedAsLinksByICU.sizeOfExcludingThis(mallocSizeOf) +
-           ianaLinksCanonicalizedDifferentlyByICU.sizeOfExcludingThis(mallocSizeOf) +
-           upperCaseFirstLocales.sizeOfExcludingThis(mallocSizeOf);
+    return availableTimeZones.shallowSizeOfExcludingThis(mallocSizeOf) +
+           ianaZonesTreatedAsLinksByICU.shallowSizeOfExcludingThis(mallocSizeOf) +
+           ianaLinksCanonicalizedDifferentlyByICU.shallowSizeOfExcludingThis(mallocSizeOf) +
+           upperCaseFirstLocales.shallowSizeOfExcludingThis(mallocSizeOf);
 }

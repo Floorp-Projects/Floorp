@@ -74,7 +74,7 @@ public:
     JSContext* mCx;
 
     // Handles switching to our global's realm.
-    JSAutoRealmAllowCCW mRealm;
+    JSAutoRealm mRealm;
 
     // Set to a valid handle if a return value is expected.
     JS::Rooted<JS::Value> mRetValue;

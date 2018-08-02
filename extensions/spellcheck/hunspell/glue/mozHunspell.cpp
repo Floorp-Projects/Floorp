@@ -90,7 +90,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(mozHunspell, mPersonalDictionary)
 
-template<> mozilla::Atomic<size_t> mozilla::CountingAllocatorBase<HunspellAllocator>::sAmount(0);
+template<> mozilla::CountingAllocatorBase<HunspellAllocator>::AmountType
+mozilla::CountingAllocatorBase<HunspellAllocator>::sAmount(0);
 
 mozHunspell::mozHunspell()
   : mHunspell(nullptr)

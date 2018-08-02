@@ -135,9 +135,7 @@ mm.addMessageListener("ppapipdf.js:getPrintSettings", ({ data }) => {
   let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].
               getService(Ci.nsIPrintSettingsService);
   printSettings = PSSVC.globalPrintSettings;
-  let webBrowserPrint =
-    containerWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-    getInterface(Ci.nsIWebBrowserPrint);
+  let webBrowserPrint = containerWindow.getInterface(Ci.nsIWebBrowserPrint);
   let PPSVC = Cc["@mozilla.org/embedcomp/printingprompt-service;1"].
               getService(Ci.nsIPrintingPromptService);
   PPSVC.showPrintDialog(containerWindow, webBrowserPrint, printSettings);
@@ -178,9 +176,7 @@ mm.addMessageListener("ppapipdf.js:printPDF", ({ data }) => {
     return;
   }
 
-  let webBrowserPrint =
-    containerWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-    getInterface(Ci.nsIWebBrowserPrint);
+  let webBrowserPrint = containerWindow.getInterface(Ci.nsIWebBrowserPrint);
   if (!webBrowserPrint || !webBrowserPrint.printPDF) {
     file.remove(false);
     return;

@@ -2655,8 +2655,7 @@ this.DownloadPDFSaver.prototype = {
     printSettings.footerStrLeft = "";
     printSettings.footerStrRight = "";
 
-    this._webBrowserPrint = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebBrowserPrint);
+    this._webBrowserPrint = win.getInterface(Ci.nsIWebBrowserPrint);
 
     try {
       await new Promise((resolve, reject) => {

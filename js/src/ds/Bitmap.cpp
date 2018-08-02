@@ -21,7 +21,7 @@ SparseBitmap::~SparseBitmap()
 size_t
 SparseBitmap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
-    size_t size = data.sizeOfExcludingThis(mallocSizeOf);
+    size_t size = data.shallowSizeOfExcludingThis(mallocSizeOf);
     for (Data::Range r(data.all()); !r.empty(); r.popFront())
         size += mallocSizeOf(r.front().value());
     return size;

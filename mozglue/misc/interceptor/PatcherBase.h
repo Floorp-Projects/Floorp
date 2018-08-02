@@ -25,7 +25,7 @@ protected:
   }
 
   ReadOnlyTargetFunction<MMPolicyT>
-  ResolveRedirectedAddress(const void* aOriginalFunction)
+  ResolveRedirectedAddress(FARPROC aOriginalFunction)
   {
     ReadOnlyTargetFunction<MMPolicyT> origFn(mVMPolicy, aOriginalFunction);
     // If function entry is jmp rel8 stub to the internal implementation, we

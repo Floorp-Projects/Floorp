@@ -2453,6 +2453,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_RESUME:
       case JSOP_DEBUGAFTERYIELD:
       case JSOP_AWAIT:
+      case JSOP_TRYSKIPAWAIT:
       case JSOP_GENERATOR:
 
       // Misc
@@ -2474,7 +2475,6 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_UNUSED126:
       case JSOP_UNUSED206:
-      case JSOP_UNUSED223:
       case JSOP_LIMIT:
         break;
     }

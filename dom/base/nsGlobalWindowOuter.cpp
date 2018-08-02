@@ -793,7 +793,7 @@ NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> global, bool isChrome)
 {
   MOZ_ASSERT(JS_IsGlobalObject(global));
 
-  JSAutoRealmAllowCCW ar(cx, global);
+  JSAutoRealm ar(cx, global);
 
   js::WrapperOptions options;
   options.setClass(&OuterWindowProxyClass);
@@ -1513,7 +1513,7 @@ static const JSFunctionSpec EnablePrivilegeSpec[] = {
 static bool
 InitializeLegacyNetscapeObject(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 {
-  JSAutoRealmAllowCCW ar(aCx, aGlobal);
+  JSAutoRealm ar(aCx, aGlobal);
 
   // Note: MathJax depends on window.netscape being exposed. See bug 791526.
   JS::Rooted<JSObject*> obj(aCx);
@@ -1850,7 +1850,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
     }
 
     // Enter the new global's realm.
-    JSAutoRealmAllowCCW ar(cx, GetWrapperPreserveColor());
+    JSAutoRealm ar(cx, GetWrapperPreserveColor());
 
     {
       JS::Rooted<JSObject*> outer(cx, GetWrapperPreserveColor());
@@ -1882,7 +1882,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
-  JSAutoRealmAllowCCW ar(cx, GetWrapperPreserveColor());
+  JSAutoRealm ar(cx, GetWrapperPreserveColor());
 
   if (!aState && !reUseInnerWindow) {
     // Loading a new page and creating a new inner window, *not*
@@ -3778,7 +3778,7 @@ nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize)
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
-  JSAutoRealmAllowCCW ar(cx, GetWrapperPreserveColor());
+  JSAutoRealm ar(cx, GetWrapperPreserveColor());
 
   DOMWindowResizeEventDetail detail;
   detail.mWidth = aSize.width;
@@ -5570,7 +5570,7 @@ nsGlobalWindowOuter::CallerInnerWindow()
   // sandboxPrototype. This used to work incidentally for unrelated reasons, but
   // now we need to do some special handling to support it.
   if (xpc::IsSandbox(scope)) {
-    JSAutoRealmAllowCCW ar(cx, scope);
+    JSAutoRealm ar(cx, scope);
     JS::Rooted<JSObject*> scopeProto(cx);
     bool ok = JS_GetPrototype(cx, scope, &scopeProto);
     NS_ENSURE_TRUE(ok, nullptr);
@@ -7115,7 +7115,7 @@ nsGlobalWindowOuter::SecurityCheckURL(const char *aURL, nsIURI** aURI)
   }
   AutoJSContext cx;
   nsGlobalWindowInner* sourceWin = nsGlobalWindowInner::Cast(sourceWindow);
-  JSAutoRealmAllowCCW ar(cx, sourceWin->GetGlobalJSObject());
+  JSAutoRealm ar(cx, sourceWin->GetGlobalJSObject());
 
   // Resolve the baseURI, which could be relative to the calling window.
   //

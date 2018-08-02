@@ -49,8 +49,8 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC()
     // moved. Release any wrappers whose weakly held JSObject has died.
 
     nsTArray<RefPtr<nsXPCWrappedJS>> dying;
-    for (Map::Enum e(mTable); !e.empty(); e.popFront()) {
-        nsXPCWrappedJS* wrapper = e.front().value();
+    for (auto iter = mTable.modIter(); !iter.done(); iter.next()) {
+        nsXPCWrappedJS* wrapper = iter.get().value();
         MOZ_ASSERT(wrapper, "found a null JS wrapper!");
 
         // Walk the wrapper chain and update all JSObjects.
@@ -64,20 +64,20 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC()
         }
 
         // Remove or update the JSObject key in the table if necessary.
-        JSObject* obj = e.front().key().unbarrieredGet();
+        JSObject* obj = iter.get().key().unbarrieredGet();
         JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
         if (!obj)
-            e.removeFront();
+            iter.remove();
         else
-            e.front().mutableKey() = obj;
+            iter.get().mutableKey() = obj;
     }
 }
 
 void
 JSObject2WrappedJSMap::ShutdownMarker()
 {
-    for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
-        nsXPCWrappedJS* wrapper = r.front().value();
+    for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
+        nsXPCWrappedJS* wrapper = iter.get().value();
         MOZ_ASSERT(wrapper, "found a null JS wrapper!");
         MOZ_ASSERT(wrapper->IsValid(), "found an invalid JS wrapper!");
         wrapper->SystemIsBeingShutDown();
@@ -88,7 +88,7 @@ size_t
 JSObject2WrappedJSMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
-    n += mTable.sizeOfExcludingThis(mallocSizeOf);
+    n += mTable.shallowSizeOfExcludingThis(mallocSizeOf);
     return n;
 }
 
@@ -96,8 +96,8 @@ size_t
 JSObject2WrappedJSMap::SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = 0;
-    for (Map::Range r = mTable.all(); !r.empty(); r.popFront())
-        n += r.front().value()->SizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = mTable.iter(); !iter.done(); iter.next())
+        n += iter.get().value()->SizeOfIncludingThis(mallocSizeOf);
     return n;
 }
 
