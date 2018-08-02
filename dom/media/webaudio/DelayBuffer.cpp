@@ -90,9 +90,6 @@ DelayBuffer::Read(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
   } else {
     aOutputChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
   }
-
-  // Remember currentDelayFrames for the next ProcessBlock call
-  mCurrentDelay = aPerFrameDelays[WEBAUDIO_BLOCK_SIZE - 1];
 }
 
 void
