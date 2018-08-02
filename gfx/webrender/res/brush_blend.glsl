@@ -29,9 +29,9 @@ void brush_vs(
 ) {
     PictureTask src_task = fetch_picture_task(user_data.x);
     vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
-    vec2 uv = vi.snapped_device_pos +
-              src_task.common_data.task_rect.p0 -
-              src_task.content_origin;
+    vec2 uv = snap_device_pos(vi) +
+        src_task.common_data.task_rect.p0 -
+        src_task.content_origin;
     vUv = vec3(uv / texture_size, src_task.common_data.texture_layer_index);
 
     vec2 uv0 = src_task.common_data.task_rect.p0;

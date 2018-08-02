@@ -70,7 +70,6 @@ void main(void) {
 #endif
     } else {
         bvec4 edge_mask = notEqual(edge_flags & ivec4(1, 2, 4, 8), ivec4(0));
-        bool do_perspective_interpolation = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0;
 
         vi = write_transform_vertex(
             local_segment_rect,
@@ -79,8 +78,7 @@ void main(void) {
             mix(vec4(0.0), vec4(1.0), edge_mask),
             ph.z,
             transform,
-            pic_task,
-            do_perspective_interpolation
+            pic_task
         );
     }
 
@@ -92,7 +90,7 @@ void main(void) {
     //           implies the other, for now.
 #ifdef WR_FEATURE_ALPHA_PASS
     write_clip(
-        vi.screen_pos,
+        vi.world_pos,
         clip_area
     );
 #endif
