@@ -685,7 +685,7 @@
 .tabbrowser-tab:hover::after,
 #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[beforehovered]::after,
 .tabbrowser-tab[multiselected]::after,
-.tabbrowser-tab[before-multiselected]::after {
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[before-multiselected]::after {
   margin-top: var(--tabs-top-border-width);
   margin-bottom: 0;
 }

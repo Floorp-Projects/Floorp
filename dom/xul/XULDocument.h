@@ -151,7 +151,6 @@ public:
                                  const nsAString& aAttr, ErrorResult& aRv);
     void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                     const nsAString& aAttr);
-    using nsDocument::GetBoxObjectFor;
 
 protected:
     virtual ~XULDocument();

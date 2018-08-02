@@ -6019,7 +6019,7 @@ nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
   nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
-  if (sf->GetScrollbarStyles().mScrollBehavior ==
+  if (sf->GetScrollStyles().mScrollBehavior ==
         NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
     scrollMode = nsIScrollableFrame::SMOOTH_MSD;
   }
@@ -11751,7 +11751,10 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   // notification is allowed only when we know docshell is not loading a new
   // document and it requires LOCATION_CHANGE_SAME_DOCUMENT flag. Otherwise,
   // FireOnLocationChange(...) breaks security UI.
-  if (!equalURIs) {
+  //
+  // If the docshell is shutting down, don't update the document URI, as we
+  // can't load into a docshell that is being destroyed.
+  if (!equalURIs && !mIsBeingDestroyed) {
     document->SetDocumentURI(newURI);
     // We can't trust SetCurrentURI to do always fire locationchange events
     // when we expect it to, so we hack around that by doing it ourselves...

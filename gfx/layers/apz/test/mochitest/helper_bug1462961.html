@@ -17,8 +17,8 @@ function* test(testDriver) {
   // scrollthumb remains a little "above" where it's supposed to be, so if the
   // bug manifests here, then the thumb will remain at the top of the track
   // and the scroll position will remain at 0.
-  var scrolled = yield* dragVerticalScrollbar(scrollableDiv, testDriver, 10, 10);
-  if (!scrolled) {
+  var dragFinisher = yield* dragVerticalScrollbar(scrollableDiv, testDriver, 10, 10);
+  if (!dragFinisher) {
     ok(true, "No scrollbar, can't do this test");
     return;
   }
@@ -27,6 +27,8 @@ function* test(testDriver) {
   // layer is activated, so we wait here until the scroll event listener is
   // triggered.
   yield;
+
+  yield* dragFinisher();
 
   // Flush everything just to be safe
   yield flushApzRepaints(testDriver);

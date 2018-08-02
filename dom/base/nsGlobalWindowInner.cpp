@@ -3924,7 +3924,7 @@ nsGlobalWindowInner::ScrollTo(const CSSIntPoint& aScroll,
       scroll.y = maxpx;
     }
 
-    bool smoothScroll = sf->GetScrollbarStyles().IsSmoothScroll(aOptions.mBehavior);
+    bool smoothScroll = sf->GetScrollStyles().IsSmoothScroll(aOptions.mBehavior);
 
     sf->ScrollToCSSPixels(scroll, smoothScroll
                             ? nsIScrollableFrame::SMOOTH_MSD
@@ -3978,7 +3978,7 @@ nsGlobalWindowInner::ScrollByLines(int32_t numLines,
     // It seems like it would make more sense for ScrollByLines to use
     // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
     // Perhaps Web content does too.
-    bool smoothScroll = sf->GetScrollbarStyles().IsSmoothScroll(aOptions.mBehavior);
+    bool smoothScroll = sf->GetScrollStyles().IsSmoothScroll(aOptions.mBehavior);
 
     sf->ScrollBy(nsIntPoint(0, numLines), nsIScrollableFrame::LINES,
                  smoothScroll
@@ -3997,7 +3997,7 @@ nsGlobalWindowInner::ScrollByPages(int32_t numPages,
     // It seems like it would make more sense for ScrollByPages to use
     // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
     // Perhaps Web content does too.
-    bool smoothScroll = sf->GetScrollbarStyles().IsSmoothScroll(aOptions.mBehavior);
+    bool smoothScroll = sf->GetScrollStyles().IsSmoothScroll(aOptions.mBehavior);
 
     sf->ScrollBy(nsIntPoint(0, numPages), nsIScrollableFrame::PAGES,
                  smoothScroll
