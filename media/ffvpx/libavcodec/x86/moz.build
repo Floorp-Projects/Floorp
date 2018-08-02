@@ -30,6 +30,12 @@ SOURCES += [
     'vp9mc_16bpp.asm',
 ]
 
+if CONFIG['MOZ_LIBAV_FFT']:
+    SOURCES += [
+        'fft.asm',
+        'fft_init.c',
+    ]
+
 FINAL_LIBRARY = 'mozavcodec'
 
 include('/media/ffvpx/ffvpxcommon.mozbuild')

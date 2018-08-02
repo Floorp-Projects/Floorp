@@ -905,9 +905,12 @@ TextEditRules::WillSetText(bool* aCancel,
   *aHandled = false;
   *aCancel = false;
 
-  if (!IsPlaintextEditor() || TextEditorRef().IsIMEComposing() ||
+  if (!IsPlaintextEditor() ||
+      TextEditorRef().IsIMEComposing() ||
+      TextEditorRef().IsUndoRedoEnabled() ||
       aMaxLength != -1) {
-    // SetTextImpl only supports plain text editor without IME.
+    // SetTextImpl only supports plain text editor without IME and
+    // when we don't need to make it undoable.
     return NS_OK;
   }
 

@@ -2130,7 +2130,27 @@ void
 Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
                             ErrorResult& aRv)
 {
-  nsINode* rangeRoot = aRange.GetRoot();
+  // If the given range is part of another Selection, we need to clone the
+  // range first.
+  RefPtr<nsRange> range;
+  if (aRange.IsInSelection() && aRange.GetSelection() != this) {
+    // Because of performance reason, when there is a cached range, let's use
+    // it.  Otherwise, clone the range.
+    if (mCachedRange) {
+      range = std::move(mCachedRange);
+      nsresult rv = range->SetStartAndEnd(aRange.StartRef().AsRaw(),
+                                          aRange.EndRef().AsRaw());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+    } else {
+      range = aRange.CloneRange();
+    }
+  } else {
+    range = &aRange;
+  }
+
+  nsINode* rangeRoot = range->GetRoot();
   if (aDocument != rangeRoot && (!rangeRoot ||
                                  aDocument != rangeRoot->GetComposedDoc())) {
     // http://w3c.github.io/selection-api/#dom-selection-addrange
@@ -2150,14 +2170,14 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
   // and returns NS_OK if range doesn't contain just one table cell
   bool didAddRange;
   int32_t rangeIndex;
-  nsresult result = AddTableCellRange(&aRange, &didAddRange, &rangeIndex);
+  nsresult result = AddTableCellRange(range, &didAddRange, &rangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
   }
 
   if (!didAddRange) {
-    result = AddItem(&aRange, &rangeIndex);
+    result = AddItem(range, &rangeIndex);
     if (NS_FAILED(result)) {
       aRv.Throw(result);
       return;
@@ -2176,7 +2196,7 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
   }
 
   RefPtr<nsPresContext>  presContext = GetPresContext();
-  SelectFrames(presContext, &aRange, true);
+  SelectFrames(presContext, range, true);
 
   if (!mFrameSelection)
     return;//nothing to do

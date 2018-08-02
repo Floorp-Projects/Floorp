@@ -384,6 +384,10 @@ button > hbox > label {
   margin-bottom: 4px;
 }
 
+#trackingProtectionBox {
+  margin-top: 16px;
+}
+
 #doNotTrackLearnMoreBox {
   margin-top: 32px;
 }
@@ -435,6 +439,10 @@ button > hbox > label {
 
 .text-link {
   margin-bottom: 0;
+}
+
+.text-link[disabled="true"] {
+  pointer-events: none;
 }
 
 #showUpdateHistory {

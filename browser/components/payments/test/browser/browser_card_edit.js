@@ -22,11 +22,13 @@ async function add_link(aOptions = {}) {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
-
+    info("add_link, aOptions: " + JSON.stringify(aOptions, null, 2));
     await navigateToAddCardPage(frame);
+    info(`add_link, from the add card page,
+          verifyPersistCheckbox with expectPersist: ${aOptions.expectDefaultCardPersist}`);
     await verifyPersistCheckbox(frame, {
       checkboxSelector: "basic-card-form .persist-checkbox",
-      expectPersist: !aOptions.isPrivate,
+      expectPersist: aOptions.expectDefaultCardPersist,
     });
     await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
       let {
@@ -45,10 +47,16 @@ async function add_link(aOptions = {}) {
          "isPrivate flag has expected value when shown from a private/non-private session");
     }, aOptions);
 
-    await fillInCardForm(frame, PTU.BasicCards.JaneMasterCard, {
-      isTemporary: aOptions.isPrivate,
+    let cardOptions = Object.assign({}, {
       checkboxSelector: "basic-card-form .persist-checkbox",
+      expectPersist: aOptions.expectCardPersist,
     });
+    if (aOptions.hasOwnProperty("setCardPersistCheckedValue")) {
+      cardOptions.setPersistCheckedValue = aOptions.setCardPersistCheckedValue;
+    }
+    await fillInCardForm(frame, PTU.BasicCards.JaneMasterCard, cardOptions);
+
+    await verifyPersistCheckbox(frame, cardOptions);
 
     await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
       let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
@@ -66,8 +74,12 @@ async function add_link(aOptions = {}) {
       addLinkSelector: ".billingAddressRow .add-link",
       checkboxSelector: "#address-page .persist-checkbox",
       initialPageId: "basic-card-page",
-      expectPersist: !aOptions.isPrivate,
+      expectPersist: aOptions.expectDefaultAddressPersist,
     });
+    if (aOptions.hasOwnProperty("setAddressPersistCheckedValue")) {
+      addressOptions.setPersistCheckedValue = aOptions.setAddressPersistCheckedValue;
+    }
+
     await navigateToAddAddressPage(frame, addressOptions);
 
     await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
@@ -96,7 +108,7 @@ async function add_link(aOptions = {}) {
                     Object.keys(state.tempBasicCards).length;
         return state.page.id == "basic-card-page" && !state["basic-card-page"].guid &&
                total == 1;
-      }, "Check basic-card page, but card should not be saved and no addresses present");
+      }, "Check basic-card page, but card should not be saved and no new addresses present");
 
       is(title.textContent, "Add Credit Card", "Add title should be still be on credit card page");
 
@@ -128,7 +140,7 @@ async function add_link(aOptions = {}) {
                          Object.keys(state.tempAddresses).length;
       is(addressCount, 2, "Check address was added");
 
-      let addressColn = testArgs.isPrivate ? state.tempAddresses : state.savedAddresses;
+      let addressColn = testArgs.expectAddressPersist ? state.savedAddresses : state.tempAddresses;
 
       ok(state["basic-card-page"].preserveFieldValues,
          "preserveFieldValues should be set when coming back from address-page");
@@ -147,10 +159,12 @@ async function add_link(aOptions = {}) {
       is(selectedAddressGuid, lastAddress.guid, "The select should have the new address selected");
     }, aOptions);
 
-    await fillInCardForm(frame, PTU.BasicCards.JaneMasterCard, {
-      isTemporary: aOptions.isPrivate,
+    cardOptions = Object.assign({}, {
       checkboxSelector: "basic-card-form .persist-checkbox",
+      expectPersist: aOptions.expectCardPersist,
     });
+
+    await verifyPersistCheckbox(frame, cardOptions);
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
@@ -163,7 +177,6 @@ async function add_link(aOptions = {}) {
         return state.page.id == "payment-summary";
       }, "Check we are back on the summary page");
     });
-
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "123",
@@ -181,16 +194,18 @@ async function add_link(aOptions = {}) {
       let cardCount = Object.keys(state.savedBasicCards).length +
                          Object.keys(state.tempBasicCards).length;
       is(cardCount, 2, "Card was added");
-      if (testArgs.isPrivate) {
-        is(Object.keys(state.tempBasicCards).length, 1, "Card was added temporarily");
-        is(Object.keys(state.savedBasicCards).length, 1, "No change to saved cards");
-      } else {
+      if (testArgs.expectCardPersist) {
         is(Object.keys(state.tempBasicCards).length, 0, "No temporary cards addded");
         is(Object.keys(state.savedBasicCards).length, 2, "New card was saved");
+      } else {
+        is(Object.keys(state.tempBasicCards).length, 1, "Card was added temporarily");
+        is(Object.keys(state.savedBasicCards).length, 1, "No change to saved cards");
       }
 
-      let cardCollection = testArgs.isPrivate ? state.tempBasicCards : state.savedBasicCards;
-      let addressCollection = testArgs.isPrivate ? state.tempAddresses : state.savedAddresses;
+      let cardCollection = testArgs.expectCardPersist ? state.savedBasicCards :
+                                                        state.tempBasicCards;
+      let addressCollection = testArgs.expectAddressPersist ? state.savedAddresses :
+                                                              state.tempAddresses;
       let savedCardGUID =
         Object.keys(cardCollection).find(key => key != prefilledGuids.card1GUID);
       let savedAddressGUID =
@@ -233,18 +248,118 @@ async function add_link(aOptions = {}) {
 
 add_task(async function test_add_link() {
   let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
+  let defaultPersist = Services.prefs.getBoolPref(SAVE_CREDITCARD_DEFAULT_PREF);
+
+  is(defaultPersist, false, `Expect ${SAVE_CREDITCARD_DEFAULT_PREF} to default to false`);
+  info("Calling add_link from test_add_link");
   await add_link({
     isPrivate: false,
+    expectDefaultCardPersist: false,
+    expectCardPersist: false,
+    expectDefaultAddressPersist: true,
+    expectAddressPersist: true,
     prefilledGuids,
   });
 });
 
 add_task(async function test_private_add_link() {
   let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
+  info("Calling add_link from test_private_add_link");
   await add_link({
     isPrivate: true,
+    expectDefaultCardPersist: false,
+    expectCardPersist: false,
+    expectDefaultAddressPersist: false,
+    expectAddressPersist: false,
     prefilledGuids,
   });
+});
+
+add_task(async function test_persist_prefd_on_add_link() {
+  let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
+  Services.prefs.setBoolPref(SAVE_CREDITCARD_DEFAULT_PREF, true);
+
+  info("Calling add_link from test_persist_prefd_on_add_link");
+  await add_link({
+    isPrivate: false,
+    expectDefaultCardPersist: true,
+    expectCardPersist: true,
+    expectDefaultAddressPersist: true,
+    expectAddressPersist: true,
+    prefilledGuids,
+  });
+  Services.prefs.clearUserPref(SAVE_CREDITCARD_DEFAULT_PREF);
+});
+
+add_task(async function test_private_persist_prefd_on_add_link() {
+  let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
+  Services.prefs.setBoolPref(SAVE_CREDITCARD_DEFAULT_PREF, true);
+
+  info("Calling add_link from test_private_persist_prefd_on_add_link");
+  // in private window, even when the pref is set true,
+  // we should still default to not saving credit-card info
+  await add_link({
+    isPrivate: true,
+    expectDefaultCardPersist: false,
+    expectCardPersist: false,
+    expectDefaultAddressPersist: false,
+    expectAddressPersist: false,
+    prefilledGuids,
+  });
+  Services.prefs.clearUserPref(SAVE_CREDITCARD_DEFAULT_PREF);
+});
+
+add_task(async function test_optin_persist_add_link() {
+  let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
+  let defaultPersist = Services.prefs.getBoolPref(SAVE_CREDITCARD_DEFAULT_PREF);
+
+  is(defaultPersist, false, `Expect ${SAVE_CREDITCARD_DEFAULT_PREF} to default to false`);
+  info("Calling add_link from test_add_link");
+  // verify that explicit opt-in by checking the box results in the record being saved
+  await add_link({
+    isPrivate: false,
+    expectDefaultCardPersist: false,
+    setCardPersistCheckedValue: true,
+    expectCardPersist: true,
+    expectDefaultAddressPersist: true,
+    expectAddressPersist: true,
+    prefilledGuids,
+  });
+});
+
+add_task(async function test_optin_private_persist_add_link() {
+  let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
+  let defaultPersist = Services.prefs.getBoolPref(SAVE_CREDITCARD_DEFAULT_PREF);
+
+  is(defaultPersist, false, `Expect ${SAVE_CREDITCARD_DEFAULT_PREF} to default to false`);
+  // verify that explicit opt-in for the card only from a private window results
+  // in the record being saved
+  await add_link({
+    isPrivate: true,
+    expectDefaultCardPersist: false,
+    setCardPersistCheckedValue: true,
+    expectCardPersist: true,
+    expectDefaultAddressPersist: false,
+    expectAddressPersist: false,
+    prefilledGuids,
+  });
+});
+
+add_task(async function test_opt_out_persist_prefd_on_add_link() {
+  let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
+  Services.prefs.setBoolPref(SAVE_CREDITCARD_DEFAULT_PREF, true);
+
+  // set the pref to default to persist creditcards, but manually uncheck the checkbox
+  await add_link({
+    isPrivate: false,
+    expectDefaultCardPersist: true,
+    setCardPersistCheckedValue: false,
+    expectCardPersist: false,
+    expectDefaultAddressPersist: true,
+    expectAddressPersist: true,
+    prefilledGuids,
+  });
+  Services.prefs.clearUserPref(SAVE_CREDITCARD_DEFAULT_PREF);
 });
 
 add_task(async function test_edit_link() {

@@ -212,7 +212,7 @@ var ContextView = {
           .attr("viewBox", "0 0 10 10")
           .attr("refX", ARROW_WIDTH)
           .attr("refY", ARROW_HEIGHT)
-          .attr("markerUnits", "strokewidth")
+          .attr("markerUnits", "strokeWidth")
           .attr("markerWidth", ARROW_WIDTH)
           .attr("markerHeight", ARROW_HEIGHT)
           .attr("orient", "auto")

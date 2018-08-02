@@ -376,6 +376,7 @@
 .tooltip-container[type="doorhanger"] .menuitem > .command > .label {
   flex: 1;
   font: menu;
+  white-space: nowrap;
 }
 
 .tooltip-container[type="doorhanger"] .checkbox-container .menuitem > .command > .label {
@@ -552,15 +553,6 @@
 #searchbox-panel-listbox .autocomplete-item,
 #searchbox-panel-listbox .autocomplete-item[selected] {
   overflow-x: hidden;
-}
-
-#searchbox-panel-listbox .autocomplete-item > .initial-value {
-  max-width: 130px;
-  margin-left: 15px;
-}
-
-#searchbox-panel-listbox .autocomplete-item > .autocomplete-value {
-  max-width: 150px;
 }
 
 /* Tooltip: Image tooltip */

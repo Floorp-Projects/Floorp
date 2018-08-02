@@ -270,8 +270,8 @@ var gMenuBuilder = {
         item.checked = true;
       }
 
-      if (!contextData.onBookmark) {
-        item.tabManager.addActiveTabPermission();
+      if (contextData.tab) {
+        item.tabManager.addActiveTabPermission(contextData.tab);
       }
 
       let info = item.getClickInfo(contextData, wasChecked);

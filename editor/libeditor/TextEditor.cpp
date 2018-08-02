@@ -421,7 +421,7 @@ nsresult
 TextEditor::OnInputText(const nsAString& aStringToInsert)
 {
   AutoPlaceholderBatch batch(this, nsGkAtoms::TypingTxnName);
-  nsresult rv = InsertTextAsAction(aStringToInsert);
+  nsresult rv = InsertTextAsSubAction(aStringToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -961,21 +961,37 @@ TextEditor::InsertText(const nsAString& aStringToInsert)
 nsresult
 TextEditor::InsertTextAsAction(const nsAString& aStringToInsert)
 {
+  // Showing this assertion is fine if this method is called by outside via
+  // mutation event listener or something.  Otherwise, this is called by
+  // wrong method.
+  NS_ASSERTION(!mPlaceholderBatch,
+    "Should be called only when this is the only edit action of the operation "
+    "unless mutation event listener nests some operations");
+
+  AutoPlaceholderBatch batch(this, nullptr);
+  nsresult rv = InsertTextAsSubAction(aStringToInsert);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert)
+{
+  MOZ_ASSERT(mPlaceholderBatch);
+
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying
+  // Protect the edit rules object from dying.
   RefPtr<TextEditRules> rules(mRules);
 
-  EditSubAction editSubAction = EditSubAction::eInsertText;
-  if (ShouldHandleIMEComposition()) {
-    // So, the string must come from IME as new composition string or
-    // commit string.
-    editSubAction = EditSubAction::eInsertTextComingFromIME;
-  }
+  EditSubAction editSubAction =
+    ShouldHandleIMEComposition() ?
+      EditSubAction::eInsertTextComingFromIME : EditSubAction::eInsertText;
 
-  AutoPlaceholderBatch batch(this, nullptr);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, editSubAction, nsIEditor::eNext);
 
@@ -1006,7 +1022,11 @@ TextEditor::InsertTextAsAction(const nsAString& aStringToInsert)
     return NS_OK;
   }
   // post-process
-  return rules->DidDoAction(selection, subActionInfo, NS_OK);
+  rv = rules->DidDoAction(selection, subActionInfo, NS_OK);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1116,6 +1136,71 @@ TextEditor::SetText(const nsAString& aString)
 {
   MOZ_ASSERT(aString.FindChar(static_cast<char16_t>('\r')) == kNotFound);
 
+  AutoPlaceholderBatch batch(this, nullptr);
+  nsresult rv = SetTextAsSubAction(aString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TextEditor::ReplaceTextAsAction(const nsAString& aString,
+                                nsRange* aReplaceRange /* = nullptr */)
+{
+  AutoPlaceholderBatch batch(this, nullptr);
+
+  // This should emulates inserting text for better undo/redo behavior.
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::eInsertText,
+                                      nsIEditor::eNext);
+
+  if (!aReplaceRange) {
+    nsresult rv = SetTextAsSubAction(aString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(aString.IsEmpty() && aReplaceRange->Collapsed())) {
+    return NS_OK;
+  }
+
+  // Note that do not notify selectionchange caused by selecting all text
+  // because it's preparation of our delete implementation so web apps
+  // shouldn't receive such selectionchange before the first mutation.
+  AutoUpdateViewBatch preventSelectionChangeEvent(this);
+
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Select the range but as far as possible, we should not create new range
+  // even if it's part of special Selection.
+  nsresult rv = selection->RemoveAllRangesTemporarily();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  ErrorResult error;
+  selection->AddRange(*aReplaceRange, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  rv = ReplaceSelectionAsSubAction(aString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TextEditor::SetTextAsSubAction(const nsAString& aString)
+{
+  MOZ_ASSERT(mPlaceholderBatch);
+
   if (NS_WARN_IF(!mRules)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1123,8 +1208,6 @@ TextEditor::SetText(const nsAString& aString)
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  // delete placeholder txns merge.
-  AutoPlaceholderBatch batch(this, nullptr);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eSetText,
                                       nsIEditor::eNext);
@@ -1149,6 +1232,11 @@ TextEditor::SetText(const nsAString& aString)
     return NS_OK;
   }
   if (!handled) {
+    // Note that do not notify selectionchange caused by selecting all text
+    // because it's preparation of our delete implementation so web apps
+    // shouldn't receive such selectionchange before the first mutation.
+    AutoUpdateViewBatch preventSelectionChangeEvent(this);
+
     // We want to select trailing BR node to remove all nodes to replace all,
     // but TextEditor::SelectEntireDocument doesn't select that BR node.
     if (rules->DocumentIsEmpty()) {
@@ -1163,17 +1251,31 @@ TextEditor::SetText(const nsAString& aString)
       rv = EditorBase::SelectEntireDocument(selection);
     }
     if (NS_SUCCEEDED(rv)) {
-      if (aString.IsEmpty()) {
-        rv = DeleteSelectionAsSubAction(eNone, eStrip);
-        NS_WARNING_ASSERTION(NS_FAILED(rv), "Failed to remove all text");
-      } else {
-        rv = InsertTextAsAction(aString);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new text");
-      }
+      rv = ReplaceSelectionAsSubAction(aString);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+        "Failed to replace selection with new string");
     }
   }
   // post-process
   return rules->DidDoAction(selection, subActionInfo, rv);
+}
+
+nsresult
+TextEditor::ReplaceSelectionAsSubAction(const nsAString& aString)
+{
+  if (aString.IsEmpty()) {
+    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  nsresult rv = InsertTextAsSubAction(aString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 bool
@@ -1256,7 +1358,7 @@ TextEditor::OnCompositionChange(WidgetCompositionEvent& aCompsitionChangeEvent)
 
     MOZ_ASSERT(mIsInEditSubAction,
       "AutoPlaceholderBatch should've notified the observes of before-edit");
-    rv = InsertTextAsAction(aCompsitionChangeEvent.mData);
+    rv = InsertTextAsSubAction(aCompsitionChangeEvent.mData);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
       "Failed to insert new composition string");
 
@@ -1936,8 +2038,7 @@ TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
   }
   MOZ_ASSERT(!handled, "WillDoAction() shouldn't handle in this case");
   if (!handled) {
-    // TODO: Use InsertTextAsSubAction() when bug 1467796 is fixed.
-    rv = InsertTextAsAction(quotedStuff);
+    rv = InsertTextAsSubAction(quotedStuff);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

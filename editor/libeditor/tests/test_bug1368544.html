@@ -52,9 +52,20 @@ SimpleTest.waitForFocus(() => {
 
       textarea.value = "ABC";
       SpecialPowers.wrap(textarea).setUserInput("");
-      ok(editor.rootElement.hasChildNodes(),
-         "editor of textarea has child node even if value is empty");
-
+      is(textarea.value, "",
+         "textarea should become empty when setUserInput() is called with empty string");
+      if (navigator.appVersion.includes("Android")) {
+        todo(!editor.rootElement.hasChildNodes(),
+             "editor of textarea should have no children when user input emulation set the value to empty");
+        if (editor.rootElement.childNodes.length > 0) {
+          is(editor.rootElement.childNodes.length, 1, "There should be only one <br> node");
+          is(editor.rootElement.firstChild.tagName.toLowerCase(), "br", "The node should be a <br> element node");
+          is(editor.rootElement.firstChild.getAttribute("_moz_editor_bogus_node"), null, "The <br> should not be a bogus node");
+        }
+      } else {
+        ok(!editor.rootElement.hasChildNodes(),
+           "editor of textarea should have no children when user input emulation set the value to empty");
+      }
       textarea.value = "ABC";
       synthesizeKey("KEY_Enter", {repeat: 2});
       textarea.value = "";

@@ -789,6 +789,51 @@ addressbar-locbar-openpage-option =
 
 addressbar-suggestions-settings = Change preferences for search engine suggestions
 
+## Privacy Section - Content Blocking
+
+content-blocking-header = Content Blocking
+
+content-blocking-desc = Block third-party content, like ads or code, that can slow your browsing and track you around the web. Customize your settings for the best balance of protection and performance.
+
+content-blocking-learn-more = Learn More
+content-blocking-restore-defaults =
+  .label = Restore Defaults
+  .accesskey = R
+
+content-blocking-toggle-on =
+  .tooltiptext = Turn Off Content Blocking
+content-blocking-toggle-off =
+  .tooltiptext = Turn On Content Blocking
+
+content-blocking-toggle-label-on = ON
+  .accesskey = O
+content-blocking-toggle-label-off = OFF
+  .accesskey = O
+
+content-blocking-category-label = Choose what to block
+
+# "Slow" in this instance means "slow to load on the network".
+# FastBlock is a feature that blocks requests to tracking sites if they
+# have not finished loading after a certain threshold of seconds.
+content-blocking-fastblock-label = Slow Tracking Elements
+  .accesskey = S
+content-blocking-fastblock-description = Blocks third-party content that takes longer than 5 seconds to load.
+content-blocking-fastblock-option-enabled =
+  .label = Always block
+content-blocking-fastblock-option-disabled =
+  .label = Never block
+
+content-blocking-tracking-protection-label = Trackers
+  .accesskey = T
+content-blocking-tracking-protection-description = Blocks all known trackers (Note: may also prevent some pages from loading).
+content-blocking-tracking-protection-option-enabled =
+  .label = Always block
+content-blocking-tracking-protection-option-pbm =
+  .label = Block only in private windows
+content-blocking-tracking-protection-option-disabled =
+  .label = Never block
+content-blocking-tracking-protection-change-blocklist = Change Block List…
+
 ## Privacy Section - Tracking
 
 tracking-header = Tracking Protection

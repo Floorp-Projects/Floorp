@@ -48,6 +48,9 @@ if CONFIG['MOZ_WMF']:
 
 if CONFIG['MOZ_FFVPX'] or CONFIG['MOZ_FFMPEG']:
     # common code to either FFmpeg or FFVPX
+    EXPORTS += [
+        'ffmpeg/FFmpegRDFTTypes.h',
+    ]
     UNIFIED_SOURCES += [
         'ffmpeg/FFmpegLibWrapper.cpp',
     ]

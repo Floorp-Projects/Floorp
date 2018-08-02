@@ -9,16 +9,24 @@
 
 #include "PlatformDecoderModule.h"
 
+struct FFmpegRDFTFuncs;
+
 namespace mozilla
 {
 
 class FFVPXRuntimeLinker
 {
 public:
+  // Main thread only.
   static bool Init();
+  // Main thread or after Init().
   static already_AddRefed<PlatformDecoderModule> CreateDecoderModule();
 
+  // Call (on any thread) after Init().
+  static void GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs);
+
 private:
+  // Set once on the main thread and then read from other threads.
   static enum LinkStatus {
     LinkStatus_INIT = 0,
     LinkStatus_FAILED,
