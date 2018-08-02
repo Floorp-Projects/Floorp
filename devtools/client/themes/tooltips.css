@@ -376,6 +376,7 @@
 .tooltip-container[type="doorhanger"] .menuitem > .command > .label {
   flex: 1;
   font: menu;
+  white-space: nowrap;
 }
 
 .tooltip-container[type="doorhanger"] .checkbox-container .menuitem > .command > .label {
