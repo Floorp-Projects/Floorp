@@ -597,7 +597,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "109f94ad5c45"
+        "revision": "30e3ca1e377b"
     }, 
     "gu-IN": {
         "platforms": [
@@ -1052,7 +1052,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "dfc1b0a7334d"
+        "revision": "7d0e56655fc1"
     }, 
     "nn-NO": {
         "platforms": [
