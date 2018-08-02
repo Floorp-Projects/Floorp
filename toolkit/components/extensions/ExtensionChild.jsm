@@ -9,10 +9,9 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionChild"];
 
-/*
- * This file handles addon logic that is independent of the chrome process.
- * When addons run out-of-process, this is the main entry point.
- * Its primary function is managing addon globals.
+/**
+ * This file handles addon logic that is independent of the chrome process and
+ * may run in all web content and extension processes.
  *
  * Don't put contentscript logic here, use ExtensionContent.jsm instead.
  */
