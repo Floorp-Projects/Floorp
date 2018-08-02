@@ -42,6 +42,7 @@ void DebuggerRequest(js::CharBuffer* aBuffer);
 void SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition);
 void Resume(bool aForward);
 void RestoreCheckpoint(size_t aId);
+void RunToPoint(const js::ExecutionPoint& aPoint);
 
 // Attempt to diverge from the recording so that new recorded events cause
 // the process to rewind. Returns false if the divergence failed: either we
