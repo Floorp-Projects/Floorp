@@ -39,9 +39,9 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
-#include "nsIWebShellServices.h"
 
 #include "nsAutoPtr.h"
+#include "nsCharsetSource.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -57,9 +57,9 @@
 #include "prtime.h"
 #include "Units.h"
 
-#include "timeline/ObservedDocShell.h"
-#include "timeline/TimelineConsumers.h"
-#include "timeline/TimelineMarker.h"
+#include "mozilla/ObservedDocShell.h"
+#include "mozilla/TimelineConsumers.h"
+#include "mozilla/TimelineMarker.h"
 
 // Interfaces Needed
 
@@ -128,7 +128,6 @@ class nsDocShell final
   , public nsIWebPageDescriptor
   , public nsIAuthPromptProvider
   , public nsILoadContext
-  , public nsIWebShellServices
   , public nsILinkHandler
   , public nsIClipboardCommands
   , public nsIDOMStorageManager
@@ -180,7 +179,6 @@ public:
   NS_DECL_NSIWEBPAGEDESCRIPTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSICLIPBOARDCOMMANDS
-  NS_DECL_NSIWEBSHELLSERVICES
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSIDEPRECATIONWARNER
 
@@ -282,6 +280,11 @@ public:
 
   mozilla::HTMLEditor* GetHTMLEditorInternal();
   nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
+
+  // Handle page navigation due to charset changes
+  nsresult CharsetChangeReloadDocument(const char* aCharset = nullptr,
+                                               int32_t aSource = kCharsetUninitialized);
+  nsresult CharsetChangeStopDocumentLoad();
 
   nsDOMNavigationTiming* GetNavigationTiming() const;
 

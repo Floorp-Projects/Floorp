@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/css/Loader.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsError.h"
 #include "nsHtml5AutoPauseUpdate.h"
 #include "nsHtml5Parser.h"
@@ -33,7 +34,6 @@
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIViewSourceChannel.h"
-#include "nsIWebShellServices.h"
 #include "nsNetUtil.h"
 #include "xpcpublic.h"
 
@@ -770,18 +770,18 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(NotNull<const Encoding*> aEncoding,
     return;
   }
 
-  nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(mDocShell);
-  if (!wss) {
+  if (!mDocShell) {
     return;
   }
 
-  // ask the webshellservice to load the URL
-  if (NS_SUCCEEDED(wss->StopDocumentLoad())) {
+  nsDocShell* docShell = static_cast<nsDocShell*>(mDocShell.get());
+
+  if (NS_SUCCEEDED(docShell->CharsetChangeStopDocumentLoad())) {
     nsAutoCString charset;
     aEncoding->Name(charset);
-    wss->ReloadDocument(charset.get(), aSource);
+    docShell->CharsetChangeReloadDocument(charset.get(), aSource);
   }
-  // if the charset switch was accepted, wss has called Terminate() on the
+  // if the charset switch was accepted, mDocShell has called Terminate() on the
   // parser by now
 
   if (!mParser) {

@@ -35,7 +35,6 @@
 #include "nsDocShellLoadTypes.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
-#include "nsIWebShellServices.h"
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
 #include "nsContentList.h"

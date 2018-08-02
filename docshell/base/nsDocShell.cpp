@@ -527,7 +527,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsILoadContext)
-  NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
   NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
   NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
@@ -13784,9 +13783,9 @@ nsDocShell::PluginsAllowedInCurrentDoc()
 // Web Shell Services API
 
 // This functions is only called when a new charset is detected in loading a
-// document. Its name should be changed to "CharsetReloadDocument"
-NS_IMETHODIMP
-nsDocShell::ReloadDocument(const char* aCharset, int32_t aSource)
+// document.
+nsresult
+nsDocShell::CharsetChangeReloadDocument(const char* aCharset, int32_t aSource)
 {
   // XXX hack. keep the aCharset and aSource wait to pick it up
   nsCOMPtr<nsIContentViewer> cv;
@@ -13818,8 +13817,8 @@ nsDocShell::ReloadDocument(const char* aCharset, int32_t aSource)
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
 }
 
-NS_IMETHODIMP
-nsDocShell::StopDocumentLoad(void)
+nsresult
+nsDocShell::CharsetChangeStopDocumentLoad()
 {
   if (eCharsetReloadRequested != mCharsetReloadState) {
     Stop(nsIWebNavigation::STOP_ALL);
