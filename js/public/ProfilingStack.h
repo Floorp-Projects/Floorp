@@ -322,7 +322,7 @@ RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 
 namespace JS {
 
-typedef void
+typedef ProfilingStack*
 (* RegisterThreadCallback)(const char* threadName, void* stackBase);
 
 typedef void

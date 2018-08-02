@@ -46,6 +46,16 @@ GlobalHelperThreadState* gHelperThreadState = nullptr;
 
 } // namespace js
 
+// These macros are identical in function to the same-named ones in
+// GeckoProfiler.h, but they are defined separately because SpiderMonkey can't
+// use GeckoProfiler.h.
+#define PROFILER_RAII_PASTE(id, line) id ## line
+#define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
+#define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
+#define AUTO_PROFILER_LABEL(label, category) \
+  HelperThread::AutoProfilerLabel PROFILER_RAII(this, label, __LINE__, \
+                                                js::ProfilingStackFrame::Category::category)
+
 bool
 js::CreateHelperThreadsState()
 {
@@ -1862,26 +1872,26 @@ HelperThread::destroy()
 void
 HelperThread::ensureRegisteredWithProfiler()
 {
-    if (registered || mozilla::recordreplay::IsRecordingOrReplaying())
+    if (profilingStack || mozilla::recordreplay::IsRecordingOrReplaying())
         return;
 
     JS::RegisterThreadCallback callback = HelperThreadState().registerThread;
     if (callback) {
-        callback("JS Helper", reinterpret_cast<void*>(GetNativeStackBase()));
-        registered = true;
+        profilingStack =
+            callback("JS Helper", reinterpret_cast<void*>(GetNativeStackBase()));
     }
 }
 
 void
 HelperThread::unregisterWithProfilerIfNeeded()
 {
-    if (!registered)
+    if (!profilingStack)
         return;
 
     JS::UnregisterThreadCallback callback = HelperThreadState().unregisterThread;
     if (callback) {
         callback();
-        registered = false;
+        profilingStack = nullptr;
     }
 }
 
@@ -2380,6 +2390,22 @@ const HelperThread::TaskSpec HelperThread::taskSpecs[] = {
     }
 };
 
+HelperThread::AutoProfilerLabel::AutoProfilerLabel(HelperThread* helperThread,
+                                                   const char* label,
+                                                   uint32_t line,
+                                                   ProfilingStackFrame::Category category)
+  : profilingStack(helperThread->profilingStack)
+{
+    if (profilingStack)
+        profilingStack->pushLabelFrame(label, nullptr, this, line, category);
+}
+
+HelperThread::AutoProfilerLabel::~AutoProfilerLabel()
+{
+    if (profilingStack)
+        profilingStack->pop();
+}
+
 void
 HelperThread::threadLoop()
 {
@@ -2410,6 +2436,7 @@ HelperThread::threadLoop()
 
         const TaskSpec* task = findHighestPriorityTask(lock);
         if (!task) {
+            AUTO_PROFILER_LABEL("HelperThread::threadLoop::wait", IDLE);
             if (mozilla::recordreplay::IsRecordingOrReplaying()) {
                 // Unlock the helper thread state lock before potentially
                 // blocking while the main thread waits for all threads to
