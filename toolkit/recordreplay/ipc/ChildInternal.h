@@ -51,6 +51,13 @@ bool MaybeDivergeFromRecording();
 // Notify navigation that a position was hit.
 void PositionHit(const js::BreakpointPosition& aPosition);
 
+// Get an execution point for hitting the specified position right now.
+js::ExecutionPoint CurrentExecutionPoint(const js::BreakpointPosition& aPosition);
+
+// Convert an identifier from NewTimeWarpTarget() which we have seen while
+// executing into an ExecutionPoint.
+js::ExecutionPoint TimeWarpTargetExecutionPoint(ProgressCounter aTarget);
+
 // Called when running forward, immediately before hitting a normal or
 // temporary checkpoint.
 void BeforeCheckpoint();
