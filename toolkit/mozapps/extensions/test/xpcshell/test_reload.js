@@ -44,8 +44,6 @@ async function tearDownAddon(addon) {
 }
 
 add_task(async function test_reloading_a_temp_addon() {
-  if (AppConstants.MOZ_APP_NAME == "thunderbird")
-    return;
   await promiseRestartManager();
   let xpi = AddonTestUtils.createTempXPIFile(ADDONS.webextension_1);
   const addon = await AddonManager.installTemporaryAddon(xpi);
