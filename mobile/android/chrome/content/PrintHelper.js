@@ -37,7 +37,7 @@ var PrintHelper = {
     printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
     printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
 
-    let webBrowserPrint = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
+    let webBrowserPrint = aBrowser.contentWindow.getInterface(Ci.nsIWebBrowserPrint);
 
     return new Promise((resolve, reject) => {
       webBrowserPrint.print(printSettings, {

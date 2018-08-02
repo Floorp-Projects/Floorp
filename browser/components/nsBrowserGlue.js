@@ -968,15 +968,6 @@ BrowserGlue.prototype = {
 
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
-    // Set up listeners and, if PdfJs is enabled, register the PDF stream converter.
-    // We delay all of the parent's initialization other than stream converter
-    // registration, because it requires file IO from HandlerService.js
-    Services.ppmm.loadProcessScript("resource://pdf.js/pdfjschildbootstrap.js", true);
-    if (PdfJs.enabled) {
-      PdfJs.ensureRegistered();
-      Services.ppmm.loadProcessScript("resource://pdf.js/pdfjschildbootstrap-enabled.js", true);
-    }
-
     TabCrashHandler.init();
     if (AppConstants.MOZ_CRASHREPORTER) {
       PluginCrashReporter.init();

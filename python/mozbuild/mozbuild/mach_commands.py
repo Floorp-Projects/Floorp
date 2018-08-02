@@ -1257,7 +1257,8 @@ class PackageFrontend(MachCommandBase):
         help='Skip all local caches to force re-fetching remote artifacts.',
         default=False)
     @CommandArgument('--from-build', metavar='BUILD', nargs='+',
-        help='Get toolchains resulting from the given build(s)')
+        help='Download toolchains resulting from the given build(s); '
+             'BUILD is a name of a toolchain task, e.g. linux64-clang')
     @CommandArgument('--tooltool-manifest', metavar='MANIFEST',
         help='Explicit tooltool manifest to process')
     @CommandArgument('--authentication-file', metavar='FILE',

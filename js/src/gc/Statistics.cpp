@@ -437,24 +437,36 @@ Statistics::formatDetailedDescription() const
   HeapSize: %.3f MiB\n\
   Chunk Delta (magnitude): %+d  (%d)\n\
   Arenas Relocated: %.3f MiB\n\
+  Trigger: %s\n\
 ";
+
+    char thresholdBuffer[100] = "n/a";
+    if (thresholdTriggered) {
+        SprintfLiteral(thresholdBuffer, "%.3f MiB of %.3f MiB threshold\n",
+                       triggerAmount / 1024.0 / 1024.0,
+                       triggerThreshold / 1024.0 / 1024.0);
+    }
+
     char buffer[1024];
-    SprintfLiteral(buffer, format,
-                   ExplainInvocationKind(gckind),
-                   ExplainReason(slices_[0].reason),
-                   nonincremental() ? "no - " : "yes",
-                   nonincremental() ? ExplainAbortReason(nonincrementalReason_) : "",
-                   zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
-                   zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
-                   zoneStats.sweptCompartmentCount,
-                   getCount(STAT_MINOR_GC),
-                   getCount(STAT_STOREBUFFER_OVERFLOW),
-                   mmu20 * 100., mmu50 * 100.,
-                   t(sccTotal), t(sccLongest),
-                   double(preBytes) / bytesPerMiB,
-                   getCount(STAT_NEW_CHUNK) - getCount(STAT_DESTROY_CHUNK),
-                   getCount(STAT_NEW_CHUNK) + getCount(STAT_DESTROY_CHUNK),
-                   double(ArenaSize * getCount(STAT_ARENA_RELOCATED)) / bytesPerMiB);
+    SprintfLiteral(
+        buffer, format,
+        ExplainInvocationKind(gckind),
+        ExplainReason(slices_[0].reason),
+        nonincremental() ? "no - " : "yes",
+        nonincremental() ? ExplainAbortReason(nonincrementalReason_) : "",
+        zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
+        zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
+        zoneStats.sweptCompartmentCount,
+        getCount(STAT_MINOR_GC),
+        getCount(STAT_STOREBUFFER_OVERFLOW),
+        mmu20 * 100., mmu50 * 100.,
+        t(sccTotal), t(sccLongest),
+        double(preBytes) / bytesPerMiB,
+        getCount(STAT_NEW_CHUNK) - getCount(STAT_DESTROY_CHUNK),
+        getCount(STAT_NEW_CHUNK) + getCount(STAT_DESTROY_CHUNK),
+        double(ArenaSize * getCount(STAT_ARENA_RELOCATED)) / bytesPerMiB,
+        thresholdBuffer);
+
     return DuplicateString(buffer);
 }
 
@@ -1517,4 +1529,3 @@ Statistics::printTotalProfileTimes()
         printProfileTimes(totalTimes_);
     }
 }
-

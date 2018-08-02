@@ -1895,7 +1895,7 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
 
   JS::RootedObject wrapper(jsapi.cx(), GetWrapper());
   if (wrapper) {
-    JSAutoRealmAllowCCW ar(jsapi.cx(), wrapper);
+    JSAutoRealm ar(jsapi.cx(), wrapper);
     IgnoredErrorResult rv;
     ReparentWrapper(jsapi.cx(), wrapper, rv);
     Unused << NS_WARN_IF(rv.Failed());

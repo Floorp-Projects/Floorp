@@ -94,7 +94,7 @@ struct DevTools : public ::testing::Test {
     if (!newGlobal)
       return nullptr;
 
-    JSAutoRealmAllowCCW ar(cx, newGlobal);
+    JSAutoRealm ar(cx, newGlobal);
 
     /* Populate the global object with the standard globals, like Object and
        Array. */

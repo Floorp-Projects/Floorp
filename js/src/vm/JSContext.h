@@ -919,6 +919,7 @@ struct JSContext : public JS::RootingContext,
     js::ThreadData<JS::PersistentRooted<js::JobQueue>*> jobQueue;
     js::ThreadData<bool> drainingJobQueue;
     js::ThreadData<bool> stopDrainingJobQueue;
+    js::ThreadData<bool> canSkipEnqueuingJobs;
 
     js::ThreadData<JSPromiseRejectionTrackerCallback> promiseRejectionTrackerCallback;
     js::ThreadData<void*> promiseRejectionTrackerCallbackData;

@@ -9,6 +9,11 @@ with Files('**'):
 
 JAR_MANIFESTS += ['jar.mn']
 
+EXTRA_COMPONENTS += [
+    'shield-content-process.js',
+    'shield.manifest',
+]
+
 SPHINX_TREES['normandy'] = 'docs'
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
