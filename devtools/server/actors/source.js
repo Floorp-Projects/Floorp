@@ -402,16 +402,15 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       let principal, cacheKey;
       // On xpcshell, we don't have a window but a Sandbox
       if (!isWorker && win instanceof Ci.nsIDOMWindow) {
-        const webNav = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation);
-        const channel = webNav.currentDocumentChannel;
+        const docShell = win.docShell;
+        const channel = docShell.currentDocumentChannel;
         principal = channel.loadInfo.loadingPrincipal;
 
         // Retrieve the cacheKey in order to load POST requests from cache
         // Note that chrome:// URLs don't support this interface.
         if (loadFromCache &&
-          webNav.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
-          cacheKey = webNav.currentDocumentChannel.cacheKey;
+          docShell.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
+          cacheKey = docShell.currentDocumentChannel.cacheKey;
         }
       }
 

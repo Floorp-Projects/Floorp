@@ -26,9 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
   const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
   function getLoadContext() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsILoadContext);
+    return window.docShell.QueryInterface(Ci.nsILoadContext);
   }
 
   // Get clipboard data to paste.

@@ -26,9 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565392
                     .getService(Ci.nsIClipboard);
   
   function getLoadContext() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsILoadContext);
+    return window.docShell.QueryInterface(Ci.nsILoadContext);
   }
 
   function getTransferableFile(file) {

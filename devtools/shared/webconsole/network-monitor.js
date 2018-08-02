@@ -1341,8 +1341,7 @@ NetworkMonitor.prototype = {
       // function is called for image requests as well but these
       // are not web pages and as such don't store the posted text
       // in the cache of the webpage.
-      const webNav = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation);
+      const webNav = this.window.docShell.QueryInterface(Ci.nsIWebNavigation);
       sentBody = NetworkHelper
                  .readPostTextFromPageViaWebNav(webNav, httpActivity.charset);
     }
@@ -2113,9 +2112,7 @@ ConsoleProgressListener.prototype = {
       return;
     }
 
-    this._webProgress = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIWebProgress);
+    this._webProgress = this.window.docShell.QueryInterface(Ci.nsIWebProgress);
     this._webProgress.addProgressListener(this,
                                           Ci.nsIWebProgress.NOTIFY_STATE_ALL);
 

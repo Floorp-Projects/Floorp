@@ -132,9 +132,7 @@ var BlockedSiteContent = {
       reason = "harmful";
     }
 
-    let docShell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIWebNavigation)
-                                      .QueryInterface(Ci.nsIDocShell);
+    let docShell = ownerDoc.defaultView.docShell;
 
     global.sendAsyncMessage("Browser:SiteBlockedError", {
       location: ownerDoc.location.href,

@@ -6,6 +6,7 @@
 
 #include "gfxTextRun.h"
 #include "gfxGlyphExtents.h"
+#include "gfxHarfBuzzShaper.h"
 #include "gfxPlatformFontList.h"
 #include "gfxUserFontSet.h"
 #include "mozilla/gfx/2D.h"

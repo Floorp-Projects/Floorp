@@ -25,7 +25,6 @@ both:
 
     // These roughly map to the ProxyHandler hooks that CPOWs need.
     nested(inside_sync) sync PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
-    nested(inside_sync) sync GetPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
     nested(inside_sync) sync GetOwnPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
     nested(inside_sync) sync DefineProperty(uint64_t objId, JSIDVariant id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
     nested(inside_sync) sync Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs);

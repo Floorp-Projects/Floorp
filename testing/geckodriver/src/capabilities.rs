@@ -141,6 +141,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         }
     }
 
+    fn set_window_rect(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(true)
+    }
+
     fn compare_browser_version(&mut self,
                                version: &str,
                                comparison: &str)

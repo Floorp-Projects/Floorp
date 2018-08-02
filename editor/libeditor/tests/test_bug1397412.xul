@@ -33,9 +33,7 @@ function runTest() {
   var expectedHTML1 = "xx<br>t<br>";
   var initialHTML2 = "xx<br><br>yy<br>";
   var expectedHTML2 = "xx<br>t<br>yy<br>";
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-     .getInterface(Ci.nsIWebNavigation)
-     .QueryInterface(Ci.nsIDocShellTreeItem)
+  window.docShell
      .rootTreeItem
      .QueryInterface(Ci.nsIDocShell)
      .appType = Ci.nsIDocShell.APP_TYPE_EDITOR;

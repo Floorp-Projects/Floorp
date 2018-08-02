@@ -76,9 +76,7 @@ parentProcessTargetPrototype.initialize = function(connection) {
   }
 
   // On XPCShell, there is no window/docshell
-  const docShell = window ? window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDocShell)
-                        : null;
+  const docShell = window ? window.docShell : null;
   Object.defineProperty(this, "docShell", {
     value: docShell,
     configurable: true
@@ -98,9 +96,7 @@ Object.defineProperty(parentProcessTargetPrototype, "docShells", {
     const e = Services.ww.getWindowEnumerator();
     while (e.hasMoreElements()) {
       const window = e.getNext();
-      const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
-                           .QueryInterface(Ci.nsIDocShell);
+      const docShell = window.docShell;
       docShells = docShells.concat(getChildDocShells(docShell));
     }
 
@@ -138,9 +134,7 @@ parentProcessTargetPrototype._attach = function() {
   const e = Services.ww.getWindowEnumerator();
   while (e.hasMoreElements()) {
     const window = e.getNext();
-    const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell);
+    const docShell = window.docShell;
     if (docShell == this.docShell) {
       continue;
     }
@@ -161,9 +155,7 @@ parentProcessTargetPrototype._detach = function() {
   const e = Services.ww.getWindowEnumerator();
   while (e.hasMoreElements()) {
     const window = e.getNext();
-    const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell);
+    const docShell = window.docShell;
     if (docShell == this.docShell) {
       continue;
     }

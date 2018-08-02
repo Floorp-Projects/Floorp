@@ -30,11 +30,7 @@ function onSpellCheck(editableElement, callback) {
   let editor = editableElement.editor;
   if (!editor) {
     let win = editableElement.ownerGlobal;
-    editor = win.QueryInterface(Ci.nsIInterfaceRequestor).
-                 getInterface(Ci.nsIWebNavigation).
-                 QueryInterface(Ci.nsIInterfaceRequestor).
-                 getInterface(Ci.nsIEditingSession).
-                 getEditorForWindow(win);
+    editor = win.docShell.editingSession.getEditorForWindow(win);
   }
   if (!editor)
     throw new Error("Unable to find editor for element " + editableElement);

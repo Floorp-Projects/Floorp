@@ -5,6 +5,7 @@
 
 #include "gfxSkipChars.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/gfx/Logging.h"
 
 struct SkippedRangeStartComparator
 {

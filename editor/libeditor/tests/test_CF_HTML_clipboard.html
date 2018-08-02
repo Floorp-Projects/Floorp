@@ -27,8 +27,8 @@ function copyCF_HTML(cfhtml, success, failure) {
   const CF_HTML = "application/x-moz-nativehtml";
 
   function getLoadContext() {
-    return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
+    return SpecialPowers.wrap(window)
+                 .docShell
                  .QueryInterface(Ci.nsILoadContext);
   }
 

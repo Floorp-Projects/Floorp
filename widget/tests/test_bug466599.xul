@@ -24,9 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=466599
   /** Test for Bug 466599 **/
 
 function getLoadContext() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsILoadContext);
+  return window.docShell.QueryInterface(Ci.nsILoadContext);
 }
 
 function copyToClipboard(txt)

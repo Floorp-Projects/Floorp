@@ -73,9 +73,7 @@ var SessionStorageInternal = {
   collect(content) {
     let data = {};
     let visitedOrigins = new Set();
-    let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
+    let docShell = content.docShell;
 
     forEachNonDynamicChildFrame(content, frame => {
       let principal = getPrincipalForFrame(docShell, frame);

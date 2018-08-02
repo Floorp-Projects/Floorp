@@ -23,9 +23,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 
   info("Setting docShell.deviceSizeIsPageSize to false");
   await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    const docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
+    const docShell = content.docShell;
     docShell.deviceSizeIsPageSize = false;
   });
 

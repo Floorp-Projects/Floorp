@@ -25,11 +25,7 @@ function runTest() {
   var editframe = window.frames[0];
   var editdoc = editframe.document;
   editdoc.designMode = 'on';
-  var editor = SpecialPowers.wrap(editframe)
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIEditingSession)
+  var editor = SpecialPowers.wrap(editframe).docShell.editingSession
                             .getEditorForWindow(editframe);
 
   styleSheets = editor.QueryInterface(Ci.nsIEditorStyleSheets);

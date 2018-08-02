@@ -54,10 +54,8 @@ SimpleTest.waitForFocus(function() {
 function isThereIMESelection()
 {
   var selCon = SpecialPowers.wrap(window).
-        QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-        getInterface(SpecialPowers.Ci.nsIWebNavigation).
-        QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-        getInterface(SpecialPowers.Ci.nsIEditingSession).
+        docShell.
+        editingSession.
         getEditorForWindow(window).
         selectionController;
   const kIMESelections = [

@@ -234,9 +234,7 @@ var LoginRecipesContent = {
       }
     }
 
-    let mm = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIWebNavigation)
-                .QueryInterface(Ci.nsIDocShell)
+    let mm = win.docShell
                 .QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(Ci.nsIContentFrameMessageManager);
 

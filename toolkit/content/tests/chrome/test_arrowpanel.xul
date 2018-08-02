@@ -211,10 +211,7 @@ function* nextTest()
 
 function setScale(win, scale)
 {
-  var wn = win.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIWebNavigation);
-  var shell = wn.QueryInterface(Ci.nsIDocShell);
-  var docViewer = shell.contentViewer;
+  var docViewer = win.docShell.contentViewer;
   docViewer.fullZoom = scale;
   zoomFactor = scale;
 }

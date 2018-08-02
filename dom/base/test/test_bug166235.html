@@ -29,10 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
   var Cc = SpecialPowers.Cc;
   var Ci = SpecialPowers.Ci;
 
-  var webnav = SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                                         .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-
-  var docShell = webnav.QueryInterface(SpecialPowers.Ci.nsIDocShell);
+  var docShell = SpecialPowers.wrap(window).docShell;
 
   var documentViewer = docShell.contentViewer
                                .QueryInterface(SpecialPowers.Ci.nsIContentViewerEdit);
@@ -43,8 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
   var textarea = SpecialPowers.wrap(document.getElementById('input'));
 
   function getLoadContext() {
-    return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIWebNavigation)
+    return SpecialPowers.wrap(window).docShell
                                      .QueryInterface(Ci.nsILoadContext);
   }
 

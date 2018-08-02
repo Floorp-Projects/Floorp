@@ -1413,10 +1413,7 @@ LoginManagerPrompter.prototype = {
   _getChromeWindow(aWindow) {
     // Handle non-e10s toolkit consumers.
     if (!Cu.isCrossProcessWrapper(aWindow)) {
-      let chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIWebNavigation)
-                             .QueryInterface(Ci.nsIDocShell)
-                             .chromeEventHandler.ownerGlobal;
+      let chromeWin = aWindow.docShell.chromeEventHandler.ownerGlobal;
       if (!chromeWin) {
         return null;
       }

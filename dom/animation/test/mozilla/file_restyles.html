@@ -60,11 +60,7 @@ body {
 'use strict';
 
 function getDocShellForObservingRestylesForWindow(aWindow) {
-  const docShell =
-    SpecialPowers.wrap(aWindow)
-                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                 .QueryInterface(SpecialPowers.Ci.nsIDocShell);
+  const docShell = SpecialPowers.wrap(aWindow).docShell;
 
   docShell.recordProfileTimelineMarkers = true;
   docShell.popProfileTimelineMarkers();

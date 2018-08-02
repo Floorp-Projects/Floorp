@@ -14,9 +14,7 @@
 
 <script type="application/javascript">
 function getLoadContext() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsILoadContext);
+  return window.docShell.QueryInterface(Ci.nsILoadContext);
 }
 
 var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]

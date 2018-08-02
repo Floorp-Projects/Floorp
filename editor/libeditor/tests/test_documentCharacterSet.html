@@ -18,11 +18,7 @@
 function getEditor() {
   const Ci = SpecialPowers.Ci;
   let editframe = window.frames[0];
-  return SpecialPowers.wrap(editframe)
-                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebNavigation)
-                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIEditingSession)
+  return SpecialPowers.wrap(editframe).docShell.editingSession
                       .getEditorForWindow(editframe);
 }
 

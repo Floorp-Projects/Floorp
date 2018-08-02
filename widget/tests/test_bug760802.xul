@@ -23,19 +23,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760802
 SimpleTest.waitForExplicitFinish();
 
 function getBaseWindowInterface(win) {
-  return win.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIWebNavigation)
-    .QueryInterface(Ci.nsIDocShellTreeItem)
+  return win.docShell
     .treeOwner
-    .QueryInterface(Ci.nsIInterfaceRequestor)
     .nsIBaseWindow;
 }
 
 function getBaseWindowInterfaceFromDocShell(win) {
-  return win.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIWebNavigation)
-    .QueryInterface(Ci.nsIDocShell)
-    .QueryInterface(Ci.nsIBaseWindow);
+  return win.docShell.QueryInterface(Ci.nsIBaseWindow);
 }
 
 function shouldThrowException(fun, exception) {

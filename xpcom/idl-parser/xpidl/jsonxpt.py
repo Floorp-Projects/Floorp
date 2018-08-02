@@ -212,16 +212,12 @@ def build_interface(iface):
         else:
             raise Exception("Unexpected interface member: %s" % member)
 
-    assert iface.attributes.shim is not None or iface.attributes.shimfile is None
-
     return {
         'name': iface.name,
         'uuid': iface.attributes.uuid,
         'methods': methods,
         'consts': consts,
         'parent': iface.base,
-        'shim': iface.attributes.shim,
-        'shimfile': iface.attributes.shimfile,
         'flags': flags(
             ('scriptable', iface.attributes.scriptable),
             ('function', iface.attributes.function),
@@ -235,27 +231,20 @@ def build_interface(iface):
 # functions, but are exported so that if we need to do something more
 # complex in them in the future we can.
 
-# Given a parsed IDL file, generate and return the typelib for that file.
 def build_typelib(idl):
-    def exported(p):
-        if p.kind != 'interface':
-            return False
-        # Only export scriptable or shim interfaces
-        return p.attributes.scriptable or p.attributes.shim
-
-    return [build_interface(p) for p in idl.productions if exported(p)]
-
-# Link a list of typelibs together into a single typelib
+    """Given a parsed IDL file, generate and return the typelib"""
+    return [build_interface(p) for p in idl.productions
+            if p.kind == 'interface' and p.attributes.scriptable]
 
 
 def link(typelibs):
+    """Link a list of typelibs together into a single typelib"""
     linked = list(itertools.chain.from_iterable(typelibs))
     assert len(set(iface['name'] for iface in linked)) == len(linked), \
         "Multiple typelibs containing the same interface were linked together"
     return linked
 
-# Write the typelib into the fd file
-
 
 def write(typelib, fd):
+    """Write typelib into fd"""
     json.dump(typelib, fd, indent=2)

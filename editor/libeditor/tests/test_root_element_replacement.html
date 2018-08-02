@@ -84,8 +84,7 @@ function onLoadIFrame()
   var frameDoc = gIFrame.contentWindow.document;
 
   var selCon = SpecialPowers.wrap(gIFrame).contentWindow.
-    QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-    getInterface(SpecialPowers.Ci.nsIWebNavigation).
+    docShell.
     QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
     getInterface(SpecialPowers.Ci.nsISelectionDisplay).
     QueryInterface(SpecialPowers.Ci.nsISelectionController);

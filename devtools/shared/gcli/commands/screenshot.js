@@ -373,9 +373,7 @@ function saveToClipboard(context, reply) {
       });
       const input = channel.open2();
 
-      const loadContext = context.environment.chromeWindow
-                                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
+      const loadContext = context.environment.chromeWindow.docShell
                                  .QueryInterface(Ci.nsILoadContext);
 
       const callback = {

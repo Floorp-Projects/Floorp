@@ -26,8 +26,7 @@ function testCopyImage () {
   function getClipboardData(mime) {
     var transferable = Cc['@mozilla.org/widget/transferable;1']
                        .createInstance(Ci.nsITransferable);
-    var loadingContext = SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIWebNavigation)
+    var loadingContext = SpecialPowers.wrap(window).docShell
                                       .QueryInterface(Ci.nsILoadContext);
     transferable.init(loadingContext);
     transferable.addDataFlavor(mime);
@@ -50,10 +49,7 @@ function testCopyImage () {
   var node = document.getElementById('logo');
 
   // Set node and copy image.
-  var webnav = SpecialPowers.wrap(window)
-               .QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-  var docShell = webnav.QueryInterface(Ci.nsIDocShell);
+  var docShell = SpecialPowers.wrap(window).docShell;
   var documentViewer = docShell.contentViewer
                                .QueryInterface(Ci.nsIContentViewerEdit);
   documentViewer.setCommandNode(node);

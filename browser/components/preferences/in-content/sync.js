@@ -356,10 +356,7 @@ var gSyncPane = {
   // Replace the current tab with the specified URL.
   replaceTabWithUrl(url) {
     // Get the <browser> element hosting us.
-    let browser = window.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShell)
-      .chromeEventHandler;
+    let browser = window.docShell.chromeEventHandler;
     // And tell it to load our URL.
     browser.loadURI(url);
   },
