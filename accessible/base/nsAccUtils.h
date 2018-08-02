@@ -138,10 +138,26 @@ public:
   static Accessible* TableFor(Accessible* aRow);
 
   /**
+   * Return true if the DOM node of a given accessible has a given attribute
+   * with a value of "true".
+   */
+  static bool IsDOMAttrTrue(const Accessible* aAccessible, nsAtom* aAttr);
+  
+  /**
    * Return true if the DOM node of given accessible has aria-selected="true"
    * attribute.
    */
-  static bool IsARIASelected(Accessible* aAccessible);
+  static inline bool IsARIASelected(const Accessible* aAccessible) {
+    return IsDOMAttrTrue(aAccessible, nsGkAtoms::aria_selected);
+  }
+
+  /**
+   * Return true if the DOM node of given accessible has
+   * aria-multiselectable="true" attribute.
+   */
+  static inline bool IsARIAMultiSelectable(const Accessible* aAccessible) {
+    return IsDOMAttrTrue(aAccessible, nsGkAtoms::aria_multiselectable);
+  }
 
   /**
    * Converts the given coordinates to coordinates relative screen.
