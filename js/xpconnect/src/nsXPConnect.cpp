@@ -604,7 +604,7 @@ NativeInterface2JSObject(HandleObject aScope,
                          MutableHandleValue aVal)
 {
     AutoJSContext cx;
-    JSAutoRealmAllowCCW ar(cx, aScope);
+    JSAutoRealm ar(cx, aScope);
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
@@ -673,7 +673,6 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     *result = nullptr;
 
     RootedObject aJSObj(aJSContext, aJSObjArg);
-    JSAutoRealmAllowCCW ar(aJSContext, aJSObj);
 
     nsresult rv = NS_ERROR_UNEXPECTED;
     if (!XPCConvert::JSObject2NativeInterface(result, aJSObj,
@@ -799,36 +798,6 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char* filename,
         filenameStr = NS_LITERAL_CSTRING("x-bogus://XPConnect/Sandbox");
     }
     return EvalInSandbox(cx, sandbox, source, filenameStr, 1, rval);
-}
-
-NS_IMETHODIMP
-nsXPConnect::GetWrappedNativePrototype(JSContext* aJSContext,
-                                       JSObject* aScopeArg,
-                                       nsIClassInfo* aClassInfo,
-                                       JSObject** aRetVal)
-{
-    RootedObject aScope(aJSContext, aScopeArg);
-    JSAutoRealmAllowCCW ar(aJSContext, aScope);
-
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIXPCScriptable> scrProto =
-        XPCWrappedNative::GatherProtoScriptable(aClassInfo);
-
-    AutoMarkingWrappedNativeProtoPtr proto(aJSContext);
-    proto = XPCWrappedNativeProto::GetNewOrUsed(scope, aClassInfo, scrProto);
-    if (!proto)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    JSObject* protoObj = proto->GetJSProtoObject();
-    if (!protoObj)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    *aRetVal = protoObj;
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP

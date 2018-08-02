@@ -6,6 +6,7 @@
 
 #include "jit/VMFunctions.h"
 
+#include "builtin/Promise.h"
 #include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"
@@ -1950,6 +1951,19 @@ typedef bool (*DoConcatStringObjectFn)(JSContext*, HandleValue, HandleValue,
                                        MutableHandleValue);
 const VMFunction DoConcatStringObjectInfo =
     FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject, "DoConcatStringObject", TailCall, PopValues(2));
+
+MOZ_MUST_USE bool
+TrySkipAwait(JSContext* cx, HandleValue val, MutableHandleValue resolved)
+{
+    bool canSkip;
+    if (!TrySkipAwait(cx, val, &canSkip, resolved))
+        return false;
+
+    if (!canSkip)
+        resolved.setMagic(JS_CANNOT_SKIP_AWAIT);
+
+    return true;
+}
 
 } // namespace jit
 } // namespace js

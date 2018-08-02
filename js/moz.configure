@@ -18,6 +18,9 @@ def building_js(build_project, help):
 option(env='JS_STANDALONE', default=building_js,
        help='Reserved for internal use')
 
+include('../build/moz.configure/rust.configure',
+        when='--enable-compile-environment')
+
 @depends('JS_STANDALONE')
 def js_standalone(value):
     if value:

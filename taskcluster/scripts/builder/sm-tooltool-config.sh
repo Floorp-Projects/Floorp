@@ -63,5 +63,9 @@ BROWSER_PLATFORM=$PLATFORM_OS$BITS
 
 # Add all the tooltool binaries to our $PATH.
 for bin in $TOOLTOOL_CHECKOUT/*/bin $TOOLTOOL_CHECKOUT/VC/bin/Hostx64/x86; do
-    export PATH="$bin:$PATH"
+    if [ ! -d "$bin" ]; then
+        continue
+    fi
+    absbin=$(cd "$bin" && pwd)
+    export PATH="$absbin:$PATH"
 done

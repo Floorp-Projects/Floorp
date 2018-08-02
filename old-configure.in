@@ -1030,6 +1030,9 @@ case "$target" in
             # warning insists on complaining about the latter case, which
             # is annoying, and rather noisy.
             CXXFLAGS="$CXXFLAGS -Wno-used-but-marked-unused"
+            # Work around until bug 1472254 is fixed.
+            CFLAGS="$CFLAGS -Wno-pragma-pack"
+            CXXFLAGS="$CXXFLAGS -Wno-pragma-pack"
         fi
         # make 'foo == bar;' error out
         CFLAGS="$CFLAGS -we4553"
@@ -4658,6 +4661,7 @@ export MOZ_APP_NAME
 export MOZ_APP_REMOTINGNAME
 export MOZ_DEV_EDITION
 export RUSTC
+export CARGO
 export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
 export STLPORT_LIBS

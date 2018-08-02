@@ -53,6 +53,8 @@ const whitelist = {
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/PrivateBrowsingUtils.jsm",
     "resource://gre/modules/ReaderMode.jsm",
+    "resource://gre/modules/WebProgressChild.jsm",
+    "resource://gre/modules/WebNavigationChild.jsm",
 
     // Pocket
     "chrome://pocket/content/AboutPocket.jsm",
@@ -62,16 +64,9 @@ const whitelist = {
     "resource://gre/modules/TelemetrySession.jsm", // bug 1470339
     "resource://gre/modules/TelemetryUtils.jsm", // bug 1470339
 
-    // PDF.js
-    "resource://pdf.js/PdfJsRegistration.jsm",
-    "resource://pdf.js/PdfjsContentUtils.jsm",
-
     // Extensions
     "resource://gre/modules/ExtensionUtils.jsm",
     "resource://gre/modules/MessageChannel.jsm",
-
-    // Shield
-    "resource://normandy-content/AboutPages.jsm",
   ]),
 };
 

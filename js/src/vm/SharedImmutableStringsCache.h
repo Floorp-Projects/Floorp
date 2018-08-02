@@ -143,7 +143,7 @@ class SharedImmutableStringsCache
             return n;
 
         // Size of the table.
-        n += locked->set.sizeOfExcludingThis(mallocSizeOf);
+        n += locked->set.shallowSizeOfExcludingThis(mallocSizeOf);
 
         // Sizes of the strings and their boxes.
         for (auto r = locked->set.all(); !r.empty(); r.popFront()) {

@@ -980,6 +980,8 @@ public:
    */
   inline nsINode* GetFlattenedTreeParentNode() const;
 
+  nsINode* GetFlattenedTreeParentNodeNonInline() const;
+
   /**
    * Like GetFlattenedTreeParentNode, but returns the document for any native
    * anonymous content that was generated for ancestor frames of the document

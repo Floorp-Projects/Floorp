@@ -52,7 +52,6 @@ function promiseWindow(url) {
   info("expecting a " + url + " window");
   return new Promise(resolve => {
     Services.obs.addObserver(function obs(win) {
-      win.QueryInterface(Ci.nsIDOMWindow);
       win.addEventListener("load", function() {
         if (win.location.href !== url) {
           info("ignoring a window with this url: " + win.location.href);

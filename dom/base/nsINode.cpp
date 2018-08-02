@@ -59,6 +59,7 @@
 #include "nsAtom.h"
 #include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
+#include "nsIContentInlines.h"
 #include "nsIContentIterator.h"
 #include "nsIControllers.h"
 #include "nsIDocument.h"
@@ -1296,7 +1297,7 @@ CheckForOutdatedParent(nsINode* aParent, nsINode* aNode, ErrorResult& aError)
 
     if (JS::GetNonCCWObjectGlobal(existingObj) !=
         global->GetGlobalJSObject()) {
-      JSAutoRealmAllowCCW ar(cx, existingObj);
+      JSAutoRealm ar(cx, existingObj);
       ReparentWrapper(cx, existingObj, aError);
     }
   }
@@ -1316,7 +1317,7 @@ ReparentWrappersInSubtree(nsIContent* aRoot)
   JS::Rooted<JSObject*> reflector(cx);
   for (nsIContent* cur = aRoot; cur; cur = cur->GetNextNode(aRoot)) {
     if ((reflector = cur->GetWrapper())) {
-      JSAutoRealmAllowCCW ar(cx, reflector);
+      JSAutoRealm ar(cx, reflector);
       ReparentWrapper(cx, reflector, rv);
       rv.WouldReportJSException();
       if (rv.Failed()) {
@@ -2974,6 +2975,12 @@ nsINode::Localize(JSContext* aCx,
   callbackResult->AppendNativeHandler(nativeHandler);
 
   return promise.forget();
+}
+
+nsINode*
+nsINode::GetFlattenedTreeParentNodeNonInline() const
+{
+  return GetFlattenedTreeParentNode();
 }
 
 NS_IMPL_ISUPPORTS(nsNodeWeakReference,

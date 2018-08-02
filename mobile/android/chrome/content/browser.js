@@ -350,7 +350,7 @@ var BrowserApp = {
   deck: null,
 
   startup: function startup() {
-    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
+    window.browserDOMWindow = new nsBrowserAccess();
     Services.obs.notifyObservers(this.browser, "BrowserChrome:Ready");
 
     this.deck = document.getElementById("browsers");

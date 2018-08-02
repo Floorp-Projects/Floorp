@@ -94,11 +94,6 @@ set_define('MOZ_PULSEAUDIO', depends_if(pulseaudio)(lambda _: True))
 include('../js/moz.configure')
 
 
-# Rust
-# ==============================================================
-include('../build/moz.configure/rust.configure',
-        when='--enable-compile-environment')
-
 # NodeJS
 # ==============================================================
 include('../build/moz.configure/node.configure')

@@ -10,6 +10,7 @@
 #define nsDOMCSSRect_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 
 class nsROCSSPrimitiveValue;

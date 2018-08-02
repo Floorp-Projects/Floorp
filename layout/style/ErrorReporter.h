@@ -9,7 +9,7 @@
 #ifndef mozilla_css_ErrorReporter_h_
 #define mozilla_css_ErrorReporter_h_
 
-#include "nsStringFwd.h"
+#include "nsString.h"
 
 struct nsCSSToken;
 class nsIDocument;

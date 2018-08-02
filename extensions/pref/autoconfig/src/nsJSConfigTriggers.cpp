@@ -75,7 +75,7 @@ nsresult CentralizedAdminPrefManagerInit(bool aSandboxEnabled)
 
 
     // Define gSandbox on system sandbox.
-    JSAutoRealmAllowCCW ac(cx, autoconfigSystemSb);
+    JSAutoRealm ar(cx, autoconfigSystemSb);
 
     JS::Rooted<JS::Value> value(cx, JS::ObjectValue(*sandbox));
 
@@ -170,7 +170,7 @@ nsresult EvaluateAdminConfigScript(JS::HandleObject sandbox,
         convertedScript = NS_ConvertASCIItoUTF16(script);
     }
     {
-        JSAutoRealmAllowCCW ac(cx, autoconfigSystemSb);
+        JSAutoRealm ar(cx, autoconfigSystemSb);
         JS::Rooted<JS::Value> value(cx, JS::BooleanValue(isUTF8));
         if (!JS_DefineProperty(cx, autoconfigSystemSb, "gIsUTF8", value, JSPROP_ENUMERATE)) {
             return NS_ERROR_UNEXPECTED;

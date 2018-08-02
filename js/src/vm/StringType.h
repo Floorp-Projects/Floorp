@@ -1198,9 +1198,8 @@ namespace js {
 
 class NormalAtom : public JSAtom
 {
-  protected: // Silence Clang unused-field warning.
+  protected:
     HashNumber hash_;
-    uint32_t padding_; // Ensure the size is a multiple of gc::CellAlignBytes.
 
   public:
     HashNumber hash() const {
@@ -1220,7 +1219,6 @@ class FatInlineAtom : public JSAtom
   protected: // Silence Clang unused-field warning.
     char inlineStorage_[sizeof(JSFatInlineString) - sizeof(JSString)];
     HashNumber hash_;
-    uint32_t padding_; // Ensure the size is a multiple of gc::CellAlignBytes.
 
   public:
     HashNumber hash() const {

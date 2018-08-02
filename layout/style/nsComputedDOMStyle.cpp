@@ -37,6 +37,7 @@
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 
+#include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/IntegerRange.h"

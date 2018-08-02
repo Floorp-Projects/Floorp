@@ -740,7 +740,7 @@ MatchGlob::Matches(const nsAString& aString) const
     jsapi.Init();
     JSContext* cx = jsapi.cx();
 
-    JSAutoRealmAllowCCW ar(cx, mRegExp);
+    JSAutoRealm ar(cx, mRegExp);
 
     JS::RootedObject regexp(cx, mRegExp);
     JS::RootedValue result(cx);

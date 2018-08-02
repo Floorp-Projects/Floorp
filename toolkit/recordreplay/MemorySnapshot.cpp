@@ -677,7 +677,7 @@ UnrecoverableSnapshotFailure()
 // Initial Memory Region Processing
 ///////////////////////////////////////////////////////////////////////////////
 
-static void
+void
 AddInitialUntrackedMemoryRegion(uint8_t* aBase, size_t aSize)
 {
   MOZ_RELEASE_ASSERT(!HasSavedCheckpoint());

@@ -265,8 +265,7 @@ function printToPdf(callback) {
         ps.endPageRange = +range[1] || 1;
     }
 
-    let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebBrowserPrint);
+    let webBrowserPrint = content.getInterface(Ci.nsIWebBrowserPrint);
     webBrowserPrint.print(ps, {
         onStateChange: function(webProgress, request, stateFlags, status) {
             if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&

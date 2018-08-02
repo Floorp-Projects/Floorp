@@ -1179,7 +1179,7 @@ GetNPObjectWrapper(JSContext *cx, JS::Handle<JSObject*> aObj, bool wrapResult = 
       return obj;
     }
 
-    JSAutoRealmAllowCCW ar(cx, obj);
+    JSAutoRealm ar(cx, obj);
     if (!::JS_GetPrototype(cx, obj, &obj)) {
       return nullptr;
     }
@@ -2021,8 +2021,8 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     // Prevent modification of sJSObjWrappers table if we go reentrant.
     sJSObjWrappersAccessible = false;
 
-    for (JSObjWrapperTable::Enum e(sJSObjWrappers); !e.empty(); e.popFront()) {
-      nsJSObjWrapper *npobj = e.front().value();
+    for (auto iter = sJSObjWrappers.modIter(); !iter.done(); iter.next()) {
+      nsJSObjWrapper* npobj = iter.get().value();
       MOZ_ASSERT(npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass);
       if (npobj->mNpp == npp) {
         if (npobj->_class && npobj->_class->invalidate) {
@@ -2031,7 +2031,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
 
         _releaseobject(npobj);
 
-        e.removeFront();
+        iter.remove();
       }
     }
 
@@ -2094,8 +2094,8 @@ nsJSNPRuntime::OnPluginDestroyPending(NPP npp)
   if (sJSObjWrappersAccessible) {
     // Prevent modification of sJSObjWrappers table if we go reentrant.
     sJSObjWrappersAccessible = false;
-    for (JSObjWrapperTable::Enum e(sJSObjWrappers); !e.empty(); e.popFront()) {
-      nsJSObjWrapper *npobj = e.front().value();
+    for (auto iter = sJSObjWrappers.iter(); !iter.done(); iter.next()) {
+      nsJSObjWrapper* npobj = iter.get().value();
       MOZ_ASSERT(npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass);
       if (npobj->mNpp == npp) {
         npobj->mDestroyPending = true;

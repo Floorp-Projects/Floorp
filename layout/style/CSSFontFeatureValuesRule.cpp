@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/CSSFontFeatureValuesRule.h"
 #include "mozilla/dom/CSSFontFeatureValuesRuleBinding.h"
+#include "mozilla/ServoBindings.h"
 
 namespace mozilla {
 namespace dom {

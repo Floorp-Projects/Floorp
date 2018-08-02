@@ -1420,6 +1420,8 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
                         bool stringsCanBeInNursery,
                         Label* notFound, Label* failure)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting PrepareAndExecuteRegExp");
+
     size_t matchPairsStartOffset = inputOutputDataStartOffset + sizeof(irregexp::InputOutputData);
     size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
 
@@ -1693,6 +1695,9 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
                                 bool stringsCanBeInNursery,
                                 Label* failure)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting CreateDependentString (encoding=%s)",
+            (latin1 ? "Latin-1" : "Two-Byte"));
+
     string_ = string;
     temp_ = temp2;
     failure_ = failure;
@@ -1853,6 +1858,8 @@ AllocateFatInlineString(JSContext* cx)
 void
 CreateDependentString::generateFallback(MacroAssembler& masm, LiveRegisterSet regsToSave)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting CreateDependentString fallback");
+
     regsToSave.take(string_);
     regsToSave.take(temp_);
     for (FallbackKind kind : mozilla::MakeEnumeratedRange(FallbackKind::Count)) {
@@ -1889,6 +1896,8 @@ CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
                           Register object, Register temp2, Register temp5,
                           ArrayObject* templateObj, Label* fail)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting CreateMatchResult fallback");
+
     MOZ_ASSERT(templateObj->group()->clasp() == &ArrayObject::class_);
 
     regsToSave.take(object);
@@ -1918,6 +1927,8 @@ CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
 JitCode*
 JitRealm::generateRegExpMatcherStub(JSContext* cx)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting RegExpMatcher stub");
+
     Register regexp = RegExpMatcherRegExpReg;
     Register input = RegExpMatcherStringReg;
     Register lastIndex = RegExpMatcherLastIndexReg;
@@ -2254,6 +2265,8 @@ static const int32_t RegExpSearcherResultFailed = -2;
 JitCode*
 JitRealm::generateRegExpSearcherStub(JSContext* cx)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting RegExpSearcher stub");
+
     Register regexp = RegExpTesterRegExpReg;
     Register input = RegExpTesterStringReg;
     Register lastIndex = RegExpTesterLastIndexReg;
@@ -2404,6 +2417,8 @@ static const int32_t RegExpTesterResultFailed = -2;
 JitCode*
 JitRealm::generateRegExpTesterStub(JSContext* cx)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting RegExpTester stub");
+
     Register regexp = RegExpTesterRegExpReg;
     Register input = RegExpTesterStringReg;
     Register lastIndex = RegExpTesterLastIndexReg;
@@ -8339,6 +8354,9 @@ ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs, Register ou
                    bool stringsCanBeInNursery,
                    Label* failure, bool isTwoByte)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting ConcatInlineString (encoding=%s)",
+            (isTwoByte ? "Two-Byte" : "Latin-1"));
+
     // State: result length in temp2.
 
     // Ensure both strings are linear.
@@ -8529,6 +8547,8 @@ CodeGenerator::visitSubstr(LSubstr* lir)
 JitCode*
 JitRealm::generateStringConcatStub(JSContext* cx)
 {
+    JitSpew(JitSpew_Codegen, "# Emitting StringConcat stub");
+
     StackMacroAssembler masm(cx);
 
     Register lhs = CallTempReg0;

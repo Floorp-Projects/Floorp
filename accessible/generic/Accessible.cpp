@@ -115,11 +115,16 @@ Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
 {
   mBits.groupInfo = nullptr;
   mInt.mIndexOfEmbeddedChild = -1;
+
+  // Assign an ID to this Accessible for use in UniqueID().
+  recordreplay::RegisterThing(this);
 }
 
 Accessible::~Accessible()
 {
   NS_ASSERTION(!mDoc, "LastRelease was never called!?!");
+
+  recordreplay::UnregisterThing(this);
 }
 
 ENameValueFlag

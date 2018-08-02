@@ -289,8 +289,7 @@ var gPluginHandler = {
 
     if (plugins.length == 1) {
       let pluginInfo = plugins[0];
-      let chromeWin = window.QueryInterface(Ci.nsIDOMChromeWindow);
-      let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWin);
+      let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
 
       let active = pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
 

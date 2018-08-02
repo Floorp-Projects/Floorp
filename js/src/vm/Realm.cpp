@@ -927,13 +927,13 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                     nonSyntacticLexicalEnvironmentsArg);
 
     *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
-    *varNamesSet += varNames_.sizeOfExcludingThis(mallocSizeOf);
+    *varNamesSet += varNames_.shallowSizeOfExcludingThis(mallocSizeOf);
 
     if (jitRealm_)
         *jitRealm += jitRealm_->sizeOfIncludingThis(mallocSizeOf);
 
     if (scriptCountsMap) {
-        *scriptCountsMapArg += scriptCountsMap->sizeOfIncludingThis(mallocSizeOf);
+        *scriptCountsMapArg += scriptCountsMap->shallowSizeOfIncludingThis(mallocSizeOf);
         for (auto r = scriptCountsMap->all(); !r.empty(); r.popFront())
             *scriptCountsMapArg += r.front().value()->sizeOfIncludingThis(mallocSizeOf);
     }

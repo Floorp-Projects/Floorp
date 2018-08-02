@@ -12,8 +12,6 @@
 </body>
 
 <script>
-var chromeWindowInterface = Ci.nsIDOMChromeWindow;
-
 SimpleTest.waitForExplicitFinish();
 
 // Force off out-of-process mozbrowser because we need to grab its
@@ -21,14 +19,7 @@ SimpleTest.waitForExplicitFinish();
 // for mozbrowser haves entirely differently.
 // XXX why doesn't pushPrefEnv() work here?
 var otherWindow = window.open("window_bug757137.xul", "", "chrome");
-ok(chromeWindowInterface !== null, 'nsIDOMChromeWindow interface is defined');
-var otherChromeWindow = null;
-try {
-  otherChromeWindow = otherWindow.QueryInterface(chromeWindowInterface);
-} catch(e) {
-  ok(false, 'exception when QI to ChromeWindow');
-}
-ok(otherChromeWindow !== null, 'XUL window should QI to ChromeWindow');
+ok(otherWindow.isChromeWindow, 'XUL window should be a ChromeWindow');
 
 SpecialPowers.pushPrefEnv({"set":[["dom.ipc.tabs.disabled", true]]}, startTest);
 
@@ -36,11 +27,7 @@ function startTest() {
   otherWindow.onload = function () {
     var w = otherWindow.document.getElementById('f').contentWindow;
     ok(w !== null, 'got the |window| for a mozbrowser iframe');
-    var chromeWindow = null;
-    try {
-      var chromeWindow = w.QueryInterface(chromeWindowInterface);
-    } catch(e) { }
-      ok(chromeWindow === null, 'mozbrowser iframe should not get ChromeWindow');
+    ok(!w.isChromeWindow, 'mozbrowser iframe should not be a ChromeWindow');
 
     otherWindow.close();
     SimpleTest.waitForFocus(SimpleTest.finish);

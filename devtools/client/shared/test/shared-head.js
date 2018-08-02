@@ -290,6 +290,7 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
       ["on", "off"],
       ["addEventListener", "removeEventListener"],
       ["addListener", "removeListener"],
+      ["addMessageListener", "removeMessageListener"]
     ]) {
       if ((add in target) && (remove in target)) {
         target[add](eventName, function onEvent(...args) {

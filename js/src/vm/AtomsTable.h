@@ -104,7 +104,7 @@ class FrozenAtomSet
     MOZ_ALWAYS_INLINE AtomSet::Ptr readonlyThreadsafeLookup(const AtomSet::Lookup& l) const;
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mSet->sizeOfIncludingThis(mallocSizeOf);
+        return mSet->shallowSizeOfIncludingThis(mallocSizeOf);
     }
 
     typedef AtomSet::Range Range;

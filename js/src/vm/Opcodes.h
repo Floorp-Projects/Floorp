@@ -2268,7 +2268,18 @@
      *   Stack: val => val
      */ \
     macro(JSOP_ITERNEXT,      222, "iternext",   NULL,  1,  1,  1,  JOF_BYTE) \
-    macro(JSOP_UNUSED223,     223, "unused223",  NULL,  1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops the top of stack value as 'value', checks if the await for 'value'
+     * can be skipped.
+     * If the await operation can be skipped and the resolution value for
+     * 'value' can be acquired, pushes the resolution value and 'true' onto the
+     * stack.  Otherwise, pushes 'value' and 'false' on the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: value => value_or_resolved, canskip
+     */ \
+    macro(JSOP_TRYSKIPAWAIT,  223,"tryskipawait",  NULL,  1,  1,  2,  JOF_BYTE) \
     \
     /*
      * Creates rest parameter array for current function call, and pushes it

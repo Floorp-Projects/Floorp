@@ -78,7 +78,9 @@ struct VMFunction
     // Address of the C function.
     void* wrapped;
 
-#ifdef JS_TRACE_LOGGING
+#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
+    // Informative name of the wrapped function. The name should not be present
+    // in release builds in order to save memory.
     const char* name_;
 #endif
 
@@ -173,7 +175,7 @@ struct VMFunction
         return ((argumentPassedInFloatRegs >> explicitArg) & 1) == 1;
     }
 
-#ifdef JS_TRACE_LOGGING
+#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
     const char* name() const {
         return name_;
     }
@@ -252,7 +254,7 @@ struct VMFunction
                uint8_t extraValuesToPop = 0, MaybeTailCall expectTailCall = NonTailCall)
       : next(nullptr),
         wrapped(wrapped),
-#ifdef JS_TRACE_LOGGING
+#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
         name_(name),
 #endif
         argumentRootTypes(argRootTypes),
@@ -269,7 +271,7 @@ struct VMFunction
     VMFunction(const VMFunction& o)
       : next(functions),
         wrapped(o.wrapped),
-#ifdef JS_TRACE_LOGGING
+#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
         name_(o.name_),
 #endif
         argumentRootTypes(o.argumentRootTypes),
@@ -956,6 +958,13 @@ extern const VMFunction SetObjectElementInfo;
 bool
 DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
                      MutableHandleValue res);
+
+// Wrapper for js::TrySkipAwait.
+// If the await operation can be skipped and the resolution value for `val` can
+// be acquired, stored the resolved value to `resolved`.  Otherwise, stores
+// the JS_CANNOT_SKIP_AWAIT magic value to `resolved`.
+MOZ_MUST_USE bool
+TrySkipAwait(JSContext* cx, HandleValue val, MutableHandleValue resolved);
 
 // This is the tailcall version of DoConcatStringObject
 extern const VMFunction DoConcatStringObjectInfo;
