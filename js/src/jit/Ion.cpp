@@ -301,7 +301,7 @@ JitRuntime::initialize(JSContext* cx)
             // Duplicate VMFunction definition. See VMFunction::hash.
             continue;
         }
-        JitSpew(JitSpew_Codegen, "# VM function wrapper");
+        JitSpew(JitSpew_Codegen, "# VM function wrapper (%s)", fun->name());
         if (!generateVMWrapper(cx, masm, *fun))
             return false;
     }
