@@ -1116,12 +1116,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void cmp32(Register lhs, Imm32 rhs);
     void cmp32(Register lhs, Register rhs);
-    void cmp32(const Address& lhs, Imm32 rhs) {
-        MOZ_CRASH("NYI");
-    }
-    void cmp32(const Address& lhs, Register rhs) {
-        MOZ_CRASH("NYI");
-    }
+    void cmp32(const Address& lhs, Imm32 rhs);
+    void cmp32(const Address& lhs, Register rhs);
 
     void cmpPtr(Register lhs, Register rhs);
     void cmpPtr(Register lhs, ImmWord rhs);

@@ -13589,22 +13589,13 @@ CodeGenerator::visitIsPackedArray(LIsPackedArray* lir)
     Register output = ToRegister(lir->output());
     Register elementsTemp = ToRegister(lir->temp());
 
-    Label notPacked, done;
-
     // Load elements and length.
     masm.loadPtr(Address(array, NativeObject::offsetOfElements()), elementsTemp);
     masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), output);
 
     // Test length == initializedLength.
     Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
-    masm.branch32(Assembler::NotEqual, initLength, output, &notPacked);
-
-    masm.move32(Imm32(1), output);
-    masm.jump(&done);
-    masm.bind(&notPacked);
-    masm.move32(Imm32(0), output);
-
-    masm.bind(&done);
+    masm.cmp32Set(Assembler::Equal, initLength, output, output);
 }
 
 typedef bool (*GetPrototypeOfFn)(JSContext*, HandleObject, MutableHandleValue);
