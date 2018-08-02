@@ -814,6 +814,15 @@ class TupBackend(CommonBackend):
             cmd_key = ' '.join(command)
             if cmd_key not in self._rust_cmds:
                 self._rust_cmds.add(cmd_key)
+                # We have some custom build scripts that depend on python code
+                # as well as invalidate a lot of the rust build, so set
+                # check_unchanged to try to reduce long incremental builds
+                # when only changing python.
+                check_unchanged = False
+                if (invocation['target_kind'][0] == 'custom-build' and
+                    os.path.basename(invocation['program']) != 'rustc'):
+                    check_unchanged = True
+
                 # The two rust libraries in the tree share many prerequisites,
                 # so we need to prune common dependencies and therefore build
                 # all rust from the same Tupfile.
@@ -825,6 +834,7 @@ class TupBackend(CommonBackend):
                     output_group=self._rust_libs,
                     extra_inputs=[self._installed_files],
                     display='%s %s' % (header, display_name(invocation)),
+                    check_unchanged=check_unchanged,
                 )
 
                 for dst, link in invocation['links'].iteritems():
