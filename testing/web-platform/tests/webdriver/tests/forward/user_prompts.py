@@ -6,6 +6,11 @@ from tests.support.asserts import assert_dialog_handled, assert_error, assert_su
 from tests.support.inline import inline
 
 
+def forward(session):
+    return session.transport.send(
+        "POST", "session/{session_id}/forward".format(**vars(session)))
+
+
 @pytest.fixture
 def pages(session):
     pages = [
@@ -21,23 +26,58 @@ def pages(session):
     return pages
 
 
-def forward(session):
-    return session.transport.send(
-        "POST", "session/{session_id}/forward".format(**vars(session)))
+@pytest.fixture
+def check_user_prompt_closed_without_exception(session, create_dialog, pages):
+    def check_user_prompt_closed_without_exception(dialog_type, retval):
+        create_dialog(dialog_type, text=dialog_type)
+
+        response = forward(session)
+        assert_success(response)
+
+        # retval not testable for confirm and prompt because window is gone
+        assert_dialog_handled(session, expected_text=dialog_type, expected_retval=None)
+
+        assert session.url == pages[1]
+
+    return check_user_prompt_closed_without_exception
+
+
+@pytest.fixture
+def check_user_prompt_closed_with_exception(session, create_dialog, pages):
+    def check_user_prompt_closed_with_exception(dialog_type, retval):
+        create_dialog(dialog_type, text=dialog_type)
+
+        response = forward(session)
+        assert_error(response, "unexpected alert open")
+
+        assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
+
+        assert session.url == pages[0]
+
+    return check_user_prompt_closed_with_exception
+
+
+@pytest.fixture
+def check_user_prompt_not_closed_but_exception(session, create_dialog, pages):
+    def check_user_prompt_not_closed_but_exception(dialog_type):
+        create_dialog(dialog_type, text=dialog_type)
+
+        response = forward(session)
+        assert_error(response, "unexpected alert open")
+
+        assert session.alert.text == dialog_type
+        session.alert.dismiss()
+
+        assert session.url == pages[0]
+
+    return check_user_prompt_not_closed_but_exception
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
 @pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
-def test_handle_prompt_accept(session, create_dialog, dialog_type, pages):
-    create_dialog(dialog_type, text=dialog_type)
-
-    response = forward(session)
-    assert_success(response)
-
+def test_accept(check_user_prompt_closed_without_exception, dialog_type):
     # retval not testable for confirm and prompt because window is gone
-    assert_dialog_handled(session, expected_text=dialog_type, expected_retval=None)
-
-    assert session.url == pages[1]
+    check_user_prompt_closed_without_exception(dialog_type, None)
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept and notify"})
@@ -46,29 +86,15 @@ def test_handle_prompt_accept(session, create_dialog, dialog_type, pages):
     ("confirm", True),
     ("prompt", ""),
 ])
-def test_handle_prompt_accept_and_notify(session, create_dialog, dialog_type, retval, pages):
-    create_dialog(dialog_type, text=dialog_type)
-
-    response = forward(session)
-    assert_error(response, "unexpected alert open")
-
-    assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
-
-    assert session.url == pages[0]
+def test_accept_and_notify(check_user_prompt_closed_with_exception, dialog_type, retval):
+    check_user_prompt_closed_with_exception(dialog_type, retval)
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
 @pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
-def test_handle_prompt_dismiss(session, create_dialog, dialog_type, pages):
-    create_dialog(dialog_type, text=dialog_type)
-
-    response = forward(session)
-    assert_success(response)
-
+def test_dismiss(check_user_prompt_closed_without_exception, dialog_type):
     # retval not testable for confirm and prompt because window is gone
-    assert_dialog_handled(session, expected_text=dialog_type, expected_retval=None)
-
-    assert session.url == pages[1]
+    check_user_prompt_closed_without_exception(dialog_type, None)
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss and notify"})
@@ -77,19 +103,14 @@ def test_handle_prompt_dismiss(session, create_dialog, dialog_type, pages):
     ("confirm", False),
     ("prompt", None),
 ])
-def test_handle_prompt_dissmiss_and_notify(session, create_dialog, dialog_type, retval, pages):
-    create_dialog(dialog_type, text=dialog_type)
-
-    response = forward(session)
-    assert_error(response, "unexpected alert open")
-
-    assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
-
-    assert session.url == pages[0]
+def test_dismiss_and_notify(check_user_prompt_closed_with_exception, dialog_type, retval):
+    check_user_prompt_closed_with_exception(dialog_type, retval)
 
 
-def test_handle_prompt_ignore():
-    """TODO"""
+@pytest.mark.capabilities({"unhandledPromptBehavior": "ignore"})
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_ignore(check_user_prompt_not_closed_but_exception, dialog_type):
+    check_user_prompt_not_closed_but_exception(dialog_type)
 
 
 @pytest.mark.parametrize("dialog_type, retval", [
@@ -97,12 +118,5 @@ def test_handle_prompt_ignore():
     ("confirm", False),
     ("prompt", None),
 ])
-def test_handle_prompt_default(session, create_dialog, dialog_type, retval, pages):
-    create_dialog(dialog_type, text=dialog_type)
-
-    response = forward(session)
-    assert_error(response, "unexpected alert open")
-
-    assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
-
-    assert session.url == pages[0]
+def test_default(check_user_prompt_closed_with_exception, dialog_type, retval):
+    check_user_prompt_closed_with_exception(dialog_type, retval)

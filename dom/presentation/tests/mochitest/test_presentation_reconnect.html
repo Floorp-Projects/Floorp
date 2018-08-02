@@ -14,10 +14,10 @@
 <iframe id="iframe" src="file_presentation_reconnect.html"></iframe>
 <script type="application/javascript">
 
-'use strict';
+"use strict";
 
 var iframe = document.getElementById("iframe");
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
 var frameScript = SpecialPowers.isMainProcess() ? gScript : contentScript;
 var request;
 var connection;
@@ -39,7 +39,7 @@ function testSetup() {
           commandHandler[command.name](command);
         }
       } else if (/^DONE$/.exec(message)) {
-        window.removeEventListener('message', listener);
+        window.removeEventListener("message", listener);
         SimpleTest.finish();
       }
     }, false);
@@ -53,9 +53,9 @@ function testSetup() {
           aAvailability.onchange = null;
           ok(aAvailability.value, "Device should be available.");
           aResolve();
-        }
+        };
 
-        gScript.sendAsyncMessage('trigger-device-add');
+        gScript.sendAsyncMessage("trigger-device-add");
       },
       function(aError) {
         ok(false, "Error occurred when getting availability: " + aError);
@@ -68,42 +68,42 @@ function testSetup() {
 
 function testStartConnection() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+    gScript.addMessageListener("device-prompt", function devicePromptHandler() {
       info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-select');
+      gScript.sendAsyncMessage("trigger-device-prompt-select");
     });
 
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+    gScript.addMessageListener("control-channel-established", function controlChannelEstablishedHandler() {
       info("A control channel is established.");
-      gScript.sendAsyncMessage('trigger-control-channel-open');
+      gScript.sendAsyncMessage("trigger-control-channel-open");
     });
 
-    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+    gScript.addMessageListener("control-channel-opened", function controlChannelOpenedHandler(aReason) {
       info("The control channel is opened.");
     });
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+    gScript.addMessageListener("control-channel-closed", function controlChannelClosedHandler(aReason) {
       info("The control channel is closed. " + aReason);
     });
 
-    frameScript.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
+    frameScript.addMessageListener("check-navigator", function checknavigatorHandler(aSuccess) {
       ok(aSuccess, "buildDataChannel get correct window object");
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+    gScript.addMessageListener("offer-sent", function offerSentHandler(aIsValid) {
       ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-answer');
+      gScript.sendAsyncMessage("trigger-incoming-answer");
     });
 
-    gScript.addMessageListener('answer-received', function answerReceivedHandler() {
+    gScript.addMessageListener("answer-received", function answerReceivedHandler() {
       info("An answer is received.");
     });
 
-    frameScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+    frameScript.addMessageListener("data-transport-initialized", function dataTransportInitializedHandler() {
       info("Data transport channel is initialized.");
     });
 
-    frameScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
+    frameScript.addMessageListener("data-transport-notification-enabled", function dataTransportNotificationEnabledHandler() {
       info("Data notification is enabled for data transport channel.");
     });
 
@@ -145,8 +145,8 @@ function testStartConnection() {
 
 function testCloseConnection() {
   return new Promise(function(aResolve, aReject) {
-    frameScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      frameScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+    frameScript.addMessageListener("data-transport-closed", function dataTransportClosedHandler(aReason) {
+      frameScript.removeMessageListener("data-transport-closed", dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
@@ -162,7 +162,7 @@ function testCloseConnection() {
 
 function testReconnectAConnectedConnection() {
   return new Promise(function(aResolve, aReject) {
-    info('--- testReconnectAConnectedConnection ---');
+    info("--- testReconnectAConnectedConnection ---");
     ok(connection.state, "connected", "Make sure the state is connected.");
 
     request.reconnect(connection.id).then(
@@ -185,7 +185,7 @@ function testReconnectAConnectedConnection() {
 
 function testReconnectInvalidID() {
   return new Promise(function(aResolve, aReject) {
-    info('--- testReconnectInvalidID ---');
+    info("--- testReconnectInvalidID ---");
 
     request.reconnect("dummyID").then(
       function(aConnection) {
@@ -203,7 +203,7 @@ function testReconnectInvalidID() {
 
 function testReconnectInvalidURL() {
   return new Promise(function(aResolve, aReject) {
-    info('--- testReconnectInvalidURL ---');
+    info("--- testReconnectInvalidURL ---");
 
     var request1 = new PresentationRequest("http://invalidURL");
     request1.reconnect(connection.id).then(
@@ -221,14 +221,14 @@ function testReconnectInvalidURL() {
 }
 
 function testReconnectIframeConnectedConnection() {
-  info('--- testReconnectIframeConnectedConnection ---');
-  gScript.sendAsyncMessage('save-control-channel-listener');
+  info("--- testReconnectIframeConnectedConnection ---");
+  gScript.sendAsyncMessage("save-control-channel-listener");
   return Promise.all([
     new Promise(function(aResolve, aReject) {
       commandHandler["connection-connected"] = function(command) {
-      gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
-        gScript.removeMessageListener('start-reconnect', startReconnectHandler);
-        gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+      gScript.addMessageListener("start-reconnect", function startReconnectHandler(url) {
+        gScript.removeMessageListener("start-reconnect", startReconnectHandler);
+        gScript.sendAsyncMessage("trigger-reconnected-acked", url);
       });
 
       var request1 = new PresentationRequest("http://example1.com");
@@ -237,7 +237,7 @@ function testReconnectIframeConnectedConnection() {
             is(aConnection.state, "connecting", "The state should be connecting.");
             aConnection.onclose = function() {
               delete commandHandler["connection-connected"];
-              gScript.sendAsyncMessage('restore-control-channel-listener');
+              gScript.sendAsyncMessage("restore-control-channel-listener");
               aResolve();
             };
             aConnection.close();
@@ -262,12 +262,12 @@ function testReconnectIframeConnectedConnection() {
 
 function testReconnectIframeClosedConnection() {
   return new Promise(function(aResolve, aReject) {
-    info('--- testReconnectIframeClosedConnection ---');
-    gScript.sendAsyncMessage('save-control-channel-listener');
+    info("--- testReconnectIframeClosedConnection ---");
+    gScript.sendAsyncMessage("save-control-channel-listener");
     commandHandler["connection-closed"] = function(command) {
-      gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
-        gScript.removeMessageListener('start-reconnect', startReconnectHandler);
-        gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+      gScript.addMessageListener("start-reconnect", function startReconnectHandler(url) {
+        gScript.removeMessageListener("start-reconnect", startReconnectHandler);
+        gScript.sendAsyncMessage("trigger-reconnected-acked", url);
       });
 
       var request1 = new PresentationRequest("http://example1.com");
@@ -283,7 +283,7 @@ function testReconnectIframeClosedConnection() {
               aResolve();
             };
             aConnection.close();
-            gScript.sendAsyncMessage('restore-control-channel-listener');
+            gScript.sendAsyncMessage("restore-control-channel-listener");
           };
         },
         function(aError) {
@@ -299,11 +299,11 @@ function testReconnectIframeClosedConnection() {
 
 function testReconnect() {
   return new Promise(function(aResolve, aReject) {
-    info('--- testReconnect ---');
-    gScript.addMessageListener('start-reconnect', function startReconnectHandler(url) {
-      gScript.removeMessageListener('start-reconnect', startReconnectHandler);
+    info("--- testReconnect ---");
+    gScript.addMessageListener("start-reconnect", function startReconnectHandler(url) {
+      gScript.removeMessageListener("start-reconnect", startReconnectHandler);
       is(url, "http://example.com/", "URLs should be the same.");
-      gScript.sendAsyncMessage('trigger-reconnected-acked', url);
+      gScript.sendAsyncMessage("trigger-reconnected-acked", url);
     });
 
     request.reconnect(connection.id).then(
@@ -318,12 +318,12 @@ function testReconnect() {
           is(aConnection.state, "connected", "Connection should be connected.");
 
           const incomingMessage = "test incoming message";
-          aConnection.addEventListener('message', function(aEvent) {
+          aConnection.addEventListener("message", function(aEvent) {
             is(aEvent.data, incomingMessage, "An incoming message should be received.");
             aResolve();
           }, {once: true});
 
-          frameScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
+          frameScript.sendAsyncMessage("trigger-incoming-message", incomingMessage);
         };
       },
       function(aError) {
@@ -336,14 +336,14 @@ function testReconnect() {
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
-    info('teardown-complete');
+    info("teardown-complete");
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
@@ -364,9 +364,9 @@ function runTests() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: "presentation-device-manage", allow: false, context: document},
 ], function() {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.controller.enabled", true],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", true]]},

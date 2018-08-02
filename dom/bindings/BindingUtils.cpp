@@ -3815,31 +3815,42 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     ns = kNameSpaceID_XHTML;
   }
 
+  constructorGetterCallback cb = nullptr;
+  if (ns == kNameSpaceID_XUL) {
+    if (definition->mLocalName == nsGkAtoms::menupopup ||
+        definition->mLocalName == nsGkAtoms::popup ||
+        definition->mLocalName == nsGkAtoms::panel ||
+        definition->mLocalName == nsGkAtoms::tooltip) {
+      cb = XULPopupElement_Binding::GetConstructorObject;
+    } else if (definition->mLocalName == nsGkAtoms::iframe ||
+                definition->mLocalName == nsGkAtoms::browser ||
+                definition->mLocalName == nsGkAtoms::editor) {
+      cb = XULFrameElement_Binding::GetConstructorObject;
+    } else if (definition->mLocalName == nsGkAtoms::scrollbox) {
+      cb = XULScrollElement_Binding::GetConstructorObject;
+    } else {
+      cb = XULElement_Binding::GetConstructorObject;
+    }
+  }
+
   int32_t tag = eHTMLTag_userdefined;
   if (!definition->IsCustomBuiltIn()) {
     // Step 4.
     // If the definition is for an autonomous custom element, the active
-    // function should be HTMLElement or XULElement.  We want to get the actual
-    // functions to compare to from our global's realm, not the caller
-    // realm.
+    // function should be HTMLElement or extend from XULElement.
+    if (!cb) {
+      cb = HTMLElement_Binding::GetConstructorObject;
+    }
+
+    // We want to get the constructor from our global's realm, not the
+    // caller realm.
     JSAutoRealm ar(aCx, global.Get());
-
-    JS::Rooted<JSObject*> constructor(aCx);
-    if (ns == kNameSpaceID_XUL) {
-      constructor = XULElement_Binding::GetConstructorObject(aCx);
-    } else {
-      constructor = HTMLElement_Binding::GetConstructorObject(aCx);
-    }
-
-    if (!constructor) {
-      return false;
-    }
+    JS::Rooted<JSObject*> constructor(aCx, cb(aCx));
 
     if (constructor != js::CheckedUnwrap(callee)) {
       return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
     }
   } else {
-    constructorGetterCallback cb;
     if (ns == kNameSpaceID_XHTML) {
       // Step 5.
       // If the definition is for a customized built-in element, the localName
@@ -3854,21 +3865,6 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
       // If the definition is for a customized built-in element, the active
       // function should be the localname's element interface.
       cb = sConstructorGetterCallback[tag];
-    } else { // kNameSpaceID_XUL
-      if (definition->mLocalName == nsGkAtoms::menupopup ||
-          definition->mLocalName == nsGkAtoms::popup ||
-          definition->mLocalName == nsGkAtoms::panel ||
-          definition->mLocalName == nsGkAtoms::tooltip) {
-        cb = XULPopupElement_Binding::GetConstructorObject;
-      } else if (definition->mLocalName == nsGkAtoms::iframe ||
-                 definition->mLocalName == nsGkAtoms::browser ||
-                 definition->mLocalName == nsGkAtoms::editor) {
-        cb = XULFrameElement_Binding::GetConstructorObject;
-      } else if (definition->mLocalName == nsGkAtoms::scrollbox) {
-          cb = XULScrollElement_Binding::GetConstructorObject;
-      } else {
-        cb = XULElement_Binding::GetConstructorObject;
-      }
     }
 
     if (!cb) {

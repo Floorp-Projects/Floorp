@@ -12,92 +12,87 @@
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for connection establishing errors of B2G Presentation API at receiver side</a>
 <script type="application/javascript">
 
-'use strict';
+"use strict";
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver_establish_connection_error.html');
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
+var receiverUrl = SimpleTest.getTestFileURL("file_presentation_receiver_establish_connection_error.html");
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 function setup() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.sendAsyncMessage('trigger-device-add');
+  gScript.sendAsyncMessage("trigger-device-add");
 
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('src', receiverUrl);
-    iframe.setAttribute("mozbrowser", "true");
-    iframe.setAttribute("mozpresentation", receiverUrl);
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("src", receiverUrl);
+  iframe.setAttribute("mozbrowser", "true");
+  iframe.setAttribute("mozpresentation", receiverUrl);
 
-    // This event is triggered when the iframe calls "alert".
-    iframe.addEventListener("mozbrowsershowmodalprompt", function receiverListener(evt) {
-      var message = evt.detail.message;
-      if (/^OK /.exec(message)) {
-        ok(true, message.replace(/^OK /, ""));
-      } else if (/^KO /.exec(message)) {
-        ok(false, message.replace(/^KO /, ""));
-      } else if (/^INFO /.exec(message)) {
-        info(message.replace(/^INFO /, ""));
-      } else if (/^COMMAND /.exec(message)) {
-        var command = JSON.parse(message.replace(/^COMMAND /, ""));
-        gScript.sendAsyncMessage(command.name, command.data);
-      } else if (/^DONE$/.exec(message)) {
-        iframe.removeEventListener("mozbrowsershowmodalprompt",
-                                   receiverListener);
-        teardown();
-      }
-    });
+  // This event is triggered when the iframe calls "alert".
+  iframe.addEventListener("mozbrowsershowmodalprompt", function receiverListener(evt) {
+    var message = evt.detail.message;
+    if (/^OK /.exec(message)) {
+      ok(true, message.replace(/^OK /, ""));
+    } else if (/^KO /.exec(message)) {
+      ok(false, message.replace(/^KO /, ""));
+    } else if (/^INFO /.exec(message)) {
+      info(message.replace(/^INFO /, ""));
+    } else if (/^COMMAND /.exec(message)) {
+      var command = JSON.parse(message.replace(/^COMMAND /, ""));
+      gScript.sendAsyncMessage(command.name, command.data);
+    } else if (/^DONE$/.exec(message)) {
+      iframe.removeEventListener("mozbrowsershowmodalprompt",
+                                 receiverListener);
+      teardown();
+    }
+  });
 
-    var promise = new Promise(function(aResolve, aReject) {
-      document.body.appendChild(iframe);
+  var promise = new Promise(function(aResolve, aReject) {
+    document.body.appendChild(iframe);
 
-      aResolve(iframe);
-    });
-    obs.notifyObservers(promise, 'setup-request-promise');
+    aResolve(iframe);
+  });
+  obs.notifyObservers(promise, "setup-request-promise");
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
-      is(aReason, 0x80004004 /* NS_ERROR_ABORT */, "The control channel is closed abnormally.");
-    });
-
-    aResolve();
+  gScript.addMessageListener("control-channel-closed", function controlChannelClosedHandler(aReason) {
+    gScript.removeMessageListener("control-channel-closed", controlChannelClosedHandler);
+    is(aReason, 0x80004004 /* NS_ERROR_ABORT */, "The control channel is closed abnormally.");
   });
 }
 
 function testIncomingSessionRequest() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('receiver-launching', function launchReceiverHandler(aSessionId) {
-      gScript.removeMessageListener('receiver-launching', launchReceiverHandler);
+    gScript.addMessageListener("receiver-launching", function launchReceiverHandler(aSessionId) {
+      gScript.removeMessageListener("receiver-launching", launchReceiverHandler);
       info("Trying to launch receiver page.");
 
       aResolve();
     });
 
-    gScript.sendAsyncMessage('trigger-incoming-session-request', receiverUrl);
+    gScript.sendAsyncMessage("trigger-incoming-session-request", receiverUrl);
   });
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
-  setup().
-  then(testIncomingSessionRequest);
+  setup();
+  testIncomingSessionRequest();
 }
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: "presentation-device-manage", allow: false, context: document},
   {type: "browser", allow: true, context: document},
 ], function() {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", false],
                                       ["dom.mozBrowserFramesEnabled", true],

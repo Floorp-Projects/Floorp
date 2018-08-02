@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cm, Cu, Cr, components} = require("chrome");
+const {Cc, Ci, Cm, Cr, components} = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
@@ -177,23 +177,37 @@ ChannelEventSinkFactory.getService = function() {
   return Cc[SINK_CONTRACT_ID].getService(Ci.nsIChannelEventSink).wrappedJSObject;
 };
 
-function StackTraceCollector(filters) {
+function StackTraceCollector(filters, messageManager) {
   this.filters = filters;
   this.stacktracesById = new Map();
+  this.messageManager = messageManager;
 }
 
 StackTraceCollector.prototype = {
   init() {
     Services.obs.addObserver(this, "http-on-opening-request");
     ChannelEventSinkFactory.getService().registerCollector(this);
+    if (this.messageManager) {
+      this.onGetStack = this.onGetStack.bind(this);
+      this.messageManager.addMessageListener("debug:request-stack", this.onGetStack);
+    }
   },
 
   destroy() {
     Services.obs.removeObserver(this, "http-on-opening-request");
     ChannelEventSinkFactory.getService().unregisterCollector(this);
+    if (this.messageManager) {
+      this.messageManager.removeMessageListener("debug:request-stack", this.onGetStack);
+    }
   },
 
   _saveStackTrace(channel, stacktrace) {
+    if (this.messageManager) {
+      this.messageManager.sendAsyncMessage("debug:request-stack-available", {
+        channelId: channel.channelId,
+        stacktrace: stacktrace && stacktrace.length > 0
+      });
+    }
     this.stacktracesById.set(channel.channelId, stacktrace);
   },
 
@@ -238,7 +252,6 @@ StackTraceCollector.prototype = {
     const oldId = oldChannel.channelId;
     const stacktrace = this.stacktracesById.get(oldId);
     if (stacktrace) {
-      this.stacktracesById.delete(oldId);
       this._saveStackTrace(newChannel, stacktrace);
     }
   },
@@ -247,7 +260,16 @@ StackTraceCollector.prototype = {
     const trace = this.stacktracesById.get(channelId);
     this.stacktracesById.delete(channelId);
     return trace;
-  }
+  },
+
+  onGetStack(msg) {
+    const channelId = msg.data;
+    const stack = this.getStackTrace(channelId);
+    this.messageManager.sendAsyncMessage("debug:request-stack", {
+      channelId,
+      stack,
+    });
+  },
 };
 
 exports.StackTraceCollector = StackTraceCollector;
@@ -741,9 +763,6 @@ NetworkResponseListener.prototype = {
  *          given the initial network request information as an argument.
  *          onNetworkEvent() must return an object which holds several add*()
  *          methods which are used to add further network request/response information.
- *        - stackTraceCollector
- *          If the owner has this optional property, it will be used as a
- *          StackTraceCollector by the NetworkMonitor.
  */
 function NetworkMonitor(filters, owner) {
   this.filters = filters;
@@ -1134,12 +1153,6 @@ NetworkMonitor.prototype = {
       if (loadingPrincipal && loadingPrincipal.URI) {
         causeUri = loadingPrincipal.URI.spec;
       }
-    }
-
-    // If this is the parent process, there is no stackTraceCollector - the stack
-    // trace will be added in NetworkMonitorChild._onNewEvent.
-    if (this.owner.stackTraceCollector) {
-      stacktrace = this.owner.stackTraceCollector.getStackTrace(event.channelId);
     }
 
     event.cause = {
@@ -1719,328 +1732,6 @@ NetworkMonitor.prototype = {
     this.owner = null;
     this.filters = null;
     this._throttler = null;
-  },
-};
-
-/**
- * The NetworkMonitorChild is used to proxy all of the network activity of the
- * child app process from the main process. The child WebConsoleActor creates an
- * instance of this object.
- *
- * Network requests for apps happen in the main process. As such,
- * a NetworkMonitor instance is used by the WebappsActor in the main process to
- * log the network requests for this child process.
- *
- * The main process creates NetworkEventActorProxy instances per request. These
- * send the data to this object using the nsIMessageManager. Here we proxy the
- * data to the WebConsoleActor or to a NetworkEventActor.
- *
- * @constructor
- * @param number outerWindowID
- *        The outerWindowID of the target actor's main window.
- * @param nsIMessageManager messageManager
- *        The nsIMessageManager to use to communicate with the parent process.
- * @param object DebuggerServerConnection
- *        The RDP connection to the client.
- * @param object owner
- *        The WebConsoleActor that is listening for the network requests.
- */
-function NetworkMonitorChild(outerWindowID, messageManager, conn, owner) {
-  this.outerWindowID = outerWindowID;
-  this.conn = conn;
-  this.owner = owner;
-  this._messageManager = messageManager;
-  this._onNewEvent = this._onNewEvent.bind(this);
-  this._onUpdateEvent = this._onUpdateEvent.bind(this);
-  this._netEvents = new Map();
-  this._msgName = `debug:${this.conn.prefix}netmonitor`;
-}
-
-exports.NetworkMonitorChild = NetworkMonitorChild;
-
-NetworkMonitorChild.prototype = {
-  owner: null,
-  _netEvents: null,
-  _saveRequestAndResponseBodies: true,
-  _throttleData: null,
-
-  get saveRequestAndResponseBodies() {
-    return this._saveRequestAndResponseBodies;
-  },
-
-  set saveRequestAndResponseBodies(val) {
-    this._saveRequestAndResponseBodies = val;
-
-    this._messageManager.sendAsyncMessage(this._msgName, {
-      action: "setPreferences",
-      preferences: {
-        saveRequestAndResponseBodies: this._saveRequestAndResponseBodies,
-      },
-    });
-  },
-
-  get throttleData() {
-    return this._throttleData;
-  },
-
-  set throttleData(val) {
-    this._throttleData = val;
-
-    this._messageManager.sendAsyncMessage(this._msgName, {
-      action: "setPreferences",
-      preferences: {
-        throttleData: this._throttleData,
-      },
-    });
-  },
-
-  init: function() {
-    this.conn.setupInParent({
-      module: "devtools/shared/webconsole/network-monitor",
-      setupParent: "setupParentProcess"
-    });
-
-    const mm = this._messageManager;
-    mm.addMessageListener(`${this._msgName}:newEvent`, this._onNewEvent);
-    mm.addMessageListener(`${this._msgName}:updateEvent`, this._onUpdateEvent);
-    mm.sendAsyncMessage(this._msgName, {
-      outerWindowID: this.outerWindowID,
-      action: "start",
-    });
-  },
-
-  _onNewEvent: DevToolsUtils.makeInfallible(function _onNewEvent(msg) {
-    const {id, event} = msg.data;
-
-    // Try to add stack trace to the event data received from parent
-    if (this.owner.stackTraceCollector) {
-      event.cause.stacktrace =
-        this.owner.stackTraceCollector.getStackTrace(event.channelId);
-    }
-
-    const actor = this.owner.onNetworkEvent(event);
-    this._netEvents.set(id, Cu.getWeakReference(actor));
-  }),
-
-  _onUpdateEvent: DevToolsUtils.makeInfallible(function _onUpdateEvent(msg) {
-    const {id, method, args} = msg.data;
-    const weakActor = this._netEvents.get(id);
-    const actor = weakActor ? weakActor.get() : null;
-    if (!actor) {
-      console.error(`Received ${this._msgName}:updateEvent for unknown event ID: ${id}`);
-      return;
-    }
-    if (!(method in actor)) {
-      console.error(`Received ${this._msgName}:updateEvent unsupported ` +
-                    `method: ${method}`);
-      return;
-    }
-    actor[method].apply(actor, args);
-  }),
-
-  destroy: function() {
-    const mm = this._messageManager;
-    try {
-      mm.removeMessageListener(`${this._msgName}:newEvent`, this._onNewEvent);
-      mm.removeMessageListener(`${this._msgName}:updateEvent`, this._onUpdateEvent);
-    } catch (e) {
-      // On b2g, when registered to a new root docshell,
-      // all message manager functions throw when trying to call them during
-      // message-manager-disconnect event.
-      // As there is no attribute/method on message manager to know
-      // if they are still usable or not, we can only catch the exception...
-    }
-    this._netEvents.clear();
-    this._messageManager = null;
-    this.conn = null;
-    this.owner = null;
-  },
-};
-
-/**
- * The NetworkEventActorProxy is used to send network request information from
- * the main process to the child app process. One proxy is used per request.
- * Similarly, one NetworkEventActor in the child app process is used per
- * request. The client receives all network logs from the child actors.
- *
- * The child process has a NetworkMonitorChild instance that is listening for
- * all network logging from the main process. The net monitor shim is used to
- * proxy the data to the WebConsoleActor instance of the child process.
- *
- * @constructor
- * @param nsIMessageManager messageManager
- *        The message manager for the child app process. This is used for
- *        communication with the NetworkMonitorChild instance of the process.
- * @param string msgName
- *        The message name to be used for this connection.
- */
-function NetworkEventActorProxy(messageManager, msgName) {
-  this.id = gSequenceId();
-  this.messageManager = messageManager;
-  this._msgName = msgName;
-}
-exports.NetworkEventActorProxy = NetworkEventActorProxy;
-
-NetworkEventActorProxy.methodFactory = function(method) {
-  return DevToolsUtils.makeInfallible(function() {
-    const args = Array.slice(arguments);
-    const mm = this.messageManager;
-    mm.sendAsyncMessage(`${this._msgName}:updateEvent`, {
-      id: this.id,
-      method: method,
-      args: args,
-    });
-  }, "NetworkEventActorProxy." + method);
-};
-
-NetworkEventActorProxy.prototype = {
-  /**
-   * Initialize the network event. This method sends the network request event
-   * to the content process.
-   *
-   * @param object event
-   *        Object describing the network request.
-   * @return object
-   *         This object.
-   */
-  init: DevToolsUtils.makeInfallible(function(event) {
-    const mm = this.messageManager;
-    mm.sendAsyncMessage(`${this._msgName}:newEvent`, {
-      id: this.id,
-      event: event,
-    });
-    return this;
-  }),
-};
-
-(function() {
-  // Listeners for new network event data coming from the NetworkMonitor.
-  const methods = ["addRequestHeaders", "addRequestCookies", "addRequestPostData",
-                   "addResponseStart", "addSecurityInfo", "addResponseHeaders",
-                   "addResponseCookies", "addResponseContent", "addResponseCache",
-                   "addEventTimings"];
-  const factory = NetworkEventActorProxy.methodFactory;
-  for (const method of methods) {
-    NetworkEventActorProxy.prototype[method] = factory(method);
-  }
-})();
-
-/**
- * This is triggered by the child calling `setupInParent` when the child's network monitor
- * is starting up.  This initializes the parent process side of the monitoring.
- */
-function setupParentProcess({ mm, prefix }) {
-  let networkMonitor = new NetworkMonitorParent(mm, prefix);
-  return {
-    onBrowserSwap: newMM => networkMonitor.setMessageManager(newMM),
-    onDisconnected: () => {
-      networkMonitor.destroy();
-      networkMonitor = null;
-    }
-  };
-}
-
-exports.setupParentProcess = setupParentProcess;
-
-/**
- * The NetworkMonitorParent runs in the parent process and uses the message manager to
- * listen for requests from the child process to start/stop the network monitor.  Most
- * request data is only available from the parent process, so that's why the network
- * monitor needs to run there when debugging tabs that are in the child.
- *
- * @param nsIMessageManager mm
- *        The message manager for the browser we're filtering on.
- * @param string prefix
- *        The RDP connection prefix that uniquely identifies the connection.
- */
-function NetworkMonitorParent(mm, prefix) {
-  this._msgName = `debug:${prefix}netmonitor`;
-  this.onNetMonitorMessage = this.onNetMonitorMessage.bind(this);
-  this.onNetworkEvent = this.onNetworkEvent.bind(this);
-  this.setMessageManager(mm);
-}
-
-NetworkMonitorParent.prototype = {
-  netMonitor: null,
-  messageManager: null,
-
-  setMessageManager(mm) {
-    if (this.messageManager) {
-      const oldMM = this.messageManager;
-      oldMM.removeMessageListener(this._msgName, this.onNetMonitorMessage);
-    }
-    this.messageManager = mm;
-    if (mm) {
-      mm.addMessageListener(this._msgName, this.onNetMonitorMessage);
-    }
-  },
-
-  /**
-   * Handler for `debug:${prefix}netmonitor` messages received through the message manager
-   * from the content process.
-   *
-   * @param object msg
-   *        Message from the content.
-   */
-  onNetMonitorMessage: DevToolsUtils.makeInfallible(function(msg) {
-    const {action} = msg.json;
-    // Pipe network monitor data from parent to child via the message manager.
-    switch (action) {
-      case "start":
-        if (!this.netMonitor) {
-          const {appId, outerWindowID} = msg.json;
-          this.netMonitor = new NetworkMonitor({
-            outerWindowID,
-            appId,
-          }, this);
-          this.netMonitor.init();
-        }
-        break;
-      case "setPreferences": {
-        const {preferences} = msg.json;
-        for (const key of Object.keys(preferences)) {
-          if ((key == "saveRequestAndResponseBodies" ||
-               key == "throttleData") && this.netMonitor) {
-            this.netMonitor[key] = preferences[key];
-          }
-        }
-        break;
-      }
-
-      case "stop":
-        if (this.netMonitor) {
-          this.netMonitor.destroy();
-          this.netMonitor = null;
-        }
-        break;
-
-      case "disconnect":
-        this.destroy();
-        break;
-    }
-  }),
-
-  /**
-   * Handler for new network requests. This method is invoked by the current
-   * NetworkMonitor instance.
-   *
-   * @param object event
-   *        Object describing the network request.
-   * @return object
-   *         A NetworkEventActorProxy instance which is notified when further
-   *         data about the request is available.
-   */
-  onNetworkEvent: DevToolsUtils.makeInfallible(function(event) {
-    return new NetworkEventActorProxy(this.messageManager, this._msgName).init(event);
-  }),
-
-  destroy: function() {
-    this.setMessageManager(null);
-
-    if (this.netMonitor) {
-      this.netMonitor.destroy();
-      this.netMonitor = null;
-    }
   },
 };
 

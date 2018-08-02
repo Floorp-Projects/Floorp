@@ -3,49 +3,44 @@
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
 var receiverUrl = SimpleTest.getTestFileURL("file_presentation_receiver_auxiliary_navigation.html");
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 function setup() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.sendAsyncMessage("trigger-device-add");
+  gScript.sendAsyncMessage("trigger-device-add");
 
-    var iframe = document.createElement("iframe");
-    iframe.setAttribute("mozbrowser", "true");
-    iframe.setAttribute("mozpresentation", receiverUrl);
-    var oop = !location.pathname.includes('_inproc');
-    iframe.setAttribute("remote", oop);
-    iframe.setAttribute("src", receiverUrl);
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
+  iframe.setAttribute("mozpresentation", receiverUrl);
+  var oop = !location.pathname.includes("_inproc");
+  iframe.setAttribute("remote", oop);
+  iframe.setAttribute("src", receiverUrl);
 
-    // This event is triggered when the iframe calls "postMessage".
-    iframe.addEventListener("mozbrowsershowmodalprompt", function listener(aEvent) {
-      var message = aEvent.detail.message;
-      if (/^OK /.exec(message)) {
-        ok(true, "Message from iframe: " + message);
-      } else if (/^KO /.exec(message)) {
-        ok(false, "Message from iframe: " + message);
-      } else if (/^INFO /.exec(message)) {
-        info("Message from iframe: " + message);
-      } else if (/^COMMAND /.exec(message)) {
-        var command = JSON.parse(message.replace(/^COMMAND /, ""));
-        gScript.sendAsyncMessage(command.name, command.data);
-      } else if (/^DONE$/.exec(message)) {
-        ok(true, "Messaging from iframe complete.");
-        iframe.removeEventListener("mozbrowsershowmodalprompt", listener);
+  // This event is triggered when the iframe calls "postMessage".
+  iframe.addEventListener("mozbrowsershowmodalprompt", function listener(aEvent) {
+    var message = aEvent.detail.message;
+    if (/^OK /.exec(message)) {
+      ok(true, "Message from iframe: " + message);
+    } else if (/^KO /.exec(message)) {
+      ok(false, "Message from iframe: " + message);
+    } else if (/^INFO /.exec(message)) {
+      info("Message from iframe: " + message);
+    } else if (/^COMMAND /.exec(message)) {
+      var command = JSON.parse(message.replace(/^COMMAND /, ""));
+      gScript.sendAsyncMessage(command.name, command.data);
+    } else if (/^DONE$/.exec(message)) {
+      ok(true, "Messaging from iframe complete.");
+      iframe.removeEventListener("mozbrowsershowmodalprompt", listener);
 
-        teardown();
-      }
-    });
-
-    var promise = new Promise(function(aResolve, aReject) {
-      document.body.appendChild(iframe);
-
-      aResolve(iframe);
-    });
-    obs.notifyObservers(promise, "setup-request-promise");
-
-    aResolve();
+      teardown();
+    }
   });
+
+  var promise = new Promise(function(aResolve, aReject) {
+    document.body.appendChild(iframe);
+
+    aResolve(iframe);
+  });
+  obs.notifyObservers(promise, "setup-request-promise");
 }
 
 function teardown() {
@@ -59,7 +54,7 @@ function teardown() {
 }
 
 function runTests() {
-  setup().then();
+  setup();
 }
 
 SimpleTest.waitForExplicitFinish();

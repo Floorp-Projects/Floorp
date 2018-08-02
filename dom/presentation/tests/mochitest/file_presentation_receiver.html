@@ -11,23 +11,23 @@
 "use strict";
 
 function is(a, b, msg) {
-  alert((a === b ? 'OK ' : 'KO ') + msg);
+  alert((a === b ? "OK " : "KO ") + msg);
 }
 
 function ok(a, msg) {
-  alert((a ? 'OK ' : 'KO ') + msg);
+  alert((a ? "OK " : "KO ") + msg);
 }
 
 function info(msg) {
-  alert('INFO ' + msg);
+  alert("INFO " + msg);
 }
 
 function command(msg) {
-  alert('COMMAND ' + JSON.stringify(msg));
+  alert("COMMAND " + JSON.stringify(msg));
 }
 
 function finish() {
-  alert('DONE');
+  alert("DONE");
 }
 
 var connection;
@@ -51,7 +51,7 @@ function testConnectionAvailable() {
         aReject();
       }
     );
-    command({ name: 'trigger-incoming-offer' });
+    command({ name: "trigger-incoming-offer" });
   });
 }
 
@@ -64,8 +64,8 @@ function testDefaultRequestIsUndefined() {
 
 function testConnectionAvailableSameOriginInnerIframe() {
   return new Promise(function(aResolve, aReject) {
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('src', './file_presentation_receiver_inner_iframe.html');
+    var iframe = document.createElement("iframe");
+    iframe.setAttribute("src", "./file_presentation_receiver_inner_iframe.html");
     document.body.appendChild(iframe);
 
     aResolve();
@@ -74,8 +74,8 @@ function testConnectionAvailableSameOriginInnerIframe() {
 
 function testConnectionUnavailableDiffOriginInnerIframe() {
   return new Promise(function(aResolve, aReject) {
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('src', 'http://example.com/tests/dom/presentation/tests/mochitest/file_presentation_non_receiver_inner_iframe.html');
+    var iframe = document.createElement("iframe");
+    iframe.setAttribute("src", "http://example.com/tests/dom/presentation/tests/mochitest/file_presentation_non_receiver_inner_iframe.html");
     document.body.appendChild(iframe);
 
     aResolve();
@@ -85,7 +85,7 @@ function testConnectionUnavailableDiffOriginInnerIframe() {
 function testConnectionListSameObject() {
   return new Promise(function(aResolve, aReject) {
     is(navigator.presentation.receiver.connectionList, navigator.presentation.receiver.connectionList, "The promise should be the same object.");
-    var promise = navigator.presentation.receiver.connectionList.then(
+    navigator.presentation.receiver.connectionList.then(
       function(aList) {
         is(connection, aList.connections[0], "The connection from list and the one from |connectionavailable| event should be the same.");
         aResolve();
@@ -103,12 +103,12 @@ function testIncomingMessage() {
   return new Promise(function(aResolve, aReject) {
     const incomingMessage = "test incoming message";
 
-    connection.addEventListener('message', function(aEvent) {
+    connection.addEventListener("message", function(aEvent) {
       is(aEvent.data, incomingMessage, "An incoming message should be received.");
       aResolve();
     }, {once: true});
 
-    command({ name: 'trigger-incoming-message',
+    command({ name: "trigger-incoming-message",
               data: incomingMessage });
   });
 }

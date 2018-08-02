@@ -164,7 +164,6 @@ function SelectorAutocompleter(inspector, inputNode) {
     listId: "searchbox-panel-listbox",
     autoSelect: true,
     position: "top",
-    theme: "auto",
     onClick: this._onSearchPopupClick,
   };
 
