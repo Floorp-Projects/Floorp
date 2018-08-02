@@ -66,6 +66,7 @@
         <h1 id="et_sslv3Used">&sslv3Used.title;</h1>
         <h1 id="et_inadequateSecurityError">&inadequateSecurityError.title;</h1>
         <h1 id="et_blockedByPolicy">&blockedByPolicy.title;</h1>
+        <h1 id="et_clockSkewError">&clockSkewError.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -96,6 +97,7 @@
         <div id="ed_sslv3Used">&sslv3Used.longDesc2;</div>
         <div id="ed_inadequateSecurityError">&inadequateSecurityError.longDesc;</div>
         <div id="ed_blockedByPolicy"></div>
+        <div id="ed_clockSkewError">&clockSkewError.longDesc;</div>
       </div>
       <div id="errorDescriptions2Container">
           <div id="ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE">&certerror.expiredCert.secondPara;</div>
@@ -105,12 +107,12 @@
       </div>
       <div id="whatCanYouDoAboutItContainer">
         <div id="es_nssBadCert_SEC_ERROR_UNKNOWN_ISSUER">&certerror.unknownIssuer.whatCanYouDoAboutIt;</div>
-        <div id="es_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt;</div>
-        <div id="es_nssBadCert_SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt;</div>
-        <div id="es_nssBadCert_SEC_ERROR_OCSP_FUTURE_RESPONSE">&certerror.expiredCert.whatCanYouDoAboutIt;</div>
-        <div id="es_nssBadCert_SEC_ERROR_OCSP_OLD_RESPONSE">&certerror.expiredCert.whatCanYouDoAboutIt;</div>
-        <div id="es_nssBadCert_MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt;</div>
-        <div id="es_nssBadCert_MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt;</div>
+        <div id="es_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
+        <div id="es_nssBadCert_SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
+        <div id="es_nssBadCert_SEC_ERROR_OCSP_FUTURE_RESPONSE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
+        <div id="es_nssBadCert_SEC_ERROR_OCSP_OLD_RESPONSE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
+        <div id="es_nssBadCert_MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
+        <div id="es_nssBadCert_MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE">&certerror.expiredCert.whatCanYouDoAboutIt2;</div>
         <div id="es_nssBadCert_SSL_ERROR_BAD_CERT_DOMAIN">&certerror.badCertDomain.whatCanYouDoAboutIt;</div>
         <div id="es_nssBadCert_SEC_ERROR_OCSP_INVALID_SIGNING_CERT">&certerror.badCertDomain.whatCanYouDoAboutIt;</div>
       </div>
@@ -176,7 +178,9 @@
         <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
           <button id="returnButton" class="primary" autocomplete="off">&returnToPreviousPage1.label;</button>
           <button id="openPortalLoginPageButton" class="primary" autocomplete="off">&openPortalLoginPage.label2;</button>
+          <button id="errorTryAgain" class="primary" autocomplete="off">&retry.label;</button>
           <button id="advancedButton" autocomplete="off">&continue1.label;</button>
+          <button id="moreInformationButton" autocomplete="off">&moreInformation.label;</button>
         </div>
       </div>
 
@@ -189,6 +193,7 @@
           <p id="badCertTechnicalInfo"/>
           <div id="advancedPanelButtonContainer" class="button-container">
             <button id="advancedPanelReturnButton" class="primary" autocomplete="off">&returnToPreviousPage1.label;</button>
+            <button id="advancedPanelErrorTryAgain" class="primary" autocomplete="off">&retry.label;</button>
             <div class="exceptionDialogButtonContainer">
               <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
             </div>
