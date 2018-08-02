@@ -65,6 +65,8 @@ export default class PaymentMethodPicker extends RichPicker {
       throw new Error(`The option ${selectedPaymentCardGUID} ` +
                       `does not exist in the payment method picker`);
     }
+
+    super.render(state);
   }
 
   get selectedStateKey() {
