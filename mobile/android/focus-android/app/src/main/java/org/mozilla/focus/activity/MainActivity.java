@@ -10,6 +10,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
@@ -20,6 +21,7 @@ import android.view.WindowManager;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.architecture.NonNullObserver;
+import org.mozilla.focus.biometrics.Biometrics;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.fragment.FirstrunFragment;
 import org.mozilla.focus.fragment.UrlInputFragment;
@@ -148,6 +150,7 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
         super.onResume();
 
         TelemetryWrapper.startSession();
+        checkBiometricStillValid();
 
         if (Settings.getInstance(this).shouldUseSecureMode()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
@@ -308,5 +311,15 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
         }
 
         super.onBackPressed();
+    }
+
+    // Handles the edge case of a user removing all enrolled prints while auth was enabled
+    private void checkBiometricStillValid() {
+        // Disable biometrics if the user is no longer eligible due to un-enrolling fingerprints:
+        if (!Biometrics.INSTANCE.hasFingerprintHardware(this)) {
+            PreferenceManager.getDefaultSharedPreferences(this)
+                    .edit().putBoolean(getString(R.string.pref_key_biometric),
+                    false).apply();
+        }
     }
 }

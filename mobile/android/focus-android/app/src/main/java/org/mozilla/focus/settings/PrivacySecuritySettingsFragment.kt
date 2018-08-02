@@ -7,8 +7,12 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.preference.Preference
+import android.preference.PreferenceCategory
 import android.preference.SwitchPreference
 import org.mozilla.focus.R
+import org.mozilla.focus.R.string.pref_key_biometric
+import org.mozilla.focus.R.string.preference_category_switching_apps
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
@@ -21,7 +25,11 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
 
         // Remove the biometric toggle if the software or hardware do not support it
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !Biometrics.hasFingerprintHardware(context)) {
-            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_biometric)))
+            val biometricPreference = findPreference(getString(pref_key_biometric)) as Preference
+            val switchingAppsCategory = findPreference(getString(
+                preference_category_switching_apps)) as PreferenceCategory
+
+            switchingAppsCategory.removePreference(biometricPreference)
         }
 
         updateStealthToggleAvailability()

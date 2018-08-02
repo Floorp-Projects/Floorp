@@ -67,6 +67,7 @@ import org.mozilla.focus.architecture.NonNullObserver;
 import org.mozilla.focus.autocomplete.AutocompleteQuickAddPopup;
 import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment;
 import org.mozilla.focus.biometrics.BiometricAuthenticationHandler;
+import org.mozilla.focus.biometrics.Biometrics;
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver;
 import org.mozilla.focus.customtabs.CustomTabConfig;
 import org.mozilla.focus.findinpage.FindInPageCoordinator;
@@ -197,7 +198,8 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
         super.onCreate(savedInstanceState);
         ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
 
-        if (biometricController == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (biometricController == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                Biometrics.INSTANCE.hasFingerprintHardware(getContext())) {
             biometricController = new BiometricAuthenticationHandler(getContext());
         }
 
@@ -248,7 +250,9 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
     public void onPause() {
         super.onPause();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.getInstance(getContext()).shouldUseBiometrics()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                Settings.getInstance(getContext()).shouldUseBiometrics() &&
+                Biometrics.INSTANCE.hasFingerprintHardware(getContext())) {
             biometricController.stopListening();
             getView().setAlpha(0);
         }
@@ -894,7 +898,9 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
             }
         });
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.getInstance(getContext()).shouldUseBiometrics()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                Settings.getInstance(getContext()).shouldUseBiometrics() &&
+                Biometrics.INSTANCE.hasFingerprintHardware(getContext())) {
             displayBiometricPromptIfNeeded();
         } else {
             getView().setAlpha(1);

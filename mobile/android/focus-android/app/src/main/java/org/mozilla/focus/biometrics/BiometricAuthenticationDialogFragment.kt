@@ -16,10 +16,10 @@ import android.support.v7.app.AppCompatDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.new_session_button
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.biometric_error_text
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.fingerprint_icon
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.description
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.fingerprintIcon
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.newSessionButton
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.description
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.biometricErrorText
 import org.mozilla.focus.R
 
 @RequiresApi(api = Build.VERSION_CODES.M)
@@ -60,15 +60,15 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
             )
         )
 
-        description.setText(R.string.biometric_auth_description)
+        v.description.setText(R.string.biometric_auth_description)
 
-        new_session_button.setText(R.string.biometric_auth_new_session)
-        new_session_button.setOnClickListener {
+        v.newSessionButton.setText(R.string.biometric_auth_new_session)
+        v.newSessionButton.setOnClickListener {
             newSessionButtonClicked()
             dismiss()
         }
 
-        fingerprint_icon.setImageResource(R.drawable.ic_fingerprint)
+        v.fingerprintIcon.setImageResource(R.drawable.ic_fingerprint)
         return v
     }
 
@@ -90,10 +90,10 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
 
     fun displayError(errorText: String) {
         // Display the error text
-        biometric_error_text.text = errorText
-        biometric_error_text.setTextColor(
+        biometricErrorText.text = errorText
+        biometricErrorText.setTextColor(
             ContextCompat.getColor(
-                biometric_error_text.context,
+                biometricErrorText.context,
                 R.color.photonRed50
             )
         )
@@ -112,7 +112,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     private fun resetErrorText() {
-        biometric_error_text.text = ""
+        biometricErrorText.text = ""
     }
 
     companion object {

@@ -81,7 +81,6 @@ class BiometricAuthenticationHandler(private val context: Context) :
 
     // Create the prompt and begin listening
     private fun startListening(cryptoObject: FingerprintManagerCompat.CryptoObject) {
-        if (!Biometrics.hasFingerprintHardware(context)) return
         if (biometricFragment == null) {
             biometricFragment = BiometricAuthenticationDialogFragment()
         }
@@ -127,7 +126,7 @@ class BiometricAuthenticationHandler(private val context: Context) :
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onPause() {
-        needsAuth = true
+        needsAuth = true && Biometrics.hasFingerprintHardware(context)
         stopListening()
     }
 

@@ -26,7 +26,7 @@
         android:gravity="center">
 
         <ImageView
-            android:id="@+id/fingerprint_icon"
+            android:id="@+id/fingerprintIcon"
             android:contentDescription="@string/biometric_auth_image_description"
             android:layout_width="@dimen/fingerprint_icon_size"
             android:layout_height="@dimen/fingerprint_icon_size" />
@@ -34,7 +34,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/biometric_error_text"
+        android:id="@+id/biometricErrorText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -45,7 +45,7 @@
         tools:text=""/>
 
     <Button
-        android:id="@+id/new_session_button"
+        android:id="@+id/newSessionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
