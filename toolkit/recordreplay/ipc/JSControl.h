@@ -178,6 +178,9 @@ struct ExecutionPoint
   }
 
   inline bool operator!=(const ExecutionPoint& o) const { return !(*this == o); }
+
+  JSObject* Encode(JSContext* aCx) const;
+  bool Decode(JSContext* aCx, JS::HandleObject aObject);
 };
 
 // Buffer type used for encoding object data.
