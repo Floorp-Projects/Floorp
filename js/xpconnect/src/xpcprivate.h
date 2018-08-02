@@ -3050,17 +3050,15 @@ nsIPrincipal* GetObjectPrincipal(JSObject* obj);
 //   TD_INTERFACE_TYPE, TD_INTERFACE_IS_TYPE
 //     value : nsISupports** (release)
 //   TD_LEGACY_ARRAY (NOTE: aArrayLen should be passed)
-//     value : void** (cleanup elements & free)
+//     value : void** (destroy elements & free)
+//   TD_ARRAY
+//     value : nsTArray<T>* (destroy elements & Clear)
 //   TD_DOMOBJECT
 //     value : T** (cleanup)
 //   TD_PROMISE
 //     value : dom::Promise** (release)
 //
 // Other types are ignored.
-//
-// Custom behaviour may be desired in some situations:
-//  - This method Truncate()s nsStrings, it does not free them.
-//  - This method does not unroot JSValues.
 inline void CleanupValue(const nsXPTType& aType,
                          void* aValue,
                          uint32_t aArrayLen = 0);
