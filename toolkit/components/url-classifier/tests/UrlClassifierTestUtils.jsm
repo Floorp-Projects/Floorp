@@ -2,9 +2,14 @@
 
 var EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
 
-const TRACKING_TABLE_NAME = "mochitest-track-simple";
+const ANNOTATION_TABLE_NAME = "mochitest1-track-simple";
+const ANNOTATION_TABLE_PREF = "urlclassifier.trackingAnnotationTable";
+const ANNOTATION_WHITELIST_TABLE_NAME = "mochitest1-trackwhite-simple";
+const ANNOTATION_WHITELIST_TABLE_PREF = "urlclassifier.trackingAnnotationWhitelistTable";
+
+const TRACKING_TABLE_NAME = "mochitest2-track-simple";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
-const WHITELIST_TABLE_NAME = "mochitest-trackwhite-simple";
+const WHITELIST_TABLE_NAME = "mochitest2-trackwhite-simple";
 const WHITELIST_TABLE_PREF = "urlclassifier.trackingWhitelistTable";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -15,11 +20,27 @@ var UrlClassifierTestUtils = {
 
   addTestTrackers() {
     // Add some URLs to the tracking databases
-    let trackingURL1 = "tracking.example.com/";
+    let annotationURL1 = "tracking.example.org/"; // only for annotations
+    let annotationURL2 = "itisatracker.org/";
+    let annotationURL3 = "trackertest.org/";
+    let annotationWhitelistedURL = "itisatrap.org/?resource=example.org";
+    let trackingURL1 = "tracking.example.com/"; // only for TP
     let trackingURL2 = "itisatracker.org/";
     let trackingURL3 = "trackertest.org/";
     let whitelistedURL = "itisatrap.org/?resource=itisatracker.org";
 
+    let annotationUpdate =
+          "n:1000\ni:" + ANNOTATION_TABLE_NAME + "\nad:3\n" +
+          "a:1:32:" + annotationURL1.length + "\n" +
+          annotationURL1 + "\n" +
+          "a:2:32:" + annotationURL2.length + "\n" +
+          annotationURL2 + "\n" +
+          "a:3:32:" + annotationURL3.length + "\n" +
+          annotationURL3 + "\n";
+    let annotationWhitelistUpdate =
+          "n:1000\ni:" + ANNOTATION_WHITELIST_TABLE_NAME + "\nad:1\n" +
+          "a:1:32:" + annotationWhitelistedURL.length + "\n" +
+          annotationWhitelistedURL + "\n";
     let trackingUpdate =
           "n:1000\ni:" + TRACKING_TABLE_NAME + "\nad:3\n" +
           "a:1:32:" + trackingURL1.length + "\n" +
@@ -34,6 +55,16 @@ var UrlClassifierTestUtils = {
           whitelistedURL + "\n";
 
     var tables = [
+      {
+        pref: ANNOTATION_TABLE_PREF,
+        name: ANNOTATION_TABLE_NAME,
+        update: annotationUpdate
+      },
+      {
+        pref: ANNOTATION_WHITELIST_TABLE_PREF,
+        name: ANNOTATION_WHITELIST_TABLE_NAME,
+        update: annotationWhitelistUpdate
+      },
       {
         pref: TRACKING_TABLE_PREF,
         name: TRACKING_TABLE_NAME,
@@ -68,6 +99,8 @@ var UrlClassifierTestUtils = {
   },
 
   cleanupTestTrackers() {
+    Services.prefs.clearUserPref(ANNOTATION_TABLE_PREF);
+    Services.prefs.clearUserPref(ANNOTATION_WHITELIST_TABLE_PREF);
     Services.prefs.clearUserPref(TRACKING_TABLE_PREF);
     Services.prefs.clearUserPref(WHITELIST_TABLE_PREF);
   },

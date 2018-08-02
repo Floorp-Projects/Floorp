@@ -2522,6 +2522,12 @@ HTMLMediaElement::ResumeLoad(PreloadAction aAction)
   }
 }
 
+bool
+HTMLMediaElement::AllowedToPlay() const
+{
+  return AutoplayPolicy::IsAllowedToPlay(*this) == nsIAutoplay::ALLOWED;
+}
+
 void
 HTMLMediaElement::UpdatePreloadAction()
 {

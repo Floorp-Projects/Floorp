@@ -24,8 +24,8 @@ function* test(testDriver) {
   var scrollableDiv = document.getElementById('scrollable');
   scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
 
-  var scrolled = yield* dragVerticalScrollbar(scrollableDiv, testDriver);
-  if (!scrolled) {
+  var dragFinisher = yield* dragVerticalScrollbar(scrollableDiv, testDriver);
+  if (!dragFinisher) {
     ok(true, "No scrollbar, can't do this test");
     return;
   }
@@ -34,6 +34,8 @@ function* test(testDriver) {
   // layer is activated, so we wait here until the scroll event listener is
   // triggered.
   yield;
+
+  yield* dragFinisher();
 
   // Flush everything just to be safe
   yield flushApzRepaints(testDriver);

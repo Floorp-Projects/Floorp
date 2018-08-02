@@ -581,12 +581,23 @@ pref("media.autoplay.block-webaudio", false);
 // By default, don't block muted media from playing automatically.
 pref("media.autoplay.allow-muted", true);
 
+// By default, don't block the media from extension background script.
+pref("media.autoplay.allow-extension-background-pages", true);
+
 // If "media.autoplay.default" is not ALLOWED, and this pref is true,
 // then audible media would only be allowed to autoplay after website has
 // been activated by specific user gestures, but non-audible
 // media won't be restricted.
 #ifdef NIGHTLY_BUILD
 pref("media.autoplay.enabled.user-gestures-needed", false);
+#endif
+
+// HTMLMediaElement.allowedToPlay should be exposed to web content when
+// block autoplay rides the trains to release. Until then, Nightly only.
+#ifdef NIGHTLY_BUILD
+pref("media.allowed-to-play.enabled", true);
+#else
+pref("media.allowed-to-play.enabled", false);
 #endif
 
 // The default number of decoded video frames that are enqueued in
@@ -5389,6 +5400,8 @@ pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
 pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");
 
 // Tables for tracking protection
+pref("urlclassifier.trackingAnnotationTable", "test-track-simple,base-track-digest256");
+pref("urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
 pref("urlclassifier.trackingTable", "test-track-simple,base-track-digest256");
 pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
 

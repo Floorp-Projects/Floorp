@@ -28,7 +28,7 @@ add_task(async function test_search() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["tabs"],
+      permissions: ["search", "tabs"],
       name: TEST_ID,
       "browser_action": {},
       "chrome_settings_overrides": {
@@ -74,7 +74,7 @@ add_task(async function test_search_notab() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["tabs"],
+      permissions: ["search", "tabs"],
       name: TEST_ID,
       "browser_action": {},
       "chrome_settings_overrides": {

@@ -149,6 +149,8 @@ window._gBrowser = {
 
   _clearMultiSelectionLocked: false,
 
+  _clearMultiSelectionLockedOnce: false,
+
   /**
    * Tab close requests are ignored if the window is closing anyway,
    * e.g. when holding Ctrl+W.
@@ -3684,6 +3686,10 @@ window._gBrowser = {
 
   clearMultiSelectedTabs(updatePositionalAttributes) {
     if (this._clearMultiSelectionLocked) {
+      if (this._clearMultiSelectionLockedOnce) {
+        this._clearMultiSelectionLockedOnce = false;
+        this._clearMultiSelectionLocked = false;
+      }
       return;
     }
 
@@ -3700,6 +3706,11 @@ window._gBrowser = {
     if (updatePositionalAttributes) {
       this.tabContainer._setPositionalAttributes();
     }
+  },
+
+  lockClearMultiSelectionOnce() {
+    this._clearMultiSelectionLockedOnce = true;
+    this._clearMultiSelectionLocked = true;
   },
 
   /**

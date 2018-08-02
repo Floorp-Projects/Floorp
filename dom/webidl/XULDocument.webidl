@@ -31,7 +31,4 @@ interface XULDocument : Document {
                                DOMString attr);
   void removeBroadcastListenerFor(Element broadcaster, Element observer,
                                   DOMString attr);
-
-  [Throws]
-  BoxObject? getBoxObjectFor(Element? element);
 };

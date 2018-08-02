@@ -67,7 +67,7 @@ export const LinkMenuOptions = {
     icon: "dismiss",
     action: ac.AlsoToMain({
       type: at.BLOCK_URL,
-      data: {url: site.url, pocket_id: site.pocket_id}
+      data: {url: site.open_url || site.url, pocket_id: site.pocket_id}
     }),
     impression: ac.ImpressionStats({
       source: eventSource,

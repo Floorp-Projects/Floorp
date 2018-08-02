@@ -8,6 +8,13 @@
 </head>
 <body>
 
+<!--
+    This domain is not blacklisted for annotations but it is for tracking protection.
+    Therefore if tracking protection is accidentally enabled, this test will fail. On
+    the other hand, tracking.example.com will not be used in any of the same-origin
+    comparisons since we always look for the top window URI when there is one and
+    that's set to be www.itisatrap.org.
+-->
 <script id="badscript" data-touched="not sure" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js"></script>
 
 </body>

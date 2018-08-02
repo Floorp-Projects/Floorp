@@ -1296,11 +1296,6 @@ if CONFIG['MOZ_ENABLE_CONTENTMANAGER']:
         'SelectSingleContentItemPage.h',
     ]
 
-if not CONFIG['MOZ_TREE_PIXMAN']:
-    system_headers += [
-        'pixman.h',
-    ]
-
 if CONFIG['MOZ_SYSTEM_LIBVPX']:
     system_headers += [
         'vpx_mem/vpx_mem.h',
