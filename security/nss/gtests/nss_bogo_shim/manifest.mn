@@ -12,9 +12,11 @@ CPPSRCS = \
       nss_bogo_shim.cc \
       $(NULL)
 
-REQUIRES = nspr nss libdbm
+INCLUDES += -I$(CORE_DEPTH)/cpputil
+
+REQUIRES = nspr nss libdbm cpputil
 
 PROGRAM = nss_bogo_shim
-#EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX)
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX)
 
 USE_STATIC_LIBS = 1

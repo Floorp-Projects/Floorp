@@ -20,30 +20,11 @@ var EXPORTED_SYMBOLS = ["PdfjsContentUtils"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PdfjsContentUtils = {
-  _mm: null,
+  _mm: Services.cpmm,
 
   /*
    * Public API
    */
-
-  init() {
-    // child *process* mm, or when loaded into the parent for in-content
-    // support the psuedo child process mm 'child PPMM'.
-    if (!this._mm) {
-      this._mm = Services.cpmm;
-      this._mm.addMessageListener("PDFJS:Child:updateSettings", this);
-
-      Services.obs.addObserver(this, "quit-application");
-    }
-  },
-
-  uninit() {
-    if (this._mm) {
-      this._mm.removeMessageListener("PDFJS:Child:updateSettings", this);
-      Services.obs.removeObserver(this, "quit-application");
-    }
-    this._mm = null;
-  },
 
   /*
    * prefs utilities - the child does not have write access to prefs.
@@ -99,34 +80,6 @@ var PdfjsContentUtils = {
       label: aLabel,
       accessKey: aAccessKey,
     });
-  },
-
-  /*
-   * Events
-   */
-
-  observe(aSubject, aTopic, aData) {
-    if (aTopic === "quit-application") {
-      this.uninit();
-    }
-  },
-
-  receiveMessage(aMsg) {
-    switch (aMsg.name) {
-      case "PDFJS:Child:updateSettings":
-        // Only react to this if we are remote.
-        if (Services.appinfo.processType ===
-            Services.appinfo.PROCESS_TYPE_CONTENT) {
-          let jsm = "resource://pdf.js/PdfJsRegistration.jsm";
-          let pdfjsr = ChromeUtils.import(jsm, {}).PdfJsRegistration;
-          if (aMsg.data.enabled) {
-            pdfjsr.ensureRegistered();
-          } else {
-            pdfjsr.ensureUnregistered();
-          }
-        }
-        break;
-    }
   },
 };
 

@@ -233,7 +233,7 @@ EvalScript(JSContext* cx,
         }
     }
 
-    JSAutoRealmAllowCCW rar(cx, targetObj);
+    JSAutoRealm rar(cx, targetObj);
     if (!JS_WrapValue(cx, retval)) {
         return false;
     }
@@ -270,7 +270,7 @@ EvalScript(JSContext* cx,
         }
 
         if (startupCache) {
-            JSAutoRealmAllowCCW ar(cx, script);
+            JSAutoRealm ar(cx, script);
             WriteCachedScript(StartupCache::GetSingleton(), cachePath, cx, script);
         }
     }
@@ -558,7 +558,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri,
     rv = NS_ReadInputStreamToString(instream, buf, len);
     NS_ENSURE_SUCCESS(rv, false);
 
-    Maybe<JSAutoRealmAllowCCW> ar;
+    Maybe<JSAutoRealm> ar;
 
     // Note that when using the ScriptPreloader cache with loadSubScript, there
     // will be a side-effect of keeping the global that the script was compiled
@@ -656,7 +656,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         return NS_ERROR_FAILURE;
     }
 
-    JSAutoRealmAllowCCW ar(cx, targetObj);
+    JSAutoRealm ar(cx, targetObj);
 
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv) {

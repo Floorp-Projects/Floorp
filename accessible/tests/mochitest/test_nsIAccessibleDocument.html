@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         // Test for correct nsIDOMWindow retrieval.
         var domWindow = null;
         try {
-          domWindow = docAcc.window.QueryInterface(nsIDOMWindow);
+          domWindow = docAcc.window;
         } catch (e) {}
         ok(domWindow, "no nsIDOMWindow for this doc accessible!");
         is(domWindow, window, "Window nodes do not match!");

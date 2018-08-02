@@ -1001,7 +1001,7 @@ nsFrameMessageManager::GetInitialProcessData(JSContext* aCx,
     // We create the initial object in the junk scope. If we created it in a
     // normal realm, that realm would leak until shutdown.
     JS::RootedObject global(aCx, xpc::PrivilegedJunkScope());
-    JSAutoRealmAllowCCW ar(aCx, global);
+    JSAutoRealm ar(aCx, global);
 
     JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
     if (!obj) {

@@ -1117,7 +1117,7 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
 
   if (wrapBehavior == eDontWrapIntoContextCompartment) {
     if (TypeNeedsOuterization<T>::value) {
-      JSAutoRealmAllowCCW ar(cx, obj);
+      JSAutoRealm ar(cx, obj);
       return TryToOuterize(rval);
     }
 
@@ -1181,9 +1181,9 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
   // We try to wrap in the realm of the underlying object of "scope"
   JS::Rooted<JSObject*> obj(cx);
   {
-    // scope for the JSAutoRealmAllowCCW so that we restore the realm
+    // scope for the JSAutoRealm so that we restore the realm
     // before we call JS_WrapValue.
-    Maybe<JSAutoRealmAllowCCW> ar;
+    Maybe<JSAutoRealm> ar;
     // Maybe<Handle> doesn't so much work, and in any case, adding
     // more Maybe (one for a Rooted and one for a Handle) adds more
     // code (and branches!) than just adding a single rooted.
@@ -1234,9 +1234,9 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
   // We try to wrap in the realm of the underlying object of "scope"
   JS::Rooted<JSObject*> obj(cx);
   {
-    // scope for the JSAutoRealmAllowCCW so that we restore the realm
+    // scope for the JSAutoRealm so that we restore the realm
     // before we call JS_WrapValue.
-    Maybe<JSAutoRealmAllowCCW> ar;
+    Maybe<JSAutoRealm> ar;
     // Maybe<Handle> doesn't so much work, and in any case, adding
     // more Maybe (one for a Rooted and one for a Handle) adds more
     // code (and branches!) than just adding a single rooted.
@@ -1421,7 +1421,17 @@ inline void
 ClearWrapper(T* p, nsWrapperCache* cache, JSObject* obj)
 {
   JS::AutoAssertGCCallback inCallback;
-  cache->ClearWrapper(obj);
+
+  // Skip clearing the wrapper when replaying. This method is called during
+  // finalization of |obj|, and when replaying a strong reference is kept on
+  // the contents of the cache: since |obj| is being finalized, the cache
+  // cannot point to |obj|, and clearing here won't do anything.
+  // Additionally, the reference held on the cache may have already been
+  // released, if we are finalizing later than we did while recording, and the
+  // cache may have already been deleted.
+  if (!recordreplay::IsReplaying()) {
+    cache->ClearWrapper(obj);
+  }
 }
 
 template<class T>
@@ -1429,9 +1439,14 @@ inline void
 ClearWrapper(T* p, void*, JSObject* obj)
 {
   JS::AutoAssertGCCallback inCallback;
-  nsWrapperCache* cache;
-  CallQueryInterface(p, &cache);
-  ClearWrapper(p, cache, obj);
+
+  // Skip clearing the wrapper when replaying, for the same reason as in the
+  // overload above: |p| may have been deleted and we cannot QI it.
+  if (!recordreplay::IsReplaying()) {
+    nsWrapperCache* cache;
+    CallQueryInterface(p, &cache);
+    ClearWrapper(p, cache, obj);
+  }
 }
 
 template<class T>
@@ -2416,7 +2431,7 @@ XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
 {
   JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(obj));
   {
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
     const DOMJSClass* domClass = GetDOMClass(obj);
     if (domClass) {
       ProtoHandleGetter protoGetter = domClass->mGetProto;
@@ -3087,7 +3102,7 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
     return false;
   }
 
-  JSAutoRealmAllowCCW ar(aCx, aGlobal);
+  JSAutoRealm ar(aCx, aGlobal);
 
   {
     js::SetReservedSlot(aGlobal, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));

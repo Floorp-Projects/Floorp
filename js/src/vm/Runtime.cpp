@@ -394,7 +394,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     {
         AutoLockScriptData lock(this);
-        rtSizes->scriptData += scriptDataTable(lock).sizeOfExcludingThis(mallocSizeOf);
+        rtSizes->scriptData += scriptDataTable(lock).shallowSizeOfExcludingThis(mallocSizeOf);
         for (ScriptDataTable::Range r = scriptDataTable(lock).all(); !r.empty(); r.popFront())
             rtSizes->scriptData += mallocSizeOf(r.front());
     }

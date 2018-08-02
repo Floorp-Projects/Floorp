@@ -2293,7 +2293,7 @@ JS::ubi::Concrete<js::Shape>::size(mozilla::MallocSizeOf mallocSizeOf) const
         size += table->sizeOfIncludingThis(mallocSizeOf);
 
     if (!get().inDictionary() && get().kids.isHash())
-        size += get().kids.toHash()->sizeOfIncludingThis(mallocSizeOf);
+        size += get().kids.toHash()->shallowSizeOfIncludingThis(mallocSizeOf);
 
     return size;
 }

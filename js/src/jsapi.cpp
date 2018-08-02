@@ -4995,6 +4995,18 @@ JS::SetPromiseRejectionTrackerCallback(JSContext* cx, JSPromiseRejectionTrackerC
     cx->promiseRejectionTrackerCallbackData = data;
 }
 
+extern JS_PUBLIC_API(void)
+JS::JobQueueIsEmpty(JSContext* cx)
+{
+    cx->canSkipEnqueuingJobs = true;
+}
+
+extern JS_PUBLIC_API(void)
+JS::JobQueueMayNotBeEmpty(JSContext* cx)
+{
+    cx->canSkipEnqueuingJobs = false;
+}
+
 JS_PUBLIC_API(JSObject*)
 JS::NewPromiseObject(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
 {

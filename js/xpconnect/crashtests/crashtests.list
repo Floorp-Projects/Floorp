@@ -34,7 +34,6 @@ load 616930-1.html
 # timeouts on mac. See bug 908895.
 skip-if(cocoaWidget&&isDebugBuild) load 639737-1.html
 load 648206-1.html
-load 705875.html
 load 720305-1.html
 load 721910.html
 load 723465.html

@@ -4650,7 +4650,7 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *regexpZone += regExps.sizeOfExcludingThis(mallocSizeOf);
     if (jitZone_)
         jitZone_->addSizeOfIncludingThis(mallocSizeOf, jitZone, baselineStubsOptimized, cachedCFG);
-    *uniqueIdMap += uniqueIds().sizeOfExcludingThis(mallocSizeOf);
+    *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);
     *shapeTables += baseShapes().sizeOfExcludingThis(mallocSizeOf)
                   + initialShapes().sizeOfExcludingThis(mallocSizeOf);
     *atomsMarkBitmaps += markedAtoms().sizeOfExcludingThis(mallocSizeOf);

@@ -312,7 +312,7 @@ PrecompiledScript::ExecuteInGlobal(JSContext* aCx, HandleObject aGlobal,
 {
     {
         RootedObject targetObj(aCx, JS_FindCompilationScope(aCx, aGlobal));
-        JSAutoRealmAllowCCW ar(aCx, targetObj);
+        JSAutoRealm ar(aCx, targetObj);
 
         Rooted<JSScript*> script(aCx, mScript);
         if (!JS::CloneAndExecuteScript(aCx, script, aRval)) {

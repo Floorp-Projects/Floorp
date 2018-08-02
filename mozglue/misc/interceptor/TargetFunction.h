@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/Types.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 
 #include <memory>
@@ -475,7 +476,7 @@ public:
     : mMMPolicy(aOther.mMMPolicy)
     , mBase(aOther.mBase)
   {
-    mLocalBytes.appendAll(aOther.mLocalBytes);
+    Unused << mLocalBytes.appendAll(aOther.mLocalBytes);
   }
 
   ReadOnlyTargetBytes(const ReadOnlyTargetBytes& aOther,
@@ -487,8 +488,8 @@ public:
       return;
     }
 
-    mLocalBytes.append(aOther.mLocalBytes.begin() + aOffsetFromOther,
-                       aOther.mLocalBytes.end());
+    Unused << mLocalBytes.append(aOther.mLocalBytes.begin() + aOffsetFromOther,
+                                 aOther.mLocalBytes.end());
   }
 
   void EnsureLimit(uint32_t aDesiredLimit)
@@ -677,6 +678,13 @@ public:
   {
   }
 
+  ReadOnlyTargetFunction(const MMPolicy& aMMPolicy, FARPROC aFunc)
+    : mTargetBytes(TargetBytesPtr<MMPolicy>::Make(aMMPolicy,
+        reinterpret_cast<const void*>(aFunc)))
+    , mOffset(0)
+  {
+  }
+
   ReadOnlyTargetFunction(const MMPolicy& aMMPolicy, uintptr_t aFunc)
     : mTargetBytes(TargetBytesPtr<MMPolicy>::Make(aMMPolicy,
         reinterpret_cast<const void*>(aFunc)))
@@ -814,7 +822,7 @@ private:
     static auto Result(const MMPolicy& aPolicy, T* aValue)
     {
       ReadOnlyTargetFunction<MMPolicy> ptr(aPolicy, aValue);
-      return ptr.ChasePointer<T>();
+      return ptr.template ChasePointer<T>();
     }
   };
 
@@ -824,7 +832,7 @@ public:
   auto ChasePointer()
   {
     mTargetBytes->EnsureLimit(mOffset + sizeof(T));
-    const typename RemoveCV<T>::Type result = *reinterpret_cast<const RemoveCV<T>::Type*>(mTargetBytes->GetLocalBytes() + mOffset);
+    const typename RemoveCV<T>::Type result = *reinterpret_cast<const typename RemoveCV<T>::Type*>(mTargetBytes->GetLocalBytes() + mOffset);
     return ChasePointerHelper<typename RemoveCV<T>::Type>::Result(mTargetBytes->GetMMPolicy(), result);
   }
 

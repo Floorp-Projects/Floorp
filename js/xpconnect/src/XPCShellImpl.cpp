@@ -195,7 +195,8 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
                 !symlink)
                 location->Normalize();
             RootedObject locationObj(cx);
-            rv = nsXPConnect::XPConnect()->WrapNative(cx, &args.thisv().toObject(),
+            RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+            rv = nsXPConnect::XPConnect()->WrapNative(cx, scope,
                                                       location,
                                                       NS_GET_IID(nsIFile),
                                                       locationObj.address());
@@ -542,7 +543,9 @@ XPCShellInterruptCallback(JSContext* cx)
     if (callback.isUndefined())
         return true;
 
-    JSAutoRealmAllowCCW ar(cx, &callback.toObject());
+    MOZ_ASSERT(js::IsFunctionObject(&callback.toObject()));
+
+    JSAutoRealm ar(cx, &callback.toObject());
     RootedValue rv(cx);
     if (!JS_CallFunctionValue(cx, nullptr, callback, JS::HandleValueArray::empty(), &rv) ||
         !rv.isBoolean())
@@ -573,9 +576,9 @@ SetInterruptCallback(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    // Otherwise, we should have a callable object.
-    if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
-        JS_ReportErrorASCII(cx, "Argument must be callable");
+    // Otherwise, we should have a function object.
+    if (!args[0].isObject() || !js::IsFunctionObject(&args[0].toObject())) {
+        JS_ReportErrorASCII(cx, "Argument must be a function");
         return false;
     }
 
