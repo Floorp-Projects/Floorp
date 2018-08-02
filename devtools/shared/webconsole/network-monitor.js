@@ -17,12 +17,15 @@ loader.lazyRequireGetter(this, "DevToolsUtils",
                          "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "flags",
                          "devtools/shared/flags");
+loader.lazyRequireGetter(this, "NetworkThrottleManager",
+                         "devtools/shared/webconsole/throttle", true);
+loader.lazyRequireGetter(this, "CacheEntry",
+                         "devtools/shared/platform/cache-entry", true);
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",
                          "nsIHttpActivityDistributor");
-const {NetworkThrottleManager} = require("devtools/shared/webconsole/throttle");
-const {CacheEntry} = require("devtools/shared/platform/cache-entry");
+
 // Network logging
 
 // The maximum uint32 value.
