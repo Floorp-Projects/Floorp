@@ -673,7 +673,6 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     *result = nullptr;
 
     RootedObject aJSObj(aJSContext, aJSObjArg);
-    JSAutoRealmAllowCCW ar(aJSContext, aJSObj);
 
     nsresult rv = NS_ERROR_UNEXPECTED;
     if (!XPCConvert::JSObject2NativeInterface(result, aJSObj,
