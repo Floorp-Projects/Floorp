@@ -127,6 +127,10 @@
 mozilla::LazyLogModule gMediaElementLog("nsMediaElement");
 static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
 
+extern mozilla::LazyLogModule gAutoplayPermissionLog;
+#define AUTOPLAY_LOG(msg, ...)                                             \
+  MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+
 #define LOG(type, msg) MOZ_LOG(gMediaElementLog, type, msg)
 #define LOG_EVENT(type, msg) MOZ_LOG(gMediaElementEventsLog, type, msg)
 
@@ -3068,6 +3072,7 @@ HTMLMediaElement::PauseIfShouldNotBePlaying()
     return;
   }
   if (AutoplayPolicy::IsAllowedToPlay(*this) != nsIAutoplay::ALLOWED) {
+    AUTOPLAY_LOG("pause because not allowed to play, element=%p", this);
     ErrorResult rv;
     Pause(rv);
     OwnerDoc()->SetDocTreeHadPlayRevoked();
