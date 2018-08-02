@@ -1700,7 +1700,7 @@ class StaticAnalysis(MachCommandBase):
         cwd = self.topobjdir
         self._compilation_commands_path = self.topobjdir
         args = self._get_clang_tidy_command(
-            check=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
+            checks=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
         monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, total)
 
