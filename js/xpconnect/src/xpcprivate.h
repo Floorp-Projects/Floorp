@@ -2806,7 +2806,8 @@ CloneInto(JSContext* cx, JS::HandleValue vobj, JS::HandleValue vscope,
           JS::HandleValue voptions, JS::MutableHandleValue rval);
 
 bool
-StackScopedClone(JSContext* cx, StackScopedCloneOptions& options, JS::MutableHandleValue val);
+StackScopedClone(JSContext* cx, StackScopedCloneOptions& options, JS::HandleObject sourceScope,
+                 JS::MutableHandleValue val);
 
 } /* namespace xpc */
 
