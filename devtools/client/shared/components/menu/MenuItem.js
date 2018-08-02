@@ -131,7 +131,10 @@ class MenuItem extends PureComponent {
       children.push(acceleratorLabel);
     }
 
-    return li({ className: "menuitem" }, button(attr, children));
+    return li(
+      { className: "menuitem", role: "presentation" },
+      button(attr, children)
+    );
   }
 }
 
