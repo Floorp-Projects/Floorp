@@ -1179,7 +1179,7 @@ GetNPObjectWrapper(JSContext *cx, JS::Handle<JSObject*> aObj, bool wrapResult = 
       return obj;
     }
 
-    JSAutoRealmAllowCCW ar(cx, obj);
+    JSAutoRealm ar(cx, obj);
     if (!::JS_GetPrototype(cx, obj, &obj)) {
       return nullptr;
     }
