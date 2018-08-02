@@ -199,22 +199,6 @@ var NetworkHelper = {
   },
 
   /**
-   * Gets the web appId that is associated with request.
-   *
-   * @param nsIHttpChannel request
-   * @returns number|null
-   *          The appId for the given request, if available.
-   */
-  getAppIdForRequest: function(request) {
-    try {
-      return this.getRequestLoadContext(request).appId;
-    } catch (ex) {
-      // request loadContent is not always available.
-    }
-    return null;
-  },
-
-  /**
    * Gets the topFrameElement that is associated with request. This
    * works in single-process and multiprocess contexts. It may cross
    * the content/chrome boundary.
