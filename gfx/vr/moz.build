@@ -97,6 +97,3 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # ovr_capi_dynamic.h '<unnamed-tag>': Alignment specifier is less than
     # actual alignment (8), and will be ignored
     CXXFLAGS += ['-wd4359']
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

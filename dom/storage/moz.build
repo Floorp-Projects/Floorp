@@ -49,6 +49,3 @@ LOCAL_INCLUDES += [
 
 if CONFIG['ENABLE_TESTS']:
     DEFINES['DOM_STORAGE_TESTS'] = True
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
