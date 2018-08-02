@@ -623,7 +623,7 @@ MacroAssembler::call(JitCode* c)
     const ARMRegister scratch64 = temps.AcquireX();
     syncStackPtr();
     BufferOffset off = immPool64(scratch64, uint64_t(c->raw()));
-    addPendingJump(off, ImmPtr(c->raw()), Relocation::JITCODE);
+    addPendingJump(off, ImmPtr(c->raw()), RelocationKind::JITCODE);
     blr(scratch64);
 }
 

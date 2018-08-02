@@ -3968,7 +3968,7 @@ CodeOffset
 MacroAssemblerARMCompat::toggledCall(JitCode* target, bool enabled)
 {
     BufferOffset bo = nextOffset();
-    addPendingJump(bo, ImmPtr(target->raw()), Relocation::JITCODE);
+    addPendingJump(bo, ImmPtr(target->raw()), RelocationKind::JITCODE);
     ScratchRegisterScope scratch(asMasm());
     ma_movPatchable(ImmPtr(target->raw()), scratch, Always);
     if (enabled)
@@ -4541,7 +4541,7 @@ void
 MacroAssembler::call(ImmPtr imm)
 {
     BufferOffset bo = m_buffer.nextOffset();
-    addPendingJump(bo, imm, Relocation::HARDCODED);
+    addPendingJump(bo, imm, RelocationKind::HARDCODED);
     ma_call(imm);
 }
 
@@ -4563,7 +4563,7 @@ void
 MacroAssembler::call(JitCode* c)
 {
     BufferOffset bo = m_buffer.nextOffset();
-    addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
+    addPendingJump(bo, ImmPtr(c->raw()), RelocationKind::JITCODE);
     ScratchRegisterScope scratch(*this);
     ma_movPatchable(ImmPtr(c->raw()), scratch, Always);
     callJitNoProfiler(scratch);
