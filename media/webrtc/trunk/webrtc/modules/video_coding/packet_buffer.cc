@@ -298,6 +298,10 @@ std::vector<std::unique_ptr<RtpFrameObject>> PacketBuffer::FindFrames(
         if (is_h264 && !is_h264_keyframe) {
           const RTPVideoHeaderH264& header =
               data_buffer_[start_index].video_header.codecHeader.H264;
+
+          if (header.nalus_length >= kMaxNalusPerPacket)
+            return found_frames;
+
           for (size_t j = 0; j < header.nalus_length; ++j) {
             if (header.nalus[j].type == H264::NaluType::kSps) {
               has_h264_sps = true;
