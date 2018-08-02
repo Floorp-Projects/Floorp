@@ -3208,8 +3208,10 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 {
     // 16-bit loads are slow and unaligned 32-bit loads may be too so
     // perform an aligned 32-bit load and adjust the bitmask accordingly.
-    MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
-    MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
+    static_assert(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0,
+                  "JSFunction nargs are aligned to uint32_t");
+    static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
+                  "JSFunction nargs and flags are stored next to each other");
 
     // First, ensure it's a scripted function.
     load32(Address(fun, JSFunction::offsetOfNargs()), scratch);

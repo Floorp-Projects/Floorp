@@ -1802,7 +1802,7 @@ public:
 
     void cmpl_im(int32_t rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("cmpl       $0x%x, " MEM_o32b, rhs, ADDR_o32b(offset, base));
+        spew("cmpl       $0x%x, " MEM_obs, rhs, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(rhs)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_CMP);
             m_formatter.immediate8s(rhs);
