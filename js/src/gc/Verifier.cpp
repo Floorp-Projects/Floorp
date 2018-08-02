@@ -643,8 +643,7 @@ CheckHeapTracer::checkCell(Cell* cell)
     // Moving
     if (!IsValidGCThingPointer(cell) ||
         ((gcType == GCType::Moving) && !IsGCThingValidAfterMovingGC(cell)) ||
-        ((gcType == GCType::NonMoving) &&
-            RelocationOverlay::isCellForwarded(cell)))
+        ((gcType == GCType::NonMoving) && cell->isForwarded()))
     {
         failures++;
         fprintf(stderr, "Bad pointer %p\n", cell);
