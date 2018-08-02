@@ -367,12 +367,6 @@ struct HelperThread
      */
     bool terminate;
 
-    /*
-     * Indicate that this thread has been registered and needs to be
-     * unregistered at shutdown.
-     */
-    bool registered;
-
     /* The current task being executed by this thread, if any. */
     mozilla::Maybe<HelperTaskUnion> currentTask;
 
@@ -420,6 +414,25 @@ struct HelperThread
     void unregisterWithProfilerIfNeeded();
 
   private:
+    struct AutoProfilerLabel
+    {
+        AutoProfilerLabel(HelperThread* helperThread, const char* label,
+                          uint32_t line,
+                          ProfilingStackFrame::Category category);
+        ~AutoProfilerLabel();
+
+    private:
+        ProfilingStack* profilingStack;
+    };
+
+    /*
+     * The profiling thread for this helper thread, which can be used to push
+     * and pop label frames.
+     * This field being non-null Indicates that this thread has been registered
+     * and needs to be unregistered at shutdown.
+     */
+    ProfilingStack* profilingStack;
+
     struct TaskSpec
     {
         using Selector = bool(GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
