@@ -246,6 +246,25 @@ ThreadClient.prototype = {
   },
 
   /**
+   * Warp through time to an execution point in the past or future.
+   *
+   * @param object aTarget
+   *        Description of the warp destination.
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  timeWarp: function(target, onResponse) {
+    const warp = () => {
+      this._doResume({ type: "warp", target }, true, onResponse);
+    };
+    if (this.paused) {
+      warp();
+    } else {
+      this.interrupt(warp);
+    }
+  },
+
+  /**
    * Interrupt a running thread.
    *
    * @param function onResponse

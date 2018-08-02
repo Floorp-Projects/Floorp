@@ -61,6 +61,7 @@ ReplayDebugger.prototype = {
   canRewind: RecordReplayControl.canRewind,
   replayResumeBackward() { RecordReplayControl.resume(/* forward = */ false); },
   replayResumeForward() { RecordReplayControl.resume(/* forward = */ true); },
+  replayTimeWarp: RecordReplayControl.timeWarp,
   replayPause: RecordReplayControl.pause,
 
   addDebuggee() {},
@@ -291,6 +292,14 @@ ReplayDebugger.prototype = {
         return position.kind == "OnPop" && !position.script;
       });
     }
+  },
+
+  get replayingOnForcedPause() {
+    return this._breakpointKindGetter("ForcedPause");
+  },
+  set replayingOnForcedPause(handler) {
+    this._breakpointKindSetter("ForcedPause", handler,
+                               () => handler.call(this, this.getNewestFrame()));
   },
 
   clearAllBreakpoints: NYI,
