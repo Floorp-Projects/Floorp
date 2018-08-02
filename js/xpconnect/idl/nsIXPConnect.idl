@@ -328,11 +328,6 @@ interface nsIXPConnect : nsISupports
 
     // Methods added since mozilla 0.6....
 
-    JSObjectPtr
-    getWrappedNativePrototype(in JSContextPtr aJSContext,
-                              in JSObjectPtr  aScope,
-                              in nsIClassInfo aClassInfo);
-
     jsval variantToJS(in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value);
     nsIVariant JSToVariant(in JSContextPtr ctx, in jsval value);
 
