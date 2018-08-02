@@ -155,6 +155,3 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
 
     # 'type cast': conversion from 'unsigned int' to 'HIMC' of greater size
     CXXFLAGS += ['-wd4312']
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
