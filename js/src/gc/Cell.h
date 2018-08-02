@@ -49,7 +49,7 @@ class StoreBuffer;
 class TenuredCell;
 
 // A GC cell is the base class for all GC things.
-struct Cell
+struct alignas(gc::CellAlignBytes) Cell
 {
   public:
     MOZ_ALWAYS_INLINE bool isTenured() const { return !IsInsideNursery(this); }
