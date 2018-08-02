@@ -166,9 +166,7 @@ dbg.onNewScript = function(script) {
   // without executing any scripts.
   RecordReplayControl.advanceProgressCounter();
 
-  if (gHasNewScriptHandler) {
-    RecordReplayControl.positionHit({ kind: "NewScript" });
-  }
+  hitGlobalHandler("NewScript");
 
   // Check in case any handlers we need to install are on the scripts just
   // created.
@@ -179,11 +177,8 @@ dbg.onNewScript = function(script) {
 // Position Handler State
 ///////////////////////////////////////////////////////////////////////////////
 
-// Whether there is a position handler for NewScript.
-let gHasNewScriptHandler = false;
-
-// Whether there is a position handler for EnterFrame.
-let gHasEnterFrameHandler = false;
+// Position kinds we are expected to hit.
+let gPositionHandlerKinds = Object.create(null);
 
 // Handlers we tried to install but couldn't due to a script not existing.
 // Breakpoints requested by the middleman --- which are preserved when
@@ -204,8 +199,7 @@ function ClearPositionHandlers() {
   dbg.clearAllBreakpoints();
   dbg.onEnterFrame = undefined;
 
-  gHasNewScriptHandler = false;
-  gHasEnterFrameHandler = false;
+  gPositionHandlerKinds = Object.create(null);
   gPendingPcHandlers.length = 0;
   gInstalledPcHandlers.length = 0;
   gOnPopFilters.length = 0;
@@ -216,6 +210,14 @@ function installPendingHandlers() {
   gPendingPcHandlers.length = 0;
 
   pending.forEach(EnsurePositionHandler);
+}
+
+// Hit a position with the specified kind if we are expected to. This is for
+// use with position kinds that have no script/offset/frameIndex information.
+function hitGlobalHandler(kind) {
+  if (gPositionHandlerKinds[kind]) {
+    RecordReplayControl.positionHit({ kind });
+  }
 }
 
 // The completion state of any frame that is being popped.
@@ -232,9 +234,7 @@ function onPopFrame(completion) {
 }
 
 function onEnterFrame(frame) {
-  if (gHasEnterFrameHandler) {
-    RecordReplayControl.positionHit({ kind: "EnterFrame" });
-  }
+  hitGlobalHandler("EnterFrame");
 
   if (considerScript(frame.script)) {
     gOnPopFilters.forEach(filter => {
@@ -259,6 +259,8 @@ function addOnPopFilter(filter) {
 }
 
 function EnsurePositionHandler(position) {
+  gPositionHandlerKinds[position.kind] = true;
+
   switch (position.kind) {
   case "Break":
   case "OnStep":
@@ -301,11 +303,7 @@ function EnsurePositionHandler(position) {
     }
     break;
   case "EnterFrame":
-    gHasEnterFrameHandler = true;
     dbg.onEnterFrame = onEnterFrame;
-    break;
-  case "NewScript":
-    gHasNewScriptHandler = true;
     break;
   }
 }
