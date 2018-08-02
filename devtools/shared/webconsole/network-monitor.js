@@ -47,7 +47,7 @@ const HTTP_TEMPORARY_REDIRECT = 307;
  */
 function matchRequest(channel, filters) {
   // Log everything if no filter is specified
-  if (!filters.outerWindowID && !filters.window && !filters.appId) {
+  if (!filters.outerWindowID && !filters.window) {
     return true;
   }
 
@@ -90,13 +90,6 @@ function matchRequest(channel, filters) {
         // outerWindowID getter from browser.xml (non-remote <xul:browser>) may
         // throw when closing a tab while resources are still loading.
       }
-    }
-  }
-
-  if (filters.appId) {
-    const appId = NetworkHelper.getAppIdForRequest(channel);
-    if (appId && appId == filters.appId) {
-      return true;
     }
   }
 
@@ -770,7 +763,6 @@ NetworkResponseListener.prototype = {
  *        Object with the filters to use for network requests:
  *        - window (nsIDOMWindow): filter network requests by the associated
  *          window object.
- *        - appId (number): filter requests by the appId.
  *        - outerWindowID (number): filter requests by their top frame's outerWindowID.
  *        Filters are optional. If any of these filters match the request is
  *        logged (OR is applied). If no filter is provided then all requests are
