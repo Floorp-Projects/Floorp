@@ -604,7 +604,7 @@ NativeInterface2JSObject(HandleObject aScope,
                          MutableHandleValue aVal)
 {
     AutoJSContext cx;
-    JSAutoRealmAllowCCW ar(cx, aScope);
+    JSAutoRealm ar(cx, aScope);
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
