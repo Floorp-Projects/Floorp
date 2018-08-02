@@ -161,6 +161,10 @@ ReplayDebugger.prototype = {
     return data.map(script => this._addScript(script));
   },
 
+  findAllConsoleMessages() {
+    return this._sendRequest({ type: "findConsoleMessages" });
+  },
+
   /////////////////////////////////////////////////////////
   // ScriptSource methods
   /////////////////////////////////////////////////////////
@@ -300,6 +304,16 @@ ReplayDebugger.prototype = {
   set replayingOnForcedPause(handler) {
     this._breakpointKindSetter("ForcedPause", handler,
                                () => handler.call(this, this.getNewestFrame()));
+  },
+
+  _getNewConsoleMessage() { return this._sendRequest({ type: "getNewConsoleMessage" }); },
+
+  get onConsoleMessage() {
+    return this._breakpointKindGetter("ConsoleMessage");
+  },
+  set onConsoleMessage(handler) {
+    this._breakpointKindSetter("ConsoleMessage", handler,
+                               () => handler.call(this, this._getNewConsoleMessage()));
   },
 
   clearAllBreakpoints: NYI,
