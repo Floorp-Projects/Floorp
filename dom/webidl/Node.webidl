@@ -105,6 +105,8 @@ interface Node : EventTarget {
   readonly attribute URI? baseURIObject;
   [ChromeOnly]
   DOMString generateXPath();
+  [ChromeOnly, Pure, BinaryName="flattenedTreeParentNodeNonInline"]
+  readonly attribute Node? flattenedTreeParentNode;
 
   /**
    * This method provides a fast-path for the Fluent localization system to
