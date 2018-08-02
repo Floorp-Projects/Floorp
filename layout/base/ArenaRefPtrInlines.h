@@ -14,6 +14,7 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ComputedStyle.h"
+#include "nsPresArena.h"
 #include "nsStyleStruct.h"
 
 namespace mozilla {

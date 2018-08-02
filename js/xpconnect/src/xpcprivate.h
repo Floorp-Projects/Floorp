@@ -2213,7 +2213,7 @@ protected:
 /***************************************************************************/
 
 extern JSObject*
-xpc_NewIDObject(JSContext* cx, JS::HandleObject jsobj, const nsID& aID);
+xpc_NewIDObject(JSContext* cx, JS::HandleObject scope, const nsID& aID);
 
 extern const nsID*
 xpc_JSObjectToID(JSContext* cx, JSObject* obj);
@@ -2806,7 +2806,8 @@ CloneInto(JSContext* cx, JS::HandleValue vobj, JS::HandleValue vscope,
           JS::HandleValue voptions, JS::MutableHandleValue rval);
 
 bool
-StackScopedClone(JSContext* cx, StackScopedCloneOptions& options, JS::MutableHandleValue val);
+StackScopedClone(JSContext* cx, StackScopedCloneOptions& options, JS::HandleObject sourceScope,
+                 JS::MutableHandleValue val);
 
 } /* namespace xpc */
 

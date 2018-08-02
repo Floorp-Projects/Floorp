@@ -80,7 +80,8 @@ public:
 
 NS_IMPL_ISUPPORTS(FreetypeReporter, nsIMemoryReporter)
 
-template<> Atomic<size_t> CountingAllocatorBase<FreetypeReporter>::sAmount(0);
+template<> CountingAllocatorBase<FreetypeReporter>::AmountType
+    CountingAllocatorBase<FreetypeReporter>::sAmount(0);
 
 static FT_MemoryRec_ sFreetypeMemoryRecord;
 

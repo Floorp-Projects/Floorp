@@ -309,7 +309,7 @@ WebIDLGlobalNameHash::DefineIfEnabled(JSContext* aCx,
   if (xpc::WrapperFactory::IsXrayWrapper(aObj)) {
     JS::Rooted<JSObject*> constructor(aCx);
     {
-      JSAutoRealmAllowCCW ar(aCx, global);
+      JSAutoRealm ar(aCx, global);
       constructor = FindNamedConstructorForXray(aCx, aId, entry);
     }
     if (NS_WARN_IF(!constructor)) {

@@ -106,7 +106,7 @@ already_AddRefed<Promise>
 Promise::Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
                  JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  JSAutoRealmAllowCCW ar(aCx, aGlobal->GetGlobalJSObject());
+  JSAutoRealm ar(aCx, aGlobal->GetGlobalJSObject());
   JS::Rooted<JSObject*> p(aCx,
                           JS::CallOriginalPromiseResolve(aCx, aValue));
   if (!p) {
@@ -122,7 +122,7 @@ already_AddRefed<Promise>
 Promise::Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
                 JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  JSAutoRealmAllowCCW ar(aCx, aGlobal->GetGlobalJSObject());
+  JSAutoRealm ar(aCx, aGlobal->GetGlobalJSObject());
   JS::Rooted<JSObject*> p(aCx,
                           JS::CallOriginalPromiseReject(aCx, aValue));
   if (!p) {

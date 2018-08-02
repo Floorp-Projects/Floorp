@@ -1652,7 +1652,7 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
 {
   JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(obj));
   {
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
     ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(global);
     // This function is called when resolving the "constructor" and "prototype"
     // properties of Xrays for DOM prototypes and constructors respectively.
@@ -2297,7 +2297,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg, ErrorResult& aErr
                                   domClass->mGetAssociatedGlobal(aCx, aObj));
   MOZ_ASSERT(JS_IsGlobalObject(newParent));
 
-  JSAutoRealmAllowCCW oldAr(aCx, oldParent);
+  JSAutoRealm oldAr(aCx, oldParent);
 
   JS::Compartment* oldCompartment = js::GetObjectCompartment(oldParent);
   JS::Compartment* newCompartment = js::GetObjectCompartment(newParent);
@@ -2317,7 +2317,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg, ErrorResult& aErr
     expandoObject = DOMProxyHandler::GetAndClearExpandoObject(aObj);
   }
 
-  JSAutoRealmAllowCCW newAr(aCx, newParent);
+  JSAutoRealm newAr(aCx, newParent);
 
   // First we clone the reflector. We get a copy of its properties and clone its
   // expando chain.
@@ -3564,7 +3564,7 @@ GetMaplikeSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
     // Since backing object access can happen in non-originating realms,
     // make sure to create the backing object in reflector realm.
     {
-      JSAutoRealmAllowCCW ar(aCx, reflector);
+      JSAutoRealm ar(aCx, reflector);
       JS::Rooted<JSObject*> newBackingObj(aCx);
       newBackingObj.set(Method(aCx));
       if (NS_WARN_IF(!newBackingObj)) {
@@ -3787,7 +3787,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   // objects as constructors?  Of course it's not clear that the spec check
   // makes sense to start with: https://github.com/whatwg/html/issues/3575
   {
-    JSAutoRealmAllowCCW ar(aCx, newTarget);
+    JSAutoRealm ar(aCx, newTarget);
     JS::Handle<JSObject*> constructor =
       GetPerInterfaceObjectHandle(aCx, aConstructorId, aCreator,
                                   true);
@@ -3844,7 +3844,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
 
     // We want to get the constructor from our global's realm, not the
     // caller realm.
-    JSAutoRealmAllowCCW ar(aCx, global.Get());
+    JSAutoRealm ar(aCx, global.Get());
     JS::Rooted<JSObject*> constructor(aCx, cb(aCx));
 
     if (constructor != js::CheckedUnwrap(callee)) {
@@ -3873,7 +3873,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
 
     // We want to get the constructor from our global's realm, not the
     // caller realm.
-    JSAutoRealmAllowCCW ar(aCx, global.Get());
+    JSAutoRealm ar(aCx, global.Get());
     JS::Rooted<JSObject*> constructor(aCx, cb(aCx));
     if (!constructor) {
       return false;
@@ -3900,7 +3900,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     // whose target is not same-realm with the proxy, or bound functions, etc).
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1317658
     {
-      JSAutoRealmAllowCCW ar(aCx, newTarget);
+      JSAutoRealm ar(aCx, newTarget);
       desiredProto = GetPerInterfaceObjectHandle(aCx, aProtoId, aCreator, true);
       if (!desiredProto) {
           return false;
@@ -3925,7 +3925,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     // Now we go to construct an element.  We want to do this in global's
     // realm, not caller realm (the normal constructor behavior),
     // just in case those elements create JS things.
-    JSAutoRealmAllowCCW ar(aCx, global.Get());
+    JSAutoRealm ar(aCx, global.Get());
 
     RefPtr<NodeInfo> nodeInfo =
       doc->NodeInfoManager()->GetNodeInfo(definition->mLocalName,
@@ -3968,7 +3968,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     JS::Rooted<JSObject*> reflector(aCx, element->GetWrapper());
     if (reflector) {
       // reflector might be in different realm.
-      JSAutoRealmAllowCCW ar(aCx, reflector);
+      JSAutoRealm ar(aCx, reflector);
       JS::Rooted<JSObject*> givenProto(aCx, desiredProto);
       if (!JS_WrapObject(aCx, &givenProto) ||
           !JS_SetPrototype(aCx, reflector, givenProto)) {
@@ -3983,7 +3983,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   // Tail end of step 8 and step 13: returning the element.  We want to do this
   // part in the global's realm, though in practice it won't matter much
   // because Element always knows which realm it should be created in.
-  JSAutoRealmAllowCCW ar(aCx, global.Get());
+  JSAutoRealm ar(aCx, global.Get());
   if (!js::IsObjectInContextCompartment(desiredProto, aCx) &&
       !JS_WrapObject(aCx, &desiredProto)) {
     return false;
@@ -4005,7 +4005,7 @@ AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
   }
 
   JS::Rooted<JSObject*> reflector(aCx, aReflector);
-  JSAutoRealmAllowCCW ar(aCx, reflector);
+  JSAutoRealm ar(aCx, reflector);
   JS::Rooted<JSObject*> reflectorProto(aCx);
   bool ok = JS_GetPrototype(aCx, reflector, &reflectorProto);
   MOZ_ASSERT(ok);

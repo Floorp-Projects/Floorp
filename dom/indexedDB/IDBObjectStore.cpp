@@ -1663,7 +1663,7 @@ public:
       return NS_OK;
     }
 
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
 
     JS::Rooted<JS::Value> value(cx);
     nsresult rv = DeserializeIndexValue(cx, &value);
@@ -1785,7 +1785,7 @@ public:
       return NS_OK;
     }
 
-    JSAutoRealmAllowCCW ar(cx, global);
+    JSAutoRealm ar(cx, global);
 
     JS::Rooted<JS::Value> value(cx);
     nsresult rv = DeserializeUpgradeValue(cx, &value);

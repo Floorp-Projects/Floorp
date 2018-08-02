@@ -301,7 +301,7 @@ JitRuntime::initialize(JSContext* cx)
             // Duplicate VMFunction definition. See VMFunction::hash.
             continue;
         }
-        JitSpew(JitSpew_Codegen, "# VM function wrapper");
+        JitSpew(JitSpew_Codegen, "# VM function wrapper (%s)", fun->name());
         if (!generateVMWrapper(cx, masm, *fun))
             return false;
     }
@@ -650,7 +650,7 @@ JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
     if (stubCodes_)
-        n += stubCodes_->sizeOfIncludingThis(mallocSizeOf);
+        n += stubCodes_->shallowSizeOfIncludingThis(mallocSizeOf);
     return n;
 }
 
@@ -661,8 +661,8 @@ JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* cachedCFG) const
 {
     *jitZone += mallocSizeOf(this);
-    *jitZone += baselineCacheIRStubCodes_.sizeOfExcludingThis(mallocSizeOf);
-    *jitZone += ionCacheIRStubInfoSet_.sizeOfExcludingThis(mallocSizeOf);
+    *jitZone += baselineCacheIRStubCodes_.shallowSizeOfExcludingThis(mallocSizeOf);
+    *jitZone += ionCacheIRStubInfoSet_.shallowSizeOfExcludingThis(mallocSizeOf);
 
     *baselineStubsOptimized += optimizedStubSpace_.sizeOfExcludingThis(mallocSizeOf);
     *cachedCFG += cfgSpace_.sizeOfExcludingThis(mallocSizeOf);
@@ -697,6 +697,9 @@ JitRuntime::getVMWrapper(const VMFunction& f) const
 void
 JitCodeHeader::init(JitCode* jitCode)
 {
+    // As long as JitCode isn't moveable, we can avoid tracing this and
+    // mutating executable data.
+    MOZ_ASSERT(!gc::IsMovableKind(gc::AllocKind::JITCODE));
     jitCode_ = jitCode;
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)

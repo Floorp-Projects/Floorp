@@ -1006,7 +1006,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   JS::Rooted<JSObject*> wrapScope(cx, global->GetGlobalJSObject());
   JS::Rooted<JS::Value> v(cx);
   {
-    JSAutoRealmAllowCCW ar(cx, wrapScope);
+    JSAutoRealm ar(cx, wrapScope);
     nsresult rv = nsContentUtils::WrapNative(cx, mTarget, &v,
                                              /* aAllowWrapping = */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1015,7 +1015,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   }
 
   JS::Rooted<JSObject*> target(cx, &v.toObject());
-  JSAutoRealmAllowCCW ar(cx, target);
+  JSAutoRealm ar(cx, target);
 
   // Now that we've entered the realm we actually care about, create our
   // scope chain.  Note that we start with |element|, not aElement, because

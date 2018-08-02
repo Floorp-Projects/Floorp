@@ -238,8 +238,6 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
                             RawAccessFrameRef& aCurrentFrame,
                             TimeStamp aTime)
 {
-  NS_ASSERTION(aTime <= TimeStamp::Now(),
-               "Given time appears to be in the future");
   AUTO_PROFILER_LABEL("FrameAnimator::AdvanceFrame", GRAPHICS);
 
   RefreshResult ret;

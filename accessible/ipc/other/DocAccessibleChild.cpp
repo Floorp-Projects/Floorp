@@ -220,7 +220,7 @@ DocAccessibleChild::RecvRelationByType(const uint64_t& aID,
   auto type = static_cast<RelationType>(aType);
   Relation rel = acc->RelationByType(type);
   while (Accessible* target = rel.Next())
-    aTargets->AppendElement(reinterpret_cast<uintptr_t>(target));
+    aTargets->AppendElement(reinterpret_cast<uint64_t>(target->UniqueID()));
 
   return IPC_OK();
 }
@@ -232,7 +232,7 @@ AddRelation(Accessible* aAcc, RelationType aType,
   Relation rel = aAcc->RelationByType(aType);
   nsTArray<uint64_t> targets;
   while (Accessible* target = rel.Next())
-    targets.AppendElement(reinterpret_cast<uintptr_t>(target));
+    targets.AppendElement(reinterpret_cast<uint64_t>(target->UniqueID()));
 
   if (!targets.IsEmpty()) {
     RelationTargets* newRelation =

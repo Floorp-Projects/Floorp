@@ -138,7 +138,7 @@ class StoreBuffer
         void trace(StoreBuffer* owner, TenuringTracer& mover);
 
         size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-            return stores_.sizeOfExcludingThis(mallocSizeOf);
+            return stores_.shallowSizeOfExcludingThis(mallocSizeOf);
         }
 
         bool isEmpty() const {
