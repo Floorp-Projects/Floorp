@@ -1043,9 +1043,6 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
     MOZ_ASSERT(src, "bad param");
     MOZ_ASSERT(iid, "bad param");
 
-    AutoJSContext cx;
-    JSAutoRealmAllowCCW ar(cx, src);
-
     *dest = nullptr;
      if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
@@ -1068,7 +1065,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
         // scope - see nsBindingManager::GetBindingImplementation.
         //
         // It's also very important that "inner" be rooted here.
-        RootedObject inner(cx,
+        RootedObject inner(RootingCx(),
                            js::CheckedUnwrap(src,
                                              /* stopAtWindowProxy = */ false));
         if (!inner) {
@@ -1109,7 +1106,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
         // Deal with Promises being passed as nsISupports.  In that situation we
         // want to create a dom::Promise and use that.
         if (iid->Equals(NS_GET_IID(nsISupports))) {
-            RootedObject innerObj(cx, inner);
+            RootedObject innerObj(RootingCx(), inner);
             if (IsPromiseObject(innerObj)) {
                 nsIGlobalObject* glob = NativeGlobal(innerObj);
                 RefPtr<Promise> p = Promise::CreateFromExisting(glob, innerObj);
