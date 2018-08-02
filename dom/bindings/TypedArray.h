@@ -172,7 +172,7 @@ public:
   Create(JSContext* cx, nsWrapperCache* creator, uint32_t length,
          const T* data = nullptr) {
     JS::Rooted<JSObject*> creatorWrapper(cx);
-    Maybe<JSAutoRealmAllowCCW> ar;
+    Maybe<JSAutoRealm> ar;
     if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
       ar.emplace(cx, creatorWrapper);
     }
