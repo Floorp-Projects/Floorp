@@ -1249,7 +1249,7 @@ CallMethodHelper::~CallMethodHelper()
         if (!GetArraySizeFromParam(param.type, UndefinedHandleValue, &arraylen))
             continue;
 
-        xpc::CleanupValue(param.type, &param.val, arraylen);
+        xpc::DestructValue(param.type, &param.val, arraylen);
     }
 }
 
