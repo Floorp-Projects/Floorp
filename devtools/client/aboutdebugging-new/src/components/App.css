@@ -2,8 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * The current layout of the about:debugging is
+ *
+ *  +-------------+-------------------------------+
+ *  |   Sidebar   | RuntimePage                   |
+ *  |   (240px)   |                               |
+ *  |             |                               |
+ *  +-------------+-------------------------------+
+ */
 .app {
+  display: grid;
   font-size: 15px;
+  grid-template-columns: 240px auto;
   height: 100vh;
   overflow: hidden;
   width: 100vw;
