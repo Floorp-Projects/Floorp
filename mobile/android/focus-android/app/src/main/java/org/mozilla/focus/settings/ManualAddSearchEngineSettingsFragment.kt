@@ -34,6 +34,12 @@ import java.net.MalformedURLException
 import java.net.URL
 
 class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
+    override fun onCreatePreferences(p0: Bundle?, p1: String?) {
+        setHasOptionsMenu(true)
+
+        addPreferencesFromResource(R.xml.manual_add_search_engine)
+    }
+
     /**
      * A reference to an active async task, if applicable, used to manage the task for lifecycle changes.
      * See {@link #onPause()} for details.
@@ -41,13 +47,6 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     private var activeAsyncTask: AsyncTask<Void, Void, Boolean>? = null
     private var menuItemForActiveAsyncTask: MenuItem? = null
     private val handler = Handler()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-
-        addPreferencesFromResource(R.xml.manual_add_search_engine)
-    }
 
     override fun onResume() {
         super.onResume()
@@ -87,13 +86,13 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         val openLearnMore = {
             SessionManager.getInstance().createSession(Source.MENU, SupportUtils
                 .getSumoURLForTopic(activity, SupportUtils.SumoTopic.ADD_SEARCH_ENGINE))
-            activity.finish()
+            activity!!.finish()
             TelemetryWrapper.addSearchEngineLearnMoreEvent()
         }
 
         val saveSearchEngine = {
-            val engineName = view.findViewById<EditText>(R.id.edit_engine_name).text.toString()
-            val searchQuery = view.findViewById<EditText>(R.id.edit_search_string).text.toString()
+            val engineName = view!!.findViewById<EditText>(R.id.edit_engine_name).text.toString()
+            val searchQuery = view!!.findViewById<EditText>(R.id.edit_search_string).text.toString()
 
             val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
             val engineValid = pref.validateEngineNameAndShowError(engineName)
@@ -128,13 +127,13 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
 
         if (isValidating) {
-            view.alpha = DISABLED_ALPHA
+            view?.alpha = DISABLED_ALPHA
             // Delay showing the loading indicator to prevent it flashing on the screen
             handler.postDelayed({
                 pref.setProgressViewShown(isValidating)
             }, LOADING_INDICATOR_DELAY)
         } else {
-            view.alpha = 1f
+            view?.alpha = 1f
             handler.removeCallbacksAndMessages(null)
             pref.setProgressViewShown(isValidating)
         }
@@ -234,10 +233,10 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             }
 
             if (isValidSearchQuery == true) {
-                CustomSearchEngineStore.addSearchEngine(that.activity, engineName, query)
-                Snackbar.make(that.view, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
-                Settings.getInstance(that.activity).setDefaultSearchEngineByName(engineName)
-                that.fragmentManager.popBackStack()
+                CustomSearchEngineStore.addSearchEngine(that.activity!!, engineName, query)
+                Snackbar.make(that.view!!, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
+                Settings.getInstance(that.activity!!).setDefaultSearchEngineByName(engineName)
+                that.fragmentManager!!.popBackStack()
             } else {
                 showServerError(that)
             }

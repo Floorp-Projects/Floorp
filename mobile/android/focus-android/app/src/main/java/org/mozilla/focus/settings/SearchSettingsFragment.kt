@@ -6,17 +6,14 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceScreen
+import android.support.v7.preference.Preference
 import org.mozilla.focus.R
 import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class SearchSettingsFragment : BaseSettingsFragment(),
         SharedPreferences.OnSharedPreferenceChangeListener {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.search_settings)
     }
 
@@ -36,8 +33,8 @@ class SearchSettingsFragment : BaseSettingsFragment(),
         super.onPause()
     }
 
-    override fun onPreferenceTreeClick(preferenceScreen: PreferenceScreen?, preference: Preference?): Boolean {
-        when (preference?.key) {
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        when (preference.key) {
             resources.getString(R.string.pref_key_search_engine) -> run {
                 navigateToFragment(InstalledSearchEnginesSettingsFragment())
                 TelemetryWrapper.openSearchSettingsEvent()
@@ -45,7 +42,7 @@ class SearchSettingsFragment : BaseSettingsFragment(),
             resources.getString(R.string.pref_key_screen_autocomplete) ->
                 navigateToFragment(AutocompleteSettingsFragment())
         }
-        return super.onPreferenceTreeClick(preferenceScreen, preference)
+        return super.onPreferenceTreeClick(preference)
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {

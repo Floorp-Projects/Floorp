@@ -7,21 +7,22 @@ package org.mozilla.focus.search
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
-import android.preference.Preference
 import android.support.design.widget.TextInputLayout
+import android.support.v7.preference.Preference
+import android.support.v7.preference.PreferenceViewHolder
 import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ProgressBar
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 
-class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : Preference(context, attrs) {
+class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
+    Preference(context, attrs) {
     private var engineNameEditText: EditText? = null
     private var searchQueryEditText: EditText? = null
     private var engineNameErrorLayout: TextInputLayout? = null
@@ -32,24 +33,32 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
     private var savedSearchEngineName: String? = null
     private var savedSearchQuery: String? = null
 
-    override fun onCreateView(parent: ViewGroup?): View {
-        val view = super.onCreateView(parent)
+    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+        super.onBindViewHolder(holder)
 
-        engineNameErrorLayout = view.findViewById(R.id.edit_engine_name_layout)
-        searchQueryErrorLayout = view.findViewById(R.id.edit_search_string_layout)
+        engineNameErrorLayout =
+                holder!!.findViewById(R.id.edit_engine_name_layout) as TextInputLayout
+        searchQueryErrorLayout =
+                holder.findViewById(R.id.edit_search_string_layout) as TextInputLayout
 
-        engineNameEditText = view.findViewById(R.id.edit_engine_name)
-        engineNameEditText?.addTextChangedListener(buildTextWatcherForErrorLayout(engineNameErrorLayout!!))
-        searchQueryEditText = view.findViewById(R.id.edit_search_string)
-        searchQueryEditText?.addTextChangedListener(buildTextWatcherForErrorLayout(searchQueryErrorLayout!!))
+        engineNameEditText = holder.findViewById(R.id.edit_engine_name) as EditText
+        engineNameEditText?.addTextChangedListener(
+            buildTextWatcherForErrorLayout(
+                engineNameErrorLayout!!
+            )
+        )
+        searchQueryEditText = holder.findViewById(R.id.edit_search_string) as EditText
+        searchQueryEditText?.addTextChangedListener(
+            buildTextWatcherForErrorLayout(
+                searchQueryErrorLayout!!
+            )
+        )
 
-        progressView = view.findViewById(R.id.progress)
+        progressView = holder.findViewById(R.id.progress) as ProgressBar
 
         updateState()
 
         ViewUtils.showKeyboard(engineNameEditText)
-
-        return view
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
@@ -102,6 +111,7 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
     fun setProgressViewShown(isShown: Boolean) {
         progressView?.visibility = if (isShown) View.VISIBLE else View.GONE
     }
+
     private fun updateState() {
         if (engineNameEditText != null) engineNameEditText?.setText(savedSearchEngineName)
         if (searchQueryEditText != null) searchQueryEditText?.setText(savedSearchQuery)

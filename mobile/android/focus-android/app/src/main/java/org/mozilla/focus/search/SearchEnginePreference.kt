@@ -7,7 +7,7 @@ package org.mozilla.focus.search
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.Preference
+import android.support.v7.preference.Preference
 import android.util.AttributeSet
 import org.mozilla.focus.Components
 import org.mozilla.focus.R
@@ -27,10 +27,10 @@ class SearchEnginePreference : Preference, SharedPreferences.OnSharedPreferenceC
         this.context = context
     }
 
-    override fun onAttachedToActivity() {
+    override fun onAttached() {
         title = defaultSearchEngineName
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-        super.onAttachedToActivity()
+        super.onAttached()
     }
 
     override fun onPrepareForRemoval() {

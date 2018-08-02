@@ -24,7 +24,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean = when (item?.itemId) {
         R.id.remove -> {
-            removeSelectedDomains(activity.applicationContext)
+            removeSelectedDomains(activity!!.applicationContext)
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -40,7 +40,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment() {
                     TelemetryWrapper.removeAutocompleteDomainsEvent(domains.size)
                 }.await()
 
-                fragmentManager.popBackStack()
+                fragmentManager!!.popBackStack()
             }
         }
     }

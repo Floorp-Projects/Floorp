@@ -35,7 +35,7 @@ class Settings private constructor(context: Context) {
     private val resources: Resources = context.resources
 
     val defaultSearchEngineName: String
-        get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), "")
+        get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), "")!!
 
     fun shouldBlockImages(): Boolean =
             // Not shipping in v1 (#188)
@@ -62,7 +62,7 @@ class Settings private constructor(context: Context) {
     fun shouldBlockCookiesValue(): String =
             preferences.getString(getPreferenceKey(R.string
                     .pref_key_performance_enable_cookies),
-                    resources.getString(R.string.preference_privacy_should_block_cookies_no_option))
+                    resources.getString(R.string.preference_privacy_should_block_cookies_no_option))!!
 
     fun shouldBlockCookies(): Boolean =
             shouldBlockCookiesValue().equals(resources.getString(

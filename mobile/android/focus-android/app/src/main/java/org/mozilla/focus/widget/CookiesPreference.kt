@@ -5,9 +5,9 @@
 package org.mozilla.focus.widget
 
 import android.content.Context
-import android.preference.ListPreference
+import android.support.v7.preference.ListPreference
+import android.support.v7.preference.PreferenceViewHolder
 import android.util.AttributeSet
-import android.view.View
 import org.mozilla.focus.utils.Settings
 
 /**
@@ -15,8 +15,8 @@ import org.mozilla.focus.utils.Settings
  */
 class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreference(context, attrs) {
 
-    override fun onBindView(view: View?) {
-        super.onBindView(view)
+    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+        super.onBindViewHolder(holder)
         updateSummary()
     }
 

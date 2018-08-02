@@ -7,6 +7,7 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v14.preference.SwitchPreference
+import android.support.v7.preference.SwitchPreferenceCompat
 import android.support.v7.preference.PreferenceFragmentCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
 import org.mozilla.focus.R
@@ -15,7 +16,8 @@ import org.mozilla.focus.utils.experimentDescriptor
 import org.mozilla.focus.utils.isInExperiment
 import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
 
-class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
+class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
+    SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         const val FRAGMENT_TAG = "ExperimentSettings"
     }
@@ -25,9 +27,9 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.experiments_settings)
-        enginePreference = preferenceManager
-                .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreference
-        enginePreference.isChecked = activity!!.isInExperiment(experimentDescriptor)
+        val enginePref: SwitchPreferenceCompat? = preferenceManager
+            .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreferenceCompat?
+        enginePref?.isChecked = activity!!.isInExperiment(experimentDescriptor)
     }
 
     override fun onResume() {
@@ -41,7 +43,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
         if (rendererPreferenceChanged) {
             activity?.app?.fretboard?.setOverride(
                     activity!!.app, experimentDescriptor, enginePreference.isChecked)
-            val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity?.packageName)
+            val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity!!.packageName)
             ProcessPhoenix.triggerRebirth(context, launcherIntent)
         }
     }

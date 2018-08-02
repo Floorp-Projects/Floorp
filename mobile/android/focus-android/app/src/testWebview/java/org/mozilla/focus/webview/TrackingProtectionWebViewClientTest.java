@@ -10,7 +10,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.focus.BuildConfig;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.when;
 // http://robolectric.org/getting-started/#note-for-linux-and-mac-users
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, packageName = "org.mozilla.focus")
+@Config(packageName = "org.mozilla.focus")
 public class TrackingProtectionWebViewClientTest {
 
     private TrackingProtectionWebViewClient trackingProtectionWebViewClient;

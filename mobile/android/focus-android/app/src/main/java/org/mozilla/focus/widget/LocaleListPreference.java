@@ -9,7 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.AsyncTask;
-import android.preference.ListPreference;
+import android.support.v7.preference.ListPreference;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -61,6 +61,10 @@ public class LocaleListPreference extends ListPreference {
         languageCodeToNameMap.put("ay", "Aimara");
         languageCodeToNameMap.put("quc", "K'iche'");
         languageCodeToNameMap.put("tsz", "P'urhepecha");
+    }
+
+    public LocaleListPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
     }
 
     /**
@@ -138,9 +142,8 @@ public class LocaleListPreference extends ListPreference {
     }
 
     @Override
-    protected void onAttachedToActivity() {
-        super.onAttachedToActivity();
-
+    public void onAttached() {
+        super.onAttached();
         // Thus far, missing glyphs are replaced by whitespace, not a box
         // or other Unicode codepoint.
         this.characterValidator = new CharacterValidator(" ");
@@ -297,9 +300,8 @@ public class LocaleListPreference extends ListPreference {
     }
 
     @Override
-    protected void onDialogClosed(boolean positiveResult) {
-        // The superclass will take care of persistence.
-        super.onDialogClosed(positiveResult);
+    protected void onClick() {
+        super.onClick();
 
         // Use this hook to try to fix up the environment ASAP.
         // Do this so that the redisplayed fragment is inflated

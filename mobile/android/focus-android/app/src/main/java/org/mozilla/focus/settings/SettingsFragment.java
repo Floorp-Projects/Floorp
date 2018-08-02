@@ -7,10 +7,7 @@ package org.mozilla.focus.settings;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceScreen;
-import android.support.annotation.Nullable;
+import android.support.v7.preference.ListPreference;
 import android.text.TextUtils;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.SettingsActivity;
@@ -30,8 +27,7 @@ public class SettingsFragment extends BaseSettingsFragment implements SharedPref
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreatePreferences(Bundle bundle, String s) {
         addPreferencesFromResource(R.xml.settings);
         // TODO: #2869 Enable Debugging and Expose Advanced Setting
         getPreferenceScreen().removePreference(findPreference(getString(R.string.pref_key_advanced_screen)));
@@ -60,9 +56,8 @@ public class SettingsFragment extends BaseSettingsFragment implements SharedPref
         super.onPause();
     }
 
-
     @Override
-    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+    public boolean onPreferenceTreeClick(android.support.v7.preference.Preference preference) {
         final Resources resources = getResources();
 
         if (preference.getKey().equals(resources.getString(R.string
@@ -79,7 +74,7 @@ public class SettingsFragment extends BaseSettingsFragment implements SharedPref
             navigateToFragment(new MozillaSettingsFragment());
         }
 
-        return super.onPreferenceTreeClick(preferenceScreen, preference);
+        return super.onPreferenceTreeClick(preference);
     }
 
     @Override

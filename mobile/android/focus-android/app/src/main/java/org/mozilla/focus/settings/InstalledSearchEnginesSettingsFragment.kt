@@ -5,8 +5,7 @@
 package org.mozilla.focus.settings
 
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceScreen
+import android.support.v7.preference.Preference
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -16,14 +15,12 @@ import org.mozilla.focus.search.RadioSearchEngineListPreference
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
+    override fun onCreatePreferences(p0: Bundle?, p1: String?) {
+        setHasOptionsMenu(true)
+    }
 
     companion object {
         fun newInstance() = InstalledSearchEnginesSettingsFragment()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
     }
 
     override fun onResume() {
@@ -44,7 +41,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onPrepareOptionsMenu(menu: Menu?) {
         super.onPrepareOptionsMenu(menu)
         menu?.findItem(R.id.menu_restore_default_engines)?.let {
-            it.isEnabled = !CustomSearchEngineStore.hasAllDefaultSearchEngines(activity)
+            it.isEnabled = !CustomSearchEngineStore.hasAllDefaultSearchEngines(activity!!)
         }
     }
 
@@ -56,7 +53,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 true
             }
             R.id.menu_restore_default_engines -> {
-                CustomSearchEngineStore.restoreDefaultSearchEngines(activity)
+                CustomSearchEngineStore.restoreDefaultSearchEngines(activity!!)
                 refetchSearchEngines()
                 TelemetryWrapper.menuRestoreEnginesEvent()
                 true
@@ -65,15 +62,15 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
         }
     }
 
-    override fun onPreferenceTreeClick(preferenceScreen: PreferenceScreen?, preference: Preference?): Boolean {
-        return when (preference?.key) {
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        return when (preference.key) {
             resources.getString(R.string.pref_key_manual_add_search_engine) -> {
                 navigateToFragment(ManualAddSearchEngineSettingsFragment())
                 TelemetryWrapper.menuAddSearchEngineEvent()
                 return true
             }
             else -> {
-                super.onPreferenceTreeClick(preferenceScreen, preference)
+                super.onPreferenceTreeClick(preference)
             }
         }
     }

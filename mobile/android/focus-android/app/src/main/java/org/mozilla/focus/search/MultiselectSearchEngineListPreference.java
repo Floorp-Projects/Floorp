@@ -6,11 +6,12 @@ package org.mozilla.focus.search;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.v7.preference.PreferenceViewHolder;
+import android.view.ContextThemeWrapper;
 import android.util.AttributeSet;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CompoundButton;
 
+import org.jetbrains.annotations.Nullable;
 import org.mozilla.focus.R;
 
 import java.util.HashSet;
@@ -27,10 +28,9 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
     }
 
     @Override
-    protected View onCreateView(ViewGroup parent) {
-        View view = super.onCreateView(parent);
+    public void onBindViewHolder(@Nullable PreferenceViewHolder holder) {
+        super.onBindViewHolder(holder);
         this.bindEngineCheckboxesToMenu();
-        return view;
     }
 
     @Override
@@ -66,7 +66,14 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
             engineButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    ((Activity) getContext()).invalidateOptionsMenu();
+                    final Context context = getContext();
+                    if (context instanceof ContextThemeWrapper) {
+                        if (((ContextThemeWrapper) context).getBaseContext() instanceof Activity) {
+                            ((Activity) ((ContextThemeWrapper) context).getBaseContext()).invalidateOptionsMenu();
+                        }
+                    } else {
+                        ((Activity) context).invalidateOptionsMenu();
+                    }
                 }
             });
         }

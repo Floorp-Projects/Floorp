@@ -5,13 +5,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
     android:minHeight="?android:attr/listPreferredItemHeightSmall"
     android:gravity="center_vertical"
     android:baselineAligned="false"
     android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
-    android:orientation="horizontal">
+    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
 
     <RelativeLayout
         android:layout_width="0dp"
@@ -23,8 +21,7 @@
         <TextView android:id="@android:id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceListItem"
-            tools:text="@string/preference_mozilla_telemetry2" />
+            android:textAppearance="?android:attr/textAppearanceListItem" />
 
         <TextView android:id="@android:id/summary"
             android:layout_width="wrap_content"
@@ -33,38 +30,16 @@
             android:layout_alignStart="@android:id/title"
             android:textAppearance="?android:attr/textAppearanceListItemSecondary"
             android:textColor="?android:attr/textColorSecondary"
-            tools:text="@string/preference_mozilla_telemetry_summary2"
             android:maxLines="10" />
-
-        <TextView
-            android:id="@+id/link"
-            android:layout_below="@android:id/summary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignStart="@android:id/title"
-            android:text="@string/preference_mozilla_telemetry_summary"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:textColor="@color/colorAction" />
 
     </RelativeLayout>
 
-    <LinearLayout
+    <!-- Preference should place its actual preference widget here. -->
+    <LinearLayout android:id="@android:id/widget_frame"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:minWidth="58dip"
         android:gravity="end|center_vertical"
-        android:orientation="vertical">
-
-        <Switch xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/switch_widget"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:orientation="vertical"
-            android:clickable="false"
-            android:focusable="false" />
-
-    </LinearLayout>
+        android:orientation="vertical" />
 
 </LinearLayout>

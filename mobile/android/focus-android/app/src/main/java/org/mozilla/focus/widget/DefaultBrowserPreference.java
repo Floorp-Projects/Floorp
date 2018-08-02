@@ -10,10 +10,10 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.preference.Preference;
 import android.provider.Settings;
+import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.Switch;
 
 import org.mozilla.focus.R;
@@ -47,10 +47,10 @@ public class DefaultBrowserPreference extends Preference {
     }
 
     @Override
-    protected void onBindView(View view) {
-        super.onBindView(view);
+    public void onBindViewHolder(PreferenceViewHolder holder) {
+        super.onBindViewHolder(holder);
 
-        switchView = view.findViewById(R.id.switch_widget);
+        switchView = (Switch) holder.findViewById(R.id.switch_widget);
 
         update();
     }

@@ -36,8 +36,9 @@ tasks:
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
           && echo "--" > .adjust_token
+          && tools/taskcluster/accept-license.sh
           && python tools/l10n/check_locales.py
-          && ./gradlew --no-daemon clean assemble assembleFocusX86DebugAndroidTest detektCheck ktlint lint pmd checkstyle spotbugs test
+          && ./gradlew --no-daemon clean assembleFocusX86DebugAndroidTest assembleKlarX86NightlyAndroidTest detektCheck ktlint lint pmd checkstyle spotbugs testFocusX86DebugUnitTest testKlarX86NightlyUnitTest
       artifacts:
         'public':
           type: 'directory'

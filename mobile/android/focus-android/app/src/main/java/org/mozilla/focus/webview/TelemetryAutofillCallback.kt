@@ -27,7 +27,7 @@ object TelemetryAutofillCallback : AutofillManager.AutofillCallback() {
     }
 
     override fun onAutofillEvent(view: View?, virtualId: Int, event: Int) {
-        super.onAutofillEvent(view, virtualId, event)
+        super.onAutofillEvent(view!!, virtualId, event)
 
         if (event == EVENT_INPUT_SHOWN) {
             TelemetryWrapper.autofillShownEvent()

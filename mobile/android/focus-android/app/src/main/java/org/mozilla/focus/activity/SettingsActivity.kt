@@ -28,7 +28,7 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.Ac
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         if (savedInstanceState == null) {
-            fragmentManager.beginTransaction()
+            supportFragmentManager.beginTransaction()
                     .add(R.id.container, SettingsFragment.newInstance())
                     .commit()
         }

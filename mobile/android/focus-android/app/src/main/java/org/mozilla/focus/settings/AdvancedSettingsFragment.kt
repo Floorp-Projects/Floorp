@@ -12,8 +12,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 class AdvancedSettingsFragment : BaseSettingsFragment(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.advanced_settings)
     }
 

@@ -15,6 +15,7 @@ import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,13 +43,13 @@ public class ViewUtils {
     private static class ShowKeyboard implements Runnable {
         private static final int INTERVAL_MS = 100;
 
-        private final WeakReference<View> viewReferemce;
+        private final WeakReference<View> viewReference;
         private final Handler handler;
 
         private int tries;
 
         private ShowKeyboard(View view) {
-            this.viewReferemce = new WeakReference<>(view);
+            this.viewReference = new WeakReference<>(view);
             this.handler = new Handler(Looper.getMainLooper());
             this.tries = 10;
         }
@@ -59,7 +60,7 @@ public class ViewUtils {
                 return;
             }
 
-            final View view = viewReferemce.get();
+            final View view = viewReference.get();
             if (view == null) {
                 // The view is gone. No need to continue.
                 return;
@@ -76,7 +77,17 @@ public class ViewUtils {
                 return;
             }
 
-            final Activity activity = (Activity) view.getContext();
+            final Activity activity;
+            if (!(view.getContext() instanceof Activity)) {
+                if (view.getContext() instanceof ContextThemeWrapper) {
+                    activity = (Activity) ((ContextThemeWrapper) view.getContext()).getBaseContext();
+                } else {
+                    return;
+                }
+            } else {
+                activity = (Activity) view.getContext();
+            }
+
             if (activity == null) {
                 return;
             }

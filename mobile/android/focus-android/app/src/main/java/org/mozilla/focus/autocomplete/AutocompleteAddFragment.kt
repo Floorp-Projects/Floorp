@@ -4,7 +4,7 @@
 
 package org.mozilla.focus.autocomplete
 
-import android.app.Fragment
+import android.support.v4.app.Fragment
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -40,16 +40,16 @@ class AutocompleteAddFragment : Fragment() {
         updater.updateIcon(R.drawable.ic_close)
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View =
-            inflater!!.inflate(R.layout.fragment_autocomplete_add_domain, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+            inflater.inflate(R.layout.fragment_autocomplete_add_domain, container, false)
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         ViewUtils.showKeyboard(domainView)
     }
 
     override fun onPause() {
         super.onPause()
-        ViewUtils.hideKeyboard(activity.currentFocus)
+        ViewUtils.hideKeyboard(activity?.currentFocus)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -64,7 +64,7 @@ class AutocompleteAddFragment : Fragment() {
                     .toLowerCase()
 
             launch(IO) {
-                val domains = CustomDomains.load(activity)
+                val domains = CustomDomains.load(activity!!)
                 val error = when {
                     domain.isEmpty() -> getString(R.string.preference_autocomplete_add_error)
                     domains.contains(domain) -> getString(R.string.preference_autocomplete_duplicate_url_error)
@@ -75,7 +75,7 @@ class AutocompleteAddFragment : Fragment() {
                     if (error != null) {
                         domainView.error = error
                     } else {
-                        saveDomainAndClose(activity.applicationContext, domain)
+                        saveDomainAndClose(activity!!.applicationContext, domain)
                     }
                 }
             }
@@ -95,6 +95,6 @@ class AutocompleteAddFragment : Fragment() {
 
         ViewUtils.showBrandedSnackbar(view, R.string.preference_autocomplete_add_confirmation, 0)
 
-        fragmentManager.popBackStack()
+        fragmentManager?.popBackStack()
     }
 }

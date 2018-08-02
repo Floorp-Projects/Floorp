@@ -12,7 +12,6 @@ import android.preference.PreferenceManager;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
@@ -32,7 +31,7 @@ import static junit.framework.Assert.assertTrue;
  * This test also verifies that the entity lists (whitelists for specific domains) actually work
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, packageName = "org.mozilla.focus")
+@Config(packageName = "org.mozilla.focus")
 public class DisconnectTest {
 
     @After

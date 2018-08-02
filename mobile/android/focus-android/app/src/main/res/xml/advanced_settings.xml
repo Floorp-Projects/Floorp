@@ -1,12 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/preference_advanced_summary">
-        <SwitchPreference
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <android.support.v7.preference.PreferenceCategory
+        android:layout="@layout/focus_preference_category"
+        android:title="@string/preference_advanced_summary">
+        <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="@string/pref_key_remote_debugging"
-            android:layout="@layout/focus_preference"
+            android:layout="@layout/focus_preference_no_icon"
             android:title="@string/preference_remote_debugging" />
-    </PreferenceCategory>
-</PreferenceScreen>
+    </android.support.v7.preference.PreferenceCategory>
+</android.support.v7.preference.PreferenceScreen>

@@ -15,16 +15,14 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 
 class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
-
-    companion object {
-        fun newInstance() = RemoveSearchEnginesSettingsFragment()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         setHasOptionsMenu(true)
 
         addPreferencesFromResource(R.xml.remove_search_engines)
+    }
+
+    companion object {
+        fun newInstance() = RemoveSearchEnginesSettingsFragment()
     }
 
     override fun onResume() {
@@ -45,7 +43,7 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
         view?.post({
             val pref = preferenceScreen
                 .findPreference(resources.getString(R.string.pref_key_multiselect_search_engine_list))
-                as MultiselectSearchEngineListPreference
+                    as MultiselectSearchEngineListPreference
 
             menu?.findItem(R.id.menu_delete_items)?.let {
                 ViewUtils.setMenuItemEnabled(it, pref.atLeastOneEngineChecked())
@@ -59,10 +57,11 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 val pref = preferenceScreen
                     .findPreference(resources.getString(R.string.pref_key_multiselect_search_engine_list))
 
-                val enginesToRemove = (pref as MultiselectSearchEngineListPreference).checkedEngineIds
+                val enginesToRemove =
+                    (pref as MultiselectSearchEngineListPreference).checkedEngineIds
                 TelemetryWrapper.removeSearchEnginesEvent(enginesToRemove.size)
-                CustomSearchEngineStore.removeSearchEngines(activity, enginesToRemove)
-                fragmentManager.popBackStack()
+                CustomSearchEngineStore.removeSearchEngines(activity!!, enginesToRemove)
+                fragmentManager!!.popBackStack()
                 true
             }
             else -> super.onOptionsItemSelected(item)

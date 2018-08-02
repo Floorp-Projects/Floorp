@@ -6,9 +6,6 @@ package org.mozilla.focus.autocomplete
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceFragment
-import android.preference.PreferenceScreen
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -16,10 +13,8 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 /**
  * Settings UI for configuring autocomplete.
  */
-class AutocompleteSettingsFragment : PreferenceFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
+    override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.autocomplete)
     }
 
@@ -39,17 +34,13 @@ class AutocompleteSettingsFragment : PreferenceFragment(), SharedPreferences.OnS
         preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onPreferenceTreeClick(preferenceScreen: PreferenceScreen?, preference: Preference?): Boolean {
+    override fun onPreferenceTreeClick(preference: android.support.v7.preference.Preference?): Boolean {
         preference?.let {
             if (it.key == getString(R.string.pref_key_screen_custom_domains)) {
-                fragmentManager.beginTransaction()
-                        .replace(R.id.container, AutocompleteListFragment())
-                        .addToBackStack(null)
-                        .commit()
+                navigateToFragment(AutocompleteListFragment())
             }
         }
-
-        return super.onPreferenceTreeClick(preferenceScreen, preference)
+        return super.onPreferenceTreeClick(preference)
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {

@@ -7,29 +7,22 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceCategory
-import android.preference.SwitchPreference
+import android.support.v7.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
-import org.mozilla.focus.R.string.pref_key_biometric
-import org.mozilla.focus.R.string.preference_category_switching_apps
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
-        SharedPreferences.OnSharedPreferenceChangeListener {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    SharedPreferences.OnSharedPreferenceChangeListener {
+    override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.privacy_security_settings)
 
         // Remove the biometric toggle if the software or hardware do not support it
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !Biometrics.hasFingerprintHardware(context)) {
-            val biometricPreference = findPreference(getString(pref_key_biometric)) as Preference
-            val switchingAppsCategory = findPreference(getString(
-                preference_category_switching_apps)) as PreferenceCategory
-
-            switchingAppsCategory.removePreference(biometricPreference)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !Biometrics.hasFingerprintHardware(
+                context!!
+            )
+        ) {
+            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_biometric)))
         }
 
         updateStealthToggleAvailability()
@@ -57,13 +50,19 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
     }
 
     private fun updateStealthToggleAvailability() {
-        val switch = preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as SwitchPreference
+        val switch =
+            preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as SwitchPreferenceCompat
         if (preferenceManager.sharedPreferences
-                        .getBoolean(resources.getString(R.string.pref_key_biometric),
-                                false)) {
+                .getBoolean(
+                    resources.getString(R.string.pref_key_biometric),
+                    false
+                )
+        ) {
             preferenceManager.sharedPreferences
-                    .edit().putBoolean(resources.getString(R.string.pref_key_secure),
-                            true).apply()
+                .edit().putBoolean(
+                    resources.getString(R.string.pref_key_secure),
+                    true
+                ).apply()
             // Disable the stealth switch
             switch.isChecked = true
             switch.isEnabled = false

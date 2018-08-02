@@ -100,7 +100,7 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         final TabLayout tabLayout = view.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager, true);
 
-        final FragmentManager fragmentManager = getFragmentManager();
+        final FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         final UrlInputFragment urlInputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
         if (urlInputFragment != null) {
             fragmentManager.beginTransaction().detach(urlInputFragment).commit();
