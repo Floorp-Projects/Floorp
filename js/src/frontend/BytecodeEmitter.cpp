@@ -6068,10 +6068,26 @@ BytecodeEmitter::emitAwaitInInnermostScope(ParseNode* pn)
 bool
 BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope)
 {
+    if (!emit1(JSOP_TRYSKIPAWAIT))              // VALUE_OR_RESOLVED CANSKIP
+        return false;
+
+    if (!emit1(JSOP_NOT))                       // VALUE_OR_RESOLVED !CANSKIP
+        return false;
+
+    InternalIfEmitter ifCanSkip(this);
+    if (!ifCanSkip.emitThen())                  // VALUE_OR_RESOLVED
+        return false;
+
     if (!emitGetDotGeneratorInScope(currentScope))
+        return false;                           // VALUE GENERATOR
+    if (!emitYieldOp(JSOP_AWAIT))               // RESOLVED
         return false;
-    if (!emitYieldOp(JSOP_AWAIT))
+
+    if (!ifCanSkip.emitEnd())
         return false;
+
+    MOZ_ASSERT(ifCanSkip.popped() == 0);
+
     return true;
 }
 

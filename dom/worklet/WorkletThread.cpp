@@ -171,7 +171,6 @@ public:
   {
     RefPtr<MicroTaskRunnable> runnable(aRunnable);
 
-#ifdef DEBUG
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(runnable);
 
@@ -181,10 +180,12 @@ public:
     JSContext* cx = workletThread->GetJSContext();
     MOZ_ASSERT(cx);
 
+#ifdef DEBUG
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     MOZ_ASSERT(global);
 #endif
 
+    JS::JobQueueMayNotBeEmpty(cx);
     GetMicroTaskQueue().push(runnable.forget());
   }
 

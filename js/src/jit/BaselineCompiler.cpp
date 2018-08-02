@@ -1032,7 +1032,6 @@ BaselineCompiler::emitBody()
             // Run-once opcode during self-hosting initialization.
           case JSOP_UNUSED126:
           case JSOP_UNUSED206:
-          case JSOP_UNUSED223:
           case JSOP_LIMIT:
             // === !! WARNING WARNING WARNING !! ===
             // Do you really want to sacrifice performance by not implementing
@@ -4119,6 +4118,38 @@ BaselineCompiler::emit_JSOP_TOASYNCITER()
     masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
     frame.popn(2);
     frame.push(R0);
+    return true;
+}
+
+typedef bool (*TrySkipAwaitFn)(JSContext*, HandleValue, MutableHandleValue);
+static const VMFunction TrySkipAwaitInfo = FunctionInfo<TrySkipAwaitFn>(jit::TrySkipAwait, "TrySkipAwait");
+
+bool
+BaselineCompiler::emit_JSOP_TRYSKIPAWAIT()
+{
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    prepareVMCall();
+    pushArg(R0);
+
+    if (!callVM(TrySkipAwaitInfo))
+        return false;
+
+    Label cannotSkip, done;
+    masm.branchTestMagicValue(Assembler::Equal, R0, JS_CANNOT_SKIP_AWAIT, &cannotSkip);
+    masm.moveValue(BooleanValue(true), R1);
+    masm.jump(&done);
+
+    masm.bind(&cannotSkip);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+    masm.moveValue(BooleanValue(false), R1);
+
+    masm.bind(&done);
+
+    frame.pop();
+    frame.push(R0);
+    frame.push(R1);
     return true;
 }
 

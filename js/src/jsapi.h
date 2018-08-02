@@ -4061,6 +4061,34 @@ SetPromiseRejectionTrackerCallback(JSContext* cx, JSPromiseRejectionTrackerCallb
                                    void* data = nullptr);
 
 /**
+ * Inform the runtime that the job queue is empty and the embedding is going to
+ * execute its last promise job. The runtime may now choose to skip creating
+ * promise jobs for asynchronous execution and instead continue execution
+ * synchronously. More specifically, this optimization is used to skip the
+ * standard job queuing behavior for `await` operations in async functions.
+ *
+ * This function may be called before executing the last job in the job queue.
+ * When it was called, JobQueueMayNotBeEmpty must be called in order to restore
+ * the default job queuing behavior before the embedding enqueues its next job
+ * into the job queue.
+ */
+extern JS_PUBLIC_API(void)
+JobQueueIsEmpty(JSContext* cx);
+
+/**
+ * Inform the runtime that job queue is no longer empty. The runtime can now no
+ * longer skip creating promise jobs for asynchronous execution, because
+ * pending jobs in the job queue must be executed first to preserve the FIFO
+ * (first in - first out) property of the queue. This effectively undoes
+ * JobQueueIsEmpty and re-enables the standard job queuing behavior.
+ *
+ * This function must be called whenever enqueuing a job to the job queue when
+ * JobQueueIsEmpty was called previously.
+ */
+extern JS_PUBLIC_API(void)
+JobQueueMayNotBeEmpty(JSContext* cx);
+
+/**
  * Returns a new instance of the Promise builtin class in the current
  * compartment, with the right slot layout.
  *
