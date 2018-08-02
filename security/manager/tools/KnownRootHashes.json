@@ -988,7 +988,12 @@
       "label": "SSL_com_EV_Root_Certification_Authority_ECC",
       "binNumber": 196,
       "sha256Fingerprint": "IqLB973tcEzB5wG19AjDEIgP6Va13ipKRPmchzolp8g="
+    },
+    {
+      "label": "GlobalSign",
+      "binNumber": 197,
+      "sha256Fingerprint": "LKvq/jfQbKIqunORwAM9JZgpUsRTZHNJdjo6ta1sz2k="
     }
   ],
-  "maxBin": 196
+  "maxBin": 197
 }

@@ -34,6 +34,9 @@ SEC_BEGIN_PROTOS
 extern SECStatus DER_Encode(PLArenaPool *arena, SECItem *dest, DERTemplate *t,
                             void *src);
 
+/*
+** This function is deprecated.
+*/
 extern SECStatus DER_Lengths(SECItem *item, int *header_len_p,
                              PRUint32 *contents_len_p);
 
