@@ -390,12 +390,6 @@ js::UninlinedIsCrossCompartmentWrapper(const JSObject* obj)
 }
 
 JS_FRIEND_API(JSObject*)
-js::GetGlobalForObjectCrossCompartment(JSObject* obj)
-{
-    return &obj->deprecatedGlobal();
-}
-
-JS_FRIEND_API(JSObject*)
 js::GetPrototypeNoProxy(JSObject* obj)
 {
     MOZ_ASSERT(!obj->is<js::ProxyObject>());

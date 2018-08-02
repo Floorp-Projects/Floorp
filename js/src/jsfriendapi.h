@@ -694,9 +694,6 @@ GetNonCCWObjectRealm(JSObject* obj)
 }
 
 JS_FRIEND_API(JSObject*)
-GetGlobalForObjectCrossCompartment(JSObject* obj);
-
-JS_FRIEND_API(JSObject*)
 GetPrototypeNoProxy(JSObject* obj);
 
 JS_FRIEND_API(void)
