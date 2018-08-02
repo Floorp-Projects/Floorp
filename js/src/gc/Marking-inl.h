@@ -99,7 +99,7 @@ RelocationOverlay::forwardTo(Cell* cell)
                   "RelocationOverlay::magic_ is in the wrong location");
     static_assert(offsetof(RelocationOverlay, magic_) == offsetof(js::Shape, base_) + sizeof(uint32_t),
                   "RelocationOverlay::magic_ is in the wrong location");
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.length),
+    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.length_),
                   "RelocationOverlay::magic_ is in the wrong location");
     magic_ = Relocated;
     newLocation_ = cell;
