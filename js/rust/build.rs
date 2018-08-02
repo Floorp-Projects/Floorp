@@ -287,7 +287,7 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "js::GetArrayBufferLengthAndData",
     "js::GetArrayBufferViewLengthAndData",
     "js::GetFunctionNativeReserved",
-    "js::GetGlobalForObjectCrossCompartment",
+    "JS::GetNonCCWObjectGlobal",
     "js::GetObjectProto",
     "JS_GetObjectRuntime",
     "JS_GetOwnPropertyDescriptorById",
