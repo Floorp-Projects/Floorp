@@ -8,6 +8,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Range.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/RectAbsolute.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/RecordedEvent.h"
 #include "mozilla/layers/WebRenderDrawEventRecorder.h"
@@ -267,9 +268,15 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     dt = gfx::Factory::CreateTiledDrawTarget(tileset);
   }
 
+  auto bounds = gfx::IntRect(origin, aSize);
+
   if (aDirtyRect) {
     Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y, aDirtyRect->size.width, aDirtyRect->size.height);
     dt->PushClipRect(dirty);
+    bounds = bounds.Intersect(IntRect(aDirtyRect->origin.x,
+                                      aDirtyRect->origin.y,
+                                      aDirtyRect->size.width,
+                                      aDirtyRect->size.height));
   }
 
   struct Reader {
@@ -294,9 +301,15 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
       return ret;
     }
 
-    void SkipBounds() {
-      MOZ_RELEASE_ASSERT(pos + sizeof(int) * 4 <= len);
-      pos += sizeof(int) * 4;
+    IntRectAbsolute ReadBounds() {
+      MOZ_RELEASE_ASSERT(pos + sizeof(int32_t) * 4 <= len);
+      int32_t x1, y1, x2, y2;
+      memcpy(&x1, buf + pos + 0 * sizeof(int32_t), sizeof(x1));
+      memcpy(&y1, buf + pos + 1 * sizeof(int32_t), sizeof(y1));
+      memcpy(&x2, buf + pos + 2 * sizeof(int32_t), sizeof(x2));
+      memcpy(&y2, buf + pos + 3 * sizeof(int32_t), sizeof(y2));
+      pos += sizeof(int32_t) * 4;
+      return IntRectAbsolute(x1, y1, x2, y2);
     }
 
   };
@@ -306,10 +319,15 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   bool ret;
   size_t offset = 0;
+  auto absBounds = IntRectAbsolute::FromRect(bounds);
   while (reader.pos < reader.len) {
     size_t end = reader.ReadSize();
     size_t extra_end = reader.ReadSize();
-    reader.SkipBounds();
+    auto combinedBounds = absBounds.Intersect(reader.ReadBounds());
+    if (combinedBounds.IsEmpty()) {
+      offset = extra_end;
+      continue;
+    }
 
     layers::WebRenderTranslator translator(dt);
 
