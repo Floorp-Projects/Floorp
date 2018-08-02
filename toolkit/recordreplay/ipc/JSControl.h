@@ -58,7 +58,12 @@ struct BreakpointPosition
     NewScript,
 
     // Break when NewTimeWarpTarget() is called.
-    WarpTarget
+    WarpTarget,
+
+    // Break when the debugger should pause even if no breakpoint has been
+    // set: the beginning or end of the replay has been reached, or a time
+    // warp has reached its destination.
+    ForcedPause
   ));
 
   Kind mKind;
@@ -110,6 +115,7 @@ struct BreakpointPosition
     case EnterFrame: return "EnterFrame";
     case NewScript: return "NewScript";
     case WarpTarget: return "WarpTarget";
+    case ForcedPause: return "ForcedPause";
     }
     MOZ_CRASH("Bad BreakpointPosition kind");
   }
