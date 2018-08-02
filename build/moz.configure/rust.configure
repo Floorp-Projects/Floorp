@@ -14,8 +14,13 @@ def add_rustup_path(what):
 
 # Rust is required by `rust_compiler` below. We allow_missing here
 # to propagate failures to the better error message there.
-rustc = check_prog('RUSTC', add_rustup_path('rustc'), allow_missing=True)
-cargo = check_prog('CARGO', add_rustup_path('cargo'), allow_missing=True)
+js_option(env='RUSTC', nargs=1, help='Path to the rust compiler')
+js_option(env='CARGO', nargs=1, help='Path to the Cargo package manager')
+
+rustc = check_prog('RUSTC', add_rustup_path('rustc'),
+                   input='RUSTC', allow_missing=True)
+cargo = check_prog('CARGO', add_rustup_path('cargo'),
+                   input='CARGO', allow_missing=True)
 
 
 @depends_if(rustc)
@@ -259,7 +264,10 @@ add_old_configure_assignment('RUSTC', rustc)
 add_old_configure_assignment('RUST_TARGET', rust_target_triple)
 
 # Rustdoc is required by Rust tests below.
-rustdoc = check_prog('RUSTDOC', add_rustup_path('rustdoc'), allow_missing=True)
+js_option(env='RUSTDOC', nargs=1, help='Path to the rustdoc program')
+
+rustdoc = check_prog('RUSTDOC', add_rustup_path('rustdoc'),
+                     input='RUSTDOC', allow_missing=True)
 
 # This option is separate from --enable-tests because Rust tests are particularly
 # expensive in terms of compile time (especially for code in libxul).
@@ -277,10 +285,13 @@ def rust_tests(enable_rust_tests, rustdoc):
 set_config('MOZ_RUST_TESTS', rust_tests)
 
 # Bindgen can use rustfmt to format Rust file, but it's not required.
-rustfmt = check_prog('RUSTFMT', add_rustup_path('rustfmt'), allow_missing=True)
+js_option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
 
-option(env='WIN64_LINK', nargs=1, help='Path to link.exe that targets win64')
-option(env='WIN64_LIB', nargs=1, help='Paths to libraries for the win64 linker')
+rustfmt = check_prog('RUSTFMT', add_rustup_path('rustfmt'),
+                     input='RUSTFMT', allow_missing=True)
+
+js_option(env='WIN64_LINK', nargs=1, help='Path to link.exe that targets win64')
+js_option(env='WIN64_LIB', nargs=1, help='Paths to libraries for the win64 linker')
 
 set_config('WIN64_LINK', depends('WIN64_LINK')(lambda x: x))
 set_config('WIN64_LIB', depends('WIN64_LIB')(lambda x: x))
