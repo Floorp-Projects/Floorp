@@ -18,7 +18,7 @@ let gWhitelist = [{
     type: "single-quote"
   }, {
     file: "netError.dtd",
-    key: "certerror.expiredCert.whatCanYouDoAboutIt",
+    key: "certerror.expiredCert.whatCanYouDoAboutIt2",
     type: "single-quote"
   }, {
     file: "netError.dtd",
@@ -35,6 +35,10 @@ let gWhitelist = [{
   }, {
     file: "netError.dtd",
     key: "certerror.wrongSystemTimeWithoutReference",
+    type: "single-quote"
+  }, {
+    file: "netError.dtd",
+    key: "clockSkewError.longDesc",
     type: "single-quote"
   }, {
     file: "phishing-afterload-warning-message.dtd",

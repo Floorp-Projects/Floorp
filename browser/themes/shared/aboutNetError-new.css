@@ -28,6 +28,11 @@ body.blocked .title {
   background-image: url("chrome://global/skin/icons/blocked.svg");
 }
 
+body.clockSkewError .title {
+  background-image: none;
+  background-repeat: no-repeat;
+}
+
 #errorContainer {
   display: none;
 }
@@ -82,11 +87,23 @@ body:not(.captiveportal) #openPortalLoginPageButton {
   display: none;
 }
 
+body:not(.clockSkewError) #errorTryAgain {
+  display: none;
+}
+
+body:not(.clockSkewError) #advancedPanelErrorTryAgain {
+  display: none;
+}
+
+body:not(.clockSkewError) #moreInformationButton {
+  display: none;
+}
+
 #openPortalLoginPageButton {
   margin-inline-start: 0;
 }
 
-body:not(.neterror) #advancedButton {
+body:not(.neterror):not(.clockSkewError) #advancedButton {
   display: block;
 }
 
@@ -219,6 +236,34 @@ span#hostname {
 
 .malformedURI #errorPageContainer {
   background-image: url("chrome://browser/content/illustrations/error-malformed-url.svg");
+}
+
+.clockSkewError #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/blue-berror.svg");
+  background-size: 18.5em;
+}
+
+.clockSkewError #returnButton {
+  display: none;
+}
+
+.clockSkewError #advancedButton {
+  display: none;
+}
+
+.clockSkewError #advancedPanelErrorTryAgain,
+.clockSkewError #errorTryAgain,
+.clockSkewError #moreInformationButton {
+  display: block;
+  margin-top: 0.3em;
+}
+
+.clockSkewError #exceptionDialogButton {
+  display: none;
+}
+
+.clockSkewError #advancedPanelReturnButton {
+  display: none;
 }
 
 .malformedURI #errorTryAgain {
