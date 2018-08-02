@@ -6,23 +6,25 @@
 package org.mozilla.gecko.prompts;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoScreenOrientation;
+import org.mozilla.gecko.GeckoScreenOrientation.ScreenOrientation;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;
 
-public class PromptService implements BundleEventListener {
+public class PromptService implements BundleEventListener,
+                                      GeckoScreenOrientation.OrientationChangeListener {
     private static final String LOGTAG = "GeckoPromptService";
 
     private final Context context;
     private final EventDispatcher dispatcher;
     private Prompt currentPrompt;
-    private int currentOrientation;
 
     public PromptService(final Context context, final EventDispatcher dispatcher) {
         this.context = context;
-        this.currentOrientation = context.getResources().getConfiguration().orientation;
+        GeckoScreenOrientation.getInstance().addListener(this);
         this.dispatcher = dispatcher;
         this.dispatcher.registerUiThreadListener(this,
             "Prompt:Show",
@@ -33,6 +35,7 @@ public class PromptService implements BundleEventListener {
         dispatcher.unregisterUiThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
+        GeckoScreenOrientation.getInstance().removeListener(this);
     }
 
     // BundleEventListener implementation
@@ -49,10 +52,11 @@ public class PromptService implements BundleEventListener {
         currentPrompt.show(message);
     }
 
-    public void changePromptOrientation(int newOrientation) {
-        if (currentPrompt != null && currentOrientation != newOrientation) {
+    // OrientationChangeListener implementation
+    @Override
+    public void onScreenOrientationChanged(ScreenOrientation newOrientation) {
+        if (currentPrompt != null) {
             currentPrompt.resetLayout();
         }
-        currentOrientation = newOrientation;
     }
 }
