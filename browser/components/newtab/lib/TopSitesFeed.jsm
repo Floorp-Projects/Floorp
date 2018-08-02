@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {TippyTopProvider} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
@@ -32,6 +32,31 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = ["favicon", "faviconRef", "faviconSize"]
 const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
 
+// Search experiment stuff
+const NO_DEFAULT_SEARCH_TILE_EXP_PREF = "improvesearch.noDefaultSearchTile";
+const SEARCH_HOST_FILTERS = [
+  {hostname: "google", identifierPattern: /^google/},
+  {hostname: "amazon", identifierPattern: /^amazon/}
+];
+
+/**
+ * isLinkDefaultSearch - does a given hostname match the user's default search engine?
+ *
+ * @param {string} hostname a top site hostname, such as "amazon" or "foo"
+ * @returns {bool}
+ */
+function isLinkDefaultSearch(hostname) {
+  for (const searchProvider of SEARCH_HOST_FILTERS) {
+    if (
+      hostname === searchProvider.hostname &&
+      String(Services.search.defaultEngine.identifier).match(searchProvider.identifierPattern)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
@@ -50,10 +75,20 @@ this.TopSitesFeed = class TopSitesFeed {
     this.refreshDefaults(this.store.getState().Prefs.values[DEFAULT_SITES_PREF]);
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({broadcast: true});
+    Services.obs.addObserver(this, "browser-search-engine-modified");
   }
 
   uninit() {
     PageThumbs.removeExpirationFilter(this);
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
+  }
+
+  observe(subj, topic, data) {
+    // We should update the current top sites if the search engine has been changed since
+    // the search engine that gets filtered out of top sites has changed.
+    if (topic === "browser-search-engine-modified" && data === "engine-default" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
+      this.refresh({broadcast: true});
+    }
   }
 
   _dedupeKey(site) {
@@ -89,15 +124,32 @@ this.TopSitesFeed = class TopSitesFeed {
   }
 
   async getLinksWithDefaults() {
+    const isExperimentOn = this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF];
     const numItems = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+
+    // Get all frecent sites from history
     const frecent = (await this.frecentCache.request({
       numItems,
       topsiteFrecency: FRECENCY_THRESHOLD
-    })).map(link => Object.assign({}, link, {hostname: shortURL(link)}));
+    }))
+    .reduce((validLinks, link) => {
+      const hostname = shortURL(link);
+      if (!(isExperimentOn && isLinkDefaultSearch(hostname))) {
+        validLinks.push({...link, hostname});
+      }
+      return validLinks;
+    }, []);
 
     // Remove any defaults that have been blocked
-    const notBlockedDefaultSites = DEFAULT_TOP_SITES.filter(link =>
-      !NewTabUtils.blockedLinks.isBlocked({url: link.url}));
+    const notBlockedDefaultSites = DEFAULT_TOP_SITES
+      .filter(link => {
+        if (NewTabUtils.blockedLinks.isBlocked({url: link.url})) {
+          return false;
+        } else if (isExperimentOn && isLinkDefaultSearch(link.hostname)) {
+          return false;
+        }
+        return true;
+      });
 
     // Get pinned links augmented with desired properties
     const plainPinned = await this.pinnedCache.request();
@@ -418,7 +470,7 @@ this.TopSitesFeed = class TopSitesFeed {
       case at.PREF_CHANGED:
         if (action.data.name === DEFAULT_SITES_PREF) {
           this.refreshDefaults(action.data.value);
-        } else if (action.data.name === ROWS_PREF) {
+        } else if ([ROWS_PREF, NO_DEFAULT_SEARCH_TILE_EXP_PREF].includes(action.data.name)) {
           this.refresh({broadcast: true});
         }
         break;

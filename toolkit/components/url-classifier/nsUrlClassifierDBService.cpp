@@ -199,7 +199,7 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
 static nsresult
 ProcessLookupResults(const LookupResultArray& aResults, nsTArray<nsCString>& aTables)
 {
-  // Build the result array.
+  // Build the result array, eliminating any duplicate tables.
   for (const RefPtr<const LookupResult> result : aResults) {
     MOZ_ASSERT(!result->mNoise, "Lookup results should not have noise added");
     LOG(("Found result from table %s", result->mTableName.get()));

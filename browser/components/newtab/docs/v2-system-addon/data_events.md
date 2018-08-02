@@ -539,3 +539,20 @@ This reports the user's interaction with Activity Stream Router.
   "event": ["CLICK_BUTTION" | "BLOCK"]
 }
 ```
+
+### Targeting error pings
+
+This reports when an error has occurred when parsing/evaluating a JEXL targeting string in a message.
+
+```js
+{
+  "client_id": "n/a",
+  "action": "asrouter_undesired_event",
+  "addon_version": "20180710100040",
+  "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
+  "locale": "en-US",
+  "message_id": "some_message_id",
+  "event": "TARGETING_EXPRESSION_ERROR",
+  "value": ["MALFORMED_EXPRESSION" | "OTHER_ERROR"]
+}
+```

@@ -34,7 +34,8 @@
           child.postMessage("play-audible", testCase.origin);
           // Wait for the window to tell us whether it could play video.
           let result = await nextWindowMessage();
-          is(result.data.played, testCase.shouldPlay, testCase.message);
+          is(result.data.allowedToPlay, testCase.shouldPlay, "allowedToPlay - " + testCase.message);
+          is(result.data.played, testCase.shouldPlay, "played - " + testCase.message);
           child.close();
         }
 

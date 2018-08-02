@@ -18,23 +18,6 @@ add_task(async function() {
   is(gBrowser.tabs[initialTabsLength + 1], newTab2, "newTab2 position is correct");
   is(gBrowser.tabs[initialTabsLength + 2], newTab3, "newTab3 position is correct");
 
-  async function dragAndDrop(tab1, tab2, copy) {
-    let rect = tab2.getBoundingClientRect();
-    let event = {
-      ctrlKey: copy,
-      altKey: copy,
-      clientX: rect.left + rect.width / 2 + 10,
-      clientY: rect.top + rect.height / 2,
-    };
-
-    let originalTPos = tab1._tPos;
-    EventUtils.synthesizeDrop(tab1, tab2, null, copy ? "copy" : "move", window, window, event);
-    if (!copy) {
-      await BrowserTestUtils.waitForCondition(() => tab1._tPos != originalTPos,
-        "Waiting for tab position to be updated");
-    }
-  }
-
   await dragAndDrop(newTab1, newTab2, false);
   is(gBrowser.tabs.length, initialTabsLength + 3, "tabs are still there");
   is(gBrowser.tabs[initialTabsLength], newTab2, "newTab2 and newTab1 are swapped");

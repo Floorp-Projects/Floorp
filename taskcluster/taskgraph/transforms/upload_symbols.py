@@ -9,6 +9,7 @@ taskcluster/ci/upload-symbols/job-template.yml into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.treeherder import join_symbol
 
 import logging
 logger = logging.getLogger(__name__)
@@ -47,13 +48,17 @@ def fill_template(config, tasks):
         th = dep.task.get('extra')['treeherder']
         th_platform = dep.task['extra'].get('treeherder-platform',
                                             "{}/{}".format(th['machine']['platform'], build_type))
+        th_symbol = th.get('symbol')
+        th_groupsymbol = th.get('groupSymbol', '?')
         treeherder.setdefault('platform', th_platform)
         treeherder.setdefault('tier', th['tier'])
         treeherder.setdefault('kind', th['jobKind'])
+
         # Disambiguate the treeherder symbol.
-        build_sym = th['symbol']
-        sym = 'Sym' + (build_sym[1:] if build_sym.startswith('B') else build_sym)
-        treeherder.setdefault('symbol', sym)
+        sym = 'Sym' + (th_symbol[1:] if th_symbol.startswith('B') else th_symbol)
+        treeherder.setdefault(
+            'symbol', join_symbol(th_groupsymbol, sym)
+        )
         task['treeherder'] = treeherder
 
         # clear out the stuff that's not part of a task description

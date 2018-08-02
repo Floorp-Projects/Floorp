@@ -24,7 +24,7 @@ if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
   do_get_profile();
 }
 
-const topWindowURI = NetUtil.newURI("http://www.itisatrap.org/");
+const topWindowURI = NetUtil.newURI("http://www.example.com/");
 
 function listener(tracking, priority, nextTest) {
   this._tracking = tracking;
@@ -66,10 +66,10 @@ var skipNormalPriority = false, skipLowestPriority = false;
 function setup_test() {
   httpServer = new HttpServer();
   httpServer.start(-1);
-  httpServer.identity.setPrimary("http", "tracking.example.com", httpServer.identity.primaryPort);
-  httpServer.identity.add("http", "example.com", httpServer.identity.primaryPort);
+  httpServer.identity.setPrimary("http", "tracking.example.org", httpServer.identity.primaryPort);
+  httpServer.identity.add("http", "example.org", httpServer.identity.primaryPort);
   normalOrigin = "http://localhost:" + httpServer.identity.primaryPort;
-  trackingOrigin = "http://tracking.example.com:" + httpServer.identity.primaryPort;
+  trackingOrigin = "http://tracking.example.org:" + httpServer.identity.primaryPort;
 
   if (runtime.processType == runtime.PROCESS_TYPE_CONTENT) {
     if (Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels") &&

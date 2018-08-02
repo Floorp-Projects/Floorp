@@ -532,7 +532,7 @@ TabChild::DoUpdateZoomConstraints(const uint32_t& aPresShellId,
                                   const ViewID& aViewId,
                                   const Maybe<ZoomConstraints>& aConstraints)
 {
-  if (!mApzcTreeManager) {
+  if (!mApzcTreeManager || mDestroyed) {
     return false;
   }
 

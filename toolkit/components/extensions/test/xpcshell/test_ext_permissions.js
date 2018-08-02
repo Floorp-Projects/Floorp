@@ -410,6 +410,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "idle",
   "menus",
   "mozillaAddons",
+  "search",
   "storage",
   "theme",
   "webRequest",
