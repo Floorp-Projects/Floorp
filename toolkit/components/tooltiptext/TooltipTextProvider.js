@@ -122,18 +122,7 @@ TooltipTextProvider.prototype = {
         usedTipElement = tipElement;
       }
 
-      let parent = tipElement.parentNode;
-      if (defView.ShadowRoot &&
-          parent instanceof defView.ShadowRoot) {
-        tipElement = parent.host;
-      } else {
-        let slot = tipElement.openOrClosedAssignedSlot;
-        if (slot) {
-          tipElement = slot;
-        } else {
-          tipElement = parent;
-        }
-      }
+      tipElement = tipElement.flattenedTreeParentNode;
     }
 
     return [titleText, XLinkTitleText, SVGTitleText, XULtooltiptextText].some(function(t) {
