@@ -4450,206 +4450,24 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
 
   mWaitingQueryLayout = false;
 
-  // When ITextStoreACP::GetTextExt() returns TS_E_NOLAYOUT, TSF returns E_FAIL
-  // to its caller (typically, active TIP).  Then, most TIPs abort current job
-  // or treat such application as non-GUI apps.  E.g., some of them give up
-  // showing candidate window, some others show candidate window at top-left of
-  // the screen.  For avoiding this issue, when there is composition (until
-  // composition is actually committed in remote content), we should not
-  // return TS_E_NOLAYOUT error for TIPs whose some features are broken by
-  // this issue.
-  // Note that ideally, this issue should be avoided by each TIP since this
-  // won't be fixed at least on non-latest Windows.  Actually, Google Japanese
-  // Input (based on Mozc) does it.  When GetTextExt() returns E_FAIL, TIPs
-  // should try to check result of GetRangeFromPoint() because TSF returns
-  // TS_E_NOLAYOUT correctly in this case. See:
-  // https://github.com/google/mozc/blob/6b878e31fb6ac4347dc9dfd8ccc1080fe718479f/src/win32/tip/tip_range_util.cc#L237-L257
-
-  bool dontReturnNoLayoutError = false;
-
   if (IsHandlingComposition() && mContentForTSF.HasOrHadComposition() &&
-      mContentForTSF.IsLayoutChangedAt(acpEnd)) {
-    MOZ_ASSERT(!mComposition.IsComposing() ||
-               mComposition.mStart ==
-                 mContentForTSF.LatestCompositionStartOffset());
-    MOZ_ASSERT(!mComposition.IsComposing() ||
-               mComposition.EndOffset() ==
-                 mContentForTSF.LatestCompositionEndOffset());
-    const Selection& selectionForTSF = SelectionForTSFRef();
-    // The bug of Microsoft Office IME 2010 for Japanese is similar to
-    // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
-    // released yet.  So, we can hack it without prefs  because there must be
-    // no developers who want to disable this hack for tests.
-    const bool kIsMSOfficeJapaneseIME2010 =
-      TSFStaticSink::IsMSOfficeJapaneseIME2010Active();
-    // MS IME for Japanese doesn't support asynchronous handling at deciding
-    // its suggest list window position.  The feature was implemented
-    // starting from Windows 8.  And also we may meet same trouble in e10s
-    // mode on Win7.  So, we should never return TS_E_NOLAYOUT to MS IME for
-    // Japanese.
-    if (kIsMSOfficeJapaneseIME2010 ||
-        ((TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar() ||
-          TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
-         TSFStaticSink::IsMSJapaneseIMEActive())) {
-      // Basically, MS-IME tries to retrieve whole composition string rect
-      // at deciding suggest window immediately after unlocking the document.
-      // However, in e10s mode, the content hasn't updated yet in most cases.
-      // Therefore, if the first character at the retrieving range rect is
-      // available, we should use it as the result.
-      if ((kIsMSOfficeJapaneseIME2010 ||
-           TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar()) &&
-          acpStart < acpEnd) {
-        acpEnd = acpStart;
-        dontReturnNoLayoutError = true;
-      }
-      // Although, the condition is not clear, MS-IME sometimes retrieves the
-      // caret rect immediately after modifying the composition string but
-      // before unlocking the document.  In such case, we should return the
-      // nearest character rect.
-      else if ((kIsMSOfficeJapaneseIME2010 ||
-                TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
-               acpStart == acpEnd &&
-               selectionForTSF.IsCollapsed() &&
-               selectionForTSF.EndOffset() == acpEnd) {
-        if (mContentForTSF.MinOffsetOfLayoutChanged() > LONG_MAX) {
-          MOZ_LOG(sTextStoreLog, LogLevel::Error,
-            ("0x%p   TSFTextStore::GetTextExt(), FAILED due to the text "
-             "is too big for TSF (cannot treat modified offset as LONG), "
-             "mContentForTSF.MinOffsetOfLayoutChanged()=%u",
-             this, mContentForTSF.MinOffsetOfLayoutChanged()));
-          return E_FAIL;
-        }
-        int32_t minOffsetOfLayoutChanged =
-          static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
-        acpEnd = acpStart = std::max(minOffsetOfLayoutChanged - 1, 0);
-        dontReturnNoLayoutError = true;
-      }
-    }
-    // ATOK fails to handle TS_E_NOLAYOUT only when it decides the position of
-    // suggest window.  In such case, ATOK tries to query rect of whole
-    // composition string.
-    // XXX For testing with legacy ATOK, we should hack it even if current ATOK
-    //     refers native caret rect on windows whose window class is one of
-    //     Mozilla window classes and we stop creating native caret for ATOK
-    //     because creating native caret causes ATOK refers caret position
-    //     when GetTextExt() returns TS_E_NOLAYOUT.
-    else if (TSFPrefs::DoNotReturnNoLayoutErrorToATOKOfCompositionString() &&
-             TSFStaticSink::IsATOKActive() &&
-             (!TSFStaticSink::IsATOKReferringNativeCaretActive() ||
-              !TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) &&
-             acpStart >= mContentForTSF.LatestCompositionStartOffset() &&
-             acpStart <= mContentForTSF.LatestCompositionEndOffset() &&
-             acpEnd >= mContentForTSF.LatestCompositionStartOffset() &&
-             acpEnd <= mContentForTSF.LatestCompositionEndOffset()) {
-      dontReturnNoLayoutError = true;
-    }
-    // Japanist 10 fails to handle TS_E_NOLAYOUT when it decides the position of
-    // candidate window.  In such case, Japanist shows candidate window at
-    // top-left of the screen.  So, we should return the nearest caret rect
-    // where we know.
-    else if (
-      TSFPrefs::DoNotReturnNoLayoutErrorToJapanist10OfCompositionString() &&
-      TSFStaticSink::IsJapanist10Active() &&
-      acpStart >= mContentForTSF.LatestCompositionStartOffset() &&
-      acpStart <= mContentForTSF.LatestCompositionEndOffset() &&
-      acpEnd >= mContentForTSF.LatestCompositionStartOffset() &&
-      acpEnd <= mContentForTSF.LatestCompositionEndOffset()) {
-      dontReturnNoLayoutError = true;
-    }
-    // Free ChangJie 2010 doesn't handle ITfContextView::GetTextExt() properly.
-    // Prehaps, it's due to the bug of TSF.  We need to check if this is
-    // necessary on Windows 10 before disabling this on Windows 10.
-    else if (TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
-             TSFStaticSink::IsFreeChangJieActive()) {
-      acpEnd = mContentForTSF.LatestCompositionStartOffset();
-      acpStart = std::min(acpStart, acpEnd);
-      dontReturnNoLayoutError = true;
-    }
-    // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
-    // mode on Win8 or later.
-    else if (IsWin8OrLater() &&
-             ((TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP() &&
-               (TSFStaticSink::IsMSChangJieActive() ||
-                TSFStaticSink::IsMSQuickActive())) ||
-             (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
-               (TSFStaticSink::IsMSPinyinActive() ||
-                TSFStaticSink::IsMSWubiActive())))) {
-      acpEnd = mContentForTSF.LatestCompositionStartOffset();
-      acpStart = std::min(acpStart, acpEnd);
-      dontReturnNoLayoutError = true;
-    }
-
-    // If we hack the queried range for active TIP, that means we should not
-    // return TS_E_NOLAYOUT even if hacked offset is still modified.  So, as
-    // far as possible, we should adjust the offset.
-    if (dontReturnNoLayoutError) {
-      MOZ_ASSERT(mContentForTSF.IsLayoutChanged());
-      if (mContentForTSF.MinOffsetOfLayoutChanged() > LONG_MAX) {
-        MOZ_LOG(sTextStoreLog, LogLevel::Error,
-          ("0x%p   TSFTextStore::GetTextExt(), FAILED due to the text "
-           "is too big for TSF (cannot treat modified offset as LONG), "
-           "mContentForTSF.MinOffsetOfLayoutChanged()=%u",
-           this, mContentForTSF.MinOffsetOfLayoutChanged()));
-        return E_FAIL;
-      }
-      bool collapsed = acpStart == acpEnd;
-      // Note that even if all characters in the editor or the composition
-      // string was modified, 0 or start offset of the composition string is
-      // useful because it may return caret rect or old character's rect which
-      // the user still see.  That must be useful information for TIP.
-      int32_t firstModifiedOffset =
-        static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
-      LONG lastUnmodifiedOffset = std::max(firstModifiedOffset - 1, 0);
-      if (mContentForTSF.IsLayoutChangedAt(acpStart)) {
-        if (acpStart >= mContentForTSF.LatestCompositionStartOffset()) {
-          // If mContentForTSF has last composition string and current
-          // composition string, we can assume that ContentCacheInParent has
-          // cached rects of composition string at least length of current
-          // composition string.  Otherwise, we can assume that rect for
-          // first character of composition string is stored since it was
-          // selection start or caret position.
-          LONG maxCachedOffset = mContentForTSF.LatestCompositionEndOffset();
-          if (mContentForTSF.WasLastComposition()) {
-            maxCachedOffset =
-              std::min(maxCachedOffset,
-                       mContentForTSF.LastCompositionStringEndOffset());
-          }
-          acpStart = std::min(acpStart, maxCachedOffset);
-        }
-        // Otherwise, we don't know which character rects are cached.  So, we
-        // need to use first unmodified character's rect in this case.  Even
-        // if there is no character, the query event will return caret rect
-        // instead.
-        else {
-          acpStart = lastUnmodifiedOffset;
-        }
-        MOZ_ASSERT(acpStart <= acpEnd);
-      }
-      // If TIP requests caret rect with collapsed range, we should keep
-      // collapsing the range.
-      if (collapsed) {
-        acpEnd = acpStart;
-      }
-      // Let's set acpEnd to larger offset of last unmodified offset or
-      // acpStart which may be the first character offset of the composition
-      // string.  However, some TIPs may want to know the right edge of the
-      // range.  Therefore, if acpEnd is in composition string and active TIP
-      // doesn't retrieve caret rect (i.e., the range isn't collapsed), we
-      // should keep using the original acpEnd.  Otherwise, we should set
-      // acpEnd to larger value of acpStart and lastUnmodifiedOffset.
-      else if (mContentForTSF.IsLayoutChangedAt(acpEnd) &&
-               (acpEnd < mContentForTSF.LatestCompositionStartOffset() ||
-                acpEnd > mContentForTSF.LatestCompositionEndOffset())) {
-        acpEnd = std::max(acpStart, lastUnmodifiedOffset);
-      }
-      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-        ("0x%p   TSFTextStore::GetTextExt() hacked the queried range "
-         "for not returning TS_E_NOLAYOUT, new values are: "
-         "acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
-    }
+      mContentForTSF.IsLayoutChanged() &&
+      mContentForTSF.MinOffsetOfLayoutChanged() > LONG_MAX) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("0x%p   TSFTextStore::GetTextExt(), FAILED due to the text "
+       "is too big for TSF (cannot treat modified offset as LONG), "
+       "mContentForTSF.MinOffsetOfLayoutChanged()=%u",
+       this, mContentForTSF.MinOffsetOfLayoutChanged()));
+    return E_FAIL;
   }
 
-  if (!dontReturnNoLayoutError && mContentForTSF.IsLayoutChangedAt(acpEnd)) {
+  // At Windows 10 build 17643 (an insider preview for RS5), Microsoft fixed
+  // the bug of TS_E_NOLAYOUT (even when we returned TS_E_NOLAYOUT, TSF
+  // returned E_FAIL to TIP).  However, until we drop to support older Windows
+  // and all TIPs are aware of TS_E_NOLAYOUT result, we need to keep returning
+  // S_OK and available rectangle only for them.
+  if (!MaybeHackNoErrorLayoutBugs(acpStart, acpEnd) &&
+      mContentForTSF.IsLayoutChangedAt(acpEnd)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("0x%p   TSFTextStore::GetTextExt() returned TS_E_NOLAYOUT "
        "(acpEnd=%d)", this, acpEnd));
@@ -4768,6 +4586,202 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
      GetBoolName(*pfClipped)));
 
   return S_OK;
+}
+
+bool
+TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
+                                         LONG& aACPEnd)
+{
+  // When ITextStoreACP::GetTextExt() returns TS_E_NOLAYOUT, TSF returns E_FAIL
+  // to its caller (typically, active TIP).  Then, most TIPs abort current job
+  // or treat such application as non-GUI apps.  E.g., some of them give up
+  // showing candidate window, some others show candidate window at top-left of
+  // the screen.  For avoiding this issue, when there is composition (until
+  // composition is actually committed in remote content), we should not
+  // return TS_E_NOLAYOUT error for TIPs whose some features are broken by
+  // this issue.
+  // Note that ideally, this issue should be avoided by each TIP since this
+  // won't be fixed at least on non-latest Windows.  Actually, Google Japanese
+  // Input (based on Mozc) does it.  When GetTextExt() returns E_FAIL, TIPs
+  // should try to check result of GetRangeFromPoint() because TSF returns
+  // TS_E_NOLAYOUT correctly in this case. See:
+  // https://github.com/google/mozc/blob/6b878e31fb6ac4347dc9dfd8ccc1080fe718479f/src/win32/tip/tip_range_util.cc#L237-L257
+
+  if (!IsHandlingComposition() || !mContentForTSF.HasOrHadComposition() ||
+      !mContentForTSF.IsLayoutChangedAt(aACPEnd)) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mComposition.IsComposing() ||
+             mComposition.mStart ==
+               mContentForTSF.LatestCompositionStartOffset());
+  MOZ_ASSERT(!mComposition.IsComposing() ||
+             mComposition.EndOffset() ==
+               mContentForTSF.LatestCompositionEndOffset());
+
+  bool dontReturnNoLayoutError = false;
+  const Selection& selectionForTSF = SelectionForTSFRef();
+  // The bug of Microsoft Office IME 2010 for Japanese is similar to
+  // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
+  // released yet.  So, we can hack it without prefs  because there must be
+  // no developers who want to disable this hack for tests.
+  const bool kIsMSOfficeJapaneseIME2010 =
+    TSFStaticSink::IsMSOfficeJapaneseIME2010Active();
+  // MS IME for Japanese doesn't support asynchronous handling at deciding
+  // its suggest list window position.  The feature was implemented
+  // starting from Windows 8.  And also we may meet same trouble in e10s
+  // mode on Win7.  So, we should never return TS_E_NOLAYOUT to MS IME for
+  // Japanese.
+  if (kIsMSOfficeJapaneseIME2010 ||
+      ((TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar() ||
+        TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
+       TSFStaticSink::IsMSJapaneseIMEActive())) {
+    // Basically, MS-IME tries to retrieve whole composition string rect
+    // at deciding suggest window immediately after unlocking the document.
+    // However, in e10s mode, the content hasn't updated yet in most cases.
+    // Therefore, if the first character at the retrieving range rect is
+    // available, we should use it as the result.
+    if ((kIsMSOfficeJapaneseIME2010 ||
+         TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar()) &&
+        aACPStart < aACPEnd) {
+      aACPEnd = aACPStart;
+      dontReturnNoLayoutError = true;
+    }
+    // Although, the condition is not clear, MS-IME sometimes retrieves the
+    // caret rect immediately after modifying the composition string but
+    // before unlocking the document.  In such case, we should return the
+    // nearest character rect.
+    else if ((kIsMSOfficeJapaneseIME2010 ||
+              TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
+             aACPStart == aACPEnd &&
+             selectionForTSF.IsCollapsed() &&
+             selectionForTSF.EndOffset() == aACPEnd) {
+      int32_t minOffsetOfLayoutChanged =
+        static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+      aACPEnd = aACPStart = std::max(minOffsetOfLayoutChanged - 1, 0);
+      dontReturnNoLayoutError = true;
+    }
+  }
+  // ATOK fails to handle TS_E_NOLAYOUT only when it decides the position of
+  // suggest window.  In such case, ATOK tries to query rect of whole
+  // composition string.
+  // XXX For testing with legacy ATOK, we should hack it even if current ATOK
+  //     refers native caret rect on windows whose window class is one of
+  //     Mozilla window classes and we stop creating native caret for ATOK
+  //     because creating native caret causes ATOK refers caret position
+  //     when GetTextExt() returns TS_E_NOLAYOUT.
+  else if (TSFPrefs::DoNotReturnNoLayoutErrorToATOKOfCompositionString() &&
+           TSFStaticSink::IsATOKActive() &&
+           (!TSFStaticSink::IsATOKReferringNativeCaretActive() ||
+            !TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) &&
+           aACPStart >= mContentForTSF.LatestCompositionStartOffset() &&
+           aACPStart <= mContentForTSF.LatestCompositionEndOffset() &&
+           aACPEnd >= mContentForTSF.LatestCompositionStartOffset() &&
+           aACPEnd <= mContentForTSF.LatestCompositionEndOffset()) {
+    dontReturnNoLayoutError = true;
+  }
+  // Japanist 10 fails to handle TS_E_NOLAYOUT when it decides the position of
+  // candidate window.  In such case, Japanist shows candidate window at
+  // top-left of the screen.  So, we should return the nearest caret rect
+  // where we know.
+  else if (
+    TSFPrefs::DoNotReturnNoLayoutErrorToJapanist10OfCompositionString() &&
+    TSFStaticSink::IsJapanist10Active() &&
+    aACPStart >= mContentForTSF.LatestCompositionStartOffset() &&
+    aACPStart <= mContentForTSF.LatestCompositionEndOffset() &&
+    aACPEnd >= mContentForTSF.LatestCompositionStartOffset() &&
+    aACPEnd <= mContentForTSF.LatestCompositionEndOffset()) {
+    dontReturnNoLayoutError = true;
+  }
+  // Free ChangJie 2010 doesn't handle ITfContextView::GetTextExt() properly.
+  // Prehaps, it's due to the bug of TSF.  We need to check if this is
+  // necessary on Windows 10 before disabling this on Windows 10.
+  else if (TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
+           TSFStaticSink::IsFreeChangJieActive()) {
+    aACPEnd = mContentForTSF.LatestCompositionStartOffset();
+    aACPStart = std::min(aACPStart, aACPEnd);
+    dontReturnNoLayoutError = true;
+  }
+  // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
+  // mode on Win8 or later.
+  else if (IsWin8OrLater() &&
+           ((TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP() &&
+             (TSFStaticSink::IsMSChangJieActive() ||
+              TSFStaticSink::IsMSQuickActive())) ||
+           (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
+             (TSFStaticSink::IsMSPinyinActive() ||
+              TSFStaticSink::IsMSWubiActive())))) {
+    aACPEnd = mContentForTSF.LatestCompositionStartOffset();
+    aACPStart = std::min(aACPStart, aACPEnd);
+    dontReturnNoLayoutError = true;
+  }
+
+  if (!dontReturnNoLayoutError) {
+    return false;
+  }
+
+  // If we hack the queried range for active TIP, that means we should not
+  // return TS_E_NOLAYOUT even if hacked offset is still modified.  So, as
+  // far as possible, we should adjust the offset.
+  MOZ_ASSERT(mContentForTSF.IsLayoutChanged());
+  bool collapsed = aACPStart == aACPEnd;
+  // Note that even if all characters in the editor or the composition
+  // string was modified, 0 or start offset of the composition string is
+  // useful because it may return caret rect or old character's rect which
+  // the user still see.  That must be useful information for TIP.
+  int32_t firstModifiedOffset =
+    static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
+  LONG lastUnmodifiedOffset = std::max(firstModifiedOffset - 1, 0);
+  if (mContentForTSF.IsLayoutChangedAt(aACPStart)) {
+    if (aACPStart >= mContentForTSF.LatestCompositionStartOffset()) {
+      // If mContentForTSF has last composition string and current
+      // composition string, we can assume that ContentCacheInParent has
+      // cached rects of composition string at least length of current
+      // composition string.  Otherwise, we can assume that rect for
+      // first character of composition string is stored since it was
+      // selection start or caret position.
+      LONG maxCachedOffset = mContentForTSF.LatestCompositionEndOffset();
+      if (mContentForTSF.WasLastComposition()) {
+        maxCachedOffset =
+          std::min(maxCachedOffset,
+                   mContentForTSF.LastCompositionStringEndOffset());
+      }
+      aACPStart = std::min(aACPStart, maxCachedOffset);
+    }
+    // Otherwise, we don't know which character rects are cached.  So, we
+    // need to use first unmodified character's rect in this case.  Even
+    // if there is no character, the query event will return caret rect
+    // instead.
+    else {
+      aACPStart = lastUnmodifiedOffset;
+    }
+    MOZ_ASSERT(aACPStart <= aACPEnd);
+  }
+
+  // If TIP requests caret rect with collapsed range, we should keep
+  // collapsing the range.
+  if (collapsed) {
+    aACPEnd = aACPStart;
+  }
+  // Let's set aACPEnd to larger offset of last unmodified offset or
+  // aACPStart which may be the first character offset of the composition
+  // string.  However, some TIPs may want to know the right edge of the
+  // range.  Therefore, if aACPEnd is in composition string and active TIP
+  // doesn't retrieve caret rect (i.e., the range isn't collapsed), we
+  // should keep using the original aACPEnd.  Otherwise, we should set
+  // aACPEnd to larger value of aACPStart and lastUnmodifiedOffset.
+  else if (mContentForTSF.IsLayoutChangedAt(aACPEnd) &&
+           (aACPEnd < mContentForTSF.LatestCompositionStartOffset() ||
+            aACPEnd > mContentForTSF.LatestCompositionEndOffset())) {
+    aACPEnd = std::max(aACPStart, lastUnmodifiedOffset);
+  }
+
+  MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+    ("0x%p   TSFTextStore::HackNoErrorLayoutBugs() hacked the queried range "
+     "for not returning TS_E_NOLAYOUT, new values are: "
+     "aACPStart=%d, aACPEnd=%d", this, aACPStart, aACPEnd));
+
+  return true;
 }
 
 STDMETHODIMP
