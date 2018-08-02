@@ -113,6 +113,8 @@ export default class AddressPicker extends RichPicker {
       throw new Error(`${this.selectedStateKey} option ${selectedAddressGUID} ` +
                       `does not exist in the address picker`);
     }
+
+    super.render(state);
   }
 
   get selectedStateKey() {
