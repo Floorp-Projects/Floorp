@@ -26,7 +26,7 @@ dictionary RTCStats {
   DOMString id;
 };
 
-dictionary RTCRTPStreamStats : RTCStats {
+dictionary RTCRtpStreamStats : RTCStats {
   unsigned long ssrc;
   DOMString mediaType;
   DOMString remoteId;
@@ -48,7 +48,7 @@ dictionary RTCRTPStreamStats : RTCStats {
   unsigned long nackCount;
 };
 
-dictionary RTCInboundRTPStreamStats : RTCRTPStreamStats {
+dictionary RTCInboundRTPStreamStats : RTCRtpStreamStats {
   unsigned long packetsReceived;
   unsigned long long bytesReceived;
   double jitter;
@@ -62,7 +62,7 @@ dictionary RTCInboundRTPStreamStats : RTCRTPStreamStats {
   unsigned long framesDecoded;
 };
 
-dictionary RTCOutboundRTPStreamStats : RTCRTPStreamStats {
+dictionary RTCOutboundRTPStreamStats : RTCRtpStreamStats {
   unsigned long packetsSent;
   unsigned long long bytesSent;
   double targetBitrate;  // config encoder bitrate target of this SSRC in bits/s
