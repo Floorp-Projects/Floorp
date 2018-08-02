@@ -30,8 +30,7 @@ var PrintingContent = {
     switch (event.type) {
       case "PrintingError": {
         let win = event.target.defaultView;
-        let wbp = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebBrowserPrint);
+        let wbp = win.getInterface(Ci.nsIWebBrowserPrint);
         let nsresult = event.detail;
         global.sendAsyncMessage("Printing:Error", {
           isPrinting: wbp.doingPrint,
@@ -335,8 +334,7 @@ var PrintingContent = {
     }
 
     try {
-      let print = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebBrowserPrint);
+      let print = contentWindow.getInterface(Ci.nsIWebBrowserPrint);
 
       if (print.doingPrintPreview) {
         this.logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PREVIEW");
