@@ -40,9 +40,9 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/ProcessMessageManager.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
@@ -1519,7 +1519,7 @@ public:
   bool DoLoadMessageManagerScript(const nsAString& aURL,
                                   bool aRunInGlobalScope) override
   {
-    ProcessGlobal* global = ProcessGlobal::Get();
+    auto* global = ContentProcessMessageManager::Get();
     MOZ_ASSERT(!aRunInGlobalScope);
     global->LoadScript(aURL);
     return true;
@@ -1748,7 +1748,7 @@ NS_NewChildProcessMessageManager(nsISupports** aResult)
   }
   auto* mm = new ChildProcessMessageManager(cb);
   nsFrameMessageManager::SetChildProcessManager(mm);
-  RefPtr<ProcessGlobal> global = new ProcessGlobal(mm);
+  auto global = MakeRefPtr<ContentProcessMessageManager>(mm);
   NS_ENSURE_TRUE(global->Init(), NS_ERROR_UNEXPECTED);
   return CallQueryInterface(global, aResult);
 }

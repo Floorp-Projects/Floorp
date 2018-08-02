@@ -32,9 +32,9 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
-#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "xpcpublic.h"
@@ -137,8 +137,8 @@ static void
 MarkMessageManagers()
 {
   if (nsFrameMessageManager::GetChildProcessManager()) {
-    // ProcessGlobal's MarkForCC marks also ChildProcessManager.
-    ProcessGlobal* pg = ProcessGlobal::Get();
+    // ContentProcessMessageManager's MarkForCC also marks ChildProcessManager.
+    ContentProcessMessageManager* pg = ContentProcessMessageManager::Get();
     if (pg) {
       pg->MarkForCC();
     }
@@ -471,8 +471,9 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
     return;
   }
 
-  if (ProcessGlobal::WasCreated() && nsFrameMessageManager::GetChildProcessManager()) {
-    ProcessGlobal* pg = ProcessGlobal::Get();
+  if (ContentProcessMessageManager::WasCreated() &&
+      nsFrameMessageManager::GetChildProcessManager()) {
+    auto* pg = ContentProcessMessageManager::Get();
     if (pg) {
       mozilla::TraceScriptHolder(ToSupports(pg), aTrc);
     }
