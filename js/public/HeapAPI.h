@@ -26,12 +26,6 @@ namespace gc {
 
 struct Cell;
 
-/*
- * The low bit is set so this should never equal a normal pointer, and the high
- * bit is set so this should never equal the upper 32 bits of a 64-bit pointer.
- */
-const uint32_t Relocated = uintptr_t(0xbad0bad1);
-
 const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
 const size_t ArenaMask = ArenaSize - 1;
@@ -205,17 +199,20 @@ struct Zone
 
 struct String
 {
-    static const uint32_t NON_ATOM_BIT     = JS_BIT(0);
-    static const uint32_t LINEAR_BIT       = JS_BIT(1);
-    static const uint32_t INLINE_CHARS_BIT = JS_BIT(3);
-    static const uint32_t LATIN1_CHARS_BIT = JS_BIT(6);
-    static const uint32_t EXTERNAL_FLAGS   = LINEAR_BIT | NON_ATOM_BIT | JS_BIT(5);
-    static const uint32_t TYPE_FLAGS_MASK  = JS_BIT(6) - 1;
-    static const uint32_t PERMANENT_ATOM_MASK    = NON_ATOM_BIT | JS_BIT(5);
-    static const uint32_t PERMANENT_ATOM_FLAGS   = JS_BIT(5);
+    static const uint32_t NON_ATOM_BIT     = JS_BIT(1);
+    static const uint32_t LINEAR_BIT       = JS_BIT(4);
+    static const uint32_t INLINE_CHARS_BIT = JS_BIT(6);
+    static const uint32_t LATIN1_CHARS_BIT = JS_BIT(9);
+    static const uint32_t EXTERNAL_FLAGS   = LINEAR_BIT | NON_ATOM_BIT | JS_BIT(8);
+    static const uint32_t TYPE_FLAGS_MASK  = JS_BITMASK(9) - JS_BIT(2) - JS_BIT(0);
+    static const uint32_t PERMANENT_ATOM_MASK    = NON_ATOM_BIT | JS_BIT(8);
+    static const uint32_t PERMANENT_ATOM_FLAGS   = JS_BIT(8);
 
-    uint32_t flags_;
+    uintptr_t flags_;
+  #if JS_BITS_PER_WORD == 32
     uint32_t length_;
+  #endif
+
     union {
         const JS::Latin1Char* nonInlineCharsLatin1;
         const char16_t* nonInlineCharsTwoByte;
@@ -225,15 +222,14 @@ struct String
     const JSStringFinalizer* externalFinalizer;
 
     inline uint32_t flags() const {
-        return flags_;
+        return uint32_t(flags_);
     }
     inline uint32_t length() const {
+  #if JS_BITS_PER_WORD == 32
         return length_;
-    }
-
-    static bool nurseryCellIsString(const js::gc::Cell* cell) {
-        MOZ_ASSERT(IsInsideNursery(cell));
-        return reinterpret_cast<const String*>(cell)->flags() & NON_ATOM_BIT;
+  #else
+        return uint32_t(flags_ >> 32);
+  #endif
     }
 
     static bool isPermanentAtom(const js::gc::Cell* cell) {
@@ -243,6 +239,7 @@ struct String
 };
 
 struct Symbol {
+    uintptr_t reserved_;
     uint32_t code_;
     static const uint32_t WellKnownAPILimit = 0x80000000;
 
