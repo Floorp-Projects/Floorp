@@ -7,19 +7,23 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const RuntimePage = createFactory(require("./RuntimePage"));
-const Sidebar = createFactory(require("./Sidebar"));
+const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 
-class App extends PureComponent {
+const Services = require("Services");
+
+class RuntimePage extends PureComponent {
   render() {
-    return dom.div(
+    return dom.article(
       {
-        className: "app",
+        className: "runtime-page",
       },
-      Sidebar(),
-      RuntimePage(),
+      RuntimeInfo({
+        icon: "chrome://branding/content/icon64.png",
+        name: Services.appinfo.name,
+        version: Services.appinfo.version,
+      }),
     );
   }
 }
 
-module.exports = App;
+module.exports = RuntimePage;
