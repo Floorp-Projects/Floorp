@@ -5,13 +5,15 @@
 [ -n "$GECKO_DIR" ]
 
 HAZARD_SHELL_OBJDIR=$WORKSPACE/obj-haz-shell
+JSBIN="$HAZARD_SHELL_OBJDIR/dist/bin/js"
 JS_SRCDIR=$GECKO_DIR/js/src
 ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
+GCCDIR="$TOOLTOOL_DIR/gcc"
 
-export CC="$TOOLTOOL_DIR/gcc/bin/gcc"
-export CXX="$TOOLTOOL_DIR/gcc/bin/g++"
-export PATH="$TOOLTOOL_DIR/gcc/bin:$PATH"
-export LD_LIBRARY_PATH="$TOOLTOOL_DIR/gcc/lib64"
+export CC="$GCCDIR/bin/gcc"
+export CXX="$GCCDIR/bin/g++"
+export PATH="$GCCDIR/bin:$PATH"
+export LD_LIBRARY_PATH="$GCCDIR/lib64"
 export RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
 export CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
 export LLVM_CONFIG="$TOOLTOOL_DIR/clang/bin/llvm-config"
@@ -20,7 +22,6 @@ PYTHON=python2.7
 if ! which $PYTHON; then
     PYTHON=python
 fi
-
 
 function check_commit_msg () {
     ( set +e;
@@ -68,7 +69,7 @@ function configure_analysis () {
     (
         cd "$analysis_dir"
         cat > defaults.py <<EOF
-js = "$HAZARD_SHELL_OBJDIR/dist/bin/js"
+js = "$JSBIN"
 analysis_scriptdir = "$ANALYSIS_SRCDIR"
 objdir = "$MOZ_OBJDIR"
 source = "$GECKO_DIR"
@@ -105,6 +106,10 @@ function run_analysis () {
         cd "$analysis_dir"
         $PYTHON "$ANALYSIS_SRCDIR/analyze.py" -v --buildcommand="$GECKO_DIR/taskcluster/scripts/builder/hazard-${build_type}.sh"
     )
+}
+
+function analysis_self_test () {
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(dirname "$JSBIN")" $PYTHON "$ANALYSIS_SRCDIR/run-test.py" -v --js "$JSBIN" --sixgill "$TOOLTOOL_DIR/sixgill" --gccdir "$GCCDIR"
 }
 
 function grab_artifacts () {
