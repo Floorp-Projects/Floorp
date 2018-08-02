@@ -50,12 +50,6 @@ public:
   // Can be used to close other fds after performing the dup2()s.
   bool MapsTo(int aFd) const;
 
-  // Wraps MapsTo in a function object, as a convenience for use with
-  // base::CloseSuperfluousFds.
-  std::function<bool(int)> MapsToFunc() const {
-    return [this](int fd) { return MapsTo(fd); };
-  }
-
 private:
   nsTArray<std::pair<int, int>> mMapping;
   nsTArray<int> mTempFds;
