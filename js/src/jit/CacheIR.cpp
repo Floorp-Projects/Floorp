@@ -3596,6 +3596,10 @@ CanAttachAddElement(NativeObject* obj, bool isInit)
         if (!proto->isNative())
             return false;
 
+        // TypedArrayObjects [[Set]] has special behavior.
+        if (proto->is<TypedArrayObject>())
+            return false;
+
         // We have to make sure the proto has no non-writable (frozen) elements
         // because we're not allowed to shadow them. There are a few cases to
         // consider:

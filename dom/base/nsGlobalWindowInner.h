@@ -699,13 +699,6 @@ public:
                   mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::External> GetExternal(mozilla::ErrorResult& aRv);
 
-  // Exposed only for testing
-  static bool
-  TokenizeDialogOptions(nsAString& aToken, nsAString::const_iterator& aIter,
-                        nsAString::const_iterator aEnd);
-  static void
-  ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult);
-
   mozilla::dom::Worklet*
   GetPaintWorklet(mozilla::ErrorResult& aRv);
 

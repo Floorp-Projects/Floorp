@@ -185,9 +185,7 @@ var gSearchResultsPane = {
    */
   getFindSelection(win) {
     // Yuck. See bug 138068.
-    let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebNavigation)
-                      .QueryInterface(Ci.nsIDocShell);
+    let docShell = win.docShell;
 
     let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsISelectionDisplay)

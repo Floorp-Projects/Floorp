@@ -192,9 +192,7 @@ exports.createContextMenu = createContextMenu;
  * @returns {Menu}
  */
 function createEditContextMenu() {
-  const docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell);
+  const docshell = window.docShell;
   const menu = new Menu({
     id: "webconsole-menu"
   });

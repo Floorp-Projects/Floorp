@@ -238,9 +238,7 @@ const nsICacheStorage = Ci.nsICacheStorage;
 const cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(nsICacheStorageService);
 
 var loadContextInfo = Services.loadContextInfo.fromLoadContext(
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIWebNavigation)
-        .QueryInterface(Ci.nsILoadContext), false);
+  window.docShell.QueryInterface(Ci.nsILoadContext), false);
 var diskStorage = cacheService.diskCacheStorage(loadContextInfo, false);
 
 const nsICookiePermission  = Ci.nsICookiePermission;

@@ -29,10 +29,7 @@ var gMisspeltWords;
 function getEditor() {
   var Ci = SpecialPowers.Ci;
   var win = window;
-  var editingSession = SpecialPowers.wrap(win).QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIEditingSession);
+  var editingSession = SpecialPowers.wrap(win).docShell.editingSession;
   return editingSession.getEditorForWindow(win);
 }
 

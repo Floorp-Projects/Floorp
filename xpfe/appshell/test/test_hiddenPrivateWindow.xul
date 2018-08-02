@@ -32,9 +32,15 @@ ok(Services.appShell.hiddenDOMWindow, "hiddenDOMWindow should exist");
 ok(Services.appShell.hiddenPrivateWindow, "hiddenPrivateWindow should exist");
 ok(Services.appShell.hiddenPrivateDOMWindow, "hiddenPrivateDOMWindow should exist");
 
-ok(!PrivateBrowsingUtils.isWindowPrivate(Services.appShell.hiddenWindow.docShell), "hiddenWindow should not be private");
+ok(
+  !PrivateBrowsingUtils.isWindowPrivate(
+    Services.appShell.hiddenWindow.docShell.domWindow),
+  "hiddenWindow should not be private");
 ok(!PrivateBrowsingUtils.isWindowPrivate(Services.appShell.hiddenDOMWindow), "hiddenDOMWindow should not be private");
-ok(PrivateBrowsingUtils.isWindowPrivate(Services.appShell.hiddenPrivateWindow.docShell), "hiddenPrivateWindow should be private");
+ok(
+  PrivateBrowsingUtils.isWindowPrivate(
+    Services.appShell.hiddenPrivateWindow.docShell.domWindow),
+  "hiddenPrivateWindow should be private");
 ok(PrivateBrowsingUtils.isWindowPrivate(Services.appShell.hiddenPrivateDOMWindow), "hiddenPrivateDOMWindow should be private");
 
 ]]>

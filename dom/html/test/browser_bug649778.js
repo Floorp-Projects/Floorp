@@ -39,8 +39,8 @@ function checkCache(url, inMemory, shouldExist, cb)
                        new CheckCacheListener(inMemory, shouldExist));
 }
 function getPopupURL() {
-  var sh = popup.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIWebNavigation)
+  var sh = popup.docShell
+                .QueryInterface(Ci.nsIWebNavigation)
                 .sessionHistory;
 
   return sh.legacySHistory.getEntryAtIndex(sh.index, false).URI.spec;

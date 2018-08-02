@@ -16,10 +16,7 @@
       let SimpleTest = opener.wrappedJSObject.SimpleTest;
 
       function getDocShellType(frame) {
-        return frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIDocShell)
-                                  .QueryInterface(Ci.nsIDocShellTreeItem)
-                                  .itemType;
+        return frame.contentWindow.docShell.itemType;
       }
 
       var normalFrame = document.getElementById("normalFrame");

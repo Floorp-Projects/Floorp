@@ -12,11 +12,7 @@
 
 <script type="text/javascript">
   function checkLoadStates() {
-   var ui = SpecialPowers.wrap(window)
-        .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-             .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-             .QueryInterface(SpecialPowers.Ci.nsIDocShell)
-             .securityUI;
+   var ui = SpecialPowers.wrap(window).docShell.securityUI;
 
    var loadedMixedActive = ui &&
      !!(ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT);

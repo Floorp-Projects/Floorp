@@ -53,9 +53,7 @@ var PrivateBrowsingUtils = {
   },
 
   privacyContextFromWindow: function pbu_privacyContextFromWindow(aWindow) {
-    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsILoadContext);
+    return aWindow.docShell.QueryInterface(Ci.nsILoadContext);
   },
 
   addToTrackingAllowlist(aURI) {

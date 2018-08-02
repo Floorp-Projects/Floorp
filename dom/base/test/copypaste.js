@@ -24,8 +24,7 @@ function modifySelection(s) {
 
 function getLoadContext() {
   var Ci = SpecialPowers.Ci;
-  return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIWebNavigation)
+  return SpecialPowers.wrap(window).docShell
                                    .QueryInterface(Ci.nsILoadContext);
 }
 
@@ -33,10 +32,7 @@ async function testCopyPaste (isXHTML) {
   var suppressUnicodeCheckIfHidden = !!isXHTML;
   var suppressHTMLCheck = !!isXHTML;
 
-  var webnav = SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                     .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-
-  var docShell = webnav.QueryInterface(SpecialPowers.Ci.nsIDocShell);
+  var docShell = SpecialPowers.wrap(window).docShell;
 
   var documentViewer = docShell.contentViewer
                                .QueryInterface(SpecialPowers.Ci.nsIContentViewerEdit);

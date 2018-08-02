@@ -87,12 +87,10 @@
       doPageNavigation(navData);
       yield undefined;
 
-      var docshell = TestWindow.getWindow()
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIDocShell);
-      var shistory = docshell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsISHistory)
+      var docshell = TestWindow.getWindow().docShell;
+      var shistory = docshell.QueryInterface(Ci.nsIWebNavigation)
+                             .sessionHistory
+                             .legacySHistory
                              .QueryInterface(Ci.nsIWebNavigation);
 
       // Reload.

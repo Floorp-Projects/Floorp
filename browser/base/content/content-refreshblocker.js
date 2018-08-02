@@ -160,9 +160,7 @@ var RefreshBlocker = {
 
     if (message.name == "RefreshBlocker:Refresh") {
       let win = Services.wm.getOuterWindowWithId(data.outerWindowID);
-      let refreshURI = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDocShell)
-                          .QueryInterface(Ci.nsIRefreshURI);
+      let refreshURI = win.docShell.QueryInterface(Ci.nsIRefreshURI);
 
       let URI = Services.io.newURI(data.URI);
 

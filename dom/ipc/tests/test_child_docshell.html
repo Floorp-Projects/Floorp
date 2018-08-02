@@ -66,9 +66,7 @@ SpecialPowers.pushPrefEnv({'set':[
       }
       chromeEventHandler.removeEventListener("DOMWindowCreated", listener);
       let new_win = evt.target.defaultView;
-      let new_docShell = new_win.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIDocShell);
+      let new_docShell = new_win.docShell;
       sendAsyncMessage("DOMWindowCreatedReceived", {
         stableChromeEventHandler: chromeEventHandler === docShell.chromeEventHandler,
         iframeHasNewDocShell: new_docShell !== docShell,

@@ -57,8 +57,7 @@ let ProcessObserver = {
 
         // Get the frame message manager for this window so we can associate this
         // page with a browser element
-        let messageManager = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDocShell)
+        let messageManager = window.docShell
                                    .QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIContentFrameMessageManager);
 

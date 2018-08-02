@@ -29,8 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
       ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
 
       webNav = SpecialPowers.wrap(testWin)
-               .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-               .getInterface(SpecialPowers.Ci.nsIWebNavigation);
+               .docShell
+               .QueryInterface(SpecialPowers.Ci.nsIWebNavigation);
       shistory = webNav.sessionHistory;
       is(shistory.count, 2, "check history length");
       is(shistory.index, 1, "check history index");
@@ -82,9 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
   });
 
   function getFrameDocShell() {
-    return SpecialPowers.wrap(testWin.window[0])
-           .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-           .getInterface(SpecialPowers.Ci.nsIDocShell)
+    return SpecialPowers.wrap(testWin.window[0]).docShell;
   }
 
   </script>

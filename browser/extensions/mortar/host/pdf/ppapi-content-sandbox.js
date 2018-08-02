@@ -261,9 +261,7 @@ mm.addMessageListener("ppapipdf.js:save", ({ data }) => {
     let listener = {
       extListener: null,
       onStartRequest(aRequest, aContext) {
-        var loadContext = containerWindow
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
+        var loadContext = containerWindow.docShell
                             .QueryInterface(Ci.nsILoadContext);
         this.extListener = extHelperAppSvc.doContent(
           "application/pdf", aRequest, loadContext, false);

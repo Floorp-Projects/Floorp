@@ -13,11 +13,7 @@ cpm.addMessageListener("cpm-async",
     cpm.sendAsyncMessage("ppm-async");
   });
 
-var dshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                    .rootTreeItem
-                    .QueryInterface(Ci.nsIDocShell);
+var dshell = content.docShell.rootTreeItem.QueryInterface(Ci.nsIDocShell);
 
 
 addEventListener("click",
