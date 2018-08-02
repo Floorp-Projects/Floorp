@@ -19,6 +19,3 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 
 # Add libFuzzer configuration directives
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1479779

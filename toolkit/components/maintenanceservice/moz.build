@@ -47,6 +47,3 @@ OS_LIBS += [
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Application Update')
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

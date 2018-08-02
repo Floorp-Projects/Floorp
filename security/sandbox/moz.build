@@ -178,6 +178,3 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
             '-wd4311', # 'reinterpret_cast': pointer truncation from 'LPOVERLAPPED' to 'DWORD'
             '-wd4312', # 'reinterpret_cast': conversion from 'DWORD' to 'LPOVERLAPPED' of greater size
         ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

@@ -21,6 +21,3 @@ if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] == 'gcc':
     LDFLAGS += [
         '-municode',
     ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

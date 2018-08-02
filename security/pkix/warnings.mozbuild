@@ -10,8 +10,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     '-Wno-reserved-id-macro', # NSPR and NSS use reserved IDs in their include guards.
     '-Wno-weak-vtables', # We rely on the linker to merge the duplicate vtables.
   ]
-  if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
 elif CONFIG['CC_TYPE'] == 'msvc':
   CXXFLAGS += [
     '-sdl', # Enable additional security checks based on Microsoft's SDL.

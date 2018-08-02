@@ -114,5 +114,3 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
 if CONFIG['CC_TYPE'] == 'gcc':
     CXXFLAGS += ['-Wno-format-truncation']
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

@@ -86,6 +86,3 @@ FINAL_LIBRARY = 'xul'
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "IPC: MSCOM")
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

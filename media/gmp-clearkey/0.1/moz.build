@@ -78,6 +78,3 @@ elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     CFLAGS += [
         '-FI', 'stdio.h',           # for sprintf() prototype
     ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

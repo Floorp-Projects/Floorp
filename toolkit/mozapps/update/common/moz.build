@@ -50,6 +50,3 @@ SOURCES += [
     'readstrings.cpp',
     'updatecommon.cpp',
 ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
