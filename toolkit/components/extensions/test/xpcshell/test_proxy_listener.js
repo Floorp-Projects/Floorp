@@ -8,10 +8,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
 
 const TRANSPARENT_PROXY_RESOLVES_HOST = Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
 
-function getProxyInfo() {
+function getProxyInfo(url = "http://www.mozilla.org/") {
   return new Promise((resolve, reject) => {
     let channel = NetUtil.newChannel({
-      uri: "http://www.mozilla.org/",
+      uri: url,
       loadUsingSystemPrincipal: true,
     });
 
@@ -176,13 +176,14 @@ async function getExtension(expectedProxyInfo) {
 
 add_task(async function test_passthrough() {
   let ext1 = await getExtension(null);
-  let ext2 = await getExtension({host: "1.2.3.4", port: 8888, type: "http"});
+  let ext2 = await getExtension({host: "1.2.3.4", port: 8888, type: "https"});
 
-  let proxyInfo = await getProxyInfo();
+  // Also use a restricted url to test the ability to proxy those.
+  let proxyInfo = await getProxyInfo("https://addons.mozilla.org/");
 
   equal(proxyInfo.host, "1.2.3.4", `second extension won`);
   equal(proxyInfo.port, "8888", `second extension won`);
-  equal(proxyInfo.type, "http", `second extension won`);
+  equal(proxyInfo.type, "https", `second extension won`);
 
   await ext2.unload();
 
