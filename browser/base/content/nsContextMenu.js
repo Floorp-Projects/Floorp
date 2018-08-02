@@ -256,9 +256,7 @@ nsContextMenu.prototype = {
         InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
       } else {
         var targetWin = this.ownerDoc.defaultView;
-        var editingSession = targetWin.docShell
-                                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIEditingSession);
+        var {editingSession} = targetWin.docShell;
 
         InlineSpellCheckerUI.init(editingSession.getEditorForWindow(targetWin));
         InlineSpellCheckerUI.initFromEvent(document.popupRangeParent,

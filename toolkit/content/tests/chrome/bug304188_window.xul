@@ -59,9 +59,7 @@ find-menu appears in editor element which has had makeEditable() called but desi
 
     async function onDocumentLoaded() {
       await ContentTask.spawn(gBrowser, null, async function() {
-        var edsession = content.docShell
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIEditingSession);
+        var edsession = content.docShell.editingSession;
         edsession.makeWindowEditable(content, "html", false, true, false);
         content.focus();
       });

@@ -419,9 +419,7 @@ var SpellCheckHelper = {
       if (win) {
         var isSpellcheckable = false;
         try {
-          var editingSession = win.docShell
-                                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIEditingSession);
+          var editingSession = win.docShell.editingSession;
           if (editingSession.windowIsEditable(win) &&
               this.getComputedStyle(element, "-moz-user-modify") == "read-write") {
             isSpellcheckable = true;

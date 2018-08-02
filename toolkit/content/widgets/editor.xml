@@ -131,7 +131,7 @@
                 onget="return this.docShell.contentViewer;"/>
       <property name="editingSession"
                 readonly="true"
-                onget="return this.webNavigation.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIEditingSession);"/>
+                onget="return this.docShell.editingSession"/>
       <property name="commandManager"
                 readonly="true"
                 onget="return this.webNavigation.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsICommandManager);"/>
