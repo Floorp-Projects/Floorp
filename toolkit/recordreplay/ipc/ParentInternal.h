@@ -57,6 +57,9 @@ void Resume(bool aForward);
 // Pause the child process at the next opportunity.
 void Pause();
 
+// Direct the child process to warp to a specific point.
+void TimeWarp(const js::ExecutionPoint& target);
+
 // Send a JSON request to the child process, and synchronously wait for a
 // response.
 void SendRequest(const js::CharBuffer& aBuffer, js::CharBuffer* aResponse);
@@ -285,10 +288,17 @@ public:
   bool IsPausedAtCheckpoint();
   bool IsPausedAtRecordingEndpoint();
 
-  // Return whether this process is paused at a breakpoint whose kind matches
-  // the supplied filter.
+  // Get all breakpoints currently installed for this process.
+  void GetInstalledBreakpoints(Vector<SetBreakpointMessage*>& aBreakpoints);
+
   typedef std::function<bool(js::BreakpointPosition::Kind)> BreakpointFilter;
+
+  // Return whether this process is paused at a breakpoint matching a filter.
   bool IsPausedAtMatchingBreakpoint(const BreakpointFilter& aFilter);
+
+  // Get the ids of all installed breakpoints matching a filter.
+  void GetMatchingInstalledBreakpoints(const BreakpointFilter& aFilter,
+                                       Vector<uint32_t>& aBreakpointIds);
 
   // Get the checkpoint at or earlier to the process' position. This is either
   // the last reached checkpoint or the previous one.
