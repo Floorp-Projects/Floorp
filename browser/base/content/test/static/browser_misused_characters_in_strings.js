@@ -37,6 +37,10 @@ let gWhitelist = [{
     key: "certerror.wrongSystemTimeWithoutReference",
     type: "single-quote"
   }, {
+    file: "netError.dtd",
+    key: "clockSkewError.longDesc",
+    type: "single-quote"
+  }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.palm.advisory.desc2",
     type: "single-quote"
