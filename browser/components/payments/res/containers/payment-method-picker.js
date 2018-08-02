@@ -18,7 +18,7 @@ export default class PaymentMethodPicker extends RichPicker {
     this.dropdown.setAttribute("option-type", "basic-card-option");
     this.securityCodeInput = document.createElement("input");
     this.securityCodeInput.autocomplete = "off";
-    this.securityCodeInput.placeholder = "CVV*"; /* XXX Bug 1473772 */
+    this.securityCodeInput.placeholder = "CVV"; /* XXX Bug 1473772 */
     this.securityCodeInput.size = 3;
     this.securityCodeInput.classList.add("security-code");
     this.securityCodeInput.addEventListener("change", this);
