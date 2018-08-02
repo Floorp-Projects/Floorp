@@ -755,7 +755,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative* wrapper,
 // additional utilities...
 
 JSObject*
-xpc_NewIDObject(JSContext* cx, HandleObject jsobj, const nsID& aID)
+xpc_NewIDObject(JSContext* cx, HandleObject scope, const nsID& aID)
 {
     RootedObject obj(cx);
 
@@ -763,7 +763,7 @@ xpc_NewIDObject(JSContext* cx, HandleObject jsobj, const nsID& aID)
     if (iid) {
         nsXPConnect* xpc = nsXPConnect::XPConnect();
         if (xpc) {
-            xpc->WrapNative(cx, jsobj, static_cast<nsISupports*>(iid),
+            xpc->WrapNative(cx, scope, static_cast<nsISupports*>(iid),
                             NS_GET_IID(nsIJSID), obj.address());
         }
     }

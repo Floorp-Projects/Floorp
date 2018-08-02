@@ -195,7 +195,8 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
                 !symlink)
                 location->Normalize();
             RootedObject locationObj(cx);
-            rv = nsXPConnect::XPConnect()->WrapNative(cx, &args.thisv().toObject(),
+            RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+            rv = nsXPConnect::XPConnect()->WrapNative(cx, scope,
                                                       location,
                                                       NS_GET_IID(nsIFile),
                                                       locationObj.address());

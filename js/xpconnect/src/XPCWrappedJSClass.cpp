@@ -240,7 +240,11 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         return nullptr;
     }
 
-    if ((id = xpc_NewIDObject(cx, jsobj, aIID))) {
+    // AutoScriptEvaluate entered jsobj's realm.
+    js::AssertSameCompartment(cx, jsobj);
+    RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+
+    if ((id = xpc_NewIDObject(cx, scope, aIID))) {
         // Throwing NS_NOINTERFACE is the prescribed way to fail QI from JS. It
         // is not an exception that is ever worth reporting, but we don't want
         // to eat all exceptions either.
