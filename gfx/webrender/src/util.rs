@@ -11,6 +11,8 @@ use euclid::{HomogeneousVector};
 use num_traits::Zero;
 use plane_split::{Clipper, Plane, Polygon};
 use std::{i32, f32};
+use std::borrow::Cow;
+
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
 const NEARLY_ZERO: f32 = 1.0 / 4096.0;
@@ -486,11 +488,20 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         FastTransform::Transform { transform, inverse, is_2d}
     }
 
-    pub fn to_transform(&self) -> TypedTransform3D<f32, Src, Dst> {
+    pub fn kind(&self) -> TransformedRectKind {
         match *self {
-            FastTransform::Offset(offset) =>
-                TypedTransform3D::create_translation(offset.x, offset.y, 0.0),
-            FastTransform::Transform { transform, .. } => transform
+            FastTransform::Offset(_) => TransformedRectKind::AxisAligned,
+            FastTransform::Transform { ref transform, .. } if transform.preserves_2d_axis_alignment() => TransformedRectKind::AxisAligned,
+            FastTransform::Transform { .. } => TransformedRectKind::Complex,
+        }
+    }
+
+    pub fn to_transform(&self) -> Cow<TypedTransform3D<f32, Src, Dst>> {
+        match *self {
+            FastTransform::Offset(offset) => Cow::Owned(
+                TypedTransform3D::create_translation(offset.x, offset.y, 0.0)
+            ),
+            FastTransform::Transform { ref transform, .. } => Cow::Borrowed(transform),
         }
     }
 
@@ -525,15 +536,6 @@ impl<Src, Dst> FastTransform<Src, Dst> {
                 FastTransform::Offset(*offset + *other_offset),
             FastTransform::Transform { transform, .. } =>
                 FastTransform::with_transform(transform.pre_translate(other_offset.to_3d()))
-        }
-    }
-
-    #[inline(always)]
-    pub fn preserves_2d_axis_alignment(&self) -> bool {
-        match *self {
-            FastTransform::Offset(..) => true,
-            FastTransform::Transform { ref transform, .. } =>
-                transform.preserves_2d_axis_alignment(),
         }
     }
 
@@ -596,17 +598,6 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
-    #[inline(always)]
-    pub fn offset(&self, new_offset: TypedVector2D<f32, Src>) -> Self {
-        match *self {
-            FastTransform::Offset(offset) => FastTransform::Offset(offset + new_offset),
-            FastTransform::Transform { ref transform, .. } => {
-                let transform = transform.pre_translate(new_offset.to_3d());
-                FastTransform::with_transform(transform)
-            }
-        }
-    }
-
     pub fn post_translate(&self, new_offset: TypedVector2D<f32, Dst>) -> Self {
         match *self {
             FastTransform::Offset(offset) => {
@@ -635,27 +626,11 @@ impl<Src, Dst> FastTransform<Src, Dst> {
 
         }
     }
-
-    pub fn update(&self, transform: TypedTransform3D<f32, Src, Dst>) -> Option<Self> {
-        if transform.is_simple_2d_translation() {
-            Some(self.offset(TypedVector2D::new(transform.m41, transform.m42)))
-        } else {
-            // If we break 2D axis alignment or have a perspective component, we need to start a
-            // new incompatible coordinate system with which we cannot share clips without masking.
-            None
-        }
-    }
 }
 
 impl<Src, Dst> From<TypedTransform3D<f32, Src, Dst>> for FastTransform<Src, Dst> {
     fn from(transform: TypedTransform3D<f32, Src, Dst>) -> Self {
         FastTransform::with_transform(transform)
-    }
-}
-
-impl<Src, Dst> Into<TypedTransform3D<f32, Src, Dst>> for FastTransform<Src, Dst> {
-    fn into(self) -> TypedTransform3D<f32, Src, Dst> {
-        self.to_transform()
     }
 }
 

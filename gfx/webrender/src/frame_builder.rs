@@ -104,7 +104,7 @@ pub struct PictureState {
 }
 
 impl PictureState {
-    pub fn new() -> PictureState {
+    pub fn new() -> Self {
         PictureState {
             tasks: Vec::new(),
             has_non_root_coord_system: false,
@@ -117,7 +117,7 @@ pub struct PrimitiveRunContext<'a> {
     pub clip_chain: &'a ClipChain,
     pub scroll_node: &'a SpatialNode,
     pub spatial_node_index: SpatialNodeIndex,
-    pub transform: Transform,
+    pub transform: Transform<'a>,
     pub local_clip_rect: LayoutRect,
 }
 
@@ -127,7 +127,7 @@ impl<'a> PrimitiveRunContext<'a> {
         scroll_node: &'a SpatialNode,
         spatial_node_index: SpatialNodeIndex,
         local_clip_rect: LayoutRect,
-        transform: Transform,
+        transform: Transform<'a>,
     ) -> Self {
         PrimitiveRunContext {
             clip_chain,

@@ -14,8 +14,9 @@ use gpu_types::BoxShadowStretchMode;
 use prim_store::{ClipData, ImageMaskData};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
-use util::{LayoutToWorldFastTransform, MaxRect, calculate_screen_bounding_rect};
-use util::{extract_inner_rect_safe, pack_as_float, recycle_vec};
+use util::{LayoutToWorldFastTransform, MaxRect, TransformedRectKind};
+use util::{calculate_screen_bounding_rect, extract_inner_rect_safe, pack_as_float, recycle_vec};
+use std::{iter, ops};
 use std::sync::Arc;
 
 #[derive(Debug, Copy, Clone)]
@@ -28,13 +29,13 @@ pub struct ClipStore {
 }
 
 impl ClipStore {
-    pub fn new() -> ClipStore {
+    pub fn new() -> Self {
         ClipStore {
             clip_sources: Vec::new(),
         }
     }
 
-    pub fn recycle(self) -> ClipStore {
+    pub fn recycle(self) -> Self {
         ClipStore {
             clip_sources: recycle_vec(self.clip_sources),
         }
@@ -45,12 +46,17 @@ impl ClipStore {
         self.clip_sources.push(clip_sources);
         index
     }
+}
 
-    pub fn get(&self, index: ClipSourcesIndex) -> &ClipSources {
+impl ops::Index<ClipSourcesIndex> for ClipStore {
+    type Output = ClipSources;
+    fn index(&self, index: ClipSourcesIndex) -> &Self::Output {
         &self.clip_sources[index.0]
     }
+}
 
-    pub fn get_mut(&mut self, index: ClipSourcesIndex) -> &mut ClipSources {
+impl ops::IndexMut<ClipSourcesIndex> for ClipStore {
+    fn index_mut(&mut self, index: ClipSourcesIndex) -> &mut Self::Output {
         &mut self.clip_sources[index.0]
     }
 }
@@ -63,51 +69,77 @@ pub struct LineDecorationClipSource {
     wavy_line_thickness: f32,
 }
 
-#[derive(Clone, Debug)]
-pub struct ClipRegion {
-    pub main: LayoutRect,
-    pub image_mask: Option<ImageMask>,
-    pub complex_clips: Vec<ComplexClipRegion>,
+
+pub struct ComplexTranslateIter<I> {
+    source: I,
+    offset: LayoutVector2D,
 }
 
-impl ClipRegion {
+impl<I: Iterator<Item = ComplexClipRegion>> Iterator for ComplexTranslateIter<I> {
+    type Item = ComplexClipRegion;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.source
+            .next()
+            .map(|mut complex| {
+                complex.rect = complex.rect.translate(&self.offset);
+                complex
+            })
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ClipRegion<I> {
+    pub main: LayoutRect,
+    pub image_mask: Option<ImageMask>,
+    pub complex_clips: I,
+}
+
+impl<J> ClipRegion<ComplexTranslateIter<J>> {
     pub fn create_for_clip_node(
         rect: LayoutRect,
-        mut complex_clips: Vec<ComplexClipRegion>,
+        complex_clips: J,
         mut image_mask: Option<ImageMask>,
         reference_frame_relative_offset: &LayoutVector2D,
-    ) -> ClipRegion {
-        let rect = rect.translate(reference_frame_relative_offset);
-
+    ) -> Self
+    where
+        J: Iterator<Item = ComplexClipRegion>
+    {
         if let Some(ref mut image_mask) = image_mask {
             image_mask.rect = image_mask.rect.translate(reference_frame_relative_offset);
         }
 
-        for complex_clip in complex_clips.iter_mut() {
-            complex_clip.rect = complex_clip.rect.translate(reference_frame_relative_offset);
-        }
-
         ClipRegion {
-            main: rect,
+            main: rect.translate(reference_frame_relative_offset),
             image_mask,
-            complex_clips,
+            complex_clips: ComplexTranslateIter {
+                source: complex_clips,
+                offset: *reference_frame_relative_offset,
+            },
         }
     }
+}
 
+impl ClipRegion<Option<ComplexClipRegion>> {
     pub fn create_for_clip_node_with_local_clip(
         local_clip: &LocalClip,
         reference_frame_relative_offset: &LayoutVector2D
-    ) -> ClipRegion {
-        let complex_clips = match *local_clip {
-            LocalClip::Rect(_) => Vec::new(),
-            LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
-        };
-        ClipRegion::create_for_clip_node(
-            *local_clip.clip_rect(),
-            complex_clips,
-            None,
-            reference_frame_relative_offset
-        )
+    ) -> Self {
+        ClipRegion {
+            main: local_clip
+                .clip_rect()
+                .translate(reference_frame_relative_offset),
+            image_mask: None,
+            complex_clips: match *local_clip {
+                LocalClip::Rect(_) => None,
+                LocalClip::RoundedRect(_, ref region) => {
+                    Some(ComplexClipRegion {
+                        rect: region.rect.translate(reference_frame_relative_offset),
+                        radii: region.radii,
+                        mode: region.mode,
+                    })
+                },
+            }
+        }
     }
 }
 
@@ -280,6 +312,92 @@ impl ClipSource {
     }
 }
 
+
+struct BoundsAccumulator {
+    local_outer: Option<LayoutRect>,
+    local_inner: Option<LayoutRect>,
+    can_calculate_inner_rect: bool,
+    can_calculate_outer_rect: bool,
+}
+
+impl BoundsAccumulator {
+    fn new() -> Self {
+        BoundsAccumulator {
+            local_outer: Some(LayoutRect::max_rect()),
+            local_inner: Some(LayoutRect::max_rect()),
+            can_calculate_inner_rect: true,
+            can_calculate_outer_rect: false,
+        }
+    }
+
+    fn add(&mut self, source: &ClipSource) {
+        // Depending on the complexity of the clip, we may either know the outer and/or inner
+        // rect, or neither or these.  In the case of a clip-out, we currently set the mask bounds
+        // to be unknown. This is conservative, but ensures correctness. In the future we can make
+        // this a lot more clever with some proper region handling.
+        if !self.can_calculate_inner_rect {
+            return
+        }
+
+        match *source {
+            ClipSource::Image(ref mask) => {
+                if !mask.repeat {
+                    self.can_calculate_outer_rect = true;
+                    self.local_outer = self.local_outer.and_then(|r| r.intersection(&mask.rect));
+                }
+                self.local_inner = None;
+            }
+            ClipSource::Rectangle(rect, mode) => {
+                // Once we encounter a clip-out, we just assume the worst
+                // case clip mask size, for now.
+                if mode == ClipMode::ClipOut {
+                    self.can_calculate_inner_rect = false;
+                    return
+                }
+
+                self.can_calculate_outer_rect = true;
+                self.local_outer = self.local_outer.and_then(|r| r.intersection(&rect));
+                self.local_inner = self.local_inner.and_then(|r| r.intersection(&rect));
+            }
+            ClipSource::RoundedRectangle(ref rect, ref radius, mode) => {
+                // Once we encounter a clip-out, we just assume the worst
+                // case clip mask size, for now.
+                if mode == ClipMode::ClipOut {
+                    self.can_calculate_inner_rect = false;
+                    return
+                }
+
+                self.can_calculate_outer_rect = true;
+                self.local_outer = self.local_outer.and_then(|r| r.intersection(rect));
+
+                let inner_rect = extract_inner_rect_safe(rect, radius);
+                self.local_inner = self.local_inner
+                    .and_then(|r| inner_rect.and_then(|ref inner| r.intersection(inner)));
+            }
+            ClipSource::BoxShadow(..) |
+            ClipSource::LineDecoration(..) => {
+                self.can_calculate_inner_rect = false;
+            }
+        }
+    }
+
+    fn finish(self) -> (LayoutRect, Option<LayoutRect>) {
+        (
+            if self.can_calculate_inner_rect {
+                self.local_inner.unwrap_or_else(LayoutRect::zero)
+            } else {
+                LayoutRect::zero()
+            },
+            if self.can_calculate_outer_rect {
+                Some(self.local_outer.unwrap_or_else(LayoutRect::zero))
+            } else {
+                None
+            },
+        )
+    }
+}
+
+
 #[derive(Debug)]
 pub struct ClipSources {
     pub clips: Vec<(ClipSource, GpuCacheHandle)>,
@@ -291,20 +409,24 @@ pub struct ClipSources {
 }
 
 impl ClipSources {
-    pub fn new(
-        clips: Vec<ClipSource>,
-        spatial_node_index: SpatialNodeIndex,
-    ) -> Self {
-        let (local_inner_rect, local_outer_rect) = Self::calculate_inner_and_outer_rects(&clips);
+    pub fn new<I>(clip_iter: I, spatial_node_index: SpatialNodeIndex) -> Self
+    where
+        I: IntoIterator<Item = ClipSource>,
+    {
+        let mut clips = Vec::new();
+        let mut bounds_accum = BoundsAccumulator::new();
+        let mut has_image_or_line_decoration_clip = false;
+        let mut only_rectangular_clips = true;
 
-        let has_image_or_line_decoration_clip =
-            clips.iter().any(|clip| clip.is_image_or_line_decoration_clip());
-        let only_rectangular_clips =
-            !has_image_or_line_decoration_clip && clips.iter().all(|clip| clip.is_rect());
-        let clips = clips
-            .into_iter()
-            .map(|clip| (clip, GpuCacheHandle::new()))
-            .collect();
+        for clip in clip_iter {
+            bounds_accum.add(&clip);
+            has_image_or_line_decoration_clip |= clip.is_image_or_line_decoration_clip();
+            only_rectangular_clips &= clip.is_rect();
+            clips.push((clip, GpuCacheHandle::new()));
+        }
+
+        only_rectangular_clips &= !has_image_or_line_decoration_clip;
+        let (local_inner_rect, local_outer_rect) = bounds_accum.finish();
 
         ClipSources {
             clips,
@@ -316,103 +438,29 @@ impl ClipSources {
         }
     }
 
-    pub fn from_region(
-        region: ClipRegion,
+    pub fn from_region<I>(
+        region: ClipRegion<I>,
         spatial_node_index: SpatialNodeIndex,
-    ) -> ClipSources {
-        let mut clips = Vec::new();
-
-        if let Some(info) = region.image_mask {
-            clips.push(ClipSource::Image(info));
-        }
-
-        clips.push(ClipSource::Rectangle(region.main, ClipMode::Clip));
-
-        for complex in region.complex_clips {
-            clips.push(ClipSource::new_rounded_rect(
+    ) -> ClipSources
+    where
+        I: IntoIterator<Item = ComplexClipRegion>
+    {
+        let clip_rect = iter::once(ClipSource::Rectangle(region.main, ClipMode::Clip));
+        let clip_image = region.image_mask.map(ClipSource::Image);
+        let clips_complex = region.complex_clips
+            .into_iter()
+            .map(|complex| ClipSource::new_rounded_rect(
                 complex.rect,
                 complex.radii,
                 complex.mode,
             ));
-        }
 
-        ClipSources::new(clips, spatial_node_index)
+        let clips_all = clip_rect.chain(clip_image).chain(clips_complex);
+        ClipSources::new(clips_all, spatial_node_index)
     }
 
     pub fn clips(&self) -> &[(ClipSource, GpuCacheHandle)] {
         &self.clips
-    }
-
-    fn calculate_inner_and_outer_rects(clips: &Vec<ClipSource>) -> (LayoutRect, Option<LayoutRect>) {
-        if clips.is_empty() {
-            return (LayoutRect::zero(), None);
-        }
-
-        // Depending on the complexity of the clip, we may either know the outer and/or inner
-        // rect, or neither or these.  In the case of a clip-out, we currently set the mask bounds
-        // to be unknown. This is conservative, but ensures correctness. In the future we can make
-        // this a lot more clever with some proper region handling.
-        let mut local_outer = Some(LayoutRect::max_rect());
-        let mut local_inner = local_outer;
-        let mut can_calculate_inner_rect = true;
-        let mut can_calculate_outer_rect = false;
-        for source in clips {
-            match *source {
-                ClipSource::Image(ref mask) => {
-                    if !mask.repeat {
-                        can_calculate_outer_rect = true;
-                        local_outer = local_outer.and_then(|r| r.intersection(&mask.rect));
-                    }
-                    local_inner = None;
-                }
-                ClipSource::Rectangle(rect, mode) => {
-                    // Once we encounter a clip-out, we just assume the worst
-                    // case clip mask size, for now.
-                    if mode == ClipMode::ClipOut {
-                        can_calculate_inner_rect = false;
-                        break;
-                    }
-
-                    can_calculate_outer_rect = true;
-                    local_outer = local_outer.and_then(|r| r.intersection(&rect));
-                    local_inner = local_inner.and_then(|r| r.intersection(&rect));
-                }
-                ClipSource::RoundedRectangle(ref rect, ref radius, mode) => {
-                    // Once we encounter a clip-out, we just assume the worst
-                    // case clip mask size, for now.
-                    if mode == ClipMode::ClipOut {
-                        can_calculate_inner_rect = false;
-                        break;
-                    }
-
-                    can_calculate_outer_rect = true;
-                    local_outer = local_outer.and_then(|r| r.intersection(rect));
-
-                    let inner_rect = extract_inner_rect_safe(rect, radius);
-                    local_inner = local_inner
-                        .and_then(|r| inner_rect.and_then(|ref inner| r.intersection(inner)));
-                }
-                ClipSource::BoxShadow(..) |
-                ClipSource::LineDecoration(..) => {
-                    can_calculate_inner_rect = false;
-                    break;
-                }
-            }
-        }
-
-        let outer = if can_calculate_outer_rect {
-            Some(local_outer.unwrap_or_else(LayoutRect::zero))
-        } else {
-            None
-        };
-
-        let inner = if can_calculate_inner_rect {
-            local_inner.unwrap_or_else(LayoutRect::zero)
-        } else {
-            LayoutRect::zero()
-        };
-
-        (inner, outer)
     }
 
     pub fn update(
@@ -523,7 +571,8 @@ impl ClipSources {
         // rectangle so that we can do screen inner rectangle optimizations for these kind of
         // cilps.
         let can_calculate_inner_rect =
-            transform.preserves_2d_axis_alignment() && !transform.has_perspective_component();
+            transform.kind() == TransformedRectKind::AxisAligned &&
+            !transform.has_perspective_component();
         let screen_inner_rect = if can_calculate_inner_rect {
             calculate_screen_bounding_rect(transform, &self.local_inner_rect, device_pixel_scale, screen_rect)
                 .unwrap_or(DeviceIntRect::zero())

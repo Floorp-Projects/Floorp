@@ -23,17 +23,18 @@ void brush_vs(
     int brush_flags,
     vec4 unused
 ) {
+    vec2 snapped_device_pos = snap_device_pos(vi);
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
     vOp = user_data.x;
 
     PictureTask src_task = fetch_picture_task(user_data.z);
-    vec2 src_uv = vi.snapped_device_pos +
+    vec2 src_uv = snapped_device_pos +
                   src_task.common_data.task_rect.p0 -
                   src_task.content_origin;
     vSrcUv = vec3(src_uv / texture_size, src_task.common_data.texture_layer_index);
 
     RenderTaskCommonData backdrop_task = fetch_render_task_common_data(user_data.y);
-    vec2 backdrop_uv = vi.snapped_device_pos +
+    vec2 backdrop_uv = snapped_device_pos +
                        backdrop_task.task_rect.p0 -
                        src_task.content_origin;
     vBackdropUv = vec3(backdrop_uv / texture_size, backdrop_task.texture_layer_index);

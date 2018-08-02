@@ -1767,7 +1767,8 @@ impl Renderer {
             }
         })?;
 
-        let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()));
+        let ext_debug_marker = device.supports_extension("GL_EXT_debug_marker");
+        let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()), ext_debug_marker);
         #[cfg(feature = "capture")]
         let read_fbo = device.create_fbo_for_external_texture(0);
 

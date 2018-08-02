@@ -36,7 +36,7 @@ pub struct HitTestClipNode {
 
 impl HitTestClipNode {
     fn new(node: &ClipNode, clip_store: &ClipStore) -> Self {
-        let clips = clip_store.get(node.clip_sources_index);
+        let clips = &clip_store[node.clip_sources_index];
         let regions = clips.clips().iter().map(|source| {
             match source.0 {
                 ClipSource::Rectangle(ref rect, mode) => HitTestRegion::Rectangle(*rect, mode),
