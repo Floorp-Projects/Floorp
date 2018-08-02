@@ -73,6 +73,7 @@ if [[ "$PROJECT" = "browser" ]]; then (
 . hazard-analysis.sh
 
 build_js_shell
+analysis_self_test
 
 # Artifacts folder is outside of the cache.
 mkdir -p "$HOME"/artifacts/ || true
