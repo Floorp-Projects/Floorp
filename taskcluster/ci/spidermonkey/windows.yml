@@ -18,6 +18,8 @@ sm-plain-win32/debug:
         symbol: SM(p)
     run:
         spidermonkey-variant: plaindebug
+    toolchains:
+        - win64-rust
 
 sm-plain-win32/opt:
     description: "Spidermonkey Plain"
@@ -28,6 +30,8 @@ sm-plain-win32/opt:
         symbol: SM(p)
     run:
         spidermonkey-variant: plain
+    toolchains:
+        - win64-rust
 
 sm-compacting-win32/debug:
     description: "Spidermonkey Compacting"
@@ -38,3 +42,5 @@ sm-compacting-win32/debug:
         symbol: SM(cgc)
     run:
         spidermonkey-variant: compacting
+    toolchains:
+        - win64-rust
