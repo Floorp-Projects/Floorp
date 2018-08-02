@@ -212,6 +212,8 @@ AboutReader.prototype = {
             btn.title = message.data.title;
           if (message.data.text)
             btn.textContent = message.data.text;
+          if (message.data.width && message.data.height)
+            btn.style.backgroundSize = `${message.data.width}px ${message.data.height}px`;
           let tb = this._toolbarElement;
           tb.appendChild(btn);
           this._setupButton(message.data.id, button => {

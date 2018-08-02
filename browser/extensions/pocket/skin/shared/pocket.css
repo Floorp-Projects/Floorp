@@ -7,9 +7,14 @@
   fill: #fbfbfb;
 }
 
+#pocket-button,
+#pageAction-panel-pocket {
+  list-style-image: url("chrome://pocket-shared/skin/pocket-outline.svg");
+}
+
 #appMenu-library-pocket-button,
-#pageAction-panel-pocket,
-#pocket-button {
+#pocket-button-box[open="true"] > #pocket-button,
+#pocket-button-box[pocketed="true"] > #pocket-button {
   list-style-image: url("chrome://pocket-shared/skin/pocket.svg");
 }
 

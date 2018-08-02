@@ -344,10 +344,13 @@ var PocketReader = {
     if (this.hidden) {
       Services.mm.broadcastAsyncMessage("Reader:RemoveButton", { id: "pocket-button" });
     } else {
-      Services.mm.broadcastAsyncMessage("Reader:AddButton",
-                               { id: "pocket-button",
-                                 title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
-                                 image: "chrome://pocket/content/panels/img/pocket.svg#pocket-mark" });
+      Services.mm.broadcastAsyncMessage("Reader:AddButton", {
+        id: "pocket-button",
+        title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
+        image: "chrome://pocket/content/panels/img/pocket-outline.svg",
+        width: 20,
+        height: 20,
+      });
     }
   },
   receiveMessage(message) {
@@ -357,9 +360,13 @@ var PocketReader = {
         if (this.hidden)
           break;
         message.target.messageManager.
-          sendAsyncMessage("Reader:AddButton", { id: "pocket-button",
-                                                 title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
-                                                 image: "chrome://pocket/content/panels/img/pocket.svg#pocket-mark"});
+          sendAsyncMessage("Reader:AddButton", {
+            id: "pocket-button",
+            title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
+            image: "chrome://pocket/content/panels/img/pocket-outline.svg",
+            width: 20,
+            height: 20,
+          });
         break;
       }
       case "Reader:Clicked-pocket-button": {
