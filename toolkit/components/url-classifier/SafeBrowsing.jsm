@@ -38,6 +38,8 @@ const tablePreferences = [
   "urlclassifier.downloadBlockTable",
   "urlclassifier.downloadAllowTable",
   "urlclassifier.passwordAllowTable",
+  "urlclassifier.trackingAnnotationTable",
+  "urlclassifier.trackingAnnotationWhitelistTable",
   "urlclassifier.trackingTable",
   "urlclassifier.trackingWhitelistTable",
   "urlclassifier.blockedTable",
@@ -110,6 +112,12 @@ var SafeBrowsing = {
     for (let i = 0; i < this.passwordAllowLists.length; ++i) {
       this.registerTableWithURLs(this.passwordAllowLists[i]);
     }
+    for (let i = 0; i < this.trackingAnnotationLists.length; ++i) {
+      this.registerTableWithURLs(this.trackingAnnotationLists[i]);
+    }
+    for (let i = 0; i < this.trackingAnnotationWhitelists.length; ++i) {
+      this.registerTableWithURLs(this.trackingAnnotationWhitelists[i]);
+    }
     for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
       this.registerTableWithURLs(this.trackingProtectionLists[i]);
     }
@@ -155,6 +163,8 @@ var SafeBrowsing = {
   downloadBlockLists:           [],
   downloadAllowLists:           [],
   passwordAllowLists:           [],
+  trackingAnnotationLists:      [],
+  trackingAnnotationWhiteLists: [],
   trackingProtectionLists:      [],
   trackingProtectionWhitelists: [],
   blockedLists:                 [],
@@ -242,6 +252,8 @@ var SafeBrowsing = {
                        this.downloadBlockLists,
                        this.downloadAllowLists,
                        this.passwordAllowLists,
+                       this.trackingAnnotationLists,
+                       this.trackingAnnotationWhitelists,
                        this.trackingProtectionLists,
                        this.trackingProtectionWhitelists,
                        this.blockedLists,
@@ -254,6 +266,8 @@ var SafeBrowsing = {
      this.downloadBlockLists,
      this.downloadAllowLists,
      this.passwordAllowLists,
+     this.trackingAnnotationLists,
+     this.trackingAnnotationWhitelists,
      this.trackingProtectionLists,
      this.trackingProtectionWhitelists,
      this.blockedLists,
@@ -277,6 +291,8 @@ var SafeBrowsing = {
                       this.downloadBlockLists,
                       this.downloadAllowLists,
                       this.passwordAllowLists,
+                      this.trackingAnnotationLists,
+                      this.trackingAnnotationWhitelists,
                       this.trackingProtectionLists,
                       this.trackingProtectionWhitelists,
                       this.blockedLists,
@@ -426,15 +442,29 @@ var SafeBrowsing = {
         listManager.disableUpdate(this.passwordAllowLists[i]);
       }
     }
+    for (let i = 0; i < this.trackingAnnotationLists.length; ++i) {
+      if (this.trackingAnnotations) {
+        listManager.enableUpdate(this.trackingAnnotationLists[i]);
+      } else {
+        listManager.disableUpdate(this.trackingAnnotationLists[i]);
+      }
+    }
+    for (let i = 0; i < this.trackingAnnotationWhitelists.length; ++i) {
+      if (this.trackingAnnotations) {
+        listManager.enableUpdate(this.trackingAnnotationWhitelists[i]);
+      } else {
+        listManager.disableUpdate(this.trackingAnnotationWhitelists[i]);
+      }
+    }
     for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
-      if (this.trackingEnabled || this.trackingAnnotations) {
+      if (this.trackingEnabled) {
         listManager.enableUpdate(this.trackingProtectionLists[i]);
       } else {
         listManager.disableUpdate(this.trackingProtectionLists[i]);
       }
     }
     for (let i = 0; i < this.trackingProtectionWhitelists.length; ++i) {
-      if (this.trackingEnabled || this.trackingAnnotations) {
+      if (this.trackingEnabled) {
         listManager.enableUpdate(this.trackingProtectionWhitelists[i]);
       } else {
         listManager.disableUpdate(this.trackingProtectionWhitelists[i]);

@@ -27,14 +27,14 @@ add_task(async function() {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+      src.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+      src.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
 
@@ -43,25 +43,25 @@ add_task(async function() {
       let img = content.document.createElement("img");
       let p = new content.Promise(resolve => { img.onload = resolve; });
       content.document.body.appendChild(img);
-      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+      img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
     {
       let img = content.document.createElement("img");
       let p = new content.Promise(resolve => { img.onload = resolve; });
       content.document.body.appendChild(img);
-      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+      img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
   });
 
-  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
+  await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
     .then(r => r.text())
     .then(text => {
       is(text, 0, "Cookies received for images");
     });
 
-  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
+  await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
     .then(r => r.text())
     .then(text => {
       is(text, 0, "Cookies received for scripts");
@@ -113,14 +113,14 @@ add_task(async function() {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+      src.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+      src.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
 
@@ -129,25 +129,25 @@ add_task(async function() {
       let img = content.document.createElement("img");
       let p = new content.Promise(resolve => { img.onload = resolve; });
       content.document.body.appendChild(img);
-      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+      img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
     {
       let img = content.document.createElement("img");
       let p = new content.Promise(resolve => { img.onload = resolve; });
       content.document.body.appendChild(img);
-      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+      img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
   });
 
-  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
+  await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
     .then(r => r.text())
     .then(text => {
       is(text, 1, "One cookie received for images.");
     });
 
-  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
+  await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
     .then(r => r.text())
     .then(text => {
       is(text, 1, "One cookie received received for scripts.");

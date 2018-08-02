@@ -68,7 +68,7 @@ describe("ASRouterFeed", () => {
     });
     it("should not re-initialize the ASRouter if it is already initialized", async () => {
       // Router starts initialized
-      await Router.init(new FakeRemotePageManager(), storage);
+      await Router.init(new FakeRemotePageManager(), storage, () => {});
       sinon.stub(Router, "init");
       prefs[EXPERIMENT_PREF] = true;
 
@@ -81,7 +81,7 @@ describe("ASRouterFeed", () => {
   describe("#onAction: PREF_CHANGE", () => {
     it("should return early if the pref changed does not enable/disable the router", async () => {
       // Router starts initialized
-      await Router.init(new FakeRemotePageManager(), storage);
+      await Router.init(new FakeRemotePageManager(), storage, () => {});
       sinon.stub(Router, "uninit");
       prefs[EXPERIMENT_PREF] = false;
 
@@ -92,7 +92,7 @@ describe("ASRouterFeed", () => {
     });
     it("should uninitialize the ASRouter if it is already initialized and the experiment pref is false", async () => {
       // Router starts initialized
-      await Router.init(new FakeRemotePageManager(), storage);
+      await Router.init(new FakeRemotePageManager(), storage, () => {});
       sinon.stub(Router, "uninit");
       prefs[EXPERIMENT_PREF] = false;
 
@@ -104,7 +104,7 @@ describe("ASRouterFeed", () => {
   });
   describe("#onAction: UNINIT", () => {
     it("should uninitialize the ASRouter and restore onboarding", async () => {
-      await Router.init(new FakeRemotePageManager(), storage);
+      await Router.init(new FakeRemotePageManager(), storage, () => {});
       sinon.stub(Router, "uninit");
 
       feed.onAction({type: at.UNINIT});

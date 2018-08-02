@@ -142,7 +142,7 @@ Please note that clobber and incremental builds are different. A clobber
 build with make will likely be as fast as a clobber build with e.g. Tup.
 However, Tup should vastly outperform make when it comes to incremental
 builds. Therefore, this issue is mostly seen when performing incremental
-builds.
+builds. For more information, see :ref:`tup`.
 
 C++ header dependency hell
 ==========================

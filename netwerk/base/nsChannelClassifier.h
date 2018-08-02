@@ -40,6 +40,8 @@ public:
 
     // Helper function to check a tracking URI against the whitelist
     nsresult IsTrackerWhitelisted(nsIURI* aWhiteListURI,
+                                  bool aUseTrackingTable,
+                                  bool aUseAnnotationTable,
                                   nsIURIClassifierCallback* aCallback);
 
     // Called once we actually classified an URI. (An additional whitelist
@@ -55,7 +57,7 @@ public:
     nsresult CheckIsTrackerWithLocalTable(std::function<void()>&& aCallback);
 
     // Helper function to create a whitelist URL.
-    already_AddRefed<nsIURI> CreateWhiteListURI() const;
+    nsresult CreateWhiteListURI(nsIURI** aURI) const;
 
     already_AddRefed<nsIChannel> GetChannel();
 

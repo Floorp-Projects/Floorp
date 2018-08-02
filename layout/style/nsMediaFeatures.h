@@ -10,10 +10,10 @@
 #define nsMediaFeatures_h_
 
 #include <stdint.h>
+#include "nsCSSProps.h"
 
 class nsAtom;
 class nsIDocument;
-struct nsCSSKTableEntry;
 class nsCSSValue;
 class nsStaticAtom;
 

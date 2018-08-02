@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ütz, xno' pa nuwi'",
   "prefs_home_header": "Etamab'äl pa ri Rutikirib'al Firefox",
   "prefs_home_description": "Tacha' achike etamab'äl nawajo' pa ri Rutikirib'al Firefox ruwäch.",
-  "prefs_section_rows_option": "{num} cholaj:{num} taq cholaj",
+  "prefs_section_rows_option": "{num} cholaj;{num} taq cholaj",
   "prefs_search_header": "Ajk'amaya'l Kanoxïk",
   "prefs_topsites_description": "Taq ruxaq yalan ye'atz'ët",
   "prefs_topstories_description2": "Nïm rupam chijun ri ajk'amaya'l, ichinan awuma rat",

@@ -9,6 +9,9 @@
 </head>
 
 <body>
+
+<p><b>To see more of what is happening: <code>export MOZ_LOG=nsChannelClassifier:3</code></b></p>
+
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
@@ -45,68 +48,105 @@ function testOnWindow(aPrivate, aCallback) {
   }, {capture: true, once: true});
 }
 
-const topic = "http-on-opening-request";
+const topic = "http-on-before-connect";
 var testUrl;
 var testWindow;
 var resolve;
 
 function checkLowestPriority(aSubject) {
+  checkPriority(aSubject, checkLowestPriority, Ci.nsISupportsPriority.PRIORITY_LOWEST, "Priority should be lowest.");
+}
+
+function checkNormalPriority(aSubject) {
+  checkPriority(aSubject, checkNormalPriority, Ci.nsISupportsPriority.PRIORITY_NORMAL, "Priority should be normal.");
+}
+
+function checkPriority(aSubject, aCallback, aPriority, aMessage) {
   var channel = aSubject.QueryInterface(Ci.nsIChannel);
-  info("Channel's url=" + channel.name);
+  info("Channel classified: " + channel.name);
   if (channel.name !== testUrl) {
     return;
   }
 
+  SpecialPowers.removeObserver(aCallback, topic);
+
   var p = aSubject.QueryInterface(Ci.nsISupportsPriority);
-  is(p.priority, Ci.nsISupportsPriority.PRIORITY_LOWEST, "Priority should be lowest.");
-  SpecialPowers.removeObserver(checkLowestPriority, topic);
+  is(p.priority, aPriority, aMessage);
+
+  info("Resolving promise for " + channel.name);
   resolve();
 }
 
-function testXHR() {
+function testXHR1() {
   return new Promise(function(aResolve, aReject) {
+    testUrl = "http://tracking.example.com/";
+    info("Not blacklisted: " + testUrl);
     resolve = aResolve;
-    SpecialPowers.addObserver(checkLowestPriority, topic);
-    testUrl = "http://mochi.test:8888/";
+    SpecialPowers.addObserver(checkNormalPriority, topic);
     testWindow.content.postMessage({type: "doXHR", url: testUrl}, "*");
   });
 }
 
-function testFetch() {
+function testXHR2() {
   return new Promise(function(aResolve, aReject) {
+    testUrl = "http://trackertest.org/";
+    info("Blacklisted and not whitelisted: " + testUrl);
     resolve = aResolve;
     SpecialPowers.addObserver(checkLowestPriority, topic);
-    testUrl = "http://itisatracker.org/";
+    testWindow.content.postMessage({type: "doXHR", url: testUrl}, "*");
+  });
+}
+
+function testFetch1() {
+  return new Promise(function(aResolve, aReject) {
+    testUrl = "http://itisatracker.org/"; // only whitelisted in TP, not for annotations
+    info("Blacklisted and not whitelisted: " + testUrl);
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkLowestPriority, topic);
+    testWindow.content.postMessage({type: "doFetch", url: testUrl}, "*");
+  });
+}
+
+function testFetch2() {
+  return new Promise(function(aResolve, aReject) {
+    testUrl = "http://tracking.example.org/"; // only whitelisted for annotations, not in TP
+    info("Blacklisted but also whitelisted: " + testUrl);
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkNormalPriority, topic);
     testWindow.content.postMessage({type: "doFetch", url: testUrl}, "*");
   });
 }
 
 function endTest() {
+  info("Finishing up...");
   testWindow.close();
   testWindow = null;
   SimpleTest.finish();
 }
 
-SpecialPowers.pushPrefEnv(
-  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
-           ["privacy.trackingprotection.annotate_channels", true],
-           ["privacy.trackingprotection.lower_network_priority", true],
-           ["channelclassifier.allowlist_example", true]]},
-  test);
-
-function test() {
-  SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
-  UrlClassifierTestUtils.addTestTrackers().then(() => {
-    testOnWindow(false, function(aWindow) {
-      testWindow = aWindow;
-      testXHR().
-      then(testFetch).
-      then(endTest);
-    });
+async function test() {
+  await SpecialPowers.pushPrefEnv(
+    {"set": [["network.http.tailing.enabled", false],
+             ["privacy.trackingprotection.enabled", false],
+             ["privacy.trackingprotection.annotate_channels", true],
+             ["privacy.trackingprotection.lower_network_priority", true]]});
+  await UrlClassifierTestUtils.addTestTrackers();
+  testOnWindow(false, async function(aWindow) {
+    testWindow = aWindow;
+    await testXHR1();
+    await testXHR2();
+    await testFetch1();
+    await testFetch2();
+    await endTest();
   });
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.registerCleanupFunction(function() {
+  info("Cleaning up prefs...");
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
+test();
 
 </script>
 

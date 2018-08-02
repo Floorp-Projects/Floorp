@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "firstrun_content": "Cewch eich nodau tudalen, hanes, cyfrineiriau a gosodiadau eraill ar eich holl ddyfeisiau.",
   "firstrun_learn_more_link": "Dysgu rhagor am Gyfrif Firefox",
   "firstrun_form_header": "Rhowch eich e-bost",
-  "firstrun_form_sub_header": "i barhau i Firefox Sync.",
+  "firstrun_form_sub_header": "i barhau i Firefox Sync",
   "firstrun_email_input_placeholder": "E-bost",
   "firstrun_invalid_input": "Mae angen e-bost dilys",
   "firstrun_extra_legal_links": "Gan barhau, rydych yn cytuno i delerau'r {terms} a'r {privacy}.",
