@@ -37,6 +37,12 @@ bool LaunchApp(const std::vector<std::string>& argv,
   }
 
   pid_t pid = options.fork_delegate ? options.fork_delegate->Fork() : fork();
+  // WARNING: if pid == 0, only async signal safe operations are permitted from
+  // here until exec or _exit.
+  //
+  // Specifically, heap allocation is not safe: the sandbox's fork substitute
+  // won't run the pthread_atfork handlers that fix up the malloc locks.
+
   if (pid < 0)
     return false;
 
@@ -51,7 +57,9 @@ bool LaunchApp(const std::vector<std::string>& argv,
       }
     }
 
-    CloseSuperfluousFds(shuffle.MapsToFunc());
+    auto fdIsUsed = [&shuffle](int fd) { return shuffle.MapsTo(fd); };
+    // Constructing a std::function from a reference_wrapper won't allocate.
+    CloseSuperfluousFds(std::ref(fdIsUsed));
 
     for (size_t i = 0; i < argv.size(); i++)
       argv_cstr[i] = const_cast<char*>(argv[i].c_str());
