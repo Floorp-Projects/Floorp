@@ -35,7 +35,7 @@ function setup() {
           startTest();
         }
       } else if (/^DONE$/.exec(message)) {
-        window.removeEventListener('message', listener);
+        window.removeEventListener("message", listener);
         SimpleTest.finish();
       }
     }, false);

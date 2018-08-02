@@ -12,64 +12,59 @@
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for connection establishing timeout of B2G Presentation API at receiver side</a>
 <script type="application/javascript">
 
-'use strict';
+"use strict";
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 function setup() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.sendAsyncMessage('trigger-device-add');
+  gScript.sendAsyncMessage("trigger-device-add");
 
-    var promise = new Promise(function(aResolve, aReject) {
-      // In order to trigger timeout, do not resolve the promise.
-    });
-    obs.notifyObservers(promise, 'setup-request-promise');
-
-    aResolve();
+  var promise = new Promise(function(aResolve, aReject) {
+    // In order to trigger timeout, do not resolve the promise.
   });
+  obs.notifyObservers(promise, "setup-request-promise");
 }
 
 function testIncomingSessionRequestReceiverLaunchTimeout() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('receiver-launching', function launchReceiverHandler(aSessionId) {
-      gScript.removeMessageListener('receiver-launching', launchReceiverHandler);
+    gScript.addMessageListener("receiver-launching", function launchReceiverHandler(aSessionId) {
+      gScript.removeMessageListener("receiver-launching", launchReceiverHandler);
       info("Trying to launch receiver page.");
     });
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+    gScript.addMessageListener("control-channel-closed", function controlChannelClosedHandler(aReason) {
+      gScript.removeMessageListener("control-channel-closed", controlChannelClosedHandler);
       is(aReason, 0x80530017 /* NS_ERROR_DOM_TIMEOUT_ERR */, "The control channel is closed due to timeout.");
       aResolve();
     });
 
-    gScript.sendAsyncMessage('trigger-incoming-session-request', 'http://example.com');
+    gScript.sendAsyncMessage("trigger-incoming-session-request", "http://example.com");
   });
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
-  setup().
-  then(testIncomingSessionRequestReceiverLaunchTimeout).
+  setup();
+  testIncomingSessionRequestReceiverLaunchTimeout().
   then(teardown);
 }
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: "presentation-device-manage", allow: false, context: document},
 ], function() {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", false],
                                       ["presentation.receiver.loading.timeout", 10]]},

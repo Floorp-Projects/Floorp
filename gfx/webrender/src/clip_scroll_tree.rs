@@ -14,7 +14,7 @@ use print_tree::{PrintTree, PrintTreePrinter};
 use resource_cache::ResourceCache;
 use scene::SceneProperties;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo};
-use util::{LayoutFastTransform, LayoutToWorldFastTransform};
+use util::LayoutToWorldFastTransform;
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
@@ -103,8 +103,8 @@ pub struct TransformUpdateState {
     /// coordinate systems which are relatively axis aligned.
     pub current_coordinate_system_id: CoordinateSystemId,
 
-    /// Transform from the coordinate system that started this compatible coordinate system.
-    pub coordinate_system_relative_transform: LayoutFastTransform,
+    /// Offset from the coordinate system that started this compatible coordinate system.
+    pub coordinate_system_relative_offset: LayoutVector2D,
 
     /// True if this node is transformed by an invertible transform.  If not, display items
     /// transformed by this node will not be displayed and display items not transformed by this
@@ -242,7 +242,7 @@ impl ClipScrollTree {
             nearest_scrolling_ancestor_offset: LayoutVector2D::zero(),
             nearest_scrolling_ancestor_viewport: LayoutRect::zero(),
             current_coordinate_system_id: CoordinateSystemId::root(),
-            coordinate_system_relative_transform: LayoutFastTransform::identity(),
+            coordinate_system_relative_offset: LayoutVector2D::zero(),
             invertible: true,
         };
 

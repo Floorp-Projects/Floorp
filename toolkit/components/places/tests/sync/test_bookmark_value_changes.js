@@ -146,7 +146,7 @@ add_task(async function test_value_combo() {
               oldParentGuid: PlacesUtils.bookmarks.toolbarGuid,
               newParentGuid: PlacesUtils.bookmarks.toolbarGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC,
-              uri: "https://bugzilla.mozilla.org/" },
+              urlHref: "https://bugzilla.mozilla.org/" },
   }, {
     name: "onItemChanged",
     params: { itemId: localItemIds.get("mozBmk______"), property: "title",
@@ -710,7 +710,7 @@ add_task(async function test_keywords_complex() {
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC,
-              uri: "http://example.com/b" },
+              urlHref: "http://example.com/b" },
   }, {
     name: "onItemMoved",
     params: { itemId: localItemIds.get("bookmarkCCCC"),
@@ -721,7 +721,7 @@ add_task(async function test_keywords_complex() {
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC,
-              uri: "http://example.com/c-remote" },
+              urlHref: "http://example.com/c-remote" },
   }, {
     name: "onItemMoved",
     params: { itemId: localItemIds.get("bookmarkDDDD"),
@@ -732,7 +732,7 @@ add_task(async function test_keywords_complex() {
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC,
-              uri: "http://example.com/d" },
+              urlHref: "http://example.com/d" },
   }, {
     name: "onItemMoved",
     params: { itemId: localItemIds.get("bookmarkEEEE"),
@@ -743,7 +743,7 @@ add_task(async function test_keywords_complex() {
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC,
-              uri: "http://example.com/e" },
+              urlHref: "http://example.com/e" },
   }, {
     name: "onItemChanged",
     params: { itemId: localItemIds.get("bookmarkCCCC"), property: "title",

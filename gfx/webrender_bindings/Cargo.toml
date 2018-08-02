@@ -7,8 +7,8 @@ license = "MPL-2.0"
 [dependencies]
 rayon = "1"
 thread_profiler = "0.1.1"
-euclid = { version = "0.18", features = ["serde"] }
-app_units = "0.6"
+euclid = { version = "0.19", features = ["serde"] }
+app_units = "0.7"
 gleam = "0.6"
 log = "0.4"
 nsstring = { path = "../../servo/support/gecko/nsstring" }

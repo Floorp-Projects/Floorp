@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Bug 1228209 - plan to remove this eventually
 function log(aMsg) {
-  //dump("-*- PresentationDataChannelSessionTransport.js : " + aMsg + "\n");
+  // dump("-*- PresentationDataChannelSessionTransport.js : " + aMsg + "\n");
 }
 
 const PRESENTATIONTRANSPORT_CID = Components.ID("{dd2bbf2f-3399-4389-8f5f-d382afb8b2d6}");
@@ -50,7 +50,7 @@ PresentationTransportBuilder.prototype = {
                                           Ci.nsIPresentationDataChannelSessionTransportBuilder,
                                           Ci.nsITimerCallback]),
 
-  buildDataChannelTransport: function(aRole, aWindow, aListener) {
+  buildDataChannelTransport(aRole, aWindow, aListener) {
     if (!aRole || !aWindow || !aListener) {
       log("buildDataChannelTransport with illegal parameters");
       throw Cr.NS_ERROR_ILLEGAL_VALUE;
@@ -85,7 +85,7 @@ PresentationTransportBuilder.prototype = {
           .then(() => this._listener
                           .sendOffer(new PresentationDataChannelDescription(this._peerConnection.localDescription)))
           .catch(e => this._reportError(e));
-    }
+    };
 
     switch (this._role) {
       case Ci.nsIPresentationService.ROLE_CONTROLLER:
@@ -99,7 +99,7 @@ PresentationTransportBuilder.prototype = {
           // Ensure the binaryType of dataChannel is blob.
           this._dataChannel.binaryType = "blob";
           this._setDataChannel();
-        }
+        };
         break;
       default:
        throw Cr.NS_ERROR_ILLEGAL_VALUE;
@@ -114,18 +114,18 @@ PresentationTransportBuilder.prototype = {
     this._timer.initWithCallback(this, timeout, this._timer.TYPE_ONE_SHOT);
   },
 
-  notify: function() {
+  notify() {
     if (!this._sessionTransport) {
       this._cleanup(Cr.NS_ERROR_NET_TIMEOUT);
     }
   },
 
-  _reportError: function(aError) {
+  _reportError(aError) {
     log("report Error " + aError.name + ":" + aError.message);
     this._cleanup(Cr.NS_ERROR_FAILURE);
   },
 
-  _setDataChannel: function() {
+  _setDataChannel() {
     this._dataChannel.onopen = () => {
       log("data channel is open, notify the listener, role " + this._role);
 
@@ -146,10 +146,10 @@ PresentationTransportBuilder.prototype = {
     this._dataChannel.onerror = aError => {
       log("data channel onerror " + aError.name + ":" + aError.message);
       this._cleanup(Cr.NS_ERROR_FAILURE);
-    }
+    };
   },
 
-  _cleanup: function(aReason) {
+  _cleanup(aReason) {
     if (aReason != Cr.NS_OK) {
       this._listener.onError(aReason);
     }
@@ -177,7 +177,7 @@ PresentationTransportBuilder.prototype = {
   },
 
   // nsIPresentationControlChannelListener
-  onOffer: function(aOffer) {
+  onOffer(aOffer) {
     if (this._role !== Ci.nsIPresentationService.ROLE_RECEIVER ||
           this._sessionTransport) {
       log("onOffer status error");
@@ -196,11 +196,11 @@ PresentationTransportBuilder.prototype = {
         .then(() => {
           this._isControlChannelNeeded = false;
           this._listener
-              .sendAnswer(new PresentationDataChannelDescription(this._peerConnection.localDescription))
+              .sendAnswer(new PresentationDataChannelDescription(this._peerConnection.localDescription));
         }).catch(e => this._reportError(e));
   },
 
-  onAnswer: function(aAnswer) {
+  onAnswer(aAnswer) {
     if (this._role !== Ci.nsIPresentationService.ROLE_CONTROLLER ||
           this._sessionTransport) {
       log("onAnswer status error");
@@ -216,7 +216,7 @@ PresentationTransportBuilder.prototype = {
     this._isControlChannelNeeded = false;
   },
 
-  onIceCandidate: function(aCandidate) {
+  onIceCandidate(aCandidate) {
     log("onIceCandidate: " + aCandidate + " with role " + this._role);
     if (!this._window || !this._peerConnection) {
       log("ignoring ICE candidate after connection");
@@ -226,7 +226,7 @@ PresentationTransportBuilder.prototype = {
     this._peerConnection.addIceCandidate(candidate).catch(e => this._reportError(e));
   },
 
-  notifyDisconnected: function(aReason) {
+  notifyDisconnected(aReason) {
     log("notifyDisconnected reason: " + aReason);
 
     if (aReason != Cr.NS_OK) {
@@ -247,7 +247,7 @@ PresentationTransport.prototype = {
   contractID: PRESENTATIONTRANSPORT_CONTRACTID,
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransport]),
 
-  init: function(aPeerConnection, aDataChannel, aWindow) {
+  init(aPeerConnection, aDataChannel, aWindow) {
     log("initWithDataChannel");
     this._enableDataNotification = false;
     this._dataChannel = aDataChannel;
@@ -264,7 +264,7 @@ PresentationTransport.prototype = {
         this._callback.notifyTransportClosed(this._closeReason);
       }
       this._cleanup();
-    }
+    };
 
     this._dataChannel.onmessage = aEvent => {
       log("data channel onmessage " + aEvent.data);
@@ -283,7 +283,7 @@ PresentationTransport.prototype = {
         this._callback.notifyTransportClosed(Cr.NS_ERROR_FAILURE);
       }
       this._cleanup();
-    }
+    };
   },
 
   // nsIPresentationTransport
@@ -299,12 +299,12 @@ PresentationTransport.prototype = {
     this._callback = aCallback;
   },
 
-  send: function(aData) {
+  send(aData) {
     log("send " + aData);
     this._dataChannel.send(aData);
   },
 
-  sendBinaryMsg: function(aData) {
+  sendBinaryMsg(aData) {
     log("sendBinaryMsg");
 
     let array = new Uint8Array(aData.length);
@@ -315,13 +315,13 @@ PresentationTransport.prototype = {
     this._dataChannel.send(array);
   },
 
-  sendBlob: function(aBlob) {
+  sendBlob(aBlob) {
     log("sendBlob");
 
     this._dataChannel.send(aBlob);
   },
 
-  enableDataNotification: function() {
+  enableDataNotification() {
     log("enableDataNotification");
     if (this._enableDataNotification) {
       return;
@@ -337,13 +337,13 @@ PresentationTransport.prototype = {
     this._messageQueue = [];
   },
 
-  close: function(aReason) {
+  close(aReason) {
     this._closeReason = aReason;
 
     this._dataChannel.close();
   },
 
-  _cleanup: function() {
+  _cleanup() {
     this._dataChannel = null;
 
     if (this._peerConnection) {
@@ -355,7 +355,7 @@ PresentationTransport.prototype = {
     this._window = null;
   },
 
-  _doNotifyData: function(aData) {
+  _doNotifyData(aData) {
     if (!this._callback) {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }

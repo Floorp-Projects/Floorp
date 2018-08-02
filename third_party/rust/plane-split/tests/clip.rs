@@ -1,16 +1,16 @@
 extern crate euclid;
 extern crate plane_split;
 
-use euclid::{point3, vec3};
+use euclid::{point3, rect, vec3};
+use euclid::{Angle, TypedRect, TypedTransform3D};
 use plane_split::{Clipper, Plane, Polygon};
+
+use std::f32::consts::FRAC_PI_4;
 
 
 #[test]
 fn clip_in() {
-    let plane: Plane<f32, ()> = Plane {
-        normal: vec3(1.0, 0.0, 1.0).normalize(),
-        offset: 20.0,
-    };
+    let plane: Plane<f32, ()> = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), 20.0).unwrap();
     let mut clipper = Clipper::new();
     clipper.add(plane);
 
@@ -28,10 +28,7 @@ fn clip_in() {
 
 #[test]
 fn clip_out() {
-    let plane: Plane<f32, ()> = Plane {
-        normal: vec3(1.0, 0.0, 1.0).normalize(),
-        offset: -20.0,
-    };
+    let plane: Plane<f32, ()> = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), -20.0).unwrap();
     let mut clipper = Clipper::new();
     clipper.add(plane);
 
@@ -68,10 +65,7 @@ fn clip_parallel() {
 
 #[test]
 fn clip_repeat() {
-    let plane: Plane<f32, ()> = Plane {
-        normal: vec3(1.0, 0.0, 1.0).normalize(),
-        offset: 0.0,
-    };
+    let plane: Plane<f32, ()> = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), 0.0).unwrap();
     let mut clipper = Clipper::new();
     clipper.add(plane.clone());
     clipper.add(plane.clone());
@@ -86,4 +80,22 @@ fn clip_repeat() {
     let results = clipper.clip(poly);
     assert_eq!(results.len(), 1);
     assert!(plane.signed_distance_sum_to(&results[0]) > 0.0);
+}
+
+#[test]
+fn clip_transformed() {
+    let t_rot: TypedTransform3D<f32, (), ()> =
+        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
+    let t_div: TypedTransform3D<f32, (), ()> =
+        TypedTransform3D::create_perspective(5.0);
+    let transform = t_rot.post_mul(&t_div);
+
+    let poly_rect: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
+    let polygon = Polygon::from_rect(poly_rect, 0);
+    let bounds: TypedRect<f32, ()> = rect(-1.0, -1.0, 2.0, 2.0);
+
+    let mut clipper = Clipper::new();
+    let results = clipper.clip_transformed(polygon, &transform, Some(bounds));
+    // iterating enforces the transformation checks/unwraps
+    assert_ne!(0, results.count());
 }

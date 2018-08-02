@@ -403,7 +403,7 @@ impl RenderTask {
         //           whether a ClipSources contains any box-shadows and skip
         //           this iteration for the majority of cases.
         for clip_item in &clips {
-            let clip_sources = clip_store.get_mut(clip_item.clip_sources_index);
+            let clip_sources = &mut clip_store[clip_item.clip_sources_index];
             for &mut (ref mut clip, _) in &mut clip_sources.clips {
                 match *clip {
                     ClipSource::BoxShadow(ref mut info) => {

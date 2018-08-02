@@ -5,10 +5,8 @@
 
 "use strict";
 
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
-const {PrefObserver} = require("devtools/client/shared/prefs");
 const {colorUtils} = require("devtools/shared/css/color");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -24,7 +22,6 @@ let itemIdCounter = 0;
  *        An object consiting any of the following options:
  *        - listId {String} The id for the list <LI> element.
  *        - position {String} The position for the tooltip ("top" or "bottom").
- *        - theme {String} String related to the theme of the popup
  *        - autoSelect {Boolean} Boolean to allow the first entry of the popup
  *          panel to be automatically selected when the popup shows.
  *        - onSelect {String} Callback called when the selected index is updated.
@@ -38,28 +35,15 @@ function AutocompletePopup(toolboxDoc, options = {}) {
 
   this.autoSelect = options.autoSelect || false;
   this.position = options.position || "bottom";
-  let theme = options.theme || "dark";
 
   this.onSelectCallback = options.onSelect;
   this.onClickCallback = options.onClick;
-
-  // If theme is auto, use the devtools.theme pref
-  if (theme === "auto") {
-    theme = Services.prefs.getCharPref("devtools.theme");
-    this.autoThemeEnabled = true;
-    // Setup theme change listener.
-    this._handleThemeChange = this._handleThemeChange.bind(this);
-    this._prefObserver = new PrefObserver("devtools.");
-    this._prefObserver.on("devtools.theme", this._handleThemeChange);
-    this._currentTheme = theme;
-  }
 
   // Create HTMLTooltip instance
   this._tooltip = new HTMLTooltip(this._document);
   this._tooltip.panel.classList.add(
     "devtools-autocomplete-popup",
-    "devtools-monospace",
-    theme + "-theme");
+    "devtools-monospace");
   // Stop this appearing as an alert to accessibility.
   this._tooltip.panel.setAttribute("role", "presentation");
 
@@ -74,7 +58,7 @@ function AutocompletePopup(toolboxDoc, options = {}) {
   if (options.listId) {
     this._list.setAttribute("id", options.listId);
   }
-  this._list.className = "devtools-autocomplete-listbox " + theme + "-theme";
+  this._list.className = "devtools-autocomplete-listbox";
 
   // We need to retrieve the item padding in order to correct the offset of the popup.
   const paddingPropertyName = "--autocomplete-item-padding-inline";
@@ -210,11 +194,6 @@ AutocompletePopup.prototype = {
     }
 
     this._list.removeEventListener("click", this.onClick);
-
-    if (this.autoThemeEnabled) {
-      this._prefObserver.off("devtools.theme", this._handleThemeChange);
-      this._prefObserver.destroy();
-    }
 
     this._list.remove();
     this._listClone.remove();
@@ -613,21 +592,6 @@ AutocompletePopup.prototype = {
     const prevPageIndex = this.selectedIndex - this._itemsPerPane - 1;
     this.selectedIndex = Math.max(prevPageIndex, 0);
     return this.selectedItem;
-  },
-
-  /**
-   * Manages theme switching for the popup based on the devtools.theme pref.
-   */
-  _handleThemeChange: function() {
-    const oldValue = this._currentTheme;
-    const newValue = Services.prefs.getCharPref("devtools.theme");
-
-    this._tooltip.panel.classList.toggle(oldValue + "-theme", false);
-    this._tooltip.panel.classList.toggle(newValue + "-theme", true);
-    this._list.classList.toggle(oldValue + "-theme", false);
-    this._list.classList.toggle(newValue + "-theme", true);
-
-    this._currentTheme = newValue;
   },
 
   /**

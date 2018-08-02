@@ -19,21 +19,21 @@ let SpecialPowers = window.parent.SpecialPowers;
 "use strict";
 
 var testDevice = {
-  id: 'id',
-  name: 'name',
-  type: 'type',
+  id: "id",
+  name: "name",
+  type: "type",
 };
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationDeviceInfoChromeScript.js'));
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationDeviceInfoChromeScript.js"));
 var request;
 var availability;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('setup-complete', function() {
+    gScript.addMessageListener("setup-complete", function() {
       aResolve();
     });
-    gScript.sendAsyncMessage('setup');
+    gScript.sendAsyncMessage("setup");
   });
 }
 
@@ -45,9 +45,9 @@ function testInitialUnavailable() {
     aAvailability.onchange = function() {
       aAvailability.onchange = null;
       ok(aAvailability.value, "Device should be available.");
-    }
+    };
     availability = aAvailability;
-    gScript.sendAsyncMessage('trigger-device-add', testDevice);
+    gScript.sendAsyncMessage("trigger-device-add", testDevice);
   }).catch(function(aError) {
     ok(false, "Error occurred when getting availability: " + aError);
     teardown();
@@ -81,19 +81,19 @@ function testOnChangeEvent() {
       availability.onchange = null;
       is(availability.value, false, "Should have no available device after device removed");
       aResolve();
-    }
-    gScript.sendAsyncMessage('trigger-device-remove');
+    };
+    gScript.sendAsyncMessage("trigger-device-remove");
   });
 }
 
 function testConsecutiveGetAvailability() {
-  let request = new PresentationRequest("https://example.org");
+  let presRequest = new PresentationRequest("https://example.org");
   let firstAvailabilityResolved = false;
   return Promise.all([
-    request.getAvailability().then(function() {
+    presRequest.getAvailability().then(function() {
       firstAvailabilityResolved = true;
     }),
-    request.getAvailability().then(function() {
+    presRequest.getAvailability().then(function() {
       ok(firstAvailabilityResolved, "getAvailability() should be resolved in sequence");
     })
   ]).catch(function(aError) {
@@ -105,22 +105,22 @@ function testConsecutiveGetAvailability() {
 function testUnsupportedDeviceAvailability() {
   return Promise.race([
     new Promise(function(aResolve, aReject) {
-      let request = new PresentationRequest("https://test.com");
-      request.getAvailability().then(function(aAvailability) {
+      let presRequest = new PresentationRequest("https://test.com");
+      presRequest.getAvailability().then(function(aAvailability) {
         availability = aAvailability;
         aAvailability.onchange = function() {
           availability.onchange = null;
           ok(false, "Should not get onchange event.");
           teardown();
-        }
+        };
       });
-      gScript.sendAsyncMessage('trigger-add-unsupport-url-device');
+      gScript.sendAsyncMessage("trigger-add-unsupport-url-device");
     }),
     new Promise(function(aResolve, aReject) {
       setTimeout(function() {
         ok(true, "Should not get onchange event.");
         availability.onchange = null;
-        gScript.sendAsyncMessage('trigger-remove-unsupported-device');
+        gScript.sendAsyncMessage("trigger-remove-unsupported-device");
         aResolve();
       }, 3000);
     }),
@@ -152,11 +152,11 @@ function testMultipleAvailabilityURLs() {
       });
     }),
     new Promise(function(aResolve) {
-      gScript.sendAsyncMessage('trigger-add-multiple-devices');
+      gScript.sendAsyncMessage("trigger-add-multiple-devices");
       aResolve();
     }),
   ]).then(new Promise(function(aResolve) {
-    gScript.sendAsyncMessage('trigger-remove-multiple-devices');
+    gScript.sendAsyncMessage("trigger-remove-multiple-devices");
     aResolve();
   }));
 }
@@ -194,11 +194,11 @@ function testPartialSupportedDeviceAvailability() {
       }),
     ]),
     new Promise(function(aResolve) {
-      gScript.sendAsyncMessage('trigger-add-https-devices');
+      gScript.sendAsyncMessage("trigger-add-https-devices");
       aResolve();
     }),
   ]).then(new Promise(function(aResolve) {
-    gScript.sendAsyncMessage('trigger-remove-https-devices');
+    gScript.sendAsyncMessage("trigger-remove-https-devices");
     aResolve();
   }));
 }
@@ -206,7 +206,7 @@ function testPartialSupportedDeviceAvailability() {
 function teardown() {
   request = null;
   availability = null;
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
   gScript.destroy();
   SimpleTest.finish();
 }

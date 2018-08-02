@@ -15,20 +15,19 @@
 <pre id="test"></pre>
 <script type="application/javascript">
 
-'use strict';
+"use strict";
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver.html');
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
+var receiverUrl = SimpleTest.getTestFileURL("file_presentation_receiver.html");
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 function setup() {
   return new Promise(function(aResolve, aReject) {
-    gScript.sendAsyncMessage('trigger-device-add');
+    gScript.sendAsyncMessage("trigger-device-add");
 
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('src', receiverUrl);
+    var iframe = document.createElement("iframe");
+    iframe.setAttribute("src", receiverUrl);
     iframe.setAttribute("mozbrowser", "true");
     iframe.setAttribute("mozpresentation", receiverUrl);
 
@@ -51,40 +50,40 @@ function setup() {
       }
     });
 
-    var promise = new Promise(function(aResolve, aReject) {
+    var promise = new Promise(function(aInnerResolve, aInnerReject) {
       document.body.appendChild(iframe);
 
-      aResolve(iframe);
+      aInnerResolve(iframe);
     });
-    obs.notifyObservers(promise, 'setup-request-promise');
+    obs.notifyObservers(promise, "setup-request-promise");
 
-    gScript.addMessageListener('offer-received', function offerReceivedHandler() {
-      gScript.removeMessageListener('offer-received', offerReceivedHandler);
+    gScript.addMessageListener("offer-received", function offerReceivedHandler() {
+      gScript.removeMessageListener("offer-received", offerReceivedHandler);
       info("An offer is received.");
     });
 
-    gScript.addMessageListener('answer-sent', function answerSentHandler(aIsValid) {
-      gScript.removeMessageListener('answer-sent', answerSentHandler);
+    gScript.addMessageListener("answer-sent", function answerSentHandler(aIsValid) {
+      gScript.removeMessageListener("answer-sent", answerSentHandler);
       ok(aIsValid, "A valid answer is sent.");
     });
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+    gScript.addMessageListener("control-channel-closed", function controlChannelClosedHandler(aReason) {
+      gScript.removeMessageListener("control-channel-closed", controlChannelClosedHandler);
       is(aReason, SpecialPowers.Cr.NS_OK, "The control channel is closed normally.");
     });
 
-    gScript.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
-      gScript.removeMessageListener('check-navigator', checknavigatorHandler);
+    gScript.addMessageListener("check-navigator", function checknavigatorHandler(aSuccess) {
+      gScript.removeMessageListener("check-navigator", checknavigatorHandler);
       ok(aSuccess, "buildDataChannel get correct window object");
     });
 
-    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
-      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
+    gScript.addMessageListener("data-transport-notification-enabled", function dataTransportNotificationEnabledHandler() {
+      gScript.removeMessageListener("data-transport-notification-enabled", dataTransportNotificationEnabledHandler);
       info("Data notification is enabled for data transport channel.");
     });
 
-    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+    gScript.addMessageListener("data-transport-closed", function dataTransportClosedHandler(aReason) {
+      gScript.removeMessageListener("data-transport-closed", dataTransportClosedHandler);
       is(aReason, SpecialPowers.Cr.NS_OK, "The data transport should be closed normally.");
     });
 
@@ -94,8 +93,8 @@ function setup() {
 
 function testIncomingSessionRequest() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('receiver-launching', function launchReceiverHandler(aSessionId) {
-      gScript.removeMessageListener('receiver-launching', launchReceiverHandler);
+    gScript.addMessageListener("receiver-launching", function launchReceiverHandler(aSessionId) {
+      gScript.removeMessageListener("receiver-launching", launchReceiverHandler);
       info("Trying to launch receiver page.");
 
       ok(navigator.presentation, "navigator.presentation should be available in in-process pages.");
@@ -103,18 +102,18 @@ function testIncomingSessionRequest() {
       aResolve();
     });
 
-    gScript.sendAsyncMessage('trigger-incoming-session-request', receiverUrl);
+    gScript.sendAsyncMessage("trigger-incoming-session-request", receiverUrl);
   });
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
@@ -124,10 +123,10 @@ function runTests() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: "presentation-device-manage", allow: false, context: document},
   {type: "browser", allow: true, context: document},
 ], function() {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.controller.enabled", false],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", true],

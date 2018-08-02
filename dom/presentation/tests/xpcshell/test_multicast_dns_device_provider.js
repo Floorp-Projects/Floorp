@@ -19,7 +19,7 @@ const SERVER_CONTRACT_ID = "@mozilla.org/presentation/control-service;1";
 
 const PREF_DISCOVERY = "dom.presentation.discovery.enabled";
 const PREF_DISCOVERABLE = "dom.presentation.discoverable";
-const PREF_DEVICENAME= "dom.presentation.device.name";
+const PREF_DEVICENAME = "dom.presentation.device.name";
 
 const LATEST_VERSION = 1;
 const SERVICE_TYPE = "_presentation-ctrl._tcp";
@@ -36,7 +36,7 @@ function sleep(aMs) {
                   .createInstance(Ci.nsITimer);
 
     timer.initWithCallback({
-      notify: function () {
+      notify() {
         resolve();
       },
     }, aMs, timer.TYPE_ONE_SHOT);
@@ -48,11 +48,11 @@ function MockFactory(aClass) {
   this._cls = aClass;
 }
 MockFactory.prototype = {
-  createInstance: function(aOuter, aIID) {
+  createInstance(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
-    switch(typeof(this._cls)) {
+    switch (typeof(this._cls)) {
       case "function":
         return new this._cls().QueryInterface(aIID);
       case "object":
@@ -61,7 +61,7 @@ MockFactory.prototype = {
         return null;
     }
   },
-  lockFactory: function(aLock) {
+  lockFactory(aLock) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
@@ -82,7 +82,7 @@ function ContractHook(aContractID, aClass) {
 ContractHook.prototype = {
   hookedMap: new Map(), // remember only the most original factory.
 
-  init: function() {
+  init() {
     this.reset();
 
     let oldContract = this.unregister();
@@ -95,9 +95,9 @@ ContractHook.prototype = {
     registerCleanupFunction(() => { this.cleanup.apply(this); });
   },
 
-  reset: function() {},
+  reset() {},
 
-  cleanup: function() {
+  cleanup() {
     this.reset();
 
     this.unregister();
@@ -111,7 +111,7 @@ ContractHook.prototype = {
     }
   },
 
-  unregister: function() {
+  unregister() {
     var classID, factory;
 
     try {
@@ -126,7 +126,7 @@ ContractHook.prototype = {
       registrar.unregisterFactory(classID, factory);
     }
 
-    return { classID: classID, factory: factory };
+    return { classID, factory };
   }
 };
 
@@ -198,12 +198,12 @@ TestPresentationDeviceListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                           Ci.nsISupportsWeakReference]),
 
-  addDevice: function(device) { this.devices[device.id] = device; },
-  removeDevice: function(device) { delete this.devices[device.id]; },
-  updateDevice: function(device) { this.devices[device.id] = device; },
-  onSessionRequest: function(device, url, presentationId, controlChannel) {},
+  addDevice(device) { this.devices[device.id] = device; },
+  removeDevice(device) { delete this.devices[device.id]; },
+  updateDevice(device) { this.devices[device.id] = device; },
+  onSessionRequest(device, url, presentationId, controlChannel) {},
 
-  count: function() {
+  count() {
     var size = 0, key;
     for (key in this.devices) {
         if (this.devices.hasOwnProperty(key)) {
@@ -233,8 +233,8 @@ function registerService() {
 
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {},
-    registerService: function(serviceInfo, listener) {
+    startDiscovery(serviceType, listener) {},
+    registerService(serviceInfo, listener) {
       deferred.resolve();
       this.serviceRegistered++;
       return {
@@ -244,11 +244,11 @@ function registerService() {
         }
       };
     },
-    resolveService: function(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {},
     serviceRegistered: 0,
     serviceUnregistered: 0
   };
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
 
   Assert.equal(mockObj.serviceRegistered, 0);
@@ -258,9 +258,9 @@ function registerService() {
   provider.listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {},
-    removeDevice: function(device) {},
-    updateDevice: function(device) {},
+    addDevice(device) {},
+    removeDevice(device) {},
+    updateDevice(device) {},
   };
 
   deferred.promise.then(function() {
@@ -283,24 +283,24 @@ function noRegisterService() {
 
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {},
-    registerService: function(serviceInfo, listener) {
+    startDiscovery(serviceType, listener) {},
+    registerService(serviceInfo, listener) {
       deferred.resolve();
       Assert.ok(false, "should not register service if not discoverable");
     },
-    resolveService: function(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {},
   };
 
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
 
   // Try register
   provider.listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {},
-    removeDevice: function(device) {},
-    updateDevice: function(device) {},
+    addDevice(device) {},
+    removeDevice(device) {},
+    updateDevice(device) {},
   };
 
   let race = Promise.race([
@@ -322,8 +322,8 @@ function registerServiceDynamically() {
 
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {},
-    registerService: function(serviceInfo, listener) {
+    startDiscovery(serviceType, listener) {},
+    registerService(serviceInfo, listener) {
       deferred.resolve();
       this.serviceRegistered++;
       return {
@@ -333,11 +333,11 @@ function registerServiceDynamically() {
         }
       };
     },
-    resolveService: function(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {},
     serviceRegistered: 0,
     serviceUnregistered: 0
   };
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
 
   Assert.equal(mockObj.serviceRegistered, 0);
@@ -347,9 +347,9 @@ function registerServiceDynamically() {
   provider.listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {},
-    removeDevice: function(device) {},
-    updateDevice: function(device) {},
+    addDevice(device) {},
+    removeDevice(device) {},
+    updateDevice(device) {},
   };
 
   Assert.equal(mockObj.serviceRegistered, 0);
@@ -385,7 +385,7 @@ function addDevice() {
                                 SERVICE_TYPE);
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -393,11 +393,11 @@ function addDevice() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
       Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
       listener.onServiceResolved(createDevice(mockDevice.host,
@@ -407,7 +407,7 @@ function addDevice() {
     }
   };
 
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = new TestPresentationDeviceListener();
   Assert.equal(listener.count(), 0);
@@ -435,7 +435,7 @@ function filterDevice() {
                                 SERVICE_TYPE);
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -443,11 +443,11 @@ function filterDevice() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
       Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
       listener.onServiceResolved(createDevice(mockDevice.host,
@@ -457,12 +457,12 @@ function filterDevice() {
     }
   };
 
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {
+    addDevice(device) {
       let tests = [
         { requestedUrl: "app://fling-player.gaiamobile.org/index.html", supported: true },
         { requestedUrl: "app://notification-receiver.gaiamobile.org/index.html", supported: true },
@@ -481,9 +481,9 @@ function filterDevice() {
       provider = null;
       run_next_test();
     },
-    updateDevice: function() {},
-    removeDevice: function() {},
-    onSessionRequest: function() {},
+    updateDevice() {},
+    removeDevice() {},
+    onSessionRequest() {},
   };
 
   provider.listener = listener;
@@ -493,8 +493,6 @@ function handleSessionRequest() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, true);
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
 
-  const testUrl = "http://example.com";
-  const testPresentationId = "test-presentation-id";
   const testDeviceName = "test-device-name";
 
   Services.prefs.setCharPref(PREF_DEVICENAME, testDeviceName);
@@ -505,7 +503,7 @@ function handleSessionRequest() {
                                 SERVICE_TYPE);
   let mockSDObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -513,11 +511,11 @@ function handleSessionRequest() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
       listener.onServiceResolved(createDevice(mockDevice.host,
                                               mockDevice.port,
                                               mockDevice.serviceName,
@@ -527,9 +525,9 @@ function handleSessionRequest() {
 
   let mockServerObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
-    connect: function(deviceInfo) {
+    connect(deviceInfo) {
       this.request = {
-        deviceInfo: deviceInfo,
+        deviceInfo,
       };
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
@@ -537,25 +535,25 @@ function handleSessionRequest() {
     },
     id: "",
     version: LATEST_VERSION,
-    isCompatibleServer: function(version) {
+    isCompatibleServer(version) {
       return this.version === version;
     }
   };
 
-  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
-  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {
+    addDevice(device) {
       this.device = device;
     },
   };
 
   provider.listener = listener;
 
-  let controlChannel = listener.device.establishControlChannel();
+  listener.device.establishControlChannel();
 
   Assert.equal(mockServerObj.request.deviceInfo.id, mockDevice.host);
   Assert.equal(mockServerObj.request.deviceInfo.address, mockDevice.host);
@@ -577,7 +575,7 @@ function handleOnSessionRequest() {
                                 SERVICE_TYPE);
   let mockSDObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -585,11 +583,11 @@ function handleOnSessionRequest() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
       listener.onServiceResolved(createDevice(mockDevice.host,
                                               mockDevice.port,
                                               mockDevice.serviceName,
@@ -599,30 +597,30 @@ function handleOnSessionRequest() {
 
   let mockServerObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
-    startServer: function() {},
-    sessionRequest: function() {},
-    close: function() {},
-    id: '',
+    startServer() {},
+    sessionRequest() {},
+    close() {},
+    id: "",
     version: LATEST_VERSION,
     port: 0,
     listener: null,
   };
 
-  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
-  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {},
-    removeDevice: function(device) {},
-    updateDevice: function(device) {},
-    onSessionRequest: function(device, url, presentationId, controlChannel) {
+    addDevice(device) {},
+    removeDevice(device) {},
+    updateDevice(device) {},
+    onSessionRequest(device, url, presentationId, controlChannel) {
       Assert.ok(true, "receive onSessionRequest event");
       this.request = {
         deviceId: device.id,
-        url: url,
-        presentationId: presentationId,
+        url,
+        presentationId,
       };
     }
   };
@@ -659,43 +657,43 @@ function handleOnSessionRequestFromUnknownDevice() {
 
   let mockSDObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {},
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {}
+    startDiscovery(serviceType, listener) {},
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {}
   };
 
   let mockServerObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
-    startServer: function() {},
-    sessionRequest: function() {},
-    close: function() {},
-    id: '',
+    startServer() {},
+    sessionRequest() {},
+    close() {},
+    id: "",
     version: LATEST_VERSION,
     port: 0,
     listener: null,
   };
 
-  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
-  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {
+    addDevice(device) {
       Assert.ok(false, "shouldn't create any new device");
     },
-    removeDevice: function(device) {
+    removeDevice(device) {
       Assert.ok(false, "shouldn't remote any device");
     },
-    updateDevice: function(device) {
+    updateDevice(device) {
       Assert.ok(false, "shouldn't update any device");
     },
-    onSessionRequest: function(device, url, presentationId, controlChannel) {
+    onSessionRequest(device, url, presentationId, controlChannel) {
       Assert.ok(true, "receive onSessionRequest event");
       this.request = {
         deviceId: device.id,
-        url: url,
-        presentationId: presentationId,
+        url,
+        presentationId,
       };
     }
   };
@@ -729,25 +727,24 @@ function handleOnSessionRequestFromUnknownDevice() {
 function noAddDevice() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, false);
 
-  let mockDevice = createDevice("device.local", 12345, "service.name", SERVICE_TYPE);
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       Assert.ok(false, "shouldn't perform any device discovery");
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
     }
   };
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
 
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {},
-    removeDevice: function(device) {},
-    updateDevice: function(device) {},
+    addDevice(device) {},
+    removeDevice(device) {},
+    updateDevice(device) {},
   };
   provider.listener = listener;
   provider.forceDiscovery();
@@ -769,7 +766,7 @@ function ignoreIncompatibleDevice() {
 
   let mockSDObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -777,10 +774,10 @@ function ignoreIncompatibleDevice() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {
       deferred.resolve();
       listener.onServiceRegistered(createDevice("",
                                                 54321,
@@ -788,10 +785,10 @@ function ignoreIncompatibleDevice() {
                                                 mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    resolveService: function(serviceInfo, listener) {
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
       Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
       listener.onServiceResolved(createDevice(mockDevice.host,
@@ -803,25 +800,25 @@ function ignoreIncompatibleDevice() {
 
   let mockServerObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
-    startServer: function() {
+    startServer() {
       Services.tm.dispatchToMainThread(() => {
         this.listener.onServerReady(this.port, this.certFingerprint);
       });
     },
-    sessionRequest: function() {},
-    close: function() {},
-    id: '',
+    sessionRequest() {},
+    close() {},
+    id: "",
     version: LATEST_VERSION,
-    isCompatibleServer: function(version) {
+    isCompatibleServer(version) {
       return false;
     },
     port: 54321,
-    certFingerprint: 'mock-cert-fingerprint',
+    certFingerprint: "mock-cert-fingerprint",
     listener: null,
   };
 
-  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
-  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = new TestPresentationDeviceListener();
 
@@ -854,7 +851,7 @@ function ignoreSelfDevice() {
   let deferred = Promise.defer();
   let mockSDObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -862,10 +859,10 @@ function ignoreSelfDevice() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {
       deferred.resolve();
       listener.onServiceRegistered(createDevice("",
                                                 0,
@@ -873,10 +870,10 @@ function ignoreSelfDevice() {
                                                 mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    resolveService: function(serviceInfo, listener) {
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
       Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
       listener.onServiceResolved(createDevice(mockDevice.host,
@@ -888,25 +885,25 @@ function ignoreSelfDevice() {
 
   let mockServerObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
-    startServer: function() {
+    startServer() {
       Services.tm.dispatchToMainThread(() => {
         this.listener.onServerReady(this.port, this.certFingerprint);
       });
     },
-    sessionRequest: function() {},
-    close: function() {},
-    id: '',
+    sessionRequest() {},
+    close() {},
+    id: "",
     version: LATEST_VERSION,
-    isCompatibleServer: function(version) {
+    isCompatibleServer(version) {
       return this.version === version;
     },
     port: 54321,
-    certFingerprint: 'mock-cert-fingerprint',
+    certFingerprint: "mock-cert-fingerprint",
     listener: null,
   };
 
-  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
-  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = new TestPresentationDeviceListener();
 
@@ -935,7 +932,7 @@ function addDeviceDynamically() {
                                 SERVICE_TYPE);
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -943,11 +940,11 @@ function addDeviceDynamically() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
       Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
       listener.onServiceResolved(createDevice(mockDevice.host,
@@ -957,7 +954,7 @@ function addDeviceDynamically() {
     }
   };
 
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = new TestPresentationDeviceListener();
   provider.listener = listener;
@@ -992,7 +989,7 @@ function updateDevice() {
     discovered: false,
 
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
 
       if (!this.discovered) {
@@ -1004,13 +1001,13 @@ function updateDevice() {
 
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {
+        cancel() {
           listener.onDiscoveryStopped(serviceType);
         }
       };
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceType, SERVICE_TYPE);
       if (serviceInfo.serviceName == "N1") {
         listener.onServiceResolved(mockDevice1);
@@ -1022,20 +1019,20 @@ function updateDevice() {
     }
   };
 
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
 
-    addDevice: function(device) {
+    addDevice(device) {
       Assert.ok(!this.isDeviceAdded);
       Assert.equal(device.id, mockDevice1.host);
       Assert.equal(device.name, mockDevice1.serviceName);
       this.isDeviceAdded = true;
     },
-    removeDevice: function(device) { Assert.ok(false); },
-    updateDevice: function(device) {
+    removeDevice(device) { Assert.ok(false); },
+    updateDevice(device) {
       Assert.ok(!this.isDeviceUpdated);
       Assert.equal(device.id, mockDevice2.host);
       Assert.equal(device.name, mockDevice2.serviceName);
@@ -1079,7 +1076,7 @@ function diffDiscovery() {
     discovered: false,
 
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
 
       if (!this.discovered) {
@@ -1093,13 +1090,13 @@ function diffDiscovery() {
 
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {
+        cancel() {
           listener.onDiscoveryStopped(serviceType);
         }
       };
     },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {},
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceType, SERVICE_TYPE);
       if (serviceInfo.serviceName == "N1") {
         listener.onServiceResolved(mockDevice1);
@@ -1113,7 +1110,7 @@ function diffDiscovery() {
     }
   };
 
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = new TestPresentationDeviceListener();
   Assert.equal(listener.count(), 0);
@@ -1121,9 +1118,9 @@ function diffDiscovery() {
   // Start discovery
   provider.listener = listener; // discover: N1, N2
   Assert.equal(listener.count(), 2);
-  Assert.equal(listener.devices['A.local'].name, mockDevice1.serviceName);
-  Assert.equal(listener.devices['B.local'].name, mockDevice2.serviceName);
-  Assert.ok(!listener.devices['C.local']);
+  Assert.equal(listener.devices["A.local"].name, mockDevice1.serviceName);
+  Assert.equal(listener.devices["B.local"].name, mockDevice2.serviceName);
+  Assert.ok(!listener.devices["C.local"]);
 
   // temporarily disable to stop discovery and re-enable
   Services.prefs.setBoolPref(PREF_DISCOVERY, false);
@@ -1131,9 +1128,9 @@ function diffDiscovery() {
 
   provider.forceDiscovery(); // discover: N1, N3, going to remove: N2
   Assert.equal(listener.count(), 3);
-  Assert.equal(listener.devices['A.local'].name, mockDevice1.serviceName);
-  Assert.equal(listener.devices['B.local'].name, mockDevice2.serviceName);
-  Assert.equal(listener.devices['C.local'].name, mockDevice3.serviceName);
+  Assert.equal(listener.devices["A.local"].name, mockDevice1.serviceName);
+  Assert.equal(listener.devices["B.local"].name, mockDevice2.serviceName);
+  Assert.equal(listener.devices["C.local"].name, mockDevice3.serviceName);
 
   // temporarily disable to stop discovery and re-enable
   Services.prefs.setBoolPref(PREF_DISCOVERY, false);
@@ -1141,9 +1138,9 @@ function diffDiscovery() {
 
   provider.forceDiscovery(); // discover: N1, N3, remove: N2
   Assert.equal(listener.count(), 2);
-  Assert.equal(listener.devices['A.local'].name, mockDevice1.serviceName);
-  Assert.ok(!listener.devices['B.local']);
-  Assert.equal(listener.devices['C.local'].name, mockDevice3.serviceName);
+  Assert.equal(listener.devices["A.local"].name, mockDevice1.serviceName);
+  Assert.ok(!listener.devices["B.local"]);
+  Assert.equal(listener.devices["C.local"].name, mockDevice3.serviceName);
 
   provider.listener = null;
 
@@ -1161,7 +1158,7 @@ function serverClosed() {
 
   let mockObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
+    startDiscovery(serviceType, listener) {
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -1169,10 +1166,10 @@ function serverClosed() {
                                            mockDevice.serviceType));
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {}
+        cancel() {}
       };
     },
-    registerService: function(serviceInfo, listener) {
+    registerService(serviceInfo, listener) {
       this.serviceRegistered++;
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
@@ -1181,7 +1178,7 @@ function serverClosed() {
         }
       };
     },
-    resolveService: function(serviceInfo, listener) {
+    resolveService(serviceInfo, listener) {
       Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
       Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
       listener.onServiceResolved(createDevice(mockDevice.host,
@@ -1192,7 +1189,7 @@ function serverClosed() {
     serviceRegistered: 0,
     serviceUnregistered: 0
   };
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
 
   Assert.equal(mockObj.serviceRegistered, 0);
@@ -1202,9 +1199,9 @@ function serverClosed() {
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) { this.devices.push(device); },
-    removeDevice: function(device) {},
-    updateDevice: function(device) {},
+    addDevice(device) { this.devices.push(device); },
+    removeDevice(device) {},
+    updateDevice(device) {},
     devices: []
   };
   Assert.equal(listener.devices.length, 0);
@@ -1216,7 +1213,7 @@ function serverClosed() {
 
   let serverListener = provider.QueryInterface(Ci.nsIPresentationControlServerListener);
   let randomPort = 9527;
-  serverListener.onServerReady(randomPort, '');
+  serverListener.onServerReady(randomPort, "");
 
   Assert.equal(mockObj.serviceRegistered, 2);
   Assert.equal(mockObj.serviceUnregistered, 1);
@@ -1239,18 +1236,18 @@ function serverRetry() {
 
   let mockSDObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {},
-    registerService: function(serviceInfo, listener) {
+    startDiscovery(serviceType, listener) {},
+    registerService(serviceInfo, listener) {
       Assert.ok(isRetrying, "register service after retrying startServer");
       provider.listener = null;
       run_next_test();
     },
-    resolveService: function(serviceInfo, listener) {}
+    resolveService(serviceInfo, listener) {}
   };
 
   let mockServerObj = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlService]),
-    startServer: function(encrypted, port) {
+    startServer(encrypted, port) {
       if (!isRetrying) {
         isRetrying = true;
         Services.tm.dispatchToMainThread(() => {
@@ -1263,25 +1260,25 @@ function serverRetry() {
         });
       }
     },
-    sessionRequest: function() {},
-    close: function() {},
-    id: '',
+    sessionRequest() {},
+    close() {},
+    id: "",
     version: LATEST_VERSION,
     port: 0,
-    certFingerprint: 'mock-cert-fingerprint',
+    certFingerprint: "mock-cert-fingerprint",
     listener: null,
   };
 
-  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
-  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                             Ci.nsISupportsWeakReference]),
-    addDevice: function(device) {},
-    removeDevice: function(device) {},
-    updateDevice: function(device) {},
-    onSessionRequest: function(device, url, presentationId, controlChannel) {}
+    addDevice(device) {},
+    removeDevice(device) {},
+    updateDevice(device) {},
+    onSessionRequest(device, url, presentationId, controlChannel) {}
   };
 
   provider.listener = listener;
@@ -1293,7 +1290,7 @@ function run_test() {
   // Ensure PSM is initialized
   Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
-  let infoHook = new ContractHook(INFO_CONTRACT_ID, MockDNSServiceInfo);
+  new ContractHook(INFO_CONTRACT_ID, MockDNSServiceInfo);
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(PREF_DISCOVERY);

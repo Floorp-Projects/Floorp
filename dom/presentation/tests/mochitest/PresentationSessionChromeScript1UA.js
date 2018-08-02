@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
+
+/* eslint-env mozilla/frame-script */
 
 const Cm = Components.manager;
 
-ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
-ChromeUtils.import('resource://gre/modules/Services.jsm');
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                       .getService(Ci.nsIUUIDGenerator);
@@ -27,42 +29,42 @@ const mockControlChannelOfSender = {
   set listener(listener) {
     // PresentationControllingInfo::SetControlChannel
     if (listener) {
-      debug('set listener for mockControlChannelOfSender without null');
+      debug("set listener for mockControlChannelOfSender without null");
     } else {
-      debug('set listener for mockControlChannelOfSender with null');
+      debug("set listener for mockControlChannelOfSender with null");
     }
     this._listener = listener;
   },
   get listener() {
     return this._listener;
   },
-  notifyConnected: function() {
+  notifyConnected() {
     // send offer after notifyConnected immediately
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .notifyConnected();
   },
-  notifyReconnected: function() {
+  notifyReconnected() {
     // send offer after notifyOpened immediately
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .notifyReconnected();
   },
-  sendOffer: function(offer) {
+  sendOffer(offer) {
     Services.tm.dispatchToMainThread(() => {
       mockControlChannelOfReceiver.onOffer(offer);
     });
   },
-  onAnswer: function(answer) {
+  onAnswer(answer) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .onAnswer(answer);
   },
-  launch: function(presentationId, url) {
+  launch(presentationId, url) {
     sessionId = presentationId;
-    sendAsyncMessage('sender-launch', url);
+    sendAsyncMessage("sender-launch", url);
   },
-  disconnect: function(reason) {
+  disconnect(reason) {
     if (!this._listener) {
       return;
     }
@@ -71,16 +73,16 @@ const mockControlChannelOfSender = {
         .notifyDisconnected(reason);
     mockControlChannelOfReceiver.disconnect();
   },
-  terminate: function(presentationId) {
-    sendAsyncMessage('sender-terminate');
+  terminate(presentationId) {
+    sendAsyncMessage("sender-terminate");
   },
-  reconnect: function(presentationId, url) {
-    sendAsyncMessage('start-reconnect', url);
+  reconnect(presentationId, url) {
+    sendAsyncMessage("start-reconnect", url);
   },
-  sendIceCandidate: function(candidate) {
+  sendIceCandidate(candidate) {
     mockControlChannelOfReceiver.notifyIceCandidate(candidate);
   },
-  notifyIceCandidate: function(candidate) {
+  notifyIceCandidate(candidate) {
     if (!this._listener) {
       return;
     }
@@ -97,9 +99,9 @@ const mockControlChannelOfReceiver = {
   set listener(listener) {
     // PresentationPresentingInfo::SetControlChannel
     if (listener) {
-      debug('set listener for mockControlChannelOfReceiver without null');
+      debug("set listener for mockControlChannelOfReceiver without null");
     } else {
-      debug('set listener for mockControlChannelOfReceiver with null');
+      debug("set listener for mockControlChannelOfReceiver with null");
     }
     this._listener = listener;
 
@@ -111,7 +113,7 @@ const mockControlChannelOfReceiver = {
   get listener() {
     return this._listener;
   },
-  notifyConnected: function() {
+  notifyConnected() {
     // do nothing
     if (!this._listener) {
       this._pendingOpened = true;
@@ -121,17 +123,17 @@ const mockControlChannelOfReceiver = {
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .notifyConnected();
   },
-  onOffer: function(offer) {
+  onOffer(offer) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .onOffer(offer);
   },
-  sendAnswer: function(answer) {
+  sendAnswer(answer) {
     Services.tm.dispatchToMainThread(() => {
       mockControlChannelOfSender.onAnswer(answer);
     });
   },
-  disconnect: function(reason) {
+  disconnect(reason) {
     if (!this._listener) {
       return;
     }
@@ -139,14 +141,14 @@ const mockControlChannelOfReceiver = {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .notifyDisconnected(reason);
-    sendAsyncMessage('control-channel-receiver-closed', reason);
+    sendAsyncMessage("control-channel-receiver-closed", reason);
   },
-  terminate: function(presentaionId) {
+  terminate(presentaionId) {
   },
-  sendIceCandidate: function(candidate) {
+  sendIceCandidate(candidate) {
     mockControlChannelOfReceiver.notifyIceCandidate(candidate);
   },
-  notifyIceCandidate: function(candidate) {
+  notifyIceCandidate(candidate) {
     if (!this._listener) {
       return;
     }
@@ -159,20 +161,20 @@ const mockControlChannelOfReceiver = {
 
 const mockDevice = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
-  id:   'id',
-  name: 'name',
-  type: 'type',
-  establishControlChannel: function(url, presentationId) {
+  id:   "id",
+  name: "name",
+  type: "type",
+  establishControlChannel(url, presentationId) {
     if (triggerControlChannelError) {
       throw Cr.NS_ERROR_FAILURE;
     }
-    sendAsyncMessage('control-channel-established');
+    sendAsyncMessage("control-channel-established");
     return mockControlChannelOfSender;
   },
-  disconnect: function() {
-    sendAsyncMessage('device-disconnected');
+  disconnect() {
+    sendAsyncMessage("device-disconnected");
   },
-  isRequestedUrlSupported: function(requestedUrl) {
+  isRequestedUrlSupported(requestedUrl) {
     return true;
   },
 };
@@ -180,7 +182,7 @@ const mockDevice = {
 const mockDevicePrompt = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevicePrompt,
                                           Ci.nsIFactory]),
-  createInstance: function(aOuter, aIID) {
+  createInstance(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
@@ -192,14 +194,14 @@ const mockDevicePrompt = {
   get request() {
     return this._request;
   },
-  promptDeviceSelection: function(request) {
+  promptDeviceSelection(request) {
     this._request = request;
-    sendAsyncMessage('device-prompt');
+    sendAsyncMessage("device-prompt");
   },
-  simulateSelect: function() {
+  simulateSelect() {
     this._request.select(mockDevice);
   },
-  simulateCancel: function() {
+  simulateCancel() {
     this._request.cancel();
   }
 };
@@ -208,18 +210,18 @@ const mockRequestUIGlue = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationRequestUIGlue,
                                           Ci.nsIFactory]),
   set promise(aPromise) {
-    this._promise = aPromise
+    this._promise = aPromise;
   },
   get promise() {
     return this._promise;
   },
-  createInstance: function(aOuter, aIID) {
+  createInstance(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return this.QueryInterface(aIID);
   },
-  sendRequest: function(aUrl, aSessionId) {
+  sendRequest(aUrl, aSessionId) {
     return this.promise;
   },
 };
@@ -244,15 +246,13 @@ function initMockAndListener() {
       registrar.registerFactory(mockClassId, "", contractId, mockFactory);
     }
 
-    return { contractId: contractId,
-             mockClassId: mockClassId,
-             mockFactory: mockFactory,
-             originalClassId: originalClassId,
-             originalFactory: originalFactory };
+    return { contractId,
+             mockClassId,
+             mockFactory,
+             originalClassId,
+             originalFactory };
   }
   // Register mock factories.
-  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                        .getService(Ci.nsIUUIDGenerator);
   originalFactoryData.push(registerMockFactory("@mozilla.org/presentation-device/prompt;1",
                                                uuidGenerator.generateUUID(),
                                                mockDevicePrompt));
@@ -260,22 +260,22 @@ function initMockAndListener() {
                                                uuidGenerator.generateUUID(),
                                                mockRequestUIGlue));
 
-  addMessageListener('trigger-device-add', function() {
-    debug('Got message: trigger-device-add');
-    var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
+  addMessageListener("trigger-device-add", function() {
+    debug("Got message: trigger-device-add");
+    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
                         .getService(Ci.nsIPresentationDeviceManager);
     deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
                  .addDevice(mockDevice);
   });
 
-  addMessageListener('trigger-device-prompt-select', function() {
-    debug('Got message: trigger-device-prompt-select');
+  addMessageListener("trigger-device-prompt-select", function() {
+    debug("Got message: trigger-device-prompt-select");
     mockDevicePrompt.simulateSelect();
   });
 
-  addMessageListener('trigger-on-session-request', function(url) {
-    debug('Got message: trigger-on-session-request');
-    var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
+  addMessageListener("trigger-on-session-request", function(url) {
+    debug("Got message: trigger-on-session-request");
+    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
                           .getService(Ci.nsIPresentationDeviceManager);
     deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
                  .onSessionRequest(mockDevice,
@@ -284,9 +284,9 @@ function initMockAndListener() {
                                    mockControlChannelOfReceiver);
   });
 
-  addMessageListener('trigger-on-terminate-request', function() {
-    debug('Got message: trigger-on-terminate-request');
-    var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
+  addMessageListener("trigger-on-terminate-request", function() {
+    debug("Got message: trigger-on-terminate-request");
+    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
                           .getService(Ci.nsIPresentationDeviceManager);
     deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
                  .onTerminateRequest(mockDevice,
@@ -295,21 +295,21 @@ function initMockAndListener() {
                                      false);
   });
 
-  addMessageListener('trigger-control-channel-open', function(reason) {
-    debug('Got message: trigger-control-channel-open');
+  addMessageListener("trigger-control-channel-open", function(reason) {
+    debug("Got message: trigger-control-channel-open");
     mockControlChannelOfSender.notifyConnected();
     mockControlChannelOfReceiver.notifyConnected();
   });
 
-  addMessageListener('trigger-control-channel-error', function(reason) {
-    debug('Got message: trigger-control-channel-open');
+  addMessageListener("trigger-control-channel-error", function(reason) {
+    debug("Got message: trigger-control-channel-open");
     triggerControlChannelError = true;
   });
 
-  addMessageListener('trigger-reconnected-acked', function(url) {
-    debug('Got message: trigger-reconnected-acked');
+  addMessageListener("trigger-reconnected-acked", function(url) {
+    debug("Got message: trigger-reconnected-acked");
     mockControlChannelOfSender.notifyReconnected();
-    var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
+    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
                           .getService(Ci.nsIPresentationDeviceManager);
     deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
                  .onReconnectRequest(mockDevice,
@@ -319,20 +319,19 @@ function initMockAndListener() {
   });
 
   // Used to call sendAsyncMessage in chrome script from receiver.
-  addMessageListener('forward-command', function(command_data) {
+  addMessageListener("forward-command", function(command_data) {
     let command = JSON.parse(command_data);
     sendAsyncMessage(command.name, command.data);
   });
 
-  addMessageListener('teardown', teardown);
+  addMessageListener("teardown", teardown);
 
-  var obs = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  obs.addObserver(function setupRequestPromiseHandler(aSubject, aTopic, aData) {
-    debug('Got observer: setup-request-promise');
-    obs.removeObserver(setupRequestPromiseHandler, aTopic);
+  Services.obs.addObserver(function setupRequestPromiseHandler(aSubject, aTopic, aData) {
+    debug("Got observer: setup-request-promise");
+    Services.obs.removeObserver(setupRequestPromiseHandler, aTopic);
     mockRequestUIGlue.promise = aSubject;
-    sendAsyncMessage('promise-setup-ready');
-  }, 'setup-request-promise');
+    sendAsyncMessage("promise-setup-ready");
+  }, "setup-request-promise");
 }
 
 function teardown() {
@@ -350,7 +349,7 @@ function teardown() {
   mockControlChannelOfReceiver.listener   = null;
   mockDevicePrompt.request                = null;
 
-  var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
+  var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
                       .getService(Ci.nsIPresentationDeviceManager);
   deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
                .removeDevice(mockDevice);
@@ -360,7 +359,7 @@ function teardown() {
                             data.mockFactory, data.originalClassId,
                             data.originalFactory);
   }
-  sendAsyncMessage('teardown-complete');
+  sendAsyncMessage("teardown-complete");
 }
 
 initMockAndListener();

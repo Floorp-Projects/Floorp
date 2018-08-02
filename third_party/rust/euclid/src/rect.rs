@@ -350,6 +350,16 @@ where
 
 impl<T, U> TypedRect<T, U>
 where
+    T: Copy + One + Add<Output = T> + Div<Output = T>,
+{
+    pub fn center(&self) -> TypedPoint2D<T, U> {
+        let two = T::one() + T::one();
+        self.origin + self.size.to_vector() / two
+    }
+}
+
+impl<T, U> TypedRect<T, U>
+where
     T: Copy + Clone + PartialOrd + Add<T, Output = T> + Sub<T, Output = T> + Zero,
 {
     #[inline]
@@ -590,7 +600,7 @@ pub fn rect<T: Copy, U>(x: T, y: T, w: T, h: T) -> TypedRect<T, U> {
 
 #[cfg(test)]
 mod tests {
-    use point::Point2D;
+    use point::{Point2D, point2};
     use vector::vec2;
     use side_offsets::SideOffsets2D;
     use size::Size2D;
@@ -834,5 +844,14 @@ mod tests {
             }
             x += 0.1
         }
+    }
+
+    #[test]
+    fn test_center() {
+        let r: Rect<i32> = rect(-2, 5, 4, 10);
+        assert_eq!(r.center(), point2(0, 10));
+
+        let r: Rect<f32> = rect(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(r.center(), point2(2.5, 4.0));
     }
 }

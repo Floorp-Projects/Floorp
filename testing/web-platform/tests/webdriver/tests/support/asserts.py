@@ -73,7 +73,7 @@ def assert_dialog_handled(session, expected_text, expected_retval):
     # of this fixture's dialog.
     try:
         assert session.alert.text != expected_text, (
-            "User prompt with text '%s' was not handled." % expected_text)
+            "User prompt with text '{}' was not handled.".format(expected_text))
 
     except NoSuchAlertException:
         # If dialog has been closed and no other one is open, check its return value

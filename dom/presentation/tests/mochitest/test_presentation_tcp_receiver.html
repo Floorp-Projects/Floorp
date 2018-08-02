@@ -15,83 +15,78 @@
 <pre id="test"></pre>
 <script type="application/javascript">
 
-'use strict';
+"use strict";
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver.html');
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
+var receiverUrl = SimpleTest.getTestFileURL("file_presentation_receiver.html");
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 function setup() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.sendAsyncMessage('trigger-device-add');
+  gScript.sendAsyncMessage("trigger-device-add");
 
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('mozbrowser', 'true');
-    iframe.setAttribute('mozpresentation', receiverUrl);
-    iframe.setAttribute('src', receiverUrl);
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
+  iframe.setAttribute("mozpresentation", receiverUrl);
+  iframe.setAttribute("src", receiverUrl);
 
-    // This event is triggered when the iframe calls "postMessage".
-    iframe.addEventListener('mozbrowsershowmodalprompt', function listener(aEvent) {
-      var message = aEvent.detail.message;
-      if (/^OK /.exec(message)) {
-        ok(true, "Message from iframe: " + message);
-      } else if (/^KO /.exec(message)) {
-        ok(false, "Message from iframe: " + message);
-      } else if (/^INFO /.exec(message)) {
-        info("Message from iframe: " + message);
-      } else if (/^COMMAND /.exec(message)) {
-        var command = JSON.parse(message.replace(/^COMMAND /, ''));
-        gScript.sendAsyncMessage(command.name, command.data);
-      } else if (/^DONE$/.exec(message)) {
-        ok(true, "Messaging from iframe complete.");
-        iframe.removeEventListener('mozbrowsershowmodalprompt', listener);
+  // This event is triggered when the iframe calls "postMessage".
+  iframe.addEventListener("mozbrowsershowmodalprompt", function listener(aEvent) {
+    var message = aEvent.detail.message;
+    if (/^OK /.exec(message)) {
+      ok(true, "Message from iframe: " + message);
+    } else if (/^KO /.exec(message)) {
+      ok(false, "Message from iframe: " + message);
+    } else if (/^INFO /.exec(message)) {
+      info("Message from iframe: " + message);
+    } else if (/^COMMAND /.exec(message)) {
+      var command = JSON.parse(message.replace(/^COMMAND /, ""));
+      gScript.sendAsyncMessage(command.name, command.data);
+    } else if (/^DONE$/.exec(message)) {
+      ok(true, "Messaging from iframe complete.");
+      iframe.removeEventListener("mozbrowsershowmodalprompt", listener);
 
-        teardown();
-      }
-    });
+      teardown();
+    }
+  });
 
-    var promise = new Promise(function(aResolve, aReject) {
-      document.body.appendChild(iframe);
+  var promise = new Promise(function(aResolve, aReject) {
+    document.body.appendChild(iframe);
 
-      aResolve(iframe);
-    });
-    obs.notifyObservers(promise, 'setup-request-promise');
+    aResolve(iframe);
+  });
+  obs.notifyObservers(promise, "setup-request-promise");
 
-    gScript.addMessageListener('offer-received', function offerReceivedHandler() {
-      gScript.removeMessageListener('offer-received', offerReceivedHandler);
-      info("An offer is received.");
-    });
+  gScript.addMessageListener("offer-received", function offerReceivedHandler() {
+    gScript.removeMessageListener("offer-received", offerReceivedHandler);
+    info("An offer is received.");
+  });
 
-    gScript.addMessageListener('answer-sent', function answerSentHandler(aIsValid) {
-      gScript.removeMessageListener('answer-sent', answerSentHandler);
-      ok(aIsValid, "A valid answer is sent.");
-    });
+  gScript.addMessageListener("answer-sent", function answerSentHandler(aIsValid) {
+    gScript.removeMessageListener("answer-sent", answerSentHandler);
+    ok(aIsValid, "A valid answer is sent.");
+  });
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
-      is(aReason, SpecialPowers.Cr.NS_OK, "The control channel is closed normally.");
-    });
+  gScript.addMessageListener("control-channel-closed", function controlChannelClosedHandler(aReason) {
+    gScript.removeMessageListener("control-channel-closed", controlChannelClosedHandler);
+    is(aReason, SpecialPowers.Cr.NS_OK, "The control channel is closed normally.");
+  });
 
-    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
-      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
-      info("Data notification is enabled for data transport channel.");
-    });
+  gScript.addMessageListener("data-transport-notification-enabled", function dataTransportNotificationEnabledHandler() {
+    gScript.removeMessageListener("data-transport-notification-enabled", dataTransportNotificationEnabledHandler);
+    info("Data notification is enabled for data transport channel.");
+  });
 
-    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
-      is(aReason, SpecialPowers.Cr.NS_OK, "The data transport should be closed normally.");
-    });
-
-    aResolve();
+  gScript.addMessageListener("data-transport-closed", function dataTransportClosedHandler(aReason) {
+    gScript.removeMessageListener("data-transport-closed", dataTransportClosedHandler);
+    is(aReason, SpecialPowers.Cr.NS_OK, "The data transport should be closed normally.");
   });
 }
 
 function testIncomingSessionRequest() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('receiver-launching', function launchReceiverHandler(aSessionId) {
-      gScript.removeMessageListener('receiver-launching', launchReceiverHandler);
+    gScript.addMessageListener("receiver-launching", function launchReceiverHandler(aSessionId) {
+      gScript.removeMessageListener("receiver-launching", launchReceiverHandler);
       info("Trying to launch receiver page.");
 
       ok(navigator.presentation, "navigator.presentation should be available in in-process pages.");
@@ -99,31 +94,31 @@ function testIncomingSessionRequest() {
       aResolve();
     });
 
-    gScript.sendAsyncMessage('trigger-incoming-session-request', receiverUrl);
+    gScript.sendAsyncMessage("trigger-incoming-session-request", receiverUrl);
   });
 }
 
 function teardown() {
-  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
-    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+  gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+    gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
     gScript.destroy();
     SimpleTest.finish();
   });
 
-  gScript.sendAsyncMessage('teardown');
+  gScript.sendAsyncMessage("teardown");
 }
 
 function runTests() {
-  setup().
-  then(testIncomingSessionRequest);
+  setup();
+  testIncomingSessionRequest();
 }
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
-  {type: 'browser', allow: true, context: document},
+  {type: "presentation-device-manage", allow: false, context: document},
+  {type: "browser", allow: true, context: document},
 ], function() {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.controller.enabled", false],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.mozBrowserFramesEnabled", true],

@@ -18,20 +18,20 @@ pathfinder = ["pathfinder_font_renderer", "pathfinder_gfx_utils", "pathfinder_pa
 serialize_program = ["serde"]
 
 [dependencies]
-app_units = "0.6"
+app_units = "0.7"
 base64 = { optional = true, version = "0.6" }
 bincode = "1.0"
 bitflags = "1.0"
 byteorder = "1.0"
 cfg-if = "0.1.2"
-euclid = "0.18"
+euclid = "0.19"
 fxhash = "0.2.1"
 gleam = "0.6"
 image = { optional = true, version = "0.19" }
 lazy_static = "1"
 log = "0.4"
-num-traits = "0.1.43"
-plane-split = "0.10"
+num-traits = "0.2"
+plane-split = "0.12"
 png = { optional = true, version = "0.12" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }

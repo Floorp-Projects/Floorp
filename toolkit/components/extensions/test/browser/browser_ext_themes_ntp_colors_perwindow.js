@@ -59,18 +59,6 @@ add_task(async function test_per_window_ntp_theme() {
       permissions: ["theme"],
     },
     async background() {
-      function promiseWindowChanged(winId) {
-        return new Promise(resolve => {
-          let listener = windowId => {
-            if (windowId === winId) {
-              browser.windows.onFocusChanged.removeListener(listener);
-              resolve();
-            }
-          };
-          browser.windows.onFocusChanged.addListener(listener);
-        });
-      }
-
       function promiseWindowChecked() {
         return new Promise(resolve => {
           let listener = msg => {
@@ -108,16 +96,8 @@ add_task(async function test_per_window_ntp_theme() {
       }
 
       async function checkWindow(theme, isBrightText, winId) {
-        // We query the window again to have the updated focus information
-        let win = await browser.windows.get(winId);
-        if (!win.focused) {
-          let focusChanged = promiseWindowChanged(win.id);
-          await browser.windows.update(win.id, {focused: true});
-          await focusChanged;
-        }
-
         let windowChecked = promiseWindowChecked();
-        browser.test.sendMessage("check-window", {theme, isBrightText});
+        browser.test.sendMessage("check-window", {theme, isBrightText, winId});
         await windowChecked;
       }
 
@@ -163,8 +143,8 @@ add_task(async function test_per_window_ntp_theme() {
     },
   });
 
-  extension.onMessage("check-window", async ({theme, isBrightText}) => {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
+  extension.onMessage("check-window", async ({theme, isBrightText, winId}) => {
+    let win = Services.wm.getOuterWindowWithId(winId);
     win.gBrowser.removePreloadedBrowser();
     for (let url of ["about:newtab", "about:home", "about:welcome"]) {
       info("Opening url: " + url);
