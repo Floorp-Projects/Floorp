@@ -5,6 +5,7 @@
 
 import json
 import os
+import posixpath
 import shutil
 import sys
 import tarfile
@@ -357,6 +358,14 @@ class CodeCoverageMixin(SingleTestMixin):
 
         report_file = str(uuid.uuid4()) + '.json'
         shutil.move(grcov_file, report_file)
+
+        # Get the test path relative to topsrcdir.
+        # This mapping is constructed by self.find_modified_tests().
+        test = self.test_src_path.get(test.replace(os.sep, posixpath.sep), test)
+
+        # Log a warning if the test path is still an absolute path.
+        if os.path.isabs(test):
+            self.warn("Found absolute path for test: {}".format(test))
 
         if suite not in self.per_test_reports:
             self.per_test_reports[suite] = {}
