@@ -68,6 +68,7 @@ talos:
     - talos-g4
     - talos-g5
     - talos-other
+    - talos-sessionrestore-many-windows
     - talos-svgr
     - talos-tp5o
     - talos-perf-reftest
@@ -205,6 +206,7 @@ windows-talos:
     - talos-g4
     - talos-g5
     - talos-other
+    - talos-sessionrestore-many-windows
     - talos-perf-reftest
     - talos-perf-reftest-singletons
     - talos-svgr
@@ -274,6 +276,7 @@ macosx64-talos:
     - talos-g4
     - talos-g5
     - talos-other
+    - talos-sessionrestore-many-windows
     - talos-svgr
     - talos-tp5o
     - talos-perf-reftest
