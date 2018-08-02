@@ -98,6 +98,12 @@ interface nsIScriptError : nsIConsoleMessage
 
     readonly attribute nsIArray notes;
 
+    /**
+     * If we are recording or replaying, this value may identify the point
+     * where the error was generated, otherwise zero.
+     */
+    attribute unsigned long long timeWarpTarget;
+
     void init(in AString message,
               in AString sourceName,
               in AString sourceLine,
