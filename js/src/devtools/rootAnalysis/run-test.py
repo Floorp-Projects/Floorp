@@ -10,12 +10,11 @@ import argparse
 
 from glob import glob
 
-testdir = os.path.abspath(os.path.join(os.path.dirname(__file__), 't'))
+scriptdir = os.path.abspath(os.path.dirname(__file__))
+testdir = os.path.join(scriptdir, 't')
 
 site.addsitedir(testdir)
 from testlib import Test, equal
-
-scriptdir = os.path.abspath(os.path.dirname(__file__))
 
 parser = argparse.ArgumentParser(description='run hazard analysis tests')
 parser.add_argument(
@@ -77,15 +76,17 @@ def binpath(prog):
     return os.path.join(cfg.sixgill_bin, prog)
 
 
+outroot = os.path.join(testdir, 'out')
+
 try:
-    os.mkdir(os.path.join('t', 'out'))
+    os.mkdir(outroot)
 except OSError:
     pass
 
 for name in cfg.tests:
     name = os.path.basename(name)
     indir = os.path.join(testdir, name)
-    outdir = os.path.join(testdir, 'out', name)
+    outdir = os.path.join(outroot, name)
     try:
         os.mkdir(outdir)
     except OSError:
