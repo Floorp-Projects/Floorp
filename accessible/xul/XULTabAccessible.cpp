@@ -5,6 +5,7 @@
 
 #include "XULTabAccessible.h"
 
+#include "ARIAMap.h"
 #include "nsAccUtils.h"
 #include "Relation.h"
 #include "Role.h"
@@ -123,6 +124,17 @@ XULTabAccessible::RelationByType(RelationType aType) const
   return rel;
 }
 
+void
+XULTabAccessible::ApplyARIAState(uint64_t* aState) const
+{
+  HyperTextAccessibleWrap::ApplyARIAState(aState);
+  // XUL tab has an implicit ARIA role of tab, so support aria-selected.
+  // Don't use aria::MapToState because that will set the SELECTABLE state
+  // even if the tab is disabled.
+  if (nsAccUtils::IsARIASelected(this)) {
+    *aState |= states::SELECTED;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTabsAccessible
@@ -157,6 +169,16 @@ XULTabsAccessible::NativeName(nsString& aName) const
 {
   // no name
   return eNameOK;
+}
+
+void
+XULTabsAccessible::ApplyARIAState(uint64_t* aState) const
+{
+  XULSelectControlAccessible::ApplyARIAState(aState);
+  // XUL tabs has an implicit ARIA role of tablist, so support
+  // aria-multiselectable.
+  MOZ_ASSERT(Elm());
+  aria::MapToState(aria::eARIAMultiSelectable, Elm(), aState);
 }
 
 
