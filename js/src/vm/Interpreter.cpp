@@ -24,6 +24,7 @@
 #include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/ModuleObject.h"
+#include "builtin/Promise.h"
 #include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
@@ -2147,7 +2148,6 @@ CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
 CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED206)
-CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
 {
     MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
@@ -3827,6 +3827,24 @@ CASE(JSOP_TOASYNCITER)
     REGS.sp[-1].setObject(*asyncIter);
 }
 END_CASE(JSOP_TOASYNCITER)
+
+CASE(JSOP_TRYSKIPAWAIT)
+{
+    ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
+    ReservedRooted<Value> resolved(&rootValue1);
+    bool canSkip;
+
+    if (!TrySkipAwait(cx, val, &canSkip, &resolved))
+        goto error;
+
+    if (canSkip) {
+        REGS.sp[-1] = resolved;
+        PUSH_BOOLEAN(true);
+    } else {
+        PUSH_BOOLEAN(false);
+    }
+}
+END_CASE(JSOP_TRYSKIPAWAIT)
 
 CASE(JSOP_SETFUNNAME)
 {

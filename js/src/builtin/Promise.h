@@ -159,6 +159,12 @@ AsyncFunctionThrown(JSContext* cx, Handle<PromiseObject*> resultPromise);
 MOZ_MUST_USE bool
 AsyncFunctionAwait(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue value);
 
+// If the await operation can be skipped and the resolution value for `val` can
+// be acquired, stored the resolved value to `resolved` and `true` to
+// `*canSkip`.  Otherwise, stores `false` to `*canSkip`.
+MOZ_MUST_USE bool
+TrySkipAwait(JSContext* cx, HandleValue val, bool* canSkip, MutableHandleValue resolved);
+
 class AsyncGeneratorObject;
 
 MOZ_MUST_USE bool

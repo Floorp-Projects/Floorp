@@ -957,6 +957,13 @@ bool
 DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
                      MutableHandleValue res);
 
+// Wrapper for js::TrySkipAwait.
+// If the await operation can be skipped and the resolution value for `val` can
+// be acquired, stored the resolved value to `resolved`.  Otherwise, stores
+// the JS_CANNOT_SKIP_AWAIT magic value to `resolved`.
+MOZ_MUST_USE bool
+TrySkipAwait(JSContext* cx, HandleValue val, MutableHandleValue resolved);
+
 // This is the tailcall version of DoConcatStringObject
 extern const VMFunction DoConcatStringObjectInfo;
 
