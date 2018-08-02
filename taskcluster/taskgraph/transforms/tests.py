@@ -388,6 +388,11 @@ test_description_schema = Schema({
         'test-platform',
         Any(basestring, None),
     ),
+
+    # A list of artifacts to install from 'fetch' tasks.
+    Optional('fetches'): {
+        basestring: [basestring],
+    },
 }, required=True)
 
 
