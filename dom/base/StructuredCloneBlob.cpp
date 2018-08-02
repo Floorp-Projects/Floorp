@@ -38,7 +38,7 @@ StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
 
   RefPtr<StructuredCloneBlob> holder = StructuredCloneBlob::Create();
 
-  Maybe<JSAutoRealmAllowCCW> ar;
+  Maybe<JSAutoRealm> ar;
   JS::RootedValue value(cx, aValue);
 
   if (aTargetGlobal) {
@@ -87,7 +87,7 @@ StructuredCloneBlob::Deserialize(JSContext* aCx, JS::HandleObject aTargetScope,
   }
 
   {
-    JSAutoRealmAllowCCW ar(aCx, scope);
+    JSAutoRealm ar(aCx, scope);
 
     Read(xpc::NativeGlobal(scope), aCx, aResult, aRv);
     if (aRv.Failed()) {

@@ -562,7 +562,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       JS::Rooted<JSObject*> wrapper(cx);
       if ((wrapper = aNode->GetWrapper())) {
         MOZ_ASSERT(IsDOMObject(wrapper));
-        JSAutoRealmAllowCCW ar(cx, wrapper);
+        JSAutoRealm ar(cx, wrapper);
         ReparentWrapper(cx, wrapper, aError);
         if (aError.Failed()) {
           if (wasRegistered) {
