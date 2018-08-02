@@ -251,11 +251,11 @@ BookmarkObserver.prototype = {
   },
   onItemVisited() {},
   onItemMoved(itemId, oldParentId, oldIndex, newParentId, newIndex, type, guid,
-              oldParentGuid, newParentGuid, source, uri) {
+              oldParentGuid, newParentGuid, source, urlHref) {
     this.notifications.push({
       name: "onItemMoved",
       params: { itemId, oldParentId, oldIndex, newParentId, newIndex, type,
-                guid, oldParentGuid, newParentGuid, source, uri },
+                guid, oldParentGuid, newParentGuid, source, urlHref },
     });
   },
 

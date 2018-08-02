@@ -299,4 +299,12 @@
   "END" \
 )
 
+#define CREATE_BOOKMARKS_DELETED_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_bookmarks_deleted_afterdelete_v1_trigger " \
+  "AFTER DELETE ON moz_bookmarks_deleted FOR EACH ROW " \
+  "BEGIN " \
+    "SELECT note_sync_change(); " \
+  "END" \
+)
+
 #endif // __nsPlacesTriggers_h__
