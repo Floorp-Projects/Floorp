@@ -4889,19 +4889,6 @@ nsGlobalWindowInner::GetIndexedDB(ErrorResult& aError)
   return mIndexedDB;
 }
 
-void
-nsGlobalWindowInner::AddPendingPromise(mozilla::dom::Promise* aPromise)
-{
-  mPendingPromises.AppendElement(aPromise);
-}
-
-void
-nsGlobalWindowInner::RemovePendingPromise(mozilla::dom::Promise* aPromise)
-{
-  DebugOnly<bool> foundIt = mPendingPromises.RemoveElement(aPromise);
-  MOZ_ASSERT(foundIt, "tried to remove a non-existent element from mPendingPromises");
-}
-
 //*****************************************************************************
 // nsGlobalWindowInner::nsIInterfaceRequestor
 //*****************************************************************************
