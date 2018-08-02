@@ -364,11 +364,13 @@ class ResponseWriter(object):
         self._wfile = handler.wfile
         self._response = response
         self._handler = handler
+        self._status_written = False
         self._headers_seen = set()
         self._headers_complete = False
         self.content_written = False
         self.request = response.request
         self.file_chunk_size = 32 * 1024
+        self.default_status = 200
 
     def write_status(self, code, message=None):
         """Write out the status line of a response.
@@ -383,13 +385,18 @@ class ResponseWriter(object):
                 message = ''
         self.write("%s %d %s\r\n" %
                    (self._response.request.protocol_version, code, message))
+        self._status_written = True
 
     def write_header(self, name, value):
         """Write out a single header for the response.
 
+        If a status has not been written, a default status will be written (currently 200)
+
         :param name: Name of the header field
         :param value: Value of the header field
         """
+        if not self._status_written:
+            self.write_status(self.default_status)
         self._headers_seen.add(name.lower())
         self.write("%s: %s\r\n" % (name, value))
         if not self._response.explicit_flush:
@@ -424,7 +431,20 @@ class ResponseWriter(object):
         self._headers_complete = True
 
     def write_content(self, data):
-        """Write the body of the response."""
+        """Write the body of the response.
+
+        HTTP-mandated headers will be automatically added with status default to 200 if they have not been explicitly set."""
+        if not self._status_written:
+            self.write_status(self.default_status)
+        if not self._headers_complete:
+            self._response.content = data
+            self.end_headers()
+        self.write_raw_content(data)
+
+    def write_raw_content(self, data):
+        """Writes the data 'as is'"""
+        if data is None:
+            raise ValueError('data cannot be None')
         if isinstance(data, (text_type, binary_type)):
             # Deliberately allows both text and binary types. See `self.encode`.
             self.write(data)
