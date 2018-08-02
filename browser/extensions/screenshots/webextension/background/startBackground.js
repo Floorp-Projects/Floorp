@@ -1,6 +1,6 @@
 /* globals browser, main, communication */
 /* This file handles:
-     clicks on the WebExtension page action
+     clicks on the Photon page action
      browser.contextMenus.onClicked
      browser.runtime.onMessage
    and loads the rest of the background page in response to those events, forwarding
@@ -29,14 +29,6 @@ this.startBackground = (function() {
     "background/main.js"
   ];
 
-  browser.pageAction.onClicked.addListener(tab => {
-    loadIfNecessary().then(() => {
-      main.onClicked(tab);
-    }).catch(error => {
-      console.error("Error loading Screenshots:", error);
-    });
-  });
-
   browser.contextMenus.create({
     id: "create-screenshot",
     title: browser.i18n.getMessage("contextMenuLabel"),
@@ -60,6 +52,9 @@ this.startBackground = (function() {
     });
     return true;
   });
+
+  let photonPageActionPort = null;
+  initPhotonPageAction();
 
   let loadedPromise;
 
@@ -86,6 +81,43 @@ this.startBackground = (function() {
       });
     });
     return loadedPromise;
+  }
+
+  function initPhotonPageAction() {
+    // Set up this side of the Photon page action port.  The other side is in
+    // bootstrap.js.  Ideally, in the future, WebExtension page actions and
+    // Photon page actions would be one in the same, but they aren't right now.
+    photonPageActionPort = browser.runtime.connect({ name: "photonPageActionPort" });
+    photonPageActionPort.onMessage.addListener((message) => {
+      switch (message.type) {
+      case "click":
+        loadIfNecessary().then(() => {
+          return browser.tabs.get(message.tab.id);
+        }).then((tab) => {
+          main.onClicked(tab);
+        }).catch((error) => {
+          console.error("Error loading Screenshots:", error);
+        });
+        break;
+      default:
+        console.error("Unrecognized message:", message);
+        break;
+      }
+    });
+    photonPageActionPort.postMessage({
+      type: "setProperties",
+      title: browser.i18n.getMessage("contextMenuLabel")
+    });
+
+    // Export these so that main.js can use them.
+    Object.defineProperties(exports, {
+      "photonPageActionPort": {
+        enumerable: true,
+        get() {
+          return photonPageActionPort;
+        }
+      }
+    });
   }
 
   return exports;
