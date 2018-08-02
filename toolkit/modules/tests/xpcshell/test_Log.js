@@ -16,17 +16,16 @@ var testFormatter = {
   }
 };
 
-function MockAppender(formatter) {
-  Log.Appender.call(this, formatter);
-  this.messages = [];
-}
-MockAppender.prototype = {
-  __proto__: Log.Appender.prototype,
+class MockAppender extends Log.Appender {
+  constructor(formatter) {
+    super(formatter);
+    this.messages = [];
+  }
 
-  doAppend: function DApp_doAppend(message) {
+  doAppend(message) {
     this.messages.push(message);
   }
-};
+}
 
 add_task(function test_Logger() {
   let log = Log.repository.getLogger("test.logger");

@@ -64,50 +64,38 @@ var Log = {
     Log.repository = value;
   },
 
-  LogMessage,
-  Logger,
-  LoggerRepository,
-
-  BasicFormatter,
-
-  Appender,
-  DumpAppender,
-  ConsoleAppender,
-
-  ParameterFormatter,
-
-  _formatError: function _formatError(e) {
-    let result = e.toString();
+  _formatError(e) {
+    let result = String(e);
     if (e.fileName) {
-      result +=  " (" + e.fileName;
+      let loc = [e.fileName];
       if (e.lineNumber) {
-        result += ":" + e.lineNumber;
+        loc.push(e.lineNumber);
       }
       if (e.columnNumber) {
-        result += ":" + e.columnNumber;
+        loc.push(e.columnNumber);
       }
-      result += ")";
+      result += `(${loc.join(":")})`;
     }
-    return result + " " + Log.stackTrace(e);
+    return `${result} ${Log.stackTrace(e)}`;
   },
 
   // This is for back compatibility with services/common/utils.js; we duplicate
   // some of the logic in ParameterFormatter
-  exceptionStr: function exceptionStr(e) {
+  exceptionStr(e) {
     if (!e) {
-      return "" + e;
+      return String(e);
     }
     if (e instanceof Ci.nsIException) {
-      return e.toString() + " " + Log.stackTrace(e);
+      return `${e} ${Log.stackTrace(e)}`;
     } else if (isError(e)) {
       return Log._formatError(e);
     }
     // else
     let message = e.message || e;
-    return message + " " + Log.stackTrace(e);
+    return `${message} ${Log.stackTrace(e)}`;
   },
 
-  stackTrace: function stackTrace(e) {
+  stackTrace(e) {
     // Wrapped nsIException
     if (e.location) {
       let frame = e.location;
@@ -136,7 +124,7 @@ var Log = {
         }
         frame = frame.caller;
       }
-      return "Stack trace: " + output.join("\n");
+      return `Stack trace: ${output.join("\n")}`;
     }
     // Standard JS exception
     if (e.stack) {
@@ -156,70 +144,72 @@ var Log = {
  * LogMessage
  * Encapsulates a single log event's data
  */
-function LogMessage(loggerName, level, message, params) {
-  this.loggerName = loggerName;
-  this.level = level;
-  /*
-   * Special case to handle "log./level/(object)", for example logging a caught exception
-   * without providing text or params like: catch(e) { logger.warn(e) }
-   * Treating this as an empty text with the object in the 'params' field causes the
-   * object to be formatted properly by BasicFormatter.
-   */
-  if (!params && message && (typeof(message) == "object") &&
-      (typeof(message.valueOf()) != "string")) {
-    this.message = null;
-    this.params = message;
-  } else {
-    // If the message text is empty, or a string, or a String object, normal handling
-    this.message = message;
-    this.params = params;
+class LogMessage {
+  constructor(loggerName, level, message, params) {
+    this.loggerName = loggerName;
+    this.level = level;
+    /*
+     * Special case to handle "log./level/(object)", for example logging a caught exception
+     * without providing text or params like: catch(e) { logger.warn(e) }
+     * Treating this as an empty text with the object in the 'params' field causes the
+     * object to be formatted properly by BasicFormatter.
+     */
+    if (!params && message && (typeof(message) == "object") &&
+        (typeof(message.valueOf()) != "string")) {
+      this.message = null;
+      this.params = message;
+    } else {
+      // If the message text is empty, or a string, or a String object, normal handling
+      this.message = message;
+      this.params = params;
+    }
+
+    // The _structured field will correspond to whether this message is to
+    // be interpreted as a structured message.
+    this._structured = this.params && this.params.action;
+    this.time = Date.now();
   }
 
-  // The _structured field will correspond to whether this message is to
-  // be interpreted as a structured message.
-  this._structured = this.params && this.params.action;
-  this.time = Date.now();
-}
-LogMessage.prototype = {
   get levelDesc() {
     if (this.level in Log.Level.Desc)
       return Log.Level.Desc[this.level];
     return "UNKNOWN";
-  },
-
-  toString: function LogMsg_toString() {
-    let msg = "LogMessage [" + this.time + " " + this.level + " " +
-      this.message;
-    if (this.params) {
-      msg += " " + JSON.stringify(this.params);
-    }
-    return msg + "]";
   }
-};
+
+  toString() {
+    let msg = `${this.time} ${this.level} ${this.message}`;
+    if (this.params) {
+      msg += ` ${JSON.stringify(this.params)}`;
+    }
+    return `LogMessage [${msg}]`;
+  }
+}
 
 /*
  * Logger
  * Hierarchical version.  Logs to all appenders, assigned or inherited
  */
 
-function Logger(name, repository) {
-  if (!repository)
-    repository = Log.repository;
-  this._name = name;
-  this.children = [];
-  this.ownAppenders = [];
-  this.appenders = [];
-  this._repository = repository;
-}
-Logger.prototype = {
-  _levelPrefName: null,
-  _levelPrefValue: null,
+class Logger {
+  constructor(name, repository) {
+    if (!repository)
+      repository = Log.repository;
+    this._name = name;
+    this.children = [];
+    this.ownAppenders = [];
+    this.appenders = [];
+    this._repository = repository;
+
+    this._levelPrefName = null;
+    this._levelPrefValue = null;
+    this._level = null;
+    this._parent = null;
+  }
 
   get name() {
     return this._name;
-  },
+  }
 
-  _level: null,
   get level() {
     if (this._levelPrefName) {
       // We've been asked to use a preference to configure the logs. If the
@@ -245,7 +235,7 @@ Logger.prototype = {
       return this.parent.level;
     dumpError("Log warning: root logger configuration error: no level defined");
     return Log.Level.All;
-  },
+  }
   set level(level) {
     if (this._levelPrefName) {
       // I guess we could honor this by nuking this._levelPrefValue, but it
@@ -257,12 +247,11 @@ Logger.prototype = {
       return;
     }
     this._level = level;
-  },
+  }
 
-  _parent: null,
   get parent() {
     return this._parent;
-  },
+  }
   set parent(parent) {
     if (this._parent == parent) {
       return;
@@ -277,7 +266,7 @@ Logger.prototype = {
     this._parent = parent;
     parent.children.push(this);
     this.updateAppenders();
-  },
+  }
 
   manageLevelFromPref(prefName) {
     if (prefName == this._levelPrefName) {
@@ -292,9 +281,9 @@ Logger.prototype = {
     }
     this._levelPrefName = prefName;
     XPCOMUtils.defineLazyPreferenceGetter(this, "_levelPrefValue", prefName);
-  },
+  }
 
-  updateAppenders: function updateAppenders() {
+  updateAppenders() {
     if (this._parent) {
       let notOwnAppenders = this._parent.appenders.filter(function(appender) {
         return !this.ownAppenders.includes(appender);
@@ -308,24 +297,24 @@ Logger.prototype = {
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].updateAppenders();
     }
-  },
+  }
 
-  addAppender: function Logger_addAppender(appender) {
+  addAppender(appender) {
     if (this.ownAppenders.includes(appender)) {
       return;
     }
     this.ownAppenders.push(appender);
     this.updateAppenders();
-  },
+  }
 
-  removeAppender: function Logger_removeAppender(appender) {
+  removeAppender(appender) {
     let index = this.ownAppenders.indexOf(appender);
     if (index == -1) {
       return;
     }
     this.ownAppenders.splice(index, 1);
     this.updateAppenders();
-  },
+  }
 
   _unpackTemplateLiteral(string, params) {
     if (!Array.isArray(params)) {
@@ -355,7 +344,7 @@ Logger.prototype = {
       concat += `\${${i}}${string[i + 1]}`;
     }
     return [concat, params];
-  },
+  }
 
   log(level, string, params) {
     if (this.level > level)
@@ -375,53 +364,54 @@ Logger.prototype = {
       }
       appender.append(message);
     }
-  },
+  }
 
   fatal(string, ...params) {
     this.log(Log.Level.Fatal, string, params);
-  },
+  }
   error(string, ...params) {
     this.log(Log.Level.Error, string, params);
-  },
+  }
   warn(string, ...params) {
     this.log(Log.Level.Warn, string, params);
-  },
+  }
   info(string, ...params) {
     this.log(Log.Level.Info, string, params);
-  },
+  }
   config(string, ...params) {
     this.log(Log.Level.Config, string, params);
-  },
+  }
   debug(string, ...params) {
     this.log(Log.Level.Debug, string, params);
-  },
+  }
   trace(string, ...params) {
     this.log(Log.Level.Trace, string, params);
   }
-};
+}
 
 /*
  * LoggerRepository
  * Implements a hierarchy of Loggers
  */
 
-function LoggerRepository() {}
-LoggerRepository.prototype = {
-  _loggers: {},
+class LoggerRepository {
+  constructor() {
+    this._loggers = {};
+    this._rootLogger = null;
+  }
 
-  _rootLogger: null,
   get rootLogger() {
     if (!this._rootLogger) {
       this._rootLogger = new Logger("root", this);
       this._rootLogger.level = Log.Level.All;
     }
     return this._rootLogger;
-  },
+  }
   set rootLogger(logger) {
     throw "Cannot change the root logger";
-  },
+  }
 
-  _updateParents: function LogRep__updateParents(name) {
+  _updateParents(name) {
     let pieces = name.split(".");
     let cur, parent;
 
@@ -448,7 +438,7 @@ LoggerRepository.prototype = {
       if (logger != name && logger.indexOf(name) == 0)
         this._updateParents(logger);
     }
-  },
+  }
 
   /**
    * Obtain a named Logger.
@@ -465,7 +455,7 @@ LoggerRepository.prototype = {
     this._loggers[name] = new Logger(name, this);
     this._updateParents(name);
     return this._loggers[name];
-  },
+  }
 
   /**
    * Obtain a Logger that logs all string messages with a prefix.
@@ -499,8 +489,8 @@ LoggerRepository.prototype = {
       return log.log(level, string, params);
     };
     return proxy;
-  },
-};
+  }
+}
 
 /*
  * Formatters
@@ -508,13 +498,14 @@ LoggerRepository.prototype = {
  */
 
 // Basic formatter that doesn't do anything fancy.
-function BasicFormatter(dateFormat) {
-  if (dateFormat) {
-    this.dateFormat = dateFormat;
+class BasicFormatter {
+  constructor(dateFormat) {
+    if (dateFormat) {
+      this.dateFormat = dateFormat;
+    }
+    this.parameterFormatter = new ParameterFormatter();
   }
-  this.parameterFormatter = new ParameterFormatter();
-}
-BasicFormatter.prototype = {
+
   /**
    * Format the text of a message with optional parameters.
    * If the text contains ${identifier}, replace that with
@@ -564,15 +555,15 @@ BasicFormatter.prototype = {
       return textParts.join(": ");
     }
     return undefined;
-  },
+  }
 
-  format: function BF_format(message) {
+  format(message) {
     return message.time + "\t" +
       message.loggerName + "\t" +
       message.levelDesc + "\t" +
       this.formatText(message);
   }
-};
+}
 
 /**
  * Test an object to see if it is a Mozilla JS Error.
@@ -588,10 +579,11 @@ function isError(aObj) {
  * a string representation of the object.
  */
 
-function ParameterFormatter() {
-  this._name = "ParameterFormatter";
-}
-ParameterFormatter.prototype = {
+class ParameterFormatter {
+  constructor() {
+    this._name = "ParameterFormatter";
+  }
+
   format(ob) {
     try {
       if (ob === undefined) {
@@ -606,7 +598,7 @@ ParameterFormatter.prototype = {
         return ob;
       }
       if (ob instanceof Ci.nsIException) {
-        return ob.toString() + " " + Log.stackTrace(ob);
+        return `${ob} ${Log.stackTrace(ob)}`;
       } else if (isError(ob)) {
         return Log._formatError(ob);
       }
@@ -619,19 +611,19 @@ ParameterFormatter.prototype = {
         return val;
       });
     } catch (e) {
-      dumpError("Exception trying to format object for log message: " + Log.exceptionStr(e));
+      dumpError(`Exception trying to format object for log message: ${Log.exceptionStr(e)}`);
     }
     // Fancy formatting failed. Just toSource() it - but even this may fail!
     try {
       return ob.toSource();
     } catch (_) { }
     try {
-      return "" + ob;
+      return String(ob);
     } catch (_) {
       return "[object]";
     }
   }
-};
+}
 
 /*
  * Appenders
@@ -639,55 +631,53 @@ ParameterFormatter.prototype = {
  * Simply subclass and override doAppend to implement a new one
  */
 
-function Appender(formatter) {
-  this._name = "Appender";
-  this._formatter = formatter || new BasicFormatter();
-}
-Appender.prototype = {
-  level: Log.Level.All,
+class Appender {
+  constructor(formatter) {
+    this.level = Log.Level.All;
+    this._name = "Appender";
+    this._formatter = formatter || new BasicFormatter();
+  }
 
-  append: function App_append(message) {
+  append(message) {
     if (message) {
       this.doAppend(this._formatter.format(message));
     }
-  },
-  toString: function App_toString() {
-    return this._name + " [level=" + this.level +
-      ", formatter=" + this._formatter + "]";
-  },
-};
+  }
+
+  toString() {
+    return `${this._name} [level=${this.level}, formatter=${this._formatter}]`;
+  }
+}
 
 /*
  * DumpAppender
  * Logs to standard out
  */
 
-function DumpAppender(formatter) {
-  Appender.call(this, formatter);
-  this._name = "DumpAppender";
-}
-DumpAppender.prototype = {
-  __proto__: Appender.prototype,
+class DumpAppender extends Appender {
+  constructor(formatter) {
+    super(formatter);
+    this._name = "DumpAppender";
+  }
 
-  doAppend: function DApp_doAppend(formatted) {
+  doAppend(formatted) {
     dump(formatted + "\n");
   }
-};
+}
 
 /*
  * ConsoleAppender
  * Logs to the javascript console
  */
 
-function ConsoleAppender(formatter) {
-  Appender.call(this, formatter);
-  this._name = "ConsoleAppender";
-}
-ConsoleAppender.prototype = {
-  __proto__: Appender.prototype,
+class ConsoleAppender extends Appender {
+  constructor(formatter) {
+    super(formatter);
+    this._name = "ConsoleAppender";
+  }
 
   // XXX this should be replaced with calls to the Browser Console
-  append: function App_append(message) {
+  append(message) {
     if (message) {
       let m = this._formatter.format(message);
       if (message.level > Log.Level.Warn) {
@@ -696,9 +686,23 @@ ConsoleAppender.prototype = {
       }
       this.doAppend(m);
     }
-  },
+  }
 
-  doAppend: function CApp_doAppend(formatted) {
+  doAppend(formatted) {
     Services.console.logStringMessage(formatted);
   }
-};
+}
+
+Object.assign(Log, {
+  LogMessage,
+  Logger,
+  LoggerRepository,
+
+  BasicFormatter,
+
+  Appender,
+  DumpAppender,
+  ConsoleAppender,
+
+  ParameterFormatter,
+});
