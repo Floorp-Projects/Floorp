@@ -802,36 +802,6 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char* filename,
 }
 
 NS_IMETHODIMP
-nsXPConnect::GetWrappedNativePrototype(JSContext* aJSContext,
-                                       JSObject* aScopeArg,
-                                       nsIClassInfo* aClassInfo,
-                                       JSObject** aRetVal)
-{
-    RootedObject aScope(aJSContext, aScopeArg);
-    JSAutoRealmAllowCCW ar(aJSContext, aScope);
-
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIXPCScriptable> scrProto =
-        XPCWrappedNative::GatherProtoScriptable(aClassInfo);
-
-    AutoMarkingWrappedNativeProtoPtr proto(aJSContext);
-    proto = XPCWrappedNativeProto::GetNewOrUsed(scope, aClassInfo, scrProto);
-    if (!proto)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    JSObject* protoObj = proto->GetJSProtoObject();
-    if (!protoObj)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    *aRetVal = protoObj;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPConnect::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
