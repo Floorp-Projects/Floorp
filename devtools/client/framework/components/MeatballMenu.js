@@ -123,6 +123,7 @@ class MeatballMenu extends PureComponent {
       items.push(
         MenuItem({
           id: `toolbox-meatball-menu-dock-${hostType.position}`,
+          key: `dock-${hostType.position}`,
           label: this.props.L10N.getStr(l10nkey),
           onClick: () => hostType.switchHost(),
           checked: hostType.position === this.props.currentHostType,
@@ -132,7 +133,7 @@ class MeatballMenu extends PureComponent {
     }
 
     if (items.length) {
-      items.push(hr());
+      items.push(hr({ key: "dock-separator" }));
     }
 
     // Split console
@@ -143,6 +144,7 @@ class MeatballMenu extends PureComponent {
       items.push(
         MenuItem({
           id: "toolbox-meatball-menu-splitconsole",
+          key: "splitconsole",
           label: this.props.L10N.getStr(l10nkey),
           accelerator: "Esc",
           onClick: this.props.toggleSplitConsole,
@@ -159,6 +161,7 @@ class MeatballMenu extends PureComponent {
       items.push(
         MenuItem({
           id: "toolbox-meatball-menu-noautohide",
+          key: "noautohide",
           label: this.props.L10N.getStr(
             "toolbox.meatballMenu.noautohide.label"
           ),
@@ -174,6 +177,7 @@ class MeatballMenu extends PureComponent {
     items.push(
       MenuItem({
         id: "toolbox-meatball-menu-settings",
+        key: "settings",
         label: this.props.L10N.getStr("toolbox.meatballMenu.settings.label"),
         accelerator: this.props.L10N.getStr("toolbox.help.key"),
         onClick: () => this.props.toggleOptions(),
@@ -181,12 +185,13 @@ class MeatballMenu extends PureComponent {
       })
     );
 
-    items.push(hr());
+    items.push(hr({ key: "docs-separator" }));
 
     // Getting started
     items.push(
       MenuItem({
         id: "toolbox-meatball-menu-documentation",
+        key: "documentation",
         label: this.props.L10N.getStr(
           "toolbox.meatballMenu.documentation.label"
         ),
@@ -202,6 +207,7 @@ class MeatballMenu extends PureComponent {
     items.push(
       MenuItem({
         id: "toolbox-meatball-menu-community",
+        key: "community",
         label: this.props.L10N.getStr("toolbox.meatballMenu.community.label"),
         onClick: () => {
           openDocLink(
