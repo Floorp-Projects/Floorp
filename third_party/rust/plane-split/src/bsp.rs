@@ -1,9 +1,11 @@
+use {Intersection, Plane, Polygon, Splitter};
+
 use binary_space_partition::{BspNode, Plane as BspPlane, PlaneCut};
 use euclid::{TypedPoint3D, TypedVector3D};
 use euclid::approxeq::ApproxEq;
 use num_traits::{Float, One, Zero};
+
 use std::{fmt, ops};
-use {Intersection, Plane, Polygon, Splitter};
 
 
 impl<T, U> BspPlane for Polygon<T, U> where
