@@ -206,20 +206,13 @@ public:
  * function returns, |val| is set to the result of the clone.
  */
 bool
-StackScopedClone(JSContext* cx, StackScopedCloneOptions& options,
+StackScopedClone(JSContext* cx, StackScopedCloneOptions& options, HandleObject sourceScope,
                  MutableHandleValue val)
 {
     StackScopedCloneData data(cx, &options);
     {
-        // For parsing val we have to enter its realm.
-        // (unless it's a primitive)
-        Maybe<JSAutoRealmAllowCCW> ar;
-        if (val.isObject()) {
-            ar.emplace(cx, &val.toObject());
-        } else if (val.isString() && !JS_WrapValue(cx, val)) {
-            return false;
-        }
-
+        // For parsing val we have to enter (a realm in) its compartment.
+        JSAutoRealm ar(cx, sourceScope);
         if (!data.Write(cx, val))
             return false;
     }
