@@ -34,6 +34,8 @@ loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link",
  *        - {Function} openSidebar (optional) function that will open the object
  *            inspector sidebar
  *        - {String} rootActorId (optional) actor id for the root object being clicked on
+ *        - {Object} executionPoint (optional) when replaying, the execution point where
+ *            this message was logged
  */
 function createContextMenu(hud, parentNode, {
   actor,
@@ -43,6 +45,8 @@ function createContextMenu(hud, parentNode, {
   serviceContainer,
   openSidebar,
   rootActorId,
+  executionPoint,
+  toolbox,
 }) {
   const win = parentNode.ownerDocument.defaultView;
   const selection = win.getSelection();
@@ -174,6 +178,19 @@ function createContextMenu(hud, parentNode, {
       accesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
       disabled: !rootActorId,
       click: () => openSidebar(message.messageId),
+    }));
+  }
+
+  // Add time warp option if available.
+  if (executionPoint) {
+    menu.append(new MenuItem({
+      id: "console-menu-time-warp",
+      label: l10n.getStr("webconsole.menu.timeWarp.label"),
+      disabled: false,
+      click: () => {
+        const threadClient = toolbox.threadClient;
+        threadClient.timeWarp(executionPoint);
+      },
     }));
   }
 
