@@ -366,6 +366,19 @@ talos-other:
         extra-options:
             - --suite=other
 
+talos-sessionrestore-many-windows:
+    description: "Talos sessionrestore-many-windows"
+    try-name: sessionrestore-many-windows
+    treeherder-symbol: T(smw)
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --suite=sessionrestore-many-windows
+
 talos-other-profiling:
     description: "Talos profiling other"
     try-name: other-profiling

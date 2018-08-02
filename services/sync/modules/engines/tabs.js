@@ -20,6 +20,10 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 ChromeUtils.defineModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+});
+
 function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
@@ -84,17 +88,6 @@ TabEngine.prototype = {
     await this.service.resource(url).delete();
   },
 
-  /**
-   * Return a Set of open URLs.
-   */
-  getOpenURLs() {
-    let urls = new Set();
-    for (let entry of this._store.getAllTabs()) {
-      urls.add(entry.urlHistory[0]);
-    }
-    return urls;
-  },
-
   async _reconcile(item) {
     // Skip our own record.
     // TabStore.itemExists tests only against our local client ID.
@@ -136,7 +129,7 @@ TabStore.prototype = {
     return JSON.parse(SessionStore.getTabState(tab));
   },
 
-  getAllTabs(filter) {
+  async getAllTabs(filter) {
     let filteredUrls = new RegExp(Svc.Prefs.get("engine.tabs.filteredUrls"), "i");
 
     let allTabs = [];
@@ -190,12 +183,18 @@ TabStore.prototype = {
           urls.length = TAB_ENTRIES_LIMIT;
         }
 
+        // tabState has .image, but it's a large data: url. So we ask the favicon service for the url.
+        let icon = "";
+        try {
+          let iconData = await PlacesUtils.promiseFaviconData(urls[0]);
+          icon = iconData.uri.spec;
+        } catch (ex) {
+          this._log.warn(`Failed to fetch favicon for ${urls[0]}`, ex);
+        }
         allTabs.push({
           title: current.title || "",
           urlHistory: urls,
-          icon: tabState.image ||
-                (tabState.attributes && tabState.attributes.image) ||
-                "",
+          icon,
           lastUsed: Math.floor((tabState.lastAccessed || 0) / 1000),
         });
       }
@@ -209,7 +208,7 @@ TabStore.prototype = {
     record.clientName = this.engine.service.clientsEngine.localName;
 
     // Sort tabs in descending-used order to grab the most recently used
-    let tabs = this.getAllTabs(true).sort(function(a, b) {
+    let tabs = (await this.getAllTabs(true)).sort(function(a, b) {
       return b.lastUsed - a.lastUsed;
     });
     const maxPayloadSize = this.engine.service.getMemcacheMaxRecordPayloadSize();

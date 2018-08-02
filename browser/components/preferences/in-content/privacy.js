@@ -20,6 +20,12 @@ ChromeUtils.defineModuleGetter(this, "SiteDataManager",
 
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingUiEnabled",
+                                      "browser.contentblocking.ui.enabled");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled",
+                                      "browser.contentblocking.enabled");
+
 const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 const TRACKING_PROTECTION_KEY = "websites.trackingProtectionMode";
@@ -43,7 +49,13 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
 });
 
 Preferences.addAll([
-  // Tracking
+  // Content Blocking
+  { id: "browser.contentblocking.enabled", type: "bool" },
+
+  // FastBlock
+  { id: "browser.fastblock.enabled", type: "bool" },
+
+  // Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
   { id: "privacy.trackingprotection.pbmode.enabled", type: "bool" },
 
@@ -136,6 +148,11 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   Preferences.add({ id: "browser.crashReports.unsubmittedCheck.autoSubmit2", type: "bool" });
 }
 
+function setEventListener(aId, aEventType, aCallback) {
+  document.getElementById(aId)
+    .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
+}
+
 var gPrivacyPane = {
   _pane: null,
 
@@ -148,11 +165,13 @@ var gPrivacyPane = {
    * Initialize the tracking protection prefs and linkify its Learn More link.
    */
   _initTrackingProtection() {
+    setEventListener("trackingProtectionRadioGroup", "command",
+      this.trackingProtectionWritePrefs);
+    setEventListener("changeBlockList", "command", this.showBlockLists);
+
     let link = document.getElementById("trackingProtectionLearnMore");
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
     link.setAttribute("href", url);
-
-    this.trackingProtectionReadPrefs();
   },
 
   /**
@@ -164,12 +183,18 @@ var gPrivacyPane = {
 
     function setInputsDisabledState(isControlled) {
       let disabled = isLocked || isControlled;
-      document.querySelectorAll("#trackingProtectionRadioGroup > radio")
-        .forEach((element) => {
-          element.disabled = disabled;
-        });
-      document.querySelector("#trackingProtectionDesc > label")
-        .disabled = disabled;
+      if (contentBlockingUiEnabled) {
+        // Only enable the TP menu if content blocking is enabled.
+        document.getElementById("trackingProtectionMenu").disabled = disabled ||
+          !contentBlockingEnabled;
+      } else {
+        document.querySelectorAll("#trackingProtectionRadioGroup > radio")
+          .forEach((element) => {
+            element.disabled = disabled;
+          });
+        document.querySelector("#trackingProtectionDesc > label")
+          .disabled = disabled;
+      }
     }
 
     if (isLocked) {
@@ -189,6 +214,12 @@ var gPrivacyPane = {
    * for tracking protection.
    */
   _initTrackingProtectionExtensionControl() {
+    let disableButton = contentBlockingUiEnabled ?
+      "contentBlockingDisableTrackingProtectionExtension" : "disableTrackingProtectionExtension";
+    setEventListener(disableButton, "command",
+      makeDisableControllingExtension(
+        PREF_SETTING_TYPE, TRACKING_PROTECTION_KEY));
+
     let trackingProtectionObserver = {
       observe(subject, topic, data) {
         gPrivacyPane._updateTrackingProtectionUI();
@@ -218,29 +249,39 @@ var gPrivacyPane = {
    * label of the "Clear Now..." button.
    */
   init() {
-    function setEventListener(aId, aEventType, aCallback) {
-      document.getElementById(aId)
-        .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
-    }
-
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
     this.updateAutoplayMediaControlsVisibility();
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingReverter();
-    this._initTrackingProtection();
-    this._initTrackingProtectionExtensionControl();
     this._initAutocomplete();
+
+    /* Initialize Content Blocking / Tracking Protection */
+
+    if (contentBlockingUiEnabled) {
+      this.initContentBlocking();
+    } else {
+      this._initTrackingProtection();
+    }
+
+    this.trackingProtectionReadPrefs();
+    this._initTrackingProtectionExtensionControl();
+
+    this.updateContentBlockingVisibility();
+
+    Preferences.get("privacy.trackingprotection.enabled").on("change",
+      gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
+    Preferences.get("privacy.trackingprotection.pbmode.enabled").on("change",
+      gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
+
+    setEventListener("trackingProtectionExceptions", "command",
+      gPrivacyPane.showTrackingProtectionExceptions);
 
     Preferences.get("privacy.sanitize.sanitizeOnShutdown").on("change",
       gPrivacyPane._updateSanitizeSettingsButton.bind(gPrivacyPane));
     Preferences.get("browser.privatebrowsing.autostart").on("change",
       gPrivacyPane.updatePrivacyMicroControls.bind(gPrivacyPane));
-    Preferences.get("privacy.trackingprotection.enabled").on("change",
-      gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
-    Preferences.get("privacy.trackingprotection.pbmode.enabled").on("change",
-      gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
     Preferences.get("media.autoplay.enabled.ask-permission").on("change",
      gPrivacyPane.updateAutoplayMediaControlsVisibility.bind(gPrivacyPane));
     Preferences.get("media.autoplay.enabled.user-gestures-needed").on("change",
@@ -269,15 +310,6 @@ var gPrivacyPane = {
       gPrivacyPane.showCookieExceptions);
     setEventListener("clearDataSettings", "command",
       gPrivacyPane.showClearPrivateDataSettings);
-    setEventListener("disableTrackingProtectionExtension", "command",
-      makeDisableControllingExtension(
-        PREF_SETTING_TYPE, TRACKING_PROTECTION_KEY));
-    setEventListener("trackingProtectionRadioGroup", "command",
-      gPrivacyPane.trackingProtectionWritePrefs);
-    setEventListener("trackingProtectionExceptions", "command",
-      gPrivacyPane.showTrackingProtectionExceptions);
-    setEventListener("changeBlockList", "command",
-      gPrivacyPane.showBlockLists);
     setEventListener("passwordExceptions", "command",
       gPrivacyPane.showPasswordExceptions);
     setEventListener("useMasterPassword", "command",
@@ -395,6 +427,117 @@ var gPrivacyPane = {
     Services.obs.notifyObservers(window, "privacy-pane-loaded");
   },
 
+  // CONTENT BLOCKING
+
+  /**
+   * Initializes the content blocking section.
+   */
+  initContentBlocking() {
+    let contentBlockingCheckbox = document.getElementById("contentBlockingCheckbox");
+    setEventListener("contentBlockingToggle", "command",
+      () => contentBlockingCheckbox.click());
+    setEventListener("changeBlockListLink", "click", this.showBlockLists);
+    setEventListener("contentBlockingRestoreDefaults", "command",
+      this.restoreContentBlockingPrefs);
+    setEventListener("trackingProtectionMenu", "command",
+      this.trackingProtectionWritePrefs);
+
+    let link = document.getElementById("contentBlockingLearnMore");
+    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
+    link.setAttribute("href", url);
+  },
+
+  /**
+   * Resets all user-exposed content blocking preferences to their default values.
+   */
+  async restoreContentBlockingPrefs() {
+    function clearIfNotLocked(pref) {
+      if (!Services.prefs.prefIsLocked(pref)) {
+        Services.prefs.clearUserPref(pref);
+      }
+    }
+
+    clearIfNotLocked("browser.contentblocking.enabled");
+    clearIfNotLocked("browser.fastblock.enabled");
+    clearIfNotLocked("urlclassifier.trackingTable");
+
+    let controllingExtension = await getControllingExtension(
+      PREF_SETTING_TYPE, TRACKING_PROTECTION_KEY);
+    if (!controllingExtension) {
+      for (let preference of TRACKING_PROTECTION_PREFS) {
+        clearIfNotLocked(preference);
+      }
+    }
+  },
+
+  /**
+   * Changes the visibility of elements in the TP/CB section depending on the
+   * content blocking UI pref.
+   */
+  updateContentBlockingVisibility() {
+    let visibleState = {
+      "contentBlockingHeader": true,
+      "contentBlockingDescription": true,
+      "contentBlockingLearnMore": true,
+      "contentBlockingRestoreDefaults": true,
+      "contentBlockingCheckboxContainer": true,
+      "contentBlockingCategories": true,
+
+      "trackingProtectionHeader": false,
+      "trackingProtectionDescription": false,
+      "trackingProtectionBox": false,
+    };
+    for (let id in visibleState) {
+      document.getElementById(id).hidden = contentBlockingUiEnabled != visibleState[id];
+    }
+  },
+
+  /**
+   * Updates the preferences UI to reflect the browser.contentblocking.enabled pref.
+   * This affects the button to toggle the pref and the disabled state of the dependent controls.
+   */
+  updateContentBlockingToggle() {
+    let onOrOff = contentBlockingEnabled ? "on" : "off";
+    let contentBlockingToggle = document.getElementById("contentBlockingToggle");
+    let contentBlockingToggleLabel = document.getElementById("contentBlockingToggleLabel");
+
+    document.l10n.setAttributes(contentBlockingToggle,
+      "content-blocking-toggle-" + onOrOff);
+    contentBlockingToggle.setAttribute("aria-pressed", contentBlockingEnabled);
+    document.l10n.setAttributes(contentBlockingToggleLabel,
+      "content-blocking-toggle-label-" + onOrOff);
+
+    this.updateContentBlockingControls();
+  },
+
+  /**
+   * Changes the disabled state of controls that depend on the browser.contentblocking.enabled pref.
+   */
+  updateContentBlockingControls() {
+    let dependentControls = [
+      "#content-blocking-categories-label",
+      ".content-blocking-icon",
+      ".content-blocking-category-menu",
+      ".content-blocking-category-name",
+      "#changeBlockListLink",
+    ];
+
+    for (let selector of dependentControls) {
+      let controls = document.querySelectorAll(selector);
+
+      for (let control of controls) {
+        if (contentBlockingEnabled) {
+          control.removeAttribute("disabled");
+        } else {
+          control.setAttribute("disabled", "true");
+        }
+      }
+    }
+
+    // Need to make sure we account for pref locking/extension overrides when enabling the TP menu.
+    this._updateTrackingProtectionUI();
+  },
+
   // TRACKING PROTECTION MODE
 
   /**
@@ -403,17 +546,22 @@ var gPrivacyPane = {
   trackingProtectionReadPrefs() {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
-    let radiogroup = document.getElementById("trackingProtectionRadioGroup");
+    let tpControl;
+    if (contentBlockingUiEnabled) {
+      tpControl = document.getElementById("trackingProtectionMenu");
+    } else {
+      tpControl = document.getElementById("trackingProtectionRadioGroup");
+    }
 
     this._updateTrackingProtectionUI();
 
     // Global enable takes precedence over enabled in Private Browsing.
     if (enabledPref.value) {
-      radiogroup.value = "always";
+      tpControl.value = "always";
     } else if (pbmPref.value) {
-      radiogroup.value = "private";
+      tpControl.value = "private";
     } else {
-      radiogroup.value = "never";
+      tpControl.value = "never";
     }
   },
 
@@ -423,9 +571,14 @@ var gPrivacyPane = {
   trackingProtectionWritePrefs() {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
-    let radiogroup = document.getElementById("trackingProtectionRadioGroup");
+    let tpControl;
+    if (contentBlockingUiEnabled) {
+      tpControl = document.getElementById("trackingProtectionMenu");
+    } else {
+      tpControl = document.getElementById("trackingProtectionRadioGroup");
+    }
 
-    switch (radiogroup.value) {
+    switch (tpControl.value) {
       case "always":
         enabledPref.value = true;
         pbmPref.value = true;

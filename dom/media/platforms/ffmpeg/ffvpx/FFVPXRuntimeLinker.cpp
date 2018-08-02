@@ -62,6 +62,7 @@ FFVPXRuntimeLinker::Init()
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 
+  MOZ_ASSERT(NS_IsMainThread());
   sLinkStatus = LinkStatus_FAILED;
 
   // We retrieve the path of the lgpllibs library as this is where mozavcodec
@@ -118,6 +119,22 @@ FFVPXRuntimeLinker::CreateDecoderModule()
     return nullptr;
   }
   return FFmpegDecoderModule<FFVPX_VERSION>::Create(&sFFVPXLib);
+}
+
+/* static */ void
+FFVPXRuntimeLinker::GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs)
+{
+  MOZ_ASSERT(sLinkStatus != LinkStatus_INIT);
+  if (sFFVPXLib.av_rdft_init &&
+      sFFVPXLib.av_rdft_calc &&
+      sFFVPXLib.av_rdft_end) {
+    aOutFuncs->init = sFFVPXLib.av_rdft_init;
+    aOutFuncs->calc = sFFVPXLib.av_rdft_calc;
+    aOutFuncs->end = sFFVPXLib.av_rdft_end;
+  } else {
+    NS_WARNING("RDFT functions expected but not found");
+    *aOutFuncs = FFmpegRDFTFuncs(); // zero
+  }
 }
 
 } // namespace mozilla

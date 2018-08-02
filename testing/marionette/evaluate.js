@@ -115,7 +115,9 @@ evaluate.sandbox = function(sb, script, args = [],
       src += `${ARGUMENTS}.push(rv => ${CALLBACK}(rv));`;
     }
 
-    src += `(function() { ${script} }).apply(null, ${ARGUMENTS})`;
+    src += `(function() {
+      ${script}
+    }).apply(null, ${ARGUMENTS})`;
 
     // timeout and unload handlers
     scriptTimeoutID = setTimeout(timeoutHandler, timeout);

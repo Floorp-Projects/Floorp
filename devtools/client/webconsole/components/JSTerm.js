@@ -1275,7 +1275,7 @@ class JSTerm extends Component {
         popupAlignElement = this.node.querySelector(".CodeMirror-cursor");
         // We need to show the popup at the ".".
         xOffset = -1 * lastPart.length * this._inputCharWidth;
-        yOffset = 4;
+        yOffset = 5;
       } else if (this.inputNode) {
         const offset = inputUntilCursor.length -
           (inputUntilCursor.lastIndexOf("\n") + 1) -

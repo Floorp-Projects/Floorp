@@ -12,7 +12,3 @@
 
 GeckoSharedLibrary('lgpllibs', linkage=None)
 SHARED_LIBRARY_NAME = 'lgpllibs'
-
-if CONFIG['MOZ_LIBAV_FFT']:
-    DIRS += ['/media/libav']
-    DEFFILE = SRCDIR + '/lgpllibs.def'

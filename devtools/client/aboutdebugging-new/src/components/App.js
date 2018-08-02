@@ -7,6 +7,7 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
+const RuntimePage = createFactory(require("./RuntimePage"));
 const Sidebar = createFactory(require("./Sidebar"));
 
 class App extends PureComponent {
@@ -15,7 +16,8 @@ class App extends PureComponent {
       {
         className: "app",
       },
-      Sidebar()
+      Sidebar(),
+      RuntimePage(),
     );
   }
 }
