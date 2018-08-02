@@ -4,4 +4,4 @@
 
 package mozilla.components.service.fretboard
 
-data class ExperimentDescriptor(val id: String)
+data class ExperimentDescriptor(val name: String)

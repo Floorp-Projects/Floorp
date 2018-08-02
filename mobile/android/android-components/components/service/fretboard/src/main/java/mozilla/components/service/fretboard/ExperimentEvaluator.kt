@@ -18,12 +18,12 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
         val experiment = getExperiment(experimentDescriptor, experiments) ?: return null
         val isEnabled = isInBucket(userBucket, experiment) && matches(context, experiment)
         context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE).let {
-            return if (it.getBoolean(experimentDescriptor.id, isEnabled)) experiment else null
+            return if (it.getBoolean(experimentDescriptor.name, isEnabled)) experiment else null
         }
     }
 
     fun getExperiment(descriptor: ExperimentDescriptor, experiments: List<Experiment>): Experiment? {
-        return experiments.firstOrNull { it.id == descriptor.id }
+        return experiments.firstOrNull { it.name == descriptor.name }
     }
 
     private fun matches(context: Context, experiment: Experiment): Boolean {
@@ -73,14 +73,14 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
     fun setOverride(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
         context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
             .edit()
-            .putBoolean(descriptor.id, active)
+            .putBoolean(descriptor.name, active)
             .apply()
     }
 
     fun clearOverride(context: Context, descriptor: ExperimentDescriptor) {
         context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
             .edit()
-            .remove(descriptor.id)
+            .remove(descriptor.name)
             .apply()
     }
 

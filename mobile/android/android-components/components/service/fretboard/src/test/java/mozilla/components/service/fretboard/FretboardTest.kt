@@ -45,25 +45,25 @@ class FretboardTest {
     fun testUpdateExperimentsEmptyStorage() {
         val experimentSource = mock(ExperimentSource::class.java)
         val result = ExperimentsSnapshot(listOf(), null)
-        `when`(experimentSource.getExperiments(result)).thenReturn(ExperimentsSnapshot(listOf(Experiment("id")), null))
+        `when`(experimentSource.getExperiments(result)).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
         val experimentStorage = mock(ExperimentStorage::class.java)
         `when`(experimentStorage.retrieve()).thenReturn(result)
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.updateExperiments()
         verify(experimentSource).getExperiments(result)
-        verify(experimentStorage).save(ExperimentsSnapshot(listOf(Experiment("id")), null))
+        verify(experimentStorage).save(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
     }
 
     @Test
     fun testUpdateExperimentsFromStorage() {
         val experimentSource = mock(ExperimentSource::class.java)
-        `when`(experimentSource.getExperiments(ExperimentsSnapshot(listOf(Experiment("id0")), null))).thenReturn(ExperimentsSnapshot(listOf(Experiment("id")), null))
+        `when`(experimentSource.getExperiments(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
         val experimentStorage = mock(ExperimentStorage::class.java)
-        `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(Experiment("id0")), null))
+        `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.updateExperiments()
-        verify(experimentSource).getExperiments(ExperimentsSnapshot(listOf(Experiment("id0")), null))
-        verify(experimentStorage).save(ExperimentsSnapshot(listOf(Experiment("id")), null))
+        verify(experimentSource).getExperiments(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))
+        verify(experimentStorage).save(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
     }
 
     @Test
@@ -71,8 +71,8 @@ class FretboardTest {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
-            Experiment("first-id"),
-            Experiment("second-id")
+            Experiment("first-id", "first-name"),
+            Experiment("second-id", "second-name")
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
         val fretboard = Fretboard(experimentSource, experimentStorage)
@@ -101,17 +101,26 @@ class FretboardTest {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
-            Experiment("first-id", match = Experiment.Matcher(
-                manufacturer = "manufacturer-1"
-            )),
-            Experiment("second-id", match = Experiment.Matcher(
-                manufacturer = "unknown",
-                appId = "test.appId"
-            )),
-            Experiment("third-id", match = Experiment.Matcher(
-                manufacturer = "unknown",
-                version = "version.name"
-            ))
+            Experiment("first-id",
+                name = "first-name",
+                match = Experiment.Matcher(
+                    manufacturer = "manufacturer-1"
+                )
+            ),
+            Experiment("second-id",
+                name = "second-name",
+                match = Experiment.Matcher(
+                    manufacturer = "unknown",
+                    appId = "test.appId"
+                )
+            ),
+            Experiment("third-id",
+                name = "third-name",
+                match = Experiment.Matcher(
+                    manufacturer = "unknown",
+                    version = "version.name"
+                )
+            )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
         val fretboard = Fretboard(experimentSource, experimentStorage)

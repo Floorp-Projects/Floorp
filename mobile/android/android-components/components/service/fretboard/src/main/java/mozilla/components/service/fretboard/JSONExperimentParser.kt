@@ -43,7 +43,7 @@ class JSONExperimentParser {
         val payloadJson: JSONObject? = jsonObject.optJSONObject(PAYLOAD_KEY)
         val payload = if (payloadJson != null) jsonToPayload(payloadJson) else null
         return Experiment(jsonObject.getString(ID_KEY),
-            jsonObject.tryGetString(NAME_KEY),
+            jsonObject.getString(NAME_KEY),
             jsonObject.tryGetString(DESCRIPTION_KEY),
             matcher,
             bucket,

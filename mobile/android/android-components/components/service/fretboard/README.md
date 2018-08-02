@@ -98,10 +98,10 @@ And then you have to register it on the manifest, just like any other `JobServic
 ### Checking if a user is part of an experiment
 In order to check if a user is part of a specific experiment, Fretboard provides two APIs: a Kotlin-friendly
 `withExperiment` API and a more Java-like `isInExperiment`. In both cases you pass an instance of `ExperimentDescriptor`
-with the id of the experiment you want to check:
+with the name of the experiment you want to check:
 
 ```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-id")
+val descriptor = ExperimentDescriptor("first-experiment-name")
 fretboard.withExperiment(descriptor) {
     someButton.setBackgroundColor(Color.RED)
 }
@@ -110,11 +110,11 @@ otherButton.isEnabled = fretboard.isInExperiment(descriptor)
 ```
 
 ### Getting experiment metadata
-Fretboard allows experiments to carry associated metadata, which can be retrieved using the kotlin-friendly 
+Fretboard allows experiments to carry associated metadata, which can be retrieved using the Kotlin-friendly 
 `withExperiment` API or the more Java-like `getExperiment` API, like this:
 
 ```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-id")
+val descriptor = ExperimentDescriptor("first-experiment-name")
 fretboard.withExperiment(descriptor) {
     toolbar.setColor(Color.parseColor(it.payload?.get("color") as String))
 }
@@ -126,14 +126,14 @@ Fretboard allows you to force activate / deactivate a specific experiment via `s
 simply have to pass true to activate it, false to deactivate:
 
 ```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-id")
+val descriptor = ExperimentDescriptor("first-experiment-name")
 fretboard.setOverride(context, descriptor, true)
 ```
 
 You can also clear an override for an experiment or all overrides:
 
 ```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-id")
+val descriptor = ExperimentDescriptor("first-experiment-name")
 fretboard.clearOverride(context, descriptor)
 fretboard.clearAllOverrides(context)
 ```

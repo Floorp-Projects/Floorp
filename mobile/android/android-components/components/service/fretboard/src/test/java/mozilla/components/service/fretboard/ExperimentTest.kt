@@ -40,7 +40,7 @@ class ExperimentTest {
 
     @Test
     fun testHashCode() {
-        val experiment = Experiment("id")
+        val experiment = Experiment("id", "name")
         assertEquals(experiment.id.hashCode(), experiment.hashCode())
     }
 }

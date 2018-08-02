@@ -97,7 +97,7 @@ class Fretboard(
      * @return active experiments
      */
     fun getActiveExperiments(context: Context): List<Experiment> {
-        return experiments.filter { isInExperiment(context, ExperimentDescriptor(it.id)) }.toList()
+        return experiments.filter { isInExperiment(context, ExperimentDescriptor(it.name)) }.toList()
     }
 
     /**

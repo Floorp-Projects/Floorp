@@ -50,13 +50,14 @@ class JSONExperimentParserTest {
 
     @Test
     fun testToJsonNullValues() {
-        val experiment = Experiment("id")
+        val experiment = Experiment("id", "name")
         val jsonObject = JSONExperimentParser().toJson(experiment)
         val buckets = jsonObject.getJSONObject("buckets")
         assertEquals(0, buckets.length())
         val match = jsonObject.getJSONObject("match")
         assertEquals(0, match.length())
         assertEquals("id", jsonObject.getString("id"))
+        assertEquals("name", jsonObject.getString("name"))
     }
 
     @Test
@@ -73,16 +74,16 @@ class JSONExperimentParserTest {
 
     @Test
     fun testFromJsonNonPresentValues() {
-        val json = """{"id":"id"}"""
-        assertEquals(Experiment("id"), JSONExperimentParser().fromJson(JSONObject(json)))
+        val json = """{"id":"id","name":"name"}"""
+        assertEquals(Experiment("id", "name"), JSONExperimentParser().fromJson(JSONObject(json)))
     }
 
     @Test
     fun testFromJsonNullValues() {
-        val json = """{"buckets":null,"name":null,"match":null,"description":null,"id":"sample-id","last_modified":null}"""
-        assertEquals(Experiment("sample-id"), JSONExperimentParser().fromJson(JSONObject(json)))
-        val emptyObjects = """{"id":"sample-id","buckets":{"min":null,"max":null},"match":{"lang":null,"appId":null,"region":null}}"""
-        assertEquals(Experiment("sample-id", bucket = Experiment.Bucket(), match = Experiment.Matcher()),
+        val json = """{"buckets":null,"name":"sample-name","match":null,"description":null,"id":"sample-id","last_modified":null}"""
+        assertEquals(Experiment("sample-id", "sample-name"), JSONExperimentParser().fromJson(JSONObject(json)))
+        val emptyObjects = """{"id":"sample-id","name":"sample-name","buckets":{"min":null,"max":null},"match":{"lang":null,"appId":null,"region":null}}"""
+        assertEquals(Experiment("sample-id", name = "sample-name", bucket = Experiment.Bucket(), match = Experiment.Matcher()),
             JSONExperimentParser().fromJson(JSONObject(emptyObjects)))
     }
 
@@ -105,7 +106,7 @@ class JSONExperimentParserTest {
         payload.put("c", 3.5)
         payload.put("d", true)
         payload.put("e", listOf(1, 2, 3, 4))
-        val experiment = Experiment("id", payload = payload)
+        val experiment = Experiment("id", name = "name", payload = payload)
         val json = JSONExperimentParser().toJson(experiment)
         val payloadJson = json.getJSONObject("payload")
         assertEquals("a", payloadJson.getString("a"))

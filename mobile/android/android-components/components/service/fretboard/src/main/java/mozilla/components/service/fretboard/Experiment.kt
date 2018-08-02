@@ -17,7 +17,7 @@ data class Experiment(
     /**
      * Human-readable name of the experiment
      */
-    val name: String? = null,
+    val name: String,
     /**
      * Detailed description of the experiment
      */
