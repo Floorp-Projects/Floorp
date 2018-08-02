@@ -4003,6 +4003,7 @@ tls13_ComputeFinished(sslSocket *ss, PK11SymKey *baseKey,
 
     PK11_FreeSymKey(secret);
     PK11_DestroyContext(hmacCtx, PR_TRUE);
+    PRINT_BUF(50, (ss, "finished value", output, outputLenUint));
     return SECSuccess;
 
 abort:

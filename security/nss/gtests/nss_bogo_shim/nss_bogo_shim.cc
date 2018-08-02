@@ -18,6 +18,7 @@
 #include "ssl3prot.h"
 #include "sslerr.h"
 #include "sslproto.h"
+#include "scoped_ptrs.h"
 
 #include "nsskeys.h"
 
@@ -33,30 +34,9 @@ std::string FormatError(PRErrorCode code) {
 
 class TestAgent {
  public:
-  TestAgent(const Config& cfg)
-      : cfg_(cfg),
-        pr_fd_(nullptr),
-        ssl_fd_(nullptr),
-        cert_(nullptr),
-        key_(nullptr) {}
+  TestAgent(const Config& cfg) : cfg_(cfg) {}
 
-  ~TestAgent() {
-    if (pr_fd_) {
-      PR_Close(pr_fd_);
-    }
-
-    if (ssl_fd_) {
-      PR_Close(ssl_fd_);
-    }
-
-    if (key_) {
-      SECKEY_DestroyPrivateKey(key_);
-    }
-
-    if (cert_) {
-      CERT_DestroyCertificate(cert_);
-    }
-  }
+  ~TestAgent() {}
 
   static std::unique_ptr<TestAgent> Create(const Config& cfg) {
     std::unique_ptr<TestAgent> agent(new TestAgent(cfg));
@@ -81,7 +61,7 @@ class TestAgent {
       return false;
     }
 
-    SECStatus rv = SSL_ResetHandshake(ssl_fd_, cfg_.get<bool>("server"));
+    SECStatus rv = SSL_ResetHandshake(ssl_fd_.get(), cfg_.get<bool>("server"));
     if (rv != SECSuccess) return false;
 
     return true;
@@ -93,11 +73,11 @@ class TestAgent {
       return false;
     }
 
-    ssl_fd_ = SSL_ImportFD(NULL, pr_fd_);
+    ssl_fd_ = ScopedPRFileDesc(SSL_ImportFD(NULL, pr_fd_.get()));
     if (!ssl_fd_) {
       return false;
     }
-    pr_fd_ = nullptr;
+    pr_fd_.release();
 
     return true;
   }
@@ -114,10 +94,10 @@ class TestAgent {
 
     addr.inet.port = PR_htons(cfg_.get<int>("port"));
 
-    pr_fd_ = PR_OpenTCPSocket(addr.raw.family);
+    pr_fd_ = ScopedPRFileDesc(PR_OpenTCPSocket(addr.raw.family));
     if (!pr_fd_) return false;
 
-    prv = PR_Connect(pr_fd_, &addr, PR_INTERVAL_NO_TIMEOUT);
+    prv = PR_Connect(pr_fd_.get(), &addr, PR_INTERVAL_NO_TIMEOUT);
     if (prv != PR_SUCCESS) {
       return false;
     }
@@ -128,21 +108,24 @@ class TestAgent {
     SECStatus rv;
 
     if (cfg_.get<std::string>("key-file") != "") {
-      key_ = ReadPrivateKey(cfg_.get<std::string>("key-file"));
+      key_ = ScopedSECKEYPrivateKey(
+          ReadPrivateKey(cfg_.get<std::string>("key-file")));
       if (!key_) return false;
     }
     if (cfg_.get<std::string>("cert-file") != "") {
-      cert_ = ReadCertificate(cfg_.get<std::string>("cert-file"));
+      cert_ = ScopedCERTCertificate(
+          ReadCertificate(cfg_.get<std::string>("cert-file")));
       if (!cert_) return false;
     }
 
     // Needed because certs are not entirely valid.
-    rv = SSL_AuthCertificateHook(ssl_fd_, AuthCertificateHook, this);
+    rv = SSL_AuthCertificateHook(ssl_fd_.get(), AuthCertificateHook, this);
     if (rv != SECSuccess) return false;
 
     if (cfg_.get<bool>("server")) {
       // Server
-      rv = SSL_ConfigServerCert(ssl_fd_, cert_, key_, nullptr, 0);
+      rv = SSL_ConfigServerCert(ssl_fd_.get(), cert_.get(), key_.get(), nullptr,
+                                0);
       if (rv != SECSuccess) {
         std::cerr << "Couldn't configure server cert\n";
         return false;
@@ -150,7 +133,8 @@ class TestAgent {
 
     } else if (key_ && cert_) {
       // Client.
-      rv = SSL_GetClientAuthDataHook(ssl_fd_, GetClientAuthDataHook, this);
+      rv =
+          SSL_GetClientAuthDataHook(ssl_fd_.get(), GetClientAuthDataHook, this);
       if (rv != SECSuccess) return false;
     }
 
@@ -270,36 +254,36 @@ class TestAgent {
 
   bool SetupOptions() {
     SECStatus rv =
-        SSL_OptionSet(ssl_fd_, SSL_ENABLE_TLS13_COMPAT_MODE, PR_TRUE);
+        SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_TLS13_COMPAT_MODE, PR_TRUE);
     if (rv != SECSuccess) return false;
 
-    rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_SESSION_TICKETS, PR_TRUE);
+    rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_SESSION_TICKETS, PR_TRUE);
     if (rv != SECSuccess) return false;
 
     SSLVersionRange vrange;
     if (!GetVersionRange(&vrange, ssl_variant_stream)) return false;
 
-    rv = SSL_VersionRangeSet(ssl_fd_, &vrange);
+    rv = SSL_VersionRangeSet(ssl_fd_.get(), &vrange);
     if (rv != SECSuccess) return false;
 
     SSLVersionRange verify_vrange;
-    rv = SSL_VersionRangeGet(ssl_fd_, &verify_vrange);
+    rv = SSL_VersionRangeGet(ssl_fd_.get(), &verify_vrange);
     if (rv != SECSuccess) return false;
     if (vrange.min != verify_vrange.min || vrange.max != verify_vrange.max)
       return false;
 
-    rv = SSL_OptionSet(ssl_fd_, SSL_NO_CACHE, false);
+    rv = SSL_OptionSet(ssl_fd_.get(), SSL_NO_CACHE, false);
     if (rv != SECSuccess) return false;
 
     auto alpn = cfg_.get<std::string>("advertise-alpn");
     if (!alpn.empty()) {
       assert(!cfg_.get<bool>("server"));
 
-      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_ALPN, PR_TRUE);
+      rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_ALPN, PR_TRUE);
       if (rv != SECSuccess) return false;
 
       rv = SSL_SetNextProtoNego(
-          ssl_fd_, reinterpret_cast<const unsigned char*>(alpn.c_str()),
+          ssl_fd_.get(), reinterpret_cast<const unsigned char*>(alpn.c_str()),
           alpn.size());
       if (rv != SECSuccess) return false;
     }
@@ -319,23 +303,23 @@ class TestAgent {
           [](int scheme) { return static_cast<SSLSignatureScheme>(scheme); });
 
       rv = SSL_SignatureSchemePrefSet(
-          ssl_fd_, sig_schemes.data(),
+          ssl_fd_.get(), sig_schemes.data(),
           static_cast<unsigned int>(sig_schemes.size()));
       if (rv != SECSuccess) return false;
     }
 
     if (cfg_.get<bool>("fallback-scsv")) {
-      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_FALLBACK_SCSV, PR_TRUE);
+      rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_FALLBACK_SCSV, PR_TRUE);
       if (rv != SECSuccess) return false;
     }
 
     if (cfg_.get<bool>("false-start")) {
-      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_FALSE_START, PR_TRUE);
+      rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_FALSE_START, PR_TRUE);
       if (rv != SECSuccess) return false;
     }
 
     if (cfg_.get<bool>("enable-ocsp-stapling")) {
-      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_OCSP_STAPLING, PR_TRUE);
+      rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_OCSP_STAPLING, PR_TRUE);
       if (rv != SECSuccess) return false;
     }
 
@@ -343,22 +327,23 @@ class TestAgent {
     if (requireClientCert || cfg_.get<bool>("verify-peer")) {
       assert(cfg_.get<bool>("server"));
 
-      rv = SSL_OptionSet(ssl_fd_, SSL_REQUEST_CERTIFICATE, PR_TRUE);
+      rv = SSL_OptionSet(ssl_fd_.get(), SSL_REQUEST_CERTIFICATE, PR_TRUE);
       if (rv != SECSuccess) return false;
 
       rv = SSL_OptionSet(
-          ssl_fd_, SSL_REQUIRE_CERTIFICATE,
+          ssl_fd_.get(), SSL_REQUIRE_CERTIFICATE,
           requireClientCert ? SSL_REQUIRE_ALWAYS : SSL_REQUIRE_NO_ERROR);
       if (rv != SECSuccess) return false;
     }
 
     if (!cfg_.get<bool>("server")) {
       // Needed to make resumption work.
-      rv = SSL_SetURL(ssl_fd_, "server");
+      rv = SSL_SetURL(ssl_fd_.get(), "server");
       if (rv != SECSuccess) return false;
     }
 
-    rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_TRUE);
+    rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_EXTENDED_MASTER_SECRET,
+                       PR_TRUE);
     if (rv != SECSuccess) return false;
 
     if (!EnableNonExportCiphers()) return false;
@@ -376,7 +361,7 @@ class TestAgent {
         return false;
       }
 
-      rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], PR_TRUE);
+      rv = SSL_CipherPrefSet(ssl_fd_.get(), SSL_ImplementedCiphers[i], PR_TRUE);
       if (rv != SECSuccess) {
         return false;
       }
@@ -395,19 +380,19 @@ class TestAgent {
                                          CERTCertificate** cert,
                                          SECKEYPrivateKey** privKey) {
     TestAgent* a = static_cast<TestAgent*>(self);
-    *cert = CERT_DupCertificate(a->cert_);
-    *privKey = SECKEY_CopyPrivateKey(a->key_);
+    *cert = CERT_DupCertificate(a->cert_.get());
+    *privKey = SECKEY_CopyPrivateKey(a->key_.get());
     return SECSuccess;
   }
 
-  SECStatus Handshake() { return SSL_ForceHandshake(ssl_fd_); }
+  SECStatus Handshake() { return SSL_ForceHandshake(ssl_fd_.get()); }
 
   // Implement a trivial echo client/server. Read bytes from the other side,
   // flip all the bits, and send them back.
   SECStatus ReadWrite() {
     for (;;) {
       uint8_t block[512];
-      int32_t rv = PR_Read(ssl_fd_, block, sizeof(block));
+      int32_t rv = PR_Read(ssl_fd_.get(), block, sizeof(block));
       if (rv < 0) {
         std::cerr << "Failure reading\n";
         return SECFailure;
@@ -419,7 +404,7 @@ class TestAgent {
         block[i] ^= 0xff;
       }
 
-      rv = PR_Write(ssl_fd_, block, len);
+      rv = PR_Write(ssl_fd_.get(), block, len);
       if (rv != len) {
         std::cerr << "Write failure\n";
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
@@ -438,7 +423,7 @@ class TestAgent {
     // reader and writer.
     uint8_t block[600];
     memset(block, ch, sizeof(block));
-    int32_t rv = PR_Write(ssl_fd_, block, sizeof(block));
+    int32_t rv = PR_Write(ssl_fd_.get(), block, sizeof(block));
     if (rv != sizeof(block)) {
       std::cerr << "Write failure\n";
       PORT_SetError(SEC_ERROR_OUTPUT_LEN);
@@ -447,7 +432,7 @@ class TestAgent {
 
     size_t left = sizeof(block);
     while (left) {
-      rv = PR_Read(ssl_fd_, block, left);
+      rv = PR_Read(ssl_fd_.get(), block, left);
       if (rv < 0) {
         std::cerr << "Failure reading\n";
         return SECFailure;
@@ -501,7 +486,7 @@ class TestAgent {
       SSLNextProtoState state;
       char chosen[256];
       unsigned int chosen_len;
-      rv = SSL_GetNextProto(ssl_fd_, &state,
+      rv = SSL_GetNextProto(ssl_fd_.get(), &state,
                             reinterpret_cast<unsigned char*>(chosen),
                             &chosen_len, sizeof(chosen));
       if (rv != SECSuccess) {
@@ -521,7 +506,7 @@ class TestAgent {
     auto sig_alg = cfg_.get<int>("expect-peer-signature-algorithm");
     if (sig_alg) {
       SSLChannelInfo info;
-      rv = SSL_GetChannelInfo(ssl_fd_, &info, sizeof(info));
+      rv = SSL_GetChannelInfo(ssl_fd_.get(), &info, sizeof(info));
       if (rv != SECSuccess) {
         PRErrorCode err = PR_GetError();
         std::cerr << "SSL_GetChannelInfo failed with error=" << FormatError(err)
@@ -541,10 +526,10 @@ class TestAgent {
 
  private:
   const Config& cfg_;
-  PRFileDesc* pr_fd_;
-  PRFileDesc* ssl_fd_;
-  CERTCertificate* cert_;
-  SECKEYPrivateKey* key_;
+  ScopedPRFileDesc pr_fd_;
+  ScopedPRFileDesc ssl_fd_;
+  ScopedCERTCertificate cert_;
+  ScopedSECKEYPrivateKey key_;
 };
 
 std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
