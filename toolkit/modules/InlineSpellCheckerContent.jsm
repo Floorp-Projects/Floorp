@@ -21,8 +21,7 @@ var InlineSpellCheckerContent = {
     if (!(editFlags & (SpellCheckHelper.TEXTAREA | SpellCheckHelper.INPUT))) {
       // Get the editor off the window.
       let win = event.target.ownerGlobal;
-      let editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebNavigation)
+      let editingSession = win.docShell
                               .QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIEditingSession);
       spellChecker = this._spellChecker =

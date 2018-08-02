@@ -31,6 +31,7 @@ struct nsXPTInterfaceInfo;
 struct nsXPTType;
 struct nsXPTParamInfo;
 struct nsXPTMethodInfo;
+struct nsXPTConstantInfo;
 struct nsXPTDOMObjectInfo;
 
 // Internal helper methods.
@@ -41,8 +42,12 @@ inline const nsXPTInterfaceInfo* GetInterface(uint16_t aIndex);
 inline const nsXPTType& GetType(uint16_t aIndex);
 inline const nsXPTParamInfo& GetParam(uint16_t aIndex);
 inline const nsXPTMethodInfo& GetMethod(uint16_t aIndex);
+inline const nsXPTConstantInfo& GetConstant(uint16_t aIndex);
 inline const nsXPTDOMObjectInfo& GetDOMObjectInfo(uint16_t aIndex);
 inline const char* GetString(uint32_t aIndex);
+
+const nsXPTInterfaceInfo* InterfaceByIID(const nsIID& aIID);
+const nsXPTInterfaceInfo* InterfaceByName(const char* aName);
 
 extern const uint16_t sInterfacesSize;
 
@@ -57,8 +62,12 @@ extern const uint16_t sInterfacesSize;
 struct nsXPTInterfaceInfo
 {
   // High efficiency getters for Interfaces based on perfect hashes.
-  static const nsXPTInterfaceInfo* ByIID(const nsIID& aIID);
-  static const nsXPTInterfaceInfo* ByName(const char* aName);
+  static const nsXPTInterfaceInfo* ByIID(const nsIID& aIID) {
+    return xpt::detail::InterfaceByIID(aIID);
+  }
+  static const nsXPTInterfaceInfo* ByName(const char* aName) {
+    return xpt::detail::InterfaceByName(aName);
+  }
 
   // These are only needed for Components_interfaces's enumerator.
   static const nsXPTInterfaceInfo* ByIndex(uint16_t aIndex) {
@@ -69,7 +78,7 @@ struct nsXPTInterfaceInfo
 
 
   // Interface flag getters
-  bool IsScriptable() const { return true; } // XXX remove (backcompat)
+  bool IsScriptable() const { return true; } // XXX remove (bug 1480245)
   bool IsFunction() const { return mFunction; }
   bool IsBuiltinClass() const { return mBuiltinClass; }
   bool IsMainProcessScriptableOnly() const { return mMainProcessScriptableOnly; }
@@ -85,18 +94,16 @@ struct nsXPTInterfaceInfo
   // Do we have an ancestor interface with the given IID?
   bool HasAncestor(const nsIID& aIID) const;
 
-  // Constant Getters and Setters.
-  uint16_t ConstantCount() const;
-  const char* Constant(uint16_t aIndex, JS::MutableHandleValue aConst) const;
-
-  // Method Getters and Setters.
+  // Get methods & constants
+  uint16_t ConstantCount() const { return mNumConsts; }
+  const nsXPTConstantInfo& Constant(uint16_t aIndex) const;
   uint16_t MethodCount() const { return mNumMethods; }
   const nsXPTMethodInfo& Method(uint16_t aIndex) const;
 
 
-  //////////////////////////////////////////////
-  // nsIInterfaceInfo backwards compatibility //
-  //////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  // nsIInterfaceInfo backwards compatibility (bug 1480245) //
+  ////////////////////////////////////////////////////////////
 
   nsresult GetName(char** aName) const;
   nsresult IsScriptable(bool* aRes) const;
@@ -115,9 +122,7 @@ struct nsXPTInterfaceInfo
   nsresult HasAncestor(const nsIID* aIID, bool* aRetval) const;
   nsresult IsMainProcessScriptableOnly(bool* aRetval) const;
 
-  // XXX: We can probably get away with removing this method. A shim interface
-  // _should_ never show up in code which calls EnsureResolved().
-  bool EnsureResolved() const { return !mIsShim; }
+  bool EnsureResolved() const { return true; } // XXX: Remove (bug 1480245)
 
   ////////////////////////////////////////////////////////////////
   // Ensure these fields are in the same order as xptcodegen.py //
@@ -134,8 +139,8 @@ struct nsXPTInterfaceInfo
   uint16_t mMethods; // Index into xpt::detail::sMethods
 
   uint16_t mConsts : 14; // Index into xpt::detail::sConsts
-  uint16_t mIsShim : 1; // Is this interface a WebIDL shim?
   uint16_t mFunction : 1;
+  // uint16_t unused : 1;
 
   uint8_t mNumMethods; // NOTE(24/04/18): largest=nsIDocShell (193)
   uint8_t mNumConsts; // NOTE(24/04/18): largest=nsIAccessibleRole (175)
@@ -500,6 +505,36 @@ struct nsXPTMethodInfo
 static_assert(sizeof(nsXPTMethodInfo) == 8, "wrong size");
 
 /**
+ * A nsXPTConstantInfo is used to describe a single interface constant.
+ */
+struct nsXPTConstantInfo
+{
+  const char* Name() const {
+    return xpt::detail::GetString(mName);
+  }
+
+  JS::Value JSValue() const {
+    if (mSigned || mValue <= uint32_t(INT32_MAX)) {
+      return JS::Int32Value(int32_t(mValue));
+    }
+    return JS::DoubleValue(mValue);
+  }
+
+  ////////////////////////////////////////////////////////////////
+  // Ensure these fields are in the same order as xptcodegen.py //
+  ////////////////////////////////////////////////////////////////
+
+  uint32_t mName : 31; // Index into xpt::detail::mStrings.
+
+  // Whether the value should be interpreted as a int32_t or uint32_t.
+  uint32_t mSigned: 1;
+  uint32_t mValue; // The value stored as a u32
+};
+
+// The fields in nsXPTConstantInfo were carefully ordered to minimize size.
+static_assert(sizeof(nsXPTConstantInfo) == 8, "wrong size");
+
+/**
  * Object representing the information required to wrap and unwrap DOMObjects.
  *
  * This object will not live in rodata as it contains relocations.
@@ -559,26 +594,6 @@ public:
   }
 };
 
-/**
- * The compressed representation of constants from XPT. Not part of the public
- * interface, as we also need to support Shim interfaces.
- */
-struct ConstInfo
-{
-  ////////////////////////////////////////////////////////////////
-  // Ensure these fields are in the same order as xptcodegen.py //
-  ////////////////////////////////////////////////////////////////
-
-  uint32_t mName : 31; // Index into xpt::detail::mStrings.
-
-  // Whether the value should be interpreted as a int32_t or uint32_t.
-  uint32_t mSigned: 1;
-  uint32_t mValue; // The value stored as a u32
-};
-
-// The fields in ConstInfo were carefully ordered to minimize size.
-static_assert(sizeof(ConstInfo) == 8, "wrong size");
-
 
 //////////////////////////////////////////////
 // Raw typelib data stored in const statics //
@@ -589,19 +604,10 @@ extern const nsXPTInterfaceInfo sInterfaces[];
 extern const nsXPTType sTypes[];
 extern const nsXPTParamInfo sParams[];
 extern const nsXPTMethodInfo sMethods[];
+extern const nsXPTConstantInfo sConsts[];
 extern const nsXPTDOMObjectInfo sDOMObjects[];
 
 extern const char sStrings[];
-extern const ConstInfo sConsts[];
-
-// shim constant information
-extern const mozilla::dom::NativePropertyHooks* sPropHooks[];
-
-// Perfect Hash Function backing data
-static const uint16_t kPHFSize = 512;
-extern const uint32_t sPHF_IIDs[]; // Length == kPHFSize
-extern const uint32_t sPHF_Names[]; // Length == kPHFSize
-extern const uint16_t sPHF_NamesIdxs[]; // Length == sInterfacesSize
 
 
 //////////////////////////////////////
@@ -633,6 +639,12 @@ inline const nsXPTMethodInfo&
 GetMethod(uint16_t aIndex)
 {
   return sMethods[aIndex];
+}
+
+inline const nsXPTConstantInfo&
+GetConstant(uint16_t aIndex)
+{
+  return sConsts[aIndex];
 }
 
 inline const nsXPTDOMObjectInfo&

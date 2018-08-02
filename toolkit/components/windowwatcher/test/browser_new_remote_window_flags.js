@@ -16,14 +16,12 @@ add_task(async function setup() {
 });
 
 function assertFlags(win) {
-  let webNav = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation);
-  let loadContext = webNav.QueryInterface(Ci.nsILoadContext);
-  let chromeFlags = webNav.QueryInterface(Ci.nsIDocShellTreeItem)
-                          .treeOwner
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIXULWindow)
-                          .chromeFlags;
+  let docShell = win.docShell;
+  let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
+  let chromeFlags = docShell.treeOwner
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIXULWindow)
+                            .chromeFlags;
   Assert.ok(loadContext.useRemoteTabs,
             "Should be using remote tabs on the load context");
   Assert.ok(chromeFlags & Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW,

@@ -92,9 +92,7 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
 }
 
 function CustomizedReload(params) {
-  this.docShell = params.targetActor.window
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDocShell);
+  this.docShell = params.targetActor.window.docShell;
   this.docShell.QueryInterface(Ci.nsIWebProgress);
 
   this.inspectedWindowEval = params.inspectedWindowEval;
@@ -173,9 +171,7 @@ CustomizedReload.prototype = {
       return;
     }
 
-    const subjectDocShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIDocShell);
+    const subjectDocShell = window.docShell;
 
     // Keep track of the set of window objects where we are going to inject
     // the injectedScript: the top level window and all its descendant

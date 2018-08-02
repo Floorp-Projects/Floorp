@@ -1690,11 +1690,7 @@ var SessionStoreInternal = {
       // We have to wait for these messages to come up from
       // each window and each browser. In the meantime, hide
       // the windows to improve perceived shutdown speed.
-      let baseWin = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDocShell)
-                          .QueryInterface(Ci.nsIDocShellTreeItem)
-                          .treeOwner
-                          .QueryInterface(Ci.nsIBaseWindow);
+      let baseWin = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
       baseWin.visibility = false;
     }
 
@@ -4473,7 +4469,7 @@ var SessionStoreInternal = {
         }
         // Width and height attribute report the inner size, but we want
         // to store the outer size, so add the difference.
-        let xulWin = aWindow.getInterface(Ci.nsIDocShell)
+        let xulWin = aWindow.docShell
                             .treeOwner
                             .QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIXULWindow);

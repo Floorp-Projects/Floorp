@@ -37,15 +37,6 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         }
         return IPC_OK();
     }
-    mozilla::ipc::IPCResult RecvGetPropertyDescriptor(const uint64_t& objId, const JSIDVariant& id,
-                                                      ReturnStatus* rs,
-                                                      PPropertyDescriptor* out) override {
-        Maybe<ObjectId> obj(ObjectId::deserialize(objId));
-        if (obj.isNothing() || !Answer::RecvGetPropertyDescriptor(obj.value(), id, rs, out)) {
-            return IPC_FAIL_NO_REASON(this);
-        }
-        return IPC_OK();
-    }
     mozilla::ipc::IPCResult RecvGetOwnPropertyDescriptor(const uint64_t& objId,
                                                          const JSIDVariant& id,
                                                          ReturnStatus* rs,
@@ -215,11 +206,6 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     }
     bool SendPreventExtensions(const ObjectId& objId, ReturnStatus* rs) override {
         return Base::SendPreventExtensions(objId.serialize(), rs);
-    }
-    bool SendGetPropertyDescriptor(const ObjectId& objId, const JSIDVariant& id,
-                                   ReturnStatus* rs,
-                                   PPropertyDescriptor* out) override {
-        return Base::SendGetPropertyDescriptor(objId.serialize(), id, rs, out);
     }
     bool SendGetOwnPropertyDescriptor(const ObjectId& objId,
                                       const JSIDVariant& id,

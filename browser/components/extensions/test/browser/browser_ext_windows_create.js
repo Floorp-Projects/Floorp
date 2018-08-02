@@ -118,8 +118,7 @@ add_task(async function testWindowCreate() {
          "Got expected hidden chrome");
     }
     if (expected.chromeFlags) {
-      let {chromeFlags} = latestWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIDocShell)
+      let {chromeFlags} = latestWindow.docShell
                                       .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
                                       .getInterface(Ci.nsIXULWindow);
       for (let flag of expected.chromeFlags) {

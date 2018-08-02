@@ -258,7 +258,7 @@ var E10SUtils = {
 
   shouldLoadURI(aDocShell, aURI, aReferrer, aHasPostData) {
     // Inner frames should always load in the current process
-    if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
+    if (aDocShell.sameTypeParent)
       return true;
 
     // If we are in a Large-Allocation process, and it wouldn't be content visible

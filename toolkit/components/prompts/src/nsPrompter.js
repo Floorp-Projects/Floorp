@@ -288,10 +288,8 @@ var PromptUtilsTemp = {
 
             // Get the chrome window for the content window we're using.
             // (Unwrap because we need a non-IDL property below.)
-            var chromeWin = promptWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIWebNavigation)
-                                     .QueryInterface(Ci.nsIDocShell)
-                                     .chromeEventHandler.ownerGlobal.wrappedJSObject;
+            var chromeWin =
+                promptWin.docShell.chromeEventHandler.ownerGlobal.wrappedJSObject;
 
             if (chromeWin.getTabModalPromptBox)
                 promptBox = chromeWin.getTabModalPromptBox(promptWin);
@@ -353,8 +351,7 @@ function openModalWindow(domWin, uri, args) {
 }
 
 function openTabPrompt(domWin, tabPrompt, args) {
-    let docShell = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell);
+    let docShell = domWin.docShell;
     let inPermitUnload = docShell.contentViewer && docShell.contentViewer.inPermitUnload;
     let eventDetail = Cu.cloneInto({tabPrompt: true, inPermitUnload}, domWin);
     PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog", null, eventDetail);
@@ -428,8 +425,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
 }
 
 function openRemotePrompt(domWin, args, tabPrompt) {
-    let docShell = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell);
+    let docShell = domWin.docShell;
     let messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsITabChild)
                                  .messageManager;

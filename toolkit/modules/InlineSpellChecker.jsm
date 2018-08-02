@@ -419,8 +419,7 @@ var SpellCheckHelper = {
       if (win) {
         var isSpellcheckable = false;
         try {
-          var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIWebNavigation)
+          var editingSession = win.docShell
                                   .QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIEditingSession);
           if (editingSession.windowIsEditable(win) &&

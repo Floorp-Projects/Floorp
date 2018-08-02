@@ -52,8 +52,7 @@
     let opened = parseInt(location.search.substring(1), 10);
     let delta = presented - opened;
 
-    let mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
+    let mm = window.docShell
                    .QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIContentFrameMessageManager);
 

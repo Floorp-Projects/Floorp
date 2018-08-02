@@ -33,10 +33,7 @@ function waitForAnimationFrames(frameCount) {
 
 function observeStyling(frameCount) {
   var Ci = SpecialPowers.Ci;
-  var docShell =
-    SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebNavigation)
-                              .QueryInterface(Ci.nsIDocShell);
+  var docShell = SpecialPowers.wrap(window).docShell;
 
   docShell.recordProfileTimelineMarkers = true;
   docShell.popProfileTimelineMarkers();

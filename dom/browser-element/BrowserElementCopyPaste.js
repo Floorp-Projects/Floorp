@@ -108,9 +108,7 @@ var CopyPasteAssistent = {
       detail.rect.right += currentRect.left;
       currentWindow = currentWindow.realFrameElement.ownerGlobal;
 
-      let targetDocShell = currentWindow
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation);
+      let targetDocShell = currentWindow.docShell;
       if(targetDocShell.isMozBrowser) {
         break;
       }

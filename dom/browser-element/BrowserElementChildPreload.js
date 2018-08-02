@@ -742,9 +742,7 @@ BrowserElementChild.prototype = {
   },
 
   _windowCreatedHandler: function(e) {
-    let targetDocShell = e.target.defaultView
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation);
+    let targetDocShell = e.target.defaultView.docShell;
     if (targetDocShell != docShell) {
       return;
     }

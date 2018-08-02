@@ -37,11 +37,7 @@ SimpleTest.waitForFocus(function() {
 
   onSpellCheck(elem, function () {
     var Ci = SpecialPowers.Ci;
-    var editingSession = SpecialPowers.wrap(window)
-                                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIWebNavigation)
-                                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIEditingSession);
+    var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
     var editor = editingSession.getEditorForWindow(window);
     var selcon = editor.selectionController;
     var sel = selcon.getSelection(selcon.SELECTION_SPELLCHECK);

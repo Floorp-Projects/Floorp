@@ -5,9 +5,8 @@ add_task(async function duplicateTab() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
-    let docshell = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell);
+    let docshell = content.window.docShell
+                                 .QueryInterface(Ci.nsIWebNavigation);
     let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0, false);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
   });
@@ -16,9 +15,8 @@ add_task(async function duplicateTab() {
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   await ContentTask.spawn(tab2.linkedBrowser, null, function() {
-    let docshell = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell);
+    let docshell = content.window.docShell
+                                 .QueryInterface(Ci.nsIWebNavigation);
     let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0, false);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
   });
@@ -34,9 +32,8 @@ add_task(async function contentToChromeNavigate() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
-    let docshell = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell);
+    let docshell = content.window.docShell
+                                 .QueryInterface(Ci.nsIWebNavigation);
     let sh = docshell.sessionHistory;
     is(sh.count, 1);
     is(sh.legacySHistory.getEntryAtIndex(0, false).docshellID.toString(), docshell.historyID.toString());

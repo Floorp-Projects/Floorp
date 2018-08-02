@@ -12,8 +12,7 @@ nsSidebar.prototype = {
   init(window) {
     this.window = window;
     try {
-      this.mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDocShell)
+      this.mm = window.docShell
                       .QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIContentFrameMessageManager);
     } catch (e) {

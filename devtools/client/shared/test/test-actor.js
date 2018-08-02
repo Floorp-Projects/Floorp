@@ -454,9 +454,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
         resolve();
       }
 
-      const docShell = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell);
+      const docShell = this.content.docShell;
       docShell.contentViewer.fullZoom = level;
     });
   },

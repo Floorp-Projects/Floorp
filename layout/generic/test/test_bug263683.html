@@ -52,8 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
         var noHighlight = snapshotWindow(window);
 
         var controller = SpecialPowers.wrap(window).
-           QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-           getInterface(SpecialPowers.Ci.nsIWebNavigation).
+           docShell.
            QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
            getInterface(SpecialPowers.Ci.nsISelectionDisplay).
            QueryInterface(SpecialPowers.Ci.nsISelectionController);

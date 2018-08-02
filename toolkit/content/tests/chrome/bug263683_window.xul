@@ -163,10 +163,7 @@
         // Check the iframe too:
         let frame = content.document.getElementById("leframe");
         // Hoops! Get the docShell first, then the selection.
-        selection = getSelection(frame.contentWindow
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShell));
+        selection = getSelection(frame.contentWindow.docShell);
         Assert.equal(selection.rangeCount, 1,
           "Correctly added a match to the selection type");
         Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
@@ -192,10 +189,7 @@
         // Check the iframe too:
         let frame = content.document.getElementById("leframe");
         // Hoops! Get the docShell first, then the selection.
-        selection = getSelection(frame.contentWindow
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShell));
+        selection = getSelection(frame.contentWindow.docShell);
         Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
 
         content.document.documentElement.focus();

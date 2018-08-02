@@ -26,25 +26,18 @@ var tests = [
   // downloadable stops loading.
   function basic() {
     var iframe = insertIframe();
-    docshellForWindow(iframe.contentWindow).allowContentRetargeting = false;
+    iframe.contentWindow.docShell.allowContentRetargeting = false;
     loadIframe(iframe);
   },
 
   // Set allowContentRetargeting = false on parent docshell, load a downloadable
   // URL, verify the downloadable stops loading.
   function inherit() {
-    var docshell = docshellForWindow(window);
+    var docshell = window.docShell;
     docshell.allowContentRetargeting = false;
     loadIframe(insertIframe());
   },
 ];
-
-function docshellForWindow(win) {
-  return win.
-         QueryInterface(Ci.nsIInterfaceRequestor).
-         getInterface(Ci.nsIWebNavigation).
-         QueryInterface(Ci.nsIDocShell);
-}
 
 function insertIframe() {
   var iframe = document.createElement("iframe");
@@ -54,7 +47,7 @@ function insertIframe() {
 
 function loadIframe(iframe) {
   iframe.setAttribute("src", TEST_URL);
-  docshellForWindow(iframe.contentWindow).
+  iframe.contentWindow.docShell.
     QueryInterface(Ci.nsIInterfaceRequestor).
     getInterface(Ci.nsIWebProgress).
     addProgressListener(progressListener,

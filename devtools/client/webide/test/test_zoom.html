@@ -20,10 +20,7 @@
 
         (async function() {
           let win = await openWebIDE();
-          let viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
-                            .QueryInterface(Ci.nsIDocShell)
-                            .contentViewer;
+          let viewer = win.docShell.contentViewer;
 
           win.Cmds.zoomOut();
           win.Cmds.zoomOut();
@@ -55,10 +52,7 @@
           await closeWebIDE(win);
 
           win = await openWebIDE();
-          viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell)
-                        .contentViewer;
+          viewer = win.docShell.contentViewer;
 
           roundZoom = Math.round(10 * viewer.fullZoom) / 10;
           is(roundZoom, 1.4, "Zoom restored");

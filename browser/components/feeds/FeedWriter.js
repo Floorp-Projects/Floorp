@@ -76,8 +76,7 @@ function FeedWriter() {
   Services.telemetry.scalarAdd("browser.feeds.preview_loaded", 1);
 
   XPCOMUtils.defineLazyGetter(this, "_mm", () =>
-    this._window.QueryInterface(Ci.nsIInterfaceRequestor).
-                 getInterface(Ci.nsIDocShell).
+    this._window.docShell.
                  QueryInterface(Ci.nsIInterfaceRequestor).
                  getInterface(Ci.nsIContentFrameMessageManager));
 }
@@ -710,9 +709,7 @@ FeedWriter.prototype = {
    *        The window of the document invoking the BrowserFeedWriter
    */
   _getOriginalURI(aWindow) {
-    let docShell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
+    let docShell = aWindow.docShell;
     let chan = docShell.currentDocumentChannel;
 
     // We probably need to call Inherit() for this, but right now we can't call

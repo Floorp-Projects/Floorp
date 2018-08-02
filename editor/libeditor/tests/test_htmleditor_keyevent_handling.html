@@ -609,10 +609,7 @@ function runTests()
   doTest(htmlEditor, "contenteditable=\"true\"", false, true, false);
 
   const nsIPlaintextEditor = SpecialPowers.Ci.nsIPlaintextEditor;
-  var editor = SpecialPowers.wrap(window).
-      QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-      getInterface(SpecialPowers.Ci.nsIWebNavigation).
-      QueryInterface(SpecialPowers.Ci.nsIDocShell).editor;
+  var editor = SpecialPowers.wrap(window).docShell.editor;
   var flags = editor.flags;
   // readonly
   editor.flags = flags | nsIPlaintextEditor.eEditorReadonlyMask;
