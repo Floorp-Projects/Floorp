@@ -222,6 +222,9 @@ enum JSWhyMagic
     /** standard constructors are not created for off-thread parsing. */
     JS_OFF_THREAD_CONSTRUCTOR,
 
+    /** used in jit::TrySkipAwait */
+    JS_CANNOT_SKIP_AWAIT,
+
     /** for local use */
     JS_GENERIC_MAGIC,
 

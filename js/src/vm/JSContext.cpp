@@ -1045,6 +1045,7 @@ InternalEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job,
                                   JS::HandleObject incumbentGlobal, void* data)
 {
     MOZ_ASSERT(job);
+    JS::JobQueueMayNotBeEmpty(cx);
     if (!cx->jobQueue->append(job)) {
         ReportOutOfMemory(cx);
         return false;
@@ -1098,6 +1099,7 @@ JS_FRIEND_API(bool)
 js::EnqueueJob(JSContext* cx, JS::HandleObject job)
 {
     MOZ_ASSERT(cx->jobQueue);
+    JS::JobQueueMayNotBeEmpty(cx);
     if (!cx->jobQueue->append(job)) {
         ReportOutOfMemory(cx);
         return false;
@@ -1153,6 +1155,12 @@ js::RunJobs(JSContext* cx)
                 continue;
 
             cx->jobQueue->get()[i] = nullptr;
+
+            // If the next job is the last job in the job queue, allow
+            // skipping the standard job queuing behavior.
+            if (i == cx->jobQueue->length() - 1)
+                JS::JobQueueIsEmpty(cx);
+
             AutoRealm ar(cx, job);
             {
                 if (!JS::Call(cx, UndefinedHandleValue, job, args, &rval)) {
@@ -1296,6 +1304,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     jobQueue(nullptr),
     drainingJobQueue(false),
     stopDrainingJobQueue(false),
+    canSkipEnqueuingJobs(false),
     promiseRejectionTrackerCallback(nullptr),
     promiseRejectionTrackerCallbackData(nullptr)
 {

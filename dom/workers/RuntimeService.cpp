@@ -1139,6 +1139,7 @@ public:
       microTaskQueue = &GetDebuggerMicroTaskQueue();
     }
 
+    JS::JobQueueMayNotBeEmpty(cx);
     microTaskQueue->push(runnable.forget());
   }
 
