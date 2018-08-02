@@ -20,9 +20,8 @@ class DelayBuffer final
 
 public:
   explicit DelayBuffer(double aMaxDelayTicks)
-    : mCurrentDelay(-1.0)
     // Round the maximum delay up to the next tick.
-    , mMaxDelayTicks(ceil(aMaxDelayTicks))
+    : mMaxDelayTicks(ceil(aMaxDelayTicks))
     , mCurrentChunk(0)
     // mLastReadChunk is initialized in EnsureBuffer
 #ifdef DEBUG
@@ -69,7 +68,6 @@ public:
 
   void Reset() {
     mChunks.Clear();
-    mCurrentDelay = -1.0;
   };
 
   int MaxDelayTicks() const { return mMaxDelayTicks; }
@@ -93,8 +91,6 @@ private:
   FallibleTArray<AudioChunk> mChunks;
   // Cache upmixed channel arrays.
   AutoTArray<const float*,GUESS_AUDIO_CHANNELS> mUpmixChannels;
-  // Current delay, in fractional ticks
-  double mCurrentDelay;
   // Maximum delay, in ticks
   int mMaxDelayTicks;
   // The current position in the circular buffer.  The next write will be to
