@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ProcessGlobal_h
-#define mozilla_dom_ProcessGlobal_h
+#ifndef mozilla_dom_ContentProcessMessageManager_h
+#define mozilla_dom_ContentProcessMessageManager_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/MessageManagerGlobal.h"
@@ -29,7 +29,14 @@ namespace ipc {
   class SharedMap;
 }
 
-class ProcessGlobal :
+/**
+ * This class implements a singleton process message manager for content
+ * processes. Each child process has exactly one instance of this class, which
+ * hosts the process's process scripts, and may exchange messages with its
+ * corresponding ParentProcessMessageManager on the parent side.
+ */
+
+class ContentProcessMessageManager :
   public nsIMessageSender,
   public nsMessageManagerScriptExecutor,
   public nsIGlobalObject,
@@ -40,7 +47,7 @@ class ProcessGlobal :
   public nsWrapperCache
 {
 public:
-  explicit ProcessGlobal(nsFrameMessageManager* aMessageManager);
+  explicit ContentProcessMessageManager(nsFrameMessageManager* aMessageManager);
 
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                  JS::Handle<jsid> aId,
@@ -54,11 +61,11 @@ public:
 
   bool Init();
 
-  static ProcessGlobal* Get();
+  static ContentProcessMessageManager* Get();
   static bool WasCreated();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ProcessGlobal, nsIMessageSender)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ContentProcessMessageManager, nsIMessageSender)
 
   void MarkForCC();
 
@@ -108,7 +115,7 @@ public:
   void SetInitialProcessData(JS::HandleValue aInitialData);
 
 protected:
-  virtual ~ProcessGlobal();
+  virtual ~ContentProcessMessageManager();
 
 private:
   bool mInitialized;
@@ -119,4 +126,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_ProcessGlobal_h
+#endif // mozilla_dom_ContentProcessMessageManager_h
