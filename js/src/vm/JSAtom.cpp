@@ -561,7 +561,7 @@ AtomsTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     size_t size = sizeof(AtomsTable);
     for (size_t i = 0; i < PartitionCount; i++) {
         size += sizeof(Partition);
-        size += partitions[i]->atoms.sizeOfExcludingThis(mallocSizeOf);
+        size += partitions[i]->atoms.shallowSizeOfExcludingThis(mallocSizeOf);
     }
     return size;
 }

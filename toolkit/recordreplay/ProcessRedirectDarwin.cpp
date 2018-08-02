@@ -152,6 +152,7 @@ namespace recordreplay {
   MACRO(sandbox_init_with_parameters)           \
   MACRO(vm_copy)                                \
   MACRO(vm_purgable_control)                    \
+  MACRO(tzset)                                  \
   /* NSPR functions */                          \
   MACRO(PL_NewHashTable)                        \
   MACRO(PL_HashTableDestroy)                    \
@@ -1439,6 +1440,12 @@ RR_arc4random()
 static uint64_t
 RR_mach_absolute_time()
 {
+  // This function might be called through OSSpinLock while setting gTlsThreadKey.
+  Thread* thread = Thread::GetByStackPointer(&thread);
+  if (!thread || thread->PassThroughEvents()) {
+    return OriginalCall(mach_absolute_time, uint64_t);
+  }
+
   RecordReplayFunction(mach_absolute_time, uint64_t);
   events.RecordOrReplayValue(&rval);
   return rval;
@@ -1545,6 +1552,8 @@ RR_vm_copy(vm_map_t aTarget, vm_address_t aSourceAddress,
   memcpy((void*) aDestAddress, (void*) aSourceAddress, aSize);
   return KERN_SUCCESS;
 }
+
+RRFunctionVoid0(tzset)
 
 ///////////////////////////////////////////////////////////////////////////////
 // NSPR redirections

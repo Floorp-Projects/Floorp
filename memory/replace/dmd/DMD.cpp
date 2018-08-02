@@ -606,9 +606,9 @@ public:
   SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
     size_t n = 0;
-    n += mSet.sizeOfExcludingThis(aMallocSizeOf);
-    for (auto r = mSet.all(); !r.empty(); r.popFront()) {
-      n += aMallocSizeOf(r.front());
+    n += mSet.shallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto iter = mSet.iter(); !iter.done(); iter.next()) {
+      n += aMallocSizeOf(iter.get());
     }
     return n;
   }
@@ -1134,12 +1134,12 @@ GatherUsedStackTraces(StackTraceSet& aStackTraces)
   aStackTraces.finish();
   MOZ_ALWAYS_TRUE(aStackTraces.init(512));
 
-  for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
-    r.front().AddStackTracesToTable(aStackTraces);
+  for (auto iter = gLiveBlockTable->iter(); !iter.done(); iter.next()) {
+    iter.get().AddStackTracesToTable(aStackTraces);
   }
 
-  for (auto r = gDeadBlockTable->all(); !r.empty(); r.popFront()) {
-    r.front().key().AddStackTracesToTable(aStackTraces);
+  for (auto iter = gDeadBlockTable->iter(); !iter.done(); iter.next()) {
+    iter.get().key().AddStackTracesToTable(aStackTraces);
   }
 }
 
@@ -1153,12 +1153,12 @@ GCStackTraces()
   StackTraceSet usedStackTraces;
   GatherUsedStackTraces(usedStackTraces);
 
-  // Delete all unused stack traces from gStackTraceTable.  The Enum destructor
-  // will automatically rehash and compact the table.
-  for (StackTraceTable::Enum e(*gStackTraceTable); !e.empty(); e.popFront()) {
-    StackTrace* const& st = e.front();
+  // Delete all unused stack traces from gStackTraceTable.  The ModIterator
+  // destructor will automatically rehash and compact the table.
+  for (auto iter = gStackTraceTable->modIter(); !iter.done(); iter.next()) {
+    StackTrace* const& st = iter.get();
     if (!usedStackTraces.has(st)) {
-      e.removeFront();
+      iter.remove();
       InfallibleAllocPolicy::delete_(st);
     }
   }
@@ -1661,8 +1661,8 @@ SizeOfInternal(Sizes* aSizes)
   StackTraceSet usedStackTraces;
   GatherUsedStackTraces(usedStackTraces);
 
-  for (auto r = gStackTraceTable->all(); !r.empty(); r.popFront()) {
-    StackTrace* const& st = r.front();
+  for (auto iter = gStackTraceTable->iter(); !iter.done(); iter.next()) {
+    StackTrace* const& st = iter.get();
 
     if (usedStackTraces.has(st)) {
       aSizes->mStackTracesUsed += MallocSizeOf(st);
@@ -1672,11 +1672,13 @@ SizeOfInternal(Sizes* aSizes)
   }
 
   aSizes->mStackTraceTable =
-    gStackTraceTable->sizeOfIncludingThis(MallocSizeOf);
+    gStackTraceTable->shallowSizeOfIncludingThis(MallocSizeOf);
 
-  aSizes->mLiveBlockTable = gLiveBlockTable->sizeOfIncludingThis(MallocSizeOf);
+  aSizes->mLiveBlockTable =
+    gLiveBlockTable->shallowSizeOfIncludingThis(MallocSizeOf);
 
-  aSizes->mDeadBlockTable = gDeadBlockTable->sizeOfIncludingThis(MallocSizeOf);
+  aSizes->mDeadBlockTable =
+    gDeadBlockTable->shallowSizeOfIncludingThis(MallocSizeOf);
 }
 
 void
@@ -1701,8 +1703,8 @@ DMDFuncs::ClearReports()
   // Unreport all blocks that were marked reported by a memory reporter.  This
   // excludes those that were reported on allocation, because they need to keep
   // their reported marking.
-  for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
-    r.front().UnreportIfNotReportedOnAlloc();
+  for (auto iter = gLiveBlockTable->iter(); !iter.done(); iter.next()) {
+    iter.get().UnreportIfNotReportedOnAlloc();
   }
 }
 
@@ -1732,7 +1734,7 @@ public:
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return mIdMap.sizeOfExcludingThis(aMallocSizeOf);
+    return mIdMap.shallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
 private:
@@ -1910,8 +1912,8 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
         // their address. Aggregate them to reduce the size of the output file.
         AggregatedLiveBlockTable agg;
         MOZ_ALWAYS_TRUE(agg.init(8192));
-        for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
-          const LiveBlock& b = r.front();
+        for (auto iter = gLiveBlockTable->iter(); !iter.done(); iter.next()) {
+          const LiveBlock& b = iter.get();
           b.AddStackTracesToTable(usedStackTraces);
 
           if (AggregatedLiveBlockTable::AddPtr p = agg.lookupForAdd(&b)) {
@@ -1922,17 +1924,17 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
         }
 
         // Now iterate over the aggregated table.
-        for (auto r = agg.all(); !r.empty(); r.popFront()) {
-          const LiveBlock& b = *r.front().key();
-          size_t num = r.front().value();
+        for (auto iter = agg.iter(); !iter.done(); iter.next()) {
+          const LiveBlock& b = *iter.get().key();
+          size_t num = iter.get().value();
           writeLiveBlock(b, num);
         }
 
       } else {
         // In scan mode we cannot aggregate because we print each live block's
         // address and contents.
-        for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
-          const LiveBlock& b = r.front();
+        for (auto iter = gLiveBlockTable->iter(); !iter.done(); iter.next()) {
+          const LiveBlock& b = iter.get();
           b.AddStackTracesToTable(usedStackTraces);
 
           writeLiveBlock(b, 1);
@@ -1940,11 +1942,11 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
       }
 
       // Dead blocks.
-      for (auto r = gDeadBlockTable->all(); !r.empty(); r.popFront()) {
-        const DeadBlock& b = r.front().key();
+      for (auto iter = gDeadBlockTable->iter(); !iter.done(); iter.next()) {
+        const DeadBlock& b = iter.get().key();
         b.AddStackTracesToTable(usedStackTraces);
 
-        size_t num = r.front().value();
+        size_t num = iter.get().value();
         MOZ_ASSERT(num > 0);
 
         writer.StartObjectElement(writer.SingleLineStyle);
@@ -1970,8 +1972,8 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
 
     writer.StartObjectProperty("traceTable");
     {
-      for (auto r = usedStackTraces.all(); !r.empty(); r.popFront()) {
-        const StackTrace* const st = r.front();
+      for (auto iter = usedStackTraces.iter(); !iter.done(); iter.next()) {
+        const StackTrace* const st = iter.get();
         writer.StartArrayProperty(isc.ToIdString(st), writer.SingleLineStyle);
         {
           for (uint32_t i = 0; i < st->Length(); i++) {
@@ -1992,8 +1994,8 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
       static const size_t locBufLen = 1024;
       char locBuf[locBufLen];
 
-      for (PointerSet::Enum e(usedPcs); !e.empty(); e.popFront()) {
-        const void* const pc = e.front();
+      for (auto iter = usedPcs.iter(); !iter.done(); iter.next()) {
+        const void* const pc = iter.get();
 
         // Use 0 for the frame number. See the JSON format description comment
         // in DMD.h to understand why.
@@ -2047,9 +2049,10 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
     StatusMsg("      Location service:      %10s bytes\n",
       Show(locService->SizeOfIncludingThis(MallocSizeOf), buf1, kBufLen));
     StatusMsg("      Used stack traces set: %10s bytes\n",
-      Show(usedStackTraces.sizeOfExcludingThis(MallocSizeOf), buf1, kBufLen));
+      Show(usedStackTraces.shallowSizeOfExcludingThis(MallocSizeOf), buf1,
+           kBufLen));
     StatusMsg("      Used PCs set:          %10s bytes\n",
-      Show(usedPcs.sizeOfExcludingThis(MallocSizeOf), buf1, kBufLen));
+      Show(usedPcs.shallowSizeOfExcludingThis(MallocSizeOf), buf1, kBufLen));
     StatusMsg("      Pointer ID map:        %10s bytes\n",
       Show(iscSize, buf1, kBufLen));
 

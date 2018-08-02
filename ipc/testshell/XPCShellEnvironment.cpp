@@ -387,7 +387,7 @@ XPCShellEnvironment::~XPCShellEnvironment()
         Rooted<JSObject*> global(cx, GetGlobalObject());
 
         {
-            JSAutoRealmAllowCCW ar(cx, global);
+            JSAutoRealm ar(cx, global);
             JS_SetAllNonReservedSlotsToUndefined(cx, global);
         }
         mGlobalHolder.reset();
@@ -448,7 +448,7 @@ XPCShellEnvironment::Init()
         NS_ERROR("Failed to get global JSObject!");
         return false;
     }
-    JSAutoRealmAllowCCW ar(cx, globalObj);
+    JSAutoRealm ar(cx, globalObj);
 
     backstagePass->SetGlobalObject(globalObj);
 

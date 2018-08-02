@@ -2967,10 +2967,13 @@ xpc::CloneInto(JSContext* aCx, HandleValue aValue, HandleValue aScope,
     if (aOptions.isObject() && !options.Parse())
         return false;
 
+    js::AssertSameCompartment(aCx, aValue);
+    RootedObject sourceScope(aCx, JS::CurrentGlobalOrNull(aCx));
+
     {
         JSAutoRealm ar(aCx, scope);
         aCloned.set(aValue);
-        if (!StackScopedClone(aCx, options, aCloned))
+        if (!StackScopedClone(aCx, options, sourceScope, aCloned))
             return false;
     }
 

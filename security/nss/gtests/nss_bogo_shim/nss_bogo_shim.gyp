@@ -37,6 +37,7 @@
         '<(DEPTH)/lib/freebl/freebl.gyp:freebl',
         '<(DEPTH)/lib/zlib/zlib.gyp:nss_zlib',
         '<(DEPTH)/lib/libpkix/libpkix.gyp:libpkix',
+        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
       ],
       'conditions': [
         [ 'disable_dbm==0', {

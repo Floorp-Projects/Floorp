@@ -1004,8 +1004,6 @@ class JSScript : public js::gc::TenuredCell
     // Unique Method ID passed to the VTune profiler, or 0 if unset.
     // Allows attribution of different jitcode to the same source script.
     uint32_t vtuneMethodId_ = 0;
-    // Extra padding to maintain JSScript as a multiple of gc::CellAlignBytes.
-    uint32_t __vtune_unused_padding_;
 #endif
 
     // Number of times the script has been called or has had backedges taken.
@@ -1183,13 +1181,6 @@ class JSScript : public js::gc::TenuredCell
         // True if the debugger's onNewScript hook has not yet been called.
         bool hideScriptFromDebugger_ : 1;
     } bitFields_;
-
-    // Add padding so JSScript is gc::Cell aligned. Make padding protected
-    // instead of private to suppress -Wunused-private-field compiler warnings.
-  protected:
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding_;
-#endif
 
     //
     // End of fields.  Start methods.
@@ -2245,13 +2236,6 @@ class LazyScript : public gc::TenuredCell
 
     // Heap allocated table with any free variables or inner functions.
     void* table_;
-
-    // Add padding so LazyScript is gc::Cell aligned. Make padding protected
-    // instead of private to suppress -Wunused-private-field compiler warnings.
-  protected:
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding;
-#endif
 
   private:
     static const uint32_t NumClosedOverBindingsBits = 20;

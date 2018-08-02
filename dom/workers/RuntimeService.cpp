@@ -972,11 +972,6 @@ public:
         NS_WARNING("failed to set workerCx's default locale");
       }
     }
-
-    // Cycle collections must occur at consistent points when recording/replaying.
-    if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::RegisterTrigger(this, [=]() { nsCycleCollector_collect(nullptr); });
-    }
   }
 
   void Shutdown(JSContext* cx) override
@@ -991,10 +986,6 @@ public:
   ~WorkerJSRuntime()
   {
     MOZ_COUNT_DTOR_INHERITED(WorkerJSRuntime, CycleCollectedJSRuntime);
-
-    if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::UnregisterTrigger(this);
-    }
   }
 
   virtual void
@@ -1031,11 +1022,7 @@ public:
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     if (aStatus == JSGC_END) {
-      if (recordreplay::IsRecordingOrReplaying()) {
-        recordreplay::ActivateTrigger(this);
-      } else {
-        nsCycleCollector_collect(nullptr);
-      }
+      nsCycleCollector_collect(nullptr);
     }
   }
 
@@ -1139,6 +1126,7 @@ public:
       microTaskQueue = &GetDebuggerMicroTaskQueue();
     }
 
+    JS::JobQueueMayNotBeEmpty(cx);
     microTaskQueue->push(runnable.forget());
   }
 

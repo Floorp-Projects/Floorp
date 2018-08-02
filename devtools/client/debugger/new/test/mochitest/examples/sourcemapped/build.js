@@ -27,10 +27,16 @@ const tests = fs
 
 (async function() {
   const targets = [
+    await require("./builds/parcel")(tests, __dirname),
     await require("./builds/webpack3")(tests, __dirname),
     await require("./builds/webpack3-babel6")(tests, __dirname),
+    await require("./builds/webpack3-babel7")(tests, __dirname),
+    await require("./builds/webpack4")(tests, __dirname),
+    await require("./builds/webpack4-babel6")(tests, __dirname),
+    await require("./builds/webpack4-babel7")(tests, __dirname),
     await require("./builds/rollup")(tests, __dirname),
-    await require("./builds/rollup-babel6")(tests, __dirname)
+    await require("./builds/rollup-babel6")(tests, __dirname),
+    await require("./builds/rollup-babel7")(tests, __dirname)
   ];
 
   await util.promisify(webpack)({
@@ -56,7 +62,7 @@ const tests = fs
       Run "yarn build" to update.
     -->${targets
       .map(({ target, fixtures }) => {
-        return `<h2>${target}</h2>${fixtures
+        return `\n    <h2>${target}</h2>${fixtures
           .map(
             ({ name, testFnName, scriptPath }) =>
               `\n    <script src="${path.relative(
@@ -95,4 +101,6 @@ const tests = fs
   ## END-SOURCEMAPPED-FIXTURES`
     )
   );
+
+  console.log("DONE - If node is still running, just hit Ctrl+C. Parcel leaves things running for some reason.")
 })();

@@ -196,7 +196,7 @@ Bench_Cpp_MozHashSet(const Params* aParams, void** aVals, size_t aLen)
 
   for (size_t i = 0; i < aParams->mNumIterations; i++) {
     size_t n = 0;
-    for (auto range = hs.all(); !range.empty(); range.popFront()) {
+    for (auto iter = hs.iter(); !iter.done(); iter.next()) {
       n++;
     }
     MOZ_RELEASE_ASSERT(aParams->mNumInserts == n);

@@ -134,7 +134,8 @@ class Tab extends _react.PureComponent {
       selectedSource,
       selectSpecificSource,
       closeTab,
-      source
+      source,
+      tabSources
     } = this.props;
     const sourceId = source.id;
     const active = selectedSource && sourceId == selectedSource.id && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
@@ -160,6 +161,7 @@ class Tab extends _react.PureComponent {
       active,
       pretty: isPrettyCode
     });
+    const path = (0, _source.getDisplayPath)(source, tabSources);
     return _react2.default.createElement("div", {
       className: className,
       key: sourceId,
@@ -171,7 +173,7 @@ class Tab extends _react.PureComponent {
       shouldHide: icon => ["file", "javascript"].includes(icon)
     }), _react2.default.createElement("div", {
       className: "filename"
-    }, (0, _source.getTruncatedFileName)(source)), _react2.default.createElement(_Button.CloseButton, {
+    }, (0, _source.getTruncatedFileName)(source), path && _react2.default.createElement("span", null, `../${path}/..`)), _react2.default.createElement(_Button.CloseButton, {
       handleClick: onClickClose,
       tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
     }));
