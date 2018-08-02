@@ -73,11 +73,31 @@ DrawTargetOffset::DetachAllSnapshots()
   }
 
 OFFSET_COMMAND(Flush)
-OFFSET_COMMAND4(DrawFilter, FilterNode*, const Rect&, const Point&, const DrawOptions&)
 OFFSET_COMMAND1(ClearRect, const Rect&)
 OFFSET_COMMAND4(MaskSurface, const Pattern&, SourceSurface*, Point, const DrawOptions&)
 OFFSET_COMMAND4(FillGlyphs, ScaledFont*, const GlyphBuffer&, const Pattern&, const DrawOptions&)
 OFFSET_COMMAND3(Mask, const Pattern&, const Pattern&, const DrawOptions&)
+
+void
+DrawTargetOffset::DrawFilter(FilterNode* aNode, const Rect& aSourceRect, const Point& aDestPoint, const DrawOptions& aOptions)
+{
+  auto clone = mTransform;
+  bool invertible = clone.Invert();
+  auto src = aSourceRect;
+  if (invertible) {
+    // Try to reduce the source rect so that it's not much bigger
+    // than the draw target. The result is not minimal. Examples
+    // are left as an exercise for the reader.
+    auto destRect = Rect(mOrigin.x,
+                         mOrigin.y,
+                         mDrawTarget->GetSize().width,
+                         mDrawTarget->GetSize().height);
+    auto dtBounds = clone.TransformBounds(destRect);
+    src = aSourceRect.Intersect(dtBounds);
+  }
+  auto shift = src.TopLeft() - aSourceRect.TopLeft();
+  mDrawTarget->DrawFilter(aNode, src, aDestPoint + shift, aOptions);
+}
 
 void
 DrawTargetOffset::PushClip(const Path* aPath)
