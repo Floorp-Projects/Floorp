@@ -260,9 +260,10 @@ nsBaseDragService::InvokeDragSession(nsINode *aDOMNode,
                                       aDragRgn, aActionType);
 
   if (NS_FAILED(rv)) {
-    mSourceNode = nullptr;
-    mTriggeringPrincipalURISpec.Truncate(0);
-    mSourceDocument = nullptr;
+    // Set mDoingDrag so that EndDragSession cleans up and sends the dragend event
+    // after the aborted drag.
+    mDoingDrag = true;
+    EndDragSession(true, 0);
   }
 
   return rv;
@@ -294,18 +295,10 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
   mInputSource = aDragEvent->MozInputSource();
 
-  nsresult rv = InvokeDragSession(aDOMNode, aPrincipalURISpec,
-                                  aTransferableArray,
-                                  aRegion, aActionType,
-                                  nsIContentPolicy::TYPE_INTERNAL_IMAGE);
-
-  if (NS_FAILED(rv)) {
-    mImage = nullptr;
-    mHasImage = false;
-    mDataTransfer = nullptr;
-  }
-
-  return rv;
+  return InvokeDragSession(aDOMNode, aPrincipalURISpec,
+                           aTransferableArray,
+                           aRegion, aActionType,
+                           nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 }
 
 NS_IMETHODIMP
@@ -336,18 +329,10 @@ nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
   // endpoints of the selection
   nsCOMPtr<nsINode> node = aSelection->GetFocusNode();
 
-  nsresult rv = InvokeDragSession(node, aPrincipalURISpec,
-                                  aTransferableArray,
-                                  nullptr, aActionType,
-                                  nsIContentPolicy::TYPE_OTHER);
-
-  if (NS_FAILED(rv)) {
-    mHasImage = false;
-    mSelection = nullptr;
-    mDataTransfer = nullptr;
-  }
-
-  return rv;
+  return InvokeDragSession(node, aPrincipalURISpec,
+                           aTransferableArray,
+                           nullptr, aActionType,
+                           nsIContentPolicy::TYPE_OTHER);
 }
 
 //-------------------------------------------------------------------------
