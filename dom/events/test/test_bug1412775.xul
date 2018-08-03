@@ -30,9 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1412775
       b.addEventListener("foo", function(e) {
         didCallChromeSide = true;
         var path = e.composedPath();
-        var mm = d.defaultView.docShell
-                              .QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIContentFrameMessageManager);
+        var mm = d.defaultView.docShell.messageManager;
         is(path.length, 5, "Should have 5 items in composedPath in chrome.");
         is(path[0], mm, "TabChildGlobal is the chrome handler.");
         is(path[1], b, "browser element should be in the path.");

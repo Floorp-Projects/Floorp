@@ -36,10 +36,7 @@ FormSubmitObserver.prototype =
     this._content = aWindow;
     this._tab = aTabChildGlobal;
     this._mm =
-      this._content.docShell
-                   .sameTypeRootTreeItem
-                   .QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIContentFrameMessageManager);
+      this._content.docShell.messageManager;
 
     this._tab.addEventListener("pageshow", this);
     this._tab.addEventListener("unload", this);

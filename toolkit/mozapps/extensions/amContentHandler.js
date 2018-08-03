@@ -73,9 +73,7 @@ amContentHandler.prototype = {
     }
 
     // Fall back to sending through the message manager
-    let messageManager = window.docShell
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIContentFrameMessageManager);
+    let messageManager = window.docShell.messageManager;
 
     messageManager.sendAsyncMessage(MSG_INSTALL_ADDON, install);
   },

@@ -196,9 +196,9 @@ this.FxAccountsWebChannel.prototype = {
 
         switch (command) {
           case COMMAND_LOADED:
-            let mm = sendingContext.browser.docShell
-              .QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIContentFrameMessageManager);
+            // Note: we want the child side of the message manager here, not the
+            // parent, so get it from the docshell, not the browser.
+            let mm = sendingContext.browser.docShell.messageManager;
             mm.sendAsyncMessage(COMMAND_LOADED);
             break;
 

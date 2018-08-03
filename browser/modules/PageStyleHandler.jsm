@@ -50,9 +50,7 @@ var PageStyleHandler = {
       return;
     }
 
-    let mm = win.docShell
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIContentFrameMessageManager);
+    let mm = win.docShell.messageManager;
     this.sendStyleSheetInfo(mm);
   },
 
