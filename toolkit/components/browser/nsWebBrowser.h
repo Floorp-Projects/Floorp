@@ -29,7 +29,6 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
-#include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIWindowWatcher.h"
@@ -71,7 +70,6 @@ public:
 
 class nsWebBrowser final : public nsIWebBrowser,
                            public nsIWebNavigation,
-                           public nsIWebBrowserSetup,
                            public nsIDocShellTreeItem,
                            public nsIBaseWindow,
                            public nsIScrollable,
@@ -117,11 +115,12 @@ public:
   NS_DECL_NSITEXTSCROLL
   NS_DECL_NSIWEBBROWSER
   NS_DECL_NSIWEBNAVIGATION
-  NS_DECL_NSIWEBBROWSERSETUP
   NS_DECL_NSIWEBBROWSERPERSIST
   NS_DECL_NSICANCELABLE
   NS_DECL_NSIWEBBROWSERFOCUS
   NS_DECL_NSIWEBPROGRESSLISTENER
+
+  void SetAllowDNSPrefetch(bool aAllowPrefetch);
 
 protected:
   virtual ~nsWebBrowser();
