@@ -140,6 +140,10 @@ subprojects {
 
     afterEvaluate {
         if (it.hasProperty('android')) {
+            dependencies {
+                lintChecks project(':tooling-lint')
+            }
+
             android {
                 testOptions {
                     unitTests {
