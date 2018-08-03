@@ -696,15 +696,18 @@ HTMLTooltip.prototype = {
    * Hide the current tooltip. The event "hidden" will be fired when the tooltip
    * is hidden.
    */
-  async hide() {
+  async hide({ fromMouseup = false } = {}) {
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     if (!this.isVisible()) {
       this.emit("hidden");
       return;
     }
 
-    // Wait for potential click events before removing listeners.
-    await new Promise(resolve => this.topWindow.setTimeout(resolve, 0));
+    // If the tooltip is hidden from a mouseup event, wait for a potential click event
+    // to be consumed before removing event listeners.
+    if (fromMouseup) {
+      await new Promise(resolve => this.topWindow.setTimeout(resolve, 0));
+    }
 
     this.removeEventListeners();
 
@@ -801,7 +804,7 @@ HTMLTooltip.prototype = {
       return;
     }
 
-    this.hide();
+    this.hide({ fromMouseup: true });
   },
 
   _isInTooltipContainer: function(node) {
