@@ -273,6 +273,8 @@ body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
   border-left: 0;
   border-right: 1px solid #b5b5b5;
   border-bottom: 1px solid #c1c1c1;
+  -moz-context-properties: fill;
+  fill: #808080;
 }
 
 .button[hidden] {
@@ -501,8 +503,6 @@ body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
 
 .close-button {
   background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg");
-  -moz-context-properties: fill;
-  fill: #808080;
   height: 68px;
   background-position: center 8px;
 }

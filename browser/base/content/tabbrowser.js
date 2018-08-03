@@ -2532,10 +2532,20 @@ window._gBrowser = {
   },
 
   getTabsToTheEndFrom(aTab) {
+    let tab;
+    if (aTab.multiselected) {
+      // In a multi-select context, pick the rightmost
+      // selected tab as reference.
+      let selectedTabs = this.selectedTabs;
+      tab = selectedTabs[selectedTabs.length - 1];
+    } else {
+      tab = aTab;
+    }
+
     let tabsToEnd = [];
     let tabs = this.visibleTabs;
     for (let i = tabs.length - 1; i >= 0; --i) {
-      if (tabs[i] == aTab || tabs[i].pinned) {
+      if (tabs[i] == tab || tabs[i].pinned) {
         break;
       }
       tabsToEnd.push(tabs[i]);
@@ -2543,6 +2553,10 @@ window._gBrowser = {
     return tabsToEnd;
   },
 
+  /**
+   * In a multi-select context, the tabs (except pinned tabs) that are located to the
+   * right of the rightmost selected tab will be removed.
+   */
   removeTabsToTheEndFrom(aTab) {
     let tabs = this.getTabsToTheEndFrom(aTab);
     if (!this.warnAboutClosingTabs(tabs.length, this.closingTabsEnum.TO_END)) {
@@ -2562,7 +2576,6 @@ window._gBrowser = {
       tabsToRemove = this.visibleTabs.filter(tab => !tab.multiselected && !tab.pinned);
     } else {
       tabsToRemove = this.visibleTabs.filter(tab => tab != aTab && !tab.pinned);
-      this.selectedTab = aTab;
     }
 
     if (!this.warnAboutClosingTabs(tabsToRemove.length, this.closingTabsEnum.OTHER)) {
@@ -2582,27 +2595,36 @@ window._gBrowser = {
   },
 
   removeTabs(tabs) {
-    let tabsWithBeforeUnload = [];
-    let lastToClose;
-    let params = { animate: true };
-    for (let tab of tabs) {
-      if (tab.selected) {
-        lastToClose = tab;
-      } else if (this._hasBeforeUnload(tab)) {
-        tabsWithBeforeUnload.push(tab);
-      } else {
-        this.removeTab(tab, params);
+    this._clearMultiSelectionLocked = true;
+
+    // Guarantee that _clearMultiSelectionLocked lock gets released.
+    try {
+      let tabsWithBeforeUnload = [];
+      let lastToClose;
+      let aParams = { animate: true };
+      for (let tab of tabs) {
+        if (tab.selected)
+          lastToClose = tab;
+        else if (this._hasBeforeUnload(tab))
+          tabsWithBeforeUnload.push(tab);
+        else
+          this.removeTab(tab, aParams);
       }
-    }
-    for (let tab of tabsWithBeforeUnload) {
-      this.removeTab(tab, params);
+      for (let tab of tabsWithBeforeUnload) {
+        this.removeTab(tab, aParams);
+      }
+
+      // Avoid changing the selected browser several times by removing it,
+      // if appropriate, lastly.
+      if (lastToClose) {
+        this.removeTab(lastToClose, aParams);
+      }
+    } catch (e) {
+      Cu.reportError(e);
     }
 
-    // Avoid changing the selected browser several times by removing it,
-    // if appropriate, lastly.
-    if (lastToClose) {
-      this.removeTab(lastToClose, params);
-    }
+    this._clearMultiSelectionLocked = false;
+    this.avoidSingleSelectedTab();
   },
 
   removeCurrentTab(aParams) {
@@ -3693,12 +3715,11 @@ window._gBrowser = {
       return;
     }
 
-    let selectedTabs = this.selectedTabs;
-    if (selectedTabs.length < 2) {
+    if (this.multiSelectedTabsCount < 1) {
       return;
     }
 
-    for (let tab of selectedTabs) {
+    for (let tab of this.selectedTabs) {
       tab.removeAttribute("multiselected");
     }
     this._multiSelectedTabsSet = new WeakSet();
@@ -3714,16 +3735,41 @@ window._gBrowser = {
   },
 
   /**
-   * Remove the active tab from the multiselection if it's the only one left there.
+   * Remove a tab from the multiselection if it's the only one left there.
+   *
+   * In fact, some scenario may lead to only one single tab multi-selected,
+   * this is something to avoid (Chrome does the same)
+   * Consider 4 tabs A,B,C,D with A having the focus
+   * 1. select C with Ctrl
+   * 2. Right-click on B and "Close Tabs to The Right"
+   *
+   * Expected result
+   * C and D closing
+   * A being the only multi-selected tab, selection should be cleared
+   *
+   *
+   * Single selected tab could even happen with a none-focused tab.
+   * For exemple with the menu "Close other tabs", it could happen
+   * with a multi-selected pinned tab.
+   * For illustration, consider 4 tabs A,B,C,D with B active
+   * 1. pin A and Ctrl-select it
+   * 2. Ctrl-select C
+   * 3. right-click on D and click "Close Other Tabs"
+   *
+   * Expected result
+   * B and C closing
+   * A[pinned] being the only multi-selected tab, selection should be cleared.
    */
-  updateActiveTabMultiSelectState() {
-    if (this.selectedTabs.length == 1) {
+  avoidSingleSelectedTab() {
+    if (this.multiSelectedTabsCount == 1 ) {
       this.clearMultiSelectedTabs();
     }
   },
 
   switchToNextMultiSelectedTab() {
     this._clearMultiSelectionLocked = true;
+
+    // Guarantee that _clearMultiSelectionLocked lock gets released.
     try {
       let lastMultiSelectedTab = gBrowser.lastMultiSelectedTab;
       if (lastMultiSelectedTab != gBrowser.selectedTab) {
@@ -3737,6 +3783,7 @@ window._gBrowser = {
     } catch (e) {
       Cu.reportError(e);
     }
+
     this._clearMultiSelectionLocked = false;
   },
 
@@ -5098,10 +5145,9 @@ var TabContextMenu = {
       gBrowser.getTabsToTheEndFrom(this.contextTab).length == 0;
 
     // Disable "Close other Tabs" if there are no unpinned tabs.
-    let unpinnedTabsToClose = gBrowser.visibleTabs.length - gBrowser._numPinnedTabs;
-    if (!this.contextTab.pinned) {
-      unpinnedTabsToClose--;
-    }
+    let unpinnedTabsToClose = multiselectionContext ?
+      gBrowser.visibleTabs.filter(t => !t.multiselected && !t.pinned).length :
+      gBrowser.visibleTabs.filter(t => t != this.contextTab && !t.pinned).length;
     document.getElementById("context_closeOtherTabs").disabled = unpinnedTabsToClose < 1;
 
     // Only one of close_tab/close_selected_tabs should be visible

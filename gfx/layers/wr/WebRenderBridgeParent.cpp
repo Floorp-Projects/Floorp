@@ -1710,6 +1710,7 @@ WebRenderBridgeParent::ClearResources()
     RefPtr<WebRenderImageHost> host = entry.second;
     host->ClearWrBridge();
     mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId, txn);
+    txn.RemovePipeline(pipelineId);
   }
   mAsyncCompositables.clear();
   for (const auto& entry : mSharedSurfaceIds) {

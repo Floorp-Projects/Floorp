@@ -6,7 +6,7 @@
 
 #include "DHCPUtils.h"
 #include <vector>
-#include "mozilla\Logging.h"
+#include "mozilla/Logging.h"
 #include "nsString.h"
 
 

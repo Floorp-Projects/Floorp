@@ -48,9 +48,9 @@ function loadContentWindow(webNavigation, uri) {
 
 async function takeScreenshot(fullWidth, fullHeight, contentWidth, contentHeight, path, url) {
   try {
-    let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
-    var webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
-    let contentWindow = await loadContentWindow(webNavigation, url);
+    var windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
+    // nsIWindowlessBrowser inherits from nsIWebNavigation.
+    let contentWindow = await loadContentWindow(windowlessBrowser, url);
     contentWindow.resizeTo(contentWidth, contentHeight);
 
     let canvas = contentWindow.document.createElementNS("http://www.w3.org/1999/xhtml", "html:canvas");
@@ -82,8 +82,8 @@ async function takeScreenshot(fullWidth, fullHeight, contentWidth, contentHeight
   } catch (e) {
     dump("Failure taking screenshot: " + e + "\n");
   } finally {
-    if (webNavigation) {
-      webNavigation.close();
+    if (windowlessBrowser) {
+      windowlessBrowser.close();
     }
   }
 }

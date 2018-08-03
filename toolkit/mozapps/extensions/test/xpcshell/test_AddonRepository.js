@@ -124,6 +124,12 @@ var GET_RESULTS = [{
   sourceURI:              BASE_URL + INSTALL_URL2,
   updateDate:             new Date(1265033045000),
 }, {
+  id:                     "test2@tests.mozilla.org",
+  type:                   "extension",
+  version:                "2.0",
+  icons:                  {},
+  sourceURI:              "http://example.com/addons/bleah.xpi",
+}, {
   id:                     "test_AddonRepository_1@tests.mozilla.org",
   type:                   "theme",
   version:                "1.4",
@@ -137,9 +143,11 @@ var GET_TEST = {
   failedIDs:      ["test1@tests.mozilla.org"],
   failedURL:        "/XPCShell/1/test1%40tests.mozilla.org",
   successfulIDs:  ["test1@tests.mozilla.org",
-                     "{00000000-1111-2222-3333-444444444444}",
-                     "test_AddonRepository_1@tests.mozilla.org"],
+                   "test2@tests.mozilla.org",
+                   "{00000000-1111-2222-3333-444444444444}",
+                   "test_AddonRepository_1@tests.mozilla.org"],
   successfulURL:    "/XPCShell/1/test1%40tests.mozilla.org%2C" +
+                    "test2%40tests.mozilla.org%2C" +
                     "%7B00000000-1111-2222-3333-444444444444%7D%2C" +
                     "test_AddonRepository_1%40tests.mozilla.org"
 };

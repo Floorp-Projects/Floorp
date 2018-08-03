@@ -65,15 +65,21 @@ add_task(async function withNotAMultiSelectedTab() {
   let tab2 = await addTab();
   let tab3 = await addTab();
   let tab4 = await addTab();
+  let tab5 = await addTab();
 
   is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
   await triggerClickOn(tab2, { ctrlKey: true });
+  await triggerClickOn(tab5, { ctrlKey: true });
 
   let tab4Pinned = BrowserTestUtils.waitForEvent(tab4, "TabPinned");
   gBrowser.pinTab(tab4);
   await tab4Pinned;
+
+  let tab5Pinned = BrowserTestUtils.waitForEvent(tab5, "TabPinned");
+  gBrowser.pinTab(tab5);
+  await tab5Pinned;
 
   ok(!initialTab.multiselected, "InitialTab is not multiselected");
   ok(tab1.multiselected, "Tab1 is multiselected");
@@ -81,7 +87,9 @@ add_task(async function withNotAMultiSelectedTab() {
   ok(!tab3.multiselected, "Tab3 is not multiselected");
   ok(!tab4.multiselected, "Tab4 is not multiselected");
   ok(tab4.pinned, "Tab4 is pinned");
-  is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
+  ok(tab5.multiselected, "Tab5 is multiselected");
+  ok(tab5.pinned, "Tab5 is pinned");
+  is(gBrowser.multiSelectedTabsCount, 3, "Three multiselected tabs");
   is(gBrowser.selectedTab, tab1, "Tab1 is the active tab");
 
   let closingTabs = [tab1, tab2, tab3];
@@ -101,8 +109,10 @@ add_task(async function withNotAMultiSelectedTab() {
   ok(tab2.closing, "Tab2 is closing");
   ok(tab3.closing, "Tab3 is closing");
   ok(!tab4.closing, "Tab4 is not closing");
-  is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
+  ok(!tab5.closing, "Tab5 is not closing");
+  is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs, selection is cleared");
   is(gBrowser.selectedTab, initialTab, "InitialTab is the active tab now");
 
-  BrowserTestUtils.removeTab(tab4);
+  for (let tab of [tab4, tab5])
+    BrowserTestUtils.removeTab(tab);
 });
