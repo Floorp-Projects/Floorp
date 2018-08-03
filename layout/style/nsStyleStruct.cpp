@@ -3771,7 +3771,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 
   if (mOverflowX != aNewData.mOverflowX
       || mOverflowY != aNewData.mOverflowY) {
-    hint |= nsChangeHint_CSSOverflowChange;
+    hint |= nsChangeHint_ScrollbarChange;
   }
 
   /* Note: When mScrollBehavior, mScrollSnapTypeX, mScrollSnapTypeY,
@@ -3808,7 +3808,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       // XXX What is the minimum hint to ensure mShapeInfo is regenerated in
       // the next reflow?
       hint |= nsChangeHint_ReflowHintsForFloatAreaChange |
-              nsChangeHint_CSSOverflowChange;
+              nsChangeHint_ScrollbarChange;
     } else {
       // shape-outside or shape-margin or shape-image-threshold changed,
       // but we don't need to reflow because we're not floating.
