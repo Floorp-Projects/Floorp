@@ -141,6 +141,12 @@ template<class Key,
          class AllocPolicy = MallocAllocPolicy>
 class HashMap
 {
+  // -- Implementation details -----------------------------------------------
+
+  // HashMap is not copyable or assignable.
+  HashMap(const HashMap& hm) = delete;
+  HashMap& operator=(const HashMap& hm) = delete;
+
   using TableEntry = HashMapEntry<Key, Value>;
 
   struct MapHashPolicy : HashPolicy
@@ -159,9 +165,13 @@ class HashMap
   using Impl = detail::HashTable<TableEntry, MapHashPolicy, AllocPolicy>;
   Impl mImpl;
 
+  friend class Impl::Enum;
+
 public:
   using Lookup = typename HashPolicy::Lookup;
   using Entry = TableEntry;
+
+  // -- Initialization -------------------------------------------------------
 
   // HashMap construction is fallible (due to possible OOM). The user must
   // call init() after construction and check the return value.
@@ -170,12 +180,59 @@ public:
   {
   }
 
+  // HashMap is movable.
+  HashMap(HashMap&& aRhs)
+    : mImpl(std::move(aRhs.mImpl))
+  {
+  }
+  void operator=(HashMap&& aRhs)
+  {
+    MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
+    mImpl = std::move(aRhs.mImpl);
+  }
+
   // Initialize the map for use. Must be called after construction, before
   // any other operations (other than initialized()).
   MOZ_MUST_USE bool init(uint32_t aLen = 16) { return mImpl.init(aLen); }
 
+  // -- Status and sizing ----------------------------------------------------
+
   // Has the map been initialized?
   bool initialized() const { return mImpl.initialized(); }
+
+  // The map's current generation.
+  Generation generation() const { return mImpl.generation(); }
+
+  // Is the map empty?
+  bool empty() const { return mImpl.empty(); }
+
+  // Number of keys/values in the map.
+  uint32_t count() const { return mImpl.count(); }
+
+  // Number of key/value slots in the map. Note: resize will happen well before
+  // count() == capacity().
+  size_t capacity() const { return mImpl.capacity(); }
+
+  // The size of the map's entry storage, in bytes. If the keys/values contain
+  // pointers to other heap blocks, you must iterate over the map and measure
+  // them separately; hence the "shallow" prefix.
+  size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+  size_t shallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) +
+           mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  // -- Lookups --------------------------------------------------------------
+
+  // Does the map contain a key/value matching |aLookup|?
+  bool has(const Lookup& aLookup) const
+  {
+    return mImpl.lookup(aLookup).found();
+  }
 
   // Return a Ptr indicating whether a key/value matching |aLookup| is
   // present in the map. E.g.:
@@ -200,9 +257,51 @@ public:
     return mImpl.readonlyThreadsafeLookup(aLookup);
   }
 
-  // Remove a previously found key/value (assuming aPtr.found()). The map
-  // must not have been mutated in the interim.
-  void remove(Ptr aPtr) { mImpl.remove(aPtr); }
+  // -- Insertions -----------------------------------------------------------
+
+  // Overwrite existing value with |aValue|, or add it if not present. Returns
+  // false on OOM.
+  template<typename KeyInput, typename ValueInput>
+  MOZ_MUST_USE bool put(KeyInput&& aKey, ValueInput&& aValue)
+  {
+    AddPtr p = lookupForAdd(aKey);
+    if (p) {
+      p->value() = std::forward<ValueInput>(aValue);
+      return true;
+    }
+    return add(
+      p, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
+  }
+
+  // Like put(), but asserts that the given key is not already present.
+  template<typename KeyInput, typename ValueInput>
+  MOZ_MUST_USE bool putNew(KeyInput&& aKey, ValueInput&& aValue)
+  {
+    return mImpl.putNew(
+      aKey, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
+  }
+
+  // Only call this to populate an empty map after reserving space with init().
+  template<typename KeyInput, typename ValueInput>
+  void putNewInfallible(KeyInput&& aKey, ValueInput&& aValue)
+  {
+    mImpl.putNewInfallible(
+      aKey, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
+  }
+
+  // Add (aKey,aDefaultValue) if |aKey| is not found. Return a false-y Ptr on
+  // OOM.
+  Ptr lookupWithDefault(const Key& aKey, const Value& aDefaultValue)
+  {
+    AddPtr p = lookupForAdd(aKey);
+    if (p) {
+      return p;
+    }
+    bool ok = add(p, aKey, aDefaultValue);
+    MOZ_ASSERT_IF(!ok, !p); // p is left false-y on OOM.
+    (void)ok;
+    return p;
+  }
 
   // Like |lookup(l)|, but on miss, |p = lookupForAdd(l)| allows efficient
   // insertion of Key |k| (where |HashPolicy::match(k,l) == true|) using
@@ -269,6 +368,45 @@ public:
                                std::forward<ValueInput>(aValue));
   }
 
+  // -- Removal --------------------------------------------------------------
+
+  // Lookup and remove the key/value matching |aLookup|, if present.
+  void remove(const Lookup& aLookup)
+  {
+    if (Ptr p = lookup(aLookup)) {
+      remove(p);
+    }
+  }
+
+  // Remove a previously found key/value (assuming aPtr.found()). The map must
+  // not have been mutated in the interim.
+  void remove(Ptr aPtr) { mImpl.remove(aPtr); }
+
+  // -- Rekeying -------------------------------------------------------------
+
+  // Infallibly rekey one entry, if necessary. Requires that template
+  // parameters Key and HashPolicy::Lookup are the same type.
+  void rekeyIfMoved(const Key& aOldKey, const Key& aNewKey)
+  {
+    if (aOldKey != aNewKey) {
+      rekeyAs(aOldKey, aNewKey, aNewKey);
+    }
+  }
+
+  // Infallibly rekey one entry if present, and return whether that happened.
+  bool rekeyAs(const Lookup& aOldLookup,
+               const Lookup& aNewLookup,
+               const Key& aNewKey)
+  {
+    if (Ptr p = lookup(aOldLookup)) {
+      mImpl.rekeyAndMaybeRehash(p, aNewLookup, aNewKey);
+      return true;
+    }
+    return false;
+  }
+
+  // -- Iteration ------------------------------------------------------------
+
   // |iter()| returns an Iterator:
   //
   //   HashMap<int, char> h;
@@ -298,6 +436,8 @@ public:
   using Enum = typename Impl::Enum;
   Range all() const { return mImpl.all(); }
 
+  // -- Clearing -------------------------------------------------------------
+
   // Remove all keys/values without changing the capacity.
   void clear() { mImpl.clear(); }
 
@@ -307,131 +447,6 @@ public:
   // Remove all keys/values and release entry storage. The map must be
   // initialized via init() again before further use.
   void finish() { mImpl.finish(); }
-
-  // Is the map empty?
-  bool empty() const { return mImpl.empty(); }
-
-  // Number of keys/values in the map.
-  uint32_t count() const { return mImpl.count(); }
-
-  // Number of key/value slots in the map. Note: resize will happen well before
-  // count() == capacity().
-  size_t capacity() const { return mImpl.capacity(); }
-
-  // The size of the map's entry storage, in bytes. If the keys/values contain
-  // pointers to other heap blocks, you must iterate over the map and measure
-  // them separately; hence the "shallow" prefix.
-  size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
-    return mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
-  }
-  size_t shallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
-    return aMallocSizeOf(this) +
-           mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
-  }
-
-  // The map's current generation.
-  Generation generation() const { return mImpl.generation(); }
-
-  /************************************************** Shorthand operations */
-
-  // Does the map contain a key/value matching |aLookup|?
-  bool has(const Lookup& aLookup) const
-  {
-    return mImpl.lookup(aLookup).found();
-  }
-
-  // Overwrite existing value with |aValue|, or add it if not present. Returns
-  // false on OOM.
-  template<typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool put(KeyInput&& aKey, ValueInput&& aValue)
-  {
-    AddPtr p = lookupForAdd(aKey);
-    if (p) {
-      p->value() = std::forward<ValueInput>(aValue);
-      return true;
-    }
-    return add(
-      p, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
-  }
-
-  // Like put(), but asserts that the given key is not already present.
-  template<typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool putNew(KeyInput&& aKey, ValueInput&& aValue)
-  {
-    return mImpl.putNew(
-      aKey, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
-  }
-
-  // Only call this to populate an empty map after reserving space with init().
-  template<typename KeyInput, typename ValueInput>
-  void putNewInfallible(KeyInput&& aKey, ValueInput&& aValue)
-  {
-    mImpl.putNewInfallible(
-      aKey, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
-  }
-
-  // Add (aKey,aDefaultValue) if |aKey| is not found. Return a false-y Ptr on
-  // OOM.
-  Ptr lookupWithDefault(const Key& aKey, const Value& aDefaultValue)
-  {
-    AddPtr p = lookupForAdd(aKey);
-    if (p) {
-      return p;
-    }
-    bool ok = add(p, aKey, aDefaultValue);
-    MOZ_ASSERT_IF(!ok, !p); // p is left false-y on OOM.
-    (void)ok;
-    return p;
-  }
-
-  // Lookup and remove the key/value matching |aLookup|, if present.
-  void remove(const Lookup& aLookup)
-  {
-    if (Ptr p = lookup(aLookup)) {
-      remove(p);
-    }
-  }
-
-  // Infallibly rekey one entry, if necessary. Requires that template
-  // parameters Key and HashPolicy::Lookup are the same type.
-  void rekeyIfMoved(const Key& aOldKey, const Key& aNewKey)
-  {
-    if (aOldKey != aNewKey) {
-      rekeyAs(aOldKey, aNewKey, aNewKey);
-    }
-  }
-
-  // Infallibly rekey one entry if present, and return whether that happened.
-  bool rekeyAs(const Lookup& aOldLookup,
-               const Lookup& aNewLookup,
-               const Key& aNewKey)
-  {
-    if (Ptr p = lookup(aOldLookup)) {
-      mImpl.rekeyAndMaybeRehash(p, aNewLookup, aNewKey);
-      return true;
-    }
-    return false;
-  }
-
-  // HashMap is movable.
-  HashMap(HashMap&& aRhs)
-    : mImpl(std::move(aRhs.mImpl))
-  {
-  }
-  void operator=(HashMap&& aRhs)
-  {
-    MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
-    mImpl = std::move(aRhs.mImpl);
-  }
-
-private:
-  // HashMap is not copyable or assignable.
-  HashMap(const HashMap& hm) = delete;
-  HashMap& operator=(const HashMap& hm) = delete;
-
-  friend class Impl::Enum;
 };
 
 //---------------------------------------------------------------------------
@@ -455,6 +470,12 @@ template<class T,
          class AllocPolicy = MallocAllocPolicy>
 class HashSet
 {
+  // -- Implementation details -----------------------------------------------
+
+  // HashSet is not copyable or assignable.
+  HashSet(const HashSet& hs) = delete;
+  HashSet& operator=(const HashSet& hs) = delete;
+
   struct SetHashPolicy : HashPolicy
   {
     using Base = HashPolicy;
@@ -468,9 +489,13 @@ class HashSet
   using Impl = detail::HashTable<const T, SetHashPolicy, AllocPolicy>;
   Impl mImpl;
 
+  friend class Impl::Enum;
+
 public:
   using Lookup = typename HashPolicy::Lookup;
   using Entry = T;
+
+  // -- Initialization -------------------------------------------------------
 
   // HashSet construction is fallible (due to possible OOM). The user must call
   // init() after construction and check the return value.
@@ -479,12 +504,59 @@ public:
   {
   }
 
+  // HashSet is movable.
+  HashSet(HashSet&& aRhs)
+    : mImpl(std::move(aRhs.mImpl))
+  {
+  }
+  void operator=(HashSet&& aRhs)
+  {
+    MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
+    mImpl = std::move(aRhs.mImpl);
+  }
+
   // Initialize the set for use. Must be called after construction, before
   // any other operations (other than initialized()).
   MOZ_MUST_USE bool init(uint32_t aLen = 16) { return mImpl.init(aLen); }
 
+  // -- Status and sizing ----------------------------------------------------
+
   // Has the set been initialized?
   bool initialized() const { return mImpl.initialized(); }
+
+  // The set's current generation.
+  Generation generation() const { return mImpl.generation(); }
+
+  // Is the set empty?
+  bool empty() const { return mImpl.empty(); }
+
+  // Number of elements in the set.
+  uint32_t count() const { return mImpl.count(); }
+
+  // Number of element slots in the set. Note: resize will happen well before
+  // count() == capacity().
+  size_t capacity() const { return mImpl.capacity(); }
+
+  // The size of the set's entry storage, in bytes. If the elements contain
+  // pointers to other heap blocks, you must iterate over the set and measure
+  // them separately; hence the "shallow" prefix.
+  size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+  size_t shallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) +
+           mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  // -- Lookups --------------------------------------------------------------
+
+  // Does the set contain an element matching |aLookup|?
+  bool has(const Lookup& aLookup) const
+  {
+    return mImpl.lookup(aLookup).found();
+  }
 
   // Return a Ptr indicating whether an element matching |aLookup| is present
   // in the set. E.g.:
@@ -508,9 +580,36 @@ public:
     return mImpl.readonlyThreadsafeLookup(aLookup);
   }
 
-  // Remove a previously found element (assuming aPtr.found()). The set must
-  // not have been mutated in the interim.
-  void remove(Ptr aPtr) { mImpl.remove(aPtr); }
+  // -- Insertions -----------------------------------------------------------
+
+  // Add |aU| if it is not present already. Returns false on OOM.
+  template<typename U>
+  MOZ_MUST_USE bool put(U&& aU)
+  {
+    AddPtr p = lookupForAdd(aU);
+    return p ? true : add(p, std::forward<U>(aU));
+  }
+
+  // Like put(), but asserts that the given key is not already present.
+  template<typename U>
+  MOZ_MUST_USE bool putNew(U&& aU)
+  {
+    return mImpl.putNew(aU, std::forward<U>(aU));
+  }
+
+  // Like the other putNew(), but for when |Lookup| is different to |T|.
+  template<typename U>
+  MOZ_MUST_USE bool putNew(const Lookup& aLookup, U&& aU)
+  {
+    return mImpl.putNew(aLookup, std::forward<U>(aU));
+  }
+
+  // Only call this to populate an empty set after reserving space with init().
+  template<typename U>
+  void putNewInfallible(const Lookup& aLookup, U&& aU)
+  {
+    mImpl.putNewInfallible(aLookup, std::forward<U>(aU));
+  }
 
   // Like |lookup(l)|, but on miss, |p = lookupForAdd(l)| allows efficient
   // insertion of T value |t| (where |HashPolicy::match(t,l) == true|) using
@@ -564,107 +663,7 @@ public:
     return mImpl.relookupOrAdd(aPtr, aLookup, std::forward<U>(aU));
   }
 
-  // |iter()| returns an Iterator:
-  //
-  //   HashSet<int> h;
-  //   for (auto iter = h.iter(); !iter.done(); iter.next()) {
-  //     int i = iter.get();
-  //   }
-  //
-  typedef typename Impl::Iterator Iterator;
-  Iterator iter() const { return mImpl.iter(); }
-
-  // |modIter()| returns a ModIterator:
-  //
-  //   HashSet<int> h;
-  //   for (auto iter = h.modIter(); !iter.done(); iter.next()) {
-  //     if (iter.get() == 42) {
-  //       iter.remove();
-  //     }
-  //   }
-  //
-  // Table resize may occur in ModIterator's destructor.
-  typedef typename Impl::ModIterator ModIterator;
-  ModIterator modIter() { return mImpl.modIter(); }
-
-  // These are similar to Iterator/ModIterator/iter(), but use different
-  // terminology.
-  using Range = typename Impl::Range;
-  using Enum = typename Impl::Enum;
-  Range all() const { return mImpl.all(); }
-
-  // Remove all elements without changing the capacity.
-  void clear() { mImpl.clear(); }
-
-  // Remove all elements and attempt to minimize the capacity.
-  void clearAndShrink() { mImpl.clearAndShrink(); }
-
-  // Remove all keys/values and release entry storage. The set must be
-  // initialized via init() again before further use.
-  void finish() { mImpl.finish(); }
-
-  // Is the set empty?
-  bool empty() const { return mImpl.empty(); }
-
-  // Number of elements in the set.
-  uint32_t count() const { return mImpl.count(); }
-
-  // Number of element slots in the set. Note: resize will happen well before
-  // count() == capacity().
-  size_t capacity() const { return mImpl.capacity(); }
-
-  // The size of the HashSet's entry storage, in bytes. If the elements contain
-  // pointers to other heap blocks, you must iterate over the set and measure
-  // them separately; hence the "shallow" prefix.
-  size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
-    return mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
-  }
-  size_t shallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
-    return aMallocSizeOf(this) +
-           mImpl.shallowSizeOfExcludingThis(aMallocSizeOf);
-  }
-
-  // The set's current generation.
-  Generation generation() const { return mImpl.generation(); }
-
-  /************************************************** Shorthand operations */
-
-  // Does the set contain an element matching |aLookup|?
-  bool has(const Lookup& aLookup) const
-  {
-    return mImpl.lookup(aLookup).found();
-  }
-
-  // Add |aU| if it is not present already. Returns false on OOM.
-  template<typename U>
-  MOZ_MUST_USE bool put(U&& aU)
-  {
-    AddPtr p = lookupForAdd(aU);
-    return p ? true : add(p, std::forward<U>(aU));
-  }
-
-  // Like put(), but asserts that the given key is not already present.
-  template<typename U>
-  MOZ_MUST_USE bool putNew(U&& aU)
-  {
-    return mImpl.putNew(aU, std::forward<U>(aU));
-  }
-
-  // Like the other putNew(), but for when |Lookup| is different to |T|.
-  template<typename U>
-  MOZ_MUST_USE bool putNew(const Lookup& aLookup, U&& aU)
-  {
-    return mImpl.putNew(aLookup, std::forward<U>(aU));
-  }
-
-  // Only call this to populate an empty set after reserving space with init().
-  template<typename U>
-  void putNewInfallible(const Lookup& aLookup, U&& aU)
-  {
-    mImpl.putNewInfallible(aLookup, std::forward<U>(aU));
-  }
+  // -- Removal --------------------------------------------------------------
 
   // Lookup and remove the element matching |aLookup|, if present.
   void remove(const Lookup& aLookup)
@@ -673,6 +672,12 @@ public:
       remove(p);
     }
   }
+
+  // Remove a previously found element (assuming aPtr.found()). The set must
+  // not have been mutated in the interim.
+  void remove(Ptr aPtr) { mImpl.remove(aPtr); }
+
+  // -- Rekeying -------------------------------------------------------------
 
   // Infallibly rekey one entry, if present. Requires that template parameters
   // T and HashPolicy::Lookup are the same type.
@@ -708,23 +713,48 @@ public:
     const_cast<T&>(*aPtr) = aNewValue;
   }
 
-  // HashSet is movable.
-  HashSet(HashSet&& aRhs)
-    : mImpl(std::move(aRhs.mImpl))
-  {
-  }
-  void operator=(HashSet&& aRhs)
-  {
-    MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
-    mImpl = std::move(aRhs.mImpl);
-  }
+  // -- Iteration ------------------------------------------------------------
 
-private:
-  // HashSet is not copyable or assignable.
-  HashSet(const HashSet& hs) = delete;
-  HashSet& operator=(const HashSet& hs) = delete;
+  // |iter()| returns an Iterator:
+  //
+  //   HashSet<int> h;
+  //   for (auto iter = h.iter(); !iter.done(); iter.next()) {
+  //     int i = iter.get();
+  //   }
+  //
+  using Iterator = typename Impl::Iterator;
+  Iterator iter() const { return mImpl.iter(); }
 
-  friend class Impl::Enum;
+  // |modIter()| returns a ModIterator:
+  //
+  //   HashSet<int> h;
+  //   for (auto iter = h.modIter(); !iter.done(); iter.next()) {
+  //     if (iter.get() == 42) {
+  //       iter.remove();
+  //     }
+  //   }
+  //
+  // Table resize may occur in ModIterator's destructor.
+  using ModIterator = typename Impl::ModIterator;
+  ModIterator modIter() { return mImpl.modIter(); }
+
+  // These are similar to Iterator/ModIterator/iter(), but use different
+  // terminology.
+  using Range = typename Impl::Range;
+  using Enum = typename Impl::Enum;
+  Range all() const { return mImpl.all(); }
+
+  // -- Clearing -------------------------------------------------------------
+
+  // Remove all elements without changing the capacity.
+  void clear() { mImpl.clear(); }
+
+  // Remove all elements and attempt to minimize the capacity.
+  void clearAndShrink() { mImpl.clearAndShrink(); }
+
+  // Remove all keys/values and release entry storage. The set must be
+  // initialized via init() again before further use.
+  void finish() { mImpl.finish(); }
 };
 
 //---------------------------------------------------------------------------
