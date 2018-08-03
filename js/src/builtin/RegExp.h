@@ -41,7 +41,7 @@ RegExpMatcher(JSContext* cx, unsigned argc, Value* vp);
 
 extern MOZ_MUST_USE bool
 RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                 int32_t lastIndex, MatchPairs* maybeMatches, MutableHandleValue output);
+                 int32_t maybeLastIndex, MatchPairs* maybeMatches, MutableHandleValue output);
 
 extern MOZ_MUST_USE bool
 RegExpSearcher(JSContext* cx, unsigned argc, Value* vp);

@@ -1025,16 +1025,18 @@ js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp)
  */
 bool
 js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                     int32_t lastIndex,
+                     int32_t maybeLastIndex,
                      MatchPairs* maybeMatches, MutableHandleValue output)
 {
-    MOZ_ASSERT(lastIndex >= 0);
-
     // The MatchPairs will always be passed in, but RegExp execution was
     // successful only if the pairs have actually been filled in.
     if (maybeMatches && maybeMatches->pairsRaw()[0] >= 0)
         return CreateRegExpMatchResult(cx, input, *maybeMatches, output);
-    return RegExpMatcherImpl(cx, regexp, input, lastIndex, output);
+
+    // |maybeLastIndex| only contains a valid value when the RegExp execution
+    // was not successful.
+    MOZ_ASSERT(maybeLastIndex >= 0);
+    return RegExpMatcherImpl(cx, regexp, input, maybeLastIndex, output);
 }
 
 /*
