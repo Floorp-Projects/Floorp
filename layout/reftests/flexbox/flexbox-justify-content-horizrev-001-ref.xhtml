@@ -121,23 +121,7 @@
            /><div class="c" style="margin-right: 10px"/>
     </div>
 
-    <!-- XXXdholbert The left/right references are *WRONG* right now (they
-         should be swapped). I'm including them in their current incorrect form
-         simply to document the testcase's current behavior and to allow this
-         test to "pass" so we can catch any regressions in the rest of the
-         test. We should fix this as part of bug 1207698 or a helper. -->
     <!-- left -->
-    <div class="flexbox">
-      <div class="a"/>
-    </div>
-    <div class="flexbox">
-      <div class="a"/><div class="b"/>
-    </div>
-    <div class="flexbox">
-      <div class="a"/><div class="b"/><div class="c"/>
-    </div>
-
-    <!-- right -->
     <div class="flexbox">
       <div class="a" style="margin-right: 190px"/>
     </div>
@@ -146,6 +130,17 @@
     </div>
     <div class="flexbox">
       <div class="a" style="margin-right: 40px"/><div class="b"/><div class="c"/>
+    </div>
+
+    <!-- right -->
+    <div class="flexbox">
+      <div class="a"/>
+    </div>
+    <div class="flexbox">
+      <div class="a"/><div class="b"/>
+    </div>
+    <div class="flexbox">
+      <div class="a"/><div class="b"/><div class="c"/>
     </div>
 
   </body>
