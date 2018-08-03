@@ -28,6 +28,8 @@ internal class HttpURLConnectionHttpClient : HttpClient {
             return urlConnection.inputStream.bufferedReader().use { it.readText() }
         } catch (e: IOException) {
             throw ExperimentDownloadException(e.message)
+        } catch (e: ClassCastException) {
+            throw ExperimentDownloadException(e.message)
         } finally {
             urlConnection?.disconnect()
         }

@@ -11,7 +11,10 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
+import java.io.IOException
 import java.net.URL
 
 @RunWith(RobolectricTestRunner::class)
@@ -28,13 +31,40 @@ class HttpURLConnectionHttpClientTest {
     }
 
     @Test(expected = ExperimentDownloadException::class)
+    fun testNonHTTPURL() {
+        HttpURLConnectionHttpClient().get(URL("file://filename.json"))
+    }
+
+    @Test(expected = ExperimentDownloadException::class)
+    fun testOpenConnectionException() {
+        val url = mock(URL::class.java)
+        `when`(url.openConnection()).thenThrow(IOException())
+        HttpURLConnectionHttpClient().get(url)
+    }
+
+    @Test(expected = ExperimentDownloadException::class)
     fun testGET404() {
-        testGETError(404)
+        testGETResponseCode(404)
     }
 
     @Test(expected = ExperimentDownloadException::class)
     fun testGET500() {
-        testGETError(500)
+        testGETResponseCode(500)
+    }
+
+    @Test(expected = ExperimentDownloadException::class)
+    fun testGET199() {
+        testGETResponseCode(199)
+    }
+
+    @Test(expected = ExperimentDownloadException::class)
+    fun testGET300() {
+        testGETResponseCode(300)
+    }
+
+    @Test
+    fun testGET299() {
+        testGET(responseCode = 299)
     }
 
     @Test
@@ -49,10 +79,10 @@ class HttpURLConnectionHttpClientTest {
         }
     }
 
-    private fun testGET(headers: Map<String, String>? = null, assertions: ((RecordedRequest) -> Unit)? = null) {
+    private fun testGET(headers: Map<String, String>? = null, responseCode: Int = 200, assertions: ((RecordedRequest) -> Unit)? = null) {
         val response = """{"data":[]}"""
         val server = MockWebServer()
-        server.enqueue(MockResponse().setBody(response))
+        server.enqueue(MockResponse().setResponseCode(responseCode).setBody(response))
         assertEquals(response, HttpURLConnectionHttpClient().get(server.url("/").url(), headers))
         val request = server.takeRequest()
         assertEquals("GET", request.method)
@@ -64,7 +94,7 @@ class HttpURLConnectionHttpClientTest {
         server.shutdown()
     }
 
-    private fun testGETError(responseCode: Int) {
+    private fun testGETResponseCode(responseCode: Int) {
         val server = MockWebServer()
         server.enqueue(MockResponse().setResponseCode(responseCode))
         try {
