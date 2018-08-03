@@ -330,6 +330,7 @@ function HTMLTooltip(toolboxDoc, {
   this._position = null;
 
   this._onClick = this._onClick.bind(this);
+  this._onMouseup = this._onMouseup.bind(this);
   this._onXulPanelHidden = this._onXulPanelHidden.bind(this);
 
   this._toggle = new TooltipToggle(this);
@@ -456,6 +457,7 @@ HTMLTooltip.prototype = {
       // Update the top window reference each time in case the host changes.
       this.topWindow = this._getTopWindow();
       this.topWindow.addEventListener("click", this._onClick, true);
+      this.topWindow.addEventListener("mouseup", this._onMouseup, true);
       this.emit("shown");
     }, 0);
   },
@@ -701,7 +703,11 @@ HTMLTooltip.prototype = {
       return;
     }
 
-    this.topWindow.removeEventListener("click", this._onClick, true);
+    // Wait for potential click events before removing listeners.
+    await new Promise(resolve => this.topWindow.setTimeout(resolve, 0));
+
+    this.removeEventListeners();
+
     this.container.classList.remove("tooltip-visible");
     if (this.useXulWrapper) {
       await this._hideXulWrapper();
@@ -714,6 +720,11 @@ HTMLTooltip.prototype = {
       this._focusedElement.focus();
       this._focusedElement = null;
     }
+  },
+
+  removeEventListeners: function() {
+    this.topWindow.removeEventListener("click", this._onClick, true);
+    this.topWindow.removeEventListener("mouseup", this._onMouseup, true);
   },
 
   /**
@@ -730,6 +741,7 @@ HTMLTooltip.prototype = {
    */
   destroy: function() {
     this.hide();
+    this.removeEventListeners();
     this.container.remove();
     if (this.xulPanelWrapper) {
       this.xulPanelWrapper.remove();
@@ -766,17 +778,30 @@ HTMLTooltip.prototype = {
       return;
     }
 
+    if (this.consumeOutsideClicks && e.button === 0) {
+      // Consume only left click events (button === 0).
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  },
+
+  /**
+   * Hide the tooltip on mouseup rather than on click because the surrounding markup
+   * may change on mousedown in a way that prevents a "click" event from being fired.
+   * If the element that received the mousedown and the mouseup are different, click
+   * will not be fired.
+   */
+  _onMouseup: function(e) {
+    if (this._isInTooltipContainer(e.target)) {
+      return;
+    }
+
     // If the disable autohide setting is in effect, ignore.
     if (Services.prefs.getBoolPref("ui.popup.disable_autohide", false)) {
       return;
     }
 
     this.hide();
-    if (this.consumeOutsideClicks && e.button === 0) {
-      // Consume only left click events (button === 0).
-      e.preventDefault();
-      e.stopPropagation();
-    }
   },
 
   _isInTooltipContainer: function(node) {
