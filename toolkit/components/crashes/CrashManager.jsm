@@ -221,6 +221,44 @@ this.CrashManager.prototype = Object.freeze({
   // The type of event is unknown.
   EVENT_FILE_ERROR_UNKNOWN_EVENT: "unknown-event",
 
+  // A whitelist of crash annotations which do not contain sensitive data
+  // and are saved in the crash record and sent with Firefox Health Report.
+  ANNOTATION_WHITELIST: [
+    "AsyncShutdownTimeout",
+    "BuildID",
+    "ipc_channel_error",
+    "LowCommitSpaceEvents",
+    "ProductID",
+    "ProductName",
+    "ReleaseChannel",
+    "RemoteType",
+    "SecondsSinceLastCrash",
+    "ShutdownProgress",
+    "StartupCrash",
+    "TelemetryEnvironment",
+    "Version",
+    // The following entries are not normal annotations that can be found in
+    // the .extra file but are included in the crash record/FHR:
+    "AvailablePageFile",
+    "AvailablePhysicalMemory",
+    "AvailableVirtualMemory",
+    "BlockedDllList",
+    "BlocklistInitFailed",
+    "ContainsMemoryReport",
+    "CrashTime",
+    "EventLoopNestingLevel",
+    "IsGarbageCollecting",
+    "MozCrashReason",
+    "OOMAllocationSize",
+    "SystemMemoryUsePercentage",
+    "TextureUsage",
+    "TotalPageFile",
+    "TotalPhysicalMemory",
+    "TotalVirtualMemory",
+    "UptimeTS",
+    "User32BeforeBlocklist",
+  ],
+
   /**
    * Obtain a list of all dumps pending upload.
    *
@@ -599,16 +637,10 @@ this.CrashManager.prototype = Object.freeze({
 
   _filterAnnotations(annotations) {
     let filteredAnnotations = {};
-    let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-                          .getService(Ci.nsICrashReporter);
 
     for (let line in annotations) {
-      try {
-        if (crashReporter.isAnnotationWhitelistedForPing(line)) {
-          filteredAnnotations[line] = annotations[line];
-        }
-      } catch (e) {
-        // Silently drop unknown annotations
+      if (this.ANNOTATION_WHITELIST.includes(line)) {
+        filteredAnnotations[line] = annotations[line];
       }
     }
 

@@ -5,7 +5,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/CrashReporter.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetryController",
@@ -36,9 +35,11 @@ TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
 
 function annotateEnvironment() {
   try {
-    let env = JSON.stringify(TelemetryEnvironment.currentEnvironment);
-    CrashReporter.addAnnotation(CrashReporter.annotations.TelemetryEnvironment,
-                                env);
+    let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"];
+    if (cr) {
+      let env = JSON.stringify(TelemetryEnvironment.currentEnvironment);
+      cr.getService(Ci.nsICrashReporter).annotateCrashReport("TelemetryEnvironment", env);
+    }
   } catch (e) {
     // crash reporting not built or disabled? Ignore errors
   }

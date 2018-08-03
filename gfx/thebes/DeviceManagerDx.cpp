@@ -885,8 +885,10 @@ DeviceManagerDx::MaybeResetAndReacquireDevices()
     Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
   }
 
+  nsPrintfCString reasonString("%d", int(resetReason));
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::DeviceResetReason, int(resetReason));
+    NS_LITERAL_CSTRING("DeviceResetReason"),
+    reasonString);
 
   bool createCompositorDevice = !!mCompositorDevice;
   bool createContentDevice = !!mContentDevice;

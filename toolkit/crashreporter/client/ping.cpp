@@ -20,8 +20,6 @@
 
 #include "json/json.h"
 
-#include "CrashAnnotations.h"
-
 using std::string;
 
 namespace CrashReporter {
@@ -122,15 +120,45 @@ const int  kTelemetryVersion     = 4;
 static Json::Value
 CreateMetadataNode(StringTable& strings)
 {
+  // The following list should be kept in sync with the one in CrashManager.jsm
+  const char *entries[] = {
+    "AsyncShutdownTimeout",
+    "AvailablePageFile",
+    "AvailablePhysicalMemory",
+    "AvailableVirtualMemory",
+    "BlockedDllList",
+    "BlocklistInitFailed",
+    "BuildID",
+    "ContainsMemoryReport",
+    "CrashTime",
+    "EventLoopNestingLevel",
+    "ipc_channel_error",
+    "IsGarbageCollecting",
+    "LowCommitSpaceEvents",
+    "MozCrashReason",
+    "OOMAllocationSize",
+    "ProductID",
+    "ProductName",
+    "ReleaseChannel",
+    "RemoteType",
+    "SecondsSinceLastCrash",
+    "ShutdownProgress",
+    "StartupCrash",
+    "SystemMemoryUsePercentage",
+    "TextureUsage",
+    "TotalPageFile",
+    "TotalPhysicalMemory",
+    "TotalVirtualMemory",
+    "UptimeTS",
+    "User32BeforeBlocklist",
+    "Version",
+  };
+
   Json::Value node;
 
-  for (auto line : strings) {
-    Annotation annotation;
-
-    if (AnnotationFromString(annotation, line.first.c_str())) {
-      if (IsAnnotationWhitelistedForPing(annotation)) {
-        node[line.first] = line.second;
-      }
+  for (auto entry : entries) {
+    if ((strings.find(entry) != strings.end()) && !strings[entry].empty()) {
+      node[entry] = strings[entry];
     }
   }
 

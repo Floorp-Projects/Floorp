@@ -6,13 +6,10 @@
 
 #include "CrashReporterMetadataShmem.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/EnumeratedRange.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace ipc {
-
-using CrashReporter::Annotation;
 
 enum class EntryType : uint8_t {
   None,
@@ -31,10 +28,9 @@ CrashReporterMetadataShmem::~CrashReporterMetadataShmem()
 }
 
 void
-CrashReporterMetadataShmem::AnnotateCrashReport(Annotation aKey,
-                                                const nsCString& aData)
+CrashReporterMetadataShmem::AnnotateCrashReport(const nsCString& aKey, const nsCString& aData)
 {
-  mAnnotations[aKey] = aData;
+  mNotes.Put(aKey, aData);
   SyncNotesToShmem();
 }
 
@@ -42,7 +38,7 @@ void
 CrashReporterMetadataShmem::AppendAppNotes(const nsCString& aData)
 {
   mAppNotes.Append(aData);
-  mAnnotations[Annotation::Notes] = mAppNotes;
+  mNotes.Put(NS_LITERAL_CSTRING("Notes"), mAppNotes);
   SyncNotesToShmem();
 }
 
@@ -56,7 +52,7 @@ public:
     *mCursor = uint8_t(EntryType::None);
   }
 
-  MOZ_MUST_USE bool WriteAnnotation(Annotation aKey, const nsCString& aValue) {
+  MOZ_MUST_USE bool WriteAnnotation(const nsCString& aKey, const nsCString& aValue) {
     // This shouldn't happen because Commit() guarantees mCursor < mEnd. But
     // we might as well be safe.
     if (mCursor >= mEnd) {
@@ -129,11 +125,11 @@ CrashReporterMetadataShmem::SyncNotesToShmem()
 {
   MetadataShmemWriter writer(mShmem);
 
-  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    if (!mAnnotations[key].IsEmpty()) {
-      if (!writer.WriteAnnotation(key, mAnnotations[key])) {
-        return;
-      }
+  for (auto it = mNotes.Iter(); !it.Done(); it.Next()) {
+    nsCString key = nsCString(it.Key());
+    nsCString value = nsCString(it.Data());
+    if (!writer.WriteAnnotation(key, value)) {
+      return;
     }
   }
 }
@@ -166,11 +162,6 @@ public:
     }
   }
 
-  template <typename T>
-  bool Read(T* aOut) {
-    return Read(aOut, sizeof(T));
-  }
-
   bool Read(nsCString& aOut) {
     uint32_t length = 0;
     if (!Read(&length)) {
@@ -187,6 +178,10 @@ public:
   }
 
 private:
+  template <typename T>
+  bool Read(T* aOut) {
+    return Read(aOut, sizeof(T));
+  }
   bool Read(void* aOut, size_t aLength) {
     const uint8_t* src = Read(aLength);
     if (!src) {
@@ -214,19 +209,17 @@ private:
 };
 
 void
-CrashReporterMetadataShmem::ReadAppNotes(const Shmem& aShmem,
-                                         AnnotationTable& aNotes)
+CrashReporterMetadataShmem::ReadAppNotes(const Shmem& aShmem, CrashReporter::AnnotationTable* aNotes)
 {
   for (MetadataShmemReader reader(aShmem); !reader.Done(); reader.Next()) {
     switch (reader.Type()) {
       case EntryType::Annotation: {
-        Annotation key;
-        nsCString value;
-        if (!reader.Read(&key) || !reader.Read(value)) {
+        nsCString key, value;
+        if (!reader.Read(key) || !reader.Read(value)) {
           return;
         }
 
-        aNotes[key] = value;
+        aNotes->Put(key, value);
         break;
       }
       default:

@@ -248,15 +248,13 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
   if (mode == MODE_SERVER) {
     int pipe_fds[2];
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, pipe_fds) != 0) {
-      mozilla::ipc::AnnotateCrashReportWithErrno(
-        CrashReporter::Annotation::IpcCreatePipeSocketPairErrno, errno);
+      mozilla::ipc::AnnotateCrashReportWithErrno("IpcCreatePipeSocketPairErrno", errno);
       return false;
     }
     // Set both ends to be non-blocking.
     if (fcntl(pipe_fds[0], F_SETFL, O_NONBLOCK) == -1 ||
         fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK) == -1) {
-      mozilla::ipc::AnnotateCrashReportWithErrno(
-        CrashReporter::Annotation::IpcCreatePipeFcntlErrno, errno);
+      mozilla::ipc::AnnotateCrashReportWithErrno("IpcCreatePipeFcntlErrno", errno);
       IGNORE_EINTR(close(pipe_fds[0]));
       IGNORE_EINTR(close(pipe_fds[1]));
       return false;
@@ -264,8 +262,7 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
 
     if (!SetCloseOnExec(pipe_fds[0]) ||
         !SetCloseOnExec(pipe_fds[1])) {
-      mozilla::ipc::AnnotateCrashReportWithErrno(
-        CrashReporter::Annotation::IpcCreatePipeCloExecErrno, errno);
+      mozilla::ipc::AnnotateCrashReportWithErrno("IpcCreatePipeCloExecErrno", errno);
       IGNORE_EINTR(close(pipe_fds[0]));
       IGNORE_EINTR(close(pipe_fds[1]));
       return false;

@@ -12,7 +12,6 @@
 #include "nsDirectoryService.h"
 #include "nsDataHashtable.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/EnumeratedRange.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/Unused.h"
@@ -234,7 +233,7 @@ static const char* androidCrashReporterJobId = nullptr;
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
 static Mutex* notesFieldLock;
-static AnnotationTable crashReporterAPIData_Table;
+static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nullptr;
 static nsCString* crashEventAPIData = nullptr;
 static nsCString* notesField = nullptr;
@@ -324,6 +323,15 @@ private:
   uint32_t mPID;
 };
 #endif // MOZ_CRASHREPORTER_INJECTOR
+
+// Crashreporter annotations that we don't send along in subprocess reports.
+static const char* kSubprocessBlacklist[] = {
+  "FramePoisonBase",
+  "FramePoisonSize",
+  "StartupCrash",
+  "StartupTime",
+  "URL"
+};
 
 // If annotations are attempted before the crash reporter is enabled,
 // they queue up here.
@@ -671,16 +679,13 @@ WriteString(PlatformWriter& pw, const char* str) {
   pw.WriteBuffer(str, len);
 }
 
+template<int N>
 static void
-WriteAnnotation(PlatformWriter& pw, const Annotation name,
-                const char* value, size_t len = 0) {
-  WriteString(pw, AnnotationToString(name));
+WriteAnnotation(PlatformWriter& pw, const char (&name)[N],
+                const char* value) {
+  WriteLiteral(pw, name);
   WriteLiteral(pw, "=");
-  if (len == 0) {
-    WriteString(pw, value);
-  } else {
-    pw.WriteBuffer(value, len);
-  }
+  WriteString(pw, value);
   WriteLiteral(pw, "\n");
 };
 
@@ -732,18 +737,13 @@ WriteGlobalMemoryStatus(PlatformWriter* apiData, PlatformWriter* eventFile)
       WriteAnnotation(*eventFile, name, buffer);                \
     }
 
-    WRITE_STATEX_FIELD(dwMemoryLoad, Annotation::SystemMemoryUsePercentage,
-                       ltoa);
-    WRITE_STATEX_FIELD(ullTotalVirtual, Annotation::TotalVirtualMemory,
-                       _ui64toa);
-    WRITE_STATEX_FIELD(ullAvailVirtual, Annotation::AvailableVirtualMemory,
-                       _ui64toa);
-    WRITE_STATEX_FIELD(ullTotalPageFile, Annotation::TotalPageFile, _ui64toa);
-    WRITE_STATEX_FIELD(ullAvailPageFile, Annotation::AvailablePageFile,
-                       _ui64toa);
-    WRITE_STATEX_FIELD(ullTotalPhys, Annotation::TotalPhysicalMemory, _ui64toa);
-    WRITE_STATEX_FIELD(ullAvailPhys, Annotation::AvailablePhysicalMemory,
-                       _ui64toa);
+    WRITE_STATEX_FIELD(dwMemoryLoad, "SystemMemoryUsePercentage", ltoa);
+    WRITE_STATEX_FIELD(ullTotalVirtual, "TotalVirtualMemory", _ui64toa);
+    WRITE_STATEX_FIELD(ullAvailVirtual, "AvailableVirtualMemory", _ui64toa);
+    WRITE_STATEX_FIELD(ullTotalPageFile, "TotalPageFile", _ui64toa);
+    WRITE_STATEX_FIELD(ullAvailPageFile, "AvailablePageFile", _ui64toa);
+    WRITE_STATEX_FIELD(ullTotalPhys, "TotalPhysicalMemory", _ui64toa);
+    WRITE_STATEX_FIELD(ullAvailPhys, "AvailablePhysicalMemory", _ui64toa);
 
 #undef WRITE_STATEX_FIELD
   }
@@ -1035,43 +1035,41 @@ MinidumpCallback(
     }
 
     if (currentSessionId) {
-      WriteAnnotation(apiData, Annotation::TelemetrySessionId,
-                      currentSessionId);
-      WriteAnnotation(eventFile, Annotation::TelemetrySessionId,
-                      currentSessionId);
+      WriteAnnotation(apiData, "TelemetrySessionId", currentSessionId);
+      WriteAnnotation(eventFile, "TelemetrySessionId", currentSessionId);
     }
 
-    WriteAnnotation(apiData, Annotation::CrashTime, crashTimeString);
-    WriteAnnotation(eventFile, Annotation::CrashTime, crashTimeString);
+    WriteAnnotation(apiData, "CrashTime", crashTimeString);
+    WriteAnnotation(eventFile, "CrashTime", crashTimeString);
 
-    WriteAnnotation(apiData, Annotation::UptimeTS, uptimeTSString);
-    WriteAnnotation(eventFile, Annotation::UptimeTS, uptimeTSString);
+    WriteAnnotation(apiData, "UptimeTS", uptimeTSString);
+    WriteAnnotation(eventFile, "UptimeTS", uptimeTSString);
 
     if (timeSinceLastCrash != 0) {
-      WriteAnnotation(apiData, Annotation::SecondsSinceLastCrash,
+      WriteAnnotation(apiData, "SecondsSinceLastCrash",
                       timeSinceLastCrashString);
-      WriteAnnotation(eventFile, Annotation::SecondsSinceLastCrash,
+      WriteAnnotation(eventFile, "SecondsSinceLastCrash",
                       timeSinceLastCrashString);
     }
     if (isGarbageCollecting) {
-      WriteAnnotation(apiData, Annotation::IsGarbageCollecting, "1");
-      WriteAnnotation(eventFile, Annotation::IsGarbageCollecting, "1");
+      WriteAnnotation(apiData, "IsGarbageCollecting", "1");
+      WriteAnnotation(eventFile, "IsGarbageCollecting", "1");
     }
 
     char buffer[128];
 
     if (eventloopNestingLevel > 0) {
       XP_STOA(eventloopNestingLevel, buffer, 10);
-      WriteAnnotation(apiData, Annotation::EventLoopNestingLevel, buffer);
-      WriteAnnotation(eventFile, Annotation::EventLoopNestingLevel, buffer);
+      WriteAnnotation(apiData, "EventLoopNestingLevel", buffer);
+      WriteAnnotation(eventFile, "EventLoopNestingLevel", buffer);
     }
 
 #ifdef XP_WIN
     if (gBreakpadReservedVM) {
       _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
-      WriteAnnotation(apiData, Annotation::BreakpadReserveAddress, buffer);
+      WriteAnnotation(apiData, "BreakpadReserveAddress", buffer);
       _ui64toa(kReserveSize, buffer, 10);
-      WriteAnnotation(apiData, Annotation::BreakpadReserveSize, buffer);
+      WriteAnnotation(apiData, "BreakpadReserveSize", buffer);
     }
 
 #ifdef HAS_DLL_BLOCKLIST
@@ -1087,37 +1085,41 @@ MinidumpCallback(
     size_t rust_panic_len;
     if (get_rust_panic_reason(&rust_panic_reason, &rust_panic_len)) {
       // rust_panic_reason is not null-terminated.
-      WriteAnnotation(apiData, Annotation::MozCrashReason, rust_panic_reason,
-                      rust_panic_len);
-      WriteAnnotation(eventFile, Annotation::MozCrashReason, rust_panic_reason,
-                      rust_panic_len);
+      WriteLiteral(apiData, "MozCrashReason=");
+      apiData.WriteBuffer(rust_panic_reason, rust_panic_len);
+      WriteLiteral(apiData, "\n");
+      WriteLiteral(eventFile, "MozCrashReason=");
+      eventFile.WriteBuffer(rust_panic_reason, rust_panic_len);
+      WriteLiteral(eventFile, "\n");
     } else if (gMozCrashReason) {
-      WriteAnnotation(apiData, Annotation::MozCrashReason, gMozCrashReason);
-      WriteAnnotation(eventFile, Annotation::MozCrashReason, gMozCrashReason);
+      WriteAnnotation(apiData, "MozCrashReason", gMozCrashReason);
+      WriteAnnotation(eventFile, "MozCrashReason", gMozCrashReason);
     }
 
     if (oomAllocationSizeBuffer[0]) {
-      WriteAnnotation(apiData, Annotation::OOMAllocationSize,
-                      oomAllocationSizeBuffer);
-      WriteAnnotation(eventFile, Annotation::OOMAllocationSize,
-                      oomAllocationSizeBuffer);
+      WriteAnnotation(apiData, "OOMAllocationSize", oomAllocationSizeBuffer);
+      WriteAnnotation(eventFile, "OOMAllocationSize", oomAllocationSizeBuffer);
     }
 
     if (texturesSizeBuffer[0]) {
-      WriteAnnotation(apiData, Annotation::TextureUsage, texturesSizeBuffer);
-      WriteAnnotation(eventFile, Annotation::TextureUsage, texturesSizeBuffer);
+      WriteAnnotation(apiData, "TextureUsage", texturesSizeBuffer);
+      WriteAnnotation(eventFile, "TextureUsage", texturesSizeBuffer);
     }
 
     if (memoryReportPath) {
-      WriteAnnotation(apiData, Annotation::ContainsMemoryReport, "1");
-      WriteAnnotation(eventFile, Annotation::ContainsMemoryReport, "1");
+      WriteLiteral(apiData, "ContainsMemoryReport=1\n");
+      WriteLiteral(eventFile, "ContainsMemoryReport=1\n");
     }
 
     std::function<void(const char*)> getThreadAnnotationCB =
-      [&] (const char* aValue) -> void {
-      if (aValue) {
-        WriteAnnotation(apiData, Annotation::ThreadIdNameMapping, aValue);
-        WriteAnnotation(eventFile, Annotation::ThreadIdNameMapping, aValue);
+      [&] (const char * aAnnotation) -> void {
+      if (aAnnotation) {
+        WriteLiteral(apiData, "ThreadIdNameMapping=");
+        WriteLiteral(eventFile, "ThreadIdNameMapping=");
+        WriteString(apiData, aAnnotation);
+        WriteString(eventFile, aAnnotation);
+        WriteLiteral(apiData, "\n");
+        WriteLiteral(eventFile, "\n");
       }
     };
     GetFlatThreadAnnotation(getThreadAnnotationCB, false);
@@ -1284,24 +1286,26 @@ PrepareChildExceptionTimeAnnotations(void* context)
   }
 
   if (oomAllocationSizeBuffer[0]) {
-    WriteAnnotation(apiData, Annotation::OOMAllocationSize,
-                    oomAllocationSizeBuffer);
+    WriteAnnotation(apiData, "OOMAllocationSize", oomAllocationSizeBuffer);
   }
 
   char* rust_panic_reason;
   size_t rust_panic_len;
   if (get_rust_panic_reason(&rust_panic_reason, &rust_panic_len)) {
     // rust_panic_reason is not null-terminated.
-    WriteAnnotation(apiData, Annotation::MozCrashReason, rust_panic_reason,
-                    rust_panic_len);
+    WriteLiteral(apiData, "MozCrashReason=");
+    apiData.WriteBuffer(rust_panic_reason, rust_panic_len);
+    WriteLiteral(apiData, "\n");
   } else if (gMozCrashReason) {
-    WriteAnnotation(apiData, Annotation::MozCrashReason, gMozCrashReason);
+    WriteAnnotation(apiData, "MozCrashReason", gMozCrashReason);
   }
 
   std::function<void(const char*)> getThreadAnnotationCB =
-    [&] (const char * aValue) -> void {
-    if (aValue) {
-      WriteAnnotation(apiData, Annotation::ThreadIdNameMapping, aValue);
+    [&] (const char * aAnnotation) -> void {
+    if (aAnnotation) {
+      WriteLiteral(apiData, "ThreadIdNameMapping=");
+      WriteString(apiData, aAnnotation);
+      WriteLiteral(apiData, "\n");
     }
   };
   GetFlatThreadAnnotation(getThreadAnnotationCB, true);
@@ -1504,6 +1508,10 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   NS_ASSERTION(!notesFieldLock, "Shouldn't have a lock yet");
   notesFieldLock = new Mutex("notesFieldLock");
 
+  crashReporterAPIData_Hash =
+    new nsDataHashtable<nsCStringHashKey,nsCString>();
+  NS_ENSURE_TRUE(crashReporterAPIData_Hash, NS_ERROR_OUT_OF_MEMORY);
+
   notesField = new nsCString();
   NS_ENSURE_TRUE(notesField, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1670,7 +1678,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   char timeString[32];
   time_t startupTime = time(nullptr);
   XP_TTOA(startupTime, timeString, 10);
-  AnnotateCrashReport(Annotation::StartupTime, nsDependentCString(timeString));
+  AnnotateCrashReport(NS_LITERAL_CSTRING("StartupTime"),
+                      nsDependentCString(timeString));
 
 #if defined(XP_MACOSX)
   // On OS X, many testers like to see the OS crash reporting dialog
@@ -1924,7 +1933,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory, const nsACString& aBuildID)
   if(NS_SUCCEEDED(GetOrInit(dataDirectory,
                             NS_LITERAL_CSTRING("InstallTime") + aBuildID,
                             data, InitInstallTime)))
-    AnnotateCrashReport(Annotation::InstallTime, data);
+    AnnotateCrashReport(NS_LITERAL_CSTRING("InstallTime"), data);
 
   // this is a little different, since we can't init it with anything,
   // since it's stored at crash time, and we can't annotate the
@@ -1982,9 +1991,8 @@ nsresult UnsetExceptionHandler()
 
   // do this here in the unlikely case that we succeeded in allocating
   // our strings but failed to allocate gExceptionHandler.
-  std::fill(crashReporterAPIData_Table.begin(),
-            crashReporterAPIData_Table.end(),
-            EmptyCString());
+  delete crashReporterAPIData_Hash;
+  crashReporterAPIData_Hash = nullptr;
 
   delete crashReporterAPILock;
   crashReporterAPILock = nullptr;
@@ -2071,8 +2079,12 @@ static void ReplaceChar(nsCString& str, const nsACString& character,
 }
 
 static nsresult
-EscapeAnnotation(const nsACString& data, nsCString& escapedData)
+EscapeAnnotation(const nsACString& key, const nsACString& data, nsCString& escapedData)
 {
+  if (FindInReadable(NS_LITERAL_CSTRING("="), key) ||
+      FindInReadable(NS_LITERAL_CSTRING("\n"), key))
+    return NS_ERROR_INVALID_ARG;
+
   if (FindInReadable(NS_LITERAL_CSTRING("\0"), data))
     return NS_ERROR_INVALID_ARG;
 
@@ -2090,15 +2102,15 @@ EscapeAnnotation(const nsACString& data, nsCString& escapedData)
 class DelayedNote
 {
  public:
-  DelayedNote(Annotation aKey, const nsACString& aData)
-  : mKey(aKey), mData(aData), mType(CrashAnnotation) {}
+  DelayedNote(const nsACString& aKey, const nsACString& aData)
+  : mKey(aKey), mData(aData), mType(Annotation) {}
 
   explicit DelayedNote(const nsACString& aData)
   : mData(aData), mType(AppNote) {}
 
   void Run()
   {
-    if (mType == CrashAnnotation) {
+    if (mType == Annotation) {
       AnnotateCrashReport(mKey, mData);
     } else {
       AppendAppNotesToCrashReport(mData);
@@ -2106,9 +2118,9 @@ class DelayedNote
   }
 
  private:
-  Annotation mKey;
+  nsCString mKey;
   nsCString mData;
-  enum AnnotationType { CrashAnnotation, AppNote } mType;
+  enum AnnotationType { Annotation, AppNote } mType;
 };
 
 static void
@@ -2132,42 +2144,20 @@ RunAndCleanUpDelayedNotes()
   }
 }
 
-nsresult AnnotateCrashReport(Annotation key, bool data)
-{
-  return AnnotateCrashReport(key, data ? NS_LITERAL_CSTRING("1")
-                                       : NS_LITERAL_CSTRING("0"));
-}
-
-nsresult AnnotateCrashReport(Annotation key, int data)
-{
-  nsAutoCString dataString;
-  dataString.AppendInt(data);
-
-  return AnnotateCrashReport(key, dataString);
-}
-
-nsresult AnnotateCrashReport(Annotation key, unsigned int data)
-{
-  nsAutoCString dataString;
-  dataString.AppendInt(data);
-
-  return AnnotateCrashReport(key, dataString);
-}
-
-nsresult AnnotateCrashReport(Annotation key, const nsACString& data)
+nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 {
   if (!GetEnabled())
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCString escapedData;
-  nsresult rv = EscapeAnnotation(data, escapedData);
+  nsresult rv = EscapeAnnotation(key, data, escapedData);
   if (NS_FAILED(rv))
     return rv;
 
   if (!XRE_IsParentProcess()) {
     // The newer CrashReporterClient can be used from any thread.
     if (RefPtr<CrashReporterClient> client = CrashReporterClient::GetSingleton()) {
-      client->AnnotateCrashReport(key, escapedData);
+      client->AnnotateCrashReport(nsCString(key), escapedData);
       return NS_OK;
     }
 
@@ -2180,18 +2170,18 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data)
 
   MutexAutoLock lock(*crashReporterAPILock);
 
-  crashReporterAPIData_Table[key] = escapedData;
+  crashReporterAPIData_Hash->Put(key, escapedData);
 
   // now rebuild the file contents
   crashReporterAPIData->Truncate(0);
   crashEventAPIData->Truncate(0);
-  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    nsDependentCString str(AnnotationToString(key));
-    nsCString entry = crashReporterAPIData_Table[key];
+  for (auto it = crashReporterAPIData_Hash->Iter(); !it.Done(); it.Next()) {
+    const nsACString& key = it.Key();
+    nsCString entry = it.Data();
     if (!entry.IsEmpty()) {
       NS_NAMED_LITERAL_CSTRING(kEquals, "=");
       NS_NAMED_LITERAL_CSTRING(kNewline, "\n");
-      nsAutoCString line = str + kEquals + entry + kNewline;
+      nsAutoCString line = key + kEquals + entry + kNewline;
 
       crashReporterAPIData->Append(line);
       crashEventAPIData->Append(line);
@@ -2201,9 +2191,9 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data)
   return NS_OK;
 }
 
-nsresult RemoveCrashReportAnnotation(Annotation key)
+nsresult RemoveCrashReportAnnotation(const nsACString& key)
 {
-  return AnnotateCrashReport(key, EmptyCString());
+  return AnnotateCrashReport(key, NS_LITERAL_CSTRING(""));
 }
 
 nsresult SetGarbageCollecting(bool collecting)
@@ -2240,7 +2230,7 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
     // we must ensure that the data is escaped and valid before the parent
     // sees it.
     nsCString escapedData;
-    nsresult rv = EscapeAnnotation(data, escapedData);
+    nsresult rv = EscapeAnnotation(NS_LITERAL_CSTRING("Notes"), data, escapedData);
     if (NS_FAILED(rv))
       return rv;
 
@@ -2259,21 +2249,20 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
   MutexAutoLock lock(*notesFieldLock);
 
   notesField->Append(data);
-  return AnnotateCrashReport(Annotation::Notes, *notesField);
+  return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);
 }
 
 // Returns true if found, false if not found.
 static bool
-GetAnnotation(CrashReporter::Annotation key, nsACString& data)
+GetAnnotation(const nsACString& key, nsACString& data)
 {
   if (!gExceptionHandler)
     return false;
 
   MutexAutoLock lock(*crashReporterAPILock);
-  nsCString entry = crashReporterAPIData_Table[key];
-  if (entry.IsEmpty()) {
+  nsAutoCString entry;
+  if (!crashReporterAPIData_Hash->Get(key, &entry))
     return false;
-  }
 
   data = entry;
   return true;
@@ -2321,14 +2310,15 @@ bool GetServerURL(nsACString& aServerURL)
   if (!gExceptionHandler)
     return false;
 
-  return GetAnnotation(CrashReporter::Annotation::ServerURL, aServerURL);
+  return GetAnnotation(NS_LITERAL_CSTRING("ServerURL"), aServerURL);
 }
 
 nsresult SetServerURL(const nsACString& aServerURL)
 {
   // store server URL with the API data
   // the client knows to handle this specially
-  return AnnotateCrashReport(Annotation::ServerURL, aServerURL);
+  return AnnotateCrashReport(NS_LITERAL_CSTRING("ServerURL"),
+                             aServerURL);
 }
 
 nsresult
@@ -2951,11 +2941,25 @@ AppendExtraData(const nsAString& id, const AnnotationTable& data)
 //-----------------------------------------------------------------------------
 // Helpers for AppendExtraData()
 //
+struct Blacklist {
+  Blacklist() : mItems(nullptr), mLen(0) { }
+  Blacklist(const char** items, int len) : mItems(items), mLen(len) { }
+
+  bool Contains(const nsACString& key) const {
+    for (int i = 0; i < mLen; ++i)
+      if (key.EqualsASCII(mItems[i]))
+        return true;
+    return false;
+  }
+
+  const char** mItems;
+  const int mLen;
+};
+
 static void
-WriteAnnotation(PRFileDesc* fd, const Annotation key, const nsACString& value)
+WriteAnnotation(PRFileDesc* fd, const nsACString& key, const nsACString& value)
 {
-  const char* annotation = AnnotationToString(key);
-  PR_Write(fd, annotation, strlen(annotation));
+  PR_Write(fd, key.BeginReading(), key.Length());
   PR_Write(fd, "=", 1);
   PR_Write(fd, value.BeginReading(), value.Length());
   PR_Write(fd, "\n", 1);
@@ -2975,9 +2979,9 @@ WriteLiteral(PRFileDesc* fd, const char (&str)[N])
 static bool
 WriteExtraData(nsIFile* extraFile,
                const AnnotationTable& data,
+               const Blacklist& blacklist,
                bool writeCrashTime=false,
-               bool truncate=false,
-               bool content=false)
+               bool truncate=false)
 {
   PRFileDesc* fd;
   int truncOrAppend = truncate ? PR_TRUNCATE : PR_APPEND;
@@ -2987,14 +2991,13 @@ WriteExtraData(nsIFile* extraFile,
   if (NS_FAILED(rv))
     return false;
 
-  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    nsCString value = data[key];
-    // Skip entries in the blacklist and empty entries.
-    if ((content && IsAnnotationBlacklistedForContent(key)) ||
-         value.IsEmpty()) {
-      continue;
+  for (auto iter = data.ConstIter(); !iter.Done(); iter.Next()) {
+    // Skip entries in the blacklist.
+    const nsACString& key = iter.Key();
+    if (blacklist.Contains(key)) {
+        continue;
     }
-    WriteAnnotation(fd, key, value);
+    WriteAnnotation(fd, key, iter.Data());
   }
 
   if (writeCrashTime) {
@@ -3003,7 +3006,7 @@ WriteExtraData(nsIFile* extraFile,
     XP_TTOA(crashTime, crashTimeString, 10);
 
     WriteAnnotation(fd,
-                    Annotation::CrashTime,
+                    nsDependentCString("CrashTime"),
                     nsDependentCString(crashTimeString));
 
     double uptimeTS = (TimeStamp::NowLoRes() -
@@ -3012,13 +3015,12 @@ WriteExtraData(nsIFile* extraFile,
     SimpleNoCLibDtoA(uptimeTS, uptimeTSString, sizeof(uptimeTSString));
 
     WriteAnnotation(fd,
-                    Annotation::UptimeTS,
+                    nsDependentCString("UptimeTS"),
                     nsDependentCString(uptimeTSString));
   }
 
   if (memoryReportPath) {
-    WriteAnnotation(fd, Annotation::ContainsMemoryReport,
-                    NS_LITERAL_CSTRING("1"));
+    WriteLiteral(fd, "ContainsMemoryReport=1\n");
   }
 
   PR_Close(fd);
@@ -3028,7 +3030,7 @@ WriteExtraData(nsIFile* extraFile,
 bool
 AppendExtraData(nsIFile* extraFile, const AnnotationTable& data)
 {
-  return WriteExtraData(extraFile, data);
+  return WriteExtraData(extraFile, data, Blacklist());
 }
 
 static bool
@@ -3073,32 +3075,24 @@ ReadAndValidateExceptionTimeAnnotations(FILE*& aFd,
     if (strchr(line, '\n')) {
       break;
     }
-    // The annotation sould be known
-    Annotation annotation;
-    if (!AnnotationFromString(annotation, line)) {
-      break;
-    }
     // Data should have been escaped by the child
     if (!IsDataEscaped(data)) {
       break;
     }
     // Looks good, save the (line,data) pair
-    aAnnotations[annotation] = nsDependentCString(data, dataLen);
+    aAnnotations.Put(nsDependentCString(line),
+                     nsDependentCString(data, dataLen));
   }
 }
 
 /**
- * Writes extra data in the .extra file corresponding to the specified
- * minidump. If `content` is set to true then this assumes that of a child
- * process.
- *
  * NOTE: One side effect of this function is that it deletes the
  * GeckoChildCrash<pid>.extra file if it exists, once processed.
  */
 static bool
 WriteExtraForMinidump(nsIFile* minidump,
                       uint32_t pid,
-                      bool content,
+                      const Blacklist& blacklist,
                       nsIFile** extraFile)
 {
   nsCOMPtr<nsIFile> extra;
@@ -3108,10 +3102,10 @@ WriteExtraForMinidump(nsIFile* minidump,
 
   {
     MutexAutoLock lock(*crashReporterAPILock);
-    if (!WriteExtraData(extra, crashReporterAPIData_Table,
+    if (!WriteExtraData(extra, *crashReporterAPIData_Hash,
+                        blacklist,
                         true /*write crash time*/,
-                        true /*truncate*/,
-                        content)) {
+                        true /*truncate*/)) {
       return false;
     }
   }
@@ -3216,10 +3210,11 @@ OnChildProcessDumpRequested(void* aContext,
     aClientInfo->pid();
 #endif
 
-  if (!WriteExtraForMinidump(minidump, pid, /* content */ true,
-                             getter_AddRefs(extraFile))) {
+  if (!WriteExtraForMinidump(minidump, pid,
+                             Blacklist(kSubprocessBlacklist,
+                                       ArrayLength(kSubprocessBlacklist)),
+                             getter_AddRefs(extraFile)))
     return;
-  }
 
   if (ShouldReport()) {
     nsCOMPtr<nsIFile> memoryReport;
@@ -3742,8 +3737,7 @@ PairedDumpCallbackExtra(
   nsCOMPtr<nsIFile>& minidump = *static_cast< nsCOMPtr<nsIFile>* >(context);
 
   nsCOMPtr<nsIFile> extra;
-  return WriteExtraForMinidump(minidump, 0, /* content */ false,
-                               getter_AddRefs(extra));
+  return WriteExtraForMinidump(minidump, 0, Blacklist(), getter_AddRefs(extra));
 }
 
 ThreadId
