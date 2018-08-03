@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "env",
 
 const {
   PREF_BOOL,
-  PREF_COMPLEX,
   PREF_INT,
   PREF_INVALID,
   PREF_STRING,
@@ -60,9 +59,6 @@ class Branch {
 
       case PREF_INT:
         return this._branch.getIntPref(pref);
-
-      case PREF_COMPLEX:
-        throw new TypeError(`Unsupported complex preference: ${pref}`);
 
       case PREF_INVALID:
       default:
