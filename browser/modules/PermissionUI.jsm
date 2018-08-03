@@ -337,8 +337,10 @@ var PermissionPromptPrototype = {
                                   this.permissionKey,
                                   promptAction.action,
                                   scope);
-            } else if (promptAction.action == SitePermissions.BLOCK) {
-              // Temporarily store BLOCK permissions only.
+            } else if (promptAction.action == SitePermissions.BLOCK ||
+                       SitePermissions.permitTemporaryAllow(this.permissionKey)) {
+              // Temporarily store BLOCK permissions only unless permission object
+              // sets permitTemporaryAllow: true
               // SitePermissions does not consider subframes when storing temporary
               // permissions on a tab, thus storing ALLOW could be exploited.
               SitePermissions.set(this.principal.URI,
