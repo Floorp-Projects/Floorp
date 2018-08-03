@@ -754,8 +754,8 @@ class FontInspector {
    *
    * @param  {String} property
    *         CSS font property name or axis name
-   * @param  {String} value
-   *         CSS font property numeric value or axis value
+   * @param  {String|Number} value
+   *         CSS font property value or axis value
    * @param  {String|undefined} fromUnit
    *         Optional CSS unit to convert from
    * @param  {String|undefined} toUnit
@@ -770,9 +770,11 @@ class FontInspector {
         unit = toUnit;
       }
 
-      this.onFontPropertyUpdate(property, value, unit);
+      // Cast value to string.
+      this.onFontPropertyUpdate(property, value + "", unit);
     } else {
-      this.onAxisUpdate(property, value);
+      // Cast axis value to string.
+      this.onAxisUpdate(property, value + "");
     }
   }
 
