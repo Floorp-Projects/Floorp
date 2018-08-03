@@ -6435,6 +6435,7 @@ nsGlobalWindowOuter::GetPrivateRoot()
   return top;
 }
 
+// This has a caller in Windows-only code (nsNativeAppSupportWin).
 Location*
 nsGlobalWindowOuter::GetLocation()
 {
