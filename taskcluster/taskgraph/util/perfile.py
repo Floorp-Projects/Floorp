@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @memoize
-def perfile_number_of_chunks(try_task_config, head_repository, head_rev, type):
+def perfile_number_of_chunks(is_try, try_task_config, head_repository, head_rev, type):
     tests_per_chunk = 10.0
     if type.startswith('test-coverage'):
         tests_per_chunk = 30.0
@@ -48,15 +48,15 @@ def perfile_number_of_chunks(try_task_config, head_repository, head_rev, type):
     if try_task_config:
         specified_files = try_task_config.split(":")
 
-    try:
-        vcs = get_repository_object(GECKO)
-        changed_files.update(vcs.get_outgoing_files('AM'))
-    except InvalidRepoPath:
-        vcs = None
-    except CalledProcessError:
-        return 0
-
-    if not changed_files:
+    if is_try:
+        try:
+            vcs = get_repository_object(GECKO)
+            changed_files.update(vcs.get_outgoing_files('AM'))
+        except InvalidRepoPath:
+            vcs = None
+        except CalledProcessError:
+            return 0
+    else:
         changed_files.update(files_changed.get_changed_files(head_repository,
                                                              head_rev))
 
