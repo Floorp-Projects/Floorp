@@ -86,6 +86,10 @@ class ChromeCastPlayer implements GeckoMediaPlayer {
         public void onStatusUpdated() {
             MediaStatus mediaStatus = remoteMediaPlayer.getMediaStatus();
 
+            if (mediaStatus == null) {
+                return;
+            }
+
             switch (mediaStatus.getPlayerState()) {
             case MediaStatus.PLAYER_STATE_PLAYING:
                 EventDispatcher.getInstance().dispatch("MediaPlayer:Playing", null);
