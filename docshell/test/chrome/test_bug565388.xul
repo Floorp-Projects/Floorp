@@ -51,14 +51,12 @@ function test() {
     }
   }
 
-  var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].
-  createInstance(Ci.nsIPrincipal);
-  var webNav = Cc["@mozilla.org/appshell/appShellService;1"].
-  getService(Ci.nsIAppShellService).
-  createWindowlessBrowser(true);
-  var docShell = webNav.
-  QueryInterface(Ci.nsIInterfaceRequestor).
-  getInterface(Ci.nsIDocShell);
+  var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
+                          .getService(Ci.nsIPrincipal);
+  var webNav = Cc["@mozilla.org/appshell/appShellService;1"]
+                 .getService(Ci.nsIAppShellService)
+                 .createWindowlessBrowser(true);
+  var docShell = webNav.docShell;
   docShell.createAboutBlankContentViewer(systemPrincipal);
   var win = docShell.contentViewer.DOMDocument.defaultView;
 

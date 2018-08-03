@@ -69,8 +69,7 @@ function test()
         .createCodebasePrincipal(baseURI, {});
 
   let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
-  let interfaceRequestor = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor);
-  let docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
+  let docShell = chromeWebNav.docShell;
   docShell.createAboutBlankContentViewer(principal);
 
   info("fake webextension docShell created");

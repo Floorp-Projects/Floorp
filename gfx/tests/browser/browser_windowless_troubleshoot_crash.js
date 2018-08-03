@@ -4,8 +4,7 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
   let webNav = Services.appShell.createWindowlessBrowser(false);
 
   let onLoaded = new Promise((resolve, reject) => {
-    let docShell = webNav.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell);
+    let docShell = webNav.docShell;
     let listener = {
       observe(contentWindow, topic, data) {
         let observedDocShell = contentWindow.docShell
