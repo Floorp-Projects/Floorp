@@ -25,7 +25,7 @@ class FutexWaiter;
  *
  * A bookkeeping object always stored immediately before the raw buffer.
  * The buffer itself is mmap()'d and refcounted.
- * SharedArrayBufferObjects and AsmJS code may hold references.
+ * SharedArrayBufferObjects and structured clone objects may hold references.
  *
  *           |<------ sizeof ------>|<- length ->|
  *
@@ -38,8 +38,6 @@ class FutexWaiter;
  * else would have to change throughout the engine, the SARB would point to
  * the data array using a constant pointer, instead of computing its
  * address.
- *
- * If preparedForAsmJS_ is true then length_ never changes.
  *
  * If preparedForWasm_ is true then length_ can change following initialization;
  * it may grow toward maxSize_.  See extensive comments above WasmArrayRawBuffer
@@ -55,7 +53,6 @@ class SharedArrayRawBuffer
     uint32_t length_;
     uint32_t maxSize_;
     size_t   mappedSize_;         // Does not include the page for the header
-    bool     preparedForAsmJS_;
     bool     preparedForWasm_;
 
     // A list of structures representing tasks waiting on some
@@ -70,13 +67,12 @@ class SharedArrayRawBuffer
 
   protected:
     SharedArrayRawBuffer(uint8_t* buffer, uint32_t length, uint32_t maxSize, size_t mappedSize,
-                         bool preparedForAsmJS, bool preparedForWasm)
+                         bool preparedForWasm)
       : refcount_(1),
         lock_(mutexid::SharedArrayGrow),
         length_(length),
         maxSize_(maxSize),
         mappedSize_(mappedSize),
-        preparedForAsmJS_(preparedForAsmJS),
         preparedForWasm_(preparedForWasm),
         waiters_(nullptr)
     {
@@ -136,10 +132,6 @@ class SharedArrayRawBuffer
     }
 #endif
 
-    bool isPreparedForAsmJS() const {
-        return preparedForAsmJS_;
-    }
-
     bool isWasm() const {
         return preparedForWasm_;
     }
@@ -187,9 +179,9 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
     static const uint8_t RAWBUF_SLOT = 0;
 
     // LENGTH_SLOT holds the length of the underlying buffer as it was when this
-    // object was created.  For JS and AsmJS use cases this is the same length
-    // as the buffer, but for Wasm the buffer can grow, and the buffer's length
-    // may be greater than the object's length.
+    // object was created.  For JS use cases this is the same length as the
+    // buffer, but for Wasm the buffer can grow, and the buffer's length may be
+    // greater than the object's length.
     static const uint8_t LENGTH_SLOT = 1;
 
     static const uint8_t RESERVED_SLOTS = 2;
@@ -237,9 +229,6 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
         return getReservedSlot(LENGTH_SLOT).toPrivateUint32();
     }
 
-    bool isPreparedForAsmJS() const {
-        return rawBufferObject()->isPreparedForAsmJS();
-    }
     bool isWasm() const {
         return rawBufferObject()->isWasm();
     }
