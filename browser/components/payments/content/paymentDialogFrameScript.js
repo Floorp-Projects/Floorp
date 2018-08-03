@@ -96,7 +96,7 @@ let PaymentFrameScript = {
           saveAddressDefaultChecked:
             Services.prefs.getBoolPref(SAVE_ADDRESS_DEFAULT_PREF, false),
         }, waivedContent);
-        return prefValues;
+        return Cu.cloneInto(prefValues, waivedContent);
       },
     };
     waivedContent.PaymentDialogUtils = Cu.cloneInto(PaymentDialogUtils, waivedContent, {
