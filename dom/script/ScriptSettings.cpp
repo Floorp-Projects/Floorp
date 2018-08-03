@@ -671,7 +671,8 @@ AutoEntryScript::AutoEntryScript(JSObject* aObject,
                                  bool aIsMainThread)
   : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread)
 {
-  MOZ_ASSERT(!js::IsCrossCompartmentWrapper(aObject));
+  // xpc::NativeGlobal uses JS::GetNonCCWObjectGlobal, which asserts that
+  // aObject is not a CCW.
 }
 
 AutoEntryScript::~AutoEntryScript()
