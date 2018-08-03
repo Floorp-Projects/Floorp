@@ -255,9 +255,9 @@ class AssemblerX86Shared : public AssemblerShared
     struct RelativePatch {
         int32_t offset;
         void* target;
-        Relocation::Kind kind;
+        RelocationKind kind;
 
-        RelativePatch(int32_t offset, void* target, Relocation::Kind kind)
+        RelativePatch(int32_t offset, void* target, RelocationKind kind)
           : offset(offset),
             target(target),
             kind(kind)
@@ -399,7 +399,7 @@ class AssemblerX86Shared : public AssemblerShared
 #ifdef DEBUG
         MOZ_ASSERT(dataRelocations_.length() == 0);
         for (auto& j : jumps_)
-            MOZ_ASSERT(j.kind == Relocation::HARDCODED);
+            MOZ_ASSERT(j.kind == RelocationKind::HARDCODED);
 #endif
     }
 

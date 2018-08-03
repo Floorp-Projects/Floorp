@@ -76,7 +76,7 @@ CPU_preprocessor_checks = OrderedDict((
     ('x86', '__i386__ || _M_IX86'),
     ('x86_64', '__x86_64__ || _M_X64'),
     ('arm', '__arm__ || _M_ARM'),
-    ('aarch64', '__aarch64__'),
+    ('aarch64', '__aarch64__ || _M_ARM64'),
     ('ia64', '__ia64__'),
     ('s390x', '__s390x__'),
     ('s390', '__s390__'),

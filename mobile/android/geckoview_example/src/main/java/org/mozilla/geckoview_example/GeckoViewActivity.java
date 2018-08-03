@@ -34,7 +34,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.ProgressBar;
 
 import java.util.LinkedList;
 import java.util.Locale;
@@ -62,6 +64,8 @@ public class GeckoViewActivity extends AppCompatActivity {
     private boolean mCanGoBack;
     private boolean mCanGoForward;
     private boolean mFullScreen;
+
+    private ProgressBar mProgressView;
 
     private LinkedList<GeckoSession.WebResponseInfo> mPendingDownloads = new LinkedList<>();
 
@@ -95,6 +99,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 
         mUseMultiprocess = getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA, true);
+        mProgressView = (ProgressBar) findViewById(R.id.page_progress);
 
         if (sGeckoRuntime == null) {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
@@ -436,6 +441,14 @@ public class GeckoViewActivity extends AppCompatActivity {
         @Override
         public void onProgressChange(GeckoSession session, int progress) {
             Log.i(LOGTAG, "onProgressChange " + progress);
+
+            mProgressView.setProgress(progress, true);
+
+            if (progress > 0 && progress < 100) {
+                mProgressView.setVisibility(View.VISIBLE);
+            } else {
+                mProgressView.setVisibility(View.GONE);
+            }
         }
 
         @Override

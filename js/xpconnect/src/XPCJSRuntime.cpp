@@ -2879,7 +2879,7 @@ ReflectorNode::edges(JSContext* cx, bool wantNames) const
             }
         }
     }
-    return range;
+    return js::UniquePtr<EdgeRange>(range.release());
 }
 
 } // Namespace ubi
