@@ -1295,7 +1295,7 @@ enum class Trap
     InvalidConversionToInteger,
     // Integer division by zero.
     IntegerDivideByZero,
-    // Out of bounds on wasm memory accesses and asm.js atomic accesses.
+    // Out of bounds on wasm memory accesses.
     OutOfBounds,
     // Unaligned on wasm atomic accesses; also used for non-standard ARM
     // unaligned access faults.
