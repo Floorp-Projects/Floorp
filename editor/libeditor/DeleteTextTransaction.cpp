@@ -112,7 +112,7 @@ DeleteTextTransaction::CanDoIt() const
   if (NS_WARN_IF(!mCharData) || NS_WARN_IF(!mEditorBase)) {
     return false;
   }
-  return mEditorBase->IsModifiableNode(mCharData);
+  return mEditorBase->IsModifiableNode(*mCharData);
 }
 
 NS_IMETHODIMP

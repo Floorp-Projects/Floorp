@@ -3190,7 +3190,7 @@ HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode)
   // Do nothing if the node is read-only.
   // XXX This is not a override method of EditorBase's method.  This might
   //     cause not called accidentally.  We need to investigate this issue.
-  if (NS_WARN_IF(!IsModifiableNode(aNode.AsContent()) &&
+  if (NS_WARN_IF(!IsModifiableNode(*aNode.AsContent()) &&
                  !IsMozEditorBogusNode(aNode.AsContent()))) {
     return NS_ERROR_FAILURE;
   }
@@ -3220,7 +3220,7 @@ HTMLEditor::DeleteTextWithTransaction(CharacterData& aCharData,
                                       uint32_t aLength)
 {
   // Do nothing if the node is read-only
-  if (!IsModifiableNode(&aCharData)) {
+  if (!IsModifiableNode(aCharData)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3239,7 +3239,7 @@ HTMLEditor::InsertTextWithTransaction(
   }
 
   // Do nothing if the node is read-only
-  if (!IsModifiableNode(aPointToInsert.GetContainer())) {
+  if (!IsModifiableNode(*aPointToInsert.GetContainer())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3356,12 +3356,6 @@ HTMLEditor::ContentRemoved(nsIContent* aChild,
     RefPtr<TextEditRules> rules(mRules);
     rules->DocumentModified();
   }
-}
-
-bool
-HTMLEditor::IsModifiableNode(nsINode* aNode)
-{
-  return !aNode || aNode->IsEditable();
 }
 
 NS_IMETHODIMP

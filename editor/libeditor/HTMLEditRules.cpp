@@ -660,22 +660,31 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
 
   RefPtr<nsRange> range = SelectionRef().GetRangeAt(0);
   nsCOMPtr<nsINode> selStartNode = range->GetStartContainer();
+  if (NS_WARN_IF(!selStartNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (!HTMLEditorRef().IsModifiableNode(selStartNode)) {
+  if (!HTMLEditorRef().IsModifiableNode(*selStartNode)) {
     *aCancel = true;
     return NS_OK;
   }
 
   nsCOMPtr<nsINode> selEndNode = range->GetEndContainer();
+  if (NS_WARN_IF(!selEndNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (selStartNode != selEndNode) {
-    if (!HTMLEditorRef().IsModifiableNode(selEndNode)) {
+    if (!HTMLEditorRef().IsModifiableNode(*selEndNode)) {
       *aCancel = true;
       return NS_OK;
     }
 
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (!HTMLEditorRef().IsModifiableNode(range->GetCommonAncestor())) {
+    nsINode* commonAncestor = range->GetCommonAncestor();
+    if (NS_WARN_IF(!commonAncestor)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!HTMLEditorRef().IsModifiableNode(*commonAncestor)) {
       *aCancel = true;
       return NS_OK;
     }
@@ -1749,7 +1758,7 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
   MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
   // Do nothing if the node is read-only
-  if (!HTMLEditorRef().IsModifiableNode(atStartOfSelection.GetContainer())) {
+  if (!HTMLEditorRef().IsModifiableNode(*atStartOfSelection.GetContainer())) {
     *aCancel = true;
     return NS_OK;
   }

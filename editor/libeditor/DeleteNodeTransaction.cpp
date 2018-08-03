@@ -52,7 +52,7 @@ bool
 DeleteNodeTransaction::CanDoIt() const
 {
   if (NS_WARN_IF(!mNodeToDelete) || NS_WARN_IF(!mEditorBase) ||
-      !mParentNode || !mEditorBase->IsModifiableNode(mParentNode)) {
+      !mParentNode || !mEditorBase->IsModifiableNode(*mParentNode)) {
     return false;
   }
   return true;
