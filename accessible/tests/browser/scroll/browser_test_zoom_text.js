@@ -21,7 +21,7 @@ async function runTests(browser, accDoc) {
   testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);
 
   await ContentTask.spawn(browser, {}, () => {
-    zoomDocument(document, 2.0);
+    zoomDocument(content.document, 2.0);
   });
 
   paragraph = findAccessibleChildByID(accDoc, "paragraph2", [nsIAccessibleText]);

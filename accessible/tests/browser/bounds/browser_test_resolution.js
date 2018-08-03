@@ -17,7 +17,7 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
     getRangeExtents(acc, 0, -1, COORDTYPE_SCREEN_RELATIVE) : getBounds(acc);
 
   await ContentTask.spawn(browser, scale, _scale => {
-    setResolution(document, _scale);
+    setResolution(content.document, _scale);
   });
 
   let [scaledX, scaledY, scaledWidth, scaledHeight] = type == "text" ?
@@ -30,7 +30,7 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
   isWithin(scaledY - docY, (y - docY) * scale, 2, "Wrong scaled y of " + name);
 
   await ContentTask.spawn(browser, {}, () => {
-    setResolution(document, 1.0);
+    setResolution(content.document, 1.0);
   });
 }
 
