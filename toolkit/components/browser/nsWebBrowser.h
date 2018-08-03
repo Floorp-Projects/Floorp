@@ -24,7 +24,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScrollable.h"
 #include "nsISHistory.h"
-#include "nsITextScroll.h"
 #include "nsIWidget.h"
 #include "nsIWebProgress.h"
 #include "nsISecureBrowserUI.h"
@@ -76,7 +75,6 @@ class nsWebBrowser final : public nsIWebBrowser,
                            public nsIDocShellTreeItem,
                            public nsIBaseWindow,
                            public nsIScrollable,
-                           public nsITextScroll,
                            public nsIInterfaceRequestor,
                            public nsIWebBrowserPersist,
                            public nsIWebBrowserFocus,
@@ -115,7 +113,6 @@ public:
   NS_DECL_NSIDOCSHELLTREEITEM
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSISCROLLABLE
-  NS_DECL_NSITEXTSCROLL
   NS_DECL_NSIWEBBROWSER
   NS_DECL_NSIWEBNAVIGATION
   NS_DECL_NSIWEBBROWSERSETUP
@@ -148,7 +145,6 @@ protected:
   nsCOMPtr<nsIBaseWindow> mDocShellAsWin;
   nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
   nsCOMPtr<nsIScrollable> mDocShellAsScrollable;
-  nsCOMPtr<nsITextScroll> mDocShellAsTextScroll;
   mozilla::OriginAttributes mOriginAttributes;
 
   nsCOMPtr<nsIWidget> mInternalWidget;
