@@ -24,6 +24,37 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class ExperimentEvaluatorTest {
     @Test
+    fun testEvaluateEmtpyMatchers() {
+        val experiment = Experiment(
+            "testid",
+            "testexperiment",
+            "testdesc",
+            Experiment.Matcher(
+                appId = "",
+                regions = listOf()
+            ),
+            Experiment.Bucket(
+                70,
+                20
+            ),
+            1528916183)
+
+        val context = mock(Context::class.java)
+        `when`(context.packageName).thenReturn("other.appId")
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
+        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+        val packageManager = mock(PackageManager::class.java)
+        val packageInfo = PackageInfo()
+        packageInfo.versionName = "test.version"
+        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
+        `when`(context.packageManager).thenReturn(packageManager)
+
+        val evaluator = ExperimentEvaluator()
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+    }
+
+    @Test
     fun testEvaluateBuckets() {
         val experiment = Experiment(
             "testid",
@@ -306,6 +337,56 @@ class ExperimentEvaluatorTest {
                 20
             ),
             1528916183)
+
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+    }
+
+    @Test
+    fun testEvaluateReleaseChannel() {
+        val experiment = Experiment(
+            "testid",
+            "testexperiment",
+            "testdesc",
+            Experiment.Matcher(
+                "eng",
+                "test.appId",
+                listOf("USA", "GBR"),
+                "test.version",
+                "unknown",
+                "robolectric",
+                "USA",
+                "alpha"
+            ),
+            Experiment.Bucket(
+                70,
+                20
+            ),
+            1528916183)
+
+        val context = mock(Context::class.java)
+        `when`(context.packageName).thenReturn("test.appId")
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
+        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+        val packageManager = mock(PackageManager::class.java)
+        val packageInfo = PackageInfo()
+        packageInfo.versionName = "test.version"
+        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
+        `when`(context.packageManager).thenReturn(packageManager)
+
+        var evaluator = ExperimentEvaluator(object : ValuesProvider() {
+            override fun getReleaseChannel(context: Context): String? {
+                return "alpha"
+            }
+        })
+
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+
+        evaluator = ExperimentEvaluator(object : ValuesProvider() {
+            override fun getRegion(context: Context): String? {
+                return "production"
+            }
+        })
 
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
