@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 this.EXPORTED_SYMBOLS = [
   /* exported PollPromise, TimedPromise */
   "PollPromise",
+  "Sleep",
   "TimedPromise",
 
   /* exported MessageManagerDestroyedPromise */
@@ -205,6 +206,27 @@ function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
     timer.cancel();
     throw err;
   });
+}
+
+/**
+ * Pauses for the given duration.
+ *
+ * @param {number} timeout
+ *     Duration to wait before fulfilling promise in milliseconds.
+ *
+ * @return {Promise}
+ *     Promise that fulfills when the `timeout` is elapsed.
+ *
+ * @throws {TypeError}
+ *     If `timeout` is not a number.
+ * @throws {RangeError}
+ *     If `timeout` is not an unsigned integer.
+ */
+function Sleep(timeout) {
+  if (typeof timeout != "number") {
+    throw new TypeError();
+  }
+  return new TimedPromise(() => {}, {timeout, throws: null});
 }
 
 /**
