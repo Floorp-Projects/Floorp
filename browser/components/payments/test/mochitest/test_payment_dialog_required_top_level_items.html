@@ -71,6 +71,7 @@ async function setup({shippingRequired, payerRequired}) {
   }] : null;
   state.request.paymentOptions.requestShipping = shippingRequired;
   state.request.paymentOptions.requestPayerName = payerRequired;
+  state.request.paymentOptions.requestPayerPhone = payerRequired;
   state.savedAddresses = shippingRequired || payerRequired ? {
     "48bnds6854t": {
       "address-level1": "MI",
@@ -92,9 +93,24 @@ async function setup({shippingRequired, payerRequired}) {
       "street-address": "P.O. Box 123",
       "tel": "+1 650 555-5555",
     },
+    "abcdef1234": {
+      "address-level1": "CA",
+      "address-level2": "Mountain View",
+      "country": "US",
+      "guid": "abcdef1234",
+      "name": "Mrs. Fields",
+    },
   } : {};
   state.savedBasicCards = {
-    "john-doe": Object.assign({methodName: "basic-card"}, deepClone(PTU.BasicCards.JohnDoe)),
+    "john-doe": Object.assign({
+      "cc-exp": (new Date()).getFullYear() + 9 + "-01",
+      methodName: "basic-card",
+      guid: "aaa1",
+    }, deepClone(PTU.BasicCards.JohnDoe)),
+    "missing-fields": Object.assign({
+      methodName: "basic-card",
+      guid: "aaa2",
+    }, deepClone(PTU.BasicCards.MissingFields)),
   };
   state.selectedPayerAddress = null;
   state.selectedPaymentCard = null;
@@ -107,7 +123,16 @@ async function setup({shippingRequired, payerRequired}) {
 function selectFirstItemOfPicker(picker) {
   picker.dropdown.popupBox.focus();
   let options = picker.dropdown.popupBox.children;
+  info(`Selecting "${options[0].textContent}" from the options`);
   synthesizeKey(options[0].textContent, {});
+  ok(picker.dropdown.selectedOption, `Option should be selected for ${picker.localName}`);
+}
+
+function selectLastItemOfPicker(picker) {
+  picker.dropdown.popupBox.focus();
+  let options = picker.dropdown.popupBox.children;
+  let lastOption = options[options.length - 1];
+  synthesizeKey(lastOption.textContent, {});
   ok(picker.dropdown.selectedOption, `Option should be selected for ${picker.localName}`);
 }
 
@@ -158,6 +183,24 @@ add_task(async function runTests() {
     await stateChangedPromise;
 
     ok(!payButton.disabled, "Button is enabled when required options are selected");
+
+    // Individually toggle each picker to see how the missing fields affects Pay button.
+    for (let picker of testCase.pickers) {
+      // There is no "invalid" option for shipping options.
+      if (picker != allPickers.shippingOption) {
+        stateChangedPromise = promiseStateChange(el1.requestStore);
+        selectLastItemOfPicker(picker);
+        await stateChangedPromise;
+
+        ok(payButton.disabled, "Button is disabled when selected option has missing fields");
+      }
+
+      stateChangedPromise = promiseStateChange(el1.requestStore);
+      selectFirstItemOfPicker(picker);
+      await stateChangedPromise;
+
+      ok(!payButton.disabled, "Button is enabled when selected option has all required fields");
+    }
   }
 });
 </script>
