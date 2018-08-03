@@ -4879,6 +4879,56 @@ CompareIRGenerator::tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rh
     return true;
 }
 
+// Handle NumberUndefined comparisons
+bool
+CompareIRGenerator::tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!(lhsVal_.isUndefined() && rhsVal_.isNumber()) &&
+        !(rhsVal_.isUndefined() && lhsVal_.isNumber()))
+    {
+        return false;
+    }
+
+    lhsVal_.isNumber() ? writer.guardIsNumber(lhsId) : writer.guardIsUndefined(lhsId);
+    rhsVal_.isNumber() ? writer.guardIsNumber(rhsId) : writer.guardIsUndefined(rhsId);
+
+    // Comparing a number with undefined will always be true for NE/STRICTNE,
+    // and always be false for other compare ops.
+    writer.loadBooleanResult(op_ == JSOP_NE || op_ == JSOP_STRICTNE);
+    writer.returnFromIC();
+
+    trackAttached("NumberUndefined");
+    return true;
+}
+
+// Handle {null/undefined} x {null,undefined} equality comparisons
+bool
+CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!lhsVal_.isNullOrUndefined() || !rhsVal_.isNullOrUndefined())
+        return false;
+
+    if (op_ == JSOP_EQ || op_ == JSOP_NE) {
+        writer.guardIsNullOrUndefined(lhsId);
+        writer.guardIsNullOrUndefined(rhsId);
+        // Sloppy equality means we actually only care about the op:
+        writer.loadBooleanResult(op_ == JSOP_EQ);
+        trackAttached("SloppyNullUndefined");
+    } else {
+        // Strict equality only hits this branch, and only in the
+        // undef {!,=}==  undef and null {!,=}== null cases.
+        // The other cases should have hit compareStrictlyDifferentTypes.
+        MOZ_ASSERT(lhsVal_.isNull() == rhsVal_.isNull());
+        lhsVal_.isNull() ? writer.guardIsNull(lhsId) : writer.guardIsUndefined(lhsId);
+        rhsVal_.isNull() ? writer.guardIsNull(rhsId) : writer.guardIsUndefined(rhsId);
+        writer.loadBooleanResult(op_ == JSOP_STRICTEQ);
+        trackAttached("StrictNullUndefinedEquality");
+    }
+
+    writer.returnFromIC();
+    return true;
+}
+
 bool
 CompareIRGenerator::tryAttachStub()
 {
@@ -4903,9 +4953,20 @@ CompareIRGenerator::tryAttachStub()
             return true;
         if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
+
+        // This should come after strictDifferent types to
+        // allow it to only handle sloppy equality.
+        if (tryAttachNullUndefined(lhsId, rhsId))
+            return true;
     }
 
-    // We want these to come below to allow us to bypass the
+    // This should preceed the Int32/Number cases to allow
+    // them to not concern themselves with handling undefined
+    // or null.
+    if (tryAttachNumberUndefined(lhsId, rhsId))
+        return true;
+
+    // We want these to be last, to allow us to bypass the
     // strictly-different-types cases in the below attachment code
     if (tryAttachInt32(lhsId, rhsId))
         return true;
