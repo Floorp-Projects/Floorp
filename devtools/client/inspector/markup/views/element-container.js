@@ -101,7 +101,6 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
 
   async _buildEventTooltipContent(target) {
     const tooltip = this.markup.eventDetailsTooltip;
-
     await tooltip.hide();
 
     const listenerInfo = await this.node.getEventListenerInfo();
@@ -114,7 +113,20 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     tooltip.once("hidden", () => {
       // Enable the image preview tooltip after closing the event details
       this.markup._enableImagePreviewTooltip();
+
+      // Allow clicks on the event badge to display the event popup again
+      // (but allow the currently queued click event to run first).
+      this.markup.win.setTimeout(() => {
+        if (this.editor._eventBadge) {
+          this.editor._eventBadge.style.pointerEvents = "auto";
+        }
+      }, 0);
     });
+
+    // Prevent clicks on the event badge to display the event popup again.
+    if (this.editor._eventBadge) {
+      this.editor._eventBadge.style.pointerEvents = "none";
+    }
     tooltip.show(target);
   },
 
