@@ -10,7 +10,7 @@ addAccessibleTask(`
   async function(browser, accDoc) {
     let onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
     await ContentTask.spawn(browser, null, () => {
-      let vc = getAccessible(document, nsIAccessibleDocument).virtualCursor;
+      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument).virtualCursor;
       vc.position = getAccessible("p1");
     });
 
@@ -23,8 +23,8 @@ addAccessibleTask(`
 
     onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
     await ContentTask.spawn(browser, null, () => {
-      let vc = getAccessible(document, nsIAccessibleDocument).virtualCursor;
-      vc.moveNextByText(nsIAccessiblePivot.CHAR_BOUNDARY);
+      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument).virtualCursor;
+      vc.moveNextByText(Ci.nsIAccessiblePivot.CHAR_BOUNDARY);
     });
     vccEvent = (await onVCChanged).QueryInterface(
       nsIAccessibleVirtualCursorChangeEvent);
@@ -35,7 +35,7 @@ addAccessibleTask(`
 
     onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
     await ContentTask.spawn(browser, null, () => {
-      let vc = getAccessible(document, nsIAccessibleDocument).virtualCursor;
+      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument).virtualCursor;
       vc.position = getAccessible("input1");
     });
     vccEvent = (await onVCChanged).QueryInterface(

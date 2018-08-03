@@ -36,13 +36,13 @@ async function runTests(browser, accDoc) {
   await testEmptyInputNode("i1");
 
   await ContentTask.spawn(browser, {}, () => {
-    zoomDocument(document, 2.0);
+    zoomDocument(content.document, 2.0);
   });
 
   await testTextNode("p1");
 
   await ContentTask.spawn(browser, {}, () => {
-    zoomDocument(document, 1.0);
+    zoomDocument(content.document, 1.0);
   });
 }
 
