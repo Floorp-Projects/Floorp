@@ -84,24 +84,13 @@ class BaseCrashTestCase(MarionetteTestCase):
 
         super(BaseCrashTestCase, self).tearDown()
 
-    def crash(self, chrome=True):
-        context = 'chrome' if chrome else 'content'
-        sandbox = None if chrome else 'system'
-
+    def crash(self, parent=True):
         socket_timeout = self.marionette.client.socket_timeout
         self.marionette.client.socket_timeout = self.socket_timeout
 
-        self.marionette.set_context(context)
+        self.marionette.set_context("content")
         try:
-            self.marionette.execute_script("""
-              // Copied from crash me simple
-              Components.utils.import("resource://gre/modules/ctypes.jsm");
-
-              // ctypes checks for NULL pointer derefs, so just go near-NULL.
-              var zero = new ctypes.intptr_t(8);
-              var badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
-              var crash = badptr.contents;
-            """, sandbox=sandbox)
+            self.marionette.navigate("about:crash{}".format("parent" if parent else "content"))
         finally:
             self.marionette.client.socket_timeout = socket_timeout
 
@@ -110,7 +99,7 @@ class TestCrash(BaseCrashTestCase):
 
     def test_crash_chrome_process(self):
         self.assertRaisesRegexp(IOError, "Process crashed",
-                                self.crash, chrome=True)
+                                self.crash, parent=True)
 
         # A crash results in a non zero exit code
         self.assertNotIn(self.marionette.instance.runner.returncode, (None, 0))
@@ -132,7 +121,7 @@ class TestCrash(BaseCrashTestCase):
         # has to be ignored. To check for the IOError, further commands have to
         # be executed until the process is gone.
         with self.assertRaisesRegexp(IOError, "Content process crashed"):
-            self.crash(chrome=False)
+            self.crash(parent=False)
             Wait(self.marionette, timeout=self.socket_timeout,
                  ignored_exceptions=NoSuchWindowException).until(
                 lambda _: self.marionette.get_url(),
@@ -154,7 +143,7 @@ class TestCrash(BaseCrashTestCase):
 
     @expectedFailure
     def test_unexpected_crash(self):
-        self.crash(chrome=True)
+        self.crash(parent=True)
 
 
 class TestCrashInSetUp(BaseCrashTestCase):
@@ -163,7 +152,7 @@ class TestCrashInSetUp(BaseCrashTestCase):
         super(TestCrashInSetUp, self).setUp()
 
         self.assertRaisesRegexp(IOError, "Process crashed",
-                                self.crash, chrome=True)
+                                self.crash, parent=True)
 
         # A crash results in a non zero exit code
         self.assertNotIn(self.marionette.instance.runner.returncode, (None, 0))
@@ -181,7 +170,7 @@ class TestCrashInTearDown(BaseCrashTestCase):
     def tearDown(self):
         try:
             self.assertRaisesRegexp(IOError, "Process crashed",
-                                    self.crash, chrome=True)
+                                    self.crash, parent=True)
 
             # A crash results in a non zero exit code
             self.assertNotIn(self.marionette.instance.runner.returncode, (None, 0))
