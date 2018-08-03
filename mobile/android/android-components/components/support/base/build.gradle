@@ -30,6 +30,7 @@ dependencies {
     // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
     api "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
 
+    testImplementation project(':support-test')
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
