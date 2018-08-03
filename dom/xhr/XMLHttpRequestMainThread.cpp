@@ -2100,6 +2100,14 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   mXMLParserStreamListener = nullptr;
   mContext = nullptr;
 
+  // If window.stop() or other aborts were issued, handle as an abort
+  if (status == NS_BINDING_ABORTED) {
+    mFlagParseBody = false;
+    IgnoredErrorResult rv;
+    RequestErrorSteps(ProgressEventType::abort, NS_OK, rv);
+    return NS_OK;
+  }
+
   bool waitingForBlobCreation = false;
 
   // If we have this error, we have to deal with a file: URL + responseType =
