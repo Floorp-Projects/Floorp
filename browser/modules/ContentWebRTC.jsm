@@ -425,15 +425,5 @@ function getMessageManagerForWindow(aContentWindow) {
     return null;
   }
 
-  let ir = docShell.sameTypeRootTreeItem
-                   .QueryInterface(Ci.nsIInterfaceRequestor);
-  try {
-    // This throws NS_NOINTERFACE for closed tabs (only with e10s enabled).
-    return ir.getInterface(Ci.nsIContentFrameMessageManager);
-  } catch (e) {
-    if (e.result == Cr.NS_NOINTERFACE) {
-      return null;
-    }
-    throw e;
-  }
+  return docShell.messageManager;
 }
