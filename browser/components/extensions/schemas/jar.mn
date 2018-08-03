@@ -16,7 +16,6 @@ browser.jar:
     content/browser/schemas/geckoProfiler.json
     content/browser/schemas/history.json
     content/browser/schemas/menus.json
-    content/browser/schemas/menus_internal.json
     content/browser/schemas/omnibox.json
     content/browser/schemas/page_action.json
     content/browser/schemas/pkcs11.json
