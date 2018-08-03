@@ -38,7 +38,7 @@ def browser_kwargs(test_type, run_info_data, config, **kwargs):
         "binary": kwargs["binary"],
         "binary_args": kwargs["binary_args"],
         "debug_info": kwargs["debug_info"],
-        "server_config": config.ssl_config["ca_cert_path"],
+        "server_config": config.ssl_config,
         "user_stylesheets": kwargs.get("user_stylesheets"),
     }
 
