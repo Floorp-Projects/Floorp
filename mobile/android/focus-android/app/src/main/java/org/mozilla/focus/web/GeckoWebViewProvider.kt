@@ -182,7 +182,6 @@ class GeckoWebViewProvider : IWebViewProvider {
         override fun loadUrl(url: String) {
             currentUrl = url
             geckoSession.loadUri(currentUrl)
-            callback?.onProgress(TEN_PROGRESS)
         }
 
         override fun cleanup() {
@@ -337,10 +336,13 @@ class GeckoWebViewProvider : IWebViewProvider {
 
         private fun createProgressDelegate(): GeckoSession.ProgressDelegate {
             return object : GeckoSession.ProgressDelegate {
+                override fun onProgressChange(session: GeckoSession?, progress: Int) {
+                    callback?.onProgress(progress)
+                }
+
                 override fun onPageStart(session: GeckoSession, url: String) {
                     callback?.onPageStarted(url)
                     callback?.resetBlockedTrackers()
-                    callback?.onProgress(QUARTER_PROGRESS)
                     isSecure = false
                 }
 
@@ -351,7 +353,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                             isSecure = true
                         }
 
-                        callback?.onProgress(FINAL_PROGRESS)
                         callback?.onPageFinished(isSecure)
                     }
                 }
@@ -591,9 +592,6 @@ class GeckoWebViewProvider : IWebViewProvider {
         private var geckoRuntime: GeckoRuntime? = null
         private var internalAboutData: String? = null
         private var internalRightsData: String? = null
-        private const val TEN_PROGRESS = 10
-        private const val QUARTER_PROGRESS = 25
-        private const val FINAL_PROGRESS = 100
         private const val USER_AGENT =
             "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0"
     }
