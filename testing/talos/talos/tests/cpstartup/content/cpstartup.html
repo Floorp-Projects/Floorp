@@ -4,9 +4,7 @@
 
       function init() {
         if (document.location.hash.indexOf("#auto") == 0) {
-          let mm = window.docShell
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIContentFrameMessageManager);
+          let mm = window.docShell.messageManager;
 
           mm.addMessageListener("CPStartup:FinalResults", function onResults(msg) {
             mm.removeMessageListener("CPStartup:FinalResults", onResults);
