@@ -163,7 +163,7 @@ add_task(async function() {
   let dropmarkerRect = document.getAnonymousElementByAttribute(gURLBar,
     "anonid", "historydropmarker").getBoundingClientRect();
   let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
-    "anonid", "textbox-input-box").getBoundingClientRect();
+    "anonid", "moz-input-box").getBoundingClientRect();
   let expectedRects = {
     filter: rects => rects.filter(r => !(
       // We put text into the urlbar so expect its textbox to change.

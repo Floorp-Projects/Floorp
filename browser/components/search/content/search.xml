@@ -503,9 +503,11 @@
           this.setAttribute("clickSelectsAll", true);
 
         var textBox = document.getAnonymousElementByAttribute(this,
-                                              "anonid", "textbox-input-box");
-        var cxmenu = document.getAnonymousElementByAttribute(textBox,
-                                          "anonid", "input-box-contextmenu");
+                                              "anonid", "moz-input-box");
+
+        // Force the Custom Element to upgrade until Bug 1470242 handles this:
+        customElements.upgrade(textBox);
+        var cxmenu = textBox.menupopup;
         cxmenu.addEventListener("popupshowing",
                                 () => { this.initContextMenu(cxmenu); },
                                 {capture: true, once: true});
