@@ -491,7 +491,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
                          (aEditSubAction == EditSubAction::eRedo))) {
     // don't let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     // expand the "changed doc range" as needed
     PromoteRange(*mDocChangeRange, aEditSubAction);
@@ -660,22 +660,31 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
 
   RefPtr<nsRange> range = SelectionRef().GetRangeAt(0);
   nsCOMPtr<nsINode> selStartNode = range->GetStartContainer();
+  if (NS_WARN_IF(!selStartNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (!HTMLEditorRef().IsModifiableNode(selStartNode)) {
+  if (!HTMLEditorRef().IsModifiableNode(*selStartNode)) {
     *aCancel = true;
     return NS_OK;
   }
 
   nsCOMPtr<nsINode> selEndNode = range->GetEndContainer();
+  if (NS_WARN_IF(!selEndNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (selStartNode != selEndNode) {
-    if (!HTMLEditorRef().IsModifiableNode(selEndNode)) {
+    if (!HTMLEditorRef().IsModifiableNode(*selEndNode)) {
       *aCancel = true;
       return NS_OK;
     }
 
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (!HTMLEditorRef().IsModifiableNode(range->GetCommonAncestor())) {
+    nsINode* commonAncestor = range->GetCommonAncestor();
+    if (NS_WARN_IF(!commonAncestor)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!HTMLEditorRef().IsModifiableNode(*commonAncestor)) {
       *aCancel = true;
       return NS_OK;
     }
@@ -1449,7 +1458,7 @@ HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   AutoLockListener lockit(&mListenerEnabled);
 
   // don't change my selection in subtransactions
-  AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
   nsAutoString tString(*inString);
   const char16_t *unicodeBuf = tString.get();
   int32_t pos = 0;
@@ -1749,7 +1758,7 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
   MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
   // Do nothing if the node is read-only
-  if (!HTMLEditorRef().IsModifiableNode(atStartOfSelection.GetContainer())) {
+  if (!HTMLEditorRef().IsModifiableNode(*atStartOfSelection.GetContainer())) {
     *aCancel = true;
     return NS_OK;
   }
@@ -2967,7 +2976,7 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
   // Figure out if the endpoints are in nodes that can be merged.  Adjust
   // surrounding whitespace in preparation to delete selection.
   if (!IsPlaintextEditor()) {
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
     rv = WSRunObject::PrepareToDeleteRange(&HTMLEditorRef(),
                                            address_of(startNode), &startOffset,
                                            address_of(endNode), &endOffset);
@@ -3383,7 +3392,7 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
     }
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
   // offset below is where you find yourself in rightBlock when you traverse
   // upwards from leftBlock
@@ -4506,7 +4515,7 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
   }
 
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
-  AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
   // Contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -5921,7 +5930,7 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDocument)
 
   {
     // Transactions may set selection, but we will set selection if necessary.
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     while (item && node != rootElement) {
       // XXX If we redesign ClearStyle(), we can use EditorDOMPoint in this
@@ -7548,7 +7557,7 @@ HTMLEditRules::GetListActionNodes(
 
   {
     // We don't like other people messing with our selection!
-    AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     // contruct a list of nodes to act on.
     nsresult rv = GetNodesFromSelection(EditSubAction::eCreateOrChangeList,

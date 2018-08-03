@@ -1111,7 +1111,7 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
         transferable->GetAnyTransferData(bestFlavor,
                                          getter_AddRefs(genericDataObj),
                                          &len))) {
-    AutoTransactionsConserveSelection dontChangeMySelection(this);
+    AutoTransactionsConserveSelection dontChangeMySelection(*this);
     nsAutoString flavor;
     CopyASCIItoUTF16(bestFlavor, flavor);
     nsAutoString stuffToPaste;

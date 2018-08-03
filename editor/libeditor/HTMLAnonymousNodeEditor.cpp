@@ -378,7 +378,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   nsIContent* hostContent = GetActiveEditingHost();
 
   if (mIsObjectResizingEnabled && focusElement &&
-      IsModifiableNode(focusElement) && focusElement != hostContent) {
+      IsModifiableNode(*focusElement) && focusElement != hostContent) {
     if (nsGkAtoms::img == focusTagAtom) {
       mResizedObjectIsAnImage = true;
     }
@@ -396,7 +396,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   }
 
   if (mIsAbsolutelyPositioningEnabled && absPosElement &&
-      IsModifiableNode(absPosElement) && absPosElement != hostContent) {
+      IsModifiableNode(*absPosElement) && absPosElement != hostContent) {
     if (mAbsolutelyPositionedObject) {
       nsresult rv = RefreshGrabber();
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -411,7 +411,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   }
 
   if (mIsInlineTableEditingEnabled && cellElement &&
-      IsModifiableNode(cellElement) && cellElement != hostContent) {
+      IsModifiableNode(*cellElement) && cellElement != hostContent) {
     if (mInlineEditedCell) {
       nsresult rv = RefreshInlineTableEditingUI();
       if (NS_WARN_IF(NS_FAILED(rv))) {

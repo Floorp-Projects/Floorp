@@ -101,6 +101,19 @@ class Benchmark(object):
         return proc.wait()
 
 
+class RunOnceBenchmark(Benchmark):
+    def collect_results(self):
+        bench_total = 0
+        # NOTE: for this benchmark we run the test once, so we have a single value array
+        for bench, scores in self.scores.items():
+            for score, values in scores.items():
+                test_name = "{}-{}".format(self.name, score)
+                total = sum(values) / len(values)
+                self.suite['subtests'].append({'name': test_name, 'value': total})
+                bench_total += int(sum(values))
+        self.suite['value'] = bench_total
+
+
 class Ares6(Benchmark):
     name = 'ares6'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'ARES-6')
@@ -159,47 +172,7 @@ class Ares6(Benchmark):
             self.suite['value'] = self.last_summary
 
 
-class SixSpeed(Benchmark):
-    name = 'six-speed'
-    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'six-speed')
-    units = 'ms'
-
-    @property
-    def command(self):
-        cmd = super(SixSpeed, self).command
-        return cmd + ['test.js']
-
-    def reset(self):
-        super(SixSpeed, self).reset()
-
-        # Scores are of the form:
-        # {<bench_name>: {<score_name>: [<values>]}}
-        self.scores = defaultdict(lambda: defaultdict(list))
-
-    def process_line(self, output):
-        m = re.search("(.+): (\d+)", output)
-        if not m:
-            return
-        subtest = m.group(1)
-        score = m.group(2)
-        if subtest not in self.scores[self.name]:
-            self.scores[self.name][subtest] = []
-        self.scores[self.name][subtest].append(int(score))
-
-
-    def collect_results(self):
-        bench_total = 0
-        # NOTE: for this benchmark we run the test once, so we have a single value array
-        for bench, scores in self.scores.items():
-            for score, values in scores.items():
-                test_name = "{}-{}".format(self.name, score)
-                total = sum(values) / len(values)
-                self.suite['subtests'].append({'name': test_name, 'value': total})
-                bench_total += int(sum(values))
-        self.suite['value'] = bench_total
-
-
-class AsmJSApps(Benchmark):
+class AsmJSApps(RunOnceBenchmark):
     name = 'asmjsapps'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'asmjs-apps')
     units = 'ms'
@@ -243,22 +216,67 @@ class AsmJSApps(Benchmark):
         self.scores[self.name][subtest].append(int(score))
 
 
-    def collect_results(self):
-        bench_total = 0
-        # NOTE: for this benchmark we run the test once, so we have a single value array
-        for bench, scores in self.scores.items():
-            for score, values in scores.items():
-                test_name = "{}-{}".format(self.name, score)
-                total = sum(values) / len(values)
-                self.suite['subtests'].append({'name': test_name, 'value': total})
-                bench_total += int(sum(values))
-        self.suite['value'] = bench_total
+class SixSpeed(RunOnceBenchmark):
+    name = 'six-speed'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'six-speed')
+    units = 'ms'
+
+    @property
+    def command(self):
+        cmd = super(SixSpeed, self).command
+        return cmd + ['test.js']
+
+    def reset(self):
+        super(SixSpeed, self).reset()
+
+        # Scores are of the form:
+        # {<bench_name>: {<score_name>: [<values>]}}
+        self.scores = defaultdict(lambda: defaultdict(list))
+
+    def process_line(self, output):
+        m = re.search("(.+): (\d+)", output)
+        if not m:
+            return
+        subtest = m.group(1)
+        score = m.group(2)
+        if subtest not in self.scores[self.name]:
+            self.scores[self.name][subtest] = []
+        self.scores[self.name][subtest].append(int(score))
+
+
+class SunSpider(RunOnceBenchmark):
+    name = 'sunspider'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'SunSpider', 'sunspider-0.9.1')
+    units = 'ms'
+
+    @property
+    def command(self):
+        cmd = super(SunSpider, self).command
+        return cmd + ['sunspider-standalone-driver.js']
+
+    def reset(self):
+        super(SunSpider, self).reset()
+
+        # Scores are of the form:
+        # {<bench_name>: {<score_name>: [<values>]}}
+        self.scores = defaultdict(lambda: defaultdict(list))
+
+    def process_line(self, output):
+        m = re.search("(.+): (\d+)", output)
+        if not m:
+            return
+        subtest = m.group(1)
+        score = m.group(2)
+        if subtest not in self.scores[self.name]:
+            self.scores[self.name][subtest] = []
+        self.scores[self.name][subtest].append(int(score))
 
 
 all_benchmarks = {
+    'asmjs-apps': AsmJSApps,
     'ares6': Ares6,
     'six-speed': SixSpeed,
-    'asmjs-apps': AsmJSApps,
+    'sunspider': SunSpider
 }
 
 

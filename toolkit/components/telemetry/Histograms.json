@@ -7220,6 +7220,37 @@
     ],
     "description": "Number of 'event' pings sent, by reason"
   },
+  "TELEMETRY_EVENT_REGISTRATION_ERROR": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "bug_numbers": [1480204],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "Other",
+      "Name",
+      "Category",
+      "Method",
+      "Object",
+      "ExtraKeys"
+    ],
+    "description": "Number of event registration failures, by field causing the failure"
+  },
+  "TELEMETRY_EVENT_RECORDING_ERROR": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "bug_numbers": [1480204],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "UnknownEvent",
+      "Expired",
+      "ExtraKey",
+      "Value",
+      "Extra"
+    ],
+    "description": "Number of event recording failures, by type of failure"
+  },
   "TELEMETRY_TEST_FLAG": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
@@ -9208,7 +9239,7 @@
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "64",
+    "expires_in_version": "68",
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
@@ -9218,7 +9249,7 @@
   "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "64",
+    "expires_in_version": "68",
     "kind": "enumerated",
     "n_values": 4,
     "bug_numbers": [1400757],
