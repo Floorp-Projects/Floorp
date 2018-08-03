@@ -2,29 +2,26 @@
 "use strict";
 
 function frameScript() {
-  function getSelectedText() {
-    let frame = this.content.frames[0].frames[1];
-    let docShell = frame.docShell;
-    let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsISelectionDisplay)
-                             .QueryInterface(Ci.nsISelectionController);
-    let selection = controller.getSelection(controller.SELECTION_FIND);
-    let range = selection.getRangeAt(0);
-    let scope = {};
-    ChromeUtils.import("resource://gre/modules/FindContent.jsm", scope);
-    let highlighter = (new scope.FindContent(docShell)).highlighter;
-    let r1 = frame.parent.frameElement.getBoundingClientRect();
-    let f1 = highlighter._getFrameElementOffsets(frame.parent);
-    let r2 = frame.frameElement.getBoundingClientRect();
-    let f2 = highlighter._getFrameElementOffsets(frame);
-    let r3 = range.getBoundingClientRect();
-    let rect = {
-      top: (r1.top + r2.top + r3.top + f1.y + f2.y),
-      left: (r1.left + r2.left + r3.left + f1.x + f2.x),
-    };
-    this.sendAsyncMessage("test:find:selectionTest", {text: selection.toString(), rect});
-  }
-  getSelectedText();
+  let frame = this.content.frames[0].frames[1];
+  let docShell = frame.docShell;
+  let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsISelectionDisplay)
+                           .QueryInterface(Ci.nsISelectionController);
+  let selection = controller.getSelection(controller.SELECTION_FIND);
+  let range = selection.getRangeAt(0);
+  let scope = {};
+  ChromeUtils.import("resource://gre/modules/FindContent.jsm", scope);
+  let highlighter = (new scope.FindContent(docShell)).highlighter;
+  let r1 = frame.parent.frameElement.getBoundingClientRect();
+  let f1 = highlighter._getFrameElementOffsets(frame.parent);
+  let r2 = frame.frameElement.getBoundingClientRect();
+  let f2 = highlighter._getFrameElementOffsets(frame);
+  let r3 = range.getBoundingClientRect();
+  let rect = {
+    top: (r1.top + r2.top + r3.top + f1.y + f2.y),
+    left: (r1.left + r2.left + r3.left + f1.x + f2.x),
+  };
+  this.sendAsyncMessage("test:find:selectionTest", {text: selection.toString(), rect});
 }
 
 function waitForMessage(messageManager, topic) {
@@ -144,7 +141,7 @@ add_task(async function testDuplicatePinnedTab() {
 
   let {selectedBrowser} = gBrowser;
 
-  let frameScriptUrl = `data:,(${frameScript})()`;
+  let frameScriptUrl = `data:,(${frameScript}).call(this)`;
   selectedBrowser.messageManager.loadFrameScript(frameScriptUrl, false);
   let message = await waitForMessage(selectedBrowser.messageManager, "test:find:selectionTest");
 

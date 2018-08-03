@@ -114,7 +114,7 @@ add_task(async function test_on_created_navigation_target_from_context_menu_subf
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
-        pageElementSelector: function() {
+        pageElementSelector: () => {
           // This code runs as a framescript in the child process and it returns the
           // target link in the subframe.
           return this.content.frames[0]
@@ -136,7 +136,7 @@ add_task(async function test_on_created_navigation_target_from_context_menu_subf
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
-        pageElementSelector: function() {
+        pageElementSelector: () => {
           // This code runs as a framescript in the child process and it returns the
           // target link in the subframe.
           return this.content.frames[0]
