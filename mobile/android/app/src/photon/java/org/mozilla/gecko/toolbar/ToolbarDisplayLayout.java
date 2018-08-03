@@ -335,7 +335,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
 
         int index = url.indexOf(baseDomain);
-        if (index == -1) {
+        if (index == -1 || url.startsWith("javascript:")) {
             setTitle(url);
             return;
         }
