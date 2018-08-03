@@ -509,14 +509,13 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
           if (ds) {
             nsCOMPtr<nsITabChild> tabChild = ds->GetTabChild();
             if (tabChild) {
-              nsCOMPtr<nsISupports> mm;
+              RefPtr<ContentFrameMessageManager> mm;
               tabChild->GetMessageManager(getter_AddRefs(mm));
-              nsCOMPtr<EventTarget> et = do_QueryInterface(mm);
-              if (et) {
+              if (mm) {
                 nsCOMPtr<nsISupports> tabChildAsSupports =
                   do_QueryInterface(tabChild);
                 mozilla::TraceScriptHolder(tabChildAsSupports, aTrc);
-                EventListenerManager* elm = et->GetExistingListenerManager();
+                EventListenerManager* elm = mm->GetExistingListenerManager();
                 if (elm) {
                   elm->TraceListeners(aTrc);
                 }
