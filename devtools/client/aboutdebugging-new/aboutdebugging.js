@@ -12,10 +12,16 @@ const { require } = BrowserLoader({
 });
 const Services = require("Services");
 
+const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
 const { createFactory } =
   require("devtools/client/shared/vendor/react");
 const { render, unmountComponentAtNode } =
   require("devtools/client/shared/vendor/react-dom");
+const Provider =
+  createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+
+const actions = require("./src/actions/index");
+const { configureStore } = require("./src/create-store");
 
 const App = createFactory(require("./src/components/App"));
 
@@ -27,7 +33,10 @@ const AboutDebugging = {
       return;
     }
 
-    render(App(), this.mount);
+    this.store = configureStore();
+    this.actions = bindActionCreators(actions, this.store.dispatch);
+
+    render(Provider({ store: this.store }, App()), this.mount);
   },
 
   destroy() {
