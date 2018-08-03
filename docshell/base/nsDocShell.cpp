@@ -639,11 +639,6 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
   } else if (aIID.Equals(NS_GET_IID(nsITabChild))) {
     *aSink = GetTabChild().take();
     return *aSink ? NS_OK : NS_ERROR_FAILURE;
-  } else if (aIID.Equals(NS_GET_IID(nsIContentFrameMessageManager))) {
-    RefPtr<ContentFrameMessageManager> mm = GetMessageManager();
-    nsCOMPtr<nsIContentFrameMessageManager> mm2 = do_QueryObject(mm);
-    mm2.forget(aSink);
-    return *aSink ? NS_OK : NS_NOINTERFACE;
   } else {
     return nsDocLoader::GetInterface(aIID, aSink);
   }
