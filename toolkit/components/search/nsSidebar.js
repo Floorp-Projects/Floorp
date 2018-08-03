@@ -11,13 +11,7 @@ function nsSidebar() {
 nsSidebar.prototype = {
   init(window) {
     this.window = window;
-    try {
-      this.mm = window.docShell
-                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIContentFrameMessageManager);
-    } catch (e) {
-      Cu.reportError(e);
-    }
+    this.mm = window.docShell.messageManager;
   },
 
   // This function implements window.external.AddSearchProvider().

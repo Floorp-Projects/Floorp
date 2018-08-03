@@ -41,10 +41,7 @@ var LightweightThemeChildHelper = {
     const windowEnumerator = Services.ww.getWindowEnumerator();
     while (windowEnumerator.hasMoreElements()) {
       const window = windowEnumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
-      const tabChildGlobal = window.docShell
-                                   .sameTypeRootTreeItem
-                                   .QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIContentFrameMessageManager);
+      const tabChildGlobal = window.docShell.messageManager;
       const {chromeOuterWindowID, content} = tabChildGlobal;
       if (changedKeys.includes(`theme/${chromeOuterWindowID}`) &&
           content && this.whitelist.has(content.document.documentURI)) {

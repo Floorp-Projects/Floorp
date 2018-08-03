@@ -266,9 +266,7 @@ let ProfileAutocomplete = {
   },
 
   _frameMMFromWindow(contentWindow) {
-    return contentWindow.docShell
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIContentFrameMessageManager);
+    return contentWindow.docShell.messageManager;
   },
 
   _getSelectedIndex(contentWindow) {
@@ -630,9 +628,7 @@ var FormAutofillContent = {
   },
 
   _messageManagerFromWindow(win) {
-    return win.docShell
-              .QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIContentFrameMessageManager);
+    return win.docShell.messageManager;
   },
 
   _onKeyDown(e) {
