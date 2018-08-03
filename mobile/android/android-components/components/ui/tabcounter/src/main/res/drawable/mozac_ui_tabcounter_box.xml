@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <stroke
+        android:width="2.3dp"
+        android:color="@color/mozac_ui_tabcounter_default_tint" />
+    <corners android:radius="2dp" />
+    <solid android:color="@android:color/transparent" />
+</shape>

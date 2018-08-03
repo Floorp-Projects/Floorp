@@ -87,6 +87,9 @@ project(':ui-icons').projectDir = new File('components/ui/icons')
 include ':ui-progress'
 project(':ui-progress').projectDir = new File('components/ui/progress')
 
+include ':ui-tabcounter'
+project(':ui-tabcounter').projectDir = new File('components/ui/tabcounter')
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Services
 ////////////////////////////////////////////////////////////////////////////////////////////////////
