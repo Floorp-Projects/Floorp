@@ -274,6 +274,9 @@ case "$target" in
         x86_64-*)
             MIDL_FLAGS="${MIDL_FLAGS} -env x64"
             ;;
+        aarch64-*)
+            MIDL_FLAGS="${MIDL_FLAGS} -env arm64"
+            ;;
         esac
 
         unset _MSVC_VER_FILTER
