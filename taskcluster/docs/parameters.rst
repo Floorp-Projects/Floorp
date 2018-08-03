@@ -84,8 +84,10 @@ Try Configuration
 
 ``try_mode``
     The mode in which a try push is operating.  This can be one of
-    ``"try_task_config"``, ``"try_option_syntax"``, or ``None`` meaning no try
+    ``"try_task_config"``, ``"try_option_syntax"``, ``"try_select"`` or ``None`` meaning no try
     input was provided.
+
+    ``"try_select"`` is used by ``mach try fuzzy`` to build a list of tasks to select from.
 
 ``try_options``
     The arguments given as try syntax (as a dictionary), or ``None`` if
