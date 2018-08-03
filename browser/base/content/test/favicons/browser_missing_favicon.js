@@ -12,7 +12,6 @@ add_task(async () => {
     let faviconPromise = waitForLinkAvailable(browser);
 
     BrowserTestUtils.loadURI(browser, testPath + "file_with_favicon.html");
-    await BrowserTestUtils.browserLoaded(browser);
 
     let iconURI = await faviconPromise;
     is(iconURI, expectedIcon, "Got correct icon.");

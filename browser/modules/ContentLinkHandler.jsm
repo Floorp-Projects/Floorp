@@ -294,10 +294,11 @@ function guessType(icon) {
 /*
  * Selects the best rich icon and tab icon from a list of IconInfo objects.
  *
+ * @param {Document} document The document to select icons for.
  * @param {Array} iconInfos A list of IconInfo objects.
  * @param {integer} preferredWidth The preferred width for tab icons.
  */
-function selectIcons(iconInfos, preferredWidth) {
+function selectIcons(document, iconInfos, preferredWidth) {
   if (iconInfos.length == 0) {
     return {
       richIcon: null,
@@ -449,7 +450,6 @@ class ContentLinkHandler {
     chromeGlobal.addEventListener("DOMLinkChanged", this);
     chromeGlobal.addEventListener("pageshow", this);
     chromeGlobal.addEventListener("pagehide", this);
-    chromeGlobal.addEventListener("DOMHeadElementParsed", this);
 
     // For every page we attempt to find a rich icon and a tab icon. These
     // objects take care of the load process for each.
@@ -461,7 +461,8 @@ class ContentLinkHandler {
 
   loadIcons() {
     let preferredWidth = PREFERRED_WIDTH * Math.ceil(this.chromeGlobal.content.devicePixelRatio);
-    let { richIcon, tabIcon } = selectIcons(this.iconInfos, preferredWidth);
+    let { richIcon, tabIcon } = selectIcons(this.chromeGlobal.content.document,
+                                            this.iconInfos, preferredWidth);
     this.iconInfos = [];
 
     if (richIcon) {
@@ -485,9 +486,8 @@ class ContentLinkHandler {
     this.iconTask.arm();
   }
 
-  onHeadParsed(event) {
-    let document = this.chromeGlobal.content.document;
-    if (event.target.ownerDocument != document) {
+  onPageShow(event) {
+    if (event.target != this.chromeGlobal.content.document) {
       return;
     }
 
@@ -497,7 +497,7 @@ class ContentLinkHandler {
 
       // Inject the default icon. Use documentURIObject so that we do the right
       // thing with about:-style error pages. See bug 453442
-      let baseURI = document.documentURIObject;
+      let baseURI = this.chromeGlobal.content.document.documentURIObject;
       if (baseURI.schemeIs("http") || baseURI.schemeIs("https")) {
         let iconUri = baseURI.mutate().setPathQueryRef("/favicon.ico").finalize();
         this.addIcon({
@@ -505,25 +505,12 @@ class ContentLinkHandler {
           width: -1,
           isRichIcon: false,
           type: TYPE_ICO,
-          node: document,
+          node: this.chromeGlobal.content.document,
         });
       }
     }
 
     // We're likely done with icon parsing so load the pending icons now.
-    if (this.iconTask.isArmed) {
-      this.iconTask.disarm();
-      this.loadIcons();
-    }
-  }
-
-  onPageShow(event) {
-    if (event.target != this.chromeGlobal.content.document) {
-      return;
-    }
-
-    // If we've seen any additional icons since the start of the body element
-    // load them now.
     if (this.iconTask.isArmed) {
       this.iconTask.disarm();
       this.loadIcons();
@@ -630,9 +617,6 @@ class ContentLinkHandler {
         break;
       case "pagehide":
         this.onPageHide(event);
-        break;
-      case "DOMHeadElementParsed":
-        this.onHeadParsed(event);
         break;
       default:
         this.onLinkEvent(event);
