@@ -129,10 +129,7 @@ public:
       AUTO_PROFILER_LABEL("AsyncFreeSnowWhite::Run", GCCC);
 
       TimeStamp start = TimeStamp::Now();
-      // 2 ms budget, given that kICCSliceBudget is only 3 ms
-      js::SliceBudget budget = js::SliceBudget(js::TimeBudget(2));
-      bool hadSnowWhiteObjects =
-        nsCycleCollector_doDeferredDeletionWithBudget(budget);
+      bool hadSnowWhiteObjects = nsCycleCollector_doDeferredDeletion();
       Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING,
                             uint32_t((TimeStamp::Now() - start).ToMilliseconds()));
       if (hadSnowWhiteObjects && !mContinuation) {
@@ -149,7 +146,7 @@ public:
   nsresult Dispatch()
   {
       nsCOMPtr<nsIRunnable> self(this);
-      return NS_IdleDispatchToCurrentThread(self.forget(), 500);
+      return NS_IdleDispatchToCurrentThread(self.forget(), 2500);
   }
 
   void Start(bool aContinuation = false, bool aPurge = false)
