@@ -11,11 +11,15 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class SearchSuggestionsService(searchEngine: SearchEngine) {
-    private var client: SearchSuggestionClient = SearchSuggestionClient(searchEngine, { fetch(it) })
+    private lateinit var client: SearchSuggestionClient
     private var httpClient = OkHttpClient()
 
     private val _canProvideSearchSuggestions = MutableLiveData<Boolean>()
     val canProvideSearchSuggestions: LiveData<Boolean> = _canProvideSearchSuggestions
+
+    init {
+        updateSearchEngine(searchEngine)
+    }
 
     private fun fetch(url: String): String? {
         httpClient.dispatcher().queuedCalls()
@@ -47,6 +51,7 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
     }
 
     fun updateSearchEngine(searchEngine: SearchEngine) {
+        _canProvideSearchSuggestions.value = searchEngine.canProvideSearchSuggestions
         client = SearchSuggestionClient(searchEngine, { fetch(it) })
     }
 

@@ -16,12 +16,14 @@ import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 import org.mozilla.focus.R
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 
-
-
-
 class SearchSuggestionsFragment : Fragment() {
-
     private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
+
+    override fun onResume() {
+        super.onResume()
+
+        searchSuggestionsViewModel.refresh()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -11,6 +11,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import android.util.Log
 
 
 class SearchSuggestionsViewModel(
@@ -21,17 +22,17 @@ class SearchSuggestionsViewModel(
     private val _promptUserToEnableSearchSuggestions = MutableLiveData<Boolean>()
 
     val canRequestSearchSuggestions = service.canProvideSearchSuggestions
-
-    val selectedSearchSuggestion: LiveData<String>
-        get() = _selectedSearchSuggestion
-
-    val searchQuery: LiveData<String>
-        get() = _searchQuery
-
-    val promptUserToEnableSearchSuggestions: LiveData<Boolean>
-        get() = _promptUserToEnableSearchSuggestions
+    val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
+    val searchQuery: LiveData<String> = _searchQuery
+    val promptUserToEnableSearchSuggestions: LiveData<Boolean> = _promptUserToEnableSearchSuggestions
 
     val suggestions = switchMap(searchQuery) {
+        val canFetchSearchSuggestions = searchSuggestionsPreferences.searchSuggestionsEnabled()
+            && (canRequestSearchSuggestions.value == true)
+
+        Log.e("enabled", "${searchSuggestionsPreferences.searchSuggestionsEnabled()}")
+        if (!canFetchSearchSuggestions) { return@switchMap null }
+
         val data = service.getSuggestions(it)
 
         map(data) {
@@ -58,10 +59,14 @@ class SearchSuggestionsViewModel(
         _searchQuery.value = query
     }
 
+    fun refresh() {
+        service.updateSearchEngine(searchSuggestionsPreferences.getSearchEngine())
+    }
+
     class Factory(private val context: Context) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
             val preferences = SearchSuggestionsPreferences(context)
-            val service = SearchSuggestionsService(preferences.searchEngine.value!!)
+            val service = SearchSuggestionsService(preferences.getSearchEngine())
 
             @Suppress("UNCHECKED_CAST")
             return SearchSuggestionsViewModel(service, preferences) as T
