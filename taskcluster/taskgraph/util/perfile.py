@@ -12,6 +12,7 @@ from mozpack.path import match as mozpackmatch
 from mozversioncontrol import get_repository_object, InvalidRepoPath
 from subprocess import CalledProcessError
 from taskgraph import files_changed
+import taskgraph
 from .. import GECKO
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,10 @@ logger = logging.getLogger(__name__)
 
 @memoize
 def perfile_number_of_chunks(is_try, try_task_config, head_repository, head_rev, type):
+    if taskgraph.fast and not is_try:
+        # When iterating on taskgraph changes, the exact number of chunks that
+        # test-verify runs usually isn't important, so skip it when going fast.
+        return 3
     tests_per_chunk = 10.0
     if type.startswith('test-coverage'):
         tests_per_chunk = 30.0
