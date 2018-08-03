@@ -1766,12 +1766,10 @@ private:
     Entry* firstRemoved = nullptr;
 
     while (true) {
-      if (MOZ_UNLIKELY(entry->isRemoved())) {
-        if (!firstRemoved) {
+      if (aCollisionBit == sCollisionBit && !firstRemoved) {
+        if (MOZ_UNLIKELY(entry->isRemoved())) {
           firstRemoved = entry;
-        }
-      } else {
-        if (aCollisionBit == sCollisionBit) {
+        } else {
           entry->setCollision();
         }
       }
