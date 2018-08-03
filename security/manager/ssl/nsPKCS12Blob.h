@@ -24,54 +24,23 @@ public:
   ~nsPKCS12Blob() {}
 
   // PKCS#12 Import
-  nsresult ImportFromFile(nsIFile* file);
+  nsresult ImportFromFile(nsIFile* file, const nsAString& password,
+                          uint32_t& error);
 
   // PKCS#12 Export
-  nsresult ExportToFile(nsIFile* file, nsIX509Cert** certs, int numCerts);
+  nsresult ExportToFile(nsIFile* file, nsIX509Cert** certs, int numCerts,
+                        const nsAString& password, uint32_t& error);
 
 private:
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
 
   // local helper functions
-  nsresult getPKCS12FilePassword(uint32_t& passwordBufferLength,
-                                 mozilla::UniquePtr<uint8_t[]>& passwordBuffer);
-  nsresult newPKCS12FilePassword(uint32_t& passwordBufferLength,
-                                 mozilla::UniquePtr<uint8_t[]>& passwordBuffer);
   nsresult inputToDecoder(mozilla::UniqueSEC_PKCS12DecoderContext& dcx,
                           nsIFile* file,
                           PRErrorCode& nssError);
-  mozilla::UniquePtr<uint8_t[]> stringToBigEndianBytes(const nsString& uni,
+  mozilla::UniquePtr<uint8_t[]> stringToBigEndianBytes(const nsAString& uni,
                                                        uint32_t& bytesLength);
-  void handleError(int myerr, PRErrorCode prerr);
-
-  // RetryReason and ImportMode are used when importing a PKCS12 file.
-  // There are two reasons that cause us to retry:
-  // - When the password entered by the user is incorrect.
-  //   The user will be prompted to try again.
-  // - When the user entered a zero length password.
-  //   An empty password should be represented as an empty string (a SECItem
-  //   that contains a single terminating null UTF16 character), but some
-  //   applications use a zero length SECItem. We try both variations, zero
-  //   length item and empty string, without giving a user prompt when trying
-  //   the different empty password flavors.
-  enum class RetryReason
-  {
-    DoNotRetry,
-    BadPassword,
-    AutoRetryEmptyPassword,
-  };
-  enum class ImportMode
-  {
-    StandardPrompt,
-    TryZeroLengthSecitem
-  };
-
-  void handleImportError(PRErrorCode nssError, RetryReason& retryReason,
-                         uint32_t passwordLengthInBytes);
-
-  nsresult ImportFromFileHelper(nsIFile* file,
-                                ImportMode aImportMode,
-                                RetryReason& aWantRetry);
+  uint32_t handlePRErrorCode(PRErrorCode prerr);
 
   static SECItem* nicknameCollision(SECItem* oldNick, PRBool* cancel,
                                     void* wincx);
