@@ -821,6 +821,7 @@ LoginManagerPrompter.prototype = {
                                                 : "PWMGR_PROMPT_UPDATE_ACTION";
     let histogram = Services.telemetry.getHistogramById(histogramName);
     histogram.add(PROMPT_DISPLAYED);
+    Services.obs.notifyObservers(null, "weave:telemetry:histogram", histogramName);
 
     const promptType = type == "password-save" ? "save" : "update";
     const flow_id = browser.ownerGlobal.gBrowser.getTabForBrowser(browser).linkedPanel;
@@ -974,6 +975,7 @@ LoginManagerPrompter.prototype = {
         }
         readDataFromUI();
         persistData();
+        Services.obs.notifyObservers(null, "weave:telemetry:histogram", histogramName);
         browser.focus();
       }
     };
@@ -983,6 +985,7 @@ LoginManagerPrompter.prototype = {
       accessKey: this._getLocalizedString(initialMsgNames.secondaryButtonAccessKey),
       callback: () => {
         histogram.add(PROMPT_NOTNOW);
+        Services.obs.notifyObservers(null, "weave:telemetry:histogram", histogramName);
         browser.focus();
       }
     }];
@@ -993,6 +996,7 @@ LoginManagerPrompter.prototype = {
         accessKey: this._getLocalizedString("notifyBarNeverRememberButtonAccessKey2"),
         callback: () => {
           histogram.add(PROMPT_NEVER);
+          Services.obs.notifyObservers(null, "weave:telemetry:histogram", histogramName);
           Services.logins.setLoginSavingEnabled(login.hostname, false);
           browser.focus();
         }
