@@ -211,7 +211,7 @@ bool DuplicateHandle(HANDLE aSourceHandle,
                                                 aTargetProcessId));
   if (!targetProcess) {
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCTransportFailureReason,
+      NS_LITERAL_CSTRING("IPCTransportFailureReason"),
       NS_LITERAL_CSTRING("Failed to open target process."));
     return false;
   }
@@ -233,18 +233,20 @@ AnnotateSystemError()
 #endif
   if (error) {
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCSystemError,
+      NS_LITERAL_CSTRING("IPCSystemError"),
       nsPrintfCString("%" PRId64, error));
   }
 }
 
 #if defined(XP_MACOSX)
 void
-AnnotateCrashReportWithErrno(CrashReporter::Annotation tag, int error)
+AnnotateCrashReportWithErrno(const char* tag, int error)
 {
-  CrashReporter::AnnotateCrashReport(tag, error);
+  CrashReporter::AnnotateCrashReport(
+    nsCString(tag),
+    nsPrintfCString("%d", error));
 }
-#endif // defined(XP_MACOSX)
+#endif
 
 void
 LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
@@ -288,9 +290,8 @@ FatalError(const char* aMsg, bool aIsParent)
     // this process if we're off the main thread.
     formattedMessage.AppendLiteral("\". Intentionally crashing.");
     NS_ERROR(formattedMessage.get());
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCFatalErrorMsg,
-      nsDependentCString(aMsg));
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCFatalErrorMsg"),
+                                       nsDependentCString(aMsg));
     AnnotateSystemError();
 #ifndef FUZZING
     MOZ_CRASH("IPC FatalError in the parent process!");

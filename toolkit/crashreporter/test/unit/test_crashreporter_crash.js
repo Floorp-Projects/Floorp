@@ -33,14 +33,8 @@ function run_test() {
   // check setting some basic data
   do_crash(function() {
              // Add various annotations
-             crashReporter.annotateCrashReport(
-              CrashReporter.annotations.TestKey, "TestValue");
-             crashReporter.annotateCrashReport(
-              CrashReporter.annotations.TestUnicode, "\u{1F4A9}");
-             // Some annotations have an alternate form when written out, Addons
-             // for example will be written out as Add-ons
-             crashReporter.annotateCrashReport(CrashReporter.annotations.Addons,
-                                               "test%40mozilla.org:0.1");
+             crashReporter.annotateCrashReport("TestKey", "TestValue");
+             crashReporter.annotateCrashReport("\u2665", "\u{1F4A9}");
              crashReporter.appendAppNotesToCrashReport("Junk");
              crashReporter.appendAppNotesToCrashReport("MoreJunk");
 
@@ -51,9 +45,8 @@ function run_test() {
            },
            function(mdump, extra) {
              Assert.equal(extra.TestKey, "TestValue");
-             Assert.equal(extra.TestUnicode, "\u{1F4A9}");
+             Assert.equal(extra["\u2665"], "\u{1F4A9}");
              Assert.equal(extra.Notes, "JunkMoreJunk");
-             Assert.equal(extra["Add-ons"], "test%40mozilla.org:0.1");
              const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
              Assert.ok("TelemetrySessionId" in extra,
                        "The TelemetrySessionId field is present in the extra file");

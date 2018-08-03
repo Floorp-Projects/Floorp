@@ -8,7 +8,6 @@ if CONFIG['OS_TARGET'] != 'Android':
     Program('crashreporter')
 
     UNIFIED_SOURCES += [
-        '../CrashAnnotations.cpp',
         'crashreporter.cpp',
         'ping.cpp',
     ]

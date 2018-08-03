@@ -6,12 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["WebProgressChild"];
 
-ChromeUtils.import("resource://gre/modules/CrashReporter.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+                                   "@mozilla.org/xre/app-info;1",
+                                   "nsICrashReporter");
 XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "@mozilla.org/network/serialization-helper;1",
                                    "nsISerializationHelper");
@@ -176,7 +178,7 @@ class WebProgressChild {
                    .setUserPass("")
                    .finalize();
         } catch (ex) { /* Ignore failures on about: URIs. */ }
-        CrashReporter.addAnnotation(CrashReporter.annotations.URL, uri.spec);
+        CrashReporter.annotateCrashReport("URL", uri.spec);
       }
     }
 

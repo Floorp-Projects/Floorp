@@ -107,8 +107,7 @@ struct ParamTraits<mozilla::net::NetAddr>
     } else {
       if (XRE_IsParentProcess()) {
         nsPrintfCString msg("%d", aParam.raw.family);
-        CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::UnknownNetAddrSocketFamily, msg);
+        CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Unknown NetAddr socket family"), msg);
       }
 
       MOZ_CRASH("Unknown socket family");
