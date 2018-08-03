@@ -388,7 +388,8 @@ class TestVerify(OptimizationStrategy):
         # and we wouldn't optimize it. Otherwise, it will return 'True, None'
         env = params.get('try_task_config', {}) or {}
         env = env.get('templates', {}).get('env', {})
-        if perfile_number_of_chunks(env.get('MOZHARNESS_TEST_PATHS', ''),
+        if perfile_number_of_chunks(params.is_try(),
+                                    env.get('MOZHARNESS_TEST_PATHS', ''),
                                     params.get('head_repository', ''),
                                     params.get('head_rev', ''),
                                     task):
