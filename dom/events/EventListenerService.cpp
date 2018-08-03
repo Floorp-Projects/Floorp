@@ -291,8 +291,9 @@ ToEventListener(JSContext* aCx, JS::Handle<JS::Value> aValue)
   }
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   RefPtr<EventListener> listener =
-    new EventListener(aCx, obj, GetIncumbentGlobal());
+    new EventListener(aCx, obj, global, GetIncumbentGlobal());
   return listener.forget();
 }
 

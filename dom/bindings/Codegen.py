@@ -4240,7 +4240,10 @@ class CastableObjectUnwrapper():
                     $*{exceptionCode}
                   }
                   JS::Rooted<JSObject*> jsImplSourceObj(cx, &${source}.toObject());
-                  ${target} = new ${type}(jsImplSourceObj, contentGlobal);
+                  MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplSourceObj),
+                                     "Don't return JS implementations from other compartments");
+                  JS::Rooted<JSObject*> jsImplSourceGlobal(cx, JS::GetNonCCWObjectGlobal(jsImplSourceObj));
+                  ${target} = new ${type}(jsImplSourceObj, jsImplSourceGlobal, contentGlobal);
                 } else {
                   $*{codeOnFailure}
                 }
@@ -4297,11 +4300,15 @@ def getCallbackConversionInfo(type, idlObject, isMember, isCallbackReturnValue,
                        not isOptional)
     if useFastCallback:
         name = "binding_detail::Fast%s" % name
-        argsPre = ""
-        argsPost = ""
+        rootArgs = ""
+        args = "&${val}.toObject(), JS::CurrentGlobalOrNull(cx)"
     else:
-        argsPre = "cx, "
-        argsPost = ", GetIncumbentGlobal()"
+        rootArgs = dedent(
+            """
+            JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());
+            JS::Rooted<JSObject*> tempGlobalRoot(cx, JS::CurrentGlobalOrNull(cx));
+            """)
+        args = "cx, tempRoot, tempGlobalRoot, GetIncumbentGlobal()"
 
     if type.nullable() or isCallbackReturnValue:
         declType = CGGeneric("RefPtr<%s>" % name)
@@ -4316,14 +4323,14 @@ def getCallbackConversionInfo(type, idlObject, isMember, isCallbackReturnValue,
 
     conversion = fill(
         """
-        { // scope for tempRoot
-          JS::Rooted<JSObject*> tempRoot(cx, &$${val}.toObject());
-          $${declName} = new ${name}(${argsPre}tempRoot${argsPost});
+        { // scope for tempRoot and tempGlobalRoot if needed
+          $*{rootArgs}
+          $${declName} = new ${name}(${args});
         }
         """,
+        rootArgs=rootArgs,
         name=name,
-        argsPre=argsPre,
-        argsPost=argsPost)
+        args=args)
     return (declType, declArgs, conversion)
 
 
@@ -15066,8 +15073,11 @@ def genConstructorBody(descriptor, initCall=""):
         if (aRv.Failed()) {
           return nullptr;
         }
+        // We should be getting the implementation object for the relevant
+        // contract here, which should never be a cross-compartment wrapper.
+        JS::Rooted<JSObject*> jsImplGlobal(cx, JS::GetNonCCWObjectGlobal(jsImplObj));
         // Build the C++ implementation.
-        RefPtr<${implClass}> impl = new ${implClass}(jsImplObj, globalHolder);
+        RefPtr<${implClass}> impl = new ${implClass}(jsImplObj, jsImplGlobal, globalHolder);
         $*{initCall}
         return impl.forget();
         """,
@@ -15219,14 +15229,14 @@ class CGJSImplClass(CGBindingImplClass):
             destructor = ClassDestructor(virtual=False, visibility="private")
 
         baseConstructors = [
-            ("mImpl(new %s(nullptr, aJSImplObject, /* aIncumbentGlobal = */ nullptr))" %
+            ("mImpl(new %s(nullptr, aJSImplObject, aJSImplGlobal, /* aIncumbentGlobal = */ nullptr))" %
              jsImplName(descriptor.name)),
             "mParent(aParent)"]
         parentInterface = descriptor.interface.parent
         while parentInterface:
             if parentInterface.isJSImplemented():
                 baseConstructors.insert(
-                    0, "%s(aJSImplObject, aParent)" % parentClass)
+                    0, "%s(aJSImplObject, aJSImplGlobal, aParent)" % parentClass)
                 break
             parentInterface = parentInterface.parent
         if not parentInterface and descriptor.interface.parent:
@@ -15236,6 +15246,7 @@ class CGJSImplClass(CGBindingImplClass):
 
         constructor = ClassConstructor(
             [Argument("JS::Handle<JSObject*>", "aJSImplObject"),
+             Argument("JS::Handle<JSObject*>", "aJSImplGlobal"),
              Argument("nsIGlobalObject*", "aParent")],
             visibility="public",
             baseConstructors=baseConstructors)
@@ -15331,7 +15342,8 @@ class CGJSImplClass(CGBindingImplClass):
             nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(global.GetAsSupports());
             MOZ_ASSERT(globalHolder);
             JS::Rooted<JSObject*> arg(cx, &args[1].toObject());
-            RefPtr<${implName}> impl = new ${implName}(arg, globalHolder);
+            JS::Rooted<JSObject*> argGlobal(cx, JS::CurrentGlobalOrNull(cx));
+            RefPtr<${implName}> impl = new ${implName}(arg, argGlobal, globalHolder);
             MOZ_ASSERT(js::IsObjectInContextCompartment(arg, cx));
             return GetOrCreateDOMReflector(cx, impl, args.rval());
             """,
@@ -15404,33 +15416,39 @@ class CGCallback(CGClass):
             ClassConstructor(
                 [Argument("JSContext*", "aCx"),
                  Argument("JS::Handle<JSObject*>", "aCallback"),
+                 Argument("JS::Handle<JSObject*>", "aCallbackGlobal"),
                  Argument("nsIGlobalObject*", "aIncumbentGlobal")],
                 bodyInHeader=True,
                 visibility="public",
                 explicit=True,
                 baseConstructors=[
-                    "%s(aCx, aCallback, aIncumbentGlobal)" % self.baseName,
+                    "%s(aCx, aCallback, aCallbackGlobal, aIncumbentGlobal)" %
+                    self.baseName,
                 ],
                 body=body),
             ClassConstructor(
-                [Argument("JS::Handle<JSObject*>", "aCallback"),
+                [Argument("JSObject*", "aCallback"),
+                 Argument("JSObject*", "aCallbackGlobal"),
                  Argument("const FastCallbackConstructor&", "")],
                 bodyInHeader=True,
                 visibility="public",
                 explicit=True,
                 baseConstructors=[
-                    "%s(aCallback, FastCallbackConstructor())" % self.baseName,
+                    "%s(aCallback, aCallbackGlobal, FastCallbackConstructor())" %
+                    self.baseName,
                 ],
                 body=body),
             ClassConstructor(
-                [Argument("JS::Handle<JSObject*>", "aCallback"),
-                 Argument("JS::Handle<JSObject*>", "aAsyncStack"),
+                [Argument("JSObject*", "aCallback"),
+                 Argument("JSObject*", "aCallbackGlobal"),
+                 Argument("JSObject*", "aAsyncStack"),
                  Argument("nsIGlobalObject*", "aIncumbentGlobal")],
                 bodyInHeader=True,
                 visibility="public",
                 explicit=True,
                 baseConstructors=[
-                    "%s(aCallback, aAsyncStack, aIncumbentGlobal)" % self.baseName,
+                    "%s(aCallback, aCallbackGlobal, aAsyncStack, aIncumbentGlobal)" %
+                    self.baseName,
                 ],
                 body=body)]
 
@@ -15591,12 +15609,13 @@ class CGFastCallback(CGClass):
         self._deps = idlObject.getDeps()
         baseName = idlObject.identifier.name
         constructor = ClassConstructor(
-            [Argument("JS::Handle<JSObject*>", "aCallback")],
+            [Argument("JSObject*", "aCallback"),
+             Argument("JSObject*", "aCallbackGlobal")],
             bodyInHeader=True,
             visibility="public",
             explicit=True,
             baseConstructors=[
-                "%s(aCallback, FastCallbackConstructor())" %
+                "%s(aCallback, aCallbackGlobal, FastCallbackConstructor())" %
                 baseName,
             ],
             body="")
