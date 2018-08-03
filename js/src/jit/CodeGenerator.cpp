@@ -1720,7 +1720,7 @@ public:
                   Label* failure);
 
     // Generate fallback path for creating DependentString.
-    void generateFallback(MacroAssembler& masm, LiveRegisterSet regsToSave);
+    void generateFallback(MacroAssembler& masm);
 };
 
 void
@@ -1861,7 +1861,6 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         LiveRegisterSet regsToSave(RegisterSet::Volatile());
         regsToSave.takeUnchecked(temp1);
         regsToSave.takeUnchecked(temp2);
-        regsToSave.addUnchecked(string);
 
         masm.PushRegsInMask(regsToSave);
 
@@ -1893,12 +1892,14 @@ AllocateFatInlineString(JSContext* cx)
 }
 
 void
-CreateDependentString::generateFallback(MacroAssembler& masm, LiveRegisterSet regsToSave)
+CreateDependentString::generateFallback(MacroAssembler& masm)
 {
     JitSpew(JitSpew_Codegen, "# Emitting CreateDependentString fallback");
 
-    regsToSave.take(string_);
-    regsToSave.take(temp_);
+    LiveRegisterSet regsToSave(RegisterSet::Volatile());
+    regsToSave.takeUnchecked(string_);
+    regsToSave.takeUnchecked(temp_);
+
     for (FallbackKind kind : mozilla::MakeEnumeratedRange(FallbackKind::Count)) {
         masm.bind(&fallbacks_[kind]);
 
@@ -1929,17 +1930,18 @@ CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind, size_t nDynamic
 }
 
 static void
-CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
-                          Register object, Register temp1, Register temp2,
+CreateMatchResultFallback(MacroAssembler& masm, Register object, Register temp1, Register temp2,
                           ArrayObject* templateObj, Label* fail)
 {
     JitSpew(JitSpew_Codegen, "# Emitting CreateMatchResult fallback");
 
     MOZ_ASSERT(templateObj->group()->clasp() == &ArrayObject::class_);
 
-    regsToSave.take(object);
-    regsToSave.take(temp1);
-    regsToSave.take(temp2);
+    LiveRegisterSet regsToSave(RegisterSet::Volatile());
+    regsToSave.takeUnchecked(object);
+    regsToSave.takeUnchecked(temp1);
+    regsToSave.takeUnchecked(temp2);
+
     masm.PushRegsInMask(regsToSave);
 
     masm.setupUnalignedABICall(object);
@@ -2118,24 +2120,13 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     masm.moveValue(NullValue(), result);
     masm.ret();
 
-    // Fallback paths for CreateDependentString and createGCObject.
-    // Need to save all registers in use when they were called.
-    LiveRegisterSet regsToSave(RegisterSet::Volatile());
-    regsToSave.addUnchecked(regexp);
-    regsToSave.addUnchecked(input);
-    regsToSave.addUnchecked(lastIndex);
-    regsToSave.addUnchecked(temp1);
-    regsToSave.addUnchecked(temp2);
-    regsToSave.addUnchecked(temp3);
-    regsToSave.addUnchecked(temp4);
-    if (maybeTemp5 != InvalidReg)
-        regsToSave.addUnchecked(maybeTemp5);
-
+    // Fallback paths for CreateDependentString.
     for (int isLatin = 0; isLatin <= 1; isLatin++)
-        depStr[isLatin].generateFallback(masm, regsToSave);
+        depStr[isLatin].generateFallback(masm);
 
+    // Fallback path for createGCObject.
     masm.bind(&matchResultFallback);
-    CreateMatchResultFallback(masm, regsToSave, object, temp2, temp3, templateObject, &oolEntry);
+    CreateMatchResultFallback(masm, object, temp2, temp3, templateObject, &oolEntry);
     masm.jump(&matchResultJoin);
 
     // Use an undefined value to signal to the caller that the OOL stub needs to be called.
