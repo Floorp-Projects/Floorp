@@ -1849,6 +1849,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 
