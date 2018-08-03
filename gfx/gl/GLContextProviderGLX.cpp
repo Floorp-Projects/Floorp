@@ -1012,10 +1012,25 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
     for (int i = 0; i < numConfigs; i++) {
         int visid = X11None;
         sGLXLibrary.fGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
-        if (!visid) {
-            continue;
+        if (visid) {
+            // WebRender compatible GLX visual is configured
+            // at nsWindow::Create() by GLContextGLX::FindVisual(),
+            // just reuse it here.
+            if (windowVisualID == static_cast<VisualID>(visid)) {
+                *out_config = cfgs[i];
+                *out_visid = visid;
+                return true;
+            }
         }
-        if (aWebRender || sGLXLibrary.IsATI()) {
+    }
+
+    // We don't have a frame buffer visual which matches the GLX visual
+    // from GLContextGLX::FindVisual(). Let's try to find a near one and hope
+    // we're not on NVIDIA (Bug 1478454) as it causes X11 BadMatch error there.
+    for (int i = 0; i < numConfigs; i++) {
+        int visid = X11None;
+        sGLXLibrary.fGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
+        if (visid) {
             int depth;
             Visual* visual;
             FindVisualAndDepth(display, visid, &visual, &depth);
@@ -1025,14 +1040,9 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                 *out_visid = visid;
                 return true;
             }
-        } else {
-            if (windowVisualID == static_cast<VisualID>(visid)) {
-                *out_config = cfgs[i];
-                *out_visid = visid;
-                return true;
-            }
         }
     }
+
 
     NS_WARNING("[GLX] Couldn't find a FBConfig matching window visual");
     return false;
