@@ -1801,11 +1801,11 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
                              latin1 ? CharEncoding::Latin1 : CharEncoding::TwoByte);
         masm.load32(newStartIndexAddress, base);
         if (latin1)
-            masm.addPtr(temp2, base);
+            masm.addPtr(base, temp2);
         else
-            masm.computeEffectiveAddress(BaseIndex(temp2, base, TimesTwo), base);
+            masm.computeEffectiveAddress(BaseIndex(temp2, base, TimesTwo), temp2);
 
-        CopyStringChars(masm, string, base, temp1, temp2, latin1 ? 1 : 2, latin1 ? 1 : 2);
+        CopyStringChars(masm, string, temp2, temp1, base, latin1 ? 1 : 2, latin1 ? 1 : 2);
 
         // Null-terminate.
         if (latin1)
@@ -1977,18 +1977,7 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     regs.take(regexp);
     regs.take(lastIndex);
 
-    // temp5 is used in single byte instructions when creating dependent
-    // strings, and has restrictions on which register it can be on some
-    // platforms.
-    Register temp5;
-    {
-        AllocatableGeneralRegisterSet oregs = regs;
-        do {
-            temp5 = oregs.takeAny();
-        } while (!MacroAssembler::canUseInSingleByteInstruction(temp5));
-        regs.take(temp5);
-    }
-
+    Register temp5 = regs.takeAny();
     Register temp1 = regs.takeAny();
     Register temp2 = regs.takeAny();
     Register temp3 = regs.takeAny();
