@@ -949,12 +949,8 @@ pref("app.productInfo.baseURL", "https://www.mozilla.org/firefox/features/");
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
 
-// Enable the new certificate error page only for Nightly
-#if defined(NIGHTLY_BUILD)
-pref("browser.security.newcerterrorpage.enabled", true);
-#else
+// Indicates if new certificate error page (enabled) or not
 pref("browser.security.newcerterrorpage.enabled", false);
-#endif
 
 // Whether to start the private browsing mode at application startup
 pref("browser.privatebrowsing.autostart", false);
