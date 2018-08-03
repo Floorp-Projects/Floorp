@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/ChildSHistoryBinding.h"
+#include "mozilla/dom/ContentFrameMessageManager.h"
 #include "nsIMessageManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSHistory.h"
@@ -20,6 +21,7 @@ ChildSHistory::ChildSHistory(nsDocShell* aDocShell)
   : mDocShell(aDocShell)
   , mHistory(new nsSHistory())
 {
+  MOZ_ASSERT(mDocShell);
   mHistory->SetRootDocShell(mDocShell);
 }
 
@@ -131,10 +133,13 @@ nsISupports*
 ChildSHistory::GetParentObject() const
 {
   // We want to get the TabChildGlobal, which is the
-  // nsIContentFrameMessageManager on mDocShell.
-  nsCOMPtr<nsIContentFrameMessageManager> mm =
-    do_GetInterface(static_cast<nsIDocShell*>(mDocShell));
-  return mm;
+  // messageManager on mDocShell.
+  RefPtr<ContentFrameMessageManager> mm;
+  if (mDocShell) {
+    mm = mDocShell->GetMessageManager();
+  }
+  // else we must be unlinked... can that happen here?
+  return ToSupports(mm);
 }
 
 } // namespace dom

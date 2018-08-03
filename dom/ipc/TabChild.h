@@ -80,7 +80,7 @@ class CoalescedMouseData;
 class CoalescedWheelData;
 
 class TabChildGlobal : public ContentFrameMessageManager,
-                       public nsIContentFrameMessageManager,
+                       public nsIMessageSender,
                        public nsIScriptObjectPrincipal,
                        public nsIGlobalObject,
                        public nsSupportsWeakReference
@@ -108,7 +108,6 @@ public:
   virtual uint64_t ChromeOuterWindowID() override;
 
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
-  NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
   void
   GetEventTargetParent(EventChainPreVisitor& aVisitor) override
