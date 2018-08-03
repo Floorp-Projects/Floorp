@@ -1077,14 +1077,12 @@ class HiddenXULWindow {
     // The windowless browser is a thin wrapper around a docShell that keeps
     // its related resources alive. It implements nsIWebNavigation and
     // forwards its methods to the underlying docShell, but cannot act as a
-    // docShell itself. Calling `getInterface(nsIDocShell)` gives us the
+    // docShell itself.  Getting .docShell gives us the
     // underlying docShell, and `QueryInterface(nsIWebNavigation)` gives us
     // access to the webNav methods that are already available on the
     // windowless browser, but contrary to appearances, they are not the same
     // object.
-    this.chromeShell = this._windowlessBrowser
-                           .QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDocShell)
+    this.chromeShell = this._windowlessBrowser.docShell
                            .QueryInterface(Ci.nsIWebNavigation);
 
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {

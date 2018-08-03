@@ -7,8 +7,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 add_task(async function() {
   let webnav = Services.appShell.createWindowlessBrowser(false);
 
-  let docShell = webnav.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
+  let docShell = webnav.docShell;
 
   docShell.createAboutBlankContentViewer(null);
 

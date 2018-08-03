@@ -64,7 +64,7 @@
 #ifdef XP_WIN
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 
-#include <Winbase.h>
+#include <winbase.h>
 
 using GetCurrentThreadStackLimitsFn = void (WINAPI*)(
   PULONG_PTR LowLimit, PULONG_PTR HighLimit);

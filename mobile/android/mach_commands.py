@@ -207,7 +207,7 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'test-ccov',
                 """Run Android local unit tests in order to get a code coverage report.
-                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")  # NOQA: E501
+        See https://firefox-source-docs.mozilla.org/mobile/android/fennec/testcoverage.html""")  # NOQA: E501
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_test_ccov(self, args):
         enable_ccov = '-Penable_code_coverage'
@@ -409,6 +409,16 @@ class MachCommands(MachCommandBase):
         # lint or checkstyle, particularly because toolchain versions
         # can change the outputs for those processes.
         self.gradle(self.substs['GRADLE_ANDROID_DEPENDENCIES_TASKS'] +
+                    ["--continue"] + args, verbose=True)
+
+        return 0
+
+    @SubCommand('android', 'archive-geckoview-coverage-artifacts',
+                """Archive compiled geckoview classfiles to be used later in generating code
+        coverage reports. See https://firefox-source-docs.mozilla.org/mobile/android/fennec/testcoverage.html""")  # NOQA: E501
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_archive_geckoview_classfiles(self, args):
+        self.gradle(self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_COVERAGE_ARTIFACTS_TASKS'] +
                     ["--continue"] + args, verbose=True)
 
         return 0

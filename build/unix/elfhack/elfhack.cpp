@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "elfxx.h"
+#include "mozilla/CheckedInt.h"
 
 #define ver "0"
 #define elfhack_data ".elfhack.data.v" ver
@@ -196,12 +197,22 @@ public:
     }
 
     bool isRelocatable() {
-        return true;
+        return false;
     }
 
     unsigned int getEntryPoint() {
         return entry_point;
     }
+
+    void insertBefore(ElfSection *section, bool dirty = true) override {
+        // Adjust the address so that this section is adjacent to the one it's
+        // being inserted before. This avoids creating holes which subsequently
+        // might lead the PHDR-adjusting code to create unnecessary additional
+        // PT_LOADs.
+        shdr.sh_addr = (section->getAddr() - shdr.sh_size) & ~(shdr.sh_addralign - 1);
+        ElfSection::insertBefore(section, dirty);
+    }
+
 private:
     void add_code_section(ElfSection *section)
     {
@@ -517,6 +528,238 @@ void maybe_split_segment(Elf *elf, ElfSegment *segment, bool fill)
     }
 }
 
+// EH_FRAME constants
+static const char DW_EH_PE_absptr = 0x00;
+static const char DW_EH_PE_omit = 0xff;
+
+// Data size
+static const char DW_EH_PE_LEB128 = 0x01;
+static const char DW_EH_PE_data2 = 0x02;
+static const char DW_EH_PE_data4 = 0x03;
+static const char DW_EH_PE_data8 = 0x04;
+
+// Data signedness
+static const char DW_EH_PE_signed = 0x08;
+
+// Modifiers
+static const char DW_EH_PE_pcrel = 0x10;
+
+
+// Return the data size part of the encoding value
+static char encoding_data_size(char encoding)
+{
+    return encoding & 0x07;
+}
+
+// Advance `step` bytes in the buffer at `data` with size `size`, returning
+// the advanced buffer pointer and remaining size.
+// Returns true if step <= size.
+static bool advance_buffer(char** data, size_t* size, size_t step)
+{
+    if (step > *size)
+        return false;
+
+    *data += step;
+    *size -= step;
+    return true;
+}
+
+// Advance in the given buffer, skipping the full length of the variable-length
+// encoded LEB128 type in CIE/FDE data.
+static bool skip_LEB128(char** data, size_t* size)
+{
+    if (!*size)
+        return false;
+
+    while (*size && (*(*data)++ & (char)0x80)) {
+        (*size)--;
+    }
+    return true;
+}
+
+// Advance in the given buffer, skipping the full length of a pointer encoded
+// with the given encoding.
+static bool skip_eh_frame_pointer(char** data, size_t* size, char encoding)
+{
+    switch (encoding_data_size(encoding)) {
+    case DW_EH_PE_data2:
+        return advance_buffer(data, size, 2);
+    case DW_EH_PE_data4:
+        return advance_buffer(data, size, 4);
+    case DW_EH_PE_data8:
+        return advance_buffer(data, size, 8);
+    case DW_EH_PE_LEB128:
+        return skip_LEB128(data, size);
+    }
+    throw std::runtime_error("unreachable");
+}
+
+// Specialized implementations for adjust_eh_frame_pointer().
+template <typename T>
+static bool adjust_eh_frame_sized_pointer(char** data, size_t* size, ElfSection* eh_frame,
+                                          unsigned int origAddr, Elf* elf)
+{
+    if (*size < sizeof(T))
+        return false;
+
+    serializable<FixedSizeData<T>> pointer(*data, *size, elf->getClass(), elf->getData());
+    mozilla::CheckedInt<T> value = pointer.value;
+    if (origAddr < eh_frame->getAddr()) {
+        unsigned int diff = eh_frame->getAddr() - origAddr;
+        value -= diff;
+    } else {
+        unsigned int diff = origAddr - eh_frame->getAddr();
+        value += diff;
+    }
+    if (!value.isValid())
+        throw std::runtime_error("Overflow while adjusting eh_frame");
+    pointer.value = value.value();
+    pointer.serialize(*data, *size, elf->getClass(), elf->getData());
+    return advance_buffer(data, size, sizeof(T));
+}
+
+// In the given eh_frame section, adjust the pointer with the given encoding, pointed to
+// by the given buffer (`data`, `size`), considering the eh_frame section was originally
+// at `origAddr`.
+// Also advances in the buffer.
+static bool adjust_eh_frame_pointer(char** data, size_t* size, char encoding, ElfSection* eh_frame,
+                                    unsigned int origAddr, Elf* elf)
+{
+    if ((encoding & 0x70) != DW_EH_PE_pcrel)
+        return skip_eh_frame_pointer(data, size, encoding);
+
+    if (encoding & DW_EH_PE_signed) {
+        switch (encoding_data_size(encoding)) {
+        case DW_EH_PE_data2:
+             return adjust_eh_frame_sized_pointer<int16_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data4:
+             return adjust_eh_frame_sized_pointer<int32_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data8:
+             return adjust_eh_frame_sized_pointer<int64_t>(data, size, eh_frame, origAddr, elf);
+        }
+    } else {
+        switch (encoding_data_size(encoding)) {
+        case DW_EH_PE_data2:
+             return adjust_eh_frame_sized_pointer<uint16_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data4:
+             return adjust_eh_frame_sized_pointer<uint32_t>(data, size, eh_frame, origAddr, elf);
+        case DW_EH_PE_data8:
+             return adjust_eh_frame_sized_pointer<uint64_t>(data, size, eh_frame, origAddr, elf);
+        }
+    }
+
+    throw std::runtime_error("Unsupported eh_frame pointer encoding");
+}
+
+// The eh_frame section may contain "PC"-relative pointers. If we move the section,
+// those need to be adjusted. Other type of pointers are relative to sections we
+// don't touch.
+static void adjust_eh_frame(ElfSection* eh_frame, unsigned int origAddr, Elf* elf)
+{
+    if (eh_frame->getAddr() == origAddr) // nothing to do;
+        return;
+
+    char* data = const_cast<char*>(eh_frame->getData());
+    size_t size = eh_frame->getSize();
+    char LSDAencoding = DW_EH_PE_omit;
+    char FDEencoding = DW_EH_PE_absptr;
+    bool hasZ = false;
+
+    // Decoding of eh_frame based on https://www.airs.com/blog/archives/460
+    while (size) {
+        if (size < 2 * sizeof(uint32_t)) goto malformed;
+
+        serializable<FixedSizeData<uint32_t>> entryLength(data, size, elf->getClass(), elf->getData());
+        if (!advance_buffer(&data, &size, sizeof(uint32_t))) goto malformed;
+
+        char* cursor = data;
+        size_t length = entryLength.value;
+
+        serializable<FixedSizeData<uint32_t>> id(data, size, elf->getClass(), elf->getData());
+        if (!advance_buffer(&cursor, &length, sizeof(uint32_t))) goto malformed;
+
+        if (id.value == 0) {
+            // This is a Common Information Entry
+            if (length < 2) goto malformed;
+            // Reset LSDA and FDE encodings, and hasZ for subsequent FDEs.
+            LSDAencoding = DW_EH_PE_omit;
+            FDEencoding = DW_EH_PE_absptr;
+            hasZ = false;
+            // CIE version. Should only be 1 or 3.
+            char version = *cursor++; length--;
+            if (version != 1 && version != 3) {
+                throw std::runtime_error("Unsupported eh_frame version");
+            }
+            // NUL terminated string.
+            const char* augmentationString = cursor;
+            size_t l = strnlen(augmentationString, length - 1);
+            if (l == length - 1) goto malformed;
+            if (!advance_buffer(&cursor, &length, l + 1)) goto malformed;
+            // Skip code alignment factor (LEB128)
+            if (!skip_LEB128(&cursor, &length)) goto malformed;
+            // Skip data alignment factor (LEB128)
+            if (!skip_LEB128(&cursor, &length)) goto malformed;
+            // Skip return address register (single byte in CIE version 1, LEB128
+            // in CIE version 3)
+            if (version == 1) {
+                if (!advance_buffer(&cursor, &length, 1)) goto malformed;
+            } else {
+                if (!skip_LEB128(&cursor, &length)) goto malformed;
+            }
+            // Past this, it's data driven by the contents of the augmentation string.
+            for (size_t i = 0; i < l; i++) {
+                if (!length) goto malformed;
+                switch (augmentationString[i]) {
+                case 'z':
+                    if (!skip_LEB128(&cursor, &length)) goto malformed;
+                    hasZ = true;
+                    break;
+                case 'L':
+                    LSDAencoding = *cursor++;
+                    length--;
+                    break;
+                case 'R':
+                    FDEencoding = *cursor++;
+                    length--;
+                    break;
+                case 'P':
+                    {
+                        char encoding = *cursor++;
+                        length--;
+                        if (!adjust_eh_frame_pointer(&cursor, &length, encoding, eh_frame, origAddr, elf))
+                            goto malformed;
+                    }
+                    break;
+                default:
+                    goto malformed;
+                }
+            }
+        } else {
+            // This is a Frame Description Entry
+            // Starting address
+            if (!adjust_eh_frame_pointer(&cursor, &length, FDEencoding, eh_frame, origAddr, elf))
+                goto malformed;
+
+            if (LSDAencoding != DW_EH_PE_omit) {
+                // Skip number of bytes, same size as the starting address.
+                if (!skip_eh_frame_pointer(&cursor, &length, FDEencoding)) goto malformed;
+                if (hasZ) {
+                    if (!skip_LEB128(&cursor, &length)) goto malformed;
+                }
+                // pointer to the LSDA.
+                if (!adjust_eh_frame_pointer(&cursor, &length, LSDAencoding, eh_frame, origAddr, elf))
+                    goto malformed;
+            }
+        }
+
+        data += entryLength.value; size -= entryLength.value;
+    }
+    return;
+
+malformed:
+    throw std::runtime_error("malformed .eh_frame");
+}
+
 template <typename Rel_Type>
 int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type2, bool force, bool fill)
 {
@@ -575,7 +818,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     std::vector<Rel_Type> new_rels;
     Elf_RelHack relhack_entry;
     relhack_entry.r_offset = relhack_entry.r_info = 0;
-    size_t init_array_reloc = 0;
+    std::vector<Rel_Type> init_array_relocs;
+    size_t init_array_insert = 0;
     for (typename std::vector<Rel_Type>::iterator i = section->rels.begin();
          i != section->rels.end(); ++i) {
         // We don't need to keep R_*_NONE relocations
@@ -612,14 +856,11 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
                 }
             }
         }
-        // Keep track of the relocation associated with the first init_array entry.
-        if (init_array && i->r_offset == init_array->getAddr()) {
-            if (init_array_reloc) {
-                fprintf(stderr, "Found multiple relocations for the first init_array entry. Skipping\n");
-                return -1;
-            }
-            new_rels.push_back(*i);
-            init_array_reloc = new_rels.size();
+        // Keep track of the relocations associated with the init_array section.
+        if (init_array && i->r_offset >= init_array->getAddr() &&
+            i->r_offset < init_array->getAddr() + init_array->getSize()) {
+            init_array_relocs.push_back(*i);
+            init_array_insert = new_rels.size();
         } else if (!(loc.getSection()->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type)) {
             // Don't pack relocations happening in non writable sections.
             // Our injected code is likely not to be allowed to write there.
@@ -656,49 +897,75 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
 
-    if (init_array && !init_array_reloc) {
+    if (init_array) {
         // Some linkers create a DT_INIT_ARRAY section that, for all purposes,
         // is empty: it only contains 0x0 or 0xffffffff pointers with no relocations.
+        // In some other cases, there can be null pointers with no relocations in
+        // the middle of the section. Example: crtend_so.o in the Android NDK contains
+        // a sized .init_array with a null pointer and no relocation, which ends up
+        // in all Android libraries, and in some cases it ends up in the middle of
+        // the final .init_array section.
+        // If we have such a reusable slot at the beginning of .init_array, we just
+        // use it. It we have one in the middle of .init_array, we slide its content
+        // to move the "hole" at the beginning and use it there (we need our injected
+        // code to run before any other).
+        // Otherwise, replace the first entry and keep the original pointer.
+        std::sort(init_array_relocs.begin(), init_array_relocs.end(),
+                  [](Rel_Type& a, Rel_Type& b) { return a.r_offset < b.r_offset; });
+        size_t expected = init_array->getAddr();
         const size_t zero = 0;
         const size_t all = SIZE_MAX;
         const char *data = init_array->getData();
         size_t length = Elf_Addr::size(elf->getClass());
-        bool empty = true;
-        for (size_t off = 0; off < init_array->getSize(); off += length) {
-            if (memcmp(data + off, &zero, length) &&
-                memcmp(data + off, &all, length)) {
-                empty = false;
+	size_t off = 0;
+	for (; off < init_array_relocs.size(); off++) {
+            auto& r = init_array_relocs[off];
+            if (r.r_offset >= expected + length &&
+                (memcmp(data + off * length, &zero, length) == 0 ||
+                 memcmp(data + off * length, &all, length) == 0)) {
+                // We found a hole, move the preceding entries.
+                while (off) {
+                    auto& p = init_array_relocs[--off];
+                    if (ELF32_R_TYPE(p.r_info) == rel_type) {
+                        unsigned int addend = get_addend(&p, elf);
+                        p.r_offset += length;
+                        set_relative_reloc(&p, elf, addend);
+                    } else {
+                        fprintf(stderr, "Unsupported relocation type in DT_INIT_ARRAY. Skipping\n");
+                        return -1;
+                    }
+                }
                 break;
             }
+            expected = r.r_offset + length;
         }
-	// If we encounter such an empty DT_INIT_ARRAY section, we add a
-	// relocation for its first entry to point to our init. Code further
-	// below will take care of actually setting the right r_info and
-	// r_addend for the relocation, as if we had a normal DT_INIT_ARRAY
-	// section.
-        if (empty) {
-            new_rels.emplace_back();
-            init_array_reloc = new_rels.size();
-            Rel_Type *rel = &new_rels[init_array_reloc - 1];
-            rel->r_offset = init_array->getAddr();
+
+        if (off == 0) {
+            // We either found a hole above, and can now use the first entry,
+            // or the init_array section is effectively empty (see further above)
+            // and we also can use the first entry.
+            // Either way, code further below will take care of actually setting
+            // the right r_info and r_added for the relocation.
+            Rel_Type rel;
+            rel.r_offset = init_array->getAddr();
+            init_array_relocs.insert(init_array_relocs.begin(), rel);
         } else {
-            fprintf(stderr, "Didn't find relocation for DT_INIT_ARRAY's first entry. Skipping\n");
-            return -1;
+            // Use relocated value of DT_INIT_ARRAY's first entry for the
+            // function to be called by the injected code.
+            auto& rel = init_array_relocs[0];
+            unsigned int addend = get_addend(&rel, elf);
+            if (ELF32_R_TYPE(rel.r_info) == rel_type) {
+                original_init = addend;
+            } else if (ELF32_R_TYPE(rel.r_info) == rel_type2) {
+                ElfSymtab_Section *symtab = (ElfSymtab_Section *)section->getLink();
+                original_init = symtab->syms[ELF32_R_SYM(rel.r_info)].value.getValue() + addend;
+            } else {
+                fprintf(stderr, "Unsupported relocation type for DT_INIT_ARRAY's first entry. Skipping\n");
+                return -1;
+            }
         }
-    } else if (init_array) {
-        Rel_Type *rel = &new_rels[init_array_reloc - 1];
-        unsigned int addend = get_addend(rel, elf);
-        // Use relocated value of DT_INIT_ARRAY's first entry for the
-        // function to be called by the injected code.
-        if (ELF32_R_TYPE(rel->r_info) == rel_type) {
-            original_init = addend;
-        } else if (ELF32_R_TYPE(rel->r_info) == rel_type2) {
-            ElfSymtab_Section *symtab = (ElfSymtab_Section *)section->getLink();
-            original_init = symtab->syms[ELF32_R_SYM(rel->r_info)].value.getValue() + addend;
-        } else {
-            fprintf(stderr, "Unsupported relocation type for DT_INIT_ARRAY's first entry. Skipping\n");
-            return -1;
-        }
+
+        new_rels.insert(std::next(new_rels.begin(), init_array_insert), init_array_relocs.begin(), init_array_relocs.end());
     }
 
     unsigned int mprotect_cb = 0;
@@ -779,6 +1046,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         }
     }
 
+    size_t old_size = section->getSize();
+
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
 
@@ -800,18 +1069,46 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         return -1;
     }
 
-    unsigned int old_exec = first_executable->getOffset();
-
     relhack->insertBefore(section);
     relhackcode->insertBefore(first_executable);
 
-    // Trying to get first_executable->getOffset() now may throw if the new
-    // layout would require it to move, so we look at the end of the relhack
-    // code section instead, comparing it to where the first executable
-    // section used to start.
-    if (relhackcode->getOffset() + relhackcode->getSize() >= old_exec) {
+    // Don't try further if we can't gain from the relocation section size change.
+    size_t align = first_executable->getSegmentByType(PT_LOAD)->getAlign();
+    size_t new_size = relhack->getSize() + relhackcode->getSize();
+    if (!force && (new_size >= old_size || old_size - new_size < align)) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
+    }
+
+    // .eh_frame/.eh_frame_hdr may be between the relocation sections and the
+    // executable sections. When that happens, we may end up creating a separate
+    // PT_LOAD for just both of them because they are not considered relocatable.
+    // But they are, in fact, kind of relocatable, albeit with some manual work.
+    // Which we'll do here.
+    ElfSegment* eh_frame_segment = elf->getSegmentByType(PT_GNU_EH_FRAME);
+    ElfSection* eh_frame_hdr = eh_frame_segment ? eh_frame_segment->getFirstSection() : nullptr;
+    // The .eh_frame section usually follows the eh_frame_hdr section.
+    ElfSection* eh_frame = eh_frame_hdr ? eh_frame_hdr->getNext() : nullptr;
+    if (eh_frame_hdr && !eh_frame) {
+        throw std::runtime_error("Expected to find an .eh_frame section after .eh_frame_hdr");
+    }
+    if (eh_frame && strcmp(eh_frame->getName(), ".eh_frame") == 0) {
+        // The distance between both sections needs to be preserved because eh_frame_hdr
+        // contains relative offsets to eh_frame. Well, they could be relocated too, but
+        // it's not worth the effort for the few number of bytes this would save.
+        size_t distance = eh_frame->getAddr() - eh_frame_hdr->getAddr();
+        ElfSection* previous = eh_frame_hdr->getPrevious();
+        eh_frame_hdr->getShdr().sh_addr =
+            (previous->getAddr() + previous->getSize() + eh_frame_hdr->getAddrAlign() - 1)
+            & ~(eh_frame_hdr->getAddrAlign() - 1);
+        unsigned int origAddr = eh_frame->getAddr();
+        eh_frame->getShdr().sh_addr =
+            (eh_frame_hdr->getAddr() + eh_frame_hdr->getSize() + eh_frame->getAddrAlign() - 1)
+            & ~(eh_frame->getAddrAlign() - 1);
+        // Re-adjust the eh_frame_hdr address to keep the original distance.
+        eh_frame_hdr->getShdr().sh_addr = eh_frame->getAddr() - distance;
+        eh_frame_hdr->markDirty();
+        adjust_eh_frame(eh_frame, origAddr, elf);
     }
 
     // Adjust PT_LOAD segments
@@ -827,9 +1124,9 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         // Adjust the first DT_INIT_ARRAY entry to point at the injected code
         // by transforming its relocation into a relative one pointing to the
         // address of the injected code.
-        Rel_Type *rel = &section->rels[init_array_reloc - 1];
+        Rel_Type *rel = &section->rels[init_array_insert];
         rel->r_info = ELF32_R_INFO(0, rel_type); // Set as a relative relocation
-        set_relative_reloc(&section->rels[init_array_reloc - 1], elf, init->getValue());
+        set_relative_reloc(rel, elf, init->getValue());
     } else if (!dyn->setValueForType(DT_INIT, init)) {
         fprintf(stderr, "Can't grow .dynamic section to set DT_INIT. Skipping\n");
         return -1;

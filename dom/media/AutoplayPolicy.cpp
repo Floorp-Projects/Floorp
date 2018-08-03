@@ -7,6 +7,7 @@
 #include "AutoplayPolicy.h"
 
 #include "mozilla/EventStateManager.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/AutoplayPermissionManager.h"
@@ -19,6 +20,26 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
+
+mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");
+
+#define AUTOPLAY_LOG(msg, ...)                                             \
+  MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+
+static const char*
+AllowAutoplayToStr(const uint32_t state)
+{
+  switch (state) {
+    case nsIAutoplay::ALLOWED:
+      return "allowed";
+    case nsIAutoplay::BLOCKED:
+      return "blocked";
+    case nsIAutoplay::PROMPT:
+      return "prompt";
+    default:
+      return "unknown";
+  }
+}
 
 namespace mozilla {
 namespace dom {
@@ -62,17 +83,17 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
   nsIDocument* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (nsContentUtils::IsExactSitePermAllow(approver->NodePrincipal(),
                                            "autoplay-media")) {
-    // Autoplay permission has been granted already.
+    AUTOPLAY_LOG("Allow autoplay as document has autoplay permission.");
     return true;
   }
 
   if (approver->HasBeenUserGestureActivated()) {
-    // Document has been activated by user gesture.
+    AUTOPLAY_LOG("Allow autoplay as document activated by user gesture.");
     return true;
   }
 
   if (approver->IsExtensionPage()) {
-    // Always allow extension page to autoplay.
+    AUTOPLAY_LOG("Allow autoplay as in extension document.");
     return true;
   }
 
@@ -108,10 +129,23 @@ DefaultAutoplayBehaviour()
 static bool
 IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
 {
-  return ((aElement.Volume() == 0.0 || aElement.Muted()) &&
-           Preferences::GetBool("media.autoplay.allow-muted", true)) ||
-          IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow()) ||
-          (aElement.OwnerDoc()->MediaDocumentKind() == nsIDocument::MediaDocumentKind::Video);
+  if ((aElement.Volume() == 0.0 || aElement.Muted()) &&
+       Preferences::GetBool("media.autoplay.allow-muted", true)) {
+    AUTOPLAY_LOG("Allow muted media %p to autoplay.", &aElement);
+    return true;
+  }
+
+  if (IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow())) {
+    AUTOPLAY_LOG("Autoplay allowed as activated/whitelisted window, media %p.", &aElement);
+    return true;
+  }
+
+  if (aElement.OwnerDoc()->MediaDocumentKind() == nsIDocument::MediaDocumentKind::Video) {
+    AUTOPLAY_LOG("Allow video document %p to autoplay\n", &aElement);
+    return true;
+  }
+
+  return false;
 }
 
 /* static */ bool
@@ -134,11 +168,12 @@ AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
               ? nsIAutoplay::ALLOWED : nsIAutoplay::BLOCKED;
   }
 
-  if (IsMediaElementAllowedToPlay(aElement)) {
-    return nsIAutoplay::ALLOWED;
-  }
+  const uint32_t result = IsMediaElementAllowedToPlay(aElement) ?
+    nsIAutoplay::ALLOWED : autoplayDefault;
 
-  return autoplayDefault;
+  AUTOPLAY_LOG("IsAllowedToPlay, mediaElement=%p, isAllowToPlay=%s",
+                &aElement, AllowAutoplayToStr(result));
+  return result;
 }
 
 /* static */ bool

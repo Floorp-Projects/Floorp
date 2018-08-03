@@ -49,6 +49,21 @@ class Elf;
 class ElfDynamic_Section;
 class ElfStrtab_Section;
 
+template <typename X>
+class FixedSizeData {
+public:
+    struct Wrapper {
+        X value;
+    };
+    typedef Wrapper Type32;
+    typedef Wrapper Type64;
+
+    template <class endian, typename R, typename T>
+    static void swap(T &t, R &r) {
+        r.value = endian::swap(t.value);
+    }
+};
+
 class Elf_Ehdr_Traits {
 public:
     typedef Elf32_Ehdr Type32;
@@ -383,7 +398,7 @@ public:
         insertInSegments(section->segments);
     }
 
-    void insertBefore(ElfSection *section, bool dirty = true) {
+    virtual void insertBefore(ElfSection *section, bool dirty = true) {
         if (previous != nullptr)
             previous->next = next;
         if (next != nullptr)
