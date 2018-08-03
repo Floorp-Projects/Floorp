@@ -24,6 +24,18 @@
   {
     "input": "z=z&a=a&z=y&a=b&z=x&a=c&z=w&a=d&z=v&a=e&z=u&a=f&z=t&a=g",
     "output": [["a", "a"], ["a", "b"], ["a", "c"], ["a", "d"], ["a", "e"], ["a", "f"], ["a", "g"], ["z", "z"], ["z", "y"], ["z", "x"], ["z", "w"], ["z", "v"], ["z", "u"], ["z", "t"]]
+  },
+  {
+    "input": "bbb&bb&aaa&aa=x&aa=y",
+    "output": [["aa", "x"], ["aa", "y"], ["aaa", ""], ["bb", ""], ["bbb", ""]]
+  },
+  {
+    "input": "z=z&=f&=t&=x",
+    "output": [["", "f"], ["", "t"], ["", "x"], ["z", "z"]]
+  },
+  {
+    "input": "a🌈&a💩",
+    "output": [["a🌈", ""], ["a💩", ""]]
   }
 ].forEach((val) => {
   test(() => {
