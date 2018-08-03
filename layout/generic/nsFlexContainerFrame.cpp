@@ -2932,6 +2932,8 @@ MainAxisPositionTracker::
     mJustifyContent(aJustifyContent)
 {
   // Extract the flag portion of mJustifyContent and strip off the flag bits
+  // NOTE: This must happen before any assignment to mJustifyContent to
+  // avoid overwriting the flag bits.
   uint8_t justifyContentFlags = mJustifyContent & NS_STYLE_JUSTIFY_FLAG_BITS;
   mJustifyContent &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
 
@@ -2978,6 +2980,24 @@ MainAxisPositionTracker::
     }
   }
 
+  // If our main axis is (internally) reversed, swap the justify-content
+  // "flex-start" and "flex-end" behaviors:
+  // NOTE: This must happen ...
+  //  - *after* value-simplification for values that are dependent on our
+  //    flex-axis reversedness; e.g. for "space-between" which specifically
+  //    behaves like "flex-start" in some cases (per spec), and hence depends on
+  //    the reversedness of flex axes.
+  //  - *before* value simplification for values that don't care about
+  //    flex-relative axis direction; e.g. for "start" which purely depends on
+  //    writing-mode and isn't affected by reversedness of flex axes.
+  if (aAxisTracker.AreAxesInternallyReversed()) {
+    if (mJustifyContent == NS_STYLE_JUSTIFY_FLEX_START) {
+      mJustifyContent = NS_STYLE_JUSTIFY_FLEX_END;
+    } else if (mJustifyContent == NS_STYLE_JUSTIFY_FLEX_END) {
+      mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
+    }
+  }
+
   // Map 'left'/'right' to 'start'/'end'
   if (mJustifyContent == NS_STYLE_JUSTIFY_LEFT ||
       mJustifyContent == NS_STYLE_JUSTIFY_RIGHT) {
@@ -2997,19 +3017,13 @@ MainAxisPositionTracker::
 
   // Map 'start'/'end' to 'flex-start'/'flex-end'.
   if (mJustifyContent == NS_STYLE_JUSTIFY_START) {
-    mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
+    mJustifyContent = aAxisTracker.IsMainAxisReversed()
+                      ? NS_STYLE_JUSTIFY_FLEX_END
+                      : NS_STYLE_JUSTIFY_FLEX_START;
   } else if (mJustifyContent == NS_STYLE_JUSTIFY_END) {
-    mJustifyContent = NS_STYLE_JUSTIFY_FLEX_END;
-  }
-
-  // If our main axis is (internally) reversed, swap the justify-content
-  // "flex-start" and "flex-end" behaviors:
-  if (aAxisTracker.AreAxesInternallyReversed()) {
-    if (mJustifyContent == NS_STYLE_JUSTIFY_FLEX_START) {
-      mJustifyContent = NS_STYLE_JUSTIFY_FLEX_END;
-    } else if (mJustifyContent == NS_STYLE_JUSTIFY_FLEX_END) {
-      mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
-    }
+    mJustifyContent = aAxisTracker.IsMainAxisReversed()
+                      ? NS_STYLE_JUSTIFY_FLEX_START
+                      : NS_STYLE_JUSTIFY_FLEX_END;
   }
 
   // Figure out how much space we'll set aside for auto margins or
@@ -3018,10 +3032,6 @@ MainAxisPositionTracker::
       mPackingSpaceRemaining != 0 &&
       !aLine->IsEmpty()) {
     switch (mJustifyContent) {
-      case NS_STYLE_JUSTIFY_BASELINE:
-      case NS_STYLE_JUSTIFY_LAST_BASELINE:
-        NS_WARNING("NYI: justify-content:left/right/baseline/last baseline");
-        MOZ_FALLTHROUGH;
       case NS_STYLE_JUSTIFY_FLEX_START:
         // All packing space should go at the end --> nothing to do here.
         break;
@@ -3197,32 +3207,10 @@ CrossAxisPositionTracker::
     }
   }
 
-  // Map 'left'/'right' to 'start'/'end'
-  if (mAlignContent == NS_STYLE_ALIGN_LEFT ||
-      mAlignContent == NS_STYLE_ALIGN_RIGHT) {
-    if (aAxisTracker.IsRowOriented()) {
-      // Container's alignment axis is not parallel to the inline axis,
-      // so we map both 'left' and 'right' to 'start'.
-      mAlignContent = NS_STYLE_ALIGN_START;
-    } else {
-      // Column-oriented, so we map 'left' and 'right' to 'start' or 'end',
-      // depending on left-to-right writing mode.
-      const bool isLTR = aAxisTracker.GetWritingMode().IsBidiLTR();
-      const bool isAlignLeft = (mAlignContent == NS_STYLE_ALIGN_LEFT);
-      mAlignContent = (isAlignLeft == isLTR) ? NS_STYLE_ALIGN_START
-                                             : NS_STYLE_ALIGN_END;
-    }
-  }
-
-  // Map 'start'/'end' to 'flex-start'/'flex-end'.
-  if (mAlignContent == NS_STYLE_ALIGN_START) {
-    mAlignContent = NS_STYLE_ALIGN_FLEX_START;
-  } else if (mAlignContent == NS_STYLE_ALIGN_END) {
-    mAlignContent = NS_STYLE_ALIGN_FLEX_END;
-  }
-
   // If our cross axis is (internally) reversed, swap the align-content
   // "flex-start" and "flex-end" behaviors:
+  // NOTE: It matters precisely when we do this; see comment alongside
+  // MainAxisPositionTracker's AreAxesInternallyReversed check.
   if (aAxisTracker.AreAxesInternallyReversed()) {
     if (mAlignContent == NS_STYLE_ALIGN_FLEX_START) {
       mAlignContent = NS_STYLE_ALIGN_FLEX_END;
@@ -3231,12 +3219,21 @@ CrossAxisPositionTracker::
     }
   }
 
+  // Map 'start'/'end' to 'flex-start'/'flex-end'.
+  if (mAlignContent == NS_STYLE_ALIGN_START) {
+    mAlignContent = aAxisTracker.IsCrossAxisReversed()
+                    ? NS_STYLE_ALIGN_FLEX_END
+                    : NS_STYLE_ALIGN_FLEX_START;
+  } else if (mAlignContent == NS_STYLE_ALIGN_END) {
+    mAlignContent = aAxisTracker.IsCrossAxisReversed()
+                    ? NS_STYLE_ALIGN_FLEX_START
+                    : NS_STYLE_ALIGN_FLEX_END;
+  }
+
   // Figure out how much space we'll set aside for packing spaces, and advance
   // past any leading packing-space.
   if (mPackingSpaceRemaining != 0) {
     switch (mAlignContent) {
-      case NS_STYLE_ALIGN_SELF_START:
-      case NS_STYLE_ALIGN_SELF_END:
       case NS_STYLE_ALIGN_BASELINE:
       case NS_STYLE_ALIGN_LAST_BASELINE:
         NS_WARNING("NYI: align-items/align-self:left/right/self-start/self-end/baseline/last baseline");
@@ -3505,29 +3502,6 @@ SingleLineCrossAxisPositionTracker::
     alignSelf = NS_STYLE_ALIGN_FLEX_START;
   }
 
-  // Map 'left'/'right' to 'start'/'end'
-  if (alignSelf == NS_STYLE_ALIGN_LEFT || alignSelf == NS_STYLE_ALIGN_RIGHT) {
-    if (aAxisTracker.IsRowOriented()) {
-      // Container's alignment axis is not parallel to the inline axis,
-      // so we map both 'left' and 'right' to 'start'.
-      alignSelf = NS_STYLE_ALIGN_START;
-    } else {
-      // Column-oriented, so we map 'left' and 'right' to 'start' or 'end',
-      // depending on left-to-right writing mode.
-      const bool isLTR = aAxisTracker.GetWritingMode().IsBidiLTR();
-      const bool isAlignLeft = (alignSelf == NS_STYLE_ALIGN_LEFT);
-      alignSelf = (isAlignLeft == isLTR) ? NS_STYLE_ALIGN_START
-                                         : NS_STYLE_ALIGN_END;
-    }
-  }
-
-  // Map 'start'/'end' to 'flex-start'/'flex-end'.
-  if (alignSelf == NS_STYLE_ALIGN_START) {
-    alignSelf = NS_STYLE_ALIGN_FLEX_START;
-  } else if (alignSelf == NS_STYLE_ALIGN_END) {
-    alignSelf = NS_STYLE_ALIGN_FLEX_END;
-  }
-
   // If our cross axis is (internally) reversed, swap the align-self
   // "flex-start" and "flex-end" behaviors:
   if (aAxisTracker.AreAxesInternallyReversed()) {
@@ -3536,6 +3510,31 @@ SingleLineCrossAxisPositionTracker::
     } else if (alignSelf == NS_STYLE_ALIGN_FLEX_END) {
       alignSelf = NS_STYLE_ALIGN_FLEX_START;
     }
+  }
+
+  // Map 'self-start'/'self-end' to 'start'/'end'
+  if (alignSelf == NS_STYLE_ALIGN_SELF_START ||
+      alignSelf == NS_STYLE_ALIGN_SELF_END) {
+    const LogicalAxis logCrossAxis = aAxisTracker.IsRowOriented()
+                                     ? eLogicalAxisBlock
+                                     : eLogicalAxisInline;
+    const WritingMode cWM = aAxisTracker.GetWritingMode();
+    const bool sameStart =
+      cWM.ParallelAxisStartsOnSameSide(logCrossAxis, aItem.GetWritingMode());
+    alignSelf = sameStart == (alignSelf == NS_STYLE_ALIGN_SELF_START)
+                ? NS_STYLE_ALIGN_START
+                : NS_STYLE_ALIGN_END;
+  }
+
+  // Map 'start'/'end' to 'flex-start'/'flex-end'.
+  if (alignSelf == NS_STYLE_ALIGN_START) {
+    alignSelf = aAxisTracker.IsCrossAxisReversed()
+                ? NS_STYLE_ALIGN_FLEX_END
+                : NS_STYLE_ALIGN_FLEX_START;
+  } else if (alignSelf == NS_STYLE_ALIGN_END) {
+    alignSelf = aAxisTracker.IsCrossAxisReversed()
+                ? NS_STYLE_ALIGN_FLEX_START
+                : NS_STYLE_ALIGN_FLEX_END;
   }
 
   // 'align-self' falls back to 'flex-start' if it is 'center'/'flex-end' and we
@@ -3547,10 +3546,6 @@ SingleLineCrossAxisPositionTracker::
   }
 
   switch (alignSelf) {
-    case NS_STYLE_ALIGN_SELF_START:
-    case NS_STYLE_ALIGN_SELF_END:
-      NS_WARNING("NYI: align-items/align-self:left/right/self-start/self-end");
-      MOZ_FALLTHROUGH;
     case NS_STYLE_ALIGN_FLEX_START:
       // No space to skip over -- we're done.
       break;
