@@ -1544,26 +1544,6 @@ public:
 #ifdef DEBUG
   uint64_t mMutationCount;
   mutable bool mEntered;
-
-  // Note that some updates to these stats are not thread-safe. See the
-  // comment on the three-argument overloading of HashTable::lookup().
-  mutable struct Stats
-  {
-    uint32_t mSearches;       // total number of table searches
-    uint32_t mSteps;          // hash chain links traversed
-    uint32_t mHits;           // searches that found key
-    uint32_t mMisses;         // searches that didn't find key
-    uint32_t mAddOverRemoved; // adds that recycled a removed entry
-    uint32_t mRemoves;        // calls to remove
-    uint32_t mRemoveFrees;    // calls to remove that freed the entry
-    uint32_t mGrows;          // table expansions
-    uint32_t mShrinks;        // table contractions
-    uint32_t mCompresses;     // table compressions
-    uint32_t mRehashes;       // tombstone decontaminations
-  } mStats;
-#define METER(x) x
-#else
-#define METER(x)
 #endif
 
   // The default initial capacity is 32 (enough to hold 16 elements), but it
@@ -1698,7 +1678,6 @@ public:
       return false;
     }
     setTableSizeLog2(log2);
-    METER(memset(&mStats, 0, sizeof(mStats)));
     return true;
   }
 
@@ -1765,10 +1744,7 @@ private:
   };
 
   // Warning: in order for readonlyThreadsafeLookup() to be safe this
-  // function must not modify the table in any way when |collisionBit| is 0.
-  // (The use of the METER() macro to increment stats violates this
-  // restriction but we will live with that for now because it's enabled so
-  // rarely.)
+  // function must not modify the table in any way when Reason==ForNonAdd.
   template<LookupReason Reason>
   MOZ_ALWAYS_INLINE Entry& lookup(const Lookup& aLookup,
                                   HashNumber aKeyHash) const
@@ -1776,7 +1752,6 @@ private:
     MOZ_ASSERT(isLiveHash(aKeyHash));
     MOZ_ASSERT(!(aKeyHash & sCollisionBit));
     MOZ_ASSERT(mTable);
-    METER(mStats.mSearches++);
 
     // Compute the primary hash address.
     HashNumber h1 = hash1(aKeyHash);
@@ -1784,13 +1759,11 @@ private:
 
     // Miss: return space for a new entry.
     if (entry->isFree()) {
-      METER(mStats.mMisses++);
       return *entry;
     }
 
     // Hit: return entry.
     if (entry->matchHash(aKeyHash) && match(*entry, aLookup)) {
-      METER(mStats.mHits++);
       return *entry;
     }
 
@@ -1809,17 +1782,14 @@ private:
         }
       }
 
-      METER(mStats.mSteps++);
       h1 = applyDoubleHash(h1, dh);
 
       entry = &mTable[h1];
       if (entry->isFree()) {
-        METER(mStats.mMisses++);
         return firstRemoved ? *firstRemoved : *entry;
       }
 
       if (entry->matchHash(aKeyHash) && match(*entry, aLookup)) {
-        METER(mStats.mHits++);
         return *entry;
       }
     }
@@ -1835,7 +1805,6 @@ private:
   {
     MOZ_ASSERT(!(aKeyHash & sCollisionBit));
     MOZ_ASSERT(mTable);
-    METER(mStats.mSearches++);
 
     // We assume 'aKeyHash' has already been distributed.
 
@@ -1845,7 +1814,6 @@ private:
 
     // Miss: return space for a new entry.
     if (!entry->isLive()) {
-      METER(mStats.mMisses++);
       return *entry;
     }
 
@@ -1856,12 +1824,10 @@ private:
       MOZ_ASSERT(!entry->isRemoved());
       entry->setCollision();
 
-      METER(mStats.mSteps++);
       h1 = applyDoubleHash(h1, dh);
 
       entry = &mTable[h1];
       if (!entry->isLive()) {
-        METER(mStats.mMisses++);
         return *entry;
       }
     }
@@ -1929,15 +1895,7 @@ private:
       return NotOverloaded;
     }
 
-    int deltaLog2;
-    if (shouldCompressTable()) {
-      METER(mStats.mCompresses++);
-      deltaLog2 = 0;
-    } else {
-      METER(mStats.mGrows++);
-      deltaLog2 = 1;
-    }
-
+    int deltaLog2 = shouldCompressTable() ? 0 : 1;
     return changeTableSize(deltaLog2, aReportFailure);
   }
 
@@ -1954,13 +1912,11 @@ private:
   void remove(Entry& aEntry)
   {
     MOZ_ASSERT(mTable);
-    METER(mStats.mRemoves++);
 
     if (aEntry.hasCollision()) {
       aEntry.removeLive();
       mRemovedCount++;
     } else {
-      METER(mStats.mRemoveFrees++);
       aEntry.clearLive();
     }
     mEntryCount--;
@@ -1972,7 +1928,6 @@ private:
   void checkUnderloaded()
   {
     if (underloaded()) {
-      METER(mStats.mShrinks++);
       (void)changeTableSize(-1, DontReportFailure);
     }
   }
@@ -2001,7 +1956,6 @@ private:
   // would have gotten through random insertion order.
   void rehashTableInPlace()
   {
-    METER(mStats.mRehashes++);
     mRemovedCount = 0;
     mGen++;
     for (size_t i = 0; i < capacity(); ++i) {
@@ -2053,7 +2007,6 @@ private:
     MOZ_ASSERT(entry);
 
     if (entry->isRemoved()) {
-      METER(mStats.mAddOverRemoved++);
       mRemovedCount--;
       keyHash |= sCollisionBit;
     }
@@ -2213,7 +2166,6 @@ public:
       if (!this->checkSimulatedOOM()) {
         return false;
       }
-      METER(mStats.mAddOverRemoved++);
       mRemovedCount--;
       aPtr.mKeyHash |= sCollisionBit;
     } else {
@@ -2319,8 +2271,6 @@ public:
     rekeyWithoutRehash(aPtr, aLookup, aKey);
     checkOverRemoved();
   }
-
-#undef METER
 };
 
 } // namespace detail
