@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
+import mozilla.components.support.base.log.logger.Logger;
+
 public class EventsMeasurement extends TelemetryMeasurement {
     private static final String LOG_TAG = EventsMeasurement.class.getSimpleName();
 
@@ -33,11 +35,13 @@ public class EventsMeasurement extends TelemetryMeasurement {
     private static final String PREFERENCE_EVENT_COUNT = "event_count";
 
     private TelemetryConfiguration configuration;
+    private Logger logger;
 
     public EventsMeasurement(TelemetryConfiguration configuration) {
         super(FIELD_NAME);
 
         this.configuration = configuration;
+        this.logger = new Logger("telemetry/events");
     }
 
     public void add(final TelemetryEvent event) {
@@ -70,7 +74,7 @@ public class EventsMeasurement extends TelemetryMeasurement {
                     resetEventCount();
                 } catch (JSONException e) {
                     // Let's log a warning and move on. This event is lost.
-                    Log.w(LOG_TAG, "Could not parse event from disk", e);
+                    logger.warn("Could not parse event from disk", e);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -85,12 +89,12 @@ public class EventsMeasurement extends TelemetryMeasurement {
             // We just log an error here. This means we are going to continue building the ping
             // with the events we were able to read from disk. The events file will be removed and
             // we might potentially lose events that we couldn't ready because of the exception.
-            Log.w(LOG_TAG, "IOException while reading events from disk", e);
+            logger.warn("IOException while reading events from disk", e);
         } finally {
             IOUtils.safeClose(stream);
 
             if (!file.delete()) {
-                Log.w(LOG_TAG, "Events file could not be deleted");
+                logger.warn("Events file could not be deleted", new IOException());
             }
         }
 
@@ -115,8 +119,7 @@ public class EventsMeasurement extends TelemetryMeasurement {
 
             countEvent();
         } catch (IOException e) {
-            Log.w(LOG_TAG, "IOException while writing event to disk", e);
-            throw new AssertionError("BOING");
+            logger.warn("IOException while writing event to disk", e);
         } finally {
             IOUtils.safeClose(stream);
         }

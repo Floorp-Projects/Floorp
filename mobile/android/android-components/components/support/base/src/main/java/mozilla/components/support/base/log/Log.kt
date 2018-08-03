@@ -59,7 +59,7 @@ object Log {
     }
 
     // Only for testing
-    @VisibleForTesting internal fun reset() {
+    @VisibleForTesting fun reset() {
         logLevel = Priority.DEBUG
 
         synchronized(sinks) {

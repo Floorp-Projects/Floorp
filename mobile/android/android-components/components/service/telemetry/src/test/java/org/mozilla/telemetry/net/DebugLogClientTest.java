@@ -4,6 +4,8 @@
 
 package org.mozilla.telemetry.net;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
@@ -13,6 +15,9 @@ import org.robolectric.shadows.ShadowLog;
 
 import java.io.PrintStream;
 
+import mozilla.components.support.base.log.Log;
+import mozilla.components.support.base.log.sink.AndroidLogSink;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -21,6 +26,16 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(RobolectricTestRunner.class)
 public class DebugLogClientTest {
+    @Before
+    public void setUp() {
+        Log.INSTANCE.addSink(new AndroidLogSink("Test"));
+    }
+
+    @After
+    public void tearDown() {
+        Log.INSTANCE.reset();
+    }
+
     @Test
     public void testDebugLogClientWritesSomethingToLog() {
         final PrintStream stream = mock(PrintStream.class);

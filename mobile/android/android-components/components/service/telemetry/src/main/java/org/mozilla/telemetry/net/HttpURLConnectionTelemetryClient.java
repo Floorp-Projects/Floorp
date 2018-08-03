@@ -22,8 +22,10 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import mozilla.components.support.base.log.logger.Logger;
+
 public class HttpURLConnectionTelemetryClient implements TelemetryClient {
-    private static final String LOG_TAG = "HttpURLTelemetryClient";
+    private Logger logger = new Logger("telemetry/client");
 
     @Override
     public boolean uploadPing(TelemetryConfiguration configuration, String path, String serializedPing) {
@@ -43,7 +45,7 @@ public class HttpURLConnectionTelemetryClient implements TelemetryClient {
 
             int responseCode = upload(connection, serializedPing);
 
-            Log.d(LOG_TAG, "Ping upload: " + responseCode);
+            logger.debug("Ping upload: " + responseCode, null);
 
             if (responseCode >= 200 && responseCode <= 299) {
                 // Known success errors (2xx):
@@ -63,24 +65,24 @@ public class HttpURLConnectionTelemetryClient implements TelemetryClient {
                 // Something our client did is not correct. It's unlikely that the client is going
                 // to recover from this by re-trying again, so we just log and error and report a
                 // successful upload to the service.
-                Log.e(LOG_TAG, "Server returned client error code: " + responseCode);
+                logger.error("Server returned client error code: " + responseCode, null);
                 return true;
             } else {
                 // Known other errors:
                 // 500 - internal error
 
                 // For all other errors we log a warning an try again at a later time.
-                Log.w(LOG_TAG, "Server returned response code: " + responseCode);
+                logger.warn("Server returned response code: " + responseCode, null);
                 return false;
             }
         } catch (MalformedURLException e) {
             // There's nothing we can do to recover from this here. So let's just log an error and
             // notify the service that this job has been completed - even though we didn't upload
             // anything to the server.
-            Log.e(LOG_TAG, "Could not upload telemetry due to malformed URL", e);
+            logger.error("Could not upload telemetry due to malformed URL", e);
             return true;
         } catch (IOException e) {
-            Log.w(LOG_TAG, "IOException while uploading ping", e);
+            logger.warn("IOException while uploading ping", e);
             return false;
         } finally {
             if (connection != null) {

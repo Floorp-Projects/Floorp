@@ -22,7 +22,11 @@ android {
 }
 
 dependencies {
+    implementation project(':support-base')
+
     implementation "com.android.support:support-annotations:${rootProject.ext.dependencies['supportLibraries']}"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"

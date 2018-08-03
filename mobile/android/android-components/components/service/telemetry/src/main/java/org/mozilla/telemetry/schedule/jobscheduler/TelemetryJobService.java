@@ -21,12 +21,13 @@ import org.mozilla.telemetry.storage.TelemetryStorage;
 
 import java.util.Calendar;
 
-public class TelemetryJobService extends JobService {
-    private static final String LOG_TAG = "TelemetryJobService";
+import mozilla.components.support.base.log.logger.Logger;
 
+public class TelemetryJobService extends JobService {
     private static final String PREFERENCE_UPLOAD_COUNT_PREFIX = "upload_count_";
     private static final String PREFERENCE_LAST_UPLOAD_PREFIX = "last_uploade_";
 
+    private final Logger logger = new Logger("telemetry/service");
     private UploadPingsTask uploadTask;
 
     @Override
@@ -61,31 +62,31 @@ public class TelemetryJobService extends JobService {
 
         for (TelemetryPingBuilder builder : telemetry.getBuilders()) {
             final String pingType = builder.getType();
-            Log.d(LOG_TAG, "Performing upload of ping type: " + pingType);
+            logger.debug("Performing upload of ping type: " + pingType, null);
 
             if (task.isCancelled()) {
-                Log.d(LOG_TAG, "Job stopped. Exiting.");
+                logger.debug("Job stopped. Exiting.", null);
                 return; // Job will be rescheduled from onStopJob().
             }
 
             if (storage.countStoredPings(pingType) == 0) {
-                Log.d(LOG_TAG, "No pings of type " + pingType + " to upload");
+                logger.debug("No pings of type " + pingType + " to upload", null);
                 continue;
             }
 
             if (hasReachedUploadLimit(configuration, pingType)) {
-                Log.d(LOG_TAG, "Daily upload limit for type " + pingType + " reached");
+                logger.debug("Daily upload limit for type " + pingType + " reached", null);
                 continue;
             }
 
             if (!performPingUpload(telemetry, pingType)) {
-                Log.i(LOG_TAG, "Upload aborted. Rescheduling job if limit not reached.");
+                logger.info("Upload aborted. Rescheduling job if limit not reached.", null);
                 jobFinished(parameters, !hasReachedUploadLimit(configuration, pingType));
                 return;
             }
         }
 
-        Log.d(LOG_TAG, "All uploads performed");
+        logger.debug("All uploads performed", null);
         jobFinished(parameters, false);
     }
 

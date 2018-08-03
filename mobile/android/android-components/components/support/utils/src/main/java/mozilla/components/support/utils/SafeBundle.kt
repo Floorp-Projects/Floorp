@@ -6,7 +6,7 @@ package mozilla.components.support.utils
 
 import android.os.Bundle
 import android.os.Parcelable
-import android.util.Log
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * See SafeIntent for more background: applications can put garbage values into Bundles. This is primarily
@@ -18,30 +18,26 @@ import android.util.Log
 class SafeBundle(private val bundle: Bundle) {
 
     fun getString(name: String): String? {
-        try {
-            return bundle.getString(name)
+        return try {
+            bundle.getString(name)
         } catch (e: OutOfMemoryError) {
-            Log.w(LOGTAG, "Couldn't get bundle items: OOM. Malformed?")
-            return null
+            Logger.warn("Couldn't get bundle items: OOM. Malformed?")
+            null
         } catch (e: RuntimeException) {
-            Log.w(LOGTAG, "Couldn't get bundle items.", e)
-            return null
+            Logger.warn("Couldn't get bundle items.", e)
+            null
         }
     }
 
     fun <T : Parcelable> getParcelable(name: String): T? {
-        try {
-            return bundle.getParcelable(name)
+        return try {
+            bundle.getParcelable(name)
         } catch (e: OutOfMemoryError) {
-            Log.w(LOGTAG, "Couldn't get bundle items: OOM. Malformed?")
-            return null
+            Logger.warn("Couldn't get bundle items: OOM. Malformed?")
+            null
         } catch (e: RuntimeException) {
-            Log.w(LOGTAG, "Couldn't get bundle items.", e)
-            return null
+            Logger.warn("Couldn't get bundle items.", e)
+            null
         }
-    }
-
-    companion object {
-        private val LOGTAG = SafeBundle::class.java.simpleName
     }
 }

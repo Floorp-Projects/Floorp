@@ -8,7 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
-import android.util.Log
+import mozilla.components.support.base.log.logger.Logger
 
 import java.util.ArrayList
 
@@ -90,15 +90,11 @@ class SafeIntent(val unsafe: Intent) {
         return try {
             block(unsafe)
         } catch (e: OutOfMemoryError) {
-            Log.w(LOGTAG, "Could not read from intent: OOM. Malformed?")
+            Logger.warn("Could not read from intent: OOM. Malformed?")
             default
         } catch (e: RuntimeException) {
-            Log.w(LOGTAG, "Could not read from intent.", e)
+            Logger.warn("Could not read from intent.", e)
             default
         }
-    }
-
-    companion object {
-        private val LOGTAG = SafeIntent::class.java.simpleName
     }
 }

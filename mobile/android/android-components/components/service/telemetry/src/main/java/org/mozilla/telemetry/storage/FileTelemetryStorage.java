@@ -29,21 +29,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import mozilla.components.support.base.log.logger.Logger;
+
 /**
  * TelemetryStorage implementation that stores pings as files on disk.
  */
 public class FileTelemetryStorage implements TelemetryStorage {
-    private static final String LOG_TAG = "FileTelemetryStorage";
-
     private static final String FILE_PATTERN = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
     private static final String STORAGE_DIRECTORY = "storage";
 
+    private final Logger logger;
     private final TelemetryConfiguration configuration;
     private final TelemetryPingSerializer serializer;
 
     private final File storageDirectory;
 
     public FileTelemetryStorage(TelemetryConfiguration configuration, TelemetryPingSerializer serializer) {
+        this.logger = new Logger("telemetry/storage");
         this.configuration = configuration;
         this.serializer = serializer;
 
@@ -72,7 +74,7 @@ public class FileTelemetryStorage implements TelemetryStorage {
 
                 if (processed) {
                     if (!file.delete()) {
-                        Log.w(LOG_TAG, "Could not delete local ping file after processing");
+                        logger.warn("Could not delete local ping file after processing", new IOException());
                     }
                 } else {
                     // The callback couldn't process this file. Let's stop and rety later.
@@ -112,7 +114,7 @@ public class FileTelemetryStorage implements TelemetryStorage {
             writer.flush();
             writer.close();
         } catch (IOException e) {
-            Log.w(LOG_TAG, "IOException while writing event to disk", e);
+            logger.warn("IOException while writing event to disk", e);
         } finally {
             IOUtils.safeClose(stream);
         }
@@ -138,7 +140,7 @@ public class FileTelemetryStorage implements TelemetryStorage {
             final File file = sortedFiles.get(i);
 
             if (!file.delete()) {
-                Log.w(LOG_TAG, "Can't prune ping file: " + file.getAbsolutePath());
+                logger.warn("Can't prune ping file: " + file.getAbsolutePath(), new IOException());
             }
         }
     }
