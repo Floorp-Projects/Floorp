@@ -2753,22 +2753,24 @@ var AddonManagerInternal = {
         await addon.disable();
     },
 
-    addonInstallDoInstall(target, id) {
+    async addonInstallDoInstall(target, id) {
       let state = this.installs.get(id);
       if (!state) {
-        return Promise.reject(`invalid id ${id}`);
+        throw new Error(`invalid id ${id}`);
       }
-      let result = state.install.install();
 
-      return state.installPromise.then(addon => new Promise(resolve => {
-        let callback = () => resolve(result);
-        if (Services.prefs.getBoolPref(PREF_WEBEXT_PERM_PROMPTS, false)) {
-          let subject = {wrappedJSObject: {target, addon, callback}};
+      let addon = await state.install.install();
+
+      if (addon.type == "theme" && !addon.appDisabled) {
+        await addon.enable();
+      }
+
+      if (Services.prefs.getBoolPref(PREF_WEBEXT_PERM_PROMPTS, false)) {
+        await new Promise(resolve => {
+          let subject = {wrappedJSObject: {target, addon, callback: resolve}};
           Services.obs.notifyObservers(subject, "webextension-install-notify");
-        } else {
-          callback();
-        }
-      }));
+        });
+      }
     },
 
     addonInstallCancel(target, id) {
