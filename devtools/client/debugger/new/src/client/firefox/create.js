@@ -47,6 +47,7 @@ function createSource(source, {
   return {
     id: source.actor,
     url: source.url,
+    relativeUrl: source.url,
     isPrettyPrinted: false,
     isWasm: supportsWasm && source.introductionType === "wasm",
     sourceMapURL: source.sourceMapURL,

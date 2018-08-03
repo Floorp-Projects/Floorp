@@ -35,13 +35,13 @@ exports.getSourceClassnames = getSourceClassnames;
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
+var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+
 var _utils = require("./utils");
 
 var _text = require("../utils/text");
 
-var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
-
-var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+var _url = require("../utils/url");
 
 var _sourcesTree = require("./sources-tree/index");
 
