@@ -65,6 +65,7 @@ interface nsILoadURIDelegate;
 native TabChildRef(already_AddRefed<nsITabChild>);
 native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
+webidl ContentFrameMessageManager;
 webidl EventTarget;
 
 [scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
@@ -1200,4 +1201,10 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Media queries only look at the value in the top-most docshell.
    */
   attribute unsigned long displayMode;
+
+  /**
+   * The message manager for this docshell.  This does not throw, but
+   * can return null if the docshell has no message manager.
+   */
+  [infallible] readonly attribute ContentFrameMessageManager messageManager;
 };
