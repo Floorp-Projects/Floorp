@@ -143,11 +143,15 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       // When editing an existing record, prevent changes to persistence
       this.persistCheckbox.hidden = true;
     } else {
-      let defaults = PaymentDialogUtils.getDefaultPreferences();
+      let {saveAddressDefaultChecked} = PaymentDialogUtils.getDefaultPreferences();
+      if (typeof saveAddressDefaultChecked != "boolean") {
+        throw new Error(`Unexpected non-boolean value for saveAddressDefaultChecked from
+          PaymentDialogUtils.getDefaultPreferences(): ${typeof saveAddressDefaultChecked}`);
+      }
       // Adding a new record: default persistence to the pref value when in a not-private session
       this.persistCheckbox.hidden = false;
       this.persistCheckbox.checked = state.isPrivate ? false :
-                                                       defaults.saveAddressDefaultChecked;
+                                                       saveAddressDefaultChecked;
     }
 
     this.formHandler.loadRecord(record);

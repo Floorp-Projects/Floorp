@@ -158,7 +158,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         record.billingAddressGUID = selectedShippingAddress;
       }
 
-      let defaults = PaymentDialogUtils.getDefaultPreferences();
+      let {saveCreditCardDefaultChecked} = PaymentDialogUtils.getDefaultPreferences();
+      if (typeof saveCreditCardDefaultChecked != "boolean") {
+        throw new Error(`Unexpected non-boolean value for saveCreditCardDefaultChecked from
+          PaymentDialogUtils.getDefaultPreferences(): ${typeof saveCreditCardDefaultChecked}`);
+      }
       // Adding a new record: default persistence to pref value when in a not-private session
       this.persistCheckbox.hidden = false;
       if (basicCardPage.hasOwnProperty("persistCheckboxValue")) {
@@ -166,7 +170,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         this.persistCheckbox.checked = basicCardPage.persistCheckboxValue;
       } else {
         this.persistCheckbox.checked = state.isPrivate ? false :
-                                                         defaults.saveCreditCardDefaultChecked;
+                                                         saveCreditCardDefaultChecked;
       }
     }
 
