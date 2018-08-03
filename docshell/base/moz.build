@@ -37,7 +37,6 @@ DIRS += [
 
 XPIDL_SOURCES += [
     'nsCDefaultURIFixup.idl',
-    'nsIClipboardCommands.idl',
     'nsIContentViewer.idl',
     'nsIContentViewerEdit.idl',
     'nsIDocShell.idl',
