@@ -379,34 +379,6 @@ class MOZ_STACK_CLASS OpIter : private Policy
         return d_.readFixedF64(out);
     }
 
-    MOZ_MUST_USE bool readAtomicViewType(Scalar::Type* viewType) {
-        uint8_t x;
-        if (!readFixedU8(&x))
-            return fail("unable to read atomic view");
-        if (x >= Scalar::MaxTypedArrayViewType)
-            return fail("invalid atomic view type");
-        *viewType = Scalar::Type(x);
-        return true;
-    }
-
-    MOZ_MUST_USE bool readAtomicBinOpOp(jit::AtomicOp* op) {
-        uint8_t x;
-        if (!readFixedU8(&x))
-            return fail("unable to read atomic opcode");
-        switch (x) {
-          case jit::AtomicFetchAddOp:
-          case jit::AtomicFetchSubOp:
-          case jit::AtomicFetchAndOp:
-          case jit::AtomicFetchOrOp:
-          case jit::AtomicFetchXorOp:
-            break;
-          default:
-            return fail("unrecognized atomic binop");
-        }
-        *op = jit::AtomicOp(x);
-        return true;
-    }
-
     MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
     MOZ_MUST_USE bool readLinearMemoryAddressAligned(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
     MOZ_MUST_USE bool readBlockType(ExprType* expr);
@@ -581,22 +553,6 @@ class MOZ_STACK_CLASS OpIter : private Policy
                                         uint32_t byteSize,
                                         Value* oldValue,
                                         Value* newValue);
-    MOZ_MUST_USE bool readOldAtomicLoad(LinearMemoryAddress<Value>* addr,
-                                        Scalar::Type* viewType);
-    MOZ_MUST_USE bool readOldAtomicStore(LinearMemoryAddress<Value>* addr,
-                                         Scalar::Type* viewType,
-                                         Value* value);
-    MOZ_MUST_USE bool readOldAtomicBinOp(LinearMemoryAddress<Value>* addr,
-                                         Scalar::Type* viewType,
-                                         jit::AtomicOp* op,
-                                         Value* value);
-    MOZ_MUST_USE bool readOldAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
-                                                   Scalar::Type* viewType,
-                                                   Value* oldValue,
-                                                   Value* newValue);
-    MOZ_MUST_USE bool readOldAtomicExchange(LinearMemoryAddress<Value>* addr,
-                                            Scalar::Type* viewType,
-                                            Value* newValue);
     MOZ_MUST_USE bool readMemCopy(Value* dest, Value* src, Value* len);
     MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
 
@@ -1892,114 +1848,6 @@ OpIter<Policy>::readAtomicCmpXchg(LinearMemoryAddress<Value>* addr, ValType resu
         return false;
 
     infalliblePush(resultType);
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readOldAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicLoad);
-
-    if (!readAtomicViewType(viewType))
-        return false;
-
-    uint32_t byteSize = Scalar::byteSize(*viewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
-        return false;
-
-    infalliblePush(ValType::I32);
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readOldAtomicStore(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                   Value* value)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicStore);
-
-    if (!readAtomicViewType(viewType))
-        return false;
-
-    uint32_t byteSize = Scalar::byteSize(*viewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
-        return false;
-
-    if (!popWithType(ValType::I32, value))
-        return false;
-
-    infalliblePush(ValType::I32);
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readOldAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                   jit::AtomicOp* op, Value* value)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicBinOp);
-
-    if (!readAtomicViewType(viewType))
-        return false;
-
-    if (!readAtomicBinOpOp(op))
-        return false;
-
-    uint32_t byteSize = Scalar::byteSize(*viewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
-        return false;
-
-    if (!popWithType(ValType::I32, value))
-        return false;
-
-    infalliblePush(ValType::I32);
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readOldAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
-                                             Scalar::Type* viewType, Value* oldValue,
-                                             Value* newValue)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicCompareExchange);
-
-    if (!readAtomicViewType(viewType))
-        return false;
-
-    uint32_t byteSize = Scalar::byteSize(*viewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
-        return false;
-
-    if (!popWithType(ValType::I32, newValue))
-        return false;
-
-    if (!popWithType(ValType::I32, oldValue))
-        return false;
-
-    infalliblePush(ValType::I32);
-    return true;
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::readOldAtomicExchange(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                      Value* value)
-{
-    MOZ_ASSERT(Classify(op_) == OpKind::OldAtomicExchange);
-
-    if (!readAtomicViewType(viewType))
-        return false;
-
-    uint32_t byteSize = Scalar::byteSize(*viewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
-        return false;
-
-    if (!popWithType(ValType::I32, value))
-        return false;
-
-    infalliblePush(ValType::I32);
     return true;
 }
 

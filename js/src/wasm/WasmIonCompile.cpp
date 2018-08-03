@@ -691,7 +691,7 @@ class FunctionCompiler
 
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* load = nullptr;
-        if (env_.isAsmJS() && !access->isAtomic()) {
+        if (env_.isAsmJS()) {
             MOZ_ASSERT(access->offset() == 0);
             MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
             load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit, access->type());
@@ -712,7 +712,7 @@ class FunctionCompiler
 
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* store = nullptr;
-        if (env_.isAsmJS() && !access->isAtomic()) {
+        if (env_.isAsmJS()) {
             MOZ_ASSERT(access->offset() == 0);
             MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
             store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
@@ -2497,104 +2497,6 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, SymbolicAddress callee, ValType o
 }
 
 static bool
-EmitOldAtomicsLoad(FunctionCompiler& f)
-{
-    LinearMemoryAddress<MDefinition*> addr;
-    Scalar::Type viewType;
-    if (!f.iter().readOldAtomicLoad(&addr, &viewType))
-        return false;
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            Synchronization::Load());
-
-    auto* ins = f.load(addr.base, &access, ValType::I32);
-    if (!f.inDeadCode() && !ins)
-        return false;
-
-    f.iter().setResult(ins);
-    return true;
-}
-
-static bool
-EmitOldAtomicsStore(FunctionCompiler& f)
-{
-    LinearMemoryAddress<MDefinition*> addr;
-    Scalar::Type viewType;
-    MDefinition* value;
-    if (!f.iter().readOldAtomicStore(&addr, &viewType, &value))
-        return false;
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            Synchronization::Store());
-
-    f.store(addr.base, &access, value);
-    f.iter().setResult(value);
-    return true;
-}
-
-static bool
-EmitOldAtomicsBinOp(FunctionCompiler& f)
-{
-    LinearMemoryAddress<MDefinition*> addr;
-    Scalar::Type viewType;
-    AtomicOp op;
-    MDefinition* value;
-    if (!f.iter().readOldAtomicBinOp(&addr, &viewType, &op, &value))
-        return false;
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            Synchronization::Full());
-
-    auto* ins = f.atomicBinopHeap(op, addr.base, &access, ValType::I32, value);
-    if (!f.inDeadCode() && !ins)
-        return false;
-
-    f.iter().setResult(ins);
-    return true;
-}
-
-static bool
-EmitOldAtomicsCompareExchange(FunctionCompiler& f)
-{
-    LinearMemoryAddress<MDefinition*> addr;
-    Scalar::Type viewType;
-    MDefinition* oldValue;
-    MDefinition* newValue;
-    if (!f.iter().readOldAtomicCompareExchange(&addr, &viewType, &oldValue, &newValue))
-        return false;
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            Synchronization::Full());
-
-    auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, ValType::I32, oldValue, newValue);
-    if (!f.inDeadCode() && !ins)
-        return false;
-
-    f.iter().setResult(ins);
-    return true;
-}
-
-static bool
-EmitOldAtomicsExchange(FunctionCompiler& f)
-{
-    LinearMemoryAddress<MDefinition*> addr;
-    Scalar::Type viewType;
-    MDefinition* value;
-    if (!f.iter().readOldAtomicExchange(&addr, &viewType, &value))
-        return false;
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            Synchronization::Full());
-
-    auto* ins = f.atomicExchangeHeap(addr.base, &access, ValType::I32, value);
-    if (!f.inDeadCode() && !ins)
-        return false;
-
-    f.iter().setResult(ins);
-    return true;
-}
-
-static bool
 EmitGrowMemory(FunctionCompiler& f)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3559,18 +3461,6 @@ EmitBodyExprs(FunctionCompiler& f)
                 CHECK(EmitCall(f, /* asmJSFuncDef = */ true));
               case uint16_t(MozOp::OldCallIndirect):
                 CHECK(EmitCallIndirect(f, /* oldStyle = */ true));
-
-              // Atomics
-              case uint16_t(MozOp::I32AtomicsLoad):
-                CHECK(EmitOldAtomicsLoad(f));
-              case uint16_t(MozOp::I32AtomicsStore):
-                CHECK(EmitOldAtomicsStore(f));
-              case uint16_t(MozOp::I32AtomicsBinOp):
-                CHECK(EmitOldAtomicsBinOp(f));
-              case uint16_t(MozOp::I32AtomicsCompareExchange):
-                CHECK(EmitOldAtomicsCompareExchange(f));
-              case uint16_t(MozOp::I32AtomicsExchange):
-                CHECK(EmitOldAtomicsExchange(f));
 
               default:
                 return f.iter().unrecognizedOpcode(&op);
