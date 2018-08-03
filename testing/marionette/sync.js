@@ -16,13 +16,10 @@ const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 this.EXPORTED_SYMBOLS = [
-  /* exported PollPromise, TimedPromise */
+  "MessageManagerDestroyedPromise",
   "PollPromise",
   "Sleep",
   "TimedPromise",
-
-  /* exported MessageManagerDestroyedPromise */
-  "MessageManagerDestroyedPromise",
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
