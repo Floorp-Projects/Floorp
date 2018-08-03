@@ -528,7 +528,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsILoadContext)
   NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
-  NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINetworkInterceptController,
                                      mInterceptController)
@@ -13287,96 +13286,6 @@ nsDocShell::EnsureCommandHandler()
   }
 
   return mCommandManager ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDocShell::CanCutSelection(bool* aResult)
-{
-  return IsCommandEnabled("cmd_cut", aResult);
-}
-
-NS_IMETHODIMP
-nsDocShell::CanCopySelection(bool* aResult)
-{
-  return IsCommandEnabled("cmd_copy", aResult);
-}
-
-NS_IMETHODIMP
-nsDocShell::CanCopyLinkLocation(bool* aResult)
-{
-  return IsCommandEnabled("cmd_copyLink", aResult);
-}
-
-NS_IMETHODIMP
-nsDocShell::CanCopyImageLocation(bool* aResult)
-{
-  return IsCommandEnabled("cmd_copyImageLocation", aResult);
-}
-
-NS_IMETHODIMP
-nsDocShell::CanCopyImageContents(bool* aResult)
-{
-  return IsCommandEnabled("cmd_copyImageContents", aResult);
-}
-
-NS_IMETHODIMP
-nsDocShell::CanPaste(bool* aResult)
-{
-  return IsCommandEnabled("cmd_paste", aResult);
-}
-
-NS_IMETHODIMP
-nsDocShell::CutSelection(void)
-{
-  return DoCommand("cmd_cut");
-}
-
-NS_IMETHODIMP
-nsDocShell::CopySelection(void)
-{
-  return DoCommand("cmd_copy");
-}
-
-NS_IMETHODIMP
-nsDocShell::CopyLinkLocation(void)
-{
-  return DoCommand("cmd_copyLink");
-}
-
-NS_IMETHODIMP
-nsDocShell::CopyImageLocation(void)
-{
-  return DoCommand("cmd_copyImageLocation");
-}
-
-NS_IMETHODIMP
-nsDocShell::CopyImageContents(void)
-{
-  return DoCommand("cmd_copyImageContents");
-}
-
-NS_IMETHODIMP
-nsDocShell::Paste(void)
-{
-  return DoCommand("cmd_paste");
-}
-
-NS_IMETHODIMP
-nsDocShell::SelectAll(void)
-{
-  return DoCommand("cmd_selectAll");
-}
-
-//
-// SelectNone
-//
-// Collapses the current selection, insertion point ends up at beginning
-// of previous selection.
-//
-NS_IMETHODIMP
-nsDocShell::SelectNone(void)
-{
-  return DoCommand("cmd_selectNone");
 }
 
 // link handling

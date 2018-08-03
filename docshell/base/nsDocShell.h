@@ -22,7 +22,6 @@
 
 #include "nsIAuthPromptProvider.h"
 #include "nsIBaseWindow.h"
-#include "nsIClipboardCommands.h"
 #include "nsIDeprecationWarner.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -129,7 +128,6 @@ class nsDocShell final
   , public nsIAuthPromptProvider
   , public nsILoadContext
   , public nsILinkHandler
-  , public nsIClipboardCommands
   , public nsIDOMStorageManager
   , public nsINetworkInterceptController
   , public nsIDeprecationWarner
@@ -178,7 +176,6 @@ public:
   NS_DECL_NSIREFRESHURI
   NS_DECL_NSIWEBPAGEDESCRIPTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
-  NS_DECL_NSICLIPBOARDCOMMANDS
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSIDEPRECATIONWARNER
 
