@@ -976,6 +976,9 @@ MediaStreamGraphImpl::NotifyInputData(const AudioDataValue* aBuffer, size_t aFra
     MOZ_ASSERT(mInputDeviceID || CurrentDriver()->Switching());
   }
 #endif
+  if (!mInputDeviceID) {
+    return;
+  }
   nsTArray<RefPtr<AudioDataListener>>* listeners = mInputDeviceUsers.GetValue(mInputDeviceID);
   MOZ_ASSERT(listeners);
   for (auto& listener : *listeners) {
