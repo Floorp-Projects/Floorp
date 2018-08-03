@@ -72,7 +72,9 @@ var PdfjsContentUtils = {
    */
   displayWarning(aWindow, aMessage, aLabel, aAccessKey) {
     // the child's dom frame mm associated with the window.
-    let winmm = aWindow.docShell.messageManager;
+    let winmm = aWindow.docShell
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIContentFrameMessageManager);
     winmm.sendAsyncMessage("PDFJS:Parent:displayWarning", {
       message: aMessage,
       label: aLabel,

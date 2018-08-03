@@ -153,6 +153,12 @@ prefBranch.addObserver("", observer.onPrefChange);
 observer.onPrefChange(); // read initial values
 
 
+function messageManagerFromWindow(win) {
+  return win.docShell
+            .QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIContentFrameMessageManager);
+}
+
 // This object maps to the "child" process (even in the single-process case).
 var LoginManagerContent = {
   __formFillService: null, // FormFillController, for username autocompleting
@@ -295,7 +301,7 @@ var LoginManagerContent = {
     }
     let actionOrigin = LoginUtils._getActionOrigin(form);
 
-    let messageManager = win.docShell.messageManager;
+    let messageManager = messageManagerFromWindow(win);
 
     // XXX Weak??
     let requestData = { form };
@@ -317,7 +323,7 @@ var LoginManagerContent = {
     let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
     let actionOrigin = LoginUtils._getActionOrigin(form);
 
-    let messageManager = win.docShell.messageManager;
+    let messageManager = messageManagerFromWindow(win);
 
     let previousResult = aPreviousResult ?
                            { searchString: aPreviousResult.searchString,
@@ -438,7 +444,7 @@ var LoginManagerContent = {
 
     const isPrivateWindow = PrivateBrowsingUtils.isContentWindowPrivate(window);
 
-    let messageManager = window.docShell.messageManager;
+    let messageManager = messageManagerFromWindow(window);
     messageManager.sendAsyncMessage("LoginStats:LoginEncountered",
                                     {
                                       isPrivateWindow,
@@ -501,7 +507,7 @@ var LoginManagerContent = {
                         frame => hasInsecureLoginForms(frame));
     };
 
-    let messageManager = topWindow.docShell.messageManager;
+    let messageManager = messageManagerFromWindow(topWindow);
     messageManager.sendAsyncMessage("RemoteLogins:insecureLoginFormPresent", {
       hasInsecureLoginForms: hasInsecureLoginForms(topWindow),
     });
@@ -939,7 +945,7 @@ var LoginManagerContent = {
     }
 
     let formSubmitURL = LoginUtils._getActionOrigin(form);
-    let messageManager = win.docShell.messageManager;
+    let messageManager = messageManagerFromWindow(win);
 
     let recipes = LoginRecipesContent.getRecipes(hostname, win);
 
@@ -1257,7 +1263,7 @@ var LoginManagerContent = {
       autofillResult = AUTOFILL_RESULT.FILLED;
 
       let win = doc.defaultView;
-      let messageManager = win.docShell.messageManager;
+      let messageManager = messageManagerFromWindow(win);
       messageManager.sendAsyncMessage("LoginStats:LoginFillSuccessful");
     } finally {
       if (autofillResult == -1) {

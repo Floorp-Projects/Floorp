@@ -203,7 +203,10 @@ class WebAPI extends APIObject {
   }
 
   init(window) {
-    let mm = window.docShell.messageManager;
+    let mm = window
+        .docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIContentFrameMessageManager);
     let broker = new APIBroker(mm);
 
     super.init(window, broker, {});

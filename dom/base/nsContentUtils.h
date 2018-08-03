@@ -124,7 +124,6 @@ class EventListenerManager;
 class HTMLEditor;
 
 namespace dom {
-class ContentFrameMessageManager;
 struct CustomElementDefinition;
 class DocumentFragment;
 class Element;
@@ -3243,8 +3242,8 @@ public:
 
   static bool ContentIsLink(nsIContent* aContent);
 
-  static already_AddRefed<mozilla::dom::ContentFrameMessageManager>
-  TryGetTabChildGlobal(nsISupports* aFrom);
+  static already_AddRefed<mozilla::dom::EventTarget>
+  TryGetTabChildGlobalAsEventTarget(nsISupports* aFrom);
 
   static PopupControlState
   PushPopupControlState(PopupControlState aState, bool aForce)

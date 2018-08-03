@@ -18,7 +18,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/AutoplayPermissionManager.h"
-#include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -1911,18 +1910,20 @@ nsGlobalWindowInner::UpdateParentTarget()
 
   nsCOMPtr<Element> frameElement = GetOuterWindow()->GetFrameElementInternal();
   nsCOMPtr<EventTarget> eventTarget =
-    nsContentUtils::TryGetTabChildGlobal(frameElement);
+    nsContentUtils::TryGetTabChildGlobalAsEventTarget(frameElement);
 
   if (!eventTarget) {
     nsGlobalWindowOuter* topWin = GetScriptableTopInternal();
     if (topWin) {
       frameElement = topWin->AsOuter()->GetFrameElementInternal();
-      eventTarget = nsContentUtils::TryGetTabChildGlobal(frameElement);
+      eventTarget =
+        nsContentUtils::TryGetTabChildGlobalAsEventTarget(frameElement);
     }
   }
 
   if (!eventTarget) {
-    eventTarget = nsContentUtils::TryGetTabChildGlobal(mChromeEventHandler);
+    eventTarget =
+      nsContentUtils::TryGetTabChildGlobalAsEventTarget(mChromeEventHandler);
   }
 
   if (!eventTarget) {

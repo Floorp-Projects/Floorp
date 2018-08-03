@@ -412,7 +412,9 @@ class ChromeActions {
       getLocalizedString(strings, "open_with_different_viewer"),
       getLocalizedString(strings, "open_with_different_viewer", "accessKey"));
 
-    let winmm = domWindow.docShell.messageManager;
+    let winmm = domWindow.docShell
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIContentFrameMessageManager);
 
     winmm.addMessageListener("PDFJS:Child:fallbackDownload",
       function fallbackDownload(msg) {
@@ -437,7 +439,9 @@ class ChromeActions {
       return;
     }
 
-    var winmm = this.domWindow.docShell.messageManager;
+    var winmm = this.domWindow.docShell
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIContentFrameMessageManager);
 
     winmm.sendAsyncMessage("PDFJS:Parent:updateControlState", data);
   }
@@ -751,7 +755,9 @@ class RequestListener {
 class FindEventManager {
   constructor(contentWindow) {
     this.contentWindow = contentWindow;
-    this.winmm = contentWindow.docShell.messageManager;
+    this.winmm = contentWindow.docShell
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIContentFrameMessageManager);
   }
 
   bind() {

@@ -31,7 +31,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
-#include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/ProcessGlobal.h"
@@ -120,11 +119,11 @@ MarkChildMessageManagers(MessageBroadcaster* aMM)
     mozilla::dom::ipc::MessageManagerCallback* cb = tabMM->GetCallback();
     if (cb) {
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
-      nsInProcessTabChildGlobal* et = fl->GetTabChildGlobal();
+      EventTarget* et = fl->GetTabChildGlobalAsEventTarget();
       if (!et) {
         continue;
       }
-      et->MarkForCC();
+      static_cast<nsInProcessTabChildGlobal*>(et)->MarkForCC();
       EventListenerManager* elm = et->GetExistingListenerManager();
       if (elm) {
         elm->MarkForCC();
@@ -509,13 +508,14 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
           if (ds) {
             nsCOMPtr<nsITabChild> tabChild = ds->GetTabChild();
             if (tabChild) {
-              RefPtr<ContentFrameMessageManager> mm;
+              nsCOMPtr<nsISupports> mm;
               tabChild->GetMessageManager(getter_AddRefs(mm));
-              if (mm) {
+              nsCOMPtr<EventTarget> et = do_QueryInterface(mm);
+              if (et) {
                 nsCOMPtr<nsISupports> tabChildAsSupports =
                   do_QueryInterface(tabChild);
                 mozilla::TraceScriptHolder(tabChildAsSupports, aTrc);
-                EventListenerManager* elm = mm->GetExistingListenerManager();
+                EventListenerManager* elm = et->GetExistingListenerManager();
                 if (elm) {
                   elm->TraceListeners(aTrc);
                 }

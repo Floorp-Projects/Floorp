@@ -8,15 +8,13 @@
 
 interface nsIWebBrowserChrome3;
 
-webidl ContentFrameMessageManager;
-
 native CommandsArray(nsTArray<nsCString>);
 [ref] native CommandsArrayRef(nsTArray<nsCString>);
 
 [scriptable, uuid(1fb79c27-e760-4088-b19c-1ce3673ec24e)]
 interface nsITabChild : nsISupports
 {
-  readonly attribute ContentFrameMessageManager messageManager;
+  readonly attribute nsISupports messageManager;
 
   attribute nsIWebBrowserChrome3 webBrowserChrome;
 
