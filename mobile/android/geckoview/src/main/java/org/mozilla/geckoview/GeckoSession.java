@@ -25,6 +25,7 @@ import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -303,8 +304,13 @@ public class GeckoSession extends LayerSession
                     final int where = convertGeckoTarget(message.getInt("where"));
                     final int flags = filterFlags(message.getInt("flags"));
 
-                    final GeckoResult<Boolean> result = delegate.onLoadRequest(GeckoSession.this,
-                            uri, where, flags);
+                    if (!IntentUtils.isUriSafeForScheme(uri)) {
+                        callback.sendError("Blocked unsafe intent URI");
+                        return;
+                    }
+
+                    final GeckoResult<Boolean> result =
+                        delegate.onLoadRequest(GeckoSession.this, uri, where, flags);
 
                     if (result == null) {
                         callback.sendSuccess(null);
