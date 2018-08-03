@@ -48,6 +48,7 @@
 class nsIDOMWindowUtils;
 class nsIHttpChannel;
 class nsISerialEventTarget;
+class nsWebBrowser;
 
 template<typename T> class nsTHashtable;
 template<typename T> class nsPtrHashKey;
@@ -822,6 +823,7 @@ private:
   class DelayedDeleteRunnable;
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;
+  RefPtr<nsWebBrowser> mWebBrowser;
   nsCOMPtr<nsIWebNavigation> mWebNav;
   RefPtr<mozilla::dom::TabGroup> mTabGroup;
   RefPtr<PuppetWidget> mPuppetWidget;

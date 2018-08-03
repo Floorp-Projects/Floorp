@@ -126,7 +126,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWebBrowser)
   NS_INTERFACE_MAP_ENTRY(nsITextScroll)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
   NS_INTERFACE_MAP_ENTRY(nsICancelable)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
@@ -762,89 +761,11 @@ nsWebBrowser::GetDocument(nsIDocument** aDocument)
   return mDocShellAsNav->GetDocument(aDocument);
 }
 
-//*****************************************************************************
-// nsWebBrowser::nsIWebBrowserSetup
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::SetProperty(uint32_t aId, uint32_t aValue)
+void
+nsWebBrowser::SetAllowDNSPrefetch(bool aAllowPrefetch)
 {
-  nsresult rv = NS_OK;
-
-  switch (aId) {
-    case nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowPlugins(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowJavascript(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowMetaRedirects(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowSubframes(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_IMAGES: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowImages(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowDNSPrefetch(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      rv = EnableGlobalHistory(!!aValue);
-      mShouldEnableHistory = aValue;
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT: {
-      // obsolete
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER: {
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      SetItemType(aValue ? static_cast<int32_t>(typeChromeWrapper) :
-                           static_cast<int32_t>(typeContentWrapper));
-      break;
-    }
-    default:
-      rv = NS_ERROR_INVALID_ARG;
-  }
-  return rv;
+  MOZ_ASSERT(mDocShell);
+  mDocShell->SetAllowDNSPrefetch(aAllowPrefetch);
 }
 
 //*****************************************************************************
