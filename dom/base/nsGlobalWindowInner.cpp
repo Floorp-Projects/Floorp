@@ -2360,7 +2360,10 @@ nsGlobalWindowInner::GetInstallTrigger()
       rv.SuppressException();
       return nullptr;
     }
-    mInstallTrigger = new InstallTriggerImpl(jsImplObj, this);
+    MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplObj));
+    JS::Rooted<JSObject*> jsImplGlobal(RootingCx(),
+                                       JS::GetNonCCWObjectGlobal(jsImplObj));
+    mInstallTrigger = new InstallTriggerImpl(jsImplObj, jsImplGlobal, this);
   }
 
   return do_AddRef(mInstallTrigger);
@@ -7451,7 +7454,10 @@ nsGlobalWindowInner::GetExternal(ErrorResult& aRv)
     if (aRv.Failed()) {
       return nullptr;
     }
-    mExternal = new External(jsImplObj, this);
+    MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplObj));
+    JS::Rooted<JSObject*> jsImplGlobal(RootingCx(),
+                                       JS::GetNonCCWObjectGlobal(jsImplObj));
+    mExternal = new External(jsImplObj, jsImplGlobal, this);
   }
 
   RefPtr<External> external = static_cast<External*>(mExternal.get());
