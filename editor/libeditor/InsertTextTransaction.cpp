@@ -70,7 +70,7 @@ InsertTextTransaction::DoTransaction()
   }
 
   // Only set selection to insertion point if editor gives permission
-  if (mEditorBase->GetShouldTxnSetSelection()) {
+  if (mEditorBase->AllowsTransactionsToChangeSelection()) {
     RefPtr<Selection> selection = mEditorBase->GetSelection();
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
@@ -82,6 +82,8 @@ InsertTextTransaction::DoTransaction()
   } else {
     // Do nothing - DOM Range gravity will adjust selection
   }
+  // XXX Other transactions do not do this but its callers do.
+  //     Why do this transaction do this by itself?
   mEditorBase->RangeUpdaterRef().
                  SelAdjInsertText(*mTextNode, mOffset, mStringToInsert);
 

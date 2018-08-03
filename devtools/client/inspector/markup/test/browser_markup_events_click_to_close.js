@@ -36,22 +36,35 @@ add_task(async function() {
 
   info("Click the event icon for the first element");
   let onShown = tooltip.once("shown");
-  EventUtils.synthesizeMouseAtCenter(evHolder1, {},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(evHolder1, {}, inspector.markup.win);
   await onShown;
   info("event tooltip for the first div is shown");
 
   info("Click the event icon for the second element");
-  const onHidden = tooltip.once("hidden");
+  let onHidden = tooltip.once("hidden");
   onShown = tooltip.once("shown");
-  EventUtils.synthesizeMouseAtCenter(evHolder2, {},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(evHolder2, {}, inspector.markup.win);
 
   await onHidden;
   info("previous tooltip hidden");
 
   await onShown;
   info("event tooltip for the second div is shown");
+
+  info("Check that clicking on evHolder2 again hides the tooltip");
+  onHidden = tooltip.once("hidden");
+  EventUtils.synthesizeMouseAtCenter(evHolder2, {}, inspector.markup.win);
+  await onHidden;
+
+  info("Check that the tooltip does not reappear immediately after");
+  await waitForTime(1000);
+  is(tooltip.isVisible(), false,
+    "The tooltip is still hidden after waiting for one second");
+
+  info("Open the tooltip on evHolder2 again");
+  onShown = tooltip.once("shown");
+  EventUtils.synthesizeMouseAtCenter(evHolder2, {}, inspector.markup.win);
+  await onShown;
 
   info("Click on the computed view tab");
   const onHighlighterHidden = toolbox.once("node-unhighlight");

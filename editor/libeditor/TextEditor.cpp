@@ -1095,7 +1095,7 @@ TextEditor::InsertParagraphSeparatorAsAction()
     }
 
     // don't change my selection in subtransactions
-    AutoTransactionsConserveSelection dontChangeMySelection(this);
+    AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     // insert a linefeed character
     EditorRawDOMPoint pointAfterInsertedLineBreak;

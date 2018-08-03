@@ -29,6 +29,13 @@ bench-ares6:
     run:
         mach: jsshell-bench --binary $JSSHELL --perfherder ares6
 
+bench-asmjsapps:
+    description: asm.js Apps shell benchmark suite
+    treeherder:
+        symbol: js-bench(asm.js-apps)
+    run:
+        mach: jsshell-bench --binary $JSSHELL --perfherder asmjs-apps
+
 bench-sixspeed:
     description: Six-Speed JavaScript shell benchmark suite
     treeherder:
@@ -36,9 +43,9 @@ bench-sixspeed:
     run:
         mach: jsshell-bench --binary $JSSHELL --perfherder six-speed
 
-bench-asmjsapps:
-    description: asm.js Apps shell benchmark suite
+bench-sunspider:
+    description: SunSpider JavaScript shell benchmark suite
     treeherder:
-        symbol: js-bench(asm.js-apps)
+        symbol: js-bench(sunspider)
     run:
-        mach: jsshell-bench --binary $JSSHELL --perfherder asmjs-apps
+        mach: jsshell-bench --binary $JSSHELL --perfherder sunspider

@@ -25,6 +25,7 @@
 #include "nsUTF8Utils.h"
 #include "nsPrintfCString.h"
 
+#include "Telemetry.h"
 #include "TelemetryCommon.h"
 #include "TelemetryEvent.h"
 #include "TelemetryEventData.h"
@@ -38,6 +39,8 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::StaticAutoPtr;
 using mozilla::TimeStamp;
+using mozilla::Telemetry::LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR;
+using mozilla::Telemetry::LABELS_TELEMETRY_EVENT_RECORDING_ERROR;
 using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
@@ -455,6 +458,7 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
   // Look up the event id.
   EventKey* eventKey = GetEventKey(lock, category, method, object);
   if (!eventKey) {
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::UnknownEvent);
     return RecordEventResult::UnknownEvent;
   }
 
@@ -463,6 +467,7 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
   // have to be removed at a specific time or version.
   // Even logging warnings would become very noisy.
   if (IsExpired(*eventKey)) {
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Expired);
     return RecordEventResult::ExpiredEvent;
   }
 
@@ -475,6 +480,7 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
 
   // Check whether the extra keys passed are valid.
   if (!CheckExtraKeysValid(*eventKey, extra)) {
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::ExtraKey);
     return RecordEventResult::InvalidExtraKey;
   }
 
@@ -804,6 +810,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
   if ((optional_argc > 0) && !aValue.isNull() && !aValue.isString()) {
     LogToBrowserConsole(nsIScriptError::warningFlag,
                         NS_LITERAL_STRING("Invalid type for value parameter."));
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Value);
     return NS_OK;
   }
 
@@ -814,6 +821,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
     if (!jsStr.init(cx, aValue)) {
       LogToBrowserConsole(nsIScriptError::warningFlag,
                           NS_LITERAL_STRING("Invalid string value for value parameter."));
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Value);
       return NS_OK;
     }
 
@@ -830,6 +838,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
   if ((optional_argc > 1) && !aExtra.isNull() && !aExtra.isObject()) {
     LogToBrowserConsole(nsIScriptError::warningFlag,
                         NS_LITERAL_STRING("Invalid type for extra parameter."));
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
     return NS_OK;
   }
 
@@ -841,6 +850,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
     if (!JS_Enumerate(cx, obj, &ids)) {
       LogToBrowserConsole(nsIScriptError::warningFlag,
                           NS_LITERAL_STRING("Failed to enumerate object."));
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
       return NS_OK;
     }
 
@@ -849,6 +859,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
       if (!key.init(cx, ids[i])) {
         LogToBrowserConsole(nsIScriptError::warningFlag,
                             NS_LITERAL_STRING("Extra dictionary should only contain string keys."));
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
         return NS_OK;
       }
 
@@ -856,6 +867,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
       if (!JS_GetPropertyById(cx, obj, ids[i], &value)) {
         LogToBrowserConsole(nsIScriptError::warningFlag,
                             NS_LITERAL_STRING("Failed to get extra property."));
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
         return NS_OK;
       }
 
@@ -863,6 +875,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
       if (!value.isString() || !jsStr.init(cx, value)) {
         LogToBrowserConsole(nsIScriptError::warningFlag,
                             NS_LITERAL_STRING("Extra properties should have string values."));
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
         return NS_OK;
       }
 
@@ -993,17 +1006,20 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
 
   if (!IsValidIdentifierString(aCategory, 30, true, true)) {
     JS_ReportErrorASCII(cx, "Category parameter should match the identifier pattern.");
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Category);
     return NS_ERROR_INVALID_ARG;
   }
 
   if (!aEventData.isObject()) {
     JS_ReportErrorASCII(cx, "Event data parameter should be an object");
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
     return NS_ERROR_INVALID_ARG;
   }
 
   JS::RootedObject obj(cx, &aEventData.toObject());
   JS::Rooted<JS::IdVector> eventPropertyIds(cx, JS::IdVector(cx));
   if (!JS_Enumerate(cx, obj, &eventPropertyIds)) {
+    mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
     return NS_ERROR_FAILURE;
   }
 
@@ -1015,16 +1031,19 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
   for (size_t i = 0, n = eventPropertyIds.length(); i < n; i++) {
     nsAutoJSString eventName;
     if (!eventName.init(cx, eventPropertyIds[i])) {
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
       return NS_ERROR_FAILURE;
     }
 
     if (!IsValidIdentifierString(NS_ConvertUTF16toUTF8(eventName), kMaxMethodNameByteLength, false, true)) {
       JS_ReportErrorASCII(cx, "Event names should match the identifier pattern.");
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Name);
       return NS_ERROR_INVALID_ARG;
     }
 
     JS::RootedValue value(cx);
     if (!JS_GetPropertyById(cx, obj, eventPropertyIds[i], &value) || !value.isObject()) {
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
       return NS_ERROR_FAILURE;
     }
     JS::RootedObject eventObj(cx, &value.toObject());
@@ -1038,10 +1057,12 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
 
     // The methods & objects properties are required.
     if (!GetArrayPropertyValues(cx, eventObj, "methods", &methods)) {
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
       return NS_ERROR_FAILURE;
     }
 
     if (!GetArrayPropertyValues(cx, eventObj, "objects", &objects)) {
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
       return NS_ERROR_FAILURE;
     }
 
@@ -1049,6 +1070,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
     bool hasProperty = false;
     if (JS_HasProperty(cx, eventObj, "extra_keys", &hasProperty) && hasProperty) {
       if (!GetArrayPropertyValues(cx, eventObj, "extra_keys", &extra_keys)) {
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
         return NS_ERROR_FAILURE;
       }
     }
@@ -1057,6 +1079,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
     if (JS_HasProperty(cx, eventObj, "expired", &hasProperty) && hasProperty) {
       JS::RootedValue temp(cx);
       if (!JS_GetProperty(cx, eventObj, "expired", &temp) || !temp.isBoolean()) {
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
         return NS_ERROR_FAILURE;
       }
 
@@ -1067,6 +1090,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
     if (JS_HasProperty(cx, eventObj, "record_on_release", &hasProperty) && hasProperty) {
       JS::RootedValue temp(cx);
       if (!JS_GetProperty(cx, eventObj, "record_on_release", &temp) || !temp.isBoolean()) {
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Other);
         return NS_ERROR_FAILURE;
       }
 
@@ -1077,6 +1101,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
     for (auto& method : methods) {
       if (!IsValidIdentifierString(method, kMaxMethodNameByteLength, false, true)) {
         JS_ReportErrorASCII(cx, "Method names should match the identifier pattern.");
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Method);
         return NS_ERROR_INVALID_ARG;
       }
     }
@@ -1085,6 +1110,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
     for (auto& object : objects) {
       if (!IsValidIdentifierString(object, kMaxObjectNameByteLength, false, true)) {
         JS_ReportErrorASCII(cx, "Object names should match the identifier pattern.");
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::Object);
         return NS_ERROR_INVALID_ARG;
       }
     }
@@ -1092,11 +1118,13 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
     // Validate extra keys.
     if (extra_keys.Length() > kMaxExtraKeyCount) {
       JS_ReportErrorASCII(cx, "No more than 10 extra keys can be registered.");
+      mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::ExtraKeys);
       return NS_ERROR_INVALID_ARG;
     }
     for (auto& key : extra_keys) {
       if (!IsValidIdentifierString(key, kMaxExtraKeyNameByteLength, false, true)) {
         JS_ReportErrorASCII(cx, "Extra key names should match the identifier pattern.");
+        mozilla::Telemetry::AccumulateCategorical(LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR::ExtraKeys);
         return NS_ERROR_INVALID_ARG;
       }
     }

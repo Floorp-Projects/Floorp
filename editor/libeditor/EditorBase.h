@@ -60,6 +60,7 @@ class CompositionTransaction;
 class CreateElementTransaction;
 class CSSEditUtils;
 class DeleteNodeTransaction;
+class DeleteRangeTransaction;
 class DeleteTextTransaction;
 class EditAggregateTransaction;
 class EditorEventListener;
@@ -1440,10 +1441,12 @@ protected: // May be called by friends.
    */
   bool IsEditable(nsINode* aNode)
   {
-    NS_ENSURE_TRUE(aNode, false);
+    if (NS_WARN_IF(!aNode)) {
+      return false;
+    }
 
     if (!aNode->IsContent() || IsMozEditorBogusNode(aNode) ||
-        !IsModifiableNode(aNode)) {
+        !IsModifiableNode(*aNode)) {
       return false;
     }
 
@@ -1510,7 +1513,10 @@ protected: // May be called by friends.
     return aNode->NodeType() == nsINode::TEXT_NODE;
   }
 
-  virtual bool IsModifiableNode(nsINode* aNode);
+  /**
+   * IsModifiableNode() checks whether the node is editable or not.
+   */
+  bool IsModifiableNode(const nsINode& aNode) const;
 
   /**
    * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
@@ -1545,7 +1551,25 @@ protected: // May be called by friends.
 
   static bool IsPreformatted(nsINode* aNode);
 
-  bool GetShouldTxnSetSelection();
+  /**
+   * AllowsTransactionsToChangeSelection() returns true if editor allows any
+   * transactions to change Selection.  Otherwise, transactions shouldn't
+   * change Selection.
+   */
+  inline bool AllowsTransactionsToChangeSelection() const
+  {
+    return mAllowsTransactionsToChangeSelection;
+  }
+
+  /**
+   * MakeThisAllowTransactionsToChangeSelection() with true makes this editor
+   * allow transactions to change Selection.  Otherwise, i.e., with false,
+   * makes this editor not allow transactions to change Selection.
+   */
+  inline void MakeThisAllowTransactionsToChangeSelection(bool aAllow)
+  {
+    mAllowsTransactionsToChangeSelection = aAllow;
+  }
 
   nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
                                   Selection& aSelection,
@@ -1946,8 +1970,9 @@ protected:
   // A Tristate value.
   uint8_t mSpellcheckCheckboxState;
 
-  // Turn off for conservative selection adjustment by transactions.
-  bool mShouldTxnSetSelection;
+  // If false, transactions should not change Selection even after modifying
+  // the DOM tree.
+  bool mAllowsTransactionsToChangeSelection;
   // Whether PreDestroy has been called.
   bool mDidPreDestroy;
   // Whether PostCreate has been called.
@@ -1971,6 +1996,7 @@ protected:
   friend class CreateElementTransaction;
   friend class CSSEditUtils;
   friend class DeleteNodeTransaction;
+  friend class DeleteRangeTransaction;
   friend class DeleteTextTransaction;
   friend class HTMLEditRules;
   friend class HTMLEditUtils;

@@ -34,7 +34,9 @@ def normalize_osx_path(p):
     return p
 
 def is_l10n_file(path):
-    return '/locale/' in path or '/localization/' in path
+    return ('/locale/' in path or
+            '/localization/' in path or
+            path.startswith('localization/'))
 
 def normalize_path(p):
     return normalize_osx_path(p)
