@@ -1545,7 +1545,7 @@ TextEditRules::CreateBogusNodeIfNeeded()
   }
 
   // Skip adding the bogus node if body is read-only.
-  if (!TextEditorRef().IsModifiableNode(rootElement)) {
+  if (!TextEditorRef().IsModifiableNode(*rootElement)) {
     return NS_OK;
   }
 

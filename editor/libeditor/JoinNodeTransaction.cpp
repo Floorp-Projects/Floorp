@@ -11,7 +11,6 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, etc.
 #include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc.
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIEditor.h"                  // for EditorBase::IsModifiableNode
 #include "nsISupportsImpl.h"            // for QueryInterface, etc.
 
 namespace mozilla {
@@ -60,7 +59,7 @@ JoinNodeTransaction::CanDoIt() const
       !mLeftNode->GetParentNode()) {
     return false;
   }
-  return mEditorBase->IsModifiableNode(mLeftNode->GetParentNode());
+  return mEditorBase->IsModifiableNode(*mLeftNode->GetParentNode());
 }
 
 // After DoTransaction() and RedoTransaction(), the left node is removed from
