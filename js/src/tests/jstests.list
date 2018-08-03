@@ -436,9 +436,6 @@ skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1406171
 skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1472211
-skip script test262/language/statements/class/super/in-constructor-superproperty-evaluation.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473228
 skip script test262/intl402/RelativeTimeFormat/prototype/toStringTag/toStringTag.js
 

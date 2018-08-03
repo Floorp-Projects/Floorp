@@ -1613,7 +1613,7 @@ void
 MacroAssembler::call(ImmPtr target)
 {
     BufferOffset bo = m_buffer.nextOffset();
-    addPendingJump(bo, target, Relocation::HARDCODED);
+    addPendingJump(bo, target, RelocationKind::HARDCODED);
     ma_call(target);
 }
 
@@ -1621,7 +1621,7 @@ void
 MacroAssembler::call(JitCode* c)
 {
     BufferOffset bo = m_buffer.nextOffset();
-    addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
+    addPendingJump(bo, ImmPtr(c->raw()), RelocationKind::JITCODE);
     ma_liPatchable(ScratchRegister, ImmPtr(c->raw()));
     callJitNoProfiler(ScratchRegister);
 }

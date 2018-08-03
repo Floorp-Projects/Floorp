@@ -38,6 +38,7 @@ add_task(async function test_empty() {
   ok(picker1, "Check picker1 exists");
   let {savedAddresses} = picker1.requestStore.getState();
   is(Object.keys(savedAddresses).length, 0, "Check empty initial state");
+  is(picker1.editLink.hidden, true, "Check that picker edit link is hidden");
   is(picker1.dropdown.popupBox.children.length, 0, "Check dropdown is empty");
 });
 
@@ -112,6 +113,7 @@ add_task(async function test_update() {
 add_task(async function test_change_selected_address() {
   let options = picker1.dropdown.popupBox.children;
   is(picker1.dropdown.selectedOption, null, "Should default to no selected option");
+  is(picker1.editLink.hidden, true, "Picker edit link should be hidden when no option is selected");
   let {selectedShippingAddress} = picker1.requestStore.getState();
   is(selectedShippingAddress, null, "store should have no option selected");
 

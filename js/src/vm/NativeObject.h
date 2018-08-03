@@ -367,7 +367,7 @@ class ObjectElements
         return int(offsetof(ObjectElements, length)) - int(sizeof(ObjectElements));
     }
 
-    static bool ConvertElementsToDoubles(JSContext* cx, uintptr_t elements);
+    static void ConvertElementsToDoubles(JSContext* cx, uintptr_t elements);
     static bool MakeElementsCopyOnWrite(JSContext* cx, NativeObject* obj);
 
     static MOZ_MUST_USE bool PreventExtensions(JSContext* cx, NativeObject* obj);

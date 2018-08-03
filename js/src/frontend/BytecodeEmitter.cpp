@@ -1956,13 +1956,13 @@ BytecodeEmitter::emitPropOp(ParseNode* pn, JSOp op)
 }
 
 bool
-BytecodeEmitter::emitSuperPropOp(ParseNode* pn, JSOp op, bool isCall)
+BytecodeEmitter::emitSuperGetProp(ParseNode* pn, bool isCall)
 {
     ParseNode* base = &pn->as<PropertyAccess>().expression();
     if (!emitSuperPropLHS(base, isCall))
         return false;
 
-    if (!emitAtomOp(pn, op))
+    if (!emitAtomOp(pn, JSOP_GETPROP_SUPER))
         return false;
 
     if (isCall && !emit1(JSOP_SWAP))
@@ -2110,10 +2110,7 @@ BytecodeEmitter::emitElemOperands(ParseNode* pn, EmitElemOption opts)
     if (!emitTree(pn->pn_right))
         return false;
 
-    if (opts == EmitElemOption::Set) {
-        if (!emit2(JSOP_PICK, 2))
-            return false;
-    } else if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
+    if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
         if (!emit1(JSOP_TOID))
             return false;
     }
@@ -2125,37 +2122,27 @@ BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, EmitElemOption opts)
 {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Elem) && pn->as<PropertyByValue>().isSuper());
 
-    // The ordering here is somewhat screwy. We need to evaluate the propval
-    // first, by spec. Do a little dance to not emit more than one JSOP_THIS.
-    // Since JSOP_THIS might throw in derived class constructors, we cannot
-    // just push it earlier as the receiver. We have to swap it down instead.
+    if (!emitGetThisForSuperBase(pn->pn_left))      // THIS
+        return false;
 
-    if (!emitTree(pn->pn_right))
+    if (opts == EmitElemOption::Call) {
+        // We need a second |this| that will be consumed during computation of
+        // the property value. (The original |this| is passed to the call.)
+        if (!emit1(JSOP_DUP))                       // THIS THIS
+            return false;
+    }
+
+    if (!emitTree(pn->pn_right))                    // THIS? THIS KEY
         return false;
 
     // We need to convert the key to an object id first, so that we do not do
     // it inside both the GETELEM and the SETELEM.
     if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
-        if (!emit1(JSOP_TOID))
+        if (!emit1(JSOP_TOID))                      // THIS? THIS KEY
             return false;
     }
 
-    if (!emitGetThisForSuperBase(pn->pn_left))
-        return false;
-
-    if (opts == EmitElemOption::Call) {
-        if (!emit1(JSOP_SWAP))
-            return false;
-
-        // We need another |this| on top, also
-        if (!emitDupAt(1))
-            return false;
-    }
-
-    if (!emit1(JSOP_SUPERBASE))
-        return false;
-
-    if (opts == EmitElemOption::Set && !emit2(JSOP_PICK, 3))
+    if (!emit1(JSOP_SUPERBASE))                     // THIS? THIS KEY SUPERBASE
         return false;
 
     return true;
@@ -2174,30 +2161,27 @@ BytecodeEmitter::emitElemOpBase(JSOp op)
 bool
 BytecodeEmitter::emitElemOp(ParseNode* pn, JSOp op)
 {
-    EmitElemOption opts = EmitElemOption::Get;
-    if (op == JSOP_CALLELEM)
-        opts = EmitElemOption::Call;
-    else if (op == JSOP_SETELEM || op == JSOP_STRICTSETELEM)
-        opts = EmitElemOption::Set;
+    MOZ_ASSERT(op == JSOP_GETELEM ||
+               op == JSOP_CALLELEM ||
+               op == JSOP_DELELEM ||
+               op == JSOP_STRICTDELELEM);
+
+    EmitElemOption opts = op == JSOP_CALLELEM ? EmitElemOption::Call : EmitElemOption::Get;
 
     return emitElemOperands(pn, opts) && emitElemOpBase(op);
 }
 
 bool
-BytecodeEmitter::emitSuperElemOp(ParseNode* pn, JSOp op, bool isCall)
+BytecodeEmitter::emitSuperGetElem(ParseNode* pn, bool isCall)
 {
-    EmitElemOption opts = EmitElemOption::Get;
-    if (isCall)
-        opts = EmitElemOption::Call;
-    else if (op == JSOP_SETELEM_SUPER || op == JSOP_STRICTSETELEM_SUPER)
-        opts = EmitElemOption::Set;
+    EmitElemOption opts = isCall ? EmitElemOption::Call : EmitElemOption::Get;
 
-    if (!emitSuperElemOperands(pn, opts))
+    if (!emitSuperElemOperands(pn, opts))           // THIS? THIS KEY SUPERBASE
         return false;
-    if (!emitElemOpBase(op))
+    if (!emitElemOpBase(JSOP_GETELEM_SUPER))        // THIS? VALUE
         return false;
 
-    if (isCall && !emit1(JSOP_SWAP))
+    if (isCall && !emit1(JSOP_SWAP))                // VALUE THIS
         return false;
 
     return true;
@@ -2228,11 +2212,11 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
     if (isSuper) {
         // There's no such thing as JSOP_DUP3, so we have to be creative.
         // Note that pushing things again is no fewer JSOps.
-        if (!emitDupAt(2))                              // KEY THIS OBJ KEY
+        if (!emitDupAt(2))                              // THIS KEY OBJ THIS
             return false;
-        if (!emitDupAt(2))                              // KEY THIS OBJ KEY THIS
+        if (!emitDupAt(2))                              // THIS KEY OBJ THIS KEY
             return false;
-        if (!emitDupAt(2))                              // KEY THIS OBJ KEY THIS OBJ
+        if (!emitDupAt(2))                              // THIS KEY OBJ THIS KEY OBJ
             return false;
         getOp = JSOP_GETELEM_SUPER;
     } else {
@@ -2245,27 +2229,16 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
         return false;
     if (!emit1(JSOP_POS))                               // OBJ KEY N
         return false;
-    if (post && !emit1(JSOP_DUP))                       // OBJ KEY N? N
-        return false;
-    if (!emit1(JSOP_ONE))                               // OBJ KEY N? N 1
-        return false;
-    if (!emit1(binop))                                  // OBJ KEY N? N+1
-        return false;
-
     if (post) {
-        if (isSuper) {
-            // We have one more value to rotate around, because of |this|
-            // on the stack
-            if (!emit2(JSOP_PICK, 4))
-                return false;
-        }
-        if (!emit2(JSOP_PICK, 3 + isSuper))             // KEY N N+1 OBJ
+        if (!emit1(JSOP_DUP))                           // OBJ KEY N N
             return false;
-        if (!emit2(JSOP_PICK, 3 + isSuper))             // N N+1 OBJ KEY
-            return false;
-        if (!emit2(JSOP_PICK, 2 + isSuper))             // N OBJ KEY N+1
+        if (!emit2(JSOP_UNPICK, 3 + isSuper))           // N OBJ KEY N
             return false;
     }
+    if (!emit1(JSOP_ONE))                               // N? OBJ KEY N 1
+        return false;
+    if (!emit1(binop))                                  // N? OBJ KEY N+1
+        return false;
 
     JSOp setOp = isSuper ? (sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER)
                          : (sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM);
@@ -6481,17 +6454,26 @@ BytecodeEmitter::emitDeleteProperty(ParseNode* node)
     MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteProp));
     MOZ_ASSERT(node->isArity(PN_UNARY));
 
-    ParseNode* propExpr = node->pn_kid;
-    MOZ_ASSERT(propExpr->isKind(ParseNodeKind::Dot));
+    PropertyAccess* propExpr = &node->pn_kid->as<PropertyAccess>();
 
-    if (propExpr->as<PropertyAccess>().isSuper()) {
-        // Still have to calculate the base, even though we are are going
-        // to throw unconditionally, as calculating the base could also
-        // throw.
+    if (propExpr->isSuper()) {
+        // The expression |delete super.foo;| has to evaluate |super.foo|,
+        // which could throw if |this| hasn't yet been set by a |super(...)|
+        // call or the super-base is not an object, before throwing a
+        // ReferenceError for attempting to delete a super-reference.
+        if (!emitGetThisForSuperBase(&propExpr->expression()))
+            return false;
+
         if (!emit1(JSOP_SUPERBASE))
             return false;
 
-        return emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER);
+        // Unconditionally throw when attempting to delete a super-reference.
+        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER))
+            return false;
+
+        // Another wrinkle: Balance the stack from the emitter's point of view.
+        // Execution will not reach here, as the last bytecode threw.
+        return emit1(JSOP_POP);
     }
 
     JSOp delOp = sc->strict() ? JSOP_STRICTDELPROP : JSOP_DELPROP;
@@ -6504,23 +6486,32 @@ BytecodeEmitter::emitDeleteElement(ParseNode* node)
     MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteElem));
     MOZ_ASSERT(node->isArity(PN_UNARY));
 
-    ParseNode* elemExpr = node->pn_kid;
-    MOZ_ASSERT(elemExpr->isKind(ParseNodeKind::Elem));
+    PropertyByValue* elemExpr = &node->pn_kid->as<PropertyByValue>();
 
-    if (elemExpr->as<PropertyByValue>().isSuper()) {
-        // Still have to calculate everything, even though we're gonna throw
-        // since it may have side effects
+    if (elemExpr->isSuper()) {
+        // The expression |delete super[foo];| has to evaluate |super[foo]|,
+        // which could throw if |this| hasn't yet been set by a |super(...)|
+        // call, or trigger side-effects when evaluating ToPropertyKey(foo),
+        // or also throw when the super-base is not an object, before throwing
+        // a ReferenceError for attempting to delete a super-reference.
+        if (!emitGetThisForSuperBase(elemExpr->pn_left))
+            return false;
+
         if (!emitTree(elemExpr->pn_right))
+            return false;
+        if (!emit1(JSOP_TOID))
             return false;
 
         if (!emit1(JSOP_SUPERBASE))
             return false;
+
+        // Unconditionally throw when attempting to delete a super-reference.
         if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER))
             return false;
 
         // Another wrinkle: Balance the stack from the emitter's point of view.
         // Execution will not reach here, as the last bytecode threw.
-        return emit1(JSOP_POP);
+        return emitPopN(2);
     }
 
     JSOp delOp = sc->strict() ? JSOP_STRICTDELELEM : JSOP_DELELEM;
@@ -6754,10 +6745,10 @@ BytecodeEmitter::emitSelfHostedGetPropertySuper(ParseNode* pn)
     ParseNode* idNode = objNode->pn_next;
     ParseNode* receiverNode = idNode->pn_next;
 
-    if (!emitTree(idNode))
+    if (!emitTree(receiverNode))
         return false;
 
-    if (!emitTree(receiverNode))
+    if (!emitTree(idNode))
         return false;
 
     if (!emitTree(objNode))
@@ -6816,7 +6807,7 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
       case ParseNodeKind::Dot:
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         if (callee->as<PropertyAccess>().isSuper()) {
-            if (!emitSuperPropOp(callee, JSOP_GETPROP_SUPER, /* isCall = */ *callop))
+            if (!emitSuperGetProp(callee, /* isCall = */ *callop))
                 return false;
         } else {
             if (!emitPropOp(callee, *callop ? JSOP_CALLPROP : JSOP_GETPROP))
@@ -6827,7 +6818,7 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
       case ParseNodeKind::Elem:
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         if (callee->as<PropertyByValue>().isSuper()) {
-            if (!emitSuperElemOp(callee, JSOP_GETELEM_SUPER, /* isCall = */ *callop))
+            if (!emitSuperGetElem(callee, /* isCall = */ *callop))
                 return false;
         } else {
             if (!emitElemOp(callee, *callop ? JSOP_CALLELEM : JSOP_GETELEM))
@@ -8546,7 +8537,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
 
       case ParseNodeKind::Dot:
         if (pn->as<PropertyAccess>().isSuper()) {
-            if (!emitSuperPropOp(pn, JSOP_GETPROP_SUPER))
+            if (!emitSuperGetProp(pn))
                 return false;
         } else {
             if (!emitPropOp(pn, JSOP_GETPROP))
@@ -8556,7 +8547,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
 
       case ParseNodeKind::Elem:
         if (pn->as<PropertyByValue>().isSuper()) {
-            if (!emitSuperElemOp(pn, JSOP_GETELEM_SUPER))
+            if (!emitSuperGetElem(pn))
                 return false;
         } else {
             if (!emitElemOp(pn, JSOP_GETELEM))

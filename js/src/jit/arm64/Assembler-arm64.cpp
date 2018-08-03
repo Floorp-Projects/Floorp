@@ -315,10 +315,10 @@ Assembler::bind(RepatchLabel* label)
 }
 
 void
-Assembler::addJumpRelocation(BufferOffset src, Relocation::Kind reloc)
+Assembler::addJumpRelocation(BufferOffset src, RelocationKind reloc)
 {
     // Only JITCODE relocations are patchable at runtime.
-    MOZ_ASSERT(reloc == Relocation::JITCODE);
+    MOZ_ASSERT(reloc == RelocationKind::JITCODE);
 
     // The jump relocation table starts with a fixed-width integer pointing
     // to the start of the extended jump table. But, we don't know the
@@ -333,11 +333,11 @@ Assembler::addJumpRelocation(BufferOffset src, Relocation::Kind reloc)
 }
 
 void
-Assembler::addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind reloc)
+Assembler::addPendingJump(BufferOffset src, ImmPtr target, RelocationKind reloc)
 {
     MOZ_ASSERT(target.value != nullptr);
 
-    if (reloc == Relocation::JITCODE)
+    if (reloc == RelocationKind::JITCODE)
         addJumpRelocation(src, reloc);
 
     // This jump is not patchable at runtime. Extended jump table entry requirements
@@ -347,10 +347,10 @@ Assembler::addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind relo
 }
 
 size_t
-Assembler::addPatchableJump(BufferOffset src, Relocation::Kind reloc)
+Assembler::addPatchableJump(BufferOffset src, RelocationKind reloc)
 {
     MOZ_CRASH("TODO: This is currently unused (and untested)");
-    if (reloc == Relocation::JITCODE)
+    if (reloc == RelocationKind::JITCODE)
         addJumpRelocation(src, reloc);
 
     size_t extendedTableIndex = pendingJumps_.length();

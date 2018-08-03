@@ -1486,22 +1486,38 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         masm.loadStringLength(input, temp2);
         masm.branch32(Assembler::AboveOrEqual, lastIndex, temp2, &done);
 
+        // For TrailSurrogateMin ≤ x ≤ TrailSurrogateMax and
+        // LeadSurrogateMin ≤ x ≤ LeadSurrogateMax, the following
+        // equations hold.
+        //
+        //    SurrogateMin ≤ x ≤ SurrogateMax
+        // <> SurrogateMin ≤ x ≤ SurrogateMin + 2^10 - 1
+        // <> ((x - SurrogateMin) >>> 10) = 0    where >>> is an unsigned-shift
+        // See Hacker's Delight, section 4-1 for details.
+        //
+        //    ((x - SurrogateMin) >>> 10) = 0
+        // <> floor((x - SurrogateMin) / 1024) = 0
+        // <> floor((x / 1024) - (SurrogateMin / 1024)) = 0
+        // <> floor(x / 1024) = SurrogateMin / 1024
+        // <> floor(x / 1024) * 1024 = SurrogateMin
+        // <> (x >>> 10) << 10 = SurrogateMin
+        // <> x & ~(2^10 - 1) = SurrogateMin
+
+        constexpr char16_t SurrogateMask = 0xFC00;
+
         // Check if input[lastIndex] is trail surrogate.
         masm.loadStringChars(input, temp2, CharEncoding::TwoByte);
-        masm.computeEffectiveAddress(BaseIndex(temp2, lastIndex, TimesTwo), temp3);
-        masm.load16ZeroExtend(Address(temp3, 0), temp3);
+        masm.load16ZeroExtend(BaseIndex(temp2, lastIndex, TimesTwo), temp3);
 
-        masm.branch32(Assembler::Below, temp3, Imm32(unicode::TrailSurrogateMin), &done);
-        masm.branch32(Assembler::Above, temp3, Imm32(unicode::TrailSurrogateMax), &done);
+        masm.and32(Imm32(SurrogateMask), temp3);
+        masm.branch32(Assembler::NotEqual, temp3, Imm32(unicode::TrailSurrogateMin), &done);
 
         // Check if input[lastIndex-1] is lead surrogate.
-        masm.move32(lastIndex, temp3);
-        masm.sub32(Imm32(1), temp3);
-        masm.computeEffectiveAddress(BaseIndex(temp2, temp3, TimesTwo), temp3);
-        masm.load16ZeroExtend(Address(temp3, 0), temp3);
+        masm.load16ZeroExtend(BaseIndex(temp2, lastIndex, TimesTwo, -int32_t(sizeof(char16_t))),
+                              temp3);
 
-        masm.branch32(Assembler::Below, temp3, Imm32(unicode::LeadSurrogateMin), &done);
-        masm.branch32(Assembler::Above, temp3, Imm32(unicode::LeadSurrogateMax), &done);
+        masm.and32(Imm32(SurrogateMask), temp3);
+        masm.branch32(Assembler::NotEqual, temp3, Imm32(unicode::LeadSurrogateMin), &done);
 
         // Move lastIndex to lead surrogate.
         masm.subPtr(Imm32(1), lastIndex);
@@ -3691,7 +3707,7 @@ CodeGenerator::visitElements(LElements* lir)
     masm.loadPtr(elements, ToRegister(lir->output()));
 }
 
-typedef bool (*ConvertElementsToDoublesFn)(JSContext*, uintptr_t);
+typedef void (*ConvertElementsToDoublesFn)(JSContext*, uintptr_t);
 static const VMFunction ConvertElementsToDoublesInfo =
     FunctionInfo<ConvertElementsToDoublesFn>(ObjectElements::ConvertElementsToDoubles,
                                              "ObjectElements::ConvertElementsToDoubles");
@@ -7581,7 +7597,6 @@ CodeGenerator::visitSignDI(LSignDI* ins)
 
     // The easiest way to distinguish -0.0 from 0.0 is that 1.0/-0.0
     // is -Infinity instead of Infinity.
-    Label isNegInf;
     masm.loadConstantDouble(1.0, temp);
     masm.divDouble(input, temp);
     masm.branchDouble(Assembler::DoubleLessThan, temp, input, &bailout);
@@ -9262,7 +9277,7 @@ CodeGenerator::emitStoreHoleCheck(Register elements, const LAllocation* index,
         Address dest(elements, ToInt32(index) * sizeof(js::Value) + offsetAdjustment);
         masm.branchTestMagic(Assembler::Equal, dest, &bail);
     } else {
-        BaseIndex dest(elements, ToRegister(index), TimesEight, offsetAdjustment);
+        BaseObjectElementIndex dest(elements, ToRegister(index), offsetAdjustment);
         masm.branchTestMagic(Assembler::Equal, dest, &bail);
     }
     bailoutFrom(&bail, snapshot);
@@ -9287,7 +9302,7 @@ CodeGenerator::emitStoreElementTyped(const LAllocation* value,
         Address dest(elements, ToInt32(index) * sizeof(js::Value) + offsetAdjustment);
         masm.storeUnboxedValue(v, valueType, dest, elementType);
     } else {
-        BaseIndex dest(elements, ToRegister(index), TimesEight, offsetAdjustment);
+        BaseObjectElementIndex dest(elements, ToRegister(index), offsetAdjustment);
         masm.storeUnboxedValue(v, valueType, dest, elementType);
     }
 }
@@ -9327,8 +9342,8 @@ CodeGenerator::visitStoreElementV(LStoreElementV* lir)
                      ToInt32(lir->index()) * sizeof(js::Value) + lir->mir()->offsetAdjustment());
         masm.storeValue(value, dest);
     } else {
-        BaseIndex dest(elements, ToRegister(lir->index()), TimesEight,
-                       lir->mir()->offsetAdjustment());
+        BaseObjectElementIndex dest(elements, ToRegister(lir->index()),
+                                    lir->mir()->offsetAdjustment());
         masm.storeValue(value, dest);
     }
 }
@@ -9360,7 +9375,7 @@ CodeGenerator::emitStoreElementHoleT(T* lir)
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
                           ool->callStub());
         if (lir->toFallibleStoreElementT()->mir()->needsHoleCheck()) {
-            masm.branchTestMagic(Assembler::Equal, BaseValueIndex(elements, index),
+            masm.branchTestMagic(Assembler::Equal, BaseObjectElementIndex(elements, index),
                                  ool->callStub());
         }
     }
@@ -9403,7 +9418,7 @@ CodeGenerator::emitStoreElementHoleV(T* lir)
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
                           ool->callStub());
         if (lir->toFallibleStoreElementV()->mir()->needsHoleCheck()) {
-            masm.branchTestMagic(Assembler::Equal, BaseValueIndex(elements, index),
+            masm.branchTestMagic(Assembler::Equal, BaseObjectElementIndex(elements, index),
                                  ool->callStub());
         }
     }
@@ -9412,7 +9427,7 @@ CodeGenerator::emitStoreElementHoleV(T* lir)
         emitPreBarrier(elements, lir->index(), 0);
 
     masm.bind(ool->rejoinStore());
-    masm.storeValue(value, BaseIndex(elements, index, TimesEight));
+    masm.storeValue(value, BaseObjectElementIndex(elements, index));
 
     masm.bind(ool->rejoin());
 }
@@ -9685,7 +9700,7 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
     masm.sub32(Imm32(1), lengthTemp);
 
     if (mir->mode() == MArrayPopShift::Pop) {
-        BaseIndex addr(elementsTemp, lengthTemp, TimesEight);
+        BaseObjectElementIndex addr(elementsTemp, lengthTemp);
         masm.loadElementTypedOrValue(addr, out, mir->needsHoleCheck(), ool->entry());
     } else {
         MOZ_ASSERT(mir->mode() == MArrayPopShift::Shift);
@@ -9768,7 +9783,7 @@ CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
     masm.spectreBoundsCheck32(length, capacity, spectreTemp, ool->entry());
 
     // Do the store.
-    masm.storeConstantOrRegister(value, BaseIndex(elementsTemp, length, TimesEight));
+    masm.storeConstantOrRegister(value, BaseObjectElementIndex(elementsTemp, length));
 
     masm.add32(Imm32(1), length);
 
@@ -11423,8 +11438,8 @@ CodeGenerator::visitLoadElementT(LLoadElementT* lir)
         int32_t offset = ToInt32(index) * sizeof(js::Value) + lir->mir()->offsetAdjustment();
         emitLoadElementT(lir, Address(elements, offset));
     } else {
-        emitLoadElementT(lir, BaseIndex(elements, ToRegister(index), TimesEight,
-                                        lir->mir()->offsetAdjustment()));
+        emitLoadElementT(lir, BaseObjectElementIndex(elements, ToRegister(index),
+                                                     lir->mir()->offsetAdjustment()));
     }
 }
 
@@ -11569,7 +11584,7 @@ CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir)
     const MLoadUnboxedScalar* mir = lir->mir();
 
     Scalar::Type readType = mir->readType();
-    int width = Scalar::byteSize(mir->storageType());
+    size_t width = Scalar::byteSize(mir->storageType());
     bool canonicalizeDouble = mir->canonicalizeDoubles();
 
     Label fail;
@@ -11606,7 +11621,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
     masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
 
     Scalar::Type arrayType = lir->mir()->arrayType();
-    int width = Scalar::byteSize(arrayType);
+    size_t width = Scalar::byteSize(arrayType);
     Label fail;
     BaseIndex source(scratch, index, ScaleFromElemWidth(width));
     masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(),
@@ -11880,7 +11895,7 @@ CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir)
 
     Scalar::Type writeType = mir->writeType();
 
-    int width = Scalar::byteSize(mir->storageType());
+    size_t width = Scalar::byteSize(mir->storageType());
 
     if (lir->index()->isConstant()) {
         Address dest(elements, ToInt32(lir->index()) * width + mir->offsetAdjustment());
@@ -11899,7 +11914,7 @@ CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole* lir)
     const LAllocation* value = lir->value();
 
     Scalar::Type arrayType = lir->mir()->arrayType();
-    int width = Scalar::byteSize(arrayType);
+    size_t width = Scalar::byteSize(arrayType);
 
     Register index = ToRegister(lir->index());
     const LAllocation* length = lir->length();
@@ -12053,7 +12068,7 @@ CodeGenerator::visitInArray(LInArray* lir)
 
         masm.branch32(Assembler::BelowOrEqual, initLength, index, failedInitLength);
         if (mir->needsHoleCheck()) {
-            BaseIndex address = BaseIndex(elements, ToRegister(lir->index()), TimesEight);
+            BaseObjectElementIndex address(elements, ToRegister(lir->index()));
             masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
         }
         masm.jump(&trueBranch);
@@ -12450,14 +12465,12 @@ CodeGenerator::emitIsCallableOrConstructor(Register object, Register output, Lab
     if (mode == Callable) {
         masm.move32(Imm32(1), output);
     } else {
-        Label notConstructor;
+        static_assert(mozilla::IsPowerOfTwo(unsigned(JSFunction::CONSTRUCTOR)),
+                      "JSFunction::CONSTRUCTOR has only one bit set");
+
         masm.load16ZeroExtend(Address(object, JSFunction::offsetOfFlags()), output);
-        masm.and32(Imm32(JSFunction::CONSTRUCTOR), output);
-        masm.branchTest32(Assembler::Zero, output, output, &notConstructor);
-        masm.move32(Imm32(1), output);
-        masm.jump(&done);
-        masm.bind(&notConstructor);
-        masm.move32(Imm32(0), output);
+        masm.rshift32(Imm32(mozilla::FloorLog2(JSFunction::CONSTRUCTOR)), output);
+        masm.and32(Imm32(1), output);
     }
     masm.jump(&done);
 
