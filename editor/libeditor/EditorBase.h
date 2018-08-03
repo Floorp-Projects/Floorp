@@ -1441,10 +1441,12 @@ protected: // May be called by friends.
    */
   bool IsEditable(nsINode* aNode)
   {
-    NS_ENSURE_TRUE(aNode, false);
+    if (NS_WARN_IF(!aNode)) {
+      return false;
+    }
 
     if (!aNode->IsContent() || IsMozEditorBogusNode(aNode) ||
-        !IsModifiableNode(aNode)) {
+        !IsModifiableNode(*aNode)) {
       return false;
     }
 
@@ -1511,7 +1513,10 @@ protected: // May be called by friends.
     return aNode->NodeType() == nsINode::TEXT_NODE;
   }
 
-  virtual bool IsModifiableNode(nsINode* aNode);
+  /**
+   * IsModifiableNode() checks whether the node is editable or not.
+   */
+  bool IsModifiableNode(const nsINode& aNode) const;
 
   /**
    * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,

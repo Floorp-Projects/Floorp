@@ -4954,9 +4954,9 @@ EditorBase::SetTextDirectionTo(TextDirection aTextDirection)
 }
 
 bool
-EditorBase::IsModifiableNode(nsINode* aNode)
+EditorBase::IsModifiableNode(const nsINode& aNode) const
 {
-  return true;
+  return !AsHTMLEditor() || aNode.IsEditable();
 }
 
 nsIContent*
