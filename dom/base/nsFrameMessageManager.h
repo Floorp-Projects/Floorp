@@ -161,7 +161,7 @@ private:
   JS::Rooted<JSObject*> mObj;
 };
 
-class nsFrameMessageManager : public nsIContentFrameMessageManager
+class nsFrameMessageManager : public nsIMessageSender
 {
   friend class mozilla::dom::MessageManagerReporter;
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
@@ -180,8 +180,7 @@ public:
   {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFrameMessageManager,
-                                                         nsIContentFrameMessageManager)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsFrameMessageManager)
 
   void MarkForCC();
 
@@ -243,7 +242,6 @@ public:
   mozilla::dom::ipc::WritableSharedMap* SharedData();
 
   NS_DECL_NSIMESSAGESENDER
-  NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
   static mozilla::dom::ProcessMessageManager* NewProcessMessageManager(bool aIsRemote);
 
