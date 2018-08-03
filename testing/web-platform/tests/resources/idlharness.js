@@ -3233,7 +3233,7 @@ function idl_test(srcs, deps, idl_setup_func, test_name) {
                     throw error;
                 }
             });
-    }, test_name);
+    }, test_name || 'idl_test setup');
 }
 
 /**
