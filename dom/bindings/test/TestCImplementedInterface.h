@@ -17,8 +17,9 @@ class TestCImplementedInterface : public TestJSImplInterface
 {
 public:
   TestCImplementedInterface(JS::Handle<JSObject*> aJSImpl,
+                            JS::Handle<JSObject*> aJSImplGlobal,
                             nsIGlobalObject* aParent)
-    : TestJSImplInterface(aJSImpl, aParent)
+    : TestJSImplInterface(aJSImpl, aJSImplGlobal, aParent)
   {}
 };
 

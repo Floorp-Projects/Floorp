@@ -131,8 +131,9 @@ nsSessionStoreUtils::AddDynamicFrameFilteredListener(EventTarget* aTarget,
   NS_ENSURE_TRUE(aTarget, NS_ERROR_NO_INTERFACE);
 
   JS::Rooted<JSObject*> obj(aCx, &aListener.toObject());
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   RefPtr<EventListener> listener =
-    new EventListener(aCx, obj, GetIncumbentGlobal());
+    new EventListener(aCx, obj, global, GetIncumbentGlobal());
 
   nsCOMPtr<nsIDOMEventListener> filter(new DynamicFrameEventFilter(listener));
 
