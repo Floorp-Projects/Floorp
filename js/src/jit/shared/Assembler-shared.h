@@ -322,8 +322,7 @@ struct Address
     { }
 #endif
 
-    Address() : base(RegisterOrSP(Registers::Invalid)), offset(0)
-    { }
+    Address() = delete;
 };
 
 #if JS_BITS_PER_WORD == 32
@@ -363,12 +362,7 @@ struct BaseIndex
     { }
 #endif
 
-    BaseIndex()
-      : base(RegisterOrSP(Registers::Invalid))
-      , index(Registers::Invalid)
-      , scale(TimesOne)
-      , offset(0)
-    {}
+    BaseIndex() = delete;
 };
 
 #if JS_BITS_PER_WORD == 32
@@ -445,17 +439,14 @@ struct BaseObjectSlotIndex : BaseValueIndex
 #endif
 };
 
-class Relocation {
-  public:
-    enum Kind {
-        // The target is immovable, so patching is only needed if the source
-        // buffer is relocated and the reference is relative.
-        HARDCODED,
+enum class RelocationKind {
+    // The target is immovable, so patching is only needed if the source
+    // buffer is relocated and the reference is relative.
+    HARDCODED,
 
-        // The target is the start of a JitCode buffer, which must be traced
-        // during garbage collection. Relocations and patching may be needed.
-        JITCODE
-    };
+    // The target is the start of a JitCode buffer, which must be traced
+    // during garbage collection. Relocations and patching may be needed.
+    JITCODE
 };
 
 class RepatchLabel

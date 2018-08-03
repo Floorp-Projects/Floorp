@@ -639,7 +639,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
 
 static bool
 DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_,
-                       HandleValue lhs, HandleValue receiver, HandleValue rhs,
+                       HandleValue lhs, HandleValue rhs, HandleValue receiver,
                        MutableHandleValue res)
 {
     // This fallback stub may trigger debug mode toggling.
@@ -734,17 +734,17 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Super property getters use a |this| that differs from base object
     if (hasReceiver_) {
-        // State: index in R0, receiver in R1, obj on the stack
+        // State: receiver in R0, index in R1, obj on the stack
 
         // Ensure stack is fully synced for the expression decompiler.
-        // We need: index, receiver, obj
+        // We need: receiver, index, obj
         masm.pushValue(R0);
         masm.pushValue(R1);
         masm.pushValue(Address(masm.getStackPointer(), sizeof(Value) * 2));
 
         // Push arguments.
-        masm.pushValue(R0); // Index
-        masm.pushValue(R1); // Reciver
+        masm.pushValue(R0); // Receiver
+        masm.pushValue(R1); // Index
         masm.pushValue(Address(masm.getStackPointer(), sizeof(Value) * 5)); // Obj
         masm.push(ICStubReg);
         pushStubPayload(masm, R0.scratchReg());

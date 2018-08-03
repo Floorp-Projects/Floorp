@@ -457,7 +457,7 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
 
     // | - sizeof(Value)| is used to put rcx such that we can read the last
     // argument, and not the value which is after.
-    BaseIndex b = BaseIndex(r9, r8, TimesEight, sizeof(RectifierFrameLayout) - sizeof(Value));
+    BaseIndex b(r9, r8, TimesEight, sizeof(RectifierFrameLayout) - sizeof(Value));
     masm.lea(Operand(b), rcx);
 
     // Copy & Push arguments, |nargs| + 1 times (to include |this|).

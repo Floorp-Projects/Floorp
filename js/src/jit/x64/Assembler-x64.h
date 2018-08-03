@@ -288,11 +288,11 @@ class Assembler : public AssemblerX86Shared
     static JitCode* CodeFromJump(JitCode* code, uint8_t* jump);
 
   private:
-    void writeRelocation(JmpSrc src, Relocation::Kind reloc);
-    void addPendingJump(JmpSrc src, ImmPtr target, Relocation::Kind reloc);
+    void writeRelocation(JmpSrc src, RelocationKind reloc);
+    void addPendingJump(JmpSrc src, ImmPtr target, RelocationKind reloc);
 
   protected:
-    size_t addPatchableJump(JmpSrc src, Relocation::Kind reloc);
+    size_t addPatchableJump(JmpSrc src, RelocationKind reloc);
 
   public:
     using AssemblerX86Shared::j;
@@ -1060,32 +1060,31 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
-    void jmp(ImmPtr target, Relocation::Kind reloc = Relocation::HARDCODED) {
+    void jmp(ImmPtr target, RelocationKind reloc = RelocationKind::HARDCODED) {
         JmpSrc src = masm.jmp();
         addPendingJump(src, target, reloc);
     }
-    void j(Condition cond, ImmPtr target,
-           Relocation::Kind reloc = Relocation::HARDCODED) {
+    void j(Condition cond, ImmPtr target, RelocationKind reloc = RelocationKind::HARDCODED) {
         JmpSrc src = masm.jCC(static_cast<X86Encoding::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
     void jmp(JitCode* target) {
-        jmp(ImmPtr(target->raw()), Relocation::JITCODE);
+        jmp(ImmPtr(target->raw()), RelocationKind::JITCODE);
     }
     void j(Condition cond, JitCode* target) {
-        j(cond, ImmPtr(target->raw()), Relocation::JITCODE);
+        j(cond, ImmPtr(target->raw()), RelocationKind::JITCODE);
     }
     void call(JitCode* target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
+        addPendingJump(src, ImmPtr(target->raw()), RelocationKind::JITCODE);
     }
     void call(ImmWord target) {
         call(ImmPtr((void*)target.value));
     }
     void call(ImmPtr target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target, Relocation::HARDCODED);
+        addPendingJump(src, target, RelocationKind::HARDCODED);
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
@@ -1093,7 +1092,7 @@ class Assembler : public AssemblerX86Shared
     CodeOffset toggledCall(JitCode* target, bool enabled) {
         CodeOffset offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
-        addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
+        addPendingJump(src, ImmPtr(target->raw()), RelocationKind::JITCODE);
         MOZ_ASSERT_IF(!oom(), size() - offset.offset() == ToggledCallSize(nullptr));
         return offset;
     }
