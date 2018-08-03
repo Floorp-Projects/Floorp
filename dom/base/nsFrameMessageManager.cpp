@@ -145,7 +145,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentFrameMessageManager)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 
   /* Message managers in child process implement nsIMessageSender.
      Message managers in the chrome process are
@@ -153,9 +153,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
      managers) or they're simple message senders. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMessageSender, !mChrome || !mIsBroadcaster)
 
-  /* nsIContentFrameMessageManager is accessible only in TabChildGlobal. */
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIContentFrameMessageManager,
-                                     !mChrome && !mIsProcessManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameMessageManager)

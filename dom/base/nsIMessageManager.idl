@@ -13,14 +13,8 @@ interface nsIMessageSender : nsISupports
 {
 };
 
-// NOTE: Only scriptable for Ci.nsIContentFrameMessageManager
-[scriptable, builtinclass, uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
-interface nsIContentFrameMessageManager : nsIMessageSender
-{
-};
-
 [uuid(b39a3324-b574-4f85-8cdb-274d04f807ef)]
-interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
+interface nsIInProcessContentFrameMessageManager : nsIMessageSender
 {
   [notxpcom] nsIContent getOwnerContent();
 };
