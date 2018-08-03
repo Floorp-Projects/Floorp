@@ -137,14 +137,12 @@ struct EnumSerializer {
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     uintParamType value;
     if (!ReadParam(aMsg, aIter, &value)) {
-      CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::IPCReadErrorReason,
-        NS_LITERAL_CSTRING("Bad iter"));
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCReadErrorReason"),
+                                         NS_LITERAL_CSTRING("Bad iter"));
       return false;
     } else if (!EnumValidator::IsLegalValue(paramType(value))) {
-      CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::IPCReadErrorReason,
-        NS_LITERAL_CSTRING("Illegal value"));
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCReadErrorReason"),
+                                         NS_LITERAL_CSTRING("Illegal value"));
       return false;
     }
     *aResult = paramType(value);

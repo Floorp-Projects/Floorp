@@ -116,7 +116,6 @@ GENERATED_FILES += [
     'AndroidManifest.xml',
     'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
-    'generated/preprocessed/org/mozilla/gecko/CrashReporterConstants.java',
     'generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
 ]
 x = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AdjustConstants.java']
@@ -131,11 +130,6 @@ y.inputs += ['MmaConstants.java.in']
 z = GENERATED_FILES['AndroidManifest.xml']
 z.script = 'generate_build_config.py:generate_android_manifest'
 z.inputs += ['AndroidManifest.xml.in']
-
-# Generate CrashReporterConstants.java
-crash_reporter_constants = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/CrashReporterConstants.java']
-crash_reporter_constants.script = '/toolkit/crashreporter/generate_crash_reporter_sources.py:emit_class'
-crash_reporter_constants.inputs += ['/toolkit/crashreporter/CrashAnnotations.yaml']
 
 # Regular builds invoke `libs` targets that localize files with no AB_CD set
 # into the default resources (res/{values,raw}).
@@ -198,7 +192,6 @@ GENERATED_FILES[t].inputs += [
     '!AndroidManifest.xml',
     '!generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     '!generated/preprocessed/org/mozilla/gecko/AppConstants.java',
-    '!generated/preprocessed/org/mozilla/gecko/CrashReporterConstants.java',
     '!generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
     # These all depend on AB_CD, which isn't captured in this definition.  Due
     # to subtle RecursiveMake details, everything works out.  In the future we

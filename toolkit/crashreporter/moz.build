@@ -9,24 +9,13 @@ SPHINX_TREES['crashreporter'] = 'docs'
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
-GENERATED_FILES += [
-    'CrashAnnotations.h',
-    'CrashReporter.jsm',
-]
-
 EXPORTS += [
-    '!CrashAnnotations.h',
     'nsExceptionHandler.h',
-]
-
-EXTRA_JS_MODULES += [
-    '!CrashReporter.jsm',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
 
 UNIFIED_SOURCES = [
-    'CrashAnnotations.cpp',
     'nsExceptionHandlerUtils.cpp',
 ]
 
@@ -136,21 +125,6 @@ else:
         'nsDummyExceptionHandler.cpp',
     ]
 
-# Generate CrashAnnotations.h
-crash_annotations = GENERATED_FILES['CrashAnnotations.h']
-crash_annotations.script = 'generate_crash_reporter_sources.py:emit_header'
-crash_annotations.inputs = [
-    'CrashAnnotations.h.in',
-    'CrashAnnotations.yaml',
-]
-
-# Generate CrashReporter.jsm
-crash_reporter_jsm = GENERATED_FILES['CrashReporter.jsm']
-crash_reporter_jsm.script = 'generate_crash_reporter_sources.py:emit_jsm'
-crash_reporter_jsm.inputs = [
-    'CrashReporter.jsm.in',
-    'CrashAnnotations.yaml',
-]
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Crash Reporting')

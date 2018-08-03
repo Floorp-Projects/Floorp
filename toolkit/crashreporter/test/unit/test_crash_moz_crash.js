@@ -2,8 +2,7 @@ function run_test() {
   // Try crashing with a runtime abort
   do_crash(function() {
              crashType = CrashTestUtils.CRASH_MOZ_CRASH;
-             crashReporter.annotateCrashReport(
-              CrashReporter.annotations.TestKey, "TestValue");
+             crashReporter.annotateCrashReport("TestKey", "TestValue");
            },
            function(mdump, extra) {
              Assert.equal(extra.TestKey, "TestValue");

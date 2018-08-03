@@ -39,28 +39,27 @@ function run_test() {
   cr.minidumpPath = cwd;
   Assert.equal(cr.minidumpPath.path, cwd.path);
 
-  // Test annotateCrashReport()
   try {
-    cr.annotateCrashReport(undefined, "");
-    do_throw("Calling annotateCrashReport() with an undefined key should have thrown!");
+    cr.annotateCrashReport("equal=equal", "");
+    do_throw("Calling annotateCrashReport() with an '=' in key should have thrown!");
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
-    cr.annotateCrashReport(1000000, "");
-    do_throw("Calling annotateCrashReport() with a bogus key should have thrown!");
+    cr.annotateCrashReport("new\nline", "");
+    do_throw("Calling annotateCrashReport() with a '\\n' in key should have thrown!");
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
-    cr.annotateCrashReport(CrashReporter.annotations.TestKey, "da\0ta");
+    cr.annotateCrashReport("", "da\0ta");
     do_throw("Calling annotateCrashReport() with a '\\0' in data should have thrown!");
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
-  cr.annotateCrashReport(CrashReporter.annotations.TestKey, "testData1");
+  cr.annotateCrashReport("testKey", "testData1");
   // Replace previous data.
-  cr.annotateCrashReport(CrashReporter.annotations.TestKey, "testData2");
+  cr.annotateCrashReport("testKey", "testData2");
 
   try {
     cr.appendAppNotesToCrashReport("da\0ta");
@@ -72,22 +71,6 @@ function run_test() {
   // Add more data.
   cr.appendAppNotesToCrashReport("additional testData4");
 
-  // Test removeCrashReportAnnotation()
-  try {
-    cr.removeCrashReportAnnotation(undefined);
-    do_throw("Calling removeCrashReportAnnotation() with an undefined key should have thrown!");
-  } catch (ex) {
-    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
-  }
-  try {
-    cr.removeCrashReportAnnotation(1000000);
-    do_throw("Calling removeCrashReportAnnotation() with a bogus key should have thrown!");
-  } catch (ex) {
-    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
-  }
-  cr.removeCrashReportAnnotation(CrashReporter.annotations.TestKey);
-
-  // Testing setting the minidumpPath field
   cr.minidumpPath = cwd;
   Assert.equal(cr.minidumpPath.path, cwd.path);
 }

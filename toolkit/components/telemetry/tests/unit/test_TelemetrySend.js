@@ -9,8 +9,8 @@
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", this);
-ChromeUtils.import("resource://gre/modules/CrashReporter.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
@@ -19,8 +19,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "TelemetrySend",
-  "resource://gre/modules/TelemetrySend.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
   "resource://gre/modules/TelemetryHealthPing.jsm");
 
@@ -607,77 +605,9 @@ add_task(async function test_measurePingsSize() {
 
 add_task(async function test_pref_observer() {
   // This test requires the presence of the crash reporter component.
-  if (!AppConstants.MOZ_CRASHREPORTER) {
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  if (!registrar.isContractIDRegistered("@mozilla.org/toolkit/crash-reporter;1")) {
     return;
-  }
-
-  // Mock the crash reporter wrapper so that we can inspect the annotations
-  var MockCrashReporter = {
-    addAnnotation(annotation, value) {
-      if (!this.keys.delete(annotation)) {
-        let string = Object.keys(CrashReporter.annotations)
-                           .find(key => key === annotation);
-        if (this.reject) {
-          this.reject(
-            Error(`Crash report annotation with unexpected key: "${string}".`));
-        }
-      }
-
-      if (this.expectedValue && value == "") {
-        if (this.reject) {
-          this.reject(Error("Crash report annotation without expected value."));
-        }
-      }
-
-      if (this.keys.size == 0) {
-        if (this.resolve) {
-          this.resolve();
-        }
-      }
-    },
-    removeAnnotation(annotation) {
-      if (!this.keys.delete(annotation)) {
-        let string = Object.keys(CrashReporter.annotations)
-                           .find(key => key === annotation);
-        if (this.reject) {
-          this.reject(
-            Error(`Crash report annotation with unexpected key: "${string}".`));
-        }
-      }
-
-      if (this.keys.size == 0) {
-        if (this.resolve) {
-          this.resolve();
-        }
-      }
-    },
-    annotations: Object.assign({}, CrashReporter.annotations),
-    keys: null,
-    expectedValue: false,
-    resolve: null,
-    reject: null,
-  };
-
-  let ts_scope = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm",
-                                    {});
-
-  ts_scope.CrashReporter = MockCrashReporter;
-  registerCleanupFunction(function() {
-    ts_scope.CrashReporter = CrashReporter;
-  });
-
-  function waitAnnotateCrashReport(expectedValue, trigger) {
-    MockCrashReporter.expectedValue = expectedValue;
-    MockCrashReporter.keys = new Set([
-      CrashReporter.annotations.TelemetryClientId,
-      CrashReporter.annotations.TelemetryServerURL
-    ]);
-
-    return new Promise(function(resolve, reject) {
-      MockCrashReporter.resolve = resolve;
-      MockCrashReporter.reject = reject;
-      trigger();
-    });
   }
 
   await TelemetrySend.setup(true);
@@ -691,6 +621,46 @@ add_task(async function test_pref_observer() {
     Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   }
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
+
+  function waitAnnotateCrashReport(expectedValue, trigger) {
+    return new Promise(function(resolve, reject) {
+      let keys = new Set(["TelemetryClientId", "TelemetryServerURL"]);
+
+      let crs = {
+        QueryInterface: ChromeUtils.generateQI([Ci.nsICrashReporter]),
+        annotateCrashReport(key, value) {
+          if (!keys.delete(key)) {
+            MockRegistrar.unregister(gMockCrs);
+            reject(Error(`Crash report annotation with unexpected key: "${key}".`));
+          }
+
+          if (expectedValue && value == "") {
+            MockRegistrar.unregister(gMockCrs);
+            reject(Error("Crash report annotation without expected value."));
+          }
+
+          if (!expectedValue && value != "") {
+            MockRegistrar.unregister(gMockCrs);
+            reject(Error(`Crash report annotation ("${key}") with unexpected value: "${value}".`));
+          }
+
+          if (keys.size == 0) {
+            MockRegistrar.unregister(gMockCrs);
+            resolve();
+          }
+        },
+        UpdateCrashEventsDir() {
+        },
+      };
+
+      let gMockCrs = MockRegistrar.register("@mozilla.org/toolkit/crash-reporter;1", crs);
+      registerCleanupFunction(function() {
+        MockRegistrar.unregister(gMockCrs);
+      });
+
+      trigger();
+    });
+  }
 
   await waitAnnotateCrashReport(!IS_UNIFIED_TELEMETRY, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false));
 

@@ -1,4 +1,3 @@
-ChromeUtils.import("resource://gre/modules/CrashReporter.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // enable crash reporting first

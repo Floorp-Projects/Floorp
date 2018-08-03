@@ -463,13 +463,10 @@ GMPParent::EnsureProcessLoaded()
 void
 GMPParent::WriteExtraDataForMinidump()
 {
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::GMPPlugin, true);
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginFilename,
-                                NS_ConvertUTF16toUTF8(mName));
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginName,
-                                mDisplayName);
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginVersion,
-                                mVersion);
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("GMPPlugin"), NS_LITERAL_CSTRING("1"));
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginFilename"), NS_ConvertUTF16toUTF8(mName));
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginName"), mDisplayName);
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginVersion"), mVersion);
 }
 
 bool

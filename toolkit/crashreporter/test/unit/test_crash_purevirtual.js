@@ -13,8 +13,7 @@ function run_test() {
   // Try crashing with a pure virtual call
   do_crash(function() {
              crashType = CrashTestUtils.CRASH_PURE_VIRTUAL_CALL;
-             crashReporter.annotateCrashReport(
-              CrashReporter.annotations.TestKey, "TestValue");
+             crashReporter.annotateCrashReport("TestKey", "TestValue");
            },
            function(mdump, extra) {
              Assert.equal(extra.TestKey, "TestValue");

@@ -1702,8 +1702,8 @@ NS_IMETHODIMP
 nsDocShell::SetRemoteTabs(bool aUseRemoteTabs)
 {
   if (aUseRemoteTabs) {
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::DOMIPCEnabled,
-                                       true);
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("DOMIPCEnabled"),
+                                       NS_LITERAL_CSTRING("1"));
   }
 
   mUseRemoteTabs = aUseRemoteTabs;
