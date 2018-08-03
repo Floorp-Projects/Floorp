@@ -547,7 +547,7 @@ menuitem.bookmark-item {
 }
 
 html|*.urlbar-input:-moz-lwtheme::placeholder,
-.searchbar-textbox:-moz-lwtheme > .urlbar-textbox-container > .textbox-input-box > html|*.textbox-input::placeholder {
+.searchbar-textbox:-moz-lwtheme > .urlbar-textbox-container > moz-input-box > html|*.textbox-input::placeholder {
   opacity: 1.0;
   color: #777;
 }

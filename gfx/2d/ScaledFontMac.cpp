@@ -595,7 +595,7 @@ UnscaledFontMac::CreateScaledFont(Float aGlyphSize,
   RefPtr<ScaledFontMac> scaledFont =
     new ScaledFontMac(fontRef, this, aGlyphSize, fontRef != mFont);
 
-  if (!scaledFont->PopulateCairoScaledFont()) {
+  if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled Mac font.";
     return nullptr;
   }

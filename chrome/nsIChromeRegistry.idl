@@ -48,9 +48,6 @@ interface nsIChromeRegistry : nsISupports
 [scriptable, uuid(93251ddf-5e85-4172-ac2a-31780562974f)]
 interface nsIXULChromeRegistry : nsIChromeRegistry
 {
-  /* Should be called when locales change to reload all chrome (including XUL). */
-  void reloadChrome();
-
   // If the optional asBCP47 parameter is true, the locale code will be
   // converted to a BCP47 language tag; in particular, this means that
   // "ja-JP-mac" will be returned as "ja-JP-x-lvariant-mac", which can be

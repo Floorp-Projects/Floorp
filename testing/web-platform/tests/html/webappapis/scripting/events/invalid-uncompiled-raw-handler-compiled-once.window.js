@@ -1,10 +1,3 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>Invalid uncompiled raw handlers should only be compiled once.</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<body>
-<script>
 setup({ allow_uncaught_exception: true });
 
 var errors = 0;
@@ -18,6 +11,4 @@ test(function() {
   assert_equals(e.onclick, null);
   assert_equals(e.onclick, null);
   assert_equals(errors, 1);
-});
-</script>
-</body>
+}, "Invalid uncompiled raw handlers should only be compiled once");

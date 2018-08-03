@@ -207,17 +207,13 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
   // for resource timing, which can include document loads, both toplevel and
   // in subframes, and resources linked from a document.
   if (aHttpChannel) {
-    mTimingAllowed = CheckAllowedOrigin(aHttpChannel, aChannel);
-    bool redirectsPassCheck = false;
-    aChannel->GetAllRedirectsPassTimingAllowCheck(&redirectsPassCheck);
-    mReportCrossOriginRedirect = mTimingAllowed && redirectsPassCheck;
-
-    SetPropertiesFromHttpChannel(aHttpChannel);
+    SetPropertiesFromHttpChannel(aHttpChannel, aChannel);
   }
 }
 
 void
-PerformanceTimingData::SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel)
+PerformanceTimingData::SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel,
+                                                    nsITimedChannel* aChannel)
 {
   MOZ_ASSERT(aHttpChannel);
 
@@ -231,6 +227,11 @@ PerformanceTimingData::SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel
   if (mDecodedBodySize == 0) {
     mDecodedBodySize = mEncodedBodySize;
   }
+
+  mTimingAllowed = CheckAllowedOrigin(aHttpChannel, aChannel);
+  bool redirectsPassCheck = false;
+  aChannel->GetAllRedirectsPassTimingAllowCheck(&redirectsPassCheck);
+  mReportCrossOriginRedirect = mTimingAllowed && redirectsPassCheck;
 }
 
 PerformanceTiming::~PerformanceTiming()

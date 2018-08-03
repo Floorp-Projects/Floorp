@@ -57,7 +57,13 @@ class RefCounted
 template <typename T>
 class AtomicRefCounted
 {
-    static const MozRefCountType DEAD = 0xffffdead;
+    // On 64-bit systems, if the refcount type is small (say, 32 bits), there's
+    // a risk that it could overflow.  So require it to be large enough.
+
+    static_assert(sizeof(MozRefCountType) == sizeof(uintptr_t),
+                  "You're at risk for ref count overflow.");
+
+    static const MozRefCountType DEAD = ~MozRefCountType(0xffff) | 0xdead;
 
   protected:
     AtomicRefCounted() : mRefCnt(0) {}
@@ -66,13 +72,13 @@ class AtomicRefCounted
   public:
     void AddRef() const
     {
-        MOZ_ASSERT(int32_t(mRefCnt) >= 0);
         ++mRefCnt;
+        MOZ_ASSERT(mRefCnt != DEAD);
     }
 
     void Release() const
     {
-        MOZ_ASSERT(int32_t(mRefCnt) > 0);
+        MOZ_ASSERT(mRefCnt != 0);
         MozRefCountType cnt = --mRefCnt;
         if (0 == cnt) {
 #ifdef DEBUG
