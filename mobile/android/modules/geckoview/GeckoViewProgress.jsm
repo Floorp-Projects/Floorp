@@ -217,16 +217,23 @@ class GeckoViewProgress extends GeckoViewModule {
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     debug `onStateChange: isTopLevel=${aWebProgress.isTopLevel},
-                          flags=${aStateFlags}, status=${aStatus}`;
+                          flags=${aStateFlags}, status=${aStatus}
+                          loadType=${aWebProgress.loadType}`;
+
 
     if (!aWebProgress.isTopLevel) {
       return;
     }
 
     const uriSpec = aRequest.QueryInterface(Ci.nsIChannel).URI.displaySpec;
-    debug `onStateChange: uri=${uriSpec}`;
+    const isSuccess = aStatus == Cr.NS_OK;
+    const isStart = (aStateFlags & Ci.nsIWebProgressListener.STATE_START) != 0;
+    const isStop = (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) != 0;
 
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+    debug `onStateChange: uri=${uriSpec} isSuccess=${isSuccess}
+           isStart=${isStart} isStop=${isStop}`;
+
+    if (isStart) {
       this._inProgress = true;
       const message = {
         type: "GeckoView:PageStart",
@@ -234,12 +241,12 @@ class GeckoViewProgress extends GeckoViewModule {
       };
 
       this.eventDispatcher.sendRequest(message);
-    } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
-               !aWebProgress.isLoadingDocument) {
+    } else if (isStop && !aWebProgress.isLoadingDocument) {
       this._inProgress = false;
+
       let message = {
         type: "GeckoView:PageStop",
-        success: !aStatus
+        success: isSuccess
       };
 
       this.eventDispatcher.sendRequest(message);
@@ -272,13 +279,6 @@ class GeckoViewProgress extends GeckoViewModule {
                              flags=${aFlags}`;
 
     this._hostChanged = true;
-    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-      // We apparently don't get a STATE_STOP in onStateChange(), so emit PageStop here
-      this.eventDispatcher.sendRequest({
-        type: "GeckoView:PageStop",
-        success: false
-      });
-    }
   }
 
   // nsIObserver event handler
