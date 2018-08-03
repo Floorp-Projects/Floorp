@@ -334,7 +334,7 @@ async function testAttrRule(browser, target, rule, expected) {
     let [event] = await contentSpawnMutation(browser, {
       expected: [recreated ? [EVENT_REORDER, parent] : [EVENT_TEXT_INSERTED, id]]
     }, ([contentId, contentAttr]) =>
-      document.getElementById(contentId).removeAttribute(contentAttr), [id, attr]);
+      content.document.getElementById(contentId).removeAttribute(contentAttr), [id, attr]);
 
     // Update accessible just in case it is now defunct.
     target.acc = findAccessibleChildByID(event.accessible, id);
@@ -362,7 +362,7 @@ async function testElmRule(browser, target, rule, expected) {
   testName(acc, expected);
   let [event] = await contentSpawnMutation(browser, {
     expected: [[EVENT_REORDER, isSibling ? parent : id]]
-  }, contentElm => document.querySelector(`${contentElm}`).remove(), elm);
+  }, contentElm => content.document.querySelector(`${contentElm}`).remove(), elm);
 
   // Update accessible just in case it is now defunct.
   target.acc = findAccessibleChildByID(event.accessible, id);
@@ -387,7 +387,7 @@ async function testSubtreeRule(browser, target, rule, expected) {
   let [event] = await contentSpawnMutation(browser, {
     expected: [[EVENT_REORDER, id]]
   }, contentId => {
-    let elm = document.getElementById(contentId);
+    let elm = content.document.getElementById(contentId);
     while (elm.firstChild) {
       elm.firstChild.remove();
     }

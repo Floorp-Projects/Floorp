@@ -16,7 +16,7 @@ addAccessibleTask(`<ul id="container"><li id="a">Test</li></ul>`,
 
     await contentSpawnMutation(browser, NO_MOVE, function() {
       // aria-own ordinal child in place, should be a no-op.
-      document.getElementById("container").setAttribute("aria-owns", "a");
+      content.document.getElementById("container").setAttribute("aria-owns", "a");
     });
 
     testChildrenIds(containerAcc, ["a"]);
@@ -32,10 +32,10 @@ addAccessibleTask(`<ul id="container"><li id="a">Test</li></ul>`,
     testChildrenIds(containerAcc, ["a"]);
 
     await contentSpawnMutation(browser, MOVE, function() {
-      let container = document.getElementById("container");
+      let container = content.document.getElementById("container");
       container.setAttribute("aria-owns", "a");
 
-      let aa = document.createElement("li");
+      let aa = content.document.createElement("li");
       aa.id = "aa";
       container.appendChild(aa);
     });
@@ -43,7 +43,7 @@ addAccessibleTask(`<ul id="container"><li id="a">Test</li></ul>`,
     testChildrenIds(containerAcc, ["aa", "a"]);
 
     await contentSpawnMutation(browser, MOVE, function() {
-      document.getElementById("container").removeAttribute("aria-owns");
+      content.document.getElementById("container").removeAttribute("aria-owns");
     });
 
     testChildrenIds(containerAcc, ["a", "aa"]);
@@ -59,7 +59,7 @@ addAccessibleTask(`<ul id="container" aria-owns="a"><li id="a">Test</li></ul>`,
 
     await contentSpawnMutation(browser, NO_MOVE, function() {
       // remove aria-owned child that is already ordinal, should be no-op.
-      document.getElementById("container").removeAttribute("aria-owns");
+      content.document.getElementById("container").removeAttribute("aria-owns");
     });
 
     testChildrenIds(containerAcc, ["a"]);
@@ -79,7 +79,7 @@ addAccessibleTask(`
     testChildrenIds(containerAcc, []);
 
     await contentSpawnMutation(browser, NO_MOVE, function() {
-      document.getElementById("container").setAttribute("aria-owns", "a");
+      content.document.getElementById("container").setAttribute("aria-owns", "a");
     });
 
     testChildrenIds(containerAcc, []);
@@ -151,7 +151,7 @@ addAccessibleTask(`
     testChildrenIds(containerAcc.firstChild, ["a", "b", "c"]);
 
     await contentSpawnMutation(browser, NO_MOVE, function() {
-      document.getElementById("container").setAttribute("aria-owns", "a c b");
+      content.document.getElementById("container").setAttribute("aria-owns", "a c b");
     });
 
     testChildrenIds(containerAcc.firstChild, ["a", "b", "c"]);
@@ -183,7 +183,7 @@ addAccessibleTask(`
 
     await contentSpawnMutation(browser, waitfor, function() {
       // Put same id twice in aria-owns
-      document.getElementById("two").setAttribute("aria-owns", "a a");
+      content.document.getElementById("two").setAttribute("aria-owns", "a a");
     });
 
     testChildrenIds(one, ["b", "c"]);
@@ -192,7 +192,7 @@ addAccessibleTask(`
     await contentSpawnMutation(browser, waitfor, function() {
       // If the previous double-id aria-owns worked correctly, we should
       // be in a good state and all is fine..
-      document.getElementById("two").setAttribute("aria-owns", "a b");
+      content.document.getElementById("two").setAttribute("aria-owns", "a b");
     });
 
     testChildrenIds(one, ["c"]);
@@ -209,10 +209,10 @@ addAccessibleTask(`<div id="a"></div><div id="b"></div>`,
     };
 
     await contentSpawnMutation(browser, waitFor, function() {
-      document.documentElement.style.display = "none";
-      document.documentElement.getBoundingClientRect();
-      document.body.setAttribute("aria-owns", "b a");
-      document.documentElement.remove();
+      content.document.documentElement.style.display = "none";
+      content.document.documentElement.getBoundingClientRect();
+      content.document.body.setAttribute("aria-owns", "b a");
+      content.document.documentElement.remove();
     });
 
     testChildrenIds(accDoc, []);
@@ -228,24 +228,24 @@ addAccessibleTask(`<div id="container"><div id="a">Hello</div></div>
     testChildrenIds(containerAcc, ["a"]);
 
     await contentSpawnMutation(browser, MOVE, function() {
-      document.getElementById("container").setAttribute("aria-owns", "c");
+      content.document.getElementById("container").setAttribute("aria-owns", "c");
     });
 
     testChildrenIds(containerAcc, ["a", "c"]);
 
     await contentSpawnMutation(browser, MOVE, function() {
-      let span = document.createElement("span");
-      document.getElementById("container").appendChild(span);
+      let span = content.document.createElement("span");
+      content.document.getElementById("container").appendChild(span);
 
-      let b = document.createElement("div");
+      let b = content.document.createElement("div");
       b.id = "b";
-      document.getElementById("container").appendChild(b);
+      content.document.getElementById("container").appendChild(b);
     });
 
     testChildrenIds(containerAcc, ["a", "b", "c"]);
 
     await contentSpawnMutation(browser, MOVE, function() {
-      document.getElementById("container").setAttribute("aria-owns", "c d");
+      content.document.getElementById("container").setAttribute("aria-owns", "c d");
     });
 
     testChildrenIds(containerAcc, ["a", "b", "c", "d"]);

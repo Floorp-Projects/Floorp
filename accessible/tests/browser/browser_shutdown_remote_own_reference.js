@@ -40,7 +40,7 @@ add_task(async function() {
     contentConsumersChanged =
       ContentTask.spawn(browser, {}, a11yConsumersChangedPromise);
     // Add a new reference to the a11y service inside the content process.
-    loadFrameScripts(browser, `let accService = Components.classes[
+    loadFrameScripts(browser, `var accService = Components.classes[
       '@mozilla.org/accessibilityService;1'].getService(
         Components.interfaces.nsIAccessibilityService);`);
     await contentConsumersChanged.then(data => Assert.deepEqual(data, {

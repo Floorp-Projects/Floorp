@@ -47,7 +47,7 @@ async function runTests(browser, accDoc) {
   await testContentBounds(browser, area);
 
   await ContentTask.spawn(browser, {}, () => {
-    zoomDocument(document, 2.0);
+    zoomDocument(content.document, 2.0);
   });
 
   await testContentBounds(browser, p1);
