@@ -18,11 +18,10 @@ registerCleanupFunction(() => { server.stop(() => {})});
 // before they are called.
 const progressListeners = new Map();
 
-function loadContentWindow(webNavigation, uri) {
+function loadContentWindow(windowlessBrowser, uri) {
   return new Promise((resolve, reject) => {
-    webNavigation.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
-    let docShell = webNavigation.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDocShell);
+    windowlessBrowser.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    let docShell = windowlessBrowser.docShell;
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIWebProgress);
     let progressListener = {
@@ -35,8 +34,6 @@ function loadContentWindow(webNavigation, uri) {
         if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
           return;
         }
-        let docShell = webNavigation.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
         let contentWindow = docShell.domWindow;
         webProgress.removeProgressListener(progressListener);
         progressListeners.delete(progressListener);
@@ -55,8 +52,7 @@ function loadContentWindow(webNavigation, uri) {
 
 add_task(async function test_snapshot() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
-  let webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
-  let contentWindow = await loadContentWindow(webNavigation, HEADLESS_URL);
+  let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_URL);
   const contentWidth = 400;
   const contentHeight = 300;
   // Verify dimensions.
@@ -93,13 +89,13 @@ add_task(async function test_snapshot() {
   }
   ok(found, "Found blue text on page.");
 
-  webNavigation.close();
+  windowlessBrowser.close();
 });
 
 add_task(async function test_snapshot_widget_layers() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
-  let webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
-  let contentWindow = await loadContentWindow(webNavigation, HEADLESS_URL);
+  // nsIWindowlessBrowser inherits from nsIWebNavigation.
+  let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_URL);
   const contentWidth = 1;
   const contentHeight = 2;
   // Verify dimensions.
@@ -125,14 +121,14 @@ add_task(async function test_snapshot_widget_layers() {
   );
   ok(true, "Snapshot with widget layers didn't crash.");
 
-  webNavigation.close();
+  windowlessBrowser.close();
 });
 
 // Ensure keydown events are triggered on the windowless browser.
 add_task(async function test_keydown() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
-  let webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
-  let contentWindow = await loadContentWindow(webNavigation, HEADLESS_URL);
+  // nsIWindowlessBrowser inherits from nsIWebNavigation.
+  let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_URL);
 
   let keydown = new Promise((resolve) => {
     contentWindow.addEventListener("keydown", () => {
@@ -149,15 +145,15 @@ add_task(async function test_keydown() {
   await keydown;
   ok(true, "Send keydown didn't crash");
 
-  webNavigation.close();
+  windowlessBrowser.close();
 });
 
 // Test dragging the mouse on a button to ensure the creation of the drag
 // service doesn't crash in headless.
 add_task(async function test_mouse_drag() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
-  let webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
-  let contentWindow = await loadContentWindow(webNavigation, HEADLESS_BUTTON_URL);
+  // nsIWindowlessBrowser inherits from nsIWebNavigation.
+  let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_BUTTON_URL);
   contentWindow.resizeTo(400, 400);
 
   let target = contentWindow.document.getElementById('btn');
@@ -175,5 +171,5 @@ add_task(async function test_mouse_drag() {
 
   ok(true, "Send mouse event didn't crash");
 
-  webNavigation.close();
+  windowlessBrowser.close();
 });

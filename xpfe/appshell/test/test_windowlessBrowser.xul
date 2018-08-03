@@ -31,8 +31,7 @@ function testWindowlessBrowser(chromePrivileged) {
 
   ok(webNav, "createWindowlessBrowser should return a wevNav");
 
-  let interfaceRequestor = webNav.QueryInterface(Ci.nsIInterfaceRequestor);
-  let docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
+  let docShell = webNav.docShell;
 
   ok(docShell, "docShell should be defined");
   ok(docShell.contentViewer.DOMDocument.defaultView, "docShell defaultView should be defined");

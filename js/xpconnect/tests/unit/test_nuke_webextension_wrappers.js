@@ -14,8 +14,7 @@ function getWindowlessBrowser(url) {
 
   let webnav = Services.appShell.createWindowlessBrowser(false);
 
-  let docShell = webnav.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
+  let docShell = webnav.docShell;
 
   docShell.createAboutBlankContentViewer(principal);
 

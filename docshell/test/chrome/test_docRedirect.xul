@@ -71,10 +71,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
 
   var webNav = Cc["@mozilla.org/appshell/appShellService;1"].
       getService(Ci.nsIAppShellService).createWindowlessBrowser(true);
-  let docShell = webNav.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDocShell);
+  let docShell = webNav.docShell;
   docShell.createAboutBlankContentViewer(
-      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal));
+      Cc["@mozilla.org/systemprincipal;1"].getService(Ci.nsIPrincipal));
 
   progressListener.add(docShell, function(success) {
     webNav.close();

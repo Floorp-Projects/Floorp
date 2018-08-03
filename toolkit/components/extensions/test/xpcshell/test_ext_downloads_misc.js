@@ -808,8 +808,7 @@ function loadImage(img, data) {
 
 add_task(async function test_getFileIcon() {
   let webNav = Services.appShell.createWindowlessBrowser(false);
-  let docShell = webNav.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
+  let docShell = webNav.docShell;
 
   let system = Services.scriptSecurityManager.getSystemPrincipal();
   docShell.createAboutBlankContentViewer(system);

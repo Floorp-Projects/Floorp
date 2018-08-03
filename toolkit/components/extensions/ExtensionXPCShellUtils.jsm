@@ -118,9 +118,8 @@ class ContentPage {
 
     let system = Services.scriptSecurityManager.getSystemPrincipal();
 
-    let chromeShell = this.windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor)
-                                            .getInterface(Ci.nsIDocShell)
-                                            .QueryInterface(Ci.nsIWebNavigation);
+    let chromeShell = this.windowlessBrowser.docShell
+                          .QueryInterface(Ci.nsIWebNavigation);
 
     chromeShell.createAboutBlankContentViewer(system);
     chromeShell.useGlobalHistory = false;

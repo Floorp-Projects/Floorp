@@ -6,6 +6,8 @@
 
 #include "nsIWebNavigation.idl"
 
+interface nsIDocShell;
+
 /**
  * This interface represents a nsIWebBrowser instance with no associated OS
  * window. Its main function is to manage the lifetimes of those windows.
@@ -23,5 +25,11 @@ interface nsIWindowlessBrowser : nsIWebNavigation
    * reference is released.
    */
   void close();
+
+  /**
+   * Get the docshell for this browser.  This is the docshell that gets
+   * navigated when the browser's nsIWebNavigation interface is used.
+   */
+  readonly attribute nsIDocShell docShell;
 };
 
