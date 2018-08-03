@@ -20,6 +20,8 @@
 
 const { Localization } =
   ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+const { Services } =
+  ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 // Match the opening angle bracket (<) in HTML tags, and HTML entities like
 // &amp;, &#0038;, &#x0026;.
@@ -572,7 +574,20 @@ class DOMLocalization extends Localization {
   translateRoots() {
     const roots = Array.from(this.roots);
     return Promise.all(
-      roots.map(root => this.translateFragment(root))
+      roots.map(async root => {
+        // We want to first retranslate the UI, and
+        // then (potentially) flip the directionality.
+        //
+        // This means that the DOM alternations and directionality
+        // are set in the same microtask.
+        await this.translateFragment(root);
+        let primaryLocale = Services.locale.getAppLocaleAsBCP47();
+        let direction = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
+        root.setAttribute("lang", primaryLocale);
+        root.setAttribute(root.namespaceURI ===
+          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          ? "localedir" : "dir", direction);
+      })
     );
   }
 
