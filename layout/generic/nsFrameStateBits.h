@@ -224,7 +224,7 @@ FRAME_STATE_BIT(Generic, 42, NS_FRAME_FONT_INFLATION_FLOW_ROOT)
 // this does not include nsSVGOuterSVGFrame since it takes part is CSS layout.
 FRAME_STATE_BIT(Generic, 43, NS_FRAME_SVG_LAYOUT)
 
-// Bits 44 and 45 are currently unused, but be kind and check with bug 1465478
+// Bits 44 and 45 are currently unused, but be kind and check with bug 1465474
 // first please :-)
 
 // This bit indicates that we're tracking visibility for this frame, and that
