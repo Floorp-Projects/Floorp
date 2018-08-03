@@ -41,7 +41,8 @@ public:
                         DOMHighResTimeStamp aZeroTime);
 
   void
-  SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel);
+  SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel,
+                               nsITimedChannel* aChannel);
 
   bool IsInitialized() const
   {

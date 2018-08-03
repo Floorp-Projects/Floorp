@@ -122,231 +122,46 @@ protected:
   virtual ~MediaEngineWebRTCAudioCaptureSource() = default;
 };
 
-// Small subset of VoEHardware
-class AudioInput
+// This class implements a cache for accessing the audio device list. It can be
+// accessed on any thread.
+class CubebDeviceEnumerator final
 {
 public:
-  AudioInput() = default;
-  // Threadsafe because it's referenced from an MicrophoneSource, which can
-  // had references to it on other threads.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioInput)
-
-  virtual int GetNumOfRecordingDevices(int& aDevices) = 0;
-  virtual int GetRecordingDeviceName(int aIndex, char (&aStrNameUTF8)[128],
-                                     char aStrGuidUTF8[128]) = 0;
-  virtual int GetRecordingDeviceStatus(bool& aIsAvailable) = 0;
-  virtual void GetChannelCount(uint32_t& aChannels) = 0;
-  virtual int GetMaxAvailableChannels(uint32_t& aChannels) = 0;
-  virtual void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener) = 0;
-  virtual void StopRecording(SourceMediaStream *aStream) = 0;
-  virtual int SetRecordingDevice(int aIndex) = 0;
-  virtual void SetUserChannelCount(uint32_t aChannels) = 0;
+  CubebDeviceEnumerator();
+  ~CubebDeviceEnumerator();
+  // This method returns a list of all the input and output audio devices
+  // available on this machine.
+  // This method is safe to call from all threads.
+  void EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
+  // From a cubeb device id, return the info for this device, if it's still a
+  // valid id, or nullptr otherwise.
+  // This method is safe to call from any thread.
+  already_AddRefed<AudioDeviceInfo>
+  DeviceInfoFromID(CubebUtils::AudioDeviceID aID);
 
 protected:
-  // Protected destructor, to discourage deletion outside of Release():
-  virtual ~AudioInput() = default;
-};
 
-class AudioInputCubeb final : public AudioInput
-{
-public:
-  explicit AudioInputCubeb(int aIndex = 0) :
-    AudioInput(), mSelectedDevice(aIndex), mInUseCount(0)
-  {
-    if (!mDeviceIndexes) {
-      mDeviceIndexes = new nsTArray<int>;
-      mDeviceNames = new nsTArray<nsCString>;
-      mDefaultDevice = -1;
-    }
-  }
-
-  static void CleanupGlobalData()
-  {
-    if (mDevices.device) {
-      cubeb_device_collection_destroy(CubebUtils::GetCubebContext(), &mDevices);
-    }
-    delete mDeviceIndexes;
-    mDeviceIndexes = nullptr;
-    delete mDeviceNames;
-    mDeviceNames = nullptr;
-  }
-
-  int GetNumOfRecordingDevices(int& aDevices)
-  {
-#ifdef MOZ_WIDGET_ANDROID
-    // OpenSL ES does not support enumerate device.
-    aDevices = 1;
-#else
-    UpdateDeviceList();
-    aDevices = mDeviceIndexes->Length();
-#endif
-    return 0;
-  }
-
-  static int32_t DeviceIndex(int aIndex)
-  {
-    // -1 = system default if any
-    if (aIndex == -1) {
-      if (mDefaultDevice == -1) {
-        aIndex = 0;
-      } else {
-        aIndex = mDefaultDevice;
-      }
-    }
-    MOZ_ASSERT(mDeviceIndexes);
-    if (aIndex < 0 || aIndex >= (int) mDeviceIndexes->Length()) {
-      return -1;
-    }
-    // Note: if the device is gone, this will be -1
-    return (*mDeviceIndexes)[aIndex]; // translate to mDevices index
-  }
-
-  static StaticMutex& Mutex()
-  {
-    return sMutex;
-  }
-
-  static bool GetDeviceID(int aDeviceIndex, CubebUtils::AudioDeviceID &aID)
-  {
-    // Assert sMutex is held
-    sMutex.AssertCurrentThreadOwns();
-#ifdef MOZ_WIDGET_ANDROID
-    aID = nullptr;
-    return true;
-#else
-    int dev_index = DeviceIndex(aDeviceIndex);
-    if (dev_index != -1) {
-      aID = mDevices.device[dev_index].devid;
-      return true;
-    }
-    return false;
-#endif
-  }
-
-  int GetRecordingDeviceName(int aIndex, char (&aStrNameUTF8)[128],
-                             char aStrGuidUTF8[128])
-  {
-#ifdef MOZ_WIDGET_ANDROID
-    aStrNameUTF8[0] = '\0';
-    aStrGuidUTF8[0] = '\0';
-#else
-    int32_t devindex = DeviceIndex(aIndex);
-    if (mDevices.count == 0 || devindex < 0) {
-      return 1;
-    }
-    SprintfLiteral(aStrNameUTF8, "%s%s", aIndex == -1 ? "default: " : "",
-                   mDevices.device[devindex].friendly_name);
-    aStrGuidUTF8[0] = '\0';
-#endif
-    return 0;
-  }
-
-  int GetRecordingDeviceStatus(bool& aIsAvailable)
-  {
-    // With cubeb, we only expose devices of type CUBEB_DEVICE_TYPE_INPUT,
-    // so unless it was removed, say it's available
-    aIsAvailable = true;
-    return 0;
-  }
-
-  void GetChannelCount(uint32_t& aChannels)
-  {
-    GetUserChannelCount(mSelectedDevice, aChannels);
-  }
-
-  static void GetUserChannelCount(int aDeviceIndex, uint32_t& aChannels)
-  {
-    aChannels = sUserChannelCount;
-  }
-
-  int GetMaxAvailableChannels(uint32_t& aChannels)
-  {
-    return GetDeviceMaxChannels(mSelectedDevice, aChannels);
-  }
-
-  static int GetDeviceMaxChannels(int aDeviceIndex, uint32_t& aChannels)
-  {
-#ifdef MOZ_WIDGET_ANDROID
-    aChannels = 1;
-#else
-    int32_t devindex = DeviceIndex(aDeviceIndex);
-    if (mDevices.count == 0 || devindex < 0) {
-      return 1;
-    }
-    aChannels = mDevices.device[devindex].max_channels;
-#endif
-    return 0;
-  }
-
-  void SetUserChannelCount(uint32_t aChannels)
-  {
-    if (GetDeviceMaxChannels(mSelectedDevice, sUserChannelCount)) {
-      sUserChannelCount = 1; // error capture mono
-      return;
-    }
-
-    if (aChannels && aChannels < sUserChannelCount) {
-      sUserChannelCount = aChannels;
-    }
-  }
-
-  void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener)
-  {
-#ifdef MOZ_WIDGET_ANDROID
-    // OpenSL ES does not support enumerating devices.
-    MOZ_ASSERT(mDevices.count == 0);
-#else
-    MOZ_ASSERT(mDevices.count > 0);
-#endif
-
-    mAnyInUse = true;
-    mInUseCount++;
-    // Always tell the stream we're using it for input
-    aStream->OpenAudioInput(mSelectedDevice, aListener);
-  }
-
-  void StopRecording(SourceMediaStream *aStream)
-  {
-    aStream->CloseAudioInput();
-    if (--mInUseCount == 0) {
-      mAnyInUse = false;
-    }
-  }
-
-  int SetRecordingDevice(int aIndex)
-  {
-    mSelectedDevice = aIndex;
-    return 0;
-  }
-
-protected:
-  ~AudioInputCubeb() {
-    MOZ_RELEASE_ASSERT(mInUseCount == 0);
-  }
+  // Static function called by cubeb when the audio input device list changes
+  // (i.e. when a new device is made available, or non-available). This
+  // re-binds to the MediaEngineWebRTC that instantiated this
+  // CubebDeviceEnumerator, and simply calls `AudioDeviceListChanged` below.
+  static void AudioDeviceListChanged_s(cubeb* aContext, void* aUser);
+  // Invalidates the cached audio input device list, can be called on any
+  // thread.
+  void AudioDeviceListChanged();
 
 private:
-  // It would be better to watch for device-change notifications
-  void UpdateDeviceList();
-
-  // We have an array, which consists of indexes to the current mDevices
-  // list.  This is updated on mDevices updates.  Many devices in mDevices
-  // won't be included in the array (wrong type, etc), or if a device is
-  // removed it will map to -1 (and opens of this device will need to check
-  // for this - and be careful of threading access.  The mappings need to
-  // updated on each re-enumeration.
-  int mSelectedDevice;
-  uint32_t mInUseCount;
-
-  // pointers to avoid static constructors
-  static nsTArray<int>* mDeviceIndexes;
-  static int mDefaultDevice; // -1 == not set
-  static nsTArray<nsCString>* mDeviceNames;
-  static cubeb_device_collection mDevices;
-  static bool mAnyInUse;
-  static StaticMutex sMutex;
-  static uint32_t sUserChannelCount;
+  // Synchronize access to mDevices
+  Mutex mMutex;
+  nsTArray<RefPtr<AudioDeviceInfo>> mDevices;
+  // If mManualInvalidation is true, then it is necessary to query the device
+  // list each time instead of relying on automatic invalidation of the cache by
+  // cubeb itself. Set in the constructor and then can be access on any thread.
+  bool mManualInvalidation;
 };
 
+// This class is instantiated on the MediaManager thread, and is then sent and
+// only ever access again on the MediaStreamGraph.
 class WebRTCAudioDataListener : public AudioDataListener
 {
 protected:
@@ -355,29 +170,29 @@ protected:
 
 public:
   explicit WebRTCAudioDataListener(MediaEngineWebRTCMicrophoneSource* aAudioSource)
-    : mMutex("WebRTCAudioDataListener::mMutex")
-    , mAudioSource(aAudioSource)
+    : mAudioSource(aAudioSource)
   {}
 
   // AudioDataListenerInterface methods
-  void NotifyOutputData(MediaStreamGraph* aGraph,
+  void NotifyOutputData(MediaStreamGraphImpl* aGraph,
                         AudioDataValue* aBuffer,
                         size_t aFrames,
                         TrackRate aRate,
                         uint32_t aChannels) override;
 
-  void NotifyInputData(MediaStreamGraph* aGraph,
+  void NotifyInputData(MediaStreamGraphImpl* aGraph,
                        const AudioDataValue* aBuffer,
                        size_t aFrames,
                        TrackRate aRate,
                        uint32_t aChannels) override;
 
-  void DeviceChanged() override;
+  uint32_t RequestedInputChannelCount(MediaStreamGraphImpl* aGraph) override;
 
-  void Shutdown();
+  void DeviceChanged(MediaStreamGraphImpl* aGraph) override;
+
+  void Disconnect(MediaStreamGraphImpl* aGraph) override;
 
 private:
-  Mutex mMutex;
   RefPtr<MediaEngineWebRTCMicrophoneSource> mAudioSource;
 };
 
@@ -385,16 +200,16 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource,
                                           public AudioDataListenerInterface
 {
 public:
-  MediaEngineWebRTCMicrophoneSource(mozilla::AudioInput* aAudioInput,
-                                    int aIndex,
-                                    const char* name,
-                                    const char* uuid,
+  MediaEngineWebRTCMicrophoneSource(RefPtr<AudioDeviceInfo> aInfo,
+                                    const nsString& name,
+                                    const nsCString& uuid,
+                                    uint32_t maxChannelCount,
                                     bool aDelayAgnostic,
                                     bool aExtendedFilter);
 
   bool RequiresSharing() const override
   {
-    return true;
+    return false;
   }
 
   nsString GetName() const override;
@@ -432,14 +247,21 @@ public:
             const PrincipalHandle& aPrincipalHandle) override;
 
   // AudioDataListenerInterface methods
-  void NotifyOutputData(MediaStreamGraph* aGraph,
+  void NotifyOutputData(MediaStreamGraphImpl* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
                         TrackRate aRate, uint32_t aChannels) override;
-  void NotifyInputData(MediaStreamGraph* aGraph,
+  void NotifyInputData(MediaStreamGraphImpl* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels) override;
 
-  void DeviceChanged() override;
+  void DeviceChanged(MediaStreamGraphImpl* aGraph) override;
+
+  uint32_t RequestedInputChannelCount(MediaStreamGraphImpl* aGraph) override
+  {
+    return GetRequestedInputChannelCount(aGraph);
+  }
+
+  void Disconnect(MediaStreamGraphImpl* aGraph) override;
 
   dom::MediaSourceEnum GetMediaSource() const override
   {
@@ -544,7 +366,7 @@ private:
                      size_t aFrames,
                      uint32_t aChannels);
 
-  void PacketizeAndProcess(MediaStreamGraph* aGraph,
+  void PacketizeAndProcess(MediaStreamGraphImpl* aGraph,
                            const AudioDataValue* aBuffer,
                            size_t aFrames,
                            TrackRate aRate,
@@ -554,18 +376,21 @@ private:
   // This is true when all processing is disabled, we can skip
   // packetization, resampling and other processing passes.
   // Graph thread only.
-  bool PassThrough() const;
+  bool PassThrough(MediaStreamGraphImpl* aGraphImpl) const;
 
   // Graph thread only.
   void SetPassThrough(bool aPassThrough);
+  uint32_t GetRequestedInputChannelCount(MediaStreamGraphImpl* aGraphImpl);
+  void SetRequestedInputChannelCount(uint32_t aRequestedInputChannelCount);
 
-  // Owning thread only.
+  // mListener is created on the MediaManager thread, and then sent to the MSG
+  // thread. On shutdown, we send this pointer to the MSG thread again, telling
+  // it to clean up.
   RefPtr<WebRTCAudioDataListener> mListener;
 
-  // Note: shared across all microphone sources. Owning thread only.
-  static int sChannelsOpen;
+  // Can be shared on any thread.
+  const RefPtr<AudioDeviceInfo> mDeviceInfo;
 
-  const RefPtr<mozilla::AudioInput> mAudioInput;
   const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
 
   // accessed from the GraphDriver thread except for deletion.
@@ -580,11 +405,10 @@ private:
   // the owning thread. Accessed under one of the two.
   nsTArray<Allocation> mAllocations;
 
-  // Current state of the shared resource for this source.
-  // Set under mMutex on the owning thread. Accessed under one of the two
-  MediaEngineSourceState mState = kReleased;
+  // Current state of the shared resource for this source. Written on the
+  // owning thread, read on either the owning thread or the MSG thread.
+  Atomic<MediaEngineSourceState> mState;
 
-  int mCapIndex;
   bool mDelayAgnostic;
   bool mExtendedFilter;
   bool mStarted;
@@ -596,6 +420,10 @@ private:
   // Member access is main thread only after construction.
   const nsMainThreadPtrHandle<media::Refcountable<dom::MediaTrackSettings>> mSettings;
 
+  // The number of channels asked for by content, after clamping to the range of
+  // legal channel count for this particular device. This is the number of
+  // channels of the input buffer passed as parameter in NotifyInputData.
+  uint32_t mRequestedInputChannelCount;
   uint64_t mTotalFrames;
   uint64_t mLastLogFrames;
 
@@ -649,14 +477,13 @@ private:
   void EnumerateSpeakerDevices(uint64_t aWindowId,
                                nsTArray<RefPtr<MediaDevice> >*);
 
-  nsCOMPtr<nsIThread> mThread;
-
   // gUM runnables can e.g. Enumerate from multiple threads
   Mutex mMutex;
-  RefPtr<mozilla::AudioInput> mAudioInput;
-  bool mFullDuplex;
-  bool mDelayAgnostic;
-  bool mExtendedFilter;
+  UniquePtr<mozilla::CubebDeviceEnumerator> mEnumerator;
+  const bool mDelayAgnostic;
+  const bool mExtendedFilter;
+  // This also is set in the ctor and then never changed, but we can't make it
+  // const because we pass it to a function that takes bool* in the ctor.
   bool mHasTabVideoSource;
 
   // Maps WindowID to a map of device uuid to their MediaEngineSource,

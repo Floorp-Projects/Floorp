@@ -46,6 +46,7 @@ class ComputedStyle;
 namespace dom {
 
 class CharacterData;
+class Text;
 class FlattenedChildIterator;
 
 } // namespace dom
@@ -57,6 +58,7 @@ public:
   typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
   typedef mozilla::dom::Element Element;
+  typedef mozilla::dom::Text Text;
 
   // FIXME(emilio): Is this really needed?
   friend class mozilla::RestyleManager;
@@ -780,6 +782,54 @@ private:
      pseudo-frames as needed */
   static const PseudoParentData sPseudoParentData[eParentTypeCount];
 
+  // The information that concerns the frame constructor after loading an XBL
+  // binding.
+  //
+  // This is expected to just be used temporarily to aggregate the different
+  // objects that LoadXBLBindingIfNeeded returns.
+  struct MOZ_STACK_CLASS XBLBindingLoadInfo
+  {
+    RefPtr<ComputedStyle> mStyle;
+    mozilla::UniquePtr<PendingBinding> mPendingBinding;
+    nsAtom* mTag = nullptr;
+
+    // For the 'no binding loaded' case.
+    XBLBindingLoadInfo(nsIContent&, ComputedStyle&);
+
+    // For the case we actually load an XBL binding.
+    XBLBindingLoadInfo(already_AddRefed<ComputedStyle> aStyle,
+                       mozilla::UniquePtr<PendingBinding> aPendingBinding,
+                       nsAtom* aTag);
+
+    // For the error case.
+    XBLBindingLoadInfo();
+  };
+
+  // Returns null mStyle / mTag members to signal an error.
+  XBLBindingLoadInfo LoadXBLBindingIfNeeded(nsIContent&,
+                                            ComputedStyle&,
+                                            uint32_t aFlags);
+
+  const FrameConstructionData* FindDataForContent(nsIContent&,
+                                                  ComputedStyle&,
+                                                  nsIFrame* aParentFrame,
+                                                  nsAtom* aTag,
+                                                  uint32_t aFlags);
+
+  // aParentFrame might be null.  If it is, that means it was an inline frame.
+  static const FrameConstructionData* FindTextData(const Text&,
+                                                   nsIFrame* aParentFrame);
+  const FrameConstructionData* FindElementData(const Element&,
+                                               ComputedStyle&,
+                                               nsIFrame* aParentFrame,
+                                               nsAtom* aTag,
+                                               uint32_t aFlags);
+  const FrameConstructionData* FindElementTagData(const Element&,
+                                                  ComputedStyle&,
+                                                  nsIFrame* aParentFrame,
+                                                  nsAtom* aTag,
+                                                  uint32_t aFlags);
+
   /* A function that takes an integer, content, style, and array of
      FrameConstructionDataByInts and finds the appropriate frame construction
      data to use and returns it.  This can return null if none of the integers
@@ -1104,8 +1154,8 @@ private:
       mIsText(false), mIsGeneratedContent(false),
       mIsAnonymousContentCreatorContent(false),
       mIsRootPopupgroup(false), mIsAllInline(false), mIsBlock(false),
-      mHasInlineEnds(false), mIsPopup(false),
-      mIsLineParticipant(false), mIsForSVGAElement(false)
+      mIsPopup(false),
+      mIsLineParticipant(false)
     {
       MOZ_COUNT_CTOR(FrameConstructionItem);
     }
@@ -1186,18 +1236,11 @@ private:
     // they might still be blocks (and in particular, out-of-flows that didn't
     // find a containing block).
     bool mIsBlock:1;
-    // Whether construction from this item will give leading and trailing
-    // inline frames.  This is equal to mIsAllInline, except for inline frame
-    // items, where it's always true, whereas mIsAllInline might be false due
-    // to {ib} splits.
-    bool mHasInlineEnds:1;
     // Whether construction from this item will create a popup that needs to
     // go into the global popup items.
     bool mIsPopup:1;
     // Whether this item should be treated as a line participant
     bool mIsLineParticipant:1;
-    // Whether this item is for an SVG <a> element
-    bool mIsForSVGAElement:1;
 
   private:
     // Not allocated from the general heap - instead, use the new/Delete APIs
@@ -1385,11 +1428,6 @@ private:
                                   const nsStyleDisplay* aStyleDisplay,
                                   nsFrameItems& aFrameItems);
 
-  // aParentFrame might be null.  If it is, that means it was an
-  // inline frame.
-  static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame,
-                                                   nsIContent* aTextContent);
-
   void ConstructTextFrame(const FrameConstructionData* aData,
                           nsFrameConstructorState& aState,
                           nsIContent*              aContent,
@@ -1509,7 +1547,6 @@ private:
   // be overriden by extends="" in XBL.
   static const FrameConstructionData* FindXULTagData(const Element&,
                                                      nsAtom* aTag,
-                                                     int32_t aNameSpaceID,
                                                      ComputedStyle&);
   // XUL data-finding helper functions and structures
 #ifdef MOZ_XUL

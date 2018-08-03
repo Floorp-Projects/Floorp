@@ -113,6 +113,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 #include "wasm/WasmJS.h"
+#include "wasm/WasmModule.h"
 
 #include "vm/Compartment-inl.h"
 #include "vm/ErrorObject-inl.h"
@@ -3206,7 +3207,7 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
             ReportCantOpenErrorUnknownEncoding(cx, script->filename());
             return false;
         }
-        auto closeFile = MakeScopeExit([file]() { fclose(file); });
+        auto closeFile = MakeScopeExit([file] { fclose(file); });
 
         jsbytecode* pc = script->code();
         jsbytecode* end = script->codeEnd();
@@ -5745,82 +5746,157 @@ DisableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-// Global mailbox that is used to communicate a SharedArrayBuffer
-// value from one worker to another.
+// Global mailbox that is used to communicate a shareable object value from one
+// worker to another.
 //
-// For simplicity we store only the SharedArrayRawBuffer; retaining
-// the SAB object would require per-runtime storage, and would have no
-// real benefits.
+// These object types are shareable:
 //
-// Invariant: when a SARB is in the mailbox its reference count is at
-// least 1, accounting for the reference from the mailbox.
+//   - SharedArrayBuffer
+//   - WasmMemoryObject (when constructed with shared:true)
+//   - WasmModuleObject
 //
-// The lock guards the mailbox variable and prevents a race where two
-// workers try to set the mailbox at the same time to replace a SARB
-// that is only referenced from the mailbox: the workers will both
-// decrement the reference count on the old SARB, and one of those
-// decrements will be on a garbage object.  We could implement this
-// with atomics and a CAS loop but it's not worth the bother.
+// For the SharedArrayBuffer and WasmMemoryObject we transmit the underlying
+// SharedArrayRawBuffer ("SARB"). For the WasmModuleObject we transmit the
+// underlying wasm::Module.  The transmitted types are refcounted.  When they
+// are in the mailbox their reference counts are at least 1, accounting for the
+// reference from the mailbox.
+//
+// The lock guards the mailbox variable and prevents a race where two workers
+// try to set the mailbox at the same time to replace an object that is only
+// referenced from the mailbox: the workers will both decrement the reference
+// count on the old object, and one of those decrements will be on a garbage
+// object.  We could implement this with atomics and a CAS loop but it's not
+// worth the bother.
+//
+// Note that if a thread reads the mailbox repeatedly it will get distinct
+// objects on each read.  The alternatives are to cache created objects locally,
+// but this retains storage we don't need to retain, or to somehow clear the
+// mailbox locally, but this creates a coordination headache.  Buyer beware.
 
-struct SharedArrayBufferMailbox
-{
-    SharedArrayBufferMailbox() : buffer(nullptr), length(0) {}
-
-    SharedArrayRawBuffer* buffer;
-    uint32_t              length;
+enum class MailboxTag {
+    Empty,
+    SharedArrayBuffer,
+    WasmMemory,
+    WasmModule
 };
 
-typedef ExclusiveData<SharedArrayBufferMailbox> SABMailbox;
+struct SharedObjectMailbox
+{
+    union Value {
+        struct {
+            SharedArrayRawBuffer* buffer;
+            uint32_t              length;
+        } sarb;
+        wasm::Module*             module;
+    };
+
+    SharedObjectMailbox() : tag(MailboxTag::Empty) {}
+
+    MailboxTag tag;
+    Value      val;
+};
+
+typedef ExclusiveData<SharedObjectMailbox> SOMailbox;
 
 // Never null after successful initialization.
-static SABMailbox* sharedArrayBufferMailbox;
+static SOMailbox* sharedObjectMailbox;
 
 static bool
-InitSharedArrayBufferMailbox()
+InitSharedObjectMailbox()
 {
-    sharedArrayBufferMailbox = js_new<SABMailbox>(mutexid::ShellArrayBufferMailbox);
-    return sharedArrayBufferMailbox != nullptr;
+    sharedObjectMailbox = js_new<SOMailbox>(mutexid::ShellObjectMailbox);
+    return sharedObjectMailbox != nullptr;
 }
 
 static void
-DestructSharedArrayBufferMailbox()
+DestructSharedObjectMailbox()
 {
     // All workers need to have terminated at this point.
 
     {
-        auto mbx = sharedArrayBufferMailbox->lock();
-        if (mbx->buffer)
-            mbx->buffer->dropReference();
+        auto mbx = sharedObjectMailbox->lock();
+        switch (mbx->tag) {
+          case MailboxTag::Empty:
+            break;
+          case MailboxTag::SharedArrayBuffer:
+          case MailboxTag::WasmMemory:
+            mbx->val.sarb.buffer->dropReference();
+            break;
+          case MailboxTag::WasmModule:
+            mbx->val.module->Release();
+            break;
+          default:
+            MOZ_CRASH();
+        }
     }
 
-    js_delete(sharedArrayBufferMailbox);
-    sharedArrayBufferMailbox = nullptr;
+    js_delete(sharedObjectMailbox);
+    sharedObjectMailbox = nullptr;
 }
 
 static bool
-GetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
+GetSharedObject(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject* newObj = nullptr;
+    RootedObject newObj(cx);
 
     {
-        auto mbx = sharedArrayBufferMailbox->lock();
+        auto mbx = sharedObjectMailbox->lock();
+        switch (mbx->tag) {
+          case MailboxTag::Empty: {
+            break;
+          }
+          case MailboxTag::SharedArrayBuffer:
+          case MailboxTag::WasmMemory: {
+            // Flag was set in the sender; ensure it is set in the receiver.
+            MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
-        if (SharedArrayRawBuffer* buf = mbx->buffer) {
+            SharedArrayRawBuffer* buf = mbx->val.sarb.buffer;
+            uint32_t length = mbx->val.sarb.length;
             if (!buf->addReference()) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_SAB_REFCNT_OFLO);
                 return false;
             }
+            auto dropBuf = MakeScopeExit([buf] { buf->dropReference(); });
 
-            // Shared memory is enabled globally in the shell: there can't be a worker
-            // that does not enable it if the main thread has it.
+            Rooted<ArrayBufferObjectMaybeShared*> maybesab(cx, SharedArrayBufferObject::New(cx, buf, length));
+            if (!maybesab)
+                return false;
+            if (mbx->tag == MailboxTag::SharedArrayBuffer) {
+                newObj = maybesab;
+            } else {
+                if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly))
+                    return false;
+
+                RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
+                newObj = WasmMemoryObject::create(cx, maybesab, proto);
+                MOZ_ASSERT_IF(newObj, newObj->as<WasmMemoryObject>().isShared());
+            }
+            if (!newObj)
+                return false;
+
+            dropBuf.release();
+
+            break;
+          }
+          case MailboxTag::WasmModule: {
+            // Flag was set in the sender; ensure it is set in the receiver.
             MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
-            newObj = SharedArrayBufferObject::New(cx, buf, mbx->length);
-            if (!newObj) {
-                buf->dropReference();
+            if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly))
                 return false;
-            }
+
+            // WasmModuleObject::create() increments the refcount on the module
+            // and signals an error and returns null if that fails.
+            RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+            newObj = WasmModuleObject::create(cx, *mbx->val.module, proto);
+            if (!newObj)
+                return false;
+            break;
+          }
+          default: {
+            MOZ_CRASH();
+          }
         }
     }
 
@@ -5829,35 +5905,77 @@ GetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-SetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
+SetSharedObject(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    SharedArrayRawBuffer* newBuffer = nullptr;
-    uint32_t newLength = 0;
 
-    if (args.get(0).isNullOrUndefined()) {
-        // Clear out the mailbox
-    }
-    else if (args.get(0).isObject() && args[0].toObject().is<SharedArrayBufferObject>()) {
-        newBuffer = args[0].toObject().as<SharedArrayBufferObject>().rawBufferObject();
-        newLength = args[0].toObject().as<SharedArrayBufferObject>().byteLength();
-        if (!newBuffer->addReference()) {
-            JS_ReportErrorASCII(cx, "Reference count overflow on SharedArrayBuffer");
+    MailboxTag tag = MailboxTag::Empty;
+    SharedObjectMailbox::Value value;
+
+    // Increase refcounts when we obtain the value to avoid operating on dead
+    // storage during self-assignment.
+
+    if (args.get(0).isObject()) {
+        RootedObject obj(cx, &args[0].toObject());
+        if (obj->is<SharedArrayBufferObject>()) {
+            Rooted<SharedArrayBufferObject*> sab(cx, &obj->as<SharedArrayBufferObject>());
+            tag = MailboxTag::SharedArrayBuffer;
+            value.sarb.buffer = sab->rawBufferObject();
+            value.sarb.length = sab->byteLength();
+            if (!value.sarb.buffer->addReference()) {
+                JS_ReportErrorASCII(cx, "Reference count overflow on SharedArrayBuffer");
+                return false;
+            }
+        } else if (obj->is<WasmMemoryObject>()) {
+            // Here we must transmit sab.byteLength() as the length; the SARB has its
+            // own notion of the length which may be greater, and that's fine.
+            if (obj->as<WasmMemoryObject>().isShared()) {
+                Rooted<SharedArrayBufferObject*> sab(cx, &obj->as<WasmMemoryObject>().buffer().as<SharedArrayBufferObject>());
+                tag = MailboxTag::WasmMemory;
+                value.sarb.buffer = sab->rawBufferObject();
+                value.sarb.length = sab->byteLength();
+                if (!value.sarb.buffer->addReference()) {
+                    JS_ReportErrorASCII(cx, "Reference count overflow on SharedArrayBuffer");
+                    return false;
+                }
+            } else {
+                JS_ReportErrorASCII(cx, "Invalid argument to SetSharedObject");
+                return false;
+            }
+        } else if (obj->is<WasmModuleObject>()) {
+            tag = MailboxTag::WasmModule;
+            value.module = &obj->as<WasmModuleObject>().module();
+            value.module->AddRef();
+        } else {
+            JS_ReportErrorASCII(cx, "Invalid argument to SetSharedObject");
             return false;
         }
+    } else if (args.get(0).isNullOrUndefined()) {
+        // Nothing
     } else {
-        JS_ReportErrorASCII(cx, "Only a SharedArrayBuffer can be installed in the global mailbox");
+        JS_ReportErrorASCII(cx, "Invalid argument to SetSharedObject");
         return false;
     }
 
     {
-        auto mbx = sharedArrayBufferMailbox->lock();
+        auto mbx = sharedObjectMailbox->lock();
 
-        if (SharedArrayRawBuffer* oldBuffer = mbx->buffer)
-            oldBuffer->dropReference();
+        switch (mbx->tag) {
+          case MailboxTag::Empty:
+            break;
+          case MailboxTag::SharedArrayBuffer:
+          case MailboxTag::WasmMemory:
+            mbx->val.sarb.buffer->dropReference();
+            break;
+          case MailboxTag::WasmModule:
+            mbx->val.module->Release();
+            break;
+          default:
+            MOZ_CRASH();
+        }
 
-        mbx->buffer = newBuffer;
-        mbx->length = newLength;
+        mbx->tag = tag;
+        mbx->val = value;
     }
 
     args.rval().setUndefined();
@@ -6958,17 +7076,25 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "evalInWorker(str)",
 "  Evaluate 'str' in a separate thread with its own runtime.\n"),
 
-    JS_FN_HELP("getSharedArrayBuffer", GetSharedArrayBuffer, 0, 0,
-"getSharedArrayBuffer()",
-"  Retrieve the SharedArrayBuffer object from the cross-worker mailbox.\n"
+    JS_FN_HELP("getSharedObject", GetSharedObject, 0, 0,
+"getSharedObject()",
+"  Retrieve the shared object from the cross-worker mailbox.\n"
 "  The object retrieved may not be identical to the object that was\n"
 "  installed, but it references the same shared memory.\n"
-"  getSharedArrayBuffer performs an ordering memory barrier.\n"),
+"  getSharedObject performs an ordering memory barrier.\n"),
 
-    JS_FN_HELP("setSharedArrayBuffer", SetSharedArrayBuffer, 0, 0,
-"setSharedArrayBuffer()",
-"  Install the SharedArrayBuffer object in the cross-worker mailbox.\n"
-"  setSharedArrayBuffer performs an ordering memory barrier.\n"),
+    JS_FN_HELP("setSharedObject", SetSharedObject, 0, 0,
+"setSharedObject(obj)",
+"  Install the shared object in the cross-worker mailbox.  The object\n"
+"  may be null.  setSharedObject performs an ordering memory barrier.\n"),
+
+    JS_FN_HELP("getSharedArrayBuffer", GetSharedObject, 0, 0,
+"getSharedArrayBuffer()",
+"  Obsolete alias for getSharedObject().\n"),
+
+    JS_FN_HELP("setSharedArrayBuffer", SetSharedObject, 0, 0,
+"setSharedArrayBuffer(obj)",
+"  Obsolete alias for setSharedObject(obj).\n"),
 
     JS_FN_HELP("shapeOf", ShapeOf, 1, 0,
 "shapeOf(obj)",
@@ -9153,7 +9279,7 @@ main(int argc, char** argv, char** envp)
     if (!JS_Init())
         return 1;
 
-    auto shutdownEngine = MakeScopeExit([]() { JS_ShutDown(); });
+    auto shutdownEngine = MakeScopeExit([] { JS_ShutDown(); });
 
     OptionParser op("Usage: {progname} [options] [[script] scriptArgs*]");
 
@@ -9399,7 +9525,7 @@ main(int argc, char** argv, char** envp)
     if (op.getBoolOption("suppress-minidump"))
         js::NoteIntentionalCrash();
 
-    if (!InitSharedArrayBufferMailbox())
+    if (!InitSharedObjectMailbox())
         return 1;
 
     // The fake CPU count must be set before initializing the Runtime,
@@ -9510,7 +9636,7 @@ main(int argc, char** argv, char** envp)
 
     KillWorkerThreads(cx);
 
-    DestructSharedArrayBufferMailbox();
+    DestructSharedObjectMailbox();
 
     CancelOffThreadJobsForRuntime(cx);
 

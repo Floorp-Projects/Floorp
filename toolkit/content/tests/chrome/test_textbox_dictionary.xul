@@ -51,17 +51,17 @@ function runContextMenuTest()
 {
   SimpleTest.executeSoon( function() {
     // The textbox has its children in an hbox XUL element, so get that first
-    var hbox = document.getAnonymousNodes(textbox).item(0);
+    var inputBox = document.getAnonymousElementByAttribute(textbox, "anonid", "moz-input-box");
     
-    var contextMenu = document.getAnonymousElementByAttribute(hbox, "anonid", "input-box-contextmenu");
+    var contextMenu = inputBox.menupopup;
    
     switch(testNum)
     {
       case 0: // "Add to Dictionary" button
-        var addToDict = contextMenu.querySelector("[anonid=spell-add-to-dictionary]");
+        var addToDict = inputBox.getMenuItem("spell-add-to-dictionary");
         ok(!addToDict.hidden, "Is Add to Dictionary visible?");
 
-        var separator = contextMenu.querySelector("[anonid=spell-suggestions-separator]");
+        var separator = inputBox.getMenuItem("spell-suggestions-separator");
         ok(!separator.hidden, "Is separator visible?");
 
         addToDict.doCommand();
@@ -75,10 +75,10 @@ function runContextMenuTest()
         break;
         
       case 1: // "Undo Add to Dictionary" button
-        var undoAddDict = contextMenu.querySelector("[anonid=spell-undo-add-to-dictionary]");
+        var undoAddDict = inputBox.getMenuItem("spell-undo-add-to-dictionary");
         ok(!undoAddDict.hidden, "Is Undo Add to Dictioanry visible?");
 
-        var separator = contextMenu.querySelector("[anonid=spell-suggestions-separator]");
+        var separator = inputBox.getMenuItem("spell-suggestions-separator");
         ok(!separator.hidden, "Is separator hidden?");
 
         undoAddDict.doCommand();

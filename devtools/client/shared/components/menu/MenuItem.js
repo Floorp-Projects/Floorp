@@ -118,14 +118,14 @@ class MenuItem extends PureComponent {
     }
 
     const textLabel = span(
-      { className: "label", ref: this.labelRef },
+      { key: "label", className: "label", ref: this.labelRef },
       this.props.label
     );
     const children = [textLabel];
 
     if (typeof this.props.accelerator !== "undefined") {
       const acceleratorLabel = span(
-        { className: "accelerator" },
+        { key: "accelerator", className: "accelerator" },
         this.props.accelerator
       );
       children.push(acceleratorLabel);

@@ -76,8 +76,7 @@ add_task(async function test_toolbar_contextmenu_touch() {
 add_task(async function test_urlbar_contextmenu_touch() {
   let urlbar = document.getElementById("urlbar");
   let textBox = document.getAnonymousElementByAttribute(urlbar,
-                                      "anonid", "textbox-input-box");
-  let menu = document.getAnonymousElementByAttribute(textBox,
-                                      "anonid", "input-box-contextmenu");
+                                      "anonid", "moz-input-box");
+  let menu = textBox.menupopup;
   await openAndCheckContextMenu(menu, textBox);
 });

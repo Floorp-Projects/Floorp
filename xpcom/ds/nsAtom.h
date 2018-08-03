@@ -107,7 +107,7 @@ protected:
   constexpr nsAtom(const char16_t* aStr, uint32_t aLength)
     : mLength(aLength)
     , mKind(static_cast<uint32_t>(nsAtom::AtomKind::Static))
-    , mHash(mozilla::ConstExprHashString(aStr))
+    , mHash(mozilla::HashString(aStr))
   {}
 
   // Used by nsDynamicAtom.

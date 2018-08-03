@@ -1,0 +1,38 @@
+<html lang="en" dir="ltr">
+<body>
+<div id="maindiv">Hello World!</div>
+</body>
+<script>
+const cpmm = SpecialPowers.Services.cpmm;
+function recordingFinished() {
+  cpmm.sendAsyncMessage("RecordingFinished");
+}
+var number = 0;
+function f() {
+  updateNumber();
+  if (number >= 10) {
+    window.setTimeout(recordingFinished);
+    return;
+  }
+  window.setTimeout(f, 1);
+}
+function updateNumber() {
+  number++;
+  document.getElementById("maindiv").innerHTML = "Number: " + number;
+  testStepping();
+}
+function testStepping() {
+  var a = 0;
+  testStepping2();
+  return a;
+}
+function testStepping2() {
+  var c = this; // Note: using 'this' causes the script to have a prologue.
+  c++;
+  c--;
+}
+window.setTimeout(f, 1);
+// Simulate a longer recording by marking major checkpoints whenever possible.
+SpecialPowers.Cu.recordReplayDirective(/* AlwaysMarkMajorCheckpoints */ 4);
+</script>
+</html>

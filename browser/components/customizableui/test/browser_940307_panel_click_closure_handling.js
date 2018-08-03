@@ -45,8 +45,8 @@ add_task(async function searchbar_in_panel() {
   searchbar.value = "foo";
   searchbar.focus();
   // Reaching into this context menu is pretty evil, but hey... it's a test.
-  let textbox = document.getAnonymousElementByAttribute(searchbar.textbox, "anonid", "textbox-input-box");
-  let contextmenu = document.getAnonymousElementByAttribute(textbox, "anonid", "input-box-contextmenu");
+  let textbox = document.getAnonymousElementByAttribute(searchbar.textbox, "anonid", "moz-input-box");
+  let contextmenu = textbox.menupopup;
   let contextMenuShown = promisePanelElementShown(window, contextmenu);
   EventUtils.synthesizeMouseAtCenter(searchbar, {type: "contextmenu", button: 2});
   await contextMenuShown;

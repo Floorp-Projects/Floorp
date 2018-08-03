@@ -414,10 +414,7 @@ def create_test_tree(metadata_path, test_manifest):
     """
     id_test_map = {}
     exclude_types = frozenset(["stub", "helper", "manual", "support", "conformancechecker"])
-    all_types = [item.item_type for item in manifestitem.__dict__.itervalues()
-                 if type(item) == type and
-                 issubclass(item, manifestitem.ManifestItem) and
-                 item.item_type is not None]
+    all_types = manifestitem.item_types.keys()
     include_types = set(all_types) - exclude_types
     for item_type, test_path, tests in test_manifest.itertypes(*include_types):
         test_file_data = TestFileData(intern(test_manifest.url_base.encode("utf8")),
