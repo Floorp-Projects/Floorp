@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:pathData="M11.2929,2.2929C11.6834,1.9024 12.3166,1.9024 12.7071,2.2929L21.7071,11.2929C22.0976,11.6834 22.0976,12.3166 21.7071,12.7071C21.3166,13.0976 20.6834,13.0976 20.2929,12.7071L19,11.4142L19,19C19,20.6569 17.6569,22 16,22L8,22C6.3431,22 5,20.6569 5,19L5,11.4142L3.7071,12.7071C3.3166,13.0976 2.6834,13.0976 2.2929,12.7071C1.9024,12.3166 1.9024,11.6834 2.2929,11.2929L11.2929,2.2929ZM12,4.4142L17,9.4142L17,19C17,19.5523 16.5523,20 16,20L15,20L15,14C15,12.8954 14.1046,12 13,12L11,12C9.8954,12 9,12.8954 9,14L9,20L8,20C7.4477,20 7,19.5523 7,19L7,9.4142L12,4.4142ZM14,16.5C14,16.7761 13.7761,17 13.5,17C13.2238,17 13,16.7761 13,16.5C13,16.2239 13.2238,16 13.5,16C13.7761,16 14,16.2239 14,16.5Z"
+      android:fillColor="#FFFFFF"
+      android:fillType="evenOdd"/>
+</vector>

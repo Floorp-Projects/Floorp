@@ -2,84 +2,86 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="64dp"
     android:background="@color/browser_menu_blocking_switch_bg"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingEnd="0dp"
-    android:paddingStart="16dp">
+    android:paddingStart="12dp"
+    android:paddingEnd="0dp">
 
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:src="@drawable/ic_trackers_blocked"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:contentDescription="@string/content_description_trackers_blocked"/>
-
-            <TextView
-                android:id="@+id/trackers_count"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:textColor="#ffffff"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="12sp"
-                app:autoSizeMaxTextSize="16sp"
-                tools:text="378"
-                tools:ignore="MissingPrefix" />
-
-        </FrameLayout>
-
-        <ImageButton
-            android:id="@+id/help_trackers"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:layout_marginTop="-16dp"
-            android:layout_marginStart="-12dp"
-            android:src="@drawable/ic_info"
-            android:contentDescription="@string/menu_help"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="@string/content_description_trackers_blocked"
+            android:src="@drawable/ic_trackers_blocked" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
-            android:ellipsize="end"
-            android:text="@string/menu_trackers_blocked_title"
-            android:textColor="@color/browser_menu_trackers_blocked_label"
-            android:textSize="16sp" />
+            android:id="@+id/trackers_count"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:textColor="#ffffff"
+            app:autoSizeMaxTextSize="16sp"
+            app:autoSizeMinTextSize="12sp"
+            app:autoSizeTextType="uniform"
+            tools:ignore="MissingPrefix"
+            tools:text="378" />
 
-    </LinearLayout>
+    </FrameLayout>
+
+    <ImageButton
+        android:id="@+id/help_trackers"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="36dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/menu_help"
+        android:src="@drawable/ic_info"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="end"
+        android:text="@string/menu_trackers_blocked_title"
+        android:textColor="@color/browser_menu_trackers_blocked_label"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/frameLayout"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Switch
         android:id="@+id/blocking_switch"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
-        android:layout_gravity="center_vertical|end"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:background="?android:attr/selectableItemBackground"
         android:checked="true"
         android:clickable="true"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:lines="1"
-        android:paddingEnd="16dp"
-        android:paddingStart="16dp"
         android:contentDescription="@string/content_description_blocking_switch"
-        android:textSize="16sp"/>
+        android:ellipsize="end"
+        android:lines="1"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>

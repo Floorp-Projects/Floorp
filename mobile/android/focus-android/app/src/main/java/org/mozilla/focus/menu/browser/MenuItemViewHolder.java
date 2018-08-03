@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.menu.browser;
 
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.TextView;
 
@@ -24,12 +25,18 @@ import org.mozilla.focus.R;
     /* package-private */ void bind(BrowserMenuAdapter.MenuItem.Default menuItem) {
         menuItemView.setId(menuItem.getId());
         menuItemView.setText(menuItem.getLabel());
-        menuItemView.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                menuItem.getDrawableResId(),
-                0,
-                0,
-                0
-        );
+        if (menuItem.getDrawableResId() != 0) {
+            final Drawable drawable = menuItemView.getContext().getDrawable(menuItem.getDrawableResId());
+            if (drawable != null) {
+                drawable.setTint(menuItemView.getContext().getResources().getColor(R.color.colorSettingsTint));
+                menuItemView.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        drawable,
+                        null,
+                        null,
+                        null
+                );
+            }
+        }
 
         final boolean isLoading = browserFragment.getSession().getLoading().getValue();
 

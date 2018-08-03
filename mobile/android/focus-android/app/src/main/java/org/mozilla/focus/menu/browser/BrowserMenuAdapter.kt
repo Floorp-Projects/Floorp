@@ -74,17 +74,37 @@ class BrowserMenuAdapter(
         items.add(MenuItem.BlockingSwitch)
 
         if (customTabConfig == null || customTabConfig.showShareMenuItem) {
-            items.add(MenuItem.Default(R.id.share, resources.getString(R.string.menu_share),
-                    R.drawable.ic_share_menu_item))
+            items.add(
+                MenuItem.Default(
+                    R.id.share, resources.getString(R.string.menu_share),
+                    R.drawable.ic_share
+                )
+            )
         }
 
-        items.add(MenuItem.Default(R.id.add_to_homescreen,
-                resources.getString(R.string.menu_add_to_home_screen), R.drawable.ic_add_to_home_menu_item))
-        items.add(MenuItem.Default(R.id.find_in_page, resources.getString(R.string.find_in_page), 0))
+        items.add(
+            MenuItem.Default(
+                R.id.add_to_homescreen,
+                resources.getString(R.string.menu_add_to_home_screen),
+                R.drawable.ic_home
+            )
+        )
+        items.add(
+            MenuItem.Default(
+                R.id.find_in_page,
+                resources.getString(R.string.find_in_page),
+                R.drawable.ic_search
+            )
+        )
 
         if (browsers.hasMultipleThirdPartyBrowsers(context)) {
-            items.add(MenuItem.Default(R.id.open_select_browser, resources.getString(
-                    R.string.menu_open_with_a_browser2), R.drawable.ic_open_in_menu_item))
+            items.add(
+                MenuItem.Default(
+                    R.id.open_select_browser, resources.getString(
+                        R.string.menu_open_with_a_browser2
+                    ), R.drawable.ic_open_in
+                )
+            )
         }
 
         if (customTabConfig != null) {
@@ -97,9 +117,16 @@ class BrowserMenuAdapter(
         }
 
         if (browsers.hasThirdPartyDefaultBrowser(context)) {
-            items.add(MenuItem.Default(R.id.open_default, resources.getString(
-                    R.string.menu_open_with_default_browser2, browsers.defaultBrowser!!.loadLabel(
-                    context.packageManager)), 0))
+            items.add(
+                MenuItem.Default(
+                    R.id.open_default, resources.getString(
+                        R.string.menu_open_with_default_browser2,
+                        browsers.defaultBrowser!!.loadLabel(
+                            context.packageManager
+                        )
+                    ), 0
+                )
+            )
         }
 
         items.add(MenuItem.RequestDesktopCheck)
@@ -107,18 +134,28 @@ class BrowserMenuAdapter(
         if (customTabConfig == null) {
             // There’s no need for Settings in a custom tab.
             // The user can go to the browser app itself in order to do this.
-            items.add(MenuItem.Default(R.id.settings, resources.getString(R.string.menu_settings),
-                    R.drawable.ic_settings_menu_item))
+            items.add(
+                MenuItem.Default(
+                    R.id.settings, resources.getString(R.string.menu_settings),
+                    R.drawable.ic_settings
+                )
+            )
         }
 
         if (AppConstants.isGeckoBuild(context)) {
             // "Report Site Issue" is available for builds using GeckoView only
-            items.add(MenuItem.Default(R.id.report_site_issue, resources.getString(R.string.menu_report_site_issue), 0))
+            items.add(
+                MenuItem.Default(
+                    R.id.report_site_issue,
+                    resources.getString(R.string.menu_report_site_issue),
+                    0
+                )
+            )
         }
 
         if (customTabConfig != null) {
             val customTabItems = customTabConfig.menuItems
-                    .map { MenuItem.Custom(R.id.custom_tab_menu_item, it.name, 0, it.pendingIntent) }
+                .map { MenuItem.Custom(R.id.custom_tab_menu_item, it.name, 0, it.pendingIntent) }
             items.addAll(customTabItems)
         }
     }
@@ -139,24 +176,33 @@ class BrowserMenuAdapter(
         return when (viewType) {
             NavigationItemViewHolder.LAYOUT_ID -> {
                 val navigationItemViewHolder = NavigationItemViewHolder(
-                        inflater.inflate(R.layout.menu_navigation, parent, false), fragment)
+                    inflater.inflate(R.layout.menu_navigation, parent, false), fragment
+                )
                 navigationItemViewHolderReference = WeakReference(navigationItemViewHolder)
                 navigationItemViewHolder
             }
             BlockingItemViewHolder.LAYOUT_ID -> {
                 val blockingItemViewHolder = BlockingItemViewHolder(
-                        inflater.inflate(R.layout.menu_blocking_switch, parent, false), fragment)
+                    inflater.inflate(R.layout.menu_blocking_switch, parent, false), fragment
+                )
                 blockingItemViewHolderReference = WeakReference(blockingItemViewHolder)
                 blockingItemViewHolder
             }
             RequestDesktopCheckItemViewHolder.LAYOUT_ID -> {
                 RequestDesktopCheckItemViewHolder(
-                        inflater.inflate(R.layout.request_desktop_check_menu_item, parent, false),
-                        fragment)
+                    inflater.inflate(R.layout.request_desktop_check_menu_item, parent, false),
+                    fragment
+                )
             }
-            MenuItemViewHolder.LAYOUT_ID -> MenuItemViewHolder(inflater.inflate(R.layout.menu_item, parent, false))
+            MenuItemViewHolder.LAYOUT_ID -> MenuItemViewHolder(
+                inflater.inflate(
+                    R.layout.menu_item,
+                    parent,
+                    false
+                )
+            )
             CustomTabMenuItemViewHolder.LAYOUT_ID -> CustomTabMenuItemViewHolder(
-                    inflater.inflate(R.layout.custom_tab_menu_item, parent, false)
+                inflater.inflate(R.layout.custom_tab_menu_item, parent, false)
             )
             else -> throw IllegalArgumentException("Unknown view type: $viewType")
         }
