@@ -256,7 +256,8 @@ TypedObjectPrediction::hasFieldNamedPrefix(const StructTypeDescr& descr,
                                            jsid id,
                                            size_t* fieldOffset,
                                            TypedObjectPrediction* out,
-                                           size_t* index) const
+                                           size_t* index,
+                                           bool* isMutable) const
 {
     // Find the index of the field |id| if any.
     if (!descr.fieldIndex(id, index))
@@ -269,6 +270,7 @@ TypedObjectPrediction::hasFieldNamedPrefix(const StructTypeDescr& descr,
     // Load the offset and type.
     *fieldOffset = descr.fieldOffset(*index);
     *out = TypedObjectPrediction(descr.fieldDescr(*index));
+    *isMutable = descr.fieldIsMutable(*index);
     return true;
 }
 
@@ -276,7 +278,8 @@ bool
 TypedObjectPrediction::hasFieldNamed(jsid id,
                                      size_t* fieldOffset,
                                      TypedObjectPrediction* fieldType,
-                                     size_t* fieldIndex) const
+                                     size_t* fieldIndex,
+                                     bool* fieldMutable) const
 {
     MOZ_ASSERT(kind() == type::Struct);
 
@@ -288,12 +291,12 @@ TypedObjectPrediction::hasFieldNamed(jsid id,
       case TypedObjectPrediction::Descr:
         return hasFieldNamedPrefix(
             descr().as<StructTypeDescr>(), ALL_FIELDS,
-            id, fieldOffset, fieldType, fieldIndex);
+            id, fieldOffset, fieldType, fieldIndex, fieldMutable);
 
       case TypedObjectPrediction::Prefix:
         return hasFieldNamedPrefix(
             *prefix().descr, prefix().fields,
-            id, fieldOffset, fieldType, fieldIndex);
+            id, fieldOffset, fieldType, fieldIndex, fieldMutable);
 
       default:
         MOZ_CRASH("Bad prediction kind");

@@ -659,6 +659,8 @@ NativeObject::maybeDensifySparseElements(JSContext* cx, HandleNativeObject obj)
 void
 NativeObject::moveShiftedElements()
 {
+    MOZ_ASSERT(isExtensible());
+
     ObjectElements* header = getElementsHeader();
     uint32_t numShifted = header->numShiftedElements();
     MOZ_ASSERT(numShifted > 0);
@@ -691,6 +693,8 @@ NativeObject::moveShiftedElements()
 void
 NativeObject::maybeMoveShiftedElements()
 {
+    MOZ_ASSERT(isExtensible());
+
     ObjectElements* header = getElementsHeader();
     MOZ_ASSERT(header->numShiftedElements() > 0);
 
@@ -702,6 +706,7 @@ NativeObject::maybeMoveShiftedElements()
 bool
 NativeObject::tryUnshiftDenseElements(uint32_t count)
 {
+    MOZ_ASSERT(isExtensible());
     MOZ_ASSERT(count > 0);
 
     ObjectElements* header = getElementsHeader();
@@ -717,7 +722,6 @@ NativeObject::tryUnshiftDenseElements(uint32_t count)
         // limit.
         if (header->initializedLength <= 10 ||
             header->isCopyOnWrite() ||
-            !isExtensible() ||
             header->hasNonwritableArrayLength() ||
             MOZ_UNLIKELY(count > ObjectElements::MaxShiftedElements))
         {
@@ -965,7 +969,7 @@ void
 NativeObject::shrinkElements(JSContext* cx, uint32_t reqCapacity)
 {
     MOZ_ASSERT(canHaveNonEmptyElements());
-    MOZ_ASSERT(reqCapacity >= getDenseInitializedLength());
+    MOZ_ASSERT(reqCapacity >= getDenseInitializedLengthUnchecked());
 
     if (denseElementsAreCopyOnWrite())
         MOZ_CRASH();

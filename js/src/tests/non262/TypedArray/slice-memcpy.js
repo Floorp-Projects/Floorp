@@ -51,7 +51,7 @@ for (var constructor of typedArrayConstructors) {
 }
 
 // Tricky: Same as above, but with SharedArrayBuffer and different compartments.
-if (typeof setSharedArrayBuffer === "function") {
+if (typeof setSharedObject === "function") {
     for (var constructor of typedArrayConstructors) {
         const elementSize = constructor.BYTES_PER_ELEMENT;
         let ts = new constructor(new SharedArrayBuffer(10 * elementSize));
@@ -62,13 +62,13 @@ if (typeof setSharedArrayBuffer === "function") {
         let ta = new constructor(ab, 0, 6);
         ta.constructor = {
             [Symbol.species]: function(len) {
-                setSharedArrayBuffer(ab);
+                setSharedObject(ab);
                 try {
                     return otherGlobal.eval(`
-                        new ${constructor.name}(getSharedArrayBuffer(), ${2 * elementSize}, ${len});
+                        new ${constructor.name}(getSharedObject(), ${2 * elementSize}, ${len});
                     `);
                 } finally {
-                    setSharedArrayBuffer(null);
+                    setSharedObject(null);
                 }
             }
         };

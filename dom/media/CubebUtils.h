@@ -10,7 +10,6 @@
 #include "cubeb/cubeb.h"
 #include "nsString.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Maybe.h"
 
 class AudioDeviceInfo;
 
@@ -54,6 +53,11 @@ cubeb_stream_prefs GetDefaultStreamPrefs();
 #ifdef MOZ_WIDGET_ANDROID
 uint32_t AndroidGetAudioOutputSampleRate();
 uint32_t AndroidGetAudioOutputFramesPerBuffer();
+#endif
+
+#ifdef ENABLE_SET_CUBEB_BACKEND
+void
+ForceSetCubebContext(cubeb* aCubebContext);
 #endif
 } // namespace CubebUtils
 } // namespace mozilla

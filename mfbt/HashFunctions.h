@@ -249,27 +249,14 @@ HashGeneric(Args... aArgs)
 namespace detail {
 
 template<typename T>
-HashNumber
+constexpr HashNumber
 HashUntilZero(const T* aStr)
 {
   HashNumber hash = 0;
-  for (T c; (c = *aStr); aStr++) {
+  for (; T c = *aStr; aStr++) {
     hash = AddToHash(hash, c);
   }
   return hash;
-}
-
-// This is a `constexpr` alternative to HashUntilZero(const T*). It should
-// only be used for compile-time computation because it uses recursion.
-// XXX: once support for GCC 4.9 is dropped, this function should be removed
-// and HashUntilZero(const T*) should be made `constexpr`.
-template<typename T>
-constexpr HashNumber
-ConstExprHashUntilZero(const T* aStr, HashNumber aHash)
-{
-  return !*aStr
-       ? aHash
-       : ConstExprHashUntilZero(aStr + 1, AddToHash(aHash, *aStr));
 }
 
 template<typename T>
@@ -310,25 +297,13 @@ HashString(const unsigned char* aStr, size_t aLength)
   return detail::HashKnownLength(aStr, aLength);
 }
 
-MOZ_MUST_USE inline HashNumber
-HashString(const char16_t* aStr)
-{
-  return detail::HashUntilZero(aStr);
-}
-
-// This is a `constexpr` alternative to HashString(const char16_t*). It should
-// only be used for compile-time computation because it uses recursion.
-//
 // You may need to use the
 // MOZ_{PUSH,POP}_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING macros if you use
 // this function. See the comment on those macros' definitions for more detail.
-//
-// XXX: once support for GCC 4.9 is dropped, this function should be removed
-// and HashString(const char16_t*) should be made `constexpr`.
 MOZ_MUST_USE constexpr HashNumber
-ConstExprHashString(const char16_t* aStr)
+HashString(const char16_t* aStr)
 {
-  return detail::ConstExprHashUntilZero(aStr, 0);
+  return detail::HashUntilZero(aStr);
 }
 
 MOZ_MUST_USE inline HashNumber

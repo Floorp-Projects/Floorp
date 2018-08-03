@@ -35,7 +35,7 @@ add_task(async function() {
     document.getAnonymousElementByAttribute(gBrowser.selectedTab, "anonid", "tab-label")
             .getBoundingClientRect();
   let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
-    "anonid", "textbox-input-box").getBoundingClientRect();
+    "anonid", "moz-input-box").getBoundingClientRect();
   let inRange = (val, min, max) => min <= val && val <= max;
 
   // Add a reflow observer and open a new tab.

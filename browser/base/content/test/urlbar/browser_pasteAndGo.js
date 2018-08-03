@@ -19,14 +19,12 @@ add_task(async function() {
         );
       });
       let textBox = document.getAnonymousElementByAttribute(gURLBar,
-        "anonid", "textbox-input-box");
-      let cxmenu = document.getAnonymousElementByAttribute(textBox,
-        "anonid", "input-box-contextmenu");
+        "anonid", "moz-input-box");
+      let cxmenu = textBox.menupopup;
       let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
       EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "contextmenu", button: 2});
       await cxmenuPromise;
-      let menuitem = document.getAnonymousElementByAttribute(textBox,
-        "anonid", "paste-and-go");
+      let menuitem = textBox.getMenuItem("paste-and-go");
       let browserLoadedPromise = BrowserTestUtils.browserLoaded(browser, false, url.replace(/\n/g, ""));
       EventUtils.synthesizeMouseAtCenter(menuitem, {});
       // Using toSource in order to get the newlines escaped:
@@ -49,14 +47,12 @@ add_task(async function() {
       );
     });
     let textBox = document.getAnonymousElementByAttribute(gURLBar,
-      "anonid", "textbox-input-box");
-    let cxmenu = document.getAnonymousElementByAttribute(textBox,
-      "anonid", "input-box-contextmenu");
+      "anonid", "moz-input-box");
+    let cxmenu = textBox.menupopup;
     let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
     EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "contextmenu", button: 2});
     await cxmenuPromise;
-    let menuitem = document.getAnonymousElementByAttribute(textBox,
-      "anonid", "paste-and-go");
+    let menuitem = textBox.getMenuItem("paste-and-go");
     let browserLoadedPromise = BrowserTestUtils.browserLoaded(browser, false, url.replace(/\u2028/g, ""));
     EventUtils.synthesizeMouseAtCenter(menuitem, {});
     // Using toSource in order to get the newlines escaped:

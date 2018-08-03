@@ -356,10 +356,10 @@
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="pref">
-      <xul:hbox class="menulist-editable-box textbox-input-box" xbl:inherits="context,disabled,readonly,focused" flex="1">
+      <xul:moz-input-box class="menulist-editable-box moz-input-box" xbl:inherits="context,disabled,readonly,focused" flex="1">
         <html:input class="menulist-editable-input" anonid="input" allowevents="true"
                     xbl:inherits="value=label,value,disabled,tabindex,readonly,placeholder"/>
-      </xul:hbox>
+      </xul:moz-input-box>
       <xul:dropmarker class="menulist-dropmarker" type="menu"
                       xbl:inherits="open,disabled,parentfocused=focused"/>
       <children includes="menupopup"/>

@@ -23,9 +23,12 @@ class UnscaledFontMac final : public UnscaledFont
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontMac, override)
-  explicit UnscaledFontMac(CGFontRef aFont, bool aIsDataFont = false)
+  explicit UnscaledFontMac(CGFontRef aFont,
+                           bool aIsDataFont = false,
+                           bool aNeedsCairo = false)
     : mFont(aFont)
     , mIsDataFont(aIsDataFont)
+    , mNeedsCairo(aNeedsCairo)
   {
     CFRetain(mFont);
   }
@@ -59,6 +62,7 @@ public:
 private:
   CGFontRef mFont;
   bool mIsDataFont;
+  bool mNeedsCairo;
 };
 
 } // namespace gfx

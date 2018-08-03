@@ -321,7 +321,7 @@ promise_test(async t => {
 promise_test(async t => {
   const pc1 = createPeerConnectionWithCleanup(t);
   const pc2 = createPeerConnectionWithCleanup(t);
-  const [track, stream] = await createTrackAndStreamWithCleanup(t);
+  const [track] = await createTrackAndStreamWithCleanup(t);
   pc1.addTransceiver(track, {streams:[]});
   const trackEvent = await exchangeOfferAndListenToOntrack(t, pc1, pc2);
   assert_equals(trackEvent.streams.length, 0, 'trackEvent.streams.length == 0');
@@ -330,7 +330,8 @@ promise_test(async t => {
 promise_test(async t => {
   const pc1 = createPeerConnectionWithCleanup(t);
   const pc2 = createPeerConnectionWithCleanup(t);
-  const [track, stream] = await createTrackAndStreamWithCleanup(t);
+  const [track] = await createTrackAndStreamWithCleanup(t);
+  const stream = new MediaStream();
   pc1.addTransceiver(track, {streams:[stream]});
   const trackEvent = await exchangeOfferAndListenToOntrack(t, pc1, pc2);
   assert_equals(trackEvent.streams.length, 1, 'trackEvent.streams.length == 1');
@@ -341,7 +342,7 @@ promise_test(async t => {
 promise_test(async t => {
   const pc1 = createPeerConnectionWithCleanup(t);
   const pc2 = createPeerConnectionWithCleanup(t);
-  const [track, stream] = await createTrackAndStreamWithCleanup(t);
+  const [track] = await createTrackAndStreamWithCleanup(t);
   const stream0 = new MediaStream();
   const stream1 = new MediaStream();
   pc1.addTransceiver(track, {streams:[stream0, stream1]});
@@ -356,8 +357,8 @@ promise_test(async t => {
 promise_test(async t => {
   const pc1 = createPeerConnectionWithCleanup(t);
   const pc2 = createPeerConnectionWithCleanup(t);
-  const [track, stream] = await createTrackAndStreamWithCleanup(t);
-  pc1.addTrack(track, stream);
+  const [track] = await createTrackAndStreamWithCleanup(t);
+  pc1.addTrack(track);
   const trackEvent = await exchangeOfferAndListenToOntrack(t, pc1, pc2);
   assert_equals(trackEvent.streams.length, 0, 'trackEvent.streams.length == 0');
 }, 'addTrack(0 streams): ontrack fires with no stream');
@@ -365,7 +366,8 @@ promise_test(async t => {
 promise_test(async t => {
   const pc1 = createPeerConnectionWithCleanup(t);
   const pc2 = createPeerConnectionWithCleanup(t);
-  const [track, stream] = await createTrackAndStreamWithCleanup(t);
+  const [track] = await createTrackAndStreamWithCleanup(t);
+  const stream = new MediaStream();
   pc1.addTrack(track, stream);
   const trackEvent = await exchangeOfferAndListenToOntrack(t, pc1, pc2);
   assert_equals(trackEvent.streams.length, 1, 'trackEvent.streams.length == 1');
@@ -376,7 +378,7 @@ promise_test(async t => {
 promise_test(async t => {
   const pc1 = createPeerConnectionWithCleanup(t);
   const pc2 = createPeerConnectionWithCleanup(t);
-  const [track, stream] = await createTrackAndStreamWithCleanup(t);
+  const [track] = await createTrackAndStreamWithCleanup(t);
   const stream0 = new MediaStream();
   const stream1 = new MediaStream();
   pc1.addTrack(track, stream0, stream1);

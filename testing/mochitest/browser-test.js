@@ -503,8 +503,6 @@ Tester.prototype = {
       this._coverageCollector = new CoverageCollector(coveragePath);
     }
 
-    this.PerTestCoverageUtils.beforeTestSync();
-
     this.structuredLogger.info("*** Start BrowserChrome Test Results ***");
     Services.console.registerListener(this);
     this._globalProperties = Object.keys(window);
@@ -514,6 +512,8 @@ Tester.prototype = {
       "__SS_tabsToRestore", "__SSi",
       "webConsoleCommandController",
     ];
+
+    this.PerTestCoverageUtils.beforeTestSync();
 
     if (this.tests.length) {
       this.waitForWindowsReady().then(() => {
