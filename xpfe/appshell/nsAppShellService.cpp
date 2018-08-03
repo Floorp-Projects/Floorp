@@ -452,24 +452,9 @@ public:
     mInterfaceRequestor = do_QueryInterface(aBrowser);
   }
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIWINDOWLESSBROWSER
   NS_FORWARD_SAFE_NSIWEBNAVIGATION(mWebNavigation)
   NS_FORWARD_SAFE_NSIINTERFACEREQUESTOR(mInterfaceRequestor)
-
-  NS_IMETHOD
-  Close() override
-  {
-    NS_ENSURE_TRUE(!mClosed, NS_ERROR_UNEXPECTED);
-    NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
-                 "WindowlessBrowser::Close called when not safe to run scripts");
-
-    mClosed = true;
-
-    mWebNavigation = nullptr;
-    mInterfaceRequestor = nullptr;
-
-    nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mBrowser);
-    return window->Destroy();
-  }
 
 protected:
   virtual ~WindowlessBrowser()
@@ -499,6 +484,33 @@ private:
 };
 
 NS_IMPL_ISUPPORTS(WindowlessBrowser, nsIWindowlessBrowser, nsIWebNavigation, nsIInterfaceRequestor)
+
+NS_IMETHODIMP
+WindowlessBrowser::Close()
+{
+  NS_ENSURE_TRUE(!mClosed, NS_ERROR_UNEXPECTED);
+  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+               "WindowlessBrowser::Close called when not safe to run scripts");
+
+  mClosed = true;
+
+  mWebNavigation = nullptr;
+  mInterfaceRequestor = nullptr;
+
+  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mBrowser);
+  return window->Destroy();
+}
+
+NS_IMETHODIMP
+WindowlessBrowser::GetDocShell(nsIDocShell** aDocShell)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mInterfaceRequestor);
+  if (!docShell) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  docShell.forget(aDocShell);
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP

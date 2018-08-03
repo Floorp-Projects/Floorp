@@ -6,10 +6,9 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 add_task(async function() {
   let webNav = Services.appShell.createWindowlessBrowser(false);
 
-  let loadContext = webNav.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsILoadContext);
+  let docShell = webNav.docShell;
 
-  let docShell = webNav.getInterface(Ci.nsIDocShell);
+  let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
 
   equal(loadContext.usePrivateBrowsing, false, "Should start out in non-private mode");
 
