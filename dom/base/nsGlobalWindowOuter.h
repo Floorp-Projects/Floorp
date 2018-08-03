@@ -561,7 +561,6 @@ public:
   }
   void GetNameOuter(nsAString& aName);
   void SetNameOuter(const nsAString& aName, mozilla::ErrorResult& aError);
-  mozilla::dom::Location* GetLocation() override;
   void GetStatusOuter(nsAString& aStatus);
   void SetStatusOuter(const nsAString& aStatus);
   void CloseOuter(bool aTrustedCaller);
