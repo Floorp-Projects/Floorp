@@ -1619,7 +1619,8 @@ GetDirectoryPath(const char *aPath) {
 #endif // DEBUG
 
 extern "C" {
-void CGSSetDenyWindowServerConnections(bool);
+CGError
+CGSSetDenyWindowServerConnections(bool);
 void CGSShutdownServerConnections();
 };
 
@@ -1631,13 +1632,15 @@ StartMacOSContentSandbox()
     return false;
   }
 
-  if (!XRE_UseNativeEventProcessing()) {
+  if (Preferences::GetBool(
+        "security.sandbox.content.mac.disconnect-windowserver")) {
     // If we've opened a connection to the window server, shut it down now. Forbid
     // future connections as well. We do this for sandboxing, but it also ensures
     // that the Activity Monitor will not label the content process as "Not
     // responding" because it's not running a native event loop. See bug 1384336.
-    CGSSetDenyWindowServerConnections(true);
     CGSShutdownServerConnections();
+    CGError result = CGSSetDenyWindowServerConnections(true);
+    MOZ_DIAGNOSTIC_ASSERT(result == kCGErrorSuccess);
   }
 
   nsAutoCString appPath, appBinaryPath, appDir;

@@ -667,13 +667,19 @@ static void adjust_eh_frame(ElfSection* eh_frame, unsigned int origAddr, Elf* el
 
     // Decoding of eh_frame based on https://www.airs.com/blog/archives/460
     while (size) {
-        if (size < 2 * sizeof(uint32_t)) goto malformed;
+        if (size < sizeof(uint32_t)) goto malformed;
 
         serializable<FixedSizeData<uint32_t>> entryLength(data, size, elf->getClass(), elf->getData());
         if (!advance_buffer(&data, &size, sizeof(uint32_t))) goto malformed;
 
         char* cursor = data;
         size_t length = entryLength.value;
+
+        if (length == 0) {
+            continue;
+        }
+
+        if (size < sizeof(uint32_t)) goto malformed;
 
         serializable<FixedSizeData<uint32_t>> id(data, size, elf->getClass(), elf->getData());
         if (!advance_buffer(&cursor, &length, sizeof(uint32_t))) goto malformed;

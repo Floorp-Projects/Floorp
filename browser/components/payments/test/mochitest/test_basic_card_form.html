@@ -347,6 +347,53 @@ add_task(async function test_edit() {
 
   form.remove();
 });
+
+add_task(async function test_field_validity_updates() {
+  let form = new BasicCardForm();
+  form.dataset.updateButtonLabel = "Add";
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let ccNumber = form.form.querySelector("#cc-number");
+  let nameInput = form.form.querySelector("#cc-name");
+
+  info("test with valid cc-number but missing cc-name");
+  ccNumber.focus();
+  sendString("4111111111111111");
+  ok(ccNumber.checkValidity(), "cc-number field is valid with good input");
+  ok(!nameInput.checkValidity(), "cc-name field is invalid when empty");
+  ok(form.saveButton.disabled, "Save button should be disabled with incomplete input");
+
+  info("correct by adding cc-name value");
+  nameInput.focus();
+  sendString("First");
+  ok(ccNumber.checkValidity(), "cc-number field is valid with good input");
+  ok(nameInput.checkValidity(), "cc-name field is valid with a value");
+  ok(!form.saveButton.disabled, "Save button should not be disabled with good input");
+
+  info("edit to make the cc-number invalid");
+  ccNumber.focus();
+  sendString("aa");
+  nameInput.focus();
+  sendString("Surname");
+
+  ok(!ccNumber.checkValidity(), "cc-number field becomes invalid with bad input");
+  ok(nameInput.checkValidity(), "cc-name field is valid with a value");
+  ok(form.saveButton.disabled, "Save button becomes disabled with bad input");
+
+  info("fix the cc-number to make it all valid again");
+  ccNumber.focus();
+  sendKey("BACK_SPACE");
+  sendKey("BACK_SPACE");
+  info("after backspaces, ccNumber.value: " + ccNumber.value);
+
+  ok(ccNumber.checkValidity(), "cc-number field becomes valid with corrected input");
+  ok(nameInput.checkValidity(), "cc-name field is valid with a value");
+  ok(!form.saveButton.disabled, "Save button is no longer disabled with corrected input");
+
+  form.remove();
+});
 </script>
 
 </body>
