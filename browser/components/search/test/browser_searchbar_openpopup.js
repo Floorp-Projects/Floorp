@@ -200,7 +200,7 @@ add_no_popup_task(async function right_click_doesnt_open_popup() {
   gURLBar.focus();
   textbox.value = "foo";
 
-  let contextPopup = document.getAnonymousElementByAttribute(textbox.inputField.parentNode, "anonid", "input-box-contextmenu");
+  let contextPopup = textbox.inputField.parentNode.menupopup;
   let promise = promiseEvent(contextPopup, "popupshown");
   context_click(textbox);
   await promise;
@@ -302,9 +302,7 @@ add_task(async function contextmenu_closes_popup() {
 
   await promise;
 
-  let contextPopup =
-    document.getAnonymousElementByAttribute(textbox.inputField.parentNode,
-                                            "anonid", "input-box-contextmenu");
+  let contextPopup = textbox.inputField.parentNode.menupopup;
   promise = promiseEvent(contextPopup, "popuphidden");
   contextPopup.hidePopup();
   await promise;

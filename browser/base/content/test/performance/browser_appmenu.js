@@ -43,7 +43,7 @@ add_task(async function() {
   await ensureNoPreloadedBrowser();
 
   let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
-    "anonid", "textbox-input-box").getBoundingClientRect();
+    "anonid", "moz-input-box").getBoundingClientRect();
   let menuButtonRect =
     document.getElementById("PanelUI-menu-button").getBoundingClientRect();
   let frameExpectations = {

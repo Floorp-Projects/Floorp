@@ -71,7 +71,7 @@ textbox[type="search"].compact {
   font-size: 11px;
 }
 
-textbox[type="search"].compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+textbox[type="search"].compact > moz-input-box > .textbox-search-icons > .textbox-search-clear {
   width: 11px;
 }
 
