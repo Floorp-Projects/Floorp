@@ -29,6 +29,24 @@ export default class AddressPicker extends RichPicker {
     }
   }
 
+  get fieldNames() {
+    if (this.hasAttribute("address-fields")) {
+      let names = this.getAttribute("address-fields").split(/\s+/);
+      if (names.length) {
+        return names;
+      }
+    }
+
+    return [
+      "address-level1",
+      "address-level2",
+      "country",
+      "name",
+      "postal-code",
+      "street-address",
+    ];
+  }
+
   /**
    * De-dupe and filter addresses for the given set of fields that will be visible
    *
@@ -37,14 +55,7 @@ export default class AddressPicker extends RichPicker {
    *                              de-duping and excluding entries
    * @returns {object} filtered copy of given addresses
    */
-  filterAddresses(addresses, fieldNames = [
-    "address-level1",
-    "address-level2",
-    "country",
-    "name",
-    "postal-code",
-    "street-address",
-  ]) {
+  filterAddresses(addresses, fieldNames = this.fieldNames) {
     let uniques = new Set();
     let result = {};
     for (let [guid, address] of Object.entries(addresses)) {
@@ -72,14 +83,7 @@ export default class AddressPicker extends RichPicker {
   render(state) {
     let addresses = paymentRequest.getAddresses(state);
     let desiredOptions = [];
-    let fieldNames;
-    if (this.hasAttribute("address-fields")) {
-      let names = this.getAttribute("address-fields").split(/\s+/);
-      if (names.length) {
-        fieldNames = names;
-      }
-    }
-    let filteredAddresses = this.filterAddresses(addresses, fieldNames);
+    let filteredAddresses = this.filterAddresses(addresses, this.fieldNames);
     for (let [guid, address] of Object.entries(filteredAddresses)) {
       let optionEl = this.dropdown.getOptionByValue(guid);
       if (!optionEl) {
