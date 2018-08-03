@@ -17,7 +17,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "nsDataHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsIMemoryReporter.h"
 #include "nsINamed.h"
 #include "nsIRunnable.h"
@@ -378,17 +378,44 @@ public:
    * to the audio output stream. Returns the number of frames played.
    */
   StreamTime PlayAudio(MediaStream* aStream);
-  /**
-   * No more data will be forthcoming for aStream. The stream will end
-   * at the current buffer end point. The StreamTracks's tracks must be
-   * explicitly set to finished by the caller.
-   */
-  void OpenAudioInputImpl(int aID,
-                          AudioDataListener *aListener);
-  virtual nsresult OpenAudioInput(int aID,
-                                  AudioDataListener *aListener) override;
-  void CloseAudioInputImpl(AudioDataListener *aListener);
-  virtual void CloseAudioInput(AudioDataListener *aListener) override;
+  /* Runs off a message on the graph thread when something requests audio from
+   * an input audio device of ID aID, and delivers the input audio frames to
+   * aListener. */
+  void OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
+                          AudioDataListener* aListener);
+  /* Called on the main thread when something requests audio from an input
+   * audio device aID. */
+  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
+                                  AudioDataListener* aListener) override;
+  /* Runs off a message on the graph when input audio from aID is not needed
+   * anymore, for a particular stream. It can be that other streams still need
+   * audio from this audio input device. */
+  void CloseAudioInputImpl(Maybe<CubebUtils::AudioDeviceID>& aID,
+                           AudioDataListener* aListener);
+  /* Called on the main thread when input audio from aID is not needed
+   * anymore, for a particular stream. It can be that other streams still need
+   * audio from this audio input device. */
+  virtual void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
+                               AudioDataListener* aListener) override;
+  /* Called on the graph thread when the input device settings should be
+   * reevaluated, for example, if the channel count of the input stream should
+   * be changed. */
+  void ReevaluateInputDevice();
+  /* Called on the graph thread when there is new output data for listeners.
+   * This is the mixed audio output of this MediaStreamGraph. */
+  void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
+                        TrackRate aRate, uint32_t aChannels);
+  /* Called on the graph thread when there is new input data for listeners. This
+   * is the raw audio input for this MediaStreamGraph. */
+  void NotifyInputData(const AudioDataValue* aBuffer, size_t aFrames,
+                       TrackRate aRate, uint32_t aChannels);
+  /* Called every time there are changes to input/output audio devices like
+   * plug/unplug etc. This can be called on any thread, and posts a message to
+   * the main thread so that it can post a message to the graph thread. */
+  void DeviceChanged();
+  /* Called every time there are changes to input/output audio devices. This is
+   * called on the graph thread. */
+  void DeviceChangedImpl();
 
   /**
    * Compute how much stream data we would like to buffer for aStream.
@@ -427,9 +454,44 @@ public:
     mStreamOrderDirty = true;
   }
 
-  uint32_t AudioChannelCount() const
+  uint32_t AudioOutputChannelCount() const
   {
     return mOutputChannels;
+  }
+
+  /**
+   * The audio input channel count for a MediaStreamGraph is the max of all the
+   * channel counts requested by the listeners. The max channel count is
+   * delivered to the listeners themselves, and they take care of downmixing.
+   */
+  uint32_t AudioInputChannelCount()
+  {
+    MOZ_ASSERT(OnGraphThreadOrNotRunning());
+
+    if (!mInputDeviceID) {
+#ifndef ANDROID
+      MOZ_ASSERT(mInputDeviceUsers.Count() == 0,
+        "If running on a platform other than android,"
+        "an explicit device id should be present");
+#endif
+      return 0;
+    }
+    uint32_t maxInputChannels = 0;
+    // When/if we decide to support multiple input device per graph, this needs
+    // loop over them.
+    nsTArray<RefPtr<AudioDataListener>>* listeners =
+      mInputDeviceUsers.GetValue(mInputDeviceID);
+    MOZ_ASSERT(listeners);
+    for (const auto& listener : *listeners) {
+      maxInputChannels =
+        std::max(maxInputChannels, listener->RequestedInputChannelCount(this));
+    }
+    return maxInputChannels;
+  }
+
+  CubebUtils::AudioDeviceID InputDeviceID()
+  {
+    return mInputDeviceID;
   }
 
   double MediaTimeToSeconds(GraphTime aTime) const
@@ -626,16 +688,22 @@ public:
   int32_t mPortCount;
 
   /**
-   * Devices to use for cubeb input & output, or NULL for no input (void*),
-   * and boolean to control if we want input/output
+   * Devices to use for cubeb input & output, or nullptr for default device.
+   * A MediaStreamGraph always has an output (even if silent).
+   * If `mInputDeviceUsers.Count() != 0`, this MediaStreamGraph wants audio
+   * input.
+   *
+   * In any case, the number of channels to use can be queried (on the graph
+   * thread) by AudioInputChannelCount() and AudioOutputChannelCount().
    */
-  bool mInputWanted;
-  int mInputDeviceID;
-  bool mOutputWanted;
-  int mOutputDeviceID;
-  // Maps AudioDataListeners to a usecount of streams using the listener
-  // so we can know when it's no longer in use.
-  nsDataHashtable<nsPtrHashKey<AudioDataListener>, uint32_t> mInputDeviceUsers;
+  CubebUtils::AudioDeviceID mInputDeviceID;
+  CubebUtils::AudioDeviceID mOutputDeviceID;
+  // Maps AudioDeviceID to an array of their users (that are listeners). This is
+  // used to deliver audio input frames and to notify the listeners that the
+  // audio device that delivers the audio frames has changed.
+  // This is only touched on the graph thread.
+  nsDataHashtable<nsVoidPtrHashKey,
+                  nsTArray<RefPtr<AudioDataListener>>> mInputDeviceUsers;
 
   // True if the graph needs another iteration after the current iteration.
   Atomic<bool> mNeedAnotherIteration;

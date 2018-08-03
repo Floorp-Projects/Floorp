@@ -526,7 +526,7 @@ DeleteArrayElement(JSContext* cx, HandleObject obj, uint64_t index, ObjectOpResu
                 if (!aobj->maybeCopyElementsForWrite(cx))
                     return false;
                 if (idx+1 == aobj->getDenseInitializedLength()) {
-                    aobj->setDenseInitializedLength(idx);
+                    aobj->setDenseInitializedLengthMaybeNonExtensible(cx, idx);
                 } else {
                     aobj->markDenseElementsNotPacked(cx);
                     aobj->setDenseElement(idx, MagicValue(JS_ELEMENTS_HOLE));
@@ -790,7 +790,7 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
             uint32_t oldInitializedLength = arr->getDenseInitializedLength();
             MOZ_ASSERT(oldCapacity >= oldInitializedLength);
             if (oldInitializedLength > newLen)
-                arr->setDenseInitializedLength(newLen);
+                arr->setDenseInitializedLengthMaybeNonExtensible(cx, newLen);
             if (oldCapacity > newLen)
                 arr->shrinkElements(cx, newLen);
 
@@ -929,6 +929,9 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     // necessary.)
     ObjectElements* header = arr->getElementsHeader();
     header->initializedLength = Min(header->initializedLength, newLen);
+
+    if (!arr->isExtensible())
+        arr->shrinkCapacityToInitializedLength(cx);
 
     if (attrs & JSPROP_READONLY)
         arr->setNonWritableLength(cx);
@@ -2395,6 +2398,8 @@ js::ArrayShiftMoveElements(NativeObject* obj)
 static inline void
 SetInitializedLength(JSContext* cx, NativeObject* obj, size_t initlen)
 {
+    MOZ_ASSERT(obj->isExtensible());
+
     size_t oldInitlen = obj->getDenseInitializedLength();
     obj->setDenseInitializedLength(initlen);
     if (initlen < oldInitlen)
@@ -2405,8 +2410,7 @@ static DenseElementResult
 MoveDenseElements(JSContext* cx, NativeObject* obj, uint32_t dstStart, uint32_t srcStart,
                   uint32_t length)
 {
-    if (!obj->isExtensible())
-        return DenseElementResult::Incomplete;
+    MOZ_ASSERT(obj->isExtensible());
 
     if (!obj->maybeCopyElementsForWrite(cx))
         return DenseElementResult::Failure;
@@ -2422,6 +2426,9 @@ ArrayShiftDenseKernel(JSContext* cx, HandleObject obj, MutableHandleValue rval)
         return DenseElementResult::Incomplete;
 
     if (MaybeInIteration(obj, cx))
+        return DenseElementResult::Incomplete;
+
+    if (!obj->as<NativeObject>().isExtensible())
         return DenseElementResult::Incomplete;
 
     size_t initlen = obj->as<NativeObject>().getDenseInitializedLength();

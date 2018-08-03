@@ -567,7 +567,7 @@ html|input.urlbar-input {
   }
 }
 
-#editBMPanel_tagsField > .textbox-input-box > html|*.textbox-input::placeholder {
+#editBMPanel_tagsField > moz-input-box > html|*.textbox-input::placeholder {
   opacity: 1.0;
   color: #bbb;
 }

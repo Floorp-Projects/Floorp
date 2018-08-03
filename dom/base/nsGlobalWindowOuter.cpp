@@ -1920,7 +1920,12 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
         // recreate them when the innerWindow is reused.
         newInnerWindow->mLocalStorage = nullptr;
         newInnerWindow->mSessionStorage = nullptr;
+        newInnerWindow->mPerformance = nullptr;
 
+        // This must be called after nullifying the internal objects because
+        // here we could recreate them, calling the getter methods, and store
+        // them into the JS slots. If we nullify them after, the slot values and
+        // the objects will be out of sync.
         newInnerWindow->ClearDocumentDependentSlots(cx);
 
         // When replacing an initial about:blank document we call
@@ -6430,6 +6435,7 @@ nsGlobalWindowOuter::GetPrivateRoot()
   return top;
 }
 
+// This has a caller in Windows-only code (nsNativeAppSupportWin).
 Location*
 nsGlobalWindowOuter::GetLocation()
 {

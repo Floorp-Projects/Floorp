@@ -2,7 +2,7 @@
 // in exclusion work.  This test is not 100% fail-safe: the test may
 // pass despite a bug, but this is unlikely.
 
-if (!(this.SharedArrayBuffer && this.getSharedArrayBuffer && this.setSharedArrayBuffer && this.evalInWorker))
+if (!(this.SharedArrayBuffer && this.getSharedObject && this.setSharedObject && this.evalInWorker))
     quit(0);
 
 try {
@@ -37,7 +37,7 @@ const evenResult = 0;
 
 const sab = new SharedArrayBuffer(sabLength);
 
-setSharedArrayBuffer(sab);
+setSharedObject(sab);
 
 const iab = new Int32Array(sab);
 
@@ -47,7 +47,7 @@ function testRun(limit) {
     // Fork off workers to hammer on memory.
     for ( var i=0 ; i < numWorkers ; i++ ) {
         evalInWorker(`
-                     const iab = new Int32Array(getSharedArrayBuffer());
+                     const iab = new Int32Array(getSharedObject());
                      const v = 1 << (8 * ${i});
                      for ( var i=0 ; i < ${limit} ; i++ ) {
                          for ( var k=0 ; k < ${iterCount} ; k++ ) {

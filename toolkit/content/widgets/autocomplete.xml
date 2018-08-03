@@ -14,12 +14,12 @@
     <content sizetopopup="pref">
       <children includes="image|deck|stack|box"/>
 
-      <xul:hbox anonid="textbox-input-box" class="textbox-input-box" flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
+      <xul:moz-input-box anonid="moz-input-box" flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
         <children/>
         <html:input anonid="input" class="autocomplete-textbox textbox-input"
                     allowevents="true"
                     xbl:inherits="tooltiptext=inputtooltiptext,value,type=inputtype,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint"/>
-      </xul:hbox>
+      </xul:moz-input-box>
       <children includes="hbox"/>
 
       <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>

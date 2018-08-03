@@ -1340,8 +1340,7 @@ void
 RestoreMemoryToLastSavedCheckpoint()
 {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
-
-  AutoDisallowMemoryChanges disallow;
+  MOZ_RELEASE_ASSERT(!gMemoryInfo->mMemoryChangesAllowed);
 
   // Restore all dirty regions that have been modified since the last
   // checkpoint was saved/restored.
@@ -1357,9 +1356,8 @@ void
 RestoreMemoryToLastSavedDiffCheckpoint()
 {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
+  MOZ_RELEASE_ASSERT(!gMemoryInfo->mMemoryChangesAllowed);
   MOZ_RELEASE_ASSERT(gMemoryInfo->mActiveDirty.empty());
-
-  AutoDisallowMemoryChanges disallow;
 
   // Wait while the snapshot threads restore all pages modified since the diff
   // snapshot was recorded.

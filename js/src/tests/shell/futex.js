@@ -12,56 +12,8 @@ function dprint(s) {
 }
 
 var hasSharedArrayBuffer = !!(this.SharedArrayBuffer &&
-                              this.getSharedArrayBuffer &&
-                              this.setSharedArrayBuffer);
-
-if (hasSharedArrayBuffer) {
-
-// Tests the SharedArrayBuffer mailbox in the shell.
-// Tests the wait/wake functionality in the shell.
-
-var sab = new SharedArrayBuffer(12);
-var mem = new Int32Array(sab);
-
-// SharedArrayBuffer mailbox tests
-
-assertEq(getSharedArrayBuffer(), null); // Mbx starts empty
-
-assertEq(setSharedArrayBuffer(mem.buffer), undefined); // Setter returns undefined
-assertEq(getSharedArrayBuffer() == null, false);       // And then the mbx is not empty
-
-var v = getSharedArrayBuffer();
-assertEq(v.byteLength, mem.buffer.byteLength); // Looks like what we put in?
-var w = new Int32Array(v);
-mem[0] = 314159;
-assertEq(w[0], 314159);		// Shares memory (locally) with what we put in?
-mem[0] = 0;
-
-setSharedArrayBuffer(null);	// Setting to null clears to null
-assertEq(getSharedArrayBuffer(), null);
-
-setSharedArrayBuffer(mem.buffer);
-setSharedArrayBuffer(undefined); // Setting to undefined clears to null
-assertEq(getSharedArrayBuffer(), null);
-
-setSharedArrayBuffer(mem.buffer);
-setSharedArrayBuffer();		// Setting without arguments clears to null
-assertEq(getSharedArrayBuffer(), null);
-
-// Only SharedArrayBuffer can be stored in the mbx
-
-assertThrowsInstanceOf(() => setSharedArrayBuffer({x:10, y:20}), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer([1,2]), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer(new ArrayBuffer(10)), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer(new Int32Array(10)), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer(false), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer(3.14), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer(mem), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer("abracadabra"), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer(() => 37), Error);
-
-} // if (hasSharedArrayBuffer) { ... }
-
+                              this.getSharedObject &&
+                              this.setSharedObject);
 
 // Futex test
 
@@ -89,10 +41,10 @@ mem[0] = 42;
 mem[1] = 37;
 mem[2] = DEBUG;
 
-setSharedArrayBuffer(mem.buffer);
+setSharedObject(mem.buffer);
 
 evalInWorker(`
-var mem = new Int32Array(getSharedArrayBuffer());
+var mem = new Int32Array(getSharedObject());
 function dprint(s) {
     if (mem[2]) print(s);
 }
@@ -102,7 +54,7 @@ mem[1] = 1337;
 dprint("Sleeping for 2 seconds");
 sleep(2);
 dprint("Waking the main thread now");
-setSharedArrayBuffer(null);
+setSharedObject(null);
 assertEq(Atomics.wake(mem, 0, 1), 1); // Can fail spuriously but very unlikely
 `);
 
@@ -110,16 +62,16 @@ var then = Date.now();
 assertEq(Atomics.wait(mem, 0, 42), "ok");
 dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
 assertEq(mem[1], 1337); // what was written in the worker is read in the main thread
-assertEq(getSharedArrayBuffer(), null); // The worker's clearing of the mbx is visible
+assertEq(getSharedObject(), null); // The worker's clearing of the mbx is visible
 
 ////////////////////////////////////////////////////////////
 
 // Test the default argument to atomics.wake()
 
-setSharedArrayBuffer(mem.buffer);
+setSharedObject(mem.buffer);
 
 evalInWorker(`
-var mem = new Int32Array(getSharedArrayBuffer());
+var mem = new Int32Array(getSharedObject());
 sleep(2);				// Probably long enough to avoid a spurious error next
 assertEq(Atomics.wake(mem, 0), 1);	// Last argument to wake should default to +Infinity
 `);

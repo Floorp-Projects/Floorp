@@ -530,7 +530,20 @@ class NativeObject : public ShapedObject
     bool containsDenseElement(uint32_t idx) {
         return idx < getDenseInitializedLength() && !elements_[idx].isMagic(JS_ELEMENTS_HOLE);
     }
+
+  private:
+    uint32_t getDenseInitializedLengthUnchecked() const {
+        return getElementsHeader()->initializedLength;
+    }
+
+  public:
     uint32_t getDenseInitializedLength() const {
+        // If the following assertion fails, there's somewhere else a missing
+        // call to shrinkCapacityToInitializedLength(). Good luck for the hunt
+        // and finding the offender!
+        MOZ_ASSERT_IF(!isExtensible(),
+                      getElementsHeader()->initializedLength == getElementsHeader()->capacity);
+
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() const {
@@ -1251,12 +1264,25 @@ class NativeObject : public ShapedObject
         }
     }
 
-    void setDenseInitializedLength(uint32_t length) {
+  private:
+    void setDenseInitializedLengthInternal(uint32_t length) {
         MOZ_ASSERT(length <= getDenseCapacity());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         MOZ_ASSERT(!denseElementsAreFrozen());
         prepareElementRangeForOverwrite(length, getElementsHeader()->initializedLength);
         getElementsHeader()->initializedLength = length;
+    }
+
+  public:
+    void setDenseInitializedLength(uint32_t length) {
+        MOZ_ASSERT(isExtensible());
+        setDenseInitializedLengthInternal(length);
+    }
+
+    void setDenseInitializedLengthMaybeNonExtensible(JSContext* cx, uint32_t length) {
+        setDenseInitializedLengthInternal(length);
+        if (!isExtensible())
+            shrinkCapacityToInitializedLength(cx);
     }
 
     inline void ensureDenseInitializedLength(JSContext* cx,
