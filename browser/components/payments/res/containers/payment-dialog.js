@@ -242,13 +242,17 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       case "": {
         // initial/default state
         this._payButton.textContent = this._payButton.dataset.label;
+        const INVALID_CLASS_NAME = "invalid-selected-option";
         this._payButton.disabled =
           (state.request.paymentOptions.requestShipping &&
-           (!this._shippingAddressPicker.value ||
-            !this._shippingOptionPicker.value)) ||
+           (!this._shippingAddressPicker.selectedOption ||
+            this._shippingAddressPicker.classList.contains(INVALID_CLASS_NAME) ||
+            !this._shippingOptionPicker.selectedOption)) ||
           (this._isPayerRequested(state.request.paymentOptions) &&
-            !this._payerAddressPicker.value) ||
-          !this._paymentMethodPicker.value ||
+           (!this._payerAddressPicker.selectedOption ||
+            this._payerAddressPicker.classList.contains(INVALID_CLASS_NAME))) ||
+          !this._paymentMethodPicker.selectedOption ||
+          this._paymentMethodPicker.classList.contains(INVALID_CLASS_NAME) ||
           state.changesPrevented;
         break;
       }
@@ -314,7 +318,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
     this._orderDetailsOverlay.hidden = !state.orderDetailsShowing;
     let genericError = "";
-    if (this._shippingAddressPicker.value &&
+    if (this._shippingAddressPicker.selectedOption &&
         (!request.paymentDetails.shippingOptions ||
          !request.paymentDetails.shippingOptions.length)) {
       genericError = this._errorText.dataset[shippingType + "GenericError"];

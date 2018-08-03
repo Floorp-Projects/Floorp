@@ -74,6 +74,7 @@
   <!ENTITY timeoutErrorPage.suggestion3  "If no other solutions work, check with **host-name**.">
   <!ENTITY timeoutErrorPage.doneButton.label     "OK">
   <!ENTITY webPaymentsBranding.label             "&brandShortName; Checkout">
+  <!ENTITY invalidOption.label                   "Missing or invalid information">
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -128,6 +129,7 @@
                           data-shipping-address-label="&shippingAddressLabel;"
                           data-delivery-address-label="&deliveryAddressLabel;"
                           data-pickup-address-label="&pickupAddressLabel;"
+                          data-invalid-label="&invalidOption.label;"
                           selected-state-key="selectedShippingAddress"></address-picker>
 
           <shipping-option-picker class="shipping-related"
@@ -139,12 +141,14 @@
                                  data-add-link-label="&basicCard.addLink.label;"
                                  data-edit-link-label="&basicCard.editLink.label;"
                                  data-cvv-placeholder="&basicCard.cvv.placeholder;"
+                                 data-invalid-label="&invalidOption.label;"
                                  label="&paymentMethodsLabel;">
           </payment-method-picker>
           <address-picker class="payer-related"
                           label="&payerLabel;"
                           data-add-link-label="&payer.addLink.label;"
                           data-edit-link-label="&payer.editLink.label;"
+                          data-invalid-label="&invalidOption.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>
         </div>
 
