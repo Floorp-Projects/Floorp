@@ -9,6 +9,8 @@ const nsFilePicker = "@mozilla.org/filepicker;1";
 const nsIX509CertDB = Ci.nsIX509CertDB;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509Cert = Ci.nsIX509Cert;
+const nsStringBundle = "@mozilla.org/intl/stringbundle;1";
+const nsIStringBundleService = Ci.nsIStringBundleService;
 const nsICertTree = Ci.nsICertTree;
 const nsCertTree = "@mozilla.org/security/nsCertTree;1";
 
@@ -17,6 +19,10 @@ const gCertFileTypes = "*.p7b; *.crt; *.cert; *.cer; *.pem; *.der";
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 
 var key;
+
+var certdialogs = Cc[nsCertificateDialogs].getService(nsICertificateDialogs);
+var strbundle = Cc[nsStringBundle].getService(nsIStringBundleService)
+                  .createBundle("chrome://pipnss/locale/pipnss.properties");
 
 /**
  * List of certs currently selected in the active tab.
@@ -205,6 +211,38 @@ function nothingOrContainerSelected(certTree) {
   return false;
 }
 
+function promptError(aErrorCode) {
+  if (aErrorCode != Ci.nsIX509CertDB.Success) {
+    let msgName = "PKCS12UnknownErr";
+    switch (aErrorCode) {
+      case Ci.nsIX509CertDB.ERROR_PKCS12_NOSMARTCARD_EXPORT:
+        msgName = "PKCS12InfoNoSmartcardBackup";
+        break;
+      case Ci.nsIX509CertDB.ERROR_PKCS12_RESTORE_FAILED:
+        msgName = "PKCS12UnknownErrRestore";
+        break;
+      case Ci.nsIX509CertDB.ERROR_PKCS12_BACKUP_FAILED:
+        msgName = "PKCS12UnknownErrBackup";
+        break;
+      case Ci.nsIX509CertDB.ERROR_PKCS12_CERT_COLLISION:
+      case Ci.nsIX509CertDB.ERROR_PKCS12_DUPLICATE_DATA:
+        msgName = "PKCS12DupData";
+        break;
+      case Ci.nsIX509CertDB.ERROR_BAD_PASSWORD:
+        msgName = "PK11BadPassword";
+        break;
+      case Ci.nsIX509CertDB.ERROR_DECODE_ERROR:
+        msgName = "PKCS12DecodeErr";
+        break;
+      default:
+        break;
+    }
+    let message = strbundle.GetStringFromName(msgName);
+    let prompter = Services.ww.getNewPrompter(window);
+    prompter.alert(null, message);
+  }
+}
+
 /**
  * Enables or disables buttons corresponding to a cert tree depending on what
  * is selected in the cert tree.
@@ -276,7 +314,12 @@ function backupCerts() {
   fp.defaultExtension = "p12";
   fp.open(rv => {
     if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
-      certdb.exportPKCS12File(fp.file, selected_certs.length, selected_certs);
+      let password = {};
+      if (certdialogs.setPKCS12FilePassword(window, password)) {
+        let errorCode = certdb.exportPKCS12File(fp.file, selected_certs.length,
+                                                selected_certs, password.value);
+        promptError(errorCode);
+      }
     }
   });
 }
@@ -342,7 +385,18 @@ function restoreCerts() {
       certdb.importUserCertificate(dataArray, dataArray.length, interfaceRequestor);
     } else {
       // Otherwise, assume it's a PKCS12 file and import it that way.
-      certdb.importPKCS12File(fp.file);
+      let password = {};
+      let errorCode = Ci.nsIX509CertDB.ERROR_BAD_PASSWORD;
+      while (errorCode == Ci.nsIX509CertDB.ERROR_BAD_PASSWORD &&
+             certdialogs.getPKCS12FilePassword(window, password)) {
+        errorCode = certdb.importPKCS12File(fp.file, password.value);
+        if (errorCode == Ci.nsIX509CertDB.ERROR_BAD_PASSWORD &&
+            password.value.length == 0) {
+          // It didn't like empty string password, try no password.
+          errorCode = certdb.importPKCS12File(fp.file, null);
+        }
+        promptError(errorCode);
+      }
     }
 
     var certcache = certdb.getCerts();

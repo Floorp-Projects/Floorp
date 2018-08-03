@@ -839,7 +839,8 @@ nsNSSCertificateDB::ImportCertsFromFile(nsIFile* aFile, uint32_t aType)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile)
+nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile, const nsAString& aPassword,
+                                     uint32_t* aError)
 {
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
@@ -851,8 +852,7 @@ nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile)
 
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
-  rv = blob.ImportFromFile(aFile);
-
+  rv = blob.ImportFromFile(aFile, aPassword, *aError);
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (NS_SUCCEEDED(rv) && observerService) {
@@ -863,8 +863,10 @@ nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t count,
-                                     nsIX509Cert** certs)
+nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t aCount,
+                                     nsIX509Cert** aCerts,
+                                     const nsAString& aPassword,
+                                     uint32_t* aError)
 {
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
@@ -875,11 +877,11 @@ nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t count,
   }
 
   NS_ENSURE_ARG(aFile);
-  if (count == 0) {
+  if (aCount == 0) {
     return NS_OK;
   }
   nsPKCS12Blob blob;
-  return blob.ExportToFile(aFile, certs, count);
+  return blob.ExportToFile(aFile, aCerts, aCount, aPassword, *aError);
 }
 
 NS_IMETHODIMP
