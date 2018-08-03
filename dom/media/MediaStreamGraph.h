@@ -12,6 +12,7 @@
 #include "StreamTracks.h"
 #include "VideoSegment.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TaskQueue.h"
 #include "nsAutoPtr.h"
@@ -105,21 +106,31 @@ public:
    * cancellation.  This is not guaranteed to be in any particular size
    * chunks.
    */
-  virtual void NotifyOutputData(MediaStreamGraph* aGraph,
+  virtual void NotifyOutputData(MediaStreamGraphImpl* aGraph,
                                 AudioDataValue* aBuffer, size_t aFrames,
                                 TrackRate aRate, uint32_t aChannels) = 0;
   /**
    * Input data from a microphone (or other audio source.  This is not
    * guaranteed to be in any particular size chunks.
    */
-  virtual void NotifyInputData(MediaStreamGraph* aGraph,
+  virtual void NotifyInputData(MediaStreamGraphImpl* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
                                TrackRate aRate, uint32_t aChannels) = 0;
 
   /**
+   * Number of audio input channels.
+   */
+  virtual uint32_t RequestedInputChannelCount(MediaStreamGraphImpl* aGraph) = 0;
+
+  /**
    * Called when the underlying audio device has changed.
    */
-  virtual void DeviceChanged() = 0;
+  virtual void DeviceChanged(MediaStreamGraphImpl* aGraph) = 0;
+
+  /**
+   * Called when the underlying audio device is being closed.
+   */
+  virtual void Disconnect(MediaStreamGraphImpl* aGraph) = 0;
 };
 
 class AudioDataListener : public AudioDataListenerInterface {
@@ -703,10 +714,11 @@ public:
   // last stream referencing an input goes away, so it can close the cubeb
   // input.  Also note: callable on any thread (though it bounces through
   // MainThread to set the command if needed).
-  nsresult OpenAudioInput(int aID,
-                          AudioDataListener *aListener);
+  nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
+                          AudioDataListener* aListener);
   // Note: also implied when Destroy() happens
-  void CloseAudioInput();
+  void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
+                       AudioDataListener* aListener);
 
   // MediaStreamGraph thread only
   void DestroyImpl() override;
@@ -832,8 +844,6 @@ public:
     MutexAutoLock lock(mMutex);
     return mStreamTracksStartTimeStamp;
   }
-
-  bool OpenNewAudioCallbackDriver(AudioDataListener *aListener);
 
   // XXX need a Reset API
 
@@ -1319,13 +1329,10 @@ public:
   // Idempotent
   static void DestroyNonRealtimeInstance(MediaStreamGraph* aGraph);
 
-  virtual nsresult OpenAudioInput(int aID,
-                                  AudioDataListener *aListener)
-  {
-    return NS_ERROR_FAILURE;
-  }
-  virtual void CloseAudioInput(AudioDataListener *aListener) {}
-
+  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
+                                  AudioDataListener* aListener) = 0;
+  virtual void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
+                               AudioDataListener* aListener) = 0;
   // Control API.
   /**
    * Create a stream that a media decoder (or some other source of
@@ -1403,13 +1410,6 @@ public:
   already_AddRefed<MediaInputPort> ConnectToCaptureStream(
     uint64_t aWindowId, MediaStream* aMediaStream);
 
-  /**
-   * Data going to the speakers from the GraphDriver's DataCallback
-   * to notify any listeners (for echo cancellation).
-   */
-  void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                        TrackRate aRate, uint32_t aChannels);
-
   void AssertOnGraphThreadOrNotRunning() const
   {
     MOZ_ASSERT(OnGraphThreadOrNotRunning());
@@ -1440,11 +1440,6 @@ protected:
    * at construction.
    */
   TrackRate mSampleRate;
-
-  /**
-   * CloseAudioInput is async, so hold a reference here.
-   */
-  nsTArray<RefPtr<AudioDataListener>> mAudioInputs;
 };
 
 } // namespace mozilla

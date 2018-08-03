@@ -1,0 +1,14 @@
+<html>
+<body>
+  <script>
+function createBlob(blocksize) {
+  var blob = new Blob();
+  while (blob.size < 25 * 1024 * 1024) { // 25 MB
+    blob = new Blob([blob, new Uint8Array(blocksize)]);
+  }
+  URL.createObjectURL(blob);
+}
+createBlob(1024 * 25);
+  </script>
+</body>
+</html>
