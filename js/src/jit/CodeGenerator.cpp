@@ -1696,9 +1696,12 @@ CopyStringChars(MacroAssembler& masm, Register to, Register from, Register len,
 
 class CreateDependentString
 {
+    CharEncoding encoding_;
     Register string_;
-    Register temp_;
+    Register temp1_;
+    Register temp2_;
     Label* failure_;
+
     enum class FallbackKind : uint8_t {
         InlineString,
         FatInlineString,
@@ -1707,17 +1710,22 @@ class CreateDependentString
     };
     mozilla::EnumeratedArray<FallbackKind, FallbackKind::Count, Label> fallbacks_, joins_;
 
-public:
+  public:
+    CreateDependentString(CharEncoding encoding, Register string, Register temp1, Register temp2,
+                          Label* failure)
+      : encoding_(encoding), string_(string), temp1_(temp1), temp2_(temp2), failure_(failure)
+    { }
+
+    Register string() const { return string_; }
+    CharEncoding encoding() const { return encoding_; }
+
     // Generate code that creates DependentString.
     // Caller should call generateFallback after masm.ret(), to generate
     // fallback path.
     void generate(MacroAssembler& masm, const JSAtomState& names,
-                  CompileRuntime* runtime,
-                  bool latin1, Register string,
-                  Register base, Register temp1, Register temp2,
+                  CompileRuntime* runtime, Register base,
                   BaseIndex startIndexAddress, BaseIndex limitIndexAddress,
-                  bool stringsCanBeInNursery,
-                  Label* failure);
+                  bool stringsCanBeInNursery);
 
     // Generate fallback path for creating DependentString.
     void generateFallback(MacroAssembler& masm);
@@ -1725,30 +1733,25 @@ public:
 
 void
 CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
-                                CompileRuntime* runtime,
-                                bool latin1, Register string,
-                                Register base, Register temp1, Register temp2,
+                                CompileRuntime* runtime, Register base,
                                 BaseIndex startIndexAddress, BaseIndex limitIndexAddress,
-                                bool stringsCanBeInNursery,
-                                Label* failure)
+                                bool stringsCanBeInNursery)
 {
     JitSpew(JitSpew_Codegen, "# Emitting CreateDependentString (encoding=%s)",
-            (latin1 ? "Latin-1" : "Two-Byte"));
+            (encoding_ == CharEncoding::Latin1 ? "Latin-1" : "Two-Byte"));
 
-    string_ = string;
-    temp_ = temp2;
-    failure_ = failure;
+    bool latin1 = encoding_ == CharEncoding::Latin1;
 
     // Compute the string length.
-    masm.load32(startIndexAddress, temp2);
-    masm.load32(limitIndexAddress, temp1);
-    masm.sub32(temp2, temp1);
+    masm.load32(startIndexAddress, temp2_);
+    masm.load32(limitIndexAddress, temp1_);
+    masm.sub32(temp2_, temp1_);
 
     Label done, nonEmpty;
 
     // Zero length matches use the empty string.
-    masm.branchTest32(Assembler::NonZero, temp1, temp1, &nonEmpty);
-    masm.movePtr(ImmGCPtr(names.empty), string);
+    masm.branchTest32(Assembler::NonZero, temp1_, temp1_, &nonEmpty);
+    masm.movePtr(ImmGCPtr(names.empty), string_);
     masm.jump(&done);
 
     masm.bind(&nonEmpty);
@@ -1758,7 +1761,7 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
     int32_t maxInlineLength = latin1
                               ? (int32_t) JSFatInlineString::MAX_LENGTH_LATIN1
                               : (int32_t) JSFatInlineString::MAX_LENGTH_TWO_BYTE;
-    masm.branch32(Assembler::Above, temp1, Imm32(maxInlineLength), &notInline);
+    masm.branch32(Assembler::Above, temp1_, Imm32(maxInlineLength), &notInline);
 
     {
         // Make a thin or fat inline string.
@@ -1767,25 +1770,25 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         int32_t maxThinInlineLength = latin1
                                       ? (int32_t) JSThinInlineString::MAX_LENGTH_LATIN1
                                       : (int32_t) JSThinInlineString::MAX_LENGTH_TWO_BYTE;
-        masm.branch32(Assembler::Above, temp1, Imm32(maxThinInlineLength), &fatInline);
+        masm.branch32(Assembler::Above, temp1_, Imm32(maxThinInlineLength), &fatInline);
 
         int32_t thinFlags = (latin1 ? JSString::LATIN1_CHARS_BIT : 0) | JSString::INIT_THIN_INLINE_FLAGS;
-        masm.newGCString(string, temp2, &fallbacks_[FallbackKind::InlineString], stringsCanBeInNursery);
+        masm.newGCString(string_, temp2_, &fallbacks_[FallbackKind::InlineString], stringsCanBeInNursery);
         masm.bind(&joins_[FallbackKind::InlineString]);
-        masm.store32(Imm32(thinFlags), Address(string, JSString::offsetOfFlags()));
+        masm.store32(Imm32(thinFlags), Address(string_, JSString::offsetOfFlags()));
         masm.jump(&stringAllocated);
 
         masm.bind(&fatInline);
 
         int32_t fatFlags = (latin1 ? JSString::LATIN1_CHARS_BIT : 0) | JSString::INIT_FAT_INLINE_FLAGS;
-        masm.newGCFatInlineString(string, temp2, &fallbacks_[FallbackKind::FatInlineString], stringsCanBeInNursery);
+        masm.newGCFatInlineString(string_, temp2_, &fallbacks_[FallbackKind::FatInlineString], stringsCanBeInNursery);
         masm.bind(&joins_[FallbackKind::FatInlineString]);
-        masm.store32(Imm32(fatFlags), Address(string, JSString::offsetOfFlags()));
+        masm.store32(Imm32(fatFlags), Address(string_, JSString::offsetOfFlags()));
 
         masm.bind(&stringAllocated);
-        masm.store32(temp1, Address(string, JSString::offsetOfLength()));
+        masm.store32(temp1_, Address(string_, JSString::offsetOfLength()));
 
-        masm.push(string);
+        masm.push(string_);
         masm.push(base);
 
         // Adjust the start index address for the above pushes.
@@ -1794,27 +1797,26 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         newStartIndexAddress.offset += 2 * sizeof(void*);
 
         // Load chars pointer for the new string.
-        masm.loadInlineStringCharsForStore(string, string);
+        masm.loadInlineStringCharsForStore(string_, string_);
 
         // Load the source characters pointer.
-        masm.loadStringChars(base, temp2,
-                             latin1 ? CharEncoding::Latin1 : CharEncoding::TwoByte);
+        masm.loadStringChars(base, temp2_, encoding_);
         masm.load32(newStartIndexAddress, base);
         if (latin1)
-            masm.addPtr(base, temp2);
+            masm.addPtr(base, temp2_);
         else
-            masm.computeEffectiveAddress(BaseIndex(temp2, base, TimesTwo), temp2);
+            masm.computeEffectiveAddress(BaseIndex(temp2_, base, TimesTwo), temp2_);
 
-        CopyStringChars(masm, string, temp2, temp1, base, latin1 ? 1 : 2, latin1 ? 1 : 2);
+        CopyStringChars(masm, string_, temp2_, temp1_, base, latin1 ? 1 : 2, latin1 ? 1 : 2);
 
         // Null-terminate.
         if (latin1)
-            masm.store8(Imm32(0), Address(string, 0));
+            masm.store8(Imm32(0), Address(string_, 0));
         else
-            masm.store16(Imm32(0), Address(string, 0));
+            masm.store16(Imm32(0), Address(string_, 0));
 
         masm.pop(base);
-        masm.pop(string);
+        masm.pop(string_);
     }
 
     masm.jump(&done);
@@ -1824,51 +1826,50 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         // Make a dependent string.
         int32_t flags = (latin1 ? JSString::LATIN1_CHARS_BIT : 0) | JSString::DEPENDENT_FLAGS;
 
-        masm.newGCString(string, temp2, &fallbacks_[FallbackKind::NotInlineString], stringsCanBeInNursery);
+        masm.newGCString(string_, temp2_, &fallbacks_[FallbackKind::NotInlineString], stringsCanBeInNursery);
         // Warning: string may be tenured (if the fallback case is hit), so
         // stores into it must be post barriered.
         masm.bind(&joins_[FallbackKind::NotInlineString]);
-        masm.store32(Imm32(flags), Address(string, JSString::offsetOfFlags()));
-        masm.store32(temp1, Address(string, JSString::offsetOfLength()));
+        masm.store32(Imm32(flags), Address(string_, JSString::offsetOfFlags()));
+        masm.store32(temp1_, Address(string_, JSString::offsetOfLength()));
 
-        masm.loadNonInlineStringChars(base, temp1,
-                                      latin1 ? CharEncoding::Latin1 : CharEncoding::TwoByte);
-        masm.load32(startIndexAddress, temp2);
+        masm.loadNonInlineStringChars(base, temp1_, encoding_);
+        masm.load32(startIndexAddress, temp2_);
         if (latin1)
-            masm.addPtr(temp2, temp1);
+            masm.addPtr(temp2_, temp1_);
         else
-            masm.computeEffectiveAddress(BaseIndex(temp1, temp2, TimesTwo), temp1);
-        masm.storeNonInlineStringChars(temp1, string);
-        masm.storeDependentStringBase(base, string);
-        masm.movePtr(base, temp1);
+            masm.computeEffectiveAddress(BaseIndex(temp1_, temp2_, TimesTwo), temp1_);
+        masm.storeNonInlineStringChars(temp1_, string_);
+        masm.storeDependentStringBase(base, string_);
+        masm.movePtr(base, temp1_);
 
         // Follow any base pointer if the input is itself a dependent string.
         // Watch for undepended strings, which have a base pointer but don't
         // actually share their characters with it.
         Label noBase;
-        masm.load32(Address(base, JSString::offsetOfFlags()), temp2);
-        masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), temp2);
-        masm.branch32(Assembler::NotEqual, temp2, Imm32(JSString::DEPENDENT_FLAGS), &noBase);
-        masm.loadDependentStringBase(base, temp1);
-        masm.storeDependentStringBase(temp1, string);
+        masm.load32(Address(base, JSString::offsetOfFlags()), temp2_);
+        masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), temp2_);
+        masm.branch32(Assembler::NotEqual, temp2_, Imm32(JSString::DEPENDENT_FLAGS), &noBase);
+        masm.loadDependentStringBase(base, temp1_);
+        masm.storeDependentStringBase(temp1_, string_);
         masm.bind(&noBase);
 
         // Post-barrier the base store, whether it was the direct or indirect
         // base (both will end up in temp1 here).
-        masm.branchPtrInNurseryChunk(Assembler::Equal, string, temp2, &done);
-        masm.branchPtrInNurseryChunk(Assembler::NotEqual, temp1, temp2, &done);
+        masm.branchPtrInNurseryChunk(Assembler::Equal, string_, temp2_, &done);
+        masm.branchPtrInNurseryChunk(Assembler::NotEqual, temp1_, temp2_, &done);
 
         LiveRegisterSet regsToSave(RegisterSet::Volatile());
-        regsToSave.takeUnchecked(temp1);
-        regsToSave.takeUnchecked(temp2);
+        regsToSave.takeUnchecked(temp1_);
+        regsToSave.takeUnchecked(temp2_);
 
         masm.PushRegsInMask(regsToSave);
 
-        masm.mov(ImmPtr(runtime), temp1);
+        masm.mov(ImmPtr(runtime), temp1_);
 
-        masm.setupUnalignedABICall(temp2);
-        masm.passABIArg(temp1);
-        masm.passABIArg(string);
+        masm.setupUnalignedABICall(temp2_);
+        masm.passABIArg(temp1_);
+        masm.passABIArg(string_);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
 
         masm.PopRegsInMask(regsToSave);
@@ -1894,11 +1895,12 @@ AllocateFatInlineString(JSContext* cx)
 void
 CreateDependentString::generateFallback(MacroAssembler& masm)
 {
-    JitSpew(JitSpew_Codegen, "# Emitting CreateDependentString fallback");
+    JitSpew(JitSpew_Codegen, "# Emitting CreateDependentString fallback (encoding=%s)",
+            (encoding_ == CharEncoding::Latin1 ? "Latin-1" : "Two-Byte"));
 
     LiveRegisterSet regsToSave(RegisterSet::Volatile());
     regsToSave.takeUnchecked(string_);
-    regsToSave.takeUnchecked(temp_);
+    regsToSave.takeUnchecked(temp2_);
 
     for (FallbackKind kind : mozilla::MakeEnumeratedRange(FallbackKind::Count)) {
         masm.bind(&fallbacks_[kind]);
@@ -2052,15 +2054,18 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     }
 
     // Loop to construct the match strings. There are two different loops,
-    // depending on whether the input is latin1.
-    CreateDependentString depStr[2];
+    // depending on whether the input is a Two-Byte or a Latin-1 string.
+    CreateDependentString depStrs[] {
+        { CharEncoding::TwoByte, temp3, temp4, temp5, &oolEntry },
+        { CharEncoding::Latin1, temp3, temp4, temp5, &oolEntry },
+    };
 
     {
         Label isLatin1, done;
         masm.branchLatin1String(input, &isLatin1);
 
-        for (int isLatin = 0; isLatin <= 1; isLatin++) {
-            if (isLatin)
+        for (auto& depStr : depStrs) {
+            if (depStr.encoding() == CharEncoding::Latin1)
                 masm.bind(&isLatin1);
 
             Label matchLoop;
@@ -2068,20 +2073,19 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
 
             Label isUndefined, storeDone;
             masm.branch32(Assembler::LessThan, stringIndexAddress, Imm32(0), &isUndefined);
+            {
+                depStr.generate(masm, cx->names(), CompileRuntime::get(cx->runtime()),
+                                input, stringIndexAddress, stringLimitAddress,
+                                stringsCanBeInNursery);
 
-            depStr[isLatin].generate(masm, cx->names(),
-                                     CompileRuntime::get(cx->runtime()),
-                                     isLatin, temp3, input, temp4, temp5,
-                                     stringIndexAddress, stringLimitAddress,
-                                     stringsCanBeInNursery,
-                                     &oolEntry);
-
-            masm.storeValue(JSVAL_TYPE_STRING, temp3, stringAddress);
-            // Storing into nursery-allocated results object's elements; no post barrier.
-            masm.jump(&storeDone);
+                // Storing into nursery-allocated results object's elements; no post barrier.
+                masm.storeValue(JSVAL_TYPE_STRING, depStr.string(), stringAddress);
+                masm.jump(&storeDone);
+            }
             masm.bind(&isUndefined);
-
-            masm.storeValue(UndefinedValue(), stringAddress);
+            {
+                masm.storeValue(UndefinedValue(), stringAddress);
+            }
             masm.bind(&storeDone);
 
             masm.add32(Imm32(1), matchIndex);
@@ -2121,8 +2125,8 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     masm.ret();
 
     // Fallback paths for CreateDependentString.
-    for (int isLatin = 0; isLatin <= 1; isLatin++)
-        depStr[isLatin].generateFallback(masm);
+    for (auto& depStr : depStrs)
+        depStr.generateFallback(masm);
 
     // Fallback path for createGCObject.
     masm.bind(&matchResultFallback);
