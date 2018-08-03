@@ -1601,6 +1601,7 @@ Loader::ParseSheet(const nsACString& aBytes,
                    AllowAsyncParse aAllowAsync)
 {
   LOG(("css::Loader::ParseSheet"));
+  AUTO_PROFILER_LABEL("css::Loader::ParseSheet", LAYOUT);
   MOZ_ASSERT(aLoadData);
   aLoadData->mIsBeingParsed = true;
 
