@@ -26,7 +26,10 @@ from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
 from mozharness.mozilla.automation import TBPL_RETRY, EXIT_STATUS_DICT
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
-from mozharness.mozilla.testing.codecoverage import CodeCoverageMixin
+from mozharness.mozilla.testing.codecoverage import (
+    CodeCoverageMixin,
+    code_coverage_config_options
+)
 
 
 class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMixin):
@@ -77,7 +80,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "default": "info",
          "help": "Set log level (debug|info|warning|error|critical|fatal)",
          }
-    ]] + copy.deepcopy(testing_config_options)
+    ]] + copy.deepcopy(testing_config_options) + \
+        copy.deepcopy(code_coverage_config_options)
 
     app_name = None
 
@@ -486,6 +490,10 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 self.config["suite_definitions"][self.test_suite].get("tests"),
                 None,
                 try_tests))
+
+        if self.java_code_coverage_enabled:
+            cmd.extend(['--enable-coverage',
+                        '--coverage-output-path', self.java_coverage_output_path])
 
         return cmd
 

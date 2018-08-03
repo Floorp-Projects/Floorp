@@ -560,6 +560,7 @@ def set_treeherder_machine_platform(config, tests):
         # The build names for Android platforms have partially evolved over the
         # years and need to be translated.
         'android-api-16/debug': 'android-em-4-3-armv7-api16/debug',
+        'android-api-16-ccov/debug': 'android-em-4-3-armv7-api16-ccov/debug',
         'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
         'android-x86/opt': 'android-em-4-2-x86/opt',
         'android-api-16-gradle/opt': 'android-api-16-gradle/opt',
@@ -730,6 +731,12 @@ def enable_code_coverage(config, tests):
             # do not run tests on fuzzing or opt build
             if 'opt' in test['build-platform'] or 'fuzzing' in test['build-platform']:
                 test['run-on-projects'] = []
+                continue
+            # Skip this transform for android code coverage builds.
+            if 'android' in test['build-platform']:
+                test.setdefault('fetches', {}).setdefault('fetch', []).append('grcov-linux-x86_64')
+                test['mozharness'].setdefault('extra-options', []).append('--java-code-coverage')
+                yield test
                 continue
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
             test['instance-size'] = 'xlarge'

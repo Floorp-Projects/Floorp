@@ -66,3 +66,10 @@ def javac_version(javac):
         return version
     except subprocess.CalledProcessError as e:
         die('Failed to get javac version: %s', e.output)
+
+
+# Java Code Coverage
+# ========================================================
+option('--enable-java-coverage', env='MOZ_JAVA_CODE_COVERAGE', help='Enable Java code coverage')
+
+set_config('MOZ_JAVA_CODE_COVERAGE', depends('--enable-java-coverage')(lambda v: bool(v)))

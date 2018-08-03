@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846906
   var interfaceRequestor = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor);
   ok(interfaceRequestor, "Should be able to query interface requestor interface");
 
-  var docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
+  var docShell = windowlessBrowser.docShell;
   ok(docShell, "Should be able to get doc shell interface");
 
   var document = webNavigation.document;

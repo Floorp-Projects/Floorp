@@ -16,9 +16,6 @@ if [ -e "$topsrcdir/gcc/bin/ld" ]; then
     export CXX="$CXX -B $topsrcdir/gcc/bin"
 fi
 
-# Until Bug 1423822 is resolved
-ac_add_options --disable-elf-hack
-
 ac_add_options --enable-lto
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"

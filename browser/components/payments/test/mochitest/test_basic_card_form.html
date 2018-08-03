@@ -136,6 +136,38 @@ add_task(async function test_saveButton() {
   form.remove();
 });
 
+add_task(async function test_requiredAttributePropagated() {
+  let form = new BasicCardForm();
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let requiredElements = [...form.form.elements].filter(e => e.required && !e.disabled);
+  ok(requiredElements.length, "There should be at least one required element");
+  for (let element of requiredElements) {
+    let container = element.closest("label") || element.closest("div");
+    ok(container.hasAttribute("required"), "Container should also be marked as required");
+  }
+  // Now test that toggling the `required` attribute will affect the container.
+  let sampleRequiredElement = requiredElements[0];
+  let sampleRequiredContainer = sampleRequiredElement.closest("label") ||
+                                sampleRequiredElement.closest("div");
+  sampleRequiredElement.removeAttribute("required");
+  await form.requestStore.setState({});
+  await asyncElementRendered();
+  ok(!sampleRequiredElement.hasAttribute("required"),
+     `"required" attribute should still be removed from element (${sampleRequiredElement.id})`);
+  ok(!sampleRequiredContainer.hasAttribute("required"),
+     `"required" attribute should be removed from container`);
+  sampleRequiredElement.setAttribute("required", "true");
+  await form.requestStore.setState({});
+  await asyncElementRendered();
+  ok(sampleRequiredContainer.hasAttribute("required"),
+     "`required` attribute is re-added to container");
+
+  form.remove();
+});
+
 add_task(async function test_genericError() {
   let form = new BasicCardForm();
   await form.requestStore.setState({
@@ -261,6 +293,14 @@ add_task(async function test_edit() {
   await asyncElementRendered();
   is(form.saveButton.textContent, "Update", "Check label");
   checkCCForm(form, card1);
+
+  let requiredElements = [...form.form.elements].filter(e => e.required && !e.disabled);
+  ok(requiredElements.length, "There should be at least one required element");
+  for (let element of requiredElements) {
+    let container = element.closest("label") || element.closest("div");
+    ok(element.hasAttribute("required"), "Element should be marked as required");
+    ok(container.hasAttribute("required"), "Container should also be marked as required");
+  }
 
   info("test future year");
   card1["cc-exp-year"] = 2100;

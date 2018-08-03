@@ -7,7 +7,7 @@
 #ifndef mozilla_toolkit_system_windowsDHCPClient_windowsNetworkFunctionsWrapper_h
 #define mozilla_toolkit_system_windowsDHCPClient_windowsNetworkFunctionsWrapper_h
 
-#include <Winsock2.h> // there is a compilation error if Winsock.h is not
+#include <winsock2.h> // there is a compilation error if Winsock.h is not
                       // declared before dhcpcsdk.h
 #include <dhcpcsdk.h>
 #include <iphlpapi.h>
