@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.SpannableStringBuilder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,7 @@ import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 
 import org.mozilla.focus.R
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
+import org.mozilla.focus.searchsuggestions.State
 
 class SearchSuggestionsFragment : Fragment() {
     private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
@@ -37,8 +39,15 @@ class SearchSuggestionsFragment : Fragment() {
             suggestions?.apply { (suggestionList.adapter as SuggestionsAdapter).refresh(this) }
         })
 
-        searchSuggestionsViewModel.promptUserToEnableSearchSuggestions.observe(this, Observer {
-            enable_search_suggestions_container.visibility = if (it == true)  View.VISIBLE else View.GONE
+        searchSuggestionsViewModel.state.observe(this, Observer { state ->
+            enable_search_suggestions_container.visibility = View.GONE
+            suggestionList.visibility = View.GONE
+
+            when (state) {
+                is State.ReadyForSuggestions -> suggestionList.visibility = View.VISIBLE
+                is State.NoSuggestionsAPI -> Log.e("foo", "bar") // noop
+                is State.Disabled -> enable_search_suggestions_container.visibility = if (state.givePrompt)  View.VISIBLE else View.GONE
+            }
         })
     }
 

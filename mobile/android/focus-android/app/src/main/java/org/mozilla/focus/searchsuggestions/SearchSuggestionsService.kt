@@ -14,8 +14,8 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
     private lateinit var client: SearchSuggestionClient
     private var httpClient = OkHttpClient()
 
-    private val _canProvideSearchSuggestions = MutableLiveData<Boolean>()
-    val canProvideSearchSuggestions: LiveData<Boolean> = _canProvideSearchSuggestions
+    var canProvideSearchSuggestions = false
+        private set
 
     init {
         updateSearchEngine(searchEngine)
@@ -51,7 +51,7 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
     }
 
     fun updateSearchEngine(searchEngine: SearchEngine) {
-        _canProvideSearchSuggestions.value = searchEngine.canProvideSearchSuggestions
+        canProvideSearchSuggestions = searchEngine.canProvideSearchSuggestions
         client = SearchSuggestionClient(searchEngine, { fetch(it) })
     }
 

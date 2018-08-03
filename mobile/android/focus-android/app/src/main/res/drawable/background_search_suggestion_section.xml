@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="-2dp" android:left="-2dp" android:right="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.5dp" android:color="@color/searchSuggestionPromptBorderColor" />
+            <solid android:color="@color/searchSuggestionPromptBackground" />
+        </shape>
+    </item>
+</layer-list>

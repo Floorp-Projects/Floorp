@@ -129,6 +129,11 @@ class Settings private constructor(context: Context) {
                     getPreferenceKey(R.string.pref_key_privacy_block_other),
                     false)
 
+    fun userHasToggledSearchSuggestions(): Boolean =
+            preferences.getBoolean(
+                    getPreferenceKey(R.string.pref_key_user_toggled_search_suggestions),
+                    false)
+
     private fun getPreferenceKey(resourceId: Int): String =
             resources.getString(resourceId)
 }

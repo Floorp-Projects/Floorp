@@ -13,25 +13,35 @@ import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 import android.util.Log
 
-
+sealed class State {
+    data class Disabled(val givePrompt: Boolean): State()
+    class NoSuggestionsAPI: State()
+    class ReadyForSuggestions: State()
+}
 class SearchSuggestionsViewModel(
         private val service: SearchSuggestionsService,
         private val searchSuggestionsPreferences: SearchSuggestionsPreferences) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
     private val _searchQuery = MutableLiveData<String>()
-    private val _promptUserToEnableSearchSuggestions = MutableLiveData<Boolean>()
 
-    val canRequestSearchSuggestions = service.canProvideSearchSuggestions
     val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
     val searchQuery: LiveData<String> = _searchQuery
-    val promptUserToEnableSearchSuggestions: LiveData<Boolean> = _promptUserToEnableSearchSuggestions
+
+    val state: LiveData<State> = map(searchSuggestionsPreferences.searchSuggestionsEnabled) { enabled ->
+        return@map if (enabled) {
+            if (service.canProvideSearchSuggestions) {
+                State.ReadyForSuggestions()
+            } else {
+                State.NoSuggestionsAPI()
+            }
+        } else {
+            val givePrompt = !searchSuggestionsPreferences.hasUserToggledSearchSuggestions()
+            State.Disabled(givePrompt)
+        }
+    }
 
     val suggestions = switchMap(searchQuery) {
-        val canFetchSearchSuggestions = searchSuggestionsPreferences.searchSuggestionsEnabled()
-            && (canRequestSearchSuggestions.value == true)
-
-        Log.e("enabled", "${searchSuggestionsPreferences.searchSuggestionsEnabled()}")
-        if (!canFetchSearchSuggestions) { return@switchMap null }
+        if (state.value !is State.ReadyForSuggestions) { return@switchMap null }
 
         val data = service.getSuggestions(it)
 
@@ -61,6 +71,7 @@ class SearchSuggestionsViewModel(
 
     fun refresh() {
         service.updateSearchEngine(searchSuggestionsPreferences.getSearchEngine())
+        searchSuggestionsPreferences.refresh()
     }
 
     class Factory(private val context: Context) : ViewModelProvider.NewInstanceFactory() {

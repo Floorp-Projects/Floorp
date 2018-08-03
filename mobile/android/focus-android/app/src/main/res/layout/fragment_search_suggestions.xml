@@ -1,33 +1,54 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment">
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
         android:id="@+id/enable_search_suggestions_container"
+        android:background="@drawable/background_search_suggestion_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:orientation="horizontal"
-        android:visibility="gone">
+        android:padding="16dp">
 
         <TextView
-            android:layout_width="200dp"
+            android:id="@+id/textView"
+            android:textColor="@color/searchSuggestionPromptTextColor"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="@string/enable_search_suggestion_label"
-            android:maxLines="2" />
+            app:layout_constraintEnd_toStartOf="@id/button2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
+            android:id="@+id/button2"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:minWidth="48dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/enable_search_suggestions_no"  />
+            android:layout_marginEnd="8dp"
+            android:text="@string/enable_search_suggestions_no"
+            android:textColor="@color/searchSuggestionPromptButtonTextColor"
+            app:layout_constraintEnd_toStartOf="@+id/button3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <Button
+            android:id="@+id/button3"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:minWidth="48dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/enable_search_suggestions_yes"  />
-    </LinearLayout>
+            android:layout_marginEnd="4dp"
+            android:text="@string/enable_search_suggestions_yes"
+            android:textColor="@color/searchSuggestionPromptButtonTextColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </android.support.constraint.ConstraintLayout>
     <TextView
         android:id="@+id/searchView"
         android:layout_width="match_parent"
