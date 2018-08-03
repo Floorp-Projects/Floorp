@@ -39,6 +39,8 @@ add_task(async function test_empty() {
   let {shippingOptions} = state && state.request && state.request.paymentDetails;
   is(Object.keys(shippingOptions).length, 0, "Check empty initial state");
   is(picker1.dropdown.popupBox.children.length, 0, "Check dropdown is empty");
+  ok(picker1.editLink.hidden, true, "Check that picker edit link is always hidden");
+  ok(picker1.addLink.hidden, true, "Check that picker add link is always hidden");
 });
 
 add_task(async function test_initialSet() {

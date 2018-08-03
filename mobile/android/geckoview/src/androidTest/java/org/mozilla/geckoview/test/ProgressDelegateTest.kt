@@ -23,6 +23,30 @@ import org.junit.runner.RunWith
 @MediumTest
 class ProgressDelegateTest : BaseSessionTest() {
 
+    @Test fun loadProgress() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        var counter = 0
+        var lastProgress = -1
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled
+            override fun onProgressChange(session: GeckoSession, progress: Int) {
+                assertThat("Progress must be strictly increasing", progress,
+                           greaterThan(lastProgress))
+                lastProgress = progress
+                counter++
+            }
+        })
+
+        assertThat("Callback should be called at least twice", counter,
+                   greaterThanOrEqualTo(2))
+        assertThat("Last progress value should be 100", lastProgress,
+                   equalTo(100))
+    }
+
+
     @Test fun load() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()

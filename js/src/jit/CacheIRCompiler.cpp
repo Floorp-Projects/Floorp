@@ -1651,7 +1651,7 @@ CacheIRCompiler::emitGuardFunctionPrototype()
     StubFieldOffset slot(reader.stubOffset(), StubField::Type::RawWord);
     masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
     emitLoadStubField(slot, scratch2);
-    BaseValueIndex prototypeSlot(scratch1, scratch2);
+    BaseObjectSlotIndex prototypeSlot(scratch1, scratch2);
     masm.branchTestObject(Assembler::NotEqual, prototypeSlot, failure->label());
     masm.unboxObject(prototypeSlot, scratch1);
     masm.branchPtr(Assembler::NotEqual,

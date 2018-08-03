@@ -623,7 +623,7 @@ MacroAssembler::call(JitCode* c)
     const ARMRegister scratch64 = temps.AcquireX();
     syncStackPtr();
     BufferOffset off = immPool64(scratch64, uint64_t(c->raw()));
-    addPendingJump(off, ImmPtr(c->raw()), Relocation::JITCODE);
+    addPendingJump(off, ImmPtr(c->raw()), RelocationKind::JITCODE);
     blr(scratch64);
 }
 
@@ -1046,7 +1046,7 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
                                   const Address& dest, MIRType slotType);
 template void
 MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
-                                  const BaseIndex& dest, MIRType slotType);
+                                  const BaseObjectElementIndex& dest, MIRType slotType);
 
 void
 MacroAssembler::comment(const char* msg)

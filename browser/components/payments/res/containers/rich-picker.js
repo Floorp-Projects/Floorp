@@ -49,6 +49,10 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
     }
   }
 
+  render(state) {
+    this.editLink.hidden = !this.dropdown.value;
+  }
+
   get value() {
     return this.dropdown &&
            this.dropdown.selectedOption;

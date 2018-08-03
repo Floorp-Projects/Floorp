@@ -450,8 +450,7 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
 
     // Get the topmost argument. We did a push of %ebp earlier, so be sure to
     // account for this in the offset
-    BaseIndex b = BaseIndex(FramePointer, esi, TimesEight,
-                            sizeof(RectifierFrameLayout) + sizeof(void*));
+    BaseIndex b(FramePointer, esi, TimesEight, sizeof(RectifierFrameLayout) + sizeof(void*));
     masm.lea(Operand(b), ecx);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
@@ -514,7 +513,7 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     masm.pop(edi);            // Discard number of actual arguments.
 
     // Discard pushed arguments, but not the pushed frame pointer.
-    BaseIndex unwind = BaseIndex(esp, ebx, TimesOne, -int32_t(sizeof(void*)));
+    BaseIndex unwind(esp, ebx, TimesOne, -int32_t(sizeof(void*)));
     masm.lea(Operand(unwind), esp);
 
     masm.pop(FramePointer);
