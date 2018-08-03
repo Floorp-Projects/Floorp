@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.getFilenameFromPath = getFilenameFromPath;
 exports.getURL = getURL;
 
-var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
+var _url = require("../../utils/url");
 
 var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
 
@@ -89,7 +89,7 @@ function _getURL(source, defaultDomain) {
         filename: url
       };
 
-    case null:
+    case "":
       if (pathname && pathname.startsWith("/")) {
         // use file protocol for a URL like "/foo/bar.js"
         return { ...def,
@@ -97,7 +97,7 @@ function _getURL(source, defaultDomain) {
           filename,
           group: "file://"
         };
-      } else if (host === null) {
+      } else if (!host) {
         return { ...def,
           path: url,
           group: defaultDomain || "",

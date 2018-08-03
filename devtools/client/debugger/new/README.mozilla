@@ -1,13 +1,13 @@
 This is the debugger.html project output.
 See https://github.com/devtools-html/debugger.html
 
-Version 77
+Version 78
 
-Comparison: https://github.com/devtools-html/debugger.html/compare/release-76...release-77
+Comparison: https://github.com/devtools-html/debugger.html/compare/release-77...release-78
 
 Packages:
 - babel-plugin-transform-es2015-modules-commonjs @6.26.2
 - babel-preset-react @6.24.1
 - react @16.4.1
 - react-dom @16.4.1
-- webpack @3.11.0
+- webpack @3.12.0
