@@ -31,6 +31,7 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
+#include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/ProcessGlobal.h"
@@ -119,11 +120,11 @@ MarkChildMessageManagers(MessageBroadcaster* aMM)
     mozilla::dom::ipc::MessageManagerCallback* cb = tabMM->GetCallback();
     if (cb) {
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
-      EventTarget* et = fl->GetTabChildGlobalAsEventTarget();
+      nsInProcessTabChildGlobal* et = fl->GetTabChildGlobal();
       if (!et) {
         continue;
       }
-      static_cast<nsInProcessTabChildGlobal*>(et)->MarkForCC();
+      et->MarkForCC();
       EventListenerManager* elm = et->GetExistingListenerManager();
       if (elm) {
         elm->MarkForCC();
