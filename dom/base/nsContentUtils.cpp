@@ -121,6 +121,7 @@
 #include "nsHtml5StringParser.h"
 #include "nsHTMLDocument.h"
 #include "nsHTMLTags.h"
+#include "nsInProcessTabChildGlobal.h"
 #include "nsIAddonPolicyService.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -11087,8 +11088,8 @@ nsContentUtils::ContentIsLink(nsIContent* aContent)
       kNameSpaceID_XLink, nsGkAtoms::type, nsGkAtoms::simple, eCaseMatters);
 }
 
-/* static */ already_AddRefed<EventTarget>
-nsContentUtils::TryGetTabChildGlobalAsEventTarget(nsISupports* aFrom)
+/* static */ already_AddRefed<ContentFrameMessageManager>
+nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom)
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(aFrom);
   if (!frameLoaderOwner) {
@@ -11100,8 +11101,8 @@ nsContentUtils::TryGetTabChildGlobalAsEventTarget(nsISupports* aFrom)
     return nullptr;
   }
 
-  nsCOMPtr<EventTarget> target = frameLoader->GetTabChildGlobalAsEventTarget();
-  return target.forget();
+  RefPtr<ContentFrameMessageManager> manager = frameLoader->GetTabChildGlobal();
+  return manager.forget();
 }
 
 /* static */ uint32_t

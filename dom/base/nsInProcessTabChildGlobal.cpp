@@ -295,7 +295,7 @@ nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
     RefPtr<nsFrameLoader> fl = owner->GetFrameLoader();
     if (fl) {
-      NS_ASSERTION(this == fl->GetTabChildGlobalAsEventTarget(),
+      NS_ASSERTION(this == fl->GetTabChildGlobal(),
                    "Wrong event target!");
       NS_ASSERTION(fl->mMessageManager == mChromeMessageManager,
                    "Wrong message manager!");
