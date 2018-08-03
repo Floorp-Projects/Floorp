@@ -520,7 +520,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
-  NS_INTERFACE_MAP_ENTRY(nsITextScroll)
   NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -6084,32 +6083,6 @@ nsDocShell::GetScrollbarVisibility(bool* aVerticalVisible,
       (scrollbarVisibility & nsIScrollableFrame::HORIZONTAL) != 0;
   }
 
-  return NS_OK;
-}
-
-//*****************************************************************************
-// nsDocShell::nsITextScroll
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsDocShell::ScrollByLines(int32_t aNumLines)
-{
-  nsIScrollableFrame* sf = GetRootScrollFrame();
-  NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
-
-  sf->ScrollBy(nsIntPoint(0, aNumLines), nsIScrollableFrame::LINES,
-               nsIScrollableFrame::SMOOTH);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::ScrollByPages(int32_t aNumPages)
-{
-  nsIScrollableFrame* sf = GetRootScrollFrame();
-  NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
-
-  sf->ScrollBy(nsIntPoint(0, aNumPages), nsIScrollableFrame::PAGES,
-               nsIScrollableFrame::SMOOTH);
   return NS_OK;
 }
 

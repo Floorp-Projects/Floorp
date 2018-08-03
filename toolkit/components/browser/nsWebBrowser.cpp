@@ -113,7 +113,6 @@ NS_IMPL_CYCLE_COLLECTION(nsWebBrowser,
                          mDocShellAsWin,
                          mDocShellAsNav,
                          mDocShellAsScrollable,
-                         mDocShellAsTextScroll,
                          mWebProgress)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWebBrowser)
@@ -122,7 +121,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWebBrowser)
   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
-  NS_INTERFACE_MAP_ENTRY(nsITextScroll)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
@@ -1560,26 +1558,6 @@ nsWebBrowser::GetScrollbarVisibility(bool* aVerticalVisible,
 }
 
 //*****************************************************************************
-// nsWebBrowser::nsITextScroll
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::ScrollByLines(int32_t aNumLines)
-{
-  NS_ENSURE_STATE(mDocShell);
-
-  return mDocShellAsTextScroll->ScrollByLines(aNumLines);
-}
-
-NS_IMETHODIMP
-nsWebBrowser::ScrollByPages(int32_t aNumPages)
-{
-  NS_ENSURE_STATE(mDocShell);
-
-  return mDocShellAsTextScroll->ScrollByPages(aNumPages);
-}
-
-//*****************************************************************************
 // nsWebBrowser: Listener Helpers
 //*****************************************************************************
 
@@ -1598,9 +1576,8 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
     nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
     nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
     nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
-    nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
     nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
-    NS_ENSURE_TRUE(req && baseWin && nav && scrollable && textScroll && progress,
+    NS_ENSURE_TRUE(req && baseWin && nav && scrollable && progress,
                    NS_ERROR_FAILURE);
 
     mDocShell = aDocShell;
@@ -1608,7 +1585,6 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
     mDocShellAsWin = baseWin;
     mDocShellAsNav = nav;
     mDocShellAsScrollable = scrollable;
-    mDocShellAsTextScroll = textScroll;
     mWebProgress = progress;
 
     // By default, do not allow DNS prefetch, so we don't break our frozen
@@ -1633,7 +1609,6 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
     mDocShellAsWin = nullptr;
     mDocShellAsNav = nullptr;
     mDocShellAsScrollable = nullptr;
-    mDocShellAsTextScroll = nullptr;
     mWebProgress = nullptr;
   }
 
