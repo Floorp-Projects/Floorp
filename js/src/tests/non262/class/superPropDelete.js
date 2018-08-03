@@ -42,5 +42,23 @@ Object.setPrototypeOf(thing2, new Proxy({}, {
 }));
 assertThrowsInstanceOf(() => thing2.go(), ReferenceError);
 
+class derivedTestDeleteProp extends base {
+    constructor() {
+        // The deletion error is a reference error, but by munging the prototype
+        // chain, we can force a type error from JSOP_SUPERBASE.
+        Object.setPrototypeOf(derivedTestDeleteProp.prototype, null);
+
+        assertThrowsInstanceOf(() => delete super.prop, ReferenceError);
+
+        super();
+
+        assertThrowsInstanceOf(() => delete super.prop, TypeError);
+
+        return {};
+    }
+}
+
+new derivedTestDeleteProp();
+
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

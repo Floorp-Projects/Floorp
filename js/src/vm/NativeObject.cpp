@@ -76,11 +76,11 @@ NativeObject::canHaveNonEmptyElements()
 
 #endif // DEBUG
 
-/* static */ bool
+/* static */ void
 ObjectElements::ConvertElementsToDoubles(JSContext* cx, uintptr_t elementsPtr)
 {
     /*
-     * This function is infallible, but has a fallible interface so that it can
+     * This function has an otherwise unused JSContext argument so that it can
      * be called directly from Ion code. Only arrays can have their dense
      * elements converted to doubles, and arrays never have empty elements.
      */
@@ -100,7 +100,6 @@ ObjectElements::ConvertElementsToDoubles(JSContext* cx, uintptr_t elementsPtr)
     }
 
     header->setShouldConvertDoubleElements();
-    return true;
 }
 
 /* static */ bool
