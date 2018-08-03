@@ -216,16 +216,23 @@ interface nsIEditor  : nsISupports
     */
   void endTransaction();
 
-  boolean shouldTxnSetSelection();
-
-  /** Set the flag that prevents insertElementTxn from changing the selection
-    * @param   should  Set false to suppress changing the selection;
-    *                  i.e., before using InsertElement() to insert
-    *                  under <head> element
-    * WARNING: You must be very careful to reset back to PR_TRUE after
-    *          setting PR_FALSE, else selection/caret is trashed
-    *          for further editing.
-    */
+  /**
+   * While setting the flag with this method to false, CreateElementTransaction,
+   * DeleteRangeTransaction, DeleteTextTransaction, InsertNodeTransaction,
+   * InsertTextTransaction and SplitNodeTransaction won't change Selection
+   * after modifying the DOM tree.
+   * Note that calling this with false does not guarantee that Selection won't
+   * be changed because other transaction may ignore this flag, editor itself
+   * may change selection, and current selection may become invalid after
+   * changing the DOM tree, etc.
+   * After calling this method with true, the caller should guarantee that
+   * Selection should be positioned where user expects.
+   *
+   * @param should    false if you don't want above transactions to modify
+   *                  Selection automatically after modifying the DOM tree.
+   *                  Note that calling this with false does not guarantee
+   *                  that Selection is never changed.
+   */
   void setShouldTxnSetSelection(in boolean should);
 
   /* ------------ Inline Spell Checking methods -------------- */
