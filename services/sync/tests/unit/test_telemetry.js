@@ -709,6 +709,30 @@ add_task(async function test_events() {
   }
 });
 
+add_task(async function test_histograms() {
+  enableValidationPrefs();
+
+  await Service.engineManager.register(BogusEngine);
+  let engine = Service.engineManager.get("bogus");
+  engine.enabled = true;
+  let server = await serverForFoo(engine);
+
+  await SyncTestingInfrastructure(server);
+  try {
+    let histId = "TELEMETRY_TEST_LINEAR";
+    Services.obs.notifyObservers(null, "weave:telemetry:histogram", histId);
+    let ping = await wait_for_ping(() => Service.sync(), true, true);
+    equal(Object.keys(ping.histograms).length, 1);
+    equal(ping.histograms[histId].sum, 0);
+    equal(ping.histograms[histId].histogram_type, 1);
+    equal(ping.histograms[histId].counts.length, 10);
+    equal(ping.histograms[histId].ranges.length, 10);
+  } finally {
+    await cleanAndGo(engine, server);
+    await Service.engineManager.unregister(engine);
+  }
+});
+
 add_task(async function test_invalid_events() {
   enableValidationPrefs();
 
