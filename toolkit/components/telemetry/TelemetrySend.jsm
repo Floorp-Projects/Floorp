@@ -800,6 +800,7 @@ var TelemetrySendImpl = {
     let setOSShutdown = () => {
       this._log.trace("setOSShutdown - in OS shutdown");
       this._isOSShutdown = true;
+      Telemetry.scalarSet("telemetry.os_shutting_down", true);
     };
 
     switch (topic) {
