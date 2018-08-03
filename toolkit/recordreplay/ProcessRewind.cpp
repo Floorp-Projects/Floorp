@@ -83,16 +83,19 @@ RestoreCheckpointAndResume(const CheckpointId& aCheckpoint)
 
   double start = CurrentTime();
 
-  // Rewind heap memory to the target checkpoint, which must have been saved.
-  CheckpointId newCheckpoint = gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
-  RestoreMemoryToLastSavedCheckpoint();
-  while (CheckpointPrecedes(aCheckpoint, newCheckpoint)) {
-    gRewindInfo->mSavedCheckpoints.back().ReleaseContents();
-    gRewindInfo->mSavedCheckpoints.popBack();
-    RestoreMemoryToLastSavedDiffCheckpoint();
-    newCheckpoint = gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
+  {
+    // Rewind heap memory to the target checkpoint, which must have been saved.
+    AutoDisallowMemoryChanges disallow;
+    CheckpointId newCheckpoint = gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
+    RestoreMemoryToLastSavedCheckpoint();
+    while (CheckpointPrecedes(aCheckpoint, newCheckpoint)) {
+      gRewindInfo->mSavedCheckpoints.back().ReleaseContents();
+      gRewindInfo->mSavedCheckpoints.popBack();
+      RestoreMemoryToLastSavedDiffCheckpoint();
+      newCheckpoint = gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
+    }
+    MOZ_RELEASE_ASSERT(newCheckpoint == aCheckpoint);
   }
-  MOZ_RELEASE_ASSERT(newCheckpoint == aCheckpoint);
 
   FixupFreeRegionsAfterRewind();
 
@@ -100,8 +103,8 @@ RestoreCheckpointAndResume(const CheckpointId& aCheckpoint)
   PrintSpew("Restore #%d:%d -> #%d:%d %.2fs\n",
             (int) gRewindInfo->mLastCheckpoint.mNormal,
             (int) gRewindInfo->mLastCheckpoint.mTemporary,
-            (int) newCheckpoint.mNormal,
-            (int) newCheckpoint.mTemporary,
+            (int) aCheckpoint.mNormal,
+            (int) aCheckpoint.mTemporary,
             (end - start) / 1000000.0);
 
   // Finally, let threads restore themselves to their stacks at the checkpoint

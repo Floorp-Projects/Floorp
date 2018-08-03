@@ -320,7 +320,7 @@ PerformanceMainThread::EnsureDocEntry()
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
     if (httpChannel) {
-      timing->SetPropertiesFromHttpChannel(httpChannel);
+      timing->SetPropertiesFromHttpChannel(httpChannel, mChannel);
     }
 
     nsAutoString name;

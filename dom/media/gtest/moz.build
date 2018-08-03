@@ -4,10 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include('/media/webrtc/webrtc.mozbuild')
+
+
+LOCAL_INCLUDES += [
+    '/media/webrtc/signaling/src/common',
+    '/media/webrtc/trunk'
+]
+
 UNIFIED_SOURCES += [
     'MockMediaResource.cpp',
     'TestAudioBuffers.cpp',
     'TestAudioCompactor.cpp',
+    'TestAudioDeviceEnumerator.cpp',
     'TestAudioMixer.cpp',
     'TestAudioPacketizer.cpp',
     'TestAudioSegment.cpp',
@@ -78,4 +87,4 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = 'xul-gtest'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+    CXXFLAGS += ['-Wno-error=shadow', '-Wno-unused-private-field']

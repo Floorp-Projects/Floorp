@@ -12,7 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-class AbortController;
 class AbortSignal;
 
 // This class must be implemented by objects who want to follow a AbortSignal.
@@ -43,7 +42,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AbortSignal, DOMEventTargetHelper)
 
-  AbortSignal(AbortController* aController, bool aAborted);
+  AbortSignal(nsIGlobalObject* aGlobalObject, bool aAborted);
   explicit AbortSignal(bool aAborted);
 
   JSObject*
@@ -65,8 +64,6 @@ public:
 
 private:
   ~AbortSignal() = default;
-
-  RefPtr<AbortController> mController;
 
   // Raw pointers. AbortFollower unregisters itself in the DTOR.
   nsTArray<AbortFollower*> mFollowers;

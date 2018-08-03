@@ -957,12 +957,12 @@ public:
   /**
    * Add a new pending binding to the list
    */
-  void AddPendingBinding(PendingBinding* aPendingBinding)
+  void AddPendingBinding(UniquePtr<PendingBinding> aPendingBinding)
   {
     if (mCurrentPendingBindingInsertionPoint) {
-      mCurrentPendingBindingInsertionPoint->setPrevious(aPendingBinding);
+      mCurrentPendingBindingInsertionPoint->setPrevious(aPendingBinding.release());
     } else {
-      mPendingBindings.insertBack(aPendingBinding);
+      mPendingBindings.insertBack(aPendingBinding.release());
     }
   }
 
@@ -3405,10 +3405,9 @@ FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame)
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame,
-                                    nsIContent* aTextContent)
+nsCSSFrameConstructor::FindTextData(const Text& aTextContent,
+                                    nsIFrame* aParentFrame)
 {
-  MOZ_ASSERT(aTextContent, "How?");
   if (aParentFrame && IsFrameForSVG(aParentFrame)) {
     nsIFrame* ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
@@ -3419,7 +3418,7 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame,
     // Don't render stuff in display: contents / Shadow DOM subtrees, because
     // TextCorrespondenceRecorder in the SVG text code doesn't really know how
     // to deal with it. This kinda sucks. :(
-    if (aParentFrame->GetContent() != aTextContent->GetParent()) {
+    if (aParentFrame->GetContent() != aTextContent.GetParent()) {
       return nullptr;
     }
 
@@ -3553,12 +3552,7 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
                                     nsIFrame* aParentFrame,
                                     ComputedStyle& aStyle)
 {
-  // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
-  // a valid HTML namespace.  This check must match the one in
-  // ShouldHaveFirstLineStyle.
-  if (!aElement.IsHTMLElement()) {
-    return nullptr;
-  }
+  MOZ_ASSERT(aElement.IsHTMLElement());
 
   nsAtom* tag = aElement.NodeInfo()->NameAtom();
   NS_ASSERTION(!aParentFrame ||
@@ -4195,12 +4189,9 @@ nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
                                       nsAtom* aTag,
-                                      int32_t aNameSpaceID,
                                       ComputedStyle& aStyle)
 {
-  if (aNameSpaceID != kNameSpaceID_XUL) {
-    return nullptr;
-  }
+  MOZ_ASSERT(aElement.IsXULElement());
 
   static const FrameConstructionDataByTag sXULTagData[] = {
 #ifdef MOZ_XUL
@@ -4928,10 +4919,7 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
                                       ComputedStyle& aStyle)
 {
-  // Make sure that we remain confined in the MathML world
-  if (!aElement.IsMathMLElement()) {
-    return nullptr;
-  }
+  MOZ_ASSERT(aElement.IsMathMLElement());
 
   nsAtom* tag = aElement.NodeInfo()->NameAtom();
 
@@ -5116,9 +5104,7 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
                                    bool aAllowsTextPathChild,
                                    ComputedStyle& aStyle)
 {
-  if (!aElement.IsSVGElement()) {
-    return nullptr;
-  }
+  MOZ_ASSERT(aElement.IsSVGElement());
 
   static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
   static const FrameConstructionData sContainerData =
@@ -5432,7 +5418,7 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
 // XXXbz it's not clear how this should best work with XBL.
 static bool
 ShouldSuppressFrameInSelect(const nsIContent* aParent,
-                            const nsIContent* aChild)
+                            const nsIContent& aChild)
 {
   if (!aParent ||
       !aParent->IsAnyOfHTMLElements(nsGkAtoms::select, nsGkAtoms::optgroup)) {
@@ -5443,23 +5429,23 @@ ShouldSuppressFrameInSelect(const nsIContent* aParent,
   //
   // We can't be regular NAC, since display: contents has no frame to generate
   // them off.
-  if (aChild->GetParent() != aParent) {
+  if (aChild.GetParent() != aParent) {
     return true;
   }
 
   // Option is always fine.
-  if (aChild->IsHTMLElement(nsGkAtoms::option)) {
+  if (aChild.IsHTMLElement(nsGkAtoms::option)) {
     return false;
   }
 
   // <optgroup> is OK in <select> but not in <optgroup>.
-  if (aChild->IsHTMLElement(nsGkAtoms::optgroup) &&
+  if (aChild.IsHTMLElement(nsGkAtoms::optgroup) &&
       aParent->IsHTMLElement(nsGkAtoms::select)) {
     return false;
   }
 
   // Allow native anonymous content no matter what.
-  if (aChild->IsRootOfAnonymousSubtree()) {
+  if (aChild.IsRootOfAnonymousSubtree()) {
     return false;
   }
 
@@ -5468,13 +5454,13 @@ ShouldSuppressFrameInSelect(const nsIContent* aParent,
 
 static bool
 ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
-                                    const nsIContent* aChild)
+                                    const nsIContent& aChild)
 {
   if (!aDetails || aDetails->Open()) {
     return false;
   }
 
-  if (aChild->GetParent() != aDetails) {
+  if (aChild.GetParent() != aDetails) {
     return true;
   }
 
@@ -5484,14 +5470,173 @@ ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
   }
 
   // Don't suppress NAC, unless it's ::before or ::after.
-  if (aChild->IsRootOfAnonymousSubtree() &&
-      !aChild->IsGeneratedContentContainerForBefore() &&
-      !aChild->IsGeneratedContentContainerForAfter()) {
+  if (aChild.IsRootOfAnonymousSubtree() &&
+      !aChild.IsGeneratedContentContainerForBefore() &&
+      !aChild.IsGeneratedContentContainerForAfter()) {
     return false;
   }
 
   return true;
 }
+
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindDataForContent(nsIContent& aContent,
+                                          ComputedStyle& aStyle,
+                                          nsIFrame* aParentFrame,
+                                          nsAtom* aTag,
+                                          uint32_t aFlags)
+{
+  MOZ_ASSERT(aStyle.StyleDisplay()->mDisplay != StyleDisplay::None &&
+             aStyle.StyleDisplay()->mDisplay != StyleDisplay::Contents,
+             "These two special display values should be handled earlier");
+
+  if (auto* text = Text::FromNode(aContent)) {
+    return FindTextData(*text, aParentFrame);
+  }
+
+  return FindElementData(*aContent.AsElement(),
+                         aStyle,
+                         aParentFrame,
+                         aTag,
+                         aFlags);
+}
+
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindElementData(const Element& aElement,
+                                       ComputedStyle& aStyle,
+                                       nsIFrame* aParentFrame,
+                                       nsAtom* aTag,
+                                       uint32_t aFlags)
+{
+  // Don't create frames for non-SVG element children of SVG elements.
+  if (!aElement.IsSVGElement()) {
+    if (aParentFrame && IsFrameForSVG(aParentFrame) &&
+        !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
+      return nullptr;
+    }
+    if (aFlags & ITEM_IS_WITHIN_SVG_TEXT) {
+      return nullptr;
+    }
+  }
+
+  if (auto* data = FindElementTagData(aElement, aStyle, aParentFrame, aTag, aFlags)) {
+    return data;
+  }
+
+  // Check for 'content: <image-url>' on the element (which makes us ignore
+  // 'display' values other than 'none' or 'contents').
+  if (ShouldCreateImageFrameForContent(aElement, aStyle)) {
+    static const FrameConstructionData sImgData =
+      SIMPLE_FCDATA(NS_NewImageFrameForContentProperty);
+    return &sImgData;
+  }
+
+  const auto& display = *aStyle.StyleDisplay();
+  if (auto* data = FindXULDisplayData(display, aElement)) {
+    return data;
+  }
+
+  return FindDisplayData(display, aElement);
+}
+
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
+                                          ComputedStyle& aStyle,
+                                          nsIFrame* aParentFrame,
+                                          nsAtom* aTag,
+                                          uint32_t aFlags)
+{
+  switch (aElement.GetNameSpaceID()) {
+    case kNameSpaceID_XHTML:
+      return FindHTMLData(aElement, aParentFrame, aStyle);
+    case kNameSpaceID_MathML:
+      return FindMathMLData(aElement, aStyle);
+    case kNameSpaceID_SVG:
+      return FindSVGData(aElement,
+                         aParentFrame,
+                         aFlags & ITEM_IS_WITHIN_SVG_TEXT,
+                         aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD,
+                         aStyle);
+    case kNameSpaceID_XUL:
+      return FindXULTagData(aElement, aTag, aStyle);
+    default:
+      return nullptr;
+  }
+}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
+  already_AddRefed<ComputedStyle> aStyle,
+  mozilla::UniquePtr<PendingBinding> aPendingBinding,
+  nsAtom* aTag)
+  : mStyle(aStyle)
+  , mPendingBinding(std::move(aPendingBinding))
+  , mTag(aTag)
+{
+  MOZ_ASSERT(mTag);
+  MOZ_ASSERT(mStyle);
+}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(nsIContent& aContent,
+                                                              ComputedStyle& aStyle)
+  : mStyle(&aStyle)
+  , mPendingBinding(nullptr)
+  , mTag(aContent.NodeInfo()->NameAtom())
+{
+}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo() = default;
+
+nsCSSFrameConstructor::XBLBindingLoadInfo
+nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
+                                              ComputedStyle& aStyle,
+                                              uint32_t aFlags)
+{
+  if (!(aFlags & ITEM_ALLOW_XBL_BASE)) {
+    return { aContent, aStyle };
+  }
+  css::URLValue* binding = aStyle.StyleDisplay()->mBinding;
+  if (!binding) {
+    return { aContent, aStyle };
+  }
+
+  nsXBLService* xblService = nsXBLService::GetInstance();
+  if (!xblService) {
+    return { };
+  }
+
+  auto newPendingBinding = MakeUnique<PendingBinding>();
+
+  bool resolveStyle;
+  nsresult rv = xblService->LoadBindings(aContent.AsElement(),
+                                         binding->GetURI(),
+                                         binding->mExtraData->GetPrincipal(),
+                                         getter_AddRefs(newPendingBinding->mBinding),
+                                         &resolveStyle);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_XBL_BLOCKED) {
+      return { aContent, aStyle };
+    }
+    return { };
+  }
+
+  RefPtr<ComputedStyle> style = resolveStyle
+    ? mPresShell->StyleSet()->ResolveServoStyle(*aContent.AsElement())
+    : do_AddRef(&aStyle);
+
+  nsAtom* tag = aContent.NodeInfo()->NameAtom();
+  if (aContent.IsXULElement()) {
+    int32_t overridenNamespace;
+    nsAtom* overridenTag =
+      mDocument->BindingManager()->ResolveTag(&aContent, &overridenNamespace);
+    // Only allow overriding from & to XUL.
+    if (overridenNamespace == kNameSpaceID_XUL) {
+      tag = overridenTag;
+    }
+  }
+
+  return { style.forget(), std::move(newPendingBinding), tag };
+}
+
 
 void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
@@ -5508,53 +5653,25 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   MOZ_ASSERT(!aContent->GetPrimaryFrame() || aState.mCreatingExtraFrames ||
              aContent->NodeInfo()->NameAtom() == nsGkAtoms::area);
 
-  // The following code allows the user to specify the base tag of an element
-  // using XBL. XUL elements can then be extended arbitrarily.
-  RefPtr<ComputedStyle> style = aComputedStyle;
   PendingBinding* pendingBinding = nullptr;
-  nsAtom* tag = aContent->NodeInfo()->NameAtom();
-  int32_t namespaceId = aContent->GetNameSpaceID();
-  if (aFlags & ITEM_ALLOW_XBL_BASE) {
-    if (css::URLValue* binding = style->StyleDisplay()->mBinding) {
-      // Ensure that our XBL bindings are installed.
-
-      nsXBLService* xblService = nsXBLService::GetInstance();
-      if (!xblService) {
-        return;
-      }
-
-      auto newPendingBinding = MakeUnique<PendingBinding>();
-      bool resolveStyle;
-
-      nsresult rv = xblService->LoadBindings(
-        aContent->AsElement(), binding->GetURI(),
-        binding->mExtraData->GetPrincipal(),
-        getter_AddRefs(newPendingBinding->mBinding), &resolveStyle);
-      if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
-        return;
-
-      if (newPendingBinding->mBinding) {
-        pendingBinding = newPendingBinding.get();
-        // aState takes over owning newPendingBinding
-        aState.AddPendingBinding(newPendingBinding.release());
-      }
-
-      if (resolveStyle) {
-        style =
-          mPresShell->StyleSet()->ResolveServoStyle(*aContent->AsElement());
-      }
-
-      aComputedStyle = style;
-      if (namespaceId == kNameSpaceID_XUL) {
-        // Only allow overriding from & to XUL.
-        int32_t overridenNamespace;
-        nsAtom* overridenTag =
-          mDocument->BindingManager()->ResolveTag(aContent, &overridenNamespace);
-        if (overridenNamespace == kNameSpaceID_XUL) {
-          tag = overridenTag;
-        }
-      }
+  RefPtr<ComputedStyle> style;
+  nsAtom* tag;
+  {
+    XBLBindingLoadInfo xblInfo =
+      LoadXBLBindingIfNeeded(*aContent, *aComputedStyle, aFlags);
+    if (!xblInfo.mTag) {
+      return;
     }
+
+    if (xblInfo.mPendingBinding && xblInfo.mPendingBinding->mBinding) {
+      pendingBinding = xblInfo.mPendingBinding.get();
+      aState.AddPendingBinding(std::move(xblInfo.mPendingBinding));
+    }
+
+    style = xblInfo.mStyle.forget();
+    aComputedStyle = style.get();
+
+    tag = xblInfo.mTag;
   }
 
   const bool isGeneratedContent = !!(aFlags & ITEM_IS_GENERATED_CONTENT);
@@ -5599,8 +5716,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     return;
   }
 
+
   nsIContent* parent = aParentFrame ? aParentFrame->GetContent() : nullptr;
-  if (ShouldSuppressFrameInSelect(parent, aContent)) {
+  if (ShouldSuppressFrameInSelect(parent, *aContent)) {
     return;
   }
 
@@ -5610,84 +5728,30 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   // ::before and ::after); we always want to create "internal" anonymous
   // content.
   auto* details = HTMLDetailsElement::FromNodeOrNull(parent);
-  if (ShouldSuppressFrameInNonOpenDetails(details, aContent)) {
+  if (ShouldSuppressFrameInNonOpenDetails(details, *aContent)) {
+    return;
+  }
+
+  const FrameConstructionData* data =
+    FindDataForContent(*aContent, *style, aParentFrame, tag, aFlags);
+  if (!data || data->mBits & FCDATA_SUPPRESS_FRAME) {
     return;
   }
 
   bool isPopup = false;
-  const bool isText = !aContent->IsElement();
-  // Try to find frame construction data for this content
-  const FrameConstructionData* data;
-  if (isText) {
-    data = FindTextData(aParentFrame, aContent);
-    if (!data) {
-      // Nothing to do here; suppressed text inside SVG
-      return;
-    }
-  } else {
-    Element& element = *aContent->AsElement();
-
-    // Don't create frames for non-SVG element children of SVG elements.
-    if (namespaceId != kNameSpaceID_SVG &&
-        ((aParentFrame &&
-          IsFrameForSVG(aParentFrame) &&
-          !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) ||
-         (aFlags & ITEM_IS_WITHIN_SVG_TEXT))) {
-      return;
-    }
-
-    data = FindHTMLData(element, aParentFrame, *style);
-    if (!data) {
-      data = FindXULTagData(element, tag, namespaceId, *style);
-    }
-    if (!data) {
-      data = FindMathMLData(element, *style);
-    }
-    if (!data) {
-      data = FindSVGData(element,
-                         aParentFrame,
-                         aFlags & ITEM_IS_WITHIN_SVG_TEXT,
-                         aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD,
-                         *style);
-    }
-
-    // Check for 'content: <image-url>' on the element (which makes us ignore
-    // 'display' values other than 'none' or 'contents').
-    if (!data && ShouldCreateImageFrameForContent(element, *style)) {
-      static const FrameConstructionData sImgData =
-        SIMPLE_FCDATA(NS_NewImageFrameForContentProperty);
-      data = &sImgData;
-    }
-
-    // Now check for XUL display types
-    if (!data) {
-      data = FindXULDisplayData(display, element);
-    }
-
-    // And general display types
-    if (!data) {
-      data = FindDisplayData(display, element);
-    }
-
-    MOZ_ASSERT(data, "Should have frame construction data now");
-
-    if (data->mBits & FCDATA_SUPPRESS_FRAME) {
-      return;
-    }
 
 #ifdef MOZ_XUL
-    if ((data->mBits & FCDATA_IS_POPUP) &&
-        (!aParentFrame || // Parent is inline
-         !aParentFrame->IsMenuFrame())) {
-      if (!aState.mPopupItems.containingBlock &&
-          !aState.mHavePendingPopupgroup) {
-        return;
-      }
-
-      isPopup = true;
+  if ((data->mBits & FCDATA_IS_POPUP) &&
+      (!aParentFrame || // Parent is inline
+       !aParentFrame->IsMenuFrame())) {
+    if (!aState.mPopupItems.containingBlock &&
+        !aState.mHavePendingPopupgroup) {
+      return;
     }
-#endif /* MOZ_XUL */
+
+    isPopup = true;
   }
+#endif /* MOZ_XUL */
 
   uint32_t bits = data->mBits;
 
@@ -5724,7 +5788,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                              style.forget(),
                              aSuppressWhiteSpaceOptimizations);
   }
-  item->mIsText = isText;
+  item->mIsText = !aContent->IsElement();
   item->mIsGeneratedContent = isGeneratedContent;
   item->mIsAnonymousContentCreatorContent =
     aFlags & ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT;
@@ -5734,14 +5798,13 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     item->mContent->AddRef();
   }
   item->mIsRootPopupgroup =
-    namespaceId == kNameSpaceID_XUL && tag == nsGkAtoms::popupgroup &&
-    aContent->IsRootOfNativeAnonymousSubtree();
+    aContent->IsRootOfNativeAnonymousSubtree() &&
+    aContent->IsXULElement() &&
+    tag == nsGkAtoms::popupgroup;
   if (item->mIsRootPopupgroup) {
     aState.mHavePendingPopupgroup = true;
   }
   item->mIsPopup = isPopup;
-  item->mIsForSVGAElement = namespaceId == kNameSpaceID_SVG &&
-                            tag == nsGkAtoms::a;
 
   if (canHavePageBreak && display.mBreakAfter) {
     AddPageBreakItem(aContent, aItems);
@@ -5753,7 +5816,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     BuildInlineChildItems(aState, *item,
                           aFlags & ITEM_IS_WITHIN_SVG_TEXT,
                           aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD);
-    item->mHasInlineEnds = true;
     item->mIsBlock = false;
   } else {
     // Compute a boolean isInline which is guaranteed to be false for blocks
@@ -5774,7 +5836,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     // that has mIsAllInline false doesn't need an {ib} split.  So this is just
     // an optimization to keep from doing too much work in cases when we can
     // show that mIsAllInline is true..
-    item->mIsAllInline = item->mHasInlineEnds = isInline ||
+    item->mIsAllInline = isInline ||
       // Figure out whether we're guaranteed this item will be out of flow.
       // This is not a precise test, since one of our ancestor inlines might add
       // an absolute containing block (if it's relatively positioned) when there
@@ -5786,8 +5848,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       //
       // If we make this test precise, we can remove some of the code dealing
       // with the imprecision in ConstructInline and adjust the comments on
-      // mIsAllInline and mIsBlock in the header.  And probably remove mIsBlock
-      // altogether, since then it will always be equal to !mHasInlineEnds.
+      // mIsAllInline and mIsBlock in the header.
       (!(bits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
        aState.GetGeometricParent(display, nullptr));
 
@@ -9281,7 +9342,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
                                 wrapperStyle,
                                 true);
 
-    newItem->mIsAllInline = newItem->mHasInlineEnds =
+    newItem->mIsAllInline =
       newItem->mComputedStyle->StyleDisplay()->IsInlineOutsideStyle();
     newItem->mIsBlock = !newItem->mIsAllInline;
 
@@ -9789,8 +9850,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
   // inline-table in the end, so it'll all work out.  In any case, arguably
   // we don't need to maintain this state at this point... but it's better
   // to, I guess.
-  newItem->mIsAllInline = newItem->mHasInlineEnds =
-    disp->IsInlineOutsideStyle();
+  newItem->mIsAllInline = disp->IsInlineOutsideStyle();
 
   bool isRuby = disp->IsRubyDisplayType();
   // All types of ruby frames need a block frame to provide line layout,
@@ -11216,7 +11276,8 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
   if (aItemIsWithinSVGText) {
     flags |= ITEM_IS_WITHIN_SVG_TEXT;
   }
-  if (aItemAllowsTextPathChild && aParentItem.mIsForSVGAElement) {
+  if (aItemAllowsTextPathChild &&
+      aParentItem.mContent->IsSVGElement(nsGkAtoms::a)) {
     flags |= ITEM_ALLOWS_TEXT_PATH_CHILD;
   }
 

@@ -200,17 +200,17 @@ void PrefChanged(const char* aPref, void* aClosure)
       sVolumeScale = std::max<double>(0, PR_strtod(value.get(), nullptr));
     }
   } else if (strcmp(aPref, PREF_CUBEB_LATENCY_PLAYBACK) == 0) {
+    StaticMutexAutoLock lock(sMutex);
     // Arbitrary default stream latency of 100ms.  The higher this
     // value, the longer stream volume changes will take to become
     // audible.
     sCubebPlaybackLatencyPrefSet = Preferences::HasUserValue(aPref);
     uint32_t value = Preferences::GetUint(aPref, CUBEB_NORMAL_LATENCY_MS);
-    StaticMutexAutoLock lock(sMutex);
     sCubebPlaybackLatencyInMilliseconds = std::min<uint32_t>(std::max<uint32_t>(value, 1), 1000);
   } else if (strcmp(aPref, PREF_CUBEB_LATENCY_MSG) == 0) {
+    StaticMutexAutoLock lock(sMutex);
     sCubebMSGLatencyPrefSet = Preferences::HasUserValue(aPref);
     uint32_t value = Preferences::GetUint(aPref, CUBEB_NORMAL_LATENCY_FRAMES);
-    StaticMutexAutoLock lock(sMutex);
     // 128 is the block size for the Web Audio API, which limits how low the
     // latency can be here.
     // We don't want to limit the upper limit too much, so that people can
@@ -234,6 +234,7 @@ void PrefChanged(const char* aPref, void* aClosure)
       cubebLog->SetLevel(LogLevel::Disabled);
     }
   } else if (strcmp(aPref, PREF_CUBEB_BACKEND) == 0) {
+    StaticMutexAutoLock lock(sMutex);
     nsAutoCString value;
     Preferences::GetCString(aPref, value);
     if (value.IsEmpty()) {
@@ -298,6 +299,15 @@ cubeb* GetCubebContext()
 {
   StaticMutexAutoLock lock(sMutex);
   return GetCubebContextUnlocked();
+}
+
+// This is only exported when running tests.
+void
+ForceSetCubebContext(cubeb* aCubebContext)
+{
+  StaticMutexAutoLock lock(sMutex);
+  sCubebContext = aCubebContext;
+  sCubebState = CubebState::Initialized;
 }
 
 bool InitPreferredSampleRate()

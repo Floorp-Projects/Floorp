@@ -79,30 +79,31 @@ AudioDeviceInfo::AudioDeviceInfo(AudioDeviceID aID,
              mDefaultFormat == FMT_F32BE, "Wrong default format");
 }
 
-Maybe<AudioDeviceID>
-AudioDeviceInfo::GetDeviceID()
+AudioDeviceID
+AudioDeviceInfo::DeviceID() const
 {
-  if (mDeviceId) {
-    return Some(mDeviceId);
-  }
-  return Nothing();
+  return mDeviceId;
 }
-
-const nsString& AudioDeviceInfo::FriendlyName()
+const nsString& AudioDeviceInfo::Name() const
 {
   return mName;
 }
-uint32_t AudioDeviceInfo::MaxChannels()
+uint32_t AudioDeviceInfo::MaxChannels() const
 {
   return mMaxChannels;
 }
-uint32_t AudioDeviceInfo::Type()
+uint32_t AudioDeviceInfo::Type() const
 {
   return mType;
 }
-uint32_t AudioDeviceInfo::State()
+uint32_t AudioDeviceInfo::State() const
 {
   return mState;
+}
+
+bool AudioDeviceInfo::Preferred() const
+{
+  return mPreferred;
 }
 
 /* readonly attribute DOMString name; */

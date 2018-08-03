@@ -328,6 +328,10 @@ class ComplexTypeDescr : public TypeDescr
     TypedProto& instancePrototype() const {
         return getReservedSlot(JS_DESCR_SLOT_TYPROTO).toObject().as<TypedProto>();
     }
+
+    bool allowConstruct() const {
+        return getReservedSlot(JS_DESCR_SLOT_FLAGS).toInt32() & JS_DESCR_FLAG_ALLOW_CONSTRUCT;
+    }
 };
 
 bool IsTypedObjectClass(const Class* clasp); // Defined below
@@ -416,8 +420,10 @@ class StructMetaTypeDescr : public NativeObject
     static StructTypeDescr* createFromArrays(JSContext* cx,
                                              HandleObject structTypePrototype,
                                              bool opaque,
+                                             bool allowConstruct,
                                              AutoIdVector& ids,
-                                             AutoValueVector& fieldTypeObjs);
+                                             AutoValueVector& fieldTypeObjs,
+                                             Vector<bool>& fieldMutabilities);
 
     // Properties and methods to be installed on StructType.prototype,
     // and hence inherited by all struct type objects:
@@ -475,6 +481,11 @@ class StructTypeDescr : public ComplexTypeDescr
 
     // Return the offset of the field at index `index`.
     size_t fieldOffset(size_t index) const;
+
+    // Return the mutability of the field at index `index`.
+    bool fieldIsMutable(size_t index) const;
+
+    static bool call(JSContext* cx, unsigned argc, Value* vp);
 
   private:
     ArrayObject& fieldInfoObject(size_t slot) const {
