@@ -9,17 +9,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>CSS Reftest Reference</title>
-    <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com"/>
+    <link rel="author" title="Mihir Iyer" href="mailto:miyer@mozilla.com"/>
     <style>
       .flexbox {
         border: 1px dashed blue;
         width: 200px;
         float: left;
         font-size: 10px;
+        direction: rtl;
       }
 
-      .flex-start, .flex-end, .center, .baseline, .stretch,
-      .self-start, .self-end {
+      .flex-start, .flex-end, .center, .baseline, .stretch, .self-start, .self-end {
         clear: both;
         margin:       1px 2px 3px 4px;
         border-width: 2px 3px 4px 5px;
@@ -35,11 +35,11 @@
       /* Classes for each of the various align-self values */
       .flex-start {
         background: lime;
-        float: left;
+        float: right;
       }
       .flex-end {
         background: orange;
-        float: right;
+        float: left;
       }
       <!-- We center shrinkwrapped text by putting it into an inline-block, and
            then wrapping that inline-block in a helper-div that has
@@ -50,11 +50,11 @@
       .center {
         background: lightblue;
         display: inline-block;
-        text-align: left; /* Keep parent's centering from tweaking my text */
+        text-align: right; /* Keep parent's centering from tweaking my text */
       }
       .baseline {
         background: teal;
-        float: left;
+        float: right;
       }
       .stretch {
         background: pink;
@@ -62,12 +62,10 @@
       .self-start {
         background: yellow;
         float: right;
-        text-align: right;
       }
       .self-end {
         background: purple;
         float: left;
-        text-align: right;
       }
       .clearFloats { clear: both }
    </style>
