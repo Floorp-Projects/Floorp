@@ -96,27 +96,32 @@ SplitNodeTransaction::DoTransaction()
   // Insert the new node
   mEditorBase->DoSplitNode(EditorDOMPoint(mStartOfRightNode),
                            *mNewLeftNode, error);
+
+  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    return NS_OK;
+  }
+
   // XXX Really odd.  The result of DoSplitNode() is respected only when
   //     we shouldn't set selection.  Otherwise, it's overridden by the
   //     result of Selection.Collapse().
-  if (mEditorBase->GetShouldTxnSetSelection()) {
-    NS_WARNING_ASSERTION(!mEditorBase->Destroyed(),
-      "The editor has gone but SplitNodeTransaction keeps trying to modify "
-      "Selection");
-    RefPtr<Selection> selection = mEditorBase->GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (NS_WARN_IF(error.Failed())) {
-      // XXX This must be a bug.
-      error.SuppressException();
-    }
-    MOZ_ASSERT(mStartOfRightNode.Offset() == mNewLeftNode->Length());
-    EditorRawDOMPoint atEndOfLeftNode;
-    atEndOfLeftNode.SetToEndOf(mNewLeftNode);
-    selection->Collapse(atEndOfLeftNode, error);
+  NS_WARNING_ASSERTION(!mEditorBase->Destroyed(),
+    "The editor has gone but SplitNodeTransaction keeps trying to modify "
+    "Selection");
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
   }
-
+  if (NS_WARN_IF(error.Failed())) {
+    // XXX This must be a bug.
+    error.SuppressException();
+  }
+  MOZ_ASSERT(mStartOfRightNode.Offset() == mNewLeftNode->Length());
+  EditorRawDOMPoint atEndOfLeftNode;
+  atEndOfLeftNode.SetToEndOf(mNewLeftNode);
+  selection->Collapse(atEndOfLeftNode, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }

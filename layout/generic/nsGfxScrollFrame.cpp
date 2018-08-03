@@ -1358,6 +1358,15 @@ ScrollFrameHelper::WantAsyncScroll() const
   ScrollStyles styles = GetScrollStylesFromFrame();
   nscoord oneDevPixel = GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
   nsRect scrollRange = GetScrollRange();
+
+  // If the page has a visual viewport size that's different from
+  // the layout viewport size at the current zoom level, we need to be
+  // able to scroll the visual viewport inside the layout viewport
+  // even if the page is not zoomable.
+  if (!GetScrollRangeForClamping().IsEqualInterior(scrollRange)) {
+    return true;
+  }
+
   bool isVScrollable = (scrollRange.height >= oneDevPixel) &&
                        (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
   bool isHScrollable = (scrollRange.width >= oneDevPixel) &&
