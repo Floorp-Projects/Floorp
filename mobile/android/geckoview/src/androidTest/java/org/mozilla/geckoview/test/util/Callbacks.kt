@@ -62,8 +62,9 @@ class Callbacks private constructor() {
             return null
         }
 
-        override fun onLoadError(session: GeckoSession, uri: String,
-                                 category: Int, error: Int) {
+        override fun onLoadError(session: GeckoSession, uri: String?,
+                                 category: Int, error: Int): GeckoResult<String>? {
+            return null
         }
     }
 
