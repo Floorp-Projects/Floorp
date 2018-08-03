@@ -26,6 +26,10 @@ var _selectors = require("../selectors/index");
 
 var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
 
+var _devtoolsServices = require("Services");
+
+var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
+
 var _devtoolsSplitter = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-splitter"];
 
 var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
@@ -68,7 +72,7 @@ const shortcuts = new _devtoolsModules.KeyShortcuts({
 });
 const {
   appinfo
-} = _devtoolsModules.Services;
+} = _devtoolsServices2.default;
 const isMacOS = appinfo.OS === "Darwin";
 const horizontalLayoutBreakpoint = window.matchMedia("(min-width: 800px)");
 const verticalLayoutBreakpoint = window.matchMedia("(min-width: 10px) and (max-width: 800px)");

@@ -35,6 +35,7 @@ var _selectors = require("../../selectors/index");
 function createOriginalSource(originalUrl, generatedSource, sourceMaps) {
   return {
     url: originalUrl,
+    relativeUrl: originalUrl,
     id: sourceMaps.generatedToOriginalId(generatedSource.id, originalUrl),
     isPrettyPrinted: false,
     isWasm: false,

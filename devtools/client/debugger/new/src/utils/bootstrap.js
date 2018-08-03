@@ -149,7 +149,7 @@ function bootstrapApp(store) {
 let currentPendingBreakpoints;
 
 function updatePrefs(state) {
-  let previousPendingBreakpoints = currentPendingBreakpoints;
+  const previousPendingBreakpoints = currentPendingBreakpoints;
   currentPendingBreakpoints = selectors.getPendingBreakpoints(state);
 
   if (previousPendingBreakpoints && currentPendingBreakpoints !== previousPendingBreakpoints) {

@@ -7,7 +7,7 @@ exports.getDomain = getDomain;
 exports.findNodeInContents = findNodeInContents;
 exports.createTreeNodeMatcher = createTreeNodeMatcher;
 
-var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
+var _url = require("../url");
 
 var _utils = require("./utils");
 

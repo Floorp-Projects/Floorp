@@ -30,7 +30,9 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _CommandBarButton = require("../shared/Button/CommandBarButton");
 
-var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+var _devtoolsServices = require("Services");
+
+var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41,7 +43,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 const {
   appinfo
-} = _devtoolsModules.Services;
+} = _devtoolsServices2.default;
 const isMacOS = appinfo.OS === "Darwin";
 const COMMANDS = ["resume", "stepOver", "stepIn", "stepOut"];
 const KEYS = {

@@ -31,6 +31,5 @@ add_task(async function() {
   });
 
   await waitForSourceCount(dbg, 3);
-
   is(getLabel(dbg, 3), "evaled.js", "evaled exists");
 });
