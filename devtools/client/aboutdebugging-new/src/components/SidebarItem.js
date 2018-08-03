@@ -8,16 +8,24 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const Actions = require("../actions/index");
+
 /**
  * This component displays an item of the Sidebar component.
  */
 class SidebarItem extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       icon: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
       isSelected: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
     };
+  }
+
+  onItemClick() {
+    this.props.dispatch(Actions.selectPage(this.props.id));
   }
 
   render() {
@@ -26,6 +34,7 @@ class SidebarItem extends PureComponent {
     return dom.li(
       {
         className: "sidebar-item" + (isSelected ? " sidebar-item--selected" : ""),
+        onClick: () => this.onItemClick()
       },
       dom.img({
         className: "sidebar-item__icon" +

@@ -378,7 +378,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
 
   // don't let any txns in here move the selection around behind our back.
   // Note that this won't prevent explicit selection setting from working.
-  AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eDeleteSelectedContent:
@@ -849,7 +849,7 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     // aEditSubAction == EditSubAction::eInsertText
 
     // don't change my selection in subtransactions
-    AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
 
     EditorRawDOMPoint pointAfterStringInserted;
     rv = TextEditorRef().InsertTextWithTransaction(*doc, *outString,
@@ -1477,7 +1477,7 @@ TextEditRules::CreateTrailingBRIfNeeded()
   }
 
   if (!lastChild->IsHTMLElement(nsGkAtoms::br)) {
-    AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
     EditorRawDOMPoint endOfRoot;
     endOfRoot.SetToEndOf(rootElement);
     CreateElementResult createMozBrResult = CreateMozBR(endOfRoot);
@@ -1545,7 +1545,7 @@ TextEditRules::CreateBogusNodeIfNeeded()
   }
 
   // Skip adding the bogus node if body is read-only.
-  if (!TextEditorRef().IsModifiableNode(rootElement)) {
+  if (!TextEditorRef().IsModifiableNode(*rootElement)) {
     return NS_OK;
   }
 

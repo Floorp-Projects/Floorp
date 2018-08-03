@@ -1208,10 +1208,6 @@ public:
   // Inner windows only.
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);
 
-  // See PromiseWindowProxy.h for an explanation.
-  void AddPendingPromise(mozilla::dom::Promise* aPromise);
-  void RemovePendingPromise(mozilla::dom::Promise* aPromise);
-
 public:
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
 

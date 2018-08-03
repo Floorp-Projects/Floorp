@@ -105,7 +105,7 @@ CreateElementTransaction::DoTransaction()
   }
 
   // Only set selection to insertion point if editor gives permission
-  if (!mEditorBase->GetShouldTxnSetSelection()) {
+  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
     // Do nothing - DOM range gravity will adjust selection
     return NS_OK;
   }

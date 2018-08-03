@@ -193,7 +193,7 @@ class CodeCoverageMixin(SingleTestMixin):
         # TODO: Add tests that haven't been run for a while (a week? N pushes?)
 
         # Add baseline code coverage collection tests
-        baseline_tests = {
+        baseline_tests_by_ext = {
             '.html': {
                 'test': 'testing/mochitest/baselinecoverage/plain/test_baselinecoverage.html',
                 'suite': 'plain'
@@ -208,6 +208,11 @@ class CodeCoverageMixin(SingleTestMixin):
             }
         }
 
+        baseline_tests_by_suite = {
+            'browser-chrome': 'testing/mochitest/baselinecoverage/browser_chrome/'
+                              'browser_baselinecoverage_browser-chrome.js'
+        }
+
         wpt_baseline_test = 'tests/web-platform/mozilla/tests/baselinecoverage/wpt_baselinecoverage.html'  # NOQA: E501
         if self.config.get('per_test_category') == "web-platform":
             if 'testharness' not in self.suites:
@@ -220,15 +225,24 @@ class CodeCoverageMixin(SingleTestMixin):
         # the baseline tests that are needed.
         tests_to_add = {}
         for suite in self.suites:
+            if len(self.suites[suite]) == 0:
+                continue
+            if suite in baseline_tests_by_suite:
+                if suite not in tests_to_add:
+                    tests_to_add[suite] = []
+                tests_to_add[suite].append(baseline_tests_by_suite[suite])
+                continue
+
+            # Default to file types if the suite has no baseline
             for test in self.suites[suite]:
                 _, test_ext = os.path.splitext(test)
 
-                if test_ext not in baseline_tests:
+                if test_ext not in baseline_tests_by_ext:
                     # Add the '.js' test as a default baseline
                     # if none other exists.
                     test_ext = '.js'
-                baseline_test_suite = baseline_tests[test_ext]['suite']
-                baseline_test_name = baseline_tests[test_ext]['test']
+                baseline_test_suite = baseline_tests_by_ext[test_ext]['suite']
+                baseline_test_name = baseline_tests_by_ext[test_ext]['test']
 
                 if baseline_test_suite not in tests_to_add:
                     tests_to_add[baseline_test_suite] = []
@@ -401,7 +415,8 @@ class CodeCoverageMixin(SingleTestMixin):
                 return
 
             # Get the baseline tests that were run.
-            baseline_tests_cov = {}
+            baseline_tests_ext_cov = {}
+            baseline_tests_suite_cov = {}
             for suite, data in self.per_test_reports.items():
                 for test, grcov_file in data.items():
                     if 'baselinecoverage' not in test:
@@ -410,9 +425,14 @@ class CodeCoverageMixin(SingleTestMixin):
                     # TODO: Optimize this part which loads JSONs
                     # with a size of about 40Mb into memory for diffing later.
                     # Bug 1460064 is filed for this.
-                    _, baseline_filetype = os.path.splitext(test)
                     with open(grcov_file, 'r') as f:
-                        baseline_tests_cov[baseline_filetype] = json.load(f)
+                        data = json.load(f)
+
+                    if suite in test:
+                        baseline_tests_suite_cov[suite] = data
+                    else:
+                        _, baseline_filetype = os.path.splitext(test)
+                        baseline_tests_ext_cov[baseline_filetype] = data
 
             dest = os.path.join(dirs['abs_blob_upload_dir'], 'per-test-coverage-reports.zip')
             with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as z:
@@ -433,19 +453,21 @@ class CodeCoverageMixin(SingleTestMixin):
 
                             # Get baseline coverage
                             baseline_coverage = {}
-                            if self.config.get('per_test_category') == "web-platform":
-                                baseline_coverage = baseline_tests_cov['.html']
+                            if suite in baseline_tests_suite_cov:
+                                baseline_coverage = baseline_tests_suite_cov[suite]
+                            elif self.config.get('per_test_category') == "web-platform":
+                                baseline_coverage = baseline_tests_ext_cov['.html']
                             else:
-                                for file_type in baseline_tests_cov:
+                                for file_type in baseline_tests_ext_cov:
                                     if not test.endswith(file_type):
                                         continue
-                                    baseline_coverage = baseline_tests_cov[file_type]
+                                    baseline_coverage = baseline_tests_ext_cov[file_type]
                                     break
 
                             if not baseline_coverage:
                                 # Default to the '.js' baseline as it is the largest
                                 self.info("Did not find a baseline test for: " + test)
-                                baseline_coverage = baseline_tests_cov['.js']
+                                baseline_coverage = baseline_tests_ext_cov['.js']
 
                             unique_coverage = rm_baseline_cov(baseline_coverage, report)
 

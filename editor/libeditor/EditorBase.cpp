@@ -163,7 +163,7 @@ EditorBase::EditorBase()
   , mDirection(eNone)
   , mDocDirtyState(-1)
   , mSpellcheckCheckboxState(eTriUnset)
-  , mShouldTxnSetSelection(true)
+  , mAllowsTransactionsToChangeSelection(true)
   , mDidPreDestroy(false)
   , mDidPostCreate(false)
   , mDispatchInputEvent(true)
@@ -983,17 +983,9 @@ EditorBase::EndPlaceholderTransaction()
 }
 
 NS_IMETHODIMP
-EditorBase::ShouldTxnSetSelection(bool* aResult)
-{
-  NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
-  *aResult = mShouldTxnSetSelection;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EditorBase::SetShouldTxnSetSelection(bool aShould)
 {
-  mShouldTxnSetSelection = aShould;
+  MakeThisAllowTransactionsToChangeSelection(aShould);
   return NS_OK;
 }
 
@@ -1732,7 +1724,7 @@ EditorBase::ReplaceContainerWithTransactionInternal(
   AutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, &aOldContainer,
                                                newContainer);
   {
-    AutoTransactionsConserveSelection conserveSelection(this);
+    AutoTransactionsConserveSelection conserveSelection(*this);
     // Move all children from the old container to the new container.
     while (aOldContainer.HasChildren()) {
       nsCOMPtr<nsIContent> child = aOldContainer.GetFirstChild();
@@ -1861,7 +1853,7 @@ EditorBase::InsertContainerWithTransactionInternal(
   }
 
   {
-    AutoTransactionsConserveSelection conserveSelection(this);
+    AutoTransactionsConserveSelection conserveSelection(*this);
     rv = InsertNodeWithTransaction(aContent,
                                    EditorRawDOMPoint(newContainer, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2661,9 +2653,10 @@ EditorBase::InsertTextWithTransaction(
               const EditorRawDOMPoint& aPointToInsert,
               EditorRawDOMPoint* aPointAfterInsertedString)
 {
-  // NOTE: caller *must* have already used AutoTransactionsConserveSelection
-  // stack-based class to turn off txn selection updating.  Caller also turned
-  // on rules sniffing if desired.
+  MOZ_ASSERT(ShouldHandleIMEComposition() ||
+             !AllowsTransactionsToChangeSelection(),
+             "caller must have already used AutoTransactionsConserveSelection "
+             "if this is not for updating composition string");
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return NS_ERROR_INVALID_ARG;
@@ -3162,7 +3155,8 @@ EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   NS_WARNING_ASSERTION(!Destroyed(),
     "The editor is destroyed during splitting a node");
 
-  bool shouldSetSelection = GetShouldTxnSetSelection();
+  bool allowedTransactionsToChangeSelection =
+    AllowsTransactionsToChangeSelection();
 
   RefPtr<Selection> previousSelection;
   for (size_t i = 0; i < savedRanges.Length(); ++i) {
@@ -3180,8 +3174,8 @@ EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
     // XXX Looks like that we don't need to modify normal selection here
     //     because selection will be modified by the caller if
-    //     GetShouldTxnSetSelection() will return true.
-    if (shouldSetSelection &&
+    //     AllowsTransactionsToChangeSelection() will return true.
+    if (allowedTransactionsToChangeSelection &&
         range.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
       // the ranges for the normal selection here.
@@ -3320,7 +3314,8 @@ EditorBase::DoJoinNodes(nsINode* aNodeToKeep,
   ErrorResult err;
   aParent->RemoveChild(*aNodeToJoin, err);
 
-  bool shouldSetSelection = GetShouldTxnSetSelection();
+  bool allowedTransactionsToChangeSelection =
+    AllowsTransactionsToChangeSelection();
 
   RefPtr<Selection> previousSelection;
   for (size_t i = 0; i < savedRanges.Length(); ++i) {
@@ -3337,7 +3332,7 @@ EditorBase::DoJoinNodes(nsINode* aNodeToKeep,
       previousSelection = range.mSelection;
     }
 
-    if (shouldSetSelection &&
+    if (allowedTransactionsToChangeSelection &&
         range.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
       // the ranges for the normal selection here.
@@ -3372,10 +3367,12 @@ EditorBase::DoJoinNodes(nsINode* aNodeToKeep,
     }
   }
 
-  if (shouldSetSelection) {
+  if (allowedTransactionsToChangeSelection) {
     // Editor wants us to set selection at join point.
     RefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
     selection->Collapse(aNodeToKeep, AssertedCast<int32_t>(firstNodeLength));
   }
 
@@ -4160,12 +4157,6 @@ EditorBase::EndUpdateViewBatch()
   }
 
   return NS_OK;
-}
-
-bool
-EditorBase::GetShouldTxnSetSelection()
-{
-  return mShouldTxnSetSelection;
 }
 
 TextComposition*
@@ -4963,9 +4954,9 @@ EditorBase::SetTextDirectionTo(TextDirection aTextDirection)
 }
 
 bool
-EditorBase::IsModifiableNode(nsINode* aNode)
+EditorBase::IsModifiableNode(const nsINode& aNode) const
 {
-  return true;
+  return !AsHTMLEditor() || aNode.IsEditable();
 }
 
 nsIContent*

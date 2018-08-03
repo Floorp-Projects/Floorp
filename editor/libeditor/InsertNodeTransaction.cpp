@@ -113,21 +113,23 @@ InsertNodeTransaction::DoTransaction()
     return error.StealNSResult();
   }
 
-  // Only set selection to insertion point if editor gives permission
-  if (mEditorBase->GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditorBase->GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    // Place the selection just after the inserted element
-    EditorRawDOMPoint afterInsertedNode(mContentToInsert);
-    DebugOnly<bool> advanced = afterInsertedNode.AdvanceOffset();
-    NS_WARNING_ASSERTION(advanced,
-      "Failed to advance offset after the inserted node");
-    selection->Collapse(afterInsertedNode, error);
-    if (NS_WARN_IF(error.Failed())) {
-      error.SuppressException();
-    }
+  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
+    return NS_OK;
+  }
+
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Place the selection just after the inserted element.
+  EditorRawDOMPoint afterInsertedNode(mContentToInsert);
+  DebugOnly<bool> advanced = afterInsertedNode.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced,
+    "Failed to advance offset after the inserted node");
+  selection->Collapse(afterInsertedNode, error);
+  if (NS_WARN_IF(error.Failed())) {
+    error.SuppressException();
   }
   return NS_OK;
 }

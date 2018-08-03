@@ -89,7 +89,7 @@ HTMLEditor::SetInlineProperty(nsAtom* aProperty,
                                       *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
-  AutoTransactionsConserveSelection dontChangeMySelection(this);
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
   EditSubActionInfo subActionInfo(EditSubAction::eSetTextProperty);
@@ -1244,7 +1244,7 @@ HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
                                       *this, EditSubAction::eRemoveTextProperty,
                                       nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
-  AutoTransactionsConserveSelection dontChangeMySelection(this);
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   bool cancel, handled;
   EditSubActionInfo subActionInfo(EditSubAction::eRemoveTextProperty);
@@ -1405,7 +1405,7 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
                                       *this, EditSubAction::eSetTextProperty,
                                       nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
-  AutoTransactionsConserveSelection dontChangeMySelection(this);
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // Loop through the ranges in the selection
   AutoRangeArray arrayOfRanges(selection);
