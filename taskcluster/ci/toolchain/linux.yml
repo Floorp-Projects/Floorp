@@ -454,6 +454,7 @@ linux64-android-gradle-dependencies:
     toolchains:
         # Aliases aren't allowed for toolchains depending on toolchains.
         - linux64-android-sdk-linux-repack
+        - linux64-node
 
 linux64-rust-1.27:
     description: "rust repack"
