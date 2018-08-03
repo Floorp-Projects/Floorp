@@ -1667,11 +1667,9 @@ Simulator::handleWasmFault(uint64_t addr, unsigned numBytes)
 
     wasm::Trap trap;
     wasm::BytecodeOffset bytecode;
-    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
-        act->startWasmTrap(wasm::Trap::OutOfBounds, 0, registerState());
-        set_pc(int64_t(moduleSegment->outOfBoundsCode()));
-        return true;
-    }
+    MOZ_ALWAYS_TRUE(moduleSegment->code().lookupTrap(pc, &trap, &bytecode));
+
+    MOZ_RELEASE_ASSERT(trap == wasm::Trap::OutOfBounds);
 
     act->startWasmTrap(wasm::Trap::OutOfBounds, bytecode.offset(), registerState());
     set_pc(int64_t(moduleSegment->trapCode()));
