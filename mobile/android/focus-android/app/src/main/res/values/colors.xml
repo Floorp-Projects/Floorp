@@ -86,4 +86,13 @@
     <color name="browser_menu_request_desktop_separator">#1Af9f9fa</color>
 
     <color name="images_removal_warning_background_color">#353852</color>
+
+    <!-- Add to Home screen dialog color palette -->
+    <color name="home_screen_dialog_bg">@color/photonInk80</color>
+    <color name="home_screen_dialog_button_text">@color/photonMagenta70</color>
+    <color name="home_screen_dialog_bg_tint">@color/photonMagenta70</color>
+    <color name="home_screen_dialog_text">@color/photonGrey10</color>
+
+    <color name="home_screen_dialog_warning_bg">#353852</color>
+    <color name="home_screen_dialog__warning_text">#99f9f9fa</color>
 </resources>

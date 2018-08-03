@@ -2,7 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/DialogStyle"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
@@ -28,13 +27,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:backgroundTint="@color/dialogAccent"
+            android:backgroundTint="@color/home_screen_dialog_bg_tint"
             android:inputType="text"
             android:paddingStart="10dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@color/add_to_homescreen_text"
+            android:textColor="@color/home_screen_dialog_text"
             android:textColorHighlight="@color/colorAccent"
-            android:textColorHint="@color/add_to_homescreen_text"
+            android:textColorHint="@color/home_screen_dialog_text"
             android:textCursorDrawable="@null" />
 
     </LinearLayout>
@@ -55,25 +54,15 @@
 
         <Button
             android:id="@+id/addtohomescreen_dialog_cancel"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAllCaps="true"
-            android:textColor="@color/dialogAccent"
-            android:textSize="14sp"
-            android:fontFamily="@string/font_roboto_medium" />
+            style="@style/ButtonStyle"
+            android:contentDescription="@string/dialog_addtohomescreen_action_cancel"
+            android:text="@string/dialog_addtohomescreen_action_cancel"/>
 
         <Button
             android:id="@+id/addtohomescreen_dialog_add"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textAllCaps="true"
-            android:textColor="@color/dialogAccent"
-            android:textSize="14sp"
+            style="@style/ButtonStyle"
             android:contentDescription="@string/dialog_addtohomescreen_action_add"
-            android:fontFamily="@string/font_roboto_medium" />
+            android:text="@string/dialog_addtohomescreen_action_add"/>
     </LinearLayout>
 
 
@@ -81,7 +70,7 @@
         android:id="@+id/homescreen_dialog_warning_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#ff262626"
+        android:background="@color/home_screen_dialog_warning_bg"
         android:orientation="horizontal"
         android:paddingBottom="16dp"
         android:paddingEnd="@dimen/dialogHorizontalPadding"
@@ -91,19 +80,18 @@
 
         <ImageView
             android:id="@+id/homescreen_dialog_block_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_width="24dp"
+            android:layout_height="24dp" />
 
         <TextView
             android:id="@+id/homescreen_dialog_warning"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="#ff262626"
             android:paddingStart="10dp"
             android:text="@string/dialog_addtohomescreen_tracking_protection"
-            android:textColor="#66ffffff"
-            android:textSize="12sp"
+            android:textColor="@color/home_screen_dialog__warning_text"
+            android:textSize="14dp"
             android:fontFamily="@string/font_roboto_regular" />
     </LinearLayout>
 

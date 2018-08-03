@@ -7,6 +7,8 @@ package org.mozilla.focus.fragment;
 
 import android.app.Dialog;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -73,8 +75,6 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
 
         final Button addToHomescreenDialogCancelButton = (Button) dialogView.findViewById(R.id.addtohomescreen_dialog_cancel);
         final Button addToHomescreenDialogConfirmButton = (Button) dialogView.findViewById(R.id.addtohomescreen_dialog_add);
-        addToHomescreenDialogCancelButton.setText(getString(R.string.dialog_addtohomescreen_action_cancel));
-        addToHomescreenDialogConfirmButton.setText(getString(R.string.dialog_addtohomescreen_action_add));
 
         final LinearLayout warning = (LinearLayout) dialogView.findViewById(R.id.homescreen_dialog_warning_layout);
         warning.setVisibility(blockingEnabled ? View.GONE : View.VISIBLE);
@@ -103,8 +103,9 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
                 dismiss();
             }
         });
-
-        return builder.create();
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        return dialog;
     }
 
     @Override
