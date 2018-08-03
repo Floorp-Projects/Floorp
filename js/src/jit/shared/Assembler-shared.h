@@ -885,10 +885,6 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
-    static bool canUseInSingleByteInstruction(Register reg) {
-        return true;
-    }
-
     void addCodeLabel(CodeLabel label) {
         propagateOOM(codeLabels_.append(label));
     }
