@@ -314,7 +314,13 @@ const browsingContextTargetPrototype = {
    * Getter for the nsIMessageManager associated to the browsing context.
    */
   get messageManager() {
-    return this.docShell.messageManager;
+    try {
+      return this.docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIContentFrameMessageManager);
+    } catch (e) {
+      return null;
+    }
   },
 
   /**

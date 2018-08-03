@@ -39,7 +39,6 @@
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
@@ -639,6 +638,17 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
   } else if (aIID.Equals(NS_GET_IID(nsITabChild))) {
     *aSink = GetTabChild().take();
     return *aSink ? NS_OK : NS_ERROR_FAILURE;
+  } else if (aIID.Equals(NS_GET_IID(nsIContentFrameMessageManager))) {
+    RefPtr<TabChild> tabChild = TabChild::GetFrom(this);
+    nsCOMPtr<nsIContentFrameMessageManager> mm;
+    if (tabChild) {
+      mm = tabChild->GetMessageManager();
+    } else {
+      if (nsPIDOMWindowOuter* win = GetWindow()) {
+        mm = do_QueryInterface(win->GetParentTarget());
+      }
+    }
+    *aSink = mm.get();
   } else {
     return nsDocLoader::GetInterface(aIID, aSink);
   }
@@ -3963,19 +3973,6 @@ nsDocShell::GetDomWindow(mozIDOMWindowProxy** aWindow)
 
   nsCOMPtr<nsPIDOMWindowOuter> window = mScriptGlobal->AsOuter();
   window.forget(aWindow);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetMessageManager(ContentFrameMessageManager** aMessageManager)
-{
-  RefPtr<ContentFrameMessageManager> mm;
-  if (RefPtr<TabChild> tabChild = TabChild::GetFrom(this)) {
-    mm = tabChild->GetMessageManager();
-  } else if (nsPIDOMWindowOuter* win = GetWindow()) {
-    mm = win->GetMessageManager();
-  }
-  mm.forget(aMessageManager);
   return NS_OK;
 }
 

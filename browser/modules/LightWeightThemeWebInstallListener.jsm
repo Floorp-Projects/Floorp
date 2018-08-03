@@ -51,5 +51,8 @@ var LightWeightThemeWebInstallListener = {
 };
 
 function getMessageManagerForContent(content) {
-  return content.docShell.messageManager;
+  return content.docShell
+                .sameTypeRootTreeItem
+                .QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIContentFrameMessageManager);
 }

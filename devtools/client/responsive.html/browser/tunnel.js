@@ -472,7 +472,8 @@ MessageManagerTunnel.prototype = {
     // non-remote, so we're able to reach into its window and use the child
     // side message manager there.
     const docShell = this.outer[FRAME_LOADER].docShell;
-    return docShell.messageManager;
+    return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIContentFrameMessageManager);
   },
 
   get inner() {
