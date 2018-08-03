@@ -1691,10 +1691,16 @@ nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument)
   }
 
   mDoc = aDocument;
-  ClearDocumentDependentSlots(aCx);
   mFocusedElement = nullptr;
   mLocalStorage = nullptr;
   mSessionStorage = nullptr;
+  mPerformance = nullptr;
+
+  // This must be called after nullifying the internal objects because here we
+  // could recreate them, calling the getter methods, and store them into the JS
+  // slots. If we nullify them after, the slot values and the objects will be
+  // out of sync.
+  ClearDocumentDependentSlots(aCx);
 
 #ifdef DEBUG
   mLastOpenedURI = aDocument->GetDocumentURI();
