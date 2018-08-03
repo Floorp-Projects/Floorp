@@ -21,3 +21,11 @@ jar {
     attributes('Lint-Registry-v2': 'mozilla.components.tooling.lint.LintIssueRegistry')
   }
 }
+
+task lint {
+  doLast {
+    // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
+    // This project doesn't have a lint task. To avoid special casing our automation I just added
+    // an empty lint task here.
+  }
+}
