@@ -1095,25 +1095,38 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     ElfSection* eh_frame_hdr = eh_frame_segment ? eh_frame_segment->getFirstSection() : nullptr;
     // The .eh_frame section usually follows the eh_frame_hdr section.
     ElfSection* eh_frame = eh_frame_hdr ? eh_frame_hdr->getNext() : nullptr;
-    if (eh_frame_hdr && !eh_frame) {
-        throw std::runtime_error("Expected to find an .eh_frame section after .eh_frame_hdr");
+    ElfSection* first = eh_frame_hdr;
+    ElfSection* second = eh_frame;
+    if (eh_frame && strcmp(eh_frame->getName(), ".eh_frame")) {
+        // But sometimes it appears *before* the eh_frame_hdr section.
+        eh_frame = eh_frame_hdr->getPrevious();
+        first = eh_frame;
+        second = eh_frame_hdr;
     }
-    if (eh_frame && strcmp(eh_frame->getName(), ".eh_frame") == 0) {
+    if (eh_frame_hdr && (!eh_frame || strcmp(eh_frame->getName(), ".eh_frame"))) {
+        throw std::runtime_error("Expected to find an .eh_frame section adjacent to .eh_frame_hdr");
+    }
+    if (eh_frame && first->getAddr() > relhack->getAddr() && second->getAddr() < relhackcode->getAddr()) {
         // The distance between both sections needs to be preserved because eh_frame_hdr
         // contains relative offsets to eh_frame. Well, they could be relocated too, but
         // it's not worth the effort for the few number of bytes this would save.
-        size_t distance = eh_frame->getAddr() - eh_frame_hdr->getAddr();
-        ElfSection* previous = eh_frame_hdr->getPrevious();
-        eh_frame_hdr->getShdr().sh_addr =
-            (previous->getAddr() + previous->getSize() + eh_frame_hdr->getAddrAlign() - 1)
-            & ~(eh_frame_hdr->getAddrAlign() - 1);
+        unsigned int distance = second->getAddr() - first->getAddr();
         unsigned int origAddr = eh_frame->getAddr();
-        eh_frame->getShdr().sh_addr =
-            (eh_frame_hdr->getAddr() + eh_frame_hdr->getSize() + eh_frame->getAddrAlign() - 1)
-            & ~(eh_frame->getAddrAlign() - 1);
-        // Re-adjust the eh_frame_hdr address to keep the original distance.
-        eh_frame_hdr->getShdr().sh_addr = eh_frame->getAddr() - distance;
-        eh_frame_hdr->markDirty();
+        ElfSection* previous = first->getPrevious();
+        first->getShdr().sh_addr =
+            (previous->getAddr() + previous->getSize() + first->getAddrAlign() - 1)
+            & ~(first->getAddrAlign() - 1);
+        second->getShdr().sh_addr =
+            (first->getAddr() + std::min(first->getSize(), distance) + second->getAddrAlign() - 1)
+            & ~(second->getAddrAlign() - 1);
+        // Re-adjust to keep the original distance.
+        // If the first section has a smaller alignment requirement than the second,
+        // the second will be farther away, so we need to adjust the first.
+        // If the second section has a smaller alignment requirement than the first,
+        // it will already be at the right distance.
+        first->getShdr().sh_addr = second->getAddr() - distance;
+        assert(distance == second->getAddr() - first->getAddr());
+        first->markDirty();
         adjust_eh_frame(eh_frame, origAddr, elf);
     }
 
