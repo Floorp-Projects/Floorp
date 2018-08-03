@@ -2820,7 +2820,8 @@ nsFrameLoader::DoLoadMessageManagerScript(const nsAString& aURL, bool aRunInGlob
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL), aRunInGlobalScope);
   }
-  RefPtr<nsInProcessTabChildGlobal> tabChild = GetTabChildGlobal();
+  RefPtr<nsInProcessTabChildGlobal> tabChild =
+    static_cast<nsInProcessTabChildGlobal*>(GetTabChildGlobalAsEventTarget());
   if (tabChild) {
     tabChild->LoadFrameScript(aURL, aRunInGlobalScope);
   }
@@ -2976,6 +2977,12 @@ nsFrameLoader::ReallyLoadFrameScripts()
     mMessageManager->InitWithCallback(this);
   }
   return NS_OK;
+}
+
+EventTarget*
+nsFrameLoader::GetTabChildGlobalAsEventTarget()
+{
+  return mChildMessageManager.get();
 }
 
 already_AddRefed<Element>

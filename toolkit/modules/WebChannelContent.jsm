@@ -12,7 +12,9 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 function getMessageManager(event) {
   let window = Cu.getGlobalForObject(event.target);
 
-  return window.docShell.messageManager;
+  return window.docShell
+               .QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIContentFrameMessageManager);
 }
 
 var WebChannelContent = {

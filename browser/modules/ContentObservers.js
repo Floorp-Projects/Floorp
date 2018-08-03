@@ -37,7 +37,18 @@ var gDecoderDoctorObserver = function(subject, topic, data) {
 };
 
 function getMessageManagerForWindow(aContentWindow) {
-  return aContentWindow.docShell.messageManager;
+  let ir = aContentWindow.docShell
+                         .sameTypeRootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor);
+  try {
+    // If e10s is disabled, this throws NS_NOINTERFACE for closed tabs.
+    return ir.getInterface(Ci.nsIContentFrameMessageManager);
+  } catch (e) {
+    if (e.result == Cr.NS_NOINTERFACE) {
+      return null;
+    }
+    throw e;
+  }
 }
 
 Services.obs.addObserver(gEMEUIObserver, "mediakeys-request");
