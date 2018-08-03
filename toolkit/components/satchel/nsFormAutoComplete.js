@@ -40,11 +40,7 @@ function isAutocompleteDisabled(aField) {
 function FormHistoryClient({ formField, inputName }) {
   if (formField && inputName != this.SEARCHBAR_ID) {
     let window = formField.ownerGlobal;
-    let topDocShell = window.docShell
-                            .sameTypeRootTreeItem
-                            .QueryInterface(Ci.nsIDocShell);
-    this.mm = topDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIContentFrameMessageManager);
+    this.mm = window.docShell.messageManager;
   } else {
     if (inputName == this.SEARCHBAR_ID && formField) {
       throw new Error("FormHistoryClient constructed with both a " +
