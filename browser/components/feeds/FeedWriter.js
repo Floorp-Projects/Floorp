@@ -75,10 +75,8 @@ function FeedWriter() {
 
   Services.telemetry.scalarAdd("browser.feeds.preview_loaded", 1);
 
-  XPCOMUtils.defineLazyGetter(this, "_mm", () =>
-    this._window.docShell.
-                 QueryInterface(Ci.nsIInterfaceRequestor).
-                 getInterface(Ci.nsIContentFrameMessageManager));
+  XPCOMUtils.defineLazyGetter(this, "_mm",
+                              () => this._window.docShell.messageManager);
 }
 
 FeedWriter.prototype = {

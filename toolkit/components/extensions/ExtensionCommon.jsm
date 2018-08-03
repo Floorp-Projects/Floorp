@@ -371,8 +371,7 @@ class BaseContext {
     let {document, docShell} = contentWindow;
 
     this.innerWindowID = getInnerWindowID(contentWindow);
-    this.messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIContentFrameMessageManager);
+    this.messageManager = docShell.messageManager;
 
     if (this.incognito == null) {
       this.incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);

@@ -359,8 +359,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
     let winUtils = domWin.windowUtils;
     winUtils.enterModalState();
 
-    let frameMM = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIContentFrameMessageManager);
+    let frameMM = docShell.messageManager;
 
     // We provide a callback so the prompt can close itself. We don't want to
     // wait for this event loop to return... Otherwise the presence of other
@@ -443,7 +442,7 @@ function openRemotePrompt(domWin, args, tabPrompt) {
     winUtils.enterModalState();
     let closed = false;
 
-    let frameMM = docShell.getInterface(Ci.nsIContentFrameMessageManager);
+    let frameMM = docShell.messageManager;
 
     // It should be hard or impossible to cause a window to create multiple
     // prompts, but just in case, give our prompt an ID.
