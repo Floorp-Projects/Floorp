@@ -1458,6 +1458,21 @@ telemetry:
     record_in_processes:
       - 'main'
 
+  os_shutting_down:
+    bug_numbers:
+      - 1480826
+    description: >
+      Records true if there is a signal that Firefox was quitting because
+      the OS was shutting down. Only available on Windows.
+    expires: "64"
+    kind: boolean
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+      - agashlin@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:
