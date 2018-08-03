@@ -621,15 +621,17 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, BackendType aB
 #ifdef WIN32
   case FontType::DWRITE:
     {
-      bool needsCairo = aBackendType == BackendType::CAIRO ||
-                        aBackendType == BackendType::SKIA;
+      bool needsCairo = aBackendType == BackendType::CAIRO;
       return NativeFontResourceDWrite::Create(aData, aSize, needsCairo);
     }
   case FontType::GDI:
     return NativeFontResourceGDI::Create(aData, aSize);
 #elif defined(XP_DARWIN)
   case FontType::MAC:
-    return NativeFontResourceMac::Create(aData, aSize);
+    {
+      bool needsCairo = aBackendType == BackendType::CAIRO;
+      return NativeFontResourceMac::Create(aData, aSize, needsCairo);
+    }
 #elif defined(MOZ_WIDGET_GTK)
   case FontType::FONTCONFIG:
     return NativeFontResourceFontconfig::Create(aData, aSize,
