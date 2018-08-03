@@ -17,10 +17,10 @@ import java.net.URL
  */
 internal class KintoClient(
     private val httpClient: HttpClient = HttpURLConnectionHttpClient(),
-    val baseUrl: String,
-    val bucketName: String,
-    val collectionName: String,
-    val headers: Map<String, String>? = null
+    private val baseUrl: String,
+    private val bucketName: String,
+    private val collectionName: String,
+    private val headers: Map<String, String>? = null
 ) {
 
     /**

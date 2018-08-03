@@ -19,9 +19,9 @@ import org.json.JSONObject
  * @param collectionName name of the collection to fetch
  */
 class KintoExperimentSource(
-    val baseUrl: String,
-    val bucketName: String,
-    val collectionName: String,
+    private val baseUrl: String,
+    private val bucketName: String,
+    private val collectionName: String,
     private val client: HttpClient = HttpURLConnectionHttpClient()
 ) : ExperimentSource {
     override fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot {
