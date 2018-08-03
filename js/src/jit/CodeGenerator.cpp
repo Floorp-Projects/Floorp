@@ -1930,7 +1930,7 @@ CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind, size_t nDynamic
 
 static void
 CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
-                          Register object, Register temp2, Register temp5,
+                          Register object, Register temp1, Register temp2,
                           ArrayObject* templateObj, Label* fail)
 {
     JitSpew(JitSpew_Codegen, "# Emitting CreateMatchResult fallback");
@@ -1938,18 +1938,18 @@ CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
     MOZ_ASSERT(templateObj->group()->clasp() == &ArrayObject::class_);
 
     regsToSave.take(object);
+    regsToSave.take(temp1);
     regsToSave.take(temp2);
-    regsToSave.take(temp5);
     masm.PushRegsInMask(regsToSave);
 
     masm.setupUnalignedABICall(object);
 
     masm.loadJSContext(object);
     masm.passABIArg(object);
-    masm.move32(Imm32(int32_t(templateObj->asTenured().getAllocKind())), temp2);
+    masm.move32(Imm32(int32_t(templateObj->asTenured().getAllocKind())), temp1);
+    masm.passABIArg(temp1);
+    masm.move32(Imm32(int32_t(templateObj->as<NativeObject>().numDynamicSlots())), temp2);
     masm.passABIArg(temp2);
-    masm.move32(Imm32(int32_t(templateObj->as<NativeObject>().numDynamicSlots())), temp5);
-    masm.passABIArg(temp5);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, CreateMatchResultFallbackFunc));
     masm.storeCallPointerResult(object);
 
@@ -1958,7 +1958,7 @@ CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
     masm.branchPtr(Assembler::Equal, object, ImmWord(0), fail);
 
     TemplateObject templateObject(templateObj);
-    masm.initGCThing(object, temp2, templateObject, true);
+    masm.initGCThing(object, temp1, templateObject, true);
 }
 
 JitCode*
@@ -1977,15 +1977,14 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     regs.take(regexp);
     regs.take(lastIndex);
 
-    Register temp5 = regs.takeAny();
     Register temp1 = regs.takeAny();
     Register temp2 = regs.takeAny();
     Register temp3 = regs.takeAny();
-
-    Register maybeTemp4 = InvalidReg;
+    Register temp4 = regs.takeAny();
+    Register maybeTemp5 = InvalidReg;
     if (!regs.empty()) {
         // There are not enough registers on x86.
-        maybeTemp4 = regs.takeAny();
+        maybeTemp5 = regs.takeAny();
     }
 
     ArrayObject* templateObject = cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
@@ -2004,7 +2003,7 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
 
     Label notFound, oolEntry;
     if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
-                                 temp1, temp2, temp5, inputOutputDataStartOffset,
+                                 temp1, temp2, temp3, inputOutputDataStartOffset,
                                  RegExpShared::Normal, stringsCanBeInNursery, &notFound, &oolEntry))
     {
         return nullptr;
@@ -2039,15 +2038,15 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     BaseIndex stringLimitAddress(masm.getStackPointer(), matchIndex, TimesEight,
                                  pairsVectorStartOffset + offsetof(MatchPair, limit));
 
-    Register temp4;
-    if (maybeTemp4 == InvalidReg) {
+    Register temp5;
+    if (maybeTemp5 == InvalidReg) {
         // We don't have enough registers for a fifth temporary. Reuse
         // |lastIndex| as a temporary. We don't need to restore its value,
         // because |lastIndex| is no longer used after a successful match.
         // (Neither here nor in the OOL path, cf. js::RegExpMatcherRaw.)
-        temp4 = lastIndex;
+        temp5 = lastIndex;
     } else {
-        temp4 = maybeTemp4;
+        temp5 = maybeTemp5;
     }
 
     // Loop to construct the match strings. There are two different loops,
@@ -2128,15 +2127,15 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     regsToSave.addUnchecked(temp1);
     regsToSave.addUnchecked(temp2);
     regsToSave.addUnchecked(temp3);
-    if (maybeTemp4 != InvalidReg)
-        regsToSave.addUnchecked(maybeTemp4);
-    regsToSave.addUnchecked(temp5);
+    regsToSave.addUnchecked(temp4);
+    if (maybeTemp5 != InvalidReg)
+        regsToSave.addUnchecked(maybeTemp5);
 
     for (int isLatin = 0; isLatin <= 1; isLatin++)
         depStr[isLatin].generateFallback(masm, regsToSave);
 
     masm.bind(&matchResultFallback);
-    CreateMatchResultFallback(masm, regsToSave, object, temp2, temp5, templateObject, &oolEntry);
+    CreateMatchResultFallback(masm, regsToSave, object, temp2, temp3, templateObject, &oolEntry);
     masm.jump(&matchResultJoin);
 
     // Use an undefined value to signal to the caller that the OOL stub needs to be called.
