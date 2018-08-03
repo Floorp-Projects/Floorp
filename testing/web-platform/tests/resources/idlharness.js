@@ -2106,7 +2106,12 @@ IdlInterface.prototype.test_member_attribute = function(member)
                 "The interface object must have a property " +
                 format_value(member.name));
             a_test.done();
-        } else if (this.is_global()) {
+            return;
+        }
+
+        this.do_member_unscopable_asserts(member);
+
+        if (this.is_global()) {
             assert_own_property(self, member.name,
                 "The global object must have a property " +
                 format_value(member.name));
@@ -2167,13 +2172,8 @@ IdlInterface.prototype.test_member_attribute = function(member)
               // since it will call done() on a_test.
               this.do_interface_attribute_asserts(self[this.name].prototype, member, a_test);
             }
-
         }
     }.bind(this));
-
-    subsetTestByKey(this.name, test, function () {
-        this.do_member_unscopable_asserts(member);
-    }.bind(this), 'Unscopable handled correctly for ' + member.name + ' property on ' + this.name);
 };
 
 //@}
@@ -2239,16 +2239,9 @@ IdlInterface.prototype.test_member_operation = function(member)
                     "interface prototype object missing non-static operation");
             memberHolderObject = self[this.name].prototype;
         }
+        this.do_member_unscopable_asserts(member);
         this.do_member_operation_asserts(memberHolderObject, member, a_test);
     }.bind(this));
-
-    subsetTestByKey(this.name, test, function () {
-        this.do_member_unscopable_asserts(member);
-    }.bind(this),
-         'Unscopable handled correctly for ' + member.name + "(" +
-         member.arguments.map(
-             function(m) {return m.idlType.idlType; } ).join(", ")
-         + ")" + ' on ' + this.name);
 };
 
 IdlInterface.prototype.do_member_unscopable_asserts = function(member)
