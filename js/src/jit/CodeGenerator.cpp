@@ -2035,27 +2035,6 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
 
     size_t elementsOffset = NativeObject::offsetOfFixedElements();
 
-#ifdef DEBUG
-    // Assert the initial value of initializedLength and length to make sure
-    // restoration on failure case works.
-    {
-        Label initLengthOK, lengthOK;
-        masm.branch32(Assembler::Equal,
-                      Address(object, elementsOffset + ObjectElements::offsetOfInitializedLength()),
-                      Imm32(templateObject->getDenseInitializedLength()),
-                      &initLengthOK);
-        masm.assumeUnreachable("Initial value of the match object's initializedLength does not match to restoration.");
-        masm.bind(&initLengthOK);
-
-        masm.branch32(Assembler::Equal,
-                      Address(object, elementsOffset + ObjectElements::offsetOfLength()),
-                      Imm32(templateObject->length()),
-                      &lengthOK);
-        masm.assumeUnreachable("Initial value of The match object's length does not match to restoration.");
-        masm.bind(&lengthOK);
-    }
-#endif
-
     Register matchIndex = temp2;
     masm.move32(Imm32(0), matchIndex);
 
@@ -2071,26 +2050,24 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     BaseIndex stringLimitAddress(masm.getStackPointer(), matchIndex, TimesEight,
                                  pairsVectorStartOffset + offsetof(MatchPair, limit));
 
+    Register temp4;
+    if (maybeTemp4 == InvalidReg) {
+        // We don't have enough registers for a fifth temporary. Reuse
+        // |lastIndex| as a temporary. We don't need to restore its value,
+        // because |lastIndex| is no longer used after a successful match.
+        // (Neither here nor in the OOL path, cf. js::RegExpMatcherRaw.)
+        temp4 = lastIndex;
+    } else {
+        temp4 = maybeTemp4;
+    }
+
     // Loop to construct the match strings. There are two different loops,
     // depending on whether the input is latin1.
     CreateDependentString depStr[2];
 
-    // depStr may refer to failureRestore during generateFallback below,
-    // so this variable must live outside of the block.
-    Label failureRestore;
     {
         Label isLatin1, done;
         masm.branchLatin1String(input, &isLatin1);
-
-        Label* failure = &oolEntry;
-        Register temp4 = (maybeTemp4 == InvalidReg) ? lastIndex : maybeTemp4;
-
-        if (maybeTemp4 == InvalidReg) {
-            failure = &failureRestore;
-
-            // Save lastIndex value to temporary space.
-            masm.store32(lastIndex, Address(object, elementsOffset + ObjectElements::offsetOfLength()));
-        }
 
         for (int isLatin = 0; isLatin <= 1; isLatin++) {
             if (isLatin)
@@ -2107,7 +2084,7 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
                                      isLatin, temp3, input, temp4, temp5,
                                      stringIndexAddress, stringLimitAddress,
                                      stringsCanBeInNursery,
-                                     failure);
+                                     &oolEntry);
 
             masm.storeValue(JSVAL_TYPE_STRING, temp3, stringAddress);
             // Storing into nursery-allocated results object's elements; no post barrier.
@@ -2122,23 +2099,9 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
             masm.jump(&matchLoop);
         }
 
-        if (maybeTemp4 == InvalidReg) {
-            // Restore lastIndex value from temporary space, both for success
-            // and failure cases.
-
-            masm.load32(Address(object, elementsOffset + ObjectElements::offsetOfLength()), lastIndex);
-            masm.jump(&done);
-
-            masm.bind(&failureRestore);
-            masm.load32(Address(object, elementsOffset + ObjectElements::offsetOfLength()), lastIndex);
-
-            // Restore the match object for failure case.
-            masm.store32(Imm32(templateObject->getDenseInitializedLength()),
-                         Address(object, elementsOffset + ObjectElements::offsetOfInitializedLength()));
-            masm.store32(Imm32(templateObject->length()),
-                         Address(object, elementsOffset + ObjectElements::offsetOfLength()));
-            masm.jump(&oolEntry);
-        }
+#ifdef DEBUG
+        masm.assumeUnreachable("The match string loop doesn't fall through.");
+#endif
 
         masm.bind(&done);
     }
