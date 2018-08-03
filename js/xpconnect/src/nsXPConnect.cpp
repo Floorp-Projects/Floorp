@@ -1028,8 +1028,12 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
     // We don't serialize mutedError-ness of scripts, which is fine as long as
     // we only serialize system and XUL-y things. We can detect this by checking
     // where the caller wants us to deserialize.
+    //
+    // CompilationScope() could theoretically GC, so get that out of the way
+    // before comparing to the cx global.
+    JSObject* loaderGlobal = xpc::CompilationScope();
     MOZ_RELEASE_ASSERT(nsContentUtils::IsSystemCaller(cx) ||
-                       CurrentGlobalOrNull(cx) == xpc::CompilationScope());
+                       CurrentGlobalOrNull(cx) == loaderGlobal);
 
     uint32_t size;
     rv = stream->Read32(&size);
