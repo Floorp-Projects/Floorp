@@ -71,7 +71,9 @@ interface Element : Node {
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);
- 
+  [ChromeOnly, Pure]
+  sequence<Element> getElementsWithGrid();
+
   [CEReactions, Throws, Pure]
   Element? insertAdjacentElement(DOMString where, Element element); // historical
 
@@ -153,6 +155,25 @@ interface Element : Node {
    * layout flushing.
    */
   boolean scrollByNoFlush(long dx, long dy);
+
+  // Support reporting of Flexbox properties
+  /**
+   * If this element has a display:flex or display:inline-flex style,
+   * this property returns an object with computed values for flex
+   * properties, as well as a property that exposes the flex lines
+   * in this container.
+   */
+  [ChromeOnly, Pure]
+  Flex? getAsFlexContainer();
+
+  // Support reporting of Grid properties
+  /**
+   * If this element has a display:grid or display:inline-grid style,
+   * this property returns an object with computed values for grid
+   * tracks and lines.
+   */
+  [ChromeOnly, Pure]
+  sequence<Grid> getGridFragments();
 
   [ChromeOnly]
   DOMMatrixReadOnly getTransformToAncestor(Element ancestor);
@@ -271,34 +292,4 @@ partial interface Element {
 partial interface Element {
   [NeedsCallerType]
   void requestPointerLock();
-};
-
-// Mozilla-specific additions to support devtools
-partial interface Element {
-  // Support reporting of Flexbox properties
-  /**
-   * If this element has a display:flex or display:inline-flex style,
-   * this property returns an object with computed values for flex
-   * properties, as well as a property that exposes the flex lines
-   * in this container.
-   */
-  [ChromeOnly, Pure]
-  Flex? getAsFlexContainer();
-
-  // Support reporting of Grid properties
-  /**
-   * If this element has a display:grid or display:inline-grid style,
-   * this property returns an object with computed values for grid
-   * tracks and lines.
-   */
-  [ChromeOnly, Pure]
-  sequence<Grid> getGridFragments();
-  
-  /**
-   * Returns a sequence of all the descendent elements of this element
-   * that have display:grid or display:inline-grid style and generate
-   * a frame.
-   */
-  [ChromeOnly, Pure]
-  sequence<Element> getElementsWithGrid();
 };
