@@ -19,7 +19,7 @@ class ConfigurationError(Exception):
 
 DEFAULTS = dict(
     # args to pass to browser
-    extra_args='',
+    extra_args=[],
     buildid='testbuildid',
     init_url='getInfo.html',
     env={'NO_EM_RESTART': '1'},

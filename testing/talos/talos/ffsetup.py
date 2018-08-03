@@ -174,7 +174,10 @@ class FFSetup(object):
                 'appname',
                 'firefox'),
             mozrunner.Runner)
-        args = [self.browser_config["extra_args"], self.browser_config["init_url"]]
+
+        args = list(self.browser_config["extra_args"])
+        args.append(self.browser_config["init_url"])
+
         runner = runner_cls(profile=self.profile_dir,
                             binary=self.browser_config["browser_path"],
                             cmdargs=args,
