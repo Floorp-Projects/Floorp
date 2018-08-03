@@ -26,8 +26,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     <content sizetopopup="pref">
       <xul:hbox flex="1" class="urlbar-textbox-container">
         <children includes="image|deck|stack|box"/>
-        <xul:hbox anonid="textbox-input-box"
-                  class="textbox-input-box urlbar-input-box"
+        <xul:moz-input-box anonid="moz-input-box"
+                  class="urlbar-input-box"
                   flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
           <children/>
           <html:input anonid="scheme"
@@ -39,7 +39,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                       allowevents="true"
                       inputmode="mozAwesomebar"
                       xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
-        </xul:hbox>
+        </xul:moz-input-box>
         <xul:image anonid="urlbar-go-button"
                    class="urlbar-go-button urlbar-icon"
                    onclick="gURLBar.handleCommand(event);"
@@ -95,9 +95,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.addEventListener("scrollend", this);
 
         var textBox = document.getAnonymousElementByAttribute(this,
-                                                "anonid", "textbox-input-box");
-        var cxmenu = document.getAnonymousElementByAttribute(textBox,
-                                            "anonid", "input-box-contextmenu");
+                                                "anonid", "moz-input-box");
+        // Force the Custom Element to upgrade until Bug 1470242 handles this:
+        customElements.upgrade(textBox);
+        var cxmenu = textBox.menupopup;
         var pasteAndGo;
         cxmenu.addEventListener("popupshowing", function() {
           if (!pasteAndGo)
