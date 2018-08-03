@@ -4,6 +4,7 @@
 
 const {
   PollPromise,
+  Sleep,
   TimedPromise,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
@@ -130,4 +131,13 @@ add_test(function test_TimedPromise_timeoutTypes() {
   new TimedPromise(() => {}, {timeout: 42});
 
   run_next_test();
+});
+
+add_task(async function test_Sleep() {
+  await Sleep(0);
+  for (let type of ["foo", true, null, undefined]) {
+    Assert.throws(() => Sleep(type), /TypeError/);
+  }
+  Assert.throws(() => Sleep(1.2), /RangeError/);
+  Assert.throws(() => Sleep(-1), /RangeError/);
 });
