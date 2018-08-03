@@ -50,7 +50,7 @@ JS::ubi::Concrete<nsINode>::edges(JSContext* cx, bool wantNames) const
       return nullptr;
     }
   }
-  return range;
+  return js::UniquePtr<EdgeRange>(range.release());
 }
 
 JS::ubi::Node::Size

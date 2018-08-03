@@ -37,7 +37,7 @@
 #include "jit/JitSpewer.h"
 
 // Spew formatting helpers.
-#define PRETTYHEX(x)                       (((x)<0)?"-":""),(((x)<0)?-(x):(x))
+#define PRETTYHEX(x)                       (((x)<0)?"-":""),((unsigned)((x)^((x)>>31))+((unsigned)(x)>>31))
 
 #define MEM_o     "%s0x%x"
 #define MEM_os    MEM_o   "(,%s,%d)"

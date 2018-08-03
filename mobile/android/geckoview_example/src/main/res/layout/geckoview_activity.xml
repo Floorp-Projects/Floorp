@@ -17,4 +17,12 @@
             android:layout_width="match_parent"
             android:layout_height="?android:actionBarSize"
             android:layout_alignParentBottom="true"/>
+
+    <ProgressBar
+            android:id="@+id/page_progress"
+            style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_alignTop="@id/gecko_view"
+            android:progress="70" />
 </RelativeLayout>

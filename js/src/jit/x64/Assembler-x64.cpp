@@ -118,7 +118,7 @@ ABIArgGenerator::next(MIRType type)
 }
 
 void
-Assembler::writeRelocation(JmpSrc src, Relocation::Kind reloc)
+Assembler::writeRelocation(JmpSrc src, RelocationKind reloc)
 {
     if (!jumpRelocations_.length()) {
         // The jump relocation table starts with a fixed-width integer pointing
@@ -127,26 +127,26 @@ Assembler::writeRelocation(JmpSrc src, Relocation::Kind reloc)
         // patch later.
         jumpRelocations_.writeFixedUint32_t(0);
     }
-    if (reloc == Relocation::JITCODE) {
+    if (reloc == RelocationKind::JITCODE) {
         jumpRelocations_.writeUnsigned(src.offset());
         jumpRelocations_.writeUnsigned(jumps_.length());
     }
 }
 
 void
-Assembler::addPendingJump(JmpSrc src, ImmPtr target, Relocation::Kind reloc)
+Assembler::addPendingJump(JmpSrc src, ImmPtr target, RelocationKind reloc)
 {
     MOZ_ASSERT(target.value != nullptr);
 
     // Emit reloc before modifying the jump table, since it computes a 0-based
     // index. This jump is not patchable at runtime.
-    if (reloc == Relocation::JITCODE)
+    if (reloc == RelocationKind::JITCODE)
         writeRelocation(src, reloc);
     enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target.value, reloc));
 }
 
 size_t
-Assembler::addPatchableJump(JmpSrc src, Relocation::Kind reloc)
+Assembler::addPatchableJump(JmpSrc src, RelocationKind reloc)
 {
     // This jump is patchable at runtime so we always need to make sure the
     // jump table is emitted.

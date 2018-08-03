@@ -356,12 +356,14 @@ def lib_path(target, c_compiler, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk
         'x86': 'x86',
         'x86_64': 'x64',
         'arm': 'arm',
+        'aarch64': 'arm64',
     }.get(target.cpu)
 
     old_target = {
         'x86': '',
         'x86_64': 'amd64',
         'arm': 'arm',
+        'aarch64': 'arm64'
     }.get(target.cpu)
     if old_target is None:
         return

@@ -673,7 +673,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // Emit bytecode to put operands for a JSOP_GETELEM/CALLELEM/SETELEM/DELELEM
     // opcode onto the stack in the right order. In the case of SETELEM, the
     // value to be assigned must already be pushed.
-    enum class EmitElemOption { Get, Set, Call, IncDec, CompoundAssign, Ref };
+    enum class EmitElemOption { Get, Call, IncDec, CompoundAssign, Ref };
     MOZ_MUST_USE bool emitElemOperands(ParseNode* pn, EmitElemOption opts);
 
     MOZ_MUST_USE bool emitElemOpBase(JSOp op);
@@ -846,10 +846,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     MOZ_MUST_USE bool emitClass(ParseNode* pn);
     MOZ_MUST_USE bool emitSuperPropLHS(ParseNode* superBase, bool isCall = false);
-    MOZ_MUST_USE bool emitSuperPropOp(ParseNode* pn, JSOp op, bool isCall = false);
+    MOZ_MUST_USE bool emitSuperGetProp(ParseNode* pn, bool isCall = false);
     MOZ_MUST_USE bool emitSuperElemOperands(ParseNode* pn,
                                             EmitElemOption opts = EmitElemOption::Get);
-    MOZ_MUST_USE bool emitSuperElemOp(ParseNode* pn, JSOp op, bool isCall = false);
+    MOZ_MUST_USE bool emitSuperGetElem(ParseNode* pn, bool isCall = false);
 
     MOZ_MUST_USE bool emitCallee(ParseNode* callee, ParseNode* call, bool* callop);
 

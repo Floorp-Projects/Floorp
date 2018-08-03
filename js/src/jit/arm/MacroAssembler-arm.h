@@ -572,7 +572,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
+        addPendingJump(bo, ImmPtr(c->raw()), RelocationKind::JITCODE);
         ScratchRegisterScope scratch(asMasm());
         ma_movPatchable(ImmPtr(c->raw()), scratch, Always);
         ma_bx(scratch);
