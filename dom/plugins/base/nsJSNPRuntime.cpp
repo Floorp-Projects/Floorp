@@ -580,13 +580,17 @@ JSValToNPVariant(NPP npp, JSContext *cx, const JS::Value& val, NPVariant *varian
   // we run with the original wrapped object, since sometimes there are
   // legitimate cases where a security wrapper ends up here (for example,
   // Location objects, which are _always_ behind security wrappers).
-  JS::Rooted<JSObject*> obj(cx, val.toObjectOrNull());
+  JS::Rooted<JSObject*> obj(cx, &val.toObject());
+  JS::Rooted<JSObject*> global(cx);
   obj = js::CheckedUnwrap(obj);
-  if (!obj) {
-    obj = val.toObjectOrNull();
+  if (obj) {
+    global = JS::GetNonCCWObjectGlobal(obj);
+  } else {
+    obj = &val.toObject();
+    global = JS::CurrentGlobalOrNull(cx);
   }
 
-  NPObject* npobj = nsJSObjWrapper::GetNewOrUsed(npp, obj);
+  NPObject* npobj = nsJSObjWrapper::GetNewOrUsed(npp, obj, global);
   if (!npobj) {
     return false;
   }
@@ -645,7 +649,7 @@ ReportExceptionIfPending(JSContext *cx)
 }
 
 nsJSObjWrapper::nsJSObjWrapper(NPP npp)
-  : mJSObj(nullptr), mNpp(npp), mDestroyPending(false)
+  : mJSObj(nullptr), mJSObjGlobal(nullptr), mNpp(npp), mDestroyPending(false)
 {
   MOZ_COUNT_CTOR(nsJSObjWrapper);
   OnWrapperCreated();
@@ -697,6 +701,7 @@ nsJSObjWrapper::NP_Invalidate(NPObject *npobj)
 
     // Forget our reference to the JSObject.
     jsnpobj->mJSObj = nullptr;
+    jsnpobj->mJSObjGlobal = nullptr;
   }
 }
 
@@ -738,7 +743,7 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
-  JSAutoRealmAllowCCW ar(cx, npjsobj->mJSObj);
+  JSAutoRealm ar(cx, npjsobj->mJSObjGlobal);
   MarkCrossZoneNPIdentifier(cx, id);
 
   AutoJSExceptionSuppressor suppressor(aes, npjsobj);
@@ -778,7 +783,7 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
   JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
-  JSAutoRealmAllowCCW ar(cx, jsobj);
+  JSAutoRealm ar(cx, npjsobj->mJSObjGlobal);
   MarkCrossZoneNPIdentifier(cx, method);
   JS::Rooted<JS::Value> fv(cx);
 
@@ -871,7 +876,7 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier npid)
 
   AutoJSExceptionSuppressor suppressor(aes, npjsobj);
   JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
-  JSAutoRealmAllowCCW ar(cx, jsobj);
+  JSAutoRealm ar(cx, npjsobj->mJSObjGlobal);
   MarkCrossZoneNPIdentifier(cx, npid);
 
   NS_ASSERTION(NPIdentifierIsInt(npid) || NPIdentifierIsString(npid),
@@ -908,7 +913,7 @@ nsJSObjWrapper::NP_GetProperty(NPObject *npobj, NPIdentifier id,
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
   AutoJSExceptionSuppressor suppressor(aes, npjsobj);
-  JSAutoRealmAllowCCW ar(cx, npjsobj->mJSObj);
+  JSAutoRealm ar(cx, npjsobj->mJSObjGlobal);
   MarkCrossZoneNPIdentifier(cx, id);
 
   JS::Rooted<JS::Value> v(cx);
@@ -945,7 +950,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier npid,
 
   AutoJSExceptionSuppressor suppressor(aes, npjsobj);
   JS::Rooted<JSObject*> jsObj(cx, npjsobj->mJSObj);
-  JSAutoRealmAllowCCW ar(cx, jsObj);
+  JSAutoRealm ar(cx, npjsobj->mJSObjGlobal);
   MarkCrossZoneNPIdentifier(cx, npid);
 
   JS::Rooted<JS::Value> v(cx, NPVariantToJSVal(npp, cx, value));
@@ -983,7 +988,7 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier npid)
   AutoJSExceptionSuppressor suppressor(aes, npjsobj);
   JS::ObjectOpResult result;
   JS::Rooted<JSObject*> obj(cx, npjsobj->mJSObj);
-  JSAutoRealmAllowCCW ar(cx, obj);
+  JSAutoRealm ar(cx, npjsobj->mJSObjGlobal);
   MarkCrossZoneNPIdentifier(cx, npid);
 
   NS_ASSERTION(NPIdentifierIsInt(npid) || NPIdentifierIsString(npid),
@@ -1037,7 +1042,7 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
 
   AutoJSExceptionSuppressor suppressor(aes, npjsobj);
   JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
-  JSAutoRealmAllowCCW ar(cx, jsobj);
+  JSAutoRealm ar(cx, npjsobj->mJSObjGlobal);
 
   JS::Rooted<JS::IdVector> ida(cx, JS::IdVector(cx));
   if (!JS_Enumerate(cx, jsobj, &ida)) {
@@ -1091,13 +1096,18 @@ nsJSObjWrapper::NP_Construct(NPObject *npobj, const NPVariant *args,
 
 // static
 NPObject *
-nsJSObjWrapper::GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj)
+nsJSObjWrapper::GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj,
+                             JS::Handle<JSObject*> objGlobal)
 {
   if (!npp) {
     NS_ERROR("Null NPP passed to nsJSObjWrapper::GetNewOrUsed()!");
 
     return nullptr;
   }
+
+  MOZ_ASSERT(JS_IsGlobalObject(objGlobal));
+  MOZ_RELEASE_ASSERT(js::GetObjectCompartment(obj) ==
+                     js::GetObjectCompartment(objGlobal));
 
   // No need to enter the right compartment here as we only get the
   // class and private from the JSObject, neither of which cares about
@@ -1148,6 +1158,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj)
   }
 
   wrapper->mJSObj = obj;
+  wrapper->mJSObjGlobal = objGlobal;
 
   // Insert the new wrapper into the hashtable, rooting the JSObject. Its
   // lifetime is now tied to that of the NPObject.
