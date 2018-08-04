@@ -176,6 +176,7 @@ public class SessionManagerTest {
         assertTrue(sessionManager.hasSession());
     }
 
+    @Test
     public void testShareIntentWithTextViaNewIntent() {
         final SessionManager sessionManager = SessionManager.getInstance();
 
