@@ -394,16 +394,14 @@ PerformanceMainThread::GetEntriesByName(const nsAString& aName,
     return;
   }
 
-  if (aName.EqualsLiteral("document")) {
-    aRetval.Clear();
+  Performance::GetEntriesByName(aName, aEntryType, aRetval);
 
-    if (mDocEntry) {
-      aRetval.AppendElement(mDocEntry);
-    }
+  // The navigation entry is the first one. If it exists and the name matches,
+  // let put it in front.
+  if (mDocEntry && mDocEntry->GetName().Equals(aName)) {
+    aRetval.InsertElementAt(0, mDocEntry);
     return;
   }
-
-  Performance::GetEntriesByName(aName, aEntryType, aRetval);
 }
 
 } // dom namespace
