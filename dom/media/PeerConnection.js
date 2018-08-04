@@ -277,8 +277,9 @@ setupPrototype(RTCSessionDescription, {
 });
 
 class RTCStatsReport {
-  constructor(win, dict) {
-    this._win = win;
+  constructor(pc, dict) {
+    this._pc = pc;
+    this._win = pc._win;
     this._pcid = dict.pcid;
     this._report = convertToRTCStatsReport(dict);
   }
@@ -292,14 +293,48 @@ class RTCStatsReport {
   //
   // Since maplike is recent, we still also make the stats available as legacy
   // enumerable read-only properties directly on our content-facing object.
+  //
+  // In addition, we warn on iteration over isRemote:true entries, which is set
+  // to break in Firefox 65.
+  //
   // Must be called after our webidl sandwich is made.
 
-  makeStatsPublic(warnNullable, isLegacy) {
+  makeStatsPublic(warnNullable, warnRemoteNullable, isLegacy) {
     let legacyProps = {};
     for (let key in this._report) {
       let internal = Cu.cloneInto(this._report[key], this._win);
       if (isLegacy) {
         internal.type = this._specToLegacyFieldMapping[internal.type] || internal.type;
+      } else if (warnRemoteNullable.warn) {
+        let entry = Cu.createObjectIn(this._win);
+        let stat = internal;
+        for (let key in stat) {
+          Object.defineProperty(entry, key, {
+            enumerable: true, configurable: false,
+            get: Cu.exportFunction(function() {
+              // Warn on remote stat access other than the recommended approach of
+              //
+              // for (let stat of stats.values()) {
+              //   switch (stat.type) {
+              //     case "outbound-rtp": {
+              //       if (stat.isRemote) continue;
+              //       let rtcp = stats.get(stat.remoteId);
+              //
+              if (warnRemoteNullable.warn && stat.isRemote &&
+                  key != "type" &&
+                  key != "isRemote") {
+                // id is first prop, a sign of JSON.stringify(), cancel warnings.
+                if (key != "id") {
+                  warnRemoteNullable.warn();
+                }
+                warnRemoteNullable.warn = null;
+              }
+              return stat[key];
+            }, entry)
+          });
+        }
+        Cu.unwaiveXrays(entry)._isRemote = stat.isRemote;
+        internal = entry;
       }
       this.setInternal(key, internal);
       let value = Cu.cloneInto(this._report[key], this._win);
@@ -320,8 +355,13 @@ class RTCStatsReport {
 
   get mozPcid() { return this._pcid; }
 
-  __onget(key, value) {
-    /* Do whatever here */
+  __onget(key, stat) {
+    if (stat && stat._isRemote &&
+        this._pc._warnDeprecatedStatsRemoteAccessNullable.warn) {
+      // Proper stats.get(localStat.remoteId) access detected. Null warning.
+      this._pc._warnDeprecatedStatsRemoteAccessNullable.warn = null;
+    }
+    return stat;
   }
 }
 setupPrototype(RTCStatsReport, {
@@ -459,6 +499,10 @@ class RTCPeerConnection {
     this._warnDeprecatedStatsCallbacksNullable = { warn: () =>
       this.logWarning("Callback-based pc.getStats is deprecated, and will be removed in the near future! Use promise-version! " +
                       "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
+
+    this._warnDeprecatedStatsRemoteAccessNullable = { warn: () =>
+      this.logWarning("Detected soon-to-break getStats() use! stat.isRemote goes away in Firefox 65, but won't warn there!\
+ - See https://blog.mozilla.org/webrtc/getstats-isremote-65/") };
 
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
@@ -1816,10 +1860,10 @@ class PeerConnectionObserver {
 
   onGetStatsSuccess(dict) {
     let pc = this._dompc;
-    let chromeobj = new RTCStatsReport(pc._win, dict);
+    let chromeobj = new RTCStatsReport(pc, dict);
     let webidlobj = pc._win.RTCStatsReport._create(pc._win, chromeobj);
-    chromeobj.makeStatsPublic(pc._warnDeprecatedStatsCallbacksNullable &&
-                              pc._warnDeprecatedStatsAccessNullable,
+    chromeobj.makeStatsPublic(pc._warnDeprecatedStatsAccessNullable,
+                              pc._warnDeprecatedStatsRemoteAccessNullable,
                               pc._onGetStatsIsLegacy);
     pc._onGetStatsSuccess(webidlobj);
   }
