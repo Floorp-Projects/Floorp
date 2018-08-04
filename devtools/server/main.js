@@ -1853,9 +1853,7 @@ DebuggerServerConnection.prototype = {
       return false;
     }
 
-    const { sendSyncMessage } = this.parentMessageManager;
-
-    return sendSyncMessage("debug:setup-in-parent", {
+    return this.parentMessageManager.sendSyncMessage("debug:setup-in-parent", {
       prefix: this.prefix,
       module: module,
       setupParent: setupParent
@@ -1882,21 +1880,20 @@ DebuggerServerConnection.prototype = {
       return null;
     }
 
-    const { addMessageListener, removeMessageListener, sendAsyncMessage } =
-      this.parentMessageManager;
+    const mm = this.parentMessageManager;
 
     const onResponse = new Promise(done => {
       const listener = msg => {
         if (msg.json.prefix != this.prefix) {
           return;
         }
-        removeMessageListener("debug:spawn-actor-in-parent:actor", listener);
+        mm.removeMessageListener("debug:spawn-actor-in-parent:actor", listener);
         done(msg.json.actorID);
       };
-      addMessageListener("debug:spawn-actor-in-parent:actor", listener);
+      mm.addMessageListener("debug:spawn-actor-in-parent:actor", listener);
     });
 
-    sendAsyncMessage("debug:spawn-actor-in-parent", {
+    mm.sendAsyncMessage("debug:spawn-actor-in-parent", {
       prefix: this.prefix,
       module,
       constructor,
