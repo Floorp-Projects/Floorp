@@ -1095,10 +1095,10 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     ElfSection* eh_frame_hdr = eh_frame_segment ? eh_frame_segment->getFirstSection() : nullptr;
     // The .eh_frame section usually follows the eh_frame_hdr section.
     ElfSection* eh_frame = eh_frame_hdr ? eh_frame_hdr->getNext() : nullptr;
-    if (eh_frame_hdr && (!eh_frame || strcmp(eh_frame->getName(), ".eh_frame"))) {
+    if (eh_frame_hdr && !eh_frame) {
         throw std::runtime_error("Expected to find an .eh_frame section after .eh_frame_hdr");
     }
-    if (eh_frame && eh_frame_hdr->getAddr() > relhack->getAddr() && eh_frame->getAddr() < relhackcode->getAddr()) {
+    if (eh_frame && strcmp(eh_frame->getName(), ".eh_frame") == 0) {
         // The distance between both sections needs to be preserved because eh_frame_hdr
         // contains relative offsets to eh_frame. Well, they could be relocated too, but
         // it's not worth the effort for the few number of bytes this would save.
