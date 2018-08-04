@@ -23,15 +23,6 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
-if CONFIG['LIBFUZZER']:
-    USE_LIBS += [
-        'fuzzer',
-        'mozglue'
-    ]
-    LOCAL_INCLUDES += [
-        '/tools/fuzzing/libfuzzer',
-    ]
-
 # DELAYLOAD_DLLS in this block ensures that the DLL blocklist is functional
 if CONFIG['OS_ARCH'] == 'WINNT':
     DELAYLOAD_DLLS += [
