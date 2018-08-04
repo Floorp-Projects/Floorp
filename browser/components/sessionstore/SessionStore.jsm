@@ -163,7 +163,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  gSessionStartup: ["@mozilla.org/browser/sessionstartup;1", "nsISessionStartup"],
   gScreenManager: ["@mozilla.org/gfx/screenmanager;1", "nsIScreenManager"],
   Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
 });
@@ -181,6 +180,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.jsm",
   SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",
   SessionSaver: "resource:///modules/sessionstore/SessionSaver.jsm",
+  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   TabAttributes: "resource:///modules/sessionstore/TabAttributes.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabState: "resource:///modules/sessionstore/TabState.jsm",
@@ -639,10 +639,10 @@ var SessionStoreInternal = {
   initSession() {
     TelemetryStopwatch.start("FX_SESSION_RESTORE_STARTUP_INIT_SESSION_MS");
     let state;
-    let ss = gSessionStartup;
+    let ss = SessionStartup;
 
     if (ss.doRestore() ||
-        ss.sessionType == Ci.nsISessionStartup.DEFER_SESSION) {
+        ss.sessionType == ss.DEFER_SESSION) {
       state = ss.state;
     }
 
@@ -650,7 +650,7 @@ var SessionStoreInternal = {
       try {
         // If we're doing a DEFERRED session, then we want to pull pinned tabs
         // out so they can be restored.
-        if (ss.sessionType == Ci.nsISessionStartup.DEFER_SESSION) {
+        if (ss.sessionType == ss.DEFER_SESSION) {
           let [iniState, remainingState] = this._prepDataForDeferredRestore(state);
           // If we have a iniState with windows, that means that we have windows
           // with app tabs to restore.
@@ -1159,7 +1159,7 @@ var SessionStoreInternal = {
           // We're starting with a single private window. Save the state we
           // actually wanted to restore so that we can do it later in case
           // the user opens another, non-private window.
-          this._deferredInitialState = gSessionStartup.state;
+          this._deferredInitialState = SessionStartup.state;
 
           // Nothing to restore now, notify observers things are complete.
           Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
@@ -1310,7 +1310,7 @@ var SessionStoreInternal = {
       // We are ready for initialization as soon as the session file has been
       // read from disk and the initial window's delayed startup has finished.
       this._promiseReadyForInitialization =
-        Promise.all([promise, gSessionStartup.onceInitialized]);
+        Promise.all([promise, SessionStartup.onceInitialized]);
     }
 
     // We can't call this.onLoad since initialization
@@ -4585,7 +4585,7 @@ var SessionStoreInternal = {
 
   /**
    * This is going to take a state as provided at startup (via
-   * nsISessionStartup.state) and split it into 2 parts. The first part
+   * SessionStartup.state) and split it into 2 parts. The first part
    * (defaultState) will be a state that should still be restored at startup,
    * while the second part (state) is a state that should be saved for later.
    * defaultState will be comprised of windows with only pinned tabs, extracted
@@ -4596,12 +4596,12 @@ var SessionStoreInternal = {
    * to restore the previous session (publicly exposed as restoreLastSession).
    *
    * @param state
-   *        The state, presumably from nsISessionStartup.state
+   *        The state, presumably from SessionStartup.state
    * @returns [defaultState, state]
    */
   _prepDataForDeferredRestore: function ssi_prepDataForDeferredRestore(state) {
     // Make sure that we don't modify the global state as provided by
-    // nsSessionStartup.state.
+    // SessionStartup.state.
     state = Cu.cloneInto(state, {});
 
     let defaultState = { windows: [], selectedWindow: 1 };
