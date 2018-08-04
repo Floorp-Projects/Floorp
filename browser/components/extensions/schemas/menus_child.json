@@ -1,0 +1,29 @@
+[
+  {
+    "namespace": "menus",
+    "permissions": ["menus"],
+    "allowedContexts": ["content", "devtools"],
+    "description": "The part of the menus API that is available in all extension contexts, including content scripts.",
+    "functions": [
+      {
+        "name": "getTargetElement",
+        "type": "function",
+        "allowedContexts": ["content", "devtools"],
+        "description": "Retrieve the element that was associated with a recent contextmenu event.",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "The identifier of the clicked element, available as info.targetElementId in the menus.onShown, onClicked or onclick event.",
+            "name": "targetElementId"
+          }
+        ],
+        "returns": {
+          "type": "object",
+          "optional": true,
+          "isInstanceOf": "Element",
+          "additionalProperties": { "type": "any" }
+        }
+      }
+    ]
+  }
+]
