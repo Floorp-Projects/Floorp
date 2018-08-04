@@ -2259,6 +2259,15 @@ nsPIDOMWindowInner::GetPerformance()
 }
 
 void
+nsPIDOMWindowInner::QueuePerformanceNavigationTiming()
+{
+  CreatePerformanceObjectIfNeeded();
+  if (mPerformance) {
+    mPerformance->QueueNavigationTimingEntry();
+  }
+}
+
+void
 nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
 {
   if (mPerformance || !mDoc) {

@@ -30,11 +30,6 @@ public:
   void AddEntry(nsIHttpChannel* aChannel,
                 nsITimedChannel* aTimedChannel) override;
 
-  void CreateDocumentEntry(nsITimedChannel* aChannel) override
-  {
-    MOZ_CRASH("This should not be called on workers.");
-  }
-
   void AddEntryOnWorker(UniquePtr<PerformanceProxyData>&& aData);
 
 private:
