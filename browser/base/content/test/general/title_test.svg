@@ -25,7 +25,7 @@
   <text id="text3" x="10px" y="128px" font-size="24px" title="ignored for SVG">
     This contains nothing.
   </text>
-  <a id="link1" xlink:href="#">
+  <a id="link1" href="#">
     This link contains &lt;title&gt;
     <title>
       This is a title
@@ -33,7 +33,7 @@
     <text id="text4" x="10px" y="192px" font-size="24px">
     </text>
   </a>
-  <a id="link2" xlink:href="#">
+  <a id="link2" href="#">
     <text x="10px" y="192px" font-size="24px">
       This text contains &lt;title&gt;
       <title>
@@ -41,13 +41,13 @@
       </title>
     </text>
   </a>
-  <a id="link3" xlink:href="#" xlink:title="This is an xlink:title attribute">
+  <a id="link3" href="#" xlink:title="This is an xlink:title attribute">
     <text x="10px" y="224px" font-size="24px">
       This link contains &lt;title&gt; &amp; xlink:title attr.
       <title>This is a title</title>
     </text>
   </a>
-  <a id="link4" xlink:href="#" xlink:title="This is an xlink:title attribute">
+  <a id="link4" href="#" xlink:title="This is an xlink:title attribute">
     <text x="10px" y="256px" font-size="24px">
       This link contains xlink:title attr.
     </text>
