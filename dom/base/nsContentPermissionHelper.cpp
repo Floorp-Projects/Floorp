@@ -708,12 +708,17 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
     for (uint32_t i = 0; i < mPermissionRequests.Length(); ++i) {
       nsCString type = mPermissionRequests[i].type();
 
+      JS::Rooted<JSObject*> obj(RootingCx(), &aChoices.toObject());
+      obj = CheckedUnwrap(obj);
+      if (!obj) {
+        return NS_ERROR_FAILURE;
+      }
+
       AutoJSAPI jsapi;
       jsapi.Init();
 
       JSContext* cx = jsapi.cx();
-      JS::Rooted<JSObject*> obj(cx, &aChoices.toObject());
-      JSAutoRealmAllowCCW ar(cx, obj);
+      JSAutoRealm ar(cx, obj);
 
       JS::Rooted<JS::Value> val(cx);
 
