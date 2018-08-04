@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 
-// Test nsISessionStartup.sessionType in the following scenario:
+// Test SessionStartup.sessionType in the following scenario:
 // - valid sessionstore.js;
 // - valid sessionCheckpoints.json with all checkpoints;
 // - the session store has been loaded
@@ -21,11 +21,8 @@ function run_test() {
   // and remove sessionstore.js
   let oldExtSessionFile = SessionFile.Paths.clean.replace("jsonlz4", "js");
   writeCompressedFile(oldExtSessionFile, SessionFile.Paths.clean).then(() => {
-    let startup = Cc["@mozilla.org/browser/sessionstartup;1"].
-        getService(Ci.nsISessionStartup);
-
     afterSessionStartupInitialization(function cb() {
-      Assert.equal(startup.sessionType, Ci.nsISessionStartup.DEFER_SESSION);
+      Assert.equal(SessionStartup.sessionType, SessionStartup.DEFER_SESSION);
       do_test_finished();
     });
   });

@@ -30,16 +30,15 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
-ChromeUtils.defineModuleGetter(this, "RunState",
-  "resource:///modules/sessionstore/RunState.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
-XPCOMUtils.defineLazyServiceGetter(this, "sessionStartup",
-  "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
-ChromeUtils.defineModuleGetter(this, "SessionWorker",
-  "resource:///modules/sessionstore/SessionWorker.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  RunState: "resource:///modules/sessionstore/RunState.jsm",
+  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  SessionWorker: "resource:///modules/sessionstore/SessionWorker.jsm",
+});
 
 const PREF_UPGRADE_BACKUP = "browser.sessionstore.upgradeBackup.latestBuildID";
 const PREF_MAX_UPGRADE_BACKUPS = "browser.sessionstore.upgradeBackup.maxUpgradeBackups";
@@ -384,7 +383,7 @@ var SessionFileInternal = {
     }
 
     let performShutdownCleanup = isFinalWrite &&
-      !sessionStartup.isAutomaticRestoreEnabled();
+      !SessionStartup.isAutomaticRestoreEnabled();
 
     this._attempts++;
     let options = {isFinalWrite, performShutdownCleanup};

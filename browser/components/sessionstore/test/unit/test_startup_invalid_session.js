@@ -15,11 +15,8 @@ function run_test() {
   // and remove sessionstore.js
   let oldExtSessionFile = SessionFile.Paths.clean.replace("jsonlz4", "js");
   writeCompressedFile(oldExtSessionFile, SessionFile.Paths.clean).then(() => {
-    let startup = Cc["@mozilla.org/browser/sessionstartup;1"].
-        getService(Ci.nsISessionStartup);
-
     afterSessionStartupInitialization(function cb() {
-      Assert.equal(startup.sessionType, Ci.nsISessionStartup.NO_SESSION);
+      Assert.equal(SessionStartup.sessionType, SessionStartup.NO_SESSION);
       do_test_finished();
     });
   });

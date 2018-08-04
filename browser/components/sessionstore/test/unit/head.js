@@ -1,5 +1,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+ChromeUtils.defineModuleGetter(this, "SessionStartup",
+  "resource:///modules/sessionstore/SessionStartup.jsm");
 
 // Call a function once initialization of SessionStartup is complete
 function afterSessionStartupInitialization(cb) {
@@ -13,6 +15,7 @@ function afterSessionStartupInitialization(cb) {
       do_throw(ex);
     }
   };
+  Services.obs.addObserver(observer, "sessionstore-state-finalized");
 
   // We need the Crash Monitor initialized for sessionstartup to run
   // successfully.
@@ -20,12 +23,7 @@ function afterSessionStartupInitialization(cb) {
   CrashMonitor.init();
 
   // Start sessionstartup initialization.
-  let startup = Cc["@mozilla.org/browser/sessionstartup;1"].
-    getService(Ci.nsIObserver);
-  Services.obs.addObserver(startup, "final-ui-startup");
-  Services.obs.addObserver(startup, "quit-application");
-  Services.obs.notifyObservers(null, "final-ui-startup");
-  Services.obs.addObserver(observer, "sessionstore-state-finalized");
+  SessionStartup.init();
 }
 
 // Compress the source file using lz4 and put the result to destination file.
