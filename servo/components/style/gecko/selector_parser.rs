@@ -488,9 +488,7 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
             }
             let args = args.into_boxed_slice();
             if let Some(pseudo) = PseudoElement::tree_pseudo_element(&name, args) {
-                if self.is_pseudo_element_enabled(&pseudo) {
-                    return Ok(pseudo);
-                }
+                return Ok(pseudo);
             }
         }
         Err(
