@@ -26,7 +26,7 @@ class DownloadDialogFragment : DialogFragment() {
         val fileName = arguments!!.getString("fileName")
         val pendingDownload = arguments!!.getParcelable<Download>("download")
 
-        val builder = AlertDialog.Builder(context!!, R.style.DialogStyle)
+        val builder = AlertDialog.Builder(requireContext(), R.style.DialogStyle)
         builder.setCancelable(true)
         builder.setTitle(getString(R.string.download_dialog_title))
 
