@@ -753,8 +753,7 @@ StorageActors.createActor({
       return;
     }
 
-    const { sendSyncMessage, addMessageListener } =
-      this.conn.parentMessageManager;
+    const mm = this.conn.parentMessageManager;
 
     this.conn.setupInParent({
       module: "devtools/server/actors/storage",
@@ -776,11 +775,11 @@ StorageActors.createActor({
     this.removeAllSessionCookies =
       callParentProcess.bind(null, "removeAllSessionCookies");
 
-    addMessageListener("debug:storage-cookie-request-child",
-                       cookieHelpers.handleParentRequest);
+    mm.addMessageListener("debug:storage-cookie-request-child",
+                          cookieHelpers.handleParentRequest);
 
     function callParentProcess(methodName, ...args) {
-      const reply = sendSyncMessage("debug:storage-cookie-request-parent", {
+      const reply = mm.sendSyncMessage("debug:storage-cookie-request-parent", {
         method: methodName,
         args: args
       });
@@ -1897,8 +1896,7 @@ StorageActors.createActor({
       return;
     }
 
-    const { sendAsyncMessage, addMessageListener } =
-      this.conn.parentMessageManager;
+    const mm = this.conn.parentMessageManager;
 
     this.conn.setupInParent({
       module: "devtools/server/actors/storage",
@@ -1914,7 +1912,7 @@ StorageActors.createActor({
     this.removeDBRecord = callParentProcessAsync.bind(null, "removeDBRecord");
     this.clearDBStore = callParentProcessAsync.bind(null, "clearDBStore");
 
-    addMessageListener("debug:storage-indexedDB-request-child", msg => {
+    mm.addMessageListener("debug:storage-indexedDB-request-child", msg => {
       switch (msg.json.method) {
         case "backToChild": {
           const [func, rv] = msg.json.args;
@@ -1938,7 +1936,7 @@ StorageActors.createActor({
 
       unresolvedPromises.set(methodName, deferred);
 
-      sendAsyncMessage("debug:storage-indexedDB-request-parent", {
+      mm.sendAsyncMessage("debug:storage-indexedDB-request-parent", {
         method: methodName,
         args: args
       });
