@@ -97,6 +97,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsScriptErrorWithStack)
 
   NS_IMETHOD GetStack(JS::MutableHandleValue) override;
+  NS_IMETHOD GetStackGlobal(JS::MutableHandleValue) override;
   NS_IMETHOD ToString(nsACString& aResult) override;
 
 private:
