@@ -698,9 +698,11 @@ _getwindowobject(NPP npp)
   nsCOMPtr<nsPIDOMWindowOuter> outer = doc->GetWindow();
   NS_ENSURE_TRUE(outer, nullptr);
 
+  JS::Rooted<JSObject*> windowProxy(dom::RootingCx(),
+                                    nsGlobalWindowOuter::Cast(outer)->GetGlobalJSObject());
   JS::Rooted<JSObject*> global(dom::RootingCx(),
-                               nsGlobalWindowOuter::Cast(outer)->GetGlobalJSObject());
-  return nsJSObjWrapper::GetNewOrUsed(npp, global);
+                               JS::GetNonCCWObjectGlobal(windowProxy));
+  return nsJSObjWrapper::GetNewOrUsed(npp, windowProxy, global);
 }
 
 NPObject*
@@ -745,8 +747,8 @@ _getpluginelement(NPP npp)
   }
 
   JS::RootedObject obj(cx, &val.toObject());
-
-  return nsJSObjWrapper::GetNewOrUsed(npp, obj);
+  JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+  return nsJSObjWrapper::GetNewOrUsed(npp, obj, global);
 }
 
 NPIdentifier

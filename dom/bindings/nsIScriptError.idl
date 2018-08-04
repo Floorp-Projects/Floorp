@@ -82,6 +82,15 @@ interface nsIScriptError : nsIConsoleMessage
     attribute jsval stack;
 
     /**
+     * If |stack| is an object, then stackGlobal must be a global object that's
+     * same-compartment with |stack|. This can be used to enter the correct
+     * realm when working with the stack object. We can't use the object itself
+     * because it might be a cross-compartment wrapper and CCWs are not
+     * associated with a single realm/global.
+     */
+    [noscript] readonly attribute jsval stackGlobal;
+
+    /**
      * The name of a template string, as found in js.msg, associated with the
      * error message.
      */

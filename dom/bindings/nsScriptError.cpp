@@ -170,6 +170,13 @@ nsScriptErrorBase::SetStack(JS::HandleValue aStack) {
 }
 
 NS_IMETHODIMP
+nsScriptErrorBase::GetStackGlobal(JS::MutableHandleValue aStackGlobal)
+{
+    aStackGlobal.setUndefined();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScriptErrorBase::GetErrorMessageName(nsAString& aErrorMessageName) {
     aErrorMessageName = mMessageName;
     return NS_OK;

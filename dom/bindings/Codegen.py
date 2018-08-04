@@ -7871,7 +7871,10 @@ class CGPerSignatureCall(CGThing):
                 slotStorageSteps += preserveWrapper
 
             if checkForXray:
-                conversionScope = "isXray ? obj : slotStorage"
+                # In the Xray case we use the current global as conversion
+                # scope, as explained in the big compartment/conversion comment
+                # above.
+                conversionScope = "isXray ? JS::CurrentGlobalOrNull(cx) : slotStorage"
             else:
                 conversionScope = "slotStorage"
 
@@ -7879,7 +7882,7 @@ class CGPerSignatureCall(CGThing):
                 """
                 {
                   JS::Rooted<JSObject*> conversionScope(cx, ${conversionScope});
-                  JSAutoRealmAllowCCW ar(cx, conversionScope);
+                  JSAutoRealm ar(cx, conversionScope);
                   do { // block we break out of when done wrapping
                     $*{wrapCode}
                   } while (false);
