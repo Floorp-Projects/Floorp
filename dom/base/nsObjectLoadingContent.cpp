@@ -1810,15 +1810,12 @@ nsObjectLoadingContent::UpdateObjectParameters()
              IsPluginType(newMime_Type)) {
     newType = newMime_Type;
     LOG(("OBJLC [%p]: Plugin type with no URI, skipping channel load", this));
-  } else if (newURI && (mOriginalContentType.IsEmpty() || newMime_Type != eType_Null)) {
+  } else if (newURI) {
     // We could potentially load this if we opened a channel on mURI, indicate
-    // this by leaving type as loading.
-    //
-    // If a MIME type was requested in the tag, but we have decided to set load
-    // type to null, ignore (otherwise we'll default to document type loading).
+    // This by leaving type as loading
     newType = eType_Loading;
   } else {
-    // Unloadable - no URI, and no plugin/MIME type. Non-plugin types (images,
+    // Unloadable - no URI, and no plugin type. Non-plugin types (images,
     // documents) always load with a channel.
     newType = eType_Null;
   }
