@@ -135,6 +135,11 @@
               "enum": ["Shift", "Alt", "Command", "Ctrl", "MacCtrl"]
             },
             "description": "An array of keyboard modifiers that were held while the menu item was clicked."
+          },
+          "targetElementId": {
+            "type": "integer",
+            "optional": true,
+            "description": "An identifier of the clicked element, if any. Use menus.getTargetElement in the page to find the corresponding element."
           }
         }
       }
@@ -456,6 +461,10 @@
               },
               "selectionText": {
                 "type": "string",
+                "optional": true
+              },
+              "targetElementId": {
+                "type": "integer",
                 "optional": true
               }
             }

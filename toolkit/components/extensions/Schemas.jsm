@@ -1739,7 +1739,8 @@ class ObjectType extends Type {
           }
         }
 
-        if (ChromeUtils.getClassName(value) !== this.isInstanceOf) {
+        if (ChromeUtils.getClassName(value) !== this.isInstanceOf &&
+            (this.isInstanceOf !== "Element" || value.nodeType !== 1)) {
           return context.error(`Object must be an instance of ${this.isInstanceOf}`,
                                `be an instance of ${this.isInstanceOf}`);
         }

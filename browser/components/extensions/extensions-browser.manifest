@@ -1,5 +1,6 @@
 category webextension-modules browser chrome://browser/content/ext-browser.json
 
 category webextension-scripts c-browser chrome://browser/content/parent/ext-browser.js
+category webextension-scripts-content browser chrome://browser/content/child/ext-browser-content-only.js
 category webextension-scripts-devtools browser chrome://browser/content/child/ext-browser.js
 category webextension-scripts-addon browser chrome://browser/content/child/ext-browser.js
