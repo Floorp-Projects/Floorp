@@ -774,8 +774,9 @@ void
 MessageChannel::WillDestroyCurrentMessageLoop()
 {
 #if defined(DEBUG)
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IPCFatalErrorProtocol,
-                                       nsDependentCString(mName));
+    CrashReporter::AnnotateCrashReport(
+        NS_LITERAL_CSTRING("IPCFatalErrorProtocol"),
+        nsDependentCString(mName));
     MOZ_CRASH("MessageLoop destroyed before MessageChannel that's bound to it");
 #endif
 
@@ -803,7 +804,8 @@ MessageChannel::Clear()
     // shouldn't intentionally crash here.
     if (!Unsound_IsClosed() && !mInKillHardShutdown) {
         CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IPCFatalErrorProtocol, nsDependentCString(mName));
+            NS_LITERAL_CSTRING("IPCFatalErrorProtocol"),
+            nsDependentCString(mName));
         switch (mChannelState) {
             case ChannelOpening:
                 MOZ_CRASH("MessageChannel destroyed without being closed " \

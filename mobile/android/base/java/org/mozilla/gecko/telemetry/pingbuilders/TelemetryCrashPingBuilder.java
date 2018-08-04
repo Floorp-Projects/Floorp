@@ -8,7 +8,6 @@ package org.mozilla.gecko.telemetry.pingbuilders;
 
 import android.util.Log;
 
-import org.mozilla.gecko.CrashReporterConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.util.StringUtils;
@@ -35,6 +34,40 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
 
     private static final String ISO8601_DATE = "yyyy-MM-dd";
     private static final String ISO8601_DATE_HOURS = "yyyy-MM-dd'T'HH':00:00.000Z'";
+
+    // The following list should be kept in sync with the one in CrashManager.jsm
+    private static final String[] ANNOTATION_WHITELIST = {
+        "AsyncShutdownTimeout",
+        "AvailablePageFile",
+        "AvailablePhysicalMemory",
+        "AvailableVirtualMemory",
+        "BlockedDllList",
+        "BlocklistInitFailed",
+        "BuildID",
+        "ContainsMemoryReport",
+        "CrashTime",
+        "EventLoopNestingLevel",
+        "ipc_channel_error",
+        "IsGarbageCollecting",
+        "LowCommitSpaceEvents",
+        "MozCrashReason",
+        "OOMAllocationSize",
+        "ProductID",
+        "ProductName",
+        "ReleaseChannel",
+        "RemoteType",
+        "SecondsSinceLastCrash",
+        "ShutdownProgress",
+        "StartupCrash",
+        "SystemMemoryUsePercentage",
+        "TextureUsage",
+        "TotalPageFile",
+        "TotalPhysicalMemory",
+        "TotalVirtualMemory",
+        "UptimeTS",
+        "User32BeforeBlocklist",
+        "Version",
+    };
 
     public TelemetryCrashPingBuilder(String crashId, String clientId, HashMap<String, String> annotations) {
         super(TelemetryPingBuilder.UNIFIED_TELEMETRY_VERSION);
@@ -145,7 +178,7 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
         ExtendedJSONObject node = new ExtendedJSONObject();
 
         for (Entry<String, String> pair : annotations.entrySet()) {
-            if (Arrays.binarySearch(CrashReporterConstants.ANNOTATION_WHITELIST, pair.getKey()) >= 0) {
+            if (Arrays.binarySearch(ANNOTATION_WHITELIST, pair.getKey()) >= 0) {
                 node.put(pair.getKey(), pair.getValue());
             }
         }

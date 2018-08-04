@@ -1,4 +1,3 @@
-ChromeUtils.import("resource://gre/modules/CrashReporter.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://testing-common/AppData.jsm", this);

@@ -283,12 +283,21 @@ GfxInfo::AddCrashReportAnnotations()
   GetAdapterDriverVersion(driverVersion);
   CopyUTF16toUTF8(driverVersion, narrowDriverVersion);
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterVendorID,
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterVendorID"),
                                      narrowVendorID);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
                                      narrowDeviceID);
-  CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::AdapterDriverVersion, narrowDriverVersion);
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDriverVersion"),
+                                     narrowDriverVersion);
+  /* Add an App Note for now so that we get the data immediately. These
+   * can go away after we store the above in the socorro db */
+  nsAutoCString note;
+  /* AppendPrintf only supports 32 character strings, mrghh. */
+  note.AppendLiteral("AdapterVendorID: ");
+  note.Append(narrowVendorID);
+  note.AppendLiteral(", AdapterDeviceID: ");
+  note.Append(narrowDeviceID);
+  CrashReporter::AppendAppNotesToCrashReport(note);
 }
 
 // We don't support checking driver versions on Mac.

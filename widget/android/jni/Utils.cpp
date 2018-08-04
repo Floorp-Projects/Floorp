@@ -204,8 +204,8 @@ bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack)
     bool result = true;
 
     result &= NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
-                           CrashReporter::Annotation::JavaStackTrace,
-                           String::Ref::From(aStack)->ToCString()));
+            NS_LITERAL_CSTRING("JavaStackTrace"),
+            String::Ref::From(aStack)->ToCString()));
 
     auto appNotes = java::GeckoAppShell::GetAppNotes();
     if (NS_WARN_IF(aEnv->ExceptionCheck())) {

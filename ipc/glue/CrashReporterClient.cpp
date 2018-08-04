@@ -26,8 +26,7 @@ CrashReporterClient::~CrashReporterClient()
 }
 
 void
-CrashReporterClient::AnnotateCrashReport(CrashReporter::Annotation aKey,
-                                         const nsCString& aData)
+CrashReporterClient::AnnotateCrashReport(const nsCString& aKey, const nsCString& aData)
 {
   StaticMutexAutoLock lock(sLock);
   mMetadata->AnnotateCrashReport(aKey, aData);
