@@ -295,7 +295,7 @@ class RTCStatsReport {
   // enumerable read-only properties directly on our content-facing object.
   //
   // In addition, we warn on iteration over isRemote:true entries, which is set
-  // to break in Firefox 58.
+  // to break in Firefox 65.
   //
   // Must be called after our webidl sandwich is made.
 
@@ -501,8 +501,8 @@ class RTCPeerConnection {
                       "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
     this._warnDeprecatedStatsRemoteAccessNullable = { warn: () =>
-      this.logWarning("Detected soon-to-break getStats() use! stat.isRemote goes away in Firefox 58, but won't warn there!\
- - See https://blog.mozilla.org/webrtc/getstats-firefox-58/") };
+      this.logWarning("Detected soon-to-break getStats() use! stat.isRemote goes away in Firefox 65, but won't warn there!\
+ - See https://blog.mozilla.org/webrtc/getstats-isremote-65/") };
 
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
