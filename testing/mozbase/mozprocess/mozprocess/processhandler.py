@@ -13,7 +13,10 @@ import threading
 import time
 import traceback
 
-from Queue import Queue, Empty
+try:
+    from queue import Queue, Empty
+except ImportError:
+    from Queue import Queue, Empty
 from datetime import datetime
 
 
@@ -124,14 +127,14 @@ class ProcessHandlerMixin(object):
             thread = threading.current_thread().name
             print("DBG::MOZPROC PID:{} ({}) | {}".format(self.pid, thread, msg))
 
-        def __del__(self, _maxint=sys.maxint):
+        def __del__(self, _maxint=sys.maxsize):
             if isWin:
                 handle = getattr(self, '_handle', None)
                 if handle:
                     if hasattr(self, '_internal_poll'):
                         self._internal_poll(_deadstate=_maxint)
                     else:
-                        self.poll(_deadstate=sys.maxint)
+                        self.poll(_deadstate=sys.maxsize)
                 if handle or self._job or self._io_port:
                     self._cleanup()
             else:
@@ -1069,7 +1072,7 @@ class StreamOutput(object):
 
     def __call__(self, line):
         try:
-            self.stream.write(line + '\n')
+            self.stream.write(line.decode() + '\n')
         except UnicodeDecodeError:
             # TODO: Workaround for bug #991866 to make sure we can display when
             # when normal UTF-8 display is failing
