@@ -19,7 +19,7 @@
   SpecialPowers.pushPrefEnv({"set": [["dom.enable_performance_navigation_timing", true]]}, start);
 
   function start() {
-    var p = performance.getEntriesByName("document")[0];
+    var p = performance.getEntriesByName(window.location.href)[0];
     ok(!!p, "There should be an entry for the document");
     document.getElementById("content").textContent += JSON.stringify(p);
 
