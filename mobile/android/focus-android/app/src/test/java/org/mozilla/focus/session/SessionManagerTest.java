@@ -188,10 +188,11 @@ public class SessionManagerTest {
         assertNotNull(sessions);
         assertEquals(1, sessions.size());
 
+        final String SEARCH_QUERY = "https://www.google.com/search?q=Hello%20World%20Focus&ie=utf-8&oe=utf-8&client=firefox-b";
         final Session session = sessions.get(0);
         assertTrue(session.isSearch());
         assertEquals("Hello World Focus", session.getSearchTerms());
-        assertEquals(TEST_URL, session.getUrl().getValue());
+        assertEquals(SEARCH_QUERY, session.getUrl().getValue());
         assertFalse(session.isCustomTab());
         assertNull(session.getCustomTabConfig());
 
