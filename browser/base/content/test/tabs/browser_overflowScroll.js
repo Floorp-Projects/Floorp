@@ -26,6 +26,10 @@ add_task(async function() {
   let nextLeftElement = () => elementFromPoint(left(scrollbox) - 1);
   let nextRightElement = () => elementFromPoint(right(scrollbox) + 1);
   let firstScrollable = () => tabs[gBrowser._numPinnedTabs];
+  let waitForNextFrame = async function() {
+    await window.promiseDocumentFlushed(() => {});
+    await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+  };
 
   arrowScrollbox.smoothScroll = false;
   registerCleanupFunction(() => {
@@ -55,25 +59,31 @@ add_task(async function() {
 
   element = nextRightElement();
   EventUtils.synthesizeMouseAtCenter(downButton, {});
+  await waitForNextFrame();
   isRight(element, "Scrolled one tab to the right with a single click");
 
   gBrowser.selectedTab = tabs[tabs.length - 1];
+  await waitForNextFrame();
   ok(right(gBrowser.selectedTab) <= right(scrollbox), "Selecting the last tab scrolls it into view " +
      "(" + right(gBrowser.selectedTab) + " <= " + right(scrollbox) + ")");
 
   element = nextLeftElement();
   EventUtils.synthesizeMouseAtCenter(upButton, {});
+  await waitForNextFrame();
   isLeft(element, "Scrolled one tab to the left with a single click");
 
   let elementPoint = left(scrollbox) - width(scrollbox);
   element = elementFromPoint(elementPoint);
-  if (elementPoint == right(element)) {
-    element = element.nextSibling;
-  }
+  element = element.nextSibling;
+
   EventUtils.synthesizeMouseAtCenter(upButton, {clickCount: 2});
+  await waitForNextFrame();
+  await BrowserTestUtils.waitForCondition(() =>
+    !gBrowser.tabContainer.arrowScrollbox._isScrolling);
   isLeft(element, "Scrolled one page of tabs with a double click");
 
   EventUtils.synthesizeMouseAtCenter(upButton, {clickCount: 3});
+  await waitForNextFrame();
   var firstScrollableLeft = left(firstScrollable());
   ok(left(scrollbox) <= firstScrollableLeft, "Scrolled to the start with a triple click " +
      "(" + left(scrollbox) + " <= " + firstScrollableLeft + ")");

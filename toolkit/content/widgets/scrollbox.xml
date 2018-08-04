@@ -156,8 +156,6 @@
         document.defaultView.getComputedStyle(this._scrollbox).direction == "rtl";
       ]]></field>
 
-      <field name="_scrollTarget">null</field>
-
       <method name="_boundsWithoutFlushing">
         <parameter name="element"/>
         <body><![CDATA[
@@ -187,6 +185,7 @@
         ]]></body>
       </method>
 
+      <field name="_ensureElementIsVisibleAnimationFrame">0</field>
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
         <parameter name="aInstant"/>
@@ -194,7 +193,13 @@
           if (!this._canScrollToElement(element))
             return;
 
-          element.scrollIntoView({ behavior: aInstant ? "instant" : "auto" });
+          if (this._ensureElementIsVisibleAnimationFrame) {
+            window.cancelAnimationFrame(this._ensureElementIsVisibleAnimationFrame);
+          }
+          this._ensureElementIsVisibleAnimationFrame = window.requestAnimationFrame(() => {
+            element.scrollIntoView({ behavior: aInstant ? "instant" : "auto" });
+            this._ensureElementIsVisibleAnimationFrame = 0;
+          });
         ]]></body>
       </method>
 
@@ -204,16 +209,6 @@
         <body><![CDATA[
           if (index == 0)
             return;
-
-          // Each scrollByIndex call is expected to scroll the given number of
-          // items. If a previous call is still in progress because of smooth
-          // scrolling, we need to complete it before starting a new one.
-          if (this._scrollTarget) {
-            let elements = this._getScrollableElements();
-            if (this._scrollTarget != elements[0] &&
-                this._scrollTarget != elements[elements.length - 1])
-              this.ensureElementIsVisible(this._scrollTarget, true);
-          }
 
           var rect = this.scrollClientRect;
           var [start, end] = this._startEndProps;
