@@ -79,7 +79,6 @@
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIWebBrowser.h"
-#include "nsIWebBrowserFocus.h"
 #include "nsIWebProgress.h"
 #include "nsIXULRuntime.h"
 #include "nsPIDOMWindow.h"
@@ -1477,22 +1476,22 @@ TabChild::ZoomToRect(const uint32_t& aPresShellId,
 mozilla::ipc::IPCResult
 TabChild::RecvActivate()
 {
+  MOZ_ASSERT(mWebBrowser);
   // Ensure that the PresShell exists, otherwise focusing
   // is definitely not going to work. GetPresShell should
   // create a PresShell if one doesn't exist yet.
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   MOZ_ASSERT(presShell);
 
-  nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(WebNavigation());
-  browser->Activate();
+  mWebBrowser->FocusActivate();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 TabChild::RecvDeactivate()
 {
-  nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(WebNavigation());
-  browser->Deactivate();
+  MOZ_ASSERT(mWebBrowser);
+  mWebBrowser->FocusDeactivate();
   return IPC_OK();
 }
 
