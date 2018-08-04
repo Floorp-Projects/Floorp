@@ -88,6 +88,13 @@ nsScriptErrorWithStack::GetStack(JS::MutableHandleValue aStack) {
 }
 
 NS_IMETHODIMP
+nsScriptErrorWithStack::GetStackGlobal(JS::MutableHandleValue aStackGlobal)
+{
+    aStackGlobal.setObjectOrNull(mStackGlobal);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult)
 {
     MOZ_ASSERT(NS_IsMainThread());

@@ -478,7 +478,13 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (stack.isObject()) {
-        JSAutoRealmAllowCCW ar(cx, &stack.toObject());
+        // Because |stack| might be a cross-compartment wrapper, we can't use it
+        // with JSAutoRealm. Use the stackGlobal for that.
+        JS::RootedValue stackGlobal(cx);
+        rv = scriptError->GetStackGlobal(&stackGlobal);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        JSAutoRealm ar(cx, &stackGlobal.toObject());
 
         StructuredCloneData data;
         ErrorResult err;
