@@ -1173,7 +1173,7 @@ TabChild::RecvLoadURL(const nsCString& aURI,
       NS_WARNING("WebNavigation()->LoadURI failed. Eating exception, what else can I do?");
   }
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aURI);
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("URL"), aURI);
 
   return IPC_OK();
 }

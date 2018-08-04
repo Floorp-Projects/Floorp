@@ -6,13 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["WebNavigationChild"];
 
-ChromeUtils.import("resource://gre/modules/CrashReporter.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "Utils",
                                "resource://gre/modules/sessionstore/Utils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+                                   "@mozilla.org/xre/app-info;1",
+                                   "nsICrashReporter");
 
 class WebNavigationChild {
   constructor(mm) {
@@ -106,7 +110,7 @@ class WebNavigationChild {
         annotation = url.spec;
       } catch (ex) { /* Ignore failures to parse and failures
                       on about: URIs. */ }
-      CrashReporter.addAnnotation(CrashReporter.annotations.URL, annotation);
+      CrashReporter.annotateCrashReport("URL", annotation);
     }
     if (referrer)
       referrer = Services.io.newURI(referrer);

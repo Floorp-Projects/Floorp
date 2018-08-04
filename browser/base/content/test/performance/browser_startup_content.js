@@ -28,7 +28,6 @@ const whitelist = {
     // General utilities
     "resource://gre/modules/AppConstants.jsm",
     "resource://gre/modules/AsyncShutdown.jsm",
-    "resource://gre/modules/CrashReporter.jsm",
     "resource://gre/modules/DeferredTask.jsm",
     "resource://gre/modules/PromiseUtils.jsm",
     "resource://gre/modules/Services.jsm", // bug 1464542

@@ -44,8 +44,7 @@ LSPAnnotationGatherer::Annotate()
     do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   bool enabled;
   if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
-    cr->AnnotateCrashReport(
-      static_cast<uint32_t>(CrashReporter::Annotation::Winsock_LSP), mString);
+    cr->AnnotateCrashReport(NS_LITERAL_CSTRING("Winsock_LSP"), mString);
   }
   mThread->AsyncShutdown();
 }

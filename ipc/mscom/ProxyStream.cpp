@@ -44,8 +44,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   , mBufSize(aInitBufSize)
   , mPreserveStream(false)
 {
-  CrashReporter::Annotation kCrashReportKey =
-    CrashReporter::Annotation::ProxyStreamUnmarshalStatus;
+  NS_NAMED_LITERAL_CSTRING(kCrashReportKey, "ProxyStreamUnmarshalStatus");
 
   if (!aInitBufSize) {
     CrashReporter::AnnotateCrashReport(kCrashReportKey,
@@ -137,7 +136,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   if (FAILED(unmarshalResult) || !mUnmarshaledProxy) {
     nsPrintfCString hrAsStr("0x%08X", unmarshalResult);
     CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::CoUnmarshalInterfaceResult, hrAsStr);
+        NS_LITERAL_CSTRING("CoUnmarshalInterfaceResult"), hrAsStr);
     AnnotateInterfaceRegistration(aIID);
     if (!mUnmarshaledProxy) {
       CrashReporter::AnnotateCrashReport(kCrashReportKey,
@@ -146,21 +145,24 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
 
 #if defined(ACCESSIBILITY)
     AnnotateClassRegistration(CLSID_AccessibleHandler);
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::UnmarshalActCtx, strActCtx);
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::UnmarshalActCtxManifestPath,
-      NS_ConvertUTF16toUTF8(manifestPath));
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::A11yHandlerRegistered,
-      a11y::IsHandlerRegistered() ? NS_LITERAL_CSTRING("true")
-                                  : NS_LITERAL_CSTRING("false"));
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("UnmarshalActCtx"),
+                                       strActCtx);
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("UnmarshalActCtxManifestPath"),
+                                       NS_ConvertUTF16toUTF8(manifestPath));
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("A11yHandlerRegistered"),
+                                       a11y::IsHandlerRegistered() ?
+                                       NS_LITERAL_CSTRING("true") :
+                                       NS_LITERAL_CSTRING("false"));
 
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::ExpectedStreamLen, expectedStreamLen);
+    nsAutoCString strExpectedStreamLen;
+    strExpectedStreamLen.AppendInt(expectedStreamLen);
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ExpectedStreamLen"),
+                                       strExpectedStreamLen);
 
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::ActualStreamLen, aInitBufSize);
+    nsAutoCString actualStreamLen;
+    actualStreamLen.AppendInt(aInitBufSize);
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ActualStreamLen"),
+                                       actualStreamLen);
 #endif // defined(ACCESSIBILITY)
   }
 }
@@ -358,37 +360,38 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
   if (FAILED(createStreamResult)) {
     nsPrintfCString hrAsStr("0x%08X", createStreamResult);
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::CreateStreamOnHGlobalFailure, hrAsStr);
+        NS_LITERAL_CSTRING("CreateStreamOnHGlobalFailure"),
+        hrAsStr);
   }
 
   if (FAILED(marshalResult)) {
     AnnotateInterfaceRegistration(aIID);
     nsPrintfCString hrAsStr("0x%08X", marshalResult);
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::CoMarshalInterfaceFailure, hrAsStr);
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::MarshalActCtxManifestPath,
-      NS_ConvertUTF16toUTF8(manifestPath));
+        NS_LITERAL_CSTRING("CoMarshalInterfaceFailure"), hrAsStr);
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("MarshalActCtxManifestPath"),
+                                       NS_ConvertUTF16toUTF8(manifestPath));
   }
 
   if (FAILED(statResult)) {
     nsPrintfCString hrAsStr("0x%08X", statResult);
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::StatFailure,
-                                       hrAsStr);
+    CrashReporter::AnnotateCrashReport(
+        NS_LITERAL_CSTRING("StatFailure"),
+        hrAsStr);
   }
 
   if (FAILED(getHGlobalResult)) {
     nsPrintfCString hrAsStr("0x%08X", getHGlobalResult);
     CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GetHGlobalFromStreamFailure, hrAsStr);
+        NS_LITERAL_CSTRING("GetHGlobalFromStreamFailure"),
+        hrAsStr);
   }
 
   mStream = std::move(stream);
 
   if (streamSize) {
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::ProxyStreamSizeFrom,
-      NS_LITERAL_CSTRING("IStream::Stat"));
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamSizeFrom"),
+                                       NS_LITERAL_CSTRING("IStream::Stat"));
     mBufSize = streamSize;
   }
 
@@ -403,14 +406,16 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
   // the size of the memory block allocated by the HGLOBAL, though it might
   // be larger than the actual stream size.
   if (!streamSize) {
-    CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::ProxyStreamSizeFrom,
-      NS_LITERAL_CSTRING("GlobalSize"));
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamSizeFrom"),
+                                       NS_LITERAL_CSTRING("GlobalSize"));
     mBufSize = static_cast<int>(::GlobalSize(hglobal));
   }
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::ProxyStreamSize,
-                                     mBufSize);
+  nsAutoCString strBufSize;
+  strBufSize.AppendInt(mBufSize);
+
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamSize"),
+                                     strBufSize);
 }
 
 } // namespace mscom

@@ -7,11 +7,7 @@
 /* eslint "semi": [2, "always"] */
 /* eslint "valid-jsdoc": [2, {requireReturn: false}] */
 
-var EXPORTED_SYMBOLS = [
-  "AddonTestUtils",
-  "MockAsyncShutdown",
-  "MockCrashReporter",
-];
+var EXPORTED_SYMBOLS = ["AddonTestUtils", "MockAsyncShutdown"];
 
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 
@@ -29,9 +25,6 @@ const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
-ChromeUtils.defineModuleGetter(this, "CrashReporter",
-                               "resource://gre/modules/CrashReporter.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
   return Management;
@@ -188,28 +181,6 @@ class MockBlocklist {
 
 MockBlocklist.prototype.QueryInterface = ChromeUtils.generateQI(["nsIBlocklistService"]);
 
-// Mock the crash reporter wrapper so that we can inspect the annotations
-var MockCrashReporter = {
-  addAnnotation(annotation, value) {
-    this.checkAnnotation(annotation);
-    this.currentAnnotations[annotation] = value;
-  },
-  removeAnnotation(annotation) {
-    this.checkAnnotation(annotation);
-    delete this.currentAnnotations[annotation];
-  },
-  checkAnnotation(annotation) {
-    for (let i in this.annotations) {
-      if (annotation == this.annotations[i]) {
-        return;
-      }
-    }
-
-    throw Cr.NS_ERROR_INVALID_ARG;
-  },
-  annotations: Object.assign({}, CrashReporter.annotations),
-  currentAnnotations: {},
-};
 
 /**
  * Escapes any occurrences of &, ", < or > with XML entities.
@@ -615,6 +586,7 @@ var AddonTestUtils = {
   createAppInfo(ID, name, version, platformVersion = "1.0") {
     AppInfo.updateAppInfo({
       ID, name, version, platformVersion,
+      crashReporter: true,
       extraProps: {
         browserTabsRemoteAutostart: false,
       },
@@ -781,7 +753,6 @@ var AddonTestUtils = {
 
     let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
     XPIScope.AsyncShutdown = MockAsyncShutdown;
-    XPIScope.CrashReporter = MockCrashReporter;
 
     XPIScope.XPIInternal.BootstrapScope.prototype
       ._beforeCallBootstrapMethod = (method, params, reason) => {
@@ -839,7 +810,7 @@ var AddonTestUtils = {
     }
 
     // Clear any crash report annotations
-    MockCrashReporter.currentAnnotations = {};
+    this.appInfo.annotations = {};
 
     // Force the XPIProvider provider to reload to better
     // simulate real-world usage.

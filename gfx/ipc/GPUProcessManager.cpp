@@ -380,11 +380,12 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   mGPUChild->SendInitVsyncBridge(std::move(vsyncParent));
 
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::GPUProcessStatus, NS_LITERAL_CSTRING("Running"));
+    NS_LITERAL_CSTRING("GPUProcessStatus"),
+    NS_LITERAL_CSTRING("Running"));
 
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::GPUProcessLaunchCount,
-    static_cast<int>(mNumProcessAttempts));
+    NS_LITERAL_CSTRING("GPUProcessLaunchCount"),
+    nsPrintfCString("%d", mNumProcessAttempts));
 }
 
 static bool
@@ -726,7 +727,7 @@ GPUProcessManager::DestroyProcess()
   }
 
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::GPUProcessStatus,
+    NS_LITERAL_CSTRING("GPUProcessStatus"),
     NS_LITERAL_CSTRING("Destroyed"));
 }
 

@@ -1283,8 +1283,7 @@ SessionStore.prototype = {
                                .finalize();
       } catch (ex) { } // ignore failures on about: URIs
 
-      Services.appinfo.annotateCrashReport(Services.appinfo.URL,
-                                           currentURI.spec);
+      Services.appinfo.annotateCrashReport("URL", currentURI.spec);
     } catch (ex) {
       // don't make noise when crashreporter is built but not enabled
       if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
