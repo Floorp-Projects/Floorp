@@ -3050,17 +3050,15 @@ nsIPrincipal* GetObjectPrincipal(JSObject* obj);
 //   TD_INTERFACE_TYPE, TD_INTERFACE_IS_TYPE
 //     value : nsISupports** (release)
 //   TD_LEGACY_ARRAY (NOTE: aArrayLen should be passed)
-//     value : void** (cleanup elements & free)
+//     value : void** (destroy elements & free)
+//   TD_ARRAY
+//     value : nsTArray<T>* (destroy elements & Clear)
 //   TD_DOMOBJECT
 //     value : T** (cleanup)
 //   TD_PROMISE
 //     value : dom::Promise** (release)
 //
 // Other types are ignored.
-//
-// Custom behaviour may be desired in some situations:
-//  - This method Truncate()s nsStrings, it does not free them.
-//  - This method does not unroot JSValues.
 inline void CleanupValue(const nsXPTType& aType,
                          void* aValue,
                          uint32_t aArrayLen = 0);
@@ -3080,6 +3078,17 @@ void InnerCleanupValue(const nsXPTType& aType,
 //
 // This method accepts the same types as xpc::CleanupValue.
 void InitializeValue(const nsXPTType& aType, void* aValue);
+
+// If a value was initialized with InitializeValue, it should be destroyed with
+// DestructValue. This method acts like CleanupValue, except that destructors
+// for complex types are also invoked, leaving them in an invalid state.
+//
+// This method should be called when destroying types initialized with
+// InitializeValue.
+//
+// The pointer 'aValue' must point to a valid value of type 'aType'.
+void DestructValue(const nsXPTType& aType, void* aValue,
+                   uint32_t aArrayLen = 0);
 
 } // namespace xpc
 

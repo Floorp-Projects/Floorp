@@ -27,9 +27,10 @@ function doTest() {
   window.parent.ok(!!window.performance.getEntriesByName(
     "http://mochi.test:8888/tests/image/test/mochitest/damon.jpg").length,
     "http://mochi.test:8888/tests/image/test/mochitest/damon.jpg should be a valid entry name");
-  window.parent.ok(!window.performance.getEntriesByName(
-    "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html").length,
-    "This iframe should NOT contain itself as an entry");
+  let entries = window.performance.getEntriesByName(
+    "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html");
+  window.parent.is(entries.length, 1, "This iframe should have only 1 entry with its URL");
+  window.parent.is(entries[0].type, "navigate", "This iframe should have its navigation entry");
 
   // Check that there are no iframes added as entries
   var resources = window.performance.getEntriesByType("resource");

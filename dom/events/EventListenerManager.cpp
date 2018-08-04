@@ -1054,17 +1054,27 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
+  MOZ_ASSERT(js::IsObjectInContextCompartment(handler, cx));
+  JS::Rooted<JSObject*> handlerGlobal(cx, JS::CurrentGlobalOrNull(cx));
+
   if (jsEventHandler->EventName() == nsGkAtoms::onerror && win) {
     RefPtr<OnErrorEventHandlerNonNull> handlerCallback =
-      new OnErrorEventHandlerNonNull(nullptr, handler, /* aIncumbentGlobal = */ nullptr);
+      new OnErrorEventHandlerNonNull(static_cast<JSContext*>(nullptr), handler,
+                                     handlerGlobal,
+                                     /* aIncumbentGlobal = */ nullptr);
     jsEventHandler->SetHandler(handlerCallback);
   } else if (jsEventHandler->EventName() == nsGkAtoms::onbeforeunload && win) {
     RefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
-      new OnBeforeUnloadEventHandlerNonNull(nullptr, handler, /* aIncumbentGlobal = */ nullptr);
+      new OnBeforeUnloadEventHandlerNonNull(static_cast<JSContext*>(nullptr),
+                                            handler,
+                                            handlerGlobal,
+                                            /* aIncumbentGlobal = */ nullptr);
     jsEventHandler->SetHandler(handlerCallback);
   } else {
     RefPtr<EventHandlerNonNull> handlerCallback =
-      new EventHandlerNonNull(nullptr, handler, /* aIncumbentGlobal = */ nullptr);
+      new EventHandlerNonNull(static_cast<JSContext*>(nullptr), handler,
+                              handlerGlobal,
+                              /* aIncumbentGlobal = */ nullptr);
     jsEventHandler->SetHandler(handlerCallback);
   }
 

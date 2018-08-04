@@ -147,13 +147,13 @@ Abs<long double>(const long double aLongDouble)
 } // namespace mozilla
 
 #if defined(_MSC_VER) && \
-    (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
+    (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64) || defined(_M_ARM64))
 #  define MOZ_BITSCAN_WINDOWS
 
 #  include <intrin.h>
 #  pragma intrinsic(_BitScanForward, _BitScanReverse)
 
-#  if defined(_M_AMD64) || defined(_M_X64)
+#  if defined(_M_AMD64) || defined(_M_X64) || defined(_M_ARM64)
 #    define MOZ_BITSCAN_WINDOWS64
 #   pragma intrinsic(_BitScanForward64, _BitScanReverse64)
 #  endif

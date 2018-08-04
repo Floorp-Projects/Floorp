@@ -1754,14 +1754,14 @@ SpecialPowersAPI.prototype = {
       aWindow.focus();
     var mm = global;
     if (aWindow) {
-      try {
-        mm = aWindow.docShell
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIContentFrameMessageManager);
-      } catch (ex) {
-        /* Ignore exceptions for e.g. XUL chrome windows from mochitest-chrome
-         * which won't have a message manager */
+      let windowMM = aWindow.docShell.messageManager;
+      if (windowMM) {
+        mm = windowMM;
       }
+      /*
+       * Otherwise (e.g. XUL chrome windows from mochitest-chrome which won't
+       * have a message manager) just stick with "global".
+       */
     }
     mm.sendAsyncMessage("SpecialPowers.Focus", {});
   },

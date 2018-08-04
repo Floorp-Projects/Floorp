@@ -106,7 +106,10 @@ public:
   void DestroyDocShell();
   void DestroyComplete();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
-  mozilla::dom::EventTarget* GetTabChildGlobalAsEventTarget();
+  nsInProcessTabChildGlobal* GetTabChildGlobal() const
+  {
+    return mChildMessageManager;
+  }
   nsresult CreateStaticClone(nsFrameLoader* aDest);
   nsresult UpdatePositionAndSize(nsSubDocumentFrame *aIFrame);
 

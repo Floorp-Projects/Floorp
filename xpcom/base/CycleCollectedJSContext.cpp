@@ -205,10 +205,12 @@ class PromiseJobRunnable final : public MicroTaskRunnable
 {
 public:
   PromiseJobRunnable(JS::HandleObject aCallback,
+                     JS::HandleObject aCallbackGlobal,
                      JS::HandleObject aAllocationSite,
                      nsIGlobalObject* aIncumbentGlobal)
     :mCallback(
-       new PromiseJobCallback(aCallback, aAllocationSite, aIncumbentGlobal))
+       new PromiseJobCallback(aCallback, aCallbackGlobal, aAllocationSite,
+                              aIncumbentGlobal))
   {
     MOZ_ASSERT(js::IsFunctionObject(aCallback));
   }
@@ -266,7 +268,10 @@ CycleCollectedJSContext::EnqueuePromiseJobCallback(JSContext* aCx,
   if (aIncumbentGlobal) {
     global = xpc::NativeGlobal(aIncumbentGlobal);
   }
-  RefPtr<MicroTaskRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite, global);
+  JS::RootedObject jobGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
+  RefPtr<MicroTaskRunnable> runnable = new PromiseJobRunnable(aJob, jobGlobal,
+                                                              aAllocationSite,
+                                                              global);
   self->DispatchToMicroTask(runnable.forget());
   return true;
 }

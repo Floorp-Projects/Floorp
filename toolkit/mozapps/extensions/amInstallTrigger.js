@@ -37,10 +37,7 @@ function RemoteMediator(window) {
   let utils = window.windowUtils;
   this._windowID = utils.currentInnerWindowID;
 
-  this.mm = window
-    .docShell
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIContentFrameMessageManager);
+  this.mm = window.docShell.messageManager;
   this.mm.addWeakMessageListener(MSG_INSTALL_CALLBACK, this);
 
   this._lastCallbackID = 0;
@@ -92,9 +89,7 @@ RemoteMediator.prototype = {
     }
 
     // Fall back to sending through the message manager
-    let messageManager = window.docShell
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIContentFrameMessageManager);
+    let messageManager = window.docShell.messageManager;
 
     return messageManager.sendSyncMessage(MSG_INSTALL_ADDON, install)[0];
   },

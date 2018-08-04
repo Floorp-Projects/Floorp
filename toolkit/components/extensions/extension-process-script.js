@@ -88,16 +88,6 @@ var contentScripts = new DefaultWeakMap(matcher => {
                                      matcher);
 });
 
-function getMessageManager(window) {
-  let docShell = window.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
-  try {
-    return docShell.getInterface(Ci.nsIContentFrameMessageManager);
-  } catch (e) {
-    // Some windows don't support this interface (hidden window).
-    return null;
-  }
-}
-
 var DocumentManager;
 var ExtensionManager;
 
@@ -490,7 +480,7 @@ ExtensionProcessScript.prototype = {
   },
 
   initExtensionDocument(policy, doc) {
-    if (DocumentManager.globals.has(getMessageManager(doc.defaultView))) {
+    if (DocumentManager.globals.has(doc.defaultView.docShell.messageManager)) {
       DocumentManager.loadInto(policy, doc.defaultView);
     }
   },
@@ -507,7 +497,7 @@ ExtensionProcessScript.prototype = {
   },
 
   loadContentScript(contentScript, window) {
-    if (DocumentManager.globals.has(getMessageManager(window))) {
+    if (DocumentManager.globals.has(window.docShell.messageManager)) {
       contentScripts.get(contentScript).injectInto(window);
     }
   },

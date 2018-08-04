@@ -25,7 +25,7 @@
  * A basic setup works something like this:
  *
  * A content script adds a message listener to its global
- * nsIContentFrameMessageManager, with an appropriate set of filters:
+ * ContentFrameMessageManager, with an appropriate set of filters:
  *
  *  {
  *    init(messageManager, window, extensionID) {

@@ -56,6 +56,7 @@ public:
   // is invoked.  aCx can be nullptr, in which case no stack is
   // captured.
   explicit CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
+                          JS::Handle<JSObject*> aCallbackGlobal,
                           nsIGlobalObject* aIncumbentGlobal)
   {
     if (aCx && JS::ContextOptionsRef(aCx).asyncStack()) {
@@ -63,20 +64,21 @@ public:
       if (!JS::CaptureCurrentStack(aCx, &stack)) {
         JS_ClearPendingException(aCx);
       }
-      Init(aCallback, stack, aIncumbentGlobal);
+      Init(aCallback, aCallbackGlobal, stack, aIncumbentGlobal);
     } else {
-      Init(aCallback, nullptr, aIncumbentGlobal);
+      Init(aCallback, aCallbackGlobal, nullptr, aIncumbentGlobal);
     }
   }
 
   // Instead of capturing the current stack to use as an async parent when the
   // callback is invoked, the caller can use this overload to pass in a stack
   // for that purpose.
-  explicit CallbackObject(JS::Handle<JSObject*> aCallback,
-                          JS::Handle<JSObject*> aAsyncStack,
+  explicit CallbackObject(JSObject* aCallback,
+                          JSObject* aCallbackGlobal,
+                          JSObject* aAsyncStack,
                           nsIGlobalObject* aIncumbentGlobal)
   {
-    Init(aCallback, aAsyncStack, aIncumbentGlobal);
+    Init(aCallback, aCallbackGlobal, aAsyncStack, aIncumbentGlobal);
   }
 
   // This is guaranteed to be non-null from the time the CallbackObject is
@@ -93,6 +95,12 @@ public:
     return CallbackPreserveColor();
   }
 
+  JSObject* CallbackGlobalOrNull() const
+  {
+    mCallbackGlobal.exposeToActiveJS();
+    return mCallbackGlobal;
+  }
+
   // Like CallbackOrNull(), but will return a new dead proxy object in the
   // caller's realm if the callback is null.
   JSObject* Callback(JSContext* aCx);
@@ -105,6 +113,7 @@ public:
   void MarkForCC()
   {
     mCallback.exposeToActiveJS();
+    mCallbackGlobal.exposeToActiveJS();
     mCreationStack.exposeToActiveJS();
   }
 
@@ -165,7 +174,8 @@ protected:
 
   explicit CallbackObject(CallbackObject* aCallbackObject)
   {
-    Init(aCallbackObject->mCallback, aCallbackObject->mCreationStack,
+    Init(aCallbackObject->mCallback, aCallbackObject->mCallbackGlobal,
+         aCallbackObject->mCreationStack,
          aCallbackObject->mIncumbentGlobal);
   }
 
@@ -199,13 +209,17 @@ protected:
   };
 
 private:
-  inline void InitNoHold(JSObject* aCallback, JSObject* aCreationStack,
+  inline void InitNoHold(JSObject* aCallback, JSObject* aCallbackGlobal,
+                         JSObject* aCreationStack,
                          nsIGlobalObject* aIncumbentGlobal)
   {
     MOZ_ASSERT(aCallback && !mCallback);
-    // Set script objects before we hold, on the off chance that a GC could
-    // somehow happen in there... (which would be pretty odd, granted).
+    MOZ_ASSERT(aCallbackGlobal);
+    MOZ_DIAGNOSTIC_ASSERT(js::GetObjectCompartment(aCallback) ==
+                          js::GetObjectCompartment(aCallbackGlobal));
+    MOZ_ASSERT(JS_IsGlobalObject(aCallbackGlobal));
     mCallback = aCallback;
+    mCallbackGlobal = aCallbackGlobal;
     mCreationStack = aCreationStack;
     if (aIncumbentGlobal) {
       mIncumbentGlobal = aIncumbentGlobal;
@@ -213,16 +227,20 @@ private:
     }
   }
 
-  inline void Init(JSObject* aCallback, JSObject* aCreationStack,
+  inline void Init(JSObject* aCallback, JSObject* aCallbackGlobal,
+                   JSObject* aCreationStack,
                    nsIGlobalObject* aIncumbentGlobal)
   {
-    InitNoHold(aCallback, aCreationStack, aIncumbentGlobal);
+    // Set script objects before we hold, on the off chance that a GC could
+    // somehow happen in there... (which would be pretty odd, granted).
+    InitNoHold(aCallback, aCallbackGlobal, aCreationStack, aIncumbentGlobal);
     mozilla::HoldJSObjects(this);
   }
 
   inline void ClearJSReferences()
   {
     mCallback = nullptr;
+    mCallbackGlobal = nullptr;
     mCreationStack = nullptr;
     mIncumbentJSGlobal = nullptr;
   }
@@ -262,10 +280,11 @@ protected:
   // assumption that we will do that last whenever we decide to actually
   // HoldJSObjects; see FinishSlowJSInitIfMoreThanOneOwner).  If you use this,
   // you MUST ensure that the object is traced until the HoldJSObjects happens!
-  CallbackObject(JS::Handle<JSObject*> aCallback,
+  CallbackObject(JSObject* aCallback,
+                 JSObject* aCallbackGlobal,
                  const FastCallbackConstructor&)
   {
-    InitNoHold(aCallback, nullptr, nullptr);
+    InitNoHold(aCallback, aCallbackGlobal, nullptr, nullptr);
   }
 
   // mCallback is not unwrapped, so it can be a cross-compartment-wrapper.
@@ -273,6 +292,11 @@ protected:
   // its members, directly itself, this code won't call f(), or get its members,
   // on the code's behalf.
   JS::Heap<JSObject*> mCallback;
+  // mCallbackGlobal is the global that we were in when we created the
+  // callback. In particular, it is guaranteed to be same-compartment with
+  // aCallback. We store it separately, because we have no way to recover the
+  // global if mCallback is a cross-compartment wrapper.
+  JS::Heap<JSObject*> mCallbackGlobal;
   JS::Heap<JSObject*> mCreationStack;
   // Ideally, we'd just hold a reference to the nsIGlobalObject, since that's
   // what we need to pass to AutoIncumbentScript. Unfortunately, that doesn't
@@ -330,7 +354,9 @@ protected:
     Maybe<AutoEntryScript> mAutoEntryScript;
     Maybe<AutoIncumbentScript> mAutoIncumbentScript;
 
-    Maybe<JS::Rooted<JSObject*> > mRootedCallable;
+    Maybe<JS::Rooted<JSObject*>> mRootedCallable;
+    // The global of mRootedCallable.
+    Maybe<JS::Rooted<JSObject*>> mRootedCallableGlobal;
 
     // Members which are used to set the async stack.
     Maybe<JS::Rooted<JSObject*>> mAsyncStack;
