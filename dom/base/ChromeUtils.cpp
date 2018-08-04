@@ -482,16 +482,11 @@ namespace module_getter {
     }
 
     JS::RootedValue value(aCx);
-    {
-      JSAutoRealmAllowCCW ar(aCx, moduleExports);
-
-      if (!JS_GetPropertyById(aCx, moduleExports, id, &value)) {
-        return false;
-      }
+    if (!JS_GetPropertyById(aCx, moduleExports, id, &value)) {
+      return false;
     }
 
-    if (!JS_WrapValue(aCx, &value) ||
-        !JS_DefinePropertyById(aCx, thisObj, id, value,
+    if (!JS_DefinePropertyById(aCx, thisObj, id, value,
                                JSPROP_ENUMERATE)) {
       return false;
     }
