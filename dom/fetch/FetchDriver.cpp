@@ -477,7 +477,7 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
   const nsLoadFlags bypassFlag = mRequest->SkipServiceWorker() ?
                                  nsIChannel::LOAD_BYPASS_SERVICE_WORKER : 0;
 
-  nsSecurityFlags secFlags = nsILoadInfo::SEC_ABOUT_BLANK_INHERITS;
+  nsSecurityFlags secFlags = 0;
   if (mRequest->Mode() == RequestMode::Cors) {
     secFlags |= nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
   } else if (mRequest->Mode() == RequestMode::Same_origin ||
