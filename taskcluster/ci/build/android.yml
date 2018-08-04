@@ -154,6 +154,55 @@ android-x86/opt:
         - linux64-sccache
         - linux64-node
 
+android-x86-fuzzing/debug:
+    description: "Android x86 Fuzzing Debug"
+    index:
+        product: mobile
+        job-name: android-x86-fuzzing-debug
+    treeherder:
+        platform: android-4-2-x86/debug
+        symbol: Bf
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: android-build}
+        max-run-time: 7200
+        env:
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+        artifacts:
+            - name: public/android/R
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/R
+              type: directory
+            - name: public/android/maven
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/maven/
+              type: directory
+            - name: public/build/geckoview-androidTest.apk
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/officialWithGeckoBinariesNoMinApi/debug/geckoview-official-withGeckoBinaries-noMinApi-debug-androidTest.apk
+              type: file
+            - name: public/build/geckoview_example.apk
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview_example/outputs/apk/officialWithGeckoBinariesNoMinApi/debug/geckoview_example-official-withGeckoBinaries-noMinApi-debug.apk
+              type: file
+            - name: public/build
+              path: /builds/worker/artifacts/
+              type: directory
+    run:
+        using: mozharness
+        actions: [get-secrets build multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: x86-fuzzing-debug
+        tooltool-downloads: internal
+    toolchains:
+        - android-gradle-dependencies
+        - android-ndk-linux
+        - android-sdk-linux
+        - linux64-clang
+        - linux64-rust-android
+        - linux64-rust-size
+        - linux64-sccache
+
 android-x86-nightly/opt:
     description: "Android 4.2 x86 Nightly"
     attributes:
