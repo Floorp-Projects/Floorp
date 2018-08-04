@@ -85,6 +85,8 @@
 #if defined(_WIN64)
 #  if defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)
 #    define MOZ_LITTLE_ENDIAN 1
+#  elif defined(_M_ARM64)
+#    define MOZ_LITTLE_ENDIAN 1
 #  else
 #    error "CPU type is unknown"
 #  endif

@@ -16,7 +16,6 @@
 #include "nsITimedChannel.h"
 
 class nsIHttpChannel;
-class nsITimedChannel;
 
 namespace mozilla {
 namespace dom {

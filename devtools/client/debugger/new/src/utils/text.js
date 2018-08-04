@@ -6,7 +6,11 @@ Object.defineProperty(exports, "__esModule", {
 exports.formatKeyShortcut = formatKeyShortcut;
 exports.truncateMiddleText = truncateMiddleText;
 
-var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+var _devtoolsServices = require("Services");
+
+var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,7 +22,7 @@ var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vend
  */
 const {
   appinfo
-} = _devtoolsModules.Services;
+} = _devtoolsServices2.default;
 const isMacOS = appinfo.OS === "Darwin";
 /**
  * Formats key for use in tooltips

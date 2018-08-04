@@ -70,10 +70,7 @@ pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,dump_syms.exe");
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("extensions.webextensions.remote", true);
-#endif
-
 pref("extensions.webextensions.background-delayed-startup", true);
 
 // Extensions that should not be flagged as legacy in about:addons

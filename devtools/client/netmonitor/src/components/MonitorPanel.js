@@ -33,7 +33,7 @@ const MediaQueryVert = window.matchMedia("(min-width: 700px)");
 
 // MediaQueryList object responsible for switching the toolbar
 // between single and 2-rows layout (depending on browser window size).
-const MediaQuerySingleRow = window.matchMedia("(min-width: 960px)");
+const MediaQuerySingleRow = window.matchMedia("(min-width: 1020px)");
 
 /**
  * Monitor panel component

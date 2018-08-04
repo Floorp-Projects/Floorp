@@ -116,6 +116,16 @@ struct nsXPTCVariant
 static_assert(offsetof(nsXPTCVariant, val) == offsetof(nsXPTCVariant, ext),
               "nsXPTCVariant::{ext,val} must have matching offsets");
 
+// static_assert that nsXPTCVariant::ExtendedVal is large enough and
+// well-aligned enough for every XPT-supported type.
+#define XPT_CHECK_SIZEOF(xpt, type) \
+    static_assert(sizeof(nsXPTCVariant::ExtendedVal) >= sizeof(type), \
+                  "nsXPTCVariant::ext not big enough for " #xpt " (" #type ")"); \
+    static_assert(MOZ_ALIGNOF(nsXPTCVariant::ExtendedVal) >= MOZ_ALIGNOF(type), \
+                  "nsXPTCVariant::ext not aligned enough for " #xpt " (" #type ")");
+XPT_FOR_EACH_TYPE(XPT_CHECK_SIZEOF)
+#undef XPT_CHECK_SIZEOF
+
 class nsIXPTCProxy : public nsISupports
 {
 public:

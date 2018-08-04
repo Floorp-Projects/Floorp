@@ -18,6 +18,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/AutoplayPermissionManager.h"
+#include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -1916,20 +1917,18 @@ nsGlobalWindowInner::UpdateParentTarget()
 
   nsCOMPtr<Element> frameElement = GetOuterWindow()->GetFrameElementInternal();
   nsCOMPtr<EventTarget> eventTarget =
-    nsContentUtils::TryGetTabChildGlobalAsEventTarget(frameElement);
+    nsContentUtils::TryGetTabChildGlobal(frameElement);
 
   if (!eventTarget) {
     nsGlobalWindowOuter* topWin = GetScriptableTopInternal();
     if (topWin) {
       frameElement = topWin->AsOuter()->GetFrameElementInternal();
-      eventTarget =
-        nsContentUtils::TryGetTabChildGlobalAsEventTarget(frameElement);
+      eventTarget = nsContentUtils::TryGetTabChildGlobal(frameElement);
     }
   }
 
   if (!eventTarget) {
-    eventTarget =
-      nsContentUtils::TryGetTabChildGlobalAsEventTarget(mChromeEventHandler);
+    eventTarget = nsContentUtils::TryGetTabChildGlobal(mChromeEventHandler);
   }
 
   if (!eventTarget) {
@@ -2260,6 +2259,15 @@ nsPIDOMWindowInner::GetPerformance()
 }
 
 void
+nsPIDOMWindowInner::QueuePerformanceNavigationTiming()
+{
+  CreatePerformanceObjectIfNeeded();
+  if (mPerformance) {
+    mPerformance->QueueNavigationTimingEntry();
+  }
+}
+
+void
 nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
 {
   if (mPerformance || !mDoc) {
@@ -2361,7 +2369,10 @@ nsGlobalWindowInner::GetInstallTrigger()
       rv.SuppressException();
       return nullptr;
     }
-    mInstallTrigger = new InstallTriggerImpl(jsImplObj, this);
+    MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplObj));
+    JS::Rooted<JSObject*> jsImplGlobal(RootingCx(),
+                                       JS::GetNonCCWObjectGlobal(jsImplObj));
+    mInstallTrigger = new InstallTriggerImpl(jsImplObj, jsImplGlobal, this);
   }
 
   return do_AddRef(mInstallTrigger);
@@ -7439,7 +7450,10 @@ nsGlobalWindowInner::GetExternal(ErrorResult& aRv)
     if (aRv.Failed()) {
       return nullptr;
     }
-    mExternal = new External(jsImplObj, this);
+    MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplObj));
+    JS::Rooted<JSObject*> jsImplGlobal(RootingCx(),
+                                       JS::GetNonCCWObjectGlobal(jsImplObj));
+    mExternal = new External(jsImplObj, jsImplGlobal, this);
   }
 
   RefPtr<External> external = static_cast<External*>(mExternal.get());

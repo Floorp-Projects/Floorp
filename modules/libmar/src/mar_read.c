@@ -114,6 +114,7 @@ static int mar_read_index(MarFile *mar) {
   uint32_t offset_to_index, size_of_index;
 
   /* verify MAR ID */
+  fseek(mar->fp, 0, SEEK_SET);
   if (fread(id, MAR_ID_SIZE, 1, mar->fp) != 1)
     return -1;
   if (memcmp(id, MAR_ID, MAR_ID_SIZE) != 0)
@@ -160,11 +161,8 @@ static MarFile *mar_fpopen(FILE *fp)
   }
 
   mar->fp = fp;
+  mar->item_table_is_valid = 0;
   memset(mar->item_table, 0, sizeof(mar->item_table));
-  if (mar_read_index(mar)) {
-    mar_close(mar);
-    return NULL;
-  }
 
   return mar;
 }
@@ -489,6 +487,14 @@ const MarItem *mar_find_item(MarFile *mar, const char *name) {
   uint32_t hash;
   const MarItem *item;
 
+  if (!mar->item_table_is_valid) {
+    if (mar_read_index(mar)) {
+      return NULL;
+    } else {
+      mar->item_table_is_valid = 1;
+    }
+  }
+
   hash = mar_hash_name(name);
 
   item = mar->item_table[hash];
@@ -501,6 +507,14 @@ const MarItem *mar_find_item(MarFile *mar, const char *name) {
 int mar_enum_items(MarFile *mar, MarItemCallback callback, void *closure) {
   MarItem *item;
   int i;
+
+  if (!mar->item_table_is_valid) {
+    if (mar_read_index(mar)) {
+      return -1;
+    } else {
+      mar->item_table_is_valid = 1;
+    }
+  }
 
   for (i = 0; i < TABLESIZE; ++i) {
     item = mar->item_table[i];

@@ -1539,7 +1539,7 @@ XPCConvert::JSArray2Native(JS::HandleValue aJSVal,
             // Array element conversion failed. Clean up all elements converted
             // before the error. Caller handles freeing 'buf'.
             for (uint32_t j = 0; j < i; ++j) {
-                CleanupValue(aEltType, aEltType.ElementPtr(buf, j));
+                DestructValue(aEltType, aEltType.ElementPtr(buf, j));
             }
             return false;
         }
@@ -1604,7 +1604,7 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             void* elements = *(void**)aValue;
 
             for (uint32_t i = 0; i < aArrayLen; ++i) {
-                CleanupValue(elty, elty.ElementPtr(elements, i));
+                DestructValue(elty, elty.ElementPtr(elements, i));
             }
             free(elements);
             break;
@@ -1617,7 +1617,7 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             auto* array = (xpt::detail::UntypedTArray*)aValue;
 
             for (uint32_t i = 0; i < array->Length(); ++i) {
-                CleanupValue(elty, elty.ElementPtr(array->Elements(), i));
+                DestructValue(elty, elty.ElementPtr(array->Elements(), i));
             }
             array->Clear();
             break;
@@ -1650,28 +1650,44 @@ void
 xpc::InitializeValue(const nsXPTType& aType, void* aValue)
 {
     switch (aType.Tag()) {
-        // Types which require custom, specific initialization.
-        case nsXPTType::T_JSVAL:
-            new (aValue) JS::Value();
-            MOZ_ASSERT(reinterpret_cast<JS::Value*>(aValue)->isUndefined());
-            break;
+        // Use placement-new to initialize complex values
+#define XPT_INIT_TYPE(tag, type) \
+    case tag: new (aValue) type(); break;
+XPT_FOR_EACH_COMPLEX_TYPE(XPT_INIT_TYPE)
+#undef XPT_INIT_TYPE
 
-        case nsXPTType::T_ASTRING:
-        case nsXPTType::T_DOMSTRING:
-            new (aValue) nsString();
-            break;
-        case nsXPTType::T_CSTRING:
-        case nsXPTType::T_UTF8STRING:
-            new (aValue) nsCString();
-            break;
-
-        case nsXPTType::T_ARRAY:
-            new (aValue) xpt::detail::UntypedTArray();
-            break;
-
-        // The remaining types all have valid states where all bytes are '0'.
+        // The remaining types have valid states where all bytes are '0'.
         default:
             aType.ZeroValue(aValue);
             break;
+    }
+}
+
+// In XPT_FOR_EACH_COMPLEX_TYPE, typenames may be namespaced (such as
+// xpt::UntypedTArray). Namespaced typenames cannot be used to explicitly invoke
+// destructors, so this method acts as a helper to let us call the destructor of
+// these objects.
+template<typename T>
+static void
+_DestructValueHelper(void* aValue)
+{
+    static_cast<T*>(aValue)->~T();
+}
+
+void
+xpc::DestructValue(const nsXPTType& aType,
+                   void* aValue,
+                   uint32_t aArrayLen)
+{
+    // Get aValue into an clean, empty state.
+    xpc::CleanupValue(aType, aValue, aArrayLen);
+
+    // Run destructors on complex types.
+    switch (aType.Tag()) {
+#define XPT_RUN_DESTRUCTOR(tag, type) \
+    case tag: _DestructValueHelper<type>(aValue); break;
+XPT_FOR_EACH_COMPLEX_TYPE(XPT_RUN_DESTRUCTOR)
+#undef XPT_RUN_DESTRUCTOR
+        default: break; // dtor is a no-op on other types.
     }
 }

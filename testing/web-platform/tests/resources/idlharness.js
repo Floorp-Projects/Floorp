@@ -2106,7 +2106,12 @@ IdlInterface.prototype.test_member_attribute = function(member)
                 "The interface object must have a property " +
                 format_value(member.name));
             a_test.done();
-        } else if (this.is_global()) {
+            return;
+        }
+
+        this.do_member_unscopable_asserts(member);
+
+        if (this.is_global()) {
             assert_own_property(self, member.name,
                 "The global object must have a property " +
                 format_value(member.name));
@@ -2167,13 +2172,8 @@ IdlInterface.prototype.test_member_attribute = function(member)
               // since it will call done() on a_test.
               this.do_interface_attribute_asserts(self[this.name].prototype, member, a_test);
             }
-
         }
     }.bind(this));
-
-    subsetTestByKey(this.name, test, function () {
-        this.do_member_unscopable_asserts(member);
-    }.bind(this), 'Unscopable handled correctly for ' + member.name + ' property on ' + this.name);
 };
 
 //@}
@@ -2239,16 +2239,9 @@ IdlInterface.prototype.test_member_operation = function(member)
                     "interface prototype object missing non-static operation");
             memberHolderObject = self[this.name].prototype;
         }
+        this.do_member_unscopable_asserts(member);
         this.do_member_operation_asserts(memberHolderObject, member, a_test);
     }.bind(this));
-
-    subsetTestByKey(this.name, test, function () {
-        this.do_member_unscopable_asserts(member);
-    }.bind(this),
-         'Unscopable handled correctly for ' + member.name + "(" +
-         member.arguments.map(
-             function(m) {return m.idlType.idlType; } ).join(", ")
-         + ")" + ' on ' + this.name);
 };
 
 IdlInterface.prototype.do_member_unscopable_asserts = function(member)
@@ -2367,10 +2360,11 @@ IdlInterface.prototype.add_iterable_members = function(member)
 };
 
 IdlInterface.prototype.test_to_json_operation = function(memberHolderObject, member) {
-    var instanceName = memberHolderObject.constructor.name;
+    var instanceName = memberHolderObject && memberHolderObject.constructor.name
+        || member.name + " object";
     if (member.has_extended_attribute("Default")) {
-        var map = this.default_to_json_operation();
         subsetTestByKey(this.name, test, function() {
+            var map = this.default_to_json_operation();
             var json = memberHolderObject.toJSON();
             map.forEach(function(type, k) {
                 assert_true(k in json, "property " + JSON.stringify(k) + " should be present in the output of " + this.name + ".prototype.toJSON()");
@@ -3207,6 +3201,7 @@ function idl_test(srcs, deps, idl_setup_func, test_name) {
         var idl_array = new IdlArray();
         srcs = (srcs instanceof Array) ? srcs : [srcs] || [];
         deps = (deps instanceof Array) ? deps : [deps] || [];
+        var setup_error = null;
         return Promise.all(
             srcs.concat(deps).map(function(spec) {
                 return fetch_spec(spec);
@@ -3224,18 +3219,21 @@ function idl_test(srcs, deps, idl_setup_func, test_name) {
                     return idl_setup_func(idl_array, t);
                 }
             })
-            .then(function() { idl_array.test(); })
-            .catch(function (reason) {
+            .catch(function(e) { setup_error = e || 'IDL setup failed.'; })
+            .finally(function () {
+                var error = setup_error;
                 try {
                     idl_array.test(); // Test what we can.
                 } catch (e) {
                     // If testing fails hard here, the original setup error
                     // is more likely to be the real cause.
-                    reason = reason || e;
+                    error = error || e;
                 }
-                return Promise.reject(reason || 'IDL setup failed.');
+                if (error) {
+                    throw error;
+                }
             });
-    }, test_name);
+    }, test_name || 'idl_test setup');
 }
 
 /**

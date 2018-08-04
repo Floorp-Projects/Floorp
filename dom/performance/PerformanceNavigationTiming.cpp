@@ -125,3 +125,10 @@ PerformanceNavigationTiming::RedirectCount() const
 {
   return mTimingData->GetRedirectCount();
 }
+
+void
+PerformanceNavigationTiming::UpdatePropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel,
+                                                             nsITimedChannel* aChannel)
+{
+  mTimingData->SetPropertiesFromHttpChannel(aHttpChannel, aChannel);
+}

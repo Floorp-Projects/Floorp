@@ -46,6 +46,7 @@ function createPrettySource(sourceId) {
     const id = await sourceMaps.generatedToOriginalId(sourceId, url);
     const prettySource = {
       url,
+      relativeUrl: url,
       id,
       isBlackBoxed: false,
       isPrettyPrinted: true,

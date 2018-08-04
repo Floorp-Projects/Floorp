@@ -42,6 +42,7 @@ DevToolsModules(
     'text.js',
     'timings.js',
     'ui.js',
+    'url.js',
     'utils.js',
     'wasm.js',
     'worker.js',
