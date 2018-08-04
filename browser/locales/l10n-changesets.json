@@ -522,7 +522,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "b31d4adc4b8e"
+        "revision": "1ca3bb05222c"
     }, 
     "fy-NL": {
         "platforms": [
@@ -1472,6 +1472,6 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "5cd49ac44df8"
+        "revision": "c970ffcee374"
     }
 }
