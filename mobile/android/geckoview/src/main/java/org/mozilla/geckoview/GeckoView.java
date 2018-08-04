@@ -392,7 +392,7 @@ public class GeckoView extends FrameLayout {
             setSession(ss.session, ss.session.getRuntime());
         } else if (ss.session != null) {
             mSession.transferFrom(ss.session);
-            mRuntime = ss.session.getRuntime();
+            mRuntime = mSession.getRuntime();
         }
     }
 
