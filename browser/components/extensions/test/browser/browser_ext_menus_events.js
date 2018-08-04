@@ -7,6 +7,8 @@ const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/
 const PAGE_BASE = PAGE.replace("context.html", "");
 const PAGE_HOST_PATTERN = "http://mochi.test/*";
 
+const EXPECT_TARGET_ELEMENT = 13337;
+
 async function grantOptionalPermission(extension, permissions) {
   const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
   const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm", {});
@@ -46,6 +48,11 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     let hiddenEvents = [];
 
     browser.menus.onShown.addListener((...args) => {
+      if (args[0].targetElementId) {
+        // In this test, we aren't interested in the exact value,
+        // only in whether it is set or not.
+        args[0].targetElementId = 13337; // = EXPECT_TARGET_ELEMENT
+      }
       shownEvents.push(args[0]);
       if (menuCreateParams.title.includes("TEST_EXPECT_NO_TAB")) {
         browser.test.assertEq(undefined, args[1], "expect no tab");
@@ -209,6 +216,8 @@ add_task(async function test_show_hide_without_menu_item() {
   let events = await extension.awaitMessage("events from menuless extension");
   is(events.length, 2, "expect two events");
   is(events[1], "onHidden", "last event should be onHidden");
+  ok(events[0].targetElementId, "info.targetElementId must be set in onShown");
+  delete events[0].targetElementId;
   Assert.deepEqual(events[0], {
     menuIds: [],
     contexts: ["page", "all"],
@@ -279,12 +288,14 @@ add_task(async function test_show_hide_browserAction_popup() {
       frameId: 0,
       editable: false,
       get pageUrl() { return popupUrl; },
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     expectedShownEventWithPermissions: {
       contexts: ["page", "all"],
       frameId: 0,
       editable: false,
       get pageUrl() { return popupUrl; },
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu(extension) {
       popupUrl = `moz-extension://${extension.uuid}/popup.html`;
@@ -362,6 +373,7 @@ add_task(async function test_show_hide_page() {
       editable: false,
       pageUrl: PAGE,
       frameId: 0,
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       await openContextMenu("body");
@@ -391,6 +403,7 @@ add_task(async function test_show_hide_frame() {
       get frameId() { return frameId; },
       pageUrl: PAGE,
       frameUrl: PAGE_BASE + "context_frame.html",
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       frameId = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
@@ -421,6 +434,7 @@ add_task(async function test_show_hide_password() {
       editable: true,
       frameId: 0,
       pageUrl: PAGE,
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       await openContextMenu("#password");
@@ -449,6 +463,7 @@ add_task(async function test_show_hide_link() {
       linkText: "Some link",
       linkUrl: PAGE_BASE + "some-link",
       pageUrl: PAGE,
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       await openContextMenu("#link1");
@@ -481,6 +496,7 @@ add_task(async function test_show_hide_image_link() {
       linkUrl: PAGE_BASE + "image-around-some-link",
       srcUrl: PAGE_BASE + "ctxmenu-image.png",
       pageUrl: PAGE,
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       await openContextMenu("#img-wrapped-in-link");
@@ -509,6 +525,7 @@ add_task(async function test_show_hide_editable_selection() {
       frameId: 0,
       pageUrl: PAGE,
       get selectionText() { return selectionText; },
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       // Select lots of text in the test page before opening the menu.
@@ -547,6 +564,7 @@ add_task(async function test_show_hide_video() {
       frameId: 0,
       srcUrl: VIDEO_URL,
       pageUrl: PAGE,
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       await ContentTask.spawn(gBrowser.selectedBrowser, VIDEO_URL, function(VIDEO_URL) {
@@ -585,6 +603,7 @@ add_task(async function test_show_hide_audio() {
       frameId: 0,
       srcUrl: AUDIO_URL,
       pageUrl: PAGE,
+      targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
       await ContentTask.spawn(gBrowser.selectedBrowser, AUDIO_URL, function(AUDIO_URL) {
