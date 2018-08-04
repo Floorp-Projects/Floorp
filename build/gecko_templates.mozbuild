@@ -36,6 +36,15 @@ def GeckoBinary(linkage='dependent', mozglue=None):
     elif linkage != None:
         error('`linkage` must be "dependent", "standalone" or None')
 
+    if CONFIG['LIBFUZZER']:
+        assert mozglue is not None, 'libfuzzer depends on "mozglue"'
+        USE_LIBS += [
+            'fuzzer'
+        ]
+        LOCAL_INCLUDES += [
+            '/tools/fuzzing/libfuzzer'
+        ]
+
     if mozglue:
         LDFLAGS += CONFIG['MOZ_GLUE_WRAP_LDFLAGS']
         if mozglue == 'program':
