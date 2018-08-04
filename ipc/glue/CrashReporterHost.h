@@ -130,12 +130,9 @@ public:
   static void NotifyCrashService(
     GeckoProcessType aProcessType,
     const nsString& aChildDumpID,
-    const AnnotationTable& aNotes);
+    const AnnotationTable* aNotes);
 
-  void AddAnnotation(CrashReporter::Annotation aKey, bool aValue);
-  void AddAnnotation(CrashReporter::Annotation aKey, int aValue);
-  void AddAnnotation(CrashReporter::Annotation aKey, unsigned int aValue);
-  void AddAnnotation(CrashReporter::Annotation aKey, const nsCString& aValue);
+  void AddNote(const nsCString& aKey, const nsCString& aValue);
 
   bool HasMinidump() const {
     return !mDumpID.IsEmpty();
@@ -155,7 +152,7 @@ private:
   Shmem mShmem;
   ThreadId mThreadId;
   time_t mStartTime;
-  AnnotationTable mExtraAnnotations;
+  AnnotationTable mExtraNotes;
   nsString mDumpID;
   bool mFinalized;
   nsCOMPtr<nsIFile> mTargetDump;

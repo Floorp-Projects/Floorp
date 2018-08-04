@@ -7,11 +7,10 @@ function run_test() {
   do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_OOM;
-      crashReporter.annotateCrashReport(
-        CrashReporter.annotations.TestKey, "Yes");
+      crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
     },
     function(mdump, extra) {
-      Assert.equal(extra.TestKey, "Yes");
+      Assert.equal(extra.TestingOOMCrash, "Yes");
       Assert.ok("OOMAllocationSize" in extra);
       Assert.ok(Number(extra.OOMAllocationSize) > 0);
     },

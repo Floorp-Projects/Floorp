@@ -1771,13 +1771,16 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 #endif
 
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::ContentSandboxEnabled, sandboxEnabled);
+    NS_LITERAL_CSTRING("ContentSandboxEnabled"),
+    sandboxEnabled? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0"));
 #if defined(XP_LINUX) && !defined(OS_ANDROID)
+  nsAutoCString flagsString;
+  flagsString.AppendInt(SandboxInfo::Get().AsInteger());
+
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::ContentSandboxCapabilities,
-    static_cast<int>(SandboxInfo::Get().AsInteger()));
+    NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
 #endif /* XP_LINUX && !OS_ANDROID */
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("RemoteType"),
                                      NS_ConvertUTF16toUTF8(GetRemoteType()));
 #endif /* MOZ_CONTENT_SANDBOX */
 
@@ -2439,8 +2442,7 @@ ContentChild::ProcessingError(Result aCode, const char* aReason)
   }
 
   nsDependentCString reason(aReason);
-  CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::ipc_channel_error, reason);
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ipc_channel_error"), reason);
 
   MOZ_CRASH("Content child abort due to IPC error");
 }
@@ -3115,9 +3117,8 @@ ContentChild::ShutdownInternal()
   // to wait for that event loop to finish. Otherwise we could prematurely
   // terminate an "unload" or "pagehide" event handler (which might be doing a
   // sync XHR, for example).
-  CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::IPCShutdownState,
-    NS_LITERAL_CSTRING("RecvShutdown"));
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
+                                     NS_LITERAL_CSTRING("RecvShutdown"));
 
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<nsThread> mainThread = nsThreadManager::get().GetCurrentThread();
@@ -3175,11 +3176,10 @@ ContentChild::ShutdownInternal()
   // parent closes.
   StartForceKillTimer();
 
-  CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::IPCShutdownState,
-    NS_LITERAL_CSTRING("SendFinishShutdown (sending)"));
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
+                                     NS_LITERAL_CSTRING("SendFinishShutdown (sending)"));
   bool sent = SendFinishShutdown();
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IPCShutdownState,
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
                                      sent ? NS_LITERAL_CSTRING("SendFinishShutdown (sent)")
                                           : NS_LITERAL_CSTRING("SendFinishShutdown (failed)"));
 }

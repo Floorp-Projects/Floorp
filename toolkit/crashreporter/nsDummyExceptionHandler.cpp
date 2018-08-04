@@ -66,31 +66,14 @@ UnsetExceptionHandler()
 }
 
 nsresult
-AnnotateCrashReport(Annotation key, bool data)
+AnnotateCrashReport(const nsACString& key,
+                    const nsACString& data)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-AnnotateCrashReport(Annotation key, int data)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-AnnotateCrashReport(Annotation key, unsigned int data)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-AnnotateCrashReport(Annotation key, const nsACString& data)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-RemoveCrashReportAnnotation(Annotation key)
+RemoveCrashReportAnnotation(const nsACString& key)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

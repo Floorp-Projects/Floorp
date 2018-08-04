@@ -24,7 +24,6 @@
 #pragma warning( pop )
 
 #include "Authenticode.h"
-#include "CrashAnnotations.h"
 #include "nsAutoPtr.h"
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/Sprintf.h"
@@ -39,9 +38,6 @@
 
 using namespace mozilla;
 
-using CrashReporter::Annotation;
-using CrashReporter::AnnotationToString;
-
 #define DLL_BLOCKLIST_ENTRY(name, ...) \
   { name, __VA_ARGS__ },
 #define DLL_BLOCKLIST_STRING_TYPE const char*
@@ -49,6 +45,18 @@ using CrashReporter::AnnotationToString;
 
 // define this for very verbose dll load debug spew
 #undef DEBUG_very_verbose
+
+static const char kBlockedDllsParameter[] = "BlockedDllList=";
+static const int kBlockedDllsParameterLen =
+  sizeof(kBlockedDllsParameter) - 1;
+
+static const char kBlocklistInitFailedParameter[] = "BlocklistInitFailed=1\n";
+static const int kBlocklistInitFailedParameterLen =
+  sizeof(kBlocklistInitFailedParameter) - 1;
+
+static const char kUser32BeforeBlocklistParameter[] = "User32BeforeBlocklist=1\n";
+static const int kUser32BeforeBlocklistParameterLen =
+  sizeof(kUser32BeforeBlocklistParameter) - 1;
 
 static uint32_t sInitFlags;
 static bool sBlocklistInitAttempted;
@@ -772,30 +780,22 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 }
 
 static void
-WriteAnnotation(HANDLE aFile, Annotation aAnnotation, const char* aValue,
-                DWORD* aNumBytes)
-{
-  const char* str = AnnotationToString(aAnnotation);
-  WriteFile(aFile, str, strlen(str), aNumBytes, nullptr);
-  WriteFile(aFile, "=", 1, aNumBytes, nullptr);
-  WriteFile(aFile, aValue, strlen(aValue), aNumBytes, nullptr);
-}
-
-static void
 InternalWriteNotes(HANDLE file)
 {
   DWORD nBytes;
 
-  WriteAnnotation(file, Annotation::BlockedDllList, "", &nBytes);
+  WriteFile(file, kBlockedDllsParameter, kBlockedDllsParameterLen, &nBytes, nullptr);
   DllBlockSet::Write(file);
   WriteFile(file, "\n", 1, &nBytes, nullptr);
 
   if (sBlocklistInitFailed) {
-    WriteAnnotation(file, Annotation::BlocklistInitFailed, "1\n", &nBytes);
+    WriteFile(file, kBlocklistInitFailedParameter,
+              kBlocklistInitFailedParameterLen, &nBytes, nullptr);
   }
 
   if (sUser32BeforeBlocklist) {
-    WriteAnnotation(file, Annotation::User32BeforeBlocklist, "1\n", &nBytes);
+    WriteFile(file, kUser32BeforeBlocklistParameter,
+              kUser32BeforeBlocklistParameterLen, &nBytes, nullptr);
   }
 }
 

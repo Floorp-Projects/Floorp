@@ -65,7 +65,7 @@ CrashReporterHost::FinalizeCrashReport()
   MOZ_ASSERT(!mFinalized);
   MOZ_ASSERT(HasMinidump());
 
-  CrashReporter::AnnotationTable annotations;
+  CrashReporter::AnnotationTable notes;
 
   nsAutoCString type;
   switch (mProcessType) {
@@ -83,23 +83,22 @@ CrashReporterHost::FinalizeCrashReport()
       NS_ERROR("unknown process type");
       break;
   }
-  annotations[CrashReporter::Annotation::ProcessType] = type;
+  notes.Put(NS_LITERAL_CSTRING("ProcessType"), type);
 
   char startTime[32];
   SprintfLiteral(startTime, "%lld", static_cast<long long>(mStartTime));
-  annotations[CrashReporter::Annotation::StartupTime] =
-    nsDependentCString(startTime);
+  notes.Put(NS_LITERAL_CSTRING("StartupTime"), nsDependentCString(startTime));
 
   // We might not have shmem (for example, when running crashreporter tests).
   if (mShmem.IsReadable()) {
-    CrashReporterMetadataShmem::ReadAppNotes(mShmem, annotations);
+    CrashReporterMetadataShmem::ReadAppNotes(mShmem, &notes);
   }
-  CrashReporter::AppendExtraData(mDumpID, mExtraAnnotations);
-  CrashReporter::AppendExtraData(mDumpID, annotations);
+  CrashReporter::AppendExtraData(mDumpID, mExtraNotes);
+  CrashReporter::AppendExtraData(mDumpID, notes);
 
-  // Use mExtraAnnotations, since NotifyCrashService looks for "PluginHang"
-  // which is set in the parent process.
-  NotifyCrashService(mProcessType, mDumpID, mExtraAnnotations);
+  // Use mExtraNotes, since NotifyCrashService looks for "PluginHang" which is
+  // set in the parent process.
+  NotifyCrashService(mProcessType, mDumpID, &mExtraNotes);
 
   mFinalized = true;
   return true;
@@ -222,11 +221,11 @@ CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
 /* static */ void
 CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
                                       const nsString& aChildDumpID,
-                                      const AnnotationTable& aNotes)
+                                      const AnnotationTable* aNotes)
 {
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "ipc::CrashReporterHost::NotifyCrashService", [&]() -> void {
+      "ipc::CrashReporterHost::NotifyCrashService", [=]() -> void {
         CrashReporterHost::NotifyCrashService(
           aProcessType, aChildDumpID, aNotes);
       });
@@ -256,8 +255,9 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
     case GeckoProcessType_Plugin: {
       processType = nsICrashService::PROCESS_TYPE_PLUGIN;
       telemetryKey.AssignLiteral("plugin");
-      nsCString val = aNotes[CrashReporter::Annotation::PluginHang];
-      if (val.Equals(NS_LITERAL_CSTRING("1"))) {
+      nsAutoCString val;
+      if (aNotes->Get(NS_LITERAL_CSTRING("PluginHang"), &val) &&
+        val.EqualsLiteral("1")) {
         crashType = nsICrashService::CRASH_TYPE_HANG;
         telemetryKey.AssignLiteral("pluginhang");
       }
@@ -282,35 +282,9 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
 }
 
 void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey, bool aValue)
+CrashReporterHost::AddNote(const nsCString& aKey, const nsCString& aValue)
 {
-  mExtraAnnotations[aKey] = aValue ? NS_LITERAL_CSTRING("1")
-                                   : NS_LITERAL_CSTRING("0");
-}
-
-void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
-                                 int aValue)
-{
-  nsAutoCString valueString;
-  valueString.AppendInt(aValue);
-  mExtraAnnotations[aKey] = valueString;
-}
-
-void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
-                                 unsigned int aValue)
-{
-  nsAutoCString valueString;
-  valueString.AppendInt(aValue);
-  mExtraAnnotations[aKey] = valueString;
-}
-
-void
-CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
-                                 const nsCString& aValue)
-{
-  mExtraAnnotations[aKey] = aValue;
+  mExtraNotes.Put(aKey, aValue);
 }
 
 } // namespace ipc

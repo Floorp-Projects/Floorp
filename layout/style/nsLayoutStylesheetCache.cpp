@@ -712,9 +712,8 @@ AnnotateCrashReport(nsIURI* aURI)
     annotation.AppendLiteral("No GRE omnijar\n");
   }
 
-  CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::SheetLoadFailure,
-    NS_ConvertUTF16toUTF8(annotation));
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("SheetLoadFailure"),
+                                     NS_ConvertUTF16toUTF8(annotation));
 }
 
 static void

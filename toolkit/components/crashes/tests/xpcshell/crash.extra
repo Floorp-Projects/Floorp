@@ -8,6 +8,7 @@ Vendor=Mozilla
 InstallTime=1000000000
 Theme=classic/1.0
 ReleaseChannel=default
+AddonsShouldHaveBlockedE10s=1
 ServerURL=https://crash-reports.mozilla.com
 SafeMode=0
 ContentSandboxCapable=1
