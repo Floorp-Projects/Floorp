@@ -128,6 +128,7 @@ struct LaunchOptions {
   };
 
   // If non-null, the fork delegate will be called instead of fork().
+  // It is not required to call pthread_atfork hooks.
   mozilla::UniquePtr<ForkDelegate> fork_delegate = nullptr;
 #endif
 };

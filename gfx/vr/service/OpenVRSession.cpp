@@ -327,7 +327,7 @@ OpenVRSession::UpdateHeadsetPose(VRSystemState& aState)
   const uint32_t posesSize = ::vr::k_unTrackedDeviceIndex_Hmd + 1;
   ::vr::TrackedDevicePose_t poses[posesSize];
   // Note: We *must* call WaitGetPoses in order for any rendering to happen at all.
-  mVRCompositor->WaitGetPoses(nullptr, 0, poses, posesSize);
+  mVRCompositor->WaitGetPoses(poses, posesSize, nullptr, 0);
 
   ::vr::Compositor_FrameTiming timing;
   timing.m_nSize = sizeof(::vr::Compositor_FrameTiming);

@@ -12,6 +12,7 @@
 #include "mozilla/dom/HTMLParamElementBinding.h"
 #include "mozilla/dom/HTMLQuoteElementBinding.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
@@ -54,6 +55,21 @@ HTMLSharedElement::GetHref(nsAString& aValue)
   nsAutoCString spec;
   uri->GetSpec(spec);
   CopyUTF8toUTF16(spec, aValue);
+}
+
+void
+HTMLSharedElement::DoneAddingChildren(bool aHaveNotified)
+{
+  if (mNodeInfo->Equals(nsGkAtoms::head)) {
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(this,
+                              NS_LITERAL_STRING("DOMHeadElementParsed"),
+                              CanBubble::eYes,
+                              ChromeOnlyDispatch::eYes);
+    // Always run async in order to avoid running script when the content
+    // sink isn't expecting it.
+    asyncDispatcher->PostDOMEvent();
+  }
 }
 
 bool
