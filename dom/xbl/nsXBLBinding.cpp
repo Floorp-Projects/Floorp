@@ -996,7 +996,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     return NS_ERROR_FAILURE;
   }
   js::AssertSameCompartment(holder, xblScope);
-  JSAutoRealmAllowCCW ar(cx, holder);
+  JSAutoRealm ar(cx, holder);
 
   // Look up the class on the property holder. The only properties on the
   // holder should be class objects. If we don't find the class object, we need
@@ -1036,7 +1036,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
 
     // Next, enter the realm of the property holder, wrap the proto, and
     // stick it on.
-    JSAutoRealmAllowCCW ar3(cx, holder);
+    JSAutoRealm ar3(cx, holder);
     if (!JS_WrapObject(cx, &proto) ||
         !JS_DefineUCProperty(cx, holder, aClassName.get(), -1, proto,
                              JSPROP_READONLY | JSPROP_PERMANENT))
