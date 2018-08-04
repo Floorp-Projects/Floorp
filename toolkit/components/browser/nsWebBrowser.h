@@ -30,7 +30,6 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserPersist.h"
-#include "nsIWebBrowserFocus.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrintSettings.h"
 #include "nsIWidgetListener.h"
@@ -76,7 +75,6 @@ class nsWebBrowser final : public nsIWebBrowser,
                            public nsITextScroll,
                            public nsIInterfaceRequestor,
                            public nsIWebBrowserPersist,
-                           public nsIWebBrowserFocus,
                            public nsIWebProgressListener,
                            public nsSupportsWeakReference
 {
@@ -117,10 +115,11 @@ public:
   NS_DECL_NSIWEBNAVIGATION
   NS_DECL_NSIWEBBROWSERPERSIST
   NS_DECL_NSICANCELABLE
-  NS_DECL_NSIWEBBROWSERFOCUS
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   void SetAllowDNSPrefetch(bool aAllowPrefetch);
+  void FocusActivate();
+  void FocusDeactivate();
 
 protected:
   virtual ~nsWebBrowser();

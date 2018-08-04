@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIWebBrowserChrome2.idl',
     'nsIWebBrowserChrome3.idl',
     'nsIWebBrowserChromeFocus.idl',
-    'nsIWebBrowserFocus.idl',
 ]
 
 if CONFIG['NS_PRINTING']:
