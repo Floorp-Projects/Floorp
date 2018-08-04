@@ -228,6 +228,7 @@ class ContextMenu {
     this.context = null;
     this.global = global;
     this.content = global.content;
+    this.lastMenuTarget = null;
 
     Object.keys(messageListeners).forEach(key =>
       global.addMessageListener(key, messageListeners[key].bind(this))
@@ -670,6 +671,7 @@ class ContextMenu {
     this.context = Object.create(null);
     const context = this.context;
 
+    context.timeStamp = aEvent.timeStamp;
     context.screenX = aEvent.screenX;
     context.screenY = aEvent.screenY;
     context.mozInputSource = aEvent.mozInputSource;
@@ -748,6 +750,13 @@ class ContextMenu {
     let editFlags = SpellCheckHelper.isEditable(context.target, this.content);
     this._setContextForNodesNoChildren(editFlags);
     this._setContextForNodesWithChildren(editFlags);
+
+    this.lastMenuTarget = {
+      // Remember the node for extensions.
+      targetRef: Cu.getWeakReference(node),
+      // The timestamp is used to verify that the target wasn't changed since the observed menu event.
+      timeStamp: context.timeStamp,
+    };
   }
 
   /**

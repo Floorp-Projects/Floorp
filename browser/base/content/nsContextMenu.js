@@ -108,6 +108,7 @@ nsContextMenu.prototype = {
       let subject = {
         menu: aXulMenu,
         tab: gBrowser ? gBrowser.getTabForBrowser(this.browser) : undefined,
+        timeStamp: this.timeStamp,
         isContentSelected: this.isContentSelected,
         inFrame: this.inFrame,
         isTextSelected: this.isTextSelected,
@@ -163,6 +164,7 @@ nsContextMenu.prototype = {
     }
 
     this.shouldDisplay = context.shouldDisplay;
+    this.timeStamp = context.timeStamp;
 
     // Assign what's _possibly_ needed from `context` sent by ContextMenu.jsm
     // Keep this consistent with the similar code in ContextMenu's _setContext
