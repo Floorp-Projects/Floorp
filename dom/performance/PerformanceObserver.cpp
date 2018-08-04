@@ -135,7 +135,8 @@ PerformanceObserver::QueueEntry(PerformanceEntry* aEntry)
   mQueuedEntries.AppendElement(aEntry);
 }
 
-static const char16_t *const sValidTypeNames[3] = {
+static const char16_t *const sValidTypeNames[4] = {
+  u"navigation",
   u"mark",
   u"measure",
   u"resource",

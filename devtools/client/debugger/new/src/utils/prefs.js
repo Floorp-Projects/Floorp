@@ -12,9 +12,10 @@ const {
 } = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
 
 const {
-  Services,
   PrefsHelper
 } = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+
+const Services = require("Services");
 
 const prefsSchemaVersion = "1.0.3";
 const pref = Services.pref;

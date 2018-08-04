@@ -67,6 +67,10 @@ public:
   NavigationType Type() const;
   uint16_t RedirectCount() const;
 
+  void
+  UpdatePropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel,
+                                  nsITimedChannel* aChannel);
+
 private:
   ~PerformanceNavigationTiming() {}
 };

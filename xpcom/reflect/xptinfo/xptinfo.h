@@ -662,43 +662,55 @@ GetString(uint32_t aIndex)
 } // namespace detail
 } // namespace xpt
 
+#define XPT_FOR_EACH_ARITHMETIC_TYPE(macro) \
+  macro(TD_INT8,   int8_t) \
+  macro(TD_INT16,  int16_t) \
+  macro(TD_INT32,  int32_t) \
+  macro(TD_INT64,  int64_t) \
+  macro(TD_UINT8,  uint8_t) \
+  macro(TD_UINT16, uint16_t) \
+  macro(TD_UINT32, uint32_t) \
+  macro(TD_UINT64, uint64_t) \
+  macro(TD_FLOAT,  float) \
+  macro(TD_DOUBLE, double) \
+  macro(TD_BOOL,   bool) \
+  macro(TD_CHAR,   char) \
+  macro(TD_WCHAR,  char16_t)
+
+#define XPT_FOR_EACH_POINTER_TYPE(macro) \
+  macro(TD_VOID,              void*) \
+  macro(TD_PNSIID,            nsID*) \
+  macro(TD_PSTRING,           char*) \
+  macro(TD_PWSTRING,          wchar_t*) \
+  macro(TD_INTERFACE_TYPE,    nsISupports*) \
+  macro(TD_INTERFACE_IS_TYPE, nsISupports*) \
+  macro(TD_LEGACY_ARRAY,      void*) \
+  macro(TD_PSTRING_SIZE_IS,   char*) \
+  macro(TD_PWSTRING_SIZE_IS,  wchar_t*) \
+  macro(TD_DOMOBJECT,         void*) \
+  macro(TD_PROMISE,           mozilla::dom::Promise*)
+
+#define XPT_FOR_EACH_COMPLEX_TYPE(macro) \
+  macro(TD_DOMSTRING,  nsString) \
+  macro(TD_UTF8STRING, nsCString) \
+  macro(TD_CSTRING,    nsCString) \
+  macro(TD_ASTRING,    nsString) \
+  macro(TD_JSVAL,      JS::Value) \
+  macro(TD_ARRAY,      xpt::detail::UntypedTArray)
+
+#define XPT_FOR_EACH_TYPE(macro) \
+  XPT_FOR_EACH_ARITHMETIC_TYPE(macro) \
+  XPT_FOR_EACH_POINTER_TYPE(macro) \
+  XPT_FOR_EACH_COMPLEX_TYPE(macro)
+
 inline size_t
 nsXPTType::Stride() const
 {
   // Compute the stride to use when walking an array of the given type.
   switch (Tag()) {
-    case TD_INT8:              return sizeof(int8_t);
-    case TD_INT16:             return sizeof(int16_t);
-    case TD_INT32:             return sizeof(int32_t);
-    case TD_INT64:             return sizeof(int64_t);
-    case TD_UINT8:             return sizeof(uint8_t);
-    case TD_UINT16:            return sizeof(uint16_t);
-    case TD_UINT32:            return sizeof(uint32_t);
-    case TD_UINT64:            return sizeof(uint64_t);
-    case TD_FLOAT:             return sizeof(float);
-    case TD_DOUBLE:            return sizeof(double);
-    case TD_BOOL:              return sizeof(bool);
-    case TD_CHAR:              return sizeof(char);
-    case TD_WCHAR:             return sizeof(char16_t);
-
-    case TD_VOID:              return sizeof(void*);
-    case TD_PNSIID:            return sizeof(nsIID*);
-    case TD_DOMSTRING:         return sizeof(nsString);
-    case TD_PSTRING:           return sizeof(char*);
-    case TD_PWSTRING:          return sizeof(char16_t*);
-    case TD_INTERFACE_TYPE:    return sizeof(nsISupports*);
-    case TD_INTERFACE_IS_TYPE: return sizeof(nsISupports*);
-    case TD_LEGACY_ARRAY:      return sizeof(void*);
-    case TD_PSTRING_SIZE_IS:   return sizeof(char*);
-    case TD_PWSTRING_SIZE_IS:  return sizeof(char16_t*);
-    case TD_DOMOBJECT:         return sizeof(void*);
-    case TD_PROMISE:           return sizeof(void*);
-
-    case TD_UTF8STRING:        return sizeof(nsCString);
-    case TD_CSTRING:           return sizeof(nsCString);
-    case TD_ASTRING:           return sizeof(nsString);
-    case TD_JSVAL:             return sizeof(JS::Value);
-    case TD_ARRAY:             return sizeof(xpt::detail::UntypedTArray);
+#define XPT_TYPE_STRIDE(tag, type) case tag: return sizeof(type);
+XPT_FOR_EACH_TYPE(XPT_TYPE_STRIDE)
+#undef XPT_TYPE_STRIDE
   }
 
   MOZ_CRASH("Unknown type");

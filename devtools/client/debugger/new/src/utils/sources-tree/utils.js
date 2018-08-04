@@ -18,7 +18,7 @@ exports.createSourceNode = createSourceNode;
 exports.createParentMap = createParentMap;
 exports.getRelativePath = getRelativePath;
 
-var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
+var _url = require("../../utils/url");
 
 var _source = require("../source");
 

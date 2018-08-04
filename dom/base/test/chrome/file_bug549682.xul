@@ -142,7 +142,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
 
     var docShell = document.getElementById('ifr').contentWindow.docShell;
     ok(docShell, "Should have docshell");
-    var cfmm = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIContentFrameMessageManager);
+    var cfmm = docShell.messageManager;
     ok(cfmm, "Should have content messageManager");
 
     var didGetSyncMessage = false;

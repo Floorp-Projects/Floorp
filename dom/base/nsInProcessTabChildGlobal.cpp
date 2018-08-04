@@ -166,7 +166,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsInProcessTabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsIMessageSender)
-  NS_INTERFACE_MAP_ENTRY(nsIContentFrameMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIInProcessContentFrameMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
@@ -295,7 +294,7 @@ nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
     RefPtr<nsFrameLoader> fl = owner->GetFrameLoader();
     if (fl) {
-      NS_ASSERTION(this == fl->GetTabChildGlobalAsEventTarget(),
+      NS_ASSERTION(this == fl->GetTabChildGlobal(),
                    "Wrong event target!");
       NS_ASSERTION(fl->mMessageManager == mChromeMessageManager,
                    "Wrong message manager!");

@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+class PerformanceNavigationTiming;
+
 class PerformanceMainThread final : public Performance
                                   , public PerformanceStorage
 {
@@ -37,8 +39,6 @@ public:
 
   virtual void AddEntry(nsIHttpChannel* channel,
                         nsITimedChannel* timedChannel) override;
-
-  void CreateDocumentEntry(nsITimedChannel* aChannel) override;
 
   TimeStamp CreationTimeStamp() const override;
 
@@ -71,8 +71,12 @@ public:
                                 const Optional<nsAString>& aEntryType,
                                 nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
 
+  void QueueNavigationTimingEntry() override;
+
 protected:
   ~PerformanceMainThread();
+
+  void CreateNavigationTimingEntry();
 
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
@@ -82,9 +86,8 @@ protected:
   GetPerformanceTimingFromString(const nsAString& aTimingName) override;
 
   void DispatchBufferFullEvent() override;
-  void EnsureDocEntry();
 
-  RefPtr<PerformanceEntry> mDocEntry;
+  RefPtr<PerformanceNavigationTiming> mDocEntry;
   RefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
   RefPtr<PerformanceTiming> mTiming;

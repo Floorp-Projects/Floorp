@@ -315,10 +315,10 @@ const browsingContextTargetPrototype = {
    */
   get messageManager() {
     try {
-      return this.docShell
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIContentFrameMessageManager);
+      return this.docShell.messageManager;
     } catch (e) {
+      // In some cases we can't get a docshell.  We just have no message manager
+      // then,
       return null;
     }
   },
