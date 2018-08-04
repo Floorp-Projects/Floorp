@@ -366,6 +366,11 @@ public:
       // (and is the reason we unconditionally build the subdocument item), so always
       // use the new one to make sure we get the right value.
       return true;
+    } else if (type == DisplayItemType::TYPE_CARET) {
+      // The caret can change position while still being owned by the same frame
+      // and we don't invalidate in that case. Use the new version since the changed
+      // bounds are needed for DLBI.
+      return true;
     }
     return false;
   }

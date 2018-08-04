@@ -38,7 +38,7 @@ new-tab
   );
 
   async function foo() {
-    domLoc.connectRoot(document);
+    domLoc.connectRoot(document.documentElement);
     await domLoc.translateRoots();
 
     is(document.getElementById('file-menu').getAttribute('label'), 'File');
