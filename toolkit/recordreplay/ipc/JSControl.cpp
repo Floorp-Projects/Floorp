@@ -37,6 +37,36 @@ NonNullObject(JSContext* aCx, HandleValue aValue)
   return &aValue.toObject();
 }
 
+template <typename T>
+static bool
+MaybeGetNumberProperty(JSContext* aCx, HandleObject aObject, const char* aProperty, T* aResult)
+{
+  RootedValue v(aCx);
+  if (!JS_GetProperty(aCx, aObject, aProperty, &v)) {
+    return false;
+  }
+  if (v.isNumber()) {
+    *aResult = v.toNumber();
+  }
+  return true;
+}
+
+template <typename T>
+static bool
+GetNumberProperty(JSContext* aCx, HandleObject aObject, const char* aProperty, T* aResult)
+{
+  RootedValue v(aCx);
+  if (!JS_GetProperty(aCx, aObject, aProperty, &v)) {
+    return false;
+  }
+  if (!v.isNumber()) {
+    JS_ReportErrorASCII(aCx, "Object missing required property");
+    return false;
+  }
+  *aResult = v.toNumber();
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // BreakpointPosition Conversion
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,19 +94,6 @@ BreakpointPosition::Encode(JSContext* aCx) const
     return nullptr;
   }
   return obj;
-}
-
-static bool
-MaybeGetNumberProperty(JSContext* aCx, HandleObject aObject, const char* aProperty, uint32_t* aResult)
-{
-  RootedValue v(aCx);
-  if (!JS_GetProperty(aCx, aObject, aProperty, &v)) {
-    return false;
-  }
-  if (v.isNumber()) {
-    *aResult = (size_t) v.toNumber();
-  }
-  return true;
 }
 
 bool
@@ -111,6 +128,47 @@ BreakpointPosition::Decode(JSContext* aCx, HandleObject aObject)
   }
 
   return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ExecutionPoint Conversion
+///////////////////////////////////////////////////////////////////////////////
+
+// Names of properties which JS code uses to specify the contents of an ExecutionPoint.
+static const char gCheckpointProperty[] = "checkpoint";
+static const char gProgressProperty[] = "progress";
+static const char gPositionProperty[] = "position";
+
+JSObject*
+ExecutionPoint::Encode(JSContext* aCx) const
+{
+  RootedObject obj(aCx, JS_NewObject(aCx, nullptr));
+  RootedObject position(aCx, mPosition.Encode(aCx));
+  if (!obj || !position ||
+      !JS_DefineProperty(aCx, obj, gCheckpointProperty,
+                         (double) mCheckpoint, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(aCx, obj, gProgressProperty,
+                         (double) mProgress, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(aCx, obj, gPositionProperty, position, JSPROP_ENUMERATE))
+  {
+    return nullptr;
+  }
+  return obj;
+}
+
+bool
+ExecutionPoint::Decode(JSContext* aCx, HandleObject aObject)
+{
+  RootedValue v(aCx);
+  if (!JS_GetProperty(aCx, aObject, gPositionProperty, &v)) {
+    return false;
+  }
+
+  RootedObject positionObject(aCx, NonNullObject(aCx, v));
+  return positionObject
+      && mPosition.Decode(aCx, positionObject)
+      && GetNumberProperty(aCx, aObject, gCheckpointProperty, &mCheckpoint)
+      && GetNumberProperty(aCx, aObject, gProgressProperty, &mProgress);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -172,6 +230,30 @@ Middleman_Resume(JSContext* aCx, unsigned aArgc, Value* aVp)
   }
 
   parent::Resume(forward);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool
+Middleman_TimeWarp(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  RootedObject targetObject(aCx, NonNullObject(aCx, args.get(0)));
+  if (!targetObject) {
+    return false;
+  }
+
+  ExecutionPoint target;
+  if (!target.Decode(aCx, targetObject)) {
+    return false;
+  }
+
+  if (!InvalidateReplayDebuggersAfterUnpause(aCx)) {
+    return false;
+  }
+
+  parent::TimeWarp(target);
 
   args.rval().setUndefined();
   return true;
@@ -643,6 +725,49 @@ RecordReplay_GetContent(JSContext* aCx, unsigned aArgc, Value* aVp)
 }
 
 static bool
+RecordReplay_CurrentExecutionPoint(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  RootedObject obj(aCx, NonNullObject(aCx, args.get(0)));
+  if (!obj) {
+    return false;
+  }
+
+  BreakpointPosition position;
+  if (!position.Decode(aCx, obj)) {
+    return false;
+  }
+
+  ExecutionPoint point = navigation::CurrentExecutionPoint(position);
+  RootedObject result(aCx, point.Encode(aCx));
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+static bool
+RecordReplay_TimeWarpTargetExecutionPoint(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  double timeWarpTarget;
+  if (!ToNumber(aCx, args.get(0), &timeWarpTarget)) {
+    return false;
+  }
+
+  ExecutionPoint point = navigation::TimeWarpTargetExecutionPoint((ProgressCounter) timeWarpTarget);
+  RootedObject result(aCx, point.Encode(aCx));
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+static bool
 RecordReplay_Dump(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   // This method is an alternative to dump() that can be used in places where
@@ -673,6 +798,7 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("registerReplayDebugger", Middleman_RegisterReplayDebugger, 1, 0),
   JS_FN("canRewind", Middleman_CanRewind, 0, 0),
   JS_FN("resume", Middleman_Resume, 1, 0),
+  JS_FN("timeWarp", Middleman_TimeWarp, 1, 0),
   JS_FN("pause", Middleman_Pause, 0, 0),
   JS_FN("sendRequest", Middleman_SendRequest, 1, 0),
   JS_FN("setBreakpoint", Middleman_SetBreakpoint, 2, 0),
@@ -686,6 +812,8 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
   JS_FN("advanceProgressCounter", RecordReplay_AdvanceProgressCounter, 0, 0),
   JS_FN("positionHit", RecordReplay_PositionHit, 1, 0),
   JS_FN("getContent", RecordReplay_GetContent, 1, 0),
+  JS_FN("currentExecutionPoint", RecordReplay_CurrentExecutionPoint, 1, 0),
+  JS_FN("timeWarpTargetExecutionPoint", RecordReplay_TimeWarpTargetExecutionPoint, 1, 0),
   JS_FN("dump", RecordReplay_Dump, 1, 0),
   JS_FS_END
 };
