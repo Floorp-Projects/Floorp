@@ -42,6 +42,7 @@ void DebuggerRequest(js::CharBuffer* aBuffer);
 void SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition);
 void Resume(bool aForward);
 void RestoreCheckpoint(size_t aId);
+void RunToPoint(const js::ExecutionPoint& aPoint);
 
 // Attempt to diverge from the recording so that new recorded events cause
 // the process to rewind. Returns false if the divergence failed: either we
@@ -50,6 +51,13 @@ bool MaybeDivergeFromRecording();
 
 // Notify navigation that a position was hit.
 void PositionHit(const js::BreakpointPosition& aPosition);
+
+// Get an execution point for hitting the specified position right now.
+js::ExecutionPoint CurrentExecutionPoint(const js::BreakpointPosition& aPosition);
+
+// Convert an identifier from NewTimeWarpTarget() which we have seen while
+// executing into an ExecutionPoint.
+js::ExecutionPoint TimeWarpTargetExecutionPoint(ProgressCounter aTarget);
 
 // Called when running forward, immediately before hitting a normal or
 // temporary checkpoint.

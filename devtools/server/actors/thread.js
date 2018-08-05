@@ -108,6 +108,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this._dbg.onDebuggerStatement = this.onDebuggerStatement;
       this._dbg.onNewScript = this.onNewScript;
       this._dbg.on("newGlobal", this.onNewGlobal);
+      if (this._dbg.replaying) {
+        this._dbg.replayingOnForcedPause = this.replayingOnForcedPause.bind(this);
+      }
       // Keep the debugger disabled until a client attaches.
       this._dbg.enabled = this._state != "detached";
     }
@@ -645,11 +648,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _handleResumeLimit: async function(request) {
     const steppingType = request.resumeLimit.type;
     const rewinding = request.rewind;
-    if (!["break", "step", "next", "finish"].includes(steppingType)) {
+    if (!["break", "step", "next", "finish", "warp"].includes(steppingType)) {
       return Promise.reject({
         error: "badParameterType",
         message: "Unknown resumeLimit type"
       });
+    }
+
+    if (steppingType == "warp") {
+      // Time warp resume limits are handled by the caller.
+      return true;
     }
 
     const generatedLocation = this.sources.getFrameLocation(this.youngestFrame);
@@ -660,7 +668,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       rewinding
     );
 
-    // Make sure there is still a frame on the stack if we are to continue stepping.
+    // Make sure there is still a frame on the stack if we are to continue
+    // stepping.
     const stepFrame = this._getNextStepFrame(this.youngestFrame, rewinding);
     if (stepFrame) {
       switch (steppingType) {
@@ -799,7 +808,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // When replaying execution in a separate process we need to explicitly
       // notify that process when to resume execution.
       if (this.dbg.replaying) {
-        if (rewinding) {
+        if (request && request.resumeLimit && request.resumeLimit.type == "warp") {
+          this.dbg.replayTimeWarp(request.resumeLimit.target);
+        } else if (rewinding) {
           this.dbg.replayResumeBackward();
         } else {
           this.dbg.replayResumeForward();
@@ -1633,6 +1644,29 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   onSkipBreakpoints: function({ skip }) {
     this.skipBreakpoints = skip;
     return { skip };
+  },
+
+  /**
+   * A function that the engine calls when replay has hit a point where it will
+   * pause, even if no breakpoint has been set. Such points include hitting the
+   * beginning or end of the replay, or reaching the target of a time warp.
+   *
+   * @param frame Debugger.Frame
+   *        The youngest stack frame, or null.
+   */
+  replayingOnForcedPause: function(frame) {
+    if (frame) {
+      this._pauseAndRespond(frame, { type: "replayForcedPause" });
+    } else {
+      const packet = this._paused(frame);
+      if (!packet) {
+        return;
+      }
+      packet.why = "replayForcedPause";
+
+      this.conn.send(packet);
+      this._pushThreadPause();
+    }
   },
 
   /**

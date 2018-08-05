@@ -79,6 +79,10 @@ namespace recordreplay {
   /* Rewind to a particular saved checkpoint in the past. */   \
   _Macro(RestoreCheckpoint)                                    \
                                                                \
+  /* Run forward to a particular execution point between the current checkpoint */ \
+  /* and the next one. */                                      \
+  _Macro(RunToPoint)                                           \
+                                                               \
   /* Notify the child whether it is the active child and should send paint and similar */ \
   /* messages to the middleman. */                             \
   _Macro(SetIsActive)                                          \
@@ -280,6 +284,17 @@ struct RestoreCheckpointMessage : public Message
   explicit RestoreCheckpointMessage(size_t aCheckpoint)
     : Message(MessageType::RestoreCheckpoint, sizeof(*this))
     , mCheckpoint(aCheckpoint)
+  {}
+};
+
+struct RunToPointMessage : public Message
+{
+  // The target execution point.
+  js::ExecutionPoint mTarget;
+
+  explicit RunToPointMessage(const js::ExecutionPoint& aTarget)
+    : Message(MessageType::RunToPoint, sizeof(*this))
+    , mTarget(aTarget)
   {}
 };
 
