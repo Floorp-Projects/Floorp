@@ -342,6 +342,10 @@ AdvanceExecutionProgressCounter()
   ++*ExecutionProgressCounter();
 }
 
+// Get an identifier for the current execution point which can be used to warp
+// here later.
+MFBT_API ProgressCounter NewTimeWarpTarget();
+
 // Return whether a script is internal to the record/replay infrastructure,
 // may run non-deterministically between recording and replaying, and whose
 // execution must not update the progress counter.

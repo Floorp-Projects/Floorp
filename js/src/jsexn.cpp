@@ -426,6 +426,19 @@ JS::ExceptionStackOrNull(HandleObject objArg)
     return obj->as<ErrorObject>().stack();
 }
 
+JS_PUBLIC_API(uint64_t)
+JS::ExceptionTimeWarpTarget(JS::HandleValue value)
+{
+    if (!value.isObject())
+        return 0;
+
+    JSObject* obj = CheckedUnwrap(&value.toObject());
+    if (!obj || !obj->is<ErrorObject>())
+        return 0;
+
+    return obj->as<ErrorObject>().timeWarpTarget();
+}
+
 bool
 Error(JSContext* cx, unsigned argc, Value* vp)
 {
