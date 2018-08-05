@@ -146,13 +146,6 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
         return p;
     }
 
-    Ptr lookupWithDefault(const Key& k, const Value& defaultValue) {
-        Ptr p = Base::lookupWithDefault(k, defaultValue);
-        if (p)
-            exposeGCThingToActiveJS(p->value());
-        return p;
-    }
-
     // Resolve ambiguity with LinkedListElement<>::remove.
     using Base::remove;
 

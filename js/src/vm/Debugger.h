@@ -225,9 +225,9 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
     }
 
     MOZ_MUST_USE bool incZoneCount(JS::Zone* zone) {
-        CountMap::Ptr p = zoneCounts.lookupWithDefault(zone, 0);
-        if (!p)
-            return false;
+        CountMap::AddPtr p = zoneCounts.lookupForAdd(zone);
+        if (!p && !zoneCounts.add(p, zone, 0))
+            return false;   // OOM'd while adding
         ++p->value();
         return true;
     }
