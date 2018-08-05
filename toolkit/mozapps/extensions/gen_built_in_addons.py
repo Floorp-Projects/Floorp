@@ -42,8 +42,10 @@ def get_registry(paths):
 
         for p, f in reg:
             path = mozpath.join(base, p)
-            if not registry.contains(path):
+            try:
                 registry.add(path, f)
+            except Exception:
+                pass
 
     return registry, used_paths
 
