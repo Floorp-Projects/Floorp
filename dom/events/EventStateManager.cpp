@@ -2753,7 +2753,7 @@ EventStateManager::GetScrollAmount(nsPresContext* aPresContext,
                     aScrollableFrame->GetLineScrollAmount();
   }
 
-  // If there is no scrollable frame and page scrolling, use viewport size.
+  // If there is no scrollable frame and page scrolling, use view port size.
   if (isPage) {
     return aPresContext->GetVisibleArea().Size();
   }

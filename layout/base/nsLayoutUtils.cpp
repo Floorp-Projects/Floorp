@@ -9040,11 +9040,11 @@ MaybeReflowForInflationScreenSizeChange(nsPresContext *aPresContext)
 }
 
 /* static */ void
-nsLayoutUtils::SetVisualViewportSize(nsIPresShell* aPresShell, CSSSize aSize)
+nsLayoutUtils::SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell, CSSSize aSize)
 {
   MOZ_ASSERT(aSize.width >= 0.0 && aSize.height >= 0.0);
 
-  aPresShell->SetVisualViewportSize(
+  aPresShell->SetScrollPositionClampingScrollPortSize(
     nsPresContext::CSSPixelsToAppUnits(aSize.width),
     nsPresContext::CSSPixelsToAppUnits(aSize.height));
 
