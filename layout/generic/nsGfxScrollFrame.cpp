@@ -381,22 +381,23 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     std::max(aKidMetrics->Height(), vScrollbarMinHeight);
   aState->mInsideBorderSize =
     ComputeInsideBorderSize(aState, desiredInsideBorderSize);
-  nsSize visualViewportSize = nsSize(std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
+  nsSize scrollPortSize = nsSize(std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
                                  std::max(0, aState->mInsideBorderSize.height - hScrollbarDesiredHeight));
 
+  nsSize visualScrollPortSize = scrollPortSize;
   nsIPresShell* presShell = PresShell();
-  if (mHelper.mIsRoot && presShell->IsVisualViewportSizeSet()) {
+  if (mHelper.mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
     nsSize compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(this, false);
     float resolution = presShell->GetResolution();
     compositionSize.width /= resolution;
     compositionSize.height /= resolution;
-    visualViewportSize = nsSize(std::max(0, compositionSize.width - vScrollbarDesiredWidth),
+    visualScrollPortSize = nsSize(std::max(0, compositionSize.width - vScrollbarDesiredWidth),
                                   std::max(0, compositionSize.height - hScrollbarDesiredHeight));
   }
 
   nsRect scrolledRect =
     mHelper.GetUnsnappedScrolledRectInternal(aState->mContentsOverflowAreas.ScrollableOverflow(),
-                                             visualViewportSize);
+                                             scrollPortSize);
   nscoord oneDevPixel = aState->mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
   if (!aForce) {
@@ -404,9 +405,9 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     if (aState->mStyles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
       bool wantHScrollbar =
         aState->mStyles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.XMost() >= visualViewportSize.width + oneDevPixel ||
+        scrolledRect.XMost() >= visualScrollPortSize.width + oneDevPixel ||
         scrolledRect.x <= -oneDevPixel;
-      if (visualViewportSize.width < hScrollbarMinSize.width)
+      if (scrollPortSize.width < hScrollbarMinSize.width)
         wantHScrollbar = false;
       if (wantHScrollbar != aAssumeHScroll)
         return false;
@@ -416,9 +417,9 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     if (aState->mStyles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
       bool wantVScrollbar =
         aState->mStyles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.YMost() >= visualViewportSize.height + oneDevPixel ||
+        scrolledRect.YMost() >= visualScrollPortSize.height + oneDevPixel ||
         scrolledRect.y <= -oneDevPixel;
-      if (visualViewportSize.height < vScrollbarMinSize.height)
+      if (scrollPortSize.height < vScrollbarMinSize.height)
         wantVScrollbar = false;
       if (wantVScrollbar != aAssumeVScroll)
         return false;
@@ -431,7 +432,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     }
     // Check whether there is actually any overflow.
     nscoord scrolledWidth = scrolledRect.width + oneDevPixel;
-    if (scrolledWidth <= visualViewportSize.width) {
+    if (scrolledWidth <= scrollPortSize.width) {
       break;
     }
     // Viewport scrollbar style is used below instead of aState->mStyles
@@ -447,10 +448,10 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     if (!doc->IsTopLevelContentDocument()) {
       break;
     }
-    doc->UpdateViewportOverflowType(scrolledWidth, visualViewportSize.width);
+    doc->UpdateViewportOverflowType(scrolledWidth, scrollPortSize.width);
   } while (false);
 
-  nscoord vScrollbarActualWidth = aState->mInsideBorderSize.width - visualViewportSize.width;
+  nscoord vScrollbarActualWidth = aState->mInsideBorderSize.width - scrollPortSize.width;
 
   aState->mShowHScrollbar = aAssumeHScroll;
   aState->mShowVScrollbar = aAssumeVScroll;
@@ -459,7 +460,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   if (!IsScrollbarOnRight()) {
     scrollPortOrigin.x += vScrollbarActualWidth;
   }
-  mHelper.mScrollPort = nsRect(scrollPortOrigin, visualViewportSize);
+  mHelper.mScrollPort = nsRect(scrollPortOrigin, scrollPortSize);
   return true;
 }
 
@@ -2859,10 +2860,10 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsAtom* aOrig
 
   nsPoint dist(std::abs(pt.x - mLastUpdateFramesPos.x),
                std::abs(pt.y - mLastUpdateFramesPos.y));
-  nsSize visualViewportSize = GetVisualViewportSize();
-  nscoord horzAllowance = std::max(visualViewportSize.width / std::max(sHorzScrollFraction, 1),
+  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
+  nscoord horzAllowance = std::max(scrollPortSize.width / std::max(sHorzScrollFraction, 1),
                                    nsPresContext::AppUnitsPerCSSPixel());
-  nscoord vertAllowance = std::max(visualViewportSize.height / std::max(sVertScrollFraction, 1),
+  nscoord vertAllowance = std::max(scrollPortSize.height / std::max(sVertScrollFraction, 1),
                                    nsPresContext::AppUnitsPerCSSPixel());
   if (dist.x >= horzAllowance || dist.y >= vertAllowance) {
     needFrameVisibilityUpdate = true;
@@ -3490,7 +3491,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
   if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL)) {
-    aBuilder->AddToWillChangeBudget(mOuter, GetVisualViewportSize());
+    aBuilder->AddToWillChangeBudget(mOuter, GetScrollPositionClampingScrollPortSize());
   }
 
   mScrollParentID = aBuilder->GetCurrentScrollParentId();
@@ -4055,16 +4056,16 @@ ScrollFrameHelper::GetScrollRangeForClamping() const
     return nsRect(nscoord_MIN/2, nscoord_MIN/2,
                   nscoord_MAX - nscoord_MIN/2, nscoord_MAX - nscoord_MIN/2);
   }
-  nsSize visualViewportSize = GetVisualViewportSize();
-  return GetScrollRange(visualViewportSize.width, visualViewportSize.height);
+  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
+  return GetScrollRange(scrollPortSize.width, scrollPortSize.height);
 }
 
 nsSize
-ScrollFrameHelper::GetVisualViewportSize() const
+ScrollFrameHelper::GetScrollPositionClampingScrollPortSize() const
 {
   nsIPresShell* presShell = mOuter->PresShell();
-  if (mIsRoot && presShell->IsVisualViewportSizeSet()) {
-    return presShell->GetVisualViewportSize();
+  if (mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
+    return presShell->GetScrollPositionClampingScrollPortSize();
   }
   return mScrollPort.Size();
 }
@@ -5295,7 +5296,7 @@ ScrollFrameHelper::IsScrollingActive(nsDisplayListBuilder* aBuilder) const
 {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
   if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL) &&
-    aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
+    aBuilder->IsInWillChangeBudget(mOuter, GetScrollPositionClampingScrollPortSize())) {
     return true;
   }
 
@@ -5603,7 +5604,7 @@ ScrollFrameHelper::ReflowFinished()
   }
 
   nsRect scrolledContentRect = GetScrolledRect();
-  nsSize scrollClampingScrollPort = GetVisualViewportSize();
+  nsSize scrollClampingScrollPort = GetScrollPositionClampingScrollPortSize();
   nscoord minX = scrolledContentRect.x;
   nscoord maxX = scrolledContentRect.XMost() - scrollClampingScrollPort.width;
   nscoord minY = scrolledContentRect.y;
@@ -5823,12 +5824,12 @@ ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   bool scrollbarOnLeft = !IsScrollbarOnRight();
   bool overlayScrollBarsWithZoom =
     mIsRoot && LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) &&
-    presShell->IsVisualViewportSizeSet();
+    presShell->IsScrollPositionClampingScrollPortSizeSet();
 
   nsSize scrollPortClampingSize = mScrollPort.Size();
   double res = 1.0;
   if (overlayScrollBarsWithZoom) {
-    scrollPortClampingSize = presShell->GetVisualViewportSize();
+    scrollPortClampingSize = presShell->GetScrollPositionClampingScrollPortSize();
     res = presShell->GetCumulativeResolution();
   }
 
@@ -6108,11 +6109,11 @@ ScrollFrameHelper::GetScrolledRect() const
   // For that, we first convert the scroll port and the scrolled rect to rects
   // relative to the reference frame, since that's the space where painting does
   // snapping.
-  nsSize visualViewportSize = GetVisualViewportSize();
+  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
   const nsIFrame* referenceFrame =
     mReferenceFrameDuringPainting ? mReferenceFrameDuringPainting : nsLayoutUtils::GetReferenceFrame(mOuter);
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(referenceFrame);
-  nsRect scrollPort(mScrollPort.TopLeft() + toReferenceFrame, visualViewportSize);
+  nsRect scrollPort(mScrollPort.TopLeft() + toReferenceFrame, scrollPortSize);
   nsRect scrolledRect = result + scrollPort.TopLeft();
 
   if (scrollPort.Overflows() || scrolledRect.Overflows()) {
