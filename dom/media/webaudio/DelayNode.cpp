@@ -30,14 +30,14 @@ class DelayNodeEngine final : public AudioNodeEngine
   typedef PlayingRefChangeHandler PlayingRefChanged;
 public:
   DelayNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination,
-                  double aMaxDelayTicks)
+                  float aMaxDelayTicks)
     : AudioNodeEngine(aNode)
     , mDestination(aDestination->Stream())
     // Keep the default value in sync with the default value in DelayNode::DelayNode.
     , mDelay(0.f)
     // Use a smoothing range of 20ms
     , mBuffer(std::max(aMaxDelayTicks,
-                       static_cast<double>(WEBAUDIO_BLOCK_SIZE)))
+                       static_cast<float>(WEBAUDIO_BLOCK_SIZE)))
     , mMaxDelay(aMaxDelayTicks)
     , mHaveProducedBeforeInput(false)
     , mLeftOverData(INT32_MIN)
@@ -115,17 +115,17 @@ public:
   }
 
   void UpdateOutputBlock(AudioNodeStream* aStream, GraphTime aFrom,
-                         AudioBlock* aOutput, double minDelay)
+                         AudioBlock* aOutput, float minDelay)
   {
-    double maxDelay = mMaxDelay;
-    double sampleRate = aStream->SampleRate();
+    float maxDelay = mMaxDelay;
+    float sampleRate = aStream->SampleRate();
     ChannelInterpretation channelInterpretation =
       aStream->GetChannelInterpretation();
     if (mDelay.HasSimpleValue()) {
       // If this DelayNode is in a cycle, make sure the delay value is at least
       // one block, even if that is greater than maxDelay.
-      double delayFrames = mDelay.GetValue() * sampleRate;
-      double delayFramesClamped =
+      float delayFrames = mDelay.GetValue() * sampleRate;
+      float delayFramesClamped =
         std::max(minDelay, std::min(delayFrames, maxDelay));
       mBuffer.Read(delayFramesClamped, aOutput, channelInterpretation);
     } else {
@@ -136,10 +136,10 @@ public:
       float values[WEBAUDIO_BLOCK_SIZE];
       mDelay.GetValuesAtTime(tick, values,WEBAUDIO_BLOCK_SIZE);
 
-      double computedDelay[WEBAUDIO_BLOCK_SIZE];
+      float computedDelay[WEBAUDIO_BLOCK_SIZE];
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
-        double delayAtTick = values[counter] * sampleRate;
-        double delayAtTickClamped =
+        float delayAtTick = values[counter] * sampleRate;
+        float delayAtTickClamped =
           std::max(minDelay, std::min(delayAtTick, maxDelay));
         computedDelay[counter] = delayAtTickClamped;
       }
@@ -182,7 +182,7 @@ public:
   RefPtr<AudioNodeStream> mDestination;
   AudioParamTimeline mDelay;
   DelayBuffer mBuffer;
-  double mMaxDelay;
+  float mMaxDelay;
   bool mHaveProducedBeforeInput;
   // How much data we have in our buffer which needs to be flushed out when our inputs
   // finish.
