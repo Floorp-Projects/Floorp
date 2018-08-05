@@ -289,20 +289,6 @@ public:
       aKey, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
   }
 
-  // Add (aKey,aDefaultValue) if |aKey| is not found. Return a false-y Ptr on
-  // OOM.
-  Ptr lookupWithDefault(const Key& aKey, const Value& aDefaultValue)
-  {
-    AddPtr p = lookupForAdd(aKey);
-    if (p) {
-      return p;
-    }
-    bool ok = add(p, aKey, aDefaultValue);
-    MOZ_ASSERT_IF(!ok, !p); // p is left false-y on OOM.
-    (void)ok;
-    return p;
-  }
-
   // Like |lookup(l)|, but on miss, |p = lookupForAdd(l)| allows efficient
   // insertion of Key |k| (where |HashPolicy::match(k,l) == true|) using
   // |add(p,k,v)|. After |add(p,k,v)|, |p| points to the new key/value. E.g.:
