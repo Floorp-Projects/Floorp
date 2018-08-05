@@ -18,14 +18,14 @@
 //   conditions are true.
 //
 //   - The key type stored in the table (|Key| for |HashMap<Key, Value>|, |T|
-//     for |HashSet<T>|) is an integer, pointer, UniquePtr, float, double, or
-//     char*.
+//     for |HashSet<T>|) is an integer, pointer, UniquePtr, float, or double.
 //
 //   - The type used for lookups (|Lookup|) is the same as the key type. This
 //     is usually the case, but not always.
 //
-//   Otherwise, you must provide your own hash policy; see the "Hash Policy"
-//   section below.
+//   There is also a |CStringHasher| policy for |char*| keys. If your keys
+//   don't match any of the above cases, you must provide your own hash policy;
+//   see the "Hash Policy" section below.
 //
 // - AllocPolicy. This defines how allocations are done by the table.
 //
