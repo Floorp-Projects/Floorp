@@ -23,9 +23,9 @@ function run()
   var newHeight = oldHeight / 2;
 
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  utils.setVisualViewportSize(newWidth, newHeight);
-  is(window.innerWidth, newWidth, "innerWidth not updated to viewport width");
-  is(window.innerHeight, newHeight, "innerHeight not updated to viewport height");
+  utils.setScrollPositionClampingScrollPortSize(newWidth, newHeight);
+  is(window.innerWidth, newWidth, "innerWidth not updated to scroll port width");
+  is(window.innerHeight, newHeight, "innerHeight not updated to scroll port height");
 
   var innerWidthGetter = Object.getOwnPropertyDescriptor(window, "innerWidth").get;
   var innerHeightGetter = Object.getOwnPropertyDescriptor(window, "innerHeight").get;

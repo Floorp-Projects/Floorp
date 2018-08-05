@@ -2852,11 +2852,11 @@ public:
   static bool HasDocumentLevelListenersForApzAwareEvents(nsIPresShell* aShell);
 
   /**
-   * Set the viewport size for the purpose of clamping the scroll position
+   * Set the scroll port size for the purpose of clamping the scroll position
    * for the root scroll frame of this document
-   * (see nsIDOMWindowUtils.setVisualViewportSize).
+   * (see nsIDOMWindowUtils.setScrollPositionClampingScrollPortSize).
    */
-  static void SetVisualViewportSize(nsIPresShell* aPresShell,
+  static void SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
                                                       CSSSize aSize);
 
   /**

@@ -1591,12 +1591,12 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute jsval plugins;
 
   /**
-   * Set the viewport size for the purposes of clamping scroll positions for
+   * Set the scrollport size for the purposes of clamping scroll positions for
    * the root scroll frame of this document to be (aWidth,aHeight) in CSS pixels.
    *
    * The caller of this method must have chrome privileges.
    */
-  void setVisualViewportSize(in float aWidth, in float aHeight);
+  void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
 
   /**
    * These are used to control whether dialogs (alert, prompt, confirm) are

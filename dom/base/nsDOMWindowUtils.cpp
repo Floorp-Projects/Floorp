@@ -3240,7 +3240,7 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::MutableHandle<JS::Value> aPlugin
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetVisualViewportSize(float aWidth, float aHeight)
+nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aHeight)
 {
   if (!(aWidth >= 0.0 && aHeight >= 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -3251,7 +3251,7 @@ nsDOMWindowUtils::SetVisualViewportSize(float aWidth, float aHeight)
     return NS_ERROR_FAILURE;
   }
 
-  nsLayoutUtils::SetVisualViewportSize(presShell, CSSSize(aWidth, aHeight));
+  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(presShell, CSSSize(aWidth, aHeight));
 
   return NS_OK;
 }
