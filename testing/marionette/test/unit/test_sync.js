@@ -2,49 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
-  PollPromise,
-  Sleep,
-  TimedPromise,
-} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
+const {PollPromise} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 const DEFAULT_TIMEOUT = 2000;
 
-add_test(function test_PollPromise_funcTypes() {
-  for (let type of ["foo", 42, null, undefined, true, [], {}]) {
-    Assert.throws(() => new PollPromise(type), /TypeError/);
-  }
-  new PollPromise(() => {});
-  new PollPromise(function() {});
-
-  run_next_test();
-});
-
-add_test(function test_PollPromise_timeoutTypes() {
-  for (let timeout of ["foo", null, true, [], {}]) {
-    Assert.throws(() => new PollPromise(() => {}, {timeout}), /TypeError/);
-  }
-  for (let timeout of [1.2, -1]) {
-    Assert.throws(() => new PollPromise(() => {}, {timeout}), /RangeError/);
-  }
-  new PollPromise(() => {}, {timeout: 42});
-
-  run_next_test();
-});
-
-add_test(function test_PollPromise_intervalTypes() {
-  for (let interval of ["foo", null, true, [], {}]) {
-    Assert.throws(() => new PollPromise(() => {}, {interval}), /TypeError/);
-  }
-  for (let interval of [1.2, -1]) {
-    Assert.throws(() => new PollPromise(() => {}, {interval}), /RangeError/);
-  }
-  new PollPromise(() => {}, {interval: 42});
-
-  run_next_test();
-});
-
-add_task(async function test_PollPromise_retvalTypes() {
+add_task(async function test_PollPromise_types() {
   for (let typ of [true, false, "foo", 42, [], {}]) {
     strictEqual(typ, await new PollPromise(resolve => resolve(typ)));
   }
@@ -109,35 +71,4 @@ add_task(async function test_PollPromise_interval() {
     reject();
   }, {timeout: 100, interval: 100});
   equal(2, nevals);
-});
-
-add_test(function test_TimedPromise_funcTypes() {
-  for (let type of ["foo", 42, null, undefined, true, [], {}]) {
-    Assert.throws(() => new TimedPromise(type), /TypeError/);
-  }
-  new TimedPromise(() => {});
-  new TimedPromise(function() {});
-
-  run_next_test();
-});
-
-add_test(function test_TimedPromise_timeoutTypes() {
-  for (let timeout of ["foo", null, true, [], {}]) {
-    Assert.throws(() => new TimedPromise(() => {}, {timeout}), /TypeError/);
-  }
-  for (let timeout of [1.2, -1]) {
-    Assert.throws(() => new TimedPromise(() => {}, {timeout}), /RangeError/);
-  }
-  new TimedPromise(() => {}, {timeout: 42});
-
-  run_next_test();
-});
-
-add_task(async function test_Sleep() {
-  await Sleep(0);
-  for (let type of ["foo", true, null, undefined]) {
-    Assert.throws(() => Sleep(type), /TypeError/);
-  }
-  Assert.throws(() => Sleep(1.2), /RangeError/);
-  Assert.throws(() => Sleep(-1), /RangeError/);
 });

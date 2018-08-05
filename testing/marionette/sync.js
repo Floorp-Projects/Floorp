@@ -16,10 +16,12 @@ const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 this.EXPORTED_SYMBOLS = [
-  "MessageManagerDestroyedPromise",
+  /* exported PollPromise, TimedPromise */
   "PollPromise",
-  "Sleep",
   "TimedPromise",
+
+  /* exported MessageManagerDestroyedPromise */
+  "MessageManagerDestroyedPromise",
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
@@ -84,24 +86,9 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
  *
  * @throws {*}
  *     If ``func`` throws, its error is propagated.
- * @throws {TypeError}
- *     If `timeout` or `interval`` are not numbers.
- * @throws {RangeError}
- *     If `timeout` or `interval` are not unsigned integers.
  */
 function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-  if (typeof func != "function") {
-    throw new TypeError();
-  }
-  if (!(typeof timeout == "number" && typeof interval == "number")) {
-    throw new TypeError();
-  }
-  if ((!Number.isInteger(timeout) || timeout < 0) ||
-      (!Number.isInteger(interval) || interval < 0)) {
-    throw new RangeError();
-  }
 
   return new Promise((resolve, reject) => {
     const start = new Date().getTime();
@@ -149,7 +136,7 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
  *     ``reject(error)``.
  * @param {timeout=} [timeout=1500] timeout
  *     ``condition``'s ``reject`` callback will be called
- *     after this timeout, given in milliseconds.
+ *     after this timeout.
  * @param {Error=} [throws=TimeoutError] throws
  *     When the ``timeout`` is hit, this error class will be
  *     thrown.  If it is null, no error is thrown and the promise is
@@ -157,24 +144,9 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
  *
  * @return {Promise.<*>}
  *     Timed promise.
- *
- * @throws {TypeError}
- *     If `timeout` is not a number.
- * @throws {RangeError}
- *     If `timeout` is not an unsigned integer.
  */
 function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-  if (typeof fn != "function") {
-    throw new TypeError();
-  }
-  if (typeof timeout != "number") {
-    throw new TypeError();
-  }
-  if (!Number.isInteger(timeout) || timeout < 0) {
-    throw new RangeError();
-  }
 
   return new Promise((resolve, reject) => {
     // Reject only if |throws| is given.  Otherwise it is assumed that
@@ -203,27 +175,6 @@ function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
     timer.cancel();
     throw err;
   });
-}
-
-/**
- * Pauses for the given duration.
- *
- * @param {number} timeout
- *     Duration to wait before fulfilling promise in milliseconds.
- *
- * @return {Promise}
- *     Promise that fulfills when the `timeout` is elapsed.
- *
- * @throws {TypeError}
- *     If `timeout` is not a number.
- * @throws {RangeError}
- *     If `timeout` is not an unsigned integer.
- */
-function Sleep(timeout) {
-  if (typeof timeout != "number") {
-    throw new TypeError();
-  }
-  return new TimedPromise(() => {}, {timeout, throws: null});
 }
 
 /**
