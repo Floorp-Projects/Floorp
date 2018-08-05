@@ -5587,6 +5587,15 @@ namespace JS {
 extern JS_PUBLIC_API(JSObject*)
 ExceptionStackOrNull(JS::HandleObject obj);
 
+/**
+ * If this process is recording or replaying and the given value is an
+ * exception object (or an unwrappable cross-compartment wrapper for one),
+ * return the point where this exception was thrown, for time warping later.
+ * Returns zero otherwise.
+ */
+extern JS_PUBLIC_API(uint64_t)
+ExceptionTimeWarpTarget(JS::HandleValue exn);
+
 } /* namespace JS */
 
 /**

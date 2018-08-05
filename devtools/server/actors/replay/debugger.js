@@ -61,6 +61,7 @@ ReplayDebugger.prototype = {
   canRewind: RecordReplayControl.canRewind,
   replayResumeBackward() { RecordReplayControl.resume(/* forward = */ false); },
   replayResumeForward() { RecordReplayControl.resume(/* forward = */ true); },
+  replayTimeWarp: RecordReplayControl.timeWarp,
   replayPause: RecordReplayControl.pause,
 
   addDebuggee() {},
@@ -105,14 +106,26 @@ ReplayDebugger.prototype = {
     return undefined;
   },
 
+  // Getter for a breakpoint kind that has no script/offset/frameIndex.
+  _breakpointKindGetter(kind) {
+    return this._searchBreakpoints(({position, data}) => {
+      return (position.kind == kind) ? data : null;
+    });
+  },
+
+  // Setter for a breakpoint kind that has no script/offset/frameIndex.
+  _breakpointKindSetter(kind, handler, callback) {
+    if (handler) {
+      this._setBreakpoint(callback, { kind }, handler);
+    } else {
+      this._clearMatchingBreakpoints(({position}) => position.kind == kind);
+    }
+  },
+
   // This is called on all ReplayDebuggers whenever the child process is about
   // to unpause. Clear out all data that is invalidated as a result.
   invalidateAfterUnpause() {
-    this._frames.forEach(frame => {
-      if (frame) {
-        frame._invalidate();
-      }
-    });
+    this._frames.forEach(frame => frame._invalidate());
     this._frames.length = 0;
 
     this._objects.forEach(obj => obj._invalidate());
@@ -146,6 +159,10 @@ ReplayDebugger.prototype = {
     // we ignore here.
     const data = this._sendRequest({ type: "findScripts" });
     return data.map(script => this._addScript(script));
+  },
+
+  findAllConsoleMessages() {
+    return this._sendRequest({ type: "findConsoleMessages" });
   },
 
   /////////////////////////////////////////////////////////
@@ -234,11 +251,6 @@ ReplayDebugger.prototype = {
         // There are no frames on the stack.
         return null;
       }
-
-      // Fill in the older frames.
-      while (index >= this._frames.length) {
-        this._frames.push(null);
-      }
     }
 
     this._frames[index] = new ReplayDebuggerFrame(this, data);
@@ -249,37 +261,24 @@ ReplayDebugger.prototype = {
     return this._getFrame(NewestFrameIndex);
   },
 
-  get onNewScript() {
-    return this._searchBreakpoints(({position, data}) => {
-      return position.kind == "NewScript" ? data : null;
-    });
+  /////////////////////////////////////////////////////////
+  // Handlers
+  /////////////////////////////////////////////////////////
+
+  _getNewScript() {
+    return this._addScript(this._sendRequest({ type: "getNewScript" }));
   },
 
+  get onNewScript() { return this._breakpointKindGetter("NewScript"); },
   set onNewScript(handler) {
-    if (handler) {
-      this._setBreakpoint(() => {
-        const script = this._sendRequest({ type: "getNewScript" });
-        const debugScript = this._addScript(script);
-        handler.call(this, debugScript);
-      }, { kind: "NewScript" }, handler);
-    } else {
-      this._clearMatchingBreakpoints(({position}) => position.kind == "NewScript");
-    }
+    this._breakpointKindSetter("NewScript", handler,
+                               () => handler.call(this, this._getNewScript()));
   },
 
-  get onEnterFrame() {
-    return this._searchBreakpoints(({position, data}) => {
-      return position.kind == "EnterFrame" ? data : null;
-    });
-  },
-
+  get onEnterFrame() { return this._breakpointKindGetter("EnterFrame"); },
   set onEnterFrame(handler) {
-    if (handler) {
-      this._setBreakpoint(() => handler.call(this, this.getNewestFrame()),
-                          { kind: "EnterFrame" }, handler);
-    } else {
-      this._clearMatchingBreakpoints(({position}) => position.kind == "EnterFrame");
-    }
+    this._breakpointKindSetter("EnterFrame", handler,
+                               () => handler.call(this, this.getNewestFrame()));
   },
 
   get replayingOnPopFrame() {
@@ -294,9 +293,27 @@ ReplayDebugger.prototype = {
                           { kind: "OnPop" }, handler);
     } else {
       this._clearMatchingBreakpoints(({position}) => {
-        return position.kind == "EnterFrame" && !position.script;
+        return position.kind == "OnPop" && !position.script;
       });
     }
+  },
+
+  get replayingOnForcedPause() {
+    return this._breakpointKindGetter("ForcedPause");
+  },
+  set replayingOnForcedPause(handler) {
+    this._breakpointKindSetter("ForcedPause", handler,
+                               () => handler.call(this, this.getNewestFrame()));
+  },
+
+  _getNewConsoleMessage() { return this._sendRequest({ type: "getNewConsoleMessage" }); },
+
+  get onConsoleMessage() {
+    return this._breakpointKindGetter("ConsoleMessage");
+  },
+  set onConsoleMessage(handler) {
+    this._breakpointKindSetter("ConsoleMessage", handler,
+                               () => handler.call(this, this._getNewConsoleMessage()));
   },
 
   clearAllBreakpoints: NYI,
@@ -455,7 +472,7 @@ ReplayDebuggerFrame.prototype = {
 
   get onPop() {
     return this._dbg._searchBreakpoints(({position, data}) => {
-      return this._positionMatches(position, "OnPop");
+      return this._positionMatches(position, "OnPop") ? data : null;
     });
   },
 

@@ -55,7 +55,18 @@ struct BreakpointPosition
     EnterFrame,
 
     // Break when a new top-level script is created.
-    NewScript
+    NewScript,
+
+    // Break when a message is logged to the web console.
+    ConsoleMessage,
+
+    // Break when NewTimeWarpTarget() is called.
+    WarpTarget,
+
+    // Break when the debugger should pause even if no breakpoint has been
+    // set: the beginning or end of the replay has been reached, or a time
+    // warp has reached its destination.
+    ForcedPause
   ));
 
   Kind mKind;
@@ -106,6 +117,9 @@ struct BreakpointPosition
     case OnPop: return "OnPop";
     case EnterFrame: return "EnterFrame";
     case NewScript: return "NewScript";
+    case ConsoleMessage: return "ConsoleMessage";
+    case WarpTarget: return "WarpTarget";
+    case ForcedPause: return "ForcedPause";
     }
     MOZ_CRASH("Bad BreakpointPosition kind");
   }
@@ -168,6 +182,9 @@ struct ExecutionPoint
   }
 
   inline bool operator!=(const ExecutionPoint& o) const { return !(*this == o); }
+
+  JSObject* Encode(JSContext* aCx) const;
+  bool Decode(JSContext* aCx, JS::HandleObject aObject);
 };
 
 // Buffer type used for encoding object data.
