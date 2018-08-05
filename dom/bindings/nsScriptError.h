@@ -74,6 +74,7 @@ protected:
   uint64_t mOuterWindowID;
   uint64_t mInnerWindowID;
   int64_t mTimeStamp;
+  uint64_t mTimeWarpTarget;
   // mInitializedOnMainThread and mIsFromPrivateWindow are set on the main
   // thread from InitializeOnMainThread().
   mozilla::Atomic<bool> mInitializedOnMainThread;

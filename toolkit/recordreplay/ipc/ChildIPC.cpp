@@ -136,6 +136,13 @@ ChannelMessageHandler(Message* aMsg)
       });
     break;
   }
+  case MessageType::RunToPoint: {
+    const RunToPointMessage& nmsg = (const RunToPointMessage&) *aMsg;
+    PauseMainThreadAndInvokeCallback([=]() {
+        navigation::RunToPoint(nmsg.mTarget);
+      });
+    break;
+  }
   default:
     MOZ_CRASH();
   }
