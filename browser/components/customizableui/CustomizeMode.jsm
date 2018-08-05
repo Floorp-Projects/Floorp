@@ -1645,11 +1645,8 @@ CustomizeMode.prototype = {
     Services.prefs.setBoolPref(kExtraDragSpacePref, aShouldShowDragSpace);
   },
 
-  get _dwu() {
-    if (!this.__dwu) {
-      this.__dwu = this.window.windowUtils;
-    }
-    return this.__dwu;
+  _getBoundsWithoutFlushing(element) {
+    return this.window.windowUtils.getBoundsWithoutFlushing(element);
   },
 
   get _dir() {
@@ -1679,7 +1676,7 @@ CustomizeMode.prototype = {
     dt.mozSetDataAt(kDragDataTypePrefix + documentId, draggedItem.id, 0);
     dt.effectAllowed = "move";
 
-    let itemRect = this._dwu.getBoundsWithoutFlushing(draggedItem);
+    let itemRect = this._getBoundsWithoutFlushing(draggedItem);
     let itemCenter = {x: itemRect.left + itemRect.width / 2,
                       y: itemRect.top + itemRect.height / 2};
     this._dragOffset = {x: aEvent.clientX - itemCenter.x,
@@ -1687,7 +1684,7 @@ CustomizeMode.prototype = {
 
     let toolbarParent = draggedItem.closest("toolbar");
     if (toolbarParent) {
-      let toolbarRect = this._dwu.getBoundsWithoutFlushing(toolbarParent);
+      let toolbarRect = this._getBoundsWithoutFlushing(toolbarParent);
       toolbarParent.style.minHeight = toolbarRect.height + "px";
     }
 
@@ -1784,7 +1781,7 @@ CustomizeMode.prototype = {
         dragOverItem = targetParent.children[position];
         if (targetAreaType == "toolbar") {
           // Check if the aDraggedItem is hovered past the first half of dragOverItem
-          let itemRect = this._dwu.getBoundsWithoutFlushing(dragOverItem);
+          let itemRect = this._getBoundsWithoutFlushing(dragOverItem);
           let dropTargetCenter = itemRect.left + (itemRect.width / 2);
           let existingDir = dragOverItem.getAttribute("dragover");
           let dirFactor = this._dir == "ltr" ? 1 : -1;
@@ -1796,7 +1793,7 @@ CustomizeMode.prototype = {
           let before = this._dir == "ltr" ? aEvent.clientX < dropTargetCenter : aEvent.clientX > dropTargetCenter;
           dragValue = before ? "before" : "after";
         } else if (targetAreaType == "menu-panel") {
-          let itemRect = this._dwu.getBoundsWithoutFlushing(dragOverItem);
+          let itemRect = this._getBoundsWithoutFlushing(dragOverItem);
           let dropTargetCenter = itemRect.top + (itemRect.height / 2);
           let existingDir = dragOverItem.getAttribute("dragover");
           if (existingDir == "before") {
@@ -2266,7 +2263,7 @@ CustomizeMode.prototype = {
 
     // Ensure this is within the container
     let boundsContainer = expectedParent;
-    let bounds = this._dwu.getBoundsWithoutFlushing(boundsContainer);
+    let bounds = this._getBoundsWithoutFlushing(boundsContainer);
     dragX = Math.min(bounds.right, Math.max(dragX, bounds.left));
     dragY = Math.min(bounds.bottom, Math.max(dragY, bounds.top));
 
@@ -2404,8 +2401,8 @@ CustomizeMode.prototype = {
       if (!this._customizing || !this._wantToBeInCustomizeMode) {
         return;
       }
-      let buttonBounds = this._dwu.getBoundsWithoutFlushing(button);
-      let windowBounds = this._dwu.getBoundsWithoutFlushing(doc.documentElement);
+      let buttonBounds = this._getBoundsWithoutFlushing(button);
+      let windowBounds = this._getBoundsWithoutFlushing(doc.documentElement);
       panelOnTheLeft = (buttonBounds.left + buttonBounds.width / 2) > windowBounds.width / 2;
     }
     let position;

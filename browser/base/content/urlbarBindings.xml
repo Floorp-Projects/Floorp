@@ -171,10 +171,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.popup.oneOffSearchButtons.textbox = null;
       ]]></destructor>
 
-      <field name="DOMWindowUtils">
-        window.windowUtils;
-      </field>
-
       <field name="scheme" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "scheme");
       </field>
@@ -593,7 +589,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // invoked regardless, thus this should be enough.
             if (this._formattingInstance != instance)
               return;
-            let isDomainRTL = this.DOMWindowUtils.getDirectionFromText(domain);
+            let isDomainRTL = window.windowUtils.getDirectionFromText(domain);
             // In the future, for example in bug 525831, we may add a forceRTL
             // char just after the domain, and in such a case we should not
             // scroll to the left.
@@ -1891,10 +1887,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       -->
       <field name="textRunsMaxLen">255</field>
 
-      <field name="DOMWindowUtils">
-        window.windowUtils;
-      </field>
-
       <field name="_maxResults">0</field>
 
       <field name="_bundle" readonly="true">
@@ -2097,7 +2089,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           // Make the popup span the width of the window.  First, set its width.
           let documentRect =
-            this.DOMWindowUtils
+            window.windowUtils
                 .getBoundsWithoutFlushing(window.document.documentElement);
           let width = documentRect.right - documentRect.left;
           this.setAttribute("width", width);
@@ -2105,7 +2097,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Now make its starting margin negative so that its leading edge
           // aligns with the window border.
           let elementRect =
-            this.DOMWindowUtils.getBoundsWithoutFlushing(aElement);
+            window.windowUtils.getBoundsWithoutFlushing(aElement);
           if (popupDirection == "rtl") {
             let offset = elementRect.right - documentRect.right;
             this.style.marginRight = offset + "px";
@@ -2122,7 +2114,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // and underflow must be handled for each item already in the popup.
           let needsHandleOverUnderflow = false;
           let boundToCheck = popupDirection == "rtl" ? "right" : "left";
-          let inputRect = this.DOMWindowUtils.getBoundsWithoutFlushing(aInput);
+          let inputRect = window.windowUtils.getBoundsWithoutFlushing(aInput);
           let startOffset = Math.abs(inputRect[boundToCheck] - documentRect[boundToCheck]);
           let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
           if (alignSiteIcons) {
@@ -2138,7 +2130,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
             let identityIcon = document.getElementById("identity-icon");
             let identityRect =
-              this.DOMWindowUtils.getBoundsWithoutFlushing(identityIcon);
+              window.windowUtils.getBoundsWithoutFlushing(identityIcon);
             let start = popupDirection == "rtl" ?
                         documentRect.right - identityRect.right :
                         identityRect.left;
@@ -2186,8 +2178,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // which is an offset from the bottom of the input, subtract the
           // bottom of the navbar from the buttom of the input.
           let yOffset = Math.round(
-            this.DOMWindowUtils.getBoundsWithoutFlushing(document.getElementById("nav-bar")).bottom -
-            this.DOMWindowUtils.getBoundsWithoutFlushing(aInput).bottom);
+            window.windowUtils.getBoundsWithoutFlushing(document.getElementById("nav-bar")).bottom -
+            window.windowUtils.getBoundsWithoutFlushing(aInput).bottom);
 
           this.openPopup(aElement, "after_start", 0, yOffset, false, false);
 
