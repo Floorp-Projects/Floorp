@@ -349,13 +349,6 @@ public:
       aPtr, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
   }
 
-  // Add a given key and a default value. Returns false on OOM.
-  template<typename KeyInput>
-  MOZ_MUST_USE bool add(AddPtr& aPtr, KeyInput&& aKey)
-  {
-    return mImpl.add(aPtr, std::forward<KeyInput>(aKey), Value());
-  }
-
   // See the comment above lookupForAdd() for details.
   template<typename KeyInput, typename ValueInput>
   MOZ_MUST_USE bool relookupOrAdd(AddPtr& aPtr,
