@@ -45,7 +45,11 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget
   // For lazy initialisation of the GL stuff
   struct InitParams
   {
-    InitParams() : mStatus(NO_PARAMS) {}
+    InitParams()
+      : mStatus(NO_PARAMS)
+      , mFBOTextureTarget(0)
+      , mInit(INIT_MODE_NONE)
+    {}
     InitParams(const gfx::IntSize& aSize,
                const gfx::IntSize& aPhySize,
                GLenum aFBOTextureTarget,

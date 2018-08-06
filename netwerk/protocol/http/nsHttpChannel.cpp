@@ -570,13 +570,21 @@ nsHttpChannel::Connect()
           this, isTrackingResource, mClassOfService));
 
     if (isTrackingResource) {
-        if (CheckFastBlocked()) {
-            Unused << AsyncAbort(NS_ERROR_ABORT);
-            CloseCacheEntry(false);
-            return NS_OK;
-        }
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+          services::GetThirdPartyUtil();
+        bool result = false;
+        if (thirdPartyUtil &&
+            NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
+                                                             &result)) &&
+            result) {
+            if (CheckFastBlocked()) {
+                Unused << AsyncAbort(NS_ERROR_ABORT);
+                CloseCacheEntry(false);
+                return NS_OK;
+            }
 
-        AddClassFlags(nsIClassOfService::Tail);
+            AddClassFlags(nsIClassOfService::Tail);
+        }
     }
 
     if (WaitingForTailUnblock()) {
@@ -2213,11 +2221,25 @@ nsHttpChannel::ProcessResponse()
     if (!referrer) {
         referrer = mReferrer;
     }
+
+    // We consider top-level tracking resource as non-tracking if not in 3rd
+    // party context.
+    bool isThirdPartyAndTrackingResource = false;
+    if(mIsTrackingResource) {
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+          services::GetThirdPartyUtil();
+        if (thirdPartyUtil) {
+            thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
+                                                &isThirdPartyAndTrackingResource);
+        }
+    }
+
     if (referrer) {
         nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
         mozilla::net::Predictor::UpdateCacheability(referrer, mURI, httpStatus,
                                                     mRequestHead, mResponseHead,
-                                                    lci, mIsTrackingResource);
+                                                    lci,
+                                                    isThirdPartyAndTrackingResource);
     }
 
     // Only allow 407 (authentication required) to continue

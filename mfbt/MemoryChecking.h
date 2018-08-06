@@ -46,6 +46,12 @@
 #endif
 
 extern "C" {
+/* workaround for bug 1306642 */
+#if defined(_MSC_VER) && defined(__clang__)
+#pragma clang diagnostic warning "-Wdll-attribute-on-redeclaration"
+#pragma clang diagnostic warning "-Winconsistent-dllimport"
+#endif
+
 /* These definitions are usually provided through the
  * sanitizer/asan_interface.h header installed by ASan.
  */

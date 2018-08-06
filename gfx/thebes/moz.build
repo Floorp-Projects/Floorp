@@ -293,3 +293,6 @@ DEFINES['GRAPHITE2_STATIC'] = True
 if CONFIG['CC_TYPE'] == 'clang':
     # Suppress warnings from Skia header files.
     SOURCES['gfxPlatform.cpp'].flags += ['-Wno-implicit-fallthrough']
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

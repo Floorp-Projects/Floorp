@@ -21,6 +21,8 @@ public:
   ImageHalfScaler(uint8_t *aData, int32_t aStride, const IntSize &aSize)
     : mOrigData(aData), mOrigStride(aStride), mOrigSize(aSize)
     , mDataStorage(nullptr)
+    , mData(nullptr)
+    , mStride(0)
   {
   }
 

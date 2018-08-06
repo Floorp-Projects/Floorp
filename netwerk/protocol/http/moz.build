@@ -143,3 +143,6 @@ if CONFIG['OS_TARGET'] == 'Darwin':
         DEFINES.update(
             HAS_CONNECTX=True,
         )
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

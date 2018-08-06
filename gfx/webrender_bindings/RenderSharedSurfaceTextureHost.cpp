@@ -15,6 +15,7 @@ namespace wr {
 
 RenderSharedSurfaceTextureHost::RenderSharedSurfaceTextureHost(gfx::SourceSurfaceSharedDataWrapper* aSurface)
   : mSurface(aSurface)
+  , mMap()
   , mLocked(false)
 {
   MOZ_COUNT_CTOR_INHERITED(RenderSharedSurfaceTextureHost, RenderTextureHost);

@@ -569,6 +569,7 @@ TexturedRenderPass::AddClippedItem(Txn& aTxn,
 
 SingleTexturePass::SingleTexturePass(FrameBuilder* aBuilder, const ItemInfo& aItem)
  : TexturedRenderPass(aBuilder, aItem),
+   mSamplerMode(SamplerMode::LinearClamp),
    mOpacity(1.0f)
 {
   SetDefaultGeometry(aItem);
@@ -677,7 +678,8 @@ SingleTexturePass::SetupPipeline()
 
 ComponentAlphaPass::ComponentAlphaPass(FrameBuilder* aBuilder, const ItemInfo& aItem)
  : TexturedRenderPass(aBuilder, aItem),
-   mOpacity(1.0f)
+   mOpacity(1.0f),
+   mSamplerMode(SamplerMode::LinearClamp)
 {
   SetDefaultGeometry(aItem);
 }
@@ -701,7 +703,7 @@ ComponentAlphaPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
     mSamplerMode = layer->GetSamplerMode();
     mTextureOnBlack = layer->GetTexture();
     mTextureOnWhite = layer->GetTextureOnWhite();
-  } 
+  }
 
   Txn txn(this);
 
@@ -742,6 +744,7 @@ ComponentAlphaPass::SetupPipeline()
 
 VideoRenderPass::VideoRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem)
  : TexturedRenderPass(aBuilder, aItem),
+   mSamplerMode(SamplerMode::LinearClamp),
    mOpacity(1.0f)
 {
   SetDefaultGeometry(aItem);
