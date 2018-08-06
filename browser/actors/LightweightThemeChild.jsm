@@ -13,6 +13,11 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
  * LightweightThemeChild forwards theme data to in-content pages.
  */
 class LightweightThemeChild extends ActorChild {
+  /**
+   * Initiate a new instance of this class from a message manager.
+   * It is possible to use a stub message manager for browsers that
+   * do not have one, like the non-remote browser sidebars.
+   */
   constructor(mm) {
     super(mm);
 
