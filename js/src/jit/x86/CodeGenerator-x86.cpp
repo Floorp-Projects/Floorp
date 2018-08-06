@@ -405,7 +405,6 @@ CodeGenerator::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
 {
     MWasmCompareExchangeHeap* mir = ins->mir();
 
-    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldValue());
     Register newval = ToRegister(ins->newValue());
@@ -416,7 +415,7 @@ CodeGenerator::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
     masm.leal(Operand(memoryBase, ptrReg, TimesOne, mir->access().offset()), addrTemp);
 
     Address memAddr(addrTemp, 0);
-    masm.compareExchange(accessType, Synchronization::Full(), memAddr, oldval, newval, output);
+    masm.wasmCompareExchange(mir->access(), memAddr, oldval, newval, output);
 }
 
 void
@@ -424,7 +423,6 @@ CodeGenerator::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
 {
     MWasmAtomicExchangeHeap* mir = ins->mir();
 
-    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     Register addrTemp = ToRegister(ins->addrTemp());
@@ -434,7 +432,7 @@ CodeGenerator::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
     masm.leal(Operand(memoryBase, ptrReg, TimesOne, mir->access().offset()), addrTemp);
 
     Address memAddr(addrTemp, 0);
-    masm.atomicExchange(accessType, Synchronization::Full(), memAddr, value, output);
+    masm.wasmAtomicExchange(mir->access(), memAddr, value, output);
 }
 
 void
@@ -442,7 +440,6 @@ CodeGenerator::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins)
 {
     MWasmAtomicBinopHeap* mir = ins->mir();
 
-    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
     Register addrTemp = ToRegister(ins->addrTemp());
@@ -455,11 +452,9 @@ CodeGenerator::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins)
 
     Address memAddr(addrTemp, 0);
     if (value->isConstant()) {
-        masm.atomicFetchOp(accessType, Synchronization::Full(), op, Imm32(ToInt32(value)),
-                           memAddr, temp, out);
+        masm.wasmAtomicFetchOp(mir->access(), op, Imm32(ToInt32(value)), memAddr, temp, out);
     } else {
-        masm.atomicFetchOp(accessType, Synchronization::Full(), op, ToRegister(value),
-                           memAddr, temp, out);
+        masm.wasmAtomicFetchOp(mir->access(), op, ToRegister(value), memAddr, temp, out);
     }
 }
 
@@ -469,7 +464,6 @@ CodeGenerator::visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* 
     MWasmAtomicBinopHeap* mir = ins->mir();
     MOZ_ASSERT(!mir->hasUses());
 
-    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register addrTemp = ToRegister(ins->addrTemp());
     const LAllocation* value = ins->value();
@@ -480,11 +474,9 @@ CodeGenerator::visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* 
 
     Address memAddr(addrTemp, 0);
     if (value->isConstant()) {
-        masm.atomicEffectOp(accessType, Synchronization::Full(), op, Imm32(ToInt32(value)), memAddr,
-                            InvalidReg);
+        masm.wasmAtomicEffectOp(mir->access(), op, Imm32(ToInt32(value)), memAddr, InvalidReg);
     } else {
-        masm.atomicEffectOp(accessType, Synchronization::Full(), op, ToRegister(value), memAddr,
-                            InvalidReg);
+        masm.wasmAtomicEffectOp(mir->access(), op, ToRegister(value), memAddr, InvalidReg);
     }
 }
 
@@ -496,19 +488,15 @@ CodeGenerator::visitWasmAtomicLoadI64(LWasmAtomicLoadI64* ins)
 
     const LAllocation* memoryBase = ins->memoryBase();
     const LAllocation* ptr = ins->ptr();
-    Operand srcAddr(ToRegister(memoryBase), ToRegister(ptr), TimesOne, offset);
+    BaseIndex srcAddr(ToRegister(memoryBase), ToRegister(ptr), TimesOne, offset);
 
     MOZ_ASSERT(ToRegister(ins->t1()) == ecx);
     MOZ_ASSERT(ToRegister(ins->t2()) == ebx);
     MOZ_ASSERT(ToOutRegister64(ins).high == edx);
     MOZ_ASSERT(ToOutRegister64(ins).low == eax);
 
-    // We must have the same values in ecx:ebx and edx:eax, but we don't care
-    // what they are.  It's safe to clobber ecx:ebx for sure because they are
-    // fixed temp registers.
-    masm.movl(eax, ebx);
-    masm.movl(edx, ecx);
-    masm.lock_cmpxchg8b(edx, eax, ecx, ebx, srcAddr);
+    masm.wasmAtomicLoad64(ins->mir()->access(), srcAddr, Register64(ecx,ebx),
+                          Register64(edx,eax));
 }
 
 void
@@ -528,18 +516,19 @@ CodeGenerator::visitWasmCompareExchangeI64(LWasmCompareExchangeI64* ins)
     MOZ_ASSERT(ToOutRegister64(ins).low == eax);
     MOZ_ASSERT(ToOutRegister64(ins).high == edx);
 
+    masm.append(ins->mir()->access(), masm.size());
     masm.lock_cmpxchg8b(edx, eax, ecx, ebx, srcAddr);
 }
 
 template<typename T>
 void
-CodeGeneratorX86::emitWasmStoreOrExchangeAtomicI64(T* ins, uint32_t offset)
+CodeGeneratorX86::emitWasmStoreOrExchangeAtomicI64(T* ins, const wasm::MemoryAccessDesc& access)
 {
-    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+    MOZ_ASSERT(access.offset() < wasm::OffsetGuardLimit);
 
     const LAllocation* memoryBase = ins->memoryBase();
     const LAllocation* ptr = ins->ptr();
-    Operand srcAddr(ToRegister(memoryBase), ToRegister(ptr), TimesOne, offset);
+    Operand srcAddr(ToRegister(memoryBase), ToRegister(ptr), TimesOne, access.offset());
 
     DebugOnly<const LInt64Allocation> value = ins->value();
     MOZ_ASSERT(ToRegister64(value).low == ebx);
@@ -553,6 +542,7 @@ CodeGeneratorX86::emitWasmStoreOrExchangeAtomicI64(T* ins, uint32_t offset)
 
     Label again;
     masm.bind(&again);
+    masm.append(access, masm.size());
     masm.lock_cmpxchg8b(edx, eax, ecx, ebx, srcAddr);
     masm.j(Assembler::Condition::NonZero, &again);
 }
@@ -563,7 +553,7 @@ CodeGenerator::visitWasmAtomicStoreI64(LWasmAtomicStoreI64* ins)
     MOZ_ASSERT(ToRegister(ins->t1()) == edx);
     MOZ_ASSERT(ToRegister(ins->t2()) == eax);
 
-    emitWasmStoreOrExchangeAtomicI64(ins, ins->mir()->access().offset());
+    emitWasmStoreOrExchangeAtomicI64(ins, ins->mir()->access());
 }
 
 void
@@ -572,7 +562,7 @@ CodeGenerator::visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* ins)
     MOZ_ASSERT(ToOutRegister64(ins).high == edx);
     MOZ_ASSERT(ToOutRegister64(ins).low == eax);
 
-    emitWasmStoreOrExchangeAtomicI64(ins, ins->access().offset());
+    emitWasmStoreOrExchangeAtomicI64(ins, ins->access());
 }
 
 void
@@ -605,7 +595,7 @@ CodeGenerator::visitWasmAtomicBinopI64(LWasmAtomicBinopI64* ins)
     Address valueAddr(esp, 0);
 
     // Here the `value` register acts as a temp, we'll restore it below.
-    masm.atomicFetchOp64(Synchronization::Full(), ins->operation(), valueAddr, srcAddr, value, output);
+    masm.wasmAtomicFetchOp64(ins->access(), ins->operation(), valueAddr, srcAddr, value, output);
 
     masm.Pop(ebx);
     masm.Pop(ecx);
