@@ -9,9 +9,8 @@ import android.os.Bundle
 import android.support.v14.preference.SwitchPreference
 import android.support.v7.preference.PreferenceFragmentCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
-import mozilla.components.service.fretboard.Fretboard
-import org.mozilla.focus.FocusApplication
 import org.mozilla.focus.R
+import org.mozilla.focus.utils.app
 import org.mozilla.focus.utils.experimentDescriptor
 import org.mozilla.focus.utils.isInExperiment
 import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
@@ -22,9 +21,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
     }
 
     private var rendererPreferenceChanged = false
-    private lateinit var fretboard: Fretboard
     private lateinit var enginePreference: SwitchPreference
-    lateinit var application: FocusApplication
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.experiments_settings)
@@ -42,7 +39,8 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
         super.onPause()
         preferenceScreen?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         if (rendererPreferenceChanged) {
-            fretboard.setOverride(application, experimentDescriptor, enginePreference.isChecked)
+            activity?.app?.fretboard?.setOverride(
+                    activity!!.app, experimentDescriptor, enginePreference.isChecked)
             val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity?.packageName)
             ProcessPhoenix.triggerRebirth(context, launcherIntent)
         }

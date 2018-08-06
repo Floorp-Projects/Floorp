@@ -16,11 +16,11 @@ const val EXPERIMENTS_COLLECTION_NAME = "focus-experiments"
 
 val experimentDescriptor = ExperimentDescriptor(Config.EXPERIMENT_DESCRIPTOR_GECKOVIEW_ENGINE)
 
-val Context.application: FocusApplication
+val Context.app: FocusApplication
     get() = applicationContext as FocusApplication
 
 fun Context.isInExperiment(descriptor: ExperimentDescriptor): Boolean =
-        application.fretboard.isInExperiment(this, descriptor)
+        app.fretboard.isInExperiment(this, descriptor)
 
 val Context.activeExperimentIds: List<String>
-    get() = application.fretboard.getActiveExperiments(this).map { it.id }
+    get() = app.fretboard.getActiveExperiments(this).map { it.id }
