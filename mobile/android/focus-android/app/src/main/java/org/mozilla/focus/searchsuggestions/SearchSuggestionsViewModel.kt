@@ -27,18 +27,8 @@ class SearchSuggestionsViewModel(
     val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
     val searchQuery: LiveData<String> = _searchQuery
 
-    val state: LiveData<State> = map(searchSuggestionsPreferences.searchSuggestionsEnabled) { enabled ->
-        return@map if (enabled) {
-            if (service.canProvideSearchSuggestions) {
-                State.ReadyForSuggestions()
-            } else {
-                State.NoSuggestionsAPI()
-            }
-        } else {
-            val givePrompt = !searchSuggestionsPreferences.hasUserToggledSearchSuggestions()
-            State.Disabled(givePrompt)
-        }
-    }
+    val _state = MutableLiveData<State>()
+    val state: LiveData<State> = _state
 
     val suggestions = switchMap(searchQuery) {
         if (state.value !is State.ReadyForSuggestions) { return@switchMap null }
@@ -71,15 +61,34 @@ class SearchSuggestionsViewModel(
 
     fun enableSearchSuggestions() {
         searchSuggestionsPreferences.enableSearchSuggestions()
+        updateState()
     }
 
     fun disableSearchSuggestions() {
         searchSuggestionsPreferences.disableSearchSuggestions()
+        updateState()
     }
 
     fun refresh() {
         service.updateSearchEngine(searchSuggestionsPreferences.getSearchEngine())
-        searchSuggestionsPreferences.refresh()
+        updateState()
+    }
+
+    private fun updateState() {
+        val enabled = searchSuggestionsPreferences.searchSuggestionsEnabled()
+
+        val state = if (enabled) {
+            if (service.canProvideSearchSuggestions) {
+                State.ReadyForSuggestions()
+            } else {
+                State.NoSuggestionsAPI()
+            }
+        } else {
+            val givePrompt = !searchSuggestionsPreferences.hasUserToggledSearchSuggestions()
+            State.Disabled(givePrompt)
+        }
+
+        _state.value = state
     }
 
     class Factory(private val context: Context) : ViewModelProvider.NewInstanceFactory() {

@@ -14,13 +14,7 @@ class SearchSuggestionsPreferences(private val context: Context) {
     private val settings = Settings.getInstance(context)
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
 
-    private val _searchSuggestionsEnabled = MutableLiveData<Boolean>()
-    val searchSuggestionsEnabled: LiveData<Boolean> = _searchSuggestionsEnabled
-
-    init {
-        refresh()
-    }
-
+    fun searchSuggestionsEnabled(): Boolean = settings.shouldShowSearchSuggestions()
     fun hasUserToggledSearchSuggestions(): Boolean = settings.userHasToggledSearchSuggestions()
 
     fun getSearchEngine(): SearchEngine {
@@ -33,8 +27,6 @@ class SearchSuggestionsPreferences(private val context: Context) {
                 .putBoolean(context.resources.getString(R.string.pref_key_user_toggled_search_suggestions), true)
                 .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), true)
                 .apply()
-
-        _searchSuggestionsEnabled.value = true
     }
 
     fun disableSearchSuggestions() {
@@ -42,11 +34,5 @@ class SearchSuggestionsPreferences(private val context: Context) {
                 .putBoolean(context.resources.getString(R.string.pref_key_user_toggled_search_suggestions), true)
                 .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), false)
                 .apply()
-
-        _searchSuggestionsEnabled.value = false
-    }
-
-    fun refresh() {
-        _searchSuggestionsEnabled.value = settings.shouldShowSearchSuggestions()
     }
 }
