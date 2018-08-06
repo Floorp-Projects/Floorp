@@ -306,6 +306,11 @@ public class GeckoSession extends LayerSession
 
                     if (!IntentUtils.isUriSafeForScheme(uri)) {
                         callback.sendError("Blocked unsafe intent URI");
+
+                        delegate.onLoadError(GeckoSession.this, uri,
+                                             NavigationDelegate.ERROR_CATEGORY_URI,
+                                             NavigationDelegate.ERROR_MALFORMED_URI);
+
                         return;
                     }
 
