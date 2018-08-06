@@ -59,6 +59,13 @@
             <label id="content-blocking-label"
                    class="identity-popup-headline"
                    flex="1">&contentBlocking.title;</label>
+            <hbox id="identity-popup-content-blocking-disabled-label">
+              <image/>
+              <label id="identity-popup-content-blocking-disabled-label-exception"
+                     tooltiptext="&contentBlocking.exception.tooltip;">&contentBlocking.disabled.label;</label>
+              <label id="identity-popup-content-blocking-disabled-label-global"
+                     tooltiptext="&contentBlocking.disabled.tooltip;">&contentBlocking.disabled.label;</label>
+            </hbox>
             <toolbarbutton id="tracking-protection-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
                            tooltiptext="&trackingProtection.tooltip;"
