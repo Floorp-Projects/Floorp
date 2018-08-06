@@ -23,7 +23,8 @@ ContainerLayerMLGPU::ContainerLayerMLGPU(LayerManagerMLGPU* aManager)
  : ContainerLayer(aManager, nullptr),
    LayerMLGPU(aManager),
    mInvalidateEntireSurface(false),
-   mSurfaceCopyNeeded(false)
+   mSurfaceCopyNeeded(false),
+   mView(nullptr)
 {
 }
 

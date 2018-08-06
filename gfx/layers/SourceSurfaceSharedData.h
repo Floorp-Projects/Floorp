@@ -42,6 +42,7 @@ public:
     : mStride(0)
     , mConsumers(0)
     , mFormat(SurfaceFormat::UNKNOWN)
+    , mCreatorPid(0)
   { }
 
   bool Init(const IntSize& aSize,

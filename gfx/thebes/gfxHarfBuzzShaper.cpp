@@ -43,6 +43,7 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
       mHBFace(aFont->GetFontEntry()->GetHBFace()),
       mHBFont(nullptr),
       mBuffer(nullptr),
+      mCallbackData(),
       mKernTable(nullptr),
       mHmtxTable(nullptr),
       mVmtxTable(nullptr),
@@ -60,6 +61,7 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
       mUseFontGlyphWidths(aFont->ProvidesGlyphWidths()),
       mInitialized(false),
       mVerticalInitialized(false),
+      mUseVerticalPresentationForms(false),
       mLoadedLocaGlyf(false),
       mLocaLongOffsets(false)
 {

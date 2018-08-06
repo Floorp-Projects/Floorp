@@ -117,7 +117,9 @@ struct BlobItemData
   LayerIntPoint mGroupOffset;
 
   BlobItemData(DIGroup* aGroup, nsDisplayItem *aItem)
-    : mGroup(aGroup)
+    : mUsed(false)
+    , mGroup(aGroup)
+    , mOpacity(0.0)
   {
     mInvalid = false;
     mEmpty = false;
@@ -221,7 +223,9 @@ struct DIGroup;
 struct Grouper
 {
   explicit Grouper(ClipManager& aClipManager)
-   : mClipManager(aClipManager)
+   : mAppUnitsPerDevPixel(0)
+   , mDisplayListBuilder(nullptr)
+   , mClipManager(aClipManager)
   {}
 
   int32_t mAppUnitsPerDevPixel;

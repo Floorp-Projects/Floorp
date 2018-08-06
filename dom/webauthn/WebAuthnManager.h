@@ -47,10 +47,8 @@ namespace dom {
 class WebAuthnTransaction
 {
 public:
-  WebAuthnTransaction(const RefPtr<Promise>& aPromise,
-                      AbortSignal* aSignal)
+  explicit WebAuthnTransaction(const RefPtr<Promise>& aPromise)
     : mPromise(aPromise)
-    , mSignal(aSignal)
     , mId(NextId())
   {
     MOZ_ASSERT(mId > 0);
@@ -58,9 +56,6 @@ public:
 
   // JS Promise representing the transaction status.
   RefPtr<Promise> mPromise;
-
-  // An optional AbortSignal instance.
-  RefPtr<AbortSignal> mSignal;
 
   // Unique transaction id.
   uint64_t mId;

@@ -166,3 +166,6 @@ OS_LIBS += [
 if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # C5038: Suppress initializer list order warnings from wrl.h
     SOURCES['WindowsUIUtils.cpp'].flags += ['-wd5038']
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

@@ -26,9 +26,10 @@ if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
 
 const topWindowURI = NetUtil.newURI("http://www.example.com/");
 
-function listener(tracking, priority, nextTest) {
+function listener(tracking, priority, throttleable, nextTest) {
   this._tracking = tracking;
   this._priority = priority;
+  this._throttleable = throttleable;
   this._nextTest = nextTest;
 }
 listener.prototype = {
@@ -38,8 +39,9 @@ listener.prototype = {
     Assert.equal(request.QueryInterface(Ci.nsISupportsPriority).priority,
                  this._priority);
     if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT && this._tracking) {
-      Assert.ok(request.QueryInterface(Ci.nsIClassOfService).classFlags &
-                Ci.nsIClassOfService.Throttleable);
+      Assert.equal(!!(request.QueryInterface(Ci.nsIClassOfService).classFlags &
+                       Ci.nsIClassOfService.Throttleable),
+                   this._throttleable);
     }
     request.cancel(Cr.NS_ERROR_ABORT);
     this._nextTest();
@@ -90,17 +92,29 @@ function doPriorityTest() {
   }
 
   currentTest = testPriorityMap.shift();
-  var channel = makeChannel(currentTest.path);
+  var channel = makeChannel(currentTest.path, currentTest.loadingPrincipal);
   channel.asyncOpen2(new listener(currentTest.expectedTracking,
                                   currentTest.expectedPriority,
+                                  currentTest.expectedThrottleable,
                                   doPriorityTest));
 }
 
-function makeChannel(path) {
-  var chan = NetUtil.newChannel({
-    uri: path,
-    loadUsingSystemPrincipal: true
-  });
+function makeChannel(path, loadingPrincipal) {
+  var chan;
+
+  if (loadingPrincipal) {
+    chan = NetUtil.newChannel({
+      uri: path,
+      loadingPrincipal: loadingPrincipal,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+    });
+  } else {
+    chan = NetUtil.newChannel({
+      uri: path,
+      loadUsingSystemPrincipal: true,
+    });
+  }
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   chan.loadFlags |= Ci.nsIChannel.LOAD_CLASSIFY_URI;
@@ -137,22 +151,26 @@ var tests =[
       {
         path: normalOrigin + "/innocent.css",
         expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
       {
         path: normalOrigin + "/innocent.js",
         expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
       {
         path: trackingOrigin + "/evil.css",
         expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
       {
         path: trackingOrigin + "/evil.js",
         expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
     ];
     // We add the doPriorityTest test here so that it only gets injected in the
@@ -171,26 +189,78 @@ var tests =[
       Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", true);
       Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", true);
     }
+    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(normalOrigin);
+    testPriorityMap = [
+      {
+        path: normalOrigin + "/innocent.css",
+        loadingPrincipal: principal,
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: true,
+      },
+      {
+        path: normalOrigin + "/innocent.js",
+        loadingPrincipal: principal,
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: true,
+      },
+      {
+        path: trackingOrigin + "/evil.css",
+        loadingPrincipal: principal,
+        expectedTracking: true,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedThrottleable: true,
+      },
+      {
+        path: trackingOrigin + "/evil.js",
+        loadingPrincipal: principal,
+        expectedTracking: true,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedThrottleable: true,
+      },
+    ];
+    // We add the doPriorityTest test here so that it only gets injected in the
+    // test list if we're not skipping over this test.
+    tests.unshift(doPriorityTest);
+    runTests();
+  },
+
+  // With the pref on, but not top-level requests, the priority of channel
+  // should be normal.
+  function setupTopLevelNormalPriority() {
+    if (skipLowestPriority) {
+      runTests();
+      return;
+    }
+    if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
+      Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", true);
+      Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", true);
+    }
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",
         expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
       {
         path: normalOrigin + "/innocent.js",
         expectedTracking: false,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
       {
         path: trackingOrigin + "/evil.css",
         expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
       {
         path: trackingOrigin + "/evil.js",
         expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
+        expectedThrottleable: false,
       },
     ];
     // We add the doPriorityTest test here so that it only gets injected in the

@@ -2129,6 +2129,10 @@ FilterNodeGammaTransferSoftware::FilterNodeGammaTransferSoftware()
  , mExponentG(0)
  , mExponentB(0)
  , mExponentA(0)
+ , mOffsetR(0.0)
+ , mOffsetG(0.0)
+ , mOffsetB(0.0)
+ , mOffsetA(0.0)
 {}
 
 void
@@ -3116,7 +3120,8 @@ FilterNodeGaussianBlurSoftware::StdDeviationXY()
 }
 
 FilterNodeDirectionalBlurSoftware::FilterNodeDirectionalBlurSoftware()
- : mBlurDirection(BLUR_DIRECTION_X)
+  : mStdDeviation(0.0)
+  , mBlurDirection(BLUR_DIRECTION_X)
 {}
 
 void
