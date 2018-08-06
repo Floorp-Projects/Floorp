@@ -8,16 +8,26 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const Actions = require("../actions/index");
+
 /**
  * This component displays debug target.
  */
 class DebugTargetItem extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       icon: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
       url: PropTypes.string.isRequired,
     };
+  }
+
+  inspect() {
+    const { dispatch, type, id } = this.props;
+    dispatch(Actions.inspectDebugTarget(type, id));
   }
 
   renderIcon() {
@@ -48,6 +58,16 @@ class DebugTargetItem extends PureComponent {
     );
   }
 
+  renderInspectButton() {
+    return dom.button(
+      {
+        onClick: e => this.inspect(),
+        className: "debug-target-item__inspect-button",
+      },
+      "Inspect"
+    );
+  }
+
   render() {
     return dom.li(
       {
@@ -55,6 +75,7 @@ class DebugTargetItem extends PureComponent {
       },
       this.renderIcon(),
       this.renderInfo(),
+      this.renderInspectButton(),
     );
   }
 }
