@@ -74,7 +74,6 @@ skip load 458637-1.html # sporadically times out (bug 473680)
 load 462947.html
 load 467392.html
 load 472593-1.html
-load 473284.xul
 load 474041-1.svg
 load 476526.html
 load 483818-1.html
