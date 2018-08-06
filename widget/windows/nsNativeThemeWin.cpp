@@ -8,6 +8,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RelativeLuminanceUtils.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsColor.h"
 #include "nsDeviceContext.h"
@@ -783,6 +784,8 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(WidgetType aWidge
     case StyleAppearance::Resizerpanel:
     case StyleAppearance::Resizer:
       return Some(eUXStatus);
+    // NOTE: if you change Menulist and MenulistButton to behave differently,
+    // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
@@ -873,6 +876,11 @@ nsresult
 nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType, 
                                        int32_t& aPart, int32_t& aState)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   switch (aWidgetType) {
     case StyleAppearance::Button: {
       aPart = BP_BUTTON;
@@ -1544,6 +1552,11 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   if (IsWidgetScrollbarPart(aWidgetType)) {
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
     if (style->StyleUserInterface()->HasCustomScrollbars()) {
@@ -2108,6 +2121,11 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
                                    WidgetType aWidgetType,
                                    LayoutDeviceIntMargin* aResult)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   switch (aWidgetType) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
     // and have a meaningful baseline, so they can't have
@@ -2303,6 +2321,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
                                        WidgetType aWidgetType,
                                        LayoutDeviceIntSize* aResult, bool* aIsOverridable)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
   nsresult rv = NS_OK;
@@ -2535,6 +2558,11 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType,
                                      nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   // Some widget types just never change state.
   if (aWidgetType == StyleAppearance::Toolbox ||
       aWidgetType == StyleAppearance::MozWinMediaToolbox ||
@@ -2572,6 +2600,9 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType,
 
   // We need to repaint the dropdown arrow in vista HTML combobox controls when
   // the control is closed to get rid of the hover effect.
+  //
+  // NOTE: if you change Menulist and MenulistButton to behave differently,
+  // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
   if ((aWidgetType == StyleAppearance::Menulist ||
        aWidgetType == StyleAppearance::MenulistButton ||
        aWidgetType == StyleAppearance::MozMenulistButton) &&
@@ -2649,6 +2680,11 @@ nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
 bool 
 nsNativeThemeWin::WidgetIsContainer(WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   // XXXdwh At some point flesh all of this out.
   if (aWidgetType == StyleAppearance::MenulistButton || 
       aWidgetType == StyleAppearance::MozMenulistButton || 
@@ -2796,6 +2832,10 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::ScaleVertical:
     case StyleAppearance::ScalethumbHorizontal:
     case StyleAppearance::ScalethumbVertical:
+    // NOTE: if you change Menulist and MenulistButton to behave differently,
+    // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
+    case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
     case StyleAppearance::InnerSpinButton:
@@ -2803,8 +2843,6 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
-    case StyleAppearance::MenulistTextfield:
-    case StyleAppearance::Menulist:
     case StyleAppearance::Tooltip:
     case StyleAppearance::Statusbar:
     case StyleAppearance::Statusbarpanel:
@@ -2845,6 +2883,11 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
                                          nsIFrame* aFrame,
                                          WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   LayoutDeviceIntMargin result;
   switch (aWidgetType) {
     case StyleAppearance::Groupbox:
@@ -2941,6 +2984,11 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
                                               LayoutDeviceIntSize* aResult,
                                               bool* aIsOverridable)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   (*aResult).width = (*aResult).height = 0;
   *aIsOverridable = true;
   switch (aWidgetType) {
@@ -3120,6 +3168,11 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
 nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType,
                                  int32_t& aPart, int32_t& aState, bool& aFocused)
 {  
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   aFocused = false;
   switch (aWidgetType) {
     case StyleAppearance::Button: {
