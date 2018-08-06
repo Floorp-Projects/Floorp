@@ -154,8 +154,6 @@ CanPlayStatus
 CanHandleMediaType(const MediaContainerType& aType,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
 #ifdef MOZ_ANDROID_HLS_SUPPORT
   if (HLSDecoder::IsSupportedType(aType)) {
     return CANPLAY_MAYBE;
