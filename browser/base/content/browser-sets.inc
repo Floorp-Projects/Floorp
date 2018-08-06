@@ -126,16 +126,6 @@
     <broadcaster id="isImage"/>
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>
-
-    <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
-                 label="&devtoolsRecordExecution.label;"
-                 command="Tools:RecordExecution"/>
-    <broadcaster id="devtoolsMenuBroadcaster_SaveRecording"
-                 label="&devtoolsSaveRecording.label;"
-                 command="Tools:SaveRecording"/>
-    <broadcaster id="devtoolsMenuBroadcaster_ReplayExecution"
-                 label="&devtoolsReplayExecution.label;"
-                 command="Tools:ReplayExecution"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
