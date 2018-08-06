@@ -18,10 +18,16 @@ parent:
 
   sync SetDictionary(nsString aDictionary) returns (bool success);
 
-  async SetDictionaryFromList(nsString[] aList, intptr_t aPromiseId);
-
-child:
-  async NotifyOfCurrentDictionary(nsString aDictionary, intptr_t aPromiseId);
+  /*
+   * Set current dictionary from list of dictionary name.
+   *
+   * @aList         A list of dictionary name.  If a string into this list is
+   *                empty string, dictionary selection is reset
+   * @aSuccess      true if setting dictionary is successful
+   * @aDictionary   Return current dictionary name that set by this method.
+   */
+  async SetDictionaryFromList(nsString[] aList)
+           returns (bool aSuccess, nsString aDictionary);
 };
 
 } // namespace mozilla

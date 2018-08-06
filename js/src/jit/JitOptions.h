@@ -71,7 +71,6 @@ struct DefaultJitOptions
     bool fullDebugChecks;
     bool limitScriptSize;
     bool osr;
-    bool asmJSAtomicsEnable;
     bool wasmFoldOffsets;
     bool wasmDelayTier2;
     uint32_t baselineWarmUpThreshold;
