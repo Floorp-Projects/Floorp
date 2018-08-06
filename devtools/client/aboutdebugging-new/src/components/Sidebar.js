@@ -11,8 +11,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { PAGES } = require("../constants");
 
 const SidebarItem = createFactory(require("./SidebarItem"));
-const FIREFOX_ICON = "chrome://devtools/skin/images/firefox-logo-glyph.svg";
-const MOBILE_ICON = "chrome://devtools/skin/images/firefox-logo-glyph.svg";
+const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
+const MOBILE_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 
 class Sidebar extends PureComponent {
   static get propTypes() {
