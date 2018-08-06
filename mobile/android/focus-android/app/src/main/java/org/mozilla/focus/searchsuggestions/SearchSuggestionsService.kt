@@ -11,7 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class SearchSuggestionsService(searchEngine: SearchEngine) {
-    private lateinit var client: SearchSuggestionClient
+    private var client: SearchSuggestionClient? = null
     private var httpClient = OkHttpClient()
 
     var canProvideSearchSuggestions = false
@@ -40,7 +40,7 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
         if (query.isBlank()) { result.value = Pair(query, listOf()) }
 
         launch(CommonPool) {
-            val suggestions = client.getSuggestions(query) ?: listOf()
+            val suggestions = client?.getSuggestions(query) ?: listOf()
 
             launch(UI) {
                 result.value = Pair(query, suggestions)
@@ -52,7 +52,11 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
 
     fun updateSearchEngine(searchEngine: SearchEngine) {
         canProvideSearchSuggestions = searchEngine.canProvideSearchSuggestions
-        client = SearchSuggestionClient(searchEngine, { fetch(it) })
+        client = try {
+            SearchSuggestionClient(searchEngine, { fetch(it) })
+        } catch (_: IllegalArgumentException) {
+            null
+        }
     }
 
     companion object {

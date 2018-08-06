@@ -68,6 +68,14 @@ class SearchSuggestionsFragment : Fragment() {
                 searchSuggestionsViewModel.selectSearchSuggestion(textView.text.toString())
             }
         }
+
+        enable_search_suggestions_button.setOnClickListener {
+            searchSuggestionsViewModel.enableSearchSuggestions()
+        }
+
+        disable_search_suggestions_button.setOnClickListener {
+            searchSuggestionsViewModel.disableSearchSuggestions()
+        }
     }
 
     companion object {

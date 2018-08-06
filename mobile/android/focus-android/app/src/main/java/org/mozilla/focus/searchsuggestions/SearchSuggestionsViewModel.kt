@@ -69,6 +69,14 @@ class SearchSuggestionsViewModel(
         _searchQuery.value = query
     }
 
+    fun enableSearchSuggestions() {
+        searchSuggestionsPreferences.enableSearchSuggestions()
+    }
+
+    fun disableSearchSuggestions() {
+        searchSuggestionsPreferences.disableSearchSuggestions()
+    }
+
     fun refresh() {
         service.updateSearchEngine(searchSuggestionsPreferences.getSearchEngine())
         searchSuggestionsPreferences.refresh()
