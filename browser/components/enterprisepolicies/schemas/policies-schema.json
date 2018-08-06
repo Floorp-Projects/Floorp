@@ -292,12 +292,8 @@
 
     "DisableTelemetry": {
       "description": "Turns off telemetry.",
-<<<<<<< local
       "first_available": "60.0",
-      "enterprise_only": true,
-=======
       "machine_only": true,
->>>>>>> graft
 
       "type": "boolean"
     },
@@ -341,12 +337,8 @@
 
     "Extensions": {
       "description": "Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.",
-<<<<<<< local
       "first_available": "60.0",
-      "enterprise_only": true,
-=======
       "machine_only": true,
->>>>>>> graft
 
       "type": "object",
       "properties": {
@@ -410,12 +402,8 @@
 
     "Homepage": {
       "description": "Set and optionally lock the homepage.",
-<<<<<<< local
       "first_available": "60.0",
-      "enterprise_only": true,
-=======
       "machine_only": true,
->>>>>>> graft
 
       "type": "object",
       "properties": {
@@ -469,24 +457,16 @@
 
     "OverrideFirstRunPage": {
       "description": "Override the first run page. Set this policy to blank if you want to disable the first run page.",
-<<<<<<< local
       "first_available": "60.0",
-      "enterprise_only": true,
-=======
       "machine_only": true,
->>>>>>> graft
 
       "type": "URLorEmpty"
     },
 
     "OverridePostUpdatePage": {
       "description": "Override the post-update \"What's New\" page. Set this policy to blank if you want to disable the post-update page.",
-<<<<<<< local
       "first_available": "60.0",
-      "enterprise_only": true,
-=======
       "machine_only": true,
->>>>>>> graft
 
       "type": "URLorEmpty"
     },
@@ -697,11 +677,7 @@
 
     "SearchBar": {
       "description": "Sets the default location of the search bar. Only applies on firtrun, but can be changed.",
-<<<<<<< local
       "first_available": "60.0",
-      "enterprise_only": true,
-=======
->>>>>>> graft
 
       "type": "string",
       "enum": ["unified", "separate"]
@@ -763,12 +739,8 @@
 
     "WebsiteFilter": {
       "description": "Blocks websites from being visited. The parameters take an array of Match Patterns, as documented in https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Match_patterns. Only http/https accesses are supported at the moment. The arrays are limited to 1000 entries each.",
-<<<<<<< local
       "first_available": "60.0",
-      "enterprise_only": "true",
-=======
       "machine_only": "true",
->>>>>>> graft
 
       "type": "object",
       "properties": {
