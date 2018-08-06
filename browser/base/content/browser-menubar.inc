@@ -521,13 +521,16 @@
                     <observes element="canViewSource" attribute="disabled"/>
                   </menuitem>
                   <menuitem id="menu_devtools_recordExecution"
-                            observes="devtoolsMenuBroadcaster_RecordExecution"
+                            label="&devtoolsRecordExecution.label;"
+                            command="Tools:RecordExecution"
                             hidden="true"/>
                   <menuitem id="menu_devtools_saveRecording"
-                            observes="devtoolsMenuBroadcaster_SaveRecording"
+                            label="&devtoolsSaveRecording.label;"
+                            command="Tools:SaveRecording"
                             hidden="true"/>
                   <menuitem id="menu_devtools_replayExecution"
-                            observes="devtoolsMenuBroadcaster_ReplayExecution"
+                            label="&devtoolsReplayExecution.label;"
+                            command="Tools:ReplayExecution"
                             hidden="true"/>
                 </menupopup>
               </menu>
