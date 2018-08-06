@@ -4581,27 +4581,6 @@ HTMLEditor::GetElementOrigin(Element& aElement,
   return NS_OK;
 }
 
-nsresult
-HTMLEditor::EndUpdateViewBatch()
-{
-  nsresult rv = EditorBase::EndUpdateViewBatch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mUpdateCount) {
-    return NS_OK;
-  }
-
-  // We may need to show resizing handles or update existing ones after
-  // all transactions are done. This way of doing is preferred to DOM
-  // mutation events listeners because all the changes the user can apply
-  // to a document may result in multiple events, some of them quite hard
-  // to listen too (in particular when an ancestor of the selection is
-  // changed but the selection itself is not changed).
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
-  return CheckSelectionStateForAnonymousButtons(selection);
-}
-
 Element*
 HTMLEditor::GetSelectionContainer()
 {
