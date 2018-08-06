@@ -580,7 +580,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void handleFailureWithHandlerTail(void* handler, Label* profilerExitTail);
 
     template <typename T>
-    void atomicStore64(const T& mem, Register temp, Register64 value);
+    void wasmAtomicStore64(const wasm::MemoryAccessDesc& access, const T& mem, Register temp,
+                           Register64 value);
 
 
     /////////////////////////////////////////////////////////////////
