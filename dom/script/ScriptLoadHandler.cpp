@@ -223,7 +223,7 @@ ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   // request.
   nsAutoString hintCharset;
   if (!mRequest->IsPreload()) {
-    mRequest->mElement->GetScriptCharset(hintCharset);
+    mRequest->Element()->GetScriptCharset(hintCharset);
   } else {
     nsTArray<ScriptLoader::PreloadInfo>::index_type i =
       mScriptLoader->mPreloads.IndexOf(mRequest, 0,
@@ -301,7 +301,7 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
       if (mimeType.LowerCaseEqualsASCII(APPLICATION_JAVASCRIPT_BINAST)) {
         if (mRequest->ShouldAcceptBinASTEncoding()) {
           mRequest->SetBinASTSource();
-          TRACE_FOR_TEST(mRequest->mElement, "scriptloader_load_source");
+          TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
           return NS_OK;
         } else {
           return NS_ERROR_FAILURE;
@@ -312,7 +312,7 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
 
   if (mRequest->IsLoadingSource()) {
     mRequest->SetTextSource();
-    TRACE_FOR_TEST(mRequest->mElement, "scriptloader_load_source");
+    TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
     return NS_OK;
   }
 
@@ -322,15 +322,15 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
     cic->GetAlternativeDataType(altDataType);
     if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
       mRequest->SetBytecode();
-      TRACE_FOR_TEST(mRequest->mElement, "scriptloader_load_bytecode");
+      TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_bytecode");
     } else {
       MOZ_ASSERT(altDataType.IsEmpty());
       mRequest->SetTextSource();
-      TRACE_FOR_TEST(mRequest->mElement, "scriptloader_load_source");
+      TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
     }
   } else {
     mRequest->SetTextSource();
-    TRACE_FOR_TEST(mRequest->mElement, "scriptloader_load_source");
+    TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
   }
 
   MOZ_ASSERT(!mRequest->IsUnknownDataType());
