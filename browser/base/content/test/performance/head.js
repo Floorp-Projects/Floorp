@@ -303,7 +303,10 @@ async function createTabs(howMany) {
     uris.push("about:blank");
   }
 
-  gBrowser.loadTabs(uris, { inBackground: true });
+  gBrowser.loadTabs(uris, {
+    inBackground: true,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
 
   await BrowserTestUtils.waitForCondition(() => {
     return Array.from(gBrowser.tabs).every(tab => tab._fullyOpen);
