@@ -1665,7 +1665,7 @@ protected: // Called by helper classes.
   void EndPlaceholderTransaction();
 
   void BeginUpdateViewBatch();
-  virtual nsresult EndUpdateViewBatch();
+  void EndUpdateViewBatch();
 
 protected: // Shouldn't be used by friend classes
   /**

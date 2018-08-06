@@ -4136,27 +4136,45 @@ EditorBase::BeginUpdateViewBatch()
   mUpdateCount++;
 }
 
-nsresult
+void
 EditorBase::EndUpdateViewBatch()
 {
   MOZ_ASSERT(mUpdateCount > 0, "bad state");
 
   if (mUpdateCount <= 0) {
     mUpdateCount = 0;
-    return NS_ERROR_FAILURE;
+    return;
   }
 
-  mUpdateCount--;
-
-  if (!mUpdateCount) {
-    // Turn selection updating and notifications back on.
-    RefPtr<Selection> selection = GetSelection();
-    if (selection) {
-      selection->EndBatchChanges();
-    }
+  if (--mUpdateCount) {
+    return;
   }
 
-  return NS_OK;
+  // Turn selection updating and notifications back on.
+  RefPtr<Selection> selection = GetSelection();
+  if (selection) {
+    selection->EndBatchChanges();
+  }
+
+  HTMLEditor* htmlEditor = AsHTMLEditor();
+  if (!htmlEditor) {
+    return;
+  }
+
+  // We may need to show resizing handles or update existing ones after
+  // all transactions are done. This way of doing is preferred to DOM
+  // mutation events listeners because all the changes the user can apply
+  // to a document may result in multiple events, some of them quite hard
+  // to listen too (in particular when an ancestor of the selection is
+  // changed but the selection itself is not changed).
+  if (NS_WARN_IF(!selection)) {
+    return;
+  }
+
+  DebugOnly<nsresult> rv =
+    htmlEditor->CheckSelectionStateForAnonymousButtons(selection);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+    "CheckSelectionStateForAnonymousButtons() failed");
 }
 
 TextComposition*
