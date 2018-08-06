@@ -17,12 +17,13 @@ const Services = require("Services");
 class RuntimePage extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
   render() {
-    const { tabs } = this.props;
+    const { dispatch, tabs } = this.props;
 
     return dom.article(
       {
@@ -34,6 +35,7 @@ class RuntimePage extends PureComponent {
         version: Services.appinfo.version,
       }),
       DebugTargetPane({
+        dispatch,
         name: "Tabs",
         targets: tabs
       }),

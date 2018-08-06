@@ -11,18 +11,18 @@
 /*
  * The current layout of debug target item is
  *
- *  +--------+--------------------+
- *  |  Icon  | Information        |
- *  |        |+------------------+|
- *  |        || Name             ||
- *  |        |+------------------+|
- *  |        || Detail           ||
- *  |        |+------------------+|
- *  +--------+--------------------+
+ *  +--------+-----------------------------+----------------+
+ *  |  Icon  | Information                 | Inspect button |
+ *  |        |+---------------------------+|                |
+ *  |        || Name                      ||                |
+ *  |        |+---------------------------+|                |
+ *  |        || Detail                    ||                |
+ *  |        |+---------------------------+|                |
+ *  +--------+-----------------------------+----------------+
  */
 .debug-target-item {
   display: grid;
-  grid-template-columns: 54px auto;
+  grid-template-columns: 54px auto max-content;
   grid-template-rows: auto auto;
   grid-row-gap: 20px;
 }
@@ -40,4 +40,13 @@
 .debug-target-item__info__name {
   font-size: 20px;
   margin-block-end: 2px;
+}
+
+.debug-target-item__inspect-button {
+  height: 36px;
+  margin-inline-start: 4px;
+  margin-inline-end: 4px;
+  min-width: 100px;
+  padding-inline-start: 20px;
+  padding-inline-end: 20px;
 }

@@ -6,6 +6,7 @@
 
 const {
   CONNECT_RUNTIME_SUCCESS,
+  DEBUG_TARGETS,
   DISCONNECT_RUNTIME_SUCCESS,
   REQUEST_TABS_SUCCESS,
 } = require("../constants");
@@ -38,12 +39,14 @@ function runtimeReducer(state = RuntimeState(), action) {
 
 function toTabComponentData(tabs) {
   return tabs.map(tab => {
+    const type = DEBUG_TARGETS.TAB;
+    const id = tab.outerWindowID;
     const icon = tab.favicon
       ? `data:image/png;base64,${ btoa(String.fromCharCode.apply(String, tab.favicon)) }`
       : "chrome://devtools/skin/images/globe.svg";
     const name = tab.title || tab.url;
     const url = tab.url;
-    return { icon, name, url };
+    return { type, id, icon, name, url };
   });
 }
 

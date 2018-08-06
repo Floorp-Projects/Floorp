@@ -17,10 +17,14 @@ const actionTypes = {
   PAGE_SELECTED: "PAGE_SELECTED",
 };
 
+const DEBUG_TARGETS = {
+  TAB: "TAB",
+};
+
 const PAGES = {
   THIS_FIREFOX: "this-firefox",
   CONNECT: "connect",
 };
 
 // flatten constants
-module.exports = Object.assign({}, { PAGES }, actionTypes);
+module.exports = Object.assign({}, { PAGES }, actionTypes, { DEBUG_TARGETS });
