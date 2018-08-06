@@ -962,9 +962,7 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
         if (!visid) {
             continue;
         }
-        if (sGLXLibrary.IsATI()) {
-            // A workaround for ATI drivers introduced at Bug 572939.
-            // Do we still need that?
+        if (aWebRender || sGLXLibrary.IsATI()) {
             int depth;
             Visual* visual;
             FindVisualAndDepth(display, visid, &visual, &depth);
@@ -975,8 +973,6 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                 return true;
             }
         } else {
-            // WebRender compatible GLX visual is configured
-            // at nsWindow::Create(), just reuse it here.
             if (windowVisualID == static_cast<VisualID>(visid)) {
                 *out_config = cfgs[i];
                 *out_visid = visid;
