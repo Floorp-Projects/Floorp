@@ -10,5 +10,6 @@ DIRS += [
 DevToolsModules(
     'Breakpoint.js',
     'BreakpointsContextMenu.js',
+    'ExceptionOption.js',
     'index.js',
 )
