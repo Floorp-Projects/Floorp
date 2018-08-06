@@ -8,7 +8,8 @@ from marionette_harness import MarionetteTestCase
 
 class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
 
-    def setUp(self, startup_page=1, include_private=True, no_auto_updates=True):
+    def setUp(self, startup_page=1, include_private=True, no_auto_updates=True,
+              win_register_restart=False):
         super(SessionStoreTestCase, self).setUp()
         # Each list element represents a window of tabs loaded at
         # some testing URL
@@ -45,6 +46,8 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
             # send us session updates unless the parent has explicitly asked
             # for them via the TabStateFlusher.
             'browser.sessionstore.debug.no_auto_updates': no_auto_updates,
+            # Whether to enable the register application restart mechanism.
+            'toolkit.winRegisterApplicationRestart': win_register_restart,
         })
 
         self.all_windows = self.test_windows.copy()
@@ -92,7 +95,6 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
                Whether or not any new windows should be a private browsing
                windows.
         """
-
         if (is_private):
             win = self.browser.open_browser(is_private=True)
             win.switch_to()
@@ -152,7 +154,6 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
         :raises: Exception: if not supported on the current platform
         :raises: WindowsError: if a Windows API call failed
         """
-
         if self.marionette.session_capabilities['platformName'] != 'windows':
             raise Exception('Unsupported platform for simulate_os_shutdown')
 
@@ -175,7 +176,6 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
 
         :raises: WindowsError: if a Windows API call fails
         """
-
         import ctypes
         from ctypes import Structure, POINTER, WINFUNCTYPE, windll, pointer, WinError
         from ctypes.wintypes import HANDLE, DWORD, BOOL, WCHAR, UINT, ULONG, LPCWSTR
@@ -283,3 +283,50 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
 
         finally:
             RmEndSession(dwSessionHandle)
+
+    def windows_shutdown_with_variety(self, restart_by_os, expect_restore):
+        """ Test restoring windows after Windows shutdown.
+
+        Opens a set of windows, both standard and private, with
+        some number of tabs in them. Once the tabs have loaded, shuts down
+        the browser with the Windows Restart Manager and restarts the browser.
+
+        This specifically exercises the Windows synchronous shutdown mechanism,
+        which terminates the process in response to the Restart Manager's
+        WM_ENDSESSION message.
+
+        If restart_by_os is True, the -os-restarted arg is passed when restarting,
+        simulating being automatically restarted by the Restart Manager.
+
+        If expect_restore is True, this ensures that the standard tabs have been
+        restored, and that the private ones have not. Otherwise it ensures that
+        no tabs and windows have been restored.
+        """
+        current_windows_set = self.convert_open_windows_to_set()
+        self.assertEqual(current_windows_set, self.all_windows,
+                         msg='Not all requested windows have been opened. Expected {}, got {}.'
+                         .format(self.all_windows, current_windows_set))
+
+        self.marionette.quit(in_app=True, callback=lambda: self.simulate_os_shutdown())
+
+        saved_args = self.marionette.instance.app_args
+        try:
+            if restart_by_os:
+                self.marionette.instance.app_args = ['-os-restarted']
+
+            self.marionette.start_session()
+            self.marionette.set_context('chrome')
+        finally:
+            self.marionette.instance.app_args = saved_args
+
+        current_windows_set = self.convert_open_windows_to_set()
+        if expect_restore:
+            self.assertEqual(current_windows_set, self.test_windows,
+                             msg="""Non private browsing windows should have
+                             been restored. Expected {}, got {}.
+                             """.format(self.test_windows, current_windows_set))
+        else:
+            self.assertEqual(len(self.puppeteer.windows.all), 1,
+                             msg='Windows from last session shouldn`t have been restored.')
+            self.assertEqual(len(self.puppeteer.windows.current.tabbar.tabs), 1,
+                             msg='Tabs from last session shouldn`t have been restored.')
