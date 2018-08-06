@@ -64,7 +64,23 @@ nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal,
                         aFallbackCharset, aTryLocaleCharset, aLang, aResult);
 }
 
+/* static */
+nsresult
+nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal,
+                                        const char *aParamName,
+                                        nsAString& aResult)
+{
+  return DoGetParameter(aHeaderVal,
+                        aParamName,
+                        HTTP_FIELD_ENCODING,
+                        EmptyCString(),
+                        false,
+                        nullptr,
+                        aResult);
+}
+
 // XXX : aTryLocaleCharset is not yet effective.
+/* static */
 nsresult
 nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
                                       const char *aParamName,
@@ -355,6 +371,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
 }
 
 
+/* static */
 nsresult
 nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
                                            const char *aParamName,
