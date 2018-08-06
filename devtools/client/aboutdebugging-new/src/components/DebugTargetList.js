@@ -16,12 +16,13 @@ const DebugTargetItem = createFactory(require("./DebugTargetItem"));
 class DebugTargetList extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       targets: PropTypes.arrayOf(PropTypes.Object).isRequired,
     };
   }
 
   render() {
-    const { targets } = this.props;
+    const { dispatch, targets } = this.props;
 
     return dom.ul(
       {
@@ -29,8 +30,11 @@ class DebugTargetList extends PureComponent {
       },
       targets.map(target =>
         DebugTargetItem({
+          dispatch,
           icon: target.icon,
+          id: target.id,
           name: target.name,
+          type: target.type,
           url: target.url,
         })
       ),
