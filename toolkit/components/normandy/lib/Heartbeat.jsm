@@ -346,7 +346,10 @@ var Heartbeat = class {
         this.options.postAnswerUrl.searchParams.append(key, engagementParams[key]);
       }
       // Open the engagement URL in a new tab.
-      this.chromeWindow.gBrowser.selectedTab = this.chromeWindow.gBrowser.addTab(this.options.postAnswerUrl.toString());
+      let { gBrowser} = this.chromeWindow;
+      gBrowser.selectedTab = gBrowser.addWebTab(this.options.postAnswerUrl.toString(), {
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+      });
     }
 
     this.endTimerIfPresent("surveyEndTimer");
