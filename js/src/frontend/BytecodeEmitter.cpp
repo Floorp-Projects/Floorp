@@ -6070,11 +6070,13 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     MOZ_ASSERT(sc->isFunctionBox());
     MOZ_ASSERT(sc->asFunctionBox()->isGenerator());
 
-    bool isAsyncGenerator = sc->asFunctionBox()->isAsync();
+    IteratorKind iterKind = sc->asFunctionBox()->isAsync()
+                            ? IteratorKind::Async
+                            : IteratorKind::Sync;
 
     if (!emitTree(iter))                                  // ITERABLE
         return false;
-    if (isAsyncGenerator) {
+    if (iterKind == IteratorKind::Async) {
         if (!emitAsyncIterator())                         // NEXT ITER
             return false;
     } else {
@@ -6102,7 +6104,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     MOZ_ASSERT(this->stackDepth == startDepth);
 
     // 11.4.3.7 AsyncGeneratorYield step 5.
-    if (isAsyncGenerator) {
+    if (iterKind == IteratorKind::Async) {
         if (!emitAwaitInInnermostScope())                 // NEXT ITER RESULT
             return false;
     }
@@ -6118,7 +6120,8 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     if (!tryCatch.emitCatch())                            // NEXT ITER RESULT
         return false;
 
-    stackDepth = startDepth;                              // NEXT ITER RESULT
+    MOZ_ASSERT(stackDepth == startDepth);
+
     if (!emit1(JSOP_EXCEPTION))                           // NEXT ITER RESULT EXCEPTION
         return false;
     if (!emitDupAt(2))                                    // NEXT ITER RESULT EXCEPTION ITER
@@ -6127,31 +6130,15 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     if (!emitAtomOp(cx->names().throw_, JSOP_CALLPROP))   // NEXT ITER RESULT EXCEPTION ITER THROW
         return false;
-    if (!emit1(JSOP_DUP))                                 // NEXT ITER RESULT EXCEPTION ITER THROW THROW
-        return false;
-    if (!emit1(JSOP_UNDEFINED))                           // NEXT ITER RESULT EXCEPTION ITER THROW THROW UNDEFINED
-        return false;
-    if (!emit1(JSOP_EQ))                                  // NEXT ITER RESULT EXCEPTION ITER THROW ?EQL
+
+    savedDepthTemp = stackDepth;
+    InternalIfEmitter ifThrowMethodIsNotDefined(this);
+    if (!emitPushNotUndefinedOrNull())                    // NEXT ITER RESULT EXCEPTION ITER THROW NOT-UNDEF-OR-NULL
         return false;
 
-    InternalIfEmitter ifThrowMethodIsNotDefined(this);
-    if (!ifThrowMethodIsNotDefined.emitThen())            // NEXT ITER RESULT EXCEPTION ITER THROW
+    if (!ifThrowMethodIsNotDefined.emitThenElse())        // NEXT ITER RESULT EXCEPTION ITER THROW
         return false;
-    savedDepthTemp = stackDepth;
-    if (!emit1(JSOP_POP))                                 // NEXT ITER RESULT EXCEPTION ITER
-        return false;
-    // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.2
-    //
-    // If the iterator does not have a "throw" method, it calls IteratorClose
-    // and then throws a TypeError.
-    IteratorKind iterKind = isAsyncGenerator ? IteratorKind::Async : IteratorKind::Sync;
-    if (!emitIteratorCloseInInnermostScope(iterKind))     // NEXT ITER RESULT EXCEPTION
-        return false;
-    if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_ITERATOR_NO_THROW)) // throw
-        return false;
-    stackDepth = savedDepthTemp;
-    if (!ifThrowMethodIsNotDefined.emitEnd())             // NEXT ITER OLDRESULT EXCEPTION ITER THROW
-        return false;
+
     // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.4.
     // RESULT = ITER.throw(EXCEPTION)                     // NEXT ITER OLDRESULT EXCEPTION ITER THROW
     if (!emit1(JSOP_SWAP))                                // NEXT ITER OLDRESULT EXCEPTION THROW ITER
@@ -6162,7 +6149,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     checkTypeSet(JSOP_CALL);
 
-    if (isAsyncGenerator) {
+    if (iterKind == IteratorKind::Async) {
         if (!emitAwaitInInnermostScope())                 // NEXT ITER OLDRESULT RESULT
             return false;
     }
@@ -6182,6 +6169,26 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     if (!emitJump(JSOP_GOTO, &checkResult))               // goto checkResult
         return false;
 
+    stackDepth = savedDepthTemp;
+    if (!ifThrowMethodIsNotDefined.emitElse())            // NEXT ITER RESULT EXCEPTION ITER THROW
+        return false;
+
+    if (!emit1(JSOP_POP))                                 // NEXT ITER RESULT EXCEPTION ITER
+        return false;
+    // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.2
+    //
+    // If the iterator does not have a "throw" method, it calls IteratorClose
+    // and then throws a TypeError.
+    if (!emitIteratorCloseInInnermostScope(iterKind))     // NEXT ITER RESULT EXCEPTION
+        return false;
+    if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_ITERATOR_NO_THROW)) // throw
+        return false;
+
+    stackDepth = savedDepthTemp;
+    if (!ifThrowMethodIsNotDefined.emitEnd())
+        return false;
+
+    stackDepth = startDepth;
     if (!tryCatch.emitFinally())
          return false;
 
@@ -6303,7 +6310,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     checkTypeSet(JSOP_CALL);
 
-    if (isAsyncGenerator) {
+    if (iterKind == IteratorKind::Async) {
         if (!emitAwaitInInnermostScope())                        // NEXT ITER RESULT RESULT
             return false;
     }
