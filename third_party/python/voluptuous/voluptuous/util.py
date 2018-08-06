@@ -1,13 +1,8 @@
 import sys
 
-try:
-    from error import LiteralInvalid, TypeInvalid, Invalid
-    from schema_builder import Schema, default_factory, raises
-    import validators
-except ImportError:
-    from .error import LiteralInvalid, TypeInvalid, Invalid
-    from .schema_builder import Schema, default_factory, raises
-    from . import validators
+from voluptuous.error import LiteralInvalid, TypeInvalid, Invalid
+from voluptuous.schema_builder import Schema, default_factory, raises
+from voluptuous import validators
 
 __author__ = 'tusharmakkar08'
 

@@ -266,3 +266,8 @@ Ensure that subclasses of Invalid of are raised as is.
     ...   exc = e
     >>> exc.errors[0].__class__.__name__
     'SpecialInvalid'
+
+Ensure that Optional('Classification') < 'Name' will return True instead of throwing an AttributeError
+
+    >>> Optional('Classification') < 'Name'
+    True

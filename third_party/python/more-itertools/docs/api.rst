@@ -124,9 +124,11 @@ These tools return summarized or aggregated data from an iterable.
 
 .. autofunction:: ilen
 .. autofunction:: first(iterable[, default])
+.. autofunction:: last(iterable[, default])
 .. autofunction:: one
 .. autofunction:: unique_to_each
 .. autofunction:: locate(iterable, pred=bool)
+.. autofunction:: rlocate(iterable, pred=bool)
 .. autofunction:: consecutive_groups(iterable, ordering=lambda x: x)
 .. autofunction:: exactly_n(iterable, n, predicate=bool)
 .. autoclass:: run_length
@@ -216,6 +218,7 @@ Others
 
 **New itertools**
 
+.. autofunction:: replace
 .. autofunction:: numeric_range(start, stop, step)
 .. autofunction:: always_reversible
 .. autofunction:: side_effect

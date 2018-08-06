@@ -4,6 +4,20 @@ Version History
 
 .. automodule:: more_itertools
 
+4.3.0
+-----
+
+* New itertools:
+    * :func:`last` (thanks to tmshn)
+    * :func:`replace` (thanks to pylang)
+    * :func:`rlocate` (thanks to jferard and pylang)
+
+* Improvements to existing itertools:
+    * :func:`locate` can now search for multiple items
+
+* Other changes:
+   * The docs now include a nice table of tools (thanks MSeifert04)
+
 4.2.0
 -----
 

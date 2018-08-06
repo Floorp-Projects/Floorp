@@ -12,6 +12,7 @@ from itertools import (
     groupby,
     islice,
     repeat,
+    starmap,
     takewhile,
     tee
 )
@@ -52,6 +53,7 @@ __all__ = [
     'intersperse',
     'islice_extended',
     'iterate',
+    'last',
     'locate',
     'lstrip',
     'make_decorator',
@@ -60,6 +62,8 @@ __all__ = [
     'one',
     'padded',
     'peekable',
+    'replace',
+    'rlocate',
     'rstrip',
     'run_length',
     'seekable',
@@ -132,6 +136,32 @@ def first(iterable, default=_marker):
         # exception, and it's weird to explicitly catch StopIteration.
         if default is _marker:
             raise ValueError('first() was called on an empty iterable, and no '
+                             'default value was provided.')
+        return default
+
+
+def last(iterable, default=_marker):
+    """Return the last item of *iterable*, or *default* if *iterable* is
+    empty.
+
+        >>> last([0, 1, 2, 3])
+        3
+        >>> last([], 'some default')
+        'some default'
+
+    If *default* is not provided and there are no items in the iterable,
+    raise ``ValueError``.
+    """
+    try:
+        try:
+            # Try to access the last item directly
+            return iterable[-1]
+        except (TypeError, AttributeError, KeyError):
+            # If not slice-able, iterate entirely using length-1 deque
+            return deque(iterable, maxlen=1)[0]
+    except IndexError:  # If the iterable was empty
+        if default is _marker:
+            raise ValueError('last() was called on an empty iterable, and no '
                              'default value was provided.')
         return default
 
@@ -1435,7 +1465,7 @@ def count_cycle(iterable, n=None):
     return ((i, item) for i in counter for item in iterable)
 
 
-def locate(iterable, pred=bool):
+def locate(iterable, pred=bool, window_size=None):
     """Yield the index of each item in *iterable* for which *pred* returns
     ``True``.
 
@@ -1445,18 +1475,17 @@ def locate(iterable, pred=bool):
         [1, 2, 4]
 
     Set *pred* to a custom function to, e.g., find the indexes for a particular
-    item:
+    item.
 
         >>> list(locate(['a', 'b', 'c', 'b'], lambda x: x == 'b'))
         [1, 3]
 
-    Use with :func:`windowed` to find the indexes of a sub-sequence:
+    If *window_size* is given, then the *pred* function will be called with
+    that many items. This enables searching for sub-sequences:
 
-        >>> from more_itertools import windowed
         >>> iterable = [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3]
-        >>> sub = [1, 2, 3]
-        >>> pred = lambda w: w == tuple(sub)  # windowed() returns tuples
-        >>> list(locate(windowed(iterable, len(sub)), pred=pred))
+        >>> pred = lambda *args: args == (1, 2, 3)
+        >>> list(locate(iterable, pred=pred, window_size=3))
         [1, 5, 9]
 
     Use with :func:`seekable` to find indexes and then retrieve the associated
@@ -1474,7 +1503,14 @@ def locate(iterable, pred=bool):
         106
 
     """
-    return compress(count(), map(pred, iterable))
+    if window_size is None:
+        return compress(count(), map(pred, iterable))
+
+    if window_size < 1:
+        raise ValueError('window size must be at least 1')
+
+    it = windowed(iterable, window_size, fillvalue=_marker)
+    return compress(count(), starmap(pred, it))
 
 
 def lstrip(iterable, pred):
@@ -2032,7 +2068,7 @@ def map_reduce(iterable, keyfunc, valuefunc=None, reducefunc=None):
         [('A', 1), ('B', 2), ('C', 3)]
 
     You may want to filter the input iterable before applying the map/reduce
-    proecdure:
+    procedure:
 
         >>> all_items = range(30)
         >>> items = [x for x in all_items if 10 <= x <= 20]  # Filter
@@ -2066,3 +2102,110 @@ def map_reduce(iterable, keyfunc, valuefunc=None, reducefunc=None):
 
     ret.default_factory = None
     return ret
+
+
+def rlocate(iterable, pred=bool, window_size=None):
+    """Yield the index of each item in *iterable* for which *pred* returns
+    ``True``, starting from the right and moving left.
+
+    *pred* defaults to :func:`bool`, which will select truthy items:
+
+        >>> list(rlocate([0, 1, 1, 0, 1, 0, 0]))  # Truthy at 1, 2, and 4
+        [4, 2, 1]
+
+    Set *pred* to a custom function to, e.g., find the indexes for a particular
+    item:
+
+        >>> iterable = iter('abcb')
+        >>> pred = lambda x: x == 'b'
+        >>> list(rlocate(iterable, pred))
+        [3, 1]
+
+    If *window_size* is given, then the *pred* function will be called with
+    that many items. This enables searching for sub-sequences:
+
+        >>> iterable = [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3]
+        >>> pred = lambda *args: args == (1, 2, 3)
+        >>> list(rlocate(iterable, pred=pred, window_size=3))
+        [9, 5, 1]
+
+    Beware, this function won't return anything for infinite iterables.
+    If *iterable* is reversible, ``rlocate`` will reverse it and search from
+    the right. Otherwise, it will search from the left and return the results
+    in reverse order.
+
+    See :func:`locate` to for other example applications.
+
+    """
+    if window_size is None:
+        try:
+            len_iter = len(iterable)
+            return (
+                len_iter - i - 1 for i in locate(reversed(iterable), pred)
+            )
+        except TypeError:
+            pass
+
+    return reversed(list(locate(iterable, pred, window_size)))
+
+
+def replace(iterable, pred, substitutes, count=None, window_size=1):
+    """Yield the items from *iterable*, replacing the items for which *pred*
+    returns ``True`` with the items from the iterable *substitutes*.
+
+        >>> iterable = [1, 1, 0, 1, 1, 0, 1, 1]
+        >>> pred = lambda x: x == 0
+        >>> substitutes = (2, 3)
+        >>> list(replace(iterable, pred, substitutes))
+        [1, 1, 2, 3, 1, 1, 2, 3, 1, 1]
+
+    If *count* is given, the number of replacements will be limited:
+
+        >>> iterable = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        >>> pred = lambda x: x == 0
+        >>> substitutes = [None]
+        >>> list(replace(iterable, pred, substitutes, count=2))
+        [1, 1, None, 1, 1, None, 1, 1, 0]
+
+    Use *window_size* to control the number of items passed as arguments to
+    *pred*. This allows for locating and replacing subsequences.
+
+        >>> iterable = [0, 1, 2, 5, 0, 1, 2, 5]
+        >>> window_size = 3
+        >>> pred = lambda *args: args == (0, 1, 2)  # 3 items passed to pred
+        >>> substitutes = [3, 4] # Splice in these items
+        >>> list(replace(iterable, pred, substitutes, window_size=window_size))
+        [3, 4, 5, 3, 4, 5]
+
+    """
+    if window_size < 1:
+        raise ValueError('window_size must be at least 1')
+
+    # Save the substitutes iterable, since it's used more than once
+    substitutes = tuple(substitutes)
+
+    # Add padding such that the number of windows matches the length of the
+    # iterable
+    it = chain(iterable, [_marker] * (window_size - 1))
+    windows = windowed(it, window_size)
+
+    n = 0
+    for w in windows:
+        # If the current window matches our predicate (and we haven't hit
+        # our maximum number of replacements), splice in the substitutes
+        # and then consume the following windows that overlap with this one.
+        # For example, if the iterable is (0, 1, 2, 3, 4...)
+        # and the window size is 2, we have (0, 1), (1, 2), (2, 3)...
+        # If the predicate matches on (0, 1), we need to zap (0, 1) and (1, 2)
+        if pred(*w):
+            if (count is None) or (n < count):
+                n += 1
+                for s in substitutes:
+                    yield s
+                consume(windows, window_size - 1)
+                continue
+
+        # If there was no match (or we've reached the replacement limit),
+        # yield the first item from the window.
+        if w and (w[0] is not _marker):
+            yield w[0]
