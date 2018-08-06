@@ -38,7 +38,7 @@ add_task(async function setup_test_preference() {
 
 add_task(async function block_autoplay_media() {
   info("- open new background tab1 -");
-  let tab1 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
+  let tab1 = window.gBrowser.addTab("about:blank");
   tab1.linkedBrowser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
 
@@ -46,7 +46,7 @@ add_task(async function block_autoplay_media() {
   await check_audio_suspended(tab1.linkedBrowser, SuspendedType.SUSPENDED_BLOCK);
 
   info("- open new background tab2 -");
-  let tab2 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
+  let tab2 = window.gBrowser.addTab("about:blank");
   tab2.linkedBrowser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
@@ -90,7 +90,7 @@ add_task(async function block_autoplay_media() {
   ]});
 
   info("- open new background tab4 -");
-  let tab4 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
+  let tab4 = window.gBrowser.addTab("about:blank");
   tab4.linkedBrowser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(tab4.linkedBrowser);
   info("- should block autoplay for non-visited tab4 -");

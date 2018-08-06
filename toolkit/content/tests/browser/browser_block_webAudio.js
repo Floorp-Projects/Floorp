@@ -16,7 +16,7 @@ add_task(async function setup_test_preference() {
 
 add_task(async function block_web_audio() {
   info("- open new background tab -");
-  let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
+  let tab = window.gBrowser.addTab("about:blank");
   tab.linkedBrowser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 

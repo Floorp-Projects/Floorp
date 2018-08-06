@@ -34,8 +34,7 @@ add_task(async function() {
   await waitForDelayedStartupFinished(win);
 
   info("Open a new tab on the new window to ensure the focus is on the new window");
-  const tab = BrowserTestUtils.addTab(win.gBrowser,
-    "data:text/html;charset=utf-8,<title>foo</title>");
+  const tab = win.gBrowser.addTab("data:text/html;charset=utf-8,<title>foo</title>");
   await BrowserTestUtils.browserLoaded(win.gBrowser.getBrowserForTab(tab));
 
   info("Synthesize a DevTools shortcut, the toolbox should not open on this new window.");

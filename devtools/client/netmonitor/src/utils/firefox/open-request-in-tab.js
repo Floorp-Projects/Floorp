@@ -33,15 +33,8 @@ function openRequestInTab(url, requestPostData) {
     postData.addHeader("Content-Type", "application/x-www-form-urlencoded");
     postData.setData(stringStream);
   }
-  const userContextId = win.gBrowser.contentPrincipal.userContextId;
-  win.gBrowser.selectedTab = win.gBrowser.addWebTab(url, {
-    // TODO this should be using the original request principal
-    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
-      userContextId,
-    }),
-    userContextId,
-    postData,
-  });
+
+  win.gBrowser.selectedTab = win.gBrowser.addTab(url, { postData });
 }
 
 function getInputStreamFromString(data) {
