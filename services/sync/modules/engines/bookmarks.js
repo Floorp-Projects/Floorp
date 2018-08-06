@@ -97,8 +97,9 @@ PlacesItem.prototype = {
     let clear = await CryptoWrapper.prototype.decrypt.call(this, keyBundle);
 
     // Convert the abstract places item to the actual object type
-    if (!this.deleted)
+    if (!this.deleted) {
       this.__proto__ = this.getTypeObject(this.type).prototype;
+    }
 
     return clear;
   },
@@ -551,8 +552,9 @@ BookmarksEngine.prototype = {
       }
 
       let parentName = parent.title || "";
-      if (guidMap[parentName] == null)
+      if (guidMap[parentName] == null) {
         guidMap[parentName] = {};
+      }
 
       // If the entry already exists, remember that there are explicit dupes.
       let entry = {
@@ -991,20 +993,23 @@ BaseBookmarksStore.prototype = {
 
   async _calculateIndex(record) {
     // Ensure folders have a very high sort index so they're not synced last.
-    if (record.type == "folder")
+    if (record.type == "folder") {
       return FOLDER_SORTINDEX;
+    }
 
     // For anything directly under the toolbar, give it a boost of more than an
     // unvisited bookmark
     let index = 0;
-    if (record.parentid == "toolbar")
+    if (record.parentid == "toolbar") {
       index += 150;
+    }
 
     // Add in the bookmark's frecency if we have something.
     if (record.bmkUri != null) {
       let frecency = await PlacesSyncUtils.history.fetchURLFrecency(record.bmkUri);
-      if (frecency != -1)
+      if (frecency != -1) {
         index += frecency;
+      }
     }
 
     return index;
@@ -1390,13 +1395,15 @@ BookmarksTracker.prototype = {
       return;
     }
 
-    if (isAnno && (!ANNOS_TO_TRACK.includes(property)))
+    if (isAnno && (!ANNOS_TO_TRACK.includes(property))) {
       // Ignore annotations except for the ones that we sync.
       return;
+    }
 
     // Ignore favicon changes to avoid unnecessary churn.
-    if (property == "favicon")
+    if (property == "favicon") {
       return;
+    }
 
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno ? " (anno)" : "")) +

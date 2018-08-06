@@ -100,8 +100,9 @@ Sync11Service.prototype = {
 
   get locked() { return this._locked; },
   lock: function lock() {
-    if (this._locked)
+    if (this._locked) {
       return false;
+    }
     this._locked = true;
     return true;
   },
@@ -155,8 +156,9 @@ Sync11Service.prototype = {
 
     try {
       let iv = Weave.Crypto.generateRandomIV();
-      if (iv.length == 24)
+      if (iv.length == 24) {
         ok = true;
+      }
 
     } catch (e) {
       this._log.debug("Crypto check failed: " + e);
@@ -196,8 +198,9 @@ Sync11Service.prototype = {
 
     // Leave a sizable delay between HMAC recovery attempts. This gives us
     // time for another client to fix themselves if we touch the record.
-    if ((now - this.lastHMACEvent) < HMAC_EVENT_INTERVAL)
+    if ((now - this.lastHMACEvent) < HMAC_EVENT_INTERVAL) {
       return false;
+    }
 
     this._log.info("Bad HMAC event detected. Attempting recovery " +
                    "or signaling to other clients.");
@@ -549,8 +552,9 @@ Sync11Service.prototype = {
     }
 
     try {
-      if (!infoResponse)
+      if (!infoResponse) {
         infoResponse = await this._fetchInfo(); // Will throw an exception on failure.
+      }
 
       // This only applies when the server is already at version 4.
       if (infoResponse.status != 200) {
@@ -1001,20 +1005,22 @@ Sync11Service.prototype = {
         return false;
       }
 
-      if (!meta)
+      if (!meta) {
         this._log.info("No metadata record, server wipe needed");
-      if (meta && !meta.payload.syncID)
+      }
+      if (meta && !meta.payload.syncID) {
         this._log.warn("No sync id, server wipe needed");
+      }
 
       this._log.info("Wiping server data");
       await this._freshStart();
 
-      if (status == 404)
+      if (status == 404) {
         this._log.info("Metadata record not found, server was wiped to ensure " +
                        "consistency.");
-      else // 200
+      } else { // 200
         this._log.info("Wiped server; incompatible metadata: " + remoteVersion);
-
+      }
       return true;
     } else if (remoteVersion > STORAGE_VERSION) {
       this.status.sync = VERSION_OUT_OF_DATE;
@@ -1075,24 +1081,26 @@ Sync11Service.prototype = {
   _checkSync: function _checkSync(ignore) {
     let reason = "";
     // Ideally we'd call _checkSetup() here but that has too many side-effects.
-    if (Status.service == CLIENT_NOT_CONFIGURED)
+    if (Status.service == CLIENT_NOT_CONFIGURED) {
       reason = kSyncNotConfigured;
-    else if (Status.service == STATUS_DISABLED || !this.enabled)
+    } else if (Status.service == STATUS_DISABLED || !this.enabled) {
       reason = kSyncWeaveDisabled;
-    else if (this.scheduler.offline)
+    } else if (this.scheduler.offline) {
       reason = kSyncNetworkOffline;
-    else if (this.status.minimumNextSync > Date.now())
+    } else if (this.status.minimumNextSync > Date.now()) {
       reason = kSyncBackoffNotMet;
-    else if ((this.status.login == MASTER_PASSWORD_LOCKED) &&
-             Utils.mpLocked())
+    } else if ((this.status.login == MASTER_PASSWORD_LOCKED) &&
+             Utils.mpLocked()) {
       reason = kSyncMasterPasswordLocked;
-    else if (Svc.Prefs.get("firstSync") == "notReady")
+    } else if (Svc.Prefs.get("firstSync") == "notReady") {
       reason = kFirstSyncChoiceNotMade;
-    else if (!Async.isAppReady())
+    } else if (!Async.isAppReady()) {
       reason = kFirefoxShuttingDown;
+    }
 
-    if (ignore && ignore.includes(reason))
+    if (ignore && ignore.includes(reason)) {
       return "";
+    }
 
     return reason;
   },

@@ -60,14 +60,17 @@ TPSCmdLine.prototype = {
     let options = {};
 
     let uristr = cmdLine.handleFlagWithParam("tps", false);
-    if (uristr == null)
+    if (uristr == null) {
         return;
+    }
     let phase = cmdLine.handleFlagWithParam("tpsphase", false);
-    if (phase == null)
+    if (phase == null) {
         throw Error("must specify --tpsphase with --tps");
+    }
     let logfile = cmdLine.handleFlagWithParam("tpslogfile", false);
-    if (logfile == null)
+    if (logfile == null) {
         logfile = "";
+    }
 
     options.ignoreUnusedEngines = cmdLine.handleFlag("ignore-unused-engines",
                                                      false);

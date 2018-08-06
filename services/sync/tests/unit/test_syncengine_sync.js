@@ -1483,8 +1483,9 @@ add_task(async function test_sync_partialUpload() {
   var noOfUploads = 0;
   collection.post = (function(orig) {
     return function() {
-      if (noOfUploads == 2)
+      if (noOfUploads == 2) {
         throw new Error("FAIL!");
+      }
       noOfUploads++;
       return orig.apply(this, arguments);
     };
@@ -1526,10 +1527,11 @@ add_task(async function test_sync_partialUpload() {
       // * records no. 23 and 42 were rejected by the server,
       // * records after the third batch and higher couldn't be uploaded because
       //   we failed hard on the 3rd upload.
-      if ((i == 23) || (i == 42) || (i >= 200))
+      if ((i == 23) || (i == 42) || (i >= 200)) {
         Assert.equal(changes[id], i);
-      else
+      } else {
         Assert.equal(false, id in changes);
+      }
     }
 
   } finally {

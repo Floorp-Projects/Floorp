@@ -79,9 +79,11 @@ var BrowserTabs = {
       for (let key in tabClient.tabs) {
         let tab = tabClient.tabs[key];
         let weaveTabUrl = tab.urlHistory[0];
-        if (uri == weaveTabUrl && profile == client.name)
-          if (title == undefined || title == tab.title)
+        if (uri == weaveTabUrl && profile == client.name) {
+          if (title == undefined || title == tab.title) {
             return true;
+          }
+        }
         }
         Logger.logInfo(`Dumping tabs for ${client.clientName}...\n` + JSON.stringify(client.tabs));
       }
