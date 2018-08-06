@@ -122,18 +122,6 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString* const& k, const 
            : EqualStringsPure<char16_t, char16_t>(s1, l);
 }
 
-/* static */ HashNumber
-CStringHashPolicy::hash(const Lookup& l)
-{
-    return mozilla::HashString(l);
-}
-
-/* static */ bool
-CStringHashPolicy::match(const char* const& k, const Lookup& l)
-{
-    return strcmp(k, l) == 0;
-}
-
 } // namespace js
 
 namespace JS {

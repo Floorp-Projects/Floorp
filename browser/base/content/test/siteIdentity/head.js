@@ -242,7 +242,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     doc.getElementById("identity-popup-security-expander").click();
     await promiseViewShown;
     is(Array.filter(doc.getElementById("identity-popup-securityView")
-                       .querySelectorAll("[observes=identity-popup-mcb-learn-more]"),
+                       .querySelectorAll(".identity-popup-mcb-learn-more"),
                     element => !BrowserTestUtils.is_hidden(element)).length, 1,
        "The 'Learn more' link should be visible once.");
   }
