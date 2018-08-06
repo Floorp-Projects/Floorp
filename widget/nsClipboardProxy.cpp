@@ -99,7 +99,7 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
         nsCOMPtr<nsIInputStream> stream;
 
         NS_NewCStringInputStream(getter_AddRefs(stream),
-                                 nsDependentCString(data.get<char>(), data.Size<char>()));
+                                 nsDependentCSubstring(data.get<char>(), data.Size<char>()));
 
         rv = aTransferable->SetTransferData(flavor.get(), stream, sizeof(nsISupports*));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -110,7 +110,7 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
           do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = dataWrapper->SetData(nsDependentCString(data.get<char>(), data.Size<char>()));
+        rv = dataWrapper->SetData(nsDependentCSubstring(data.get<char>(), data.Size<char>()));
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper,
