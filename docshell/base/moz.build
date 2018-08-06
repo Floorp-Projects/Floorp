@@ -49,6 +49,7 @@ XPIDL_SOURCES += [
     'nsIReflowObserver.idl',
     'nsIRefreshURI.idl',
     'nsIScrollable.idl',
+    'nsITextScroll.idl',
     'nsITooltipListener.idl',
     'nsITooltipTextProvider.idl',
     'nsIURIFixup.idl',

@@ -1,0 +1,33 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsITextScroll is an interface that can be implemented by a control that
+ * supports text scrolling. 
+ */
+
+[scriptable, uuid(067B28A0-877F-11d3-AF7E-00A024FFC08C)]
+interface nsITextScroll : nsISupports
+{
+  /**
+   * Scroll the view up or down by aNumLines lines. positive
+   * values move down in the view. Prevents scrolling off the
+   * end of the view.
+   * @param numLines number of lines to scroll the view by
+   */
+	void scrollByLines(in long numLines);
+
+	/**
+   * Scroll the view up or down by numPages pages. a page
+   * is considered to be the amount displayed by the clip view.
+   * positive values move down in the view. Prevents scrolling
+   * off the end of the view.
+   * @param numPages number of pages to scroll the view by
+   */
+	void scrollByPages(in long numPages);
+};
