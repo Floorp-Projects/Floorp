@@ -6,9 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import shutil
 
 from ..cli import BaseTryParser
-from ..push import push_to_try, history_path
+from ..push import push_to_try, history_path, old_history_path
 
 
 class AgainParser(BaseTryParser):
@@ -37,6 +38,12 @@ class AgainParser(BaseTryParser):
 
 
 def run_try_again(index=0, purge=False, list_configs=False, message='{msg}', **pushargs):
+    # Try to move existing history file from the old location to the new one.
+    if os.path.isfile(old_history_path) and not os.path.isfile(history_path):
+        if not os.path.isdir(os.path.dirname(history_path)):
+            os.makedirs(os.path.dirname(history_path))
+        shutil.move(old_history_path, history_path)
+
     if purge:
         os.remove(history_path)
         return
