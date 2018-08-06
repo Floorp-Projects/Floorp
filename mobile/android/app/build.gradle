@@ -26,6 +26,7 @@ android {
         buildConfigField 'String', 'BUILD_DIR', "\"${project.buildDir}\""
 
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
     }
 
     aaptOptions {
@@ -236,7 +237,7 @@ dependencies {
     }
 
     if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
-        implementation "com.google.android.gms:play-services-analytics:$google_play_services_version"
+        implementation "com.google.android.gms:play-services-ads-identifier:$google_play_services_version"
         implementation "com.google.android.gms:play-services-basement:$google_play_services_version"
     }
 
