@@ -101,6 +101,9 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::SVGTurbulenceRendere
                                                             int aNumOctaves, const Rect &aTileRect)
  : mBaseFrequency(aBaseFrequency)
  , mNumOctaves(aNumOctaves)
+ , mStitchInfo()
+ , mStitchable(false)
+ , mType(TURBULENCE_TYPE_TURBULENCE)
 {
   InitFromSeed(aSeed);
   if (Stitch) {

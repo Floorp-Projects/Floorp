@@ -38,3 +38,5 @@ if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':
         '/toolkit/crashreporter/google-breakpad/src',
     ]
 
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

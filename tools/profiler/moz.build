@@ -153,3 +153,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Gecko Profiler')
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

@@ -70,3 +70,6 @@ elif CONFIG['CC_TYPE'] == 'msvc':
     # declaration of '*' hides class member
     '-wd4458',
   ]
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

@@ -1779,8 +1779,8 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
       }
       aWriter.EndArray();
     }
+    aWriter.EndObject();
   }
-  aWriter.EndObject();
 }
 
 #if defined(GP_OS_android)

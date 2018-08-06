@@ -920,6 +920,7 @@ gfxUserFontEntry::GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult)
 
 gfxUserFontSet::gfxUserFontSet()
     : mFontFamilies(4),
+      mRebuildGeneration(0),
       mLocalRulesUsed(false),
       mRebuildLocalRules(false),
       mDownloadCount(0),

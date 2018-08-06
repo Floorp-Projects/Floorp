@@ -358,6 +358,7 @@ CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager
   , mOptions(aOptions)
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
+  , mCompositorBridgeID(0)
   , mRootLayerTreeID{0}
   , mOverrideComposeReadiness(false)
   , mForceCompositionTask(nullptr)
