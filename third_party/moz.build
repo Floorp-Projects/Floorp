@@ -12,3 +12,6 @@ with Files('webkit/**'):
 
 with Files('prio/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
+
+with Files('msgpack/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
