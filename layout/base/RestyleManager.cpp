@@ -496,7 +496,7 @@ RestyleManager::ContentRemoved(nsIContent* aOldChild,
  * This is called from both Restyle managers.
  */
 void
-RestyleManager::ContentStateChangedInternal(Element* aElement,
+RestyleManager::ContentStateChangedInternal(const Element& aElement,
                                             EventStates aStateMask,
                                             nsChangeHint* aOutChangeHint)
 {
@@ -510,7 +510,7 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
   // based on content states, so if we already don't have a frame we don't
   // need to force a reframe -- if it's needed, the HasStateDependentStyle
   // call will handle things.
-  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+  nsIFrame* primaryFrame = aElement.GetPrimaryFrame();
   if (primaryFrame) {
     // If it's generated content, ignore LOADING/etc state changes on it.
     if (!primaryFrame->IsGeneratedContentFrame() &&
@@ -2200,8 +2200,8 @@ ServoRestyleState::TableAwareParentFor(const nsIFrame* aChild)
 
 void
 RestyleManager::PostRestyleEvent(Element* aElement,
-                                      nsRestyleHint aRestyleHint,
-                                      nsChangeHint aMinChangeHint)
+                                 nsRestyleHint aRestyleHint,
+                                 nsChangeHint aMinChangeHint)
 {
   MOZ_ASSERT(!(aMinChangeHint & nsChangeHint_NeutralChange),
              "Didn't expect explicit change hints to be neutral!");
@@ -2945,7 +2945,7 @@ RestyleManager::ClearSnapshots()
 }
 
 ServoElementSnapshot&
-RestyleManager::SnapshotFor(Element* aElement)
+RestyleManager::SnapshotFor(Element& aElement)
 {
   MOZ_ASSERT(!mInStyleRefresh);
 
@@ -2959,14 +2959,14 @@ RestyleManager::SnapshotFor(Element* aElement)
   //
   // Can't wait to make ProcessPendingRestyles the only entry-point for styling,
   // so this becomes much easier to reason about. Today is not that day though.
-  MOZ_ASSERT(aElement->HasServoData());
-  MOZ_ASSERT(!aElement->HasFlag(ELEMENT_HANDLED_SNAPSHOT));
+  MOZ_ASSERT(aElement.HasServoData());
+  MOZ_ASSERT(!aElement.HasFlag(ELEMENT_HANDLED_SNAPSHOT));
 
-  ServoElementSnapshot* snapshot = mSnapshots.LookupOrAdd(aElement, aElement);
-  aElement->SetFlags(ELEMENT_HAS_SNAPSHOT);
+  ServoElementSnapshot* snapshot = mSnapshots.LookupOrAdd(&aElement, aElement);
+  aElement.SetFlags(ELEMENT_HAS_SNAPSHOT);
 
   // Now that we have a snapshot, make sure a restyle is triggered.
-  aElement->NoteDirtyForServo();
+  aElement.NoteDirtyForServo();
   return *snapshot;
 }
 
@@ -3177,30 +3177,33 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
     return;
   }
 
-  Element* aElement = aContent->AsElement();
-  if (!aElement->HasServoData()) {
+  Element& element = *aContent->AsElement();
+  if (!element.HasServoData()) {
     return;
   }
 
   nsChangeHint changeHint;
-  ContentStateChangedInternal(aElement, aChangedBits, &changeHint);
+  ContentStateChangedInternal(element, aChangedBits, &changeHint);
 
   // Don't bother taking a snapshot if no rules depend on these state bits.
   //
   // We always take a snapshot for the LTR/RTL event states, since Servo doesn't
   // track those bits in the same way, and we know that :dir() rules are always
   // present in UA style sheets.
+  //
+  // FIXME(emilio): Doesn't this early-return drop the change hint on the floor?
+  // Should it?
   if (!aChangedBits.HasAtLeastOneOfStates(DIRECTION_STATES) &&
-      !StyleSet()->HasStateDependency(*aElement, aChangedBits)) {
+      !StyleSet()->HasStateDependency(element, aChangedBits)) {
     return;
   }
 
-  ServoElementSnapshot& snapshot = SnapshotFor(aElement);
-  EventStates previousState = aElement->StyleState() ^ aChangedBits;
+  ServoElementSnapshot& snapshot = SnapshotFor(element);
+  EventStates previousState = element.StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
 
   if (changeHint) {
-    Servo_NoteExplicitHints(aElement, nsRestyleHint(0), changeHint);
+    Servo_NoteExplicitHints(&element, nsRestyleHint(0), changeHint);
   }
 
   // Assuming we need to invalidate cached style in getComputedStyle for
@@ -3271,30 +3274,30 @@ RestyleManager::AttributeWillChange(Element* aElement,
                                     int32_t aModType,
                                     const nsAttrValue* aNewValue)
 {
-  TakeSnapshotForAttributeChange(aElement, aNameSpaceID, aAttribute);
+  TakeSnapshotForAttributeChange(*aElement, aNameSpaceID, aAttribute);
 }
 
 void
 RestyleManager::ClassAttributeWillBeChangedBySMIL(Element* aElement)
 {
-  TakeSnapshotForAttributeChange(aElement, kNameSpaceID_None,
+  TakeSnapshotForAttributeChange(*aElement, kNameSpaceID_None,
                                  nsGkAtoms::_class);
 }
 
 void
-RestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
+RestyleManager::TakeSnapshotForAttributeChange(Element& aElement,
                                                int32_t aNameSpaceID,
                                                nsAtom* aAttribute)
 {
   MOZ_ASSERT(!mInStyleRefresh);
 
-  if (!aElement->HasServoData()) {
+  if (!aElement.HasServoData()) {
     return;
   }
 
   bool influencesOtherPseudoClassState;
   if (!NeedToRecordAttrChange(*StyleSet(),
-                              *aElement,
+                              aElement,
                               aNameSpaceID,
                               aAttribute,
                               &influencesOtherPseudoClassState)) {
