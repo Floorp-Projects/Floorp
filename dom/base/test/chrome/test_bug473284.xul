@@ -1,5 +1,11 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=473284
+-->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-         class="reftest-wait"
 onload="
 var result = '';
 try {
@@ -86,8 +92,14 @@ try {
   result += '.';
 }
 
-document.documentElement.textContent = result == '.23.56.89.bc' ? 'PASSED' : 'FAILED';
-if (document.documentElement.textContent == 'PASSED') {
-  document.documentElement.removeAttribute('class');
-}
-"/>
+is(result, '.23.56.89.bc', 'The correct assignments throw.');
+">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=473284"
+     target="_blank">Mozilla Bug 473284</a>
+  </body>
+</window>
