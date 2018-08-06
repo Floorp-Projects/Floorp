@@ -1208,27 +1208,6 @@ nsIContent::SetXBLInsertionPoint(nsIContent* aContent)
   }
 }
 
-nsresult
-FragmentOrElement::InsertChildBefore(nsIContent* aKid,
-                                     nsIContent* aBeforeThis,
-                                     bool aNotify)
-{
-  MOZ_ASSERT(aKid, "null ptr");
-
-  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
-  MOZ_ASSERT(index >= 0);
-
-  return doInsertChildAt(aKid, index, aNotify, mAttrsAndChildren);
-}
-
-void
-FragmentOrElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
-{
-  // Let's keep the node alive.
-  nsCOMPtr<nsIContent> kungFuDeathGrip = aKid;
-  doRemoveChildAt(ComputeIndexOf(aKid), aNotify, aKid, mAttrsAndChildren);
-}
-
 void
 FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
                                           OOMReporter& aError)
@@ -1349,24 +1328,20 @@ public:
       return;
     }
     FragmentOrElement* container = static_cast<FragmentOrElement*>(aNode);
-    uint32_t childCount = container->mAttrsAndChildren.ChildCount();
-    if (childCount) {
+    if (container->HasChildren()) {
       // Invalidate cached array of child nodes
       container->InvalidateChildNodes();
 
-      while (childCount-- > 0) {
+      while (container->HasChildren()) {
         // Hold a strong ref to the node when we remove it, because we may be
-        // the last reference to it.  We need to call TakeChildAt() and
-        // update mFirstChild before calling UnbindFromTree, since this last
-        // can notify various observers and they should really see consistent
+        // the last reference to it.  We need to call DisconnectChild()
+        // before calling UnbindFromTree, since this last can notify various
+        // observers and they should really see consistent
         // tree state.
         // If this code changes, change the corresponding code in
         // FragmentOrElement's and nsDocument's unlink impls.
-        nsCOMPtr<nsIContent> child =
-          container->mAttrsAndChildren.TakeChildAt(childCount);
-        if (childCount == 0) {
-          container->mFirstChild = nullptr;
-        }
+        nsCOMPtr<nsIContent> child = container->GetLastChild();
+        container->DisconnectChild(child);
         UnbindSubtree(child);
         child->UnbindFromTree();
       }
@@ -1471,26 +1446,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
 
   // Unlink child content (and unbind our subtree).
   if (tmp->UnoptimizableCCNode() || !nsCCUncollectableMarker::sGeneration) {
-    uint32_t childCount = tmp->mAttrsAndChildren.ChildCount();
-    if (childCount) {
-      // Don't allow script to run while we're unbinding everything.
-      nsAutoScriptBlocker scriptBlocker;
-      while (childCount-- > 0) {
-        // Hold a strong ref to the node when we remove it, because we may be
-        // the last reference to it.  We need to call TakeChildAt() and
-        // update mFirstChild before calling UnbindFromTree, since this last
-        // can notify various observers and they should really see consistent
-        // tree state.
-        // If this code changes, change the corresponding code in nsDocument's
-        // unlink impl and ContentUnbinder::UnbindSubtree.
-        nsCOMPtr<nsIContent> child = tmp->mAttrsAndChildren.TakeChildAt(childCount);
-        if (childCount == 0) {
-          tmp->mFirstChild = nullptr;
-        }
-        child->UnbindFromTree();
-      }
+    // Don't allow script to run while we're unbinding everything.
+    nsAutoScriptBlocker scriptBlocker;
+    while (tmp->HasChildren()) {
+      // Hold a strong ref to the node when we remove it, because we may be
+      // the last reference to it.
+      // If this code changes, change the corresponding code in nsDocument's
+      // unlink impl and ContentUnbinder::UnbindSubtree.
+      nsCOMPtr<nsIContent> child = tmp->GetLastChild();
+      tmp->DisconnectChild(child);
+      child->UnbindFromTree();
     }
-  } else if (!tmp->GetParent() && tmp->mAttrsAndChildren.ChildCount()) {
+  } else if (!tmp->GetParent() && tmp->HasChildren()) {
     ContentUnbinder::Append(tmp);
   } /* else {
     The subtree root will end up to a ContentUnbinder, and that will
@@ -2049,7 +2016,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     }
   }
 
-  // Traverse attribute names and child content.
+  // Traverse attribute names.
   {
     uint32_t i;
     uint32_t attrs = tmp->mAttrsAndChildren.AttrCount();
@@ -2061,12 +2028,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
         cb.NoteNativeChild(name->NodeInfo(),
                            NS_CYCLE_COLLECTION_PARTICIPANT(NodeInfo));
       }
-    }
-
-    uint32_t kids = tmp->mAttrsAndChildren.ChildCount();
-    for (i = 0; i < kids; i++) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mAttrsAndChildren[i]");
-      cb.NoteXPCOMChild(tmp->mAttrsAndChildren.GetSafeChildAt(i));
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -2126,24 +2087,6 @@ bool
 FragmentOrElement::ThreadSafeTextIsOnlyWhitespace() const
 {
   return false;
-}
-
-uint32_t
-FragmentOrElement::GetChildCount() const
-{
-  return mAttrsAndChildren.ChildCount();
-}
-
-nsIContent *
-FragmentOrElement::GetChildAt_Deprecated(uint32_t aIndex) const
-{
-  return mAttrsAndChildren.GetSafeChildAt(aIndex);
-}
-
-int32_t
-FragmentOrElement::ComputeIndexOf(const nsINode* aPossibleChild) const
-{
-  return mAttrsAndChildren.IndexOfChild(aPossibleChild);
 }
 
 static inline bool

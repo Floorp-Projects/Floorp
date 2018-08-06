@@ -255,36 +255,6 @@ Attr::IsNodeOfType(uint32_t aFlags) const
     return false;
 }
 
-uint32_t
-Attr::GetChildCount() const
-{
-  return 0;
-}
-
-nsIContent *
-Attr::GetChildAt_Deprecated(uint32_t aIndex) const
-{
-  return nullptr;
-}
-
-int32_t
-Attr::ComputeIndexOf(const nsINode* aPossibleChild) const
-{
-  return -1;
-}
-
-nsresult
-Attr::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                        bool aNotify)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void
-Attr::RemoveChildNode(nsIContent* aKid, bool aNotify)
-{
-}
-
 void
 Attr::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {

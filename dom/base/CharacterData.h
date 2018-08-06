@@ -99,33 +99,6 @@ public:
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
                                     ErrorResult& aError) override;
 
-  // nsINode methods
-  uint32_t GetChildCount() const final
-  {
-    return 0;
-  }
-
-  nsIContent* GetChildAt_Deprecated(uint32_t aIndex) const final
-  {
-    return nullptr;
-  }
-
-  int32_t ComputeIndexOf(const nsINode* aPossibleChild) const final
-  {
-    return -1;
-  }
-
-  nsresult InsertChildBefore(nsIContent* aKid,
-                             nsIContent* aBeforeThis,
-                             bool aNotify) final
-  {
-    return NS_OK;
-  }
-
-  void RemoveChildNode(nsIContent* aKid, bool aNotify) final
-  {
-  }
-
   void GetTextContentInternal(nsAString& aTextContent, OOMReporter&) final
   {
     GetNodeValue(aTextContent);
