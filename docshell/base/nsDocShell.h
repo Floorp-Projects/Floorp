@@ -35,6 +35,7 @@
 #include "nsIRefreshURI.h"
 #include "nsIScrollable.h"
 #include "nsITabParent.h"
+#include "nsITextScroll.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
@@ -121,6 +122,7 @@ class nsDocShell final
   , public nsIWebNavigation
   , public nsIBaseWindow
   , public nsIScrollable
+  , public nsITextScroll
   , public nsIRefreshURI
   , public nsIWebProgressListener
   , public nsIWebPageDescriptor
@@ -171,6 +173,7 @@ public:
   NS_DECL_NSIWEBNAVIGATION
   NS_DECL_NSIBASEWINDOW
   NS_DECL_NSISCROLLABLE
+  NS_DECL_NSITEXTSCROLL
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIREFRESHURI
