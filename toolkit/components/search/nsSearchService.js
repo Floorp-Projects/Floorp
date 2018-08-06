@@ -4331,7 +4331,12 @@ SearchService.prototype = {
   },
 
   parseSubmissionURL: function SRCH_SVC_parseSubmissionURL(aURL) {
-    this._ensureInitialized();
+    if (!gInitialized) {
+      // If search is not initialized, do nothing.
+      // This allows us to use this function early in telemetry.
+      // The only other consumer of this (places) uses it much later.
+      return gEmptyParseSubmissionResult;
+    }
     LOG("parseSubmissionURL: Parsing \"" + aURL + "\".");
 
     if (!this._parseSubmissionMap) {
