@@ -6431,7 +6431,7 @@ var BrowserOffline = {
   // BrowserOffline Public Methods
   init() {
     if (!this._uiElement)
-      this._uiElement = document.getElementById("workOfflineMenuitemState");
+      this._uiElement = document.getElementById("cmd_toggleOfflineStatus");
 
     Services.obs.addObserver(this, "network:offline-status-changed");
 

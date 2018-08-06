@@ -89,8 +89,7 @@
                           label="&goOfflineCmd.label;"
                           accesskey="&goOfflineCmd.accesskey;"
                           type="checkbox"
-                          observes="workOfflineMenuitemState"
-                          oncommand="BrowserOffline.toggleOfflineStatus();"/>
+                          command="cmd_toggleOfflineStatus"/>
                 <menuitem id="menu_FileQuitItem"
 #ifdef XP_WIN
                           label="&quitApplicationCmdWin2.label;"
