@@ -38,6 +38,9 @@ const FRAME_COLOR = [71, 105, 91];
 const TAB_BACKGROUND_TEXT_COLOR = [207, 221, 192, .9];
 
 function hexToRGB(hex) {
+  if (!hex) {
+    return null;
+  }
   hex = parseInt((hex.indexOf("#") > -1 ? hex.substring(1) : hex), 16);
   return [hex >> 16, (hex & 0x00FF00) >> 8, (hex & 0x0000FF)];
 }
@@ -47,6 +50,9 @@ function rgbToCSS(rgb) {
 }
 
 function hexToCSS(hex) {
+  if (!hex) {
+    return null;
+  }
   return rgbToCSS(hexToRGB(hex));
 }
 
