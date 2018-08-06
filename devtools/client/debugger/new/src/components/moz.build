@@ -11,6 +11,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'A11yIntention.js',
     'App.js',
     'ProjectSearch.js',
     'QuickOpenModal.js',
