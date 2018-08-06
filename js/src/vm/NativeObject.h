@@ -530,20 +530,7 @@ class NativeObject : public ShapedObject
     bool containsDenseElement(uint32_t idx) {
         return idx < getDenseInitializedLength() && !elements_[idx].isMagic(JS_ELEMENTS_HOLE);
     }
-
-  private:
-    uint32_t getDenseInitializedLengthUnchecked() const {
-        return getElementsHeader()->initializedLength;
-    }
-
-  public:
     uint32_t getDenseInitializedLength() const {
-        // If the following assertion fails, there's somewhere else a missing
-        // call to shrinkCapacityToInitializedLength(). Good luck for the hunt
-        // and finding the offender!
-        MOZ_ASSERT_IF(!isExtensible(),
-                      getElementsHeader()->initializedLength == getElementsHeader()->capacity);
-
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() const {
