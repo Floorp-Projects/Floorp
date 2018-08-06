@@ -952,7 +952,7 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setMimeType(download.getMimeType());
 
-        if (!AppConstants.isGeckoBuild(getContext())) {
+        if (!AppConstants.INSTANCE.isGeckoBuild()) {
             final String cookie = CookieManager.getInstance().getCookie(download.getUrl());
             request.addRequestHeader("Cookie", cookie)
                     .addRequestHeader("User-Agent", download.getUserAgent());
