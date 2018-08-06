@@ -442,7 +442,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         public void onProgressChange(GeckoSession session, int progress) {
             Log.i(LOGTAG, "onProgressChange " + progress);
 
-            mProgressView.setProgress(progress, true);
+            mProgressView.setProgress(progress);
 
             if (progress > 0 && progress < 100) {
                 mProgressView.setVisibility(View.VISIBLE);
