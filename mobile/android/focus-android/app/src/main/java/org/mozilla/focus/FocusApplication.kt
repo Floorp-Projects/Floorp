@@ -87,7 +87,6 @@ class FocusApplication : LocaleAwareApplication() {
         launch(IO) {
             fretboard.loadExperiments() // load current settings from disk
             fretboard.updateExperiments() // then update disk and memory from the network
-            TelemetryWrapper.recordActiveExperiments(this@FocusApplication)
         }
     }
 

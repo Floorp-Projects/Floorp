@@ -260,6 +260,8 @@ object TelemetryWrapper {
                     .addPingBuilder(TelemetryCorePingBuilder(configuration))
                     .addPingBuilder(TelemetryEventPingBuilder(configuration))
                     .setDefaultSearchProvider(createDefaultSearchProvider(context)))
+
+            TelemetryWrapper.recordActiveExperiments(context)
         } finally {
             StrictMode.setThreadPolicy(threadPolicy)
         }
