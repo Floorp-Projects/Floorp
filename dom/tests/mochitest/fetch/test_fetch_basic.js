@@ -1,13 +1,8 @@
 function testAboutURL() {
   var p1 = fetch('about:blank').then(function(res) {
-    is(res.status, 200, "about:blank should load a valid Response");
-    is(res.headers.get('content-type'), 'text/html;charset=utf-8',
-       "about:blank content-type should be text/html;charset=utf-8");
-    is(res.headers.has('content-length'), false,
-       "about:blank should not have a content-length header");
-    return res.text().then(function(v) {
-      is(v, "", "about:blank body should be empty");
-    });
+    ok(false, "about:blank should fail");
+  }, function(e) {
+    ok(e instanceof TypeError, "about:blank should fail");
   });
 
   var p2 = fetch('about:config').then(function(res) {

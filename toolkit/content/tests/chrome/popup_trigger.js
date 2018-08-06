@@ -453,7 +453,7 @@ var popupTests = [
         var evt = child.createEvent("Event");
         evt.initEvent("click", true, true);
         child.documentElement.dispatchEvent(evt);
-        is(child.documentElement.getAttribute("data"), "xnull",
+        is(child.documentElement.getAttribute("data"), "xundefined",
            "cannot get popupNode from other document");
         child.documentElement.setAttribute("data", "none");
         // now try again with document.popupNode set explicitly

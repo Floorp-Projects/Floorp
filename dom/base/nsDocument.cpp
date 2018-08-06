@@ -259,6 +259,7 @@
 #include "mozilla/dom/MenuBoxObject.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
+#include "nsXULPopupManager.h"
 #include "nsIDocShellTreeOwner.h"
 #endif
 #include "nsIPresShellInlines.h"
@@ -10172,6 +10173,112 @@ nsIDocument::MaybeResolveReadyForIdle()
   if (readyPromise) {
     readyPromise->MaybeResolve(this);
   }
+}
+
+static JSObject*
+GetScopeObjectOfNode(nsINode* node)
+{
+    MOZ_ASSERT(node, "Must not be called with null.");
+
+    // Window root occasionally keeps alive a node of a document whose
+    // window is already dead. If in this brief period someone calls
+    // GetPopupNode and we return that node, we can end up creating a
+    // reflector for the node in the wrong global (the current global,
+    // not the document global, because we won't know what the document
+    // global is).  Returning an orphan node like that to JS would be a
+    // bug anyway, so to avoid this, let's do the same check as fetching
+    // GetParentObjet() on the document does to determine the scope and
+    // if it returns null let's just return null in XULDocument::GetPopupNode.
+    nsIDocument* doc = node->OwnerDoc();
+    MOZ_ASSERT(doc, "This should never happen.");
+
+    nsIGlobalObject* global = doc->GetScopeObject();
+    return global ? global->GetGlobalJSObject() : nullptr;
+}
+
+
+already_AddRefed<nsPIWindowRoot>
+nsIDocument::GetWindowRoot()
+{
+  if (!mDocumentContainer) {
+    return nullptr;
+  }
+  // XXX It's unclear why this can't just use GetWindow().
+  nsCOMPtr<nsPIDOMWindowOuter> piWin = mDocumentContainer->GetWindow();
+  return piWin ? piWin->GetTopWindowRoot() : nullptr;
+}
+
+already_AddRefed<nsINode>
+nsIDocument::GetPopupNode()
+{
+    nsCOMPtr<nsINode> node;
+    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
+    if (rootWin) {
+        node = rootWin->GetPopupNode(); // addref happens here
+    }
+
+    if (!node) {
+        nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+        if (pm) {
+            node = pm->GetLastTriggerPopupNode(this);
+        }
+    }
+
+    if (node && GetScopeObjectOfNode(node)) {
+        return node.forget();
+    }
+
+    return nullptr;
+}
+
+void
+nsIDocument::SetPopupNode(nsINode* aNode)
+{
+    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
+    if (rootWin) {
+        rootWin->SetPopupNode(aNode);
+    }
+}
+
+// Returns the rangeOffset element from the XUL Popup Manager. This is for
+// chrome callers only.
+nsINode*
+nsIDocument::GetPopupRangeParent(ErrorResult& aRv)
+{
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (!pm) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+    }
+
+    return pm->GetMouseLocationParent();
+}
+
+// Returns the rangeOffset element from the XUL Popup Manager.
+int32_t
+nsIDocument::GetPopupRangeOffset(ErrorResult& aRv)
+{
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (!pm) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return 0;
+    }
+
+    return pm->MouseLocationOffset();
+}
+
+already_AddRefed<nsINode>
+nsIDocument::GetTooltipNode()
+{
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
+    nsCOMPtr<nsINode> node = pm->GetLastTriggerTooltipNode(this);
+    if (node) {
+      return node.forget();
+    }
+  }
+
+  return nullptr;
 }
 
 nsIHTMLCollection*
