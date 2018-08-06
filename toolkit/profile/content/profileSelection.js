@@ -197,7 +197,7 @@ function RenameProfile() {
       return false;
     }
 
-    selectedItem.label = newName;
+    selectedItem.firstChild.setAttribute("value", newName);
     var tiptext = gProfileManagerBundle.
                   getFormattedString("profileTooltip",
                                      [newName, selectedProfile.rootDir.path]);
