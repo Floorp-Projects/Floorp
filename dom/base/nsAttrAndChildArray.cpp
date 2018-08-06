@@ -107,189 +107,6 @@ nsAttrAndChildArray::~nsAttrAndChildArray()
   free(mImpl);
 }
 
-nsIContent*
-nsAttrAndChildArray::GetSafeChildAt(uint32_t aPos) const
-{
-  if (aPos < ChildCount()) {
-    return ChildAt(aPos);
-  }
-
-  return nullptr;
-}
-
-nsIContent * const *
-nsAttrAndChildArray::GetChildArray(uint32_t* aChildCount) const
-{
-  *aChildCount = ChildCount();
-
-  if (!*aChildCount) {
-    return nullptr;
-  }
-
-  return reinterpret_cast<nsIContent**>(mImpl->mBuffer + AttrSlotsSize());
-}
-
-nsresult
-nsAttrAndChildArray::InsertChildAt(nsIContent* aChild, uint32_t aPos)
-{
-  NS_ASSERTION(aChild, "nullchild");
-  NS_ASSERTION(aPos <= ChildCount(), "out-of-bounds");
-
-  uint32_t offset = AttrSlotsSize();
-  uint32_t childCount = ChildCount();
-
-  NS_ENSURE_TRUE(childCount < ATTRCHILD_ARRAY_MAX_CHILD_COUNT,
-                 NS_ERROR_FAILURE);
-
-  // First try to fit new child in existing childlist
-  if (mImpl && offset + childCount < mImpl->mBufferSize) {
-    void** pos = mImpl->mBuffer + offset + aPos;
-    if (childCount != aPos) {
-      memmove(pos + 1, pos, (childCount - aPos) * sizeof(nsIContent*));
-    }
-    SetChildAtPos(pos, aChild, aPos, childCount);
-
-    SetChildCount(childCount + 1);
-
-    return NS_OK;
-  }
-
-  // Try to fit new child in existing buffer by compressing attrslots
-  if (offset && !mImpl->mBuffer[offset - ATTRSIZE]) {
-    // Compress away all empty slots while we're at it. This might not be the
-    // optimal thing to do.
-    uint32_t attrCount = NonMappedAttrCount();
-    void** newStart = mImpl->mBuffer + attrCount * ATTRSIZE;
-    void** oldStart = mImpl->mBuffer + offset;
-    memmove(newStart, oldStart, aPos * sizeof(nsIContent*));
-    memmove(&newStart[aPos + 1], &oldStart[aPos],
-            (childCount - aPos) * sizeof(nsIContent*));
-    SetChildAtPos(newStart + aPos, aChild, aPos, childCount);
-
-    SetAttrSlotAndChildCount(attrCount, childCount + 1);
-
-    return NS_OK;
-  }
-
-  // We can't fit in current buffer, Realloc time!
-  if (!GrowBy(1)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  void** pos = mImpl->mBuffer + offset + aPos;
-  if (childCount != aPos) {
-    memmove(pos + 1, pos, (childCount - aPos) * sizeof(nsIContent*));
-  }
-  SetChildAtPos(pos, aChild, aPos, childCount);
-
-  SetChildCount(childCount + 1);
-
-  return NS_OK;
-}
-
-void
-nsAttrAndChildArray::RemoveChildAt(uint32_t aPos)
-{
-  // Just store the return value of TakeChildAt in an nsCOMPtr to
-  // trigger a release.
-  nsCOMPtr<nsIContent> child = TakeChildAt(aPos);
-}
-
-already_AddRefed<nsIContent>
-nsAttrAndChildArray::TakeChildAt(uint32_t aPos)
-{
-  NS_ASSERTION(aPos < ChildCount(), "out-of-bounds");
-
-  uint32_t childCount = ChildCount();
-  void** pos = mImpl->mBuffer + AttrSlotsSize() + aPos;
-  nsIContent* child = static_cast<nsIContent*>(*pos);
-  if (child->mPreviousOrLastSibling) {
-    child->mPreviousOrLastSibling->mNextSibling = child->mNextSibling;
-  }
-  if (child->mNextSibling) {
-    child->mNextSibling->mPreviousOrLastSibling = child->mPreviousOrLastSibling;
-  }
-  child->mPreviousOrLastSibling = child->mNextSibling = nullptr;
-
-  memmove(pos, pos + 1, (childCount - aPos - 1) * sizeof(nsIContent*));
-  SetChildCount(childCount - 1);
-
-  return dont_AddRef(child);
-}
-
-int32_t
-nsAttrAndChildArray::IndexOfChild(const nsINode* aPossibleChild) const
-{
-  if (!mImpl) {
-    return -1;
-  }
-  void** children = mImpl->mBuffer + AttrSlotsSize();
-  // Use signed here since we compare count to cursor which has to be signed
-  int32_t i, count = ChildCount();
-
-  if (count >= CACHE_CHILD_LIMIT) {
-    int32_t cursor = GetIndexFromCache(this);
-    // Need to compare to count here since we may have removed children since
-    // the index was added to the cache.
-    // We're also relying on that GetIndexFromCache returns -1 if no cached
-    // index was found.
-    if (cursor >= count) {
-      cursor = -1;
-    }
-
-    // Seek outward from the last found index. |inc| will change sign every
-    // run through the loop. |sign| just exists to make sure the absolute
-    // value of |inc| increases each time through.
-    int32_t inc = 1, sign = 1;
-    while (cursor >= 0 && cursor < count) {
-      if (children[cursor] == aPossibleChild) {
-        AddIndexToCache(this, cursor);
-
-        return cursor;
-      }
-
-      cursor += inc;
-      inc = -inc - sign;
-      sign = -sign;
-    }
-
-    // We ran into one 'edge'. Add inc to cursor once more to get back to
-    // the 'side' where we still need to search, then step in the |sign|
-    // direction.
-    cursor += inc;
-
-    if (sign > 0) {
-      for (; cursor < count; ++cursor) {
-        if (children[cursor] == aPossibleChild) {
-          AddIndexToCache(this, cursor);
-
-          return static_cast<int32_t>(cursor);
-        }
-      }
-    }
-    else {
-      for (; cursor >= 0; --cursor) {
-        if (children[cursor] == aPossibleChild) {
-          AddIndexToCache(this, cursor);
-
-          return static_cast<int32_t>(cursor);
-        }
-      }
-    }
-
-    // The child wasn't even in the remaining children
-    return -1;
-  }
-
-  for (i = 0; i < count; ++i) {
-    if (children[i] == aPossibleChild) {
-      return static_cast<int32_t>(i);
-    }
-  }
-
-  return -1;
-}
-
 uint32_t
 nsAttrAndChildArray::AttrCount() const
 {
@@ -652,17 +469,13 @@ nsAttrAndChildArray::Compact()
   // First compress away empty attrslots
   uint32_t slotCount = AttrSlotCount();
   uint32_t attrCount = NonMappedAttrCount();
-  uint32_t childCount = ChildCount();
 
   if (attrCount < slotCount) {
-    memmove(mImpl->mBuffer + attrCount * ATTRSIZE,
-            mImpl->mBuffer + slotCount * ATTRSIZE,
-            childCount * sizeof(nsIContent*));
     SetAttrSlotCount(attrCount);
   }
 
   // Then resize or free buffer
-  uint32_t newSize = attrCount * ATTRSIZE + childCount;
+  uint32_t newSize = attrCount * ATTRSIZE;
   if (!newSize && !mImpl->mMappedAttrs) {
     free(mImpl);
     mImpl = nullptr;
@@ -689,28 +502,6 @@ nsAttrAndChildArray::Clear()
   uint32_t i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
     ATTRS(mImpl)[i].~InternalAttr();
-  }
-
-  nsAutoScriptBlocker scriptBlocker;
-  uint32_t end = slotCount * ATTRSIZE + ChildCount();
-  for (i = slotCount * ATTRSIZE; i < end; ++i) {
-    nsIContent* child = static_cast<nsIContent*>(mImpl->mBuffer[i]);
-    // making this false so tree teardown doesn't end up being
-    // O(N*D) (number of nodes times average depth of tree).
-    child->UnbindFromTree(false); // XXX is it better to let the owner do this?
-    // Make sure to unlink our kids from each other, since someone
-    // else could stil be holding references to some of them.
-
-    // XXXbz We probably can't push this assignment down into the |aNullParent|
-    // case of UnbindFromTree because we still need the assignment in
-    // RemoveChildAt.  In particular, ContentRemoved fires between
-    // RemoveChildAt and UnbindFromTree, and in ContentRemoved the sibling
-    // chain needs to be correct.  Though maybe we could set the prev and next
-    // to point to each other but keep the kid being removed pointing to them
-    // through ContentRemoved so consumers can find where it used to be in the
-    // list?
-    child->mPreviousOrLastSibling = child->mNextSibling = nullptr;
-    NS_RELEASE(child);
   }
 
   SetAttrSlotAndChildCount(0, 0);
@@ -816,12 +607,8 @@ nsresult nsAttrAndChildArray::EnsureCapacityToClone(const nsAttrAndChildArray& a
   MOZ_ASSERT(!mImpl, "nsAttrAndChildArray::EnsureCapacityToClone requires the array be empty when called");
 
   uint32_t attrCount = aOther.NonMappedAttrCount();
-  uint32_t childCount = 0;
-  if (aAllocateChildren) {
-    childCount = aOther.ChildCount();
-  }
 
-  if (attrCount == 0 && childCount == 0) {
+  if (attrCount == 0) {
     return NS_OK;
   }
 
@@ -829,7 +616,6 @@ nsresult nsAttrAndChildArray::EnsureCapacityToClone(const nsAttrAndChildArray& a
   // have already allocated an nsAttrAndChildArray of this size.
   uint32_t size = attrCount;
   size *= ATTRSIZE;
-  size += childCount;
   uint32_t totalSize = size;
   totalSize += NS_IMPL_EXTRA_SIZE;
 
@@ -910,12 +696,10 @@ bool
 nsAttrAndChildArray::AddAttrSlot()
 {
   uint32_t slotCount = AttrSlotCount();
-  uint32_t childCount = ChildCount();
 
   CheckedUint32 size = slotCount;
   size += 1;
   size *= ATTRSIZE;
-  size += childCount;
   if (!size.isValid()) {
     return false;
   }
@@ -928,36 +712,10 @@ nsAttrAndChildArray::AddAttrSlot()
 
   void** offset = mImpl->mBuffer + slotCount * ATTRSIZE;
 
-  if (childCount > 0) {
-    memmove(&ATTRS(mImpl)[slotCount + 1], &ATTRS(mImpl)[slotCount],
-            childCount * sizeof(nsIContent*));
-  }
-
   SetAttrSlotCount(slotCount + 1);
   memset(static_cast<void*>(offset), 0, sizeof(InternalAttr));
 
   return true;
-}
-
-inline void
-nsAttrAndChildArray::SetChildAtPos(void** aPos, nsIContent* aChild,
-                                   uint32_t aIndex, uint32_t aChildCount)
-{
-  MOZ_ASSERT(!aChild->GetNextSibling(), "aChild with next sibling?");
-  MOZ_ASSERT(!aChild->GetPreviousSibling(), "aChild with prev sibling?");
-
-  *aPos = aChild;
-  NS_ADDREF(aChild);
-  if (aIndex != 0) {
-    nsIContent* previous = static_cast<nsIContent*>(*(aPos - 1));
-    aChild->mPreviousOrLastSibling = previous;
-    previous->mNextSibling = aChild;
-  }
-  if (aIndex != aChildCount) {
-    nsIContent* next = static_cast<nsIContent*>(*(aPos + 1));
-    aChild->mNextSibling = next;
-    next->mPreviousOrLastSibling = aChild;
-  }
 }
 
 size_t
