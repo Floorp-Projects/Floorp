@@ -79,7 +79,7 @@ class TelemetrySwitchPreference extends Preference {
                 // move the link into an xml parameter, but there's no advantage to making it configurable now.
                 final String url = SupportUtils.getSumoURLForTopic(getContext(), SupportUtils.SumoTopic.USAGE_DATA);
                 SessionManager.getInstance().createSession(Source.MENU, url);
-                ((Activity) getContext()).onBackPressed();
+                ((Activity) getContext()).finish();
             }
         });
 
