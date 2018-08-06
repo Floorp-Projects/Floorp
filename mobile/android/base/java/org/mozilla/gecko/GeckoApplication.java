@@ -374,14 +374,11 @@ public class GeckoApplication extends Application
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
 
-        // Enable multiDex only for local builds.
-        final boolean isLocalBuild = BuildConfig.FLAVOR_audience.equals("local");
-
         // API >= 21 natively supports loading multiple DEX files from APK files.
         // Needs just 'multiDexEnabled true' inside the gradle build configuration.
         final boolean isMultidexLibNeeded = BuildConfig.FLAVOR_minApi.equals("noMinApi");
 
-        if (isLocalBuild && isMultidexLibNeeded) {
+        if (isMultidexLibNeeded) {
             MultiDex.install(this);
         }
     }

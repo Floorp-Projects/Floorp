@@ -29,9 +29,10 @@
  * browser.startup.page is set to 3.
  */
 
+var EXPORTED_SYMBOLS = ["SessionStartup"];
+
 /* :::::::: Constants and Helpers ::::::::::::::: */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "SessionFile",
@@ -45,13 +46,14 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 
 const STATE_RUNNING_STR = "running";
 
+const TYPE_NO_SESSION = 0;
+const TYPE_RECOVER_SESSION = 1;
+const TYPE_RESUME_SESSION = 2;
+const TYPE_DEFER_SESSION = 3;
+
 // 'browser.startup.page' preference value to resume the previous session.
 const BROWSER_STARTUP_RESUME_SESSION = 3;
 
-function debug(aMsg) {
-  aMsg = ("SessionStartup: " + aMsg).replace(/\S{80}/g, "$&\n");
-  Services.console.logStringMessage(aMsg);
-}
 function warning(aMsg, aException) {
   let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
 consoleMsg.init(aMsg, aException.fileName, null, aException.lineNumber, 0, Ci.nsIScriptError.warningFlag, "component javascript");
@@ -71,14 +73,15 @@ var gOnceInitializedDeferred = (function() {
 
 /* :::::::: The Service ::::::::::::::: */
 
-function SessionStartup() {
-}
-
-SessionStartup.prototype = {
+var SessionStartup = {
+  NO_SESSION: TYPE_NO_SESSION,
+  RECOVER_SESSION: TYPE_RECOVER_SESSION,
+  RESUME_SESSION: TYPE_RESUME_SESSION,
+  DEFER_SESSION: TYPE_DEFER_SESSION,
 
   // the state to restore at startup
   _initialState: null,
-  _sessionType: Ci.nsISessionStartup.NO_SESSION,
+  _sessionType: TYPE_NO_SESSION,
   _initialized: false,
 
   // Stores whether the previous session crashed.
@@ -161,7 +164,7 @@ SessionStartup.prototype = {
 
     if (this._initialState == null) {
       // No valid session found.
-      this._sessionType = Ci.nsISessionStartup.NO_SESSION;
+      this._sessionType = this.NO_SESSION;
       Services.obs.notifyObservers(null, "sessionstore-state-finalized");
       gOnceInitializedDeferred.resolve();
       return;
@@ -222,21 +225,21 @@ SessionStartup.prototype = {
 
       // set the startup type
       if (this._previousSessionCrashed && resumeFromCrash)
-        this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
+        this._sessionType = this.RECOVER_SESSION;
       else if (!this._previousSessionCrashed && this._resumeSessionEnabled)
-        this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
+        this._sessionType = this.RESUME_SESSION;
       else if (this._initialState)
-        this._sessionType = Ci.nsISessionStartup.DEFER_SESSION;
+        this._sessionType = this.DEFER_SESSION;
       else
         this._initialState = null; // reset the state
-
       Services.obs.addObserver(this, "sessionstore-windows-restored", true);
 
-      if (this._sessionType != Ci.nsISessionStartup.NO_SESSION)
+      if (this._sessionType != this.NO_SESSION)
         Services.obs.addObserver(this, "browser:purge-session-history", true);
 
       // We're ready. Notify everyone else.
       Services.obs.notifyObservers(null, "sessionstore-state-finalized");
+
       gOnceInitializedDeferred.resolve();
     });
   },
@@ -246,22 +249,6 @@ SessionStartup.prototype = {
    */
   observe: function sss_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-    case "app-startup":
-      Services.obs.addObserver(this, "final-ui-startup", true);
-      Services.obs.addObserver(this, "quit-application", true);
-      break;
-    case "final-ui-startup":
-      Services.obs.removeObserver(this, "final-ui-startup");
-      Services.obs.removeObserver(this, "quit-application");
-      this.init();
-      break;
-    case "quit-application":
-      // no reason for initializing at this point (cf. bug 409115)
-      Services.obs.removeObserver(this, "final-ui-startup");
-      Services.obs.removeObserver(this, "quit-application");
-      if (this._sessionType != Ci.nsISessionStartup.NO_SESSION)
-        Services.obs.removeObserver(this, "browser:purge-session-history");
-      break;
     case "sessionstore-windows-restored":
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
       // free _initialState after nsSessionStore is done with it
@@ -271,7 +258,7 @@ SessionStartup.prototype = {
     case "browser:purge-session-history":
       Services.obs.removeObserver(this, "browser:purge-session-history");
       // reset all state on sanitization
-      this._sessionType = Ci.nsISessionStartup.NO_SESSION;
+      this._sessionType = this.NO_SESSION;
       break;
     }
   },
@@ -319,8 +306,8 @@ SessionStartup.prototype = {
    * @returns bool
    */
   _willRestore() {
-    return this._sessionType == Ci.nsISessionStartup.RECOVER_SESSION ||
-           this._sessionType == Ci.nsISessionStartup.RESUME_SESSION;
+    return this._sessionType == this.RECOVER_SESSION ||
+           this._sessionType == this.RESUME_SESSION;
   },
 
   /**
@@ -371,11 +358,7 @@ SessionStartup.prototype = {
     return this._previousSessionCrashed;
   },
 
-  /* ........ QueryInterface .............. */
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference,
-                                          Ci.nsISessionStartup]),
-  classID: Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}")
+                                          Ci.nsISupportsWeakReference]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStartup]);

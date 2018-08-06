@@ -1383,6 +1383,11 @@ protected:
    */
   void ClearStaleServoData();
 
+  /**
+   * Returns the top window root from the outer window.
+   */
+  already_AddRefed<nsPIWindowRoot> GetWindowRoot();
+
 private:
   class SelectorCacheKey
   {
@@ -3335,6 +3340,13 @@ public:
   already_AddRefed<nsIURI> GetMozDocumentURIIfNotForErrorPages();
 
   mozilla::dom::Promise* GetDocumentReadyForIdle(mozilla::ErrorResult& aRv);
+
+  already_AddRefed<nsINode> GetPopupNode();
+  void SetPopupNode(nsINode* aNode);
+  nsINode* GetPopupRangeParent(ErrorResult& aRv);
+  int32_t GetPopupRangeOffset(ErrorResult& aRv);
+  already_AddRefed<nsINode> GetTooltipNode();
+  void SetTooltipNode(nsINode* aNode) { /* do nothing */ }
 
   // ParentNode
   nsIHTMLCollection* Children();

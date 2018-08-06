@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   HomePage: "resource:///modules/HomePage.jsm",
   LaterRun: "resource:///modules/LaterRun.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm"
 });
@@ -510,9 +511,7 @@ nsBrowserContentHandler.prototype = {
             // into account because that requires waiting for the session file
             // to be read. If a crash occurs after updating, before restarting,
             // we may open the startPage in addition to restoring the session.
-            var ss = Cc["@mozilla.org/browser/sessionstartup;1"]
-                       .getService(Ci.nsISessionStartup);
-            willRestoreSession = ss.isAutomaticRestoreEnabled();
+            willRestoreSession = SessionStartup.isAutomaticRestoreEnabled();
 
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
             if (prefb.prefHasUserValue("app.update.postupdate")) {
