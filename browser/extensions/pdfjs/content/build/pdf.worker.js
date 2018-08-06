@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.719';
-var pdfjsBuild = '35214245';
+var pdfjsVersion = '2.0.750';
+var pdfjsBuild = 'c8ee6331';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.719';
+    let workerVersion = '2.0.750';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -17447,11 +17447,6 @@ var CalRGBCS = function CalRGBCSClosure() {
       (0, _util.info)('Invalid Gamma [' + this.GR + ', ' + this.GG + ', ' + this.GB + '] for ' + this.name + ', falling back to default');
       this.GR = this.GG = this.GB = 1;
     }
-    if (this.MXA < 0 || this.MYA < 0 || this.MZA < 0 || this.MXB < 0 || this.MYB < 0 || this.MZB < 0 || this.MXC < 0 || this.MYC < 0 || this.MZC < 0) {
-      (0, _util.info)('Invalid Matrix for ' + this.name + ' [' + this.MXA + ', ' + this.MYA + ', ' + this.MZA + this.MXB + ', ' + this.MYB + ', ' + this.MZB + this.MXC + ', ' + this.MYC + ', ' + this.MZC + '], falling back to default');
-      this.MXA = this.MYB = this.MZC = 1;
-      this.MXB = this.MYA = this.MZA = this.MXC = this.MYC = this.MZB = 0;
-    }
   }
   function matrixProduct(a, b, result) {
     result[0] = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -18162,7 +18157,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     this.data.radioButton = this.hasFieldFlag(_util.AnnotationFieldFlag.RADIO) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
     this.data.pushButton = this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
     if (this.data.checkBox) {
-      this._processCheckBox();
+      this._processCheckBox(params);
     } else if (this.data.radioButton) {
       this._processRadioButton(params);
     } else if (this.data.pushButton) {
@@ -18171,11 +18166,24 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       (0, _util.warn)('Invalid field flags for button widget annotation');
     }
   }
-  _processCheckBox() {
-    if (!(0, _primitives.isName)(this.data.fieldValue)) {
+  _processCheckBox(params) {
+    if ((0, _primitives.isName)(this.data.fieldValue)) {
+      this.data.fieldValue = this.data.fieldValue.name;
+    }
+    const customAppearance = params.dict.get('AP');
+    if (!(0, _primitives.isDict)(customAppearance)) {
       return;
     }
-    this.data.fieldValue = this.data.fieldValue.name;
+    const exportValueOptionsDict = customAppearance.get('D');
+    if (!(0, _primitives.isDict)(exportValueOptionsDict)) {
+      return;
+    }
+    const exportValues = exportValueOptionsDict.getKeys();
+    const hasCorrectOptionCount = exportValues.length === 2;
+    if (!hasCorrectOptionCount) {
+      return;
+    }
+    this.data.exportValue = exportValues[0] === 'Off' ? exportValues[1] : exportValues[0];
   }
   _processRadioButton(params) {
     this.data.fieldValue = this.data.buttonValue = null;
@@ -20391,8 +20399,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         var cidSystemInfo = dict.get('CIDSystemInfo');
         if ((0, _primitives.isDict)(cidSystemInfo)) {
           properties.cidSystemInfo = {
-            registry: cidSystemInfo.get('Registry'),
-            ordering: cidSystemInfo.get('Ordering'),
+            registry: (0, _util.stringToPDFString)(cidSystemInfo.get('Registry')),
+            ordering: (0, _util.stringToPDFString)(cidSystemInfo.get('Ordering')),
             supplement: cidSystemInfo.get('Supplement')
           };
         }
@@ -22346,6 +22354,8 @@ var _unicode = __w_pdfjs_require__(36);
 
 var _font_renderer = __w_pdfjs_require__(37);
 
+var _cmap = __w_pdfjs_require__(29);
+
 var _stream = __w_pdfjs_require__(14);
 
 var _type1_parser = __w_pdfjs_require__(38);
@@ -22685,31 +22695,9 @@ var Font = function FontClosure() {
       this.fallbackToSystemFont();
       return;
     }
-    if (subtype === 'Type1C') {
-      if (type !== 'Type1' && type !== 'MMType1') {
-        if (isTrueTypeFile(file)) {
-          subtype = 'TrueType';
-        } else {
-          type = 'Type1';
-        }
-      } else if (isOpenTypeFile(file)) {
-        subtype = 'OpenType';
-      }
-    }
-    if (subtype === 'CIDFontType0C' && type !== 'CIDFontType0') {
-      type = 'CIDFontType0';
-    }
-    if (type === 'CIDFontType0') {
-      if (isType1File(file)) {
-        subtype = 'CIDFontType0';
-      } else if (isOpenTypeFile(file)) {
-        subtype = 'OpenType';
-      } else {
-        subtype = 'CIDFontType0C';
-      }
-    }
-    if (subtype === 'OpenType' && type !== 'OpenType') {
-      type = 'OpenType';
+    [type, subtype] = getFontFileType(file, properties);
+    if (type !== this.type || subtype !== this.subtype) {
+      (0, _util.info)('Inconsistent font file Type/SubType, expected: ' + `${this.type}/${this.subtype} but found: ${type}/${subtype}.`);
     }
     try {
       var data;
@@ -22737,9 +22725,6 @@ var Font = function FontClosure() {
           throw new _util.FormatError(`Font ${type} is not supported`);
       }
     } catch (e) {
-      if (!(e instanceof _util.FormatError)) {
-        throw e;
-      }
       (0, _util.warn)(e);
       this.fallbackToSystemFont();
       return;
@@ -22783,7 +22768,7 @@ var Font = function FontClosure() {
   }
   function isTrueTypeFile(file) {
     var header = file.peekBytes(4);
-    return (0, _util.readUint32)(header, 0) === 0x00010000;
+    return (0, _util.readUint32)(header, 0) === 0x00010000 || (0, _util.bytesToString)(header) === 'true';
   }
   function isTrueTypeCollectionFile(file) {
     let header = file.peekBytes(4);
@@ -22802,6 +22787,50 @@ var Font = function FontClosure() {
       return true;
     }
     return false;
+  }
+  function isCFFFile(file) {
+    const header = file.peekBytes(4);
+    if (header[0] >= 1 && header[3] >= 1 && header[3] <= 4) {
+      return true;
+    }
+    return false;
+  }
+  function getFontFileType(file, { type, subtype, composite }) {
+    let fileType, fileSubtype;
+    if (isTrueTypeFile(file) || isTrueTypeCollectionFile(file)) {
+      if (composite) {
+        fileType = 'CIDFontType2';
+      } else {
+        fileType = 'TrueType';
+      }
+    } else if (isOpenTypeFile(file)) {
+      if (composite) {
+        fileType = 'CIDFontType2';
+      } else {
+        fileType = 'OpenType';
+      }
+    } else if (isType1File(file)) {
+      if (composite) {
+        fileType = 'CIDFontType0';
+      } else if (type === 'MMType1') {
+        fileType = 'MMType1';
+      } else {
+        fileType = 'Type1';
+      }
+    } else if (isCFFFile(file)) {
+      if (composite) {
+        fileType = 'CIDFontType0';
+        fileSubtype = 'CIDFontType0C';
+      } else {
+        fileType = 'Type1';
+        fileSubtype = 'Type1C';
+      }
+    } else {
+      (0, _util.warn)('getFontFileType: Unable to detect correct font file Type/Subtype.');
+      fileType = type;
+      fileSubtype = subtype;
+    }
+    return [fileType, fileSubtype];
   }
   function buildToFontChar(encoding, glyphsUnicodeMap, differences) {
     var toFontChar = [],
@@ -24040,7 +24069,8 @@ var Font = function FontClosure() {
       let cff, cffFile;
       var isTrueType = !tables['CFF '];
       if (!isTrueType) {
-        if (header.version === 'OTTO' && !(properties.composite && properties.cidToGidMap) || !tables['head'] || !tables['hhea'] || !tables['maxp'] || !tables['post']) {
+        const isComposite = properties.composite && ((properties.cidToGidMap || []).length > 0 || !(properties.cMap instanceof _cmap.IdentityCMap));
+        if (header.version === 'OTTO' && !isComposite || !tables['head'] || !tables['hhea'] || !tables['maxp'] || !tables['post']) {
           cffFile = new _stream.Stream(tables['CFF '].data);
           cff = new CFFFont(cffFile, properties);
           adjustWidths(properties);
@@ -40375,24 +40405,36 @@ var PDFImage = function PDFImageClosure() {
   function PDFImage({ xref, res, image, isInline = false, smask = null, mask = null, isMask = false, pdfFunctionFactory }) {
     this.image = image;
     var dict = image.dict;
-    if (dict.has('Filter')) {
-      var filter = dict.get('Filter').name;
-      if (filter === 'JPXDecode') {
-        var jpxImage = new _jpx.JpxImage();
-        jpxImage.parseImageProperties(image.stream);
-        image.stream.reset();
-        image.bitsPerComponent = jpxImage.bitsPerComponent;
-        image.numComps = jpxImage.componentsCount;
-      } else if (filter === 'JBIG2Decode') {
-        image.bitsPerComponent = 1;
-        image.numComps = 1;
+    const filter = dict.get('Filter');
+    if ((0, _primitives.isName)(filter)) {
+      switch (filter.name) {
+        case 'JPXDecode':
+          var jpxImage = new _jpx.JpxImage();
+          jpxImage.parseImageProperties(image.stream);
+          image.stream.reset();
+          image.width = jpxImage.width;
+          image.height = jpxImage.height;
+          image.bitsPerComponent = jpxImage.bitsPerComponent;
+          image.numComps = jpxImage.componentsCount;
+          break;
+        case 'JBIG2Decode':
+          image.bitsPerComponent = 1;
+          image.numComps = 1;
+          break;
       }
     }
-    this.width = dict.get('Width', 'W');
-    this.height = dict.get('Height', 'H');
-    if (this.width < 1 || this.height < 1) {
-      throw new _util.FormatError(`Invalid image width: ${this.width} or ` + `height: ${this.height}`);
+    let width = dict.get('Width', 'W');
+    let height = dict.get('Height', 'H');
+    if (Number.isInteger(image.width) && image.width > 0 && Number.isInteger(image.height) && image.height > 0 && (image.width !== width || image.height !== height)) {
+      (0, _util.warn)('PDFImage - using the Width/Height of the image data, ' + 'rather than the image dictionary.');
+      width = image.width;
+      height = image.height;
     }
+    if (width < 1 || height < 1) {
+      throw new _util.FormatError(`Invalid image width: ${width} or ` + `height: ${height}`);
+    }
+    this.width = width;
+    this.height = height;
     this.interpolate = dict.get('Interpolate', 'I') || false;
     this.imageMask = dict.get('ImageMask', 'IM') || false;
     this.matte = dict.get('Matte') || false;
@@ -40423,7 +40465,7 @@ var PDFImage = function PDFImageClosure() {
             colorSpace = _primitives.Name.get('DeviceCMYK');
             break;
           default:
-            throw new Error(`JPX images with ${this.numComps} ` + 'color components not supported.');
+            throw new Error(`JPX images with ${image.numComps} ` + 'color components not supported.');
         }
       }
       let resources = isInline ? res : null;
