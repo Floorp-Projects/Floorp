@@ -94,6 +94,7 @@ android-api-16-ccov/debug:
         secrets: true
         custom-build-variant-cfg: api-16-debug-ccov
         tooltool-downloads: internal
+    run-on-projects: ['mozilla-central']
     toolchains:
         - android-gradle-dependencies
         - android-ndk-linux
