@@ -21,7 +21,7 @@ add_task(async function test_scroll_background_about_reader_tabs() {
   pushPrefs(["browser.sessionstore.restore_on_demand", true]);
 
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  let tab = newWin.gBrowser.addTab(READER_MODE_URL);
+  let tab = BrowserTestUtils.addTab(newWin.gBrowser, READER_MODE_URL);
   let browser = tab.linkedBrowser;
   await Promise.all([
     BrowserTestUtils.browserLoaded(browser),

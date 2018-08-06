@@ -25,7 +25,7 @@ add_task(async function new_window() {
   let newWin;
   try {
     newWin = await promiseNewWindowLoaded();
-    let tab = newWin.gBrowser.addTab("http://example.com/browser_625016.js?" + Math.random());
+    let tab = BrowserTestUtils.addTab(newWin.gBrowser, "http://example.com/browser_625016.js?" + Math.random());
     await promiseBrowserLoaded(tab.linkedBrowser);
 
     // Double check that we have no closed windows

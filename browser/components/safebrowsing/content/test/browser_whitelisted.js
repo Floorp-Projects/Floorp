@@ -27,7 +27,7 @@ function testWhitelistedPage(window) {
 
 add_task(async function testNormalBrowsing() {
   tabbrowser = gBrowser;
-  let tab = tabbrowser.selectedTab = tabbrowser.addTab();
+  let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
 
   info("Load a test page that's whitelisted");
   Services.prefs.setCharPref(PREF_WHITELISTED_HOSTNAMES, "example.com,www.ItIsaTrap.org,example.net");
