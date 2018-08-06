@@ -20,6 +20,7 @@ uint64_t LayerMLGPU::sFrameKey = 0;
 LayerMLGPU::LayerMLGPU(LayerManagerMLGPU* aManager)
  : HostLayer(aManager),
    mFrameKey(0),
+   mComputedOpacity(0.0),
    mPrepared(false)
 {
 }

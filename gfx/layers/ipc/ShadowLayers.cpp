@@ -65,6 +65,7 @@ class Transaction
 public:
   Transaction()
     : mTargetRotation(ROTATION_0)
+    , mTargetOrientation(dom::eScreenOrientation_None)
     , mOpen(false)
     , mRotationChanged(false)
   {}
