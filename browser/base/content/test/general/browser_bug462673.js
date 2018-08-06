@@ -20,7 +20,7 @@ add_task(async function() {
   let tab = win.gBrowser.tabContainer.firstChild;
   await promiseTabLoadEvent(tab, getRootDirectory(gTestPath) + "test_bug462673.html");
 
-  var newTab = BrowserTestUtils.addTab(win.gBrowser);
+  var newTab = win.gBrowser.addTab();
   var newBrowser = newTab.linkedBrowser;
   win.gBrowser.removeTab(tab);
   ok(!win.closed, "Window stays open");

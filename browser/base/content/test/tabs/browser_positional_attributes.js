@@ -4,10 +4,8 @@
 
 var tabs = [];
 
-function addTab(aURL, done) {
-  tabs.push(BrowserTestUtils.addTab(gBrowser, aURL, {
-    skipAnimation: true,
-  }, done));
+function addTab(aURL) {
+  tabs.push(gBrowser.addTab(aURL, {skipAnimation: true}));
 }
 
 function switchTab(index) {
@@ -22,13 +20,10 @@ function testAttrib(tabIndex, attrib, expected) {
 add_task(async function setup() {
   is(gBrowser.tabs.length, 1, "one tab is open initially");
 
-  await new Promise(r => addTab("http://mochi.test:8888/#0", r));
-  await new Promise(r => addTab("http://mochi.test:8888/#1", r));
-  await new Promise(r => addTab("http://mochi.test:8888/#2", r));
-  await new Promise(r => addTab("http://mochi.test:8888/#3", r));
-
-  is(gBrowser.tabs.length, 5, "five tabs are open after setup");
-  EventUtils.synthesizeMouse(tabs[1], 1, 1, {type: "mouseover"});
+  addTab("http://mochi.test:8888/#0");
+  addTab("http://mochi.test:8888/#1");
+  addTab("http://mochi.test:8888/#2");
+  addTab("http://mochi.test:8888/#3");
 });
 
 // Add several new tabs in sequence, hiding some, to ensure that the

@@ -22,7 +22,7 @@ add_task(async function testPermissionUnknownInPrivateWindow() {
   }, win);
 
   info("Creating private tab");
-  win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
+  win.gBrowser.selectedTab = win.gBrowser.addTab();
 
   info("Loading test page: " + testPageURL);
   win.gBrowser.selectedBrowser.loadURI(testPageURL);

@@ -210,7 +210,7 @@ function referrerTestCaseLoaded(aTestNumber, aParams) {
             "&cross=" + escape(test.cross || "");
   let browser = gTestWindow.gBrowser;
   return BrowserTestUtils.openNewForegroundTab(browser, () => {
-    browser.selectedTab = BrowserTestUtils.addTab(browser, url, aParams);
+    browser.selectedTab = browser.addTab(url, aParams);
   }, false, true);
 }
 
