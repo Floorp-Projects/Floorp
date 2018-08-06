@@ -386,20 +386,6 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-// Pref to control whether ::xul-tree-* pseudo-elements are parsed in content
-// pages.
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
-VARCACHE_PREF(
-  "layout.css.xul-tree-pseudos.content.enabled",
-   layout_css_xul_tree_pseudos_content_enabled,
-  bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
 // Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 VARCACHE_PREF(
   "layout.css.grid-template-subgrid-value.enabled",

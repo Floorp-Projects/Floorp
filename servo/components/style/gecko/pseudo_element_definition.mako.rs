@@ -112,11 +112,7 @@ impl PseudoElement {
             % for pseudo in PSEUDOS:
                 ${pseudo_element_variant(pseudo)} =>
                 % if pseudo.is_tree_pseudo_element():
-                    if unsafe { structs::StaticPrefs_sVarCache_layout_css_xul_tree_pseudos_content_enabled } {
-                        0
-                    } else {
-                        structs::CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME
-                    },
+                    0,
                 % elif pseudo.is_anon_box():
                     structs::CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS,
                 % else:
