@@ -71,7 +71,7 @@ var { helpers, assert } = (function () {
     options.isFirefox = true;
 
     var tabbrowser = options.chromeWindow.gBrowser;
-    options.tab = BrowserTestUtils.addTab(tabbrowser);
+    options.tab = tabbrowser.addTab();
     tabbrowser.selectedTab = options.tab;
     options.browser = tabbrowser.getBrowserForTab(options.tab);
     options.target = TargetFactory.forTab(options.tab);
@@ -117,7 +117,7 @@ var { helpers, assert } = (function () {
     options.isFirefox = true;
 
     var tabbrowser = options.chromeWindow.gBrowser;
-    options.tab = BrowserTestUtils.addTab(tabbrowser);
+    options.tab = tabbrowser.addTab();
     tabbrowser.selectedTab = options.tab;
     options.browser = tabbrowser.getBrowserForTab(options.tab);
     options.target = TargetFactory.forTab(options.tab);

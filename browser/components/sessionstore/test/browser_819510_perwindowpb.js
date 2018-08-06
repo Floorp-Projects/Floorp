@@ -113,7 +113,7 @@ add_task(async function test_3() {
 });
 
 async function promiseTabLoad(win, url) {
-  let tab = BrowserTestUtils.addTab(win.gBrowser, url);
+  let tab = win.gBrowser.addTab(url);
   await promiseBrowserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);
 }

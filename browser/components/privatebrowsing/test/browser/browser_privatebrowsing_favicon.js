@@ -159,7 +159,7 @@ async function assignCookies(aBrowser, aURL, aCookieValue) {
 }
 
 async function openTab(aBrowser, aURL) {
-  let tab = BrowserTestUtils.addTab(aBrowser, aURL);
+  let tab = aBrowser.addTab(aURL);
 
   // Select tab and make sure its browser is focused.
   aBrowser.selectedTab = tab;

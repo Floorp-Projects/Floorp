@@ -212,9 +212,6 @@ function openWebLinkIn(url, where, params) {
   if (!params.triggeringPrincipal) {
     params.triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
   }
-  if (Services.scriptSecurityManager.isSystemPrincipal(params.triggeringPrincipal)) {
-    throw new Error("System principal should never be passed into openWebLinkIn()");
-  }
 
   openUILinkIn(url, where, params);
 }
@@ -259,8 +256,7 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
 
   if (arguments.length == 3 && typeof arguments[2] == "object") {
     params = aAllowThirdPartyFixup;
-  }
-  if (!params || !params.triggeringPrincipal) {
+  } else {
     throw new Error("Required argument triggeringPrincipal missing within openUILinkIn");
   }
 
