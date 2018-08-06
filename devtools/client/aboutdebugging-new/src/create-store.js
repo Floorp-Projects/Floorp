@@ -10,6 +10,7 @@ const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
 const rootReducer = require("./reducers/index");
 const { RuntimeState } = require("./reducers/runtime-state");
 const { UiState } = require("./reducers/ui-state");
+const debugTargetListenerMiddleware = require("./middleware/debug-target-listener");
 
 exports.configureStore = function() {
   const initialState = {
@@ -17,7 +18,7 @@ exports.configureStore = function() {
     ui: new UiState()
   };
 
-  const middleware = applyMiddleware(thunk);
+  const middleware = applyMiddleware(thunk, debugTargetListenerMiddleware);
 
   return createStore(rootReducer, initialState, middleware);
 };

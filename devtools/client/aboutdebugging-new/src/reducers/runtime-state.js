@@ -7,6 +7,7 @@
 const {
   CONNECT_RUNTIME_SUCCESS,
   DISCONNECT_RUNTIME_SUCCESS,
+  REQUEST_TABS_SUCCESS,
 } = require("../constants");
 
 function RuntimeState() {
@@ -19,11 +20,15 @@ function RuntimeState() {
 function runtimeReducer(state = RuntimeState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
-      const { client, tabs } = action;
-      return { client, tabs: toTabComponentData(tabs) };
+      const { client } = action;
+      return Object.assign({}, state, { client });
     }
     case DISCONNECT_RUNTIME_SUCCESS: {
       return RuntimeState();
+    }
+    case REQUEST_TABS_SUCCESS: {
+      const { tabs } = action;
+      return Object.assign({}, state, { tabs: toTabComponentData(tabs) });
     }
 
     default:

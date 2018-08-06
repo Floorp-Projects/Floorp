@@ -14,6 +14,9 @@ const {
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
+  REQUEST_TABS_FAILURE,
+  REQUEST_TABS_START,
+  REQUEST_TABS_SUCCESS,
 } = require("../constants");
 
 function connectRuntime() {
@@ -26,9 +29,9 @@ function connectRuntime() {
 
     try {
       await client.connect();
-      const { tabs } = await client.listTabs({ favicons: true });
 
-      dispatch({ type: CONNECT_RUNTIME_SUCCESS, client, tabs });
+      dispatch({ type: CONNECT_RUNTIME_SUCCESS, client });
+      dispatch(requestTabs());
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
     }
@@ -52,7 +55,24 @@ function disconnectRuntime() {
   };
 }
 
+function requestTabs() {
+  return async (dispatch, getState) => {
+    dispatch({ type: REQUEST_TABS_START });
+
+    const client = getState().runtime.client;
+
+    try {
+      const { tabs } = await client.listTabs({ favicons: true });
+
+      dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
+    } catch (e) {
+      dispatch({ type: REQUEST_TABS_FAILURE, error: e.message });
+    }
+  };
+}
+
 module.exports = {
   connectRuntime,
   disconnectRuntime,
+  requestTabs,
 };
