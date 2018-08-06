@@ -154,7 +154,8 @@
   margin-inline-end: -20px;
 }
 
-#tracking-protection-icon-box[state] {
+#tracking-protection-icon-box[active],
+#tracking-protection-icon-box[hasException] {
   margin-inline-end: 0px;
   visibility: visible;
 }
@@ -163,7 +164,7 @@
   transition: margin-left 200ms ease-out, margin-right 200ms ease-out;
 }
 
-#tracking-protection-icon-box:not([hasException])[state="blocked-tracking-content"][animationsenabled] > #tracking-protection-icon,
+#tracking-protection-icon-box:not([hasException])[active][animationsenabled] > #tracking-protection-icon,
 #tracking-protection-icon-box:not([animationsenabled]) > #tracking-protection-icon-animatable-box {
   display: none;
 }
@@ -177,7 +178,7 @@
   height: 20px;
 }
 
-#tracking-protection-icon-box:not([hasException])[state="blocked-tracking-content"] #tracking-protection-icon-animatable-image {
+#tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
   background-image: url(chrome://browser/skin/tracking-protection-animation.svg);
   transform: translateX(-1232px);
   width: 1248px;
@@ -187,29 +188,26 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-#tracking-protection-icon-box[state="blocked-tracking-content"] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
+#tracking-protection-icon-box[active] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
   transform: scaleX(-1) translateX(-1232px);
 }
 
-#tracking-protection-icon-box[state="blocked-tracking-content"][animate] #tracking-protection-icon-animatable-image {
+#tracking-protection-icon-box[active][animate] #tracking-protection-icon-animatable-image {
   animation-name: tp-icon-animation;
   animation-timing-function: steps(77);
   animation-duration: 3s;
   animation-fill-mode: forwards;
 }
 
-#tracking-protection-icon-box[state="blocked-tracking-content"][animate] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
+#tracking-protection-icon-box[active][animate] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
   animation-name: tp-icon-animation-rtl;
 }
 
-#tracking-protection-icon-box[state="blocked-tracking-content"] > #tracking-protection-icon {
+#tracking-protection-icon-box[active] > #tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
 }
 
-/* Override the blocked tracking content rule for cases when the user has added an exception
- * on a different tab to signify that protection is disabled now */
-#tracking-protection-icon-box[hasException][state="blocked-tracking-content"] > #tracking-protection-icon,
-#tracking-protection-icon-box[state="loaded-tracking-content"] > #tracking-protection-icon {
+#tracking-protection-icon-box[hasException] > #tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
 }
 
