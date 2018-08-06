@@ -15,7 +15,6 @@
 #include "jit/AtomicOperations.h"
 #include "js/Wrapper.h"
 #include "vm/SharedMem.h"
-#include "wasm/AsmJS.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmTypes.h"
 
@@ -27,21 +26,6 @@ using mozilla::Nothing;
 using mozilla::CheckedInt;
 
 using namespace js;
-
-// allocSize does not include the header page.
-static size_t
-SharedArrayMappedSizeForAsmJS(size_t allocSize)
-{
-    MOZ_RELEASE_ASSERT(sizeof(SharedArrayRawBuffer) < gc::SystemPageSize());
-#ifdef WASM_HUGE_MEMORY
-    // Since this SharedArrayBuffer will likely be used for asm.js code, prepare
-    // it for asm.js by mapping the 4gb protected zone described in WasmTypes.h.
-    return wasm::HugeMappedSize;
-#else
-    MOZ_ASSERT(allocSize % gc::SystemPageSize() == 0);
-    return allocSize + wasm::GuardSize;
-#endif
-}
 
 static size_t
 SharedArrayMappedSizeForWasm(size_t declaredMaxSize)
@@ -65,11 +49,7 @@ SharedArrayRawBuffer::Allocate(uint32_t length, const Maybe<uint32_t>& max)
 {
     MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::MaxBufferByteLength);
 
-    // A buffer cannot be used for both asm.js and wasm at the same time.
     bool preparedForWasm = max.isSome();
-    bool preparedForAsmJS = !preparedForWasm &&
-                            jit::JitOptions.asmJSAtomicsEnable &&
-                            IsValidAsmJSHeapLength(length);
 
     uint32_t accessibleSize = SharedArrayAccessibleSize(length);
     if (accessibleSize < length)
@@ -80,8 +60,6 @@ SharedArrayRawBuffer::Allocate(uint32_t length, const Maybe<uint32_t>& max)
     size_t mappedSize;
     if (preparedForWasm)
         mappedSize = SharedArrayMappedSizeForWasm(maxSize);
-    else if (preparedForAsmJS)
-        mappedSize = SharedArrayMappedSizeForAsmJS(accessibleSize);
     else
         mappedSize = accessibleSize;
 
@@ -98,7 +76,6 @@ SharedArrayRawBuffer::Allocate(uint32_t length, const Maybe<uint32_t>& max)
                                                                    length,
                                                                    maxSize,
                                                                    mappedSize,
-                                                                   preparedForAsmJS,
                                                                    preparedForWasm);
     MOZ_ASSERT(rawbuf->length_ == length); // Deallocation needs this
     return rawbuf;

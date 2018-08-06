@@ -32,7 +32,6 @@
 #include "builtin/String.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
-#include "jit/AtomicOperations.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/Wrapper.h"
@@ -104,28 +103,11 @@ enum AsmJSMathBuiltinFunction
     AsmJSMathBuiltin_clz32
 };
 
-// The asm.js spec will recognize this set of builtin Atomics functions.
-enum AsmJSAtomicsBuiltinFunction
-{
-    AsmJSAtomicsBuiltin_compareExchange,
-    AsmJSAtomicsBuiltin_exchange,
-    AsmJSAtomicsBuiltin_load,
-    AsmJSAtomicsBuiltin_store,
-    AsmJSAtomicsBuiltin_add,
-    AsmJSAtomicsBuiltin_sub,
-    AsmJSAtomicsBuiltin_and,
-    AsmJSAtomicsBuiltin_or,
-    AsmJSAtomicsBuiltin_xor,
-    AsmJSAtomicsBuiltin_isLockFree
-};
-
-
 // An AsmJSGlobal represents a JS global variable in the asm.js module function.
 class AsmJSGlobal
 {
   public:
-    enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction,
-                 AtomicsBuiltinFunction, Constant };
+    enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction, Constant };
     enum VarInitKind { InitConstant, InitImport };
     enum ConstantKind { GlobalConstant, MathConstant };
 
@@ -144,7 +126,6 @@ class AsmJSGlobal
             uint32_t ffiIndex_;
             Scalar::Type viewType_;
             AsmJSMathBuiltinFunction mathBuiltinFunc_;
-            AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
             struct {
                 ConstantKind kind_;
                 double value_;
@@ -198,10 +179,6 @@ class AsmJSGlobal
     AsmJSMathBuiltinFunction mathBuiltinFunction() const {
         MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
         return pod.u.mathBuiltinFunc_;
-    }
-    AsmJSAtomicsBuiltinFunction atomicsBuiltinFunction() const {
-        MOZ_ASSERT(pod.which_ == AtomicsBuiltinFunction);
-        return pod.u.atomicsBuiltinFunc_;
     }
     ConstantKind constantKind() const {
         MOZ_ASSERT(pod.which_ == Constant);
@@ -1244,8 +1221,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             FFI,
             ArrayView,
             ArrayViewCtor,
-            MathBuiltinFunction,
-            AtomicsBuiltinFunction
+            MathBuiltinFunction
         };
 
       private:
@@ -1283,7 +1259,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             uint32_t ffiIndex_;
             Scalar::Type viewType_;
             AsmJSMathBuiltinFunction mathBuiltinFunc_;
-            AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
 
             // |varOrConst|, through |varOrConst.literalValue_|, has a
             // non-trivial constructor and therefore MUST be placement-new'd
@@ -1342,13 +1317,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         AsmJSMathBuiltinFunction mathBuiltinFunction() const {
             MOZ_ASSERT(which_ == MathBuiltinFunction);
             return u.mathBuiltinFunc_;
-        }
-        bool isAtomicsFunction() const {
-            return which_ == AtomicsBuiltinFunction;
-        }
-        AsmJSAtomicsBuiltinFunction atomicsBuiltinFunction() const {
-            MOZ_ASSERT(which_ == AtomicsBuiltinFunction);
-            return u.atomicsBuiltinFunc_;
         }
     };
 
@@ -1438,7 +1406,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     typedef HashMap<NamedSig, uint32_t, NamedSig> FuncImportMap;
     typedef HashMap<PropertyName*, Global*> GlobalMap;
     typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
-    typedef HashMap<PropertyName*, AsmJSAtomicsBuiltinFunction> AtomicsNameMap;
     typedef Vector<ArrayView> ArrayViewVector;
 
     JSContext*            cx_;
@@ -1449,7 +1416,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     PropertyName*         importArgumentName_;
     PropertyName*         bufferArgumentName_;
     MathNameMap           standardLibraryMathNames_;
-    AtomicsNameMap        standardLibraryAtomicsNames_;
     RootedFunction        dummyFunction_;
 
     // Validation-internal state:
@@ -1460,7 +1426,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     SigSet                sigSet_;
     FuncImportMap         funcImportMap_;
     ArrayViewVector       arrayViews_;
-    bool                  atomicsPresent_;
 
     // State used to build the AsmJSModule in finish():
     ModuleEnvironment     env_;
@@ -1485,12 +1450,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             return false;
         MathBuiltin builtin(cst);
         return standardLibraryMathNames_.putNew(atom->asPropertyName(), builtin);
-    }
-    bool addStandardLibraryAtomicsName(const char* name, AsmJSAtomicsBuiltinFunction func) {
-        JSAtom* atom = Atomize(cx_, name, strlen(name));
-        if (!atom)
-            return false;
-        return standardLibraryAtomicsNames_.putNew(atom->asPropertyName(), func);
     }
     bool newSig(FuncType&& sig, uint32_t* sigIndex) {
         if (env_.types.length() >= MaxTypes)
@@ -1521,7 +1480,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         importArgumentName_(nullptr),
         bufferArgumentName_(nullptr),
         standardLibraryMathNames_(cx),
-        standardLibraryAtomicsNames_(cx),
         dummyFunction_(cx),
         validationLifo_(VALIDATION_LIFO_DEFAULT_CHUNK_SIZE),
         funcDefs_(cx),
@@ -1530,12 +1488,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         sigSet_(cx),
         funcImportMap_(cx),
         arrayViews_(cx),
-        atomicsPresent_(false),
         env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
-             cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
-               ? Shareable::True
-               : Shareable::False,
-             ModuleKind::AsmJS),
+             Shareable::False, ModuleKind::AsmJS),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false)
@@ -1628,21 +1582,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             return false;
         }
 
-        if (!standardLibraryAtomicsNames_.init() ||
-            !addStandardLibraryAtomicsName("compareExchange", AsmJSAtomicsBuiltin_compareExchange) ||
-            !addStandardLibraryAtomicsName("exchange", AsmJSAtomicsBuiltin_exchange) ||
-            !addStandardLibraryAtomicsName("load", AsmJSAtomicsBuiltin_load) ||
-            !addStandardLibraryAtomicsName("store", AsmJSAtomicsBuiltin_store) ||
-            !addStandardLibraryAtomicsName("add", AsmJSAtomicsBuiltin_add) ||
-            !addStandardLibraryAtomicsName("sub", AsmJSAtomicsBuiltin_sub) ||
-            !addStandardLibraryAtomicsName("and", AsmJSAtomicsBuiltin_and) ||
-            !addStandardLibraryAtomicsName("or", AsmJSAtomicsBuiltin_or) ||
-            !addStandardLibraryAtomicsName("xor", AsmJSAtomicsBuiltin_xor) ||
-            !addStandardLibraryAtomicsName("isLockFree", AsmJSAtomicsBuiltin_isLockFree))
-        {
-            return false;
-        }
-
         // This flows into FunctionBox, so must be tenured.
         dummyFunction_ = NewScriptedFunction(cx_, 0, JSFunction::INTERPRETED, nullptr,
                                              /* proto = */ nullptr, gc::AllocKind::FUNCTION,
@@ -1669,7 +1608,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     }
 
     RootedFunction& dummyFunction()          { return dummyFunction_; }
-    bool atomicsPresent() const              { return atomicsPresent_; }
     uint32_t minMemoryLength() const         { return env_.minMemoryLength; }
 
     void initModuleFunctionName(PropertyName* name) {
@@ -1831,31 +1769,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         AsmJSGlobal g(AsmJSGlobal::Constant, std::move(fieldChars));
         g.pod.u.constant.value_ = constant;
         g.pod.u.constant.kind_ = AsmJSGlobal::GlobalConstant;
-        return asmJSMetadata_->asmJSGlobals.append(std::move(g));
-    }
-    bool addAtomicsBuiltinFunction(PropertyName* var, AsmJSAtomicsBuiltinFunction func,
-                                   PropertyName* field)
-    {
-        if (!JitOptions.asmJSAtomicsEnable) {
-            return failCurrentOffset("asm.js Atomics only enabled when the environment variable "
-                                     "JIT_OPTION_asmJSAtomicsEnable is set to true");
-        }
-
-        atomicsPresent_ = true;
-
-        UniqueChars fieldChars = StringToNewUTF8CharsZ(cx_, *field);
-        if (!fieldChars)
-            return false;
-
-        Global* global = validationLifo_.new_<Global>(Global::AtomicsBuiltinFunction);
-        if (!global)
-            return false;
-        new (&global->u.atomicsBuiltinFunc_) AsmJSAtomicsBuiltinFunction(func);
-        if (!globalMap_.putNew(var, global))
-            return false;
-
-        AsmJSGlobal g(AsmJSGlobal::AtomicsBuiltinFunction, std::move(fieldChars));
-        g.pod.u.atomicsBuiltinFunc_ = func;
         return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addArrayViewCtor(PropertyName* var, Scalar::Type vt, PropertyName* field) {
@@ -2120,17 +2033,10 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         }
         return false;
     }
-    bool lookupStandardLibraryAtomicsName(PropertyName* name, AsmJSAtomicsBuiltinFunction* atomicsBuiltin) const {
-        if (AtomicsNameMap::Ptr p = standardLibraryAtomicsNames_.lookup(name)) {
-            *atomicsBuiltin = p->value();
-            return true;
-        }
-        return false;
-    }
 
     bool startFunctionBodies() {
         if (!arrayViews_.empty())
-            env_.memoryUsage = atomicsPresent_ ? MemoryUsage::Shared : MemoryUsage::Unshared;
+            env_.memoryUsage = MemoryUsage::Unshared;
         else
             env_.memoryUsage = MemoryUsage::None;
         return true;
@@ -2983,18 +2889,6 @@ CheckGlobalMathImport(ModuleValidator& m, ParseNode* initNode, PropertyName* var
 }
 
 static bool
-CheckGlobalAtomicsImport(ModuleValidator& m, ParseNode* initNode, PropertyName* varName,
-                         PropertyName* field)
-{
-    // Atomics builtin, with the form glob.Atomics.[[builtin]]
-    AsmJSAtomicsBuiltinFunction func;
-    if (!m.lookupStandardLibraryAtomicsName(field, &func))
-        return m.failName(initNode, "'%s' is not a standard Atomics builtin", field);
-
-    return m.addAtomicsBuiltinFunction(varName, func, field);
-}
-
-static bool
 CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initNode)
 {
     ParseNode* base = DotBase(initNode);
@@ -3002,7 +2896,7 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
 
     if (base->isKind(ParseNodeKind::Dot)) {
         ParseNode* global = DotBase(base);
-        PropertyName* mathOrAtomics = DotMember(base);
+        PropertyName* math = DotMember(base);
 
         PropertyName* globalName = m.globalArgumentName();
         if (!globalName)
@@ -3016,11 +2910,9 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
             return m.failName(base, "expecting %s.*", globalName);
         }
 
-        if (mathOrAtomics == m.cx()->names().Math)
+        if (math == m.cx()->names().Math)
             return CheckGlobalMathImport(m, initNode, varName, field);
-        if (mathOrAtomics == m.cx()->names().Atomics)
-            return CheckGlobalAtomicsImport(m, initNode, varName, field);
-        return m.failName(base, "expecting %s.{Math|Atomics}", globalName);
+        return m.failName(base, "expecting %s.Math", globalName);
     }
 
     if (!base->isKind(ParseNodeKind::Name))
@@ -3337,7 +3229,6 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
           case ModuleValidator::Global::Function:
           case ModuleValidator::Global::FFI:
           case ModuleValidator::Global::MathBuiltinFunction:
-          case ModuleValidator::Global::AtomicsBuiltinFunction:
           case ModuleValidator::Global::Table:
           case ModuleValidator::Global::ArrayView:
           case ModuleValidator::Global::ArrayViewCtor:
@@ -3786,243 +3677,6 @@ CheckMathMinMax(FunctionValidator& f, ParseNode* callNode, bool isMax, Type* typ
     return true;
 }
 
-static bool
-CheckSharedArrayAtomicAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
-                             Scalar::Type* viewType)
-{
-    if (!CheckArrayAccess(f, viewName, indexExpr, viewType))
-        return false;
-
-    // The global will be sane, CheckArrayAccess checks it.
-    const ModuleValidator::Global* global = f.lookupGlobal(viewName->name());
-    if (global->which() != ModuleValidator::Global::ArrayView)
-        return f.fail(viewName, "base of array access must be a typed array view");
-
-    MOZ_ASSERT(f.m().atomicsPresent());
-
-    switch (*viewType) {
-      case Scalar::Int8:
-      case Scalar::Int16:
-      case Scalar::Int32:
-      case Scalar::Uint8:
-      case Scalar::Uint16:
-      case Scalar::Uint32:
-        return true;
-      default:
-        return f.failf(viewName, "not an integer array");
-    }
-}
-
-static bool
-WriteAtomicOperator(FunctionValidator& f, MozOp opcode, Scalar::Type viewType)
-{
-    return f.encoder().writeOp(opcode) &&
-           f.encoder().writeFixedU8(viewType);
-}
-
-static bool
-CheckAtomicsLoad(FunctionValidator& f, ParseNode* call, Type* type)
-{
-    if (CallArgListLength(call) != 2)
-        return f.fail(call, "Atomics.load must be passed 2 arguments");
-
-    ParseNode* arrayArg = CallArgList(call);
-    ParseNode* indexArg = NextNode(arrayArg);
-
-    Scalar::Type viewType;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
-        return false;
-
-    if (!WriteAtomicOperator(f, MozOp::I32AtomicsLoad, viewType))
-        return false;
-
-    if (!WriteArrayAccessFlags(f, viewType))
-        return false;
-
-    *type = Type::Int;
-    return true;
-}
-
-static bool
-CheckAtomicsStore(FunctionValidator& f, ParseNode* call, Type* type)
-{
-    if (CallArgListLength(call) != 3)
-        return f.fail(call, "Atomics.store must be passed 3 arguments");
-
-    ParseNode* arrayArg = CallArgList(call);
-    ParseNode* indexArg = NextNode(arrayArg);
-    ParseNode* valueArg = NextNode(indexArg);
-
-    Type rhsType;
-    if (!CheckExpr(f, valueArg, &rhsType))
-        return false;
-
-    if (!rhsType.isIntish())
-        return f.failf(arrayArg, "%s is not a subtype of intish", rhsType.toChars());
-
-    Scalar::Type viewType;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
-        return false;
-
-    if (!WriteAtomicOperator(f, MozOp::I32AtomicsStore, viewType))
-        return false;
-
-    if (!WriteArrayAccessFlags(f, viewType))
-        return false;
-
-    *type = rhsType;
-    return true;
-}
-
-static bool
-CheckAtomicsBinop(FunctionValidator& f, ParseNode* call, Type* type, AtomicOp op)
-{
-    if (CallArgListLength(call) != 3)
-        return f.fail(call, "Atomics binary operator must be passed 3 arguments");
-
-    ParseNode* arrayArg = CallArgList(call);
-    ParseNode* indexArg = NextNode(arrayArg);
-    ParseNode* valueArg = NextNode(indexArg);
-
-    Type valueArgType;
-    if (!CheckExpr(f, valueArg, &valueArgType))
-        return false;
-
-    if (!valueArgType.isIntish())
-        return f.failf(valueArg, "%s is not a subtype of intish", valueArgType.toChars());
-
-    Scalar::Type viewType;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
-        return false;
-
-    if (!WriteAtomicOperator(f, MozOp::I32AtomicsBinOp, viewType))
-        return false;
-    if (!f.encoder().writeFixedU8(uint8_t(op)))
-        return false;
-
-    if (!WriteArrayAccessFlags(f, viewType))
-        return false;
-
-    *type = Type::Int;
-    return true;
-}
-
-static bool
-CheckAtomicsIsLockFree(FunctionValidator& f, ParseNode* call, Type* type)
-{
-    if (CallArgListLength(call) != 1)
-        return f.fail(call, "Atomics.isLockFree must be passed 1 argument");
-
-    ParseNode* sizeArg = CallArgList(call);
-
-    uint32_t size;
-    if (!IsLiteralInt(f.m(), sizeArg, &size))
-        return f.fail(sizeArg, "Atomics.isLockFree requires an integer literal argument");
-
-    *type = Type::Int;
-    return f.writeInt32Lit(AtomicOperations::isLockfreeJS(size));
-}
-
-static bool
-CheckAtomicsCompareExchange(FunctionValidator& f, ParseNode* call, Type* type)
-{
-    if (CallArgListLength(call) != 4)
-        return f.fail(call, "Atomics.compareExchange must be passed 4 arguments");
-
-    ParseNode* arrayArg = CallArgList(call);
-    ParseNode* indexArg = NextNode(arrayArg);
-    ParseNode* oldValueArg = NextNode(indexArg);
-    ParseNode* newValueArg = NextNode(oldValueArg);
-
-    Type oldValueArgType;
-    if (!CheckExpr(f, oldValueArg, &oldValueArgType))
-        return false;
-
-    Type newValueArgType;
-    if (!CheckExpr(f, newValueArg, &newValueArgType))
-        return false;
-
-    if (!oldValueArgType.isIntish())
-        return f.failf(oldValueArg, "%s is not a subtype of intish", oldValueArgType.toChars());
-
-    if (!newValueArgType.isIntish())
-        return f.failf(newValueArg, "%s is not a subtype of intish", newValueArgType.toChars());
-
-    Scalar::Type viewType;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
-        return false;
-
-    if (!WriteAtomicOperator(f, MozOp::I32AtomicsCompareExchange, viewType))
-        return false;
-
-    if (!WriteArrayAccessFlags(f, viewType))
-        return false;
-
-    *type = Type::Int;
-    return true;
-}
-
-static bool
-CheckAtomicsExchange(FunctionValidator& f, ParseNode* call, Type* type)
-{
-    if (CallArgListLength(call) != 3)
-        return f.fail(call, "Atomics.exchange must be passed 3 arguments");
-
-    ParseNode* arrayArg = CallArgList(call);
-    ParseNode* indexArg = NextNode(arrayArg);
-    ParseNode* valueArg = NextNode(indexArg);
-
-    Type valueArgType;
-    if (!CheckExpr(f, valueArg, &valueArgType))
-        return false;
-
-    if (!valueArgType.isIntish())
-        return f.failf(arrayArg, "%s is not a subtype of intish", valueArgType.toChars());
-
-    Scalar::Type viewType;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
-        return false;
-
-    if (!WriteAtomicOperator(f, MozOp::I32AtomicsExchange, viewType))
-        return false;
-
-    if (!WriteArrayAccessFlags(f, viewType))
-        return false;
-
-    *type = Type::Int;
-    return true;
-}
-
-static bool
-CheckAtomicsBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSAtomicsBuiltinFunction func,
-                        Type* type)
-{
-    switch (func) {
-      case AsmJSAtomicsBuiltin_compareExchange:
-        return CheckAtomicsCompareExchange(f, callNode, type);
-      case AsmJSAtomicsBuiltin_exchange:
-        return CheckAtomicsExchange(f, callNode, type);
-      case AsmJSAtomicsBuiltin_load:
-        return CheckAtomicsLoad(f, callNode, type);
-      case AsmJSAtomicsBuiltin_store:
-        return CheckAtomicsStore(f, callNode, type);
-      case AsmJSAtomicsBuiltin_add:
-        return CheckAtomicsBinop(f, callNode, type, AtomicFetchAddOp);
-      case AsmJSAtomicsBuiltin_sub:
-        return CheckAtomicsBinop(f, callNode, type, AtomicFetchSubOp);
-      case AsmJSAtomicsBuiltin_and:
-        return CheckAtomicsBinop(f, callNode, type, AtomicFetchAndOp);
-      case AsmJSAtomicsBuiltin_or:
-        return CheckAtomicsBinop(f, callNode, type, AtomicFetchOrOp);
-      case AsmJSAtomicsBuiltin_xor:
-        return CheckAtomicsBinop(f, callNode, type, AtomicFetchXorOp);
-      case AsmJSAtomicsBuiltin_isLockFree:
-        return CheckAtomicsIsLockFree(f, callNode, type);
-      default:
-        MOZ_CRASH("unexpected atomicsBuiltin function");
-    }
-}
-
 typedef bool (*CheckArgType)(FunctionValidator& f, ParseNode* argNode, Type type);
 
 template <CheckArgType checkArg>
@@ -4392,17 +4046,12 @@ CheckUncoercedCall(FunctionValidator& f, ParseNode* expr, Type* type)
     MOZ_ASSERT(expr->isKind(ParseNodeKind::Call));
 
     const ModuleValidator::Global* global;
-    if (IsCallToGlobal(f.m(), expr, &global)) {
-        if (global->isMathFunction())
-            return CheckMathBuiltinCall(f, expr, global->mathBuiltinFunction(), type);
-        if (global->isAtomicsFunction())
-            return CheckAtomicsBuiltinCall(f, expr, global->atomicsBuiltinFunction(), type);
-    }
+    if (IsCallToGlobal(f.m(), expr, &global) && global->isMathFunction())
+        return CheckMathBuiltinCall(f, expr, global->mathBuiltinFunction(), type);
 
-    return f.fail(expr, "all function calls must either be calls to standard lib math functions, "
-                        "standard atomic functions ignored (via f(); or comma-expression), coerced"
-                        " to signed (via f()|0), coerced to float (via fround(f())) or coerced to "
-                        "double (via +f())");
+    return f.fail(expr, "all function calls must be calls to standard lib math functions,"
+                        " ignored (via f(); or comma-expression), coerced to signed (via f()|0),"
+                        " coerced to float (via fround(f())), or coerced to double (via +f())");
 }
 
 static bool
@@ -4463,18 +4112,6 @@ CheckCoercedMathBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSMath
 }
 
 static bool
-CheckCoercedAtomicsBuiltinCall(FunctionValidator& f, ParseNode* callNode,
-                               AsmJSAtomicsBuiltinFunction func, Type ret, Type* type)
-{
-    MOZ_ASSERT(ret.isCanonical());
-
-    Type actual;
-    if (!CheckAtomicsBuiltinCall(f, callNode, func, &actual))
-        return false;
-    return CoerceResult(f, callNode, ret, actual, type);
-}
-
-static bool
 CheckCoercedCall(FunctionValidator& f, ParseNode* call, Type ret, Type* type)
 {
     MOZ_ASSERT(ret.isCanonical());
@@ -4505,8 +4142,6 @@ CheckCoercedCall(FunctionValidator& f, ParseNode* call, Type ret, Type* type)
             return CheckFFICall(f, call, global->ffiIndex(), ret, type);
           case ModuleValidator::Global::MathBuiltinFunction:
             return CheckCoercedMathBuiltinCall(f, call, global->mathBuiltinFunction(), ret, type);
-          case ModuleValidator::Global::AtomicsBuiltinFunction:
-            return CheckCoercedAtomicsBuiltinCall(f, call, global->atomicsBuiltinFunction(), ret, type);
           case ModuleValidator::Global::ConstantLiteral:
           case ModuleValidator::Global::ConstantImport:
           case ModuleValidator::Global::Variable:
@@ -6286,36 +5921,6 @@ ValidateMathBuiltinFunction(JSContext* cx, const AsmJSGlobal& global, HandleValu
 }
 
 static bool
-ValidateAtomicsBuiltinFunction(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
-{
-    RootedValue v(cx);
-    if (!GetDataProperty(cx, globalVal, cx->names().Atomics, &v))
-        return false;
-
-    if (!GetDataProperty(cx, v, global.field(), &v))
-        return false;
-
-    Native native = nullptr;
-    switch (global.atomicsBuiltinFunction()) {
-      case AsmJSAtomicsBuiltin_compareExchange: native = atomics_compareExchange; break;
-      case AsmJSAtomicsBuiltin_exchange: native = atomics_exchange; break;
-      case AsmJSAtomicsBuiltin_load: native = atomics_load; break;
-      case AsmJSAtomicsBuiltin_store: native = atomics_store; break;
-      case AsmJSAtomicsBuiltin_add: native = atomics_add; break;
-      case AsmJSAtomicsBuiltin_sub: native = atomics_sub; break;
-      case AsmJSAtomicsBuiltin_and: native = atomics_and; break;
-      case AsmJSAtomicsBuiltin_or: native = atomics_or; break;
-      case AsmJSAtomicsBuiltin_xor: native = atomics_xor; break;
-      case AsmJSAtomicsBuiltin_isLockFree: native = atomics_isLockFree; break;
-    }
-
-    if (!IsNativeFunction(v, native))
-        return LinkFail(cx, "bad Atomics.* builtin function");
-
-    return true;
-}
-
-static bool
 ValidateConstant(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
     RootedValue v(cx, globalVal);
@@ -6397,17 +6002,7 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
         if (!ArrayBufferObject::prepareForAsmJS(cx, arrayBuffer, needGuard))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
     } else {
-        if (!buffer->as<SharedArrayBufferObject>().isPreparedForAsmJS()) {
-            if (buffer->as<SharedArrayBufferObject>().isWasm()) {
-                return LinkFail(cx, "SharedArrayBuffer created for Wasm cannot be used for "
-                                    "asm.js");
-            }
-            if (!jit::JitOptions.asmJSAtomicsEnable) {
-                return LinkFail(cx, "Can link with SharedArrayBuffer only when the environment "
-                                    "variable JIT_OPTION_asmJSAtomicsEnable is set to true");
-            }
-            return LinkFail(cx, "Unable to prepare SharedArrayBuffer for asm.js use");
-        }
+        return LinkFail(cx, "Unable to prepare SharedArrayBuffer for asm.js use");
     }
 
     MOZ_ASSERT(buffer->isPreparedForAsmJS());
@@ -6444,10 +6039,6 @@ GetImports(JSContext* cx, const AsmJSMetadata& metadata, HandleValue globalVal,
             break;
           case AsmJSGlobal::MathBuiltinFunction:
             if (!ValidateMathBuiltinFunction(cx, global, globalVal))
-                return false;
-            break;
-          case AsmJSGlobal::AtomicsBuiltinFunction:
-            if (!ValidateAtomicsBuiltinFunction(cx, global, globalVal))
                 return false;
             break;
           case AsmJSGlobal::Constant:

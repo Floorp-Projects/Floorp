@@ -28,19 +28,15 @@ NS_IMPL_ADDREF_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 NS_IMPL_RELEASE_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 
 ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
-                                     nsIScriptElement* aElement,
-                                     CORSMode aCORSMode,
+                                     ScriptFetchOptions* aFetchOptions,
                                      const SRIMetadata& aIntegrity,
                                      nsIURI* aReferrer,
-                                     mozilla::net::ReferrerPolicy aReferrerPolicy,
                                      ScriptLoader* aLoader)
   : ScriptLoadRequest(ScriptKind::eModule,
                       aURI,
-                      aElement,
-                      aCORSMode,
+                      aFetchOptions,
                       aIntegrity,
-                      aReferrer,
-                      aReferrerPolicy),
+                      aReferrer),
     mIsTopLevel(true),
     mLoader(aLoader),
     mVisitedSet(new VisitedURLSet())
@@ -52,18 +48,15 @@ ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
                                      ModuleLoadRequest* aParent)
   : ScriptLoadRequest(ScriptKind::eModule,
                       aURI,
-                      aParent->mElement,
-                      aParent->mCORSMode,
+                      aParent->mFetchOptions,
                       SRIMetadata(),
-                      aParent->mURI,
-                      aParent->mReferrerPolicy),
+                      aParent->mURI),
     mIsTopLevel(false),
     mLoader(aParent->mLoader),
     mVisitedSet(aParent->mVisitedSet)
 {
   MOZ_ASSERT(mVisitedSet->Contains(aURI));
 
-  mTriggeringPrincipal = aParent->mTriggeringPrincipal;
   mIsInline = false;
   mScriptMode = aParent->mScriptMode;
 }
