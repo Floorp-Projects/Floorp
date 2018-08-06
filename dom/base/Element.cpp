@@ -181,9 +181,9 @@ template<int a, int b> struct Check##type##Size \
 Check##type##Size<sizeof(type), opt_size + EXTRA_DOM_ELEMENT_BYTES> g##type##CES;
 
 // Note that mozjemalloc uses a 16 byte quantum, so 128 is a bin/bucket size.
-ASSERT_ELEMENT_SIZE(Element, 120);
-ASSERT_ELEMENT_SIZE(HTMLDivElement, 120);
-ASSERT_ELEMENT_SIZE(HTMLSpanElement, 120);
+ASSERT_ELEMENT_SIZE(Element, 128);
+ASSERT_ELEMENT_SIZE(HTMLDivElement, 128);
+ASSERT_ELEMENT_SIZE(HTMLSpanElement, 128);
 
 #undef ASSERT_ELEMENT_SIZE
 #undef EXTRA_DOM_ELEMENT_BYTES
