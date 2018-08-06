@@ -35,6 +35,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "mozilla/layers/StackingContextHelper.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsLookAndFeel.h"
 #include "VibrancyManager.h"
 
@@ -3069,6 +3070,11 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   // setup to draw into the correct port
   int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
 
@@ -3866,6 +3872,8 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
     case StyleAppearance::Toolbar:
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::Statusbar:
+    // NOTE: if you change Menulist and MenulistButton to behave differently,
+    // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::MenulistButton:
@@ -4033,6 +4041,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
     }
 
+    // NOTE: if you change Menulist and MenulistButton to behave differently,
+    // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
@@ -4161,6 +4171,8 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
     case StyleAppearance::TextfieldMultiline:
     case StyleAppearance::Searchfield:
     case StyleAppearance::Listbox:
+    // NOTE: if you change Menulist and MenulistButton to behave differently,
+    // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
@@ -4292,6 +4304,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
+    // NOTE: if you change Menulist and MenulistButton to behave differently,
+    // be sure to handle StaticPrefs::layout_css_webkit_appearance_enabled.
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
@@ -4620,6 +4634,11 @@ bool
 nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
                                       WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   // if this is a dropdown button in a combobox the answer is always no
   if (aWidgetType == StyleAppearance::MenulistButton ||
       aWidgetType == StyleAppearance::MozMenulistButton) {
@@ -4759,6 +4778,11 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 bool
 nsNativeThemeCocoa::WidgetIsContainer(WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   // flesh this out at some point
   switch (aWidgetType) {
    case StyleAppearance::MenulistButton:
@@ -4781,6 +4805,11 @@ nsNativeThemeCocoa::WidgetIsContainer(WidgetType aWidgetType)
 bool
 nsNativeThemeCocoa::ThemeDrawsFocusForWidget(WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   if (aWidgetType == StyleAppearance::Menulist ||
       aWidgetType == StyleAppearance::MenulistTextfield ||
       aWidgetType == StyleAppearance::Button ||
