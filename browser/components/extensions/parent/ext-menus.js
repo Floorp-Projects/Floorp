@@ -198,6 +198,22 @@ var gMenuBuilder = {
   customizeElement(element, item, contextData) {
     let label = item.title;
     if (label) {
+      let accessKey;
+      label = label.replace(/&([\S\s]|$)/g, (_, nextChar, i) => {
+        if (nextChar === "&") {
+          return "&";
+        }
+        if (accessKey === undefined) {
+          if (nextChar === "%" && label.charAt(i + 2) === "s") {
+            accessKey = "";
+          } else {
+            accessKey = nextChar;
+          }
+        }
+        return nextChar;
+      });
+      element.setAttribute("accesskey", accessKey || "");
+
       if (contextData.isTextSelected && label.indexOf("%s") > -1) {
         let selection = contextData.selectionText.trim();
         // The rendering engine will truncate the title if it's longer than 64 characters.
