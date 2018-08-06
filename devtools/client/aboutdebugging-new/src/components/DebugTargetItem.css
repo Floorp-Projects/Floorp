@@ -1,0 +1,43 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * The current layout of debug target item is
+ *
+ *  +--------+--------------------+
+ *  |  Icon  | Information        |
+ *  |        |+------------------+|
+ *  |        || Name             ||
+ *  |        |+------------------+|
+ *  |        || Detail           ||
+ *  |        |+------------------+|
+ *  +--------+--------------------+
+ */
+.debug-target-item {
+  display: grid;
+  grid-template-columns: 54px auto;
+  grid-template-rows: auto auto;
+  grid-row-gap: 20px;
+}
+
+.debug-target-item__icon {
+  height: 36px;
+  width: 36px;
+}
+
+.debug-target-item__info {
+  /* so as to ellipsis */
+  min-width: 0;
+}
+
+.debug-target-item__info__name {
+  font-size: 20px;
+  margin-block-end: 2px;
+}

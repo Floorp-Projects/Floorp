@@ -9,6 +9,7 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const DebugTargetPane = createFactory(require("./DebugTargetPane"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 
 const Services = require("Services");
@@ -21,6 +22,8 @@ class RuntimePage extends PureComponent {
   }
 
   render() {
+    const { tabs } = this.props;
+
     return dom.article(
       {
         className: "page",
@@ -29,6 +32,10 @@ class RuntimePage extends PureComponent {
         icon: "chrome://branding/content/icon64.png",
         name: Services.appinfo.name,
         version: Services.appinfo.version,
+      }),
+      DebugTargetPane({
+        name: "Tabs",
+        targets: tabs
       }),
     );
   }
