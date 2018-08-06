@@ -70,8 +70,8 @@
 }
 
 #identity-popup-mainView {
-  min-width: 30em;
-  max-width: 30em;
+  min-width: 33em;
+  max-width: 33em;
 }
 
 .identity-popup-section:not(:first-child) {
@@ -80,7 +80,7 @@
 
 .identity-popup-security-content,
 #identity-popup-permissions-content,
-#tracking-protection-content {
+#identity-popup-content-blocking-content {
   background-repeat: no-repeat;
   background-position: 1em 1em;
   background-size: 24px auto;
@@ -95,7 +95,7 @@
 
 .identity-popup-security-content:-moz-locale-dir(rtl),
 #identity-popup-permissions-content:-moz-locale-dir(rtl),
-#tracking-protection-content:-moz-locale-dir(rtl) {
+#identity-popup-content-blocking-content:-moz-locale-dir(rtl) {
   background-position: calc(100% - 1em) 1em;
 }
 
@@ -147,19 +147,22 @@
 
 /* CONTENT */
 
+.identity-popup-content-blocking-category-label,
+.identity-popup-content-blocking-category-state-label,
+.identity-popup-content-blocking-category-add-blocking,
 .identity-popup-permission-label,
 .identity-popup-permission-state-label,
 .identity-popup-security-content > description,
 #identity-popup-security-descriptions > description,
 #identity-popup-securityView-body > description,
 #identity-popup-permissions-content > description,
-#tracking-protection-content > description {
+#identity-popup-content-blocking-content > description {
   font-size: 110%;
   margin: 0;
 }
 
 #identity-popup-permissions-content > description,
-#tracking-protection-content > description {
+#identity-popup-content-blocking-content > description {
   color: var(--panel-disabled-color);
 }
 
@@ -300,59 +303,77 @@ description#identity-popup-content-verifier,
   margin-inline-end: 0;
 }
 
-/* TRACKING PROTECTION */
+/* CONTENT BLOCKING / TRACKING PROTECTION */
 
-#tracking-protection-content {
+#identity-popup-content-blocking-content {
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
-#tracking-protection-content[enabled="false"],
-#tracking-protection-content[hasException],
-#tracking-protection-content[state="loaded-tracking-content"] {
-  background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
-}
-
-/* Show the "on" label by default, except when TP is disabled or there's a local exception. */
-#tracking-protection-label-off,
-#tracking-protection-content[enabled="false"] #tracking-protection-label-on,
-#tracking-protection-content[hasException] #tracking-protection-label-on,
-#tracking-protection-content[state="loaded-tracking-content"] #tracking-protection-label-on {
+/* We can currently show either the old tracking protection-only UI, which has "Tracking Protection"
+ * as a label, or the new content blocking UI which has a different label and also a list of
+ * categories of blockers. This rule hides elements depending on which UI we want to show */
+#identity-popup-content-blocking-content[contentBlockingUI] #tracking-protection-label,
+#identity-popup-content-blocking-content:not([contentBlockingUI]) #content-blocking-label,
+#identity-popup-content-blocking-content:not([contentBlockingUI]) > #identity-popup-content-blocking-category-list {
   display: none;
 }
 
-#tracking-protection-label-on,
-#tracking-protection-content[enabled="false"] #tracking-protection-label-off,
-#tracking-protection-content[hasException] #tracking-protection-label-off,
-#tracking-protection-content[state="loaded-tracking-content"] #tracking-protection-label-off {
-  display: -moz-box;
+/* Content Blocking categories */
+
+#identity-popup-content-blocking-category-list {
+  margin-top: 10px;
 }
 
-#tracking-protection-content > description {
+/* Don't show the categories when no trackers were detected. */
+#identity-popup-content-blocking-content:not([detected]) > #identity-popup-content-blocking-category-list {
   display: none;
 }
+
+/* Show the "detected"/"not detected" message depending on the content state. */
+#identity-popup-content-blocking-content:not([detected]) > #identity-popup-content-blocking-detected,
+#identity-popup-content-blocking-content[detected] > #identity-popup-content-blocking-not-detected {
+  display: none;
+}
+
+#identity-popup-content-blocking-content[enabled][hasException] .identity-popup-content-blocking-category-state-label,
+.identity-popup-content-blocking-category:not(.blocked) .identity-popup-content-blocking-category-state-label {
+  display: none;
+}
+
+.identity-popup-content-blocking-category.blocked .identity-popup-content-blocking-category-add-blocking {
+  display: none;
+}
+
+.fastblock-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/slowtrackers.svg);
+}
+
+#identity-popup-content-blocking-category-fastblock.blocked > .fastblock-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/slowtrackers-disabled.svg);
+}
+
+.tracking-protection-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+}
+
+#identity-popup-content-blocking-category-tracking-protection.blocked > .tracking-protection-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
+}
+
+/* Content Blocking action button */
 
 .tracking-protection-button {
   margin: 1em 0 0;
   display: none;
 }
 
-/* Show the right tracking descriptions and buttons for the corresponding state. */
-
-/* Default state / Tracking not detected */
-#tracking-protection-content:not([state]):-moz-any([enabled="false"], :not([hasException])) > #tracking-not-detected,
-#tracking-protection-content:not([state])[enabled="true"][hasException] > #tracking-not-detected-exception,
-/* Blocking tracking, offer buttons to unblock (depending on PBM). */
-#tracking-protection-content:not([hasException])[state="blocked-tracking-content"] > #tracking-blocked,
-#main-window:not([privatebrowsingmode]) #tracking-protection-content:not([hasException])[state="blocked-tracking-content"] > #tracking-action-unblock,
-#main-window[privatebrowsingmode] #tracking-protection-content[state="blocked-tracking-content"] > #tracking-action-unblock-private,
-/* Enabled and no exception but trackers loaded, probably needs a reload */
-#tracking-protection-content[enabled="true"]:not([hasException])[state="loaded-tracking-content"] > #tracking-reload-required,
-#tracking-protection-content[enabled="true"]:not([hasException])[state="loaded-tracking-content"] > #tracking-action-reload,
-/* Tracking Loaded */
-#tracking-protection-content[state="loaded-tracking-content"][enabled="false"] > #tracking-loaded,
-#tracking-protection-content[enabled="true"][hasException] > #tracking-loaded-exception,
-/* Has an exception, offer to block the site again. */
-#tracking-protection-content[enabled="true"][hasException] > #tracking-action-block {
+/* Show the right action buttons depending on content state */
+/* Offer to temporarily add an exception in private mode. */
+#main-window:not([privatebrowsingmode]) #identity-popup-content-blocking-content[enabled][detected]:not([hasException]) > #tracking-action-unblock,
+/* Offer to permanently add an exception in normal mode. */
+#main-window[privatebrowsingmode] #identity-popup-content-blocking-content[enabled][detected]:not([hasException]) > #tracking-action-unblock-private,
+/* If there's an exception just offer to remove the exception again. */
+#identity-popup-content-blocking-content[enabled][hasException] > #tracking-action-block {
   display: -moz-box;
 }
 
@@ -377,6 +398,7 @@ description#identity-popup-content-verifier,
   min-height: 24px;
 }
 
+#identity-popup-content-blocking-category-list,
 #identity-popup-permission-list {
   /* Offset the padding set on #identity-popup-permissions-content so that it
      shows up just below the section. The permission icons are 16px wide and
@@ -384,6 +406,7 @@ description#identity-popup-content-verifier,
   margin-inline-start: calc(-1em - 16px);
 }
 
+.identity-popup-content-blocking-category,
 .identity-popup-permission-item {
   min-height: 24px;
 }
@@ -392,6 +415,7 @@ description#identity-popup-content-verifier,
   margin-top: 5px;
 }
 
+.identity-popup-content-blocking-category-icon,
 .identity-popup-permission-icon {
   width: 16px;
   height: 16px;
@@ -407,6 +431,8 @@ description#identity-popup-content-verifier,
   50% { opacity: 0; }
 }
 
+.identity-popup-content-blocking-category-label,
+.identity-popup-content-blocking-category-state-label,
 .identity-popup-permission-label,
 .identity-popup-permission-state-label {
   /* We need to align the action buttons and permission icons with the text.
@@ -417,13 +443,20 @@ description#identity-popup-content-verifier,
   margin-top: -0.1em;
 }
 
+.identity-popup-content-blocking-category-label,
 .identity-popup-permission-label {
   margin-inline-start: 1em;
 }
 
+.identity-popup-content-blocking-category-state-label,
+.identity-popup-content-blocking-category-add-blocking,
 .identity-popup-permission-state-label {
   margin-inline-end: 5px;
   text-align: end;
+}
+
+.identity-popup-content-blocking-category-state-label,
+.identity-popup-permission-state-label {
   color: var(--panel-disabled-color);
 }
 
