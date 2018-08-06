@@ -1,6 +1,35 @@
 # Changelog
 
-## [Unreleased]
+## [0.11.0]
+
+**Changes**:
+
+- [#293](https://github.com/alecthomas/voluptuous/pull/293): Support Python 3.6.
+- [#294](https://github.com/alecthomas/voluptuous/pull/294): Drop support for Python 2.6, 3.1 and 3.2.
+- [#318](https://github.com/alecthomas/voluptuous/pull/318): Allow to use nested schema and allow any validator to be compiled.
+- [#324](https://github.com/alecthomas/voluptuous/pull/324):
+  Default values MUST now pass validation just as any regular value. This is a backward incompatible change if a schema uses default values that don't pass validation against the specified schema.
+- [#328](https://github.com/alecthomas/voluptuous/pull/328):
+  Modify `__lt__` in Marker class to allow comparison with non Marker objects, such as str and int.
+
+**New**:
+
+- [#307](https://github.com/alecthomas/voluptuous/pull/307): Add description field to `Marker` instances.
+- [#311](https://github.com/alecthomas/voluptuous/pull/311): Add `Schema.infer` method for basic schema inference.
+- [#314](https://github.com/alecthomas/voluptuous/pull/314): Add `SomeOf` validator.
+
+**Fixes**:
+
+- [#279](https://github.com/alecthomas/voluptuous/pull/279):
+  Treat Python 2 old-style classes like types when validating.
+- [#280](https://github.com/alecthomas/voluptuous/pull/280): Make
+  `IsDir()`, `IsFile()` and `PathExists()` consistent between different Python versions.
+- [#290](https://github.com/alecthomas/voluptuous/pull/290): Use absolute imports to avoid import conflicts.
+- [#291](https://github.com/alecthomas/voluptuous/pull/291): Fix `Coerce` validator to catch `decimal.InvalidOperation`.
+- [#298](https://github.com/alecthomas/voluptuous/pull/298): Make `Schema([])` usage consistent with `Schema({})`.
+- [#303](https://github.com/alecthomas/voluptuous/pull/303): Allow partial validation when using validate decorator.
+- [#316](https://github.com/alecthomas/voluptuous/pull/316): Make `Schema.__eq__` deterministic.
+- [#319](https://github.com/alecthomas/voluptuous/pull/319): Replace implementation of `Maybe(s)` with `Any(None, s)` to allow it to be compiled.
 
 ## [0.10.5]
 

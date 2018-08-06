@@ -5,22 +5,16 @@ import sys
 from functools import wraps
 from decimal import Decimal, InvalidOperation
 
-try:
-    from schema_builder import Schema, raises, message
-    from error import (MultipleInvalid, CoerceInvalid, TrueInvalid, FalseInvalid, BooleanInvalid, Invalid, AnyInvalid,
-                       AllInvalid, MatchInvalid, UrlInvalid, EmailInvalid, FileInvalid, DirInvalid, RangeInvalid,
-                       PathInvalid, ExactSequenceInvalid, LengthInvalid, DatetimeInvalid, DateInvalid, InInvalid,
-                       TypeInvalid, NotInInvalid, ContainsInvalid)
-except ImportError:
-    from .schema_builder import Schema, raises, message
-    from .error import (MultipleInvalid, CoerceInvalid, TrueInvalid, FalseInvalid, BooleanInvalid, Invalid, AnyInvalid,
-                        AllInvalid, MatchInvalid, UrlInvalid, EmailInvalid, FileInvalid, DirInvalid, RangeInvalid,
-                        PathInvalid, ExactSequenceInvalid, LengthInvalid, DatetimeInvalid, DateInvalid, InInvalid,
-                        TypeInvalid, NotInInvalid, ContainsInvalid)
-
+from voluptuous.schema_builder import Schema, raises, message
+from voluptuous.error import (MultipleInvalid, CoerceInvalid, TrueInvalid, FalseInvalid, BooleanInvalid, Invalid,
+                              AnyInvalid, AllInvalid, MatchInvalid, UrlInvalid, EmailInvalid, FileInvalid, DirInvalid,
+                              RangeInvalid, PathInvalid, ExactSequenceInvalid, LengthInvalid, DatetimeInvalid,
+                              DateInvalid, InInvalid, TypeInvalid, NotInInvalid, ContainsInvalid, NotEnoughValid,
+                              TooManyValid)
 
 if sys.version_info >= (3,):
     import urllib.parse as urlparse
+
     basestring = str
 else:
     import urlparse
@@ -99,7 +93,7 @@ class Coerce(object):
     def __call__(self, v):
         try:
             return self.type(v)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, InvalidOperation):
             msg = self.msg or ('expected %s' % self.type_name)
             raise CoerceInvalid(msg)
 
@@ -187,7 +181,40 @@ def Boolean(v):
     return bool(v)
 
 
-class Any(object):
+class _WithSubValidators(object):
+    """Base class for validators that use sub-validators.
+
+    Special class to use as a parent class for validators using sub-validators.
+    This class provides the `__voluptuous_compile__` method so the
+    sub-validators are compiled by the parent `Schema`.
+    """
+
+    def __init__(self, *validators, **kwargs):
+        self.validators = validators
+        self.msg = kwargs.pop('msg', None)
+
+    def __voluptuous_compile__(self, schema):
+        self._compiled = [
+            schema._compile(v)
+            for v in self.validators
+        ]
+        return self._run
+
+    def _run(self, path, value):
+        return self._exec(self._compiled, value, path)
+
+    def __call__(self, v):
+        return self._exec((Schema(val) for val in self.validators), v)
+
+    def __repr__(self):
+        return '%s(%s, msg=%r)' % (
+            self.__class__.__name__,
+            ", ".join(repr(v) for v in self.validators),
+            self.msg
+        )
+
+
+class Any(_WithSubValidators):
     """Use the first validated value.
 
     :param msg: Message to deliver to user if validation fails.
@@ -212,33 +239,30 @@ class Any(object):
     ...   validate(4)
     """
 
-    def __init__(self, *validators, **kwargs):
-        self.validators = validators
-        self.msg = kwargs.pop('msg', None)
-        self._schemas = [Schema(val, **kwargs) for val in validators]
-
-    def __call__(self, v):
+    def _exec(self, funcs, v, path=None):
         error = None
-        for schema in self._schemas:
+        for func in funcs:
             try:
-                return schema(v)
+                if path is None:
+                    return func(v)
+                else:
+                    return func(path, v)
             except Invalid as e:
                 if error is None or len(e.path) > len(error.path):
                     error = e
         else:
             if error:
-                raise error if self.msg is None else AnyInvalid(self.msg)
-            raise AnyInvalid(self.msg or 'no valid value found')
-
-    def __repr__(self):
-        return 'Any([%s])' % (", ".join(repr(v) for v in self.validators))
+                raise error if self.msg is None else AnyInvalid(
+                    self.msg, path=path)
+            raise AnyInvalid(self.msg or 'no valid value found',
+                             path=path)
 
 
 # Convenience alias
 Or = Any
 
 
-class All(object):
+class All(_WithSubValidators):
     """Value must pass all validators.
 
     The output of each validator is passed as input to the next.
@@ -251,24 +275,16 @@ class All(object):
     10
     """
 
-    def __init__(self, *validators, **kwargs):
-        self.validators = validators
-        self.msg = kwargs.pop('msg', None)
-        self._schemas = [Schema(val, **kwargs) for val in validators]
-
-    def __call__(self, v):
+    def _exec(self, funcs, v, path=None):
         try:
-            for schema in self._schemas:
-                v = schema(v)
+            for func in funcs:
+                if path is None:
+                    v = func(v)
+                else:
+                    v = func(path, v)
         except Invalid as e:
-            raise e if self.msg is None else AllInvalid(self.msg)
+            raise e if self.msg is None else AllInvalid(self.msg, path=path)
         return v
-
-    def __repr__(self):
-        return 'All(%s, msg=%r)' % (
-            ", ".join(repr(v) for v in self.validators),
-            self.msg
-        )
 
 
 # Convenience alias
@@ -419,9 +435,13 @@ def IsFile(v):
     >>> with raises(FileInvalid, 'Not a file'):
     ...   IsFile()(None)
     """
-    if v:
-        return os.path.isfile(v)
-    else:
+    try:
+        if v:
+            v = str(v)
+            return os.path.isfile(v)
+        else:
+            raise FileInvalid('Not a file')
+    except TypeError:
         raise FileInvalid('Not a file')
 
 
@@ -435,9 +455,13 @@ def IsDir(v):
     >>> with raises(DirInvalid, 'Not a directory'):
     ...   IsDir()(None)
     """
-    if v:
-        return os.path.isdir(v)
-    else:
+    try:
+        if v:
+            v = str(v)
+            return os.path.isdir(v)
+        else:
+            raise DirInvalid("Not a directory")
+    except TypeError:
         raise DirInvalid("Not a directory")
 
 
@@ -453,16 +477,21 @@ def PathExists(v):
     >>> with raises(PathInvalid, 'Not a Path'):
     ...   PathExists()(None)
     """
-    if v:
-        return os.path.exists(v)
-    else:
+    try:
+        if v:
+            v = str(v)
+            return os.path.exists(v)
+        else:
+            raise PathInvalid("Not a Path")
+    except TypeError:
         raise PathInvalid("Not a Path")
 
 
-class Maybe(object):
-    """Validate that the object is of a given type or is None.
+def Maybe(validator):
+    """Validate that the object matches given validator or is None.
 
-    :raises Invalid: if the value is not of the type declared and is not None
+    :raises Invalid: if the value does not match the given validator and is not
+        None
 
     >>> s = Schema(Maybe(int))
     >>> s(10)
@@ -471,21 +500,7 @@ class Maybe(object):
     ...  s("string")
 
     """
-    def __init__(self, kind, msg=None):
-        if not isinstance(kind, type):
-            raise TypeError("kind has to be a type")
-
-        self.kind = kind
-        self.msg = msg
-
-    def __call__(self, v):
-        if v is not None and not isinstance(v, self.kind):
-            raise Invalid(self.msg or "%s must be None or of type %s" % (v, self.kind))
-
-        return v
-
-    def __repr__(self):
-        return 'Maybe(%s)' % str(self.kind)
+    return Any(None, validator)
 
 
 class Range(object):
@@ -621,15 +636,10 @@ class Date(Datetime):
     """Validate that the value matches the date format."""
 
     DEFAULT_FORMAT = '%Y-%m-%d'
-    FORMAT_DESCRIPTION = 'yyyy-mm-dd'
 
     def __call__(self, v):
         try:
             datetime.datetime.strptime(v, self.format)
-            if len(v) != len(self.FORMAT_DESCRIPTION):
-                raise DateInvalid(
-                    self.msg or 'value has invalid length'
-                                ' expected length %d (%s)' % (len(self.FORMAT_DESCRIPTION), self.FORMAT_DESCRIPTION))
         except (TypeError, ValueError):
             raise DateInvalid(
                 self.msg or 'value does not match'
@@ -704,7 +714,7 @@ class Contains(object):
         return v
 
     def __repr__(self):
-        return 'Contains(%s)' % (self.item, )
+        return 'Contains(%s)' % (self.item,)
 
 
 class ExactSequence(object):
@@ -866,10 +876,8 @@ class Unordered(object):
             el = missing[0]
             raise Invalid(self.msg or 'Element #{} ({}) is not valid against any validator'.format(el[0], el[1]))
         elif missing:
-            raise MultipleInvalid([
-                Invalid(self.msg or 'Element #{} ({}) is not valid against any validator'.format(el[0], el[1]))
-                for el in missing
-            ])
+            raise MultipleInvalid([Invalid(self.msg or 'Element #{} ({}) is not valid against any validator'.format(
+                el[0], el[1])) for el in missing])
         return v
 
     def __repr__(self):
@@ -904,15 +912,16 @@ class Number(object):
         """
         precision, scale, decimal_num = self._get_precision_scale(v)
 
-        if self.precision is not None and self.scale is not None and\
-            precision != self.precision and scale != self.scale:
-            raise Invalid(self.msg or "Precision must be equal to %s, and Scale must be equal to %s" %(self.precision, self.scale))
+        if self.precision is not None and self.scale is not None and precision != self.precision\
+                and scale != self.scale:
+            raise Invalid(self.msg or "Precision must be equal to %s, and Scale must be equal to %s" % (self.precision,
+                                                                                                        self.scale))
         else:
             if self.precision is not None and precision != self.precision:
-                raise Invalid(self.msg or "Precision must be equal to %s"%self.precision)
+                raise Invalid(self.msg or "Precision must be equal to %s" % self.precision)
 
-            if self.scale is not None and scale != self.scale :
-                raise Invalid(self.msg or "Scale must be equal to %s"%self.scale)
+            if self.scale is not None and scale != self.scale:
+                raise Invalid(self.msg or "Scale must be equal to %s" % self.scale)
 
         if self.yield_decimal:
             return decimal_num
@@ -933,3 +942,63 @@ class Number(object):
             raise Invalid(self.msg or 'Value must be a number enclosed with string')
 
         return (len(decimal_num.as_tuple().digits), -(decimal_num.as_tuple().exponent), decimal_num)
+
+
+class SomeOf(_WithSubValidators):
+    """Value must pass at least some validations, determined by the given parameter.
+    Optionally, number of passed validations can be capped.
+
+    The output of each validator is passed as input to the next.
+
+    :param min_valid: Minimum number of valid schemas.
+    :param validators: a list of schemas or validators to match input against
+    :param max_valid: Maximum number of valid schemas.
+    :param msg: Message to deliver to user if validation fails.
+    :param kwargs: All other keyword arguments are passed to the sub-Schema constructors.
+
+    :raises NotEnoughValid: if the minimum number of validations isn't met
+    :raises TooManyValid: if the more validations than the given amount is met
+
+    >>> validate = Schema(SomeOf(min_valid=2, validators=[Range(1, 5), Any(float, int), 6.6]))
+    >>> validate(6.6)
+    6.6
+    >>> validate(3)
+    3
+    >>> with raises(MultipleInvalid, 'value must be at most 5, not a valid value'):
+    ...     validate(6.2)
+    """
+
+    def __init__(self, validators, min_valid=None, max_valid=None, **kwargs):
+        assert min_valid is not None or max_valid is not None, \
+            'when using "%s" you should specify at least one of min_valid and max_valid' % (type(self).__name__,)
+        self.min_valid = min_valid or 0
+        self.max_valid = max_valid or len(validators)
+        super(SomeOf, self).__init__(*validators, **kwargs)
+
+    def _exec(self, funcs, v, path=None):
+        errors = []
+        funcs = list(funcs)
+        for func in funcs:
+            try:
+                if path is None:
+                    v = func(v)
+                else:
+                    v = func(path, v)
+            except Invalid as e:
+                errors.append(e)
+
+        passed_count = len(funcs) - len(errors)
+        if self.min_valid <= passed_count <= self.max_valid:
+            return v
+
+        msg = self.msg
+        if not msg:
+            msg = ', '.join(map(str, errors))
+
+        if passed_count > self.max_valid:
+            raise TooManyValid(msg)
+        raise NotEnoughValid(msg)
+
+    def __repr__(self):
+        return 'SomeOf(min_valid=%s, validators=[%s], max_valid=%s, msg=%r)' % (
+            self.min_valid, ", ".join(repr(v) for v in self.validators), self.max_valid, self.msg)
