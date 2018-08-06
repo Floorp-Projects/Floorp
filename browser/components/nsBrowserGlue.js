@@ -1805,7 +1805,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 72;
+    const UI_VERSION = 73;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2140,6 +2140,19 @@ BrowserGlue.prototype = {
       // Migrate performance tool's recording interval value from msec to usec.
       let pref = "devtools.performance.recording.interval";
       Services.prefs.setIntPref(pref, Services.prefs.getIntPref(pref, 1) * 1000);
+    }
+
+    if (currentUIVersion < 73) {
+      // Remove blocklist JSON local dumps in profile.
+      OS.File.removeDir(OS.Path.join(OS.Constants.Path.profileDir, "blocklists"),
+                        { ignoreAbsent: true });
+      OS.File.removeDir(OS.Path.join(OS.Constants.Path.profileDir, "blocklists-preview"),
+                        { ignoreAbsent: true });
+      for (const filename of ["addons.json", "plugins.json", "gfx.json"]) {
+        // Some old versions used to dump without subfolders. Clean them while we are at it.
+        const path = OS.Path.join(OS.Constants.Path.profileDir, `blocklists-${filename}`);
+        OS.File.remove(path, { ignoreAbsent: true });
+      }
     }
 
     // Update the migration version.
