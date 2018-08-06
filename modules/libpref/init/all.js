@@ -3100,9 +3100,6 @@ pref("layout.idle_period.required_quiescent_frames", 2);
 // end and the start of the next tick to avoid jank.
 pref("layout.idle_period.time_limit", 1);
 
-// Whether -webkit-appearance is aliased to -moz-appearance
-pref("layout.css.webkit-appearance.enabled", false);
-
 // Is support for the core interfaces of Web Animations API enabled?
 pref("dom.animations-api.core.enabled", true);
 
