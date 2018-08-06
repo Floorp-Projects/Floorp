@@ -53,13 +53,6 @@ thumb[orient="horizontal"] {
   min-width: 8px;
 }
 
-/* ::::: scrollbar button ::::: */
-
-scrollbarbutton {
-  min-width: 16px;
-  min-height: 16px;
-}
-
 /* ::::: square at the corner of two scrollbars ::::: */
 
 scrollcorner {
