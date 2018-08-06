@@ -51,6 +51,50 @@ static const char* kPrefNameEnableTSF = "intl.tsf.enable";
 
 LazyLogModule sTextStoreLog("nsTextStoreWidgets");
 
+enum class TextInputProcessorID
+{
+  // Internal use only.  This won't be returned by TSFStaticSink::ActiveTIP().
+  eNotComputed,
+
+  // Not a TIP.  E.g., simple keyboard layout or IMM-IME.
+  eNone,
+
+  // Used for other TIPs, i.e., any TIPs which we don't support specifically.
+  eUnknown,
+
+  // TIP for Japanese.
+  eMicrosoftIMEForJapanese,
+  eMicrosoftOfficeIME2010ForJapanese,
+  eGoogleJapaneseInput,
+  eATOK2011,
+  eATOK2012,
+  eATOK2013,
+  eATOK2014,
+  eATOK2015,
+  eATOK2016,
+  eATOKUnknown,
+  eJapanist10,
+
+  // TIP for Traditional Chinese.
+  eMicrosoftBopomofo,
+  eMicrosoftChangJie,
+  eMicrosoftPhonetic,
+  eMicrosoftQuick,
+  eMicrosoftNewChangJie,
+  eMicrosoftNewPhonetic,
+  eMicrosoftNewQuick,
+  eFreeChangJie,
+
+  // TIP for Simplified Chinese.
+  eMicrosoftPinyin,
+  eMicrosoftPinyinNewExperienceInputStyle,
+  eMicrosoftWubi,
+
+  // TIP for Korean.
+  eMicrosoftIMEForKorean,
+  eMicrosoftOldHangul,
+};
+
 static const char*
 GetBoolName(bool aBool)
 {
@@ -1077,106 +1121,163 @@ public:
      return (::ImmGetIMEFileNameW(aHKL, nullptr, 0) > 0);
   }
 
-#define DECL_AND_IMPL_IS_TIP_ACTIVE(aMethod)                                   \
-  static bool aMethod()                                                        \
-  {                                                                            \
-    RefPtr<TSFStaticSink> staticSink = GetInstance();                          \
-    if (NS_WARN_IF(!staticSink) ||                                             \
-        NS_WARN_IF(!staticSink->EnsureInitActiveTIPKeyboard())) {              \
-      return false;                                                            \
-    }                                                                          \
-    return staticSink->aMethod ## Internal();                                  \
+  static bool IsTraditionalChinese()
+  {
+    EnsureInstance();
+    return sInstance && sInstance->IsTraditionalChineseInternal();
+  }
+  static bool IsSimplifiedChinese()
+  {
+    EnsureInstance();
+    return sInstance && sInstance->IsSimplifiedChineseInternal();
+  }
+  static bool IsJapanese()
+  {
+    EnsureInstance();
+    return sInstance && sInstance->IsJapaneseInternal();
+  }
+  static bool IsKorean()
+  {
+    EnsureInstance();
+    return sInstance && sInstance->IsKoreanInternal();
   }
 
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSJapaneseIMEActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSOfficeJapaneseIME2010Active)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsGoogleJapaneseInputActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOKActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2011Active)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2012Active)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2013Active)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2014Active)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2015Active)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2016Active)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsJapanist10Active)
+  /**
+   * ActiveTIP() returns an ID for currently active TIP.
+   * Please note that this method is expensive due to needs a lot of GUID
+   * comparations if active language ID is one of CJKT.  If you need to
+   * check TIPs for a specific language, you should check current language
+   * first.
+   */
+  static TextInputProcessorID ActiveTIP()
+  {
+    EnsureInstance();
+    if (!sInstance || !sInstance->EnsureInitActiveTIPKeyboard()) {
+      return TextInputProcessorID::eUnknown;
+    }
+    sInstance->ComputeActiveTextInputProcessor();
+    if (NS_WARN_IF(sInstance->mActiveTIP ==
+                     TextInputProcessorID::eNotComputed)) {
+      return TextInputProcessorID::eUnknown;
+    }
+    return sInstance->mActiveTIP;
+  }
 
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSBopomofoActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSChangJieActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSPhoneticActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSQuickActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSNewChangJieActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSNewPhoneticActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSNewQuickActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsFreeChangJieActive)
+  static bool IsMSChangJieOrMSQuickActive()
+  {
+    // ActiveTIP() is expensive if it hasn't computed active TIP yet.
+    // For avoiding unnecessary computation, we should check if the language
+    // for current TIP is Traditional Chinese.
+    if (!IsTraditionalChinese()) {
+      return false;
+    }
+    switch (ActiveTIP()) {
+      case TextInputProcessorID::eMicrosoftChangJie:
+      case TextInputProcessorID::eMicrosoftQuick:
+        return true;
+      default:
+        return false;
+    }
+  }
 
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSPinyinActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSPinyinNewExperienceInputStyleActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSWubiActive)
+  static bool IsMSPinyinOrMSWubiActive()
+  {
+    // ActiveTIP() is expensive if it hasn't computed active TIP yet.
+    // For avoiding unnecessary computation, we should check if the language
+    // for current TIP is Simplified Chinese.
+    if (!IsSimplifiedChinese()) {
+      return false;
+    }
+    switch (ActiveTIP()) {
+      case TextInputProcessorID::eMicrosoftPinyin:
+      case TextInputProcessorID::eMicrosoftWubi:
+        return true;
+      default:
+        return false;
+    }
+  }
 
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSKoreanIMEActive)
-  DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSOldHangulActive)
+  static bool IsMSJapaneseIMEActive()
+  {
+    // ActiveTIP() is expensive if it hasn't computed active TIP yet.
+    // For avoiding unnecessary computation, we should check if the language
+    // for current TIP is Japanese.
+    if (!IsJapanese()) {
+      return false;
+    }
+    return ActiveTIP() == TextInputProcessorID::eMicrosoftIMEForJapanese;
+  }
 
-#undef DECL_AND_IMPL_IS_TIP_ACTIVE
+  static bool IsGoogleJapaneseInputActive()
+  {
+    // ActiveTIP() is expensive if it hasn't computed active TIP yet.
+    // For avoiding unnecessary computation, we should check if the language
+    // for current TIP is Japanese.
+    if (!IsJapanese()) {
+      return false;
+    }
+    return ActiveTIP() == TextInputProcessorID::eGoogleJapaneseInput;
+  }
+
+  static bool IsATOKActive()
+  {
+    // ActiveTIP() is expensive if it hasn't computed active TIP yet.
+    // For avoiding unnecessary computation, we should check if active TIP is
+    // ATOK first since it's cheaper.
+    return IsJapanese() && sInstance->IsATOKActiveInternal();
+  }
 
   // Note that ATOK 2011 - 2016 refers native caret position for deciding its
   // popup window position.
   static bool IsATOKReferringNativeCaretActive()
   {
-    RefPtr<TSFStaticSink> staticSink = GetInstance();
-    if (NS_WARN_IF(!staticSink) ||
-        NS_WARN_IF(!staticSink->EnsureInitActiveTIPKeyboard())) {
+    // ActiveTIP() is expensive if it hasn't computed active TIP yet.
+    // For avoiding unnecessary computation, we should check if active TIP is
+    // ATOK first since it's cheaper.
+    if (!IsJapanese() || !sInstance->IsATOKActiveInternal()) {
       return false;
     }
-    return staticSink->IsATOKActiveInternal() &&
-           (staticSink->IsATOK2011ActiveInternal() ||
-            staticSink->IsATOK2012ActiveInternal() ||
-            staticSink->IsATOK2013ActiveInternal() ||
-            staticSink->IsATOK2014ActiveInternal() ||
-            staticSink->IsATOK2015ActiveInternal());
+    switch (ActiveTIP()) {
+      case TextInputProcessorID::eATOK2011:
+      case TextInputProcessorID::eATOK2012:
+      case TextInputProcessorID::eATOK2013:
+      case TextInputProcessorID::eATOK2014:
+      case TextInputProcessorID::eATOK2015:
+        return true;
+      default:
+        return false;
+    }
   }
 
 private:
-  /****************************************************************************
-   * Japanese TIP
-   ****************************************************************************/
-
-  // Note that TIP name may depend on the language of the environment.
-  // For example, some TIP may use localized name for its target language
-  // environment but English name for the others.  Therefore, we should
-  // compare GUID as far as possible.
-
-  bool IsMSJapaneseIMEActiveInternal() const
+  static void EnsureInstance()
   {
-    // {A76C93D9-5523-4E90-AAFA-4DB112F9AC76} (Win7, Win8.1, Win10)
-    static const GUID kGUID = {
-      0xA76C93D9, 0x5523, 0x4E90,
-        { 0xAA, 0xFA, 0x4D, 0xB1, 0x12, 0xF9, 0xAC, 0x76 }
-    };
-    return mActiveTIPGUID == kGUID;
+    if (!sInstance) {
+      RefPtr<TSFStaticSink> staticSink = GetInstance();
+      Unused << staticSink;
+    }
   }
 
-  bool IsMSOfficeJapaneseIME2010ActiveInternal() const
+  bool IsTraditionalChineseInternal() const
   {
-    // {54EDCC94-1524-4BB1-9FB7-7BABE4F4CA64}
-    static const GUID kGUID = {
-      0x54EDCC94, 0x1524, 0x4BB1,
-        { 0x9F, 0xB7, 0x7B, 0xAB, 0xE4, 0xF4, 0xCA, 0x64 }
-    };
-    return mActiveTIPGUID == kGUID;
+    return mLangID == 0x0404;
+  }
+  bool IsSimplifiedChineseInternal() const
+  {
+    return mLangID == 0x0804;
+  }
+  bool IsJapaneseInternal() const
+  {
+    return mLangID == 0x0411;
+  }
+  bool IsKoreanInternal() const
+  {
+    return mLangID == 0x0412;
   }
 
-  bool IsGoogleJapaneseInputActiveInternal() const
+  bool IsATOKActiveInternal()
   {
-    // {773EB24E-CA1D-4B1B-B420-FA985BB0B80D}
-    static const GUID kGUID = {
-      0x773EB24E, 0xCA1D, 0x4B1B,
-        { 0xB4, 0x20, 0xFA, 0x98, 0x5B, 0xB0, 0xB8, 0x0D }
-    };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsATOKActiveInternal() const
-  {
+    EnsureInitActiveTIPKeyboard();
     // FYI: Name of packaged ATOK includes the release year like "ATOK 2015".
     //      Name of ATOK Passport (subscription) equals "ATOK".
     return StringBeginsWith(mActiveTIPKeyboardDescription,
@@ -1184,245 +1285,277 @@ private:
            mActiveTIPKeyboardDescription.EqualsLiteral("ATOK");
   }
 
-  bool IsATOK2011ActiveInternal() const
+  void ComputeActiveTextInputProcessor()
   {
+    if (mActiveTIP != TextInputProcessorID::eNotComputed) {
+      return;
+    }
+
+    if (mActiveTIPGUID == GUID_NULL) {
+      mActiveTIP = TextInputProcessorID::eNone;
+      return;
+    }
+
+    // Comparing GUID is slow. So, we should use language information to
+    // reduce the comparing cost for TIP which is not we do not support
+    // specifically since they are always compared with all supported TIPs.
+    switch (mLangID) {
+      case 0x0404:
+        mActiveTIP = ComputeActiveTIPAsTraditionalChinese();
+        break;
+      case 0x0411:
+        mActiveTIP = ComputeActiveTIPAsJapanese();
+        break;
+      case 0x0412:
+        mActiveTIP = ComputeActiveTIPAsKorean();
+        break;
+      case 0x0804:
+        mActiveTIP = ComputeActiveTIPAsSimplifiedChinese();
+        break;
+      default:
+        mActiveTIP = TextInputProcessorID::eUnknown;
+    }
+  }
+
+  TextInputProcessorID ComputeActiveTIPAsJapanese()
+  {
+    // {A76C93D9-5523-4E90-AAFA-4DB112F9AC76} (Win7, Win8.1, Win10)
+    static const GUID kMicrosoftIMEForJapaneseGUID = {
+      0xA76C93D9, 0x5523, 0x4E90,
+        { 0xAA, 0xFA, 0x4D, 0xB1, 0x12, 0xF9, 0xAC, 0x76 }
+    };
+    if (mActiveTIPGUID == kMicrosoftIMEForJapaneseGUID) {
+      return TextInputProcessorID::eMicrosoftIMEForJapanese;
+    }
+    // {54EDCC94-1524-4BB1-9FB7-7BABE4F4CA64}
+    static const GUID kMicrosoftOfficeIME2010ForJapaneseGUID = {
+      0x54EDCC94, 0x1524, 0x4BB1,
+        { 0x9F, 0xB7, 0x7B, 0xAB, 0xE4, 0xF4, 0xCA, 0x64 }
+    };
+    if (mActiveTIPGUID == kMicrosoftOfficeIME2010ForJapaneseGUID) {
+      return TextInputProcessorID::eMicrosoftOfficeIME2010ForJapanese;
+    }
+    // {773EB24E-CA1D-4B1B-B420-FA985BB0B80D}
+    static const GUID kGoogleJapaneseInputGUID = {
+      0x773EB24E, 0xCA1D, 0x4B1B,
+        { 0xB4, 0x20, 0xFA, 0x98, 0x5B, 0xB0, 0xB8, 0x0D }
+    };
+    if (mActiveTIPGUID == kGoogleJapaneseInputGUID) {
+      return TextInputProcessorID::eGoogleJapaneseInput;
+    }
     // {F9C24A5C-8A53-499D-9572-93B2FF582115}
-    static const GUID kGUID = {
+    static const GUID kATOK2011GUID = {
       0xF9C24A5C, 0x8A53, 0x499D,
         { 0x95, 0x72, 0x93, 0xB2, 0xFF, 0x58, 0x21, 0x15 }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsATOK2012ActiveInternal() const
-  {
+    if (mActiveTIPGUID == kATOK2011GUID) {
+      return TextInputProcessorID::eATOK2011;
+    }
     // {1DE01562-F445-401B-B6C3-E5B18DB79461}
-    static const GUID kGUID = {
+    static const GUID kATOK2012GUID = {
       0x1DE01562, 0xF445, 0x401B,
         { 0xB6, 0xC3, 0xE5, 0xB1, 0x8D, 0xB7, 0x94, 0x61 }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsATOK2013ActiveInternal() const
-  {
+    if (mActiveTIPGUID == kATOK2012GUID) {
+      return TextInputProcessorID::eATOK2012;
+    }
     // {3C4DB511-189A-4168-B6EA-BFD0B4C85615}
-    static const GUID kGUID = {
+    static const GUID kATOK2013GUID = {
       0x3C4DB511, 0x189A, 0x4168,
         { 0xB6, 0xEA, 0xBF, 0xD0, 0xB4, 0xC8, 0x56, 0x15 }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsATOK2014ActiveInternal() const
-  {
+    if (mActiveTIPGUID == kATOK2013GUID) {
+      return TextInputProcessorID::eATOK2013;
+    }
     // {4EF33B79-6AA9-4271-B4BF-9321C279381B}
-    static const GUID kGUID = {
+    static const GUID kATOK2014GUID = {
       0x4EF33B79, 0x6AA9, 0x4271,
         { 0xB4, 0xBF, 0x93, 0x21, 0xC2, 0x79, 0x38, 0x1B }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsATOK2015ActiveInternal() const
-  {
+    if (mActiveTIPGUID == kATOK2014GUID) {
+      return TextInputProcessorID::eATOK2014;
+    }
     // {EAB4DC00-CE2E-483D-A86A-E6B99DA9599A}
-    static const GUID kGUID = {
+    static const GUID kATOK2015GUID = {
       0xEAB4DC00, 0xCE2E, 0x483D,
         { 0xA8, 0x6A, 0xE6, 0xB9, 0x9D, 0xA9, 0x59, 0x9A }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsATOK2016ActiveInternal() const
-  {
+    if (mActiveTIPGUID == kATOK2015GUID) {
+      return TextInputProcessorID::eATOK2015;
+    }
     // {0B557B4C-5740-4110-A60A-1493FA10BF2B}
-    static const GUID kGUID = {
+    static const GUID kATOK2016GUID = {
       0x0B557B4C, 0x5740, 0x4110,
         { 0xA6, 0x0A, 0x14, 0x93, 0xFA, 0x10, 0xBF, 0x2B }
     };
-    return mActiveTIPGUID == kGUID;
-  }
+    if (mActiveTIPGUID == kATOK2016GUID) {
+      return TextInputProcessorID::eATOK2016;
+    }
 
-  // * ATOK 2017
-  //   - {6DBFD8F5-701D-11E6-920F-782BCBA6348F}
-  // * ATOK Passport (confirmed with version 31.1.2)
-  //   - {A38F2FD9-7199-45E1-841C-BE0313D8052F}
+    // * ATOK 2017
+    //   - {6DBFD8F5-701D-11E6-920F-782BCBA6348F}
+    // * ATOK Passport (confirmed with version 31.1.2)
+    //   - {A38F2FD9-7199-45E1-841C-BE0313D8052F}
 
-  bool IsJapanist10ActiveInternal() const
-  {
+    if (IsATOKActiveInternal()) {
+      return TextInputProcessorID::eATOKUnknown;
+    }
+
     // {E6D66705-1EDA-4373-8D01-1D0CB2D054C7}
-    static const GUID kGUID = {
+    static const GUID kJapanist10GUID = {
       0xE6D66705, 0x1EDA, 0x4373,
         { 0x8D, 0x01, 0x1D, 0x0C, 0xB2, 0xD0, 0x54, 0xC7 }
     };
-    return mActiveTIPGUID == kGUID;
+    if (mActiveTIPGUID == kJapanist10GUID) {
+      return TextInputProcessorID::eJapanist10;
+    }
+
+    return TextInputProcessorID::eUnknown;
   }
 
-  /****************************************************************************
-   * Traditional Chinese TIP
-   ****************************************************************************/
-
-  bool IsMSBopomofoActiveInternal() const
+  TextInputProcessorID ComputeActiveTIPAsTraditionalChinese()
   {
     // {B2F9C502-1742-11D4-9790-0080C882687E} (Win8.1, Win10)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftBopomofoGUID = {
       0xB2F9C502, 0x1742, 0x11D4,
         { 0x97, 0x90, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSChangJieActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftBopomofoGUID) {
+      return TextInputProcessorID::eMicrosoftBopomofo;
+    }
     // {4BDF9F03-C7D3-11D4-B2AB-0080C882687E} (Win7, Win8.1, Win10)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftChangJieGUID = {
       0x4BDF9F03, 0xC7D3, 0x11D4,
         { 0xB2, 0xAB, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSPhoneticActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftChangJieGUID) {
+      return TextInputProcessorID::eMicrosoftChangJie;
+    }
     // {761309DE-317A-11D4-9B5D-0080C882687E} (Win7)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftPhoneticGUID = {
       0x761309DE, 0x317A, 0x11D4,
         { 0x9B, 0x5D, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSQuickActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftPhoneticGUID) {
+      return TextInputProcessorID::eMicrosoftPhonetic;
+    }
     // {6024B45F-5C54-11D4-B921-0080C882687E} (Win7, Win8.1, Win10)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftQuickGUID = {
       0x6024B45F, 0x5C54, 0x11D4,
         { 0xB9, 0x21, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSNewChangJieActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftQuickGUID) {
+      return TextInputProcessorID::eMicrosoftQuick;
+    }
     // {F3BA907A-6C7E-11D4-97FA-0080C882687E} (Win7)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftNewChangJieGUID = {
       0xF3BA907A, 0x6C7E, 0x11D4,
         { 0x97, 0xFA, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSNewPhoneticActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftNewChangJieGUID) {
+      return TextInputProcessorID::eMicrosoftNewChangJie;
+    }
     // {B2F9C502-1742-11D4-9790-0080C882687E} (Win7)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftNewPhoneticGUID = {
       0xB2F9C502, 0x1742, 0x11D4,
         { 0x97, 0x90, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSNewQuickActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftNewPhoneticGUID) {
+      return TextInputProcessorID::eMicrosoftNewPhonetic;
+    }
     // {0B883BA0-C1C7-11D4-87F9-0080C882687E} (Win7)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftNewQuickGUID = {
       0x0B883BA0, 0xC1C7, 0x11D4,
         { 0x87, 0xF9, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
+    if (mActiveTIPGUID == kMicrosoftNewQuickGUID) {
+      return TextInputProcessorID::eMicrosoftNewQuick;
+    }
 
-  // NOTE: There are some other Traditional Chinese TIPs installed in Windows:
-  // * Chinese Traditional Array (version 6.0)
-  //   - {D38EFF65-AA46-4FD5-91A7-67845FB02F5B} (Win7, Win8.1)
-  // * Chinese Traditional DaYi (version 6.0)
-  //   - {037B2C25-480C-4D7F-B027-D6CA6B69788A} (Win7, Win8.1)
+    // NOTE: There are some other Traditional Chinese TIPs installed in Windows:
+    // * Chinese Traditional Array (version 6.0)
+    //   - {D38EFF65-AA46-4FD5-91A7-67845FB02F5B} (Win7, Win8.1)
+    // * Chinese Traditional DaYi (version 6.0)
+    //   - {037B2C25-480C-4D7F-B027-D6CA6B69788A} (Win7, Win8.1)
 
-  bool IsFreeChangJieActiveInternal() const
-  {
     // {B58630B5-0ED3-4335-BBC9-E77BBCB43CAD}
-    static const GUID kGUID = {
+    static const GUID kFreeChangJieGUID = {
       0xB58630B5, 0x0ED3, 0x4335,
         { 0xBB, 0xC9, 0xE7, 0x7B, 0xBC, 0xB4, 0x3C, 0xAD }
     };
-    return mActiveTIPGUID == kGUID;
+    if (mActiveTIPGUID == kFreeChangJieGUID) {
+      return TextInputProcessorID::eFreeChangJie;
+    }
+
+    return TextInputProcessorID::eUnknown;
   }
 
-  /****************************************************************************
-   * Simplified Chinese TIP
-   ****************************************************************************/
-
-  bool IsMSPinyinActiveInternal() const
+  TextInputProcessorID ComputeActiveTIPAsSimplifiedChinese()
   {
     // FYI: This matches with neither "Microsoft Pinyin ABC Input Style" nor
     //      "Microsoft Pinyin New Experience Input Style" on Win7.
-
     // {FA550B04-5AD7-411F-A5AC-CA038EC515D7} (Win8.1, Win10)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftPinyinGUID = {
       0xFA550B04, 0x5AD7, 0x411F,
         { 0xA5, 0xAC, 0xCA, 0x03, 0x8E, 0xC5, 0x15, 0xD7 }
     };
-    return mActiveTIPGUID == kGUID;
-  }
+    if (mActiveTIPGUID == kMicrosoftPinyinGUID) {
+      return TextInputProcessorID::eMicrosoftPinyin;
+    }
 
-  bool IsMSPinyinNewExperienceInputStyleActiveInternal() const
-  {
     // {F3BA9077-6C7E-11D4-97FA-0080C882687E} (Win7)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftPinyinNewExperienceInputStyleGUID = {
       0xF3BA9077, 0x6C7E, 0x11D4,
         { 0x97, 0xFA, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSWubiActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftPinyinNewExperienceInputStyleGUID) {
+      return TextInputProcessorID::eMicrosoftPinyinNewExperienceInputStyle;
+    }
     // {82590C13-F4DD-44F4-BA1D-8667246FDF8E} (Win8.1, Win10)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftWubiGUID = {
       0x82590C13, 0xF4DD, 0x44F4,
         { 0xBA, 0x1D, 0x86, 0x67, 0x24, 0x6F, 0xDF, 0x8E }
     };
-    return mActiveTIPGUID == kGUID;
+    if (mActiveTIPGUID == kMicrosoftWubiGUID) {
+      return TextInputProcessorID::eMicrosoftWubi;
+    }
+    // NOTE: There are some other Simplified Chinese TIPs installed in Windows:
+    // * Chinese Simplified QuanPin (version 6.0)
+    //   - {54FC610E-6ABD-4685-9DDD-A130BDF1B170} (Win8.1)
+    // * Chinese Simplified ZhengMa (version 6.0)
+    //   - {733B4D81-3BC3-4132-B91A-E9CDD5E2BFC9} (Win8.1)
+    // * Chinese Simplified ShuangPin (version 6.0)
+    //   - {EF63706D-31C4-490E-9DBB-BD150ADC454B} (Win8.1)
+    // * Microsoft Pinyin ABC Input Style
+    //   - {FCA121D2-8C6D-41FB-B2DE-A2AD110D4820} (Win7)
+    return TextInputProcessorID::eUnknown;
   }
 
-  // NOTE: There are some other Simplified Chinese TIPs installed in Windows:
-  // * Chinese Simplified QuanPin (version 6.0)
-  //   - {54FC610E-6ABD-4685-9DDD-A130BDF1B170} (Win8.1)
-  // * Chinese Simplified ZhengMa (version 6.0)
-  //   - {733B4D81-3BC3-4132-B91A-E9CDD5E2BFC9} (Win8.1)
-  // * Chinese Simplified ShuangPin (version 6.0)
-  //   - {EF63706D-31C4-490E-9DBB-BD150ADC454B} (Win8.1)
-  // * Microsoft Pinyin ABC Input Style
-  //   - {FCA121D2-8C6D-41FB-B2DE-A2AD110D4820} (Win7)
-
-  /****************************************************************************
-   * Korean TIP
-   ****************************************************************************/
-
-  bool IsMSKoreanIMEActiveInternal() const
+  TextInputProcessorID ComputeActiveTIPAsKorean()
   {
     // {B5FE1F02-D5F2-4445-9C03-C568F23C99A1} (Win7, Win8.1, Win10)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftIMEForKoreanGUID = {
       0xB5FE1F02, 0xD5F2, 0x4445,
         { 0x9C, 0x03, 0xC5, 0x68, 0xF2, 0x3C, 0x99, 0xA1 }
     };
-    return mActiveTIPGUID == kGUID;
-  }
-
-  bool IsMSOldHangulActiveInternal() const
-  {
+    if (mActiveTIPGUID == kMicrosoftIMEForKoreanGUID) {
+      return TextInputProcessorID::eMicrosoftIMEForKorean;
+    }
     // {B60AF051-257A-46BC-B9D3-84DAD819BAFB} (Win8.1, Win10)
-    static const GUID kGUID = {
+    static const GUID kMicrosoftOldHangulGUID = {
       0xB60AF051, 0x257A, 0x46BC,
         { 0xB9, 0xD3, 0x84, 0xDA, 0xD8, 0x19, 0xBA, 0xFB }
     };
-    return mActiveTIPGUID == kGUID;
-  }
+    if (mActiveTIPGUID == kMicrosoftOldHangulGUID) {
+      return TextInputProcessorID::eMicrosoftOldHangul;
+    }
 
-  // NOTE: There is the other Korean TIP installed in Windows:
-  // * Microsoft IME 2010
-  //   - {48878C45-93F9-4aaf-A6A1-272CD863C4F5} (Win7)
+    // NOTE: There is the other Korean TIP installed in Windows:
+    // * Microsoft IME 2010
+    //   - {48878C45-93F9-4aaf-A6A1-272CD863C4F5} (Win7)
+
+    return TextInputProcessorID::eUnknown;
+  }
 
 public: // ITfInputProcessorProfileActivationSink
   STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
@@ -1440,6 +1573,8 @@ private:
                          REFGUID aProfile, nsAString& aDescription);
   bool IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
                              REFGUID aProfile);
+
+  TextInputProcessorID mActiveTIP;
 
   // Cookie of installing ITfInputProcessorProfileActivationSink
   DWORD mIPProfileCookie;
@@ -1467,7 +1602,8 @@ private:
 StaticRefPtr<TSFStaticSink> TSFStaticSink::sInstance;
 
 TSFStaticSink::TSFStaticSink()
-  : mIPProfileCookie(TF_INVALID_COOKIE)
+  : mActiveTIP(TextInputProcessorID::eNotComputed)
+  , mIPProfileCookie(TF_INVALID_COOKIE)
   , mLangID(0)
   , mIsIMM_IME(false)
   , mOnActivatedCalled(false)
@@ -1558,10 +1694,11 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
       (dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT ||
        catid == GUID_TFCAT_TIP_KEYBOARD)) {
     mOnActivatedCalled = true;
+    mActiveTIP = TextInputProcessorID::eNotComputed;
     mActiveTIPGUID = guidProfile;
-    mLangID = langid;
+    mLangID = langid & 0xFFFF;
     mIsIMM_IME = IsIMM_IME(hkl);
-    GetTIPDescription(rclsid, mLangID, guidProfile,
+    GetTIPDescription(rclsid, langid, guidProfile,
                       mActiveTIPKeyboardDescription);
     if (mActiveTIPGUID != GUID_NULL) {
       // key should be "LocaleID|Description".  Although GUID of the
@@ -1571,7 +1708,7 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
       // LocaleID because Microsoft IME may not include language information.
       // 72 is kMaximumKeyStringLength in TelemetryScalar.cpp
       nsAutoString key;
-      key.AppendPrintf("0x%04X|", mLangID & 0xFFFF);
+      key.AppendPrintf("0x%04X|", mLangID);
       nsAutoString description(mActiveTIPKeyboardDescription);
       static const uint32_t kMaxDescriptionLength = 72 - key.Length();
       if (description.Length() > kMaxDescriptionLength) {
@@ -2683,11 +2820,9 @@ TSFTextStore::QueryInsert(LONG acpTestStart,
   // Assume we are given good offsets for now
   if (IsWin8OrLater() && !mComposition.IsComposing() &&
       ((TSFPrefs::NeedToHackQueryInsertForMSTraditionalTIP() &&
-         (TSFStaticSink::IsMSChangJieActive() ||
-          TSFStaticSink::IsMSQuickActive())) ||
+        TSFStaticSink::IsMSChangJieOrMSQuickActive()) ||
        (TSFPrefs::NeedToHackQueryInsertForMSSimplifiedTIP() &&
-         (TSFStaticSink::IsMSPinyinActive() ||
-          TSFStaticSink::IsMSWubiActive())))) {
+        TSFStaticSink::IsMSPinyinOrMSWubiActive()))) {
     MOZ_LOG(sTextStoreLog, LogLevel::Warning,
       ("0x%p   TSFTextStore::QueryInsert() WARNING using different "
        "result for the TIP", this));
@@ -3863,23 +3998,34 @@ TSFTextStore::ShouldSetInputScopeOfURLBarToDefault()
   //      However, if it's installed on Win7 and has not been updated yet
   //      after the OS is upgraded to Win8 or later, it's still an IMM-IME.
   //      Therefore, we also need to check with IMMHandler here.
-  return TSFPrefs::ShouldSetInputScopeOfURLBarToDefault() &&
-         (IMMHandler::IsGoogleJapaneseInputActive() ||
-          (!TSFTextStore::IsIMM_IMEActive() &&
-           (TSFStaticSink::IsMSJapaneseIMEActive() ||
-            TSFStaticSink::IsGoogleJapaneseInputActive() ||
-            TSFStaticSink::IsMSBopomofoActive() ||
-            TSFStaticSink::IsMSChangJieActive() ||
-            TSFStaticSink::IsMSPhoneticActive() ||
-            TSFStaticSink::IsMSQuickActive() ||
-            TSFStaticSink::IsMSNewChangJieActive() ||
-            TSFStaticSink::IsMSNewPhoneticActive() ||
-            TSFStaticSink::IsMSNewQuickActive() ||
-            TSFStaticSink::IsMSPinyinActive() ||
-            TSFStaticSink::IsMSPinyinNewExperienceInputStyleActive() ||
-            (IsWin8OrLater() && TSFStaticSink::IsMSKoreanIMEActive()) ||
-            TSFStaticSink::IsMSOldHangulActive() ||
-            TSFStaticSink::IsMSWubiActive())));
+  if (!TSFPrefs::ShouldSetInputScopeOfURLBarToDefault()) {
+    return false;
+  }
+
+  if (IMMHandler::IsGoogleJapaneseInputActive()) {
+    return true;
+  }
+
+  switch (TSFStaticSink::ActiveTIP()) {
+    case TextInputProcessorID::eMicrosoftIMEForJapanese:
+    case TextInputProcessorID::eGoogleJapaneseInput:
+    case TextInputProcessorID::eMicrosoftBopomofo:
+    case TextInputProcessorID::eMicrosoftChangJie:
+    case TextInputProcessorID::eMicrosoftPhonetic:
+    case TextInputProcessorID::eMicrosoftQuick:
+    case TextInputProcessorID::eMicrosoftNewChangJie:
+    case TextInputProcessorID::eMicrosoftNewPhonetic:
+    case TextInputProcessorID::eMicrosoftNewQuick:
+    case TextInputProcessorID::eMicrosoftPinyin:
+    case TextInputProcessorID::eMicrosoftPinyinNewExperienceInputStyle:
+    case TextInputProcessorID::eMicrosoftOldHangul:
+    case TextInputProcessorID::eMicrosoftWubi:
+      return true;
+    case TextInputProcessorID::eMicrosoftIMEForKorean:
+      return IsWin8OrLater();
+    default:
+      return false;
+  }
 }
 
 void
@@ -4619,24 +4765,34 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
              mComposition.EndOffset() ==
                mContentForTSF.LatestCompositionEndOffset());
 
+  // We need to compute active TIP now.  This may take a couple of milliseconds,
+  // however, it'll be cached, so, must be faster than check active TIP every
+  // GetTextExt() calls.
+  TextInputProcessorID activeTIP = TSFStaticSink::ActiveTIP();
+
   // The bug of Microsoft Office IME 2010 for Japanese is similar to
   // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
   // released yet.  So, we can hack it without prefs  because there must be
   // no developers who want to disable this hack for tests.
-  const bool kIsMSOfficeJapaneseIME2010 =
-    TSFStaticSink::IsMSOfficeJapaneseIME2010Active();
 
   // If TSF does not have the bug, we need to hack only with a few TIPs.
-  // XXX We have not tested with Microsoft Office IME 2010 since it's
-  //     installable only with Win7 and Win8 (i.e., cannot install Win8.1 and
-  //     Win10), and requires upgrade to Win10.
   static const bool sTSFHasTheBug = !IsWindows10BuildOrLater(17643);
-  if (!sTSFHasTheBug &&
-      !kIsMSOfficeJapaneseIME2010 &&
-      !TSFStaticSink::IsJapanist10Active()) {
-    return false;
+  if (!sTSFHasTheBug) {
+    switch (activeTIP) {
+      // XXX We have not tested with Microsoft Office IME 2010 since it's
+      //     installable only with Win7 and Win8 (i.e., cannot install Win8.1
+      //     and Win10), and requires upgrade to Win10.
+      case TextInputProcessorID::eMicrosoftOfficeIME2010ForJapanese:
+      case TextInputProcessorID::eJapanist10:
+        // Those TIPs still have bugs of handling TS_E_NOLAYOUT error.
+        break;
+      default:
+        return false;
+    }
   }
 
+  // TODO: Rewrite following blocks with switch-case statement of activeTIP
+  //       since it's faster and simpler.
   bool dontReturnNoLayoutError = false;
   const Selection& selectionForTSF = SelectionForTSFRef();
   // MS IME for Japanese doesn't support asynchronous handling at deciding
@@ -4644,16 +4800,17 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
   // starting from Windows 8.  And also we may meet same trouble in e10s
   // mode on Win7.  So, we should never return TS_E_NOLAYOUT to MS IME for
   // Japanese.
-  if (kIsMSOfficeJapaneseIME2010 ||
+  if (activeTIP == TextInputProcessorID::eMicrosoftOfficeIME2010ForJapanese ||
       ((TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar() ||
         TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
-       TSFStaticSink::IsMSJapaneseIMEActive())) {
+       activeTIP == TextInputProcessorID::eMicrosoftIMEForJapanese)) {
     // Basically, MS-IME tries to retrieve whole composition string rect
     // at deciding suggest window immediately after unlocking the document.
     // However, in e10s mode, the content hasn't updated yet in most cases.
     // Therefore, if the first character at the retrieving range rect is
     // available, we should use it as the result.
-    if ((kIsMSOfficeJapaneseIME2010 ||
+    if ((activeTIP ==
+           TextInputProcessorID::eMicrosoftOfficeIME2010ForJapanese ||
          TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar()) &&
         aACPStart < aACPEnd) {
       aACPEnd = aACPStart;
@@ -4663,7 +4820,8 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     // caret rect immediately after modifying the composition string but
     // before unlocking the document.  In such case, we should return the
     // nearest character rect.
-    else if ((kIsMSOfficeJapaneseIME2010 ||
+    else if ((activeTIP ==
+                TextInputProcessorID::eMicrosoftOfficeIME2010ForJapanese ||
               TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret()) &&
              aACPStart == aACPEnd &&
              selectionForTSF.IsCollapsed() &&
@@ -4699,7 +4857,7 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
   // we need this hack.
   else if (
     TSFPrefs::DoNotReturnNoLayoutErrorToJapanist10OfCompositionString() &&
-    TSFStaticSink::IsJapanist10Active() &&
+    activeTIP == TextInputProcessorID::eJapanist10 &&
     aACPStart >= mContentForTSF.LatestCompositionStartOffset() &&
     aACPStart <= mContentForTSF.LatestCompositionEndOffset() &&
     aACPEnd >= mContentForTSF.LatestCompositionStartOffset() &&
@@ -4710,7 +4868,7 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
   // This must be caused by the bug of TSF since Free ChangJie works fine on
   // build 17643 and later.
   else if (TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
-           TSFStaticSink::IsFreeChangJieActive()) {
+           activeTIP == TextInputProcessorID::eFreeChangJie) {
     aACPEnd = mContentForTSF.LatestCompositionStartOffset();
     aACPStart = std::min(aACPStart, aACPEnd);
     dontReturnNoLayoutError = true;
@@ -4719,11 +4877,9 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
   // mode on Win8 or later.
   else if (IsWin8OrLater() &&
            ((TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP() &&
-             (TSFStaticSink::IsMSChangJieActive() ||
-              TSFStaticSink::IsMSQuickActive())) ||
-           (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
-             (TSFStaticSink::IsMSPinyinActive() ||
-              TSFStaticSink::IsMSWubiActive())))) {
+               TSFStaticSink::IsMSChangJieOrMSQuickActive()) ||
+            (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
+               TSFStaticSink::IsMSPinyinOrMSWubiActive()))) {
     aACPEnd = mContentForTSF.LatestCompositionStartOffset();
     aACPStart = std::min(aACPStart, aACPEnd);
     dontReturnNoLayoutError = true;
