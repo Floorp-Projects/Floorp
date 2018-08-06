@@ -11,8 +11,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { PAGES } = require("../constants");
 
 const SidebarItem = createFactory(require("./SidebarItem"));
-const FIREFOX_ICON = "chrome://devtools/skin/images/firefox-logo-glyph.svg";
-const MOBILE_ICON = "chrome://devtools/skin/images/firefox-logo-glyph.svg";
+const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
+const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 
 class Sidebar extends PureComponent {
   static get propTypes() {
@@ -41,7 +41,7 @@ class Sidebar extends PureComponent {
         SidebarItem({
           id: PAGES.CONNECT,
           dispatch,
-          icon: MOBILE_ICON,
+          icon: CONNECT_ICON,
           isSelected: PAGES.CONNECT === selectedPage,
           name: "Connect",
         })
