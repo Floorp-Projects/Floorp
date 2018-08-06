@@ -196,7 +196,7 @@ var BrowserTestUtils = {
             opening();
             tab = tabbrowser.selectedTab;
           } else {
-            tabbrowser.selectedTab = tab = tabbrowser.addTab(opening);
+            tabbrowser.selectedTab = tab = BrowserTestUtils.addTab(tabbrowser, opening);
           }
         })
       ];
