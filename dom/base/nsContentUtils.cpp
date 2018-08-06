@@ -7823,8 +7823,8 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
 
         // The buffer contains the terminating null.
         Shmem itemData = item.data().get_Shmem();
-        const nsDependentCString text(itemData.get<char>(),
-                                      itemData.Size<char>());
+        const nsDependentCSubstring text(itemData.get<char>(),
+                                         itemData.Size<char>());
         rv = dataWrapper->SetData(text);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -8005,7 +8005,7 @@ ConvertToShmem(mozilla::dom::nsIContentChild* aChild,
            : static_cast<IShmemAllocator*>(aParent);
 
   Shmem result;
-  if (!allocator->AllocShmem(aInput.Length() + 1,
+  if (!allocator->AllocShmem(aInput.Length(),
                              SharedMemory::TYPE_BASIC,
                              &result)) {
     return result;
@@ -8013,7 +8013,7 @@ ConvertToShmem(mozilla::dom::nsIContentChild* aChild,
 
   memcpy(result.get<char>(),
          aInput.BeginReading(),
-         aInput.Length() + 1);
+         aInput.Length());
 
   return result;
 }
