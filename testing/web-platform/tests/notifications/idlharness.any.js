@@ -12,13 +12,16 @@ idl_test(
   idl_array => {
     idl_array.add_objects({
       Notification: ['notification'],
-      NotificationEvent: ['notificationEvent'],
     });
     if (self.ServiceWorkerGlobalScope) {
-      idl_array.add_objects({ServiceWorkerGlobalScope: ['self']});
+      idl_array.add_objects({
+        NotificationEvent: ['notificationEvent'],
+        ServiceWorkerGlobalScope: ['self'],
+      });
     }
-
     self.notification = new Notification("Running idlharness.");
-    self.notificationEvent = new NotificationEvent("Running idlharness.");
+    if (self.ServiceWorkerGlobalScope) {
+      self.notificationEvent = new NotificationEvent("type", { notification: notification });
+    }
   }
 );
