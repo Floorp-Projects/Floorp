@@ -8,7 +8,6 @@ ext.configureProductFlavors = {
     productFlavors {
         local {
             dimension "audience"
-            multiDexEnabled true
         }
 
         // Automation builds.  We use "official" rather than "automation" to drive these builds down

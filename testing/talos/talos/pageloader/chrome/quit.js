@@ -62,23 +62,8 @@ function goQuitApplication() {
     return false;
   }
 
-  const kAppStartup = "@mozilla.org/toolkit/app-startup;1";
-  const kAppShell   = "@mozilla.org/appshell/appShellService;1";
-  var appService;
-  var forceQuit;
-
-  if (kAppStartup in Cc) {
-    appService = Services.startup;
-    forceQuit  = Ci.nsIAppStartup.eForceQuit;
-  } else if (kAppShell in Cc) {
-    appService = Services.appShell;
-    forceQuit = Ci.nsIAppShellService.eForceQuit;
-  } else {
-    throw "goQuitApplication: no AppStartup/appShell";
-  }
-
   try {
-    appService.quit(forceQuit);
+    Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
   } catch (ex) {
     throw ("goQuitApplication: " + ex);
   }

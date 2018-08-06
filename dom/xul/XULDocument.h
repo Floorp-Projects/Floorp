@@ -137,12 +137,6 @@ public:
     void TraceProtos(JSTracer* aTrc);
 
     // WebIDL API
-    already_AddRefed<nsINode> GetPopupNode();
-    void SetPopupNode(nsINode* aNode);
-    nsINode* GetPopupRangeParent(ErrorResult& aRv);
-    int32_t GetPopupRangeOffset(ErrorResult& aRv);
-    already_AddRefed<nsINode> GetTooltipNode();
-    void SetTooltipNode(nsINode* aNode) { /* do nothing */ }
     nsIDOMXULCommandDispatcher* GetCommandDispatcher() const
     {
         return mCommandDispatcher;
@@ -189,8 +183,6 @@ protected:
     ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
                                  Element* aListener,
                                  nsAtom* aAttr);
-
-    already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
     static void DirectionChanged(const char* aPrefName, XULDocument* aData);
 

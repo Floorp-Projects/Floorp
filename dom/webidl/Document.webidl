@@ -406,6 +406,21 @@ partial interface Document {
   // "document_idle" webextension script injection point.
   [ChromeOnly, Throws]
   readonly attribute Promise<Document> documentReadyForIdle;
+
+  [ChromeOnly]
+  attribute Node? popupNode;
+
+  /**
+   * These attributes correspond to rangeParent and rangeOffset. They will help
+   * you find where in the DOM the popup is happening. Can be accessed only
+   * during a popup event. Accessing any other time will be an error.
+   */
+  [Throws, ChromeOnly]
+  readonly attribute Node? popupRangeParent;
+  [Throws, ChromeOnly]
+  readonly attribute long  popupRangeOffset;
+  [ChromeOnly]
+  attribute Node? tooltipNode;
 };
 
 dictionary BlockParsingOptions {

@@ -2276,8 +2276,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   }
 
   bool IsInnerTableStyle() const {
-    return mozilla::StyleDisplay::TableCaption == mDisplay ||
-           mozilla::StyleDisplay::TableCell == mDisplay ||
+    return mozilla::StyleDisplay::TableCell == mDisplay ||
            IsInternalTableStyleExceptCell();
   }
 
