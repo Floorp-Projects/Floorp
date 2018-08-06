@@ -147,6 +147,7 @@
 
 /* CONTENT */
 
+#identity-popup-content-blocking-disabled-label,
 .identity-popup-content-blocking-category-label,
 .identity-popup-content-blocking-category-state-label,
 .identity-popup-content-blocking-category-add-blocking,
@@ -185,12 +186,18 @@
 
 .identity-popup-warning-gray {
   padding-inline-start: 24px;
-  background: url(chrome://browser/skin/controlcenter/warning-gray.svg) no-repeat 0 50%;
+  background: url(chrome://browser/skin/controlcenter/warning.svg) no-repeat 0 50%;
+  fill: #808080;
+  stroke: #fff;
+  -moz-context-properties: fill, stroke;
 }
 
 .identity-popup-warning-yellow {
   padding-inline-start: 24px;
-  background: url(chrome://browser/skin/controlcenter/warning-yellow.svg) no-repeat 0 50%;
+  background: url(chrome://browser/skin/controlcenter/warning.svg) no-repeat 0 50%;
+  fill: #ffbf00;
+  stroke: #fff;
+  -moz-context-properties: fill, stroke;
 }
 
 .identity-popup-warning-gray:-moz-locale-dir(rtl),
@@ -316,6 +323,50 @@ description#identity-popup-content-verifier,
 #identity-popup-content-blocking-content:not([contentBlockingUI]) #content-blocking-label,
 #identity-popup-content-blocking-content:not([contentBlockingUI]) > #identity-popup-content-blocking-category-list {
   display: none;
+}
+
+/* Disabled label */
+
+#identity-popup-content-blocking-disabled-label {
+  padding: 0px 5px;
+  border-radius: 3px;
+  margin: 5px;
+  display: none;
+  color: #fff;
+}
+
+#identity-popup-content-blocking-content[hasException] #identity-popup-content-blocking-disabled-label {
+  display: -moz-box;
+  background-color: #d7b600;
+  stroke: #d7b600;
+}
+
+#identity-popup-content-blocking-content[enabled][hasException] #identity-popup-content-blocking-disabled-label-global {
+  display: none;
+}
+
+#identity-popup-content-blocking-content:not([enabled]) #identity-popup-content-blocking-disabled-label {
+  display: -moz-box;
+  background-color: #d70022;
+  stroke: #d70022;
+}
+
+#identity-popup-content-blocking-content:not([enabled]) #identity-popup-content-blocking-disabled-label-exception {
+  display: none;
+}
+
+#identity-popup-content-blocking-disabled-label > label {
+  margin: 0;
+  line-height: 18px;
+}
+
+#identity-popup-content-blocking-disabled-label > image {
+  list-style-image: url(chrome://browser/skin/controlcenter/warning.svg);
+  fill: currentColor;
+  -moz-context-properties: fill, stroke;
+  margin-inline-end: 4px;
+  height: 13px;
+  width: 13px;
 }
 
 /* Content Blocking categories */
