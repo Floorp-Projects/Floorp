@@ -212,8 +212,9 @@ var Utils = {
    *        Property name to defer (or an array of property names)
    */
   deferGetSet: function Utils_deferGetSet(obj, defer, prop) {
-    if (Array.isArray(prop))
+    if (Array.isArray(prop)) {
       return prop.map(prop => Utils.deferGetSet(obj, defer, prop));
+    }
 
     let prot = obj.prototype;
 
@@ -234,26 +235,33 @@ var Utils = {
 
   deepEquals: function eq(a, b) {
     // If they're triple equals, then it must be equals!
-    if (a === b)
+    if (a === b) {
       return true;
+    }
 
     // If they weren't equal, they must be objects to be different
-    if (typeof a != "object" || typeof b != "object")
+    if (typeof a != "object" || typeof b != "object") {
       return false;
+    }
 
     // But null objects won't have properties to compare
-    if (a === null || b === null)
+    if (a === null || b === null) {
       return false;
+    }
 
     // Make sure all of a's keys have a matching value in b
-    for (let k in a)
-      if (!eq(a[k], b[k]))
+    for (let k in a) {
+      if (!eq(a[k], b[k])) {
         return false;
+      }
+    }
 
     // Do the same for b's keys but skip those that we already checked
-    for (let k in b)
-      if (!(k in a) && !eq(a[k], b[k]))
+    for (let k in b) {
+      if (!(k in a) && !eq(a[k], b[k])) {
         return false;
+      }
+    }
 
     return true;
   },
@@ -505,8 +513,9 @@ var Utils = {
    * arrays if possible.
    */
   arraySub: function arraySub(minuend, subtrahend) {
-    if (!minuend.length || !subtrahend.length)
+    if (!minuend.length || !subtrahend.length) {
       return minuend;
+    }
     let setSubtrahend = new Set(subtrahend);
     return minuend.filter(i => !setSubtrahend.has(i));
   },
@@ -515,10 +524,12 @@ var Utils = {
    * Build the union of two arrays. Reuse arrays if possible.
    */
   arrayUnion: function arrayUnion(foo, bar) {
-    if (!foo.length)
+    if (!foo.length) {
       return bar;
-    if (!bar.length)
+    }
+    if (!bar.length) {
       return foo;
+    }
     return foo.concat(Utils.arraySub(bar, foo));
   },
 
@@ -764,6 +775,7 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
 Svc.Obs = Observers;
 
 Svc.Obs.add("xpcom-shutdown", function() {
-  for (let name in Svc)
+  for (let name in Svc) {
     delete Svc[name];
+  }
 });
