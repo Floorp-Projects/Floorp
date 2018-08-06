@@ -42,7 +42,7 @@ Structure:
           name: <string>, // engine name, e.g. "Yahoo"; or "NONE" if no default
           loadPath: <string>, // where the engine line is located; missing if no default
           origin: <string>, // 'default', 'verified', 'unverified', or 'invalid'; based on the presence and validity of the engine's loadPath verification hash.
-          submissionURL: <string> // missing if no default or for user-installed engines
+          submissionURL: <string> // set for default engines or well known search domains
         },
         searchCohort: <string>, // optional, contains an identifier for any active search A/B experiments
         e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
