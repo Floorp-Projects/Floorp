@@ -391,16 +391,6 @@ wasm::Classify(OpBytes op)
               return OpKind::OldCallDirect;
             case MozOp::OldCallIndirect:
               return OpKind::OldCallIndirect;
-            case MozOp::I32AtomicsLoad:
-              return OpKind::OldAtomicLoad;
-            case MozOp::I32AtomicsStore:
-              return OpKind::OldAtomicStore;
-            case MozOp::I32AtomicsBinOp:
-              return OpKind::OldAtomicBinOp;
-            case MozOp::I32AtomicsCompareExchange:
-              return OpKind::OldAtomicCompareExchange;
-            case MozOp::I32AtomicsExchange:
-              return OpKind::OldAtomicExchange;
           }
           break;
       }

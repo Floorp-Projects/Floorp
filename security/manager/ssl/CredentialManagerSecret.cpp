@@ -85,7 +85,7 @@ CredentialManagerSecret::StoreSecret(const nsACString& aSecret,
     MOZ_LOG(gCredentialManagerSecretLog,
             LogLevel::Debug,
             ("CredWriteW failed %d", GetLastError()));
-    NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
@@ -101,7 +101,7 @@ CredentialManagerSecret::DeleteSecret(const nsACString& aLabel)
     MOZ_LOG(gCredentialManagerSecretLog,
             LogLevel::Debug,
             ("CredDeleteA failed %d", error));
-    NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
