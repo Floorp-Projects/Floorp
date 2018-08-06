@@ -137,6 +137,11 @@ class Settings private constructor(context: Context) {
     fun userHasDismissedNoSuggestionsMessage(): Boolean =
             preferences.getBoolean(SearchSuggestionsPreferences.DISMISSED_NO_SUGGESTIONS_PREF, false)
 
+    fun shouldDisplayHomescreenTips() =
+        preferences.getBoolean(
+            getPreferenceKey(R.string.pref_key_homescreen_tips),
+            false)
+
     fun isDefaultBrowser() = preferences.getBoolean(
         getPreferenceKey(R.string.pref_key_default_browser),
         false)

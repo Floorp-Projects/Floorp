@@ -188,7 +188,7 @@ class UrlInputFragment :
 
         keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
 
-        val tip = TipManager.getNextTip(context)
+        val tip = TipManager.getNextTipIfAvailable(context)
 
         if (tip != null) {
             keyboardLinearLayout.homeViewTipsLabel.text = tip.text
@@ -201,6 +201,7 @@ class UrlInputFragment :
     private fun showFocusSubtitle() {
         keyboardLinearLayout.homeViewTipsLabel.text = getString(teaser)
         keyboardLinearLayout.homeViewTipsLabel.alpha = 1f
+        keyboardLinearLayout.homeViewTipsLabel.setOnClickListener(null)
     }
 
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {

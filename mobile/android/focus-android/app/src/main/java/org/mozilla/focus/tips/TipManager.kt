@@ -18,8 +18,9 @@ import android.app.Activity
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
-class Tip(val text: String, val shouldDisplay: () -> Boolean, val deepLink: () -> Unit)
+class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: () -> Unit)
 
 object TipManager {
 
@@ -42,14 +43,16 @@ object TipManager {
         addOpenInNewTabTip(context)
     }
 
-    fun getNextTip(context: Context): Tip? {
+    // Will not return a tip if tips are disabled or if MAX TIPS have already been shown.
+    fun getNextTipIfAvailable(context: Context): Tip? {
         if (!listInitialized) {
             populateListOfTips(context)
             listInitialized = true
         }
 
-        // Only show three tips before going back to the "Focus" branding
-        if (tipsShown == MAX_TIPS_TO_DISPLAY || listOfTips.count() <= 0) {
+        // Only show three tips before going back to the "Focus" branding and if they're enabled
+        if (tipsShown == MAX_TIPS_TO_DISPLAY || listOfTips.count() <= 0 ||
+            !Settings.getInstance(context).shouldDisplayHomescreenTips()) {
             return null
         }
 
@@ -57,13 +60,14 @@ object TipManager {
 
         // Find a random tip that the user doesn't already know about
         while (!tip.shouldDisplay()) {
-            tip = listOfTips[getRandomTipIndex()]
-            if (!tip.shouldDisplay()) { listOfTips.remove(tip) }
+            listOfTips.remove(tip)
             if (listOfTips.count() == 0) { return null }
+            tip = listOfTips[getRandomTipIndex()]
         }
 
         listOfTips.remove(tip)
         tipsShown += 1
+        TelemetryWrapper.displayTipEvent(tip.id)
         return tip
     }
 
@@ -72,6 +76,9 @@ object TipManager {
     }
 
     private fun addTrackingProtectionTip(context: Context) {
+        val id = tip_disable_tracking_protection
+        val name = context.resources.getString(id)
+
         val shouldDisplayTrackingProtection = {
             Settings.getInstance(context).shouldBlockOtherTrackers() ||
                     Settings.getInstance(context).shouldBlockAdTrackers() ||
@@ -81,28 +88,31 @@ object TipManager {
         val deepLinkTrackingProtection = {
             val activity = context as Activity
             (activity as LocaleAwareAppCompatActivity).openPrivacySecuritySettings()
+            TelemetryWrapper.pressTipEvent(id)
         }
 
-        listOfTips.add(Tip(context.resources.getString(tip_disable_tracking_protection),
-            shouldDisplayTrackingProtection, deepLinkTrackingProtection))
+        listOfTips.add(Tip(id, name, shouldDisplayTrackingProtection, deepLinkTrackingProtection))
     }
 
     private fun addHomescreenTip(context: Context) {
+        val id = tip_add_to_homescreen
+        val name = context.resources.getString(id)
         val shouldDisplayAddToHomescreen = {
             !Settings.getInstance(context).hasAddedToHomescreen()
         }
 
         val deepLinkAddToHomescreen = {
             SessionManager.getInstance().createSession(Source.MENU, ADD_HOMESCREEN_URL)
+            TelemetryWrapper.pressTipEvent(id)
         }
 
-        listOfTips.add(Tip(context.resources.getString(tip_add_to_homescreen),
-            shouldDisplayAddToHomescreen,
-            deepLinkAddToHomescreen))
+        listOfTips.add(Tip(id, name, shouldDisplayAddToHomescreen, deepLinkAddToHomescreen))
     }
 
     private fun addDefaultBrowserTip(context: Context) {
         val appName = context.resources.getString(app_name)
+        val id = tip_set_default_browser
+        val name = context.resources.getString(id, appName)
 
         val shouldDisplayDefaultBrowser = {
             !Settings.getInstance(context).isDefaultBrowser()
@@ -110,14 +120,19 @@ object TipManager {
 
         val deepLinkDefaultBrowser = {
             DefaultBrowserPreference(context, null).onClick()
+            TelemetryWrapper.pressTipEvent(id)
         }
 
-        listOfTips.add(Tip(context.resources.getString(tip_set_default_browser, appName),
+        listOfTips.add(Tip(id,
+            name,
             shouldDisplayDefaultBrowser,
             deepLinkDefaultBrowser))
     }
 
     private fun addAutocompleteUrlTip(context: Context) {
+        val id = tip_autocomplete_url
+        val name = context.resources.getString(id)
+
         val shouldDisplayAutocompleteUrl = {
             !Settings.getInstance(context).shouldAutocompleteFromCustomDomainList()
         }
@@ -125,24 +140,25 @@ object TipManager {
         val deepLinkAutocompleteUrl = {
             val activity = context as Activity
             (activity as LocaleAwareAppCompatActivity).openAutocompleteUrlSettings()
+            TelemetryWrapper.pressTipEvent(id)
         }
 
-        listOfTips.add(Tip(context.resources.getString(tip_autocomplete_url),
-            shouldDisplayAutocompleteUrl,
-            deepLinkAutocompleteUrl))
+        listOfTips.add(Tip(id, name, shouldDisplayAutocompleteUrl, deepLinkAutocompleteUrl))
     }
 
     private fun addOpenInNewTabTip(context: Context) {
+        val id = tip_open_in_new_tab
+        val name = context.resources.getString(id)
+
         val shouldDisplayOpenInNewTab = {
             !Settings.getInstance(context).hasOpenedInNewTab()
         }
 
         val deepLinkOpenInNewTab = {
             SessionManager.getInstance().createSession(Source.MENU, NEW_TAB_URL)
+            TelemetryWrapper.pressTipEvent(id)
         }
 
-        listOfTips.add(Tip(context.resources.getString(tip_open_in_new_tab),
-            shouldDisplayOpenInNewTab,
-            deepLinkOpenInNewTab))
+        listOfTips.add(Tip(id, name, shouldDisplayOpenInNewTab, deepLinkOpenInNewTab))
     }
 }
