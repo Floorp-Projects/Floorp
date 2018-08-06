@@ -64,3 +64,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_WASM_GC'] = True
+
+if CONFIG['MOZ_ASAN'] and CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

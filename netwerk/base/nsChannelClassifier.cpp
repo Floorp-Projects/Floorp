@@ -42,6 +42,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 
@@ -364,11 +365,13 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
     NS_ENSURE_ARG(result);
     *result = false;
 
-    nsresult rv;
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-        do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+      services::GetThirdPartyUtil();
+    if (NS_WARN_IF(!thirdPartyUtil)) {
+      return NS_ERROR_FAILURE;
+    }
 
+    nsresult rv;
     nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
     if (NS_FAILED(rv) || !chan) {
       LOG(("nsChannelClassifier[%p]: Not an HTTP channel", this));
@@ -543,11 +546,13 @@ nsChannelClassifier::NotifyTrackingProtectionDisabled(nsIChannel *aChannel)
       return NS_OK;
     }
 
-    nsresult rv;
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-        do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+      services::GetThirdPartyUtil();
+    if (NS_WARN_IF(!thirdPartyUtil)) {
+      return NS_ERROR_FAILURE;
+    }
 
+    nsresult rv;
     nsCOMPtr<mozIDOMWindowProxy> win;
     rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, getter_AddRefs(win));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -847,10 +852,13 @@ nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
     classifiedChannel->SetMatchedInfo(aList, aProvider, aFullHash);
   }
 
-  nsCOMPtr<mozIDOMWindowProxy> win;
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-    do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+    services::GetThirdPartyUtil();
+  if (NS_WARN_IF(!thirdPartyUtil)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> win;
   rv = thirdPartyUtil->GetTopWindowForChannel(channel, getter_AddRefs(win));
   NS_ENSURE_SUCCESS(rv, NS_OK);
   auto* pwin = nsPIDOMWindowOuter::From(win);
@@ -1204,7 +1212,15 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
 
     SetIsTrackingResourceHelper(channel);
     if (CachedPrefs::GetInstance()->IsLowerNetworkPriority()) {
-      LowerPriorityHelper(channel);
+      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        services::GetThirdPartyUtil();
+      bool result = false;
+      if (thirdPartyUtil &&
+          NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyChannel(channel, nullptr,
+                                                           &result)) &&
+          result) {
+        LowerPriorityHelper(channel);
+      }
     }
   }
 }
