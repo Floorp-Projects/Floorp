@@ -37,7 +37,7 @@ var AboutPrivateBrowsingHandler = {
       }
       case "DontShowIntroPanelAgain": {
         let win = aMessage.target.browser.ownerGlobal;
-        win.TrackingProtection.dontShowIntroPanelAgain();
+        win.ContentBlocking.dontShowIntroPanelAgain();
         break;
       }
     }

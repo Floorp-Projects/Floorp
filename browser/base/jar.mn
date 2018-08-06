@@ -36,6 +36,7 @@ browser.jar:
         content/browser/browser-customization.js      (content/browser-customization.js)
         content/browser/browser-data-submission-info-bar.js (content/browser-data-submission-info-bar.js)
         content/browser/browser-compacttheme.js       (content/browser-compacttheme.js)
+        content/browser/browser-contentblocking.js    (content/browser-contentblocking.js)
 #ifndef MOZILLA_OFFICIAL
         content/browser/browser-development-helpers.js (content/browser-development-helpers.js)
 #endif
@@ -53,7 +54,6 @@ browser.jar:
         content/browser/browser-sync.js               (content/browser-sync.js)
         content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar.js)
         content/browser/browser-thumbnails.js         (content/browser-thumbnails.js)
-        content/browser/browser-trackingprotection.js (content/browser-trackingprotection.js)
         content/browser/browser-webrender.js          (content/browser-webrender.js)
         content/browser/tab-content.js                (content/tab-content.js)
         content/browser/content.js                    (content/content.js)

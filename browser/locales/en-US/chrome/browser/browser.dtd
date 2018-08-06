@@ -918,29 +918,51 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY getUserMedia.audioCapture.label "Audio from the tab will be shared.">
 <!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
 
-<!ENTITY trackingProtection.on "Tracking Protection: ON">
-<!ENTITY trackingProtection.off "Tracking Protection: OFF">
+<!ENTITY contentBlocking.title "Content Blocking">
+<!ENTITY contentBlocking.detected "Blockable content detected on this site.">
+<!ENTITY contentBlocking.notDetected "No blockable content detected on this page">
+
+<!ENTITY contentBlocking.fastBlock.label "Slow-Loading Trackers">
+<!-- LOCALIZATION NOTE (contentBlocking.fastBlock.blocked.label):
+     This label signals that this type of content blocking is turned
+     ON and is successfully blocking malicious/slow content, so this is
+     a positive thing. It forms the end of the (imaginary) sentence
+     "Slow-Loading Trackers [are] Blocked"-->
+<!ENTITY contentBlocking.fastBlock.blocked.label "Blocked">
+<!-- LOCALIZATION NOTE (contentBlocking.fastBlock.add.label):
+     This is displayed as a link to preferences, where the user can add
+     this specific type of content blocking. When this text is shown
+     the type of content blocking is currently not enabled. -->
+<!ENTITY contentBlocking.fastBlock.add.label "Add Blocking…">
+
+<!ENTITY contentBlocking.trackingProtection.label "Trackers">
+<!-- LOCALIZATION NOTE (contentBlocking.trackingProtection.blocked.label):
+     This label signals that this type of content blocking is turned
+     ON and is successfully blocking malicious/slow content, so this is
+     a positive thing. It forms the end of the (imaginary) sentence
+     "Trackers [are] Blocked"-->
+<!ENTITY contentBlocking.trackingProtection.blocked.label "Blocked">
+<!-- LOCALIZATION NOTE (contentBlocking.trackingProtection.add.label):
+     This is displayed as a link to preferences, where the user can add
+     this specific type of content blocking. When this text is shown
+     the type of content blocking is currently not enabled. -->
+<!ENTITY contentBlocking.trackingProtection.add.label "Add Blocking…">
+
 <!ENTITY trackingProtection.title "Tracking Protection">
 <!ENTITY trackingProtection.tooltip "Open Tracking Protection Preferences">
-<!ENTITY trackingProtection.detectedBlocked4 "&brandShortName; is blocking parts of this page that may track your browsing.">
-<!ENTITY trackingProtection.detectedNotBlocked5 "&brandShortName; has detected elements that may track your browsing.">
-<!ENTITY trackingProtection.detectedException "&brandShortName; has detected elements that may track your browsing. You have disabled protection for this site.">
-<!ENTITY trackingProtection.notDetected5 "No tracking elements detected on this page.">
-<!ENTITY trackingProtection.notDetectedException "No tracking elements detected on this page. You have disabled protection for this site.">
 
-<!ENTITY trackingProtection.reloadRequired2 "You have enabled Tracking Protection. Reload this page to block all trackers.">
 <!-- LOCALIZATION NOTE (trackingProtection.unblock3.label, trackingProtection.unblock3.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
      center while looking at a site with trackers in NON-private browsing mode. -->
-<!ENTITY trackingProtection.unblock3.label "Disable For This Site">
-<!ENTITY trackingProtection.unblock3.accesskey "D">
+<!ENTITY trackingProtection.unblock4.label "Disable Blocking For This Site">
+<!ENTITY trackingProtection.unblock4.accesskey "D">
 <!-- LOCALIZATION NOTE (trackingProtection.unblockPrivate3.label, trackingProtection.unblockPrivate3.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
      center while looking at a site with trackers in PRIVATE browsing mode. -->
-<!ENTITY trackingProtection.unblockPrivate3.label "Disable For This Session">
-<!ENTITY trackingProtection.unblockPrivate3.accesskey "D">
-<!ENTITY trackingProtection.block4.label "Enable For This Site">
-<!ENTITY trackingProtection.block4.accesskey "E">
+<!ENTITY trackingProtection.unblockPrivate4.label "Disable Blocking Temporarily">
+<!ENTITY trackingProtection.unblockPrivate4.accesskey "D">
+<!ENTITY trackingProtection.block5.label "Enable Blocking For This Site">
+<!ENTITY trackingProtection.block5.accesskey "E">
 <!ENTITY trackingProtection.reload2.label "Reload Page">
 <!ENTITY trackingProtection.reload2.accesskey "R">
 
