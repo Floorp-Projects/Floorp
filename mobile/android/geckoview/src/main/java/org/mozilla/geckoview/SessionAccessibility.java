@@ -370,9 +370,6 @@ public class SessionAccessibility {
         if (message.getBoolean("clickable")) {
             node.setClickable(true);
             node.addAction(AccessibilityNodeInfo.ACTION_CLICK);
-        } else {
-            node.setClickable(false);
-            node.removeAction(AccessibilityNodeInfo.ACTION_CLICK);
         }
 
         final GeckoBundle bounds = message.getBundle("bounds");
@@ -420,9 +417,10 @@ public class SessionAccessibility {
         if (eventSource != View.NO_ID) {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
-            if (mVirtualContentNode == null) {
-                mVirtualContentNode = AccessibilityNodeInfo.obtain(mView, eventSource);
+            if (mVirtualContentNode != null) {
+                mVirtualContentNode.recycle();
             }
+            mVirtualContentNode = AccessibilityNodeInfo.obtain(mView, eventSource);
             populateNodeInfoFromJSON(mVirtualContentNode, message);
         }
 
