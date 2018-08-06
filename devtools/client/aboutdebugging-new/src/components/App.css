@@ -23,4 +23,5 @@
 
 .page {
   padding-block-start: 60px;
+  overflow-y: auto;
 }

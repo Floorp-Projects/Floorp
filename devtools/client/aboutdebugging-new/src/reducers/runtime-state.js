@@ -20,7 +20,7 @@ function runtimeReducer(state = RuntimeState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
       const { client, tabs } = action;
-      return { client, tabs };
+      return { client, tabs: toTabComponentData(tabs) };
     }
     case DISCONNECT_RUNTIME_SUCCESS: {
       return RuntimeState();
@@ -29,6 +29,17 @@ function runtimeReducer(state = RuntimeState(), action) {
     default:
       return state;
   }
+}
+
+function toTabComponentData(tabs) {
+  return tabs.map(tab => {
+    const icon = tab.favicon
+      ? `data:image/png;base64,${ btoa(String.fromCharCode.apply(String, tab.favicon)) }`
+      : "chrome://devtools/skin/images/globe.svg";
+    const name = tab.title || tab.url;
+    const url = tab.url;
+    return { icon, name, url };
+  });
 }
 
 module.exports = {
