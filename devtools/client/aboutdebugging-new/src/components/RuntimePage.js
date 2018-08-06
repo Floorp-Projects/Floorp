@@ -4,14 +4,22 @@
 
 "use strict";
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 
 const Services = require("Services");
 
 class RuntimePage extends PureComponent {
+  static get propTypes() {
+    return {
+      tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    };
+  }
+
   render() {
     return dom.article(
       {
@@ -26,4 +34,10 @@ class RuntimePage extends PureComponent {
   }
 }
 
-module.exports = RuntimePage;
+const mapStateToProps = state => {
+  return {
+    tabs: state.runtime.tabs,
+  };
+};
+
+module.exports = connect(mapStateToProps)(RuntimePage);

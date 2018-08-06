@@ -25,6 +25,8 @@ const { configureStore } = require("./src/create-store");
 
 const App = createFactory(require("./src/components/App"));
 
+const { PAGES } = require("./src/constants");
+
 const AboutDebugging = {
   init() {
     if (!Services.prefs.getBoolPref("devtools.enabled", true)) {
@@ -37,6 +39,8 @@ const AboutDebugging = {
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
     render(Provider({ store: this.store }, App()), this.mount);
+
+    this.actions.selectPage(PAGES.THIS_FIREFOX);
   },
 
   destroy() {

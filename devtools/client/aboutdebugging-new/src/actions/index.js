@@ -4,6 +4,7 @@
 
 "use strict";
 
+const runtime = require("./runtime");
 const ui = require("./ui");
 
-Object.assign(exports, ui);
+Object.assign(exports, ui, runtime);
