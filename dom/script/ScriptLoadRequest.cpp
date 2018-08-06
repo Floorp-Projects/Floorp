@@ -17,6 +17,32 @@ namespace mozilla {
 namespace dom {
 
 //////////////////////////////////////////////////////////////
+// ScriptFetchOptions
+//////////////////////////////////////////////////////////////
+
+NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions,
+                         mElement,
+                         mTriggeringPrincipal)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScriptFetchOptions, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
+
+ScriptFetchOptions::ScriptFetchOptions(mozilla::CORSMode aCORSMode,
+                                       mozilla::net::ReferrerPolicy aReferrerPolicy,
+                                       nsIScriptElement* aElement,
+                                       nsIPrincipal* aTriggeringPrincipal)
+  : mCORSMode(aCORSMode)
+  , mReferrerPolicy(aReferrerPolicy)
+  , mElement(aElement)
+  , mTriggeringPrincipal(aTriggeringPrincipal)
+{
+  MOZ_ASSERT(mTriggeringPrincipal);
+}
+
+ScriptFetchOptions::~ScriptFetchOptions()
+{}
+
+//////////////////////////////////////////////////////////////
 // ScriptLoadRequest
 //////////////////////////////////////////////////////////////
 
@@ -29,13 +55,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheInfo)
   tmp->DropBytecodeCacheReferences();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheInfo)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -45,17 +71,14 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
                                      nsIURI* aURI,
-                                     nsIScriptElement* aElement,
-                                     mozilla::CORSMode aCORSMode,
-                                     const SRIMetadata& aIntegrity,
-                                     nsIURI* aReferrer,
-                                     mozilla::net::ReferrerPolicy aReferrerPolicy)
+                                     ScriptFetchOptions* aFetchOptions,
+                                     const SRIMetadata &aIntegrity,
+                                     nsIURI* aReferrer)
   : mKind(aKind)
-  , mElement(aElement)
-  , mScriptFromHead(false)
+  , mScriptMode(ScriptMode::eBlocking)
   , mProgress(Progress::eLoading)
   , mDataType(DataType::eUnknown)
-  , mScriptMode(ScriptMode::eBlocking)
+  , mScriptFromHead(false)
   , mIsInline(true)
   , mHasSourceMapURL(false)
   , mInDeferList(false)
@@ -65,17 +88,17 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
   , mIsCanceled(false)
   , mWasCompiledOMT(false)
   , mIsTracking(false)
+  , mFetchOptions(aFetchOptions)
   , mOffThreadToken(nullptr)
   , mScriptTextLength(0)
   , mScriptBytecode()
   , mBytecodeOffset(0)
   , mURI(aURI)
   , mLineNo(1)
-  , mCORSMode(aCORSMode)
   , mIntegrity(aIntegrity)
   , mReferrer(aReferrer)
-  , mReferrerPolicy(aReferrerPolicy)
 {
+  MOZ_ASSERT(mFetchOptions);
 }
 
 ScriptLoadRequest::~ScriptLoadRequest()
