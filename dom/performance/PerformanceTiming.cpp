@@ -286,11 +286,9 @@ PerformanceTimingData::CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
     return false;
   }
 
-  // TYPE_DOCUMENT loads have no loadingPrincipal.  And that's OK, because we
-  // never actually need to have a performance timing entry for TYPE_DOCUMENT
-  // loads.
+  // TYPE_DOCUMENT loads have no loadingPrincipal.
   if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
-    return false;
+    return true;
   }
 
   nsCOMPtr<nsIPrincipal> principal = loadInfo->LoadingPrincipal();

@@ -217,3 +217,6 @@ LOCAL_INCLUDES += [
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
+
+if CONFIG['ENABLE_CLANG_PLUGIN'] and CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

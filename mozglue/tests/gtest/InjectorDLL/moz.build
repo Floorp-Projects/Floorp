@@ -13,3 +13,6 @@ UNIFIED_SOURCES = [
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.gtest += ['!InjectorDLL.dll']
+
+if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497

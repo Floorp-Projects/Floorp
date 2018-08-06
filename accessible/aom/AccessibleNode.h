@@ -8,6 +8,7 @@
 #define A11Y_AOM_ACCESSIBLENODE_H
 
 #include "nsDataHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -238,11 +239,7 @@ protected:
 
   already_AddRefed<AccessibleNode> GetProperty(AOMRelationProperty aProperty)
   {
-    RefPtr<AccessibleNode> data;
-    if (mRelationProperties.Get(static_cast<int>(aProperty), &data)) {
-      return data.forget();
-    }
-    return nullptr;
+    return mRelationProperties.Get(static_cast<int>(aProperty));
   }
 
   void SetProperty(AOMRelationProperty aProperty,
@@ -258,7 +255,7 @@ protected:
   // The 2k'th bit indicates whether the k'th boolean property is used(1) or not(0)
   // and 2k+1'th bit contains the property's value(1:true, 0:false)
   uint32_t mBooleanProperties;
-  nsDataHashtable<nsUint32HashKey, RefPtr<AccessibleNode> > mRelationProperties;
+  nsRefPtrHashtable<nsUint32HashKey, AccessibleNode> mRelationProperties;
   nsDataHashtable<nsUint32HashKey, nsString> mStringProperties;
 
   RefPtr<a11y::Accessible> mIntl;

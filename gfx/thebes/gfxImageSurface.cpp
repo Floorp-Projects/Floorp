@@ -22,6 +22,7 @@ using namespace mozilla::gfx;
 gfxImageSurface::gfxImageSurface()
   : mSize(0, 0),
     mOwnsData(false),
+    mData(nullptr),
     mFormat(SurfaceFormat::UNKNOWN),
     mStride(0)
 {

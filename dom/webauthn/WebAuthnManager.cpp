@@ -402,7 +402,7 @@ WebAuthnManager::MakeCredential(const PublicKeyCredentialCreationOptions& aOptio
   }
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(WebAuthnTransaction(promise, signal));
+  mTransaction = Some(WebAuthnTransaction(promise));
   mChild->SendRequestRegister(mTransaction.ref().mId, info);
 
   return promise.forget();
@@ -582,7 +582,7 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
   }
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(WebAuthnTransaction(promise, signal));
+  mTransaction = Some(WebAuthnTransaction(promise));
   mChild->SendRequestSign(mTransaction.ref().mId, info);
 
   return promise.forget();

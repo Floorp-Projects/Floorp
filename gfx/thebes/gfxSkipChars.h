@@ -204,7 +204,11 @@ public:
      * The empty constructor creates an object that is useless until it is assigned.
      */
     gfxSkipCharsIterator()
-        : mSkipChars(nullptr)
+        : mSkipChars(nullptr),
+          mOriginalStringOffset(0),
+          mSkippedStringOffset(0),
+          mCurrentRangeIndex(0),
+          mOriginalStringToSkipCharsOffset(0)
     { }
 
     /**

@@ -32,7 +32,8 @@ AccessibleNode::IsAOMEnabled(JSContext* aCx, JSObject* /*unused*/)
   return nsContentUtils::IsSystemCaller(aCx) || sPrefCacheValue;
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AccessibleNode, mIntl, mDOMNode, mStates)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AccessibleNode, mRelationProperties,
+                                      mIntl, mDOMNode, mStates)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AccessibleNode)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
