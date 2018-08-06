@@ -2,6 +2,8 @@
 
 /* global windowTracker, EventManager, EventEmitter */
 
+/* eslint-disable complexity */
+
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
@@ -184,6 +186,10 @@ class Theme {
         case "popup_highlight_text":
         case "ntp_background":
         case "ntp_text":
+        case "sidebar":
+        case "sidebar_text":
+        case "sidebar_highlight":
+        case "sidebar_highlight_text":
           this.lwtStyles[color] = cssColor;
           break;
         default:
