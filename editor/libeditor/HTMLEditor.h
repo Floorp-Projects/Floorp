@@ -752,8 +752,6 @@ protected: // Called by helper classes.
     EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
   virtual void OnEndHandlingTopLevelEditSubAction() override;
 
-  virtual nsresult EndUpdateViewBatch() override;
-
 protected: // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
 
