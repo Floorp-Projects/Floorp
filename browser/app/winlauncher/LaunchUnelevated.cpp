@@ -6,6 +6,7 @@
 
 #include "LaunchUnelevated.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/mscom/COMApartmentRegion.h"
 #include "mozilla/RefPtr.h"
@@ -21,6 +22,76 @@
 #include <servprov.h>
 #include <shlobj.h>
 #include <shobjidl.h>
+
+static mozilla::Maybe<TOKEN_ELEVATION_TYPE>
+GetElevationType(const nsAutoHandle& aToken)
+{
+  DWORD retLen;
+  TOKEN_ELEVATION_TYPE elevationType;
+  if (!::GetTokenInformation(aToken.get(), TokenElevationType, &elevationType,
+                             sizeof(elevationType), &retLen)) {
+    return mozilla::Nothing();
+  }
+
+  return mozilla::Some(elevationType);
+}
+
+static mozilla::Maybe<bool>
+IsHighIntegrity(const nsAutoHandle& aToken)
+{
+  DWORD reqdLen;
+  if (!::GetTokenInformation(aToken.get(), TokenIntegrityLevel, nullptr, 0,
+                             &reqdLen) &&
+      ::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+    return mozilla::Nothing();
+  }
+
+  auto buf = mozilla::MakeUnique<char[]>(reqdLen);
+
+  if (!::GetTokenInformation(aToken.get(), TokenIntegrityLevel, buf.get(),
+                             reqdLen, &reqdLen)) {
+    return mozilla::Nothing();
+  }
+
+  auto tokenLabel = reinterpret_cast<PTOKEN_MANDATORY_LABEL>(buf.get());
+
+  DWORD subAuthCount = *::GetSidSubAuthorityCount(tokenLabel->Label.Sid);
+  DWORD integrityLevel = *::GetSidSubAuthority(tokenLabel->Label.Sid,
+                                               subAuthCount - 1);
+  return mozilla::Some(integrityLevel > SECURITY_MANDATORY_MEDIUM_RID);
+}
+
+static nsReturnRef<HANDLE>
+GetMediumIntegrityToken(const nsAutoHandle& aProcessToken)
+{
+  nsAutoHandle empty;
+
+  HANDLE rawResult;
+  if (!::DuplicateTokenEx(aProcessToken.get(), 0, nullptr,
+                          SecurityImpersonation, TokenPrimary, &rawResult)) {
+    return empty.out();
+  }
+
+  nsAutoHandle result(rawResult);
+
+  BYTE mediumIlSid[SECURITY_MAX_SID_SIZE];
+  DWORD mediumIlSidSize = sizeof(mediumIlSid);
+  if (!::CreateWellKnownSid(WinMediumLabelSid, nullptr, mediumIlSid,
+                            &mediumIlSidSize)) {
+    return empty.out();
+  }
+
+  TOKEN_MANDATORY_LABEL integrityLevel = {};
+  integrityLevel.Label.Attributes = SE_GROUP_INTEGRITY;
+  integrityLevel.Label.Sid = reinterpret_cast<PSID>(mediumIlSid);
+
+  if (!::SetTokenInformation(rawResult, TokenIntegrityLevel, &integrityLevel,
+                             sizeof(integrityLevel))) {
+    return empty.out();
+  }
+
+  return result.out();
+}
 
 namespace mozilla {
 
@@ -125,36 +196,62 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   return SUCCEEDED(hr);
 }
 
-mozilla::Maybe<bool>
-IsElevated()
+Maybe<ElevationState>
+GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken)
 {
+  aOutMediumIlToken.reset();
+
+  const DWORD tokenFlags = TOKEN_QUERY | TOKEN_DUPLICATE |
+                           TOKEN_ADJUST_DEFAULT | TOKEN_ASSIGN_PRIMARY;
   HANDLE rawToken;
-  if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &rawToken)) {
-    return mozilla::Nothing();
+  if (!::OpenProcessToken(::GetCurrentProcess(), tokenFlags, &rawToken)) {
+    return Nothing();
   }
 
   nsAutoHandle token(rawToken);
 
-  DWORD reqdLen;
-  if (!::GetTokenInformation(token.get(), TokenIntegrityLevel, nullptr, 0,
-                             &reqdLen) &&
-      ::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-    return mozilla::Nothing();
+  Maybe<TOKEN_ELEVATION_TYPE> elevationType = GetElevationType(token);
+  if (!elevationType) {
+    return Nothing();
   }
 
-  auto buf = mozilla::MakeUnique<char[]>(reqdLen);
+  switch (elevationType.value()) {
+    case TokenElevationTypeLimited:
+      return Some(ElevationState::eNormalUser);
+    case TokenElevationTypeFull:
+      // If we want to start a non-elevated browser process and wait on it,
+      // we're going to need a medium IL token.
+      if ((aFlags & (mozilla::LauncherFlags::eWaitForBrowser |
+                     mozilla::LauncherFlags::eNoDeelevate)) ==
+          mozilla::LauncherFlags::eWaitForBrowser) {
+        aOutMediumIlToken = GetMediumIntegrityToken(token);
+      }
 
-  if (!::GetTokenInformation(token.get(), TokenIntegrityLevel, buf.get(),
-                             reqdLen, &reqdLen)) {
-    return mozilla::Nothing();
+      return Some(ElevationState::eElevated);
+    case TokenElevationTypeDefault:
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
+      return Nothing();
   }
 
-  auto tokenLabel = reinterpret_cast<PTOKEN_MANDATORY_LABEL>(buf.get());
+  // In this case, UAC is disabled. We do not yet know whether or not we are
+  // running at high integrity. If we are at high integrity, we can't relaunch
+  // ourselves in a non-elevated state via Explorer, as we would just end up in
+  // an infinite loop of launcher processes re-launching themselves.
 
-  DWORD subAuthCount = *::GetSidSubAuthorityCount(tokenLabel->Label.Sid);
-  DWORD integrityLevel = *::GetSidSubAuthority(tokenLabel->Label.Sid,
-                                               subAuthCount - 1);
-  return mozilla::Some(integrityLevel > SECURITY_MANDATORY_MEDIUM_RID);
+  Maybe<bool> isHighIntegrity = IsHighIntegrity(token);
+  if (!isHighIntegrity) {
+    return Nothing();
+  }
+
+  if (!isHighIntegrity.value()) {
+    return Some(ElevationState::eNormalUser);
+  }
+
+  aOutMediumIlToken = GetMediumIntegrityToken(token);
+
+  return Some(ElevationState::eHighIntegrityNoUAC);
 }
 
 } // namespace mozilla
