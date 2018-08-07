@@ -4297,6 +4297,15 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   return targetFrame;
 }
 
+static nsIContent*
+FindCommonAncestor(nsIContent* aNode1, nsIContent* aNode2)
+{
+  if (!aNode1 || !aNode2) {
+    return nullptr;
+  }
+  return nsContentUtils::GetCommonFlattenedTreeAncestor(aNode1, aNode2);
+}
+
 class EnterLeaveDispatcher
 {
 public:
@@ -4314,11 +4323,7 @@ public:
                                         win && win->HasMouseEnterLeaveEventListeners()) {
       mRelatedTarget = aRelatedTarget ?
         aRelatedTarget->FindFirstNonChromeOnlyAccessContent() : nullptr;
-      nsINode* commonParent = nullptr;
-      if (aTarget && aRelatedTarget) {
-        commonParent =
-          nsContentUtils::GetCommonAncestor(aTarget, aRelatedTarget);
-      }
+      nsINode* commonParent = FindCommonAncestor(aTarget, aRelatedTarget);
       nsIContent* current = aTarget;
       // Note, it is ok if commonParent is null!
       while (current && current != commonParent) {
@@ -4326,7 +4331,7 @@ public:
           mTargets.AppendObject(current);
         }
         // mouseenter/leave is fired only on elements.
-        current = current->GetParent();
+        current = current->GetFlattenedTreeParent();
       }
     }
   }
@@ -5136,15 +5141,6 @@ GetLabelTarget(nsIContent* aPossibleLabel)
     return nullptr;
 
   return label->GetLabeledElement();
-}
-
-static nsIContent*
-FindCommonAncestor(nsIContent* aNode1, nsIContent* aNode2)
-{
-  if (!aNode1 || !aNode2) {
-    return nullptr;
-  }
-  return nsContentUtils::GetCommonFlattenedTreeAncestor(aNode1, aNode2);
 }
 
 /* static */
