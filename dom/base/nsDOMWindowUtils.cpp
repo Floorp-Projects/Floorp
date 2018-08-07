@@ -4407,3 +4407,30 @@ nsDOMWindowUtils::WrCapture()
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetSystemFont(const nsACString& aFontName)
+{
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_OK;
+  }
+
+  nsAutoCString fontName(aFontName);
+  return widget->SetSystemFont(fontName);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetSystemFont(nsACString& aFontName)
+{
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_OK;
+  }
+
+  nsAutoCString fontName;
+  widget->GetSystemFont(fontName);
+  aFontName.Assign(fontName);
+  return NS_OK;
+}
+

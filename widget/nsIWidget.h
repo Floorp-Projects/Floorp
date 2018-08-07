@@ -1696,6 +1696,18 @@ class nsIWidget : public nsISupports
     virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
     {}
 
+    /**
+     * Setter/Getter of the system font setting for testing.
+     */
+    virtual nsresult SetSystemFont(const nsCString& aFontName)
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    virtual nsresult GetSystemFont(nsCString& aFontName)
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
 private:
   class LongTapInfo
   {

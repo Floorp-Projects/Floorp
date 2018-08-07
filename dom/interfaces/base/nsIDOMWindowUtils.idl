@@ -1931,6 +1931,11 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void wrCapture();
 
+  /**
+   * NOTE: Currently works only on GTK+.
+   */
+  attribute ACString systemFont;
+
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
   const long DEFAULT_PEN_POINTER_ID   = 1;
