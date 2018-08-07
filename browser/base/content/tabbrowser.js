@@ -464,18 +464,22 @@ window._gBrowser = {
 
   _setFindbarData() {
     // Ensure we know what the find bar key is in the content process:
-    let {sharedData} = Services.ppmm;
-    if (!sharedData.has("Findbar:Shortcut")) {
+    let initialProcessData = Services.ppmm.initialProcessData;
+    if (!initialProcessData.findBarShortcutData) {
       let keyEl = document.getElementById("key_find");
       let mods = keyEl.getAttribute("modifiers")
         .replace(/accel/i, AppConstants.platform == "macosx" ? "meta" : "control");
-      sharedData.set("Findbar:Shortcut", {
+      initialProcessData.findBarShortcutData = {
         key: keyEl.getAttribute("key"),
-        shiftKey: mods.includes("shift"),
-        ctrlKey: mods.includes("control"),
-        altKey: mods.includes("alt"),
-        metaKey: mods.includes("meta"),
-      });
+        modifiers: {
+          shiftKey: mods.includes("shift"),
+          ctrlKey: mods.includes("control"),
+          altKey: mods.includes("alt"),
+          metaKey: mods.includes("meta"),
+        },
+      };
+      Services.ppmm.broadcastAsyncMessage("Findbar:ShortcutData",
+        initialProcessData.findBarShortcutData);
     }
   },
 

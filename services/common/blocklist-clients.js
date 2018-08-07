@@ -104,31 +104,6 @@ async function updatePinningList({ data: { current: records } }) {
 }
 
 /**
- * Write list of records into JSON file, and notify nsBlocklistService.
- *
- * @param {Object} client   RemoteSettingsClient instance
- * @param {Object} data      Current records in the local db.
- */
-async function updateJSONBlocklist(client, { data: { current: records } }) {
-  // Write JSON dump for synchronous load at startup.
-  const path = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
-  const blocklistFolder = OS.Path.dirname(path);
-
-  await OS.File.makeDir(blocklistFolder, {from: OS.Constants.Path.profileDir});
-
-  const serialized = JSON.stringify({data: records}, null, 2);
-  try {
-    await OS.File.writeAtomic(path, serialized, {tmpPath: path + ".tmp"});
-    // Notify change to `nsBlocklistService`
-    const eventData = {filename: client.filename};
-    Services.cpmm.sendAsyncMessage("Blocklist:reload-from-disk", eventData);
-  } catch (e) {
-    Cu.reportError(e);
-  }
-}
-
-
-/**
  * This custom filter function is used to limit the entries returned
  * by `RemoteSettings("...").get()` depending on the target app information
  * defined on entries.
@@ -211,7 +186,6 @@ function initialize() {
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_SIGNER),
     filterFunc: targetAppFilter,
   });
-  AddonBlocklistClient.on("sync", updateJSONBlocklist.bind(null, AddonBlocklistClient));
 
   PluginBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
@@ -219,7 +193,6 @@ function initialize() {
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_SIGNER),
     filterFunc: targetAppFilter,
   });
-  PluginBlocklistClient.on("sync", updateJSONBlocklist.bind(null, PluginBlocklistClient));
 
   GfxBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
@@ -227,7 +200,6 @@ function initialize() {
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
     filterFunc: targetAppFilter,
   });
-  GfxBlocklistClient.on("sync", updateJSONBlocklist.bind(null, GfxBlocklistClient));
 
   PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_BUCKET),

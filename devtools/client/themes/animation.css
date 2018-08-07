@@ -646,6 +646,9 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   border-inline-start: var(--tick-line-style);
   height: 100%;
   position: absolute;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .animated-property-list-container .tick-label:last-child {

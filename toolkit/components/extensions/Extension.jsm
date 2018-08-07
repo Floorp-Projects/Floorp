@@ -1784,6 +1784,9 @@ class Extension extends ExtensionData {
           // If the extension has to migrate backend, ensure that the data migration
           // starts once Firefox is idle after the extension has been started.
           this.once("ready", () => ChromeUtils.idleDispatch(() => {
+            if (this.hasShutdown) {
+              return;
+            }
             ExtensionStorageIDB.selectBackend({extension: this});
           }));
         }
@@ -1844,6 +1847,17 @@ class Extension extends ExtensionData {
 
     if (!this.policy) {
       return;
+    }
+
+    if (this.hasPermission("storage") && ExtensionStorageIDB.selectedBackendPromises.has(this)) {
+      // Wait the data migration to complete.
+      try {
+        await ExtensionStorageIDB.selectedBackendPromises.get(this);
+      } catch (err) {
+        Cu.reportError(
+          `Error while waiting for extension data migration on shutdown: ${this.policy.debugName} - ` +
+          `${err.message}::${err.stack}`);
+      }
     }
 
     if (this.rootURI instanceof Ci.nsIJARURI) {
