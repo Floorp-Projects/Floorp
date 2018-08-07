@@ -387,28 +387,5 @@ DrawTargetTiled::PopLayer()
   mPushedLayers.pop_back();
 }
 
-void
-DrawTargetTiled::PadEdges(const IntRegion& aRegion)
-{
-  for (size_t i = 0; i < mTiles.size(); i++) {
-    if (mTiles[i].mClippedOut) {
-      continue;
-    }
-
-    auto tileRect = RoundedOut(Rect(mTiles[i].mTileOrigin.x,
-                                    mTiles[i].mTileOrigin.y,
-                                    mTiles[i].mDrawTarget->GetSize().width,
-                                    mTiles[i].mDrawTarget->GetSize().height));
-
-    // We only need to pad edges on tiles that intersect the edge of the region
-    if (aRegion.Intersects(tileRect) && !aRegion.Contains(tileRect)) {
-      IntRegion padRegion = aRegion;
-      padRegion.MoveBy(-mTiles[i].mTileOrigin);
-      padRegion.AndWith(IntRect(0, 0, mTiles[i].mDrawTarget->GetSize().width, mTiles[i].mDrawTarget->GetSize().height));
-      mTiles[i].mDrawTarget->PadEdges(padRegion);
-    }
-  }
-}
-
 } // namespace gfx
 } // namespace mozilla

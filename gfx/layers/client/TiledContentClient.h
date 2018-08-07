@@ -16,7 +16,6 @@
 #include "Units.h"                      // for CSSPoint
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/gfx/2D.h"             // for gfx::Tile
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory
@@ -50,33 +49,6 @@ enum class TilePaintFlags : uint8_t {
   Progressive = 0x2,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TilePaintFlags)
-
-struct AcquiredBackBuffer
-{
-  AcquiredBackBuffer(gfx::DrawTarget* aTarget,
-                     gfx::DrawTargetCapture* aCapture,
-                     gfx::DrawTarget* aBackBuffer,
-                     const gfx::IntRect& aUpdatedRect,
-                     std::vector<RefPtr<TextureClient>>&& aTextureClients)
-    : mTarget(aTarget)
-    , mCapture(aCapture)
-    , mBackBuffer(aBackBuffer)
-    , mUpdatedRect(aUpdatedRect)
-    , mTextureClients(aTextureClients)
-  {}
-
-  AcquiredBackBuffer(const AcquiredBackBuffer&) = delete;
-  AcquiredBackBuffer& operator=(const AcquiredBackBuffer&) = delete;
-
-  AcquiredBackBuffer(AcquiredBackBuffer&&) = default;
-  AcquiredBackBuffer& operator=(AcquiredBackBuffer&&) = default;
-
-  RefPtr<gfx::DrawTarget> mTarget;
-  RefPtr<gfx::DrawTargetCapture> mCapture;
-  RefPtr<gfx::DrawTarget> mBackBuffer;
-  gfx::IntRect mUpdatedRect;
-  std::vector<RefPtr<TextureClient>> mTextureClients;
-};
 
 /**
  * Represent a single tile in tiled buffer. The buffer keeps tiles,
@@ -156,16 +128,31 @@ struct TileClient
   *
   * If nullptr is returned, aTextureClientOnWhite is undefined.
   */
-  Maybe<AcquiredBackBuffer> AcquireBackBuffer(CompositableClient&,
-                                              const nsIntRegion& aDirtyRegion,
-                                              const nsIntRegion& aVisibleRegion,
-                                              gfxContentType aContent,
-                                              SurfaceMode aMode,
-                                              TilePaintFlags aFlags);
+  TextureClient* GetBackBuffer(CompositableClient&,
+                               const nsIntRegion& aDirtyRegion,
+                               const nsIntRegion& aVisibleRegion,
+                               gfxContentType aContent, SurfaceMode aMode,
+                               nsIntRegion& aAddPaintedRegion,
+                               TilePaintFlags aFlags,
+                               RefPtr<TextureClient>* aTextureClientOnWhite,
+                               std::vector<CapturedTiledPaintState::Copy>* aCopies,
+                               std::vector<RefPtr<TextureClient>>* aClients);
 
   void DiscardFrontBuffer();
 
   void DiscardBackBuffer();
+
+  /*
+   * Copy aRegion from aBuffer and aBufferOnWhite positioned at aBufferOrigin
+   * into ourselves assuming we are positioned at aTileOrigin.
+   */
+  bool CopyFromBuffer(RefPtr<TextureClient> aBuffer,
+                      RefPtr<TextureClient> aBufferOnWhite,
+                      nsIntPoint aBufferOrigin,
+                      nsIntPoint aTileOrigin,
+                      const nsIntRegion& aRegion,
+                      TilePaintFlags aFlags,
+                      std::vector<CapturedTiledPaintState::Copy>* aCopies);
 
   /* We wrap the back buffer in a class that disallows assignment
    * so that we can track when ever it changes so that we can update
@@ -199,12 +186,12 @@ private:
    * Copies dirty pixels from the front buffer into the back buffer,
    * and records the copied region in aAddPaintedRegion.
    */
-  void ValidateFromFront(const nsIntRegion& aDirtyRegion,
-                         const nsIntRegion& aVisibleRegion,
-                         gfx::DrawTarget* aBackBuffer,
-                         TilePaintFlags aFlags,
-                         gfx::IntRect* aCopiedRegion,
-                         std::vector<RefPtr<TextureClient>>* aClients);
+  void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
+                                   const nsIntRegion& aVisibleRegion,
+                                   nsIntRegion& aAddPaintedRegion,
+                                   TilePaintFlags aFlags,
+                                   std::vector<CapturedTiledPaintState::Copy>* aCopies,
+                                   std::vector<RefPtr<TextureClient>>* aClients);
 };
 
 /**

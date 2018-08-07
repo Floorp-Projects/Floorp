@@ -1913,7 +1913,7 @@ public:
    * are the coordinates of the line. (x1 == x2) || (y1 == y2)
    */
   typedef void(*visitFn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
-  void VisitEdges(visitFn, void *closure) const;
+  void VisitEdges(visitFn, void *closure);
 
   nsCString ToString() const;
 
@@ -2519,7 +2519,7 @@ public:
   }
 
   typedef void (*visitFn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
-  void VisitEdges (visitFn visit, void *closure) const
+  void VisitEdges (visitFn visit, void *closure)
   {
     mImpl.VisitEdges (visit, closure);
   }

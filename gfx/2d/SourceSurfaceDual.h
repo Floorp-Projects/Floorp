@@ -25,11 +25,6 @@ public:
     , mB(aDTB->Snapshot())
   { }
 
-  SourceSurfaceDual(SourceSurface *aSourceA, SourceSurface *aSourceB)
-    : mA(aSourceA)
-    , mB(aSourceB)
-  { }
-
   virtual SurfaceType GetType() const override { return SurfaceType::DUAL_DT; }
   virtual IntSize GetSize() const override { return mA->GetSize(); }
   virtual SurfaceFormat GetFormat() const override { return mA->GetFormat(); }

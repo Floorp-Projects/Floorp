@@ -58,6 +58,7 @@ public:
   FORWARD_FUNCTION1(PushClipRect, const Rect &, aRect)
   FORWARD_FUNCTION(PopClip)
   FORWARD_FUNCTION(PopLayer)
+  FORWARD_FUNCTION1(ClearRect, const Rect &, aRect)
 
   virtual void SetTransform(const Matrix &aTransform) override {
     mTransform = aTransform;
@@ -86,8 +87,6 @@ public:
                                      const Color &aColor, const Point &aOffset,
                                      Float aSigma, CompositionOp aOp) override;
 
-  virtual void ClearRect(const Rect &aRect) override;
-
   virtual void CopySurface(SourceSurface *aSurface, const IntRect &aSourceRect,
                            const IntPoint &aDestination) override;
 
@@ -114,12 +113,6 @@ public:
                          const Matrix& aMaskTransform,
                          const IntRect& aBounds = IntRect(),
                          bool aCopyBackground = false) override;
-
-  virtual bool Unrotate(IntPoint aRotation) override
-  {
-    return mA->Unrotate(aRotation) &&
-           mB->Unrotate(aRotation);
-  }
 
   virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromData(unsigned char *aData,
