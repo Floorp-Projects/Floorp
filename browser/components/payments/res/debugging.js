@@ -200,6 +200,12 @@ let ADDRESSES_1 = {
     "street-address": "P.O. Box 123",
     "tel": "+1 650 555-5555",
   },
+  "abcde12345": {
+    "address-level2": "Mountain View",
+    "country": "US",
+    "guid": "abcde12345",
+    "name": "Mrs. Fields",
+  },
 };
 
 let DUPED_ADDRESSES = {
@@ -284,6 +290,20 @@ let BASIC_CARDS_1 = {
     "cc-additional-name": "",
     "cc-family-name": "Doe",
     "cc-exp": "2023-05",
+  },
+  "123456789abc": {
+    methodName: "basic-card",
+    "cc-number": "************1234",
+    "guid": "123456789abc",
+    "version": 1,
+    "timeCreated": 1517890536491,
+    "timeLastModified": 1517890564518,
+    "timeLastUsed": 0,
+    "timesUsed": 0,
+    "cc-name": "Jane Fields",
+    "cc-given-name": "Jane",
+    "cc-additional-name": "",
+    "cc-family-name": "Fields",
   },
 };
 

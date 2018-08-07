@@ -13,6 +13,7 @@ Test the address-picker component
   <script src="../../res/vendor/custom-elements.min.js"></script>
   <script src="../../res/unprivileged-fallbacks.js"></script>
 
+  <link rel="stylesheet" type="text/css" href="../../res/containers/rich-picker.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/components/address-option.css"/>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -65,13 +66,20 @@ add_task(async function test_initialSet() {
         "street-address": "P.O. Box 123",
         "tel": "+1 650 555-5555",
       },
+      "abcde12345": {
+        "address-level2": "Mountain View",
+        "country": "US",
+        "guid": "abcde12345",
+        "name": "Mrs. Fields",
+      },
     },
   });
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
-  is(options.length, 2, "Check dropdown has both addresses");
+  is(options.length, 3, "Check dropdown has all addresses");
   ok(options[0].textContent.includes("Mr. Foo"), "Check first address");
   ok(options[1].textContent.includes("Mrs. Bar"), "Check second address");
+  ok(options[2].textContent.includes("Mrs. Fields"), "Check third address");
 });
 
 add_task(async function test_update() {
@@ -98,11 +106,17 @@ add_task(async function test_update() {
         "street-address": "P.O. Box 123",
         "tel": "+1 650 555-5555",
       },
+      "abcde12345": {
+        "address-level2": "Mountain View",
+        "country": "US",
+        "guid": "abcde12345",
+        "name": "Mrs. Fields",
+      },
     },
   });
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
-  is(options.length, 2, "Check dropdown still has both addresses");
+  is(options.length, 3, "Check dropdown still has all addresses");
   ok(options[0].textContent.includes("Mr. Foo-edit"), "Check updated name in first address");
   ok(!options[0].getAttribute("address-level2"), "Check removed first address-level2");
   ok(options[1].textContent.includes("Mrs. Bar"), "Check that name is the same in second address");
@@ -116,16 +130,33 @@ add_task(async function test_change_selected_address() {
   is(picker1.editLink.hidden, true, "Picker edit link should be hidden when no option is selected");
   let {selectedShippingAddress} = picker1.requestStore.getState();
   is(selectedShippingAddress, null, "store should have no option selected");
+  ok(!picker1.classList.contains("invalid-selected-option"), "No validation on an empty selection");
+  ok(isHidden(picker1.invalidLabel), "The invalid label should be hidden");
+
+  picker1.dropdown.popupBox.focus();
+  synthesizeKey(options[2].getAttribute("name"), {});
+  await asyncElementRendered();
+
+  let selectedOption = picker1.dropdown.selectedOption;
+  is(selectedOption, options[2], "Selected option should now be the third option");
+  selectedShippingAddress = picker1.requestStore.getState().selectedShippingAddress;
+  is(selectedShippingAddress, selectedOption.getAttribute("guid"),
+     "store should have third option selected");
+  // The third option is missing some fields. Make sure that it is marked as such.
+  ok(picker1.classList.contains("invalid-selected-option"), "The third option is missing fields");
+  ok(!isHidden(picker1.invalidLabel), "The invalid label should be visible");
 
   picker1.dropdown.popupBox.focus();
   synthesizeKey(options[1].getAttribute("name"), {});
   await asyncElementRendered();
 
-  let selectedOption = picker1.dropdown.selectedOption;
+  selectedOption = picker1.dropdown.selectedOption;
   is(selectedOption, options[1], "Selected option should now be the second option");
   selectedShippingAddress = picker1.requestStore.getState().selectedShippingAddress;
   is(selectedShippingAddress, selectedOption.getAttribute("guid"),
      "store should have second option selected");
+  ok(!picker1.classList.contains("invalid-selected-option"), "The second option has all fields");
+  ok(isHidden(picker1.invalidLabel), "The invalid label should be hidden");
 });
 
 add_task(async function test_streetAddress_combines_street_level2_level1_postalCode_country() {
@@ -134,14 +165,28 @@ add_task(async function test_streetAddress_combines_street_level2_level1_postalC
   let streetAddress = richoption1.querySelector(".street-address");
   /* eslint-disable max-len */
   is(streetAddress.textContent,
-     `${options[1].getAttribute("street-address")} ${options[1].getAttribute("address-level2")} ${options[1].getAttribute("address-level1")} ${options[1].getAttribute("postal-code")} ${options[1].getAttribute("country")}`);
+     `${options[1].getAttribute("street-address")} ${options[1].getAttribute("address-level2")} ${options[1].getAttribute("address-level1")} ${options[1].getAttribute("postal-code")} ${options[1].getAttribute("country")}`,
+     "The address shown should be human readable and include all fields");
   /* eslint-enable max-len */
+
+  picker1.dropdown.popupBox.focus();
+  synthesizeKey(options[2].getAttribute("name"), {});
+  await asyncElementRendered();
+
+  richoption1 = picker1.dropdown.querySelector(".rich-select-selected-option");
+  streetAddress = richoption1.querySelector(".street-address");
+  is(streetAddress.textContent, " Mountain View   US",
+     "The address shown should be human readable and include all fields");
+
+  picker1.dropdown.popupBox.focus();
+  synthesizeKey(options[1].getAttribute("name"), {});
+  await asyncElementRendered();
 });
 
 add_task(async function test_delete() {
   picker1.requestStore.setState({
     savedAddresses: {
-      // 48bnds6854t was deleted
+      // 48bnds6854t and abcde12345 was deleted
       "68gjdh354j": {
         "address-level1": "CA",
         "address-level2": "Mountain View",

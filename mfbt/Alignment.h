@@ -26,6 +26,12 @@ class AlignmentFinder
   {
     char mChar;
     T mT;
+
+    // Aligner may be used to check alignment of types with deleted dtors. This
+    // results in such specializations having implicitly deleted dtors, which
+    // causes fatal warnings on MSVC (see bug 1481005). As we don't create
+    // Aligners, we can avoid this warning by explicitly deleting the dtor.
+    ~Aligner() = delete;
   };
 
 public:

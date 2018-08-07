@@ -3275,6 +3275,15 @@ public:
 
   static bool CanShowPopup(nsIPrincipal* aPrincipal);
 
+  /**
+   * Serializes a JSON-like JS::Value into a string.
+   *
+   * Usage:
+   *   nsAutoString serializedValue;
+   *   nsContentUtils::StringifyJSON(cx, &value, serializedValue);
+   */
+  static bool StringifyJSON(JSContext* aCx, JS::MutableHandle<JS::Value> vp, nsAString& aOutStr);
+
 private:
   static bool InitializeEventTable();
 

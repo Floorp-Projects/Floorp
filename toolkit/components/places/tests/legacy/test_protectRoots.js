@@ -1,22 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
+add_task(async () => {
   const ROOTS = [
-    PlacesUtils.bookmarksMenuFolderId,
-    PlacesUtils.toolbarFolderId,
-    PlacesUtils.unfiledBookmarksFolderId,
-    PlacesUtils.tagsFolderId,
-    PlacesUtils.placesRootId,
-    PlacesUtils.mobileFolderId,
+    PlacesUtils.bookmarks.rootGuid,
+    ...PlacesUtils.bookmarks.userContentRoots,
+    PlacesUtils.bookmarks.tagsGuid,
   ];
 
-  for (let root of ROOTS) {
-    Assert.ok(PlacesUtils.isRootItem(root));
+  for (let guid of ROOTS) {
+    Assert.ok(PlacesUtils.isRootItem(guid));
+
+    let id = await PlacesUtils.promiseItemId(guid);
 
     try {
-      PlacesUtils.bookmarks.removeItem(root);
+      PlacesUtils.bookmarks.removeItem(id);
       do_throw("Trying to remove a root should throw");
     } catch (ex) {}
   }
-}
+});

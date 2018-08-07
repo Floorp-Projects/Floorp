@@ -176,7 +176,7 @@ add_task(async function test_generic_errors() {
   await asyncElementRendered();
 
   let picker = el1._shippingAddressPicker;
-  ok(picker.value, "Address picker should have a selected value");
+  ok(picker.selectedOption, "Address picker should have a selected option");
   is(el1._errorText.textContent, SHIPPING_GENERIC_ERROR,
      "Generic error message should be shown when no shipping options or error are provided");
 });
@@ -294,8 +294,6 @@ add_task(async function test_picker_labels() {
     await asyncElementRendered();
     is(picker.labelElement.textContent, label,
        `Label should be appropriate for ${shippingType}`);
-    info(JSON.stringify(el1.requestStore.getState(), null, 2));
-    info(picker.outerHTML);
   }
 });
 

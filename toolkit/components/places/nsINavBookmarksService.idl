@@ -297,11 +297,6 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute long long toolbarFolder;
 
   /**
-   * The item ID of the mobile bookmarks folder.
-   */
-  readonly attribute long long mobileFolder;
-
-  /**
    * The total number of Sync changes (inserts, updates, deletes, merges, and
    * uploads) recorded since Places startup for all bookmarks.
    *

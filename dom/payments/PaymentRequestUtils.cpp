@@ -12,15 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-static bool
-WriteCallback(const char16_t* aBuf, uint32_t aLength, void* aData)
-{
-  nsAString* result = static_cast<nsAString*>(aData);
-  result->Append(static_cast<const char16_t*>(aBuf),
-                 static_cast<uint32_t>(aLength));
-  return true;
-}
-
 nsresult
 SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject, nsAString& aSerializedObject)
 {
@@ -32,12 +23,10 @@ SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject, nsAString& aSeri
 nsresult
 SerializeFromJSVal(JSContext* aCx, JS::HandleValue aValue, nsAString& aSerializedValue)
 {
-  MOZ_ASSERT(aCx);
   aSerializedValue.Truncate();
-  JS::RootedValue value(aCx, aValue.get());
   nsAutoString serializedValue;
-  NS_ENSURE_TRUE(JS_Stringify(aCx, &value, nullptr, JS::NullHandleValue,
-                              WriteCallback, &serializedValue), NS_ERROR_XPC_BAD_CONVERT_JS);
+  JS::RootedValue value(aCx, aValue.get());
+  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, &value, serializedValue), NS_ERROR_XPC_BAD_CONVERT_JS);
   NS_ENSURE_TRUE(!serializedValue.IsEmpty(), NS_ERROR_FAILURE);
   aSerializedValue = serializedValue;
   return NS_OK;

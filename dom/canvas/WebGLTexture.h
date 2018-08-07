@@ -51,6 +51,23 @@ bool
 DoesTargetMatchDimensions(WebGLContext* webgl, TexImageTarget target, uint8_t dims,
                           const char* funcName);
 
+namespace webgl {
+
+struct SamplingState final
+{
+    // Only store that which changes validation.
+    TexMinFilter minFilter = LOCAL_GL_NEAREST_MIPMAP_LINEAR;
+    TexMagFilter magFilter = LOCAL_GL_LINEAR;
+    TexWrap wrapS = LOCAL_GL_REPEAT;
+    TexWrap wrapT = LOCAL_GL_REPEAT;
+    //TexWrap wrapR = LOCAL_GL_REPEAT;
+    //GLfloat minLod = -1000;
+    //GLfloat maxLod = 1000;
+    TexCompareMode compareMode = LOCAL_GL_NONE;
+    //TexCompareFunc compareFunc = LOCAL_GL_LEQUAL;
+};
+
+} // namespace webgl
 
 // NOTE: When this class is switched to new DOM bindings, update the (then-slow)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
@@ -74,10 +91,6 @@ protected:
     static const uint8_t kMaxFaceCount = 6;
     uint8_t mFaceCount; // 6 for cube maps, 1 otherwise.
 
-    TexMinFilter mMinFilter;
-    TexMagFilter mMagFilter;
-    TexWrap mWrapS, mWrapT;
-
     bool mImmutable; // Set by texStorage*
     uint8_t mImmutableLevelCount;
 
@@ -86,7 +99,7 @@ protected:
     // You almost certainly don't want to query mMaxMipmapLevel.
     // You almost certainly want MaxEffectiveMipmapLevel().
 
-    GLenum mTexCompareMode;
+    webgl::SamplingState mSamplingState;
 
     // Resolvable optimizations:
     bool mIsResolved;
@@ -354,25 +367,7 @@ protected:
                                     uint32_t level);
     bool EnsureLevelInitialized(const char* funcName, uint32_t level);
 
-    bool CheckFloatTextureFilterParams() const {
-        // Without OES_texture_float_linear, only NEAREST and
-        // NEAREST_MIMPAMP_NEAREST are supported.
-        return mMagFilter == LOCAL_GL_NEAREST &&
-               (mMinFilter == LOCAL_GL_NEAREST ||
-                mMinFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
-    }
-
-    bool AreBothWrapModesClampToEdge() const {
-        return mWrapS == LOCAL_GL_CLAMP_TO_EDGE &&
-               mWrapT == LOCAL_GL_CLAMP_TO_EDGE;
-    }
-
 public:
-    bool DoesMinFilterRequireMipmap() const {
-        return !(mMinFilter == LOCAL_GL_NEAREST ||
-                 mMinFilter == LOCAL_GL_LINEAR);
-    }
-
     void SetGeneratedMipmap();
 
     void SetCustomMipmap();

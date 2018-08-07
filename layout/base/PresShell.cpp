@@ -1685,8 +1685,13 @@ PresShell::ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
 NS_IMETHODIMP
 PresShell::RepaintSelection(RawSelectionType aRawSelectionType)
 {
-  if (!mSelection)
+  if (!mSelection) {
     return NS_ERROR_NULL_POINTER;
+  }
+
+  if (MOZ_UNLIKELY(mIsDestroying)) {
+    return NS_OK;
+  }
 
   RefPtr<nsFrameSelection> frameSelection = mSelection;
   return frameSelection->RepaintSelection(ToSelectionType(aRawSelectionType));

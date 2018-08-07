@@ -11108,3 +11108,25 @@ nsContentUtils::CanShowPopup(nsIPrincipal* aPrincipal)
 
   return !sDisablePopups;
 }
+
+static bool
+JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData)
+{
+  nsAString* result = static_cast<nsAString*>(aData);
+  result->Append(static_cast<const char16_t*>(aBuf),
+                 static_cast<uint32_t>(aLen));
+  return true;
+}
+
+/* static */ bool
+nsContentUtils::StringifyJSON(JSContext* aCx, JS::MutableHandle<JS::Value> aValue, nsAString& aOutStr)
+{
+  MOZ_ASSERT(aCx);
+  aOutStr.Truncate();
+  JS::RootedValue value(aCx, aValue.get());
+  nsAutoString serializedValue;
+  NS_ENSURE_TRUE(JS_Stringify(aCx, &value, nullptr, JS::NullHandleValue,
+                              JSONCreator, &serializedValue), false);
+  aOutStr = serializedValue;
+  return true;
+}

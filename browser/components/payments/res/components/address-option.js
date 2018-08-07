@@ -62,11 +62,13 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
   }
 
   render() {
-    this._name.textContent = this.name;
-    this["_street-address"].textContent = `${this.streetAddress} ` +
-      `${this.addressLevel2} ${this.addressLevel1} ${this.postalCode} ${this.country}`;
-    this._email.textContent = this.email;
-    this._tel.textContent = this.tel;
+    // Fall back to empty strings to prevent 'null' from appearing.
+    this._name.textContent = this.name || "";
+    this["_street-address"].textContent =
+      `${this.streetAddress || ""} ${this.addressLevel2 || ""} ` +
+      `${this.addressLevel1 || ""} ${this.postalCode || ""} ${this.country || ""}`;
+    this._email.textContent = this.email || "";
+    this._tel.textContent = this.tel || "";
   }
 }
 

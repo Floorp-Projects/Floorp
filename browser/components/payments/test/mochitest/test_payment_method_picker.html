@@ -13,6 +13,7 @@ Test the payment-method-picker component
   <script src="../../res/vendor/custom-elements.min.js"></script>
   <script src="../../res/unprivileged-fallbacks.js"></script>
 
+  <link rel="stylesheet" type="text/css" href="../../res/containers/rich-picker.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/components/basic-card-option.css"/>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -61,13 +62,22 @@ add_task(async function test_initialSet() {
         "cc-number": "***********1234",
         "guid": "68gjdh354j",
       },
+      "123456789abc": {
+        "cc-name": "Jane Fields",
+        "cc-given-name": "Jane",
+        "cc-additional-name": "",
+        "cc-family-name": "Fields",
+        "cc-number": "************9876",
+        "guid": "123456789abc",
+      },
     },
   });
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
-  is(options.length, 2, "Check dropdown has both cards");
+  is(options.length, 3, "Check dropdown has all three cards");
   ok(options[0].textContent.includes("John Doe"), "Check first card");
   ok(options[1].textContent.includes("J Smith"), "Check second card");
+  ok(options[2].textContent.includes("Jane Fields"), "Check third card");
 });
 
 add_task(async function test_update() {
@@ -90,16 +100,25 @@ add_task(async function test_update() {
         "cc-number": "***********1234",
         "guid": "68gjdh354j",
       },
+      "123456789abc": {
+        "cc-name": "Jane Fields",
+        "cc-given-name": "Jane",
+        "cc-additional-name": "",
+        "cc-family-name": "Fields",
+        "cc-number": "************9876",
+        "guid": "123456789abc",
+      },
     },
   });
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
-  is(options.length, 2, "Check dropdown still has both cards");
+  is(options.length, 3, "Check dropdown still has three cards");
   ok(!options[0].textContent.includes("John Doe"), "Check cleared first cc-name");
   ok(options[0].textContent.includes("9876"), "Check updated first cc-number");
   ok(options[0].textContent.includes("09"), "Check updated first exp-month");
 
   ok(options[1].textContent.includes("J Smith"), "Check second card is the same");
+  ok(options[2].textContent.includes("Jane Fields"), "Check third card is the same");
 });
 
 add_task(async function test_change_selected_card() {
@@ -111,21 +130,42 @@ add_task(async function test_change_selected_card() {
   } = picker1.requestStore.getState();
   is(selectedPaymentCard, null, "store should have no option selected");
   is(selectedPaymentCardSecurityCode, null, "store should have no security code");
+  ok(!picker1.classList.contains("invalid-selected-option"), "No validation on an empty selection");
+  ok(isHidden(picker1.invalidLabel), "The invalid label should be hidden");
 
   await SimpleTest.promiseFocus();
   picker1.dropdown.popupBox.focus();
-  synthesizeKey("************1234", {});
+  synthesizeKey("************9876", {});
   await asyncElementRendered();
   ok(true, "Focused the security code field");
   ok(!picker1.open, "Picker should be closed");
 
   let selectedOption = picker1.dropdown.selectedOption;
+  is(selectedOption, options[2], "Selected option should now be the third option");
+  selectedPaymentCard = picker1.requestStore.getState().selectedPaymentCard;
+  is(selectedPaymentCard, selectedOption.getAttribute("guid"),
+     "store should have third option selected");
+  selectedPaymentCardSecurityCode = picker1.requestStore.getState().selectedPaymentCardSecurityCode;
+  is(selectedPaymentCardSecurityCode, null, "store should have empty security code");
+  ok(picker1.classList.contains("invalid-selected-option"), "Missing fields for the third option");
+  ok(!isHidden(picker1.invalidLabel), "The invalid label should be visible");
+
+  await SimpleTest.promiseFocus();
+  picker1.dropdown.popupBox.focus();
+  synthesizeKey("***********1234", {});
+  await asyncElementRendered();
+  ok(true, "Focused the security code field");
+  ok(!picker1.open, "Picker should be closed");
+
+  selectedOption = picker1.dropdown.selectedOption;
   is(selectedOption, options[1], "Selected option should now be the second option");
   selectedPaymentCard = picker1.requestStore.getState().selectedPaymentCard;
   is(selectedPaymentCard, selectedOption.getAttribute("guid"),
      "store should have second option selected");
   selectedPaymentCardSecurityCode = picker1.requestStore.getState().selectedPaymentCardSecurityCode;
   is(selectedPaymentCardSecurityCode, null, "store should have empty security code");
+  ok(!picker1.classList.contains("invalid-selected-option"), "The second option has all fields");
+  ok(isHidden(picker1.invalidLabel), "The invalid label should be hidden");
 
   let stateChangePromise = promiseStateChange(picker1.requestStore);
 
@@ -149,12 +189,21 @@ add_task(async function test_delete() {
         "cc-number": "***********1234",
         "guid": "68gjdh354j",
       },
+      "123456789abc": {
+        "cc-name": "Jane Fields",
+        "cc-given-name": "Jane",
+        "cc-additional-name": "",
+        "cc-family-name": "Fields",
+        "cc-number": "************9876",
+        "guid": "123456789abc",
+      },
     },
   });
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
-  is(options.length, 1, "Check dropdown has one remaining card");
-  ok(options[0].textContent.includes("J Smith"), "Check remaining card");
+  is(options.length, 2, "Check dropdown has two remaining cards");
+  ok(options[0].textContent.includes("J Smith"), "Check remaining card #1");
+  ok(options[1].textContent.includes("Jane Fields"), "Check remaining card #2");
 });
 </script>
 

@@ -1089,7 +1089,7 @@ XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "openInTabClosesMenu",
  */
 function canMoveUnwrappedNode(unwrappedNode) {
   if ((unwrappedNode.concreteGuid && PlacesUtils.isRootItem(unwrappedNode.concreteGuid)) ||
-      unwrappedNode.id <= 0 || PlacesUtils.isRootItem(unwrappedNode.id)) {
+      (unwrappedNode.guid && PlacesUtils.isRootItem(unwrappedNode.guid))) {
     return false;
   }
 

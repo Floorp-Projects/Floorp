@@ -40,6 +40,7 @@ interface URL {
   USVString toJSON();
 };
 
+[Exposed=(Window,DedicatedWorker,SharedWorker)]
 partial interface URL {
   [Throws]
   static DOMString createObjectURL(Blob blob);
@@ -47,10 +48,8 @@ partial interface URL {
   static void revokeObjectURL(DOMString url);
   [ChromeOnly, Throws]
   static boolean isValidURL(DOMString url);
-};
 
-// https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html
-partial interface URL {
+  // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html
   [Throws]
   static DOMString createObjectURL(MediaSource source);
 };

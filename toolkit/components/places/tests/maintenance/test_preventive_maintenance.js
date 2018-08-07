@@ -1244,32 +1244,32 @@ tests.push({
 
     let bookmarks = [{
       placeId: this._placeA,
-      parentId: PlacesUtils.unfiledBookmarksFolderId,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "A",
       guid: "bookmarkAAAA",
     }, {
       placeId: placeB,
-      parentId: PlacesUtils.mobileFolderId,
+      parentGuid: PlacesUtils.bookmarks.mobileGuid,
       title: "B",
       guid: "bookmarkBBBB",
     }, {
       placeId: placeC,
-      parentId: PlacesUtils.bookmarksMenuFolderId,
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
       title: "C1",
       guid: "bookmarkCCC1",
     }, {
       placeId: placeC,
-      parentId: PlacesUtils.toolbarFolderId,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       title: "C2",
       guid: "bookmarkCCC2",
     }, {
       placeId: this._placeD,
-      parentId: PlacesUtils.toolbarFolderId,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       title: "D",
       guid: "bookmarkDDDD",
     }, {
       placeId: this._placeE,
-      parentId: PlacesUtils.unfiledBookmarksFolderId,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "E",
       guid: "bookmarkEEEE",
     }];
@@ -1282,9 +1282,9 @@ tests.push({
       keyword: "bye",
     }];
 
-    for (let { placeId, parentId, title, guid } of bookmarks) {
+    for (let { placeId, parentGuid, title, guid } of bookmarks) {
       let itemId = addBookmark(placeId, PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                               parentId, null, null, title, guid);
+                               await PlacesUtils.promiseItemId(parentGuid), null, null, title, guid);
       this._bookmarkIds.push(itemId);
     }
 
