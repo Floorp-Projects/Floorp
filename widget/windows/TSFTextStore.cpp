@@ -4918,11 +4918,14 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
       break;
     // Some Simplified Chinese TIPs of Microsoft don't show candidate window
     // in e10s mode on Win8 or later.
+    // FYI: Only Simplified Chinese TIPs of Microsoft still require this hack
+    //      because they sometimes do not show candidate window when we return
+    //      TS_E_NOLAYOUT for first query.  Note that even when they show
+    //      candidate window properly, we return TS_E_NOLAYOUT and following
+    //      log looks same as when they don't show candidate window.  Perhaps,
+    //      there is stateful cause or race in them.
     case TextInputProcessorID::eMicrosoftPinyin:
     case TextInputProcessorID::eMicrosoftWubi:
-      if (!sTSFHasTheBug) {
-        return false;
-      }
       if (!IsWin8OrLater() ||
           !TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP()) {
         return false;
