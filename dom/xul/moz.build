@@ -16,6 +16,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 if CONFIG['MOZ_XUL']:
     EXPORTS += [
+        'nsXULCommandDispatcher.h',
         'nsXULElement.h',
     ]
 

@@ -1953,12 +1953,10 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   }
 
   // When a menu is opened, make sure that command updating is unlocked first.
-  if (document->IsXULDocument()) {
-    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher =
-      document->AsXULDocument()->GetCommandDispatcher();
-    if (xulCommandDispatcher) {
-      xulCommandDispatcher->Unlock();
-    }
+  nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher =
+    document->GetCommandDispatcher();
+  if (commandDispatcher) {
+    commandDispatcher->Unlock();
   }
 
   for (nsCOMPtr<nsIContent> grandChild = aPopup->GetFirstChild();
