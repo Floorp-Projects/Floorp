@@ -1561,50 +1561,6 @@ ContentEventHandler::EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const
   aRect.width = std::max(1, aRect.width);
 }
 
-ContentEventHandler::NodePosition
-ContentEventHandler::GetNodePositionHavingFlatText(
-                       const NodePosition& aNodePosition)
-{
-  return GetNodePositionHavingFlatText(aNodePosition.Container(),
-                                       aNodePosition.Offset());
-}
-
-ContentEventHandler::NodePosition
-ContentEventHandler::GetNodePositionHavingFlatText(nsINode* aNode,
-                                                   int32_t aNodeOffset)
-{
-  if (aNode->IsText()) {
-    return NodePosition(aNode, aNodeOffset);
-  }
-
-  int32_t childCount = static_cast<int32_t>(aNode->GetChildCount());
-
-  // If it's a empty element node, returns itself.
-  if (!childCount) {
-    MOZ_ASSERT(!aNodeOffset || aNodeOffset == 1);
-    return NodePosition(aNode, aNodeOffset);
-  }
-
-  // If there is a node at given position, return the start of it.
-  if (aNodeOffset < childCount) {
-    return NodePosition(aNode->GetChildAt_Deprecated(aNodeOffset), 0);
-  }
-
-  // If the offset represents "after" the node, we need to return the last
-  // child of it.  For example, if a range is |<p>[<br>]</p>|, then, the
-  // end point is {<p>, 1}.  In such case, callers need the <br> node.
-  if (aNodeOffset == childCount) {
-    nsINode* node = aNode->GetChildAt_Deprecated(childCount - 1);
-    return NodePosition(node,
-      node->IsText()
-        ? static_cast<int32_t>(node->AsContent()->TextLength())
-        : 1);
-  }
-
-  NS_WARNING("aNodeOffset is invalid value");
-  return NodePosition();
-}
-
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetFirstFrameInRangeForTextRect(const RawRange& aRawRange)
 {
