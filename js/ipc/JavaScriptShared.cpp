@@ -538,11 +538,8 @@ JavaScriptShared::findObjectById(JSContext* cx, const ObjectId& objId)
     // wrappers.
     JSAutoRealm ar(cx, scopeForTargetObjects());
     if (objId.hasXrayWaiver()) {
-        {
-            JSAutoRealmAllowCCW ar2(cx, obj);
-            obj = js::ToWindowProxyIfWindow(obj);
-            MOZ_ASSERT(obj);
-        }
+        obj = js::ToWindowProxyIfWindow(obj);
+        MOZ_ASSERT(obj);
         if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &obj))
             return nullptr;
     } else {
