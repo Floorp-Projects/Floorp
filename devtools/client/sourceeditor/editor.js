@@ -403,6 +403,7 @@ Editor.prototype = {
         this.emit("dirty-change");
       }
     });
+    cm.on("changes", () => this.emit("changes"));
     cm.on("cursorActivity", () => this.emit("cursorActivity"));
 
     cm.on("gutterClick", (cmArg, line, gutter, ev) => {
