@@ -13,7 +13,7 @@ var EXPORTED_SYMBOLS = ["LightweightThemeChildHelper"];
  */
 var LightweightThemeChildHelper = {
   listener: null,
-  whitelist: [],
+  whitelist: null,
 
   /**
    * Listen to theme updates for the current process
@@ -40,9 +40,10 @@ var LightweightThemeChildHelper = {
   _updateProcess(changedKeys) {
     const windowEnumerator = Services.ww.getWindowEnumerator();
     while (windowEnumerator.hasMoreElements()) {
-      const window = windowEnumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
-      const tabChildGlobal = window.docShell.messageManager;
-      const {chromeOuterWindowID, content} = tabChildGlobal;
+      const {
+        chromeOuterWindowID,
+        content,
+      } = windowEnumerator.getNext().docShell.messageManager;
       if (changedKeys.includes(`theme/${chromeOuterWindowID}`) &&
           content && this.whitelist.has(content.document.documentURI)) {
         this.update(chromeOuterWindowID, content);
