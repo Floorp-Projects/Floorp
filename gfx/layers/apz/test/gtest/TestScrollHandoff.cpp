@@ -412,6 +412,7 @@ TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
 // other direction.
 TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
   SCOPED_GFX_VAR(UseWebRender, bool, false);
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
 
   CreateScrollHandoffLayerTree1();
 
