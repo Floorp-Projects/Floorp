@@ -10,6 +10,7 @@ module.exports = {
     "AddonManagerPermissions": false,
     "BroadcastChannel": false,
     "BrowserFeedWriter": false,
+    "CSSAnimation": false,
     "CSSPrimitiveValue": false,
     "CSSValueList": false,
     "Cc": false,
