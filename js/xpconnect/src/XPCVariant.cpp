@@ -339,7 +339,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
         if (!XPCArrayHomogenizer::GetTypeForArray(cx, jsobj, len, &type, &id))
             return false;
 
-        if (!XPCConvert::JSData2Native(&mData.u.array.mArrayValue,
+        if (!XPCConvert::JSData2Native(cx, &mData.u.array.mArrayValue,
                                        val, type, &id, len, nullptr))
             return false;
 

@@ -3496,7 +3496,8 @@ UnwrapArgImpl(JSContext* cx,
   }
 
   RefPtr<nsXPCWrappedJS> wrappedJS;
-  nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, iid, getter_AddRefs(wrappedJS));
+  nsresult rv =
+    nsXPCWrappedJS::GetNewOrUsed(cx, src, iid, getter_AddRefs(wrappedJS));
   if (NS_FAILED(rv) || !wrappedJS) {
     return rv;
   }
