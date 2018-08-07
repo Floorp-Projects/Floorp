@@ -91,6 +91,9 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
     readonly attribute InterfaceInfoPtr InterfaceInfo;
     readonly attribute nsIIDPtr         InterfaceIID;
 
+    // Match the GetJSObject() signature.
+    [notxpcom, nostdcall] JSObjectPtr GetJSObjectGlobal();
+
     void debugDump(in short depth);
 
     void aggregatedQueryInterface(in nsIIDRef uuid,

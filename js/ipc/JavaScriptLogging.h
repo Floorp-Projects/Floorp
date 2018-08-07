@@ -105,15 +105,12 @@ class Logging
         if (local == incoming) {
             JS::RootedObject obj(cx);
             obj = shared->objects_.find(id);
-            if (obj) {
-                JSAutoRealmAllowCCW ar(cx, obj);
-                objDesc = js::ObjectClassName(cx, obj);
-            } else {
-                objDesc = "<dead object>";
-            }
+            obj = js::UncheckedUnwrap(obj, true);
 
+            JSAutoRealm ar(cx, obj);
+            objDesc = js::ObjectClassName(cx, obj);
             side = shared->isParent() ? "parent" : "child";
-            ptr = js::UncheckedUnwrap(obj, true);
+            ptr = obj;
         } else {
             objDesc = "<cpow>";
             side = shared->isParent() ? "child" : "parent";
