@@ -311,6 +311,9 @@ public:
                  const bool aIsVertical,
                  const LayoutDeviceIntPoint& aPoint) override;
 
+  nsresult SetSystemFont(const nsCString& aFontName) override;
+  nsresult GetSystemFont(nsCString& aFontName) override;
+
   // TextEventDispatcherListener
   using nsBaseWidget::NotifyIME;
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,

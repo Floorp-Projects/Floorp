@@ -1547,5 +1547,26 @@ PuppetWidget::WillDispatchKeyboardEvent(
   MOZ_ASSERT(aTextEventDispatcher == mTextEventDispatcher);
 }
 
+nsresult
+PuppetWidget::SetSystemFont(const nsCString& aFontName)
+{
+  if (!mTabChild) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mTabChild->SendSetSystemFont(aFontName);
+  return NS_OK;
+}
+
+nsresult
+PuppetWidget::GetSystemFont(nsCString& aFontName)
+{
+  if (!mTabChild) {
+    return NS_ERROR_FAILURE;
+  }
+  mTabChild->SendGetSystemFont(&aFontName);
+  return NS_OK;
+}
+
 } // namespace widget
 } // namespace mozilla
