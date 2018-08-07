@@ -28,6 +28,7 @@
 class nsFontMetrics;
 class nsOverflowChecker;
 class nsTreeImageListener;
+class nsIScriptableRegion;
 
 namespace mozilla {
 namespace layout {
