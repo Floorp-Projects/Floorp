@@ -143,7 +143,8 @@
     <string name="preference_category_search">Search</string>
 
     <!-- Title of "switch" preference that enables/disables search suggestions -->
-    <string name="preference_show_search_suggestions">Show search suggestions</string>
+    <string name="preference_show_search_suggestions">Get search suggestions</string>
+    <string name="preference_show_search_suggestions_summary">%1$s will send what you type in the address bar to your search engine</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Default</string>
@@ -654,7 +655,7 @@ be temporary, and you can try again later.</li>
     <string name="biometric_auth_moved_too_quickly">Finger moved too fast. Try again.</string>
 
     <string name="enable_search_suggestion_title">Would you like to turn on search suggestions?</string>
-    <string name="enable_search_suggestion_subtitle">To get search suggestions, Focus needs to send what you type in the address bar to the search engine you\'ve chosen. %1$s.</string>
+    <string name="enable_search_suggestion_subtitle">To get search suggestions, %1$s needs to send what you type in the address bar to the search engine you\'ve chosen. %2$s.</string>
     <string name="enable_search_suggestion_subtitle_learnmore">Learn more</string>
     <string name="enable_search_suggestions_no">NO</string>
     <string name="enable_search_suggestions_yes">YES</string>

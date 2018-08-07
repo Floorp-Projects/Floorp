@@ -109,9 +109,10 @@ class SearchSuggestionsFragment : Fragment() {
 
     private fun buildEnableSearchSuggestionsSubtitle(): SpannableString {
         val subtitle = resources.getString(R.string.enable_search_suggestion_subtitle)
+        val appName = resources.getString(R.string.app_name)
         val learnMore = resources.getString(R.string.enable_search_suggestion_subtitle_learnmore)
 
-        val spannable = SpannableString(String.format(subtitle, learnMore))
+        val spannable = SpannableString(String.format(subtitle, appName, learnMore))
         val startIndex = spannable.indexOf(learnMore)
         val endIndex = startIndex + learnMore.length
 
