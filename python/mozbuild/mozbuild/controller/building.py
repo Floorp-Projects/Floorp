@@ -1287,7 +1287,9 @@ class BuildDriver(MozbuildObject):
             # Display a notification when the build completes.
             self.notify('Build complete' if not status else 'Build failed')
 
-        gather_telemetry(monitor, mach_context, self.substs, ccache_diff)
+        gather_telemetry(command='build', success=(status == 0), monitor=monitor,
+                         mach_context=mach_context, substs=self.substs,
+                         paths=[self.topsrcdir, self.topobjdir])
 
         if status:
             return status
