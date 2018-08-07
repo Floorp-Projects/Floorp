@@ -548,10 +548,8 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
     , mDefaultCacheLifetime(defaultCacheEntryLifetime)
     , mDefaultGracePeriod(defaultGracePeriod)
     , mLock("nsHostResolver.mLock")
-    , mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV")
     , mEvictionQSize(0)
     , mShutdown(true)
-    , mNumIdleTasks(0)
     , mActiveTaskCount(0)
     , mActiveAnyThreadCount(0)
     , mPendingCount(0)
@@ -605,7 +603,7 @@ nsHostResolver::Init()
 #endif
 
     // We can configure the threadpool to keep threads alive for a while after
-    // the last ThreadFunc task has been executed.
+    // the last ResolveHostTask has been executed.
     int32_t poolTimeoutSecs = Preferences::GetInt(kPrefThreadIdleTime, 60);
     uint32_t poolTimeoutMs;
     if (poolTimeoutSecs < 0) {
@@ -706,9 +704,6 @@ nsHostResolver::Shutdown()
 
         mEvictionQSize = 0;
         mPendingCount = 0;
-
-        if (mNumIdleTasks)
-            mIdleTaskCV.NotifyAll();
 
         // empty host database
         mRecordDB.Clear();
@@ -1016,7 +1011,6 @@ nsHostResolver::ResolveHost(const nsACString &aHost,
                         rec->remove();
                         mHighQ.insertBack(rec);
                         rec->flags = flags;
-                        ConditionallyCreateThread(rec);
                     } else if (IsMediumPriority(flags) &&
                                IsLowPriority(rec->flags)) {
                         // Move from low to med.
@@ -1024,7 +1018,6 @@ nsHostResolver::ResolveHost(const nsACString &aHost,
                         rec->remove();
                         mMediumQ.insertBack(rec);
                         rec->flags = flags;
-                        mIdleTaskCV.Notify();
                     }
                 }
             }
@@ -1081,31 +1074,6 @@ nsHostResolver::DetachCallback(const nsACString &host,
     if (rec) {
         callback->OnResolveHostComplete(this, rec, status);
     }
-}
-
-nsresult
-nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
-{
-    if (mNumIdleTasks) {
-        // wake up idle tasks to process this lookup
-        mIdleTaskCV.Notify();
-    }
-    else if ((mActiveTaskCount < HighThreadThreshold) ||
-             (IsHighPriority(rec->flags) && mActiveTaskCount < MAX_RESOLVER_THREADS)) {
-        nsCOMPtr<nsIRunnable> event =
-            mozilla::NewRunnableMethod("nsHostResolver::ThreadFunc",
-                                       this,
-                                       &nsHostResolver::ThreadFunc);
-        mActiveTaskCount++;
-        nsresult rv = mResolverThreads->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
-        if (NS_FAILED(rv)) {
-            mActiveTaskCount--;
-        }
-    }
-    else {
-        LOG(("  Unable to find a thread for looking up host [%s].\n", rec->host.get()));
-    }
-    return NS_OK;
 }
 
 // make sure the mTrrLock is held when this is used!
@@ -1247,15 +1215,16 @@ nsHostResolver::NativeLookup(nsHostRecord *aRec)
     rec->onQueue = true;
     rec->mResolving++;
 
-    nsresult rv = ConditionallyCreateThread(rec);
-
-    LOG (("  DNS thread counters: total=%d any-live=%d idle=%d pending=%d\n",
+    LOG (("  DNS thread counters: total=%d any-live=%d pending=%d\n",
           static_cast<uint32_t>(mActiveTaskCount),
           static_cast<uint32_t>(mActiveAnyThreadCount),
-          static_cast<uint32_t>(mNumIdleTasks),
           static_cast<uint32_t>(mPendingCount)));
 
-    return rv;
+    nsCOMPtr<nsIRunnable> event =
+        mozilla::NewRunnableMethod("nsHostResolver::ResolveHostTask",
+                                   this,
+                                   &nsHostResolver::ResolveHostTask);
+    return mResolverThreads->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
 }
 
 ResolverMode
@@ -1340,73 +1309,34 @@ nsHostResolver::DeQueue(LinkedList<RefPtr<nsHostRecord>>& aQ, nsHostRecord **aRe
 bool
 nsHostResolver::GetHostToLookup(nsHostRecord **result)
 {
-    bool timedOut = false;
-    TimeDuration timeout;
-    TimeStamp epoch, now;
-
     MutexAutoLock lock(mLock);
-
-    timeout = (mNumIdleTasks >= HighThreadThreshold) ? mShortIdleTimeout : mLongIdleTimeout;
-    epoch = TimeStamp::Now();
-
-    while (!mShutdown) {
-        // remove next record from Q; hand over owning reference. Check high, then med, then low
 
 #define SET_GET_TTL(var, val) (var)->mGetTtl = sGetTtlEnabled && (val)
 
-        if (!mHighQ.isEmpty()) {
-            DeQueue (mHighQ, result);
-            SET_GET_TTL(*result, false);
+    if (!mHighQ.isEmpty()) {
+        DeQueue(mHighQ, result);
+        SET_GET_TTL(*result, false);
+        return true;
+    }
+
+    if (mActiveAnyThreadCount < HighThreadThreshold) {
+        if (!mMediumQ.isEmpty()) {
+            DeQueue(mMediumQ, result);
+            mActiveAnyThreadCount++;
+            (*result)->usingAnyThread = true;
+            SET_GET_TTL(*result, true);
             return true;
         }
 
-        if (mActiveAnyThreadCount < HighThreadThreshold) {
-            if (!mMediumQ.isEmpty()) {
-                DeQueue (mMediumQ, result);
-                mActiveAnyThreadCount++;
-                (*result)->usingAnyThread = true;
-                SET_GET_TTL(*result, true);
-                return true;
-            }
-
-            if (!mLowQ.isEmpty()) {
-                DeQueue (mLowQ, result);
-                mActiveAnyThreadCount++;
-                (*result)->usingAnyThread = true;
-                SET_GET_TTL(*result, true);
-                return true;
-            }
-        }
-
-        // Determining timeout is racy, so allow one cycle through checking the queues
-        // before exiting.
-        if (timedOut)
-            break;
-
-        // wait for one or more of the following to occur:
-        //  (1) the pending queue has a host record to process
-        //  (2) the shutdown flag has been set
-        //  (3) the thread has been idle for too long
-
-        mNumIdleTasks++;
-        mIdleTaskCV.Wait(timeout);
-        mNumIdleTasks--;
-
-        now = TimeStamp::Now();
-
-        if (now - epoch >= timeout) {
-            timedOut = true;
-        } else {
-            // It is possible that CondVar::Wait() was interrupted and returned
-            // early, in which case we will loop back and re-enter it. In that
-            // case we want to do so with the new timeout reduced to reflect
-            // time already spent waiting.
-            timeout -= now - epoch;
-            epoch = now;
+        if (!mLowQ.isEmpty()) {
+            DeQueue(mLowQ, result);
+            mActiveAnyThreadCount++;
+            (*result)->usingAnyThread = true;
+            SET_GET_TTL(*result, true);
+            return true;
         }
     }
 
-    // tell thread to exit...
     return false;
 }
 
@@ -1826,8 +1756,9 @@ nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 void
-nsHostResolver::ThreadFunc()
+nsHostResolver::ResolveHostTask()
 {
+    mActiveTaskCount++;
     LOG(("DNS lookup thread - starting execution.\n"));
 
 #if defined(RES_RETRY_ON_FAILURE)
@@ -1836,17 +1767,12 @@ nsHostResolver::ThreadFunc()
     RefPtr<nsHostRecord> rec;
     AddrInfo *ai = nullptr;
 
-    do {
-        if (!rec) {
-            RefPtr<nsHostRecord> tmpRec;
-            if (!GetHostToLookup(getter_AddRefs(tmpRec))) {
-                break; // thread shutdown signal
-            }
-            // GetHostToLookup() returns an owning reference
-            MOZ_ASSERT(tmpRec);
-            rec.swap(tmpRec);
-        }
+    if (!GetHostToLookup(getter_AddRefs(rec))) {
+        NS_WARNING("Could not find any host to resolve");
+        return;
+    }
 
+    do {
         LOG(("DNS lookup thread - Calling getaddrinfo for host [%s].\n",
              rec->host.get()));
 
@@ -1901,7 +1827,7 @@ nsHostResolver::ThreadFunc()
         } else {
             rec = nullptr;
         }
-    } while(true);
+    } while(rec);
 
     mActiveTaskCount--;
     LOG(("DNS lookup thread - queue empty, task finished.\n"));
