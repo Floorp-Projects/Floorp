@@ -13,9 +13,12 @@ var EXPORTED_SYMBOLS = [
  ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URLSearchParams"]);
 
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;
@@ -88,7 +91,6 @@ const URLBAR_SELECTED_RESULT_METHODS = {
 
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 
-
 function getOpenTabsAndWinsCounts() {
   let tabCount = 0;
   let winCount = 0;
@@ -159,6 +161,10 @@ let URICountListener = {
       return;
     }
 
+    // Don't include URI and domain counts when in private mode.
+    let shouldCountURI = !PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal) ||
+                         Services.prefs.getBoolPref("browser.engagement.total_uri_count.pbm", false);
+
     // Track URI loads, even if they're not http(s).
     let uriSpec = null;
     try {
@@ -166,7 +172,9 @@ let URICountListener = {
     } catch (e) {
       // If we have troubles parsing the spec, still count this as
       // an unfiltered URI.
-      Services.telemetry.scalarAdd(UNFILTERED_URI_COUNT_SCALAR_NAME, 1);
+      if (shouldCountURI) {
+        Services.telemetry.scalarAdd(UNFILTERED_URI_COUNT_SCALAR_NAME, 1);
+      }
       return;
     }
 
@@ -188,9 +196,39 @@ let URICountListener = {
     // The URI wasn't from a restored tab. Count it among the unfiltered URIs.
     // If this is an http(s) URI, this also gets counted by the "total_uri_count"
     // probe.
-    Services.telemetry.scalarAdd(UNFILTERED_URI_COUNT_SCALAR_NAME, 1);
+    if (shouldCountURI) {
+      Services.telemetry.scalarAdd(UNFILTERED_URI_COUNT_SCALAR_NAME, 1);
+    }
 
     if (!this.isHttpURI(uri)) {
+      return;
+    }
+
+    let parseURLResult = Services.search.parseSubmissionURL(uriSpec);
+    if (parseURLResult.engine) {
+      this._recordSearchTelemetry(uriSpec, parseURLResult);
+    } else if (this._urlsQueuedForParsing) {
+      if (Services.search.isInitialized) {
+        this._urlsQueuedForParsing = null;
+      } else {
+        this._urlsQueuedForParsing.push(uriSpec);
+        if (this._urlsQueuedForParsing.length == 1) {
+          Services.search.init(rv => {
+            if (Components.isSuccessCode(rv)) {
+              for (let url of this._urlsQueuedForParsing) {
+                let innerParseURLResult = Services.search.parseSubmissionURL(url);
+                if (innerParseURLResult.engine) {
+                  this._recordSearchTelemetry(url, innerParseURLResult);
+                }
+              }
+            }
+            this._urlsQueuedForParsing = null;
+          });
+        }
+      }
+    }
+
+    if (!shouldCountURI) {
       return;
     }
 
@@ -224,6 +262,31 @@ let URICountListener = {
    */
   reset() {
     this._domainSet.clear();
+  },
+
+  _urlsQueuedForParsing: [],
+
+  _recordSearchTelemetry(url, parseURLResult) {
+    switch (parseURLResult.engine.identifier) {
+      case "google":
+      case "google-2018":
+        let type;
+        let queries = new URLSearchParams(url.split("?")[1]);
+        let code = queries.get("client");
+        if (code) {
+          // Detecting follow-on searches for sap is a little tricky.
+          // There are a few parameters that only show up
+          // with follow-ons, so we look for those. (oq/ved/ei)
+          type = queries.has("oq") || queries.has("ved") || queries.has("ei") ? "sap-follow-on" : "sap";
+        } else {
+          type = "organic";
+        }
+        let payload = `google.in-content.${type}:${code || "none"}`;
+
+        let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+        histogram.add(payload);
+        break;
+    }
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
@@ -614,11 +677,6 @@ let BrowserUsageTelemetry = {
     win.addEventListener("unload", this);
     win.addEventListener("TabOpen", this, true);
 
-    // Don't include URI and domain counts when in private mode.
-    if (PrivateBrowsingUtils.isWindowPrivate(win) &&
-        !Services.prefs.getBoolPref("browser.engagement.total_uri_count.pbm", false)) {
-      return;
-    }
     win.gBrowser.tabContainer.addEventListener(TAB_RESTORING_TOPIC, this);
     win.gBrowser.addTabsProgressListener(URICountListener);
   },
@@ -630,11 +688,6 @@ let BrowserUsageTelemetry = {
     win.removeEventListener("unload", this);
     win.removeEventListener("TabOpen", this, true);
 
-    // Don't include URI and domain counts when in private mode.
-    if (PrivateBrowsingUtils.isWindowPrivate(win.defaultView) &&
-        !Services.prefs.getBoolPref("browser.engagement.total_uri_count.pbm", false)) {
-      return;
-    }
     win.defaultView.gBrowser.tabContainer.removeEventListener(TAB_RESTORING_TOPIC, this);
     win.defaultView.gBrowser.removeTabsProgressListener(URICountListener);
   },
