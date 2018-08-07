@@ -6424,40 +6424,7 @@ nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel, boo
   return NS_SUCCEEDED(aPrincipal->CheckMayLoad(channelURI, false, aAllowIfInheritsPrincipal));
 }
 
-nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
-  : mString(aString), mService(nullptr)
-{
-  CallGetService("@mozilla.org/network/mime-hdrparam;1", &mService);
-}
-
-nsContentTypeParser::~nsContentTypeParser()
-{
-  NS_IF_RELEASE(mService);
-}
-
-nsresult
-nsContentTypeParser::GetParameter(const char* aParameterName,
-                                  nsAString& aResult) const
-{
-  NS_ENSURE_TRUE(mService, NS_ERROR_FAILURE);
-  return mService->GetParameterHTTP(mString, aParameterName,
-                                    EmptyCString(), false, nullptr,
-                                    aResult);
-}
-
-nsresult
-nsContentTypeParser::GetType(nsAString& aResult) const
-{
-  nsresult rv = GetParameter(nullptr, aResult);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsContentUtils::ASCIIToLower(aResult);
-  return NS_OK;
-}
-
 /* static */
-
 bool
 nsContentUtils::CanAccessNativeAnon()
 {
