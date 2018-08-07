@@ -13,6 +13,9 @@ import org.mozilla.focus.R
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.web.GeckoWebViewProvider
 
+import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
+
+
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
@@ -130,9 +133,10 @@ class Settings private constructor(context: Context) {
                     false)
 
     fun userHasToggledSearchSuggestions(): Boolean =
-            preferences.getBoolean(
-                    getPreferenceKey(R.string.pref_key_user_toggled_search_suggestions),
-                    false)
+            preferences.getBoolean(SearchSuggestionsPreferences.TOGGLED_SUGGESTIONS_PREF, false)
+
+    fun userHasDismissedNoSuggestionsMessage(): Boolean =
+            preferences.getBoolean(SearchSuggestionsPreferences.DISMISSED_NO_SUGGESTIONS_PREF, false)
 
     private fun getPreferenceKey(resourceId: Int): String =
             resources.getString(resourceId)

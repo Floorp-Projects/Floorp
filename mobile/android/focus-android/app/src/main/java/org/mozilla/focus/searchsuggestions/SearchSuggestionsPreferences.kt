@@ -16,6 +16,7 @@ class SearchSuggestionsPreferences(private val context: Context) {
 
     fun searchSuggestionsEnabled(): Boolean = settings.shouldShowSearchSuggestions()
     fun hasUserToggledSearchSuggestions(): Boolean = settings.userHasToggledSearchSuggestions()
+    fun userHasDismissedNoSuggestionsMessage(): Boolean = settings.userHasDismissedNoSuggestionsMessage()
 
     fun getSearchEngine(): SearchEngine {
         return Components.searchEngineManager.getDefaultSearchEngine(
@@ -24,15 +25,26 @@ class SearchSuggestionsPreferences(private val context: Context) {
 
     fun enableSearchSuggestions() {
         preferences.edit()
-                .putBoolean(context.resources.getString(R.string.pref_key_user_toggled_search_suggestions), true)
+                .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
                 .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), true)
                 .apply()
     }
 
     fun disableSearchSuggestions() {
         preferences.edit()
-                .putBoolean(context.resources.getString(R.string.pref_key_user_toggled_search_suggestions), true)
+                .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
                 .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), false)
                 .apply()
+    }
+
+    fun dismissNoSuggestionsMessage() {
+        preferences.edit()
+                .putBoolean(DISMISSED_NO_SUGGESTIONS_PREF, true)
+                .apply()
+    }
+
+    companion object {
+        const val TOGGLED_SUGGESTIONS_PREF = "user_has_toggled_search_suggestions"
+        const val DISMISSED_NO_SUGGESTIONS_PREF = "user_dismissed_no_search_suggestions"
     }
 }

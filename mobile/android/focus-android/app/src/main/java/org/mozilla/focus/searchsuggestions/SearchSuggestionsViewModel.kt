@@ -15,7 +15,7 @@ import android.util.Log
 
 sealed class State {
     data class Disabled(val givePrompt: Boolean): State()
-    class NoSuggestionsAPI: State()
+    data class NoSuggestionsAPI(val givePrompt: Boolean): State()
     class ReadyForSuggestions: State()
 }
 class SearchSuggestionsViewModel(
@@ -69,6 +69,11 @@ class SearchSuggestionsViewModel(
         updateState()
     }
 
+    fun dismissNoSuggestionsMessage() {
+        searchSuggestionsPreferences.dismissNoSuggestionsMessage()
+        updateState()
+    }
+
     fun refresh() {
         service.updateSearchEngine(searchSuggestionsPreferences.getSearchEngine())
         updateState()
@@ -81,7 +86,8 @@ class SearchSuggestionsViewModel(
             if (service.canProvideSearchSuggestions) {
                 State.ReadyForSuggestions()
             } else {
-                State.NoSuggestionsAPI()
+                val givePrompt = !searchSuggestionsPreferences.userHasDismissedNoSuggestionsMessage()
+                State.NoSuggestionsAPI(givePrompt)
             }
         } else {
             val givePrompt = !searchSuggestionsPreferences.hasUserToggledSearchSuggestions()

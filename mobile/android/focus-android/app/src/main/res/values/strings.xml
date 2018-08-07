@@ -656,4 +656,6 @@ be temporary, and you can try again later.</li>
     <string name="enable_search_suggestion_label">Would you like to turn on search suggestions? (To get search suggestions, Focus needs to send what you type in the address bar to the search engine you\'ve chosen. Learn more)</string>
     <string name="enable_search_suggestions_no">NO</string>
     <string name="enable_search_suggestions_yes">YES</string>
+    <string name="no_suggestions_message">Some search engines cannot show suggestions.</string>
+    <string name="dismiss_no_suggestions_prompt_button">DISMISS</string>
 </resources>

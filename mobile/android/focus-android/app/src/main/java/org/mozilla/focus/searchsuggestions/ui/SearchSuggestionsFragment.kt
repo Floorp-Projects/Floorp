@@ -41,12 +41,13 @@ class SearchSuggestionsFragment : Fragment() {
 
         searchSuggestionsViewModel.state.observe(this, Observer { state ->
             enable_search_suggestions_container.visibility = View.GONE
+            no_suggestions_container.visibility = View.GONE
             suggestionList.visibility = View.GONE
 
             when (state) {
                 is State.ReadyForSuggestions -> suggestionList.visibility = View.VISIBLE
-                is State.NoSuggestionsAPI -> Log.e("foo", "bar") // noop
-                is State.Disabled -> enable_search_suggestions_container.visibility = if (state.givePrompt)  View.VISIBLE else View.GONE
+                is State.NoSuggestionsAPI -> no_suggestions_container.visibility = if (state.givePrompt) View.VISIBLE else View.GONE
+                is State.Disabled -> enable_search_suggestions_container.visibility = if (state.givePrompt) View.VISIBLE else View.GONE
             }
         })
     }
@@ -75,6 +76,10 @@ class SearchSuggestionsFragment : Fragment() {
 
         disable_search_suggestions_button.setOnClickListener {
             searchSuggestionsViewModel.disableSearchSuggestions()
+        }
+
+        dismiss_no_suggestions_message.setOnClickListener {
+            searchSuggestionsViewModel.dismissNoSuggestionsMessage()
         }
     }
 
