@@ -1521,18 +1521,7 @@ pref("browser.tabs.remote.desktopbehavior", true);
 
 // For speculatively warming up tabs to improve perceived
 // performance while using the async tab switcher.
-//
-// This feature is enabled by default on Windows and Linux
-// on all channels.
-//
-// This feature is enabled on macOS only on the Nightly channel
-// until bug 1453080 is fixed.
-//
-#if !defined(XP_MACOSX) || defined(NIGHTLY_BUILD)
 pref("browser.tabs.remote.warmup.enabled", true);
-#else
-pref("browser.tabs.remote.warmup.enabled", false);
-#endif
 
 // Caches tab layers to improve perceived performance
 // of tab switches.
