@@ -309,13 +309,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
       nsTreeBodyFrame* treeBody =
         do_QueryFrame(aDOMNode->AsContent()->GetPrimaryFrame());
       if (treeBody) {
-        nsCOMPtr<nsIScriptableRegion> region;
-        treeBody->GetSelectionRegion(getter_AddRefs(region));
-        if (region) {
-          nsIntRegion intRegion;
-          region->GetRegion(&intRegion);
-          mRegion.emplace(CSSIntRegion::FromUnknownRegion(intRegion));
-        }
+        mRegion = treeBody->GetSelectionRegion();
       }
     }
   }
