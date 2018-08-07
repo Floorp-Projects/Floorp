@@ -6245,13 +6245,13 @@ nsIDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
   }
 #endif
 
-  // Batch updates so that mutation events don't change "the title
-  // element" under us
-  mozAutoDocUpdate updateBatch(this, true);
-
+  Maybe<mozAutoDocUpdate> updateBatch;
   nsCOMPtr<Element> title = GetTitleElement();
   if (rootElement->IsSVGElement(nsGkAtoms::svg)) {
     if (!title) {
+      // Batch updates so that mutation events don't change "the title
+      // element" under us
+      updateBatch.emplace(this, true);
       RefPtr<mozilla::dom::NodeInfo> titleInfo =
         mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nullptr,
                                       kNameSpaceID_SVG,
@@ -6265,6 +6265,9 @@ nsIDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
     }
   } else if (rootElement->IsHTMLElement()) {
     if (!title) {
+      // Batch updates so that mutation events don't change "the title
+      // element" under us
+      updateBatch.emplace(this, true);
       Element* head = GetHeadElement();
       if (!head) {
         return;
