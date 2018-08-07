@@ -19,14 +19,14 @@
 namespace mozilla {
 namespace gfx {
 
-using namespace ipc;
+using mozilla::ipc::IPCResult;
 
 VRParent::VRParent()
  : mVRGPUParent(nullptr)
 {
 }
 
-mozilla::ipc::IPCResult
+IPCResult
 VRParent::RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint)
 {
   RefPtr<VRGPUParent> vrGPUParent = VRGPUParent::CreateForGPU(std::move(aEndpoint));
@@ -38,7 +38,7 @@ VRParent::RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
+IPCResult
 VRParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                    nsTArray<GfxVarUpdate>&& vars,
                    const DevicePrefs& devicePrefs)
@@ -67,15 +67,15 @@ VRParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-VRParent::RecvNotifyVsync(const TimeStamp& aVsyncTimestamp)
+IPCResult
+VRParent::RecvNotifyVsync(const TimeStamp& vsyncTimestamp)
 {
   VRManager* vm = VRManager::Get();
-  vm->NotifyVsync(aVsyncTimestamp);
+  vm->NotifyVsync(vsyncTimestamp);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
+IPCResult
 VRParent::RecvUpdatePref(const GfxPrefSetting& setting)
 {
   gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
@@ -83,7 +83,7 @@ VRParent::RecvUpdatePref(const GfxPrefSetting& setting)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
+IPCResult
 VRParent::RecvUpdateVar(const GfxVarUpdate& aUpdate)
 {
   gfxVars::ApplyUpdate(aUpdate);
