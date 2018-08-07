@@ -2397,21 +2397,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // These methods are defined in nsStyleStructInlines.h.
 
   /**
-   * Returns whether the element is a containing block for its
-   * absolutely positioned descendants.
-   * aContextFrame is the frame for which this is the nsStyleDisplay.
-   */
-  inline bool IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const;
-
-  /**
-   * The same as IsAbsPosContainingBlock, except skipping the tests that
-   * are based on the frame rather than the ComputedStyle (thus
-   * potentially returning a false positive).
-   */
-  inline bool IsAbsPosContainingBlockForAppropriateFrame(
-    mozilla::ComputedStyle&) const;
-
-  /**
    * Returns true when the element has the transform property
    * or a related property, and supports CSS transforms.
    * aContextFrame is the frame for which this is the nsStyleDisplay.
@@ -2426,6 +2411,25 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   inline bool HasPerspective(const nsIFrame* aContextFrame) const;
 
   /**
+   * Returns whether the element is a containing block for its
+   * absolutely positioned descendants.
+   * aContextFrame is the frame for which this is the nsStyleDisplay.
+   */
+  inline bool IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const;
+
+  /**
+   * Tests for only the sub-parts of IsAbsPosContainingBlock that apply
+   * to nearly all frames, except those that are SVG text frames.
+   *
+   * This should be used only when the caller has the style but not the
+   * frame (i.e., when calculating style changes).
+   *
+   * NOTE: This (unlike IsAbsPosContainingBlock) does not include
+   * IsFixPosContainingBlockForNonSVGTextFrames.
+   */
+  inline bool IsAbsPosContainingBlockForNonSVGTextFrames() const;
+
+  /**
    * Returns true when the element is a containing block for its fixed-pos
    * descendants.
    * aContextFrame is the frame for which this is the nsStyleDisplay.
@@ -2433,12 +2437,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   inline bool IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const;
 
   /**
-   * The same as IsFixedPosContainingBlock, except skipping the tests that
-   * are based on the frame rather than the ComputedStyle (thus
-   * potentially returning a false positive).
+   * Tests for only the sub-parts of IsFixedPosContainingBlock that apply
+   * to:
+   *  - nearly all frames, except those that are SVG text frames.
+   *  - frames that support CSS transforms and are not SVG text frames.
+   *
+   * This should be used only when the caller has the style but not the
+   * frame (i.e., when calculating style changes).
    */
-  inline bool IsFixedPosContainingBlockForAppropriateFrame(
+  inline bool IsFixedPosContainingBlockForNonSVGTextFrames(
     mozilla::ComputedStyle&) const;
+  inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
 
   /**
    * Returns the final combined transform.
@@ -2455,9 +2464,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 private:
   // Helpers for above functions, which do some but not all of the tests
   // for them (since transform must be tested separately for each).
-  inline bool HasAbsPosContainingBlockStyleInternal() const;
-  inline bool HasFixedPosContainingBlockStyleInternal(
-    mozilla::ComputedStyle&) const;
   void GenerateCombinedTransform();
 };
 
