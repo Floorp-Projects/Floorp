@@ -5,19 +5,27 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 '''
-This file contains a voluptuous schema definition for build system telemetry.
+This file contains a voluptuous schema definition for build system telemetry, and functions
+to fill an instance of that schema for a single mach invocation.
 '''
 
+from datetime import datetime
+import json
+import os
+import math
 import platform
+import pprint
 import sys
 from voluptuous import (
     Any,
     Optional,
+    MultipleInvalid,
     Required,
     Schema,
 )
 from voluptuous.validators import Datetime
 
+import mozpack.path as mozpath
 from .base import (
     BuildEnvironmentNotFoundException,
 )
@@ -68,55 +76,199 @@ schema = Schema({
 })
 
 
-def gather_telemetry(monitor, mach_context, substs, ccache_diff):
-    if monitor.have_resource_usage:
-        telemetry_handler = getattr(mach_context,
-                                    'telemetry_handler', None)
-        data = monitor.get_resource_usage()
+def get_client_id(state_dir):
+    '''
+    Get a client id, which is a UUID, from a file in the state directory. If the file doesn't
+    exist, generate a UUID and save it to a file.
+    '''
+    path = os.path.join(state_dir, 'telemetry_client_id.json')
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            return json.load(f)['client_id']
+    import uuid
+    # uuid4 is random, other uuid types may include identifiers from the local system.
+    client_id = str(uuid.uuid4())
+    with open(path, 'wb') as f:
+        json.dump({'client_id': client_id}, f)
+    return client_id
 
-        # Record build configuration data. For now, we cherry pick
-        # items we need rather than grabbing everything, in order
-        # to avoid accidentally disclosing PII.
-        data['substs'] = {}
-        try:
-            for key in ['MOZ_ARTIFACT_BUILDS', 'MOZ_USING_CCACHE', 'MOZ_USING_SCCACHE']:
-                value = substs.get(key, False)
-                data['substs'][key] = value
-        except BuildEnvironmentNotFoundException:
-            pass
 
-        # Grab ccache stats if available. We need to be careful not
-        # to capture information that can potentially identify the
-        # user (such as the cache location)
-        if ccache_diff:
-            data['ccache'] = {}
-            for key in [key[0] for key in ccache_diff.STATS_KEYS]:
-                try:
-                    data['ccache'][key] = ccache_diff._values[key]
-                except KeyError:
-                    pass
+def cpu_brand_linux():
+    '''
+    Read the CPU brand string out of /proc/cpuinfo on Linux.
+    '''
+    with open('/proc/cpuinfo', 'rb') as f:
+        for line in f:
+            if line.startswith('model name'):
+                _, brand = line.split(': ', 1)
+                return brand.rstrip().decode('ascii')
+    # not found?
+    return None
 
-        # Add common metadata to help submit sorted data later on.
-        data['argv'] = sys.argv
-        data.setdefault('system', {}).update(dict(
-            architecture=list(platform.architecture()),
-            machine=platform.machine(),
-            python_version=platform.python_version(),
-            release=platform.release(),
-            system=platform.system(),
-            version=platform.version(),
-        ))
 
-        if platform.system() == 'Linux':
-            dist = list(platform.linux_distribution())
-            data['system']['linux_distribution'] = dist
-        elif platform.system() == 'Windows':
-            win32_ver = list((platform.win32_ver())),
-            data['system']['win32_ver'] = win32_ver
-        elif platform.system() == 'Darwin':
-            # mac version is a special Cupertino snowflake
-            r, v, m = platform.mac_ver()
-            data['system']['mac_ver'] = [r, list(v), m]
+def cpu_brand_windows():
+    '''
+    Read the CPU brand string from the registry on Windows.
+    '''
+    try:
+        import _winreg
+    except ImportError:
+        import winreg as _winreg
 
-        if telemetry_handler:
-            telemetry_handler(mach_context, data)
+    try:
+        h = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
+                            r'HARDWARE\DESCRIPTION\System\CentralProcessor\0')
+        (brand, ty) = _winreg.QueryValueEx(h, 'ProcessorNameString')
+        if ty == _winreg.REG_SZ:
+            return brand
+    except WindowsError:
+        pass
+    return None
+
+
+def cpu_brand_mac():
+    '''
+    Get the CPU brand string via sysctl on macos.
+    '''
+    import ctypes
+    import ctypes.util
+
+    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("c"))
+    # First, find the required buffer size.
+    bufsize = ctypes.c_size_t(0)
+    result = libc.sysctlbyname(b'machdep.cpu.brand_string', None, ctypes.byref(bufsize),
+                               None, 0)
+    if result != 0:
+        return None
+    bufsize.value += 1
+    buf = ctypes.create_string_buffer(bufsize.value)
+    # Now actually get the value.
+    result = libc.sysctlbyname(b'machdep.cpu.brand_string', buf, ctypes.byref(bufsize), None, 0)
+    if result != 0:
+        return None
+
+    return buf.value.decode()
+
+
+def get_cpu_brand():
+    '''
+    Get the CPU brand string as returned by CPUID.
+    '''
+    return {
+        'Linux': cpu_brand_linux,
+        'Windows': cpu_brand_windows,
+        'Darwin': cpu_brand_mac,
+    }.get(platform.system(), lambda: None)()
+
+
+def get_system_info():
+    '''
+    Gather info to fill the `system` keys in the schema.
+    '''
+    # Normalize OS names a bit, and bucket non-tier-1 platforms into "other".
+    info = {
+        'os': {
+            'Linux': 'linux',
+            'Windows': 'windows',
+            'Darwin': 'macos',
+        }.get(platform.system(), 'other')
+    }
+    try:
+        import psutil
+
+        info['logical_cores'] = psutil.cpu_count()
+        info['physical_cores'] = psutil.cpu_count(logical=False)
+        # `total` on Linux is gathered from /proc/meminfo's `MemTotal`, which is the total
+        # amount of physical memory minus some kernel usage, so round up to the nearest GB
+        # to get a sensible answer.
+        info['memory_gb'] = int(
+            math.ceil(float(psutil.virtual_memory().total) / (1024 * 1024 * 1024)))
+    except ImportError:
+        # TODO: sort out psutil availability on Windows, or write a fallback impl for Windows.
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1481612
+        pass
+    cpu_brand = get_cpu_brand()
+    if cpu_brand is not None:
+        info['cpu_brand'] = cpu_brand
+    # TODO: drive_is_ssd, virtual_machine: https://bugzilla.mozilla.org/show_bug.cgi?id=1481613
+    return info
+
+
+def get_build_opts(substs):
+    '''
+    Translate selected items from `substs` into `build_opts` keys in the schema.
+    '''
+    try:
+        return {
+            k: ty(substs.get(s, None)) for (k, s, ty) in (
+                # Selected substitutions.
+                ('compiler', 'CC_TYPE', str),
+                ('artifact', 'MOZ_ARTIFACT_BUILDS', bool),
+                ('debug', 'MOZ_DEBUG', bool),
+                ('opt', 'MOZ_OPTIMIZE', bool),
+                ('ccache', 'CCACHE', bool),
+                ('sccache', 'MOZ_USING_SCCACHE', bool),
+                # TODO: detect icecream: https://bugzilla.mozilla.org/show_bug.cgi?id=1481614
+            )
+        }
+    except BuildEnvironmentNotFoundException:
+        return {}
+
+
+def filter_args(command, argv, paths):
+    '''
+    Given the full list of command-line arguments, remove anything up to and including `command`,
+    and attempt to filter absolute pathnames out of any arguments after that.
+    '''
+    args = list(argv)
+    while args:
+        a = args.pop(0)
+        if a == command:
+            break
+
+    def filter_path(p):
+        p = mozpath.abspath(p)
+        base = mozpath.basedir(p, paths)
+        if base:
+            return mozpath.relpath(p, base)
+        # Best-effort.
+        return '<path omitted>'
+    return [filter_path(arg) for arg in args]
+
+
+def gather_telemetry(command='', success=False, monitor=None, mach_context=None, substs={},
+                     paths=[]):
+    '''
+    Gather telemetry about the build and the user's system and pass it to the telemetry
+    handler to be stored for later submission.
+
+    Any absolute paths on the command line will be made relative to `paths` or replaced
+    with a placeholder to avoid including paths from developer's machines.
+    '''
+    data = {
+        'client_id': get_client_id(mach_context.state_dir),
+        # Simplest way to get an rfc3339 datetime string, AFAICT.
+        'time': datetime.utcfromtimestamp(monitor.start_time).isoformat(b'T') + 'Z',
+        'command': command,
+        'argv': filter_args(command, sys.argv, paths),
+        'success': success,
+        # TODO: use a monotonic clock: https://bugzilla.mozilla.org/show_bug.cgi?id=1481624
+        'duration_ms': int(monitor.elapsed * 1000),
+        'build_opts': get_build_opts(substs),
+        'system': get_system_info(),
+        # TODO: exception: https://bugzilla.mozilla.org/show_bug.cgi?id=1481617
+        # TODO: file_types_changed: https://bugzilla.mozilla.org/show_bug.cgi?id=1481774
+    }
+    try:
+        # Validate against the schema.
+        schema(data)
+    except MultipleInvalid as exc:
+        msg = ['Build telemetry is invalid:']
+        for error in exc.errors:
+            msg.append(str(error))
+        print('\n'.join(msg) + '\n' + pprint.pformat(data))
+
+    telemetry_handler = getattr(mach_context,
+                                'telemetry_handler', None)
+    if telemetry_handler:
+        telemetry_handler(mach_context, data)
