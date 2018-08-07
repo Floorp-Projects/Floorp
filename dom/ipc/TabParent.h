@@ -628,6 +628,11 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(const nsCString& aFirstPartyURI) override;
 
+  mozilla::ipc::IPCResult
+  RecvSetSystemFont(const nsCString& aFontName) override;
+  mozilla::ipc::IPCResult
+  RecvGetSystemFont(nsCString* aFontName) override;
+
   ContentCacheInParent mContentCache;
 
   nsIntRect mRect;

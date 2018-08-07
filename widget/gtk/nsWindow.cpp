@@ -7317,3 +7317,27 @@ nsWindow::SetCompositorHint(WindowComposeRequest aState)
     }
 }
 #endif
+
+nsresult
+nsWindow::SetSystemFont(const nsCString& aFontName)
+{
+    GtkSettings* settings = gtk_settings_get_default();
+    g_object_set(settings, "gtk-font-name", aFontName.get(), nullptr);
+    return NS_OK;
+}
+
+nsresult
+nsWindow::GetSystemFont(nsCString& aFontName)
+{
+    GtkSettings* settings = gtk_settings_get_default();
+    gchar* fontName = nullptr;
+    g_object_get(settings,
+                 "gtk-font-name", &fontName,
+                 nullptr);
+    if (fontName) {
+        aFontName.Assign(fontName);
+        g_free(fontName);
+    }
+    return NS_OK;
+}
+

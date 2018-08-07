@@ -3609,6 +3609,26 @@ TabParent::SetIsActiveRecordReplayTab(bool aIsActive)
   }
 }
 
+mozilla::ipc::IPCResult
+TabParent::RecvSetSystemFont(const nsCString& aFontName)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->SetSystemFont(aFontName);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabParent::RecvGetSystemFont(nsCString* aFontName)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->GetSystemFont(*aFontName);
+  }
+  return IPC_OK();
+}
+
 NS_IMETHODIMP
 FakeChannel::OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo)
 {
