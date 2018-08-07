@@ -378,7 +378,7 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
     return nullptr;
   }
 
-  JSAutoRealmAllowCCW ar(cx, callback);
+  JSAutoRealm ar(cx, aCallback->CallbackGlobalOrNull());
 
   RefPtr<nsXPCWrappedJS> wrappedJS;
   nsresult rv =
