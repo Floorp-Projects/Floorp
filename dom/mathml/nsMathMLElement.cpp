@@ -961,8 +961,8 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
   }
 
   bool hasHref = false;
-  const nsAttrValue* href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
-                                                      kNameSpaceID_None);
+  const nsAttrValue* href = mAttrs.GetAttr(nsGkAtoms::href,
+                                           kNameSpaceID_None);
   if (href) {
     // MathML href
     // The REC says: "When user agents encounter MathML elements with both href
@@ -989,8 +989,7 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
       { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nullptr };
 
     // Optimization: check for href first for early return
-    href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
-                                     kNameSpaceID_XLink);
+    href = mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
     if (href &&
         FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::type,
                         sTypeVals, eCaseMatters) !=
@@ -1023,8 +1022,8 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
 void
 nsMathMLElement::GetLinkTarget(nsAString& aTarget)
 {
-  const nsAttrValue* target = mAttrsAndChildren.GetAttr(nsGkAtoms::target,
-                                                        kNameSpaceID_XLink);
+  const nsAttrValue* target = mAttrs.GetAttr(nsGkAtoms::target,
+                                             kNameSpaceID_XLink);
   if (target) {
     target->ToString(aTarget);
   }

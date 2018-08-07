@@ -5,12 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Storage of the children and attributes of a DOM node; storage for
- * the two is unified to minimize footprint.
+ * Storage of the attributes of a DOM node.
  */
 
-#ifndef nsAttrAndChildArray_h___
-#define nsAttrAndChildArray_h___
+#ifndef AttrArray_h___
+#define AttrArray_h___
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -45,12 +44,12 @@ class nsMappedAttributeElement;
 
 #define ATTRSIZE (sizeof(InternalAttr) / sizeof(void*))
 
-class nsAttrAndChildArray
+class AttrArray
 {
   typedef mozilla::dom::BorrowedAttrInfo BorrowedAttrInfo;
 public:
-  nsAttrAndChildArray();
-  ~nsAttrAndChildArray();
+  AttrArray();
+  ~AttrArray();
 
   bool HasAttrs() const
   {
@@ -145,12 +144,12 @@ public:
   // unmapped attributes and children of |aOther|. If |aAllocateChildren| is not
   // true, only enough space for unmapped attributes will be reserved.
   // It is REQUIRED that this function be called ONLY when the array is empty.
-  nsresult EnsureCapacityToClone(const nsAttrAndChildArray& aOther,
+  nsresult EnsureCapacityToClone(const AttrArray& aOther,
                                  bool aAllocateChildren);
 
 private:
-  nsAttrAndChildArray(const nsAttrAndChildArray& aOther) = delete;
-  nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther) = delete;
+  AttrArray(const AttrArray& aOther) = delete;
+  AttrArray& operator=(const AttrArray& aOther) = delete;
 
   void Clear();
 

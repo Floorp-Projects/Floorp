@@ -7,7 +7,6 @@
 #define nsIDocument_h___
 
 #include "mozilla/FlushType.h"           // for enum
-#include "nsAttrAndChildArray.h"
 #include "nsAutoPtr.h"                   // for member
 #include "nsCOMArray.h"                  // for member
 #include "nsCompatibility.h"             // for member
@@ -4419,9 +4418,6 @@ protected:
 
   // Tracking for plugins in the document.
   nsTHashtable<nsPtrHashKey<nsIObjectLoadingContent>> mPlugins;
-
-  // Array of owning references to all children
-  nsAttrAndChildArray mChildren;
 
   RefPtr<mozilla::dom::DocumentTimeline> mDocumentTimeline;
   mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;

@@ -12,7 +12,7 @@
 #ifndef nsMappedAttributes_h___
 #define nsMappedAttributes_h___
 
-#include "nsAttrAndChildArray.h"
+#include "AttrArray.h"
 #include "nsMappedAttributeElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ServoBindingTypes.h"

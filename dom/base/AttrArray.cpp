@@ -9,7 +9,7 @@
  * the two is unified to minimize footprint.
  */
 
-#include "nsAttrAndChildArray.h"
+#include "AttrArray.h"
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
@@ -29,8 +29,8 @@ CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.
 It should be small enough to not cause collisions between adjecent arrays, and
 large enough to make sure that all indexes are used. The size below is based
 on the size of the smallest possible element (currently 20[*] bytes) which is
-the smallest distance between two nsAttrAndChildArray. 20/(2^_5_) is 0.625.
-This means that two adjacent nsAttrAndChildArrays will overlap one in 2.7 times.
+the smallest distance between two AttrArray. 20/(2^_5_) is 0.625.
+This means that two adjacent AttrArrays will overlap one in 2.7 times.
 However not all elements will have enough children to get cached. And any
 allocator that doesn't return addresses aligned to 64 bytes will ensure that
 any index will get used.
@@ -48,7 +48,7 @@ any index will get used.
 
 struct IndexCacheSlot
 {
-  const nsAttrAndChildArray* array;
+  const AttrArray* array;
   int32_t index;
 };
 
@@ -60,7 +60,7 @@ static IndexCacheSlot indexCache[CACHE_NUM_SLOTS];
 static
 inline
 void
-AddIndexToCache(const nsAttrAndChildArray* aArray, int32_t aIndex)
+AddIndexToCache(const AttrArray* aArray, int32_t aIndex)
 {
   uint32_t ix = CACHE_GET_INDEX(aArray);
   indexCache[ix].array = aArray;
@@ -70,7 +70,7 @@ AddIndexToCache(const nsAttrAndChildArray* aArray, int32_t aIndex)
 static
 inline
 int32_t
-GetIndexFromCache(const nsAttrAndChildArray* aArray)
+GetIndexFromCache(const AttrArray* aArray)
 {
   uint32_t ix = CACHE_GET_INDEX(aArray);
   return indexCache[ix].array == aArray ? indexCache[ix].index : -1;
@@ -91,12 +91,12 @@ GetIndexFromCache(const nsAttrAndChildArray* aArray)
 #define NS_IMPL_EXTRA_SIZE \
   ((sizeof(Impl) - sizeof(mImpl->mBuffer)) / sizeof(void*))
 
-nsAttrAndChildArray::nsAttrAndChildArray()
+AttrArray::AttrArray()
   : mImpl(nullptr)
 {
 }
 
-nsAttrAndChildArray::~nsAttrAndChildArray()
+AttrArray::~AttrArray()
 {
   if (!mImpl) {
     return;
@@ -108,13 +108,13 @@ nsAttrAndChildArray::~nsAttrAndChildArray()
 }
 
 uint32_t
-nsAttrAndChildArray::AttrCount() const
+AttrArray::AttrCount() const
 {
   return NonMappedAttrCount() + MappedAttrCount();
 }
 
 const nsAttrValue*
-nsAttrAndChildArray::GetAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
+AttrArray::GetAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
 {
   uint32_t i, slotCount = AttrSlotCount();
   if (aNamespaceID == kNameSpaceID_None) {
@@ -141,7 +141,7 @@ nsAttrAndChildArray::GetAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
 }
 
 const nsAttrValue*
-nsAttrAndChildArray::GetAttr(const nsAString& aLocalName) const
+AttrArray::GetAttr(const nsAString& aLocalName) const
 {
   uint32_t i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
@@ -158,8 +158,8 @@ nsAttrAndChildArray::GetAttr(const nsAString& aLocalName) const
 }
 
 const nsAttrValue*
-nsAttrAndChildArray::GetAttr(const nsAString& aName,
-                             nsCaseTreatment aCaseSensitive) const
+AttrArray::GetAttr(const nsAString& aName,
+                   nsCaseTreatment aCaseSensitive) const
 {
   // Check whether someone is being silly and passing non-lowercase
   // attr names.
@@ -191,10 +191,10 @@ nsAttrAndChildArray::GetAttr(const nsAString& aName,
 }
 
 const nsAttrValue*
-nsAttrAndChildArray::AttrAt(uint32_t aPos) const
+AttrArray::AttrAt(uint32_t aPos) const
 {
   NS_ASSERTION(aPos < AttrCount(),
-               "out-of-bounds access in nsAttrAndChildArray");
+               "out-of-bounds access in AttrArray");
 
   uint32_t nonmapped = NonMappedAttrCount();
   if (aPos < nonmapped) {
@@ -205,8 +205,8 @@ nsAttrAndChildArray::AttrAt(uint32_t aPos) const
 }
 
 nsresult
-nsAttrAndChildArray::SetAndSwapAttr(nsAtom* aLocalName, nsAttrValue& aValue,
-                                    bool* aHadValue)
+AttrArray::SetAndSwapAttr(nsAtom* aLocalName, nsAttrValue& aValue,
+                          bool* aHadValue)
 {
   *aHadValue = false;
   uint32_t i, slotCount = AttrSlotCount();
@@ -233,8 +233,8 @@ nsAttrAndChildArray::SetAndSwapAttr(nsAtom* aLocalName, nsAttrValue& aValue,
 }
 
 nsresult
-nsAttrAndChildArray::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
-                                    nsAttrValue& aValue, bool* aHadValue)
+AttrArray::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
+                          nsAttrValue& aValue, bool* aHadValue)
 {
   int32_t namespaceID = aName->NamespaceID();
   nsAtom* localName = aName->NameAtom();
@@ -267,9 +267,8 @@ nsAttrAndChildArray::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
   return NS_OK;
 }
 
-
 nsresult
-nsAttrAndChildArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
+AttrArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
 {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds");
 
@@ -305,10 +304,10 @@ nsAttrAndChildArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
 }
 
 mozilla::dom::BorrowedAttrInfo
-nsAttrAndChildArray::AttrInfoAt(uint32_t aPos) const
+AttrArray::AttrInfoAt(uint32_t aPos) const
 {
   NS_ASSERTION(aPos < AttrCount(),
-               "out-of-bounds access in nsAttrAndChildArray");
+               "out-of-bounds access in AttrArray");
 
   uint32_t nonmapped = NonMappedAttrCount();
   if (aPos < nonmapped) {
@@ -320,10 +319,10 @@ nsAttrAndChildArray::AttrInfoAt(uint32_t aPos) const
 }
 
 const nsAttrName*
-nsAttrAndChildArray::AttrNameAt(uint32_t aPos) const
+AttrArray::AttrNameAt(uint32_t aPos) const
 {
   NS_ASSERTION(aPos < AttrCount(),
-               "out-of-bounds access in nsAttrAndChildArray");
+               "out-of-bounds access in AttrArray");
 
   uint32_t nonmapped = NonMappedAttrCount();
   if (aPos < nonmapped) {
@@ -334,7 +333,7 @@ nsAttrAndChildArray::AttrNameAt(uint32_t aPos) const
 }
 
 const nsAttrName*
-nsAttrAndChildArray::GetSafeAttrNameAt(uint32_t aPos) const
+AttrArray::GetSafeAttrNameAt(uint32_t aPos) const
 {
   uint32_t nonmapped = NonMappedAttrCount();
   if (aPos < nonmapped) {
@@ -354,7 +353,7 @@ nsAttrAndChildArray::GetSafeAttrNameAt(uint32_t aPos) const
 }
 
 const nsAttrName*
-nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsAString& aName) const
+AttrArray::GetExistingAttrNameFromQName(const nsAString& aName) const
 {
   uint32_t i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
@@ -371,7 +370,7 @@ nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsAString& aName) const
 }
 
 int32_t
-nsAttrAndChildArray::IndexOfAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
+AttrArray::IndexOfAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
 {
   int32_t idx;
   if (mImpl && mImpl->mMappedAttrs && aNamespaceID == kNameSpaceID_None) {
@@ -409,11 +408,11 @@ nsAttrAndChildArray::IndexOfAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
 }
 
 nsresult
-nsAttrAndChildArray::SetAndSwapMappedAttr(nsAtom* aLocalName,
-                                          nsAttrValue& aValue,
-                                          nsMappedAttributeElement* aContent,
-                                          nsHTMLStyleSheet* aSheet,
-                                          bool* aHadValue)
+AttrArray::SetAndSwapMappedAttr(nsAtom* aLocalName,
+                                nsAttrValue& aValue,
+                                nsMappedAttributeElement* aContent,
+                                nsHTMLStyleSheet* aSheet,
+                                bool* aHadValue)
 {
   bool willAdd = true;
   if (mImpl && mImpl->mMappedAttrs) {
@@ -429,7 +428,7 @@ nsAttrAndChildArray::SetAndSwapMappedAttr(nsAtom* aLocalName,
 }
 
 nsresult
-nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
+AttrArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
 {
   MOZ_ASSERT(mImpl && mImpl->mMappedAttrs,
                   "Should have mapped attrs here!");
@@ -446,7 +445,7 @@ nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
 }
 
 nsresult
-nsAttrAndChildArray::DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement)
+AttrArray::DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement)
 {
   MOZ_ASSERT(mImpl && mImpl->mMappedAttrs, "Should have mapped attrs here!");
 
@@ -460,7 +459,7 @@ nsAttrAndChildArray::DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aEle
 }
 
 void
-nsAttrAndChildArray::Compact()
+AttrArray::Compact()
 {
   if (!mImpl) {
     return;
@@ -489,7 +488,7 @@ nsAttrAndChildArray::Compact()
 }
 
 void
-nsAttrAndChildArray::Clear()
+AttrArray::Clear()
 {
   if (!mImpl) {
     return;
@@ -508,7 +507,7 @@ nsAttrAndChildArray::Clear()
 }
 
 uint32_t
-nsAttrAndChildArray::NonMappedAttrCount() const
+AttrArray::NonMappedAttrCount() const
 {
   if (!mImpl) {
     return 0;
@@ -523,13 +522,13 @@ nsAttrAndChildArray::NonMappedAttrCount() const
 }
 
 uint32_t
-nsAttrAndChildArray::MappedAttrCount() const
+AttrArray::MappedAttrCount() const
 {
   return mImpl && mImpl->mMappedAttrs ? (uint32_t)mImpl->mMappedAttrs->Count() : 0;
 }
 
 nsresult
-nsAttrAndChildArray::ForceMapped(nsMappedAttributeElement* aContent, nsIDocument* aDocument)
+AttrArray::ForceMapped(nsMappedAttributeElement* aContent, nsIDocument* aDocument)
 {
   nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
   RefPtr<nsMappedAttributes> mapped = GetModifiableMapped(aContent, sheet, false, 0);
@@ -537,17 +536,18 @@ nsAttrAndChildArray::ForceMapped(nsMappedAttributeElement* aContent, nsIDocument
 }
 
 void
-nsAttrAndChildArray::ClearMappedServoStyle() {
+AttrArray::ClearMappedServoStyle()
+{
   if (mImpl && mImpl->mMappedAttrs) {
     mImpl->mMappedAttrs->ClearServoStyle();
   }
 }
 
 nsMappedAttributes*
-nsAttrAndChildArray::GetModifiableMapped(nsMappedAttributeElement* aContent,
-                                         nsHTMLStyleSheet* aSheet,
-                                         bool aWillAddAttr,
-                                         int32_t aAttrCount)
+AttrArray::GetModifiableMapped(nsMappedAttributeElement* aContent,
+                               nsHTMLStyleSheet* aSheet,
+                               bool aWillAddAttr,
+                               int32_t aAttrCount)
 {
   if (mImpl && mImpl->mMappedAttrs) {
     return mImpl->mMappedAttrs->Clone(aWillAddAttr);
@@ -561,7 +561,7 @@ nsAttrAndChildArray::GetModifiableMapped(nsMappedAttributeElement* aContent,
 }
 
 nsresult
-nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
+AttrArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
 {
   NS_ASSERTION(aAttributes, "missing attributes");
 
@@ -596,15 +596,16 @@ nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
 }
 
 const nsMappedAttributes*
-nsAttrAndChildArray::GetMapped() const
+AttrArray::GetMapped() const
 {
   return mImpl ? mImpl->mMappedAttrs : nullptr;
 }
 
-nsresult nsAttrAndChildArray::EnsureCapacityToClone(const nsAttrAndChildArray& aOther,
-                                                    bool aAllocateChildren)
+nsresult
+AttrArray::EnsureCapacityToClone(const AttrArray& aOther,
+                                 bool aAllocateChildren)
 {
-  MOZ_ASSERT(!mImpl, "nsAttrAndChildArray::EnsureCapacityToClone requires the array be empty when called");
+  MOZ_ASSERT(!mImpl, "AttrArray::EnsureCapacityToClone requires the array be empty when called");
 
   uint32_t attrCount = aOther.NonMappedAttrCount();
 
@@ -613,7 +614,7 @@ nsresult nsAttrAndChildArray::EnsureCapacityToClone(const nsAttrAndChildArray& a
   }
 
   // No need to use a CheckedUint32 because we are cloning. We know that we
-  // have already allocated an nsAttrAndChildArray of this size.
+  // have already allocated an AttrArray of this size.
   uint32_t size = attrCount;
   size *= ATTRSIZE;
   uint32_t totalSize = size;
@@ -635,7 +636,7 @@ nsresult nsAttrAndChildArray::EnsureCapacityToClone(const nsAttrAndChildArray& a
 }
 
 bool
-nsAttrAndChildArray::GrowBy(uint32_t aGrowSize)
+AttrArray::GrowBy(uint32_t aGrowSize)
 {
   CheckedUint32 size = 0;
   if (mImpl) {
@@ -693,7 +694,7 @@ nsAttrAndChildArray::GrowBy(uint32_t aGrowSize)
 }
 
 bool
-nsAttrAndChildArray::AddAttrSlot()
+AttrArray::AddAttrSlot()
 {
   uint32_t slotCount = AttrSlotCount();
 
@@ -719,7 +720,7 @@ nsAttrAndChildArray::AddAttrSlot()
 }
 
 size_t
-nsAttrAndChildArray::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+AttrArray::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   if (mImpl) {

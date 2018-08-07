@@ -113,14 +113,14 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
 
   bool reparse = (aDst->OwnerDoc() != OwnerDoc());
 
-  rv = static_cast<nsGenericHTMLElement*>(aDst)->mAttrsAndChildren.
-       EnsureCapacityToClone(mAttrsAndChildren, aPreallocateChildren);
+  rv = static_cast<nsGenericHTMLElement*>(aDst)->mAttrs.
+         EnsureCapacityToClone(mAttrs, aPreallocateChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t i, count = GetAttrCount();
   for (i = 0; i < count; ++i) {
-    const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
-    const nsAttrValue *value = mAttrsAndChildren.AttrAt(i);
+    const nsAttrName *name = mAttrs.AttrNameAt(i);
+    const nsAttrValue *value = mAttrs.AttrAt(i);
 
     if (name->Equals(nsGkAtoms::style, kNameSpaceID_None) &&
         value->Type() == nsAttrValue::eCSSDeclaration) {
@@ -1474,7 +1474,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
 int32_t
 nsGenericHTMLElement::GetIntAttr(nsAtom* aAttr, int32_t aDefault) const
 {
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+  const nsAttrValue* attrVal = mAttrs.GetAttr(aAttr);
   if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
     return attrVal->GetIntegerValue();
   }
@@ -1494,7 +1494,7 @@ uint32_t
 nsGenericHTMLElement::GetUnsignedIntAttr(nsAtom* aAttr,
                                          uint32_t aDefault) const
 {
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+  const nsAttrValue* attrVal = mAttrs.GetAttr(aAttr);
   if (!attrVal || attrVal->Type() != nsAttrValue::eInteger) {
     return aDefault;
   }
@@ -1529,7 +1529,7 @@ nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr, nsIURI** aURI
 {
   *aURI = nullptr;
 
-  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(aAttr);
+  const nsAttrValue* attr = mAttrs.GetAttr(aAttr);
   if (!attr) {
     return false;
   }
@@ -2596,9 +2596,9 @@ nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
 void
 nsGenericHTMLElement::RecompileScriptEventListeners()
 {
-    int32_t i, count = mAttrsAndChildren.AttrCount();
+    int32_t i, count = mAttrs.AttrCount();
     for (i = 0; i < count; ++i) {
-        const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
+        const nsAttrName *name = mAttrs.AttrNameAt(i);
 
         // Eventlistenener-attributes are always in the null namespace
         if (!name->IsAtom()) {

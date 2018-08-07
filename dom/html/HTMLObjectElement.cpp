@@ -366,7 +366,7 @@ HTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
 
   // TODO: this should probably be managed directly by IsHTMLFocusable.
   // See bug 597242.
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::tabindex);
+  const nsAttrValue* attrVal = mAttrs.GetAttr(nsGkAtoms::tabindex);
 
   *aIsFocusable = attrVal && attrVal->Type() == nsAttrValue::eInteger;
 

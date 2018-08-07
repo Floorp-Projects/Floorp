@@ -316,17 +316,17 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
     RefPtr<nsXULElement> element = Construct(ni.forget());
 
-    nsresult rv = element->mAttrsAndChildren.EnsureCapacityToClone(mAttrsAndChildren,
-                                                                   aPreallocateChildren);
+    nsresult rv = element->mAttrs.EnsureCapacityToClone(mAttrs,
+                                                        aPreallocateChildren);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Note that we're _not_ copying mControllers.
 
-    uint32_t count = mAttrsAndChildren.AttrCount();
+    uint32_t count = mAttrs.AttrCount();
     rv = NS_OK;
     for (uint32_t i = 0; i < count; ++i) {
-        const nsAttrName* originalName = mAttrsAndChildren.AttrNameAt(i);
-        const nsAttrValue* originalValue = mAttrsAndChildren.AttrAt(i);
+        const nsAttrName* originalName = mAttrs.AttrNameAt(i);
+        const nsAttrValue* originalValue = mAttrs.AttrAt(i);
         nsAttrValue attrValue;
 
         // Style rules need to be cloned.
@@ -344,13 +344,13 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
 
         bool oldValueSet;
         if (originalName->IsAtom()) {
-           rv = element->mAttrsAndChildren.SetAndSwapAttr(originalName->Atom(),
-                                                          attrValue,
-                                                          &oldValueSet);
+           rv = element->mAttrs.SetAndSwapAttr(originalName->Atom(),
+                                               attrValue,
+                                               &oldValueSet);
         } else {
-            rv = element->mAttrsAndChildren.SetAndSwapAttr(originalName->NodeInfo(),
-                                                           attrValue,
-                                                           &oldValueSet);
+            rv = element->mAttrs.SetAndSwapAttr(originalName->NodeInfo(),
+                                                attrValue,
+                                                &oldValueSet);
         }
         NS_ENSURE_SUCCESS(rv, rv);
         element->AddListenerFor(*originalName);
@@ -1317,11 +1317,11 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
         bool oldValueSet;
         // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         if (protoattr->mName.IsAtom()) {
-            rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.Atom(),
-                                                  attrValue, &oldValueSet);
+            rv = mAttrs.SetAndSwapAttr(protoattr->mName.Atom(),
+                                       attrValue, &oldValueSet);
         } else {
-            rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.NodeInfo(),
-                                                  attrValue, &oldValueSet);
+            rv = mAttrs.SetAndSwapAttr(protoattr->mName.NodeInfo(),
+                                       attrValue, &oldValueSet);
         }
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1513,9 +1513,9 @@ nsXULElement::BoolAttrIsTrue(nsAtom* aName) const
 void
 nsXULElement::RecompileScriptEventListeners()
 {
-    int32_t i, count = mAttrsAndChildren.AttrCount();
+    int32_t i, count = mAttrs.AttrCount();
     for (i = 0; i < count; ++i) {
-        const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
+        const nsAttrName *name = mAttrs.AttrNameAt(i);
 
         // Eventlistenener-attributes are always in the null namespace
         if (!name->IsAtom()) {

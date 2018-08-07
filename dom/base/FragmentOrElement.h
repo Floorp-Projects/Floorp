@@ -16,7 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
-#include "nsAttrAndChildArray.h"          // member
+#include "AttrArray.h"                    // member
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_*
 #include "nsIContent.h"                   // base class
 #include "nsNodeUtils.h"                  // class member nsNodeUtils::CloneNodeImpl
@@ -328,9 +328,9 @@ protected:
 
   friend class ::ContentUnbinder;
   /**
-   * Array containing all attributes and children for this element
+   * Array containing all attributes for this element
    */
-  nsAttrAndChildArray mAttrsAndChildren;
+  AttrArray mAttrs;
 };
 
 } // namespace dom

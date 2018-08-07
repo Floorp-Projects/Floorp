@@ -72,7 +72,7 @@ HTMLMeterElement::Min() const
    * If the attribute min is defined, the minimum is this value.
    * Otherwise, the minimum is the default value.
    */
-  const nsAttrValue* attrMin = mAttrsAndChildren.GetAttr(nsGkAtoms::min);
+  const nsAttrValue* attrMin = mAttrs.GetAttr(nsGkAtoms::min);
   if (attrMin && attrMin->Type() == nsAttrValue::eDoubleValue) {
     return attrMin->GetDoubleValue();
   }
@@ -90,7 +90,7 @@ HTMLMeterElement::Max() const
    */
   double max;
 
-  const nsAttrValue* attrMax = mAttrsAndChildren.GetAttr(nsGkAtoms::max);
+  const nsAttrValue* attrMax = mAttrs.GetAttr(nsGkAtoms::max);
   if (attrMax && attrMax->Type() == nsAttrValue::eDoubleValue) {
     max = attrMax->GetDoubleValue();
   } else {
@@ -113,7 +113,7 @@ HTMLMeterElement::Value() const
    */
   double value;
 
-  const nsAttrValue* attrValue = mAttrsAndChildren.GetAttr(nsGkAtoms::value);
+  const nsAttrValue* attrValue = mAttrs.GetAttr(nsGkAtoms::value);
   if (attrValue && attrValue->Type() == nsAttrValue::eDoubleValue) {
     value = attrValue->GetDoubleValue();
   } else {
@@ -143,7 +143,7 @@ HTMLMeterElement::Low() const
 
   double min = Min();
 
-  const nsAttrValue* attrLow = mAttrsAndChildren.GetAttr(nsGkAtoms::low);
+  const nsAttrValue* attrLow = mAttrs.GetAttr(nsGkAtoms::low);
   if (!attrLow || attrLow->Type() != nsAttrValue::eDoubleValue) {
     return min;
   }
@@ -171,7 +171,7 @@ HTMLMeterElement::High() const
 
   double max = Max();
 
-  const nsAttrValue* attrHigh = mAttrsAndChildren.GetAttr(nsGkAtoms::high);
+  const nsAttrValue* attrHigh = mAttrs.GetAttr(nsGkAtoms::high);
   if (!attrHigh || attrHigh->Type() != nsAttrValue::eDoubleValue) {
     return max;
   }
@@ -204,7 +204,7 @@ HTMLMeterElement::Optimum() const
   double min = Min();
 
   const nsAttrValue* attrOptimum =
-              mAttrsAndChildren.GetAttr(nsGkAtoms::optimum);
+              mAttrs.GetAttr(nsGkAtoms::optimum);
   if (!attrOptimum || attrOptimum->Type() != nsAttrValue::eDoubleValue) {
     return (min + max) / 2.0;
   }

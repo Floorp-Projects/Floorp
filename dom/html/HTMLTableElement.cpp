@@ -1079,7 +1079,7 @@ HTMLTableElement::BuildInheritedAttributes()
                               document->GetAttributeStyleSheet() : nullptr;
   RefPtr<nsMappedAttributes> newAttrs;
   if (sheet) {
-    const nsAttrValue* value = mAttrsAndChildren.GetAttr(nsGkAtoms::cellpadding);
+    const nsAttrValue* value = mAttrs.GetAttr(nsGkAtoms::cellpadding);
     if (value) {
       RefPtr<nsMappedAttributes> modifiableMapped = new
       nsMappedAttributes(sheet, MapInheritedTableAttributesIntoRule);
