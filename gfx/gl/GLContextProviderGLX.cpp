@@ -16,6 +16,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorOptions.h"
+#include "mozilla/Range.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/GtkCompositorWidget.h"
 #include "mozilla/Unused.h"
@@ -889,28 +891,76 @@ bool
 GLContextGLX::FindVisual(Display* display, int screen, bool useWebRender,
                          bool useAlpha, int* const out_visualId)
 {
-    int attribs[] = {
-        LOCAL_GLX_RGBA,
-        LOCAL_GLX_DOUBLEBUFFER,
-        LOCAL_GLX_RED_SIZE, 8,
-        LOCAL_GLX_GREEN_SIZE, 8,
-        LOCAL_GLX_BLUE_SIZE, 8,
-        LOCAL_GLX_ALPHA_SIZE, useAlpha ? 8 : 0,
-        LOCAL_GLX_DEPTH_SIZE, useWebRender ? 24 : 0,
-        LOCAL_GL_NONE
-    };
-
     if (!sGLXLibrary.EnsureInitialized()) {
         return false;
     }
 
-    XVisualInfo* visuals = sGLXLibrary.fChooseVisual(display, screen, attribs);
-    if (!visuals) {
+    XVisualInfo visualTemplate;
+    visualTemplate.screen = screen;
+
+    // Get all visuals of screen
+
+    int visualsLen = 0;
+    XVisualInfo* xVisuals = XGetVisualInfo(display, VisualScreenMask, &visualTemplate, &visualsLen);
+    if (!xVisuals) {
+        return false;
+    }
+    const Range<XVisualInfo> visualInfos(xVisuals, visualsLen);
+    auto cleanupVisuals = MakeScopeExit([&] {
+        XFree(xVisuals);
+    });
+
+    // Get default visual info
+
+    Visual* defaultVisual = DefaultVisual(display, screen);
+    const auto defaultVisualInfo = [&]() -> const XVisualInfo* {
+        for (const auto& cur : visualInfos) {
+            if (cur.visual == defaultVisual) {
+                return &cur;
+            }
+        }
+        return nullptr;
+    }();
+    if (!defaultVisualInfo) {
+        MOZ_ASSERT(false);
         return false;
     }
 
-    *out_visualId = visuals[0].visualid;
-    return true;
+    const int bpp = useAlpha ? 32 : 24;
+    const int alphaSize = useAlpha ? 8 : 0;
+    const int depthSize = useWebRender ? 24 : 0;
+
+    for (auto& cur : visualInfos) {
+
+        const auto fnConfigMatches = [&](const int pname, const int expected) {
+            int actual;
+            if (sGLXLibrary.fGetConfig(display, &cur, pname, &actual)) {
+                return false;
+            }
+            return actual == expected;
+        };
+
+        // Check if visual is compatible.
+        if (cur.depth != bpp ||
+            cur.c_class != defaultVisualInfo->c_class) {
+            continue;
+        }
+
+        // Check if visual is compatible to GL requests.
+        if (fnConfigMatches(LOCAL_GLX_USE_GL, 1) &&
+            fnConfigMatches(LOCAL_GLX_DOUBLEBUFFER, 1) &&
+            fnConfigMatches(LOCAL_GLX_RED_SIZE, 8) &&
+            fnConfigMatches(LOCAL_GLX_GREEN_SIZE, 8) &&
+            fnConfigMatches(LOCAL_GLX_BLUE_SIZE, 8) &&
+            fnConfigMatches(LOCAL_GLX_ALPHA_SIZE, alphaSize) &&
+            fnConfigMatches(LOCAL_GLX_DEPTH_SIZE, depthSize))
+        {
+            *out_visualId = cur.visualid;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool
@@ -919,9 +969,19 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                                     GLXFBConfig* const out_config, int* const out_visid,
                                     bool aWebRender)
 {
+    // XXX the visual ID is almost certainly the LOCAL_GLX_FBCONFIG_ID, so
+    // we could probably do this first and replace the glXGetFBConfigs
+    // with glXChooseConfigs.  Docs are sparklingly clear as always.
+    XWindowAttributes windowAttrs;
+    if (!XGetWindowAttributes(display, window, &windowAttrs)) {
+        NS_WARNING("[GLX] XGetWindowAttributes() failed");
+        return false;
+    }
+
     ScopedXFree<GLXFBConfig>& cfgs = *out_scopedConfigArr;
     int numConfigs;
     const int webrenderAttribs[] = {
+        LOCAL_GLX_ALPHA_SIZE, windowAttrs.depth == 32 ? 8 : 0,
         LOCAL_GLX_DEPTH_SIZE, 24,
         LOCAL_GLX_DOUBLEBUFFER, True,
         0
@@ -944,14 +1004,6 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
     }
     NS_ASSERTION(numConfigs > 0, "No FBConfigs found!");
 
-    // XXX the visual ID is almost certainly the LOCAL_GLX_FBCONFIG_ID, so
-    // we could probably do this first and replace the glXGetFBConfigs
-    // with glXChooseConfigs.  Docs are sparklingly clear as always.
-    XWindowAttributes windowAttrs;
-    if (!XGetWindowAttributes(display, window, &windowAttrs)) {
-        NS_WARNING("[GLX] XGetWindowAttributes() failed");
-        return false;
-    }
     const VisualID windowVisualID = XVisualIDFromVisual(windowAttrs.visual);
 #ifdef DEBUG
     printf("[GLX] window %lx has VisualID 0x%lx\n", window, windowVisualID);
