@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
+ServoElementSnapshot::ServoElementSnapshot(const Element& aElement)
   : mState(0)
   , mContains(Flags(0))
   , mIsTableBorderNonzero(false)
@@ -22,23 +22,22 @@ ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
   , mOtherAttributeChanged(false)
 {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
+  MOZ_ASSERT(NS_IsMainThread());
   mIsHTMLElementInHTMLDocument =
-    aElement->IsHTMLElement() && aElement->IsInHTMLDocument();
-  mIsInChromeDocument = nsContentUtils::IsChromeDoc(aElement->OwnerDoc());
-  mSupportsLangAttr = aElement->SupportsLangAttr();
+    aElement.IsHTMLElement() && aElement.IsInHTMLDocument();
+  mIsInChromeDocument = nsContentUtils::IsChromeDoc(aElement.OwnerDoc());
+  mSupportsLangAttr = aElement.SupportsLangAttr();
 }
 
 void
-ServoElementSnapshot::AddOtherPseudoClassState(Element* aElement)
+ServoElementSnapshot::AddOtherPseudoClassState(const Element& aElement)
 {
-  MOZ_ASSERT(aElement);
-
   if (HasOtherPseudoClassState()) {
     return;
   }
 
-  mIsTableBorderNonzero = Gecko_IsTableBorderNonzero(aElement);
-  mIsMozBrowserFrame = Gecko_IsBrowserFrame(aElement);
+  mIsTableBorderNonzero = Gecko_IsTableBorderNonzero(&aElement);
+  mIsMozBrowserFrame = Gecko_IsBrowserFrame(&aElement);
 
   mContains |= Flags::OtherPseudoClassState;
 }
