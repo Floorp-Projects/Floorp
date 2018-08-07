@@ -82,6 +82,28 @@ ShowError(DWORD aError = ::GetLastError())
   ::LocalFree(rawMsgBuf);
 }
 
+static mozilla::LauncherFlags
+ProcessCmdLine(int& aArgc, wchar_t* aArgv[])
+{
+  mozilla::LauncherFlags result = mozilla::LauncherFlags::eNone;
+
+  if (mozilla::CheckArg(aArgc, aArgv, L"wait-for-browser",
+                        static_cast<const wchar_t**>(nullptr),
+                        mozilla::CheckArgFlag::RemoveArg) == mozilla::ARG_FOUND ||
+      mozilla::EnvHasValue("MOZ_AUTOMATION")) {
+    result |= mozilla::LauncherFlags::eWaitForBrowser;
+  }
+
+  if (mozilla::CheckArg(aArgc, aArgv, L"no-deelevate",
+                        static_cast<const wchar_t**>(nullptr),
+                        mozilla::CheckArgFlag::CheckOSInt |
+                        mozilla::CheckArgFlag::RemoveArg) == mozilla::ARG_FOUND) {
+    result |= mozilla::LauncherFlags::eNoDeelevate;
+  }
+
+  return result;
+}
+
 namespace mozilla {
 
 // Eventually we want to be able to set a build config flag such that, when set,
@@ -117,13 +139,20 @@ LauncherMain(int argc, wchar_t* argv[])
     return 1;
   }
 
-  // If we're elevated, we should relaunch ourselves as a normal user
-  Maybe<bool> isElevated = IsElevated();
-  if (!isElevated) {
+  LauncherFlags flags = ProcessCmdLine(argc, argv);
+
+  nsAutoHandle mediumIlToken;
+  Maybe<ElevationState> elevationState = GetElevationState(flags, mediumIlToken);
+  if (!elevationState) {
     return 1;
   }
 
-  if (isElevated.value()) {
+  // If we're elevated, we should relaunch ourselves as a normal user.
+  // Note that we only call LaunchUnelevated when we don't need to wait for the
+  // browser process.
+  if (elevationState.value() == ElevationState::eElevated &&
+      !(flags & (LauncherFlags::eWaitForBrowser | LauncherFlags::eNoDeelevate)) &&
+      !mediumIlToken.get()) {
     return !LaunchUnelevated(argc, argv);
   }
 
@@ -178,8 +207,20 @@ LauncherMain(int argc, wchar_t* argv[])
   }
 
   PROCESS_INFORMATION pi = {};
-  if (!::CreateProcessW(argv[0], cmdLine.get(), nullptr, nullptr, inheritHandles,
-                        creationFlags, nullptr, nullptr, &siex.StartupInfo, &pi)) {
+  BOOL createOk;
+
+  if (mediumIlToken.get()) {
+    createOk = ::CreateProcessAsUserW(mediumIlToken.get(), argv[0], cmdLine.get(),
+                                      nullptr, nullptr, inheritHandles,
+                                      creationFlags, nullptr, nullptr,
+                                      &siex.StartupInfo, &pi);
+  } else {
+    createOk = ::CreateProcessW(argv[0], cmdLine.get(), nullptr, nullptr,
+                                inheritHandles, creationFlags, nullptr, nullptr,
+                                &siex.StartupInfo, &pi);
+  }
+
+  if (!createOk) {
     ShowError();
     return 1;
   }
@@ -194,13 +235,22 @@ LauncherMain(int argc, wchar_t* argv[])
     return 1;
   }
 
-  const DWORD timeout = ::IsDebuggerPresent() ? INFINITE :
-                        kWaitForInputIdleTimeoutMS;
+  if (flags & LauncherFlags::eWaitForBrowser) {
+    DWORD exitCode;
+    if (::WaitForSingleObject(process.get(), INFINITE) == WAIT_OBJECT_0 &&
+        ::GetExitCodeProcess(process.get(), &exitCode)) {
+      // Propagate the browser process's exit code as our exit code.
+      return static_cast<int>(exitCode);
+    }
+  } else {
+    const DWORD timeout = ::IsDebuggerPresent() ? INFINITE :
+                          kWaitForInputIdleTimeoutMS;
 
-  // Keep the current process around until the callback process has created
-  // its message queue, to avoid the launched process's windows being forced
-  // into the background.
-  mozilla::WaitForInputIdle(process.get(), timeout);
+    // Keep the current process around until the callback process has created
+    // its message queue, to avoid the launched process's windows being forced
+    // into the background.
+    mozilla::WaitForInputIdle(process.get(), timeout);
+  }
 
   return 0;
 }
