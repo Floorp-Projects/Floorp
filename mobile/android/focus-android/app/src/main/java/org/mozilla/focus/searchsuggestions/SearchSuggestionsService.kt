@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.searchsuggestions
 
 import android.arch.lifecycle.LiveData
@@ -19,19 +23,6 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
 
     init {
         updateSearchEngine(searchEngine)
-    }
-
-    private fun fetch(url: String): String? {
-        httpClient.dispatcher().queuedCalls()
-                .filter { it.request().tag() == REQUEST_TAG }
-                .forEach { it.cancel() }
-
-        val request = Request.Builder()
-                .tag(REQUEST_TAG)
-                .url(url)
-                .build()
-
-        return httpClient.newCall(request).execute().body()?.string() ?: ""
     }
 
     fun getSuggestions(query: String): LiveData<Pair<String, List<String>>> {
@@ -57,6 +48,19 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
         } catch (_: IllegalArgumentException) {
             null
         }
+    }
+
+    private fun fetch(url: String): String? {
+        httpClient.dispatcher().queuedCalls()
+                .filter { it.request().tag() == REQUEST_TAG }
+                .forEach { it.cancel() }
+
+        val request = Request.Builder()
+                .tag(REQUEST_TAG)
+                .url(url)
+                .build()
+
+        return httpClient.newCall(request).execute().body()?.string() ?: ""
     }
 
     companion object {
