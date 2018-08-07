@@ -374,15 +374,15 @@ const TEST_DATA = [
                 offsets: [3, 30], commentOffsets: [0, 33]}]
   },
 
-  // HTML comments are ignored.
+  // HTML comments are not special -- they are just ordinary tokens.
   {
     parseComments: true,
     input: "<!-- color: red; --> color: blue;",
     expected: [
-      {name: "color", value: "red", priority: "",
-       offsets: [5, 16]},
-      {name: "color", value: "blue", priority: "",
-       offsets: [21, 33]}]
+      {name: "<!-- color", value: "red", priority: "",
+       offsets: [0, 16]},
+      {name: "--> color", value: "blue", priority: "",
+       offsets: [17, 33]}]
   },
 
   // Don't error on an empty comment.

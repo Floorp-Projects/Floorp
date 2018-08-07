@@ -318,12 +318,6 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
       break;
     }
 
-    // Ignore HTML comment tokens (but parse anything they might
-    // happen to surround).
-    if (token.tokenType === "htmlcomment") {
-      continue;
-    }
-
     // Update the start and end offsets of the declaration, but only
     // when we see a significant token.
     if (token.tokenType !== "whitespace" && token.tokenType !== "comment") {
