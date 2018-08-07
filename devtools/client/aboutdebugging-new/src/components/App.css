@@ -14,6 +14,7 @@
 .app {
   display: grid;
   font-size: 15px;
+  grid-column-gap: 40px;
   grid-template-columns: 240px auto;
   height: 100vh;
   overflow: hidden;
