@@ -421,6 +421,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is overflow: -moz-scrollbars-* value enabled?
+VARCACHE_PREF(
+  "layout.css.overflow.moz-scrollbars.enabled",
+   layout_css_overflow_moz_scrollbars_enabled,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------
