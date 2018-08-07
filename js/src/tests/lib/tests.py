@@ -249,3 +249,6 @@ class RefTestCase(object):
 
     def __hash__(self):
         return self.path.__hash__()
+
+    def __repr__(self):
+        return "<lib.tests.RefTestCase %s>" % (self.path,)

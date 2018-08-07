@@ -12,23 +12,15 @@
 
 var global = this;
 
+ChromeUtils.import("resource://specialpowers/MockFilePicker.jsm");
+ChromeUtils.import("resource://specialpowers/MockColorPicker.jsm");
+ChromeUtils.import("resource://specialpowers/MockPermissionPrompt.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-ChromeUtils.defineModuleGetter(this, "MockFilePicker",
-                               "resource://specialpowers/MockFilePicker.jsm");
-ChromeUtils.defineModuleGetter(this, "MockColorPicker",
-                               "resource://specialpowers/MockColorPicker.jsm");
-ChromeUtils.defineModuleGetter(this, "MockPermissionPrompt",
-                               "resource://specialpowers/MockPermissionPrompt.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
-                               "resource://gre/modules/ServiceWorkerCleanUp.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/ServiceWorkerCleanUp.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PerTestCoverageUtils",
   "resource://testing-common/PerTestCoverageUtils.jsm");

@@ -130,4 +130,9 @@ customElements.setElementCreationCallback("printpreview-toolbar", type => {
     "chrome://global/content/printPreviewToolbar.js", window);
 });
 
+customElements.setElementCreationCallback("editor", type => {
+  Services.scriptloader.loadSubScript(
+    "chrome://global/content/elements/editor.js", window);
+});
+
 }

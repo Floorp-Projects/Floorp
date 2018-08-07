@@ -1033,9 +1033,11 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
         // nsIPropertyBag - xpconnect will do that work.
 
         if (iid->Equals(NS_GET_IID(nsIPropertyBag)) && jso) {
+            RootedObject jsoGlobal(cx, wrappedJS->GetJSObjectGlobal());
             RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, *iid);
             if (clasp) {
-                RootedObject answer(cx, clasp->CallQueryInterfaceOnJSObject(cx, jso, *iid));
+                RootedObject answer(cx, clasp->CallQueryInterfaceOnJSObject(cx, jso, jsoGlobal,
+                                                                            *iid));
 
                 if (!answer) {
                     aTearOff->SetInterface(nullptr);
@@ -1591,7 +1593,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     }
 
     nsresult err;
-    if (!XPCConvert::JSData2Native(&dp->val, src, type, &param_iid, 0, &err)) {
+    if (!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type, &param_iid, 0, &err)) {
         ThrowBadParam(err, i, mCallContext);
         return false;
     }
@@ -1655,7 +1657,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
 
     nsresult err;
 
-    if (!XPCConvert::JSData2Native(&dp->val, src, type,
+    if (!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
                                    &param_iid, array_count, &err)) {
         ThrowBadParam(err, i, mCallContext);
         return false;

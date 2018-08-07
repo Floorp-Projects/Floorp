@@ -677,7 +677,7 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     RootedObject aJSObj(aJSContext, aJSObjArg);
 
     nsresult rv = NS_ERROR_UNEXPECTED;
-    if (!XPCConvert::JSObject2NativeInterface(result, aJSObj,
+    if (!XPCConvert::JSObject2NativeInterface(aJSContext, result, aJSObj,
                                               &aIID, nullptr, &rv))
         return rv;
     return NS_OK;
@@ -713,7 +713,7 @@ nsXPConnect::WrapJSAggregatedToNative(nsISupports* aOuter,
 
     RootedObject aJSObj(aJSContext, aJSObjArg);
     nsresult rv;
-    if (!XPCConvert::JSObject2NativeInterface(result, aJSObj,
+    if (!XPCConvert::JSObject2NativeInterface(aJSContext, result, aJSObj,
                                               &aIID, aOuter, &rv))
         return rv;
     return NS_OK;

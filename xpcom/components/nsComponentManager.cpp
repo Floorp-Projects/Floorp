@@ -666,6 +666,15 @@ nsComponentManagerImpl::ManifestManifest(ManifestProcessingContext& aCx,
 }
 
 void
+nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& aCx,
+                                                int aLineNo,
+                                                char* const* aArgv)
+{
+  LogMessageWithContext(aCx.mFile, aLineNo,
+                        "Binary XPCOM components are no longer supported.");
+}
+
+void
 nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
                                           int aLineNo, char* const* aArgv)
 {
