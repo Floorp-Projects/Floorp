@@ -8,7 +8,6 @@
 
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
-#include "nsIScriptableRegion.h"
 #include "nsITransferable.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"

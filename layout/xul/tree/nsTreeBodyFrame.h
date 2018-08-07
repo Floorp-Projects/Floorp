@@ -28,7 +28,6 @@
 class nsFontMetrics;
 class nsOverflowChecker;
 class nsTreeImageListener;
-class nsIScriptableRegion;
 
 namespace mozilla {
 namespace layout {
@@ -90,7 +89,7 @@ public:
   int32_t RowHeight() const;
   int32_t RowWidth();
   int32_t GetHorizontalPosition() const;
-  nsresult GetSelectionRegion(nsIScriptableRegion **aRegion);
+  mozilla::Maybe<mozilla::CSSIntRegion> GetSelectionRegion();
   int32_t FirstVisibleRow() const { return mTopRowIndex; }
   int32_t LastVisibleRow() const { return mTopRowIndex + mPageLength; }
   int32_t PageLength() const { return mPageLength; }
