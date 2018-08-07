@@ -103,7 +103,7 @@ fn render_blob(
 
     Ok(RasterizedBlobImage {
         data: Arc::new(texels),
-        size: descriptor.size,
+        rasterized_rect: dirty_rect,
     })
 }
 

@@ -37,7 +37,7 @@ pub struct GpuProfileTag {
     pub label: &'static str,
     pub color: ColorF,
 }
- 
+
 impl NamedTag for GpuProfileTag {
     fn get_label(&self) -> &str {
         self.label
@@ -457,6 +457,7 @@ pub struct RendererProfileCounters {
     pub vao_count_and_size: ResourceProfileCounter,
     pub color_targets: IntProfileCounter,
     pub alpha_targets: IntProfileCounter,
+    pub texture_data_uploaded: IntProfileCounter,
 }
 
 pub struct RendererProfileTimers {
@@ -475,6 +476,7 @@ impl RendererProfileCounters {
             vao_count_and_size: ResourceProfileCounter::new("VAO"),
             color_targets: IntProfileCounter::new("Color Targets"),
             alpha_targets: IntProfileCounter::new("Alpha Targets"),
+            texture_data_uploaded: IntProfileCounter::new("Texture data, kb"),
         }
     }
 
@@ -483,6 +485,7 @@ impl RendererProfileCounters {
         self.vertices.reset();
         self.color_targets.reset();
         self.alpha_targets.reset();
+        self.texture_data_uploaded.reset();
     }
 }
 
@@ -792,7 +795,6 @@ pub struct Profiler {
 
 #[cfg(feature = "debug_renderer")]
 impl Profiler {
-
     pub fn new() -> Self {
         Profiler {
             draw_state: DrawState {
@@ -1021,6 +1023,7 @@ impl Profiler {
                 &renderer_profile.alpha_targets,
                 &renderer_profile.draw_calls,
                 &renderer_profile.vertices,
+                &renderer_profile.texture_data_uploaded,
                 &self.backend_time,
                 &self.compositor_time,
                 &self.gpu_time,
@@ -1047,6 +1050,7 @@ impl Profiler {
                 &renderer_profile.frame_counter,
                 &renderer_profile.color_targets,
                 &renderer_profile.alpha_targets,
+                &renderer_profile.texture_data_uploaded,
             ],
             debug_renderer,
             true,
