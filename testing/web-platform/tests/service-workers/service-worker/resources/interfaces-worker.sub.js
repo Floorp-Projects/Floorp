@@ -93,3 +93,7 @@ test(function() {
 test(() => {
     assert_false('XMLHttpRequest' in self);
   }, 'xhr is not exposed');
+
+test(() => {
+    assert_false('createObjectURL' in self.URL);
+  }, 'URL.createObjectURL is not exposed')

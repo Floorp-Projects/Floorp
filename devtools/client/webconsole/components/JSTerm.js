@@ -349,7 +349,7 @@ class JSTerm extends Component {
           }
         });
 
-        this.editor.on("change", this._inputEventHandler);
+        this.editor.on("changes", this._inputEventHandler);
         this.editor.appendToLocalElement(this.node);
         const cm = this.editor.codeMirror;
         cm.on("paste", (_, event) => this.props.onPaste(event));

@@ -1531,7 +1531,7 @@ Search.prototype = {
 
   async _matchPlacesKeyword() {
     // The first word could be a keyword, so that's what we'll search.
-    let keyword = this._searchTokens[0];
+    let keyword = this._strippedPrefix + this._searchTokens[0];
     let entry = await PlacesUtils.keywords.fetch(keyword);
     if (!entry)
       return false;

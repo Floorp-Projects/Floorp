@@ -10,6 +10,7 @@
 #include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
+#include "WebGLTexture.h"
 
 namespace mozilla {
 
@@ -21,11 +22,20 @@ class WebGLSampler final
     friend class WebGLContext2;
     friend class WebGLTexture;
 
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSampler)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSampler)
+
 public:
-    WebGLSampler(WebGLContext* webgl, GLuint sampler);
-
     const GLuint mGLName;
+private:
+    webgl::SamplingState mState;
 
+public:
+    explicit WebGLSampler(WebGLContext* webgl);
+private:
+    ~WebGLSampler();
+
+public:
     void Delete();
     WebGLContext* GetParentObject() const;
 
@@ -33,22 +43,7 @@ public:
 
     void SamplerParameter(const char* funcName, GLenum pname, const FloatOrInt& param);
 
-private:
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSampler)
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSampler)
-
-    TexMinFilter mMinFilter;
-    TexMagFilter mMagFilter;
-    TexWrap mWrapS;
-    TexWrap mWrapT;
-    TexWrap mWrapR;
-    GLfloat mMinLod;
-    GLfloat mMaxLod;
-    TexCompareMode mCompareMode;
-    TexCompareFunc mCompareFunc;
-
-private:
-    ~WebGLSampler();
+    const auto& State() const { return mState; }
 };
 
 } // namespace mozilla

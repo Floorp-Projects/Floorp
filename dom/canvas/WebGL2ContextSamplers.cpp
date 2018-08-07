@@ -15,10 +15,7 @@ WebGL2Context::CreateSampler()
     if (IsContextLost())
         return nullptr;
 
-    GLuint sampler;
-    gl->fGenSamplers(1, &sampler);
-
-    RefPtr<WebGLSampler> globj = new WebGLSampler(this, sampler);
+    RefPtr<WebGLSampler> globj = new WebGLSampler(this);
     return globj.forget();
 }
 

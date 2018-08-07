@@ -804,6 +804,10 @@
   box-shadow: inset -4px 0 var(--blue-40);
 }
 
+.all-tabs-item[selected] > .all-tabs-button {
+  font-weight: bold;
+}
+
 .all-tabs-button {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
