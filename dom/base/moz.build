@@ -299,6 +299,7 @@ UNIFIED_SOURCES += [
     'nsContentPermissionHelper.cpp',
     'nsContentPolicy.cpp',
     'nsContentSink.cpp',
+    'nsContentTypeParser.cpp',
     'nsCopySupport.cpp',
     'nsDataDocumentContentPolicy.cpp',
     'nsDocument.cpp',
