@@ -8,6 +8,7 @@
 
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
+#include "nsIScriptableRegion.h"
 #include "nsITransferable.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
@@ -196,6 +197,9 @@ protected:
   uint16_t mInputSource;
 
   nsTArray<RefPtr<mozilla::dom::ContentParent>> mChildProcesses;
+
+  // Sub-region for tree-selections.
+  nsCOMPtr<nsIScriptableRegion> mRegion;
 };
 
 #endif // nsBaseDragService_h__
