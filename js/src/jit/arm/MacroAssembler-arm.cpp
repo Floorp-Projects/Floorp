@@ -6332,12 +6332,7 @@ MacroAssemblerARM::wasmUnalignedLoadImpl(const wasm::MemoryAccessDesc& access, R
                                          Register tmp3)
 {
     MOZ_ASSERT(ptr == ptrScratch);
-    MOZ_ASSERT_IF(access.type() != Scalar::Float32 && access.type() != Scalar::Float64,
-                  tmp2 == Register::Invalid() && tmp3 == Register::Invalid());
-    MOZ_ASSERT_IF(access.type() == Scalar::Float32,
-                  tmp2 != Register::Invalid() && tmp3 == Register::Invalid());
-    MOZ_ASSERT_IF(access.type() == Scalar::Float64,
-                  tmp2 != Register::Invalid() && tmp3 != Register::Invalid());
+    MOZ_ASSERT(tmp != ptr);
 
     uint32_t offset = access.offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
@@ -6351,49 +6346,64 @@ MacroAssemblerARM::wasmUnalignedLoadImpl(const wasm::MemoryAccessDesc& access, R
     ma_add(memoryBase, ptr);
 
     unsigned byteSize = access.byteSize();
+    MOZ_ASSERT(byteSize == 8 || byteSize == 4 || byteSize == 2);
+
     Scalar::Type type = access.type();
-    bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32 ||
-                    type == Scalar::Int64;
+    bool isSigned = type == Scalar::Int16 || type == Scalar::Int32 || type == Scalar::Int64;
 
-    Register low;
-    if (out64 != Register64::Invalid())
-        low = out64.low;
-    else if (outAny.isFloat())
-        low = tmp2;
-    else
-        low = outAny.gpr();
-
-    MOZ_ASSERT(low != tmp);
-    MOZ_ASSERT(low != ptr);
+    // If it's a two-word load we must load the high word first to get signal
+    // handling right.
 
     asMasm().memoryBarrierBefore(access.sync());
 
-    emitUnalignedLoad(isSigned, Min(byteSize, 4u), ptr, tmp, low);
-
-    if (out64 != Register64::Invalid()) {
-        if (type == Scalar::Int64) {
-            MOZ_ASSERT(byteSize == 8);
-            emitUnalignedLoad(isSigned, 4, ptr, tmp, out64.high, /* offset */ 4);
-        } else {
-            MOZ_ASSERT(byteSize <= 4);
-            // Propagate sign.
+    switch (access.type()) {
+      case Scalar::Float32: {
+        MOZ_ASSERT(byteSize == 4);
+        MOZ_ASSERT(tmp2 != Register::Invalid() && tmp3 == Register::Invalid());
+        MOZ_ASSERT(outAny.fpu().isSingle());
+        emitUnalignedLoad(&access, /*signed*/false, /*size*/4, ptr, tmp, tmp2);
+        ma_vxfer(tmp2, outAny.fpu());
+        break;
+      }
+      case Scalar::Float64: {
+        MOZ_ASSERT(byteSize == 8);
+        MOZ_ASSERT(tmp2 != Register::Invalid() && tmp3 != Register::Invalid());
+        MOZ_ASSERT(outAny.fpu().isDouble());
+        emitUnalignedLoad(&access, /*signed=*/false, /*size=*/4, ptr, tmp, tmp3, /*offset=*/4);
+        emitUnalignedLoad(nullptr, /*signed=*/false, /*size=*/4, ptr, tmp, tmp2);
+        ma_vxfer(tmp2, tmp3, outAny.fpu());
+        break;
+      }
+      case Scalar::Int64: {
+        MOZ_ASSERT(byteSize == 8);
+        MOZ_ASSERT(tmp2 == Register::Invalid() && tmp3 == Register::Invalid());
+        MOZ_ASSERT(out64.high != ptr);
+        emitUnalignedLoad(&access, /*signed=*/false, /*size=*/4, ptr, tmp, out64.high, /*offset=*/4);
+        emitUnalignedLoad(nullptr, /*signed=*/false, /*size=*/4, ptr, tmp, out64.low);
+        break;
+      }
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32: {
+        MOZ_ASSERT(byteSize <= 4);
+        MOZ_ASSERT(tmp2 == Register::Invalid() && tmp3 == Register::Invalid());
+        if (out64 != Register64::Invalid()) {
+            emitUnalignedLoad(&access, isSigned, byteSize, ptr, tmp, out64.low);
             if (isSigned)
                 ma_asr(Imm32(31), out64.low, out64.high);
             else
                 ma_mov(Imm32(0), out64.high);
-        }
-    } else if (outAny.isFloat()) {
-        FloatRegister output = outAny.fpu();
-        if (byteSize == 4) {
-            MOZ_ASSERT(output.isSingle());
-            ma_vxfer(low, output);
         } else {
-            MOZ_ASSERT(byteSize == 8);
-            MOZ_ASSERT(output.isDouble());
-            Register high = tmp3;
-            emitUnalignedLoad(/* signed */ false, 4, ptr, tmp, high, /* offset */ 4);
-            ma_vxfer(low, high, output);
+            emitUnalignedLoad(&access, isSigned, byteSize, ptr, tmp, outAny.gpr());
         }
+        break;
+      }
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      default: {
+        MOZ_CRASH("Bad type");
+      }
     }
 
     asMasm().memoryBarrierAfter(access.sync());
@@ -6402,17 +6412,19 @@ MacroAssemblerARM::wasmUnalignedLoadImpl(const wasm::MemoryAccessDesc& access, R
 void
 MacroAssemblerARM::wasmUnalignedStoreImpl(const wasm::MemoryAccessDesc& access, FloatRegister floatValue,
                                           Register64 val64, Register memoryBase, Register ptr,
-                                          Register ptrScratch, Register tmp)
+                                          Register ptrScratch, Register valOrTmp)
 {
     MOZ_ASSERT(ptr == ptrScratch);
     // They can't both be valid, but they can both be invalid.
-    MOZ_ASSERT_IF(!floatValue.isInvalid(), val64 == Register64::Invalid());
-    MOZ_ASSERT_IF(val64 != Register64::Invalid(), floatValue.isInvalid());
+    MOZ_ASSERT(floatValue.isInvalid() || val64 == Register64::Invalid());
+    // Don't try extremely clever optimizations.
+    MOZ_ASSERT_IF(val64 != Register64::Invalid(), valOrTmp != val64.high && valOrTmp != val64.low);
 
     uint32_t offset = access.offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     unsigned byteSize = access.byteSize();
+    MOZ_ASSERT(byteSize == 8 || byteSize == 4 || byteSize == 2);
 
     if (offset) {
         ScratchRegisterScope scratch(asMasm());
@@ -6424,66 +6436,115 @@ MacroAssemblerARM::wasmUnalignedStoreImpl(const wasm::MemoryAccessDesc& access, 
 
     asMasm().memoryBarrierAfter(access.sync());
 
+    // If it's a two-word store we must store the high word first to get signal
+    // handling right.
+
     if (val64 != Register64::Invalid()) {
-        if (val64.low != tmp)
-            ma_mov(val64.low, tmp);
+        MOZ_ASSERT(byteSize == 8);
+        emitUnalignedStore(&access, /*size=*/4, ptr, val64.high, /*offset=*/4);
+        emitUnalignedStore(nullptr, /*size=*/4, ptr, val64.low);
     } else if (!floatValue.isInvalid()) {
-        ma_vxfer(floatValue, tmp);
-    }
-    // Otherwise, tmp has the integer value to store.
-
-    emitUnalignedStore(Min(byteSize, 4u), ptr, tmp);
-
-    if (byteSize > 4) {
-        if (val64 != Register64::Invalid()) {
-            if (val64.high != tmp)
-                ma_mov(val64.high, tmp);
-        } else {
-            MOZ_ASSERT(!floatValue.isInvalid());
-            MOZ_ASSERT(floatValue.isDouble());
+        if (floatValue.isDouble()) {
+            MOZ_ASSERT(byteSize == 8);
             ScratchRegisterScope scratch(asMasm());
-            ma_vxfer(floatValue, scratch, tmp);
+            ma_vxfer(floatValue, scratch, valOrTmp);
+            emitUnalignedStore(&access, /*size=*/4, ptr, valOrTmp, /*offset=*/4);
+            emitUnalignedStore(nullptr, /*size=*/4, ptr, scratch);
+        } else {
+            MOZ_ASSERT(byteSize == 4);
+            ma_vxfer(floatValue, valOrTmp);
+            emitUnalignedStore(&access, /*size=*/4, ptr, valOrTmp);
         }
-        emitUnalignedStore(4, ptr, tmp, /* offset */ 4);
+    } else {
+        MOZ_ASSERT(byteSize == 2 || byteSize == 4);
+        emitUnalignedStore(&access, byteSize, ptr, valOrTmp);
     }
 
     asMasm().memoryBarrierAfter(access.sync());
 }
 
 void
-MacroAssemblerARM::emitUnalignedLoad(bool isSigned, unsigned byteSize, Register ptr,
+MacroAssemblerARM::emitUnalignedLoad(const wasm::MemoryAccessDesc* access,
+                                     bool isSigned, unsigned byteSize, Register ptr,
                                      Register tmp, Register dest, unsigned offset)
 {
     // Preconditions.
     MOZ_ASSERT(ptr != tmp);
     MOZ_ASSERT(ptr != dest);
     MOZ_ASSERT(tmp != dest);
-    MOZ_ASSERT(byteSize <= 4);
+    MOZ_ASSERT(byteSize == 2 || byteSize == 4);
+    MOZ_ASSERT(offset == 0 || offset == 4);
+
+    // The trap metadata is only valid for the first instruction, so we must
+    // make the first instruction fault if any of them is going to fault.  Hence
+    // byte loads must be issued from high addresses toward low addresses (or we
+    // must emit metadata for each load).
+    //
+    // So for a four-byte load from address x we will emit an eight-instruction
+    // sequence:
+    //
+    //   ldrsb [x+3], tmp           // note signed load *if appropriate*
+    //   lsl dest, tmp lsl 24       // move high byte + sign bits into place; clear low bits
+    //   ldrb [x+2], tmp            // note unsigned load
+    //   or dest, dest, tmp lsl 16  // add another byte
+    //   ldrb [x+1], tmp            // ...
+    //   or dest, dest, tmp lsl 8
+    //   ldrb [x], tmp
+    //   or dest, dest, tmp
 
     ScratchRegisterScope scratch(asMasm());
 
-    for (unsigned i = 0; i < byteSize; i++) {
-        // Only the last byte load shall be signed, if needed.
-        bool signedByteLoad = isSigned && (i == byteSize - 1);
-        ma_dataTransferN(IsLoad, 8, signedByteLoad, ptr, Imm32(offset + i), i ? tmp : dest, scratch);
-        if (i)
-            as_orr(dest, dest, lsl(tmp, 8 * i));
+    int i = byteSize - 1;
+
+    BufferOffset load = ma_dataTransferN(IsLoad, 8, isSigned, ptr, Imm32(offset + i), tmp, scratch);
+    if (access)
+        append(*access, load.getOffset());
+    ma_lsl(Imm32(8 * i), tmp, dest);
+    --i;
+
+    while (i >= 0) {
+        ma_dataTransferN(IsLoad, 8, /*signed=*/false, ptr, Imm32(offset + i), tmp, scratch);
+        as_orr(dest, dest, lsl(tmp, 8 * i));
+        --i;
     }
 }
 
 void
-MacroAssemblerARM::emitUnalignedStore(unsigned byteSize, Register ptr, Register val,
+MacroAssemblerARM::emitUnalignedStore(const wasm::MemoryAccessDesc* access,
+                                      unsigned byteSize, Register ptr, Register val,
                                       unsigned offset)
 {
     // Preconditions.
     MOZ_ASSERT(ptr != val);
-    MOZ_ASSERT(byteSize <= 4);
+    MOZ_ASSERT(byteSize == 2 || byteSize == 4);
+    MOZ_ASSERT(offset == 0 || offset == 4);
 
-    ScratchRegisterScope scratch(asMasm());
+    // See comments above.  Here an additional motivation is that no side
+    // effects should be observed if any of the stores would fault, so we *must*
+    // go high-to-low, we can't emit metadata for individual stores in
+    // low-to-high order.
+    //
+    // For a four-byte store to address x we will emit a seven-instruction
+    // sequence:
+    //
+    //   lsr  scratch, val, 24
+    //   strb [x+3], scratch
+    //   lsr  scratch, val, 16
+    //   strb [x+2], scratch
+    //   lsr  scratch, val, 8
+    //   strb [x+1], scratch
+    //   strb [x], val
 
-    for (unsigned i = 0; i < byteSize; i++) {
-        ma_dataTransferN(IsStore, 8 /* bits */, /* signed */ false, ptr, Imm32(offset + i), val, scratch);
-        if (i < byteSize - 1)
-            ma_lsr(Imm32(8), val, val);
+    // `val` may be scratch in the case when we store doubles.
+    SecondScratchRegisterScope scratch(asMasm());
+
+    for (int i = byteSize - 1; i > 0; i--) {
+        ma_lsr(Imm32(i * 8), val, scratch);
+        // Use as_dtr directly to avoid needing another scratch register; we can
+        // do this because `offset` is known to be small.
+        BufferOffset store = as_dtr(IsStore, 8, Offset, scratch, DTRAddr(ptr, DtrOffImm(offset + i)));
+        if (i == (int)byteSize - 1 && access)
+            append(*access, store.getOffset());
     }
+    as_dtr(IsStore, 8, Offset, val, DTRAddr(ptr, DtrOffImm(offset)));
 }
