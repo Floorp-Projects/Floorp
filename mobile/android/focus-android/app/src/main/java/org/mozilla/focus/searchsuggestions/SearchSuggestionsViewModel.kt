@@ -18,14 +18,14 @@ import android.text.style.StyleSpan
 import mozilla.components.browser.search.SearchEngine
 
 sealed class State {
-    data class Disabled(val givePrompt: Boolean): State()
-    data class NoSuggestionsAPI(val givePrompt: Boolean): State()
-    class ReadyForSuggestions: State()
+    data class Disabled(val givePrompt: Boolean) : State()
+    data class NoSuggestionsAPI(val givePrompt: Boolean) : State()
+    class ReadyForSuggestions : State()
 }
 
 class SearchSuggestionsViewModel(
-        private val service: SearchSuggestionsService,
-        private val searchSuggestionsPreferences: SearchSuggestionsPreferences
+    private val service: SearchSuggestionsService,
+    private val searchSuggestionsPreferences: SearchSuggestionsPreferences
 ) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
     val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
@@ -118,4 +118,3 @@ class SearchSuggestionsViewModel(
         }
     }
 }
-

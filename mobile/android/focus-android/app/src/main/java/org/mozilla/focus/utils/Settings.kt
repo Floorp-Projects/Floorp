@@ -15,7 +15,6 @@ import org.mozilla.focus.web.GeckoWebViewProvider
 
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
 
-
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */

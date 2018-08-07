@@ -138,7 +138,9 @@ class UrlInputFragment :
         super.onCreate(savedInstanceState)
 
         model = ViewModelProviders.of(activity!!).get(MainViewModel::class.java)
-        searchSuggestionsViewModel = ViewModelProviders.of(activity!!, SearchSuggestionsViewModel.Factory(activity!!)).get(SearchSuggestionsViewModel::class.java)
+        searchSuggestionsViewModel = ViewModelProviders
+                .of(activity!!, SearchSuggestionsViewModel.Factory(activity!!))
+                .get(SearchSuggestionsViewModel::class.java)
 
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let {

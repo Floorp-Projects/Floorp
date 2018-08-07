@@ -31,7 +31,6 @@ import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
-import org.mozilla.focus.utils.SupportUtils
 
 class SearchSuggestionsFragment : Fragment() {
     private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
@@ -60,20 +59,37 @@ class SearchSuggestionsFragment : Fragment() {
             suggestionList.visibility = View.GONE
 
             when (state) {
-                is State.ReadyForSuggestions -> suggestionList.visibility = View.VISIBLE
-                is State.NoSuggestionsAPI -> no_suggestions_container.visibility = if (state.givePrompt) View.VISIBLE else View.GONE
-                is State.Disabled -> enable_search_suggestions_container.visibility = if (state.givePrompt) View.VISIBLE else View.GONE
+                is State.ReadyForSuggestions ->
+                    suggestionList.visibility = View.VISIBLE
+                is State.NoSuggestionsAPI ->
+                    no_suggestions_container.visibility = if (state.givePrompt) {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
+                is State.Disabled ->
+                    enable_search_suggestions_container.visibility = if (state.givePrompt) {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
             }
         })
 
         searchSuggestionsViewModel.searchEngine.observe(this, Observer { searchEngine ->
-            val icon = searchEngine?.icon?.let { BitmapDrawable(resources, it) } ?: resources.getDrawable(R.drawable.ic_search, null)
+            val icon = searchEngine?.icon?.let {
+                BitmapDrawable(resources, it)
+            } ?: resources.getDrawable(R.drawable.ic_search, null)
+
             searchView.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
         })
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? = inflater.inflate(R.layout.fragment_search_suggestions, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? = inflater.inflate(R.layout.fragment_search_suggestions, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -128,7 +144,8 @@ class SearchSuggestionsFragment : Fragment() {
         }
 
         spannable.setSpan(learnMoreSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        val color = ForegroundColorSpan(ContextCompat.getColor(context!!, R.color.searchSuggestionPromptButtonTextColor))
+        val color = ForegroundColorSpan(
+                ContextCompat.getColor(context!!, R.color.searchSuggestionPromptButtonTextColor))
         spannable.setSpan(color, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         return spannable
@@ -138,7 +155,9 @@ class SearchSuggestionsFragment : Fragment() {
         fun create() = SearchSuggestionsFragment()
     }
 
-    inner class SuggestionsAdapter(private val clickListener: (String) -> Unit): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class SuggestionsAdapter(
+        private val clickListener: (String) -> Unit
+    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private var suggestions: List<SpannableStringBuilder> = listOf()
 
         fun refresh(suggestions: List<SpannableStringBuilder>) {
@@ -159,16 +178,20 @@ class SearchSuggestionsFragment : Fragment() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            return SuggestionViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false), clickListener)
+            return SuggestionViewHolder(
+                    LayoutInflater.from(parent.context).inflate(viewType, parent, false),
+                    clickListener)
         }
     }
 }
 
-
 /**
  * ViewHolder implementation for a suggestion item in the list.
  */
-private class SuggestionViewHolder(itemView: View, private val clickListener: (String) -> Unit) : RecyclerView.ViewHolder(itemView) {
+private class SuggestionViewHolder(
+    itemView: View,
+    private val clickListener: (String) -> Unit
+) : RecyclerView.ViewHolder(itemView) {
     companion object {
         const val LAYOUT_ID = R.layout.item_suggestion
     }
