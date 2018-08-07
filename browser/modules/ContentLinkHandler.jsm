@@ -294,11 +294,10 @@ function guessType(icon) {
 /*
  * Selects the best rich icon and tab icon from a list of IconInfo objects.
  *
- * @param {Document} document The document to select icons for.
  * @param {Array} iconInfos A list of IconInfo objects.
  * @param {integer} preferredWidth The preferred width for tab icons.
  */
-function selectIcons(document, iconInfos, preferredWidth) {
+function selectIcons(iconInfos, preferredWidth) {
   if (iconInfos.length == 0) {
     return {
       richIcon: null,
@@ -450,6 +449,7 @@ class ContentLinkHandler {
     chromeGlobal.addEventListener("DOMLinkChanged", this);
     chromeGlobal.addEventListener("pageshow", this);
     chromeGlobal.addEventListener("pagehide", this);
+    chromeGlobal.addEventListener("DOMHeadElementParsed", this);
 
     // For every page we attempt to find a rich icon and a tab icon. These
     // objects take care of the load process for each.
@@ -461,8 +461,7 @@ class ContentLinkHandler {
 
   loadIcons() {
     let preferredWidth = PREFERRED_WIDTH * Math.ceil(this.chromeGlobal.content.devicePixelRatio);
-    let { richIcon, tabIcon } = selectIcons(this.chromeGlobal.content.document,
-                                            this.iconInfos, preferredWidth);
+    let { richIcon, tabIcon } = selectIcons(this.iconInfos, preferredWidth);
     this.iconInfos = [];
 
     if (richIcon) {
@@ -486,31 +485,61 @@ class ContentLinkHandler {
     this.iconTask.arm();
   }
 
-  onPageShow(event) {
-    if (event.target != this.chromeGlobal.content.document) {
+  addRootIcon(document) {
+    // If we've already seen a tab icon or if root favicons are disabled then
+    // bail out.
+    if (this.seenTabIcon || !Services.prefs.getBoolPref("browser.chrome.guess_favicon", true)) {
       return;
     }
 
-    if (!this.seenTabIcon && Services.prefs.getBoolPref("browser.chrome.guess_favicon", true)) {
-      // Currently ImageDocuments will just load the default favicon, see bug
-      // 403651 for discussion.
+    // Currently ImageDocuments will just load the default favicon, see bug
+    // 403651 for discussion.
 
-      // Inject the default icon. Use documentURIObject so that we do the right
-      // thing with about:-style error pages. See bug 453442
-      let baseURI = this.chromeGlobal.content.document.documentURIObject;
-      if (baseURI.schemeIs("http") || baseURI.schemeIs("https")) {
-        let iconUri = baseURI.mutate().setPathQueryRef("/favicon.ico").finalize();
-        this.addIcon({
-          iconUri,
-          width: -1,
-          isRichIcon: false,
-          type: TYPE_ICO,
-          node: this.chromeGlobal.content.document,
-        });
-      }
+    // Inject the default icon. Use documentURIObject so that we do the right
+    // thing with about:-style error pages. See bug 453442
+    let baseURI = document.documentURIObject;
+    if (baseURI.schemeIs("http") || baseURI.schemeIs("https")) {
+      let iconUri = baseURI.mutate().setPathQueryRef("/favicon.ico").finalize();
+      this.addIcon({
+        iconUri,
+        width: -1,
+        isRichIcon: false,
+        type: TYPE_ICO,
+        node: document,
+      });
+    }
+  }
+
+  onHeadParsed(event) {
+    let document = this.chromeGlobal.content.document;
+    if (event.target.ownerDocument != document) {
+      return;
     }
 
+    // Per spec icons are meant to be in the <head> tag so we should have seen
+    // all the icons now so add the root icon if no other tab icons have been
+    // seen.
+    this.addRootIcon(document);
+
     // We're likely done with icon parsing so load the pending icons now.
+    if (this.iconTask.isArmed) {
+      this.iconTask.disarm();
+      this.loadIcons();
+    }
+  }
+
+  onPageShow(event) {
+    let document = this.chromeGlobal.content.document;
+    if (event.target != document) {
+      return;
+    }
+
+    // Add the root icon if it hasn't already been added. We encounter this case
+    // for documents that do not have a <head> tag.
+    this.addRootIcon(document);
+
+    // If we've seen any additional icons since the start of the body element
+    // load them now.
     if (this.iconTask.isArmed) {
       this.iconTask.disarm();
       this.loadIcons();
@@ -617,6 +646,9 @@ class ContentLinkHandler {
         break;
       case "pagehide":
         this.onPageHide(event);
+        break;
+      case "DOMHeadElementParsed":
+        this.onHeadParsed(event);
         break;
       default:
         this.onLinkEvent(event);
