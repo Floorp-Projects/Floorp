@@ -56,6 +56,16 @@ public:
   MOZ_ALWAYS_INLINE T& Right() { return right; }
   MOZ_ALWAYS_INLINE T& Top() { return top; }
   MOZ_ALWAYS_INLINE T& Bottom() { return bottom; }
+  T Area() const { return Width() * Height(); }
+
+  void Inflate(T aD) { Inflate(aD, aD); }
+  void Inflate(T aDx, T aDy)
+  {
+    left -= aDx;
+    top -= aDy;
+    right += aDx;
+    bottom += aDy;
+  }
 
   MOZ_ALWAYS_INLINE void SetBox(T aLeft, T aTop, T aRight, T aBottom)
   {
@@ -80,7 +90,9 @@ public:
 
   static Sub FromRect(const Rect& aRect)
   {
-    MOZ_ASSERT(!aRect.Overflows());
+    if (aRect.Overflows()) {
+      return Sub();
+    }
     return Sub(aRect.x, aRect.y, aRect.XMost(), aRect.YMost());
   }
 
@@ -91,6 +103,9 @@ public:
     result.top = std::max<T>(top, aOther.top);
     result.right = std::min<T>(right, aOther.right);
     result.bottom = std::min<T>(bottom, aOther.bottom);
+    if (result.right < result.left || result.bottom < result.top) {
+      result.SizeTo(0, 0);
+    }
     return result;
   }
 
@@ -103,6 +118,137 @@ public:
     return left == aOther.left && top == aOther.top &&
            right == aOther.right && bottom == aOther.bottom;
   }
+
+  bool IsEqualInterior(const Sub& aRect) const
+  {
+    return IsEqualEdges(aRect) || (IsEmpty() && aRect.IsEmpty());
+  }
+
+  MOZ_ALWAYS_INLINE void MoveBy(T aDx, T aDy) { left += aDx; right += aDx; top += aDy; bottom += aDy; }
+  MOZ_ALWAYS_INLINE void MoveBy(const Point& aPoint) { left += aPoint.x; right += aPoint.x; top += aPoint.y; bottom += aPoint.y; }
+  MOZ_ALWAYS_INLINE void SizeTo(T aWidth, T aHeight) { right = left + aWidth; bottom = top + aHeight; }
+
+  bool Contains(const Sub& aRect) const
+  {
+    return aRect.IsEmpty() ||
+      (left <= aRect.left && aRect.right <= right &&
+       top <= aRect.top && aRect.bottom <= bottom);
+  }
+  bool Contains(T aX, T aY) const
+  {
+    return (left <= aX && aX < right &&
+            top <= aY && aY < bottom);
+  }
+
+  bool Intersects(const Sub& aRect) const
+  {
+    return !IsEmpty() && !aRect.IsEmpty() &&
+      left < aRect.right && aRect.left < right &&
+      top < aRect.bottom && aRect.top < bottom;
+  }
+
+  void SetEmpty() {
+    left = right = top = bottom = 0;
+  }
+
+  // Returns the smallest rectangle that contains both the area of both
+  // this and aRect2.
+  // Thus, empty input rectangles are ignored.
+  // If both rectangles are empty, returns this.
+  // WARNING! This is not safe against overflow, prefer using SafeUnion instead
+  // when dealing with int-based rects.
+  MOZ_MUST_USE Sub Union(const Sub& aRect) const
+  {
+    if (IsEmpty()) {
+      return aRect;
+    } else if (aRect.IsEmpty()) {
+      return *static_cast<const Sub*>(this);
+    } else {
+      return UnionEdges(aRect);
+    }
+  }
+  // Returns the smallest rectangle that contains both the points (including
+  // edges) of both aRect1 and aRect2.
+  // Thus, empty input rectangles are allowed to affect the result.
+  // WARNING! This is not safe against overflow, prefer using SafeUnionEdges
+  // instead when dealing with int-based rects.
+  MOZ_MUST_USE Sub UnionEdges(const Sub& aRect) const
+  {
+    Sub result;
+    result.left = std::min(left, aRect.left);
+    result.top = std::min(top, aRect.top);
+    result.right = std::max(XMost(), aRect.XMost());
+    result.bottom = std::max(YMost(), aRect.YMost());
+    return result;
+  }
+
+  // Scale 'this' by aScale without doing any rounding.
+  void Scale(T aScale) { Scale(aScale, aScale); }
+  // Scale 'this' by aXScale and aYScale, without doing any rounding.
+  void Scale(T aXScale, T aYScale)
+  {
+    right = XMost() * aXScale;
+    bottom = YMost() * aYScale;
+    left = left * aXScale;
+    top = top * aYScale;
+  }
+  // Scale 'this' by aScale, converting coordinates to integers so that the result is
+  // the smallest integer-coordinate rectangle containing the unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
+  void ScaleRoundOut(double aScale) { ScaleRoundOut(aScale, aScale); }
+  // Scale 'this' by aXScale and aYScale, converting coordinates to integers so
+  // that the result is the smallest integer-coordinate rectangle containing the
+  // unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
+  void ScaleRoundOut(double aXScale, double aYScale)
+  {
+    right = static_cast<T>(ceil(double(XMost()) * aXScale));
+    bottom = static_cast<T>(ceil(double(YMost()) * aYScale));
+    left = static_cast<T>(floor(double(left) * aXScale));
+    top = static_cast<T>(floor(double(top) * aYScale));
+  }
+  // Scale 'this' by aScale, converting coordinates to integers so that the result is
+  // the largest integer-coordinate rectangle contained by the unrounded result.
+  void ScaleRoundIn(double aScale) { ScaleRoundIn(aScale, aScale); }
+  // Scale 'this' by aXScale and aYScale, converting coordinates to integers so
+  // that the result is the largest integer-coordinate rectangle contained by the
+  // unrounded result.
+  void ScaleRoundIn(double aXScale, double aYScale)
+  {
+    right = static_cast<T>(floor(double(XMost()) * aXScale));
+    bottom = static_cast<T>(floor(double(YMost()) * aYScale));
+    left = static_cast<T>(ceil(double(left) * aXScale));
+    top = static_cast<T>(ceil(double(top) * aYScale));
+  }
+  // Scale 'this' by 1/aScale, converting coordinates to integers so that the result is
+  // the smallest integer-coordinate rectangle containing the unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
+  void ScaleInverseRoundOut(double aScale) { ScaleInverseRoundOut(aScale, aScale); }
+  // Scale 'this' by 1/aXScale and 1/aYScale, converting coordinates to integers so
+  // that the result is the smallest integer-coordinate rectangle containing the
+  // unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
+  void ScaleInverseRoundOut(double aXScale, double aYScale)
+  {
+    right = static_cast<T>(ceil(double(XMost()) / aXScale));
+    bottom = static_cast<T>(ceil(double(YMost()) / aYScale));
+    left = static_cast<T>(floor(double(left) / aXScale));
+    top = static_cast<T>(floor(double(top) / aYScale));
+  }
+  // Scale 'this' by 1/aScale, converting coordinates to integers so that the result is
+  // the largest integer-coordinate rectangle contained by the unrounded result.
+  void ScaleInverseRoundIn(double aScale) { ScaleInverseRoundIn(aScale, aScale); }
+  // Scale 'this' by 1/aXScale and 1/aYScale, converting coordinates to integers so
+  // that the result is the largest integer-coordinate rectangle contained by the
+  // unrounded result.
+  void ScaleInverseRoundIn(double aXScale, double aYScale)
+  {
+    right = static_cast<T>(floor(double(XMost()) / aXScale));
+    bottom = static_cast<T>(floor(double(YMost()) / aYScale));
+    left = static_cast<T>(ceil(double(left) / aXScale));
+    top = static_cast<T>(ceil(double(top) / aYScale));
+  }
+
 };
 
 template <class Units>

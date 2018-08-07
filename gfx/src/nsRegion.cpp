@@ -63,7 +63,7 @@ nsRegion::AssertStateInternal() const
     }
   }
 
-  if (!(mBounds == CalculateBounds())) {
+  if (!(mBounds.IsEqualEdges(CalculateBounds()))) {
     failed = true;
   }
 
@@ -89,7 +89,7 @@ bool nsRegion::Contains(const nsRegion& aRgn) const
   return true;
 }
 
-bool nsRegion::Intersects(const nsRect& aRect) const
+bool nsRegion::Intersects(const nsRectAbsolute& aRect) const
 {
   if (mBands.IsEmpty()) {
     return mBounds.Intersects(aRect);
@@ -130,7 +130,7 @@ void nsRegion::Inflate(const nsMargin& aMargin)
 {
   nsRegion newRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+    nsRectAbsolute rect = iter.GetAbsolute();
     rect.Inflate(aMargin);
     newRegion.AddRect(rect);
   }
@@ -489,7 +489,7 @@ nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
 
   nsRegion newRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+    nsRectAbsolute rect = iter.GetAbsolute();
     rect.ScaleRoundOut(aXScale, aYScale);
     newRegion.AddRect(rect);
   }
@@ -502,7 +502,7 @@ nsRegion& nsRegion::ScaleInverseRoundOut (float aXScale, float aYScale)
 {
   nsRegion newRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+    nsRectAbsolute rect = iter.GetAbsolute();
     rect.ScaleInverseRoundOut(aXScale, aYScale);
     newRegion.AddRect(rect);
   }
@@ -535,7 +535,7 @@ nsRegion& nsRegion::Transform (const mozilla::gfx::Matrix4x4 &aTransform)
   nsRegion newRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
     nsRect rect = nsIntRegion::ToRect(TransformRect(nsIntRegion::FromRect(iter.Get()), aTransform));
-    newRegion.AddRect(rect);
+    newRegion.AddRect(nsRectAbsolute::FromRect(rect));
   }
 
   *this = std::move(newRegion);
@@ -552,7 +552,7 @@ nsRegion nsRegion::ScaleToOtherAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAP
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
     nsRect rect = iter.Get();
     rect = rect.ScaleToOtherAppUnitsRoundOut(aFromAPP, aToAPP);
-    newRegion.AddRect(rect);
+    newRegion.AddRect(nsRectAbsolute::FromRect(rect));
   }
 
   return newRegion;
@@ -568,7 +568,7 @@ nsRegion nsRegion::ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
     nsRect rect = iter.Get();
     rect = rect.ScaleToOtherAppUnitsRoundIn(aFromAPP, aToAPP);
-    newRegion.AddRect(rect);
+    newRegion.AddRect(nsRectAbsolute::FromRect(rect));
   }
 
   return newRegion;
@@ -641,7 +641,7 @@ nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
    */
 
   if (mBands.IsEmpty()) {
-    nsIntRect rect = mBounds.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+    nsIntRect rect = mBounds.ToNSRect().ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
     return nsIntRegion(rect);
   }
 
