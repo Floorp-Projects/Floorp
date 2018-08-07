@@ -125,7 +125,11 @@ function setPausePoints(sourceId) {
   }) => {
     const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
 
-    if (!_prefs.features.pausePoints || !source || !source.text || source.isWasm) {
+    if (!_prefs.features.pausePoints || !source || !source.text) {
+      return;
+    }
+
+    if (source.isWasm) {
       return;
     }
 

@@ -19,7 +19,7 @@ function findFunctionText(line, source, symbols) {
     column: Infinity
   });
 
-  if (!func || !source.text) {
+  if (source.isWasm || !func || !source.text) {
     return null;
   }
 
