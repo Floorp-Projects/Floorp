@@ -7827,7 +7827,7 @@
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "description": "Records search counts for search access points and in content searches. For search access points, the format is: <engine-name>.<search-access-point> For in content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]"
+    "description": "Record the search counts for search engines"
   },
   "SEARCH_RESET_RESULT": {
     "record_in_processes": ["main", "content"],
