@@ -31,7 +31,6 @@
 #include "nsISHistoryListener.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
-#include "nsCWebBrowserPersist.h"
 #include "nsIServiceManager.h"
 #include "nsFocusManager.h"
 #include "Layers.h"
