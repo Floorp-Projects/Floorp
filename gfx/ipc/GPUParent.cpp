@@ -41,6 +41,7 @@
 #include "nsThreadManager.h"
 #include "prenv.h"
 #include "ProcessUtils.h"
+#include "VRGPUChild.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VRThread.h"
@@ -307,6 +308,16 @@ GPUParent::RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 }
 
 mozilla::ipc::IPCResult
+GPUParent::RecvInitVR(Endpoint<PVRGPUChild>&& aEndpoint)
+{
+  gfx::VRGPUChild::InitForGPUProcess(std::move(aEndpoint));
+
+  // TODO:: Bug 1481327: init VR process shared memory handle via VRGPUChild::Get();
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 GPUParent::RecvInitUiCompositorController(const LayersId& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint)
 {
   UiCompositorControllerParent::Start(aRootLayerTreeId, std::move(aEndpoint));
@@ -462,6 +473,15 @@ GPUParent::RecvRequestMemoryReport(const uint32_t& aGeneration,
 
   mozilla::dom::MemoryReportRequestClient::Start(
     aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUParent::RecvShutdownVR()
+{
+  if (gfxPrefs::VRProcessEnabled()) {
+    VRGPUChild::ShutDown();
+  }
   return IPC_OK();
 }
 

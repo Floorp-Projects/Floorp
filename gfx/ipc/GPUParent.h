@@ -43,6 +43,7 @@ public:
   mozilla::ipc::IPCResult RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint) override;
   mozilla::ipc::IPCResult RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvInitVR(Endpoint<PVRGPUChild>&& aVRGPUChild) override;
   mozilla::ipc::IPCResult RecvInitUiCompositorController(const LayersId& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvInitProfiler(Endpoint<PProfilerChild>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& pref) override;
@@ -61,6 +62,7 @@ public:
     const bool& anonymize,
     const bool& minimizeMemoryUsage,
     const MaybeFileDesc& DMDFile) override;
+  mozilla::ipc::IPCResult RecvShutdownVR() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -31,7 +31,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                                            nsTArray<GfxVarUpdate>&& vars,
                                            const DevicePrefs& devicePrefs) override;
-  virtual mozilla::ipc::IPCResult RecvNotifyVsync(const TimeStamp& aVsyncTimestamp) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyVsync(const TimeStamp& vsyncTimestamp) override;
   virtual mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& setting) override;
   virtual mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref) override;
 

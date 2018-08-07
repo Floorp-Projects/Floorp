@@ -28,8 +28,8 @@ VRGPUParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   MessageLoop::current()->PostTask(
   NewRunnableMethod("gfx::VRGPUParent::DeferredDestroy",
-                     this,
-                     &VRGPUParent::DeferredDestroy));
+                    this,
+                    &VRGPUParent::DeferredDestroy));
 }
 
 void
