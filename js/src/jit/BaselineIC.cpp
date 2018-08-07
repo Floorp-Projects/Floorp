@@ -5188,6 +5188,71 @@ ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     return tailCallVM(DoNewArrayInfo, masm);
 }
 
+//
+// NewObject_Fallback
+//
+static bool
+DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHandleValue res)
+{
+    SharedStubInfo info(cx, payload, stub->icEntry());
+
+    FallbackICSpew(cx, stub, "NewObject");
+
+    RootedObject obj(cx);
+
+    RootedObject templateObject(cx, stub->templateObject());
+    if (templateObject) {
+        MOZ_ASSERT(!templateObject->group()->maybePreliminaryObjectsDontCheckGeneration());
+        obj = NewObjectOperationWithTemplate(cx, templateObject);
+    } else {
+        HandleScript script = info.script();
+        jsbytecode* pc = info.pc();
+        obj = NewObjectOperation(cx, script, pc);
+
+        if (obj && !obj->isSingleton() &&
+            !obj->group()->maybePreliminaryObjectsDontCheckGeneration())
+        {
+            templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
+            if (!templateObject)
+                return false;
+
+            if (!JitOptions.disableCacheIR) {
+                bool attached = false;
+                RootedScript script(cx, info.outerScript(cx));
+                NewObjectIRGenerator gen(cx, script, pc, stub->state().mode(), JSOp(*pc), templateObject);
+                if (gen.tryAttachStub()) {
+                    ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                                BaselineCacheIRStubKind::Regular,
+                                                                ICStubEngine::Baseline , script, stub, &attached);
+                    if (newStub)
+                        JitSpew(JitSpew_BaselineIC, "  NewObject Attached CacheIR stub");
+                }
+            }
+            stub->setTemplateObject(templateObject);
+        }
+    }
+
+    if (!obj)
+        return false;
+
+    res.setObject(*obj);
+    return true;
+}
+
+typedef bool(*DoNewObjectFn)(JSContext*, void*, ICNewObject_Fallback*, MutableHandleValue);
+static const VMFunction DoNewObjectInfo =
+    FunctionInfo<DoNewObjectFn>(DoNewObject, "DoNewObject", TailCall);
+
+bool
+ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(ICStubReg); // stub.
+    pushStubPayload(masm, R0.scratchReg());
+
+    return tailCallVM(DoNewObjectInfo, masm);
+}
 
 } // namespace jit
 } // namespace js
