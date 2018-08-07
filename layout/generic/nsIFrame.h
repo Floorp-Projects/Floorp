@@ -2862,6 +2862,11 @@ public:
     // inline-block sizing characteristics (like form controls).
     eReplacedSizing =                   1 << 16,
 
+    // Does this frame class support 'contain: layout' and
+    // 'contain:paint' (supporting one is equivalent to supporting the
+    // other).
+    eSupportsContainLayoutAndPaint =    1 << 17,
+
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
     // meaningful in DEBUG builds.
@@ -2878,11 +2883,13 @@ public:
    */
   virtual bool IsFrameOfType(uint32_t aFlags) const
   {
+    return !(aFlags & ~(
 #ifdef DEBUG
-    return !(aFlags & ~(nsIFrame::eDEBUGAllFrames | nsIFrame::eSupportsCSSTransforms));
-#else
-    return !(aFlags & ~nsIFrame::eSupportsCSSTransforms);
+                        nsIFrame::eDEBUGAllFrames |
 #endif
+                        nsIFrame::eSupportsCSSTransforms |
+                        nsIFrame::eSupportsContainLayoutAndPaint
+                        ));
   }
 
   /**

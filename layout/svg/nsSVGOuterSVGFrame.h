@@ -74,6 +74,12 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
+  bool IsFrameOfType(uint32_t aFlags) const override
+  {
+    return nsSVGDisplayContainerFrame::IsFrameOfType(
+      aFlags & ~eSupportsContainLayoutAndPaint);
+  }
+
   virtual nsSplittableType GetSplittableType() const override;
 
 #ifdef DEBUG_FRAME_DUMP

@@ -45,6 +45,10 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
+    if (aFlags & eSupportsContainLayoutAndPaint) {
+      return false;
+    }
+
     return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 

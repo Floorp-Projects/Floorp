@@ -43,7 +43,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    if (aFlags & eSupportsCSSTransforms) {
+    if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint)) {
       return false;
     }
     return nsContainerFrame::IsFrameOfType(aFlags &
