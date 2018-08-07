@@ -440,7 +440,8 @@ bool ConvertToPrimitive(JSContext* cx, HandleValue v, T* retval)
 
 // static
 bool
-XPCConvert::JSData2Native(void* d, HandleValue s,
+XPCConvert::JSData2Native(JSContext* cx,
+                          void* d, HandleValue s,
                           const nsXPTType& type,
                           const nsID* iid,
                           uint32_t arrlen,
@@ -448,7 +449,8 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 {
     MOZ_ASSERT(d, "bad param");
 
-    AutoJSContext cx;
+    js::AssertSameCompartment(cx, s);
+
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
@@ -796,7 +798,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         }
 
         RootedObject src(cx, &s.toObject());
-        return JSObject2NativeInterface((void**)d, src, iid, nullptr, pErr);
+        return JSObject2NativeInterface(cx, (void**)d, src, iid, nullptr, pErr);
     }
 
     case nsXPTType::T_DOMOBJECT:
@@ -1034,7 +1036,8 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
 
 // static
 bool
-XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
+XPCConvert::JSObject2NativeInterface(JSContext* cx,
+                                     void** dest, HandleObject src,
                                      const nsID* iid,
                                      nsISupports* aOuter,
                                      nsresult* pErr)
@@ -1042,6 +1045,8 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
     MOZ_ASSERT(dest, "bad param");
     MOZ_ASSERT(src, "bad param");
     MOZ_ASSERT(iid, "bad param");
+
+    js::AssertSameCompartment(cx, src);
 
     *dest = nullptr;
      if (pErr)
@@ -1116,7 +1121,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
     }
 
     RefPtr<nsXPCWrappedJS> wrapper;
-    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, getter_AddRefs(wrapper));
+    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(cx, src, *iid, getter_AddRefs(wrapper));
     if (pErr)
         *pErr = rv;
 
@@ -1534,7 +1539,7 @@ XPCConvert::JSArray2Native(JS::HandleValue aJSVal,
     RootedValue current(cx);
     for (uint32_t i = 0; i < length; ++i) {
         if (!JS_GetElement(cx, jsarray, i, &current) ||
-            !JSData2Native(aEltType.ElementPtr(buf, i), current,
+            !JSData2Native(cx, aEltType.ElementPtr(buf, i), current,
                            aEltType, aIID, 0, pErr)) {
             // Array element conversion failed. Clean up all elements converted
             // before the error. Caller handles freeing 'buf'.
