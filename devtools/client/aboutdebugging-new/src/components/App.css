@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * The current layout of the about:debugging is
+ * The current layout of about:debugging is
  *
  *  +-------------+-------------------------------+
- *  |   Sidebar   | RuntimePage                   |
+ *  |   Sidebar   | Page (Runtime or Connect)     |
  *  |   (240px)   |                               |
  *  |             |                               |
  *  +-------------+-------------------------------+
@@ -14,8 +14,13 @@
 .app {
   display: grid;
   font-size: 15px;
+  grid-column-gap: 40px;
   grid-template-columns: 240px auto;
   height: 100vh;
   overflow: hidden;
   width: 100vw;
+}
+
+.page {
+  padding-block-start: 60px;
 }

@@ -261,3 +261,16 @@ interface nsIWebBrowserPersist : nsICancelable
    */
   void cancelSave();
 };
+
+/**
+ * We don't export nsWebBrowserPersist.h as a public header, so we need a place
+ * to put the CID/ContractID. All places uses the WebBrowserPersist include
+ * nsIWebBrowserPersist.h, so we define our contract IDs here for now.
+ */
+%{ C++
+// {7E677795-C582-4cd1-9E8D-8271B3474D2A}
+#define NS_WEBBROWSERPERSIST_CID \
+  { 0x7e677795, 0xc582, 0x4cd1, { 0x9e, 0x8d, 0x82, 0x71, 0xb3, 0x47, 0x4d, 0x2a } }
+#define NS_WEBBROWSERPERSIST_CONTRACTID \
+  "@mozilla.org/embedding/browser/nsWebBrowserPersist;1"
+%}

@@ -24,6 +24,14 @@
       testStates("pressed_button", STATE_PRESSED, 0, STATE_CHECKABLE);
       testStates("pressed_menu_button", STATE_PRESSED | STATE_HASPOPUP, 0, STATE_CHECKABLE);
 
+      testStates("tabs", STATE_MULTISELECTABLE);
+      // Make sure XUL selection works, since aria-selected defaults to false.
+      testStates("tab1", STATE_SELECTED);
+      // aria-selected="true".
+      testStates("tab2", STATE_SELECTED);
+      // Neither.
+      testStates("tab3", 0, 0, STATE_SELECTED);
+
       SimpleTest.finish()
     }
 
@@ -53,6 +61,14 @@
           <menuitem label="I am a menu item" />
         </menupopup>
       </button>
+
+      <tabbox>
+        <tabs id="tabs" aria-multiselectable="true">
+          <tab id="tab1" label="tab1" selected="true"/>
+          <tab id="tab2" label="tab2" aria-selected="true"/>
+          <tab id="tab3" label="tab3"/>
+        </tabs>
+      </tabbox>
     </vbox>
   </hbox>
 

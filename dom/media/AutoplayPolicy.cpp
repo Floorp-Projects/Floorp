@@ -140,7 +140,9 @@ IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
     return true;
   }
 
-  if (aElement.OwnerDoc()->MediaDocumentKind() == nsIDocument::MediaDocumentKind::Video) {
+  nsIDocument* topDocument = ApproverDocOf(*aElement.OwnerDoc());
+  if (topDocument &&
+      topDocument->MediaDocumentKind() == nsIDocument::MediaDocumentKind::Video) {
     AUTOPLAY_LOG("Allow video document %p to autoplay\n", &aElement);
     return true;
   }
