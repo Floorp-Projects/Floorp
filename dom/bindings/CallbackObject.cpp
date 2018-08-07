@@ -379,9 +379,10 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
   }
 
   JSAutoRealmAllowCCW ar(cx, callback);
+
   RefPtr<nsXPCWrappedJS> wrappedJS;
   nsresult rv =
-    nsXPCWrappedJS::GetNewOrUsed(callback, aIID, getter_AddRefs(wrappedJS));
+    nsXPCWrappedJS::GetNewOrUsed(cx, callback, aIID, getter_AddRefs(wrappedJS));
   if (NS_FAILED(rv) || !wrappedJS) {
     return nullptr;
   }

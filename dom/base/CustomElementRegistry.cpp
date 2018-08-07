@@ -1211,18 +1211,23 @@ CustomElementRegistry::CallGetCustomInterface(Element* aElement,
 
       nsCOMPtr<nsIJSID> iid = nsJSID::NewID(aIID);
       func->Call(aElement, iid, &customInterface);
-      if (customInterface) {
+      JS::Rooted<JSObject*> funcGlobal(RootingCx(), func->CallbackGlobalOrNull());
+      if (customInterface && funcGlobal) {
         RefPtr<nsXPCWrappedJS> wrappedJS;
-        nsresult rv =
-          nsXPCWrappedJS::GetNewOrUsed(customInterface,
-                                       NS_GET_IID(nsISupports),
-                                       getter_AddRefs(wrappedJS)); 
-        if (NS_SUCCEEDED(rv) && wrappedJS) {
-          // Check if the returned object implements the desired interface. 
-          nsCOMPtr<nsISupports> retval;
-          if (NS_SUCCEEDED(wrappedJS->QueryInterface(aIID,
-                                                     getter_AddRefs(retval)))) {        
-            return retval.forget();
+        AutoJSAPI jsapi;
+        if (jsapi.Init(funcGlobal)) {
+          JSContext* cx = jsapi.cx();
+          nsresult rv =
+            nsXPCWrappedJS::GetNewOrUsed(cx, customInterface,
+                                         NS_GET_IID(nsISupports),
+                                         getter_AddRefs(wrappedJS));
+          if (NS_SUCCEEDED(rv) && wrappedJS) {
+            // Check if the returned object implements the desired interface.
+            nsCOMPtr<nsISupports> retval;
+            if (NS_SUCCEEDED(wrappedJS->QueryInterface(aIID,
+                                                       getter_AddRefs(retval)))) {
+              return retval.forget();
+            }
           }
         }
       }

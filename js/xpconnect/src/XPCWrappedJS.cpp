@@ -301,6 +301,7 @@ nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     MOZ_ASSERT(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
     JS::TraceEdge(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
+    JS::TraceEdge(trc, &mJSObjGlobal, "nsXPCWrappedJS::mJSObjGlobal");
 }
 
 NS_IMETHODIMP
@@ -318,9 +319,16 @@ nsXPCWrappedJS::GetJSObject()
     return mJSObj;
 }
 
+JSObject*
+nsXPCWrappedJS::GetJSObjectGlobal()
+{
+    return mJSObjGlobal;
+}
+
 // static
 nsresult
-nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
+nsXPCWrappedJS::GetNewOrUsed(JSContext* cx,
+                             JS::HandleObject jsObj,
                              REFNSIID aIID,
                              nsXPCWrappedJS** wrapperResult)
 {
@@ -328,7 +336,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     MOZ_RELEASE_ASSERT(NS_IsMainThread(),
                        "nsXPCWrappedJS::GetNewOrUsed called off main thread");
 
-    AutoJSContext cx;
+    MOZ_RELEASE_ASSERT(js::GetContextCompartment(cx) == js::GetObjectCompartment(jsObj));
 
     bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsObj);
     RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID,
@@ -369,13 +377,17 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         if (!rootClasp)
             return NS_ERROR_FAILURE;
 
-        root = new nsXPCWrappedJS(cx, rootJSObj, rootClasp, nullptr, &rv);
+        // Note: rootJSObj is never a CCW because GetRootJSObject unwraps. We
+        // also rely on this in nsXPCWrappedJS::UpdateObjectPointerAfterGC.
+        RootedObject global(cx, JS::GetNonCCWObjectGlobal(rootJSObj));
+        root = new nsXPCWrappedJS(cx, rootJSObj, global, rootClasp, nullptr, &rv);
         if (NS_FAILED(rv)) {
             return rv;
         }
     }
 
-    RefPtr<nsXPCWrappedJS> wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, root, &rv);
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    RefPtr<nsXPCWrappedJS> wrapper = new nsXPCWrappedJS(cx, jsObj, global, clasp, root, &rv);
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -385,14 +397,20 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
 
 nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
                                JSObject* aJSObj,
+                               JSObject* aJSObjGlobal,
                                nsXPCWrappedJSClass* aClass,
                                nsXPCWrappedJS* root,
                                nsresult* rv)
     : mJSObj(aJSObj),
+      mJSObjGlobal(aJSObjGlobal),
       mClass(aClass),
       mRoot(root ? root : this),
       mNext(nullptr)
 {
+    MOZ_ASSERT(JS_IsGlobalObject(aJSObjGlobal));
+    MOZ_RELEASE_ASSERT(js::GetObjectCompartment(aJSObj) ==
+                       js::GetObjectCompartment(aJSObjGlobal));
+
     *rv = InitStub(GetClass()->GetIID());
     // Continue even in the failure case, so that our refcounting/Destroy
     // behavior works correctly.
@@ -503,6 +521,7 @@ nsXPCWrappedJS::Unlink()
         }
 
         mJSObj = nullptr;
+        mJSObjGlobal = nullptr;
     }
 
     if (IsRootWrapper()) {
@@ -640,6 +659,7 @@ nsXPCWrappedJS::SystemIsBeingShutDown()
     // if we are not currently running an incremental GC.
     MOZ_ASSERT(!IsIncrementalGCInProgress(xpc_GetSafeJSContext()));
     *mJSObj.unsafeGet() = nullptr;
+    *mJSObjGlobal.unsafeGet() = nullptr;
 
     // Notify other wrappers in the chain.
     if (mNext)
@@ -675,7 +695,8 @@ nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
     if (!ccx.IsValid())
         return NS_ERROR_UNEXPECTED;
 
-    return nsXPCWrappedJSClass::BuildPropertyEnumerator(ccx, GetJSObject(),
+    RootedObject scope(cx, GetJSObjectGlobal());
+    return nsXPCWrappedJSClass::BuildPropertyEnumerator(ccx, GetJSObject(), scope,
                                                         aEnumerate);
 }
 
@@ -687,8 +708,9 @@ nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant** _retval)
     if (!ccx.IsValid())
         return NS_ERROR_UNEXPECTED;
 
+    RootedObject scope(cx, GetJSObjectGlobal());
     return nsXPCWrappedJSClass::
-        GetNamedPropertyAsVariant(ccx, GetJSObject(), name, _retval);
+        GetNamedPropertyAsVariant(ccx, GetJSObject(), scope, name, _retval);
 }
 
 /***************************************************************************/
