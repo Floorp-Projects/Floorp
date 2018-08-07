@@ -199,7 +199,7 @@ MP4Decoder::IsAAC(const nsACString& aMimeType)
 bool
 MP4Decoder::IsEnabled()
 {
-  return StaticPrefs::mediaMp4Enabled();
+  return StaticPrefs::MediaMp4Enabled();
 }
 
 /* static */ nsTArray<UniquePtr<TrackInfo>>
