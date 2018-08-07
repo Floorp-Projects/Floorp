@@ -72,6 +72,7 @@ function record(result) {
 function keepCurrentEngine() {
   // Calling the currentEngine setter will force a correct loadPathHash to be
   // written for this engine, so that we don't prompt the user again.
+  // eslint-disable-next-line no-self-assign
   Services.search.currentEngine = Services.search.currentEngine;
   record(TELEMETRY_RESULT_ENUM.KEPT_CURRENT);
   savePref("declined");
