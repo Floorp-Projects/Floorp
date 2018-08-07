@@ -1291,24 +1291,16 @@ var PlacesUtils = {
   /**
    * Checks if item is a root.
    *
-   * @param {Number|String} guid The guid or id of the item to look for.
+   * @param {String} guid The guid of the item to look for.
    * @returns {Boolean} true if guid is a root, false otherwise.
    */
   isRootItem(guid) {
-    if (typeof guid === "string") {
-      return guid == PlacesUtils.bookmarks.menuGuid ||
-             guid == PlacesUtils.bookmarks.toolbarGuid ||
-             guid == PlacesUtils.bookmarks.unfiledGuid ||
-             guid == PlacesUtils.bookmarks.tagsGuid ||
-             guid == PlacesUtils.bookmarks.rootGuid ||
-             guid == PlacesUtils.bookmarks.mobileGuid;
-    }
-    return guid == PlacesUtils.bookmarksMenuFolderId ||
-           guid == PlacesUtils.toolbarFolderId ||
-           guid == PlacesUtils.unfiledBookmarksFolderId ||
-           guid == PlacesUtils.tagsFolderId ||
-           guid == PlacesUtils.placesRootId ||
-           guid == PlacesUtils.mobileFolderId;
+    return guid == PlacesUtils.bookmarks.menuGuid ||
+           guid == PlacesUtils.bookmarks.toolbarGuid ||
+           guid == PlacesUtils.bookmarks.unfiledGuid ||
+           guid == PlacesUtils.bookmarks.tagsGuid ||
+           guid == PlacesUtils.bookmarks.rootGuid ||
+           guid == PlacesUtils.bookmarks.mobileGuid;
   },
 
   /**
