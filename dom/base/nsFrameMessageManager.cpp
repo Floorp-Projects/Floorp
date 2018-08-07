@@ -727,13 +727,13 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
       JS::RootingContext* rcx = RootingCx();
       JS::Rooted<JSObject*> object(rcx);
-      JS::Rooted<JSObject*> nonCCWObject(rcx);
+      JS::Rooted<JSObject*> objectGlobal(rcx);
 
       RefPtr<MessageListener> webIDLListener;
       if (!weakListener) {
         webIDLListener = listener.mStrongListener;
         object = webIDLListener->CallbackOrNull();
-        nonCCWObject = webIDLListener->CallbackGlobalOrNull();
+        objectGlobal = webIDLListener->CallbackGlobalOrNull();
       } else {
         nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(weakListener);
         if (!wrappedJS) {
@@ -741,9 +741,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         }
 
         object = wrappedJS->GetJSObject();
-        // This is not really guaranteed to not be a CCW yet, but hopefully bug
-        // 1478359 will help with that.
-        nonCCWObject = object;
+        objectGlobal = wrappedJS->GetJSObjectGlobal();
       }
 
       if (!object) {
@@ -754,9 +752,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       JSContext* cx = aes.cx();
 
       // We passed the unwrapped object to AutoEntryScript so we now need to
-      // enter the realm of the non-ccw object that represents the realm of our
+      // enter the realm of the global object that represents the realm of our
       // callback.
-      JSAutoRealm ar(cx, nonCCWObject);
+      JSAutoRealm ar(cx, objectGlobal);
 
       RootedDictionary<ReceiveMessageArgument> argument(cx);
 
