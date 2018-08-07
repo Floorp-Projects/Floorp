@@ -1723,9 +1723,8 @@ async function updateSyncBookmark(db, updateInfo) {
     let oldParentRecordId =
       BookmarkSyncUtils.guidToRecordId(oldBookmarkItem.parentGuid);
     if (requestedParentRecordId != oldParentRecordId) {
-      let oldId = await PlacesUtils.promiseItemId(oldBookmarkItem.guid);
-      if (PlacesUtils.isRootItem(oldId)) {
-        throw new Error(`Cannot move Places root ${oldId}`);
+      if (PlacesUtils.isRootItem(oldBookmarkItem.guid)) {
+        throw new Error(`Cannot move Places root ${oldBookmarkItem.guid}`);
       }
       let requestedParentGuid =
         BookmarkSyncUtils.recordIdToGuid(requestedParentRecordId);
@@ -2176,7 +2175,7 @@ var dedupeSyncBookmark = async function(db, localGuid, remoteGuid,
   let localId = rows[0].getResultByName("id");
   let localParentId = rows[0].getResultByName("parentId");
   let bookmarkType = rows[0].getResultByName("type");
-  if (PlacesUtils.isRootItem(localId)) {
+  if (PlacesUtils.isRootItem(localGuid)) {
     throw new Error(`Cannot de-dupe local root ${localGuid}`);
   }
 
