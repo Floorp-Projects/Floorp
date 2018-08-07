@@ -5,51 +5,71 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment">
+
     <android.support.constraint.ConstraintLayout
         android:id="@+id/enable_search_suggestions_container"
-        android:background="@drawable/background_search_suggestion_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:visibility="gone">
+        android:background="@drawable/background_search_suggestion_section"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp">
 
         <TextView
-            android:id="@+id/textView"
-            android:textColor="@color/searchSuggestionPromptTextColor"
+            android:id="@+id/enable_search_suggestions_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/enable_search_suggestion_label"
-            app:layout_constraintEnd_toStartOf="@id/disable_search_suggestions_button"
+            android:text="@string/enable_search_suggestion_title"
+            android:textColor="@color/searchSuggestionPromptTitleColor"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <TextView
+            android:id="@+id/enable_search_suggestions_subtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:lineSpacingExtra="4sp"
+            android:text="@string/enable_search_suggestion_subtitle"
+            android:textColor="@color/searchSuggestionPromptSubtitleColor"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toTopOf="@+id/disable_search_suggestions_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/enable_search_suggestions_title" />
+
         <Button
             android:id="@+id/disable_search_suggestions_button"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:minWidth="48dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:minWidth="48dp"
             android:text="@string/enable_search_suggestions_no"
             android:textColor="@color/searchSuggestionPromptButtonTextColor"
-            app:layout_constraintEnd_toStartOf="@+id/enable_search_suggestions_button"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/enable_search_suggestions_button" />
 
         <Button
             android:id="@+id/enable_search_suggestions_button"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:minWidth="48dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:minWidth="48dp"
             android:text="@string/enable_search_suggestions_yes"
             android:textColor="@color/searchSuggestionPromptButtonTextColor"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
     </android.support.constraint.ConstraintLayout>
+
     <android.support.constraint.ConstraintLayout
         android:id="@+id/no_suggestions_container"
         android:background="@drawable/background_search_suggestion_section"
@@ -60,7 +80,7 @@
 
         <TextView
             android:id="@+id/no_suggestions_message"
-            android:textColor="@color/searchSuggestionPromptTextColor"
+            android:textColor="@color/searchSuggestionPromptTitleColor"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

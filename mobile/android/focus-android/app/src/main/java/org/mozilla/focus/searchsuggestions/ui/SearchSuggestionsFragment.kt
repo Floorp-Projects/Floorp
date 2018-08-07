@@ -1,13 +1,24 @@
 package org.mozilla.focus.searchsuggestions.ui
 
+import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.SpannableString
 import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.method.MovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +29,9 @@ import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 import org.mozilla.focus.R
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
+import org.mozilla.focus.session.SessionManager
+import org.mozilla.focus.session.Source
+import org.mozilla.focus.utils.SupportUtils
 
 class SearchSuggestionsFragment : Fragment() {
     private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
@@ -64,6 +78,10 @@ class SearchSuggestionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        enable_search_suggestions_subtitle.text = buildEnableSearchSuggestionsSubtitle()
+        enable_search_suggestions_subtitle.movementMethod = LinkMovementMethod.getInstance()
+        enable_search_suggestions_subtitle.highlightColor = Color.TRANSPARENT
+
         suggestionList.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
         suggestionList.adapter = SuggestionsAdapter {
             searchSuggestionsViewModel.selectSearchSuggestion(it)
@@ -87,6 +105,32 @@ class SearchSuggestionsFragment : Fragment() {
         dismiss_no_suggestions_message.setOnClickListener {
             searchSuggestionsViewModel.dismissNoSuggestionsMessage()
         }
+    }
+
+    private fun buildEnableSearchSuggestionsSubtitle(): SpannableString {
+        val subtitle = resources.getString(R.string.enable_search_suggestion_subtitle)
+        val learnMore = resources.getString(R.string.enable_search_suggestion_subtitle_learnmore)
+
+        val spannable = SpannableString(String.format(subtitle, learnMore))
+        val startIndex = spannable.indexOf(learnMore)
+        val endIndex = startIndex + learnMore.length
+
+        val learnMoreSpan = object : ClickableSpan() {
+            override fun onClick(textView: View) {
+                val url = "https://mozilla.org"
+                SessionManager.getInstance().createSession(Source.MENU, url)
+            }
+
+            override fun updateDrawState(ds: TextPaint?) {
+                ds?.isUnderlineText = false
+            }
+        }
+
+        spannable.setSpan(learnMoreSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val color = ForegroundColorSpan(ContextCompat.getColor(context!!, R.color.searchSuggestionPromptButtonTextColor))
+        spannable.setSpan(color, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        return spannable
     }
 
     companion object {
@@ -125,7 +169,7 @@ class SearchSuggestionsFragment : Fragment() {
  */
 private class SuggestionViewHolder(itemView: View, private val clickListener: (String) -> Unit) : RecyclerView.ViewHolder(itemView) {
     companion object {
-        val LAYOUT_ID = R.layout.item_suggestion
+        const val LAYOUT_ID = R.layout.item_suggestion
     }
 
     val suggestionText: TextView = itemView.findViewById(R.id.suggestion)
