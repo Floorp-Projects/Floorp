@@ -5,9 +5,10 @@
 DevToolsModules(
     'App.css',
     'App.js',
+    'ConnectPage.css',
+    'ConnectPage.js',
     'RuntimeInfo.css',
     'RuntimeInfo.js',
-    'RuntimePage.css',
     'RuntimePage.js',
     'Sidebar.css',
     'Sidebar.js',

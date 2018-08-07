@@ -626,7 +626,8 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(uint8_t releva
 
         TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-        if (bool hasLineOfContext = anyChars.fillExcludingContext(&err, offset)) {
+        bool hasLineOfContext = anyChars.fillExcludingContext(&err, offset);
+        if (hasLineOfContext) {
             if (!internalComputeLineOfContext(&err, offset))
                 break;
 

@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.connect-page__steps {
+  list-style-type: decimal;
+  margin-inline-start: 40px;
+  line-height: 1.5em;
+  margin-block-end: 20px;
+}
+
+.connect-page__step {
+  padding-inline-start: 20px;
+}
+
+.connect-page__section__title {
+  display: flex;
+}
+
+.connect-page__section__icon {
+  width: 32px;
+  height: 32px;
+  margin-inline-end: 5px;
+}

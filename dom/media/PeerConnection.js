@@ -1419,8 +1419,12 @@ class RTCPeerConnection {
     }
     this._closed = true;
     this.changeIceConnectionState("closed");
-    this._localIdp.close();
-    this._remoteIdp.close();
+    if (this._localIdp) {
+        this._localIdp.close();
+    }
+    if (this._remoteIdp) {
+        this._remoteIdp.close();
+    }
     this._impl.close();
     this._suppressEvents = true;
     delete this._pc;

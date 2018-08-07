@@ -43,15 +43,4 @@
 #define NS_PROMPTSERVICE_CONTRACTID \
  "@mozilla.org/embedcomp/prompt-service;1"
 
-/**
- * This contract ID should be implemented by password managers to be able to
- * override the standard implementation of nsIAuthPrompt2. It will be used as
- * a service.
- *
- * This contract implements the following interfaces:
- * nsIPromptFactory
- */
-#define NS_PWMGR_AUTHPROMPTFACTORY \
- "@mozilla.org/passwordmanager/authpromptfactory;1"
-
 #endif // NSEMBEDCID_H

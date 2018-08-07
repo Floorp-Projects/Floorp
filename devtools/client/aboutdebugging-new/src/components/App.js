@@ -11,6 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { PAGES } = require("../constants");
 
+const ConnectPage = createFactory(require("./ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
 const Sidebar = createFactory(require("./Sidebar"));
 
@@ -29,6 +30,8 @@ class App extends PureComponent {
     switch (this.props.selectedPage) {
       case PAGES.THIS_FIREFOX:
         return RuntimePage();
+      case PAGES.CONNECT:
+        return ConnectPage();
       default:
         // Invalid page, blank.
         return null;

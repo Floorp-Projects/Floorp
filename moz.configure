@@ -581,6 +581,7 @@ def config_status_deps(build_env, build_project):
         extra_deps = [os.path.join(topobjdir[:-7], '.mozconfig.json')]
 
     return list(__sandbox__._all_paths) + extra_deps + [
+        os.path.join(topsrcdir, 'CLOBBER'),
         os.path.join(topsrcdir, 'configure'),
         os.path.join(topsrcdir, 'js', 'src', 'configure'),
         os.path.join(topsrcdir, 'configure.in'),
