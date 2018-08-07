@@ -2017,8 +2017,7 @@ EventStateManager::DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow
         if (htmlElement->Draggable()) {
           break;
         }
-      }
-      else {
+      } else {
         if (dragContent->IsXULElement()) {
           // All XUL elements are draggable, so if a XUL element is
           // encountered, stop looking for draggable nodes and just use the
@@ -2032,7 +2031,7 @@ EventStateManager::DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow
         }
         // otherwise, it's not an HTML or XUL element, so just keep looking
       }
-      dragContent = dragContent->GetParent();
+      dragContent = dragContent->GetFlattenedTreeParent();
     }
   }
 
@@ -2451,7 +2450,7 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
     return;
 
   while (targetContent->IsText()) {
-    targetContent = targetContent->GetParent();
+    targetContent = targetContent->GetFlattenedTreeParent();
   }
 
   WidgetMouseScrollEvent event(aEvent->IsTrusted(),
@@ -2490,7 +2489,7 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   }
 
   while (targetContent->IsText()) {
-    targetContent = targetContent->GetParent();
+    targetContent = targetContent->GetFlattenedTreeParent();
   }
 
   WidgetMouseScrollEvent event(aEvent->IsTrusted(),
@@ -3341,14 +3340,12 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           break;
         }
 
-        if (activeContent) {
-          // The nearest enclosing element goes into the :active state.  If
-          // we're not an element (so we're text or something) we need to obtain
-          // our parent element and put it into :active instead.
-          if (!activeContent->IsElement()) {
-            nsIContent* par = activeContent->GetParent();
-            if (par)
-              activeContent = par;
+        // The nearest enclosing element goes into the :active state.  If we're
+        // not an element (so we're text or something) we need to obtain
+        // our parent element and put it into :active instead.
+        if (activeContent && !activeContent->IsElement()) {
+          if (nsIContent* par = activeContent->GetFlattenedTreeParent()) {
+            activeContent = par;
           }
         }
       }
@@ -4918,7 +4915,7 @@ EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
   }
   if (mouseContent) {
     if (mouseContent->IsText()) {
-      mouseContent = mouseContent->GetParent();
+      mouseContent = mouseContent->GetFlattenedTreeParent();
     }
     if (mouseContent && mouseContent->IsRootOfNativeAnonymousSubtree()) {
       mouseContentParent = mouseContent->GetParent();
@@ -5048,7 +5045,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
       // to walk up the closest ancestor element, just like we do in
       // nsPresShell::HandleEvent.
       while (mouseContent && !mouseContent->IsElement()) {
-        mouseContent = mouseContent->GetParent();
+        mouseContent = mouseContent->GetFlattenedTreeParent();
       }
 
       if (!mouseContent && !mCurrentTarget && !aOverrideClickTarget) {
@@ -5359,8 +5356,8 @@ EventStateManager::ResetLastOverForContent(
                      nsIContent* aContent)
 {
   if (aElemWrapper && aElemWrapper->mLastOverElement &&
-      nsContentUtils::ContentIsDescendantOf(aElemWrapper->mLastOverElement,
-                                            aContent)) {
+      nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+        aElemWrapper->mLastOverElement, aContent)) {
     aElemWrapper->mLastOverElement = nullptr;
   }
 }
