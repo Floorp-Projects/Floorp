@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.mozilla.focus.widget.ResizableKeyboardLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -100,6 +100,7 @@
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/suggestionList"
         android:orientation="vertical"
+        android:background="@color/searchSuggestionsBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-</LinearLayout>
+</org.mozilla.focus.widget.ResizableKeyboardLinearLayout>
