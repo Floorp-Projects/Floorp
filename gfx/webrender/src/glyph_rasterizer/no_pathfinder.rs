@@ -15,7 +15,7 @@ use platform::font::FontContext;
 use glyph_rasterizer::{FontInstance, FontContexts, GlyphKey};
 use glyph_rasterizer::{GlyphRasterizer, GlyphRasterJob, GlyphRasterJobs, GlyphRasterResult};
 use glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
-use texture_cache::{TextureCache, TextureCacheHandle};
+use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use gpu_cache::GpuCache;
 use render_task::{RenderTaskTree, RenderTaskCache};
 use tiling::SpecialRenderPasses;
@@ -188,6 +188,7 @@ impl GlyphRasterizer {
                             gpu_cache,
                             Some(glyph_key_cache.eviction_notice()),
                             UvRectKind::Rect,
+                            Eviction::Auto,
                         );
                         GlyphCacheEntry::Cached(CachedGlyphInfo {
                             texture_cache_handle,

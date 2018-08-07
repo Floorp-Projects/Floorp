@@ -535,11 +535,12 @@ bitflags!{
     /// Mask for clearing caches in debug commands.
     #[derive(Deserialize, Serialize)]
     pub struct ClearCache: u8 {
-        const IMAGES = 0x1;
-        const GLYPHS = 0x2;
-        const GLYPH_DIMENSIONS = 0x4;
-        const RENDER_TASKS = 0x8;
-        const TEXTURE_CACHE = 0x16;
+        const IMAGES = 0b1;
+        const GLYPHS = 0b01;
+        const GLYPH_DIMENSIONS = 0b001;
+        const RENDER_TASKS = 0b0001;
+        const TEXTURE_CACHE = 0b00001;
+        const RASTERIZED_BLOBS = 0b000001;
     }
 }
 

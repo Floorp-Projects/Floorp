@@ -4,12 +4,12 @@
 
 use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
 use api::{DevicePoint, DeviceRect, DeviceSize, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize};
-use api::{WorldPixel, WorldPoint, WorldRect};
+use api::{WorldPixel, WorldRect};
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D};
-use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedVector3D};
+use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D};
 use euclid::{HomogeneousVector};
 use num_traits::Zero;
-use plane_split::{Clipper, Plane, Polygon};
+use plane_split::{Clipper, Polygon};
 use std::{i32, f32};
 use std::borrow::Cow;
 
@@ -175,16 +175,13 @@ pub fn calculate_screen_bounding_rect(
     device_pixel_scale: DevicePixelScale,
     screen_bounds: Option<&DeviceIntRect>,
 ) -> Option<DeviceIntRect> {
-    debug!("rect {:?}", rect);
-    debug!("transform {:?}", transform);
-    debug!("screen_bounds: {:?}", screen_bounds);
+    debug!("calculate_screen_bounding_rect for {:?}", rect);
     let homogens = [
         transform.transform_point2d_homogeneous(&rect.origin),
         transform.transform_point2d_homogeneous(&rect.top_right()),
         transform.transform_point2d_homogeneous(&rect.bottom_left()),
         transform.transform_point2d_homogeneous(&rect.bottom_right()),
     ];
-    debug!("homogeneous points {:?}", homogens);
     let max_rect = match screen_bounds {
         Some(bounds) => bounds.to_f32(),
         None => DeviceRect::max_rect(),
@@ -193,60 +190,17 @@ pub fn calculate_screen_bounding_rect(
     // Note: we only do the full frustum collision when the polygon approaches the camera plane.
     // Otherwise, it will be clamped to the screen bounds anyway.
     let world_rect = if homogens.iter().any(|h| h.w <= 0.0) {
+        debug!("transform {:?}", transform);
+        debug!("screen_bounds: {:?}", screen_bounds);
+        debug!("homogeneous points {:?}", homogens);
+
         let mut clipper = Clipper::new();
-        // using inverse-transpose of the inversed transform
-        let t = transform.to_transform();
-        // camera plane
-        {
-            let normal = TypedVector3D::new(t.m14, t.m24, t.m34);
-            let kf = 1.0 / normal.length();
-            clipper.add(Plane {
-                normal: normal * kf,
-                offset: t.m44 * kf,
-            });
-        }
-
-        // The equations for clip planes come from the following one:
-        // (v * M).x < right
-        // (v, Mx) < right
-        // (v, Mx) - right = 0;
-
-        // left/right planes
-        if let Some(bounds) = screen_bounds {
-            let normal = TypedVector3D::new(t.m11, t.m21, t.m31);
-            let kf = 1.0 / normal.length();
-            clipper.add(Plane {
-                normal: normal * kf,
-                offset: t.m41 * kf - (bounds.origin.x) as f32 / device_pixel_scale.0,
-            });
-            clipper.add(Plane {
-                normal: normal * -kf,
-                offset: t.m41 * -kf + (bounds.origin.x + bounds.size.width) as f32 / device_pixel_scale.0,
-            });
-        }
-        // top/bottom planes
-        if let Some(bounds) = screen_bounds {
-            let normal = TypedVector3D::new(t.m12, t.m22, t.m32);
-            let kf = 1.0 / normal.length();
-            clipper.add(Plane {
-                normal: normal * kf,
-                offset: t.m42 * kf - (bounds.origin.y) as f32 / device_pixel_scale.0,
-            });
-            clipper.add(Plane {
-                normal: normal * -kf,
-                offset: t.m42 * -kf + (bounds.origin.y + bounds.size.height) as f32 / device_pixel_scale.0,
-            });
-        }
-
-        let polygon = Polygon::from_points(
-            [
-                rect.origin.to_3d(),
-                rect.top_right().to_3d(),
-                rect.bottom_left().to_3d(),
-                rect.bottom_right().to_3d(),
-            ],
-            1,
+        clipper.add_frustum(
+            &transform.to_transform(),
+            screen_bounds.map(|b| b.to_f32() / device_pixel_scale),
         );
+
+        let polygon = Polygon::from_rect(*rect, 1);
         debug!("crossing detected for poly {:?}", polygon);
         let results = clipper.clip(polygon);
         debug!("clip results: {:?}", results);
@@ -260,14 +214,10 @@ pub fn calculate_screen_bounding_rect(
             // filter out parts behind the view plane
             .flat_map(|poly| &poly.points)
             .map(|p| {
-                debug!("\tpoint {:?} -> {:?} -> {:?}", p,
-                    transform.transform_point2d_homogeneous(&p.to_2d()),
-                    transform.transform_point2d(&p.to_2d())
-                );
-                //TODO: change to `expect` when the near splitting code is ready
-                transform
-                    .transform_point2d(&p.to_2d())
-                    .unwrap_or(WorldPoint::zero())
+                let mut homo = transform.transform_point2d_homogeneous(&p.to_2d());
+                homo.w = homo.w.max(0.00000001); // avoid infinite values
+                debug!("\tpoint {:?} -> {:?} -> {:?}", p, homo, homo.to_point2d());
+                homo.to_point2d().unwrap()
             })
         )
     } else {
@@ -280,55 +230,17 @@ pub fn calculate_screen_bounding_rect(
         ])
     };
 
-    debug!("world rect {:?}", world_rect);
-    (world_rect * device_pixel_scale)
-        .round_out()
-        .intersection(&max_rect)
-        .map(|r| r.to_i32())
-}
-
-pub fn _subtract_rect<U>(
-    rect: &TypedRect<f32, U>,
-    other: &TypedRect<f32, U>,
-    results: &mut Vec<TypedRect<f32, U>>,
-) {
-    results.clear();
-
-    let int = rect.intersection(other);
-    match int {
-        Some(int) => {
-            let rx0 = rect.origin.x;
-            let ry0 = rect.origin.y;
-            let rx1 = rx0 + rect.size.width;
-            let ry1 = ry0 + rect.size.height;
-
-            let ox0 = int.origin.x;
-            let oy0 = int.origin.y;
-            let ox1 = ox0 + int.size.width;
-            let oy1 = oy0 + int.size.height;
-
-            let r = TypedRect::from_untyped(&rect_from_points_f(rx0, ry0, ox0, ry1));
-            if r.size.width > 0.0 && r.size.height > 0.0 {
-                results.push(r);
-            }
-            let r = TypedRect::from_untyped(&rect_from_points_f(ox0, ry0, ox1, oy0));
-            if r.size.width > 0.0 && r.size.height > 0.0 {
-                results.push(r);
-            }
-            let r = TypedRect::from_untyped(&rect_from_points_f(ox0, oy1, ox1, ry1));
-            if r.size.width > 0.0 && r.size.height > 0.0 {
-                results.push(r);
-            }
-            let r = TypedRect::from_untyped(&rect_from_points_f(ox1, ry0, rx1, ry1));
-            if r.size.width > 0.0 && r.size.height > 0.0 {
-                results.push(r);
-            }
-        }
-        None => {
-            results.push(*rect);
-        }
+    let result = (world_rect * device_pixel_scale)
+         .round_out()
+         .intersection(&max_rect)
+         .map(|r| r.to_i32());
+    if homogens.iter().any(|h| h.w <= 0.0) {
+        debug!("world rect {:?}", world_rect);
+        debug!("result {:?}", result);
     }
+    result
 }
+
 
 #[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]

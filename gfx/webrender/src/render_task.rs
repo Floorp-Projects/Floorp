@@ -26,7 +26,7 @@ use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
 use resource_cache::{CacheItem, ResourceCache};
 use std::{cmp, ops, usize, f32, i32};
-use texture_cache::{TextureCache, TextureCacheHandle};
+use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
 #[cfg(feature = "pathfinder")]
@@ -1104,6 +1104,7 @@ impl RenderTaskCache {
                     gpu_cache,
                     None,
                     render_task.uv_rect_kind(),
+                    Eviction::Auto,
                 );
 
                 // Get the allocation details in the texture cache, and store

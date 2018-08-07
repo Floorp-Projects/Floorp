@@ -93,25 +93,27 @@ pub enum CacheEntryMarker {}
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CacheEntry {
-    // Size the requested item, in device pixels.
+    /// Size the requested item, in device pixels.
     size: DeviceUintSize,
-    // Details specific to standalone or shared items.
+    /// Details specific to standalone or shared items.
     kind: EntryKind,
-    // Arbitrary user data associated with this item.
+    /// Arbitrary user data associated with this item.
     user_data: [f32; 3],
-    // The last frame this item was requested for rendering.
+    /// The last frame this item was requested for rendering.
     last_access: FrameId,
-    // Handle to the resource rect in the GPU cache.
+    /// Handle to the resource rect in the GPU cache.
     uv_rect_handle: GpuCacheHandle,
-    // Image format of the item.
+    /// Image format of the item.
     format: ImageFormat,
     filter: TextureFilter,
-    // The actual device texture ID this is part of.
+    /// The actual device texture ID this is part of.
     texture_id: CacheTextureId,
-    // Optional notice when the entry is evicted from the cache.
+    /// Optional notice when the entry is evicted from the cache.
     eviction_notice: Option<EvictionNotice>,
-    // The type of UV rect this entry specifies.
+    /// The type of UV rect this entry specifies.
     uv_rect_kind: UvRectKind,
+    /// If set to `Auto` the cache entry may be evicted if unused for a number of frames.
+    eviction: Eviction,
 }
 
 impl CacheEntry {
@@ -136,6 +138,7 @@ impl CacheEntry {
             uv_rect_handle: GpuCacheHandle::new(),
             eviction_notice: None,
             uv_rect_kind,
+            eviction: Eviction::Auto,
         }
     }
 
@@ -190,6 +193,14 @@ impl TextureCacheHandle {
     pub fn new() -> Self {
         TextureCacheHandle { entry: None }
     }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum Eviction {
+    Auto,
+    Manual,
 }
 
 // An eviction notice is a shared condition useful for detecting
@@ -410,6 +421,7 @@ impl TextureCache {
         gpu_cache: &mut GpuCache,
         eviction_notice: Option<&EvictionNotice>,
         uv_rect_kind: UvRectKind,
+        eviction: Eviction,
     ) {
         // Determine if we need to allocate texture cache memory
         // for this item. We need to reallocate if any of the following
@@ -462,6 +474,8 @@ impl TextureCache {
 
         // Upload the resource rect and texture array layer.
         entry.update_gpu_cache(gpu_cache);
+
+        entry.eviction = eviction;
 
         // Create an update command, which the render thread processes
         // to upload the new image data into the correct location
@@ -581,6 +595,17 @@ impl TextureCache {
          DeviceUintRect::new(origin, entry.size))
     }
 
+    pub fn mark_unused(&mut self, handle: &TextureCacheHandle) {
+        if let Some(ref handle) = handle.entry {
+            if let Some(entry) = self.entries.get_opt_mut(handle) {
+                // Set a very low last accessed frame to make it very likely that this entry
+                // will get cleaned up next time we try to expire entries.
+                entry.last_access = FrameId(0);
+                entry.eviction = Eviction::Auto;
+            }
+        }
+    }
+
     // Expire old standalone textures.
     fn expire_old_standalone_entries(&mut self) {
         let mut eviction_candidates = Vec::new();
@@ -590,7 +615,7 @@ impl TextureCache {
         // anything not used this frame).
         for handle in self.standalone_entry_handles.drain(..) {
             let entry = self.entries.get(&handle);
-            if entry.last_access == self.frame_id {
+            if entry.eviction == Eviction::Manual || entry.last_access == self.frame_id {
                 retained_entries.push(handle);
             } else {
                 eviction_candidates.push(handle);
@@ -1205,6 +1230,7 @@ impl TextureArray {
                 texture_id: self.texture_id.unwrap(),
                 eviction_notice: None,
                 uv_rect_kind,
+                eviction: Eviction::Auto,
             }
         })
     }

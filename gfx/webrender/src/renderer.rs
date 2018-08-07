@@ -2585,23 +2585,23 @@ impl Renderer {
                             0,
                         );
 
-                        match source {
+                        let bytes_uploaded = match source {
                             TextureUpdateSource::Bytes { data } => {
                                 uploader.upload(
                                     rect, layer_index, stride,
                                     &data[offset as usize ..],
-                                );
+                                )
                             }
                             TextureUpdateSource::External { id, channel_index } => {
                                 let handler = self.external_image_handler
                                     .as_mut()
                                     .expect("Found external image, but no handler set!");
-                                match handler.lock(id, channel_index).source {
+                                let size = match handler.lock(id, channel_index).source {
                                     ExternalImageSource::RawData(data) => {
                                         uploader.upload(
                                             rect, layer_index, stride,
                                             &data[offset as usize ..],
-                                        );
+                                        )
                                     }
                                     ExternalImageSource::Invalid => {
                                         // Create a local buffer to fill the pbo.
@@ -2611,15 +2611,18 @@ impl Renderer {
                                         // WR haven't support RGBAF32 format in texture_cache, so
                                         // we use u8 type here.
                                         let dummy_data: Vec<u8> = vec![255; total_size as usize];
-                                        uploader.upload(rect, layer_index, stride, &dummy_data);
+                                        uploader.upload(rect, layer_index, stride, &dummy_data)
                                     }
                                     ExternalImageSource::NativeTexture(eid) => {
                                         panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
                                     }
                                 };
                                 handler.unlock(id, channel_index);
+                                size
                             }
-                        }
+                        };
+
+                        self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
                     }
                     TextureUpdateOp::Free => {
                         let texture = &mut self.texture_resolver.cache_texture_map[update.id.0];

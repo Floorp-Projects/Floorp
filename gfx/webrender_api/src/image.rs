@@ -245,7 +245,7 @@ pub struct BlobImageDescriptor {
 }
 
 pub struct RasterizedBlobImage {
-    pub size: DeviceUintSize,
+    pub rasterized_rect: DeviceUintRect,
     pub data: Arc<Vec<u8>>,
 }
 
