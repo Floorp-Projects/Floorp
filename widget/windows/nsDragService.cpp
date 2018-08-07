@@ -29,7 +29,6 @@
 #include "nsIScreenManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURL.h"
-#include "nsCWebBrowserPersist.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"

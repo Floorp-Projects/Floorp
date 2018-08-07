@@ -10,7 +10,6 @@ with Files('**'):
 DIRS += ['build']
 
 XPIDL_SOURCES += [
-    'nsCWebBrowser.idl',
     'nsIEmbeddingSiteWindow.idl',
     'nsIWebBrowser.idl',
     'nsIWebBrowserChrome.idl',

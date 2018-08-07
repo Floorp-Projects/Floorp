@@ -21,14 +21,13 @@
 #include "nsIProgressEventSink.h"
 #include "nsIFile.h"
 #include "nsIWebProgressListener2.h"
+#include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserPersistDocument.h"
 
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
-
-#include "nsCWebBrowserPersist.h"
 
 class nsIStorageStream;
 class nsIWebBrowserPersistDocument;

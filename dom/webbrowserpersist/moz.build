@@ -9,7 +9,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 XPIDL_SOURCES += [
-    'nsCWebBrowserPersist.idl',
     'nsIWebBrowserPersist.idl',
     'nsIWebBrowserPersistDocument.idl',
 ]
