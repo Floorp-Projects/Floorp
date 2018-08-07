@@ -8,6 +8,7 @@
 
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { Task } = require("devtools/shared/task");
+var asyncStorage = require("devtools/shared/async-storage");
 
 const sourceUtils = {
   isLoaded: source => source.loadedState === "loaded"
@@ -481,6 +482,8 @@ function createDebuggerContext(toolbox) {
  * Clear all the debugger related preferences.
  */
 function clearDebuggerPreferences() {
+  asyncStorage.clear();
+  Services.prefs.clearUserPref("devtools.recordreplay.enabled");
   Services.prefs.clearUserPref("devtools.debugger.pause-on-exceptions");
   Services.prefs.clearUserPref("devtools.debugger.pause-on-caught-exceptions");
   Services.prefs.clearUserPref("devtools.debugger.ignore-caught-exceptions");

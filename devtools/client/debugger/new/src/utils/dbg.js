@@ -70,6 +70,7 @@ function setupHelper(obj) {
   const dbg = { ...obj,
     selectors,
     prefs: _prefs.prefs,
+    asyncStore: _prefs.asyncStore,
     features: _prefs.features,
     timings,
     getCM,
