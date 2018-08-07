@@ -7,7 +7,6 @@
 DIRS += [
     'activity-stream',
     'aushelper',
-    'followonsearch',
     'formautofill',
     'onboarding',
     'pdfjs',
