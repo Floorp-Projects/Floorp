@@ -295,7 +295,7 @@ def parse_args():
     return (options, prefix, requested_paths, excluded_paths)
 
 
-def load_wpt_tests(requested_paths, excluded_paths, debug):
+def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
     """Return a list of `RefTestCase` objects for the jsshell testharness.js
     tests filtered by the given paths and debug-ness."""
     repo_root = abspath(os.path.join(here, "..", "..", ".."))
@@ -340,6 +340,7 @@ def load_wpt_tests(requested_paths, excluded_paths, debug):
         "metadata_root": os.path.join(wp, "meta"),
         "gecko_e10s": False,
         "verify": False,
+        "wasm": wasm,
     }
     wptcommandline.set_from_config(kwargs)
     test_paths = kwargs["test_paths"]
