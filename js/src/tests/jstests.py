@@ -295,7 +295,7 @@ def parse_args():
     return (options, prefix, requested_paths, excluded_paths)
 
 
-def load_wpt_tests(requested_paths, excluded_paths, debug):
+def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
     """Return a list of `RefTestCase` objects for the jsshell testharness.js
     tests filtered by the given paths and debug-ness."""
     repo_root = abspath(os.path.join(here, "..", "..", ".."))
@@ -340,6 +340,7 @@ def load_wpt_tests(requested_paths, excluded_paths, debug):
         "metadata_root": os.path.join(wp, "meta"),
         "gecko_e10s": False,
         "verify": False,
+        "wasm": wasm,
     }
     wptcommandline.set_from_config(kwargs)
     test_paths = kwargs["test_paths"]
@@ -382,7 +383,9 @@ def load_wpt_tests(requested_paths, excluded_paths, debug):
             extra_helper_paths=extra_helper_paths + [resolve(test_path, s) for s in test.scripts],
             wpt=test
         )
-        for test_path, test_type, test in loader.iter_tests()
+        for test_path, test in (
+            (os.path.relpath(test.path, wpt), test) for test in loader.tests["testharness"]
+        )
     ]
 
 
@@ -410,10 +413,13 @@ def load_tests(options, requested_paths, excluded_paths):
     test_count = manifest.count_tests(test_dir, path_options)
     test_gen = manifest.load_reftests(test_dir, path_options, xul_tester)
 
-    wpt_tests = load_wpt_tests(requested_paths, excluded_paths,
-                               debug=xul_tester.test("isDebugBuild"))
-    test_count += len(wpt_tests)
-    test_gen = chain(test_gen, wpt_tests)
+    # WPT tests are already run in the browser in their own harness.
+    if not options.make_manifests:
+        wpt_tests = load_wpt_tests(requested_paths, excluded_paths,
+                                   debug=xul_tester.test("isDebugBuild"),
+                                   wasm=xul_tester.test("wasmIsSupported()"))
+        test_count += len(wpt_tests)
+        test_gen = chain(test_gen, wpt_tests)
 
     if options.test_reflect_stringify is not None:
         def trs_gen(tests):

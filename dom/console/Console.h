@@ -239,14 +239,14 @@ private:
   // - the system-principal scope when we want to dispatch the ConsoleEvent to
   //   nsIConsoleAPIStorage (See the comment in Console.cpp about the use of
   //   xpc::PrivilegedJunkScope()
-  // - the mConsoleEventNotifier->Callable() scope when we want to notify this
+  // - the mConsoleEventNotifier->CallableGlobal() when we want to notify this
   //   handler about a new ConsoleEvent.
   // - It can be the global from the JSContext when RetrieveConsoleEvents is
   //   called.
   bool
   PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
                                               const Sequence<JS::Value>& aArguments,
-                                              JSObject* aTargetScope,
+                                              JS::Handle<JSObject*> aTargetScope,
                                               JS::MutableHandle<JS::Value> aValue,
                                               ConsoleCallData* aData);
 
