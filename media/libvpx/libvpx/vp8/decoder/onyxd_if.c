@@ -41,7 +41,6 @@
 #endif
 
 extern void vp8_init_loop_filter(VP8_COMMON *cm);
-extern void vp8cx_init_de_quantizer(VP8D_COMP *pbi);
 static int get_free_fb(VP8_COMMON *cm);
 static void ref_cnt_fb(int *buf, int *idx, int new_idx);
 
@@ -446,7 +445,7 @@ int vp8_create_decoder_instances(struct frame_buffers *fb, VP8D_CONFIG *oxcf) {
 #if CONFIG_MULTITHREAD
   if (setjmp(fb->pbi[0]->common.error.jmp)) {
     vp8_remove_decoder_instances(fb);
-    memset(fb->pbi, 0, sizeof(fb->pbi) / sizeof(fb->pbi[0]));
+    memset(fb->pbi, 0, sizeof(fb->pbi));
     vpx_clear_system_state();
     return VPX_CODEC_ERROR;
   }
@@ -470,4 +469,8 @@ int vp8_remove_decoder_instances(struct frame_buffers *fb) {
   /* decoder instance for single thread mode */
   remove_decompressor(pbi);
   return VPX_CODEC_OK;
+}
+
+int vp8dx_get_quantizer(const VP8D_COMP *cpi) {
+  return cpi->common.base_qindex;
 }

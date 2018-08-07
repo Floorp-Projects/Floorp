@@ -26,19 +26,19 @@ static INLINE void inter_predictor(const uint8_t *src, int src_stride,
                                    const struct scale_factors *sf, int w, int h,
                                    int ref, const InterpKernel *kernel, int xs,
                                    int ys) {
-  sf->predict[subpel_x != 0][subpel_y != 0][ref](
-      src, src_stride, dst, dst_stride, kernel[subpel_x], xs, kernel[subpel_y],
-      ys, w, h);
+  sf->predict[subpel_x != 0][subpel_y != 0][ref](src, src_stride, dst,
+                                                 dst_stride, kernel, subpel_x,
+                                                 xs, subpel_y, ys, w, h);
 }
 
 #if CONFIG_VP9_HIGHBITDEPTH
 static INLINE void highbd_inter_predictor(
-    const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
+    const uint16_t *src, int src_stride, uint16_t *dst, int dst_stride,
     const int subpel_x, const int subpel_y, const struct scale_factors *sf,
     int w, int h, int ref, const InterpKernel *kernel, int xs, int ys, int bd) {
   sf->highbd_predict[subpel_x != 0][subpel_y != 0][ref](
-      src, src_stride, dst, dst_stride, kernel[subpel_x], xs, kernel[subpel_y],
-      ys, w, h, bd);
+      src, src_stride, dst, dst_stride, kernel, subpel_x, xs, subpel_y, ys, w,
+      h, bd);
 }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
@@ -68,7 +68,7 @@ void vp9_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
 
 #if CONFIG_VP9_HIGHBITDEPTH
 void vp9_highbd_build_inter_predictor(
-    const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
+    const uint16_t *src, int src_stride, uint16_t *dst, int dst_stride,
     const MV *mv_q3, const struct scale_factors *sf, int w, int h, int do_avg,
     const InterpKernel *kernel, enum mv_precision precision, int x, int y,
     int bd);

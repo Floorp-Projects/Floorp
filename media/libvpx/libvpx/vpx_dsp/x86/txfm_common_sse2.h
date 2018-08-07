@@ -18,6 +18,9 @@
   _mm_set_epi16((int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a), \
                 (int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a))
 
+#define pair_set_epi32(a, b) \
+  _mm_set_epi32((int)(b), (int)(a), (int)(b), (int)(a))
+
 #define dual_set_epi16(a, b)                                            \
   _mm_set_epi16((int16_t)(b), (int16_t)(b), (int16_t)(b), (int16_t)(b), \
                 (int16_t)(a), (int16_t)(a), (int16_t)(a), (int16_t)(a))

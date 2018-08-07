@@ -53,13 +53,13 @@ void DecoderTest::HandlePeekResult(Decoder *const decoder,
      * pass it is not a keyframe, so we only expect VPX_CODEC_OK on the first
      * frame, which must be a keyframe. */
     if (video->frame_number() == 0)
-      ASSERT_EQ(VPX_CODEC_OK, res_peek) << "Peek return failed: "
-                                        << vpx_codec_err_to_string(res_peek);
+      ASSERT_EQ(VPX_CODEC_OK, res_peek)
+          << "Peek return failed: " << vpx_codec_err_to_string(res_peek);
   } else {
     /* The Vp9 implementation of PeekStream returns an error only if the
      * data passed to it isn't a valid Vp9 chunk. */
-    ASSERT_EQ(VPX_CODEC_OK, res_peek) << "Peek return failed: "
-                                      << vpx_codec_err_to_string(res_peek);
+    ASSERT_EQ(VPX_CODEC_OK, res_peek)
+        << "Peek return failed: " << vpx_codec_err_to_string(res_peek);
   }
 }
 

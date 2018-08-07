@@ -151,16 +151,17 @@ static INLINE uint64_t xgetbv(void) {
 #endif
 #endif
 
-#define HAS_MMX 0x01
-#define HAS_SSE 0x02
-#define HAS_SSE2 0x04
-#define HAS_SSE3 0x08
-#define HAS_SSSE3 0x10
-#define HAS_SSE4_1 0x20
-#define HAS_AVX 0x40
-#define HAS_AVX2 0x80
+#define HAS_MMX 0x001
+#define HAS_SSE 0x002
+#define HAS_SSE2 0x004
+#define HAS_SSE3 0x008
+#define HAS_SSSE3 0x010
+#define HAS_SSE4_1 0x020
+#define HAS_AVX 0x040
+#define HAS_AVX2 0x080
+#define HAS_AVX512 0x100
 #ifndef BIT
-#define BIT(n) (1 << n)
+#define BIT(n) (1u << n)
 #endif
 
 static INLINE int x86_simd_caps(void) {
@@ -209,6 +210,12 @@ static INLINE int x86_simd_caps(void) {
         cpuid(7, 0, reg_eax, reg_ebx, reg_ecx, reg_edx);
 
         if (reg_ebx & BIT(5)) flags |= HAS_AVX2;
+
+        // bits 16 (AVX-512F) & 17 (AVX-512DQ) & 28 (AVX-512CD) &
+        // 30 (AVX-512BW) & 32 (AVX-512VL)
+        if ((reg_ebx & (BIT(16) | BIT(17) | BIT(28) | BIT(30) | BIT(31))) ==
+            (BIT(16) | BIT(17) | BIT(28) | BIT(30) | BIT(31)))
+          flags |= HAS_AVX512;
       }
     }
   }

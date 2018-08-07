@@ -26,11 +26,21 @@
 /* MSVS uses _f{seek,tell}i64. */
 #define fseeko _fseeki64
 #define ftello _ftelli64
+typedef int64_t FileOffset;
 #elif defined(_WIN32)
 /* MinGW uses f{seek,tell}o64 for large files. */
 #define fseeko fseeko64
 #define ftello ftello64
-#endif /* _WIN32 */
+typedef off64_t FileOffset;
+#elif CONFIG_OS_SUPPORT
+typedef off_t FileOffset;
+/* Use 32-bit file operations in WebM file format when building ARM
+ * executables (.axf) with RVCT. */
+#else
+#define fseeko fseek
+#define ftello ftell
+typedef long FileOffset; /* NOLINT */
+#endif /* CONFIG_OS_SUPPORT */
 
 #if CONFIG_OS_SUPPORT
 #if defined(_MSC_VER)
@@ -41,13 +51,6 @@
 #include <unistd.h> /* NOLINT */
 #endif              /* _MSC_VER */
 #endif              /* CONFIG_OS_SUPPORT */
-
-/* Use 32-bit file operations in WebM file format when building ARM
- * executables (.axf) with RVCT. */
-#if !CONFIG_OS_SUPPORT
-#define fseeko fseek
-#define ftello ftell
-#endif /* CONFIG_OS_SUPPORT */
 
 #define LITERALU64(hi, lo) ((((uint64_t)hi) << 32) | lo)
 

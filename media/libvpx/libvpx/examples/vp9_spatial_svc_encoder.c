@@ -168,7 +168,7 @@ void usage_exit(void) {
 static void parse_command_line(int argc, const char **argv_,
                                AppInput *app_input, SvcContext *svc_ctx,
                                vpx_codec_enc_cfg_t *enc_cfg) {
-  struct arg arg = { 0 };
+  struct arg arg;
   char **argv = NULL;
   char **argi = NULL;
   char **argj = NULL;
@@ -509,7 +509,7 @@ static void printout_rate_control_summary(struct RateControlStats *rc,
 }
 
 vpx_codec_err_t parse_superframe_index(const uint8_t *data, size_t data_sz,
-                                       uint32_t sizes[8], int *count) {
+                                       uint64_t sizes[8], int *count) {
   // A chunk ending with a byte matching 0xc0 is an invalid chunk unless
   // it is a super frame index. If the last byte of real video compression
   // data is 0xc0 the encoder must add a 0 byte. If we have the marker but
@@ -606,9 +606,9 @@ void set_frame_flags_bypass_mode(int sl, int tl, int num_spatial_layers,
 }
 
 int main(int argc, const char **argv) {
-  AppInput app_input = { 0 };
+  AppInput app_input;
   VpxVideoWriter *writer = NULL;
-  VpxVideoInfo info = { 0 };
+  VpxVideoInfo info;
   vpx_codec_ctx_t codec;
   vpx_codec_enc_cfg_t enc_cfg;
   SvcContext svc_ctx;
@@ -640,8 +640,9 @@ int main(int argc, const char **argv) {
 
 // Allocate image buffer
 #if CONFIG_VP9_HIGHBITDEPTH
-  if (!vpx_img_alloc(&raw, enc_cfg.g_input_bit_depth == 8 ? VPX_IMG_FMT_I420
-                                                          : VPX_IMG_FMT_I42016,
+  if (!vpx_img_alloc(&raw,
+                     enc_cfg.g_input_bit_depth == 8 ? VPX_IMG_FMT_I420
+                                                    : VPX_IMG_FMT_I42016,
                      enc_cfg.g_w, enc_cfg.g_h, 32)) {
     die("Failed to allocate image %dx%d\n", enc_cfg.g_w, enc_cfg.g_h);
   }
@@ -697,12 +698,18 @@ int main(int argc, const char **argv) {
 
   if (svc_ctx.speed != -1)
     vpx_codec_control(&codec, VP8E_SET_CPUUSED, svc_ctx.speed);
-  if (svc_ctx.threads)
+  if (svc_ctx.threads) {
     vpx_codec_control(&codec, VP9E_SET_TILE_COLUMNS, (svc_ctx.threads >> 1));
+    if (svc_ctx.threads > 1)
+      vpx_codec_control(&codec, VP9E_SET_ROW_MT, 1);
+    else
+      vpx_codec_control(&codec, VP9E_SET_ROW_MT, 0);
+  }
   if (svc_ctx.speed >= 5 && svc_ctx.aqmode == 1)
     vpx_codec_control(&codec, VP9E_SET_AQ_MODE, 3);
   if (svc_ctx.speed >= 5)
     vpx_codec_control(&codec, VP8E_SET_STATIC_THRESHOLD, 1);
+  vpx_codec_control(&codec, VP8E_SET_MAX_INTRA_BITRATE_PCT, 900);
 
   // Encode frames
   while (!end_of_stream) {
@@ -763,7 +770,7 @@ int main(int argc, const char **argv) {
           SvcInternal_t *const si = (SvcInternal_t *)svc_ctx.internal;
           if (cx_pkt->data.frame.sz > 0) {
 #if OUTPUT_RC_STATS
-            uint32_t sizes[8];
+            uint64_t sizes[8];
             int count = 0;
 #endif
             vpx_video_writer_write_frame(writer, cx_pkt->data.frame.buf,
@@ -775,6 +782,8 @@ int main(int argc, const char **argv) {
               vpx_codec_control(&codec, VP9E_GET_SVC_LAYER_ID, &layer_id);
               parse_superframe_index(cx_pkt->data.frame.buf,
                                      cx_pkt->data.frame.sz, sizes, &count);
+              if (enc_cfg.ss_number_layers == 1)
+                sizes[0] = cx_pkt->data.frame.sz;
               // Note computing input_layer_frames here won't account for frame
               // drops in rate control stats.
               // TODO(marpan): Fix this for non-bypass mode so we can get stats

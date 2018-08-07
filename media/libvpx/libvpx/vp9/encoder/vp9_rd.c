@@ -146,7 +146,7 @@ static const int rd_boost_factor[16] = { 64, 32, 32, 32, 24, 16, 12, 12,
 static const int rd_frame_type_factor[FRAME_UPDATE_TYPES] = { 128, 144, 128,
                                                               128, 144 };
 
-int vp9_compute_rd_mult(const VP9_COMP *cpi, int qindex) {
+int64_t vp9_compute_rd_mult_based_on_qindex(const VP9_COMP *cpi, int qindex) {
   const int64_t q = vp9_dc_quant(qindex, 0, cpi->common.bit_depth);
 #if CONFIG_VP9_HIGHBITDEPTH
   int64_t rdmult = 0;
@@ -161,6 +161,12 @@ int vp9_compute_rd_mult(const VP9_COMP *cpi, int qindex) {
 #else
   int64_t rdmult = 88 * q * q / 24;
 #endif  // CONFIG_VP9_HIGHBITDEPTH
+  return rdmult;
+}
+
+int vp9_compute_rd_mult(const VP9_COMP *cpi, int qindex) {
+  int64_t rdmult = vp9_compute_rd_mult_based_on_qindex(cpi, qindex);
+
   if (cpi->oxcf.pass == 2 && (cpi->common.frame_type != KEY_FRAME)) {
     const GF_GROUP *const gf_group = &cpi->twopass.gf_group;
     const FRAME_UPDATE_TYPE frame_type = gf_group->update_type[gf_group->index];
@@ -306,63 +312,62 @@ void vp9_initialize_rd_consts(VP9_COMP *cpi) {
   }
 }
 
+// NOTE: The tables below must be of the same size.
+
+// The functions described below are sampled at the four most significant
+// bits of x^2 + 8 / 256.
+
+// Normalized rate:
+// This table models the rate for a Laplacian source with given variance
+// when quantized with a uniform quantizer with given stepsize. The
+// closed form expression is:
+// Rn(x) = H(sqrt(r)) + sqrt(r)*[1 + H(r)/(1 - r)],
+// where r = exp(-sqrt(2) * x) and x = qpstep / sqrt(variance),
+// and H(x) is the binary entropy function.
+static const int rate_tab_q10[] = {
+  65536, 6086, 5574, 5275, 5063, 4899, 4764, 4651, 4553, 4389, 4255, 4142, 4044,
+  3958,  3881, 3811, 3748, 3635, 3538, 3453, 3376, 3307, 3244, 3186, 3133, 3037,
+  2952,  2877, 2809, 2747, 2690, 2638, 2589, 2501, 2423, 2353, 2290, 2232, 2179,
+  2130,  2084, 2001, 1928, 1862, 1802, 1748, 1698, 1651, 1608, 1530, 1460, 1398,
+  1342,  1290, 1243, 1199, 1159, 1086, 1021, 963,  911,  864,  821,  781,  745,
+  680,   623,  574,  530,  490,  455,  424,  395,  345,  304,  269,  239,  213,
+  190,   171,  154,  126,  104,  87,   73,   61,   52,   44,   38,   28,   21,
+  16,    12,   10,   8,    6,    5,    3,    2,    1,    1,    1,    0,    0,
+};
+
+// Normalized distortion:
+// This table models the normalized distortion for a Laplacian source
+// with given variance when quantized with a uniform quantizer
+// with given stepsize. The closed form expression is:
+// Dn(x) = 1 - 1/sqrt(2) * x / sinh(x/sqrt(2))
+// where x = qpstep / sqrt(variance).
+// Note the actual distortion is Dn * variance.
+static const int dist_tab_q10[] = {
+  0,    0,    1,    1,    1,    2,    2,    2,    3,    3,    4,    5,    5,
+  6,    7,    7,    8,    9,    11,   12,   13,   15,   16,   17,   18,   21,
+  24,   26,   29,   31,   34,   36,   39,   44,   49,   54,   59,   64,   69,
+  73,   78,   88,   97,   106,  115,  124,  133,  142,  151,  167,  184,  200,
+  215,  231,  245,  260,  274,  301,  327,  351,  375,  397,  418,  439,  458,
+  495,  528,  559,  587,  613,  637,  659,  680,  717,  749,  777,  801,  823,
+  842,  859,  874,  899,  919,  936,  949,  960,  969,  977,  983,  994,  1001,
+  1006, 1010, 1013, 1015, 1017, 1018, 1020, 1022, 1022, 1023, 1023, 1023, 1024,
+};
+static const int xsq_iq_q10[] = {
+  0,      4,      8,      12,     16,     20,     24,     28,     32,
+  40,     48,     56,     64,     72,     80,     88,     96,     112,
+  128,    144,    160,    176,    192,    208,    224,    256,    288,
+  320,    352,    384,    416,    448,    480,    544,    608,    672,
+  736,    800,    864,    928,    992,    1120,   1248,   1376,   1504,
+  1632,   1760,   1888,   2016,   2272,   2528,   2784,   3040,   3296,
+  3552,   3808,   4064,   4576,   5088,   5600,   6112,   6624,   7136,
+  7648,   8160,   9184,   10208,  11232,  12256,  13280,  14304,  15328,
+  16352,  18400,  20448,  22496,  24544,  26592,  28640,  30688,  32736,
+  36832,  40928,  45024,  49120,  53216,  57312,  61408,  65504,  73696,
+  81888,  90080,  98272,  106464, 114656, 122848, 131040, 147424, 163808,
+  180192, 196576, 212960, 229344, 245728,
+};
+
 static void model_rd_norm(int xsq_q10, int *r_q10, int *d_q10) {
-  // NOTE: The tables below must be of the same size.
-
-  // The functions described below are sampled at the four most significant
-  // bits of x^2 + 8 / 256.
-
-  // Normalized rate:
-  // This table models the rate for a Laplacian source with given variance
-  // when quantized with a uniform quantizer with given stepsize. The
-  // closed form expression is:
-  // Rn(x) = H(sqrt(r)) + sqrt(r)*[1 + H(r)/(1 - r)],
-  // where r = exp(-sqrt(2) * x) and x = qpstep / sqrt(variance),
-  // and H(x) is the binary entropy function.
-  static const int rate_tab_q10[] = {
-    65536, 6086, 5574, 5275, 5063, 4899, 4764, 4651, 4553, 4389, 4255, 4142,
-    4044,  3958, 3881, 3811, 3748, 3635, 3538, 3453, 3376, 3307, 3244, 3186,
-    3133,  3037, 2952, 2877, 2809, 2747, 2690, 2638, 2589, 2501, 2423, 2353,
-    2290,  2232, 2179, 2130, 2084, 2001, 1928, 1862, 1802, 1748, 1698, 1651,
-    1608,  1530, 1460, 1398, 1342, 1290, 1243, 1199, 1159, 1086, 1021, 963,
-    911,   864,  821,  781,  745,  680,  623,  574,  530,  490,  455,  424,
-    395,   345,  304,  269,  239,  213,  190,  171,  154,  126,  104,  87,
-    73,    61,   52,   44,   38,   28,   21,   16,   12,   10,   8,    6,
-    5,     3,    2,    1,    1,    1,    0,    0,
-  };
-
-  // Normalized distortion:
-  // This table models the normalized distortion for a Laplacian source
-  // with given variance when quantized with a uniform quantizer
-  // with given stepsize. The closed form expression is:
-  // Dn(x) = 1 - 1/sqrt(2) * x / sinh(x/sqrt(2))
-  // where x = qpstep / sqrt(variance).
-  // Note the actual distortion is Dn * variance.
-  static const int dist_tab_q10[] = {
-    0,    0,    1,    1,    1,    2,    2,    2,    3,    3,    4,    5,
-    5,    6,    7,    7,    8,    9,    11,   12,   13,   15,   16,   17,
-    18,   21,   24,   26,   29,   31,   34,   36,   39,   44,   49,   54,
-    59,   64,   69,   73,   78,   88,   97,   106,  115,  124,  133,  142,
-    151,  167,  184,  200,  215,  231,  245,  260,  274,  301,  327,  351,
-    375,  397,  418,  439,  458,  495,  528,  559,  587,  613,  637,  659,
-    680,  717,  749,  777,  801,  823,  842,  859,  874,  899,  919,  936,
-    949,  960,  969,  977,  983,  994,  1001, 1006, 1010, 1013, 1015, 1017,
-    1018, 1020, 1022, 1022, 1023, 1023, 1023, 1024,
-  };
-  static const int xsq_iq_q10[] = {
-    0,      4,      8,      12,     16,     20,     24,     28,     32,
-    40,     48,     56,     64,     72,     80,     88,     96,     112,
-    128,    144,    160,    176,    192,    208,    224,    256,    288,
-    320,    352,    384,    416,    448,    480,    544,    608,    672,
-    736,    800,    864,    928,    992,    1120,   1248,   1376,   1504,
-    1632,   1760,   1888,   2016,   2272,   2528,   2784,   3040,   3296,
-    3552,   3808,   4064,   4576,   5088,   5600,   6112,   6624,   7136,
-    7648,   8160,   9184,   10208,  11232,  12256,  13280,  14304,  15328,
-    16352,  18400,  20448,  22496,  24544,  26592,  28640,  30688,  32736,
-    36832,  40928,  45024,  49120,  53216,  57312,  61408,  65504,  73696,
-    81888,  90080,  98272,  106464, 114656, 122848, 131040, 147424, 163808,
-    180192, 196576, 212960, 229344, 245728,
-  };
   const int tmp = (xsq_q10 >> 2) + 8;
   const int k = get_msb(tmp) - 3;
   const int xq = (k << 3) + ((tmp >> k) & 0x7);
@@ -372,6 +377,24 @@ static void model_rd_norm(int xsq_q10, int *r_q10, int *d_q10) {
   *r_q10 = (rate_tab_q10[xq] * b_q10 + rate_tab_q10[xq + 1] * a_q10) >> 10;
   *d_q10 = (dist_tab_q10[xq] * b_q10 + dist_tab_q10[xq + 1] * a_q10) >> 10;
 }
+
+static void model_rd_norm_vec(int xsq_q10[MAX_MB_PLANE],
+                              int r_q10[MAX_MB_PLANE],
+                              int d_q10[MAX_MB_PLANE]) {
+  int i;
+  const int one_q10 = 1 << 10;
+  for (i = 0; i < MAX_MB_PLANE; ++i) {
+    const int tmp = (xsq_q10[i] >> 2) + 8;
+    const int k = get_msb(tmp) - 3;
+    const int xq = (k << 3) + ((tmp >> k) & 0x7);
+    const int a_q10 = ((xsq_q10[i] - xsq_iq_q10[xq]) << 10) >> (2 + k);
+    const int b_q10 = one_q10 - a_q10;
+    r_q10[i] = (rate_tab_q10[xq] * b_q10 + rate_tab_q10[xq + 1] * a_q10) >> 10;
+    d_q10[i] = (dist_tab_q10[xq] * b_q10 + dist_tab_q10[xq + 1] * a_q10) >> 10;
+  }
+}
+
+static const uint32_t MAX_XSQ_Q10 = 245727;
 
 void vp9_model_rd_from_var_lapndz(unsigned int var, unsigned int n_log2,
                                   unsigned int qstep, int *rate,
@@ -387,13 +410,36 @@ void vp9_model_rd_from_var_lapndz(unsigned int var, unsigned int n_log2,
     *dist = 0;
   } else {
     int d_q10, r_q10;
-    static const uint32_t MAX_XSQ_Q10 = 245727;
     const uint64_t xsq_q10_64 =
         (((uint64_t)qstep * qstep << (n_log2 + 10)) + (var >> 1)) / var;
     const int xsq_q10 = (int)VPXMIN(xsq_q10_64, MAX_XSQ_Q10);
     model_rd_norm(xsq_q10, &r_q10, &d_q10);
     *rate = ROUND_POWER_OF_TWO(r_q10 << n_log2, 10 - VP9_PROB_COST_SHIFT);
     *dist = (var * (int64_t)d_q10 + 512) >> 10;
+  }
+}
+
+// Implements a fixed length vector form of vp9_model_rd_from_var_lapndz where
+// vectors are of length MAX_MB_PLANE and all elements of var are non-zero.
+void vp9_model_rd_from_var_lapndz_vec(unsigned int var[MAX_MB_PLANE],
+                                      unsigned int n_log2[MAX_MB_PLANE],
+                                      unsigned int qstep[MAX_MB_PLANE],
+                                      int64_t *rate_sum, int64_t *dist_sum) {
+  int i;
+  int xsq_q10[MAX_MB_PLANE], d_q10[MAX_MB_PLANE], r_q10[MAX_MB_PLANE];
+  for (i = 0; i < MAX_MB_PLANE; ++i) {
+    const uint64_t xsq_q10_64 =
+        (((uint64_t)qstep[i] * qstep[i] << (n_log2[i] + 10)) + (var[i] >> 1)) /
+        var[i];
+    xsq_q10[i] = (int)VPXMIN(xsq_q10_64, MAX_XSQ_Q10);
+  }
+  model_rd_norm_vec(xsq_q10, r_q10, d_q10);
+  for (i = 0; i < MAX_MB_PLANE; ++i) {
+    int rate =
+        ROUND_POWER_OF_TWO(r_q10[i] << n_log2[i], 10 - VP9_PROB_COST_SHIFT);
+    int64_t dist = (var[i] * (int64_t)d_q10[i] + 512) >> 10;
+    *rate_sum += rate;
+    *dist_sum += dist;
   }
 }
 
@@ -624,19 +670,21 @@ void vp9_update_rd_thresh_fact(int (*factor_buf)[MAX_MODES], int rd_thresh,
   }
 }
 
-int vp9_get_intra_cost_penalty(int qindex, int qdelta,
-                               vpx_bit_depth_t bit_depth) {
-  const int q = vp9_dc_quant(qindex, qdelta, bit_depth);
-#if CONFIG_VP9_HIGHBITDEPTH
-  switch (bit_depth) {
-    case VPX_BITS_8: return 20 * q;
-    case VPX_BITS_10: return 5 * q;
-    case VPX_BITS_12: return ROUND_POWER_OF_TWO(5 * q, 2);
-    default:
-      assert(0 && "bit_depth should be VPX_BITS_8, VPX_BITS_10 or VPX_BITS_12");
-      return -1;
-  }
-#else
-  return 20 * q;
-#endif  // CONFIG_VP9_HIGHBITDEPTH
+int vp9_get_intra_cost_penalty(const VP9_COMP *const cpi, BLOCK_SIZE bsize,
+                               int qindex, int qdelta) {
+  // Reduce the intra cost penalty for small blocks (<=16x16).
+  int reduction_fac =
+      (bsize <= BLOCK_16X16) ? ((bsize <= BLOCK_8X8) ? 4 : 2) : 0;
+
+  if (cpi->noise_estimate.enabled && cpi->noise_estimate.level == kHigh)
+    // Don't reduce intra cost penalty if estimated noise level is high.
+    reduction_fac = 0;
+
+  // Always use VPX_BITS_8 as input here because the penalty is applied
+  // to rate not distortion so we want a consistent penalty for all bit
+  // depths. If the actual bit depth were passed in here then the value
+  // retured by vp9_dc_quant() would scale with the bit depth and we would
+  // then need to apply inverse scaling to correct back to a bit depth
+  // independent rate penalty.
+  return (20 * vp9_dc_quant(qindex, qdelta, VPX_BITS_8)) >> reduction_fac;
 }

@@ -201,6 +201,8 @@ void EncoderTest::RunLoop(VideoSource *video) {
       PreEncodeFrameHook(video, encoder.get());
       encoder->EncodeFrame(video, frame_flags_);
 
+      PostEncodeFrameHook(encoder.get());
+
       CxDataIterator iter = encoder->GetCxData();
 
       bool has_cxdata = false;
@@ -225,6 +227,8 @@ void EncoderTest::RunLoop(VideoSource *video) {
             break;
 
           case VPX_CODEC_PSNR_PKT: PSNRPktHook(pkt); break;
+
+          case VPX_CODEC_STATS_PKT: StatsPktHook(pkt); break;
 
           default: break;
         }

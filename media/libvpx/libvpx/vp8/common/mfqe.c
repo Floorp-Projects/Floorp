@@ -74,8 +74,7 @@ static void apply_ifactor(unsigned char *y_src, int y_src_stride,
                             src_weight);
     vp8_filter_by_weight8x8(v_src, uv_src_stride, v_dst, uv_dst_stride,
                             src_weight);
-  } else /* if (block_size == 8) */
-  {
+  } else {
     vp8_filter_by_weight8x8(y_src, y_src_stride, y_dst, y_dst_stride,
                             src_weight);
     vp8_filter_by_weight4x4(u_src, uv_src_stride, u_dst, uv_dst_stride,
@@ -136,8 +135,7 @@ static void multiframe_quality_enhance_block(
     usad = (vpx_sad8x8(u, uv_stride, ud, uvd_stride) + 32) >> 6;
     vsad = (vpx_sad8x8(v, uv_stride, vd, uvd_stride) + 32) >> 6;
 #endif
-  } else /* if (blksize == 8) */
-  {
+  } else {
     actd = (vpx_variance8x8(yd, yd_stride, VP8_ZEROS, 0, &sse) + 32) >> 6;
     act = (vpx_variance8x8(y, y_stride, VP8_ZEROS, 0, &sse) + 32) >> 6;
 #ifdef USE_SSD
@@ -186,14 +184,12 @@ static void multiframe_quality_enhance_block(
       apply_ifactor(y, y_stride, yd, yd_stride, u, v, uv_stride, ud, vd,
                     uvd_stride, blksize, ifactor);
     }
-  } else /* else implicitly copy from previous frame */
-  {
+  } else { /* else implicitly copy from previous frame */
     if (blksize == 16) {
       vp8_copy_mem16x16(y, y_stride, yd, yd_stride);
       vp8_copy_mem8x8(u, uv_stride, ud, uvd_stride);
       vp8_copy_mem8x8(v, uv_stride, vd, uvd_stride);
-    } else /* if (blksize == 8) */
-    {
+    } else {
       vp8_copy_mem8x8(y, y_stride, yd, yd_stride);
       for (up = u, udp = ud, i = 0; i < uvblksize;
            ++i, up += uv_stride, udp += uvd_stride) {
@@ -297,8 +293,7 @@ void vp8_multiframe_quality_enhance(VP8_COMMON *cm) {
               }
             }
           }
-        } else /* totmap = 4 */
-        {
+        } else { /* totmap = 4 */
           multiframe_quality_enhance_block(
               16, qcurr, qprev, y_ptr, u_ptr, v_ptr, show->y_stride,
               show->uv_stride, yd_ptr, ud_ptr, vd_ptr, dest->y_stride,

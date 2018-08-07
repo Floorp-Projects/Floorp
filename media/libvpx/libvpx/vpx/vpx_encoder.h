@@ -63,7 +63,7 @@ extern "C" {
  * fields to structures
  */
 #define VPX_ENCODER_ABI_VERSION \
-  (5 + VPX_CODEC_ABI_VERSION) /**<\hideinitializer*/
+  (6 + VPX_CODEC_ABI_VERSION) /**<\hideinitializer*/
 
 /*! \brief Encoder capabilities bitfield
  *
@@ -82,10 +82,6 @@ extern "C" {
  *  returned partition by partition.
  */
 #define VPX_CODEC_CAP_OUTPUT_PARTITION 0x20000
-
-/*! Can support input images at greater than 8 bitdepth.
- */
-#define VPX_CODEC_CAP_HIGHBITDEPTH 0x40000
 
 /*! \brief Initialization-time Feature Enabling
  *
@@ -158,9 +154,8 @@ enum vpx_codec_cx_pkt_kind {
   VPX_CODEC_STATS_PKT,      /**< Two-pass statistics for this frame */
   VPX_CODEC_FPMB_STATS_PKT, /**< first pass mb statistics for this frame */
   VPX_CODEC_PSNR_PKT,       /**< PSNR statistics for this frame */
-// Spatial SVC is still experimental and may be removed before the next ABI
-// bump.
-#if VPX_ENCODER_ABI_VERSION > (5 + VPX_CODEC_ABI_VERSION)
+// Spatial SVC is still experimental and may be removed.
+#if defined(VPX_TEST_SPATIAL_SVC)
   VPX_CODEC_SPATIAL_SVC_LAYER_SIZES, /**< Sizes for each layer in this frame*/
   VPX_CODEC_SPATIAL_SVC_LAYER_PSNR,  /**< PSNR for each layer in this frame*/
 #endif
@@ -196,9 +191,8 @@ typedef struct vpx_codec_cx_pkt {
       double psnr[4];          /**< PSNR, total/y/u/v */
     } psnr;                    /**< data for PSNR packet */
     vpx_fixed_buf_t raw;       /**< data for arbitrary packets */
-// Spatial SVC is still experimental and may be removed before the next
-// ABI bump.
-#if VPX_ENCODER_ABI_VERSION > (5 + VPX_CODEC_ABI_VERSION)
+// Spatial SVC is still experimental and may be removed.
+#if defined(VPX_TEST_SPATIAL_SVC)
     size_t layer_sizes[VPX_SS_MAX_LAYERS];
     struct vpx_psnr_pkt layer_psnr[VPX_SS_MAX_LAYERS];
 #endif
@@ -512,25 +506,31 @@ typedef struct vpx_codec_enc_cfg {
 
   /*!\brief Rate control adaptation undershoot control
    *
-   * This value, expressed as a percentage of the target bitrate,
+   * VP8: Expressed as a percentage of the target bitrate,
    * controls the maximum allowed adaptation speed of the codec.
    * This factor controls the maximum amount of bits that can
    * be subtracted from the target bitrate in order to compensate
    * for prior overshoot.
-   *
-   * Valid values in the range 0-1000.
+   * VP9: Expressed as a percentage of the target bitrate, a threshold
+   * undershoot level (current rate vs target) beyond which more agressive
+   * corrective measures are taken.
+   *   *
+   * Valid values in the range VP8:0-1000 VP9: 0-100.
    */
   unsigned int rc_undershoot_pct;
 
   /*!\brief Rate control adaptation overshoot control
    *
-   * This value, expressed as a percentage of the target bitrate,
+   * VP8: Expressed as a percentage of the target bitrate,
    * controls the maximum allowed adaptation speed of the codec.
    * This factor controls the maximum amount of bits that can
    * be added to the target bitrate in order to compensate for
    * prior undershoot.
+   * VP9: Expressed as a percentage of the target bitrate, a threshold
+   * overshoot level (current rate vs target) beyond which more agressive
+   * corrective measures are taken.
    *
-   * Valid values in the range 0-1000.
+   * Valid values in the range VP8:0-1000 VP9: 0-100.
    */
   unsigned int rc_overshoot_pct;
 
@@ -594,6 +594,13 @@ typedef struct vpx_codec_enc_cfg {
    * the maximum bitrate to be used for a single GOP (aka "section")
    */
   unsigned int rc_2pass_vbr_maxsection_pct;
+
+  /*!\brief Two-pass corpus vbr mode complexity control
+  * Used only in VP9: A value representing the corpus midpoint complexity
+  * for corpus vbr mode. This value defaults to 0 which disables corpus vbr
+  * mode in favour of normal vbr mode.
+  */
+  unsigned int rc_2pass_vbr_corpus_complexity;
 
   /*
    * keyframing settings (kf)

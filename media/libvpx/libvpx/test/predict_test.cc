@@ -324,6 +324,15 @@ INSTANTIATE_TEST_CASE_P(
                       make_tuple(4, 4, &vp8_sixtap_predict4x4_msa)));
 #endif
 
+#if HAVE_MMI
+INSTANTIATE_TEST_CASE_P(
+    MMI, SixtapPredictTest,
+    ::testing::Values(make_tuple(16, 16, &vp8_sixtap_predict16x16_mmi),
+                      make_tuple(8, 8, &vp8_sixtap_predict8x8_mmi),
+                      make_tuple(8, 4, &vp8_sixtap_predict8x4_mmi),
+                      make_tuple(4, 4, &vp8_sixtap_predict4x4_mmi)));
+#endif
+
 class BilinearPredictTest : public PredictTestBase {};
 
 TEST_P(BilinearPredictTest, TestWithRandomData) {

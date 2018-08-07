@@ -21,6 +21,14 @@ extern "C" {
 
 #define MOTION_MAGNITUDE_THRESHOLD (8 * 3)
 
+// Denoiser is used in non svc real-time mode which does not use alt-ref, so no
+// need to allocate for it, and hence we need MAX_REF_FRAME - 1
+#define NONSVC_REF_FRAMES MAX_REF_FRAMES - 1
+
+// Number of frame buffers when SVC is used. [0] for current denoised buffer and
+// [1..8] for REF_FRAMES
+#define SVC_REF_FRAMES 9
+
 typedef enum vp9_denoiser_decision {
   COPY_BLOCK,
   FILTER_BLOCK,
@@ -35,12 +43,13 @@ typedef enum vp9_denoiser_level {
 } VP9_DENOISER_LEVEL;
 
 typedef struct vp9_denoiser {
-  YV12_BUFFER_CONFIG running_avg_y[MAX_REF_FRAMES];
-  YV12_BUFFER_CONFIG mc_running_avg_y;
+  YV12_BUFFER_CONFIG *running_avg_y;
+  YV12_BUFFER_CONFIG *mc_running_avg_y;
   YV12_BUFFER_CONFIG last_source;
-  int increase_denoising;
   int frame_buffer_initialized;
   int reset;
+  int num_ref_frames;
+  int num_layers;
   VP9_DENOISER_LEVEL denoising_level;
   VP9_DENOISER_LEVEL prev_denoising_level;
 } VP9_DENOISER;
@@ -58,13 +67,13 @@ typedef struct {
 } VP9_PICKMODE_CTX_DEN;
 
 struct VP9_COMP;
+struct SVC;
 
-void vp9_denoiser_update_frame_info(VP9_DENOISER *denoiser,
-                                    YV12_BUFFER_CONFIG src,
-                                    FRAME_TYPE frame_type,
-                                    int refresh_alt_ref_frame,
-                                    int refresh_golden_frame,
-                                    int refresh_last_frame, int resized);
+void vp9_denoiser_update_frame_info(
+    VP9_DENOISER *denoiser, YV12_BUFFER_CONFIG src, FRAME_TYPE frame_type,
+    int refresh_alt_ref_frame, int refresh_golden_frame, int refresh_last_frame,
+    int alt_fb_idx, int gld_fb_idx, int lst_fb_idx, int resized,
+    int svc_base_is_key, int second_spatial_layer);
 
 void vp9_denoiser_denoise(struct VP9_COMP *cpi, MACROBLOCK *mb, int mi_row,
                           int mi_col, BLOCK_SIZE bs, PICK_MODE_CONTEXT *ctx,
@@ -76,8 +85,14 @@ void vp9_denoiser_update_frame_stats(MODE_INFO *mi, unsigned int sse,
                                      PREDICTION_MODE mode,
                                      PICK_MODE_CONTEXT *ctx);
 
-int vp9_denoiser_alloc(VP9_DENOISER *denoiser, int width, int height, int ssx,
-                       int ssy,
+int vp9_denoiser_realloc_svc(VP9_COMMON *cm, VP9_DENOISER *denoiser,
+                             int svc_buf_shift, int refresh_alt,
+                             int refresh_gld, int refresh_lst, int alt_fb_idx,
+                             int gld_fb_idx, int lst_fb_idx);
+
+int vp9_denoiser_alloc(VP9_COMMON *cm, struct SVC *svc, VP9_DENOISER *denoiser,
+                       int use_svc, int noise_sen, int width, int height,
+                       int ssx, int ssy,
 #if CONFIG_VP9_HIGHBITDEPTH
                        int use_highbitdepth,
 #endif
@@ -96,6 +111,13 @@ static INLINE int total_adj_strong_thresh(BLOCK_SIZE bs,
 void vp9_denoiser_free(VP9_DENOISER *denoiser);
 
 void vp9_denoiser_set_noise_level(VP9_DENOISER *denoiser, int noise_level);
+
+int64_t vp9_scale_part_thresh(int64_t threshold, VP9_DENOISER_LEVEL noise_level,
+                              int content_state, int temporal_layer_id);
+
+int64_t vp9_scale_acskip_thresh(int64_t threshold,
+                                VP9_DENOISER_LEVEL noise_level, int abs_sumdiff,
+                                int temporal_layer_id);
 
 #ifdef __cplusplus
 }  // extern "C"
