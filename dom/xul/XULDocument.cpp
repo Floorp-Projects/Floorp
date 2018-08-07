@@ -47,7 +47,6 @@
 #include "nsString.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
-#include "nsXULCommandDispatcher.h"
 #include "nsXULElement.h"
 #include "nsXULPrototypeCache.h"
 #include "mozilla/Logging.h"
@@ -235,14 +234,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULDocument, XMLDocument)
     // XXX tmp->mContextStack?
 
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentPrototype)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypes)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStore)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULDocument, XMLDocument)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStore)
     //XXX We should probably unlink all the objects we traverse.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -1154,9 +1151,6 @@ XULDocument::Init()
 {
     nsresult rv = XMLDocument::Init();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Create our command dispatcher and hook it up.
-    mCommandDispatcher = new nsXULCommandDispatcher(this);
 
     if (gRefCnt++ == 0) {
         // ensure that the XUL prototype cache is instantiated successfully,
