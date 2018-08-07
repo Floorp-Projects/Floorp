@@ -196,7 +196,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.23.4"
 
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
-    focusImplementation 'com.google.android.gms:play-services-analytics:16.0.1' // Required by Adjust
+    focusImplementation 'com.android.installreferrer:installreferrer:1.0' // Required by Adjust
 
     armImplementation "org.mozilla:geckoview-beta-armeabi-v7a:${geckoview_version}"
     x86Implementation "org.mozilla:geckoview-beta-x86:${geckoview_version}"

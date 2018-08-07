@@ -13,7 +13,6 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.view.View;
 
 import org.mozilla.focus.R;
 
@@ -71,10 +70,10 @@ public class FloatingSessionsButton extends FloatingActionButton {
         }
 
         if (shouldBeVisible) {
-            setVisibility(View.VISIBLE);
+            show();
             invalidate();
         } else {
-            setVisibility(View.GONE);
+            hide();
         }
     }
 

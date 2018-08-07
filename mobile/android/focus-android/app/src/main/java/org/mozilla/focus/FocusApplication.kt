@@ -6,7 +6,7 @@
 package org.mozilla.focus
 
 import android.os.StrictMode
-import android.preference.PreferenceManager
+import android.support.v7.preference.PreferenceManager
 import kotlinx.coroutines.experimental.CoroutineDispatcher
 import kotlinx.coroutines.experimental.asCoroutineDispatcher
 import kotlinx.coroutines.experimental.launch

@@ -68,6 +68,10 @@ public class FloatingEraseButton extends FloatingActionButton {
             return;
         }
 
-        super.setVisibility(visibility);
+        if (visibility == View.VISIBLE) {
+            show();
+        } else {
+            hide();
+        }
     }
 }
