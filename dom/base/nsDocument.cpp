@@ -1696,11 +1696,10 @@ nsDocument::~nsDocument()
   // Invalidate cached array of child nodes
   InvalidateChildNodes();
 
-  for (uint32_t indx = mChildren.ChildCount(); indx-- != 0; ) {
-    mChildren.ChildAt(indx)->UnbindFromTree();
-    mChildren.RemoveChildAt(indx);
-  }
-  mFirstChild = nullptr;
+  // We should not have child nodes when destructor is called,
+  // since child nodes keep their owner document alive.
+  MOZ_ASSERT(!HasChildren());
+
   mCachedRootElement = nullptr;
 
   for (auto& sheets : mAdditionalSheets) {
@@ -1866,12 +1865,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   tmp->mExternalResourceMap.Traverse(&cb);
 
-  // Traverse the mChildren nsAttrAndChildArray.
-  for (int32_t indx = int32_t(tmp->mChildren.ChildCount()); indx > 0; --indx) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildren[i]");
-    cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
-  }
-
   // Traverse all nsIDocument pointer members.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSecurityInfo)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDisplayDocument)
@@ -1987,25 +1980,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   nsINode::Unlink(tmp);
 
-  // Unlink the mChildren nsAttrAndChildArray.
-  uint32_t childCount = tmp->mChildren.ChildCount();
-  if (childCount) {
-    while (childCount-- > 0) {
-      // Hold a strong ref to the node when we remove it, because we may be
-      // the last reference to it.  We need to call TakeChildAt() and
-      // update mFirstChild before calling UnbindFromTree, since this last
-      // can notify various observers and they should really see consistent
-      // tree state.
-      // If this code changes, change the corresponding code in
-      // FragmentOrElement's unlink impl and ContentUnbinder::UnbindSubtree.
-      nsCOMPtr<nsIContent> child = tmp->mChildren.TakeChildAt(childCount);
-      if (childCount == 0) {
-        tmp->mFirstChild = nullptr;
-      }
-      child->UnbindFromTree();
-    }
+  while (tmp->HasChildren()) {
+    // Hold a strong ref to the node when we remove it, because we may be
+    // the last reference to it.
+    // If this code changes, change the corresponding code in nsDocument's
+    // unlink impl and ContentUnbinder::UnbindSubtree.
+    nsCOMPtr<nsIContent> child = tmp->GetLastChild();
+    tmp->DisconnectChild(child);
+    child->UnbindFromTree();
   }
-  tmp->mFirstChild = nullptr;
 
   tmp->UnlinkOriginalDocumentIfStatic();
 
@@ -2253,22 +2236,16 @@ nsIDocument::ResetToURI(nsIURI* aURI,
 
   bool oldVal = mInUnlinkOrDeletion;
   mInUnlinkOrDeletion = true;
-  uint32_t count = mChildren.ChildCount();
   { // Scope for update
     MOZ_AUTO_DOC_UPDATE(this, true);
 
     // Invalidate cached array of child nodes
     InvalidateChildNodes();
 
-    for (int32_t i = int32_t(count) - 1; i >= 0; i--) {
-      nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
-
+    while (HasChildren()) {
+      nsCOMPtr<nsIContent> content = GetLastChild();
       nsIContent* previousSibling = content->GetPreviousSibling();
-
-      if (nsINode::GetFirstChild() == content) {
-        mFirstChild = content->GetNextSibling();
-      }
-      mChildren.RemoveChildAt(i);
+      DisconnectChild(content);
       if (content == mCachedRootElement) {
         // Immediately clear mCachedRootElement, now that it's been removed
         // from mChildren, so that GetRootElement() will stop returning this
@@ -4143,10 +4120,7 @@ nsIDocument::InsertChildBefore(nsIContent* aKid,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
-  MOZ_ASSERT(index >= 0);
-
-  return doInsertChildAt(aKid, index, aNotify, mChildren);
+  return nsINode::InsertChildBefore(aKid, aBeforeThis, aNotify);
 }
 
 void
@@ -4159,13 +4133,13 @@ nsIDocument::RemoveChildNode(nsIContent* aKid, bool aNotify)
 
   // Preemptively clear mCachedRootElement, since we may be about to remove it
   // from our child list, and we don't want to return this maybe-obsolete value
-  // from any GetRootElement() calls that happen inside of doRemoveChildAt().
-  // (NOTE: for this to be useful, doRemoveChildAt() must NOT trigger any
+  // from any GetRootElement() calls that happen inside of RemoveChildNode().
+  // (NOTE: for this to be useful, RemoveChildNode() must NOT trigger any
   // GetRootElement() calls until after it's removed the child from mChildren.
   // Any call before that point would restore this soon-to-be-obsolete cached
   // answer, and our clearing here would be fruitless.)
   mCachedRootElement = nullptr;
-  doRemoveChildAt(ComputeIndexOf(aKid), aNotify, aKid, mChildren);
+  nsINode::RemoveChildNode(aKid, aNotify);
   MOZ_ASSERT(mCachedRootElement != aKid,
              "Stale pointer in mCachedRootElement, after we tried to clear it "
              "(maybe somebody called GetRootElement() too early?)");
@@ -8770,10 +8744,6 @@ nsDocument::CloneDocHelper(nsDocument* clone, bool aPreallocateChildren) const
   clone->mType = mType;
   clone->mXMLDeclarationBits = mXMLDeclarationBits;
   clone->mBaseTarget = mBaseTarget;
-
-  // Preallocate attributes and child arrays
-  rv = clone->mChildren.EnsureCapacityToClone(mChildren, aPreallocateChildren);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

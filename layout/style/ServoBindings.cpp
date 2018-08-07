@@ -147,6 +147,12 @@ Gecko_GetLastChild(RawGeckoNodeBorrowed aNode)
 }
 
 RawGeckoNodeBorrowedOrNull
+Gecko_GetPreviousSibling(RawGeckoNodeBorrowed aNode)
+{
+  return aNode->GetPreviousSibling();
+}
+
+RawGeckoNodeBorrowedOrNull
 Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed aNode)
 {
   return aNode->GetFlattenedTreeParentNodeForStyle();
