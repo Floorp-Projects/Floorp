@@ -23,27 +23,13 @@ DrawTargetCaptureImpl::~DrawTargetCaptureImpl()
   }
 }
 
-DrawTargetCaptureImpl::DrawTargetCaptureImpl(gfx::DrawTarget* aTarget, size_t aFlushBytes)
-  : mSnapshot(nullptr),
-    mStride(0),
-    mSurfaceAllocationSize(0),
-    mFlushBytes(aFlushBytes)
-{
-  mSize = aTarget->GetSize();
-  mFormat = aTarget->GetFormat();
-  SetPermitSubpixelAA(aTarget->GetPermitSubpixelAA());
-
-  mRefDT = aTarget;
-}
-
 DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
                                              const IntSize& aSize,
                                              SurfaceFormat aFormat)
   : mSize(aSize),
     mSnapshot(nullptr),
     mStride(0),
-    mSurfaceAllocationSize(0),
-    mFlushBytes(0)
+    mSurfaceAllocationSize(0)
 {
   RefPtr<DrawTarget> screenRefDT =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
@@ -89,7 +75,6 @@ DrawTargetCaptureImpl::Init(const IntSize& aSize, DrawTarget* aRefDT)
 void
 DrawTargetCaptureImpl::InitForData(int32_t aStride, size_t aSurfaceAllocationSize)
 {
-  MOZ_ASSERT(!mFlushBytes);
   mStride = aStride;
   mSurfaceAllocationSize = aSurfaceAllocationSize;
 }
@@ -359,12 +344,6 @@ DrawTargetCaptureImpl::Blur(const AlphaBoxBlur& aBlur)
 }
 
 void
-DrawTargetCaptureImpl::PadEdges(const IntRegion& aRegion)
-{
-  AppendCommand(PadEdgesCommand)(aRegion);
-}
-
-void
 DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform)
 {
   for (CaptureCommandList::iterator iter(mCommands); !iter.Done(); iter.Next()) {
@@ -410,12 +389,6 @@ DrawTargetCaptureImpl::CreateFilter(FilterType aType)
   } else {
     return mRefDT->CreateFilter(aType);
   }
-}
-
-bool
-DrawTargetCaptureImpl::IsEmpty() const
-{
-  return mCommands.IsEmpty();
 }
 
 void

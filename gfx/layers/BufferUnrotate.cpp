@@ -11,9 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-namespace mozilla {
-namespace gfx {
-
 void BufferUnrotate(uint8_t* aBuffer, int aByteWidth, int aHeight,
                     int aByteStride, int aXBoundary, int aYBoundary)
 {
@@ -66,5 +63,3 @@ void BufferUnrotate(uint8_t* aBuffer, int aByteWidth, int aHeight,
   }
 }
 
-} // namespace gfx
-} // namespace mozilla

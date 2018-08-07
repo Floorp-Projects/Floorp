@@ -153,17 +153,22 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   nsIntRegion tileVisibleRegion = aNewValidRegion.MovedBy(-mTilingOrigin);
   nsIntRegion tileDirtyRegion = paintRegion.MovedBy(-mTilingOrigin);
 
-  Maybe<AcquiredBackBuffer> backBuffer =
-    mTile.AcquireBackBuffer(mCompositableClient,
-                            tileDirtyRegion,
-                            tileVisibleRegion,
-                            content,
-                            mode,
-                            aFlags);
+  std::vector<RefPtr<TextureClient>> paintClients;
+  std::vector<CapturedTiledPaintState::Copy> paintCopies;
+  std::vector<CapturedTiledPaintState::Clear> paintClears;
 
-  if (!backBuffer) {
-    return;
-  }
+  nsIntRegion extraPainted;
+  RefPtr<TextureClient> backBufferOnWhite;
+  RefPtr<TextureClient> backBuffer =
+    mTile.GetBackBuffer(mCompositableClient,
+                        tileDirtyRegion,
+                        tileVisibleRegion,
+                        content, mode,
+                        extraPainted,
+                        aFlags,
+                        &backBufferOnWhite,
+                        &paintCopies,
+                        &paintClients);
 
   // Mark the area we need to paint in the back buffer as invalid in the
   // front buffer as they will become out of sync.
@@ -179,7 +184,20 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   // Mark the region we will be painting and the region we copied from the front buffer as
   // needing to be uploaded to the compositor
-  mTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(backBuffer->mUpdatedRect);
+  mTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
+
+  extraPainted.MoveBy(mTilingOrigin);
+  extraPainted.And(extraPainted, aNewValidRegion);
+
+  if (!backBuffer) {
+    return;
+  }
+
+  RefPtr<gfx::DrawTarget> dt = backBuffer->BorrowDrawTarget();
+  RefPtr<gfx::DrawTarget> dtOnWhite;
+  if (backBufferOnWhite) {
+    dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
+  }
 
   // If the old frontbuffer was discarded then attempt to copy what we
   // can from it to the new backbuffer.
@@ -188,45 +206,80 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     copyableRegion.And(aNewValidRegion, discardedValidRegion);
     copyableRegion.SubOut(aDirtyRegion);
 
-    OpenMode readMode = asyncPaint ? OpenMode::OPEN_READ_ASYNC
-                                   : OpenMode::OPEN_READ;
-
-    DualTextureClientAutoLock discardedBuffer(discardedFrontBuffer, discardedFrontBufferOnWhite, readMode);
-
-    if (discardedBuffer.Succeeded()) {
-      RefPtr<gfx::SourceSurface> discardedSurface = discardedBuffer->Snapshot();
-
-      for (auto iter = copyableRegion.RectIter(); !iter.Done(); iter.Next()) {
-        const gfx::IntRect src = iter.Get() - discardedValidRegion.GetBounds().TopLeft();
-        const gfx::IntPoint dest = iter.Get().TopLeft() - mTilingOrigin;
-
-        backBuffer->mTarget->CopySurface(discardedSurface, src, dest);
-      }
-
+    if (!mTile.CopyFromBuffer(discardedFrontBuffer,
+                              discardedFrontBufferOnWhite,
+                              discardedValidRegion.GetBounds().TopLeft(),
+                              mTilingOrigin,
+                              copyableRegion,
+                              aFlags,
+                              &paintCopies)) {
+      gfxWarning() << "[Tiling:Client] Failed to aquire the discarded front buffer's draw target";
+    } else {
       TILING_LOG("TILING %p: Region copied from discarded frontbuffer %s\n", &mPaintedLayer, Stringify(copyableRegion).c_str());
 
       // We don't need to repaint valid content that was just copied.
       paintRegion.SubOut(copyableRegion);
       copyableRegion.MoveBy(-mTilingOrigin);
       tileDirtyRegion.SubOut(copyableRegion);
-    } else {
-      gfxWarning() << "[Tiling:Client] Failed to aquire the discarded front buffer's draw target";
     }
   }
 
   if (mode != SurfaceMode::SURFACE_OPAQUE) {
-    for (auto iter = tileDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const gfx::Rect drawRect(iter.Get().X(), iter.Get().Y(),
-                               iter.Get().Width(), iter.Get().Height());
-      backBuffer->mTarget->ClearRect(drawRect);
+    auto clear = CapturedTiledPaintState::Clear{
+      dt,
+      dtOnWhite,
+      tileDirtyRegion,
+    };
+
+    if (asyncPaint) {
+      paintClears.push_back(clear);
+    } else {
+      clear.ClearBuffer();
     }
   }
 
-  // Paint into the target
-  {
-    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(backBuffer->mTarget);
+  if (dtOnWhite) {
+    dt = gfx::Factory::CreateDualDrawTarget(dt, dtOnWhite);
+    dtOnWhite = nullptr;
+  }
+
+  if (asyncPaint) {
+    // Create a capture draw target
+    RefPtr<gfx::DrawTargetCapture> captureDT =
+      gfx::Factory::CreateCaptureDrawTarget(dt->GetBackendType(),
+                                            dt->GetSize(),
+                                            dt->GetFormat());
+
+    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(captureDT);
     if (!ctx) {
-      gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(backBuffer->mTarget);
+      gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
+      return;
+    }
+    ctx->SetMatrix(ctx->CurrentMatrix().PreTranslate(-mTilingOrigin.x, -mTilingOrigin.y));
+    aCallback(&mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
+    ctx = nullptr;
+
+    // Replay on the paint thread
+    RefPtr<CapturedTiledPaintState> capturedState =
+      new CapturedTiledPaintState(dt,
+                                  captureDT);
+    capturedState->mClients = std::move(paintClients);
+    capturedState->mClients.push_back(backBuffer);
+    if (backBufferOnWhite) {
+      capturedState->mClients.push_back(backBufferOnWhite);
+    }
+    capturedState->mCopies = std::move(paintCopies);
+    capturedState->mClears = std::move(paintClears);
+
+    PaintThread::Get()->PaintTiledContents(capturedState);
+    mManager->SetQueuedAsyncPaints();
+  } else {
+    MOZ_ASSERT(paintCopies.size() == 0);
+    MOZ_ASSERT(paintClears.size() == 0);
+
+    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
+    if (!ctx) {
+      gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
       return;
     }
     ctx->SetMatrix(ctx->CurrentMatrix().PreTranslate(-mTilingOrigin.x, -mTilingOrigin.y));
@@ -234,24 +287,10 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     aCallback(&mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
   }
 
-  if (asyncPaint) {
-    if (!backBuffer->mCapture->IsEmpty()) {
-      RefPtr<PaintTask> task = new PaintTask();
-      task->mCapture = backBuffer->mCapture;
-      task->mTarget = backBuffer->mBackBuffer;
-      task->mClients = std::move(backBuffer->mTextureClients);
-      PaintThread::Get()->QueuePaintTask(task);
-      mManager->SetQueuedAsyncPaints();
-    }
-  } else {
-    MOZ_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
-    MOZ_ASSERT(!backBuffer->mCapture);
-  }
-
   // The new buffer is now validated, remove the dirty region from it.
   mTile.mInvalidBack.SubOut(tileDirtyRegion);
 
-  backBuffer = Nothing();
+  dt = nullptr;
 
   mTile.Flip();
   UnlockTile(mTile);

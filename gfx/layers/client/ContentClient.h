@@ -22,7 +22,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for TextureDumpMode
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
-#include "mozilla/layers/PaintThread.h"  // for PaintTask
+#include "mozilla/layers/PaintThread.h"  // for CapturedBufferState
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "ReadbackProcessor.h"          // For ReadbackProcessor::Update
@@ -40,6 +40,10 @@ class DrawTarget;
 namespace layers {
 
 class PaintedLayer;
+class CapturedPaintState;
+class CapturedBufferState;
+
+typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState*);
 
 /**
  * A compositable client for PaintedLayers. These are different to Image/Canvas
@@ -107,8 +111,6 @@ public:
       , mMode(SurfaceMode::SURFACE_NONE)
       , mClip(DrawRegionClip::NONE)
       , mContentType(gfxContentType::SENTINEL)
-      , mAsyncPaint(false)
-      , mAsyncTask(nullptr)
     {}
 
     nsIntRegion mRegionToDraw;
@@ -116,8 +118,7 @@ public:
     SurfaceMode mMode;
     DrawRegionClip mClip;
     gfxContentType mContentType;
-    bool mAsyncPaint;
-    RefPtr<PaintTask> mAsyncTask;
+    RefPtr<CapturedBufferState> mBufferState;
   };
 
   enum {
@@ -148,7 +149,7 @@ public:
    * this.
    */
   virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags);
-  virtual void EndPaint(PaintState& aPaintState, nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
+  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) {}
 
   /**
    * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
@@ -169,7 +170,19 @@ public:
     PaintState& aPaintState,
     RotatedBuffer::DrawIterator* aIter = nullptr);
 
+  /**
+   * Borrow a draw target for recording. The required transform for correct painting
+   * is not applied to the returned DrawTarget by default, BUT it is
+   * required to be whenever drawing does happen.
+   */
+  virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(
+    PaintState& aPaintState,
+    RotatedBuffer::DrawIterator* aIter,
+    bool aSetTransform = false);
+
   void ReturnDrawTarget(gfx::DrawTarget*& aReturned);
+
+  static bool PrepareDrawTargetForPainting(CapturedPaintState*);
 
   enum {
     BUFFER_COMPONENT_ALPHA = 0x02 // Dual buffers should be created for drawing with
@@ -206,12 +219,8 @@ protected:
    * aRegionToDraw is the region which is guaranteed to be overwritten when
    * drawing the next frame.
    */
-  virtual void FinalizeFrame(PaintState& aPaintState) {
-  }
-
-  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const
-  {
-    return mBuffer;
+  virtual Maybe<CapturedBufferState::Copy> FinalizeFrame(const nsIntRegion& aRegionToDraw) {
+    return Nothing();
   }
 
   /**
@@ -231,6 +240,10 @@ class ContentClientBasic final : public ContentClient
 {
 public:
   explicit ContentClientBasic(gfx::BackendType aBackend);
+
+  virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                                  RotatedBuffer::DrawIterator* aIter,
+                                                                  bool aSetTransform) override;
 
   void DrawTo(PaintedLayer* aLayer,
               gfx::DrawTarget* aTarget,
@@ -281,7 +294,11 @@ public:
                     bool aDumpHtml=false,
                     TextureDumpMode aCompress=TextureDumpMode::Compress) override;
 
-  virtual void EndPaint(PaintState& aPaintState, nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) override;
+  virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
+                                                                  RotatedBuffer::DrawIterator* aIter,
+                                                                  bool aSetTransform) override;
+
+  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) override;
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion);
@@ -347,12 +364,7 @@ public:
 
   virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags) override;
 
-  virtual void FinalizeFrame(PaintState& aPaintState) override;
-
-  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const override
-  {
-    return mFrontBuffer;
-  }
+  virtual Maybe<CapturedBufferState::Copy> FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
 
   virtual TextureInfo GetTextureInfo() const override
   {

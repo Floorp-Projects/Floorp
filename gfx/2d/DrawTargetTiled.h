@@ -124,7 +124,6 @@ public:
                          CompositionOp = CompositionOp::OP_OVER) override;
   virtual void PopLayer() override;
 
-  virtual void PadEdges(const IntRegion& aRegion) override;
 
   virtual void SetTransform(const Matrix &aTransform) override;
 
