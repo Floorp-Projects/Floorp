@@ -5325,11 +5325,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           // This might be the Win10 dark mode setting; only way to tell
           // is to actually force a theme change, since we don't get
           // WM_THEMECHANGED or WM_SYSCOLORCHANGE when that happens.
-          if (IsWin10OrLater() && mWindowType == eWindowType_toplevel) {
-            nsIPresShell* presShell = mWidgetListener->GetPresShell();
-            if (presShell) {
-              presShell->ThemeChanged();
-            }
+          if (IsWin10OrLater()) {
+            NotifyThemeChanged();
           }
           // WM_SYSCOLORCHANGE is not dispatched for accent color changes
           OnSysColorChanged();
