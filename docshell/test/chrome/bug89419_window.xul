@@ -10,8 +10,6 @@
 
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/specialpowersAPI.js"/>
-  <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SpecialPowersObserverAPI.js"/>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/specialpowers.js"/>
