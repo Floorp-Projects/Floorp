@@ -409,15 +409,6 @@ nsFrameMessageManager::GetDelayedScripts(JSContext* aCx,
 }
 
 static bool
-JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData)
-{
-  nsAString* result = static_cast<nsAString*>(aData);
-  result->Append(static_cast<const char16_t*>(aBuf),
-                 static_cast<uint32_t>(aLen));
-  return true;
-}
-
-static bool
 GetParamsForMessage(JSContext* aCx,
                     const JS::Value& aValue,
                     const JS::Value& aTransfer,
@@ -453,8 +444,7 @@ GetParamsForMessage(JSContext* aCx,
   //    properly cases when interface is implemented in JS and used
   //    as a dictionary.
   nsAutoString json;
-  NS_ENSURE_TRUE(JS_Stringify(aCx, &v, nullptr, JS::NullHandleValue,
-                              JSONCreator, &json), false);
+  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, &v, json), false);
   NS_ENSURE_TRUE(!json.IsEmpty(), false);
 
   JS::Rooted<JS::Value> val(aCx, JS::NullValue());
