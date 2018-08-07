@@ -444,6 +444,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     static const size_t MaxStubDataSizeInBytes = 20 * sizeof(uintptr_t);
     bool tooLarge_;
 
+    // Basic caching to avoid quadatic lookup behaviour in readStubFieldForIon.
+    mutable uint32_t lastOffset_;
+    mutable uint32_t lastIndex_;
+
     void assertSameCompartment(JSObject*);
 
     void writeOp(CacheOp op) {
@@ -507,7 +511,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         nextInstructionId_(0),
         numInputOperands_(0),
         stubDataSize_(0),
-        tooLarge_(false)
+        tooLarge_(false),
+        lastOffset_(0),
+        lastIndex_(0)
     {}
 
     bool failed() const { return buffer_.oom() || tooLarge_; }
@@ -557,10 +563,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
 
     // This should not be used when compiling Baseline code, as Baseline code
     // shouldn't bake in stub values.
-    StubField readStubFieldForIon(size_t i, StubField::Type type) const {
-        MOZ_ASSERT(stubFields_[i].type() == type);
-        return stubFields_[i];
-    }
+    StubField readStubFieldForIon(uint32_t offset, StubField::Type type) const;
 
     ObjOperandId guardIsObject(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsObject, val);
