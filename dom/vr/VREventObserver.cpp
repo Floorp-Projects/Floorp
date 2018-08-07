@@ -164,5 +164,13 @@ VREventObserver::NotifyVRDisplayPresentChange(uint32_t aDisplayID)
   }
 }
 
+void
+VREventObserver::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {
+  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+    mWindow->NotifyPresentationGenerationChanged(aDisplayID);
+    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

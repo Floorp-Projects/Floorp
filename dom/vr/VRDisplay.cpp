@@ -542,6 +542,11 @@ VRDisplay::IsHandlingVRNavigationEvent()
     (TimeStamp::Now() - mHandlingVRNavigationEventStart) <= timeout;
 }
 
+void
+VRDisplay::OnPresentationGenerationChanged() {
+  ExitPresentInternal();
+}
+
 already_AddRefed<Promise>
 VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers,
                           CallerType aCallerType,

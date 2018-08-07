@@ -6863,6 +6863,15 @@ nsGlobalWindowInner::NotifyActiveVRDisplaysChanged()
 }
 
 void
+nsGlobalWindowInner::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {
+  for (const auto& display : mVRDisplays) {
+    if (display->DisplayId() == aDisplayID) {
+      display->OnPresentationGenerationChanged();
+    }
+  }
+}
+
+void
 nsGlobalWindowInner::DispatchVRDisplayActivate(uint32_t aDisplayID,
                                                mozilla::dom::VRDisplayEventReason aReason)
 {
