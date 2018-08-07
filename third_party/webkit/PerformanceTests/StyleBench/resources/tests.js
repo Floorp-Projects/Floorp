@@ -1,21 +1,18 @@
-function makeSteps(configuration)
+function makeSteps(count)
 {
-    const steps = [];
-    for (i = 0; i < configuration.stepCount; ++i) {
-        steps.push(new BenchmarkTestStep(`Adding classes - ${i}`, (bench, contentWindow, contentDocument) => {
-            bench.addClasses(configuration.mutationsPerStep);
+    let steps = [];
+    for (let i = 0; i < count; ++i) {
+        steps.push(new BenchmarkTestStep('Adding classes', (bench, contentWindow, contentDocument) => {
+            bench.addClasses(100);
         }));
-        steps.push(new BenchmarkTestStep(`Removing classes - ${i}`, (bench, contentWindow, contentDocument) => {
-            bench.removeClasses(configuration.mutationsPerStep);
+        steps.push(new BenchmarkTestStep('Removing classes', (bench, contentWindow, contentDocument) => {
+            bench.removeClasses(100);
         }));
-        steps.push(new BenchmarkTestStep(`Mutating attributes - ${i}`, (bench, contentWindow, contentDocument) => {
-            bench.mutateAttributes(configuration.mutationsPerStep);
+        steps.push(new BenchmarkTestStep('Adding leaf elements', (bench, contentWindow, contentDocument) => {
+            bench.addLeafElements(100);
         }));
-        steps.push(new BenchmarkTestStep(`Adding leaf elements - ${i}`, (bench, contentWindow, contentDocument) => {
-            bench.addLeafElements(configuration.mutationsPerStep);
-        }));
-        steps.push(new BenchmarkTestStep(`Removing leaf elements - ${i}`, (bench, contentWindow, contentDocument) => {
-            bench.removeLeafElements(configuration.mutationsPerStep);
+        steps.push(new BenchmarkTestStep('Removing leaf elements', (bench, contentWindow, contentDocument) => {
+            bench.removeLeafElements(100);
         }));
     }
     return steps;
@@ -31,7 +28,7 @@ function makeSuite(configuration)
                 return contentWindow.createBenchmark(configuration);
             });
         },
-        tests: makeSteps(configuration),
+        tests: makeSteps(5),
     };
 }
 
