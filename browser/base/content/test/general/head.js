@@ -524,7 +524,9 @@ async function loadBadCertPage(url) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.document.getElementById("exceptionDialogButton").click();
   });
-  await exceptionDialogResolved;
+  if (!Services.prefs.getBoolPref("browser.security.newcerterrorpage.enabled", false)) {
+    await exceptionDialogResolved;
+  }
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 }
 
