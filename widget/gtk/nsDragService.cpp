@@ -334,7 +334,7 @@ nsDragService::InvokeDragSession(nsINode *aDOMNode,
 // nsBaseDragService
 nsresult
 nsDragService::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
-                                     nsIScriptableRegion* aRegion,
+                                     const Maybe<CSSIntRegion>& aRegion,
                                      uint32_t aActionType)
 {
     // make sure that we have an array of transferables to use
@@ -1717,8 +1717,8 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     LayoutDeviceIntRect dragRect;
     nsPresContext* pc;
     RefPtr<SourceSurface> surface;
-    DrawDrag(mSourceNode, mRegion, mScreenPosition,
-             &dragRect, &surface, &pc);
+    DrawDrag(mSourceNode, mRegion,
+             mScreenPosition, &dragRect, &surface, &pc);
     if (!pc)
         return;
 
