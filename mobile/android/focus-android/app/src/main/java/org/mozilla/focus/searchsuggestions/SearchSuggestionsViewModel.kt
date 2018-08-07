@@ -11,7 +11,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
-import android.util.Log
+import mozilla.components.browser.search.SearchEngine
 
 sealed class State {
     data class Disabled(val givePrompt: Boolean): State()
@@ -20,15 +20,19 @@ sealed class State {
 }
 class SearchSuggestionsViewModel(
         private val service: SearchSuggestionsService,
-        private val searchSuggestionsPreferences: SearchSuggestionsPreferences) : ViewModel() {
+        private val searchSuggestionsPreferences: SearchSuggestionsPreferences
+) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
-    private val _searchQuery = MutableLiveData<String>()
-
     val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
+
+    private val _searchQuery = MutableLiveData<String>()
     val searchQuery: LiveData<String> = _searchQuery
 
-    val _state = MutableLiveData<State>()
+    private val _state = MutableLiveData<State>()
     val state: LiveData<State> = _state
+
+    private val _searchEngine = MutableLiveData<SearchEngine>()
+    val searchEngine: LiveData<SearchEngine> = _searchEngine
 
     val suggestions = switchMap(searchQuery) {
         if (state.value !is State.ReadyForSuggestions) { return@switchMap null }
@@ -75,7 +79,9 @@ class SearchSuggestionsViewModel(
     }
 
     fun refresh() {
-        service.updateSearchEngine(searchSuggestionsPreferences.getSearchEngine())
+        val engine = searchSuggestionsPreferences.getSearchEngine()
+        service.updateSearchEngine(engine)
+        _searchEngine.value = engine
         updateState()
     }
 

@@ -1,9 +1,6 @@
 package org.mozilla.focus.searchsuggestions
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
 import android.content.Context
-import android.content.res.Resources
 import android.preference.PreferenceManager
 import org.mozilla.focus.R
 import mozilla.components.browser.search.SearchEngine

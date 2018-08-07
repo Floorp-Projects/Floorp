@@ -2,6 +2,7 @@ package org.mozilla.focus.searchsuggestions.ui
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
@@ -49,6 +50,11 @@ class SearchSuggestionsFragment : Fragment() {
                 is State.NoSuggestionsAPI -> no_suggestions_container.visibility = if (state.givePrompt) View.VISIBLE else View.GONE
                 is State.Disabled -> enable_search_suggestions_container.visibility = if (state.givePrompt) View.VISIBLE else View.GONE
             }
+        })
+
+        searchSuggestionsViewModel.searchEngine.observe(this, Observer { searchEngine ->
+            val icon = searchEngine?.icon?.let { BitmapDrawable(resources, it) } ?: resources.getDrawable(R.drawable.ic_search, null)
+            searchView.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
         })
     }
 
