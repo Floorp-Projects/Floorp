@@ -991,6 +991,24 @@ bool InScriptableRange(int64_t val);
 // Make sure a 64bit value can be captured by JS MAX_SAFE_INTEGER
 bool InScriptableRange(uint64_t val);
 
+/**
+ * Given the value of a single header field  (such as
+ * Content-Disposition and Content-Type) and the name of a parameter
+ * (e.g. filename, name, charset), returns the value of the parameter.
+ * See nsIMIMEHeaderParam.idl for more information.
+ *
+ * @param  aHeaderVal        a header string to get the value of a parameter
+ *                           from.
+ * @param  aParamName        the name of a MIME header parameter (e.g.
+ *                           filename, name, charset). If empty or nullptr,
+ *                           returns the first (possibly) _unnamed_ 'parameter'.
+ * @return the value of <code>aParamName</code> in Unichar(UTF-16).
+ */
+nsresult
+GetParameterHTTP(const nsACString& aHeaderVal,
+                 const char* aParamName,
+                 nsAString& aResult);
+
 } // namespace net
 } // namespace mozilla
 

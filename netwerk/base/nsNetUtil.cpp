@@ -80,6 +80,7 @@
 #include "nsICertOverrideService.h"
 #include "nsQueryObject.h"
 #include "mozIThirdPartyUtil.h"
+#include "../mime/nsMIMEHeaderParamImpl.h"
 
 #include <limits>
 
@@ -3257,6 +3258,15 @@ bool
 InScriptableRange(uint64_t val)
 {
     return val <= kJS_MAX_SAFE_UINTEGER;
+}
+
+nsresult
+GetParameterHTTP(const nsACString& aHeaderVal,
+                 const char* aParamName,
+                 nsAString& aResult)
+{
+  return nsMIMEHeaderParamImpl::GetParameterHTTP(
+    aHeaderVal, aParamName, aResult);
 }
 
 } // namespace net
