@@ -14,21 +14,21 @@ import org.mozilla.focus.R
 import org.mozilla.focus.utils.app
 import org.mozilla.focus.utils.experimentDescriptor
 import org.mozilla.focus.utils.isInExperiment
+import org.mozilla.focus.web.Config
 import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
 
 class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
-    SharedPreferences.OnSharedPreferenceChangeListener {
+        SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         const val FRAGMENT_TAG = "ExperimentSettings"
     }
 
     private var rendererPreferenceChanged = false
-    private lateinit var enginePreference: SwitchPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.experiments_settings)
         val enginePref: SwitchPreferenceCompat? = preferenceManager
-            .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreferenceCompat?
+                .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreferenceCompat?
         enginePref?.isChecked = activity!!.isInExperiment(experimentDescriptor)
     }
 
@@ -41,8 +41,6 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
         super.onPause()
         preferenceScreen?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         if (rendererPreferenceChanged) {
-            activity?.app?.fretboard?.setOverride(
-                    activity!!.app, experimentDescriptor, enginePreference.isChecked)
             val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity!!.packageName)
             ProcessPhoenix.triggerRebirth(context, launcherIntent)
         }
@@ -52,6 +50,9 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
         when (key) {
             ENGINE_PREF_STRING_KEY -> {
                 rendererPreferenceChanged = true
+                activity!!.app.fretboard.setOverride(
+                        activity!!.app, experimentDescriptor,
+                        sharedPreferences!!.getBoolean(key, Config.DEFAULT_NEW_RENDERER))
             }
         }
     }
