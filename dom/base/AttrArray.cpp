@@ -24,59 +24,6 @@
 
 using mozilla::CheckedUint32;
 
-/*
-CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.
-It should be small enough to not cause collisions between adjecent arrays, and
-large enough to make sure that all indexes are used. The size below is based
-on the size of the smallest possible element (currently 20[*] bytes) which is
-the smallest distance between two AttrArray. 20/(2^_5_) is 0.625.
-This means that two adjacent AttrArrays will overlap one in 2.7 times.
-However not all elements will have enough children to get cached. And any
-allocator that doesn't return addresses aligned to 64 bytes will ensure that
-any index will get used.
-
-[*] sizeof(Element).  Except is that really 20 bytes?  Seems dubious!
-*/
-
-#define CACHE_POINTER_SHIFT 5
-#define CACHE_NUM_SLOTS 128
-#define CACHE_CHILD_LIMIT 10
-
-#define CACHE_GET_INDEX(_array) \
-  ((NS_PTR_TO_INT32(_array) >> CACHE_POINTER_SHIFT) & \
-   (CACHE_NUM_SLOTS - 1))
-
-struct IndexCacheSlot
-{
-  const AttrArray* array;
-  int32_t index;
-};
-
-// This is inited to all zeroes since it's static. Though even if it wasn't
-// the worst thing that'd happen is a small inefficency if you'd get a false
-// positive cachehit.
-static IndexCacheSlot indexCache[CACHE_NUM_SLOTS];
-
-static
-inline
-void
-AddIndexToCache(const AttrArray* aArray, int32_t aIndex)
-{
-  uint32_t ix = CACHE_GET_INDEX(aArray);
-  indexCache[ix].array = aArray;
-  indexCache[ix].index = aIndex;
-}
-
-static
-inline
-int32_t
-GetIndexFromCache(const AttrArray* aArray)
-{
-  uint32_t ix = CACHE_GET_INDEX(aArray);
-  return indexCache[ix].array == aArray ? indexCache[ix].index : -1;
-}
-
-
 /**
  * Due to a compiler bug in VisualAge C++ for AIX, we need to return the
  * address of the first index into mBuffer here, instead of simply returning
@@ -218,9 +165,6 @@ AttrArray::SetAndSwapAttr(nsAtom* aLocalName, nsAttrValue& aValue,
     }
   }
 
-  NS_ENSURE_TRUE(i < ATTRCHILD_ARRAY_MAX_ATTR_COUNT,
-                 NS_ERROR_FAILURE);
-
   if (i == slotCount && !AddAttrSlot()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -252,9 +196,6 @@ AttrArray::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
       return NS_OK;
     }
   }
-
-  NS_ENSURE_TRUE(i < ATTRCHILD_ARRAY_MAX_ATTR_COUNT,
-                 NS_ERROR_FAILURE);
 
   if (i == slotCount && !AddAttrSlot()) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -503,7 +444,7 @@ AttrArray::Clear()
     ATTRS(mImpl)[i].~InternalAttr();
   }
 
-  SetAttrSlotAndChildCount(0, 0);
+  SetAttrSlotCount(0);
 }
 
 uint32_t
@@ -630,7 +571,7 @@ AttrArray::EnsureCapacityToClone(const AttrArray& aOther,
   // number of slots for attributes so that children don't get written into
   // that part of the array (which will then need to be moved later).
   memset(static_cast<void*>(mImpl->mBuffer), 0, sizeof(InternalAttr) * attrCount);
-  SetAttrSlotAndChildCount(attrCount, 0);
+  SetAttrSlotCount(attrCount);
 
   return NS_OK;
 }
@@ -685,7 +626,7 @@ AttrArray::GrowBy(uint32_t aGrowSize)
   // Set initial counts if we didn't have a buffer before
   if (needToInitialize) {
     mImpl->mMappedAttrs = nullptr;
-    SetAttrSlotAndChildCount(0, 0);
+    SetAttrSlotCount(0);
   }
 
   mImpl->mBufferSize = size.value() - NS_IMPL_EXTRA_SIZE;
