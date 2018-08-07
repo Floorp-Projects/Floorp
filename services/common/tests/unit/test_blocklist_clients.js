@@ -4,7 +4,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
 const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
@@ -18,12 +17,6 @@ const IS_ANDROID = AppConstants.platform == "android";
 let gBlocklistClients;
 let server;
 
-async function readJSON(filepath) {
-  const binaryData = await OS.File.read(filepath);
-  const textData = (new TextDecoder()).decode(binaryData);
-  return Promise.resolve(JSON.parse(textData));
-}
-
 async function clear_state() {
   for (let {client} of gBlocklistClients) {
     // Remove last server times.
@@ -32,11 +25,6 @@ async function clear_state() {
     // Clear local DB.
     const collection = await client.openCollection();
     await collection.clear();
-
-    // Remove JSON dumps folders in profile dir.
-    const dumpFile = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
-    const folder = OS.Path.dirname(dumpFile);
-    await OS.File.removeDir(folder, { ignoreAbsent: true });
   }
 }
 
@@ -146,21 +134,6 @@ add_task(async function test_initial_dump_is_loaded_when_using_get_on_empty_coll
 });
 add_task(clear_state);
 
-add_task(async function test_list_is_written_to_file_in_profile() {
-  for (let {client, testData} of gBlocklistClients) {
-    const filePath = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
-    const profFile = new FileUtils.File(filePath);
-    strictEqual(profFile.exists(), false);
-
-    await client.maybeSync(2000, Date.now(), {loadDump: false});
-
-    strictEqual(profFile.exists(), true);
-    const content = await readJSON(profFile.path);
-    equal(content.data[0].blockID, testData[testData.length - 1]);
-  }
-});
-add_task(clear_state);
-
 add_task(async function test_current_server_time_is_saved_in_pref() {
   for (let {client} of gBlocklistClients) {
     // The lastCheckTimePref was customized:
@@ -170,42 +143,6 @@ add_task(async function test_current_server_time_is_saved_in_pref() {
     await client.maybeSync(2000, serverTime);
     const after = Services.prefs.getIntPref(client.lastCheckTimePref);
     equal(after, Math.round(serverTime / 1000));
-  }
-});
-add_task(clear_state);
-
-add_task(async function test_update_json_file_when_addons_has_changes() {
-  for (let {client, testData} of gBlocklistClients) {
-    await client.maybeSync(2000, Date.now() - 1000, {loadDump: false});
-    const filePath = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
-    const profFile = new FileUtils.File(filePath);
-    const fileLastModified = profFile.lastModifiedTime = profFile.lastModifiedTime - 1000;
-    const serverTime = Date.now();
-
-    await client.maybeSync(3001, serverTime);
-
-    // File was updated.
-    notEqual(fileLastModified, profFile.lastModifiedTime);
-    const content = await readJSON(profFile.path);
-    deepEqual(content.data.map((r) => r.blockID), testData);
-    // Server time was updated.
-    const after = Services.prefs.getIntPref(client.lastCheckTimePref);
-    equal(after, Math.round(serverTime / 1000));
-  }
-});
-add_task(clear_state);
-
-add_task(async function test_sends_reload_message_when_blocklist_has_changes() {
-  for (let {client} of gBlocklistClients) {
-    let received = await new Promise((resolve, reject) => {
-      Services.ppmm.addMessageListener("Blocklist:reload-from-disk", {
-        receiveMessage(aMsg) { resolve(aMsg); }
-      });
-
-      client.maybeSync(2000, Date.now() - 1000, {loadDump: false});
-    });
-
-    equal(received.data.filename, client.filename);
   }
 });
 add_task(clear_state);
