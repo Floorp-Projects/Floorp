@@ -200,7 +200,6 @@ EXTRA_JS_MODULES += [
     'E10SUtils.jsm',
     'EventEmitter.jsm',
     'FileUtils.jsm',
-    'FindBarChild.jsm',
     'Finder.jsm',
     'FinderHighlighter.jsm',
     'FinderIterator.jsm',
@@ -254,8 +253,6 @@ EXTRA_JS_MODULES += [
     'UpdateUtils.jsm',
     'WebChannel.jsm',
     'WebChannelContent.jsm',
-    'WebNavigationChild.jsm',
-    'WebProgressChild.jsm',
     'WindowDraggingUtils.jsm',
     'ZipUtils.jsm',
 ]

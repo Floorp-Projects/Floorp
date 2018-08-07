@@ -649,7 +649,7 @@ TestReplaceDyingInMap()
 
     auto ptr2 = cache.lookupForAdd(3);
     CHECK(!ptr2);
-    CHECK(cache.add(ptr2, 3));
+    CHECK(cache.add(ptr2, 3, JS::Heap<JSObject*>()));
 
     auto ptr3 = cache.lookupForAdd(4);
     CHECK(!ptr3);

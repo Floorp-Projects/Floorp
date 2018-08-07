@@ -2905,7 +2905,7 @@ nsXPCComponents_Utils::GenerateXPCWrappedJS(HandleValue aObj, HandleValue aScope
         return NS_ERROR_FAILURE;
 
     RefPtr<WrappedJSHolder> holder = new WrappedJSHolder();
-    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(obj, NS_GET_IID(nsISupports),
+    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(aCx, obj, NS_GET_IID(nsISupports),
                                                getter_AddRefs(holder->mWrappedJS));
     holder.forget(aOut);
     return rv;
