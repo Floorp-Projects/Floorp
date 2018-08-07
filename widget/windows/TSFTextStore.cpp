@@ -4718,8 +4718,9 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
 
   // ATOK 2011 - 2016 refers native caret position and size on windows whose
   // class name is one of Mozilla's windows for deciding candidate window
-  // position.  Therefore, we need to create native caret only when ATOK 2011 -
-  // 2016 is active.
+  // position.  Additionally, ATOK 2015 and earlier behaves really odd when
+  // we don't create native caret.  Therefore, we need to create native caret
+  // only when ATOK 2011 - 2015 is active (i.e., not necessary for ATOK 2016).
   if (TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
       TSFStaticSink::IsATOKReferringNativeCaretActive() &&
       mComposition.IsComposing() &&
@@ -4844,6 +4845,12 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     // ATOK fails to handle TS_E_NOLAYOUT only when it decides the position of
     // suggest window.  In such case, ATOK tries to query rect of whole or a
     // part of composition string.
+    // FYI: ATOK changes their implementation around candidate window and
+    //      suggest widget at ATOK 2016.  Therefore, there are some differences
+    //      ATOK 2015 (or older) and ATOK 2016 (or newer).
+    // FYI: ATOK 2017 stops referring our window class name.  I.e., ATOK 2016
+    //      and older may behave differently only on Gecko but this must be
+    //      finished from ATOK 2017.
     // FYI: For testing with legacy ATOK, we should hack it even if current ATOK
     //      refers native caret rect on windows whose window class is one of
     //      Mozilla window classes and we stop creating native caret for ATOK
@@ -4854,18 +4861,23 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     case TextInputProcessorID::eATOK2013:
     case TextInputProcessorID::eATOK2014:
     case TextInputProcessorID::eATOK2015:
-    case TextInputProcessorID::eATOK2016:
-    case TextInputProcessorID::eATOKUnknown:
+      // ATOK 2016 and later may temporarily show candidate window at odd
+      // position when you convert a word quickly (e.g., keep pressing
+      // space bar).  So, on ATOK 2016 or later, we need to keep hacking the
+      // result of GetTextExt().
       if (sAlllowToStopHackingIfFine) {
         return false;
       }
       // If we'll create native caret where we paint our caret.  Then, ATOK
       // will refer native caret.  So, we don't need to hack anything in
       // this case.
-      if (TSFStaticSink::IsATOKReferringNativeCaretActive() &&
-          TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) {
+      if (TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) {
+        MOZ_ASSERT(TSFStaticSink::IsATOKReferringNativeCaretActive());
         return false;
       }
+      MOZ_FALLTHROUGH;
+    case TextInputProcessorID::eATOK2016:
+    case TextInputProcessorID::eATOKUnknown:
       if (!TSFPrefs::DoNotReturnNoLayoutErrorToATOKOfCompositionString()) {
         return false;
       }
