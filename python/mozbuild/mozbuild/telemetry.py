@@ -8,7 +8,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 This file contains a voluptuous schema definition for build system telemetry.
 '''
 
-from mozbuild.configure.constants import CompilerType
+import platform
+import sys
 from voluptuous import (
     Any,
     Optional,
@@ -16,6 +17,11 @@ from voluptuous import (
     Schema,
 )
 from voluptuous.validators import Datetime
+
+from .base import (
+    BuildEnvironmentNotFoundException,
+)
+from .configure.constants import CompilerType
 
 schema = Schema({
     Required('client_id', description='A UUID to uniquely identify a client'): basestring,
@@ -60,3 +66,57 @@ schema = Schema({
                  description='true if the OS appears to be running in a virtual machine'): bool,
     },
 })
+
+
+def gather_telemetry(monitor, mach_context, substs, ccache_diff):
+    if monitor.have_resource_usage:
+        telemetry_handler = getattr(mach_context,
+                                    'telemetry_handler', None)
+        data = monitor.get_resource_usage()
+
+        # Record build configuration data. For now, we cherry pick
+        # items we need rather than grabbing everything, in order
+        # to avoid accidentally disclosing PII.
+        data['substs'] = {}
+        try:
+            for key in ['MOZ_ARTIFACT_BUILDS', 'MOZ_USING_CCACHE', 'MOZ_USING_SCCACHE']:
+                value = substs.get(key, False)
+                data['substs'][key] = value
+        except BuildEnvironmentNotFoundException:
+            pass
+
+        # Grab ccache stats if available. We need to be careful not
+        # to capture information that can potentially identify the
+        # user (such as the cache location)
+        if ccache_diff:
+            data['ccache'] = {}
+            for key in [key[0] for key in ccache_diff.STATS_KEYS]:
+                try:
+                    data['ccache'][key] = ccache_diff._values[key]
+                except KeyError:
+                    pass
+
+        # Add common metadata to help submit sorted data later on.
+        data['argv'] = sys.argv
+        data.setdefault('system', {}).update(dict(
+            architecture=list(platform.architecture()),
+            machine=platform.machine(),
+            python_version=platform.python_version(),
+            release=platform.release(),
+            system=platform.system(),
+            version=platform.version(),
+        ))
+
+        if platform.system() == 'Linux':
+            dist = list(platform.linux_distribution())
+            data['system']['linux_distribution'] = dist
+        elif platform.system() == 'Windows':
+            win32_ver = list((platform.win32_ver())),
+            data['system']['win32_ver'] = win32_ver
+        elif platform.system() == 'Darwin':
+            # mac version is a special Cupertino snowflake
+            r, v, m = platform.mac_ver()
+            data['system']['mac_ver'] = [r, list(v), m]
+
+        if telemetry_handler:
+            telemetry_handler(mach_context, data)
