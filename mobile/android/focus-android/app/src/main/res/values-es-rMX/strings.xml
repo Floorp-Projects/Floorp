@@ -117,7 +117,7 @@
   <string name="content_description_forward">Ir hacia delante</string>
   <string name="content_description_reload">Recargar sitio web</string>
   <string name="content_description_back">Regresar a la navegación</string>
-  <string name="content_description_stop">Dejar cargando el sitio web</string>
+  <string name="content_description_stop">Detener la carga del sitio web</string>
   <string name="content_description_customtab_exit">Regresar a la aplicación anterior</string>
   <string name="content_description_blocking_switch">Bloquear rastreadores</string>
   <string name="your_rights">Tus derechos</string>

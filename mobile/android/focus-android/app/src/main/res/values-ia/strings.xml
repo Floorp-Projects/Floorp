@@ -35,11 +35,11 @@
   <string name="preference_category_web_content">Contento de web</string>
   <string name="preference_category_switching_apps">Navigation trans le applicationes</string>
   <string name="preference_category_general">General</string>
-  <string name="preference_category_data_collection_use">Collection e uso de datos</string>
+  <string name="preference_category_data_collection_use">Colligimento e uso de datos</string>
   <string name="preference_category_search">Cercar</string>
   <string name="preference_search_engine_default">Predefinite</string>
   <string name="preference_state_on">Activar</string>
-  <string name="preference_state_off">Disactivar</string>
+  <string name="preference_state_off">Inactive</string>
   <string name="preference_subitem_autocomplete">Auto-completamento del URL</string>
   <string name="preference_switch_autocomplete">Auto-completar</string>
   <string name="preference_category_autocomplete_preinstalled">Lista de URL predefinite</string>
@@ -52,7 +52,7 @@
   <string name="preference_category_cookies">Cookies e datos de sitos</string>
   <string name="preference_category_data_choices">Selectiones de datos</string>
   <string name="preference_autocomplete_title_remove">Remover URLs personalisate</string>
-  <string name="preference_autocomplete_learn_more">Apprender plus</string>
+  <string name="preference_autocomplete_learn_more">Saper plus</string>
   <string name="preference_autocomplete_custom_summary">Adde e gere le complementamento personalisate del URLs.</string>
   <string name="preference_autocomplete_add_title">URL a adder</string>
   <string name="preference_autocomplete_add_hint">Colla o insere le URL</string>
