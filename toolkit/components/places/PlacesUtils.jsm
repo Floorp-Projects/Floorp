@@ -1283,11 +1283,6 @@ var PlacesUtils = {
     return this.unfiledBookmarksFolderId = this.bookmarks.unfiledBookmarksFolder;
   },
 
-  get mobileFolderId() {
-    delete this.mobileFolderId;
-    return this.mobileFolderId = this.bookmarks.mobileFolder;
-  },
-
   /**
    * Checks if item is a root.
    *
