@@ -342,7 +342,6 @@ class IonBuilder
     AbortReasonOr<Ok> newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t length);
 
     // jsop_newobject helpers.
-    AbortReasonOr<Ok> newObjectTrySharedStub(bool* emitted);
     AbortReasonOr<Ok> newObjectTryTemplateObject(bool* emitted, JSObject* templateObject);
     AbortReasonOr<Ok> newObjectTryVM(bool* emitted, JSObject* templateObject);
 
