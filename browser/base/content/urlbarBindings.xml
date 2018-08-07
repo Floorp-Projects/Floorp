@@ -93,7 +93,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.addEventListener("overflow", this);
         this.inputField.addEventListener("underflow", this);
         this.inputField.addEventListener("scrollend", this);
-        window.addEventListener("resize", this);
 
         var textBox = document.getAnonymousElementByAttribute(this,
                                                 "anonid", "moz-input-box");
@@ -159,7 +158,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.removeEventListener("overflow", this);
         this.inputField.removeEventListener("underflow", this);
         this.inputField.removeEventListener("scrollend", this);
-        window.removeEventListener("resize", this);
 
         if (this._deferredKeyEventTimeout) {
           clearTimeout(this._deferredKeyEventTimeout);
@@ -1419,25 +1417,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               // to handle cases like backspace, autofill or repeated searches.
               // Ensure to clear those internal caches when switching tabs.
               this.controller.resetInternalState();
-              break;
-            case "resize":
-              // Throttle resize handling for performance reasons.
-              if (!this._resizeThrottleTimeout) {
-                this._resizeThrottleTimeout = setTimeout(() => {
-                  window.requestAnimationFrame(() => {
-                    delete this._resizeThrottleTimeout;
-
-                    // Close the popup since it would be wrongly sized, we'll
-                    // recalculate a proper size on reopening. For example, this may
-                    // happen when using special OS resize functions like Win+Arrow.
-                    this.closePopup();
-
-                    // Ensure the host remains visible when the input field is not
-                    // focused.
-                    this.formatValue();
-                  });
-                }, 30);
-              }
               break;
           }
         ]]></body>
