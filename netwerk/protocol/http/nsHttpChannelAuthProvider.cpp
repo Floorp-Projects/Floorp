@@ -1119,11 +1119,11 @@ nsHttpChannelAuthProvider::GetIdentityFromURI(uint32_t            authFlags,
     mURI->GetUsername(buf);
     if (!buf.IsEmpty()) {
         NS_UnescapeURL(buf);
-        CopyASCIItoUTF16(buf, userBuf);
+        CopyUTF8toUTF16(buf, userBuf);
         mURI->GetPassword(buf);
         if (!buf.IsEmpty()) {
             NS_UnescapeURL(buf);
-            CopyASCIItoUTF16(buf, passBuf);
+            CopyUTF8toUTF16(buf, passBuf);
         }
     }
 
