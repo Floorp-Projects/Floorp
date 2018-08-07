@@ -1847,7 +1847,7 @@ nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY)
 void
 nsBaseWidget::NotifyPresShell(NotificationFunc aNotificationFunc)
 {
-  if (!mWidgetListener || mWidgetListener->GetXULWindow()) {
+  if (!mWidgetListener) {
     return;
   }
 
