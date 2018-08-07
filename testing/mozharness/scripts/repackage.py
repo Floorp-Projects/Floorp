@@ -27,18 +27,18 @@ class Repackage(BaseScript):
         config = self.config
         dirs = self.query_abs_dirs()
 
-        input_home = config['input_home'].format(**dirs)
+        input_dir = dirs['abs_input_dir']
 
         for path, url in config["download_config"].items():
             status = self.download_file(url=url,
                                         file_name=path,
-                                        parent_dir=input_home)
+                                        parent_dir=input_dir)
             if not status:
                 self.fatal("Unable to fetch signed input from %s" % url)
 
             if 'mar' in path:
                 # Ensure mar is executable
-                self.chmod(os.path.join(input_home, path), 0755)
+                self.chmod(os.path.join(input_dir, path), 0755)
 
     def setup(self):
         self._run_tooltool()
@@ -55,17 +55,14 @@ class Repackage(BaseScript):
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
         dirs['abs_mozilla_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
-        locale_dir = ''
+        dirs['abs_input_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'inputs')
+        output_dir_suffix = []
         if config.get('locale'):
-            locale_dir = "{}{}".format(os.path.sep, config['locale'])
-        repack_id_dir = ''
+            output_dir_suffix.append(config['locale'])
         if config.get('repack_id'):
-            repack_id_dir = "{}{}".format(os.path.sep, config['repack_id'])
-        dirs['output_home'] = config['output_home'].format(
-            locale=locale_dir,
-            repack_id=repack_id_dir,
-            **abs_dirs
-        )
+            output_dir_suffix.append(config['repack_id'])
+        dirs['abs_output_dir'] = os.path.join(
+            abs_dirs['abs_work_dir'], 'outputs', *output_dir_suffix)
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
@@ -77,7 +74,7 @@ class Repackage(BaseScript):
         dirs = self.query_abs_dirs()
 
         # Make sure the upload dir is around.
-        self.mkdir_p(dirs['output_home'])
+        self.mkdir_p(dirs['abs_output_dir'])
 
         for repack_config in config["repackage_config"]:
             command = [sys.executable, 'mach', '--log-no-times', 'repackage'] + \

@@ -1,8 +1,6 @@
 import os
 
 config = {
-    "input_home": "{abs_work_dir}/inputs",
-    "output_home": "{abs_work_dir}/artifacts{locale}",
     "src_mozconfig": "browser/config/mozconfigs/macosx64/repack",
 
     "locale": os.environ.get("LOCALE"),
@@ -14,13 +12,13 @@ config = {
 
     "repackage_config": [[
         "dmg",
-        "-i", "{abs_work_dir}/inputs/target.tar.gz",
-        "-o", "{output_home}/target.dmg"
+        "-i", "{abs_input_dir}/target.tar.gz",
+        "-o", "{abs_output_dir}/target.dmg"
     ], [
         "mar",
-        "-i", "{abs_work_dir}/inputs/target.tar.gz",
-        "--mar", "{abs_work_dir}/inputs/mar",
-        "-o", "{output_home}/target.complete.mar"
+        "-i", "{abs_input_dir}/target.tar.gz",
+        "--mar", "{abs_input_dir}/mar",
+        "-o", "{abs_output_dir}/target.complete.mar"
     ]],
 
     # ToolTool
