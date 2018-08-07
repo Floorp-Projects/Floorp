@@ -82,8 +82,7 @@ bool
 SVGAnimationElement::GetTargetAttributeName(int32_t *aNamespaceID,
                                             nsAtom **aLocalName) const
 {
-  const nsAttrValue* nameAttr
-    = mAttrsAndChildren.GetAttr(nsGkAtoms::attributeName);
+  const nsAttrValue* nameAttr = mAttrs.GetAttr(nsGkAtoms::attributeName);
 
   if (!nameAttr)
     return false;
@@ -177,8 +176,8 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
     }
     const nsAttrValue* href =
       HasAttr(kNameSpaceID_None, nsGkAtoms::href)
-      ? mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
-      : mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
+        ? mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
+        : mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
     if (href) {
       nsAutoString hrefStr;
       href->ToString(hrefStr);
@@ -298,7 +297,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       // After unsetting href, we may still have xlink:href, so we
       // should try to add it back.
       const nsAttrValue* xlinkHref =
-        mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
+        mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
       if (xlinkHref) {
         UpdateHrefTarget(xlinkHref->GetStringValue());
       }
