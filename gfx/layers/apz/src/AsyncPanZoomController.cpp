@@ -3064,15 +3064,6 @@ ParentLayerPoint AsyncPanZoomController::AttemptFling(const FlingHandoffState& a
     residualVelocity.y = 0;
   }
 
-  // If we're not scrollable in at least one of the directions in which we
-  // were handed velocity, don't start a fling animation.
-  if (GetVelocityVector().Length() < gfxPrefs::APZFlingMinVelocityThreshold()) {
-    // Relieve overscroll now if needed, since we will not transition to a fling
-    // animation and then an overscroll animation, and relieve it then.
-    aHandoffState.mChain->SnapBackOverscrolledApzc(this);
-    return residualVelocity;
-  }
-
   // If there's a scroll snap point near the predicted fling destination,
   // scroll there using a smooth scroll animation. Otherwise, start a
   // fling animation.

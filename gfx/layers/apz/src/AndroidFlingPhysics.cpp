@@ -151,8 +151,6 @@ void AndroidFlingPhysics::Init(const ParentLayerPoint& aStartingVelocity,
                                float aPLPPI)
 {
   mVelocity = aStartingVelocity.Length();
-  // We should not have created a fling animation if there is no velocity.
-  MOZ_ASSERT(mVelocity != 0.0f);
   const double tuningCoeff = ComputeDeceleration(aPLPPI);
   mTargetDuration = ComputeFlingDuration(mVelocity, tuningCoeff);
   MOZ_ASSERT(!mTargetDuration.IsZero());
