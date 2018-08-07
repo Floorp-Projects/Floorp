@@ -18,6 +18,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsTArray.h"
+#include "nsRegion.h"
 #include "Units.h"
 
 // translucency level for drag images
@@ -82,7 +83,7 @@ protected:
    * EndDragSession() get called if the platform drag is successfully invoked.
    */
   virtual nsresult InvokeDragSessionImpl(nsIArray* aTransferableArray,
-                                         nsIScriptableRegion* aDragRgn,
+                                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                                          uint32_t aActionType) = 0;
 
   /**
@@ -108,7 +109,7 @@ protected:
    * whichever of mImage or aDOMNode is used.
    */
   nsresult DrawDrag(nsINode* aDOMNode,
-                    nsIScriptableRegion* aRegion,
+                    const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                     mozilla::CSSIntPoint aScreenPosition,
                     mozilla::LayoutDeviceIntRect* aScreenDragRect,
                     RefPtr<SourceSurface>* aSurface,
@@ -199,7 +200,7 @@ protected:
   nsTArray<RefPtr<mozilla::dom::ContentParent>> mChildProcesses;
 
   // Sub-region for tree-selections.
-  nsCOMPtr<nsIScriptableRegion> mRegion;
+  mozilla::Maybe<mozilla::CSSIntRegion> mRegion;
 };
 
 #endif // nsBaseDragService_h__
