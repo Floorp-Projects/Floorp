@@ -1694,15 +1694,15 @@ var PlacesUtils = {
         case PlacesUtils.bookmarks.TYPE_FOLDER:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
           // Mark root folders.
-          if (itemId == PlacesUtils.placesRootId)
+          if (item.guid == PlacesUtils.bookmarks.rootGuid)
             item.root = "placesRoot";
-          else if (itemId == PlacesUtils.bookmarksMenuFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.menuGuid)
             item.root = "bookmarksMenuFolder";
-          else if (itemId == PlacesUtils.unfiledBookmarksFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.unfiledGuid)
             item.root = "unfiledBookmarksFolder";
-          else if (itemId == PlacesUtils.toolbarFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.toolbarGuid)
             item.root = "toolbarFolder";
-          else if (itemId == PlacesUtils.mobileFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.mobileGuid)
             item.root = "mobileFolder";
           break;
         case PlacesUtils.bookmarks.TYPE_SEPARATOR:
