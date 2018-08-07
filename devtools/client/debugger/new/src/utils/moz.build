@@ -13,7 +13,6 @@ DIRS += [
 DevToolsModules(
     'assert.js',
     'ast.js',
-    'asyncStoreHelper.js',
     'bootstrap.js',
     'build-query.js',
     'clipboard.js',
