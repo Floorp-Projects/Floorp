@@ -1,4 +1,4 @@
-52853
+52862
 0/nm
 0th/pt
 1/n1
@@ -14378,6 +14378,7 @@ altruistic
 altruistically
 alum/SM
 alumina/M
+aluminize/D
 aluminum/M
 alumna/M
 alumnae
@@ -21319,7 +21320,7 @@ coup's
 coup/AS
 coupe/SM
 couple's
-couple/UCGSD
+couple/UCGSDRZ
 couplet/MS
 coupling/SM
 coupon/SM
@@ -26511,6 +26512,7 @@ flamingo/MS
 flammability/IM
 flammable/SM
 flan/MS
+flaneur/MS
 flange/MS
 flank/SZGMDR
 flanker/M
@@ -31235,6 +31237,7 @@ infrastructural
 infrastructure/SM
 infrequence/M
 infrequent/Y
+infringe/RZ
 infringement/MS
 infuriate/GDS
 infuriating/Y
@@ -42781,6 +42784,7 @@ retrofitting
 retrograde/DSG
 retrogress/GVDS
 retrogression/M
+retroreflector/S
 retrorocket/MS
 retrospect/MDSGV
 retrospection/M
@@ -46747,7 +46751,7 @@ steadiness/UM
 steady/TGPDRSM
 steak/SM
 steakhouse/SM
-steal/SMHG
+steal/SMHGRZ
 stealth/M
 stealthily
 stealthiness/M
@@ -49458,6 +49462,7 @@ trail/ZGSMDR
 trailblazer/MS
 trailblazing/M
 trailer/M
+trailhead/S
 train/ZGSMDRBJ
 trained/U
 trainee/SM
@@ -52743,6 +52748,10 @@ youthfulness/M
 youths
 yow
 yowl/MDSG
+yowsa
+yowsah
+yowza
+yowzah
 yr/S
 ytterbium/M
 yttrium/M
