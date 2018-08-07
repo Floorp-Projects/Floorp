@@ -16,6 +16,7 @@
 #include "nsError.h"                    // for nsresult
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
 #include "nsRect.h"                     // for mozilla::gfx::IntRect, nsRect
+#include "nsRectAbsolute.h"
 #include "nsMargin.h"                   // for nsIntMargin
 #include "nsRegionFwd.h"                // for nsIntRegion
 #include "nsString.h"                   // for nsCString
@@ -120,7 +121,7 @@ struct Band
   using StripArray = AutoTArray<Strip, 2>;
 #endif
 
-  MOZ_IMPLICIT Band(const nsRect& aRect)
+  MOZ_IMPLICIT Band(const nsRectAbsolute& aRect)
     : top(aRect.Y()), bottom(aRect.YMost())
   {
     mStrips.AppendElement(Strip{ aRect.X(), aRect.XMost() });
@@ -511,6 +512,9 @@ public:
 
   nsRegion() { }
   MOZ_IMPLICIT nsRegion(const nsRect& aRect) {
+    mBounds = nsRectAbsolute::FromRect(aRect);
+  }
+  MOZ_IMPLICIT nsRegion(const nsRectAbsolute& aRect) {
     mBounds = aRect;
   }
   explicit nsRegion(mozilla::gfx::ArrayView<pixman_box32_t> aRects)
@@ -701,7 +705,7 @@ public:
 
     mBands = std::move(newBands);
     if (!mBands.Length()) {
-      mBounds = nsRect();
+      mBounds = nsRectAbsolute();
     } else {
       mBounds = CalculateBounds();
     }
@@ -711,13 +715,13 @@ public:
     return *this;
   }
 
-  nsRegion& AndWith(const nsRect& aRect)
+  nsRegion& AndWith(const nsRectAbsolute& aRect)
   {
 #ifdef DEBUG_REGIONS
     class OperationStringGeneratorAndWith : public OperationStringGenerator
     {
     public:
-      OperationStringGeneratorAndWith(nsRegion& aRegion, const nsRect& aRect)
+      OperationStringGeneratorAndWith(nsRegion& aRegion, const nsRectAbsolute& aRect)
         : mRegion(&aRegion), mRegionCopy(aRegion), mRect(aRect)
       {
         aRegion.mCurrentOpGenerator = this;
@@ -737,7 +741,7 @@ public:
     private:
       nsRegion * mRegion;
       nsRegion mRegionCopy;
-      nsRect mRect;
+      nsRectAbsolute mRect;
     };
 
     OperationStringGeneratorAndWith opGenerator(*this, aRect);
@@ -801,6 +805,9 @@ public:
     AssertState();
     return *this;
   }
+  nsRegion& AndWith(const nsRect& aRect) {
+    return AndWith(nsRectAbsolute::FromRect(aRect));
+  }
   nsRegion& And(const nsRegion& aRgn1, const nsRegion& aRgn2)
   {
     if (&aRgn1 == this) {
@@ -855,7 +862,7 @@ public:
     And(mBands, aRgn1.mBands, aRgn2.mBands);
 
     if (!mBands.Length()) {
-      mBounds = nsRect();
+      mBounds = nsRectAbsolute();
     } else {
       mBounds = CalculateBounds();
     }
@@ -868,7 +875,7 @@ public:
   {
     return And(aRegion, aRect);
   }
-  nsRegion& And(const nsRegion& aRegion, const nsRect& aRect)
+  nsRegion& And(const nsRegion& aRegion, const nsRectAbsolute& aRect)
   {
     if (&aRegion == this) {
       return AndWith(aRect);
@@ -877,7 +884,7 @@ public:
     class OperationStringGeneratorAnd : public OperationStringGenerator
     {
     public:
-      OperationStringGeneratorAnd(nsRegion& aThisRegion, const nsRegion& aRegion, const nsRect& aRect)
+      OperationStringGeneratorAnd(nsRegion& aThisRegion, const nsRegion& aRegion, const nsRectAbsolute& aRect)
         : mThisRegion(&aThisRegion), mRegion(aRegion), mRect(aRect)
       {
         aThisRegion.mCurrentOpGenerator = this;
@@ -897,7 +904,7 @@ public:
     private:
       nsRegion* mThisRegion;
       nsRegion mRegion;
-      nsRect mRect;
+      nsRectAbsolute mRect;
     };
 
     OperationStringGeneratorAnd opGenerator(*this, aRegion, aRect);
@@ -958,6 +965,10 @@ public:
     AssertState();
     return *this;
   }
+  nsRegion& And(const nsRegion& aRegion, const nsRect& aRect)
+  {
+    return And(aRegion, nsRectAbsolute::FromRect(aRect));
+  }
   nsRegion& And(const nsRect& aRect1, const nsRect& aRect2)
   {
     nsRect tmpRect;
@@ -969,13 +980,13 @@ public:
   nsRegion& OrWith(const nsRegion& aOther)
   {
     for (RectIterator idx(aOther); !idx.Done(); idx.Next()) {
-      AddRect(idx.Get());
+      AddRect(idx.GetAbsolute());
     }
     return *this;
   }
   nsRegion& OrWith(const nsRect& aOther)
   {
-    AddRect(aOther);
+    AddRect(nsRectAbsolute::FromRect(aOther));
     return *this;
   }
   nsRegion& Or(const nsRegion& aRgn1, const nsRegion& aRgn2)
@@ -984,7 +995,7 @@ public:
       *this = aRgn1;
     }
     for (RectIterator idx(aRgn2); !idx.Done(); idx.Next()) {
-      AddRect(idx.Get());
+      AddRect(idx.GetAbsolute());
     }
     return *this;
   }
@@ -993,7 +1004,7 @@ public:
     if (&aRegion != this) {
       *this = aRegion;
     }
-    AddRect(aRect);
+    AddRect(nsRectAbsolute::FromRect(aRect));
     return *this;
   }
   nsRegion& Or(const nsRect& aRect, const nsRegion& aRegion)
@@ -1381,7 +1392,7 @@ public:
 
 private:
   // Internal helper for executing subtraction.
-  void RunSubtraction(const nsRect& aRect)
+  void RunSubtraction(const nsRectAbsolute& aRect)
   {
     Strip rectStrip(aRect.X(), aRect.XMost());
 
@@ -1448,7 +1459,7 @@ private:
   }
 
 public:
-  nsRegion& SubWith(const nsRect& aRect) {
+  nsRegion& SubWith(const nsRectAbsolute& aRect) {
     if (!mBounds.Intersects(aRect)) {
       return *this;
     }
@@ -1462,7 +1473,7 @@ public:
     class OperationStringGeneratorSubWith : public OperationStringGenerator
     {
     public:
-      OperationStringGeneratorSubWith(nsRegion& aRegion, const nsRect& aRect)
+      OperationStringGeneratorSubWith(nsRegion& aRegion, const nsRectAbsolute& aRect)
         : mRegion(&aRegion), mRegionCopy(aRegion), mRect(aRect)
       {
         aRegion.mCurrentOpGenerator = this;
@@ -1482,7 +1493,7 @@ public:
     private:
       nsRegion * mRegion;
       nsRegion mRegionCopy;
-      nsRect mRect;
+      nsRectAbsolute mRect;
     };
 
     OperationStringGeneratorSubWith opGenerator(*this, aRect);
@@ -1494,7 +1505,7 @@ public:
 
     RunSubtraction(aRect);
 
-    if (aRect.x <= mBounds.x || aRect.y <= mBounds.y ||
+    if (aRect.X() <= mBounds.X() || aRect.Y() <= mBounds.Y() ||
         aRect.XMost() >= mBounds.XMost() || aRect.YMost() >= mBounds.YMost()) {
       mBounds = CalculateBounds();
     }
@@ -1502,7 +1513,7 @@ public:
     AssertState();
     return *this;
   }
-  nsRegion& Sub(const nsRegion& aRegion, const nsRect& aRect)
+  nsRegion& Sub(const nsRegion& aRegion, const nsRectAbsolute& aRect)
   {
     if (aRect.Contains(aRegion.mBounds)) {
       SetEmpty();
@@ -1515,7 +1526,7 @@ public:
     class OperationStringGeneratorSub : public OperationStringGenerator
     {
     public:
-      OperationStringGeneratorSub(nsRegion& aRegion, const nsRegion& aRegionOther, const nsRect& aRect)
+      OperationStringGeneratorSub(nsRegion& aRegion, const nsRegion& aRegionOther, const nsRectAbsolute& aRect)
         : mRegion(&aRegion), mRegionOther(aRegionOther), mRect(aRect)
       {
         aRegion.mCurrentOpGenerator = this;
@@ -1535,7 +1546,7 @@ public:
     private:
       nsRegion * mRegion;
       nsRegion mRegionOther;
-      nsRect mRect;
+      nsRectAbsolute mRect;
     };
 
     OperationStringGeneratorSub opGenerator(*this, aRegion, aRect);
@@ -1632,12 +1643,29 @@ public:
     EnsureSimplified();
     return *this;
   }
+  nsRegion& SubWith(const nsRect& aRect) {
+    return SubWith(nsRectAbsolute::FromRect(aRect));
+  }
   nsRegion& Sub(const nsRect& aRect, const nsRegion& aRegion)
   {
     Copy(aRect);
     return SubWith(aRegion);
   }
+  nsRegion& Sub(const nsRectAbsolute& aRect, const nsRegion& aRegion)
+  {
+    Copy(aRect);
+    return SubWith(aRegion);
+  }
   nsRegion& Sub(const nsRect& aRect1, const nsRect& aRect2)
+  {
+    Copy(aRect1);
+    return SubWith(aRect2);
+  }
+  nsRegion& Sub(const nsRegion& aRegion, const nsRect& aRect)
+  {
+    return Sub(aRegion, nsRectAbsolute::FromRect(aRect));
+  }
+  nsRegion& Sub(const nsRectAbsolute& aRect1, const nsRectAbsolute& aRect2)
   {
     Copy(aRect1);
     return SubWith(aRect2);
@@ -1673,7 +1701,7 @@ public:
     }
     return false;
   }
-  bool Contains(const nsRect& aRect) const
+  bool Contains(const nsRectAbsolute& aRect) const
   {
     if (aRect.IsEmpty()) {
       return false;
@@ -1726,9 +1754,16 @@ public:
     }
     return false;
   }
+  bool Contains(const nsRect& aRect) const
+  {
+    return Contains(nsRectAbsolute::FromRect(aRect));
+  }
 
   bool Contains(const nsRegion& aRgn) const;
-  bool Intersects(const nsRect& aRect) const;
+  bool Intersects(const nsRectAbsolute& aRect) const;
+  bool Intersects(const nsRect& aRect) const {
+    return Intersects(nsRectAbsolute::FromRect(aRect));
+  }
 
   void MoveBy(int32_t aXOffset, int32_t aYOffset)
   {
@@ -1848,7 +1883,8 @@ public:
 
     return rects;
   }
-  const nsRect GetBounds() const { return mBounds; }
+  const nsRect GetBounds() const { return mBounds.ToNSRect(); }
+  const nsRectAbsolute GetAbsoluteBounds() const { return mBounds; }
   uint64_t Area() const;
 
   /**
@@ -1942,6 +1978,13 @@ private:
   nsRegion& Copy(const nsRect& aRect)
   {
     mBands.Clear();
+    mBounds = nsRectAbsolute::FromRect(aRect);
+    return *this;
+  }
+
+  nsRegion& Copy(const nsRectAbsolute& aRect)
+  {
+    mBands.Clear();
     mBounds = aRect;
     return *this;
   }
@@ -1952,20 +1995,19 @@ private:
     }
   }
 
-  static inline nsRect BoxToRect(const pixman_box32_t &aBox)
+  static inline nsRectAbsolute BoxToRect(const pixman_box32_t &aBox)
   {
-    return nsRect(aBox.x1, aBox.y1,
-      aBox.x2 - aBox.x1,
-      aBox.y2 - aBox.y1);
+    return nsRectAbsolute(aBox.x1, aBox.y1,
+                          aBox.x2, aBox.y2);
   }
 
-  void AddRect(const nsRect& aRect)
+  void AddRect(const nsRectAbsolute& aRect)
   {
 #ifdef DEBUG_REGIONS
     class OperationStringGeneratorAddRect : public OperationStringGenerator
     {
     public:
-      OperationStringGeneratorAddRect(nsRegion& aRegion, const nsRect& aRect)
+      OperationStringGeneratorAddRect(nsRegion& aRegion, const nsRectAbsolute& aRect)
         : mRegion(&aRegion), mRegionCopy(aRegion), mRect(aRect)
       {
         aRegion.mCurrentOpGenerator = this;
@@ -1985,18 +2027,12 @@ private:
     private:
       nsRegion* mRegion;
       nsRegion mRegionCopy;
-      nsRect mRect;
+      nsRectAbsolute mRect;
     };
 
     OperationStringGeneratorAddRect opGenerator(*this, aRect);
 #endif
     if (aRect.IsEmpty()) {
-      return;
-    }
-
-    if (aRect.Overflows()) {
-      // We don't accept rects which overflow.
-      gfxWarning() << "Passing overflowing rect to AddRect.";
       return;
     }
 
@@ -2109,7 +2145,7 @@ private:
 
   // Most callers could probably do this on the fly, if this ever shows up
   // in profiles we could optimize this.
-  nsRect CalculateBounds() const
+  nsRectAbsolute CalculateBounds() const
   {
     if (mBands.IsEmpty()) {
       return mBounds;
@@ -2125,7 +2161,7 @@ private:
       rightMost = std::max(rightMost, band.mStrips.LastElement().right);
     }
 
-    return nsRect(leftMost, top, rightMost - leftMost, bottom - top);
+    return nsRectAbsolute(leftMost, top, rightMost, bottom);
   }
 
   static uint32_t ComputeMergedAreaIncrease(const Band& aTopBand,
@@ -2164,7 +2200,7 @@ private:
 
   BandArray mBands;
   // Considering we only ever OR with nsRects, the bounds should fit in an nsRect as well.
-  nsRect mBounds;
+  nsRectAbsolute mBounds;
 #ifdef DEBUG_REGIONS
   friend class OperationStringGenerator;
   OperationStringGenerator* mCurrentOpGenerator;
@@ -2196,11 +2232,20 @@ public:
     const nsRect Get() const
     {
       if (mRegion.mBands.IsEmpty()) {
-        return mRegion.mBounds;
+        return mRegion.GetBounds();
       }
       return nsRect(mCurrentStrip->left, mCurrentBand->top,
         mCurrentStrip->right - mCurrentStrip->left,
         mCurrentBand->bottom - mCurrentBand->top);
+    }
+
+    const nsRectAbsolute GetAbsolute() const
+    {
+      if (mRegion.mBands.IsEmpty()) {
+        return mRegion.mBounds;
+      }
+      return nsRectAbsolute(mCurrentStrip->left, mCurrentBand->top,
+                            mCurrentStrip->right, mCurrentBand->bottom);
     }
 
     void Next()
