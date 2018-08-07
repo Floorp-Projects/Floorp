@@ -48,4 +48,28 @@ class MozDropmarker extends MozXULElement {
 
 customElements.define("dropmarker", MozDropmarker);
 
+class MozCommandSet extends MozXULElement {
+  connectedCallback() {
+    if (this.getAttribute("commandupdater")) {
+      let events = this.getAttribute("events");
+      if (events === "") {
+        events = "*";
+      }
+      let targets = this.getAttribute("targets");
+      if (targets === "") {
+        targets = "*";
+      }
+      document.commandDispatcher.addCommandUpdater(this, events, targets);
+    }
+  }
+
+  disconnectedCallback() {
+    if (this.getAttribute("commandupdater")) {
+      document.commandDispatcher.removeCommandUpdater(this);
+    }
+  }
+}
+
+customElements.define("commandset", MozCommandSet);
+
 }
