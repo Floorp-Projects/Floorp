@@ -6247,9 +6247,9 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
     }
 
     if (!aFrameList.IsEmpty()) {
-      bool positioned = aParentFrame->IsRelativelyPositioned();
       nsFrameItems ibSiblings;
-      CreateIBSiblings(aState, aParentFrame, positioned, aFrameList,
+      CreateIBSiblings(aState, aParentFrame,
+                       aParentFrame->IsAbsPosContainingBlock(), aFrameList,
                        ibSiblings);
 
       // Make sure to trigger reflow of the inline that used to be our
@@ -11118,11 +11118,6 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
-  bool positioned =
-    StyleDisplay::Inline == aDisplay->mDisplay &&
-    aDisplay->IsRelativelyPositionedStyle() &&
-    !nsSVGUtils::IsInSVGTextSubtree(aParentFrame);
-
   nsInlineFrame* newFrame = NS_NewInlineFrame(mPresShell, computedStyle);
 
   // Initialize the frame
@@ -11132,8 +11127,9 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                                   // because the object's destructor is significant
                                                   // this is part of the fix for bug 42372
 
+  bool isAbsPosCB = newFrame->IsAbsPosContainingBlock();
   newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-  if (positioned) {
+  if (isAbsPosCB) {
     // Relatively positioned frames becomes a container for child
     // frames that are positioned
     aState.PushAbsoluteContainingBlock(newFrame, newFrame, absoluteSaveState);
@@ -11172,7 +11168,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   aFrameItems.AddChild(newFrame);
 
   newFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
-  CreateIBSiblings(aState, newFrame, positioned, childItems, aFrameItems);
+  CreateIBSiblings(aState, newFrame, isAbsPosCB, childItems, aFrameItems);
 
   return newFrame;
 }
@@ -11180,10 +11176,12 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 void
 nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
                                         nsContainerFrame* aInitialInline,
-                                        bool aIsPositioned,
+                                        bool aIsAbsPosCB,
                                         nsFrameItems& aChildItems,
                                         nsFrameItems& aSiblings)
 {
+  MOZ_ASSERT(aIsAbsPosCB == aInitialInline->IsAbsPosContainingBlock());
+
   nsIContent* content = aInitialInline->GetContent();
   ComputedStyle* computedStyle = aInitialInline->Style();
   nsContainerFrame* parentFrame = aInitialInline->GetParent();
@@ -11231,7 +11229,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
     nsInlineFrame* inlineFrame = NS_NewInlineFrame(mPresShell, computedStyle);
     InitAndRestoreFrame(aState, content, parentFrame, inlineFrame, false);
     inlineFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-    if (aIsPositioned) {
+    if (aIsAbsPosCB) {
       inlineFrame->MarkAsAbsoluteContainingBlock();
     }
 
