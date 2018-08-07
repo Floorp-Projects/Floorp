@@ -20,10 +20,6 @@ var _actions = require("../actions/index");
 
 var _actions2 = _interopRequireDefault(_actions);
 
-var _A11yIntention = require("./A11yIntention");
-
-var _A11yIntention2 = _interopRequireDefault(_A11yIntention);
-
 var _ShortcutsModal = require("./ShortcutsModal");
 
 var _selectors = require("../selectors/index");
@@ -281,10 +277,10 @@ class App extends _react.Component {
     } = this.props;
     return _react2.default.createElement("div", {
       className: "debugger"
-    }, _react2.default.createElement(_A11yIntention2.default, null, this.renderLayout(), quickOpenEnabled === true && _react2.default.createElement(_QuickOpenModal2.default, {
+    }, this.renderLayout(), quickOpenEnabled === true && _react2.default.createElement(_QuickOpenModal2.default, {
       shortcutsModalEnabled: this.state.shortcutsModalEnabled,
       toggleShortcutsModal: () => this.toggleShortcutsModal()
-    }), this.renderShortcutsModal()));
+    }), this.renderShortcutsModal());
   }
 
 }

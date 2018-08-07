@@ -400,12 +400,9 @@ function getSelectedFrameBindings(state) {
   let frameBindings = [];
 
   while (currentScope && currentScope.type != "object") {
-    if (currentScope.bindings) {
-      const bindings = Object.keys(currentScope.bindings.variables);
-      const args = [].concat(...currentScope.bindings.arguments.map(argument => Object.keys(argument)));
-      frameBindings = [...frameBindings, ...bindings, ...args];
-    }
-
+    const bindings = Object.keys(currentScope.bindings.variables);
+    const args = [].concat(...currentScope.bindings.arguments.map(argument => Object.keys(argument)));
+    frameBindings = [...frameBindings, ...bindings, ...args];
     currentScope = currentScope.parent;
   }
 

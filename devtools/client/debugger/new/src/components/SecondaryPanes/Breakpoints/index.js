@@ -14,10 +14,6 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
-var _ExceptionOption = require("./ExceptionOption");
-
-var _ExceptionOption2 = _interopRequireDefault(_ExceptionOption);
-
 var _Breakpoint = require("./Breakpoint");
 
 var _Breakpoint2 = _interopRequireDefault(_Breakpoint);
@@ -41,6 +37,19 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+function createExceptionOption(label, value, onChange, className) {
+  return _react2.default.createElement("div", {
+    className: className,
+    onClick: onChange
+  }, _react2.default.createElement("input", {
+    type: "checkbox",
+    checked: value ? "checked" : "",
+    onChange: e => e.stopPropagation() && onChange()
+  }), _react2.default.createElement("div", {
+    className: "breakpoint-exceptions-label"
+  }, label));
+}
+
 class Breakpoints extends _react.Component {
   renderExceptionsOptions() {
     const {
@@ -50,21 +59,13 @@ class Breakpoints extends _react.Component {
       pauseOnExceptions
     } = this.props;
     const isEmpty = breakpointSources.length == 0;
+    const exceptionsBox = createExceptionOption(L10N.getStr("pauseOnExceptionsItem2"), shouldPauseOnExceptions, () => pauseOnExceptions(!shouldPauseOnExceptions, false), "breakpoints-exceptions");
+    const ignoreCaughtBox = createExceptionOption(L10N.getStr("pauseOnCaughtExceptionsItem"), shouldPauseOnCaughtExceptions, () => pauseOnExceptions(true, !shouldPauseOnCaughtExceptions), "breakpoints-exceptions-caught");
     return _react2.default.createElement("div", {
       className: (0, _classnames2.default)("breakpoints-exceptions-options", {
         empty: isEmpty
       })
-    }, _react2.default.createElement(_ExceptionOption2.default, {
-      className: "breakpoints-exceptions",
-      label: L10N.getStr("pauseOnExceptionsItem2"),
-      isChecked: shouldPauseOnExceptions,
-      onChange: () => pauseOnExceptions(!shouldPauseOnExceptions, false)
-    }), shouldPauseOnExceptions && _react2.default.createElement(_ExceptionOption2.default, {
-      className: "breakpoints-exceptions-caught",
-      label: L10N.getStr("pauseOnCaughtExceptionsItem"),
-      isChecked: shouldPauseOnCaughtExceptions,
-      onChange: () => pauseOnExceptions(true, !shouldPauseOnCaughtExceptions)
-    }));
+    }, exceptionsBox, shouldPauseOnExceptions ? ignoreCaughtBox : null);
   }
 
   renderBreakpoints() {
