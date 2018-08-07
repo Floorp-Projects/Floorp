@@ -37,6 +37,33 @@ CacheIRWriter::assertSameCompartment(JSObject* obj) {
     assertSameCompartmentDebugOnly(cx_, obj);
 }
 
+StubField
+CacheIRWriter::readStubFieldForIon(uint32_t offset, StubField::Type type) const
+{
+    size_t index = 0;
+    size_t currentOffset = 0;
+
+    // If we've seen an offset earlier than this before, we know we can start the search
+    // there at least, otherwise, we start the search from the beginning.
+    if (lastOffset_ < offset) {
+        currentOffset = lastOffset_;
+        index = lastIndex_;
+    }
+
+    while (currentOffset != offset) {
+        currentOffset += StubField::sizeInBytes(stubFields_[index].type());
+        index++;
+        MOZ_ASSERT(index < stubFields_.length());
+    }
+
+    MOZ_ASSERT(stubFields_[index].type() == type);
+
+    lastOffset_ = currentOffset;
+    lastIndex_ = index;
+
+    return stubFields_[index];
+}
+
 IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                          ICState::Mode mode)
   : writer(cx),
