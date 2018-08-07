@@ -15,7 +15,7 @@
   async function* mockGenerateMessages(locales, resourceIds) {
     const mc = new MessageContext(locales);
     mc.addMessages("title = Hello World");
-    mc.addMessages("link\n    .title = Click me");
+    mc.addMessages("link =\n    .title = Click me");
     yield mc;
   }
 

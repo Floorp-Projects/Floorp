@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@aa95b1f (July 10, 2018) */
+/* fluent@0.7.0 */
 
 /*  eslint no-magic-numbers: [0]  */
 
@@ -25,6 +25,9 @@ const MAX_PLACEABLES = 100;
 const entryIdentifierRe = /-?[a-zA-Z][a-zA-Z0-9_-]*/y;
 const identifierRe = /[a-zA-Z][a-zA-Z0-9_-]*/y;
 const functionIdentifierRe = /^[A-Z][A-Z_?-]*$/;
+const unicodeEscapeRe = /^[a-fA-F0-9]{4}$/;
+const trailingWSRe = /[ \t\n\r]+$/;
+
 
 /**
  * The `Parser` class is responsible for parsing FTL resources.
@@ -94,44 +97,13 @@ class RuntimeParser {
     const ch = this._source[this._index];
 
     // We don't care about comments or sections at runtime
-    if (ch === "/" ||
-      (ch === "#" &&
-        [" ", "#", "\n"].includes(this._source[this._index + 1]))) {
+    if (ch === "#" &&
+        [" ", "#", "\n"].includes(this._source[this._index + 1])) {
       this.skipComment();
       return;
     }
 
-    if (ch === "[") {
-      this.skipSection();
-      return;
-    }
-
     this.getMessage();
-  }
-
-  /**
-   * Skip the section entry from the current index.
-   *
-   * @private
-   */
-  skipSection() {
-    this._index += 1;
-    if (this._source[this._index] !== "[") {
-      throw this.error('Expected "[[" to open a section');
-    }
-
-    this._index += 1;
-
-    this.skipInlineWS();
-    this.getVariantName();
-    this.skipInlineWS();
-
-    if (this._source[this._index] !== "]" ||
-        this._source[this._index + 1] !== "]") {
-      throw this.error('Expected "]]" to close a section');
-    }
-
-    this._index += 2;
   }
 
   /**
@@ -147,6 +119,8 @@ class RuntimeParser {
 
     if (this._source[this._index] === "=") {
       this._index++;
+    } else {
+      throw this.error("Expected \"=\" after the identifier");
     }
 
     this.skipInlineWS();
@@ -236,7 +210,7 @@ class RuntimeParser {
    * Get identifier using the provided regex.
    *
    * By default this will get identifiers of public messages, attributes and
-   * external arguments (without the $).
+   * variables (without the $).
    *
    * @returns {String}
    * @private
@@ -311,21 +285,30 @@ class RuntimeParser {
    * @private
    */
   getString() {
-    const start = this._index + 1;
+    let value = "";
+    this._index++;
 
-    while (++this._index < this._length) {
+    while (this._index < this._length) {
       const ch = this._source[this._index];
 
       if (ch === '"') {
+        this._index++;
         break;
       }
 
       if (ch === "\n") {
         throw this.error("Unterminated string expression");
       }
+
+      if (ch === "\\") {
+        value += this.getEscapedCharacter(["{", "\\", "\""]);
+      } else {
+        this._index++;
+        value += ch;
+      }
     }
 
-    return this._source.substring(start, this._index++);
+    return value;
   }
 
   /**
@@ -349,10 +332,17 @@ class RuntimeParser {
       eol = this._length;
     }
 
-    const firstLineContent = start !== eol ?
-      this._source.slice(start, eol) : null;
+    // If there's any text between the = and the EOL, store it for now. The next
+    // non-empty line will decide what to do with it.
+    const firstLineContent = start !== eol
+      // Trim the trailing whitespace in case this is a single-line pattern.
+      // Multiline patterns are parsed anew by getComplexPattern.
+      ? this._source.slice(start, eol).replace(trailingWSRe, "")
+      : null;
 
-    if (firstLineContent && firstLineContent.includes("{")) {
+    if (firstLineContent
+      && (firstLineContent.includes("{")
+        || firstLineContent.includes("\\"))) {
       return this.getComplexPattern();
     }
 
@@ -439,13 +429,19 @@ class RuntimeParser {
         }
         ch = this._source[this._index];
         continue;
-      } else if (ch === "\\") {
-        const ch2 = this._source[this._index + 1];
-        if (ch2 === '"' || ch2 === "{" || ch2 === "\\") {
-          ch = ch2;
-          this._index++;
-        }
-      } else if (ch === "{") {
+      }
+
+      if (ch === undefined) {
+        break;
+      }
+
+      if (ch === "\\") {
+        buffer += this.getEscapedCharacter();
+        ch = this._source[this._index];
+        continue;
+      }
+
+      if (ch === "{") {
         // Push the buffer to content array right before placeable
         if (buffer.length) {
           content.push(buffer);
@@ -457,18 +453,13 @@ class RuntimeParser {
         buffer = "";
         content.push(this.getPlaceable());
 
-        this._index++;
-
-        ch = this._source[this._index];
+        ch = this._source[++this._index];
         placeables++;
         continue;
       }
 
-      if (ch) {
-        buffer += ch;
-      }
-      this._index++;
-      ch = this._source[this._index];
+      buffer += ch;
+      ch = this._source[++this._index];
     }
 
     if (content.length === 0) {
@@ -476,12 +467,41 @@ class RuntimeParser {
     }
 
     if (buffer.length) {
-      content.push(buffer);
+      // Trim trailing whitespace, too.
+      content.push(buffer.replace(trailingWSRe, ""));
     }
 
     return content;
   }
   /* eslint-enable complexity */
+
+  /**
+   * Parse an escape sequence and return the unescaped character.
+   *
+   * @returns {string}
+   * @private
+   */
+  getEscapedCharacter(specials = ["{", "\\"]) {
+    this._index++;
+    const next = this._source[this._index];
+
+    if (specials.includes(next)) {
+      this._index++;
+      return next;
+    }
+
+    if (next === "u") {
+      const sequence = this._source.slice(this._index + 1, this._index + 5);
+      if (unicodeEscapeRe.test(sequence)) {
+        this._index += 5;
+        return String.fromCodePoint(parseInt(sequence, 16));
+      }
+
+      throw this.error(`Invalid Unicode escape sequence: \\u${sequence}`);
+    }
+
+    throw this.error(`Unknown escape sequence: \\${next}`);
+  }
 
   /**
    * Parses a single placeable in a Message pattern and returns its
@@ -519,7 +539,7 @@ class RuntimeParser {
     const ch = this._source[this._index];
 
     if (ch === "}") {
-      if (selector.type === "attr" && selector.id.name.startsWith("-")) {
+      if (selector.type === "getattr" && selector.id.name.startsWith("-")) {
         throw this.error(
           "Attributes of private messages cannot be interpolated."
         );
@@ -536,11 +556,11 @@ class RuntimeParser {
       throw this.error("Message references cannot be used as selectors.");
     }
 
-    if (selector.type === "var") {
+    if (selector.type === "getvar") {
       throw this.error("Variants cannot be used as selectors.");
     }
 
-    if (selector.type === "attr" && !selector.id.name.startsWith("-")) {
+    if (selector.type === "getattr" && !selector.id.name.startsWith("-")) {
       throw this.error(
         "Attributes of public messages cannot be used as selectors."
       );
@@ -578,6 +598,10 @@ class RuntimeParser {
    * @private
    */
   getSelectorExpression() {
+    if (this._source[this._index] === "{") {
+      return this.getPlaceable();
+    }
+
     const literal = this.getLiteral();
 
     if (literal.type !== "ref") {
@@ -590,7 +614,7 @@ class RuntimeParser {
       const name = this.getIdentifier();
       this._index++;
       return {
-        type: "attr",
+        type: "getattr",
         id: literal,
         name
       };
@@ -602,7 +626,7 @@ class RuntimeParser {
       const key = this.getVariantKey();
       this._index++;
       return {
-        type: "var",
+        type: "getvar",
         id: literal,
         key
       };
@@ -640,7 +664,7 @@ class RuntimeParser {
     const args = [];
 
     while (this._index < this._length) {
-      this.skipInlineWS();
+      this.skipWS();
 
       if (this._source[this._index] === ")") {
         return args;
@@ -657,7 +681,7 @@ class RuntimeParser {
 
         if (this._source[this._index] === ":") {
           this._index++;
-          this.skipInlineWS();
+          this.skipWS();
 
           const val = this.getSelectorExpression();
 
@@ -685,7 +709,7 @@ class RuntimeParser {
         }
       }
 
-      this.skipInlineWS();
+      this.skipWS();
 
       if (this._source[this._index] === ")") {
         break;
@@ -885,7 +909,7 @@ class RuntimeParser {
     if (cc0 === 36) { // $
       this._index++;
       return {
-        type: "ext",
+        type: "var",
         name: this.getIdentifier()
       };
     }
@@ -925,12 +949,11 @@ class RuntimeParser {
     // to parse them properly and skip their content.
     let eol = this._source.indexOf("\n", this._index);
 
-    while (eol !== -1 &&
-      ((this._source[eol + 1] === "/" && this._source[eol + 2] === "/") ||
-       (this._source[eol + 1] === "#" &&
-         [" ", "#"].includes(this._source[eol + 2])))) {
-      this._index = eol + 3;
+    while (eol !== -1
+      && this._source[eol + 1] === "#"
+      && [" ", "#"].includes(this._source[eol + 2])) {
 
+      this._index = eol + 3;
       eol = this._source.indexOf("\n", this._index);
 
       if (eol === -1) {
@@ -972,7 +995,7 @@ class RuntimeParser {
 
         if ((cc >= 97 && cc <= 122) || // a-z
             (cc >= 65 && cc <= 90) || // A-Z
-             cc === 47 || cc === 91) { // /[
+             cc === 45) { // -
           this._index = start;
           return;
         }
@@ -1169,11 +1192,11 @@ function values(opts) {
  * The role of the Fluent resolver is to format a translation object to an
  * instance of `FluentType` or an array of instances.
  *
- * Translations can contain references to other messages or external arguments,
+ * Translations can contain references to other messages or variables,
  * conditional logic in form of select expressions, traits which describe their
  * grammatical features, and can use Fluent builtins which make use of the
  * `Intl` formatters to format numbers, dates, lists and more into the
- * context's language.  See the documentation of the Fluent syntax for more
+ * context's language. See the documentation of the Fluent syntax for more
  * information.
  *
  * In case of errors the resolver will try to salvage as much of the
@@ -1436,8 +1459,8 @@ function Type(env, expr) {
       return new FluentSymbol(expr.name);
     case "num":
       return new FluentNumber(expr.val);
-    case "ext":
-      return ExternalArgument(env, expr);
+    case "var":
+      return VariableReference(env, expr);
     case "fun":
       return FunctionReference(env, expr);
     case "call":
@@ -1446,11 +1469,11 @@ function Type(env, expr) {
       const message = MessageReference(env, expr);
       return Type(env, message);
     }
-    case "attr": {
+    case "getattr": {
       const attr = AttributeExpression(env, expr);
       return Type(env, attr);
     }
-    case "var": {
+    case "getvar": {
       const variant = VariantExpression(env, expr);
       return Type(env, variant);
     }
@@ -1474,7 +1497,7 @@ function Type(env, expr) {
 }
 
 /**
- * Resolve a reference to an external argument.
+ * Resolve a reference to a variable.
  *
  * @param   {Object} env
  *    Resolver environment object.
@@ -1485,11 +1508,11 @@ function Type(env, expr) {
  * @returns {FluentType}
  * @private
  */
-function ExternalArgument(env, {name}) {
+function VariableReference(env, {name}) {
   const { args, errors } = env;
 
   if (!args || !args.hasOwnProperty(name)) {
-    errors.push(new ReferenceError(`Unknown external: ${name}`));
+    errors.push(new ReferenceError(`Unknown variable: ${name}`));
     return new FluentNone(name);
   }
 
@@ -1512,7 +1535,7 @@ function ExternalArgument(env, {name}) {
       }
     default:
       errors.push(
-        new TypeError(`Unsupported external type: ${name}, ${typeof arg}`)
+        new TypeError(`Unsupported variable type: ${name}, ${typeof arg}`)
       );
       return new FluentNone(name);
   }
@@ -1691,13 +1714,13 @@ class FluentResource extends Map {
  * responsible for parsing translation resources in the Fluent syntax and can
  * format translation units (entities) to strings.
  *
- * Always use `MessageContext.format` to retrieve translation units from
- * a context.  Translations can contain references to other entities or
- * external arguments, conditional logic in form of select expressions, traits
- * which describe their grammatical features, and can use Fluent builtins which
- * make use of the `Intl` formatters to format numbers, dates, lists and more
- * into the context's language.  See the documentation of the Fluent syntax for
- * more information.
+ * Always use `MessageContext.format` to retrieve translation units from a
+ * context. Translations can contain references to other entities or variables,
+ * conditional logic in form of select expressions, traits which describe their
+ * grammatical features, and can use Fluent builtins which make use of the
+ * `Intl` formatters to format numbers, dates, lists and more into the
+ * context's language. See the documentation of the Fluent syntax for more
+ * information.
  */
 class MessageContext {
 
@@ -1849,8 +1872,8 @@ class MessageContext {
    * Format a message to a string or null.
    *
    * Format a raw `message` from the context into a string (or a null if it has
-   * a null value).  `args` will be used to resolve references to external
-   * arguments inside of the translation.
+   * a null value).  `args` will be used to resolve references to variables
+   * passed as arguments to the translation.
    *
    * In case of errors `format` will try to salvage as much of the translation
    * as possible and will still return a string.  For performance reasons, the
@@ -1868,7 +1891,7 @@ class MessageContext {
    *
    *     // Returns 'Hello, name!' and `errors` is now:
    *
-   *     [<ReferenceError: Unknown external: name>]
+   *     [<ReferenceError: Unknown variable: name>]
    *
    * @param   {Object | string}    message
    * @param   {Object | undefined} args

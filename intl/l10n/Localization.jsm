@@ -16,7 +16,7 @@
  */
 
 
-/* fluent-dom@aa95b1f (July 10, 2018) */
+/* fluent-dom@cab517f (July 31, 2018) */
 
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
@@ -25,13 +25,25 @@ const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 
-/*
- * CachedAsyncIterable caches the elements yielded by an iterable.
- *
- * It can be used to iterate over an iterable many times without depleting the
- * iterable.
- */
-class CachedAsyncIterable {
+class CachedIterable extends Array {
+  /**
+   * Create a `CachedIterable` instance from an iterable or, if another
+   * instance of `CachedIterable` is passed, return it without any
+   * modifications.
+   *
+   * @param {Iterable} iterable
+   * @returns {CachedIterable}
+   */
+  static from(iterable) {
+    if (iterable instanceof this) {
+      return iterable;
+    }
+
+    return new this(iterable);
+  }
+}
+
+class CachedAsyncIterable extends CachedIterable {
   /**
    * Create an `CachedAsyncIterable` instance.
    *
@@ -39,6 +51,8 @@ class CachedAsyncIterable {
    * @returns {CachedAsyncIterable}
    */
   constructor(iterable) {
+    super();
+
     if (Symbol.asyncIterator in Object(iterable)) {
       this.iterator = iterable[Symbol.asyncIterator]();
     } else if (Symbol.iterator in Object(iterable)) {
@@ -46,20 +60,46 @@ class CachedAsyncIterable {
     } else {
       throw new TypeError("Argument must implement the iteration protocol.");
     }
-
-    this.seen = [];
   }
 
+  /**
+   * Synchronous iterator over the cached elements.
+   *
+   * Return a generator object implementing the iterator protocol over the
+   * cached elements of the original (async or sync) iterable.
+   */
+  [Symbol.iterator]() {
+    const cached = this;
+    let cur = 0;
+
+    return {
+      next() {
+        if (cached.length === cur) {
+          return {value: undefined, done: true};
+        }
+        return cached[cur++];
+      }
+    };
+  }
+
+  /**
+   * Asynchronous iterator caching the yielded elements.
+   *
+   * Elements yielded by the original iterable will be cached and available
+   * synchronously. Returns an async generator object implementing the
+   * iterator protocol over the elements of the original (async or sync)
+   * iterable.
+   */
   [Symbol.asyncIterator]() {
-    const { seen, iterator } = this;
+    const cached = this;
     let cur = 0;
 
     return {
       async next() {
-        if (seen.length <= cur) {
-          seen.push(await iterator.next());
+        if (cached.length <= cur) {
+          cached.push(await cached.iterator.next());
         }
-        return seen[cur++];
+        return cached[cur++];
       }
     };
   }
@@ -71,13 +111,17 @@ class CachedAsyncIterable {
    * @param {number} count - number of elements to consume
    */
   async touchNext(count = 1) {
-    const { seen, iterator } = this;
     let idx = 0;
     while (idx++ < count) {
-      if (seen.length === 0 || seen[seen.length - 1].done === false) {
-        seen.push(await iterator.next());
+      const last = this[this.length - 1];
+      if (last && last.done) {
+        break;
       }
+      this.push(await this.iterator.next());
     }
+    // Return the last cached {value, done} object to allow the calling
+    // code to decide if it needs to call touchNext again.
+    return this[this.length - 1];
   }
 }
 
@@ -112,8 +156,8 @@ class Localization {
   constructor(resourceIds = [], generateMessages = defaultGenerateMessages) {
     this.resourceIds = resourceIds;
     this.generateMessages = generateMessages;
-    this.ctxs =
-      new CachedAsyncIterable(this.generateMessages(this.resourceIds));
+    this.ctxs = CachedAsyncIterable.from(
+      this.generateMessages(this.resourceIds));
   }
 
   addResourceIds(resourceIds) {
@@ -276,8 +320,8 @@ class Localization {
    * that language negotiation or available resources changed.
    */
   onChange() {
-    this.ctxs =
-      new CachedAsyncIterable(this.generateMessages(this.resourceIds));
+    this.ctxs = CachedAsyncIterable.from(
+      this.generateMessages(this.resourceIds));
     this.ctxs.touchNext(2);
   }
 }
