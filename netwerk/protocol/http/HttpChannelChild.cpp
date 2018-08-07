@@ -3708,8 +3708,8 @@ HttpChannelChild::OnCopyComplete(nsresult aStatus)
 }
 
 nsresult
-HttpChannelChild::AsyncCall(void (HttpChannelChild::*funcPtr)(),
-                            nsRunnableMethod<HttpChannelChild> **retval)
+HttpChannelChild::AsyncCallImpl(void (HttpChannelChild::*funcPtr)(),
+                                nsRunnableMethod<HttpChannelChild> **retval)
 {
   nsresult rv;
 
