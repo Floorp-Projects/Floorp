@@ -29,7 +29,10 @@ class TickLabels extends PureComponent {
         dom.div(
           {
             className: "tick-label",
-            style: { marginInlineStart: `${ tick.position }%` },
+            style: {
+              marginInlineStart: `${ tick.position }%`,
+              maxWidth: `${ tick.width }px`
+            },
           },
           tick.label
         )
