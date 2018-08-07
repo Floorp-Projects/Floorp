@@ -2440,6 +2440,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
    * Tests for only the sub-parts of IsFixedPosContainingBlock that apply
    * to:
    *  - nearly all frames, except those that are SVG text frames.
+   *  - frames that support CSS contain:layout and contain:paint and are not
+   *    SVG text frames.
    *  - frames that support CSS transforms and are not SVG text frames.
    *
    * This should be used only when the caller has the style but not the
@@ -2447,6 +2449,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
    */
   inline bool IsFixedPosContainingBlockForNonSVGTextFrames(
     mozilla::ComputedStyle&) const;
+  inline bool
+    IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const;
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
 
   /**

@@ -161,15 +161,19 @@ nsStyleDisplay::IsFixedPosContainingBlockForNonSVGTextFrames(
   // should have the FIXPOS_CB flag set on them.
   NS_ASSERTION(aStyle.ThreadsafeStyleDisplay() == this, "unexpected aStyle");
 
-  if (IsContainPaint()) {
-    return true;
-  }
-
   if (mWillChangeBitField & NS_STYLE_WILL_CHANGE_FIXPOS_CB) {
     return true;
   }
 
   return aStyle.ThreadsafeStyleEffects()->HasFilters();
+}
+
+bool
+nsStyleDisplay::IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const
+{
+  // FIXME (bug 1472919): 'contain: layout' should also establish a
+  // containing block for fixed and absolute positioned elements.
+  return IsContainPaint();
 }
 
 bool
@@ -189,6 +193,8 @@ nsStyleDisplay::IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const
   // NOTE: Any CSS properties that influence the output of this function
   // should have the FIXPOS_CB flag set on them.
   if (!IsFixedPosContainingBlockForNonSVGTextFrames(*style) &&
+      (!IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() ||
+       !aContextFrame->IsFrameOfType(nsIFrame::eSupportsContainLayoutAndPaint)) &&
       (!IsFixedPosContainingBlockForTransformSupportingFrames() ||
        !aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms))) {
     return false;
@@ -216,6 +222,8 @@ nsStyleDisplay::IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const
   // should have the ABSPOS_CB set on them.
   if (!IsAbsPosContainingBlockForNonSVGTextFrames() &&
       !IsFixedPosContainingBlockForNonSVGTextFrames(*style) &&
+      (!IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() ||
+       !aContextFrame->IsFrameOfType(nsIFrame::eSupportsContainLayoutAndPaint)) &&
       (!IsFixedPosContainingBlockForTransformSupportingFrames() ||
        !aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms))) {
     return false;

@@ -252,7 +252,20 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
         // before and after the change)
         (isFixedCB ||
          oldDisp->IsFixedPosContainingBlockForTransformSupportingFrames() ==
-         newDisp->IsFixedPosContainingBlockForTransformSupportingFrames())) {
+         newDisp->IsFixedPosContainingBlockForTransformSupportingFrames()) &&
+        // contain-layout-and-paint-supporting frames are a subset of
+        // non-SVG-text frames, so no need to test this if isFixedCB is true
+        // (both before and after the change).
+        //
+        // Note, however, that neither of these last two sets is a
+        // subset of the other, because table frames support contain:
+        // layout/paint but not transforms (which are instead inherited
+        // to the table wrapper), and quite a few frame types support
+        // transforms but not contain: layout/paint (e.g., table rows
+        // and row groups, many SVG frames).
+        (isFixedCB ||
+         oldDisp->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() ==
+         newDisp->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames())) {
       // While some styles that cause the frame to be a containing block
       // has changed, the overall result cannot have changed (no matter
       // what the frame type is).
