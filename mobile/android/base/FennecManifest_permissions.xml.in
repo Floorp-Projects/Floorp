@@ -36,10 +36,8 @@
     <!-- Tab Queue -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
-#ifdef MOZ_UPDATER
-    <!-- To be able to install Nightly app updates on API 26+ -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-#endif
+    <!-- To be able to install updates and other downloaded APKs on API 26+ -->
+    <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
 #ifdef MOZ_ANDROID_BEAM
     <!-- Android Beam support -->
