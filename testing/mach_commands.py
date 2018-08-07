@@ -18,6 +18,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
     SettingsProvider,
+    SubCommand,
 )
 
 from mozbuild.base import (
@@ -986,3 +987,99 @@ class TestInfoCommand(MachCommandBase):
                 print("Bug %s: %s" % (bug['id'], bug['summary']))
         else:
             print("No bugs found.")
+
+    @SubCommand('test-info', 'long-tasks',
+                description='Find tasks approaching their taskcluster max-run-time.')
+    @CommandArgument('--branches',
+                     default='mozilla-central,mozilla-inbound,autoland',
+                     help='Report for named branches '
+                          '(default: mozilla-central,mozilla-inbound,autoland)')
+    @CommandArgument('--start',
+                     default=(date.today() - timedelta(7)
+                              ).strftime("%Y-%m-%d"),
+                     help='Start date (YYYY-MM-DD)')
+    @CommandArgument('--end',
+                     default=date.today().strftime("%Y-%m-%d"),
+                     help='End date (YYYY-MM-DD)')
+    @CommandArgument('--max-threshold-pct',
+                     default=90.0,
+                     help='Count tasks exceeding this percentage of max-run-time.')
+    @CommandArgument('--filter-threshold-pct',
+                     default=0.5,
+                     help='Report tasks exceeding this percentage of long tasks.')
+    @CommandArgument('--verbose', action='store_true',
+                     help='Enable debug logging.')
+    def report_long_running_tasks(self, **params):
+        def get_long_running_ratio(record):
+            count = record['count']
+            tasks_gt_pct = record['tasks_gt_pct']
+            return count / tasks_gt_pct
+
+        branches = params['branches']
+        start = params['start']
+        end = params['end']
+        self.verbose = params['verbose']
+        threshold_pct = float(params['max_threshold_pct'])
+        filter_threshold_pct = float(params['filter_threshold_pct'])
+
+        # Search test durations in ActiveData for long-running tests
+        query = {
+            "from": "task",
+            "format": "list",
+            "groupby": ["run.name"],
+            "limit": 1000,
+            "select": [
+                {
+                    "value": "task.maxRunTime",
+                    "aggregate": "median",
+                    "name": "max_run_time"
+                },
+                {
+                    "aggregate": "count"
+                },
+                {
+                    "value": {
+                        "when": {
+                            "gt": [
+                                {
+                                    "div": ["action.duration", "task.maxRunTime"]
+                                }, threshold_pct/100.0
+                            ]
+                        },
+                        "then": 1
+                    },
+                    "aggregate": "sum",
+                    "name": "tasks_gt_pct"
+                },
+            ],
+            "where": {"and": [
+                {"in": {"build.branch": branches.split(',')}},
+                {"gt": {"task.run.start_time": {"date": start}}},
+                {"lte": {"task.run.start_time": {"date": end}}},
+                {"eq": {"state": "completed"}},
+            ]}
+        }
+        data = self.submit(query)
+        print("\nTasks nearing their max-run-time on %s between %s and %s" %
+              (branches, start, end))
+        if data and len(data) > 0:
+            filtered = []
+            for record in data:
+                if 'tasks_gt_pct' in record:
+                    count = record['count']
+                    tasks_gt_pct = record['tasks_gt_pct']
+                    if tasks_gt_pct / count > filter_threshold_pct / 100.0:
+                        filtered.append(record)
+            filtered.sort(key=get_long_running_ratio)
+            if not filtered:
+                print("No long running tasks found.")
+            for record in filtered:
+                name = record['run']['name']
+                count = record['count']
+                max_run_time = record['max_run_time']
+                tasks_gt_pct = record['tasks_gt_pct']
+                print("%-55s: %d of %d runs (%.1f%%) exceeded %d%% of max-run-time (%d s)" %
+                      (name, tasks_gt_pct, count, tasks_gt_pct * 100 / count,
+                       threshold_pct, max_run_time))
+        else:
+            print("No tasks found.")
