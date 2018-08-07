@@ -19,7 +19,7 @@ add_task(async function test_keyword_searc() {
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "Generic page title" },
     { uri: uri2, title: "Generic page title" },
-    { uri: uri3, title: "This page shouldn't be suggested" },
+    { uri: uri3, title: "This page uri contains the keyword" },
   ]);
   await addBookmark({ uri: uri1, title: "Bookmark title", keyword: "key"});
 
@@ -92,6 +92,13 @@ add_task(async function test_keyword_searc() {
   await check_autocomplete({
     search: " key test",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=test"), title: "abc", style: ["keyword", "heuristic"] } ]
+  });
+
+  info("Bug 1481319 - Keyword with a prefix in front");
+  await check_autocomplete({
+    search: "http://key",
+    matches: [ { uri: uri3, title: "This page uri contains the keyword" } ],
+    completed: "http://key",
   });
 
   await cleanup();
