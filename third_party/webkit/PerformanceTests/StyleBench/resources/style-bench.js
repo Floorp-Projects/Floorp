@@ -12,26 +12,14 @@ class Random
         return this.seed = this.seed * 16807 % 2147483647;
     }
 
-    underOne()
-    {
-        return (this.next % 1048576) / 1048576;
-    }
-
     chance(chance)
     {
-        return this.underOne() < chance;
+        return this.next % 1048576 < chance * 1048576;
     }
 
     number(under)
     {
         return this.next % under;
-    }
-
-    numberSquareWeightedToLow(under)
-    {
-        const random = this.underOne();
-        const random2 = random * random;
-        return Math.floor(random2 * under);
     }
 }
 
@@ -47,19 +35,9 @@ class StyleBench
         return {
             name: 'Default',
             elementTypeCount: 10,
-            idChance: 0.05,
             elementChance: 0.5,
             classCount: 200,
             classChance: 0.3,
-            starChance: 0.05,
-            attributeChance: 0.02,
-            attributeCount: 10,
-            attributeValueCount: 20,
-            attributeOperators: ['','='],
-            elementClassChance: 0.5,
-            elementMaximumClasses: 3,
-            elementAttributeChance: 0.2,
-            elementMaximumAttributes: 3,
             combinators: [' ', '>',],
             pseudoClasses: [],
             pseudoClassChance: 0,
@@ -71,11 +49,9 @@ class StyleBench
             maximumTreeWidth: 50,
             repeatingSequenceChance: 0.2,
             repeatingSequenceMaximumLength: 3,
-            leafMutationChance: 0.1,
+            leafClassMutationChance: 0.1,
             styleSeed: 1,
             domSeed: 2,
-            stepCount: 5,
-            mutationsPerStep: 100,
         };
     }
 
@@ -94,32 +70,21 @@ class StyleBench
         });
     }
 
-    static structuralPseudoClassConfiguration()
+    static pseudoClassConfiguration()
     {
         return Object.assign(this.defaultConfiguration(), {
-            name: 'Structural pseudo classes',
-            pseudoClassChance: 0.1,
-            pseudoClasses: [
-                'first-child',
-                'last-child',
-                'first-of-type',
-                'last-of-type',
-                'only-of-type',
-                'empty',
-            ],
-        });
-    }
-
-    static nthPseudoClassConfiguration()
-    {
-        return Object.assign(this.defaultConfiguration(), {
-            name: 'Nth pseudo classes',
+            name: 'Positional pseudo classes',
             pseudoClassChance: 0.1,
             pseudoClasses: [
                 'nth-child(2n+1)',
                 'nth-last-child(3n)',
                 'nth-of-type(3n)',
                 'nth-last-of-type(4n)',
+                'first-child',
+                'last-child',
+                'first-of-type',
+                'last-of-type',
+                'only-of-type',
             ],
         });
     }
@@ -137,8 +102,7 @@ class StyleBench
         return [
             this.descendantCombinatorConfiguration(),
             this.siblingCombinatorConfiguration(),
-            this.structuralPseudoClassConfiguration(),
-            this.nthPseudoClassConfiguration(),
+            this.pseudoClassConfiguration(),
             this.beforeAndAfterConfiguration(),
         ];
     }
@@ -146,7 +110,6 @@ class StyleBench
     constructor(configuration)
     {
         this.configuration = configuration;
-        this.idCount = 0;
 
         this.baseStyle = document.createElement("style");
         this.baseStyle.textContent = `
@@ -156,8 +119,10 @@ class StyleBench
             }
             #testroot * {
                 display: inline-block;
+            }
+            #testroot :empty {
+                width:10px;
                 height:10px;
-                min-width:10px;
             }
         `;
         document.head.appendChild(this.baseStyle);
@@ -172,36 +137,19 @@ class StyleBench
     randomElementName()
     {
         const elementTypeCount = this.configuration.elementTypeCount;
-        return `elem${ this.random.numberSquareWeightedToLow(elementTypeCount) }`;
+        return `elem${ this.random.number(elementTypeCount) }`;
     }
 
     randomClassName()
     {
         const classCount = this.configuration.classCount;
-        return `class${ this.random.numberSquareWeightedToLow(classCount) }`;
+        return `class${ this.random.number(classCount) }`;
     }
 
     randomClassNameFromRange(range)
     {
         const maximum = Math.round(range * this.configuration.classCount);
-        return `class${ this.random.numberSquareWeightedToLow(maximum) }`;
-    }
-
-    randomAttributeName()
-    {
-        const attributeCount = this.configuration.attributeCount;
-        return `attr${ this.random.numberSquareWeightedToLow(attributeCount) }`;
-    }
-
-    randomAttributeValue()
-    {
-        const attributeValueCount = this.configuration.attributeValueCount;
-        const valueNum = this.random.numberSquareWeightedToLow(attributeValueCount);
-        if (valueNum == 0)
-            return "";
-        if (valueNum == 1)
-            return "val";
-        return `val${valueNum}`;
+        return `class${ this.random.number(maximum) }`;
     }
 
     randomCombinator()
@@ -210,63 +158,28 @@ class StyleBench
         return combinators[this.random.number(combinators.length)]
     }
 
-    randomPseudoClass(isLast)
+    randomPseudoClass()
     {
         const pseudoClasses = this.configuration.pseudoClasses;
-        const pseudoClass = pseudoClasses[this.random.number(pseudoClasses.length)]
-        if (!isLast && pseudoClass == 'empty')
-            return this.randomPseudoClass(isLast);
-        return pseudoClass;
+        return pseudoClasses[this.random.number(pseudoClasses.length)]
     }
 
-    randomId()
+    makeSimpleSelector(index, length)
     {
-        const idCount = this.configuration.idChance * this.configuration.elementCount ;
-        return `id${ this.random.number(idCount) }`;
-    }
-
-    randomAttributeSelector()
-    {
-        const name = this.randomAttributeName();
-        const operators = this.configuration.attributeOperators;
-        const operator = operators[this.random.numberSquareWeightedToLow(operators.length)];
-        if (operator == '')
-            return `[${name}]`;
-        const value = this.randomAttributeValue();
-        return `[${name}${operator}"${value}"]`;
-    }
-
-    makeCompoundSelector(index, length)
-    {
-        const isFirst = index == 0;
         const isLast = index == length - 1;
         const usePseudoClass = this.random.chance(this.configuration.pseudoClassChance) && this.configuration.pseudoClasses.length;
-        const useId = isFirst && this.random.chance(this.configuration.idChance);
-        const useElement = !useId && (usePseudoClass || this.random.chance(this.configuration.elementChance)); // :nth-of-type etc only make sense with element
-        const useAttribute = !useId && this.random.chance(this.configuration.attributeChance);
-        const useIdElementOrAttribute = useId || useElement || useAttribute;
-        const useStar = !useIdElementOrAttribute && !isFirst && this.random.chance(this.configuration.starChance);
-        const useClass = !useId && !useStar && (!useIdElementOrAttribute || this.random.chance(this.configuration.classChance));
+        const useElement = usePseudoClass || this.random.chance(this.configuration.elementChance); // :nth-of-type etc only make sense with element
+        const useClass = !useElement || this.random.chance(this.configuration.classChance);
         const useBeforeOrAfter = isLast && this.random.chance(this.configuration.beforeAfterChance);
         let result = "";
         if (useElement)
             result += this.randomElementName();
-        if (useStar)
-            result = "*";
-        if (useId)
-            result += "#" + this.randomId();
         if (useClass) {
-            const classCount = this.random.numberSquareWeightedToLow(2) + 1;
-            for (let i = 0; i < classCount; ++i) {
-                // Use a smaller pool of class names on the left side of the selectors to create containers.
-                result += "." + this.randomClassNameFromRange((index + 1) / length);
-            }
+            // Use a smaller pool of class names on the left side of the selectors to create containers.
+            result += "." + this.randomClassNameFromRange((index + 1) / length);
         }
-        if (useAttribute)
-            result += this.randomAttributeSelector();
-
         if (usePseudoClass)
-            result +=  ":" + this.randomPseudoClass(isLast);
+            result +=  ":" + this.randomPseudoClass();
         if (useBeforeOrAfter) {
             if (this.random.chance(0.5))
                 result +=  "::before";
@@ -279,12 +192,12 @@ class StyleBench
     makeSelector()
     {
         const length = this.random.number(this.configuration.maximumSelectorLength) + 1;
-        let result = this.makeCompoundSelector(0, length);
-        for (let i = 1; i < length; ++i) {
+        let result = this.makeSimpleSelector(0, length);
+        for (let i = 0; i < length; ++i) {
             const combinator = this.randomCombinator();
             if (combinator != ' ')
                 result += " " + combinator;
-            result += " " + this.makeCompoundSelector(i, length);
+            result += " " + this.makeSimpleSelector(i, length);
         }
         return result;
     }
@@ -299,7 +212,7 @@ class StyleBench
         let declaration = `background-color: rgb(${this.randomColorComponent}, ${this.randomColorComponent}, ${this.randomColorComponent});`;
 
         if (selector.endsWith('::before') || selector.endsWith('::after'))
-            declaration += " content: ''; min-width:5px; display:inline-block;";
+            declaration += " content: '\xa0';";
 
         return declaration;
     }
@@ -329,22 +242,11 @@ class StyleBench
     makeElement()
     {
         const element = document.createElement(this.randomElementName());
-        const hasClasses = this.random.chance(this.configuration.elementClassChance);
-        const hasAttributes = this.random.chance(this.configuration.elementAttributeChance);
+        const hasClasses = this.random.chance(0.5);
         if (hasClasses) {
-            const count = this.random.numberSquareWeightedToLow(this.configuration.elementMaximumClasses) + 1;
+            const count = this.random.number(3) + 1;
             for (let i = 0; i < count; ++i)
                 element.classList.add(this.randomClassName());
-        }
-        if (hasAttributes) {
-            const count = this.random.number(this.configuration.elementMaximumAttributes) + 1;
-            for (let i = 0; i < count; ++i)
-                element.setAttribute(this.randomAttributeName(), this.randomAttributeValue());
-        }
-        const hasId = this.random.chance(this.configuration.idChance);
-        if (hasId) {
-            element.id = `id${ this.idCount }`;
-            this.idCount++;
         }
         return element;
     }
@@ -418,7 +320,7 @@ class StyleBench
         for (let i = 0; i < count;) {
             const element = this.randomTreeElement();
             // There are more leaves than branches. Avoid skewing towards leaf mutations.
-            if (!element.firstChild && !this.random.chance(this.configuration.leafMutationChance))
+            if (!element.firstChild && !this.random.chance(this.configuration.leafClassMutationChance))
                 continue;
             ++i;
             const classList = element.classList;
@@ -431,7 +333,7 @@ class StyleBench
         for (let i = 0; i < count;) {
             const element = this.randomTreeElement();
             const classList = element.classList;
-            if (!element.firstChild && !this.random.chance(this.configuration.leafMutationChance))
+            if (!element.firstChild && !this.random.chance(this.configuration.leafClassMutationChance))
                 continue;
             if (!classList.length)
                 continue;
@@ -469,33 +371,6 @@ class StyleBench
         this.updateCachedTestElements();
     }
 
-    mutateAttributes(count)
-    {
-        for (let i = 0; i < count;) {
-            const element = this.randomTreeElement();
-            // There are more leaves than branches. Avoid skewing towards leaf mutations.
-            if (!element.firstChild && !this.random.chance(this.configuration.leafMutationChance))
-                continue;
-            const attributeNames = element.getAttributeNames();
-            let mutatedAttributes = false;
-            for (const name of attributeNames) {
-                if (name == "class" || name == "id")
-                    continue;
-                if (this.random.chance(0.5))
-                    element.removeAttribute(name);
-                else
-                    element.setAttribute(name, this.randomAttributeValue());
-                mutatedAttributes = true;
-            }
-            if (!mutatedAttributes) {
-                const attributeCount = this.random.number(this.configuration.elementMaximumAttributes) + 1;
-                for (let j = 0; j < attributeCount; ++j)
-                    element.setAttribute(this.randomAttributeName(), this.randomAttributeValue());
-            }
-            ++i;
-        }
-    }
-
     async runForever()
     {
         while (true) {
@@ -503,7 +378,6 @@ class StyleBench
             this.removeClasses(10);
             this.addLeafElements(10);
             this.removeLeafElements(10);
-            this.mutateAttributes(10);
 
             await nextAnimationFrame();
         }
