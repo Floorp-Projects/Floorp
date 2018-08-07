@@ -16,7 +16,7 @@
  */
 
 
-/* fluent-dom@aa95b1f (July 10, 2018) */
+/* fluent-dom@cab517f (July 31, 2018) */
 
 const { Localization } =
   ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
@@ -60,10 +60,10 @@ const LOCALIZABLE_ATTRIBUTES = {
     th: ["abbr"]
   },
   "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": {
-    description: ["value"],
     global: [
       "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label"
     ],
+    description: ["value"],
     key: ["key", "keycode"],
     label: ["value"],
     textbox: ["placeholder"],
@@ -523,7 +523,7 @@ class DOMLocalization extends Localization {
     if (this.windowElement) {
       if (this.windowElement !== newRoot.ownerGlobal) {
         throw new Error(`Cannot connect a root:
-          DOMLocalization already has a root from a different window`);
+          DOMLocalization already has a root from a different window.`);
       }
     } else {
       this.windowElement = newRoot.ownerGlobal;
