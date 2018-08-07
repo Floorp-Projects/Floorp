@@ -46,7 +46,15 @@ struct ManifestDirective
   const char* directive;
   int argc;
 
+  // Binary components are only allowed for APP locations.
+  bool apponly;
+
+  // Some directives should only be delivered for APP or EXTENSION locations.
+  bool componentonly;
+
   bool ischrome;
+
+  bool allowbootstrap;
 
   // The contentaccessible flags only apply to content/resource directives.
   bool contentflags;
@@ -59,44 +67,50 @@ struct ManifestDirective
   void (nsChromeRegistry::*regfunc)(
     nsChromeRegistry::ManifestProcessingContext& aCx,
     int aLineNo, char* const* aArgv, int aFlags);
+
+  bool isContract;
 };
 static const ManifestDirective kParsingTable[] = {
   {
-    "manifest",         1, true, false,
+    "manifest",         1, false, false, true, true, false,
     &nsComponentManagerImpl::ManifestManifest, nullptr,
   },
   {
-    "component",        2, false, false,
+    "binary-component", 1, true, true, false, false, false,
+    &nsComponentManagerImpl::ManifestBinaryComponent, nullptr,
+  },
+  {
+    "component",        2, false, true, false, false, false,
     &nsComponentManagerImpl::ManifestComponent, nullptr,
   },
   {
-    "contract",         2, false, false,
+    "contract",         2, false, true, false, false, false,
     &nsComponentManagerImpl::ManifestContract, nullptr,
   },
   {
-    "category",         3, false, false,
+    "category",         3, false, true, false, false, false,
     &nsComponentManagerImpl::ManifestCategory, nullptr,
   },
   {
-    "content",          2, true,  true,
+    "content",          2, false, true, true, true,  true,
     nullptr, &nsChromeRegistry::ManifestContent,
   },
   {
-    "locale",           3, true, false,
+    "locale",           3, false, true, true, true, false,
     nullptr, &nsChromeRegistry::ManifestLocale,
   },
   {
-    "skin",             3, true, false,
+    "skin",             3, false, false, true, true, false,
     nullptr, &nsChromeRegistry::ManifestSkin,
   },
   {
     // NB: note that while skin manifests can use this, they are only allowed
     // to use it for chrome://../skin/ URLs
-    "override",         2, true, false,
+    "override",         2, false, false, true, true, false,
     nullptr, &nsChromeRegistry::ManifestOverride,
   },
   {
-    "resource",         2, false, true,
+    "resource",         2, false, true, true, false, true,
     nullptr, &nsChromeRegistry::ManifestResource,
   }
 };
@@ -571,9 +585,24 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       continue;
     }
 
-    if (!directive->ischrome && NS_BOOTSTRAPPED_LOCATION == aType) {
+    if (!directive->allowbootstrap && NS_BOOTSTRAPPED_LOCATION == aType) {
       LogMessageWithContext(aFile, line,
                             "Bootstrapped manifest not allowed to use '%s' directive.",
+                            token);
+      continue;
+    }
+
+#ifndef MOZ_BINARY_EXTENSIONS
+    if (directive->apponly && NS_APP_LOCATION != aType) {
+      LogMessageWithContext(aFile, line,
+                            "Only application manifests may use the '%s' directive.", token);
+      continue;
+    }
+#endif
+
+    if (directive->componentonly && NS_SKIN_LOCATION == aType) {
+      LogMessageWithContext(aFile, line,
+                            "Skin manifest not allowed to use '%s' directive.",
                             token);
       continue;
     }
@@ -692,8 +721,15 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))(
         chromecx, line, argv, flags);
     } else if (directive->ischrome || !aChromeOnly) {
-      (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))(
-        mgrcx, line, argv);
+      if (directive->isContract) {
+        CachedDirective* cd = contracts.AppendElement();
+        cd->lineno = line;
+        cd->argv[0] = argv[0];
+        cd->argv[1] = argv[1];
+      } else {
+        (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))(
+          mgrcx, line, argv);
+      }
     }
   }
 

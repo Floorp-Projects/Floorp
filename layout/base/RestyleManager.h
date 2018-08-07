@@ -472,7 +472,9 @@ protected:
   void RestyleForEmptyChange(Element* aContainer);
   void MaybeRestyleForEdgeChildChange(Element* aContainer, nsIContent* aChangedChild);
 
-  void ContentStateChangedInternal(Element* aElement,
+  // TODO(emilio): there's no good reason this isn't part of ContentStateChanged
+  // now, or the change hint isn't returned instead of via an out-param, really.
+  void ContentStateChangedInternal(const Element&,
                                    EventStates aStateMask,
                                    nsChangeHint* aOutChangeHint);
 
@@ -529,8 +531,8 @@ protected:
 
   const SnapshotTable& Snapshots() const { return mSnapshots; }
   void ClearSnapshots();
-  ServoElementSnapshot& SnapshotFor(mozilla::dom::Element* aElement);
-  void TakeSnapshotForAttributeChange(mozilla::dom::Element* aElement,
+  ServoElementSnapshot& SnapshotFor(Element&);
+  void TakeSnapshotForAttributeChange(Element&,
                                       int32_t aNameSpaceID,
                                       nsAtom* aAttribute);
 

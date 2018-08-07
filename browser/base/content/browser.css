@@ -588,6 +588,7 @@ hbox.urlbar-input-box {
 html|input.urlbar-scheme {
   position: absolute;
   height: 100%;
+  left: 0;
   visibility: hidden;
   direction: ltr;
   pointer-events: none;
