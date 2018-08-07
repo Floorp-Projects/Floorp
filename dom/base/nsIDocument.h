@@ -532,21 +532,6 @@ public:
 
   // nsINode
   bool IsNodeOfType(uint32_t aFlags) const final;
-  nsIContent* GetChildAt_Deprecated(uint32_t aIndex) const final
-  {
-    return mChildren.GetSafeChildAt(aIndex);
-  }
-
-  int32_t ComputeIndexOf(const nsINode* aPossibleChild) const final
-  {
-    return mChildren.IndexOfChild(aPossibleChild);
-  }
-
-  uint32_t GetChildCount() const final
-  {
-    return mChildren.ChildCount();
-  }
-
   nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
                              bool aNotify) override;
   void RemoveChildNode(nsIContent* aKid, bool aNotify) final;

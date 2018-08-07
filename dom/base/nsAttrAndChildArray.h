@@ -52,24 +52,6 @@ public:
   nsAttrAndChildArray();
   ~nsAttrAndChildArray();
 
-  uint32_t ChildCount() const
-  {
-    return mImpl ? (mImpl->mAttrAndChildCount >> ATTRCHILD_ARRAY_ATTR_SLOTS_BITS) : 0;
-  }
-  nsIContent* ChildAt(uint32_t aPos) const
-  {
-    NS_ASSERTION(aPos < ChildCount(), "out-of-bounds access in nsAttrAndChildArray");
-    return reinterpret_cast<nsIContent*>(mImpl->mBuffer[AttrSlotsSize() + aPos]);
-  }
-  nsIContent* GetSafeChildAt(uint32_t aPos) const;
-  nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
-  nsresult InsertChildAt(nsIContent* aChild, uint32_t aPos);
-  void RemoveChildAt(uint32_t aPos);
-  // Like RemoveChildAt but hands the reference to the child being
-  // removed back to the caller instead of just releasing it.
-  already_AddRefed<nsIContent> TakeChildAt(uint32_t aPos);
-  int32_t IndexOfChild(const nsINode* aPossibleChild) const;
-
   bool HasAttrs() const
   {
     return MappedAttrCount() || (AttrSlotCount() && AttrSlotIsTaken(0));
@@ -221,14 +203,6 @@ private:
 
   bool GrowBy(uint32_t aGrowSize);
   bool AddAttrSlot();
-
-  /**
-   * Set *aPos to aChild and update sibling pointers as needed.  aIndex is the
-   * index at which aChild is actually being inserted.  aChildCount is the
-   * number of kids we had before the insertion.
-   */
-  inline void SetChildAtPos(void** aPos, nsIContent* aChild, uint32_t aIndex,
-                            uint32_t aChildCount);
 
   /**
    * Guts of SetMappedAttrStyleSheet for the rare case when we have mapped attrs
