@@ -108,6 +108,7 @@ GLXLibrary::EnsureInitialized()
         SYMBOL(MakeCurrent),
         SYMBOL(SwapBuffers),
         SYMBOL(QueryVersion),
+        SYMBOL(GetConfig),
         SYMBOL(GetCurrentContext),
         SYMBOL(WaitGL),
         SYMBOL(WaitX),
