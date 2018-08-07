@@ -1,0 +1,20 @@
+<!doctype html>
+<html class="reftest-wait">
+<style>
+  input {
+    border: 0;
+  }
+</style>
+<label id="fooLabel" for="foo">Foo label</label>
+<input id="foo" type="text" value="foo" >
+<label id="barLabel" for="bar">Bar label</label>
+<input id="bar" type="text" value="bar">
+<script>
+onload = function() {
+  barLabel.click();
+  requestAnimationFrame(() => {
+    document.documentElement.className = "";
+  });
+}
+</script>
+</html>
