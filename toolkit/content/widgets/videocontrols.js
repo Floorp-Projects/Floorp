@@ -264,6 +264,12 @@ this.VideoControlsImplPageWidget = class {
                 }
                 let preDefinedSize = this.controlBarComputedStyles.getPropertyValue(propertyName);
 
+                // This shouldn't happen, but if it does, the throw here turns
+                // intermittent oranges to perma-orange.
+                if (!preDefinedSize) {
+                  throw new Error("Stylesheet not loaded yet? propertyName: " + propertyName);
+                }
+
                 return parseInt(preDefinedSize, 10);
               }
             },
