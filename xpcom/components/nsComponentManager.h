@@ -287,6 +287,8 @@ public:
 
   void ManifestManifest(ManifestProcessingContext& aCx, int aLineNo,
                         char* const* aArgv);
+  void ManifestBinaryComponent(ManifestProcessingContext& aCx, int aLineNo,
+                               char* const* aArgv);
   void ManifestComponent(ManifestProcessingContext& aCx, int aLineNo,
                          char* const* aArgv);
   void ManifestContract(ManifestProcessingContext& aCx, int aLineNo,

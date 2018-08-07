@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Cm = Components.manager;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -20,6 +21,15 @@ var EXPORTED_SYMBOLS = ["AboutPages"];
 
 const SHIELD_LEARN_MORE_URL_PREF = "app.normandy.shieldLearnMoreUrl";
 
+// Due to bug 1051238 frame scripts are cached forever, so we can't update them
+// as a restartless add-on. The Math.random() is the work around for this.
+const PROCESS_SCRIPT = (
+  `resource://normandy-content/shield-content-process.js?${Math.random()}`
+);
+const FRAME_SCRIPT = (
+  `resource://normandy-content/shield-content-frame.js?${Math.random()}`
+);
+
 /**
  * Class for managing an about: page that Normandy provides. Adapted from
  * browser/extensions/pocket/content/AboutPocket.jsm.
@@ -28,10 +38,10 @@ const SHIELD_LEARN_MORE_URL_PREF = "app.normandy.shieldLearnMoreUrl";
  * @implements nsIAboutModule
  */
 class AboutPage {
-  constructor({chromeUrl, aboutHost, classID, description, uriFlags}) {
+  constructor({chromeUrl, aboutHost, classId, description, uriFlags}) {
     this.chromeUrl = chromeUrl;
     this.aboutHost = aboutHost;
-    this.classID = Components.ID(classID);
+    this.classId = Components.ID(classId);
     this.description = description;
     this.uriFlags = uriFlags;
   }
@@ -51,6 +61,34 @@ class AboutPage {
     }
     return channel;
   }
+
+  createInstance(outer, iid) {
+    if (outer !== null) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+    return this.QueryInterface(iid);
+  }
+
+  /**
+   * Register this about: page with XPCOM. This must be called once in each
+   * process (parent and content) to correctly initialize the page.
+   */
+  register() {
+    Cm.QueryInterface(Ci.nsIComponentRegistrar).registerFactory(
+      this.classId,
+      this.description,
+      `@mozilla.org/network/protocol/about;1?what=${this.aboutHost}`,
+      this,
+    );
+  }
+
+  /**
+   * Unregister this about: page with XPCOM. This must be called before the
+   * add-on is cleaned up if the page has been registered.
+   */
+  unregister() {
+    Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(this.classId, this);
+  }
 }
 AboutPage.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIAboutModule]);
 
@@ -60,17 +98,23 @@ AboutPage.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIAboutModule])
 var AboutPages = {
   async init() {
     // Load scripts in content processes and tabs
+    Services.ppmm.loadProcessScript(PROCESS_SCRIPT, true);
+    Services.mm.loadFrameScript(FRAME_SCRIPT, true);
 
     // Register about: pages and their listeners
+    this.aboutStudies.register();
     this.aboutStudies.registerParentListeners();
 
     CleanupManager.addCleanupHandler(() => {
       // Stop loading processs scripts and notify existing scripts to clean up.
+      Services.ppmm.removeDelayedProcessScript(PROCESS_SCRIPT);
       Services.ppmm.broadcastAsyncMessage("Shield:ShuttingDown");
+      Services.mm.removeDelayedFrameScript(FRAME_SCRIPT);
       Services.mm.broadcastAsyncMessage("Shield:ShuttingDown");
 
       // Clean up about pages
       this.aboutStudies.unregisterParentListeners();
+      this.aboutStudies.unregister();
     });
   },
 };
@@ -84,7 +128,7 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
   const aboutStudies = new AboutPage({
     chromeUrl: "resource://normandy-content/about-studies/about-studies.html",
     aboutHost: "studies",
-    classID: "{6ab96943-a163-482c-9622-4faedc0e827f}",
+    classId: "{6ab96943-a163-482c-9622-4faedc0e827f}",
     description: "Shield Study Listing",
     uriFlags: (
       Ci.nsIAboutModule.ALLOW_SCRIPT
