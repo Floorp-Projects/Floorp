@@ -94,10 +94,6 @@ public:
     return result;
   }
 
-  bool IsEmpty() const {
-    return right <= left || bottom <= top;
-  }
-
   bool IsEqualEdges(const Sub& aOther) const
   {
     return left == aOther.left && top == aOther.top &&
