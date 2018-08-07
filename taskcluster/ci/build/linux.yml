@@ -104,6 +104,8 @@ linux64/pgo:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -136,6 +138,7 @@ linux64-fuzzing/debug:
         max-run-time: 3600
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -233,6 +236,8 @@ linux64-devedition-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -267,6 +272,7 @@ linux64-base-toolchains/opt:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -297,6 +303,7 @@ linux64-base-toolchains/debug:
         max-run-time: 3600
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -394,6 +401,8 @@ linux/pgo:
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -501,6 +510,8 @@ linux-devedition-nightly/opt:
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -540,6 +551,8 @@ linux-nightly/opt:
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -807,6 +820,8 @@ linux64-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -1003,6 +1018,8 @@ linux64-ccov/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -1034,6 +1051,8 @@ linux64-ccov/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 7200
+        env:
+            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
