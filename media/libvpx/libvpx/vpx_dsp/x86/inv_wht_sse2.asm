@@ -9,6 +9,7 @@
 ;
 
 %include "third_party/x86inc/x86inc.asm"
+%include "vpx_dsp/x86/bitdepth_conversion_sse2.asm"
 
 SECTION .text
 
@@ -82,15 +83,8 @@ SECTION .text
 
 INIT_XMM sse2
 cglobal iwht4x4_16_add, 3, 3, 7, input, output, stride
-%if CONFIG_VP9_HIGHBITDEPTH
-  mova            m0,        [inputq +  0]
-  packssdw        m0,        [inputq + 16]
-  mova            m1,        [inputq + 32]
-  packssdw        m1,        [inputq + 48]
-%else
-  mova            m0,        [inputq +  0]
-  mova            m1,        [inputq + 16]
-%endif
+  LOAD_TRAN_LOW    0, inputq, 0
+  LOAD_TRAN_LOW    1, inputq, 8
   psraw           m0,        2
   psraw           m1,        2
 

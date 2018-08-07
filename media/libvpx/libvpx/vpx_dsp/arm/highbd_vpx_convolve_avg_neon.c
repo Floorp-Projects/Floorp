@@ -13,18 +13,16 @@
 #include "./vpx_dsp_rtcd.h"
 #include "vpx/vpx_integer.h"
 
-void vpx_highbd_convolve_avg_neon(const uint8_t *src8, ptrdiff_t src_stride,
-                                  uint8_t *dst8, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x, int filter_x_stride,
-                                  const int16_t *filter_y, int filter_y_stride,
+void vpx_highbd_convolve_avg_neon(const uint16_t *src, ptrdiff_t src_stride,
+                                  uint16_t *dst, ptrdiff_t dst_stride,
+                                  const InterpKernel *filter, int x0_q4,
+                                  int x_step_q4, int y0_q4, int y_step_q4,
                                   int w, int h, int bd) {
-  const uint16_t *src = CONVERT_TO_SHORTPTR(src8);
-  uint16_t *dst = CONVERT_TO_SHORTPTR(dst8);
-
-  (void)filter_x;
-  (void)filter_x_stride;
-  (void)filter_y;
-  (void)filter_y_stride;
+  (void)filter;
+  (void)x0_q4;
+  (void)x_step_q4;
+  (void)y0_q4;
+  (void)y_step_q4;
   (void)bd;
 
   if (w < 8) {  // avg4

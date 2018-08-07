@@ -8,6 +8,8 @@
 
 #include "mkvmuxer/mkvwriter.h"
 
+#include <sys/types.h>
+
 #ifdef _MSC_VER
 #include <share.h>  // for _SH_DENYWR
 #endif

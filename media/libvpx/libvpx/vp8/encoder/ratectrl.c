@@ -498,11 +498,9 @@ static void calc_gf_params(VP8_COMP *cpi) {
    * This is updated once the real frame size/boost is known.
    */
   if (cpi->oxcf.fixed_q == -1) {
-    if (cpi->pass == 2) /* 2 Pass */
-    {
+    if (cpi->pass == 2) { /* 2 Pass */
       cpi->frames_till_gf_update_due = cpi->baseline_gf_interval;
-    } else /* 1 Pass */
-    {
+    } else { /* 1 Pass */
       cpi->frames_till_gf_update_due = cpi->baseline_gf_interval;
 
       if (cpi->last_boost > 750) cpi->frames_till_gf_update_due++;
@@ -1442,12 +1440,33 @@ int vp8_pick_frame_size(VP8_COMP *cpi) {
 // If this just encoded frame (mcomp/transform/quant, but before loopfilter and
 // pack_bitstream) has large overshoot, and was not being encoded close to the
 // max QP, then drop this frame and force next frame to be encoded at max QP.
-// Condition this on 1 pass CBR with screen content mode and frame dropper off.
+// Allow this for screen_content_mode = 2, or if drop frames is allowed.
 // TODO(marpan): Should do this exit condition during the encode_frame
 // (i.e., halfway during the encoding of the frame) to save cycles.
 int vp8_drop_encodedframe_overshoot(VP8_COMP *cpi, int Q) {
-  if (cpi->pass == 0 && cpi->oxcf.end_usage == USAGE_STREAM_FROM_SERVER &&
-      cpi->drop_frames_allowed == 0 && cpi->common.frame_type != KEY_FRAME) {
+  int force_drop_overshoot = 0;
+#if CONFIG_MULTI_RES_ENCODING
+  // Only check for dropping due to overshoot on the lowest stream.
+  // If the lowest stream of the multi-res encoding was dropped due to
+  // overshoot, then force dropping on all upper layer streams
+  // (mr_encoder_id > 0).
+  LOWER_RES_FRAME_INFO *low_res_frame_info =
+      (LOWER_RES_FRAME_INFO *)cpi->oxcf.mr_low_res_mode_info;
+  if (cpi->oxcf.mr_total_resolutions > 1 && cpi->oxcf.mr_encoder_id > 0) {
+    force_drop_overshoot = low_res_frame_info->is_frame_dropped_overshoot_maxqp;
+    if (!force_drop_overshoot) {
+      cpi->force_maxqp = 0;
+      cpi->frames_since_last_drop_overshoot++;
+      return 0;
+    }
+  }
+#endif
+  if (cpi->common.frame_type != KEY_FRAME &&
+      (cpi->oxcf.screen_content_mode == 2 ||
+       (cpi->drop_frames_allowed &&
+        (force_drop_overshoot ||
+         (cpi->rate_correction_factor < (4.0f * MIN_BPB_FACTOR) &&
+          cpi->frames_since_last_drop_overshoot > (int)cpi->framerate))))) {
     // Note: the "projected_frame_size" from encode_frame() only gives estimate
     // of mode/motion vector rate (in non-rd mode): so below we only require
     // that projected_frame_size is somewhat greater than per-frame-bandwidth,
@@ -1458,17 +1477,20 @@ int vp8_drop_encodedframe_overshoot(VP8_COMP *cpi, int Q) {
     // Rate threshold, in bytes.
     int thresh_rate = 2 * (cpi->av_per_frame_bandwidth >> 3);
     // Threshold for the average (over all macroblocks) of the pixel-sum
-    // residual error over 16x16 block. Should add QP dependence on threshold?
-    int thresh_pred_err_mb = (256 << 4);
+    // residual error over 16x16 block.
+    int thresh_pred_err_mb = (200 << 4);
     int pred_err_mb = (int)(cpi->mb.prediction_error / cpi->common.MBs);
-    if (Q < thresh_qp && cpi->projected_frame_size > thresh_rate &&
-        pred_err_mb > thresh_pred_err_mb) {
+    // Reduce/ignore thresh_rate if pred_err_mb much larger than its threshold,
+    // give more weight to pred_err metric for overshoot detection.
+    if (cpi->drop_frames_allowed && pred_err_mb > (thresh_pred_err_mb << 4))
+      thresh_rate = thresh_rate >> 3;
+    if ((Q < thresh_qp && cpi->projected_frame_size > thresh_rate &&
+         pred_err_mb > thresh_pred_err_mb) ||
+        force_drop_overshoot) {
+      unsigned int i;
       double new_correction_factor;
-      const int target_size = cpi->av_per_frame_bandwidth;
       int target_bits_per_mb;
-      // Drop this frame: advance frame counters, and set force_maxqp flag.
-      cpi->common.current_video_frame++;
-      cpi->frames_since_key++;
+      const int target_size = cpi->av_per_frame_bandwidth;
       // Flag to indicate we will force next frame to be encoded at max QP.
       cpi->force_maxqp = 1;
       // Reset the buffer levels.
@@ -1499,14 +1521,40 @@ int vp8_drop_encodedframe_overshoot(VP8_COMP *cpi, int Q) {
       if (cpi->rate_correction_factor > MAX_BPB_FACTOR) {
         cpi->rate_correction_factor = MAX_BPB_FACTOR;
       }
+      // Drop this frame: update frame counters.
+      cpi->common.current_video_frame++;
+      cpi->frames_since_key++;
+      cpi->temporal_pattern_counter++;
+      cpi->frames_since_last_drop_overshoot = 0;
+      if (cpi->oxcf.number_of_layers > 1) {
+        // Set max_qp and rate correction for all temporal layers if overshoot
+        // is detected.
+        for (i = 0; i < cpi->oxcf.number_of_layers; ++i) {
+          LAYER_CONTEXT *lc = &cpi->layer_context[i];
+          lc->force_maxqp = 1;
+          lc->frames_since_last_drop_overshoot = 0;
+          lc->rate_correction_factor = cpi->rate_correction_factor;
+        }
+      }
+#if CONFIG_MULTI_RES_ENCODING
+      if (cpi->oxcf.mr_total_resolutions > 1)
+        low_res_frame_info->is_frame_dropped_overshoot_maxqp = 1;
+#endif
       return 1;
-    } else {
-      cpi->force_maxqp = 0;
-      return 0;
     }
     cpi->force_maxqp = 0;
+    cpi->frames_since_last_drop_overshoot++;
+#if CONFIG_MULTI_RES_ENCODING
+    if (cpi->oxcf.mr_total_resolutions > 1)
+      low_res_frame_info->is_frame_dropped_overshoot_maxqp = 0;
+#endif
     return 0;
   }
   cpi->force_maxqp = 0;
+  cpi->frames_since_last_drop_overshoot++;
+#if CONFIG_MULTI_RES_ENCODING
+  if (cpi->oxcf.mr_total_resolutions > 1)
+    low_res_frame_info->is_frame_dropped_overshoot_maxqp = 0;
+#endif
   return 0;
 }

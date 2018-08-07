@@ -6,6 +6,8 @@ b87815bf86020c592ccc7a846ba2e28ec8043902 *hantro_odd.yuv
 456d1493e52d32a5c30edf44a27debc1fa6b253a *invalid-vp90-2-00-quantizer-11.webm.ivf.s52984_r01-05_b6-.ivf.res
 c123d1f9f02fb4143abb5e271916e3a3080de8f6 *invalid-vp90-2-00-quantizer-11.webm.ivf.s52984_r01-05_b6-z.ivf
 456d1493e52d32a5c30edf44a27debc1fa6b253a *invalid-vp90-2-00-quantizer-11.webm.ivf.s52984_r01-05_b6-z.ivf.res
+efafb92b7567bc04c3f1432ea6c268c1c31affd5 *invalid-vp90-2-21-resize_inter_320x180_5_3-4.webm.ivf.s45551_r01-05_b6-.ivf
+5d9474c0309b7ca09a182d888f73b37a8fe1362c *invalid-vp90-2-21-resize_inter_320x180_5_3-4.webm.ivf.s45551_r01-05_b6-.ivf.res
 fe346136b9b8c1e6f6084cc106485706915795e4 *invalid-vp90-01-v3.webm
 5d9474c0309b7ca09a182d888f73b37a8fe1362c *invalid-vp90-01-v3.webm.res
 d78e2fceba5ac942246503ec8366f879c4775ca5 *invalid-vp90-02-v2.webm
@@ -848,3 +850,7 @@ a000d568431d07379dd5a8ec066061c07e560b47 *invalid-vp90-2-00-quantizer-63.ivf.kf_
 6fa3d3ac306a3d9ce1d610b78441dc00d2c2d4b9 *tos_vp8.webm
 e402cbbf9e550ae017a1e9f1f73931c1d18474e8 *invalid-crbug-667044.webm
 d3964f9dad9f60363c81b688324d95b4ec7c8038 *invalid-crbug-667044.webm.res
+fd9df7f3f6992af1d7a9dde975c9a0d6f28c053d *invalid-bug-1443.ivf
+fd3020fa6e9ca5966206738654c97dec313b0a95 *invalid-bug-1443.ivf.res
+17696cd21e875f1d6e5d418cbf89feab02c8850a *vp90-2-22-svc_1280x720_1.webm
+e2f9e1e47a791b4e939a9bdc50bf7a25b3761f77 *vp90-2-22-svc_1280x720_1.webm.md5

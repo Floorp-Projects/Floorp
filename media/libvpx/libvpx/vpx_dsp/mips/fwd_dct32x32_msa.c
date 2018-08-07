@@ -927,21 +927,21 @@ void vpx_fdct32x32_rd_msa(const int16_t *input, int16_t *out,
 }
 
 void vpx_fdct32x32_1_msa(const int16_t *input, int16_t *out, int32_t stride) {
-  int sum = LD_HADD(input, stride);
-  sum += LD_HADD(input + 8, stride);
-  sum += LD_HADD(input + 16, stride);
-  sum += LD_HADD(input + 24, stride);
-  sum += LD_HADD(input + 32 * 8, stride);
-  sum += LD_HADD(input + 32 * 8 + 8, stride);
-  sum += LD_HADD(input + 32 * 8 + 16, stride);
-  sum += LD_HADD(input + 32 * 8 + 24, stride);
-  sum += LD_HADD(input + 32 * 16, stride);
-  sum += LD_HADD(input + 32 * 16 + 8, stride);
-  sum += LD_HADD(input + 32 * 16 + 16, stride);
-  sum += LD_HADD(input + 32 * 16 + 24, stride);
-  sum += LD_HADD(input + 32 * 24, stride);
-  sum += LD_HADD(input + 32 * 24 + 8, stride);
-  sum += LD_HADD(input + 32 * 24 + 16, stride);
-  sum += LD_HADD(input + 32 * 24 + 24, stride);
+  int sum, i;
+  v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
+  v4i32 vec_w = { 0 };
+
+  for (i = 0; i < 16; ++i) {
+    LD_SH4(input, 8, in0, in1, in2, in3);
+    input += stride;
+    LD_SH4(input, 8, in4, in5, in6, in7);
+    input += stride;
+    ADD4(in0, in1, in2, in3, in4, in5, in6, in7, in0, in2, in4, in6);
+    ADD2(in0, in2, in4, in6, in0, in4);
+    vec_w += __msa_hadd_s_w(in0, in0);
+    vec_w += __msa_hadd_s_w(in4, in4);
+  }
+
+  sum = HADD_SW_S32(vec_w);
   out[0] = (int16_t)(sum >> 3);
 }

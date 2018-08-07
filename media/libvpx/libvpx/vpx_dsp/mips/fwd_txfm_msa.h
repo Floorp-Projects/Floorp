@@ -14,22 +14,6 @@
 #include "vpx_dsp/mips/txfm_macros_msa.h"
 #include "vpx_dsp/txfm_common.h"
 
-#define LD_HADD(psrc, stride)                                                  \
-  ({                                                                           \
-    v8i16 in0_m, in1_m, in2_m, in3_m, in4_m, in5_m, in6_m, in7_m;              \
-    v4i32 vec_w_m;                                                             \
-                                                                               \
-    LD_SH4((psrc), stride, in0_m, in1_m, in2_m, in3_m);                        \
-    ADD2(in0_m, in1_m, in2_m, in3_m, in0_m, in2_m);                            \
-    LD_SH4(((psrc) + 4 * stride), stride, in4_m, in5_m, in6_m, in7_m);         \
-    ADD4(in4_m, in5_m, in6_m, in7_m, in0_m, in2_m, in4_m, in6_m, in4_m, in6_m, \
-         in0_m, in4_m);                                                        \
-    in0_m += in4_m;                                                            \
-                                                                               \
-    vec_w_m = __msa_hadd_s_w(in0_m, in0_m);                                    \
-    HADD_SW_S32(vec_w_m);                                                      \
-  })
-
 #define VP9_FDCT4(in0, in1, in2, in3, out0, out1, out2, out3)                  \
   {                                                                            \
     v8i16 cnst0_m, cnst1_m, cnst2_m, cnst3_m;                                  \

@@ -65,12 +65,16 @@ typedef struct {
   int_mv best_sse_mv;
   MV_REFERENCE_FRAME best_reference_frame;
   MV_REFERENCE_FRAME best_zeromv_reference_frame;
+  int sb_skip_denoising;
 #endif
 
   // motion vector cache for adaptive motion search control in partition
   // search loop
   MV pred_mv[MAX_REF_FRAMES];
   INTERP_FILTER pred_interp_filter;
+
+  // Used for the machine learning-based early termination
+  int32_t sum_y_eobs;
 } PICK_MODE_CONTEXT;
 
 typedef struct PC_TREE {

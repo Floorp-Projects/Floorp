@@ -34,8 +34,8 @@ class Y4mVideoSource : public VideoSource {
   virtual void OpenSource() {
     CloseSource();
     input_file_ = OpenTestDataFile(file_name_);
-    ASSERT_TRUE(input_file_ != NULL) << "Input file open failed. Filename: "
-                                     << file_name_;
+    ASSERT_TRUE(input_file_ != NULL)
+        << "Input file open failed. Filename: " << file_name_;
   }
 
   virtual void ReadSourceToStart() {

@@ -131,9 +131,9 @@ static int svc_log(SvcContext *svc_ctx, SVC_LOG_LEVEL level, const char *fmt,
 static vpx_codec_err_t extract_option(LAYER_OPTION_TYPE type, char *input,
                                       int *value0, int *value1) {
   if (type == SCALE_FACTOR) {
-    *value0 = strtol(input, &input, 10);
+    *value0 = (int)strtol(input, &input, 10);
     if (*input++ != '/') return VPX_CODEC_INVALID_PARAM;
-    *value1 = strtol(input, &input, 10);
+    *value1 = (int)strtol(input, &input, 10);
 
     if (*value0 < option_min_values[SCALE_FACTOR] ||
         *value1 < option_min_values[SCALE_FACTOR] ||
@@ -436,6 +436,10 @@ vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
       si->svc_params.scaling_factor_num[sl] = DEFAULT_SCALE_FACTORS_NUM_2x[sl2];
       si->svc_params.scaling_factor_den[sl] = DEFAULT_SCALE_FACTORS_DEN_2x[sl2];
     }
+    if (svc_ctx->spatial_layers == 1) {
+      si->svc_params.scaling_factor_num[0] = 1;
+      si->svc_params.scaling_factor_den[0] = 1;
+    }
   }
   for (tl = 0; tl < svc_ctx->temporal_layers; ++tl) {
     for (sl = 0; sl < svc_ctx->spatial_layers; ++sl) {
@@ -555,8 +559,7 @@ vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
   iter = NULL;
   while ((cx_pkt = vpx_codec_get_cx_data(codec_ctx, &iter))) {
     switch (cx_pkt->kind) {
-#if VPX_ENCODER_ABI_VERSION > (5 + VPX_CODEC_ABI_VERSION)
-#if CONFIG_SPATIAL_SVC
+#if CONFIG_SPATIAL_SVC && defined(VPX_TEST_SPATIAL_SVC)
       case VPX_CODEC_SPATIAL_SVC_LAYER_PSNR: {
         int i;
         for (i = 0; i < svc_ctx->spatial_layers; ++i) {
@@ -591,9 +594,8 @@ vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
         break;
       }
 #endif
-#endif
       case VPX_CODEC_PSNR_PKT: {
-#if VPX_ENCODER_ABI_VERSION > (5 + VPX_CODEC_ABI_VERSION)
+#if CONFIG_SPATIAL_SVC && defined(VPX_TEST_SPATIAL_SVC)
         int j;
         svc_log(svc_ctx, SVC_LOG_DEBUG,
                 "frame: %d, layer: %d, PSNR(Total/Y/U/V): "

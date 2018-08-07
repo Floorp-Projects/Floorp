@@ -193,6 +193,11 @@ typedef struct MV_SPEED_FEATURES {
   int fullpel_search_step_param;
 } MV_SPEED_FEATURES;
 
+typedef struct PARTITION_SEARCH_BREAKOUT_THR {
+  int64_t dist;
+  int rate;
+} PARTITION_SEARCH_BREAKOUT_THR;
+
 #define MAX_MESH_STEP 4
 
 typedef struct MESH_PATTERN {
@@ -226,7 +231,12 @@ typedef struct SPEED_FEATURES {
 
   // This variable is used to cap the maximum number of times we skip testing a
   // mode to be evaluated. A high value means we will be faster.
+  // Turned off when (row_mt_bit_exact == 1 && adaptive_rd_thresh_row_mt == 0).
   int adaptive_rd_thresh;
+
+  // Flag to use adaptive_rd_thresh when row-mt it enabled, only for non-rd
+  // pickmode.
+  int adaptive_rd_thresh_row_mt;
 
   // Enables skipping the reconstruction step (idct, recon) in the
   // intermediate steps assuming the last frame didn't have too many intra
@@ -317,14 +327,8 @@ typedef struct SPEED_FEATURES {
   // point for this motion search and limits the search range around it.
   int adaptive_motion_search;
 
-  // Flag for allowing some use of exhaustive searches;
-  int allow_exhaustive_searches;
-
   // Threshold for allowing exhaistive motion search.
   int exhaustive_searches_thresh;
-
-  // Maximum number of exhaustive searches for a frame.
-  int max_exaustive_pct;
 
   // Pattern to be used for any exhaustive mesh searches.
   MESH_PATTERN mesh_patterns[MAX_MESH_STEP];
@@ -442,8 +446,10 @@ typedef struct SPEED_FEATURES {
   INTERP_FILTER_MASK interp_filter_search_mask;
 
   // Partition search early breakout thresholds.
-  int64_t partition_search_breakout_dist_thr;
-  int partition_search_breakout_rate_thr;
+  PARTITION_SEARCH_BREAKOUT_THR partition_search_breakout_thr;
+
+  // Machine-learning based partition search early termination
+  int ml_partition_search_early_termination;
 
   // Allow skipping partition search for still image frame
   int allow_partition_search_skip;
@@ -456,12 +462,13 @@ typedef struct SPEED_FEATURES {
   int short_circuit_flat_blocks;
 
   // Skip a number of expensive mode evaluations for blocks with very low
-  // temporal variance.
+  // temporal variance. If the low temporal variance flag is set for a block,
+  // do the following:
   // 1: Skip all golden modes and ALL INTRA for bsize >= 32x32.
   // 2: Skip golden non-zeromv and newmv-last for bsize >= 16x16, skip ALL
   // INTRA for bsize >= 32x32 and vert/horz INTRA for bsize 16x16, 16x32 and
   // 32x16.
-  // 3: Same as (2), but also skip golden zeromv for low res.
+  // 3: Same as (2), but also skip golden zeromv.
   int short_circuit_low_temp_var;
 
   // Limits the rd-threshold update for early exit for the newmv-last mode,
@@ -477,6 +484,30 @@ typedef struct SPEED_FEATURES {
 
   // Global flag to enable partition copy from the previous frame.
   int copy_partition_flag;
+
+  // Compute the source sad for every superblock of the frame,
+  // prior to encoding the frame, to be used to bypass some encoder decisions.
+  int use_source_sad;
+
+  int use_simple_block_yrd;
+
+  // If source sad of superblock is high (> adapt_partition_thresh), will switch
+  // from VARIANCE_PARTITION to REFERENCE_PARTITION (which selects partition
+  // based on the nonrd-pickmode).
+  int adapt_partition_source_sad;
+  int adapt_partition_thresh;
+
+  // Enable use of alt-refs in 1 pass VBR.
+  int use_altref_onepass;
+
+  // Enable use of compound prediction, for nonrd_pickmode with nonzero lag.
+  int use_compound_nonrd_pickmode;
+
+  // Always use nonrd_pick_intra for all block sizes on keyframes.
+  int nonrd_keyframe;
+
+  // For SVC: enables use of partition from lower spatial resolution.
+  int svc_use_lowres_part;
 } SPEED_FEATURES;
 
 struct VP9_COMP;

@@ -21,7 +21,7 @@
 
 #if CONFIG_VP9_HIGHBITDEPTH
 void vp9_highbd_build_inter_predictor(
-    const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
+    const uint16_t *src, int src_stride, uint16_t *dst, int dst_stride,
     const MV *src_mv, const struct scale_factors *sf, int w, int h, int ref,
     const InterpKernel *kernel, enum mv_precision precision, int x, int y,
     int bd) {
@@ -190,7 +190,8 @@ static void build_inter_predictors(MACROBLOCKD *xd, int plane, int block,
 
 #if CONFIG_VP9_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-      highbd_inter_predictor(pre, pre_buf->stride, dst, dst_buf->stride,
+      highbd_inter_predictor(CONVERT_TO_SHORTPTR(pre), pre_buf->stride,
+                             CONVERT_TO_SHORTPTR(dst), dst_buf->stride,
                              subpel_x, subpel_y, sf, w, h, ref, kernel, xs, ys,
                              xd->bd);
     } else {

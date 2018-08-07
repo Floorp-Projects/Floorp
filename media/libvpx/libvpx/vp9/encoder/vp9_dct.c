@@ -556,9 +556,8 @@ void vp9_fht4x4_c(const int16_t *input, tran_low_t *output, int stride,
 
 void vp9_fdct8x8_quant_c(const int16_t *input, int stride,
                          tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                         int skip_block, const int16_t *zbin_ptr,
-                         const int16_t *round_ptr, const int16_t *quant_ptr,
-                         const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
+                         int skip_block, const int16_t *round_ptr,
+                         const int16_t *quant_ptr, tran_low_t *qcoeff_ptr,
                          tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
                          uint16_t *eob_ptr, const int16_t *scan,
                          const int16_t *iscan) {
@@ -566,6 +565,8 @@ void vp9_fdct8x8_quant_c(const int16_t *input, int stride,
 
   int i, j;
   tran_low_t intermediate[64];
+
+  (void)iscan;
 
   // Transform columns
   {
@@ -631,12 +632,6 @@ void vp9_fdct8x8_quant_c(const int16_t *input, int stride,
     fdct8(&intermediate[i * 8], &coeff_ptr[i * 8]);
     for (j = 0; j < 8; ++j) coeff_ptr[j + i * 8] /= 2;
   }
-
-  // TODO(jingning) Decide the need of these arguments after the
-  // quantization process is completed.
-  (void)zbin_ptr;
-  (void)quant_shift_ptr;
-  (void)iscan;
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
   memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));

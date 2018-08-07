@@ -123,6 +123,8 @@ static int fourcc_is_ivf(const char detect[4]) {
   return 0;
 }
 
+static const arg_def_t help =
+    ARG_DEF(NULL, "help", 0, "Show usage options and exit");
 static const arg_def_t debugmode =
     ARG_DEF("D", "debug", 0, "Debug mode (makes output deterministic)");
 static const arg_def_t outputfile =
@@ -199,7 +201,8 @@ static const arg_def_t test16bitinternalarg = ARG_DEF(
     NULL, "test-16bit-internal", 0, "Force use of 16 bit internal buffer");
 #endif
 
-static const arg_def_t *main_args[] = { &debugmode,
+static const arg_def_t *main_args[] = { &help,
+                                        &debugmode,
                                         &outputfile,
                                         &codecarg,
                                         &passes,
@@ -321,8 +324,11 @@ static const arg_def_t minsection_pct =
     ARG_DEF(NULL, "minsection-pct", 1, "GOP min bitrate (% of target)");
 static const arg_def_t maxsection_pct =
     ARG_DEF(NULL, "maxsection-pct", 1, "GOP max bitrate (% of target)");
-static const arg_def_t *rc_twopass_args[] = { &bias_pct, &minsection_pct,
-                                              &maxsection_pct, NULL };
+static const arg_def_t corpus_complexity =
+    ARG_DEF(NULL, "corpus-complexity", 1, "corpus vbr complexity midpoint");
+static const arg_def_t *rc_twopass_args[] = {
+  &bias_pct, &minsection_pct, &maxsection_pct, &corpus_complexity, NULL
+};
 
 static const arg_def_t kf_min_dist =
     ARG_DEF(NULL, "kf-min-dist", 1, "Minimum keyframe interval (frames)");
@@ -441,8 +447,8 @@ static const struct arg_enum_list color_space_enum[] = {
 };
 
 static const arg_def_t input_color_space =
-    ARG_DEF_ENUM(NULL, "color-space", 1, "The color space of input content:",
-                 color_space_enum);
+    ARG_DEF_ENUM(NULL, "color-space", 1,
+                 "The color space of input content:", color_space_enum);
 
 #if CONFIG_VP9_HIGHBITDEPTH
 static const struct arg_enum_list bitdepth_enum[] = {
@@ -460,6 +466,7 @@ static const arg_def_t inbitdeptharg =
 static const struct arg_enum_list tune_content_enum[] = {
   { "default", VP9E_CONTENT_DEFAULT },
   { "screen", VP9E_CONTENT_SCREEN },
+  { "film", VP9E_CONTENT_FILM },
   { NULL, 0 }
 };
 
@@ -468,8 +475,18 @@ static const arg_def_t tune_content = ARG_DEF_ENUM(
 
 static const arg_def_t target_level = ARG_DEF(
     NULL, "target-level", 1,
-    "Target level (255: off (default); 0: only keep level stats; 10: level 1.0;"
-    " 11: level 1.1; ... 62: level 6.2)");
+    "Target level\n"
+    "                                        255: off (default)\n"
+    "                                          0: only keep level stats\n"
+    "                                          1: adaptively set alt-ref "
+    "distance and column tile limit based on picture size, and keep"
+    " level stats\n"
+    "                                         10: level 1.0  11: level 1.1  "
+    "...  62: level 6.2");
+
+static const arg_def_t row_mt =
+    ARG_DEF(NULL, "row-mt", 1,
+            "Enable row based non-deterministic multi-threading in VP9");
 #endif
 
 #if CONFIG_VP9_ENCODER
@@ -498,6 +515,7 @@ static const arg_def_t *vp9_args[] = { &cpu_used_vp9,
                                        &min_gf_interval,
                                        &max_gf_interval,
                                        &target_level,
+                                       &row_mt,
 #if CONFIG_VP9_HIGHBITDEPTH
                                        &bitdeptharg,
                                        &inbitdeptharg,
@@ -528,51 +546,60 @@ static const int vp9_arg_ctrl_map[] = { VP8E_SET_CPUUSED,
                                         VP9E_SET_MIN_GF_INTERVAL,
                                         VP9E_SET_MAX_GF_INTERVAL,
                                         VP9E_SET_TARGET_LEVEL,
+                                        VP9E_SET_ROW_MT,
                                         0 };
 #endif
 
 static const arg_def_t *no_args[] = { NULL };
 
-void usage_exit(void) {
+void show_help(FILE *fout, int shorthelp) {
   int i;
   const int num_encoder = get_vpx_encoder_count();
 
-  fprintf(stderr, "Usage: %s <options> -o dst_filename src_filename \n",
+  fprintf(fout, "Usage: %s <options> -o dst_filename src_filename \n",
           exec_name);
 
-  fprintf(stderr, "\nOptions:\n");
-  arg_show_usage(stderr, main_args);
-  fprintf(stderr, "\nEncoder Global Options:\n");
-  arg_show_usage(stderr, global_args);
-  fprintf(stderr, "\nRate Control Options:\n");
-  arg_show_usage(stderr, rc_args);
-  fprintf(stderr, "\nTwopass Rate Control Options:\n");
-  arg_show_usage(stderr, rc_twopass_args);
-  fprintf(stderr, "\nKeyframe Placement Options:\n");
-  arg_show_usage(stderr, kf_args);
+  if (shorthelp) {
+    fprintf(fout, "Use --help to see the full list of options.\n");
+    return;
+  }
+
+  fprintf(fout, "\nOptions:\n");
+  arg_show_usage(fout, main_args);
+  fprintf(fout, "\nEncoder Global Options:\n");
+  arg_show_usage(fout, global_args);
+  fprintf(fout, "\nRate Control Options:\n");
+  arg_show_usage(fout, rc_args);
+  fprintf(fout, "\nTwopass Rate Control Options:\n");
+  arg_show_usage(fout, rc_twopass_args);
+  fprintf(fout, "\nKeyframe Placement Options:\n");
+  arg_show_usage(fout, kf_args);
 #if CONFIG_VP8_ENCODER
-  fprintf(stderr, "\nVP8 Specific Options:\n");
-  arg_show_usage(stderr, vp8_args);
+  fprintf(fout, "\nVP8 Specific Options:\n");
+  arg_show_usage(fout, vp8_args);
 #endif
 #if CONFIG_VP9_ENCODER
-  fprintf(stderr, "\nVP9 Specific Options:\n");
-  arg_show_usage(stderr, vp9_args);
+  fprintf(fout, "\nVP9 Specific Options:\n");
+  arg_show_usage(fout, vp9_args);
 #endif
-  fprintf(stderr,
+  fprintf(fout,
           "\nStream timebase (--timebase):\n"
           "  The desired precision of timestamps in the output, expressed\n"
           "  in fractional seconds. Default is 1/1000.\n");
-  fprintf(stderr, "\nIncluded encoders:\n\n");
+  fprintf(fout, "\nIncluded encoders:\n\n");
 
   for (i = 0; i < num_encoder; ++i) {
     const VpxInterface *const encoder = get_vpx_encoder_by_index(i);
     const char *defstr = (i == (num_encoder - 1)) ? "(default)" : "";
-    fprintf(stderr, "    %-6s - %s %s\n", encoder->name,
+    fprintf(fout, "    %-6s - %s %s\n", encoder->name,
             vpx_codec_iface_name(encoder->codec_interface()), defstr);
   }
-  fprintf(stderr, "\n        ");
-  fprintf(stderr, "Use --codec to switch to a non-default encoder.\n\n");
+  fprintf(fout, "\n        ");
+  fprintf(fout, "Use --codec to switch to a non-default encoder.\n\n");
+}
 
+void usage_exit(void) {
+  show_help(stderr, 1);
   exit(EXIT_FAILURE);
 }
 
@@ -887,7 +914,10 @@ static void parse_global_config(struct VpxEncoderConfig *global, char **argv) {
   for (argi = argj = argv; (*argj = *argi); argi += arg.argv_step) {
     arg.argv_step = 1;
 
-    if (arg_match(&arg, &codecarg, argi)) {
+    if (arg_match(&arg, &help, argi)) {
+      show_help(stdout, 0);
+      exit(EXIT_SUCCESS);
+    } else if (arg_match(&arg, &codecarg, argi)) {
       global->codec = get_vpx_encoder_by_name(arg.val);
       if (!global->codec)
         die("Error: Unrecognized argument (%s) to --codec\n", arg.val);
@@ -1223,6 +1253,11 @@ static int parse_stream_params(struct VpxEncoderConfig *global,
 
       if (global->passes < 2)
         warn("option %s ignored in one-pass mode.\n", arg.name);
+    } else if (arg_match(&arg, &corpus_complexity, argi)) {
+      config->cfg.rc_2pass_vbr_corpus_complexity = arg_parse_uint(&arg);
+
+      if (global->passes < 2)
+        warn("option %s ignored in one-pass mode.\n", arg.name);
     } else if (arg_match(&arg, &kf_min_dist, argi)) {
       config->cfg.kf_min_dist = arg_parse_uint(&arg);
     } else if (arg_match(&arg, &kf_max_dist, argi)) {
@@ -1419,6 +1454,7 @@ static void show_stream_config(struct stream_state *stream,
   SHOW(rc_2pass_vbr_bias_pct);
   SHOW(rc_2pass_vbr_minsection_pct);
   SHOW(rc_2pass_vbr_maxsection_pct);
+  SHOW(rc_2pass_vbr_corpus_complexity);
   SHOW(kf_mode);
   SHOW(kf_min_dist);
   SHOW(kf_max_dist);
@@ -1657,7 +1693,7 @@ static void get_cx_data(struct stream_state *stream,
   *got_data = 0;
   while ((pkt = vpx_codec_get_cx_data(&stream->encoder, &iter))) {
     static size_t fsize = 0;
-    static int64_t ivf_header_pos = 0;
+    static FileOffset ivf_header_pos = 0;
 
     switch (pkt->kind) {
       case VPX_CODEC_CX_FRAME_PKT:
@@ -1683,7 +1719,7 @@ static void get_cx_data(struct stream_state *stream,
             fsize += pkt->data.frame.sz;
 
             if (!(pkt->data.frame.flags & VPX_FRAME_IS_FRAGMENT)) {
-              const int64_t currpos = ftello(stream->file);
+              const FileOffset currpos = ftello(stream->file);
               fseeko(stream->file, ivf_header_pos, SEEK_SET);
               ivf_write_frame_size(stream->file, fsize);
               fseeko(stream->file, currpos, SEEK_SET);
@@ -1883,8 +1919,6 @@ int main(int argc, const char **argv_) {
   memset(&input, 0, sizeof(input));
   exec_name = argv_[0];
 
-  if (argc < 3) usage_exit();
-
   /* Setup default input stream settings */
   input.framerate.numerator = 30;
   input.framerate.denominator = 1;
@@ -1897,6 +1931,8 @@ int main(int argc, const char **argv_) {
    */
   argv = argv_dup(argc - 1, argv_ + 1);
   parse_global_config(&global, argv);
+
+  if (argc < 3) usage_exit();
 
   switch (global.color_type) {
     case I420: input.fmt = VPX_IMG_FMT_I420; break;
@@ -1931,7 +1967,10 @@ int main(int argc, const char **argv_) {
   /* Handle non-option arguments */
   input.filename = argv[0];
 
-  if (!input.filename) usage_exit();
+  if (!input.filename) {
+    fprintf(stderr, "No input file specified!\n");
+    usage_exit();
+  }
 
   /* Decide if other chroma subsamplings than 4:2:0 are supported */
   if (global.codec->fourcc == VP9_FOURCC) input.only_i420 = 0;

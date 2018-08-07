@@ -22,6 +22,11 @@
 
 #include "common/webmids.h"
 
+// disable deprecation warnings for auto_ptr
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 namespace mkvparser {
 const float MasteringMetadata::kValueNotPresent = FLT_MAX;
 const long long Colour::kValueNotPresent = LLONG_MAX;
@@ -1528,15 +1533,19 @@ long SeekHead::Parse() {
   if (pos != stop)
     return E_FILE_FORMAT_INVALID;
 
-  m_entries = new (std::nothrow) Entry[entry_count];
+  if (entry_count > 0) {
+    m_entries = new (std::nothrow) Entry[entry_count];
 
-  if (m_entries == NULL)
-    return -1;
+    if (m_entries == NULL)
+      return -1;
+  }
 
-  m_void_elements = new (std::nothrow) VoidElement[void_element_count];
+  if (void_element_count > 0) {
+    m_void_elements = new (std::nothrow) VoidElement[void_element_count];
 
-  if (m_void_elements == NULL)
-    return -1;
+    if (m_void_elements == NULL)
+      return -1;
+  }
 
   // now parse the entries and void elements
 
@@ -1555,14 +1564,14 @@ long SeekHead::Parse() {
     if (status < 0)  // error
       return status;
 
-    if (id == libwebm::kMkvSeek) {
+    if (id == libwebm::kMkvSeek && entry_count > 0) {
       if (ParseEntry(pReader, pos, size, pEntry)) {
         Entry& e = *pEntry++;
 
         e.element_start = idpos;
         e.element_size = (pos + size) - idpos;
       }
-    } else if (id == libwebm::kMkvVoid) {
+    } else if (id == libwebm::kMkvVoid && void_element_count > 0) {
       VoidElement& e = *pVoidElement++;
 
       e.element_start = idpos;
@@ -2426,7 +2435,9 @@ bool CuePoint::TrackPosition::Parse(IMkvReader* pReader, long long start_,
 }
 
 const CuePoint::TrackPosition* CuePoint::Find(const Track* pTrack) const {
-  assert(pTrack);
+  if (pTrack == NULL) {
+    return NULL;
+  }
 
   const long long n = pTrack->GetNumber();
 
@@ -4026,7 +4037,7 @@ long SegmentInfo::Parse() {
   }
 
   const double rollover_check = m_duration * m_timecodeScale;
-  if (rollover_check > LLONG_MAX)
+  if (rollover_check > static_cast<double>(LLONG_MAX))
     return E_FILE_FORMAT_INVALID;
 
   if (pos != stop)
@@ -4975,29 +4986,27 @@ bool PrimaryChromaticity::Parse(IMkvReader* reader, long long read_pos,
   if (!reader)
     return false;
 
-  std::auto_ptr<PrimaryChromaticity> chromaticity_ptr;
+  if (!*chromaticity)
+    *chromaticity = new PrimaryChromaticity();
 
-  if (!*chromaticity) {
-    chromaticity_ptr.reset(new PrimaryChromaticity());
-  } else {
-    chromaticity_ptr.reset(*chromaticity);
-  }
-
-  if (!chromaticity_ptr.get())
+  if (!*chromaticity)
     return false;
 
-  float* value = is_x ? &chromaticity_ptr->x : &chromaticity_ptr->y;
+  PrimaryChromaticity* pc = *chromaticity;
+  float* value = is_x ? &pc->x : &pc->y;
 
   double parser_value = 0;
-  const long long value_parse_status =
+  const long long parse_status =
       UnserializeFloat(reader, read_pos, value_size, parser_value);
+
+  // Valid range is [0, 1]. Make sure the double is representable as a float
+  // before casting.
+  if (parse_status < 0 || parser_value < 0.0 || parser_value > 1.0 ||
+      (parser_value > 0.0 && parser_value < FLT_MIN))
+    return false;
 
   *value = static_cast<float>(parser_value);
 
-  if (value_parse_status < 0 || *value < 0.0 || *value > 1.0)
-    return false;
-
-  *chromaticity = chromaticity_ptr.release();
   return true;
 }
 
@@ -5228,7 +5237,9 @@ bool Projection::Parse(IMkvReader* reader, long long start, long long size,
       double value = 0;
       const long long value_parse_status =
           UnserializeFloat(reader, read_pos, child_size, value);
-      if (value_parse_status < 0) {
+      // Make sure value is representable as a float before casting.
+      if (value_parse_status < 0 || value < -FLT_MAX || value > FLT_MAX ||
+          (value > 0.0 && value < FLT_MIN)) {
         return false;
       }
 
@@ -7932,7 +7943,6 @@ long Block::Parse(const Cluster* pCluster) {
     pf = m_frames;
     while (pf != pf_end) {
       Frame& f = *pf++;
-      assert((pos + f.len) <= stop);
       if ((pos + f.len) > stop)
         return E_FILE_FORMAT_INVALID;
 

@@ -25,14 +25,12 @@ static void encode_mvcomponent(vp8_writer *const w, const int v,
   const vp8_prob *p = mvc->prob;
   const int x = v < 0 ? -v : v;
 
-  if (x < mvnum_short) /* Small */
-  {
+  if (x < mvnum_short) { /* Small */
     vp8_write(w, 0, p[mvpis_short]);
     vp8_treed_write(w, vp8_small_mvtree, p + MVPshort, x, 3);
 
     if (!x) return; /* no sign bit */
-  } else            /* Large */
-  {
+  } else {          /* Large */
     int i = 0;
 
     vp8_write(w, 1, p[mvpis_short]);

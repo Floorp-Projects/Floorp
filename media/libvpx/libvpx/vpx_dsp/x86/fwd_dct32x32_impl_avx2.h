@@ -51,7 +51,7 @@ void FDCT32x32_2D_AVX2(const int16_t *input, int16_t *output_org, int stride) {
   //    When we use them, in one case, they are all the same. In all others
   //    it's a pair of them that we need to repeat four times. This is done
   //    by constructing the 32 bit constant corresponding to that pair.
-  const __m256i k__cospi_p16_p16 = _mm256_set1_epi16((int16_t)cospi_16_64);
+  const __m256i k__cospi_p16_p16 = _mm256_set1_epi16(cospi_16_64);
   const __m256i k__cospi_p16_m16 =
       pair256_set_epi16(+cospi_16_64, -cospi_16_64);
   const __m256i k__cospi_m08_p24 = pair256_set_epi16(-cospi_8_64, cospi_24_64);

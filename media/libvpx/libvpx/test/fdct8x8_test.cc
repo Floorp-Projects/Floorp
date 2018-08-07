@@ -88,45 +88,45 @@ void fht8x8_ref(const int16_t *in, tran_low_t *out, int stride, int tx_type) {
 
 #if CONFIG_VP9_HIGHBITDEPTH
 void idct8x8_10(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_64_add_c(in, out, stride, 10);
+  vpx_highbd_idct8x8_64_add_c(in, CAST_TO_SHORTPTR(out), stride, 10);
 }
 
 void idct8x8_12(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_64_add_c(in, out, stride, 12);
+  vpx_highbd_idct8x8_64_add_c(in, CAST_TO_SHORTPTR(out), stride, 12);
 }
 
 void iht8x8_10(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
-  vp9_highbd_iht8x8_64_add_c(in, out, stride, tx_type, 10);
+  vp9_highbd_iht8x8_64_add_c(in, CAST_TO_SHORTPTR(out), stride, tx_type, 10);
 }
 
 void iht8x8_12(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
-  vp9_highbd_iht8x8_64_add_c(in, out, stride, tx_type, 12);
+  vp9_highbd_iht8x8_64_add_c(in, CAST_TO_SHORTPTR(out), stride, tx_type, 12);
 }
 
 #if HAVE_SSE2
 
 void idct8x8_12_add_10_c(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_12_add_c(in, out, stride, 10);
+  vpx_highbd_idct8x8_12_add_c(in, CAST_TO_SHORTPTR(out), stride, 10);
 }
 
 void idct8x8_12_add_12_c(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_12_add_c(in, out, stride, 12);
+  vpx_highbd_idct8x8_12_add_c(in, CAST_TO_SHORTPTR(out), stride, 12);
 }
 
 void idct8x8_12_add_10_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_12_add_sse2(in, out, stride, 10);
+  vpx_highbd_idct8x8_12_add_sse2(in, CAST_TO_SHORTPTR(out), stride, 10);
 }
 
 void idct8x8_12_add_12_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_12_add_sse2(in, out, stride, 12);
+  vpx_highbd_idct8x8_12_add_sse2(in, CAST_TO_SHORTPTR(out), stride, 12);
 }
 
 void idct8x8_64_add_10_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_64_add_sse2(in, out, stride, 10);
+  vpx_highbd_idct8x8_64_add_sse2(in, CAST_TO_SHORTPTR(out), stride, 10);
 }
 
 void idct8x8_64_add_12_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vpx_highbd_idct8x8_64_add_sse2(in, out, stride, 12);
+  vpx_highbd_idct8x8_64_add_sse2(in, CAST_TO_SHORTPTR(out), stride, 12);
 }
 #endif  // HAVE_SSE2
 #endif  // CONFIG_VP9_HIGHBITDEPTH
@@ -257,7 +257,7 @@ class FwdTrans8x8TestBase {
 #if CONFIG_VP9_HIGHBITDEPTH
       } else {
         ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(test_temp_block, CONVERT_TO_BYTEPTR(dst16), pitch_));
+            RunInvTxfm(test_temp_block, CAST_TO_BYTEPTR(dst16), pitch_));
 #endif
       }
 
@@ -340,7 +340,7 @@ class FwdTrans8x8TestBase {
 #if CONFIG_VP9_HIGHBITDEPTH
       } else {
         ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(test_temp_block, CONVERT_TO_BYTEPTR(dst16), pitch_));
+            RunInvTxfm(test_temp_block, CAST_TO_BYTEPTR(dst16), pitch_));
 #endif
       }
 
@@ -413,7 +413,7 @@ class FwdTrans8x8TestBase {
 #if CONFIG_VP9_HIGHBITDEPTH
       } else {
         ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(coeff, CONVERT_TO_BYTEPTR(dst16), pitch_));
+            RunInvTxfm(coeff, CAST_TO_BYTEPTR(dst16), pitch_));
 #endif
       }
 
@@ -497,9 +497,9 @@ class FwdTrans8x8TestBase {
         ASM_REGISTER_STATE_CHECK(RunInvTxfm(coeff, dst, pitch_));
 #if CONFIG_VP9_HIGHBITDEPTH
       } else {
-        ref_txfm(coeff, CONVERT_TO_BYTEPTR(ref16), pitch_);
+        ref_txfm(coeff, CAST_TO_BYTEPTR(ref16), pitch_);
         ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(coeff, CONVERT_TO_BYTEPTR(dst16), pitch_));
+            RunInvTxfm(coeff, CAST_TO_BYTEPTR(dst16), pitch_));
 #endif
       }
 
@@ -511,8 +511,8 @@ class FwdTrans8x8TestBase {
         const int diff = dst[j] - ref[j];
 #endif
         const uint32_t error = diff * diff;
-        EXPECT_EQ(0u, error) << "Error: 8x8 IDCT has error " << error
-                             << " at index " << j;
+        EXPECT_EQ(0u, error)
+            << "Error: 8x8 IDCT has error " << error << " at index " << j;
       }
     }
   }
@@ -671,16 +671,11 @@ INSTANTIATE_TEST_CASE_P(
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
 #if HAVE_NEON && !CONFIG_EMULATE_HARDWARE
-#if CONFIG_VP9_HIGHBITDEPTH
-INSTANTIATE_TEST_CASE_P(NEON, FwdTrans8x8DCT,
-                        ::testing::Values(make_tuple(&vpx_fdct8x8_c,
-                                                     &vpx_idct8x8_64_add_neon,
-                                                     0, VPX_BITS_8)));
-#else   // !CONFIG_VP9_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(NEON, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&vpx_fdct8x8_neon,
                                                      &vpx_idct8x8_64_add_neon,
                                                      0, VPX_BITS_8)));
+#if !CONFIG_VP9_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
     NEON, FwdTrans8x8HT,
     ::testing::Values(
@@ -688,8 +683,8 @@ INSTANTIATE_TEST_CASE_P(
         make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_neon, 1, VPX_BITS_8),
         make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_neon, 2, VPX_BITS_8),
         make_tuple(&vp9_fht8x8_c, &vp9_iht8x8_64_add_neon, 3, VPX_BITS_8)));
-#endif  // CONFIG_VP9_HIGHBITDEPTH
-#endif  // HAVE_NEON && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
+#endif  // !CONFIG_VP9_HIGHBITDEPTH
+#endif  // HAVE_NEON && !CONFIG_EMULATE_HARDWARE
 
 #if HAVE_SSE2 && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(SSE2, FwdTrans8x8DCT,
@@ -744,7 +739,7 @@ INSTANTIATE_TEST_CASE_P(
     !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(SSSE3, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&vpx_fdct8x8_ssse3,
-                                                     &vpx_idct8x8_64_add_ssse3,
+                                                     &vpx_idct8x8_64_add_sse2,
                                                      0, VPX_BITS_8)));
 #endif
 
@@ -761,4 +756,11 @@ INSTANTIATE_TEST_CASE_P(
         make_tuple(&vp9_fht8x8_msa, &vp9_iht8x8_64_add_msa, 2, VPX_BITS_8),
         make_tuple(&vp9_fht8x8_msa, &vp9_iht8x8_64_add_msa, 3, VPX_BITS_8)));
 #endif  // HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
+
+#if HAVE_VSX && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
+INSTANTIATE_TEST_CASE_P(VSX, FwdTrans8x8DCT,
+                        ::testing::Values(make_tuple(&vpx_fdct8x8_c,
+                                                     &vpx_idct8x8_64_add_vsx, 0,
+                                                     VPX_BITS_8)));
+#endif  // HAVE_VSX && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 }  // namespace

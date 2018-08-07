@@ -276,6 +276,8 @@
 
 %endmacro
 
+SECTION .text
+
 %if ABI_IS_32BIT
 
 ;void vp8_loop_filter_horizontal_edge_sse2

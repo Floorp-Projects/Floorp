@@ -48,7 +48,7 @@ typedef const vpx_tree_index vpx_tree[];
 static INLINE vpx_prob get_prob(unsigned int num, unsigned int den) {
   assert(den != 0);
   {
-    const int p = (int)(((int64_t)num * 256 + (den >> 1)) / den);
+    const int p = (int)(((uint64_t)num * 256 + (den >> 1)) / den);
     // (p > 255) ? 255 : (p < 1) ? 1 : p;
     const int clipped_prob = p | ((255 - p) >> 23) | (p == 0);
     return (vpx_prob)clipped_prob;

@@ -15,6 +15,7 @@
 #include "./vpx_dsp_rtcd.h"
 
 #include "vpx/vpx_integer.h"
+#include "vpx_dsp/postproc.h"
 #include "vpx_ports/mem.h"
 
 void vpx_plane_add_noise_c(uint8_t *start, const int8_t *noise, int blackclamp,

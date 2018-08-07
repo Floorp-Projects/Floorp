@@ -318,15 +318,16 @@ static void convolve_vert_64_dspr2(const uint8_t *src, int32_t src_stride,
 
 void vpx_convolve8_vert_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                               uint8_t *dst, ptrdiff_t dst_stride,
-                              const int16_t *filter_x, int x_step_q4,
-                              const int16_t *filter_y, int y_step_q4, int w,
+                              const InterpKernel *filter, int x0_q4,
+                              int x_step_q4, int y0_q4, int y_step_q4, int w,
                               int h) {
+  const int16_t *const filter_y = filter[y0_q4];
   assert(y_step_q4 == 16);
   assert(((const int32_t *)filter_y)[1] != 0x800000);
 
   if (((const int32_t *)filter_y)[0] == 0) {
-    vpx_convolve2_vert_dspr2(src, src_stride, dst, dst_stride, filter_x,
-                             x_step_q4, filter_y, y_step_q4, w, h);
+    vpx_convolve2_vert_dspr2(src, src_stride, dst, dst_stride, filter, x0_q4,
+                             x_step_q4, y0_q4, y_step_q4, w, h);
   } else {
     uint32_t pos = 38;
 
@@ -349,8 +350,8 @@ void vpx_convolve8_vert_dspr2(const uint8_t *src, ptrdiff_t src_stride,
         convolve_vert_64_dspr2(src, src_stride, dst, dst_stride, filter_y, h);
         break;
       default:
-        vpx_convolve8_vert_c(src, src_stride, dst, dst_stride, filter_x,
-                             x_step_q4, filter_y, y_step_q4, w, h);
+        vpx_convolve8_vert_c(src, src_stride, dst, dst_stride, filter, x0_q4,
+                             x_step_q4, y0_q4, y_step_q4, w, h);
         break;
     }
   }

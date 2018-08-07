@@ -45,9 +45,12 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi, const MV *ref_mv,
 
   mv_sf->search_method = HEX;
   vp9_full_pixel_search(cpi, x, BLOCK_16X16, &ref_full, step_param,
-                        x->errorperbit, cond_cost_list(cpi, cost_list), ref_mv,
-                        dst_mv, 0, 0);
+                        cpi->sf.mv.search_method, x->errorperbit,
+                        cond_cost_list(cpi, cost_list), ref_mv, dst_mv, 0, 0);
   mv_sf->search_method = old_search_method;
+
+  /* restore UMV window */
+  x->mv_limits = tmp_mv_limits;
 
   // Try sub-pixel MC
   // if (bestsme > error_thresh && bestsme < INT_MAX)
@@ -65,9 +68,6 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi, const MV *ref_mv,
   xd->mi[0]->mv[0].as_mv = *dst_mv;
 
   vp9_build_inter_predictors_sby(xd, mb_row, mb_col, BLOCK_16X16);
-
-  /* restore UMV window */
-  x->mv_limits = tmp_mv_limits;
 
   return vpx_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
                       xd->plane[0].dst.buf, xd->plane[0].dst.stride);

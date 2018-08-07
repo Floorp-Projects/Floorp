@@ -81,6 +81,8 @@ extern fractional_mv_step_fp vp9_find_best_sub_pixel_tree_pruned;
 extern fractional_mv_step_fp vp9_find_best_sub_pixel_tree_pruned_more;
 extern fractional_mv_step_fp vp9_find_best_sub_pixel_tree_pruned_evenmore;
 extern fractional_mv_step_fp vp9_skip_sub_pixel_tree;
+extern fractional_mv_step_fp vp9_return_max_sub_pixel_mv;
+extern fractional_mv_step_fp vp9_return_min_sub_pixel_mv;
 
 typedef int (*vp9_full_search_fn_t)(const MACROBLOCK *x, const MV *ref_mv,
                                     int sad_per_bit, int distance,
@@ -105,9 +107,13 @@ int vp9_refining_search_8p_c(const MACROBLOCK *x, MV *ref_mv, int error_per_bit,
 struct VP9_COMP;
 
 int vp9_full_pixel_search(struct VP9_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bsize,
-                          MV *mvp_full, int step_param, int error_per_bit,
-                          int *cost_list, const MV *ref_mv, MV *tmp_mv,
-                          int var_max, int rd);
+                          MV *mvp_full, int step_param, int search_method,
+                          int error_per_bit, int *cost_list, const MV *ref_mv,
+                          MV *tmp_mv, int var_max, int rd);
+
+void vp9_set_subpel_mv_search_range(MvLimits *subpel_mv_limits,
+                                    const MvLimits *umv_window_limits,
+                                    const MV *ref_mv);
 
 #ifdef __cplusplus
 }  // extern "C"

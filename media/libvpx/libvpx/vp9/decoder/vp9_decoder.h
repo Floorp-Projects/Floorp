@@ -21,7 +21,6 @@
 #include "vp9/common/vp9_thread_common.h"
 #include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/common/vp9_ppflags.h"
-#include "vp9/decoder/vp9_dthread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,13 +52,10 @@ typedef struct VP9Decoder {
 
   int refresh_frame_flags;
 
-  int frame_parallel_decode;  // frame-based threading.
-
   // TODO(hkuang): Combine this with cur_buf in macroblockd as they are
   // the same.
   RefCntBuffer *cur_buf;  //  Current decoding frame buffer.
 
-  VPxWorker *frame_worker_owner;  // frame_worker that owns this pbi.
   VPxWorker lf_worker;
   VPxWorker *tile_workers;
   TileWorkerData *tile_worker_data;
@@ -121,9 +117,10 @@ static INLINE void decrease_ref_count(int idx, RefCntBuffer *const frame_bufs,
     // But the private buffer is not set up until finish decoding header.
     // So any error happens during decoding header, the frame_bufs will not
     // have valid priv buffer.
-    if (frame_bufs[idx].ref_count == 0 &&
+    if (!frame_bufs[idx].released && frame_bufs[idx].ref_count == 0 &&
         frame_bufs[idx].raw_frame_buffer.priv) {
       pool->release_fb_cb(pool->cb_priv, &frame_bufs[idx].raw_frame_buffer);
+      frame_bufs[idx].released = 1;
     }
   }
 }

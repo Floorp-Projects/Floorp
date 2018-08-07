@@ -371,6 +371,7 @@ const char *const kVP9TestVectors[] = {
 #endif  // CONFIG_VP9_HIGHBITDEPTH
   "vp90-2-20-big_superframe-01.webm",
   "vp90-2-20-big_superframe-02.webm",
+  "vp90-2-22-svc_1280x720_1.webm",
   RESIZE_TEST_VECTORS
 };
 const char *const kVP9TestVectorsSvc[] = { "vp90-2-22-svc_1280x720_3.ivf" };

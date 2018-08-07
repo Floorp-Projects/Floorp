@@ -19,6 +19,8 @@
 ;   int dst_stride      - 3
 ; )
 
+SECTION .text
+
 global sym(vp8_idct_dequant_0_2x_sse2) PRIVATE
 sym(vp8_idct_dequant_0_2x_sse2):
     push        rbp

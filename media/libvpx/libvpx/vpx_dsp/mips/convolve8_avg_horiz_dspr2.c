@@ -938,15 +938,16 @@ static void convolve_avg_horiz_64_dspr2(const uint8_t *src_ptr,
 
 void vpx_convolve8_avg_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                    uint8_t *dst, ptrdiff_t dst_stride,
-                                   const int16_t *filter_x, int x_step_q4,
-                                   const int16_t *filter_y, int y_step_q4,
+                                   const InterpKernel *filter, int x0_q4,
+                                   int32_t x_step_q4, int y0_q4, int y_step_q4,
                                    int w, int h) {
+  const int16_t *const filter_x = filter[x0_q4];
   assert(x_step_q4 == 16);
   assert(((const int32_t *)filter_x)[1] != 0x800000);
 
   if (((const int32_t *)filter_x)[0] == 0) {
-    vpx_convolve2_avg_horiz_dspr2(src, src_stride, dst, dst_stride, filter_x,
-                                  x_step_q4, filter_y, y_step_q4, w, h);
+    vpx_convolve2_avg_horiz_dspr2(src, src_stride, dst, dst_stride, filter,
+                                  x0_q4, x_step_q4, y0_q4, y_step_q4, w, h);
   } else {
     uint32_t pos = 38;
 
@@ -987,9 +988,8 @@ void vpx_convolve8_avg_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                     h);
         break;
       default:
-        vpx_convolve8_avg_horiz_c(src + 3, src_stride, dst, dst_stride,
-                                  filter_x, x_step_q4, filter_y, y_step_q4, w,
-                                  h);
+        vpx_convolve8_avg_horiz_c(src + 3, src_stride, dst, dst_stride, filter,
+                                  x0_q4, x_step_q4, y0_q4, y_step_q4, w, h);
         break;
     }
   }
