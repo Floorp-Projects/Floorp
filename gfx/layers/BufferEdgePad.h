@@ -4,18 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_BUFFER_UNROTATE_H
-#define MOZILLA_GFX_BUFFER_UNROTATE_H
+#ifndef MOZILLA_LAYERS_BUFFER_EDGE_PAD_H
+#define MOZILLA_LAYERS_BUFFER_EDGE_PAD_H
 
-#include "mozilla/Types.h"
+#include "mozilla/gfx/2D.h"
+#include "nsRegion.h"
 
 namespace mozilla {
-namespace gfx {
+namespace layers {
 
-void BufferUnrotate(uint8_t* aBuffer, int aByteWidth, int aHeight,
-                    int aByteStride, int aXByteBoundary, int aYBoundary);
+void PadDrawTargetOutFromRegion(RefPtr<gfx::DrawTarget> aDrawTarget, nsIntRegion &aRegion);
 
-} // namespace gfx
+} // namespace layers
 } // namespace mozilla
 
-#endif // MOZILLA_GFX_BUFFER_UNROTATE_H
+#endif // MOZILLA_LAYERS_BUFFER_EDGE_PAD_H

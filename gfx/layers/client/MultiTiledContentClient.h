@@ -53,7 +53,7 @@ public:
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
                          void* aCallbackData) override;
-
+  
   void ResetPaintedAndValidState() override {
     mValidRegion.SetEmpty();
     mTiles.mSize.width = 0;
@@ -122,7 +122,7 @@ private:
   // Parameters that are collected during Update for a paint before they
   // are either executed or replayed on the paint thread.
   std::vector<gfx::Tile> mPaintTiles;
-  std::vector<RefPtr<PaintTask>> mPaintTasks;
+  std::vector<RefPtr<CapturedTiledPaintState>> mPaintStates;
 
   /**
    * While we're adding tiles, this is used to keep track of the position of
