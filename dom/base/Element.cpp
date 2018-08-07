@@ -2507,10 +2507,6 @@ Element::SetSingleClassFromParser(nsAtom* aSingleClassName)
 {
   // Keep this in sync with SetAttr and SetParsedAttr below.
 
-  if (!mAttrs.CanFitMoreAttrs()) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsAttrValue value(aSingleClassName);
 
   nsIDocument* document = GetComposedDoc();
@@ -2547,10 +2543,6 @@ Element::SetAttr(int32_t aNamespaceID, nsAtom* aName,
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
-
-  if (!mAttrs.CanFitMoreAttrs()) {
-    return NS_ERROR_FAILURE;
-  }
 
   uint8_t modType;
   bool hasListeners;
@@ -2614,11 +2606,6 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
-
-  if (!mAttrs.CanFitMoreAttrs()) {
-    return NS_ERROR_FAILURE;
-  }
-
 
   uint8_t modType;
   bool hasListeners;
