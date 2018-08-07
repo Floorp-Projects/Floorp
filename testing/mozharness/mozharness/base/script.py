@@ -2211,17 +2211,6 @@ class BaseScript(ScriptMixin, LogMixin, object):
         # Summaries need a lot more love.
         self.log(message, level=level)
 
-    def add_failure(self, key, message="%(key)s failed.", level=ERROR,
-                    increment_return_code=True):
-        if key not in self.failures:
-            self.failures.append(key)
-            self.add_summary(message % {'key': key}, level=level)
-            if increment_return_code:
-                self.return_code += 1
-
-    def query_failure(self, key):
-        return key in self.failures
-
     def summarize_success_count(self, success_count, total_count,
                                 message="%d of %d successful.",
                                 level=None):
