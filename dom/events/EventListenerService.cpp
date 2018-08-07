@@ -82,15 +82,22 @@ EventListenerChange::GetCountOfEventListenerChangesAffectingAccessibility(
 
 EventListenerInfo::EventListenerInfo(const nsAString& aType,
                                      JS::Handle<JSObject*> aScriptedListener,
+                                     JS::Handle<JSObject*> aScriptedListenerGlobal,
                                      bool aCapturing,
                                      bool aAllowsUntrusted,
                                      bool aInSystemEventGroup)
   : mType(aType)
   , mScriptedListener(aScriptedListener)
+  , mScriptedListenerGlobal(aScriptedListenerGlobal)
   , mCapturing(aCapturing)
   , mAllowsUntrusted(aAllowsUntrusted)
   , mInSystemEventGroup(aInSystemEventGroup)
 {
+  if (aScriptedListener) {
+    MOZ_ASSERT(JS_IsGlobalObject(aScriptedListenerGlobal));
+    js::AssertSameCompartment(aScriptedListener, aScriptedListenerGlobal);
+  }
+
   HoldJSObjects(this);
 }
 
@@ -106,10 +113,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EventListenerInfo)
   tmp->mScriptedListener = nullptr;
+  tmp->mScriptedListenerGlobal = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(EventListenerInfo)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptedListener)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptedListenerGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EventListenerInfo)
@@ -152,7 +161,7 @@ NS_IMETHODIMP
 EventListenerInfo::GetListenerObject(JSContext* aCx,
                                      JS::MutableHandle<JS::Value> aObject)
 {
-  Maybe<JSAutoRealmAllowCCW> ar;
+  Maybe<JSAutoRealm> ar;
   GetJSVal(aCx, ar, aObject);
   return NS_OK;
 }
@@ -165,12 +174,12 @@ NS_IMPL_ISUPPORTS(EventListenerService, nsIEventListenerService)
 
 bool
 EventListenerInfo::GetJSVal(JSContext* aCx,
-                            Maybe<JSAutoRealmAllowCCW>& aAr,
+                            Maybe<JSAutoRealm>& aAr,
                             JS::MutableHandle<JS::Value> aJSVal)
 {
   if (mScriptedListener) {
     aJSVal.setObject(*mScriptedListener);
-    aAr.emplace(aCx, mScriptedListener);
+    aAr.emplace(aCx, mScriptedListenerGlobal);
     return true;
   }
 
@@ -184,7 +193,7 @@ EventListenerInfo::ToSource(nsAString& aResult)
   aResult.SetIsVoid(true);
 
   AutoSafeJSContext cx;
-  Maybe<JSAutoRealmAllowCCW> ar;
+  Maybe<JSAutoRealm> ar;
   JS::Rooted<JS::Value> v(cx);
   if (GetJSVal(cx, ar, &v)) {
     JSString* str = JS_ValueToSource(cx, v);
