@@ -160,7 +160,7 @@ async function mutateTabStorage(knownTab, mutations, sentinelValue) {
     knownTab.tab.linkedBrowser,
     { mutations, sentinelValue },
     function(args) {
-      return content.wrappedJSObject.mutateStorage(args);
+      return content.wrappedJSObject.mutateStorage(Cu.cloneInto(args, content));
     });
 }
 
