@@ -197,6 +197,8 @@ def make_job_description(config, jobs):
                                                      project=config.params["project"]),
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
+            # Don't add generic artifact directory.
+            'skip-artifacts': True,
         }
 
         if locale:
@@ -292,7 +294,7 @@ def _generate_task_output_files(task, build_platform, locale=None, project=None)
     if build_platform.startswith('linux') or build_platform.startswith('macosx'):
         output_files = [{
             'type': 'file',
-            'path': '/builds/worker/workspace/build/artifacts/{}target.complete.mar'
+            'path': '/builds/worker/workspace/build/outputs/{}target.complete.mar'
                     .format(locale_output_path),
             'name': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
         }]
@@ -300,7 +302,7 @@ def _generate_task_output_files(task, build_platform, locale=None, project=None)
         if build_platform.startswith('macosx'):
             output_files.append({
                 'type': 'file',
-                'path': '/builds/worker/workspace/build/artifacts/{}target.dmg'
+                'path': '/builds/worker/workspace/build/outputs/{}target.dmg'
                         .format(locale_output_path),
                 'name': '{}/{}target.dmg'.format(artifact_prefix, locale_output_path),
             })
@@ -308,11 +310,11 @@ def _generate_task_output_files(task, build_platform, locale=None, project=None)
     elif build_platform.startswith('win'):
         output_files = [{
             'type': 'file',
-            'path': '{}/{}target.installer.exe'.format(artifact_prefix, locale_output_path),
+            'path': 'build/outputs/{}target.installer.exe'.format(locale_output_path),
             'name': '{}/{}target.installer.exe'.format(artifact_prefix, locale_output_path),
         }, {
             'type': 'file',
-            'path': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
+            'path': 'build/outputs/{}target.complete.mar'.format(locale_output_path),
             'name': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
         }]
 

@@ -165,6 +165,8 @@ def make_job_description(config, jobs):
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
             'taskcluster-proxy': True if get_artifact_prefix(dep_job) else False,
+            # Don't add generic artifact directory.
+            'skip-artifacts': True,
         }
 
         worker['env'].update(REPACK_ID=repack_id)
@@ -251,7 +253,7 @@ def _generate_task_output_files(task, build_platform, partner):
     if build_platform.startswith('macosx'):
         output_files = [{
             'type': 'file',
-            'path': '/builds/worker/workspace/build/artifacts/{}target.dmg'
+            'path': '/builds/worker/workspace/build/outputs/{}target.dmg'
                     .format(partner_output_path),
             'name': '{}/{}target.dmg'.format(artifact_prefix, partner_output_path),
         }]
@@ -259,7 +261,7 @@ def _generate_task_output_files(task, build_platform, partner):
     elif build_platform.startswith('win'):
         output_files = [{
             'type': 'file',
-            'path': '{}/{}target.installer.exe'.format(artifact_prefix, partner_output_path),
+            'path': 'build/outputs/{}target.installer.exe'.format(partner_output_path),
             'name': '{}/{}target.installer.exe'.format(artifact_prefix, partner_output_path),
         }]
 
