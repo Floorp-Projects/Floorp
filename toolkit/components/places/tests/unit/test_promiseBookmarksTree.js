@@ -90,7 +90,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         check_unset("children");
       }
 
-      let rootName = mapItemIdToInternalRootName(aItem.id);
+      let rootName = mapItemGuidToInternalRootName(aItem.guid);
       if (rootName)
         Assert.equal(aItem.root, rootName);
       else

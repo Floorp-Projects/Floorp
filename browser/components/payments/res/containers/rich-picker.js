@@ -32,6 +32,11 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
     this.editLink.href = "javascript:void(0)";
     this.editLink.textContent = this.dataset.editLinkLabel;
     this.editLink.addEventListener("click", this);
+
+    this.invalidLabel = document.createElement("label");
+    this.invalidLabel.className = "invalid-label";
+    this.invalidLabel.setAttribute("for", this.dropdown.popupBox.id);
+    this.invalidLabel.textContent = this.dataset.invalidLabel;
   }
 
   connectedCallback() {
@@ -40,6 +45,7 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
     this.appendChild(this.dropdown);
     this.appendChild(this.editLink);
     this.appendChild(this.addLink);
+    this.appendChild(this.invalidLabel);
     super.connectedCallback();
   }
 
@@ -51,10 +57,28 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
 
   render(state) {
     this.editLink.hidden = !this.dropdown.value;
+
+    this.classList.toggle("invalid-selected-option",
+                          this.missingFieldsOfSelectedOption().length);
   }
 
-  get value() {
+  get selectedOption() {
     return this.dropdown &&
            this.dropdown.selectedOption;
+  }
+
+  get fieldNames() {
+    return [];
+  }
+
+  missingFieldsOfSelectedOption() {
+    let selectedOption = this.selectedOption;
+    if (!selectedOption) {
+      return [];
+    }
+
+    let fieldNames = this.fieldNames;
+    // Return all field names that are empty or missing from the option.
+    return fieldNames.filter(name => !selectedOption.getAttribute(name));
   }
 }

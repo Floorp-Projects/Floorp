@@ -129,15 +129,10 @@ WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)
     , mGLName(tex)
     , mTarget(LOCAL_GL_NONE)
     , mFaceCount(0)
-    , mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR)
-    , mMagFilter(LOCAL_GL_LINEAR)
-    , mWrapS(LOCAL_GL_REPEAT)
-    , mWrapT(LOCAL_GL_REPEAT)
     , mImmutable(false)
     , mImmutableLevelCount(0)
     , mBaseMipmapLevel(0)
     , mMaxMipmapLevel(1000)
-    , mTexCompareMode(LOCAL_GL_NONE)
     , mIsResolved(false)
     , mResolved_FakeBlack(FakeBlackType::None)
     , mResolved_Swizzle(nullptr)
@@ -196,7 +191,6 @@ WebGLTexture::IsMipmapComplete(const char* funcName, uint32_t texUnit,
                                bool* const out_initFailed)
 {
     *out_initFailed = false;
-    MOZ_ASSERT(DoesMinFilterRequireMipmap());
     // GLES 3.0.4, p161
 
     uint32_t maxLevel;
@@ -343,9 +337,14 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
         return false;
     }
 
-    WebGLSampler* sampler = mContext->mBoundSamplers[texUnit];
-    TexMinFilter minFilter = sampler ? sampler->mMinFilter : mMinFilter;
-    TexMagFilter magFilter = sampler ? sampler->mMagFilter : mMagFilter;
+    const auto* samplingState = &mSamplingState;
+    const auto& sampler = mContext->mBoundSamplers[texUnit];
+    if (sampler) {
+        samplingState = &(sampler->State());
+    }
+
+    const auto& minFilter = samplingState->minFilter;
+    const auto& magFilter = samplingState->magFilter;
 
     // "* The minification filter requires a mipmap (is neither NEAREST nor LINEAR) and
     //    the texture is not mipmap complete."
@@ -379,7 +378,7 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
         //      3.0.1:
         //      "* Clarify that a texture is incomplete if it has a depth component, no
         //         shadow comparison, and linear filtering (also Bug 9481)."
-        if (format->d && mTexCompareMode != LOCAL_GL_NONE) {
+        if (format->d && samplingState->compareMode != LOCAL_GL_NONE) {
             isFilterable = true;
         }
 
@@ -423,11 +422,9 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
         //    non-power-of-two images, and either the texture wrap mode is not
         //    CLAMP_TO_EDGE, or the minification filter is neither NEAREST nor LINEAR."
         if (!baseImageInfo.IsPowerOfTwo()) {
-            TexWrap wrapS = sampler ? sampler->mWrapS : mWrapS;
-            TexWrap wrapT = sampler ? sampler->mWrapT : mWrapT;
             // "either the texture wrap mode is not CLAMP_TO_EDGE"
-            if (wrapS != LOCAL_GL_CLAMP_TO_EDGE ||
-                wrapT != LOCAL_GL_CLAMP_TO_EDGE)
+            if (samplingState->wrapS != LOCAL_GL_CLAMP_TO_EDGE ||
+                samplingState->wrapT != LOCAL_GL_CLAMP_TO_EDGE)
             {
                 *out_reason = "Non-power-of-two textures must have a wrap mode of"
                               " CLAMP_TO_EDGE.";
@@ -458,8 +455,13 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
 bool
 WebGLTexture::MaxEffectiveMipmapLevel(uint32_t texUnit, uint32_t* const out) const
 {
-    WebGLSampler* sampler = mContext->mBoundSamplers[texUnit];
-    TexMinFilter minFilter = sampler ? sampler->mMinFilter : mMinFilter;
+    const auto* samplingState = &mSamplingState;
+    const auto& sampler = mContext->mBoundSamplers[texUnit];
+    if (sampler) {
+        samplingState = &(sampler->State());
+    }
+
+    const auto& minFilter = samplingState->minFilter;
     if (minFilter == LOCAL_GL_NEAREST ||
         minFilter == LOCAL_GL_LINEAR)
     {
@@ -949,7 +951,7 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
                            LOCAL_GL_NEAREST_MIPMAP_NEAREST);
         gl->fGenerateMipmap(texTarget.get());
         gl->fTexParameteri(texTarget.get(), LOCAL_GL_TEXTURE_MIN_FILTER,
-                           mMinFilter.get());
+                           mSamplingState.minFilter.get());
     } else {
         gl->fGenerateMipmap(texTarget.get());
     }
@@ -968,23 +970,8 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
     GLfloat f = 0.0f;
 
     switch (pname) {
-    case LOCAL_GL_TEXTURE_MIN_FILTER:
-        return JS::NumberValue(uint32_t(mMinFilter.get()));
-
-    case LOCAL_GL_TEXTURE_MAG_FILTER:
-        return JS::NumberValue(uint32_t(mMagFilter.get()));
-
-    case LOCAL_GL_TEXTURE_WRAP_S:
-        return JS::NumberValue(uint32_t(mWrapS.get()));
-
-    case LOCAL_GL_TEXTURE_WRAP_T:
-        return JS::NumberValue(uint32_t(mWrapT.get()));
-
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
         return JS::NumberValue(mBaseMipmapLevel);
-
-    case LOCAL_GL_TEXTURE_COMPARE_MODE:
-        return JS::NumberValue(uint32_t(mTexCompareMode));
 
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
         return JS::NumberValue(mMaxMipmapLevel);
@@ -995,8 +982,13 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
     case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
         return JS::NumberValue(uint32_t(mImmutableLevelCount));
 
-    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+    case LOCAL_GL_TEXTURE_MIN_FILTER:
+    case LOCAL_GL_TEXTURE_MAG_FILTER:
+    case LOCAL_GL_TEXTURE_WRAP_S:
+    case LOCAL_GL_TEXTURE_WRAP_T:
     case LOCAL_GL_TEXTURE_WRAP_R:
+    case LOCAL_GL_TEXTURE_COMPARE_MODE:
+    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
         mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
         return JS::NumberValue(uint32_t(i));
 
@@ -1169,6 +1161,7 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& 
     // Store any needed values
 
     FloatOrInt clamped = param;
+    bool invalidateCaches = true;
     switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
         mBaseMipmapLevel = clamped.i;
@@ -1183,38 +1176,35 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& 
         break;
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
-        mMinFilter = clamped.i;
+        mSamplingState.minFilter = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_MAG_FILTER:
-        mMagFilter = clamped.i;
+        mSamplingState.magFilter = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_WRAP_S:
-        mWrapS = clamped.i;
+        mSamplingState.wrapS = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_WRAP_T:
-        mWrapT = clamped.i;
+        mSamplingState.wrapT = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
-        mTexCompareMode = clamped.i;
+        mSamplingState.compareMode = clamped.i;
         break;
-
-    // We don't actually need to store the WRAP_R, since it doesn't change texture
-    // completeness rules.
-    }
 
     // Only a couple of pnames don't need to invalidate our resolve status cache.
-    switch (pname) {
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
     case LOCAL_GL_TEXTURE_WRAP_R:
+    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+        invalidateCaches = false;
         break;
+    }
 
-    default:
+    if (invalidateCaches) {
         InvalidateResolveCache();
-        break;
     }
 
     ////////////////

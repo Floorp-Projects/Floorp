@@ -1283,32 +1283,19 @@ var PlacesUtils = {
     return this.unfiledBookmarksFolderId = this.bookmarks.unfiledBookmarksFolder;
   },
 
-  get mobileFolderId() {
-    delete this.mobileFolderId;
-    return this.mobileFolderId = this.bookmarks.mobileFolder;
-  },
-
   /**
    * Checks if item is a root.
    *
-   * @param {Number|String} guid The guid or id of the item to look for.
+   * @param {String} guid The guid of the item to look for.
    * @returns {Boolean} true if guid is a root, false otherwise.
    */
   isRootItem(guid) {
-    if (typeof guid === "string") {
-      return guid == PlacesUtils.bookmarks.menuGuid ||
-             guid == PlacesUtils.bookmarks.toolbarGuid ||
-             guid == PlacesUtils.bookmarks.unfiledGuid ||
-             guid == PlacesUtils.bookmarks.tagsGuid ||
-             guid == PlacesUtils.bookmarks.rootGuid ||
-             guid == PlacesUtils.bookmarks.mobileGuid;
-    }
-    return guid == PlacesUtils.bookmarksMenuFolderId ||
-           guid == PlacesUtils.toolbarFolderId ||
-           guid == PlacesUtils.unfiledBookmarksFolderId ||
-           guid == PlacesUtils.tagsFolderId ||
-           guid == PlacesUtils.placesRootId ||
-           guid == PlacesUtils.mobileFolderId;
+    return guid == PlacesUtils.bookmarks.menuGuid ||
+           guid == PlacesUtils.bookmarks.toolbarGuid ||
+           guid == PlacesUtils.bookmarks.unfiledGuid ||
+           guid == PlacesUtils.bookmarks.tagsGuid ||
+           guid == PlacesUtils.bookmarks.rootGuid ||
+           guid == PlacesUtils.bookmarks.mobileGuid;
   },
 
   /**
@@ -1694,15 +1681,15 @@ var PlacesUtils = {
         case PlacesUtils.bookmarks.TYPE_FOLDER:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
           // Mark root folders.
-          if (itemId == PlacesUtils.placesRootId)
+          if (item.guid == PlacesUtils.bookmarks.rootGuid)
             item.root = "placesRoot";
-          else if (itemId == PlacesUtils.bookmarksMenuFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.menuGuid)
             item.root = "bookmarksMenuFolder";
-          else if (itemId == PlacesUtils.unfiledBookmarksFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.unfiledGuid)
             item.root = "unfiledBookmarksFolder";
-          else if (itemId == PlacesUtils.toolbarFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.toolbarGuid)
             item.root = "toolbarFolder";
-          else if (itemId == PlacesUtils.mobileFolderId)
+          else if (item.guid == PlacesUtils.bookmarks.mobileGuid)
             item.root = "mobileFolder";
           break;
         case PlacesUtils.bookmarks.TYPE_SEPARATOR:

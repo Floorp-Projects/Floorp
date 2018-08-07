@@ -29,6 +29,13 @@ export default class PaymentMethodPicker extends RichPicker {
     this.dropdown.after(this.securityCodeInput);
   }
 
+  get fieldNames() {
+    let fieldNames = [...BasicCardOption.recordAttributes];
+    // Type is not a required field though it may be present.
+    fieldNames.splice(fieldNames.indexOf("type"), 1);
+    return fieldNames;
+  }
+
   render(state) {
     let basicCards = paymentRequest.getBasicCards(state);
     let desiredOptions = [];

@@ -482,6 +482,10 @@ var PaymentTestUtils = {
       "cc-name": "Jane McMaster-Card",
       "cc-number": "5555555555554444",
     },
+    MissingFields: {
+      "cc-name": "Missy Fields",
+      "cc-number": "340000000000009",
+    },
     Temp: {
       "cc-exp-month": 12,
       "cc-exp-year": (new Date()).getFullYear() + 9,
