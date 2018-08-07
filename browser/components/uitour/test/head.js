@@ -323,7 +323,7 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
               let callbacksCalled = 0;
               let resolveCallbackPromise;
               let allCallbacksCalledPromise = new Promise(resolve => resolveCallbackPromise = resolve);
-              let argumentsWithFunctions = contentArgs.args.map((arg, index) => {
+              let argumentsWithFunctions = Cu.cloneInto(contentArgs.args.map((arg, index) => {
                 if (arg === "" && contentArgs.fnIndices.includes(index)) {
                   return function() {
                     callbacksCalled++;
@@ -334,9 +334,9 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
                   };
                 }
                 return arg;
-              });
+              }), content, {cloneFunctions: true});
               let rv = contentWin.Mozilla.UITour[contentArgs.methodName].apply(contentWin.Mozilla.UITour,
-                                                                        argumentsWithFunctions);
+                                                                               argumentsWithFunctions);
               if (contentArgs.fnIndices.length) {
                 await allCallbacksCalledPromise;
               }
