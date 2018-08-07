@@ -18,16 +18,16 @@ if not os.environ.get("NO_STUB_INSTALLER"):
 repackage_config = [[
         "installer",
         "--package-name", "firefox",
-        "--package", "{abs_work_dir}\\inputs\\target.zip",
+        "--package", "{abs_input_dir}\\target.zip",
         "--tag", "{abs_mozilla_dir}\\browser\\installer\\windows\\app.tag",
-        "--setupexe", "{abs_work_dir}\\inputs\\setup.exe",
-        "-o", "{output_home}\\target.installer.exe",
+        "--setupexe", "{abs_input_dir}\\setup.exe",
+        "-o", "{abs_output_dir}\\target.installer.exe",
         "--sfx-stub", "other-licenses/7zstub/firefox/7zSD.sfx",
     ], [
         "mar",
-        "-i", "{abs_work_dir}\\inputs\\target.zip",
-        "--mar", "{abs_work_dir}\\inputs\\mar.exe",
-        "-o", "{output_home}\\target.complete.mar",
+        "-i", "{abs_input_dir}\\target.zip",
+        "--mar", "{abs_input_dir}\\mar.exe",
+        "-o", "{abs_output_dir}\\target.complete.mar",
     ]]
 
 if not os.environ.get("NO_STUB_INSTALLER"):
@@ -35,15 +35,12 @@ if not os.environ.get("NO_STUB_INSTALLER"):
     repackage_config.append([
         "installer",
         "--tag", "{abs_mozilla_dir}\\browser\\installer\\windows\\stub.tag",
-        "--setupexe", "{abs_work_dir}\\inputs\\setup-stub.exe",
-        "-o", "{output_home}\\target.stub-installer.exe",
+        "--setupexe", "{abs_input_dir}\\setup-stub.exe",
+        "-o", "{abs_output_dir}\\target.stub-installer.exe",
         "--sfx-stub", "other-licenses/7zstub/firefox/7zSD.sfx",
     ])
 
 config = {
-    "input_home": "{abs_work_dir}\\inputs",
-    "output_home": "{base_work_dir}\\public\\build{locale}",
-
     "locale": os.environ.get("LOCALE"),
 
     "download_config": download_config,
