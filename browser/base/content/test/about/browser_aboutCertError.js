@@ -84,6 +84,32 @@ add_task(async function checkReturnToAboutHome() {
   }
 });
 
+add_task(async function checkExceptionDialogButton() {
+  info("Loading a bad cert page and making sure the exceptionDialogButton directly adds an exception");
+  let tab = await openErrorPage(BAD_CERT);
+  let browser = tab.linkedBrowser;
+  let loaded = BrowserTestUtils.browserLoaded(browser, false, BAD_CERT);
+  info("Clicking the exceptionDialogButton in advanced panel");
+  await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let exceptionButton = doc.getElementById("exceptionDialogButton");
+    exceptionButton.click();
+  });
+
+  info("Loading the url after adding exception");
+  await loaded;
+
+  await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    ok(!doc.documentURI.startsWith("about:certerror"), "Exception has been added");
+  });
+
+  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                              .getService(Ci.nsICertOverrideService);
+  certOverrideService.clearValidityOverride("expired.example.com", -1);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 add_task(async function checkReturnToPreviousPage() {
   info("Loading a bad cert page and making sure 'return to previous page' goes back");
   for (let useFrame of [false, true]) {
