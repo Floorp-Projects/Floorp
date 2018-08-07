@@ -87,6 +87,8 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
+XPCOMUtils.defineLazyPreferenceGetter(this, "isStorageIDBEnabled",
+                                      "extensions.webextensions.ExtensionStorageIDB.enabled");
 
 var {
   GlobalManager,
@@ -1293,6 +1295,7 @@ class Extension extends ExtensionData {
     this.views = new Set();
     this._backgroundPageFrameLoader = null;
 
+    this.storageIDBBackend = null;
     this.onStartup = null;
 
     this.hasShutdown = false;
@@ -1533,6 +1536,7 @@ class Extension extends ExtensionData {
       principal: this.principal,
       optionalPermissions: this.manifest.optional_permissions,
       schemaURLs: this.schemaURLs,
+      storageIDBBackend: this.storageIDBBackend,
     };
   }
 
@@ -1729,6 +1733,10 @@ class Extension extends ExtensionData {
       this.policy.extension = this;
 
       this.updatePermissions(this.startupReason);
+
+      if (this.hasPermission("storage") && !isStorageIDBEnabled) {
+        this.storageIDBBackend = false;
+      }
 
       // The "startup" Management event sent on the extension instance itself
       // is emitted just before the Management "startup" event,

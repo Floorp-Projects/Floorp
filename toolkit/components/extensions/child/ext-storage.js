@@ -129,6 +129,7 @@ this.storage = class extends ExtensionAPI {
   }
 
   getAPI(context) {
+    const {extension} = context;
     const serialize = ExtensionStorage.serializeForContext.bind(null, context);
     const deserialize = ExtensionStorage.deserializeForContext.bind(null, context);
 
@@ -178,19 +179,31 @@ this.storage = class extends ExtensionAPI {
       });
     };
 
+    // Synchronously select the backend if the IndexedDB backend is not enabled.
+    let selectedBackend;
+    if (extension.storageIDBBackend === false) {
+      selectedBackend = this.getLocalFileBackend(context, {deserialize, serialize});
+    }
+
     // Generate the backend-agnostic local API wrapped methods.
     const local = {};
     for (let method of ["get", "set", "remove", "clear"]) {
       local[method] = async function(...args) {
-        if (!promiseStorageLocalBackend) {
-          promiseStorageLocalBackend = getStorageLocalBackend();
+        // Discover the selected backend if it is not known yet.
+        if (!selectedBackend) {
+          if (!promiseStorageLocalBackend) {
+            promiseStorageLocalBackend = getStorageLocalBackend().catch(err => {
+              // Clear the cached promise if it has been rejected.
+              promiseStorageLocalBackend = null;
+              throw err;
+            });
+          }
+
+          // Get the selected backend and cache it for the next API calls from this context.
+          selectedBackend = await promiseStorageLocalBackend;
         }
-        const backend = await promiseStorageLocalBackend.catch(err => {
-          // Clear the cached promise if it has been rejected.
-          promiseStorageLocalBackend = null;
-          throw err;
-        });
-        return backend[method](...args);
+
+        return selectedBackend[method](...args);
       };
     }
 

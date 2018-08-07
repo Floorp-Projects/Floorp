@@ -606,6 +606,8 @@ class BrowserExtensionContent extends EventEmitter {
     this.dependencies = data.dependencies;
     this.schemaURLs = data.schemaURLs;
 
+    this.storageIDBBackend = data.storageIDBBackend;
+
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
