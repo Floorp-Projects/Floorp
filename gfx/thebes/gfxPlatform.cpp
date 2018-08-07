@@ -31,6 +31,7 @@
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
 #include "gfxConfig.h"
+#include "VRProcessManager.h"
 #include "VRThread.h"
 
 #ifdef XP_WIN
@@ -1003,6 +1004,7 @@ gfxPlatform::Shutdown()
 
     if (XRE_IsParentProcess()) {
       GPUProcessManager::Shutdown();
+      VRProcessManager::Shutdown();
     }
 
     gfx::Factory::ShutDown();

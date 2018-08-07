@@ -16,7 +16,7 @@ async protocol PVR
 parent:
   async NewGPUVRManager(Endpoint<PVRGPUParent> endpoint);
   async Init(GfxPrefSetting[] prefs, GfxVarUpdate[] vars, DevicePrefs devicePrefs);
-  async NotifyVsync(TimeStamp aVsyncTimestamp);
+  async NotifyVsync(TimeStamp vsyncTimestamp);
 
   async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);

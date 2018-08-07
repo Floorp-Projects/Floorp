@@ -10,6 +10,7 @@ include protocol PAPZInputBridge;
 include protocol PCompositorManager;
 include protocol PImageBridge;
 include protocol PProfiler;
+include protocol PVRGPU;
 include protocol PVRManager;
 include protocol PVsyncBridge;
 include protocol PUiCompositorController;
@@ -29,19 +30,6 @@ using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace gfx {
-
-union GfxPrefValue {
-  bool;
-  int32_t;
-  uint32_t;
-  float;
-  nsCString;
-};
-
-struct GfxPrefSetting {
-  int32_t index;
-  GfxPrefValue value;
-};
 
 struct LayerTreeIdMapping {
   LayersId layersId;
@@ -72,7 +60,8 @@ parent:
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
   async InitUiCompositorController(LayersId rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
-
+  // Forward GPU process its endpoints to the VR process.
+  async InitVR(Endpoint<PVRGPUChild> endpoint);
   // Called to update a gfx preference or variable.
   async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);
@@ -103,6 +92,7 @@ parent:
                             bool anonymize,
                             bool minimizeMemoryUsage,
                             MaybeFileDesc DMDFile);
+  async ShutdownVR();
 
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after
@@ -116,6 +106,8 @@ child:
   async GraphicsError(nsCString aError);
 
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+
+  async CreateVRProcess();
 
   // Have a message be broadcasted to the UI process by the UI process
   // observer service.

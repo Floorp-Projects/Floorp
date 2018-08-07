@@ -154,6 +154,7 @@ static inline bool
 ProcessOwnsCompositor()
 {
   return XRE_GetProcessType() == GeckoProcessType_GPU ||
+         XRE_GetProcessType() == GeckoProcessType_VR ||
          (XRE_IsParentProcess() && !gfxConfig::IsEnabled(Feature::GPU_PROCESS));
 }
 

@@ -13,6 +13,8 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "VRProcessManager.h"
+#include "VRChild.h"
 
 using namespace mozilla;
 
@@ -90,6 +92,13 @@ gfxPrefs::Pref::OnChange()
       GfxPrefValue value;
       GetLiveValue(&value);
       Unused << gpu->SendUpdatePref(gfx::GfxPrefSetting(mIndex, value));
+    }
+  }
+  if (auto vpm = gfx::VRProcessManager::Get()) {
+    if (gfx::VRChild* vr = vpm->GetVRChild()) {
+      GfxPrefValue value;
+      GetLiveValue(&value);
+      Unused << vr->SendUpdatePref(gfx::GfxPrefSetting(mIndex, value));
     }
   }
   FireChangeCallback();
