@@ -1871,6 +1871,9 @@ public:
     "intl.ime.hack.set_input_scope_of_url_bar_to_default",
     ShouldSetInputScopeOfURLBarToDefault, true)
   DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later",
+    AllowToStopHackingOnBuild17643OrLater, false)
+  DECL_AND_IMPL_BOOL_PREF(
     "intl.tsf.hack.atok.create_native_caret",
     NeedToCreateNativeCaretForLegacyATOK, true)
   DECL_AND_IMPL_BOOL_PREF(
@@ -4766,7 +4769,9 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
                mContentForTSF.LatestCompositionEndOffset());
 
   // If TSF does not have the bug, we need to hack only with a few TIPs.
-  static const bool sTSFHasTheBug = !IsWindows10BuildOrLater(17643);
+  static const bool sAlllowToStopHackingIfFine =
+    IsWindows10BuildOrLater(17643) &&
+    TSFPrefs::AllowToStopHackingOnBuild17643OrLater();
 
   // We need to compute active TIP now.  This may take a couple of milliseconds,
   // however, it'll be cached, so, must be faster than check active TIP every
@@ -4779,7 +4784,7 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     // mode on Win7.  So, we should never return TS_E_NOLAYOUT to MS IME for
     // Japanese.
     case TextInputProcessorID::eMicrosoftIMEForJapanese:
-      if (!sTSFHasTheBug) {
+      if (sAlllowToStopHackingIfFine) {
         return false;
       }
       // Basically, MS-IME tries to retrieve whole composition string rect
@@ -4851,7 +4856,7 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     case TextInputProcessorID::eATOK2015:
     case TextInputProcessorID::eATOK2016:
     case TextInputProcessorID::eATOKUnknown:
-      if (!sTSFHasTheBug) {
+      if (sAlllowToStopHackingIfFine) {
         return false;
       }
       // If we'll create native caret where we paint our caret.  Then, ATOK
@@ -4893,7 +4898,7 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     // This must be caused by the bug of TSF since Free ChangJie works fine on
     // build 17643 and later.
     case TextInputProcessorID::eFreeChangJie:
-      if (!sTSFHasTheBug) {
+      if (sAlllowToStopHackingIfFine) {
         return false;
       }
       if (!TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie()) {
@@ -4906,7 +4911,7 @@ TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart,
     // in e10s mode on Win8 or later.
     case TextInputProcessorID::eMicrosoftChangJie:
     case TextInputProcessorID::eMicrosoftQuick:
-      if (!sTSFHasTheBug) {
+      if (sAlllowToStopHackingIfFine) {
         return false;
       }
       if (!IsWin8OrLater() ||
