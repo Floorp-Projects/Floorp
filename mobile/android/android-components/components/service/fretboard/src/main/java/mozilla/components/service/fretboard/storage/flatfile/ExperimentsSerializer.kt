@@ -48,11 +48,10 @@ internal class ExperimentsSerializer {
         val jsonParser = JSONExperimentParser()
         for (i in 0 until experimentsJsonArray.length())
             experiments.add(jsonParser.fromJson(experimentsJsonArray[i] as JSONObject))
-        val lastModified: Long?
-        if (experimentsJson.has(LAST_MODIFIED_KEY)) {
-            lastModified = experimentsJson.getLong(LAST_MODIFIED_KEY)
+        val lastModified = if (experimentsJson.has(LAST_MODIFIED_KEY)) {
+            experimentsJson.getLong(LAST_MODIFIED_KEY)
         } else {
-            lastModified = null
+            null
         }
         return ExperimentsSnapshot(experiments, lastModified)
     }

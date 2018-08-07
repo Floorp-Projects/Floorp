@@ -14,11 +14,11 @@ class FlatFileExperimentStorage(file: File) : ExperimentStorage {
     private val atomicFile: AtomicFile = AtomicFile(file)
 
     override fun retrieve(): ExperimentsSnapshot {
-        try {
+        return try {
             val experimentsJson = String(atomicFile.readFully())
-            return ExperimentsSerializer().fromJson(experimentsJson)
+            ExperimentsSerializer().fromJson(experimentsJson)
         } catch (e: FileNotFoundException) {
-            return ExperimentsSnapshot(listOf(), null)
+            ExperimentsSnapshot(listOf(), null)
         }
     }
 
