@@ -642,8 +642,6 @@ class MOZ_RAII CacheIRCompiler
     // sizeof(stubType)
     uint32_t stubDataOffset_;
 
-    uint32_t nextStubField_;
-
     enum class StubFieldPolicy {
         Address,
         Constant
@@ -659,7 +657,6 @@ class MOZ_RAII CacheIRCompiler
         liveFloatRegs_(FloatRegisterSet::All()),
         mode_(mode),
         stubDataOffset_(stubDataOffset),
-        nextStubField_(0),
         stubFieldPolicy_(policy)
     {
         MOZ_ASSERT(!writer.failed());
@@ -724,15 +721,12 @@ class MOZ_RAII CacheIRCompiler
     uintptr_t readStubWord(uint32_t offset, StubField::Type type) {
         MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
         MOZ_ASSERT((offset % sizeof(uintptr_t)) == 0);
-        // We use nextStubField_ to access the data as it's stored in an as-of-yet
-        // unpacked vector, and so using the offset can be incorrect where the index
-        // would change as a result of packing.
-        return writer_.readStubFieldForIon(nextStubField_++, type).asWord();
+        return writer_.readStubFieldForIon(offset, type).asWord();
     }
     uint64_t readStubInt64(uint32_t offset, StubField::Type type) {
         MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
         MOZ_ASSERT((offset % sizeof(uintptr_t)) == 0);
-        return writer_.readStubFieldForIon(nextStubField_++, type).asInt64();
+        return writer_.readStubFieldForIon(offset, type).asInt64();
     }
     int32_t int32StubField(uint32_t offset) {
         MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);

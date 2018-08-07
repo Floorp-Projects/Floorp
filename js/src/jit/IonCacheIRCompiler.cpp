@@ -592,8 +592,6 @@ IonCacheIRCompiler::compile()
         allocator.nextOp();
     } while (reader.more());
 
-    MOZ_RELEASE_ASSERT(nextStubField_ == writer_.numStubFields());
-
     masm.assumeUnreachable("Should have returned from IC");
 
     // Done emitting the main IC code. Now emit the failure paths.
