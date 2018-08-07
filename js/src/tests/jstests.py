@@ -411,10 +411,13 @@ def load_tests(options, requested_paths, excluded_paths):
     test_count = manifest.count_tests(test_dir, path_options)
     test_gen = manifest.load_reftests(test_dir, path_options, xul_tester)
 
-    wpt_tests = load_wpt_tests(requested_paths, excluded_paths,
-                               debug=xul_tester.test("isDebugBuild"))
-    test_count += len(wpt_tests)
-    test_gen = chain(test_gen, wpt_tests)
+    # WPT tests are already run in the browser in their own harness.
+    if not options.make_manifests:
+        wpt_tests = load_wpt_tests(requested_paths, excluded_paths,
+                                   debug=xul_tester.test("isDebugBuild"),
+                                   wasm=xul_tester.test("wasmIsSupported()"))
+        test_count += len(wpt_tests)
+        test_gen = chain(test_gen, wpt_tests)
 
     if options.test_reflect_stringify is not None:
         def trs_gen(tests):
