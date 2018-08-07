@@ -283,7 +283,7 @@ function testParseFilter(doc, parser) {
 }
 
 function testParseAngle(doc, parser) {
-  let frag = parser.parseCssProperty("image-orientation", "90deg", {
+  let frag = parser.parseCssProperty("rotate", "90deg", {
     angleSwatchClass: "test-angleswatch"
   });
 
