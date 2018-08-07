@@ -45,9 +45,6 @@ public:
                    nsAtom* aTag,
                    mozilla::dom::Element** aResult);
 
-    static nsresult
-    SetCommandUpdater(nsIDocument* aDocument, mozilla::dom::Element* aElement);
-
     static nsICollation*
     GetCollation();
 };
