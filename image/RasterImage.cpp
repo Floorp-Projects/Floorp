@@ -107,9 +107,6 @@ RasterImage::~RasterImage()
 
   // Record Telemetry.
   Telemetry::Accumulate(Telemetry::IMAGE_DECODE_COUNT, mDecodeCount);
-  if (mAnimationState) {
-    Telemetry::Accumulate(Telemetry::IMAGE_ANIMATED_DECODE_COUNT, mDecodeCount);
-  }
 }
 
 nsresult
@@ -1512,11 +1509,6 @@ RasterImage::Draw(gfxContext* aContext,
       TimeDuration drawLatency = TimeStamp::Now() - mDrawStartTime;
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_ON_DRAW_LATENCY,
                             int32_t(drawLatency.ToMicroseconds()));
-      if (mAnimationState) {
-        Telemetry::Accumulate(Telemetry::IMAGE_ANIMATED_DECODE_ON_DRAW_LATENCY,
-                              int32_t(drawLatency.ToMicroseconds()));
-
-      }
       mDrawStartTime = TimeStamp();
   }
 
@@ -1770,11 +1762,6 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
     if (aStatus.mFinished) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
                             int32_t(aTelemetry.mDecodeTime.ToMicroseconds()));
-
-      if (mAnimationState) {
-        Telemetry::Accumulate(Telemetry::IMAGE_ANIMATED_DECODE_TIME,
-                              int32_t(aTelemetry.mDecodeTime.ToMicroseconds()));
-      }
 
       if (aTelemetry.mSpeedHistogram && aTelemetry.mBytesDecoded) {
         Telemetry::Accumulate(*aTelemetry.mSpeedHistogram, aTelemetry.Speed());
