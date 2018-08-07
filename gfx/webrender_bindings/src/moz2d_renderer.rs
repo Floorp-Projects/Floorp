@@ -383,7 +383,12 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
                         MutByteSlice::new(output.as_mut_slice()),
                     ) {
                         Ok(RasterizedBlobImage {
-                            size: descriptor.size,
+                            rasterized_rect: item.dirty_rect.unwrap_or(
+                                DeviceUintRect {
+                                    origin: DeviceUintPoint::origin(),
+                                    size: descriptor.size,
+                                }
+                            ),
                             data: Arc::new(output),
                         })
                     } else {
