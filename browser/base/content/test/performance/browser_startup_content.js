@@ -23,18 +23,12 @@ const whitelist = {
     "extension-process-script.js",
   ]),
   modules: new Set([
-    // From the test harness
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
-    "resource://specialpowers/MockColorPicker.jsm",
-    "resource://specialpowers/MockFilePicker.jsm",
-    "resource://specialpowers/MockPermissionPrompt.jsm",
 
     // General utilities
     "resource://gre/modules/AppConstants.jsm",
     "resource://gre/modules/AsyncShutdown.jsm",
     "resource://gre/modules/DeferredTask.jsm",
-    "resource://gre/modules/FileUtils.jsm",
-    "resource://gre/modules/NetUtil.jsm",
     "resource://gre/modules/PromiseUtils.jsm",
     "resource://gre/modules/Services.jsm", // bug 1464542
     "resource://gre/modules/Timer.jsm",
@@ -59,6 +53,8 @@ const whitelist = {
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/PrivateBrowsingUtils.jsm",
     "resource://gre/modules/ReaderMode.jsm",
+    "resource://gre/modules/WebProgressChild.jsm",
+    "resource://gre/modules/WebNavigationChild.jsm",
 
     // Pocket
     "chrome://pocket/content/AboutPocket.jsm",
@@ -71,12 +67,6 @@ const whitelist = {
     // Extensions
     "resource://gre/modules/ExtensionUtils.jsm",
     "resource://gre/modules/MessageChannel.jsm",
-
-    // Service workers
-    "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-
-    // Shield
-    "resource://normandy-content/AboutPages.jsm",
   ]),
 };
 

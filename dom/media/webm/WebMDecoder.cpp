@@ -85,7 +85,7 @@ WebMDecoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
 bool
 WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
-  if (!Preferences::GetBool("media.webm.enabled")) {
+  if (!StaticPrefs::MediaWebMEnabled()) {
     return false;
   }
 
