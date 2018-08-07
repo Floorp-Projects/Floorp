@@ -1019,16 +1019,7 @@ XULDocument::AddElementToDocumentPre(Element* aElement)
         AddToIdTable(aElement, id);
     }
 
-    // 2. If the element is a 'command updater' (i.e., has a
-    // "commandupdater='true'" attribute), then add the element to the
-    // document's command dispatcher
-    if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::commandupdater,
-                              nsGkAtoms::_true, eCaseMatters)) {
-        rv = nsXULContentUtils::SetCommandUpdater(this, aElement);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // 3. Check for a broadcaster hookup attribute, in which case
+    // 2. Check for a broadcaster hookup attribute, in which case
     // we'll hook the node up as a listener on a broadcaster.
     bool listener, resolved;
     rv = CheckBroadcasterHookup(aElement, &listener, &resolved);
@@ -1106,7 +1097,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
         nsXBLService::DetachGlobalKeyHandler(aElement);
     }
 
-    // 1. Remove any children from the document.
+    // Remove any children from the document.
     for (nsIContent* child = aElement->GetLastChild();
          child;
          child = child->GetPreviousSibling()) {
@@ -1125,15 +1116,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
         RemoveFromIdTable(aElement, id);
     }
 
-    // 3. If the element is a 'command updater', then remove the
-    // element from the document's command dispatcher.
-    if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::commandupdater,
-                              nsGkAtoms::_true, eCaseMatters)) {
-        rv = mCommandDispatcher->RemoveCommandUpdater(aElement);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // 4. Remove the element from our broadcaster map, since it is no longer
+    // Remove the element from our broadcaster map, since it is no longer
     // in the document.
     nsCOMPtr<Element> broadcaster, listener;
     nsAutoString attribute, broadcasterID;
