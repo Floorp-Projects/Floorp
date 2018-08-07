@@ -119,18 +119,33 @@ impl<T, U> Polygon<T, U> where
     U: fmt::Debug,
 {
     /// Construct a polygon from points that are already transformed.
+    #[deprecated(since = "0.12.1", note = "Use try_from_points instead")]
     pub fn from_points(
         points: [TypedPoint3D<T, U>; 4],
         anchor: usize,
     ) -> Self {
+        Self::try_from_points(points, anchor).unwrap()
+    }
+
+    /// Construct a polygon from points that are already transformed.
+    /// Return None if the polygon doesn't contain any space.
+    /// This method will be removed in `from_points` in the next breaking release.
+    pub fn try_from_points(
+        points: [TypedPoint3D<T, U>; 4],
+        anchor: usize,
+    ) -> Option<Self> {
         let edge1 = points[1] - points[0];
         let edge2 = points[2] - points[0];
         let edge3 = points[3] - points[0];
+        let edge4 = points[3] - points[1];
+
+        if edge2.square_length() < T::epsilon() || edge4.square_length() < T::epsilon() {
+            return None
+        }
 
         // one of them can be zero for redundant polygons produced by plane splitting
         //Note: this would be nicer if we used triangles instead of quads in the first place...
         // see https://github.com/servo/plane-split/issues/17
-        debug_assert!(edge2.square_length() > T::approx_epsilon());
         let normal_rough1 = edge1.cross(edge2);
         let normal_rough2 = edge2.cross(edge3);
         let square_length1 = normal_rough1.square_length();
@@ -144,14 +159,14 @@ impl<T, U> Polygon<T, U> where
         let offset = -points[0].to_vector()
             .dot(normal);
 
-        Polygon {
+        Some(Polygon {
             points,
             plane: Plane {
                 normal,
                 offset,
             },
             anchor,
-        }
+        })
     }
 
     /// Construct a polygon from a non-transformed rectangle.
@@ -186,7 +201,7 @@ impl<T, U> Polygon<T, U> where
         //Note: this code path could be more efficient if we had inverse-transpose
         //let n4 = transform.transform_point4d(&TypedPoint4D::new(T::zero(), T::zero(), T::one(), T::zero()));
         //let normal = TypedPoint3D::new(n4.x, n4.y, n4.z);
-        Some(Self::from_points(points, anchor))
+        Self::try_from_points(points, anchor)
     }
 
     /// Bring a point into the local coordinate space, returning
@@ -228,7 +243,7 @@ impl<T, U> Polygon<T, U> where
         //Note: this code path could be more efficient if we had inverse-transpose
         //let n4 = transform.transform_point4d(&TypedPoint4D::new(T::zero(), T::zero(), T::one(), T::zero()));
         //let normal = TypedPoint3D::new(n4.x, n4.y, n4.z);
-        Some(Polygon::from_points(points, self.anchor))
+        Polygon::try_from_points(points, self.anchor)
     }
 
     /// Check if all the points are indeed placed on the plane defined by
@@ -251,12 +266,18 @@ impl<T, U> Polygon<T, U> where
         is_planar && is_winding
     }
 
+    /// Check if the polygon doesn't contain any space. This may happen
+    /// after a sequence of splits, and such polygons should be discarded.
+    pub fn is_empty(&self) -> bool {
+        (self.points[0] - self.points[2]).square_length() < T::epsilon() ||
+        (self.points[1] - self.points[3]).square_length() < T::epsilon()
+    }
+
     /// Check if this polygon contains another one.
     pub fn contains(&self, other: &Self) -> bool {
         //TODO: actually check for inside/outside
         self.plane.contains(&other.plane)
     }
-
 
     /// Project this polygon onto a 3D vector, returning a line projection.
     /// Note: we can think of it as a projection to a ray placed at the origin.
@@ -332,8 +353,8 @@ impl<T, U> Polygon<T, U> where
             .zip(cuts.iter_mut())
         {
             // intersecting line segment [a, b] with `line`
-            //a + (b-a) * t = r + k * d
-            //(a, d) + t * (b-a, d) - (r, d) = k
+            // a + (b-a) * t = r + k * d
+            // (a, d) + t * (b-a, d) - (r, d) = k
             // a + t * (b-a) = r + t * (b-a, d) * d + (a-r, d) * d
             // t * ((b-a) - (b-a, d)*d) = (r-a) - (r-a, d) * d
             let pr = line.origin - a - line.dir * line.dir.dot(line.origin - a);

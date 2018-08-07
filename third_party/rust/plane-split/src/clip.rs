@@ -131,6 +131,6 @@ impl<
         }
         self.results
             .drain(..)
-            .map(move |poly| poly.transform(transform).unwrap())
+            .flat_map(move |poly| poly.transform(transform))
     }
 }
