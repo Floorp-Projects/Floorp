@@ -325,7 +325,7 @@ class RTCStatsReport {
                   key != "isRemote") {
                 // id is first prop, a sign of JSON.stringify(), cancel warnings.
                 if (key != "id") {
-                  warnRemoteNullable.warn();
+                  warnRemoteNullable.warn(key);
                 }
                 warnRemoteNullable.warn = null;
               }
@@ -500,9 +500,9 @@ class RTCPeerConnection {
       this.logWarning("Callback-based pc.getStats is deprecated, and will be removed in the near future! Use promise-version! " +
                       "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
-    this._warnDeprecatedStatsRemoteAccessNullable = { warn: () =>
-      this.logWarning("Detected soon-to-break getStats() use! stat.isRemote goes away in Firefox 65, but won't warn there!\
- - See https://blog.mozilla.org/webrtc/getstats-isremote-65/") };
+    this._warnDeprecatedStatsRemoteAccessNullable = { warn: (key) =>
+      this.logWarning(`Detected soon-to-break getStats() use with key="${key}"! stat.isRemote goes away in Firefox 65, but won't warn there!\
+ - See https://blog.mozilla.org/webrtc/getstats-isremote-65/`) };
 
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
