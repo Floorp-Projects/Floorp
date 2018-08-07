@@ -29,6 +29,9 @@
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
 #include "SVGImageContext.h"
+#ifdef MOZ_XUL
+#include "nsTreeBodyFrame.h"
+#endif
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -295,9 +298,28 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
   mInputSource = aDragEvent->MozInputSource();
 
+  // If dragging within a XUL tree and no custom drag image was
+  // set, the region argument to InvokeDragSessionWithImage needs
+  // to be set to the area encompassing the selected rows of the
+  // tree to ensure that the drag feedback gets clipped to those
+  // rows. For other content, region should be null.
+  nsCOMPtr<nsIScriptableRegion> region;
+#ifdef MOZ_XUL
+  if (aDOMNode && aDOMNode->IsContent() && !aImage) {
+    if (aDOMNode->NodeInfo()->Equals(nsGkAtoms::treechildren,
+                                     kNameSpaceID_XUL)) {
+      nsTreeBodyFrame* treeBody =
+        do_QueryFrame(aDOMNode->AsContent()->GetPrimaryFrame());
+      if (treeBody) {
+        treeBody->GetSelectionRegion(getter_AddRefs(region));
+      }
+    }
+  }
+#endif
+
   return InvokeDragSession(aDOMNode, aPrincipalURISpec,
                            aTransferableArray,
-                           aRegion, aActionType,
+                           region, aActionType,
                            nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 }
 
