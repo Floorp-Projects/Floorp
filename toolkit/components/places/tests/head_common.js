@@ -887,25 +887,25 @@ async function compareFavicons(icon1, icon2, msg) {
 }
 
 /**
- * Get the internal "root" folder name for an item, specified by its itemId.
- * If the itemId does not point to a root folder, null is returned.
+ * Get the internal "root" folder name for an item, specified by its itemGuid.
+ * If the itemGuid does not point to a root folder, null is returned.
  *
- * @param aItemId
- *        the item id.
- * @return the internal-root name for the root folder, if aItemId points
+ * @param itemGuid
+ *        the item guid.
+ * @return the internal-root name for the root folder, if itemGuid points
  * to such folder, null otherwise.
  */
-function mapItemIdToInternalRootName(aItemId) {
-  switch (aItemId) {
-    case PlacesUtils.placesRootId:
+function mapItemGuidToInternalRootName(itemGuid) {
+  switch (itemGuid) {
+    case PlacesUtils.bookmarks.rootGuid:
       return "placesRoot";
-    case PlacesUtils.bookmarksMenuFolderId:
+    case PlacesUtils.bookmarks.menuGuid:
       return "bookmarksMenuFolder";
-    case PlacesUtils.toolbarFolderId:
+    case PlacesUtils.bookmarks.toolbarGuid:
       return "toolbarFolder";
-    case PlacesUtils.unfiledBookmarksFolderId:
+    case PlacesUtils.bookmarks.unfiledGuid:
       return "unfiledBookmarksFolder";
-    case PlacesUtils.mobileFolderId:
+    case PlacesUtils.bookmarks.mobileGuid:
       return "mobileFolder";
   }
   return null;
