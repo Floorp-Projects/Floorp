@@ -90,12 +90,6 @@ addMessageListener("MixedContent:ReenableProtection", function() {
 XPCOMUtils.defineLazyProxy(this, "LightweightThemeChildHelper",
   "resource:///modules/LightweightThemeChildHelper.jsm");
 
-XPCOMUtils.defineLazyProxy(this, "ManifestMessages", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/ManifestMessages.jsm", tmp);
-  return new tmp.ManifestMessages(global);
-});
-
 let themeablePagesWhitelist = new Set([
   "about:home",
   "about:newtab",
@@ -523,8 +517,3 @@ addEventListener("MozAfterPaint", function onFirstNonBlankPaint() {
   removeEventListener("MozAfterPaint", onFirstNonBlankPaint);
   sendAsyncMessage("Browser:FirstNonBlankPaint");
 });
-
-addMessageListener("DOM:WebManifest:hasManifestLink", ManifestMessages);
-addMessageListener("DOM:ManifestObtainer:Obtain", ManifestMessages);
-addMessageListener("DOM:Manifest:FireAppInstalledEvent", ManifestMessages);
-addMessageListener("DOM:WebManifest:fetchIcon", ManifestMessages);

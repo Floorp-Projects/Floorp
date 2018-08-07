@@ -220,7 +220,7 @@
     </content>
 
     <implementation>
-      <!-- Please keep in sync with toolkit/modules/FindBarChild.jsm -->
+      <!-- Please keep in sync with toolkit/content/browser-content.js -->
       <field name="FIND_NORMAL">0</field>
       <field name="FIND_TYPEAHEAD">1</field>
       <field name="FIND_LINKS">2</field>
