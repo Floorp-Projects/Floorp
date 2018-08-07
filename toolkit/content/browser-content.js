@@ -37,18 +37,6 @@ XPCOMUtils.defineLazyProxy(this, "PopupBlocking", () => {
   return new tmp.PopupBlocking(global);
 });
 
-XPCOMUtils.defineLazyProxy(this, "ShieldFrameListener", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://normandy-content/ShieldFrameListener.jsm", tmp);
-  return new tmp.ShieldFrameListener(global);
-});
-
-XPCOMUtils.defineLazyProxy(this, "UITourListener", () => {
-  let tmp = {};
-  ChromeUtils.import("resource:///modules/ContentUITour.jsm", tmp);
-  return new tmp.UITourListener(global);
-});
-
 XPCOMUtils.defineLazyProxy(this, "SelectionSourceContent",
   "resource://gre/modules/SelectionSourceContent.jsm");
 
@@ -60,12 +48,6 @@ XPCOMUtils.defineLazyProxy(this, "DateTimePickerContent", () => {
   ChromeUtils.import("resource://gre/modules/DateTimePickerContent.jsm", tmp);
   return new tmp.DateTimePickerContent(this);
 });
-
-XPCOMUtils.defineLazyProxy(this, "FindBarChild", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/FindBarChild.jsm", tmp);
-  return new tmp.FindBarChild(this);
-}, {inQuickFind: false, inPassThrough: false});
 
 
 // Lazily load the finder code
@@ -135,6 +117,13 @@ addMessageListener("SwitchDocumentDirection", () => {
 });
 
 var FindBar = {
+  /* Please keep in sync with toolkit/content/widgets/findbar.xml */
+  FIND_NORMAL: 0,
+  FIND_TYPEAHEAD: 1,
+  FIND_LINKS: 2,
+
+  _findMode: 0,
+
   /**
    * _findKey and _findModifiers are used to determine whether a keypress
    * is a user attempting to use the find shortcut, after which we'll
@@ -142,11 +131,58 @@ var FindBar = {
    * there. To do this, we need shortcut data from the parent.
    */
   _findKey: null,
+  _findModifiers: null,
 
   init() {
-    Services.els.addSystemEventListener(global, "keypress",
-                                        this.onKeypress.bind(this), false);
+    addMessageListener("Findbar:UpdateState", this);
+    Services.els.addSystemEventListener(global, "keypress", this, false);
+    Services.els.addSystemEventListener(global, "mouseup", this, false);
+    this._initShortcutData();
     this.init = null;
+  },
+
+  receiveMessage(msg) {
+    switch (msg.name) {
+      case "Findbar:UpdateState":
+        this._findMode = msg.data.findMode;
+        this._quickFindTimeout = msg.data.hasQuickFindTimeout;
+        if (msg.data.isOpenAndFocused) {
+          this._keepPassingUntilToldOtherwise = false;
+        }
+        break;
+      case "Findbar:ShortcutData":
+        // Set us up to never need this again for the lifetime of this process,
+        // and remove the listener.
+        Services.cpmm.initialProcessData.findBarShortcutData = msg.data;
+        Services.cpmm.removeMessageListener("Findbar:ShortcutData", this);
+        this._initShortcutData(msg.data);
+        break;
+    }
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "keypress":
+        this._onKeypress(event);
+        break;
+      case "mouseup":
+        this._onMouseup(event);
+        break;
+    }
+  },
+
+  /**
+   * Use initial process data for find key/modifier data if we have it.
+   * Otherwise, add a listener so we get the data when the parent process has
+   * it.
+   */
+  _initShortcutData(data = Services.cpmm.initialProcessData.findBarShortcutData) {
+    if (data) {
+      this._findKey = data.key;
+      this._findModifiers = data.modifiers;
+    } else {
+      Services.cpmm.addMessageListener("Findbar:ShortcutData", this);
+    }
   },
 
   /**
@@ -155,46 +191,99 @@ var FindBar = {
    * them being lost.
    * @param aEvent the key event to check.
    */
-  eventMatchesFindShortcut(aEvent) {
-    if (!this._findKey) {
-      this._findKey = Services.cpmm.sharedData.get("Findbar:Shortcut");
-      if (!this._findKey) {
-          return false;
-      }
+  _eventMatchesFindShortcut(aEvent) {
+    let modifiers = this._findModifiers;
+    if (!modifiers) {
+      return false;
     }
-    for (let k in this._findKey) {
-      if (this._findKey[k] != aEvent[k]) {
-        return false;
-      }
-    }
-    return true;
+    return aEvent.ctrlKey == modifiers.ctrlKey && aEvent.altKey == modifiers.altKey &&
+      aEvent.shiftKey == modifiers.shiftKey && aEvent.metaKey == modifiers.metaKey &&
+      aEvent.key == this._findKey;
   },
 
-  onKeypress(event) {
-    if (!FindBarChild.inPassThrough &&
-        this.eventMatchesFindShortcut(event)) {
-      return FindBarChild.start(event);
+  /**
+   * Returns whether FAYT can be used for the given event in
+   * the current content state.
+   */
+  _canAndShouldFastFind() {
+    let should = false;
+    let can = BrowserUtils.canFastFind(content);
+    if (can) {
+      // XXXgijs: why all these shenanigans? Why not use the event's target?
+      let focusedWindow = {};
+      let elt = Services.focus.getFocusedElementForWindow(content, true, focusedWindow);
+      let win = focusedWindow.value;
+      should = BrowserUtils.shouldFastFind(elt, win);
+    }
+    return { can, should };
+  },
+
+  _onKeypress(event) {
+    const FAYT_LINKS_KEY = "'";
+    const FAYT_TEXT_KEY = "/";
+    if (this._eventMatchesFindShortcut(event)) {
+      this._keepPassingUntilToldOtherwise = true;
+    }
+    // Useless keys:
+    if (event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented) {
+      return;
     }
 
-    if (event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented ||
-        !BrowserUtils.canFastFind(content)) {
-      return null;
+    // Check the focused element etc.
+    let fastFind = this._canAndShouldFastFind();
+
+    // Can we even use find in this page at all?
+    if (!fastFind.can) {
+      return;
+    }
+    if (this._keepPassingUntilToldOtherwise) {
+      this._passKeyToParent(event);
+      return;
+    }
+    if (!fastFind.should) {
+      return;
     }
 
-    if (FindBarChild.inPassThrough || FindBarChild.inQuickFind) {
-      return FindBarChild.onKeypress(event);
-    }
-
-    if (event.charCode && BrowserUtils.shouldFastFind(event.target)) {
-      let key = String.fromCharCode(event.charCode);
-      if ((key == "/" || key == "'") && RemoteFinder._manualFAYT) {
-        return FindBarChild.startQuickFind(event);
+    let charCode = event.charCode;
+    // If the find bar is open and quick find is on, send the key to the parent.
+    if (this._findMode != this.FIND_NORMAL && this._quickFindTimeout) {
+      if (!charCode)
+        return;
+      this._passKeyToParent(event);
+    } else {
+      let key = charCode ? String.fromCharCode(charCode) : null;
+      let manualstartFAYT = (key == FAYT_LINKS_KEY || key == FAYT_TEXT_KEY) && RemoteFinder._manualFAYT;
+      let autostartFAYT = !manualstartFAYT && RemoteFinder._findAsYouType && key && key != " ";
+      if (manualstartFAYT || autostartFAYT) {
+        let mode = (key == FAYT_LINKS_KEY || (autostartFAYT && RemoteFinder._typeAheadLinksOnly)) ?
+          this.FIND_LINKS : this.FIND_TYPEAHEAD;
+        // Set _findMode immediately (without waiting for child->parent->child roundtrip)
+        // to ensure we pass any further keypresses, too.
+        this._findMode = mode;
+        this._passKeyToParent(event);
       }
-      if (key != " " && RemoteFinder._findAsYouType) {
-        return FindBarChild.startQuickFind(event, true);
-      }
     }
-    return null;
+  },
+
+  _passKeyToParent(event) {
+    event.preventDefault();
+    // These are the properties required to dispatch another 'real' event
+    // to the findbar in the parent in _dispatchKeypressEvent in findbar.xml .
+    // If you make changes here, verify that that method can still do its job.
+    const kRequiredProps = [
+      "type", "bubbles", "cancelable", "ctrlKey", "altKey", "shiftKey",
+      "metaKey", "keyCode", "charCode",
+    ];
+    let fakeEvent = {};
+    for (let prop of kRequiredProps) {
+      fakeEvent[prop] = event[prop];
+    }
+    sendAsyncMessage("Findbar:Keypress", fakeEvent);
+  },
+
+  _onMouseup(event) {
+    if (this._findMode != this.FIND_NORMAL)
+      sendAsyncMessage("Findbar:Mouseup");
   },
 };
 FindBar.init();
@@ -445,7 +534,3 @@ let ExtFind = {
 };
 
 ExtFind.init();
-
-addEventListener("ShieldPageEvent", ShieldFrameListener, false, true);
-
-addEventListener("mozUITour", UITourListener, false, true);
