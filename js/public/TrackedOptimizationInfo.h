@@ -135,7 +135,6 @@ namespace JS {
     _(UnknownProperty)                                                  \
     _(NoTemplateObject)                                                 \
     _(TemplateObjectIsUnboxedWithoutInlineElements)                     \
-    _(TemplateObjectIsPlainObjectWithDynamicSlots)                      \
     _(LengthTooBig)                                                     \
     _(SpeculationOnInputTypesFailed)                                    \
     _(RelationalCompare)                                                \
