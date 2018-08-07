@@ -209,6 +209,7 @@ public class GeckoAppShell
     private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
 
     static private int sDensityDpi;
+    static private Float sDensity;
     static private int sScreenDepth;
 
     /* Is the value in sVibrationEndTime valid? */
@@ -1030,9 +1031,17 @@ public class GeckoAppShell
         return sDensityDpi;
     }
 
+    public static synchronized void setDisplayDensityOverride(@Nullable Float density) {
+        sDensity = density;
+    }
+
     @WrapForJNI(calledFrom = "gecko")
-    private static float getDensity() {
-        return getApplicationContext().getResources().getDisplayMetrics().density;
+    private static synchronized float getDensity() {
+        if (sDensity == null) {
+            sDensity =  new Float(getApplicationContext().getResources().getDisplayMetrics().density);
+        }
+
+        return sDensity;
     }
 
     private static boolean isHighMemoryDevice() {
