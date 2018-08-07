@@ -60,6 +60,7 @@ void
 IDBWrapperCache::SetScriptOwner(JSObject* aScriptOwner)
 {
   MOZ_ASSERT(aScriptOwner);
+  MOZ_ASSERT(JS_IsGlobalObject(aScriptOwner));
 
   mScriptOwner = aScriptOwner;
   mozilla::HoldJSObjects(this);
