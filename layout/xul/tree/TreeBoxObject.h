@@ -59,8 +59,6 @@ public:
 
   int32_t HorizontalPosition();
 
-  already_AddRefed<nsIScriptableRegion> SelectionRegion();
-
   void EnsureCellIsVisible(int32_t row, nsTreeColumn* col, ErrorResult& aRv);
 
   void ScrollToRow(int32_t aRow);
