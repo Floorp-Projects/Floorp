@@ -577,6 +577,8 @@ def set_treeherder_machine_platform(config, tests):
             test['treeherder-machine-platform'] = test['test-platform']
         elif 'android-hw' in test['test-platform']:
             test['treeherder-machine-platform'] = test['test-platform']
+        elif 'android-em-7.0-x86' in test['test-platform']:
+            test['treeherder-machine-platform'] = 'android-em-7-0-x86/opt'
         else:
             test['treeherder-machine-platform'] = translation.get(
                 test['build-platform'], test['test-platform'])
@@ -986,6 +988,8 @@ def set_worker_type(config, tests):
                 test['worker-type'] = 'proj-autophone/gecko-t-ap-perf-p2'
             else:
                 test['worker-type'] = 'proj-autophone/gecko-t-ap-unit-p2'
+        elif test_platform.startswith('android-em-7.0-x86'):
+            test['worker-type'] = 'terraform-packet/gecko-t-linux'
         elif test_platform.startswith('linux') or test_platform.startswith('android'):
             if test.get('suite', '') == 'talos' and \
                  not test['build-platform'].startswith('linux64-ccov'):
