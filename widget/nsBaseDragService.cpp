@@ -63,7 +63,8 @@ nsBaseDragService::nsBaseDragService()
     mDragAction(DRAGDROP_ACTION_NONE),
     mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
     mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
-    mSuppressLevel(0), mInputSource(MouseEvent_Binding::MOZ_SOURCE_MOUSE)
+    mSuppressLevel(0), mInputSource(MouseEvent_Binding::MOZ_SOURCE_MOUSE),
+    mRegion(nullptr)
 {
 }
 
@@ -236,7 +237,6 @@ NS_IMETHODIMP
 nsBaseDragService::InvokeDragSession(nsINode *aDOMNode,
                                      const nsACString& aPrincipalURISpec,
                                      nsIArray* aTransferableArray,
-                                     nsIScriptableRegion* aDragRgn,
                                      uint32_t aActionType,
                                      nsContentPolicyType aContentPolicyType =
                                        nsIContentPolicy::TYPE_OTHER)
@@ -260,7 +260,7 @@ nsBaseDragService::InvokeDragSession(nsINode *aDOMNode,
   nsIPresShell::ClearMouseCapture(nullptr);
 
   nsresult rv = InvokeDragSessionImpl(aTransferableArray,
-                                      aDragRgn, aActionType);
+                                      mRegion, aActionType);
 
   if (NS_FAILED(rv)) {
     // Set mDoingDrag so that EndDragSession cleans up and sends the dragend event
@@ -276,7 +276,6 @@ NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
                                               const nsACString& aPrincipalURISpec,
                                               nsIArray* aTransferableArray,
-                                              nsIScriptableRegion* aRegion,
                                               uint32_t aActionType,
                                               nsINode* aImage,
                                               int32_t aImageX, int32_t aImageY,
@@ -303,7 +302,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
   // to be set to the area encompassing the selected rows of the
   // tree to ensure that the drag feedback gets clipped to those
   // rows. For other content, region should be null.
-  nsCOMPtr<nsIScriptableRegion> region;
+  mRegion = nullptr;
 #ifdef MOZ_XUL
   if (aDOMNode && aDOMNode->IsContent() && !aImage) {
     if (aDOMNode->NodeInfo()->Equals(nsGkAtoms::treechildren,
@@ -311,16 +310,18 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
       nsTreeBodyFrame* treeBody =
         do_QueryFrame(aDOMNode->AsContent()->GetPrimaryFrame());
       if (treeBody) {
-        treeBody->GetSelectionRegion(getter_AddRefs(region));
+        treeBody->GetSelectionRegion(getter_AddRefs(mRegion));
       }
     }
   }
 #endif
 
-  return InvokeDragSession(aDOMNode, aPrincipalURISpec,
-                           aTransferableArray,
-                           region, aActionType,
-                           nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+  nsresult rv = InvokeDragSession(aDOMNode, aPrincipalURISpec,
+                                  aTransferableArray,
+                                  aActionType,
+                                  nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+  mRegion = nullptr;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -341,6 +342,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
   mDragPopup = nullptr;
   mImage = nullptr;
   mImageOffset = CSSIntPoint();
+  mRegion = nullptr;
 
   mScreenPosition.x = aDragEvent->ScreenX(CallerType::System);
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
@@ -353,7 +355,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
 
   return InvokeDragSession(node, aPrincipalURISpec,
                            aTransferableArray,
-                           nullptr, aActionType,
+                           aActionType,
                            nsIContentPolicy::TYPE_OTHER);
 }
 
@@ -471,6 +473,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
   mScreenPosition = CSSIntPoint();
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
   mInputSource = MouseEvent_Binding::MOZ_SOURCE_MOUSE;
+  mRegion = nullptr;
 
   return NS_OK;
 }
