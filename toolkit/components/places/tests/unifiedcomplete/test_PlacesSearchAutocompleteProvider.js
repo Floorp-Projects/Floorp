@@ -55,17 +55,17 @@ add_task(async function test_aliased_search_engine_match() {
   // Lower case
   let match = await PlacesSearchAutocompleteProvider.findMatchByAlias("pork");
   Assert.equal(match.engineName, "bacon");
-  Assert.equal(match.alias, "pork");
+  Assert.equal(match.aliases[0], "pork");
   Assert.equal(match.iconUrl, null);
   // Upper case
   let match1 = await PlacesSearchAutocompleteProvider.findMatchByAlias("PORK");
   Assert.equal(match1.engineName, "bacon");
-  Assert.equal(match1.alias, "pork");
+  Assert.equal(match1.aliases[0], "pork");
   Assert.equal(match1.iconUrl, null);
   // Cap case
   let match2 = await PlacesSearchAutocompleteProvider.findMatchByAlias("Pork");
   Assert.equal(match2.engineName, "bacon");
-  Assert.equal(match2.alias, "pork");
+  Assert.equal(match2.aliases[0], "pork");
   Assert.equal(match2.iconUrl, null);
 });
 
@@ -78,17 +78,17 @@ add_task(async function test_aliased_search_engine_match_upper_case_alias() {
   // lower case
   let match = await PlacesSearchAutocompleteProvider.findMatchByAlias("pr");
   Assert.equal(match.engineName, "patch");
-  Assert.equal(match.alias, "PR");
+  Assert.equal(match.aliases[0], "PR");
   Assert.equal(match.iconUrl, null);
   // Upper case
   let match1 = await PlacesSearchAutocompleteProvider.findMatchByAlias("PR");
   Assert.equal(match1.engineName, "patch");
-  Assert.equal(match1.alias, "PR");
+  Assert.equal(match1.aliases[0], "PR");
   Assert.equal(match1.iconUrl, null);
   // Cap case
   let match2 = await PlacesSearchAutocompleteProvider.findMatchByAlias("Pr");
   Assert.equal(match2.engineName, "patch");
-  Assert.equal(match2.alias, "PR");
+  Assert.equal(match2.aliases[0], "PR");
   Assert.equal(match2.iconUrl, null);
 });
 
@@ -113,6 +113,15 @@ add_task(async function test_parseSubmissionURL_basic() {
   result = PlacesSearchAutocompleteProvider.parseSubmissionURL("http://example.org/");
   Assert.equal(result, null);
 });
+
+add_task(async function test_builtin_aliased_search_engine_match() {
+  let match = await PlacesSearchAutocompleteProvider.findMatchByAlias("@google");
+  Assert.equal(match.engineName, "Google");
+
+  let match1 = await PlacesSearchAutocompleteProvider.findMatchByAlias("@amazon");
+  Assert.ok(match1.engineName.startsWith("Amazon"));
+});
+
 
 function promiseDefaultSearchEngine() {
   return new Promise(resolve => {
