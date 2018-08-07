@@ -69,7 +69,7 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
         iconView.setImageBitmap(iconBitmap);
 
         final ImageView blockIcon = (ImageView) dialogView.findViewById(R.id.homescreen_dialog_block_icon);
-        blockIcon.setImageResource(R.drawable.ic_tracking_protection_16_disabled);
+        blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled);
 
         final Button addToHomescreenDialogCancelButton = (Button) dialogView.findViewById(R.id.addtohomescreen_dialog_cancel);
         final Button addToHomescreenDialogConfirmButton = (Button) dialogView.findViewById(R.id.addtohomescreen_dialog_add);
