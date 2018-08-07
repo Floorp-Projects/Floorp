@@ -21,8 +21,6 @@ const kPageURL =
 const environment = Cc["@mozilla.org/process/environment;1"]
                     .getService(Ci.nsIEnvironment);
 
-const InspectorUtils = SpecialPowers.InspectorUtils;
-
 // Parameters for running the python script that registers/unregisters fonts.
 const kPythonPath = "/usr/bin/python";
 const kFontInstallerPath = "browser/security/sandbox/test/mac_register_font.py";
@@ -128,6 +126,8 @@ add_task(async function() {
 
     // Get a list of fonts being used to display the web content.
     let fontList = await ContentTask.spawn(aBrowser, {}, async function() {
+      Cu.importGlobalProperties(["InspectorUtils"]);
+
       let window = content.window.wrappedJSObject;
       let range = window.document.createRange();
       let contentDiv = window.document.getElementById("content");
