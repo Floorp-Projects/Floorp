@@ -63,8 +63,7 @@ nsBaseDragService::nsBaseDragService()
     mDragAction(DRAGDROP_ACTION_NONE),
     mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
     mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
-    mSuppressLevel(0), mInputSource(MouseEvent_Binding::MOZ_SOURCE_MOUSE),
-    mRegion(nullptr)
+    mSuppressLevel(0), mInputSource(MouseEvent_Binding::MOZ_SOURCE_MOUSE)
 {
 }
 
@@ -302,7 +301,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
   // to be set to the area encompassing the selected rows of the
   // tree to ensure that the drag feedback gets clipped to those
   // rows. For other content, region should be null.
-  mRegion = nullptr;
+  mRegion = Nothing();
 #ifdef MOZ_XUL
   if (aDOMNode && aDOMNode->IsContent() && !aImage) {
     if (aDOMNode->NodeInfo()->Equals(nsGkAtoms::treechildren,
@@ -310,7 +309,13 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
       nsTreeBodyFrame* treeBody =
         do_QueryFrame(aDOMNode->AsContent()->GetPrimaryFrame());
       if (treeBody) {
-        treeBody->GetSelectionRegion(getter_AddRefs(mRegion));
+        nsCOMPtr<nsIScriptableRegion> region;
+        treeBody->GetSelectionRegion(getter_AddRefs(region));
+        if (region) {
+          nsIntRegion intRegion;
+          region->GetRegion(&intRegion);
+          mRegion.emplace(CSSIntRegion::FromUnknownRegion(intRegion));
+        }
       }
     }
   }
@@ -320,7 +325,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
                                   aTransferableArray,
                                   aActionType,
                                   nsIContentPolicy::TYPE_INTERNAL_IMAGE);
-  mRegion = nullptr;
+  mRegion = Nothing();
   return rv;
 }
 
@@ -342,7 +347,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
   mDragPopup = nullptr;
   mImage = nullptr;
   mImageOffset = CSSIntPoint();
-  mRegion = nullptr;
+  mRegion = Nothing();
 
   mScreenPosition.x = aDragEvent->ScreenX(CallerType::System);
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
@@ -473,7 +478,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
   mScreenPosition = CSSIntPoint();
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
   mInputSource = MouseEvent_Binding::MOZ_SOURCE_MOUSE;
-  mRegion = nullptr;
+  mRegion = Nothing();
 
   return NS_OK;
 }
@@ -573,7 +578,7 @@ GetPresShellForContent(nsINode* aDOMNode)
 
 nsresult
 nsBaseDragService::DrawDrag(nsINode* aDOMNode,
-                            nsIScriptableRegion* aRegion,
+                            const Maybe<CSSIntRegion>& aRegion,
                             CSSIntPoint aScreenPosition,
                             LayoutDeviceIntRect* aScreenDragRect,
                             RefPtr<SourceSurface>* aSurface,
@@ -633,9 +638,7 @@ nsBaseDragService::DrawDrag(nsINode* aDOMNode,
     CSSIntRect dragRect;
     if (aRegion) {
       // the region's coordinates are relative to the root frame
-      int32_t dragRectX, dragRectY, dragRectW, dragRectH;
-      aRegion->GetBoundingBox(&dragRectX, &dragRectY, &dragRectW, &dragRectH);
-      dragRect.SetRect(dragRectX, dragRectY, dragRectW, dragRectH);
+      dragRect = aRegion->GetBounds();
 
       nsIFrame* rootFrame = presShell->GetRootFrame();
       CSSIntRect screenRect = rootFrame->GetScreenRect();
@@ -695,12 +698,7 @@ nsBaseDragService::DrawDrag(nsINode* aDOMNode,
 
   if (!mDragPopup) {
     // otherwise, just draw the node
-    nsIntRegion clipRegion;
     uint32_t renderFlags = mImage ? 0 : nsIPresShell::RENDER_AUTO_SCALE;
-    if (aRegion) {
-      aRegion->GetRegion(&clipRegion);
-    }
-
     if (renderFlags) {
       nsCOMPtr<nsINode> dragINode = do_QueryInterface(dragNode);
       // check if the dragged node itself is an img element
@@ -721,7 +719,7 @@ nsBaseDragService::DrawDrag(nsINode* aDOMNode,
       }
     }
     LayoutDeviceIntPoint pnt(aScreenDragRect->TopLeft());
-    *aSurface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nullptr,
+    *aSurface = presShell->RenderNode(dragNode, aRegion,
                                       pnt, aScreenDragRect,
                                       renderFlags);
   }
