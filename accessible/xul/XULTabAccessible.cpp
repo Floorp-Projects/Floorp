@@ -5,6 +5,7 @@
 
 #include "XULTabAccessible.h"
 
+#include "ARIAMap.h"
 #include "nsAccUtils.h"
 #include "Relation.h"
 #include "Role.h"
@@ -123,6 +124,17 @@ XULTabAccessible::RelationByType(RelationType aType) const
   return rel;
 }
 
+void
+XULTabAccessible::ApplyARIAState(uint64_t* aState) const
+{
+  HyperTextAccessibleWrap::ApplyARIAState(aState);
+  // XUL tab has an implicit ARIA role of tab, so support aria-selected.
+  // Don't use aria::MapToState because that will set the SELECTABLE state
+  // even if the tab is disabled.
+  if (nsAccUtils::IsARIASelected(this)) {
+    *aState |= states::SELECTED;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTabsAccessible
@@ -157,6 +169,66 @@ XULTabsAccessible::NativeName(nsString& aName) const
 {
   // no name
   return eNameOK;
+}
+
+void
+XULTabsAccessible::ApplyARIAState(uint64_t* aState) const
+{
+  XULSelectControlAccessible::ApplyARIAState(aState);
+  // XUL tabs has an implicit ARIA role of tablist, so support
+  // aria-multiselectable.
+  MOZ_ASSERT(Elm());
+  aria::MapToState(aria::eARIAMultiSelectable, Elm(), aState);
+}
+
+// XUL tabs is a single selection control and doesn't allow ARIA selection.
+// However, if aria-multiselectable is used, it becomes a multiselectable
+// control, where both native and ARIA markup are used to set selection.
+// Therefore, if aria-multiselectable is set, use the base implementation of
+// the selection retrieval methods in order to support ARIA selection.
+// We don't bother overriding the selection setting methods because
+// current front-end code using XUL tabs doesn't support setting of
+//  aria-selected by the a11y engine and we still want to be able to set the
+// primary selected item according to XUL.
+
+void
+XULTabsAccessible::SelectedItems(nsTArray<Accessible*>* aItems)
+{
+  if (nsAccUtils::IsARIAMultiSelectable(this)) {
+    AccessibleWrap::SelectedItems(aItems);
+  } else {
+    XULSelectControlAccessible::SelectedItems(aItems);
+  }
+}
+
+Accessible*
+XULTabsAccessible::GetSelectedItem(uint32_t aIndex)
+{
+  if (nsAccUtils::IsARIAMultiSelectable(this)) {
+    return AccessibleWrap::GetSelectedItem(aIndex);
+  }
+
+  return XULSelectControlAccessible::GetSelectedItem(aIndex);
+}
+
+uint32_t
+XULTabsAccessible::SelectedItemCount()
+{
+  if (nsAccUtils::IsARIAMultiSelectable(this)) {
+    return AccessibleWrap::SelectedItemCount();
+  }
+
+  return XULSelectControlAccessible::SelectedItemCount();
+}
+
+bool
+XULTabsAccessible::IsItemSelected(uint32_t aIndex)
+{
+  if (nsAccUtils::IsARIAMultiSelectable(this)) {
+    return AccessibleWrap::IsItemSelected(aIndex);
+  }
+
+  return XULSelectControlAccessible::IsItemSelected(aIndex);
 }
 
 

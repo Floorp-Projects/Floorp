@@ -244,13 +244,11 @@ nsAccUtils::GetSelectableContainer(Accessible* aAccessible, uint64_t aState)
 }
 
 bool
-nsAccUtils::IsARIASelected(Accessible* aAccessible)
+nsAccUtils::IsDOMAttrTrue(const Accessible* aAccessible, nsAtom* aAttr)
 {
-  if (!aAccessible->GetContent()->IsElement())
-    return false;
-  return aAccessible->GetContent()->AsElement()->
-    AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_selected,
-                nsGkAtoms::_true, eCaseMatters);
+  dom::Element* el = aAccessible->Elm();
+  return el && el->AttrValueIs(kNameSpaceID_None, aAttr, nsGkAtoms::_true,
+                               eCaseMatters);
 }
 
 Accessible*

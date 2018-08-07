@@ -277,6 +277,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
   , mRecvCodecPlugin(nullptr)
   , mVideoStatsTimer(NS_NewTimer())
 {
+  mCall->RegisterConduit(this);
   mRecvStreamConfig.renderer = this;
 
   // Video Stats Callback
@@ -307,6 +308,7 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
 {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  mCall->UnregisterConduit(this);
   if (mVideoStatsTimer) {
     CSFLogDebug(LOGTAG, "canceling StreamStats for VideoConduit: %p", this);
     MutexAutoLock lock(mCodecMutex);
@@ -884,6 +886,22 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   return condError;
 }
 
+static uint32_t
+GenerateRandomSSRC()
+{
+  uint32_t ssrc;
+  do {
+    SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
+    if (rv != SECSuccess) {
+      CSFLogError(LOGTAG, "%s: PK11_GenerateRandom failed with error %d",
+                  __FUNCTION__, rv);
+      return 0;
+    }
+  } while (ssrc == 0); // webrtc.org code has fits if you select an SSRC of 0
+
+  return ssrc;
+}
+
 bool
 WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
 {
@@ -902,6 +920,11 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
   }
 
   CSFLogDebug(LOGTAG, "%s: SSRC %u (0x%x)", __FUNCTION__, ssrc, ssrc);
+  if (!mCall->UnsetRemoteSSRC(ssrc)) {
+    CSFLogError(LOGTAG, "%s: Failed to unset SSRC %u (0x%x) on other conduits,"
+                " bailing", __FUNCTION__, ssrc, ssrc);
+    return false;
+  }
   mRecvStreamConfig.rtp.remote_ssrc = ssrc;
   mWaitingForInitialSsrc = false;
 
@@ -924,6 +947,33 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
     }
   }
   return (StartReceiving() == kMediaConduitNoError);
+}
+
+bool
+WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc)
+{
+  unsigned int our_ssrc;
+  if (!GetRemoteSSRC(&our_ssrc)) {
+    // This only fails when we aren't sending, which isn't really an error here
+    return true;
+  }
+
+  if (our_ssrc != ssrc) {
+    return true;
+  }
+
+  while (our_ssrc == ssrc) {
+    our_ssrc = GenerateRandomSSRC();
+    if (our_ssrc == 0) {
+      return false;
+    }
+  }
+
+  // There is a (tiny) chance that this new random ssrc will collide with some
+  // other conduit's remote ssrc, in which case that conduit will choose a new
+  // one.
+  SetRemoteSSRC(our_ssrc);
+  return true;
 }
 
 bool
@@ -1428,13 +1478,12 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       // Handle un-signalled SSRCs by creating a random one and then when it actually gets set,
       // we'll destroy and recreate.  Simpler than trying to unwind all the logic that assumes
       // the receive stream is created and started when we ConfigureRecvMediaCodecs()
-      unsigned int ssrc;
-      do {
-        SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
-        if (rv != SECSuccess) {
-          return kMediaConduitUnknownError;
-        }
-      } while (ssrc == 0); // webrtc.org code has fits if you select an SSRC of 0
+      uint32_t ssrc = GenerateRandomSSRC();
+      if (ssrc == 0) {
+        // webrtc.org code has fits if you select an SSRC of 0, so that's how
+        // we signal an error.
+        return kMediaConduitUnknownError;
+      }
 
       mRecvStreamConfig.rtp.remote_ssrc = ssrc;
       mRecvSSRC = ssrc;
@@ -1451,13 +1500,12 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     auto ssrc = mSendStreamConfig.rtp.ssrcs.front();
     Unused << NS_WARN_IF(ssrc == mRecvStreamConfig.rtp.remote_ssrc);
 
-    while (ssrc == mRecvStreamConfig.rtp.remote_ssrc || ssrc == 0) {
-      SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
-      if (rv != SECSuccess) {
+    while (ssrc == mRecvStreamConfig.rtp.remote_ssrc) {
+      ssrc = GenerateRandomSSRC();
+      if (ssrc == 0) {
         return kMediaConduitUnknownError;
       }
     }
-    // webrtc.org code has fits if you select an SSRC of 0
 
     mRecvStreamConfig.rtp.local_ssrc = ssrc;
     CSFLogDebug(LOGTAG, "%s (%p): Local SSRC 0x%08x (of %u), remote SSRC 0x%08x",

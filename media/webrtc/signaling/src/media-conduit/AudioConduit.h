@@ -208,6 +208,10 @@ public:
   {
     return false;
   }
+  bool UnsetRemoteSSRC(uint32_t ssrc) override
+  {
+    return true;
+  }
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
