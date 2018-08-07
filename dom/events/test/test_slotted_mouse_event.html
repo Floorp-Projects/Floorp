@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bug 1481500: mouse enter / leave events in slotted content</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script>
+function runTests() {
+  let iframe = document.createElement('iframe');
+  document.body.appendChild(iframe);
+  iframe.onload = () => frameLoaded(iframe);
+  iframe.srcdoc =
+    `<div id="host"><div id="target"></div></div>`
+}
+
+function frameLoaded(iframe) {
+  let host = iframe.contentDocument.getElementById('host');
+  let target = iframe.contentDocument.getElementById('target');
+  let finished = false;
+
+  host.attachShadow({ mode: 'open' }).innerHTML = `
+    <style>
+      :host {
+        width: 300px;
+        height: 300px;
+        background: purple;
+      }
+      ::slotted(div) {
+        width: 100px;
+        height: 100px;
+        background: green;
+      }
+    </style>
+    <slot></slot>
+  `;
+
+  host.addEventListener("mouseleave", e => {
+    if (finished)
+      return;
+    ok(false, "Should not fire mouseleave when moving the cursor to the slotted target");
+  });
+
+  target.addEventListener("mouseenter", () => {
+    if (finished)
+      return;
+    ok(true, "Moving the mouse into the target should trigger a mouseenter there");
+    setTimeout(() => {
+      finished = true;
+      SimpleTest.finish()
+    }, 0);
+  });
+
+  synthesizeMouseAtCenter(host, { type: "mousemove" });
+  synthesizeMouseAtCenter(target, { type: "mousemove" });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.webcomponents.shadowdom.enabled", true]
+    ]
+  }, runTests);
+});
+</script>
