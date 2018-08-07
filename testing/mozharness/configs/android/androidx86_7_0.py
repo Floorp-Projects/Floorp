@@ -5,7 +5,6 @@
 
 config = {
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidx86_7_0/releng.manifest",
-    "tooltool_servers": ['http://taskcluster/relengapi/tooltool/'],
     "emulator_manifest": """
         [
         {

@@ -50,6 +50,7 @@ WORKER_TYPES = {
     'proj-autophone/gecko-t-ap-unit-g5': ('script-engine-autophone', 'linux'),
     'proj-autophone/gecko-t-ap-perf-p2': ('script-engine-autophone', 'linux'),
     'proj-autophone/gecko-t-ap-unit-p2': ('script-engine-autophone', 'linux'),
+    'terraform-packet/gecko-t-linux': ('docker-worker', 'linux'),
 }
 
 

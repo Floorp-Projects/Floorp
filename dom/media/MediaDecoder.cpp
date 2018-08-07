@@ -18,6 +18,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "Visibility.h"
@@ -1265,25 +1266,25 @@ MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 bool
 MediaDecoder::IsOpusEnabled()
 {
-  return Preferences::GetBool("media.opus.enabled");
+  return StaticPrefs::MediaOpusEnabled();
 }
 
 bool
 MediaDecoder::IsOggEnabled()
 {
-  return Preferences::GetBool("media.ogg.enabled");
+  return StaticPrefs::MediaOggEnabled();
 }
 
 bool
 MediaDecoder::IsWaveEnabled()
 {
-  return Preferences::GetBool("media.wave.enabled");
+  return StaticPrefs::MediaWaveEnabled();
 }
 
 bool
 MediaDecoder::IsWebMEnabled()
 {
-  return Preferences::GetBool("media.webm.enabled");
+  return StaticPrefs::MediaWebMEnabled();
 }
 
 NS_IMETHODIMP
