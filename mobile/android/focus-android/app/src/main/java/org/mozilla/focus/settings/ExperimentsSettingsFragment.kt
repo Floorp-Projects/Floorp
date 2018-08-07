@@ -6,7 +6,6 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.support.v14.preference.SwitchPreference
 import android.support.v7.preference.SwitchPreferenceCompat
 import android.support.v7.preference.PreferenceFragmentCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
