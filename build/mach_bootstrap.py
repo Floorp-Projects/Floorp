@@ -190,7 +190,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     def telemetry_handler(context, data):
         # We have not opted-in to telemetry
-        if 'BUILD_SYSTEM_TELEMETRY' not in os.environ:
+        if not context.settings.build.telemetry:
             return
 
         telemetry_dir = os.path.join(get_state_dir()[0], 'telemetry')
@@ -239,7 +239,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             return
 
         # We have not opted-in to telemetry
-        if 'BUILD_SYSTEM_TELEMETRY' not in os.environ:
+        if not context.settings.build.telemetry:
             return
 
         # Every n-th operation

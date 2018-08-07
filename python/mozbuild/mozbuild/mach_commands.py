@@ -2842,3 +2842,12 @@ class Analyze(MachCommandBase):
                 res = 'Please specify the location of cost_dict.gz with --path.'
                 print ('Could not find cost_dict.gz at %s' % path, res, sep='\n')
                 return 1
+
+
+@SettingsProvider
+class TelemetrySettings():
+    config_settings = [
+        ('build.telemetry', 'boolean', """
+Enable submission of build system telemetry.
+        """.strip(), False),
+    ]
