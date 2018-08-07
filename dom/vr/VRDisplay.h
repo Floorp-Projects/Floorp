@@ -367,6 +367,7 @@ public:
   void StartHandlingVRNavigationEvent();
   void StopHandlingVRNavigationEvent();
   bool IsHandlingVRNavigationEvent();
+  void OnPresentationGenerationChanged();
 
 protected:
   VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient);

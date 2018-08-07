@@ -69,6 +69,7 @@ public:
     int32_t *aHandle);
   void CancelFrameRequestCallback(int32_t aHandle);
   void RunFrameRequestCallbacks();
+  void NotifyPresentationGenerationChanged(uint32_t aDisplayID);
 
   void UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates);
   void FireDOMVRDisplayMountedEvent(uint32_t aDisplayID);
@@ -115,6 +116,7 @@ private:
   void FireDOMVRDisplayPresentChangeEventInternal(uint32_t aDisplayID);
   void FireDOMVRDisplayConnectEventsForLoadInternal(uint32_t aDisplayID,
                                                     dom::VREventObserver* aObserver);
+  void NotifyPresentationGenerationChangedInternal(uint32_t aDisplayID);
 
   nsTArray<RefPtr<VRDisplayClient> > mDisplays;
   bool mDisplaysInitialized;
