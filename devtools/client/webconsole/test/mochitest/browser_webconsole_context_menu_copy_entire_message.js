@@ -19,6 +19,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
   window.logStuff = function () {
     console.log("simple " +  "text message");
     function wrapper() {
+      console.log(new Error("error object"));
       console.trace();
     }
     wrapper();
@@ -99,6 +100,17 @@ add_task(async function() {
     "Log line has the right format:\n" + lines[0]);
   ok(TRACE_FORMAT.test(lines[1]), "Stacktrace line has the right format:\n" + lines[1]);
   ok(TRACE_FORMAT.test(lines[2]), "Stacktrace line has the right format:\n" + lines[2]);
+
+  info("Test copy menu item for the error message");
+  message = await waitFor(() => findMessage(hud, "Error:"));
+  clipboardText = await copyMessageContent(hud, message);
+  ok(true, "Clipboard text was found and saved");
+  lines = clipboardText.split("\n");
+  is(lines[0], `Error: "error object"`, "Error object first line has expected text");
+  ok(lines[1].startsWith(`\twrapper data:text/html`),
+    "Error stacktrace first line starts with expected value");
+  ok(lines[2].startsWith(`\tlogStuff data:text/html`),
+    "Error stacktrace second line starts with expected value");
 
   observer.destroy();
   Services.prefs.clearUserPref(PREF_MESSAGE_TIMESTAMP);
