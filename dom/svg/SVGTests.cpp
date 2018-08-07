@@ -69,7 +69,7 @@ SVGTests::IsConditionalProcessingAttribute(const nsAtom* aAttribute) const
 int32_t
 SVGTests::GetBestLanguagePreferenceRank(const nsAString& aAcceptLangs) const
 {
-  const nsDefaultStringComparator defaultComparator;
+  const nsCaseInsensitiveStringComparator caseInsensitiveComparator;
 
   if (!mStringListAttributes[LANGUAGE].IsExplicitlySet()) {
     return -2;
@@ -82,12 +82,13 @@ SVGTests::GetBestLanguagePreferenceRank(const nsAString& aAcceptLangs) const
     int32_t index = 0;
     while (languageTokenizer.hasMoreTokens()) {
       const nsAString& languageToken = languageTokenizer.nextToken();
-      bool exactMatch = (languageToken == mStringListAttributes[LANGUAGE][i]);
+      bool exactMatch = languageToken.Equals(mStringListAttributes[LANGUAGE][i],
+                                             caseInsensitiveComparator);
       bool prefixOnlyMatch =
         !exactMatch &&
         nsStyleUtil::DashMatchCompare(mStringListAttributes[LANGUAGE][i],
                                       languageTokenizer.nextToken(),
-                                      defaultComparator);
+                                      caseInsensitiveComparator);
       if (index == 0 && exactMatch) {
         // best possible match
         return 0;
@@ -155,14 +156,14 @@ SVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) const
       return false;
     }
 
-    const nsDefaultStringComparator defaultComparator;
+    const nsCaseInsensitiveStringComparator caseInsensitiveComparator;
 
     for (uint32_t i = 0; i < mStringListAttributes[LANGUAGE].Length(); i++) {
       nsCharSeparatedTokenizer languageTokenizer(acceptLangs, ',');
       while (languageTokenizer.hasMoreTokens()) {
         if (nsStyleUtil::DashMatchCompare(mStringListAttributes[LANGUAGE][i],
                                           languageTokenizer.nextToken(),
-                                          defaultComparator)) {
+                                          caseInsensitiveComparator)) {
           return true;
         }
       }

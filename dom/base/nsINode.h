@@ -370,19 +370,7 @@ public:
   friend class nsAttrAndChildArray;
 
 #ifdef MOZILLA_INTERNAL_API
-  explicit nsINode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : mNodeInfo(aNodeInfo)
-  , mParent(nullptr)
-#ifndef BOOL_FLAGS_ON_WRAPPER_CACHE
-  , mBoolFlags(0)
-#endif
-  , mNextSibling(nullptr)
-  , mPreviousSibling(nullptr)
-  , mFirstChild(nullptr)
-  , mSubtreeRoot(this)
-  , mSlots(nullptr)
-  {
-  }
+  explicit nsINode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 #endif
 
   virtual ~nsINode();
@@ -582,7 +570,10 @@ public:
    * Get the number of children
    * @return the number of children
    */
-  virtual uint32_t GetChildCount() const = 0;
+  uint32_t GetChildCount() const
+  {
+    return mChildCount;
+  }
 
   /**
    * NOTE: this function is going to be removed soon (hopefully!) Don't use it
@@ -592,7 +583,7 @@ public:
    * @param aIndex the index of the child to get
    * @return the child, or null if index out of bounds
    */
-  virtual nsIContent* GetChildAt_Deprecated(uint32_t aIndex) const = 0;
+  nsIContent* GetChildAt_Deprecated(uint32_t aIndex) const;
 
   /**
    * Get the index of a child within this content
@@ -602,7 +593,7 @@ public:
    * If the return value is not -1, then calling GetChildAt_Deprecated() with
    * that value will return aPossibleChild.
    */
-  virtual int32_t ComputeIndexOf(const nsINode* aPossibleChild) const = 0;
+  virtual int32_t ComputeIndexOf(const nsINode* aPossibleChild) const;
 
   /**
    * Returns the "node document" of this node.
@@ -827,7 +818,7 @@ public:
    * @throws NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
    */
   virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                     bool aNotify) = 0;
+                                     bool aNotify);
 
   /**
    * Append a content node to the end of the child list.  This method handles
@@ -861,7 +852,7 @@ public:
    *        nsIContent, and |this| for nsIDocument) that the remove has
    *        occurred
    */
-  virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) = 0;
+  virtual void RemoveChildNode(nsIContent* aKid, bool aNotify);
 
   /**
    * Get a property associated with this node.
@@ -1296,13 +1287,13 @@ public:
   nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
 
   nsINodeList* ChildNodes();
-  nsIContent* GetFirstChild() const { return mFirstChild; }
-  nsIContent* GetLastChild() const
-  {
-    uint32_t count = GetChildCount();
 
-    return count > 0 ? GetChildAt_Deprecated(count - 1) : nullptr;
+  nsIContent* GetFirstChild() const
+  {
+    return mFirstChild;
   }
+
+  nsIContent* GetLastChild() const;
 
   /**
    * Implementation is in nsIDocument.h, because it needs to cast from
@@ -1373,6 +1364,10 @@ protected:
   // should really only be called for elements and document fragments.
   mozilla::dom::Element* GetElementById(const nsAString& aId);
 
+  void AppendChildToChildList(nsIContent* aKid);
+  void InsertChildToChildList(nsIContent* aKid, nsIContent* aNextSibling);
+  void DisconnectChild(nsIContent* aKid);
+
 public:
   void LookupPrefix(const nsAString& aNamespace, nsAString& aResult);
   bool IsDefaultNamespace(const nsAString& aNamespaceURI)
@@ -1385,7 +1380,7 @@ public:
                           nsAString& aNamespaceURI);
 
   nsIContent* GetNextSibling() const { return mNextSibling; }
-  nsIContent* GetPreviousSibling() const { return mPreviousSibling; }
+  nsIContent* GetPreviousSibling() const;
 
   /**
    * Get the next node in the pre-order tree traversal of the DOM.  If
@@ -1992,33 +1987,6 @@ protected:
   virtual mozilla::dom::Element* GetNameSpaceElement() = 0;
 
   /**
-   * Most of the implementation of the nsINode RemoveChildAt method.
-   * Should only be called on document, element, and document fragment
-   * nodes.  The aChildArray passed in should be the one for |this|.
-   *
-   * @param aIndex The index to remove at.
-   * @param aNotify Whether to notify.
-   * @param aKid The kid at aIndex.  Must not be null.
-   * @param aChildArray The child array to work with.
-   * @param aMutationEvent whether to fire a mutation event for this removal.
-   */
-  void doRemoveChildAt(uint32_t aIndex, bool aNotify, nsIContent* aKid,
-                       nsAttrAndChildArray& aChildArray);
-
-  /**
-   * Most of the implementation of the nsINode InsertChildAt_Deprecated method.
-   * Should only be called on document, element, and document fragment
-   * nodes.  The aChildArray passed in should be the one for |this|.
-   *
-   * @param aKid The child to insert.
-   * @param aIndex The index to insert at.
-   * @param aNotify Whether to notify.
-   * @param aChildArray The child array to work with
-   */
-  nsresult doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                           bool aNotify, nsAttrAndChildArray& aChildArray);
-
-  /**
    * Parse the given selector string into a servo SelectorList.
    *
    * Never returns null if aRv is not failing.
@@ -2065,16 +2033,17 @@ private:
   uint32_t mBoolFlags;
 #endif
 
+  //NOTE, there are 32 bits left here, at least in 64 bit builds.
+
+  uint32_t mChildCount;
 
 protected:
-  // These references are non-owning and safe, as they are managed by
-  // nsAttrAndChildArray.
-  nsIContent* MOZ_NON_OWNING_REF mNextSibling;
-  nsIContent* MOZ_NON_OWNING_REF mPreviousSibling;
-  // This reference is non-owning and safe, since in the case of documents,
-  // it is set to null when the document gets destroyed, and in the case of
-  // other nodes, the children keep the parents alive.
-  nsIContent* MOZ_NON_OWNING_REF mFirstChild;
+  // mNextSibling and mFirstChild are strong references while
+  // mPreviousOrLastSibling is a weak ref. |mFirstChild->mPreviousOrLastSibling|
+  // points to the last child node.
+  nsCOMPtr<nsIContent> mFirstChild;
+  nsCOMPtr<nsIContent> mNextSibling;
+  nsIContent* MOZ_NON_OWNING_REF mPreviousOrLastSibling;
 
   union {
     // Pointer to our primary frame.  Might be null.
