@@ -208,7 +208,7 @@ function generateClientScope(scopes, originalScopes) {
 
   const thisScope = originalScopes.find(scope => scope.bindings.this);
 
-  if (result.bindings && thisScope) {
+  if (thisScope) {
     result.bindings.this = thisScope.generatedBindings.this || null;
   }
 

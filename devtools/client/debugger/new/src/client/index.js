@@ -31,13 +31,6 @@ function loadFromPrefs(actions) {
   }
 }
 
-async function loadInitialState() {
-  const pendingBreakpoints = await _prefs.asyncStore.pendingBreakpoints;
-  return {
-    pendingBreakpoints
-  };
-}
-
 async function onConnect(connection, {
   services,
   toolboxActions
@@ -48,7 +41,6 @@ async function onConnect(connection, {
   }
 
   const commands = firefox.clientCommands;
-  const initialState = await loadInitialState();
   const {
     store,
     actions,
@@ -56,7 +48,7 @@ async function onConnect(connection, {
   } = (0, _bootstrap.bootstrapStore)(commands, {
     services,
     toolboxActions
-  }, initialState);
+  });
   const workers = (0, _bootstrap.bootstrapWorkers)();
   await firefox.onConnect(connection, actions);
   await loadFromPrefs(actions);
