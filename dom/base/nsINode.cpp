@@ -150,6 +150,21 @@ nsINode::nsSlots::Unlink()
 
 //----------------------------------------------------------------------
 
+#ifdef MOZILLA_INTERNAL_API
+nsINode::nsINode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  : mNodeInfo(aNodeInfo)
+  , mParent(nullptr)
+#ifndef BOOL_FLAGS_ON_WRAPPER_CACHE
+  , mBoolFlags(0)
+#endif
+  , mChildCount(0)
+  , mPreviousOrLastSibling(nullptr)
+  , mSubtreeRoot(this)
+  , mSlots(nullptr)
+{
+}
+#endif
+
 nsINode::~nsINode()
 {
   MOZ_ASSERT(!HasSlots(), "nsNodeUtils::LastRelease was not called?");
@@ -413,6 +428,12 @@ nsINode::ChildNodes()
   }
 
   return slots->mChildNodes;
+}
+
+nsIContent*
+nsINode::GetLastChild() const
+{
+  return mFirstChild ? mFirstChild->mPreviousOrLastSibling : nullptr;
 }
 
 void
@@ -1208,6 +1229,8 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNodeInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNextSibling)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(GetParent())
 
   nsSlots *slots = tmp->GetExistingSlots();
@@ -1335,9 +1358,13 @@ ReparentWrappersInSubtree(nsIContent* aRoot)
 }
 
 nsresult
-nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                         bool aNotify, nsAttrAndChildArray& aChildArray)
-{
+nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aChildToInsertBefore,
+                           bool aNotify)
+ {
+  if (!IsContainerNode()) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
   MOZ_ASSERT(!aKid->GetParentNode(), "Inserting node that already has parent");
   MOZ_ASSERT(!IsAttr());
 
@@ -1373,31 +1400,24 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
     }
   }
 
-  uint32_t childCount = aChildArray.ChildCount();
-  NS_ENSURE_TRUE(aIndex <= childCount, NS_ERROR_ILLEGAL_VALUE);
-  bool isAppend = (aIndex == childCount);
-
-  nsresult rv = aChildArray.InsertChildAt(aKid, aIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aIndex == 0) {
-    mFirstChild = aKid;
+  if (!aChildToInsertBefore) {
+    AppendChildToChildList(aKid);
+  } else {
+    InsertChildToChildList(aKid, aChildToInsertBefore);
   }
 
   nsIContent* parent = IsContent() ? AsContent() : nullptr;
 
   bool wasInXBLScope = ShouldUseXBLScope(aKid);
-  rv = aKid->BindToTree(doc, parent,
-                        parent ? parent->GetBindingParent() : nullptr);
+  nsresult rv = aKid->BindToTree(doc, parent,
+                                 parent ? parent->GetBindingParent() : nullptr);
   if (NS_SUCCEEDED(rv) && !wasInXBLScope && ShouldUseXBLScope(aKid)) {
     MOZ_ASSERT(ShouldUseXBLScope(this),
                "Why does the kid need to use an XBL scope?");
     rv = ReparentWrappersInSubtree(aKid);
   }
   if (NS_FAILED(rv)) {
-    if (GetFirstChild() == aKid) {
-      mFirstChild = aKid->GetNextSibling();
-    }
-    aChildArray.RemoveChildAt(aIndex);
+    DisconnectChild(aKid);
     aKid->UnbindFromTree();
     return rv;
   }
@@ -1411,7 +1431,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
   if (aNotify) {
     // Note that we always want to call ContentInserted when things are added
     // as kids to documents
-    if (parent && isAppend) {
+    if (parent && !aChildToInsertBefore) {
       nsNodeUtils::ContentAppended(parent, aKid);
     } else {
       nsNodeUtils::ContentInserted(this, aKid);
@@ -1428,6 +1448,127 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
   }
 
   return NS_OK;
+}
+
+nsIContent*
+nsINode::GetPreviousSibling() const
+{
+  // Do not expose circular linked list
+  if (mPreviousOrLastSibling && !mPreviousOrLastSibling->mNextSibling) {
+    return nullptr;
+  }
+  return mPreviousOrLastSibling;
+}
+
+void
+nsINode::AppendChildToChildList(nsIContent* aKid)
+{
+  MOZ_ASSERT(aKid);
+  MOZ_ASSERT(!aKid->mNextSibling);
+
+  if (mFirstChild) {
+    nsIContent* lastChild = GetLastChild();
+    lastChild->mNextSibling = aKid;
+    aKid->mPreviousOrLastSibling = lastChild;
+  } else {
+    mFirstChild = aKid;
+  }
+
+  // Maintain link to the last child
+  mFirstChild->mPreviousOrLastSibling = aKid;
+  ++mChildCount;
+}
+
+void
+nsINode::InsertChildToChildList(nsIContent* aKid, nsIContent* aNextSibling)
+{
+  MOZ_ASSERT(aKid);
+  MOZ_ASSERT(aNextSibling);
+
+  nsIContent* previousSibling = aNextSibling->mPreviousOrLastSibling;
+  aNextSibling->mPreviousOrLastSibling = aKid;
+  aKid->mPreviousOrLastSibling = previousSibling;
+  aKid->mNextSibling = aNextSibling;
+
+  if (aNextSibling == mFirstChild) {
+    MOZ_ASSERT(!previousSibling->mNextSibling);
+    mFirstChild = aKid;
+  } else {
+    previousSibling->mNextSibling = aKid;
+  }
+
+  ++mChildCount;
+}
+
+void
+nsINode::DisconnectChild(nsIContent* aKid)
+{
+  MOZ_ASSERT(aKid);
+  MOZ_ASSERT(GetChildCount() > 0);
+
+  nsIContent* previousSibling = aKid->GetPreviousSibling();
+  nsCOMPtr<nsIContent> ref = aKid;
+
+  if (aKid->mNextSibling) {
+    aKid->mNextSibling->mPreviousOrLastSibling = aKid->mPreviousOrLastSibling;
+  } else {
+    // aKid is the last child in the list
+    mFirstChild->mPreviousOrLastSibling = aKid->mPreviousOrLastSibling;
+  }
+  aKid->mPreviousOrLastSibling = nullptr;
+
+  if (previousSibling) {
+    previousSibling->mNextSibling = aKid->mNextSibling.forget();
+  } else {
+    // aKid is the first child in the list
+    mFirstChild = aKid->mNextSibling.forget();
+  }
+
+  --mChildCount;
+}
+
+nsIContent*
+nsINode::GetChildAt_Deprecated(uint32_t aIndex) const
+{
+  if (aIndex >= GetChildCount()) {
+    return nullptr;
+  }
+
+  nsIContent* child = mFirstChild;
+  while (aIndex--) {
+    child = child->GetNextSibling();
+  }
+
+  return child;
+}
+
+int32_t
+nsINode::ComputeIndexOf(const nsINode* aChild) const
+{
+  if (!aChild) {
+    return -1;
+  }
+
+  if (aChild->GetParentNode() != this) {
+    return -1;
+  }
+
+  if (aChild == GetLastChild()) {
+    return GetChildCount() - 1;
+  }
+
+  int32_t index = 0;
+  nsINode* current = mFirstChild;
+  while (current) {
+    MOZ_ASSERT(current->GetParentNode() == this);
+    if (current == aChild) {
+      return index;
+    }
+    current = current->GetNextSibling();
+    ++index;
+  }
+
+  return -1;
 }
 
 Element*
@@ -1756,7 +1897,7 @@ nsINode::Prepend(const Sequence<OwningNodeOrString>& aNodes,
     return;
   }
 
-  nsCOMPtr<nsINode> refNode = mFirstChild;
+  nsCOMPtr<nsIContent> refNode = mFirstChild;;
   InsertBefore(*node, refNode, aRv);
 }
 
@@ -1774,17 +1915,14 @@ nsINode::Append(const Sequence<OwningNodeOrString>& aNodes,
 }
 
 void
-nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
-                         nsIContent* aKid, nsAttrAndChildArray& aChildArray)
+nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {
   // NOTE: This function must not trigger any calls to
   // nsIDocument::GetRootElement() calls until *after* it has removed aKid from
   // aChildArray. Any calls before then could potentially restore a stale
   // value for our cached root element, per note in
   // nsDocument::RemoveChildNode().
-  MOZ_ASSERT(aKid && aKid->GetParentNode() == this &&
-             aKid == GetChildAt_Deprecated(aIndex) &&
-             ComputeIndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
+  MOZ_ASSERT(aKid && aKid->GetParentNode() == this, "Bogus aKid");
   MOZ_ASSERT(!IsAttr());
 
   nsMutationGuard::DidMutate();
@@ -1792,11 +1930,9 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
 
   nsIContent* previousSibling = aKid->GetPreviousSibling();
 
-  if (GetFirstChild() == aKid) {
-    mFirstChild = aKid->GetNextSibling();
-  }
-
-  aChildArray.RemoveChildAt(aIndex);
+  // Since aKid is use also after DisconnectChild, ensure it stays alive.
+  nsCOMPtr<nsIContent> kungfuDeathGrip = aKid;
+  DisconnectChild(aKid);
 
   // Invalidate cached array of child nodes
   InvalidateChildNodes();
@@ -2434,8 +2570,8 @@ nsINode::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
   // - mSlots
   //
   // The following members are not measured:
-  // - mParent, mNextSibling, mPreviousSibling, mFirstChild: because they're
-  //   non-owning
+  // - mParent, mNextSibling, mPreviousOrLastSibling, mFirstChild: because they're
+  //   non-owning, from "exclusive ownership" point of view.
 }
 
 void

@@ -81,6 +81,9 @@ public:
     Bool      fMakeCurrent(Display* display, GLXDrawable drawable, GLXContext context) const
         WRAP( fMakeCurrent(display, drawable, context) )
 
+    XVisualInfo* fGetConfig(Display* display, XVisualInfo* info, int attrib, int* value) const
+        WRAP(    fGetConfig(display, info, attrib, value) )
+
     GLXContext fGetCurrentContext() const
         WRAP(  fGetCurrentContext() )
 
@@ -179,6 +182,7 @@ private:
     struct {
         void         (GLAPIENTRY *fDestroyContext) (Display*, GLXContext);
         Bool         (GLAPIENTRY *fMakeCurrent) (Display*, GLXDrawable, GLXContext);
+        XVisualInfo* (GLAPIENTRY *fGetConfig) (Display*, XVisualInfo*, int, int*);
         GLXContext   (GLAPIENTRY *fGetCurrentContext) ();
         void*        (GLAPIENTRY *fGetProcAddress) (const char*);
         GLXFBConfig* (GLAPIENTRY *fChooseFBConfig) (Display*, int, const int*, int*);
