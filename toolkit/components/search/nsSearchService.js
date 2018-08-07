@@ -2403,8 +2403,6 @@ Engine.prototype = {
     let responseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
                                                             URLTYPE_SEARCH_HTML;
 
-    LOG("getURLParsingInfo: responseType: \"" + responseType + "\"");
-
     let url = this._getURLOfType(responseType);
     if (!url || url.method != "GET") {
       return null;
@@ -4272,7 +4270,6 @@ SearchService.prototype = {
   _parseSubmissionMap: null,
 
   _buildParseSubmissionMap: function SRCH_SVC__buildParseSubmissionMap() {
-    LOG("_buildParseSubmissionMap");
     this._parseSubmissionMap = new Map();
 
     // Used only while building the map, indicates which entries do not refer to
@@ -4281,16 +4278,12 @@ SearchService.prototype = {
     let keysOfAlternates = new Set();
 
     for (let engine of this._sortedEngines) {
-      LOG("Processing engine: " + engine.name);
-
       if (engine.hidden) {
-        LOG("Engine is hidden.");
         continue;
       }
 
       let urlParsingInfo = engine.getURLParsingInfo();
       if (!urlParsingInfo) {
-        LOG("Engine does not support URL parsing.");
         continue;
       }
 
@@ -4307,17 +4300,12 @@ SearchService.prototype = {
         // domains, even if they are found later in the ordered engine list.
         let existingEntry = this._parseSubmissionMap.get(key);
         if (!existingEntry) {
-          LOG("Adding new entry: " + key);
           if (isAlternate) {
             keysOfAlternates.add(key);
           }
         } else if (!isAlternate && keysOfAlternates.has(key)) {
-          LOG("Overriding alternate entry: " + key +
-              " (" + existingEntry.engine.name + ")");
           keysOfAlternates.delete(key);
         } else {
-          LOG("Keeping existing entry: " + key +
-              " (" + existingEntry.engine.name + ")");
           return;
         }
 
@@ -4385,8 +4373,12 @@ SearchService.prototype = {
   },
 
   parseSubmissionURL: function SRCH_SVC_parseSubmissionURL(aURL) {
-    this._ensureInitialized();
-    LOG("parseSubmissionURL: Parsing \"" + aURL + "\".");
+    if (!gInitialized) {
+      // If search is not initialized, do nothing.
+      // This allows us to use this function early in telemetry.
+      // The only other consumer of this (places) uses it much later.
+      return gEmptyParseSubmissionResult;
+    }
 
     if (!this._parseSubmissionMap) {
       this._buildParseSubmissionMap();
@@ -4399,7 +4391,6 @@ SearchService.prototype = {
 
       // Exclude any URL that is not HTTP or HTTPS from the beginning.
       if (soughtUrl.scheme != "http" && soughtUrl.scheme != "https") {
-        LOG("The URL scheme is not HTTP or HTTPS.");
         return gEmptyParseSubmissionResult;
       }
 
@@ -4408,14 +4399,12 @@ SearchService.prototype = {
       soughtQuery = soughtUrl.query;
     } catch (ex) {
       // Errors while parsing the URL or accessing the properties are not fatal.
-      LOG("The value does not look like a structured URL.");
       return gEmptyParseSubmissionResult;
     }
 
     // Look up the domain and path in the map to identify the search engine.
     let mapEntry = this._parseSubmissionMap.get(soughtKey);
     if (!mapEntry) {
-      LOG("No engine associated with domain and path: " + soughtKey);
       return gEmptyParseSubmissionResult;
     }
 
@@ -4432,7 +4421,6 @@ SearchService.prototype = {
       }
     }
     if (encodedTerms === null) {
-      LOG("Missing terms parameter: " + mapEntry.termsParameterName);
       return gEmptyParseSubmissionResult;
     }
 
@@ -4461,12 +4449,9 @@ SearchService.prototype = {
         encodedTerms.replace(/\+/g, " "));
     } catch (ex) {
       // Decoding errors will cause this match to be ignored.
-      LOG("Parameter decoding failed. Charset: " +
-          mapEntry.engine.queryCharset);
       return gEmptyParseSubmissionResult;
     }
 
-    LOG("Match found. Terms: " + terms);
     return new ParseSubmissionResult(mapEntry.engine, terms, offset, length);
   },
 
