@@ -4,6 +4,8 @@
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // Turn off the authentication dialog blocking for this test.
 var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
@@ -283,20 +285,7 @@ var listener = {
   onStopRequest: function test_onStopR(request, ctx, status) {
     Assert.equal(status, Cr.NS_ERROR_ABORT);
 
-    if (current_test < (tests.length - 1)) {
-      // First, gotta clear the auth cache
-      Cc["@mozilla.org/network/http-auth-manager;1"]
-        .getService(Ci.nsIHttpAuthManager)
-        .clearAll();
-
-      current_test++;
-      tests[current_test]();
-    } else {
-      do_test_pending();
-      httpserv.stop(do_test_finished);
-    }
-
-    do_test_finished();
+    moveToNextTest();
   }
 };
 
@@ -318,11 +307,28 @@ var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
              test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
              test_basicrealm, test_nonascii, test_digest_noauth, test_digest,
              test_digest_bogus_user, test_short_digest, test_large_realm,
-             test_large_domain];
+             test_large_domain, test_nonascii_xhr];
 
 var current_test = 0;
 
 var httpserv = null;
+
+function moveToNextTest() {
+  if (current_test < (tests.length - 1)) {
+    // First, gotta clear the auth cache
+    Cc["@mozilla.org/network/http-auth-manager;1"]
+      .getService(Ci.nsIHttpAuthManager)
+      .clearAll();
+
+    current_test++;
+    tests[current_test]();
+  } else {
+    do_test_pending();
+    httpserv.stop(do_test_finished);
+  }
+
+  do_test_finished();
+}
 
 function run_test() {
   httpserv = new HttpServer();
@@ -460,6 +466,21 @@ function test_nonascii() {
   do_test_pending();
 }
 
+function test_nonascii_xhr() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", URL + "/auth/non_ascii", true, "é", "é");
+  xhr.onreadystatechange = function(event) {
+    if (xhr.readyState == 4) {
+      Assert.equal(xhr.status, 200);
+      moveToNextTest();
+      xhr.onreadystatechange = null;
+    }
+  };
+  xhr.send(null);
+
+  do_test_pending();
+}
+
 function test_digest_noauth() {
   var chan = makeChan(URL + "/auth/digest", URL);
 
@@ -561,7 +582,8 @@ function authNonascii(metadata, response) {
     response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
 
-    body = "success";
+    // Use correct XML syntax since this function is also used for testing XHR.
+    body = "<?xml version='1.0' ?><root>success</root>";
   }
   else
   {
@@ -569,7 +591,7 @@ function authNonascii(metadata, response) {
     response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
 
-    body = "failed";
+    body = "<?xml version='1.0' ?><root>failed</root>";
   }
 
   response.bodyOutputStream.write(body, body.length);
