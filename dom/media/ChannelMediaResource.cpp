@@ -11,6 +11,7 @@
 #include "nsIClassOfService.h"
 #include "nsIInputStream.h"
 #include "nsIThreadRetargetableRequest.h"
+#include "nsHttp.h"
 #include "nsNetUtil.h"
 
 static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
@@ -222,7 +223,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     nsAutoCString ranges;
     Unused << hc->GetResponseHeader(NS_LITERAL_CSTRING("Accept-Ranges"),
                                     ranges);
-    bool acceptsRanges = ranges.EqualsLiteral("bytes");
+    bool acceptsRanges =
+      net::nsHttp::FindToken(ranges.get(), "bytes", HTTP_HEADER_VALUE_SEPS);
 
     int64_t contentLength = -1;
     const bool isCompressed = IsPayloadCompressed(hc);
