@@ -143,7 +143,6 @@ class BrowserMenuAdapter(
         }
 
         if (AppConstants.isGeckoBuild) {
-            items.add(MenuItem.RequestDesktopCheck)
             // "Report Site Issue" is available for builds using GeckoView only
             items.add(
                 MenuItem.Default(
