@@ -493,14 +493,20 @@ class MacroAssemblerARM : public Assembler
     // - all three registers must be different.
     // - tmp and dest will get clobbered, ptr will remain intact.
     // - byteSize can be up to 4 bytes and no more (GPR are 32 bits on ARM).
-    void emitUnalignedLoad(bool isSigned, unsigned byteSize, Register ptr, Register tmp,
+    // - offset can be 0 or 4
+    // If `access` is not null then emit the appropriate access metadata.
+    void emitUnalignedLoad(const wasm::MemoryAccessDesc* access,
+                           bool isSigned, unsigned byteSize, Register ptr, Register tmp,
                            Register dest, unsigned offset = 0);
 
     // Ditto, for a store. Note stores don't care about signedness.
     // - the two registers must be different.
     // - val will get clobbered, ptr will remain intact.
     // - byteSize can be up to 4 bytes and no more (GPR are 32 bits on ARM).
-    void emitUnalignedStore(unsigned byteSize, Register ptr, Register val, unsigned offset = 0);
+    // - offset can be 0 or 4
+    // If `access` is not null then emit the appropriate access metadata.
+    void emitUnalignedStore(const wasm::MemoryAccessDesc* access,
+                            unsigned byteSize, Register ptr, Register val, unsigned offset = 0);
 
     // Implementation for transferMultipleByRuns so we can use different
     // iterators for forward/backward traversals. The sign argument should be 1
