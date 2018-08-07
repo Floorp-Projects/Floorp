@@ -116,7 +116,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "seen", "dependencies", "hasEmbeddedWebExtension",
                           "userPermissions", "icons", "iconURL", "icon64URL",
                           "blocklistState", "blocklistURL", "startupData",
-                          "previewImage"];
+                          "previewImage", "hidden"];
 
 const LEGACY_TYPES = new Set([
   "extension",
@@ -288,6 +288,7 @@ class AddonInternal {
     this.seen = true;
     this.skinnable = false;
     this.startupData = null;
+    this._hidden = false;
 
     this.inDatabase = false;
 
@@ -416,7 +417,12 @@ class AddonInternal {
   }
 
   get hidden() {
-    return this.location.isSystem;
+    return this.location.isSystem ||
+           (this._hidden && this.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED);
+  }
+
+  set hidden(val) {
+    this._hidden = val;
   }
 
   get disabled() {
@@ -577,10 +583,10 @@ class AddonInternal {
     }
 
     if (this.inDatabase) {
-      // hidden and system add-ons should not be user disabled,
-      // as there is no UI to re-enable them.
-      if (this.hidden) {
-        throw new Error(`Cannot disable hidden add-on ${this.id}`);
+      // System add-ons should not be user disabled, as there is no UI to
+      // re-enable them.
+      if (this.location.isSystem) {
+        throw new Error(`Cannot disable system add-on ${this.id}`);
       }
       await XPIDatabase.updateAddonDisabledState(this, val);
     } else {
