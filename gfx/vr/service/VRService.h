@@ -11,7 +11,6 @@
 
 #include "moz_external_vr.h"
 
-#include <thread>
 namespace base {
 class Thread;
 } // namespace base

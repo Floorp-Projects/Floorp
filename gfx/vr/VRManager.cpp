@@ -15,6 +15,7 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/Unused.h"
+#include "mozilla/gfx/GPUParent.h"
 
 #include "gfxPrefs.h"
 #include "gfxVR.h"
@@ -48,6 +49,8 @@ VRManager::ManagerInit()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // TODO: We should make VRManager::ManagerInit
+  // be called when entering VR content pages.
   if (sVRManagerSingleton == nullptr) {
     sVRManagerSingleton = new VRManager();
     ClearOnShutdown(&sVRManagerSingleton);
@@ -81,7 +84,13 @@ VRManager::VRManager()
 #if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
   // The VR Service accesses all hardware from a separate process
   // and replaces the other VRSystemManager when enabled.
-  mVRService = VRService::Create();
+  if (!gfxPrefs::VRProcessEnabled()) {
+    mVRService = VRService::Create();
+  } else if (gfxPrefs::VRProcessEnabled() && XRE_IsGPUProcess()) {
+    gfx::GPUParent* gpu = GPUParent::GetSingleton();
+    MOZ_ASSERT(gpu);
+    Unused << gpu->SendCreateVRProcess();
+  }
   if (mVRService) {
     mExternalManager = VRSystemManagerExternal::Create(mVRService->GetAPIShmem());
   }
