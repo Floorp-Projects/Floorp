@@ -3,20 +3,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .sidebar-item {
-  --sidebar-item-color: var(--grey-50);
-  --sidebar-item-selected-color: var(--blue-55);
+  /* Import css variables from common.css */
+  --sidebar-text-color: var(--in-content-category-text);
+  --sidebar-selected-color: var(--in-content-category-text-selected);
+  --sidebar-background-hover: var(--in-content-category-background-hover);
 }
 
 .sidebar-item {
-  color: var(--sidebar-item-color);
   align-items: center;
+  border-radius: 2px;
+  color: var(--sidebar-text-color);
   display: flex;
-  font-size: 20px;
+  font-size: 16px;
+  height: 48px;
   margin-inline-start: 24px;
+  padding-inline-end: 10px;
+  padding-inline-start: 10px;
+  transition: background-color 150ms;
+  -moz-user-select: none;
+}
+
+.sidebar-item:hover {
+  background-color: var(--sidebar-background-hover);
 }
 
 .sidebar-item__icon {
-  fill: var(--sidebar-item-color);
+  fill: currentColor;
   height: 24px;
   margin-inline-end: 9px;
   width: 24px;
@@ -24,9 +36,5 @@
 }
 
 .sidebar-item--selected {
-  color: var(--sidebar-item-selected-color);
-}
-
-.sidebar-item__icon--selected {
-  fill: var(--sidebar-item-selected-color);
+  color: var(--sidebar-selected-color);
 }
