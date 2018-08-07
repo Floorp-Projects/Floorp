@@ -14,24 +14,24 @@
 #include "./vp9_rtcd.h"
 #include "./vpx_config.h"
 #include "vpx_dsp/vpx_dsp_common.h"
-#include "vpx_dsp/x86/fdct.h"
+#include "vpx_dsp/x86/bitdepth_conversion_sse2.h"
 #include "vpx_dsp/x86/inv_txfm_sse2.h"
 #include "vpx_dsp/x86/txfm_common_sse2.h"
 
 void vp9_fdct8x8_quant_ssse3(
     const int16_t *input, int stride, tran_low_t *coeff_ptr, intptr_t n_coeffs,
-    int skip_block, const int16_t *zbin_ptr, const int16_t *round_ptr,
-    const int16_t *quant_ptr, const int16_t *quant_shift_ptr,
+    int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr,
     tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
     uint16_t *eob_ptr, const int16_t *scan_ptr, const int16_t *iscan_ptr) {
   __m128i zero;
   int pass;
+
   // Constants
   //    When we use them, in one case, they are all the same. In all others
   //    it's a pair of them that we need to repeat four times. This is done
   //    by constructing the 32 bit constant corresponding to that pair.
   const __m128i k__dual_p16_p16 = dual_set_epi16(23170, 23170);
-  const __m128i k__cospi_p16_p16 = _mm_set1_epi16((int16_t)cospi_16_64);
+  const __m128i k__cospi_p16_p16 = _mm_set1_epi16(cospi_16_64);
   const __m128i k__cospi_p16_m16 = pair_set_epi16(cospi_16_64, -cospi_16_64);
   const __m128i k__cospi_p24_p08 = pair_set_epi16(cospi_24_64, cospi_8_64);
   const __m128i k__cospi_m08_p24 = pair_set_epi16(-cospi_8_64, cospi_24_64);
@@ -53,8 +53,6 @@ void vp9_fdct8x8_quant_ssse3(
   int index = 0;
 
   (void)scan_ptr;
-  (void)zbin_ptr;
-  (void)quant_shift_ptr;
   (void)coeff_ptr;
 
   // Pre-condition input (shift by two)

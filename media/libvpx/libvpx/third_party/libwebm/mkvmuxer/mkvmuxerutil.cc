@@ -10,6 +10,7 @@
 
 #ifdef __ANDROID__
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 
 #include <cassert>
@@ -288,7 +289,7 @@ uint64 EbmlElementSize(uint64 type, const char* value) {
   ebml_size += strlen(value);
 
   // Size of Datasize
-  ebml_size++;
+  ebml_size += GetCodedUIntSize(strlen(value));
 
   return ebml_size;
 }

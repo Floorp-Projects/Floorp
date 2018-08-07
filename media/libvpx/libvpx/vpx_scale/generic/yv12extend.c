@@ -111,25 +111,6 @@ void vp8_yv12_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
   assert(ybf->y_height - ybf->y_crop_height >= 0);
   assert(ybf->y_width - ybf->y_crop_width >= 0);
 
-#if CONFIG_VP9_HIGHBITDEPTH
-  if (ybf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    extend_plane_high(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
-                      ybf->y_crop_height, ybf->border, ybf->border,
-                      ybf->border + ybf->y_height - ybf->y_crop_height,
-                      ybf->border + ybf->y_width - ybf->y_crop_width);
-
-    extend_plane_high(ybf->u_buffer, ybf->uv_stride, ybf->uv_crop_width,
-                      ybf->uv_crop_height, uv_border, uv_border,
-                      uv_border + ybf->uv_height - ybf->uv_crop_height,
-                      uv_border + ybf->uv_width - ybf->uv_crop_width);
-
-    extend_plane_high(ybf->v_buffer, ybf->uv_stride, ybf->uv_crop_width,
-                      ybf->uv_crop_height, uv_border, uv_border,
-                      uv_border + ybf->uv_height - ybf->uv_crop_height,
-                      uv_border + ybf->uv_width - ybf->uv_crop_width);
-    return;
-  }
-#endif
   extend_plane(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
                ybf->y_crop_height, ybf->border, ybf->border,
                ybf->border + ybf->y_height - ybf->y_crop_height,
@@ -208,7 +189,50 @@ static void memcpy_short_addr(uint8_t *dst8, const uint8_t *src8, int num) {
 // Copies the source image into the destination image and updates the
 // destination's UMV borders.
 // Note: The frames are assumed to be identical in size.
+
 void vp8_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_ybc,
+                           YV12_BUFFER_CONFIG *dst_ybc) {
+  int row;
+  const uint8_t *src = src_ybc->y_buffer;
+  uint8_t *dst = dst_ybc->y_buffer;
+
+#if 0
+  /* These assertions are valid in the codec, but the libvpx-tester uses
+   * this code slightly differently.
+   */
+  assert(src_ybc->y_width == dst_ybc->y_width);
+  assert(src_ybc->y_height == dst_ybc->y_height);
+#endif
+
+  for (row = 0; row < src_ybc->y_height; ++row) {
+    memcpy(dst, src, src_ybc->y_width);
+    src += src_ybc->y_stride;
+    dst += dst_ybc->y_stride;
+  }
+
+  src = src_ybc->u_buffer;
+  dst = dst_ybc->u_buffer;
+
+  for (row = 0; row < src_ybc->uv_height; ++row) {
+    memcpy(dst, src, src_ybc->uv_width);
+    src += src_ybc->uv_stride;
+    dst += dst_ybc->uv_stride;
+  }
+
+  src = src_ybc->v_buffer;
+  dst = dst_ybc->v_buffer;
+
+  for (row = 0; row < src_ybc->uv_height; ++row) {
+    memcpy(dst, src, src_ybc->uv_width);
+    src += src_ybc->uv_stride;
+    dst += dst_ybc->uv_stride;
+  }
+
+  vp8_yv12_extend_frame_borders_c(dst_ybc);
+}
+
+#if CONFIG_VP9
+void vpx_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_ybc,
                            YV12_BUFFER_CONFIG *dst_ybc) {
   int row;
   const uint8_t *src = src_ybc->y_buffer;
@@ -249,7 +273,7 @@ void vp8_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_ybc,
       dst += dst_ybc->uv_stride;
     }
 
-    vp8_yv12_extend_frame_borders_c(dst_ybc);
+    vpx_extend_frame_borders_c(dst_ybc);
     return;
   } else {
     assert(!(dst_ybc->flags & YV12_FLAG_HIGHBITDEPTH));
@@ -280,8 +304,9 @@ void vp8_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_ybc,
     dst += dst_ybc->uv_stride;
   }
 
-  vp8_yv12_extend_frame_borders_c(dst_ybc);
+  vpx_extend_frame_borders_c(dst_ybc);
 }
+#endif  // CONFIG_VP9
 
 void vpx_yv12_copy_y_c(const YV12_BUFFER_CONFIG *src_ybc,
                        YV12_BUFFER_CONFIG *dst_ybc) {

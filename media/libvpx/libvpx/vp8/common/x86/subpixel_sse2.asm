@@ -16,6 +16,7 @@ extern sym(vp8_bilinear_filters_x86_8)
 %define VP8_FILTER_WEIGHT 128
 %define VP8_FILTER_SHIFT  7
 
+SECTION .text
 
 ;/************************************************************************************
 ; Notes: filter_block1d_h6 applies a 6 tap filter horizontally to the input pixels. The

@@ -49,7 +49,7 @@ typedef struct {
   uint8_t speed;
 } LAYER_CONTEXT;
 
-typedef struct {
+typedef struct SVC {
   int spatial_layer_id;
   int temporal_layer_id;
   int number_spatial_layers;
@@ -87,7 +87,20 @@ typedef struct {
   int ref_frame_index[REF_FRAMES];
   int force_zero_mode_spatial_ref;
   int current_superframe;
+  int non_reference_frame;
   int use_base_mv;
+  // Used to control the downscaling filter for source scaling, for 1 pass CBR.
+  // downsample_filter_phase: = 0 will do sub-sampling (no weighted average),
+  // = 8 will center the target pixel and get a symmetric averaging filter.
+  // downsample_filter_type: 4 filters may be used: eighttap_regular,
+  // eighttap_smooth, eighttap_sharp, and bilinear.
+  INTERP_FILTER downsample_filter_type[VPX_SS_MAX_LAYERS];
+  int downsample_filter_phase[VPX_SS_MAX_LAYERS];
+
+  BLOCK_SIZE *prev_partition_svc;
+  int mi_stride[VPX_MAX_LAYERS];
+
+  int first_layer_denoise;
 } SVC;
 
 struct VP9_COMP;
@@ -117,6 +130,10 @@ void vp9_save_layer_context(struct VP9_COMP *const cpi);
 // Initialize second pass rc for spatial svc.
 void vp9_init_second_pass_spatial_svc(struct VP9_COMP *cpi);
 
+void get_layer_resolution(const int width_org, const int height_org,
+                          const int num, const int den, int *width_out,
+                          int *height_out);
+
 // Increment number of video frames in layer
 void vp9_inc_frame_in_layer(struct VP9_COMP *const cpi);
 
@@ -136,6 +153,8 @@ int vp9_one_pass_cbr_svc_start_layer(struct VP9_COMP *const cpi);
 void vp9_free_svc_cyclic_refresh(struct VP9_COMP *const cpi);
 
 void vp9_svc_reset_key_frame(struct VP9_COMP *const cpi);
+
+void vp9_svc_check_reset_layer_rc_flag(struct VP9_COMP *const cpi);
 
 #ifdef __cplusplus
 }  // extern "C"

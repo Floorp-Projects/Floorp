@@ -298,10 +298,10 @@ TEST_P(ResizeTest, TestExternalResizeWorks) {
     unsigned int expected_h;
     ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight, &expected_w,
                         &expected_h, 0);
-    EXPECT_EQ(expected_w, info->w) << "Frame " << frame
-                                   << " had unexpected width";
-    EXPECT_EQ(expected_h, info->h) << "Frame " << frame
-                                   << " had unexpected height";
+    EXPECT_EQ(expected_w, info->w)
+        << "Frame " << frame << " had unexpected width";
+    EXPECT_EQ(expected_h, info->h)
+        << "Frame " << frame << " had unexpected height";
   }
 }
 
@@ -513,10 +513,10 @@ TEST_P(ResizeRealtimeTest, TestExternalResizeWorks) {
     unsigned int expected_h;
     ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight, &expected_w,
                         &expected_h, 1);
-    EXPECT_EQ(expected_w, info->w) << "Frame " << frame
-                                   << " had unexpected width";
-    EXPECT_EQ(expected_h, info->h) << "Frame " << frame
-                                   << " had unexpected height";
+    EXPECT_EQ(expected_w, info->w)
+        << "Frame " << frame << " had unexpected width";
+    EXPECT_EQ(expected_h, info->h)
+        << "Frame " << frame << " had unexpected height";
     EXPECT_EQ(static_cast<unsigned int>(0), GetMismatchFrames());
   }
 }

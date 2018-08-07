@@ -222,7 +222,7 @@ unsigned int vpx_variance16x16_sse2(const unsigned char *src, int src_stride,
                                     unsigned int *sse) {
   int sum;
   vpx_get16x16var_sse2(src, src_stride, ref, ref_stride, sse, &sum);
-  return *sse - (((uint32_t)((int64_t)sum * sum)) >> 8);
+  return *sse - (uint32_t)(((int64_t)sum * sum) >> 8);
 }
 
 unsigned int vpx_variance32x32_sse2(const uint8_t *src, int src_stride,

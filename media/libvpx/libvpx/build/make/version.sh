@@ -60,6 +60,7 @@ if [ ${bare} ]; then
     echo "${changelog_version}${git_version_id}" > $$.tmp
 else
     cat<<EOF>$$.tmp
+// This file is generated. Do not edit.
 #define VERSION_MAJOR  $major_version
 #define VERSION_MINOR  $minor_version
 #define VERSION_PATCH  $patch_version

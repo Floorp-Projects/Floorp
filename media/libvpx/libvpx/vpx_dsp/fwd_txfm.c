@@ -84,7 +84,7 @@ void vpx_fdct4x4_1_c(const int16_t *input, tran_low_t *output, int stride) {
   for (r = 0; r < 4; ++r)
     for (c = 0; c < 4; ++c) sum += input[r * stride + c];
 
-  output[0] = sum << 1;
+  output[0] = sum * 2;
 }
 
 void vpx_fdct8x8_c(const int16_t *input, tran_low_t *final_output, int stride) {

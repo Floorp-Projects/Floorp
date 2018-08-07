@@ -99,9 +99,7 @@ class VpxEncoderParmsGetToDecoder
     vpx_codec_ctx_t *const vp9_decoder = decoder->GetDecoder();
     vpx_codec_alg_priv_t *const priv =
         reinterpret_cast<vpx_codec_alg_priv_t *>(vp9_decoder->priv);
-    FrameWorkerData *const worker_data =
-        reinterpret_cast<FrameWorkerData *>(priv->frame_workers[0].data1);
-    VP9_COMMON *const common = &worker_data->pbi->common;
+    VP9_COMMON *const common = &priv->pbi->common;
 
     if (encode_parms.lossless) {
       EXPECT_EQ(0, common->base_qindex);

@@ -156,6 +156,8 @@ void vp9_idct16x16_add(const tran_low_t *input, uint8_t *dest, int stride,
     vpx_idct16x16_1_add(input, dest, stride);
   else if (eob <= 10)
     vpx_idct16x16_10_add(input, dest, stride);
+  else if (eob <= 38)
+    vpx_idct16x16_38_add(input, dest, stride);
   else
     vpx_idct16x16_256_add(input, dest, stride);
 }
@@ -203,7 +205,7 @@ void vp9_iht16x16_add(TX_TYPE tx_type, const tran_low_t *input, uint8_t *dest,
 
 #if CONFIG_VP9_HIGHBITDEPTH
 
-void vp9_highbd_iht4x4_16_add_c(const tran_low_t *input, uint8_t *dest8,
+void vp9_highbd_iht4x4_16_add_c(const tran_low_t *input, uint16_t *dest,
                                 int stride, int tx_type, int bd) {
   const highbd_transform_2d IHT_4[] = {
     { vpx_highbd_idct4_c, vpx_highbd_idct4_c },   // DCT_DCT  = 0
@@ -211,7 +213,6 @@ void vp9_highbd_iht4x4_16_add_c(const tran_low_t *input, uint8_t *dest8,
     { vpx_highbd_idct4_c, vpx_highbd_iadst4_c },  // DCT_ADST = 2
     { vpx_highbd_iadst4_c, vpx_highbd_iadst4_c }  // ADST_ADST = 3
   };
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
 
   int i, j;
   tran_low_t out[4 * 4];
@@ -243,14 +244,13 @@ static const highbd_transform_2d HIGH_IHT_8[] = {
   { vpx_highbd_iadst8_c, vpx_highbd_iadst8_c }  // ADST_ADST = 3
 };
 
-void vp9_highbd_iht8x8_64_add_c(const tran_low_t *input, uint8_t *dest8,
+void vp9_highbd_iht8x8_64_add_c(const tran_low_t *input, uint16_t *dest,
                                 int stride, int tx_type, int bd) {
   int i, j;
   tran_low_t out[8 * 8];
   tran_low_t *outptr = out;
   tran_low_t temp_in[8], temp_out[8];
   const highbd_transform_2d ht = HIGH_IHT_8[tx_type];
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
 
   // Inverse transform row vectors.
   for (i = 0; i < 8; ++i) {
@@ -277,14 +277,13 @@ static const highbd_transform_2d HIGH_IHT_16[] = {
   { vpx_highbd_iadst16_c, vpx_highbd_iadst16_c }  // ADST_ADST = 3
 };
 
-void vp9_highbd_iht16x16_256_add_c(const tran_low_t *input, uint8_t *dest8,
+void vp9_highbd_iht16x16_256_add_c(const tran_low_t *input, uint16_t *dest,
                                    int stride, int tx_type, int bd) {
   int i, j;
   tran_low_t out[16 * 16];
   tran_low_t *outptr = out;
   tran_low_t temp_in[16], temp_out[16];
   const highbd_transform_2d ht = HIGH_IHT_16[tx_type];
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
 
   // Rows
   for (i = 0; i < 16; ++i) {
@@ -305,7 +304,7 @@ void vp9_highbd_iht16x16_256_add_c(const tran_low_t *input, uint8_t *dest8,
 }
 
 // idct
-void vp9_highbd_idct4x4_add(const tran_low_t *input, uint8_t *dest, int stride,
+void vp9_highbd_idct4x4_add(const tran_low_t *input, uint16_t *dest, int stride,
                             int eob, int bd) {
   if (eob > 1)
     vpx_highbd_idct4x4_16_add(input, dest, stride, bd);
@@ -313,7 +312,7 @@ void vp9_highbd_idct4x4_add(const tran_low_t *input, uint8_t *dest, int stride,
     vpx_highbd_idct4x4_1_add(input, dest, stride, bd);
 }
 
-void vp9_highbd_iwht4x4_add(const tran_low_t *input, uint8_t *dest, int stride,
+void vp9_highbd_iwht4x4_add(const tran_low_t *input, uint16_t *dest, int stride,
                             int eob, int bd) {
   if (eob > 1)
     vpx_highbd_iwht4x4_16_add(input, dest, stride, bd);
@@ -321,7 +320,7 @@ void vp9_highbd_iwht4x4_add(const tran_low_t *input, uint8_t *dest, int stride,
     vpx_highbd_iwht4x4_1_add(input, dest, stride, bd);
 }
 
-void vp9_highbd_idct8x8_add(const tran_low_t *input, uint8_t *dest, int stride,
+void vp9_highbd_idct8x8_add(const tran_low_t *input, uint16_t *dest, int stride,
                             int eob, int bd) {
   // If dc is 1, then input[0] is the reconstructed value, do not need
   // dequantization. Also, when dc is 1, dc is counted in eobs, namely eobs >=1.
@@ -338,7 +337,7 @@ void vp9_highbd_idct8x8_add(const tran_low_t *input, uint8_t *dest, int stride,
   }
 }
 
-void vp9_highbd_idct16x16_add(const tran_low_t *input, uint8_t *dest,
+void vp9_highbd_idct16x16_add(const tran_low_t *input, uint16_t *dest,
                               int stride, int eob, int bd) {
   // The calculation can be simplified if there are not many non-zero dct
   // coefficients. Use eobs to separate different cases.
@@ -347,18 +346,22 @@ void vp9_highbd_idct16x16_add(const tran_low_t *input, uint8_t *dest,
     vpx_highbd_idct16x16_1_add(input, dest, stride, bd);
   } else if (eob <= 10) {
     vpx_highbd_idct16x16_10_add(input, dest, stride, bd);
+  } else if (eob <= 38) {
+    vpx_highbd_idct16x16_38_add(input, dest, stride, bd);
   } else {
     vpx_highbd_idct16x16_256_add(input, dest, stride, bd);
   }
 }
 
-void vp9_highbd_idct32x32_add(const tran_low_t *input, uint8_t *dest,
+void vp9_highbd_idct32x32_add(const tran_low_t *input, uint16_t *dest,
                               int stride, int eob, int bd) {
   // Non-zero coeff only in upper-left 8x8
   if (eob == 1) {
     vpx_highbd_idct32x32_1_add(input, dest, stride, bd);
   } else if (eob <= 34) {
     vpx_highbd_idct32x32_34_add(input, dest, stride, bd);
+  } else if (eob <= 135) {
+    vpx_highbd_idct32x32_135_add(input, dest, stride, bd);
   } else {
     vpx_highbd_idct32x32_1024_add(input, dest, stride, bd);
   }
@@ -366,7 +369,7 @@ void vp9_highbd_idct32x32_add(const tran_low_t *input, uint8_t *dest,
 
 // iht
 void vp9_highbd_iht4x4_add(TX_TYPE tx_type, const tran_low_t *input,
-                           uint8_t *dest, int stride, int eob, int bd) {
+                           uint16_t *dest, int stride, int eob, int bd) {
   if (tx_type == DCT_DCT)
     vp9_highbd_idct4x4_add(input, dest, stride, eob, bd);
   else
@@ -374,7 +377,7 @@ void vp9_highbd_iht4x4_add(TX_TYPE tx_type, const tran_low_t *input,
 }
 
 void vp9_highbd_iht8x8_add(TX_TYPE tx_type, const tran_low_t *input,
-                           uint8_t *dest, int stride, int eob, int bd) {
+                           uint16_t *dest, int stride, int eob, int bd) {
   if (tx_type == DCT_DCT) {
     vp9_highbd_idct8x8_add(input, dest, stride, eob, bd);
   } else {
@@ -383,7 +386,7 @@ void vp9_highbd_iht8x8_add(TX_TYPE tx_type, const tran_low_t *input,
 }
 
 void vp9_highbd_iht16x16_add(TX_TYPE tx_type, const tran_low_t *input,
-                             uint8_t *dest, int stride, int eob, int bd) {
+                             uint16_t *dest, int stride, int eob, int bd) {
   if (tx_type == DCT_DCT) {
     vp9_highbd_idct16x16_add(input, dest, stride, eob, bd);
   } else {

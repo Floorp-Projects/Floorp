@@ -125,6 +125,8 @@
         pxor        %1, [GLOBAL(t80)]
 %endmacro
 
+SECTION .text
+
 ;void vp8_loop_filter_bh_y_sse2
 ;(
 ;    unsigned char *src_ptr,

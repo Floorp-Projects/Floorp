@@ -187,8 +187,8 @@ void DecodeFiles(const FileList files[]) {
   for (const FileList *iter = files; iter->name != NULL; ++iter) {
     SCOPED_TRACE(iter->name);
     for (int t = 1; t <= 8; ++t) {
-      EXPECT_EQ(iter->expected_md5, DecodeFile(iter->name, t)) << "threads = "
-                                                               << t;
+      EXPECT_EQ(iter->expected_md5, DecodeFile(iter->name, t))
+          << "threads = " << t;
     }
   }
 }

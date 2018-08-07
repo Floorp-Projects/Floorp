@@ -36,7 +36,8 @@ static INLINE void idct8x8_1_add_neg_kernel(uint8_t **dest, const int stride,
 
 void vpx_idct8x8_1_add_neon(const tran_low_t *input, uint8_t *dest,
                             int stride) {
-  const int16_t out0 = WRAPLOW(dct_const_round_shift(input[0] * cospi_16_64));
+  const int16_t out0 =
+      WRAPLOW(dct_const_round_shift((int16_t)input[0] * cospi_16_64));
   const int16_t out1 = WRAPLOW(dct_const_round_shift(out0 * cospi_16_64));
   const int16_t a1 = ROUND_POWER_OF_TWO(out1, 5);
 

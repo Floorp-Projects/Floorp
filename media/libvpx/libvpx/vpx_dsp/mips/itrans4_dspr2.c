@@ -343,6 +343,7 @@ void iadst4_dspr2(const int16_t *input, int16_t *output) {
     return;
   }
 
+  // 32-bit result is enough for the following multiplications.
   s0 = sinpi_1_9 * x0;
   s1 = sinpi_2_9 * x0;
   s2 = sinpi_3_9 * x1;

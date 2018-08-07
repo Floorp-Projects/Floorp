@@ -37,13 +37,10 @@ extern "C" {
 #define REF_FRAMES_LOG2 3
 #define REF_FRAMES (1 << REF_FRAMES_LOG2)
 
-// 4 scratch frames for the new frames to support a maximum of 4 cores decoding
-// in parallel, 3 for scaled references on the encoder.
-// TODO(hkuang): Add ondemand frame buffers instead of hardcoding the number
-// of framebuffers.
+// 1 scratch frame for the new frame, 3 for scaled references on the encoder.
 // TODO(jkoleszar): These 3 extra references could probably come from the
 // normal reference pool.
-#define FRAME_BUFFERS (REF_FRAMES + 7)
+#define FRAME_BUFFERS (REF_FRAMES + 4)
 
 #define FRAME_CONTEXTS_LOG2 2
 #define FRAME_CONTEXTS (1 << FRAME_CONTEXTS_LOG2)
@@ -72,30 +69,12 @@ typedef struct {
   MV_REF *mvs;
   int mi_rows;
   int mi_cols;
+  uint8_t released;
   vpx_codec_frame_buffer_t raw_frame_buffer;
   YV12_BUFFER_CONFIG buf;
-
-  // The Following variables will only be used in frame parallel decode.
-
-  // frame_worker_owner indicates which FrameWorker owns this buffer. NULL means
-  // that no FrameWorker owns, or is decoding, this buffer.
-  VPxWorker *frame_worker_owner;
-
-  // row and col indicate which position frame has been decoded to in real
-  // pixel unit. They are reset to -1 when decoding begins and set to INT_MAX
-  // when the frame is fully decoded.
-  int row;
-  int col;
 } RefCntBuffer;
 
 typedef struct BufferPool {
-// Protect BufferPool from being accessed by several FrameWorkers at
-// the same time during frame parallel decode.
-// TODO(hkuang): Try to use atomic variable instead of locking the whole pool.
-#if CONFIG_MULTITHREAD
-  pthread_mutex_t pool_mutex;
-#endif
-
   // Private data associated with the frame buffer callbacks.
   void *cb_priv;
 
@@ -235,10 +214,6 @@ typedef struct VP9Common {
   struct loopfilter lf;
   struct segmentation seg;
 
-  // TODO(hkuang): Remove this as it is the same as frame_parallel_decode
-  // in pbi.
-  int frame_parallel_decode;  // frame-based threading.
-
   // Context probabilities for reference frame prediction
   MV_REFERENCE_FRAME comp_fixed_ref;
   MV_REFERENCE_FRAME comp_var_ref[2];
@@ -283,11 +258,6 @@ typedef struct VP9Common {
   int above_context_alloc_cols;
 } VP9_COMMON;
 
-// TODO(hkuang): Don't need to lock the whole pool after implementing atomic
-// frame reference count.
-void lock_buffer_pool(BufferPool *const pool);
-void unlock_buffer_pool(BufferPool *const pool);
-
 static INLINE YV12_BUFFER_CONFIG *get_ref_frame(VP9_COMMON *cm, int index) {
   if (index < 0 || index >= REF_FRAMES) return NULL;
   if (cm->ref_frame_map[index] < 0) return NULL;
@@ -303,7 +273,6 @@ static INLINE int get_free_fb(VP9_COMMON *cm) {
   RefCntBuffer *const frame_bufs = cm->buffer_pool->frame_bufs;
   int i;
 
-  lock_buffer_pool(cm->buffer_pool);
   for (i = 0; i < FRAME_BUFFERS; ++i)
     if (frame_bufs[i].ref_count == 0) break;
 
@@ -314,7 +283,6 @@ static INLINE int get_free_fb(VP9_COMMON *cm) {
     i = INVALID_IDX;
   }
 
-  unlock_buffer_pool(cm->buffer_pool);
   return i;
 }
 
@@ -342,7 +310,7 @@ static INLINE void set_partition_probs(const VP9_COMMON *const cm,
   xd->partition_probs =
       frame_is_intra_only(cm)
           ? &vp9_kf_partition_probs[0]
-          : (const vpx_prob(*)[PARTITION_TYPES - 1])cm->fc->partition_prob;
+          : (const vpx_prob(*)[PARTITION_TYPES - 1]) cm->fc->partition_prob;
 }
 
 static INLINE void vp9_init_macroblockd(VP9_COMMON *cm, MACROBLOCKD *xd,

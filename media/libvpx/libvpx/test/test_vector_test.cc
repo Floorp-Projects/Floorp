@@ -28,13 +28,10 @@
 
 namespace {
 
-enum DecodeMode { kSerialMode, kFrameParallelMode };
+const int kThreads = 0;
+const int kFileName = 1;
 
-const int kDecodeMode = 0;
-const int kThreads = 1;
-const int kFileName = 2;
-
-typedef std::tr1::tuple<int, int, const char *> DecodeParam;
+typedef std::tr1::tuple<int, const char *> DecodeParam;
 
 class TestVectorTest : public ::libvpx_test::DecoderTest,
                        public ::libvpx_test::CodecTestWithParam<DecodeParam> {
@@ -53,8 +50,8 @@ class TestVectorTest : public ::libvpx_test::DecoderTest,
 
   void OpenMD5File(const std::string &md5_file_name_) {
     md5_file_ = libvpx_test::OpenTestDataFile(md5_file_name_);
-    ASSERT_TRUE(md5_file_ != NULL) << "Md5 file open failed. Filename: "
-                                   << md5_file_name_;
+    ASSERT_TRUE(md5_file_ != NULL)
+        << "Md5 file open failed. Filename: " << md5_file_name_;
   }
 
   virtual void DecompressedFrameHook(const vpx_image_t &img,
@@ -92,29 +89,14 @@ class TestVectorTest : public ::libvpx_test::DecoderTest,
 TEST_P(TestVectorTest, MD5Match) {
   const DecodeParam input = GET_PARAM(1);
   const std::string filename = std::tr1::get<kFileName>(input);
-  const int threads = std::tr1::get<kThreads>(input);
-  const int mode = std::tr1::get<kDecodeMode>(input);
   vpx_codec_flags_t flags = 0;
   vpx_codec_dec_cfg_t cfg = vpx_codec_dec_cfg_t();
   char str[256];
 
-  if (mode == kFrameParallelMode) {
-    flags |= VPX_CODEC_USE_FRAME_THREADING;
-#if CONFIG_VP9_DECODER
-    // TODO(hkuang): Fix frame parallel decode bug. See issue 1086.
-    if (resize_clips_.find(filename) != resize_clips_.end()) {
-      printf("Skipping the test file: %s, due to frame parallel decode bug.\n",
-             filename.c_str());
-      return;
-    }
-#endif
-  }
+  cfg.threads = std::tr1::get<kThreads>(input);
 
-  cfg.threads = threads;
-
-  snprintf(str, sizeof(str) / sizeof(str[0]) - 1,
-           "file: %s  mode: %s threads: %d", filename.c_str(),
-           mode == 0 ? "Serial" : "Parallel", threads);
+  snprintf(str, sizeof(str) / sizeof(str[0]) - 1, "file: %s threads: %d",
+           filename.c_str(), cfg.threads);
   SCOPED_TRACE(str);
 
   // Open compressed video file.
@@ -145,13 +127,10 @@ TEST_P(TestVectorTest, MD5Match) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(video.get(), cfg));
 }
 
-// Test VP8 decode in serial mode with single thread.
-// NOTE: VP8 only support serial mode.
 #if CONFIG_VP8_DECODER
 VP8_INSTANTIATE_TEST_CASE(
     TestVectorTest,
     ::testing::Combine(
-        ::testing::Values(0),  // Serial Mode.
         ::testing::Values(1),  // Single thread.
         ::testing::ValuesIn(libvpx_test::kVP8TestVectors,
                             libvpx_test::kVP8TestVectors +
@@ -164,33 +143,28 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Values(
             static_cast<const libvpx_test::CodecFactory *>(&libvpx_test::kVP8)),
         ::testing::Combine(
-            ::testing::Values(0),    // Serial Mode.
-            ::testing::Range(1, 8),  // With 1 ~ 8 threads.
+            ::testing::Range(2, 9),  // With 2 ~ 8 threads.
             ::testing::ValuesIn(libvpx_test::kVP8TestVectors,
                                 libvpx_test::kVP8TestVectors +
                                     libvpx_test::kNumVP8TestVectors))));
 
 #endif  // CONFIG_VP8_DECODER
 
-// Test VP9 decode in serial mode with single thread.
 #if CONFIG_VP9_DECODER
 VP9_INSTANTIATE_TEST_CASE(
     TestVectorTest,
     ::testing::Combine(
-        ::testing::Values(0),  // Serial Mode.
         ::testing::Values(1),  // Single thread.
         ::testing::ValuesIn(libvpx_test::kVP9TestVectors,
                             libvpx_test::kVP9TestVectors +
                                 libvpx_test::kNumVP9TestVectors)));
 
-// Test VP9 decode in frame parallel mode with different number of threads.
 INSTANTIATE_TEST_CASE_P(
-    VP9MultiThreadedFrameParallel, TestVectorTest,
+    VP9MultiThreaded, TestVectorTest,
     ::testing::Combine(
         ::testing::Values(
             static_cast<const libvpx_test::CodecFactory *>(&libvpx_test::kVP9)),
         ::testing::Combine(
-            ::testing::Values(1),    // Frame Parallel mode.
             ::testing::Range(2, 9),  // With 2 ~ 8 threads.
             ::testing::ValuesIn(libvpx_test::kVP9TestVectors,
                                 libvpx_test::kVP9TestVectors +

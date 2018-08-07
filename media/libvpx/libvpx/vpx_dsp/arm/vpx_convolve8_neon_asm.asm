@@ -42,10 +42,11 @@
 ; r1    int src_stride
 ; r2    uint8_t *dst
 ; r3    int dst_stride
-; sp[]const int16_t *filter_x
-; sp[]int x_step_q4
-; sp[]const int16_t *filter_y ; unused
-; sp[]int y_step_q4           ; unused
+; sp[]const int16_t *filter
+; sp[]int x0_q4
+; sp[]int x_step_q4 ; unused
+; sp[]int y0_q4
+; sp[]int y_step_q4 ; unused
 ; sp[]int w
 ; sp[]int h
 
@@ -54,11 +55,11 @@
 
     sub             r0, r0, #3              ; adjust for taps
 
-    ldr             r5, [sp, #32]           ; filter_x
-    ldr             r6, [sp, #48]           ; w
-    ldr             r7, [sp, #52]           ; h
+    ldrd            r4, r5, [sp, #32]       ; filter, x0_q4
+    add             r4, r5, lsl #4
+    ldrd            r6, r7, [sp, #52]       ; w, h
 
-    vld1.s16        {q0}, [r5]              ; filter_x
+    vld1.s16        {q0}, [r4]              ; filter
 
     sub             r8, r1, r1, lsl #2      ; -src_stride * 3
     add             r8, r8, #4              ; -src_stride * 3 + 4
@@ -119,7 +120,7 @@ vpx_convolve8_loop_horiz
 
     pld             [r5, r1, lsl #1]
 
-    ; src[] * filter_x
+    ; src[] * filter
     MULTIPLY_BY_Q0  q1,  d16, d17, d20, d22, d18, d19, d23, d24
     MULTIPLY_BY_Q0  q2,  d17, d20, d22, d18, d19, d23, d24, d26
     MULTIPLY_BY_Q0  q14, d20, d22, d18, d19, d23, d24, d26, d27
@@ -173,11 +174,13 @@ vpx_convolve8_loop_horiz
     sub             r0, r0, r1
     sub             r0, r0, r1, lsl #1
 
-    ldr             r4, [sp, #32]           ; filter_y
-    ldr             r6, [sp, #40]           ; w
-    ldr             lr, [sp, #44]           ; h
+    ldr             r4, [sp, #24]           ; filter
+    ldr             r5, [sp, #36]           ; y0_q4
+    add             r4, r5, lsl #4
+    ldr             r6, [sp, #44]           ; w
+    ldr             lr, [sp, #48]           ; h
 
-    vld1.s16        {q0}, [r4]              ; filter_y
+    vld1.s16        {q0}, [r4]              ; filter
 
     lsl             r1, r1, #1
     lsl             r3, r3, #1
@@ -216,7 +219,7 @@ vpx_convolve8_loop_vert
     pld             [r5]
     pld             [r8]
 
-    ; src[] * filter_y
+    ; src[] * filter
     MULTIPLY_BY_Q0  q1,  d16, d17, d18, d19, d20, d21, d22, d24
 
     pld             [r5, r3]
