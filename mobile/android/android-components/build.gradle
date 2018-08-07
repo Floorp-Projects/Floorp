@@ -7,7 +7,7 @@ buildscript {
         coroutines: '0.23.4',
         supportLibraries: '27.1.1',
         fxa: '0.2.1',
-        jna: '4.5.1',
+        jna: '4.5.2',
         // Test only:
         junit: '4.12',
         robolectric: '3.8',

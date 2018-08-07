@@ -33,31 +33,38 @@ repositories {
             artifact '/project.fxaclient.builds.[revision]/artifacts/public/bin/[organisation]/[module]_[revision].[ext]'
         }
     }
-
-    ivy {
-        url 'https://github.com/'
-        layout 'pattern', {
-            artifact '/java-native-access/[organisation]/raw/[revision]/dist/[module].[ext]'
-        }
-    }
 }
 
-configurations{
+configurations {
     fxa
-    jna
+
+    // There's an interaction between Gradle's resolution of dependencies with different types
+    // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
+    // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
+    // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
+    // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
+    // what's happening is that @aar type in `implementation` resolves to the @jar type in
+    // `testImplementation`, and that it wins the dependency resolution battle.
+    //
+    // A workaround is to add a new configuration which depends on the @jar type and to reference
+    // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
+    // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
+    // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
+    // Success!
+    jnaForTest
 }
 
 dependencies {
+    jnaForTest "net.java.dev.jna:jna:${rootProject.ext.dependencies['jna']}@jar"
+
     fxa "mozilla:fxa_client_android:${rootProject.ext.dependencies['fxa']}@zip"
     fxa "mozilla:fxa_client_android_deps:${rootProject.ext.dependencies['fxa']}@zip"
-    jna "jna:android-armv7:${rootProject.ext.dependencies['jna']}@jar"
-    jna "jna:android-aarch64:${rootProject.ext.dependencies['jna']}@jar"
-    jna "jna:android-x86:${rootProject.ext.dependencies['jna']}@jar"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
-    implementation "net.java.dev.jna:jna:${rootProject.ext.dependencies['jna']}"
+    implementation "net.java.dev.jna:jna:${rootProject.ext.dependencies['jna']}@aar"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
 
+    testImplementation files(configurations.jnaForTest.files)
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
@@ -65,18 +72,7 @@ dependencies {
 
 ext.jniOutputDir = "src/main/jniLibs"
 
-ext.jnaUnzip = { task, source, target ->
-    configure(task) {
-        from zipTree(configurations.jna.find { it.name.startsWith(source) })
-        include 'libjnidispatch.so'
-        into "$jniOutputDir/$target"
-    }
-}
-task unzipJnaArm(type: Copy) { t -> jnaUnzip(t, "android-armv7", "armeabi-v7a") }
-task unzipJnaArm64(type: Copy) { t -> jnaUnzip(t, "android-aarch64", "arm64") }
-task unzipJnaX86(type: Copy) { t -> jnaUnzip(t, "android-x86", "x86") }
-
-task unzipFxaLibs(dependsOn: [unzipJnaArm, unzipJnaArm64, unzipJnaX86], type: Copy) {
+task unzipFxaLibs(type: Copy) {
     from configurations.fxa.files.collect { zipTree(it) }
     into jniOutputDir
 }
