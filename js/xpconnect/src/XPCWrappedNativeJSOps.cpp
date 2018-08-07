@@ -157,7 +157,7 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
             RootedId id(ccx, ccx.GetContext()->
                             GetStringID(XPCJSContext::IDX_WRAPPED_JSOBJECT));
 
-            JSAutoRealmAllowCCW ar(ccx, mainObj);
+            JSAutoRealm ar(ccx, underware->GetJSObjectGlobal());
 
             RootedValue val(ccx);
             if (JS_GetPropertyById(ccx, mainObj, id, &val) &&

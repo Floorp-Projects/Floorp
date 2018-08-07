@@ -556,11 +556,6 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
             remove(p);
     }
 
-    template<typename KeyInput>
-    bool add(AddPtr& p, KeyInput&& k) {
-        return map.add(p, std::forward<KeyInput>(k));
-    }
-
     template<typename KeyInput, typename ValueInput>
     bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
         return map.add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));

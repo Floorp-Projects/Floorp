@@ -91,8 +91,8 @@ public:
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode);
-  void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aTxn);
-  void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn);
+  void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn, wr::TransactionBuilder& aFastTxn);
+  void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aSceneBuilderTxn);
 
   void SetEmptyDisplayList(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn);
 
@@ -198,18 +198,20 @@ private:
   void ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
                                   const wr::PipelineId& aPipelineId,
                                   AsyncImagePipeline* aPipeline,
-                                  wr::TransactionBuilder& aTxn);
+                                  wr::TransactionBuilder& aSceneBuilderTxn,
+                                  wr::TransactionBuilder& aMaybeFastTxn);
   Maybe<TextureHost::ResourceUpdateOp>
   UpdateImageKeys(const wr::Epoch& aEpoch,
                   const wr::PipelineId& aPipelineId,
-                  wr::TransactionBuilder& aResourceUpdates,
                   AsyncImagePipeline* aPipeline,
-                  nsTArray<wr::ImageKey>& aKeys);
+                  nsTArray<wr::ImageKey>& aKeys,
+                  wr::TransactionBuilder& aSceneBuilderTxn,
+                  wr::TransactionBuilder& aMaybeFastTxn);
   Maybe<TextureHost::ResourceUpdateOp>
-  UpdateWithoutExternalImage(wr::TransactionBuilder& aResources,
-                             TextureHost* aTexture,
+  UpdateWithoutExternalImage(TextureHost* aTexture,
                              wr::ImageKey aKey,
-                             TextureHost::ResourceUpdateOp);
+                             TextureHost::ResourceUpdateOp,
+                             wr::TransactionBuilder& aTxn);
 
   RefPtr<wr::WebRenderAPI> mApi;
   wr::IdNamespace mIdNamespace;
