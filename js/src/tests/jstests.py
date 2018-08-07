@@ -383,7 +383,9 @@ def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
             extra_helper_paths=extra_helper_paths + [resolve(test_path, s) for s in test.scripts],
             wpt=test
         )
-        for test_path, test_type, test in loader.iter_tests()
+        for test_path, test in (
+            (os.path.relpath(test.path, wpt), test) for test in loader.tests["testharness"]
+        )
     ]
 
 
