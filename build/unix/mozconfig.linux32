@@ -2,12 +2,8 @@
 
 export MOZ_LINUX_32_SSE2_STARTUP_ERROR=1
 
-CFLAGS="$CFLAGS -msse -msse2 -mfpmath=sse"
-CXXFLAGS="$CXXFLAGS -msse -msse2 -mfpmath=sse"
+CFLAGS="$CFLAGS -march=pentium-m -msse -msse2 -mfpmath=sse"
+CXXFLAGS="$CXXFLAGS -march=pentium-m -msse -msse2 -mfpmath=sse"
 
-if test `uname -m` = "x86_64"; then
-  CC="$CC -m32 -march=pentium-m"
-  CXX="$CXX -m32 -march=pentium-m"
-  ac_add_options --target=i686-pc-linux
-  ac_add_options --host=i686-pc-linux
-fi
+ac_add_options --target=i686-pc-linux
+ac_add_options --host=i686-pc-linux

@@ -407,6 +407,10 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
   // Lock the image so its surfaces don't disappear during the test.
   image->LockImage();
 
+  auto unlock = mozilla::MakeScopeExit([&] {
+    image->UnlockImage();
+  });
+
   // Use GetFrame() to force a sync decode of the image, specifying FRAME_FIRST
   // to ensure that we don't get an animated decode.
   RefPtr<SourceSurface> surface =

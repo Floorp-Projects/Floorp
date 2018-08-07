@@ -273,7 +273,8 @@ public:
       p, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
   }
 
-  // Like put(), but asserts that the given key is not already present.
+  // Like put(), but slightly faster. Must only be used when the given key is
+  // not already present. (In debug builds, assertions check this.)
   template<typename KeyInput, typename ValueInput>
   MOZ_MUST_USE bool putNew(KeyInput&& aKey, ValueInput&& aValue)
   {
@@ -281,26 +282,25 @@ public:
       aKey, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
   }
 
-  // Only call this to populate an empty map after reserving space with init().
+  // Like putNew(), but should be only used when the table is known to be big
+  // enough for the insertion, and hashing cannot fail. Typically this is used
+  // to populate an empty map with known-unique keys after reserving space with
+  // init(), e.g.
+  //
+  //   using HM = HashMap<int,char>;
+  //   HM h;
+  //   if (!h.init(3)) {
+  //     MOZ_CRASH("OOM");
+  //   }
+  //   h.putNewInfallible(1, 'a');    // unique key
+  //   h.putNewInfallible(2, 'b');    // unique key
+  //   h.putNewInfallible(3, 'c');    // unique key
+  //
   template<typename KeyInput, typename ValueInput>
   void putNewInfallible(KeyInput&& aKey, ValueInput&& aValue)
   {
     mImpl.putNewInfallible(
       aKey, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
-  }
-
-  // Add (aKey,aDefaultValue) if |aKey| is not found. Return a false-y Ptr on
-  // OOM.
-  Ptr lookupWithDefault(const Key& aKey, const Value& aDefaultValue)
-  {
-    AddPtr p = lookupForAdd(aKey);
-    if (p) {
-      return p;
-    }
-    bool ok = add(p, aKey, aDefaultValue);
-    MOZ_ASSERT_IF(!ok, !p); // p is left false-y on OOM.
-    (void)ok;
-    return p;
   }
 
   // Like |lookup(l)|, but on miss, |p = lookupForAdd(l)| allows efficient
@@ -347,13 +347,6 @@ public:
   {
     return mImpl.add(
       aPtr, std::forward<KeyInput>(aKey), std::forward<ValueInput>(aValue));
-  }
-
-  // Add a given key and a default value. Returns false on OOM.
-  template<typename KeyInput>
-  MOZ_MUST_USE bool add(AddPtr& aPtr, KeyInput&& aKey)
-  {
-    return mImpl.add(aPtr, std::forward<KeyInput>(aKey), Value());
   }
 
   // See the comment above lookupForAdd() for details.
@@ -590,7 +583,8 @@ public:
     return p ? true : add(p, std::forward<U>(aU));
   }
 
-  // Like put(), but asserts that the given key is not already present.
+  // Like put(), but slightly faster. Must only be used when the given element
+  // is not already present. (In debug builds, assertions check this.)
   template<typename U>
   MOZ_MUST_USE bool putNew(U&& aU)
   {
@@ -604,7 +598,20 @@ public:
     return mImpl.putNew(aLookup, std::forward<U>(aU));
   }
 
-  // Only call this to populate an empty set after reserving space with init().
+  // Like putNew(), but should be only used when the table is known to be big
+  // enough for the insertion, and hashing cannot fail. Typically this is used
+  // to populate an empty set with known-unique elements after reserving space
+  // with init(), e.g.
+  //
+  //   using HS = HashMap<int>;
+  //   HS h;
+  //   if (!h.init(3)) {
+  //     MOZ_CRASH("OOM");
+  //   }
+  //   h.putNewInfallible(1);     // unique element
+  //   h.putNewInfallible(2);     // unique element
+  //   h.putNewInfallible(3);     // unique element
+  //
   template<typename U>
   void putNewInfallible(const Lookup& aLookup, U&& aU)
   {
@@ -1795,12 +1802,9 @@ private:
     }
   }
 
-  // This is a copy of lookup hardcoded to the assumptions:
-  //   1. the lookup is a lookupForAdd
-  //   2. the key, whose |keyHash| has been passed is not in the table,
-  //   3. no entries have been removed from the table.
-  // This specialized search avoids the need for recovering lookup values
-  // from entries, which allows more flexible Lookup/Key types.
+  // This is a copy of lookup() hardcoded to the assumptions:
+  //   1. the lookup is for an add;
+  //   2. the key, whose |keyHash| has been passed is not in the table.
   Entry& findFreeEntry(HashNumber aKeyHash)
   {
     MOZ_ASSERT(!(aKeyHash & sCollisionBit));
@@ -1821,7 +1825,6 @@ private:
     DoubleHash dh = hash2(aKeyHash);
 
     while (true) {
-      MOZ_ASSERT(!entry->isRemoved());
       entry->setCollision();
 
       h1 = applyDoubleHash(h1, dh);
