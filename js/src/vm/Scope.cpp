@@ -435,8 +435,8 @@ Scope::finalize(FreeOp* fop)
     if (data_) {
         // We don't need to call the destructors for any GCPtrs in Data because
         // this only happens during a GC.
-        fop->free_(reinterpret_cast<void*>(data_));
-        data_ = 0;
+        fop->free_(data_);
+        data_ = nullptr;
     }
 }
 
@@ -444,7 +444,7 @@ size_t
 Scope::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     if (data_)
-        return mallocSizeOf(reinterpret_cast<void*>(data_));
+        return mallocSizeOf(data_);
     return 0;
 }
 
