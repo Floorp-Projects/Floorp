@@ -98,17 +98,6 @@ add_task(async function itemsInTheCollectionBeforeShiftClicking() {
     ok(tab5.multiselected && gBrowser._multiSelectedTabsSet.has(tab5), "Tab5 is multi-selected");
     is(gBrowser.multiSelectedTabsCount, 3, "Three tabs are multi-selected");
 
-    info("Click on tab4 while holding Shift key");
-    await triggerClickOn(tab4, { shiftKey: true });
-
-    is(gBrowser.selectedTab, tab3, "Tab3 has focus");
-    ok(!tab1.multiselected && !gBrowser._multiSelectedTabsSet.has(tab1), "Tab1 is not multi-selected");
-    ok(!tab2.multiselected && !gBrowser._multiSelectedTabsSet.has(tab2), "Tab2 is not multi-selected ");
-    ok(tab3.multiselected && gBrowser._multiSelectedTabsSet.has(tab3), "Tab3 is multi-selected");
-    ok(tab4.multiselected && gBrowser._multiSelectedTabsSet.has(tab4), "Tab4 is multi-selected");
-    ok(!tab5.multiselected && !gBrowser._multiSelectedTabsSet.has(tab5), "Tab5 is not multi-selected");
-    is(gBrowser.multiSelectedTabsCount, 2, "Two tabs are multi-selected");
-
     info("Click on tab1 while holding Shift key");
     await triggerClickOn(tab1, { shiftKey: true });
 
