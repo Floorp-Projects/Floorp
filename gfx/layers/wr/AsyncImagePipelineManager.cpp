@@ -366,8 +366,8 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
     // We may, however, have updated some resources.
 
     // Use transaction of scene builder thread to notify epoch.
-    // It is for making epoc update consisitent.
-    aMaybeFastTxn.UpdateEpoch(aPipelineId, aEpoch);
+    // It is for making epoch update consistent.
+    aSceneBuilderTxn.UpdateEpoch(aPipelineId, aEpoch);
     if (aPipeline->mCurrentTexture) {
       HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture->AsWebRenderTextureHost());
     }

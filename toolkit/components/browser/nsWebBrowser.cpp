@@ -25,7 +25,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
-#include "nsIWebBrowserFocus.h"
 #include "nsIPresShell.h"
 #include "nsIURIContentListener.h"
 #include "nsISHistoryListener.h"
@@ -114,7 +113,6 @@ NS_IMPL_CYCLE_COLLECTION(nsWebBrowser,
                          mDocShellAsWin,
                          mDocShellAsNav,
                          mDocShellAsScrollable,
-                         mDocShellAsTextScroll,
                          mWebProgress)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWebBrowser)
@@ -123,13 +121,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWebBrowser)
   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
-  NS_INTERFACE_MAP_ENTRY(nsITextScroll)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
   NS_INTERFACE_MAP_ENTRY(nsICancelable)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -762,89 +757,11 @@ nsWebBrowser::GetDocument(nsIDocument** aDocument)
   return mDocShellAsNav->GetDocument(aDocument);
 }
 
-//*****************************************************************************
-// nsWebBrowser::nsIWebBrowserSetup
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::SetProperty(uint32_t aId, uint32_t aValue)
+void
+nsWebBrowser::SetAllowDNSPrefetch(bool aAllowPrefetch)
 {
-  nsresult rv = NS_OK;
-
-  switch (aId) {
-    case nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowPlugins(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowJavascript(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowMetaRedirects(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowSubframes(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_IMAGES: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowImages(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      mDocShell->SetAllowDNSPrefetch(!!aValue);
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY: {
-      NS_ENSURE_STATE(mDocShell);
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      rv = EnableGlobalHistory(!!aValue);
-      mShouldEnableHistory = aValue;
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT: {
-      // obsolete
-      break;
-    }
-    case nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER: {
-      NS_ENSURE_TRUE((aValue == static_cast<uint32_t>(true) ||
-                      aValue == static_cast<uint32_t>(false)),
-                     NS_ERROR_INVALID_ARG);
-      SetItemType(aValue ? static_cast<int32_t>(typeChromeWrapper) :
-                           static_cast<int32_t>(typeContentWrapper));
-      break;
-    }
-    default:
-      rv = NS_ERROR_INVALID_ARG;
-  }
-  return rv;
+  MOZ_ASSERT(mDocShell);
+  mDocShell->SetAllowDNSPrefetch(aAllowPrefetch);
 }
 
 //*****************************************************************************
@@ -1641,26 +1558,6 @@ nsWebBrowser::GetScrollbarVisibility(bool* aVerticalVisible,
 }
 
 //*****************************************************************************
-// nsWebBrowser::nsITextScroll
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::ScrollByLines(int32_t aNumLines)
-{
-  NS_ENSURE_STATE(mDocShell);
-
-  return mDocShellAsTextScroll->ScrollByLines(aNumLines);
-}
-
-NS_IMETHODIMP
-nsWebBrowser::ScrollByPages(int32_t aNumPages)
-{
-  NS_ENSURE_STATE(mDocShell);
-
-  return mDocShellAsTextScroll->ScrollByPages(aNumPages);
-}
-
-//*****************************************************************************
 // nsWebBrowser: Listener Helpers
 //*****************************************************************************
 
@@ -1679,9 +1576,8 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
     nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
     nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
     nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
-    nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
     nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
-    NS_ENSURE_TRUE(req && baseWin && nav && scrollable && textScroll && progress,
+    NS_ENSURE_TRUE(req && baseWin && nav && scrollable && progress,
                    NS_ERROR_FAILURE);
 
     mDocShell = aDocShell;
@@ -1689,7 +1585,6 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
     mDocShellAsWin = baseWin;
     mDocShellAsNav = nav;
     mDocShellAsScrollable = scrollable;
-    mDocShellAsTextScroll = textScroll;
     mWebProgress = progress;
 
     // By default, do not allow DNS prefetch, so we don't break our frozen
@@ -1714,7 +1609,6 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
     mDocShellAsWin = nullptr;
     mDocShellAsNav = nullptr;
     mDocShellAsScrollable = nullptr;
-    mDocShellAsTextScroll = nullptr;
     mWebProgress = nullptr;
   }
 
@@ -1761,7 +1655,7 @@ nsWebBrowser::WindowActivated()
   printf("nsWebBrowser::NS_ACTIVATE %p %s\n", (void*)this,
          NS_ConvertUTF16toUTF8(documentURI).get());
 #endif
-  Activate();
+  FocusActivate();
 }
 
 void
@@ -1774,7 +1668,7 @@ nsWebBrowser::WindowDeactivated()
   printf("nsWebBrowser::NS_DEACTIVATE %p %s\n", (void*)this,
          NS_ConvertUTF16toUTF8(documentURI).get());
 #endif
-  Deactivate();
+  FocusDeactivate();
 }
 
 bool
@@ -1794,116 +1688,25 @@ nsWebBrowser::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion)
   layerManager->EndTransaction(DrawPaintedLayer, &mBackgroundColor);
   return true;
 }
-/*
-NS_IMETHODIMP
-nsWebBrowser::GetPrimaryContentWindow(mozIDOMWindowProxy** aDOMWindow)
-{
-  *aDOMWindow = nullptr;
 
-  nsCOMPtr<nsIDocShellTreeItem> item;
-  NS_ENSURE_TRUE(mDocShellTreeOwner, NS_ERROR_FAILURE);
-  mDocShellTreeOwner->GetPrimaryContentShell(getter_AddRefs(item));
-  NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShell> docShell;
-  docShell = do_QueryInterface(item);
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsPIDOMWindowOuter> domWindow = docShell->GetWindow();
-  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
-
-  *aDOMWindow = domWindow;
-  NS_ADDREF(*aDOMWindow);
-  return NS_OK;
-}
-*/
-//*****************************************************************************
-// nsWebBrowser::nsIWebBrowserFocus
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::Activate(void)
+void
+nsWebBrowser::FocusActivate()
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (fm && window) {
-    return fm->WindowRaised(window);
+    fm->WindowRaised(window);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebBrowser::Deactivate(void)
+void
+nsWebBrowser::FocusDeactivate()
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (fm && window) {
-    return fm->WindowLowered(window);
+    fm->WindowLowered(window);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetFocusAtFirstElement(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetFocusAtLastElement(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::GetFocusedWindow(mozIDOMWindowProxy** aFocusedWindow)
-{
-  NS_ENSURE_ARG_POINTER(aFocusedWindow);
-  *aFocusedWindow = nullptr;
-
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow();
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  RefPtr<Element> focusedElement;
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  return fm ? fm->GetFocusedElementForWindow(window, true, aFocusedWindow,
-                                             getter_AddRefs(focusedElement)) :
-              NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetFocusedWindow(mozIDOMWindowProxy* aFocusedWindow)
-{
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  return fm ? fm->SetFocusedWindow(aFocusedWindow) : NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::GetFocusedElement(dom::Element** aFocusedElement)
-{
-  NS_ENSURE_ARG_POINTER(aFocusedElement);
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow();
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-
-  if (!fm) {
-    *aFocusedElement = nullptr;
-    return NS_OK;
-  }
-
-  return fm->GetFocusedElementForWindow(window, true, nullptr, aFocusedElement);
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetFocusedElement(dom::Element* aFocusedElement)
-{
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  return fm ? fm->SetFocus(aFocusedElement, 0) : NS_OK;
 }
 
 void

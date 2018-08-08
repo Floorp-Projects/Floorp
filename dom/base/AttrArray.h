@@ -5,12 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Storage of the children and attributes of a DOM node; storage for
- * the two is unified to minimize footprint.
+ * Storage of the attributes of a DOM node.
  */
 
-#ifndef nsAttrAndChildArray_h___
-#define nsAttrAndChildArray_h___
+#ifndef AttrArray_h___
+#define AttrArray_h___
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -31,26 +30,14 @@ class nsMappedAttributeElement;
 #define ATTRCHILD_ARRAY_GROWSIZE 8
 #define ATTRCHILD_ARRAY_LINEAR_THRESHOLD 32
 
-#define ATTRCHILD_ARRAY_ATTR_SLOTS_BITS 10
-
-#define ATTRCHILD_ARRAY_MAX_ATTR_COUNT \
-    ((1 << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS) - 1)
-
-#define ATTRCHILD_ARRAY_MAX_CHILD_COUNT \
-    (~uint32_t(0) >> ATTRCHILD_ARRAY_ATTR_SLOTS_BITS)
-
-#define ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK \
-    ((1 << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS) - 1)
-
-
 #define ATTRSIZE (sizeof(InternalAttr) / sizeof(void*))
 
-class nsAttrAndChildArray
+class AttrArray
 {
   typedef mozilla::dom::BorrowedAttrInfo BorrowedAttrInfo;
 public:
-  nsAttrAndChildArray();
-  ~nsAttrAndChildArray();
+  AttrArray();
+  ~AttrArray();
 
   bool HasAttrs() const
   {
@@ -121,12 +108,6 @@ public:
 
   void Compact();
 
-  bool CanFitMoreAttrs() const
-  {
-    return AttrSlotCount() < ATTRCHILD_ARRAY_MAX_ATTR_COUNT ||
-           !AttrSlotIsTaken(ATTRCHILD_ARRAY_MAX_ATTR_COUNT - 1);
-  }
-
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   bool HasMappedAttrs() const
   {
@@ -145,12 +126,12 @@ public:
   // unmapped attributes and children of |aOther|. If |aAllocateChildren| is not
   // true, only enough space for unmapped attributes will be reserved.
   // It is REQUIRED that this function be called ONLY when the array is empty.
-  nsresult EnsureCapacityToClone(const nsAttrAndChildArray& aOther,
+  nsresult EnsureCapacityToClone(const AttrArray& aOther,
                                  bool aAllocateChildren);
 
 private:
-  nsAttrAndChildArray(const nsAttrAndChildArray& aOther) = delete;
-  nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther) = delete;
+  AttrArray(const AttrArray& aOther) = delete;
+  AttrArray& operator=(const AttrArray& aOther) = delete;
 
   void Clear();
 
@@ -172,7 +153,7 @@ private:
 
   uint32_t AttrSlotCount() const
   {
-    return mImpl ? mImpl->mAttrAndChildCount & ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK : 0;
+    return mImpl ? mImpl->mAttrCount : 0;
   }
 
   bool AttrSlotIsTaken(uint32_t aSlot) const
@@ -181,24 +162,9 @@ private:
     return mImpl->mBuffer[aSlot * ATTRSIZE];
   }
 
-  void SetChildCount(uint32_t aCount)
-  {
-    mImpl->mAttrAndChildCount =
-        (mImpl->mAttrAndChildCount & ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK) |
-        (aCount << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS);
-  }
-
   void SetAttrSlotCount(uint32_t aCount)
   {
-    mImpl->mAttrAndChildCount =
-        (mImpl->mAttrAndChildCount & ~ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK) |
-        aCount;
-  }
-
-  void SetAttrSlotAndChildCount(uint32_t aSlotCount, uint32_t aChildCount)
-  {
-    mImpl->mAttrAndChildCount = aSlotCount |
-      (aChildCount << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS);
+    mImpl->mAttrCount = aCount;
   }
 
   bool GrowBy(uint32_t aGrowSize);
@@ -221,7 +187,7 @@ private:
   };
 
   struct Impl {
-    uint32_t mAttrAndChildCount;
+    uint32_t mAttrCount;
     uint32_t mBufferSize;
     nsMappedAttributes* mMappedAttrs;
     void* mBuffer[1];

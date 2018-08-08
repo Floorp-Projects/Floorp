@@ -283,7 +283,7 @@ pub struct GpuMarker {
 impl GpuMarker {
     fn new(gl: &Rc<gl::Gl>, message: &str, ext_debug_marker: bool) -> Self {
         let gl = if ext_debug_marker {
-            gl.push_group_marker_ext(message);            
+            gl.push_group_marker_ext(message);
             Some(Rc::clone(gl))
         } else {
             None

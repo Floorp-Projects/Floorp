@@ -17,7 +17,7 @@ const LoadURIDelegate = {
   // Return whether the loading has been handled.
   load: function(aWindow, aEventDispatcher, aUri, aWhere, aFlags) {
     if (!aWindow) {
-      return false;
+      return Promise.resolve(false);
     }
 
     const message = {
@@ -27,18 +27,7 @@ const LoadURIDelegate = {
       flags: aFlags
     };
 
-    let handled = undefined;
-    aEventDispatcher.sendRequestForResult(message).then(response => {
-      handled = response;
-    }, () => {
-      // There was an error or listener was not registered in GeckoSession,
-      // treat as unhandled.
-      handled = false;
-    });
-    Services.tm.spinEventLoopUntil(() =>
-        aWindow.closed || handled !== undefined);
-
-    return handled || false;
+    return aEventDispatcher.sendRequestForResult(message).then((response) => response || false).catch(() => false);
   },
 
   handleLoadError: function(aWindow, aEventDispatcher, aUri, aError,

@@ -22,7 +22,6 @@
 
 #include "nsIAuthPromptProvider.h"
 #include "nsIBaseWindow.h"
-#include "nsIClipboardCommands.h"
 #include "nsIDeprecationWarner.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -35,13 +34,12 @@
 #include "nsIRefreshURI.h"
 #include "nsIScrollable.h"
 #include "nsITabParent.h"
-#include "nsITextScroll.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
-#include "nsIWebShellServices.h"
 
 #include "nsAutoPtr.h"
+#include "nsCharsetSource.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -57,9 +55,9 @@
 #include "prtime.h"
 #include "Units.h"
 
-#include "timeline/ObservedDocShell.h"
-#include "timeline/TimelineConsumers.h"
-#include "timeline/TimelineMarker.h"
+#include "mozilla/ObservedDocShell.h"
+#include "mozilla/TimelineConsumers.h"
+#include "mozilla/TimelineMarker.h"
 
 // Interfaces Needed
 
@@ -122,15 +120,12 @@ class nsDocShell final
   , public nsIWebNavigation
   , public nsIBaseWindow
   , public nsIScrollable
-  , public nsITextScroll
   , public nsIRefreshURI
   , public nsIWebProgressListener
   , public nsIWebPageDescriptor
   , public nsIAuthPromptProvider
   , public nsILoadContext
-  , public nsIWebShellServices
   , public nsILinkHandler
-  , public nsIClipboardCommands
   , public nsIDOMStorageManager
   , public nsINetworkInterceptController
   , public nsIDeprecationWarner
@@ -173,14 +168,11 @@ public:
   NS_DECL_NSIWEBNAVIGATION
   NS_DECL_NSIBASEWINDOW
   NS_DECL_NSISCROLLABLE
-  NS_DECL_NSITEXTSCROLL
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIREFRESHURI
   NS_DECL_NSIWEBPAGEDESCRIPTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
-  NS_DECL_NSICLIPBOARDCOMMANDS
-  NS_DECL_NSIWEBSHELLSERVICES
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSIDEPRECATIONWARNER
 
@@ -282,6 +274,11 @@ public:
 
   mozilla::HTMLEditor* GetHTMLEditorInternal();
   nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
+
+  // Handle page navigation due to charset changes
+  nsresult CharsetChangeReloadDocument(const char* aCharset = nullptr,
+                                               int32_t aSource = kCharsetUninitialized);
+  nsresult CharsetChangeStopDocumentLoad();
 
   nsDOMNavigationTiming* GetNavigationTiming() const;
 

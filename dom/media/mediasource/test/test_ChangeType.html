@@ -10,10 +10,6 @@
 <pre id="test"><script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-async function setupTest() {
-  await SpecialPowers.pushPrefEnv({"set": [["media.mediasource.experimental.enabled", true]]});
-}
-setupTest();
 
 runWithMSE(function(ms, el) {
   el.controls = true;

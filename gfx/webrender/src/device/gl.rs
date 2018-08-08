@@ -2313,10 +2313,20 @@ impl<'a, T> TextureUploader<'a, T> {
         layer_index: i32,
         stride: Option<u32>,
         data: &[T],
-    ) {
+    ) -> usize {
+        let bytes_pp = self.target.texture.format.bytes_per_pixel();
+        let upload_size = match stride {
+            Some(stride) => ((rect.size.height - 1) * stride + rect.size.width * bytes_pp) as usize,
+            None => (rect.size.area() * bytes_pp) as usize,
+        };
+        assert!(upload_size <= data.len() * mem::size_of::<T>());
+
         match self.buffer {
             Some(ref mut buffer) => {
-                let upload_size = mem::size_of::<T>() * data.len();
+                let elem_count = upload_size / mem::size_of::<T>();
+                assert_eq!(elem_count * mem::size_of::<T>(), upload_size);
+                let slice = &data[.. elem_count];
+
                 if buffer.size_used + upload_size > buffer.size_allocated {
                     // flush
                     for chunk in buffer.chunks.drain() {
@@ -2329,7 +2339,7 @@ impl<'a, T> TextureUploader<'a, T> {
                     gl::buffer_data(
                         self.target.gl,
                         gl::PIXEL_UNPACK_BUFFER,
-                        data,
+                        slice,
                         buffer.usage,
                     );
                     buffer.size_allocated = upload_size;
@@ -2338,7 +2348,7 @@ impl<'a, T> TextureUploader<'a, T> {
                         self.target.gl,
                         gl::PIXEL_UNPACK_BUFFER,
                         buffer.size_used as _,
-                        data,
+                        slice,
                     );
                 }
 
@@ -2355,6 +2365,8 @@ impl<'a, T> TextureUploader<'a, T> {
                 });
             }
         }
+
+        upload_size
     }
 }
 

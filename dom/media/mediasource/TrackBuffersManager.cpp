@@ -2105,7 +2105,8 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   data.RemoveElementsAt(firstRemovedIndex.ref(),
                         lastRemovedIndex - firstRemovedIndex.ref() + 1);
 
-  if (aIntervals.GetEnd() >= aTrackData.mHighestStartTimestamp) {
+  if (removedIntervals.GetEnd() >= aTrackData.mHighestStartTimestamp &&
+      removedIntervals.GetStart() <= aTrackData.mHighestStartTimestamp) {
     // The sample with the highest presentation time got removed.
     // Rescan the trackbuffer to determine the new one.
     TimeUnit highestStartTime;

@@ -186,7 +186,13 @@ protected:
 
   nsresult
   AsyncCall(void (HttpChannelChild::*funcPtr)(),
-            nsRunnableMethod<HttpChannelChild> **retval = nullptr) override;
+            nsRunnableMethod<HttpChannelChild> **retval = nullptr) override {
+    // Normally, this method would just be implemented directly, but clang
+    // miscompiles the corresponding non-virtual thunk on linux x86.
+    // It however doesn't when going though a non-virtual method.
+    // https://bugs.llvm.org/show_bug.cgi?id=38466
+    return AsyncCallImpl(funcPtr, retval);
+  };
 
   // Get event target for processing network events.
   already_AddRefed<nsIEventTarget> GetNeckoTarget() override;
@@ -195,6 +201,9 @@ protected:
   NS_IMETHOD LogBlockedCORSRequest(const nsAString & aMessage, const nsACString& aCategory) override;
 
 private:
+  nsresult
+  AsyncCallImpl(void (HttpChannelChild::*funcPtr)(),
+                nsRunnableMethod<HttpChannelChild> **retval);
 
   class OverrideRunnable : public Runnable {
   public:

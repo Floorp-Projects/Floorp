@@ -2,13 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
-use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering, LayoutRect};
-use api::{DeviceIntPoint, YuvColorSpace, YuvFormat};
-use api::{LayoutToWorldTransform, WorldPixel};
+use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize, DeviceIntPoint};
+use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
+use api::{YuvColorSpace, YuvFormat, WorldPixel};
 use clip::{ClipSource, ClipStore, ClipWorkItem};
 use clip_scroll_tree::{CoordinateSystemId};
-use euclid::{TypedTransform3D, vec3};
+use euclid::vec3;
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheAddress};
 use gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders};
@@ -17,17 +16,17 @@ use gpu_types::{PrimitiveInstance, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
-use plane_split::{BspSplitter, Polygon, Splitter};
+use plane_split::{BspSplitter, Clipper, Polygon, Splitter};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PictureIndex, PrimitiveIndex, PrimitiveKind};
 use prim_store::{PrimitiveMetadata, PrimitiveRun, PrimitiveStore, VisibleGradientTile};
 use prim_store::{BorderSource};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKind, RenderTaskTree};
-use renderer::{BlendMode, ImageBufferKind};
-use renderer::{BLOCKS_PER_UV_RECT, ShaderColorMode};
+use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
+use renderer::BLOCKS_PER_UV_RECT;
 use resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache};
 use scene::FilterOpHelpers;
-use std::{usize, f32, i32};
+use std::{f32, i32};
 use tiling::{RenderTargetContext};
 use util::{TransformedRectKind};
 
@@ -676,19 +675,30 @@ impl AlphaBatchBuilder {
                         if picture.is_in_3d_context {
                             // Push into parent plane splitter.
                             debug_assert!(picture.surface.is_some());
-
-                            let real_xf = &ctx
-                                .transforms
+                            let transform = &ctx.transforms
                                 .get_transform(picture.reference_frame_index);
-                            match make_polygon(
-                                picture.real_local_rect,
-                                &real_xf.m,
-                                prim_index.0,
-                            ) {
-                                Some(polygon) => splitter.add(polygon),
-                                None => {
-                                    // this shouldn't happen, the path will ultimately be
-                                    // turned into `expect` when the splitting code is fixed
+
+                            match transform.transform_kind {
+                                TransformedRectKind::AxisAligned => {
+                                    let polygon = Polygon::from_transformed_rect(
+                                        picture.real_local_rect.cast(),
+                                        transform.m.cast(),
+                                        prim_index.0,
+                                    ).unwrap();
+                                    splitter.add(polygon);
+                                }
+                                TransformedRectKind::Complex => {
+                                    let mut clipper = Clipper::new();
+                                    let bounds = (screen_rect.clipped.to_f32() / ctx.device_pixel_scale).to_f64();
+                                    let matrix = transform.m.cast();
+                                    let results = clipper.clip_transformed(
+                                        Polygon::from_rect(picture.real_local_rect.cast(), prim_index.0),
+                                        &matrix,
+                                        Some(bounds),
+                                    );
+                                    for poly in results {
+                                        splitter.add(poly);
+                                    }
                                 }
                             }
 
@@ -1709,33 +1719,6 @@ pub fn resolve_image(
     }
 }
 
-/// Construct a polygon from stacking context boundaries.
-/// `anchor` here is an index that's going to be preserved in all the
-/// splits of the polygon.
-fn make_polygon(
-    rect: LayoutRect,
-    transform: &LayoutToWorldTransform,
-    anchor: usize,
-) -> Option<Polygon<f64, WorldPixel>> {
-    let mat = TypedTransform3D::row_major(
-        transform.m11 as f64,
-        transform.m12 as f64,
-        transform.m13 as f64,
-        transform.m14 as f64,
-        transform.m21 as f64,
-        transform.m22 as f64,
-        transform.m23 as f64,
-        transform.m24 as f64,
-        transform.m31 as f64,
-        transform.m32 as f64,
-        transform.m33 as f64,
-        transform.m34 as f64,
-        transform.m41 as f64,
-        transform.m42 as f64,
-        transform.m43 as f64,
-        transform.m44 as f64);
-    Polygon::from_transformed_rect(rect.cast(), mat, anchor)
-}
 
 /// Batcher managing draw calls into the clip mask (in the RT cache).
 #[derive(Debug)]

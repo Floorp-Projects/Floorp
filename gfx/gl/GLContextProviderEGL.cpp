@@ -582,15 +582,16 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
             robustness_attribs = required_attribs;
             robustness_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
             robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
-            // Skip EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT, since it doesn't help us.
-        }
 
-        if (egl->IsExtensionSupported(GLLibraryEGL::KHR_create_context) &&
-            !egl->IsANGLE())
-        {
-            rbab_attribs = required_attribs;
-            rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
-            rbab_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
+            rbab_attribs = robustness_attribs;
+            rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
+            rbab_attribs.push_back(LOCAL_EGL_TRUE);
+        } else if (egl->IsExtensionSupported(GLLibraryEGL::KHR_create_context)) {
+            robustness_attribs = required_attribs;
+            robustness_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
+            robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
+
+            rbab_attribs = robustness_attribs;
             rbab_attribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
             rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
         }
