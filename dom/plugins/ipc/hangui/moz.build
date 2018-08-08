@@ -26,7 +26,6 @@ OS_LIBS += [
     'comctl32',
 ]
 
-if ((CONFIG['MOZ_PGO'] or
-     (not CONFIG['HAVE_64BIT_BUILD'] and CONFIG['ENABLE_CLANG_PLUGIN']))
+if (not CONFIG['HAVE_64BIT_BUILD'] and CONFIG['ENABLE_CLANG_PLUGIN']
     and CONFIG['CC_TYPE'] == 'clang-cl'):
     AllowCompilerWarnings()  # workaround for bug 1090497
