@@ -128,6 +128,10 @@ public class ClassicWebViewProvider implements IWebViewProvider {
 
     @Override
     public void applyAppSettings(@NotNull Context context, @NotNull WebSettings webSettings, @NotNull SystemWebView systemWebView) {
+
+        // Clear the cache so trackers previously loaded are removed
+        systemWebView.clearCache(true);
+
         // We could consider calling setLoadsImagesAutomatically() here too (This will block images not loaded over the network too)
         webSettings.setBlockNetworkImage(Settings.getInstance(context).shouldBlockImages());
         webSettings.setJavaScriptEnabled(!Settings.getInstance(context).shouldBlockJavaScript());
