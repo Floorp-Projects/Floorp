@@ -21,7 +21,6 @@ namespace js {
 
 class LazyScript;
 class LifoAlloc;
-class ModuleObject;
 class ScriptSourceObject;
 
 namespace frontend {
@@ -53,11 +52,11 @@ CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
                   SourceBufferHolder& srcBuf,
                   ScriptSourceObject** sourceObjectOut = nullptr);
 
-ModuleObject*
+JSScript*
 CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf);
 
-ModuleObject*
+JSScript*
 CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf, LifoAlloc& alloc,
               ScriptSourceObject** sourceObjectOut = nullptr);

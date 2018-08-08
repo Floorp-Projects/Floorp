@@ -1271,6 +1271,15 @@ JS::GetNonCCWObjectGlobal(JSObject* obj)
     return &obj->nonCCWGlobal();
 }
 
+JS_PUBLIC_API(JSObject*)
+JS::GetScriptGlobal(JSScript* script)
+{
+    AssertHeapIsIdleOrIterating();
+    JSObject* global = script->realm()->maybeGlobal();
+    MOZ_ASSERT(global);
+    return global;
+}
+
 JS_PUBLIC_API(bool)
 JS::detail::ComputeThis(JSContext* cx, Value* vp, MutableHandleObject thisObject)
 {
@@ -4247,7 +4256,7 @@ JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
     return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API(JSScript*)
 JS::FinishOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
@@ -4838,53 +4847,61 @@ JS::SetModuleMetadataHook(JSRuntime* rt, JS::ModuleMetadataHook func)
 
 JS_PUBLIC_API(bool)
 JS::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                  SourceBufferHolder& srcBuf, JS::MutableHandleObject module)
+                  SourceBufferHolder& srcBuf, JS::MutableHandleScript script)
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    module.set(frontend::CompileModule(cx, options, srcBuf));
-    return !!module;
+    script.set(frontend::CompileModule(cx, options, srcBuf));
+    return !!script;
 }
 
 JS_PUBLIC_API(void)
-JS::SetModuleHostDefinedField(JSObject* module, const JS::Value& value)
+JS::SetModuleHostDefinedField(JSScript* script, const JS::Value& value)
 {
-    module->as<ModuleObject>().setHostDefinedField(value);
+    MOZ_ASSERT(script->module());
+    script->module()->setHostDefinedField(value);
 }
 
 JS_PUBLIC_API(JS::Value)
-JS::GetModuleHostDefinedField(JSObject* module)
+JS::GetModuleHostDefinedField(JSScript* script)
 {
-    return module->as<ModuleObject>().hostDefinedField();
+    MOZ_ASSERT(script->module());
+    return script->module()->hostDefinedField();
 }
 
 JS_PUBLIC_API(bool)
-JS::ModuleInstantiate(JSContext* cx, JS::HandleObject moduleArg)
+JS::ModuleInstantiate(JSContext* cx, JS::HandleScript script)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, moduleArg);
-    return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
+    assertSameCompartment(cx, script);
+    RootedModuleObject module(cx, script->module());
+    MOZ_ASSERT(module);
+    return ModuleObject::Instantiate(cx, module);
 }
 
 JS_PUBLIC_API(bool)
-JS::ModuleEvaluate(JSContext* cx, JS::HandleObject moduleArg)
+JS::ModuleEvaluate(JSContext* cx, JS::HandleScript script)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, moduleArg);
-    return ModuleObject::Evaluate(cx, moduleArg.as<ModuleObject>());
+    assertSameCompartment(cx, script);
+    RootedModuleObject module(cx, script->module());
+    MOZ_ASSERT(module);
+    return ModuleObject::Evaluate(cx, module);
 }
 
 JS_PUBLIC_API(JSObject*)
-JS::GetRequestedModules(JSContext* cx, JS::HandleObject moduleArg)
+JS::GetRequestedModules(JSContext* cx, JS::HandleScript script)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, moduleArg);
-    return &moduleArg->as<ModuleObject>().requestedModules();
+    assertSameCompartment(cx, script);
+    RootedModuleObject module(cx, script->module());
+    MOZ_ASSERT(module);
+    return &module->requestedModules();
 }
 
 JS_PUBLIC_API(JSString*)
@@ -4909,13 +4926,6 @@ JS::GetRequestedModuleSourcePos(JSContext* cx, JS::HandleValue value,
     auto& requested = value.toObject().as<RequestedModuleObject>();
     *lineNumber = requested.lineNumber();
     *columnNumber = requested.columnNumber();
-}
-
-JS_PUBLIC_API(JSScript*)
-JS::GetModuleScript(JS::HandleObject moduleRecord)
-{
-    AssertHeapIsIdle();
-    return moduleRecord->as<ModuleObject>().script();
 }
 
 JS_PUBLIC_API(JSObject*)

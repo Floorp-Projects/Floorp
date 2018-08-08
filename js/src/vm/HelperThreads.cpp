@@ -525,9 +525,9 @@ ModuleParseTask::parse(JSContext* cx)
 {
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    ModuleObject* module = frontend::CompileModule(cx, options, data, alloc, &sourceObject.get());
-    if (module) {
-        scripts.infallibleAppend(module->script());
+    JSScript* script = frontend::CompileModule(cx, options, data, alloc, &sourceObject.get());
+    if (script) {
+        scripts.infallibleAppend(script);
         if (sourceObject)
             sourceObjects.infallibleAppend(sourceObject);
     }
@@ -1806,10 +1806,10 @@ GlobalHelperThreadState::finishMultiScriptsDecodeTask(JSContext* cx, JS::OffThre
     return finishParseTask(cx, ParseTaskKind::MultiScriptsDecode, token, scripts);
 }
 
-JSObject*
+JSScript*
 GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token)
 {
-    JSScript* script = finishParseTask(cx, ParseTaskKind::Module, token);
+    RootedScript script(cx, finishParseTask(cx, ParseTaskKind::Module, token));
     if (!script)
         return nullptr;
 
@@ -1820,7 +1820,7 @@ GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, JS::OffThreadToken
     if (!ModuleObject::Freeze(cx, module))
         return nullptr;
 
-    return module;
+    return script;
 }
 
 void

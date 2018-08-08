@@ -4403,7 +4403,8 @@ CASE(JSOP_IMPORTMETA)
     ReservedRooted<JSObject*> module(&rootObject0, GetModuleObjectForScript(script));
     MOZ_ASSERT(module);
 
-    JSObject* metaObject = GetOrCreateModuleMetaObject(cx, module);
+    ReservedRooted<JSScript*> script(&rootScript0, module->as<ModuleObject>().script());
+    JSObject* metaObject = GetOrCreateModuleMetaObject(cx, script);
     if (!metaObject)
         goto error;
 

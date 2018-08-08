@@ -306,7 +306,7 @@ class GlobalHelperThreadState
     JSScript* finishScriptParseTask(JSContext* cx, JS::OffThreadToken* token);
     JSScript* finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token);
     bool finishMultiScriptsDecodeTask(JSContext* cx, JS::OffThreadToken* token, MutableHandle<ScriptVector> scripts);
-    JSObject* finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token);
+    JSScript* finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token);
 
 #if defined(JS_BUILD_BINAST)
     JSScript* finishBinASTDecodeTask(JSContext* cx, JS::OffThreadToken* token);

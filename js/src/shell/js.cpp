@@ -4299,11 +4299,11 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
     SourceBufferHolder srcBuf(chars, scriptContents->length(),
                               SourceBufferHolder::NoOwnership);
 
-    RootedObject module(cx, frontend::CompileModule(cx, options, srcBuf));
-    if (!module)
+    RootedScript script(cx, frontend::CompileModule(cx, options, srcBuf));
+    if (!script)
         return false;
 
-    args.rval().setObject(*module);
+    args.rval().setObject(*script->module());
     return true;
 }
 
@@ -4330,9 +4330,11 @@ SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static JSObject*
-CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier)
+static JSScript*
+CallModuleResolveHook(JSContext* cx, HandleScript script, HandleString specifier)
 {
+    MOZ_ASSERT(script->module());
+
     Handle<GlobalObject*> global = cx->global();
     RootedValue hookValue(cx, global->getReservedSlot(GlobalAppSlotModuleResolveHook));
     if (hookValue.isUndefined()) {
@@ -4342,7 +4344,7 @@ CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier
     MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
 
     JS::AutoValueArray<2> args(cx);
-    args[0].setObject(*module);
+    args[0].setObject(*script->module());
     args[1].setString(specifier);
 
     RootedValue result(cx);
@@ -4354,14 +4356,13 @@ CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier
          return nullptr;
     }
 
-    return &result.toObject();
+    return result.toObject().as<ModuleObject>().script();
 }
 
 static bool
-ShellModuleMetadataHook(JSContext* cx, HandleObject module, HandleObject metaObject)
+ShellModuleMetadataHook(JSContext* cx, HandleScript script, HandleObject metaObject)
 {
     // For the shell, just use the script's filename as the base URL.
-    RootedScript script(cx, module->as<ModuleObject>().script());
     const char* filename = script->scriptSource()->filename();
     MOZ_ASSERT(filename);
 
@@ -4863,11 +4864,11 @@ FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
 
     DeleteOffThreadJob(cx, job);
 
-    RootedObject module(cx, JS::FinishOffThreadModule(cx, token));
-    if (!module)
+    RootedScript script(cx, JS::FinishOffThreadModule(cx, token));
+    if (!script)
         return false;
 
-    args.rval().setObject(*module);
+    args.rval().setObject(*script->module());
     return true;
 }
 
