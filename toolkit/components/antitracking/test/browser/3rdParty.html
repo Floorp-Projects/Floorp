@@ -21,7 +21,8 @@ function is(a, b, msg) {
 onmessage = function(e) {
   let runnableStr = `(() => {return (${e.data});})();`;
   let runnable = eval(runnableStr); // eslint-disable-line no-eval
-  runnable.call(this).then(_ => {
+  // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off
+  runnable.call(this, /* Phase */ 1).then(_ => {
     parent.postMessage({ type: "finish" }, "*");
   });
 };
