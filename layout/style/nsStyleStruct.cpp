@@ -993,10 +993,19 @@ StyleBasicShape::GetShapeTypeName() const
 
 // --------------------
 // StyleShapeSource
+StyleShapeSource::StyleShapeSource()
+  : mBasicShape()
+{
+}
 
 StyleShapeSource::StyleShapeSource(const StyleShapeSource& aSource)
 {
   DoCopy(aSource);
+}
+
+StyleShapeSource::~StyleShapeSource()
+{
+  DoDestroy();
 }
 
 StyleShapeSource&
@@ -1040,8 +1049,10 @@ void
 StyleShapeSource::SetURL(css::URLValue* aValue)
 {
   MOZ_ASSERT(aValue);
-  if (!mShapeImage) {
-    mShapeImage = MakeUnique<nsStyleImage>();
+  if (mType != StyleShapeSourceType::Image &&
+      mType != StyleShapeSourceType::URL) {
+    DoDestroy();
+    new (&mShapeImage) UniquePtr<nsStyleImage>(new nsStyleImage());
   }
   mShapeImage->SetURLValue(do_AddRef(aValue));
   mType = StyleShapeSourceType::URL;
@@ -1051,7 +1062,8 @@ void
 StyleShapeSource::SetShapeImage(UniquePtr<nsStyleImage> aShapeImage)
 {
   MOZ_ASSERT(aShapeImage);
-  mShapeImage = std::move(aShapeImage);
+  DoDestroy();
+  new (&mShapeImage) UniquePtr<nsStyleImage>(std::move(aShapeImage));
   mType = StyleShapeSourceType::Image;
 }
 
@@ -1072,7 +1084,8 @@ StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
                                 StyleGeometryBox aReferenceBox)
 {
   MOZ_ASSERT(aBasicShape);
-  mBasicShape = std::move(aBasicShape);
+  DoDestroy();
+  new (&mBasicShape) UniquePtr<StyleBasicShape>(std::move(aBasicShape));
   mReferenceBox = aReferenceBox;
   mType = StyleShapeSourceType::Shape;
 }
@@ -1080,6 +1093,7 @@ StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
 void
 StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
 {
+  DoDestroy();
   mReferenceBox = aReferenceBox;
   mType = StyleShapeSourceType::Box;
 }
@@ -1110,6 +1124,25 @@ StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
       SetReferenceBox(aOther.GetReferenceBox());
       break;
   }
+}
+
+void
+StyleShapeSource::DoDestroy()
+{
+  switch (mType) {
+    case StyleShapeSourceType::Shape:
+      mBasicShape.~UniquePtr<StyleBasicShape>();
+      break;
+    case StyleShapeSourceType::Image:
+    case StyleShapeSourceType::URL:
+      mShapeImage.~UniquePtr<nsStyleImage>();
+      break;
+    case StyleShapeSourceType::None:
+    case StyleShapeSourceType::Box:
+      // Not a union type, so do nothing.
+      break;
+  }
+  mType = StyleShapeSourceType::None;
 }
 
 // --------------------

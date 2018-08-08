@@ -28,7 +28,7 @@ function testTargetsAreInElements(targets, elements) {
   let c = 0;
   for (let target of targets) {
     if (c >= elements.length) {
-      ok(false, "We have more targets than elements found.");
+      ok(false, "We shouldn't have more targets than elements found.");
       break;
     }
     let element = elements[c];
@@ -47,13 +47,12 @@ function testTargetsAreInElements(targets, elements) {
   }
 
   // Make sure we don't have any extra elements after going through all the targets.
-  is(c, elements.length, "We found more elements than we have targets.");
+  is(c, elements.length, "We shouldn't have more elements than we have targets.");
 }
 
 function runTests() {
   // Part 1: Look for all the grid elements starting from the document root.
   let elementsFromRoot = document.documentElement.getElementsWithGrid();
-  is(elementsFromRoot.length, 8, "Found expected number of elements within document root.");
 
   // Check that the expected elements were returned.
   // Targets are provided in order we expect them to appear.
@@ -65,21 +64,24 @@ function runTests() {
     {id:"c", message:"'plain' grid container with display:inline-grid"},
     {id:"d", message:"display:subgrid inside display:inline-grid (to be fixed in Bug 1240834)", todo:true},
     {id:"e", message:"grid container with visibility:hidden"},
-    {id:"f", message:"grid container inside a display:none element"},
+    {id:"f", message:"grid container inside an element"},
     {id:"g", message:"overflow:scroll grid container"},
     {id:"h", message:"button as a grid container"},
     {id:"i", message:"fieldset as a grid container"},
+    {id:"k1", message:"grid container containing a grid container"},
+    {id:"k2", message:"grid container inside a grid container"},
   ];
+  is(elementsFromRoot.length, 10, "Found expected number of elements within document root.");
   testTargetsAreInElements(targetsFromRoot, elementsFromRoot);
 
 
   // Part 2: Look for all the grid elements starting from a non-root element.
   let elementsFromNonRoot = document.getElementById("a_non_root_element").getElementsWithGrid();
-  is(elementsFromNonRoot.length, 1, "Found expected number of elements from non-root element.");
 
   let targetsFromNonRoot = [
-    {id:"f", message:"grid container inside a display:none element (from non-root element)"},
+    {id:"f", message:"grid container inside an element (from non-root element)"},
   ];
+  is(elementsFromNonRoot.length, 1, "Found expected number of elements from non-root element.");
   testTargetsAreInElements(targetsFromNonRoot, elementsFromNonRoot);
 
   SimpleTest.finish();
@@ -101,7 +103,7 @@ function runTests() {
 
 <div id="e" class="g" style="visibility:hidden"></div>
 
-<div id="a_non_root_element" style="display:none"><div id="f" class="g"></div></div>
+<div id="a_non_root_element"><div id="f" class="g"></div></div>
 
 <div class="no-match"></div>
 
@@ -110,6 +112,10 @@ function runTests() {
 <button id="h" class="g"></button>
 
 <fieldset id="i" class="g"></fieldset>
+
+<div id="a_display_none_element" style="display:none"><div id="j" class="g"></div></div>
+
+<div id="k1" class="g"><div id="k2" class="g"></div></div>
 
 </body>
 </html>

@@ -17,6 +17,11 @@ ChromeUtils.defineModuleGetter(this, "SearchSuggestionController",
 
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
+const ENGINE_ALIASES = new Map([
+  ["Google", "@google"],
+  ["Amazon", "@amazon"],
+]);
+
 const SearchAutocompleteProviderInternal = {
   /**
    * Array of objects in the format returned by findMatchByToken.
@@ -83,22 +88,13 @@ const SearchAutocompleteProviderInternal = {
 
     // The search engines will always be processed in the order returned by the
     // search service, which can be defined by the user.
-    Services.search.getVisibleEngines().forEach(e => this._addEngine(e));
+    Services.search.getEngines().forEach(e => this._addEngine(e));
   },
 
   _addEngine(engine) {
     let domain = engine.getResultDomain();
 
-    if (engine.alias) {
-      this.aliasMatches.push({
-        alias: engine.alias,
-        engineName: engine.name,
-        iconUrl: engine.iconURI ? engine.iconURI.spec : null,
-        resultDomain: domain,
-      });
-    }
-
-    if (domain) {
+    if (domain && !engine.hidden) {
       this.priorityMatches.push({
         token: domain,
         // The searchForm property returns a simple URL for the search engine, but
@@ -106,6 +102,30 @@ const SearchAutocompleteProviderInternal = {
         url: engine.searchForm,
         engineName: engine.name,
         iconUrl: engine.iconURI ? engine.iconURI.spec : null,
+      });
+    }
+
+    let aliases = [];
+
+    for (let [name, alias] of ENGINE_ALIASES) {
+      if (!engine.wrappedJSObject._isDefault ||
+          !engine.name.startsWith(name)) {
+        continue;
+      }
+      aliases.push(alias);
+      break;
+    }
+
+    if (engine.alias) {
+      aliases.push(engine.alias);
+    }
+
+    if (aliases.length) {
+      this.aliasMatches.push({
+        aliases,
+        engineName: engine.name,
+        iconUrl: engine.iconURI ? engine.iconURI.spec : null,
+        resultDomain: domain,
       });
     }
   },
@@ -260,7 +280,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
     await this.ensureInitialized();
 
     return SearchAutocompleteProviderInternal.aliasMatches
-             .find(m => m.alias.toLocaleLowerCase() == searchToken.toLocaleLowerCase());
+             .find(m => m.aliases.some(a => a.toLocaleLowerCase() == searchToken.toLocaleLowerCase()));
   },
 
   async getDefaultMatch() {

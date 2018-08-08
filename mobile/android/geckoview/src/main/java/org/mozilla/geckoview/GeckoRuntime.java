@@ -109,6 +109,8 @@ public final class GeckoRuntime implements Parcelable {
             flags |= GeckoThread.FLAG_DEBUGGING;
         }
 
+        GeckoAppShell.setDisplayDensityOverride(settings.getDisplayDensityOverride());
+
         final int crashReportingJobId = settings.getCrashReportingServiceJobId();
         settings.getExtras().putInt(
                 GeckoRuntimeSettings.EXTRA_CRASH_REPORTING_JOB_ID, crashReportingJobId);

@@ -11,4 +11,5 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 jobs-from:
+    - benchmarks.yml
     - toolchains.yml

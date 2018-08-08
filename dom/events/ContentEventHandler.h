@@ -360,11 +360,6 @@ protected:
                                 LayoutDeviceIntRect& aRect,
                                 WritingMode& aWritingMode);
 
-  // Returns a node and position in the node for computing text rect.
-  NodePosition GetNodePositionHavingFlatText(const NodePosition& aNodePosition);
-  NodePosition GetNodePositionHavingFlatText(nsINode* aNode,
-                                             int32_t aNodeOffset);
-
   struct MOZ_STACK_CLASS FrameAndNodeOffset final
   {
     // mFrame is safe since this can live in only stack class and

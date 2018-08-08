@@ -1846,6 +1846,8 @@ Toolbox.prototype = {
    *        Reason the tool was opened
    */
   selectTool: function(id, reason = "unknown") {
+    this.emit("panel-changed");
+
     if (this.currentToolId == id) {
       const panel = this._toolPanels.get(id);
       if (panel) {

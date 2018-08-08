@@ -34,17 +34,19 @@ for (i = 0; i < vals.length; ++i) {
   is(c(), vals[i], "Simple property set");
 }
 
-$('t').style.overflow = mozVals[0];
-is($('t').style.getPropertyValue("overflow-y"), "scroll", "Roundtrip");
-is($('t').style.getPropertyValue("overflow-x"), "hidden", "Roundtrip");
-is($('t').style.overflow, "hidden scroll", "Shorthand read directly");
-is(c(), "hidden scroll", "Shorthand computed");
+if (SpecialPowers.getBoolPref("layout.css.overflow.moz-scrollbars.enabled")) {
+  $('t').style.overflow = mozVals[0];
+  is($('t').style.getPropertyValue("overflow-y"), "scroll", "Roundtrip");
+  is($('t').style.getPropertyValue("overflow-x"), "hidden", "Roundtrip");
+  is($('t').style.overflow, "hidden scroll", "Shorthand read directly");
+  is(c(), "hidden scroll", "Shorthand computed");
 
-$('t').style.overflow = mozVals[1];
-is($('t').style.getPropertyValue("overflow-x"), "scroll", "Roundtrip");
-is($('t').style.getPropertyValue("overflow-y"), "hidden", "Roundtrip");
-is($('t').style.overflow, "scroll hidden", "Shorthand read directly");
-is(c(), "scroll hidden", "Shorthand computed");
+  $('t').style.overflow = mozVals[1];
+  is($('t').style.getPropertyValue("overflow-x"), "scroll", "Roundtrip");
+  is($('t').style.getPropertyValue("overflow-y"), "hidden", "Roundtrip");
+  is($('t').style.overflow, "scroll hidden", "Shorthand read directly");
+  is(c(), "scroll hidden", "Shorthand computed");
+}
 
 for (i = 0; i < vals.length; ++i) {
   for (j = 0; j < vals.length; ++j) {

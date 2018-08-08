@@ -52,6 +52,7 @@
 #include "DrawTargetCapture.h"
 #include "DrawTargetDual.h"
 #include "DrawTargetTiled.h"
+#include "DrawTargetOffset.h"
 #include "DrawTargetWrapAndRecord.h"
 #include "DrawTargetRecording.h"
 
@@ -542,6 +543,19 @@ Factory::CreateTiledDrawTarget(const TileSet& aTileSet)
 
   return dt.forget();
 }
+
+already_AddRefed<DrawTarget>
+Factory::CreateOffsetDrawTarget(DrawTarget *aDrawTarget, IntPoint aTileOrigin)
+{
+  RefPtr<DrawTargetOffset> dt = new DrawTargetOffset();
+
+  if (!dt->Init(aDrawTarget, aTileOrigin)) {
+    return nullptr;
+  }
+
+  return dt.forget();
+}
+
 
 bool
 Factory::DoesBackendSupportDataDrawtarget(BackendType aType)

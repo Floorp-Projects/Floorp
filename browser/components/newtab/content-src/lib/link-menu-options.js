@@ -169,7 +169,7 @@ export const LinkMenuOptions = {
   }),
   SaveToPocket: (site, index, eventSource) => ({
     id: "menu_action_save_to_pocket",
-    icon: "pocket-save",
+    icon: "pocket",
     action: ac.AlsoToMain({
       type: at.SAVE_TO_POCKET,
       data: {site: {url: site.url, title: site.title}}

@@ -1042,6 +1042,9 @@ def make_job_description(config, tests):
         jobdesc['dependencies'] = {'build': build_label}
         jobdesc['job-from'] = test['job-from']
 
+        if test.get('fetches'):
+            jobdesc['fetches'] = test['fetches']
+
         if test['mozharness']['requires-signed-builds'] is True:
             jobdesc['dependencies']['build-signing'] = test['build-signing-label']
 

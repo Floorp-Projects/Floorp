@@ -101,6 +101,14 @@ raptor-chrome:
     - raptor-gdocs-chrome
     - raptor-sunspider-chrome
 
+# Fetch tasks are only supported on Linux for now,
+# so these need to be separate sets.
+raptor-fetch-firefox:
+    - raptor-unity-webgl-firefox
+
+raptor-fetch-chrome:
+    - raptor-unity-webgl-chrome
+
 awsy:
     - awsy
     - awsy-base
