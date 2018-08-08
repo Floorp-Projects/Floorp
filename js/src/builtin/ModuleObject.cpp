@@ -1643,9 +1643,10 @@ ArrayObject* ModuleBuilder::createArray(const JS::Rooted<GCHashMap<K, V>>& map)
 }
 
 JSObject*
-js::GetOrCreateModuleMetaObject(JSContext* cx, HandleObject moduleArg)
+js::GetOrCreateModuleMetaObject(JSContext* cx, HandleScript script)
 {
-    HandleModuleObject module = moduleArg.as<ModuleObject>();
+    MOZ_ASSERT(script->module());
+    RootedModuleObject module(cx, script->module());
     if (JSObject* obj = module->metaObject())
         return obj;
 
@@ -1659,7 +1660,7 @@ js::GetOrCreateModuleMetaObject(JSContext* cx, HandleObject moduleArg)
         return nullptr;
     }
 
-    if (!func(cx, module, metaObject))
+    if (!func(cx, script, metaObject))
         return nullptr;
 
     module->setMetaObject(metaObject);

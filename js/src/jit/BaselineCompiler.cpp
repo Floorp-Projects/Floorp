@@ -5138,7 +5138,8 @@ BaselineCompiler::emit_JSOP_IMPORTMETA()
     RootedModuleObject module(cx, GetModuleObjectForScript(script));
     MOZ_ASSERT(module);
 
-    JSObject* metaObject = GetOrCreateModuleMetaObject(cx, module);
+    RootedScript moduleScript(cx, module->script());
+    JSObject* metaObject = GetOrCreateModuleMetaObject(cx, moduleScript);
     if (!metaObject)
         return false;
 
