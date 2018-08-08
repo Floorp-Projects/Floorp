@@ -207,7 +207,7 @@ hpp:
 
 Arguments:
     init:
-        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
@@ -428,8 +428,9 @@ CallExpression:
                 op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
             }
         }
-
-        BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
+        auto result = arguments;
+        result->setKind(ParseNodeKind::Call);
+        result->prepend(callee);
         result->setOp(op);
 
 
@@ -488,11 +489,11 @@ CompoundAssignmentExpression:
 
 ComputedMemberAssignmentTarget:
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
+        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
 
 ComputedMemberExpression:
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
+        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
 
 ConditionalExpression:
     build: |
@@ -830,7 +831,10 @@ LiteralStringExpression:
 
 NewExpression:
     build: |
-        BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
+        auto result = arguments;
+        result->setKind(ParseNodeKind::New);
+        result->prepend(callee);
+        result->setOp(JSOP_NEW);
 
 ObjectExpression:
     build:
@@ -918,28 +922,12 @@ SwitchStatementWithDefault:
         BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope, true));
 
 StaticMemberAssignmentTarget:
-    init:
-        size_t nameStart;
-    fields:
-        property:
-            block:
-                before: |
-                    nameStart = tokenizer_->offset();
     build: |
-        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
 
 StaticMemberExpression:
-    init:
-        size_t nameStart;
-    fields:
-        property:
-            block:
-                before: |
-                    nameStart = tokenizer_->offset();
     build: |
-        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
 
 ThisExpression:
     build: |
