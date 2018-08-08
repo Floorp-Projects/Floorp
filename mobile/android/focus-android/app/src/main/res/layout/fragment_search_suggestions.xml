@@ -117,7 +117,7 @@
         android:gravity="center_vertical"
         android:lines="1"
         android:padding="16dp"
-        android:text="Hello World!"
+        android:text="..."
         android:textColor="@color/searchHintTextColor"
         android:textSize="14sp" />
 
