@@ -54,8 +54,8 @@
 
     <color name="searchSuggestionPromptBackground">@color/photonInk80</color>
     <color name="searchSuggestionPromptTitleColor">@color/photonGrey10</color>
-    <color name="searchSuggestionPromptSubtitleColor">#99f9f9fa</color>
-    <color name="searchSuggestionPromptBorderColor">#19f9f9fa</color>
+    <color name="searchSuggestionPromptSubtitleColor">#9e9fad</color>
+    <color name="searchSuggestionPromptBorderColor">#343751</color>
     <color name="searchSuggestionPromptButtonTextColor">@color/photonMagenta70</color>
 
     <color name="searchHintTextColor">#ffffffff</color>
