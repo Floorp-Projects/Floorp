@@ -576,7 +576,7 @@ GetParentProcessId()
     NTSTATUS ExitStatus;
     PPEB PebBaseAddress;
     ULONG_PTR AffinityMask;
-    KPRIORITY BasePriority;
+    LONG BasePriority;
     ULONG_PTR UniqueProcessId;
     ULONG_PTR InheritedFromUniqueProcessId;
   };
