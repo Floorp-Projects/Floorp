@@ -3,12 +3,47 @@
 
 "use strict";
 
+const CB_PREF = "browser.contentblocking.enabled";
+const CB_UI_PREF = "browser.contentblocking.ui.enabled";
+
 ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
 
 // Test that the app menu toggle correctly flips the TP pref in
 // normal windows and private windows.
 add_task(async function testGlobalToggle() {
-  await SpecialPowers.pushPrefEnv({set: [["privacy.trackingprotection.appMenuToggle.enabled", true]]});
+  await SpecialPowers.pushPrefEnv({set: [[CB_UI_PREF, true]]});
+
+  let panelUIButton = await TestUtils.waitForCondition(() => document.getElementById("PanelUI-menu-button"));
+
+  info("Opening main menu");
+
+  let promiseShown = BrowserTestUtils.waitForEvent(PanelUI.mainView, "ViewShown");
+  panelUIButton.click();
+  await promiseShown;
+
+  info("Opened main menu");
+
+  let toggle = document.getElementById("appMenu-tp-toggle");
+
+  Services.prefs.setBoolPref(CB_PREF, false);
+  await TestUtils.waitForCondition(() => toggle.getAttribute("enabled") == "false");
+
+  Services.prefs.setBoolPref(CB_PREF, true);
+  await TestUtils.waitForCondition(() => toggle.getAttribute("enabled") == "true");
+
+  toggle.click();
+  is(Services.prefs.getBoolPref(CB_PREF), false);
+
+  toggle.click();
+  is(Services.prefs.getBoolPref(CB_PREF), true);
+
+  Services.prefs.clearUserPref(CB_PREF);
+});
+
+// Test that the app menu toggle correctly flips the TP pref in
+// normal windows and private windows.
+add_task(async function testGlobalToggleTP() {
+  await SpecialPowers.pushPrefEnv({set: [[CB_UI_PREF, false]]});
 
   async function runTest(privateWindow) {
     let win = await BrowserTestUtils.openNewBrowserWindow({private: privateWindow});
