@@ -20,7 +20,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
     stack: [
       "_rebuild@chrome://browser/content/search/search.xml",
       "set_popup@chrome://browser/content/search/search.xml",
-      "enableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
+      "set_oneOffSearchesEnabled@chrome://browser/content/urlbarBindings.xml",
       "_enableOrDisableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
       "urlbar_XBL_Constructor/<@chrome://browser/content/urlbarBindings.xml",
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
