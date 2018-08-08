@@ -551,37 +551,14 @@ MapFile(PRFileDesc* file, PRFileInfo* info)
     return UniqueMapping(memory, MemUnmap(info->size));
 }
 
-bool
-wasm::CompiledModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& buildId)
-{
-    PRFileInfo info;
-    UniqueMapping mapping = MapFile(compiled, &info);
-    if (!mapping)
-        return false;
-
-    Assumptions assumptions(std::move(buildId));
-    return Module::assumptionsMatch(assumptions, mapping.get(), info.size);
-}
-
 SharedModule
-wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
-                        JS::BuildIdCharVector&& buildId, UniqueChars filename,
-                        unsigned line)
+wasm::DeserializeModule(PRFileDesc* bytecodeFile, JS::BuildIdCharVector&& buildId,
+                        UniqueChars filename, unsigned line)
 {
     PRFileInfo bytecodeInfo;
     UniqueMapping bytecodeMapping = MapFile(bytecodeFile, &bytecodeInfo);
     if (!bytecodeMapping)
         return nullptr;
-
-    if (PRFileDesc* compiledFile = maybeCompiledFile) {
-        PRFileInfo compiledInfo;
-        UniqueMapping compiledMapping = MapFile(compiledFile, &compiledInfo);
-        if (!compiledMapping)
-            return nullptr;
-
-        return Module::deserialize(bytecodeMapping.get(), bytecodeInfo.size,
-                                   compiledMapping.get(), compiledInfo.size);
-    }
 
     // Since the compiled file's assumptions don't match, we must recompile from
     // bytecode. The bytecode file format is simply that of a .wasm (see

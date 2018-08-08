@@ -298,11 +298,6 @@
      {}
     ]
    ],
-   "wasm/js/indexeddb.js": [
-    [
-     {}
-    ]
-   ],
    "wasm/js/int_exprs.wast.js": [
     [
      {}
@@ -868,12 +863,6 @@
      {}
     ]
    ],
-   "wasm/indexeddb.js.html": [
-    [
-     "/_mozilla/wasm/indexeddb.js.html",
-     {}
-    ]
-   ],
    "wasm/int_exprs.wast.js.html": [
     [
      "/_mozilla/wasm/int_exprs.wast.js.html",
@@ -1415,10 +1404,6 @@
    "d684d926f4328482dd5a41cee07ea2d4c472cdb2",
    "testharness"
   ],
-  "wasm/indexeddb.js.html": [
-   "f7f6d778cc350b5db5d938f0e276df8befbcb464",
-   "testharness"
-  ],
   "wasm/int_exprs.wast.js.html": [
    "b2fce1586af5a68d17a03e97a56595760a0b0fc2",
    "testharness"
@@ -1569,10 +1554,6 @@
   ],
   "wasm/js/imports.wast.js": [
    "ce2c6f93b8102fdd0d9fde9c038c1261858a3056",
-   "support"
-  ],
-  "wasm/js/indexeddb.js": [
-   "f6e18fb66be0fa51219f1759940fd66f913c0629",
    "support"
   ],
   "wasm/js/int_exprs.wast.js": [

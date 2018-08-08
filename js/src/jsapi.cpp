@@ -7639,18 +7639,11 @@ JS::GetWasmModule(HandleObject obj)
     return &CheckedUnwrap(obj)->as<WasmModuleObject>().module();
 }
 
-JS_PUBLIC_API(bool)
-JS::CompiledWasmModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& buildId)
-{
-    return wasm::CompiledModuleAssumptionsMatch(compiled, std::move(buildId));
-}
-
 JS_PUBLIC_API(RefPtr<JS::WasmModule>)
-JS::DeserializeWasmModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled,
-                          JS::BuildIdCharVector&& buildId, UniqueChars file,
-                          unsigned line)
+JS::DeserializeWasmModule(PRFileDesc* bytecode, JS::BuildIdCharVector&& buildId,
+                          UniqueChars filename, unsigned line)
 {
-    return wasm::DeserializeModule(bytecode, maybeCompiled, std::move(buildId), std::move(file), line);
+    return wasm::DeserializeModule(bytecode, std::move(buildId), std::move(filename), line);
 }
 
 JS_PUBLIC_API(void)
