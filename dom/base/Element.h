@@ -1168,24 +1168,12 @@ public:
 
   /**
    * Return an array of all elements in the subtree rooted at this
-   * element that are styled as grid containers. This includes
-   * elements that don't actually generate any frames (by virtue of
-   * being in a 'display:none' subtree), but this does not include
+   * element that have grid container frames. This does not include
    * pseudo-elements.
    */
   void GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements);
 
 private:
-  /**
-   * Define a general matching function that can be passed to
-   * GetElementsByMatching(). Each Element being considered is
-   * passed in.
-   */
-  typedef bool (*nsElementMatchFunc)(Element* aElement);
-
-  void GetElementsByMatching(nsElementMatchFunc aFunc,
-                             nsTArray<RefPtr<Element>>& aElements);
-
   /**
    * Implement the algorithm specified at
    * https://dom.spec.whatwg.org/#insert-adjacent for both

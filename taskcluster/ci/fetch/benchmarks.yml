@@ -1,0 +1,8 @@
+unity-webgl:
+  description: unity-webgl benchmark
+  fetch:
+    type: static-url
+    artifact-name: unity-webgl.zip
+    url: https://github.com/mozilla/perf-automation/releases/download/unity-webgl-v1/unity-webgl-6beb3d3e22ab.zip
+    sha256: f71ee3a3f5b9513f041e1dd01c032d51f2071e1ad130e8ac2cf0c553c468b9ea
+    size: 27062962

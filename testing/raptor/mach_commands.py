@@ -12,11 +12,17 @@ import os
 import sys
 import json
 import socket
+import subprocess
 
-from mozbuild.base import MozbuildObject, MachCommandBase
 from mach.decorators import CommandProvider, Command
+from mozboot.util import get_state_dir
+from mozbuild.base import MozbuildObject, MachCommandBase
+from mozpack.copier import FileCopier
+from mozpack.manifests import InstallManifest
 
 HERE = os.path.dirname(os.path.realpath(__file__))
+BENCHMARK_REPOSITORY = 'https://github.com/mozilla/perf-automation'
+BENCHMARK_REVISION = '6beb3d3e22abce8cf8e2e89bc45acd4152258f12'
 
 
 class RaptorRunner(MozbuildObject):
@@ -29,6 +35,7 @@ class RaptorRunner(MozbuildObject):
         """
 
         self.init_variables(raptor_args)
+        self.setup_benchmarks()
         self.make_config()
         self.write_config()
         self.make_args()
@@ -47,6 +54,44 @@ class RaptorRunner(MozbuildObject):
                                             'raptor-venv')
         self.python_interp = sys.executable
         self.raptor_args = raptor_args
+
+    def setup_benchmarks(self):
+        """Make sure benchmarks are linked to the proper location in the objdir.
+
+        Benchmarks can either live in-tree or in an external repository. In the latter
+        case also clone/update the repository if necessary.
+        """
+        print("Updating external benchmarks from {}".format(BENCHMARK_REPOSITORY))
+
+        # Set up the external repo
+        external_repo_path = os.path.join(get_state_dir()[0], 'performance-tests')
+
+        if not os.path.isdir(external_repo_path):
+            subprocess.check_call(['git', 'clone', BENCHMARK_REPOSITORY, external_repo_path])
+        else:
+            subprocess.check_call(['git', 'checkout', 'master'], cwd=external_repo_path)
+            subprocess.check_call(['git', 'pull'], cwd=external_repo_path)
+
+        subprocess.check_call(['git', 'checkout', BENCHMARK_REVISION], cwd=external_repo_path)
+
+        # Link benchmarks to the objdir
+        benchmark_paths = (
+            os.path.join(external_repo_path, 'benchmarks'),
+            os.path.join(self.topsrcdir, 'third_party', 'webkit', 'PerformanceTests'),
+        )
+        manifest = InstallManifest()
+
+        for benchmark_path in benchmark_paths:
+            for path in os.listdir(benchmark_path):
+                abspath = os.path.join(benchmark_path, path)
+                if not os.path.isdir(abspath) or path.startswith('.'):
+                    continue
+
+                manifest.add_link(abspath, path)
+
+        copier = FileCopier()
+        manifest.populate_registry(copier)
+        copier.copy(os.path.join(self.topobjdir, 'testing', 'raptor', 'benchmarks'))
 
     def make_config(self):
         default_actions = ['populate-webroot', 'install-chrome', 'create-virtualenv', 'run-tests']

@@ -39,38 +39,20 @@ class Benchmark(object):
         else:
             self.bench_dir = os.path.join(self.bench_dir, 'tests', 'webkit', 'PerformanceTests')
 
-        # when running locally we need to get the benchmark source
-        if self.config.get('run_local', False):
-            self.get_webkit_source()
+            # Some benchmarks may have been downloaded from a fetch task, make
+            # sure they get copied over.
+            fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
+            if fetches_dir and os.path.isdir(fetches_dir):
+                for name in os.listdir(fetches_dir):
+                    path = os.path.join(fetches_dir, name)
+                    if os.path.isdir(path):
+                        shutil.copytree(path, os.path.join(self.bench_dir, name))
 
         LOG.info("bench_dir contains:")
         LOG.info(os.listdir(self.bench_dir))
 
         # now have the benchmark source ready, go ahead and serve it up!
         self.start_http_server()
-
-    def get_webkit_source(self):
-        # in production the build system auto copies webkit source into place;
-        # but when run locally we need to do this manually, so that raptor can find it
-        # TODO: when we have benchmarks that are not in webkit, ensure we copy them
-        dest = self.bench_dir
-        # source for all benchmarks is repo/third_party...
-        src = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'], 'third_party',
-                           'webkit', 'PerformanceTests')
-
-        if os.path.exists(dest):
-            LOG.info("benchmark source already exists at: %s" % dest)
-            return
-        else:
-            # making parent directory tree as copytree will fail if bench_dir exists
-            LOG.info("bench_dir to be used for benchmark source: %s" % self.bench_dir)
-            os.makedirs(os.path.dirname(self.bench_dir))
-
-        LOG.info("copying webkit benchmarks from %s to %s" % (src, dest))
-        try:
-            shutil.copytree(src, dest)
-        except Exception:
-            LOG.critical("error copying webkit benchmarks from %s to %s" % (src, dest))
 
     def start_http_server(self):
         self.write_server_headers()

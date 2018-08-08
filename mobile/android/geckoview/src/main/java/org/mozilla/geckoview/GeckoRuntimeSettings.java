@@ -236,6 +236,17 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mConsoleOutput.set(enabled);
             return this;
         }
+
+        /**
+         * Set the display density override.
+         *
+         * @param density The display density value to use for overriding the system default.
+         * @return The builder instance.
+         */
+        public @NonNull Builder displayDensityOverride(float density) {
+            mSettings.mDisplayDensityOverride = density;
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -299,6 +310,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ boolean mJavaCrashReporting;
     /* package */ int mCrashReportingJobId;
     /* package */ boolean mDebugPause;
+    /* package */ float mDisplayDensityOverride = -1.0f;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mCookieBehavior, mCookieLifetime, mConsoleOutput,
@@ -338,6 +350,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mJavaCrashReporting = settings.mJavaCrashReporting;
         mCrashReportingJobId = settings.mCrashReportingJobId;
         mDebugPause = settings.mDebugPause;
+        mDisplayDensityOverride = settings.mDisplayDensityOverride;
     }
 
     /* package */ void flush() {
@@ -464,6 +477,18 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return True if the pause is enabled.
      */
     public boolean getPauseForDebuggerEnabled() { return mDebugPause; }
+
+    /**
+     * Gets the display density override value.
+     *
+     * @returns Returns a positive number. Will return null if not set.
+     */
+    public Float getDisplayDensityOverride() {
+        if (mDisplayDensityOverride > 0.0f) {
+            return new Float(mDisplayDensityOverride);
+        }
+        return null;
+    }
 
     // Sync values with nsICookieService.idl.
     @Retention(RetentionPolicy.SOURCE)
@@ -623,6 +648,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         ParcelableUtils.writeBoolean(out, mJavaCrashReporting);
         out.writeInt(mCrashReportingJobId);
         ParcelableUtils.writeBoolean(out, mDebugPause);
+        out.writeFloat(mDisplayDensityOverride);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -642,6 +668,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mJavaCrashReporting = ParcelableUtils.readBoolean(source);
         mCrashReportingJobId = source.readInt();
         mDebugPause = ParcelableUtils.readBoolean(source);
+        mDisplayDensityOverride = source.readFloat();
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR

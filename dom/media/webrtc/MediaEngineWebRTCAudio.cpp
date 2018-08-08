@@ -878,6 +878,21 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
       // audio callbacks have started, to cover the case where audio callbacks
       // start appending data immediately and there is no extra data buffered.
       delta += WEBAUDIO_BLOCK_SIZE;
+
+      // If we're supposed to be packetizing but there's no packetizer yet,
+      // there must not have been any live frames appended yet.
+      // If there were live frames appended and we haven't appended the
+      // right amount of silence, we'll have to append silence once more,
+      // failing the other assert below.
+      MOZ_ASSERT_IF(!PassThrough(aStream->GraphImpl()) && !mPacketizerInput,
+                    !mAllocations[i].mLiveFramesAppended);
+
+      if (!PassThrough(aStream->GraphImpl()) && mPacketizerInput) {
+        // Processing is active and is processed in chunks of 10ms through the
+        // input packetizer. We allow for 10ms of silence on the track to
+        // accomodate the buffering worst-case.
+        delta += mPacketizerInput->PacketSize();
+      }
     }
 
     LOG_FRAMES(("Pulling %" PRId64 " frames of silence for allocation %p",
