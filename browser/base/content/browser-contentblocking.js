@@ -27,11 +27,6 @@ var TrackingProtection = {
       document.getElementById("identity-popup-content-blocking-category-tracking-protection");
   },
 
-  get appMenuButton() {
-    delete this.appMenuButton;
-    return this.appMenuButton = document.getElementById("appMenu-tp-toggle");
-  },
-
   strings: {
     get enableTooltip() {
       delete this.enableTooltip;
@@ -113,18 +108,19 @@ var TrackingProtection = {
 
     if (!ContentBlocking.contentBlockingUIEnabled) {
       ContentBlocking.updateEnabled();
-    }
+      let appMenuButton = ContentBlocking.appMenuButton;
 
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      this.appMenuButton.setAttribute("tooltiptext", this.enabledInPrivateWindows ?
-        this.strings.disableTooltipPB : this.strings.enableTooltipPB);
-      this.appMenuButton.setAttribute("enabled", this.enabledInPrivateWindows);
-      this.appMenuButton.setAttribute("aria-pressed", this.enabledInPrivateWindows);
-    } else {
-      this.appMenuButton.setAttribute("tooltiptext", this.enabledGlobally ?
-        this.strings.disableTooltip : this.strings.enableTooltip);
-      this.appMenuButton.setAttribute("enabled", this.enabledGlobally);
-      this.appMenuButton.setAttribute("aria-pressed", this.enabledGlobally);
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        appMenuButton.setAttribute("tooltiptext", this.enabledInPrivateWindows ?
+          this.strings.disableTooltipPB : this.strings.enableTooltipPB);
+        appMenuButton.setAttribute("enabled", this.enabledInPrivateWindows);
+        appMenuButton.setAttribute("aria-pressed", this.enabledInPrivateWindows);
+      } else {
+        appMenuButton.setAttribute("tooltiptext", this.enabledGlobally ?
+          this.strings.disableTooltip : this.strings.enableTooltip);
+        appMenuButton.setAttribute("enabled", this.enabledGlobally);
+        appMenuButton.setAttribute("aria-pressed", this.enabledGlobally);
+      }
     }
   },
 };
@@ -135,12 +131,47 @@ var ContentBlocking = {
   MAX_INTROS: 20,
   PREF_ENABLED: "browser.contentblocking.enabled",
   PREF_UI_ENABLED: "browser.contentblocking.ui.enabled",
-  PREF_APP_MENU_TOGGLE: "privacy.trackingprotection.appMenuToggle.enabled",
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
   content: null,
   icon: null,
   activeTooltipText: null,
   disabledTooltipText: null,
+
+  get appMenuLabel() {
+    delete this.appMenuLabel;
+    return this.appMenuLabel = document.getElementById("appMenu-tp-label");
+  },
+
+  get appMenuButton() {
+    delete this.appMenuButton;
+    return this.appMenuButton = document.getElementById("appMenu-tp-toggle");
+  },
+
+  strings: {
+    get enableTooltip() {
+      delete this.enableTooltip;
+      return this.enableTooltip =
+        gNavigatorBundle.getString("contentBlocking.toggle.enable.tooltip");
+    },
+
+    get disableTooltip() {
+      delete this.disableTooltip;
+      return this.disableTooltip =
+        gNavigatorBundle.getString("contentBlocking.toggle.disable.tooltip");
+    },
+
+    get appMenuTitle() {
+      delete this.appMenuTitle;
+      return this.appMenuTitle =
+        gNavigatorBundle.getString("contentBlocking.title");
+    },
+
+    get appMenuTooltip() {
+      delete this.appMenuTooltip;
+      return this.appMenuTooltip =
+        gNavigatorBundle.getString("contentBlocking.tooltip");
+    },
+  },
 
   // A list of blockers that will be displayed in the categories list
   // when blockable content is detected. A blocker must be an object
@@ -169,8 +200,6 @@ var ContentBlocking = {
     let $ = selector => document.querySelector(selector);
     this.content = $("#identity-popup-content-blocking-content");
     this.icon = $("#tracking-protection-icon");
-    this.appMenuContainer = $("#appMenu-tp-container");
-    this.appMenuSeparator = $("#appMenu-tp-separator");
     this.iconBox = $("#tracking-protection-icon-box");
     this.animatedIcon = $("#tracking-protection-icon-animatable-image");
     this.animatedIcon.addEventListener("animationend", () => this.iconBox.removeAttribute("animate"));
@@ -195,19 +224,6 @@ var ContentBlocking = {
     XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingUIEnabled", this.PREF_UI_ENABLED, false,
       this.updateUIEnabled.bind(this));
 
-    this.updateAppMenuToggle = () => {
-      if (Services.prefs.getBoolPref(this.PREF_APP_MENU_TOGGLE, false)) {
-        this.appMenuContainer.removeAttribute("hidden");
-        this.appMenuSeparator.removeAttribute("hidden");
-      } else {
-        this.appMenuContainer.setAttribute("hidden", "true");
-        this.appMenuSeparator.setAttribute("hidden", "true");
-      }
-    };
-
-    Services.prefs.addObserver(this.PREF_APP_MENU_TOGGLE, this.updateAppMenuToggle);
-
-    this.updateAppMenuToggle();
     this.updateEnabled();
     this.updateUIEnabled();
 
@@ -224,7 +240,6 @@ var ContentBlocking = {
       }
     }
 
-    Services.prefs.removeObserver(this.PREF_APP_MENU_TOGGLE, this.updateAppMenuToggle);
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
   },
 
@@ -234,11 +249,32 @@ var ContentBlocking = {
 
   updateEnabled() {
     this.content.toggleAttribute("enabled", this.enabled);
+
+    if (this.contentBlockingUIEnabled) {
+      this.appMenuButton.setAttribute("tooltiptext", this.enabled ?
+        this.strings.disableTooltip : this.strings.enableTooltip);
+      this.appMenuButton.setAttribute("enabled", this.enabled);
+      this.appMenuButton.setAttribute("aria-pressed", this.enabled);
+    }
   },
 
   updateUIEnabled() {
     this.content.toggleAttribute("contentBlockingUI", this.contentBlockingUIEnabled);
+
+    if (this.contentBlockingUIEnabled) {
+      this.appMenuLabel.setAttribute("label", this.strings.appMenuTitle);
+      this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
+    }
+
     this.updateEnabled();
+  },
+
+  onGlobalToggleCommand() {
+    if (this.contentBlockingUIEnabled) {
+      Services.prefs.setBoolPref(this.PREF_ENABLED, !this.enabled);
+    } else {
+      TrackingProtection.onGlobalToggleCommand();
+    }
   },
 
   hideIdentityPopupAndReload() {
