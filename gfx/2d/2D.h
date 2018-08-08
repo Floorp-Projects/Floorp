@@ -1761,6 +1761,7 @@ public:
    * and format.
    */
   static already_AddRefed<DrawTarget> CreateTiledDrawTarget(const TileSet& aTileSet);
+  static already_AddRefed<DrawTarget> CreateOffsetDrawTarget(DrawTarget *aDrawTarget, IntPoint aTileOrigin);
 
   static bool DoesBackendSupportDataDrawtarget(BackendType aType);
 

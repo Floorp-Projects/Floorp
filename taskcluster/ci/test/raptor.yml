@@ -192,3 +192,32 @@ raptor-sunspider-chrome:
         extra-options:
             - --test=raptor-sunspider
             - --app=chrome
+
+raptor-unity-webgl-firefox:
+    description: "Raptor Unity WebGL on Firefox"
+    try-name: raptor-unity-webgl-firefox
+    treeherder-symbol: Rap(ugl)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 3
+    max-run-time: 3600
+    mozharness:
+        extra-options:
+            - --test=raptor-unity-webgl
+    fetches:
+        fetch:
+            - unity-webgl
+
+raptor-unity-webgl-chrome:
+    description: "Raptor Unity WebGL on Chrome"
+    try-name: raptor-unity-webgl-chrome
+    treeherder-symbol: Rap-C(ugl)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 3
+    max-run-time: 3600
+    mozharness:
+        extra-options:
+            - --test=raptor-unity-webgl
+            - --app=chrome
+    fetches:
+        fetch:
+            - unity-webgl

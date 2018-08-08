@@ -24,7 +24,8 @@
                   "*://*/StyleBench/*",
                   "*://*/MotionMark/*",
                   "*://*/SunSpider/*",
-                  "*://*/webaudio/*"],
+                  "*://*/webaudio/*",
+                  "*://*/unity-webgl/index.html*"],
       "js": ["benchmark-relay.js"]
     }
   ],
