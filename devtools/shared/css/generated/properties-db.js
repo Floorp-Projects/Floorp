@@ -7868,10 +7868,12 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
+      "block",
       "both",
       "horizontal",
       "inherit",
       "initial",
+      "inline",
       "none",
       "unset",
       "vertical"
