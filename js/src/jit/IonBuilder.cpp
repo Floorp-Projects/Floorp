@@ -2012,17 +2012,13 @@ IonBuilder::inspectOpcode(JSOp op)
         current->pushSlot(current->stackDepth() - 1 - GET_UINT24(pc));
         return Ok();
 
-      case JSOP_NEWINIT:
-        if (GET_UINT8(pc) == JSProto_Array)
-            return jsop_newarray(0);
-        return jsop_newobject();
-
       case JSOP_NEWARRAY:
         return jsop_newarray(GET_UINT32(pc));
 
       case JSOP_NEWARRAY_COPYONWRITE:
         return jsop_newarray_copyonwrite();
 
+      case JSOP_NEWINIT:
       case JSOP_NEWOBJECT:
         return jsop_newobject();
 
