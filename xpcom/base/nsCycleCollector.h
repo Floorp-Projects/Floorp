@@ -43,6 +43,7 @@ void nsCycleCollector_finishAnyCurrentCollection();
 void nsCycleCollector_dispatchDeferredDeletion(bool aContinuation = false,
                                                bool aPurge = false);
 bool nsCycleCollector_doDeferredDeletion();
+bool nsCycleCollector_doDeferredDeletionWithBudget(js::SliceBudget& aBudget);
 
 already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink();
 
