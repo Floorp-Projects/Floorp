@@ -83,6 +83,26 @@ class ToolboxToolbar extends Component {
     };
   }
 
+  constructor(props) {
+    super(props);
+
+    this.hideMenu = this.hideMenu.bind(this);
+  }
+
+  componentDidMount() {
+    this.props.toolbox.on("panel-changed", this.hideMenu);
+  }
+
+  componentWillUnmount() {
+    this.props.toolbox.off("panel-changed", this.hideMenu);
+  }
+
+  hideMenu() {
+    if (this.refs.meatballMenuButton) {
+      this.refs.meatballMenuButton.hideMenu();
+    }
+  }
+
   /**
    * The render function is kept fairly short for maintainability. See the individual
    * render functions for how each of the sections is rendered.
