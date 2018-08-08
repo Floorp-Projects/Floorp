@@ -164,7 +164,13 @@ Channel::SendMessage(const Message& aMsg)
   size_t nbytes = aMsg.mSize;
   while (nbytes) {
     int rv = HANDLE_EINTR(send(mFd, ptr, nbytes, 0));
-    MOZ_RELEASE_ASSERT((size_t) rv <= nbytes);
+    if (rv < 0) {
+      // If the other side of the channel has crashed, don't send the message.
+      // Avoid crashing in this process too, so that we don't generate another
+      // minidump that masks the original crash.
+      MOZ_RELEASE_ASSERT(errno == EPIPE);
+      return;
+    }
     ptr += rv;
     nbytes -= rv;
   }
