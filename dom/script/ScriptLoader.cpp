@@ -491,8 +491,12 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
       rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
       if (NS_SUCCEEDED(rv)) {
-        SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
-        rv = nsJSUtils::CompileModule(cx, srcBuf, global, options, &module);
+        auto srcBuf = GetScriptSource(cx, aRequest);
+        if (srcBuf) {
+          rv = nsJSUtils::CompileModule(cx, *srcBuf, global, options, &module);
+        } else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
       }
     }
 
@@ -1824,11 +1828,11 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
-    SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
-    if (!JS::CompileOffThreadModule(cx, options,
-                                    srcBuf,
-                                    OffThreadScriptLoaderCallback,
-                                    static_cast<void*>(runnable))) {
+    auto srcBuf = GetScriptSource(cx, aRequest);
+    if (!srcBuf || !JS::CompileOffThreadModule(cx, options,
+                                               *srcBuf,
+                                               OffThreadScriptLoaderCallback,
+                                               static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (aRequest->IsBytecode()) {
@@ -1852,11 +1856,11 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 #endif
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
-    SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
-    if (!JS::CompileOffThread(cx, options,
-                              srcBuf,
-                              OffThreadScriptLoaderCallback,
-                              static_cast<void*>(runnable))) {
+    auto srcBuf = GetScriptSource(cx, aRequest);
+    if (!srcBuf || !JS::CompileOffThread(cx, options,
+                                         *srcBuf,
+                                         OffThreadScriptLoaderCallback,
+                                         static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -1896,7 +1900,7 @@ ScriptLoader::CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest)
   return ProcessRequest(aRequest);
 }
 
-SourceBufferHolder
+mozilla::Maybe<SourceBufferHolder>
 ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 {
   // Return a SourceBufferHolder object holding the script's source text.
@@ -1909,15 +1913,17 @@ ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 
     size_t nbytes = inlineData.Length() * sizeof(char16_t);
     JS::UniqueTwoByteChars chars(static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
-    MOZ_RELEASE_ASSERT(chars);
+    if (!chars) {
+      return Nothing();
+    }
+
     memcpy(chars.get(), inlineData.get(), nbytes);
-    return SourceBufferHolder(std::move(chars), inlineData.Length());
+    return Some(SourceBufferHolder(std::move(chars), inlineData.Length()));
   }
 
   size_t length = aRequest->ScriptText().length();
-  return SourceBufferHolder(aRequest->ScriptText().extractOrCopyRawBuffer(),
-                            length,
-                            SourceBufferHolder::GiveOwnership);
+  JS::UniqueTwoByteChars chars(aRequest->ScriptText().extractOrCopyRawBuffer());
+  return Some(SourceBufferHolder(std::move(chars), length));
 }
 
 nsresult
@@ -2369,14 +2375,17 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
                                               &script);
               } else {
                 MOZ_ASSERT(aRequest->IsTextSource());
-                SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
+                auto srcBuf = GetScriptSource(cx, aRequest);
 
-                if (recordreplay::IsRecordingOrReplaying()) {
-                  recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
-                                                 srcBuf.get(), srcBuf.length());
+                if (srcBuf) {
+                  if (recordreplay::IsRecordingOrReplaying()) {
+                    recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
+                                                   srcBuf->get(), srcBuf->length());
+                  }
+                  rv = exec.CompileAndExec(options, *srcBuf, &script);
+                } else {
+                  rv = NS_ERROR_OUT_OF_MEMORY;
                 }
-
-                rv = exec.CompileAndExec(options, srcBuf, &script);
               }
             }
           }
