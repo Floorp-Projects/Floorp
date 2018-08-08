@@ -85,7 +85,7 @@ async function verifyRawHeaders(monitor) {
                                    "date", "content-length"];
 
   const expectedRequestHeaders = ["Host", "User-Agent", "Accept", "Accept-Language",
-                                  "Accept-Encoding", "Cookie", "Connection",
+                                  "Accept-Encoding", "Connection", "Cookie",
                                   "Upgrade-Insecure-Requests", "Pragma",
                                   "Cache-Control"];
 
