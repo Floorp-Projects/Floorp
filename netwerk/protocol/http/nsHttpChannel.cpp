@@ -439,9 +439,69 @@ nsHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage, const nsACString
 //-----------------------------------------------------------------------------
 
 nsresult
+nsHttpChannel::PrepareToConnect()
+{
+    LOG(("nsHttpChannel::PrepareToConnect [this=%p]\n", this));
+
+    AddCookiesToRequest();
+
+    // notify "http-on-modify-request" observers
+    CallOnModifyRequestObservers();
+
+    SetLoadGroupUserAgentOverride();
+
+    // Check if request was cancelled during on-modify-request or on-useragent.
+    if (mCanceled) {
+        return mStatus;
+    }
+
+    if (mSuspendCount) {
+        // We abandon the connection here if there was one.
+        LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
+        MOZ_ASSERT(!mCallOnResume);
+        mCallOnResume = &nsHttpChannel::HandleOnBeforeConnect;
+        return NS_OK;
+    }
+
+    return OnBeforeConnect();
+}
+
+void
+nsHttpChannel::HandleOnBeforeConnect()
+{
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
+    nsresult rv;
+
+    if (mSuspendCount) {
+        LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
+        mCallOnResume = &nsHttpChannel::HandleOnBeforeConnect;
+        return;
+    }
+
+    LOG(("nsHttpChannel::HandleOnBeforeConnect [this=%p]\n", this));
+    rv = OnBeforeConnect();
+    if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
+        Unused << AsyncAbort(rv);
+    }
+}
+
+nsresult
 nsHttpChannel::OnBeforeConnect()
 {
     nsresult rv;
+
+    // Check if request was cancelled during suspend AFTER on-modify-request or
+    // on-useragent.
+    if (mCanceled) {
+        return mStatus;
+    }
+
+    // Check to see if we should redirect this channel elsewhere by
+    // nsIHttpChannel.redirectTo API request
+    if (mAPIRedirectToURI) {
+        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+    }
 
     // Note that we are only setting the "Upgrade-Insecure-Requests" request
     // header for *all* navigational requests instead of all requests as
@@ -6109,8 +6169,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         mUserSetCookieHeader = cookieHeader;
     }
 
-    AddCookiesToRequest();
-
     // Set user agent override, do so before OnOpeningRequest notification
     // since we want to allow consumers of that notification change or remove
     // the User-Agent request header.
@@ -6323,23 +6381,6 @@ nsHttpChannel::BeginConnect()
              this, static_cast<uint32_t>(rv)));
     }
 
-    // notify "http-on-modify-request" observers
-    CallOnModifyRequestObservers();
-
-    SetLoadGroupUserAgentOverride();
-
-    // Check if request was cancelled during on-modify-request or on-useragent.
-    if (mCanceled) {
-        return mStatus;
-    }
-
-    if (mSuspendCount) {
-        LOG(("Waiting until resume BeginConnect [this=%p]\n", this));
-        MOZ_ASSERT(!mCallOnResume);
-        mCallOnResume = &nsHttpChannel::HandleBeginConnectContinue;
-        return NS_OK;
-    }
-
     return BeginConnectContinue();
 }
 
@@ -6368,8 +6409,7 @@ nsHttpChannel::BeginConnectContinue()
 {
     nsresult rv;
 
-    // Check if request was cancelled during suspend AFTER on-modify-request or
-    // on-useragent.
+    // Check if request was cancelled during suspend AFTER on-opening-request.
     if (mCanceled) {
         return mStatus;
     }
@@ -6651,7 +6691,7 @@ nsHttpChannel::ContinueBeginConnectWithResult()
         // case, we should not send the request to the server
         rv = mStatus;
     } else {
-        rv = OnBeforeConnect();
+        rv = PrepareToConnect();
     }
 
     LOG(("nsHttpChannel::ContinueBeginConnectWithResult result [this=%p rv=%" PRIx32

@@ -299,6 +299,8 @@ private:
     MOZ_MUST_USE nsresult BeginConnectContinue();
     MOZ_MUST_USE nsresult ContinueBeginConnectWithResult();
     void     ContinueBeginConnect();
+    MOZ_MUST_USE nsresult PrepareToConnect();
+    void HandleOnBeforeConnect();
     MOZ_MUST_USE nsresult OnBeforeConnect();
     void     OnBeforeConnectContinue();
     MOZ_MUST_USE nsresult Connect();
