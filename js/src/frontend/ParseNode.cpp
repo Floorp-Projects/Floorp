@@ -216,21 +216,6 @@ UnaryNode::dump(GenericPrinter& out, int indent)
 void
 BinaryNode::dump(GenericPrinter& out, int indent)
 {
-    if (isKind(ParseNodeKind::Dot)) {
-        out.put("(.");
-
-        DumpParseTree(pn_right, out, indent + 2);
-
-        out.putChar(' ');
-        if (as<PropertyAccess>().isSuper())
-            out.put("super");
-        else
-            DumpParseTree(pn_left, out, indent + 2);
-
-        out.printf(")");
-        return;
-    }
-
     const char* name = parseNodeNames[size_t(getKind())];
     out.printf("(%s ", name);
     indent += strlen(name) + 2;
@@ -303,7 +288,10 @@ DumpName(GenericPrinter& out, const CharT* s, size_t len)
 void
 NameNode::dump(GenericPrinter& out, int indent)
 {
-    if (isKind(ParseNodeKind::Name) || isKind(ParseNodeKind::PropertyName)) {
+    if (isKind(ParseNodeKind::Name) || isKind(ParseNodeKind::Dot)) {
+        if (isKind(ParseNodeKind::Dot))
+            out.put("(.");
+
         if (!pn_atom) {
             out.put("#<null name>");
         } else if (getOp() == JSOP_GETARG && pn_atom->length() == 0) {
@@ -317,6 +305,15 @@ NameNode::dump(GenericPrinter& out, int indent)
                 DumpName(out, pn_atom->latin1Chars(nogc), pn_atom->length());
             else
                 DumpName(out, pn_atom->twoByteChars(nogc), pn_atom->length());
+        }
+
+        if (isKind(ParseNodeKind::Dot)) {
+            out.putChar(' ');
+            if (as<PropertyAccess>().isSuper())
+                out.put("super");
+            else
+                DumpParseTree(expr(), out, indent + 2);
+            out.printf(")");
         }
         return;
     }

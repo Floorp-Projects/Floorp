@@ -248,11 +248,9 @@ class SyntaxParseHandler
     MOZ_MUST_USE bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
     void addArrayElement(Node literal, Node element) { }
 
-    Node newArguments(const TokenPos& pos) { return NodeGeneric; }
-    Node newCall(Node callee, Node args) { return NodeFunctionCall; }
-
-    Node newSuperCall(Node callee, Node args) { return NodeGeneric; }
-    Node newTaggedTemplate(Node callee, Node args) { return NodeGeneric; }
+    Node newCall(const TokenPos& pos) { return NodeFunctionCall; }
+    Node newSuperCall(Node callee) { return NodeGeneric; }
+    Node newTaggedTemplate(const TokenPos& pos) { return NodeGeneric; }
 
     Node newObjectLiteral(uint32_t begin) { return NodeUnparenthesizedObject; }
     Node newClassMethodList(uint32_t begin) { return NodeGeneric; }
@@ -334,12 +332,8 @@ class SyntaxParseHandler
     }
     Node newDebuggerStatement(const TokenPos& pos) { return NodeGeneric; }
 
-    Node newPropertyName(PropertyName* name, const TokenPos& pos) {
-        lastAtom = name;
-        return NodeGeneric;
-    }
-
-    Node newPropertyAccess(Node expr, Node key) {
+    Node newPropertyAccess(Node expr, PropertyName* key, uint32_t end) {
+        lastAtom = key;
         return NodeDottedProperty;
     }
 
@@ -434,7 +428,7 @@ class SyntaxParseHandler
                    list == NodeFunctionCall);
     }
 
-    Node newNewExpression(uint32_t begin, Node ctor, Node args) {
+    Node newNewExpression(uint32_t begin, Node ctor) {
         return NodeGeneric;
     }
 
