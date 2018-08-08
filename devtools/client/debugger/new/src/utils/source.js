@@ -197,7 +197,7 @@ function getDisplayPath(mySource, sources) {
   const filename = getFilename(mySource); // Find sources that have the same filename, but different paths
   // as the original source
 
-  const similarSources = sources.filter(source => getRawSourceURL(mySource.url) != getRawSourceURL(source.url) && filename == getFilename(source));
+  const similarSources = sources.filter(source => mySource.url != source.url && filename == getFilename(source));
 
   if (similarSources.length == 0) {
     return undefined;
@@ -295,11 +295,7 @@ function getSourcePath(url) {
 
 
 function getSourceLineCount(source) {
-  if (source.error) {
-    return 0;
-  }
-
-  if (source.isWasm) {
+  if (source.isWasm && !source.error) {
     const {
       binary
     } = source.text;
@@ -329,19 +325,14 @@ function getSourceLineCount(source) {
 
 
 function getMode(source, symbols) {
-  if (source.isWasm) {
-    return {
-      name: "text"
-    };
-  }
-
   const {
     contentType,
     text,
+    isWasm,
     url
   } = source;
 
-  if (!text) {
+  if (!text || isWasm) {
     return {
       name: "text"
     };
@@ -460,7 +451,7 @@ function isLoading(source) {
 }
 
 function getTextAtPosition(source, location) {
-  if (!source || source.isWasm || !source.text) {
+  if (!source || !source.text || source.isWasm) {
     return "";
   }
 

@@ -44,19 +44,16 @@ function createFrame(frame) {
 function createSource(source, {
   supportsWasm
 }) {
-  const createdSource = {
+  return {
     id: source.actor,
     url: source.url,
     relativeUrl: source.url,
     isPrettyPrinted: false,
-    isWasm: false,
+    isWasm: supportsWasm && source.introductionType === "wasm",
     sourceMapURL: source.sourceMapURL,
     isBlackBoxed: false,
     loadedState: "unloaded"
   };
-  return Object.assign(createdSource, {
-    isWasm: supportsWasm && source.introductionType === "wasm"
-  });
 }
 
 function createPause(packet, response) {
