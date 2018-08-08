@@ -264,6 +264,7 @@ GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize)
 
     checkIncrementalZoneState(cx, t);
     gcTracer.traceTenuredAlloc(t, kind);
+    cx->noteTenuredAlloc();
     return t;
 }
 

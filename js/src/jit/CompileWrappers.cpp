@@ -214,6 +214,12 @@ CompileZone::addressOfStringNurseryCurrentEnd()
     return zone()->runtimeFromAnyThread()->gc.addressOfStringNurseryCurrentEnd();
 }
 
+uint32_t*
+CompileZone::addressOfNurseryAllocCount()
+{
+    return zone()->runtimeFromAnyThread()->gc.addressOfNurseryAllocCount();
+}
+
 bool
 CompileZone::canNurseryAllocateStrings()
 {

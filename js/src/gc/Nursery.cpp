@@ -396,6 +396,7 @@ js::Nursery::allocate(size_t size)
 
     void* thing = (void*)position();
     position_ = position() + size;
+    runtime()->gc.stats().noteNurseryAlloc();
 
     JS_EXTRA_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size, MemCheckKind::MakeUndefined);
 
@@ -620,6 +621,8 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
         json.property("lazy_capacity", previousGC.nurseryLazyCapacity);
     if (!timeInChunkAlloc_.IsZero())
         json.property("chunk_alloc_us", timeInChunkAlloc_, json.MICROSECONDS);
+    json.property("cells_allocated_nursery", runtime()->gc.stats().allocsSinceMinorGCNursery());
+    json.property("cells_allocated_tenured", runtime()->gc.stats().allocsSinceMinorGCTenured());
 
     json.beginObjectProperty("phase_times");
 

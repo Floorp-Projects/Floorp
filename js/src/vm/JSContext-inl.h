@@ -422,6 +422,11 @@ JSContext::enterAtomsZone()
 inline void
 JSContext::setZone(js::Zone *zone, JSContext::IsAtomsZone isAtomsZone)
 {
+    if (zone_)
+        zone_->addTenuredAllocsSinceMinorGC(allocsThisZoneSinceMinorGC_);
+
+    allocsThisZoneSinceMinorGC_ = 0;
+
     zone_ = zone;
     if (zone == nullptr) {
         freeLists_ = nullptr;
