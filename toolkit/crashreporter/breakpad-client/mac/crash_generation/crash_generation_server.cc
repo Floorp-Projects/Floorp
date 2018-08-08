@@ -110,9 +110,7 @@ bool CrashGenerationServer::WaitForOneMessage() {
         mach_port_t crashing_thread = message.GetTranslatedPort(1);
         mach_port_t handler_thread = message.GetTranslatedPort(2);
         mach_port_t ack_port = message.GetTranslatedPort(3);
-        pid_t remote_pid = -1;
-        pid_for_task(remote_task, &remote_pid);
-        ClientInfo client(remote_pid);
+        ClientInfo client(info.child_pid);
 
         bool result;
         std::string dump_path;
