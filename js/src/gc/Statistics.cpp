@@ -752,6 +752,7 @@ Statistics::Statistics(JSRuntime* rt)
     gcTimerFile(nullptr),
     gcDebugFile(nullptr),
     nonincrementalReason_(gc::AbortReason::None),
+    allocsSinceMinorGC({0, 0}),
     preBytes(0),
     thresholdTriggered(false),
     triggerAmount(0.0),
@@ -1046,6 +1047,8 @@ Statistics::endNurseryCollection(JS::gcreason::Reason reason)
                                      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END,
                                      reason);
     }
+
+    allocsSinceMinorGC = {0, 0};
 }
 
 void
