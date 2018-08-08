@@ -19,7 +19,6 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
-import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -97,36 +96,21 @@ class NavigationDelegateTest : BaseSessionTest() {
                    containsString(mobileSubStr))
     }
 
-    fun telemetryTest(process: String) {
+    @Test fun telemetry() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         val telemetry = sessionRule.runtime.telemetry
         val result = sessionRule.waitForResult(telemetry.getSnapshots(true))
 
-        val snapshots = result?.get(process) as GeckoBundle
-
-        assertThat("Snapshots should not be null",
-                   snapshots, notNullValue())
-
         assertThat("Histograms should not be null",
-                   snapshots.get("histograms"), notNullValue())
+                   result?.get("histograms"), notNullValue())
         assertThat("Keyed histograms should not be null",
-                   snapshots.get("keyedHistograms"), notNullValue())
+                   result?.get("keyedHistograms"), notNullValue())
         assertThat("Scalars should not be null",
-                   snapshots.get("scalars"), notNullValue())
+                   result?.get("scalars"), notNullValue())
         assertThat("Keyed scalars should not be null",
-                   snapshots.get("keyedScalars"), notNullValue())
-    }
-
-    @Test fun telemetryParent() {
-        telemetryTest("parent")
-    }
-
-
-    @Test fun telemetryContent() {
-        assumeThat(sessionRule.env.isMultiprocess, equalTo(true));
-        telemetryTest("content")
+                   result?.get("keyedScalars"), notNullValue())
     }
 
     @Test fun load() {
