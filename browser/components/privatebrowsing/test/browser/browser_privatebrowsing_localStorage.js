@@ -9,7 +9,7 @@
 
   let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
 
-  win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser, page1);
+  win.gBrowser.selectedTab = win.gBrowser.addTab(page1);
   let browser = win.gBrowser.selectedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
 

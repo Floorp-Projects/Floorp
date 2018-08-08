@@ -16,7 +16,7 @@ add_task(async function test() {
   await promiseBrowserLoaded(win.gBrowser.selectedBrowser);
 
   // Open a second tab and close the first one.
-  let tab = BrowserTestUtils.addTab(win.gBrowser, "about:mozilla");
+  let tab = win.gBrowser.addTab("about:mozilla");
   await promiseBrowserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);
   await promiseRemoveTabAndSessionState(win.gBrowser.tabs[0]);

@@ -97,7 +97,7 @@ add_task(async function testExceptionAddition() {
   testTrackingPageUnblocked();
 
   info("Test that the exception is remembered across tabs in the same private window");
-  tab = browser.selectedTab = BrowserTestUtils.addTab(browser);
+  tab = browser.selectedTab = browser.addTab();
 
   info("Load a test page containing tracking elements");
   await promiseTabLoadEvent(tab, TRACKING_PAGE);

@@ -15,11 +15,11 @@ add_task(async function() {
 
   var URL = "http://mochi.test:8888/browser/dom/tests/browser/page_privatestorageevent.html";
 
-  var privTab = BrowserTestUtils.addTab(privWin.gBrowser, URL);
+  var privTab = privWin.gBrowser.addTab(URL);
   await BrowserTestUtils.browserLoaded(privWin.gBrowser.getBrowserForTab(privTab));
   var privBrowser = gBrowser.getBrowserForTab(privTab);
 
-  var pubTab = BrowserTestUtils.addTab(pubWin.gBrowser, URL);
+  var pubTab = pubWin.gBrowser.addTab(URL);
   await BrowserTestUtils.browserLoaded(pubWin.gBrowser.getBrowserForTab(pubTab));
   var pubBrowser = gBrowser.getBrowserForTab(pubTab);
 

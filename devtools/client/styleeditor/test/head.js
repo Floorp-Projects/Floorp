@@ -28,7 +28,7 @@ var addTab = function(url, win) {
     const targetWindow = win || window;
     const targetBrowser = targetWindow.gBrowser;
 
-    const tab = targetBrowser.selectedTab = BrowserTestUtils.addTab(targetBrowser, url);
+    const tab = targetBrowser.selectedTab = targetBrowser.addTab(url);
     BrowserTestUtils.browserLoaded(targetBrowser.selectedBrowser)
       .then(function() {
         info("URL '" + url + "' loading complete");

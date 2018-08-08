@@ -527,8 +527,18 @@ this.tabs = class extends ExtensionAPI {
             }
           }).then(window => {
             let url;
-            let principal = context.principal;
 
+            if (createProperties.url !== null) {
+              url = context.uri.resolve(createProperties.url);
+
+              if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+                return Promise.reject({message: `Illegal URL: ${url}`});
+              }
+
+              if (createProperties.openInReaderMode) {
+                url = `about:reader?url=${encodeURIComponent(url)}`;
+              }
+            }
 
             if (createProperties.cookieStoreId && !extension.hasPermission("cookies")) {
               return Promise.reject({message: `No permission for cookieStoreId: ${createProperties.cookieStoreId}`});
@@ -559,19 +569,6 @@ this.tabs = class extends ExtensionAPI {
               }
             }
 
-            if (createProperties.url !== null) {
-              url = context.uri.resolve(createProperties.url);
-
-              if (!context.checkLoadURL(url, {dontReportErrors: true})) {
-                return Promise.reject({message: `Illegal URL: ${url}`});
-              }
-
-              if (createProperties.openInReaderMode) {
-                url = `about:reader?url=${encodeURIComponent(url)}`;
-              }
-            } else {
-              url = window.BROWSER_NEW_TAB_URL;
-            }
             // Only set disallowInheritPrincipal on non-discardable urls as it
             // will override creating a lazy browser.  Setting triggeringPrincipal
             // will ensure other cases are handled, but setting it may prevent
@@ -581,11 +578,8 @@ this.tabs = class extends ExtensionAPI {
               // Make sure things like about:blank and data: URIs never inherit,
               // and instead always get a NullPrincipal.
               options.disallowInheritPrincipal = true;
-              // Falling back to codebase here as about: requires it, however is safe.
-              principal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI(url), {
-                userContextId: options.userContextId,
-                privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(window.gBrowser) ? 1 : 0,
-              });
+            } else {
+              options.triggeringPrincipal = context.principal;
             }
 
             tabListener.initTabReady();
@@ -624,14 +618,13 @@ this.tabs = class extends ExtensionAPI {
               return Promise.reject({message: `Title may only be set for discarded tabs.`});
             }
 
-            options.triggeringPrincipal = principal;
-            let nativeTab = window.gBrowser.addTab(url, options);
+            let nativeTab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
             if (createProperties.discarded) {
               SessionStore.setTabState(nativeTab, {
                 entries: [{
                   url: url,
                   title: options.title,
-                  triggeringPrincipal_base64: Utils.serializePrincipal(principal),
+                  triggeringPrincipal_base64: Utils.serializePrincipal(context.principal),
                 }],
               });
             }

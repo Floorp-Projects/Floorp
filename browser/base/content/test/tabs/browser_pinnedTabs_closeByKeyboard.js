@@ -21,7 +21,7 @@ function test() {
 
   testState(false);
 
-  let pinnedTab = BrowserTestUtils.addTab(gBrowser);
+  let pinnedTab = gBrowser.addTab();
   gBrowser.pinTab(pinnedTab);
 
   // Just pinning the tab shouldn't change the key state.
@@ -45,7 +45,7 @@ function test() {
   testState(true);
 
   // Test that accel+w in a pinned tab selects the next tab.
-  let pinnedTab2 = BrowserTestUtils.addTab(gBrowser);
+  let pinnedTab2 = gBrowser.addTab();
   gBrowser.pinTab(pinnedTab2);
   gBrowser.selectedTab = pinnedTab;
 

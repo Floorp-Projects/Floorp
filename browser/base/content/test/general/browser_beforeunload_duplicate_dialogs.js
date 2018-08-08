@@ -45,7 +45,7 @@ add_task(async function closeWindowWithMultipleTabsIncludingOneBeforeUnload() {
   let newWin = await promiseOpenAndLoadWindow({}, true);
   let firstTab = newWin.gBrowser.selectedTab;
   await promiseTabLoadEvent(firstTab, TEST_PAGE);
-  await promiseTabLoadEvent(BrowserTestUtils.addTab(newWin.gBrowser), "http://example.com/");
+  await promiseTabLoadEvent(newWin.gBrowser.addTab(), "http://example.com/");
   let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   newWin.BrowserTryToCloseWindow();
