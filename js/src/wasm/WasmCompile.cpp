@@ -450,7 +450,7 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
     return mg.finishModule(bytecode);
 }
 
-bool
+void
 wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancelled)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
@@ -463,19 +463,23 @@ wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancel
     ModuleEnvironment env(CompileMode::Tier2, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))
-        return false;
+        return;
 
     ModuleGenerator mg(args, &env, cancelled, &error);
     if (!mg.init())
-        return false;
+        return;
 
     if (!DecodeCodeSection(env, d, mg))
-        return false;
+        return;
 
     if (!DecodeModuleTail(d, &env))
-        return false;
+        return;
 
-    return mg.finishTier2(module);
+    if (!mg.finishTier2(module))
+        return;
+
+    // The caller doesn't care about success or failure; only that compilation
+    // is inactive, so there is no success to return here.
 }
 
 class StreamingDecoder

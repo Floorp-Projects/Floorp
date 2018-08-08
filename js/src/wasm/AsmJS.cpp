@@ -6491,8 +6491,7 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
     if (!moduleChars.init(parser))
         return JS::AsmJSCache_InternalError;
 
-    size_t bytecodeSize = module.bytecodeSerializedSize();
-    MOZ_RELEASE_ASSERT(bytecodeSize == 0);
+    MOZ_RELEASE_ASSERT(module.bytecode().length() == 0);
 
     size_t compiledSize = module.compiledSerializedSize();
     MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);

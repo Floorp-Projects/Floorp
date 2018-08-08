@@ -95,23 +95,6 @@ class LinkData
     WASM_DECLARE_SERIALIZABLE(LinkData)
 };
 
-// Contains the locked tiering state of a Module: whether there is an active
-// background tier-2 compilation in progress and, if so, the list of listeners
-// waiting for the tier-2 compilation to complete.
-
-struct Tiering
-{
-    typedef Vector<RefPtr<JS::WasmModuleListener>, 0, SystemAllocPolicy> ListenerVector;
-
-    Tiering() : active(false) {}
-    ~Tiering() { MOZ_ASSERT(listeners.empty()); MOZ_ASSERT(!active); }
-
-    ListenerVector listeners;
-    bool active;
-};
-
-typedef ExclusiveWaitableData<Tiering> ExclusiveTiering;
-
 // Module represents a compiled wasm module and primarily provides two
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized
@@ -137,7 +120,11 @@ class Module : public JS::WasmModule
     const ElemSegmentVector elemSegments_;
     const StructTypeVector  structTypes_;
     const SharedBytes       bytecode_;
-    ExclusiveTiering        tiering_;
+
+    // This flag is only used for testing purposes and is racily updated as soon
+    // as tier-2 compilation finishes (in success or failure).
+
+    mutable Atomic<bool>    testingTier2Active_;
 
     // `codeIsBusy_` is set to false initially and then to true when `code_` is
     // already being used for an instance and can't be shared because it may be
@@ -160,7 +147,6 @@ class Module : public JS::WasmModule
                       HandleValVector globalImportValues) const;
 
     class Tier2GeneratorTaskImpl;
-    void notifyCompilationListeners();
 
   public:
     Module(Assumptions&& assumptions,
@@ -183,7 +169,7 @@ class Module : public JS::WasmModule
         elemSegments_(std::move(elemSegments)),
         structTypes_(std::move(structTypes)),
         bytecode_(&bytecode),
-        tiering_(mutexid::WasmModuleTieringLock),
+        testingTier2Active_(false),
         codeIsBusy_(false)
     {
         MOZ_ASSERT_IF(metadata().debugEnabled, unlinkedCodeForDebugging_);
@@ -213,22 +199,19 @@ class Module : public JS::WasmModule
                      MutableHandleWasmInstanceObject instanceObj) const;
 
     // Tier-2 compilation may be initiated after the Module is constructed at
-    // most once, ideally before any client can attempt to serialize the Module.
-    // When tier-2 compilation completes, ModuleGenerator calls finishTier2()
-    // from a helper thread, passing tier-variant data which will be installed
-    // and made visible.
+    // most once. When tier-2 compilation completes, ModuleGenerator calls
+    // finishTier2() from a helper thread, passing tier-variant data which will
+    // be installed and made visible.
 
     void startTier2(const CompileArgs& args);
     bool finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2);
-    void blockOnTier2Complete() const;
+
+    void testingBlockOnTier2Complete() const;
+    bool testingTier2Active() const { return testingTier2Active_; }
 
     // Currently dead, but will be ressurrected with shell tests (bug 1330661)
     // and HTTP cache integration.
 
-    size_t bytecodeSerializedSize() const;
-    void bytecodeSerialize(uint8_t* bytecodeBegin, size_t bytecodeSize) const;
-    bool compilationComplete() const;
-    bool notifyWhenCompilationComplete(JS::WasmModuleListener* listener);
     size_t compiledSerializedSize() const;
     void compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const;
 
