@@ -274,6 +274,10 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
+    if (aFlags & eSupportsContainLayoutAndPaint) {
+      return false;
+    }
+
     return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
   }
 

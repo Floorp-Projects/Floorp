@@ -68,9 +68,11 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return !(aFlags & nsIFrame::eLineParticipant) &&
-      nsContainerFrame::IsFrameOfType(aFlags &
-              ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
+    if (aFlags & (eLineParticipant | eSupportsContainLayoutAndPaint)) {
+      return false;
+    }
+    return nsContainerFrame::IsFrameOfType(aFlags &
+      ~(eMathML | eExcludesIgnorableWhitespace));
   }
 
   virtual void

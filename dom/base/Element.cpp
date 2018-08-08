@@ -327,7 +327,7 @@ Element::UpdateEditableState(bool aNotify)
 int32_t
 Element::TabIndex()
 {
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::tabindex);
+  const nsAttrValue* attrVal = mAttrs.GetAttr(nsGkAtoms::tabindex);
   if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
     return attrVal->GetIntegerValue();
   }
@@ -645,9 +645,9 @@ Element::ClassList()
 void
 Element::GetAttributeNames(nsTArray<nsString>& aResult)
 {
-  uint32_t count = mAttrsAndChildren.AttrCount();
+  uint32_t count = mAttrs.AttrCount();
   for (uint32_t i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
+    const nsAttrName* name = mAttrs.AttrNameAt(i);
     name->GetQualifiedName(*aResult.AppendElement());
   }
 }
@@ -1297,9 +1297,9 @@ void
 Element::GetAttribute(const nsAString& aName, DOMString& aReturn)
 {
   const nsAttrValue* val =
-    mAttrsAndChildren.GetAttr(aName,
-                              IsHTMLElement() && IsInHTMLDocument() ?
-                                eIgnoreCase : eCaseMatters);
+    mAttrs.GetAttr(aName,
+                   IsHTMLElement() && IsInHTMLDocument() ?
+                     eIgnoreCase : eCaseMatters);
   if (val) {
     val->ToString(aReturn);
   } else {
@@ -2156,7 +2156,7 @@ Element::GetInlineStyleDeclaration() const
   if (!MayHaveStyle()) {
     return nullptr;
   }
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
+  const nsAttrValue* attrVal = mAttrs.GetAttr(nsGkAtoms::style);
 
   if (attrVal && attrVal->Type() == nsAttrValue::eCSSDeclaration) {
     return attrVal->GetCSSDeclarationValue();
@@ -2168,7 +2168,7 @@ Element::GetInlineStyleDeclaration() const
 const nsMappedAttributes*
 Element::GetMappedAttributes() const
 {
-  return mAttrsAndChildren.GetMapped();
+  return mAttrs.GetMapped();
 }
 
 void
@@ -2408,12 +2408,12 @@ Element::InternalGetAttrNameFromQName(const nsAString& aStr,
     nsAutoString lower;
     nsAutoString& outStr = aNameToUse ? *aNameToUse : lower;
     nsContentUtils::ASCIIToLower(aStr, outStr);
-    val = mAttrsAndChildren.GetExistingAttrNameFromQName(outStr);
+    val = mAttrs.GetExistingAttrNameFromQName(outStr);
     if (val) {
       outStr.Truncate();
     }
   } else {
-    val = mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
+    val = mAttrs.GetExistingAttrNameFromQName(aStr);
     if (!val && aNameToUse) {
       *aNameToUse = aStr;
     }
@@ -2502,10 +2502,6 @@ Element::SetSingleClassFromParser(nsAtom* aSingleClassName)
 {
   // Keep this in sync with SetAttr and SetParsedAttr below.
 
-  if (!mAttrsAndChildren.CanFitMoreAttrs()) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsAttrValue value(aSingleClassName);
 
   nsIDocument* document = GetComposedDoc();
@@ -2542,10 +2538,6 @@ Element::SetAttr(int32_t aNamespaceID, nsAtom* aName,
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
-
-  if (!mAttrsAndChildren.CanFitMoreAttrs()) {
-    return NS_ERROR_FAILURE;
-  }
 
   uint8_t modType;
   bool hasListeners;
@@ -2609,11 +2601,6 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
-
-  if (!mAttrsAndChildren.CanFitMoreAttrs()) {
-    return NS_ERROR_FAILURE;
-  }
-
 
   uint8_t modType;
   bool hasListeners;
@@ -2682,7 +2669,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     // stuff to Element?
     if (!IsAttributeMapped(aName) ||
         !SetAndSwapMappedAttribute(aName, aParsedValue, &oldValueSet, &rv)) {
-      rv = mAttrsAndChildren.SetAndSwapAttr(aName, aParsedValue, &oldValueSet);
+      rv = mAttrs.SetAndSwapAttr(aName, aParsedValue, &oldValueSet);
     }
   }
   else {
@@ -2691,7 +2678,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
                                                    aNamespaceID,
                                                    ATTRIBUTE_NODE);
 
-    rv = mAttrsAndChildren.SetAndSwapAttr(ni, aParsedValue, &oldValueSet);
+    rv = mAttrs.SetAndSwapAttr(ni, aParsedValue, &oldValueSet);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2945,7 +2932,7 @@ Element::FindAttrValueIn(int32_t aNameSpaceID,
   NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
   NS_ASSERTION(aValues, "Null value array");
 
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
+  const nsAttrValue* val = mAttrs.GetAttr(aName, aNameSpaceID);
   if (val) {
     for (int32_t i = 0; aValues[i]; ++i) {
       if (val->Equals(*aValues[i], aCaseSensitive)) {
@@ -2963,7 +2950,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
 {
   NS_ASSERTION(nullptr != aName, "must have attribute name");
 
-  int32_t index = mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID);
+  int32_t index = mAttrs.IndexOfAttr(aName, aNameSpaceID);
   if (index < 0) {
     return NS_OK;
   }
@@ -3014,7 +3001,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
   nsAttrValue oldValue;
-  rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);
+  rv = mAttrs.RemoveAttrAt(index, oldValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PostIdMaybeChange(aNameSpaceID, aName, nullptr);
@@ -3086,12 +3073,12 @@ void
 Element::DescribeAttribute(uint32_t index, nsAString& aOutDescription) const
 {
   // name
-  mAttrsAndChildren.AttrNameAt(index)->GetQualifiedName(aOutDescription);
+  mAttrs.AttrNameAt(index)->GetQualifiedName(aOutDescription);
 
   // value
   aOutDescription.AppendLiteral("=\"");
   nsAutoString value;
-  mAttrsAndChildren.AttrAt(index)->ToString(value);
+  mAttrs.AttrAt(index)->ToString(value);
   for (uint32_t i = value.Length(); i > 0; --i) {
     if (value[i - 1] == char16_t('"'))
       value.Insert(char16_t('\\'), i - 1);
@@ -3104,7 +3091,7 @@ Element::DescribeAttribute(uint32_t index, nsAString& aOutDescription) const
 void
 Element::ListAttributes(FILE* out) const
 {
-  uint32_t index, count = mAttrsAndChildren.AttrCount();
+  uint32_t index, count = mAttrs.AttrCount();
   for (index = 0; index < count; index++) {
     nsAutoString attributeDescription;
     DescribeAttribute(index, attributeDescription);
@@ -3242,7 +3229,7 @@ Element::Describe(nsAString& aOutDescription) const
   aOutDescription.Append(mNodeInfo->QualifiedName());
   aOutDescription.AppendPrintf("@%p", (void *)this);
 
-  uint32_t index, count = mAttrsAndChildren.AttrCount();
+  uint32_t index, count = mAttrs.AttrCount();
   for (index = 0; index < count; index++) {
     aOutDescription.Append(' ');
     nsAutoString attributeDescription;
@@ -4107,7 +4094,7 @@ Element::GetEnumAttr(nsAtom* aAttr,
                      const char* aDefaultInvalid,
                      nsAString& aResult) const
 {
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+  const nsAttrValue* attrVal = mAttrs.GetAttr(aAttr);
 
   aResult.Truncate();
 

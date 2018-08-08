@@ -33,14 +33,11 @@ add_task(async function() {
   info("Opening a tab while there is a true user setting on split console pref");
   toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   ok(toolbox.splitConsole, "Split console is visible by default.");
-
+  ok(isJstermFocused(toolbox.getPanel("webconsole").hud.jsterm),
+     "Split console input is focused by default");
   ok(await doesMenuSayHide(toolbox),
      "Split console menu item initially says hide");
   is(getHeightPrefValue(), 200, "Height is set based on panel height after closing");
-
-  const activeElement = getActiveElement(toolbox.doc);
-  const inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
-  is(activeElement, inputNode, "Split console input is focused by default");
 
   toolbox.webconsolePanel.height = 1;
   ok(toolbox.webconsolePanel.clientHeight > 1,
@@ -70,14 +67,6 @@ add_task(async function() {
   await toolbox.destroy();
 });
 
-function getActiveElement(doc) {
-  let activeElement = doc.activeElement;
-  while (activeElement && activeElement.contentDocument) {
-    activeElement = activeElement.contentDocument.activeElement;
-  }
-  return activeElement;
-}
-
 function getVisiblePrefValue() {
   return Services.prefs.getBoolPref("devtools.toolbox.splitconsoleEnabled");
 }
@@ -86,10 +75,11 @@ function getHeightPrefValue() {
   return Services.prefs.getIntPref("devtools.toolbox.splitconsoleHeight");
 }
 
-function doesMenuSayHide(toolbox) {
+async function doesMenuSayHide(toolbox) {
+  const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
+  await waitUntil(() => toolbox.win.getComputedStyle(button).pointerEvents === "auto");
   return new Promise(resolve => {
-    const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
-    EventUtils.sendMouseEvent({ type: "click" }, button);
+    EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.win);
 
     toolbox.doc.addEventListener("popupshown", () => {
       const menuItem =

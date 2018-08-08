@@ -93,8 +93,8 @@ SVGMPathElement::BindToTree(nsIDocument* aDocument,
   if (aDocument) {
     const nsAttrValue* hrefAttrValue =
       HasAttr(kNameSpaceID_None, nsGkAtoms::href)
-      ? mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
-      : mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
+        ? mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
+        : mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
     if (hrefAttrValue) {
       UpdateHrefTarget(aParent, hrefAttrValue->GetStringValue());
     }
@@ -154,7 +154,7 @@ SVGMPathElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       // After unsetting href, we may still have xlink:href, so we should
       // try to add it back.
       const nsAttrValue* xlinkHref =
-        mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
+        mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
       if (xlinkHref) {
         UpdateHrefTarget(GetParent(), xlinkHref->GetStringValue());
       }

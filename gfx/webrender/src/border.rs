@@ -9,9 +9,8 @@ use app_units::Au;
 use ellipse::Ellipse;
 use display_list_flattener::DisplayListFlattener;
 use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
-use prim_store::{BrushKind, BrushPrimitive, BrushSegment, VECS_PER_SEGMENT};
+use prim_store::{BrushKind, BrushPrimitive, BrushSegment};
 use prim_store::{BorderSource, EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
-use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use util::{lerp, RectHelpers};
 
 // Using 2048 as the maximum radius in device space before which we
@@ -22,6 +21,10 @@ use util::{lerp, RectHelpers};
 
 /// Maximum resolution in device pixels at which borders are rasterized.
 pub const MAX_BORDER_RESOLUTION: u32 = 2048;
+/// Maximum number of dots or dashes per segment to avoid freezing and filling up
+/// memory with unreasonable inputs. It would be better to address this by not building
+/// a list of per-dot information in the first place.
+pub const MAX_DASH_COUNT: usize = 2048;
 
 trait AuSizeConverter {
     fn to_au(&self) -> LayoutSizeAu;
@@ -355,11 +358,7 @@ impl BorderCornerClipSource {
             1.0 - 2.0 * outer_scale.y,
         );
 
-        // No point in pushing more clips as it will blow up the maximum amount of
-        // segments per primitive later down the road.
-        // See #2915 for a better fix.
-        let clip_limit = MAX_VERTEX_TEXTURE_WIDTH / VECS_PER_SEGMENT;
-        let max_clip_count = self.max_clip_count.min(clip_limit);
+        let max_clip_count = self.max_clip_count.min(MAX_DASH_COUNT);
 
         match self.kind {
             BorderCornerClipKind::Dash => {
@@ -372,6 +371,7 @@ impl BorderCornerClipSource {
                 // sophisticated dash placement algorithm that takes into account
                 // the offset of the dashes along edge segments.
                 let mut current_arc_length = 0.25 * dash_arc_length;
+                dot_dash_data.reserve(max_clip_count);
                 for _ in 0 .. max_clip_count {
                     let arc_length0 = current_arc_length;
                     current_arc_length += dash_arc_length;
@@ -425,8 +425,8 @@ impl BorderCornerClipSource {
                 ]);
             }
             BorderCornerClipKind::Dot => {
-                let mut forward_dots = Vec::new();
-                let mut back_dots = Vec::new();
+                let mut forward_dots = Vec::with_capacity(max_clip_count / 2 + 1);
+                let mut back_dots = Vec::with_capacity(max_clip_count / 2 + 1);
                 let mut leftover_arc_length = 0.0;
 
                 // Alternate between adding dots at the start and end of the
@@ -500,6 +500,8 @@ impl BorderCornerClipSource {
 
                     [center.x, center.y, radius, 0.0, 0.0, 0.0, 0.0, 0.0]
                 };
+
+                dot_dash_data.reserve(forward_dots.len() + back_dots.len());
 
                 for (i, dot) in forward_dots.iter().enumerate() {
                     let extra_dist = i as f32 * extra_space_per_dot;

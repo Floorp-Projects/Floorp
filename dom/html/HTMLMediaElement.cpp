@@ -2545,7 +2545,7 @@ HTMLMediaElement::UpdatePreloadAction()
   } else {
     // Find the appropriate preload action by looking at the attribute.
     const nsAttrValue* val =
-      mAttrsAndChildren.GetAttr(nsGkAtoms::preload, kNameSpaceID_None);
+      mAttrs.GetAttr(nsGkAtoms::preload, kNameSpaceID_None);
     // MSE doesn't work if preload is none, so it ignores the pref when src is
     // from MSE.
     uint32_t preloadDefault =

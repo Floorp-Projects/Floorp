@@ -33,13 +33,13 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'dom'
 
 EXPORTS += [
+    'AttrArray.h',
     'AutocompleteFieldList.h',
     'Crypto.h',
     'HTMLSplitOnSpacesTokenizer.h',
     'IframeSandboxKeywordList.h',
     'mozAutoDocUpdate.h',
     'NodeUbiReporting.h',
-    'nsAttrAndChildArray.h',
     'nsAttrName.h',
     'nsAttrValue.h',
     'nsAttrValueInlines.h',
@@ -238,6 +238,7 @@ if CONFIG['FUZZING']:
 UNIFIED_SOURCES += [
     'AnonymousContent.cpp',
     'Attr.cpp',
+    'AttrArray.cpp',
     'BarProps.cpp',
     'BodyUtil.cpp',
     'BorrowedAttrInfo.cpp',
@@ -289,7 +290,6 @@ UNIFIED_SOURCES += [
     'NodeInfo.cpp',
     'NodeIterator.cpp',
     'NodeUbiReporting.cpp',
-    'nsAttrAndChildArray.cpp',
     'nsAttrValue.cpp',
     'nsAttrValueOrString.cpp',
     'nsCCUncollectableMarker.cpp',
