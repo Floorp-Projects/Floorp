@@ -1622,8 +1622,8 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange)
     return FrameAndNodeOffset();
   }
 
-  nsINode* endNode = aRawRange.GetEndContainer();
-  uint32_t endOffset = aRawRange.EndOffset();
+  const RangeBoundary& endPoint = aRawRange.End();
+  MOZ_ASSERT(endPoint.IsSet());
   // If the end point is start of a text node or specified by its parent and
   // index, the node shouldn't be included into the range.  For example,
   // with this case, |<p>abc[<br>]def</p>|, the range ends at 3rd children of
@@ -1641,16 +1641,17 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange)
   // of "d" instead of right-bottom of "c").  Therefore, this method shouldn't
   // include the last frame when its content isn't really in aRawRange.
   nsINode* nextNodeOfRangeEnd = nullptr;
-  if (endNode->IsText()) {
+  if (endPoint.Container()->IsText()) {
     // Don't set nextNodeOfRangeEnd to the start node of aRawRange because if
-    // endNode is same as start node of the range, the text node shouldn't be
-    // next of range end even if the offset is 0.  This could occur with empty
-    // text node.
-    if (!endOffset && aRawRange.GetStartContainer() != endNode) {
-      nextNodeOfRangeEnd = endNode;
+    // the container of the end is same as start node of the range, the text
+    // node shouldn't be next of range end even if the offset is 0.  This
+    // could occur with empty text node.
+    if (endPoint.IsStartOfContainer() &&
+        aRawRange.GetStartContainer() != endPoint.Container()) {
+      nextNodeOfRangeEnd = endPoint.Container();
     }
-  } else if (endOffset < endNode->GetChildCount()) {
-    nextNodeOfRangeEnd = endNode->GetChildAt_Deprecated(endOffset);
+  } else if (endPoint.IsSetAndValid()) {
+    nextNodeOfRangeEnd = endPoint.GetChildAtOffset();
   }
 
   for (iter->Last(); !iter->IsDone(); iter->Prev()) {
@@ -2967,43 +2968,47 @@ ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aRawRange)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsINode> container = aRawRange.GetStartContainer();
-  int32_t offsetInParentNode = aRawRange.StartOffset();
-  if (NS_WARN_IF(!container) || NS_WARN_IF(offsetInParentNode < 0)) {
+  const RangeBoundary& startPoint = aRawRange.Start();
+  if (NS_WARN_IF(!startPoint.IsSet())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  // If the node is text node, we don't need to modify aRawRange.
-  if (container->IsText()) {
+  // If the node does not have children like a text node, we don't need to
+  // modify aRawRange.
+  if (!startPoint.Container()->HasChildren()) {
     return NS_OK;
   }
 
   // If the container is not a text node but it has a text node at the offset,
   // we should adjust the range into the text node.
   // NOTE: This is emulating similar situation of EditorBase.
-  nsINode* childNode = nullptr;
-  int32_t offsetInChildNode = -1;
-  if (!offsetInParentNode && container->HasChildren()) {
+  if (startPoint.IsStartOfContainer()) {
     // If the range is the start of the container, adjusted the range to the
     // start of the first child.
-    childNode = container->GetFirstChild();
-    offsetInChildNode = 0;
-  } else if (static_cast<uint32_t>(offsetInParentNode) <
-               container->GetChildCount()) {
-    // If the range is next to a child node, adjust the range to the end of
-    // the previous child.
-    childNode = container->GetChildAt_Deprecated(offsetInParentNode - 1);
-    offsetInChildNode = childNode->Length();
-  }
-
-  // But if the found node isn't a text node, we cannot modify the range.
-  if (!childNode || !childNode->IsText() ||
-      NS_WARN_IF(offsetInChildNode < 0)) {
+    if (!startPoint.Container()->GetFirstChild()->IsText()) {
+      return NS_OK;
+    }
+    nsresult rv =
+      aRawRange.CollapseTo(
+                  RawRangeBoundary(startPoint.Container()->GetFirstChild(), 0));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     return NS_OK;
   }
 
+  if (!startPoint.IsSetAndValid()) {
+    return NS_OK;
+  }
+
+  // If start of the range is next to a child node, adjust the range to the
+  // end of the previous child (i.e., startPoint.Ref()).
+  if (!startPoint.Ref()->IsText()) {
+    return NS_OK;
+  }
   nsresult rv =
-    aRawRange.CollapseTo(RawRangeBoundary(childNode, offsetInChildNode));
+    aRawRange.CollapseTo(
+                RawRangeBoundary(startPoint.Ref(), startPoint.Ref()->Length()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
