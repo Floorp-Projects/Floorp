@@ -441,6 +441,13 @@ Scriptability::Get(JSObject* aScope)
     return RealmPrivate::Get(aScope)->scriptability;
 }
 
+/* static */
+Scriptability&
+Scriptability::Get(JSScript* aScript)
+{
+    return RealmPrivate::Get(aScript)->scriptability;
+}
+
 bool
 IsContentXBLCompartment(JS::Compartment* compartment)
 {

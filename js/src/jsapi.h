@@ -1234,6 +1234,12 @@ CurrentGlobalOrNull(JSContext* cx);
 extern JS_PUBLIC_API(JSObject*)
 GetNonCCWObjectGlobal(JSObject* obj);
 
+/**
+ * Get the global object associated with a script's realm.
+ */
+extern JS_PUBLIC_API(JSObject*)
+GetScriptGlobal(JSScript* script);
+
 } // namespace JS
 
 /**
@@ -3692,7 +3698,7 @@ CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
                        JS::SourceBufferHolder& srcBuf,
                        OffThreadCompileCallback callback, void* callbackData);
 
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API(JSScript*)
 FinishOffThreadModule(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(void)
@@ -3864,7 +3870,7 @@ extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
          const char* filename, JS::MutableHandleValue rval);
 
-using ModuleResolveHook = JSObject* (*)(JSContext*, HandleObject, HandleString);
+using ModuleResolveHook = JSScript* (*)(JSContext*, HandleScript, HandleString);
 
 /**
  * Get the HostResolveImportedModule hook for the runtime.
@@ -3878,7 +3884,7 @@ GetModuleResolveHook(JSRuntime* rt);
 extern JS_PUBLIC_API(void)
 SetModuleResolveHook(JSRuntime* rt, ModuleResolveHook func);
 
-using ModuleMetadataHook = bool (*)(JSContext*, HandleObject, HandleObject);
+using ModuleMetadataHook = bool (*)(JSContext*, HandleScript, HandleObject);
 
 /**
  * Get the hook for populating the import.meta metadata object.
@@ -3895,24 +3901,24 @@ SetModuleMetadataHook(JSRuntime* rt, ModuleMetadataHook func);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global
- * of cx and return a source text module record.
+ * of cx.
  */
 extern JS_PUBLIC_API(bool)
 CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-              SourceBufferHolder& srcBuf, JS::MutableHandleObject moduleRecord);
+              SourceBufferHolder& srcBuf, JS::MutableHandleScript script);
 
 /**
  * Set the [[HostDefined]] field of a source text module record to the given
  * value.
  */
 extern JS_PUBLIC_API(void)
-SetModuleHostDefinedField(JSObject* module, const JS::Value& value);
+SetModuleHostDefinedField(JSScript* module, const JS::Value& value);
 
 /**
  * Get the [[HostDefined]] field of a source text module record.
  */
 extern JS_PUBLIC_API(JS::Value)
-GetModuleHostDefinedField(JSObject* module);
+GetModuleHostDefinedField(JSScript* script);
 
 /*
  * Perform the ModuleInstantiate operation on the given source text module
@@ -3923,7 +3929,7 @@ GetModuleHostDefinedField(JSObject* module);
  * the module.
  */
 extern JS_PUBLIC_API(bool)
-ModuleInstantiate(JSContext* cx, JS::HandleObject moduleRecord);
+ModuleInstantiate(JSContext* cx, JS::HandleScript script);
 
 /*
  * Perform the ModuleEvaluate operation on the given source text module record.
@@ -3935,7 +3941,7 @@ ModuleInstantiate(JSContext* cx, JS::HandleObject moduleRecord);
  * ModuleInstantiate must have completed prior to calling this.
  */
 extern JS_PUBLIC_API(bool)
-ModuleEvaluate(JSContext* cx, JS::HandleObject moduleRecord);
+ModuleEvaluate(JSContext* cx, JS::HandleScript script);
 
 /*
  * Get a list of the module specifiers used by a source text module
@@ -3954,7 +3960,7 @@ ModuleEvaluate(JSContext* cx, JS::HandleObject moduleRecord);
  * GetRequestedModuleSourcePos()
  */
 extern JS_PUBLIC_API(JSObject*)
-GetRequestedModules(JSContext* cx, JS::HandleObject moduleRecord);
+GetRequestedModules(JSContext* cx, JS::HandleScript script);
 
 extern JS_PUBLIC_API(JSString*)
 GetRequestedModuleSpecifier(JSContext* cx, JS::HandleValue requestedModuleObject);
@@ -3962,9 +3968,6 @@ GetRequestedModuleSpecifier(JSContext* cx, JS::HandleValue requestedModuleObject
 extern JS_PUBLIC_API(void)
 GetRequestedModuleSourcePos(JSContext* cx, JS::HandleValue requestedModuleObject,
                             uint32_t* lineNumber, uint32_t* columnNumber);
-
-extern JS_PUBLIC_API(JSScript*)
-GetModuleScript(JS::HandleObject moduleRecord);
 
 } /* namespace JS */
 
