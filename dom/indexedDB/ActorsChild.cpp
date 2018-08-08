@@ -675,22 +675,19 @@ DeserializeStructuredCloneFiles(
           break;
         }
 
-        case StructuredCloneFile::eWasmBytecode:
-        case StructuredCloneFile::eWasmCompiled: {
+        case StructuredCloneFile::eWasmBytecode: {
           if (aModuleSet) {
             MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
             StructuredCloneFile* file = aFiles.AppendElement();
             MOZ_ASSERT(file);
 
-            file->mType = serializedFile.type();
+            file->mType = StructuredCloneFile::eWasmBytecode;
 
             MOZ_ASSERT(moduleIndex < aModuleSet->Length());
             file->mWasmModule = aModuleSet->ElementAt(moduleIndex);
 
-            if (serializedFile.type() == StructuredCloneFile::eWasmCompiled) {
-              moduleIndex++;
-            }
+            moduleIndex++;
 
             break;
           }
@@ -707,8 +704,17 @@ DeserializeStructuredCloneFiles(
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
 
-          file->mType = serializedFile.type();
+          file->mType = StructuredCloneFile::eWasmBytecode;
           file->mBlob.swap(blob);
+
+          break;
+        }
+
+        case StructuredCloneFile::eWasmCompiled: {
+          StructuredCloneFile* file = aFiles.AppendElement();
+          MOZ_ASSERT(file);
+
+          file->mType = StructuredCloneFile::eWasmCompiled;
 
           break;
         }
@@ -1481,17 +1487,13 @@ class BackgroundRequestChild::PreprocessHelper final
   , public nsIInputStreamCallback
   , public nsIFileMetadataCallback
 {
-  typedef std::pair<nsCOMPtr<nsIInputStream>,
-                    nsCOMPtr<nsIInputStream>> StreamPair;
-
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
-  nsTArray<StreamPair> mStreamPairs;
+  nsTArray<nsCOMPtr<nsIInputStream>> mStreams;
   nsTArray<RefPtr<JS::WasmModule>> mModuleSet;
   BackgroundRequestChild* mActor;
 
-  // These 2 are populated when the processing of the stream pairs runs.
+  // This is populated when the processing of the stream runs.
   PRFileDesc* mCurrentBytecodeFileDesc;
-  PRFileDesc* mCurrentCompiledFileDesc;
 
   RefPtr<TaskQueue> mTaskQueue;
   nsCOMPtr<nsIEventTarget> mTaskQueueEventTarget;
@@ -1505,7 +1507,6 @@ public:
     , mOwningEventTarget(aActor->GetActorEventTarget())
     , mActor(aActor)
     , mCurrentBytecodeFileDesc(nullptr)
-    , mCurrentCompiledFileDesc(nullptr)
     , mModuleSetIndex(aModuleSetIndex)
     , mResultCode(NS_OK)
   {
@@ -1555,7 +1556,7 @@ private:
   RunOnOwningThread();
 
   void
-  ProcessCurrentStreamPair();
+  ProcessCurrentStream();
 
   nsresult
   WaitForStreamReady(nsIInputStream* aInputStream);
@@ -3387,26 +3388,12 @@ PreprocessHelper::Init(const nsTArray<StructuredCloneFile>& aFiles)
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aFiles.IsEmpty());
 
-  uint32_t count = aFiles.Length();
-
-  // We should receive even number of files.
-  MOZ_ASSERT(count % 2 == 0);
-
-  // Let's process it as pairs.
-  count = count / 2;
-
-  nsTArray<StreamPair> streamPairs;
-  for (uint32_t index = 0; index < count; index++) {
-    uint32_t bytecodeIndex = index * 2;
-    uint32_t compiledIndex = bytecodeIndex + 1;
-
-    const StructuredCloneFile& bytecodeFile = aFiles[bytecodeIndex];
-    const StructuredCloneFile& compiledFile = aFiles[compiledIndex];
+  nsTArray<nsCOMPtr<nsIInputStream>> streams;
+  for (uint32_t index = 0; index < aFiles.Length(); index++) {
+    const StructuredCloneFile& bytecodeFile = aFiles[index];
 
     MOZ_ASSERT(bytecodeFile.mType == StructuredCloneFile::eWasmBytecode);
     MOZ_ASSERT(bytecodeFile.mBlob);
-    MOZ_ASSERT(compiledFile.mType == StructuredCloneFile::eWasmCompiled);
-    MOZ_ASSERT(compiledFile.mBlob);
 
     ErrorResult errorResult;
 
@@ -3417,17 +3404,10 @@ PreprocessHelper::Init(const nsTArray<StructuredCloneFile>& aFiles)
       return errorResult.StealNSResult();
     }
 
-    nsCOMPtr<nsIInputStream> compiledStream;
-    compiledFile.mBlob->CreateInputStream(getter_AddRefs(compiledStream),
-                                          errorResult);
-    if (NS_WARN_IF(errorResult.Failed())) {
-      return errorResult.StealNSResult();
-    }
-
-    streamPairs.AppendElement(StreamPair(bytecodeStream, compiledStream));
+    streams.AppendElement(bytecodeStream);
   }
 
-  mStreamPairs = std::move(streamPairs);
+  mStreams = std::move(streams);
 
   return NS_OK;
 }
@@ -3480,23 +3460,19 @@ PreprocessHelper::RunOnOwningThread()
 
 void
 BackgroundRequestChild::
-PreprocessHelper::ProcessCurrentStreamPair()
+PreprocessHelper::ProcessCurrentStream()
 {
   MOZ_ASSERT(!IsOnOwningThread());
-  MOZ_ASSERT(!mStreamPairs.IsEmpty());
-
-  nsresult rv;
-
-  const StreamPair& streamPair = mStreamPairs[0];
+  MOZ_ASSERT(!mStreams.IsEmpty());
 
   // We still don't have the current bytecode FileDesc.
   if (!mCurrentBytecodeFileDesc) {
-    const nsCOMPtr<nsIInputStream>& bytecodeStream = streamPair.first;
+    const nsCOMPtr<nsIInputStream>& bytecodeStream = mStreams[0];
     MOZ_ASSERT(bytecodeStream);
 
     mCurrentBytecodeFileDesc = GetFileDescriptorFromStream(bytecodeStream);
     if (!mCurrentBytecodeFileDesc) {
-      rv = WaitForStreamReady(bytecodeStream);
+      nsresult rv = WaitForStreamReady(bytecodeStream);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         ContinueWithStatus(rv);
       }
@@ -3504,21 +3480,7 @@ PreprocessHelper::ProcessCurrentStreamPair()
     }
   }
 
-  if (!mCurrentCompiledFileDesc) {
-    const nsCOMPtr<nsIInputStream>& compiledStream = streamPair.second;
-    MOZ_ASSERT(compiledStream);
-
-    mCurrentCompiledFileDesc = GetFileDescriptorFromStream(compiledStream);
-    if (!mCurrentCompiledFileDesc) {
-      rv = WaitForStreamReady(compiledStream);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        ContinueWithStatus(rv);
-      }
-      return;
-    }
-  }
-
-  MOZ_ASSERT(mCurrentBytecodeFileDesc && mCurrentCompiledFileDesc);
+  MOZ_ASSERT(mCurrentBytecodeFileDesc);
 
   JS::BuildIdCharVector buildId;
   bool ok = GetBuildId(&buildId);
@@ -3529,7 +3491,6 @@ PreprocessHelper::ProcessCurrentStreamPair()
 
   RefPtr<JS::WasmModule> module =
     JS::DeserializeWasmModule(mCurrentBytecodeFileDesc,
-                              mCurrentCompiledFileDesc,
                               std::move(buildId),
                               nullptr,
                               0);
@@ -3539,7 +3500,7 @@ PreprocessHelper::ProcessCurrentStreamPair()
   }
 
   mModuleSet.AppendElement(module);
-  mStreamPairs.RemoveElementAt(0);
+  mStreams.RemoveElementAt(0);
 
   ContinueWithStatus(NS_OK);
 }
@@ -3584,18 +3545,17 @@ PreprocessHelper::ContinueWithStatus(nsresult aStatus)
 
   // Let's reset the value for the next operation.
   mCurrentBytecodeFileDesc = nullptr;
-  mCurrentCompiledFileDesc = nullptr;
 
   nsCOMPtr<nsIEventTarget> eventTarget;
 
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
     // If the previous operation failed, we don't continue the processing of the
-    // other stream pairs.
+    // other streams.
     MOZ_ASSERT(mResultCode == NS_OK);
     mResultCode = aStatus;
 
     eventTarget = mOwningEventTarget;
-  } else if (mStreamPairs.IsEmpty()) {
+  } else if (mStreams.IsEmpty()) {
     // If all the streams have been processed, we can go back to the owning
     // thread.
     eventTarget = mOwningEventTarget;
@@ -3619,7 +3579,7 @@ PreprocessHelper::Run()
   if (IsOnOwningThread()) {
     RunOnOwningThread();
   } else {
-    ProcessCurrentStreamPair();
+    ProcessCurrentStream();
   }
 
   return NS_OK;
@@ -3648,7 +3608,7 @@ PreprocessHelper::DataIsReady(nsIInputStream* aStream)
 {
   MOZ_ASSERT(!IsOnOwningThread());
   MOZ_ASSERT(aStream);
-  MOZ_ASSERT(!mStreamPairs.IsEmpty());
+  MOZ_ASSERT(!mStreams.IsEmpty());
 
   // We still don't have the current bytecode FileDesc.
   if (!mCurrentBytecodeFileDesc) {
@@ -3658,20 +3618,8 @@ PreprocessHelper::DataIsReady(nsIInputStream* aStream)
       return NS_OK;
     }
 
-    // Let's continue with the processing of the current pair.
-    ProcessCurrentStreamPair();
-    return NS_OK;
-  }
-
-  if (!mCurrentCompiledFileDesc) {
-    mCurrentCompiledFileDesc = GetFileDescriptorFromStream(aStream);
-    if (!mCurrentCompiledFileDesc) {
-      ContinueWithStatus(NS_ERROR_FAILURE);
-      return NS_OK;
-    }
-
-    // Let's continue with the processing of the current pair.
-    ProcessCurrentStreamPair();
+    // Let's continue with the processing of the current stream.
+    ProcessCurrentStream();
     return NS_OK;
   }
 
