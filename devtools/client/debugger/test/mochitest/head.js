@@ -88,7 +88,7 @@ this.addTab = function addTab(aUrl, aWindow) {
   let targetBrowser = targetWindow.gBrowser;
 
   targetWindow.focus();
-  let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
+  let tab = targetBrowser.selectedTab = BrowserTestUtils.addTab(targetBrowser, aUrl);
   let linkedBrowser = tab.linkedBrowser;
 
   info("Loading frame script with url " + FRAME_SCRIPT_URL + ".");

@@ -231,7 +231,7 @@ add_task(async function testNormalBrowsing() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   tabbrowser = gBrowser;
-  let tab = tabbrowser.selectedTab = tabbrowser.addTab();
+  let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
 
   TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
@@ -252,7 +252,7 @@ add_task(async function testNormalBrowsing() {
 add_task(async function testPrivateBrowsing() {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
   tabbrowser = privateWin.gBrowser;
-  let tab = tabbrowser.selectedTab = tabbrowser.addTab();
+  let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
 
   TrackingProtection = tabbrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");

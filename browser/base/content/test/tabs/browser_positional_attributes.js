@@ -4,8 +4,10 @@
 
 var tabs = [];
 
-function addTab(aURL) {
-  tabs.push(gBrowser.addTab(aURL, {skipAnimation: true}));
+function addTab(aURL, done) {
+  tabs.push(BrowserTestUtils.addTab(gBrowser, aURL, {
+    skipAnimation: true,
+  }, done));
 }
 
 function switchTab(index) {
@@ -20,17 +22,17 @@ function testAttrib(tabIndex, attrib, expected) {
 add_task(async function setup() {
   is(gBrowser.tabs.length, 1, "one tab is open initially");
 
-  addTab("http://mochi.test:8888/#0");
-  addTab("http://mochi.test:8888/#1");
-  addTab("http://mochi.test:8888/#2");
-  addTab("http://mochi.test:8888/#3");
+  await new Promise(r => addTab("http://mochi.test:8888/#0", r));
+  await new Promise(r => addTab("http://mochi.test:8888/#1", r));
+  await new Promise(r => addTab("http://mochi.test:8888/#2", r));
+  await new Promise(r => addTab("http://mochi.test:8888/#3", r));
+
+  is(gBrowser.tabs.length, 5, "five tabs are open after setup");
 });
 
 // Add several new tabs in sequence, hiding some, to ensure that the
 // correct attributes get set
 add_task(async function test() {
-  await switchTab(0);
-
   testAttrib(0, "first-visible-tab", true);
   testAttrib(4, "last-visible-tab", true);
   testAttrib(0, "visuallyselected", true);
