@@ -171,13 +171,15 @@ class Bootstrapper(object):
     """Main class that performs system bootstrap."""
 
     def __init__(self, finished=FINISHED, choice=None, no_interactive=False,
-                 hg_configure=False):
+                 hg_configure=False, no_system_changes=False):
         self.instance = None
         self.finished = finished
         self.choice = choice
         self.hg_configure = hg_configure
+        self.no_system_changes = no_system_changes
         cls = None
-        args = {'no_interactive': no_interactive}
+        args = {'no_interactive': no_interactive,
+                'no_system_changes': no_system_changes}
 
         if sys.platform.startswith('linux'):
             distro, version, dist_id = platform.linux_distribution()
