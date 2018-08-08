@@ -1155,8 +1155,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
 
-  virtual mozilla::ipc::IPCResult RecvRecordReplayFatalError(const nsCString& aError) override;
-
   virtual mozilla::ipc::IPCResult
   RecvBeginDriverCrashGuard(const uint32_t& aGuardType,
                             bool* aOutCrashed) override;

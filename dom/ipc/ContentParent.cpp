@@ -147,7 +147,6 @@
 #include "nsIObserverService.h"
 #include "nsIParentChannel.h"
 #include "nsIPresShell.h"
-#include "nsIPromptService.h"
 #include "nsIRemoteWindowContext.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
@@ -5233,18 +5232,6 @@ ContentParent::RecvGraphicsError(const nsCString& aError)
     message << "CP+" << aError.get();
     lf->UpdateStringsVector(message.str());
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvRecordReplayFatalError(const nsCString& aError)
-{
-  nsCOMPtr<nsIPromptService> promptService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-  MOZ_RELEASE_ASSERT(promptService);
-
-  nsAutoCString str(aError);
-  promptService->Alert(nullptr, u"Fatal Record/Replay Error", NS_ConvertUTF8toUTF16(str).get());
-
   return IPC_OK();
 }
 
