@@ -930,7 +930,7 @@
         <body><![CDATA[
           let showMinimalUI = this._findMode != this.FIND_NORMAL;
 
-          let nodes = this.getElement("findbar-container").childNodes;
+          let nodes = this.getElement("findbar-container").children;
           let wrapper = this.getElement("findbar-textbox-wrapper");
           let foundMatches = this._foundMatches;
           for (let node of nodes) {

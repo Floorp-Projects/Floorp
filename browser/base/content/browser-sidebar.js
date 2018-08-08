@@ -170,7 +170,7 @@ var SidebarUI = {
   setPosition() {
     // First reset all ordinals to match DOM ordering.
     let browser = document.getElementById("browser");
-    [...browser.childNodes].forEach((node, i) => {
+    [...browser.children].forEach((node, i) => {
       node.ordinal = i + 1;
     });
 

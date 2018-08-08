@@ -119,10 +119,10 @@ class TabsListBase {
 
   _addTab(newTab) {
     let newRow = this._createRow(newTab);
-    let nextTab = newTab.nextSibling;
+    let nextTab = newTab.nextElementSibling;
 
     while (nextTab && !this.filterFn(nextTab)) {
-      nextTab = nextTab.nextSibling;
+      nextTab = nextTab.nextElementSibling;
     }
 
     if (nextTab) {
@@ -157,7 +157,7 @@ class TabsPanel extends TabsListBase {
   constructor(opts) {
     super({
       ...opts,
-      containerNode: opts.containerNode || opts.view.firstChild,
+      containerNode: opts.containerNode || opts.view.firstElementChild,
     });
     this.view = opts.view;
     this.view.addEventListener(TABS_PANEL_EVENTS.show, this);
@@ -250,7 +250,7 @@ class TabsPanel extends TabsListBase {
     setAttributes(row, {selected: tab.selected});
 
     let busy = tab.getAttribute("busy");
-    let button = row.firstChild;
+    let button = row.firstElementChild;
     setAttributes(button, {
       busy,
       label: tab.label,
@@ -269,7 +269,7 @@ class TabsPanel extends TabsListBase {
   }
 
   _setImageAttributes(row, tab) {
-    let button = row.firstChild;
+    let button = row.firstElementChild;
     let image = this.doc.getAnonymousElementByAttribute(
       button, "class", "toolbarbutton-icon") ||
       this.doc.getAnonymousElementByAttribute(

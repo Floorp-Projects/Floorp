@@ -240,7 +240,7 @@
           return;
         }
 
-        var children = this.childNodes;
+        var children = this.children;
         var length = children.length;
         for (var i = 0; i < length; i++) {
           if (children[i].getAttribute("selected") == "true") {
@@ -298,20 +298,20 @@
           // otherwise linked tabpanel element has the same index as the given
           // tab element.
           let tabElmIdx = this.getIndexOfItem(aTabElm);
-          return tabpanelsElm.childNodes[tabElmIdx];
+          return tabpanelsElm.children[tabElmIdx];
         ]]>
         </body>
       </method>
 
       <!-- nsIDOMXULSelectControlElement -->
       <property name="itemCount" readonly="true"
-                onget="return this.childNodes.length"/>
+                onget="return this.children.length"/>
 
       <property name="value" onget="return this.getAttribute('value');">
         <setter>
           <![CDATA[
             this.setAttribute("value", val);
-            var children = this.childNodes;
+            var children = this.children;
             for (var c = children.length - 1; c >= 0; c--) {
               if (children[c].value == val) {
                 this.selectedIndex = c;
@@ -352,7 +352,7 @@
       <property name="selectedIndex">
         <getter>
         <![CDATA[
-          const tabs = this.childNodes;
+          const tabs = this.children;
           for (var i = 0; i < tabs.length; i++) {
             if (tabs[i].selected)
               return i;
@@ -365,7 +365,7 @@
         <![CDATA[
           var tab = this.getItemAtIndex(val);
           if (tab) {
-            Array.forEach(this.childNodes, function(aTab) {
+            Array.forEach(this.children, function(aTab) {
               if (aTab.selected && aTab != tab)
                 aTab._selected = false;
             });
@@ -390,7 +390,7 @@
       <property name="selectedItem">
         <getter>
         <![CDATA[
-          const tabs = this.childNodes;
+          const tabs = this.children;
           for (var i = 0; i < tabs.length; i++) {
             if (tabs[i].selected)
               return tabs[i];
@@ -414,7 +414,7 @@
         <parameter name="item"/>
         <body>
         <![CDATA[
-          return Array.indexOf(this.childNodes, item);
+          return Array.indexOf(this.children, item);
         ]]>
         </body>
       </method>
@@ -423,7 +423,7 @@
         <parameter name="index"/>
         <body>
         <![CDATA[
-          return this.childNodes.item(index);
+          return this.children.item(index);
         ]]>
         </body>
       </method>
@@ -436,10 +436,10 @@
         <![CDATA[
           var requestedTab = aNewTab;
           while (aNewTab.hidden || aNewTab.disabled || !this._canAdvanceToTab(aNewTab)) {
-            aNewTab = aFallbackDir == -1 ? aNewTab.previousSibling : aNewTab.nextSibling;
+            aNewTab = aFallbackDir == -1 ? aNewTab.previousElementSibling : aNewTab.nextElementSibling;
             if (!aNewTab && aWrap)
-              aNewTab = aFallbackDir == -1 ? this.childNodes[this.childNodes.length - 1] :
-                                             this.childNodes[0];
+              aNewTab = aFallbackDir == -1 ? this.children[this.children.length - 1] :
+                                             this.children[0];
             if (!aNewTab || aNewTab == requestedTab)
               return;
           }
@@ -491,8 +491,8 @@
           var startTab = this.selectedItem;
           var next = startTab[aDir == -1 ? "previousSibling" : "nextSibling"];
           if (!next && aWrap) {
-            next = aDir == -1 ? this.childNodes[this.childNodes.length - 1] :
-                                this.childNodes[0];
+            next = aDir == -1 ? this.children[this.children.length - 1] :
+                                this.children[0];
           }
           if (next && next != startTab) {
             this._selectNewTab(next, aDir, aWrap);
@@ -557,11 +557,11 @@
 
           // Return tab element having 'linkedpanel' attribute equal to the id
           // of the tab panel or the same index as the tab panel element.
-          let tabpanelIdx = Array.indexOf(this.childNodes, aTabPanelElm);
+          let tabpanelIdx = Array.indexOf(this.children, aTabPanelElm);
           if (tabpanelIdx == -1)
             return null;
 
-          let tabElms = tabsElm.childNodes;
+          let tabElms = tabsElm.children;
           let tabElmFromIndex = tabElms[tabpanelIdx];
 
           let tabpanelId = aTabPanelElm.id;
@@ -600,7 +600,7 @@
         ]]></getter>
       </property>
 
-      <field name="_selectedPanel">this.childNodes.item(this.selectedIndex)</field>
+      <field name="_selectedPanel">this.children.item(this.selectedIndex)</field>
 
       <property name="selectedIndex">
         <getter>
@@ -612,16 +612,16 @@
 
         <setter>
         <![CDATA[
-          if (val < 0 || val >= this.childNodes.length)
+          if (val < 0 || val >= this.children.length)
             return val;
 
           // Give the tabbrowser a chance to run logic regardless of
           // whether the panel is going to change:
           this.dispatchEvent(new CustomEvent("preselect",
-            { detail: this.getRelatedElement(this.childNodes[val]) }));
+            { detail: this.getRelatedElement(this.children[val]) }));
 
           var panel = this._selectedPanel;
-          this._selectedPanel = this.childNodes[val];
+          this._selectedPanel = this.children[val];
           this.setAttribute("selectedIndex", val);
           if (this._selectedPanel != panel) {
             var event = document.createEvent("Events");
@@ -643,7 +643,7 @@
         <setter>
           <![CDATA[
             var selectedIndex = -1;
-            for (var panel = val; panel != null; panel = panel.previousSibling)
+            for (var panel = val; panel != null; panel = panel.previousElementSibling)
               ++selectedIndex;
             this.selectedIndex = selectedIndex;
             return val;
@@ -791,13 +791,13 @@
 
       <handler event="keydown" keycode="VK_HOME" group="system" preventdefault="true">
       <![CDATA[
-        this.parentNode._selectNewTab(this.parentNode.childNodes[0]);
+        this.parentNode._selectNewTab(this.parentNode.children[0]);
       ]]>
       </handler>
 
       <handler event="keydown" keycode="VK_END" group="system" preventdefault="true">
       <![CDATA[
-        var tabs = this.parentNode.childNodes;
+        var tabs = this.parentNode.children;
         this.parentNode._selectNewTab(tabs[tabs.length - 1], -1);
       ]]>
       </handler>

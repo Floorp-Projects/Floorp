@@ -30,7 +30,7 @@ var CustomizationHandler = {
   _customizationStarting() {
     // Disable the toolbar context menu items
     let menubar = document.getElementById("main-menubar");
-    for (let childNode of menubar.childNodes)
+    for (let childNode of menubar.children)
       childNode.setAttribute("disabled", true);
 
     let cmd = document.getElementById("cmd_CustomizeToolbars");
@@ -69,7 +69,7 @@ var CustomizationHandler = {
 
     // Re-enable parts of the UI we disabled during the dialog
     let menubar = document.getElementById("main-menubar");
-    for (let childNode of menubar.childNodes)
+    for (let childNode of menubar.children)
       childNode.setAttribute("disabled", false);
     let cmd = document.getElementById("cmd_CustomizeToolbars");
     cmd.removeAttribute("disabled");

@@ -540,17 +540,17 @@
           element = document.createElementNS(kXULNS, "menuseparator");
           aMenu.appendChild(element);
 
-          let insertLocation = aMenu.firstChild;
-          while (insertLocation.nextSibling &&
+          let insertLocation = aMenu.firstElementChild;
+          while (insertLocation.nextElementSibling &&
                  insertLocation.getAttribute("cmd") != "cmd_paste")
-            insertLocation = insertLocation.nextSibling;
+            insertLocation = insertLocation.nextElementSibling;
           if (insertLocation) {
             element = document.createElementNS(kXULNS, "menuitem");
             label = stringBundle.getString("cmd_pasteAndSearch");
             element.setAttribute("label", label);
             element.setAttribute("anonid", "paste-and-search");
             element.setAttribute("oncommand", "BrowserSearch.pasteAndSearch(event)");
-            aMenu.insertBefore(element, insertLocation.nextSibling);
+            aMenu.insertBefore(element, insertLocation.nextElementSibling);
             pasteAndSearch = element;
           }
 
@@ -1386,9 +1386,9 @@
           if (this.selectedButton && !isOneOffSelected)
             this.selectedButton = null;
           if (this.query) {
-            groupText = headerSearchText.previousSibling.value +
+            groupText = headerSearchText.previousElementSibling.value +
                         '"' + headerSearchText.value + '"' +
-                        headerSearchText.nextSibling.value;
+                        headerSearchText.nextElementSibling.value;
             if (!isOneOffSelected)
               this.header.selectedIndex = 1;
           } else {
@@ -1455,12 +1455,12 @@
           }
 
           // Finally, build the list of one-off buttons.
-          while (this.buttons.firstChild != this.settingsButtonCompact)
-            this.buttons.firstChild.remove();
+          while (this.buttons.firstElementChild != this.settingsButtonCompact)
+            this.buttons.firstElementChild.remove();
           // Remove the trailing empty text node introduced by the binding's
           // content markup above.
-          if (this.settingsButtonCompact.nextSibling)
-            this.settingsButtonCompact.nextSibling.remove();
+          if (this.settingsButtonCompact.nextElementSibling)
+            this.settingsButtonCompact.nextElementSibling.remove();
 
           let engines = this.engines;
           let oneOffCount = engines.length;
@@ -1560,7 +1560,7 @@
               // width of the last dummy item by the remainder.
               let remainder = panelWidth - (enginesPerRow * buttonWidth);
               let width = remainder + buttonWidth;
-              let lastDummyItem = this.settingsButtonCompact.previousSibling;
+              let lastDummyItem = this.settingsButtonCompact.previousElementSibling;
               lastDummyItem.setAttribute("width", width);
             }
           }
@@ -1741,7 +1741,7 @@
         <parameter name="aIncludeNonEngineButtons"/>
         <body><![CDATA[
           let buttons = [];
-          for (let oneOff = this.buttons.firstChild; oneOff; oneOff = oneOff.nextSibling) {
+          for (let oneOff = this.buttons.firstElementChild; oneOff; oneOff = oneOff.nextElementSibling) {
             // oneOff may be a text node since the list xul:description contains
             // whitespace and the compact settings button.  See the markup
             // above.  _rebuild removes text nodes, but it may not have been
@@ -1755,7 +1755,7 @@
           }
 
           if (aIncludeNonEngineButtons) {
-            for (let addEngine = this.addEngines.firstChild; addEngine; addEngine = addEngine.nextSibling) {
+            for (let addEngine = this.addEngines.firstElementChild; addEngine; addEngine = addEngine.nextElementSibling) {
               buttons.push(addEngine);
             }
             buttons.push(this.compact ? this.settingsButtonCompact : this.settingsButton);

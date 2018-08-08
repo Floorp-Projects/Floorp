@@ -791,11 +791,11 @@ var CustomizableUIInternal = {
     this.beginBatchUpdate();
 
     try {
-      let currentNode = container.firstChild;
+      let currentNode = container.firstElementChild;
       let placementsToRemove = new Set();
       for (let id of aPlacements) {
         while (currentNode && currentNode.getAttribute("skipintoolbarset") == "true") {
-          currentNode = currentNode.nextSibling;
+          currentNode = currentNode.nextElementSibling;
         }
 
         // Fix ids for specials and continue, for correctly placed specials.
@@ -804,7 +804,7 @@ var CustomizableUIInternal = {
           currentNode.id = id;
         }
         if (currentNode && currentNode.id == id) {
-          currentNode = currentNode.nextSibling;
+          currentNode = currentNode.nextElementSibling;
           continue;
         }
 
@@ -854,10 +854,10 @@ var CustomizableUIInternal = {
 
       if (currentNode) {
         let palette = aAreaNode.toolbox ? aAreaNode.toolbox.palette : null;
-        let limit = currentNode.previousSibling;
-        let node = container.lastChild;
+        let limit = currentNode.previousElementSibling;
+        let node = container.lastElementChild;
         while (node && node != limit) {
-          let previousSibling = node.previousSibling;
+          let previousSibling = node.previousElementSibling;
           // Nodes opt-in to removability. If they're removable, and we haven't
           // seen them in the placements array, then we toss them into the palette
           // if one exists. If no palette exists, we just remove the node. If the
@@ -3903,7 +3903,7 @@ var CustomizableUI = {
       if (menuChild.localName == "menuseparator") {
         // Don't insert duplicate or leading separators. This can happen if there are
         // menus (which we don't copy) above the separator.
-        if (!fragment.lastChild || fragment.lastChild.localName == "menuseparator") {
+        if (!fragment.lastElementChild || fragment.lastElementChild.localName == "menuseparator") {
           continue;
         }
         subviewItem = doc.createElementNS(kNSXUL, "menuseparator");
@@ -4440,7 +4440,7 @@ OverflowableToolbar.prototype = {
     if (!this._enabled)
       return;
 
-    let child = this._target.lastChild;
+    let child = this._target.lastElementChild;
 
     let thisOverflowResponse = ++this._lastOverflowCounter;
 
@@ -4453,7 +4453,7 @@ OverflowableToolbar.prototype = {
     }
 
     while (child && scrollLeftMin != scrollLeftMax) {
-      let prevChild = child.previousSibling;
+      let prevChild = child.previousElementSibling;
 
       if (child.getAttribute("overflows") != "false") {
         this._collapsed.set(child.id, this._target.clientWidth);
@@ -4462,7 +4462,7 @@ OverflowableToolbar.prototype = {
         CustomizableUIInternal.ensureButtonContextMenu(child, this._toolbar, true);
         CustomizableUIInternal.notifyListeners("onWidgetOverflow", child, this._target);
 
-        this._list.insertBefore(child, this._list.firstChild);
+        this._list.insertBefore(child, this._list.firstElementChild);
         if (!this._addedListener) {
           CustomizableUI.addListener(this);
         }
@@ -4513,8 +4513,8 @@ OverflowableToolbar.prototype = {
   _moveItemsBackToTheirOrigin(shouldMoveAllItems, targetWidth) {
     let placements = gPlacements.get(this._toolbar.id);
     let win = this._target.ownerGlobal;
-    while (this._list.firstChild) {
-      let child = this._list.firstChild;
+    while (this._list.firstElementChild) {
+      let child = this._list.firstElementChild;
       let minSize = this._collapsed.get(child.id);
 
       if (!shouldMoveAllItems && minSize) {
@@ -4608,16 +4608,16 @@ OverflowableToolbar.prototype = {
     // ensure that we try to move items back as soon as that's possible.
     if (aNode.parentNode == this._list) {
       let updatedMinSize;
-      if (aNode.previousSibling) {
-        updatedMinSize = this._collapsed.get(aNode.previousSibling.id);
+      if (aNode.previousElementSibling) {
+        updatedMinSize = this._collapsed.get(aNode.previousElementSibling.id);
       } else {
         // Force (these) items to try to flow back into the bar:
         updatedMinSize = 1;
       }
-      let nextItem = aNode.nextSibling;
+      let nextItem = aNode.nextElementSibling;
       while (nextItem) {
         this._collapsed.set(nextItem.id, updatedMinSize);
-        nextItem = nextItem.nextSibling;
+        nextItem = nextItem.nextElementSibling;
       }
     }
   },
@@ -4637,7 +4637,7 @@ OverflowableToolbar.prototype = {
       if (nowOverflowed) {
         // NB: we're guaranteed that it has a previousSibling, because if it didn't,
         // we would have added it to the toolbar instead. See getOverflowedNextNode.
-        let prevId = aNode.previousSibling.id;
+        let prevId = aNode.previousElementSibling.id;
         let minSize = this._collapsed.get(prevId);
         this._collapsed.set(aNode.id, minSize);
         aNode.setAttribute("cui-anchorid", this._chevron.id);
@@ -4669,9 +4669,9 @@ OverflowableToolbar.prototype = {
         CustomizableUI.removeListener(this);
         this._addedListener = false;
       }
-    } else if (aNode.previousSibling) {
+    } else if (aNode.previousElementSibling) {
       // but if it still is, it must have changed places. Bookkeep:
-      let prevId = aNode.previousSibling.id;
+      let prevId = aNode.previousElementSibling.id;
       let minSize = this._collapsed.get(prevId);
       this._collapsed.set(aNode.id, minSize);
     } else {
@@ -4745,7 +4745,7 @@ OverflowableToolbar.prototype = {
         window.clearTimeout(this._hideTimeoutId);
       }
       this._hideTimeoutId = window.setTimeout(() => {
-        if (!this._panel.firstChild.matches(":hover")) {
+        if (!this._panel.firstElementChild.matches(":hover")) {
           PanelMultiView.hidePopup(this._panel);
         }
       }, OVERFLOW_PANEL_HIDE_DELAY_MS);
