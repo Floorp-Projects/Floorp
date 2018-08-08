@@ -594,12 +594,6 @@ GetBlur(gfxContext* aDestinationCtx,
   if (useDestRect) {
     minSize = aRectSize;
   }
-
-  int32_t maxTextureSize = gfxPlatform::MaxTextureSize();
-  if (minSize.width > maxTextureSize || minSize.height > maxTextureSize) {
-    return nullptr;
-  }
-
   aOutMinSize = minSize;
 
   DrawTarget* destDT = aDestinationCtx->GetDrawTarget();
@@ -961,7 +955,13 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
                                const gfxRect& aDirtyRect,
                                const gfxRect& aSkipRect)
 {
-  if (!RectIsInt32Safe(ToRect(aRect))) {
+  const double maxSize = (double)gfxPlatform::MaxTextureSize();
+  const double maxPos = (double)std::numeric_limits<std::int16_t>::max();
+  if (aRect.width > maxSize || aRect.height > maxSize ||
+      std::abs(aRect.x) > maxPos || std::abs(aRect.y) > maxPos) {
+    // The rectangle is huge, perhaps due to a very strong perspective or some other
+    // transform. We won't be able to blur something this big so give up now before
+    // overflowing or running into texture size limits later.
     return;
   }
 
@@ -1020,12 +1020,17 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   // so if there's a transform on destDrawTarget that is not pixel-aligned,
   // there will be seams between adjacent parts of the box-shadow. It's hard to
   // avoid those without the use of an intermediate surface.
-  // You might think that we could avoid those by just turning off AA, but there
+  // You might think that we could avoid those by just turning of AA, but there
   // is a problem with that: Box-shadow rendering needs to clip out the
   // element's border box, and we'd like that clip to have anti-aliasing -
   // especially if the element has rounded corners! So we can't do that unless
   // we have a way to say "Please anti-alias the clip, but don't antialias the
   // destination rect of the DrawSurface call".
+  // On OS X there is an additional problem with turning off AA: CoreGraphics
+  // will not just fill the pixels that have their pixel center inside the
+  // filled shape. Instead, it will fill all the pixels which are partially
+  // covered by the shape. So for pixels on the edge between two adjacent parts,
+  // all those pixels will be painted to by both parts, which looks very bad.
 
   destDrawTarget->PopClip();
 }
