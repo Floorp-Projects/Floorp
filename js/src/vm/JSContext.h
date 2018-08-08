@@ -130,6 +130,11 @@ struct JSContext : public JS::RootingContext,
     // Free lists for allocating in the current zone.
     js::ThreadData<js::gc::FreeLists*> freeLists_;
 
+    // This is reset each time we switch zone, then added to the variable in the
+    // zone when we switch away from it.  This would be a js::ThreadData but we
+    // need to take its address.
+    uint32_t allocsThisZoneSinceMinorGC_;
+
     // Free lists for parallel allocation in the atoms zone on helper threads.
     js::ThreadData<js::gc::FreeLists*> atomsZoneFreeLists_;
 
@@ -196,6 +201,20 @@ struct JSContext : public JS::RootingContext,
 
     void reportAllocationOverflow() {
         js::ReportAllocationOverflow(this);
+    }
+
+    void noteTenuredAlloc() {
+        allocsThisZoneSinceMinorGC_++;
+    }
+
+    uint32_t* addressOfTenuredAllocCount() {
+        return &allocsThisZoneSinceMinorGC_;
+    }
+
+    uint32_t getAndResetAllocsThisZoneSinceMinorGC() {
+        uint32_t allocs = allocsThisZoneSinceMinorGC_;
+        allocsThisZoneSinceMinorGC_ = 0;
+        return allocs;
     }
 
     // Accessors for immutable runtime data.

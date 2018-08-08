@@ -831,6 +831,10 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
     Pop(result);
 
     bind(&success);
+
+    uint32_t* countAddress = GetJitContext()->runtime->addressOfTenuredAllocCount();
+    movePtr(ImmPtr(countAddress), temp);
+    add32(Imm32(1), Address(temp, 0));
 }
 
 void
@@ -993,6 +997,17 @@ MacroAssembler::bumpPointerAllocate(Register result, Register temp, Label* fail,
     branchPtr(Assembler::Below, Address(temp, endOffset.value()), result, fail);
     storePtr(result, Address(temp, 0));
     subPtr(Imm32(size), result);
+
+    CompileZone* zone = GetJitContext()->realm->zone();
+    uint32_t* countAddress = zone->addressOfNurseryAllocCount();
+    CheckedInt<int32_t> counterOffset = (CheckedInt<uintptr_t>(uintptr_t(countAddress)) -
+        CheckedInt<uintptr_t>(uintptr_t(posAddr))).toChecked<int32_t>();
+    if (counterOffset.isValid()) {
+        add32(Imm32(1), Address(temp, counterOffset.value()));
+    } else {
+        movePtr(ImmPtr(countAddress), temp);
+        add32(Imm32(1), Address(temp, 0));
+    }
 }
 
 // Inlined equivalent of gc::AllocateString, jumping to fail if nursery
