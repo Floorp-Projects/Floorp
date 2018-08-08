@@ -381,10 +381,3 @@ TokenStream [
 
     assert_eq!(expected, format!("{:#?}", tts));
 }
-
-#[test]
-fn default_tokenstream_is_empty() {
-    let default_token_stream: TokenStream = Default::default();
-
-    assert!(default_token_stream.is_empty());
-}
