@@ -87,7 +87,6 @@ function loadSourceMap(sourceId) {
       // If this source doesn't have a sourcemap, enable it for pretty printing
       dispatch({
         type: "UPDATE_SOURCE",
-        // NOTE: Flow https://github.com/facebook/flow/issues/6342 issue
         source: { ...source,
           sourceMapURL: ""
         }

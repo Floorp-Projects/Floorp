@@ -47,6 +47,7 @@ add_task(async function() {
   await pushPref("devtools.debugger.features.map-scopes", true);
 
   const dbg = await initDebugger("doc-sourcemapped.html");
+
   await evalInConsoleAtPoint(dbg, "webpack3-babel6", "eval-maps", { line: 14, column: 4 }, [
     "one === 1",
     "two === 4",

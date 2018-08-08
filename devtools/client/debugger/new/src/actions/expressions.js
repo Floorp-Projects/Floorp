@@ -219,10 +219,10 @@ function getMappedExpression(expression) {
     const mappings = (0, _selectors.getSelectedScopeMappings)(getState());
     const bindings = (0, _selectors.getSelectedFrameBindings)(getState());
 
-    if (!mappings && !bindings && !expression.includes("await")) {
+    if (!mappings && !bindings) {
       return expression;
     }
 
-    return parser.mapExpression(expression, mappings, bindings || [], _prefs.features.mapExpressionBindings, _prefs.features.mapAwaitExpression);
+    return parser.mapExpression(expression, mappings, bindings, _prefs.features.mapExpressionBindings);
   };
 }
