@@ -179,7 +179,7 @@ TRR::SendHTTPRequest()
 
     nsAutoCString uri;
     gTRRService->GetURI(uri);
-    uri.Append(NS_LITERAL_CSTRING("?ct&dns="));
+    uri.Append(NS_LITERAL_CSTRING("?dns="));
     uri.Append(body);
     rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
   } else {
@@ -216,7 +216,7 @@ TRR::SendHTTPRequest()
   }
 
   rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                     NS_LITERAL_CSTRING("application/dns-udpwireformat"),
+                                     NS_LITERAL_CSTRING("application/dns-message"),
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -258,14 +258,14 @@ TRR::SendHTTPRequest()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = uploadChannel->ExplicitSetUploadStream(uploadStream,
-                                                NS_LITERAL_CSTRING("application/dns-udpwireformat"),
+                                                NS_LITERAL_CSTRING("application/dns-message"),
                                                 streamLength,
                                                 NS_LITERAL_CSTRING("POST"), false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // set the *default* response content type
-  if (NS_FAILED(httpChannel->SetContentType(NS_LITERAL_CSTRING("application/dns-udpwireformat")))) {
+  if (NS_FAILED(httpChannel->SetContentType(NS_LITERAL_CSTRING("application/dns-message")))) {
     LOG(("TRR::SendHTTPRequest: couldn't set content-type!\n"));
   }
   if (NS_SUCCEEDED(httpChannel->AsyncOpen2(this))) {
@@ -929,9 +929,8 @@ TRR::OnStopRequest(nsIRequest *aRequest,
     nsAutoCString contentType;
     httpChannel->GetContentType(contentType);
     if (contentType.Length() &&
-        !contentType.LowerCaseEqualsLiteral("application/dns-udpwireformat")) {
-      // try and parse missing content-types, but otherwise require udpwireformat
-      LOG(("TRR:OnStopRequest %p %s %d should fail due to content type %s\n",
+        !contentType.LowerCaseEqualsLiteral("application/dns-message")) {
+      LOG(("TRR:OnStopRequest %p %s %d wrong content type %s\n",
            this, mHost.get(), mType, contentType.get()));
       FailData(NS_ERROR_UNEXPECTED);
       return NS_OK;
