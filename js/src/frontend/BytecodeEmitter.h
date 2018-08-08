@@ -638,7 +638,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitSingleDeclaration(ParseNode* decls, ParseNode* decl,
                                             ParseNode* initializer);
 
-    MOZ_MUST_USE bool emitNewInit(JSProtoKey key);
+    MOZ_MUST_USE bool emitNewInit();
     MOZ_MUST_USE bool emitSingletonInitialiser(ParseNode* pn);
 
     MOZ_MUST_USE bool emitPrepareIteratorResult();

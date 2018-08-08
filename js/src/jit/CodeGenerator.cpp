@@ -2880,19 +2880,10 @@ CodeGenerator::visitNullarySharedStub(LNullarySharedStub* lir)
         emitSharedStub(ICStub::Kind::NewArray_Fallback, lir);
         break;
       }
+      case JSOP_NEWINIT:
       case JSOP_NEWOBJECT:
         emitSharedStub(ICStub::Kind::NewObject_Fallback, lir);
         break;
-      case JSOP_NEWINIT: {
-        JSProtoKey key = JSProtoKey(GET_UINT8(pc));
-        if (key == JSProto_Array) {
-            masm.move32(Imm32(0), R0.scratchReg());
-            emitSharedStub(ICStub::Kind::NewArray_Fallback, lir);
-        } else {
-            emitSharedStub(ICStub::Kind::NewObject_Fallback, lir);
-        }
-        break;
-      }
       default:
         MOZ_CRASH("Unsupported jsop in shared stubs.");
     }
