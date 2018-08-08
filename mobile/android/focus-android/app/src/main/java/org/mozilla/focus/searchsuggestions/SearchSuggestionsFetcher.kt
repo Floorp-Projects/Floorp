@@ -8,11 +8,14 @@ import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.consumeEach
 import mozilla.components.browser.search.suggestions.SearchSuggestionClient
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.search.SearchEngine
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.mozilla.focus.utils.debounce
 
 open class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
     data class SuggestionResult(val query: String, val suggestions: List<String>)
@@ -20,32 +23,39 @@ open class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
     private var client: SearchSuggestionClient? = null
     private var httpClient = OkHttpClient()
 
+    private val fetchChannel = Channel<String>(capacity = Channel.UNLIMITED)
+
+    private val _results = MutableLiveData<SuggestionResult>()
+    val results: LiveData<SuggestionResult> = _results
+
     var canProvideSearchSuggestions = false
         private set
 
     init {
         updateSearchEngine(searchEngine)
+        launch(CommonPool) {
+            fetchChannel
+                    .debounce(THROTTLE_AMOUNT)
+                    .consumeEach { getSuggestions(it) }
+        }
     }
 
-    fun getSuggestions(query: String): LiveData<SuggestionResult> {
-        val result = MutableLiveData<SuggestionResult>()
-
-        if (query.isBlank()) { result.value = SuggestionResult(query, listOf()) }
-
-        launch(CommonPool) {
-            val suggestions = client?.getSuggestions(query) ?: listOf()
-
-            launch(UI) {
-                result.value = SuggestionResult(query, suggestions)
-            }
-        }
-
-        return result
+    fun requestSuggestions(query: String) {
+        if (query.isBlank()) { _results.value = SuggestionResult(query, listOf()); return }
+        fetchChannel.offer(query)
     }
 
     fun updateSearchEngine(searchEngine: SearchEngine) {
         canProvideSearchSuggestions = searchEngine.canProvideSearchSuggestions
         client = if (canProvideSearchSuggestions) SearchSuggestionClient(searchEngine, { fetch(it) }) else null
+    }
+
+    private suspend fun getSuggestions(query: String) {
+        val suggestions = client?.getSuggestions(query) ?: listOf()
+
+        launch(UI) {
+            _results.value = SuggestionResult(query, suggestions)
+        }
     }
 
     private fun fetch(url: String): String? {
@@ -63,5 +73,6 @@ open class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
 
     companion object {
         private const val REQUEST_TAG = "searchSuggestionFetch"
+        private const val THROTTLE_AMOUNT: Long = 100
     }
 }

@@ -8,7 +8,6 @@ import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Transformations.map
-import android.arch.lifecycle.Transformations.switchMap
 import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.graphics.Typeface
@@ -24,8 +23,8 @@ sealed class State {
 }
 
 class SearchSuggestionsViewModel(
-        private val fetcher: SearchSuggestionsFetcher,
-        private val preferences: SearchSuggestionsPreferences
+    private val fetcher: SearchSuggestionsFetcher,
+    private val preferences: SearchSuggestionsPreferences
 ) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
     val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
@@ -39,23 +38,17 @@ class SearchSuggestionsViewModel(
     private val _searchEngine = MutableLiveData<SearchEngine>()
     val searchEngine: LiveData<SearchEngine> = _searchEngine
 
-    val suggestions = switchMap(searchQuery) {
-        if (state.value !is State.ReadyForSuggestions) { return@switchMap null }
+    val suggestions = map(fetcher.results) {
+        val style = StyleSpan(Typeface.BOLD)
+        val endIndex = it.query.length
 
-        val data = fetcher.getSuggestions(it)
+        it.suggestions.map {
+            val ssb = SpannableStringBuilder(it)
+            ssb.setSpan(style, 0, minOf(endIndex, it.length), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-        map(data) {
-            val style = StyleSpan(Typeface.BOLD)
-            val endIndex = it.query.length
-
-            it.suggestions.map {
-                val ssb = SpannableStringBuilder(it)
-                ssb.setSpan(style, 0, minOf(endIndex, it.length), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-                ssb
-            }
+            ssb
         }
-    }!!
+    }
 
     fun selectSearchSuggestion(suggestion: String) {
         _selectedSearchSuggestion.value = suggestion
@@ -63,6 +56,10 @@ class SearchSuggestionsViewModel(
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+
+        if (state.value is State.ReadyForSuggestions) {
+            fetcher.requestSuggestions(query)
+        }
     }
 
     fun enableSearchSuggestions() {
