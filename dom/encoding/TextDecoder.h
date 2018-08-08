@@ -33,7 +33,7 @@ public:
               ErrorResult& aRv)
   {
     nsAutoPtr<TextDecoder> txtDecoder(new TextDecoder());
-    txtDecoder->Init(aEncoding, aOptions.mFatal, aRv);
+    txtDecoder->Init(aEncoding, aOptions, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -60,22 +60,21 @@ public:
    * Validates provided label and throws an exception if invalid label.
    *
    * @param aLabel       The encoding label (case insensitive) provided.
-   * @param aFatal       indicates whether to throw an 'EncodingError'
-   *                     exception or not when decoding.
+   * @param aOptions     The TextDecoderOptions to use.
    * @return aRv         EncodingError exception else null.
    */
-  void Init(const nsAString& aLabel, const bool aFatal, ErrorResult& aRv);
+  void Init(const nsAString& aLabel, const TextDecoderOptions& aOptions,
+            ErrorResult& aRv);
 
   /**
    * Performs initialization with a Gecko-canonical encoding name (as opposed
    * to a label.)
    *
    * @param aEncoding    An Encoding object
-   * @param aFatal       indicates whether to throw an 'EncodingError'
-   *                     exception or not when decoding.
+   * @param aOptions     The TextDecoderOptions to use.
    */
   void InitWithEncoding(NotNull<const Encoding*> aEncoding,
-                        const bool aFatal);
+                        const TextDecoderOptions& aOptions);
 
   /**
    * Return the encoding name.
