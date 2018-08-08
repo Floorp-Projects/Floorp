@@ -1531,7 +1531,7 @@ BytecodeEmitter::reportExtraWarning(const Maybe<uint32_t>& maybeOffset,
 }
 
 bool
-BytecodeEmitter::emitNewInit(JSProtoKey key)
+BytecodeEmitter::emitNewInit()
 {
     const size_t len = 1 + UINT32_INDEX_LEN;
     ptrdiff_t offset;
@@ -1540,7 +1540,7 @@ BytecodeEmitter::emitNewInit(JSProtoKey key)
 
     jsbytecode* code = this->code(offset);
     code[0] = JSOP_NEWINIT;
-    code[1] = jsbytecode(key);
+    code[1] = 0;
     code[2] = 0;
     code[3] = 0;
     code[4] = 0;
@@ -3547,7 +3547,7 @@ BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFla
             if (!updateSourceCoordNotes(member->pn_pos.begin))
                 return false;
 
-            if (!emitNewInit(JSProto_Object))                     // ... *SET RHS *LREF RHS TARGET
+            if (!emitNewInit())                                   // ... *SET RHS *LREF RHS TARGET
                 return false;
             if (!emit1(JSOP_DUP))                                 // ... *SET RHS *LREF RHS TARGET TARGET
                 return false;
@@ -3641,7 +3641,7 @@ BytecodeEmitter::emitDestructuringObjRestExclusionSet(ParseNode* pattern)
     MOZ_ASSERT(pattern->last()->isKind(ParseNodeKind::Spread));
 
     ptrdiff_t offset = this->offset();
-    if (!emitNewInit(JSProto_Object))
+    if (!emitNewInit())
         return false;
 
     // Try to construct the shape of the object as we go, so we can emit a
@@ -7478,7 +7478,7 @@ BytecodeEmitter::emitObject(ParseNode* pn)
      * (or mutating the object's [[Prototype]], in the case of __proto__).
      */
     ptrdiff_t offset = this->offset();
-    if (!emitNewInit(JSProto_Object))
+    if (!emitNewInit())
         return false;
 
     // Try to construct the shape of the object as we go, so we can emit a
@@ -8178,7 +8178,7 @@ BytecodeEmitter::emitClass(ParseNode* pn)
         if (!emit1(JSOP_SWAP))                                  // ... HOMEOBJ HERITAGE
             return false;
     } else {
-        if (!emitNewInit(JSProto_Object))                       // ... HOMEOBJ
+        if (!emitNewInit())                                     // ... HOMEOBJ
             return false;
     }
 
