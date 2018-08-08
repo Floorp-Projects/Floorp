@@ -465,6 +465,7 @@ tokens! {
     }
     keyword: {
         "as"       pub struct As           /// `as`
+        "async"    pub struct Async        /// `async`
         "auto"     pub struct Auto         /// `auto`
         "box"      pub struct Box          /// `box`
         "break"    pub struct Break        /// `break`
@@ -566,6 +567,7 @@ macro_rules! Token {
     (-=)       => { $crate::token::SubEq };
     (_)        => { $crate::token::Underscore };
     (as)       => { $crate::token::As };
+    (async)    => { $crate::token::Async };
     (auto)     => { $crate::token::Auto };
     (box)      => { $crate::token::Box };
     (break)    => { $crate::token::Break };
@@ -679,6 +681,7 @@ macro_rules! punct {
 #[cfg_attr(rustfmt, rustfmt_skip)]
 macro_rules! keyword {
     ($i:expr, as)       => { call!($i, <$crate::token::As as $crate::synom::Synom>::parse) };
+    ($i:expr, async)    => { call!($i, <$crate::token::Async as $crate::synom::Synom>::parse) };
     ($i:expr, auto)     => { call!($i, <$crate::token::Auto as $crate::synom::Synom>::parse) };
     ($i:expr, box)      => { call!($i, <$crate::token::Box as $crate::synom::Synom>::parse) };
     ($i:expr, break)    => { call!($i, <$crate::token::Break as $crate::synom::Synom>::parse) };
@@ -736,6 +739,7 @@ ident_from_token!(self);
 ident_from_token!(Self);
 ident_from_token!(super);
 ident_from_token!(crate);
+ident_from_token!(extern);
 
 #[cfg(feature = "parsing")]
 mod parsing {

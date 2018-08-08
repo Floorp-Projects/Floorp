@@ -119,7 +119,7 @@ impl WrProgramBinaryDiskCache {
 
             // Use uuid for file name
             let uuid1 = Uuid::new_v4();
-            let file_name = uuid1.to_hyphenated_string();
+            let file_name = uuid1.hyphenated().to_string();
             let program_binary = Arc::clone(program_binary);
             let file_path = cache_path.join(&file_name);
 

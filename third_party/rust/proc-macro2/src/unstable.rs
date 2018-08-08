@@ -287,7 +287,7 @@ pub enum SourceFile {
 
 impl SourceFile {
     fn nightly(sf: proc_macro::SourceFile) -> Self {
-        let filename = stable::file_name(sf.path().to_string());
+        let filename = stable::file_name(sf.path().display().to_string());
         SourceFile::Nightly(sf, filename)
     }
 
