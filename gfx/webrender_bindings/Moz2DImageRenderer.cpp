@@ -255,16 +255,10 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     return false;
   }
 
+  auto origin = gfx::IntPoint(0, 0);
   if (aTileOffset) {
-    // It's overkill to use a TiledDrawTarget for a single tile
-    // but it was the easiest way to get the offset handling working
-    gfx::TileSet tileset;
-    gfx::Tile tile;
-    tile.mDrawTarget = dt;
-    tile.mTileOrigin = gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
-    tileset.mTiles = &tile;
-    tileset.mTileCount = 1;
-    dt = gfx::Factory::CreateTiledDrawTarget(tileset);
+    origin = gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
+    dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
   }
 
   if (aDirtyRect) {
