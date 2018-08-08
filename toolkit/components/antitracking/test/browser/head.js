@@ -9,6 +9,8 @@ const TEST_3RD_PARTY_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_3RD_PARTY_PAGE_WO = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyWO.html";
 const TEST_3RD_PARTY_PAGE_UI = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyUI.html";
 
+var gFeatures = undefined;
+
 let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 this.AntiTracking = {
@@ -130,9 +132,14 @@ this.AntiTracking = {
       let browser = gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
+      let pageURL = TEST_3RD_PARTY_PAGE_WO;
+      if (gFeatures == "noopener") {
+        pageURL += "?noopener";
+      }
+
       info("Creating a 3rd party content");
       await ContentTask.spawn(browser,
-                              { page: TEST_3RD_PARTY_PAGE_WO,
+                              { page: pageURL,
                                 blockingCallback: blockingCallback.toString(),
                                 nonBlockingCallback: nonBlockingCallback.toString(),
                               },
