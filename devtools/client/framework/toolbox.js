@@ -3219,8 +3219,8 @@ Toolbox.prototype = {
    * Opens source in debugger. Falls back to plain "view-source:".
    * @see devtools/client/shared/source-utils.js
    */
-  viewSourceInDebugger: function(sourceURL, sourceLine) {
-    return viewSource.viewSourceInDebugger(this, sourceURL, sourceLine);
+  viewSourceInDebugger: function(sourceURL, sourceLine, reason) {
+    return viewSource.viewSourceInDebugger(this, sourceURL, sourceLine, reason);
   },
 
   /**

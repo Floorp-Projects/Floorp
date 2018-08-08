@@ -2088,7 +2088,7 @@ Inspector.prototype = {
   jumpToCustomElementDefinition: function() {
     const node = this.selection.nodeFront;
     const { url, line } = node.customElementLocation;
-    this._toolbox.viewSourceInDebugger(url, line);
+    this._toolbox.viewSourceInDebugger(url, line, "show_custom_element");
   },
 
   /**

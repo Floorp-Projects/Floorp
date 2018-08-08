@@ -714,7 +714,7 @@ ElementEditor.prototype = {
 
   onCustomBadgeClick: function() {
     const { url, line } = this.node.customElementLocation;
-    this.markup.toolbox.viewSourceInDebugger(url, line);
+    this.markup.toolbox.viewSourceInDebugger(url, line, "show_custom_element");
   },
 
   /**
