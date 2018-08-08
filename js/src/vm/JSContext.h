@@ -238,7 +238,14 @@ struct JSContext : public JS::RootingContext,
   private:
     inline void setRealm(JS::Realm* realm);
     inline void enterRealm(JS::Realm* realm);
+
     inline void enterAtomsZone();
+    inline void leaveAtomsZone(JS::Realm* oldRealm);
+    enum IsAtomsZone {
+        AtomsZone,
+        NotAtomsZone
+    };
+    inline void setZone(js::Zone* zone, IsAtomsZone isAtomsZone);
 
     friend class js::AutoAllocInAtomsZone;
     friend class js::AutoRealm;
@@ -252,7 +259,6 @@ struct JSContext : public JS::RootingContext,
     inline void setRealmForJitExceptionHandler(JS::Realm* realm);
 
     inline void leaveRealm(JS::Realm* oldRealm);
-    inline void leaveAtomsZone(JS::Realm* oldRealm);
 
     void setHelperThread(js::HelperThread* helperThread);
     js::HelperThread* helperThread() const { return helperThread_; }
