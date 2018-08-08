@@ -149,7 +149,7 @@ impl Generics {
         // This is Option::get_or_insert_with in Rust 1.20.
         if self.where_clause.is_none() {
             self.where_clause = Some(WhereClause {
-                where_token: <Token![where]>::default(),
+                where_token: Default::default(),
                 predicates: Punctuated::new(),
             });
         }

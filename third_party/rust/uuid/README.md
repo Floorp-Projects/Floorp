@@ -2,6 +2,7 @@ uuid
 ====
 
 [![Build Status](https://travis-ci.org/rust-lang-nursery/uuid.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/uuid)
+[![](http://meritbadge.herokuapp.com/uuid)](https://crates.io/crates/uuid)
 
 A Rust library to generate and parse UUIDs.
 
@@ -26,7 +27,8 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-uuid = "0.5"
+
+uuid = "0.1"
 ```
 
 and this to your crate root:
@@ -37,15 +39,13 @@ extern crate uuid;
 
 ## Examples
 
-To parse a simple UUID, then print the version and urn string format:
+To create a new random (V4) UUID and print it out in hexadecimal form:
 
 ```rust
-extern crate uuid;
 use uuid::Uuid;
 
 fn main() {
-    let my_uuid = Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap();
-    println!("Parsed a version {} UUID.", my_uuid.get_version_num());
+    let my_uuid = Uuid::new_v4();
     println!("{}", my_uuid);
 }
 ```
@@ -60,43 +60,15 @@ Md5      | Version 3: MD5 hash
 Random   | Version 4: Random
 Sha1     | Version 5: SHA-1 hash
 
-To create a new random (V4) UUID and print it out in hexadecimal form, first
-you'll need to change how you depend on `uuid`:
-
-```toml
-[dependencies]
-uuid = { version = "0.5", features = ["v4"] }
-```
-
-Next, you'll write:
+To parse a simple UUID, then print the version and urn string format:
 
 ```rust
-extern crate uuid;
 use uuid::Uuid;
 
 fn main() {
-    let my_uuid = Uuid::new_v4();
-    println!("{}", my_uuid);
-}
-```
-
-To create a new sha1-hash based (V5) UUID and print it out in hexadecimal form,
-you'll also need to change how you depend on `uuid`:
-
-```toml
-[dependencies]
-uuid = { version = "0.5", features = ["v5"] }
-```
-
-Next, you'll write:
-
-```rust
-extern crate uuid;
-use uuid::Uuid;
-
-fn main() {
-    let my_uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, "foo");
-    println!("{}", my_uuid);
+    let my_uuid = Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap();
+    println!("Parsed a version {} UUID.", my_uuid.get_version_num());
+    println!("{}", my_uuid.to_urn_string());
 }
 ```
 

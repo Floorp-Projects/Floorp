@@ -4,6 +4,7 @@
 
 // Re-exports used by the decl_derive! and test_derive!
 pub use syn::{parse_str, parse, DeriveInput};
+pub use quote::Tokens;
 pub use proc_macro::TokenStream as TokenStream;
 pub use proc_macro2::TokenStream as TokenStream2;
 
@@ -15,9 +16,8 @@ pub use proc_macro2::TokenStream as TokenStream2;
 ///
 /// ```
 /// # extern crate quote;
-/// # extern crate proc_macro2;
 /// # extern crate synstructure;
-/// fn derive(input: synstructure::Structure) -> proc_macro2::TokenStream {
+/// fn derive(input: synstructure::Structure) -> quote::Tokens {
 ///     unimplemented!()
 /// }
 /// ```
@@ -27,10 +27,9 @@ pub use proc_macro2::TokenStream as TokenStream2;
 /// ### Without Attributes
 /// ```
 /// # #[macro_use] extern crate quote;
-/// # extern crate proc_macro2;
 /// # extern crate synstructure;
 /// # fn main() {}
-/// fn derive_interesting(_input: synstructure::Structure) -> proc_macro2::TokenStream {
+/// fn derive_interesting(_input: synstructure::Structure) -> quote::Tokens {
 ///     quote! { ... }
 /// }
 ///
@@ -42,10 +41,9 @@ pub use proc_macro2::TokenStream as TokenStream2;
 /// ### With Attributes
 /// ```
 /// # #[macro_use] extern crate quote;
-/// # extern crate proc_macro2;
 /// # extern crate synstructure;
 /// # fn main() {}
-/// fn derive_interesting(_input: synstructure::Structure) -> proc_macro2::TokenStream {
+/// fn derive_interesting(_input: synstructure::Structure) -> quote::Tokens {
 ///     quote! { ... }
 /// }
 ///
@@ -86,9 +84,8 @@ macro_rules! decl_derive {
 ///
 /// ```
 /// # #[macro_use] extern crate quote;
-/// # extern crate proc_macro2;
 /// # #[macro_use] extern crate synstructure;
-/// fn test_derive_example(_s: synstructure::Structure) -> proc_macro2::TokenStream {
+/// fn test_derive_example(_s: synstructure::Structure) -> quote::Tokens {
 ///     quote! { const YOUR_OUTPUT: &'static str = "here"; }
 /// }
 ///
@@ -129,8 +126,10 @@ macro_rules! test_derive {
             let expected = stringify!( $($o)* )
                 .parse::<$crate::macros::TokenStream2>()
                 .expect("output should be a valid TokenStream");
-            let mut expected_toks = $crate::macros::TokenStream2::from(expected);
-            if res.to_string() != expected_toks.to_string() {
+            let mut expected_toks = $crate::macros::Tokens::new();
+            expected_toks.append_all(expected);
+
+            if res != expected_toks {
                 panic!("\
 test_derive failed:
 expected:
@@ -177,12 +176,10 @@ got:
 /// # Example
 ///
 /// ```
-/// extern crate syn;
 /// #[macro_use]
 /// extern crate quote;
 /// #[macro_use]
 /// extern crate synstructure;
-/// extern crate proc_macro2;
 /// # const _IGNORE: &'static str = stringify! {
 /// decl_derive!([Interest] => derive_interest);
 /// # };
@@ -200,8 +197,7 @@ got:
 ///         // filtering out fields which should be ignored by all methods and for
 ///         // the purposes of binding type parameters.
 ///         filter(s) {
-///             s.filter(|bi| bi.ast().ident != Some(syn::Ident::new("a",
-///                 proc_macro2::Span::call_site())));
+///             s.filter(|bi| bi.ast().ident != Some("a".into()));
 ///         }
 ///
 ///         // This is an implementation of a method in the implemented crate. The
@@ -382,7 +378,7 @@ macro_rules! simple_derive {
             ]
         )*]
     ) => {
-        fn $iname(mut st: $crate::Structure) -> $crate::macros::TokenStream2 {
+        fn $iname(mut st: $crate::Structure) -> $crate::macros::Tokens {
             let _ = &mut st; // Silence the unused mut warning
 
             // Filter/transform the `Structure` object before cloning it for
