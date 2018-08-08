@@ -410,7 +410,7 @@ CountdownThreadMain(void*)
     if (gMemoryInfo->mCountdown && --gMemoryInfo->mCountdown == 0) {
       // When debugging hangs in the child process, we can break here in lldb
       // to inspect what the process is doing.
-      child::ReportFatalError("CountdownThread activated");
+      child::ReportFatalError(Nothing(), "CountdownThread activated");
     }
     ThreadYield();
   }
@@ -665,11 +665,13 @@ HandleDirtyMemoryFault(uint8_t* aAddress)
 void
 UnrecoverableSnapshotFailure()
 {
-  AutoSpinLock lock(gMemoryInfo->mTrackedRegionsLock);
-  DirectUnprotectMemory(PageBase(&errno), PageSize, false);
-  for (auto region : gMemoryInfo->mTrackedRegionsByAllocationOrder) {
-    DirectUnprotectMemory(region.mBase, region.mSize, region.mExecutable,
-                          /* aIgnoreFailures = */ true);
+  if (gMemoryInfo) {
+    AutoSpinLock lock(gMemoryInfo->mTrackedRegionsLock);
+    DirectUnprotectMemory(PageBase(&errno), PageSize, false);
+    for (auto region : gMemoryInfo->mTrackedRegionsByAllocationOrder) {
+      DirectUnprotectMemory(region.mBase, region.mSize, region.mExecutable,
+                            /* aIgnoreFailures = */ true);
+    }
   }
 }
 
@@ -1064,14 +1066,14 @@ CheckFixedMemory(void* aAddress, size_t aSize)
         gMemoryInfo->mTrackedRegions.lookupClosestLessOrEqual(page);
       if (!region.isSome() ||
           !MemoryContains(region.ref().mBase, region.ref().mSize, page, PageSize)) {
-        child::ReportFatalError("Fixed memory is not tracked!");
+        MOZ_CRASH("Fixed memory is not tracked!");
       }
     }
   }
 
   // The memory should not be free.
   if (gFreeRegions.Intersects(aAddress, aSize)) {
-    child::ReportFatalError("Fixed memory is currently free!");
+    MOZ_CRASH("Fixed memory is currently free!");
   }
 }
 

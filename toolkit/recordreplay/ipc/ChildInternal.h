@@ -78,6 +78,24 @@ void HitCheckpoint(size_t aId, bool aRecordingEndpoint);
 
 void HitBreakpoint(bool aRecordingEndpoint, const uint32_t* aBreakpoints, size_t aNumBreakpoints);
 
+// Optional information about a crash that occurred. If not provided to
+// ReportFatalError, the current thread will be treated as crashed.
+struct MinidumpInfo
+{
+  int mExceptionType;
+  int mCode;
+  int mSubcode;
+  mach_port_t mThread;
+
+  MinidumpInfo(int aExceptionType, int aCode, int aSubcode, mach_port_t aThread)
+    : mExceptionType(aExceptionType), mCode(aCode), mSubcode(aSubcode), mThread(aThread)
+  {}
+};
+
+// Generate a minidump and report a fatal error to the middleman process.
+void ReportFatalError(const Maybe<MinidumpInfo>& aMinidumpInfo,
+                      const char* aFormat, ...);
+
 // Monitor used for various synchronization tasks.
 extern Monitor* gMonitor;
 

@@ -188,7 +188,7 @@ RecordReplayInterface_ExecuteTriggers()
       ThreadEvent ev = (ThreadEvent) thread->Events().ReadScalar();
       if (ev != ThreadEvent::ExecuteTrigger) {
         if (ev != ThreadEvent::ExecuteTriggersFinished) {
-          child::ReportFatalError("ExecuteTrigger Mismatch");
+          child::ReportFatalError(Nothing(), "ExecuteTrigger Mismatch");
           Unreachable();
         }
         break;
