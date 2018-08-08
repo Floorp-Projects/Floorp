@@ -7004,7 +7004,7 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   // success!
 
-  if (!aCalledNoScript && !windowExists && uri) {
+  if (!aCalledNoScript && !windowExists && uri && !forceNoOpener) {
     MaybeAllowStorageForOpenedWindow(uri);
   }
 
