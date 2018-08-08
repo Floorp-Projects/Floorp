@@ -197,6 +197,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation "org.robolectric:robolectric:4.0-alpha-3" // required to support api level 28
     testImplementation 'org.mockito:mockito-core:2.19.0'
+    testImplementation "android.arch.core:core-testing:${architecture_components_version}"
 
     androidTestImplementation 'com.android.support.test.uiautomator:uiautomator-v18:2.1.3'
 

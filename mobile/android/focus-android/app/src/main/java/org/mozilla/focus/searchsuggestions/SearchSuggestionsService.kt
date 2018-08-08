@@ -14,7 +14,7 @@ import mozilla.components.browser.search.SearchEngine
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-class SearchSuggestionsService(searchEngine: SearchEngine) {
+open class SearchSuggestionsService(searchEngine: SearchEngine) {
     data class SuggestionResult(val query: String, val suggestions: List<String>)
 
     private var client: SearchSuggestionClient? = null
