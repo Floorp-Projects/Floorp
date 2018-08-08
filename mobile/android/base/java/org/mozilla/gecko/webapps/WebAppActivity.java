@@ -9,6 +9,7 @@ import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -28,6 +29,8 @@ import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.FormAssistPopup;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoScreenOrientation;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.permissions.Permissions;
@@ -36,7 +39,9 @@ import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
+import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoResult;
+import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
@@ -171,6 +176,15 @@ public class WebAppActivity extends AppCompatActivity
         updateFromManifest();
 
         mGeckoSession.loadUri(mManifest.getStartUri().toString());
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (mPromptService != null) {
+            mPromptService.changePromptOrientation(newConfig.orientation);
+        }
     }
 
     private void fallbackToFennec(String message) {

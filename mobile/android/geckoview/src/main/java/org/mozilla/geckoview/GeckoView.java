@@ -16,7 +16,6 @@ import org.mozilla.gecko.util.ActivityUtils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -30,6 +29,7 @@ import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -342,7 +342,6 @@ public class GeckoView extends FrameLayout {
         if (!mSession.isOpen()) {
             mSession.open(mRuntime);
         }
-        mRuntime.orientationChanged();
 
         super.onAttachedToWindow();
     }
@@ -358,18 +357,6 @@ public class GeckoView extends FrameLayout {
         // If we saved state earlier, we don't want to close the window.
         if (!mStateSaved && mSession.isOpen()) {
             mSession.close();
-        }
-    }
-
-    @Override
-    protected void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        if (mRuntime != null) {
-            // onConfigurationChanged is not called for 180 degree orientation changes,
-            // we will miss such rotations and the screen orientation will not be
-            // updated.
-            mRuntime.orientationChanged(newConfig.orientation);
         }
     }
 
@@ -406,7 +393,7 @@ public class GeckoView extends FrameLayout {
             setSession(ss.session, ss.session.getRuntime());
         } else if (ss.session != null) {
             mSession.transferFrom(ss.session);
-            mRuntime = mSession.getRuntime();
+            mRuntime = ss.session.getRuntime();
         }
     }
 
