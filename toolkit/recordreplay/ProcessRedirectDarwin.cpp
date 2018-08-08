@@ -150,6 +150,7 @@ namespace recordreplay {
   MACRO(sandbox_free_error)                     \
   MACRO(sandbox_init)                           \
   MACRO(sandbox_init_with_parameters)           \
+  MACRO(task_threads)                           \
   MACRO(vm_copy)                                \
   MACRO(vm_purgable_control)                    \
   MACRO(tzset)                                  \
@@ -1506,6 +1507,16 @@ RR_sandbox_init_with_parameters(const char* aProfile, uint64_t aFlags,
   AutoEnsurePassThroughThreadEvents pt;
   return OriginalCall(sandbox_init_with_parameters, ssize_t,
                       aProfile, aFlags, aParameters, aErrorBuf);
+}
+
+static kern_return_t
+RR_task_threads(mach_port_t aTask, thread_act_array_t *aThreads,
+                mach_msg_type_number_t *aNumThreads)
+{
+  // Make sure events are passed through here so that replaying processes can
+  // inspect their own threads.
+  AutoEnsurePassThroughThreadEvents pt;
+  return OriginalCall(task_threads, kern_return_t, aTask, aThreads, aNumThreads);
 }
 
 static kern_return_t
