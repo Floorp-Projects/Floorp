@@ -43,11 +43,7 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
 
     fun updateSearchEngine(searchEngine: SearchEngine) {
         canProvideSearchSuggestions = searchEngine.canProvideSearchSuggestions
-        client = try {
-            SearchSuggestionClient(searchEngine, { fetch(it) })
-        } catch (_: IllegalArgumentException) {
-            null
-        }
+        client = if (canProvideSearchSuggestions) SearchSuggestionClient(searchEngine, { fetch(it) }) else null
     }
 
     private fun fetch(url: String): String? {
