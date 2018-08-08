@@ -90,12 +90,12 @@ let PaymentFrameScript = {
       },
 
       getDefaultPreferences() {
-        let prefValues = Cu.cloneInto({
+        let prefValues = {
           saveCreditCardDefaultChecked:
             Services.prefs.getBoolPref(SAVE_CREDITCARD_DEFAULT_PREF, false),
           saveAddressDefaultChecked:
             Services.prefs.getBoolPref(SAVE_ADDRESS_DEFAULT_PREF, false),
-        }, waivedContent);
+        };
         return prefValues;
       },
     };

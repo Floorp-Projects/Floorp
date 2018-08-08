@@ -18,7 +18,7 @@ function frameScript() {
   });
   addMessageListener("Test:DispatchUntrustedKeyEvents", msg => {
     var evt = new content.CustomEvent("Test:DispatchKeyEvents", {
-      detail: Cu.cloneInto({ code: msg.data }, content),
+      detail: { code: msg.data }
     });
     content.dispatchEvent(evt);
   });

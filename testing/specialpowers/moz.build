@@ -23,7 +23,6 @@ FINAL_TARGET_FILES.content += [
     'content/MozillaLogger.js',
     'content/specialpowers.js',
     'content/specialpowersAPI.js',
-    'content/specialpowersFrameScript.js',
     'content/SpecialPowersObserver.jsm',
     'content/SpecialPowersObserverAPI.js',
 ]
