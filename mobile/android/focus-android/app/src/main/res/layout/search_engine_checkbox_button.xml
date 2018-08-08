@@ -8,7 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/preference_row_height"
     android:button="@null"
-    android:drawableRight="?android:listChoiceIndicatorMultiple"
+    android:drawableEnd="?android:listChoiceIndicatorMultiple"
     android:drawablePadding="@dimen/preference_drawable_padding"
     android:background="?android:attr/selectableItemBackground"
     android:foreground="@drawable/preference_multiselect_search_engine_foreground"

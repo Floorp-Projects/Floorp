@@ -14,7 +14,7 @@
     android:paddingStart="16dp"
     android:lines="1"
     android:ellipsize="end"
-    tools:drawableLeft="@drawable/ic_delete"
+    tools:drawableStart="@drawable/ic_delete"
     android:text="@string/tabs_tray_action_erase"
     android:textColor="#ffffff"
     android:textSize="14sp" />
