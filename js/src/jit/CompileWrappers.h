@@ -82,8 +82,6 @@ class CompileZone
     const void* addressOfNurseryCurrentEnd();
     const void* addressOfStringNurseryCurrentEnd();
 
-    uint32_t* addressOfNurseryAllocCount();
-
     bool nurseryExists();
     bool canNurseryAllocateStrings();
     void setMinorGCShouldCancelIonCompilations();
