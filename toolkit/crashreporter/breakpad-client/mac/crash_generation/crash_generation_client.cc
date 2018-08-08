@@ -32,6 +32,8 @@
 #include "mac/crash_generation/crash_generation_server.h"
 #include "common/mac/MachIPC.h"
 
+#include "mozilla/recordreplay/ChildIPC.h"
+
 namespace google_breakpad {
 
 bool CrashGenerationClient::RequestDumpForException(
@@ -53,6 +55,14 @@ bool CrashGenerationClient::RequestDumpForException(
   info.exception_type = exception_type;
   info.exception_code = exception_code;
   info.exception_subcode = exception_subcode;
+  info.child_pid = getpid();
+
+  // When recording/replaying, associate minidumps with the middleman process
+  // so that the UI process can find them.
+  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+    info.child_pid = mozilla::recordreplay::child::MiddlemanProcessId();
+  }
+
   message.SetData(&info, sizeof(info));
 
   const mach_msg_timeout_t kSendTimeoutMs = 2 * 1000;
