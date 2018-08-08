@@ -17,7 +17,7 @@ class SearchSuggestionsViewModelTest {
 
     @Test
     fun setSearchQuery() {
-        val service = mock(SearchSuggestionsService::class.java)
+        val service = mock(SearchSuggestionsFetcher::class.java)
         val preferences = mock(SearchSuggestionsPreferences::class.java)
         val lifecycle = LifecycleRegistry(mock(LifecycleOwner::class.java))
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)

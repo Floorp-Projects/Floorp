@@ -24,8 +24,8 @@ sealed class State {
 }
 
 class SearchSuggestionsViewModel(
-    private val service: SearchSuggestionsService,
-    private val searchSuggestionsPreferences: SearchSuggestionsPreferences
+        private val fetcher: SearchSuggestionsFetcher,
+        private val preferences: SearchSuggestionsPreferences
 ) : ViewModel() {
     private val _selectedSearchSuggestion = MutableLiveData<String>()
     val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
@@ -42,7 +42,7 @@ class SearchSuggestionsViewModel(
     val suggestions = switchMap(searchQuery) {
         if (state.value !is State.ReadyForSuggestions) { return@switchMap null }
 
-        val data = service.getSuggestions(it)
+        val data = fetcher.getSuggestions(it)
 
         map(data) {
             val style = StyleSpan(Typeface.BOLD)
@@ -66,39 +66,39 @@ class SearchSuggestionsViewModel(
     }
 
     fun enableSearchSuggestions() {
-        searchSuggestionsPreferences.enableSearchSuggestions()
+        preferences.enableSearchSuggestions()
         updateState()
     }
 
     fun disableSearchSuggestions() {
-        searchSuggestionsPreferences.disableSearchSuggestions()
+        preferences.disableSearchSuggestions()
         updateState()
     }
 
     fun dismissNoSuggestionsMessage() {
-        searchSuggestionsPreferences.dismissNoSuggestionsMessage()
+        preferences.dismissNoSuggestionsMessage()
         updateState()
     }
 
     fun refresh() {
-        val engine = searchSuggestionsPreferences.getSearchEngine()
-        service.updateSearchEngine(engine)
+        val engine = preferences.getSearchEngine()
+        fetcher.updateSearchEngine(engine)
         _searchEngine.value = engine
         updateState()
     }
 
     private fun updateState() {
-        val enabled = searchSuggestionsPreferences.searchSuggestionsEnabled()
+        val enabled = preferences.searchSuggestionsEnabled()
 
         val state = if (enabled) {
-            if (service.canProvideSearchSuggestions) {
+            if (fetcher.canProvideSearchSuggestions) {
                 State.ReadyForSuggestions()
             } else {
-                val givePrompt = !searchSuggestionsPreferences.userHasDismissedNoSuggestionsMessage()
+                val givePrompt = !preferences.userHasDismissedNoSuggestionsMessage()
                 State.NoSuggestionsAPI(givePrompt)
             }
         } else {
-            val givePrompt = !searchSuggestionsPreferences.hasUserToggledSearchSuggestions()
+            val givePrompt = !preferences.hasUserToggledSearchSuggestions()
             State.Disabled(givePrompt)
         }
 
@@ -108,7 +108,7 @@ class SearchSuggestionsViewModel(
     class Factory(private val context: Context) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
             val preferences = SearchSuggestionsPreferences(context)
-            val service = SearchSuggestionsService(preferences.getSearchEngine())
+            val service = SearchSuggestionsFetcher(preferences.getSearchEngine())
 
             @Suppress("UNCHECKED_CAST")
             return SearchSuggestionsViewModel(service, preferences) as T
