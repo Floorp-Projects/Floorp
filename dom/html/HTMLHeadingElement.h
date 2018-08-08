@@ -28,8 +28,7 @@ public:
                               nsAttrValue& aResult) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   void SetAlign(const nsAString& aAlign, ErrorResult& aError)
   {

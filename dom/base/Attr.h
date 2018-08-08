@@ -32,7 +32,7 @@ class Attr final : public nsINode
 
 public:
   Attr(nsDOMAttributeMap* aAttrMap,
-       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+       already_AddRefed<dom::NodeInfo>&& aNodeInfo,
        const nsAString& aValue);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -70,8 +70,7 @@ public:
 
   // nsINode interface
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
   virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const override;
 
   static void Initialize();

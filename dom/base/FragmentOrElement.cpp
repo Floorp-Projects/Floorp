@@ -2040,11 +2040,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 //----------------------------------------------------------------------
 
 nsresult
-FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst,
-                               bool aPreallocateChildren)
+FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst)
 {
-  nsresult rv = aDst->mAttrs.EnsureCapacityToClone(mAttrs,
-                                                   aPreallocateChildren);
+  nsresult rv = aDst->mAttrs.EnsureCapacityToClone(mAttrs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t i, count = mAttrs.AttrCount();

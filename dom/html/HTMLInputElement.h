@@ -277,8 +277,7 @@ public:
    */
   HTMLInputElement* GetSelectedRadioButton() const;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement,
                                            nsGenericHTMLFormElementWithState)

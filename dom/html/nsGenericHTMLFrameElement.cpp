@@ -401,10 +401,9 @@ nsGenericHTMLFrameElement::DestroyContent()
 }
 
 nsresult
-nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest,
-                                       bool aPreallocateChildren)
+nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest)
 {
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIDocument* doc = aDest->OwnerDoc();

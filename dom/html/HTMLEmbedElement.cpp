@@ -313,13 +313,13 @@ HTMLEmbedElement::DestroyContent()
 }
 
 nsresult
-HTMLEmbedElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
+HTMLEmbedElement::CopyInnerTo(HTMLEmbedElement* aDest)
 {
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {
-    CreateStaticClone(static_cast<HTMLEmbedElement*>(aDest));
+    CreateStaticClone(aDest);
   }
 
   return rv;

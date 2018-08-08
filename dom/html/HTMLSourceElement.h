@@ -30,8 +30,7 @@ public:
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSourceElement, source)
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // Override BindToTree() so that we can trigger a load when we add a
   // child source element.

@@ -30,8 +30,7 @@ public:
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSummaryElement, summary)
 
-  nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult,
-                 bool aPreallocateChildren) const override;
+  nsresult Clone(NodeInfo*, nsINode** aResult) const override;
 
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 

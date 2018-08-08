@@ -543,8 +543,7 @@ AttrArray::GetMapped() const
 }
 
 nsresult
-AttrArray::EnsureCapacityToClone(const AttrArray& aOther,
-                                 bool aAllocateChildren)
+AttrArray::EnsureCapacityToClone(const AttrArray& aOther)
 {
   MOZ_ASSERT(!mImpl, "AttrArray::EnsureCapacityToClone requires the array be empty when called");
 

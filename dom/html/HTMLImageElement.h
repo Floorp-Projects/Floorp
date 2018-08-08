@@ -79,12 +79,11 @@ public:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
   virtual EventStates IntrinsicState() const override;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
 
-  nsresult CopyInnerTo(Element* aDest, bool aPreallocateChildren);
+  nsresult CopyInnerTo(HTMLImageElement* aDest);
 
   void MaybeLoadImage(bool aAlwaysForceLoad);
 
