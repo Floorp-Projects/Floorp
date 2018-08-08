@@ -23,7 +23,7 @@ this.call = function (name, args) {
   dump("Calling function with name " + name + ".\n");
 
   dump("args " + JSON.stringify(args) + "\n");
-  return XPCNativeWrapper.unwrap(content)[name].apply(undefined, Cu.cloneInto(args, content));
+  return XPCNativeWrapper.unwrap(content)[name].apply(undefined, args);
 };
 
 this._eval = function (string) {

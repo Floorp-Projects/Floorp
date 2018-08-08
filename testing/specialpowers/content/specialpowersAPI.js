@@ -8,17 +8,13 @@
 "use strict";
 
 /* import-globals-from MozillaLogger.js */
-/* globals XPCNativeWrapper */
+/* globals XPCNativeWrapper, content */
 
-var EXPORTED_SYMBOLS = ["SpecialPowersAPI", "bindDOMWindowUtils"];
+var global = this;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Services.scriptloader.loadSubScript("resource://specialpowers/MozillaLogger.js", this);
-
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-                               "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "MockFilePicker",
                                "resource://specialpowers/MockFilePicker.jsm");
 ChromeUtils.defineModuleGetter(this, "MockColorPicker",
@@ -586,9 +582,6 @@ SpecialPowersAPI.prototype = {
         let messageId = aMessage.json.id;
         let name = aMessage.json.name;
         let message = aMessage.json.message;
-        if (this.mm) {
-          message = new StructuredCloneHolder(message).deserialize(this.mm.content);
-        }
         // Ignore message from other chrome script
         if (messageId != id)
           return;
@@ -761,12 +754,12 @@ SpecialPowersAPI.prototype = {
       setTimeout(callback, 0);
     // for mochitest-plain
     else
-      this.mm.content.setTimeout(callback, 0);
+      content.window.setTimeout(callback, 0);
   },
 
   _delayCallbackTwice(callback) {
-     let delayedCallback = () => {
-       let delayAgain = (aCallback) => {
+     function delayedCallback() {
+       function delayAgain(aCallback) {
          // Using this._setTimeout doesn't work here
          // It causes failures in mochtests that use
          // multiple pushPrefEnv calls
@@ -775,10 +768,10 @@ SpecialPowersAPI.prototype = {
            setTimeout(aCallback, 0);
          // For mochitest-plain
          else
-           this.mm.content.setTimeout(aCallback, 0);
-       };
-       delayAgain(delayAgain.bind(this, callback));
-     };
+           content.window.setTimeout(aCallback, 0);
+       }
+       delayAgain(delayAgain(callback));
+     }
      return delayedCallback;
   },
 
@@ -1468,10 +1461,10 @@ SpecialPowersAPI.prototype = {
   // XXX end of problematic APIs
 
   addChromeEventListener(type, listener, capture, allowUntrusted) {
-    this.mm.addEventListener(type, listener, capture, allowUntrusted);
+    addEventListener(type, listener, capture, allowUntrusted);
   },
   removeChromeEventListener(type, listener, capture) {
-    this.mm.removeEventListener(type, listener, capture);
+    removeEventListener(type, listener, capture);
   },
 
   // Note: each call to registerConsoleListener MUST be paired with a
@@ -1759,7 +1752,7 @@ SpecialPowersAPI.prototype = {
     // With aWindow, it is called in SimpleTest.waitForFocus to allow popup window opener focus switching
     if (aWindow)
       aWindow.focus();
-    var mm = this.mm;
+    var mm = global;
     if (aWindow) {
       let windowMM = aWindow.docShell.messageManager;
       if (windowMM) {
@@ -1782,7 +1775,7 @@ SpecialPowersAPI.prototype = {
     // in e10s b-c tests |content.window| is a CPOW whereas |window| works fine.
     // for some non-e10s mochi tests, |window| is null whereas |content.window|
     // works fine.  So we take whatever is non-null!
-    xferable.init(this._getDocShell(typeof(window) == "undefined" ? this.mm.content.window : window)
+    xferable.init(this._getDocShell(typeof(window) == "undefined" ? content.window : window)
                       .QueryInterface(Ci.nsILoadContext));
     xferable.addDataFlavor(flavor);
     Services.clipboard.getData(xferable, whichClipboard);
@@ -2102,7 +2095,7 @@ SpecialPowersAPI.prototype = {
           state = "unloaded";
           resolveUnload();
         } else if (msg.data.type in handler) {
-          handler[msg.data.type](...Cu.cloneInto(msg.data.args, this.window));
+          handler[msg.data.type](...msg.data.args);
         } else {
           dump(`Unexpected: ${msg.data.type}\n`);
         }
@@ -2123,7 +2116,7 @@ SpecialPowersAPI.prototype = {
 
   createChromeCache(name, url) {
     let principal = this._getPrincipalFromArg(url);
-    return wrapIfUnwrapped(new this.mm.content.CacheStorage(name, principal));
+    return wrapIfUnwrapped(new content.window.CacheStorage(name, principal));
   },
 
   loadChannelAndReturnStatus(url, loadUsingSystemPrincipal) {

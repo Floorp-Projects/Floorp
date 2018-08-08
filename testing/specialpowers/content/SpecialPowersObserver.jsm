@@ -16,7 +16,8 @@ var EXPORTED_SYMBOLS = ["SpecialPowersObserver"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 Cu.importGlobalProperties(["File"]);
 
-const CHILD_SCRIPT_API = "resource://specialpowers/specialpowersFrameScript.js";
+const CHILD_SCRIPT = "resource://specialpowers/specialpowers.js";
+const CHILD_SCRIPT_API = "resource://specialpowers/specialpowersAPI.js";
 const CHILD_LOGGER_SCRIPT = "resource://specialpowers/MozillaLogger.js";
 
 
@@ -81,6 +82,7 @@ SpecialPowersObserver.prototype._loadFrameScript = function() {
 
     this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
     this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
+    this._messageManager.loadFrameScript(CHILD_SCRIPT, true);
     this._isFrameScriptLoaded = true;
     this._createdFiles = null;
   }
@@ -147,6 +149,7 @@ SpecialPowersObserver.prototype.uninit = function() {
 
     this._messageManager.removeDelayedFrameScript(CHILD_LOGGER_SCRIPT);
     this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT_API);
+    this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT);
     this._isFrameScriptLoaded = false;
   }
 };
