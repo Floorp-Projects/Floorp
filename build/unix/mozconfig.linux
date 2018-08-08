@@ -7,13 +7,9 @@ fi
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
-if [ -n "$FORCE_GCC" ]; then
-    CC="$TOOLTOOL_DIR/gcc/bin/gcc"
-    CXX="$TOOLTOOL_DIR/gcc/bin/g++"
-else
-    CC="$TOOLTOOL_DIR/clang/bin/clang"
-    CXX="$TOOLTOOL_DIR/clang/bin/clang++"
-fi
+# We deal with valgrind builds here
+CC="$TOOLTOOL_DIR/gcc/bin/gcc"
+CXX="$TOOLTOOL_DIR/gcc/bin/g++"
 
 # We want to make sure we use binutils and other binaries in the tooltool
 # package.
