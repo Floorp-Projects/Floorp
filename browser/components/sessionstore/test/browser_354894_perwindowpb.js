@@ -163,7 +163,7 @@ let setupTest = async function(options, testFunction) {
  *        The browser window to load the tabs in
  */
 function injectTestTabs(win) {
-  let promises = TEST_URLS.map(url => win.gBrowser.addTab(url))
+  let promises = TEST_URLS.map(url => BrowserTestUtils.addTab(win.gBrowser, url))
                           .map(tab => BrowserTestUtils.browserLoaded(tab.linkedBrowser));
   return Promise.all(promises);
 }
@@ -313,7 +313,7 @@ add_task(async function test_open_close_window_and_popup() {
     openDialog(location, "popup2", POPUP_FEATURES, TEST_URLS[1]);
     let popup2 = await popup2Promise;
 
-    popup2.gBrowser.addTab(TEST_URLS[0]);
+    BrowserTestUtils.addTab(popup2.gBrowser, TEST_URLS[0]);
 
     let closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
@@ -378,7 +378,7 @@ add_task(async function test_open_close_only_popup() {
     openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
     popup = await popupPromise;
 
-    popup.gBrowser.addTab(TEST_URLS[0]);
+    BrowserTestUtils.addTab(popup.gBrowser, TEST_URLS[0]);
     is(popup.gBrowser.browsers.length, 2,
        "Did not restore to the popup window (2)");
 

@@ -11,7 +11,7 @@ add_task(async function test() {
 
   function checkGeolocation(aPrivateMode, aWindow) {
     return (async function() {
-      aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab(testPageURL);
+      aWindow.gBrowser.selectedTab = BrowserTestUtils.addTab(aWindow.gBrowser, testPageURL);
       await BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser);
 
       let notification = aWindow.PopupNotifications.getNotification("geolocation");
