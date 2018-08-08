@@ -259,7 +259,7 @@ BEGIN_TEST(testSavedStacks_selfHostedFrames)
     result = JS::GetSavedFrameColumn(cx, principals, selfHostedFrame, &column,
                                      JS::SavedFrameSelfHosted::Exclude);
     CHECK(result == JS::SavedFrameResult::Ok);
-    CHECK_EQUAL(column, 9U);
+    CHECK_EQUAL(column, 5U);
 
     // Function display name
     result = JS::GetSavedFrameFunctionDisplayName(cx, principals, selfHostedFrame, &str,

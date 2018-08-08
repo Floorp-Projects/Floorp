@@ -2702,25 +2702,24 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case ParseNodeKind::Call:
       case ParseNodeKind::SuperCall:
       {
-        ParseNode* pn_callee = pn->pn_left;
-        ParseNode* pn_args = pn->pn_right;
-        MOZ_ASSERT(pn->pn_pos.encloses(pn_callee->pn_pos));
+        ParseNode* next = pn->pn_head;
+        MOZ_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
         RootedValue callee(cx);
         if (pn->isKind(ParseNodeKind::SuperCall)) {
-            MOZ_ASSERT(pn_callee->isKind(ParseNodeKind::SuperBase));
-            if (!builder.super(&pn_callee->pn_pos, &callee))
+            MOZ_ASSERT(next->isKind(ParseNodeKind::SuperBase));
+            if (!builder.super(&next->pn_pos, &callee))
                 return false;
         } else {
-            if (!expression(pn_callee, &callee))
+            if (!expression(next, &callee))
                 return false;
         }
 
         NodeVector args(cx);
-        if (!args.reserve(pn_args->pn_count))
+        if (!args.reserve(pn->pn_count - 1))
             return false;
 
-        for (ParseNode* next = pn_args->pn_head; next; next = next->pn_next) {
+        for (next = next->pn_next; next; next = next->pn_next) {
             MOZ_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
             RootedValue arg(cx);
@@ -2741,17 +2740,17 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 
       case ParseNodeKind::Dot:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
         RootedValue expr(cx);
         RootedValue propname(cx);
-        RootedAtom pnAtom(cx, pn->pn_right->pn_atom);
+        RootedAtom pnAtom(cx, pn->pn_atom);
 
         if (pn->as<PropertyAccess>().isSuper()) {
-            if (!builder.super(&pn->pn_left->pn_pos, &expr))
+            if (!builder.super(&pn->pn_expr->pn_pos, &expr))
                 return false;
         } else {
-            if (!expression(pn->pn_left, &expr))
+            if (!expression(pn->pn_expr, &expr))
                 return false;
         }
 
