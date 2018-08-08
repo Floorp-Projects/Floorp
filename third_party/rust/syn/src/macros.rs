@@ -113,12 +113,7 @@ macro_rules! ast_enum_of_structs {
     )
 }
 
-#[cfg(
-    all(
-        feature = "printing",
-        any(feature = "full", feature = "derive")
-    )
-)]
+#[cfg(all(feature = "printing", any(feature = "full", feature = "derive")))]
 macro_rules! generate_to_tokens {
     (do_not_generate_to_tokens $($foo:tt)*) => ();
 
@@ -154,13 +149,7 @@ macro_rules! to_tokens_call {
     };
 }
 
-#[cfg(
-    all(
-        feature = "printing",
-        feature = "derive",
-        not(feature = "full")
-    )
-)]
+#[cfg(all(feature = "printing", feature = "derive", not(feature = "full")))]
 macro_rules! to_tokens_call {
     // If the variant is marked as #full, don't auto-generate to-tokens for it.
     ($e:ident, $tokens:ident, #full $($rest:tt)*) => {
@@ -183,12 +172,7 @@ macro_rules! maybe_ast_struct {
     ($($rest:tt)*) => (ast_struct! { $($rest)* });
 }
 
-#[cfg(
-    all(
-        feature = "parsing",
-        any(feature = "full", feature = "derive")
-    )
-)]
+#[cfg(all(feature = "parsing", any(feature = "full", feature = "derive")))]
 macro_rules! impl_synom {
     ($t:ident $description:tt $($parser:tt)+) => {
         impl Synom for $t {
