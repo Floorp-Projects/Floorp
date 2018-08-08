@@ -14,7 +14,6 @@ import android.view.WindowManager;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,12 +64,6 @@ public class GeckoScreenOrientation {
     // Whether the update should notify Gecko about screen orientation changes.
     private boolean mShouldNotify = true;
 
-    public interface OrientationChangeListener {
-        void onScreenOrientationChanged(ScreenOrientation newOrientation);
-    }
-
-    private final List<OrientationChangeListener> mListeners;
-
     public static GeckoScreenOrientation getInstance() {
         if (sInstance == null) {
             sInstance = new GeckoScreenOrientation();
@@ -79,22 +72,7 @@ public class GeckoScreenOrientation {
     }
 
     private GeckoScreenOrientation() {
-        mListeners = new ArrayList<>();
         update();
-    }
-
-    /**
-     * Add a listener that will be notified when the screen orientation has changed.
-     */
-    public void addListener(OrientationChangeListener aListener) {
-        mListeners.add(aListener);
-    }
-
-    /**
-     * Remove a OrientationChangeListener again.
-     */
-    public void removeListener(OrientationChangeListener aListener) {
-        mListeners.remove(aListener);
     }
 
     /*
@@ -157,9 +135,6 @@ public class GeckoScreenOrientation {
         }
         mScreenOrientation = aScreenOrientation;
         Log.d(LOGTAG, "updating to new orientation " + mScreenOrientation);
-        for (OrientationChangeListener listener : mListeners) {
-            listener.onScreenOrientationChanged(mScreenOrientation);
-        }
         if (mShouldNotify) {
             // Gecko expects a definite screen orientation, so we default to the
             // primary orientations.
@@ -176,7 +151,7 @@ public class GeckoScreenOrientation {
                                             aScreenOrientation.value, getAngle());
             }
         }
-        ScreenManagerHelper.refreshScreenInfo();
+        GeckoAppShell.resetScreenSize();
         return true;
     }
 
