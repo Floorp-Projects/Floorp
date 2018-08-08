@@ -9149,6 +9149,14 @@ exports.PREFERENCES = [
     "svg.transform-box.enabled"
   ],
   [
+    "overflow-clip-box-block",
+    "layout.css.overflow-clip-box.enabled"
+  ],
+  [
+    "overflow-clip-box-inline",
+    "layout.css.overflow-clip-box.enabled"
+  ],
+  [
     "overscroll-behavior-x",
     "layout.css.overscroll-behavior.enabled"
   ],
@@ -9197,23 +9205,11 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
-    "overflow-clip-box-block",
-    "layout.css.overflow-clip-box.enabled"
-  ],
-  [
-    "overflow-clip-box-inline",
-    "layout.css.overflow-clip-box.enabled"
-  ],
-  [
     "scroll-snap-points-x",
     "layout.css.scroll-snap.enabled"
   ],
   [
     "scroll-snap-points-y",
-    "layout.css.scroll-snap.enabled"
-  ],
-  [
-    "scroll-snap-destination",
     "layout.css.scroll-snap.enabled"
   ],
   [
@@ -9223,6 +9219,10 @@ exports.PREFERENCES = [
   [
     "scrollbar-track-color",
     "layout.css.scrollbar-colors.enabled"
+  ],
+  [
+    "scroll-snap-destination",
+    "layout.css.scroll-snap.enabled"
   ],
   [
     "shape-margin",
