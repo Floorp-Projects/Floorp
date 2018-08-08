@@ -192,27 +192,6 @@ struct Statistics
         thresholdTriggered = true;
     }
 
-    void noteNurseryAlloc() {
-        allocsSinceMinorGC.nursery++;
-    }
-
-    // tenured allocs don't include nursery evictions.
-    void setAllocsSinceMinorGCTenured(uint32_t allocs) {
-        allocsSinceMinorGC.tenured = allocs;
-    }
-
-    uint32_t allocsSinceMinorGCNursery() {
-        return allocsSinceMinorGC.nursery;
-    }
-
-    uint32_t allocsSinceMinorGCTenured() {
-        return allocsSinceMinorGC.tenured;
-    }
-
-    uint32_t* addressOfAllocsSinceMinorGCNursery() {
-        return &allocsSinceMinorGC.nursery;
-    }
-
     void beginNurseryCollection(JS::gcreason::Reason reason);
     void endNurseryCollection(JS::gcreason::Reason reason);
 
@@ -335,15 +314,6 @@ struct Statistics
                     STAT_LIMIT,
                     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
                                     mozilla::recordreplay::Behavior::DontPreserve>> counts;
-
-    /*
-     * These events cannot be kept in the above array, we need to take their
-     * address.
-     */
-    struct {
-        uint32_t nursery;
-        uint32_t tenured;
-    } allocsSinceMinorGC;
 
     /* Allocated space before the GC started. */
     size_t preBytes;
