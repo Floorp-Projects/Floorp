@@ -94,9 +94,9 @@ function* testSteps()
 
   let newCompiledBuffer = fileReader.result;
 
-  info("Verifying blobs differ");
+  info("Verifying that re-storing of re-compiled code has been disabled");
 
-  ok(!compareBuffers(newCompiledBuffer, compiledBuffer), "Blobs differ");
+  ok(compareBuffers(newCompiledBuffer, compiledBuffer), "Blobs don't differ");
 
   info("Getting wasm again");
 

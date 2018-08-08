@@ -222,20 +222,24 @@ class Module : public JS::WasmModule
     bool finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2);
     void blockOnTier2Complete() const;
 
-    // JS API and JS::WasmModule implementation:
+    // Currently dead, but will be ressurrected with shell tests (bug 1330661)
+    // and HTTP cache integration.
 
-    size_t bytecodeSerializedSize() const override;
-    void bytecodeSerialize(uint8_t* bytecodeBegin, size_t bytecodeSize) const override;
-    bool compilationComplete() const override;
-    bool notifyWhenCompilationComplete(JS::WasmModuleListener* listener) override;
-    size_t compiledSerializedSize() const override;
-    void compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const override;
+    size_t bytecodeSerializedSize() const;
+    void bytecodeSerialize(uint8_t* bytecodeBegin, size_t bytecodeSize) const;
+    bool compilationComplete() const;
+    bool notifyWhenCompilationComplete(JS::WasmModuleListener* listener);
+    size_t compiledSerializedSize() const;
+    void compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const;
 
     static bool assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin,
                                  size_t remain);
     static RefPtr<Module> deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
                                       const uint8_t* compiledBegin, size_t compiledSize,
                                       Metadata* maybeMetadata = nullptr);
+
+    // JS API and JS::WasmModule implementation:
+
     JSObject* createObject(JSContext* cx) override;
 
     // about:memory reporting:
@@ -255,12 +259,9 @@ typedef RefPtr<Module> SharedModule;
 
 // JS API implementations:
 
-bool
-CompiledModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& buildId);
-
 SharedModule
-DeserializeModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled, JS::BuildIdCharVector&& buildId,
-                  UniqueChars filename, unsigned line);
+DeserializeModule(PRFileDesc* bytecode, JS::BuildIdCharVector&& buildId, UniqueChars filename,
+                  unsigned line);
 
 } // namespace wasm
 } // namespace js
