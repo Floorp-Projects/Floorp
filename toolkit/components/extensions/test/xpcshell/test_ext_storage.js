@@ -30,12 +30,18 @@ async function checkGetImpl(areaName, prop, value) {
 
   data = await storage.get(prop);
   browser.test.assertEq(value, data[prop], `string getter worked for ${prop} in ${areaName}`);
+  browser.test.assertEq(Object.keys(data).length, 1,
+                        `string getter should return an object with a single property`);
 
   data = await storage.get([prop]);
   browser.test.assertEq(value, data[prop], `array getter worked for ${prop} in ${areaName}`);
+  browser.test.assertEq(Object.keys(data).length, 1,
+                        `array getter with a single key should return an object with a single property`);
 
   data = await storage.get({[prop]: undefined});
   browser.test.assertEq(value, data[prop], `object getter worked for ${prop} in ${areaName}`);
+  browser.test.assertEq(Object.keys(data).length, 1,
+                        `object getter with a single key should return an object with a single property`);
 }
 
 add_task(async function test_local_cache_invalidation() {

@@ -251,7 +251,9 @@ class ExtensionStorageLocalIDB extends IndexedDB {
     let keys;
     let defaultValues;
 
-    if (Array.isArray(keysOrItems)) {
+    if (typeof keysOrItems === "string") {
+      keys = [keysOrItems];
+    } else if (Array.isArray(keysOrItems)) {
       keys = keysOrItems;
     } else if (keysOrItems && typeof(keysOrItems) === "object") {
       keys = Object.keys(keysOrItems);

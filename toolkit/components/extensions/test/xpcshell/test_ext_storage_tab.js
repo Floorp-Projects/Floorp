@@ -238,7 +238,7 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
             }
 
             try {
-              const res = await browser.storage.local.get("newvalue");
+              const res = await browser.storage.local.get("newkey");
               browser.test.assertEq(expectedValue, res.newkey);
               browser.test.sendMessage("storage-local-get-resolved");
             } catch (err) {
