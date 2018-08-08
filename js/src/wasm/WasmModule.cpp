@@ -175,19 +175,16 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
     SharedModule            module_;
     SharedCompileArgs       compileArgs_;
     Atomic<bool>            cancelled_;
-    bool                    finished_;
 
   public:
     Tier2GeneratorTaskImpl(Module& module, const CompileArgs& compileArgs)
       : module_(&module),
         compileArgs_(&compileArgs),
-        cancelled_(false),
-        finished_(false)
+        cancelled_(false)
     {}
 
     ~Tier2GeneratorTaskImpl() override {
-        if (!finished_)
-            module_->notifyCompilationListeners();
+        module_->testingTier2Active_ = false;
     }
 
     void cancel() override {
@@ -195,51 +192,24 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
     }
 
     void execute() override {
-        MOZ_ASSERT(!finished_);
-        finished_ = CompileTier2(*compileArgs_, *module_, &cancelled_);
+        CompileTier2(*compileArgs_, *module_, &cancelled_);
     }
 };
 
 void
 Module::startTier2(const CompileArgs& args)
 {
-    MOZ_ASSERT(!tiering_.lock()->active);
-
-    // If a Module initiates tier-2 compilation, we must ensure that eventually
-    // notifyCompilationListeners() is called. Since we must ensure
-    // Tier2GeneratorTaskImpl objects are destroyed *anyway*, we use
-    // ~Tier2GeneratorTaskImpl() to call notifyCompilationListeners() if it
-    // hasn't been already.
+    MOZ_ASSERT(!testingTier2Active_);
 
     auto task = MakeUnique<Tier2GeneratorTaskImpl>(*this, args);
     if (!task)
         return;
 
-    tiering_.lock()->active = true;
+    // This flag will be cleared asynchronously by ~Tier2GeneratorTaskImpl()
+    // on success or failure.
+    testingTier2Active_ = true;
 
     StartOffThreadWasmTier2Generator(std::move(task));
-}
-
-void
-Module::notifyCompilationListeners()
-{
-    // Notify listeners without holding the lock to avoid deadlocks if the
-    // listener takes their own lock or reenters this Module.
-
-    Tiering::ListenerVector listeners;
-    {
-        auto tiering = tiering_.lock();
-
-        MOZ_ASSERT(tiering->active);
-        tiering->active = false;
-
-        Swap(listeners, tiering->listeners);
-
-        tiering.notify_all(/* inactive */);
-    }
-
-    for (RefPtr<JS::WasmModuleListener>& listener : listeners)
-        listener->onCompilationComplete();
 }
 
 bool
@@ -296,14 +266,8 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2Arg, Modul
         MOZ_ASSERT(!code().hasTier2());
         code().commitTier2();
 
-        // Now tier2 is committed and we can update jump tables entries to
-        // start making tier2 live.  Because lazy stubs are protected by a lock
-        // and notifyCompilationListeners should be called without any lock
-        // held, do it before.
-
         stubs2->setJitEntries(stub2Index, code());
     }
-    notifyCompilationListeners();
 
     // And we update the jump vector.
 
@@ -323,65 +287,16 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2Arg, Modul
 }
 
 void
-Module::blockOnTier2Complete() const
+Module::testingBlockOnTier2Complete() const
 {
-    auto tiering = tiering_.lock();
-    while (tiering->active)
-        tiering.wait(/* inactive */);
-}
-
-/* virtual */ size_t
-Module::bytecodeSerializedSize() const
-{
-    return bytecode_->bytes.length();
-}
-
-/* virtual */ void
-Module::bytecodeSerialize(uint8_t* bytecodeBegin, size_t bytecodeSize) const
-{
-    MOZ_ASSERT(!!bytecodeBegin == !!bytecodeSize);
-
-    // Bytecode deserialization is not guarded by Assumptions and thus must not
-    // change incompatibly between builds. For simplicity, the format of the
-    // bytecode file is a .wasm file which ensures backwards compatibility.
-
-    const Bytes& bytes = bytecode_->bytes;
-    uint8_t* bytecodeEnd = WriteBytes(bytecodeBegin, bytes.begin(), bytes.length());
-    MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
-}
-
-/* virtual */ bool
-Module::compilationComplete() const
-{
-    // For the purposes of serialization, if there is not an active tier-2
-    // compilation in progress, compilation is "complete" in that
-    // compiledSerialize() can be called. Now, tier-2 compilation may have
-    // failed or never started in the first place, but in such cases, a
-    // zero-byte compilation is serialized, triggering recompilation on upon
-    // deserialization. Basically, we only want serialization to wait if waiting
-    // would eventually produce tier-2 code.
-    return !tiering_.lock()->active;
-}
-
-/* virtual */ bool
-Module::notifyWhenCompilationComplete(JS::WasmModuleListener* listener)
-{
-    {
-        auto tiering = tiering_.lock();
-        if (tiering->active)
-            return tiering->listeners.append(listener);
-    }
-
-    // Notify the listener without holding the lock to avoid deadlocks if the
-    // listener takes their own lock or reenters this Module.
-    listener->onCompilationComplete();
-    return true;
+    while (testingTier2Active_)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
 /* virtual */ size_t
 Module::compiledSerializedSize() const
 {
-    MOZ_ASSERT(!tiering_.lock()->active);
+    MOZ_ASSERT(!testingTier2Active_);
 
     // The compiled debug code must not be saved, set compiled size to 0,
     // so Module::assumptionsMatch will return false during assumptions
@@ -405,7 +320,7 @@ Module::compiledSerializedSize() const
 /* virtual */ void
 Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
 {
-    MOZ_ASSERT(!tiering_.lock()->active);
+    MOZ_ASSERT(!testingTier2Active_);
 
     if (metadata().debugEnabled) {
         MOZ_RELEASE_ASSERT(compiledSize == 0);
@@ -632,7 +547,7 @@ Module::extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const
 
     // This function is only used for testing purposes so we can simply
     // block on tiered compilation to complete.
-    blockOnTier2Complete();
+    testingBlockOnTier2Complete();
 
     if (!code_->hasTier(tier)) {
         vp.setNull();
@@ -1304,7 +1219,7 @@ Module::instantiate(JSContext* cx,
     cx->runtime()->setUseCounter(instance, useCounter);
 
     if (cx->options().testWasmAwaitTier2())
-        blockOnTier2Complete();
+        testingBlockOnTier2Complete();
 
     return true;
 }
