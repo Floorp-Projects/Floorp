@@ -1555,6 +1555,58 @@ class ICBinaryArith_Fallback : public ICFallbackStub
     };
 };
 
+// JSOP_NEWARRAY
+
+class ICNewArray_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    GCPtrObject templateObject_;
+
+    // The group used for objects created here is always available, even if the
+    // template object itself is not.
+    GCPtrObjectGroup templateGroup_;
+
+    ICNewArray_Fallback(JitCode* stubCode, ObjectGroup* templateGroup)
+      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode),
+        templateObject_(nullptr), templateGroup_(templateGroup)
+    {}
+
+  public:
+    class Compiler : public ICStubCompiler {
+        RootedObjectGroup templateGroup;
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        Compiler(JSContext* cx, ObjectGroup* templateGroup, Engine engine)
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback, engine),
+            templateGroup(cx, templateGroup)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) override {
+            return newStub<ICNewArray_Fallback>(space, getStubCode(), templateGroup);
+        }
+    };
+
+    GCPtrObject& templateObject() {
+        return templateObject_;
+    }
+
+    void setTemplateObject(JSObject* obj) {
+        MOZ_ASSERT(obj->group() == templateGroup());
+        templateObject_ = obj;
+    }
+
+    GCPtrObjectGroup& templateGroup() {
+        return templateGroup_;
+    }
+
+    void setTemplateGroup(ObjectGroup* group) {
+        templateObject_ = nullptr;
+        templateGroup_ = group;
+    }
+};
+
 inline bool
 IsCacheableDOMProxy(JSObject* obj)
 {
