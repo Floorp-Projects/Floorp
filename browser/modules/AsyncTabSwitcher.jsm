@@ -414,7 +414,7 @@ class AsyncTabSwitcher {
 
       let tabpanels = this.tabbrowser.tabpanels;
       let showPanel = this.tabbrowser.tabContainer.getRelatedElement(showTab);
-      let index = Array.indexOf(tabpanels.childNodes, showPanel);
+      let index = Array.indexOf(tabpanels.children, showPanel);
       if (index != -1) {
         this.log(`Switch to tab ${index} - ${this.tinfo(showTab)}`);
         tabpanels.setAttribute("selectedIndex", index);

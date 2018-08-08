@@ -203,7 +203,7 @@ add_task(async function test_tabs_showhide() {
     if (win != window) {
       otherwin = win;
     }
-    let tabs = Array.from(win.gBrowser.tabs.values());
+    let tabs = Array.from(win.gBrowser.tabs);
     ok(!tabs[0].hidden, "first tab not hidden");
     for (let i = 1; i < tabs.length; i++) {
       ok(tabs[i].hidden, "tab hidden value is correct");
@@ -222,7 +222,7 @@ add_task(async function test_tabs_showhide() {
 
   otherwin = SessionStore.undoCloseWindow(0);
   await BrowserTestUtils.waitForEvent(otherwin, "load");
-  let tabs = Array.from(otherwin.gBrowser.tabs.values());
+  let tabs = Array.from(otherwin.gBrowser.tabs);
   ok(!tabs[0].hidden, "first tab not hidden");
   for (let i = 1; i < tabs.length; i++) {
     ok(tabs[i].hidden, "tab hidden value is correct");
@@ -242,7 +242,7 @@ add_task(async function test_tabs_showhide() {
 
   // Check from chrome code that all tabs are visible again.
   for (let win of BrowserWindowIterator()) {
-    let tabs = Array.from(win.gBrowser.tabs.values());
+    let tabs = Array.from(win.gBrowser.tabs);
     for (let i = 0; i < tabs.length; i++) {
       ok(!tabs[i].hidden, "tab hidden value is correct");
     }

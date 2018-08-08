@@ -22,14 +22,14 @@ class MozDeck extends MozXULElement {
 
   set selectedPanel(val) {
     var selectedIndex = -1;
-    for (var panel = val; panel != null; panel = panel.previousSibling)
+    for (var panel = val; panel != null; panel = panel.previousElementSibling)
       ++selectedIndex;
     this.selectedIndex = selectedIndex;
     return val;
   }
 
   get selectedPanel() {
-    return this.childNodes[this.selectedIndex];
+    return this.children[this.selectedIndex];
   }
 }
 
@@ -38,7 +38,7 @@ customElements.define("deck", MozDeck);
 class MozDropmarker extends MozXULElement {
   connectedCallback() {
     // Only create the image the first time we are connected
-    if (!this.firstChild) {
+    if (!this.firstElementChild) {
       let image = document.createXULElement("image");
       image.classList.add("dropmarker-icon");
       this.appendChild(image);

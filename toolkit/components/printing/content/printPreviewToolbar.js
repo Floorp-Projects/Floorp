@@ -97,7 +97,7 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
 
     this.mSimplifyPageNotAllowed = this.mSimplifyPageCheckbox.disabled;
 
-    this.mSimplifyPageToolbarSeparator = this.mSimplifyPageCheckbox.nextSibling;
+    this.mSimplifyPageToolbarSeparator = this.mSimplifyPageCheckbox.nextElementSibling;
 
     this.mPrintPreviewObs = "";
 

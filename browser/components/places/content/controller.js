@@ -564,8 +564,8 @@ PlacesController.prototype = {
     var separator = null;
     var visibleItemsBeforeSep = false;
     var usableItemCount = 0;
-    for (var i = 0; i < aPopup.childNodes.length; ++i) {
-      var item = aPopup.childNodes[i];
+    for (var i = 0; i < aPopup.children.length; ++i) {
+      var item = aPopup.children[i];
       if (item.getAttribute("ignoreitem") == "true") {
         continue;
       }

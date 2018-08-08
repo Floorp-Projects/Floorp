@@ -63,7 +63,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       contextMenu.setAttribute("onpopuphidden", "DownloadsSubview.onContextMenuHidden(this);");
       let clearButton = contextMenu.querySelector("menuitem[command='downloadsCmd_clearDownloads']");
       clearButton.hidden = false;
-      clearButton.previousSibling.hidden = true;
+      clearButton.previousElementSibling.hidden = true;
       contextMenu.querySelector("menuitem[command='cmd_delete']")
         .setAttribute("command", "downloadsCmd_delete");
     }
@@ -101,7 +101,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     let waitForMs = 200;
     if (this.batchFragment.childElementCount) {
       // Prepend the batch fragment.
-      this.container.insertBefore(this.batchFragment, this.container.firstChild || null);
+      this.container.insertBefore(this.batchFragment, this.container.firstElementChild || null);
       waitForMs = 0;
     }
     // Wait a wee bit to dispatch the event, because another batch may start
@@ -174,7 +174,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
         return;
 
       let count = 0;
-      for (let button of this.container.childNodes) {
+      for (let button of this.container.children) {
         if (this.destroyed)
           return;
         if (!button._shell)

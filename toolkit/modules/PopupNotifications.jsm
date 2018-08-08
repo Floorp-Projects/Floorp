@@ -238,7 +238,7 @@ function PopupNotifications(tabbrowser, panel,
     }
 
     // Esc key cancels the topmost notification, if there is one.
-    let notification = this.panel.firstChild;
+    let notification = this.panel.firstElementChild;
     if (!notification) {
       return;
     }
@@ -700,8 +700,8 @@ PopupNotifications.prototype = {
       }
     }
 
-    let browser = this.panel.firstChild &&
-                  this.panel.firstChild.notification.browser;
+    let browser = this.panel.firstElementChild &&
+                  this.panel.firstElementChild.notification.browser;
     this.panel.hidePopup();
     if (browser)
       browser.focus();
@@ -728,7 +728,7 @@ PopupNotifications.prototype = {
    */
   _clearPanel() {
     let popupnotification;
-    while ((popupnotification = this.panel.lastChild)) {
+    while ((popupnotification = this.panel.lastElementChild)) {
       this.panel.removeChild(popupnotification);
 
       // If this notification was provided by the chrome document rather than
@@ -739,9 +739,9 @@ PopupNotifications.prototype = {
 
         // Remove nodes dynamically added to the notification's menu button
         // in _refreshPanel.
-        let contentNode = popupnotification.lastChild;
+        let contentNode = popupnotification.lastElementChild;
         while (contentNode) {
-          let previousSibling = contentNode.previousSibling;
+          let previousSibling = contentNode.previousElementSibling;
           if (contentNode.nodeName == "menuitem" ||
               contentNode.nodeName == "menuseparator")
             popupnotification.removeChild(contentNode);
@@ -1027,7 +1027,7 @@ PopupNotifications.prototype = {
 
       // On OS X and Linux we need a different panel arrow color for
       // click-to-play plugins, so copy the popupid and use css.
-      this.panel.setAttribute("popupid", this.panel.firstChild.getAttribute("popupid"));
+      this.panel.setAttribute("popupid", this.panel.firstElementChild.getAttribute("popupid"));
       notificationsToShow.forEach(function(n) {
         // Record that the notification was actually displayed on screen.
         // Notifications that were opened a second time or that were originally
@@ -1415,14 +1415,14 @@ PopupNotifications.prototype = {
   },
 
   _dismissOrRemoveCurrentNotifications() {
-    let browser = this.panel.firstChild &&
-                  this.panel.firstChild.notification.browser;
+    let browser = this.panel.firstElementChild &&
+                  this.panel.firstElementChild.notification.browser;
     if (!browser)
       return;
 
     let notifications = this._getNotificationsForBrowser(browser);
     // Mark notifications as dismissed and call dismissal callbacks
-    Array.forEach(this.panel.childNodes, function(nEl) {
+    Array.forEach(this.panel.children, function(nEl) {
       let notificationObj = nEl.notification;
       // Never call a dismissal handler on a notification that's been removed.
       if (!notifications.includes(notificationObj))

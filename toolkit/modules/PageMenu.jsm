@@ -76,7 +76,7 @@ PageMenu.prototype = {
     let pos = insertionPoint.getAttribute(this.PAGEMENU_ATTR);
     if (pos == "start") {
       insertionPoint.insertBefore(fragment,
-                                  insertionPoint.firstChild);
+                                  insertionPoint.firstElementChild);
     } else if (pos.startsWith("#")) {
       insertionPoint.insertBefore(fragment, insertionPoint.querySelector(pos));
     } else {
@@ -180,12 +180,12 @@ PageMenu.prototype = {
 
   // Get the first child of the given element with the given tag name.
   getImmediateChild(element, tag) {
-    let child = element.firstChild;
+    let child = element.firstElementChild;
     while (child) {
       if (child.localName == tag) {
         return child;
       }
-      child = child.nextSibling;
+      child = child.nextElementSibling;
     }
     return null;
   },
@@ -197,7 +197,7 @@ PageMenu.prototype = {
     if (aPopup.hasAttribute(this.PAGEMENU_ATTR))
       return aPopup;
 
-    let element = aPopup.firstChild;
+    let element = aPopup.firstElementChild;
     while (element) {
       if (element.localName == "menu") {
         let popup = this.getImmediateChild(element, "menupopup");
@@ -208,7 +208,7 @@ PageMenu.prototype = {
           }
         }
       }
-      element = element.nextSibling;
+      element = element.nextElementSibling;
     }
 
     return null;
@@ -225,9 +225,9 @@ PageMenu.prototype = {
       let element = ungenerated[last];
       ungenerated.splice(last, 1);
 
-      let i = element.childNodes.length;
+      let i = element.children.length;
       while (i-- > 0) {
-        let child = element.childNodes[i];
+        let child = element.children[i];
         if (!child.hasAttribute(this.GENERATEDITEMID_ATTR)) {
           ungenerated.push(child);
           continue;

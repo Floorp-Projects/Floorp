@@ -95,8 +95,8 @@ TabListView.prototype = {
         this._renderClient(client);
       }
     }
-    if (this.list.firstChild) {
-      const firstTab = this.list.firstChild.querySelector(".item.tab:first-child .item-title");
+    if (this.list.firstElementChild) {
+      const firstTab = this.list.firstElementChild.querySelector(".item.tab:first-child .item-title");
       if (firstTab) {
         firstTab.setAttribute("tabindex", 2);
       }
@@ -521,7 +521,7 @@ TabListView.prototype = {
     let item = this.container.querySelector(".item.selected");
     let showTabOptions = this._isTab(item);
 
-    let el = menu.firstChild;
+    let el = menu.firstElementChild;
 
     while (el) {
       let show = false;
@@ -542,7 +542,7 @@ TabListView.prototype = {
       }
       el.hidden = !show;
 
-      el = el.nextSibling;
+      el = el.nextElementSibling;
     }
   },
 
@@ -589,7 +589,7 @@ TabListView.prototype = {
   },
 
   _indexOfNode(parent, child) {
-    return Array.prototype.indexOf.call(parent.childNodes, child);
+    return Array.prototype.indexOf.call(parent.children, child);
   },
 
   _isTab(item) {
@@ -601,7 +601,7 @@ TabListView.prototype = {
   },
 
   _openAllClientTabs(clientNode, where) {
-    const tabs = clientNode.querySelector(".item-tabs-list").childNodes;
+    const tabs = clientNode.querySelector(".item-tabs-list").children;
     const urls = [...tabs].map(tab => tab.dataset.url);
     this.props.onOpenTabs(urls, where);
   }
