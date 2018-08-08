@@ -277,10 +277,11 @@ bool JSXrayTraits::getOwnPropertyFromWrapperIfSafe(JSContext* cx,
 {
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
     RootedObject target(cx, getTargetObject(wrapper));
+    RootedObject wrapperGlobal(cx, JS::CurrentGlobalOrNull(cx));
     {
         JSAutoRealm ar(cx, target);
         JS_MarkCrossZoneId(cx, id);
-        if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, outDesc))
+        if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, wrapperGlobal, id, outDesc))
             return false;
     }
     return JS_WrapPropertyDescriptor(cx, outDesc);
@@ -289,6 +290,7 @@ bool JSXrayTraits::getOwnPropertyFromWrapperIfSafe(JSContext* cx,
 bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
                                                   HandleObject target,
                                                   HandleObject wrapper,
+                                                  HandleObject wrapperGlobal,
                                                   HandleId id,
                                                   MutableHandle<PropertyDescriptor> outDesc)
 {
@@ -297,6 +299,8 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
     MOZ_ASSERT(getTargetObject(wrapper) == target);
     MOZ_ASSERT(js::IsObjectInContextCompartment(target, cx));
     MOZ_ASSERT(WrapperFactory::IsXrayWrapper(wrapper));
+    MOZ_ASSERT(JS_IsGlobalObject(wrapperGlobal));
+    js::AssertSameCompartment(wrapper, wrapperGlobal);
     MOZ_ASSERT(outDesc.object() == nullptr);
 
     Rooted<PropertyDescriptor> desc(cx);
@@ -309,7 +313,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
 
     // Disallow accessor properties.
     if (desc.hasGetterOrSetter()) {
-        JSAutoRealmAllowCCW ar(cx, wrapper);
+        JSAutoRealm ar(cx, wrapperGlobal);
         JS_MarkCrossZoneId(cx, id);
         return ReportWrapperDenial(cx, id, WrapperDenialForXray, "property has accessor");
     }
@@ -321,7 +325,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
 
         // Disallow non-subsumed objects.
         if (!AccessCheck::subsumes(target, propObj)) {
-            JSAutoRealmAllowCCW ar(cx, wrapper);
+            JSAutoRealm ar(cx, wrapperGlobal);
             JS_MarkCrossZoneId(cx, id);
             return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not same-origin with target");
         }
@@ -329,14 +333,14 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
         // Disallow non-Xrayable objects.
         XrayType xrayType = GetXrayType(propObj);
         if (xrayType == NotXray || xrayType == XrayForOpaqueObject) {
-            JSAutoRealmAllowCCW ar(cx, wrapper);
+            JSAutoRealm ar(cx, wrapperGlobal);
             JS_MarkCrossZoneId(cx, id);
             return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not Xrayable");
         }
 
         // Disallow callables.
         if (JS::IsCallable(propObj)) {
-            JSAutoRealmAllowCCW ar(cx, wrapper);
+            JSAutoRealm ar(cx, wrapperGlobal);
             JS_MarkCrossZoneId(cx, id);
             return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value is callable");
         }
@@ -344,7 +348,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
 
     // Disallow any property that shadows something on its (Xrayed)
     // prototype chain.
-    JSAutoRealmAllowCCW ar2(cx, wrapper);
+    JSAutoRealm ar2(cx, wrapperGlobal);
     JS_MarkCrossZoneId(cx, id);
     RootedObject proto(cx);
     bool foundOnProto = false;
@@ -659,6 +663,8 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
 bool
 JSXrayTraits::delete_(JSContext* cx, HandleObject wrapper, HandleId id, ObjectOpResult& result)
 {
+    MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
+
     RootedObject holder(cx, ensureHolder(cx, wrapper));
     if (!holder)
         return false;
@@ -670,11 +676,12 @@ JSXrayTraits::delete_(JSContext* cx, HandleObject wrapper, HandleId id, ObjectOp
     bool isObjectOrArrayInstance = (key == JSProto_Object || key == JSProto_Array) &&
                                    !isPrototype(holder);
     if (isObjectOrArrayInstance) {
+        RootedObject wrapperGlobal(cx, JS::CurrentGlobalOrNull(cx));
         RootedObject target(cx, getTargetObject(wrapper));
         JSAutoRealm ar(cx, target);
         JS_MarkCrossZoneId(cx, id);
         Rooted<PropertyDescriptor> desc(cx);
-        if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, &desc))
+        if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, wrapperGlobal, id, &desc))
             return false;
         if (desc.object())
             return JS_DeletePropertyById(cx, target, id, result);
@@ -799,6 +806,8 @@ bool
 JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags,
                              AutoIdVector& props)
 {
+    MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
+
     RootedObject target(cx, getTargetObject(wrapper));
     RootedObject holder(cx, ensureHolder(cx, wrapper));
     if (!holder)
@@ -810,6 +819,7 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
         // object, but only after filtering them carefully.
         if (key == JSProto_Object || key == JSProto_Array) {
             MOZ_ASSERT(props.empty());
+            RootedObject wrapperGlobal(cx, JS::CurrentGlobalOrNull(cx));
             {
                 JSAutoRealm ar(cx, target);
                 AutoIdVector targetProps(cx);
@@ -822,8 +832,11 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
                 for (size_t i = 0; i < targetProps.length(); ++i) {
                     Rooted<PropertyDescriptor> desc(cx);
                     RootedId id(cx, targetProps[i]);
-                    if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, &desc))
+                    if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, wrapperGlobal, id,
+                                                        &desc))
+                    {
                         return false;
+                    }
                     if (desc.object())
                         props.infallibleAppend(id);
                 }

@@ -267,10 +267,12 @@ public:
                                                 JS::HandleId id,
                                                 JS::MutableHandle<JS::PropertyDescriptor> desc);
 
-    // Like the above, but operates in the target compartment.
+    // Like the above, but operates in the target compartment. wrapperGlobal is
+    // the caller's global (must be in the wrapper compartment).
     static bool getOwnPropertyFromTargetIfSafe(JSContext* cx,
                                                JS::HandleObject target,
                                                JS::HandleObject wrapper,
+                                               JS::HandleObject wrapperGlobal,
                                                JS::HandleId id,
                                                JS::MutableHandle<JS::PropertyDescriptor> desc);
 
