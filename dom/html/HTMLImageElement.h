@@ -233,6 +233,11 @@ public:
   {
     GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
   }
+  void SetDecoding(const nsAString& aDecoding, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::decoding, aDecoding, aError);
+  }
+  void GetDecoding(nsAString& aValue);
 
   net::ReferrerPolicy
   GetImageReferrerPolicy() override
