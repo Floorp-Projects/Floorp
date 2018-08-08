@@ -1079,8 +1079,11 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     relhackcode->insertBefore(first_executable);
 
     // Don't try further if we can't gain from the relocation section size change.
+    // We account for the fact we're going to split the PT_LOAD before the injected
+    // code section, so the overhead of the page alignment for section needs to be
+    // accounted for.
     size_t align = first_executable->getSegmentByType(PT_LOAD)->getAlign();
-    size_t new_size = relhack->getSize() + relhackcode->getSize();
+    size_t new_size = relhack->getSize() + relhackcode->getSize() + relhackcode->getAddr() & (align - 1);
     if (!force && (new_size >= old_size || old_size - new_size < align)) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
