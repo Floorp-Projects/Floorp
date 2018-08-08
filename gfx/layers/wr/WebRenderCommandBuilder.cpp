@@ -748,9 +748,7 @@ struct DIGroup
         GP("doing children in EndGroup\n");
         aGrouper->PaintContainerItem(this, item, bounds, children, aContext, aRecorder);
       } else {
-        // Hit test items don't have anything to paint so skip them. Ideally we
-        // would drop these items earlier...
-        if (dirty && item->Type() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+        if (dirty) {
           // What should the clip settting strategy be? We can set the full clip everytime.
           // this is probably easiest for now. An alternative would be to put the push and the pop
           // into separate items and let invalidation handle it that way.
