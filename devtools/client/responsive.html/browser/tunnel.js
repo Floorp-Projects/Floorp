@@ -381,6 +381,10 @@ MessageManagerTunnel.prototype = {
   INNER_TO_OUTER_MESSAGES: [
     // Messages sent to browser.js
     "Browser:LoadURI",
+    "Link:SetIcon",
+    "Link:SetFailedIcon",
+    "Link:AddFeed",
+    "Link:AddSearch",
     // Messages sent to RemoteWebProgress.jsm
     "Content:LoadURIResult",
     "Content:LocationChange",
