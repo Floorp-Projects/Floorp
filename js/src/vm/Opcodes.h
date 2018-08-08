@@ -840,14 +840,11 @@
     /*
      * Pushes newly created object onto the stack.
      *
-     * This opcode takes the kind of initializer (JSProto_Array or
-     * JSProto_Object).
-     *
-     * This opcode has three extra bytes so it can be exchanged with
+     * This opcode has four extra bytes so it can be exchanged with
      * JSOP_NEWOBJECT during emit.
      *   Category: Literals
      *   Type: Object
-     *   Operands: uint8_t kind (, uint24_t extra)
+     *   Operands: (uint32_t extra)
      *   Stack: => obj
      */ \
     macro(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, JOF_UINT8) \

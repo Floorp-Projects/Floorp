@@ -2167,26 +2167,10 @@ bool
 BaselineCompiler::emit_JSOP_NEWINIT()
 {
     frame.syncStack(0);
-    JSProtoKey key = JSProtoKey(GET_UINT8(pc));
 
-    if (key == JSProto_Array) {
-        // Pass length in R0.
-        masm.move32(Imm32(0), R0.scratchReg());
-
-        ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-        if (!group)
-            return false;
-
-        ICNewArray_Fallback::Compiler stubCompiler(cx, group, ICStubCompiler::Engine::Baseline);
-        if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
-            return false;
-    } else {
-        MOZ_ASSERT(key == JSProto_Object);
-
-        ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::Baseline);
-        if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
-            return false;
-    }
+    ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::Baseline);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
 
     frame.push(R0);
     return true;
