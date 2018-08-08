@@ -92,14 +92,14 @@ window.gActivityStreamStrings = {
   "section_menu_action_privacy_notice": "Ngec me mung",
   "firstrun_title": "Take Firefox with You",
   "firstrun_content": "Get your bookmarks, history, passwords and other settings on all your devices.",
-  "firstrun_learn_more_link": "Learn more about Firefox Accounts",
-  "firstrun_form_header": "Enter your email",
+  "firstrun_learn_more_link": "Nong ngec mapol ikom Akaunt me Firefox",
+  "firstrun_form_header": "Ket email mamegi",
   "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "Email",
-  "firstrun_invalid_input": "Valid email required",
-  "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
-  "firstrun_terms_of_service": "Terms of Service",
-  "firstrun_privacy_notice": "Privacy Notice",
-  "firstrun_continue_to_login": "Continue",
-  "firstrun_skip_login": "Skip this step"
+  "firstrun_invalid_input": "Email ma tye atir mite",
+  "firstrun_extra_legal_links": "Mede anyim nyuto ni i yee {terms} ki {privacy}.",
+  "firstrun_terms_of_service": "Cik me Tic",
+  "firstrun_privacy_notice": "Ngec me mung",
+  "firstrun_continue_to_login": "Mede",
+  "firstrun_skip_login": "Kal citep man"
 };

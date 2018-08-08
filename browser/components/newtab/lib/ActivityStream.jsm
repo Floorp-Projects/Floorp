@@ -42,6 +42,8 @@ const DEFAULT_SITES = new Map([
 const GEO_PREF = "browser.search.region";
 const SPOCS_GEOS = ["US"];
 
+const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+
 // Determine if spocs should be shown for a geo/locale
 function showSpocs({geo}) {
   return SPOCS_GEOS.includes(geo);
@@ -155,7 +157,11 @@ const PREFS_CONFIG = new Map([
   }],
   ["improvesearch.noDefaultSearchTile", {
     title: "Experiment to remove tiles that are the same as the default search",
-    value: false
+    value: true
+  }],
+  ["improvesearch.topSiteSearchShortcuts", {
+    title: "Experiment to show special top sites that perform keyword searches",
+    value: true
   }],
   ["asrouterExperimentEnabled", {
     title: "Is the message center experiment on?",
@@ -165,9 +171,24 @@ const PREFS_CONFIG = new Map([
     title: "What cohort is the user in?",
     value: 0
   }],
-  ["asrouter.snippetsUrl", {
-    title: "A custom URL for the AS router snippets",
-    value: "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br"
+  ["asrouter.messageProviders", {
+    title: "Configuration for ASRouter message providers",
+
+    /**
+     * Each provider must have a unique id and a type of "local" or "remote".
+     * Local providers must specify the name of an ASRouter message provider.
+     * Remote providers must specify a `url` and an `updateCycleInMs`.
+     */
+    value: JSON.stringify([{
+      id: "onboarding",
+      type: "local",
+      localProvider: "OnboardingMessageProvider"
+    }, {
+      id: "snippets",
+      type: "remote",
+      url: "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br",
+      updateCycleInMs: ONE_HOUR_IN_MS * 4
+    }])
   }]
 ]);
 

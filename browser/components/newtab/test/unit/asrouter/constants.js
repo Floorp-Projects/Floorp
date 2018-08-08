@@ -9,12 +9,13 @@ export const FAKE_LOCAL_MESSAGES = [
   {id: "bar", template: "fancy_template", content: {title: "Foo", body: "Foo123"}},
   {id: "baz", content: {title: "Foo", body: "Foo123"}}
 ];
-export const FAKE_LOCAL_PROVIDER = {id: "onboarding", type: "local", messages: FAKE_LOCAL_MESSAGES};
+export const FAKE_LOCAL_PROVIDER = {id: "onboarding", type: "local", localProvider: "FAKE_LOCAL_PROVIDER"};
+export const FAKE_LOCAL_PROVIDERS = {FAKE_LOCAL_PROVIDER: {getMessages: () => FAKE_LOCAL_MESSAGES}};
 
 export const FAKE_REMOTE_MESSAGES = [
   {id: "qux", template: "simple_template", content: {title: "Qux", body: "hello world"}}
 ];
-export const FAKE_REMOTE_PROVIDER = {id: "remotey", type: "remote", url: "http://fake.com/endpoint", endpointPref: "remotePref"};
+export const FAKE_REMOTE_PROVIDER = {id: "remotey", type: "remote", url: "http://fake.com/endpoint"};
 
 // Stubs methods on RemotePageManager
 export class FakeRemotePageManager {
