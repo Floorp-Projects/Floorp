@@ -110,16 +110,6 @@ android {
         klarX86Debug.root = 'src/klarDebug'
         klarX86Debug.root = 'src/klarDebug'
         klarX86Debug.root = 'src/klarDebug'
-
-        // UI test
-        androidTestWebviewCompile {
-            java.srcDirs += ['src/androidTestWebview/java']
-        }
-
-        // UI tests
-        androidTestGeckoCompile {
-           java.srcDirs += ['src/androidTestGecko/java']
-        }
     }
 }
 
