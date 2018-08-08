@@ -32,7 +32,6 @@ function getRelativeUrl(source, root) {
 }
 
 function formatSource(source, root) {
-  // NOTE: Flow https://github.com/facebook/flow/issues/6342 issue
   return { ...source,
     relativeUrl: getRelativeUrl(source, root)
   };

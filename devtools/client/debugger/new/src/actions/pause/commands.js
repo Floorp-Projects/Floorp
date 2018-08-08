@@ -209,7 +209,7 @@ function hasAwait(source, pauseLocation) {
     column
   } = pauseLocation;
 
-  if (source.isWasm || !source.text) {
+  if (!source.text) {
     return false;
   }
 

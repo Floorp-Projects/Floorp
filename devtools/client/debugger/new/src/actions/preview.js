@@ -54,7 +54,7 @@ function updatePreview(target, tokenPos, codeMirror) {
   }) => {
     const cursorPos = target.getBoundingClientRect();
 
-    if (!(0, _selectors.isSelectedFrameVisible)(getState()) || !(0, _selectors.isLineInScope)(getState(), tokenPos.line)) {
+    if ((0, _selectors.getCanRewind)(getState()) || !(0, _selectors.isSelectedFrameVisible)(getState()) || !(0, _selectors.isLineInScope)(getState(), tokenPos.line)) {
       return;
     }
 
