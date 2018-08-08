@@ -144,6 +144,8 @@
 
     <!-- Title of "switch" preference that enables/disables search suggestions -->
     <string name="preference_show_search_suggestions">Get search suggestions</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_show_search_suggestions_summary">%1$s will send what you type in the address bar to your search engine</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
@@ -654,11 +656,26 @@ be temporary, and you can try again later.</li>
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Finger moved too fast. Try again.</string>
 
+    <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title">Would you like to turn on search suggestions?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+         %1$s will be replaced by the app name (e.g. Firefox Focus)
+          %2$s will be replaced with the "Learn more" string with the name: enable_search_suggestion_subtitle_learnmore -->
     <string name="enable_search_suggestion_subtitle">To get search suggestions, %1$s needs to send what you type in the address bar to the search engine you\'ve chosen. %2$s.</string>
+
+    <!-- Learn more string to be placed inside: enable_search_suggestion_subtitle -->
     <string name="enable_search_suggestion_subtitle_learnmore">Learn more</string>
-    <string name="enable_search_suggestions_no">NO</string>
-    <string name="enable_search_suggestions_yes">YES</string>
+
+    <!-- Label used for the no button for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">No</string>
+
+    <!-- Label used for the yes button for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Yes</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
     <string name="no_suggestions_message">Some search engines cannot show suggestions.</string>
-    <string name="dismiss_no_suggestions_prompt_button">DISMISS</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Dismiss</string>
 </resources>
