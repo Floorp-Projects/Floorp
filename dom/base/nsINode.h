@@ -35,7 +35,7 @@
 #endif
 #endif
 
-class nsAttrAndChildArray;
+class AttrArray;
 class nsAttrChildContentList;
 class nsDOMAttributeMap;
 class nsIAnimationObserver;
@@ -367,7 +367,7 @@ public:
   friend class nsNodeUtils;
   friend class nsNodeWeakReference;
   friend class nsNodeSupportsWeakRefTearoff;
-  friend class nsAttrAndChildArray;
+  friend class AttrArray;
 
 #ifdef MOZILLA_INTERNAL_API
   explicit nsINode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

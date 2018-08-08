@@ -2019,12 +2019,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
   // Traverse attribute names.
   {
     uint32_t i;
-    uint32_t attrs = tmp->mAttrsAndChildren.AttrCount();
+    uint32_t attrs = tmp->mAttrs.AttrCount();
     for (i = 0; i < attrs; i++) {
-      const nsAttrName* name = tmp->mAttrsAndChildren.AttrNameAt(i);
+      const nsAttrName* name = tmp->mAttrs.AttrNameAt(i);
       if (!name->IsAtom()) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-                                           "mAttrsAndChildren[i]->NodeInfo()");
+                                           "mAttrs[i]->NodeInfo()");
         cb.NoteNativeChild(name->NodeInfo(),
                            NS_CYCLE_COLLECTION_PARTICIPANT(NodeInfo));
       }
@@ -2043,14 +2043,14 @@ nsresult
 FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst,
                                bool aPreallocateChildren)
 {
-  nsresult rv = aDst->mAttrsAndChildren.EnsureCapacityToClone(mAttrsAndChildren,
-                                                              aPreallocateChildren);
+  nsresult rv = aDst->mAttrs.EnsureCapacityToClone(mAttrs,
+                                                   aPreallocateChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t i, count = mAttrsAndChildren.AttrCount();
+  uint32_t i, count = mAttrs.AttrCount();
   for (i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
-    const nsAttrValue* value = mAttrsAndChildren.AttrAt(i);
+    const nsAttrName* name = mAttrs.AttrNameAt(i);
+    const nsAttrValue* value = mAttrs.AttrAt(i);
     nsAutoString valStr;
     value->ToString(valStr);
     rv = aDst->AsElement()->SetAttr(name->NamespaceID(), name->LocalName(),
@@ -2323,7 +2323,7 @@ FragmentOrElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
 {
   nsIContent::AddSizeOfExcludingThis(aSizes, aNodeSize);
   *aNodeSize +=
-    mAttrsAndChildren.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+    mAttrs.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots) {

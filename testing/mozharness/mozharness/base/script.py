@@ -38,6 +38,7 @@ import urlparse
 import hashlib
 import zlib
 if os.name == 'nt':
+    import locale
     try:
         import win32file
         import win32api
@@ -1229,6 +1230,13 @@ class ScriptMixin(PlatformMixin):
         for k in purge_env:
             if k in env:
                 del env[k]
+        if os.name == 'nt':
+            pref_encoding = locale.getpreferredencoding()
+            for k, v in env.iteritems():
+                # When run locally on Windows machines, some environment
+                # variables may be unicode.
+                if isinstance(v, unicode):
+                    env[k] = v.encode(pref_encoding)
         if set_self_env:
             self.env = env
         return env

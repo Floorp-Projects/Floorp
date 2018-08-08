@@ -246,6 +246,12 @@ compartment.
     thereby escaping the capability-based limits. For this reason,
     `onNewGlobalObject` is only available to privileged code.
 
+    Note that, even though the presence of a `Debugger`'s `onNewGlobalObject`
+    hook can have arbitrary side effects, the garbage collector does not
+    consider the presence of the hook sufficient reason to keep the `Debugger`
+    alive. Thus, the behavior of code that uses `onNewGlobalObject` on unrooted,
+    enabled `Debugger`s may be affected by the garbage collector's activity, and
+    is not entirely deterministic.
 
 
 ## Function Properties of the Debugger Prototype Object

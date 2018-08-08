@@ -86,7 +86,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_expand_section": "Expand Section",
   "section_menu_action_manage_section": "Manage Section",
   "section_menu_action_manage_webext": "توسیع بندرست کریں",
-  "section_menu_action_add_topsite": "بہترین سائٹ شامل کریں",
+  "section_menu_action_add_topsite": "Add Top Site",
   "section_menu_action_move_up": "اوپر کریں",
   "section_menu_action_move_down": "نیچے کریں",
   "section_menu_action_privacy_notice": "رازداری کا نوٹس",
