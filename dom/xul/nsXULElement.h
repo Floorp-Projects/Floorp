@@ -21,7 +21,7 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIURI.h"
 #include "nsLayoutCID.h"
-#include "nsAttrAndChildArray.h"
+#include "AttrArray.h"
 #include "nsGkAtoms.h"
 #include "nsStringFwd.h"
 #include "nsStyledElement.h"

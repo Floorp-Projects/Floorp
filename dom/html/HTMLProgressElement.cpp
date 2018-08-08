@@ -66,7 +66,7 @@ HTMLProgressElement::ParseAttribute(int32_t aNamespaceID,
 double
 HTMLProgressElement::Value() const
 {
-  const nsAttrValue* attrValue = mAttrsAndChildren.GetAttr(nsGkAtoms::value);
+  const nsAttrValue* attrValue = mAttrs.GetAttr(nsGkAtoms::value);
   if (!attrValue || attrValue->Type() != nsAttrValue::eDoubleValue ||
       attrValue->GetDoubleValue() < 0.0) {
     return kDefaultValue;
@@ -78,7 +78,7 @@ HTMLProgressElement::Value() const
 double
 HTMLProgressElement::Max() const
 {
-  const nsAttrValue* attrMax = mAttrsAndChildren.GetAttr(nsGkAtoms::max);
+  const nsAttrValue* attrMax = mAttrs.GetAttr(nsGkAtoms::max);
   if (!attrMax || attrMax->Type() != nsAttrValue::eDoubleValue ||
       attrMax->GetDoubleValue() <= 0.0) {
     return kDefaultMax;
@@ -100,7 +100,7 @@ HTMLProgressElement::Position() const
 bool
 HTMLProgressElement::IsIndeterminate() const
 {
-  const nsAttrValue* attrValue = mAttrsAndChildren.GetAttr(nsGkAtoms::value);
+  const nsAttrValue* attrValue = mAttrs.GetAttr(nsGkAtoms::value);
   return !attrValue || attrValue->Type() != nsAttrValue::eDoubleValue;
 }
 

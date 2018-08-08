@@ -24,6 +24,8 @@ const whitelist = {
   ]),
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
+    "resource://specialpowers/specialpowers.js",
+    "resource://specialpowers/specialpowersAPI.js",
 
     // General utilities
     "resource://gre/modules/AppConstants.jsm",

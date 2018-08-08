@@ -59,6 +59,20 @@ fn valid() {
 }
 
 #[test]
+fn empty() {
+    let poly = Polygon::<f32, ()>::try_from_points(
+        [
+            point3(0.0, 0.0, 1.0),
+            point3(0.0, 0.0, 1.0),
+            point3(0.0, 0.00001, 1.0),
+            point3(1.0, 0.0, 0.0),
+        ],
+        1,
+    );
+    assert_eq!(None, poly);
+}
+
+#[test]
 fn from_transformed_rect() {
     let rect: TypedRect<f32, ()> = TypedRect::new(point2(10.0, 10.0), TypedSize2D::new(20.0, 30.0));
     let transform: TypedTransform3D<f32, (), ()> =

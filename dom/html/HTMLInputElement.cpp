@@ -4831,7 +4831,7 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
     CancelImageRequests(aNotify);
 
     // And we should update our mapped attribute mapping function.
-    mAttrsAndChildren.UpdateMappedAttrRuleMapper(*this);
+    mAttrs.UpdateMappedAttrRuleMapper(*this);
   } else if (mType == NS_FORM_INPUT_IMAGE) {
     if (aNotify) {
       // We just got switched to be an image input; we should see
@@ -4848,7 +4848,7 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
     }
 
     // And we should update our mapped attribute mapping function.
-    mAttrsAndChildren.UpdateMappedAttrRuleMapper(*this);
+    mAttrs.UpdateMappedAttrRuleMapper(*this);
   }
 
   if (mType == NS_FORM_INPUT_PASSWORD && IsInComposedDoc()) {

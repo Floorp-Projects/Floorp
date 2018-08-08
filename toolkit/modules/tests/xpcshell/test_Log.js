@@ -16,17 +16,16 @@ var testFormatter = {
   }
 };
 
-function MockAppender(formatter) {
-  Log.Appender.call(this, formatter);
-  this.messages = [];
-}
-MockAppender.prototype = {
-  __proto__: Log.Appender.prototype,
+class MockAppender extends Log.Appender {
+  constructor(formatter) {
+    super(formatter);
+    this.messages = [];
+  }
 
-  doAppend: function DApp_doAppend(message) {
+  doAppend(message) {
     this.messages.push(message);
   }
-};
+}
 
 add_task(function test_Logger() {
   let log = Log.repository.getLogger("test.logger");
@@ -64,28 +63,6 @@ add_task(function test_Logger_parent() {
   Assert.ok(gpAppender.messages[0].indexOf("child info test") > 0);
 });
 
-add_test(function test_LoggerWithMessagePrefix() {
-  let log = Log.repository.getLogger("test.logger.prefix");
-  let appender = new MockAppender(new Log.MessageOnlyFormatter());
-  log.addAppender(appender);
-
-  let prefixed = Log.repository.getLoggerWithMessagePrefix(
-    "test.logger.prefix", "prefix: ");
-
-  log.warn("no prefix");
-  prefixed.warn("with prefix");
-  prefixed.warn `with prefix`;
-
-  Assert.equal(appender.messages.length, 3, "3 messages were logged.");
-  Assert.deepEqual(appender.messages, [
-    "no prefix",
-    "prefix: with prefix",
-    "prefix: with prefix",
-  ], "Prefix logger works.");
-
-  run_next_test();
-});
-
 /*
  * A utility method for checking object equivalence.
  * Fields with a reqular expression value in expected will be tested
@@ -110,225 +87,6 @@ function checkObjects(expected, actual) {
     Assert.notEqual(expected[key], undefined);
   }
 }
-
-add_task(function test_StructuredLogCommands() {
-  let appender = new MockAppender(new Log.StructuredFormatter());
-  let logger = Log.repository.getLogger("test.StructuredOutput");
-  logger.addAppender(appender);
-  logger.level = Log.Level.Info;
-
-  logger.logStructured("test_message", {_message: "message string one"});
-  logger.logStructured("test_message", {_message: "message string two",
-                                        _level: "ERROR",
-                                        source_file: "test_Log.js"});
-  logger.logStructured("test_message");
-  logger.logStructured("test_message", {source_file: "test_Log.js",
-                                        message_position: 4});
-
-  let messageOne = {"_time": /\d+/,
-                    "_namespace": "test.StructuredOutput",
-                    "_level": "INFO",
-                    "_message": "message string one",
-                    "action": "test_message"};
-
-  let messageTwo = {"_time": /\d+/,
-                    "_namespace": "test.StructuredOutput",
-                    "_level": "ERROR",
-                    "_message": "message string two",
-                    "action": "test_message",
-                    "source_file": "test_Log.js"};
-
-  let messageThree = {"_time": /\d+/,
-                      "_namespace": "test.StructuredOutput",
-                      "_level": "INFO",
-                      "action": "test_message"};
-
-  let messageFour = {"_time": /\d+/,
-                     "_namespace": "test.StructuredOutput",
-                     "_level": "INFO",
-                     "action": "test_message",
-                     "source_file": "test_Log.js",
-                     "message_position": 4};
-
-  checkObjects(messageOne, JSON.parse(appender.messages[0]));
-  checkObjects(messageTwo, JSON.parse(appender.messages[1]));
-  checkObjects(messageThree, JSON.parse(appender.messages[2]));
-  checkObjects(messageFour, JSON.parse(appender.messages[3]));
-
-  let errored = false;
-  try {
-    logger.logStructured("", {_message: "invalid message"});
-  } catch (e) {
-    errored = true;
-    Assert.equal(e, "An action is required when logging a structured message.");
-  } finally {
-    Assert.ok(errored);
-  }
-
-  errored = false;
-  try {
-    logger.logStructured("message_action", "invalid params");
-  } catch (e) {
-    errored = true;
-    Assert.equal(e, "The params argument is required to be an object.");
-  } finally {
-    Assert.ok(errored);
-  }
-
-  // Logging with unstructured interface should produce the same messages
-  // as the structured interface for these cases.
-  appender = new MockAppender(new Log.StructuredFormatter());
-  logger = Log.repository.getLogger("test.StructuredOutput1");
-  messageOne._namespace = "test.StructuredOutput1";
-  messageTwo._namespace = "test.StructuredOutput1";
-  logger.addAppender(appender);
-  logger.level = Log.Level.All;
-  logger.info("message string one", {action: "test_message"});
-  logger.error("message string two", {action: "test_message",
-                                      source_file: "test_Log.js"});
-
-  checkObjects(messageOne, JSON.parse(appender.messages[0]));
-  checkObjects(messageTwo, JSON.parse(appender.messages[1]));
-});
-
-add_task(function test_StorageStreamAppender() {
-  let appender = new Log.StorageStreamAppender(testFormatter);
-  Assert.equal(appender.getInputStream(), null);
-
-  // Log to the storage stream and verify the log was written and can be
-  // read back.
-  let logger = Log.repository.getLogger("test.StorageStreamAppender");
-  logger.addAppender(appender);
-  logger.info("OHAI");
-  let inputStream = appender.getInputStream();
-  let data = NetUtil.readInputStreamToString(inputStream,
-                                             inputStream.available());
-  Assert.equal(data, "test.StorageStreamAppender\tINFO\tOHAI\n");
-
-  // We can read it again even.
-  let sndInputStream = appender.getInputStream();
-  let sameData = NetUtil.readInputStreamToString(sndInputStream,
-                                                 sndInputStream.available());
-  Assert.equal(data, sameData);
-
-  // Reset the appender and log some more.
-  appender.reset();
-  Assert.equal(appender.getInputStream(), null);
-  logger.debug("wut?!?");
-  inputStream = appender.getInputStream();
-  data = NetUtil.readInputStreamToString(inputStream,
-                                         inputStream.available());
-  Assert.equal(data, "test.StorageStreamAppender\tDEBUG\twut?!?\n");
-});
-
-function fileContents(path) {
-  let decoder = new TextDecoder();
-  return OS.File.read(path).then(array => {
-    return decoder.decode(array);
-  });
-}
-
-add_task(async function test_FileAppender() {
-  // This directory does not exist yet
-  let dir = OS.Path.join(do_get_profile().path, "test_Log");
-  Assert.equal(false, await OS.File.exists(dir));
-  let path = OS.Path.join(dir, "test_FileAppender");
-  let appender = new Log.FileAppender(path, testFormatter);
-  let logger = Log.repository.getLogger("test.FileAppender");
-  logger.addAppender(appender);
-
-  // Logging to a file that can't be created won't do harm.
-  Assert.equal(false, await OS.File.exists(path));
-  logger.info("OHAI!");
-
-  await OS.File.makeDir(dir);
-  logger.info("OHAI");
-  await appender._lastWritePromise;
-
-  Assert.equal((await fileContents(path)),
-               "test.FileAppender\tINFO\tOHAI\n");
-
-  logger.info("OHAI");
-  await appender._lastWritePromise;
-
-  Assert.equal((await fileContents(path)),
-               "test.FileAppender\tINFO\tOHAI\n" +
-               "test.FileAppender\tINFO\tOHAI\n");
-
-  // Reset the appender and log some more.
-  await appender.reset();
-  Assert.equal(false, await OS.File.exists(path));
-
-  logger.debug("O RLY?!?");
-  await appender._lastWritePromise;
-  Assert.equal((await fileContents(path)),
-               "test.FileAppender\tDEBUG\tO RLY?!?\n");
-
-  await appender.reset();
-  logger.debug("1");
-  logger.info("2");
-  logger.info("3");
-  logger.info("4");
-  logger.info("5");
-  // Waiting on only the last promise should account for all of these.
-  await appender._lastWritePromise;
-
-  // Messages ought to be logged in order.
-  Assert.equal((await fileContents(path)),
-               "test.FileAppender\tDEBUG\t1\n" +
-               "test.FileAppender\tINFO\t2\n" +
-               "test.FileAppender\tINFO\t3\n" +
-               "test.FileAppender\tINFO\t4\n" +
-               "test.FileAppender\tINFO\t5\n");
-});
-
-add_task(async function test_BoundedFileAppender() {
-  let dir = OS.Path.join(do_get_profile().path, "test_Log");
-
-  if (!(await OS.File.exists(dir))) {
-    await OS.File.makeDir(dir);
-  }
-
-  let path = OS.Path.join(dir, "test_BoundedFileAppender");
-  // This appender will hold about two lines at a time.
-  let appender = new Log.BoundedFileAppender(path, testFormatter, 40);
-  let logger = Log.repository.getLogger("test.BoundedFileAppender");
-  logger.addAppender(appender);
-
-  logger.info("ONE");
-  logger.info("TWO");
-  await appender._lastWritePromise;
-
-  Assert.equal((await fileContents(path)),
-               "test.BoundedFileAppender\tINFO\tONE\n" +
-               "test.BoundedFileAppender\tINFO\tTWO\n");
-
-  logger.info("THREE");
-  logger.info("FOUR");
-
-  Assert.notEqual(appender._removeFilePromise, undefined);
-  await appender._removeFilePromise;
-  await appender._lastWritePromise;
-
-  Assert.equal((await fileContents(path)),
-               "test.BoundedFileAppender\tINFO\tTHREE\n" +
-               "test.BoundedFileAppender\tINFO\tFOUR\n");
-
-  await appender.reset();
-  logger.info("ONE");
-  logger.info("TWO");
-  logger.info("THREE");
-  logger.info("FOUR");
-
-  Assert.notEqual(appender._removeFilePromise, undefined);
-  await appender._removeFilePromise;
-  await appender._lastWritePromise;
-
-  Assert.equal((await fileContents(path)),
-               "test.BoundedFileAppender\tINFO\tTHREE\n" +
-               "test.BoundedFileAppender\tINFO\tFOUR\n");
-
-});
 
 /*
  * Test parameter formatting.
@@ -509,31 +267,6 @@ add_task(async function test_log_err_only() {
     Assert.equal(msg.message, null);
     Assert.equal(msg.params, e);
   }
-});
-
-/*
- * Test logStructured() messages through basic formatter.
- */
-add_task(async function test_structured_basic() {
-  let log = Log.repository.getLogger("test.logger");
-  let appender = new MockAppender(new Log.BasicFormatter());
-
-  log.level = Log.Level.Info;
-  appender.level = Log.Level.Info;
-  log.addAppender(appender);
-
-  // A structured entry with no _message is treated the same as log./level/(null, params)
-  // except the 'action' field is added to the object.
-  log.logStructured("action", {data: "structure"});
-  Assert.equal(appender.messages.length, 1);
-  Assert.ok(appender.messages[0].includes('{"data":"structure","action":"action"}'));
-
-  // A structured entry with _message and substitution is treated the same as
-  // log./level/(null, params).
-  log.logStructured("action", {_message: "Structured sub ${data}", data: "structure"});
-  Assert.equal(appender.messages.length, 2);
-  info(appender.messages[1]);
-  Assert.ok(appender.messages[1].includes("Structured sub structure"));
 });
 
 /*
