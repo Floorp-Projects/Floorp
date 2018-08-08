@@ -20,7 +20,8 @@ internal class ExperimentsSerializer {
      * Transforms the given list of experiments to
      * its json file representation
      *
-     * @param snapshot experiments to serialize
+     * @param snapshot experiment snapshot to serialize
+     *
      * @return json file representation of the given experiments
      */
     fun toJson(snapshot: ExperimentsSnapshot): String {
@@ -39,7 +40,8 @@ internal class ExperimentsSerializer {
      * representation, as stored locally inside a file
      *
      * @param json json file contents
-     * @return list of experiments
+     *
+     * @return experiment snapshot with the parsed list of experiments
      */
     fun fromJson(json: String): ExperimentsSnapshot {
         val experimentsJson = JSONObject(json)

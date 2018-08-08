@@ -18,6 +18,7 @@ interface HttpClient {
      *
      * @param url destination url
      * @param headers headers to submit with the request
+     *
      * @return HTTP response
      */
     fun get(url: URL, headers: Map<String, String>? = null): String

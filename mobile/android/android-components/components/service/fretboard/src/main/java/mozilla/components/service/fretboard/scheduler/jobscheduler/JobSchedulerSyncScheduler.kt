@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit
 /**
  * Class used to schedule sync of experiment
  * configuration from the server
+ *
+ * @param context context
  */
 class JobSchedulerSyncScheduler(context: Context) {
     private val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
@@ -30,6 +32,7 @@ class JobSchedulerSyncScheduler(context: Context) {
      * Schedule sync with the default constraints
      * (once a day)
      *
+     * @param jobId unique identifier of the job
      * @param serviceName object with the service to run
      */
     fun schedule(jobId: Int, serviceName: ComponentName) {

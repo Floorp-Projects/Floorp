@@ -15,9 +15,10 @@ import org.json.JSONObject
  * Class responsible for fetching and
  * parsing experiments from a Kinto server
  *
- * @param baseUrl Kinto server url
- * @param bucketName name of the bucket to fetch
- * @param collectionName name of the collection to fetch
+ * @property baseUrl Kinto server url
+ * @property bucketName name of the bucket to fetch
+ * @property collectionName name of the collection to fetch
+ * @property client http client to use
  */
 class KintoExperimentSource(
     private val baseUrl: String,

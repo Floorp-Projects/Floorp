@@ -8,7 +8,23 @@ import android.content.Context
 import android.text.TextUtils
 import java.util.zip.CRC32
 
+/**
+ * Class used to determine if a specific experiment should be enabled or not
+ * for the device the app is running in
+ *
+ * @property valuesProvider provider for the device's values
+ */
 internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = ValuesProvider()) {
+    /**
+     * Determines if a specific experiment should be enabled or not for the device
+     *
+     * @param context context
+     * @param experimentDescriptor experiment descriptor
+     * @param experiments list of all experiments
+     * @param userBucket device bucket
+     *
+     * @return experiment object if the device is part of the experiment, null otherwise
+     */
     fun evaluate(
         context: Context,
         experimentDescriptor: ExperimentDescriptor,
@@ -22,6 +38,14 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
         }
     }
 
+    /**
+     * Finds an experiment given its descriptor
+     *
+     * @param descriptor experiment descriptor
+     * @param experiments experiment list
+     *
+     * @return found experiment or null
+     */
     fun getExperiment(descriptor: ExperimentDescriptor, experiments: List<Experiment>): Experiment? {
         return experiments.firstOrNull { it.name == descriptor.name }
     }
@@ -70,6 +94,13 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
         return (checksum % MAX_BUCKET).toInt()
     }
 
+    /**
+     * Overrides a specified experiment
+     *
+     * @param context context
+     * @param descriptor descriptor of the experiment
+     * @param active overridden value for the experiment, true to activate it, false to deactivate
+     */
     fun setOverride(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
         context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
             .edit()
@@ -77,6 +108,12 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
             .apply()
     }
 
+    /**
+     * Clears an override for a specified experiment
+     *
+     * @param context context
+     * @param descriptor descriptor of the experiment
+     */
     fun clearOverride(context: Context, descriptor: ExperimentDescriptor) {
         context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
             .edit()
@@ -84,6 +121,11 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
             .apply()
     }
 
+    /**
+     * Clears all experiment overrides
+     *
+     * @param context context
+     */
     fun clearAllOverrides(context: Context) {
         context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
             .edit()

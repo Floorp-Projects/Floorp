@@ -55,6 +55,7 @@ class JSONExperimentParser {
      * Converts the specified experiment to json
      *
      * @param experiment experiment to convert
+     *
      * @return json representation of the experiment
      */
     fun toJson(experiment: Experiment): JSONObject {

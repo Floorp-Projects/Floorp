@@ -7,7 +7,22 @@ package mozilla.components.service.fretboard
 import android.content.Context
 import java.util.UUID
 
+/**
+ * Class used to generate a random UUID for the device
+ * and store it persistent in shared preferences.
+ *
+ * If the UUID was already generated it returns the stored one
+ *
+ * @param context context
+ */
 internal class DeviceUuidFactory(context: Context) {
+    /**
+     * Unique UUID for the current android device. As with all UUIDs,
+     * this unique ID is "very highly likely" to be unique across all Android
+     * devices. Much more so than ANDROID_ID is
+     *
+     * The UUID is generated with <code>UUID.randomUUID()</code>
+     */
     val uuid by lazy {
         val preferences = context
             .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)

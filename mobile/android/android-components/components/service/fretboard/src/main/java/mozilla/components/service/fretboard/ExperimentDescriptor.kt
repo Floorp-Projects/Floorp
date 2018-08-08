@@ -4,4 +4,9 @@
 
 package mozilla.components.service.fretboard
 
+/**
+ * Class used to identify an experiment
+ *
+ * @property name experiment name
+ */
 data class ExperimentDescriptor(val name: String)

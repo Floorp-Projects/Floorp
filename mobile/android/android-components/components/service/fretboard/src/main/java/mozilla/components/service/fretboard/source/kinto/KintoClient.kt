@@ -9,11 +9,11 @@ import java.net.URL
 /**
  * Helper class to make it easier to interact with Kinto
  *
- * @param httpClient http client to use
- * @param baseUrl Kinto server url
- * @param bucketName name of the bucket to fetch
- * @param collectionName name of the collection to fetch
- * @param headers headers to provide along with the request
+ * @property httpClient http client to use
+ * @property baseUrl Kinto server url
+ * @property bucketName name of the bucket to fetch
+ * @property collectionName name of the collection to fetch
+ * @property headers headers to provide along with the request
  */
 internal class KintoClient(
     private val httpClient: HttpClient = HttpURLConnectionHttpClient(),
@@ -35,7 +35,8 @@ internal class KintoClient(
     /**
      * Performs a diff, given the last_modified time
      *
-     * @param lastModified last modified time
+     * @param lastModified last modified time as a UNIX timestamp
+     *
      * @return Kinto diff response
      */
     fun diff(lastModified: Long): String {

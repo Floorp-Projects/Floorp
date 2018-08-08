@@ -8,6 +8,12 @@ package mozilla.components.service.fretboard
  * Represents an experiment sync result
  */
 data class ExperimentsSnapshot(
+    /**
+     * Downloaded list of experiments
+     */
     val experiments: List<Experiment>,
+    /**
+     * Last time experiments were modified on the server, as a UNIX timestamp
+     */
     val lastModified: Long?
 )

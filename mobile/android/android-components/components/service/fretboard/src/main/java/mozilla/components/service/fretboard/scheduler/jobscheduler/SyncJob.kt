@@ -9,6 +9,9 @@ import android.app.job.JobService
 import mozilla.components.service.fretboard.Fretboard
 import java.util.concurrent.Executors
 
+/**
+ * JobScheduler job used to updating the list of experiments
+ */
 abstract class SyncJob : JobService() {
     private val executor = Executors.newSingleThreadExecutor()
 
