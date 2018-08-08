@@ -110,6 +110,11 @@ BackgroundVideoDecodingPermissionObserver::EnableEvent() const
     return;
   }
 
+  nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
+  if (!ownerTop) {
+    return;
+  }
+
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(doc,
                              NS_LITERAL_STRING("UnselectedTabHover:Enable"),
@@ -123,6 +128,11 @@ BackgroundVideoDecodingPermissionObserver::DisableEvent() const
 {
   nsIDocument* doc = GetOwnerDoc();
   if (!doc) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
+  if (!ownerTop) {
     return;
   }
 
