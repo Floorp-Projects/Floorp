@@ -243,7 +243,7 @@ gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar,
                           rect.Height() - 2.0 * halfBorderWidth);
     if (!borderStrokeRect.IsEmpty()) {
         ColorPattern adjustedColor = color;
-        color.mColor.a *= BOX_BORDER_OPACITY;
+        adjustedColor.mColor.a *= BOX_BORDER_OPACITY;
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
         aDrawTarget.FillRect(borderStrokeRect, adjustedColor);
 #else
