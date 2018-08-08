@@ -265,8 +265,8 @@ var ctrlTab = {
 
     aPreview._tab = aTab;
 
-    if (aPreview._canvas.firstChild) {
-      aPreview._canvas.firstChild.remove();
+    if (aPreview._canvas.firstElementChild) {
+      aPreview._canvas.firstElementChild.remove();
     }
 
     if (aTab) {

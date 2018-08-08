@@ -91,7 +91,7 @@ AreaPositionManager.prototype = {
       if (aY > targetBounds.top && aY < targetBounds.bottom) {
         if ((this._dir == "ltr" && aX > outsideX) ||
             (this._dir == "rtl" && aX < outsideX)) {
-          return closest.nextSibling || aContainer;
+          return closest.nextElementSibling || aContainer;
         }
       }
     }
@@ -128,10 +128,10 @@ AreaPositionManager.prototype = {
         child.style.transform = "";
       }
     }
-    if (aContainer.lastChild && aIsFromThisArea &&
+    if (aContainer.lastElementChild && aIsFromThisArea &&
         !this._lastPlaceholderInsertion) {
       // Flush layout:
-      aContainer.lastChild.getBoundingClientRect();
+      aContainer.lastElementChild.getBoundingClientRect();
       // then remove all the [notransition]
       for (let child of aContainer.children) {
         child.removeAttribute("notransition");

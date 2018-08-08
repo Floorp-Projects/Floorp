@@ -1023,7 +1023,7 @@ BrowserPageActions.sendToDevice = {
     notReady.setAttribute("label", "sendToDevice-notReadyTitle");
     notReady.setAttribute("disabled", "true");
     bodyNode.appendChild(notReady);
-    for (let node of bodyNode.childNodes) {
+    for (let node of bodyNode.children) {
       BrowserPageActions.takeNodeAttributeFromPanel(node, "title");
       BrowserPageActions.takeNodeAttributeFromPanel(node, "shortcut");
     }
@@ -1218,7 +1218,7 @@ BrowserPageActions.shareURL = {
 
     // We cache the providers + the UI if the user selects the share
     // panel multiple times while the panel is open.
-    if (this._cached && bodyNode.childNodes.length > 0) {
+    if (this._cached && bodyNode.children.length > 0) {
       return;
     }
 

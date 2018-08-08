@@ -572,9 +572,9 @@ var PanelMultiView = class extends AssociatedToNode {
       return;
     }
 
-    // Node.children and Node.childNodes is live to DOM changes like the
+    // Node.children and Node.children is live to DOM changes like the
     // ones we're about to do, so iterate over a static copy:
-    let subviews = Array.from(this._viewStack.childNodes);
+    let subviews = Array.from(this._viewStack.children);
     let viewCache = this.document.getElementById(viewCacheId);
     for (let subview of subviews) {
       viewCache.appendChild(subview);
@@ -875,7 +875,7 @@ var PanelMultiView = class extends AssociatedToNode {
       nextPanelView.visible = true;
       // Until the header is visible, it has 0 height.
       // Wait for layout before measuring it
-      let header = viewNode.firstChild;
+      let header = viewNode.firstElementChild;
       if (header && header.classList.contains("panel-header")) {
         viewRect.height += await window.promiseDocumentFlushed(() => {
           return this._dwu.getBoundsWithoutFlushing(header).height;
@@ -1203,7 +1203,7 @@ var PanelView = class extends AssociatedToNode {
    */
   set headerText(value) {
     // If the header already exists, update or remove it as requested.
-    let header = this.node.firstChild;
+    let header = this.node.firstElementChild;
     if (header && header.classList.contains("panel-header")) {
       if (value) {
         header.querySelector("label").setAttribute("value", value);

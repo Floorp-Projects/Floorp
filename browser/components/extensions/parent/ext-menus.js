@@ -76,7 +76,7 @@ var gMenuBuilder = {
 
     if (visible.length) {
       const separator = menu.ownerDocument.createElement("menuseparator");
-      menu.insertBefore(separator, menu.firstChild);
+      menu.insertBefore(separator, menu.firstElementChild);
       this.itemsToCleanUp.add(separator);
 
       for (const child of visible) {
@@ -91,7 +91,7 @@ var gMenuBuilder = {
     const element = this.buildSingleElement(item, contextData);
     const children = this.buildChildren(item, contextData);
     if (children.length) {
-      element.firstChild.append(...children);
+      element.firstElementChild.append(...children);
     }
     return element;
   },
@@ -118,7 +118,7 @@ var gMenuBuilder = {
 
   createTopLevelElement(root, contextData) {
     let rootElement = this.buildElementWithChildren(root, contextData);
-    if (!rootElement.firstChild || !rootElement.firstChild.childNodes.length) {
+    if (!rootElement.firstElementChild || !rootElement.firstElementChild.children.length) {
       // If the root has no visible children, there is no reason to show
       // the root menu item itself either.
       return null;
@@ -156,9 +156,9 @@ var gMenuBuilder = {
   removeTopLevelMenuIfNeeded(element) {
     // If there is only one visible top level element we don't need the
     // root menu element for the extension.
-    let menuPopup = element.firstChild;
-    if (menuPopup && menuPopup.childNodes.length == 1) {
-      let onlyChild = menuPopup.firstChild;
+    let menuPopup = element.firstElementChild;
+    if (menuPopup && menuPopup.children.length == 1) {
+      let onlyChild = menuPopup.firstElementChild;
 
       // Keep single checkbox items in the submenu on Linux since
       // the extension icon overlaps the checkbox otherwise.

@@ -398,7 +398,7 @@ const gClickAndHoldListenersOnElement = {
       return;
 
     // Prevent the menupopup from opening immediately
-    aEvent.currentTarget.firstChild.hidden = true;
+    aEvent.currentTarget.firstElementChild.hidden = true;
 
     aEvent.currentTarget.addEventListener("mouseout", this);
     aEvent.currentTarget.addEventListener("mouseup", this);
@@ -425,7 +425,7 @@ const gClickAndHoldListenersOnElement = {
 
   _openMenu(aButton) {
     this._cancelHold(aButton);
-    aButton.firstChild.hidden = false;
+    aButton.firstElementChild.hidden = false;
     aButton.open = true;
   },
 
@@ -753,9 +753,9 @@ var gPopupBlockerObserver = {
   },
 
   onPopupHiding(aEvent) {
-    let item = aEvent.target.lastChild;
+    let item = aEvent.target.lastElementChild;
     while (item && item.id != "blockedPopupsSeparator") {
-      let next = item.previousSibling;
+      let next = item.previousElementSibling;
       item.remove();
       item = next;
     }
@@ -2767,16 +2767,16 @@ function UpdateUrlbarSearchSplitterState() {
 
   // If the splitter is already in the right place, we don't need to do anything:
   if (splitter &&
-      ((splitter.nextSibling == searchbar && splitter.previousSibling == urlbar) ||
-       (splitter.nextSibling == urlbar && splitter.previousSibling == searchbar))) {
+      ((splitter.nextElementSibling == searchbar && splitter.previousElementSibling == urlbar) ||
+       (splitter.nextElementSibling == urlbar && splitter.previousElementSibling == searchbar))) {
     return;
   }
 
   var ibefore = null;
   if (urlbar && searchbar) {
-    if (urlbar.nextSibling == searchbar)
+    if (urlbar.nextElementSibling == searchbar)
       ibefore = searchbar;
-    else if (searchbar.nextSibling == urlbar)
+    else if (searchbar.nextElementSibling == urlbar)
       ibefore = urlbar;
   }
 
@@ -4120,7 +4120,7 @@ function FillHistoryMenu(aParent) {
   }
 
   // Remove old entries if any
-  let children = aParent.childNodes;
+  let children = aParent.children;
   for (var i = children.length - 1; i >= 0; --i) {
     if (children[i].hasAttribute("index"))
       aParent.removeChild(children[i]);
@@ -4204,7 +4204,7 @@ function FillHistoryMenu(aParent) {
     if (!initial) {
       let existingLength = children.length;
       while (existingIndex < existingLength) {
-        aParent.removeChild(aParent.lastChild);
+        aParent.removeChild(aParent.lastElementChild);
         existingIndex++;
       }
     }
@@ -5511,15 +5511,15 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     return;
 
   // Empty the menu
-  for (var i = popup.childNodes.length - 1; i >= 0; --i) {
-    var deadItem = popup.childNodes[i];
+  for (var i = popup.children.length - 1; i >= 0; --i) {
+    var deadItem = popup.children[i];
     if (deadItem.hasAttribute("toolbarId"))
       popup.removeChild(deadItem);
   }
 
-  var firstMenuItem = aInsertPoint || popup.firstChild;
+  var firstMenuItem = aInsertPoint || popup.firstElementChild;
 
-  let toolbarNodes = gNavToolbox.childNodes;
+  let toolbarNodes = gNavToolbox.children;
 
   for (let toolbar of toolbarNodes) {
     if (!toolbar.hasAttribute("toolbarname")) {
@@ -5555,7 +5555,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   let toolbarItem = popup.triggerNode;
 
   if (toolbarItem && toolbarItem.localName == "toolbarpaletteitem") {
-    toolbarItem = toolbarItem.firstChild;
+    toolbarItem = toolbarItem.firstElementChild;
   } else if (toolbarItem && toolbarItem.localName != "toolbar") {
     while (toolbarItem && toolbarItem.parentNode) {
       let parent = toolbarItem.parentNode;
@@ -6239,7 +6239,7 @@ function getUnwrappedTriggerNode(popup) {
   // Toolbar buttons are wrapped in customize mode. Unwrap if necessary.
   let {triggerNode} = popup;
   if (triggerNode && gCustomizeMode.isWrappedToolbarItem(triggerNode)) {
-    return triggerNode.firstChild;
+    return triggerNode.firstElementChild;
   }
   return triggerNode;
 }
@@ -6336,11 +6336,11 @@ var gPageStyleMenu = {
 
   fillPopup(menuPopup) {
     let styleSheetInfo = this._getStyleSheetInfo(gBrowser.selectedBrowser);
-    var noStyle = menuPopup.firstChild;
-    var persistentOnly = noStyle.nextSibling;
-    var sep = persistentOnly.nextSibling;
-    while (sep.nextSibling)
-      menuPopup.removeChild(sep.nextSibling);
+    var noStyle = menuPopup.firstElementChild;
+    var persistentOnly = noStyle.nextElementSibling;
+    var sep = persistentOnly.nextElementSibling;
+    while (sep.nextElementSibling)
+      menuPopup.removeChild(sep.nextElementSibling);
 
     let styleSheets = styleSheetInfo.filteredStyleSheets;
     var currentStyleSheets = {};
@@ -8076,7 +8076,7 @@ TabModalPromptBox.prototype = {
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
     let browser = this.browser;
-    browser.parentNode.insertBefore(newPrompt, browser.nextSibling);
+    browser.parentNode.insertBefore(newPrompt, browser.nextElementSibling);
     browser.setAttribute("tabmodalPromptShowing", true);
 
     newPrompt.clientTop; // style flush to assure binding is attached

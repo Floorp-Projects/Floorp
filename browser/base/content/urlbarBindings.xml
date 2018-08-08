@@ -111,10 +111,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             pasteAndGo.setAttribute("disabled", "true");
         });
 
-        var insertLocation = cxmenu.firstChild;
-        while (insertLocation.nextSibling &&
+        var insertLocation = cxmenu.firstElementChild;
+        while (insertLocation.nextElementSibling &&
                insertLocation.getAttribute("cmd") != "cmd_paste")
-          insertLocation = insertLocation.nextSibling;
+          insertLocation = insertLocation.nextElementSibling;
         if (insertLocation) {
           pasteAndGo = document.createXULElement("menuitem");
           let label = Services.strings.createBundle("chrome://browser/locale/browser.properties").
@@ -123,7 +123,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           pasteAndGo.setAttribute("anonid", "paste-and-go");
           pasteAndGo.setAttribute("oncommand",
               "gURLBar.select(); goDoCommand('cmd_paste'); gURLBar.handleCommand();");
-          cxmenu.insertBefore(pasteAndGo, insertLocation.nextSibling);
+          cxmenu.insertBefore(pasteAndGo, insertLocation.nextElementSibling);
         }
 
         this.popup.addEventListener("popupshowing", () => {
@@ -2235,7 +2235,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Do this immediately after we've requested the popup to open. This
           // will cause sync reflows but prevents flickering.
           if (needsHandleOverUnderflow) {
-            for (let item of this.richlistbox.childNodes) {
+            for (let item of this.richlistbox.children) {
               item.handleOverUnderflow();
             }
           }
@@ -2252,7 +2252,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
           let lastRowCount = this._lastRowCount;
           // Figure out how many rows to show
-          let rows = this.richlistbox.childNodes;
+          let rows = this.richlistbox.children;
           this._lastRowCount = rows.length;
           let numRows = Math.min(this.matchCount, this.maxRows, rows.length);
 
@@ -2391,7 +2391,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           // Update all searchengine result items to use the newly selected
           // engine.
-          for (let item of this.richlistbox.childNodes) {
+          for (let item of this.richlistbox.children) {
             if (item.collapsed) {
               break;
             }

@@ -147,7 +147,7 @@ const CustomizableWidgets = [
       body.appendChild(fragment);
       let footer;
       while (--elementCount >= 0) {
-        let element = body.childNodes[elementCount];
+        let element = body.children[elementCount];
         CustomizableUI.addShortcut(element);
         element.classList.add("subviewbutton");
         if (element.classList.contains("restoreallitem")) {
@@ -401,7 +401,7 @@ const CustomizableWidgets = [
 
       let pinnedContainer = aDocument.getElementById("PanelUI-characterEncodingView-pinned");
       let charsetContainer = aDocument.getElementById("PanelUI-characterEncodingView-charsets");
-      let elements = [...(pinnedContainer.childNodes), ...(charsetContainer.childNodes)];
+      let elements = [...(pinnedContainer.children), ...(charsetContainer.children)];
 
       this._updateElements(elements, currentCharset);
     },
@@ -413,7 +413,7 @@ const CustomizableWidgets = [
           "intl.charset.detector", Ci.nsIPrefLocalizedString).data;
       } catch (e) {}
 
-      this._updateElements(detectorContainer.childNodes, currentDetector);
+      this._updateElements(detectorContainer.children, currentDetector);
     },
     _updateElements(aElements, aCurrentItem) {
       if (!aElements.length) {
@@ -643,7 +643,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
 
         for (let client of clients) {
           // add a menu separator for all clients other than the first.
-          if (fragment.lastChild) {
+          if (fragment.lastElementChild) {
             let separator = doc.createElementNS(kNSXUL, "menuseparator");
             fragment.appendChild(separator);
           }

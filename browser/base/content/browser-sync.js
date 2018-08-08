@@ -373,8 +373,8 @@ var gSync = {
     }
 
     // remove existing menu items
-    for (let i = devicesPopup.childNodes.length - 1; i >= 0; --i) {
-      let child = devicesPopup.childNodes[i];
+    for (let i = devicesPopup.children.length - 1; i >= 0; --i) {
+      let child = devicesPopup.children[i];
       if (child.classList.contains("sync-menuitem")) {
         child.remove();
       }
@@ -476,7 +476,7 @@ var gSync = {
     signInItem.addEventListener("command", () => {
       this.openPrefs("sendtab");
     });
-    fragment.insertBefore(signInItem, fragment.lastChild);
+    fragment.insertBefore(signInItem, fragment.lastElementChild);
   },
 
   _appendSendTabInfoItems(fragment, createDeviceNodeFn, statusLabel, actions) {
