@@ -37,13 +37,16 @@ TextDecoder::InitWithEncoding(NotNull<const Encoding*> aEncoding,
                               const TextDecoderOptions& aOptions)
 {
   aEncoding->Name(mEncoding);
-  // If the constructor is called with an options argument,
-  // and the fatal property of the dictionary is set,
-  // set the internal fatal flag of the decoder object.
+  // Store the flags passed via our options dictionary.
   mFatal = aOptions.mFatal;
+  mIgnoreBOM = aOptions.mIgnoreBOM;
 
   // Create a decoder object for mEncoding.
-  mDecoder = aEncoding->NewDecoderWithBOMRemoval();
+  if (mIgnoreBOM) {
+    mDecoder = aEncoding->NewDecoderWithoutBOMHandling();
+  } else {
+    mDecoder = aEncoding->NewDecoderWithBOMRemoval();
+  }
 }
 
 void

@@ -42,6 +42,7 @@ public:
 
   TextDecoder()
     : mFatal(false)
+    , mIgnoreBOM(false)
   {
     MOZ_COUNT_CTOR(TextDecoder);
   }
@@ -113,10 +114,15 @@ public:
     return mFatal;
   }
 
+  bool IgnoreBOM() const {
+    return mIgnoreBOM;
+  }
+
 private:
   nsCString mEncoding;
   mozilla::UniquePtr<mozilla::Decoder> mDecoder;
   bool mFatal;
+  bool mIgnoreBOM;
 };
 
 } // namespace dom
