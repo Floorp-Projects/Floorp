@@ -34,24 +34,32 @@ const ROWS_PREF = "topSitesRows";
 
 // Search experiment stuff
 const NO_DEFAULT_SEARCH_TILE_EXP_PREF = "improvesearch.noDefaultSearchTile";
-const SEARCH_FILTERS = [
-  "google",
-  "search.yahoo",
-  "yahoo",
-  "bing",
-  "ask",
-  "duckduckgo"
+const SEARCH_HOST_FILTERS = [
+  {hostname: "google", identifierPattern: /^google/},
+  {hostname: "amazon", identifierPattern: /^amazon/}
 ];
 
-function getShortURLForCurrentSearch() {
-  const url = shortURL({url: Services.search.currentEngine.searchForm});
-  return url;
+/**
+ * isLinkDefaultSearch - does a given hostname match the user's default search engine?
+ *
+ * @param {string} hostname a top site hostname, such as "amazon" or "foo"
+ * @returns {bool}
+ */
+function isLinkDefaultSearch(hostname) {
+  for (const searchProvider of SEARCH_HOST_FILTERS) {
+    if (
+      hostname === searchProvider.hostname &&
+      String(Services.search.defaultEngine.identifier).match(searchProvider.identifierPattern)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
-    this._currentSearchHostname = null;
     this.dedupe = new Dedupe(this._dedupeKey);
     this.frecentCache = new LinksCache(NewTabUtils.activityStreamLinks,
       "getTopSites", CACHED_LINK_PROPS_TO_MIGRATE, (oldOptions, newOptions) =>
@@ -68,20 +76,17 @@ this.TopSitesFeed = class TopSitesFeed {
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({broadcast: true});
     Services.obs.addObserver(this, "browser-search-engine-modified");
-    this._currentSearchHostname = getShortURLForCurrentSearch();
   }
 
   uninit() {
     PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
-    this._currentSearchHostname = null;
   }
 
   observe(subj, topic, data) {
     // We should update the current top sites if the search engine has been changed since
     // the search engine that gets filtered out of top sites has changed.
-    if (topic === "browser-search-engine-modified" && data === "engine-current" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
-      this._currentSearchHostname = getShortURLForCurrentSearch();
+    if (topic === "browser-search-engine-modified" && data === "engine-default" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
       this.refresh({broadcast: true});
     }
   }
@@ -118,23 +123,8 @@ this.TopSitesFeed = class TopSitesFeed {
     }, []));
   }
 
-  /**
-   * isExperimentOnAndLinkFilteredSearch - is the experiment on and does a given hostname match the user's default search engine?
-   *
-   * @param {string} hostname a top site hostname, such as "amazon" or "foo"
-   * @returns {bool}
-   */
-  isExperimentOnAndLinkFilteredSearch(hostname) {
-    if (!this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
-      return false;
-    }
-    if (SEARCH_FILTERS.includes(hostname) || hostname === this._currentSearchHostname) {
-      return true;
-    }
-    return false;
-  }
-
   async getLinksWithDefaults() {
+    const isExperimentOn = this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF];
     const numItems = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
 
     // Get all frecent sites from history
@@ -144,7 +134,7 @@ this.TopSitesFeed = class TopSitesFeed {
     }))
     .reduce((validLinks, link) => {
       const hostname = shortURL(link);
-      if (!this.isExperimentOnAndLinkFilteredSearch(hostname)) {
+      if (!(isExperimentOn && isLinkDefaultSearch(hostname))) {
         validLinks.push({...link, hostname});
       }
       return validLinks;
@@ -155,7 +145,7 @@ this.TopSitesFeed = class TopSitesFeed {
       .filter(link => {
         if (NewTabUtils.blockedLinks.isBlocked({url: link.url})) {
           return false;
-        } else if (this.isExperimentOnAndLinkFilteredSearch(link.hostname)) {
+        } else if (isExperimentOn && isLinkDefaultSearch(link.hostname)) {
           return false;
         }
         return true;

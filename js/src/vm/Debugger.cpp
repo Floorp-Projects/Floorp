@@ -837,6 +837,9 @@ Debugger::hasAnyLiveHooks(JSRuntime* rt) const
     if (!enabled)
         return false;
 
+    // A onNewGlobalObject hook does not hold its Debugger live, so its behavior
+    // is nondeterministic. This behavior is not satisfying, but it is at least
+    // documented.
     if (getHook(OnDebuggerStatement) ||
         getHook(OnExceptionUnwind) ||
         getHook(OnNewScript) ||

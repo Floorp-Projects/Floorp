@@ -42,29 +42,115 @@ var consoleAppender;
 // A set of all preference roots used by all instances.
 var allBranches = new Set();
 
+const ONE_BYTE = 1;
+const ONE_KILOBYTE = 1024 * ONE_BYTE;
+const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
+
+const STREAM_SEGMENT_SIZE = 4096;
+const PR_UINT32_MAX = 0xffffffff;
+
+/**
+ * Append to an nsIStorageStream
+ *
+ * This writes logging output to an in-memory stream which can later be read
+ * back as an nsIInputStream. It can be used to avoid expensive I/O operations
+ * during logging. Instead, one can periodically consume the input stream and
+ * e.g. write it to disk asynchronously.
+ */
+class StorageStreamAppender extends Log.Appender {
+  constructor(formatter) {
+    super(formatter);
+    this._name = "StorageStreamAppender";
+
+    this._converterStream = null; // holds the nsIConverterOutputStream
+    this._outputStream = null; // holds the underlying nsIOutputStream
+
+    this._ss = null;
+  }
+
+  get outputStream() {
+    if (!this._outputStream) {
+      // First create a raw stream. We can bail out early if that fails.
+      this._outputStream = this.newOutputStream();
+      if (!this._outputStream) {
+        return null;
+      }
+
+      // Wrap the raw stream in an nsIConverterOutputStream. We can reuse
+      // the instance if we already have one.
+      if (!this._converterStream) {
+        this._converterStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                                  .createInstance(Ci.nsIConverterOutputStream);
+      }
+      this._converterStream.init(this._outputStream, "UTF-8");
+    }
+    return this._converterStream;
+  }
+
+  newOutputStream() {
+    let ss = this._ss = Cc["@mozilla.org/storagestream;1"]
+                          .createInstance(Ci.nsIStorageStream);
+    ss.init(STREAM_SEGMENT_SIZE, PR_UINT32_MAX, null);
+    return ss.getOutputStream(0);
+  }
+
+  getInputStream() {
+    if (!this._ss) {
+      return null;
+    }
+    return this._ss.newInputStream(0);
+  }
+
+  reset() {
+    if (!this._outputStream) {
+      return;
+    }
+    this.outputStream.close();
+    this._outputStream = null;
+    this._ss = null;
+  }
+
+  doAppend(formatted) {
+    if (!formatted) {
+      return;
+    }
+    try {
+      this.outputStream.writeString(formatted + "\n");
+    } catch (ex) {
+      if (ex.result == Cr.NS_BASE_STREAM_CLOSED) {
+        // The underlying output stream is closed, so let's open a new one
+        // and try again.
+        this._outputStream = null;
+      } try {
+          this.outputStream.writeString(formatted + "\n");
+      } catch (ex) {
+        // Ah well, we tried, but something seems to be hosed permanently.
+      }
+    }
+  }
+}
+
 // A storage appender that is flushable to a file on disk.  Policies for
 // when to flush, to what file, log rotation etc are up to the consumer
 // (although it does maintain a .sawError property to help the consumer decide
 // based on its policies)
-function FlushableStorageAppender(formatter) {
-  Log.StorageStreamAppender.call(this, formatter);
-  this.sawError = false;
-}
-
-FlushableStorageAppender.prototype = {
-  __proto__: Log.StorageStreamAppender.prototype,
+class FlushableStorageAppender extends StorageStreamAppender {
+  constructor(formatter) {
+    super(formatter);
+    this.sawError = false;
+  }
 
   append(message) {
     if (message.level >= Log.Level.Error) {
       this.sawError = true;
     }
-    Log.StorageStreamAppender.prototype.append.call(this, message);
-  },
+    StorageStreamAppender.prototype.append.call(this, message);
+  }
 
   reset() {
-    Log.StorageStreamAppender.prototype.reset.call(this);
+    super.reset();
     this.sawError = false;
-  },
+  }
 
   // Flush the current stream to a file. Somewhat counter-intuitively, you
   // must pass a log which will be written to with details of the operation.
@@ -83,7 +169,7 @@ FlushableStorageAppender.prototype = {
     } catch (ex) {
       log.error("Failed to copy log stream to file", ex);
     }
-  },
+  }
 
   /**
    * Copy an input stream to the named file, doing everything off the main
@@ -124,14 +210,16 @@ FlushableStorageAppender.prototype = {
       }
     }
     log.trace("finished copy to", fullOutputFileName);
-  },
-};
+  }
+}
 
 // The public LogManager object.
 function LogManager(prefRoot, logNames, logFilePrefix) {
   this._prefObservers = [];
   this.init(prefRoot, logNames, logFilePrefix);
 }
+
+LogManager.StorageStreamAppender = StorageStreamAppender;
 
 LogManager.prototype = {
   _cleaningUpFileLogs: false,

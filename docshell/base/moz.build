@@ -37,7 +37,6 @@ DIRS += [
 
 XPIDL_SOURCES += [
     'nsCDefaultURIFixup.idl',
-    'nsIClipboardCommands.idl',
     'nsIContentViewer.idl',
     'nsIContentViewerEdit.idl',
     'nsIDocShell.idl',
@@ -49,7 +48,6 @@ XPIDL_SOURCES += [
     'nsIReflowObserver.idl',
     'nsIRefreshURI.idl',
     'nsIScrollable.idl',
-    'nsITextScroll.idl',
     'nsITooltipListener.idl',
     'nsITooltipTextProvider.idl',
     'nsIURIFixup.idl',
@@ -62,12 +60,12 @@ XPIDL_MODULE = 'docshell'
 
 EXPORTS += [
     'nsCTooltipTextProvider.h',
+    'nsDocShell.h',
     'nsDocShellLoadInfo.h',
     'nsDocShellLoadTypes.h',
     'nsDocShellTreeOwner.h',
     'nsILinkHandler.h',
     'nsIScrollObserver.h',
-    'nsIWebShellServices.h',
     'SerializedLoadContext.h',
 ]
 

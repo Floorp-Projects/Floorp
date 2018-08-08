@@ -588,7 +588,7 @@ var State = {
       } else if (id == 1) {
         name = BRAND_NAME;
         image = "chrome://branding/content/icon32.png";
-      } else if (/[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}/.test(host)) {
+      } else if (/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(host)) {
         let addon = WebExtensionPolicy.getByHostname(host);
         name = `${addon.name} (${addon.id})`;
         image = "chrome://mozapps/skin/extensions/extensionGeneric-16.svg";

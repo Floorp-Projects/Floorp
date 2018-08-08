@@ -6,17 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const ONE_BYTE = 1;
-const ONE_KILOBYTE = 1024 * ONE_BYTE;
-const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
-
-const STREAM_SEGMENT_SIZE = 4096;
-const PR_UINT32_MAX = 0xffffffff;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AndroidLog: "resource://gre/modules/AndroidLog.jsm", // Only used on Android.
-  OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Task: "resource://gre/modules/Task.jsm",
 });
@@ -73,93 +64,38 @@ var Log = {
     Log.repository = value;
   },
 
-  LogMessage,
-  Logger,
-  LoggerRepository,
-
-  Formatter,
-  BasicFormatter,
-  MessageOnlyFormatter,
-  StructuredFormatter,
-
-  Appender,
-  DumpAppender,
-  ConsoleAppender,
-  StorageStreamAppender,
-  AndroidAppender,
-
-  FileAppender,
-  BoundedFileAppender,
-
-  ParameterFormatter,
-  // Logging helper:
-  // let logger = Log.repository.getLogger("foo");
-  // logger.info(Log.enumerateInterfaces(someObject).join(","));
-  enumerateInterfaces: function Log_enumerateInterfaces(aObject) {
-    let interfaces = [];
-
-    for (let i in Ci) {
-      try {
-        aObject.QueryInterface(Ci[i]);
-        interfaces.push(i);
-      } catch (ex) {}
-    }
-
-    return interfaces;
-  },
-
-  // Logging helper:
-  // let logger = Log.repository.getLogger("foo");
-  // logger.info(Log.enumerateProperties(someObject).join(","));
-  enumerateProperties(aObject, aExcludeComplexTypes) {
-    let properties = [];
-
-    for (let p in aObject) {
-      try {
-        if (aExcludeComplexTypes &&
-            (typeof(aObject[p]) == "object" || typeof(aObject[p]) == "function"))
-          continue;
-        properties.push(p + " = " + aObject[p]);
-      } catch (ex) {
-        properties.push(p + " = " + ex);
-      }
-    }
-
-    return properties;
-  },
-
-  _formatError: function _formatError(e) {
-    let result = e.toString();
+  _formatError(e) {
+    let result = String(e);
     if (e.fileName) {
-      result +=  " (" + e.fileName;
+      let loc = [e.fileName];
       if (e.lineNumber) {
-        result += ":" + e.lineNumber;
+        loc.push(e.lineNumber);
       }
       if (e.columnNumber) {
-        result += ":" + e.columnNumber;
+        loc.push(e.columnNumber);
       }
-      result += ")";
+      result += `(${loc.join(":")})`;
     }
-    return result + " " + Log.stackTrace(e);
+    return `${result} ${Log.stackTrace(e)}`;
   },
 
   // This is for back compatibility with services/common/utils.js; we duplicate
   // some of the logic in ParameterFormatter
-  exceptionStr: function exceptionStr(e) {
+  exceptionStr(e) {
     if (!e) {
-      return "" + e;
+      return String(e);
     }
     if (e instanceof Ci.nsIException) {
-      return e.toString() + " " + Log.stackTrace(e);
+      return `${e} ${Log.stackTrace(e)}`;
     } else if (isError(e)) {
       return Log._formatError(e);
     }
     // else
-    let message = e.message ? e.message : e;
-    return message + " " + Log.stackTrace(e);
+    let message = e.message || e;
+    return `${message} ${Log.stackTrace(e)}`;
   },
 
-  stackTrace: function stackTrace(e) {
+  stackTrace(e) {
     // Wrapped nsIException
     if (e.location) {
       let frame = e.location;
@@ -188,7 +124,7 @@ var Log = {
         }
         frame = frame.caller;
       }
-      return "Stack trace: " + output.join("\n");
+      return `Stack trace: ${output.join("\n")}`;
     }
     // Standard JS exception
     if (e.stack) {
@@ -208,70 +144,72 @@ var Log = {
  * LogMessage
  * Encapsulates a single log event's data
  */
-function LogMessage(loggerName, level, message, params) {
-  this.loggerName = loggerName;
-  this.level = level;
-  /*
-   * Special case to handle "log./level/(object)", for example logging a caught exception
-   * without providing text or params like: catch(e) { logger.warn(e) }
-   * Treating this as an empty text with the object in the 'params' field causes the
-   * object to be formatted properly by BasicFormatter.
-   */
-  if (!params && message && (typeof(message) == "object") &&
-      (typeof(message.valueOf()) != "string")) {
-    this.message = null;
-    this.params = message;
-  } else {
-    // If the message text is empty, or a string, or a String object, normal handling
-    this.message = message;
-    this.params = params;
+class LogMessage {
+  constructor(loggerName, level, message, params) {
+    this.loggerName = loggerName;
+    this.level = level;
+    /*
+     * Special case to handle "log./level/(object)", for example logging a caught exception
+     * without providing text or params like: catch(e) { logger.warn(e) }
+     * Treating this as an empty text with the object in the 'params' field causes the
+     * object to be formatted properly by BasicFormatter.
+     */
+    if (!params && message && (typeof(message) == "object") &&
+        (typeof(message.valueOf()) != "string")) {
+      this.message = null;
+      this.params = message;
+    } else {
+      // If the message text is empty, or a string, or a String object, normal handling
+      this.message = message;
+      this.params = params;
+    }
+
+    // The _structured field will correspond to whether this message is to
+    // be interpreted as a structured message.
+    this._structured = this.params && this.params.action;
+    this.time = Date.now();
   }
 
-  // The _structured field will correspond to whether this message is to
-  // be interpreted as a structured message.
-  this._structured = this.params && this.params.action;
-  this.time = Date.now();
-}
-LogMessage.prototype = {
   get levelDesc() {
     if (this.level in Log.Level.Desc)
       return Log.Level.Desc[this.level];
     return "UNKNOWN";
-  },
-
-  toString: function LogMsg_toString() {
-    let msg = "LogMessage [" + this.time + " " + this.level + " " +
-      this.message;
-    if (this.params) {
-      msg += " " + JSON.stringify(this.params);
-    }
-    return msg + "]";
   }
-};
+
+  toString() {
+    let msg = `${this.time} ${this.level} ${this.message}`;
+    if (this.params) {
+      msg += ` ${JSON.stringify(this.params)}`;
+    }
+    return `LogMessage [${msg}]`;
+  }
+}
 
 /*
  * Logger
  * Hierarchical version.  Logs to all appenders, assigned or inherited
  */
 
-function Logger(name, repository) {
-  if (!repository)
-    repository = Log.repository;
-  this._name = name;
-  this.children = [];
-  this.ownAppenders = [];
-  this.appenders = [];
-  this._repository = repository;
-}
-Logger.prototype = {
-  _levelPrefName: null,
-  _levelPrefValue: null,
+class Logger {
+  constructor(name, repository) {
+    if (!repository)
+      repository = Log.repository;
+    this._name = name;
+    this.children = [];
+    this.ownAppenders = [];
+    this.appenders = [];
+    this._repository = repository;
+
+    this._levelPrefName = null;
+    this._levelPrefValue = null;
+    this._level = null;
+    this._parent = null;
+  }
 
   get name() {
     return this._name;
-  },
+  }
 
-  _level: null,
   get level() {
     if (this._levelPrefName) {
       // We've been asked to use a preference to configure the logs. If the
@@ -297,7 +235,7 @@ Logger.prototype = {
       return this.parent.level;
     dumpError("Log warning: root logger configuration error: no level defined");
     return Log.Level.All;
-  },
+  }
   set level(level) {
     if (this._levelPrefName) {
       // I guess we could honor this by nuking this._levelPrefValue, but it
@@ -309,12 +247,11 @@ Logger.prototype = {
       return;
     }
     this._level = level;
-  },
+  }
 
-  _parent: null,
   get parent() {
     return this._parent;
-  },
+  }
   set parent(parent) {
     if (this._parent == parent) {
       return;
@@ -329,7 +266,7 @@ Logger.prototype = {
     this._parent = parent;
     parent.children.push(this);
     this.updateAppenders();
-  },
+  }
 
   manageLevelFromPref(prefName) {
     if (prefName == this._levelPrefName) {
@@ -344,9 +281,9 @@ Logger.prototype = {
     }
     this._levelPrefName = prefName;
     XPCOMUtils.defineLazyPreferenceGetter(this, "_levelPrefValue", prefName);
-  },
+  }
 
-  updateAppenders: function updateAppenders() {
+  updateAppenders() {
     if (this._parent) {
       let notOwnAppenders = this._parent.appenders.filter(function(appender) {
         return !this.ownAppenders.includes(appender);
@@ -360,63 +297,24 @@ Logger.prototype = {
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].updateAppenders();
     }
-  },
+  }
 
-  addAppender: function Logger_addAppender(appender) {
+  addAppender(appender) {
     if (this.ownAppenders.includes(appender)) {
       return;
     }
     this.ownAppenders.push(appender);
     this.updateAppenders();
-  },
+  }
 
-  removeAppender: function Logger_removeAppender(appender) {
+  removeAppender(appender) {
     let index = this.ownAppenders.indexOf(appender);
     if (index == -1) {
       return;
     }
     this.ownAppenders.splice(index, 1);
     this.updateAppenders();
-  },
-
-  /**
-   * Logs a structured message object.
-   *
-   * @param action
-   *        (string) A message action, one of a set of actions known to the
-   *          log consumer.
-   * @param params
-   *        (object) Parameters to be included in the message.
-   *          If _level is included as a key and the corresponding value
-   *          is a number or known level name, the message will be logged
-   *          at the indicated level. If _message is included as a key, the
-   *          value is used as the descriptive text for the message.
-   */
-  logStructured(action, params) {
-    if (!action) {
-      throw "An action is required when logging a structured message.";
-    }
-    if (!params) {
-      this.log(this.level, undefined, {"action": action});
-      return;
-    }
-    if (typeof(params) != "object") {
-      throw "The params argument is required to be an object.";
-    }
-
-    let level = params._level;
-    if (level) {
-      let ulevel = level.toUpperCase();
-      if (ulevel in Log.Level.Numbers) {
-        level = Log.Level.Numbers[ulevel];
-      }
-    } else {
-      level = this.level;
-    }
-
-    params.action = action;
-    this.log(level, params._message, params);
-  },
+  }
 
   _unpackTemplateLiteral(string, params) {
     if (!Array.isArray(params)) {
@@ -446,7 +344,7 @@ Logger.prototype = {
       concat += `\${${i}}${string[i + 1]}`;
     }
     return [concat, params];
-  },
+  }
 
   log(level, string, params) {
     if (this.level > level)
@@ -466,53 +364,54 @@ Logger.prototype = {
       }
       appender.append(message);
     }
-  },
+  }
 
   fatal(string, ...params) {
     this.log(Log.Level.Fatal, string, params);
-  },
+  }
   error(string, ...params) {
     this.log(Log.Level.Error, string, params);
-  },
+  }
   warn(string, ...params) {
     this.log(Log.Level.Warn, string, params);
-  },
+  }
   info(string, ...params) {
     this.log(Log.Level.Info, string, params);
-  },
+  }
   config(string, ...params) {
     this.log(Log.Level.Config, string, params);
-  },
+  }
   debug(string, ...params) {
     this.log(Log.Level.Debug, string, params);
-  },
+  }
   trace(string, ...params) {
     this.log(Log.Level.Trace, string, params);
   }
-};
+}
 
 /*
  * LoggerRepository
  * Implements a hierarchy of Loggers
  */
 
-function LoggerRepository() {}
-LoggerRepository.prototype = {
-  _loggers: {},
+class LoggerRepository {
+  constructor() {
+    this._loggers = {};
+    this._rootLogger = null;
+  }
 
-  _rootLogger: null,
   get rootLogger() {
     if (!this._rootLogger) {
       this._rootLogger = new Logger("root", this);
       this._rootLogger.level = Log.Level.All;
     }
     return this._rootLogger;
-  },
+  }
   set rootLogger(logger) {
     throw "Cannot change the root logger";
-  },
+  }
 
-  _updateParents: function LogRep__updateParents(name) {
+  _updateParents(name) {
     let pieces = name.split(".");
     let cur, parent;
 
@@ -539,7 +438,7 @@ LoggerRepository.prototype = {
       if (logger != name && logger.indexOf(name) == 0)
         this._updateParents(logger);
     }
-  },
+  }
 
   /**
    * Obtain a named Logger.
@@ -556,7 +455,7 @@ LoggerRepository.prototype = {
     this._loggers[name] = new Logger(name, this);
     this._updateParents(name);
     return this._loggers[name];
-  },
+  }
 
   /**
    * Obtain a Logger that logs all string messages with a prefix.
@@ -590,30 +489,22 @@ LoggerRepository.prototype = {
       return log.log(level, string, params);
     };
     return proxy;
-  },
-};
+  }
+}
 
 /*
  * Formatters
  * These massage a LogMessage into whatever output is desired.
- * BasicFormatter and StructuredFormatter are implemented here.
  */
 
-// Abstract formatter
-function Formatter() {}
-Formatter.prototype = {
-  format: function Formatter_format(message) {}
-};
-
 // Basic formatter that doesn't do anything fancy.
-function BasicFormatter(dateFormat) {
-  if (dateFormat) {
-    this.dateFormat = dateFormat;
+class BasicFormatter {
+  constructor(dateFormat) {
+    if (dateFormat) {
+      this.dateFormat = dateFormat;
+    }
+    this.parameterFormatter = new ParameterFormatter();
   }
-  this.parameterFormatter = new ParameterFormatter();
-}
-BasicFormatter.prototype = {
-  __proto__: Formatter.prototype,
 
   /**
    * Format the text of a message with optional parameters.
@@ -664,73 +555,15 @@ BasicFormatter.prototype = {
       return textParts.join(": ");
     }
     return undefined;
-  },
+  }
 
-  format: function BF_format(message) {
+  format(message) {
     return message.time + "\t" +
       message.loggerName + "\t" +
       message.levelDesc + "\t" +
       this.formatText(message);
   }
-};
-
-/**
- * A formatter that only formats the string message component.
- */
-function MessageOnlyFormatter() {
 }
-MessageOnlyFormatter.prototype = Object.freeze({
-  __proto__: Formatter.prototype,
-
-  format(message) {
-    return message.message;
-  },
-});
-
-// Structured formatter that outputs JSON based on message data.
-// This formatter will format unstructured messages by supplying
-// default values.
-function StructuredFormatter() { }
-StructuredFormatter.prototype = {
-  __proto__: Formatter.prototype,
-
-  format(logMessage) {
-    let output = {
-      _time: logMessage.time,
-      _namespace: logMessage.loggerName,
-      _level: logMessage.levelDesc
-    };
-
-    for (let key in logMessage.params) {
-      output[key] = logMessage.params[key];
-    }
-
-    if (!output.action) {
-      output.action = "UNKNOWN";
-    }
-
-    if (!output._message && logMessage.message) {
-      output._message = logMessage.message;
-    }
-
-    return JSON.stringify(output);
-  }
-};
-
-/**
- * A formatter that does not prepend time/name/level information to messages,
- * because those fields are logged separately when using the Android logger.
- */
-function AndroidFormatter() {
-  BasicFormatter.call(this);
-}
-AndroidFormatter.prototype = Object.freeze({
-  __proto__: BasicFormatter.prototype,
-
-  format(message) {
-    return this.formatText(message);
-  },
-});
 
 /**
  * Test an object to see if it is a Mozilla JS Error.
@@ -746,10 +579,11 @@ function isError(aObj) {
  * a string representation of the object.
  */
 
-function ParameterFormatter() {
-  this._name = "ParameterFormatter";
-}
-ParameterFormatter.prototype = {
+class ParameterFormatter {
+  constructor() {
+    this._name = "ParameterFormatter";
+  }
+
   format(ob) {
     try {
       if (ob === undefined) {
@@ -764,7 +598,7 @@ ParameterFormatter.prototype = {
         return ob;
       }
       if (ob instanceof Ci.nsIException) {
-        return ob.toString() + " " + Log.stackTrace(ob);
+        return `${ob} ${Log.stackTrace(ob)}`;
       } else if (isError(ob)) {
         return Log._formatError(ob);
       }
@@ -777,19 +611,19 @@ ParameterFormatter.prototype = {
         return val;
       });
     } catch (e) {
-      dumpError("Exception trying to format object for log message: " + Log.exceptionStr(e));
+      dumpError(`Exception trying to format object for log message: ${Log.exceptionStr(e)}`);
     }
     // Fancy formatting failed. Just toSource() it - but even this may fail!
     try {
       return ob.toSource();
     } catch (_) { }
     try {
-      return "" + ob;
+      return String(ob);
     } catch (_) {
       return "[object]";
     }
   }
-};
+}
 
 /*
  * Appenders
@@ -797,56 +631,53 @@ ParameterFormatter.prototype = {
  * Simply subclass and override doAppend to implement a new one
  */
 
-function Appender(formatter) {
-  this._name = "Appender";
-  this._formatter = formatter ? formatter : new BasicFormatter();
-}
-Appender.prototype = {
-  level: Log.Level.All,
+class Appender {
+  constructor(formatter) {
+    this.level = Log.Level.All;
+    this._name = "Appender";
+    this._formatter = formatter || new BasicFormatter();
+  }
 
-  append: function App_append(message) {
+  append(message) {
     if (message) {
       this.doAppend(this._formatter.format(message));
     }
-  },
-  toString: function App_toString() {
-    return this._name + " [level=" + this.level +
-      ", formatter=" + this._formatter + "]";
-  },
-  doAppend: function App_doAppend(formatted) {}
-};
+  }
+
+  toString() {
+    return `${this._name} [level=${this.level}, formatter=${this._formatter}]`;
+  }
+}
 
 /*
  * DumpAppender
  * Logs to standard out
  */
 
-function DumpAppender(formatter) {
-  Appender.call(this, formatter);
-  this._name = "DumpAppender";
-}
-DumpAppender.prototype = {
-  __proto__: Appender.prototype,
+class DumpAppender extends Appender {
+  constructor(formatter) {
+    super(formatter);
+    this._name = "DumpAppender";
+  }
 
-  doAppend: function DApp_doAppend(formatted) {
+  doAppend(formatted) {
     dump(formatted + "\n");
   }
-};
+}
 
 /*
  * ConsoleAppender
  * Logs to the javascript console
  */
 
-function ConsoleAppender(formatter) {
-  Appender.call(this, formatter);
-  this._name = "ConsoleAppender";
-}
-ConsoleAppender.prototype = {
-  __proto__: Appender.prototype,
+class ConsoleAppender extends Appender {
+  constructor(formatter) {
+    super(formatter);
+    this._name = "ConsoleAppender";
+  }
 
   // XXX this should be replaced with calls to the Browser Console
-  append: function App_append(message) {
+  append(message) {
     if (message) {
       let m = this._formatter.format(message);
       if (message.level > Log.Level.Warn) {
@@ -855,246 +686,23 @@ ConsoleAppender.prototype = {
       }
       this.doAppend(m);
     }
-  },
+  }
 
-  doAppend: function CApp_doAppend(formatted) {
+  doAppend(formatted) {
     Services.console.logStringMessage(formatted);
   }
-};
-
-/**
- * Append to an nsIStorageStream
- *
- * This writes logging output to an in-memory stream which can later be read
- * back as an nsIInputStream. It can be used to avoid expensive I/O operations
- * during logging. Instead, one can periodically consume the input stream and
- * e.g. write it to disk asynchronously.
- */
-function StorageStreamAppender(formatter) {
-  Appender.call(this, formatter);
-  this._name = "StorageStreamAppender";
 }
 
-StorageStreamAppender.prototype = {
-  __proto__: Appender.prototype,
+Object.assign(Log, {
+  LogMessage,
+  Logger,
+  LoggerRepository,
 
-  _converterStream: null, // holds the nsIConverterOutputStream
-  _outputStream: null,    // holds the underlying nsIOutputStream
+  BasicFormatter,
 
-  _ss: null,
+  Appender,
+  DumpAppender,
+  ConsoleAppender,
 
-  get outputStream() {
-    if (!this._outputStream) {
-      // First create a raw stream. We can bail out early if that fails.
-      this._outputStream = this.newOutputStream();
-      if (!this._outputStream) {
-        return null;
-      }
-
-      // Wrap the raw stream in an nsIConverterOutputStream. We can reuse
-      // the instance if we already have one.
-      if (!this._converterStream) {
-        this._converterStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
-                                  .createInstance(Ci.nsIConverterOutputStream);
-      }
-      this._converterStream.init(this._outputStream, "UTF-8");
-    }
-    return this._converterStream;
-  },
-
-  newOutputStream: function newOutputStream() {
-    let ss = this._ss = Cc["@mozilla.org/storagestream;1"]
-                          .createInstance(Ci.nsIStorageStream);
-    ss.init(STREAM_SEGMENT_SIZE, PR_UINT32_MAX, null);
-    return ss.getOutputStream(0);
-  },
-
-  getInputStream: function getInputStream() {
-    if (!this._ss) {
-      return null;
-    }
-    return this._ss.newInputStream(0);
-  },
-
-  reset: function reset() {
-    if (!this._outputStream) {
-      return;
-    }
-    this.outputStream.close();
-    this._outputStream = null;
-    this._ss = null;
-  },
-
-  doAppend(formatted) {
-    if (!formatted) {
-      return;
-    }
-    try {
-      this.outputStream.writeString(formatted + "\n");
-    } catch (ex) {
-      if (ex.result == Cr.NS_BASE_STREAM_CLOSED) {
-        // The underlying output stream is closed, so let's open a new one
-        // and try again.
-        this._outputStream = null;
-      } try {
-          this.outputStream.writeString(formatted + "\n");
-      } catch (ex) {
-        // Ah well, we tried, but something seems to be hosed permanently.
-      }
-    }
-  }
-};
-
-/**
- * File appender
- *
- * Writes output to file using OS.File.
- */
-function FileAppender(path, formatter) {
-  Appender.call(this, formatter);
-  this._name = "FileAppender";
-  this._encoder = new TextEncoder();
-  this._path = path;
-  this._file = null;
-  this._fileReadyPromise = null;
-
-  // This is a promise exposed for testing/debugging the logger itself.
-  this._lastWritePromise = null;
-}
-
-FileAppender.prototype = {
-  __proto__: Appender.prototype,
-
-  _openFile() {
-    return (async () => {
-      try {
-        this._file = await OS.File.open(this._path,
-                                        {truncate: true});
-      } catch (err) {
-        if (err instanceof OS.File.Error) {
-          this._file = null;
-        } else {
-          throw err;
-        }
-      }
-    })();
-  },
-
-  _getFile() {
-    if (!this._fileReadyPromise) {
-      this._fileReadyPromise = this._openFile();
-    }
-
-    return this._fileReadyPromise;
-  },
-
-  doAppend(formatted) {
-    let array = this._encoder.encode(formatted + "\n");
-    if (this._file) {
-      this._lastWritePromise = this._file.write(array);
-    } else {
-      this._lastWritePromise = this._getFile().then(_ => {
-        this._fileReadyPromise = null;
-        if (this._file) {
-          return this._file.write(array);
-        }
-        return undefined;
-      });
-    }
-  },
-
-  reset() {
-    let fileClosePromise = this._file.close();
-    return fileClosePromise.then(_ => {
-      this._file = null;
-      return OS.File.remove(this._path);
-    });
-  }
-};
-
-/**
- * Bounded File appender
- *
- * Writes output to file using OS.File. After the total message size
- * (as defined by formatted.length) exceeds maxSize, existing messages
- * will be discarded, and subsequent writes will be appended to a new log file.
- */
-function BoundedFileAppender(path, formatter, maxSize = 2 * ONE_MEGABYTE) {
-  FileAppender.call(this, path, formatter);
-  this._name = "BoundedFileAppender";
-  this._size = 0;
-  this._maxSize = maxSize;
-  this._closeFilePromise = null;
-}
-
-BoundedFileAppender.prototype = {
-  __proto__: FileAppender.prototype,
-
-  doAppend(formatted) {
-    if (!this._removeFilePromise) {
-      if (this._size < this._maxSize) {
-        this._size += formatted.length;
-        return FileAppender.prototype.doAppend.call(this, formatted);
-      }
-      this._removeFilePromise = this.reset();
-    }
-    this._removeFilePromise.then(_ => {
-      this._removeFilePromise = null;
-      this.doAppend(formatted);
-    });
-    return undefined;
-  },
-
-  reset() {
-    let fileClosePromise;
-    if (this._fileReadyPromise) {
-      // An attempt to open the file may still be in progress.
-      fileClosePromise = this._fileReadyPromise.then(_ => {
-        return this._file.close();
-      });
-    } else {
-      fileClosePromise = this._file.close();
-    }
-
-    return fileClosePromise.then(_ => {
-      this._size = 0;
-      this._file = null;
-      return OS.File.remove(this._path);
-    });
-  }
-};
-
-/*
- * AndroidAppender
- * Logs to Android logcat using AndroidLog.jsm
- */
-function AndroidAppender(aFormatter) {
-  Appender.call(this, aFormatter || new AndroidFormatter());
-  this._name = "AndroidAppender";
-}
-AndroidAppender.prototype = {
-  __proto__: Appender.prototype,
-
-  // Map log level to AndroidLog.foo method.
-  _mapping: {
-    [Log.Level.Fatal]:  "e",
-    [Log.Level.Error]:  "e",
-    [Log.Level.Warn]:   "w",
-    [Log.Level.Info]:   "i",
-    [Log.Level.Config]: "d",
-    [Log.Level.Debug]:  "d",
-    [Log.Level.Trace]:  "v",
-  },
-
-  append(aMessage) {
-    if (!aMessage) {
-      return;
-    }
-
-    // AndroidLog.jsm always prepends "Gecko" to the tag, so we strip any
-    // leading "Gecko" here. Also strip dots to save space.
-    const tag = aMessage.loggerName.replace(/^Gecko|\./g, "");
-    const msg = this._formatter.format(aMessage);
-    AndroidLog[this._mapping[aMessage.level]](tag, msg);
-  },
-};
+  ParameterFormatter,
+});

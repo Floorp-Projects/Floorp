@@ -197,6 +197,10 @@ class MenuButton extends PureComponent {
 
   async onClick(e) {
     if (e.target === this.buttonRef) {
+      // On Mac, even after clicking the button it doesn't get focus.
+      // Force focus to the button so that our keydown handlers get called.
+      this.buttonRef.focus();
+
       if (this.props.onClick) {
         this.props.onClick(e);
       }

@@ -303,7 +303,7 @@ public:
   bool IsHTMLLink(nsIURI** aURI) const;
 
   // HTML element methods
-  void Compact() { mAttrsAndChildren.Compact(); }
+  void Compact() { mAttrs.Compact(); }
 
   virtual void UpdateEditableState(bool aNotify) override;
 
