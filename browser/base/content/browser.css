@@ -653,6 +653,15 @@ html|input.urlbar-input[textoverflow="start"]:not([focused]) {
   display: none;
 }
 
+/* Hide the em-dash separator between the search query description (.ac-title)
+   and the "Search with Foo" description (.ac-url) if the search query is the
+   empty string.  Also hide .ac-title itself because it has a margin-inline-end;
+   alternatively we would need to remove that margin in this case. */
+#PopupAutoCompleteRichResult > richlistbox > richlistitem.emptySearchQuery > .ac-separator,
+#PopupAutoCompleteRichResult > richlistbox > richlistitem.emptySearchQuery > .ac-title {
+  display: none;
+}
+
 #PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-site-icon {
   margin-inline-start: 0;
 }
