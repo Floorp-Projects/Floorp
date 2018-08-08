@@ -17,7 +17,8 @@ ChromeUtils.defineModuleGetter(this, "ASRouterTriggerListeners",
 
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
-const MESSAGE_PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
+const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+const SNIPPETS_ENDPOINT_PREF = "browser.newtabpage.activity-stream.asrouter.snippetsUrl";
 // List of hosts for endpoints that serve router messages.
 // Key is allowed host, value is a name for the endpoint host.
 const DEFAULT_WHITELIST_HOSTS = {
@@ -25,8 +26,6 @@ const DEFAULT_WHITELIST_HOSTS = {
   "snippets-admin.mozilla.org": "preview"
 };
 const SNIPPETS_ENDPOINT_WHITELIST = "browser.newtab.activity-stream.asrouter.whitelistHosts";
-
-const LOCAL_MESSAGE_PROVIDERS = {OnboardingMessageProvider};
 
 const MessageLoaderUtils = {
   /**
@@ -133,7 +132,7 @@ this.MessageLoaderUtils = MessageLoaderUtils;
  * so that it can be more easily unit tested.
  */
 class _ASRouter {
-  constructor(messageProviderPref = MESSAGE_PROVIDER_PREF, localProviders = LOCAL_MESSAGE_PROVIDERS) {
+  constructor(initialState = {}) {
     this.initialized = false;
     this.messageChannel = null;
     this.dispatchToAS = null;
@@ -144,52 +143,41 @@ class _ASRouter {
       providers: [],
       blockList: [],
       impressions: {},
-      messages: []
+      messages: [],
+      ...initialState
     };
     this._triggerHandler = this._triggerHandler.bind(this);
-    this._messageProviderPref = messageProviderPref;
-    this._localProviders = localProviders;
     this.onMessage = this.onMessage.bind(this);
     this._handleTargetingError = this._handleTargetingError.bind(this);
   }
 
-  // Update message providers and fetch new messages on pref change
+  _addASRouterPrefListener() {
+    this.state.providers.forEach(provider => {
+      if (provider.endpointPref) {
+        Services.prefs.addObserver(provider.endpointPref, this);
+      }
+    });
+  }
+
+  // Update provider endpoint and fetch new messages on pref change
   async observe(aSubject, aTopic, aPrefName) {
-    if (aPrefName === this._messageProviderPref) {
-      this._updateMessageProviders();
-    }
+    await this.setState(prevState => {
+      const providers = [...prevState.providers];
+      this._updateProviderEndpointUrl(providers.find(p => p.endpointPref === aPrefName));
+      return {providers};
+    });
 
     await this.loadMessagesFromAllProviders();
   }
 
-  // Fetch and decode the message provider pref JSON, and update the message providers
-  _updateMessageProviders() {
-    // If we have added a `preview` provider, hold onto it
-    const existingPreviewProvider = this.state.providers.find(p => p.id === "preview");
-    const providers = existingPreviewProvider ? [existingPreviewProvider] : [];
-    const providersJSON = Services.prefs.getStringPref(this._messageProviderPref, "");
-    try {
-      JSON.parse(providersJSON).forEach(provider => providers.push(provider));
-    } catch (e) {
-      Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
+  _updateProviderEndpointUrl(provider) {
+    if (provider && provider.endpointPref) {
+      provider.url = Services.prefs.getStringPref(provider.endpointPref, "");
+      // Reset provider update timestamp to force messages refresh
+      provider.lastUpdated = undefined;
     }
 
-    providers.forEach(provider => {
-      if (provider.type === "local" && !provider.messages) {
-        // Get the messages from the local message provider
-        const localProvider = this._localProviders[provider.localProvider];
-        provider.messages = localProvider ? localProvider.getMessages() : [];
-      }
-      // Reset provider update timestamp to force message refresh
-      provider.lastUpdated = undefined;
-    });
-
-    const providerIDs = providers.map(p => p.id);
-    this.setState(prevState => ({
-      providers,
-      // Clear any messages from removed providers
-      messages: [...prevState.messages.filter(message => providerIDs.includes(message.provider))]
-    }));
+    return provider;
   }
 
   get state() {
@@ -230,7 +218,7 @@ class _ASRouter {
       let newState = {messages: [], providers: []};
       for (const provider of this.state.providers) {
         if (needsUpdate.includes(provider)) {
-          const {messages, lastUpdated} = await MessageLoaderUtils.loadMessagesForProvider(provider);
+          const {messages, lastUpdated} = await MessageLoaderUtils.loadMessagesForProvider(this._updateProviderEndpointUrl(provider));
           newState.providers.push({...provider, lastUpdated});
           newState.messages = [...newState.messages, ...messages];
         } else {
@@ -273,7 +261,7 @@ class _ASRouter {
   async init(channel, storage, dispatchToAS) {
     this.messageChannel = channel;
     this.messageChannel.addMessageListener(INCOMING_MESSAGE_NAME, this.onMessage);
-    Services.prefs.addObserver(this._messageProviderPref, this);
+    this._addASRouterPrefListener();
     this._storage = storage;
     this.WHITELIST_HOSTS = this._loadSnippetsWhitelistHosts();
     this.dispatchToAS = dispatchToAS;
@@ -281,7 +269,6 @@ class _ASRouter {
     const blockList = await this._storage.get("blockList") || [];
     const impressions = await this._storage.get("impressions") || {};
     await this.setState({blockList, impressions});
-    this._updateMessageProviders();
     await this.loadMessagesFromAllProviders();
 
     // sets .initialized to true and resolves .waitForInitialized promise
@@ -293,7 +280,11 @@ class _ASRouter {
     this.messageChannel.removeMessageListener(INCOMING_MESSAGE_NAME, this.onMessage);
     this.messageChannel = null;
     this.dispatchToAS = null;
-    Services.prefs.removeObserver(this._messageProviderPref, this);
+    this.state.providers.forEach(provider => {
+      if (provider.endpointPref) {
+        Services.prefs.removeObserver(provider.endpointPref, this);
+      }
+    });
     // Uninitialise all trigger listeners
     for (const listener of ASRouterTriggerListeners.values()) {
       listener.uninit();
@@ -665,6 +656,11 @@ this._ASRouter = _ASRouter;
  * ASRouter - singleton instance of _ASRouter that controls all messages
  * in the new tab page.
  */
-this.ASRouter = new _ASRouter();
+this.ASRouter = new _ASRouter({
+  providers: [
+    {id: "onboarding", type: "local", messages: OnboardingMessageProvider.getMessages()},
+    {id: "snippets", type: "remote", endpointPref: SNIPPETS_ENDPOINT_PREF, updateCycleInMs: ONE_HOUR_IN_MS * 4}
+  ]
+});
 
 const EXPORTED_SYMBOLS = ["_ASRouter", "ASRouter", "MessageLoaderUtils"];
