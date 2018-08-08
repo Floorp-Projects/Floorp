@@ -432,7 +432,7 @@ MatchPattern::Matches(const URLInfo& aURL, bool aExplicit) const
     return false;
   }
 
-  if (!DomainIsWildcard() && !MatchesDomain(aURL.Host())) {
+  if (!MatchesDomain(aURL.Host())) {
     return false;
   }
 
