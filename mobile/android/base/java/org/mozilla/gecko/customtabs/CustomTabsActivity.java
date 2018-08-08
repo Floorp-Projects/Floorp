@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -38,6 +39,8 @@ import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.FormAssistPopup;
 import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Telemetry;
@@ -56,7 +59,9 @@ import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.webapps.WebApps;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
+import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoResult;
+import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
@@ -184,6 +189,15 @@ public class CustomTabsActivity extends AppCompatActivity
     public void onRequestPermissionsResult(final int requestCode, final String[] permissions,
                                            final int[] grantResults) {
         Permissions.onRequestPermissionsResult(this, permissions, grantResults);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (mPromptService != null) {
+            mPromptService.changePromptOrientation(newConfig.orientation);
+        }
     }
 
     private void sendTelemetry() {

@@ -6,6 +6,7 @@
 
 package org.mozilla.geckoview;
 
+import android.content.SharedPreferences;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.content.Context;
@@ -15,7 +16,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoScreenOrientation;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -255,22 +256,6 @@ public final class GeckoRuntime implements Parcelable {
      */
     @NonNull public File getProfileDir() {
         return GeckoThread.getActiveProfile().getDir();
-    }
-
-    /**
-     * Notify Gecko that the screen orientation has changed.
-     */
-    public void orientationChanged() {
-        GeckoScreenOrientation.getInstance().update();
-    }
-
-    /**
-     * Notify Gecko that the screen orientation has changed.
-     * @param newOrientation The new screen orientation, as retrieved e.g. from the current
-     *                       {@link android.content.res.Configuration}.
-     */
-    public void orientationChanged(int newOrientation) {
-        GeckoScreenOrientation.getInstance().update(newOrientation);
     }
 
     @Override // Parcelable

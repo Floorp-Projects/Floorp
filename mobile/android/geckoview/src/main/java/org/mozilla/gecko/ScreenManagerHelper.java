@@ -18,20 +18,6 @@ class ScreenManagerHelper {
     final static int DISPLAY_VIRTUAL  = 2; // wireless displays, such as Chromecast, WiFi-Display, etc.
 
     /**
-     * Trigger a refresh of the cached screen information held by Gecko.
-     */
-    public static void refreshScreenInfo() {
-        // Screen data is initialised automatically on startup, so no need to queue the call if
-        // Gecko isn't running yet.
-        if (GeckoThread.isRunning()) {
-            nativeRefreshScreenInfo();
-        }
-    }
-
-    @WrapForJNI(stubName = "RefreshScreenInfo", dispatchTo = "gecko")
-    private native static void nativeRefreshScreenInfo();
-
-    /**
      * Add a new nsScreen when a new display in Android is available.
      *
      * @param displayType the display type of the nsScreen would be added

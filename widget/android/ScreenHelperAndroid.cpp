@@ -26,10 +26,6 @@ class ScreenHelperAndroid::ScreenHelperSupport final
 public:
     typedef ScreenManagerHelper::Natives<ScreenHelperSupport> Base;
 
-    static void RefreshScreenInfo() {
-      gHelper->Refresh();
-    }
-
     static int32_t AddDisplay(int32_t aDisplayType, int32_t aWidth, int32_t aHeight, float aDensity) {
         static Atomic<uint32_t> nextId;
 

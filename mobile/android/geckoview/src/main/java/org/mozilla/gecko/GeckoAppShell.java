@@ -28,6 +28,9 @@ import java.util.TreeMap;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.permissions.Permissions;
+import org.mozilla.gecko.process.GeckoProcessManager;
+import org.mozilla.gecko.SysInfo;
 import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -36,19 +39,28 @@ import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
+import android.content.pm.Signature;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
@@ -66,22 +78,33 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.LocaleList;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.os.StrictMode;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.SimpleArrayMap;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Display;
 import android.view.HapticFeedbackConstants;
+import android.view.Surface;
+import android.view.SurfaceView;
+import android.view.TextureView;
+import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
+import android.widget.AbsoluteLayout;
 
 public class GeckoAppShell
 {
@@ -237,6 +260,8 @@ public class GeckoAppShell
 
     @WrapForJNI(dispatchTo = "gecko")
     public static native void notifyUriVisited(String uri);
+
+    private static Rect sScreenSize;
 
     @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "gecko")
     private static native void nativeNotifyObservers(String topic, String data);
@@ -1837,12 +1862,19 @@ public class GeckoAppShell
         return 0;
     }
 
+    public static synchronized void resetScreenSize() {
+        sScreenSize = null;
+    }
+
     @WrapForJNI(calledFrom = "gecko")
-    private static Rect getScreenSize() {
-        final WindowManager wm = (WindowManager)
-                getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-        final Display disp = wm.getDefaultDisplay();
-        return new Rect(0, 0, disp.getWidth(), disp.getHeight());
+    private static synchronized Rect getScreenSize() {
+        if (sScreenSize == null) {
+            final WindowManager wm = (WindowManager)
+                    getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+            final Display disp = wm.getDefaultDisplay();
+            sScreenSize = new Rect(0, 0, disp.getWidth(), disp.getHeight());
+        }
+        return sScreenSize;
     }
 
     @WrapForJNI(calledFrom = "any")
