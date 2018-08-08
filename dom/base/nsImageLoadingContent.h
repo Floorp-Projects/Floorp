@@ -24,6 +24,7 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/net/ReferrerPolicy.h"
+#include "nsAttrValue.h"
 
 class nsIURI;
 class nsIDocument;
@@ -232,6 +233,15 @@ protected:
   // Get ourselves as an nsIContent*.  Not const because some of the callers
   // want a non-const nsIContent.
   virtual nsIContent* AsContent() = 0;
+
+  enum class ImageDecodingType : uint8_t {
+    Auto,
+    Async,
+    Sync,
+  };
+
+  static const nsAttrValue::EnumTable kDecodingTable[];
+  static const nsAttrValue::EnumTable* kDecodingTableDefault;
 
 private:
   /**
