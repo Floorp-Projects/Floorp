@@ -13,6 +13,9 @@
 <script>
 "use strict";
 
+// Bug 1479956 - On android-debug verify this test times out
+SimpleTest.requestLongerTimeout(2);
+
 /* globals clipboardWriteText, clipboardWrite, clipboardReadText, clipboardRead */
 function shared() {
   this.clipboardWriteText = function(txt) {
@@ -182,7 +185,9 @@ add_task(async function test_contentscript_clipboard_permission_readtext() {
       "contentscript.js": contentScript,
     },
   };
-  SpecialPowers.clipboardCopyString("HI");
+  await SimpleTest.promiseClipboardChange("HI", () => {
+    SpecialPowers.clipboardCopyString("HI");
+  }, "text/unicode");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
   let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
@@ -263,8 +268,10 @@ add_task(async function test_contentscript_clipboard_permission_read() {
       "contentscript.js": contentScript,
     },
   };
+  await SimpleTest.promiseClipboardChange("HELLO", () => {
+    SpecialPowers.clipboardCopyString("HELLO");
+  }, "text/unicode");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  SpecialPowers.clipboardCopyString("HELLO");
   await extension.startup();
   let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/test-oop-extensions/file_sample.html");
   await extension.awaitMessage("ready");
