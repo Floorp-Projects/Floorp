@@ -24,6 +24,7 @@
 #include "mozilla/dom/ScriptLoadRequest.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/dom/SRICheck.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/Vector.h"
@@ -506,8 +507,8 @@ private:
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
-  JS::SourceBufferHolder GetScriptSource(JSContext* aCx,
-                                         ScriptLoadRequest* aRequest);
+  mozilla::Maybe<JS::SourceBufferHolder> GetScriptSource(JSContext* aCx,
+                                                         ScriptLoadRequest* aRequest);
 
   void SetModuleFetchStarted(ModuleLoadRequest *aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* aRequest,
