@@ -15,6 +15,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class SearchSuggestionsService(searchEngine: SearchEngine) {
+    data class SuggestionResult(val query: String, val suggestions: List<String>)
+
     private var client: SearchSuggestionClient? = null
     private var httpClient = OkHttpClient()
 
@@ -25,16 +27,16 @@ class SearchSuggestionsService(searchEngine: SearchEngine) {
         updateSearchEngine(searchEngine)
     }
 
-    fun getSuggestions(query: String): LiveData<Pair<String, List<String>>> {
-        val result = MutableLiveData<Pair<String, List<String>>>()
+    fun getSuggestions(query: String): LiveData<SuggestionResult> {
+        val result = MutableLiveData<SuggestionResult>()
 
-        if (query.isBlank()) { result.value = Pair(query, listOf()) }
+        if (query.isBlank()) { result.value = SuggestionResult(query, listOf()) }
 
         launch(CommonPool) {
             val suggestions = client?.getSuggestions(query) ?: listOf()
 
             launch(UI) {
-                result.value = Pair(query, suggestions)
+                result.value = SuggestionResult(query, suggestions)
             }
         }
 

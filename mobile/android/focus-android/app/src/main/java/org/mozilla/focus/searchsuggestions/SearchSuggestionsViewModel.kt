@@ -45,13 +45,10 @@ class SearchSuggestionsViewModel(
         val data = service.getSuggestions(it)
 
         map(data) {
-            val query = it.first
-            val suggestions = it.second
-
             val style = StyleSpan(Typeface.BOLD)
-            val endIndex = query.length
+            val endIndex = it.query.length
 
-            suggestions.map {
+            it.suggestions.map {
                 val ssb = SpannableStringBuilder(it)
                 ssb.setSpan(style, 0, minOf(endIndex, it.length), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
