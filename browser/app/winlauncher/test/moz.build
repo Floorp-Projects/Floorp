@@ -13,6 +13,7 @@ LOCAL_INCLUDES += [
 ]
 
 OS_LIBS += [
+    'mincore',
     'ntdll',
 ]
 
