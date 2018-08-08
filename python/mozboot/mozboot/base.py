@@ -157,9 +157,10 @@ MODERN_RUST_VERSION = LooseVersion('1.28.0')
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
 
-    def __init__(self, no_interactive=False):
+    def __init__(self, no_interactive=False, no_system_changes=False):
         self.package_manager_updated = False
         self.no_interactive = no_interactive
+        self.no_system_changes = no_system_changes
         self.state_dir = None
 
     def install_system_packages(self):
