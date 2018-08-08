@@ -25,11 +25,10 @@ protected:
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
 } // namespace dom

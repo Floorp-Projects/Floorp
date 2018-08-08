@@ -64,7 +64,7 @@ public:
                               bool aNullParent = true) override;
   virtual void DestroyContent() override;
 
-  nsresult CopyInnerTo(mozilla::dom::Element* aDest, bool aPreallocateChildren);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   virtual int32_t TabIndexDefault() override;
 

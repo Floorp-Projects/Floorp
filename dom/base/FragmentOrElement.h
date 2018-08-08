@@ -153,7 +153,7 @@ protected:
    * Copy attributes and state to another element
    * @param aDest the object to copy to
    */
-  nsresult CopyInnerTo(FragmentOrElement* aDest, bool aPreallocateChildren);
+  nsresult CopyInnerTo(FragmentOrElement* aDest);
 
 public:
   /**

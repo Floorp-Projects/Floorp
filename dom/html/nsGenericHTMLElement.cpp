@@ -105,16 +105,15 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
+nsGenericHTMLElement::CopyInnerTo(Element* aDst)
 {
   MOZ_ASSERT(!aDst->GetUncomposedDoc(),
              "Should not CopyInnerTo an Element in a document");
-  nsresult rv;
 
   bool reparse = (aDst->OwnerDoc() != OwnerDoc());
 
-  rv = static_cast<nsGenericHTMLElement*>(aDst)->mAttrs.
-         EnsureCapacityToClone(mAttrs, aPreallocateChildren);
+  nsresult rv =
+    static_cast<nsGenericHTMLElement*>(aDst)->mAttrs.EnsureCapacityToClone(mAttrs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t i, count = GetAttrCount();

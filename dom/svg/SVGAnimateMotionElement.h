@@ -31,8 +31,7 @@ protected:
 
 public:
   // nsINode specializations
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // SVGAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction() override;

@@ -32,14 +32,11 @@ public:
     MOZ_ASSERT(IsInNamespace(kNameSpaceID_XHTML), "Someone messed up our nodeinfo");
   }
 
-  nsresult Clone(dom::NodeInfo* aNodeInfo,
-                 nsINode** aResult,
-                 bool aPreallocateChildren) const final;
+  nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const final;
 
-  nsresult CopyInnerTo(GeneratedImageContent* aDest, bool aPreallocateChildren)
+  nsresult CopyInnerTo(GeneratedImageContent* aDest)
   {
-    nsresult rv =
-      nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
+    nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
     NS_ENSURE_SUCCESS(rv, rv);
     aDest->mIndex = mIndex;
     return NS_OK;

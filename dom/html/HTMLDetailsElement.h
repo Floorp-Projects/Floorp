@@ -33,8 +33,7 @@ public:
 
   nsIContent* GetFirstSummary() const;
 
-  nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult,
-                 bool aPreallocateChildren) const override;
+  nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;

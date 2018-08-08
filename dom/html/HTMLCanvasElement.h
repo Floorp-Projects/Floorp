@@ -296,10 +296,8 @@ public:
                                 nsAttrValue& aResult) override;
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute, int32_t aModType) const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
-  nsresult CopyInnerTo(mozilla::dom::Element* aDest,
-                       bool aPreallocateChildren);
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult CopyInnerTo(HTMLCanvasElement* aDest);
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 

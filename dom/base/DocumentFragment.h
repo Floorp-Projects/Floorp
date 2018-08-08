@@ -43,7 +43,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentFragment, FragmentOrElement)
 
-  explicit DocumentFragment(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit DocumentFragment(already_AddRefed<dom::NodeInfo>& aNodeInfo)
     : FragmentOrElement(aNodeInfo), mHost(nullptr)
   {
     Init();
@@ -98,8 +98,7 @@ protected:
   {
   }
 
-  nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                 bool aPreallocateChildren) const override;
+  nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
   RefPtr<Element> mHost;
 };
 
