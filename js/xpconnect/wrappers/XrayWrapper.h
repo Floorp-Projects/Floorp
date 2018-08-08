@@ -126,9 +126,11 @@ private:
                                   JS::MutableHandleObject expandoObject);
 
     // |cx| is in the target's compartment, and |exclusiveWrapper| is any xray
-    // that has exclusive use of the expando.
+    // that has exclusive use of the expando. |exclusiveWrapperGlobal| is the
+    // caller's global and must be same-compartment with |exclusiveWrapper|.
     JSObject* attachExpandoObject(JSContext* cx, JS::HandleObject target,
                                   JS::HandleObject exclusiveWrapper,
+                                  JS::HandleObject exclusiveWrapperGlobal,
                                   nsIPrincipal* origin);
 
     XrayTraits(XrayTraits&) = delete;
