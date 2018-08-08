@@ -92,7 +92,6 @@ add_task(async function test_displayURI_camera() {
 
 add_task(async function test_displayURI_geo_blob() {
   await check(async function() {
-    Cu.importGlobalProperties(["Blob"]);
     let text = "<script>navigator.geolocation.getCurrentPosition(() => {})</script>";
     let blob = new Blob([text], {type: "text/html"});
     let url = content.URL.createObjectURL(blob);
@@ -102,7 +101,6 @@ add_task(async function test_displayURI_geo_blob() {
 
 add_task(async function test_displayURI_camera_blob() {
   await check(async function() {
-    Cu.importGlobalProperties(["Blob"]);
     let text = "<script>navigator.mediaDevices.getUserMedia({video: true, fake: true})</script>";
     let blob = new Blob([text], {type: "text/html"});
     let url = content.URL.createObjectURL(blob);

@@ -19,17 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=628410
 <script type="application/javascript">
 
 /** Test for Bug 628410 **/
-{
-  // window.toSource() will throw if SpecialPowers is defined on the window and
-  // permissive COWs are not enabled for the global that owns its frame message
-  // manager.
-  let sp = window.SpecialPowers;
-  window.SpecialPowers = null;
-
-  window.toSource();
-  window.SpecialPowers = sp;
-}
-
+window.toSource();
 window.toString();
 InstallTrigger + "";
 console + "";
