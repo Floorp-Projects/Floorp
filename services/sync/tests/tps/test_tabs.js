@@ -17,8 +17,8 @@ var phases = { "phase1": "profile1",
  */
 
 var tabs1 = [
-  { uri: "https://mozqa.com/data/firefox/layout/mozilla.html",
-    title: "Mozilla",
+  { uri: "https://www.mozilla.org/en-US/firefox/",
+    title: "Firefox",
     profile: "profile1"
   },
   { uri: "data:text/html,<html><head><title>Hello</title></head><body>Hello</body></html>",
@@ -28,8 +28,8 @@ var tabs1 = [
 ];
 
 var tabs2 = [
-  { uri: "https://mozqa.com/data/firefox/layout/mozilla_community.html",
-    title: "Mozilla Community",
+  { uri: "https://www.mozilla.org/en-US/contribute/",
+    title: "Get Involved",
     profile: "profile2"
   },
   { uri: "data:text/html,<html><head><title>Bye</title></head><body>Bye</body></html>",
