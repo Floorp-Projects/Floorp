@@ -124,6 +124,9 @@ def install_libgcc(gcc_dir, clang_dir):
     libgcc_dir = os.path.join(gcc_dir, "lib64")
     clang_lib_dir = os.path.join(clang_dir, "lib")
     copy_tree(libgcc_dir, clang_lib_dir)
+    libgcc_dir = os.path.join(gcc_dir, "lib32")
+    clang_lib_dir = os.path.join(clang_dir, "lib32")
+    copy_tree(libgcc_dir, clang_lib_dir)
     include_dir = os.path.join(gcc_dir, "include")
     clang_include_dir = os.path.join(clang_dir, "include")
     copy_tree(include_dir, clang_include_dir)
@@ -294,7 +297,7 @@ def get_tool(config, key):
 #       run-clang-tidy.py
 def prune_final_dir_for_clang_tidy(final_dir):
     # Make sure we only have what we expect.
-    dirs = ("bin", "include", "lib", "libexec", "msbuild-bin", "share", "tools")
+    dirs = ("bin", "include", "lib", "lib32", "libexec", "msbuild-bin", "share", "tools")
     for f in glob.glob("%s/*" % final_dir):
         if os.path.basename(f) not in dirs:
             raise Exception("Found unknown file %s in the final directory" % f)
