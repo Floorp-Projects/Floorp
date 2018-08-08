@@ -21,9 +21,6 @@ settings set target.inline-breakpoint-strategy always
 # object as being of type "nsBlockFrame *" rather than "nsIFrame *".
 settings set target.prefer-dynamic-value run-target
 
-# Show the string value in atoms.
-type summary add nsAtom --summary-string "${var.mString}"
-
 # Show the value of text nodes.
 type summary add nsTextNode --summary-string "${var.mText}"
 
