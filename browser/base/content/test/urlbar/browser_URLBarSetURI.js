@@ -67,7 +67,7 @@ var tests = [
 function loadTabInWindow(win, callback) {
   info("Loading tab");
   let url = "http://user:pass@example.com/";
-  let tab = win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser, url);
+  let tab = win.gBrowser.selectedTab = win.gBrowser.addTab(url);
   BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url).then(() => {
     info("Tab loaded");
     is(win.gURLBar.textValue, "example.com", "URL bar had user/pass stripped initially");

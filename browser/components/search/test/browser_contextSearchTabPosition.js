@@ -33,8 +33,8 @@ add_task(async function test() {
   container.addEventListener("TabOpen", tabAdded);
 
   BrowserTestUtils.addTab(gBrowser, "about:blank");
-  BrowserSearch.loadSearchFromContext("mozilla", Services.scriptSecurityManager.getSystemPrincipal());
-  BrowserSearch.loadSearchFromContext("firefox", Services.scriptSecurityManager.getSystemPrincipal());
+  BrowserSearch.loadSearchFromContext("mozilla");
+  BrowserSearch.loadSearchFromContext("firefox");
 
   // Wait for all the tabs to open.
   await tabsLoadedDeferred.promise;

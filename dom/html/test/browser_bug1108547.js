@@ -43,7 +43,7 @@ function runPass(getterFile, finishedCallback) {
 
   function afterPrivateWindowOpened() {
     // In the private window, open the getter file, and wait for a new tab to be opened.
-    privateWin.gBrowser.selectedTab = BrowserTestUtils.addTab(privateWin.gBrowser, rootDir + getterFile);
+    privateWin.gBrowser.selectedTab = privateWin.gBrowser.addTab(rootDir + getterFile);
     testBrowser = privateWin.gBrowser.selectedBrowser;
     privateWin.gBrowser.tabContainer.addEventListener("TabOpen", onNewTabOpened, true);
   }
@@ -77,7 +77,7 @@ function runPass(getterFile, finishedCallback) {
 
   function afterPrivateWindowOpened2() {
     // In the private window, open the setter file, and wait for it to load.
-    privateWin.gBrowser.selectedTab = BrowserTestUtils.addTab(privateWin.gBrowser, rootDir + "file_bug1108547-1.html");
+    privateWin.gBrowser.selectedTab = privateWin.gBrowser.addTab(rootDir + "file_bug1108547-1.html");
     BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser).then(afterOpenCookieSetter2);
   }
 

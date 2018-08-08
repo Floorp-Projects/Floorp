@@ -9,7 +9,7 @@ add_task(async function testNoSessionRestoreButton() {
   (await BrowserTestUtils.openNewBrowserWindow({private: true})).close();
 
   let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
-  let tab = BrowserTestUtils.addTab(win.gBrowser, "about:sessionrestore");
+  let tab = win.gBrowser.addTab("about:sessionrestore");
   let browser = tab.linkedBrowser;
 
   await BrowserTestUtils.browserLoaded(browser);

@@ -154,10 +154,7 @@ async function doTest(aInsertRelatedAfterCurrent, aInsertAfterCurrent) {
   // loadTabs will insertAfterCurrent
   let nextTab = aInsertAfterCurrent ? gBrowser.selectedTab._tPos + 1 : gBrowser.tabs.length;
 
-  gBrowser.loadTabs(bulkLoad, {
-    inBackground: true,
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
+  gBrowser.loadTabs(bulkLoad, { inBackground: true });
   await loadPromises;
   for (let i = nextTab, j = 0; j < bulkLoad.length; i++, j++) {
     is(gBrowser.tabs[i].linkedBrowser.currentURI.spec, bulkLoad[j], `bulkLoad tab pos ${i} matched`);

@@ -32,7 +32,7 @@
 
       this.invoke = function addTab_invoke()
       {
-        tabBrowser().addTrustedTab(aURL);
+        tabBrowser().addTab(aURL);
       }
 
       this.getID = function addTab_getID()

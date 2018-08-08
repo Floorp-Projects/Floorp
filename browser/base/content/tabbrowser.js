@@ -1373,11 +1373,6 @@ window._gBrowser = {
       aName = params.name;
     }
 
-    // all callers of loadOneTab need to pass a valid triggeringPrincipal.
-    if (!aTriggeringPrincipal) {
-      throw new Error("Required argument triggeringPrincipal missing within loadOneTab");
-    }
-
     var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
       Services.prefs.getBoolPref("browser.tabs.loadInBackground");
     var owner = bgLoad ? null : this.selectedTab;
@@ -2139,30 +2134,6 @@ window._gBrowser = {
     tab.dispatchEvent(evt);
   },
 
-  /**
-   * Loads a tab with a default null principal unless specified
-   */
-  addWebTab(aURI, params = {}) {
-    if (!params.triggeringPrincipal) {
-      params.triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({
-        userContextId: params.userContextId,
-      });
-    }
-    if (Services.scriptSecurityManager.isSystemPrincipal(params.triggeringPrincipal)) {
-      throw new Error("System principal should never be passed into addWebTab()");
-    }
-    return this.addTab(aURI, params);
-  },
-
-  /**
-   * Must only be used sparingly for content that came from Chrome context
-   * If in doubt use addWebTab
-   */
-  addTrustedTab(aURI, params = {}) {
-    params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    return this.addTab(aURI, params);
-  },
-
   // eslint-disable-next-line complexity
   addTab(aURI, {
     allowMixedContent,
@@ -2198,13 +2169,6 @@ window._gBrowser = {
     recordExecution,
     replayExecution,
   } = {}) {
-    // all callers of addTab that pass a params object need to pass
-    // a valid triggeringPrincipal.
-    if (!triggeringPrincipal) {
-      throw new Error("Required argument triggeringPrincipal missing within addTab");
-    }
-
-
     // if we're adding tabs, we're past interrupt mode, ditch the owner
     if (this.selectedTab.owner) {
       this.selectedTab.owner = null;
@@ -2860,9 +2824,7 @@ window._gBrowser = {
       aTab._mouseleave();
 
     if (newTab)
-      this.addTrustedTab(BROWSER_NEW_TAB_URL, {
-        skipAnimation: true,
-      });
+      this.addTab(BROWSER_NEW_TAB_URL, { skipAnimation: true });
     else
       TabBarVisibility.update();
 
@@ -3637,7 +3599,7 @@ window._gBrowser = {
       // new tab must have the same usercontextid as the old one
       params.userContextId = aTab.getAttribute("usercontextid");
     }
-    let newTab = this.addWebTab("about:blank", params);
+    let newTab = this.addTab("about:blank", params);
     let newBrowser = this.getBrowserForTab(newTab);
 
     // Stop the about:blank load.
@@ -5314,22 +5276,10 @@ var TabContextMenu = {
     });
   },
   reopenInContainer(event) {
-    let userContextId = parseInt(event.target.getAttribute("data-usercontextid"));
-    /* Create a triggering principal that is able to load the new tab
-       For codebase principals that are about: chrome: or resource: we need system to load them.
-       Anything other than system principal needs to have the new userContextId.
-    */
-    let triggeringPrincipal = this.contextTab.linkedBrowser.contentPrincipal;
-    if (triggeringPrincipal.isNullPrincipal) {
-      triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({ userContextId });
-    } else if (triggeringPrincipal.isCodebasePrincipal) {
-      triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(triggeringPrincipal.URI, { userContextId });
-    }
     let newTab = gBrowser.addTab(this.contextTab.linkedBrowser.currentURI.spec, {
-      userContextId,
+      userContextId: parseInt(event.target.getAttribute("data-usercontextid")),
       pinned: this.contextTab.pinned,
       index: this.contextTab._tPos + 1,
-      triggeringPrincipal,
     });
 
     if (gBrowser.selectedTab == this.contextTab) {

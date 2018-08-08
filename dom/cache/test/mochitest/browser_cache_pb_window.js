@@ -105,7 +105,7 @@ function test() {
     return BrowserTestUtils.openNewBrowserWindow({private: true});
   }).then(pw => {
     privateWin = pw;
-    privateTab = BrowserTestUtils.addTab(pw.gBrowser, "http://example.com/");
+    privateTab = pw.gBrowser.addTab("http://example.com/");
     return BrowserTestUtils.browserLoaded(privateTab.linkedBrowser);
   }).then(tab => {
     return Promise.all([

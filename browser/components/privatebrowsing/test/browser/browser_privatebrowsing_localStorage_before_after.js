@@ -15,7 +15,7 @@ add_task(async function test() {
 
   // Step 1.
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
-  let privateBrowser = BrowserTestUtils.addTab(privateWin.gBrowser,
+  let privateBrowser = privateWin.gBrowser.addTab(
     prefix + "browser_privatebrowsing_localStorage_before_after_page.html").linkedBrowser;
   await BrowserTestUtils.browserLoaded(privateBrowser);
 
@@ -23,7 +23,7 @@ add_task(async function test() {
 
   // Step 2.
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  let browser = BrowserTestUtils.addTab(win.gBrowser,
+  let browser = win.gBrowser.addTab(
     prefix + "browser_privatebrowsing_localStorage_before_after_page2.html").linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
 

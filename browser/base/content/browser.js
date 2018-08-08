@@ -538,8 +538,7 @@ const gStoragePressureObserver = {
       accessKey: prefStrBundle.getString("spaceAlert.learnMoreButton.accesskey"),
       callback(notificationBar, button) {
         let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
-        // This is a content URL, loaded from trusted UX.
-        gBrowser.selectedTab = gBrowser.addTrustedTab(learnMoreURL);
+        gBrowser.selectedTab = gBrowser.addTab(learnMoreURL);
       }
     });
     if (usage < USAGE_THRESHOLD_BYTES) {
@@ -3972,11 +3971,8 @@ const BrowserSearch = {
    * @return engine The search engine used to perform a search, or null if no
    *                search was performed.
    */
-  _loadSearch(searchText, useNewTab, purpose, triggeringPrincipal) {
+  _loadSearch(searchText, useNewTab, purpose) {
     let engine;
-    if (!triggeringPrincipal) {
-      throw new Error("Required argument triggeringPrincipal missing within _loadSearch");
-    }
 
     // If the search bar is visible, use the current engine, otherwise, fall
     // back to the default engine.
@@ -4000,10 +3996,23 @@ const BrowserSearch = {
                useNewTab ? "tab" : "current",
                { postData: submission.postData,
                  inBackground,
-                 relatedToCurrent: true,
-                 triggeringPrincipal });
+                 relatedToCurrent: true });
 
     return engine;
+  },
+
+  /**
+   * Just like _loadSearch, but preserving an old API.
+   *
+   * @return string Name of the search engine used to perform a search or null
+   *         if a search was not performed.
+   */
+  loadSearch: function BrowserSearch_search(searchText, useNewTab, purpose) {
+    let engine = BrowserSearch._loadSearch(searchText, useNewTab, purpose);
+    if (!engine) {
+      return null;
+    }
+    return engine.name;
   },
 
   /**
@@ -4012,8 +4021,8 @@ const BrowserSearch = {
    * This should only be called from the context menu. See
    * BrowserSearch.loadSearch for the preferred API.
    */
-  loadSearchFromContext(terms, triggeringPrincipal) {
-    let engine = BrowserSearch._loadSearch(terms, true, "contextmenu", triggeringPrincipal);
+  loadSearchFromContext(terms) {
+    let engine = BrowserSearch._loadSearch(terms, true, "contextmenu");
     if (engine) {
       BrowserSearch.recordSearchInTelemetry(engine, "contextmenu");
     }
@@ -7380,8 +7389,7 @@ const gAccessibilityServiceIndicator = {
          type === "click") {
       let a11yServicesSupportURL =
         Services.urlFormatter.formatURLPref("accessibility.support.url");
-      // This is a known URL coming from trusted UI
-      gBrowser.selectedTab = gBrowser.addTrustedTab(a11yServicesSupportURL);
+      gBrowser.selectedTab = gBrowser.addTab(a11yServicesSupportURL);
       Services.telemetry.scalarSet("a11y.indicator_acted_on", true);
     }
   },

@@ -4,7 +4,7 @@ const TEST_URI = getRootDirectory(gTestPath).replace("chrome://mochitests/conten
  * Loading an image from https:// should work.
  */
 add_task(async function load_image_from_https_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_URI);
+  let tab = gBrowser.addTab(TEST_URI);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   gBrowser.selectedTab = tab;
@@ -38,7 +38,7 @@ add_task(async function load_image_from_https_test() {
  * Loading an image from http:// should be rejected.
  */
 add_task(async function load_image_from_http_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_URI);
+  let tab = gBrowser.addTab(TEST_URI);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   gBrowser.selectedTab = tab;
@@ -74,7 +74,7 @@ add_task(async function load_image_from_http_test() {
  * The load from https:// should be replaced.
  */
 add_task(async function load_https_and_http_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_URI);
+  let tab = gBrowser.addTab(TEST_URI);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Clear image cache, otherwise in non-e10s mode the image might be cached by
@@ -121,7 +121,7 @@ add_task(async function load_https_and_http_test() {
  * the imageBlockingStatus value.
  */
 add_task(async function block_pending_request_test() {
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_URI);
+  let tab = gBrowser.addTab(TEST_URI);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   gBrowser.selectedTab = tab;

@@ -8,7 +8,7 @@
 add_task(async function test_no_session_restore_menu_option() {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   ok(true, "The first private window got loaded");
-  BrowserTestUtils.addTab(win.gBrowser, "about:mozilla");
+  win.gBrowser.addTab("about:mozilla");
   await BrowserTestUtils.closeWindow(win);
 
   win = await BrowserTestUtils.openNewBrowserWindow({ private: true });

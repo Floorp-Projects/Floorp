@@ -16,7 +16,7 @@ add_task(async function() {
   let win = await promiseNewWindowLoaded();
 
   // Add a new tab.
-  let tab = BrowserTestUtils.addTab(win.gBrowser, "about:blank");
+  let tab = win.gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
   ok(browser.isRemoteBrowser, "browser is remote");

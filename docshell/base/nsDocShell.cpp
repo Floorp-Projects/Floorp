@@ -950,7 +950,6 @@ nsDocShell::LoadURI(nsIURI* aURI,
   uint32_t flags = 0;
 
   if (inheritPrincipal) {
-    MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(principalToInherit), "Should not inherit SystemPrincipal");
     flags |= INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
   }
 

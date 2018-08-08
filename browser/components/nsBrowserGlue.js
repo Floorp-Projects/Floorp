@@ -2355,7 +2355,7 @@ BrowserGlue.prototype = {
           let tabs = win.gBrowser.tabs;
           tab = tabs[tabs.length - 1];
         } else {
-          tab = win.gBrowser.addWebTab(URI.uri);
+          tab = win.gBrowser.addTab(URI.uri);
         }
         tab.setAttribute("attention", true);
         return tab;
@@ -2435,7 +2435,7 @@ BrowserGlue.prototype = {
       let tabs = win.gBrowser.tabs;
       tab = tabs[tabs.length - 1];
     } else {
-      tab = win.gBrowser.addWebTab(url);
+      tab = win.gBrowser.addTab(url);
     }
     tab.setAttribute("attention", true);
     let clickCallback = (subject, topic, data) => {
@@ -2468,7 +2468,7 @@ BrowserGlue.prototype = {
       if (!win) {
         this._openURLInNewWindow(url);
       } else {
-        win.gBrowser.addWebTab(url);
+        win.gBrowser.addTab(url);
       }
     };
 

@@ -576,10 +576,7 @@ Tester.prototype = {
 
     // Replace the last tab with a fresh one
     if (window.gBrowser) {
-      gBrowser.addTab("about:blank", {
-        skipAnimation: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
+      gBrowser.addTab("about:blank", { skipAnimation: true });
       gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
       gBrowser.stop();
     }
