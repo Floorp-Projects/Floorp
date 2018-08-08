@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "Firefox Monitor",
+  "version": "2.0",
+  "applications": {
+    "gecko": {
+      "id": "fxmonitor@mozilla.org",
+      "strict_min_version": "62.0"
+    }
+  }
+}
