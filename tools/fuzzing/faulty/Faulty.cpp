@@ -362,7 +362,7 @@ Faulty::MaybeCollectAndClosePipe(int aPipe, unsigned int aProbability)
   }
 
   if (aPipe > -1) {
-    FAULTY_LOG("Collecting pipe %d to bucket of pipes (count: %ld)",
+    FAULTY_LOG("Collecting pipe %d to bucket of pipes (count: %zu)",
                aPipe, mFds.size());
     mFds.insert(aPipe);
   }

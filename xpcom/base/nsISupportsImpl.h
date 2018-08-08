@@ -424,11 +424,17 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(mozilla::recordreplay::Behavior::DontPreserve)
 
 #define NS_DECL_CYCLE_COLLECTING_ISUPPORTS                                    \
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_META(override)
+
+#define NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL                              \
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_META(final)
+
+#define NS_DECL_CYCLE_COLLECTING_ISUPPORTS_META(...)                          \
 public:                                                                       \
   NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
-                            void** aInstancePtr) override;                    \
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override;                 \
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) override;                \
+                            void** aInstancePtr) __VA_ARGS__;                 \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) __VA_ARGS__;              \
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) __VA_ARGS__;             \
   NS_IMETHOD_(void) DeleteCycleCollectable(void);                             \
   typedef mozilla::FalseType HasThreadSafeRefCnt;                             \
 protected:                                                                    \
