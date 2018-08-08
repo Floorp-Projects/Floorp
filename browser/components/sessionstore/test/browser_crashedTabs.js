@@ -300,7 +300,7 @@ add_task(async function test_revive_all_tabs_from_session_store() {
   // a second window, since only selected tabs will show
   // about:tabcrashed.
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  let newTab2 = BrowserTestUtils.addTab(win2.gBrowser, PAGE_1, { sameProcessAsFrameLoader: browser.frameLoader });
+  let newTab2 = win2.gBrowser.addTab(PAGE_1, { sameProcessAsFrameLoader: browser.frameLoader });
   win2.gBrowser.selectedTab = newTab2;
   let browser2 = newTab2.linkedBrowser;
   ok(browser2.isRemoteBrowser, "Should be a remote browser");
@@ -407,7 +407,7 @@ add_task(async function test_hide_restore_all_button() {
   // Load up a second window so we can get another tab to show
   // about:tabcrashed
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  let newTab3 = BrowserTestUtils.addTab(win2.gBrowser, PAGE_2, { sameProcessAsFrameLoader: browser.frameLoader });
+  let newTab3 = win2.gBrowser.addTab(PAGE_2, { sameProcessAsFrameLoader: browser.frameLoader });
   win2.gBrowser.selectedTab = newTab3;
   let otherWinBrowser = newTab3.linkedBrowser;
   await promiseBrowserLoaded(otherWinBrowser);
