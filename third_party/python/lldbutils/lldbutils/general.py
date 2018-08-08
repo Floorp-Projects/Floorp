@@ -6,6 +6,12 @@ def summarize_string(valobj, internal_dict):
     length = valobj.GetChildMemberWithName("mLength").GetValueAsUnsigned(0)
     return utils.format_string(data, length)
 
+def summarize_atom(valobj, internal_dict):
+    target = lldb.debugger.GetSelectedTarget()
+    length = valobj.GetChildMemberWithName("mLength").GetValueAsUnsigned()
+    string = target.EvaluateExpression("(char16_t*)%s.GetUTF16String()" % valobj.GetName())
+    return utils.format_string(string, length)
+
 class TArraySyntheticChildrenProvider:
     def __init__(self, valobj, internal_dict):
         self.valobj = valobj
@@ -98,6 +104,7 @@ def init(debugger):
     debugger.HandleCommand("type summary add nsFixedCString -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type summary add nsAutoString -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type summary add nsAutoCString -F lldbutils.general.summarize_string")
+    debugger.HandleCommand("type summary add nsAtom -F lldbutils.general.summarize_atom")
     debugger.HandleCommand("type synthetic add -x \"nsTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("type synthetic add -x \"AutoTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("type synthetic add -x \"FallibleTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
