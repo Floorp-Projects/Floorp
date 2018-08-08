@@ -209,7 +209,7 @@
           </toolbarbutton>
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
-        <toolbaritem id="appMenu-tp-container" hidden="true" closemenu="none">
+        <toolbaritem closemenu="none">
           <toolbarbutton id="appMenu-tp-label"
                          tooltiptext="&trackingProtection.tooltip;"
                          class="subviewbutton subviewbutton-iconic"
@@ -218,7 +218,7 @@
           <toolbarseparator orient="vertical"/>
           <toolbarbutton id="appMenu-tp-toggle"
                          enabled="false"
-                         oncommand="TrackingProtection.onGlobalToggleCommand();" />
+                         oncommand="ContentBlocking.onGlobalToggleCommand();" />
         </toolbaritem>
         <toolbarseparator id="appMenu-tp-separator" hidden="true" />
         <toolbarbutton id="appMenu-new-window-button"
