@@ -1187,6 +1187,8 @@ var BrowserApp = {
       if ("userRequested" in aParams) tab.userRequested = aParams.userRequested;
       tab.isSearch = ("isSearch" in aParams) ? aParams.isSearch : false;
     }
+    // Don't fall back to System here Bug 1474619
+    let triggeringPrincipal = "triggeringPrincipal" in aParams ? aParams.triggeringPrincipal : Services.scriptSecurityManager.getSystemPrincipal();
 
     try {
       aBrowser.loadURI(aURI, {
@@ -1194,6 +1196,7 @@ var BrowserApp = {
         referrerURI,
         charset,
         postData,
+        triggeringPrincipal,
       });
     } catch(e) {
       if (tab) {

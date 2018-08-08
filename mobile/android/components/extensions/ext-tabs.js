@@ -247,6 +247,7 @@ this.tabs = class extends ExtensionAPI {
         }).api(),
 
         async create(createProperties) {
+          let principal = context.principal;
           let window = createProperties.windowId !== null ?
             windowTracker.getWindow(createProperties.windowId, context) :
             windowTracker.topWindow;
@@ -260,6 +261,9 @@ this.tabs = class extends ExtensionAPI {
             if (!context.checkLoadURL(url, {dontReportErrors: true})) {
               return Promise.reject({message: `Illegal URL: ${url}`});
             }
+          } else {
+            // Falling back to system here as about:newtab requires it, however is safe.
+            principal = Services.scriptSecurityManager.getSystemPrincipal();
           }
 
           let options = {};
@@ -285,6 +289,7 @@ this.tabs = class extends ExtensionAPI {
           options.parentId = BrowserApp.selectedTab.id;
 
           tabListener.initTabReady();
+          options.triggeringPrincipal = principal;
           let nativeTab = BrowserApp.addTab(url, options);
 
           if (createProperties.url) {
