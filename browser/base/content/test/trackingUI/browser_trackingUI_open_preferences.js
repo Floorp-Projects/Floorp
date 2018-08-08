@@ -3,7 +3,10 @@
 
 "use strict";
 
-const PREF = "privacy.trackingprotection.enabled";
+const CB_PREF = "browser.contentblocking.enabled";
+const CB_UI_PREF = "browser.contentblocking.ui.enabled";
+const TP_PREF = "privacy.trackingprotection.enabled";
+const FB_PREF = "browser.fastblock.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
 async function waitAndAssertPreferencesShown() {
@@ -43,6 +46,32 @@ add_task(async function testOpenPreferencesFromPrefsButton() {
     await shown;
   });
 });
+
+// Tests that clicking the contentblocking category items "add blocking" labels
+// links to about:preferences
+add_task(async function testOpenPreferencesFromAddBlockingButtons() {
+  SpecialPowers.pushPrefEnv({set: [
+    [CB_PREF, true],
+    [CB_UI_PREF, true],
+    [FB_PREF, false],
+    [TP_PREF, false],
+  ]});
+
+  await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
+    let addBlockingButtons = document.querySelectorAll(".identity-popup-content-blocking-category-add-blocking");
+    for (let button of addBlockingButtons) {
+      let promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+      gIdentityHandler._identityBox.click();
+      await promisePanelOpen;
+
+      ok(BrowserTestUtils.is_visible(button), "Button is shown.");
+      let shown = waitAndAssertPreferencesShown();
+      button.click();
+      await shown;
+    }
+  });
+});
+
 
 add_task(async function cleanup() {
   UrlClassifierTestUtils.cleanupTestTrackers();

@@ -1,4 +1,4 @@
-const URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_trackingUI_6.html";
+const URL = "http://mochi.test:8888/browser/browser/base/content/test/trackingUI/file_trackingUI_fetch.html";
 
 function waitForSecurityChange(numChanges = 1) {
   return new Promise(resolve => {
@@ -18,7 +18,10 @@ function waitForSecurityChange(numChanges = 1) {
 }
 
 add_task(async function test_fetch() {
-  await SpecialPowers.pushPrefEnv({ set: [["privacy.trackingprotection.enabled", true]] });
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["privacy.trackingprotection.enabled", true],
+    ["browser.contentblocking.enabled", true],
+  ]});
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(newTabBrowser) {
     let securityChange = waitForSecurityChange();
@@ -29,15 +32,13 @@ add_task(async function test_fetch() {
     });
     await securityChange;
 
-    var TrackingProtection = newTabBrowser.ownerGlobal.TrackingProtection;
-    ok(TrackingProtection, "got TP object");
-    ok(TrackingProtection.enabled, "TP is enabled");
+    let ContentBlocking = newTabBrowser.ownerGlobal.ContentBlocking;
+    ok(ContentBlocking, "got CB object");
+    ok(ContentBlocking.enabled, "CB is enabled");
 
-    is(TrackingProtection.content.getAttribute("state"), "blocked-tracking-content",
-        'content: state="blocked-tracking-content"');
-    is(TrackingProtection.iconBox.getAttribute("state"), "blocked-tracking-content",
-        'iconBox: state="blocked-tracking-content"');
-    is(TrackingProtection.iconBox.getAttribute("tooltiptext"),
+    ok(ContentBlocking.content.hasAttribute("detected"), "has detected content blocking");
+    ok(ContentBlocking.iconBox.hasAttribute("active"), "icon box is active");
+    is(ContentBlocking.iconBox.getAttribute("tooltiptext"),
        gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"), "correct tooltip");
   });
 });
