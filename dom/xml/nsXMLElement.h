@@ -23,8 +23,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(nsXMLElement, mozilla::dom::Element)
 
   // nsINode interface methods
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo*, nsINode **aResult) const override;
 
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;

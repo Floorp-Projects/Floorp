@@ -30,13 +30,12 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aError);
   }
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
-                         bool aPreallocateChildren) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
 protected:
   virtual ~HTMLDataElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
 
 } // namespace dom

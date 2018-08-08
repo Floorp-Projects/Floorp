@@ -1152,8 +1152,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
 //
 
 nsresult
-XULDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                   bool aPreallocateChildren) const
+XULDocument::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
     // We don't allow cloning of a XUL document
     *aResult = nullptr;

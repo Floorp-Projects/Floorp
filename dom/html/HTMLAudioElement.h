@@ -31,8 +31,7 @@ public:
   // nsIDOMHTMLMediaElement
   using HTMLMediaElement::GetPaused;
 
-  virtual nsresult Clone(NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(NodeInfo*, nsINode** aResult) const override;
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
   // WebIDL
