@@ -14,8 +14,7 @@ this.menusChild = class extends ExtensionAPI {
               element = lastMenuTarget.targetRef.get();
             }
           }
-          // TODO: Support shadow DOM (now we return null).
-          if (element && context.contentWindow.document.contains(element)) {
+          if (element && element.getRootNode({composed: true}) === context.contentWindow.document) {
             return element;
           }
           return null;
