@@ -414,7 +414,7 @@ pub mod parsing {
                 bang: punct!(!) >>
                 path_and_tts: brackets!(tuple!(
                     call!(Path::parse_mod_style),
-                    syn!(TokenStream)
+                    syn!(TokenStream),
                 )) >>
                 ({
                     let (bracket, (path, tts)) = path_and_tts;
@@ -454,7 +454,7 @@ pub mod parsing {
                 pound: punct!(#) >>
                 path_and_tts: brackets!(tuple!(
                     call!(Path::parse_mod_style),
-                    syn!(TokenStream)
+                    syn!(TokenStream),
                 )) >>
                 ({
                     let (bracket, (path, tts)) = path_and_tts;

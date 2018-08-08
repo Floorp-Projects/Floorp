@@ -247,9 +247,12 @@ where
 impl<T: Debug, P: Debug> Debug for Punctuated<T, P> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut list = f.debug_list();
-        list.entries(&self.inner);
-        for t in self.last.iter() {
-            list.entry(&*t);
+        for &(ref t, ref p) in &self.inner {
+            list.entry(t);
+            list.entry(p);
+        }
+        if let Some(ref last) = self.last {
+            list.entry(last);
         }
         list.finish()
     }
