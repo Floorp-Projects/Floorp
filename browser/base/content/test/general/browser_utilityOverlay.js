@@ -90,7 +90,7 @@ function test_getBoolPref() {
 }
 
 function test_openNewTabWith() {
-  openNewTabWith("http://example.com/");
+  openNewTabWith("http://example.com/", null, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});
   let tab = gBrowser.selectedTab = gBrowser.tabs[1];
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     is(tab.linkedBrowser.currentURI.spec, "http://example.com/", "example.com loaded");

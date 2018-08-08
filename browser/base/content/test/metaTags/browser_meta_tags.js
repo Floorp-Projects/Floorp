@@ -32,7 +32,7 @@ add_task(async function multiple_tabs() {
 
   // Add a background tab to cause another page to load *without* putting the
   // desired URL in a background tab, which results in its timers being throttled.
-  gBrowser.addTab();
+  BrowserTestUtils.addTab(gBrowser);
 
   // Wait until places has stored the page info
   const pageInfo = await waitForPageInfo(TEST_PATH);

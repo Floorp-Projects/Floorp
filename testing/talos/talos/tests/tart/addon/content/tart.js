@@ -161,7 +161,7 @@ Tart.prototype = {
 
   addSomeChromeUriTab() {
     this._endDetection = this.tabDetector;
-    this._win.gBrowser.selectedTab = this._win.gBrowser.addTab("chrome://tart/content/blank.icon.html");
+    this._win.gBrowser.selectedTab = this._win.gBrowser.addTrustedTab("chrome://tart/content/blank.icon.html");
   },
 
   triggerCustomizeEnter() {

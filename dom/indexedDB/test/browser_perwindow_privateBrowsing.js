@@ -26,7 +26,7 @@ add_task(async function test2() {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
   info("creating tab");
-  win.gBrowser.selectedTab = win.gBrowser.addTab();
+  win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
   win.gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage("InvalidStateError", win.gBrowser);
   win.gBrowser.removeCurrentTab();
