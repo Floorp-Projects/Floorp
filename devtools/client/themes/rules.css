@@ -283,12 +283,6 @@
   border-bottom-color: transparent;
 }
 
-@media (min-resolution: 1.1dppx) {
-  .ruleview-warning {
-    background-image: url(images/alerticon-warning@2x.png);
-  }
-}
-
 .ruleview-overridden-rule-filter {
   background-image: url(chrome://devtools/skin/images/filter.svg#filterinput);
   background-size: 11px 11px;
@@ -327,6 +321,12 @@
   display: inline-block;
   width: 13px;
   height: 12px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .ruleview-warning {
+    background-image: url(images/alerticon-warning@2x.png);
+  }
 }
 
 .ruleview-rule:not(:hover) .ruleview-enableproperty {
