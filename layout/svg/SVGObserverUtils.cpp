@@ -26,7 +26,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 void
-nsSVGRenderingObserver::StartObserving()
+SVGRenderingObserver::StartObserving()
 {
   Element* target = GetTarget();
   if (target) {
@@ -35,7 +35,7 @@ nsSVGRenderingObserver::StartObserving()
 }
 
 void
-nsSVGRenderingObserver::StopObserving()
+SVGRenderingObserver::StopObserving()
 {
   Element* target = GetTarget();
 
@@ -57,7 +57,7 @@ GetObserverList(Element *aElement)
 }
 
 Element*
-nsSVGRenderingObserver::GetReferencedElement()
+SVGRenderingObserver::GetReferencedElement()
 {
   Element* target = GetTarget();
 #ifdef DEBUG
@@ -77,15 +77,15 @@ nsSVGRenderingObserver::GetReferencedElement()
 }
 
 nsIFrame*
-nsSVGRenderingObserver::GetReferencedFrame()
+SVGRenderingObserver::GetReferencedFrame()
 {
   Element* referencedElement = GetReferencedElement();
   return referencedElement ? referencedElement->GetPrimaryFrame() : nullptr;
 }
 
 nsIFrame*
-nsSVGRenderingObserver::GetReferencedFrame(LayoutFrameType aFrameType,
-                                           bool* aOK)
+SVGRenderingObserver::GetReferencedFrame(LayoutFrameType aFrameType,
+                                         bool* aOK)
 {
   nsIFrame* frame = GetReferencedFrame();
   if (frame) {
@@ -99,25 +99,25 @@ nsSVGRenderingObserver::GetReferencedFrame(LayoutFrameType aFrameType,
 }
 
 void
-nsSVGRenderingObserver::OnNonDOMMutationRenderingChange()
+SVGRenderingObserver::OnNonDOMMutationRenderingChange()
 {
   mInObserverList = false;
   OnRenderingChange();
 }
 
 void
-nsSVGRenderingObserver::NotifyEvictedFromRenderingObserverList()
+SVGRenderingObserver::NotifyEvictedFromRenderingObserverList()
 {
   mInObserverList = false; // We've been removed from rendering-obs. list.
   StopObserving();            // Remove ourselves from mutation-obs. list.
 }
 
 void
-nsSVGRenderingObserver::AttributeChanged(dom::Element* aElement,
-                                         int32_t aNameSpaceID,
-                                         nsAtom* aAttribute,
-                                         int32_t aModType,
-                                         const nsAttrValue* aOldValue)
+SVGRenderingObserver::AttributeChanged(dom::Element* aElement,
+                                       int32_t aNameSpaceID,
+                                       nsAtom* aAttribute,
+                                       int32_t aModType,
+                                       const nsAttrValue* aOldValue)
 {
   // An attribute belonging to the element that we are observing *or one of its
   // descendants* has changed.
@@ -136,20 +136,20 @@ nsSVGRenderingObserver::AttributeChanged(dom::Element* aElement,
 }
 
 void
-nsSVGRenderingObserver::ContentAppended(nsIContent* aFirstNewContent)
+SVGRenderingObserver::ContentAppended(nsIContent* aFirstNewContent)
 {
   OnRenderingChange();
 }
 
 void
-nsSVGRenderingObserver::ContentInserted(nsIContent* aChild)
+SVGRenderingObserver::ContentInserted(nsIContent* aChild)
 {
   OnRenderingChange();
 }
 
 void
-nsSVGRenderingObserver::ContentRemoved(nsIContent* aChild,
-                                       nsIContent* aPreviousSibling)
+SVGRenderingObserver::ContentRemoved(nsIContent* aChild,
+                                     nsIContent* aPreviousSibling)
 {
   OnRenderingChange();
 }
@@ -787,7 +787,7 @@ nsSVGRenderingObserverList::InvalidateAll()
   if (mObservers.Count() == 0)
     return;
 
-  AutoTArray<nsSVGRenderingObserver*,10> observers;
+  AutoTArray<SVGRenderingObserver*,10> observers;
 
   for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
     observers.AppendElement(it.Get()->GetKey());
@@ -805,10 +805,10 @@ nsSVGRenderingObserverList::InvalidateAllForReflow()
   if (mObservers.Count() == 0)
     return;
 
-  AutoTArray<nsSVGRenderingObserver*,10> observers;
+  AutoTArray<SVGRenderingObserver*,10> observers;
 
   for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
-    nsSVGRenderingObserver* obs = it.Get()->GetKey();
+    SVGRenderingObserver* obs = it.Get()->GetKey();
     if (obs->ObservesReflow()) {
       observers.AppendElement(obs);
       it.Remove();
@@ -823,7 +823,7 @@ nsSVGRenderingObserverList::InvalidateAllForReflow()
 void
 nsSVGRenderingObserverList::RemoveAll()
 {
-  AutoTArray<nsSVGRenderingObserver*,10> observers;
+  AutoTArray<SVGRenderingObserver*,10> observers;
 
   for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
     observers.AppendElement(it.Get()->GetKey());
@@ -839,7 +839,7 @@ nsSVGRenderingObserverList::RemoveAll()
 
 void
 SVGObserverUtils::AddRenderingObserver(Element* aElement,
-                                       nsSVGRenderingObserver* aObserver)
+                                       SVGRenderingObserver* aObserver)
 {
   nsSVGRenderingObserverList *observerList = GetObserverList(aElement);
   if (!observerList) {
@@ -855,7 +855,7 @@ SVGObserverUtils::AddRenderingObserver(Element* aElement,
 
 void
 SVGObserverUtils::RemoveRenderingObserver(Element* aElement,
-                                          nsSVGRenderingObserver* aObserver)
+                                          SVGRenderingObserver* aObserver)
 {
   nsSVGRenderingObserverList *observerList = GetObserverList(aElement);
   if (observerList) {

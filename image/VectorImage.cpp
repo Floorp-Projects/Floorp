@@ -26,7 +26,7 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsStubDocumentObserver.h"
-#include "SVGObserverUtils.h" // for nsSVGRenderingObserver
+#include "SVGObserverUtils.h" // for SVGRenderingObserver
 #include "nsWindowSizes.h"
 #include "ImageRegion.h"
 #include "ISurfaceProvider.h"
@@ -51,13 +51,13 @@ using namespace layers;
 namespace image {
 
 // Helper-class: SVGRootRenderingObserver
-class SVGRootRenderingObserver final : public nsSVGRenderingObserver {
+class SVGRootRenderingObserver final : public SVGRenderingObserver {
 public:
   NS_DECL_ISUPPORTS
 
   SVGRootRenderingObserver(SVGDocumentWrapper* aDocWrapper,
                            VectorImage*        aVectorImage)
-    : nsSVGRenderingObserver()
+    : SVGRenderingObserver()
     , mDocWrapper(aDocWrapper)
     , mVectorImage(aVectorImage)
     , mHonoringInvalidations(true)
