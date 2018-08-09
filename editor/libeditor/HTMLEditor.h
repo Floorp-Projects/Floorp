@@ -788,6 +788,16 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult InsertBrElementAtSelectionWithTransaction();
 
+  /**
+   * InsertTextWithQuotationsInternal() replaces selection with new content.
+   * First, this method splits aStringToInsert to multiple chunks which start
+   * with non-linebreaker except first chunk and end with a linebreaker except
+   * last chunk.  Then, each chunk starting with ">" is inserted after wrapping
+   * with <span _moz_quote="true">, and each chunk not starting with ">" is
+   * inserted as normal text.
+   */
+  nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
+
   nsresult LoadHTML(const nsAString& aInputString);
 
   /**
