@@ -28,7 +28,7 @@ Device.prototype = {
   isRoot() {
     return ADB.shell("id").then(stdout => {
       if (stdout) {
-        let uid = stdout.match(/uid=(\d+)/)[1];
+        const uid = stdout.match(/uid=(\d+)/)[1];
         return uid == "0";
       }
       return false;
