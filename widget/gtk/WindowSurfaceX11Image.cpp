@@ -174,11 +174,13 @@ UpdateMaskBits(gchar* aMaskBits, int32_t aMaskWidth, int32_t aMaskHeight,
 void
 WindowSurfaceX11Image::ResizeTransparencyBitmap(int aWidth, int aHeight)
 {
-  if (mTransparencyBitmapWidth*mTransparencyBitmapHeight < aWidth*aHeight) {
-    delete[] mTransparencyBitmap;
+  int32_t actualSize =
+    GetBitmapStride(mTransparencyBitmapWidth)*mTransparencyBitmapHeight;
+  int32_t newSize = GetBitmapStride(aWidth)*aHeight;
 
-    int32_t byteSize = GetBitmapStride(aWidth)*aHeight;
-    mTransparencyBitmap = new gchar[byteSize];
+  if (actualSize < newSize) {
+    delete[] mTransparencyBitmap;
+    mTransparencyBitmap = new gchar[newSize];
   }
 
   mTransparencyBitmapWidth = aWidth;
