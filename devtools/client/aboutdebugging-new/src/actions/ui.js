@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
   PAGES,
 } = require("../constants");
@@ -23,6 +24,11 @@ function selectPage(page) {
   };
 }
 
+function updateNetworkLocations(locations) {
+  return { type: NETWORK_LOCATIONS_UPDATED, locations };
+}
+
 module.exports = {
   selectPage,
+  updateNetworkLocations,
 };

@@ -5,8 +5,9 @@
 "use strict";
 
 const {
+  NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
-  PAGES
+  PAGES,
 } = require("../constants");
 
 function UiState(locations = []) {
@@ -21,6 +22,11 @@ function uiReducer(state = UiState(), action) {
     case PAGE_SELECTED: {
       const { page } = action;
       return Object.assign({}, state, { selectedPage: page });
+    }
+
+    case NETWORK_LOCATIONS_UPDATED: {
+      const { locations } = action;
+      return Object.assign({}, state, { networkLocations: locations });
     }
 
     default:
