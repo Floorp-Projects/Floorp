@@ -3059,6 +3059,16 @@ JS_WriteTypedArray(JSStructuredCloneWriter* w, HandleValue v)
     MOZ_ASSERT(v.isObject());
     assertSameCompartment(w->context(), v);
     RootedObject obj(w->context(), &v.toObject());
+
+    // Note: writeTypedArray also does a CheckedUnwrap but it assumes this
+    // returns non-null. This isn't guaranteed for JSAPI users so we do our
+    // own unwrapping here.
+    obj = CheckedUnwrap(obj);
+    if (!obj) {
+        ReportAccessDenied(w->context());
+        return false;
+    }
+
     return w->writeTypedArray(obj);
 }
 
