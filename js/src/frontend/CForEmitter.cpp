@@ -69,7 +69,6 @@ CForEmitter::emitBody(Cond cond, const Maybe<uint32_t>& bodyPos)
         }
     }
 
-    // NB: the SRC_FOR note has offsetBias 1 (JSOP_NOP_LENGTH).
     if (!bce_->newSrcNote(SRC_FOR, &noteIndex_))
         return false;
     if (!bce_->emit1(JSOP_NOP))
