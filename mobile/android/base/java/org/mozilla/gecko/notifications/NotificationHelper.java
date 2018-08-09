@@ -26,6 +26,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.BitmapUtils;
@@ -92,7 +93,11 @@ public final class NotificationHelper implements BundleEventListener {
         /**
          * Mozilla Location Services notification channel.
          */
-        MLS
+        MLS,
+        /**
+         * Mozilla Location Services notification channel.
+         */
+        DOWNLOAD
     }
 
     private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>() {{
@@ -101,6 +106,9 @@ public final class NotificationHelper implements BundleEventListener {
 
         final String MLS_CHANNEL_TAG     = "mls-notification-channel";
         put(Channel.MLS, MLS_CHANNEL_TAG);
+
+        final String DOWNLOAD_NOTIFICATION_TAG = "download-notification-channel";
+        put(Channel.DOWNLOAD, DOWNLOAD_NOTIFICATION_TAG);
     }};
 
     // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
@@ -159,6 +167,12 @@ public final class NotificationHelper implements BundleEventListener {
                 case MLS: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
                             mContext.getString(R.string.mls_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                }
+                break;
+
+                case DOWNLOAD: {
+                    channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
+                            mContext.getString(R.string.download_notification_channel), NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
 
@@ -319,10 +333,6 @@ public final class NotificationHelper implements BundleEventListener {
             builder.setLights(light[0], light[1], light[2]);
         }
 
-        if (!AppConstants.Versions.preO) {
-            builder.setChannelId(getNotificationChannel(Channel.DEFAULT).getId());
-        }
-
         final boolean ongoing = message.getBoolean(ONGOING_ATTR);
         builder.setOngoing(ongoing);
 
@@ -340,6 +350,15 @@ public final class NotificationHelper implements BundleEventListener {
             final Bitmap b = BitmapUtils.getBitmapFromDataURI(
                     message.getString(LARGE_ICON_ATTR, ""));
             builder.setLargeIcon(b);
+        }
+
+        if (!AppConstants.Versions.preO) {
+            if (message.getString(HANDLER_ATTR).equals("downloads")) {
+                builder.setChannelId(getNotificationChannel(Channel.DOWNLOAD).getId());
+                builder.setOnlyAlertOnce(true);
+            } else {
+                builder.setChannelId(getNotificationChannel(Channel.DEFAULT).getId());
+            }
         }
 
         if (message.containsKey(PROGRESS_VALUE_ATTR) &&
