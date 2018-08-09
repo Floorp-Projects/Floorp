@@ -6104,8 +6104,13 @@ class DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher
                                                           bool successor,
                                                           MutableHandleObject result)
       : cx_(cx), offset_(offset), successor_(successor), result_(result) { }
+
     using ReturnType = bool;
+
     ReturnType match(HandleScript script) {
+        if (!EnsureScriptOffsetIsValid(cx_, script, offset_))
+            return false;
+
         PcVector adjacent;
         if (successor_) {
             if (!GetSuccessorBytecodes(script->code() + offset_, adjacent)) {
@@ -6129,12 +6134,14 @@ class DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher
         }
         return true;
     }
+
     ReturnType match(Handle<LazyScript*> lazyScript) {
         RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
         if (!script)
             return false;
         return match(script);
     }
+
     ReturnType match(Handle<WasmInstanceObject*> instance) {
         JS_ReportErrorASCII(cx_, "getSuccessorOrPredecessorOffsets NYI on wasm instances");
         return false;
