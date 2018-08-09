@@ -607,7 +607,6 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     MOZ_ASSERT(!JS_IsDeadWrapper(origTarget),
                "We don't want a dead proxy in the wrapper map");
     Value origv = ObjectValue(*origTarget);
-    Realm* wrealm = wobj->deprecatedRealm();
     JS::Compartment* wcompartment = wobj->compartment();
 
     AutoDisableProxyCheck adpc;
@@ -627,6 +626,10 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // When we remove origv from the wrapper map, its wrapper, wobj, must
     // immediately cease to be a cross-compartment wrapper. Nuke it.
     NukeCrossCompartmentWrapper(cx, wobj);
+
+    // wobj is no longer a cross-compartment wrapper after nuking it, so we can
+    // now use nonCCWRealm.
+    Realm* wrealm = wobj->nonCCWRealm();
 
     // First, we wrap it in the new compartment. We try to use the existing
     // wrapper, |wobj|, since it's been nuked anyway. The wrap() function has

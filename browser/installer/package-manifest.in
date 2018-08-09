@@ -514,6 +514,12 @@
 ; svg
 @RESPATH@/res/svg.css
 
+; [Layout Debugger]
+#ifdef MOZ_DEBUG
+@RESPATH@/chrome/layoutdebug@JAREXT@
+@RESPATH@/chrome/layoutdebug.manifest
+#endif
+
 ; [Personal Security Manager]
 ;
 ; NSS libraries are signed in the staging directory,

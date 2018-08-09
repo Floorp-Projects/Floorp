@@ -27,9 +27,11 @@ class App extends PureComponent {
   }
 
   getSelectedPageComponent() {
-    switch (this.props.selectedPage) {
+    const { dispatch, selectedPage } = this.props;
+
+    switch (selectedPage) {
       case PAGES.THIS_FIREFOX:
-        return RuntimePage();
+        return RuntimePage({ dispatch });
       case PAGES.CONNECT:
         return ConnectPage();
       default:
