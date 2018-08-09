@@ -51,7 +51,7 @@ const ADB = {
 
   // We startup by launching adb in server mode, and setting
   // the tcp socket preference to |true|
-  start() {
+  async start() {
     return new Promise(async (resolve, reject) => {
       const onSuccessfulStart = () => {
         Services.obs.notifyObservers(null, "adb-ready");
