@@ -28,6 +28,7 @@
 #include "js/TracingAPI.h"
 #include "js/Wrapper.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
@@ -85,7 +86,7 @@ typedef JS::GCHashMap<nsJSObjWrapperKey,
                       nsJSObjWrapper*,
                       JSObjWrapperHasher,
                       js::SystemAllocPolicy> JSObjWrapperTable;
-static JSObjWrapperTable sJSObjWrappers;
+static UniquePtr<JSObjWrapperTable> sJSObjWrappers;
 
 // Whether it's safe to iterate sJSObjWrappers.  Set to true when sJSObjWrappers
 // has been initialized and is not currently being enumerated.
@@ -294,8 +295,8 @@ OnWrapperDestroyed();
 static void
 TraceJSObjWrappers(JSTracer *trc, void *data)
 {
-  if (sJSObjWrappers.initialized()) {
-    sJSObjWrappers.trace(trc);
+  if (sJSObjWrappers) {
+    sJSObjWrappers->trace(trc);
   }
 }
 
@@ -361,14 +362,16 @@ static bool
 CreateJSObjWrapperTable()
 {
   MOZ_ASSERT(!sJSObjWrappersAccessible);
-  MOZ_ASSERT(!sJSObjWrappers.initialized());
+  MOZ_ASSERT(!sJSObjWrappers);
 
   if (!RegisterGCCallbacks()) {
     return false;
   }
 
-  if (!sJSObjWrappers.init(16)) {
-    NS_ERROR("Error initializing PLDHashTable sJSObjWrappers!");
+  sJSObjWrappers = MakeUnique<JSObjWrapperTable>();
+  if (!sJSObjWrappers->init(16)) {
+    sJSObjWrappers = nullptr;
+    NS_ERROR("Error initializing sJSObjWrappers!");
     return false;
   }
 
@@ -380,12 +383,11 @@ static void
 DestroyJSObjWrapperTable()
 {
   MOZ_ASSERT(sJSObjWrappersAccessible);
-  MOZ_ASSERT(sJSObjWrappers.initialized());
-  MOZ_ASSERT(sJSObjWrappers.count() == 0);
+  MOZ_ASSERT(sJSObjWrappers);
+  MOZ_ASSERT(sJSObjWrappers->count() == 0);
 
-  // No more wrappers, and our hash was initialized. Finish the
-  // hash to prevent leaking it.
-  sJSObjWrappers.finish();
+  // No more wrappers. Delete the table.
+  sJSObjWrappers = nullptr;
   sJSObjWrappersAccessible = false;
 }
 
@@ -694,9 +696,9 @@ nsJSObjWrapper::NP_Invalidate(NPObject *npobj)
     if (sJSObjWrappersAccessible) {
       // Remove the wrapper from the hash
       nsJSObjWrapperKey key(jsnpobj->mJSObj, jsnpobj->mNpp);
-      JSObjWrapperTable::Ptr ptr = sJSObjWrappers.lookup(key);
+      JSObjWrapperTable::Ptr ptr = sJSObjWrappers->lookup(key);
       MOZ_ASSERT(ptr.found());
-      sJSObjWrappers.remove(ptr);
+      sJSObjWrappers->remove(ptr);
     }
 
     // Forget our reference to the JSObject.
@@ -1132,14 +1134,14 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj,
       return _retainobject(npobj);
   }
 
-  if (!sJSObjWrappers.initialized()) {
+  if (!sJSObjWrappers) {
     // No hash yet (or any more), initialize it.
     if (!CreateJSObjWrapperTable())
       return nullptr;
   }
   MOZ_ASSERT(sJSObjWrappersAccessible);
 
-  JSObjWrapperTable::Ptr p = sJSObjWrappers.lookupForAdd(nsJSObjWrapperKey(obj, npp));
+  JSObjWrapperTable::Ptr p = sJSObjWrappers->lookupForAdd(nsJSObjWrapperKey(obj, npp));
   if (p) {
     MOZ_ASSERT(p->value());
     // Found a live nsJSObjWrapper, return it.
@@ -1162,7 +1164,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj,
 
   // Insert the new wrapper into the hashtable, rooting the JSObject. Its
   // lifetime is now tied to that of the NPObject.
-  if (!sJSObjWrappers.putNew(nsJSObjWrapperKey(obj, npp), wrapper)) {
+  if (!sJSObjWrappers->putNew(nsJSObjWrapperKey(obj, npp), wrapper)) {
     // Out of memory, free the wrapper we created.
     _releaseobject(wrapper);
     return nullptr;
@@ -2032,7 +2034,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     // Prevent modification of sJSObjWrappers table if we go reentrant.
     sJSObjWrappersAccessible = false;
 
-    for (auto iter = sJSObjWrappers.modIter(); !iter.done(); iter.next()) {
+    for (auto iter = sJSObjWrappers->modIter(); !iter.done(); iter.next()) {
       nsJSObjWrapper* npobj = iter.get().value();
       MOZ_ASSERT(npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass);
       if (npobj->mNpp == npp) {
@@ -2105,7 +2107,7 @@ nsJSNPRuntime::OnPluginDestroyPending(NPP npp)
   if (sJSObjWrappersAccessible) {
     // Prevent modification of sJSObjWrappers table if we go reentrant.
     sJSObjWrappersAccessible = false;
-    for (auto iter = sJSObjWrappers.iter(); !iter.done(); iter.next()) {
+    for (auto iter = sJSObjWrappers->iter(); !iter.done(); iter.next()) {
       nsJSObjWrapper* npobj = iter.get().value();
       MOZ_ASSERT(npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass);
       if (npobj->mNpp == npp) {
