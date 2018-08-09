@@ -27,9 +27,6 @@ add_task(async function init() {
 add_task(async function simple() {
   let iconURL = "chrome://browser/skin/mail.svg";
   let id = "test-simple";
-  let nodeAttributes = {
-    "test-attr": "test attr value",
-  };
   let title = "Test simple";
   let tooltip = "Test simple tooltip";
 
@@ -55,7 +52,6 @@ add_task(async function simple() {
   let action = PageActions.addAction(new PageActions.Action({
     iconURL,
     id,
-    nodeAttributes,
     title,
     tooltip,
     onCommand(event, buttonNode) {
@@ -83,7 +79,6 @@ add_task(async function simple() {
 
   Assert.equal(action.getIconURL(), iconURL, "iconURL");
   Assert.equal(action.id, id, "id");
-  Assert.deepEqual(action.nodeAttributes, nodeAttributes, "nodeAttributes");
   Assert.equal(action.pinnedToUrlbar, false, "pinnedToUrlbar");
   Assert.equal(action.getDisabled(), false, "disabled");
   Assert.equal(action.getDisabled(window), false, "disabled in window");
@@ -182,12 +177,6 @@ add_task(async function simple() {
   Assert.equal(panelButtonNode.id, panelButtonID, "panelButtonID");
   Assert.equal(panelButtonNode.getAttribute("label"), action.getTitle(),
                "label");
-  for (let name in action.nodeAttributes) {
-    Assert.ok(panelButtonNode.hasAttribute(name), "Has attribute: " + name);
-    Assert.equal(panelButtonNode.getAttribute(name),
-                 action.nodeAttributes[name],
-                 "Equal attribute: " + name);
-  }
 
   // The separator between the built-ins and non-built-ins should exist.
   let sepNode =
@@ -220,13 +209,6 @@ add_task(async function simple() {
                "onPlacedInUrlbarCallCount should be inc'ed");
   urlbarButtonNode = document.getElementById(urlbarButtonID);
   Assert.notEqual(urlbarButtonNode, null, "urlbarButtonNode");
-  for (let name in action.nodeAttributes) {
-    Assert.ok(urlbarButtonNode.hasAttribute(name), name,
-              "Has attribute: " + name);
-    Assert.equal(urlbarButtonNode.getAttribute(name),
-                 action.nodeAttributes[name],
-                 "Equal attribute: " + name);
-  }
 
   // The button should have been inserted before the bookmark star.
   Assert.notEqual(urlbarButtonNode.nextSibling, null, "Should be a next node");
