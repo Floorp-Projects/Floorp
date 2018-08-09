@@ -324,7 +324,7 @@ var gXPInstallObserver = {
       options.eventCallback = function(aEvent) {
         switch (aEvent) {
           case "shown":
-            let notificationElement = [...this.owner.panel.childNodes]
+            let notificationElement = [...this.owner.panel.children]
                                       .find(n => n.notification == this);
             if (notificationElement) {
               if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {

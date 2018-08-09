@@ -53,6 +53,7 @@ class nsRange;
 namespace mozilla {
 class AutoSelectionRestorer;
 class AutoTopLevelEditSubActionNotifier;
+class AutoTransactionBatch;
 class AutoTransactionsConserveSelection;
 class AutoUpdateViewBatch;
 class ChangeAttributeTransaction;
@@ -1667,6 +1668,16 @@ protected: // Called by helper classes.
   void BeginUpdateViewBatch();
   void EndUpdateViewBatch();
 
+  /**
+   * Used by AutoTransactionBatch.  After calling BeginTransactionInternal(),
+   * all transactions will be treated as an atomic transaction.  I.e.,
+   * two or more transactions are undid once.
+   * XXX What's the difference with PlaceholderTransaction? Should we always
+   *     use it instead?
+   */
+  void BeginTransactionInternal();
+  void EndTransactionInternal();
+
 protected: // Shouldn't be used by friend classes
   /**
    * The default destructor. This should suffice. Should this be pure virtual
@@ -1990,6 +2001,7 @@ protected:
   friend class AutoPlaceholderBatch;
   friend class AutoSelectionRestorer;
   friend class AutoTopLevelEditSubActionNotifier;
+  friend class AutoTransactionBatch;
   friend class AutoTransactionsConserveSelection;
   friend class AutoUpdateViewBatch;
   friend class CompositionTransaction;

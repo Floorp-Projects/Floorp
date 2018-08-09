@@ -209,7 +209,7 @@ window._gBrowser = {
 
   get tabs() {
     delete this.tabs;
-    return this.tabs = this.tabContainer.childNodes;
+    return this.tabs = this.tabContainer.children;
   },
 
   get tabbox() {
@@ -317,7 +317,7 @@ window._gBrowser = {
     this._selectedTab = tab;
 
     let uniqueId = this._generateUniquePanelID();
-    this.tabpanels.childNodes[0].id = uniqueId;
+    this.tabpanels.children[0].id = uniqueId;
     tab.linkedPanel = uniqueId;
     tab.permanentKey = browser.permanentKey;
     tab._tPos = 0;
@@ -539,7 +539,7 @@ window._gBrowser = {
   _appendStatusPanel() {
     let browser = this.selectedBrowser;
     let browserContainer = this.getBrowserContainer(browser);
-    browserContainer.insertBefore(StatusPanel.panel, browser.parentNode.nextSibling);
+    browserContainer.insertBefore(StatusPanel.panel, browser.parentNode.nextElementSibling);
   },
 
   _updateTabBarForPinnedTabs() {
@@ -3064,14 +3064,14 @@ window._gBrowser = {
     // Try to find a remaining tab that comes after the given tab
     let tab = aTab;
     do {
-      tab = tab.nextSibling;
+      tab = tab.nextElementSibling;
     } while (tab && !remainingTabs.includes(tab));
 
     if (!tab) {
       tab = aTab;
 
       do {
-        tab = tab.previousSibling;
+        tab = tab.previousElementSibling;
       } while (tab && !remainingTabs.includes(tab));
     }
 
@@ -3525,6 +3525,12 @@ window._gBrowser = {
       if (activeTabNewIndex > -1) {
         win.gBrowser.adoptTab(activeTab, activeTabNewIndex, true /* aSelectTab */);
       }
+
+      // Restore tab selection
+      let winVisibleTabs = win.gBrowser.visibleTabs;
+      let winTabLength = winVisibleTabs.length;
+      win.gBrowser.addRangeToMultiSelectedTabs(winVisibleTabs[0],
+                                               winVisibleTabs[winTabLength - 1]);
     }, { once: true });
 
     win = this.replaceTabWithWindow(firstInactiveTab);
@@ -3600,9 +3606,9 @@ window._gBrowser = {
   },
 
   moveTabForward() {
-    let nextTab = this.selectedTab.nextSibling;
+    let nextTab = this.selectedTab.nextElementSibling;
     while (nextTab && nextTab.hidden)
-      nextTab = nextTab.nextSibling;
+      nextTab = nextTab.nextElementSibling;
 
     if (nextTab)
       this.moveTabTo(this.selectedTab, nextTab._tPos);
@@ -3667,9 +3673,9 @@ window._gBrowser = {
   },
 
   moveTabBackward() {
-    let previousTab = this.selectedTab.previousSibling;
+    let previousTab = this.selectedTab.previousElementSibling;
     while (previousTab && previousTab.hidden)
-      previousTab = previousTab.previousSibling;
+      previousTab = previousTab.previousElementSibling;
 
     if (previousTab)
       this.moveTabTo(this.selectedTab, previousTab._tPos);

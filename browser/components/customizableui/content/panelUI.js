@@ -99,7 +99,7 @@ const PanelUI = {
     // we need to know whether anything is in the permanent panel area.
     this.overflowFixedList.hidden = false;
     // Also unhide the separator. We use CSS to hide/show it based on the panel's content.
-    this.overflowFixedList.previousSibling.hidden = false;
+    this.overflowFixedList.previousElementSibling.hidden = false;
     CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
     this.updateOverflowStatus();
 
@@ -508,8 +508,8 @@ const PanelUI = {
     }
 
     let container = this.libraryRecentHighlights;
-    container.hidden = container.previousSibling.hidden =
-      container.previousSibling.previousSibling.hidden = false;
+    container.hidden = container.previousElementSibling.hidden =
+      container.previousElementSibling.previousElementSibling.hidden = false;
     let fragment = document.createDocumentFragment();
     for (let highlight of highlights) {
       let button = document.createElement("toolbarbutton");
@@ -547,8 +547,8 @@ const PanelUI = {
     while (container.firstChild) {
       container.firstChild.remove();
     }
-    container.hidden = container.previousSibling.hidden =
-      container.previousSibling.previousSibling.hidden = true;
+    container.hidden = container.previousElementSibling.hidden =
+      container.previousElementSibling.previousElementSibling.hidden = true;
   },
 
   /**

@@ -134,6 +134,16 @@
     "n_values": 3,
     "description": "Status of the application reputation remote lookup (0=OK, 1=failed, 2=invalid protobuf response)"
   },
+  "APPLICATION_REPUTATION_SERVER_2": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1479901],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["ErrOthers", "ResponseValid", "FailGetChannel", "FailGetResponse", "HTTP1xx", "HTTP2xx", "HTTP204", "HTTP3xx", "HTTP400", "HTTP4xx", "HTTP403", "HTTP404", "HTTP408", "HTTP413", "HTTP5xx", "HTTP502_504_511", "HTTP503", "HTTP505", "HTTPOthers", "ErrAlreadyConnected", "ErrNotConnected", "ErrConnectionRefused", "ErrNetTimeout", "ErrOffline", "ErrPortAccess", "ErrNetReset", "ErrNetInterrupt", "ErrProxyConnection", "ErrNetPartial", "ErrNetInadequate", "ErrUnknownHost", "ErrDNSLookupQueue", "ErrUnknownProxyHost"],
+    "description": "Network status of the application reputation remote lookup"
+  },
   "APPLICATION_REPUTATION_SERVER_VERDICT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],

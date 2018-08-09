@@ -313,7 +313,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
     worker = taskdesc['worker']
-    is_talos = test['suite'] == 'talos'
+    is_talos = test['suite'] == 'talos' or test['suite'] == 'raptor'
     is_macosx = worker['os'] == 'macosx'
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
@@ -393,7 +393,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
     worker = taskdesc['worker']
-    is_talos = test['suite'] == 'talos'
+    is_talos = test['suite'] == 'talos' or test['suite'] == 'raptor'
     if worker['os'] != 'linux':
         raise Exception('os: {} not supported on script-engine-autophone'.format(worker['os']))
 

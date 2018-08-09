@@ -157,7 +157,7 @@ async function test_mute_tab(tab, icon, expectMuted) {
   return mutedPromise;
 }
 
-async function dragAndDrop(tab1, tab2, copy) {
+async function dragAndDrop(tab1, tab2, copy, destWindow = window) {
   let rect = tab2.getBoundingClientRect();
   let event = {
     ctrlKey: copy,
@@ -166,10 +166,23 @@ async function dragAndDrop(tab1, tab2, copy) {
     clientY: rect.top + rect.height / 2,
   };
 
+  if (destWindow != window) {
+    // Make sure that both tab1 and tab2 are visible
+    window.focus();
+    window.moveTo(rect.left, rect.top + rect.height * 3);
+  }
+
   let originalTPos = tab1._tPos;
-  EventUtils.synthesizeDrop(tab1, tab2, null, copy ? "copy" : "move", window, window, event);
-  if (!copy) {
+  EventUtils.synthesizeDrop(tab1, tab2, null, copy ? "copy" : "move", window, destWindow, event);
+  if (!copy && destWindow == window) {
     await BrowserTestUtils.waitForCondition(() => tab1._tPos != originalTPos,
       "Waiting for tab position to be updated");
+  } else if (destWindow != window) {
+    await BrowserTestUtils.waitForCondition(() => tab1.closing,
+      "Waiting for tab closing");
   }
+}
+
+function getUrl(tab) {
+  return tab.linkedBrowser.currentURI.spec;
 }

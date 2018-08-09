@@ -170,6 +170,37 @@ add_task(async function test_inspect_method() {
 });
 add_task(clear_state);
 
+add_task(async function test_listeners_are_not_deduplicated() {
+  const serverTime = Date.now();
+
+  let count = 0;
+  const plus1 = () => { count += 1; };
+
+  client.on("sync", plus1);
+  client.on("sync", plus1);
+  client.on("sync", plus1);
+
+  await client.maybeSync(2000, serverTime);
+
+  equal(count, 3);
+});
+add_task(clear_state);
+
+add_task(async function test_listeners_can_be_removed() {
+  const serverTime = Date.now();
+
+  let count = 0;
+  const onSync = () => { count += 1; };
+
+  client.on("sync", onSync);
+  client.off("sync", onSync);
+
+  await client.maybeSync(2000, serverTime);
+
+  equal(count, 0);
+});
+add_task(clear_state);
+
 add_task(async function test_all_listeners_are_executed_if_one_fails() {
   const serverTime = Date.now();
 
