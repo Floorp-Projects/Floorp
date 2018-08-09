@@ -1,6 +1,6 @@
 "use strict";
 
-/* global windowTracker, EventManager, EventEmitter, AddonManager */
+/* global windowTracker, EventManager, EventEmitter */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -36,7 +36,7 @@ class Theme {
    * @param {string} extension Extension that created the theme.
    * @param {Integer} windowId The windowId where the theme is applied.
    */
-  constructor({extension, details, windowId, experiment}) {
+  constructor({extension, details, windowId}) {
     this.extension = extension;
     this.details = details;
     this.windowId = windowId;
@@ -45,24 +45,6 @@ class Theme {
       icons: {},
     };
 
-    if (experiment) {
-      const canRunExperiment = !AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-        Services.prefs.getBoolPref("extensions.legacy.enabled");
-      if (canRunExperiment) {
-        this.lwtStyles.experimental = {
-          colors: {},
-          images: {},
-          properties: {},
-        };
-        const {baseURI} = this.extension;
-        if (experiment.stylesheet) {
-          experiment.stylesheet = baseURI.resolve(experiment.stylesheet);
-        }
-        this.experiment = experiment;
-      } else {
-        throw new Error("This extension is not allowed to run theme experiments");
-      }
-    }
     this.load();
   }
 
@@ -106,9 +88,6 @@ class Theme {
     }
     onUpdatedEmitter.emit("theme-updated", this.details, this.windowId);
 
-    if (this.experiment) {
-      lwtData.experiment = this.experiment;
-    }
     LightweightThemeManager.fallbackThemeData = this.lwtStyles;
     Services.obs.notifyObservers(null,
                                  "lightweight-theme-styling-update",
@@ -184,13 +163,7 @@ class Theme {
         case "ntp_text":
           this.lwtStyles[color] = cssColor;
           break;
-        default:
-          if (this.experiment && this.experiment.colors && color in this.experiment.colors) {
-            this.lwtStyles.experimental.colors[color] = cssColor;
-          }
-          break;
       }
-
     }
   }
 
@@ -219,12 +192,6 @@ class Theme {
         case "theme_frame": {
           let resolvedURL = baseURI.resolve(val);
           this.lwtStyles.headerURL = resolvedURL;
-          break;
-        }
-        default: {
-          if (this.experiment && this.experiment.images && image in this.experiment.images) {
-            this.lwtStyles.experimental.images[image] = baseURI.resolve(val);
-          }
           break;
         }
       }
@@ -318,12 +285,6 @@ class Theme {
           this.lwtStyles.backgroundsTiling = tiling.join(",");
           break;
         }
-        default: {
-          if (this.experiment && this.experiment.properties && property in this.experiment.properties) {
-            this.lwtStyles.experimental.properties[property] = val;
-          }
-          break;
-        }
       }
     }
   }
@@ -353,12 +314,10 @@ this.theme = class extends ExtensionAPI {
   onManifestEntry(entryName) {
     let {extension} = this;
     let {manifest} = extension;
-    let {theme, theme_experiment} = manifest;
 
     defaultTheme = new Theme({
       extension,
-      details: theme,
-      experiment: theme_experiment,
+      details: manifest.theme,
     });
   }
 
@@ -407,7 +366,6 @@ this.theme = class extends ExtensionAPI {
             extension,
             details,
             windowId,
-            experiment: this.extension.manifest.theme_experiment,
           });
         },
         reset: (windowId) => {
