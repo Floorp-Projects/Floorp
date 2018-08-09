@@ -2078,19 +2078,18 @@ inline mozilla::dom::Element* nsINode::GetParentElement() const
  */
 #define NS_IMPL_ELEMENT_CLONE(_elementName)                                 \
 nsresult                                                                    \
-_elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
-                    bool aPreallocateChildren) const                        \
+_elementName::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const \
 {                                                                           \
   *aResult = nullptr;                                                       \
   already_AddRefed<mozilla::dom::NodeInfo> ni =                             \
-    RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();                   \
+    RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();                     \
   _elementName *it = new _elementName(ni);                                  \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
                                                                             \
   nsCOMPtr<nsINode> kungFuDeathGrip = it;                                   \
-  nsresult rv = const_cast<_elementName*>(this)->CopyInnerTo(it, aPreallocateChildren); \
+  nsresult rv = const_cast<_elementName*>(this)->CopyInnerTo(it);           \
   if (NS_SUCCEEDED(rv)) {                                                   \
     kungFuDeathGrip.swap(*aResult);                                         \
   }                                                                         \
@@ -2101,8 +2100,8 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
 #define EXPAND(...) __VA_ARGS__
 #define NS_IMPL_ELEMENT_CLONE_WITH_INIT_HELPER(_elementName, extra_args_)   \
 nsresult                                                                    \
-_elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
-                    bool aPreallocateChildren) const                        \
+_elementName::Clone(mozilla::dom::NodeInfo* aNodeInfo,                      \
+                    nsINode** aResult) const                                \
 {                                                                           \
   *aResult = nullptr;                                                       \
   already_AddRefed<mozilla::dom::NodeInfo> ni =                             \
@@ -2114,7 +2113,7 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
                                                                             \
   nsCOMPtr<nsINode> kungFuDeathGrip = it;                                   \
   nsresult rv = it->Init();                                                 \
-  nsresult rv2 = const_cast<_elementName*>(this)->CopyInnerTo(it, aPreallocateChildren); \
+  nsresult rv2 = const_cast<_elementName*>(this)->CopyInnerTo(it);          \
   if (NS_FAILED(rv2)) {                                                     \
     rv = rv2;                                                               \
   }                                                                         \

@@ -64,6 +64,15 @@ class AutomationMixin(object):
             if set_return_code:
                 self.return_code = EXIT_STATUS_DICT[self.worst_status]
 
+    def add_failure(self, key, message="%(key)s failed.", level=ERROR):
+        if key not in self.failures:
+            self.failures.append(key)
+            self.add_summary(message % {'key': key}, level=level)
+            self.record_status(TBPL_FAILURE)
+
+    def query_failure(self, key):
+        return key in self.failures
+
     def set_property(self, prop_name, prop_value):
         self.info("Setting property %s to %s" % (prop_name, prop_value))
         self.properties[prop_name] = prop_value

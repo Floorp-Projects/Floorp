@@ -577,14 +577,12 @@ HTMLCanvasElement::GetOriginalCanvas()
 }
 
 nsresult
-HTMLCanvasElement::CopyInnerTo(Element* aDest,
-                               bool aPreallocateChildren)
+HTMLCanvasElement::CopyInnerTo(HTMLCanvasElement* aDest)
 {
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
   if (aDest->OwnerDoc()->IsStaticDocument()) {
-    HTMLCanvasElement* dest = static_cast<HTMLCanvasElement*>(aDest);
-    dest->mOriginalCanvas = this;
+    aDest->mOriginalCanvas = this;
 
     // We make sure that the canvas is not zero sized since that would cause
     // the DrawImage call below to return an error, which would cause printing
@@ -592,15 +590,14 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest,
     nsIntSize size = GetWidthHeight();
     if (size.height > 0 && size.width > 0) {
       nsCOMPtr<nsISupports> cxt;
-      dest->GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(cxt));
+      aDest->GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(cxt));
       RefPtr<CanvasRenderingContext2D> context2d =
         static_cast<CanvasRenderingContext2D*>(cxt.get());
       if (context2d && !mPrintCallback) {
         CanvasImageSource source;
         source.SetAsHTMLCanvasElement() = this;
         ErrorResult err;
-        context2d->DrawImage(source,
-                             0.0, 0.0, err);
+        context2d->DrawImage(source, 0.0, 0.0, err);
         rv = err.StealNSResult();
       }
     }

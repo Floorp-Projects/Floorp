@@ -1088,35 +1088,60 @@ describe("Top Sites Feed", () => {
     const NO_DEFAULT_SEARCH_TILE_PREF = "improvesearch.noDefaultSearchTile";
     let cachedDefaultSearch;
     beforeEach(() => {
-      cachedDefaultSearch = global.Services.search.defaultEngine;
-      global.Services.search.defaultEngine = {identifier: "google"};
+      cachedDefaultSearch = global.Services.search.currentEngine;
+      global.Services.search.currentEngine = {identifier: "google", searchForm: "google.com"};
       feed.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
     });
     afterEach(() => {
-      global.Services.search.defaultEngine = cachedDefaultSearch;
+      global.Services.search.currentEngine = cachedDefaultSearch;
     });
-    it("should not filter out google from the query results if the experiment pref is off", async () => {
-      links = [{url: "google.com"}, {url: "foo.com"}];
+    it("should filter out alexa top 5 search from the default sites", async () => {
+      const TOP_5_TEST = [
+        "google.com",
+        "search.yahoo.com",
+        "yahoo.com",
+        "bing.com",
+        "ask.com",
+        "duckduckgo.com"
+      ];
+      links = [{url: "amazon.com"}, ...TOP_5_TEST.map(url => ({url}))];
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.include(urlsReturned, "amazon.com");
+      TOP_5_TEST.forEach(url => assert.notInclude(urlsReturned, url));
+    });
+    it("should not filter out alexa, default search from the query results if the experiment pref is off", async () => {
+      links = [{url: "google.com"}, {url: "foo.com"}, {url: "duckduckgo"}];
       feed.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = false;
       const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
       assert.include(urlsReturned, "google.com");
     });
-    it("should filter out google from the default sites if it matches the current default search", async () => {
+    it("should filter out the current default search from the default sites", async () => {
+      feed._currentSearchHostname = "amazon";
       feed.onAction({type: at.PREFS_INITIAL_VALUES, data: {"default.sites": "google.com,amazon.com"}});
       links = [{url: "foo.com"}];
       const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
-      assert.include(urlsReturned, "amazon.com");
-      assert.notInclude(urlsReturned, "google.com");
+      assert.notInclude(urlsReturned, "amazon.com");
     });
-    it("should not filter out google from pinned sites even if it matches the current default search", async () => {
+    it("should not filter out current default search from pinned sites even if it matches the current default search", async () => {
       links = [{url: "foo.com"}];
       fakeNewTabUtils.pinnedLinks.links = [{url: "google.com"}];
       const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
       assert.include(urlsReturned, "google.com");
     });
-    it("should call refresh when the the default search engine has been set", () => {
+    it("should set ._currentSearchHostname to the current engine hostname on init", async () => {
+      global.Services.search.currentEngine = {identifier: "ddg", searchForm: "duckduckgo.com"};
+      sandbox.stub(feed, "refresh");
+
+      await feed.init();
+
+      assert.equal(feed._currentSearchHostname, "duckduckgo");
+    });
+    it("should call refresh and set ._currentSearchHostname to the new engine hostname when the the default search engine has been set", () => {
       sinon.stub(feed, "refresh");
-      feed.observe(null, "browser-search-engine-modified", "engine-default");
+      global.Services.search.currentEngine = {identifier: "ddg", searchForm: "duckduckgo.com"};
+      feed.observe(null, "browser-search-engine-modified", "engine-current");
+      assert.equal(feed._currentSearchHostname, "duckduckgo");
+      assert.calledOnce(feed.refresh);
     });
     it("should call refresh when the experiment pref has changed", () => {
       sinon.stub(feed, "refresh");

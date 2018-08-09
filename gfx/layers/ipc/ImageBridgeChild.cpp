@@ -709,15 +709,15 @@ ImageBridgeChild::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier&
                             aIdentifier.mParentBackend != LayersBackend::LAYERS_WR;
   // D3DTexture might become obsolte. To prevent to use obsoleted D3DTexture,
   // drop all ImageContainers' ImageClients.
+
+  bool needsDrop = disablingWebRender;
+
 #if defined(XP_WIN)
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
-  bool needsDrop = !!mImageDevice &&
-                   mImageDevice != device &&
-                   GetCompositorBackendType() == LayersBackend::LAYERS_D3D11 ||
-                   disablingWebRender;
+  needsDrop |= !!mImageDevice &&
+               mImageDevice != device &&
+               GetCompositorBackendType() == LayersBackend::LAYERS_D3D11;
   mImageDevice = device;
-#else
-  bool needsDrop = disablingWebRender;
 #endif
 
   IdentifyTextureHost(aIdentifier);

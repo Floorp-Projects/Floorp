@@ -536,8 +536,7 @@ public:
                              bool aNotify) override;
   void RemoveChildNode(nsIContent* aKid, bool aNotify) final;
   nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo,
-                 nsINode **aResult,
-                 bool aPreallocateChildren) const override
+                 nsINode **aResult) const override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

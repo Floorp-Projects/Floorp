@@ -15,33 +15,9 @@ const PKCS12_FILE = "test_certDB_import/cert_from_windows.pfx";
 const CERT_COMMON_NAME = "test_cert_from_windows";
 const TEST_CERT_PASSWORD = "黒い";
 
-// Mock implementation of nsICertificateDialogs.
-const gCertificateDialogs = {
-  confirmDownloadCACert: () => {
-    // We don't test anything that calls this method.
-    ok(false, "confirmDownloadCACert() should not have been called");
-  },
-  setPKCS12FilePassword: (ctx, password) => {
-    password.value = TEST_CERT_PASSWORD;
-    return true;
-  },
-  getPKCS12FilePassword: (ctx, password) => {
-    password.value = TEST_CERT_PASSWORD;
-    return true;
-  },
-  viewCert: (ctx, cert) => {
-    // This shouldn't be called for import methods.
-    ok(false, "viewCert() should not have been called");
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs])
-};
-
 var gPrompt = {
   password: "password",
   clickOk: true,
-  expectingAlert: false,
-  expectedAlertRegexp: null,
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
 
@@ -50,10 +26,7 @@ var gPrompt = {
   // how objects get wrapped when going across xpcom boundaries.
   alert(title, text) {
     info(`alert('${text}')`);
-    ok(this.expectingAlert,
-       "alert() should only be called if we're expecting it");
-    ok(this.expectedAlertRegexp.test(text),
-       "alert text should match expected message");
+    ok(false, "not expecting alert() to be called");
   },
 
   promptPassword(dialogTitle, text, password, checkMsg, checkValue) {
@@ -83,14 +56,10 @@ function findCertByCommonName(commonName) {
 }
 
 function run_test() {
-  let certificateDialogsCID =
-    MockRegistrar.register("@mozilla.org/nsCertificateDialogs;1",
-                           gCertificateDialogs);
   let promptFactoryCID =
     MockRegistrar.register("@mozilla.org/prompter;1", gPromptFactory);
 
   registerCleanupFunction(() => {
-    MockRegistrar.unregister(certificateDialogsCID);
     MockRegistrar.unregister(promptFactoryCID);
   });
 
@@ -106,7 +75,8 @@ function run_test() {
   equal(cert, null, "cert should not be found before import");
   let certFile = do_get_file(PKCS12_FILE);
   ok(certFile, `${PKCS12_FILE} should exist`);
-  gCertDB.importPKCS12File(certFile);
+  let errorCode = gCertDB.importPKCS12File(certFile, TEST_CERT_PASSWORD);
+  equal(errorCode, Ci.nsIX509CertDB.Success, "cert should import");
   cert = findCertByCommonName(CERT_COMMON_NAME);
   notEqual(cert, null, "cert should be found now");
 
@@ -118,7 +88,8 @@ function run_test() {
   let output = do_get_tempdir();
   output.append("output.p12");
   ok(!output.exists(), "output shouldn't exist before exporting PKCS12 file");
-  gCertDB.exportPKCS12File(output, 1, [cert]);
+  errorCode = gCertDB.exportPKCS12File(output, 1, [cert], TEST_CERT_PASSWORD);
+  equal(errorCode, Ci.nsIX509CertDB.Success, "cert should export");
   ok(output.exists(), "output should exist after exporting PKCS12 file");
   output.remove(false /* not a directory; recursive doesn't apply */);
 
@@ -131,8 +102,8 @@ function run_test() {
   let output2 = do_get_tempdir();
   output2.append("output2.p12");
   ok(!output2.exists(), "output2 shouldn't exist before exporting PKCS12 file");
-  gPrompt.expectingAlert = true;
-  gPrompt.expectedAlertRegexp = /Failed to create the PKCS #12 backup file for unknown reasons\./;
-  throws(() => gCertDB.exportPKCS12File(output, 1, [cert]), /NS_ERROR_FAILURE/);
+  errorCode = gCertDB.exportPKCS12File(output, 1, [cert], TEST_CERT_PASSWORD);
+  equal(errorCode, Ci.nsIX509CertDB.ERROR_PKCS12_BACKUP_FAILED, "cert should not export");
+
   ok(!output2.exists(), "output2 shouldn't exist after failing to export");
 }

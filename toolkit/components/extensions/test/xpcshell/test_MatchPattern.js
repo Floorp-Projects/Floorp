@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(async function test_MatchPattern_matches() {
-  function test(url, pattern, normalized = pattern, options = {}) {
+  function test(url, pattern, normalized = pattern, options = {}, explicit) {
     let uri = Services.io.newURI(url);
 
     pattern = Array.concat(pattern);
@@ -16,25 +16,25 @@ add_task(async function test_MatchPattern_matches() {
 
     deepEqual(set2.patterns, patterns, "Patterns in set should equal the input patterns");
 
-    equal(set.matches(uri), set2.matches(uri), "Single pattern and pattern set should return the same match");
+    equal(set.matches(uri, explicit), set2.matches(uri, explicit), "Single pattern and pattern set should return the same match");
 
     for (let [i, pat] of patterns.entries()) {
       equal(pat.pattern, normalized[i], "Pattern property should contain correct normalized pattern value");
     }
 
     if (patterns.length == 1) {
-      equal(patterns[0].matches(uri), set.matches(uri), "Single pattern and string set should return the same match");
+      equal(patterns[0].matches(uri, explicit), set.matches(uri, explicit), "Single pattern and string set should return the same match");
     }
 
-    return set.matches(uri);
+    return set.matches(uri, explicit);
   }
 
-  function pass({url, pattern, normalized, options}) {
-    ok(test(url, pattern, normalized, options), `Expected match: ${JSON.stringify(pattern)}, ${url}`);
+  function pass({url, pattern, normalized, options, explicit}) {
+    ok(test(url, pattern, normalized, options, explicit), `Expected match: ${JSON.stringify(pattern)}, ${url}`);
   }
 
-  function fail({url, pattern, normalized, options}) {
-    ok(!test(url, pattern, normalized, options), `Expected no match: ${JSON.stringify(pattern)}, ${url}`);
+  function fail({url, pattern, normalized, options, explicit}) {
+    ok(!test(url, pattern, normalized, options, explicit), `Expected no match: ${JSON.stringify(pattern)}, ${url}`);
   }
 
   function invalid({pattern}) {
@@ -112,6 +112,13 @@ add_task(async function test_MatchPattern_matches() {
   // Match url with fragments.
   pass({url: "http://mozilla.org/base#some-fragment", pattern: "http://mozilla.org/base"});
 
+  // Match data:-URLs.
+  pass({url: "data:text/plain,foo", pattern: ["data:text/plain,foo"]});
+  pass({url: "data:text/plain,foo", pattern: ["data:text/plain,*"]});
+  pass({url: "data:text/plain;charset=utf-8,foo", pattern: ["data:text/plain;charset=utf-8,foo"]});
+  fail({url: "data:text/plain,foo", pattern: ["data:text/plain;charset=utf-8,foo"]});
+  fail({url: "data:text/plain;charset=utf-8,foo", pattern: ["data:text/plain,foo"]});
+
   // Privileged matchers:
   invalid({pattern: "about:foo"});
   invalid({pattern: "resource://foo/*"});
@@ -124,8 +131,33 @@ add_task(async function test_MatchPattern_matches() {
   fail({url: "resource://fog/bar", pattern: ["resource://foo/bar"], options: {restrictSchemes: false}});
   fail({url: "about:foo", pattern: ["about:meh"], options: {restrictSchemes: false}});
 
-  // about: matchers should ignore ignorePath.
+  // Matchers for schemes without host should ignore ignorePath.
   pass({url: "about:reader?http://e.com/", pattern: ["about:reader*"], options: {ignorePath: true, restrictSchemes: false}});
+  pass({url: "data:,", pattern: ["data:,*"], options: {ignorePath: true}});
+
+  // Matchers for schems without host should still match even if the explicit (host) flag is set.
+  pass({url: "about:reader?explicit", pattern: ["about:reader*"], options: {restrictSchemes: false}, explicit: true});
+  pass({url: "about:reader?explicit", pattern: ["about:reader?explicit"], options: {restrictSchemes: false}, explicit: true});
+  pass({url: "data:,explicit", pattern: ["data:,explicit"], explicit: true});
+  pass({url: "data:,explicit", pattern: ["data:,*"], explicit: true});
+
+  // Matchers without "//" separator in the pattern.
+  pass({url: "data:text/plain;charset=utf-8,foo", pattern: ["data:*"]});
+  pass({url: "about:blank", pattern: ["about:*"], options: {restrictSchemes: false}});
+  pass({url: "view-source:https://example.com", pattern: ["view-source:*"], options: {restrictSchemes: false}});
+  invalid({pattern: ["chrome:*"], options: {restrictSchemes: false}});
+  invalid({pattern: "http:*"});
+
+  // Matchers for unrecognized schemes.
+  invalid({pattern: "unknown-scheme:*"});
+  pass({url: "unknown-scheme:foo", pattern: ["unknown-scheme:foo"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme:foo", pattern: ["unknown-scheme:*"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme://foo", pattern: ["unknown-scheme://foo"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme://foo", pattern: ["unknown-scheme://*"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme://foo", pattern: ["unknown-scheme:*"], options: {restrictSchemes: false}});
+  fail({url: "unknown-scheme://foo", pattern: ["unknown-scheme:foo"], options: {restrictSchemes: false}});
+  fail({url: "unknown-scheme:foo", pattern: ["unknown-scheme://foo"], options: {restrictSchemes: false}});
+  fail({url: "unknown-scheme:foo", pattern: ["unknown-scheme://*"], options: {restrictSchemes: false}});
 });
 
 add_task(async function test_MatchPattern_overlaps() {

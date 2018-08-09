@@ -32,8 +32,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(XBLChildrenElement, nsXMLElement)
 
   // nsINode interface methods
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   void AppendInsertedChild(nsIContent* aChild, bool aNotify)
   {

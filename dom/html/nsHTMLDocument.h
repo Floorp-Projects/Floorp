@@ -131,8 +131,7 @@ public:
 
   virtual nsresult SetEditingState(EditingState aState) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override;
 
   virtual void RemovedFromDocShell() override;
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;

@@ -8674,7 +8674,7 @@ nsIDocument::RefreshLinkHrefs()
 }
 
 nsresult
-nsDocument::CloneDocHelper(nsDocument* clone, bool aPreallocateChildren) const
+nsDocument::CloneDocHelper(nsDocument* clone) const
 {
   clone->mIsStaticDocument = mCreatingStaticClone;
 

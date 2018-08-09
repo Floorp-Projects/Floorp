@@ -2850,7 +2850,7 @@ const LinkMenuOptions = {
   }),
   SaveToPocket: (site, index, eventSource) => ({
     id: "menu_action_save_to_pocket",
-    icon: "pocket",
+    icon: "pocket-save",
     action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
       type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].SAVE_TO_POCKET,
       data: { site: { url: site.url, title: site.title } }
