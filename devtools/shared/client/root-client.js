@@ -32,6 +32,16 @@ function RootClient(client, greeting) {
   this.actor = greeting.from;
   this.applicationType = greeting.applicationType;
   this.traits = greeting.traits;
+
+  // Cache root form as this will always be the same value.
+  Object.defineProperty(this, "rootForm", {
+    get() {
+      delete this.rootForm;
+      this.rootForm = this._getRoot();
+      return this.rootForm;
+    },
+    configurable: true
+  });
 }
 exports.RootClient = RootClient;
 
@@ -43,7 +53,7 @@ RootClient.prototype = {
    * browser.  This can replace usages of `listTabs` that only wanted the global actors
    * and didn't actually care about tabs.
    */
-  getRoot: DebuggerClient.requester({ type: "getRoot" }),
+  _getRoot: DebuggerClient.requester({ type: "getRoot" }),
 
    /**
    * List the open tabs.
