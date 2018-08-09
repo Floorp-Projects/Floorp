@@ -1,5 +1,5 @@
 # NOTE: bug 1084564 covers "fails"/"skip" annotations for android below:
-fuzzy(255,5000) == 444-1.html 444-1-ref.html
+fuzzy(0-255,0-5000) == 444-1.html 444-1-ref.html
 fails-if(Android) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
 fails-if(Android) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
 fails-if(Android) skip-if(gtkWidget) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
@@ -19,7 +19,7 @@ random skip-if(Android) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
 skip-if(Android) == offset-1.xhtml offset-1-ref.html
 random skip-if(Android) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 random skip-if(Android) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
-skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
+skip-if(Android) fuzzy-if(winWidget,0-1,0-56000) fuzzy-if(cocoaWidget,0-1,0-56000) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
 skip-if(Android) == poster-1.html poster-ref-blue250x200.html
 skip-if(Android) == poster-2.html poster-ref-black140x100.html
 skip-if(Android) == poster-3.html poster-ref-black140x100.html

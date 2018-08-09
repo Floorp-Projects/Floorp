@@ -2,36 +2,36 @@
 
 # mask-composite test cases
 == mask-composite-1a.html mask-composite-1-ref.html
-fuzzy-if(skiaContent,64,200) == mask-composite-1b.html mask-composite-1-ref.html
+fuzzy-if(skiaContent,0-64,0-200) == mask-composite-1b.html mask-composite-1-ref.html
 == mask-composite-1c.html mask-composite-1-ref.html
 == mask-composite-1d.html mask-composite-1-ref.html
-fuzzy-if(skiaContent||winWidget,1,5000) == mask-composite-2a.html mask-composite-2-ref.html
-fuzzy-if(skiaContent||winWidget,64,5200) == mask-composite-2b.html mask-composite-2-ref.html
+fuzzy-if(skiaContent||winWidget,0-1,0-5000) == mask-composite-2a.html mask-composite-2-ref.html
+fuzzy-if(skiaContent||winWidget,0-64,0-5200) == mask-composite-2b.html mask-composite-2-ref.html
 == mask-composite-2c.html mask-composite-2-ref.html
 
 # mask-mode test cases
-fuzzy-if(skiaContent,1,30000) == mask-mode-a.html mask-mode-ref.html
-fuzzy-if(skiaContent,1,30000) == mask-mode-b.html mask-mode-ref.html
-fuzzy-if(skiaContent,1,30000) == mask-mode-c.html mask-mode-ref.html
-fuzzy-if(skiaContent,1,30000) == mask-mode-d.html mask-mode-ref.html
-fuzzy-if(skiaContent,1,30000) fuzzy-if(d2d,1,30000) == mask-mode-to-mask-type.html mask-mode-to-mask-type-ref.html
+fuzzy-if(skiaContent,0-1,0-30000) == mask-mode-a.html mask-mode-ref.html
+fuzzy-if(skiaContent,0-1,0-30000) == mask-mode-b.html mask-mode-ref.html
+fuzzy-if(skiaContent,0-1,0-30000) == mask-mode-c.html mask-mode-ref.html
+fuzzy-if(skiaContent,0-1,0-30000) == mask-mode-d.html mask-mode-ref.html
+fuzzy-if(skiaContent,0-1,0-30000) fuzzy-if(d2d,0-1,0-30000) == mask-mode-to-mask-type.html mask-mode-to-mask-type-ref.html
 
 # mask-image test cases
 == mask-image-1a.html mask-image-1-ref.html
 == mask-image-1b.html mask-image-1-ref.html
 random-if(gtkWidget) skip-if(winWidget&&/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == mask-image-1c.html mask-image-1-ref.html # bug 1365177
 == mask-image-1d.html mask-image-1-ref.html
-fuzzy-if(skiaContent||winWidget,1,20000) == mask-image-2.html mask-image-2-ref.html
+fuzzy-if(skiaContent||winWidget,0-1,0-20000) == mask-image-2.html mask-image-2-ref.html
 == mask-image-3a.html mask-image-3-ref.html
 == mask-image-3b.html mask-image-3-ref.html
-fuzzy-if(skiaContent||winWidget,1,43) == mask-image-3c.html mask-image-3-ref.html
-fuzzy-if(skiaContent||winWidget,1,43) == mask-image-3d.html mask-image-3-ref.html
+fuzzy-if(skiaContent||winWidget,0-1,0-43) == mask-image-3c.html mask-image-3-ref.html
+fuzzy-if(skiaContent||winWidget,0-1,0-43) == mask-image-3d.html mask-image-3-ref.html
 == mask-image-3e.html mask-image-3-ref.html
 # Due to SVG luminance, see bug 1372577, parent process doesn't use d2d for luminance.
-fuzzy-if(skiaContent||winWidget,50,85) fuzzy-if(webrender,1,126) == mask-image-3f.html mask-image-3-ref.html
-fuzzy-if(skiaContent||winWidget,50,85) fuzzy-if(webrender,1,126) == mask-image-3g.html mask-image-3-ref.html
-fuzzy-if(winWidget,1,3) fuzzy-if(skiaContent,2,12) == mask-image-3h.html mask-image-3-ref.html
-fuzzy-if(skiaContent,71,203) fuzzy-if(cocoaWidget&&!webrender,101,193) == mask-image-3i.html mask-image-3-ref.html
+fuzzy-if(skiaContent||winWidget,0-50,0-85) fuzzy-if(webrender,0-1,0-126) == mask-image-3f.html mask-image-3-ref.html
+fuzzy-if(skiaContent||winWidget,0-50,0-85) fuzzy-if(webrender,0-1,0-126) == mask-image-3g.html mask-image-3-ref.html
+fuzzy-if(winWidget,0-1,0-3) fuzzy-if(skiaContent,0-2,0-12) == mask-image-3h.html mask-image-3-ref.html
+fuzzy-if(skiaContent,0-71,0-203) fuzzy-if(cocoaWidget&&!webrender,0-101,0-193) == mask-image-3i.html mask-image-3-ref.html
 == mask-image-4a.html blank.html
 == mask-image-4b.html blank.html
 == mask-image-5.html mask-image-5-ref.html
@@ -87,31 +87,31 @@ fails == mask-origin-2.html mask-origin-2-ref.html # bug 1260094
 == mask-size-percent-percent.html mask-size-percent-percent-ref.html
 == mask-size-percent-percent-stretch.html mask-size-percent-percent-stretch-ref.html
 
-fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-contentBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) == clip-path-contentBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64-64,371-371) == clip-path-contentBox-1c.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-paddingBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) == clip-path-paddingBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-paddingBox-1c.html clip-path-geometryBox-1-ref.html
-fuzzy(64,371) == clip-path-borderBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) == clip-path-borderBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy(64,371) == clip-path-borderBox-1c.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) == clip-path-marginBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy(64,371) == clip-path-fillBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy(64,371) == clip-path-strokeBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy(64,370) == clip-path-strokeBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-viewBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-viewBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy(64,371) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,9,98) fuzzy-if(webrender,64,100) == clip-path-geometryBox-2.html clip-path-geometryBox-2-ref.html
+fuzzy-if(winWidget,0-1,0-21) fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(webrender,0-64,0-371) == clip-path-contentBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-21) fuzzy-if(skiaContent,0-1,0-60) == clip-path-contentBox-1b.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-21) fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(webrender,64-64,371-371) == clip-path-contentBox-1c.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-21) fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(webrender,0-64,0-371) == clip-path-paddingBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-21) fuzzy-if(skiaContent,0-1,0-60) == clip-path-paddingBox-1b.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-21) fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(webrender,0-64,0-371) == clip-path-paddingBox-1c.html clip-path-geometryBox-1-ref.html
+fuzzy(0-64,0-371) == clip-path-borderBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-21) fuzzy-if(skiaContent,0-1,0-60) == clip-path-borderBox-1b.html clip-path-geometryBox-1-ref.html
+fuzzy(0-64,0-371) == clip-path-borderBox-1c.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-21) fuzzy-if(skiaContent,0-1,0-60) == clip-path-marginBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy(0-64,0-371) == clip-path-fillBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy(0-64,0-371) == clip-path-strokeBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy(0-64,0-370) == clip-path-strokeBox-1b.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-1,0-21) fuzzy-if(skiaContent,0-1,0-60) == clip-path-viewBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-1,0-21) fuzzy-if(skiaContent,0-1,0-60) == clip-path-viewBox-1b.html clip-path-geometryBox-1-ref.html
+fuzzy(0-64,0-371) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-9,0-98) fuzzy-if(webrender,0-64,0-100) == clip-path-geometryBox-2.html clip-path-geometryBox-2-ref.html
 
 == clip-path-localRef-1.html clip-path-localRef-1-ref.html
 
 # mask with opacity test cases
-fuzzy(1,5000) == mask-opacity-1a.html mask-opacity-1-ref.html
-fuzzy(1,5000) == mask-opacity-1b.html mask-opacity-1-ref.html
-fuzzy(1,5000) == mask-opacity-1c.html mask-opacity-1-ref.html
-fuzzy(1,5000) == mask-opacity-1d.html mask-opacity-1-ref.html
-fuzzy(1,5000) == mask-opacity-1e.html mask-opacity-1-ref.html
+fuzzy(0-1,0-5000) == mask-opacity-1a.html mask-opacity-1-ref.html
+fuzzy(0-1,0-5000) == mask-opacity-1b.html mask-opacity-1-ref.html
+fuzzy(0-1,0-5000) == mask-opacity-1c.html mask-opacity-1-ref.html
+fuzzy(0-1,0-5000) == mask-opacity-1d.html mask-opacity-1-ref.html
+fuzzy(0-1,0-5000) == mask-opacity-1e.html mask-opacity-1-ref.html
 
 == clip-path-mix-blend-mode-1.html clip-path-mix-blend-mode-1-ref.html

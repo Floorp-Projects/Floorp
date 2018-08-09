@@ -10,7 +10,7 @@
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "Header incorrectly indicates that the bitmap is several GB in size."
 # [We accept it. So does Chromium.]
-fuzzy(1,926) == badbitssize.bmp pal1.png
+fuzzy(0-1,0-926) == badbitssize.bmp pal1.png
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
@@ -98,7 +98,7 @@ fuzzy(1,926) == badbitssize.bmp pal1.png
 # allowed."
 # [We accept it. Chromium rejects it. Accepting seems better given that we can
 # decode it perfectly well.]
-fuzzy(1,996) == rletopdown.bmp pal8.png
+fuzzy(0-1,0-996) == rletopdown.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "A file that has been truncated in the middle of the bitmap."

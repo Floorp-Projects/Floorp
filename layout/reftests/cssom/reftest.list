@@ -1,2 +1,2 @@
-fuzzy-if(skiaContent,2,5) == computed-style-cross-window.html computed-style-cross-window-ref.html
+fuzzy-if(skiaContent,0-2,0-5) == computed-style-cross-window.html computed-style-cross-window-ref.html
 == inline-style-null.html inline-style-null-ref.html

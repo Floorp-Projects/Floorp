@@ -41,12 +41,12 @@ include zoom/reftest.list
 == canvas-drawImage-scale-1b.html lime100x100-ref.html
 == canvas-drawImage-scale-1c.html lime100x100-ref.html
 
-fuzzy(1,2) fuzzy-if(skiaContent,1,529) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
-fuzzy(1,2) fuzzy-if(skiaContent,1,529) == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
+fuzzy(0-1,0-2) fuzzy-if(skiaContent,0-1,0-529) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
+fuzzy(0-1,0-2) fuzzy-if(skiaContent,0-1,0-529) == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
 
-fuzzy-if(winWidget&&!d2d,1,10000) fuzzy-if(azureSkia,1,10000) fuzzy-if(Android,1,10000) == canvas-drawImage-alpha-1.html canvas-drawImage-alpha-1-ref.html
+fuzzy-if(winWidget&&!d2d,0-1,0-10000) fuzzy-if(azureSkia,0-1,0-10000) fuzzy-if(Android,0-1,0-10000) == canvas-drawImage-alpha-1.html canvas-drawImage-alpha-1-ref.html
 #Same as scale-2a but with globalAlpha:
-fuzzy(1,2) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,7018) fuzzy-if(azureSkia,1,40000) fuzzy-if(webrender&&winWidget,1-1,39743-39743) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
+fuzzy(0-1,0-2) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-7018) fuzzy-if(azureSkia,0-1,0-40000) fuzzy-if(webrender&&winWidget,1-1,39743-39743) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
 
 == canvas-drawImage-slice-1a.html lime100x100-ref.html
 == canvas-drawImage-slice-1b.html lime100x100-ref.html
@@ -62,7 +62,7 @@ test-pref(svg.context-properties.content.enabled,true) == context-fill-01.html l
 test-pref(svg.context-properties.content.enabled,true) == context-fill-02.html lime100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-04.html lime100x100-50pct-ref.html
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-04.html lime100x100-50pct-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-05.html context-fill-or-stroke-05-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-06.html lime100x100-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-07.html context-fill-07-ref.html
@@ -75,7 +75,7 @@ test-pref(svg.context-properties.content.enabled,true) == context-stroke-01.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-02.html lime100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-04.html lime100x100-50pct-ref.html
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-04.html lime100x100-50pct-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-05.html context-fill-or-stroke-05-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-06.html lime100x100-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-07.html context-stroke-07-ref.html
@@ -83,27 +83,27 @@ test-pref(svg.context-properties.content.enabled,true) == context-stroke-08.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-bg-image-01.html blue100x100-border-ref.html
 # context-fill-opacity:
 == context-fill-opacity-01.html blue100x100-ref.html
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-01.html context-fill-or-stroke-opacity-01-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,20000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-02.html context-fill-or-stroke-opacity-02-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-03.html context-fill-or-stroke-opacity-03-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-04.html blue100x100-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-05.html blue100x100-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-01.html context-fill-or-stroke-opacity-01-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-20000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-02.html context-fill-or-stroke-opacity-02-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-03.html context-fill-or-stroke-opacity-03-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-04.html blue100x100-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-opacity-05.html blue100x100-ref.html # Bug 1377327
 # context-stroke-opacity:
 == context-stroke-opacity-01.html blue100x100-ref.html
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-01.html context-fill-or-stroke-opacity-01-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,20000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-02.html context-fill-or-stroke-opacity-02-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-03.html context-fill-or-stroke-opacity-03-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-04.html blue100x100-ref.html # Bug 1377327
-fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-05.html blue100x100-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-01.html context-fill-or-stroke-opacity-01-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-20000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-02.html context-fill-or-stroke-opacity-02-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-03.html context-fill-or-stroke-opacity-03-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-04.html blue100x100-ref.html # Bug 1377327
+fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-opacity-05.html blue100x100-ref.html # Bug 1377327
 
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,350) == img-simple-3.html  img-simple-3-ref.html
+fuzzy-if(skiaContent,0-255,0-350) == img-simple-3.html  img-simple-3-ref.html
 == img-simple-4.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,90) == img-simple-5.html  img-simple-5-ref.html
+fuzzy-if(skiaContent,0-255,0-90) == img-simple-5.html  img-simple-5-ref.html
 == img-simple-6.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,27) == img-simple-7.html  img-simple-7-ref.html
+fuzzy-if(skiaContent,0-255,0-27) == img-simple-7.html  img-simple-7-ref.html
 
 # Test with mix of <html:img> and <svg:image> referring to the same images,
 # with a variety of preserveAspectRatio values in play.
@@ -112,7 +112,7 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 # More complex <img> tests
 == img-blobURI-1.html lime100x100-ref.html
 == img-blobURI-2.html lime100x100-ref.html
-fuzzy-if(d2d,16,10) == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html # d2d is bug 1074161
+fuzzy-if(d2d,0-16,0-10) == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html # d2d is bug 1074161
 == img-display-none-1.html about:blank
 == img-dyn-1.html img-dyn-1-ref.html
 == img-foreignObject-1.html lime100x100-ref.html
@@ -156,8 +156,8 @@ fuzzy-if(webrender,255-255,12-12) == img-width-slice-2.html  img-width-slice-2-r
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
 fuzzy-if(webrender,255-255,20-20) == img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
 fuzzy-if(webrender,255-255,20-20) == img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
-fuzzy-if(skiaContent,255,10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
-fuzzy-if(skiaContent,255,10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
+fuzzy-if(skiaContent,0-255,0-10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
+fuzzy-if(skiaContent,0-255,0-10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
 
 # with with a fragmentIdentifier viewBox
 == img-fragment-1a.html  img-fragment-1-ref.html
@@ -174,10 +174,10 @@ fuzzy-if(skiaContent,255,10) fuzzy-if(webrender,255-255,20-20) == img-novb-width
 == svg-image-simple-3.svg lime100x100.svg
 
 # tests for <svg> files that include themselves as an <image>
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == svg-image-recursive-1a.svg  svg-image-recursive-1-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == svg-image-recursive-1b.svg  svg-image-recursive-1-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == svg-image-recursive-2a.svg  svg-image-recursive-2-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == svg-image-recursive-2b.html svg-image-recursive-2-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-1) == svg-image-recursive-1a.svg  svg-image-recursive-1-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-1) == svg-image-recursive-1b.svg  svg-image-recursive-1-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-1) == svg-image-recursive-2a.svg  svg-image-recursive-2-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-1) == svg-image-recursive-2b.html svg-image-recursive-2-ref.svg
 
 # tests for external resources vs. data URIs in SVG as an image
 == svg-image-datauri-1.html            lime100x100.svg
@@ -196,7 +196,7 @@ HTTP == svg-stylesheet-external-1.html blue100x100.svg
 # XXXseth: The underlying problems also apply to media fragments,
 # but the test case would be much simpler. This should be switched
 # over to use media fragments once bug 790640 lands.
-fuzzy(2,1) == svg-border-image-repaint-1.html svg-border-image-repaint-1-ref.html
+fuzzy(0-2,0-1) == svg-border-image-repaint-1.html svg-border-image-repaint-1-ref.html
 
 # Test that 'image-orientation: from-image' has no effect, since SVGs don't have EXIF data.
 == image-orientation-viewbox-and-size.html?from-image  image-orientation-viewbox-and-size.html?none

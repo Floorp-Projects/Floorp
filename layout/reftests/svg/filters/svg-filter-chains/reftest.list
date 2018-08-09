@@ -13,6 +13,6 @@ default-preferences pref(layout.css.filters.enabled,true)
 == intersecting-filter-regions.svg intersecting-filter-regions-ref.svg
 == long-chain.svg simple-chain-ref.svg
 == multiple-primitives-per-filter.svg simple-chain-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,173) == second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-173) == second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha-ref.svg
 == second-filter-uses-SourceGraphic.svg simple-chain-ref.svg
 == simple-chain.svg simple-chain-ref.svg

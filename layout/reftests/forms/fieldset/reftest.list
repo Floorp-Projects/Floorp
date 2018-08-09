@@ -1,17 +1,17 @@
-fuzzy-if(skiaContent,2,13) == dynamic-legend-scroll-1.html dynamic-legend-scroll-1-ref.html
+fuzzy-if(skiaContent,0-2,0-13) == dynamic-legend-scroll-1.html dynamic-legend-scroll-1-ref.html
 == fieldset-hidden-1.html fieldset-hidden-1-ref.html
 == fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1-ref.html
 == fieldset-percentage-padding-1.html fieldset-percentage-padding-1-ref.html
 == fieldset-scroll-1.html fieldset-scroll-1-ref.html
 == fieldset-scrolled-1.html fieldset-scrolled-1-ref.html
 == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,142,276) == positioned-container-1.html positioned-container-1-ref.html
+fuzzy-if(winWidget&&!layersGPUAccelerated,0-142,0-276) == positioned-container-1.html positioned-container-1-ref.html
 == relpos-legend-1.html relpos-legend-1-ref.html
 == relpos-legend-2.html relpos-legend-2-ref.html
 == relpos-legend-3.html relpos-legend-3-ref.html
 == relpos-legend-4.html relpos-legend-4-ref.html
 fuzzy-if(webrender,17-19,1221-2452) == sticky-legend-1.html sticky-legend-1-ref.html
-fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
+fuzzy-if(skiaContent,0-1,0-40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 == overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html
 == fieldset-grid-001.html fieldset-grid-001-ref.html
