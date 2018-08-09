@@ -907,15 +907,19 @@ ControlFlowGenerator::processWhileOrForInLoop(jssrcnote* sn)
     //    LOOPENTRY
     //    ...
     //    IFNE        ; goes to LOOPHEAD
-    // for (x in y) { } loops are similar; the cond will be a MOREITER.
+    // for-in/for-of loops are similar;
+    // for-in has IFEQ as the back jump, and the cond will be a MOREITER.
     MOZ_ASSERT(SN_TYPE(sn) == SRC_FOR_OF || SN_TYPE(sn) == SRC_FOR_IN || SN_TYPE(sn) == SRC_WHILE);
-    int ifneOffset = GetSrcNoteOffset(sn, 0);
-    jsbytecode* ifne = pc + ifneOffset;
-    MOZ_ASSERT(ifne > pc);
+    // FIXME: Replaced in the subsequent patch.
+    static_assert(unsigned(SrcNote::ForIn::BackJumpOffset) == 0,
+                  "SrcNote::{While,ForIn,ForOf}::BackJumpOffset should be same");
+    int backjumppcOffset = GetSrcNoteOffset(sn, SrcNote::ForIn::BackJumpOffset);
+    jsbytecode* backjumppc = pc + backjumppcOffset;
+    MOZ_ASSERT(backjumppc > pc);
 
-    // Verify that the IFNE goes back to a loophead op.
+    // Verify that the back jump goes back to a loophead op.
     MOZ_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_LOOPHEAD);
-    MOZ_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
+    MOZ_ASSERT(GetNextPc(pc) == backjumppc + GetJumpOffset(backjumppc));
 
     jsbytecode* loopEntry = pc + GetJumpOffset(pc);
 
@@ -931,7 +935,7 @@ ControlFlowGenerator::processWhileOrForInLoop(jssrcnote* sn)
     jsbytecode* loopHead = GetNextPc(pc);
     jsbytecode* bodyStart = GetNextPc(loopHead);
     jsbytecode* bodyEnd = pc + GetJumpOffset(pc);
-    jsbytecode* exitpc = GetNextPc(ifne);
+    jsbytecode* exitpc = GetNextPc(backjumppc);
     jsbytecode* continuepc = pc;
 
     CFGBlock* header = CFGBlock::New(alloc(), loopEntry);
@@ -946,7 +950,7 @@ ControlFlowGenerator::processWhileOrForInLoop(jssrcnote* sn)
     current->setStopIns(ins);
     current->setStopPc(pc);
 
-    if (!pushLoop(CFGState::WHILE_LOOP_COND, ifne, current,
+    if (!pushLoop(CFGState::WHILE_LOOP_COND, backjumppc, current,
                   loopHead, bodyEnd, bodyStart, bodyEnd, exitpc, continuepc))
     {
         return ControlStatus::Error;
