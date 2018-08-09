@@ -1009,7 +1009,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mAllowMergingAndFlattening(true),
       mWillComputePluginGeometry(false),
       mInTransform(false),
-      mInFilter(false),
       mInPageSequence(false),
       mIsInChromePresContext(false),
       mSyncDecodeImages(false),
@@ -1059,7 +1058,6 @@ nsDisplayListBuilder::BeginFrame()
   mIsPaintingToWindow = false;
   mIgnoreSuppression = false;
   mInTransform = false;
-  mInFilter = false;
   mSyncDecodeImages = false;
 }
 
