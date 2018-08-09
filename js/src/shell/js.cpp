@@ -2754,8 +2754,14 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 
           case SRC_FOR_IN:
           case SRC_FOR_OF:
-            if (!sp->jsprintf(" closingjump %u", unsigned(GetSrcNoteOffset(sn, 0))))
+            // FIXME: replaced in the subsequent patch.
+            static_assert(unsigned(SrcNote::ForIn::BackJumpOffset) == 0,
+                          "SrcNote::{ForIn,ForOf}::BackJumpOffset should be same");
+            if (!sp->jsprintf(" backjump %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::ForIn::BackJumpOffset))))
+            {
                 return false;
+            }
             break;
 
           case SRC_WHILE:

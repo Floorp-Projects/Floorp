@@ -54,6 +54,16 @@ class SrcNote {
             Count,
         };
     };
+    // SRC_FOR_IN: Source note for JSOP_GOTO at the top of for-in loop,
+    //             which jumps to JSOP_LOOPENTRY.
+    class ForIn {
+      public:
+        enum Fields {
+            // The offset of JSOP_IFEQ at the end of the loop from JSOP_GOTO.
+            BackJumpOffset,
+            Count,
+        };
+    };
     // SRC_TABLESWITCH: Source note for JSOP_TABLESWITCH.
     class TableSwitch {
       public:
@@ -126,8 +136,7 @@ class SrcNote {
     M(SRC_FOR,          "for",         SrcNote::For::Count) \
     M(SRC_WHILE,        "while",       1)  /* JSOP_GOTO to for or while loop condition from before \
                                               loop, else JSOP_NOP at top of do-while loop. */      \
-    M(SRC_FOR_IN,       "for-in",      1)  /* JSOP_GOTO to for-in loop condition from before       \
-                                              loop. */                                             \
+    M(SRC_FOR_IN,       "for-in",      SrcNote::ForIn::Count) \
     M(SRC_FOR_OF,       "for-of",      1)  /* JSOP_GOTO to for-of loop condition from before       \
                                               loop. */                                             \
     M(SRC_CONTINUE,     "continue",    0)  /* JSOP_GOTO is a continue. */                          \
