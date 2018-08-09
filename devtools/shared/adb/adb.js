@@ -49,6 +49,38 @@ const ADB = {
     return this._adbFilePromise;
   },
 
+  async _runProcess(process, params) {
+    return new Promise((resolve, reject) => {
+      process.runAsync(params, params.length, {
+        observe(subject, topic, data) {
+          switch (topic) {
+            case "process-finished":
+              resolve();
+              break;
+            case "process-failed":
+              reject();
+              break;
+          }
+        }
+      }, false);
+    });
+  },
+
+  // Waits until a predicate returns true or re-tries the predicate calls
+  // |retry| times, we wait for 100ms between each calls.
+  async _waitUntil(predicate, retry = 20) {
+    let count = 0;
+    while (count++ < retry) {
+      if (await predicate()) {
+        return true;
+      }
+      // Wait for 100 milliseconds.
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    // Timed out after trying too many times.
+    return false;
+  },
+
   // We startup by launching adb in server mode, and setting
   // the tcp socket preference to |true|
   async start() {
@@ -83,20 +115,19 @@ const ADB = {
       } catch (e) {
       }
       const params = ["start-server"];
-      const self = this;
-      process.runAsync(params, params.length, {
-        observe(subject, topic, data) {
-          switch (topic) {
-            case "process-finished":
-              onSuccessfulStart();
-              break;
-            case "process-failed":
-              self.ready = false;
-              reject();
-              break;
-          }
-        }
-      }, false);
+      let isStarted = false;
+      try {
+        await this._runProcess(process, params);
+        isStarted = await this._waitUntil(check);
+      } catch (e) {
+      }
+
+      if (isStarted) {
+        onSuccessfulStart();
+      } else {
+        this.ready = false;
+        reject();
+      }
     });
   },
 
@@ -113,17 +144,12 @@ const ADB = {
       return; // We didn't start the server, nothing to do
     }
     await this.kill(sync);
-    // Make sure the ADB server stops listening.
-    //
-    // kill() above doesn't mean that the ADB server stops, it just means that
-    // 'adb kill-server' command finished, so that it's possible that the ADB
-    // server is still alive there.
-    while (true) {
-      const isAdbRunning = await check();
-      if (!isAdbRunning) {
-        break;
-      }
-    }
+    // Make sure the ADB server stops listening because kill() above doesn't
+    // mean that the ADB server stops, it means that 'adb kill-server' command
+    // just finished, so that it's possible that the ADB server is still alive.
+    await this._waitUntil(async () => {
+      return !await check();
+    });
   },
 
   /**
