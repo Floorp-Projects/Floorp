@@ -245,6 +245,9 @@ StyleUpdatingCommand::ToggleState(HTMLEditor* aHTMLEditor)
 
   if (doTagRemoval) {
     // Also remove equivalent properties (bug 317093)
+    // XXX Why don't we make the following two transactions as an atomic
+    //     transaction?  If the element is <b>, <i> or <strike>, user
+    //     needs to undo twice.
     if (mTagName == nsGkAtoms::b) {
       nsresult rv =
         aHTMLEditor->RemoveInlineProperty(nsGkAtoms::strong, nullptr);
@@ -272,18 +275,21 @@ StyleUpdatingCommand::ToggleState(HTMLEditor* aHTMLEditor)
     return NS_OK;
   }
 
-  // Superscript and Subscript styles are mutually exclusive
-  aHTMLEditor->BeginTransaction();
+  // Superscript and Subscript styles are mutually exclusive.
+  AutoTransactionBatch bundleAllTransactions(*aHTMLEditor);
 
-  nsresult rv = NS_OK;
   if (mTagName == nsGkAtoms::sub || mTagName == nsGkAtoms::sup) {
-    rv = aHTMLEditor->RemoveInlineProperty(mTagName, nullptr);
-  }
-  if (NS_SUCCEEDED(rv)) {
-    rv = aHTMLEditor->SetInlineProperty(mTagName, nullptr, EmptyString());
+    nsresult rv = aHTMLEditor->RemoveInlineProperty(mTagName, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
-  aHTMLEditor->EndTransaction();
+  nsresult rv =
+    aHTMLEditor->SetInlineProperty(mTagName, nullptr, EmptyString());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return rv;
 }

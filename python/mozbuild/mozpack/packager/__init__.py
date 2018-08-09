@@ -18,6 +18,7 @@ from mozpack.chrome.manifest import (
 )
 import mozpack.path as mozpath
 from collections import deque
+import json
 
 
 class Component(object):
@@ -269,7 +270,30 @@ class SimplePackager(object):
                 install_rdf = file.open().read()
                 if self.UNPACK_ADDON_RE.search(install_rdf):
                     addon = 'unpacked'
-                self._addons[mozpath.dirname(path)] = addon
+                self._add_addon(mozpath.dirname(path), addon)
+            elif mozpath.basename(path) == 'manifest.json':
+                manifest = file.open().read()
+                try:
+                    parsed = json.loads(manifest)
+                except ValueError:
+                    pass
+                if isinstance(parsed, dict) and parsed.has_key('manifest_version'):
+                    self._add_addon(mozpath.dirname(path), True)
+
+    def _add_addon(self, path, addon_type):
+        '''
+        Add the given BaseFile to the collection of addons if a parent
+        directory is not already in the collection.
+        '''
+        if mozpath.basedir(path, self._addons) != None:
+            return
+
+        for dir in self._addons:
+            if mozpath.basedir(dir, [path]) != None:
+                del self._addons[dir]
+                break
+
+        self._addons[path] = addon_type
 
     def _add_manifest_file(self, path, file):
         '''

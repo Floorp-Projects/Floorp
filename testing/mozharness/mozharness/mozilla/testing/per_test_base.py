@@ -22,6 +22,14 @@ class SingleTestMixin(object):
         self.tests_downloaded = False
         self.reftest_test_dir = None
         self.jsreftest_test_dir = None
+        # Map from full test path on the test machine to a relative path in the source checkout.
+        # Use self._map_test_path_to_source(test_machine_path, source_path) to add a mapping.
+        self.test_src_path = {}
+
+    def _map_test_path_to_source(self, test_machine_path, source_path):
+        test_machine_path = test_machine_path.replace(os.sep, posixpath.sep)
+        source_path = source_path.replace(os.sep, posixpath.sep)
+        self.test_src_path[test_machine_path] = source_path
 
     def _is_gpu_suite(self, suite):
         if suite and (suite == 'gpu' or suite.startswith('webgl')):
@@ -66,9 +74,10 @@ class SingleTestMixin(object):
             if os.path.exists(path):
                 man = manifest.ReftestManifest()
                 man.load(path)
-                tests_by_path.update({
-                    os.path.relpath(t, self.reftest_test_dir): (suite, subsuite) for t in man.files
-                })
+                for t in man.files:
+                    relpath = os.path.relpath(t, self.reftest_test_dir)
+                    tests_by_path[relpath] = (suite, subsuite)
+                    self._map_test_path_to_source(t, relpath)
                 self.info("Per-test run updated with manifest %s" % path)
 
         suite = 'jsreftest'
@@ -85,7 +94,9 @@ class SingleTestMixin(object):
                 epos = t.find('=')
                 if epos > 0:
                     relpath = t[epos+1:]
+                    test_path = os.path.join(self.jsreftest_test_dir, relpath)
                     relpath = os.path.join('js', 'src', 'tests', relpath)
+                    self._map_test_path_to_source(test_path, relpath)
                     tests_by_path.update({relpath: (suite, None)})
                 else:
                     self.warning("unexpected jsreftest test format: %s" % str(t))
@@ -163,9 +174,10 @@ class SingleTestMixin(object):
                 suite_files = self.suites.get(type)
                 if not suite_files:
                     suite_files = []
-                path = os.path.join(tests_path, path)
-                suite_files.append(path)
+                test_path = os.path.join(tests_path, path)
+                suite_files.append(test_path)
                 self.suites[type] = suite_files
+                self._map_test_path_to_source(test_path, repo_path)
 
     def find_modified_tests(self):
         """

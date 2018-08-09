@@ -13,7 +13,9 @@ const EventEmitter = require("devtools/shared/event-emitter");
  * is created for a node.
  *
  * When a custom element is defined for a monitored name, an "element-defined" event is
- * fired with the Set of impacted node actors as argument.
+ * fired with the following Object argument:
+ * - {String} name: name of the custom element defined
+ * - {Set} Set of impacted node actors
  */
 class CustomElementWatcher extends EventEmitter {
   constructor(chromeEventHandler) {
@@ -59,11 +61,8 @@ class CustomElementWatcher extends EventEmitter {
     const registryMap = this._getMapForRegistry(registry);
 
     const name = nodeActor.rawNode.localName;
-    if (!registryMap.has(name)) {
-      // Create a new entry in the Map for this name.
-      registryMap.set(name, new Set());
-    }
-    registryMap.get(name).add(nodeActor);
+    const actorsSet = this._getActorsForName(name, registryMap);
+    actorsSet.add(nodeActor);
   }
 
   /**
@@ -78,7 +77,7 @@ class CustomElementWatcher extends EventEmitter {
     const registry = win.customElements;
     const registryMap = this._getMapForRegistry(registry);
     const name = nodeActor.rawNode.localName;
-    if (registryMap && registryMap.has(name)) {
+    if (registryMap.has(name)) {
       registryMap.get(name).delete(nodeActor);
     }
   }
@@ -92,6 +91,17 @@ class CustomElementWatcher extends EventEmitter {
       this.watchedRegistries.set(registry, new Map());
     }
     return this.watchedRegistries.get(registry);
+  }
+
+  /**
+   * Retrieve the set of nodeActors for a given name and registry.
+   * Will create the set if not created yet.
+   */
+  _getActorsForName(name, registryMap) {
+    if (!registryMap.has(name)) {
+      registryMap.set(name, new Set());
+    }
+    return registryMap.get(name);
   }
 
   _shouldWatchDefinition(nodeActor) {
@@ -110,9 +120,8 @@ class CustomElementWatcher extends EventEmitter {
     const registryMap = this._getMapForRegistry(registry);
 
     const name = event.detail;
-    const nodeActors = registryMap.get(name);
-
-    this.emit("element-defined", nodeActors);
+    const actors = this._getActorsForName(name, registryMap);
+    this.emit("element-defined", { name, actors });
     registryMap.delete(name);
   }
 

@@ -59,6 +59,7 @@ add_task(async function test_contentscript_xrays() {
     // And test what happens if we now set document.domain and cause
     // wrapper remapping.
     let doc = window.frames[0].document;
+    // eslint-disable-next-line no-self-assign
     doc.domain = doc.domain;
 
     browser.test.notifyPass("contentScriptAdoptionWithXrays");

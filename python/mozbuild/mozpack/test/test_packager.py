@@ -237,6 +237,29 @@ class TestSimplePackager(unittest.TestCase):
                 '<RDF>\n<... em:unpack=\'false\'>\n<...>\n</RDF>')
             packager.add('addon11/install.rdf', install_rdf_addon11)
 
+        we_manifest = GeneratedFile('{"manifest_version": 2, "name": "Test WebExtension", "version": "1.0"}')
+        # hybrid and hybrid2 are both bootstrapped extensions with
+        # embedded webextensions, they differ in the order in which
+        # the manifests are added to the packager.
+        with errors.context('manifest', 20):
+            packager.add('hybrid/install.rdf', install_rdf)
+
+        with errors.context('manifest', 21):
+            packager.add('hybrid/webextension/manifest.json', we_manifest)
+
+        with errors.context('manifest', 22):
+            packager.add('hybrid2/webextension/manifest.json', we_manifest)
+
+        with errors.context('manifest', 23):
+            packager.add('hybrid2/install.rdf', install_rdf)
+
+        with errors.context('manifest', 24):
+            packager.add('webextension/manifest.json', we_manifest)
+
+        non_we_manifest = GeneratedFile('{"not a webextension": true}')
+        with errors.context('manifest', 25):
+            packager.add('nonwebextension/manifest.json', non_we_manifest)
+
         self.assertEqual(formatter.log, [])
 
         with errors.context('dummy', 1):
@@ -257,7 +280,10 @@ class TestSimplePackager(unittest.TestCase):
             (('dummy', 1), 'add_base', 'addon7', True),
             (('dummy', 1), 'add_base', 'addon8', 'unpacked'),
             (('dummy', 1), 'add_base', 'addon9', True),
+            (('dummy', 1), 'add_base', 'hybrid', True),
+            (('dummy', 1), 'add_base', 'hybrid2', True),
             (('dummy', 1), 'add_base', 'qux', False),
+            (('dummy', 1), 'add_base', 'webextension', True),
             ((os.path.join(curdir, 'foo', 'bar.manifest'), 2),
              'add_manifest', ManifestContent('foo', 'bar', 'bar/')),
             ((os.path.join(curdir, 'foo', 'bar.manifest'), 1),
@@ -297,12 +323,23 @@ class TestSimplePackager(unittest.TestCase):
              install_rdf_addon10),
             (('manifest', 19), 'add', 'addon11/install.rdf',
              install_rdf_addon11),
+            (('manifest', 20), 'add', 'hybrid/install.rdf', install_rdf),
+            (('manifest', 21),
+             'add', 'hybrid/webextension/manifest.json', we_manifest),
+            (('manifest', 22),
+             'add', 'hybrid2/webextension/manifest.json', we_manifest),
+            (('manifest', 23), 'add', 'hybrid2/install.rdf', install_rdf),
+            (('manifest', 24),
+             'add', 'webextension/manifest.json', we_manifest),
+            (('manifest', 25),
+             'add', 'nonwebextension/manifest.json', non_we_manifest),
         ])
 
         self.assertEqual(packager.get_bases(),
                          set(['', 'addon', 'addon2', 'addon3', 'addon4',
                               'addon5', 'addon6', 'addon7', 'addon8',
-                              'addon9', 'addon10', 'addon11', 'qux']))
+                              'addon9', 'addon10', 'addon11', 'qux',
+                              'hybrid', 'hybrid2', 'webextension']))
         self.assertEqual(packager.get_bases(addons=False), set(['', 'qux']))
 
     def test_simple_packager_manifest_consistency(self):

@@ -31,11 +31,13 @@ function init() {
 
 function searchBookmarks(aSearchString) {
   var tree = document.getElementById("bookmarks-view");
-  if (!aSearchString)
+  if (!aSearchString) {
+    // eslint-disable-next-line no-self-assign
     tree.place = tree.place;
-  else
+  } else {
     tree.applyFilter(aSearchString,
                      PlacesUtils.bookmarks.userContentRoots);
+  }
 }
 
 window.addEventListener("SidebarFocused",

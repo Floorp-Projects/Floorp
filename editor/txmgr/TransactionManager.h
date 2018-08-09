@@ -93,6 +93,12 @@ public:
                           bool aDidMerge,
                           nsresult aMergeResult);
 
+  /**
+   * Exposing non-virtual methods of nsITransactionManager methods.
+   */
+  nsresult BeginBatchInternal(nsISupports* aData);
+  nsresult EndBatchInternal(bool aAllowEmpty);
+
 private:
   virtual ~TransactionManager() = default;
 

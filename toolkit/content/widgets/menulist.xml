@@ -145,14 +145,14 @@
                             onget="return this.hasAttribute('open');"/>
 
       <property name="itemCount" readonly="true"
-                onget="return this.menupopup ? this.menupopup.childNodes.length : 0"/>
+                onget="return this.menupopup ? this.menupopup.children.length : 0"/>
 
       <property name="menupopup" readonly="true">
         <getter>
           <![CDATA[
-            var popup = this.firstChild;
+            var popup = this.firstElementChild;
             while (popup && popup.localName != "menupopup")
-              popup = popup.nextSibling;
+              popup = popup.nextElementSibling;
             return popup;
           ]]>
         </getter>
@@ -180,7 +180,7 @@
                 this.mSelectedInternal.parentNode.parentNode != this)
               return -1;
 
-            var children = this.mSelectedInternal.parentNode.childNodes;
+            var children = this.mSelectedInternal.parentNode.children;
             var i = children.length;
             while (i--)
               if (children[i] == this.mSelectedInternal)
@@ -193,8 +193,8 @@
           <![CDATA[
             var popup = this.menupopup;
             if (popup && 0 <= val) {
-              if (val < popup.childNodes.length)
-                this.selectedItem = popup.childNodes[val];
+              if (val < popup.children.length)
+                this.selectedItem = popup.children[val];
             } else
               this.selectedItem = null;
             return val;
@@ -286,7 +286,7 @@
         <![CDATA[
           var popup = this.menupopup;
           if (popup) {
-            var children = popup.childNodes;
+            var children = popup.children;
             var i = children.length;
             while (i--)
               if (children[i] == item)
@@ -303,7 +303,7 @@
         <![CDATA[
           var popup = this.menupopup;
           if (popup) {
-            var children = popup.childNodes;
+            var children = popup.children;
             if (index >= 0 && index < children.length)
               return children[index];
           }

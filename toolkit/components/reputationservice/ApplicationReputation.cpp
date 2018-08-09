@@ -56,6 +56,8 @@
 #include "nsWeakReference.h"
 #include "nsIRedirectHistoryEntry.h"
 
+#include "ApplicationReputationTelemetryUtils.h"
+
 using mozilla::ArrayLength;
 using mozilla::BasePrincipal;
 using mozilla::OriginAttributes;
@@ -1612,6 +1614,7 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   if (NS_FAILED(aResult)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
       SERVER_RESPONSE_FAILED);
+    AccumulateCategorical(NSErrorToLabel(aResult));
     return aResult;
   }
 
@@ -1622,6 +1625,8 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   if (NS_FAILED(rv)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
       SERVER_RESPONSE_FAILED);
+    AccumulateCategorical(
+      mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2::FailGetChannel);
     return rv;
   }
 
@@ -1630,12 +1635,15 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   if (NS_FAILED(rv)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
       SERVER_RESPONSE_FAILED);
+    AccumulateCategorical(
+      mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2::FailGetResponse);
     return rv;
   }
 
   if (status != 200) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
       SERVER_RESPONSE_FAILED);
+    AccumulateCategorical(HTTPStatusToLabel(status));
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1650,6 +1658,9 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
 
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
     SERVER_RESPONSE_VALID);
+  AccumulateCategorical(
+    mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2::ResponseValid);
+
   // Clamp responses 0-7, we only know about 0-4 for now.
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER_VERDICT,
     std::min<uint32_t>(response.verdict(), 7));
