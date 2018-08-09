@@ -204,8 +204,7 @@ protected:
   // so instead we track it here.
   bool mIsComposedDocParticipant;
 
-  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
-                 bool aPreallocateChildren) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
 } // namespace dom

@@ -19,7 +19,7 @@ class SVGGElement final : public SVGGraphicsElement
 {
 protected:
   explicit SVGGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult (::NS_NewSVGGElement(nsIContent **aResult,
                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
@@ -27,8 +27,7 @@ public:
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
 } // namespace dom

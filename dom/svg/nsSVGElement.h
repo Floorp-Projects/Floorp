@@ -75,8 +75,8 @@ protected:
 
 public:
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const MOZ_MUST_OVERRIDE override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const
+    MOZ_MUST_OVERRIDE override;
 
   typedef mozilla::SVGNumberList SVGNumberList;
   typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;

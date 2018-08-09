@@ -93,15 +93,14 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement,
 // nsIDOMHTMLTextAreaElement
 
 nsresult
-HTMLTextAreaElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                           bool aPreallocateChildren) const
+HTMLTextAreaElement::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   *aResult = nullptr;
   already_AddRefed<mozilla::dom::NodeInfo> ni =
     RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
   RefPtr<HTMLTextAreaElement> it = new HTMLTextAreaElement(ni);
 
-  nsresult rv = const_cast<HTMLTextAreaElement*>(this)->CopyInnerTo(it, aPreallocateChildren);
+  nsresult rv = const_cast<HTMLTextAreaElement*>(this)->CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mValueChanged) {
@@ -1038,10 +1037,9 @@ HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
 nsresult
-HTMLTextAreaElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
+HTMLTextAreaElement::CopyInnerTo(Element* aDest)
 {
-  nsresult rv = nsGenericHTMLFormElementWithState::CopyInnerTo(aDest,
-                                                               aPreallocateChildren);
+  nsresult rv = nsGenericHTMLFormElementWithState::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {

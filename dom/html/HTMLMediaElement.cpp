@@ -6858,9 +6858,9 @@ HTMLMediaElement::GetDocumentLoadGroup()
 }
 
 nsresult
-HTMLMediaElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
+HTMLMediaElement::CopyInnerTo(Element* aDest)
 {
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     HTMLMediaElement* dest = static_cast<HTMLMediaElement*>(aDest);

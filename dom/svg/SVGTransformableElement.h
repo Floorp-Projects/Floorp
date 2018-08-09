@@ -26,12 +26,11 @@ struct SVGBoundingBoxOptions;
 class SVGTransformableElement : public nsSVGElement
 {
 public:
-  explicit SVGTransformableElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit SVGTransformableElement(already_AddRefed<dom::NodeInfo>& aNodeInfo)
     : nsSVGElement(aNodeInfo) {}
   virtual ~SVGTransformableElement() {}
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override = 0;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // WebIDL
   already_AddRefed<SVGAnimatedTransformList> Transform();

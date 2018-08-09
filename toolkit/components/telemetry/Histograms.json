@@ -88,6 +88,26 @@
     "bug_numbers": [1245901],
     "alert_emails": ["benjamin@smedbergs.us"]
   },
+  "APPLICATION_REPUTATION_BINARY": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1480639],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["BinaryFile", "NonBinaryFile", "MissingFilename"],
+    "description": "Whether or not the file examined by download protection is a binary type (or it's not possible to tell because the filename is missing)."
+  },
+  "APPLICATION_REPUTATION_BINARY_ARCHIVE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1480639],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["OtherBinaryFile", "DmgFile", "RarFile", "ZipFile"],
+    "description": "Whether a binary file examined by download protection is one of the common archive formats."
+  },
   "APPLICATION_REPUTATION_SHOULD_BLOCK": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
@@ -4110,15 +4130,6 @@
     "high": 3000,
     "n_buckets": 10,
     "description": "Time spent on SQLite read() (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "MOZ_SQLITE_COOKIES_OLD_SCHEMA": {
-    "record_in_processes": ["main"],
-    "expires_in_version": "62",
-    "kind": "enumerated",
-    "n_values": 10,
-    "bug_numbers": [1412218],
-    "alert_emails": ["necko@mozilla.com", "junior@mozilla.com"],
-    "description": "Old schema version of the cookie database. 0 for having legacy cookies.txt."
   },
   "MOZ_SQLITE_COOKIES_BLOCK_MAIN_THREAD_MS_V2": {
     "record_in_processes": ["main"],
@@ -11178,10 +11189,10 @@
     "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown. File bugs in Core::DOM in case of a Telemetry regression."
   },
   "SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS": {
-    "expires_in_version": "61",
+    "expires_in_version": "68",
     "record_in_processes": ["main", "content"],
     "kind": "exponential",
-    "bug_numbers": [1359610],
+    "bug_numbers": [1359610, 1433916],
     "high": 6000,
     "keyed": true,
     "n_buckets": 25,
@@ -11190,9 +11201,9 @@
     "description": "Time delta (ms) between when a network request is intercepted and the service worker provides a response. This includes: possible SW startup, worker thread dispatch, time until the respondWith() promise resolves, time to synthesize the response (including the body), worker thread to main thread dispatch. In the future this should include the IPC roundtrips involved in fetch interception."
   },
   "SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS": {
-    "expires_in_version": "61",
+    "expires_in_version": "68",
     "record_in_processes": ["main", "content"],
-    "bug_numbers": [1359610],
+    "bug_numbers": [1359610, 1433916],
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 25,
@@ -11203,9 +11214,9 @@
   },
 
   "SERVICE_WORKER_FETCH_EVENT_FINISH_SYNTHESIZED_RESPONSE_MS": {
-    "expires_in_version": "61",
+    "expires_in_version": "68",
     "record_in_processes": ["main", "content"],
-    "bug_numbers": [1359610],
+    "bug_numbers": [1359610, 1433916],
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 25,
@@ -11216,9 +11227,9 @@
   },
 
   "SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS": {
-    "expires_in_version": "61",
+    "expires_in_version": "68",
     "record_in_processes": ["main", "content"],
-    "bug_numbers": [1359610],
+    "bug_numbers": [1359610, 1433916],
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 25,

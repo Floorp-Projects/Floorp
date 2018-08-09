@@ -45,10 +45,12 @@ exports.viewSourceInStyleEditor = async function(toolbox, sourceURL,
  * @param {Toolbox} toolbox
  * @param {string} sourceURL
  * @param {number} sourceLine
+ * @param {string} [reason=unknown]
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine) {
+exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine,
+                                              reason = "unknown") {
   // If the Debugger was already open, switch to it and try to show the
   // source immediately. Otherwise, initialize it and wait for the sources
   // to be added first.
@@ -59,7 +61,7 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine) {
   if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
     const source = dbg.getSource(sourceURL);
     if (source) {
-      await toolbox.selectTool("jsdebugger");
+      await toolbox.selectTool("jsdebugger", reason);
       dbg.selectSource(sourceURL, sourceLine);
       return true;
     }
@@ -80,7 +82,7 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine) {
 
   const item = Sources.getItemForAttachment(a => a.source.url === sourceURL);
   if (item) {
-    await toolbox.selectTool("jsdebugger");
+    await toolbox.selectTool("jsdebugger", reason);
 
     // Determine if the source has already finished loading. There's two cases
     // in which we need to wait for the source to be shown:

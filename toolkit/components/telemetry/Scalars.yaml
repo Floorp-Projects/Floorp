@@ -1852,9 +1852,10 @@ sw:
   synthesized_res_count:
     bug_numbers:
       - 1416629
+      - 1433916
     description: >
       The count of number of synthesize response made by service workers.
-    expires: "61"
+    expires: "68"
     kind: uint
     notification_emails:
       - sw-telemetry@mozilla.com
@@ -1883,9 +1884,10 @@ sw:
   alternative_body_used_count:
     bug_numbers:
       - 1423623
+      - 1433916
     description: >
       The count of number of synthesize response using alternative body.
-    expires: "61"
+    expires: "68"
     kind: uint
     notification_emails:
       - sw-telemetry@mozilla.com

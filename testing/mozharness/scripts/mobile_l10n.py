@@ -217,7 +217,7 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         else:
             prop_value = message
         self.set_property(prop_key, prop_value)
-        MercurialScript.add_failure(self, locale, message=message, **kwargs)
+        AutomationMixin.add_failure(self, locale, message=message, **kwargs)
 
     def summary(self):
         MercurialScript.summary(self)

@@ -31,14 +31,13 @@ namespace dom {
 // Implementation
 
 nsresult
-SVGDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                   bool aPreallocateChildren) const
+SVGDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
   RefPtr<SVGDocument> clone = new SVGDocument();
-  nsresult rv = CloneDocHelper(clone.get(), aPreallocateChildren);
+  nsresult rv = CloneDocHelper(clone.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(clone.get(), aResult);

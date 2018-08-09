@@ -20,38 +20,54 @@ class FontSize extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+    this.historicMax = {};
+  }
+
   render() {
+    const value = parseFloat(this.props.value);
     const unit = getUnitFromValue(this.props.value);
     let max;
     switch (unit) {
       case "em":
       case "rem":
-        max = 10;
+        max = 4;
         break;
       case "vh":
       case "vw":
       case "vmin":
       case "vmax":
-        max = 100;
+        max = 10;
         break;
       case "%":
-        max = 500;
+        max = 200;
         break;
       default:
-        max = 300;
+        max = 72;
         break;
     }
 
+    // Allow the upper bound to increase so it accomodates the out-of-bounds value.
+    max = Math.max(max, value);
+    // Ensure we store the max value ever reached for this unit type. This will be the
+    // max value of the input and slider. Without this memoization, the value and slider
+    // thumb get clamped at the upper bound while decrementing an out-of-bounds value.
+    this.historicMax[unit] = this.historicMax[unit]
+      ? Math.max(this.historicMax[unit], max)
+      : max;
+
     return FontPropertyValue({
+      allowAutoIncrement: true,
       label: getStr("fontinspector.fontSizeLabel"),
       min: 0,
-      max,
+      max: this.historicMax[unit],
       name: "font-size",
       onChange: this.props.onChange,
       showUnit: true,
       step: getStepForUnit(unit),
       unit,
-      value: parseFloat(this.props.value),
+      value,
     });
   }
 }

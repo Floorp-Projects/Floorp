@@ -127,6 +127,11 @@ VRDisplayClient::FireEvents()
     }
   }
 
+  if (mLastPresentingGeneration != mDisplayInfo.mDisplayState.mPresentingGeneration) {
+    mLastPresentingGeneration = mDisplayInfo.mDisplayState.mPresentingGeneration;
+    vm->NotifyPresentationGenerationChanged(mDisplayInfo.mDisplayID);
+  }
+
   // Check if we need to trigger VRDisplay.requestAnimationFrame
   if (mLastEventFrameId != mDisplayInfo.mFrameId) {
     mLastEventFrameId = mDisplayInfo.mFrameId;

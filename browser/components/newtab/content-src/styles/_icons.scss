@@ -89,6 +89,10 @@
     background-image: url('#{$image-path}glyph-pocket-16.svg');
   }
 
+  &.icon-pocket-save {
+    background-image: url('#{$image-path}glyph-pocket-save-16.svg');
+  }
+
   &.icon-history-item {
     background-image: url('chrome://browser/skin/history.svg');
   }

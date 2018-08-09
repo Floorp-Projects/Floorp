@@ -669,8 +669,7 @@ ShadowRoot::ServoStyleRuleMap()
 }
 
 nsresult
-ShadowRoot::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                  bool aPreallocateChildren) const
+ShadowRoot::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   *aResult = nullptr;
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;

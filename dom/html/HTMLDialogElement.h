@@ -24,8 +24,7 @@ public:
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLDialogElement, dialog)
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
-                         bool aPreallocateChildren) const override;
+  nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
   static bool IsDialogEnabled();
 

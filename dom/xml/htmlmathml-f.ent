@@ -124,7 +124,7 @@
 <!ENTITY DifferentialD    "&#x02146;" ><!--DOUBLE-STRUCK ITALIC SMALL D -->
 <!ENTITY Dopf             "&#x1D53B;" ><!--MATHEMATICAL DOUBLE-STRUCK CAPITAL D -->
 <!ENTITY Dot              "&#x000A8;" ><!--DIAERESIS -->
-<!ENTITY DotDot           " &#x020DC;" ><!--COMBINING FOUR DOTS ABOVE -->
+<!ENTITY DotDot           "&#x020DC;" ><!--COMBINING FOUR DOTS ABOVE -->
 <!ENTITY DotEqual         "&#x02250;" ><!--APPROACHES THE LIMIT -->
 <!ENTITY DoubleContourIntegral "&#x0222F;" ><!--SURFACE INTEGRAL -->
 <!ENTITY DoubleDot        "&#x000A8;" ><!--DIAERESIS -->
@@ -143,7 +143,7 @@
 <!ENTITY DownArrow        "&#x02193;" ><!--DOWNWARDS ARROW -->
 <!ENTITY DownArrowBar     "&#x02913;" ><!--DOWNWARDS ARROW TO BAR -->
 <!ENTITY DownArrowUpArrow "&#x021F5;" ><!--DOWNWARDS ARROW LEFTWARDS OF UPWARDS ARROW -->
-<!ENTITY DownBreve        " &#x00311;" ><!--COMBINING INVERTED BREVE -->
+<!ENTITY DownBreve        "&#x00311;" ><!--COMBINING INVERTED BREVE -->
 <!ENTITY DownLeftRightVector "&#x02950;" ><!--LEFT BARB DOWN RIGHT BARB DOWN HARPOON -->
 <!ENTITY DownLeftTeeVector "&#x0295E;" ><!--LEFTWARDS HARPOON WITH BARB DOWN FROM BAR -->
 <!ENTITY DownLeftVector   "&#x021BD;" ><!--LEFTWARDS HARPOON WITH BARB DOWNWARDS -->
@@ -550,7 +550,7 @@
 <!ENTITY TildeFullEqual   "&#x02245;" ><!--APPROXIMATELY EQUAL TO -->
 <!ENTITY TildeTilde       "&#x02248;" ><!--ALMOST EQUAL TO -->
 <!ENTITY Topf             "&#x1D54B;" ><!--MATHEMATICAL DOUBLE-STRUCK CAPITAL T -->
-<!ENTITY TripleDot        " &#x020DB;" ><!--COMBINING THREE DOTS ABOVE -->
+<!ENTITY TripleDot        "&#x020DB;" ><!--COMBINING THREE DOTS ABOVE -->
 <!ENTITY Tscr             "&#x1D4AF;" ><!--MATHEMATICAL SCRIPT CAPITAL T -->
 <!ENTITY Tstrok           "&#x00166;" ><!--LATIN CAPITAL LETTER T WITH STROKE -->
 <!ENTITY Uacute           "&#x000DA;" ><!--LATIN CAPITAL LETTER U WITH ACUTE -->
@@ -1964,7 +1964,7 @@
 <!ENTITY tcaron           "&#x00165;" ><!--LATIN SMALL LETTER T WITH CARON -->
 <!ENTITY tcedil           "&#x00163;" ><!--LATIN SMALL LETTER T WITH CEDILLA -->
 <!ENTITY tcy              "&#x00442;" ><!--CYRILLIC SMALL LETTER TE -->
-<!ENTITY tdot             " &#x020DB;" ><!--COMBINING THREE DOTS ABOVE -->
+<!ENTITY tdot             "&#x020DB;" ><!--COMBINING THREE DOTS ABOVE -->
 <!ENTITY telrec           "&#x02315;" ><!--TELEPHONE RECORDER -->
 <!ENTITY tfr              "&#x1D531;" ><!--MATHEMATICAL FRAKTUR SMALL T -->
 <!ENTITY there4           "&#x02234;" ><!--THEREFORE -->

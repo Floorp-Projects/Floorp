@@ -40,8 +40,7 @@ public:
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) override;
 
   // nsIContent
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                         bool aPreallocateChildren) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
