@@ -187,7 +187,7 @@ const ADB = {
   // Start tracking devices connecting and disconnecting from the host.
   // We can't reuse runCommand here because we keep the socket alive.
   // @return The socket used.
-  trackDevices: function adb_trackDevices() {
+  trackDevices() {
     console.log("trackDevices");
     const socket = client.connect();
     let waitForFirst = true;
@@ -281,7 +281,7 @@ const ADB = {
   },
 
   // Sends back an array of device names.
-  listDevices: function adb_listDevices() {
+  listDevices() {
     console.log("listDevices");
 
     return this.runCommand("host:devices").then(
@@ -301,7 +301,7 @@ const ADB = {
   },
 
   // sends adb forward localPort devicePort
-  forwardPort: function adb_forwardPort(localPort, devicePort) {
+  forwardPort(localPort, devicePort) {
     console.log("forwardPort " + localPort + " -- " + devicePort);
     // <host-prefix>:forward:<local>;<remote>
 
@@ -323,7 +323,7 @@ const ADB = {
   //   recv DATA + hex4 + data
   // recv DONE + hex4(0)
   // send QUIT + hex4(0)
-  pull: function adb_pull(from, dest) {
+  pull(from, dest) {
     const deferred = PromiseUtils.defer();
     let state;
     let fileData = null;
@@ -550,7 +550,7 @@ const ADB = {
   // pushes a file to the device.
   // from and dest are full paths.
   // XXX we should STAT the remote path before sending.
-  push: function adb_push(from, dest) {
+  push(from, dest) {
     const deferred = PromiseUtils.defer();
     let socket;
     let state;
@@ -719,7 +719,7 @@ const ADB = {
   },
 
   // Run a shell command
-  shell: function adb_shell(command) {
+  shell(command) {
     const deferred = PromiseUtils.defer();
     let state;
     let stdout = "";
@@ -806,19 +806,19 @@ const ADB = {
     return deferred.promise;
   },
 
-  reboot: function adb_reboot() {
+  reboot() {
     return this.shell("reboot");
   },
 
-  rebootRecovery: function adb_rebootRecovery() {
+  rebootRecovery() {
     return this.shell("reboot recovery");
   },
 
-  rebootBootloader: function adb_rebootBootloader() {
+  rebootBootloader() {
     return this.shell("reboot bootloader");
   },
 
-  root: function adb_root() {
+  root() {
     const deferred = PromiseUtils.defer();
     let state;
 
@@ -893,7 +893,7 @@ const ADB = {
   // Asynchronously runs an adb command.
   // @param command The command as documented in
   // http://androidxref.com/4.0.4/xref/system/core/adb/SERVICES.TXT
-  runCommand: function adb_runCommand(command) {
+  runCommand(command) {
     console.log("runCommand " + command);
     const deferred = PromiseUtils.defer();
     if (!this.ready) {
