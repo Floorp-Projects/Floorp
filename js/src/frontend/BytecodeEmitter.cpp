@@ -27,6 +27,7 @@
 #include "frontend/BytecodeControlStructures.h"
 #include "frontend/CForEmitter.h"
 #include "frontend/EmitterScope.h"
+#include "frontend/ForInEmitter.h"
 #include "frontend/ForOfLoopControl.h"
 #include "frontend/IfEmitter.h"
 #include "frontend/Parser.h"
@@ -4987,6 +4988,8 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, const EmitterScope* headLexical
     MOZ_ASSERT(forInHead->isKind(ParseNodeKind::ForIn));
     MOZ_ASSERT(forInHead->isArity(PN_TERNARY));
 
+    ForInEmitter forIn(this, headLexicalEmitterScope);
+
     // Annex B: Evaluate the var-initializer expression if present.
     // |for (var i = initializer in expr) { ... }|
     ParseNode* forInTarget = forInHead->pn_kid1;
@@ -5014,114 +5017,38 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, const EmitterScope* headLexical
         }
     }
 
+    if (!forIn.emitIterated())                            //
+        return false;
+
     // Evaluate the expression being iterated.
     ParseNode* expr = forInHead->pn_kid3;
-    if (!emitTreeInBranch(expr))                          // EXPR
+    if (!emitTree(expr))                                  // EXPR
         return false;
 
     MOZ_ASSERT(forInLoop->pn_iflags == 0);
 
-    if (!emit1(JSOP_ITER))                                // ITER
+    MOZ_ASSERT_IF(headLexicalEmitterScope,
+                  forInTarget->isKind(ParseNodeKind::Let) ||
+                  forInTarget->isKind(ParseNodeKind::Const));
+
+    if (!forIn.emitInitialize())                          // ITER ITERVAL
         return false;
 
-    // For-in loops have both the iterator and the value on the stack. Push
-    // undefined to balance the stack.
-    if (!emit1(JSOP_UNDEFINED))                           // ITER ITERVAL
+    if (!emitInitializeForInOrOfTarget(forInHead))        // ITER ITERVAL
         return false;
 
-    LoopControl loopInfo(this, StatementKind::ForInLoop);
-
-    /* Annotate so IonMonkey can find the loop-closing jump. */
-    unsigned noteIndex;
-    if (!newSrcNote(SRC_FOR_IN, &noteIndex))
+    if (!forIn.emitBody())                                // ITER ITERVAL
         return false;
-
-    // Jump down to the loop condition to minimize overhead (assuming at least
-    // one iteration, just like the other loop forms).
-    if (!loopInfo.emitEntryJump(this))                    // ITER ITERVAL
-        return false;
-
-    if (!loopInfo.emitLoopHead(this, Nothing()))          // ITER ITERVAL
-        return false;
-
-    // If the loop had an escaping lexical declaration, replace the current
-    // environment with an dead zoned one to implement TDZ semantics.
-    if (headLexicalEmitterScope) {
-        // The environment chain only includes an environment for the for-in
-        // loop head *if* a scope binding is captured, thereby requiring
-        // recreation each iteration. If a lexical scope exists for the head,
-        // it must be the innermost one. If that scope has closed-over
-        // bindings inducing an environment, recreate the current environment.
-        MOZ_ASSERT(forInTarget->isKind(ParseNodeKind::Let) ||
-                   forInTarget->isKind(ParseNodeKind::Const));
-        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
-        MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
-
-        if (headLexicalEmitterScope->hasEnvironment()) {
-            if (!emit1(JSOP_RECREATELEXICALENV))          // ITER ITERVAL
-                return false;
-        }
-
-        // For uncaptured bindings, put them back in TDZ.
-        if (!headLexicalEmitterScope->deadZoneFrameSlots(this))
-            return false;
-    }
-
-    {
-#ifdef DEBUG
-        auto loopDepth = this->stackDepth;
-#endif
-        MOZ_ASSERT(loopDepth >= 2);
-
-        if (!emit1(JSOP_ITERNEXT))                        // ITER ITERVAL
-            return false;
-
-        if (!emitInitializeForInOrOfTarget(forInHead))    // ITER ITERVAL
-            return false;
-
-        MOZ_ASSERT(this->stackDepth == loopDepth,
-                   "iterator and iterval must be left on the stack");
-    }
 
     // Perform the loop body.
     ParseNode* forBody = forInLoop->pn_right;
     if (!emitTree(forBody))                               // ITER ITERVAL
         return false;
 
-    // Set offset for continues.
-    loopInfo.setContinueTarget(offset());
-
-    // Make sure this code is attributed to the "for".
-    if (!updateSourceCoordNotes(forInHead->pn_pos.begin))
+    if (!forIn.emitEnd(Some(forInHead->pn_pos.begin)))    //
         return false;
 
-    if (!loopInfo.emitLoopEntry(this, Nothing()))         // ITER ITERVAL
-        return false;
-    if (!emit1(JSOP_POP))                                 // ITER
-        return false;
-    if (!emit1(JSOP_MOREITER))                            // ITER NEXTITERVAL?
-        return false;
-    if (!emit1(JSOP_ISNOITER))                            // ITER NEXTITERVAL? ISNOITER
-        return false;
-
-    if (!loopInfo.emitLoopEnd(this, JSOP_IFEQ))           // ITER NEXTITERVAL
-        return false;
-
-    // Set the srcnote offset so we can find the closing jump.
-    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
-        return false;
-
-    if (!loopInfo.patchBreaksAndContinues(this))
-        return false;
-
-    // Pop the enumeration value.
-    if (!emit1(JSOP_POP))                                 // ITER
-        return false;
-
-    if (!tryNoteList.append(JSTRY_FOR_IN, this->stackDepth, loopInfo.headOffset(), offset()))
-        return false;
-
-    return emit1(JSOP_ENDITER);                           //
+    return true;
 }
 
 /* C-style `for (init; cond; update) ...` loop. */
