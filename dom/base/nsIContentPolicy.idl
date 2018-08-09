@@ -348,10 +348,11 @@ interface nsIContentPolicy : nsISupports
 
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
-   * DoContentSecurityChecks, all nsIContentPolicy implementations, the
-   * static_assert in dom/cache/DBSchema.cpp, ChannelWrapper.webidl,
-   * ChannelWrapper.cpp, nsPermissionManager.cpp, and other things that are not
-   * listed here that are related to nsIContentPolicy. */
+   * DoContentSecurityChecks, IsContentPolicyTypeWhitelistedForFastBlock,
+   * all nsIContentPolicy implementations, the static_assert in
+   * dom/cache/DBSchema.cpp, ChannelWrapper.webidl, ChannelWrapper.cpp,
+   * nsPermissionManager.cpp, and other things that are not listed here
+   * that are related to nsIContentPolicy. */
 
   //////////////////////////////////////////////////////////////////////
 
