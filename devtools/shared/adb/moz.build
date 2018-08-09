@@ -5,6 +5,7 @@
 DevToolsModules(
     'adb-binary.js',
     'adb-client.js',
+    'adb-device.js',
     'adb-running-checker.js',
     'adb-scanner.js',
     'adb-socket.js',
