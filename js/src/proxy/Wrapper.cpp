@@ -340,6 +340,11 @@ Wrapper::wrappedObject(JSObject* wrapper)
     // of black wrappers black but while it is in progress we can observe gray
     // targets. Expose rather than returning a gray object in this case.
     if (target) {
+        // A cross-compartment wrapper should never wrap a CCW. We rely on this
+        // in the wrapper handlers (we use AutoRealm on our return value, and
+        // AutoRealm cannot be used with CCWs).
+        MOZ_ASSERT_IF(IsCrossCompartmentWrapper(wrapper),
+                      !IsCrossCompartmentWrapper(target));
         if (wrapper->isMarkedBlack())
             MOZ_ASSERT(JS::ObjectIsNotGray(target));
         if (!wrapper->isMarkedGray())
