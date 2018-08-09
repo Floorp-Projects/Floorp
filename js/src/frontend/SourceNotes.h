@@ -64,6 +64,29 @@ class SrcNote {
             Count,
         };
     };
+    // SRC_WHILE for do-while: Source note for JSOP_NOP at the top of do-while
+    //                         loop
+    // FIXME: Add SRC_DO_WHILE (bug 1477896).
+    class DoWhile1 {
+      public:
+        enum Fields {
+            // The offset of the condition ops from JSOP_NOP.
+            CondOffset,
+            Count,
+        };
+    };
+    // SRC_WHILE for do-while: Source note for JSOP_LOOPHEAD at the top of
+    //                         do-while loop
+    // FIXME: Add SRC_DO_WHILE (bug 1477896).
+    class DoWhile2 {
+      public:
+        enum Fields {
+            // The offset of JSOP_IFNE at the end of the loop from
+            // JSOP_LOOPHEAD.
+            BackJumpOffset,
+            Count,
+        };
+    };
     // SRC_FOR_IN: Source note for JSOP_GOTO at the top of for-in loop,
     //             which jumps to JSOP_LOOPENTRY.
     class ForIn {
@@ -147,6 +170,12 @@ class SrcNote {
         };
     };
 };
+
+// FIXME: Add SRC_DO_WHILE (bug 1477896).
+static_assert(unsigned(SrcNote::While::Count) == unsigned(SrcNote::DoWhile1::Count),
+              "SRC_WHILE can be shared between while and do-while");
+static_assert(unsigned(SrcNote::While::Count) == unsigned(SrcNote::DoWhile2::Count),
+              "SRC_WHILE can be shared between while and do-while");
 
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
