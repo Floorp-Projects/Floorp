@@ -55,25 +55,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445177
     b1.parentNode.appendChild(o1);
     isnot(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (8)");
 
-    document.addBroadcastListenerFor(b1, o1, "value");
-    is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (9)");
-
-    o1.remove();
-    b1.setAttribute("value", "foobar");
-    is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (10)");
-
-    b1.parentNode.appendChild(o1);
-    is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (11)");
-
-    o1.setAttribute("observes", "b1");
-    is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (12)");
-
-    // When broadcaster isn't in document, changes to its attributes aren't
-    // reflected to listener.
-    b1.remove();
-    b1.setAttribute("value", "foo");
-    isnot(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (13)");
-
     SimpleTest.finish();
   }
 

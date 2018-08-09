@@ -10,9 +10,4 @@ interface MozObserver;
 [Func="IsChromeOrXBL"]
 interface XULDocument : Document {
 
-  [Throws]
-  void addBroadcastListenerFor(Element broadcaster, Element observer,
-                               DOMString attr);
-  void removeBroadcastListenerFor(Element broadcaster, Element observer,
-                                  DOMString attr);
 };
