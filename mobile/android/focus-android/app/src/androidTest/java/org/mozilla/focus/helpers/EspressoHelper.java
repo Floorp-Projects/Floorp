@@ -7,7 +7,13 @@ package org.mozilla.focus.helpers;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.test.espresso.ViewInteraction;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.mozilla.focus.R;
 
 import okhttp3.mockwebserver.MockWebServer;
@@ -69,5 +75,24 @@ public class EspressoHelper {
 
     public static ViewInteraction onFloatingTabsButton() {
         return onView(withId(R.id.tabs));
+    }
+
+    public static Matcher<View> childAtPosition(
+            final Matcher<View> parentMatcher, final int position) {
+
+        return new TypeSafeMatcher<View>() {
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("Child at position " + position + " in parent ");
+                parentMatcher.describeTo(description);
+            }
+
+            @Override
+            public boolean matchesSafely(View view) {
+                ViewParent parent = view.getParent();
+                return parent instanceof ViewGroup && parentMatcher.matches(parent)
+                        && view.equals(((ViewGroup) parent).getChildAt(position));
+            }
+        };
     }
 }

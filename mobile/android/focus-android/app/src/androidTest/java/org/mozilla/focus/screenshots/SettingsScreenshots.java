@@ -25,23 +25,23 @@ import mozilla.components.browser.domains.CustomDomains;
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
 
-import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.PreferenceMatchers.withKey;
-import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
+import static android.support.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isEnabled;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.AllOf.allOf;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
+import static org.mozilla.focus.helpers.EspressoHelper.childAtPosition;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
 @RunWith(AndroidJUnit4.class)
@@ -119,7 +119,7 @@ public class SettingsScreenshots extends ScreenshotTest {
 
         /* Manual Search Engine page */
         final String addEngineLabel = getString(R.string.preference_search_add2);
-        onData(withTitleText(addEngineLabel))
+        onView(withText(addEngineLabel))
                 .check(matches(isEnabled()))
                 .perform(click());
         onView(withId(R.id.edit_engine_name))
@@ -141,7 +141,7 @@ public class SettingsScreenshots extends ScreenshotTest {
 
         /* Tap autocomplete menu */
         final String urlAutocompletemenu = getString(R.string.preference_subitem_autocomplete);
-        onData(withTitleText(urlAutocompletemenu))
+        onView(withText(urlAutocompletemenu))
                 .perform(click());
         onView(withText(getString(R.string.preference_autocomplete_custom_summary)))
                 .check(matches(isDisplayed()));
@@ -151,11 +151,8 @@ public class SettingsScreenshots extends ScreenshotTest {
         onView(withText(getString(R.string.preference_autocomplete_custom_summary)))
                 .perform(click());
         /* Add custom URL */
-        final String key = InstrumentationRegistry
-                .getTargetContext()
-                .getString(R.string.pref_key_screen_custom_domains);
-        onData(withKey(key))
-                .perform(click());
+        onView(allOf(withId(R.id.list),
+                childAtPosition(withId(android.R.id.list_container), 0))).perform(actionOnItemAtPosition(4, click()));
 
         final String addCustomURLAction = getString(R.string.preference_autocomplete_action_add);
         onView(withText(addCustomURLAction))
@@ -219,7 +216,7 @@ public class SettingsScreenshots extends ScreenshotTest {
         // "About" screen
         final String aboutLabel = getString(R.string.preference_about, getString(R.string.app_name));
 
-        onData(withTitleText(aboutLabel))
+        onView(withText(aboutLabel))
                 .check(matches(isDisplayed()))
                 .perform(click());
 
@@ -237,7 +234,7 @@ public class SettingsScreenshots extends ScreenshotTest {
         // "Your rights" screen
         final String yourRightsLabel = getString(R.string.menu_rights);
 
-        onData(withTitleText(yourRightsLabel))
+        onView(withText(yourRightsLabel))
                 .check(matches(isDisplayed()))
                 .perform(click());
 
