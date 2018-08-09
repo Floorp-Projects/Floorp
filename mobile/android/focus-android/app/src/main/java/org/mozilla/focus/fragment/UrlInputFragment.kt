@@ -8,12 +8,17 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.SharedPreferences
 import android.graphics.Typeface
 import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
 import android.text.SpannableString
 import android.text.TextUtils
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +26,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.webkit.URLUtil
 import android.widget.FrameLayout
+import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.android.synthetic.main.fragment_urlinput.view.homeViewTipsLabel
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
@@ -28,6 +34,7 @@ import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import org.mozilla.focus.R
+import org.mozilla.focus.R.string.pref_key_homescreen_tips
 import org.mozilla.focus.R.string.teaser
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
@@ -58,7 +65,8 @@ class FocusCrashException : Exception()
 @Suppress("LargeClass", "TooManyFunctions")
 class UrlInputFragment :
     LocaleAwareFragment(),
-    View.OnClickListener {
+    View.OnClickListener,
+    SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         @JvmField
         val FRAGMENT_TAG = "url_input"
@@ -144,6 +152,9 @@ class UrlInputFragment :
         model = ViewModelProviders.of(activity!!).get(MainViewModel::class.java)
         searchSuggestionsViewModel = ViewModelProviders.of(this).get(SearchSuggestionsViewModel::class.java)
 
+        PreferenceManager.getDefaultSharedPreferences(context)
+            .registerOnSharedPreferenceChangeListener(this)
+
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let {
             session = if (SessionManager.getInstance().hasSessionWithUUID(it)) SessionManager
@@ -180,19 +191,38 @@ class UrlInputFragment :
     }
 
     private fun updateTipsLabel() {
-        val context = context
-
-        if (context == null) {
-            return
-        }
-
-        keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
-
+        val context = context ?: return
         val tip = TipManager.getNextTipIfAvailable(context)
+        keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
 
         if (tip != null) {
             keyboardLinearLayout.homeViewTipsLabel.text = tip.text
-            keyboardLinearLayout.homeViewTipsLabel.setOnClickListener { tip.deepLink() }
+
+            // Only make the second line clickable if applicable
+            val linkStartIndex =
+                if (tip.text.contains("\n")) tip.text.indexOf("\n") + 2 else 0
+            val textWithDeepLink = SpannableString(tip.text)
+
+            keyboardLinearLayout.homeViewTipsLabel.movementMethod = LinkMovementMethod()
+            homeViewTipsLabel.setText(tip.text, TextView.BufferType.SPANNABLE)
+
+            val deepLinkAction = object : ClickableSpan() {
+                override fun onClick(widget: View?) {
+                    tip.deepLink()
+                }
+            }
+
+            textWithDeepLink.setSpan(deepLinkAction,
+                linkStartIndex,
+                tip.text.length,
+                0)
+
+            textWithDeepLink.setSpan(ForegroundColorSpan(homeViewTipsLabel.currentTextColor),
+                linkStartIndex,
+                tip.text.length,
+                0)
+
+            homeViewTipsLabel.text = textWithDeepLink
         } else {
             showFocusSubtitle()
         }
@@ -663,5 +693,9 @@ class UrlInputFragment :
             content.setSpan(StyleSpan(Typeface.BOLD), start, start + searchText.length, 0)
             searchViewContainer?.visibility = View.VISIBLE
         }
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        if (key == getString(pref_key_homescreen_tips)) { updateTipsLabel() }
     }
 }

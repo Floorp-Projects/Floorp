@@ -6,9 +6,9 @@ package org.mozilla.focus.tips
 
 import android.content.Context
 import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.widget.DefaultBrowserPreference
 import java.util.Random
 import android.app.Activity
+import android.os.Build
 import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_set_default_browser
 import org.mozilla.focus.R.string.tip_add_to_homescreen
@@ -20,6 +20,7 @@ import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.SupportUtils
 
 class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: () -> Unit)
 
@@ -125,7 +126,11 @@ object TipManager {
         }
 
         val deepLinkDefaultBrowser = {
-            DefaultBrowserPreference(context, null).onClick()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                SupportUtils.openDefaultAppsSettings(context)
+            } else {
+                SupportUtils.openDefaultBrowserSumoPage(context)
+            }
             TelemetryWrapper.pressTipEvent(id)
         }
 

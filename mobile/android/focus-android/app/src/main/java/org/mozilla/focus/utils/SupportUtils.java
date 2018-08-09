@@ -5,12 +5,20 @@
 
 package org.mozilla.focus.utils;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 
+import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.focus.locale.Locales;
+import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.session.Source;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -66,6 +74,22 @@ public class SupportUtils {
         } catch (PackageManager.NameNotFoundException e) {
             // This should be impossible - we should always be able to get information about ourselves:
             throw new IllegalStateException("Unable find package details for Focus", e);
+        }
+    }
+
+    public static void openDefaultBrowserSumoPage(Context context) {
+        SessionManager.getInstance().createSession(Source.MENU, SupportUtils.DEFAULT_BROWSER_URL);
+        ((Activity) context).onBackPressed();
+    }
+
+    @TargetApi(Build.VERSION_CODES.N)
+    public static void openDefaultAppsSettings(Context context) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            // In some cases, a matching Activity may not exist (according to the Android docs).
+            openDefaultBrowserSumoPage(context);
         }
     }
 }

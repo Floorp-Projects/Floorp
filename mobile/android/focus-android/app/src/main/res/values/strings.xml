@@ -684,31 +684,37 @@ be temporary, and you can try again later.</li>
     <string name="dismiss_no_suggestions_prompt_button">Dismiss</string>
 
     <!-- Tips displayed on the home view -->
-    <!-- Tip displayed on home view explaining how to disable tracking protection -->
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The newline here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Site behaving unexpectedly?\n
     Try turning off Tracking Protection</string>
 
-    <!-- Tip displayed on home view explaining how to add sites to homescreen -->
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    The newline here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_add_to_homescreen">Get one-tap access to sites you use most\n
         Menu > Add to Home screen</string>
 
     <!-- Tip displayed on home view explaining how to make Focus the default browser
-    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).-->
-    <string name="tip_set_default_browser">Open every link in %1$s
-        Set %1$s as default browser"
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The newline here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Open every link in %1$s\n
+        Set %1$s as default browser
     </string>
 
-    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL-->
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The newline here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_autocomplete_url">Autocomplete URLs for sites you use most\n
         Long-press any URL in the address bar
     </string>
 
-    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL-->
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The newline here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Open a link in a new tab\n
         Long-press any link on a page
     </string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website -->
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     The newline here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_request_desktop">Rather see the full desktop site?\n
     Menu > Request desktop site
     </string>

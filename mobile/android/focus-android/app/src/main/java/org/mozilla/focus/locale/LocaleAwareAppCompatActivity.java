@@ -85,13 +85,7 @@ public abstract class LocaleAwareAppCompatActivity
 
     public void openPrivacySecuritySettings() {
         final Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        settingsIntent.putExtra("privacy", true);
-        startActivityForResult(settingsIntent, 0);
-    }
-
-    public void openAutocompleteUrlSettings() {
-        final Intent settingsIntent = new Intent(this, SettingsActivity.class);
-        settingsIntent.putExtra("autocompleteUrl", true);
+        settingsIntent.putExtra(SettingsActivity.SHOULD_OPEN_PRIVACY_EXTRA, true);
         startActivityForResult(settingsIntent, 0);
     }
 
