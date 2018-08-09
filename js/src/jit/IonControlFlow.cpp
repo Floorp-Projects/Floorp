@@ -1434,26 +1434,27 @@ ControlFlowGenerator::processForLoop(JSOp op, jssrcnote* sn)
     MOZ_ASSERT(op == JSOP_NOP);
     pc = GetNextPc(pc);
 
-    jsbytecode* condpc = pc + GetSrcNoteOffset(sn, 0);
-    jsbytecode* updatepc = pc + GetSrcNoteOffset(sn, 1);
-    jsbytecode* ifne = pc + GetSrcNoteOffset(sn, 2);
-    jsbytecode* exitpc = GetNextPc(ifne);
+    jsbytecode* condpc = pc + GetSrcNoteOffset(sn, SrcNote::For::CondOffset);
+    jsbytecode* updatepc = pc + GetSrcNoteOffset(sn, SrcNote::For::UpdateOffset);
+    jsbytecode* backjumppc = pc + GetSrcNoteOffset(sn, SrcNote::For::BackJumpOffset);
+    jsbytecode* exitpc = GetNextPc(backjumppc);
 
     // for loops have the following structures:
     //
-    //   NOP or POP
-    //   [GOTO cond | NOP]
+    //   NOP
+    //   [GOTO cond]
     //   LOOPHEAD
     // body:
     //    ; [body]
-    // [increment:]
+    // [update:]
     //   [FRESHENBLOCKSCOPE, if needed by a cloned block]
-    //    ; [increment]
+    //    ; [update]
     // [cond:]
     //   LOOPENTRY
-    //   GOTO body
+    //    ; [cond]
+    //   [GOTO body | IFNE body]
     //
-    // If there is a condition (condpc != ifne), this acts similar to a while
+    // If there is a condition (condpc != backjumppc), this acts similar to a while
     // loop otherwise, it acts like a do-while loop.
     //
     // Note that currently Ion does not compile pushblockscope/popblockscope as
@@ -1462,7 +1463,7 @@ ControlFlowGenerator::processForLoop(JSOp op, jssrcnote* sn)
     jsbytecode* bodyStart = pc;
     jsbytecode* bodyEnd = updatepc;
     jsbytecode* loopEntry = condpc;
-    if (condpc != ifne) {
+    if (condpc != backjumppc) {
         MOZ_ASSERT(JSOp(*bodyStart) == JSOP_GOTO);
         MOZ_ASSERT(bodyStart + GetJumpOffset(bodyStart) == condpc);
         bodyStart = GetNextPc(bodyStart);
@@ -1477,7 +1478,7 @@ ControlFlowGenerator::processForLoop(JSOp op, jssrcnote* sn)
     }
     jsbytecode* loopHead = bodyStart;
     MOZ_ASSERT(JSOp(*bodyStart) == JSOP_LOOPHEAD);
-    MOZ_ASSERT(ifne + GetJumpOffset(ifne) == bodyStart);
+    MOZ_ASSERT(backjumppc + GetJumpOffset(backjumppc) == bodyStart);
     bodyStart = GetNextPc(bodyStart);
 
     MOZ_ASSERT(JSOp(*loopEntry) == JSOP_LOOPENTRY);
@@ -1495,9 +1496,9 @@ ControlFlowGenerator::processForLoop(JSOp op, jssrcnote* sn)
     // parse the condition.
     jsbytecode* stopAt;
     CFGState::State initial;
-    if (condpc != ifne) {
+    if (condpc != backjumppc) {
         pc = condpc;
-        stopAt = ifne;
+        stopAt = backjumppc;
         initial = CFGState::FOR_LOOP_COND;
     } else {
         pc = bodyStart;
@@ -1512,7 +1513,7 @@ ControlFlowGenerator::processForLoop(JSOp op, jssrcnote* sn)
     }
 
     CFGState& state = cfgStack_.back();
-    state.loop.condpc = (condpc != ifne) ? condpc : nullptr;
+    state.loop.condpc = (condpc != backjumppc) ? condpc : nullptr;
     state.loop.updatepc = (updatepc != condpc) ? updatepc : nullptr;
     if (state.loop.updatepc)
         state.loop.updateEnd = condpc;

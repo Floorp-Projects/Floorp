@@ -37,6 +37,23 @@ namespace js {
 
 class SrcNote {
   public:
+    // SRC_FOR: Source note for JSOP_NOP at the top of C-style for loop,
+    //          which is placed after init expression/declaration ops.
+    class For {
+      public:
+        enum Fields {
+            // The offset of the condition expression ops from JSOP_NOP.
+            CondOffset,
+
+            // The offset of the update expression ops from JSOP_NOP.
+            UpdateOffset,
+
+            // The offset of JSOP_GOTO/JSOP_IFNE at the end of the loop from
+            // JSOP_NOP.
+            BackJumpOffset,
+            Count,
+        };
+    };
     // SRC_TABLESWITCH: Source note for JSOP_TABLESWITCH.
     class TableSwitch {
       public:
@@ -106,7 +123,7 @@ class SrcNote {
     M(SRC_IF,           "if",          0)  /* JSOP_IFEQ bytecode is from an if-then. */            \
     M(SRC_IF_ELSE,      "if-else",     0)  /* JSOP_IFEQ bytecode is from an if-then-else. */       \
     M(SRC_COND,         "cond",        0)  /* JSOP_IFEQ is from conditional ?: operator. */        \
-    M(SRC_FOR,          "for",         3)  /* JSOP_NOP or JSOP_POP in for(;;) loop head. */        \
+    M(SRC_FOR,          "for",         SrcNote::For::Count) \
     M(SRC_WHILE,        "while",       1)  /* JSOP_GOTO to for or while loop condition from before \
                                               loop, else JSOP_NOP at top of do-while loop. */      \
     M(SRC_FOR_IN,       "for-in",      1)  /* JSOP_GOTO to for-in loop condition from before       \
