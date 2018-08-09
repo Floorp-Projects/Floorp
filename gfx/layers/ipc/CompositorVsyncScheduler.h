@@ -93,6 +93,12 @@ public:
    */
   const TimeStamp& GetLastComposeTime() const;
 
+  /**
+   * Update LastCompose TimeStamp to current timestamp.
+   * The function is typically used when composition is handled outside the CompositorVsyncScheduler.
+   */
+  void UpdateLastComposeTime();
+
 private:
   virtual ~CompositorVsyncScheduler();
 
