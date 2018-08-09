@@ -205,6 +205,22 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_SetProperty(cx, info, "arm64-simulator", value))
         return false;
 
+#ifdef JS_SIMULATOR_MIPS32
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "mips32-simulator", value))
+        return false;
+
+#ifdef JS_SIMULATOR_MIPS64
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "mips64-simulator", value))
+        return false;
+
 #ifdef MOZ_ASAN
     value = BooleanValue(true);
 #else
