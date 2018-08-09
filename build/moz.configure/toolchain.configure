@@ -1745,10 +1745,12 @@ js_option('--enable-stdcxx-compat', env='MOZ_STDCXX_COMPAT',
 
 
 @template
-def libstdcxx_version(var, compiler):
-    @depends(compiler, when='--enable-stdcxx-compat')
+def libstdcxx_version(var, compiler, host_or_target):
+    @depends(compiler, host_or_target, when='--enable-stdcxx-compat')
     @imports(_from='mozbuild.configure.libstdcxx', _import='find_version')
-    def version(compiler):
+    def version(compiler, host_or_target):
+        if host_or_target.os == 'Android':
+            return None
         result = find_version(
             compiler.wrapper + [compiler.compiler] + compiler.flags)
         if result:
@@ -1760,10 +1762,12 @@ def libstdcxx_version(var, compiler):
 
 add_gcc_flag(
     '-D_GLIBCXX_USE_CXX11_ABI=0', cxx_compiler,
-    when=libstdcxx_version('MOZ_LIBSTDCXX_TARGET_VERSION', cxx_compiler))
+    when=libstdcxx_version(
+        'MOZ_LIBSTDCXX_TARGET_VERSION', cxx_compiler, target))
 add_gcc_flag(
     '-D_GLIBCXX_USE_CXX11_ABI=0', host_cxx_compiler,
-    when=libstdcxx_version('MOZ_LIBSTDCXX_HOST_VERSION', host_cxx_compiler))
+    when=libstdcxx_version(
+        'MOZ_LIBSTDCXX_HOST_VERSION', host_cxx_compiler, host))
 
 
 @depends(c_compiler.try_compile(flags=['-fsanitize=fuzzer-no-link'],
