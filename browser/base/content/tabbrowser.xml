@@ -1479,7 +1479,14 @@
           }
         } else if (draggedTab) {
           let newIndex = this._getDropIndex(event, false);
-          gBrowser.adoptTab(draggedTab, newIndex, true);
+          let newTabs = [];
+          for (let tab of movingTabs) {
+            let newTab = gBrowser.adoptTab(tab, newIndex++, tab == draggedTab);
+            newTabs.push(newTab);
+          }
+
+          // Restore tab selection
+          gBrowser.addRangeToMultiSelectedTabs(newTabs[0], newTabs[newTabs.length - 1]);
         } else {
           // Pass true to disallow dropping javascript: or data: urls
           let links;
@@ -1606,7 +1613,7 @@
             props.outerWidth = winWidth;
             props.outerHeight = winHeight;
           }
-          gBrowser.replaceTabWithWindow(draggedTab, props);
+          gBrowser.replaceTabsWithWindow(draggedTab, props);
         }
         event.stopPropagation();
       ]]></handler>
