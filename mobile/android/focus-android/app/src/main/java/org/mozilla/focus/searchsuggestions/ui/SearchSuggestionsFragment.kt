@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.support.v7.util.DiffUtil
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.SpannableString
@@ -25,6 +26,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_search_suggestions.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 
 import org.mozilla.focus.R
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
@@ -158,11 +162,39 @@ class SearchSuggestionsFragment : Fragment() {
     inner class SuggestionsAdapter(
         private val clickListener: (String) -> Unit
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        inner class DiffCallback(
+            private val oldSuggestions: List<SpannableStringBuilder>,
+            private val newSuggestions: List<SpannableStringBuilder>
+        ) : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = oldSuggestions.size
+            override fun getNewListSize(): Int = newSuggestions.size
+            override fun areItemsTheSame(p0: Int, p1: Int): Boolean = true
+            override fun areContentsTheSame(p0: Int, p1: Int): Boolean = oldSuggestions[p0] == newSuggestions[p0]
+            override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? = newSuggestions[newItemPosition]
+        }
+
         private var suggestions: List<SpannableStringBuilder> = listOf()
 
         fun refresh(suggestions: List<SpannableStringBuilder>) {
-            this.suggestions = suggestions
-            notifyDataSetChanged()
+            launch(CommonPool) {
+                val result = DiffUtil.calculateDiff(DiffCallback(this@SuggestionsAdapter.suggestions, suggestions))
+
+                launch(UI) {
+                    result.dispatchUpdatesTo(this@SuggestionsAdapter)
+                    this@SuggestionsAdapter.suggestions = suggestions
+                }
+            }
+        }
+
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
+            if (payloads.isEmpty()) {
+                super.onBindViewHolder(holder, position, payloads)
+                return
+            }
+
+            val payload = payloads[0] as? SpannableStringBuilder ?: return
+            val view = holder as? SuggestionViewHolder ?: return
+            view.bind(payload)
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
