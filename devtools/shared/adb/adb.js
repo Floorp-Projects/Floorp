@@ -769,6 +769,7 @@ const ADB = {
             break;
           }
           ignoreResponseCode = true;
+          // eslint-disable-next-lined no-fallthrough
         case "decode-shell":
           const decoder = new TextDecoder();
           const text = new Uint8Array(client.getBuffer(data),
