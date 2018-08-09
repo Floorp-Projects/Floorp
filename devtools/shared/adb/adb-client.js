@@ -15,7 +15,7 @@ const { AdbSocket } = require("./adb-socket");
 const OKAY = 0x59414b4f;
 const FAIL = 0x4c494146;
 
-let _sockets = [ ];
+const _sockets = [ ];
 
 // Return buffer, which differs between Gecko versions
 function getBuffer(aPacket) {
@@ -26,24 +26,24 @@ function getBuffer(aPacket) {
 // @param aIgnoreResponse True if this packet has no OKAY/FAIL.
 // @return                A js object { length:...; data:... }
 function unpackPacket(aPacket, aIgnoreResponse) {
-  let buffer = getBuffer(aPacket);
+  const buffer = getBuffer(aPacket);
   console.debug("Len buffer: " + buffer.byteLength);
   if (buffer.byteLength === 4 && !aIgnoreResponse) {
     console.debug("Packet empty");
     return { length: 0, data: "" };
   }
-  let lengthView = new Uint8Array(buffer, aIgnoreResponse ? 0 : 4, 4);
-  let decoder = new TextDecoder();
-  let length = parseInt(decoder.decode(lengthView), 16);
-  let text = new Uint8Array(buffer, aIgnoreResponse ? 4 : 8, length);
+  const lengthView = new Uint8Array(buffer, aIgnoreResponse ? 0 : 4, 4);
+  const decoder = new TextDecoder();
+  const length = parseInt(decoder.decode(lengthView), 16);
+  const text = new Uint8Array(buffer, aIgnoreResponse ? 4 : 8, length);
   return { length, data: decoder.decode(text) };
 }
 
 // Checks if the response is expected (defaults to OKAY).
 // @return true if response equals expected.
 function checkResponse(aPacket, aExpected = OKAY) {
-  let buffer = getBuffer(aPacket);
-  let view = new Uint32Array(buffer, 0, 1);
+  const buffer = getBuffer(aPacket);
+  const view = new Uint32Array(buffer, 0, 1);
   if (view[0] == FAIL) {
     console.debug("Response: FAIL");
   }
@@ -61,7 +61,7 @@ function createRequest(aCommand) {
     length = "0" + length;
   }
 
-  let encoder = new TextEncoder();
+  const encoder = new TextEncoder();
   console.debug("Created request: " + length + aCommand);
   return encoder.encode(length + aCommand);
 }
@@ -73,12 +73,12 @@ function close() {
 }
 
 function connect() {
-  let tmp = new AdbSocket();
+  const tmp = new AdbSocket();
   _sockets.push(tmp);
   return tmp;
 }
 
-let client = {
+const client = {
   getBuffer,
   unpackPacket,
   checkResponse,

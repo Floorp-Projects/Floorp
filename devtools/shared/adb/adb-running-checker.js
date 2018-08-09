@@ -19,21 +19,21 @@ exports.check = async function check() {
   console.debug("Asking for host:version");
 
   return new Promise(resolve => {
-    let runFSM = function runFSM(aData) {
+    const runFSM = function runFSM(aData) {
       console.debug("runFSM " + state);
       switch (state) {
         case "start":
-          let req = client.createRequest("host:version");
+          const req = client.createRequest("host:version");
           socket.send(req);
           state = "wait-version";
           break;
         case "wait-version":
           // TODO: Actually check the version number to make sure the daemon
           //       supports the commands we want to use
-          let { length, data } = client.unpackPacket(aData);
+          const { length, data } = client.unpackPacket(aData);
           console.debug("length: ", length, "data: ", data);
           socket.close();
-          let version = parseInt(data, "16");
+          const version = parseInt(data, "16");
           if (version >= 31) {
             resolve(true);
           } else {
@@ -47,7 +47,7 @@ exports.check = async function check() {
       }
     };
 
-    let setupSocket = function() {
+    const setupSocket = function() {
       socket.s.onerror = function(aEvent) {
         console.debug("running checker onerror");
         resolve(false);
