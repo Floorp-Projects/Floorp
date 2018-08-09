@@ -65,7 +65,7 @@ window.gActivityStreamStrings = {
   "topsites_form_url_label": "URL",
   "topsites_form_image_url_label": "URL de imagem personalizada",
   "topsites_form_url_placeholder": "Digite ou cole um URL",
-  "topsites_form_use_image_link": "Utilizar uma imagem personalizada…",
+  "topsites_form_use_image_link": "Usar uma imagem personalizada…",
   "topsites_form_preview_button": "Visualizar",
   "topsites_form_add_button": "Adicionar",
   "topsites_form_save_button": "Salvar",

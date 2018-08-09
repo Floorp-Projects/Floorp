@@ -205,7 +205,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -1538,6 +1538,24 @@ function addLocaleDataForReactIntl(locale) {
   Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["addLocaleData"])([{ locale, parentLocale: "en" }]);
 }
 
+// Returns a function will not be continuously triggered when called. The
+// function will be triggered if called again after `wait` milliseconds.
+function debounce(func, wait) {
+  let timer;
+  return (...args) => {
+    if (timer) {
+      return;
+    }
+
+    let wakeUp = () => {
+      timer = null;
+    };
+
+    timer = setTimeout(wakeUp, wait);
+    func.apply(this, args);
+  };
+}
+
 class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
   componentWillMount() {
     const { App, locale } = this.props;
@@ -1562,9 +1580,29 @@ class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
     this.updateTheme();
   }
 
-  componentWillUpdate({ App }) {
+  hasTopStoriesSectionChanged(nextProps) {
+    const nPropsSections = nextProps.Sections.find(section => section.id === "topstories");
+    const tPropsSections = this.props.Sections.find(section => section.id === "topstories");
+    if (nPropsSections && nPropsSections.options) {
+      if (!tPropsSections || !tPropsSections.options) {
+        return true;
+      }
+      if (nPropsSections.options.show_spocs !== tPropsSections.options.show_spocs) {
+        return true;
+      }
+      if (nPropsSections.options.stories_endpoint !== tPropsSections.options.stories_endpoint) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  componentWillUpdate(nextProps) {
     this.updateTheme();
-    this.sendNewTabRehydrated(App);
+    if (this.hasTopStoriesSectionChanged(nextProps)) {
+      this.renderNotified = false;
+    }
+    this.sendNewTabRehydrated(nextProps.App);
   }
 
   updateTheme() {
@@ -1621,6 +1659,25 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
   constructor(props) {
     super(props);
     this.openPreferences = this.openPreferences.bind(this);
+    this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
+    this.state = { fixedSearch: false };
+  }
+
+  componentDidMount() {
+    global.addEventListener("scroll", this.onWindowScroll);
+  }
+
+  componentWillUnmount() {
+    global.removeEventListener("scroll", this.onWindowScroll);
+  }
+
+  onWindowScroll() {
+    const SCROLL_THRESHOLD = 34;
+    if (global.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
+      this.setState({ fixedSearch: true });
+    } else if (global.scrollY <= SCROLL_THRESHOLD && this.state.fixedSearch) {
+      this.setState({ fixedSearch: false });
+    }
   }
 
   openPreferences() {
@@ -1636,7 +1693,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
 
     const shouldBeFixedToTop = common_PrerenderData_jsm__WEBPACK_IMPORTED_MODULE_7__["PrerenderData"].arePrefsValid(name => prefs[name]);
 
-    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top"].filter(v => v).join(" ");
+    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && "fixed-search"].filter(v => v).join(" ");
 
     return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
       "div",
@@ -1675,7 +1732,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
   }
 }
 
-const Base = Object(react_redux__WEBPACK_IMPORTED_MODULE_4__["connect"])(state => ({ App: state.App, Prefs: state.Prefs }))(_Base);
+const Base = Object(react_redux__WEBPACK_IMPORTED_MODULE_4__["connect"])(state => ({ App: state.App, Prefs: state.Prefs, Sections: state.Sections }))(_Base);
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
@@ -2344,32 +2401,36 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
       "div",
       { className: "search-wrapper" },
       react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
-        "label",
-        { htmlFor: "newtab-search-text", className: "search-label" },
+        "div",
+        { className: "search-inner-wrapper" },
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
-          "span",
-          { className: "sr-only" },
-          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "search_web_placeholder" })
-        )
-      ),
-      react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
-        id: "newtab-search-text",
-        maxLength: "256",
-        placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
-        ref: this.onInputMount,
-        title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
-        type: "search" }),
-      react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
-        "button",
-        {
-          id: "searchSubmit",
-          className: "search-button",
-          onClick: this.onClick,
-          title: this.props.intl.formatMessage({ id: "search_button" }) },
+          "label",
+          { htmlFor: "newtab-search-text", className: "search-label" },
+          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+            "span",
+            { className: "sr-only" },
+            react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "search_web_placeholder" })
+          )
+        ),
+        react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+          id: "newtab-search-text",
+          maxLength: "256",
+          placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
+          ref: this.onInputMount,
+          title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
+          type: "search" }),
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
-          "span",
-          { className: "sr-only" },
-          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "search_button" })
+          "button",
+          {
+            id: "searchSubmit",
+            className: "search-button",
+            onClick: this.onClick,
+            title: this.props.intl.formatMessage({ id: "search_button" }) },
+          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+            "span",
+            { className: "sr-only" },
+            react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "search_button" })
+          )
         )
       )
     );
@@ -2830,12 +2891,17 @@ const LinkMenuOptions = {
       data: { url: site.url }
     })
   }),
-  PinTopSite: (site, index) => ({
+  PinTopSite: ({ url, searchTopSite, label }, index) => ({
     id: "menu_action_pin",
     icon: "pin",
     action: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
       type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_PIN,
-      data: { site: { url: site.url }, index }
+      data: {
+        site: Object.assign({
+          url
+        }, searchTopSite && { searchTopSite, label }),
+        index
+      }
     }),
     userEvent: "PIN"
   }),
@@ -2927,7 +2993,7 @@ class _LinkMenu extends react__WEBPACK_IMPORTED_MODULE_5___default.a.PureCompone
     const { site, index, source, isPrivateBrowsingEnabled, siteInfo, platform } = props;
 
     // Handle special case of default site
-    const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
+    const propOptions = !site.isDefault || site.searchTopSite ? props.options : DEFAULT_SITE_MENU_OPTIONS;
 
     const options = propOptions.map(o => content_src_lib_link_menu_options__WEBPACK_IMPORTED_MODULE_4__["LinkMenuOptions"][o](site, index, source, isPrivateBrowsingEnabled, siteInfo, platform)).map(option => {
       const { action, impression, id, string_id, type, userEvent } = option;
@@ -4087,10 +4153,13 @@ const TopSites = Object(react_redux__WEBPACK_IMPORTED_MODULE_4__["connect"])(sta
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TOP_SITES_SOURCE", function() { return TOP_SITES_SOURCE; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TOP_SITES_CONTEXT_MENU_OPTIONS", function() { return TOP_SITES_CONTEXT_MENU_OPTIONS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS", function() { return TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MIN_RICH_FAVICON_SIZE", function() { return MIN_RICH_FAVICON_SIZE; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MIN_CORNER_FAVICON_SIZE", function() { return MIN_CORNER_FAVICON_SIZE; });
 const TOP_SITES_SOURCE = "TOP_SITES";
 const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
+// the special top site for search shortcut experiment can only have the option to unpin (which removes) the topsite
+const TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "BlockUrl"];
 // minimum size necessary to show a rich icon instead of a screenshot
 const MIN_RICH_FAVICON_SIZE = 96;
 // minimum size necessary to show any icon in the top left corner with a screenshot
@@ -4236,6 +4305,13 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
     if (defaultStyle) {
       // force no styles (letter fallback) even if the link has imagery
       smallFaviconFallback = false;
+    } else if (link.searchTopSite) {
+      imageClassName = "top-site-icon rich-icon";
+      imageStyle = {
+        backgroundColor: link.backgroundColor,
+        backgroundImage: `url(${tippyTopIcon})`
+      };
+      smallFaviconStyle = { backgroundImage: `url(${tippyTopIcon})` };
     } else if (link.customScreenshotURL) {
       // assume high quality custom screenshot and use rich icon styles and class names
       imageClassName = "top-site-icon rich-icon";
@@ -4288,6 +4364,7 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
             "div",
             { className: "tile", "aria-hidden": true, "data-fallback": letterFallback },
             react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: imageClassName, style: imageStyle }),
+            link.searchTopSite && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "top-site-icon search-topsite" }),
             showSmallFavicon && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
               className: "top-site-icon default-icon",
               "data-fallback": smallFaviconFallback && letterFallback,
@@ -4333,6 +4410,11 @@ class TopSite extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     if (this.props.link.isPinned) {
       value.card_type = "pinned";
     }
+    if (this.props.link.searchTopSite) {
+      // Set the card_type as "search" regardless of its pinning status
+      value.card_type = "search";
+      value.search_vendor = this.props.link.hostname;
+    }
     return { value };
   }
 
@@ -4351,10 +4433,17 @@ class TopSite extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     // specified as a property on the link.
     event.preventDefault();
     const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
-      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].OPEN_LINK,
-      data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
-    }));
+    if (!this.props.link.searchTopSite) {
+      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
+        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].OPEN_LINK,
+        data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
+      }));
+    } else {
+      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
+        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].FILL_SEARCH_TERM,
+        data: { label: this.props.link.label }
+      }));
+    }
   }
 
   onMenuButtonClick(event) {
@@ -4391,7 +4480,7 @@ class TopSite extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
           dispatch: props.dispatch,
           index: props.index,
           onUpdate: this.onMenuUpdate,
-          options: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_2__["TOP_SITES_CONTEXT_MENU_OPTIONS"],
+          options: link.searchTopSite ? _TopSitesConstants__WEBPACK_IMPORTED_MODULE_2__["TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS"] : _TopSitesConstants__WEBPACK_IMPORTED_MODULE_2__["TOP_SITES_CONTEXT_MENU_OPTIONS"],
           site: link,
           siteInfo: this._getTelemetryInfo(),
           source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_2__["TOP_SITES_SOURCE"] })
@@ -4493,11 +4582,11 @@ class _TopSiteList extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComp
           this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
             type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_INSERT,
             data: {
-              site: {
+              site: Object.assign({
                 url: this.state.draggedSite.url,
                 label: this.state.draggedTitle,
                 customScreenshotURL: this.state.draggedSite.customScreenshotURL
-              },
+              }, this.state.draggedSite.searchTopSite && { searchTopSite: true }),
               index,
               draggedFromIndex: this.state.draggedIndex
             }
@@ -4653,7 +4742,8 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
       if (_this.props.fxa_endpoint && !_this.didFetch) {
         try {
           _this.didFetch = true;
-          const response = yield fetch(`${_this.props.fxa_endpoint}/metrics-flow`);
+          const response = yield fetch(`${_this.props.fxa_endpoint}/metrics-flow?entrypoint=
+          activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun&form_type=email`);
           if (response.status === 200) {
             const { flowId, flowBeginTime } = yield response.json();
             _this.setState({ flowId, flowBeginTime });
