@@ -1861,7 +1861,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
     while (!counts.empty()) {
         RootedObject obj(context(), &objs.back().toObject());
-        AutoRealm ar(context(), obj);
+        assertSameCompartment(context(), obj);
         if (counts.back()) {
             counts.back()--;
             RootedValue key(context(), entries.back());
