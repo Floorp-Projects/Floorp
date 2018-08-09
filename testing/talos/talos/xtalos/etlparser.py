@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 import mozfile
-from . import xtalos
+import xtalos
 
 EVENTNAME_INDEX = 0
 PROCESS_INDEX = 2
@@ -66,7 +66,15 @@ def filterOutHeader(data):
     # 0 means we are in the header
     # 1+ means that we are past the header
     state = -1
-    for row in data:
+    done = False
+    while not done:
+        try:
+            row = data.next()
+        except StopIteration:
+            done = True
+            break
+        except csv.Error:
+            continue
 
         if not len(row):
             continue
