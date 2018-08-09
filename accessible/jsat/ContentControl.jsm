@@ -33,15 +33,16 @@ function ContentControl(aContentScope) {
 }
 
 this.ContentControl.prototype = {
-  messagesOfInterest: ["AccessFu:MoveCursor",
-                       "AccessFu:ClearCursor",
-                       "AccessFu:MoveToPoint",
-                       "AccessFu:AutoMove",
-                       "AccessFu:Activate",
-                       "AccessFu:MoveByGranularity",
+  messagesOfInterest: ["AccessFu:Activate",
                        "AccessFu:AndroidScroll",
-                       "AccessFu:SetSelection",
-                       "AccessFu:Clipboard"],
+                       "AccessFu:AutoMove",
+                       "AccessFu:ClearCursor",
+                       "AccessFu:Clipboard",
+                       "AccessFu:MoveByGranularity",
+                       "AccessFu:MoveCursor",
+                       "AccessFu:MoveToPoint",
+                       "AccessFu:Select",
+                       "AccessFu:SetSelection"],
 
   start: function cc_start() {
     let cs = this._contentScope.get();
@@ -180,6 +181,16 @@ this.ContentControl.prototype = {
     this.autoMove(null, aMessage.json);
   },
 
+  handleSelect: function cc_handleSelect(aMessage) {
+    const vc = this.vc;
+    if (!this.sendToChild(vc, aMessage, null, true)) {
+      const acc = vc.position;
+      if (Utils.getState(acc).contains(States.SELECTABLE)) {
+        this.handleActivate(aMessage);
+      }
+    }
+  },
+
   handleActivate: function cc_handleActivate(aMessage) {
     let activateAccessible = (aAccessible) => {
       Logger.debug(() => {
@@ -222,7 +233,7 @@ this.ContentControl.prototype = {
       if (!Utils.getState(aAccessible).contains(States.CHECKABLE) &&
           !Utils.getState(aAccessible).contains(States.SELECTABLE)) {
         this._contentScope.get().sendAsyncMessage("AccessFu:Present",
-          Presentation.actionInvoked(aAccessible, "click"));
+          Presentation.actionInvoked());
       }
     };
 

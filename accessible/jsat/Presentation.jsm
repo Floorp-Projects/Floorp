@@ -116,21 +116,16 @@ class AndroidPresentor {
    */
   selected(aAccessible) {
     return [{
-      eventType: AndroidEvents.VIEW_CLICKED,
+      eventType: AndroidEvents.VIEW_SELECTED,
       selected: Utils.getState(aAccessible).contains(States.SELECTED)
     }];
   }
 
   /**
    * An object's action has been invoked.
-   * @param {nsIAccessible} aAccessible the object that has been invoked.
-   * @param {string} aActionName the name of the action.
    */
-  actionInvoked(aAccessible, aActionName) {
-    return [{
-      eventType: AndroidEvents.VIEW_CLICKED,
-      text: Utils.localize(UtteranceGenerator.genForAction(aAccessible, aActionName))
-    }];
+  actionInvoked() {
+    return [{ eventType: AndroidEvents.VIEW_CLICKED }];
   }
 
   /**
