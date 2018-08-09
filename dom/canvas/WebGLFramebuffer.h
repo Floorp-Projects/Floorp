@@ -67,11 +67,11 @@ public:
     bool HasAlpha() const;
     bool IsReadableFloat() const;
 
-    void Clear();
+    void Clear(const char* funcName);
 
-    void SetTexImage(WebGLTexture* tex, TexImageTarget target,
+    void SetTexImage(const char* funcName, WebGLTexture* tex, TexImageTarget target,
                      GLint level, GLint layer = 0);
-    void SetRenderbuffer(WebGLRenderbuffer* rb);
+    void SetRenderbuffer(const char* funcName, WebGLRenderbuffer* rb);
 
     WebGLTexture* Texture() const { return mTexturePtr; }
     WebGLRenderbuffer* Renderbuffer() const { return mRenderbufferPtr; }
@@ -97,11 +97,11 @@ public:
 
     void Resolve(gl::GLContext* gl) const;
 
-    JS::Value GetParameter(WebGLContext* webgl, JSContext* cx,
+    JS::Value GetParameter(const char* funcName, WebGLContext* webgl, JSContext* cx,
                            GLenum target, GLenum attachment, GLenum pname,
                            ErrorResult* const out_error) const;
 
-    void OnBackingStoreRespecified() const;
+    void OnBackingStoreRespecified(const char* funcName) const;
 
     bool IsEquivalentForFeedback(const WebGLFBAttachPoint& other) const {
         if (!IsDefined() || !other.IsDefined())
@@ -232,16 +232,17 @@ protected:
     void ResolveAttachments() const;
     void RefreshDrawBuffers() const;
     void RefreshReadBuffer() const;
-    bool ResolveAttachmentData() const;
+    bool ResolveAttachmentData(const char* funcName) const;
 
 public:
-    void DetachTexture(const WebGLTexture* tex);
-    void DetachRenderbuffer(const WebGLRenderbuffer* rb);
-    bool ValidateAndInitAttachments() const;
-    bool ValidateClearBufferType(GLenum buffer, uint32_t drawBuffer,
+    void DetachTexture(const char* funcName, const WebGLTexture* tex);
+    void DetachRenderbuffer(const char* funcName, const WebGLRenderbuffer* rb);
+    bool ValidateAndInitAttachments(const char* funcName) const;
+    bool ValidateClearBufferType(const char* funcName, GLenum buffer, uint32_t drawBuffer,
                                  GLenum funcType) const;
 
-    bool ValidateForColorRead(const webgl::FormatUsageInfo** out_format,
+    bool ValidateForColorRead(const char* funcName,
+                              const webgl::FormatUsageInfo** out_format,
                               uint32_t* out_width, uint32_t* out_height) const;
 
     ////////////////
@@ -278,27 +279,27 @@ public:
     // Invalidation
 
     bool IsResolvedComplete() const { return bool(mResolvedCompleteData); }
-    void InvalidateFramebufferStatus();
+    void InvalidateFramebufferStatus(const char* funcName);
     void RefreshResolvedData();
 
     ////////////////
     // WebGL funcs
 
-    bool IsCheckFramebufferStatusComplete() const {
-        return CheckFramebufferStatus() == LOCAL_GL_FRAMEBUFFER_COMPLETE;
+    bool IsCheckFramebufferStatusComplete(const char* const funcName) const {
+        return CheckFramebufferStatus(funcName) == LOCAL_GL_FRAMEBUFFER_COMPLETE;
     }
 
-    FBStatus CheckFramebufferStatus() const;
-    void FramebufferRenderbuffer(GLenum attachment, GLenum rbtarget,
+    FBStatus CheckFramebufferStatus(const char* funcName) const;
+    void FramebufferRenderbuffer(const char* funcName, GLenum attachment, GLenum rbtarget,
                                  WebGLRenderbuffer* rb);
-    void FramebufferTexture2D(GLenum attachment,
+    void FramebufferTexture2D(const char* funcName, GLenum attachment,
                               GLenum texImageTarget, WebGLTexture* tex, GLint level);
-    void FramebufferTextureLayer(GLenum attachment,
+    void FramebufferTextureLayer(const char* funcName, GLenum attachment,
                                  WebGLTexture* tex, GLint level, GLint layer);
-    void DrawBuffers(const dom::Sequence<GLenum>& buffers);
-    void ReadBuffer(GLenum attachPoint);
+    void DrawBuffers(const char* funcName, const dom::Sequence<GLenum>& buffers);
+    void ReadBuffer(const char* funcName, GLenum attachPoint);
 
-    JS::Value GetAttachmentParameter(JSContext* cx, GLenum target,
+    JS::Value GetAttachmentParameter(const char* funcName, JSContext* cx, GLenum target,
                                      GLenum attachment, GLenum pname,
                                      ErrorResult* const out_error);
 

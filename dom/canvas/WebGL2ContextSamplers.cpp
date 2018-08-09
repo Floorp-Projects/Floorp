@@ -12,7 +12,6 @@ namespace mozilla {
 already_AddRefed<WebGLSampler>
 WebGL2Context::CreateSampler()
 {
-    const FuncScope funcScope(*this, "createSampler");
     if (IsContextLost())
         return nullptr;
 
@@ -23,8 +22,7 @@ WebGL2Context::CreateSampler()
 void
 WebGL2Context::DeleteSampler(WebGLSampler* sampler)
 {
-    const FuncScope funcScope(*this, "deleteSampler");
-    if (!ValidateDeleteObject(sampler))
+    if (!ValidateDeleteObject("deleteSampler", sampler))
         return;
 
     for (uint32_t n = 0; n < mGLMaxTextureUnits; n++) {
@@ -39,27 +37,25 @@ WebGL2Context::DeleteSampler(WebGLSampler* sampler)
 }
 
 bool
-WebGL2Context::IsSampler(const WebGLSampler* const obj)
+WebGL2Context::IsSampler(const WebGLSampler* sampler)
 {
-    const FuncScope funcScope(*this, "isSampler");
-    if (!ValidateIsObject(obj))
+    if (!ValidateIsObject("isSampler", sampler))
         return false;
 
-    return gl->fIsSampler(obj->mGLName);
+    return gl->fIsSampler(sampler->mGLName);
 }
 
 void
 WebGL2Context::BindSampler(GLuint unit, WebGLSampler* sampler)
 {
-    const FuncScope funcScope(*this, "bindSampler");
     if (IsContextLost())
         return;
 
-    if (sampler && !ValidateObject("sampler", *sampler))
+    if (sampler && !ValidateObject("bindSampler", *sampler))
         return;
 
     if (unit >= mGLMaxTextureUnits)
-        return ErrorInvalidValue("unit must be < %u", mGLMaxTextureUnits);
+        return ErrorInvalidValue("bindSampler: unit must be < %u", mGLMaxTextureUnits);
 
     ////
 
@@ -72,40 +68,40 @@ WebGL2Context::BindSampler(GLuint unit, WebGLSampler* sampler)
 void
 WebGL2Context::SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint param)
 {
-    const FuncScope funcScope(*this, "samplerParameteri");
+    const char funcName[] = "samplerParameteri";
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("sampler", sampler))
+    if (!ValidateObject(funcName, sampler))
         return;
 
-    sampler.SamplerParameter(pname, FloatOrInt(param));
+    sampler.SamplerParameter(funcName, pname, FloatOrInt(param));
 }
 
 void
 WebGL2Context::SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat param)
 {
-    const FuncScope funcScope(*this, "samplerParameterf");
+    const char funcName[] = "samplerParameterf";
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("sampler", sampler))
+    if (!ValidateObject(funcName, sampler))
         return;
 
-    sampler.SamplerParameter(pname, FloatOrInt(param));
+    sampler.SamplerParameter(funcName, pname, FloatOrInt(param));
 }
 
 void
 WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler, GLenum pname,
                                    JS::MutableHandleValue retval)
 {
-    const FuncScope funcScope(*this, "getSamplerParameter");
+    const char funcName[] = "getSamplerParameter";
     retval.setNull();
 
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("sampler", sampler))
+    if (!ValidateObject(funcName, sampler))
         return;
 
     ////
@@ -135,7 +131,7 @@ WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler, GLen
         return;
 
     default:
-        ErrorInvalidEnumInfo("pname", pname);
+        ErrorInvalidEnumArg(funcName, "pname", pname);
         return;
     }
 }

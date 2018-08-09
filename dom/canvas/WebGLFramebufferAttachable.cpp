@@ -31,12 +31,12 @@ WebGLFramebufferAttachable::UnmarkAttachment(const WebGLFBAttachPoint& attachmen
 }
 
 void
-WebGLFramebufferAttachable::InvalidateStatusOfAttachedFBs() const
+WebGLFramebufferAttachable::InvalidateStatusOfAttachedFBs(const char* funcName) const
 {
     const size_t count = mAttachmentPoints.Length();
     for (size_t i = 0; i < count; ++i) {
         MOZ_ASSERT(mAttachmentPoints[i]->mFB);
-        mAttachmentPoints[i]->mFB->InvalidateFramebufferStatus();
+        mAttachmentPoints[i]->mFB->InvalidateFramebufferStatus(funcName);
     }
 }
 

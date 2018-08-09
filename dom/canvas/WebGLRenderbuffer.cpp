@@ -175,12 +175,13 @@ WebGLRenderbuffer::DoRenderbufferStorage(uint32_t samples,
 }
 
 void
-WebGLRenderbuffer::RenderbufferStorage(uint32_t samples, GLenum internalFormat,
-                                       uint32_t width, uint32_t height)
+WebGLRenderbuffer::RenderbufferStorage(const char* funcName, uint32_t samples,
+                                       GLenum internalFormat, uint32_t width,
+                                       uint32_t height)
 {
     const auto usage = mContext->mFormatUsage->GetRBUsage(internalFormat);
     if (!usage) {
-        mContext->ErrorInvalidEnum("Invalid `internalFormat`: 0x%04x.",
+        mContext->ErrorInvalidEnum("%s: Invalid `internalFormat`: 0x%04x.", funcName,
                                    internalFormat);
         return;
     }
@@ -188,8 +189,9 @@ WebGLRenderbuffer::RenderbufferStorage(uint32_t samples, GLenum internalFormat,
     if (width > mContext->mGLMaxRenderbufferSize ||
         height > mContext->mGLMaxRenderbufferSize)
     {
-        mContext->ErrorInvalidValue("Width or height exceeds maximum renderbuffer"
-                                    " size.");
+        mContext->ErrorInvalidValue("%s: Width or height exceeds maximum renderbuffer"
+                                    " size.",
+                                    funcName);
         return;
     }
 
@@ -199,7 +201,7 @@ WebGLRenderbuffer::RenderbufferStorage(uint32_t samples, GLenum internalFormat,
     MOZ_ASSERT(usage->maxSamplesKnown);
 
     if (samples > usage->maxSamples) {
-        mContext->ErrorInvalidOperation("`samples` is out of the valid range.");
+        mContext->ErrorInvalidOperation("%s: `samples` is out of the valid range.", funcName);
         return;
     }
 
@@ -207,7 +209,8 @@ WebGLRenderbuffer::RenderbufferStorage(uint32_t samples, GLenum internalFormat,
 
     const GLenum error = DoRenderbufferStorage(samples, usage, width, height);
     if (error) {
-        mContext->GenerateWarning("Unexpected error %s", EnumString(error).c_str());
+        const char* errorName = WebGLContext::ErrorName(error);
+        mContext->GenerateWarning("%s generated error %s", funcName, errorName);
         return;
     }
 
@@ -219,7 +222,7 @@ WebGLRenderbuffer::RenderbufferStorage(uint32_t samples, GLenum internalFormat,
     mHeight = height;
     mImageDataStatus = WebGLImageDataStatus::UninitializedImageData;
 
-    InvalidateStatusOfAttachedFBs();
+    InvalidateStatusOfAttachedFBs(funcName);
 }
 
 void

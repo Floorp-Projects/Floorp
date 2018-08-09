@@ -52,9 +52,11 @@ public:
     WebGLUniformLocation(WebGLContext* webgl, const webgl::LinkedProgramInfo* linkInfo,
                          webgl::UniformInfo* info, GLuint loc, size_t arrayIndex);
 
-    bool ValidateForProgram(const WebGLProgram* prog) const;
-    bool ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType) const;
-    bool ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize) const;
+    bool ValidateForProgram(const WebGLProgram* prog, const char* funcName) const;
+    bool ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType,
+                             const char* funcName) const;
+    bool ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize,
+                             const char* funcName) const;
 
     JS::Value GetUniform(JSContext* js) const;
 

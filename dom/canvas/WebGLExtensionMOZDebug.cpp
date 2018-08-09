@@ -26,11 +26,6 @@ WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
                                      JS::MutableHandle<JS::Value> retval,
                                      ErrorResult& er) const
 {
-    if (mIsLost)
-        return;
-    const WebGLContext::FuncScope funcScope(*mContext, "MOZ_debug.getParameter");
-    MOZ_ASSERT(!mContext->IsContextLost());
-
     const auto& gl = mContext->gl;
 
     switch (pname) {
@@ -77,7 +72,7 @@ WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
         return;
 
     default:
-        mContext->ErrorInvalidEnumInfo("pname", pname);
+        mContext->ErrorInvalidEnumArg("MOZ_debug.getParameter", "pname", pname);
         retval.set(JS::NullValue());
         return;
     }

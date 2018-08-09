@@ -305,7 +305,7 @@ class WebGLContext
     friend struct webgl::UniformBlockInfo;
 
     friend const webgl::CachedDrawFetchLimits*
-        ValidateDraw(WebGLContext*, GLenum, uint32_t);
+        ValidateDraw(WebGLContext*, const char*, GLenum, uint32_t);
 
     enum {
         UNPACK_FLIP_Y_WEBGL = 0x9240,
@@ -328,11 +328,6 @@ class WebGLContext
     uint64_t mCompletedFenceId = 0;
 
 public:
-    class FuncScope;
-private:
-    mutable FuncScope* mFuncScope = nullptr;
-
-public:
     WebGLContext();
 
 protected:
@@ -350,8 +345,8 @@ public:
     virtual void OnMemoryPressure() override;
 
     // nsICanvasRenderingContextInternal
-    virtual int32_t GetWidth() override { return DrawingBufferWidth(); }
-    virtual int32_t GetHeight() override { return DrawingBufferHeight(); }
+    virtual int32_t GetWidth() override { return DrawingBufferWidth("get width"); }
+    virtual int32_t GetHeight() override { return DrawingBufferHeight("get height"); }
 
     NS_IMETHOD SetDimensions(int32_t width, int32_t height) override;
     NS_IMETHOD InitializeWithDrawTarget(nsIDocShell*,
@@ -394,31 +389,6 @@ public:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    // -
-
-    const auto& CurFuncScope() const { return *mFuncScope; }
-    const char* FuncName() const;
-
-    class FuncScope final {
-    public:
-        const WebGLContext& mWebGL;
-        const char* const mFuncName;
-    private:
-#ifdef DEBUG
-        mutable bool mStillNeedsToCheckContextLost = true;
-#endif
-
-    public:
-        FuncScope(const WebGLContext& webgl, const char* funcName);
-        ~FuncScope();
-
-        void OnCheckContextLost() const {
-#ifdef DEBUG
-            mStillNeedsToCheckContextLost = false;
-#endif
-        }
-    };
-
     void SynthesizeGLError(GLenum err) const;
     void SynthesizeGLError(GLenum err, const char* fmt, ...) const MOZ_FORMAT_PRINTF(3, 4);
 
@@ -427,10 +397,12 @@ public:
     void ErrorInvalidValue(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
     void ErrorInvalidFramebufferOperation(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
     void ErrorInvalidEnumInfo(const char* info, GLenum enumValue) const;
+    void ErrorInvalidEnumInfo(const char* info, const char* funcName,
+                              GLenum enumValue) const;
     void ErrorOutOfMemory(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
     void ErrorImplementationBug(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
 
-    void ErrorInvalidEnumArg(const char* argName, GLenum val) const;
+    void ErrorInvalidEnumArg(const char* funcName, const char* argName, GLenum val) const;
 
     static const char* ErrorName(GLenum error);
 
@@ -442,7 +414,7 @@ public:
      */
     static void EnumName(GLenum val, nsCString* out_name);
 
-    void DummyReadFramebufferOperation();
+    void DummyReadFramebufferOperation(const char* funcName);
 
     WebGLTexture* ActiveBoundTextureForTarget(const TexTarget texTarget) const {
         switch (texTarget.get()) {
@@ -532,15 +504,13 @@ public:
     void Commit();
     void GetCanvas(dom::Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& retval);
 private:
-    gfx::IntSize DrawingBufferSize();
+    gfx::IntSize DrawingBufferSize(const char* funcName);
 public:
-    GLsizei DrawingBufferWidth() {
-        const FuncScope funcScope(*this, "drawingBufferWidth");
-        return DrawingBufferSize().width;
+    GLsizei DrawingBufferWidth(const char* const funcName = "drawingBufferWidth") {
+        return DrawingBufferSize(funcName).width;
     }
-    GLsizei DrawingBufferHeight() {
-        const FuncScope funcScope(*this, "drawingBufferHeight");
-        return DrawingBufferSize().height;
+    GLsizei DrawingBufferHeight(const char* const funcName = "drawingBufferHeight") {
+        return DrawingBufferSize(funcName).height;
     }
 
     layers::LayersBackend GetCompositorBackendType() const;
@@ -548,9 +518,7 @@ public:
     void
     GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
-    // This is the entrypoint. Don't test against it directly.
-    bool IsContextLost() const;
-
+    bool IsContextLost() const { return mContextStatus != ContextNotLost; }
     void GetSupportedExtensions(dom::Nullable< nsTArray<nsString> >& retval,
                                 dom::CallerType callerType);
     void GetExtension(JSContext* cx, const nsAString& name,
@@ -681,15 +649,11 @@ public:
     GetUniformLocation(const WebGLProgram& prog, const nsAString& name);
 
     void Hint(GLenum target, GLenum mode);
-
-    bool IsBuffer(const WebGLBuffer* obj);
-    bool IsFramebuffer(const WebGLFramebuffer* obj);
-    bool IsProgram(const WebGLProgram* obj);
-    bool IsRenderbuffer(const WebGLRenderbuffer* obj);
-    bool IsShader(const WebGLShader* obj);
-    bool IsTexture(const WebGLTexture* obj);
-    bool IsVertexArray(const WebGLVertexArray* obj);
-
+    bool IsFramebuffer(const WebGLFramebuffer* fb);
+    bool IsProgram(const WebGLProgram* prog);
+    bool IsRenderbuffer(const WebGLRenderbuffer* rb);
+    bool IsShader(const WebGLShader* shader);
+    bool IsVertexArray(const WebGLVertexArray* vao);
     void LineWidth(GLfloat width);
     void LinkProgram(WebGLProgram& prog);
     void PixelStorei(GLenum pname, GLint param);
@@ -716,9 +680,11 @@ public:
                     GLenum type, const dom::Nullable<dom::ArrayBufferView>& maybeView,
                     dom::CallerType aCallerType, ErrorResult& rv)
     {
-        const FuncScope funcScope(*this, "readPixels");
-        if (!ValidateNonNull("pixels", maybeView))
+        const char funcName[] = "readPixels";
+        if (maybeView.IsNull()) {
+            ErrorInvalidValue("%s: `pixels` must not be null.", funcName);
             return;
+        }
         ReadPixels(x, y, width, height, format, type, maybeView.Value(), 0,
                    aCallerType, rv);
     }
@@ -734,13 +700,10 @@ public:
     ////
 
     void RenderbufferStorage(GLenum target, GLenum internalFormat,
-                             GLsizei width, GLsizei height)
-    {
-        const FuncScope funcScope(*this, "renderbufferStorage");
-        RenderbufferStorage_base(target, 0, internalFormat, width, height);
-    }
+                             GLsizei width, GLsizei height);
 protected:
-    void RenderbufferStorage_base(GLenum target, GLsizei samples, GLenum internalformat,
+    void RenderbufferStorage_base(const char* funcName, GLenum target,
+                                  GLsizei samples, GLenum internalformat,
                                   GLsizei width, GLsizei height);
 public:
     void SampleCoverage(GLclampf value, WebGLboolean invert);
@@ -929,13 +892,14 @@ public:
 
     void UseProgram(WebGLProgram* prog);
 
-    bool ValidateAttribArraySetter(uint32_t count, uint32_t arrayLength);
-    bool ValidateUniformLocation(WebGLUniformLocation* loc);
+    bool ValidateAttribArraySetter(const char* name, uint32_t count,
+                                   uint32_t arrayLength);
+    bool ValidateUniformLocation(WebGLUniformLocation* loc, const char* funcName);
     bool ValidateUniformSetter(WebGLUniformLocation* loc, uint8_t setterSize,
-                               GLenum setterType);
+                               GLenum setterType, const char* funcName);
     bool ValidateUniformArraySetter(WebGLUniformLocation* loc,
                                     uint8_t setterElemSize, GLenum setterType,
-                                    uint32_t setterArraySize,
+                                    uint32_t setterArraySize, const char* funcName,
                                     uint32_t* out_numElementsToUpload);
     bool ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
                                           uint8_t setterCols,
@@ -943,6 +907,7 @@ public:
                                           GLenum setterType,
                                           uint32_t setterArraySize,
                                           bool setterTranspose,
+                                          const char* funcName,
                                           uint32_t* out_numElementsToUpload);
     void ValidateProgram(const WebGLProgram& prog);
     bool ValidateUniformLocation(const char* info, WebGLUniformLocation* loc);
@@ -987,6 +952,7 @@ public:
 
     already_AddRefed<WebGLBuffer> CreateBuffer();
     void DeleteBuffer(WebGLBuffer* buf);
+    bool IsBuffer(WebGLBuffer* buf);
 
 protected:
     // bound buffer state
@@ -1012,18 +978,18 @@ protected:
     WebGLRefPtr<WebGLQuery> mQuerySlot_TimeElapsed;
 
     WebGLRefPtr<WebGLQuery>*
-    ValidateQuerySlotByTarget(GLenum target);
+    ValidateQuerySlotByTarget(const char* funcName, GLenum target);
 
 public:
-    already_AddRefed<WebGLQuery> CreateQuery();
-    void DeleteQuery(WebGLQuery* query);
-    bool IsQuery(const WebGLQuery* query);
-    void BeginQuery(GLenum target, WebGLQuery& query);
-    void EndQuery(GLenum target);
+    already_AddRefed<WebGLQuery> CreateQuery(const char* funcName = nullptr);
+    void DeleteQuery(WebGLQuery* query, const char* funcName = nullptr);
+    bool IsQuery(const WebGLQuery* query, const char* funcName = nullptr);
+    void BeginQuery(GLenum target, WebGLQuery& query, const char* funcName = nullptr);
+    void EndQuery(GLenum target, const char* funcName = nullptr);
     void GetQuery(JSContext* cx, GLenum target, GLenum pname,
-                  JS::MutableHandleValue retval);
+                  JS::MutableHandleValue retval, const char* funcName = nullptr);
     void GetQueryParameter(JSContext* cx, const WebGLQuery& query, GLenum pname,
-                           JS::MutableHandleValue retval);
+                           JS::MutableHandleValue retval, const char* funcName = nullptr);
 
 
 // -----------------------------------------------------------------------------
@@ -1055,7 +1021,7 @@ private:
     realGLboolean mStencilTestEnabled;
     GLenum mGenerateMipmapHint = 0;
 
-    bool ValidateCapabilityEnum(GLenum cap);
+    bool ValidateCapabilityEnum(GLenum cap, const char* info);
     realGLboolean* GetStateTrackingSlot(GLenum cap);
 
     // Allocation debugging variables
@@ -1086,6 +1052,8 @@ public:
         retval.set(GetTexParameter(texTarget, pname));
     }
 
+    bool IsTexture(WebGLTexture* tex);
+
     void TexParameterf(GLenum texTarget, GLenum pname, GLfloat param) {
         TexParameter_base(texTarget, pname, FloatOrInt(param));
     }
@@ -1107,11 +1075,11 @@ public:
                               GLsizei width, GLsizei height, GLint border,
                               GLsizei imageSize, WebGLsizeiptr offset)
     {
-        const FuncScope funcScope(*this, "compressedTexImage2D");
+        const char funcName[] = "compressedTexImage2D";
         const uint8_t funcDims = 2;
         const GLsizei depth = 1;
         const TexImageSourceAdapter src(&offset, 0, 0);
-        CompressedTexImage(funcDims, target, level, internalFormat, width,
+        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
                            height, depth, border, src, Some(imageSize));
     }
 
@@ -1121,11 +1089,11 @@ public:
                               const T& anySrc, GLuint viewElemOffset = 0,
                               GLuint viewElemLengthOverride = 0)
     {
-        const FuncScope funcScope(*this, "compressedTexImage2D");
+        const char funcName[] = "compressedTexImage2D";
         const uint8_t funcDims = 2;
         const GLsizei depth = 1;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
-        CompressedTexImage(funcDims, target, level, internalFormat, width,
+        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
                            height, depth, border, src, Nothing());
     }
 
@@ -1133,12 +1101,12 @@ public:
                                  GLsizei width, GLsizei height, GLenum unpackFormat,
                                  GLsizei imageSize, WebGLsizeiptr offset)
     {
-        const FuncScope funcScope(*this, "compressedTexSubImage2D");
+        const char funcName[] = "compressedTexSubImage2D";
         const uint8_t funcDims = 2;
         const GLint zOffset = 0;
         const GLsizei depth = 1;
         const TexImageSourceAdapter src(&offset, 0, 0);
-        CompressedTexSubImage(funcDims, target, level, xOffset, yOffset,
+        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src, Some(imageSize));
     }
 
@@ -1148,26 +1116,25 @@ public:
                                  const T& anySrc, GLuint viewElemOffset = 0,
                                  GLuint viewElemLengthOverride = 0)
     {
-        const FuncScope funcScope(*this, "compressedTexSubImage2D");
+        const char funcName[] = "compressedTexSubImage2D";
         const uint8_t funcDims = 2;
         const GLint zOffset = 0;
         const GLsizei depth = 1;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
-        CompressedTexSubImage(funcDims, target, level, xOffset, yOffset,
+        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src, Nothing());
     }
 
 protected:
-    void CompressedTexImage(uint8_t funcDims, GLenum target,
+    void CompressedTexImage(const char* funcName, uint8_t funcDims, GLenum target,
                             GLint level, GLenum internalFormat, GLsizei width,
                             GLsizei height, GLsizei depth, GLint border,
                             const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize);
-    void CompressedTexSubImage(uint8_t funcDims, GLenum target,
+    void CompressedTexSubImage(const char* funcName, uint8_t funcDims, GLenum target,
                                GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
                                GLsizei width, GLsizei height, GLsizei depth,
                                GLenum unpackFormat, const TexImageSource& src,
                                const Maybe<GLsizei>& expectedImageSize);
-
     ////////////////////////////////////
 
 public:
@@ -1178,15 +1145,15 @@ public:
                            GLint yOffset, GLint x, GLint y, GLsizei width,
                            GLsizei height)
     {
-        const FuncScope funcScope(*this, "copyTexSubImage2D");
+        const char funcName[] = "copyTexSubImage2D";
         const uint8_t funcDims = 2;
         const GLint zOffset = 0;
-        CopyTexSubImage(funcDims, target, level, xOffset, yOffset, zOffset,
+        CopyTexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset,
                         x, y, width, height);
     }
 
 protected:
-    void CopyTexSubImage(uint8_t funcDims, GLenum target,
+    void CopyTexSubImage(const char* funcName, uint8_t funcDims, GLenum target,
                          GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
                          GLint x, GLint y, GLsizei width, GLsizei height);
 
@@ -1246,14 +1213,14 @@ protected:
                     GLsizei height, GLint border, GLenum unpackFormat,
                     GLenum unpackType, const TexImageSource& src)
     {
-        const FuncScope funcScope(*this, "texImage2D");
+        const char funcName[] = "texImage2D";
         const uint8_t funcDims = 2;
         const GLsizei depth = 1;
-        TexImage(funcDims, target, level, internalFormat, width, height, depth,
+        TexImage(funcName, funcDims, target, level, internalFormat, width, height, depth,
                  border, unpackFormat, unpackType, src);
     }
 
-    void TexImage(uint8_t funcDims, GLenum target, GLint level,
+    void TexImage(const char* funcName, uint8_t funcDims, GLenum target, GLint level,
                   GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth,
                   GLint border, GLenum unpackFormat, GLenum unpackType,
                   const TexImageSource& src);
@@ -1286,15 +1253,15 @@ protected:
                        GLsizei width, GLsizei height, GLenum unpackFormat,
                        GLenum unpackType, const TexImageSource& src)
     {
-        const FuncScope funcScope(*this, "texSubImage2D");
+        const char funcName[] = "texSubImage2D";
         const uint8_t funcDims = 2;
         const GLint zOffset = 0;
         const GLsizei depth = 1;
-        TexSubImage(funcDims, target, level, xOffset, yOffset, zOffset, width,
+        TexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset, width,
                     height, depth, unpackFormat, unpackType, src);
     }
 
-    void TexSubImage(uint8_t funcDims, GLenum target, GLint level,
+    void TexSubImage(const char* funcName, uint8_t funcDims, GLenum target, GLint level,
                      GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
                      GLsizei height, GLsizei depth, GLenum unpackFormat,
                      GLenum unpackType, const TexImageSource& src);
@@ -1303,35 +1270,35 @@ protected:
     // WebGLTextureUpload.cpp
 public:
     UniquePtr<webgl::TexUnpackBlob>
-    From(TexImageTarget target, GLsizei rawWidth, GLsizei rawHeight,
+    From(const char* funcName, TexImageTarget target, GLsizei rawWidth, GLsizei rawHeight,
          GLsizei rawDepth, GLint border, const TexImageSource& src,
          dom::Uint8ClampedArray* const scopedArr);
 
 protected:
-    bool ValidateTexImageSpecification(uint8_t funcDims,
+    bool ValidateTexImageSpecification(const char* funcName, uint8_t funcDims,
                                        GLenum texImageTarget, GLint level,
                                        GLsizei width, GLsizei height, GLsizei depth,
                                        GLint border,
                                        TexImageTarget* const out_target,
                                        WebGLTexture** const out_texture,
                                        WebGLTexture::ImageInfo** const out_imageInfo);
-    bool ValidateTexImageSelection(uint8_t funcDims,
+    bool ValidateTexImageSelection(const char* funcName, uint8_t funcDims,
                                    GLenum texImageTarget, GLint level, GLint xOffset,
                                    GLint yOffset, GLint zOffset, GLsizei width,
                                    GLsizei height, GLsizei depth,
                                    TexImageTarget* const out_target,
                                    WebGLTexture** const out_texture,
                                    WebGLTexture::ImageInfo** const out_imageInfo);
-    bool ValidateUnpackInfo(bool usePBOs, GLenum format,
+    bool ValidateUnpackInfo(const char* funcName, bool usePBOs, GLenum format,
                             GLenum type, webgl::PackingInfo* const out);
 
     UniquePtr<webgl::TexUnpackBlob>
-    FromDomElem(TexImageTarget target, uint32_t width,
+    FromDomElem(const char* funcName, TexImageTarget target, uint32_t width,
                 uint32_t height, uint32_t depth, const dom::Element& elem,
                 ErrorResult* const out_error);
 
     UniquePtr<webgl::TexUnpackBytes>
-    FromCompressed(TexImageTarget target, GLsizei rawWidth,
+    FromCompressed(const char* funcName, TexImageTarget target, GLsizei rawWidth,
                    GLsizei rawHeight, GLsizei rawDepth, GLint border,
                    const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize);
 
@@ -1341,21 +1308,21 @@ protected:
 
 public:
     void DrawArrays(GLenum mode, GLint first, GLsizei count) {
-        const FuncScope funcScope(*this, "drawArrays");
-        DrawArraysInstanced(mode, first, count, 1);
+        DrawArraysInstanced(mode, first, count, 1, "drawArrays");
     }
 
     void DrawElements(GLenum mode, GLsizei count, GLenum type,
-                      WebGLintptr byteOffset)
+                      WebGLintptr byteOffset, const char* funcName = "drawElements")
     {
-        const FuncScope funcScope(*this, "drawElements");
-        DrawElementsInstanced(mode, count, type, byteOffset, 1);
+        DrawElementsInstanced(mode, count, type, byteOffset, 1, funcName);
     }
 
     void DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertexCount,
-                             GLsizei instanceCount);
+                             GLsizei instanceCount,
+                             const char* funcName = "drawArraysInstanced");
     void DrawElementsInstanced(GLenum mode, GLsizei vertexCount, GLenum type,
-                               WebGLintptr byteOffset, GLsizei instanceCount);
+                               WebGLintptr byteOffset, GLsizei instanceCount,
+                               const char* funcName = "drawElementsInstanced");
 
     void EnableVertexAttribArray(GLuint index);
     void DisableVertexAttribArray(GLuint index);
@@ -1373,66 +1340,65 @@ public:
 
     ////
 
-    void VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    void VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w,
+                        const char* funcName = nullptr);
 
     ////
 
     void VertexAttrib1f(GLuint index, GLfloat x) {
-        const FuncScope funcScope(*this, "vertexAttrib1f");
-        VertexAttrib4f(index, x, 0, 0, 1);
+        VertexAttrib4f(index, x, 0, 0, 1, "vertexAttrib1f");
     }
     void VertexAttrib2f(GLuint index, GLfloat x, GLfloat y) {
-        const FuncScope funcScope(*this, "vertexAttrib2f");
-        VertexAttrib4f(index, x, y, 0, 1);
+        VertexAttrib4f(index, x, y, 0, 1, "vertexAttrib2f");
     }
     void VertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z) {
-        const FuncScope funcScope(*this, "vertexAttrib3f");
-        VertexAttrib4f(index, x, y, z, 1);
+        VertexAttrib4f(index, x, y, z, 1, "vertexAttrib3f");
     }
 
     ////
 
     void VertexAttrib1fv(GLuint index, const Float32ListU& list) {
-        const FuncScope funcScope(*this, "vertexAttrib1fv");
+        const char funcName[] = "vertexAttrib1fv";
         const auto& arr = Float32Arr::From(list);
-        if (!ValidateAttribArraySetter(1, arr.elemCount))
+        if (!ValidateAttribArraySetter(funcName, 1, arr.elemCount))
             return;
 
-        VertexAttrib4f(index, arr.elemBytes[0], 0, 0, 1);
+        VertexAttrib4f(index, arr.elemBytes[0], 0, 0, 1, funcName);
     }
 
     void VertexAttrib2fv(GLuint index, const Float32ListU& list) {
-        const FuncScope funcScope(*this, "vertexAttrib2fv");
+        const char funcName[] = "vertexAttrib2fv";
         const auto& arr = Float32Arr::From(list);
-        if (!ValidateAttribArraySetter(2, arr.elemCount))
+        if (!ValidateAttribArraySetter(funcName, 2, arr.elemCount))
             return;
 
-        VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], 0, 1);
+        VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], 0, 1, funcName);
     }
 
     void VertexAttrib3fv(GLuint index, const Float32ListU& list) {
-        const FuncScope funcScope(*this, "vertexAttrib3fv");
+        const char funcName[] = "vertexAttrib3fv";
         const auto& arr = Float32Arr::From(list);
-        if (!ValidateAttribArraySetter(3, arr.elemCount))
+        if (!ValidateAttribArraySetter(funcName, 3, arr.elemCount))
             return;
 
-        VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], arr.elemBytes[2], 1);
+        VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], arr.elemBytes[2], 1,
+                       funcName);
     }
 
     void VertexAttrib4fv(GLuint index, const Float32ListU& list) {
-        const FuncScope funcScope(*this, "vertexAttrib4fv");
+        const char funcName[] = "vertexAttrib4fv";
         const auto& arr = Float32Arr::From(list);
-        if (!ValidateAttribArraySetter(4, arr.elemCount))
+        if (!ValidateAttribArraySetter(funcName, 4, arr.elemCount))
             return;
 
         VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], arr.elemBytes[2],
-                       arr.elemBytes[3]);
+                       arr.elemBytes[3], funcName);
     }
 
     ////
 
 protected:
-    void VertexAttribAnyPointer(bool isFuncInt, GLuint index,
+    void VertexAttribAnyPointer(const char* funcName, bool isFuncInt, GLuint index,
                                 GLint size, GLenum type, bool normalized, GLsizei stride,
                                 WebGLintptr byteOffset);
 
@@ -1441,18 +1407,18 @@ public:
                              WebGLboolean normalized, GLsizei stride,
                              WebGLintptr byteOffset)
     {
-        const FuncScope funcScope(*this, "vertexAttribPointer");
+        const char funcName[] = "vertexAttribPointer";
         const bool isFuncInt = false;
-        VertexAttribAnyPointer(isFuncInt, index, size, type, normalized, stride,
+        VertexAttribAnyPointer(funcName, isFuncInt, index, size, type, normalized, stride,
                                byteOffset);
     }
 
     void VertexAttribDivisor(GLuint index, GLuint divisor);
 
 private:
-    WebGLBuffer* DrawElements_check(GLsizei indexCount, GLenum type,
+    WebGLBuffer* DrawElements_check(const char* funcName, GLsizei indexCount, GLenum type,
                                     WebGLintptr byteOffset, GLsizei instanceCount);
-    void Draw_cleanup();
+    void Draw_cleanup(const char* funcName);
 
     void VertexAttrib1fv_base(GLuint index, uint32_t arrayLength,
                               const GLfloat* ptr);
@@ -1469,7 +1435,7 @@ private:
 // PROTECTED
 protected:
     WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need() const;
-    bool DoFakeVertexAttrib0(uint64_t vertexCount);
+    bool DoFakeVertexAttrib0(const char* funcName, uint64_t vertexCount);
     void UndoFakeVertexAttrib0();
 
     CheckedUint32 mGeneration;
@@ -1562,19 +1528,19 @@ protected:
     // process we currently are at.
     // This is used to support the WebGL spec's asyncronous nature in handling
     // context loss.
-    enum class ContextStatus {
+    enum ContextStatus {
         // The context is stable; there either are none or we don't know of any.
-        NotLost,
+        ContextNotLost,
         // The context has been lost, but we have not yet sent an event to the
         // script informing it of this.
-        LostAwaitingEvent,
+        ContextLostAwaitingEvent,
         // The context has been lost, and we have sent the script an event
         // informing it of this.
-        Lost,
+        ContextLost,
         // The context is lost, an event has been sent to the script, and the
         // script correctly handled the event. We are waiting for the context to
         // be restored.
-        LostAwaitingRestore
+        ContextLostAwaitingRestore
     };
 
     // -------------------------------------------------------------------------
@@ -1637,14 +1603,17 @@ protected:
     bool ValidateBlendEquationEnum(GLenum cap, const char* info);
     bool ValidateBlendFuncEnumsCompatibility(GLenum sfactor, GLenum dfactor,
                                              const char* info);
+    bool ValidateComparisonEnum(GLenum target, const char* info);
     bool ValidateStencilOpEnum(GLenum action, const char* info);
-    bool ValidateFaceEnum(GLenum face);
+    bool ValidateFaceEnum(GLenum face, const char* info);
     bool ValidateTexInputData(GLenum type, js::Scalar::Type jsArrayType,
                               WebGLTexImageFunc func, WebGLTexDimensions dims);
+    bool ValidateDrawModeEnum(GLenum mode, const char* info);
+    bool ValidateAttribIndex(GLuint index, const char* info);
     bool ValidateAttribPointer(bool integerMode, GLuint index, GLint size, GLenum type,
                                WebGLboolean normalized, GLsizei stride,
                                WebGLintptr byteOffset, const char* info);
-    bool ValidateStencilParamsForDrawCall() const;
+    bool ValidateStencilParamsForDrawCall(const char* funcName) const;
 
     bool ValidateCopyTexImage(TexInternalFormat srcFormat, TexInternalFormat dstformat,
                               WebGLTexImageFunc func, WebGLTexDimensions dims);
@@ -1688,26 +1657,28 @@ protected:
                                       WebGLTexDimensions dims);
 
     bool ValidateUniformLocationForProgram(WebGLUniformLocation* location,
-                                           WebGLProgram* program);
+                                           WebGLProgram* program,
+                                           const char* funcName);
 
     bool HasDrawBuffers() const {
         return IsWebGL2() ||
                IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers);
     }
 
-    WebGLRefPtr<WebGLBuffer>* ValidateBufferSlot(GLenum target);
+    WebGLRefPtr<WebGLBuffer>* ValidateBufferSlot(const char* funcName, GLenum target);
 public:
-    WebGLBuffer* ValidateBufferSelection(GLenum target);
+    WebGLBuffer* ValidateBufferSelection(const char* funcName, GLenum target);
 protected:
-    IndexedBufferBinding* ValidateIndexedBufferSlot(GLenum target, GLuint index);
+    IndexedBufferBinding* ValidateIndexedBufferSlot(const char* funcName, GLenum target,
+                                                    GLuint index);
 
-    bool ValidateIndexedBufferBinding(GLenum target, GLuint index,
+    bool ValidateIndexedBufferBinding(const char* funcName, GLenum target, GLuint index,
                                       WebGLRefPtr<WebGLBuffer>** const out_genericBinding,
                                       IndexedBufferBinding** const out_indexedBinding);
 
-    bool ValidateNonNegative(const char* argName, int64_t val) {
+    bool ValidateNonNegative(const char* funcName, const char* argName, int64_t val) {
         if (MOZ_UNLIKELY(val < 0)) {
-            ErrorInvalidValue("`%s` must be non-negative.", argName);
+            ErrorInvalidValue("%s: `%s` must be non-negative.", funcName, argName);
             return false;
         }
         return true;
@@ -1715,15 +1686,15 @@ protected:
 
 public:
     template<typename T>
-    bool ValidateNonNull(const char* const argName, const dom::Nullable<T>& maybe) {
+    bool ValidateNonNull(const char* funcName, const dom::Nullable<T>& maybe) {
         if (maybe.IsNull()) {
-            ErrorInvalidValue("%s: Cannot be null.", argName);
+            ErrorInvalidValue("%s: `null` is invalid.", funcName);
             return false;
         }
         return true;
     }
 
-    bool ValidateArrayBufferView(const dom::ArrayBufferView& view,
+    bool ValidateArrayBufferView(const char* funcName, const dom::ArrayBufferView& view,
                                  GLuint elemOffset, GLuint elemCountOverride,
                                  uint8_t** const out_bytes, size_t* const out_byteLen);
 
@@ -1743,23 +1714,23 @@ protected:
 
     //////
 public:
-    bool ValidateObjectAllowDeleted(const char* const argName,
+    bool ValidateObjectAllowDeleted(const char* funcName,
                                     const WebGLContextBoundObject& object)
     {
         if (!object.IsCompatibleWithContext(this)) {
             ErrorInvalidOperation("%s: Object from different WebGL context (or older"
                                   " generation of this one) passed as argument.",
-                                  argName);
+                                  funcName);
             return false;
         }
 
         return true;
     }
 
-    bool ValidateObject(const char* const argName, const WebGLDeletableObject& object,
-                        const bool isShaderOrProgram = false)
+    bool ValidateObject(const char* funcName, const WebGLDeletableObject& object,
+                        bool isShaderOrProgram = false)
     {
-        if (!ValidateObjectAllowDeleted(argName, object))
+        if (!ValidateObjectAllowDeleted(funcName, object))
             return false;
 
         if (isShaderOrProgram) {
@@ -1775,14 +1746,14 @@ public:
             if (object.IsDeleted()) {
                 ErrorInvalidValue("%s: Shader or program object argument cannot have been"
                                   " deleted.",
-                                  argName);
+                                  funcName);
                 return false;
             }
         } else {
             if (object.IsDeleteRequested()) {
                 ErrorInvalidOperation("%s: Object argument cannot have been marked for"
                                       " deletion.",
-                                      argName);
+                                      funcName);
                 return false;
             }
         }
@@ -1792,15 +1763,44 @@ public:
 
     ////
 
-    // Program and Shader are incomplete, so we can't inline the conversion to
-    // WebGLDeletableObject here.
-    bool ValidateObject(const char* const argName, const WebGLProgram& object);
-    bool ValidateObject(const char* const argName, const WebGLShader& object);
+    bool ValidateObject(const char* funcName, const WebGLProgram& object);
+    bool ValidateObject(const char* funcName, const WebGLShader& object);
 
     ////
 
-    bool ValidateIsObject(const WebGLDeletableObject* object) const;
-    bool ValidateDeleteObject(const WebGLDeletableObject* object);
+    bool ValidateIsObject(const char* funcName,
+                          const WebGLDeletableObject* object) const
+    {
+        if (IsContextLost())
+            return false;
+
+        if (!object)
+            return false;
+
+        if (!object->IsCompatibleWithContext(this))
+            return false;
+
+        if (object->IsDeleted())
+            return false;
+
+        return true;
+    }
+
+    bool ValidateDeleteObject(const char* funcName, const WebGLDeletableObject* object) {
+        if (IsContextLost())
+            return false;
+
+        if (!object)
+            return false;
+
+        if (!ValidateObjectAllowDeleted(funcName, *object))
+            return false;
+
+        if (object->IsDeleteRequested())
+            return false;
+
+        return true;
+    }
 
     ////
 
@@ -1826,8 +1826,8 @@ protected:
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
     RefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
 
-    bool ValidateFramebufferTarget(GLenum target);
-    bool ValidateInvalidateFramebuffer(GLenum target,
+    bool ValidateFramebufferTarget(GLenum target, const char* const info);
+    bool ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
                                        const dom::Sequence<GLenum>& attachments,
                                        ErrorResult* const out_rv,
                                        std::vector<GLenum>* const scopedVector,
@@ -1870,7 +1870,7 @@ protected:
     CheckedUint32 GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
                                 uint32_t depth, uint8_t bytesPerPixel);
 
-    bool ValidatePackSize(uint32_t width, uint32_t height,
+    bool ValidatePackSize(const char* funcName, uint32_t width, uint32_t height,
                           uint8_t bytesPerPixel, uint32_t* const out_rowStride,
                           uint32_t* const out_endOffset);
 
@@ -1949,7 +1949,7 @@ protected:
     WebGLContextLossHandler mContextLossHandler;
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;
-    ContextStatus mContextStatus = ContextStatus::NotLost;
+    ContextStatus mContextStatus;
     bool mContextLostErrorSet;
 
     // Used for some hardware (particularly Tegra 2 and 4) that likes to
@@ -1993,16 +1993,17 @@ protected:
 
     // --
 
-    bool EnsureDefaultFB();
-    bool ValidateAndInitFB(const WebGLFramebuffer* fb);
+    bool EnsureDefaultFB(const char* funcName);
+    bool ValidateAndInitFB(const char* funcName, const WebGLFramebuffer* fb);
     void DoBindFB(const WebGLFramebuffer* fb, GLenum target = LOCAL_GL_FRAMEBUFFER) const;
 
-    bool BindCurFBForDraw();
-    bool BindCurFBForColorRead(const webgl::FormatUsageInfo** out_format,
+    bool BindCurFBForDraw(const char* funcName);
+    bool BindCurFBForColorRead(const char* funcName,
+                               const webgl::FormatUsageInfo** out_format,
                                uint32_t* out_width, uint32_t* out_height);
     void DoColorMask(uint8_t bitmask) const;
     void BlitBackbufferToCurDriverFB() const;
-    bool BindDefaultFBForRead();
+    bool BindDefaultFBForRead(const char* funcName);
 
     // --
 
@@ -2082,15 +2083,12 @@ RoundUpToMultipleOf(const V& value, const M& multiple)
     return ((value + multiple - 1) / multiple) * multiple;
 }
 
-const char* GetEnumName(GLenum val, const char* defaultRet = "<unknown>");
-std::string EnumString(GLenum val);
-
 bool
-ValidateTexTarget(WebGLContext* webgl, uint8_t funcDims,
+ValidateTexTarget(WebGLContext* webgl, const char* funcName, uint8_t funcDims,
                   GLenum rawTexTarget, TexTarget* const out_texTarget,
                   WebGLTexture** const out_tex);
 bool
-ValidateTexImageTarget(WebGLContext* webgl, uint8_t funcDims,
+ValidateTexImageTarget(WebGLContext* webgl, const char* funcName, uint8_t funcDims,
                        GLenum rawTexImageTarget, TexImageTarget* const out_texImageTarget,
                        WebGLTexture** const out_tex);
 

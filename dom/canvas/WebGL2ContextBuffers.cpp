@@ -19,21 +19,21 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
                                  GLintptr readOffset, GLintptr writeOffset,
                                  GLsizeiptr size)
 {
-    const FuncScope funcScope(*this, "copyBufferSubData");
+    const char funcName[] = "copyBufferSubData";
     if (IsContextLost())
         return;
 
-    const auto& readBuffer = ValidateBufferSelection(readTarget);
+    const auto& readBuffer = ValidateBufferSelection(funcName, readTarget);
     if (!readBuffer)
         return;
 
-    const auto& writeBuffer = ValidateBufferSelection(writeTarget);
+    const auto& writeBuffer = ValidateBufferSelection(funcName, writeTarget);
     if (!writeBuffer)
         return;
 
-    if (!ValidateNonNegative("readOffset", readOffset) ||
-        !ValidateNonNegative("writeOffset", writeOffset) ||
-        !ValidateNonNegative("size", size))
+    if (!ValidateNonNegative(funcName, "readOffset", readOffset) ||
+        !ValidateNonNegative(funcName, "writeOffset", writeOffset) ||
+        !ValidateNonNegative(funcName, "size", size))
     {
         return;
     }
@@ -43,7 +43,7 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     {
         const auto neededBytes = CheckedInt<size_t>(offset) + size;
         if (!neededBytes.isValid() || neededBytes.value() > buffer->ByteLength()) {
-            ErrorInvalidValue("Invalid %s range.", info);
+            ErrorInvalidValue("%s: Invalid %s range.", funcName, info);
             return false;
         }
         return true;
@@ -62,8 +62,9 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
         const bool separate = (readOffset + size <= writeOffset ||
                                writeOffset + size <= readOffset);
         if (!separate) {
-            ErrorInvalidValue("Ranges [readOffset, readOffset + size) and"
-                              " [writeOffset, writeOffset + size) overlap.");
+            ErrorInvalidValue("%s: ranges [readOffset, readOffset + size) and"
+                              " [writeOffset, writeOffset + size) overlap",
+                              funcName);
             return;
         }
     }
@@ -73,7 +74,8 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     MOZ_ASSERT(readType != WebGLBuffer::Kind::Undefined);
     MOZ_ASSERT(writeType != WebGLBuffer::Kind::Undefined);
     if (writeType != readType) {
-        ErrorInvalidOperation("Can't copy %s data to %s data.",
+        ErrorInvalidOperation("%s: Can't copy %s data to %s data.",
+                              funcName,
                               (readType == WebGLBuffer::Kind::OtherData) ? "other"
                                                                          : "element",
                               (writeType == WebGLBuffer::Kind::OtherData) ? "other"
@@ -93,16 +95,16 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
                                 const dom::ArrayBufferView& dstData, GLuint dstElemOffset,
                                 GLuint dstElemCountOverride)
 {
-    const FuncScope funcScope(*this, "getBufferSubData");
+    const char funcName[] = "getBufferSubData";
     if (IsContextLost())
         return;
 
-    if (!ValidateNonNegative("srcByteOffset", srcByteOffset))
+    if (!ValidateNonNegative(funcName, "srcByteOffset", srcByteOffset))
         return;
 
     uint8_t* bytes;
     size_t byteLen;
-    if (!ValidateArrayBufferView(dstData, dstElemOffset, dstElemCountOverride,
+    if (!ValidateArrayBufferView(funcName, dstData, dstElemOffset, dstElemCountOverride,
                                  &bytes, &byteLen))
     {
         return;
@@ -110,17 +112,17 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
 
     ////
 
-    const auto& buffer = ValidateBufferSelection(target);
+    const auto& buffer = ValidateBufferSelection(funcName, target);
     if (!buffer)
         return;
 
-    if (!buffer->ValidateRange(srcByteOffset, byteLen))
+    if (!buffer->ValidateRange(funcName, srcByteOffset, byteLen))
         return;
 
     ////
 
     if (!CheckedInt<GLsizeiptr>(byteLen).isValid()) {
-        ErrorOutOfMemory("Size too large.");
+        ErrorOutOfMemory("%s: Size too large.", funcName);
         return;
     }
     const GLsizeiptr glByteLen(byteLen);
@@ -132,14 +134,16 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
     case LOCAL_GL_STREAM_READ:
     case LOCAL_GL_DYNAMIC_READ:
         if (mCompletedFenceId < buffer->mLastUpdateFenceId) {
-            GenerateWarning("Reading from a buffer without checking for previous"
+            GenerateWarning("%s: Reading from a buffer without checking for previous"
                             " command completion likely causes pipeline stalls."
-                            " Please use FenceSync.");
+                            " Please use FenceSync.",
+                            funcName);
         }
         break;
     default:
-        GenerateWarning("Reading from a buffer with usage other than *_READ"
-                        " causes pipeline stalls. Copy through a STREAM_READ buffer.");
+        GenerateWarning("%s: Reading from a buffer with usage other than *_READ"
+                        " causes pipeline stalls. Copy through a STREAM_READ buffer.",
+                        funcName);
         break;
     }
 
