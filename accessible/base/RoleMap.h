@@ -13,6 +13,7 @@ ROLE(NOTHING,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(TITLEBAR,
@@ -21,6 +22,7 @@ ROLE(TITLEBAR,
      NSAccessibilityUnknownRole,  //Irrelevant on OS X; windows are always native.
      ROLE_SYSTEM_TITLEBAR,
      ROLE_SYSTEM_TITLEBAR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MENUBAR,
@@ -29,6 +31,7 @@ ROLE(MENUBAR,
      NSAccessibilityMenuBarRole,  //Irrelevant on OS X; the menubar will always be native and on the top of the screen.
      ROLE_SYSTEM_MENUBAR,
      ROLE_SYSTEM_MENUBAR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SCROLLBAR,
@@ -37,6 +40,7 @@ ROLE(SCROLLBAR,
      NSAccessibilityScrollBarRole,  //We might need to make this its own mozAccessible, to support the children objects (valueindicator, down/up buttons).
      ROLE_SYSTEM_SCROLLBAR,
      ROLE_SYSTEM_SCROLLBAR,
+     "android.view.View",
      eNameFromValueRule)
 
 ROLE(GRIP,
@@ -45,6 +49,7 @@ ROLE(GRIP,
      NSAccessibilitySplitterRole,
      ROLE_SYSTEM_GRIP,
      ROLE_SYSTEM_GRIP,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SOUND,
@@ -53,6 +58,7 @@ ROLE(SOUND,
      NSAccessibilityUnknownRole,  //Unused on OS X.
      ROLE_SYSTEM_SOUND,
      ROLE_SYSTEM_SOUND,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CURSOR,
@@ -61,6 +67,7 @@ ROLE(CURSOR,
      NSAccessibilityUnknownRole,  //Unused on OS X.
      ROLE_SYSTEM_CURSOR,
      ROLE_SYSTEM_CURSOR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CARET,
@@ -69,6 +76,7 @@ ROLE(CARET,
      NSAccessibilityUnknownRole,  //Unused on OS X.
      ROLE_SYSTEM_CARET,
      ROLE_SYSTEM_CARET,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(ALERT,
@@ -77,6 +85,7 @@ ROLE(ALERT,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_ALERT,
      ROLE_SYSTEM_ALERT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(WINDOW,
@@ -85,6 +94,7 @@ ROLE(WINDOW,
      NSAccessibilityWindowRole,  //Irrelevant on OS X; all window a11y is handled by the system.
      ROLE_SYSTEM_WINDOW,
      ROLE_SYSTEM_WINDOW,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(INTERNAL_FRAME,
@@ -93,6 +103,7 @@ ROLE(INTERNAL_FRAME,
      NSAccessibilityScrollAreaRole,
      USE_ROLE_STRING,
      IA2_ROLE_INTERNAL_FRAME,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MENUPOPUP,
@@ -101,6 +112,7 @@ ROLE(MENUPOPUP,
      NSAccessibilityMenuRole,  //The parent of menuitems.
      ROLE_SYSTEM_MENUPOPUP,
      ROLE_SYSTEM_MENUPOPUP,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MENUITEM,
@@ -109,6 +121,7 @@ ROLE(MENUITEM,
      NSAccessibilityMenuItemRole,
      ROLE_SYSTEM_MENUITEM,
      ROLE_SYSTEM_MENUITEM,
+     "android.view.MenuItem",
      eNameFromSubtreeRule)
 
 ROLE(TOOLTIP,
@@ -117,6 +130,7 @@ ROLE(TOOLTIP,
      @"AXHelpTag",  //10.4+ only, so we re-define the constant.
      ROLE_SYSTEM_TOOLTIP,
      ROLE_SYSTEM_TOOLTIP,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(APPLICATION,
@@ -125,6 +139,7 @@ ROLE(APPLICATION,
      NSAccessibilityGroupRole,  //Unused on OS X. the system will take care of this.
      ROLE_SYSTEM_APPLICATION,
      ROLE_SYSTEM_APPLICATION,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(DOCUMENT,
@@ -133,6 +148,7 @@ ROLE(DOCUMENT,
      @"AXWebArea",
      ROLE_SYSTEM_DOCUMENT,
      ROLE_SYSTEM_DOCUMENT,
+     "android.view.View",
      eNoNameRule)
 
 /**
@@ -150,6 +166,7 @@ ROLE(PANE,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_GROUPING,
      ROLE_SYSTEM_GROUPING,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CHART,
@@ -158,6 +175,7 @@ ROLE(CHART,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_CHART,
      ROLE_SYSTEM_CHART,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(DIALOG,
@@ -166,6 +184,7 @@ ROLE(DIALOG,
      NSAccessibilityWindowRole,  //There's a dialog subrole.
      ROLE_SYSTEM_DIALOG,
      ROLE_SYSTEM_DIALOG,
+     "android.app.Dialog",
      eNoNameRule)
 
 ROLE(BORDER,
@@ -174,6 +193,7 @@ ROLE(BORDER,
      NSAccessibilityUnknownRole,  //Unused on OS X.
      ROLE_SYSTEM_BORDER,
      ROLE_SYSTEM_BORDER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(GROUPING,
@@ -182,6 +202,7 @@ ROLE(GROUPING,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_GROUPING,
      ROLE_SYSTEM_GROUPING,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SEPARATOR,
@@ -190,6 +211,7 @@ ROLE(SEPARATOR,
      NSAccessibilitySplitterRole,
      ROLE_SYSTEM_SEPARATOR,
      ROLE_SYSTEM_SEPARATOR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(TOOLBAR,
@@ -198,6 +220,7 @@ ROLE(TOOLBAR,
      NSAccessibilityToolbarRole,
      ROLE_SYSTEM_TOOLBAR,
      ROLE_SYSTEM_TOOLBAR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(STATUSBAR,
@@ -206,6 +229,7 @@ ROLE(STATUSBAR,
      NSAccessibilityUnknownRole,  //Doesn't exist on OS X (a status bar is its parts; a progressbar, a label, etc.)
      ROLE_SYSTEM_STATUSBAR,
      ROLE_SYSTEM_STATUSBAR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(TABLE,
@@ -214,6 +238,7 @@ ROLE(TABLE,
      NSAccessibilityTableRole,
      ROLE_SYSTEM_TABLE,
      ROLE_SYSTEM_TABLE,
+     "android.widget.GridView",
      eNoNameRule)
 
 ROLE(COLUMNHEADER,
@@ -222,6 +247,7 @@ ROLE(COLUMNHEADER,
      NSAccessibilityCellRole,
      ROLE_SYSTEM_COLUMNHEADER,
      ROLE_SYSTEM_COLUMNHEADER,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(ROWHEADER,
@@ -230,6 +256,7 @@ ROLE(ROWHEADER,
      NSAccessibilityCellRole,
      ROLE_SYSTEM_ROWHEADER,
      ROLE_SYSTEM_ROWHEADER,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(COLUMN,
@@ -238,6 +265,7 @@ ROLE(COLUMN,
      NSAccessibilityColumnRole,
      ROLE_SYSTEM_COLUMN,
      ROLE_SYSTEM_COLUMN,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(ROW,
@@ -246,6 +274,7 @@ ROLE(ROW,
      NSAccessibilityRowRole,
      ROLE_SYSTEM_ROW,
      ROLE_SYSTEM_ROW,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(CELL,
@@ -254,6 +283,7 @@ ROLE(CELL,
      NSAccessibilityCellRole,
      ROLE_SYSTEM_CELL,
      ROLE_SYSTEM_CELL,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(LINK,
@@ -262,6 +292,7 @@ ROLE(LINK,
      @"AXLink",  //10.4+ the attr first define in SDK 10.4, so we define it here too. ROLE_LINK
      ROLE_SYSTEM_LINK,
      ROLE_SYSTEM_LINK,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(HELPBALLOON,
@@ -270,6 +301,7 @@ ROLE(HELPBALLOON,
      @"AXHelpTag",
      ROLE_SYSTEM_HELPBALLOON,
      ROLE_SYSTEM_HELPBALLOON,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(CHARACTER,
@@ -278,6 +310,7 @@ ROLE(CHARACTER,
      NSAccessibilityUnknownRole,  //Unused on OS X.
      ROLE_SYSTEM_CHARACTER,
      ROLE_SYSTEM_CHARACTER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(LIST,
@@ -286,6 +319,7 @@ ROLE(LIST,
      NSAccessibilityListRole,
      ROLE_SYSTEM_LIST,
      ROLE_SYSTEM_LIST,
+     "android.widget.ListView",
      eNameFromSubtreeIfReqRule)
 
 ROLE(LISTITEM,
@@ -294,6 +328,7 @@ ROLE(LISTITEM,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_LISTITEM,
      ROLE_SYSTEM_LISTITEM,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(OUTLINE,
@@ -302,6 +337,7 @@ ROLE(OUTLINE,
      NSAccessibilityOutlineRole,
      ROLE_SYSTEM_OUTLINE,
      ROLE_SYSTEM_OUTLINE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(OUTLINEITEM,
@@ -310,6 +346,7 @@ ROLE(OUTLINEITEM,
      NSAccessibilityRowRole,
      ROLE_SYSTEM_OUTLINEITEM,
      ROLE_SYSTEM_OUTLINEITEM,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(PAGETAB,
@@ -318,6 +355,7 @@ ROLE(PAGETAB,
      NSAccessibilityRadioButtonRole,
      ROLE_SYSTEM_PAGETAB,
      ROLE_SYSTEM_PAGETAB,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(PROPERTYPAGE,
@@ -326,6 +364,7 @@ ROLE(PROPERTYPAGE,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_PROPERTYPAGE,
      ROLE_SYSTEM_PROPERTYPAGE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(INDICATOR,
@@ -334,6 +373,7 @@ ROLE(INDICATOR,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_INDICATOR,
      ROLE_SYSTEM_INDICATOR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(GRAPHIC,
@@ -342,6 +382,7 @@ ROLE(GRAPHIC,
      NSAccessibilityImageRole,
      ROLE_SYSTEM_GRAPHIC,
      ROLE_SYSTEM_GRAPHIC,
+     "android.widget.Image",
      eNoNameRule)
 
 ROLE(STATICTEXT,
@@ -350,6 +391,7 @@ ROLE(STATICTEXT,
      NSAccessibilityStaticTextRole,
      ROLE_SYSTEM_STATICTEXT,
      ROLE_SYSTEM_STATICTEXT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(TEXT_LEAF,
@@ -358,6 +400,7 @@ ROLE(TEXT_LEAF,
      NSAccessibilityStaticTextRole,
      ROLE_SYSTEM_TEXT,
      ROLE_SYSTEM_TEXT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(PUSHBUTTON,
@@ -366,6 +409,7 @@ ROLE(PUSHBUTTON,
      NSAccessibilityButtonRole,
      ROLE_SYSTEM_PUSHBUTTON,
      ROLE_SYSTEM_PUSHBUTTON,
+     "android.widget.Button",
      eNameFromSubtreeRule)
 
 ROLE(CHECKBUTTON,
@@ -374,6 +418,7 @@ ROLE(CHECKBUTTON,
      NSAccessibilityCheckBoxRole,
      ROLE_SYSTEM_CHECKBUTTON,
      ROLE_SYSTEM_CHECKBUTTON,
+     "android.widget.CheckBox",
      eNameFromSubtreeRule)
 
 ROLE(RADIOBUTTON,
@@ -382,6 +427,7 @@ ROLE(RADIOBUTTON,
      NSAccessibilityRadioButtonRole,
      ROLE_SYSTEM_RADIOBUTTON,
      ROLE_SYSTEM_RADIOBUTTON,
+     "android.widget.RadioButton",
      eNameFromSubtreeRule)
 
 // Equivalent of HTML select element with size="1". See also EDITCOMBOBOX.
@@ -391,6 +437,7 @@ ROLE(COMBOBOX,
      NSAccessibilityPopUpButtonRole,
      ROLE_SYSTEM_COMBOBOX,
      ROLE_SYSTEM_COMBOBOX,
+     "android.widget.Spinner",
      eNameFromValueRule)
 
 ROLE(DROPLIST,
@@ -399,6 +446,7 @@ ROLE(DROPLIST,
      NSAccessibilityPopUpButtonRole,
      ROLE_SYSTEM_DROPLIST,
      ROLE_SYSTEM_DROPLIST,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(PROGRESSBAR,
@@ -407,6 +455,7 @@ ROLE(PROGRESSBAR,
      NSAccessibilityProgressIndicatorRole,
      ROLE_SYSTEM_PROGRESSBAR,
      ROLE_SYSTEM_PROGRESSBAR,
+     "android.widget.ProgressBar",
      eNameFromValueRule)
 
 ROLE(DIAL,
@@ -415,6 +464,7 @@ ROLE(DIAL,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_DIAL,
      ROLE_SYSTEM_DIAL,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(HOTKEYFIELD,
@@ -423,6 +473,7 @@ ROLE(HOTKEYFIELD,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_HOTKEYFIELD,
      ROLE_SYSTEM_HOTKEYFIELD,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SLIDER,
@@ -431,6 +482,7 @@ ROLE(SLIDER,
      NSAccessibilitySliderRole,
      ROLE_SYSTEM_SLIDER,
      ROLE_SYSTEM_SLIDER,
+     "android.widget.SeekBar",
      eNameFromValueRule)
 
 ROLE(SPINBUTTON,
@@ -439,6 +491,7 @@ ROLE(SPINBUTTON,
      NSAccessibilityIncrementorRole,  //Subroles: Increment/Decrement.
      ROLE_SYSTEM_SPINBUTTON,
      ROLE_SYSTEM_SPINBUTTON,
+     "android.widget.EditText",
      eNameFromValueRule)
 
 ROLE(DIAGRAM,
@@ -447,6 +500,7 @@ ROLE(DIAGRAM,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_DIAGRAM,
      ROLE_SYSTEM_DIAGRAM,
+     "android.widget.Image",
      eNoNameRule)
 
 ROLE(ANIMATION,
@@ -455,6 +509,7 @@ ROLE(ANIMATION,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_ANIMATION,
      ROLE_SYSTEM_ANIMATION,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(EQUATION,
@@ -463,6 +518,7 @@ ROLE(EQUATION,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_EQUATION,
      ROLE_SYSTEM_EQUATION,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(BUTTONDROPDOWN,
@@ -471,6 +527,7 @@ ROLE(BUTTONDROPDOWN,
      NSAccessibilityPopUpButtonRole,
      ROLE_SYSTEM_BUTTONDROPDOWN,
      ROLE_SYSTEM_BUTTONDROPDOWN,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(BUTTONMENU,
@@ -479,6 +536,7 @@ ROLE(BUTTONMENU,
      NSAccessibilityMenuButtonRole,
      ROLE_SYSTEM_BUTTONMENU,
      ROLE_SYSTEM_BUTTONMENU,
+     "android.widget.Spinner",
      eNameFromSubtreeRule)
 
 ROLE(BUTTONDROPDOWNGRID,
@@ -487,6 +545,7 @@ ROLE(BUTTONDROPDOWNGRID,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_BUTTONDROPDOWNGRID,
      ROLE_SYSTEM_BUTTONDROPDOWNGRID,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(WHITESPACE,
@@ -495,6 +554,7 @@ ROLE(WHITESPACE,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_WHITESPACE,
      ROLE_SYSTEM_WHITESPACE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(PAGETABLIST,
@@ -503,6 +563,7 @@ ROLE(PAGETABLIST,
      NSAccessibilityTabGroupRole,
      ROLE_SYSTEM_PAGETABLIST,
      ROLE_SYSTEM_PAGETABLIST,
+     "android.widget.TabWidget",
      eNoNameRule)
 
 ROLE(CLOCK,
@@ -511,6 +572,7 @@ ROLE(CLOCK,
      NSAccessibilityUnknownRole,  //Unused on OS X
      ROLE_SYSTEM_CLOCK,
      ROLE_SYSTEM_CLOCK,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SPLITBUTTON,
@@ -519,6 +581,7 @@ ROLE(SPLITBUTTON,
      NSAccessibilityButtonRole,
      ROLE_SYSTEM_SPLITBUTTON,
      ROLE_SYSTEM_SPLITBUTTON,
+     "android.widget.Button",
      eNoNameRule)
 
 ROLE(IPADDRESS,
@@ -527,6 +590,7 @@ ROLE(IPADDRESS,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_IPADDRESS,
      ROLE_SYSTEM_IPADDRESS,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(ACCEL_LABEL,
@@ -535,6 +599,7 @@ ROLE(ACCEL_LABEL,
      NSAccessibilityStaticTextRole,
      ROLE_SYSTEM_STATICTEXT,
      ROLE_SYSTEM_STATICTEXT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(ARROW,
@@ -543,6 +608,7 @@ ROLE(ARROW,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_INDICATOR,
      ROLE_SYSTEM_INDICATOR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CANVAS,
@@ -551,6 +617,7 @@ ROLE(CANVAS,
      NSAccessibilityImageRole,
      USE_ROLE_STRING,
      IA2_ROLE_CANVAS,
+     "android.widget.Image",
      eNoNameRule)
 
 ROLE(CHECK_MENU_ITEM,
@@ -559,6 +626,7 @@ ROLE(CHECK_MENU_ITEM,
      NSAccessibilityMenuItemRole,
      ROLE_SYSTEM_MENUITEM,
      IA2_ROLE_CHECK_MENU_ITEM,
+     "android.view.MenuItem",
      eNameFromSubtreeRule)
 
 ROLE(COLOR_CHOOSER,
@@ -567,6 +635,7 @@ ROLE(COLOR_CHOOSER,
      NSAccessibilityColorWellRole,
      ROLE_SYSTEM_DIALOG,
      IA2_ROLE_COLOR_CHOOSER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(DATE_EDITOR,
@@ -575,6 +644,7 @@ ROLE(DATE_EDITOR,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_DATE_EDITOR,
+     "android.widget.Spinner",
      eNoNameRule)
 
 ROLE(DESKTOP_ICON,
@@ -583,6 +653,7 @@ ROLE(DESKTOP_ICON,
      NSAccessibilityImageRole,
      USE_ROLE_STRING,
      IA2_ROLE_DESKTOP_ICON,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(DESKTOP_FRAME,
@@ -591,6 +662,7 @@ ROLE(DESKTOP_FRAME,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_DESKTOP_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(DIRECTORY_PANE,
@@ -599,6 +671,7 @@ ROLE(DIRECTORY_PANE,
      NSAccessibilityBrowserRole,
      USE_ROLE_STRING,
      IA2_ROLE_DIRECTORY_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(FILE_CHOOSER,
@@ -607,6 +680,7 @@ ROLE(FILE_CHOOSER,
      NSAccessibilityUnknownRole,  //Unused on OS X
      USE_ROLE_STRING,
      IA2_ROLE_FILE_CHOOSER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(FONT_CHOOSER,
@@ -615,6 +689,7 @@ ROLE(FONT_CHOOSER,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_FONT_CHOOSER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CHROME_WINDOW,
@@ -623,6 +698,7 @@ ROLE(CHROME_WINDOW,
      NSAccessibilityGroupRole,  //Contains the main Firefox UI
      ROLE_SYSTEM_APPLICATION,
      IA2_ROLE_FRAME,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(GLASS_PANE,
@@ -631,6 +707,7 @@ ROLE(GLASS_PANE,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_GLASS_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(HTML_CONTAINER,
@@ -639,6 +716,7 @@ ROLE(HTML_CONTAINER,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(ICON,
@@ -647,6 +725,7 @@ ROLE(ICON,
      NSAccessibilityImageRole,
      ROLE_SYSTEM_PUSHBUTTON,
      IA2_ROLE_ICON,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(LABEL,
@@ -655,6 +734,7 @@ ROLE(LABEL,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_STATICTEXT,
      IA2_ROLE_LABEL,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(LAYERED_PANE,
@@ -663,6 +743,7 @@ ROLE(LAYERED_PANE,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_LAYERED_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(OPTION_PANE,
@@ -671,6 +752,7 @@ ROLE(OPTION_PANE,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_OPTION_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(PASSWORD_TEXT,
@@ -679,6 +761,7 @@ ROLE(PASSWORD_TEXT,
      NSAccessibilityTextFieldRole,
      ROLE_SYSTEM_TEXT,
      ROLE_SYSTEM_TEXT,
+     "android.widget.EditText",
      eNoNameRule)
 
 ROLE(POPUP_MENU,
@@ -687,6 +770,7 @@ ROLE(POPUP_MENU,
      NSAccessibilityUnknownRole,  //Unused
      ROLE_SYSTEM_MENUPOPUP,
      ROLE_SYSTEM_MENUPOPUP,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(RADIO_MENU_ITEM,
@@ -695,6 +779,7 @@ ROLE(RADIO_MENU_ITEM,
      NSAccessibilityMenuItemRole,
      ROLE_SYSTEM_MENUITEM,
      IA2_ROLE_RADIO_MENU_ITEM,
+     "android.view.MenuItem",
      eNameFromSubtreeRule)
 
 ROLE(ROOT_PANE,
@@ -703,6 +788,7 @@ ROLE(ROOT_PANE,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_ROOT_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SCROLL_PANE,
@@ -711,6 +797,7 @@ ROLE(SCROLL_PANE,
      NSAccessibilityScrollAreaRole,
      USE_ROLE_STRING,
      IA2_ROLE_SCROLL_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SPLIT_PANE,
@@ -719,6 +806,7 @@ ROLE(SPLIT_PANE,
      NSAccessibilitySplitGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_SPLIT_PANE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(TABLE_COLUMN_HEADER,
@@ -727,6 +815,7 @@ ROLE(TABLE_COLUMN_HEADER,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_COLUMNHEADER,
      ROLE_SYSTEM_COLUMNHEADER,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(TABLE_ROW_HEADER,
@@ -735,6 +824,7 @@ ROLE(TABLE_ROW_HEADER,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_ROWHEADER,
      ROLE_SYSTEM_ROWHEADER,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(TEAR_OFF_MENU_ITEM,
@@ -743,6 +833,7 @@ ROLE(TEAR_OFF_MENU_ITEM,
      NSAccessibilityMenuItemRole,
      ROLE_SYSTEM_MENUITEM,
      IA2_ROLE_TEAR_OFF_MENU,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(TERMINAL,
@@ -751,6 +842,7 @@ ROLE(TERMINAL,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_TERMINAL,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(TEXT_CONTAINER,
@@ -759,6 +851,7 @@ ROLE(TEXT_CONTAINER,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_TEXT_FRAME,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(TOGGLE_BUTTON,
@@ -767,6 +860,7 @@ ROLE(TOGGLE_BUTTON,
      NSAccessibilityButtonRole,
      ROLE_SYSTEM_PUSHBUTTON,
      IA2_ROLE_TOGGLE_BUTTON,
+     "android.widget.ToggleButton",
      eNameFromSubtreeRule)
 
 ROLE(TREE_TABLE,
@@ -775,6 +869,7 @@ ROLE(TREE_TABLE,
      NSAccessibilityTableRole,
      ROLE_SYSTEM_OUTLINE,
      ROLE_SYSTEM_OUTLINE,
+     "android.widget.GridView",
      eNoNameRule)
 
 ROLE(VIEWPORT,
@@ -783,6 +878,7 @@ ROLE(VIEWPORT,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_PANE,
      IA2_ROLE_VIEW_PORT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(HEADER,
@@ -791,6 +887,7 @@ ROLE(HEADER,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_HEADER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(FOOTER,
@@ -799,6 +896,7 @@ ROLE(FOOTER,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_FOOTER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(PARAGRAPH,
@@ -807,6 +905,7 @@ ROLE(PARAGRAPH,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_PARAGRAPH,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(RULER,
@@ -815,6 +914,7 @@ ROLE(RULER,
      @"AXRuler",  //10.4+ only, so we re-define the constant.
      USE_ROLE_STRING,
      IA2_ROLE_RULER,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(AUTOCOMPLETE,
@@ -823,6 +923,7 @@ ROLE(AUTOCOMPLETE,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_COMBOBOX,
      ROLE_SYSTEM_COMBOBOX,
+     "android.widget.EditText",
      eNoNameRule)
 
 ROLE(EDITBAR,
@@ -831,6 +932,7 @@ ROLE(EDITBAR,
      NSAccessibilityTextFieldRole,
      ROLE_SYSTEM_TEXT,
      IA2_ROLE_EDITBAR,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(ENTRY,
@@ -839,6 +941,7 @@ ROLE(ENTRY,
      NSAccessibilityTextFieldRole,
      ROLE_SYSTEM_TEXT,
      ROLE_SYSTEM_TEXT,
+     "android.widget.EditText",
      eNameFromValueRule)
 
 ROLE(CAPTION,
@@ -847,6 +950,7 @@ ROLE(CAPTION,
      NSAccessibilityStaticTextRole,
      USE_ROLE_STRING,
      IA2_ROLE_CAPTION,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(NON_NATIVE_DOCUMENT,
@@ -855,6 +959,7 @@ ROLE(NON_NATIVE_DOCUMENT,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      ROLE_SYSTEM_DOCUMENT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(HEADING,
@@ -863,6 +968,7 @@ ROLE(HEADING,
      @"AXHeading",
      USE_ROLE_STRING,
      IA2_ROLE_HEADING,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(PAGE,
@@ -871,6 +977,7 @@ ROLE(PAGE,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_PAGE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SECTION,
@@ -879,6 +986,7 @@ ROLE(SECTION,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_SECTION,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(REDUNDANT_OBJECT,
@@ -887,6 +995,7 @@ ROLE(REDUNDANT_OBJECT,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_REDUNDANT_OBJECT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(FORM,
@@ -895,6 +1004,7 @@ ROLE(FORM,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_FORM,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(IME,
@@ -903,6 +1013,7 @@ ROLE(IME,
      NSAccessibilityUnknownRole,
      USE_ROLE_STRING,
      IA2_ROLE_INPUT_METHOD_WINDOW,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(APP_ROOT,
@@ -911,6 +1022,7 @@ ROLE(APP_ROOT,
      NSAccessibilityUnknownRole,  //Unused on OS X
      ROLE_SYSTEM_APPLICATION,
      ROLE_SYSTEM_APPLICATION,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(PARENT_MENUITEM,
@@ -919,6 +1031,7 @@ ROLE(PARENT_MENUITEM,
      NSAccessibilityMenuItemRole,
      ROLE_SYSTEM_MENUITEM,
      ROLE_SYSTEM_MENUITEM,
+     "android.view.MenuItem",
      eNameFromSubtreeRule)
 
 ROLE(CALENDAR,
@@ -927,6 +1040,7 @@ ROLE(CALENDAR,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_CLIENT,
      ROLE_SYSTEM_CLIENT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(COMBOBOX_LIST,
@@ -935,6 +1049,7 @@ ROLE(COMBOBOX_LIST,
      NSAccessibilityMenuRole,
      ROLE_SYSTEM_LIST,
      ROLE_SYSTEM_LIST,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(COMBOBOX_OPTION,
@@ -943,6 +1058,7 @@ ROLE(COMBOBOX_OPTION,
      NSAccessibilityMenuItemRole,
      ROLE_SYSTEM_LISTITEM,
      ROLE_SYSTEM_LISTITEM,
+     "android.view.MenuItem",
      eNameFromSubtreeRule)
 
 ROLE(IMAGE_MAP,
@@ -951,6 +1067,7 @@ ROLE(IMAGE_MAP,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_GRAPHIC,
      ROLE_SYSTEM_GRAPHIC,
+     "android.widget.Image",
      eNoNameRule)
 
 ROLE(OPTION,
@@ -959,6 +1076,7 @@ ROLE(OPTION,
      NSAccessibilityStaticTextRole,
      ROLE_SYSTEM_LISTITEM,
      ROLE_SYSTEM_LISTITEM,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(RICH_OPTION,
@@ -967,6 +1085,7 @@ ROLE(RICH_OPTION,
      NSAccessibilityRowRole,
      ROLE_SYSTEM_LISTITEM,
      ROLE_SYSTEM_LISTITEM,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(LISTBOX,
@@ -975,6 +1094,7 @@ ROLE(LISTBOX,
      NSAccessibilityListRole,
      ROLE_SYSTEM_LIST,
      ROLE_SYSTEM_LIST,
+     "android.widget.ListView",
      eNoNameRule)
 
 ROLE(FLAT_EQUATION,
@@ -983,6 +1103,7 @@ ROLE(FLAT_EQUATION,
      NSAccessibilityUnknownRole,
      ROLE_SYSTEM_EQUATION,
      ROLE_SYSTEM_EQUATION,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(GRID_CELL,
@@ -991,6 +1112,7 @@ ROLE(GRID_CELL,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_CELL,
      ROLE_SYSTEM_CELL,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(EMBEDDED_OBJECT,
@@ -999,6 +1121,7 @@ ROLE(EMBEDDED_OBJECT,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_EMBEDDED_OBJECT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(NOTE,
@@ -1007,6 +1130,7 @@ ROLE(NOTE,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_NOTE,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(FIGURE,
@@ -1015,6 +1139,7 @@ ROLE(FIGURE,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_GROUPING,
      ROLE_SYSTEM_GROUPING,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CHECK_RICH_OPTION,
@@ -1023,6 +1148,7 @@ ROLE(CHECK_RICH_OPTION,
      NSAccessibilityCheckBoxRole,
      ROLE_SYSTEM_CHECKBUTTON,
      ROLE_SYSTEM_CHECKBUTTON,
+     "android.widget.CheckBox",
      eNameFromSubtreeRule)
 
 ROLE(DEFINITION_LIST,
@@ -1031,6 +1157,7 @@ ROLE(DEFINITION_LIST,
      NSAccessibilityListRole,
      ROLE_SYSTEM_LIST,
      ROLE_SYSTEM_LIST,
+     "android.widget.ListView",
      eNameFromSubtreeIfReqRule)
 
 ROLE(TERM,
@@ -1039,6 +1166,7 @@ ROLE(TERM,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_LISTITEM,
      ROLE_SYSTEM_LISTITEM,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(DEFINITION,
@@ -1047,6 +1175,7 @@ ROLE(DEFINITION,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_PARAGRAPH,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(KEY,
@@ -1055,6 +1184,7 @@ ROLE(KEY,
      NSAccessibilityButtonRole,
      ROLE_SYSTEM_PUSHBUTTON,
      ROLE_SYSTEM_PUSHBUTTON,
+     "android.widget.Button",
      eNameFromSubtreeRule)
 
 ROLE(SWITCH,
@@ -1063,6 +1193,7 @@ ROLE(SWITCH,
      NSAccessibilityCheckBoxRole,
      ROLE_SYSTEM_CHECKBUTTON,
      IA2_ROLE_TOGGLE_BUTTON,
+     "android.widget.CheckBox",
      eNameFromSubtreeRule)
 
 ROLE(MATHML_MATH,
@@ -1071,6 +1202,7 @@ ROLE(MATHML_MATH,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_EQUATION,
      ROLE_SYSTEM_EQUATION,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_IDENTIFIER,
@@ -1079,6 +1211,7 @@ ROLE(MATHML_IDENTIFIER,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(MATHML_NUMBER,
@@ -1087,6 +1220,7 @@ ROLE(MATHML_NUMBER,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(MATHML_OPERATOR,
@@ -1095,6 +1229,7 @@ ROLE(MATHML_OPERATOR,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(MATHML_TEXT,
@@ -1103,6 +1238,7 @@ ROLE(MATHML_TEXT,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(MATHML_STRING_LITERAL,
@@ -1111,6 +1247,7 @@ ROLE(MATHML_STRING_LITERAL,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNameFromSubtreeRule)
 
 ROLE(MATHML_GLYPH,
@@ -1119,6 +1256,7 @@ ROLE(MATHML_GLYPH,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.widget.Image",
      eNameFromSubtreeRule)
 
 ROLE(MATHML_ROW,
@@ -1127,6 +1265,7 @@ ROLE(MATHML_ROW,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_FRACTION,
@@ -1135,6 +1274,7 @@ ROLE(MATHML_FRACTION,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_SQUARE_ROOT,
@@ -1143,6 +1283,7 @@ ROLE(MATHML_SQUARE_ROOT,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_ROOT,
@@ -1151,6 +1292,7 @@ ROLE(MATHML_ROOT,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_FENCED,
@@ -1159,6 +1301,7 @@ ROLE(MATHML_FENCED,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_ENCLOSED,
@@ -1167,6 +1310,7 @@ ROLE(MATHML_ENCLOSED,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_STYLE,
@@ -1175,6 +1319,7 @@ ROLE(MATHML_STYLE,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_SUB,
@@ -1183,6 +1328,7 @@ ROLE(MATHML_SUB,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_SUP,
@@ -1191,6 +1337,7 @@ ROLE(MATHML_SUP,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_SUB_SUP,
@@ -1199,6 +1346,7 @@ ROLE(MATHML_SUB_SUP,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_UNDER,
@@ -1207,6 +1355,7 @@ ROLE(MATHML_UNDER,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_OVER,
@@ -1215,6 +1364,7 @@ ROLE(MATHML_OVER,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_UNDER_OVER,
@@ -1223,6 +1373,7 @@ ROLE(MATHML_UNDER_OVER,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_MULTISCRIPTS,
@@ -1231,6 +1382,7 @@ ROLE(MATHML_MULTISCRIPTS,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_TABLE,
@@ -1239,6 +1391,7 @@ ROLE(MATHML_TABLE,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.widget.GridView",
      eNoNameRule)
 
 ROLE(MATHML_LABELED_ROW,
@@ -1247,6 +1400,7 @@ ROLE(MATHML_LABELED_ROW,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_TABLE_ROW,
@@ -1255,6 +1409,7 @@ ROLE(MATHML_TABLE_ROW,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_CELL,
@@ -1263,6 +1418,7 @@ ROLE(MATHML_CELL,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_ACTION,
@@ -1271,6 +1427,7 @@ ROLE(MATHML_ACTION,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_ERROR,
@@ -1279,6 +1436,7 @@ ROLE(MATHML_ERROR,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_STACK,
@@ -1287,6 +1445,7 @@ ROLE(MATHML_STACK,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_LONG_DIVISION,
@@ -1295,6 +1454,7 @@ ROLE(MATHML_LONG_DIVISION,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_STACK_GROUP,
@@ -1303,6 +1463,7 @@ ROLE(MATHML_STACK_GROUP,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_STACK_ROW,
@@ -1311,6 +1472,7 @@ ROLE(MATHML_STACK_ROW,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_STACK_CARRIES,
@@ -1319,6 +1481,7 @@ ROLE(MATHML_STACK_CARRIES,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_STACK_CARRY,
@@ -1327,6 +1490,7 @@ ROLE(MATHML_STACK_CARRY,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(MATHML_STACK_LINE,
@@ -1335,6 +1499,7 @@ ROLE(MATHML_STACK_LINE,
      NSAccessibilityGroupRole,
      0,
      IA2_ROLE_UNKNOWN,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(RADIO_GROUP,
@@ -1343,6 +1508,7 @@ ROLE(RADIO_GROUP,
      NSAccessibilityRadioGroupRole,
      ROLE_SYSTEM_GROUPING,
      ROLE_SYSTEM_GROUPING,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(TEXT,
@@ -1351,6 +1517,7 @@ ROLE(TEXT,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_TEXT_FRAME,
+     "android.view.View",
      eNameFromSubtreeIfReqRule)
 
 ROLE(DETAILS,
@@ -1359,6 +1526,7 @@ ROLE(DETAILS,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_GROUPING,
      ROLE_SYSTEM_GROUPING,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(SUMMARY,
@@ -1367,6 +1535,7 @@ ROLE(SUMMARY,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_PUSHBUTTON,
      ROLE_SYSTEM_PUSHBUTTON,
+     "android.widget.Button",
      eNameFromSubtreeRule)
 
 ROLE(LANDMARK,
@@ -1375,6 +1544,7 @@ ROLE(LANDMARK,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_LANDMARK,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(NAVIGATION,
@@ -1383,6 +1553,7 @@ ROLE(NAVIGATION,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_LANDMARK,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(FOOTNOTE,
@@ -1391,6 +1562,7 @@ ROLE(FOOTNOTE,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_FOOTNOTE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(ARTICLE,
@@ -1399,6 +1571,7 @@ ROLE(ARTICLE,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_DOCUMENT,
      ROLE_SYSTEM_DOCUMENT,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(REGION,
@@ -1407,6 +1580,7 @@ ROLE(REGION,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_LANDMARK,
+     "android.view.View",
      eNoNameRule)
 
 // A composite widget with a text input and popup. Used for ARIA role combobox.
@@ -1417,6 +1591,7 @@ ROLE(EDITCOMBOBOX,
      NSAccessibilityComboBoxRole,
      ROLE_SYSTEM_COMBOBOX,
      ROLE_SYSTEM_COMBOBOX,
+     "android.widget.EditText",
      eNameFromValueRule)
 
 ROLE(BLOCKQUOTE,
@@ -1425,6 +1600,7 @@ ROLE(BLOCKQUOTE,
      NSAccessibilityGroupRole,
      ROLE_SYSTEM_GROUPING,
      IA2_ROLE_BLOCK_QUOTE,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CONTENT_DELETION,
@@ -1433,6 +1609,7 @@ ROLE(CONTENT_DELETION,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_CONTENT_DELETION,
+     "android.view.View",
      eNoNameRule)
 
 ROLE(CONTENT_INSERTION,
@@ -1441,4 +1618,5 @@ ROLE(CONTENT_INSERTION,
      NSAccessibilityGroupRole,
      USE_ROLE_STRING,
      IA2_ROLE_CONTENT_INSERTION,
+     "android.view.View",
      eNoNameRule)
