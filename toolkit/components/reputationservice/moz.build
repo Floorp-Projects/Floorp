@@ -22,6 +22,7 @@ XPIDL_MODULE = 'reputationservice'
 
 UNIFIED_SOURCES += [
     'ApplicationReputation.cpp',
+    'ApplicationReputationTelemetryUtils.cpp',
     'chromium/chrome/common/safe_browsing/csd.pb.cc',
     'LoginReputation.cpp',
     'LoginReputationIPC.cpp',
