@@ -295,6 +295,9 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 
   mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable, length);
   mIsTransportSeekable = seekable;
+  if (mFirstReadLength < 0) {
+    mFirstReadLength = length;
+  }
 
   mSuspendAgent.Delegate(mChannel);
 
@@ -317,7 +320,14 @@ bool
 ChannelMediaResource::IsTransportSeekable()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mIsTransportSeekable;
+  // We Report the transport as seekable if we know we will never seek into
+  // the underlying transport. As the MediaCache reads content by block of
+  // BLOCK_SIZE bytes, so the content length is less it will always be fully
+  // read from offset = 0 and we can then always successfully seek within this
+  // buffered content.
+  return mIsTransportSeekable ||
+         (mFirstReadLength > 0 &&
+          mFirstReadLength < MediaCacheStream::BLOCK_SIZE);
 }
 
 nsresult
