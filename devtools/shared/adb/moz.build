@@ -4,6 +4,10 @@
 
 DevToolsModules(
     'adb-binary.js',
+    'adb-client.js',
+    'adb-running-checker.js',
+    'adb-socket.js',
+    'adb.js',
 )
 
 with Files('**'):
