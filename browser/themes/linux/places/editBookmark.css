@@ -40,10 +40,6 @@
   -moz-appearance: button-arrow-down;
 }
 
-#editBookmarkPanelContent {
-  min-width: 23em;
-}
-
 #editBMPanel_folderTree {
   margin-top: 2px;
   margin-bottom: 2px;
