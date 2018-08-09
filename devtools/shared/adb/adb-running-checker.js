@@ -33,7 +33,7 @@ exports.check = async function check() {
           const { length, data } = client.unpackPacket(packetData);
           console.debug("length: ", length, "data: ", data);
           socket.close();
-          const version = parseInt(data, "16");
+          const version = parseInt(data, 16);
           if (version >= 31) {
             resolve(true);
           } else {
