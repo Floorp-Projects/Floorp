@@ -22,7 +22,7 @@
 //! using Syn's parser combinator macros.
 //!
 //! ```
-//! #![feature(proc_macro)]
+//! #![feature(proc_macro_diagnostic)]
 //!
 //! extern crate syn;
 //! extern crate proc_macro;
