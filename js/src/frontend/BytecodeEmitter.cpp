@@ -25,6 +25,7 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeControlStructures.h"
+#include "frontend/CForEmitter.h"
 #include "frontend/EmitterScope.h"
 #include "frontend/ForOfLoopControl.h"
 #include "frontend/IfEmitter.h"
@@ -4785,7 +4786,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(ParseNode* forHead)
 }
 
 bool
-BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitterScope)
+BytecodeEmitter::emitForOf(ParseNode* forOfLoop, const EmitterScope* headLexicalEmitterScope)
 {
     MOZ_ASSERT(forOfLoop->isKind(ParseNodeKind::For));
     MOZ_ASSERT(forOfLoop->isArity(PN_BINARY));
@@ -4976,7 +4977,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
 }
 
 bool
-BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitterScope)
+BytecodeEmitter::emitForIn(ParseNode* forInLoop, const EmitterScope* headLexicalEmitterScope)
 {
     MOZ_ASSERT(forInLoop->isKind(ParseNodeKind::For));
     MOZ_ASSERT(forInLoop->isArity(PN_BINARY));
@@ -5125,193 +5126,82 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
 
 /* C-style `for (init; cond; update) ...` loop. */
 bool
-BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterScope)
+BytecodeEmitter::emitCStyleFor(ParseNode* pn, const EmitterScope* headLexicalEmitterScope)
 {
-    LoopControl loopInfo(this, StatementKind::ForLoop);
-
     ParseNode* forHead = pn->pn_left;
     ParseNode* forBody = pn->pn_right;
+    ParseNode* init = forHead->pn_kid1;
+    ParseNode* cond = forHead->pn_kid2;
+    ParseNode* update = forHead->pn_kid3;
+    bool isLet = init && init->isKind(ParseNodeKind::Let);
+
+    CForEmitter cfor(this, isLet ? headLexicalEmitterScope : nullptr);
+
+    if (!cfor.emitInit(init ? Some(init->pn_pos.begin) : Nothing()))
+        return false;                                     //
 
     // If the head of this for-loop declared any lexical variables, the parser
     // wrapped this ParseNodeKind::For node in a ParseNodeKind::LexicalScope
-    // representing the implicit scope of those variables. By the time we get here,
-    // we have already entered that scope. So far, so good.
-    //
-    // ### Scope freshening
-    //
-    // Each iteration of a `for (let V...)` loop creates a fresh loop variable
-    // binding for V, even if the loop is a C-style `for(;;)` loop:
-    //
-    //     var funcs = [];
-    //     for (let i = 0; i < 2; i++)
-    //         funcs.push(function() { return i; });
-    //     assertEq(funcs[0](), 0);  // the two closures capture...
-    //     assertEq(funcs[1](), 1);  // ...two different `i` bindings
-    //
-    // This is implemented by "freshening" the implicit block -- changing the
-    // scope chain to a fresh clone of the instantaneous block object -- each
-    // iteration, just before evaluating the "update" in for(;;) loops.
-    //
-    // No freshening occurs in `for (const ...;;)` as there's no point: you
-    // can't reassign consts. This is observable through the Debugger API. (The
-    // ES6 spec also skips cloning the environment in this case.)
-    bool forLoopRequiresFreshening = false;
-    if (ParseNode* init = forHead->pn_kid1) {
+    // representing the implicit scope of those variables. By the time we get
+    // here, we have already entered that scope. So far, so good.
+    if (init) {
         // Emit the `init` clause, whether it's an expression or a variable
         // declaration. (The loop variables were hoisted into an enclosing
         // scope, but we still need to emit code for the initializers.)
-        if (!updateSourceCoordNotes(init->pn_pos.begin))
-            return false;
         if (init->isForLoopDeclaration()) {
-            if (!emitTree(init))
+            if (!emitTree(init))                          //
                 return false;
         } else {
             // 'init' is an expression, not a declaration. emitTree left its
             // value on the stack.
-            if (!emitTree(init, ValueUsage::IgnoreValue))
+            if (!emitTree(init, ValueUsage::IgnoreValue)) // VAL
                 return false;
-            if (!emit1(JSOP_POP))
-                return false;
-        }
-
-        // ES 13.7.4.8 step 2. The initial freshening.
-        //
-        // If an initializer let-declaration may be captured during loop iteration,
-        // the current scope has an environment.  If so, freshen the current
-        // environment to expose distinct bindings for each loop iteration.
-        forLoopRequiresFreshening = init->isKind(ParseNodeKind::Let) && headLexicalEmitterScope;
-        if (forLoopRequiresFreshening) {
-            // The environment chain only includes an environment for the for(;;)
-            // loop head's let-declaration *if* a scope binding is captured, thus
-            // requiring a fresh environment each iteration. If a lexical scope
-            // exists for the head, it must be the innermost one. If that scope
-            // has closed-over bindings inducing an environment, recreate the
-            // current environment.
-            MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
-            MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
-
-            if (headLexicalEmitterScope->hasEnvironment()) {
-                if (!emit1(JSOP_FRESHENLEXICALENV))
-                    return false;
-            }
-        }
-    }
-
-    /*
-     * NB: the SRC_FOR note has offsetBias 1 (JSOP_NOP_LENGTH).
-     * Use tmp to hold the biased srcnote "top" offset, which differs
-     * from the top local variable by the length of the JSOP_GOTO
-     * emitted in between tmp and top if this loop has a condition.
-     */
-    unsigned noteIndex;
-    if (!newSrcNote(SRC_FOR, &noteIndex))
-        return false;
-    if (!emit1(JSOP_NOP))
-        return false;
-    ptrdiff_t top = offset();
-
-    if (forHead->pn_kid2) {
-        /* Goto the loop condition, which branches back to iterate. */
-        if (!loopInfo.emitEntryJump(this))
-            return false;
-    }
-
-    /* Emit code for the loop body. */
-    if (!loopInfo.emitLoopHead(this, getOffsetForLoop(forBody)))
-        return false;
-    if (!forHead->pn_kid2) {
-        if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(forBody)))
-            return false;
-    }
-
-    if (!emitTreeInBranch(forBody))
-        return false;
-
-    // Set loop and enclosing "update" offsets, for continue.  Note that we
-    // continue to immediately *before* the block-freshening: continuing must
-    // refresh the block.
-    if (!loopInfo.emitContinueTarget(this))
-        return false;
-
-    // ES 13.7.4.8 step 3.e. The per-iteration freshening.
-    if (forLoopRequiresFreshening) {
-        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
-        MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
-
-        if (headLexicalEmitterScope->hasEnvironment()) {
-            if (!emit1(JSOP_FRESHENLEXICALENV))
+            if (!emit1(JSOP_POP))                         //
                 return false;
         }
     }
 
-    // Check for update code to do before the condition (if any).
-    // The update code may not be executed at all; it needs its own TDZ cache.
-    if (ParseNode* update = forHead->pn_kid3) {
-        TDZCheckCache tdzCache(this);
-
-        if (!updateSourceCoordNotes(update->pn_pos.begin))
-            return false;
-        if (!emitTree(update, ValueUsage::IgnoreValue))
-            return false;
-        if (!emit1(JSOP_POP))
-            return false;
-
-        /* Restore the absolute line number for source note readers. */
-        uint32_t lineNum = parser->errorReporter().lineAt(pn->pn_pos.end);
-        if (currentLine() != lineNum) {
-            if (!newSrcNote2(SRC_SETLINE, ptrdiff_t(lineNum)))
-                return false;
-            current->currentLine = lineNum;
-            current->lastColumn = 0;
-        }
-    }
-
-    ptrdiff_t tmp3 = offset();
-
-    if (forHead->pn_kid2) {
-        /* Fix up the goto from top to target the loop condition. */
-        if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(forHead->pn_kid2)))
-            return false;
-
-        if (!emitTree(forHead->pn_kid2))
-            return false;
-    } else if (!forHead->pn_kid3) {
-        // If there is no condition clause and no update clause, mark
-        // the loop-ending "goto" with the location of the "for".
-        // This ensures that the debugger will stop on each loop
-        // iteration.
-        if (!updateSourceCoordNotes(pn->pn_pos.begin))
-            return false;
-    }
-
-    /* Set the first note offset so we can find the loop condition. */
-    if (!setSrcNoteOffset(noteIndex, 0, tmp3 - top))
-        return false;
-    if (!setSrcNoteOffset(noteIndex, 1, loopInfo.continueTargetOffset() - top))
-        return false;
-
-    /* If no loop condition, just emit a loop-closing jump. */
-    if (!loopInfo.emitLoopEnd(this, forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO))
-        return false;
-
-    /* The third note offset helps us find the loop-closing jump. */
-    if (!setSrcNoteOffset(noteIndex, 2, loopInfo.loopEndOffset() - top))
-        return false;
-
-    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, loopInfo.headOffset(),
-                            loopInfo.breakTargetOffset()))
+    if (!cfor.emitBody(cond ? CForEmitter::Cond::Present : CForEmitter::Cond::Missing,
+                       getOffsetForLoop(forBody)))        //
     {
         return false;
     }
 
-    if (!loopInfo.patchBreaksAndContinues(this))
+    if (!emitTree(forBody))                               //
+        return false;
+
+    if (!cfor.emitUpdate(update ? CForEmitter::Update::Present : CForEmitter::Update::Missing,
+                         update ? Some(update->pn_pos.begin) : Nothing()))
+    {                                                     //
+        return false;
+    }
+
+    // Check for update code to do before the condition (if any).
+    if (update) {
+        if (!emitTree(update, ValueUsage::IgnoreValue))   // VAL
+            return false;
+    }
+
+    if (!cfor.emitCond(Some(pn->pn_pos.begin),
+                       cond ? Some(cond->pn_pos.begin) : Nothing(),
+                       Some(pn->pn_pos.end)))             //
+    {
+        return false;
+    }
+
+    if (cond) {
+        if (!emitTree(cond))                              // VAL
+            return false;
+    }
+
+    if (!cfor.emitEnd())                                  //
         return false;
 
     return true;
 }
 
 bool
-BytecodeEmitter::emitFor(ParseNode* pn, EmitterScope* headLexicalEmitterScope)
+BytecodeEmitter::emitFor(ParseNode* pn, const EmitterScope* headLexicalEmitterScope)
 {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::For));
 

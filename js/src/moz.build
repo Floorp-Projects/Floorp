@@ -211,6 +211,7 @@ UNIFIED_SOURCES += [
     'frontend/BytecodeCompiler.cpp',
     'frontend/BytecodeControlStructures.cpp',
     'frontend/BytecodeEmitter.cpp',
+    'frontend/CForEmitter.cpp',
     'frontend/EmitterScope.cpp',
     'frontend/FoldConstants.cpp',
     'frontend/ForOfLoopControl.cpp',

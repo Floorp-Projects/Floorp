@@ -2743,10 +2743,10 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
 
           case SRC_FOR:
-            if (!sp->jsprintf(" cond %u update %u tail %u",
-                              unsigned(GetSrcNoteOffset(sn, 0)),
-                              unsigned(GetSrcNoteOffset(sn, 1)),
-                              unsigned(GetSrcNoteOffset(sn, 2))))
+            if (!sp->jsprintf(" cond %u update %u backjump %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::For::CondOffset)),
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::For::UpdateOffset)),
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::For::BackJumpOffset))))
             {
                 return false;
             }
