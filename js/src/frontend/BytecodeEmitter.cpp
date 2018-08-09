@@ -35,6 +35,7 @@
 #include "frontend/SwitchEmitter.h"
 #include "frontend/TDZCheckCache.h"
 #include "frontend/TryEmitter.h"
+#include "frontend/WhileEmitter.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
@@ -5375,73 +5376,20 @@ BytecodeEmitter::emitDo(ParseNode* pn)
 bool
 BytecodeEmitter::emitWhile(ParseNode* pn)
 {
-    /*
-     * Minimize bytecodes issued for one or more iterations by jumping to
-     * the condition below the body and closing the loop if the condition
-     * is true with a backward branch. For iteration count i:
-     *
-     *  i    test at the top                 test at the bottom
-     *  =    ===============                 ==================
-     *  0    ifeq-pass                       goto; ifne-fail
-     *  1    ifeq-fail; goto; ifne-pass      goto; ifne-pass; ifne-fail
-     *  2    2*(ifeq-fail; goto); ifeq-pass  goto; 2*ifne-pass; ifne-fail
-     *  . . .
-     *  N    N*(ifeq-fail; goto); ifeq-pass  goto; N*ifne-pass; ifne-fail
-     */
-
-    // If we have a single-line while, like "while (x) ;", we want to
-    // emit the line note before the initial goto, so that the
-    // debugger sees a single entry point.  This way, if there is a
-    // breakpoint on the line, it will only fire once; and "next"ing
-    // will skip the whole loop.  However, for the multi-line case we
-    // want to emit the line note after the initial goto, so that
-    // "cont" stops on each iteration -- but without a stop before the
-    // first iteration.
-    if (parser->errorReporter().lineAt(pn->pn_pos.begin) ==
-        parser->errorReporter().lineAt(pn->pn_pos.end))
-    {
-        if (!updateSourceCoordNotes(pn->pn_pos.begin))
-            return false;
-    }
-
-    JumpTarget top{ -1 };
-    if (!emitJumpTarget(&top))
+    WhileEmitter wh(this);
+    if (!wh.emitBody(Some(pn->pn_pos.begin), getOffsetForLoop(pn->pn_right), Some(pn->pn_pos.end)))
         return false;
 
-    LoopControl loopInfo(this, StatementKind::WhileLoop);
-    loopInfo.setContinueTarget(top.offset);
-
-    unsigned noteIndex;
-    if (!newSrcNote(SRC_WHILE, &noteIndex))
+    if (!emitTree(pn->pn_right))
         return false;
 
-    if (!loopInfo.emitEntryJump(this))
+    if (!wh.emitCond(getOffsetForLoop(pn->pn_left)))
         return false;
 
-    if (!loopInfo.emitLoopHead(this, getOffsetForLoop(pn->pn_right)))
-        return false;
-
-    if (!emitTreeInBranch(pn->pn_right))
-        return false;
-
-    if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(pn->pn_left)))
-        return false;
     if (!emitTree(pn->pn_left))
         return false;
 
-    if (!loopInfo.emitLoopEnd(this, JSOP_IFNE))
-        return false;
-
-    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, loopInfo.headOffset(),
-                            loopInfo.breakTargetOffset()))
-    {
-        return false;
-    }
-
-    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
-        return false;
-
-    if (!loopInfo.patchBreaksAndContinues(this))
+    if (!wh.emitEnd())
         return false;
 
     return true;

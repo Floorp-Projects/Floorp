@@ -225,6 +225,7 @@ UNIFIED_SOURCES += [
     'frontend/TDZCheckCache.cpp',
     'frontend/TokenStream.cpp',
     'frontend/TryEmitter.cpp',
+    'frontend/WhileEmitter.cpp',
     'gc/Allocator.cpp',
     'gc/AtomMarking.cpp',
     'gc/Barrier.cpp',
