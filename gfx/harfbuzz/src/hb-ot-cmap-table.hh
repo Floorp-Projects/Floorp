@@ -37,6 +37,9 @@
  */
 #define HB_OT_TAG_cmap HB_TAG('c','m','a','p')
 
+#ifndef HB_MAX_UNICODE_CODEPOINT_VALUE
+#define HB_MAX_UNICODE_CODEPOINT_VALUE 0x10FFFF
+#endif
 
 namespace OT {
 
@@ -437,8 +440,10 @@ struct CmapSubtableLongSegmented
   {
     for (unsigned int i = 0; i < this->groups.len; i++) {
       hb_set_add_range (out,
-			this->groups[i].startCharCode,
-			this->groups[i].endCharCode);
+			MIN ((unsigned int) this->groups[i].startCharCode,
+			     (unsigned int) HB_MAX_UNICODE_CODEPOINT_VALUE),
+			MIN ((unsigned int) this->groups[i].endCharCode,
+			     (unsigned int) HB_MAX_UNICODE_CODEPOINT_VALUE));
     }
   }
 
@@ -800,37 +805,37 @@ struct cmap
   {
     hb_serialize_context_t c (dest, dest_sz);
 
-    OT::cmap *cmap = c.start_serialize<OT::cmap> ();
-    if (unlikely (!c.extend_min (*cmap)))
+    cmap *table = c.start_serialize<cmap> ();
+    if (unlikely (!c.extend_min (*table)))
     {
       return false;
     }
 
-    cmap->version.set (0);
+    table->version.set (0);
 
-    if (unlikely (!cmap->encodingRecord.serialize (&c, /* numTables */ 3)))
+    if (unlikely (!table->encodingRecord.serialize (&c, /* numTables */ 3)))
       return false;
 
     // TODO(grieger): Convert the below to a for loop
 
     // Format 4, Plat 0 Encoding Record
-    EncodingRecord &format4_plat0_rec = cmap->encodingRecord[0];
+    EncodingRecord &format4_plat0_rec = table->encodingRecord[0];
     format4_plat0_rec.platformID.set (0); // Unicode
     format4_plat0_rec.encodingID.set (3);
 
     // Format 4, Plat 3 Encoding Record
-    EncodingRecord &format4_plat3_rec = cmap->encodingRecord[1];
+    EncodingRecord &format4_plat3_rec = table->encodingRecord[1];
     format4_plat3_rec.platformID.set (3); // Windows
     format4_plat3_rec.encodingID.set (1); // Unicode BMP
 
     // Format 12 Encoding Record
-    EncodingRecord &format12_rec = cmap->encodingRecord[2];
+    EncodingRecord &format12_rec = table->encodingRecord[2];
     format12_rec.platformID.set (3); // Windows
     format12_rec.encodingID.set (10); // Unicode UCS-4
 
     // Write out format 4 sub table
     {
-      CmapSubtable &subtable = format4_plat0_rec.subtable.serialize (&c, cmap);
+      CmapSubtable &subtable = format4_plat0_rec.subtable.serialize (&c, table);
       format4_plat3_rec.subtable.set (format4_plat0_rec.subtable);
       subtable.u.format.set (4);
 
@@ -841,7 +846,7 @@ struct cmap
 
     // Write out format 12 sub table.
     {
-      CmapSubtable &subtable = format12_rec.subtable.serialize (&c, cmap);
+      CmapSubtable &subtable = format12_rec.subtable.serialize (&c, table);
       subtable.u.format.set (12);
 
       CmapSubtableFormat12 &format12 = subtable.u.format12;
@@ -894,57 +899,57 @@ struct cmap
   {
     inline void init (hb_face_t *face)
     {
-      this->blob = OT::Sanitizer<OT::cmap>().sanitize (face->reference_table (HB_OT_TAG_cmap));
-      const OT::cmap *cmap = this->blob->as<OT::cmap> ();
-      const OT::CmapSubtable *subtable = nullptr;
-      const OT::CmapSubtableFormat14 *subtable_uvs = nullptr;
+      this->blob = hb_sanitize_context_t().reference_table<cmap> (face);
+      const cmap *table = this->blob->as<cmap> ();
+      const CmapSubtable *subtable = nullptr;
+      const CmapSubtableFormat14 *subtable_uvs = nullptr;
 
       bool symbol = false;
       /* 32-bit subtables. */
-      if (!subtable) subtable = cmap->find_subtable (3, 10);
-      if (!subtable) subtable = cmap->find_subtable (0, 6);
-      if (!subtable) subtable = cmap->find_subtable (0, 4);
+      if (!subtable) subtable = table->find_subtable (3, 10);
+      if (!subtable) subtable = table->find_subtable (0, 6);
+      if (!subtable) subtable = table->find_subtable (0, 4);
       /* 16-bit subtables. */
-      if (!subtable) subtable = cmap->find_subtable (3, 1);
-      if (!subtable) subtable = cmap->find_subtable (0, 3);
-      if (!subtable) subtable = cmap->find_subtable (0, 2);
-      if (!subtable) subtable = cmap->find_subtable (0, 1);
-      if (!subtable) subtable = cmap->find_subtable (0, 0);
+      if (!subtable) subtable = table->find_subtable (3, 1);
+      if (!subtable) subtable = table->find_subtable (0, 3);
+      if (!subtable) subtable = table->find_subtable (0, 2);
+      if (!subtable) subtable = table->find_subtable (0, 1);
+      if (!subtable) subtable = table->find_subtable (0, 0);
       if (!subtable)
       {
-	subtable = cmap->find_subtable (3, 0);
+	subtable = table->find_subtable (3, 0);
 	if (subtable) symbol = true;
       }
       /* Meh. */
-      if (!subtable) subtable = &Null(OT::CmapSubtable);
+      if (!subtable) subtable = &Null(CmapSubtable);
 
       /* UVS subtable. */
       if (!subtable_uvs)
       {
-	const OT::CmapSubtable *st = cmap->find_subtable (0, 5);
+	const CmapSubtable *st = table->find_subtable (0, 5);
 	if (st && st->u.format == 14)
 	  subtable_uvs = &st->u.format14;
       }
       /* Meh. */
-      if (!subtable_uvs) subtable_uvs = &Null(OT::CmapSubtableFormat14);
+      if (!subtable_uvs) subtable_uvs = &Null(CmapSubtableFormat14);
 
       this->uvs_table = subtable_uvs;
 
       this->get_glyph_data = subtable;
       if (unlikely (symbol))
       {
-	this->get_glyph_func = get_glyph_from_symbol<OT::CmapSubtable>;
+	this->get_glyph_func = get_glyph_from_symbol<CmapSubtable>;
 	this->get_all_codepoints_func = null_get_all_codepoints_func;
       } else {
 	switch (subtable->u.format) {
 	/* Accelerate format 4 and format 12. */
 	default:
-	  this->get_glyph_func = get_glyph_from<OT::CmapSubtable>;
+	  this->get_glyph_func = get_glyph_from<CmapSubtable>;
 	  this->get_all_codepoints_func = null_get_all_codepoints_func;
 	  break;
 	case 12:
-	  this->get_glyph_func = get_glyph_from<OT::CmapSubtableFormat12>;
-	  this->get_all_codepoints_func = get_all_codepoints_from<OT::CmapSubtableFormat12>;
+	  this->get_glyph_func = get_glyph_from<CmapSubtableFormat12>;
+	  this->get_all_codepoints_func = get_all_codepoints_from<CmapSubtableFormat12>;
 	  break;
 	case  4:
 	  {
@@ -977,9 +982,9 @@ struct cmap
 						  variation_selector,
 						  glyph))
       {
-	case OT::GLYPH_VARIANT_NOT_FOUND:		return false;
-	case OT::GLYPH_VARIANT_FOUND:		return true;
-	case OT::GLYPH_VARIANT_USE_DEFAULT:	break;
+	case GLYPH_VARIANT_NOT_FOUND:	return false;
+	case GLYPH_VARIANT_FOUND:	return true;
+	case GLYPH_VARIANT_USE_DEFAULT:	break;
       }
 
       return get_nominal_glyph (unicode, glyph);
@@ -1046,9 +1051,9 @@ struct cmap
     const void *get_glyph_data;
     hb_cmap_get_all_codepoints_func_t get_all_codepoints_func;
 
-    OT::CmapSubtableFormat4::accelerator_t format4_accel;
+    CmapSubtableFormat4::accelerator_t format4_accel;
 
-    const OT::CmapSubtableFormat14 *uvs_table;
+    const CmapSubtableFormat14 *uvs_table;
     hb_blob_t *blob;
   };
 

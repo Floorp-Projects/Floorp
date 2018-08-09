@@ -48,7 +48,7 @@ typedef struct hb_graphite2_tablelist_t {
   unsigned int tag;
 } hb_graphite2_tablelist_t;
 
-struct hb_graphite2_shaper_face_data_t {
+struct hb_graphite2_face_data_t {
   hb_face_t *face;
   gr_face   *grface;
   hb_graphite2_tablelist_t *tlist;
@@ -56,7 +56,7 @@ struct hb_graphite2_shaper_face_data_t {
 
 static const void *hb_graphite2_get_table (const void *data, unsigned int tag, size_t *len)
 {
-  hb_graphite2_shaper_face_data_t *face_data = (hb_graphite2_shaper_face_data_t *) data;
+  hb_graphite2_face_data_t *face_data = (hb_graphite2_face_data_t *) data;
   hb_graphite2_tablelist_t *tlist = face_data->tlist;
 
   hb_blob_t *blob = nullptr;
@@ -93,7 +93,7 @@ retry:
   return d;
 }
 
-hb_graphite2_shaper_face_data_t *
+hb_graphite2_face_data_t *
 _hb_graphite2_shaper_face_data_create (hb_face_t *face)
 {
   hb_blob_t *silf_blob = face->reference_table (HB_GRAPHITE2_TAG_SILF);
@@ -106,7 +106,7 @@ _hb_graphite2_shaper_face_data_create (hb_face_t *face)
   }
   hb_blob_destroy (silf_blob);
 
-  hb_graphite2_shaper_face_data_t *data = (hb_graphite2_shaper_face_data_t *) calloc (1, sizeof (hb_graphite2_shaper_face_data_t));
+  hb_graphite2_face_data_t *data = (hb_graphite2_face_data_t *) calloc (1, sizeof (hb_graphite2_face_data_t));
   if (unlikely (!data))
     return nullptr;
 
@@ -122,7 +122,7 @@ _hb_graphite2_shaper_face_data_create (hb_face_t *face)
 }
 
 void
-_hb_graphite2_shaper_face_data_destroy (hb_graphite2_shaper_face_data_t *data)
+_hb_graphite2_shaper_face_data_destroy (hb_graphite2_face_data_t *data)
 {
   hb_graphite2_tablelist_t *tlist = data->tlist;
 
@@ -154,16 +154,16 @@ hb_graphite2_face_get_gr_face (hb_face_t *face)
  * shaper font data
  */
 
-struct hb_graphite2_shaper_font_data_t {};
+struct hb_graphite2_font_data_t {};
 
-hb_graphite2_shaper_font_data_t *
+hb_graphite2_font_data_t *
 _hb_graphite2_shaper_font_data_create (hb_font_t *font HB_UNUSED)
 {
-  return (hb_graphite2_shaper_font_data_t *) HB_SHAPER_DATA_SUCCEEDED;
+  return (hb_graphite2_font_data_t *) HB_SHAPER_DATA_SUCCEEDED;
 }
 
 void
-_hb_graphite2_shaper_font_data_destroy (hb_graphite2_shaper_font_data_t *data HB_UNUSED)
+_hb_graphite2_shaper_font_data_destroy (hb_graphite2_font_data_t *data HB_UNUSED)
 {
 }
 
@@ -181,20 +181,20 @@ hb_graphite2_font_get_gr_font (hb_font_t *font)
  * shaper shape_plan data
  */
 
-struct hb_graphite2_shaper_shape_plan_data_t {};
+struct hb_graphite2_shape_plan_data_t {};
 
-hb_graphite2_shaper_shape_plan_data_t *
+hb_graphite2_shape_plan_data_t *
 _hb_graphite2_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan HB_UNUSED,
 					     const hb_feature_t *user_features HB_UNUSED,
 					     unsigned int        num_user_features HB_UNUSED,
 					     const int          *coords HB_UNUSED,
 					     unsigned int        num_coords HB_UNUSED)
 {
-  return (hb_graphite2_shaper_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
+  return (hb_graphite2_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
 }
 
 void
-_hb_graphite2_shaper_shape_plan_data_destroy (hb_graphite2_shaper_shape_plan_data_t *data HB_UNUSED)
+_hb_graphite2_shaper_shape_plan_data_destroy (hb_graphite2_shape_plan_data_t *data HB_UNUSED)
 {
 }
 

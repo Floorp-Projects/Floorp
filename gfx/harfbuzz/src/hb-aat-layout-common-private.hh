@@ -161,7 +161,7 @@ struct LookupFormat0
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (arrayZ.sanitize (c, c->num_glyphs));
+    return_trace (arrayZ.sanitize (c, c->get_num_glyphs ()));
   }
 
   protected:
@@ -625,7 +625,7 @@ struct hb_aat_apply_context_t :
 		sanitizer (), lookup_index (0), debug_depth (0)
   {
     sanitizer.init (table);
-    sanitizer.num_glyphs = face->get_num_glyphs ();
+    sanitizer.set_num_glyphs (face->get_num_glyphs ());
     sanitizer.start_processing ();
   }
 

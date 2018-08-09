@@ -157,8 +157,6 @@ hb_map_allocation_successful (const hb_map_t  *map)
  *
  *
  *
- * Return value:
- *
  * Since: 1.7.7
  **/
 void
@@ -188,7 +186,7 @@ hb_map_get (const hb_map_t *map,
 /**
  * hb_map_del:
  * @map: a map.
- * @codepoint:
+ * @key:
  *
  *
  *
@@ -204,7 +202,7 @@ hb_map_del (hb_map_t       *map,
 /**
  * hb_map_has:
  * @map: a map.
- * @codepoint:
+ * @key:
  *
  *
  *

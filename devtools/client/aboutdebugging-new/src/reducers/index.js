@@ -5,8 +5,10 @@
 "use strict";
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
+const { runtimeReducer } = require("./runtime-state");
 const { uiReducer } = require("./ui-state");
 
 module.exports = combineReducers({
+  runtime: runtimeReducer,
   ui: uiReducer
 });

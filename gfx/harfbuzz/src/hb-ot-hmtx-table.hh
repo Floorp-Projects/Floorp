@@ -69,7 +69,7 @@ struct hmtxvmtx
   inline bool subset_update_header (hb_subset_plan_t *plan,
                                     unsigned int num_hmetrics) const
   {
-    hb_blob_t *src_blob = OT::Sanitizer<H> ().sanitize (plan->source->reference_table (H::tableTag));
+    hb_blob_t *src_blob = hb_sanitize_context_t().reference_table<H> (plan->source, H::tableTag);
     hb_blob_t *dest_blob = hb_blob_copy_writable_or_fail(src_blob);
     hb_blob_destroy (src_blob);
 
@@ -195,7 +195,7 @@ struct hmtxvmtx
       bool got_font_extents = false;
       if (T::os2Tag)
       {
-	hb_blob_t *os2_blob = Sanitizer<os2> ().sanitize (face->reference_table (T::os2Tag));
+	hb_blob_t *os2_blob = hb_sanitize_context_t().reference_table<os2> (face);
 	const os2 *os2_table = os2_blob->as<os2> ();
 #define USE_TYPO_METRICS (1u<<7)
 	if (0 != (os2_table->fsSelection & USE_TYPO_METRICS))
@@ -208,7 +208,7 @@ struct hmtxvmtx
 	hb_blob_destroy (os2_blob);
       }
 
-      hb_blob_t *_hea_blob = Sanitizer<H> ().sanitize (face->reference_table (H::tableTag));
+      hb_blob_t *_hea_blob = hb_sanitize_context_t().reference_table<H> (face);
       const H *_hea_table = _hea_blob->as<H> ();
       num_advances = _hea_table->numberOfLongMetrics;
       if (!got_font_extents)
@@ -222,7 +222,7 @@ struct hmtxvmtx
 
       has_font_extents = got_font_extents;
 
-      blob = Sanitizer<hmtxvmtx> ().sanitize (face->reference_table (T::tableTag));
+      blob = hb_sanitize_context_t().reference_table<hmtxvmtx> (face, T::tableTag);
 
       /* Cap num_metrics() and num_advances() based on table length. */
       unsigned int len = hb_blob_get_length (blob);
@@ -240,7 +240,7 @@ struct hmtxvmtx
       }
       table = blob->as<hmtxvmtx> ();
 
-      var_blob = Sanitizer<HVARVVAR> ().sanitize (face->reference_table (T::variationsTag));
+      var_blob = hb_sanitize_context_t().reference_table<HVARVVAR> (face, T::variationsTag);
       var_table = var_blob->as<HVARVVAR> ();
     }
 

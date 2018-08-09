@@ -362,7 +362,7 @@ struct kern
   {
     inline void init (hb_face_t *face)
     {
-      blob = Sanitizer<kern>().sanitize (face->reference_table (HB_OT_TAG_kern));
+      blob = hb_sanitize_context_t().reference_table<kern> (face);
       table = blob->as<kern> ();
       table_length = blob->length;
     }
