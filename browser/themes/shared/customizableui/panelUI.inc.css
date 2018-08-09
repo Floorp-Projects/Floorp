@@ -109,6 +109,11 @@
   stroke: transparent;
 }
 
+.cui-widget-panel,
+#widget-overflow {
+  font: menu;
+}
+
 panelview {
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
@@ -908,7 +913,6 @@ panelview .toolbarbutton-1,
 }
 
 .panel-banner-item > .toolbarbutton-multiline-text {
-  font: menu;
   margin: 0;
   padding: 0;
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
@@ -946,15 +950,6 @@ panelview .toolbarbutton-1,
 .subviewbutton > .menu-accel-container > .menu-iconic-accel,
 .subviewbutton > .menu-accel-container > .menu-accel {
   margin-inline-end: 0 !important; /* to override menu.css on Windows */
-}
-
-#widget-overflow-fixed-list .toolbarbutton-1 > .toolbarbutton-text,
-#widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text,
-.addon-banner-item,
-.subviewbutton,
-.subviewbutton-nav,
-.subview-subheader {
-  font: menu;
 }
 
 .subviewbutton[shortcut]::after {
@@ -1004,12 +999,6 @@ panelview .toolbarbutton-1,
   transform: translateY(2px) scaleX(.75);
 }
 
-/* This is a <label> but it should fit in with the menu font- and colorwise. */
-#PanelUI-characterEncodingView-autodetect-label {
-  font: menu;
-  color: inherit;
-}
-
 .subviewbutton[checked="true"] {
   list-style-image: url(chrome://browser/skin/check.svg);
   -moz-context-properties: fill;
@@ -1027,7 +1016,6 @@ panelview .toolbarbutton-1,
 
 panelmultiview .toolbaritem-combined-buttons > label {
   -moz-box-flex: 1;
-  font: menu;
   margin: 0;
   padding: 4px 0px;
 }
@@ -1086,7 +1074,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
 }
 
 .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
-  font-size: 1em;
   padding-inline-start: 0;
 }
 
