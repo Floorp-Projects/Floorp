@@ -2764,8 +2764,11 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
 
           case SRC_WHILE:
-            if (!sp->jsprintf(" offset %u", unsigned(GetSrcNoteOffset(sn, 0))))
+            if (!sp->jsprintf(" offset %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::While::BackJumpOffset))))
+            {
                 return false;
+            }
             break;
 
           case SRC_NEXTCASE:
