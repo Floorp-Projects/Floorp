@@ -12,6 +12,7 @@ DevToolsModules(
     'config-view.js',
     'project-list.js',
     'runtime-list.js',
+    'runtime-types.js',
     'runtimes.js',
     'tab-store.js',
     'utils.js'
