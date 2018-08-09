@@ -53,6 +53,8 @@ inline bool IsLowerCase(uint32_t c) {
 class nsCaseInsensitiveStringComparator : public nsStringComparator
 {
 public:
+  nsCaseInsensitiveStringComparator() = default;
+
   virtual int32_t operator() (const char16_t*,
                               const char16_t*,
                               uint32_t,
