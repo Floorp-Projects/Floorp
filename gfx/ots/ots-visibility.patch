@@ -1,7 +1,8 @@
 diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-sanitiser.h
 --- a/gfx/ots/include/opentype-sanitiser.h
 +++ b/gfx/ots/include/opentype-sanitiser.h
-@@ -5,6 +5,26 @@
+@@ -4,8 +4,28 @@
+ 
  #ifndef OPENTYPE_SANITISER_H_
  #define OPENTYPE_SANITISER_H_
  
@@ -28,7 +29,9 @@ diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-san
  #if defined(_WIN32)
  #include <stdlib.h>
  typedef signed char int8_t;
-@@ -161,7 +181,7 @@ enum TableAction {
+ typedef unsigned char uint8_t;
+@@ -164,9 +184,9 @@ enum TableAction {
+   TABLE_ACTION_PASSTHRU, // Serialize the table unchanged
    TABLE_ACTION_DROP      // Drop the table
  };
  
@@ -37,3 +40,4 @@ diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-san
    public:
      OTSContext() {}
      virtual ~OTSContext() {}
+ 

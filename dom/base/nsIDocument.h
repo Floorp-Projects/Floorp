@@ -15,6 +15,7 @@
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIContentViewer.h"
+#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroup.h"                // for member (in nsCOMPtr)
@@ -3324,6 +3325,7 @@ public:
 
   mozilla::dom::Promise* GetDocumentReadyForIdle(mozilla::ErrorResult& aRv);
 
+  nsIDOMXULCommandDispatcher* GetCommandDispatcher();
   already_AddRefed<nsINode> GetPopupNode();
   void SetPopupNode(nsINode* aNode);
   nsINode* GetPopupRangeParent(ErrorResult& aRv);
@@ -4497,6 +4499,8 @@ protected:
 
   // Count of unload/beforeunload/pagehide operations in progress.
   uint32_t mIgnoreOpensDuringUnloadCounter;
+
+  nsCOMPtr<nsIDOMXULCommandDispatcher> mCommandDispatcher; // [OWNER] of the focus tracker
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

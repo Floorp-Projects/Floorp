@@ -920,8 +920,9 @@ SyncServer.prototype = {
    */
   respond: function respond(req, resp, code, status, body, headers) {
     resp.setStatusLine(req.httpVersion, code, status);
-    if (!headers)
+    if (!headers) {
       headers = this.defaultHeaders;
+    }
     for (let header in headers) {
       let value = headers[header];
       resp.setHeader(header, value);

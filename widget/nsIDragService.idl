@@ -7,7 +7,6 @@
 #include "nsIArray.idl"
 #include "nsISupports.idl"
 #include "nsIDragSession.idl"
-#include "nsIScriptableRegion.idl"
 #include "nsIContentPolicy.idl"
 
 webidl DragEvent;
@@ -46,8 +45,6 @@ interface nsIDragService : nsISupports
     * @param  aPrincipalURISpec - the URI of the triggering principal of the
     *            drag, or an empty string if it's from browser chrome or OS
     * @param  aTransferables - an array of transferables to be dragged
-    * @param  aRegion - a region containing rectangles for cursor feedback, 
-    *            in window coordinates.
     * @param  aActionType - specified which of copy/move/link are allowed
     * @param  aContentPolicyType - the contentPolicyType that will be
     *           passed to the loadInfo when creating a new channel
@@ -55,8 +52,7 @@ interface nsIDragService : nsISupports
     */
   void invokeDragSession (in Node aDOMNode,
                           in AUTF8String aPrincipalURISpec,
-                          in nsIArray aTransferables, 
-                          in nsIScriptableRegion aRegion,
+                          in nsIArray aTransferables,
                           in unsigned long aActionType,
                           [optional] in nsContentPolicyType aContentPolicyType);
 
@@ -91,7 +87,6 @@ interface nsIDragService : nsISupports
   void invokeDragSessionWithImage(in Node aDOMNode,
                                   in AUTF8String aPrincipalURISpec,
                                   in nsIArray aTransferableArray,
-                                  in nsIScriptableRegion aRegion,
                                   in unsigned long aActionType,
                                   in Node aImage,
                                   in long aImageX,

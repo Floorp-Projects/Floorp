@@ -61,13 +61,12 @@ public:
 
     // nsBaseDragService
     virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
-                                           nsIScriptableRegion* aRegion,
+                                           const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                                            uint32_t aActionType) override;
     // nsIDragService
     NS_IMETHOD InvokeDragSession (nsINode *aDOMNode,
                                   const nsACString& aPrincipalURISpec,
                                   nsIArray * anArrayTransferables,
-                                  nsIScriptableRegion * aRegion,
                                   uint32_t aActionType,
                                   nsContentPolicyType aContentPolicyType) override;
     NS_IMETHOD StartDragSession() override;
@@ -208,8 +207,6 @@ private:
     GtkWidget     *mHiddenWidget;
     // our source data items
     nsCOMPtr<nsIArray> mSourceDataItems;
-
-    nsCOMPtr<nsIScriptableRegion> mSourceRegion;
 
     // get a list of the sources in gtk's format
     GtkTargetList *GetSourceList(void);

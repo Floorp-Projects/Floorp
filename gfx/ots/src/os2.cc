@@ -152,7 +152,7 @@ bool OpenTypeOS2::Parse(const uint8_t *data, size_t length) {
   if ((this->table.version < 4) &&
       (this->table.selection & 0x300)) {
     // bit 8 and 9 must be unset in OS/2 table versions less than 4.
-    Warning("fSelection bits 8 and 9 must be unset for table version %d",
+    Warning("fsSelection bits 8 and 9 must be unset for table version %d",
             this->table.version);
   }
 

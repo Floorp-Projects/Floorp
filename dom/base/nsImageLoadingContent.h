@@ -24,6 +24,7 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/net/ReferrerPolicy.h"
+#include "nsAttrValue.h"
 
 class nsIURI;
 class nsIDocument;
@@ -79,6 +80,11 @@ public:
   void ForceReload(bool aNotify, mozilla::ErrorResult& aError);
 
   mozilla::dom::Element* FindImageMap();
+
+  /**
+   * Toggle whether or not to synchronously decode an image on draw.
+   */
+  void SetSyncDecodingHint(bool aHint);
 
 protected:
   enum ImageLoadType {
@@ -227,6 +233,15 @@ protected:
   // Get ourselves as an nsIContent*.  Not const because some of the callers
   // want a non-const nsIContent.
   virtual nsIContent* AsContent() = 0;
+
+  enum class ImageDecodingType : uint8_t {
+    Auto,
+    Async,
+    Sync,
+  };
+
+  static const nsAttrValue::EnumTable kDecodingTable[];
+  static const nsAttrValue::EnumTable* kDecodingTableDefault;
 
 private:
   /**
@@ -444,6 +459,19 @@ private:
   void MakePendingScriptedRequestsCurrent();
 
   /**
+   * Depending on the configured decoding hint, and/or how recently we updated
+   * the image request, force or stop the frame from decoding the image
+   * synchronously when it is drawn.
+   * @param aPrepareNextRequest True if this is when updating the image request.
+   * @param aFrame If called from FrameCreated the frame passed to FrameCreated.
+   *               This is our frame, but at the time of the FrameCreated call
+   *               our primary frame pointer hasn't been set yet, so this is
+   *               only way to get our frame.
+   */
+  void MaybeForceSyncDecoding(bool aPrepareNextRequest,
+                              nsIFrame* aFrame = nullptr);
+
+  /**
    * Typically we will have only one observer (our frame in the screen
    * prescontext), so we want to only make space for one and to
    * heap-allocate anything past that (saves memory and malloc churn
@@ -522,6 +550,9 @@ private:
   //
   // Also we use this variable to check if some evil code is reentering LoadImage.
   bool mIsStartingImageLoad;
+
+  // If true, force frames to synchronously decode images on draw.
+  bool mSyncDecodingHint;
 };
 
 #endif // nsImageLoadingContent_h__

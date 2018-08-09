@@ -1162,7 +1162,7 @@ public:
    */
   virtual already_AddRefed<mozilla::gfx::SourceSurface>
   RenderNode(nsINode* aNode,
-             nsIntRegion* aRegion,
+             const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
              const mozilla::LayoutDeviceIntPoint aPoint,
              mozilla::LayoutDeviceIntRect* aScreenRect,
              uint32_t aFlags) = 0;

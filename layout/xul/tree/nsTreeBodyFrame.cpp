@@ -63,7 +63,6 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "mozilla/dom/TreeColumnBinding.h"
-#include "nsIScriptableRegion.h"
 #include <algorithm>
 #include "ScrollbarActivity.h"
 
@@ -568,26 +567,23 @@ nsTreeBodyFrame::GetHorizontalPosition() const
   return nsPresContext::AppUnitsToIntCSSPixels(mHorzPosition);
 }
 
-nsresult
-nsTreeBodyFrame::GetSelectionRegion(nsIScriptableRegion **aRegion)
+Maybe<CSSIntRegion>
+nsTreeBodyFrame::GetSelectionRegion()
 {
-  *aRegion = nullptr;
-
   nsCOMPtr<nsITreeSelection> selection;
   mView->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_TRUE(selection, NS_OK);
+  if (!selection) {
+    return Nothing();
+  }
 
-  // XXXbz should we just construct as |new ScriptableRegion()|
-  // instead, and make this method return void?
-  nsCOMPtr<nsIScriptableRegion> region = do_CreateInstance("@mozilla.org/gfx/region;1");
-  NS_ENSURE_TRUE(region, NS_ERROR_FAILURE);
-  region->Init();
 
   RefPtr<nsPresContext> presContext = PresContext();
   nsIntRect rect = mRect.ToOutsidePixels(presContext->AppUnitsPerCSSPixel());
 
   nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
   nsPoint origin = GetOffsetTo(rootFrame);
+
+  CSSIntRegion region;
 
   // iterate through the visible rows and add the selected ones to the
   // drag region
@@ -599,16 +595,16 @@ nsTreeBodyFrame::GetSelectionRegion(nsIScriptableRegion **aRegion)
   for (int32_t i = mTopRowIndex; i <= end; i++) {
     bool isSelected;
     selection->IsSelected(i, &isSelected);
-    if (isSelected)
-      region->UnionRect(x, y, rect.width, rowHeight);
+    if (isSelected) {
+      region.OrWith(CSSIntRect(x, y, rect.width, rowHeight));
+    }
     y += rowHeight;
   }
 
   // clip to the tree boundary in case one row extends past it
-  region->IntersectRect(x, top, rect.width, rect.height);
+  region.AndWith(CSSIntRect(x, top, rect.width, rect.height));
 
-  region.forget(aRegion);
-  return NS_OK;
+  return Some(region);
 }
 
 nsresult

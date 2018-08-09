@@ -114,6 +114,12 @@ SVGImageElement::Href()
          : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
+void
+SVGImageElement::GetDecoding(nsAString& aValue)
+{
+  GetEnumAttr(nsGkAtoms::decoding, kDecodingTableDefault->tag, aValue);
+}
+
 //----------------------------------------------------------------------
 
 nsresult
@@ -152,6 +158,24 @@ SVGImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
 //----------------------------------------------------------------------
 // nsIContent methods:
 
+bool
+SVGImageElement::ParseAttribute(int32_t aNamespaceID,
+                                 nsAtom* aAttribute,
+                                 const nsAString& aValue,
+                                 nsIPrincipal* aMaybeScriptedPrincipal,
+                                 nsAttrValue& aResult)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::decoding) {
+      return aResult.ParseEnumValue(aValue, kDecodingTable, false,
+                                    kDecodingTableDefault);
+    }
+  }
+
+  return SVGImageElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                             aMaybeScriptedPrincipal, aResult);
+}
+
 nsresult
 SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
@@ -168,6 +192,12 @@ SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     } else {
       CancelImageRequests(aNotify);
     }
+  } else if (aName == nsGkAtoms::decoding &&
+             aNamespaceID == kNameSpaceID_None) {
+    // Request sync or async image decoding.
+    SetSyncDecodingHint(aValue &&
+                        static_cast<ImageDecodingType>(aValue->GetEnumValue())
+                          == ImageDecodingType::Sync);
   }
   return SVGImageElementBase::AfterSetAttr(aNamespaceID, aName,
                                            aValue, aOldValue,

@@ -6,8 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsITreeView;
-interface nsITreeSelection;
-interface nsIScriptableRegion;
 
 webidl Element;
 webidl TreeColumn;

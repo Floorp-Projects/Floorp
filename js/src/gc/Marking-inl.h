@@ -40,13 +40,12 @@ template <typename T>
 inline bool
 IsForwarded(const T* t)
 {
-    const RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
     if (!MightBeForwarded<T>::value) {
-        MOZ_ASSERT(!overlay->isForwarded());
+        MOZ_ASSERT(!t->isForwarded());
         return false;
     }
 
-    return overlay->isForwarded();
+    return t->isForwarded();
 }
 
 struct IsForwardedFunctor : public BoolDefaultAdaptor<Value, false> {
@@ -93,16 +92,14 @@ inline void
 RelocationOverlay::forwardTo(Cell* cell)
 {
     MOZ_ASSERT(!isForwarded());
-    // The location of magic_ is important because it must never be valid to see
-    // the value Relocated there in a GC thing that has not been moved.
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSObject, group_) + sizeof(uint32_t),
-                  "RelocationOverlay::magic_ is in the wrong location");
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(js::Shape, base_) + sizeof(uint32_t),
-                  "RelocationOverlay::magic_ is in the wrong location");
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.length),
-                  "RelocationOverlay::magic_ is in the wrong location");
-    magic_ = Relocated;
-    newLocation_ = cell;
+
+    // Preserve old flags because nursery may check them before checking
+    // if this is a forwarded Cell.
+    //
+    // This is pretty terrible and we should find a better way to implement
+    // Cell::getTrackKind() that doesn't rely on this behavior.
+    uintptr_t gcFlags = dataWithTag_ & Cell::RESERVED_MASK;
+    dataWithTag_ = uintptr_t(cell) | gcFlags | Cell::FORWARD_BIT;
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -111,7 +108,7 @@ template <typename T>
 inline bool
 IsGCThingValidAfterMovingGC(T* t)
 {
-    return !IsInsideNursery(t) && !RelocationOverlay::isCellForwarded(t);
+    return !IsInsideNursery(t) && !t->isForwarded();
 }
 
 template <typename T>

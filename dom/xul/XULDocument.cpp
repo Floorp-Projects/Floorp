@@ -47,7 +47,6 @@
 #include "nsString.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
-#include "nsXULCommandDispatcher.h"
 #include "nsXULElement.h"
 #include "nsXULPrototypeCache.h"
 #include "mozilla/Logging.h"
@@ -235,14 +234,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULDocument, XMLDocument)
     // XXX tmp->mContextStack?
 
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentPrototype)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypes)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStore)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULDocument, XMLDocument)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStore)
     //XXX We should probably unlink all the objects we traverse.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -1019,16 +1016,7 @@ XULDocument::AddElementToDocumentPre(Element* aElement)
         AddToIdTable(aElement, id);
     }
 
-    // 2. If the element is a 'command updater' (i.e., has a
-    // "commandupdater='true'" attribute), then add the element to the
-    // document's command dispatcher
-    if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::commandupdater,
-                              nsGkAtoms::_true, eCaseMatters)) {
-        rv = nsXULContentUtils::SetCommandUpdater(this, aElement);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // 3. Check for a broadcaster hookup attribute, in which case
+    // 2. Check for a broadcaster hookup attribute, in which case
     // we'll hook the node up as a listener on a broadcaster.
     bool listener, resolved;
     rv = CheckBroadcasterHookup(aElement, &listener, &resolved);
@@ -1106,7 +1094,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
         nsXBLService::DetachGlobalKeyHandler(aElement);
     }
 
-    // 1. Remove any children from the document.
+    // Remove any children from the document.
     for (nsIContent* child = aElement->GetLastChild();
          child;
          child = child->GetPreviousSibling()) {
@@ -1125,15 +1113,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
         RemoveFromIdTable(aElement, id);
     }
 
-    // 3. If the element is a 'command updater', then remove the
-    // element from the document's command dispatcher.
-    if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::commandupdater,
-                              nsGkAtoms::_true, eCaseMatters)) {
-        rv = mCommandDispatcher->RemoveCommandUpdater(aElement);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // 4. Remove the element from our broadcaster map, since it is no longer
+    // Remove the element from our broadcaster map, since it is no longer
     // in the document.
     nsCOMPtr<Element> broadcaster, listener;
     nsAutoString attribute, broadcasterID;
@@ -1170,9 +1150,6 @@ XULDocument::Init()
 {
     nsresult rv = XMLDocument::Init();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Create our command dispatcher and hook it up.
-    mCommandDispatcher = new nsXULCommandDispatcher(this);
 
     if (gRefCnt++ == 0) {
         // ensure that the XUL prototype cache is instantiated successfully,
