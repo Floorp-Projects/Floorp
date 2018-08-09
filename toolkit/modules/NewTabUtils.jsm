@@ -10,6 +10,12 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["btoa", "URL"]);
 
+const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
+const {
+    SEARCH_SHORTCUTS_EXPERIMENT,
+    getSearchProvider
+} = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm", {});
+
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -1168,6 +1174,16 @@ var ActivityStreamProvider = {
         combiner(link, other);
       }
       map.set(host, link);
+    }
+
+    // Convert all links that are supposed to be a seach shortcut to its canonical URL
+    if (Services.prefs.getBoolPref(`browser.newtabpage.activity-stream.${SEARCH_SHORTCUTS_EXPERIMENT}`)) {
+      links.forEach(link => {
+        let searchProvider = getSearchProvider(shortURL(link));
+        if (searchProvider) {
+          link.url = searchProvider.url;
+        }
+      });
     }
 
     // Remove any blocked links.
