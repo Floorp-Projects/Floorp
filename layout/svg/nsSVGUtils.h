@@ -161,19 +161,6 @@ private:
 };
 
 
-#define NS_ISVGFILTERREFERENCE_IID \
-{ 0x9744ee20, 0x1bcf, 0x4c62, \
- { 0x86, 0x7d, 0xd3, 0x7a, 0x91, 0x60, 0x3e, 0xef } }
-
-class nsISVGFilterReference : public nsISupports
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGFILTERREFERENCE_IID)
-  virtual void Invalidate() = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterReference, NS_ISVGFILTERREFERENCE_IID)
-
 /**
  * General functions used by all of SVG layout and possibly content code.
  * If a method is used by content and depends only on other content methods
