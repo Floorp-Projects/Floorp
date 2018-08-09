@@ -286,6 +286,31 @@ class Bootstrapper(object):
         state_dir_available = os.path.exists(state_dir)
         return state_dir_available, state_dir
 
+    def maybe_install_private_packages_or_exit(self, state_dir,
+                                               state_dir_available,
+                                               have_clone,
+                                               checkout_root):
+        # Install the clang packages needed for developing stylo, as well
+        # as the version of NodeJS that we currently support.
+        if not self.instance.no_interactive:
+            # The best place to install our packages is in the state directory
+            # we have.  If the user doesn't have one, we need them to re-run
+            # bootstrap and create the directory.
+            #
+            # XXX Android bootstrap just assumes the existence of the state
+            # directory and writes the NDK into it.  Should we do the same?
+            if not state_dir_available:
+                print(STYLO_NODEJS_DIRECTORY_MESSAGE.format(statedir=state_dir))
+                sys.exit(1)
+
+            if not have_clone:
+                print(STYLE_NODEJS_REQUIRES_CLONE)
+                sys.exit(1)
+
+            self.instance.state_dir = state_dir
+            self.instance.ensure_stylo_packages(state_dir, checkout_root)
+            self.instance.ensure_node_packages(state_dir, checkout_root)
+
     def bootstrap(self):
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
@@ -346,26 +371,10 @@ class Bootstrapper(object):
         if not have_clone:
             print(SOURCE_ADVERTISE)
 
-        # Install the clang packages needed for developing stylo, as well
-        # as the version of NodeJS that we currently support.
-        if not self.instance.no_interactive:
-            # The best place to install our packages is in the state directory
-            # we have.  If the user doesn't have one, we need them to re-run
-            # bootstrap and create the directory.
-            #
-            # XXX Android bootstrap just assumes the existence of the state
-            # directory and writes the NDK into it.  Should we do the same?
-            if not state_dir_available:
-                print(STYLO_NODEJS_DIRECTORY_MESSAGE.format(statedir=state_dir))
-                sys.exit(1)
-
-            if not have_clone:
-                print(STYLE_NODEJS_REQUIRES_CLONE)
-                sys.exit(1)
-
-            self.instance.state_dir = state_dir
-            self.instance.ensure_stylo_packages(state_dir, checkout_root)
-            self.instance.ensure_node_packages(state_dir, checkout_root)
+        self.maybe_install_private_packages_or_exit(state_dir,
+                                                    state_dir_available,
+                                                    have_clone,
+                                                    checkout_root)
 
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc')
