@@ -1008,6 +1008,12 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
+  "media.media-capabilities.screen.enabled",
+   MediaCapabilitiesScreenEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
   "media.benchmark.vp9.fps",
    MediaBenchmarkVp9Fps,
   RelaxedAtomicUint32, 0
