@@ -1636,17 +1636,6 @@ public:
     return table;
   }
 
-  static Entry* maybeCreateTable(AllocPolicy& aAllocPolicy, uint32_t aCapacity)
-  {
-    Entry* table = aAllocPolicy.template maybe_pod_malloc<Entry>(aCapacity);
-    if (table) {
-      for (uint32_t i = 0; i < aCapacity; i++) {
-        new (&table[i]) Entry();
-      }
-    }
-    return table;
-  }
-
   static void destroyTable(AllocPolicy& aAllocPolicy,
                            Entry* aOldTable,
                            uint32_t aCapacity)
