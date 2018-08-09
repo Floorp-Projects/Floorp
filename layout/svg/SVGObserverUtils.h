@@ -129,18 +129,18 @@ protected:
  * element IDs change). The code here is responsible for that.
  *
  * When a frame references a supporting resource, we create a property
- * object derived from nsSVGIDRenderingObserver to manage the relationship. The
+ * object derived from SVGIDRenderingObserver to manage the relationship. The
  * property object is attached to the referencing frame.
  */
-class nsSVGIDRenderingObserver : public SVGRenderingObserver
+class SVGIDRenderingObserver : public SVGRenderingObserver
 {
 public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::IDTracker IDTracker;
 
-  nsSVGIDRenderingObserver(nsIURI* aURI, nsIContent* aObservingContent,
+  SVGIDRenderingObserver(nsIURI* aURI, nsIContent* aObservingContent,
                          bool aReferenceImage);
-  virtual ~nsSVGIDRenderingObserver();
+  virtual ~SVGIDRenderingObserver();
 
 protected:
   Element* GetTarget() override { return mObservedElementTracker.get(); }
@@ -155,7 +155,7 @@ protected:
   class ElementTracker final : public IDTracker
   {
   public:
-    explicit ElementTracker(nsSVGIDRenderingObserver* aOwningObserver)
+    explicit ElementTracker(SVGIDRenderingObserver* aOwningObserver)
       : mOwningObserver(aOwningObserver)
     {}
   protected:
@@ -171,7 +171,7 @@ protected:
      */
     virtual bool IsPersistent() override { return true; }
   private:
-    nsSVGIDRenderingObserver* mOwningObserver;
+    SVGIDRenderingObserver* mOwningObserver;
   };
 
   ElementTracker mObservedElementTracker;
@@ -203,14 +203,14 @@ private:
   nsIPresShell *mFramePresShell;
 };
 
-class nsSVGRenderingObserverProperty : public nsSVGIDRenderingObserver
+class nsSVGRenderingObserverProperty : public SVGIDRenderingObserver
 {
 public:
   NS_DECL_ISUPPORTS
 
   nsSVGRenderingObserverProperty(nsIURI* aURI, nsIFrame *aFrame,
                                  bool aReferenceImage)
-    : nsSVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage)
+    : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage)
     , mFrameReference(aFrame)
   {}
 
@@ -234,14 +234,14 @@ protected:
  *
  * The nsSVGFilterChainObserver class manages a list of nsSVGFilterReferences.
  */
-class nsSVGFilterReference final : public nsSVGIDRenderingObserver
+class nsSVGFilterReference final : public SVGIDRenderingObserver
                                  , public nsISVGFilterReference
 {
 public:
   nsSVGFilterReference(nsIURI* aURI,
                        nsIContent* aObservingContent,
                        nsSVGFilterChainObserver* aFilterChainObserver)
-    : nsSVGIDRenderingObserver(aURI, aObservingContent, false)
+    : SVGIDRenderingObserver(aURI, aObservingContent, false)
     , mFilterChainObserver(aFilterChainObserver)
   {
   }
@@ -257,7 +257,7 @@ public:
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSVGFilterReference, nsSVGIDRenderingObserver)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSVGFilterReference, SVGIDRenderingObserver)
 
   // nsISVGFilterReference
   virtual void Invalidate() override { OnRenderingChange(); };
@@ -265,7 +265,7 @@ public:
 protected:
   virtual ~nsSVGFilterReference() {}
 
-  // nsSVGIDRenderingObserver
+  // SVGIDRenderingObserver
   virtual void OnRenderingChange() override;
 
 private:
