@@ -797,15 +797,12 @@
 }
 
 .all-tabs-item[selected] {
+  font-weight: bold;
   box-shadow: inset 4px 0 var(--blue-40);
 }
 
 .all-tabs-item[selected]:-moz-locale-dir(rtl) {
   box-shadow: inset -4px 0 var(--blue-40);
-}
-
-.all-tabs-item[selected] > .all-tabs-button {
-  font-weight: bold;
 }
 
 .all-tabs-button {
