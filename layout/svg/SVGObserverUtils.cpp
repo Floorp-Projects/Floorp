@@ -230,8 +230,15 @@ nsSVGRenderingObserverProperty::OnRenderingChange()
   }
 }
 
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGFilterReference)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGFilterReference)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterReference)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsSVGFilterReference)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGFilterReference)
 
@@ -243,12 +250,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterReference)
   tmp->StopObserving();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservedElementTracker);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, SVGIDRenderingObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISVGFilterReference)
-NS_INTERFACE_MAP_END
 
 nsSVGFilterFrame *
 nsSVGFilterReference::GetFilterFrame()
