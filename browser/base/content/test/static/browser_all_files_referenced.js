@@ -163,6 +163,8 @@ var whitelist = [
   // Bug 1463225 (on Mac this is only used by a test)
   {file: "chrome://global/content/bindings/toolbar.xml",
    platforms: ["macosx"]},
+  // Bug 1483277 (temporarily unreferenced)
+  {file: "chrome://browser/content/browser.xhtml"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>
