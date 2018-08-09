@@ -1,11 +1,11 @@
 # 468496-1 will also detect bugs in video drivers.
 == 468496-1.html 468496-1-ref.html
-fuzzy(175,443) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 611498-1.html 611498-ref.html # Bug 1392106
-fuzzy-if(Android,8,1000) == 709477-1.html 709477-1-ref.html
+fuzzy(0-175,0-443) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 611498-1.html 611498-ref.html # Bug 1392106
+fuzzy-if(Android,0-8,0-1000) == 709477-1.html 709477-1-ref.html
 skip-if(!asyncPan) == 1086723.html 1086723-ref.html
 == 853889-1.html 853889-1-ref.html
-skip-if(Android) fuzzy-if(skiaContent,1,587) == 1143303-1.svg pass.svg
-fuzzy(100,30) == 1149923.html 1149923-ref.html # use fuzzy due to few distorted pixels caused by border-radius
+skip-if(Android) fuzzy-if(skiaContent,0-1,0-587) == 1143303-1.svg pass.svg
+fuzzy(0-100,0-30) == 1149923.html 1149923-ref.html # use fuzzy due to few distorted pixels caused by border-radius
 == 1131264-1.svg pass.svg
 == 1419528.html 1419528-ref.html
 == 1424673.html 1424673-ref.html
@@ -15,4 +15,4 @@ fuzzy(100,30) == 1149923.html 1149923-ref.html # use fuzzy due to few distorted 
 == 1451168.html 1451168-ref.html
 == 1461313.html 1461313-ref.html
 fuzzy(5-32,21908-26354) fuzzy-if(webrender,0-1,0-3) == 1463802.html 1463802-ref.html
-fuzzy(11,4) == 1474722.html 1474722-ref.html
+fuzzy(0-11,0-4) == 1474722.html 1474722-ref.html

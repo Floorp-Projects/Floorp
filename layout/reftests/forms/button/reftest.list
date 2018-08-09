@@ -6,13 +6,13 @@
 
 # Android is off ever-so-slightly on the points where the text
 # runs into the border on this text, so a little fuzz is needed.
-fuzzy-if(Android,1,16) == overflow-areas-1.html overflow-areas-1-ref.html
+fuzzy-if(Android,0-1,0-16) == overflow-areas-1.html overflow-areas-1-ref.html
 
 # The buttons in these tests have some fancy shading applied to their corners
 # on Android, despite their "-moz-appearance: none; background: gray", so they
 # don't quite match the reference case's normal <div>. That's why they're fuzzy.
-fuzzy-if(Android,125,20) == percent-height-child.html percent-height-child-ref.html
-fuzzy-if(Android,125,20) == percent-width-child.html  percent-width-child-ref.html
+fuzzy-if(Android,0-125,0-20) == percent-height-child.html percent-height-child-ref.html
+fuzzy-if(Android,0-125,0-20) == percent-width-child.html  percent-width-child-ref.html
 
 == vertical-centering.html vertical-centering-ref.html
 

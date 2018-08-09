@@ -1,4 +1,4 @@
-fuzzy-if(skiaContent,1,161) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),16,161) pref(layout.css.shape-outside.enabled,true) == dynamic-shape-outside-1.html dynamic-shape-outside-1-ref.html
+fuzzy-if(skiaContent,0-1,0-161) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-16,0-161) pref(layout.css.shape-outside.enabled,true) == dynamic-shape-outside-1.html dynamic-shape-outside-1-ref.html
 
 == shape-outside-empty-circle-1.html shape-outside-empty-point-ref.html
 == shape-outside-empty-circle-2.html shape-outside-empty-circle-ref.html
@@ -8,7 +8,7 @@ fuzzy-if(skiaContent,1,161) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),
 == shape-outside-empty-ellipse-2.html shape-outside-empty-circle-ref.html
 == shape-outside-empty-ellipse-3.html shape-outside-empty-point-ref.html
 # The next test needs fuzzy due to chamfer aberration
-fuzzy(255,520) == shape-outside-empty-ellipse-4.html shape-outside-empty-circle-ref.html
+fuzzy(0-255,0-520) == shape-outside-empty-ellipse-4.html shape-outside-empty-circle-ref.html
 == shape-outside-empty-ellipse-5.html shape-outside-empty-line-ref.html
 == shape-outside-empty-ellipse-6.html shape-outside-empty-line-ref.html
 == shape-outside-empty-ellipse-7.html shape-outside-empty-nothing-ref.html
@@ -25,7 +25,7 @@ fuzzy(255,520) == shape-outside-empty-ellipse-4.html shape-outside-empty-circle-
 
 == shape-outside-empty-polygon-1.html shape-outside-empty-point-ref.html
 # The next test needs fuzzy due to chamfer aberration
-fuzzy(255,520) == shape-outside-empty-polygon-2.html shape-outside-empty-circle-ref.html
+fuzzy(0-255,0-520) == shape-outside-empty-polygon-2.html shape-outside-empty-circle-ref.html
 == shape-outside-empty-polygon-3.html shape-outside-empty-line-ref.html
 == shape-outside-empty-polygon-4.html shape-outside-empty-line-ref.html
 == shape-outside-empty-polygon-5.html shape-outside-empty-point-ref.html

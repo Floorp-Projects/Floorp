@@ -25,7 +25,7 @@ fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-
 # This one fails on windows R (but not Ru, strangely) and GTK.
 # On Windows R and GTK, the single-line <label> flex item has a different
 # background size in test vs. ref
-fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate the random-if. The skip-if(Android) is because checkbox/radio appearance:none doesn't work as expected.
+fuzzy-if(cocoaWidget,0-1,0-2) random-if(winWidget||gtkWidget) skip-if(Android) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate the random-if. The skip-if(Android) is because checkbox/radio appearance:none doesn't work as expected.
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 == flexbox-item-align-self-dynamic-pos-001.html flexbox-item-align-self-dynamic-pos-001-ref.html
 == flexbox-item-align-self-dynamic-pos-002.html flexbox-item-align-self-dynamic-pos-002-ref.html
@@ -51,13 +51,13 @@ fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) == fl
 # Tests for dynamic insertions of content into a flex container
 # (with existing [div | span | text] inside the flexbox, and new content
 # inserted adjacent to that existing content.)
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+fuzzy-if(skiaContent,0-3,0-10) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fuzzy-if(skiaContent,0-3,0-10) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
+fuzzy-if(skiaContent,0-3,0-10) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fuzzy-if(skiaContent,0-3,0-10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
 == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml
@@ -85,8 +85,8 @@ fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-i
 == flexbox-position-absolute-3.xhtml  flexbox-position-absolute-3-ref.xhtml
 == flexbox-position-absolute-4.xhtml  flexbox-position-absolute-4-ref.xhtml
 == flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
-fuzzy-if(Android,16,400) == flexbox-position-fixed-1.xhtml     flexbox-position-fixed-1-ref.xhtml
-fuzzy-if(Android,16,400) == flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml
+fuzzy-if(Android,0-16,0-400) == flexbox-position-fixed-1.xhtml     flexbox-position-fixed-1-ref.xhtml
+fuzzy-if(Android,0-16,0-400) == flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml
 == flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
 == flexbox-position-fixed-4.xhtml     flexbox-position-fixed-4-ref.xhtml
 
@@ -110,17 +110,17 @@ fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.
 == flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
 
 # Tests for flexbox in an iframe that gets resized.
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,16) fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
-fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-2.xhtml flexbox-resizeviewport-2-ref.xhtml
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-16) fuzzy-if(skiaContent,0-1,0-5) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
+fuzzy-if(skiaContent,0-1,0-5) == flexbox-resizeviewport-2.xhtml flexbox-resizeviewport-2-ref.xhtml
 
 # Tests for flexbox styling on things that don't support it
 == flexbox-styling-on-svg-1.svg flexbox-styling-on-svg-1-ref.svg
 
 # Tests with widgets as flex items
-fuzzy-if(gtkWidget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
-fuzzy-if(gtkWidget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+fuzzy-if(gtkWidget,0-1,0-66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
 skip-if(gtkWidget) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html # bug 1260965
-fuzzy-if(gtkWidget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+fuzzy-if(gtkWidget,0-1,0-31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
 
 # Tests for table flex items
 == flexbox-table-flex-items-1.html flexbox-table-flex-items-1-ref.html

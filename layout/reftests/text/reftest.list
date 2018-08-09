@@ -29,7 +29,7 @@ fails-if(cocoaWidget) == lineheight-metrics-1.html lineheight-metrics-1-ref.html
 == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == long-1.html long-ref.html # Bug 1392106
-fuzzy-if(Android,255,325) == pre-line-1.html pre-line-1-ref.html
+fuzzy-if(Android,0-255,0-325) == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html
 == pre-line-4.html pre-line-4-ref.html
@@ -57,8 +57,8 @@ fails-if(Android) skip-if(d2d||cocoaWidget||skiaContent) == subpixel-glyphs-x-1a
 skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
 == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 # No platforms do subpixel positioning vertically
-fuzzy-if(Android,19,2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
-fuzzy-if(Android,231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
+fuzzy-if(Android,0-19,0-2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
+fuzzy-if(Android,0-231,0-653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
 != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
@@ -124,8 +124,8 @@ fails == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 pref(gfx.font_rendering.graphite.enabled,true) == wordbreak-9.html wordbreak-9-ref.html
 == wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
-fuzzy-if(Android,1,1) == wordwrap-02.html wordwrap-02-ref.html # bug 1363940
-fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
+fuzzy-if(Android,0-1,0-1) == wordwrap-02.html wordwrap-02-ref.html # bug 1363940
+fuzzy-if(gtkWidget,0-1,0-177) fuzzy-if(skiaContent,0-1,0-50) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
 == wordwrap-04.html wordwrap-04-ref.html
 == overflowwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
@@ -153,8 +153,8 @@ random-if(cocoaWidget) random-if(gtkWidget) == zwnj-01.xhtml zwnj-01-ref.xhtml #
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 444656.html 444656-ref.html # Bug 1392106
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
-fuzzy-if(skiaContent,1,600) == 475092-sub.html 475092-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) fuzzy-if(webrender&&cocoaWidget,95-95,404-404) == 475092-pos.html 475092-sub.html # bug 482596
+fuzzy-if(skiaContent,0-1,0-600) == 475092-sub.html 475092-ref.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,0-90,0-3100) fuzzy-if(webrender&&cocoaWidget,95-95,404-404) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html
@@ -207,7 +207,7 @@ fails-if(Android) == emoji-04.html emoji-04-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) == graphite-01.html graphite-01-ref.html
 # Test 02 (using Pig Latin) is fuzzy on Win7 because glyph positioning is not guaranteed to match exactly
 # between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
-fuzzy-if(winWidget,49,220) pref(gfx.font_rendering.graphite.enabled,true) == graphite-02.html graphite-02-ref.html
+fuzzy-if(winWidget,0-49,0-220) pref(gfx.font_rendering.graphite.enabled,true) == graphite-02.html graphite-02-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) != graphite-03a.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,true) != graphite-03b.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,false) != graphite-01.html graphite-01-ref.html
@@ -321,7 +321,7 @@ pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.h
 == hyphenation-control-2.html hyphenation-control-2-ref.html
 == hyphenation-control-3.html hyphenation-control-3-ref.html
 == hyphenation-control-4.html hyphenation-control-4-ref.html
-fuzzy-if(winWidget,47,6) == hyphenation-control-5.html hyphenation-control-5-ref.html
+fuzzy-if(winWidget,0-47,0-6) == hyphenation-control-5.html hyphenation-control-5-ref.html
 == hyphenation-control-6.html hyphenation-control-6-ref.html
 == hyphenation-control-7.html hyphenation-control-7-ref.html
 

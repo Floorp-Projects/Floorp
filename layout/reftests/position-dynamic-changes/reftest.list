@@ -7,4 +7,4 @@ include relative/reftest.list
 == multiple-changes.html multiple-changes-ref.html
 == shrink-wrap.html shrink-wrap-ref.html
 == max-width.html max-width-ref.html
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == min-width.html min-width-ref.html # Bug 761770
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-2) == min-width.html min-width-ref.html # Bug 761770

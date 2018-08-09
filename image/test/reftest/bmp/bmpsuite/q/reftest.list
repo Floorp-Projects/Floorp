@@ -7,7 +7,7 @@
 # documentation says that 1-bpp images have a palette size of 2 (not 'up to
 # 2'), but it would be silly for a viewer not to support a size of 1."
 # [We accept it. So does Chromium.]
-fuzzy(1,926) == pal1p1.bmp pal1p1.png
+fuzzy(0-1,0-926) == pal1p1.bmp pal1p1.png
 
 # BMP: bihsize=64, 127 x 64, bpp=1, compression=3, colors=2
 # "My attempt to make a BMP file with Huffman 1D compression. It is quite
@@ -52,21 +52,21 @@ fuzzy(1,926) == pal1p1.bmp pal1p1.png
 # "A file with some unused bytes between the palette and the image. This is
 # probably valid, but I’m not 100% sure."
 # [We accept it. So does Chromium.]
-fuzzy(1,996) == pal8offs.bmp pal8.png
+fuzzy(0-1,0-996) == pal8offs.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=300
 # "An 8-bit image with 300 palette colors. This may be invalid, because the
 # documentation could be interpreted to imply that 8-bit images aren’t allowed
 # to have more than 256 colors."
 # [We accept it. So does Chromium.]
-fuzzy(1,996) == pal8oversizepal.bmp pal8.png
+fuzzy(0-1,0-996) == pal8oversizepal.bmp pal8.png
 
 # BMP: bihsize=12, 127 x 64, bpp=8, compression=0, colors=0
 # # "Some OS/2 BMP specifications say that the size field in the file header
 # should be set to the aggregate size of the file header and infoheader,
 # instead of the total file size. For OS/2v1, that means it will always be 26.
 # BMP decoders usually ignore this field, so it shouldn’t cause a problem."
-fuzzy(1,996) == pal8os2-sz.bmp pal8.png
+fuzzy(0-1,0-996) == pal8os2-sz.bmp pal8.png
 
 # BMP: bihsize=12, 127 x 64, bpp=8, compression=0, colors=0
 # "Some OS/2 BMP specifications define the fields at offsets 6 and 8 to be a
@@ -74,7 +74,7 @@ fuzzy(1,996) == pal8os2-sz.bmp pal8.png
 # they are sometimes, as in this file, set to nonzero values. This should cause
 # no problems, except that it could prevent some programs from detecting this
 # file as a BMP file."
-fuzzy(1,996) == pal8os2-hs.bmp pal8.png
+fuzzy(0-1,0-996) == pal8os2-hs.bmp pal8.png
 
 # BMP: bihsize=12, 127 x 64, bpp=8, compression=0, colors=0
 # "An OS/2v1 with a less-than-full-sized palette. Probably not valid, but such
@@ -87,31 +87,31 @@ fuzzy(1,996) == pal8os2-hs.bmp pal8.png
 # BMP: bihsize=64, 127 x 64, bpp=8, compression=0, colors=252
 # "My attempt to make an OS/2v2 bitmap."
 # [We accept it. So does Chromium.]
-fuzzy(1,996) == pal8os2v2.bmp pal8.png
+fuzzy(0-1,0-996) == pal8os2v2.bmp pal8.png
 
 # BMP: bihsize=16, 127 x 64, bpp=8, compression=0, colors=0
 # "An OS/2v2 bitmap whose header has only 16 bytes, instead of the full 64."
 # [We accept it. So does Chromium.]
-fuzzy(1,996) == pal8os2v2-16.bmp pal8.png
+fuzzy(0-1,0-996) == pal8os2v2-16.bmp pal8.png
 
 # BMP: bihsize=64, 127 x 64, bpp=8, compression=0, colors=252
 # "An OS/2v2 bitmap. Like q/pal8os2-sz.bmp, the size field is set to the size
 # of the headers (78), instead of the size of the file."
-fuzzy(1,996) == pal8os2v2-sz.bmp pal8.png
+fuzzy(0-1,0-996) == pal8os2v2-sz.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=252
 # "An OS/2v2 bitmap, with a 40-byte header. Like q/pal8os2-sz.bmp, the size
 # field is set to the size of the headers (54), instead of the size of the
 # file. Except for that, this file cannot be distinguished from a Windows
 # BMPv3 file."
-fuzzy(1,996) == pal8os2v2-40sz.bmp pal8.png
+fuzzy(0-1,0-996) == pal8os2v2-40sz.bmp pal8.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=0, colors=0
 # "Same idea as q/rgb32fakealpha.bmp. The default 16-bit color format has one
 # unused bit per pixel, and in this image some of the unused bits are set to 1.
 # It’s possible that some viewers will interpret this image as having
 # transparency."
-fuzzy(1,1296) == rgb16faketrns.bmp rgb16.png
+fuzzy(0-1,0-1296) == rgb16faketrns.bmp rgb16.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "An unusual and silly 16-bit image, with 2 red bits, 3 green bits, and 1 blue
@@ -124,7 +124,7 @@ fuzzy(1,1296) == rgb16faketrns.bmp rgb16.png
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "Similar to q/rgb16-231.bmp, with 3 red bits, 10 green bits, and 3 blue
 # bits."
-fuzzy(1,689) == rgb16-3103.bmp rgb16-3103.png
+fuzzy(0-1,0-689) == rgb16-3103.bmp rgb16-3103.png
 
 # BMP: bihsize=124, 127 x 64, bpp=16, compression=3, colors=0
 # "A 16-bit image with an alpha channel. There are 4 bits for each color
@@ -135,7 +135,7 @@ fuzzy(1,689) == rgb16-3103.bmp rgb16-3103.png
 # BMP: bihsize=124, 127 x 64, bpp=16, compression=3, colors=0
 # "Similar to q/rgba16-4444.bmp, with 5 red bits, 5 green bits, 5 blue bits,
 # and a 1-bit alpha channel."
-fuzzy(1,2203) == rgba16-5551.bmp rgba16-5551.png
+fuzzy(0-1,0-2203) == rgba16-5551.bmp rgba16-5551.png
 
 # BMP: bihsize=124, 127 x 64, bpp=16, compression=3, colors=0
 # "Similar to q/rgba16-4444.bmp, with 1 red bit, 9 green bits, 2 blue bits,
@@ -200,11 +200,11 @@ fuzzy(1,2203) == rgba16-5551.bmp rgba16-5551.png
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32 bits/pixel image, with all 32 bits used: 11 each for red and green, and
 # 10 for blue. As far as I know, this is perfectly valid, but it is unusual."
-fuzzy(1,1408) == rgb32-111110.bmp rgb24.png
+fuzzy(0-1,0-1408) == rgb32-111110.bmp rgb24.png
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32 bits/pixel image, with 7 bits for red, 18 for green, and 7 for blue."
-fuzzy(1,753) == rgb32-7187.bmp rgb32-7187.png
+fuzzy(0-1,0-753) == rgb32-7187.bmp rgb32-7187.png
 
 # BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
 # "A BMP with an alpha channel. Transparency is barely documented, so it’s
@@ -216,17 +216,17 @@ fuzzy(1,753) == rgb32-7187.bmp rgb32-7187.png
 # BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32 bits/pixel image, with 10 bits for red, 10 for green, 10 for blue, and
 # 2 for alpha."
-fuzzy(1,1296) == rgba32-1010102.bmp rgba32-1010102.png
+fuzzy(0-1,0-1296) == rgba32-1010102.bmp rgba32-1010102.png
 
 # BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32 bits/pixel image, with 8 bits for red, 12 for green, 8 for blue, and 4
 # for alpha."
-fuzzy(1,753) == rgba32-81284.bmp rgba32-81284.png
+fuzzy(0-1,0-753) == rgba32-81284.bmp rgba32-81284.png
 
 # BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32 bits/pixel image, with 6 bits for red, 17 for green, 5 for blue, and 4
 # for alpha."
-fuzzy(1,1554) == rgba32-61754.bmp rgba32-61754.png
+fuzzy(0-1,0-1554) == rgba32-61754.bmp rgba32-61754.png
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=6, colors=0
 # "An image of type BI_ALPHABITFIELDS. Supposedly, this was used on Windows CE.

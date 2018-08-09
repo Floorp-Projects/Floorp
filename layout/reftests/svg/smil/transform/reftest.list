@@ -1,17 +1,17 @@
 # Tests related to SVG Animation (using SMIL), focusing on the animateTransform
 # element.
 
-fuzzy(111,1802) fuzzy-if(skiaContent,130,1000) == additive-1.svg additive-1-ref.svg # bug 981344, bug 1239766
+fuzzy(0-111,0-1802) fuzzy-if(skiaContent,0-130,0-1000) == additive-1.svg additive-1-ref.svg # bug 981344, bug 1239766
 == animate-width-1.svg lime.svg
-fuzzy-if(cocoaWidget,1,32) fuzzy-if(winWidget,15,30) fuzzy-if(gtkWidget,3,39) fuzzy-if(webrender,3-3,9-9) fuzzy-if(Android,16,1) == paced-1.svg paced-1-ref.svg # bug 981640, Bug 1293550
-fuzzy-if(skiaContent,7,90) == rotate-angle-1.svg rotate-angle-ref.svg
-fuzzy-if(skiaContent,7,90) == rotate-angle-2.svg rotate-angle-ref.svg
-fuzzy-if(skiaContent,7,130) == rotate-angle-3.svg rotate-angle-ref.svg
-fuzzy-if(skiaContent,7,90) == rotate-angle-4.svg rotate-angle-ref.svg
-fuzzy-if(skiaContent,7,60) == rotate-angle-5.svg rotate-angle-ref.svg
-fuzzy(7,306) fuzzy-if(Android,16,3) == scale-1.svg scale-1-ref.svg  # bug 981004, AA difference
+fuzzy-if(cocoaWidget,0-1,0-32) fuzzy-if(winWidget,0-15,0-30) fuzzy-if(gtkWidget,0-3,0-39) fuzzy-if(webrender,3-3,9-9) fuzzy-if(Android,0-16,0-1) == paced-1.svg paced-1-ref.svg # bug 981640, Bug 1293550
+fuzzy-if(skiaContent,0-7,0-90) == rotate-angle-1.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,0-7,0-90) == rotate-angle-2.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,0-7,0-130) == rotate-angle-3.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,0-7,0-90) == rotate-angle-4.svg rotate-angle-ref.svg
+fuzzy-if(skiaContent,0-7,0-60) == rotate-angle-5.svg rotate-angle-ref.svg
+fuzzy(0-7,0-306) fuzzy-if(Android,0-16,0-3) == scale-1.svg scale-1-ref.svg  # bug 981004, AA difference
 == set-transform-1.svg lime.svg
-fuzzy-if(winWidget||gtkWidget||OSX,3,27) fuzzy-if(skiaContent,7,1548) == skew-1.svg skew-1-ref.svg # bug 983671, Bug 1260629
+fuzzy-if(winWidget||gtkWidget||OSX,0-3,0-27) fuzzy-if(skiaContent,0-7,0-1548) == skew-1.svg skew-1-ref.svg # bug 983671, Bug 1260629
 == translate-clipPath-1.svg lime.svg
 == translate-gradient-1.svg lime.svg
 == translate-pattern-1.svg lime.svg

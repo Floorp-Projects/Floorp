@@ -96,20 +96,20 @@ fuzzy-if(webrender&&gtkWidget,0-208,0-12) == complex-decoration-style-standards.
 == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
 == 641444-1.html 641444-1-ref.html
 == decoration-css21.html decoration-css21-ref.html
-fuzzy-if(cocoaWidget,1,5) == decoration-color-override-quirks.html decoration-color-override-quirks-ref.html
+fuzzy-if(cocoaWidget,0-1,0-5) == decoration-color-override-quirks.html decoration-color-override-quirks-ref.html
 == decoration-color-override-standards.html decoration-color-override-standards-ref.html
 != decoration-color-override-standards-ref.html decoration-color-override-quirks-ref.html
 == decoration-css21-block.html decoration-css21-block-ref.html
 != inline-baseline-almost-standards.html inline-baseline-almost-standards-ref.html
 != inline-baseline-quirks.html inline-baseline-quirks-ref.html
 == 676538-1.html 676538-1-ref.html
-fuzzy-if(OSX==1010,1,4) == underline-button-1.html underline-button-1-ref.html
-fuzzy-if(OSX==1010,1,2) == underline-button-2.html underline-button-2-ref.html
-fuzzy-if(skiaContent,4,2) == underline-select-1.html underline-select-1-ref.html
+fuzzy-if(OSX==1010,0-1,0-4) == underline-button-1.html underline-button-1-ref.html
+fuzzy-if(OSX==1010,0-1,0-2) == underline-button-2.html underline-button-2-ref.html
+fuzzy-if(skiaContent,0-4,0-2) == underline-select-1.html underline-select-1-ref.html
 == underline-select-2.html underline-select-2-ref.html
 == 1133392.html 1133392-ref.html
 != 1159729-offset-adjustment.html 1159729-offset-adjustment-notref.html
 == emphasis-style-dynamic.html emphasis-style-dynamic-ref.html
 == vertical-mode-decorations-1.html vertical-mode-decorations-1-ref.html
-fuzzy-if(Android,238,36) == vertical-mode-decorations-2.html vertical-mode-decorations-2-ref.html
+fuzzy-if(Android,0-238,0-36) == vertical-mode-decorations-2.html vertical-mode-decorations-2-ref.html
 != 1415214.html 1415214-notref.html

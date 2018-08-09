@@ -18,9 +18,9 @@ random-if(winWidget) == small-caps-1.html small-caps-1-ref.html # fails if defau
 == uppercase-1.html uppercase-ref.html
 == uppercase-szlig-1.html uppercase-szlig-ref.html
 # these use DejaVu Sans via @font-face for consistency of results
-fuzzy-if(cocoaWidget,250,15) == all-upper.html all-upper-ref.html # bug 1140292
-fuzzy-if(cocoaWidget,250,15) fuzzy-if(skiaContent,1,1800) == all-lower.html all-lower-ref.html # bug 1140292
-fuzzy-if(skiaContent,1,80) == all-title.html all-title-ref.html
+fuzzy-if(cocoaWidget,0-250,0-15) == all-upper.html all-upper-ref.html # bug 1140292
+fuzzy-if(cocoaWidget,0-250,0-15) fuzzy-if(skiaContent,0-1,0-1800) == all-lower.html all-lower-ref.html # bug 1140292
+fuzzy-if(skiaContent,0-1,0-80) == all-title.html all-title-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-upper.html smtp-upper-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-lower.html smtp-lower-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-title.html smtp-title-ref.html # Bug 1392106

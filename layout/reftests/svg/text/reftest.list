@@ -5,9 +5,9 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-scaled.
 fuzzy-if(webrender&&!gtkWidget,119-166,278-318) == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
 fuzzy-if(webrender&&!gtkWidget,117-132,201-204) == simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
 fuzzy-if(webrender&&!gtkWidget,122-134,245-250) == simple-anchor-end.svg simple-anchor-end-ref.html
-fuzzy-if(skiaContent&&dwrite,104,131) fuzzy-if(webrender&&!gtkWidget,125-194,288-319) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
+fuzzy-if(skiaContent&&dwrite,0-104,0-131) fuzzy-if(webrender&&!gtkWidget,125-194,288-319) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
 fuzzy-if(webrender&&!gtkWidget,132-134,205-207) == simple-anchor-middle-rtl.svg simple-anchor-middle-rtl-ref.html
-fuzzy-if(skiaContent,111,81) fuzzy-if(webrender&&!gtkWidget,122-181,254-257) == simple-anchor-middle.svg simple-anchor-middle-ref.html
+fuzzy-if(skiaContent,0-111,0-81) fuzzy-if(webrender&&!gtkWidget,122-181,254-257) == simple-anchor-middle.svg simple-anchor-middle-ref.html
 fuzzy-if(webrender&&!gtkWidget,132-134,294-319) == simple-bidi.svg simple-bidi-ref.html
 == simple-bidi-2.svg simple-bidi.svg
 
@@ -36,7 +36,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender&&!gtkWid
 == simple-multiple-dx-anchor-middle-bidi.svg simple-multiple-dx-anchor-middle-bidi-ref.svg
 == simple-multiple-dx-anchor-end-rtl.svg simple-multiple-dx-anchor-end-rtl-ref.svg
 == simple-multiple-dx-anchor-end.svg simple-multiple-dx-anchor-end-ref.svg
-fuzzy-if(skiaContent,1,2) == simple-multiple-dx-anchor-middle-rtl.svg simple-multiple-dx-anchor-middle-rtl-ref.svg
+fuzzy-if(skiaContent,0-1,0-2) == simple-multiple-dx-anchor-middle-rtl.svg simple-multiple-dx-anchor-middle-rtl-ref.svg
 == simple-multiple-dx-anchor-middle.svg simple-multiple-dx-anchor-middle-ref.svg
 == simple-multiple-dx-bidi.svg simple-multiple-dx-bidi-ref.svg
 == simple-multiple-dx-bidi-2.svg simple-multiple-dx-bidi.svg
@@ -81,9 +81,9 @@ fuzzy-if(webrender&&!gtkWidget,132-134,205-206) == simple-rtl.svg simple-rtl-ref
 == multiple-chunks-different-anchor-bidi.svg multiple-chunks-different-anchor-bidi-ref.svg
 == multiple-chunks-different-anchor-rtl.svg multiple-chunks-different-anchor-rtl-ref.svg
 == multiple-chunks-different-anchor.svg multiple-chunks-different-anchor-ref.svg
-fuzzy-if(Android,242,81) == multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor-ref.svg
+fuzzy-if(Android,0-242,0-81) == multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor-ref.svg
 == multiple-chunks-directions-and-anchor-dx.svg multiple-chunks-directions-and-anchor-dx-ref.svg
-fuzzy-if(Android,242,81) == multiple-chunks-directions-and-anchor-multiple-dx.svg multiple-chunks-directions-and-anchor-multiple-dx-ref.svg
+fuzzy-if(Android,0-242,0-81) == multiple-chunks-directions-and-anchor-multiple-dx.svg multiple-chunks-directions-and-anchor-multiple-dx-ref.svg
 == multiple-chunks-dx-bidi.svg multiple-chunks-dx-bidi-ref.svg
 == multiple-chunks-dx-different-anchor-bidi.svg multiple-chunks-dx-different-anchor-bidi-ref.svg
 == multiple-chunks-dx-different-anchor-rtl.svg multiple-chunks-dx-different-anchor-rtl-ref.svg
@@ -110,7 +110,7 @@ fuzzy-if(Android,242,81) == multiple-chunks-directions-and-anchor-multiple-dx.sv
 == simple-multiline-pc.svg simple-multiline-pc-ref.svg
 == simple-multiline-anchor-end.svg simple-multiline-anchor-end-ref.svg
 
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-15) == textpath.svg textpath-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-a.svg textpath-a-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-middle.svg textpath-anchor-middle-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-end.svg textpath-anchor-end-ref.svg # Bug 1392106
@@ -123,8 +123,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-reset-position.
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-inherit-position.svg textpath-inherit-position-ref.svg # Bug 1392106
 
 == textLength.svg textLength-ref.svg
-fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) fuzzy-if(skiaContent,4,100) == textLength-3.svg textLength-3-ref.svg
+fuzzy-if(skiaContent,0-1,0-200) == textLength-2.svg textLength-2-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),0-4,0-17) fuzzy-if(skiaContent,0-4,0-100) == textLength-3.svg textLength-3-ref.svg
 == textLength-4.svg textLength-4-ref.svg
 == textLength-5.svg textLength-5-ref.svg
 == textLength-6.svg textLength-6-ref.svg
@@ -169,37 +169,37 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-vertical-align.sv
 == dynamic-font-size-4.svg dynamic-font-size-4-ref.svg
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline-ref.svg
 == dynamic-multiple-x.svg dynamic-multiple-x-ref.svg
-fuzzy-if(!d2d,14,2) fuzzy-if(skiaContent,1,200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
+fuzzy-if(!d2d,0-14,0-2) fuzzy-if(skiaContent,0-1,0-200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
 == dynamic-text-shadow.svg text-shadow-ref.svg
 
 # text and masks
-fuzzy-if(skiaContent&&winWidget,50,224)  == mask-applied.svg mask-applied-ref.svg
-fuzzy-if(skiaContent&&winWidget,105,112) == mask-content.svg mask-content-ref.svg
-fuzzy-if(skiaContent&&winWidget,53,112) == mask-content-2.svg mask-content-2-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-50,0-224)  == mask-applied.svg mask-applied-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-105,0-112) == mask-content.svg mask-content-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-53,0-112) == mask-content-2.svg mask-content-2-ref.svg
 
 # text and clipPaths
 == clipPath-applied.svg clipPath-applied-ref.svg
-fuzzy-if(skiaContent&&winWidget,105,56) == clipPath-content.svg clipPath-content-ref.svg
-fuzzy-if(skiaContent&&winWidget,53,112) == clipPath-content-2.svg clipPath-content-2-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-105,0-56) == clipPath-content.svg clipPath-content-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-53,0-112) == clipPath-content-2.svg clipPath-content-2-ref.svg
 
 # text and patterns
-fuzzy-if(cocoaWidget,1,6) fuzzy-if(skiaContent,65,313) == pattern-content.svg pattern-content-ref.svg
+fuzzy-if(cocoaWidget,0-1,0-6) fuzzy-if(skiaContent,0-65,0-313) == pattern-content.svg pattern-content-ref.svg
 
 # text and filters
-fuzzy-if(skiaContent&&winWidget,126,336) == filter-applied.svg filter-applied-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-126,0-336) == filter-applied.svg filter-applied-ref.svg
 
 # vertical text
-fuzzy-if(skiaContent,1,80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg # Bug 1392106
 
 # selection
 needs-focus == deselectAll.svg deselectAll-ref.svg
-fuzzy-if(skiaContent,1,250) needs-focus == selectSubString.svg selectSubString-ref.svg
-fuzzy-if(skiaContent,1,600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
-fuzzy-if(skiaContent,1,250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
+fuzzy-if(skiaContent,0-1,0-250) needs-focus == selectSubString.svg selectSubString-ref.svg
+fuzzy-if(skiaContent,0-1,0-600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
+fuzzy-if(skiaContent,0-1,0-250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,251-254) == simple-selection.svg simple-selection-ref.html # Bug 1392106
-fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,1-1,575-575) needs-focus fuzzy-if(webrender&&!gtkWidget,134-148,294-318) == simple-bidi-selection.svg simple-bidi-selection-ref.html
-fuzzy-if(skiaContent,1,50) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,253-254) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
-fuzzy-if(skiaContent,1,150) fuzzy-if(webrender,1-1,222-222) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,251-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
-fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,1-1,934-934) needs-focus fuzzy-if(webrender&&!gtkWidget,134-152,494-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-100) fuzzy-if(webrender,1-1,575-575) needs-focus fuzzy-if(webrender&&!gtkWidget,134-148,294-318) == simple-bidi-selection.svg simple-bidi-selection-ref.html
+fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,253-254) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
+fuzzy-if(skiaContent,0-1,0-150) fuzzy-if(webrender,1-1,222-222) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,251-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-300) fuzzy-if(webrender,1-1,934-934) needs-focus fuzzy-if(webrender&&!gtkWidget,134-152,494-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
-fuzzy-if(skiaContent,1,200) needs-focus == textpath-selection.svg textpath-selection-ref.svg
+fuzzy-if(skiaContent,0-1,0-200) needs-focus == textpath-selection.svg textpath-selection-ref.svg

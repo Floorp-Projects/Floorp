@@ -1,21 +1,21 @@
 == top-1.html top-1-ref.html
-fuzzy-if(Android,6,1568) == top-2.html top-2-ref.html
-fuzzy-if(Android,6,2729) == top-3.html top-3-ref.html
+fuzzy-if(Android,0-6,0-1568) == top-2.html top-2-ref.html
+fuzzy-if(Android,0-6,0-2729) == top-3.html top-3-ref.html
 == top-4.html top-4-ref.html
 == top-5.html top-5-ref.html
-fuzzy-if(Android,2,1568) == top-6.html top-6-ref.html
+fuzzy-if(Android,0-2,0-1568) == top-6.html top-6-ref.html
 == bottom-1.html bottom-1-ref.html
 == bottom-2a.html bottom-2-ref.html
 == bottom-2b.html bottom-2-ref.html
 == bottom-2c.html bottom-2-ref.html
 == bottom-3.html bottom-3-ref.html
 == bottom-4.html bottom-4-ref.html
-fuzzy-if(Android,2,4) == left-1.html left-1-ref.html
-fuzzy-if(Android,2,4) == left-2.html left-2-ref.html
+fuzzy-if(Android,0-2,0-4) == left-1.html left-1-ref.html
+fuzzy-if(Android,0-2,0-4) == left-2.html left-2-ref.html
 == left-3.html left-3-ref.html
 == right-1.html right-1-ref.html
-fuzzy-if(Android,2,4) == right-2.html right-2-ref.html
-fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
+fuzzy-if(Android,0-2,0-4) == right-2.html right-2-ref.html
+fuzzy-if(Android,0-2,0-4) == right-3.html right-3-ref.html
 == margin-1.html margin-1-ref.html
 == padding-1.html padding-1-ref.html
 == padding-2.html padding-2-ref.html
@@ -26,28 +26,28 @@ fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
 == scrollframe-reflow-1.html scrollframe-reflow-1-ref.html
 == scrollframe-reflow-2.html scrollframe-reflow-2-ref.html
 == scrollframe-auto-1.html scrollframe-auto-1-ref.html
-fuzzy-if(Android,2,3) == stacking-context-1.html stacking-context-1-ref.html
+fuzzy-if(Android,0-2,0-3) == stacking-context-1.html stacking-context-1-ref.html
 == top-bottom-1.html top-bottom-1-ref.html
 == top-bottom-2.html top-bottom-2-ref.html
 == top-bottom-3.html top-bottom-3-ref.html
 == left-right-1.html left-right-1-ref.html
 == left-right-2.html left-right-2-ref.html
 == left-right-3.html left-right-3-ref.html
-fuzzy-if(Android,4,810) == containing-block-1.html containing-block-1-ref.html
+fuzzy-if(Android,0-4,0-810) == containing-block-1.html containing-block-1-ref.html
 == overconstrained-1.html overconstrained-1-ref.html
 == overconstrained-2.html overconstrained-2-ref.html
 == overconstrained-3.html overconstrained-3-ref.html
 == inline-1.html inline-1-ref.html
 == inline-2.html inline-2-ref.html
-fuzzy-if(OSX,99,210) == inline-3.html inline-3-ref.html
+fuzzy-if(OSX,0-99,0-210) == inline-3.html inline-3-ref.html
 skip-if(!asyncPan) == inline-4.html inline-4-ref.html
 fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
-fuzzy-if(skiaContent,1,22) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) fuzzy-if(Android,8,1533) == block-in-inline-2.html block-in-inline-2-ref.html
-fuzzy-if(Android,8,630) fuzzy-if(OSX,1,11) fuzzy-if(skiaContent,1,220) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) == block-in-inline-3.html block-in-inline-3-ref.html
+fuzzy-if(skiaContent,0-1,0-22) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) fuzzy-if(Android,0-8,0-1533) == block-in-inline-2.html block-in-inline-2-ref.html
+fuzzy-if(Android,0-8,0-630) fuzzy-if(OSX,0-1,0-11) fuzzy-if(skiaContent,0-1,0-220) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) == block-in-inline-3.html block-in-inline-3-ref.html
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == iframe-1.html iframe-1-ref.html
 skip-if(Android) == transformed-1.html transformed-1-ref.html # bug 1430787 for android
-fuzzy-if(Android,2,4) skip-if(!asyncPan||Android) == transformed-2.html transformed-2-ref.html # bug 1430787 for android
+fuzzy-if(Android,0-2,0-4) skip-if(!asyncPan||Android) == transformed-2.html transformed-2-ref.html # bug 1430787 for android

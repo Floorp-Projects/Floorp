@@ -4,14 +4,14 @@ pref(layout.css.mix-blend-mode.enabled,true) fuzzy-if(webrender,1-1,1411-7888) =
 pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) fuzzy-if(webrender&&winWidget,27-27,2-2) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,10000) fuzzy-if(skiaContent,1,30000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-10000) fuzzy-if(skiaContent,0-1,0-30000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha-ref.html
 pref(layout.css.background-blend-mode.enabled,true) fuzzy-if(webrender,1-1,1411-7888) == background-blending-gradient-color.html background-blending-gradient-color-ref.html
-fuzzy-if(azureSkiaGL,3,7597) fuzzy-if(cocoaWidget,3,7597) fuzzy-if(d2d,1,3800) fuzzy-if(d3d11,1,4200) fuzzy-if(skiaContent,2,9450) fuzzy-if(webrender,1-1,3938-23663) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
-fuzzy-if(azureSkiaGL,2,7174) fuzzy-if(webrender,1-1,1312-7887) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
-fuzzy-if(azureSkia||d2d||gtkWidget,1,10000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
+fuzzy-if(azureSkiaGL,0-3,0-7597) fuzzy-if(cocoaWidget,0-3,0-7597) fuzzy-if(d2d,0-1,0-3800) fuzzy-if(d3d11,0-1,0-4200) fuzzy-if(skiaContent,0-2,0-9450) fuzzy-if(webrender,1-1,3938-23663) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
+fuzzy-if(azureSkiaGL,0-2,0-7174) fuzzy-if(webrender,1-1,1312-7887) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
+fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-10000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-png.html background-blending-image-color-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-svg.html background-blending-image-color-ref.html
-fuzzy-if(azureSkiaGL,2,7174) fuzzy-if(webrender,1-1,1411-7888) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-gradient.html background-blending-gradient-color-ref.html
+fuzzy-if(azureSkiaGL,0-2,0-7174) fuzzy-if(webrender,1-1,1411-7888) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-gradient.html background-blending-gradient-color-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-image.html background-blending-image-color-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-isolation.html background-blending-isolation-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-list-repeat.html background-blending-list-repeat-ref.html
@@ -20,36 +20,36 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-multi
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-color-burn.html background-blending-color-burn-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-color-dodge.html background-blending-color-dodge-ref.svg
 # need to investigate why these tests are fuzzy - first suspect is a possible color space conversion on some platforms; same for mix-blend-mode tests
-fuzzy-if(azureSkia||gtkWidget,2,9600) fuzzy-if(d2d,1,8000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-color.html background-blending-color-ref.svg
+fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(d2d,0-1,0-8000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-color.html background-blending-color-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-darken.html background-blending-darken-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-difference.html background-blending-difference-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-exclusion.html background-blending-exclusion-ref.svg
-fuzzy-if(cocoaWidget||d2d,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hard-light.html background-blending-hard-light-ref.svg
-fuzzy-if(d2d,1,9600) fuzzy-if(azureSkia||gtkWidget,1,11200) fuzzy-if(webrender,1-1,9600-11200) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hue.html background-blending-hue-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-exclusion.html background-blending-exclusion-ref.svg
+fuzzy-if(cocoaWidget||d2d,0-1,0-1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hard-light.html background-blending-hard-light-ref.svg
+fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(webrender,1-1,9600-11200) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hue.html background-blending-hue-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-lighten.html background-blending-lighten-ref.svg
-fuzzy-if(d2d,1,8000) fuzzy-if(azureSkia||gtkWidget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-luminosity.html background-blending-luminosity-ref.svg
+fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-luminosity.html background-blending-luminosity-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-multiply.html background-blending-multiply-ref.svg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-normal.html background-blending-normal-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||gtkWidget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-overlay.html background-blending-overlay-ref.svg
-fuzzy-if(d2d,1,3200) fuzzy-if(azureSkia||gtkWidget,2,12800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-saturation.html background-blending-saturation-ref.svg
-fuzzy-if(d2d||azureSkia||gtkWidget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-screen.html background-blending-screen-ref.svg
-fuzzy-if(d2d||azureSkia||gtkWidget,10,4800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-soft-light.html background-blending-soft-light-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||gtkWidget,0-1,0-1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-overlay.html background-blending-overlay-ref.svg
+fuzzy-if(d2d,0-1,0-3200) fuzzy-if(azureSkia||gtkWidget,0-2,0-12800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-saturation.html background-blending-saturation-ref.svg
+fuzzy-if(d2d||azureSkia||gtkWidget,0-1,0-1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-screen.html background-blending-screen-ref.svg
+fuzzy-if(d2d||azureSkia||gtkWidget,0-10,0-4800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-soft-light.html background-blending-soft-light-ref.svg
 
-fuzzy-if(azureSkia||d2d||gtkWidget,1,40000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
+fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-40000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
 
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
-fuzzy(65,53) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
+fuzzy(0-65,0-53) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
-fuzzy-if(d3d11,49,200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
-fuzzy-if(d3d11,1,5) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
+fuzzy-if(d3d11,0-49,0-200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
+fuzzy-if(d3d11,0-1,0-5) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
-fuzzy(2,14400) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
+fuzzy(0-2,0-14400) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-dest-alpha-1135271.html mix-blend-mode-dest-alpha-1135271-ref.html
 == clipped-mixblendmode-containing-unclipped-stuff.html clipped-mixblendmode-containing-unclipped-stuff-ref.html
-fuzzy(1,6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-opacity-containing-unclipped-mixblendmode-ref.html
+fuzzy(0-1,0-6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-opacity-containing-unclipped-mixblendmode-ref.html
 
 # Test plan 5.3.1 Blending between the background layers and the background color for an element with background-blend-mode
 # Test 9
@@ -88,11 +88,11 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-backg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,16408) fuzzy-if(Android,4,768) fuzzy-if(gtkWidget,1,132) fuzzy-if(skiaContent,1,800) fuzzy-if(d2d,1,33208) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-16408) fuzzy-if(Android,0-4,0-768) fuzzy-if(gtkWidget,0-1,0-132) fuzzy-if(skiaContent,0-1,0-800) fuzzy-if(d2d,0-1,0-33208) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-element.html background-blending-moz-element-ref.html
 
-fuzzy(1,40000) pref(layout.css.background-blend-mode.enabled,true) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
+fuzzy(0-1,0-40000) pref(layout.css.background-blend-mode.enabled,true) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
 
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
 pref(layout.css.isolation.enabled,true) == blend-isolation.html blend-isolation-ref.html

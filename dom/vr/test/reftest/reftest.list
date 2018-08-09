@@ -6,5 +6,5 @@ default-preferences pref(dom.vr.puppet.enabled,true) pref(dom.vr.test.enabled,tr
 # Our Windows 7 test machines don't support D3D11.1, so we run these tests on Windows 8+ only.
 skip-if((!winWidget&&release_or_beta)||Android||gtkWidget||!layersGPUAccelerated||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == draw_rect.html wrapper.html?draw_rect.png
 # On MacOSX platform, getting different color interpolation result.
-# For lower resolution Mac hardware, we need to adjust it to fuzzy-if(cocoaWidget,1,1200).
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||cocoaWidget,1,600) skip-if((!winWidget&&release_or_beta)||Android||gtkWidget||!layersGPUAccelerated||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == change_size.html wrapper.html?change_size.png
+# For lower resolution Mac hardware, we need to adjust it to fuzzy-if(cocoaWidget,0-1,0-1200).
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||cocoaWidget,0-1,0-600) skip-if((!winWidget&&release_or_beta)||Android||gtkWidget||!layersGPUAccelerated||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == change_size.html wrapper.html?change_size.png

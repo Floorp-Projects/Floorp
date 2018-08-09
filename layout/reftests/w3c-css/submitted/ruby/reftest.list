@@ -1,6 +1,6 @@
 # Tests for inlinizing block-level boxes
 == ruby-inlinize-blocks-001.html ruby-inlinize-blocks-001-ref.html
-fuzzy-if(winWidget,144,1) == ruby-inlinize-blocks-002.html ruby-inlinize-blocks-002-ref.html
+fuzzy-if(winWidget,0-144,0-1) == ruby-inlinize-blocks-002.html ruby-inlinize-blocks-002-ref.html
 == ruby-inlinize-blocks-003.html ruby-inlinize-blocks-003-ref.html
 == ruby-inlinize-blocks-004.html ruby-inlinize-blocks-004-ref.html
 == ruby-inlinize-blocks-005.html ruby-inlinize-blocks-005-ref.html

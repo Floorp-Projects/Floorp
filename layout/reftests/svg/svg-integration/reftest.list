@@ -9,10 +9,10 @@ include clip-path/reftest.list
 == clipPath-html-03-extref.xhtml clipPath-html-03-ref.svg
 == clipPath-html-04.xhtml clipPath-html-04-ref.xhtml
 == clipPath-html-04-extref.xhtml clipPath-html-04-ref.xhtml
-fuzzy-if(true,140,70) == clipPath-html-05.xhtml clipPath-html-05-ref.xhtml # Bug 776089
-fuzzy-if(true,140,70) == clipPath-html-05-extref.xhtml clipPath-html-05-ref.xhtml # Bug 776089
-fuzzy-if(Android,255,30) == clipPath-html-06.xhtml clipPath-html-06-ref.xhtml
-fuzzy-if(Android,255,30) == clipPath-html-06-extref.xhtml clipPath-html-06-ref.xhtml
+fuzzy-if(true,0-140,0-70) == clipPath-html-05.xhtml clipPath-html-05-ref.xhtml # Bug 776089
+fuzzy-if(true,0-140,0-70) == clipPath-html-05-extref.xhtml clipPath-html-05-ref.xhtml # Bug 776089
+fuzzy-if(Android,0-255,0-30) == clipPath-html-06.xhtml clipPath-html-06-ref.xhtml
+fuzzy-if(Android,0-255,0-30) == clipPath-html-06-extref.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-07.xhtml clipPath-html-07-ref.svg
 == clipPath-html-08.xhtml clipPath-html-07-ref.svg # reuse 07-ref.svg
 == clipPath-html-zoomed-01.xhtml clipPath-html-01-ref.svg
@@ -28,25 +28,25 @@ fuzzy-if(Android,255,30) == clipPath-html-06-extref.xhtml clipPath-html-06-ref.x
 == filter-html-dynamic-01.xhtml filter-html-dynamic-01-ref.xhtml
 random-if(Android) == filter-html-01-extref.xhtml filter-html-01-ref.svg # Android: bug 1198380
 == filter-html-zoomed-01.xhtml filter-html-01-ref.svg
-fuzzy-if(webrender,1,125414) == mask-html-01.xhtml mask-html-01-ref.svg
-fuzzy-if(webrender,1,125414) == mask-html-01-extref-01.xhtml mask-html-01-ref.svg
+fuzzy-if(webrender,0-1,0-125414) == mask-html-01.xhtml mask-html-01-ref.svg
+fuzzy-if(webrender,0-1,0-125414) == mask-html-01-extref-01.xhtml mask-html-01-ref.svg
 random == mask-html-01-extref-02.xhtml mask-html-01-ref.svg # random due to bug 877661
-fuzzy-if(webrender,1,125414) == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
-fuzzy-if(webrender,1,125414) == mask-html-xbl-bound-01.html mask-html-01-ref.svg
+fuzzy-if(webrender,0-1,0-125414) == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
+fuzzy-if(webrender,0-1,0-125414) == mask-html-xbl-bound-01.html mask-html-01-ref.svg
 == mask-transformed-html-01.xhtml ../pass.svg
 == mask-transformed-html-02.xhtml ../pass.svg
-fuzzy-if(skiaContent,1,5) == patterned-svg-under-transformed-html-01.xhtml ../pass.svg
+fuzzy-if(skiaContent,0-1,0-5) == patterned-svg-under-transformed-html-01.xhtml ../pass.svg
 == patterned-svg-under-transformed-html-02.xhtml ../pass.svg
 
-fuzzy(1,5000) == mask-clipPath-opacity-01a.xhtml mask-clipPath-opacity-01-ref.xhtml
-fuzzy(1,5000) == mask-clipPath-opacity-01b.xhtml mask-clipPath-opacity-01-ref.xhtml
-fuzzy(1,5000) == mask-clipPath-opacity-01c.xhtml mask-clipPath-opacity-01-ref.xhtml
-fuzzy(1,5000) == mask-clipPath-opacity-01d.xhtml mask-clipPath-opacity-01-ref.xhtml
-fuzzy(1,5000) == mask-clipPath-opacity-01e.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(0-1,0-5000) == mask-clipPath-opacity-01a.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(0-1,0-5000) == mask-clipPath-opacity-01b.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(0-1,0-5000) == mask-clipPath-opacity-01c.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(0-1,0-5000) == mask-clipPath-opacity-01d.xhtml mask-clipPath-opacity-01-ref.xhtml
+fuzzy(0-1,0-5000) == mask-clipPath-opacity-01e.xhtml mask-clipPath-opacity-01-ref.xhtml
 
 == transform-outer-svg-01.xhtml transform-outer-svg-01-ref.xhtml
 
 # box-decoration-break tests
-fuzzy-if(Android,4,10) fuzzy-if(webrender&&cocoaWidget,9-9,3-3) == box-decoration-break-01.xhtml box-decoration-break-01-ref.xhtml
-fuzzy(62,14) == box-decoration-break-02.xhtml box-decoration-break-02-ref.xhtml
-fuzzy(67,238) == box-decoration-break-03.xhtml box-decoration-break-01-ref.xhtml
+fuzzy-if(Android,0-4,0-10) fuzzy-if(webrender&&cocoaWidget,9-9,3-3) == box-decoration-break-01.xhtml box-decoration-break-01-ref.xhtml
+fuzzy(0-62,0-14) == box-decoration-break-02.xhtml box-decoration-break-02-ref.xhtml
+fuzzy(0-67,0-238) == box-decoration-break-03.xhtml box-decoration-break-01-ref.xhtml

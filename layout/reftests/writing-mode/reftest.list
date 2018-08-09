@@ -5,7 +5,7 @@
 == 1083748.html 1083748-ref.html
 == 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
 == 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
-fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android,4,8704) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
+fuzzy-if(gtkWidget,0-255,0-2) fuzzy-if(winWidget||Android,0-4,0-8704) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
 == 1083892-1.html 1083892-1-ref.html
 == 1086883-1a.html 1086883-1-ref.html
 == 1086883-1b.html 1086883-1-ref.html
@@ -16,7 +16,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1090159-1.html 1090159-1
 == 1090168-1.html 1090168-1-ref.html
 != 1090168-1.html 1090168-1-notref.html
 == 1090168-2.html 1090168-2-ref.html
-fuzzy-if(azureSkia,255,2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
+fuzzy-if(azureSkia,0-255,0-2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
 == 1091058-1.html 1091058-1-ref.html
 == 1094434-1.html 1094434-1-ref.html
 == 1094434-2.html 1094434-2-ref.html
@@ -32,7 +32,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1b.html 1102175-
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html # Bug 1392106
-fuzzy(116,94) fuzzy-if(winWidget,135,124) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
+fuzzy(0-116,0-94) fuzzy-if(winWidget,0-135,0-124) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
 == 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
 == 1122366-1-margin-collapse.html 1122366-1-margin-collapse-ref.html
@@ -65,13 +65,13 @@ fuzzy(116,94) fuzzy-if(winWidget,135,124) == 1115916-1-vertical-metrics.html 111
 skip-if(Android||winWidget) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
 skip-if(!(Android)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
 skip-if(!winWidget) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
-fuzzy-if(Android,1,18) == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
+fuzzy-if(Android,0-1,0-18) == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
 # Android uses different margins for buttons compared to the ref.
-skip-if(Android) fuzzy-if(skiaContent&&!Android,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
+skip-if(Android) fuzzy-if(skiaContent&&!Android,0-2,0-6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
 skip-if(!(Android)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
 # Android uses different margins for buttons compared to the ref.
 skip-if(Android) == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
-fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
 == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
@@ -110,9 +110,9 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1130907-intrinsic-sizing
 skip-if(Android) == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html # Disabled on Android until bug 1352238 is fixed.
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
 == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html
-fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
-fuzzy-if(winWidget,255,221) fuzzy-if(skiaContent,159,111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
-fuzzy-if(winWidget,255,236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html
+fuzzy-if(winWidget,0-255,0-163) fuzzy-if(skiaContent,0-159,0-111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
+fuzzy-if(winWidget,0-255,0-221) fuzzy-if(skiaContent,0-159,0-111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
+fuzzy-if(winWidget,0-255,0-236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html
 == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
 != 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html
 
@@ -148,9 +148,9 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1188061-2-nsChangeHint_U
 # tests involving sideways-lr mode
 == 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.html
 == 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
-fuzzy-if(winWidget,3,84) fails-if(webrender&&!gtkWidget) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
-fuzzy-if(winWidget,3,112) fails-if(webrender||Android) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html # see bug 1366692. Rounding error with WR enabled, and on Android.
-fuzzy-if(gtkWidget,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
+fuzzy-if(winWidget,0-3,0-84) fails-if(webrender&&!gtkWidget) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
+fuzzy-if(winWidget,0-3,0-112) fails-if(webrender||Android) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html # see bug 1366692. Rounding error with WR enabled, and on Android.
+fuzzy-if(gtkWidget,0-255,0-6) fuzzy-if(cocoaWidget,0-65,0-69) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
 
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
 == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
@@ -170,13 +170,13 @@ skip-if(Android) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientat
 == 1302734-bidi-plaintext-2d.html 1302734-bidi-plaintext-2-ref.html
 
 == 1302389-scrolled-rect-1a.html 1302389-scrolled-rect-1-ref.html
-fuzzy-if(Android,54,852) == 1302389-scrolled-rect-1b.html 1302389-scrolled-rect-1-ref.html
-fuzzy-if(Android,54,852) fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-1c.html 1302389-scrolled-rect-1-ref.html
-fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-1d.html 1302389-scrolled-rect-1-ref.html
-fuzzy-if(Android,54,852) fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-2a.html 1302389-scrolled-rect-2-ref.html
-fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-2b.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(Android,0-54,0-852) == 1302389-scrolled-rect-1b.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(Android,0-54,0-852) fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-1c.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-1d.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(Android,0-54,0-852) fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-2a.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(gtkWidget,0-1,0-25) fuzzy-if(cocoaWidget,0-1,0-2) == 1302389-scrolled-rect-2b.html 1302389-scrolled-rect-2-ref.html
 == 1302389-scrolled-rect-2c.html 1302389-scrolled-rect-2-ref.html
-fuzzy-if(Android,54,852) == 1302389-scrolled-rect-2d.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(Android,0-54,0-852) == 1302389-scrolled-rect-2d.html 1302389-scrolled-rect-2-ref.html
 
 == 1361631-mongolian-upright-1.html 1361631-mongolian-upright-1-ref.html
 == 1395926-vertical-upright-gpos-1.html 1395926-vertical-upright-gpos-1-ref.html

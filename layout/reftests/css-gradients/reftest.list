@@ -1,12 +1,12 @@
-fuzzy-if(!contentSameGfxBackendAsCanvas,4,88500) fuzzy-if(azureSkiaGL||skiaContent,4,89700) == linear-1a.html linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(skiaContent,1,16000) fuzzy-if(webrender,1,23918) == linear-keywords-1a.html linear-keywords-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-4,0-89700) == linear-1a.html linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-2,0-88500) fuzzy-if(azureSkiaGL,0-2,0-89997) fuzzy-if(skiaContent,0-1,0-16000) fuzzy-if(webrender,0-1,0-23918) == linear-keywords-1a.html linear-keywords-1-ref.html
 == linear-diagonal-1a.html linear-diagonal-1-ref.html
 == linear-diagonal-2a.html linear-diagonal-2-ref.html
 == linear-diagonal-3a.html linear-diagonal-3-ref.html
 == linear-diagonal-4a.html linear-diagonal-4-ref.html
 == linear-premul.html linear-premul-ref.html
 
-fuzzy(1,800000) == linear-flipped-1.html linear-flipped-1-ref.html
+fuzzy(0-1,0-800000) == linear-flipped-1.html linear-flipped-1-ref.html
 == linear-position-1a.html linear-position-1-ref.html
 == linear-repeat-1a.html linear-repeat-1-ref.html
 fails-if(d2d&&!webrender) == linear-repeat-1b.html linear-repeat-1-ref.html # bug 582236
@@ -15,92 +15,92 @@ fails-if(d2d&&!webrender) == linear-repeat-1d.html linear-repeat-1-ref.html # bu
 == linear-repeat-1e.html linear-repeat-1-ref.html
 fails-if(d2d&&!webrender) == linear-repeat-1f.html linear-repeat-1-ref.html # bug 582236
 fails-if(d2d&&!webrender) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
-fuzzy-if(skiaContent,1,500) == linear-rotated-1.html linear-rotated-1-ref.html
-fuzzy-if(winWidget,1,37800) fuzzy-if(skiaContent,1,45000) == linear-size-1a.html linear-size-1-ref.html
+fuzzy-if(skiaContent,0-1,0-500) == linear-rotated-1.html linear-rotated-1-ref.html
+fuzzy-if(winWidget,0-1,0-37800) fuzzy-if(skiaContent,0-1,0-45000) == linear-size-1a.html linear-size-1-ref.html
 == linear-stops-1a.html linear-stops-1-ref.html
 == linear-stops-1b.html linear-stops-1-ref.html
 == linear-stops-1c.html linear-stops-1-ref.html
 == linear-stops-1d.html linear-stops-1-ref.html
 == linear-stops-1e.html linear-stops-1-ref.html
 == linear-stops-1f.html linear-stops-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL||skiaContent,3,89700) == linear-vertical-1a.html linear-vertical-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL||skiaContent,3,89700) == linear-vertical-1b.html linear-vertical-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL||skiaContent,3,89700) == linear-vertical-1c.html linear-vertical-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL||skiaContent,3,89700) == linear-vertical-1d.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1a.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1b.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1c.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1d.html linear-vertical-1-ref.html
 fails-if(webrender&&cocoaWidget) == linear-vertical-subpixel-1.html linear-vertical-subpixel-1-ref.html
 == linear-viewport.html linear-viewport-ref.html
 == nostops.html about:blank
 == onestop.html about:blank
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1a.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1b.html radial-1-ref.html
-fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,4,90000) == radial-2a.html radial-2-ref.html
-fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,4,90000) == radial-2b.html radial-2-ref.html
-fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,4,90000) == radial-2c.html radial-2-ref.html
-fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,4,90000) == radial-2d.html radial-2-ref.html
-fuzzy-if(cocoaWidget,1,28) fuzzy-if(winWidget,1,18) fuzzy-if(skiaContent,1,50) == radial-position-1b.html radial-position-1-ref.html
-fuzzy-if(cocoaWidget,4,22317) fuzzy-if(Android,8,771) == radial-shape-closest-corner-1a.html radial-shape-closest-corner-1-ref.html
-fuzzy(1,238) fuzzy-if(cocoaWidget,4,22608) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\./.test(http.oscpu))&&d2d,1,336) fuzzy-if(Android,8,787) fuzzy-if(skiaContent,2,300) == radial-shape-closest-corner-1b.html radial-shape-closest-corner-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880) == radial-shape-closest-side-1a.html radial-shape-closest-side-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880) == radial-shape-closest-side-1b.html radial-shape-closest-side-1-ref.html
-fuzzy-if(Android,8,771) == radial-shape-farthest-corner-1a.html radial-shape-farthest-corner-1-ref.html
-fails-if(gtkWidget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(1,1622) fuzzy-if(cocoaWidget,2,41281) fuzzy-if(Android,8,1091) fuzzy-if(skiaContent,2,500) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
-fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
-fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-1,0-5884) fuzzy-if(cocoaWidget,0-9,0-87824) fuzzy-if(azureSkiaGL,0-6,0-88024) random-if(d2d) fuzzy-if(skiaContent,0-4,0-6000) == radial-1a.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-1,0-5884) fuzzy-if(cocoaWidget,0-9,0-87824) fuzzy-if(azureSkiaGL,0-6,0-88024) random-if(d2d) fuzzy-if(skiaContent,0-4,0-6000) == radial-1b.html radial-1-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2a.html radial-2-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2b.html radial-2-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2c.html radial-2-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2d.html radial-2-ref.html
+fuzzy-if(cocoaWidget,0-1,0-28) fuzzy-if(winWidget,0-1,0-18) fuzzy-if(skiaContent,0-1,0-50) == radial-position-1b.html radial-position-1-ref.html
+fuzzy-if(cocoaWidget,0-4,0-22317) fuzzy-if(Android,0-8,0-771) == radial-shape-closest-corner-1a.html radial-shape-closest-corner-1-ref.html
+fuzzy(0-1,0-238) fuzzy-if(cocoaWidget,0-4,0-22608) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\./.test(http.oscpu))&&d2d,0-1,0-336) fuzzy-if(Android,0-8,0-787) fuzzy-if(skiaContent,0-2,0-300) == radial-shape-closest-corner-1b.html radial-shape-closest-corner-1-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-5) fuzzy-if(Android,0-17,0-3880) == radial-shape-closest-side-1a.html radial-shape-closest-side-1-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-5) fuzzy-if(Android,0-17,0-3880) == radial-shape-closest-side-1b.html radial-shape-closest-side-1-ref.html
+fuzzy-if(Android,0-8,0-771) == radial-shape-farthest-corner-1a.html radial-shape-farthest-corner-1-ref.html
+fails-if(gtkWidget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(0-1,0-1622) fuzzy-if(cocoaWidget,0-2,0-41281) fuzzy-if(Android,0-8,0-1091) fuzzy-if(skiaContent,0-2,0-500) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
+fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
+fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
 fuzzy-if(webrender,1-2,2-9) == radial-size-1a.html radial-size-1-ref.html
 fuzzy-if(webrender,1-2,2-9) == radial-size-1b.html radial-size-1-ref.html
-fuzzy-if(Android,4,248) == radial-zero-length-1a.html radial-zero-length-1-ref.html
-fuzzy-if(Android,4,248) == radial-zero-length-1b.html radial-zero-length-1-ref.html
-fuzzy-if(Android,4,248) == radial-zero-length-1c.html radial-zero-length-1-ref.html
-fuzzy-if(Android,4,248) == radial-zero-length-1d.html radial-zero-length-1-ref.html
-fuzzy-if(Android,4,248) == radial-zero-length-1e.html radial-zero-length-1-ref.html
-fuzzy-if(Android,4,248) == radial-zero-length-1f.html radial-zero-length-1-ref.html
+fuzzy-if(Android,0-4,0-248) == radial-zero-length-1a.html radial-zero-length-1-ref.html
+fuzzy-if(Android,0-4,0-248) == radial-zero-length-1b.html radial-zero-length-1-ref.html
+fuzzy-if(Android,0-4,0-248) == radial-zero-length-1c.html radial-zero-length-1-ref.html
+fuzzy-if(Android,0-4,0-248) == radial-zero-length-1d.html radial-zero-length-1-ref.html
+fuzzy-if(Android,0-4,0-248) == radial-zero-length-1e.html radial-zero-length-1-ref.html
+fuzzy-if(Android,0-4,0-248) == radial-zero-length-1f.html radial-zero-length-1-ref.html
 == radial-premul.html radial-premul-ref.html
 == repeated-final-stop-1.html repeated-final-stop-1-ref.html
 == repeating-linear-1a.html repeating-linear-1-ref.html
 == repeating-linear-1b.html repeating-linear-1-ref.html
 == repeating-linear-2a.html repeating-linear-2-ref.html
-fuzzy-if(d2d,127,2612) == repeating-radial-1a.html repeating-radial-1-ref.html
+fuzzy-if(d2d,0-127,0-2612) == repeating-radial-1a.html repeating-radial-1-ref.html
 == repeating-radial-1b.html repeating-radial-1-ref.html
-fuzzy-if(d2d,127,2612) == repeating-radial-1c.html repeating-radial-1-ref.html
+fuzzy-if(d2d,0-127,0-2612) == repeating-radial-1c.html repeating-radial-1-ref.html
 == repeating-radial-1d.html repeating-radial-1-ref.html
 == repeating-radial-2a.html repeating-radial-2-ref.html
 == repeating-radial-2b.html repeating-radial-2-ref.html
-fuzzy-if(skiaContent,18,600) == twostops-1a.html twostops-1-ref.html
-fuzzy-if(skiaContent,18,600) == twostops-1b.html twostops-1-ref.html
-fuzzy-if(skiaContent,226,600) == twostops-1c.html twostops-1-ref.html
-fuzzy-if(skiaContent,141,300) == twostops-1d.html twostops-1-ref.html
-fuzzy-if(skiaContent,73,900) == twostops-1e.html twostops-1-ref.html
+fuzzy-if(skiaContent,0-18,0-600) == twostops-1a.html twostops-1-ref.html
+fuzzy-if(skiaContent,0-18,0-600) == twostops-1b.html twostops-1-ref.html
+fuzzy-if(skiaContent,0-226,0-600) == twostops-1c.html twostops-1-ref.html
+fuzzy-if(skiaContent,0-141,0-300) == twostops-1d.html twostops-1-ref.html
+fuzzy-if(skiaContent,0-73,0-900) == twostops-1e.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent&&layersGPUAccelerated,8,20000) == aja-linear-1a.html aja-linear-1-ref.html
-fails-if(!d2d&&!skiaContent) fuzzy-if(webrender,1,10125) fuzzy-if(skiaContent,1,20000) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1c.html aja-linear-1-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1d.html aja-linear-1-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1e.html aja-linear-1-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1f.html aja-linear-1-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-2.html aja-linear-2-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-3a.html aja-linear-3-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-3b.html aja-linear-3-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-4a.html aja-linear-4-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-4b.html aja-linear-4-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-5a.html aja-linear-5-ref.html 
-fuzzy-if(Android,6,10576) == height-dependence-1.html height-dependence-1-ref.html
-fuzzy-if(cocoaWidget,1,40000) fuzzy-if(Android,6,10576) == height-dependence-2.html height-dependence-2-ref.html
-fuzzy-if(Android,6,10576) == height-dependence-3.html height-dependence-3-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent&&layersGPUAccelerated,0-8,0-20000) == aja-linear-1a.html aja-linear-1-ref.html
+fails-if(!d2d&&!skiaContent) fuzzy-if(webrender,0-1,0-10125) fuzzy-if(skiaContent,0-1,0-20000) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-1c.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-1d.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-1e.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-1f.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-2,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-2.html aja-linear-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-2,0-19999) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-3a.html aja-linear-3-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-2,0-19999) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-3b.html aja-linear-3-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-4a.html aja-linear-4-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-4b.html aja-linear-4-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-5a.html aja-linear-5-ref.html 
+fuzzy-if(Android,0-6,0-10576) == height-dependence-1.html height-dependence-1-ref.html
+fuzzy-if(cocoaWidget,0-1,0-40000) fuzzy-if(Android,0-6,0-10576) == height-dependence-2.html height-dependence-2-ref.html
+fuzzy-if(Android,0-6,0-10576) == height-dependence-3.html height-dependence-3-ref.html
 
 == linear-onestopposition-1.html linear-onestopposition-1-ref.html
-fuzzy-if(d2d,47,400) == linear-onestopposition-1.html linear-onestopposition-1-ref2.html # d2d interpolates the hard stop
+fuzzy-if(d2d,0-47,0-400) == linear-onestopposition-1.html linear-onestopposition-1-ref2.html # d2d interpolates the hard stop
 == radial-onestopposition-1a.html radial-onestopposition-1-ref.html
 == radial-onestopposition-1b.html radial-onestopposition-1-ref.html
 == repeating-linear-onestopposition-1.html orange-square.html
 == repeating-radial-onestopposition-1a.html orange-square.html
 == repeating-radial-onestopposition-1b.html orange-square.html
 == bug-916535-background-repeat-linear.html bug-916535-background-repeat-linear-ref.html
-fuzzy(1,800000) == large-gradient-1.html large-gradient-1-ref.html
-fuzzy-if(Android,4,1) == large-gradient-2.html large-gradient-2-ref.html # Bug 1182082
-fuzzy(1,800000) == large-gradient-3.html large-gradient-3-ref.html
+fuzzy(0-1,0-800000) == large-gradient-1.html large-gradient-1-ref.html
+fuzzy-if(Android,0-4,0-1) == large-gradient-2.html large-gradient-2-ref.html # Bug 1182082
+fuzzy(0-1,0-800000) == large-gradient-3.html large-gradient-3-ref.html
 == large-gradient-4.html large-gradient-4-ref.html
-fuzzy(2,800000) == large-gradient-5.html large-gradient-5-ref.html
+fuzzy(0-2,0-800000) == large-gradient-5.html large-gradient-5-ref.html
 == 1224761-1.html 1224761-1-ref.html
 
-fuzzy(1,800000) == mask-gradient-translucent-end-color-1.html mask-gradient-translucent-end-color-1-ref.html
+fuzzy(0-1,0-800000) == mask-gradient-translucent-end-color-1.html mask-gradient-translucent-end-color-1-ref.html

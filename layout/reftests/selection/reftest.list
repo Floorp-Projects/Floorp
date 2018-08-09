@@ -1,27 +1,27 @@
-fuzzy-if(skiaContent,1,30) == dynamic-text-1a.html dynamic-text-1-ref.html
-fuzzy-if(skiaContent,1,40) == dynamic-text-1b.html dynamic-text-1-ref.html
+fuzzy-if(skiaContent,0-1,0-30) == dynamic-text-1a.html dynamic-text-1-ref.html
+fuzzy-if(skiaContent,0-1,0-40) == dynamic-text-1b.html dynamic-text-1-ref.html
 != extend-1-sanity.html extend-1-ref.html
-fuzzy-if(skiaContent,1,1000) == extend-1a.html extend-1-ref.html
-fuzzy-if(skiaContent,1,10) == extend-1b.html extend-1-ref.html
-fuzzy-if(skiaContent,1,1000) == extend-1c.html extend-1-ref.html
-fuzzy-if(skiaContent,1,1000) == extend-1d.html extend-1-ref.html
-fuzzy-if(skiaContent,1,1000) == extend-1e.html extend-1-ref.html
-fuzzy-if(skiaContent,1,1000) == extend-1f.html extend-1-ref.html
-fuzzy-if(skiaContent,1,1000) == extend-1g.html extend-1-ref.html
-fuzzy-if(skiaContent,1,1000) == extend-1h.html extend-1-ref.html
-fuzzy-if(skiaContent,1,10) == extend-1i.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-1000) == extend-1a.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-10) == extend-1b.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-1000) == extend-1c.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-1000) == extend-1d.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-1000) == extend-1e.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-1000) == extend-1f.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-1000) == extend-1g.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-1000) == extend-1h.html extend-1-ref.html
+fuzzy-if(skiaContent,0-1,0-10) == extend-1i.html extend-1-ref.html
 == extend-2a.html extend-2-ref.html
 == extend-2b.html extend-2-ref.html
 != extend-3-sanity.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3a.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3b.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3c.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3d.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3e.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3f.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3g.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3h.html extend-3-ref.html
-fuzzy-if(skiaContent,1,700) == extend-3i.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3a.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3b.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3c.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3d.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3e.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3f.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3g.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3h.html extend-3-ref.html
+fuzzy-if(skiaContent,0-1,0-700) == extend-3i.html extend-3-ref.html
 == extend-4a.html extend-4-ref.html
 == extend-4b.html extend-4-ref.html
 # these 3 random-if(Android) are a difference of Native & Xul, see bug 739714
@@ -30,11 +30,11 @@ random-if(Android) needs-focus != pseudo-element-of-native-anonymous.html pseudo
 random-if(Android) fails-if(cocoaWidget) needs-focus == non-themed-widget.html non-themed-widget-ref.html
 random-if(Android) fails-if(cocoaWidget) needs-focus == themed-widget.html themed-widget-ref.html
 == addrange-1.html addrange-ref.html
-fuzzy-if(skiaContent,1,1200) == addrange-2.html addrange-ref.html
+fuzzy-if(skiaContent,0-1,0-1200) == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html
 == modify-range.html modify-range-ref.html
 == dom-mutations.html dom-mutations-ref.html
-fuzzy-if(OSX==1010,9,1) fuzzy-if(OSX&&skiaContent&&!webrender,6,1) fuzzy-if(skiaContent&&!OSX,1,2138) == trailing-space-1.html trailing-space-1-ref.html
+fuzzy-if(OSX==1010,0-9,0-1) fuzzy-if(OSX&&skiaContent&&!webrender,0-6,0-1) fuzzy-if(skiaContent&&!OSX,0-1,0-2138) == trailing-space-1.html trailing-space-1-ref.html
 != invalidation-1-ref.html invalidation-2-ref.html
 == invalidation-1a.html invalidation-1-ref.html
 == invalidation-1b.html invalidation-1-ref.html
@@ -48,7 +48,7 @@ fuzzy-if(OSX==1010,9,1) fuzzy-if(OSX&&skiaContent&&!webrender,6,1) fuzzy-if(skia
 == invalidation-2d.html invalidation-2-ref.html
 == invalidation-2e.html invalidation-2-ref.html
 == invalidation-2f.html invalidation-2-ref.html
-fuzzy(7,2) fuzzy-if(OSX,1,1) fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) needs-focus == rtl-selection-with-decoration.html rtl-selection-with-decoration-ref.html # Bug 1392106
+fuzzy(0-7,0-2) fuzzy-if(OSX,0-1,0-1) fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) needs-focus == rtl-selection-with-decoration.html rtl-selection-with-decoration-ref.html # Bug 1392106
 fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == semitransparent-decoration-line.html semitransparent-decoration-line-ref.html
-fuzzy-if(OSX,1,6) fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == writing-mode.html writing-mode-ref.html
+fuzzy-if(OSX,0-1,0-6) fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == writing-mode.html writing-mode-ref.html
 needs-focus == 1478604.html 1478604-ref.html
