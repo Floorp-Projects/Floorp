@@ -835,12 +835,6 @@ public:
    */
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
 
-  /**
-   * Returns true if we're currently building a display list that's
-   * under an nsDisplayFilter.
-   */
-  bool IsInFilter() const { return mInFilter; }
-
   bool IsInPageSequence() const { return mInPageSequence; }
   void SetInPageSequence(bool aInPage) { mInPageSequence = aInPage; }
 
@@ -1176,28 +1170,23 @@ public:
   };
 
   /**
-   * A helper class to temporarily set the value of mFilterASR and
-   * mInFilter.
+   * A helper class to temporarily set the value of mFilterASR.
    */
-  class AutoEnterFilter {
+  class AutoFilterASRSetter {
   public:
-    AutoEnterFilter(nsDisplayListBuilder* aBuilder, bool aUsingFilter)
-      : mBuilder(aBuilder)
-      , mOldValue(aBuilder->mFilterASR)
-      , mOldInFilter(aBuilder->mInFilter)
+    AutoFilterASRSetter(nsDisplayListBuilder* aBuilder, bool aUsingFilter)
+      : mBuilder(aBuilder), mOldValue(aBuilder->mFilterASR)
     {
       if (!aBuilder->mFilterASR && aUsingFilter) {
         aBuilder->mFilterASR = aBuilder->CurrentActiveScrolledRoot();
-        aBuilder->mInFilter = true;
       }
     }
-    ~AutoEnterFilter() {
+    ~AutoFilterASRSetter() {
       mBuilder->mFilterASR = mOldValue;
     }
   private:
     nsDisplayListBuilder* mBuilder;
     const ActiveScrolledRoot* mOldValue;
-    bool mOldInFilter;
   };
 
   /**
@@ -1959,7 +1948,6 @@ private:
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform
   bool                           mInTransform;
-  bool                           mInFilter;
   bool                           mInPageSequence;
   bool                           mIsInChromePresContext;
   bool                           mSyncDecodeImages;
