@@ -26,6 +26,14 @@ add_task(async function setup() {
   });
 });
 
+function mouseout() {
+  let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
+  EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
+  EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mousemove"});
+  info("Waiting for mouseout event");
+  return mouseOutPromise;
+}
+
 async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
                                 shouldAutoClose, popupHideFn, isBookmarkRemoved}) {
   await BrowserTestUtils.withNewTab({gBrowser, url: TEST_URL}, async function(browser) {
@@ -170,11 +178,7 @@ add_task(async function panel_shown_for_new_bookmarks_mousemove_mouseout() {
       is(bookmarkPanel.state, "open", "Panel should still be open on mousemove");
     },
     async popupHideFn() {
-      let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
-      EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
-      EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-      info("Waiting for mouseout event");
-      await mouseOutPromise;
+      await mouseout();
       info("Got mouseout event, should autoclose now");
     },
     shouldAutoClose: false,
@@ -269,11 +273,7 @@ add_task(async function panel_shown_for_new_bookmark_compositionstart_mouseout_n
       await compositionStartPromise;
       info("Got compositionstart event");
 
-      let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
-      EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
-      EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-      info("Waiting for mouseout event");
-      await mouseOutPromise;
+      await mouseout();
       info("Got mouseout event, but shouldn't run autoclose");
     },
     shouldAutoClose: false,
@@ -433,11 +433,7 @@ add_task(async function ctrl_d_new_bookmark_mousedown_mouseout_no_autoclose() {
 
       EventUtils.synthesizeMouseAtCenter(bookmarkPanelTitle, {button: 1, type: "mousedown"});
 
-      let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
-      EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
-      EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-      info("Waiting for mouseout event");
-      await mouseOutPromise;
+      await mouseout();
     },
     shouldAutoClose: false,
     popupHideFn() {
