@@ -48,18 +48,18 @@ namespace mozilla {
  * a constructor and destructor, which should call StartObserving and
  * StopObserving, respectively.
  */
-class nsSVGRenderingObserver : public nsStubMutationObserver
+class SVGRenderingObserver : public nsStubMutationObserver
 {
 
 protected:
-  virtual ~nsSVGRenderingObserver()
-    {}
+  virtual ~SVGRenderingObserver() = default;
 
 public:
   typedef mozilla::dom::Element Element;
-  nsSVGRenderingObserver()
+
+  SVGRenderingObserver()
     : mInObserverList(false)
-    {}
+  {}
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -77,7 +77,7 @@ public:
    */
   void OnNonDOMMutationRenderingChange();
 
-  // When a nsSVGRenderingObserver list gets forcibly cleared, it uses this
+  // When a SVGRenderingObserver list gets forcibly cleared, it uses this
   // callback to notify every observer that's cleared from it, so they can
   // react.
   void NotifyEvictedFromRenderingObserverList();
@@ -132,7 +132,7 @@ protected:
  * object derived from nsSVGIDRenderingObserver to manage the relationship. The
  * property object is attached to the referencing frame.
  */
-class nsSVGIDRenderingObserver : public nsSVGRenderingObserver
+class nsSVGIDRenderingObserver : public SVGRenderingObserver
 {
 public:
   typedef mozilla::dom::Element Element;
@@ -395,7 +395,7 @@ private:
 };
 
 /**
- * A manager for one-shot nsSVGRenderingObserver tracking.
+ * A manager for one-shot SVGRenderingObserver tracking.
  * nsSVGRenderingObservers can be added or removed. They are not strongly
  * referenced so an observer must be removed before it dies.
  * When InvalidateAll is called, all outstanding references get
@@ -424,12 +424,12 @@ public:
     MOZ_COUNT_DTOR(nsSVGRenderingObserverList);
   }
 
-  void Add(nsSVGRenderingObserver* aObserver)
+  void Add(SVGRenderingObserver* aObserver)
   { mObservers.PutEntry(aObserver); }
-  void Remove(nsSVGRenderingObserver* aObserver)
+  void Remove(SVGRenderingObserver* aObserver)
   { mObservers.RemoveEntry(aObserver); }
 #ifdef DEBUG
-  bool Contains(nsSVGRenderingObserver* aObserver)
+  bool Contains(SVGRenderingObserver* aObserver)
   { return (mObservers.GetEntry(aObserver) != nullptr); }
 #endif
   bool IsEmpty()
@@ -454,7 +454,7 @@ public:
   void RemoveAll();
 
 private:
-  nsTHashtable<nsPtrHashKey<nsSVGRenderingObserver> > mObservers;
+  nsTHashtable<nsPtrHashKey<SVGRenderingObserver>> mObservers;
 };
 
 class SVGObserverUtils
@@ -604,11 +604,13 @@ public:
   /**
    * @param aFrame must be a first-continuation.
    */
-  static void AddRenderingObserver(Element* aElement, nsSVGRenderingObserver *aObserver);
+  static void AddRenderingObserver(Element* aElement,
+                                   SVGRenderingObserver *aObserver);
   /**
    * @param aFrame must be a first-continuation.
    */
-  static void RemoveRenderingObserver(Element* aElement, nsSVGRenderingObserver *aObserver);
+  static void RemoveRenderingObserver(Element* aElement,
+                                      SVGRenderingObserver *aObserver);
 
   /**
    * Removes all rendering observers from aElement.
