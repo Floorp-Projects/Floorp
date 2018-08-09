@@ -51,10 +51,9 @@ main (int argc, char **argv)
   const char *font_data = hb_blob_get_data (blob, &len);
   printf ("Opened font file %s: %d bytes long\n", argv[1], len);
 
-  Sanitizer<OpenTypeFontFile> sanitizer;
-  hb_blob_t *font_blob = sanitizer.sanitize (blob);
+  hb_blob_t *font_blob = hb_sanitize_context_t().sanitize_blob<OpenTypeFontFile> (blob);
   const OpenTypeFontFile* sanitized = font_blob->as<OpenTypeFontFile> ();
-  if (sanitized == &Null(OpenTypeFontFile))
+  if (!font_blob->data)
   {
     printf ("Sanitization of the file wasn't successful. Exit");
     return 1;

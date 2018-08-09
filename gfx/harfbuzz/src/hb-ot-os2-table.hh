@@ -51,12 +51,12 @@ struct os2
 
   inline bool subset (hb_subset_plan_t *plan) const
   {
-    hb_blob_t *os2_blob = OT::Sanitizer<OT::os2>().sanitize (hb_face_reference_table (plan->source, HB_OT_TAG_os2));
+    hb_blob_t *os2_blob = hb_sanitize_context_t().reference_table<os2> (plan->source);
     hb_blob_t *os2_prime_blob = hb_blob_create_sub_blob (os2_blob, 0, -1);
     // TODO(grieger): move to hb_blob_copy_writable_or_fail
     hb_blob_destroy (os2_blob);
 
-    OT::os2 *os2_prime = (OT::os2 *) hb_blob_get_data_writable (os2_prime_blob, nullptr);
+    os2 *os2_prime = (os2 *) hb_blob_get_data_writable (os2_prime_blob, nullptr);
     if (unlikely (!os2_prime)) {
       hb_blob_destroy (os2_prime_blob);
       return false;

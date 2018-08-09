@@ -1,3 +1,39 @@
+Overview of changes leading to 1.8.7
+Wednesday, August 8, 2018
+====================================
+- Fix assertion failure with GDEF-blacklisted fonts.
+
+
+Overview of changes leading to 1.8.6
+Tuesday, August 7, 2018
+====================================
+- Internal code shuffling.
+- New API to speed up getting advance widths for implementations
+  that have heavy overhead in get_h_advance callback:
++hb_font_funcs_set_glyph_h_advances_func
++hb_font_funcs_set_glyph_v_advances_func
++hb_font_get_glyph_advances_for_direction
++hb_font_get_glyph_h_advances
++hb_font_get_glyph_h_advances_func_t
++hb_font_get_glyph_v_advances
++hb_font_get_glyph_v_advances_func_t
+
+
+Overview of changes leading to 1.8.5
+Wednesday, August 1, 2018
+====================================
+- Major Khmer shaper improvements to better match Microsoft.
+- Indic bug fixes.
+- Internal improvements to atomic operations.
+
+
+Overview of changes leading to 1.8.4
+Tuesday, July 17, 2018
+====================================
+- Fix build on non-C++11.
+- Use C++-style GCC atomics and C++11 atomics.
+
+
 Overview of changes leading to 1.8.3
 Wednesday, July 11, 2018
 ====================================

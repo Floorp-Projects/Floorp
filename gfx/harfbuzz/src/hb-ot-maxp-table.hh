@@ -100,14 +100,14 @@ struct maxp
 
   inline bool subset (hb_subset_plan_t *plan) const
   {
-    hb_blob_t *maxp_blob = OT::Sanitizer<OT::maxp>().sanitize (hb_face_reference_table (plan->source, HB_OT_TAG_maxp));
+    hb_blob_t *maxp_blob = hb_sanitize_context_t().reference_table<maxp> (plan->source);
     hb_blob_t *maxp_prime_blob = hb_blob_copy_writable_or_fail (maxp_blob);
     hb_blob_destroy (maxp_blob);
 
     if (unlikely (!maxp_prime_blob)) {
       return false;
     }
-    OT::maxp *maxp_prime = (OT::maxp *) hb_blob_get_data (maxp_prime_blob, nullptr);
+    maxp *maxp_prime = (maxp *) hb_blob_get_data (maxp_prime_blob, nullptr);
 
     maxp_prime->set_num_glyphs (plan->glyphs.len);
     if (plan->drop_hints)
@@ -118,7 +118,7 @@ struct maxp
     return result;
   }
 
-  static inline void drop_hint_fields (hb_subset_plan_t *plan, OT::maxp *maxp_prime)
+  static inline void drop_hint_fields (hb_subset_plan_t *plan, maxp *maxp_prime)
   {
     if (maxp_prime->version.major == 1)
     {
