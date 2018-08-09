@@ -3396,7 +3396,13 @@ function setNodeFullText(loadedProps, node) {
   }
 
   if (nodeIsLongString(node)) {
-    node.contents.value.fullText = loadedProps.fullText;
+    const {fullText} = loadedProps;
+
+    if (node.contents.value) {
+      node.contents.value.fullText = fullText;
+    } else if (node.contents.getterValue) {
+      node.contents.getterValue.fullText = fullText;
+    }
   }
 
   return node;
