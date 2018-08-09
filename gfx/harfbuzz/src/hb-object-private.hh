@@ -35,9 +35,107 @@
 #include "hb-private.hh"
 #include "hb-atomic-private.hh"
 #include "hb-mutex-private.hh"
+#include "hb-vector-private.hh"
 
 
-/* reference_count */
+/*
+ * Lockable set
+ */
+
+template <typename item_t, typename lock_t>
+struct hb_lockable_set_t
+{
+  hb_vector_t <item_t, 1> items;
+
+  inline void init (void) { items.init (); }
+
+  template <typename T>
+  inline item_t *replace_or_insert (T v, lock_t &l, bool replace)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (item) {
+      if (replace) {
+	item_t old = *item;
+	*item = v;
+	l.unlock ();
+	old.fini ();
+      }
+      else {
+        item = nullptr;
+	l.unlock ();
+      }
+    } else {
+      item = items.push (v);
+      l.unlock ();
+    }
+    return item;
+  }
+
+  template <typename T>
+  inline void remove (T v, lock_t &l)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (item) {
+      item_t old = *item;
+      *item = items[items.len - 1];
+      items.pop ();
+      l.unlock ();
+      old.fini ();
+    } else {
+      l.unlock ();
+    }
+  }
+
+  template <typename T>
+  inline bool find (T v, item_t *i, lock_t &l)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (item)
+      *i = *item;
+    l.unlock ();
+    return !!item;
+  }
+
+  template <typename T>
+  inline item_t *find_or_insert (T v, lock_t &l)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (!item) {
+      item = items.push (v);
+    }
+    l.unlock ();
+    return item;
+  }
+
+  inline void fini (lock_t &l)
+  {
+    if (!items.len) {
+      /* No need for locking. */
+      items.fini ();
+      return;
+    }
+    l.lock ();
+    while (items.len) {
+      item_t old = items[items.len - 1];
+	items.pop ();
+	l.unlock ();
+	old.fini ();
+	l.lock ();
+    }
+    items.fini ();
+    l.unlock ();
+  }
+
+};
+
+
+/*
+ * Reference-count.
+ */
 
 #define HB_REFERENCE_COUNT_INERT_VALUE 0
 #define HB_REFERENCE_COUNT_POISON_VALUE -0x0000DEAD
@@ -47,14 +145,14 @@ struct hb_reference_count_t
 {
   hb_atomic_int_t ref_count;
 
-  inline void init (int v) { ref_count.set_unsafe (v); }
-  inline int get_unsafe (void) const { return ref_count.get_unsafe (); }
+  inline void init (int v) { ref_count.set_relaxed (v); }
+  inline int get_relaxed (void) const { return ref_count.get_relaxed (); }
   inline int inc (void) { return ref_count.inc (); }
   inline int dec (void) { return ref_count.dec (); }
-  inline void fini (void) { ref_count.set_unsafe (HB_REFERENCE_COUNT_POISON_VALUE); }
+  inline void fini (void) { ref_count.set_relaxed (HB_REFERENCE_COUNT_POISON_VALUE); }
 
-  inline bool is_inert (void) const { return ref_count.get_unsafe () == HB_REFERENCE_COUNT_INERT_VALUE; }
-  inline bool is_valid (void) const { return ref_count.get_unsafe () > 0; }
+  inline bool is_inert (void) const { return ref_count.get_relaxed () == HB_REFERENCE_COUNT_INERT_VALUE; }
+  inline bool is_valid (void) const { return ref_count.get_relaxed () > 0; }
 };
 
 
@@ -89,12 +187,14 @@ struct hb_user_data_array_t
 };
 
 
-/* object_header */
+/*
+ * Object header
+ */
 
 struct hb_object_header_t
 {
   hb_reference_count_t ref_count;
-  hb_user_data_array_t *user_data;
+  mutable hb_user_data_array_t *user_data;
 
 #define HB_OBJECT_HEADER_STATIC {HB_REFERENCE_COUNT_INIT, nullptr}
 
@@ -103,7 +203,9 @@ struct hb_object_header_t
 };
 
 
-/* object */
+/*
+ * Object
+ */
 
 template <typename Type>
 static inline void hb_object_trace (const Type *obj, const char *function)
@@ -111,7 +213,7 @@ static inline void hb_object_trace (const Type *obj, const char *function)
   DEBUG_MSG (OBJECT, (void *) obj,
 	     "%s refcount=%d",
 	     function,
-	     obj ? obj->header.ref_count.get_unsafe () : 0);
+	     obj ? obj->header.ref_count.get_relaxed () : 0);
 }
 
 template <typename Type>

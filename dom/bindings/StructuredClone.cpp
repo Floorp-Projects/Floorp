@@ -45,9 +45,12 @@ WriteStructuredCloneImageData(JSContext* aCx, JSStructuredCloneWriter* aWriter,
 {
   uint32_t width = aImageData->Width();
   uint32_t height = aImageData->Height();
-  JS::Rooted<JSObject*> dataArray(aCx, aImageData->GetDataObject());
 
-  JSAutoRealmAllowCCW ar(aCx, dataArray);
+  JS::Rooted<JSObject*> dataArray(aCx, aImageData->GetDataObject());
+  if (!JS_WrapObject(aCx, &dataArray)) {
+    return false;
+  }
+
   JS::Rooted<JS::Value> arrayValue(aCx, JS::ObjectValue(*dataArray));
   return JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEDATA, 0) &&
          JS_WriteUint32Pair(aWriter, width, height) &&

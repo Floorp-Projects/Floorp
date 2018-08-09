@@ -68,7 +68,7 @@ struct SBIXStrike
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
-		  imageOffsetsZ.sanitize_shallow (c, c->num_glyphs + 1));
+		  imageOffsetsZ.sanitize_shallow (c, c->get_num_glyphs () + 1));
   }
 
   protected:
@@ -96,14 +96,9 @@ struct sbix
   {
     inline void init (hb_face_t *face)
     {
-      num_glyphs = hb_face_get_glyph_count (face);
-
-      OT::Sanitizer<OT::sbix> sanitizer;
-      sanitizer.set_num_glyphs (num_glyphs);
-      sbix_blob = sanitizer.sanitize (face->reference_table (HB_OT_TAG_sbix));
+      sbix_blob = hb_sanitize_context_t().reference_table<sbix> (face);
       sbix_len = hb_blob_get_length (sbix_blob);
-      sbix_table = sbix_blob->as<OT::sbix> ();
-
+      sbix_table = sbix_blob->as<sbix> ();
     }
 
     inline void fini (void)
@@ -134,7 +129,6 @@ struct sbix
 
     unsigned int sbix_len;
     unsigned int num_glyphs;
-
   };
 
   protected:

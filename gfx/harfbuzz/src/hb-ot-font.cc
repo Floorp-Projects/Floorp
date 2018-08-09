@@ -41,13 +41,39 @@
 
 struct hb_ot_font_t
 {
+  inline void init (hb_face_t *face)
+  {
+    cmap.init (face);
+    h_metrics.init (face);
+    v_metrics.init (face, h_metrics.ascender - h_metrics.descender); /* TODO Can we do this lazily? */
+
+    this->face = face;
+    glyf.init ();
+    cbdt.init ();
+    post.init ();
+    kern.init ();
+  }
+  inline void fini (void)
+  {
+    cmap.fini ();
+    h_metrics.fini ();
+    v_metrics.fini ();
+
+    glyf.fini ();
+    cbdt.fini ();
+    post.fini ();
+    kern.fini ();
+  }
+
   OT::cmap::accelerator_t cmap;
   OT::hmtx::accelerator_t h_metrics;
   OT::vmtx::accelerator_t v_metrics;
-  OT::hb_lazy_loader_t<OT::glyf::accelerator_t> glyf;
-  OT::hb_lazy_loader_t<OT::CBDT::accelerator_t> cbdt;
-  OT::hb_lazy_loader_t<OT::post::accelerator_t> post;
-  OT::hb_lazy_loader_t<OT::kern::accelerator_t> kern;
+
+  hb_face_t *face; /* MUST be JUST before the lazy loaders. */
+  hb_object_lazy_loader_t<1, OT::glyf::accelerator_t> glyf;
+  hb_object_lazy_loader_t<2, OT::CBDT::accelerator_t> cbdt;
+  hb_object_lazy_loader_t<3, OT::post::accelerator_t> post;
+  hb_object_lazy_loader_t<4, OT::kern::accelerator_t> kern;
 };
 
 
@@ -59,13 +85,7 @@ _hb_ot_font_create (hb_face_t *face)
   if (unlikely (!ot_font))
     return nullptr;
 
-  ot_font->cmap.init (face);
-  ot_font->h_metrics.init (face);
-  ot_font->v_metrics.init (face, ot_font->h_metrics.ascender - ot_font->h_metrics.descender); /* TODO Can we do this lazily? */
-  ot_font->glyf.init (face);
-  ot_font->cbdt.init (face);
-  ot_font->post.init (face);
-  ot_font->kern.init (face);
+  ot_font->init (face);
 
   return ot_font;
 }
@@ -75,13 +95,7 @@ _hb_ot_font_destroy (void *data)
 {
   hb_ot_font_t *ot_font = (hb_ot_font_t *) data;
 
-  ot_font->cmap.fini ();
-  ot_font->h_metrics.fini ();
-  ot_font->v_metrics.fini ();
-  ot_font->glyf.fini ();
-  ot_font->cbdt.fini ();
-  ot_font->post.fini ();
-  ot_font->kern.fini ();
+  ot_font->fini ();
 
   free (ot_font);
 }

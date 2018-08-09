@@ -4,5 +4,6 @@
 
 DevToolsModules(
     'index.js',
+    'runtime.js',
     'ui.js',
 )

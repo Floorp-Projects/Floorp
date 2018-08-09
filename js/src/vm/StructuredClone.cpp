@@ -1861,7 +1861,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
     while (!counts.empty()) {
         RootedObject obj(context(), &objs.back().toObject());
-        AutoRealm ar(context(), obj);
+        assertSameCompartment(context(), obj);
         if (counts.back()) {
             counts.back()--;
             RootedValue key(context(), entries.back());
@@ -2890,12 +2890,16 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
 
     JSAutoStructuredCloneBuffer buf(JS::StructuredCloneScope::SameProcessSameThread, callbacks, closure);
     {
-        // If we use Maybe<AutoRealm> here, G++ can't tell that the
-        // destructor is only called when Maybe::construct was called, and
-        // we get warnings about using uninitialized variables.
         if (value.isObject()) {
-            AutoRealm ar(cx, &value.toObject());
-            if (!buf.write(cx, value, callbacks, closure))
+            RootedObject obj(cx, &value.toObject());
+            obj = CheckedUnwrap(obj);
+            if (!obj) {
+                ReportAccessDenied(cx);
+                return false;
+            }
+            AutoRealm ar(cx, obj);
+            RootedValue unwrappedVal(cx, ObjectValue(*obj));
+            if (!buf.write(cx, unwrappedVal, callbacks, closure))
                 return false;
         } else {
             if (!buf.write(cx, value, callbacks, closure))
@@ -3059,6 +3063,16 @@ JS_WriteTypedArray(JSStructuredCloneWriter* w, HandleValue v)
     MOZ_ASSERT(v.isObject());
     assertSameCompartment(w->context(), v);
     RootedObject obj(w->context(), &v.toObject());
+
+    // Note: writeTypedArray also does a CheckedUnwrap but it assumes this
+    // returns non-null. This isn't guaranteed for JSAPI users so we do our
+    // own unwrapping here.
+    obj = CheckedUnwrap(obj);
+    if (!obj) {
+        ReportAccessDenied(w->context());
+        return false;
+    }
+
     return w->writeTypedArray(obj);
 }
 

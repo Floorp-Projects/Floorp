@@ -82,13 +82,12 @@ IntlUtils::GetDisplayNames(const Sequence<nsString>& aLocales,
     return;
   }
 
-  if (!retVal.isObject()) {
+  if (!retVal.isObject() || !JS_WrapValue(cx, &retVal)) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   // Return the result as DisplayNameResult.
-  JSAutoRealmAllowCCW ar(cx, &retVal.toObject());
   if (!aResult.Init(cx, retVal)) {
     aError.Throw(NS_ERROR_FAILURE);
   }
@@ -129,13 +128,12 @@ IntlUtils::GetLocaleInfo(const Sequence<nsString>& aLocales,
     return;
   }
 
-  if (!retVal.isObject()) {
+  if (!retVal.isObject() || !JS_WrapValue(cx, &retVal)) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   // Return the result as LocaleInfo.
-  JSAutoRealmAllowCCW ar(cx, &retVal.toObject());
   if (!aResult.Init(cx, retVal)) {
     aError.Throw(NS_ERROR_FAILURE);
   }

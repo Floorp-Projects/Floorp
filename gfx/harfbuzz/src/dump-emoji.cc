@@ -233,12 +233,10 @@ int main (int argc, char **argv)
   svg.dump (svg_callback);
   svg.fini ();
 
-  OT::Sanitizer<OT::COLR> sanitizerCOLR;
-  hb_blob_t* colr_blob = sanitizerCOLR.sanitize (face->reference_table (HB_OT_TAG_COLR));
+  hb_blob_t* colr_blob = hb_sanitize_context_t ().reference_table<OT::COLR> (face);
   const OT::COLR *colr = colr_blob->as<OT::COLR> ();
 
-  OT::Sanitizer<OT::CPAL> sanitizerCPAL;
-  hb_blob_t* cpal_blob = sanitizerCPAL.sanitize (face->reference_table (HB_OT_TAG_CPAL));
+  hb_blob_t* cpal_blob = hb_sanitize_context_t ().reference_table<OT::CPAL> (face);
   const OT::CPAL *cpal = cpal_blob->as<OT::CPAL> ();
 
   cairo_font_face_t *cairo_face;
