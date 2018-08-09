@@ -157,13 +157,13 @@ SVGRenderingObserver::ContentRemoved(nsIContent* aChild,
 /**
  * Note that in the current setup there are two separate observer lists.
  *
- * In nsSVGIDRenderingObserver's ctor, the new object adds itself to the
+ * In SVGIDRenderingObserver's ctor, the new object adds itself to the
  * mutation observer list maintained by the referenced element. In this way the
- * nsSVGIDRenderingObserver is notified if there are any attribute or content
+ * SVGIDRenderingObserver is notified if there are any attribute or content
  * tree changes to the element or any of its *descendants*.
  *
- * In nsSVGIDRenderingObserver::GetReferencedElement() the
- * nsSVGIDRenderingObserver object also adds itself to an
+ * In SVGIDRenderingObserver::GetReferencedElement() the
+ * SVGIDRenderingObserver object also adds itself to an
  * SVGRenderingObserverList object belonging to the referenced
  * element.
  *
@@ -171,9 +171,9 @@ SVGRenderingObserver::ContentRemoved(nsIContent* aChild,
  * benefits/necessity of maintaining a second observer list.
  */
 
-nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI* aURI,
-                                                   nsIContent* aObservingContent,
-                                                   bool aReferenceImage)
+SVGIDRenderingObserver::SVGIDRenderingObserver(nsIURI* aURI,
+                                               nsIContent* aObservingContent,
+                                               bool aReferenceImage)
   : mObservedElementTracker(this)
 {
   // Start watching the target element
@@ -181,13 +181,13 @@ nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI* aURI,
   StartObserving();
 }
 
-nsSVGIDRenderingObserver::~nsSVGIDRenderingObserver()
+SVGIDRenderingObserver::~SVGIDRenderingObserver()
 {
   StopObserving();
 }
 
 void
-nsSVGIDRenderingObserver::OnRenderingChange()
+SVGIDRenderingObserver::OnRenderingChange()
 {
   if (mObservedElementTracker.get() && mInObserverList) {
     SVGObserverUtils::RemoveRenderingObserver(mObservedElementTracker.get(), this);
@@ -217,7 +217,7 @@ NS_IMPL_ISUPPORTS(nsSVGRenderingObserverProperty, nsIMutationObserver)
 void
 nsSVGRenderingObserverProperty::OnRenderingChange()
 {
-  nsSVGIDRenderingObserver::OnRenderingChange();
+  SVGIDRenderingObserver::OnRenderingChange();
 
   nsIFrame* frame = mFrameReference.Get();
 
@@ -245,7 +245,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterReference)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsSVGIDRenderingObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, SVGIDRenderingObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsISVGFilterReference)
 NS_INTERFACE_MAP_END
@@ -260,7 +260,7 @@ nsSVGFilterReference::GetFilterFrame()
 void
 nsSVGFilterReference::OnRenderingChange()
 {
-  nsSVGIDRenderingObserver::OnRenderingChange();
+  SVGIDRenderingObserver::OnRenderingChange();
 
   if (mFilterChainObserver) {
     mFilterChainObserver->Invalidate();
