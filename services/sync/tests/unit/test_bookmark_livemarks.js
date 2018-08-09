@@ -51,8 +51,9 @@ function makeLivemark(p, mintGUID) {
   // Copy here, because tests mutate the contents.
   b.cleartext = Cu.cloneInto(p, {});
 
-  if (mintGUID)
+  if (mintGUID) {
     b.id = Utils.makeGUID();
+  }
 
   return b;
 }

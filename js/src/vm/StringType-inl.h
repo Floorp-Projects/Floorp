@@ -97,13 +97,27 @@ JSString::validateLength(JSContext* maybecx, size_t length)
     return true;
 }
 
+template<>
+MOZ_ALWAYS_INLINE const char16_t*
+JSString::nonInlineCharsRaw() const
+{
+    return d.s.u2.nonInlineCharsTwoByte;
+}
+
+template<>
+MOZ_ALWAYS_INLINE const JS::Latin1Char*
+JSString::nonInlineCharsRaw() const
+{
+    return d.s.u2.nonInlineCharsLatin1;
+}
+
 MOZ_ALWAYS_INLINE void
 JSRope::init(JSContext* cx, JSString* left, JSString* right, size_t length)
 {
-    d.u1.length = length;
-    d.u1.flags = INIT_ROPE_FLAGS;
     if (left->hasLatin1Chars() && right->hasLatin1Chars())
-        d.u1.flags |= LATIN1_CHARS_BIT;
+        setLengthAndFlags(length, INIT_ROPE_FLAGS | LATIN1_CHARS_BIT);
+    else
+        setLengthAndFlags(length, INIT_ROPE_FLAGS);
     d.s.u2.left = left;
     d.s.u3.right = right;
 
@@ -139,13 +153,12 @@ JSDependentString::init(JSContext* cx, JSLinearString* base, size_t start,
                         size_t length)
 {
     MOZ_ASSERT(start + length <= base->length());
-    d.u1.length = length;
     JS::AutoCheckCannotGC nogc;
     if (base->hasLatin1Chars()) {
-        d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
+        setLengthAndFlags(length, DEPENDENT_FLAGS | LATIN1_CHARS_BIT);
         d.s.u2.nonInlineCharsLatin1 = base->latin1Chars(nogc) + start;
     } else {
-        d.u1.flags = DEPENDENT_FLAGS;
+        setLengthAndFlags(length, DEPENDENT_FLAGS);
         d.s.u2.nonInlineCharsTwoByte = base->twoByteChars(nogc) + start;
     }
     d.s.u3.base = base;
@@ -206,16 +219,14 @@ JSDependentString::new_(JSContext* cx, JSLinearString* baseArg, size_t start,
 MOZ_ALWAYS_INLINE void
 JSFlatString::init(const char16_t* chars, size_t length)
 {
-    d.u1.length = length;
-    d.u1.flags = INIT_FLAT_FLAGS;
+    setLengthAndFlags(length, INIT_FLAT_FLAGS);
     d.s.u2.nonInlineCharsTwoByte = chars;
 }
 
 MOZ_ALWAYS_INLINE void
 JSFlatString::init(const JS::Latin1Char* chars, size_t length)
 {
-    d.u1.length = length;
-    d.u1.flags = INIT_FLAT_FLAGS | LATIN1_CHARS_BIT;
+    setLengthAndFlags(length, INIT_FLAT_FLAGS | LATIN1_CHARS_BIT);
     d.s.u2.nonInlineCharsLatin1 = chars;
 }
 
@@ -294,8 +305,7 @@ MOZ_ALWAYS_INLINE JS::Latin1Char*
 JSThinInlineString::init<JS::Latin1Char>(size_t length)
 {
     MOZ_ASSERT(lengthFits<JS::Latin1Char>(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_THIN_INLINE_FLAGS | LATIN1_CHARS_BIT;
+    setLengthAndFlags(length, INIT_THIN_INLINE_FLAGS | LATIN1_CHARS_BIT);
     return d.inlineStorageLatin1;
 }
 
@@ -304,8 +314,7 @@ MOZ_ALWAYS_INLINE char16_t*
 JSThinInlineString::init<char16_t>(size_t length)
 {
     MOZ_ASSERT(lengthFits<char16_t>(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_THIN_INLINE_FLAGS;
+    setLengthAndFlags(length, INIT_THIN_INLINE_FLAGS);
     return d.inlineStorageTwoByte;
 }
 
@@ -314,8 +323,7 @@ MOZ_ALWAYS_INLINE JS::Latin1Char*
 JSFatInlineString::init<JS::Latin1Char>(size_t length)
 {
     MOZ_ASSERT(lengthFits<JS::Latin1Char>(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_FAT_INLINE_FLAGS | LATIN1_CHARS_BIT;
+    setLengthAndFlags(length, INIT_FAT_INLINE_FLAGS | LATIN1_CHARS_BIT);
     return d.inlineStorageLatin1;
 }
 
@@ -324,8 +332,7 @@ MOZ_ALWAYS_INLINE char16_t*
 JSFatInlineString::init<char16_t>(size_t length)
 {
     MOZ_ASSERT(lengthFits<char16_t>(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_FAT_INLINE_FLAGS;
+    setLengthAndFlags(length, INIT_FAT_INLINE_FLAGS);
     return d.inlineStorageTwoByte;
 }
 
@@ -334,8 +341,7 @@ JSExternalString::init(const char16_t* chars, size_t length, const JSStringFinal
 {
     MOZ_ASSERT(fin);
     MOZ_ASSERT(fin->finalize);
-    d.u1.length = length;
-    d.u1.flags = EXTERNAL_FLAGS;
+    setLengthAndFlags(length, EXTERNAL_FLAGS);
     d.s.u2.nonInlineCharsTwoByte = chars;
     d.s.u3.externalFinalizer = fin;
 }

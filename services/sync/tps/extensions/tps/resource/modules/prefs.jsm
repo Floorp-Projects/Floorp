@@ -44,8 +44,9 @@ Preference.prototype = {
     let weavepref = WEAVE_PREF_PREFIX + this.name;
     try {
       let syncPref = Services.prefs.getBoolPref(weavepref);
-      if (!syncPref)
+      if (!syncPref) {
         Services.prefs.setBoolPref(weavepref, true);
+      }
     } catch (e) {
       Logger.AssertTrue(false, "Weave doesn't sync pref " + this.name);
     }
