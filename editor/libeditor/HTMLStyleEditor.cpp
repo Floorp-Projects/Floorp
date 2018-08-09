@@ -549,7 +549,7 @@ HTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
   }
 
   // Split any matching style nodes above the node/offset
-  OwningNonNull<nsIContent> node = *(*aNode)->AsContent();
+  nsCOMPtr<nsIContent> node = (*aNode)->AsContent();
 
   bool useCSS = IsCSSEnabled();
 
@@ -572,7 +572,7 @@ HTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
         // node is href - test if really <a href=...
         (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(node)) ||
         // or node is any prop, and we asked to split them all
-        (!aProperty && NodeIsProperty(node)) ||
+        (!aProperty && NodeIsProperty(*node)) ||
         // or the style is specified in the style attribute
         isSet) {
       // Found a style node we need to split
@@ -593,6 +593,9 @@ HTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
       }
     }
     node = node->GetParent();
+    if (NS_WARN_IF(!node)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   return NS_OK;
