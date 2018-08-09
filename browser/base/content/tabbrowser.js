@@ -3487,6 +3487,12 @@ window._gBrowser = {
       if (activeTabNewIndex > -1) {
         win.gBrowser.adoptTab(activeTab, activeTabNewIndex, true /* aSelectTab */);
       }
+
+      // Restore tab selection
+      let winVisibleTabs = win.gBrowser.visibleTabs;
+      let winTabLength = winVisibleTabs.length;
+      win.gBrowser.addRangeToMultiSelectedTabs(winVisibleTabs[0],
+                                               winVisibleTabs[winTabLength - 1]);
     }, { once: true });
 
     win = this.replaceTabWithWindow(firstInactiveTab);
