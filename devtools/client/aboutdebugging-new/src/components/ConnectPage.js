@@ -10,7 +10,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 
-class RuntimePage extends PureComponent {
+class ConnectPage extends PureComponent {
   renderSteps(steps) {
     return dom.ul(
       {
@@ -89,4 +89,4 @@ class RuntimePage extends PureComponent {
   }
 }
 
-module.exports = RuntimePage;
+module.exports = ConnectPage;
