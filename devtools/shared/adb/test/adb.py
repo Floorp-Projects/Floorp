@@ -20,9 +20,17 @@ PORT = 5037
 
 class ADBServer(SocketServer.BaseRequestHandler):
     def sendData(self, data):
-        self.request.send('OKAY')
-        self.request.send('%04x' % len(data))
-        self.request.send(data)
+        header = 'OKAY%04x' % len(data)
+        all_data = header + data
+        total_length = len(all_data)
+        sent_length = 0
+        # Make sure send all data to the client.
+        # Though the data length here is pretty small but sometimes when the
+        # client is on heavy load (e.g. MOZ_CHAOSMODE) we can't send the whole
+        # data at once.
+        while sent_length < total_length:
+            sent = self.request.send(all_data[sent_length:])
+            sent_length = sent_length + sent
 
     def handle(self):
         while True:
