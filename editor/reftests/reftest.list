@@ -59,8 +59,8 @@ random-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override.
 random-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-ref.html
 needs-focus == caret_on_focus.html caret_on_focus-ref.html
 needs-focus != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
-fuzzy-if(Android,1,1) needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
-fuzzy-if(skiaContent,3,1) needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
+fuzzy-if(Android,0-1,0-1) needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
+fuzzy-if(skiaContent,0-3,0-1) needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
 needs-focus == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
@@ -82,8 +82,8 @@ needs-focus == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese-
 needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
-fuzzy-if(browserIsRemote,255,3) asserts-if(browserIsRemote,0-3) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # bug 959132 for assertions
-fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2824) == 642800.html 642800-ref.html
+fuzzy-if(browserIsRemote,0-255,0-3) asserts-if(browserIsRemote,0-3) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # bug 959132 for assertions
+fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-2824) == 642800.html 642800-ref.html
 == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
 != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
 != selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
@@ -104,12 +104,12 @@ skip-if(Android) needs-focus == 462758-grabbers-resizers.html 462758-grabbers-re
 == 388980-1.html 388980-1-ref.html
 needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1-ref.html
 fails-if(Android) needs-focus != spellcheck-superscript-2.html spellcheck-superscript-2-ref.html # bug 783658
-fuzzy-if(skiaContent,1,3400) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-1.html 824080-1-ref.html
-fuzzy-if(OSX,1,1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-2.html 824080-2-ref.html #Bug 1313253
-fuzzy-if(OSX,1,1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-3.html 824080-3-ref.html #Bug 1312951
+fuzzy-if(skiaContent,0-1,0-3400) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-1.html 824080-1-ref.html
+fuzzy-if(OSX,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-2.html 824080-2-ref.html #Bug 1313253
+fuzzy-if(OSX,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-3.html 824080-3-ref.html #Bug 1312951
 needs-focus != 824080-2.html 824080-3.html
-fuzzy-if(skiaContent,1,3200) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-4.html 824080-4-ref.html
-fuzzy-if(skiaContent,2,1800) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-5.html 824080-5-ref.html
+fuzzy-if(skiaContent,0-1,0-3200) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-4.html 824080-4-ref.html
+fuzzy-if(skiaContent,0-2,0-1800) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-5.html 824080-5-ref.html
 needs-focus != 824080-4.html 824080-5.html
 needs-focus == 824080-6.html 824080-6-ref.html
 needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-7.html 824080-7-ref.html
@@ -133,8 +133,8 @@ needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-conten
 == spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-disabled-ref.html
 == 911201.html 911201-ref.html
 needs-focus == 969773.html 969773-ref.html
-fuzzy-if(skiaContent,1,220) == 997805.html 997805-ref.html
-fuzzy-if(skiaContent,1,220) skip-if(verify&&OSX) == 1088158.html 1088158-ref.html
+fuzzy-if(skiaContent,0-1,0-220) == 997805.html 997805-ref.html
+fuzzy-if(skiaContent,0-1,0-220) skip-if(verify&&OSX) == 1088158.html 1088158-ref.html
 needs-focus == 1443902-1.html 1443902-1-ref.html
 needs-focus == 1443902-2.html 1443902-2-ref.html
 needs-focus == 1443902-3.html 1443902-3-ref.html

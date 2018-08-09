@@ -18,17 +18,17 @@ include svg-filter-chains/reftest.list
 == dynamic-filter-invalidation-01.svg pass.svg
 == dynamic-filter-invalidation-02.svg pass.svg
 
-fuzzy(1,42500) == feBlend-1.svg feBlend-1-ref.svg
+fuzzy(0-1,0-42500) == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
 
-fuzzy-if(d2d||skiaContent,1,6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
-fuzzy-if(d2d,1,10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
+fuzzy-if(d2d||skiaContent,0-1,0-6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
+fuzzy-if(d2d,0-1,0-10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
 
 == feComponentTransfer-1.svg feComponentTransfer-1-ref.svg
 == feComponentTransfer-2.svg feComponentTransfer-2-ref.svg
 
-fuzzy-if(d2d||skiaContent,1,9600) == feComposite-1.svg feComposite-1-ref.svg
-fuzzy-if(d2d||skiaContent,1,10000) == feComposite-2.svg feComposite-2-ref.svg
+fuzzy-if(d2d||skiaContent,0-1,0-9600) == feComposite-1.svg feComposite-1-ref.svg
+fuzzy-if(d2d||skiaContent,0-1,0-10000) == feComposite-2.svg feComposite-2-ref.svg
 
 == feConvolveMatrix-1.svg feConvolveMatrix-1-ref.svg
 == feConvolveMatrix-2.svg feConvolveMatrix-2-ref.svg
@@ -36,10 +36,10 @@ fuzzy-if(d2d||skiaContent,1,10000) == feComposite-2.svg feComposite-2-ref.svg
 == feDisplacementMap-1.svg feDisplacementMap-1-ref.svg
 == feDisplacementMap-2.svg feDisplacementMap-2-ref.svg
 
-fuzzy-if(d2d,1,6400) fuzzy-if(skiaContent,1,1600)  == feFlood-1.svg feFlood-1-ref.svg
-skip-if(d2d) fuzzy-if(skiaContent,1,6400) == feFlood-2.svg feFlood-2-ref.svg
+fuzzy-if(d2d,0-1,0-6400) fuzzy-if(skiaContent,0-1,0-1600)  == feFlood-1.svg feFlood-1-ref.svg
+skip-if(d2d) fuzzy-if(skiaContent,0-1,0-6400) == feFlood-2.svg feFlood-2-ref.svg
 
-fuzzy(1,6400) fuzzy-if(skiaContent,1,6404) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy(0-1,0-6400) fuzzy-if(skiaContent,0-1,0-6404) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
 == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
@@ -67,7 +67,7 @@ skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feG
 
 == filter-clipped-rect-01.svg pass.svg
 == filter-in-pattern-01.svg pass.svg
-fuzzy(5,67) != filter-in-pattern-02.svg filter-in-pattern-02-ref.svg
+fuzzy(0-5,0-67) != filter-in-pattern-02.svg filter-in-pattern-02-ref.svg
 random-if(winWidget) == filter-in-mask-01.svg pass.svg # bug 1356139
 == filter-in-mask-02.svg pass.svg
 == filter-inner-svg-01.svg pass.svg
@@ -96,15 +96,15 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feComponentTransfer-03.svg pass.svg
 == feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
-fuzzy(1,26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
-fuzzy(1,10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
+fuzzy(0-1,0-26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
+fuzzy(0-1,0-10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 
-fuzzy-if(skiaContent,1,400) == feDisplacementMap-alpha-01.svg pass.svg
-fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
+fuzzy-if(skiaContent,0-1,0-400) == feDisplacementMap-alpha-01.svg pass.svg
+fuzzy(0-2,0-500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 == feDisplacementMap-scale-01.svg pass.svg
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,25) == feDropShadow-01.svg feDropShadow-01-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) == feDropShadow-01.svg feDropShadow-01-ref.svg
 
 == feFlood-color-01.svg pass.svg
 
@@ -119,16 +119,16 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,25) == feDropShadow-01.svg
 == feTile-large-02.svg feTile-large-02-ref.svg
 == feTile-outside-01.svg feTile-outside-01-ref.svg
 
-fuzzy(1,219) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
+fuzzy(0-1,0-219) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
-fuzzy(2,2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
+fuzzy(0-2,0-2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
 
 == filter-lighting-region.svg filter-lighting-region-ref.svg
 
 == fePointLight-zoomed-page.svg fePointLight-zoomed-page-ref.svg
 
 == feTurbulence-offset.svg feTurbulence-offset-ref.svg
-fuzzy(1,10000) == feTurbulence-zero-baseFreq-01.svg feTurbulence-zero-baseFreq-01-ref.svg
+fuzzy(0-1,0-10000) == feTurbulence-zero-baseFreq-01.svg feTurbulence-zero-baseFreq-01-ref.svg
 != feTurbulence-zero-baseFreq-02.svg about:blank
 
 == outside-sourcegraphic-1.svg outside-sourcegraphic-ref.svg
