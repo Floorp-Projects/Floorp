@@ -25,10 +25,6 @@ add_task(async function() {
   let toolbox = await gDevTools.showToolbox(target, null,
     Toolbox.HostType.BOTTOM);
 
-  let onTitleChanged = waitForTitleChange(toolbox);
-  await toolbox.selectTool("inspector");
-  await onTitleChanged;
-
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
   // Wait for title change event *after* switch host, in order to listen
   // for the event on the WINDOW host window, which only exists after switchHost
@@ -65,7 +61,7 @@ add_task(async function() {
   // Listen to will-navigate to check if the view is empty
   const willNavigate = toolbox.target.once("will-navigate");
 
-  onTitleChanged = waitForTitleChange(toolbox);
+  const onTitleChanged = waitForTitleChange(toolbox);
 
   // Only select the iframe after we are able to select an element from the top
   // level document.
