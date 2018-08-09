@@ -39,7 +39,8 @@
  * hb_face_t
  */
 
-struct hb_face_t {
+struct hb_face_t
+{
   hb_object_header_t header;
   ASSERT_POD ();
 
@@ -55,15 +56,12 @@ struct hb_face_t {
 
   struct hb_shaper_data_t shaper_data;	/* Various shaper data. */
 
-  /* Various non-shaping data. */
-  /* ... */
-
   /* Cache */
-  struct plan_node_t {
+  struct plan_node_t
+  {
     hb_shape_plan_t *shape_plan;
     plan_node_t *next;
   } *shape_plans;
-
 
   inline hb_blob_t *reference_table (hb_tag_t tag) const
   {
@@ -97,8 +95,7 @@ struct hb_face_t {
   HB_INTERNAL void load_upem (void) const;
   HB_INTERNAL void load_num_glyphs (void) const;
 };
-
-extern HB_INTERNAL const hb_face_t _hb_face_nil;
+DECLARE_NULL_INSTANCE (hb_face_t);
 
 #define HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS
 #define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_PROTOTYPE(shaper, face);

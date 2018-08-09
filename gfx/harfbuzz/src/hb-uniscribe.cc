@@ -309,7 +309,7 @@ HB_SHAPER_DATA_ENSURE_DEFINE(uniscribe, font)
  * shaper face data
  */
 
-struct hb_uniscribe_shaper_face_data_t {
+struct hb_uniscribe_face_data_t {
   HANDLE fh;
   hb_uniscribe_shaper_funcs_t *funcs;
   wchar_t face_name[LF_FACESIZE];
@@ -358,7 +358,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
    * full, PS. All of them point to the same name data with our unique name.
    */
 
-  blob = OT::Sanitizer<OT::OpenTypeFontFile>().sanitize (blob);
+  blob = hb_sanitize_context_t ().sanitize_blob<OT::OpenTypeFontFile> (blob);
 
   unsigned int length, new_length, name_str_len;
   const char *orig_sfnt_data = hb_blob_get_data (blob, &length);
@@ -383,7 +383,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
 
   memcpy(new_sfnt_data, orig_sfnt_data, length);
 
-  OT::name &name = OT::StructAtOffset<OT::name> (new_sfnt_data, name_table_offset);
+  OT::name &name = StructAtOffset<OT::name> (new_sfnt_data, name_table_offset);
   name.format.set (0);
   name.count.set (ARRAY_LENGTH (name_IDs));
   name.stringOffset.set (name.get_size ());
@@ -399,7 +399,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
   }
 
   /* Copy string data from new_name, converting wchar_t to UTF16BE. */
-  unsigned char *p = &OT::StructAfter<unsigned char> (name);
+  unsigned char *p = &StructAfter<unsigned char> (name);
   for (unsigned int i = 0; i < name_str_len; i++)
   {
     *p++ = new_name[i] >> 8;
@@ -439,10 +439,10 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
 			 HB_MEMORY_MODE_WRITABLE, nullptr, free);
 }
 
-hb_uniscribe_shaper_face_data_t *
+hb_uniscribe_face_data_t *
 _hb_uniscribe_shaper_face_data_create (hb_face_t *face)
 {
-  hb_uniscribe_shaper_face_data_t *data = (hb_uniscribe_shaper_face_data_t *) calloc (1, sizeof (hb_uniscribe_shaper_face_data_t));
+  hb_uniscribe_face_data_t *data = (hb_uniscribe_face_data_t *) calloc (1, sizeof (hb_uniscribe_face_data_t));
   if (unlikely (!data))
     return nullptr;
 
@@ -479,7 +479,7 @@ _hb_uniscribe_shaper_face_data_create (hb_face_t *face)
 }
 
 void
-_hb_uniscribe_shaper_face_data_destroy (hb_uniscribe_shaper_face_data_t *data)
+_hb_uniscribe_shaper_face_data_destroy (hb_uniscribe_face_data_t *data)
 {
   RemoveFontMemResourceEx (data->fh);
   free (data);
@@ -490,7 +490,7 @@ _hb_uniscribe_shaper_face_data_destroy (hb_uniscribe_shaper_face_data_t *data)
  * shaper font data
  */
 
-struct hb_uniscribe_shaper_font_data_t {
+struct hb_uniscribe_font_data_t {
   HDC hdc;
   LOGFONTW log_font;
   HFONT hfont;
@@ -508,19 +508,19 @@ populate_log_font (LOGFONTW  *lf,
   lf->lfCharSet = DEFAULT_CHARSET;
 
   hb_face_t *face = font->face;
-  hb_uniscribe_shaper_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
+  hb_uniscribe_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
 
   memcpy (lf->lfFaceName, face_data->face_name, sizeof (lf->lfFaceName));
 
   return true;
 }
 
-hb_uniscribe_shaper_font_data_t *
+hb_uniscribe_font_data_t *
 _hb_uniscribe_shaper_font_data_create (hb_font_t *font)
 {
   if (unlikely (!hb_uniscribe_shaper_face_data_ensure (font->face))) return nullptr;
 
-  hb_uniscribe_shaper_font_data_t *data = (hb_uniscribe_shaper_font_data_t *) calloc (1, sizeof (hb_uniscribe_shaper_font_data_t));
+  hb_uniscribe_font_data_t *data = (hb_uniscribe_font_data_t *) calloc (1, sizeof (hb_uniscribe_font_data_t));
   if (unlikely (!data))
     return nullptr;
 
@@ -559,7 +559,7 @@ _hb_uniscribe_shaper_font_data_create (hb_font_t *font)
 }
 
 void
-_hb_uniscribe_shaper_font_data_destroy (hb_uniscribe_shaper_font_data_t *data)
+_hb_uniscribe_shaper_font_data_destroy (hb_uniscribe_font_data_t *data)
 {
   if (data->hdc)
     ReleaseDC (nullptr, data->hdc);
@@ -574,7 +574,7 @@ LOGFONTW *
 hb_uniscribe_font_get_logfontw (hb_font_t *font)
 {
   if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return nullptr;
-  hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
+  hb_uniscribe_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
   return &font_data->log_font;
 }
 
@@ -582,7 +582,7 @@ HFONT
 hb_uniscribe_font_get_hfont (hb_font_t *font)
 {
   if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return nullptr;
-  hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
+  hb_uniscribe_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
   return font_data->hfont;
 }
 
@@ -591,20 +591,20 @@ hb_uniscribe_font_get_hfont (hb_font_t *font)
  * shaper shape_plan data
  */
 
-struct hb_uniscribe_shaper_shape_plan_data_t {};
+struct hb_uniscribe_shape_plan_data_t {};
 
-hb_uniscribe_shaper_shape_plan_data_t *
+hb_uniscribe_shape_plan_data_t *
 _hb_uniscribe_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan HB_UNUSED,
 					     const hb_feature_t *user_features HB_UNUSED,
 					     unsigned int        num_user_features HB_UNUSED,
 					     const int          *coords HB_UNUSED,
 					     unsigned int        num_coords HB_UNUSED)
 {
-  return (hb_uniscribe_shaper_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
+  return (hb_uniscribe_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
 }
 
 void
-_hb_uniscribe_shaper_shape_plan_data_destroy (hb_uniscribe_shaper_shape_plan_data_t *data HB_UNUSED)
+_hb_uniscribe_shaper_shape_plan_data_destroy (hb_uniscribe_shape_plan_data_t *data HB_UNUSED)
 {
 }
 
@@ -622,8 +622,8 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
 		     unsigned int        num_features)
 {
   hb_face_t *face = font->face;
-  hb_uniscribe_shaper_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
-  hb_uniscribe_shaper_font_data_t *font_data = HB_SHAPER_DATA_GET (font);
+  hb_uniscribe_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
+  hb_uniscribe_font_data_t *font_data = HB_SHAPER_DATA_GET (font);
   hb_uniscribe_shaper_funcs_t *funcs = face_data->funcs;
 
   /*

@@ -84,19 +84,9 @@ extern "C" int hb_memalign_impl(void **memptr, size_t alignment, size_t size);
 #endif
 
 
-/* Compiler attributes */
-
-
-template <typename T>
-struct _hb_alignof
-{
-  struct s
-  {
-    char c;
-    T t;
-  };
-  static constexpr unsigned int value = offsetof (s, t);
-};
+/*
+ * Compiler attributes
+ */
 
 #if __cplusplus < 201103L
 
@@ -108,7 +98,6 @@ struct _hb_alignof
 #define constexpr const
 #endif
 
-// Static assertions
 #ifndef static_assert
 #define static_assert(e, msg) \
 	HB_UNUSED typedef int HB_PASTE(static_assertion_failed_at_line_, __LINE__) [(e) ? 1 : -1]
@@ -122,9 +111,19 @@ struct _hb_alignof
 #define thread_local
 #endif
 
+template <typename T>
+struct _hb_alignof
+{
+  struct s
+  {
+    char c;
+    T t;
+  };
+  static constexpr size_t value = offsetof (s, t);
+};
 #ifndef alignof
 #define alignof(x) (_hb_alignof<x>::value)
-#endif // alignof
+#endif
 
 #endif // __cplusplus < 201103L
 
@@ -161,7 +160,11 @@ struct _hb_alignof
 #ifndef HB_INTERNAL
 # if !defined(HB_NO_VISIBILITY) && !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(_MSC_VER) && !defined(__SUNPRO_CC)
 #  define HB_INTERNAL __attribute__((__visibility__("hidden")))
-# else
+# elif defined(__MINGW32__)
+   /* We use -export-symbols on mingw32, since it does not support visibility
+    * attribute. */
+#  define HB_INTERNAL
+#else
 #  define HB_INTERNAL
 #  define HB_NO_VISIBILITY 1
 # endif
@@ -282,13 +285,12 @@ static int errno = 0; /* Use something better? */
 #define HB_STMT_START do
 #define HB_STMT_END   while (0)
 
+/* Static-assert as expression. */
 template <unsigned int cond> class hb_assert_constant_t;
 template <> class hb_assert_constant_t<1> {};
-
 #define ASSERT_STATIC_EXPR_ZERO(_cond) (0 * (unsigned int) sizeof (hb_assert_constant_t<_cond>))
 
 /* Lets assert int types.  Saves trouble down the road. */
-
 static_assert ((sizeof (int8_t) == 1), "");
 static_assert ((sizeof (uint8_t) == 1), "");
 static_assert ((sizeof (int16_t) == 2), "");
@@ -297,7 +299,6 @@ static_assert ((sizeof (int32_t) == 4), "");
 static_assert ((sizeof (uint32_t) == 4), "");
 static_assert ((sizeof (int64_t) == 8), "");
 static_assert ((sizeof (uint64_t) == 8), "");
-
 static_assert ((sizeof (hb_codepoint_t) == 4), "");
 static_assert ((sizeof (hb_position_t) == 4), "");
 static_assert ((sizeof (hb_mask_t) == 4), "");
@@ -334,95 +335,37 @@ static_assert ((sizeof (hb_var_int_t) == 4), "");
   TypeName(const TypeName&); \
   void operator=(const TypeName&)
 
+
 /*
- * Static pools
+ * Compiler-assisted vectorization parameters.
  */
 
-/* Global nul-content Null pool.  Enlarge as necessary. */
+/*
+ * Disable vectorization for now.  To correctly use them, we should
+ * use posix_memalign() to allocate in hb_vector_t.  Otherwise, can
+ * cause misaligned access.
+ *
+ * https://bugs.chromium.org/p/chromium/issues/detail?id=860184
+ */
+#if !defined(HB_VECTOR_SIZE)
+#  define HB_VECTOR_SIZE 0
+#endif
 
-#define HB_NULL_POOL_SIZE 264
-static_assert (HB_NULL_POOL_SIZE % sizeof (void *) == 0, "Align HB_NULL_POOL_SIZE.");
-
-#ifdef HB_NO_VISIBILITY
-static
+/* The `vector_size' attribute was introduced in gcc 3.1. */
+#if !defined(HB_VECTOR_SIZE)
+#  if defined( __GNUC__ ) && ( __GNUC__ >= 4 )
+#    define HB_VECTOR_SIZE 128
+#  else
+#    define HB_VECTOR_SIZE 0
+#  endif
+#endif
+static_assert (0 == (HB_VECTOR_SIZE & (HB_VECTOR_SIZE - 1)), "HB_VECTOR_SIZE is not power of 2.");
+static_assert (0 == (HB_VECTOR_SIZE % 64), "HB_VECTOR_SIZE is not multiple of 64.");
+#if HB_VECTOR_SIZE
+typedef uint64_t hb_vector_size_impl_t __attribute__((vector_size (HB_VECTOR_SIZE / 8)));
 #else
-extern HB_INTERNAL
+typedef uint64_t hb_vector_size_impl_t;
 #endif
-void * const _hb_NullPool[HB_NULL_POOL_SIZE / sizeof (void *)]
-#ifdef HB_NO_VISIBILITY
-= {}
-#endif
-;
-/* Generic nul-content Null objects. */
-template <typename Type>
-static inline Type const & Null (void) {
-  static_assert (sizeof (Type) <= HB_NULL_POOL_SIZE, "Increase HB_NULL_POOL_SIZE.");
-  return *reinterpret_cast<Type const *> (_hb_NullPool);
-}
-#define Null(Type) Null<Type>()
-
-/* Specializaiton for arbitrary-content arbitrary-sized Null objects. */
-#define DEFINE_NULL_DATA(Namespace, Type, data) \
-} /* Close namespace. */ \
-static const char _Null##Type[sizeof (Namespace::Type) + 1] = data; /* +1 is for nul-termination in data */ \
-template <> \
-/*static*/ inline const Namespace::Type& Null<Namespace::Type> (void) { \
-  return *reinterpret_cast<const Namespace::Type *> (_Null##Type); \
-} \
-namespace Namespace { \
-/* The following line really exists such that we end in a place needing semicolon */ \
-static_assert (Namespace::Type::min_size + 1 <= sizeof (_Null##Type), "Null pool too small.  Enlarge.")
-
-
-/* Global writable pool.  Enlarge as necessary. */
-
-/* To be fully correct, CrapPool must be thread_local. However, we do not rely on CrapPool
- * for correct operation. It only exist to catch and divert program logic bugs instead of
- * causing bad memory access. So, races there are not actually introducing incorrectness
- * in the code. Has ~12kb binary size overhead to have it, also clang build fails with it. */
-#ifdef HB_NO_VISIBILITY
-static
-#else
-extern HB_INTERNAL
-#endif
-/*thread_local*/ void * _hb_CrapPool[HB_NULL_POOL_SIZE / sizeof (void *)]
-#ifdef HB_NO_VISIBILITY
-= {}
-#endif
-;
-/* CRAP pool: Common Region for Access Protection. */
-template <typename Type>
-static inline Type& Crap (void) {
-  static_assert (sizeof (Type) <= HB_NULL_POOL_SIZE, "Increase HB_NULL_POOL_SIZE.");
-  Type *obj = reinterpret_cast<Type *> (_hb_CrapPool);
-  *obj = Null(Type);
-  return *obj;
-}
-#define Crap(Type) Crap<Type>()
-
-template <typename Type>
-struct CrapOrNull {
-  static inline Type & get (void) { return Crap(Type); }
-};
-template <typename Type>
-struct CrapOrNull<const Type> {
-  static inline Type const & get (void) { return Null(Type); }
-};
-#define CrapOrNull(Type) CrapOrNull<Type>::get ()
-
-
-/* ASCII tag/character handling */
-
-static inline bool ISALPHA (unsigned char c)
-{ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
-static inline bool ISALNUM (unsigned char c)
-{ return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'); }
-static inline bool ISSPACE (unsigned char c)
-{ return c == ' ' || c =='\f'|| c =='\n'|| c =='\r'|| c =='\t'|| c =='\v'; }
-static inline unsigned char TOUPPER (unsigned char c)
-{ return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c; }
-static inline unsigned char TOLOWER (unsigned char c)
-{ return (c >= 'A' && c <= 'Z') ? c - 'A' + 'a' : c; }
 
 
 /* HB_NDEBUG disables some sanity checks that are very safe to disable and
@@ -435,41 +378,7 @@ static inline unsigned char TOLOWER (unsigned char c)
 #endif
 
 
-/* Misc */
-
-template <typename T> class hb_assert_unsigned_t;
-template <> class hb_assert_unsigned_t<unsigned char> {};
-template <> class hb_assert_unsigned_t<unsigned short> {};
-template <> class hb_assert_unsigned_t<unsigned int> {};
-template <> class hb_assert_unsigned_t<unsigned long> {};
-
-template <typename T> static inline bool
-hb_in_range (T u, T lo, T hi)
-{
-  /* The sizeof() is here to force template instantiation.
-   * I'm sure there are better ways to do this but can't think of
-   * one right now.  Declaring a variable won't work as HB_UNUSED
-   * is unusable on some platforms and unused types are less likely
-   * to generate a warning than unused variables. */
-  static_assert ((sizeof (hb_assert_unsigned_t<T>) >= 0), "");
-
-  /* The casts below are important as if T is smaller than int,
-   * the subtract results will become a signed int! */
-  return (T)(u - lo) <= (T)(hi - lo);
-}
-
-template <typename T> static inline bool
-hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2)
-{
-  return hb_in_range (u, lo1, hi1) || hb_in_range (u, lo2, hi2);
-}
-
-template <typename T> static inline bool
-hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2, T lo3, T hi3)
-{
-  return hb_in_range (u, lo1, hi1) || hb_in_range (u, lo2, hi2) || hb_in_range (u, lo3, hi3);
-}
-
+/* Flags */
 
 /* Enable bitwise ops on enums marked as flags_t */
 /* To my surprise, looks like the function resolver is happy to silently cast
@@ -493,7 +402,6 @@ hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2, T lo3, T hi3)
 	  static inline T& operator ^= (T& l, T r) { l = l ^ r; return l; } \
 	}
 
-
 /* Useful for set-operations on small enums.
  * For example, for testing "x ∈ {x1, x2, x3}" use:
  * (FLAG_UNSAFE(x) & (FLAG(x1) | FLAG(x2) | FLAG(x3)))
@@ -502,58 +410,6 @@ hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2, T lo3, T hi3)
 #define FLAG_UNSAFE(x) ((unsigned int)(x) < 32 ? (1U << (unsigned int)(x)) : 0)
 #define FLAG_RANGE(x,y) (ASSERT_STATIC_EXPR_ZERO ((x) < (y)) + FLAG(y+1) - FLAG(x))
 
-
-
-/* Compiler-assisted vectorization. */
-
-/*
- * Disable vectorization for now.  To correctly use them, we should
- * use posix_memalign() to allocate them.  Otherwise, can cause
- * misaligned access.
- *
- * https://bugs.chromium.org/p/chromium/issues/detail?id=860184
- */
-#if !defined(HB_VECTOR_SIZE)
-#  define HB_VECTOR_SIZE 0
-#endif
-
-/* The `vector_size' attribute was introduced in gcc 3.1. */
-#if !defined(HB_VECTOR_SIZE)
-#  if defined( __GNUC__ ) && ( __GNUC__ >= 4 )
-#    define HB_VECTOR_SIZE 128
-#  else
-#    define HB_VECTOR_SIZE 0
-#  endif
-#endif
-
-
-/* Global runtime options. */
-
-struct hb_options_t
-{
-  unsigned int initialized : 1;
-  unsigned int uniscribe_bug_compatible : 1;
-};
-
-union hb_options_union_t {
-  unsigned int i;
-  hb_options_t opts;
-};
-static_assert ((sizeof (int) == sizeof (hb_options_union_t)), "");
-
-HB_INTERNAL void
-_hb_options_init (void);
-
-extern HB_INTERNAL hb_options_union_t _hb_options;
-
-static inline hb_options_t
-hb_options (void)
-{
-  if (unlikely (!_hb_options.i))
-    _hb_options_init ();
-
-  return _hb_options.opts;
-}
 
 /* Size signifying variable-sized array */
 #define VAR 1
@@ -605,6 +461,7 @@ _hb_memalign(void **memptr, size_t alignment, size_t size)
 #include "hb-debug.hh"
 #include "hb-dsalgs.hh"
 #include "hb-mutex-private.hh"
+#include "hb-null.hh"
 #include "hb-object-private.hh"
 
 #endif /* HB_PRIVATE_HH */
