@@ -17,7 +17,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.mozilla.focus.utils.debounce
 
-open class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
+class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
     data class SuggestionResult(val query: String, val suggestions: List<String>)
 
     private var client: SearchSuggestionClient? = null

@@ -228,10 +228,8 @@ class UrlInputFragment :
             searchViewContainer?.visibility = View.GONE
         }
 
-        val fragment = SearchSuggestionsFragment.create()
-        val transaction = fragmentManager!!.beginTransaction()
-        transaction
-                .replace(searchViewContainer.id, fragment)
+        fragmentManager!!.beginTransaction()
+                .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
                 .commit()
     }
 

@@ -169,8 +169,10 @@ class SearchSuggestionsFragment : Fragment() {
             override fun getOldListSize(): Int = oldSuggestions.size
             override fun getNewListSize(): Int = newSuggestions.size
             override fun areItemsTheSame(p0: Int, p1: Int): Boolean = true
-            override fun areContentsTheSame(p0: Int, p1: Int): Boolean = oldSuggestions[p0] == newSuggestions[p0]
-            override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? = newSuggestions[newItemPosition]
+            override fun areContentsTheSame(p0: Int, p1: Int): Boolean =
+                    oldSuggestions[p0] == newSuggestions[p0]
+            override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? =
+                    newSuggestions[newItemPosition]
         }
 
         private var suggestions: List<SpannableStringBuilder> = listOf()
@@ -189,12 +191,11 @@ class SearchSuggestionsFragment : Fragment() {
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.isEmpty()) {
                 super.onBindViewHolder(holder, position, payloads)
-                return
+            } else {
+                val payload = payloads[0] as? SpannableStringBuilder ?: return
+                val view = holder as? SuggestionViewHolder ?: return
+                view.bind(payload)
             }
-
-            val payload = payloads[0] as? SpannableStringBuilder ?: return
-            val view = holder as? SuggestionViewHolder ?: return
-            view.bind(payload)
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {

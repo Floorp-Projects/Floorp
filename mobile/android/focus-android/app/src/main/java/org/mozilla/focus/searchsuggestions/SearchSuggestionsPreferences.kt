@@ -11,7 +11,7 @@ import mozilla.components.browser.search.SearchEngine
 import org.mozilla.focus.Components
 import org.mozilla.focus.utils.Settings
 
-open class SearchSuggestionsPreferences(private val context: Context) {
+class SearchSuggestionsPreferences(private val context: Context) {
     private val settings = Settings.getInstance(context)
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
 

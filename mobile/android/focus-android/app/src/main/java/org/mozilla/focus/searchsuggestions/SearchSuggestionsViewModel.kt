@@ -38,15 +38,14 @@ class SearchSuggestionsViewModel(
     private val _searchEngine = MutableLiveData<SearchEngine>()
     val searchEngine: LiveData<SearchEngine> = _searchEngine
 
-    val suggestions = map(fetcher.results) {
+    val suggestions = map(fetcher.results) { result ->
         val style = StyleSpan(Typeface.BOLD)
-        val endIndex = it.query.length
+        val endIndex = result.query.length
 
-        it.suggestions.map {
-            val ssb = SpannableStringBuilder(it)
-            ssb.setSpan(style, 0, minOf(endIndex, it.length), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-            ssb
+        result.suggestions.map { suggestion ->
+            SpannableStringBuilder(suggestion).apply {
+                setSpan(style, 0, minOf(endIndex, suggestion.length), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
         }
     }
 
