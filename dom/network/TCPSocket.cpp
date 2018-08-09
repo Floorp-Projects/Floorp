@@ -858,12 +858,10 @@ TCPSocket::Send(JSContext* aCx,
       return false;
     }
   } else {
-    JS::Rooted<JSObject*> obj(aCx, aData.Obj());
-    JSAutoRealmAllowCCW ar(aCx, obj);
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*obj));
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*aData.Obj()));
 
     stream = do_CreateInstance("@mozilla.org/io/arraybuffer-input-stream;1");
-    nsresult rv = stream->SetData(value, aByteOffset, byteLength, aCx);
+    nsresult rv = stream->SetData(value, aByteOffset, byteLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return false;
