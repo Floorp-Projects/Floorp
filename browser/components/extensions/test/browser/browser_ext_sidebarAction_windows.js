@@ -60,10 +60,4 @@ add_task(async function sidebar_windows() {
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
-
-  // Move toolbar button back to customization.
-  CustomizableUI.removeWidgetFromArea("sidebar-button", CustomizableUI.AREA_NAVBAR);
-  ok(!document.getElementById("sidebar-button"), "sidebar button is not in UI");
-  // This is set on initial sidebar install.
-  Services.prefs.clearUserPref("extensions.sidebar-button.shown");
 });

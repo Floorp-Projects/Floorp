@@ -119,8 +119,3 @@ add_task(async function sidebar_image_contextmenu() {
 
   await extension.unload();
 });
-
-add_task(async function cleanup() {
-  // This is set on initial sidebar install.
-  Services.prefs.clearUserPref("extensions.sidebar-button.shown");
-});
