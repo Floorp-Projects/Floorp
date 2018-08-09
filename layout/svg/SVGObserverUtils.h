@@ -410,18 +410,18 @@ private:
  * via nsSVGContainerFrame::RemoveFrame, since only frames in the frame
  * tree should be referenced.
  */
-class nsSVGRenderingObserverList
+class SVGRenderingObserverList
 {
 public:
-  nsSVGRenderingObserverList()
+  SVGRenderingObserverList()
     : mObservers(4)
   {
-    MOZ_COUNT_CTOR(nsSVGRenderingObserverList);
+    MOZ_COUNT_CTOR(SVGRenderingObserverList);
   }
 
-  ~nsSVGRenderingObserverList() {
+  ~SVGRenderingObserverList() {
     InvalidateAll();
-    MOZ_COUNT_DTOR(nsSVGRenderingObserverList);
+    MOZ_COUNT_DTOR(SVGRenderingObserverList);
   }
 
   void Add(SVGRenderingObserver* aObserver)
