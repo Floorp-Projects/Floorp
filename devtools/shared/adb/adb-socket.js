@@ -30,22 +30,23 @@ class AdbSocket {
    *        the array to dump
    */
   _hexdump(aArray) {
-    let decoder = new TextDecoder("windows-1252");
-    let array = new Uint8Array(aArray.buffer);
-    let s = decoder.decode(array);
-    let len = array.length;
+    const decoder = new TextDecoder("windows-1252");
+    const array = new Uint8Array(aArray.buffer);
+    const s = decoder.decode(array);
+    const len = array.length;
     let dbg = "len=" + len + " ";
-    let l = len > 20 ? 20 : len;
+    const l = len > 20 ? 20 : len;
 
     for (let i = 0; i < l; i++) {
       let c = array[i].toString(16);
-      if (c.length == 1)
+      if (c.length == 1) {
         c = "0" + c;
+      }
       dbg += c;
     }
     dbg += " ";
     for (let i = 0; i < l; i++) {
-      let c = array[i];
+      const c = array[i];
       if (c < 32 || c > 127) {
         dbg += ".";
       } else {
