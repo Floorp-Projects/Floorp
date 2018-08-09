@@ -817,10 +817,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitDo(ParseNode* pn);
     MOZ_MUST_USE bool emitWhile(ParseNode* pn);
 
-    MOZ_MUST_USE bool emitFor(ParseNode* pn, EmitterScope* headLexicalEmitterScope = nullptr);
-    MOZ_MUST_USE bool emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterScope);
-    MOZ_MUST_USE bool emitForIn(ParseNode* pn, EmitterScope* headLexicalEmitterScope);
-    MOZ_MUST_USE bool emitForOf(ParseNode* pn, EmitterScope* headLexicalEmitterScope);
+    MOZ_MUST_USE bool emitFor(ParseNode* pn,
+                              const EmitterScope* headLexicalEmitterScope = nullptr);
+    MOZ_MUST_USE bool emitCStyleFor(ParseNode* pn, const EmitterScope* headLexicalEmitterScope);
+    MOZ_MUST_USE bool emitForIn(ParseNode* pn, const EmitterScope* headLexicalEmitterScope);
+    MOZ_MUST_USE bool emitForOf(ParseNode* pn, const EmitterScope* headLexicalEmitterScope);
 
     MOZ_MUST_USE bool emitInitializeForInOrOfTarget(ParseNode* forHead);
 
