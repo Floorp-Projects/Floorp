@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/PlacesSearchAutocompleteProvider.jsm");
+ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+updateAppInfo();
 
 add_task(async function() {
     // Tell the search service we are running in the US.  This also has the
