@@ -21,8 +21,9 @@
 #include "SVGUseElement.h"
 #include "ImageLoader.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
 
 void
 nsSVGRenderingObserver::StartObserving()
@@ -1066,3 +1067,6 @@ SVGObserverUtils::GetMaskURI(nsIFrame* aFrame, uint32_t aIndex)
     svgReset->mMask.mLayers[aIndex].mImage.GetURLValue();
   return ResolveURLUsingLocalRef(aFrame, data);
 }
+
+} // namespace mozilla
+
