@@ -910,12 +910,11 @@ ControlFlowGenerator::processWhileOrForInOrForOfLoop(jssrcnote* sn)
     // for-in/for-of loops are similar; for-in/for-of have IFEQ as the back
     // jump, and the cond of for-in will be a MOREITER.
     MOZ_ASSERT(SN_TYPE(sn) == SRC_FOR_OF || SN_TYPE(sn) == SRC_FOR_IN || SN_TYPE(sn) == SRC_WHILE);
-    // FIXME: Replaced in the subsequent patch.
-    static_assert(unsigned(SrcNote::ForIn::BackJumpOffset) == 0,
+    static_assert(unsigned(SrcNote::While::BackJumpOffset) == unsigned(SrcNote::ForIn::BackJumpOffset),
                   "SrcNote::{While,ForIn,ForOf}::BackJumpOffset should be same");
-    static_assert(unsigned(SrcNote::ForOf::BackJumpOffset) == 0,
+    static_assert(unsigned(SrcNote::While::BackJumpOffset) == unsigned(SrcNote::ForOf::BackJumpOffset),
                   "SrcNote::{While,ForIn,ForOf}::BackJumpOffset should be same");
-    int backjumppcOffset = GetSrcNoteOffset(sn, SrcNote::ForIn::BackJumpOffset);
+    int backjumppcOffset = GetSrcNoteOffset(sn, SrcNote::While::BackJumpOffset);
     jsbytecode* backjumppc = pc + backjumppcOffset;
     MOZ_ASSERT(backjumppc > pc);
 
