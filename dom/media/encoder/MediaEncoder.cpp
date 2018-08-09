@@ -19,6 +19,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
@@ -1057,7 +1058,7 @@ MediaEncoder::Stop()
 bool
 MediaEncoder::IsWebMEncoderEnabled()
 {
-  return Preferences::GetBool("media.encoder.webm.enabled");
+  return StaticPrefs::MediaEncoderWebMEnabled();
 }
 #endif
 
