@@ -1474,8 +1474,12 @@ MediaFormatReader::ResolveSetCDMPromiseIfDone(TrackType aTrack)
   if (mSetCDMForTracks.isEmpty()) {
     LOGV("%s : Done ", __func__);
     mSetCDMPromise.Resolve(/* aIgnored = */ true, __func__);
-    ScheduleUpdate(TrackInfo::kAudioTrack);
-    ScheduleUpdate(TrackInfo::kVideoTrack);
+    if (HasAudio()) {
+      ScheduleUpdate(TrackInfo::kAudioTrack);
+    }
+    if (HasVideo()) {
+      ScheduleUpdate(TrackInfo::kVideoTrack);
+    }
     return true;
   }
   LOGV("%s : %s track is ready.", __func__, TrackTypeToStr(aTrack));
@@ -2221,6 +2225,9 @@ MediaFormatReader::ScheduleUpdate(TrackType aTrack)
     return;
   }
   auto& decoder = GetDecoderData(aTrack);
+  MOZ_RELEASE_ASSERT(decoder.GetCurrentInfo(),
+                     "Can only schedule update when track exists");
+
   if (decoder.mUpdateScheduled) {
     return;
   }
