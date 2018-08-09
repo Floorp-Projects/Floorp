@@ -368,6 +368,8 @@ pub mod parsing {
         keyword!(Self) => { Into::into }
         |
         keyword!(crate) => { Into::into }
+        |
+        keyword!(extern) => { Into::into }
     ));
 
     named!(pub qpath -> (Option<QSelf>, Path), alt!(

@@ -749,8 +749,8 @@ macro_rules! reject {
 /// *This macro is available if Syn is built with the `"parsing"` feature.*
 #[macro_export]
 macro_rules! tuple {
-    ($i:expr, $($rest:tt)*) => {
-        tuple_parser!($i, (), $($rest)*)
+    ($i:expr, $($rest:tt)+) => {
+        tuple_parser!($i, (), $($rest)+)
     };
 }
 
@@ -758,47 +758,34 @@ macro_rules! tuple {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! tuple_parser {
-    ($i:expr, ($($parsed:tt),*), $e:ident, $($rest:tt)*) => {
-        tuple_parser!($i, ($($parsed),*), call!($e), $($rest)*)
+    ($i:expr, ($($parsed:ident,)*), $e:ident) => {
+        tuple_parser!($i, ($($parsed,)*), call!($e))
     };
 
-    ($i:expr, (), $submac:ident!( $($args:tt)* ), $($rest:tt)*) => {
+    ($i:expr, ($($parsed:ident,)*), $e:ident, $($rest:tt)*) => {
+        tuple_parser!($i, ($($parsed,)*), call!($e), $($rest)*)
+    };
+
+    ($i:expr, ($($parsed:ident,)*), $submac:ident!( $($args:tt)* )) => {
         match $submac!($i, $($args)*) {
             ::std::result::Result::Err(err) =>
                 ::std::result::Result::Err(err),
             ::std::result::Result::Ok((o, i)) =>
-                tuple_parser!(i, (o), $($rest)*),
+                ::std::result::Result::Ok((($($parsed,)* o,), i)),
         }
     };
 
-    ($i:expr, ($($parsed:tt)*), $submac:ident!( $($args:tt)* ), $($rest:tt)*) => {
+    ($i:expr, ($($parsed:ident,)*), $submac:ident!( $($args:tt)* ), $($rest:tt)*) => {
         match $submac!($i, $($args)*) {
             ::std::result::Result::Err(err) =>
                 ::std::result::Result::Err(err),
             ::std::result::Result::Ok((o, i)) =>
-                tuple_parser!(i, ($($parsed)* , o), $($rest)*),
+                tuple_parser!(i, ($($parsed,)* o,), $($rest)*),
         }
     };
 
-    ($i:expr, ($($parsed:tt),*), $e:ident) => {
-        tuple_parser!($i, ($($parsed),*), call!($e))
-    };
-
-    ($i:expr, (), $submac:ident!( $($args:tt)* )) => {
-        $submac!($i, $($args)*)
-    };
-
-    ($i:expr, ($($parsed:expr),*), $submac:ident!( $($args:tt)* )) => {
-        match $submac!($i, $($args)*) {
-            ::std::result::Result::Err(err) =>
-                ::std::result::Result::Err(err),
-            ::std::result::Result::Ok((o, i)) =>
-                ::std::result::Result::Ok((($($parsed),*, o), i)),
-        }
-    };
-
-    ($i:expr, ($($parsed:expr),*)) => {
-        ::std::result::Result::Ok((($($parsed),*), $i))
+    ($i:expr, ($($parsed:ident,)*),) => {
+        ::std::result::Result::Ok((($($parsed,)*), $i))
     };
 }
 
