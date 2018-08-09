@@ -1496,12 +1496,10 @@ var BookmarkingUI = {
   _updateStar: function BUI__updateStar() {
     if (this._itemGuids.size > 0) {
       this.broadcaster.setAttribute("starred", "true");
-      this.broadcaster.setAttribute("buttontooltiptext", this._starredTooltip);
       this.broadcaster.setAttribute("tooltiptext", this._starredTooltip);
     } else {
       this.star.removeAttribute("animate");
       this.broadcaster.removeAttribute("starred");
-      this.broadcaster.setAttribute("buttontooltiptext", this._unstarredTooltip);
       this.broadcaster.setAttribute("tooltiptext", this._unstarredTooltip);
     }
   },
