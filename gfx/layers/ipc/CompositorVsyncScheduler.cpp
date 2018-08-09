@@ -348,5 +348,12 @@ CompositorVsyncScheduler::GetLastComposeTime() const
   return mLastCompose;
 }
 
+void
+CompositorVsyncScheduler::UpdateLastComposeTime()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  mLastCompose = TimeStamp::Now();
+}
+
 } // namespace layers
 } // namespace mozilla
