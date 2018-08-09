@@ -3761,6 +3761,11 @@ window._gBrowser = {
     this._clearMultiSelectionLocked = true;
   },
 
+  unlockClearMultiSelection() {
+    this._clearMultiSelectionLockedOnce = false;
+    this._clearMultiSelectionLocked = false;
+  },
+
   /**
    * Remove a tab from the multiselection if it's the only one left there.
    *
