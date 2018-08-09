@@ -12,6 +12,7 @@
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 
@@ -121,6 +122,11 @@ public:
   already_AddRefed<mozilla::dom::ScreenLuminance> GetLuminance() const
   {
     return nullptr;
+  }
+
+  static bool MediaCapabilitiesEnabled(JSContext* aCx, JSObject* aGlobal)
+  {
+    return mozilla::StaticPrefs::MediaCapabilitiesScreenEnabled();
   }
 
   IMPL_EVENT_HANDLER(change);
