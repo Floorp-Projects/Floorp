@@ -421,6 +421,7 @@ private:
     // Cancels host records in the pending queue and also
     // calls CompleteLookup with the NS_ERROR_ABORT result code.
     void     ClearPendingQueue(mozilla::LinkedList<RefPtr<nsHostRecord>>& aPendingQ);
+    nsresult ConditionallyCreateThread(nsHostRecord *rec);
 
     /**
      * Starts a new lookup in the background for entries that are in the grace
@@ -428,7 +429,7 @@ private:
      */
     nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const nsACString &host);
 
-    void ResolveHostTask();
+    void ThreadFunc();
 
     enum {
         METHOD_HIT = 1,
@@ -444,6 +445,7 @@ private:
     uint32_t      mDefaultCacheLifetime; // granularity seconds
     uint32_t      mDefaultGracePeriod; // granularity seconds
     mutable Mutex mLock;    // mutable so SizeOfIncludingThis can be const
+    CondVar       mIdleTaskCV;
     nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord> mRecordDB;
     mozilla::LinkedList<RefPtr<nsHostRecord>> mHighQ;
     mozilla::LinkedList<RefPtr<nsHostRecord>> mMediumQ;
@@ -457,6 +459,7 @@ private:
     RefPtr<nsIThreadPool> mResolverThreads;
 
     mozilla::Atomic<bool>     mShutdown;
+    mozilla::Atomic<uint32_t> mNumIdleTasks;
     mozilla::Atomic<uint32_t> mActiveTaskCount;
     mozilla::Atomic<uint32_t> mActiveAnyThreadCount;
     mozilla::Atomic<uint32_t> mPendingCount;
