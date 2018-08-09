@@ -134,9 +134,6 @@ public:
 
     void TraceProtos(JSTracer* aTrc);
 
-    // WebIDL API
-    void AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
-                                 const nsAString& aAttr, ErrorResult& aRv);
     void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                     const nsAString& aAttr);
 
@@ -172,6 +169,9 @@ protected:
 
     nsresult
     AddElementToDocumentPost(Element* aElement);
+
+    void AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
+                                 const nsAString& aAttr, ErrorResult& aRv);
 
     nsresult
     ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
