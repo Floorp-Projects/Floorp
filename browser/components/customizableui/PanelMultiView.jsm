@@ -172,9 +172,14 @@ var AssociatedToNode = class {
     return this.node.ownerGlobal;
   }
 
-  _getBoundsWithoutFlushing(element) {
-    return this.window.windowUtils.getBoundsWithoutFlushing(element);
-  }   
+  /**
+   * nsIDOMWindowUtils for the window of this node.
+   */
+  get _dwu() {
+    if (this.__dwu)
+      return this.__dwu;
+    return this.__dwu = this.window.windowUtils;
+  }
 
   /**
    * Dispatches a custom event on this element.
@@ -418,7 +423,8 @@ var PanelMultiView = class extends AssociatedToNode {
     this._panel.removeEventListener("popuphidden", this);
     this.window.removeEventListener("keydown", this);
     this.node = this._openPopupPromise = this._openPopupCancelCallback =
-      this._viewContainer = this._viewStack = this._transitionDetails = null;
+      this._viewContainer = this._viewStack = this.__dwu =
+      this._transitionDetails = null;
   }
 
   /**
@@ -872,7 +878,7 @@ var PanelMultiView = class extends AssociatedToNode {
       let header = viewNode.firstChild;
       if (header && header.classList.contains("panel-header")) {
         viewRect.height += await window.promiseDocumentFlushed(() => {
-          return this._getBoundsWithoutFlushing(header).height;
+          return this._dwu.getBoundsWithoutFlushing(header).height;
         });
       }
       await nextPanelView.descriptionHeightWorkaround();
@@ -886,7 +892,7 @@ var PanelMultiView = class extends AssociatedToNode {
       await nextPanelView.descriptionHeightWorkaround();
 
       viewRect = await window.promiseDocumentFlushed(() => {
-        return this._getBoundsWithoutFlushing(viewNode);
+        return this._dwu.getBoundsWithoutFlushing(viewNode);
       });
       // Bail out if the panel was closed in the meantime.
       if (!nextPanelView.isOpenIn(this)) {
@@ -1251,7 +1257,7 @@ var PanelView = class extends AssociatedToNode {
    * navigation if the view is still open but is invisible.
    */
   captureKnownSize() {
-    let rect = this._getBoundsWithoutFlushing(this.node);
+    let rect = this._dwu.getBoundsWithoutFlushing(this.node);
     this.knownWidth = rect.width;
     this.knownHeight = rect.height;
   }
@@ -1364,6 +1370,7 @@ var PanelView = class extends AssociatedToNode {
 
     let navigableElements = Array.from(this.node.querySelectorAll(
       ":-moz-any(button,toolbarbutton,menulist,.text-link):not([disabled])"));
+    let dwu = this._dwu;
     return this.__navigableElements = navigableElements.filter(element => {
       // Set the "tabindex" attribute to make sure the element is focusable.
       if (!element.hasAttribute("tabindex")) {
@@ -1372,7 +1379,7 @@ var PanelView = class extends AssociatedToNode {
       if (element.hasAttribute("disabled")) {
         return false;
       }
-      let bounds = this._getBoundsWithoutFlushing(element);
+      let bounds = dwu.getBoundsWithoutFlushing(element);
       return bounds.width > 0 && bounds.height > 0;
     });
   }
