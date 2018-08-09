@@ -28,6 +28,7 @@
 #include "frontend/CForEmitter.h"
 #include "frontend/EmitterScope.h"
 #include "frontend/ForInEmitter.h"
+#include "frontend/ForOfEmitter.h"
 #include "frontend/ForOfLoopControl.h"
 #include "frontend/IfEmitter.h"
 #include "frontend/Parser.h"
@@ -390,11 +391,19 @@ BytecodeEmitter::emitJumpTargetAndPatch(JumpList jump)
 }
 
 bool
+BytecodeEmitter::emitCall(JSOp op, uint16_t argc, const Maybe<uint32_t>& sourceCoordOffset)
+{
+    if (sourceCoordOffset.isSome()) {
+        if (!updateSourceCoordNotes(*sourceCoordOffset))
+            return false;
+    }
+    return emit3(op, ARGC_LO(argc), ARGC_HI(argc));
+}
+
+bool
 BytecodeEmitter::emitCall(JSOp op, uint16_t argc, ParseNode* pn)
 {
-    if (pn && !updateSourceCoordNotes(pn->pn_pos.begin))
-        return false;
-    return emit3(op, ARGC_LO(argc), ARGC_HI(argc));
+    return emitCall(op, argc, pn ? Some(pn->pn_pos.begin) : Nothing());
 }
 
 bool
@@ -2839,7 +2848,8 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
 }
 
 bool
-BytecodeEmitter::emitIteratorNext(ParseNode* pn, IteratorKind iterKind /* = IteratorKind::Sync */,
+BytecodeEmitter::emitIteratorNext(const Maybe<uint32_t>& callSourceCoordOffset,
+                                  IteratorKind iterKind /* = IteratorKind::Sync */,
                                   bool allowSelfHosted /* = false */)
 {
     MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting,
@@ -2848,7 +2858,7 @@ BytecodeEmitter::emitIteratorNext(ParseNode* pn, IteratorKind iterKind /* = Iter
 
     MOZ_ASSERT(this->stackDepth >= 2);                    // ... NEXT ITER
 
-    if (!emitCall(JSOP_CALL, 0, pn))                      // ... RESULT
+    if (!emitCall(JSOP_CALL, 0, callSourceCoordOffset))   // ... RESULT
         return false;
 
     if (iterKind == IteratorKind::Async) {
@@ -3381,7 +3391,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
             return false;
         if (!emitDupAt(emitted + 1))                              // ... OBJ NEXT ITER *LREF NEXT ITER
             return false;
-        if (!emitIteratorNext(pattern))                           // ... OBJ NEXT ITER *LREF RESULT
+        if (!emitIteratorNext(Some(pattern->pn_pos.begin)))       // ... OBJ NEXT ITER *LREF RESULT
             return false;
         if (!emit1(JSOP_DUP))                                     // ... OBJ NEXT ITER *LREF RESULT RESULT
             return false;
@@ -4689,8 +4699,8 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
             return false;
         if (!emitDupAt(3))                                // NEXT ITER ARR I NEXT ITER
             return false;
-        if (!emitIteratorNext(nullptr, IteratorKind::Sync, allowSelfHosted))  // ITER ARR I RESULT
-            return false;
+        if (!emitIteratorNext(Nothing(), IteratorKind::Sync, allowSelfHosted))
+            return false;                                 // ITER ARR I RESULT
         if (!emit1(JSOP_DUP))                             // NEXT ITER ARR I RESULT RESULT
             return false;
         if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // NEXT ITER ARR I RESULT DONE
@@ -4703,8 +4713,11 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     }
 
     // Let Ion know where the closing jump of this loop is.
-1    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
+    if (!setSrcNoteOffset(noteIndex, SrcNote::ForOf::BackJumpOffset,
+                          loopInfo.loopEndOffsetFromEntryJump()))
+    {
         return false;
+    }
 
     // No breaks or continues should occur in spreads.
     MOZ_ASSERT(loopInfo.breaks.offset == -1);
@@ -4815,166 +4828,38 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, const EmitterScope* headLexical
         allowSelfHostedIter = true;
     }
 
-    // Evaluate the expression being iterated. The forHeadExpr should use a
-    // distinct TDZCheckCache to evaluate since (abstractly) it runs in its own
-    // LexicalEnvironment.
-    if (!emitTreeInBranch(forHeadExpr))                   // ITERABLE
-        return false;
-    if (iterKind == IteratorKind::Async) {
-        if (!emitAsyncIterator())                         // NEXT ITER
-            return false;
-    } else {
-        if (!emitIterator())                              // NEXT ITER
-            return false;
-    }
+    ForOfEmitter forOf(this, headLexicalEmitterScope, allowSelfHostedIter, iterKind);
 
-    int32_t iterDepth = stackDepth;
-
-    // For-of loops have the iterator next method, the iterator itself, and
-    // the result.value on the stack.
-    // Push an undefined to balance the stack.
-    if (!emit1(JSOP_UNDEFINED))                           // NEXT ITER UNDEF
+    if (!forOf.emitIterated())                            //
         return false;
 
-    ForOfLoopControl loopInfo(this, iterDepth, allowSelfHostedIter, iterKind);
-
-    // Annotate so IonMonkey can find the loop-closing jump.
-    unsigned noteIndex;
-    if (!newSrcNote(SRC_FOR_OF, &noteIndex))
+    if (!emitTree(forHeadExpr))                           // ITERABLE
         return false;
 
-    if (!loopInfo.emitEntryJump(this))                    // NEXT ITER UNDEF
-        return false;
-
-    if (!loopInfo.emitLoopHead(this, Nothing()))          // NEXT ITER UNDEF
-        return false;
-
-    // If the loop had an escaping lexical declaration, replace the current
-    // environment with an dead zoned one to implement TDZ semantics.
     if (headLexicalEmitterScope) {
-        // The environment chain only includes an environment for the for-of
-        // loop head *if* a scope binding is captured, thereby requiring
-        // recreation each iteration. If a lexical scope exists for the head,
-        // it must be the innermost one. If that scope has closed-over
-        // bindings inducing an environment, recreate the current environment.
         DebugOnly<ParseNode*> forOfTarget = forOfHead->pn_kid1;
         MOZ_ASSERT(forOfTarget->isKind(ParseNodeKind::Let) ||
                    forOfTarget->isKind(ParseNodeKind::Const));
-        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
-        MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
-
-        if (headLexicalEmitterScope->hasEnvironment()) {
-            if (!emit1(JSOP_RECREATELEXICALENV))          // NEXT ITER UNDEF
-                return false;
-        }
-
-        // For uncaptured bindings, put them back in TDZ.
-        if (!headLexicalEmitterScope->deadZoneFrameSlots(this))
-            return false;
     }
 
-    {
-#ifdef DEBUG
-        auto loopDepth = this->stackDepth;
-#endif
+    if (!forOf.emitInitialize(Some(forOfHead->pn_pos.begin)))
+        return false;                                     // NEXT ITER VALUE
 
-        // Make sure this code is attributed to the "for".
-        if (!updateSourceCoordNotes(forOfHead->pn_pos.begin))
-            return false;
-
-        if (!emit1(JSOP_POP))                             // NEXT ITER
-            return false;
-        if (!emit1(JSOP_DUP2))                            // NEXT ITER NEXT ITER
-            return false;
-
-        if (!emitIteratorNext(forOfHead, iterKind, allowSelfHostedIter))
-            return false;                                 // NEXT ITER RESULT
-
-        if (!emit1(JSOP_DUP))                             // NEXT ITER RESULT RESULT
-            return false;
-        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // NEXT ITER RESULT DONE
-            return false;
-
-        InternalIfEmitter ifDone(this);
-
-        if (!ifDone.emitThen())                           // NEXT ITER RESULT
-            return false;
-
-        // Remove RESULT from the stack to release it.
-        if (!emit1(JSOP_POP))                             // NEXT ITER
-            return false;
-        if (!emit1(JSOP_UNDEFINED))                       // NEXT ITER UNDEF
-            return false;
-
-        // If the iteration is done, leave loop here, instead of the branch at
-        // the end of the loop.
-        if (!loopInfo.emitSpecialBreakForDone(this))      // NEXT ITER UNDEF
-            return false;
-
-        if (!ifDone.emitEnd())                            // NEXT ITER RESULT
-            return false;
-
-        // Emit code to assign result.value to the iteration variable.
-        //
-        // Note that ES 13.7.5.13, step 5.c says getting result.value does not
-        // call IteratorClose, so start JSTRY_ITERCLOSE after the GETPROP.
-        if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) // NEXT ITER VALUE
-            return false;
-
-        if (!loopInfo.emitBeginCodeNeedingIteratorClose(this))
-            return false;
-
-        if (!emitInitializeForInOrOfTarget(forOfHead))    // NEXT ITER VALUE
-            return false;
-
-        MOZ_ASSERT(stackDepth == loopDepth,
-                   "the stack must be balanced around the initializing "
-                   "operation");
-
-        // Remove VALUE from the stack to release it.
-        if (!emit1(JSOP_POP))                             // NEXT ITER
-            return false;
-        if (!emit1(JSOP_UNDEFINED))                       // NEXT ITER UNDEF
-            return false;
-
-        // Perform the loop body.
-        ParseNode* forBody = forOfLoop->pn_right;
-        if (!emitTree(forBody))                           // NEXT ITER UNDEF
-            return false;
-
-        MOZ_ASSERT(stackDepth == loopDepth,
-                   "the stack must be balanced around the for-of body");
-
-        if (!loopInfo.emitEndCodeNeedingIteratorClose(this))
-            return false;
-
-        loopInfo.setContinueTarget(offset());
-
-        if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(forHeadExpr)))
-            return false;                                 // NEXT ITER UNDEF
-
-        if (!emit1(JSOP_FALSE))                           // NEXT ITER UNDEF FALSE
-            return false;
-        if (!loopInfo.emitLoopEnd(this, JSOP_IFEQ))       // NEXT ITER UNDEF
-            return false;
-
-        MOZ_ASSERT(this->stackDepth == loopDepth);
-    }
-
-    // Let Ion know where the closing jump of this loop is.
-    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
+    if (!emitInitializeForInOrOfTarget(forOfHead))        // NEXT ITER VALUE
         return false;
 
-    if (!loopInfo.patchBreaksAndContinues(this))
+    if (!forOf.emitBody())                                // NEXT ITER UNDEF
         return false;
 
-    if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, loopInfo.headOffset(),
-                            loopInfo.breakTargetOffset()))
-    {
+    // Perform the loop body.
+    ParseNode* forBody = forOfLoop->pn_right;
+    if (!emitTree(forBody))                               // NEXT ITER UNDEF
         return false;
-    }
 
-    return emitPopN(3);                                   //
+    if (!forOf.emitEnd(Some(forHeadExpr->pn_pos.begin)))  //
+        return false;
+
+    return true;
 }
 
 bool

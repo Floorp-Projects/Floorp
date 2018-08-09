@@ -215,6 +215,7 @@ UNIFIED_SOURCES += [
     'frontend/EmitterScope.cpp',
     'frontend/FoldConstants.cpp',
     'frontend/ForInEmitter.cpp',
+    'frontend/ForOfEmitter.cpp',
     'frontend/ForOfLoopControl.cpp',
     'frontend/IfEmitter.cpp',
     'frontend/JumpList.cpp',
