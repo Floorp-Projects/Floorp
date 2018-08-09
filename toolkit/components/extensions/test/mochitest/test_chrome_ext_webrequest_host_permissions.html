@@ -36,9 +36,11 @@ add_task(async function test_webRequest_host_permissions() {
   await mochi_test.awaitMessage("ready");
 
   const win1 = window.open("https://example.com/chrome/toolkit/components/extensions/test/mochitest/file_with_images.html");
-  ok((await all.awaitMessage("png")).endsWith("good.png"), "<all_urls> permission gets to see good.png");
+  let urls = [await all.awaitMessage("png"),
+              await all.awaitMessage("png")];
+  ok(urls.some(url => url.endsWith("good.png")), "<all_urls> permission gets to see good.png");
   ok((await example.awaitMessage("png")).endsWith("good.png"), "example permission sees same-origin example.com image");
-  ok((await all.awaitMessage("png")).endsWith("great.png"), "<all_urls> permission also sees great.png");
+  ok(urls.some(url => url.endsWith("great.png")), "<all_urls> permission also sees great.png");
 
   // Clear the in-memory image cache, it can prevent listeners from receiving events.
   const imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
@@ -46,9 +48,11 @@ add_task(async function test_webRequest_host_permissions() {
   win1.close();
 
   const win2 = window.open("http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest/file_with_images.html");
-  ok((await all.awaitMessage("png")).endsWith("good.png"), "<all_urls> permission gets to see good.png");
+  urls = [await all.awaitMessage("png"),
+          await all.awaitMessage("png")];
+  ok(urls.some(url => url.endsWith("good.png")), "<all_urls> permission gets to see good.png");
   ok((await mochi_test.awaitMessage("png")).endsWith("great.png"), "mochi.test permission sees same-origin mochi.test image");
-  ok((await all.awaitMessage("png")).endsWith("great.png"), "<all_urls> permission also sees great.png");
+  ok(urls.some(url => url.endsWith("great.png")), "<all_urls> permission also sees great.png");
   win2.close();
 
   await all.unload();
