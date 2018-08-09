@@ -5019,11 +5019,9 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-DoNewArray(JSContext* cx, void* payload, ICNewArray_Fallback* stub, uint32_t length,
+DoNewArray(JSContext* cx, BaselineFrame* frame, ICNewArray_Fallback* stub, uint32_t length,
            MutableHandleValue res)
 {
-    SharedStubInfo info(cx, payload, stub->icEntry());
-
     FallbackICSpew(cx, stub, "NewArray");
 
     RootedObject obj(cx);
@@ -5033,8 +5031,9 @@ DoNewArray(JSContext* cx, void* payload, ICNewArray_Fallback* stub, uint32_t len
         if (!obj)
             return false;
     } else {
-        HandleScript script = info.script();
-        jsbytecode* pc = info.pc();
+        RootedScript script(cx, frame->script());
+        jsbytecode* pc = stub->icEntry()->pc(script);
+
         obj = NewArrayOperation(cx, script, pc, length);
         if (!obj)
             return false;
@@ -5051,7 +5050,7 @@ DoNewArray(JSContext* cx, void* payload, ICNewArray_Fallback* stub, uint32_t len
     return true;
 }
 
-typedef bool(*DoNewArrayFn)(JSContext*, void*, ICNewArray_Fallback*, uint32_t,
+typedef bool(*DoNewArrayFn)(JSContext*, BaselineFrame*, ICNewArray_Fallback*, uint32_t,
                             MutableHandleValue);
 static const VMFunction DoNewArrayInfo =
     FunctionInfo<DoNewArrayFn>(DoNewArray, "DoNewArray", TailCall);
@@ -5063,7 +5062,7 @@ ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.push(R0.scratchReg()); // length
     masm.push(ICStubReg); // stub.
-    pushStubPayload(masm, R0.scratchReg());
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoNewArrayInfo, masm);
 }
