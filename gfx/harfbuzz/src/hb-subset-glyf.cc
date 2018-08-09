@@ -292,7 +292,7 @@ hb_subset_glyf_and_loca (hb_subset_plan_t *plan,
                          hb_blob_t       **glyf_prime, /* OUT */
                          hb_blob_t       **loca_prime /* OUT */)
 {
-  hb_blob_t *glyf_blob = OT::Sanitizer<OT::glyf>().sanitize (plan->source->reference_table (HB_OT_TAG_glyf));
+  hb_blob_t *glyf_blob = hb_sanitize_context_t ().reference_table<OT::glyf> (plan->source);
   const char *glyf_data = hb_blob_get_data(glyf_blob, nullptr);
 
   OT::glyf::accelerator_t glyf;

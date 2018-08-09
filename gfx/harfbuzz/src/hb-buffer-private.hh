@@ -83,7 +83,8 @@ HB_MARK_AS_FLAG_T (hb_buffer_scratch_flags_t);
  * hb_buffer_t
  */
 
-struct hb_buffer_t {
+struct hb_buffer_t
+{
   hb_object_header_t header;
   ASSERT_POD ();
 
@@ -352,6 +353,7 @@ struct hb_buffer_t {
       info[i].mask &= ~HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
   }
 };
+DECLARE_NULL_INSTANCE (hb_buffer_t);
 
 
 /* Loop over clusters. Duplicated in foreach_syllable(). */

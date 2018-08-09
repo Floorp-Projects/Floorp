@@ -45,6 +45,20 @@
 #include <stdlib.h>
 
 
+DEFINE_NULL_INSTANCE (hb_blob_t) =
+{
+  HB_OBJECT_HEADER_STATIC,
+
+  true, /* immutable */
+
+  nullptr, /* data */
+  0, /* length */
+  HB_MEMORY_MODE_READONLY, /* mode */
+
+  nullptr, /* user_data */
+  nullptr  /* destroy */
+};
+
 /**
  * hb_blob_create: (skip)
  * @data: Pointer to blob data.
@@ -182,20 +196,7 @@ hb_blob_copy_writable_or_fail (hb_blob_t *blob)
 hb_blob_t *
 hb_blob_get_empty (void)
 {
-  static const hb_blob_t _hb_blob_nil = {
-    HB_OBJECT_HEADER_STATIC,
-
-    true, /* immutable */
-
-    nullptr, /* data */
-    0, /* length */
-    HB_MEMORY_MODE_READONLY, /* mode */
-
-    nullptr, /* user_data */
-    nullptr  /* destroy */
-  };
-
-  return const_cast<hb_blob_t *> (&_hb_blob_nil);
+  return const_cast<hb_blob_t *> (&Null(hb_blob_t));
 }
 
 /**

@@ -185,7 +185,8 @@ hb_unicode_funcs_create (hb_unicode_funcs_t *parent)
 }
 
 
-const hb_unicode_funcs_t _hb_unicode_funcs_nil = {
+DEFINE_NULL_INSTANCE (hb_unicode_funcs_t) =
+{
   HB_OBJECT_HEADER_STATIC,
 
   nullptr, /* parent */
@@ -209,7 +210,7 @@ const hb_unicode_funcs_t _hb_unicode_funcs_nil = {
 hb_unicode_funcs_t *
 hb_unicode_funcs_get_empty (void)
 {
-  return const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_nil);
+  return const_cast<hb_unicode_funcs_t *> (&Null(hb_unicode_funcs_t));
 }
 
 /**

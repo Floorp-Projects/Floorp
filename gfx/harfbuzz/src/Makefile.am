@@ -14,6 +14,7 @@ check_PROGRAMS =
 
 # Convenience targets:
 lib: $(BUILT_SOURCES) libharfbuzz.la libharfbuzz-subset.la
+libs: $(BUILT_SOURCES) $(lib_LTLIBRARIES)
 fuzzing: $(BUILT_SOURCES) libharfbuzz-fuzzing.la libharfbuzz-subset-fuzzing.la
 
 lib_LTLIBRARIES = libharfbuzz.la
@@ -373,15 +374,11 @@ dist_check_SCRIPTS += \
 endif
 
 check_PROGRAMS += \
-	dump-fon \
 	dump-indic-data \
 	dump-khmer-data \
 	dump-myanmar-data \
 	dump-use-data \
 	$(NULL)
-dump_fon_SOURCES = dump-fon.cc
-dump_fon_CPPFLAGS = $(HBCFLAGS)
-dump_fon_LDADD = libharfbuzz.la $(HBLIBS)
 dump_indic_data_SOURCES = dump-indic-data.cc hb-ot-shape-complex-indic-table.cc
 dump_indic_data_CPPFLAGS = $(HBCFLAGS)
 dump_indic_data_LDADD = libharfbuzz.la $(HBLIBS)

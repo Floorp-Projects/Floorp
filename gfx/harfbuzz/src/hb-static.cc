@@ -26,7 +26,41 @@
 
 #include "hb-private.hh"
 
+#include "hb-open-type-private.hh"
+#include "hb-ot-layout-common-private.hh"
+
+#include "hb-face-private.hh"
+#include "hb-ot-head-table.hh"
+#include "hb-ot-maxp-table.hh"
+
 #ifndef HB_NO_VISIBILITY
-void * const _hb_NullPool[HB_NULL_POOL_SIZE / sizeof (void *)] = {};
-/*thread_local*/ void * _hb_CrapPool[HB_NULL_POOL_SIZE / sizeof (void *)] = {};
+
+hb_vector_size_impl_t const _hb_NullPool[(HB_NULL_POOL_SIZE + sizeof (hb_vector_size_impl_t) - 1) / sizeof (hb_vector_size_impl_t)] = {};
+/*thread_local*/ hb_vector_size_impl_t _hb_CrapPool[(HB_NULL_POOL_SIZE + sizeof (hb_vector_size_impl_t) - 1) / sizeof (hb_vector_size_impl_t)] = {};
+
+DEFINE_NULL_NAMESPACE_BYTES (OT, Index) =  {0xFF,0xFF};
+DEFINE_NULL_NAMESPACE_BYTES (OT, LangSys) = {0x00,0x00, 0xFF,0xFF, 0x00,0x00};
+DEFINE_NULL_NAMESPACE_BYTES (OT, RangeRecord) = {0x00,0x01, 0x00,0x00, 0x00, 0x00};
+
+
+void
+hb_face_t::load_num_glyphs (void) const
+{
+  hb_sanitize_context_t c = hb_sanitize_context_t ();
+  c.set_num_glyphs (0); /* So we don't recurse ad infinitum. */
+  hb_blob_t *maxp_blob = c.reference_table<OT::maxp> (this);
+  const OT::maxp *maxp_table = maxp_blob->as<OT::maxp> ();
+  num_glyphs = maxp_table->get_num_glyphs ();
+  hb_blob_destroy (maxp_blob);
+}
+
+void
+hb_face_t::load_upem (void) const
+{
+  hb_blob_t *head_blob = hb_sanitize_context_t ().reference_table<OT::head> (this);
+  const OT::head *head_table = head_blob->as<OT::head> ();
+  upem = head_table->get_upem ();
+  hb_blob_destroy (head_blob);
+}
+
 #endif

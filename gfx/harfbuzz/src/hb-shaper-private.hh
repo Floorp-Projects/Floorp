@@ -49,23 +49,12 @@ HB_INTERNAL const hb_shaper_pair_t *
 _hb_shapers_get (void);
 
 
-/* For embedding in face / font / ... */
-struct hb_shaper_data_t {
-#define HB_SHAPER_IMPLEMENT(shaper) void *shaper;
-#include "hb-shaper-list.hh"
-#undef HB_SHAPER_IMPLEMENT
-};
-
-#define HB_SHAPERS_COUNT (sizeof (hb_shaper_data_t) / sizeof (void *))
-
 /* Means: succeeded, but don't need to keep any data. */
 #define HB_SHAPER_DATA_SUCCEEDED ((void *) +1)
-
 /* Means: tried but failed to create. */
 #define HB_SHAPER_DATA_INVALID ((void *) -1)
-#define HB_SHAPER_DATA_IS_INVALID(data) ((void *) (data) == HB_SHAPER_DATA_INVALID)
 
-#define HB_SHAPER_DATA_TYPE_NAME(shaper, object)	hb_##shaper##_shaper_##object##_data_t
+#define HB_SHAPER_DATA_TYPE_NAME(shaper, object)	hb_##shaper##_##object##_data_t
 #define HB_SHAPER_DATA_TYPE(shaper, object)		struct HB_SHAPER_DATA_TYPE_NAME(shaper, object)
 #define HB_SHAPER_DATA_INSTANCE(shaper, object, instance)	(* (HB_SHAPER_DATA_TYPE(shaper, object) **) &(instance)->shaper_data.shaper)
 #define HB_SHAPER_DATA(shaper, object)			HB_SHAPER_DATA_INSTANCE(shaper, object, object)
@@ -97,6 +86,16 @@ HB_SHAPER_DATA_ENSURE_FUNC(shaper, object) (hb_##object##_t *object) \
   retry: \
   HB_SHAPER_DATA_TYPE (shaper, object) *data = (HB_SHAPER_DATA_TYPE (shaper, object) *) hb_atomic_ptr_get (&HB_SHAPER_DATA (shaper, object)); \
   if (likely (data) && !(condition)) { \
+    /* Note that evaluating condition above can be dangerous if another thread \
+     * got here first and destructed data.  That's, as always, bad use pattern. \
+     * If you modify the font (change font size), other threads must not be \
+     * using it at the same time.  However, since this check is delayed to \
+     * when one actually tries to shape something, this is a XXX race condition \
+     * (and the only know we have that I know of) right now.  Ie. you modify the \
+     * font size in one thread, then (supposedly safely) try to use it from two \
+     * or more threads and BOOM!  I'm not sure how to fix this.  We want RCU. \
+     * Maybe when it doesn't matter when we finally implement AAT shaping, as
+     * this (condition) is currently only used by hb-coretext. */ \
     /* Drop and recreate. */ \
     /* If someone dropped it in the mean time, throw it away and don't touch it. \
      * Otherwise, destruct it. */ \
@@ -117,8 +116,17 @@ HB_SHAPER_DATA_ENSURE_FUNC(shaper, object) (hb_##object##_t *object) \
       goto retry; \
     } \
   } \
-  return data != nullptr && !HB_SHAPER_DATA_IS_INVALID (data); \
+  return data != nullptr && (void *) data != HB_SHAPER_DATA_INVALID; \
 }
+
+
+/* For embedding in face / font / ... */
+struct hb_shaper_data_t {
+#define HB_SHAPER_IMPLEMENT(shaper) void *shaper;
+#include "hb-shaper-list.hh"
+#undef HB_SHAPER_IMPLEMENT
+};
+#define HB_SHAPERS_COUNT (sizeof (hb_shaper_data_t) / sizeof (void *))
 
 
 #endif /* HB_SHAPER_PRIVATE_HH */

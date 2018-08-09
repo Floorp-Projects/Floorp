@@ -37,7 +37,7 @@
 
 /* hb_options_t */
 
-hb_options_union_t _hb_options;
+hb_atomic_int_t _hb_options;
 
 void
 _hb_options_init (void)
@@ -50,7 +50,7 @@ _hb_options_init (void)
   u.opts.uniscribe_bug_compatible = c && strstr (c, "uniscribe-bug-compatible");
 
   /* This is idempotent and threadsafe. */
-  _hb_options = u;
+  _hb_options.set_relaxed (u.i);
 }
 
 
@@ -1069,3 +1069,12 @@ hb_variation_to_string (hb_variation_t *variation,
   memcpy (buf, s, len);
   buf[len] = '\0';
 }
+
+/* If there is no visibility control, then hb-static.cc will NOT
+ * define anything.  Instead, we get it to define one set in here
+ * only, so only libharfbuzz.so defines them, not other libs. */
+#ifdef HB_NO_VISIBILITY
+#undef HB_NO_VISIBILITY
+#include "hb-static.cc"
+#define HB_NO_VISIBILITY 1
+#endif
