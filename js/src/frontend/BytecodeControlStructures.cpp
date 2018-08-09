@@ -8,9 +8,12 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/EmitterScope.h"
+#include "vm/Opcodes.h"
 
 using namespace js;
 using namespace js::frontend;
+
+using mozilla::Maybe;
 
 NestableControl::NestableControl(BytecodeEmitter* bce, StatementKind kind)
   : Nestable<NestableControl>(&bce->innermostNestableControl),
@@ -38,8 +41,7 @@ LabelControl::LabelControl(BytecodeEmitter* bce, JSAtom* label, ptrdiff_t startO
 
 LoopControl::LoopControl(BytecodeEmitter* bce, StatementKind loopKind)
   : BreakableControl(bce, loopKind),
-    tdzCache_(bce),
-    continueTarget({ -1 })
+    tdzCache_(bce)
 {
     MOZ_ASSERT(is<LoopControl>());
 
@@ -76,6 +78,14 @@ LoopControl::LoopControl(BytecodeEmitter* bce, StatementKind loopKind)
 }
 
 bool
+LoopControl::emitContinueTarget(BytecodeEmitter* bce)
+{
+    if (!bce->emitJumpTarget(&continueTarget_))
+        return false;
+    return true;
+}
+
+bool
 LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce)
 {
     // This doesn't pop stack values, nor handle any other controls.
@@ -92,12 +102,68 @@ LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce)
 }
 
 bool
+LoopControl::emitEntryJump(BytecodeEmitter* bce)
+{
+    if (!bce->emitJump(JSOP_GOTO, &entryJump_))
+        return false;
+    return true;
+}
+
+bool
+LoopControl::emitLoopHead(BytecodeEmitter* bce, const Maybe<uint32_t>& nextPos)
+{
+    if (nextPos) {
+        if (!bce->updateSourceCoordNotes(*nextPos))
+            return false;
+    }
+
+    head_ = { bce->offset() };
+    if (!bce->emit1(JSOP_LOOPHEAD))
+        return false;
+
+    return true;
+}
+
+bool
+LoopControl::emitLoopEntry(BytecodeEmitter* bce, const Maybe<uint32_t>& nextPos)
+{
+    if (nextPos) {
+        if (!bce->updateSourceCoordNotes(*nextPos))
+            return false;
+    }
+
+    JumpTarget entry = { bce->offset() };
+    bce->patchJumpsToTarget(entryJump_, entry);
+
+    MOZ_ASSERT(loopDepth_ > 0);
+
+    uint8_t loopDepthAndFlags = PackLoopEntryDepthHintAndFlags(loopDepth_,
+                                                               canIonOsr_);
+    if (!bce->emit2(JSOP_LOOPENTRY, loopDepthAndFlags))
+        return false;
+
+    return true;
+}
+
+bool
+LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op)
+{
+    JumpList beq;
+    if (!bce->emitBackwardJump(op, head_, &beq, &breakTarget_))
+        return false;
+
+    loopEndOffset_ = beq.offset;
+
+    return true;
+}
+
+bool
 LoopControl::patchBreaksAndContinues(BytecodeEmitter* bce)
 {
-    MOZ_ASSERT(continueTarget.offset != -1);
+    MOZ_ASSERT(continueTarget_.offset != -1);
     if (!patchBreaks(bce))
         return false;
-    bce->patchJumpsToTarget(continues, continueTarget);
+    bce->patchJumpsToTarget(continues, continueTarget_);
     return true;
 }
 
