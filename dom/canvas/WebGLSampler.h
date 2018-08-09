@@ -41,7 +41,7 @@ public:
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
-    void SamplerParameter(GLenum pname, const FloatOrInt& param);
+    void SamplerParameter(const char* funcName, GLenum pname, const FloatOrInt& param);
 
     const auto& State() const { return mState; }
 };

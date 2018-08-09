@@ -172,13 +172,15 @@ WebGLShader::~WebGLShader()
 void
 WebGLShader::ShaderSource(const nsAString& source)
 {
+    const char funcName[] = "shaderSource";
     nsString sourceWithoutComments;
     if (!TruncateComments(source, &sourceWithoutComments)) {
-        mContext->ErrorOutOfMemory("Failed to alloc for empting comment contents.");
+        mContext->ErrorOutOfMemory("%s: Failed to alloc for empting comment contents.",
+                                   funcName);
         return;
     }
 
-    if (!ValidateGLSLPreprocString(mContext, sourceWithoutComments))
+    if (!ValidateGLSLPreprocString(mContext, funcName, sourceWithoutComments))
         return;
 
     // We checked that the source stripped of comments is in the

@@ -17,7 +17,6 @@ namespace mozilla {
 already_AddRefed<WebGLTransformFeedback>
 WebGL2Context::CreateTransformFeedback()
 {
-    const FuncScope funcScope(*this, "createTransformFeedback");
     if (IsContextLost())
         return nullptr;
 
@@ -31,12 +30,12 @@ WebGL2Context::CreateTransformFeedback()
 void
 WebGL2Context::DeleteTransformFeedback(WebGLTransformFeedback* tf)
 {
-    const FuncScope funcScope(*this, "deleteTransformFeedback");
-    if (!ValidateDeleteObject(tf))
+    const char funcName[] = "deleteTransformFeedback";
+    if (!ValidateDeleteObject(funcName, tf))
         return;
 
     if (tf->mIsActive) {
-        ErrorInvalidOperation("Cannot delete active transform feedbacks.");
+        ErrorInvalidOperation("%s: Cannot delete active transform feedbacks.", funcName);
         return;
     }
 
@@ -48,33 +47,33 @@ WebGL2Context::DeleteTransformFeedback(WebGLTransformFeedback* tf)
 }
 
 bool
-WebGL2Context::IsTransformFeedback(const WebGLTransformFeedback* const obj)
+WebGL2Context::IsTransformFeedback(const WebGLTransformFeedback* tf)
 {
-    const FuncScope funcScope(*this, "isTransformFeedback");
-    if (!ValidateIsObject(obj))
+    if (!ValidateIsObject("isTransformFeedback", tf))
         return false;
 
-    return gl->fIsTransformFeedback(obj->mGLName);
+    return gl->fIsTransformFeedback(tf->mGLName);
 }
 
 void
 WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
 {
-    const FuncScope funcScope(*this, "bindTransformFeedback");
+    const char funcName[] = "bindTransformFeedback";
     if (IsContextLost())
         return;
 
     if (target != LOCAL_GL_TRANSFORM_FEEDBACK)
-        return ErrorInvalidEnum("`target` must be TRANSFORM_FEEDBACK.");
+        return ErrorInvalidEnum("%s: `target` must be TRANSFORM_FEEDBACK.", funcName);
 
-    if (tf && !ValidateObject("tf", *tf))
+    if (tf && !ValidateObject(funcName, *tf))
         return;
 
     if (mBoundTransformFeedback->mIsActive &&
         !mBoundTransformFeedback->mIsPaused)
     {
-        ErrorInvalidOperation("Currently bound transform feedback is active and not"
-                              " paused.");
+        ErrorInvalidOperation("%s: Currently bound transform feedback is active and not"
+                              " paused.",
+                              funcName);
         return;
     }
 
@@ -96,7 +95,6 @@ WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
 void
 WebGL2Context::BeginTransformFeedback(GLenum primMode)
 {
-    const FuncScope funcScope(*this, "beginTransformFeedback");
     if (IsContextLost())
         return;
 
@@ -106,7 +104,6 @@ WebGL2Context::BeginTransformFeedback(GLenum primMode)
 void
 WebGL2Context::EndTransformFeedback()
 {
-    const FuncScope funcScope(*this, "endTransformFeedback");
     if (IsContextLost())
         return;
 
@@ -116,7 +113,6 @@ WebGL2Context::EndTransformFeedback()
 void
 WebGL2Context::PauseTransformFeedback()
 {
-    const FuncScope funcScope(*this, "pauseTransformFeedback");
     if (IsContextLost())
         return;
 
@@ -126,7 +122,6 @@ WebGL2Context::PauseTransformFeedback()
 void
 WebGL2Context::ResumeTransformFeedback()
 {
-    const FuncScope funcScope(*this, "resumeTransformFeedback");
     if (IsContextLost())
         return;
 
@@ -138,11 +133,10 @@ WebGL2Context::TransformFeedbackVaryings(WebGLProgram& program,
                                          const dom::Sequence<nsString>& varyings,
                                          GLenum bufferMode)
 {
-    const FuncScope funcScope(*this, "transformFeedbackVaryings");
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("program", program))
+    if (!ValidateObject("transformFeedbackVaryings: program", program))
         return;
 
     program.TransformFeedbackVaryings(varyings, bufferMode);
@@ -151,11 +145,10 @@ WebGL2Context::TransformFeedbackVaryings(WebGLProgram& program,
 already_AddRefed<WebGLActiveInfo>
 WebGL2Context::GetTransformFeedbackVarying(const WebGLProgram& program, GLuint index)
 {
-    const FuncScope funcScope(*this, "getTransformFeedbackVarying");
     if (IsContextLost())
         return nullptr;
 
-    if (!ValidateObject("program", program))
+    if (!ValidateObject("getTransformFeedbackVarying: program", program))
         return nullptr;
 
     return program.GetTransformFeedbackVarying(index);

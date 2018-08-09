@@ -64,7 +64,7 @@ public:
     void EndQuery();
     void GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const;
     bool IsQuery() const;
-    void QueryCounter(GLenum target);
+    void QueryCounter(const char* funcName, GLenum target);
 };
 
 } // namespace mozilla

@@ -19,7 +19,6 @@ namespace mozilla {
 JS::Value
 WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 {
-  const FuncScope funcScope(*this, "getParameter");
   // The following cases are handled in WebGLContext::GetParameter():
   //     case LOCAL_GL_MAX_COLOR_ATTACHMENTS:
   //     case LOCAL_GL_MAX_DRAW_BUFFERS:
