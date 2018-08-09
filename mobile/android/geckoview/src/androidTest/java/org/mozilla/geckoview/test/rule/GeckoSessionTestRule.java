@@ -5,9 +5,9 @@
 
 package org.mozilla.geckoview.test.rule;
 
-import org.junit.rules.TestRule;
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.geckoview.BuildConfig;
+import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
 import org.mozilla.geckoview.GeckoResult.OnValueListener;
@@ -42,12 +42,17 @@ import android.net.LocalSocketAddress;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.os.MessageQueue;
 import android.os.Process;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.rule.UiThreadTestRule;
+import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -72,7 +77,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import kotlin.jvm.JvmClassMappingKt;
@@ -84,7 +88,7 @@ import kotlin.reflect.KClass;
  * for waiting on particular callbacks to be called, and methods for asserting that
  * callbacks are called in the proper order.
  */
-public class GeckoSessionTestRule implements TestRule {
+public class GeckoSessionTestRule extends UiThreadTestRule {
     private static final String LOGTAG = "GeckoSessionTestRule";
 
     private static final long DEFAULT_TIMEOUT_MILLIS = 10000;
@@ -1474,35 +1478,23 @@ public class GeckoSessionTestRule implements TestRule {
 
     @Override
     public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
+        return super.apply(new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                final AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
-                mInstrumentation.runOnMainSync(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            prepareStatement(description);
-                            base.evaluate();
-                            performTestEndCheck();
-                        } catch (Throwable t) {
-                            exceptionRef.set(t);
-                        } finally {
-                            try {
-                                cleanupStatement();
-                            } catch (Throwable t) {
-                                exceptionRef.set(t);
-                            }
-                        }
-                    }
-                });
-
-                Throwable throwable = exceptionRef.get();
-                if (throwable != null) {
-                    throw throwable;
+                try {
+                    prepareStatement(description);
+                    base.evaluate();
+                    performTestEndCheck();
+                } finally {
+                    cleanupStatement();
                 }
             }
-        };
+        }, description);
+    }
+
+    @Override
+    protected boolean shouldRunOnUiThread(final Description description) {
+        return true;
     }
 
     /**
