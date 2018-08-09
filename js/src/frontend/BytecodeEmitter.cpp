@@ -26,6 +26,7 @@
 #include "ds/Nestable.h"
 #include "frontend/BytecodeControlStructures.h"
 #include "frontend/CForEmitter.h"
+#include "frontend/DoWhileEmitter.h"
 #include "frontend/EmitterScope.h"
 #include "frontend/ForInEmitter.h"
 #include "frontend/ForOfEmitter.h"
@@ -5310,64 +5311,21 @@ BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isA
 bool
 BytecodeEmitter::emitDo(ParseNode* pn)
 {
-    // Ensure that the column of the 'do' is set properly.
-    if (!updateSourceCoordNotes(pn->pn_pos.begin))
-        return false;
+    DoWhileEmitter doWhile(this);
 
-    /* Emit an annotated nop so IonBuilder can recognize the 'do' loop. */
-    unsigned noteIndex;
-    if (!newSrcNote(SRC_WHILE, &noteIndex))
-        return false;
-    if (!emit1(JSOP_NOP))
-        return false;
-
-    unsigned noteIndex2;
-    if (!newSrcNote(SRC_WHILE, &noteIndex2))
-        return false;
-
-    /* Compile the loop body. */
-    LoopControl loopInfo(this, StatementKind::DoLoop);
-
-    if (!loopInfo.emitLoopHead(this, getOffsetForLoop(pn->pn_left)))
-        return false;
-
-    if (!loopInfo.emitLoopEntry(this, Nothing()))
+    if (!doWhile.emitBody(Some(pn->pn_pos.begin), getOffsetForLoop(pn->pn_left)))
         return false;
 
     if (!emitTree(pn->pn_left))
         return false;
 
-    // Set the offset for continues.
-    if (!loopInfo.emitContinueTarget(this))
+    if (!doWhile.emitCond())
         return false;
 
-    /* Compile the loop condition, now that continues know where to go. */
     if (!emitTree(pn->pn_right))
         return false;
 
-    if (!loopInfo.emitLoopEnd(this, JSOP_IFNE))
-        return false;
-
-    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, loopInfo.headOffset(),
-                            loopInfo.breakTargetOffset()))
-    {
-        return false;
-    }
-
-    /*
-     * Update the annotations with the update and back edge positions, for
-     * IonBuilder.
-     *
-     * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
-     * note gets bigger.
-     */
-    if (!setSrcNoteOffset(noteIndex2, 0, loopInfo.loopEndOffsetFromLoopHead()))
-        return false;
-    // +1 for NOP above.
-    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.continueTargetOffsetFromLoopHead() + 1))
-        return false;
-
-    if (!loopInfo.patchBreaksAndContinues(this))
+    if (!doWhile.emitEnd())
         return false;
 
     return true;

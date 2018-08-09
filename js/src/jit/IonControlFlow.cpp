@@ -1541,11 +1541,11 @@ ControlFlowGenerator::processDoWhileLoop(jssrcnote* sn)
     //    COND        ; start of condition
     //    ...
     //    IFNE ->     ; goes to LOOPHEAD
-    int condition_offset = GetSrcNoteOffset(sn, 0);
+    int condition_offset = GetSrcNoteOffset(sn, SrcNote::DoWhile1::CondOffset);
     jsbytecode* conditionpc = pc + condition_offset;
 
     jssrcnote* sn2 = GetSrcNote(gsn, script, pc + 1);
-    int offset = GetSrcNoteOffset(sn2, 0);
+    int offset = GetSrcNoteOffset(sn2, SrcNote::DoWhile2::BackJumpOffset);
     jsbytecode* ifne = pc + offset + 1;
     MOZ_ASSERT(ifne > pc);
 
