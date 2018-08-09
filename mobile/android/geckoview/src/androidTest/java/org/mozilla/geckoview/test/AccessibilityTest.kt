@@ -64,6 +64,7 @@ class AccessibilityTest : BaseSessionTest() {
         fun onAccessibilityFocused(event: AccessibilityEvent) { }
         fun onClicked(event: AccessibilityEvent) { }
         fun onFocused(event: AccessibilityEvent) { }
+        fun onSelected(event: AccessibilityEvent) { }
         fun onTextSelectionChanged(event: AccessibilityEvent) { }
         fun onTextChanged(event: AccessibilityEvent) { }
         fun onTextTraversal(event: AccessibilityEvent) { }
@@ -90,6 +91,7 @@ class AccessibilityTest : BaseSessionTest() {
                     AccessibilityEvent.TYPE_VIEW_FOCUSED -> newDelegate.onFocused(event)
                     AccessibilityEvent.TYPE_VIEW_CLICKED -> newDelegate.onClicked(event)
                     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED -> newDelegate.onAccessibilityFocused(event)
+                    AccessibilityEvent.TYPE_VIEW_SELECTED -> newDelegate.onSelected(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> newDelegate.onTextSelectionChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> newDelegate.onTextChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY -> newDelegate.onTextTraversal(event)
@@ -204,21 +206,25 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    private fun waitUntilClick(checked: Boolean? = null, selected: Boolean? = null) {
+    private fun waitUntilClick(checked: Boolean) {
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onClicked(event: AccessibilityEvent) {
                 var nodeId = getSourceId(event)
                 var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Event's checked state matches", event.isChecked, equalTo(checked))
+                assertThat("Checkbox node has correct checked state", node.isChecked, equalTo(checked))
+            }
+        })
+    }
 
-                if (checked != null) {
-                    assertThat("Event's checked state matches", event.isChecked, equalTo(checked))
-                    assertThat("Checkbox node has correct checked state", node.isChecked, equalTo(checked))
-                }
-
-                if (selected != null) {
-                    assertThat("Selectable node has correct selected state", node.isSelected, equalTo(selected))
-                }
+    private fun waitUntilSelect(selected: Boolean) {
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onSelected(event: AccessibilityEvent) {
+                var nodeId = getSourceId(event)
+                var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Selectable node has correct selected state", node.isSelected, equalTo(selected))
             }
         })
     }
@@ -407,10 +413,10 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(checked = true)
+        waitUntilClick(true)
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(checked = false)
+        waitUntilClick(false)
     }
 
     @Test fun testSelectable() {
@@ -435,9 +441,15 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(selected = true)
+        waitUntilSelect(true)
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(selected = false)
+        waitUntilSelect(false)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SELECT, null)
+        waitUntilSelect(true)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SELECT, null)
+        waitUntilSelect(false)
     }
 }
