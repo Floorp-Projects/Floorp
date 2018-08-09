@@ -197,6 +197,16 @@ TransactionManager::Clear()
 NS_IMETHODIMP
 TransactionManager::BeginBatch(nsISupports* aData)
 {
+  nsresult rv = BeginBatchInternal(aData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TransactionManager::BeginBatchInternal(nsISupports* aData)
+{
   // We can batch independent transactions together by simply pushing
   // a dummy transaction item on the do stack. This dummy transaction item
   // will be popped off the do stack, and then pushed on the undo stack
@@ -224,6 +234,16 @@ TransactionManager::BeginBatch(nsISupports* aData)
 
 NS_IMETHODIMP
 TransactionManager::EndBatch(bool aAllowEmpty)
+{
+  nsresult rv = EndBatchInternal(aAllowEmpty);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TransactionManager::EndBatchInternal(bool aAllowEmpty)
 {
   // XXX: Need to add some mechanism to detect the case where the transaction
   //      at the top of the do stack isn't the dummy transaction, so we can
