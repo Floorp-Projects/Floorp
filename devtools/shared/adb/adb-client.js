@@ -18,52 +18,52 @@ const FAIL = 0x4c494146;
 const _sockets = [ ];
 
 // Return buffer, which differs between Gecko versions
-function getBuffer(aPacket) {
-  return aPacket.buffer ? aPacket.buffer : aPacket;
+function getBuffer(packet) {
+  return packet.buffer ? packet.buffer : packet;
 }
 
 // @param aPacket         The packet to get the length from.
 // @param aIgnoreResponse True if this packet has no OKAY/FAIL.
 // @return                A js object { length:...; data:... }
-function unpackPacket(aPacket, aIgnoreResponse) {
-  const buffer = getBuffer(aPacket);
+function unpackPacket(packet, ignoreResponse) {
+  const buffer = getBuffer(packet);
   console.debug("Len buffer: " + buffer.byteLength);
-  if (buffer.byteLength === 4 && !aIgnoreResponse) {
+  if (buffer.byteLength === 4 && !ignoreResponse) {
     console.debug("Packet empty");
     return { length: 0, data: "" };
   }
-  const lengthView = new Uint8Array(buffer, aIgnoreResponse ? 0 : 4, 4);
+  const lengthView = new Uint8Array(buffer, ignoreResponse ? 0 : 4, 4);
   const decoder = new TextDecoder();
   const length = parseInt(decoder.decode(lengthView), 16);
-  const text = new Uint8Array(buffer, aIgnoreResponse ? 4 : 8, length);
+  const text = new Uint8Array(buffer, ignoreResponse ? 4 : 8, length);
   return { length, data: decoder.decode(text) };
 }
 
 // Checks if the response is expected (defaults to OKAY).
 // @return true if response equals expected.
-function checkResponse(aPacket, aExpected = OKAY) {
-  const buffer = getBuffer(aPacket);
+function checkResponse(packet, expected = OKAY) {
+  const buffer = getBuffer(packet);
   const view = new Uint32Array(buffer, 0, 1);
   if (view[0] == FAIL) {
     console.debug("Response: FAIL");
   }
   console.debug("view[0] = " + view[0]);
-  return view[0] == aExpected;
+  return view[0] == expected;
 }
 
 // @param aCommand A protocol-level command as described in
 //  http://androidxref.com/4.0.4/xref/system/core/adb/OVERVIEW.TXT and
 //  http://androidxref.com/4.0.4/xref/system/core/adb/SERVICES.TXT
 // @return A 8 bit typed array.
-function createRequest(aCommand) {
-  let length = aCommand.length.toString(16).toUpperCase();
+function createRequest(command) {
+  let length = command.length.toString(16).toUpperCase();
   while (length.length < 4) {
     length = "0" + length;
   }
 
   const encoder = new TextEncoder();
-  console.debug("Created request: " + length + aCommand);
-  return encoder.encode(length + aCommand);
+  console.debug("Created request: " + length + command);
+  return encoder.encode(length + command);
 }
 
 function close() {
