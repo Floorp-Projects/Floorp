@@ -25,7 +25,7 @@ public:
 
   // nsBaseDragService
   virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
-                                         nsIScriptableRegion* aRegion,
+                                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                                          uint32_t aActionType) override;
   // nsIDragService
   NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
@@ -46,14 +46,14 @@ private:
   // Creates and returns the drag image for a drag. aImagePoint will be set to
   // the origin of the drag relative to mNativeDragView.
   NSImage* ConstructDragImage(nsINode* aDOMNode,
-                              nsIScriptableRegion* aRegion,
+                              const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                               NSPoint* aImagePoint);
 
   // Creates and returns the drag image for a drag. aPoint should be the origin
   // of the drag, for example the mouse coordinate of the mousedown event.
   // aDragRect will be set the area of the drag relative to this.
   NSImage* ConstructDragImage(nsINode* aDOMNode,
-                              nsIScriptableRegion* aRegion,
+                              const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                               mozilla::CSSIntPoint aPoint,
                               mozilla::LayoutDeviceIntRect* aDragRect);
 

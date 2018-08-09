@@ -48,10 +48,35 @@ struct Chunk;
 class StoreBuffer;
 class TenuredCell;
 
-// A GC cell is the base class for all GC things.
+// [SMDOC] GC Cell
+//
+// A GC cell is the base class for all GC things. All types allocated on the GC
+// heap extend either gc::Cell or gc::TenuredCell. If a type is always tenured,
+// prefer the TenuredCell class as base.
+//
+// The first word (a pointer or uintptr_t) of each Cell must reserve the low
+// Cell::ReservedBits bits for GC purposes. The remaining bits are available to
+// sub-classes and typically store a pointer to another gc::Cell.
+//
+// During moving GC operation a Cell may be marked as forwarded. This indicates
+// that a gc::RelocationOverlay is currently stored in the Cell's memory and
+// should be used to find the new location of the Cell.
 struct alignas(gc::CellAlignBytes) Cell
 {
   public:
+    // The low bits of the first word of each Cell are reserved for GC flags.
+    static constexpr int ReservedBits = 2;
+    static constexpr uintptr_t RESERVED_MASK = JS_BITMASK(ReservedBits);
+
+    // Indicates if the cell is currently a RelocationOverlay
+    static constexpr uintptr_t FORWARD_BIT = JS_BIT(0);
+
+    // When a Cell is in the nursery, this will indicate if it is a JSString (1)
+    // or JSObject (0). When not in nursery, this bit is still reserved for
+    // JSString to use as JSString::NON_ATOM bit. This may be removed by Bug
+    // 1376646.
+    static constexpr uintptr_t JSSTRING_BIT = JS_BIT(1);
+
     MOZ_ALWAYS_INLINE bool isTenured() const { return !IsInsideNursery(this); }
     MOZ_ALWAYS_INLINE const TenuredCell& asTenured() const;
     MOZ_ALWAYS_INLINE TenuredCell& asTenured();
@@ -76,6 +101,17 @@ struct alignas(gc::CellAlignBytes) Cell
     inline JS::TraceKind getTraceKind() const;
 
     static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone* zone);
+
+    inline bool isForwarded() const {
+        uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
+        return firstWord & FORWARD_BIT;
+    }
+
+    inline bool nurseryCellIsString() const {
+        MOZ_ASSERT(!isTenured());
+        uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
+        return firstWord & JSSTRING_BIT;
+    }
 
     template <class T>
     inline bool is() const {
@@ -255,7 +291,7 @@ Cell::getTraceKind() const
 {
     if (isTenured())
         return asTenured().getTraceKind();
-    if (JS::shadow::String::nurseryCellIsString(this))
+    if (nurseryCellIsString())
         return JS::TraceKind::String;
     return JS::TraceKind::Object;
 }

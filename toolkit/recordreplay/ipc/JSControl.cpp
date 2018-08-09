@@ -188,6 +188,12 @@ Middleman_RegisterReplayDebugger(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
+  obj = ::js::CheckedUnwrap(obj);
+  if (!obj) {
+    ::js::ReportAccessDenied(aCx);
+    return false;
+  }
+
   PersistentRootedObject* root = new PersistentRootedObject(aCx);
   *root = obj;
   gReplayDebuggers.append(root);
@@ -201,7 +207,7 @@ InvalidateReplayDebuggersAfterUnpause(JSContext* aCx)
 {
   RootedValue rval(aCx);
   for (auto root : gReplayDebuggers) {
-    JSAutoRealmAllowCCW ac(aCx, *root);
+    JSAutoRealm ar(aCx, *root);
     if (!JS_CallFunctionName(aCx, *root, "invalidateAfterUnpause",
                              HandleValueArray::empty(), &rval))
     {
@@ -312,6 +318,12 @@ Middleman_SetBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
+  handler = ::js::CheckedUnwrap(handler);
+  if (!handler) {
+    ::js::ReportAccessDenied(aCx);
+    return false;
+  }
+
   BreakpointPosition position;
   if (!position.Decode(aCx, positionObject)) {
     return false;
@@ -341,7 +353,7 @@ HitBreakpoint(JSContext* aCx, size_t aId)
   InstalledBreakpoint* breakpoint = gBreakpoints[aId];
   MOZ_RELEASE_ASSERT(breakpoint);
 
-  JSAutoRealmAllowCCW ac(aCx, breakpoint->mHandler);
+  JSAutoRealm ar(aCx, breakpoint->mHandler);
 
   RootedValue handlerValue(aCx, ObjectValue(*breakpoint->mHandler));
   RootedValue rval(aCx);

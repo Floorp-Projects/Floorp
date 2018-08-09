@@ -47,7 +47,7 @@ GetPrincipalURIFromNode(nsCOMPtr<nsINode>& sourceNode,
 
 nsresult
 nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
-                                          nsIScriptableRegion* aRegion,
+                                          const Maybe<CSSIntRegion>& aRegion,
                                           uint32_t aActionType)
 {
   NS_ENSURE_STATE(mSourceDocument->GetDocShell());

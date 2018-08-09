@@ -28,11 +28,11 @@ js::Nursery::isInside(const SharedMem<T>& p) const
 MOZ_ALWAYS_INLINE /* static */ bool
 js::Nursery::getForwardedPointer(js::gc::Cell** ref)
 {
-    MOZ_ASSERT(ref);
-    MOZ_ASSERT(IsInsideNursery(*ref));
-    const gc::RelocationOverlay* overlay = reinterpret_cast<const gc::RelocationOverlay*>(*ref);
-    if (!overlay->isForwarded())
+    js::gc::Cell* cell = (*ref);
+    MOZ_ASSERT(IsInsideNursery(cell));
+    if (!cell->isForwarded())
         return false;
+    const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(cell);
     *ref = overlay->forwardingAddress();
     return true;
 }
