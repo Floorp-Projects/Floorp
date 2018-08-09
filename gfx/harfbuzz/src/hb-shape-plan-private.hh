@@ -51,6 +51,7 @@ struct hb_shape_plan_t
 
   struct hb_shaper_data_t shaper_data;
 };
+DECLARE_NULL_INSTANCE (hb_shape_plan_t);
 
 #define HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS \
 	, const hb_feature_t *user_features \

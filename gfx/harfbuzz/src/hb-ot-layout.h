@@ -194,6 +194,13 @@ HB_EXTERN unsigned int
 hb_ot_layout_table_get_lookup_count (hb_face_t    *face,
 				     hb_tag_t      table_tag);
 
+HB_EXTERN void
+hb_ot_layout_collect_features (hb_face_t      *face,
+                               hb_tag_t        table_tag,
+                               const hb_tag_t *scripts,
+                               const hb_tag_t *languages,
+                               const hb_tag_t *features,
+                               hb_set_t       *feature_indexes /* OUT */);
 
 HB_EXTERN void
 hb_ot_layout_collect_lookups (hb_face_t      *face,

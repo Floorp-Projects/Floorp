@@ -701,6 +701,28 @@ hb_buffer_t::guess_segment_properties (void)
 
 /* Public API */
 
+DEFINE_NULL_INSTANCE (hb_buffer_t) =
+{
+  HB_OBJECT_HEADER_STATIC,
+
+  const_cast<hb_unicode_funcs_t *> (&_hb_Null_hb_unicode_funcs_t),
+  HB_BUFFER_FLAG_DEFAULT,
+  HB_BUFFER_CLUSTER_LEVEL_DEFAULT,
+  HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
+  HB_BUFFER_SCRATCH_FLAG_DEFAULT,
+  HB_BUFFER_MAX_LEN_DEFAULT,
+  HB_BUFFER_MAX_OPS_DEFAULT,
+
+  HB_BUFFER_CONTENT_TYPE_INVALID,
+  HB_SEGMENT_PROPERTIES_DEFAULT,
+  false, /* successful */
+  true, /* have_output */
+  true  /* have_positions */
+
+  /* Zero is good enough for everything else. */
+};
+
+
 /**
  * hb_buffer_create: (Xconstructor)
  *
@@ -743,27 +765,7 @@ hb_buffer_create (void)
 hb_buffer_t *
 hb_buffer_get_empty (void)
 {
-  static const hb_buffer_t _hb_buffer_nil = {
-    HB_OBJECT_HEADER_STATIC,
-
-    const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_nil),
-    HB_BUFFER_FLAG_DEFAULT,
-    HB_BUFFER_CLUSTER_LEVEL_DEFAULT,
-    HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
-    HB_BUFFER_SCRATCH_FLAG_DEFAULT,
-    HB_BUFFER_MAX_LEN_DEFAULT,
-    HB_BUFFER_MAX_OPS_DEFAULT,
-
-    HB_BUFFER_CONTENT_TYPE_INVALID,
-    HB_SEGMENT_PROPERTIES_DEFAULT,
-    false, /* successful */
-    true, /* have_output */
-    true  /* have_positions */
-
-    /* Zero is good enough for everything else. */
-  };
-
-  return const_cast<hb_buffer_t *> (&_hb_buffer_nil);
+  return const_cast<hb_buffer_t *> (&Null(hb_buffer_t));
 }
 
 /**

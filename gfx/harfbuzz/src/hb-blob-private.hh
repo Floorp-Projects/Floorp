@@ -57,11 +57,6 @@ struct hb_blob_t
   HB_INTERNAL bool try_make_writable_inplace (void);
   HB_INTERNAL bool try_make_writable_inplace_unix (void);
 
-  inline void lock (void)
-  {
-    hb_blob_make_immutable (this);
-  }
-
   template <typename Type>
   inline const Type* as (void) const
   {
@@ -81,6 +76,7 @@ struct hb_blob_t
   void *user_data;
   hb_destroy_func_t destroy;
 };
+DECLARE_NULL_INSTANCE (hb_blob_t);
 
 
 #endif /* HB_BLOB_PRIVATE_HH */

@@ -2284,8 +2284,10 @@ Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame
     if (!cx->compartment()->wrap(cx, &wrappedFrame))
         return false;
 
+    // Try to get the constructor name from the ObjectGroup's TypeNewScript.
+    // This is only relevant for native objects.
     RootedAtom ctorName(cx);
-    {
+    if (obj->is<NativeObject>()) {
         AutoRealm ar(cx, obj);
         if (!JSObject::constructorDisplayAtom(cx, obj, &ctorName))
             return false;
@@ -9770,6 +9772,15 @@ DebuggerObject::applyMethod(JSContext* cx, unsigned argc, Value* vp)
     return object->call(cx, object, thisv, args, callArgs.rval());
 }
 
+static void
+EnterDebuggeeObjectRealm(JSContext* cx, Maybe<AutoRealm>& ar, JSObject* referent)
+{
+    // |referent| may be a cross-compartment wrapper and CCWs normally
+    // shouldn't be used with AutoRealm, but here we use an arbitrary realm for
+    // now because we don't really have another option.
+    ar.emplace(cx, referent->maybeCCWRealm()->maybeGlobal());
+}
+
 /* static */ bool
 DebuggerObject::asEnvironmentMethod(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -10099,7 +10110,8 @@ DebuggerObject::getClassName(JSContext* cx, HandleDebuggerObject object,
 
     const char* className;
     {
-        AutoRealm ar(cx, referent);
+        Maybe<AutoRealm> ar;
+        EnterDebuggeeObjectRealm(cx, ar, referent);
         className = GetObjectClassName(cx, referent);
     }
 
@@ -10396,7 +10408,8 @@ DebuggerObject::isExtensible(JSContext* cx, HandleDebuggerObject object, bool& r
     RootedObject referent(cx, object->referent());
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
+
     ErrorCopier ec(ar);
     return IsExtensible(cx, referent, &result);
 }
@@ -10407,7 +10420,7 @@ DebuggerObject::isSealed(JSContext* cx, HandleDebuggerObject object, bool& resul
     RootedObject referent(cx, object->referent());
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
 
     ErrorCopier ec(ar);
     return TestIntegrityLevel(cx, referent, IntegrityLevel::Sealed, &result);
@@ -10419,7 +10432,7 @@ DebuggerObject::isFrozen(JSContext* cx, HandleDebuggerObject object, bool& resul
     RootedObject referent(cx, object->referent());
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
 
     ErrorCopier ec(ar);
     return TestIntegrityLevel(cx, referent, IntegrityLevel::Frozen, &result);
@@ -10434,7 +10447,8 @@ DebuggerObject::getPrototypeOf(JSContext* cx, HandleDebuggerObject object,
 
     RootedObject proto(cx);
     {
-        AutoRealm ar(cx, referent);
+        Maybe<AutoRealm> ar;
+        EnterDebuggeeObjectRealm(cx, ar, referent);
         if (!GetPrototype(cx, referent, &proto))
             return false;
     }
@@ -10456,7 +10470,7 @@ DebuggerObject::getOwnPropertyNames(JSContext* cx, HandleDebuggerObject object,
     AutoIdVector ids(cx);
     {
         Maybe<AutoRealm> ar;
-        ar.emplace(cx, referent);
+        EnterDebuggeeObjectRealm(cx, ar, referent);
 
         ErrorCopier ec(ar);
         if (!GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN, &ids))
@@ -10478,7 +10492,7 @@ DebuggerObject::getOwnPropertySymbols(JSContext* cx, HandleDebuggerObject object
     AutoIdVector ids(cx);
     {
         Maybe<AutoRealm> ar;
-        ar.emplace(cx, referent);
+        EnterDebuggeeObjectRealm(cx, ar, referent);
 
         ErrorCopier ec(ar);
         if (!GetPropertyKeys(cx, referent,
@@ -10503,7 +10517,8 @@ DebuggerObject::getOwnPropertyDescriptor(JSContext* cx, HandleDebuggerObject obj
     // Bug: This can cause the debuggee to run!
     {
         Maybe<AutoRealm> ar;
-        ar.emplace(cx, referent);
+        EnterDebuggeeObjectRealm(cx, ar, referent);
+
         cx->markId(id);
 
         ErrorCopier ec(ar);
@@ -10542,7 +10557,7 @@ DebuggerObject::preventExtensions(JSContext* cx, HandleDebuggerObject object)
     RootedObject referent(cx, object->referent());
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
 
     ErrorCopier ec(ar);
     return PreventExtensions(cx, referent);
@@ -10554,7 +10569,7 @@ DebuggerObject::seal(JSContext* cx, HandleDebuggerObject object)
     RootedObject referent(cx, object->referent());
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
 
     ErrorCopier ec(ar);
     return SetIntegrityLevel(cx, referent, IntegrityLevel::Sealed);
@@ -10566,7 +10581,7 @@ DebuggerObject::freeze(JSContext* cx, HandleDebuggerObject object)
     RootedObject referent(cx, object->referent());
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
 
     ErrorCopier ec(ar);
     return SetIntegrityLevel(cx, referent, IntegrityLevel::Frozen);
@@ -10585,7 +10600,8 @@ DebuggerObject::defineProperty(JSContext* cx, HandleDebuggerObject object, Handl
     JS_TRY_OR_RETURN_FALSE(cx, CheckPropertyDescriptorAccessors(cx, desc));
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
+
     if (!cx->compartment()->wrap(cx, &desc))
         return false;
     cx->markId(id);
@@ -10615,7 +10631,8 @@ DebuggerObject::defineProperties(JSContext* cx, HandleDebuggerObject object,
     }
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
+
     for (size_t i = 0; i < descs.length(); i++) {
         if (!cx->compartment()->wrap(cx, descs[i]))
             return false;
@@ -10638,7 +10655,7 @@ DebuggerObject::deleteProperty(JSContext* cx, HandleDebuggerObject object, Handl
     RootedObject referent(cx, object->referent());
 
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
 
     cx->markId(id);
 
@@ -10678,7 +10695,7 @@ DebuggerObject::call(JSContext* cx, HandleDebuggerObject object, HandleValue thi
     // compartment. (Rewrapping always takes place in the destination
     // compartment.)
     Maybe<AutoRealm> ar;
-    ar.emplace(cx, referent);
+    EnterDebuggeeObjectRealm(cx, ar, referent);
     if (!cx->compartment()->wrap(cx, &calleev) || !cx->compartment()->wrap(cx, &thisv))
         return false;
     for (unsigned i = 0; i < args2.length(); ++i) {
@@ -10771,7 +10788,8 @@ DebuggerObject::makeDebuggeeValue(JSContext* cx, HandleDebuggerObject object,
         // Enter this Debugger.Object's referent's compartment, and wrap the
         // argument as appropriate for references from there.
         {
-            AutoRealm ar(cx, referent);
+            Maybe<AutoRealm> ar;
+            EnterDebuggeeObjectRealm(cx, ar, referent);
             if (!cx->compartment()->wrap(cx, &value))
                 return false;
         }

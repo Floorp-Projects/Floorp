@@ -3844,6 +3844,21 @@ pref("intl.tsf.associate_imc_only_when_imm_ime_is_active", false);
 
 // Enables/Disables hack for specific TIP.
 
+// On Windows 10 Build 17643 (an Insider Preview build of RS5), Microsoft have
+// fixed the caller of ITextACPStore::GetTextExt() to return TS_E_NOLAYOUT to
+// TIP as-is, rather than converting to E_FAIL.  Therefore, if TIP supports
+// asynchronous layout computation perfectly, we can return TS_E_NOLAYOUT
+// and TIP waits next OnLayoutChange() notification.  However, some TIPs still
+// have some bugs of asynchronous layout support.  We keep hacking the result
+// of GetTextExt() like running on Windows 10, however, there could be unknown
+// TIP bugs if we stop hacking the result.  So, user can stop checking build ID
+// to make Gecko hack the result forcibly.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later", true);
+#else
+pref("intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later", false);
+#endif
+
 // Whether creates native caret for ATOK or not.
 pref("intl.tsf.hack.atok.create_native_caret", true);
 // Whether use available composition string rect for result of
