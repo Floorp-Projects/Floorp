@@ -379,16 +379,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  if (aBuilder->IsInFilter()) {
-    nsIDocument* outerDoc = PresShell()->GetDocument();
-    nsIDocument* innerDoc = presShell->GetDocument();
-    if (outerDoc && innerDoc) {
-      if (!outerDoc->NodePrincipal()->Equals(innerDoc->NodePrincipal())) {
-        outerDoc->SetDocumentAndPageUseCounter(eUseCounter_custom_FilteredCrossOriginIFrame);
-      }
-    }
-  }
-
   nsIFrame* subdocRootFrame = presShell->GetRootFrame();
 
   nsPresContext* presContext = presShell->GetPresContext();
