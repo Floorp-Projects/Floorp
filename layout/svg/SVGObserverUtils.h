@@ -31,7 +31,11 @@ class nsSVGClipPathFrame;
 class nsSVGPaintServerFrame;
 class nsSVGFilterFrame;
 class nsSVGMaskFrame;
+namespace mozilla {
 class nsSVGFilterChainObserver;
+}
+
+namespace mozilla {
 
 /*
  * This interface allows us to be notified when a piece of SVG content is
@@ -714,5 +718,7 @@ public:
   static already_AddRefed<nsIURI>
   GetBaseURLForLocalRef(nsIContent* aContent, nsIURI* aDocURI);
 };
+
+} // namespace mozilla
 
 #endif /*NSSVGEFFECTS_H_*/
