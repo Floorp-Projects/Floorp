@@ -27,6 +27,7 @@ rsdparsa_capi = { path = "../../../../media/webrtc/signaling/src/sdp/rsdparsa_ca
 log = {version = "0.4", features = ["release_max_level_info"]}
 env_logger = {version = "0.5", default-features = false} # disable `regex` to reduce code size
 cose-c = { version = "0.1.5" }
+rkv = "0.4"
 
 [build-dependencies]
 # Use exactly version 0.2.1, which uses semver 0.6, which other crates

@@ -43,8 +43,8 @@
 //! [ts]: https://doc.rust-lang.org/proc_macro/struct.TokenStream.html
 
 // Proc-macro2 types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/proc-macro2/0.4.6")]
-#![cfg_attr(feature = "nightly", feature(proc_macro))]
+#![doc(html_root_url = "https://docs.rs/proc-macro2/0.4.9")]
+#![cfg_attr(feature = "nightly", feature(proc_macro_raw_ident, proc_macro_span))]
 
 #[cfg(feature = "proc-macro")]
 extern crate proc_macro;
@@ -115,6 +115,14 @@ impl TokenStream {
     /// Checks if this `TokenStream` is empty.
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
+    }
+}
+
+/// `TokenStream::default()` returns an empty stream,
+/// i.e. this is equivalent with `TokenStream::new()`.
+impl Default for TokenStream {
+    fn default() -> Self {
+        TokenStream::new()
     }
 }
 

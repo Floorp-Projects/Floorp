@@ -32,8 +32,9 @@ impl WalkFields for i32 {
 extern crate synstructure;
 #[macro_use]
 extern crate quote;
+extern crate proc_macro2;
 
-fn walkfields_derive(s: synstructure::Structure) -> quote::Tokens {
+fn walkfields_derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
     let body = s.each(|bi| quote!{
         walk(#bi)
     });
@@ -99,8 +100,9 @@ impl Interest for i32 {
 extern crate synstructure;
 #[macro_use]
 extern crate quote;
+extern crate proc_macro2;
 
-fn interest_derive(mut s: synstructure::Structure) -> quote::Tokens {
+fn interest_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream {
     let body = s.fold(false, |acc, bi| quote!{
         #acc || example_traits::Interest::interesting(#bi)
     });
