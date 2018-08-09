@@ -234,11 +234,11 @@ public final class NotificationClient implements NotificationListener {
                 .setSmallIcon(notification.icon)
                 .setWhen(notification.when)
                 .setContentIntent(notification.contentIntent)
+                .setOnlyAlertOnce(true)
                 .setProgress((int) progressMax, (int) progress, false);
 
         if (!AppConstants.Versions.preO) {
-            notificationBuilder.setChannelId(NotificationHelper.getInstance(mContext)
-                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+            notificationBuilder.setChannelId(notification.getChannelId());
         }
 
         notification = notificationBuilder.build();
