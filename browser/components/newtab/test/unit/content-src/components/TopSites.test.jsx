@@ -587,6 +587,29 @@ describe("<TopSite>", () => {
       assert.propertyVal(action.data.value, "card_type", "pinned");
       assert.propertyVal(action.data.value, "icon_type", "rich_icon");
     });
+    it("should dispatch a UserEventAction with the right data for search top site", () => {
+      const dispatch = sinon.stub();
+      const siteInfo = {
+        iconType: "tippytop",
+        isPinned: true,
+        searchTopSite: true,
+        hostname: "google",
+        label: "@google"
+      };
+      const wrapper = shallow(<TopSite link={Object.assign({}, link, siteInfo)} index={3} dispatch={dispatch} />);
+
+      wrapper.find(TopSiteLink).simulate("click", {preventDefault() {}});
+
+      const [action] = dispatch.firstCall.args;
+      assert.isUserEventAction(action);
+
+      assert.propertyVal(action.data, "event", "CLICK");
+      assert.propertyVal(action.data, "source", "TOP_SITES");
+      assert.propertyVal(action.data, "action_position", 3);
+      assert.propertyVal(action.data.value, "card_type", "search");
+      assert.propertyVal(action.data.value, "icon_type", "tippytop");
+      assert.propertyVal(action.data.value, "search_vendor", "google");
+    });
     it("should dispatch OPEN_LINK with the right data", () => {
       const dispatch = sinon.stub();
       const wrapper = shallow(<TopSite link={Object.assign({}, link, {typedBonus: true})} index={3} dispatch={dispatch} />);
@@ -707,6 +730,10 @@ describe("<TopSiteForm>", () => {
   });
 
   describe("#TopSiteLink", () => {
+    beforeEach(() => {
+      setup();
+    });
+
     it("should display a TopSiteLink preview", () => {
       assert.equal(wrapper.find(TopSiteLink).length, 1);
     });
@@ -725,6 +752,13 @@ describe("<TopSiteForm>", () => {
       wrapper.setProps({previewResponse: ""});
 
       assert.equal(wrapper.find(".top-site-icon").length, 0);
+    });
+
+    it("should render the search icon when searchTopSite is true", () => {
+      wrapper.setProps({site: {tippyTopIcon: "bar", searchTopSite: true}});
+
+      assert.equal(wrapper.find(".rich-icon").getDOMNode().style["background-image"], "url(\"bar\")");
+      assert.isTrue(wrapper.find(".search-topsite").exists());
     });
   });
 

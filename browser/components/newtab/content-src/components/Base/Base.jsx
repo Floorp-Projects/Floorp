@@ -24,6 +24,20 @@ function addLocaleDataForReactIntl(locale) {
   addLocaleData([{locale, parentLocale: "en"}]);
 }
 
+// Returns a function will not be continuously triggered when called. The
+// function will be triggered if called again after `wait` milliseconds.
+function debounce(func, wait) {
+  let timer;
+  return (...args) => {
+    if (timer) { return; }
+
+    let wakeUp = () => { timer = null; };
+
+    timer = setTimeout(wakeUp, wait);
+    func.apply(this, args);
+  };
+}
+
 export class _Base extends React.PureComponent {
   componentWillMount() {
     const {App, locale} = this.props;
@@ -48,9 +62,29 @@ export class _Base extends React.PureComponent {
     this.updateTheme();
   }
 
-  componentWillUpdate({App}) {
+  hasTopStoriesSectionChanged(nextProps) {
+    const nPropsSections = nextProps.Sections.find(section => section.id === "topstories");
+    const tPropsSections = this.props.Sections.find(section => section.id === "topstories");
+    if (nPropsSections && nPropsSections.options) {
+      if (!tPropsSections || !tPropsSections.options) {
+        return true;
+      }
+      if (nPropsSections.options.show_spocs !== tPropsSections.options.show_spocs) {
+        return true;
+      }
+      if (nPropsSections.options.stories_endpoint !== tPropsSections.options.stories_endpoint) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  componentWillUpdate(nextProps) {
     this.updateTheme();
-    this.sendNewTabRehydrated(App);
+    if (this.hasTopStoriesSectionChanged(nextProps)) {
+      this.renderNotified = false;
+    }
+    this.sendNewTabRehydrated(nextProps.App);
   }
 
   updateTheme() {
@@ -106,6 +140,25 @@ export class BaseContent extends React.PureComponent {
   constructor(props) {
     super(props);
     this.openPreferences = this.openPreferences.bind(this);
+    this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
+    this.state = {fixedSearch: false};
+  }
+
+  componentDidMount() {
+    global.addEventListener("scroll", this.onWindowScroll);
+  }
+
+  componentWillUnmount() {
+    global.removeEventListener("scroll", this.onWindowScroll);
+  }
+
+  onWindowScroll() {
+    const SCROLL_THRESHOLD = 34;
+    if (global.scrollY > SCROLL_THRESHOLD && !this.state.fixedSearch) {
+      this.setState({fixedSearch: true});
+    } else if (global.scrollY <= SCROLL_THRESHOLD && this.state.fixedSearch) {
+      this.setState({fixedSearch: false});
+    }
   }
 
   openPreferences() {
@@ -123,7 +176,8 @@ export class BaseContent extends React.PureComponent {
 
     const outerClassName = [
       "outer-wrapper",
-      shouldBeFixedToTop && "fixed-to-top"
+      shouldBeFixedToTop && "fixed-to-top",
+      prefs.showSearch && this.state.fixedSearch && "fixed-search"
     ].filter(v => v).join(" ");
 
     return (
@@ -154,4 +208,4 @@ export class BaseContent extends React.PureComponent {
   }
 }
 
-export const Base = connect(state => ({App: state.App, Prefs: state.Prefs}))(_Base);
+export const Base = connect(state => ({App: state.App, Prefs: state.Prefs, Sections: state.Sections}))(_Base);

@@ -35,6 +35,11 @@
     "image_url": "facebook-com@2x.png"
   },
   {
+    "title": "google",
+    "url": "https://www.google.com/",
+    "image_url": "google-com@2x.png"
+  },
+  {
     "title": "leboncoin",
     "url": "http://www.leboncoin.fr/",
     "image_url": "leboncoin-fr@2x.png"
