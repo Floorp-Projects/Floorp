@@ -536,8 +536,15 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
             }
         } else if (key == JSProto_Function) {
             if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_LENGTH)) {
+                uint16_t length;
+                RootedFunction fun(cx, JS_GetObjectFunction(target));
+                {
+                    JSAutoRealm ar(cx, target);
+                    if (!JS_GetFunctionLength(cx, fun, &length))
+                        return false;
+                }
                 FillPropertyDescriptor(desc, wrapper, JSPROP_PERMANENT | JSPROP_READONLY,
-                                       NumberValue(JS_GetFunctionArity(JS_GetObjectFunction(target))));
+                                       NumberValue(length));
                 return true;
             }
             if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAME)) {
