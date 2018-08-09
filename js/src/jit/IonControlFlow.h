@@ -869,7 +869,6 @@ class ControlFlowGenerator
     ControlStatus processContinue(JSOp op);
     ControlStatus processBreak(JSOp op, jssrcnote* sn);
     ControlStatus processReturn(JSOp op);
-    ControlStatus maybeLoop(JSOp op, jssrcnote* sn);
     ControlStatus snoopControlFlow(JSOp op);
     ControlStatus processBrokenLoop(CFGState& state);
     ControlStatus finishLoop(CFGState& state, CFGBlock* successor);

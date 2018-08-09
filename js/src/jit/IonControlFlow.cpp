@@ -262,10 +262,20 @@ ControlFlowGenerator::ControlStatus
 ControlFlowGenerator::snoopControlFlow(JSOp op)
 {
     switch (op) {
-      case JSOP_POP:
       case JSOP_NOP: {
         jssrcnote* sn = GetSrcNote(gsn, script, pc);
-        return maybeLoop(op, sn);
+        if (sn) {
+            // do { } while (cond)
+            if (SN_TYPE(sn) == SRC_WHILE)
+                return processDoWhileLoop(sn);
+            // Build a mapping such that given a basic block, whose successor
+            // has a phi
+
+            // for (; ; update?)
+            if (SN_TYPE(sn) == SRC_FOR)
+                return processForLoop(op, sn);
+        }
+        break;
       }
 
       case JSOP_RETURN:
@@ -1392,44 +1402,6 @@ ControlFlowGenerator::processAndOrEnd(CFGState& state)
         return ControlStatus::Error;
 
     return ControlStatus::Joined;
-}
-
-ControlFlowGenerator::ControlStatus
-ControlFlowGenerator::maybeLoop(JSOp op, jssrcnote* sn)
-{
-    // This function looks at the opcode and source note and tries to
-    // determine the structure of the loop. For some opcodes, like
-    // POP/NOP which are not explicitly control flow, this source note is
-    // optional. For opcodes with control flow, like GOTO, an unrecognized
-    // or not-present source note is a compilation failure.
-    switch (op) {
-      case JSOP_POP:
-        // for (init; ; update?) ...
-        if (sn && SN_TYPE(sn) == SRC_FOR) {
-            MOZ_CRASH("Not supported anymore?");
-            return processForLoop(op, sn);
-        }
-        break;
-
-      case JSOP_NOP:
-        if (sn) {
-            // do { } while (cond)
-            if (SN_TYPE(sn) == SRC_WHILE)
-                return processDoWhileLoop(sn);
-            // Build a mapping such that given a basic block, whose successor
-            // has a phi
-
-            // for (; ; update?)
-            if (SN_TYPE(sn) == SRC_FOR)
-                return processForLoop(op, sn);
-        }
-        break;
-
-      default:
-        MOZ_CRASH("unexpected opcode");
-    }
-
-    return ControlStatus::None;
 }
 
 ControlFlowGenerator::ControlStatus
