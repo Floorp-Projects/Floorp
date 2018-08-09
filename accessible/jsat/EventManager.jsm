@@ -93,25 +93,26 @@ this.EventManager.prototype = {
       return ["DOMEvent", aEvent.type];
     });
 
+    // The target could be an element, document or window
+    const win = aEvent.target.ownerGlobal;
     try {
       switch (aEvent.type) {
-      case "wheel":
-      {
-        let delta = aEvent.deltaX || aEvent.deltaY;
-        this.contentControl.autoMove(
-         null,
-         { moveMethod: delta > 0 ? "moveNext" : "movePrevious",
-           onScreenOnly: true, noOpIfOnScreen: true, delay: 500 });
-        break;
-      }
-      case "scroll":
-      case "resize":
-      {
-        // the target could be an element, document or window
-        let window = aEvent.target.ownerGlobal;
-        this.present(Presentation.viewportChanged(window));
-        break;
-      }
+        case "wheel":
+        {
+          let delta = aEvent.deltaX || aEvent.deltaY;
+          this.contentControl.autoMove(
+           null,
+           { moveMethod: delta > 0 ? "moveNext" : "movePrevious",
+             onScreenOnly: true, noOpIfOnScreen: true, delay: 500 });
+          break;
+        }
+        case "scroll":
+          this.present(Presentation.viewportScrolled(win));
+        case "resize":
+        {
+          this.present(Presentation.viewportChanged(win));
+          break;
+        }
       }
     } catch (x) {
       Logger.logException(x, "Error handling DOM event");
@@ -465,7 +466,9 @@ this.EventManager.prototype = {
   },
 
   present: function present(aPresentationData) {
-    this.sendMsgFunc("AccessFu:Present", aPresentationData);
+    if (aPresentationData && aPresentationData.length > 0) {
+      this.sendMsgFunc("AccessFu:Present", aPresentationData);
+    }
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
