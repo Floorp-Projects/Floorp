@@ -11,7 +11,6 @@ menucaption {
   -moz-font-smoothing-background-color: -moz-mac-menuitem;
   -moz-box-align: center;
   color: MenuText;
-  font: -moz-pull-down-menu;
   list-style-image: none;
   -moz-image-region: auto;
   padding: 0 21px 2px;
@@ -24,6 +23,12 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   -moz-font-smoothing-background-color: -moz-mac-menuitem;
 }
 
+menuitem[default="true"],
+menuitem.spell-suggestion,
+menucaption {
+  font-weight: bold;
+}
+
 /* ..... internal content .... */
 
 .menu-text,
@@ -31,16 +36,6 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 .menu-accel,
 .menu-iconic-accel {
   margin: 0 !important;
-}
-
-.menu-text,
-.menu-iconic-text {
-  font-weight: inherit;
-  color: inherit;
-}
-
-menucaption > .menu-iconic-text {
-  font-weight: bold;
 }
 
 .menu-iconic-icon {
@@ -109,15 +104,17 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 
 .menubar-left {
   margin: 0 2px;
-  color: inherit;
 }
 
 .menubar-text {
   margin: 0 1px !important;
-  color: inherit;
 }
 
 /* ::::: menu/menuitems in popups ::::: */
+
+menupopup {
+  font: -moz-pull-down-menu;
+}
 
 menupopup > menu,
 menupopup > menuitem,
@@ -144,7 +141,6 @@ menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   max-width: none;
-  font: inherit;
   color: -moz-FieldText;
 }
 
