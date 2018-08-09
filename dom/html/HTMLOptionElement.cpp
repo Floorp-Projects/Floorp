@@ -388,9 +388,9 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
 }
 
 nsresult
-HTMLOptionElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
+HTMLOptionElement::CopyInnerTo(Element* aDest)
 {
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {

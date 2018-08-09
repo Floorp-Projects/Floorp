@@ -391,8 +391,7 @@ public:
                                                 int32_t aModType) const override;
     NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-    virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                           bool aPreallocateChildren) const override;
+    virtual nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override;
     virtual mozilla::EventStates IntrinsicState() const override;
 
     virtual void RecompileScriptEventListeners() override;

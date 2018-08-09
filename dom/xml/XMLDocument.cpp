@@ -608,14 +608,13 @@ XMLDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
 // nsIDocument interface
 
 nsresult
-XMLDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                   bool aPreallocateChildren) const
+XMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
   RefPtr<XMLDocument> clone = new XMLDocument();
-  nsresult rv = CloneDocHelper(clone, aPreallocateChildren);
+  nsresult rv = CloneDocHelper(clone);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // State from XMLDocument

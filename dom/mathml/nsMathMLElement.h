@@ -70,8 +70,7 @@ public:
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
                      mozilla::EventChainPostVisitor& aVisitor) override;
-  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
-                 bool aPreallocateChildren) const override;
+  nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override;
   virtual mozilla::EventStates IntrinsicState() const override;
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 

@@ -1343,8 +1343,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="_enableOrDisableOneOffSearches">
         <body><![CDATA[
-          let enable = this._prefs.getBoolPref("oneOffSearches");
-          this.popup.enableOneOffSearches(enable);
+          this.popup.oneOffSearchesEnabled =
+            this._prefs.getBoolPref("oneOffSearches");
         ]]></body>
       </method>
 
@@ -1697,6 +1697,52 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
         ]]></body>
       </method>
+
+      <!--
+        Sets the input's value, starts a search, and opens the popup.
+
+        @param  value
+                The input's value will be set to this value, and the search will
+                use it as its query.
+        @param  options
+                An optional object with the following optional properties:
+                * disableOneOffButtons: Set to true to hide the one-off search
+                  buttons.
+                * disableSearchSuggestionsNotification: Set to true to hide the
+                  onboarding opt-out search suggestions notification.
+      -->
+      <method name="search">
+        <parameter name="value"/>
+        <parameter name="options"/>
+        <body><![CDATA[
+          this.focus();
+          this.textValue = value;
+
+          options = options || {};
+
+          if (options.disableOneOffButtons) {
+            this.popup.addEventListener("popupshowing", () => {
+              if (this.popup.oneOffSearchesEnabled) {
+                this.popup.oneOffSearchesEnabled = false;
+                this.popup.addEventListener("popuphidden", () => {
+                  this.popup.oneOffSearchesEnabled = true;
+                }, {once: true});
+              }
+            }, {once: true});
+          }
+
+          if (options.disableSearchSuggestionsNotification &&
+              this.whichSearchSuggestionsNotification != "none") {
+            let which = this.whichSearchSuggestionsNotification;
+            this._whichSearchSuggestionsNotification = "none";
+            this.popup.addEventListener("popuphidden", () => {
+              this._whichSearchSuggestionsNotification = which;
+            }, {once: true});
+          }
+
+          this.controller.startSearch(value);
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -1933,11 +1979,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="enableOneOffSearches">
-        <parameter name="enable"/>
-        <body><![CDATA[
-          this._oneOffSearchesEnabled = enable;
-          if (enable) {
+      <property name="oneOffSearchesEnabled">
+        <getter><![CDATA[
+          return this._oneOffSearchesEnabled;
+        ]]></getter>
+        <setter><![CDATA[
+          this._oneOffSearchesEnabled = !!val;
+          if (val) {
             this.oneOffSearchButtons.telemetryOrigin = "urlbar";
             this.oneOffSearchButtons.style.display = "-moz-box";
             // Set .textbox first, since the popup setter will cause
@@ -1950,8 +1998,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.oneOffSearchButtons.textbox = null;
             this.oneOffSearchButtons.popup = null;
           }
-        ]]></body>
-      </method>
+          return this._oneOffSearchesEnabled;
+        ]]></setter>
+      </property>
 
       <!-- Override this so that navigating between items results in an item
            always being selected. -->

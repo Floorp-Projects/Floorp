@@ -107,8 +107,7 @@ public:
     nsresult OnPrototypeLoadDone(bool aResumeWalk);
 
     // nsINode interface overrides
-    virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
-                           bool aPreallocateChildren) const override;
+    virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,

@@ -345,12 +345,12 @@ SVGImageElement::GetStringInfo()
 }
 
 nsresult
-SVGImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
+SVGImageElement::CopyInnerTo(Element* aDest)
 {
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<SVGImageElement*>(aDest));
   }
-  return SVGImageElementBase::CopyInnerTo(aDest, aPreallocateChildren);
+  return SVGImageElementBase::CopyInnerTo(aDest);
 }
 
 } // namespace dom

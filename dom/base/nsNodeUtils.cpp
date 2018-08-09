@@ -429,7 +429,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
   nsCOMPtr<nsINode> clone;
   if (aClone) {
-    nsresult rv = aNode->Clone(nodeInfo, getter_AddRefs(clone), aDeep);
+    nsresult rv = aNode->Clone(nodeInfo, getter_AddRefs(clone));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aError.Throw(rv);
       return nullptr;
