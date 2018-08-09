@@ -1,7 +1,11 @@
 "use strict";
 
+const EventEmitter = require("devtools/shared/event-emitter");
 const { ExtensionTestUtils } = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm", {});
+const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { getFileForBinary } = require("devtools/shared/adb/adb-binary");
+const { check } = require("devtools/shared/adb/adb-running-checker");
+const { ADB } = require("devtools/shared/adb/adb");
 
 const ADB_JSON = {
   "Linux": {
@@ -33,9 +37,29 @@ const ADB_JSON = {
 
 ExtensionTestUtils.init(this);
 
+function readAdbMockContent() {
+  const adbMockFile = do_get_file("adb.py", false);
+  const s = Cc["@mozilla.org/network/file-input-stream;1"]
+    .createInstance(Ci.nsIFileInputStream);
+  s.init(adbMockFile, -1, -1, false);
+  try {
+    return NetUtil.readInputStreamToString(s, s.available());
+  } finally {
+    s.close();
+  }
+}
+
+const adbMock = readAdbMockContent();
+
 add_task(async function setup() {
   // Prepare the profile directory where the adb extension will be installed.
   do_get_profile();
+});
+
+add_task(async function testAdbIsNotRunningInitially() {
+  const isAdbRunning = await check();
+  // Assume that no adb server running.
+  ok(!isAdbRunning, "adb is not running initially");
 });
 
 add_task(async function testNoAdbExtension() {
@@ -61,6 +85,8 @@ add_task(async function testNoAdbJSON() {
     manifest: {
       version: "1.0",
       applications: {
+        // The extension id here and in later test cases should match the
+        // corresponding prefrece value.
         gecko: { id: "adb@mozilla.org" }
       }
     },
@@ -118,6 +144,38 @@ add_task(async function testExtract() {
 
   const adbBinary = await getFileForBinary();
   ok(await adbBinary.exists);
+
+  await extension.unload();
+});
+
+add_task(async function testStartAndStop() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: { id: "adb@mozilla.org" }
+      }
+    },
+    files: {
+      "adb.json": JSON.stringify(ADB_JSON),
+      "linux/adb": adbMock,
+      "linux64/adb": adbMock,
+      "mac64/adb": adbMock,
+      "win32/adb.exe": adbMock,
+      "win32/AdbWinApi.dll": "dummy",
+      "win32/AdbWinUsbApi.dll": "dummy"
+    },
+  });
+
+  await extension.startup();
+
+  await ADB.start();
+  ok(ADB.ready);
+
+  ok(await check(), "adb is now running");
+
+  await ADB.stop(true /* sync */);
+  ok(!ADB.ready);
 
   await extension.unload();
 });
