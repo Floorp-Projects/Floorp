@@ -854,7 +854,7 @@ class ControlFlowGenerator
     ControlStatus processForCondEnd(CFGState& state);
     ControlStatus processForBodyEnd(CFGState& state);
     ControlStatus processForUpdateEnd(CFGState& state);
-    ControlStatus processWhileOrForInLoop(jssrcnote* sn);
+    ControlStatus processWhileOrForInOrForOfLoop(jssrcnote* sn);
     ControlStatus processNextTableSwitchCase(CFGState& state);
     ControlStatus processCondSwitch();
     ControlStatus processCondSwitchCase(CFGState& state);

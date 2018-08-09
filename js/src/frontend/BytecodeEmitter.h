@@ -549,6 +549,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     void patchJumpsToTarget(JumpList jump, JumpTarget target);
     MOZ_MUST_USE bool emitJumpTargetAndPatch(JumpList jump);
 
+    MOZ_MUST_USE bool emitCall(JSOp op, uint16_t argc,
+                               const mozilla::Maybe<uint32_t>& sourceCoordOffset);
     MOZ_MUST_USE bool emitCall(JSOp op, uint16_t argc, ParseNode* pn = nullptr);
     MOZ_MUST_USE bool emitCallIncDec(ParseNode* incDec);
 
@@ -746,7 +748,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
-    MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, IteratorKind kind = IteratorKind::Sync,
+    MOZ_MUST_USE bool emitIteratorNext(const mozilla::Maybe<uint32_t>& callSourceCoordOffset,
+                                       IteratorKind kind = IteratorKind::Sync,
                                        bool allowSelfHosted = false);
     MOZ_MUST_USE bool emitIteratorCloseInScope(EmitterScope& currentScope,
                                                IteratorKind iterKind = IteratorKind::Sync,
