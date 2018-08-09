@@ -222,6 +222,12 @@ HTMLImageElement::Y()
   return GetXY().y;
 }
 
+void
+HTMLImageElement::GetDecoding(nsAString& aValue)
+{
+  GetEnumAttr(nsGkAtoms::decoding, kDecodingTableDefault->tag, aValue);
+}
+
 bool
 HTMLImageElement::ParseAttribute(int32_t aNamespaceID,
                                  nsAtom* aAttribute,
@@ -236,6 +242,10 @@ HTMLImageElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::crossorigin) {
       ParseCORSValue(aValue, aResult);
       return true;
+    }
+    if (aAttribute == nsGkAtoms::decoding) {
+      return aResult.ParseEnumValue(aValue, kDecodingTable, false,
+                                    kDecodingTableDefault);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return true;
@@ -378,6 +388,12 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
 
     PictureSourceSizesChanged(this, attrVal.String(), aNotify);
+  } else if (aName == nsGkAtoms::decoding &&
+             aNameSpaceID == kNameSpaceID_None) {
+    // Request sync or async image decoding.
+    SetSyncDecodingHint(aValue &&
+                        static_cast<ImageDecodingType>(aValue->GetEnumValue()) ==
+                          ImageDecodingType::Sync);
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,

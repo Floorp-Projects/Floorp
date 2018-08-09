@@ -25,8 +25,7 @@
   { MOZ_LITERAL_UNICODE_STRING(L##name), __VA_ARGS__ },
 #define DLL_BLOCKLIST_STRING_TYPE UNICODE_STRING
 
-// Restrict the blocklist definitions to Nightly-only for now
-#if defined(NIGHTLY_BUILD)
+#if defined(MOZ_LAUNCHER_PROCESS) || defined(NIGHTLY_BUILD)
 #include "mozilla/WindowsDllBlocklistDefs.h"
 #else
 #include "mozilla/WindowsDllBlocklistCommon.h"

@@ -21,6 +21,8 @@ interface SVGImageElement : SVGGraphicsElement {
   readonly attribute SVGAnimatedLength height;
   [Constant]
   readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
+  [CEReactions, SetterThrows]
+  attribute DOMString decoding;
 };
 
 SVGImageElement implements MozImageLoadingContent;

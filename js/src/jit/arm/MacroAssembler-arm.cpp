@@ -2426,6 +2426,24 @@ MacroAssemblerARMCompat::cmp32(Register lhs, Register rhs)
 }
 
 void
+MacroAssemblerARMCompat::cmp32(const Address& lhs, Imm32 rhs)
+{
+    ScratchRegisterScope scratch(asMasm());
+    SecondScratchRegisterScope scratch2(asMasm());
+    ma_ldr(lhs, scratch, scratch2);
+    ma_cmp(scratch, rhs, scratch2);
+}
+
+void
+MacroAssemblerARMCompat::cmp32(const Address& lhs, Register rhs)
+{
+    ScratchRegisterScope scratch(asMasm());
+    SecondScratchRegisterScope scratch2(asMasm());
+    ma_ldr(lhs, scratch, scratch2);
+    ma_cmp(scratch, rhs);
+}
+
+void
 MacroAssemblerARMCompat::cmpPtr(Register lhs, ImmWord rhs)
 {
     cmp32(lhs, Imm32(rhs.value));

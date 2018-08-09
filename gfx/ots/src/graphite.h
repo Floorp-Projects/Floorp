@@ -14,6 +14,7 @@ template<typename ParentType>
 class TablePart {
  public:
   TablePart(ParentType* parent) : parent(parent) { }
+  virtual ~TablePart() { }
   virtual bool ParsePart(Buffer& table) = 0;
   virtual bool SerializePart(OTSStream* out) const = 0;
  protected:

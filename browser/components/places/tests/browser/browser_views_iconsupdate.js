@@ -108,12 +108,15 @@ async function getRectForSidebarItem(guid) {
   let sidebar = document.getElementById("sidebar");
   let tree = sidebar.contentDocument.getElementById("bookmarks-view");
   tree.selectItems([guid]);
-  let rect = {};
-  [rect.left, rect.top, rect.width, rect.height] = tree.treeBoxObject
-                                                       .selectionRegion
-                                                       .getRects();
-  // Adjust the position for the sidebar.
-  rect.left += sidebar.getBoundingClientRect().left;
-  rect.top += sidebar.getBoundingClientRect().top;
-  return rect;
+  let treerect = tree.getBoundingClientRect();
+  let cellrect = tree.treeBoxObject.
+                      getCoordsForCellItem(tree.currentIndex, tree.columns[0], "cell");
+
+  // Adjust the position for the tree and sidebar.
+  return {
+    left: treerect.left + cellrect.left + sidebar.getBoundingClientRect().left,
+    top: treerect.top + cellrect.top + sidebar.getBoundingClientRect().top,
+    width: cellrect.width,
+    height: cellrect.height
+  };
 }
