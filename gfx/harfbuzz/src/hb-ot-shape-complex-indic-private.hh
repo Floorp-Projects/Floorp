@@ -300,7 +300,9 @@ static const hb_codepoint_t ra_chars[] = {
   0x0CB0u, /* Kannada */
   0x0D30u, /* Malayalam */	/* No Reph, Logical Repha */
 
-  0x0DBBu, /* Sinhala */		/* Reph formed only with ZWJ */
+  0x0DBBu, /* Sinhala */	/* Reph formed only with ZWJ */
+
+  0x179Au, /* Khmer */
 };
 
 static inline bool

@@ -14,9 +14,12 @@ HB_BASE_sources = \
 	hb-face.cc \
 	hb-font-private.hh \
 	hb-font.cc \
+	hb-iter-private.hh \
 	hb-map-private.hh \
 	hb-map.cc \
+	hb-machinery-private.hh \
 	hb-mutex-private.hh \
+	hb-null.hh \
 	hb-object-private.hh \
 	hb-open-file-private.hh \
 	hb-open-type-private.hh \
@@ -50,6 +53,7 @@ HB_BASE_sources = \
 	hb-string-array.hh \
 	hb-unicode-private.hh \
 	hb-unicode.cc \
+	hb-vector-private.hh \
 	hb-utf-private.hh \
 	hb-warning.cc \
 	$(NULL)
@@ -93,8 +97,6 @@ HB_OT_sources = \
 	hb-aat-layout-morx-table.hh \
 	hb-aat-layout-trak-table.hh \
 	hb-aat-layout-private.hh \
-	hb-aat-fmtx-table.hh \
-	hb-aat-gcid-table.hh \
 	hb-aat-ltag-table.hh \
 	hb-ot-font.cc \
 	hb-ot-layout.cc \

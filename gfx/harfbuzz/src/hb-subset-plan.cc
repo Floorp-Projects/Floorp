@@ -56,11 +56,15 @@ _add_gid_and_children (const OT::glyf::accelerator_t &glyf,
 static void
 _gsub_closure (hb_face_t *face, hb_set_t *gids_to_retain)
 {
-  // TODO(grieger): This uses all lookups, instead collect
-  //                the set of lookups that are relevant.
-  //                See fontTools implementation.
+  hb_auto_t<hb_set_t> lookup_indices;
+  hb_ot_layout_collect_lookups (face,
+                                HB_OT_TAG_GSUB,
+                                nullptr,
+                                nullptr,
+                                nullptr,
+                                &lookup_indices);
   hb_ot_layout_lookups_substitute_closure (face,
-                                           nullptr,
+                                           &lookup_indices,
                                            gids_to_retain);
 }
 

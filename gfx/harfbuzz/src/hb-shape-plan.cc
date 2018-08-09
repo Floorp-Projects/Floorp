@@ -88,6 +88,31 @@ hb_shape_plan_plan (hb_shape_plan_t    *shape_plan,
  * hb_shape_plan_t
  */
 
+DEFINE_NULL_INSTANCE (hb_shape_plan_t) =
+{
+  HB_OBJECT_HEADER_STATIC,
+
+  true, /* default_shaper_list */
+  nullptr, /* face */
+  HB_SEGMENT_PROPERTIES_DEFAULT, /* props */
+
+  nullptr, /* shaper_func */
+  nullptr, /* shaper_name */
+
+  nullptr, /* user_features */
+  0,    /* num_user_featurs */
+
+  nullptr, /* coords */
+  0,    /* num_coords */
+
+  {
+#define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
+#include "hb-shaper-list.hh"
+#undef HB_SHAPER_IMPLEMENT
+  }
+};
+
+
 /**
  * hb_shape_plan_create: (Xconstructor)
  * @face: 
@@ -188,30 +213,7 @@ hb_shape_plan_create2 (hb_face_t                     *face,
 hb_shape_plan_t *
 hb_shape_plan_get_empty (void)
 {
-  static const hb_shape_plan_t _hb_shape_plan_nil = {
-    HB_OBJECT_HEADER_STATIC,
-
-    true, /* default_shaper_list */
-    nullptr, /* face */
-    HB_SEGMENT_PROPERTIES_DEFAULT, /* props */
-
-    nullptr, /* shaper_func */
-    nullptr, /* shaper_name */
-
-    nullptr, /* user_features */
-    0,    /* num_user_featurs */
-
-    nullptr, /* coords */
-    0,    /* num_coords */
-
-    {
-#define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
-#include "hb-shaper-list.hh"
-#undef HB_SHAPER_IMPLEMENT
-    }
-  };
-
-  return const_cast<hb_shape_plan_t *> (&_hb_shape_plan_nil);
+  return const_cast<hb_shape_plan_t *> (&Null(hb_shape_plan_t));
 }
 
 /**
