@@ -12,6 +12,8 @@ import re
 from mozfile.mozfile import remove as mozfileremove
 import subprocess
 import sys
+import shutil
+import tempfile
 from distutils.version import LooseVersion
 sys.path.append(os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "third_party", "python", "which"))
@@ -86,19 +88,33 @@ def eslint_setup(should_clobber=False):
         else:
             mozfileremove(node_modules_path)
 
-    npm_path = get_node_or_npm_path("npm")
+    npm_path, version = get_node_or_npm_path("npm")
     if not npm_path:
         return 1
 
     extra_parameters = ["--loglevel=error"]
 
-    # Install ESLint and external plugins. We pass `--no-package-lock` to avoid
-    # unexpected/unwanted npm changes to package-lock.json passing into the
-    # tree.
-    cmd = [npm_path, "install", "--no-package-lock"]
+    package_lock_json_path = os.path.join(get_project_root(), "package-lock.json")
+    package_lock_json_tmp_path = os.path.join(tempfile.gettempdir(), "package-lock.json.tmp")
+
+    # If we have an npm version newer than 5.8.0, just use 'ci', as that's much
+    # simpler and does exactly what we want.
+    npm_is_older_version = version < LooseVersion("5.8.0")
+
+    if npm_is_older_version:
+        cmd = [npm_path, "install"]
+        shutil.copy2(package_lock_json_path, package_lock_json_tmp_path)
+    else:
+        cmd = [npm_path, "ci"]
+
     cmd.extend(extra_parameters)
     print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
-    if not call_process("eslint", cmd):
+    result = call_process("eslint", cmd)
+
+    if npm_is_older_version:
+        shutil.move(package_lock_json_tmp_path, package_lock_json_path)
+
+    if not result:
         return 1
 
     eslint_path = os.path.join(get_project_root(), "node_modules", ".bin", "eslint")
@@ -307,24 +323,21 @@ def get_node_or_npm_path(filename, minversion=None):
         elif platform.system() == "Linux":
             print("  - /usr/bin/{}".format(filename))
 
-        return None
-
-    if not minversion:
-        return node_or_npm_path
+        return None, None
 
     version_str = get_version(node_or_npm_path).lstrip('v')
 
     version = LooseVersion(version_str)
 
-    if version > minversion:
-        return node_or_npm_path
+    if not minversion or version > minversion:
+        return node_or_npm_path, version
 
     if filename == "npm":
         print(NPM_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
     else:
         print(NODE_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
 
-    return None
+    return None, None
 
 
 def get_version(path):
