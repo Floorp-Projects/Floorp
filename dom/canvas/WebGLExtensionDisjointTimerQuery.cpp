@@ -29,83 +29,76 @@ WebGLExtensionDisjointTimerQuery::~WebGLExtensionDisjointTimerQuery()
 already_AddRefed<WebGLQuery>
 WebGLExtensionDisjointTimerQuery::CreateQueryEXT() const
 {
+    const char funcName[] = "createQueryEXT";
     if (mIsLost)
         return nullptr;
-    const WebGLContext::FuncScope funcScope(*mContext, "createQueryEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    return mContext->CreateQuery();
+    return mContext->CreateQuery(funcName);
 }
 
 void
 WebGLExtensionDisjointTimerQuery::DeleteQueryEXT(WebGLQuery* query) const
 {
+    const char funcName[] = "deleteQueryEXT";
     if (mIsLost)
         return;
-    const WebGLContext::FuncScope funcScope(*mContext, "deleteQueryEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    mContext->DeleteQuery(query);
+    mContext->DeleteQuery(query, funcName);
 }
 
 bool
 WebGLExtensionDisjointTimerQuery::IsQueryEXT(const WebGLQuery* query) const
 {
+    const char funcName[] = "isQueryEXT";
     if (mIsLost)
         return false;
-    const WebGLContext::FuncScope funcScope(*mContext, "isQueryEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    return mContext->IsQuery(query);
+    return mContext->IsQuery(query, funcName);
 }
 
 void
 WebGLExtensionDisjointTimerQuery::BeginQueryEXT(GLenum target, WebGLQuery& query) const
 {
+    const char funcName[] = "beginQueryEXT";
     if (mIsLost)
         return;
-    const WebGLContext::FuncScope funcScope(*mContext, "beginQueryEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    mContext->BeginQuery(target, query);
+    mContext->BeginQuery(target, query, funcName);
 }
 
 void
 WebGLExtensionDisjointTimerQuery::EndQueryEXT(GLenum target) const
 {
+    const char funcName[] = "endQueryEXT";
     if (mIsLost)
         return;
-    const WebGLContext::FuncScope funcScope(*mContext, "endQueryEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    mContext->EndQuery(target);
+    mContext->EndQuery(target, funcName);
 }
 
 void
 WebGLExtensionDisjointTimerQuery::QueryCounterEXT(WebGLQuery& query, GLenum target) const
 {
+    const char funcName[] = "queryCounterEXT";
     if (mIsLost)
         return;
-    const WebGLContext::FuncScope funcScope(*mContext, "queryCounterEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    if (!mContext->ValidateObject("query", query))
+    if (!mContext->ValidateObject(funcName, query))
         return;
 
-    query.QueryCounter(target);
+    query.QueryCounter(funcName, target);
 }
 
 void
 WebGLExtensionDisjointTimerQuery::GetQueryEXT(JSContext* cx, GLenum target, GLenum pname,
                                               JS::MutableHandleValue retval) const
 {
+    const char funcName[] = "getQueryEXT";
     retval.setNull();
     if (mIsLost)
         return;
-    const WebGLContext::FuncScope funcScope(*mContext, "getQueryEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    mContext->GetQuery(cx, target, pname, retval);
+    mContext->GetQuery(cx, target, pname, retval, funcName);
 }
 
 void
@@ -113,13 +106,12 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
                                                     const WebGLQuery& query, GLenum pname,
                                                     JS::MutableHandleValue retval) const
 {
+    const char funcName[] = "getQueryObjectEXT";
     retval.setNull();
     if (mIsLost)
         return;
-    const WebGLContext::FuncScope funcScope(*mContext, "getQueryObjectEXT");
-    MOZ_ASSERT(!mContext->IsContextLost());
 
-    mContext->GetQueryParameter(cx, query, pname, retval);
+    mContext->GetQueryParameter(cx, query, pname, retval, funcName);
 }
 
 bool

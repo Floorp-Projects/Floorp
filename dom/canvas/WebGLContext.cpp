@@ -165,6 +165,7 @@ WebGLContext::WebGLContext()
 
     mAllowContextRestore = true;
     mLastLossWasSimulated = false;
+    mContextStatus = ContextNotLost;
     mLoseContextOnMemoryPressure = false;
     mCanLoseContextInForeground = true;
     mRestoreWhenVisible = false;
@@ -328,8 +329,9 @@ WebGLContext::Invalidate()
 void
 WebGLContext::OnVisibilityChange()
 {
-    if (gl) // Context not lost.
+    if (!IsContextLost()) {
         return;
+    }
 
     if (!mRestoreWhenVisible || mLastLossWasSimulated) {
         return;
@@ -522,7 +524,7 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
     switch (mOptions.powerPreference) {
     case dom::WebGLPowerPreference::Low_power:
         break;
-
+        
         // Eventually add a heuristic, but for now default to high-performance.
         // We can even make it dynamic by holding on to a ForceDiscreteGPUHelperCGL iff
         // we decide it's a high-performance application:
@@ -659,7 +661,7 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
 // Fallback for resizes:
 
 bool
-WebGLContext::EnsureDefaultFB()
+WebGLContext::EnsureDefaultFB(const char* const funcName)
 {
     if (mDefaultFB) {
         MOZ_ASSERT(mDefaultFB->mSize == mRequestedSize);
@@ -696,7 +698,7 @@ WebGLContext::EnsureDefaultFB()
     }
 
     if (!mDefaultFB) {
-        GenerateWarning("Backbuffer resize failed. Losing context.");
+        GenerateWarning("%s: Backbuffer resize failed. Losing context.", funcName);
         ForceLoseContext();
         return false;
     }
@@ -745,9 +747,6 @@ WebGLContext::ThrowEvent_WebGLContextCreationError(const nsACString& text)
 NS_IMETHODIMP
 WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 {
-    const FuncScope funcScope(*this, "<SetDimensions>");
-    (void)IsContextLost(); // We handle this ourselves.
-
     if (signedWidth < 0 || signedHeight < 0) {
         if (!gl) {
             Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID,
@@ -924,7 +923,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     MOZ_ASSERT(!mDefaultFB);
     mRequestedSize = {width, height};
-    if (!EnsureDefaultFB()) {
+    if (!EnsureDefaultFB("context initialization")) {
         MOZ_ASSERT(!gl);
 
         failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_BACKBUFFER");
@@ -1042,7 +1041,7 @@ WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
         if (contexts[i] == this)
             continue;
 
-        if (!contexts[i]->gl)
+        if (contexts[i]->IsContextLost())
             continue;
 
         if (!contexts[i]->GetCanvas()) {
@@ -1232,7 +1231,6 @@ bool
 WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                        CanvasRenderer* aRenderer)
 {
-    const FuncScope funcScope(*this, "<InitializeCanvasRenderer>");
     if (IsContextLost())
         return false;
 
@@ -1257,7 +1255,7 @@ WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
     }
 
     data.mGLContext = gl;
-    data.mSize = DrawingBufferSize();
+    data.mSize = DrawingBufferSize("InitializeCanvasRenderer");
     data.mHasAlpha = mOptions.alpha;
     data.mIsGLAlphaPremult = IsPremultAlpha() || !data.mHasAlpha;
 
@@ -1318,7 +1316,6 @@ void
 WebGLContext::GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval)
 {
     retval.SetNull();
-    const FuncScope funcScope(*this, "getContextAttributes");
     if (IsContextLost())
         return;
 
@@ -1462,14 +1459,13 @@ WebGLContext::BlitBackbufferToCurDriverFB() const
 bool
 WebGLContext::PresentScreenBuffer()
 {
-    const FuncScope funcScope(*this, "<PresentScreenBuffer>");
     if (IsContextLost())
         return false;
 
     if (!mShouldPresent)
         return false;
 
-    if (!ValidateAndInitFB(nullptr))
+    if (!ValidateAndInitFB("Present", nullptr))
         return false;
 
     const auto& screen = gl->Screen();
@@ -1534,14 +1530,16 @@ WebGLContext::EndComposition()
 }
 
 void
-WebGLContext::DummyReadFramebufferOperation()
+WebGLContext::DummyReadFramebufferOperation(const char* funcName)
 {
     if (!mBoundReadFramebuffer)
         return; // Infallible.
 
-    const auto status = mBoundReadFramebuffer->CheckFramebufferStatus();
+    const auto status = mBoundReadFramebuffer->CheckFramebufferStatus(funcName);
+
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        ErrorInvalidFramebufferOperation("Framebuffer must be complete.");
+        ErrorInvalidFramebufferOperation("%s: Framebuffer must be complete.",
+                                         funcName);
     }
 }
 
@@ -1677,7 +1675,7 @@ WebGLContext::UpdateContextLossStatus()
         // this timer event. In this case, there's nothing to do here, just don't crash.
         return;
     }
-    if (mContextStatus == ContextStatus::NotLost) {
+    if (mContextStatus == ContextNotLost) {
         // We don't know that we're lost, but we might be, so we need to
         // check. If we're guilty, don't allow restores, though.
 
@@ -1695,7 +1693,7 @@ WebGLContext::UpdateContextLossStatus()
         // Fall through.
     }
 
-    if (mContextStatus == ContextStatus::LostAwaitingEvent) {
+    if (mContextStatus == ContextLostAwaitingEvent) {
         // The context has been lost and we haven't yet triggered the
         // callback, so do that now.
         const auto kEventName = NS_LITERAL_STRING("webglcontextlost");
@@ -1722,7 +1720,7 @@ WebGLContext::UpdateContextLossStatus()
         }
 
         // We sent the callback, so we're just 'regular lost' now.
-        mContextStatus = ContextStatus::Lost;
+        mContextStatus = ContextLost;
         // If we're told to use the default handler, it means the script
         // didn't bother to handle the event. In this case, we shouldn't
         // auto-restore the context.
@@ -1732,7 +1730,7 @@ WebGLContext::UpdateContextLossStatus()
         // Fall through.
     }
 
-    if (mContextStatus == ContextStatus::Lost) {
+    if (mContextStatus == ContextLost) {
         // Context is lost, and we've already sent the callback. We
         // should try to restore the context if we're both allowed to,
         // and supposed to.
@@ -1754,13 +1752,13 @@ WebGLContext::UpdateContextLossStatus()
         return;
     }
 
-    if (mContextStatus == ContextStatus::LostAwaitingRestore) {
+    if (mContextStatus == ContextLostAwaitingRestore) {
         // Context is lost, but we should try to restore it.
 
         if (!mAllowContextRestore) {
             // We might decide this after thinking we'd be OK restoring
             // the context, so downgrade.
-            mContextStatus = ContextStatus::Lost;
+            mContextStatus = ContextLost;
             return;
         }
 
@@ -1771,7 +1769,7 @@ WebGLContext::UpdateContextLossStatus()
         }
 
         // Revival!
-        mContextStatus = ContextStatus::NotLost;
+        mContextStatus = ContextNotLost;
 
         if (mCanvasElement) {
             nsContentUtils::DispatchTrustedEvent(
@@ -1798,8 +1796,8 @@ void
 WebGLContext::ForceLoseContext(bool simulateLosing)
 {
     printf_stderr("WebGL(%p)::ForceLoseContext\n", this);
-    MOZ_ASSERT(gl);
-    mContextStatus = ContextStatus::LostAwaitingEvent;
+    MOZ_ASSERT(!IsContextLost());
+    mContextStatus = ContextLostAwaitingEvent;
     mContextLostErrorSet = false;
 
     // Burn it all!
@@ -1814,7 +1812,7 @@ void
 WebGLContext::ForceRestoreContext()
 {
     printf_stderr("WebGL(%p)::ForceRestoreContext\n", this);
-    mContextStatus = ContextStatus::LostAwaitingRestore;
+    mContextStatus = ContextLostAwaitingRestore;
     mAllowContextRestore = true; // Hey, you did say 'force'.
 
     // Queue up a task, since we know the status changed.
@@ -1824,11 +1822,10 @@ WebGLContext::ForceRestoreContext()
 already_AddRefed<mozilla::gfx::SourceSurface>
 WebGLContext::GetSurfaceSnapshot(gfxAlphaType* const out_alphaType)
 {
-    const FuncScope funcScope(*this, "<GetSurfaceSnapshot>");
-    if (IsContextLost())
+    if (!gl)
         return nullptr;
 
-    if (!BindDefaultFBForRead())
+    if (!BindDefaultFBForRead("GetSurfaceSnapshot"))
         return nullptr;
 
     const auto surfFormat = mOptions.alpha ? SurfaceFormat::B8G8R8A8
@@ -1885,25 +1882,26 @@ WebGLContext::DidRefresh()
 ////////////////////////////////////////////////////////////////////////////////
 
 gfx::IntSize
-WebGLContext::DrawingBufferSize()
+WebGLContext::DrawingBufferSize(const char* const funcName)
 {
     const gfx::IntSize zeros{0, 0};
     if (IsContextLost())
         return zeros;
 
-    if (!EnsureDefaultFB())
+    if (!EnsureDefaultFB(funcName))
         return zeros;
 
     return mDefaultFB->mSize;
 }
 
 bool
-WebGLContext::ValidateAndInitFB(const WebGLFramebuffer* const fb)
+WebGLContext::ValidateAndInitFB(const char* const funcName,
+                                const WebGLFramebuffer* const fb)
 {
     if (fb)
-        return fb->ValidateAndInitAttachments();
+        return fb->ValidateAndInitAttachments(funcName);
 
-    if (!EnsureDefaultFB())
+    if (!EnsureDefaultFB(funcName))
         return false;
 
     if (mDefaultFB_IsInvalid) {
@@ -1926,10 +1924,10 @@ WebGLContext::DoBindFB(const WebGLFramebuffer* const fb, const GLenum target) co
 }
 
 bool
-WebGLContext::BindCurFBForDraw()
+WebGLContext::BindCurFBForDraw(const char* const funcName)
 {
     const auto& fb = mBoundDrawFramebuffer;
-    if (!ValidateAndInitFB(fb))
+    if (!ValidateAndInitFB(funcName, fb))
         return false;
 
     DoBindFB(fb);
@@ -1937,27 +1935,30 @@ WebGLContext::BindCurFBForDraw()
 }
 
 bool
-WebGLContext::BindCurFBForColorRead(const webgl::FormatUsageInfo** const out_format,
+WebGLContext::BindCurFBForColorRead(const char* const funcName,
+                                    const webgl::FormatUsageInfo** const out_format,
                                     uint32_t* const out_width,
                                     uint32_t* const out_height)
 {
     const auto& fb = mBoundReadFramebuffer;
 
     if (fb) {
-        if (!ValidateAndInitFB(fb))
+        if (!ValidateAndInitFB(funcName, fb))
             return false;
-        if (!fb->ValidateForColorRead(out_format, out_width, out_height))
+        if (!fb->ValidateForColorRead(funcName, out_format, out_width, out_height))
             return false;
 
         gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb->mGLName);
         return true;
     }
 
-    if (!BindDefaultFBForRead())
+    if (!BindDefaultFBForRead(funcName))
         return false;
 
     if (mDefaultFB_ReadBuffer == LOCAL_GL_NONE) {
-        ErrorInvalidOperation("Can't read from backbuffer when readBuffer mode is NONE.");
+        ErrorInvalidOperation("%s: Can't read from backbuffer when readBuffer mode is"
+                              " NONE.",
+                              funcName);
         return false;
     }
 
@@ -1973,9 +1974,9 @@ WebGLContext::BindCurFBForColorRead(const webgl::FormatUsageInfo** const out_for
 }
 
 bool
-WebGLContext::BindDefaultFBForRead()
+WebGLContext::BindDefaultFBForRead(const char* const funcName)
 {
-    if (!ValidateAndInitFB(nullptr))
+    if (!ValidateAndInitFB(funcName, nullptr))
         return false;
 
     if (!mDefaultFB->mSamples) {
@@ -1986,7 +1987,7 @@ WebGLContext::BindDefaultFBForRead()
     if (!mResolvedDefaultFB) {
         mResolvedDefaultFB = MozFramebuffer::Create(gl, mDefaultFB->mSize, 0, false);
         if (!mResolvedDefaultFB) {
-            gfxCriticalNote << FuncName() << ": Failed to create mResolvedDefaultFB.";
+            gfxCriticalNote << funcName << ": Failed to create mResolvedDefaultFB.";
             return false;
         }
     }
@@ -2298,8 +2299,9 @@ WebGLContext::GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
 already_AddRefed<layers::SharedSurfaceTextureClient>
 WebGLContext::GetVRFrame()
 {
-  if (!gl)
-    return nullptr;
+  if (IsContextLost()) {
+    ForceRestoreContext();
+  }
 
   int frameId = gfx::impl::VRDisplayExternal::sPushIndex;
   static int lastFrameId = -1;
@@ -2315,7 +2317,7 @@ WebGLContext::GetVRFrame()
       EndComposition();
   }
 
-  if (!gl) {
+  if (IsContextLost()) {
     return nullptr;
   }
 
@@ -2332,7 +2334,7 @@ WebGLContext::GetVRFrame()
   /**
    * Make sure that the WebGL buffer is committed to the attached SurfaceTexture on Android.
    */
-  if (!ignoreFrame) {
+  if (!ignoreFrame && !IsContextLost()) {
     sharedSurface->Surf()->ProducerAcquire();
     sharedSurface->Surf()->Commit();
     sharedSurface->Surf()->ProducerRelease();
@@ -2352,7 +2354,7 @@ WebGLContext::GetVRFrame()
   BeginComposition();
   EndComposition();
 
-  if (!gl)
+  if (IsContextLost())
       return nullptr;
 
   gl::GLScreenBuffer* screen = gl->Screen();
@@ -2381,7 +2383,8 @@ SizeOfViewElem(const dom::ArrayBufferView& view)
 }
 
 bool
-WebGLContext::ValidateArrayBufferView(const dom::ArrayBufferView& view, GLuint elemOffset,
+WebGLContext::ValidateArrayBufferView(const char* funcName,
+                                      const dom::ArrayBufferView& view, GLuint elemOffset,
                                       GLuint elemCountOverride, uint8_t** const out_bytes,
                                       size_t* const out_byteLen)
 {
@@ -2393,14 +2396,14 @@ WebGLContext::ValidateArrayBufferView(const dom::ArrayBufferView& view, GLuint e
 
     size_t elemCount = byteLen / elemSize;
     if (elemOffset > elemCount) {
-        ErrorInvalidValue("Invalid offset into ArrayBufferView.");
+        ErrorInvalidValue("%s: Invalid offset into ArrayBufferView.", funcName);
         return false;
     }
     elemCount -= elemOffset;
 
     if (elemCountOverride) {
         if (elemCountOverride > elemCount) {
-            ErrorInvalidValue("Invalid sub-length for ArrayBufferView.");
+            ErrorInvalidValue("%s: Invalid sub-length for ArrayBufferView.", funcName);
             return false;
         }
         elemCount = elemCountOverride;
@@ -2423,90 +2426,6 @@ WebGLContext::UpdateMaxDrawBuffers()
     // "The value of the MAX_COLOR_ATTACHMENTS_WEBGL parameter must be greater than or
     //  equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter."
     mGLMaxDrawBuffers = std::min(mGLMaxDrawBuffers, mGLMaxColorAttachments);
-}
-
-// --
-
-const char*
-WebGLContext::FuncName() const
-{
-    const char* ret;
-    if (MOZ_LIKELY( mFuncScope )) {
-        ret = mFuncScope->mFuncName;
-    } else {
-        MOZ_ASSERT(false);
-        ret = "<funcName unknown>";
-    }
-    return ret;
-}
-
-// -
-
-WebGLContext::FuncScope::FuncScope(const WebGLContext& webgl, const char* const funcName)
-    : mWebGL(webgl)
-    , mFuncName(bool(mWebGL.mFuncScope) ? nullptr : funcName)
-{
-    if (MOZ_UNLIKELY( !mFuncName )) {
-#ifdef DEBUG
-        mStillNeedsToCheckContextLost = false;
-#endif
-        return;
-    }
-
-    mWebGL.mFuncScope = this;
-}
-
-WebGLContext::FuncScope::~FuncScope()
-{
-    if (MOZ_UNLIKELY( !mFuncName ))
-        return;
-
-    MOZ_ASSERT(!mStillNeedsToCheckContextLost);
-    mWebGL.mFuncScope = nullptr;
-}
-
-bool
-WebGLContext::IsContextLost() const
-{
-    if (MOZ_LIKELY( mFuncScope )) {
-        mFuncScope->OnCheckContextLost();
-    }
-    return mContextStatus != ContextStatus::NotLost;
-}
-
-// --
-
-bool
-WebGLContext::ValidateIsObject(const WebGLDeletableObject* const object) const
-{
-    if (IsContextLost())
-        return false;
-
-    if (!object)
-        return false;
-
-    if (!object->IsCompatibleWithContext(this))
-        return false;
-
-    return !object->IsDeleted();
-}
-
-bool
-WebGLContext::ValidateDeleteObject(const WebGLDeletableObject* const object)
-{
-    if (IsContextLost())
-        return false;
-
-    if (!object)
-        return false;
-
-    if (!ValidateObjectAllowDeleted("obj", *object))
-        return false;
-
-    if (object->IsDeleteRequested())
-        return false;
-
-    return true;
 }
 
 // --

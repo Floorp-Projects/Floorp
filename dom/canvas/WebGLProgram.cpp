@@ -463,7 +463,7 @@ webgl::LinkedProgramInfo::~LinkedProgramInfo()
 }
 
 const webgl::CachedDrawFetchLimits*
-webgl::LinkedProgramInfo::GetDrawFetchLimits() const
+webgl::LinkedProgramInfo::GetDrawFetchLimits(const char* const funcName) const
 {
     const auto& webgl = prog->mContext;
     const auto& vao = webgl->mBoundVertexArray;
@@ -482,9 +482,9 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
         uint32_t i = 0;
         for (const auto& cur : vao->mAttribs) {
             if (cur.mEnabled && !cur.mBuf) {
-                webgl->ErrorInvalidOperation("Vertex attrib array %u is enabled but"
+                webgl->ErrorInvalidOperation("%s: Vertex attrib array %u is enabled but"
                                              " has no buffer bound.",
-                                             i);
+                                             funcName, i);
                 return nullptr;
             }
         }
@@ -507,9 +507,9 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
         if (attribData.mEnabled) {
             MOZ_ASSERT(attribData.mBuf);
             if (attribData.mBuf->IsBoundForTF()) {
-                webgl->ErrorInvalidOperation("Vertex attrib %u's buffer is bound for"
+                webgl->ErrorInvalidOperation("%s: Vertex attrib %u's buffer is bound for"
                                              " transform feedback.",
-                                              loc);
+                                              funcName, loc);
                 return nullptr;
             }
             cacheDeps.push_back(&attribData.mBuf->mFetchInvalidator);
@@ -537,17 +537,18 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
             nsCString progType, dataType;
             WebGLContext::EnumName(progAttrib.mBaseType, &progType);
             WebGLContext::EnumName(attribDataBaseType, &dataType);
-            webgl->ErrorInvalidOperation("Vertex attrib %u requires data of type %s,"
+            webgl->ErrorInvalidOperation("%s: Vertex attrib %u requires data of type %s,"
                                          " but is being supplied with type %s.",
-                                         loc, progType.BeginReading(),
+                                         funcName, loc, progType.BeginReading(),
                                          dataType.BeginReading());
             return nullptr;
         }
     }
 
     if (hasActiveAttrib && !hasActiveDivisor0) {
-        webgl->ErrorInvalidOperation("One active vertex attrib (if any are active)"
-                                     " must have a divisor of 0.");
+        webgl->ErrorInvalidOperation("%s: One active vertex attrib (if any are active)"
+                                     " must have a divisor of 0.",
+                                     funcName);
         return nullptr;
     }
 
@@ -624,17 +625,17 @@ WebGLProgram::AttachShader(WebGLShader* shader)
 void
 WebGLProgram::BindAttribLocation(GLuint loc, const nsAString& name)
 {
-    if (!ValidateGLSLVariableName(name, mContext))
+    if (!ValidateGLSLVariableName(name, mContext, "bindAttribLocation"))
         return;
 
     if (loc >= mContext->MaxVertexAttribs()) {
-        mContext->ErrorInvalidValue("`location` must be less than"
+        mContext->ErrorInvalidValue("bindAttribLocation: `location` must be less than"
                                     " MAX_VERTEX_ATTRIBS.");
         return;
     }
 
     if (StringBeginsWith(name, NS_LITERAL_STRING("gl_"))) {
-        mContext->ErrorInvalidOperation("Can't set the location of a"
+        mContext->ErrorInvalidOperation("bindAttribLocation: Can't set the location of a"
                                         " name that starts with 'gl_'.");
         return;
     }
@@ -734,11 +735,11 @@ WebGLProgram::GetAttachedShaders(nsTArray<RefPtr<WebGLShader>>* const out) const
 GLint
 WebGLProgram::GetAttribLocation(const nsAString& userName_wide) const
 {
-    if (!ValidateGLSLVariableName(userName_wide, mContext))
+    if (!ValidateGLSLVariableName(userName_wide, mContext, "getAttribLocation"))
         return -1;
 
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("getAttribLocation: `program` must be linked.");
         return -1;
     }
 
@@ -765,11 +766,11 @@ GetFragDataByUserName(const WebGLProgram* prog,
 GLint
 WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
 {
-    if (!ValidateGLSLVariableName(userName_wide, mContext))
+    if (!ValidateGLSLVariableName(userName_wide, mContext, "getFragDataLocation"))
         return -1;
 
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("getFragDataLocation: `program` must be linked.");
         return -1;
     }
 
@@ -864,7 +865,8 @@ WebGLProgram::GetProgramParameter(GLenum pname) const
         return JS::BooleanValue(bool(GetProgramiv(gl, mGLName, pname)));
 
     default:
-        mContext->ErrorInvalidEnumInfo("pname", pname);
+        mContext->ErrorInvalidEnumInfo("getProgramParameter: `pname`",
+                                       pname);
         return JS::NullValue();
     }
 }
@@ -872,11 +874,11 @@ WebGLProgram::GetProgramParameter(GLenum pname) const
 GLuint
 WebGLProgram::GetUniformBlockIndex(const nsAString& userName_wide) const
 {
-    if (!ValidateGLSLVariableName(userName_wide, mContext))
+    if (!ValidateGLSLVariableName(userName_wide, mContext, "getUniformBlockIndex"))
         return LOCAL_GL_INVALID_INDEX;
 
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("getUniformBlockIndex: `program` must be linked.");
         return LOCAL_GL_INVALID_INDEX;
     }
 
@@ -902,14 +904,14 @@ void
 WebGLProgram::GetActiveUniformBlockName(GLuint uniformBlockIndex, nsAString& retval) const
 {
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("getActiveUniformBlockName: `program` must be linked.");
         return;
     }
 
     const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
     GLuint uniformBlockCount = (GLuint) linkInfo->uniformBlocks.size();
     if (uniformBlockIndex >= uniformBlockCount) {
-        mContext->ErrorInvalidValue("index %u invalid.", uniformBlockIndex);
+        mContext->ErrorInvalidValue("getActiveUniformBlockName: index %u invalid.", uniformBlockIndex);
         return;
     }
 
@@ -921,14 +923,14 @@ JS::Value
 WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex, GLenum pname) const
 {
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("getActiveUniformBlockParameter: `program` must be linked.");
         return JS::NullValue();
     }
 
     const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
     GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
     if (uniformBlockIndex >= uniformBlockCount) {
-        mContext->ErrorInvalidValue("Index %u invalid.", uniformBlockIndex);
+        mContext->ErrorInvalidValue("getActiveUniformBlockParameter: index %u invalid.", uniformBlockIndex);
         return JS::NullValue();
     }
 
@@ -956,15 +958,16 @@ JS::Value
 WebGLProgram::GetActiveUniformBlockActiveUniforms(JSContext* cx, GLuint uniformBlockIndex,
                                                   ErrorResult* const out_error) const
 {
+    const char funcName[] = "getActiveUniformBlockParameter";
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("%s: `program` must be linked.", funcName);
         return JS::NullValue();
     }
 
     const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
     GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
     if (uniformBlockIndex >= uniformBlockCount) {
-        mContext->ErrorInvalidValue("Index %u invalid.", uniformBlockIndex);
+        mContext->ErrorInvalidValue("%s: Index %u invalid.", funcName, uniformBlockIndex);
         return JS::NullValue();
     }
 
@@ -994,11 +997,11 @@ WebGLProgram::GetActiveUniformBlockActiveUniforms(JSContext* cx, GLuint uniformB
 already_AddRefed<WebGLUniformLocation>
 WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
 {
-    if (!ValidateGLSLVariableName(userName_wide, mContext))
+    if (!ValidateGLSLVariableName(userName_wide, mContext, "getUniformLocation"))
         return nullptr;
 
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("getUniformLocation: `program` must be linked.");
         return nullptr;
     }
 
@@ -1029,8 +1032,9 @@ void
 WebGLProgram::GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
                                 dom::Nullable< nsTArray<GLuint> >& retval) const
 {
+    const char funcName[] = "getUniformIndices";
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("%s: `program` must be linked.", funcName);
         return;
     }
 
@@ -1062,21 +1066,23 @@ void
 WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex,
                                   GLuint uniformBlockBinding) const
 {
+    const char funcName[] = "getActiveUniformBlockName";
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("%s: `program` must be linked.", funcName);
         return;
     }
 
     const auto& uniformBlocks = LinkInfo()->uniformBlocks;
     if (uniformBlockIndex >= uniformBlocks.size()) {
-        mContext->ErrorInvalidValue("Index %u invalid.", uniformBlockIndex);
+        mContext->ErrorInvalidValue("%s: Index %u invalid.", funcName, uniformBlockIndex);
         return;
     }
     const auto& uniformBlock = uniformBlocks[uniformBlockIndex];
 
     const auto& indexedBindings = mContext->mIndexedUniformBufferBindings;
     if (uniformBlockBinding >= indexedBindings.size()) {
-        mContext->ErrorInvalidValue("Binding %u invalid.", uniformBlockBinding);
+        mContext->ErrorInvalidValue("%s: Binding %u invalid.", funcName,
+                                    uniformBlockBinding);
         return;
     }
     const auto& indexedBinding = indexedBindings[uniformBlockBinding];
@@ -1136,9 +1142,12 @@ WebGLProgram::ValidateForLink()
 void
 WebGLProgram::LinkProgram()
 {
+    const char funcName[] = "linkProgram";
+
     if (mNumActiveTFOs) {
-        mContext->ErrorInvalidOperation("Program is in-use by one or more active"
-                                        " transform feedback objects.");
+        mContext->ErrorInvalidOperation("%s: Program is in-use by one or more active"
+                                        " transform feedback objects.",
+                                        funcName);
         return;
     }
 
@@ -1148,7 +1157,7 @@ WebGLProgram::LinkProgram()
     mMostRecentLinkInfo = nullptr;
 
     if (!ValidateForLink()) {
-        mContext->GenerateWarning("%s", mLinkLog.BeginReading());
+        mContext->GenerateWarning("%s: %s", funcName, mLinkLog.BeginReading());
         return;
     }
 
@@ -1199,7 +1208,7 @@ WebGLProgram::LinkProgram()
         // report in compileShader the translation errors generated by ANGLE,
         // but it seems saner to keep a single way of obtaining shader infologs.
         if (!mLinkLog.IsEmpty()) {
-            mContext->GenerateWarning("Failed to link, leaving the following"
+            mContext->GenerateWarning("linkProgram: Failed to link, leaving the following"
                                       " log:\n%s\n",
                                       mLinkLog.BeginReading());
         }
@@ -1418,8 +1427,11 @@ WebGLProgram::ValidateAfterTentativeLink(nsCString* const out_linkLog) const
 bool
 WebGLProgram::UseProgram() const
 {
+    const char funcName[] = "useProgram";
+
     if (!mMostRecentLinkInfo) {
-        mContext->ErrorInvalidOperation("Program has not been successfully linked.");
+        mContext->ErrorInvalidOperation("%s: Program has not been successfully linked.",
+                                        funcName);
         return false;
     }
 
@@ -1427,7 +1439,8 @@ WebGLProgram::UseProgram() const
         mContext->mBoundTransformFeedback->mIsActive &&
         !mContext->mBoundTransformFeedback->mIsPaused)
     {
-        mContext->ErrorInvalidOperation("Transform feedback active and not paused.");
+        mContext->ErrorInvalidOperation("%s: Transform feedback active and not paused.",
+                                        funcName);
         return false;
     }
 
@@ -1444,7 +1457,7 @@ WebGLProgram::ValidateProgram() const
     // See bug 593867 for NVIDIA and bug 657201 for ATI. The latter is confirmed
     // with Mac OS 10.6.7.
     if (gl->WorkAroundDriverBugs()) {
-        mContext->GenerateWarning("Implemented as a no-op on"
+        mContext->GenerateWarning("validateProgram: Implemented as a no-op on"
                                   " Mac to work around crashes.");
         return;
     }
@@ -1523,6 +1536,8 @@ void
 WebGLProgram::TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
                                         GLenum bufferMode)
 {
+    const char funcName[] = "transformFeedbackVaryings";
+
     const auto& gl = mContext->gl;
 
     switch (bufferMode) {
@@ -1535,7 +1550,8 @@ WebGLProgram::TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
             gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
                              &maxAttribs);
             if (varyings.Length() > maxAttribs) {
-                mContext->ErrorInvalidValue("Length of `varyings` exceeds %s.",
+                mContext->ErrorInvalidValue("%s: Length of `varyings` exceeds %s.",
+                                            funcName,
                                             "TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
                 return;
             }
@@ -1543,7 +1559,7 @@ WebGLProgram::TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
         break;
 
     default:
-        mContext->ErrorInvalidEnumInfo("bufferMode", bufferMode);
+        mContext->ErrorInvalidEnum("%s: Bad `bufferMode`: 0x%04x.", funcName, bufferMode);
         return;
     }
 
@@ -1560,12 +1576,13 @@ WebGLProgram::GetTransformFeedbackVarying(GLuint index) const
     // No docs in the WebGL 2 spec for this function. Taking the language for
     // getActiveAttrib, which states that the function returns null on any error.
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("`program` must be linked.");
+        mContext->ErrorInvalidOperation("getTransformFeedbackVarying: `program` must be "
+                                        "linked.");
         return nullptr;
     }
 
     if (index >= LinkInfo()->transformFeedbackVaryings.size()) {
-        mContext->ErrorInvalidValue("`index` is greater or "
+        mContext->ErrorInvalidValue("getTransformFeedbackVarying: `index` is greater or "
                                     "equal to TRANSFORM_FEEDBACK_VARYINGS.");
         return nullptr;
     }

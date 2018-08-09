@@ -20,28 +20,6 @@
 
 namespace mozilla {
 
-static bool
-ValidateAttribIndex(WebGLContext& webgl, GLuint index)
-{
-    bool valid = (index < webgl.MaxVertexAttribs());
-
-    if (!valid) {
-        if (index == GLuint(-1)) {
-            webgl.ErrorInvalidValue("-1 is not a valid `index`. This value"
-                                    " probably comes from a getAttribLocation()"
-                                    " call, where this return value -1 means"
-                                    " that the passed name didn't correspond to"
-                                    " an active attribute in the specified"
-                                    " program.");
-        } else {
-            webgl.ErrorInvalidValue("`index` must be less than"
-                                    " MAX_VERTEX_ATTRIBS.");
-        }
-    }
-
-    return valid;
-}
-
 JSObject*
 WebGLContext::GetVertexAttribFloat32Array(JSContext* cx, GLuint index)
 {
@@ -81,13 +59,17 @@ WebGLContext::GetVertexAttribUint32Array(JSContext* cx, GLuint index)
 ////////////////////////////////////////
 
 void
-WebGLContext::VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+WebGLContext::VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w,
+                             const char* funcName)
 {
-    const FuncScope funcScope(*this, "vertexAttrib4f");
+    if (!funcName) {
+        funcName = "vertexAttrib4f";
+    }
+
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, funcName))
         return;
 
     ////
@@ -108,13 +90,17 @@ WebGLContext::VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfl
 }
 
 void
-WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
+WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w,
+                               const char* funcName)
 {
-    const FuncScope funcScope(*this, "vertexAttribI4i");
+    if (!funcName) {
+        funcName = "vertexAttribI4i";
+    }
+
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, funcName))
         return;
 
     ////
@@ -135,13 +121,17 @@ WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
 }
 
 void
-WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
+WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w,
+                                const char* funcName)
 {
-    const FuncScope funcScope(*this, "vertexAttribI4ui");
+    if (!funcName) {
+        funcName = "vertexAttribI4ui";
+    }
+
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, funcName))
         return;
 
     ////
@@ -166,11 +156,10 @@ WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLui
 void
 WebGLContext::EnableVertexAttribArray(GLuint index)
 {
-    const FuncScope funcScope(*this, "enableVertexAttribArray");
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, "enableVertexAttribArray"))
         return;
 
     gl->fEnableVertexAttribArray(index);
@@ -183,11 +172,10 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
 void
 WebGLContext::DisableVertexAttribArray(GLuint index)
 {
-    const FuncScope funcScope(*this, "disableVertexAttribArray");
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, "disableVertexAttribArray"))
         return;
 
     if (index || !gl->IsCompatibilityProfile()) {
@@ -203,11 +191,11 @@ JS::Value
 WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                               ErrorResult& rv)
 {
-    const FuncScope funcScope(*this, "getVertexAttrib");
+    const char funcName[] = "getVertexAttrib";
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, funcName))
         return JS::NullValue();
 
     MOZ_ASSERT(mBoundVertexArray);
@@ -273,22 +261,21 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         break;
     }
 
-    ErrorInvalidEnumInfo("pname", pname);
+    ErrorInvalidEnumInfo("getVertexAttrib: parameter", pname);
     return JS::NullValue();
 }
 
 WebGLsizeiptr
 WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname)
 {
-    const FuncScope funcScope(*this, "getVertexAttribOffset");
     if (IsContextLost())
         return 0;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, "getVertexAttribOffset"))
         return 0;
 
     if (pname != LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER) {
-        ErrorInvalidEnum("`pname` must be VERTEX_ATTRIB_ARRAY_POINTER.");
+        ErrorInvalidEnum("getVertexAttribOffset: bad parameter");
         return 0;
     }
 
@@ -299,31 +286,31 @@ WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname)
 ////////////////////////////////////////
 
 void
-WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
+WebGLContext::VertexAttribAnyPointer(const char* funcName, bool isFuncInt, GLuint index,
                                      GLint size, GLenum type, bool normalized,
                                      GLsizei stride, WebGLintptr byteOffset)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, funcName))
         return;
 
     ////
 
     if (size < 1 || size > 4) {
-        ErrorInvalidValue("Invalid element size.");
+        ErrorInvalidValue("%s: invalid element size", funcName);
         return;
     }
 
     // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
     if (stride < 0 || stride > 255) {
-        ErrorInvalidValue("Negative or too large stride.");
+        ErrorInvalidValue("%s: negative or too large stride", funcName);
         return;
     }
 
     if (byteOffset < 0) {
-        ErrorInvalidValue("Negative offset.");
+        ErrorInvalidValue("%s: negative offset", funcName);
         return;
     }
 
@@ -380,7 +367,7 @@ WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
             break;
         }
         if (size != 4) {
-            ErrorInvalidOperation("Size must be 4 for this type.");
+            ErrorInvalidOperation("%s: size must be 4 for this type.", funcName);
             return;
         }
         typeAlignment = 4;
@@ -391,7 +378,7 @@ WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
         break;
     }
     if (!isTypeValid) {
-        ErrorInvalidEnumInfo("type", type);
+        ErrorInvalidEnumArg(funcName, "type", type);
         return;
     }
 
@@ -404,8 +391,9 @@ WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
     if (stride & typeAlignmentMask ||
         byteOffset & typeAlignmentMask)
     {
-        ErrorInvalidOperation("`stride` and `byteOffset` must satisfy the alignment"
-                              " requirement of `type`.");
+        ErrorInvalidOperation("%s: `stride` and `byteOffset` must satisfy the alignment"
+                              " requirement of `type`.",
+                              funcName);
         return;
     }
 
@@ -413,7 +401,8 @@ WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
 
     const auto& buffer = mBoundArrayBuffer;
     if (!buffer && byteOffset) {
-        ErrorInvalidOperation("If ARRAY_BUFFER is null, byteOffset must be zero.");
+        ErrorInvalidOperation("%s: If ARRAY_BUFFER is null, byteOffset must be zero.",
+                              funcName);
         return;
     }
 
@@ -437,11 +426,10 @@ WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
 void
 WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
 {
-    const FuncScope funcScope(*this, "vertexAttribDivisor");
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(*this, index))
+    if (!ValidateAttribIndex(index, "vertexAttribDivisor"))
         return;
 
     MOZ_ASSERT(mBoundVertexArray);

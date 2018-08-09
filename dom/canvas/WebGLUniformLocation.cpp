@@ -29,18 +29,20 @@ WebGLUniformLocation::~WebGLUniformLocation()
 { }
 
 bool
-WebGLUniformLocation::ValidateForProgram(const WebGLProgram* prog) const
+WebGLUniformLocation::ValidateForProgram(const WebGLProgram* prog,
+                                         const char* funcName) const
 {
     // Check the weak-pointer.
     if (!mLinkInfo) {
-        mContext->ErrorInvalidOperation("This uniform location is obsolete because"
-                                        " its program has been successfully relinked.");
+        mContext->ErrorInvalidOperation("%s: This uniform location is obsolete because"
+                                        " its program has been successfully relinked.",
+                                        funcName);
         return false;
     }
 
     if (mLinkInfo->prog != prog) {
-        mContext->ErrorInvalidOperation("This uniform location corresponds to a"
-                                        " different program.");
+        mContext->ErrorInvalidOperation("%s: This uniform location corresponds to a"
+                                        " different program.", funcName);
         return false;
     }
 
@@ -117,22 +119,23 @@ IsUniformSetterTypeValid(GLenum setterType, GLenum uniformType)
 }
 
 bool
-WebGLUniformLocation::ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType) const
+WebGLUniformLocation::ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType,
+                                          const char* funcName) const
 {
     MOZ_ASSERT(mLinkInfo);
 
     const auto& uniformElemSize = mInfo->mActiveInfo->mElemSize;
     if (setterElemSize != uniformElemSize) {
-        mContext->ErrorInvalidOperation("Function used differs from uniform size: %i",
-                                        uniformElemSize);
+        mContext->ErrorInvalidOperation("%s: Function used differs from uniform size: %i",
+                                        funcName, uniformElemSize);
         return false;
     }
 
     const auto& uniformElemType = mInfo->mActiveInfo->mElemType;
     if (!IsUniformSetterTypeValid(setterType, uniformElemType)) {
-        mContext->ErrorInvalidOperation("Function used is incompatible with uniform"
+        mContext->ErrorInvalidOperation("%s: Function used is incompatible with uniform"
                                         " type: %i",
-                                        uniformElemType);
+                                        funcName, uniformElemType);
         return false;
     }
 
@@ -140,17 +143,17 @@ WebGLUniformLocation::ValidateSizeAndType(uint8_t setterElemSize, GLenum setterT
 }
 
 bool
-WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize,
-                                          size_t setterArraySize) const
+WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize,
+                                          const char* funcName) const
 {
     MOZ_ASSERT(mLinkInfo);
 
     if (setterArraySize == 0 ||
         setterArraySize % setterElemSize)
     {
-        mContext->ErrorInvalidValue("Expected an array of length a multiple of %d,"
+        mContext->ErrorInvalidValue("%s: Expected an array of length a multiple of %d,"
                                     " got an array of length %zu.",
-                                    setterElemSize, setterArraySize);
+                                    funcName, setterElemSize, setterArraySize);
         return false;
     }
 
@@ -164,10 +167,10 @@ WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize,
     if (!mInfo->mActiveInfo->mIsArray &&
         setterArraySize != setterElemSize)
     {
-        mContext->ErrorInvalidOperation("Expected an array of length exactly %d"
+        mContext->ErrorInvalidOperation("%s: Expected an array of length exactly %d"
                                         " (since this uniform is not an array uniform),"
                                         " got an array of length %zu.",
-                                       setterElemSize, setterArraySize);
+                                        funcName, setterElemSize, setterArraySize);
         return false;
     }
 

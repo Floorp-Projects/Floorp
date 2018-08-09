@@ -23,7 +23,7 @@ namespace mozilla {
  */
 
 WebGLRefPtr<WebGLQuery>*
-WebGLContext::ValidateQuerySlotByTarget(GLenum target)
+WebGLContext::ValidateQuerySlotByTarget(const char* funcName, GLenum target)
 {
     if (IsWebGL2()) {
         switch (target) {
@@ -49,7 +49,7 @@ WebGLContext::ValidateQuerySlotByTarget(GLenum target)
         }
     }
 
-    ErrorInvalidEnumInfo("target", target);
+    ErrorInvalidEnum("%s: Bad `target`.", funcName);
     return nullptr;
 }
 
@@ -58,9 +58,12 @@ WebGLContext::ValidateQuerySlotByTarget(GLenum target)
 // Query Objects
 
 already_AddRefed<WebGLQuery>
-WebGLContext::CreateQuery()
+WebGLContext::CreateQuery(const char* funcName)
 {
-    const FuncScope funcScope(*this, "createQuery");
+    if (!funcName) {
+        funcName = "createQuery";
+    }
+
     if (IsContextLost())
         return nullptr;
 
@@ -69,31 +72,50 @@ WebGLContext::CreateQuery()
 }
 
 void
-WebGLContext::DeleteQuery(WebGLQuery* query)
+WebGLContext::DeleteQuery(WebGLQuery* query, const char* funcName)
 {
-    const FuncScope funcScope(*this, "deleteQuery");
-    if (!ValidateDeleteObject(query))
+    if (!funcName) {
+        funcName = "deleteQuery";
+    }
+
+    if (!ValidateDeleteObject(funcName, query))
         return;
 
     query->DeleteQuery();
 }
 
-void
-WebGLContext::BeginQuery(GLenum target, WebGLQuery& query)
+bool
+WebGLContext::IsQuery(const WebGLQuery* query, const char* funcName)
 {
-    const FuncScope funcScope(*this, "beginQuery");
+    if (!funcName) {
+        funcName = "isQuery";
+    }
+
+    if (!ValidateIsObject(funcName, query))
+        return false;
+
+    return query->IsQuery();
+}
+
+void
+WebGLContext::BeginQuery(GLenum target, WebGLQuery& query, const char* funcName)
+{
+    if (!funcName) {
+        funcName = "beginQuery";
+    }
+
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("query", query))
+    if (!ValidateObject(funcName, query))
         return;
 
-    const auto& slot = ValidateQuerySlotByTarget(target);
+    const auto& slot = ValidateQuerySlotByTarget(funcName, target);
     if (!slot)
         return;
 
     if (*slot)
-        return ErrorInvalidOperation("Query target already active.");
+        return ErrorInvalidOperation("%s: Query target already active.", funcName);
 
     ////
 
@@ -101,28 +123,33 @@ WebGLContext::BeginQuery(GLenum target, WebGLQuery& query)
 }
 
 void
-WebGLContext::EndQuery(GLenum target)
+WebGLContext::EndQuery(GLenum target, const char* funcName)
 {
-    const FuncScope funcScope(*this, "endQuery");
+    if (!funcName) {
+        funcName = "endQuery";
+    }
+
     if (IsContextLost())
         return;
 
-    const auto& slot = ValidateQuerySlotByTarget(target);
+    const auto& slot = ValidateQuerySlotByTarget(funcName, target);
     if (!slot)
         return;
 
     const auto& query = *slot;
     if (!query)
-        return ErrorInvalidOperation("Query target not active.");
+        return ErrorInvalidOperation("%s: Query target not active.", funcName);
 
     query->EndQuery();
 }
 
 void
 WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
-                       JS::MutableHandleValue retval)
+                       JS::MutableHandleValue retval, const char* funcName)
 {
-    const FuncScope funcScope(*this, "getQuery");
+    if (!funcName) {
+        funcName = "getQuery";
+    }
 
     retval.setNull();
     if (IsContextLost())
@@ -140,7 +167,7 @@ WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
                 return;
             }
 
-            const auto& slot = ValidateQuerySlotByTarget(target);
+            const auto& slot = ValidateQuerySlotByTarget(funcName, target);
             if (!slot || !*slot)
                 return;
 
@@ -161,7 +188,7 @@ WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
         if (target != LOCAL_GL_TIME_ELAPSED_EXT &&
             target != LOCAL_GL_TIMESTAMP_EXT)
         {
-            ErrorInvalidEnumInfo("target", target);
+            ErrorInvalidEnum("%s: Bad pname for target.", funcName);
             return;
         }
 
@@ -180,19 +207,22 @@ WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
         break;
     }
 
-    ErrorInvalidEnumInfo("pname", pname);
+    ErrorInvalidEnum("%s: Bad pname.", funcName);
 }
 
 void
 WebGLContext::GetQueryParameter(JSContext*, const WebGLQuery& query, GLenum pname,
-                                JS::MutableHandleValue retval)
+                                JS::MutableHandleValue retval, const char* funcName)
 {
-    const FuncScope funcScope(*this, "getQueryParameter");
+    if (!funcName) {
+        funcName = "getQueryParameter";
+    }
+
     retval.setNull();
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("query", query))
+    if (!ValidateObject(funcName, query))
         return;
 
     query.GetQueryParameter(pname, retval);
