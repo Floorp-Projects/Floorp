@@ -1680,7 +1680,8 @@ NS_IMETHODIMP
 HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 {
   // The whole operation should be undoable in one transaction:
-  BeginTransaction();
+  // XXX Why isn't enough to use only AutoPlaceholderBatch here?
+  AutoTransactionBatch bundleAllTransactions(*this);
   AutoPlaceholderBatch beginBatching(this);
 
   // We're going to loop over the string, collecting up a "hunk"
@@ -1766,8 +1767,6 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
     curHunkIsQuoted = quoted;
     hunkStart = lineStart;
   }
-
-  EndTransaction();
 
   return rv;
 }
