@@ -170,7 +170,7 @@ class SearchSuggestionsFragment : Fragment() {
             override fun getNewListSize(): Int = newSuggestions.size
             override fun areItemsTheSame(p0: Int, p1: Int): Boolean = true
             override fun areContentsTheSame(p0: Int, p1: Int): Boolean =
-                    oldSuggestions[p0] == newSuggestions[p0]
+                    oldSuggestions[p0] == newSuggestions[p1]
             override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? =
                     newSuggestions[newItemPosition]
         }
