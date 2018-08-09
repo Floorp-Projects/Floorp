@@ -147,11 +147,15 @@ class Settings private constructor(context: Context) {
         false)
 
     fun hasOpenedInNewTab() = preferences.getBoolean(
-        getPreferenceKey(R.string.pref_key_has_opened_new_tab),
+        getPreferenceKey(R.string.has_opened_new_tab),
         false)
 
     fun hasAddedToHomescreen() = preferences.getBoolean(
-        getPreferenceKey(R.string.pref_key_has_added_to_home_screen),
+        getPreferenceKey(R.string.has_added_to_home_screen),
+        false)
+
+    fun hasRequestedDesktop() = preferences.getBoolean(
+        getPreferenceKey(R.string.has_requested_desktop),
         false)
 
     private fun getPreferenceKey(resourceId: Int): String =

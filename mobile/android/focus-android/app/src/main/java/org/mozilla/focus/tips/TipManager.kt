@@ -5,16 +5,17 @@
 package org.mozilla.focus.tips
 
 import android.content.Context
+import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.widget.DefaultBrowserPreference
+import java.util.Random
+import android.app.Activity
 import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_set_default_browser
 import org.mozilla.focus.R.string.tip_add_to_homescreen
 import org.mozilla.focus.R.string.tip_disable_tracking_protection
 import org.mozilla.focus.R.string.tip_autocomplete_url
+import org.mozilla.focus.R.string.tip_request_desktop
 import org.mozilla.focus.R.string.app_name
-import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.widget.DefaultBrowserPreference
-import java.util.Random
-import android.app.Activity
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
@@ -28,6 +29,10 @@ object TipManager {
         "https://support.mozilla.org/en-US/kb/open-new-tab-firefox-focus-android"
     private const val ADD_HOMESCREEN_URL =
         "https://support.mozilla.org/en-US/kb/add-web-page-shortcuts-your-home-screen"
+    private const val AUTOCOMPLETE_URL =
+        "https://support.mozilla.org/en-US/kb/autocomplete-settings-firefox-focus-address-bar"
+    private const val REQUEST_DESKTOP_URL =
+        "https://support.mozilla.org/en-US/kb/switch-desktop-view-firefox-focus-android"
     private const val MAX_TIPS_TO_DISPLAY = 3
 
     private val listOfTips = mutableListOf<Tip>()
@@ -41,6 +46,7 @@ object TipManager {
         addDefaultBrowserTip(context)
         addAutocompleteUrlTip(context)
         addOpenInNewTabTip(context)
+        addRequestDesktopTip(context)
     }
 
     // Will not return a tip if tips are disabled or if MAX TIPS have already been shown.
@@ -138,8 +144,7 @@ object TipManager {
         }
 
         val deepLinkAutocompleteUrl = {
-            val activity = context as Activity
-            (activity as LocaleAwareAppCompatActivity).openAutocompleteUrlSettings()
+            SessionManager.getInstance().createSession(Source.MENU, AUTOCOMPLETE_URL)
             TelemetryWrapper.pressTipEvent(id)
         }
 
@@ -156,6 +161,22 @@ object TipManager {
 
         val deepLinkOpenInNewTab = {
             SessionManager.getInstance().createSession(Source.MENU, NEW_TAB_URL)
+            TelemetryWrapper.pressTipEvent(id)
+        }
+
+        listOfTips.add(Tip(id, name, shouldDisplayOpenInNewTab, deepLinkOpenInNewTab))
+    }
+
+    private fun addRequestDesktopTip(context: Context) {
+        val id = tip_request_desktop
+        val name = context.resources.getString(id)
+
+        val shouldDisplayOpenInNewTab = {
+            !Settings.getInstance(context).hasRequestedDesktop()
+        }
+
+        val deepLinkOpenInNewTab = {
+            SessionManager.getInstance().createSession(Source.MENU, REQUEST_DESKTOP_URL)
             TelemetryWrapper.pressTipEvent(id)
         }
 

@@ -102,7 +102,7 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
                         editableTitle.getText().toString().trim(), blockingEnabled, requestDesktop);
                 TelemetryWrapper.addToHomescreenShortcutEvent();
                 PreferenceManager.getDefaultSharedPreferences(getContext()).edit()
-                        .putBoolean(getContext().getString(R.string.pref_key_has_added_to_home_screen),
+                        .putBoolean(getContext().getString(R.string.has_added_to_home_screen),
                                 true).apply();
                 dismiss();
             }

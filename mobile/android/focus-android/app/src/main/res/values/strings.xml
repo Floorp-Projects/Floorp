@@ -685,23 +685,31 @@ be temporary, and you can try again later.</li>
 
     <!-- Tips displayed on the home view -->
     <!-- Tip displayed on home view explaining how to disable tracking protection -->
-    <string name="tip_disable_tracking_protection">Sites not working as intended?\n
-        Turn off Tracking Protection</string>
+    <string name="tip_disable_tracking_protection">Site behaving unexpectedly?\n
+    Try turning off Tracking Protection</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen -->
-    <string name="tip_add_to_homescreen">Open your favorite site in one tap:\n
-        Menu -> Add to homescreen</string>
+    <string name="tip_add_to_homescreen">Get one-tap access to sites you use most\n
+        Menu > Add to Home screen</string>
 
     <!-- Tip displayed on home view explaining how to make Focus the default browser
     Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).-->
-    <string name="tip_set_default_browser">Open links in %1$s by default:\n
-        Set as default browser"
+    <string name="tip_set_default_browser">Open every link in %1$s
+        Set %1$s as default browser"
     </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL-->
-    <string name="tip_autocomplete_url">Autocomplete your favorite web addresses"</string>
+    <string name="tip_autocomplete_url">Autocomplete URLs for sites you use most\n
+        Long-press any URL in the address bar
+    </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL-->
-    <string name="tip_open_in_new_tab">Open links in a new tab"</string>
+    <string name="tip_open_in_new_tab">Open a link in a new tab\n
+        Long-press any link on a page
+    </string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website -->
+    <string name="tip_request_desktop">Rather see the full desktop site?\n
+    Menu > Request desktop site
+    </string>
 </resources>

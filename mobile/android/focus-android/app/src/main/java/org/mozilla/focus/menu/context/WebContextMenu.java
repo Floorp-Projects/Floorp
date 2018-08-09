@@ -136,7 +136,7 @@ public class WebContextMenu {
                         SessionManager.getInstance().createSession(Source.MENU, hitTarget.linkURL);
                         TelemetryWrapper.openLinkInNewTabEvent();
                         PreferenceManager.getDefaultSharedPreferences(context).edit()
-                                .putBoolean(context.getString(R.string.pref_key_has_opened_new_tab),
+                                .putBoolean(context.getString(R.string.has_opened_new_tab),
                                         true).apply();
 
                         return true;
