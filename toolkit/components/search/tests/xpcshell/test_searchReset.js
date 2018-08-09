@@ -97,6 +97,7 @@ add_task(async function test_promptURLs() {
 
   // Calling the currentEngine setter for the same engine should
   // prevent further prompts.
+  // eslint-disable-next-line no-self-assign
   Services.search.currentEngine = Services.search.currentEngine;
   Assert.equal(url("foo", "searchbar"),
                "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");

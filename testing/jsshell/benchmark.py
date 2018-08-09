@@ -172,50 +172,6 @@ class Ares6(Benchmark):
             self.suite['value'] = self.last_summary
 
 
-class AsmJSApps(RunOnceBenchmark):
-    name = 'asmjsapps'
-    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'asmjs-apps')
-    units = 'ms'
-
-    @property
-    def command(self):
-        if not self.args:
-            self.args = []
-        full_args = ['bash', 'harness.sh', self.shell + " " + " ".join(self.args)]
-        return full_args
-
-    def reset(self):
-        super(AsmJSApps, self).reset()
-
-        # Scores are of the form:
-        # {<bench_name>: {<score_name>: [<values>]}}
-        self.scores = defaultdict(lambda: defaultdict(list))
-
-    def process_results(self, output):
-        total = 0.0
-        tests = []
-        for line in output.splitlines():
-            m = re.search("(.+) - (\d+(\.\d+)?)", line)
-            if not m:
-                continue
-            name = m.group(1)
-            score = m.group(2)
-            total += float(score)
-            tests.append({ 'name': name, 'time': score })
-        tests.append({ 'name': '__total__', 'time': total })
-        return tests
-
-    def process_line(self, output):
-        m = re.search("(.+) - (\d+(\.\d+)?)", output)
-        if not m:
-            return
-        subtest = m.group(1)
-        score = m.group(2)
-        if subtest not in self.scores[self.name]:
-            self.scores[self.name][subtest] = []
-        self.scores[self.name][subtest].append(int(score))
-
-
 class SixSpeed(RunOnceBenchmark):
     name = 'six-speed'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'six-speed')
@@ -273,7 +229,6 @@ class SunSpider(RunOnceBenchmark):
 
 
 all_benchmarks = {
-    'asmjs-apps': AsmJSApps,
     'ares6': Ares6,
     'six-speed': SixSpeed,
     'sunspider': SunSpider

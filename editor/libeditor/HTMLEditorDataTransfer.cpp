@@ -1680,9 +1680,20 @@ NS_IMETHODIMP
 HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 {
   // The whole operation should be undoable in one transaction:
-  BeginTransaction();
+  // XXX Why isn't enough to use only AutoPlaceholderBatch here?
+  AutoTransactionBatch bundleAllTransactions(*this);
   AutoPlaceholderBatch beginBatching(this);
 
+  nsresult rv = InsertTextWithQuotationsInternal(aStringToInsert);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertTextWithQuotationsInternal(const nsAString& aStringToInsert)
+{
   // We're going to loop over the string, collecting up a "hunk"
   // that's all the same type (quoted or not),
   // Whenever the quotedness changes (or we reach the string's end)
@@ -1766,8 +1777,6 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
     curHunkIsQuoted = quoted;
     hunkStart = lineStart;
   }
-
-  EndTransaction();
 
   return rv;
 }
@@ -1919,7 +1928,16 @@ HTMLEditor::Rewrap(bool aRespectNewlines)
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),  "Failed to select all text");
   }
 
-  return InsertTextWithQuotations(wrapped);
+  // The whole operation in InsertTextWithQuotationsInternal() should be
+  // undoable in one transaction.
+  // XXX Why isn't enough to use only AutoPlaceholderBatch here?
+  AutoTransactionBatch bundleAllTransactions(*this);
+  AutoPlaceholderBatch beginBatching(this);
+  rv = InsertTextWithQuotationsInternal(wrapped);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

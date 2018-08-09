@@ -877,18 +877,30 @@ EditorBase::CanRedo(bool* aIsEnabled, bool* aCanRedo)
 NS_IMETHODIMP
 EditorBase::BeginTransaction()
 {
+  BeginTransactionInternal();
+  return NS_OK;
+}
+
+void
+EditorBase::BeginTransactionInternal()
+{
   BeginUpdateViewBatch();
 
   if (mTransactionManager) {
     RefPtr<TransactionManager> transactionManager(mTransactionManager);
     transactionManager->BeginBatch(nullptr);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 EditorBase::EndTransaction()
+{
+  EndTransactionInternal();
+  return NS_OK;
+}
+
+void
+EditorBase::EndTransactionInternal()
 {
   if (mTransactionManager) {
     RefPtr<TransactionManager> transactionManager(mTransactionManager);
@@ -896,8 +908,6 @@ EditorBase::EndTransaction()
   }
 
   EndUpdateViewBatch();
-
-  return NS_OK;
 }
 
 void

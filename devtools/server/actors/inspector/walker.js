@@ -350,10 +350,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * When a custom element is defined for one of the names currently watched, send a
-   * customElementDefined mutation for all the NodeActors using this tag name.
+   * When a custom element is defined, send a customElementDefined mutation for all the
+   * NodeActors using this tag name.
    */
-  onCustomElementDefined: function(actors) {
+  onCustomElementDefined: function({name, actors}) {
     actors.forEach(actor => this.queueMutation({
       target: actor.actorID,
       type: "customElementDefined",

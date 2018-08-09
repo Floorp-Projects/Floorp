@@ -360,8 +360,8 @@ var gEditItemOverlay = {
   async _initFolderMenuList(aSelectedFolderGuid) {
     // clean up first
     var menupopup = this._folderMenuList.menupopup;
-    while (menupopup.childNodes.length > 6)
-      menupopup.removeChild(menupopup.lastChild);
+    while (menupopup.children.length > 6)
+      menupopup.removeChild(menupopup.lastElementChild);
 
     // Build the static list
     if (!this._staticFoldersListBuilt) {
@@ -414,7 +414,7 @@ var gEditItemOverlay = {
                                       this._folderMenuList.selectedIndex);
 
     // Hide the folders-separator if no folder is annotated as recently-used
-    this._element("foldersSeparator").hidden = (menupopup.childNodes.length <= 6);
+    this._element("foldersSeparator").hidden = (menupopup.children.length <= 6);
     this._folderMenuList.disabled = this.readOnly;
   },
 
@@ -664,13 +664,13 @@ var gEditItemOverlay = {
   _getFolderMenuItem(aFolderGuid, aTitle) {
     let menupopup = this._folderMenuList.menupopup;
     let menuItem = Array.prototype.find.call(
-      menupopup.childNodes, item => item.folderGuid === aFolderGuid);
+      menupopup.children, item => item.folderGuid === aFolderGuid);
     if (menuItem !== undefined)
       return menuItem;
 
     // 3 special folders + separator + folder-items-count limit
-    if (menupopup.childNodes.length == 4 + MAX_FOLDER_ITEM_IN_MENU_LIST)
-      menupopup.removeChild(menupopup.lastChild);
+    if (menupopup.children.length == 4 + MAX_FOLDER_ITEM_IN_MENU_LIST)
+      menupopup.removeChild(menupopup.lastElementChild);
 
     return this._appendFolderItemToMenupopup(menupopup, aFolderGuid, aTitle);
   },
@@ -752,7 +752,7 @@ var gEditItemOverlay = {
                                          : null;
 
     while (tagsSelector.hasChildNodes()) {
-      tagsSelector.removeChild(tagsSelector.lastChild);
+      tagsSelector.removeChild(tagsSelector.lastElementChild);
     }
 
     let tagsInField = this._getTagsArrayFromTagsInputField();
@@ -950,7 +950,7 @@ var gEditItemOverlay = {
       // menulist has been changed, we need to update the label of its
       // representing element.
       let menupopup = this._folderMenuList.menupopup;
-      for (let menuitem of menupopup.childNodes) {
+      for (let menuitem of menupopup.children) {
         if ("folderGuid" in menuitem && menuitem.folderGuid == aGuid) {
           menuitem.label = aNewTitle;
           break;
