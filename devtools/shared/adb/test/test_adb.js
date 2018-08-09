@@ -180,3 +180,44 @@ add_task(async function testStartAndStop() {
   await extension.unload();
 });
 
+add_task(async function testTrackDevices() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: { id: "adb@mozilla.org" }
+      }
+    },
+    files: {
+      "adb.json": JSON.stringify(ADB_JSON),
+      "linux/adb": adbMock,
+      "linux64/adb": adbMock,
+      "mac64/adb": adbMock,
+      "win32/adb.exe": adbMock,
+      "win32/AdbWinApi.dll": "dummy",
+      "win32/AdbWinUsbApi.dll": "dummy"
+    },
+  });
+
+  await extension.startup();
+
+  await ADB.start();
+  ok(ADB.ready);
+
+  ok(await check(), "adb is now running");
+
+  const receivedDeviceId = await new Promise(resolve => {
+    EventEmitter.on(ADB, "device-connected", deviceId => {
+      resolve(deviceId);
+    });
+    ADB.trackDevices();
+  });
+
+  equal(receivedDeviceId, "1234567890");
+
+  await ADB.stop(true /* sync */);
+  ok(!ADB.ready);
+
+  await extension.unload();
+});
+
