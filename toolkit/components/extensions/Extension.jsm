@@ -1599,9 +1599,9 @@ class Extension extends ExtensionData {
 
     data["Extension:Extensions"].push(serial);
 
-    this.broadcast("Extension:Startup", serial);
-
-    return Promise.all(promises);
+    return this.broadcast("Extension:Startup", serial).then(() => {
+      return Promise.all(promises);
+    });
   }
 
   /**
