@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .connect-page__steps {
-  list-style-type: decimal;
-  margin-inline-start: 40px;
   line-height: 1.5em;
+  list-style-type: decimal;
   margin-block-end: 20px;
+  margin-inline-start: 40px;
 }
 
 .connect-page__step {
@@ -18,7 +18,7 @@
 }
 
 .connect-page__section__icon {
-  width: 32px;
   height: 32px;
   margin-inline-end: 5px;
+  width: 32px;
 }
