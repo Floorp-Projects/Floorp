@@ -604,6 +604,8 @@ class UrlInputFragment :
             view.applyAutocompleteResult(AutocompleteResult(result.text, result.source, result.size, { result.url }))
         }
 
+        searchSuggestionsViewModel.setSearchQuery(searchText)
+
         if (searchText.trim { it <= ' ' }.isEmpty()) {
             clearView?.visibility = View.GONE
             searchViewContainer?.visibility = View.GONE
@@ -628,7 +630,6 @@ class UrlInputFragment :
 
             val content = SpannableString(hint.replace(PLACEHOLDER, searchText))
             content.setSpan(StyleSpan(Typeface.BOLD), start, start + searchText.length, 0)
-            searchSuggestionsViewModel.setSearchQuery(searchText)
             searchViewContainer?.visibility = View.VISIBLE
         }
     }
