@@ -1267,6 +1267,7 @@ def pgo_flags(compiler, build_env, target):
               gen_cflags=['-fprofile-instr-generate'],
               gen_ldflags=['clang_rt.profile-x86_64.lib'],
               use_cflags=['-fprofile-instr-use=%s' % profdata,
+                          '-Wno-error=profile-instr-out-of-date',
                           '-Wno-error=profile-instr-unprofiled'],
               use_ldflags=[],
           )

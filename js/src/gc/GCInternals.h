@@ -177,7 +177,7 @@ struct MovingTracer : JS::CallbackTracer
     void onScopeEdge(Scope** basep) override;
     void onRegExpSharedEdge(RegExpShared** sharedp) override;
     void onChild(const JS::GCCellPtr& thing) override {
-        MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing.asCell()));
+        MOZ_ASSERT(!thing.asCell()->isForwarded());
     }
 
 #ifdef DEBUG

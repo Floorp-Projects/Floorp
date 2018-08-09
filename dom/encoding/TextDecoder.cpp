@@ -15,7 +15,8 @@ namespace mozilla {
 namespace dom {
 
 void
-TextDecoder::Init(const nsAString& aLabel, const bool aFatal,
+TextDecoder::Init(const nsAString& aLabel,
+                  const TextDecoderOptions& aOptions,
                   ErrorResult& aRv)
 {
   // Let encoding be the result of getting an encoding from label.
@@ -28,21 +29,24 @@ TextDecoder::Init(const nsAString& aLabel, const bool aFatal,
     aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(label);
     return;
   }
-  InitWithEncoding(WrapNotNull(encoding), aFatal);
+  InitWithEncoding(WrapNotNull(encoding), aOptions);
 }
 
 void
 TextDecoder::InitWithEncoding(NotNull<const Encoding*> aEncoding,
-                              const bool aFatal)
+                              const TextDecoderOptions& aOptions)
 {
   aEncoding->Name(mEncoding);
-  // If the constructor is called with an options argument,
-  // and the fatal property of the dictionary is set,
-  // set the internal fatal flag of the decoder object.
-  mFatal = aFatal;
+  // Store the flags passed via our options dictionary.
+  mFatal = aOptions.mFatal;
+  mIgnoreBOM = aOptions.mIgnoreBOM;
 
   // Create a decoder object for mEncoding.
-  mDecoder = aEncoding->NewDecoderWithBOMRemoval();
+  if (mIgnoreBOM) {
+    mDecoder = aEncoding->NewDecoderWithoutBOMHandling();
+  } else {
+    mDecoder = aEncoding->NewDecoderWithBOMRemoval();
+  }
 }
 
 void

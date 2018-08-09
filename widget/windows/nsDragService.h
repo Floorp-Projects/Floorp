@@ -25,7 +25,7 @@ public:
   
   // nsBaseDragService
   virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
-                                         nsIScriptableRegion* aRegion,
+                                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                                          uint32_t aActionType);
 
   // nsIDragSession
@@ -54,7 +54,7 @@ protected:
 
   // Create a bitmap for drag operations
   bool CreateDragImage(nsINode *aDOMNode,
-                       nsIScriptableRegion *aRegion,
+                       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
                        SHDRAGIMAGE *psdi);
 
   IDataObject * mDataObject;

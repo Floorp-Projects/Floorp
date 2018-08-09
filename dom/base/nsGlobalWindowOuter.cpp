@@ -6267,8 +6267,8 @@ nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
   }
 
   nsIDocument* doc = rootWindow->GetExtantDoc();
-  // See if we contain a XUL document.
-  if (!doc || !doc->IsXULDocument()) {
+
+  if (!doc) {
     return;
   }
   // selectionchange action is only used for mozbrowser, not for XUL. So we bypass
@@ -6276,7 +6276,7 @@ nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
   if (!anAction.EqualsLiteral("selectionchange")) {
     // Retrieve the command dispatcher and call updateCommands on it.
     nsIDOMXULCommandDispatcher* xulCommandDispatcher =
-      doc->AsXULDocument()->GetCommandDispatcher();
+      doc->GetCommandDispatcher();
     if (xulCommandDispatcher) {
       nsContentUtils::AddScriptRunner(new CommandDispatcher(xulCommandDispatcher,
                                                             anAction));

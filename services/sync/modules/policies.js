@@ -470,8 +470,9 @@ SyncScheduler.prototype = {
   updateClientMode: function updateClientMode() {
     // Nothing to do if it's the same amount
     let numClients = this.numClients;
-    if (numClients == this.numClientsLastSync)
+    if (numClients == this.numClientsLastSync) {
       return;
+    }
 
     this._log.debug(`Client count: ${this.numClientsLastSync} -> ${numClients}`);
     this.numClientsLastSync = numClients;
@@ -661,8 +662,9 @@ SyncScheduler.prototype = {
     this.globalScore = this.nextSync = 0;
 
     // Clear out any scheduled syncs
-    if (this.syncTimer)
+    if (this.syncTimer) {
       this.syncTimer.clear();
+    }
   },
 
 };

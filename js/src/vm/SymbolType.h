@@ -32,6 +32,11 @@ namespace JS {
 
 class Symbol : public js::gc::TenuredCell
 {
+  protected:
+    // Reserved word for Cell GC invariants. This also ensures minimum
+    // structure size.
+    uintptr_t reserved_;
+
   private:
     SymbolCode code_;
 
@@ -41,25 +46,23 @@ class Symbol : public js::gc::TenuredCell
 
     JSAtom* description_;
 
-    // The minimum allocation size is sizeof(JSString): 16 bytes on 32-bit
-    // architectures and 24 bytes on 64-bit.  A size_t of padding makes Symbol
-    // the minimum size on both.
-    size_t unused_;
-
     Symbol(SymbolCode code, js::HashNumber hash, JSAtom* desc)
-        : code_(code), hash_(hash), description_(desc)
-    {
-        // Silence warnings about unused_ being... unused.
-        (void)unused_;
-        static_assert(uint32_t(SymbolCode::WellKnownAPILimit) == JS::shadow::Symbol::WellKnownAPILimit,
-                      "JS::shadow::Symbol::WellKnownAPILimit must match SymbolCode::WellKnownAPILimit");
-    }
+        : reserved_(0), code_(code), hash_(hash), description_(desc) { }
 
     Symbol(const Symbol&) = delete;
     void operator=(const Symbol&) = delete;
 
     static Symbol*
     newInternal(JSContext* cx, SymbolCode code, js::HashNumber hash, JSAtom* description);
+
+    static void staticAsserts() {
+        static_assert(uint32_t(SymbolCode::WellKnownAPILimit) == JS::shadow::Symbol::WellKnownAPILimit,
+                      "JS::shadow::Symbol::WellKnownAPILimit must match SymbolCode::WellKnownAPILimit");
+        static_assert(offsetof(Symbol, reserved_) == offsetof(JS::shadow::Symbol, reserved_),
+                      "JS::shadow::Symbol::reserved_ offset must match SymbolCode::reserved_");
+        static_assert(offsetof(Symbol, code_) == offsetof(JS::shadow::Symbol, code_),
+                      "JS::shadow::Symbol::code_ offset must match SymbolCode::code_");
+    }
 
   public:
     static Symbol* new_(JSContext* cx, SymbolCode code, JSString* description);

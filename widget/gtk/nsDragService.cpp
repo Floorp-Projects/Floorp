@@ -312,7 +312,6 @@ NS_IMETHODIMP
 nsDragService::InvokeDragSession(nsINode *aDOMNode,
                                  const nsACString& aPrincipalURISpec,
                                  nsIArray * aArrayTransferables,
-                                 nsIScriptableRegion * aRegion,
                                  uint32_t aActionType,
                                  nsContentPolicyType aContentPolicyType =
                                    nsIContentPolicy::TYPE_OTHER)
@@ -328,14 +327,14 @@ nsDragService::InvokeDragSession(nsINode *aDOMNode,
 
     return nsBaseDragService::InvokeDragSession(aDOMNode, aPrincipalURISpec,
                                                 aArrayTransferables,
-                                                aRegion, aActionType,
+                                                aActionType,
                                                 aContentPolicyType);
 }
 
 // nsBaseDragService
 nsresult
 nsDragService::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
-                                     nsIScriptableRegion* aRegion,
+                                     const Maybe<CSSIntRegion>& aRegion,
                                      uint32_t aActionType)
 {
     // make sure that we have an array of transferables to use
@@ -350,9 +349,6 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
 
     if (!sourceList)
         return NS_OK;
-
-    // stored temporarily until the drag-begin signal has been received
-    mSourceRegion = aRegion;
 
     // save our action type
     GdkDragAction action = GDK_ACTION_DEFAULT;
@@ -395,8 +391,6 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
                                              action,
                                              1,
                                              &event);
-
-    mSourceRegion = nullptr;
 
     nsresult rv;
     if (context) {
@@ -1723,8 +1717,8 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     LayoutDeviceIntRect dragRect;
     nsPresContext* pc;
     RefPtr<SourceSurface> surface;
-    DrawDrag(mSourceNode, mSourceRegion, mScreenPosition,
-             &dragRect, &surface, &pc);
+    DrawDrag(mSourceNode, mRegion,
+             mScreenPosition, &dragRect, &surface, &pc);
     if (!pc)
         return;
 

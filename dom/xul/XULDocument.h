@@ -15,7 +15,6 @@
 #include "mozilla/StyleSheet.h"
 #include "nsForwardReference.h"
 #include "nsIContent.h"
-#include "nsIDOMXULCommandDispatcher.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
@@ -136,10 +135,6 @@ public:
     void TraceProtos(JSTracer* aTrc);
 
     // WebIDL API
-    nsIDOMXULCommandDispatcher* GetCommandDispatcher() const
-    {
-        return mCommandDispatcher;
-    }
     void AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                  const nsAString& aAttr, ErrorResult& aRv);
     void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
@@ -219,8 +214,6 @@ protected:
      * called in this situation.
      */
     bool                       mStillWalking;
-
-    nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     uint32_t mPendingSheets;
 

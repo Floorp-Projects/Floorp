@@ -59,6 +59,3 @@ if CONFIG['OS_TARGET'] != 'WINNT':
     DisableStlWrapping()
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
-
-if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

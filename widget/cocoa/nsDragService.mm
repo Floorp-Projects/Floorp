@@ -66,7 +66,7 @@ nsDragService::~nsDragService()
 
 NSImage*
 nsDragService::ConstructDragImage(nsINode* aDOMNode,
-                                  nsIScriptableRegion* aRegion,
+                                  const Maybe<CSSIntRegion>& aRegion,
                                   NSPoint* aDragPoint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -108,7 +108,7 @@ nsDragService::ConstructDragImage(nsINode* aDOMNode,
 
 NSImage*
 nsDragService::ConstructDragImage(nsINode* aDOMNode,
-                                  nsIScriptableRegion* aRegion,
+                                  const Maybe<CSSIntRegion>& aRegion,
                                   CSSIntPoint aPoint,
                                   LayoutDeviceIntRect* aDragRect)
  {
@@ -284,7 +284,7 @@ nsDragService::GetFilePath(NSPasteboardItem* item)
 
 nsresult
 nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
-                                     nsIScriptableRegion* aDragRgn,
+                                     const Maybe<CSSIntRegion>& aRegion,
                                      uint32_t aActionType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -344,7 +344,7 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
   [pbItem setDataProvider:mNativeDragView forTypes:types];
 
   NSPoint draggingPoint;
-  NSImage* image = ConstructDragImage(mSourceNode, aDragRgn, &draggingPoint);
+  NSImage* image = ConstructDragImage(mSourceNode, aRegion, &draggingPoint);
 
   NSRect localDragRect = image.alignmentRect;
   localDragRect.origin.x = draggingPoint.x;
@@ -712,7 +712,7 @@ nsDragService::DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint)
 
         // Create a new image; if one isn't returned don't change the current one.
         LayoutDeviceIntRect newRect;
-        NSImage* image = ConstructDragImage(mSourceNode, nullptr, screenPoint, &newRect);
+        NSImage* image = ConstructDragImage(mSourceNode, Nothing(), screenPoint, &newRect);
         if (image) {
           NSRect draggingRect = nsCocoaUtils::GeckoRectToCocoaRectDevPix(newRect, scaleFactor);
           [draggingItem setDraggingFrame:draggingRect contents:image];

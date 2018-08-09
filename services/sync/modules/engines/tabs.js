@@ -62,8 +62,9 @@ TabEngine.prototype = {
   async getChangedIDs() {
     // No need for a proper timestamp (no conflict resolution needed).
     let changedIDs = {};
-    if (this._tracker.modified)
+    if (this._tracker.modified) {
       changedIDs[this.service.clientsEngine.localID] = 0;
+    }
     return changedIDs;
   },
 

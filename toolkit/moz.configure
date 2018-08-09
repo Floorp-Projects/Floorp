@@ -1048,3 +1048,19 @@ def unsigned_addon_scopes(scopes):
 
 set_config('MOZ_UNSIGNED_APP_SCOPE', unsigned_addon_scopes.app)
 set_config('MOZ_UNSIGNED_SYSTEM_SCOPE', unsigned_addon_scopes.system)
+
+# Launcher process (Windows only)
+# ==============================================================
+
+option('--enable-launcher-process', help='Enable launcher process by default')
+
+@depends('--enable-launcher-process', target)
+def launcher(value, target):
+    enabled = bool(value)
+    if enabled and target.os != 'WINNT':
+        die('Cannot enable launcher process on %s', target.os)
+    if enabled:
+        return True
+
+set_config('MOZ_LAUNCHER_PROCESS', launcher)
+set_define('MOZ_LAUNCHER_PROCESS', launcher)

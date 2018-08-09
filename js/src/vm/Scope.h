@@ -26,6 +26,7 @@
 
 namespace js {
 
+class BaseScopeData;
 class ModuleObject;
 class Scope;
 
@@ -304,34 +305,24 @@ class Scope : public js::gc::TenuredCell
 {
     friend class GCMarker;
 
-    // The kind determines data_.
-    //
-    // The memory here must be fully initialized, since otherwise the magic_
-    // value for gc::RelocationOverlay will land in the padding and may be
-    // stale.
-    union {
-        ScopeKind kind_;
-        uintptr_t paddedKind_;
-    };
-
     // The enclosing scope or nullptr.
     GCPtrScope enclosing_;
+
+    // The kind determines data_.
+    ScopeKind kind_;
 
     // If there are any aliased bindings, the shape for the
     // EnvironmentObject. Otherwise nullptr.
     GCPtrShape environmentShape_;
 
   protected:
-    uintptr_t data_;
+    BaseScopeData* data_;
 
     Scope(ScopeKind kind, Scope* enclosing, Shape* environmentShape)
       : enclosing_(enclosing),
+        kind_(kind),
         environmentShape_(environmentShape),
-        data_(0)
-    {
-        paddedKind_ = 0;
-        kind_ = kind;
-    }
+        data_(nullptr) { }
 
     static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
                          HandleShape envShape);
@@ -349,7 +340,7 @@ class Scope : public js::gc::TenuredCell
     template <typename T, typename D>
     void initData(mozilla::UniquePtr<T, D> data) {
         MOZ_ASSERT(!data_);
-        data_ = reinterpret_cast<uintptr_t>(data.release());
+        data_ = data.release();
     }
 
   public:
@@ -469,7 +460,7 @@ class LexicalScope : public Scope
   public:
     // Data is public because it is created by the frontend. See
     // Parser<FullParseHandler>::newLexicalScopeData.
-    struct Data : BaseScopeData
+    struct Data : public BaseScopeData
     {
         // Bindings are sorted by kind in both frames and environments.
         //
@@ -505,11 +496,11 @@ class LexicalScope : public Scope
                                         uint32_t firstFrameSlot, HandleScope enclosing);
 
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     static uint32_t nextFrameSlot(Scope* start);
@@ -566,7 +557,7 @@ class FunctionScope : public Scope
   public:
     // Data is public because it is created by the
     // frontend. See Parser<FullParseHandler>::newFunctionScopeData.
-    struct Data : BaseScopeData
+    struct Data : public BaseScopeData
     {
         // The canonical function of the scope, as during a scope walk we
         // often query properties of the JSFunction (e.g., is the function an
@@ -640,11 +631,11 @@ class FunctionScope : public Scope
                                          HandleFunction fun, HandleScope enclosing);
 
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
   public:
@@ -699,7 +690,7 @@ class VarScope : public Scope
   public:
     // Data is public because it is created by the
     // frontend. See Parser<FullParseHandler>::newVarScopeData.
-    struct Data : BaseScopeData
+    struct Data : public BaseScopeData
     {
         // All bindings are vars.
         uint32_t length = 0;
@@ -732,11 +723,11 @@ class VarScope : public Scope
                                     HandleScope enclosing);
 
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
   public:
@@ -822,11 +813,11 @@ class GlobalScope : public Scope
                                        MutableHandle<UniquePtr<Data>> data);
 
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
   public:
@@ -879,7 +870,7 @@ class EvalScope : public Scope
   public:
     // Data is public because it is created by the frontend. See
     // Parser<FullParseHandler>::newEvalScopeData.
-    struct Data : BaseScopeData
+    struct Data : public BaseScopeData
     {
         // All bindings in an eval script are 'var' bindings. The implicit
         // lexical scope around the eval is present regardless of strictness
@@ -917,11 +908,11 @@ class EvalScope : public Scope
                                      HandleScope enclosing);
 
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
   public:
@@ -1014,11 +1005,11 @@ class ModuleScope : public Scope
                                        Handle<ModuleObject*> module, HandleScope enclosing);
 
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
   public:
@@ -1042,7 +1033,7 @@ class WasmInstanceScope : public Scope
     static const ScopeKind classScopeKind_ = ScopeKind::WasmInstance;
 
   public:
-    struct Data : BaseScopeData
+    struct Data : public BaseScopeData
     {
         uint32_t memoriesStart = 0;
         uint32_t globalsStart = 0;
@@ -1064,11 +1055,11 @@ class WasmInstanceScope : public Scope
 
   private:
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
   public:
@@ -1101,7 +1092,7 @@ class WasmFunctionScope : public Scope
     static const ScopeKind classScopeKind_ = ScopeKind::WasmFunction;
 
   public:
-    struct Data : BaseScopeData
+    struct Data : public BaseScopeData
     {
         uint32_t length = 0;
         uint32_t nextFrameSlot = 0;
@@ -1119,11 +1110,11 @@ class WasmFunctionScope : public Scope
 
   private:
     Data& data() {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
     const Data& data() const {
-        return *reinterpret_cast<Data*>(data_);
+        return *static_cast<Data*>(data_);
     }
 
   public:

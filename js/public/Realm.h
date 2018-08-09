@@ -73,6 +73,11 @@ GetCompartmentForRealm(Realm* realm)
 extern JS_PUBLIC_API(Realm*)
 GetObjectRealmOrNull(JSObject* obj);
 
+// Return a script's realm. All scripts are created in a particular realm, which
+// never changes.
+extern JS_PUBLIC_API(Realm*)
+GetScriptRealm(JSScript* script);
+
 // Get the value of the "private data" internal field of the given Realm.
 // This field is initially null and is set using SetRealmPrivate.
 // It's a pointer to embeddding-specific data that SpiderMonkey never uses.

@@ -796,7 +796,7 @@ WasmHasTier2CompilationCompleted(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<WasmModuleObject*> module(cx, &unwrapped->as<WasmModuleObject>());
-    args.rval().set(BooleanValue(module->module().compilationComplete()));
+    args.rval().set(BooleanValue(!module->module().testingTier2Active()));
     return true;
 }
 

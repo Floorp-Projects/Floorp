@@ -1421,11 +1421,9 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 
     }
 
-#if defined(GP_PLAT_amd64_linux)
-    // There's no RuleSet for the specified address.  On amd64_linux, see if
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
+    // There's no RuleSet for the specified address.  On amd64/x86_linux, see if
     // it's possible to recover the caller's frame by using the frame pointer.
-    // This would probably work for the 32-bit case too, but hasn't been
-    // tested for that case.
 
     // We seek to compute (new_IP, new_SP, new_BP) from (old_BP, stack image),
     // and assume the following layout:
@@ -1473,7 +1471,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
         }
       }
     }
-#endif // defined(GP_PLAT_amd64_linux)
+#endif // defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
 
     // We failed to recover a frame either using CFI or FP chasing, and we
     // have no other ways to recover the frame.  So we have to give up.

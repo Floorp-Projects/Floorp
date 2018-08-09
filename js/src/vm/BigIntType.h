@@ -38,13 +38,16 @@ class BigInt final : public js::gc::TenuredCell
     friend bool js::StringToBigIntImpl(const mozilla::Range<const CharT>& chars,
                                        uint8_t radix, Handle<BigInt*> res);
 
+  protected:
+    // Reserved word for Cell GC invariants. This also ensures minimum
+    // structure size.
+    uintptr_t reserved_;
+
   private:
-    // The minimum allocation size is currently 16 bytes (see
-    // SortedArenaList in gc/ArenaList.h).
-    union {
-        mpz_t num_;
-        uint8_t unused_[js::gc::MinCellSize];
-    };
+    mpz_t num_;
+
+  protected:
+    BigInt() : reserved_(0) { }
 
   public:
     // Allocate and initialize a BigInt value

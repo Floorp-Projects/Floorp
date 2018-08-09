@@ -45,38 +45,21 @@ function* testSteps()
   let db = request.result;
   db.onerror = errorHandler;
 
-  info("Storing wasm");
+  info("Testing failure to store wasm");
 
   let objectStore = db.transaction([objectStoreName], "readwrite")
                       .objectStore(objectStoreName);
-  request = objectStore.add(wasmData.value, wasmData.key);
-  request.onsuccess = continueToNextStepSync;
-  yield undefined;
 
-  is(request.result, wasmData.key, "Got correct key");
-
-  info("Getting wasm");
-
-  request = objectStore.get(wasmData.key);
-  request.onsuccess = continueToNextStepSync;
-  yield undefined;
-
-  info("Verifying wasm");
-
-  verifyWasmModule(request.result, wasmData.value);
-  yield undefined;
-
-  info("Getting wasm in new transaction");
-
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName).get(wasmData.key);
-  request.onsuccess = continueToNextStepSync;
-  yield undefined;
-
-  info("Verifying wasm");
-
-  verifyWasmModule(request.result, wasmData.value);
-  yield undefined;
+  // storing a wasm module in IDB should now fail
+  let failed = false;
+  try {
+    objectStore.add(wasmData.value, wasmData.key);
+  } catch (err) {
+    failed = true;
+    ok(err instanceof DOMException, "caught right error type");
+    is(err.name, "DataCloneError", "caught right error name");
+  }
+  ok(failed, "error was thrown");
 
   finishTest();
 }

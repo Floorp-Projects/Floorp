@@ -211,6 +211,13 @@ js::IsExtensible(JSContext* cx, HandleObject obj, bool* extensible)
     }
 
     *extensible = obj->nonProxyIsExtensible();
+
+    // If the following assertion fails, there's somewhere else a missing
+    // call to shrinkCapacityToInitializedLength() which needs to be found and
+    // fixed.
+    MOZ_ASSERT_IF(obj->isNative() && !*extensible,
+                  obj->as<NativeObject>().getDenseInitializedLength() ==
+                  obj->as<NativeObject>().getDenseCapacity());
     return true;
 }
 

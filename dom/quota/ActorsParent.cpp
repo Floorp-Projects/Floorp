@@ -5361,10 +5361,6 @@ QuotaManager::EnsureOriginIsInitializedInternal(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    mTemporaryStorageInitialized = true;
-
-    CheckTemporaryStorageLimits();
   }
 
   bool created;

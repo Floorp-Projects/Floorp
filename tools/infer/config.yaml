@@ -1,0 +1,23 @@
+---
+target: obj-x86_64-pc-linux-gnu
+# It is used by 'mach static-analysis' and 'mozreview static-analysis bot'
+# in order to have consistency across the used checkers.
+platforms:
+  - linux64
+infer_checkers:
+  - name: check-nullable
+    publish: !!bool yes
+  - name: eradicate
+    publish: !!bool no
+  - name: quandary
+    publish: !!bool yes
+  - name: starvation
+    publish: !!bool yes
+  - name: litho
+    publish: !!bool yes
+  - name: racerd
+    publish: !!bool yes
+  - name: liveness
+    publish: !!bool yes
+# Third party files from mozilla-central
+third_party: tools/rewriting/ThirdPartyPaths.txt

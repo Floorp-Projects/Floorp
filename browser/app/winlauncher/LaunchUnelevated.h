@@ -7,11 +7,22 @@
 #ifndef mozilla_LaunchUnelevated_h
 #define mozilla_LaunchUnelevated_h
 
+#include "LauncherProcessWin.h"
 #include "mozilla/Maybe.h"
+#include "nsWindowsHelpers.h"
 
 namespace mozilla {
 
-mozilla::Maybe<bool> IsElevated();
+enum class ElevationState
+{
+  eNormalUser = 0,
+  eElevated = (1 << 0),
+  eHighIntegrityNoUAC = (1 << 1),
+};
+
+mozilla::Maybe<ElevationState>
+GetElevationState(LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken);
+
 bool LaunchUnelevated(int aArgc, wchar_t* aArgv[]);
 
 } // namespace mozilla

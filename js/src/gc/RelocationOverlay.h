@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 
+#include "gc/Cell.h"
 #include "js/HeapAPI.h"
 #include "vm/JSObject.h"
 #include "vm/Shape.h"
@@ -23,49 +24,36 @@
 namespace js {
 namespace gc {
 
-struct Cell;
-
 /*
  * This structure overlays a Cell that has been moved and provides a way to find
  * its new location. It's used during generational and compacting GC.
  */
-class RelocationOverlay
+class RelocationOverlay : public Cell
 {
-    /* See comment in js/public/HeapAPI.h. */
-    static const uint32_t Relocated = js::gc::Relocated;
-
-    /*
-     * Keep the low 32 bits untouched. Use them to distinguish strings from
-     * objects in the nursery.
-     */
-    uint32_t preserve_;
-
-    /* Set to Relocated when moved. */
-    uint32_t magic_;
-
-    /* The location |this| was moved to. */
-    Cell* newLocation_;
+    // First word of a Cell has additional requirements from GC. The GC flags
+    // determine if a Cell is a normal entry or is a RelocationOverlay.
+    //                3         0
+    //  -------------------------
+    //  | NewLocation | GCFlags |
+    //  -------------------------
+    uintptr_t dataWithTag_;
 
     /* A list entry to track all relocated things. */
     RelocationOverlay* next_;
 
   public:
     static const RelocationOverlay* fromCell(const Cell* cell) {
-        return reinterpret_cast<const RelocationOverlay*>(cell);
+        return static_cast<const RelocationOverlay*>(cell);
     }
 
     static RelocationOverlay* fromCell(Cell* cell) {
-        return reinterpret_cast<RelocationOverlay*>(cell);
-    }
-
-    bool isForwarded() const {
-        (void) preserve_; // Suppress warning
-        return magic_ == Relocated;
+        return static_cast<RelocationOverlay*>(cell);
     }
 
     Cell* forwardingAddress() const {
         MOZ_ASSERT(isForwarded());
-        return newLocation_;
+        uintptr_t newLocation = dataWithTag_ & ~Cell::RESERVED_MASK;
+        return reinterpret_cast<Cell*>(newLocation);
     }
 
     void forwardTo(Cell* cell);
@@ -78,10 +66,6 @@ class RelocationOverlay
     RelocationOverlay* next() const {
         MOZ_ASSERT(isForwarded());
         return next_;
-    }
-
-    static bool isCellForwarded(const Cell* cell) {
-        return fromCell(cell)->isForwarded();
     }
 };
 

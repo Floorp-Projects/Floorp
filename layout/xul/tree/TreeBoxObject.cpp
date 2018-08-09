@@ -7,7 +7,6 @@
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsCOMPtr.h"
 #include "nsXULElement.h"
-#include "nsIScriptableRegion.h"
 #include "nsTreeContentView.h"
 #include "nsITreeSelection.h"
 #include "ChildIterator.h"
@@ -312,19 +311,6 @@ int32_t TreeBoxObject::GetPageLength()
   if (body)
     return body->PageLength();
   return 0;
-}
-
-already_AddRefed<nsIScriptableRegion>
-TreeBoxObject::SelectionRegion()
-{
-  nsTreeBodyFrame* body = GetTreeBodyFrame();
-  if (!body) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIScriptableRegion> region;
-  body->GetSelectionRegion(getter_AddRefs(region));
-  return region.forget();
 }
 
 NS_IMETHODIMP

@@ -9634,9 +9634,6 @@ public:
   GetFile(FileInfo* aFileInfo);
 
   already_AddRefed<nsIFile>
-  GetCheckedFile(FileInfo* aFileInfo);
-
-  already_AddRefed<nsIFile>
   GetJournalFile(FileInfo* aFileInfo);
 
   nsresult
@@ -9646,16 +9643,8 @@ public:
                        bool aCompress);
 
   nsresult
-  ReplaceFile(nsIFile* aFile,
-              nsIFile* aNewFile,
-              nsIFile* aNewJournalFile);
-
-  nsresult
   RemoveFile(nsIFile* aFile,
              nsIFile* aJournalFile);
-
-  already_AddRefed<FileInfo>
-  GetNewFileInfo();
 
 private:
   nsresult
@@ -9736,136 +9725,6 @@ DeserializeStructuredCloneFile(FileManager* aFileManager,
 }
 
 nsresult
-CheckWasmModule(FileHelper* aFileHelper,
-                StructuredCloneFile* aBytecodeFile,
-                StructuredCloneFile* aCompiledFile)
-{
-  MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aFileHelper);
-  MOZ_ASSERT(aBytecodeFile);
-  MOZ_ASSERT(aCompiledFile);
-  MOZ_ASSERT(aBytecodeFile->mType == StructuredCloneFile::eWasmBytecode);
-  MOZ_ASSERT(aCompiledFile->mType == StructuredCloneFile::eWasmCompiled);
-
-  nsCOMPtr<nsIFile> compiledFile =
-    aFileHelper->GetCheckedFile(aCompiledFile->mFileInfo);
-  if (NS_WARN_IF(!compiledFile)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv;
-
-  bool match;
-  {
-    ScopedPRFileDesc compiledFileDesc;
-    rv = compiledFile->OpenNSPRFileDesc(PR_RDONLY,
-                                        0644,
-                                        &compiledFileDesc.rwget());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    JS::BuildIdCharVector buildId;
-    bool ok = GetBuildId(&buildId);
-    if (NS_WARN_IF(!ok)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    match = JS::CompiledWasmModuleAssumptionsMatch(compiledFileDesc,
-                                                   std::move(buildId));
-  }
-  if (match) {
-    return NS_OK;
-  }
-
-  // Re-compile the module.  It would be preferable to do this in the child
-  // (content process) instead of here in the parent, but that would be way more
-  // complex and without significant memory allocation or security benefits.
-  // See the discussion starting from
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1312808#c9 for more details.
-  nsCOMPtr<nsIFile> bytecodeFile =
-    aFileHelper->GetCheckedFile(aBytecodeFile->mFileInfo);
-  if (NS_WARN_IF(!bytecodeFile)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ScopedPRFileDesc bytecodeFileDesc;
-  rv = bytecodeFile->OpenNSPRFileDesc(PR_RDONLY,
-                                      0644,
-                                      &bytecodeFileDesc.rwget());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  JS::BuildIdCharVector buildId;
-  bool ok = GetBuildId(&buildId);
-  if (NS_WARN_IF(!ok)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<JS::WasmModule> module = JS::DeserializeWasmModule(bytecodeFileDesc,
-                                                            nullptr,
-                                                            std::move(buildId),
-                                                            nullptr,
-                                                            0);
-  if (NS_WARN_IF(!module)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  size_t compiledSize = module->compiledSerializedSize();
-  UniquePtr<uint8_t[]> compiled(new (fallible) uint8_t[compiledSize]);
-  if (NS_WARN_IF(!compiled)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  module->compiledSerialize(compiled.get(), compiledSize);
-
-  nsCOMPtr<nsIInputStream> inputStream;
-  rv = NS_NewByteInputStream(getter_AddRefs(inputStream),
-                             reinterpret_cast<const char*>(compiled.get()),
-                             compiledSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  RefPtr<FileInfo> newFileInfo = aFileHelper->GetNewFileInfo();
-
-  nsCOMPtr<nsIFile> newFile = aFileHelper->GetFile(newFileInfo);
-  if (NS_WARN_IF(!newFile)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIFile> newJournalFile =
-    aFileHelper->GetJournalFile(newFileInfo);
-  if (NS_WARN_IF(!newJournalFile)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = aFileHelper->CreateFileFromStream(newFile,
-                                         newJournalFile,
-                                         inputStream,
-                                         /* aCompress */ false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    nsresult rv2 = aFileHelper->RemoveFile(newFile, newJournalFile);
-    if (NS_WARN_IF(NS_FAILED(rv2))) {
-      return rv;
-    }
-    return rv;
-  }
-
-  rv = aFileHelper->ReplaceFile(compiledFile, newFile, newJournalFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    nsresult rv2 = aFileHelper->RemoveFile(newFile, newJournalFile);
-    if (NS_WARN_IF(NS_FAILED(rv2))) {
-      return rv;
-    }
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
 DeserializeStructuredCloneFiles(FileManager* aFileManager,
                                 const nsAString& aText,
                                 nsTArray<StructuredCloneFile>& aResult,
@@ -9878,7 +9737,6 @@ DeserializeStructuredCloneFiles(FileManager* aFileManager,
 
   nsAutoString token;
   nsresult rv;
-  Maybe<FileHelper> fileHelper;
 
   while (tokenizer.hasMoreTokens()) {
     token = tokenizer.nextToken();
@@ -9898,25 +9756,9 @@ DeserializeStructuredCloneFiles(FileManager* aFileManager,
       *aHasPreprocessInfo = true;
     }
     else if (file->mType == StructuredCloneFile::eWasmCompiled) {
-      if (fileHelper.isNothing()) {
-        fileHelper.emplace(aFileManager);
-
-        rv = fileHelper->Init();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
-
       MOZ_ASSERT(aResult.Length() > 1);
       MOZ_ASSERT(aResult[aResult.Length() - 2].mType ==
                    StructuredCloneFile::eWasmBytecode);
-
-      StructuredCloneFile* previousFile = &aResult[aResult.Length() - 2];
-
-      rv = CheckWasmModule(fileHelper.ptr(), previousFile, file);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
 
       *aHasPreprocessInfo = true;
     }
@@ -9978,9 +9820,7 @@ SerializeStructuredCloneFiles(
   for (uint32_t index = 0; index < count; index++) {
     const StructuredCloneFile& file = aFiles[index];
 
-    if (aForPreprocess &&
-        file.mType != StructuredCloneFile::eWasmBytecode &&
-        file.mType != StructuredCloneFile::eWasmCompiled) {
+    if (aForPreprocess && file.mType != StructuredCloneFile::eWasmBytecode) {
       continue;
     }
 
@@ -10064,15 +9904,14 @@ SerializeStructuredCloneFiles(
         break;
       }
 
-      case StructuredCloneFile::eWasmBytecode:
-      case StructuredCloneFile::eWasmCompiled: {
+      case StructuredCloneFile::eWasmBytecode: {
         if (!aForPreprocess) {
           SerializedStructuredCloneFile* serializedFile =
             aResult.AppendElement(fallible);
           MOZ_ASSERT(serializedFile);
 
           serializedFile->file() = null_t();
-          serializedFile->type() = file.mType;
+          serializedFile->type() = StructuredCloneFile::eWasmBytecode;
         } else {
           RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
           impl->SetFileId(file.mFileInfo->Id());
@@ -10091,11 +9930,21 @@ SerializeStructuredCloneFiles(
           MOZ_ASSERT(serializedFile);
 
           serializedFile->file() = ipcBlob;
-          serializedFile->type() = file.mType;
+          serializedFile->type() = StructuredCloneFile::eWasmBytecode;
 
           aDatabase->MapBlob(ipcBlob, file.mFileInfo);
         }
 
+        break;
+      }
+
+      case StructuredCloneFile::eWasmCompiled: {
+        SerializedStructuredCloneFile* serializedFile =
+          aResult.AppendElement(fallible);
+        MOZ_ASSERT(serializedFile);
+
+        serializedFile->file() = null_t();
+        serializedFile->type() = StructuredCloneFile::eWasmCompiled;
         break;
       }
 
@@ -29138,22 +28987,6 @@ FileHelper::GetFile(FileInfo* aFileInfo)
 }
 
 already_AddRefed<nsIFile>
-FileHelper::GetCheckedFile(FileInfo* aFileInfo)
-{
-  MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aFileInfo);
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mFileDirectory);
-
-  const int64_t fileId = aFileInfo->Id();
-  MOZ_ASSERT(fileId > 0);
-
-  nsCOMPtr<nsIFile> file =
-    mFileManager->GetCheckedFileForId(mFileDirectory, fileId);
-  return file.forget();
-}
-
-already_AddRefed<nsIFile>
 FileHelper::GetJournalFile(FileInfo* aFileInfo)
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -29280,59 +29113,6 @@ FileHelper::CreateFileFromStream(nsIFile* aFile,
 }
 
 nsresult
-FileHelper::ReplaceFile(nsIFile* aFile,
-                        nsIFile* aNewFile,
-                        nsIFile* aNewJournalFile)
-{
-  MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aFile);
-  MOZ_ASSERT(aNewFile);
-  MOZ_ASSERT(aNewJournalFile);
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mFileDirectory);
-  MOZ_ASSERT(mJournalDirectory);
-
-  nsresult rv;
-
-  int64_t fileSize;
-
-  if (mFileManager->EnforcingQuota()) {
-    rv = aFile->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  nsAutoString fileName;
-  rv = aFile->GetLeafName(fileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aNewFile->RenameTo(nullptr, fileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (mFileManager->EnforcingQuota()) {
-    QuotaManager* quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    quotaManager->DecreaseUsageForOrigin(mFileManager->Type(),
-                                         mFileManager->Group(),
-                                         mFileManager->Origin(),
-                                         fileSize);
-  }
-
-  rv = aNewJournalFile->Remove(false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
 FileHelper::RemoveFile(nsIFile* aFile,
                        nsIFile* aJournalFile)
 {
@@ -29368,14 +29148,6 @@ FileHelper::RemoveFile(nsIFile* aFile,
   }
 
   return NS_OK;
-}
-
-already_AddRefed<FileInfo>
-FileHelper::GetNewFileInfo()
-{
-  MOZ_ASSERT(mFileManager);
-
-  return mFileManager->GetNewFileInfo();
 }
 
 class FileHelper::ReadCallback final : public nsIInputStreamCallback

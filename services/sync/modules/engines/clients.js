@@ -640,8 +640,9 @@ ClientEngine.prototype = {
     this._log.debug("Handling HMAC mismatch for " + item.id);
 
     let base = await SyncEngine.prototype.handleHMACMismatch.call(this, item, mayRetry);
-    if (base != SyncEngine.kRecoveryStrategy.error)
+    if (base != SyncEngine.kRecoveryStrategy.error) {
       return base;
+    }
 
     // It's a bad client record. Save it to be deleted at the end of the sync.
     this._log.debug("Bad client record detected. Scheduling for deletion.");
@@ -1054,8 +1055,9 @@ ClientStore.prototype = {
   async getAllIDs() {
     let ids = {};
     ids[this.engine.localID] = true;
-    for (let id in this._remoteClients)
+    for (let id in this._remoteClients) {
       ids[id] = true;
+    }
     return ids;
   },
 

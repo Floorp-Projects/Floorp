@@ -36,6 +36,7 @@ private:
   // The connection is owned by DBus library
   RefPtr<DBusConnection>  mConnection;
   nsCString               mAppName;
+  nsCString               mPathName;
 };
 
 #endif // __nsDBusRemoteService_h__

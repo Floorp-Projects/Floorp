@@ -2139,29 +2139,9 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                                 action, event, dataTransfer);
   }
   else {
-    // if dragging within a XUL tree and no custom drag image was
-    // set, the region argument to InvokeDragSessionWithImage needs
-    // to be set to the area encompassing the selected rows of the
-    // tree to ensure that the drag feedback gets clipped to those
-    // rows. For other content, region should be null.
-    nsCOMPtr<nsIScriptableRegion> region;
-#ifdef MOZ_XUL
-    if (dragTarget && !dragImage) {
-      if (dragTarget->NodeInfo()->Equals(nsGkAtoms::treechildren,
-                                         kNameSpaceID_XUL)) {
-        nsTreeBodyFrame* treeBody =
-          do_QueryFrame(dragTarget->GetPrimaryFrame());
-        if (treeBody) {
-          treeBody->GetSelectionRegion(getter_AddRefs(region));
-        }
-      }
-    }
-#endif
-
     dragService->InvokeDragSessionWithImage(dragTarget,
                                             aPrincipalURISpec, transArray,
-                                            region, action,
-                                            dragImage,
+                                            action, dragImage,
                                             imageX, imageY, event,
                                             dataTransfer);
   }

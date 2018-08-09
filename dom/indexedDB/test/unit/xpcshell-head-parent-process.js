@@ -646,7 +646,3 @@ var SpecialPowers = {
     }
   },
 };
-
-// This can be removed soon when on by default.
-if (SpecialPowers.isMainProcess())
-  SpecialPowers.setBoolPref("javascript.options.wasm_baselinejit", true);
