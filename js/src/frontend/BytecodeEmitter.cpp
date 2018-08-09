@@ -515,51 +515,22 @@ BytecodeEmitter::updateSourceCoordNotes(uint32_t offset)
     return true;
 }
 
-bool
-BytecodeEmitter::emitLoopHead(ParseNode* nextpn, JumpTarget* top)
+Maybe<uint32_t>
+BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn)
 {
-    if (nextpn) {
-        /*
-         * Try to give the JSOP_LOOPHEAD the same line number as the next
-         * instruction. nextpn is often a block, in which case the next
-         * instruction typically comes from the first statement inside.
-         */
-        if (nextpn->isKind(ParseNodeKind::LexicalScope))
-            nextpn = nextpn->scopeBody();
-        MOZ_ASSERT_IF(nextpn->isKind(ParseNodeKind::StatementList), nextpn->isArity(PN_LIST));
-        if (nextpn->isKind(ParseNodeKind::StatementList) && nextpn->pn_head)
-            nextpn = nextpn->pn_head;
-        if (!updateSourceCoordNotes(nextpn->pn_pos.begin))
-            return false;
-    }
+    if (!nextpn)
+        return Nothing();
 
-    *top = { offset() };
-    return emit1(JSOP_LOOPHEAD);
-}
+    // Try to give the JSOP_LOOPHEAD and JSOP_LOOPENTRY the same line number as
+    // the next instruction. nextpn is often a block, in which case the next
+    // instruction typically comes from the first statement inside.
+    if (nextpn->isKind(ParseNodeKind::LexicalScope))
+        nextpn = nextpn->scopeBody();
+    MOZ_ASSERT_IF(nextpn->isKind(ParseNodeKind::StatementList), nextpn->isArity(PN_LIST));
+    if (nextpn->isKind(ParseNodeKind::StatementList) && nextpn->pn_head)
+        nextpn = nextpn->pn_head;
 
-bool
-BytecodeEmitter::emitLoopEntry(ParseNode* nextpn, JumpList entryJump)
-{
-    if (nextpn) {
-        /* Update the line number, as for LOOPHEAD. */
-        if (nextpn->isKind(ParseNodeKind::LexicalScope))
-            nextpn = nextpn->scopeBody();
-        MOZ_ASSERT_IF(nextpn->isKind(ParseNodeKind::StatementList), nextpn->isArity(PN_LIST));
-        if (nextpn->isKind(ParseNodeKind::StatementList) && nextpn->pn_head)
-            nextpn = nextpn->pn_head;
-        if (!updateSourceCoordNotes(nextpn->pn_pos.begin))
-            return false;
-    }
-
-    JumpTarget entry{ offset() };
-    patchJumpsToTarget(entryJump, entry);
-
-    LoopControl& loopInfo = innermostNestableControl->as<LoopControl>();
-    MOZ_ASSERT(loopInfo.loopDepth() > 0);
-
-    uint8_t loopDepthAndFlags = PackLoopEntryDepthHintAndFlags(loopInfo.loopDepth(),
-                                                               loopInfo.canIonOsr());
-    return emit2(JSOP_LOOPENTRY, loopDepthAndFlags);
+    return Some(nextpn->pn_pos.begin);
 }
 
 void
@@ -4680,12 +4651,10 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     // Jump down to the loop condition to minimize overhead, assuming at least
     // one iteration.  (This is also what we do for loops; whether this
     // assumption holds for spreads is an unanswered question.)
-    JumpList initialJump;
-    if (!emitJump(JSOP_GOTO, &initialJump))               // NEXT ITER ARR I (during the goto)
+    if (!loopInfo.emitEntryJump(this))                    // NEXT ITER ARR I (during the goto)
         return false;
 
-    JumpTarget top{ -1 };
-    if (!emitLoopHead(nullptr, &top))                     // NEXT ITER ARR I
+    if (!loopInfo.emitLoopHead(this, Nothing()))          // NEXT ITER ARR I
         return false;
 
     // When we enter the goto above, we have NEXT ITER ARR I on the stack. But
@@ -4694,8 +4663,6 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     // Increment manually to reflect this.
     this->stackDepth++;
 
-    JumpList beq;
-    JumpTarget breakTarget{ -1 };
     {
 #ifdef DEBUG
         auto loopDepth = this->stackDepth;
@@ -4713,7 +4680,7 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
         // and enclosing "update" offsets, as we do with for-loops.
 
         // COME FROM the beginning of the loop to here.
-        if (!emitLoopEntry(nullptr, initialJump))         // NEXT ITER ARR I
+        if (!loopInfo.emitLoopEntry(this, Nothing()))     // NEXT ITER ARR I
             return false;
 
         if (!emitDupAt(3))                                // NEXT ITER ARR I NEXT
@@ -4727,22 +4694,25 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
         if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // NEXT ITER ARR I RESULT DONE
             return false;
 
-        if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget)) // NEXT ITER ARR I RESULT
+        if (!loopInfo.emitLoopEnd(this, JSOP_IFEQ))       // NEXT ITER ARR I RESULT
             return false;
 
         MOZ_ASSERT(this->stackDepth == loopDepth);
     }
 
     // Let Ion know where the closing jump of this loop is.
-    if (!setSrcNoteOffset(noteIndex, 0, beq.offset - initialJump.offset))
+1    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
         return false;
 
     // No breaks or continues should occur in spreads.
     MOZ_ASSERT(loopInfo.breaks.offset == -1);
     MOZ_ASSERT(loopInfo.continues.offset == -1);
 
-    if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, breakTarget.offset))
+    if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, loopInfo.headOffset(),
+                            loopInfo.breakTargetOffset()))
+    {
         return false;
+    }
 
     if (!emit2(JSOP_PICK, 4))                             // ITER ARR FINAL_INDEX RESULT NEXT
         return false;
@@ -4871,12 +4841,10 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     if (!newSrcNote(SRC_FOR_OF, &noteIndex))
         return false;
 
-    JumpList initialJump;
-    if (!emitJump(JSOP_GOTO, &initialJump))               // NEXT ITER UNDEF
+    if (!loopInfo.emitEntryJump(this))                    // NEXT ITER UNDEF
         return false;
 
-    JumpTarget top{ -1 };
-    if (!emitLoopHead(nullptr, &top))                     // NEXT ITER UNDEF
+    if (!loopInfo.emitLoopHead(this, Nothing()))          // NEXT ITER UNDEF
         return false;
 
     // If the loop had an escaping lexical declaration, replace the current
@@ -4903,8 +4871,6 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
             return false;
     }
 
-    JumpList beq;
-    JumpTarget breakTarget{ -1 };
     {
 #ifdef DEBUG
         auto loopDepth = this->stackDepth;
@@ -4980,29 +4946,31 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         if (!loopInfo.emitEndCodeNeedingIteratorClose(this))
             return false;
 
-        // Set offset for continues.
-        loopInfo.continueTarget = { offset() };
+        loopInfo.setContinueTarget(offset());
 
-        if (!emitLoopEntry(forHeadExpr, initialJump))     // NEXT ITER UNDEF
-            return false;
+        if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(forHeadExpr)))
+            return false;                                 // NEXT ITER UNDEF
 
         if (!emit1(JSOP_FALSE))                           // NEXT ITER UNDEF FALSE
             return false;
-        if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget))
-            return false;                                 // NEXT ITER UNDEF
+        if (!loopInfo.emitLoopEnd(this, JSOP_IFEQ))       // NEXT ITER UNDEF
+            return false;
 
         MOZ_ASSERT(this->stackDepth == loopDepth);
     }
 
     // Let Ion know where the closing jump of this loop is.
-    if (!setSrcNoteOffset(noteIndex, 0, beq.offset - initialJump.offset))
+    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
         return false;
 
     if (!loopInfo.patchBreaksAndContinues(this))
         return false;
 
-    if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, breakTarget.offset))
+    if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, loopInfo.headOffset(),
+                            loopInfo.breakTargetOffset()))
+    {
         return false;
+    }
 
     return emitPopN(3);                                   //
 }
@@ -5069,12 +5037,10 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
 
     // Jump down to the loop condition to minimize overhead (assuming at least
     // one iteration, just like the other loop forms).
-    JumpList initialJump;
-    if (!emitJump(JSOP_GOTO, &initialJump))               // ITER ITERVAL
+    if (!loopInfo.emitEntryJump(this))                    // ITER ITERVAL
         return false;
 
-    JumpTarget top{ -1 };
-    if (!emitLoopHead(nullptr, &top))                     // ITER ITERVAL
+    if (!loopInfo.emitLoopHead(this, Nothing()))          // ITER ITERVAL
         return false;
 
     // If the loop had an escaping lexical declaration, replace the current
@@ -5122,13 +5088,13 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
         return false;
 
     // Set offset for continues.
-    loopInfo.continueTarget = { offset() };
+    loopInfo.setContinueTarget(offset());
 
     // Make sure this code is attributed to the "for".
     if (!updateSourceCoordNotes(forInHead->pn_pos.begin))
         return false;
 
-    if (!emitLoopEntry(nullptr, initialJump))             // ITER ITERVAL
+    if (!loopInfo.emitLoopEntry(this, Nothing()))         // ITER ITERVAL
         return false;
     if (!emit1(JSOP_POP))                                 // ITER
         return false;
@@ -5137,13 +5103,11 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
     if (!emit1(JSOP_ISNOITER))                            // ITER NEXTITERVAL? ISNOITER
         return false;
 
-    JumpList beq;
-    JumpTarget breakTarget{ -1 };
-    if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget))
-        return false;                                     // ITER NEXTITERVAL
+    if (!loopInfo.emitLoopEnd(this, JSOP_IFEQ))           // ITER NEXTITERVAL
+        return false;
 
     // Set the srcnote offset so we can find the closing jump.
-    if (!setSrcNoteOffset(noteIndex, 0, beq.offset - initialJump.offset))
+    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
         return false;
 
     if (!loopInfo.patchBreaksAndContinues(this))
@@ -5153,7 +5117,7 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
     if (!emit1(JSOP_POP))                                 // ITER
         return false;
 
-    if (!tryNoteList.append(JSTRY_FOR_IN, this->stackDepth, top.offset, offset()))
+    if (!tryNoteList.append(JSTRY_FOR_IN, this->stackDepth, loopInfo.headOffset(), offset()))
         return false;
 
     return emit1(JSOP_ENDITER);                           //
@@ -5244,21 +5208,21 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
         return false;
     if (!emit1(JSOP_NOP))
         return false;
-    ptrdiff_t tmp = offset();
+    ptrdiff_t top = offset();
 
-    JumpList jmp;
     if (forHead->pn_kid2) {
         /* Goto the loop condition, which branches back to iterate. */
-        if (!emitJump(JSOP_GOTO, &jmp))
+        if (!loopInfo.emitEntryJump(this))
             return false;
     }
 
     /* Emit code for the loop body. */
-    JumpTarget top{ -1 };
-    if (!emitLoopHead(forBody, &top))
+    if (!loopInfo.emitLoopHead(this, getOffsetForLoop(forBody)))
         return false;
-    if (jmp.offset == -1 && !emitLoopEntry(forBody, jmp))
-        return false;
+    if (!forHead->pn_kid2) {
+        if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(forBody)))
+            return false;
+    }
 
     if (!emitTreeInBranch(forBody))
         return false;
@@ -5266,7 +5230,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
     // Set loop and enclosing "update" offsets, for continue.  Note that we
     // continue to immediately *before* the block-freshening: continuing must
     // refresh the block.
-    if (!emitJumpTarget(&loopInfo.continueTarget))
+    if (!loopInfo.emitContinueTarget(this))
         return false;
 
     // ES 13.7.4.8 step 3.e. The per-iteration freshening.
@@ -5306,8 +5270,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
 
     if (forHead->pn_kid2) {
         /* Fix up the goto from top to target the loop condition. */
-        MOZ_ASSERT(jmp.offset >= 0);
-        if (!emitLoopEntry(forHead->pn_kid2, jmp))
+        if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(forHead->pn_kid2)))
             return false;
 
         if (!emitTree(forHead->pn_kid2))
@@ -5322,23 +5285,24 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
     }
 
     /* Set the first note offset so we can find the loop condition. */
-    if (!setSrcNoteOffset(noteIndex, 0, tmp3 - tmp))
+    if (!setSrcNoteOffset(noteIndex, 0, tmp3 - top))
         return false;
-    if (!setSrcNoteOffset(noteIndex, 1, loopInfo.continueTarget.offset - tmp))
+    if (!setSrcNoteOffset(noteIndex, 1, loopInfo.continueTargetOffset() - top))
         return false;
 
     /* If no loop condition, just emit a loop-closing jump. */
-    JumpList beq;
-    JumpTarget breakTarget{ -1 };
-    if (!emitBackwardJump(forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO, top, &beq, &breakTarget))
+    if (!loopInfo.emitLoopEnd(this, forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO))
         return false;
 
     /* The third note offset helps us find the loop-closing jump. */
-    if (!setSrcNoteOffset(noteIndex, 2, beq.offset - tmp))
+    if (!setSrcNoteOffset(noteIndex, 2, loopInfo.loopEndOffset() - top))
         return false;
 
-    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top.offset, breakTarget.offset))
+    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, loopInfo.headOffset(),
+                            loopInfo.breakTargetOffset()))
+    {
         return false;
+    }
 
     if (!loopInfo.patchBreaksAndContinues(this))
         return false;
@@ -5659,34 +5623,33 @@ BytecodeEmitter::emitDo(ParseNode* pn)
         return false;
 
     /* Compile the loop body. */
-    JumpTarget top;
-    if (!emitLoopHead(pn->pn_left, &top))
-        return false;
-
     LoopControl loopInfo(this, StatementKind::DoLoop);
 
-    JumpList empty;
-    if (!emitLoopEntry(nullptr, empty))
+    if (!loopInfo.emitLoopHead(this, getOffsetForLoop(pn->pn_left)))
+        return false;
+
+    if (!loopInfo.emitLoopEntry(this, Nothing()))
         return false;
 
     if (!emitTree(pn->pn_left))
         return false;
 
     // Set the offset for continues.
-    if (!emitJumpTarget(&loopInfo.continueTarget))
+    if (!loopInfo.emitContinueTarget(this))
         return false;
 
     /* Compile the loop condition, now that continues know where to go. */
     if (!emitTree(pn->pn_right))
         return false;
 
-    JumpList beq;
-    JumpTarget breakTarget{ -1 };
-    if (!emitBackwardJump(JSOP_IFNE, top, &beq, &breakTarget))
+    if (!loopInfo.emitLoopEnd(this, JSOP_IFNE))
         return false;
 
-    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top.offset, breakTarget.offset))
+    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, loopInfo.headOffset(),
+                            loopInfo.breakTargetOffset()))
+    {
         return false;
+    }
 
     /*
      * Update the annotations with the update and back edge positions, for
@@ -5695,9 +5658,10 @@ BytecodeEmitter::emitDo(ParseNode* pn)
      * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
      * note gets bigger.
      */
-    if (!setSrcNoteOffset(noteIndex2, 0, beq.offset - top.offset))
+    if (!setSrcNoteOffset(noteIndex2, 0, loopInfo.loopEndOffsetFromLoopHead()))
         return false;
-    if (!setSrcNoteOffset(noteIndex, 0, 1 + (loopInfo.continueTarget.offset - top.offset)))
+    // +1 for NOP above.
+    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.continueTargetOffsetFromLoopHead() + 1))
         return false;
 
     if (!loopInfo.patchBreaksAndContinues(this))
@@ -5743,36 +5707,36 @@ BytecodeEmitter::emitWhile(ParseNode* pn)
         return false;
 
     LoopControl loopInfo(this, StatementKind::WhileLoop);
-    loopInfo.continueTarget = top;
+    loopInfo.setContinueTarget(top.offset);
 
     unsigned noteIndex;
     if (!newSrcNote(SRC_WHILE, &noteIndex))
         return false;
 
-    JumpList jmp;
-    if (!emitJump(JSOP_GOTO, &jmp))
+    if (!loopInfo.emitEntryJump(this))
         return false;
 
-    if (!emitLoopHead(pn->pn_right, &top))
+    if (!loopInfo.emitLoopHead(this, getOffsetForLoop(pn->pn_right)))
         return false;
 
     if (!emitTreeInBranch(pn->pn_right))
         return false;
 
-    if (!emitLoopEntry(pn->pn_left, jmp))
+    if (!loopInfo.emitLoopEntry(this, getOffsetForLoop(pn->pn_left)))
         return false;
     if (!emitTree(pn->pn_left))
         return false;
 
-    JumpList beq;
-    JumpTarget breakTarget{ -1 };
-    if (!emitBackwardJump(JSOP_IFNE, top, &beq, &breakTarget))
+    if (!loopInfo.emitLoopEnd(this, JSOP_IFNE))
         return false;
 
-    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top.offset, breakTarget.offset))
+    if (!tryNoteList.append(JSTRY_LOOP, stackDepth, loopInfo.headOffset(),
+                            loopInfo.breakTargetOffset()))
+    {
         return false;
+    }
 
-    if (!setSrcNoteOffset(noteIndex, 0, beq.offset - jmp.offset))
+    if (!setSrcNoteOffset(noteIndex, 0, loopInfo.loopEndOffsetFromEntryJump()))
         return false;
 
     if (!loopInfo.patchBreaksAndContinues(this))
