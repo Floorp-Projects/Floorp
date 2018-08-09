@@ -5,6 +5,7 @@
 DIRS += [
     'actions',
     'components',
+    'middleware',
     'reducers',
 ]
 

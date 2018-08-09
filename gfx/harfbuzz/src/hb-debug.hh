@@ -28,12 +28,54 @@
 #define HB_DEBUG_HH
 
 #include "hb-private.hh"
+#include "hb-atomic-private.hh"
 #include "hb-dsalgs.hh"
 
 
 #ifndef HB_DEBUG
 #define HB_DEBUG 0
 #endif
+
+
+/*
+ * Global runtime options.
+ */
+
+struct hb_options_t
+{
+  unsigned int unused : 1; /* In-case sign bit is here. */
+  unsigned int initialized : 1;
+  unsigned int uniscribe_bug_compatible : 1;
+};
+
+union hb_options_union_t {
+  int i;
+  hb_options_t opts;
+};
+static_assert ((sizeof (hb_atomic_int_t) >= sizeof (hb_options_union_t)), "");
+
+HB_INTERNAL void
+_hb_options_init (void);
+
+extern HB_INTERNAL hb_atomic_int_t _hb_options;
+
+static inline hb_options_t
+hb_options (void)
+{
+  /* Make a local copy, so we can access bitfield threadsafely. */
+  hb_options_union_t u;
+  u.i = _hb_options.get_relaxed ();
+
+  if (unlikely (!u.i))
+    _hb_options_init ();
+
+  return u.opts;
+}
+
+
+/*
+ * Debug output (needs enabling at compile time.)
+ */
 
 static inline bool
 _hb_debug (unsigned int level,

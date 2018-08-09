@@ -994,7 +994,6 @@ mozJSComponentLoader::ImportInto(const nsACString& registryLocation,
     RootedValue targetVal(cx, targetValArg);
     RootedObject targetObject(cx, nullptr);
 
-    Maybe<JSAutoRealm> ar;
     if (optionalArgc) {
         // The caller passed in the optional second argument. Get it.
         if (targetVal.isObject()) {
@@ -1018,9 +1017,6 @@ mozJSComponentLoader::ImportInto(const nsACString& registryLocation,
         }
     } else {
         FindTargetObject(cx, &targetObject);
-        if (targetObject) {
-            ar.emplace(cx, targetObject);
-        }
     }
 
     js::AssertSameCompartment(cx, targetObject);

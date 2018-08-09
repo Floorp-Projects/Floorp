@@ -9,6 +9,9 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/dom/ScriptSettings.h"
+
+using mozilla::dom::RootingCx;
 
 NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIArrayBufferInputStream, nsIInputStream);
 
@@ -22,15 +25,14 @@ ArrayBufferInputStream::ArrayBufferInputStream()
 NS_IMETHODIMP
 ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
                                 uint32_t aByteOffset,
-                                uint32_t aLength,
-                                JSContext* aCx)
+                                uint32_t aLength)
 {
   NS_ASSERT_OWNINGTHREAD(ArrayBufferInputStream);
 
   if (!aBuffer.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  JS::RootedObject arrayBuffer(aCx, &aBuffer.toObject());
+  JS::RootedObject arrayBuffer(RootingCx(), &aBuffer.toObject());
   if (!JS_IsArrayBufferObject(arrayBuffer)) {
     return NS_ERROR_FAILURE;
   }

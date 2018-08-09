@@ -52,6 +52,7 @@ job-defaults:
             - taskcluster/moz.build
             - taskcluster/ci/spidermonkey/kind.yml
             - testing/mozbase/**
+            - testing/web-platform/**
             - test.mozbuild
             - toolkit/mozapps/installer/package-name.mk
             - toolkit/mozapps/installer/upload-files.mk

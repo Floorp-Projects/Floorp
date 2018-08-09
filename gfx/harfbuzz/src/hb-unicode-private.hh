@@ -60,7 +60,8 @@ extern HB_INTERNAL const uint8_t _hb_modified_combining_class[256];
   HB_UNICODE_FUNC_IMPLEMENT (hb_script_t, script) \
   /* ^--- Add new simple callbacks here */
 
-struct hb_unicode_funcs_t {
+struct hb_unicode_funcs_t
+{
   hb_object_header_t header;
   ASSERT_POD ();
 
@@ -263,9 +264,7 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
 #undef HB_UNICODE_FUNC_IMPLEMENT
   } destroy;
 };
-
-
-extern HB_INTERNAL const hb_unicode_funcs_t _hb_unicode_funcs_nil;
+DECLARE_NULL_INSTANCE (hb_unicode_funcs_t);
 
 
 /* Modified combining marks */

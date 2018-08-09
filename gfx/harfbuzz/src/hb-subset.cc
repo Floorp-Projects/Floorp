@@ -78,14 +78,12 @@ template<typename TableType>
 static bool
 _subset (hb_subset_plan_t *plan)
 {
-  OT::Sanitizer<TableType> sanitizer;
-
-  hb_blob_t *source_blob = sanitizer.sanitize (plan->source->reference_table (TableType::tableTag));
+  hb_blob_t *source_blob = hb_sanitize_context_t ().reference_table<TableType> (plan->source);
   const TableType *table = source_blob->as<TableType> ();
 
   hb_tag_t tag = TableType::tableTag;
   hb_bool_t result = false;
-  if (table != &Null(TableType))
+  if (source_blob->data)
   {
     result = table->subset(plan);
   } else {
@@ -159,14 +157,14 @@ _hb_subset_face_data_reference_blob (hb_subset_face_data_t *data)
   if (unlikely (!buf))
     return nullptr;
 
-  OT::hb_serialize_context_t c (buf, face_length);
+  hb_serialize_context_t c (buf, face_length);
   OT::OpenTypeFontFile *f = c.start_serialize<OT::OpenTypeFontFile> ();
 
   bool is_cff = data->tables.lsearch (HB_TAG ('C','F','F',' ')) || data->tables.lsearch (HB_TAG ('C','F','F','2'));
   hb_tag_t sfnt_tag = is_cff ? OT::OpenTypeFontFile::CFFTag : OT::OpenTypeFontFile::TrueTypeTag;
 
-  OT::Supplier<hb_tag_t>    tags_supplier  (&data->tables[0].tag, table_count, sizeof (data->tables[0]));
-  OT::Supplier<hb_blob_t *> blobs_supplier (&data->tables[0].blob, table_count, sizeof (data->tables[0]));
+  Supplier<hb_tag_t>    tags_supplier  (&data->tables[0].tag, table_count, sizeof (data->tables[0]));
+  Supplier<hb_blob_t *> blobs_supplier (&data->tables[0].blob, table_count, sizeof (data->tables[0]));
   bool ret = f->serialize_single (&c,
 				  sfnt_tag,
 				  tags_supplier,

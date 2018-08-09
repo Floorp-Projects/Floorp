@@ -41,14 +41,14 @@ _get_fvar (hb_face_t *face)
 {
   if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return Null(OT::fvar);
   hb_ot_layout_t * layout = hb_ot_layout_from_face (face);
-  return *(layout->fvar.get ());
+  return *(layout->table.fvar.get ());
 }
 static inline const OT::avar&
 _get_avar (hb_face_t *face)
 {
   if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return Null(OT::avar);
   hb_ot_layout_t * layout = hb_ot_layout_from_face (face);
-  return *(layout->avar.get ());
+  return *(layout->table.avar.get ());
 }
 
 /**
@@ -65,7 +65,7 @@ _get_avar (hb_face_t *face)
 hb_bool_t
 hb_ot_var_has_data (hb_face_t *face)
 {
-  return &_get_fvar (face) != &Null(OT::fvar);
+  return _get_fvar (face).has_data ();
 }
 
 /**
