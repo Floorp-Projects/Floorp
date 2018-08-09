@@ -100,7 +100,9 @@ add_task(async function testNoAdbJSON() {
   await extension.unload();
 });
 
-add_task(async function testNoTargetBinaries() {
+add_task({
+  skip_if: () => mozinfo.os == "win" // bug 1482008
+}, async function testNoTargetBinaries() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: "1.0",
@@ -148,7 +150,9 @@ add_task(async function testExtract() {
   await extension.unload();
 });
 
-add_task(async function testStartAndStop() {
+add_task({
+  skip_if: () => mozinfo.os == "win" // bug 1482008
+}, async function testStartAndStop() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: "1.0",
@@ -180,7 +184,9 @@ add_task(async function testStartAndStop() {
   await extension.unload();
 });
 
-add_task(async function testTrackDevices() {
+add_task({
+  skip_if: () => mozinfo.os == "win" // bug 1482008
+}, async function testTrackDevices() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: "1.0",
