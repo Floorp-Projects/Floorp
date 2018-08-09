@@ -6,7 +6,6 @@
  */
 
 interface MozTreeView;
-interface nsIScriptableRegion;
 
 dictionary TreeCellInfo {
     long row = 0;
@@ -54,11 +53,6 @@ interface TreeBoxObject : BoxObject {
    * Get the pixel position of the horizontal scrollbar.
    */
   readonly attribute long horizontalPosition;
-
-  /**
-   * Return the region for the visible parts of the selection, in device pixels
-   */
-  readonly attribute nsIScriptableRegion selectionRegion;
 
   /**
    * Get the index of the first visible row.

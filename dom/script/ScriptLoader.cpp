@@ -478,12 +478,12 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
   nsresult rv;
   {
     JSContext* cx = aes.cx();
-    JS::Rooted<JSObject*> module(cx);
+    JS::Rooted<JSScript*> script(cx);
 
     if (aRequest->mWasCompiledOMT) {
-      module = JS::FinishOffThreadModule(cx, aRequest->mOffThreadToken);
+      script = JS::FinishOffThreadModule(cx, aRequest->mOffThreadToken);
       aRequest->mOffThreadToken = nullptr;
-      rv = module ? NS_OK : NS_ERROR_FAILURE;
+      rv = script ? NS_OK : NS_ERROR_FAILURE;
     } else {
       JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
@@ -491,17 +491,21 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
       rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
       if (NS_SUCCEEDED(rv)) {
-        SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
-        rv = nsJSUtils::CompileModule(cx, srcBuf, global, options, &module);
+        auto srcBuf = GetScriptSource(cx, aRequest);
+        if (srcBuf) {
+          rv = nsJSUtils::CompileModule(cx, *srcBuf, global, options, &script);
+        } else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
       }
     }
 
-    MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
+    MOZ_ASSERT(NS_SUCCEEDED(rv) == (script != nullptr));
 
     RefPtr<ModuleScript> moduleScript = new ModuleScript(this, aRequest->mBaseURL);
     aRequest->mModuleScript = moduleScript;
 
-    if (!module) {
+    if (!script) {
       LOG(("ScriptLoadRequest (%p):   compilation failed (%d)",
            aRequest, unsigned(rv)));
 
@@ -517,7 +521,7 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
       return NS_OK;
     }
 
-    moduleScript->SetModuleRecord(module);
+    moduleScript->SetScript(script);
 
     // Validate requested modules and treat failure to resolve module specifiers
     // the same as a parse error.
@@ -610,14 +614,14 @@ ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>* aUrlsOu
   ModuleScript* ms = aRequest->mModuleScript;
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(ms->ModuleRecord())) {
+  if (!jsapi.Init(JS::GetScriptGlobal(ms->Script()))) {
     return NS_ERROR_FAILURE;
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> moduleRecord(cx, ms->ModuleRecord());
+  JS::Rooted<JSScript*> script(cx, ms->Script());
   JS::Rooted<JSObject*> requestedModules(cx);
-  requestedModules = JS::GetRequestedModules(cx, moduleRecord);
+  requestedModules = JS::GetRequestedModules(cx, script);
   MOZ_ASSERT(requestedModules);
 
   uint32_t length;
@@ -751,14 +755,14 @@ ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
 }
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, specifier)
-JSObject*
-HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
+JSScript*
+HostResolveImportedModule(JSContext* aCx, JS::Handle<JSScript*> aScript,
                           JS::Handle<JSString*> aSpecifier)
 {
   // Let referencing module script be referencingModule.[[HostDefined]].
-  JS::Value value = JS::GetModuleHostDefinedField(aModule);
+  JS::Value value = JS::GetModuleHostDefinedField(aScript);
   auto script = static_cast<ModuleScript*>(value.toPrivate());
-  MOZ_ASSERT(script->ModuleRecord() == aModule);
+  MOZ_ASSERT(script->Script() == aScript);
 
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
@@ -779,25 +783,25 @@ HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
   MOZ_ASSERT(ms, "Resolved module not found in module map");
 
   MOZ_ASSERT(!ms->HasParseError());
-  MOZ_ASSERT(ms->ModuleRecord());
+  MOZ_ASSERT(ms->Script());
 
-  return ms->ModuleRecord();
+  return ms->Script();
 }
 
 bool
-HostPopulateImportMeta(JSContext* aCx, JS::Handle<JSObject*> aModule,
+HostPopulateImportMeta(JSContext* aCx, JS::Handle<JSScript*> aScript,
                        JS::Handle<JSObject*> aMetaObject)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aModule);
+  MOZ_DIAGNOSTIC_ASSERT(aScript);
 
-  JS::Value value = JS::GetModuleHostDefinedField(aModule);
+  JS::Value value = JS::GetModuleHostDefinedField(aScript);
   if (value.isUndefined()) {
     JS_ReportErrorASCII(aCx, "Module script not found");
     return false;
   }
 
   auto script = static_cast<ModuleScript*>(value.toPrivate());
-  MOZ_DIAGNOSTIC_ASSERT(script->ModuleRecord() == aModule);
+  MOZ_DIAGNOSTIC_ASSERT(script->Script() == aScript);
 
   nsAutoCString url;
   MOZ_DIAGNOSTIC_ASSERT(script->BaseURL());
@@ -928,18 +932,18 @@ ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
     return true;
   }
 
-  MOZ_ASSERT(moduleScript->ModuleRecord());
+  MOZ_ASSERT(moduleScript->Script());
 
   nsAutoMicroTask mt;
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(moduleScript->ModuleRecord()))) {
+  if (NS_WARN_IF(!jsapi.Init(JS::GetScriptGlobal(moduleScript->Script())))) {
     return false;
   }
 
   EnsureModuleResolveHook(jsapi.cx());
 
-  JS::Rooted<JSObject*> module(jsapi.cx(), moduleScript->ModuleRecord());
-  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleInstantiate(jsapi.cx(), module));
+  JS::Rooted<JSScript*> script(jsapi.cx(), moduleScript->Script());
+  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleInstantiate(jsapi.cx(), script));
 
   if (!ok) {
     LOG(("ScriptLoadRequest (%p): Instantiate failed", aRequest));
@@ -1824,11 +1828,11 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
-    SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
-    if (!JS::CompileOffThreadModule(cx, options,
-                                    srcBuf,
-                                    OffThreadScriptLoaderCallback,
-                                    static_cast<void*>(runnable))) {
+    auto srcBuf = GetScriptSource(cx, aRequest);
+    if (!srcBuf || !JS::CompileOffThreadModule(cx, options,
+                                               *srcBuf,
+                                               OffThreadScriptLoaderCallback,
+                                               static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (aRequest->IsBytecode()) {
@@ -1852,11 +1856,11 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 #endif
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
-    SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
-    if (!JS::CompileOffThread(cx, options,
-                              srcBuf,
-                              OffThreadScriptLoaderCallback,
-                              static_cast<void*>(runnable))) {
+    auto srcBuf = GetScriptSource(cx, aRequest);
+    if (!srcBuf || !JS::CompileOffThread(cx, options,
+                                         *srcBuf,
+                                         OffThreadScriptLoaderCallback,
+                                         static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -1896,7 +1900,7 @@ ScriptLoader::CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest)
   return ProcessRequest(aRequest);
 }
 
-SourceBufferHolder
+mozilla::Maybe<SourceBufferHolder>
 ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 {
   // Return a SourceBufferHolder object holding the script's source text.
@@ -1909,15 +1913,17 @@ ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 
     size_t nbytes = inlineData.Length() * sizeof(char16_t);
     JS::UniqueTwoByteChars chars(static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
-    MOZ_RELEASE_ASSERT(chars);
+    if (!chars) {
+      return Nothing();
+    }
+
     memcpy(chars.get(), inlineData.get(), nbytes);
-    return SourceBufferHolder(std::move(chars), inlineData.Length());
+    return Some(SourceBufferHolder(std::move(chars), inlineData.Length()));
   }
 
   size_t length = aRequest->ScriptText().length();
-  return SourceBufferHolder(aRequest->ScriptText().extractOrCopyRawBuffer(),
-                            length,
-                            SourceBufferHolder::GiveOwnership);
+  JS::UniqueTwoByteChars chars(aRequest->ScriptText().extractOrCopyRawBuffer());
+  return Some(SourceBufferHolder(std::move(chars), length));
 }
 
 nsresult
@@ -2297,20 +2303,19 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
         return NS_OK; // An error is reported by AutoEntryScript.
       }
 
-      JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
-      MOZ_ASSERT(module);
+      JS::Rooted<JSScript*> script(cx, moduleScript->Script());
+      MOZ_ASSERT(script);
 
       if (!moduleScript->SourceElementAssociated()) {
-        rv = nsJSUtils::InitModuleSourceElement(cx, module, aRequest->Element());
+        rv = nsJSUtils::InitModuleSourceElement(cx, script, aRequest->Element());
         NS_ENSURE_SUCCESS(rv, rv);
         moduleScript->SetSourceElementAssociated();
 
         // The script is now ready to be exposed to the debugger.
-        JS::Rooted<JSScript*> script(cx, JS::GetModuleScript(module));
         JS::ExposeScriptToDebugger(cx, script);
       }
 
-      rv = nsJSUtils::ModuleEvaluate(cx, module);
+      rv = nsJSUtils::ModuleEvaluate(cx, script);
       MOZ_ASSERT(NS_FAILED(rv) == aes.HasException());
       if (NS_FAILED(rv)) {
         LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
@@ -2369,14 +2374,17 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
                                               &script);
               } else {
                 MOZ_ASSERT(aRequest->IsTextSource());
-                SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
+                auto srcBuf = GetScriptSource(cx, aRequest);
 
-                if (recordreplay::IsRecordingOrReplaying()) {
-                  recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
-                                                 srcBuf.get(), srcBuf.length());
+                if (srcBuf) {
+                  if (recordreplay::IsRecordingOrReplaying()) {
+                    recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
+                                                   srcBuf->get(), srcBuf->length());
+                  }
+                  rv = exec.CompileAndExec(options, *srcBuf, &script);
+                } else {
+                  rv = NS_ERROR_OUT_OF_MEMORY;
                 }
-
-                rv = exec.CompileAndExec(options, srcBuf, &script);
               }
             }
           }

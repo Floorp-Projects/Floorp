@@ -259,6 +259,7 @@
 #include "mozilla/dom/MenuBoxObject.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
+#include "nsXULCommandDispatcher.h"
 #include "nsXULPopupManager.h"
 #include "nsIDocShellTreeOwner.h"
 #endif
@@ -1924,6 +1925,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplets);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchors);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
@@ -2014,6 +2016,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
 
   tmp->mParentDocument = nullptr;
 
@@ -10147,6 +10150,20 @@ nsIDocument::MaybeResolveReadyForIdle()
   if (readyPromise) {
     readyPromise->MaybeResolve(this);
   }
+}
+
+nsIDOMXULCommandDispatcher*
+nsIDocument::GetCommandDispatcher()
+{
+  // Only chrome documents are allowed to use command dispatcher.
+  if (!nsContentUtils::IsChromeDoc(this)) {
+    return nullptr;
+  }
+  if (!mCommandDispatcher) {
+    // Create our command dispatcher and hook it up.
+    mCommandDispatcher = new nsXULCommandDispatcher(this);
+  }
+  return mCommandDispatcher;
 }
 
 static JSObject*

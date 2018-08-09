@@ -191,7 +191,7 @@ public:
 
   already_AddRefed<SourceSurface>
   RenderNode(nsINode* aNode,
-             nsIntRegion* aRegion,
+             const Maybe<CSSIntRegion>& aRegion,
              const LayoutDeviceIntPoint aPoint,
              LayoutDeviceIntRect* aScreenRect,
              uint32_t aFlags) override;
@@ -543,7 +543,7 @@ private:
   already_AddRefed<SourceSurface>
   PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems,
                       dom::Selection* aSelection,
-                      nsIntRegion* aRegion,
+                      const Maybe<CSSIntRegion>& aRegion,
                       nsRect aArea,
                       const LayoutDeviceIntPoint aPoint,
                       LayoutDeviceIntRect* aScreenRect,

@@ -407,6 +407,11 @@ partial interface Document {
   [ChromeOnly, Throws]
   readonly attribute Promise<Document> documentReadyForIdle;
 
+  // Lazily created command dispatcher, returns null if the document is not
+  // chrome privileged.
+  [ChromeOnly]
+  readonly attribute XULCommandDispatcher? commandDispatcher;
+
   [ChromeOnly]
   attribute Node? popupNode;
 

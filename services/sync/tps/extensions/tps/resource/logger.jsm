@@ -79,9 +79,10 @@ var Logger = {
   },
 
   AssertEqual(val1, val2, msg) {
-    if (val1 != val2)
+    if (val1 != val2) {
       throw new Error("ASSERTION FAILED! " + msg + "; expected " +
             JSON.stringify(val2) + ", got " + JSON.stringify(val1));
+    }
   },
 
   log(msg, withoutPrefix) {
@@ -131,10 +132,11 @@ var Logger = {
   },
 
   logInfo(msg, withoutPrefix) {
-    if (withoutPrefix)
+    if (withoutPrefix) {
       this.log(msg, true);
-    else
+    } else {
       this.log("CROSSWEAVE INFO: " + msg);
+    }
   },
 
   logPass(msg) {

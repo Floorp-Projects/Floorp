@@ -87,10 +87,9 @@ CompileBuffer(const CompileArgs& args,
               UniqueChars* error,
               UniqueCharsVector* warnings);
 
-// Attempt to compile the second tier of the given wasm::Module, returning whether
-// tier-2 compilation succeeded and Module::finishTier2 was called.
+// Attempt to compile the second tier of the given wasm::Module.
 
-bool
+void
 CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancelled);
 
 // Compile the given WebAssembly module which has been broken into three

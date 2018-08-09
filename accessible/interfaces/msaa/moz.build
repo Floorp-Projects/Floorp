@@ -44,6 +44,3 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
         '-Wno-missing-braces',
         '-Wno-unused-const-variable',
     ]
-
-if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

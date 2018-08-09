@@ -61,7 +61,7 @@ class MockVRService {
   }
 }
 
-// Implements both VRDisplayHost and VRMagicWindowProvider. Maintains a mock for
+// Implements both XRDeviceImpl and VRMagicWindowProvider. Maintains a mock for
 // XRPresentationProvider.
 class MockDevice {
   constructor(fakeDeviceInit, service) {
@@ -89,14 +89,14 @@ class MockDevice {
   // Functions for setup.
   // This function calls to the backend to add this device to the list.
   notifyClientOfDisplay() {
-    let displayPtr = new device.mojom.VRDisplayHostPtr();
-    let displayRequest = mojo.makeRequest(displayPtr);
-    let displayBinding =
-        new mojo.Binding(device.mojom.VRDisplayHost, this, displayRequest);
+    let devicePtr = new device.mojom.XRDevicePtr();
+    let deviceRequest = mojo.makeRequest(devicePtr);
+    let deviceBinding =
+        new mojo.Binding(device.mojom.XRDevice, this, deviceRequest);
 
     let clientRequest = mojo.makeRequest(this.displayClient_);
     this.service_.client_.onDisplayConnected(
-        displayPtr, clientRequest, this.displayInfo_);
+        devicePtr, clientRequest, this.displayInfo_);
   }
 
   // Test methods.
@@ -279,7 +279,7 @@ class MockDevice {
     // do not have any use for this data at present.
   }
 
-  // VRDisplayHost implementation.
+  // XRDeviceImpl implementation.
 
   requestSession(sessionOptions, was_activation) {
     return this.supportsSession(sessionOptions).then((result) => {

@@ -32,10 +32,11 @@ add_task(async function run_test() {
   _("Should have 1 entry now");
   let id = "";
   for (let _id in (await store.getAllIDs())) {
-    if (id == "")
+    if (id == "") {
       id = _id;
-    else
+    } else {
       do_throw("Should have only gotten one!");
+    }
   }
   Assert.ok((store.itemExists(id)));
 
@@ -67,10 +68,11 @@ add_task(async function run_test() {
   }]);
   id = "";
   for (let _id in (await store.getAllIDs())) {
-    if (id == "")
+    if (id == "") {
       id = _id;
-    else
+    } else {
       do_throw("Should have only gotten one!");
+    }
   }
 
   _("Change the id of the new entry to something else");
@@ -104,10 +106,11 @@ add_task(async function run_test() {
   await applyEnsureNoFailures([toDelete]);
   id = "";
   for (let _id in (await store.getAllIDs())) {
-    if (id == "")
+    if (id == "") {
       id = _id;
-    else
+    } else {
       do_throw("Should have only gotten one!");
+    }
   }
   Assert.ok((store.itemExists(id)));
   // mark entry as deleted

@@ -81,6 +81,15 @@ static void PrintReqURL(imgIRequest* req) {
 }
 #endif /* DEBUG_chb */
 
+const nsAttrValue::EnumTable nsImageLoadingContent::kDecodingTable[] = {
+  { "auto",   nsImageLoadingContent::ImageDecodingType::Auto },
+  { "async",  nsImageLoadingContent::ImageDecodingType::Async },
+  { "sync",   nsImageLoadingContent::ImageDecodingType::Sync },
+  { nullptr,  0 }
+};
+
+const nsAttrValue::EnumTable* nsImageLoadingContent::kDecodingTableDefault =
+  &nsImageLoadingContent::kDecodingTable[0];
 
 nsImageLoadingContent::nsImageLoadingContent()
   : mCurrentRequestFlags(0),
@@ -99,7 +108,8 @@ nsImageLoadingContent::nsImageLoadingContent()
     mStateChangerDepth(0),
     mCurrentRequestRegistered(false),
     mPendingRequestRegistered(false),
-    mIsStartingImageLoad(false)
+    mIsStartingImageLoad(false),
+    mSyncDecodingHint(false)
 {
   if (!nsContentUtils::GetImgLoaderForChannel(nullptr, nullptr)) {
     mLoadingEnabled = false;
@@ -332,6 +342,50 @@ nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled)
 {
   if (nsContentUtils::GetImgLoaderForChannel(nullptr, nullptr)) {
     mLoadingEnabled = aLoadingEnabled;
+  }
+}
+
+void
+nsImageLoadingContent::SetSyncDecodingHint(bool aHint)
+{
+  if (mSyncDecodingHint == aHint) {
+    return;
+  }
+
+  mSyncDecodingHint = aHint;
+  MaybeForceSyncDecoding(/* aPrepareNextRequest */ false);
+}
+
+void
+nsImageLoadingContent::MaybeForceSyncDecoding(bool aPrepareNextRequest,
+                                              nsIFrame* aFrame /* = nullptr */)
+{
+  nsIFrame* frame = aFrame ? aFrame : GetOurPrimaryFrame();
+  nsImageFrame* imageFrame = do_QueryFrame(frame);
+  nsSVGImageFrame* svgImageFrame = do_QueryFrame(frame);
+  if (!imageFrame && !svgImageFrame) {
+    return;
+  }
+
+  bool forceSync = mSyncDecodingHint;
+  if (!forceSync && aPrepareNextRequest) {
+    // Detect JavaScript-based animations created by changing the |src|
+    // attribute on a timer.
+    TimeStamp now = TimeStamp::Now();
+    TimeDuration threshold =
+      TimeDuration::FromMilliseconds(
+        gfxPrefs::ImageInferSrcAnimationThresholdMS());
+
+    // If the length of time between request changes is less than the threshold,
+    // then force sync decoding to eliminate flicker from the animation.
+    forceSync = (now - mMostRecentRequestChange < threshold);
+    mMostRecentRequestChange = now;
+  }
+
+  if (imageFrame) {
+    imageFrame->SetForceSyncDecoding(forceSync);
+  } else {
+    svgImageFrame->SetForceSyncDecoding(forceSync);
   }
 }
 
@@ -629,6 +683,7 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
 
+  MaybeForceSyncDecoding(/* aPrepareNextRequest */ false, aFrame);
   TrackImage(mCurrentRequest, aFrame);
   TrackImage(mPendingRequest, aFrame);
 
@@ -1263,27 +1318,7 @@ nsImageLoadingContent::CancelPendingEvent()
 RefPtr<imgRequestProxy>&
 nsImageLoadingContent::PrepareNextRequest(ImageLoadType aImageLoadType)
 {
-  nsImageFrame* imageFrame = do_QueryFrame(GetOurPrimaryFrame());
-  nsSVGImageFrame* svgImageFrame = do_QueryFrame(GetOurPrimaryFrame());
-  if (imageFrame || svgImageFrame) {
-    // Detect JavaScript-based animations created by changing the |src|
-    // attribute on a timer.
-    TimeStamp now = TimeStamp::Now();
-    TimeDuration threshold =
-      TimeDuration::FromMilliseconds(
-        gfxPrefs::ImageInferSrcAnimationThresholdMS());
-
-    // If the length of time between request changes is less than the threshold,
-    // then force sync decoding to eliminate flicker from the animation.
-    bool forceSync = (now - mMostRecentRequestChange < threshold);
-    if (imageFrame) {
-      imageFrame->SetForceSyncDecoding(forceSync);
-    } else {
-      svgImageFrame->SetForceSyncDecoding(forceSync);
-    }
-
-    mMostRecentRequestChange = now;
-  }
+  MaybeForceSyncDecoding(/* aPrepareNextRequest */ true);
 
   // We only want to cancel the existing current request if size is not
   // available. bz says the web depends on this behavior.

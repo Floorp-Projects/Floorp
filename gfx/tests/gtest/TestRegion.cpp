@@ -224,6 +224,11 @@ TEST(Gfx, RegionIsEqual)
 }
 
 TEST(Gfx, RegionOrWith) {
+  PR_Sleep(PR_SecondsToInterval(10));
+  {
+    nsRegion r(nsRect(11840, 11840, 4640, -10880));
+    r.OrWith(nsRect(160, 160, 7720, 880));
+  }
   {
     nsRegion r(nsRect(79, 31, 75, 12));
     r.OrWith(nsRect(22, 43, 132, 5));

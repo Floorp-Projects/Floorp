@@ -126,8 +126,9 @@ function FormData(props, msSinceEpoch) {
   this.usSinceEpoch = msSinceEpoch * 1000;
 
   for (var prop in props) {
-    if (prop in this)
+    if (prop in this) {
       this[prop] = props[prop];
+    }
   }
 }
 

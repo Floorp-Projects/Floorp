@@ -10,8 +10,6 @@ interface MozObserver;
 [Func="IsChromeOrXBL"]
 interface XULDocument : Document {
 
-  readonly attribute XULCommandDispatcher? commandDispatcher;
-
   [Throws]
   void addBroadcastListenerFor(Element broadcaster, Element observer,
                                DOMString attr);

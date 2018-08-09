@@ -32,8 +32,9 @@ WBORecord.prototype = {
   _logName: "Sync.Record.WBO",
 
   get sortindex() {
-    if (this.data.sortindex)
+    if (this.data.sortindex) {
       return this.data.sortindex;
+    }
     return 0;
   },
 
@@ -85,10 +86,12 @@ WBORecord.prototype = {
   toJSON: function toJSON() {
     // Copy fields from data to be stringified, making sure payload is a string
     let obj = {};
-    for (let [key, val] of Object.entries(this.data))
+    for (let [key, val] of Object.entries(this.data)) {
       obj[key] = key == "payload" ? JSON.stringify(val) : val;
-    if (this.ttl)
+    }
+    if (this.ttl) {
       obj.ttl = this.ttl;
+    }
     return obj;
   },
 
@@ -176,9 +179,10 @@ CryptoWrapper.prototype = {
     }
 
     // Verify that the encrypted id matches the requested record's id.
-    if (this.cleartext.id != this.id)
+    if (this.cleartext.id != this.id) {
       throw new Error(
           `Record id mismatch: ${this.cleartext.id} != ${this.id}`);
+    }
 
     return this.cleartext;
   },
@@ -236,8 +240,9 @@ RecordManager.prototype = {
       this.response = await this.service.resource(url).get();
 
       // Don't parse and save the record on failure
-      if (!this.response.success)
+      if (!this.response.success) {
         return null;
+      }
 
       let record = new this._recordType(url);
       record.deserialize(this.response.obj);
@@ -255,8 +260,9 @@ RecordManager.prototype = {
   get(url) {
     // Use a url string as the key to the hash
     let spec = url.spec ? url.spec : url;
-    if (spec in this._records)
+    if (spec in this._records) {
       return Promise.resolve(this._records[spec]);
+    }
     return this.import(url);
   },
 
@@ -266,8 +272,9 @@ RecordManager.prototype = {
   },
 
   contains: function RecordMgr_contains(url) {
-    if ((url.spec || url) in this._records)
+    if ((url.spec || url) in this._records) {
       return true;
+    }
     return false;
   },
 
@@ -321,8 +328,9 @@ CollectionKeyManager.prototype = {
       for (let k1 in m1) {
         let v1 = m1[k1];
         let v2 = m2[k1];
-        if (!(v1 && v2 && v1.equals(v2)))
+        if (!(v1 && v2 && v1.equals(v2))) {
           changed.push(k1);
+        }
       }
     }
 
@@ -350,8 +358,9 @@ CollectionKeyManager.prototype = {
   },
 
   keyForCollection(collection) {
-    if (collection && this._collections[collection])
+    if (collection && this._collections[collection]) {
       return this._collections[collection];
+    }
 
     return this._default;
   },
@@ -469,13 +478,15 @@ CollectionKeyManager.prototype = {
     this._log.info("Testing for updateNeeded. Last modified: " + this.lastModified);
 
     // No local record of modification time? Need an update.
-    if (!this.lastModified)
+    if (!this.lastModified) {
       return true;
+    }
 
     // No keys on the server? We need an update, though our
     // update handling will be a little more drastic...
-    if (!(CRYPTO_COLLECTION in info_collections))
+    if (!(CRYPTO_COLLECTION in info_collections)) {
       return true;
+    }
 
     // Otherwise, we need an update if our modification time is stale.
     return (info_collections[CRYPTO_COLLECTION] > this.lastModified);
@@ -497,8 +508,9 @@ CollectionKeyManager.prototype = {
     this._log.info("Setting collection keys contents. Our last modified: " +
                    this.lastModified + ", input modified: " + modified + ".");
 
-    if (!payload)
+    if (!payload) {
       throw new Error("No payload in CollectionKeyManager.setContents().");
+    }
 
     if (!payload.default) {
       this._log.warn("No downloaded default key: this should not occur.");
