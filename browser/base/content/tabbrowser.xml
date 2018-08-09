@@ -443,15 +443,26 @@
               }
             }
             aTabWidth += "px";
+            let tabsToReset = [];
             for (let i = numPinned; i < tabs.length; i++) {
               let tab = tabs[i];
               tab.style.setProperty("max-width", aTabWidth, "important");
               if (!isEndTab) { // keep tabs the same width
                 tab.style.transition = "none";
-                window.getComputedStyle(tab); // flush styles to skip animation; see bug 649247
-                tab.style.transition = "";
+                tabsToReset.push(tab);
               }
             }
+
+            if (tabsToReset.length) {
+              window.promiseDocumentFlushed(() => {}).then(() => {
+                window.requestAnimationFrame(() => {
+                  for (let tab of tabsToReset) {
+                    tab.style.transition = "";
+                  }
+                });
+              });
+            }
+
             this._hasTabTempMaxWidth = true;
             gBrowser.addEventListener("mousemove", this);
             window.addEventListener("mouseout", this);
