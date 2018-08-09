@@ -4232,10 +4232,6 @@ BytecodeEmitter::emitCallSiteObject(ParseNode* pn)
     return emitObjectPairOp(objbox1, objbox2, JSOP_CALLSITEOBJ);
 }
 
-/* See the SRC_FOR source note offsetBias comments later in this file. */
-JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
-JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
-
 namespace {
 
 class EmitLevelManager
@@ -8609,10 +8605,6 @@ CGYieldAndAwaitOffsetList::finish(YieldAndAwaitOffsetArray& array, uint32_t prol
         array[i] = prologueLength + list[i];
 }
 
-/*
- * We should try to get rid of offsetBias (always 0 or 1, where 1 is
- * JSOP_{NOP,POP}_LENGTH), which is used only by SRC_FOR.
- */
 const JSSrcNoteSpec js_SrcNoteSpec[] = {
 #define DEFINE_SRC_NOTE_SPEC(sym, name, arity) { name, arity },
     FOR_EACH_SRC_NOTE_TYPE(DEFINE_SRC_NOTE_SPEC)
