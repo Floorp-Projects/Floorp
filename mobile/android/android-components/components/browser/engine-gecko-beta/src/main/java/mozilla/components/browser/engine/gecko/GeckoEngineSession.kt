@@ -143,6 +143,10 @@ class GeckoEngineSession(
     * ProgressDelegate implementation for forwarding callbacks to observers of the session.
     */
     private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
+        override fun onProgressChange(session: GeckoSession?, progress: Int) {
+            notifyObservers { onProgress(progress) }
+        }
+
         override fun onSecurityChange(
             session: GeckoSession?,
             securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
