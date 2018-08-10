@@ -13,3 +13,7 @@ Before you attempt to make a contribution please read the [Community Participati
 ### Development
 
 * [Code coverage]({{ site.baseurl }}/contributing/code-coverage)
+
+### Process
+
+* [Release checklist]({{ site.baseurl }}/contributing/release-checklist)
