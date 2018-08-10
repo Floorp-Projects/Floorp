@@ -14,5 +14,4 @@ DevToolsModules(
     'newSources.js',
     'prettyPrint.js',
     'select.js',
-    'tabs.js',
 )
