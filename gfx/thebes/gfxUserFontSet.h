@@ -589,6 +589,13 @@ public:
     // is the font loading or loaded, or did it fail?
     UserFontLoadState LoadState() const { return mUserFontLoadState; }
 
+    void LoadCanceled()
+    {
+      mUserFontLoadState = STATUS_NOT_LOADED;
+      mFontDataLoadingState = NOT_LOADING;
+      mLoader = nullptr;
+    }
+
     // whether to wait before using fallback font or not
     bool WaitForUserFont() const {
         return (mUserFontLoadState == STATUS_LOAD_PENDING ||

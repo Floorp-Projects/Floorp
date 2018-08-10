@@ -325,8 +325,7 @@ nsFontFaceLoader::OnStopRequest(nsIRequest* aRequest,
 void
 nsFontFaceLoader::Cancel()
 {
-  mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::NOT_LOADING;
-  mUserFontEntry->mLoader = nullptr;
+  mUserFontEntry->LoadCanceled();
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();
