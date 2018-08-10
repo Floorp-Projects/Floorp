@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ":sunny: Google Summer of Code: Fretboard - A/B Testing Framework for Android"
+title: "☀️ Google Summer of Code: Fretboard - A/B Testing Framework for Android"
 date: 2018-08-10 14:48:00 +0200
 author: fernando
 ---
