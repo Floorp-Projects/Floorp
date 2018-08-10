@@ -341,11 +341,10 @@ android-em-4.2-x86/opt:
     test-sets:
         - android-x86-tests
 
-# Coming soon!
-# android-em-7.0-x86/opt:
-#     build-platform: android-x86/opt
-#     test-sets:
-#         - android-x86-kvm-tests
+android-em-7.0-x86/opt:
+    build-platform: android-x86/opt
+    test-sets:
+        - android-x86-kvm-tests
 
 # android-hw test platforms execute on real devices attached to Autophone hosts.
 
