@@ -64,7 +64,7 @@ class KintoExperimentSource(
                 }
             }
         } catch (e: JSONException) {
-            throw ExperimentDownloadException(e.message)
+            throw ExperimentDownloadException(e)
         }
         return ExperimentsSnapshot(mutableExperiments, maxLastModified)
     }

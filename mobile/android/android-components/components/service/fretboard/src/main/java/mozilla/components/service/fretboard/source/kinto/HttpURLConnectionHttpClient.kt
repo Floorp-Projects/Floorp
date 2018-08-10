@@ -27,9 +27,9 @@ internal class HttpURLConnectionHttpClient : HttpClient {
 
             return urlConnection.inputStream.bufferedReader().use { it.readText() }
         } catch (e: IOException) {
-            throw ExperimentDownloadException(e.message)
+            throw ExperimentDownloadException(e)
         } catch (e: ClassCastException) {
-            throw ExperimentDownloadException(e.message)
+            throw ExperimentDownloadException(e)
         } finally {
             urlConnection?.disconnect()
         }
