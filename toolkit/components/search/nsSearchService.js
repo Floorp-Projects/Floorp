@@ -936,36 +936,6 @@ function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
   });
 }
 
-const ENGINE_ALIASES = new Map([
-  ["google", ["@google"]],
-  ["amazondotcom", ["@amazon"]],
-  ["amazondotcom-de", ["@amazon"]],
-  ["amazon-en-GB", ["@amazon"]],
-  ["amazon-france", ["@amazon"]],
-  ["amazon-jp", ["@amazon"]],
-  ["amazon-it", ["@amazon"]],
-  ["twitter", ["@twitter"]],
-  ["wikipedia", ["@wikipedia"]],
-  ["ebay", ["@ebay"]],
-  ["bing", ["@bing"]],
-  ["ddg", ["@duckduckgo", "@ddg"]],
-  ["yandex", ["@yandex"]],
-  ["baidu", ["@baidu"]],
-]);
-
-
-function getInternalAliases(engine) {
-  if (!engine._isDefault) {
-    return [];
-  }
-  for (let [name, aliases] of ENGINE_ALIASES) {
-    if (engine._shortName.startsWith(name)) {
-      return aliases;
-    }
-  }
-  return [];
-}
-
 /**
  * Creates an engineURL object, which holds the query URL and all parameters.
  *
@@ -1268,8 +1238,6 @@ Engine.prototype = {
   _iconUpdateURL: null,
   /* The extension ID if added by an extension. */
   _extensionID: null,
-  /* Internal aliases for default engines only. */
-  _internalAliases: [],
 
   /**
    * Retrieves the data from the engine's file.
@@ -3157,7 +3125,6 @@ SearchService.prototype = {
       if (!aEngine.getAttr("updateexpir"))
         engineUpdateService.scheduleNextUpdate(aEngine);
     }
-    aEngine._internalAliases = getInternalAliases(aEngine);
   },
 
   _loadEnginesMetadataFromCache: function SRCH_SVC__loadEnginesMetadataFromCache(cache) {
@@ -3819,9 +3786,8 @@ SearchService.prototype = {
     this._ensureInitialized();
     for (var engineName in this._engines) {
       var engine = this._engines[engineName];
-      if (engine && (engine.alias == aAlias || engine._internalAliases.includes(aAlias))) {
+      if (engine && engine.alias == aAlias)
         return engine;
-      }
     }
     return null;
   },
