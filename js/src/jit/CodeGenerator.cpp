@@ -1443,6 +1443,39 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
 {
     JitSpew(JitSpew_Codegen, "# Emitting PrepareAndExecuteRegExp");
 
+    /*
+     * [SMDOC] Stack layout for PrepareAndExecuteRegExp
+     *
+     * inputOutputDataStartOffset +-----> +---------------+
+     *                                    |InputOutputData|
+     *          inputStartAddress +---------->  inputStart|
+     *            inputEndAddress +---------->    inputEnd|
+     *          startIndexAddress +---------->  startIndex|
+     *            endIndexAddress +---------->    endIndex|
+     *      matchesPointerAddress +---------->     matches|
+     *         matchResultAddress +---------->      result|
+     *                                    +---------------+
+     *      matchPairsStartOffset +-----> +---------------+
+     *                                    |  MatchPairs   |
+     *            pairCountAddress +----------->  count   |
+     *         pairsPointerAddress +----------->  pairs   |
+     *                                    |               |
+     *                                    +---------------+
+     *     pairsVectorStartOffset +-----> +---------------+
+     *                                    |   MatchPair   |
+     *                                    |       start   |  <-------+
+     *                                    |       limit   |          | Reserved space for
+     *                                    +---------------+          | `RegExpObject::MaxPairCount`
+     *                                           .                   | MatchPair objects.
+     *                                           .                   |
+     *                                           .                   |
+     *                                    +---------------+          |
+     *                                    |   MatchPair   |          |
+     *                                    |       start   |  <-------+
+     *                                    |       limit   |
+     *                                    +---------------+
+     */
+
     size_t matchPairsStartOffset = inputOutputDataStartOffset + sizeof(irregexp::InputOutputData);
     size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
 
@@ -1463,8 +1496,6 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     Address pairsPointerAddress(masm.getStackPointer(),
         matchPairsStartOffset + MatchPairs::offsetOfPairs());
 
-    Address pairsVectorAddress(masm.getStackPointer(), pairsVectorStartOffset);
-
     RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());
     if (!res)
         return false;
@@ -1477,8 +1508,18 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         // passed to the OOL stub in the caller if we aren't able to execute the
         // RegExp inline, and that stub needs to be able to determine whether the
         // execution finished successfully.
+
+        // Initialize MatchPairs::pairCount to 1, the correct value can only
+        // be determined after loading the RegExpShared.
         masm.store32(Imm32(1), pairCountAddress);
-        masm.store32(Imm32(-1), pairsVectorAddress);
+
+        // Initialize MatchPairs::pairs[0]::start to MatchPair::NoMatch.
+        Address firstMatchPairStartAddress(masm.getStackPointer(),
+                                           pairsVectorStartOffset + offsetof(MatchPair, start));
+        masm.store32(Imm32(MatchPair::NoMatch), firstMatchPairStartAddress);
+
+        // Assign the MatchPairs::pairs pointer to the first MatchPair object.
+        Address pairsVectorAddress(masm.getStackPointer(), pairsVectorStartOffset);
         masm.computeEffectiveAddress(pairsVectorAddress, temp1);
         masm.storePtr(temp1, pairsPointerAddress);
     }
@@ -1540,7 +1581,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         masm.branch32(Assembler::NotEqual, temp3, Imm32(unicode::LeadSurrogateMin), &done);
 
         // Move lastIndex to lead surrogate.
-        masm.subPtr(Imm32(1), lastIndex);
+        masm.sub32(Imm32(1), lastIndex);
 
         masm.bind(&done);
     }
@@ -1598,7 +1639,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         masm.storePtr(temp2, endIndexAddress);
     }
     masm.storePtr(lastIndex, startIndexAddress);
-    masm.store32(Imm32(0), matchResultAddress);
+    masm.store32(Imm32(RegExpRunStatus_Error), matchResultAddress);
 
     // Save any volatile inputs.
     LiveGeneralRegisterSet volatileRegs;
@@ -1930,11 +1971,11 @@ CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind, size_t nDynamic
 
 static void
 CreateMatchResultFallback(MacroAssembler& masm, Register object, Register temp1, Register temp2,
-                          ArrayObject* templateObj, Label* fail)
+                          const TemplateObject& templateObject, Label* fail)
 {
     JitSpew(JitSpew_Codegen, "# Emitting CreateMatchResult fallback");
 
-    MOZ_ASSERT(templateObj->group()->clasp() == &ArrayObject::class_);
+    MOZ_ASSERT(templateObject.isArrayObject());
 
     LiveRegisterSet regsToSave(RegisterSet::Volatile());
     regsToSave.takeUnchecked(object);
@@ -1947,9 +1988,9 @@ CreateMatchResultFallback(MacroAssembler& masm, Register object, Register temp1,
 
     masm.loadJSContext(object);
     masm.passABIArg(object);
-    masm.move32(Imm32(int32_t(templateObj->asTenured().getAllocKind())), temp1);
+    masm.move32(Imm32(int32_t(templateObject.getAllocKind())), temp1);
     masm.passABIArg(temp1);
-    masm.move32(Imm32(int32_t(templateObj->as<NativeObject>().numDynamicSlots())), temp2);
+    masm.move32(Imm32(int32_t(templateObject.asNativeTemplateObject().numDynamicSlots())), temp2);
     masm.passABIArg(temp2);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, CreateMatchResultFallbackFunc));
     masm.storeCallPointerResult(object);
@@ -1958,7 +1999,6 @@ CreateMatchResultFallback(MacroAssembler& masm, Register object, Register temp1,
 
     masm.branchPtr(Assembler::Equal, object, ImmWord(0), fail);
 
-    TemplateObject templateObject(templateObj);
     masm.initGCThing(object, temp1, templateObject, true);
 }
 
@@ -1991,11 +2031,13 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     ArrayObject* templateObject = cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
     if (!templateObject)
         return nullptr;
+    TemplateObject templateObj(templateObject);
+    const NativeTemplateObject& nativeTemplateObj = templateObj.asNativeTemplateObject();
 
     // The template object should have enough space for the maximum number of
     // pairs this stub can handle.
     MOZ_ASSERT(ObjectElements::VALUES_PER_HEADER + RegExpObject::MaxPairCount ==
-               gc::GetGCKindSlots(templateObject->asTenured().getAllocKind()));
+               gc::GetGCKindSlots(templateObj.getAllocKind()));
 
     StackMacroAssembler masm(cx);
 
@@ -2013,31 +2055,76 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     // Construct the result.
     Register object = temp1;
     Label matchResultFallback, matchResultJoin;
-    TemplateObject templateObj(templateObject);
     masm.createGCObject(object, temp2, templateObj, gc::DefaultHeap, &matchResultFallback);
     masm.bind(&matchResultJoin);
 
     // Initialize slots of result object.
+    MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
+    MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == 2);
+    static_assert(RegExpRealm::MatchResultObjectIndexSlot == 0,
+                  "First slot holds the 'index' property");
+    static_assert(RegExpRealm::MatchResultObjectInputSlot == 1,
+                  "Second slot holds the 'input' property");
+
     masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
-    masm.storeValue(templateObject->getSlot(0), Address(temp2, 0));
-    masm.storeValue(templateObject->getSlot(1), Address(temp2, sizeof(Value)));
+    masm.storeValue(nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectIndexSlot),
+                    Address(temp2, 0));
+    masm.storeValue(nativeTemplateObj.getSlot(RegExpRealm::MatchResultObjectInputSlot),
+                    Address(temp2, sizeof(Value)));
 
-    size_t elementsOffset = NativeObject::offsetOfFixedElements();
+   /*
+    * [SMDOC] Stack layout for the RegExpMatcher stub
+    *
+    *                                    +---------------+
+    *                                    |Return-Address |
+    *                                    +---------------+
+    * inputOutputDataStartOffset +-----> +---------------+
+    *                                    |InputOutputData|
+    *                                    +---------------+
+    *                                    +---------------+
+    *                                    |  MatchPairs   |
+    *           pairsCountAddress +----------->  count   |
+    *                                    |       pairs   |
+    *                                    |               |
+    *                                    +---------------+
+    *     pairsVectorStartOffset +-----> +---------------+
+    *                                    |   MatchPair   |
+    *             matchPairStart +------------>  start   |  <-------+
+    *             matchPairLimit +------------>  limit   |          | Reserved space for
+    *                                    +---------------+          | `RegExpObject::MaxPairCount`
+    *                                           .                   | MatchPair objects.
+    *                                           .                   |
+    *                                           .                   | `count` objects will be
+    *                                    +---------------+          | initialized and can be
+    *                                    |   MatchPair   |          | accessed below.
+    *                                    |       start   |  <-------+
+    *                                    |       limit   |
+    *                                    +---------------+
+    */
 
+    static_assert(sizeof(MatchPair) == 2 * sizeof(int32_t),
+                  "MatchPair consists of two int32 values representing the start"
+                  "and the end offset of the match");
+
+    Address pairCountAddress = RegExpPairCountAddress(masm, inputOutputDataStartOffset);
+
+    size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
+    Address firstMatchPairStartAddress(masm.getStackPointer(),
+                                       pairsVectorStartOffset + offsetof(MatchPair, start));
+
+    // Incremented by one below for each match pair.
     Register matchIndex = temp2;
     masm.move32(Imm32(0), matchIndex);
 
-    size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
-    Address pairsVectorAddress(masm.getStackPointer(), pairsVectorStartOffset);
-    Address pairCountAddress = RegExpPairCountAddress(masm, inputOutputDataStartOffset);
+    // The element in which to store the result of the current match.
+    size_t elementsOffset = NativeObject::offsetOfFixedElements();
+    BaseObjectElementIndex objectMatchElement(object, matchIndex, elementsOffset);
 
-    BaseIndex stringAddress(object, matchIndex, TimesEight, elementsOffset);
-
-    JS_STATIC_ASSERT(sizeof(MatchPair) == 8);
-    BaseIndex stringIndexAddress(masm.getStackPointer(), matchIndex, TimesEight,
-                                 pairsVectorStartOffset + offsetof(MatchPair, start));
-    BaseIndex stringLimitAddress(masm.getStackPointer(), matchIndex, TimesEight,
-                                 pairsVectorStartOffset + offsetof(MatchPair, limit));
+    // The current match pair's "start" and "limit" member.
+    BaseIndex matchPairStart(masm.getStackPointer(), matchIndex, TimesEight,
+                             pairsVectorStartOffset + offsetof(MatchPair, start));
+    BaseIndex matchPairLimit(masm.getStackPointer(), matchIndex, TimesEight,
+                             pairsVectorStartOffset + offsetof(MatchPair, limit));
 
     Register temp5;
     if (maybeTemp5 == InvalidReg) {
@@ -2068,20 +2155,23 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
             Label matchLoop;
             masm.bind(&matchLoop);
 
+            static_assert(MatchPair::NoMatch == -1,
+                          "MatchPair::start is negative if no match was found");
+
             Label isUndefined, storeDone;
-            masm.branch32(Assembler::LessThan, stringIndexAddress, Imm32(0), &isUndefined);
+            masm.branch32(Assembler::LessThan, matchPairStart, Imm32(0), &isUndefined);
             {
                 depStr.generate(masm, cx->names(), CompileRuntime::get(cx->runtime()),
-                                input, stringIndexAddress, stringLimitAddress,
+                                input, matchPairStart, matchPairLimit,
                                 stringsCanBeInNursery);
 
                 // Storing into nursery-allocated results object's elements; no post barrier.
-                masm.storeValue(JSVAL_TYPE_STRING, depStr.string(), stringAddress);
+                masm.storeValue(JSVAL_TYPE_STRING, depStr.string(), objectMatchElement);
                 masm.jump(&storeDone);
             }
             masm.bind(&isUndefined);
             {
-                masm.storeValue(UndefinedValue(), stringAddress);
+                masm.storeValue(UndefinedValue(), objectMatchElement);
             }
             masm.bind(&storeDone);
 
@@ -2098,20 +2188,18 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
     }
 
     // Fill in the rest of the output object.
-    masm.store32(matchIndex, Address(object, elementsOffset + ObjectElements::offsetOfInitializedLength()));
-    masm.store32(matchIndex, Address(object, elementsOffset + ObjectElements::offsetOfLength()));
+    masm.store32(matchIndex,
+                 Address(object, elementsOffset + ObjectElements::offsetOfInitializedLength()));
+    masm.store32(matchIndex,
+                 Address(object, elementsOffset + ObjectElements::offsetOfLength()));
 
     masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
 
-    MOZ_ASSERT(templateObject->numFixedSlots() == 0);
-    MOZ_ASSERT(templateObject->lookupPure(cx->names().index)->slot() == 0);
-    MOZ_ASSERT(templateObject->lookupPure(cx->names().input)->slot() == 1);
-
-    masm.load32(pairsVectorAddress, temp3);
+    masm.load32(firstMatchPairStartAddress, temp3);
     masm.storeValue(JSVAL_TYPE_INT32, temp3, Address(temp2, 0));
-    Address inputSlotAddress(temp2, sizeof(Value));
-    masm.storeValue(JSVAL_TYPE_STRING, input, inputSlotAddress);
-    // No post barrier needed (inputSlotAddress is within nursery object.)
+
+    // No post barrier needed (address is within nursery object.)
+    masm.storeValue(JSVAL_TYPE_STRING, input, Address(temp2, sizeof(Value)));
 
     // All done!
     masm.tagValue(JSVAL_TYPE_OBJECT, object, result);
@@ -2127,7 +2215,7 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
 
     // Fallback path for createGCObject.
     masm.bind(&matchResultFallback);
-    CreateMatchResultFallback(masm, object, temp2, temp3, templateObject, &oolEntry);
+    CreateMatchResultFallback(masm, object, temp2, temp3, templateObj, &oolEntry);
     masm.jump(&matchResultJoin);
 
     // Use an undefined value to signal to the caller that the OOL stub needs to be called.
@@ -2276,14 +2364,44 @@ JitRealm::generateRegExpSearcherStub(JSContext* cx)
         return nullptr;
     }
 
-    size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
-    Address stringIndexAddress(masm.getStackPointer(),
-                               pairsVectorStartOffset + offsetof(MatchPair, start));
-    Address stringLimitAddress(masm.getStackPointer(),
-                               pairsVectorStartOffset + offsetof(MatchPair, limit));
+    /*
+     * [SMDOC] Stack layout for the RegExpSearcher stub
+     *
+     *                                    +---------------+
+     *                                    |Return-Address |
+     *                                    +---------------+
+     * inputOutputDataStartOffset +-----> +---------------+
+     *                                    |InputOutputData|
+     *                                    +---------------+
+     *                                    +---------------+
+     *                                    |  MatchPairs   |
+     *                                    |       count   |
+     *                                    |       pairs   |
+     *                                    |               |
+     *                                    +---------------+
+     *     pairsVectorStartOffset +-----> +---------------+
+     *                                    |   MatchPair   |
+     *             matchPairStart +------------>  start   |  <-------+
+     *             matchPairLimit +------------>  limit   |          | Reserved space for
+     *                                    +---------------+          | `RegExpObject::MaxPairCount`
+     *                                           .                   | MatchPair objects.
+     *                                           .                   |
+     *                                           .                   | Only a single object will
+     *                                    +---------------+          | be initialized and can be
+     *                                    |   MatchPair   |          | accessed below.
+     *                                    |       start   |  <-------+
+     *                                    |       limit   |
+     *                                    +---------------+
+     */
 
-    masm.load32(stringIndexAddress, result);
-    masm.load32(stringLimitAddress, input);
+    size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
+    Address matchPairStart(masm.getStackPointer(),
+                           pairsVectorStartOffset + offsetof(MatchPair, start));
+    Address matchPairLimit(masm.getStackPointer(),
+                           pairsVectorStartOffset + offsetof(MatchPair, limit));
+
+    masm.load32(matchPairStart, result);
+    masm.load32(matchPairLimit, input);
     masm.lshiftPtr(Imm32(15), input);
     masm.or32(input, result);
     masm.ret();
