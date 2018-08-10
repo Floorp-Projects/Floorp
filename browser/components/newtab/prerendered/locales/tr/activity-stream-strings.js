@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Bölümü yönet",
   "section_menu_action_manage_webext": "Eklentiyi yönet",
   "section_menu_action_add_topsite": "Sık kullanılan site ekle",
+  "section_menu_action_add_search_engine": "Arama motoru ekle",
   "section_menu_action_move_up": "Yukarı taşı",
   "section_menu_action_move_down": "Aşağı taşı",
   "section_menu_action_privacy_notice": "Gizlilik bildirimi",

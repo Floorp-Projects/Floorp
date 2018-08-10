@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Διαχείριση ενότητας",
   "section_menu_action_manage_webext": "Διαχείριση επέκτασης",
   "section_menu_action_add_topsite": "Προσθήκη κορυφαίας ιστοσελίδας",
+  "section_menu_action_add_search_engine": "Προσθήκη μηχανής αναζήτησης",
   "section_menu_action_move_up": "Μετακίνηση επάνω",
   "section_menu_action_move_down": "Μετακίνηση κάτω",
   "section_menu_action_privacy_notice": "Σημείωση απορρήτου",

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "გვერდის ნაწილების მართვა",
   "section_menu_action_manage_webext": "გაფართოების მართვა",
   "section_menu_action_add_topsite": "რჩეული საიტის დამატება",
+  "section_menu_action_add_search_engine": "საძიებო სისტემის დამატება",
   "section_menu_action_move_up": "აწევა",
   "section_menu_action_move_down": "ჩამოწევა",
   "section_menu_action_privacy_notice": "პირადი მონაცემების დაცვის განაცხადი",
