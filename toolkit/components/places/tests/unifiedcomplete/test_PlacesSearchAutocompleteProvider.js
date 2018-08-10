@@ -119,11 +119,7 @@ add_task(async function test_parseSubmissionURL_basic() {
 add_task(async function test_builtin_aliased_search_engine_match() {
   let match = await PlacesSearchAutocompleteProvider.findMatchByAlias("@google");
   Assert.equal(match.engineName, "Google");
-
-  let match1 = await PlacesSearchAutocompleteProvider.findMatchByAlias("@amazon");
-  Assert.ok(match1.engineName.startsWith("Amazon"));
 });
-
 
 function promiseDefaultSearchEngine() {
   return new Promise(resolve => {
