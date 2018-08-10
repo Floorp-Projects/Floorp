@@ -8,6 +8,8 @@
 
 _A collection of Android libraries to build browsers or browser-like applications._
 
+ For more information [see the website](https://mozilla-mobile.github.io/android-components/).
+
 # Getting Involved
 
 We encourage you to participate in this open source project. We love pull requests, bug reports, ideas, (security) code reviews or any kind of positive contribution.
