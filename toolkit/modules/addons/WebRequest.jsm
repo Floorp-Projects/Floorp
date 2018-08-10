@@ -228,7 +228,6 @@ var nextFakeRequestId = 1;
 
 var ContentPolicyManager = {
   policyData: new Map(),
-  policies: new Map(),
   idMap: new Map(),
   nextId: 0,
 
@@ -243,36 +242,10 @@ var ContentPolicyManager = {
     let browser = ChromeUtils.getClassName(msg.target) == "XULFrameElement" ? msg.target : null;
 
     let requestId = `fakeRequest-${++nextFakeRequestId}`;
-    for (let id of msg.data.ids) {
-      let callback = this.policies.get(id);
-      if (!callback) {
-        // It's possible that this listener has been removed and the
-        // child hasn't learned yet.
-        continue;
-      }
-      let response = null;
-      let listenerKind = "onStop";
-      let data = Object.assign({requestId, browser, serialize: serializeRequestData}, msg.data);
+    let data = Object.assign({requestId, browser, serialize: serializeRequestData}, msg.data);
 
-      delete data.ids;
-      try {
-        response = callback(data);
-        if (response) {
-          if (response.cancel) {
-            listenerKind = "onError";
-            data.error = "NS_ERROR_ABORT";
-            return {cancel: true};
-          }
-          // FIXME: Need to handle redirection here (for non-HTTP URIs only)
-        }
-      } catch (e) {
-        Cu.reportError(e);
-      } finally {
-        runLater(() => this.runChannelListener(listenerKind, data));
-      }
-    }
-
-    return {};
+    this.runChannelListener("opening", data);
+    runLater(() => this.runChannelListener("onStop", data));
   },
 
   shouldRunListener(policyType, url, opts) {
@@ -298,7 +271,11 @@ var ContentPolicyManager = {
     let listeners = HttpObserverManager.listeners[kind];
     for (let [callback, opts] of listeners.entries()) {
       if (this.shouldRunListener(data.type, data.url, opts)) {
-        callback(data);
+        try {
+          callback(data);
+        } catch (e) {
+          Cu.reportError(e);
+        }
       }
     }
   },
@@ -316,7 +293,6 @@ var ContentPolicyManager = {
 
     this.policyData.set(id, opts);
 
-    this.policies.set(id, callback);
     this.idMap.set(callback, id);
   },
 
@@ -326,7 +302,6 @@ var ContentPolicyManager = {
 
     this.policyData.delete(id);
     this.idMap.delete(callback);
-    this.policies.delete(id);
   },
 };
 ContentPolicyManager.init();

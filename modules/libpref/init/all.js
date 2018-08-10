@@ -5895,8 +5895,9 @@ pref("browser.fastblock.enabled", false);
 // after this timeout will be canceled.
 pref("browser.fastblock.timeout", 5000);
 
-// Disables clipboard reads and writes by default.
-pref("dom.events.asyncClipboard", false);
+// Enable clipboard readText() and writeText() by default
+pref("dom.events.asyncClipboard", true);
+// Disable clipboard read() and write() by default
 pref("dom.events.asyncClipboard.dataTransfer", false);
 // Should only be enabled in tests
 pref("dom.events.testing.asyncClipboard", false);

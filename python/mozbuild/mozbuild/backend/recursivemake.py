@@ -810,12 +810,39 @@ class RecursiveMakeBackend(CommonBackend):
         compile_roots = [t for t, deps in self._compile_graph.iteritems()
                          if not deps or t not in all_compile_deps]
 
-        rule = root_deps_mk.create_rule(['recurse_compile'])
-        rule.add_dependencies(compile_roots)
-        for target, deps in sorted(self._compile_graph.items()):
-            if deps:
-                rule = root_deps_mk.create_rule([target])
-                rule.add_dependencies(deps)
+        def add_category_rules(category, roots, graph):
+            rule = root_deps_mk.create_rule(['recurse_%s' % category])
+            rule.add_dependencies(roots)
+            for target, deps in sorted(graph.items()):
+                if deps:
+                    rule = root_deps_mk.create_rule([target])
+                    rule.add_dependencies(deps)
+
+        non_default_roots = defaultdict(list)
+        non_default_graphs = defaultdict(lambda: OrderedDefaultDict(set))
+
+        default_root_dirs = set()
+        for root in compile_roots:
+            # If this is a non-default target, separate the root from the
+            # rest of the compile graph.
+            target_name = mozpath.basename(root)
+
+            if target_name not in ('target', 'host'):
+                non_default_roots[target_name].append(root)
+                compile_roots.remove(root)
+                non_default_graphs[target_name][root] = self._compile_graph[root]
+                del self._compile_graph[root]
+            else:
+                dir_name = mozpath.dirname(root)
+                default_root_dirs.add(dir_name)
+
+        # If a directory only contains non-default compile targets, we don't
+        # attempt to dump symbols there.
+        self._no_skip['syms'] &= default_root_dirs
+
+        add_category_rules('compile', compile_roots, self._compile_graph)
+        for category, graph in non_default_graphs.iteritems():
+            add_category_rules(category, non_default_roots[category], graph)
 
         root_mk = Makefile()
 
@@ -830,6 +857,15 @@ class RecursiveMakeBackend(CommonBackend):
             set(self._compile_graph.keys()) | all_compile_deps)))
         root_mk.add_statement('syms_targets := %s' % ' '.join(sorted(
             set('%s/syms' % d for d in self._no_skip['syms']))))
+
+        root_mk.add_statement('non_default_tiers := %s' % ' '.join(sorted(
+            non_default_roots.keys())))
+
+        for category, graphs in non_default_graphs.iteritems():
+            category_dirs = [mozpath.dirname(target)
+                             for target in graphs.keys()]
+            root_mk.add_statement('%s_dirs := %s' % (category,
+                                                     ' '.join(category_dirs)))
 
         root_mk.add_statement('include root-deps.mk')
 
@@ -1252,6 +1288,10 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('COMPUTED_%s += %s\n' % (var,
                                                         ' '.join(make_quote(shell_quote(f)) for f in flags)))
 
+    def _process_non_default_target(self, libdef, target_name, backend_file):
+        backend_file.write("%s:: %s\n" % (libdef.output_category, target_name))
+        backend_file.write('MOZBUILD_NON_DEFAULT_TARGETS += %s\n' % target_name)
+
     def _process_shared_library(self, libdef, backend_file):
         backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
         backend_file.write('FORCE_SHARED_LIB := 1\n')
@@ -1263,6 +1303,14 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('SYMBOLS_FILE := %s\n' % libdef.symbols_file)
         if not libdef.cxx_link:
             backend_file.write('LIB_IS_C_ONLY := 1\n')
+        if libdef.output_category:
+            self._process_non_default_target(libdef, libdef.lib_name,
+                                             backend_file)
+            # Override the install rule target for this library. This is hacky,
+            # but can go away as soon as we start building libraries in their
+            # final location (bug 1459764).
+            backend_file.write('SHARED_LIBRARY_TARGET := %s\n' %
+                               libdef.output_category)
 
     def _process_static_library(self, libdef, backend_file):
         backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
@@ -1283,6 +1331,8 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('CARGO_TARGET_DIR := %s\n' % target_dir)
         if libdef.features:
             backend_file.write('%s := %s\n' % (libdef.FEATURES_VAR, ' '.join(libdef.features)))
+        if libdef.output_category:
+            self._process_non_default_target(libdef, libdef.import_name, backend_file)
 
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
@@ -1291,8 +1341,11 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('HOST_SHARED_LIBRARY = %s\n' % libdef.lib_name)
 
     def _build_target_for_obj(self, obj):
+        target_name = obj.KIND
+        if hasattr(obj, 'output_category') and obj.output_category:
+            target_name = obj.output_category
         return '%s/%s' % (mozpath.relpath(obj.objdir,
-            self.environment.topobjdir), obj.KIND)
+            self.environment.topobjdir), target_name)
 
     def _process_linked_libraries(self, obj, backend_file):
         def pretty_relpath(lib, name):
