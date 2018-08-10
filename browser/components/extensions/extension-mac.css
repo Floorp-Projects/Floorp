@@ -1,6 +1,6 @@
 button.browser-style,
 select.browser-style,
-.browser-style > input[type="checkbox"] + label::before {
+.browser-style > input[type="checkbox"] {
   border-radius: 4px;
 }
 
