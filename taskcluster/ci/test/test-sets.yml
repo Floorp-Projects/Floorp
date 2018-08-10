@@ -390,14 +390,14 @@ android-x86-kvm-tests:
     - crashtest
     - geckoview-junit
     - jsreftest
-    - mochitest
+    # - mochitest
     # - mochitest-chrome
     - mochitest-clipboard
     - mochitest-gpu
-    - mochitest-media
+    # - mochitest-media
     # - mochitest-webgl1-core
-    - reftest
-    - test-verify
+    # - reftest
+    # - test-verify
 
 android-ccov-tests:
     - geckoview-junit
