@@ -6,6 +6,9 @@ const image96x96 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAJCAYAAA
 const baseURL = "http://mozilla${i}.com/";
 
 function* runTests() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", false]]
+  });
   // Add 3 top sites - 2 visits each so it can pass frecency threshold of the top sites query
   for (let i = 1; i <= 3; i++) {
     yield PlacesTestUtils.addVisits(baseURL.replace("${i}", i));
