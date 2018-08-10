@@ -10182,6 +10182,8 @@ template class GeneralParser<FullParseHandler, Utf8Unit>;
 template class GeneralParser<SyntaxParseHandler, Utf8Unit>;
 template class GeneralParser<FullParseHandler, char16_t>;
 template class GeneralParser<SyntaxParseHandler, char16_t>;
+template class Parser<FullParseHandler, Utf8Unit>;
+template class Parser<SyntaxParseHandler, Utf8Unit>;
 template class Parser<FullParseHandler, char16_t>;
 template class Parser<SyntaxParseHandler, char16_t>;
 
