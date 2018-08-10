@@ -151,7 +151,9 @@ _Generic low-level UI components for building apps._
 
 * 🔵 [**Icons**](components/ui/icons/README.md) - A collection of often used browser icons.
 
-* 🔵 [**Progress**](components/ui/progress/README.md) - An animated progress bar following the Photon Design System. 
+* 🔵 [**Progress**](components/ui/progress/README.md) - An animated progress bar following the Photon Design System.
+
+* ⚪ [**Tabcounter**](components/ui/tabcounter/README.md) - A button that shows the current tab count and can animate state changes.
 
 ## Service
 
