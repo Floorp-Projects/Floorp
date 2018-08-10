@@ -9678,32 +9678,8 @@ void
 nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
                                nsIFrame* aChildFrame)
 {
-  const nsStyleDisplay* display = StyleDisplay();
-  if (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::scrolledContent) {
-    // If we are a scrollframe's inner anonymous box, we'll want to check if
-    // our parent has contain:layout below, so we change the nsStyleDisplay we
-    // read from here.
-    display = mParent->StyleDisplay();
-  }
-  if (display->IsContainLayout() && IsFrameOfType(eSupportsContainLayoutAndPaint)) {
-    // If we have layout containment and are not a non-atomic, inline-level
-    // principal box (or, if we are a scrollframe's inner anonymous box and
-    // our parent has layout containment) we should only consider our child's
-    // visual (ink) overflow, leaving the scrollable regions of the parent
-    // unaffected.
-    // Note: scrollable overflow is a subset of visual overflow,
-    // so this has the same affect as unioning the child's visual and
-    // scrollable overflow with the parent's visual overflow.
-    // XXX doesn't work correctly for floats - bug 1481951
-    nsRect childVisual = aChildFrame->GetVisualOverflowRect();
-    nsOverflowAreas combined = nsOverflowAreas(
-      childVisual,
-      nsRect());
-    aOverflowAreas.UnionWith(combined + aChildFrame->GetPosition());
-  } else {
-    aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreas() +
-                             aChildFrame->GetPosition());
-  }
+  aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreas() +
+                           aChildFrame->GetPosition());
 }
 
 bool
