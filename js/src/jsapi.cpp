@@ -279,6 +279,12 @@ JS::ObjectOpResult::failNoIndexedSetter()
     return fail(JSMSG_NO_INDEXED_SETTER);
 }
 
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failNotDataDescriptor()
+{
+    return fail(JSMSG_NOT_DATA_DESCRIPTOR);
+}
+
 JS_PUBLIC_API(int64_t)
 JS_Now()
 {

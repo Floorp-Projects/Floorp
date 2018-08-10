@@ -588,6 +588,7 @@ MSG_DEF(JSMSG_CANT_DELETE_WINDOW_NAMED_PROPERTY, 1, JSEXN_TYPEERR, "can't delete
 MSG_DEF(JSMSG_CANT_PREVENT_EXTENSIONS,   0, JSEXN_TYPEERR, "can't prevent extensions on this proxy object")
 MSG_DEF(JSMSG_NO_NAMED_SETTER,           2, JSEXN_TYPEERR, "{0} doesn't have a named property setter for '{1}'")
 MSG_DEF(JSMSG_NO_INDEXED_SETTER,         2, JSEXN_TYPEERR, "{0} doesn't have an indexed property setter for '{1}'")
+MSG_DEF(JSMSG_NOT_DATA_DESCRIPTOR,       2, JSEXN_TYPEERR, "can't define a getter/setter for element '{1}' of {0} object")
 
 // Super
 MSG_DEF(JSMSG_CANT_DELETE_SUPER, 0, JSEXN_REFERENCEERR, "invalid delete involving 'super'")
