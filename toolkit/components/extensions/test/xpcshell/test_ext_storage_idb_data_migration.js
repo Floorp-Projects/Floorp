@@ -87,6 +87,15 @@ add_task(async function setup() {
   // Telemetry test setup needed to ensure that the builtin events are defined
   // and they can be collected and verified.
   await TelemetryController.testSetup();
+
+  // This is actually only needed on Android, because it does not properly support unified telemetry
+  // and so, if not enabled explicitly here, it would make these tests to fail when running on a
+  // non-Nightly build.
+  const oldCanRecordBase = Services.telemetry.canRecordBase;
+  Services.telemetry.canRecordBase = true;
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordBase = oldCanRecordBase;
+  });
 });
 
 // Test that the old data is migrated successfully to the new storage backend

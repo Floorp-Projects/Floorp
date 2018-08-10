@@ -6,3 +6,12 @@ unity-webgl:
     url: https://github.com/mozilla/perf-automation/releases/download/unity-webgl-v1/unity-webgl-6beb3d3e22ab.zip
     sha256: f71ee3a3f5b9513f041e1dd01c032d51f2071e1ad130e8ac2cf0c553c468b9ea
     size: 27062962
+
+assorted-dom:
+  description: assorted-dom benchmark
+  fetch:
+    type: static-url
+    artifact-name: assorted-dom.zip
+    url: https://github.com/mozilla/perf-automation/releases/download/assorted-dom-v1/assorted-dom-4befd28725c6.zip
+    sha256: e4eafe4a8e70c7ae6d42d668d3b1640b9fd9b696c486ff35aab754c368f78c2c
+    size: 402665

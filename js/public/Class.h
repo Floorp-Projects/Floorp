@@ -202,6 +202,7 @@ class ObjectOpResult
     JS_PUBLIC_API(bool) failCantSetProto();
     JS_PUBLIC_API(bool) failNoNamedSetter();
     JS_PUBLIC_API(bool) failNoIndexedSetter();
+    JS_PUBLIC_API(bool) failNotDataDescriptor();
 
     uint32_t failureCode() const {
         MOZ_ASSERT(!ok());

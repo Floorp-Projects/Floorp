@@ -4,11 +4,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-SpecialPowers.pushPrefEnv({
-  // Ignore toolbarbutton stuff, other test covers it.
-  set: [["extensions.sidebar-button.shown", true]],
-});
-
 async function runTests(options) {
   async function background(getTests) {
     async function checkDetails(expecting, details) {
