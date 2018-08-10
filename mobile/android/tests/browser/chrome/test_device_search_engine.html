@@ -54,7 +54,8 @@ SimpleTest.registerCleanupFunction(function() {
   });
   Services.obs.addObserver(search_observer, "browser-search-engine-modified");
   info("Loading search engine");
-  Services.search.addEngine("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/devicesearch.xml", Ci.nsISearchEngine.DATA_XML, null, false);
+  Services.search.addEngine("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/devicesearch.xml",
+                            null, null, false);
 
   </script>
 </head>
