@@ -123,7 +123,7 @@ JSEventHandler::HandleEvent(Event* aEvent)
   bool isChromeHandler =
     isMainThread ?
       nsContentUtils::ObjectPrincipal(
-        GetTypedEventHandler().Ptr()->CallbackPreserveColor()) ==
+        GetTypedEventHandler().Ptr()->CallbackGlobalOrNull()) ==
         nsContentUtils::GetSystemPrincipal() :
       mozilla::dom::IsCurrentThreadRunningChromeWorker();
 
