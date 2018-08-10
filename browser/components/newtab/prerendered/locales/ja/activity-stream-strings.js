@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "セクションを管理",
   "section_menu_action_manage_webext": "拡張機能を管理",
   "section_menu_action_add_topsite": "トップサイトを追加",
+  "section_menu_action_add_search_engine": "検索エンジンを追加",
   "section_menu_action_move_up": "上へ移動",
   "section_menu_action_move_down": "下へ移動",
   "section_menu_action_privacy_notice": "プライバシー通知",

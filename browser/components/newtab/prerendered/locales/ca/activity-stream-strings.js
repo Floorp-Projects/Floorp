@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gestiona la secció",
   "section_menu_action_manage_webext": "Gestiona l'extensió",
   "section_menu_action_add_topsite": "Afegeix com a lloc principal",
+  "section_menu_action_add_search_engine": "Afegeix un motor de cerca",
   "section_menu_action_move_up": "Mou cap amunt",
   "section_menu_action_move_down": "Mou cap avall",
   "section_menu_action_privacy_notice": "Avís de privadesa",

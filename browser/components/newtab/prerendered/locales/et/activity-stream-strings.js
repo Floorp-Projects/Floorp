@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Halda osa",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Lisa top sait",
+  "section_menu_action_add_search_engine": "Add Search Engine",
   "section_menu_action_move_up": "Liiguta üles",
   "section_menu_action_move_down": "Liiguta alla",
   "section_menu_action_privacy_notice": "Privaatsuspoliitika",
