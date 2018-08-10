@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "பகுதியை நிர்வகி",
   "section_menu_action_manage_webext": "நீட்சிகளை நிர்வகி",
   "section_menu_action_add_topsite": "முதன்மை தளத்தைச் சேர்",
+  "section_menu_action_add_search_engine": "தேடும் பொறியைச் சேர்",
   "section_menu_action_move_up": "மேலே நகர்த்து",
   "section_menu_action_move_down": "கீழே நகர்த்து",
   "section_menu_action_privacy_notice": "தனியுரிமை அறிவிப்பு",

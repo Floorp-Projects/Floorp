@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "విభాగ నిర్వహణ",
   "section_menu_action_manage_webext": "పొడగింత నిర్వహణ",
   "section_menu_action_add_topsite": "మేటి సైటును చేర్చు",
+  "section_menu_action_add_search_engine": "శోధన యంత్రాన్ని చేర్చు",
   "section_menu_action_move_up": "పైకి జరుపు",
   "section_menu_action_move_down": "కిందకి జరుపు",
   "section_menu_action_privacy_notice": "అంతరంగికత గమనిక",

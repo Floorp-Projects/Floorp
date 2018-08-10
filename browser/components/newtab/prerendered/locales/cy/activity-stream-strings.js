@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Rheoli'r Adran",
   "section_menu_action_manage_webext": "Rheoli Estyniad",
   "section_menu_action_add_topsite": "Ychwanegu Hoff Wefan",
+  "section_menu_action_add_search_engine": "Ychwanegu Peiriant Chwilio",
   "section_menu_action_move_up": "Symud i Fyny",
   "section_menu_action_move_down": "Symud i Lawr",
   "section_menu_action_privacy_notice": "Hysbysiad Preifatrwydd",

@@ -123,6 +123,7 @@ $half-base-gutter: $base-gutter / 2;
   .tile { // sass-lint:disable-block property-sort-order
     border-radius: $top-sites-border-radius;
     box-shadow: inset $inner-box-shadow, var(--newtab-card-shadow);
+    cursor: pointer;
     height: $top-sites-size;
     position: relative;
     width: $top-sites-size;
@@ -297,22 +298,40 @@ $half-base-gutter: $base-gutter / 2;
   $form-width: 300px;
   $form-spacing: 32px;
 
+  .section-title {
+    font-size: 16px;
+    margin: 0 0 16px;
+  }
+
   .form-input-container {
     max-width: $form-width + 3 * $form-spacing + $rich-icon-size;
     margin: 0 auto;
     padding: $form-spacing;
 
     .top-site-outer {
-      padding: 0;
-      margin: 24px 0 0;
-      margin-inline-start: $form-spacing;
       pointer-events: none;
     }
+  }
 
-    .section-title {
-      font-size: 16px;
-      margin: 0 0 16px;
+  .search-shortcuts-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: $form-spacing;
+
+    .top-site-outer {
+      margin-inline-start: 0;
+      margin-inline-end: 39px;
+
+      &:nth-child(5n) {
+        margin-inline-end: 0;
+      }
     }
+  }
+
+  .top-site-outer {
+    padding: 0;
+    margin: 24px 0 0;
+    margin-inline-start: $form-spacing;
   }
 
   .fields-and-preview {
@@ -478,6 +497,101 @@ $half-base-gutter: $base-gutter / 2;
         margin-inline-start: 0;
       }
     }
+  }
+
+  // prevent text selection of keyword label when clicking to select
+  .title {
+    -moz-user-select: none;
+  }
+
+  // CSS styled checkbox
+  [type='checkbox']:not(:checked),
+  [type='checkbox']:checked {
+    left: -9999px;
+    position: absolute;
+  }
+
+  [type='checkbox']:not(:checked) + label,
+  [type='checkbox']:checked + label {
+    cursor: pointer;
+    display: block;
+    position: relative;
+  }
+
+  $checkbox-offset: -8px;
+
+  [type='checkbox']:not(:checked) + label::before,
+  [type='checkbox']:checked + label::before {
+    background: var(--newtab-background-color);
+    border: $input-border;
+    border-radius: $border-radius;
+    content: '';
+    height: 21px;
+    left: $checkbox-offset;
+    position: absolute;
+    top: $checkbox-offset;
+    width: 21px;
+    z-index: 1;
+
+    [dir='rtl'] & {
+      left: auto;
+      right: $checkbox-offset;
+    }
+  }
+
+  // checkmark
+  [type='checkbox']:not(:checked) + label::after,
+  [type='checkbox']:checked + label::after {
+    background: url('chrome://global/skin/in-content/check.svg') no-repeat center center; // sass-lint:disable-line no-url-domains
+    content: '';
+    height: 21px;
+    left: $checkbox-offset;
+    position: absolute;
+    top: $checkbox-offset;
+    width: 21px;
+    -moz-context-properties: fill, stroke;
+    fill: var(--newtab-link-primary-color);
+    stroke: none;
+    z-index: 2;
+
+    [dir='rtl'] & {
+      left: auto;
+      right: $checkbox-offset;
+    }
+  }
+
+  // when selected, highlight the tile
+  [type='checkbox']:checked + label {
+    .tile {
+      box-shadow: 0 0 0 2px var(--newtab-link-primary-color);
+    }
+  }
+
+  // when unselected, higlight the tile on hover
+  [type='checkbox']:not(:checked) + label {
+    .tile:hover {
+      @include fade-in;
+    }
+  }
+
+  // checkmark changes
+  [type='checkbox']:not(:checked) + label::after {
+    opacity: 0;
+  }
+
+  [type='checkbox']:checked + label::after {
+    opacity: 1;
+  }
+
+  // hover
+  [type='checkbox'] + label:hover::before {
+    border: 1px solid var(--newtab-link-primary-color);
+  }
+
+  // accessibility
+  [type='checkbox']:checked:focus + label::before,
+  [type='checkbox']:not(:checked):focus + label::before {
+    border: 1px dotted var(--newtab-link-primary-color);
   }
 }
 

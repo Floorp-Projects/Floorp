@@ -20,9 +20,24 @@
     "image_url": "avito-ru@2x.png"
   },
   {
+    "title": "baidu",
+    "url": "https://www.baidu.com/",
+    "image_url": "baidu-com@2x.png"
+  },
+  {
     "title": "bbc",
     "url": "https://www.bbc.co.uk/",
     "image_url": "bbc-uk@2x.png"
+  },
+  {
+    "title": "bing",
+    "url": "https://www.bing.com/",
+    "image_url": "bing-com@2x.png"
+  },
+  {
+    "title": "duckduckgo",
+    "url": "https://www.duckduckgo.com/",
+    "image_url": "duckduckgo-com@2x.png"
   },
   {
     "title": "ebay",
@@ -78,6 +93,11 @@
     "title": "wykop",
     "url": "https://www.wykop.pl/",
     "image_url": "wykop-pl@2x.png"
+  },
+  {
+    "title": "yandex",
+    "url": "https://www.yandex.com/",
+    "image_url": "yandex-com@2x.png"
   },
   {
     "title": "youtube",

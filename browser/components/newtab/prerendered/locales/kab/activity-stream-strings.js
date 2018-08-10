@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Sefrek tigezmi",
   "section_menu_action_manage_webext": "Sefrek asiɣzef",
   "section_menu_action_add_topsite": "Rnu asmel ifazen",
+  "section_menu_action_add_search_engine": "Rnu amsedday n unadi",
   "section_menu_action_move_up": "Ali",
   "section_menu_action_move_down": "Ader",
   "section_menu_action_privacy_notice": "Tasertit n tbaḍnit",

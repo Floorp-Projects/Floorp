@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "أدِر القسم",
   "section_menu_action_manage_webext": "أدِر الامتداد",
   "section_menu_action_add_topsite": "أضف موقعًا شائعًا",
+  "section_menu_action_add_search_engine": "أضِف محرك بحث",
   "section_menu_action_move_up": "انقل لأعلى",
   "section_menu_action_move_down": "انقل لأسفل",
   "section_menu_action_privacy_notice": "تنويه الخصوصية",

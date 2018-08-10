@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Kelola Bagian",
   "section_menu_action_manage_webext": "Kelola Ekstensi",
   "section_menu_action_add_topsite": "Tambah Situs Pilihan",
+  "section_menu_action_add_search_engine": "Tambahkan Mesin Pencari",
   "section_menu_action_move_up": "Naikkan",
   "section_menu_action_move_down": "Turunkan",
   "section_menu_action_privacy_notice": "Kebijakan Privasi",

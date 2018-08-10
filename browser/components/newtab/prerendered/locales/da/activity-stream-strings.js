@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Håndter afsnit",
   "section_menu_action_manage_webext": "Håndter udvidelse",
   "section_menu_action_add_topsite": "Tilføj ny webside",
+  "section_menu_action_add_search_engine": "Tilføj søgetjeneste",
   "section_menu_action_move_up": "Flyt op",
   "section_menu_action_move_down": "Flyt ned",
   "section_menu_action_privacy_notice": "Privatlivspolitik",

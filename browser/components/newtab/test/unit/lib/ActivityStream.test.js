@@ -344,28 +344,37 @@ describe("ActivityStream", () => {
       assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "");
     });
 
-    it("should be 'baidu,amazon' in China", () => {
+    it("should be 'baidu' in China", () => {
       stub.returns("CN");
       as._updateDynamicPrefs();
-      assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "baidu,amazon");
+      assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "baidu");
     });
 
-    it("should be 'yandex,amazon' in Russia, Belarus, Kazakhstan, and Turkey", () => {
+    it("should be 'yandex' in Russia, Belarus, Kazakhstan, and Turkey", () => {
       const geos = ["BY", "KZ", "RU", "TR"];
       for (const geo of geos) {
         stub.returns(geo);
         as._updateDynamicPrefs();
-        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "yandex,amazon");
+        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "yandex");
       }
     });
 
-    it("should be 'google,amazon' elsewhere", () => {
-      // A selection of other geos
-      const geos = ["CA", "DE", "GB", "ID", "IN", "US"];
+    it("should be 'google,amazon' in Germany, France, the UK, Japan, Italy, and the US", () => {
+      const geos = ["DE", "FR", "GB", "IT", "JP", "US"];
       for (const geo of geos) {
         stub.returns(geo);
         as._updateDynamicPrefs();
         assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "google,amazon");
+      }
+    });
+
+    it("should be 'google' elsewhere", () => {
+      // A selection of other geos
+      const geos = ["BR", "CA", "ES", "ID", "IN"];
+      for (const geo of geos) {
+        stub.returns(geo);
+        as._updateDynamicPrefs();
+        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "google");
       }
     });
   });

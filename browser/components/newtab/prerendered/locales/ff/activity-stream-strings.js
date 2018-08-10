@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Feewnu taƴre",
   "section_menu_action_manage_webext": "Yiil Timmitere",
   "section_menu_action_add_topsite": "Ɓeydu lowre rowrowre",
+  "section_menu_action_add_search_engine": "Ɓeydu Masiŋ Njiilaw",
   "section_menu_action_move_up": "Dirtin dow",
   "section_menu_action_move_down": "Dirtin les",
   "section_menu_action_privacy_notice": "Tintinal sirlu",

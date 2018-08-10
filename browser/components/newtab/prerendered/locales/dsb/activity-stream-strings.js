@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Wótrězk zastojaś",
   "section_menu_action_manage_webext": "Rozšyrjenje zastojaś",
   "section_menu_action_add_topsite": "Woblubowane sedło pśidaś",
+  "section_menu_action_add_search_engine": "Pytnicu pśidaś",
   "section_menu_action_move_up": "Górjej",
   "section_menu_action_move_down": "Dołoj",
   "section_menu_action_privacy_notice": "Powěźeńka priwatnosći",

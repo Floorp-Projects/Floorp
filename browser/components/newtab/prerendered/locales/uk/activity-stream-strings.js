@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Керувати розділом",
   "section_menu_action_manage_webext": "Керувати розширенням",
   "section_menu_action_add_topsite": "Додати до популярних сайтів",
+  "section_menu_action_add_search_engine": "Додати засіб пошуку",
   "section_menu_action_move_up": "Вгору",
   "section_menu_action_move_down": "Вниз",
   "section_menu_action_privacy_notice": "Повідомлення про приватність",

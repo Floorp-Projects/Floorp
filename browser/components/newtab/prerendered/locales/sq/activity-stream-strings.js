@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Administroni Ndarjen",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Shtoni Sajt Kryesues",
+  "section_menu_action_add_search_engine": "Shtoni Motor Kërkimesh",
   "section_menu_action_move_up": "Ngjite",
   "section_menu_action_move_down": "Zbrite",
   "section_menu_action_privacy_notice": "Shënim Mbi Privatësinë",

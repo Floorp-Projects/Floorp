@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gestisci seçion",
   "section_menu_action_manage_webext": "Gestisci estenscioin",
   "section_menu_action_add_topsite": "Azonzi scito prinçipâ",
+  "section_menu_action_add_search_engine": "Azonzi motô de riçerca",
   "section_menu_action_move_up": "Mescia in sciù",
   "section_menu_action_move_down": "Mescia in zu",
   "section_menu_action_privacy_notice": "Informativa in sciâ privacy",

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Управление на раздела",
   "section_menu_action_manage_webext": "Управление на добавката",
   "section_menu_action_add_topsite": "Добавяне на често посещавана страница",
+  "section_menu_action_add_search_engine": "Добавяне на търсеща машина",
   "section_menu_action_move_up": "Преместване нагоре",
   "section_menu_action_move_down": "Преместване надолу",
   "section_menu_action_privacy_notice": "Политика за личните данни",

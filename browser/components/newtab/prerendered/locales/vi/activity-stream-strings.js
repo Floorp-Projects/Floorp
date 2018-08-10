@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Quản lý mục",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Thêm trang web hàng đầu",
+  "section_menu_action_add_search_engine": "Thêm công cụ tìm kiếm",
   "section_menu_action_move_up": "Di chuyển lên",
   "section_menu_action_move_down": "Di chuyển xuống",
   "section_menu_action_privacy_notice": "Chính sách riêng tư",

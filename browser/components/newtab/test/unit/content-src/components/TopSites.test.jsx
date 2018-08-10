@@ -18,6 +18,7 @@ const perfSvc = {
 };
 
 const DEFAULT_PROPS = {
+  Prefs: {values: {}},
   TopSites: {initialized: true, rows: []},
   TopSitesRows: TOP_SITES_DEFAULT_ROWS,
   topSiteIconType: () => "no_image",
@@ -321,6 +322,11 @@ describe("<TopSiteLink>", () => {
     link.url = "https://www.foobar.org";
     const wrapper = shallow(<TopSiteLink link={link} />);
     assert.propertyVal(wrapper.find("a").props(), "href", "https://www.foobar.org");
+  });
+  it("should not add the url to the href if it a search shortcut", () => {
+    link.searchTopSite = true;
+    const wrapper = shallow(<TopSiteLink link={link} />);
+    assert.isFalse(wrapper.find("a").props().href);
   });
   it("should have rtl direction automatically set for text", () => {
     const wrapper = shallow(<TopSiteLink link={link} />);

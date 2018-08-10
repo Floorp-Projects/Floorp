@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "વિભાગ સંચાલિત કરો",
   "section_menu_action_manage_webext": "એક્સ્ટેંશનનો વહીવટ કરો",
   "section_menu_action_add_topsite": "ટોચની સાઇટ ઉમેરો",
+  "section_menu_action_add_search_engine": "શોધ યંત્ર ઉમેરો",
   "section_menu_action_move_up": "ઉપર કરો",
   "section_menu_action_move_down": "નીચે કરો",
   "section_menu_action_privacy_notice": "ખાનગી સૂચના",

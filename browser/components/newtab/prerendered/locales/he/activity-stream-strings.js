@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "ניהול מדור",
   "section_menu_action_manage_webext": "ניהול הרחבה",
   "section_menu_action_add_topsite": "הוספת אתר מוביל",
+  "section_menu_action_add_search_engine": "הוספת מנוע חיפוש",
   "section_menu_action_move_up": "העברה למעלה",
   "section_menu_action_move_down": "העברה למטה",
   "section_menu_action_privacy_notice": "הצהרת פרטיות",

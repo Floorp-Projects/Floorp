@@ -23,7 +23,11 @@ const INITIAL_STATE = {
     // The history (and possibly default) links
     rows: [],
     // Used in content only to dispatch action to TopSiteForm.
-    editForm: null
+    editForm: null,
+    // Used in content only to open the SearchShortcutsForm modal.
+    showSearchShortcutsForm: false,
+    // The list of available search shortcuts.
+    searchShortcuts: []
   },
   Prefs: {
     initialized: false,
@@ -98,6 +102,10 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       });
     case at.TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, {editForm: null});
+    case at.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL:
+      return Object.assign({}, prevState, {showSearchShortcutsForm: true});
+    case at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL:
+      return Object.assign({}, prevState, {showSearchShortcutsForm: false});
     case at.PREVIEW_RESPONSE:
       if (!prevState.editForm || action.data.url !== prevState.editForm.previewUrl) {
         return prevState;
@@ -172,6 +180,8 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       }
       newRows = prevState.rows.filter(site => action.data.url !== site.url);
       return Object.assign({}, prevState, {rows: newRows});
+    case at.UPDATE_SEARCH_SHORTCUTS:
+      return {...prevState, searchShortcuts: action.data.searchShortcuts};
     default:
       return prevState;
   }

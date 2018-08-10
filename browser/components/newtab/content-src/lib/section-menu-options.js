@@ -61,6 +61,12 @@ export const SectionMenuOptions = {
     action: {type: at.TOP_SITES_EDIT, data: {index: -1}},
     userEvent: "MENU_ADD_TOPSITE"
   }),
+  AddSearchShortcut: section => ({
+    id: "section_menu_action_add_search_engine",
+    icon: "search",
+    action: {type: at.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL},
+    userEvent: "MENU_ADD_SEARCH_SHORTCUTS"
+  }),
   PrivacyNotice: section => ({
     id: "section_menu_action_privacy_notice",
     icon: "info",

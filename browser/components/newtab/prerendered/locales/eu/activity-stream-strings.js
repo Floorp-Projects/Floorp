@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Kudeatu atala",
   "section_menu_action_manage_webext": "Kudeatu hedapena",
   "section_menu_action_add_topsite": "Gehitu maiz erabilitako gunea",
+  "section_menu_action_add_search_engine": "Gehitu bilaketa-motorra",
   "section_menu_action_move_up": "Eraman gora",
   "section_menu_action_move_down": "Eraman behera",
   "section_menu_action_privacy_notice": "Pribatutasun-oharra",

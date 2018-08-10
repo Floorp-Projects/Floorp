@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "ຈັດການສ່ວນ",
   "section_menu_action_manage_webext": "ຈັດການສ່ວນເສີມ",
   "section_menu_action_add_topsite": "ເພີ່ມເວັບໄຊທ໌ຍອດນິຍົມ",
+  "section_menu_action_add_search_engine": "ເພີ່ມເຄື່ອງມືການຊອກຫາ",
   "section_menu_action_move_up": "ຍ້າຍຂື້ນ",
   "section_menu_action_move_down": "ຍ້າຍລົງ",
   "section_menu_action_privacy_notice": "ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ",

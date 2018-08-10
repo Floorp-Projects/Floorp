@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "จัดการส่วน",
   "section_menu_action_manage_webext": "จัดการส่วนขยาย",
   "section_menu_action_add_topsite": "เพิ่มไซต์เด่น",
+  "section_menu_action_add_search_engine": "เพิ่มเครื่องมือค้นหา",
   "section_menu_action_move_up": "ย้ายขึ้น",
   "section_menu_action_move_down": "ย้ายลง",
   "section_menu_action_privacy_notice": "ประกาศความเป็นส่วนตัว",

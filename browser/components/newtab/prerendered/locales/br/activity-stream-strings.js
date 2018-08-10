@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Merañ ar gevrenn",
   "section_menu_action_manage_webext": "Merañ an askouezh",
   "section_menu_action_add_topsite": "Ouzhpennañ ul lec'hienn gwellañ din",
+  "section_menu_action_add_search_engine": "Ouzhpennañ ul lusker enklask",
   "section_menu_action_move_up": "Dilec'hiañ etrezek ar c'hrec'h",
   "section_menu_action_move_down": "Dilec'hiañ etrezek an traoñ",
   "section_menu_action_privacy_notice": "Evezhiadennoù a-fet buhez prevez",

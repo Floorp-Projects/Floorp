@@ -3,7 +3,9 @@ window.gActivityStreamPrerenderedState = {
   "TopSites": {
     "initialized": false,
     "rows": [],
-    "editForm": null
+    "editForm": null,
+    "showSearchShortcutsForm": false,
+    "searchShortcuts": []
   },
   "App": {
     "initialized": false

@@ -6,12 +6,22 @@
 // List of sites we match against Topsites in order to identify sites
 // that should be converted to search Topsites
 const SEARCH_SHORTCUTS = [
-  {keyword: "@google", shortURL: "google", url: "https://google.com", searchIdentifier: /^google/},
+  {keyword: "@amazon", shortURL: "amazon", url: "https://amazon.com", searchIdentifier: /^amazon/},
   {keyword: "@baidu", shortURL: "baidu", url: "https://baidu.com", searchIdentifier: /^baidu/},
-  {keyword: "@yandex", shortURL: "yandex", url: "https://yandex.com", searchIdentifier: /^yandex/},
-  {keyword: "@amazon", shortURL: "amazon", url: "https://amazon.com", searchIdentifier: /^amazon/}
+  {keyword: "@google", shortURL: "google", url: "https://google.com", searchIdentifier: /^google/},
+  {keyword: "@yandex", shortURL: "yandex", url: "https://yandex.com", searchIdentifier: /^yandex/}
 ];
 this.SEARCH_SHORTCUTS = SEARCH_SHORTCUTS;
+
+// These can be added via the editor but will not be added organically
+this.CUSTOM_SEARCH_SHORTCUTS = [
+  ...SEARCH_SHORTCUTS,
+  {keyword: "@bing", shortURL: "bing", url: "https://bing.com", searchIdentifier: /^bing/},
+  {keyword: "@duckduckgo", shortURL: "duckduckgo", url: "https://duckduckgo.com", searchIdentifier: /^ddg/},
+  {keyword: "@ebay", shortURL: "ebay", url: "https://ebay.com", searchIdentifier: /^ebay/},
+  {keyword: "@twitter", shortURL: "twitter", url: "https://twitter.com", searchIdentifier: /^twitter/},
+  {keyword: "@wikipedia", shortURL: "wikipedia", url: "https://wikipedia.org", searchIdentifier: /^wikipedia/}
+];
 
 // Note: you must add the activity stream branch to the beginning of this if using outside activity stream
 this.SEARCH_SHORTCUTS_EXPERIMENT = "improvesearch.topSiteSearchShortcuts";
@@ -23,5 +33,5 @@ function getSearchProvider(candidateShortURL) {
 }
 this.getSearchProvider = getSearchProvider;
 
-const EXPORTED_SYMBOLS = ["getSearchProvider", "SEARCH_SHORTCUTS", "SEARCH_SHORTCUTS_EXPERIMENT",
+const EXPORTED_SYMBOLS = ["getSearchProvider", "SEARCH_SHORTCUTS", "CUSTOM_SEARCH_SHORTCUTS", "SEARCH_SHORTCUTS_EXPERIMENT",
   "SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF", "SEARCH_SHORTCUTS_HAVE_PINNED_PREF"];

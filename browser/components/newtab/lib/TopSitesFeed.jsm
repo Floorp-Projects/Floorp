@@ -12,6 +12,7 @@ const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.js
 const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
 const {getDefaultOptions} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
 const {
+  CUSTOM_SEARCH_SHORTCUTS,
   SEARCH_SHORTCUTS_EXPERIMENT,
   SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
   SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
@@ -173,8 +174,9 @@ this.TopSitesFeed = class TopSitesFeed {
       // The plainPinnedSites array is populated with pinned sites at their
       // respective indices, and null everywhere else, but is not always the
       // right length
+      const emptySlots = Math.max(numberOfSlots - plainPinnedSites.length, 0);
       const pinnedSites = [...plainPinnedSites].concat(
-        Array(numberOfSlots - plainPinnedSites.length).fill(null)
+        Array(emptySlots).fill(null)
       );
 
       await new Promise(resolve => Services.search.init(resolve));
@@ -188,7 +190,7 @@ this.TopSitesFeed = class TopSitesFeed {
           !pinnedSites.find(s => s && s.hostname === shortcut.shortURL) &&
           !prevInsertedShortcuts.includes(shortcut.shortURL) &&
           nextAvailable > -1 &&
-          Services.search.getEngines().find(e => e.identifier.match(shortcut.searchIdentifier))
+          Services.search.getEngines().find(e => e.identifier && e.identifier.match(shortcut.searchIdentifier))
         ) {
           const site = this.topSiteToSearchTopSite({url: shortcut.url});
           this._pinSiteAt(site, nextAvailable);
@@ -277,7 +279,8 @@ this.TopSitesFeed = class TopSitesFeed {
         {},
         frecentSite || {isDefault: !!notBlockedDefaultSites.find(finder)},
         link,
-        {hostname: shortURL(link)}
+        {hostname: shortURL(link)},
+        {searchTopSite: !!link.searchTopSite}
       );
 
       // Add in favicons if we don't already have it
@@ -340,6 +343,7 @@ this.TopSitesFeed = class TopSitesFeed {
     if (!this._tippyTopProvider.initialized) {
       await this._tippyTopProvider.init();
     }
+
     const links = await this.getLinksWithDefaults();
     const newAction = {type: at.TOP_SITES_UPDATED, data: {links}};
     let storedPrefs;
@@ -358,6 +362,32 @@ this.TopSitesFeed = class TopSitesFeed {
       // Don't broadcast only update the state and update the preloaded tab.
       this.store.dispatch(ac.AlsoToPreloaded(newAction));
     }
+  }
+
+  async updateCustomSearchShortcuts() {
+    if (!this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT]) {
+      return;
+    }
+
+    if (!this._tippyTopProvider.initialized) {
+      await this._tippyTopProvider.init();
+    }
+
+    // Populate the state with available search shortcuts
+    await new Promise(resolve => Services.search.init(resolve));
+    const searchShortcuts = Services.search.getDefaultEngines().reduce((result, engine) => {
+      if (engine.identifier) {
+        const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s => engine.identifier.match(s.searchIdentifier));
+        if (shortcut) {
+          result.push(this._tippyTopProvider.processSite({...shortcut}));
+        }
+      }
+      return result;
+    }, []);
+    this.store.dispatch(ac.BroadcastToContent({
+      type: at.UPDATE_SEARCH_SHORTCUTS,
+      data: {searchShortcuts}
+    }));
   }
 
   topSiteToSearchTopSite(site) {
@@ -587,6 +617,7 @@ this.TopSitesFeed = class TopSitesFeed {
     switch (action.type) {
       case at.INIT:
         this.init();
+        this.updateCustomSearchShortcuts();
         break;
       case at.SYSTEM_TICK:
         this.refresh({broadcast: false});

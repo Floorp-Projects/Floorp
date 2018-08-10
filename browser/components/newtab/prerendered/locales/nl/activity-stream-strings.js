@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Sectie beheren",
   "section_menu_action_manage_webext": "Extensie beheren",
   "section_menu_action_add_topsite": "Topwebsite toevoegen",
+  "section_menu_action_add_search_engine": "Zoekmachine toevoegen",
   "section_menu_action_move_up": "Omhoog verplaatsen",
   "section_menu_action_move_down": "Omlaag verplaatsen",
   "section_menu_action_privacy_notice": "Privacyverklaring",

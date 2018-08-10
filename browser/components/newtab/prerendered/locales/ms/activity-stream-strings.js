@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Urus Seksyen",
   "section_menu_action_manage_webext": "Urus Ekstensi",
   "section_menu_action_add_topsite": "Tambah Laman Teratas",
+  "section_menu_action_add_search_engine": "Tambah Enjin Carian",
   "section_menu_action_move_up": "Pindah Atas",
   "section_menu_action_move_down": "Pindah Bawah",
   "section_menu_action_privacy_notice": "Notis Privasi",

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Pamahalaan ang Seksyon",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Magdagdag ng Nangungunang Site",
+  "section_menu_action_add_search_engine": "Add Search Engine",
   "section_menu_action_move_up": "Ilipat Up",
   "section_menu_action_move_down": "Ilipat sa Baba",
   "section_menu_action_privacy_notice": "Paunawa sa Privacy",

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Administrar sección",
   "section_menu_action_manage_webext": "Administrar extensión",
   "section_menu_action_add_topsite": "Agregar Sitio más visitado",
+  "section_menu_action_add_search_engine": "Agregar buscador",
   "section_menu_action_move_up": "Subir",
   "section_menu_action_move_down": "Bajar",
   "section_menu_action_privacy_notice": "Nota de privacidad",

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Lo bute",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Med Kakube maloyo",
+  "section_menu_action_add_search_engine": "Med Ingin me Yeny",
   "section_menu_action_move_up": "Kob Malo",
   "section_menu_action_move_down": "Kob Piny",
   "section_menu_action_privacy_notice": "Ngec me mung",

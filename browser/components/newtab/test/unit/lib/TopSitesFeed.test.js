@@ -363,6 +363,16 @@ describe("Top Sites Feed", () => {
 
         assert.equal(result[0].screenshot, "bar");
       });
+      it("should not set searchTopSite from frecent site", async () => {
+        links = [{url: "https://foo.com/", searchTopSite: true, screenshot: "screenshot"}];
+        fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/"}];
+
+        const result = await feed.getLinksWithDefaults();
+
+        assert.propertyVal(result[0], "searchTopSite", false);
+        // But it should copy over other properties
+        assert.propertyVal(result[0], "screenshot", "screenshot");
+      });
       describe("concurrency", () => {
         let resolvers;
         beforeEach(() => {
@@ -1176,6 +1186,10 @@ describe("Top Sites Feed", () => {
         {identifier: "google"},
         {identifier: "amazon"}
       ];
+      global.Services.search.getDefaultEngines = () => [
+        {identifier: "google"},
+        {identifier: "amazon"}
+      ];
       fakeNewTabUtils.pinnedLinks.pin = sinon.stub().callsFake((site, index) => {
         fakeNewTabUtils.pinnedLinks.links[index] = site;
       });
@@ -1272,6 +1286,28 @@ describe("Top Sites Feed", () => {
 
       const defaultSearchTopsite = urlsReturned.find(s => s.url === "google.com");
       assert.isTrue(defaultSearchTopsite.searchTopSite);
+    });
+    it("should dispatch UPDATE_SEARCH_SHORTCUTS on updateCustomSearchShortcuts", async () => {
+      feed.store.state.Prefs.values["improvesearch.noDefaultSearchTile"] = true;
+      await feed.updateCustomSearchShortcuts();
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {
+          searchShortcuts: [{
+            keyword: "@google",
+            searchIdentifier: /^google/,
+            shortURL: "google",
+            url: "https://google.com"
+          }, {
+            keyword: "@amazon",
+            searchIdentifier: /^amazon/,
+            shortURL: "amazon",
+            url: "https://amazon.com"
+          }]
+        },
+        meta: {from: "ActivityStream:Main", to: "ActivityStream:Content"},
+        type: "UPDATE_SEARCH_SHORTCUTS"
+      });
     });
 
     describe("_maybeInsertSearchShortcuts", () => {

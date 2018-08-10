@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Nastavení sekce",
   "section_menu_action_manage_webext": "Správa rozšíření",
   "section_menu_action_add_topsite": "Přidat mezi top stránky",
+  "section_menu_action_add_search_engine": "Přidat vyhledávací modul",
   "section_menu_action_move_up": "Posunout nahoru",
   "section_menu_action_move_down": "Posunout dolů",
   "section_menu_action_privacy_notice": "Zásady ochrany osobních údajů",
