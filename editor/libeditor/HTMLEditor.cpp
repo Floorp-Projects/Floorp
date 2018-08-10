@@ -2657,10 +2657,6 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
 {
   MOZ_ASSERT(!aRv.Failed());
 
-  bool isCollapsed = aSelection.IsCollapsed();
-
-  // nullptr indicates we should look for any element.
-  bool anyTag = !aTagName;
   bool isLinkTag = aTagName && IsLinkTag(*aTagName);
   bool isNamedAnchorTag = aTagName && IsNamedAnchorTag(*aTagName);
 
@@ -2682,7 +2678,7 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
     nsCOMPtr<nsINode> selectedNode = startNode;
     if (selectedNode) {
       // Test for appropriate node type requested
-      if (anyTag || aTagName == selectedNode->NodeInfo()->NameAtom() ||
+      if (!aTagName || aTagName == selectedNode->NodeInfo()->NameAtom() ||
           (isLinkTag && HTMLEditUtils::IsLink(selectedNode)) ||
           (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(selectedNode))) {
         return selectedNode.forget();
@@ -2690,8 +2686,7 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
     }
   }
 
-  bool bNodeFound = false;
-  nsCOMPtr<Element> selectedElement;
+  RefPtr<Element> selectedElement;
   if (isLinkTag) {
     // Link tag is a special case - we return the anchor node
     //  found for any selection that is totally within a link,
@@ -2705,22 +2700,18 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
                                     anchor.Container());
       // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
       if (parentLinkOfAnchor) {
-        if (isCollapsed) {
-          // We have just a caret in the link
-          bNodeFound = true;
-        } else if (focus.IsSet()) {
+        if (aSelection.IsCollapsed()) {
+          // We have just a caret in the link.
+          return parentLinkOfAnchor.forget();
+        }
+        if (focus.IsSet()) {
           // Link node must be the same for both ends of selection.
           RefPtr<Element> parentLinkOfFocus =
             GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
                                         focus.Container());
           if (parentLinkOfFocus == parentLinkOfAnchor) {
-            bNodeFound = true;
+            return parentLinkOfAnchor.forget();
           }
-        }
-
-        // We found a link node parent
-        if (bNodeFound) {
-          return parentLinkOfAnchor.forget();
         }
       } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
         // Check if link node is the only thing selected
@@ -2728,14 +2719,13 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
             anchor.Container() == focus.Container() &&
             focus.GetChildAtOffset() ==
               anchor.GetChildAtOffset()->GetNextSibling()) {
-          selectedElement = do_QueryInterface(anchor.GetChildAtOffset());
-          bNodeFound = true;
+          selectedElement = Element::FromNodeOrNull(anchor.GetChildAtOffset());
         }
       }
     }
   }
 
-  if (!isCollapsed) {
+  if (!aSelection.IsCollapsed()) {
     RefPtr<nsRange> currange = aSelection.GetRangeAt(0);
     if (currange) {
       nsresult rv;
@@ -2747,6 +2737,7 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
         return nullptr;
       }
 
+      bool found = !!selectedElement;
       const nsAtom* tagNameLookingFor = aTagName;
       iter->Init(currange);
       // loop through the content iterator for each content node
@@ -2758,15 +2749,13 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
         if (selectedElement) {
           // If we already found a node, then we have another element,
           //  thus there's not just one element selected
-          if (bNodeFound) {
-            bNodeFound = false;
+          if (found) {
             break;
           }
 
-          if (anyTag) {
+          if (!tagNameLookingFor) {
             // Get name of first selected element
             tagNameLookingFor = selectedElement->NodeInfo()->NameAtom();
-            anyTag = false;
           }
 
           // The "A" tag is a pain,
@@ -2775,14 +2764,15 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
                HTMLEditUtils::IsLink(selectedElement)) ||
               (isNamedAnchorTag &&
                HTMLEditUtils::IsNamedAnchor(selectedElement))) {
-            bNodeFound = true;
+            found = true;
           }
           // All other tag names are handled here.
           else if (tagNameLookingFor ==
                      selectedElement->NodeInfo()->NameAtom()) {
-            bNodeFound = true;
+            found = true;
           }
-          if (!bNodeFound) {
+
+          if (!found) {
             // Check if node we have is really part of the selection???
             break;
           }
@@ -2791,7 +2781,6 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
       }
     } else {
       // Should never get here?
-      isCollapsed = true;
       NS_WARNING("isCollapsed was FALSE, but no elements found in selection\n");
     }
   }
