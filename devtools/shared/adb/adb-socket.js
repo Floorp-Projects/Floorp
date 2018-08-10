@@ -5,6 +5,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
+const { dumpn } = require("devtools/shared/DevToolsUtils");
 
 function createTCPSocket(location, port, options) {
   // Starting with FF57, jsm share the same global and requires some special code
@@ -53,7 +54,7 @@ class AdbSocket {
         dbg += s[i];
       }
     }
-    console.debug(dbg);
+    dumpn(dbg);
   }
 
   // debugging version of tcpsocket.send()
