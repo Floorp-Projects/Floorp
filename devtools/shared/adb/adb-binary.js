@@ -27,17 +27,23 @@ loader.lazyGetter(this, "ADB_BINARY_PATH", () => {
   return adbBinaryPath;
 });
 
-async function getAdbInfo(adbUri) {
+const MANIFEST = "manifest.json";
+
+/**
+ * Read contents from a given uri in the devtools-adb-extension and parse the
+ * contents as JSON.
+ */
+async function readFromExtension(fileUri) {
   return new Promise(resolve => {
     NetUtil.asyncFetch({
-      uri: adbUri,
+      uri: fileUri,
       loadUsingSystemPrincipal: true
     }, (input) => {
       try {
         const string = NetUtil.readInputStreamToString(input, input.available());
         resolve(JSON.parse(string));
       } catch (e) {
-        dumpn(`Could not read adb.json in the extension: ${e}`);
+        dumpn(`Could not read ${fileUri} in the extension: ${e}`);
         resolve(null);
       }
     });
@@ -49,8 +55,7 @@ async function getAdbInfo(adbUri) {
  * Uses NetUtil to read and write, since it's required for reading.
  *
  * @param {string} file
- *        The path name of the file in the extension, such as "win32/adb.exe".
- *        This has to have a '/' in the path string.
+ *        The path name of the file in the extension.
  */
 async function unpackFile(file) {
   const policy = ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
@@ -59,7 +64,8 @@ async function unpackFile(file) {
   }
 
   // Assumes that destination dir already exists.
-  const filePath = OS.Path.join(UNPACKED_ROOT_PATH, file.split("/")[1]);
+  const basePath = file.substring(file.lastIndexOf("/") + 1);
+  const filePath = OS.Path.join(UNPACKED_ROOT_PATH, basePath);
   await new Promise((resolve, reject) => {
     NetUtil.asyncFetch({
       uri: policy.getURL(file),
@@ -91,8 +97,7 @@ async function extractFiles() {
     return false;
   }
   const uri = policy.getURL("adb.json");
-
-  const adbInfo = await getAdbInfo(uri);
+  const adbInfo = await readFromExtension(uri);
   if (!adbInfo) {
     return false;
   }
@@ -118,6 +123,10 @@ async function extractFiles() {
     return false;
   }
 
+  // manifest.json isn't in adb.json but has to be unpacked for version
+  // comparison
+  filesForAdb.push(MANIFEST);
+
   await OS.File.makeDir(UNPACKED_ROOT_PATH);
 
   for (const file of filesForAdb) {
@@ -127,6 +136,71 @@ async function extractFiles() {
       return false;
     }
   }
+
+  return true;
+}
+
+/**
+ * Read the manifest from inside the devtools-adb-extension.
+ * Uses NetUtil since data is packed inside the extension, not a local file.
+ */
+async function getManifestFromExtension() {
+  const policy = ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
+  if (!policy) {
+    return null;
+  }
+
+  const manifestUri = policy.getURL(MANIFEST);
+  return readFromExtension(manifestUri);
+}
+
+/**
+ * Returns whether manifest.json has already been unpacked.
+ */
+async function isManifestUnpacked() {
+  const manifestPath = OS.Path.join(UNPACKED_ROOT_PATH, MANIFEST);
+  return OS.File.exists(manifestPath);
+}
+
+/**
+ * Read the manifest from the unpacked binary directory.
+ * Uses OS.File since this is a local file.
+ */
+async function getManifestFromUnpacked() {
+  if (!await isManifestUnpacked()) {
+    throw new Error("Manifest doesn't exist at unpacked path");
+  }
+
+  const manifestPath = OS.Path.join(UNPACKED_ROOT_PATH, MANIFEST);
+  const binary = await OS.File.read(manifestPath);
+  const json = new TextDecoder().decode(binary);
+  let data;
+  try {
+    data = JSON.parse(json);
+  } catch (e) {
+  }
+  return data;
+}
+
+/**
+ * Check state of binary unpacking, including the location and manifest.
+ */
+async function isUnpacked() {
+  if (!await isManifestUnpacked()) {
+    dumpn("Needs unpacking, no manifest found");
+    return false;
+  }
+
+  const manifestInExtension = await getManifestFromExtension();
+  const unpackedManifest = await getManifestFromUnpacked();
+  if (manifestInExtension.version != unpackedManifest.version) {
+    dumpn(
+      `Needs unpacking, extension version ${manifestInExtension.version} != ` +
+      `unpacked version ${unpackedManifest.version}`
+    );
+    return false;
+  }
+  dumpn("Already unpacked");
   return true;
 }
 
@@ -138,7 +212,8 @@ async function extractFiles() {
  *        File object for the binary.
  */
 async function getFileForBinary() {
-  if (!await extractFiles()) {
+  if (!await isUnpacked() &&
+      !await extractFiles()) {
     return null;
   }
   return new FileUtils.File(ADB_BINARY_PATH);
