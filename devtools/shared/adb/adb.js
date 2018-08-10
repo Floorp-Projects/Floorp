@@ -108,13 +108,8 @@ const ADB = {
       const adbFile = await this.adbFilePromise;
       process.init(adbFile);
       // Hide command prompt window on Windows
-      try {
-        // startHidden is 55+
-        process.startHidden = true;
-        // noShell attribute is 58+
-        process.noShell = true;
-      } catch (e) {
-      }
+      process.startHidden = true;
+      process.noShell = true;
       const params = ["start-server"];
       let isStarted = false;
       try {
@@ -171,13 +166,8 @@ const ADB = {
     const adbFile = await this.adbFilePromise;
     process.init(adbFile);
     // Hide command prompt window on Windows
-    try {
-      // startHidden is 55+
-      process.startHidden = true;
-      // noShell attribute is 58+
-      process.noShell = true;
-    } catch (e) {
-    }
+    process.startHidden = true;
+    process.noShell = true;
     const params = ["kill-server"];
 
     if (sync) {
