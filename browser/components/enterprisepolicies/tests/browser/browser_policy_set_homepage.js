@@ -154,3 +154,14 @@ add_task(async function homepage_test_locked() {
   await check_homepage({expectedURL: "http://example4.com/|http://example5.com/|http://example6.com/",
                        locked: true});
 });
+
+add_task(async function homepage_test_anchor_link() {
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "Homepage": {
+        "URL": "http://example1.com/#test"
+      }
+    }
+  });
+  await check_homepage({expectedURL: "http://example1.com/#test"});
+});
