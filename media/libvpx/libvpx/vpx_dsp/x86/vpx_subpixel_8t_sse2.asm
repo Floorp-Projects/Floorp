@@ -176,6 +176,8 @@
     movq        [rdi + %2], xmm0
 %endm
 
+SECTION .text
+
 ;void vpx_filter_block1d4_v8_sse2
 ;(
 ;    unsigned char *src_ptr,

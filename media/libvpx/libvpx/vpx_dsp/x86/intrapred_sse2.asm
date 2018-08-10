@@ -61,7 +61,7 @@ cglobal d45_predictor_4x4, 3, 4, 4, dst, stride, above, goffset
   psrlq                m3, 8
   movd   [dstq+strideq  ], m3
   psrlq                m0, 56
-  movd              tempq, m0
+  movd              tempd, m0
   mov    [dstq+strideq+3], tempb
 
   RESTORE_GOT

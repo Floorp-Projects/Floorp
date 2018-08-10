@@ -14,6 +14,7 @@
 #include "vp8/common/extend.h"
 #include "bitstream.h"
 #include "encodeframe.h"
+#include "ethreading.h"
 
 #if CONFIG_MULTITHREAD
 
@@ -25,11 +26,11 @@ static THREAD_FUNCTION thread_loopfilter(void *p_data) {
   VP8_COMMON *cm = &cpi->common;
 
   while (1) {
-    if (protected_read(&cpi->mt_mutex, &cpi->b_multi_threaded) == 0) break;
+    if (vpx_atomic_load_acquire(&cpi->b_multi_threaded) == 0) break;
 
     if (sem_wait(&cpi->h_event_start_lpf) == 0) {
       /* we're shutting down */
-      if (protected_read(&cpi->mt_mutex, &cpi->b_multi_threaded) == 0) break;
+      if (vpx_atomic_load_acquire(&cpi->b_multi_threaded) == 0) break;
 
       vp8_loopfilter_frame(cpi, cm);
 
@@ -47,7 +48,7 @@ static THREAD_FUNCTION thread_encoding_proc(void *p_data) {
   ENTROPY_CONTEXT_PLANES mb_row_left_context;
 
   while (1) {
-    if (protected_read(&cpi->mt_mutex, &cpi->b_multi_threaded) == 0) break;
+    if (vpx_atomic_load_acquire(&cpi->b_multi_threaded) == 0) break;
 
     if (sem_wait(&cpi->h_event_start_encoding[ithread]) == 0) {
       const int nsync = cpi->mt_sync_range;
@@ -65,7 +66,7 @@ static THREAD_FUNCTION thread_encoding_proc(void *p_data) {
       int *totalrate = &mbri->totalrate;
 
       /* we're shutting down */
-      if (protected_read(&cpi->mt_mutex, &cpi->b_multi_threaded) == 0) break;
+      if (vpx_atomic_load_acquire(&cpi->b_multi_threaded) == 0) break;
 
       xd->mode_info_context = cm->mi + cm->mode_info_stride * (ithread + 1);
       xd->mode_info_stride = cm->mode_info_stride;
@@ -79,8 +80,8 @@ static THREAD_FUNCTION thread_encoding_proc(void *p_data) {
         int recon_y_stride = cm->yv12_fb[ref_fb_idx].y_stride;
         int recon_uv_stride = cm->yv12_fb[ref_fb_idx].uv_stride;
         int map_index = (mb_row * cm->mb_cols);
-        const int *last_row_current_mb_col;
-        int *current_mb_col = &cpi->mt_current_mb_col[mb_row];
+        const vpx_atomic_int *last_row_current_mb_col;
+        vpx_atomic_int *current_mb_col = &cpi->mt_current_mb_col[mb_row];
 
 #if (CONFIG_REALTIME_ONLY & CONFIG_ONTHEFLY_BITPACKING)
         vp8_writer *w = &cpi->bc[1 + (mb_row % num_part)];
@@ -107,13 +108,11 @@ static THREAD_FUNCTION thread_encoding_proc(void *p_data) {
         /* for each macroblock col in image */
         for (mb_col = 0; mb_col < cm->mb_cols; ++mb_col) {
           if (((mb_col - 1) % nsync) == 0) {
-            pthread_mutex_t *mutex = &cpi->pmutex[mb_row];
-            protected_write(mutex, current_mb_col, mb_col - 1);
+            vpx_atomic_store_release(current_mb_col, mb_col - 1);
           }
 
           if (mb_row && !(mb_col & (nsync - 1))) {
-            pthread_mutex_t *mutex = &cpi->pmutex[mb_row - 1];
-            sync_read(mutex, mb_col, last_row_current_mb_col, nsync);
+            vp8_atomic_spin_wait(mb_col, last_row_current_mb_col, nsync);
           }
 
 #if CONFIG_REALTIME_ONLY & CONFIG_ONTHEFLY_BITPACKING
@@ -285,7 +284,7 @@ static THREAD_FUNCTION thread_encoding_proc(void *p_data) {
         vp8_extend_mb_row(&cm->yv12_fb[dst_fb_idx], xd->dst.y_buffer + 16,
                           xd->dst.u_buffer + 8, xd->dst.v_buffer + 8);
 
-        protected_write(&cpi->pmutex[mb_row], current_mb_col, mb_col + nsync);
+        vpx_atomic_store_release(current_mb_col, mb_col + nsync);
 
         /* this is to account for the border */
         xd->mode_info_context++;
@@ -489,11 +488,9 @@ void vp8cx_init_mbrthread_data(VP8_COMP *cpi, MACROBLOCK *x,
 int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
   const VP8_COMMON *cm = &cpi->common;
 
-  cpi->b_multi_threaded = 0;
+  vpx_atomic_init(&cpi->b_multi_threaded, 0);
   cpi->encoding_thread_count = 0;
   cpi->b_lpf_running = 0;
-
-  pthread_mutex_init(&cpi->mt_mutex, NULL);
 
   if (cm->processor_core_count > 1 && cpi->oxcf.multi_threaded > 1) {
     int ithread;
@@ -525,7 +522,7 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
     CHECK_MEM_ERROR(cpi->en_thread_data,
                     vpx_malloc(sizeof(ENCODETHREAD_DATA) * th_count));
 
-    cpi->b_multi_threaded = 1;
+    vpx_atomic_store_release(&cpi->b_multi_threaded, 1);
     cpi->encoding_thread_count = th_count;
 
     /*
@@ -554,7 +551,7 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
 
     if (rc) {
       /* shutdown other threads */
-      protected_write(&cpi->mt_mutex, &cpi->b_multi_threaded, 0);
+      vpx_atomic_store_release(&cpi->b_multi_threaded, 0);
       for (--ithread; ithread >= 0; ithread--) {
         pthread_join(cpi->h_encoding_thread[ithread], 0);
         sem_destroy(&cpi->h_event_start_encoding[ithread]);
@@ -567,8 +564,6 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
       vpx_free(cpi->h_encoding_thread);
       vpx_free(cpi->mb_row_ei);
       vpx_free(cpi->en_thread_data);
-
-      pthread_mutex_destroy(&cpi->mt_mutex);
 
       return -1;
     }
@@ -584,7 +579,7 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
 
       if (rc) {
         /* shutdown other threads */
-        protected_write(&cpi->mt_mutex, &cpi->b_multi_threaded, 0);
+        vpx_atomic_store_release(&cpi->b_multi_threaded, 0);
         for (--ithread; ithread >= 0; ithread--) {
           sem_post(&cpi->h_event_start_encoding[ithread]);
           sem_post(&cpi->h_event_end_encoding[ithread]);
@@ -602,8 +597,6 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
         vpx_free(cpi->mb_row_ei);
         vpx_free(cpi->en_thread_data);
 
-        pthread_mutex_destroy(&cpi->mt_mutex);
-
         return -2;
       }
     }
@@ -612,9 +605,9 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
 }
 
 void vp8cx_remove_encoder_threads(VP8_COMP *cpi) {
-  if (protected_read(&cpi->mt_mutex, &cpi->b_multi_threaded)) {
+  if (vpx_atomic_load_acquire(&cpi->b_multi_threaded)) {
     /* shutdown other threads */
-    protected_write(&cpi->mt_mutex, &cpi->b_multi_threaded, 0);
+    vpx_atomic_store_release(&cpi->b_multi_threaded, 0);
     {
       int i;
 
@@ -642,6 +635,5 @@ void vp8cx_remove_encoder_threads(VP8_COMP *cpi) {
     vpx_free(cpi->mb_row_ei);
     vpx_free(cpi->en_thread_data);
   }
-  pthread_mutex_destroy(&cpi->mt_mutex);
 }
 #endif

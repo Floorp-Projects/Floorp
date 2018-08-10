@@ -51,6 +51,10 @@
 #undef compress
 #include "mozilla/Compression.h"
 
+// Undo the damage done by X11
+#ifdef Status
+#  undef Status
+#endif
 // Protocol buffer (generated automatically)
 #include "protobuf/LayerScopePacket.pb.h"
 

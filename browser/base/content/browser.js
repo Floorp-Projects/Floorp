@@ -538,7 +538,8 @@ const gStoragePressureObserver = {
       accessKey: prefStrBundle.getString("spaceAlert.learnMoreButton.accesskey"),
       callback(notificationBar, button) {
         let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
-        gBrowser.selectedTab = gBrowser.addTab(learnMoreURL);
+        // This is a content URL, loaded from trusted UX.
+        gBrowser.selectedTab = gBrowser.addTrustedTab(learnMoreURL);
       }
     });
     if (usage < USAGE_THRESHOLD_BYTES) {
@@ -3971,8 +3972,11 @@ const BrowserSearch = {
    * @return engine The search engine used to perform a search, or null if no
    *                search was performed.
    */
-  _loadSearch(searchText, useNewTab, purpose) {
+  _loadSearch(searchText, useNewTab, purpose, triggeringPrincipal) {
     let engine;
+    if (!triggeringPrincipal) {
+      throw new Error("Required argument triggeringPrincipal missing within _loadSearch");
+    }
 
     // If the search bar is visible, use the current engine, otherwise, fall
     // back to the default engine.
@@ -3996,23 +4000,10 @@ const BrowserSearch = {
                useNewTab ? "tab" : "current",
                { postData: submission.postData,
                  inBackground,
-                 relatedToCurrent: true });
+                 relatedToCurrent: true,
+                 triggeringPrincipal });
 
     return engine;
-  },
-
-  /**
-   * Just like _loadSearch, but preserving an old API.
-   *
-   * @return string Name of the search engine used to perform a search or null
-   *         if a search was not performed.
-   */
-  loadSearch: function BrowserSearch_search(searchText, useNewTab, purpose) {
-    let engine = BrowserSearch._loadSearch(searchText, useNewTab, purpose);
-    if (!engine) {
-      return null;
-    }
-    return engine.name;
   },
 
   /**
@@ -4021,8 +4012,8 @@ const BrowserSearch = {
    * This should only be called from the context menu. See
    * BrowserSearch.loadSearch for the preferred API.
    */
-  loadSearchFromContext(terms) {
-    let engine = BrowserSearch._loadSearch(terms, true, "contextmenu");
+  loadSearchFromContext(terms, triggeringPrincipal) {
+    let engine = BrowserSearch._loadSearch(terms, true, "contextmenu", triggeringPrincipal);
     if (engine) {
       BrowserSearch.recordSearchInTelemetry(engine, "contextmenu");
     }
@@ -7097,7 +7088,7 @@ function BrowserOpenAddonsMgr(aView) {
 }
 
 function BeginRecordExecution() {
-  gBrowser.selectedTab = gBrowser.addTab("about:blank", { recordExecution: "*" });
+  gBrowser.selectedTab = gBrowser.addWebTab("about:blank", { recordExecution: "*" });
 }
 
 function SaveRecordedExecution() {
@@ -7120,7 +7111,7 @@ function BeginReplayExecution() {
   fp.init(window, null, Ci.nsIFilePicker.modeOpen);
   fp.open(rv => {
     if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
-      gBrowser.selectedTab = gBrowser.addTab(null, { replayExecution: fp.file.path });
+      gBrowser.selectedTab = gBrowser.addWebTab(null, { replayExecution: fp.file.path });
     }
   });
 }
@@ -7389,7 +7380,8 @@ const gAccessibilityServiceIndicator = {
          type === "click") {
       let a11yServicesSupportURL =
         Services.urlFormatter.formatURLPref("accessibility.support.url");
-      gBrowser.selectedTab = gBrowser.addTab(a11yServicesSupportURL);
+      // This is a known URL coming from trusted UI
+      gBrowser.selectedTab = gBrowser.addTrustedTab(a11yServicesSupportURL);
       Services.telemetry.scalarSet("a11y.indicator_acted_on", true);
     }
   },

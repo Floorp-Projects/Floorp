@@ -8,8 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/mips/fwd_txfm_msa.h"
 
+void vpx_fdct8x8_1_msa(const int16_t *input, tran_low_t *out, int32_t stride) {
+  v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
+  v4i32 vec_w;
+
+  LD_SH8(input, stride, in0, in1, in2, in3, in4, in5, in6, in7);
+  ADD4(in0, in1, in2, in3, in4, in5, in6, in7, in0, in2, in4, in6);
+  ADD2(in0, in2, in4, in6, in0, in4);
+  vec_w = __msa_hadd_s_w(in0, in0);
+  vec_w += __msa_hadd_s_w(in4, in4);
+  out[0] = HADD_SW_S32(vec_w);
+  out[1] = 0;
+}
+
+#if !CONFIG_VP9_HIGHBITDEPTH
 void fdct8x16_1d_column(const int16_t *input, int16_t *tmp_ptr,
                         int32_t src_stride) {
   v8i16 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
@@ -215,11 +230,6 @@ void vpx_fdct8x8_msa(const int16_t *input, int16_t *output,
   ST_SH8(in0, in1, in2, in3, in4, in5, in6, in7, output, 8);
 }
 
-void vpx_fdct8x8_1_msa(const int16_t *input, int16_t *out, int32_t stride) {
-  out[0] = LD_HADD(input, stride);
-  out[1] = 0;
-}
-
 void vpx_fdct16x16_msa(const int16_t *input, int16_t *output,
                        int32_t src_stride) {
   int32_t i;
@@ -237,9 +247,26 @@ void vpx_fdct16x16_msa(const int16_t *input, int16_t *output,
 }
 
 void vpx_fdct16x16_1_msa(const int16_t *input, int16_t *out, int32_t stride) {
-  int sum = LD_HADD(input, stride);
-  sum += LD_HADD(input + 8, stride);
-  sum += LD_HADD(input + 16 * 8, stride);
-  sum += LD_HADD(input + 16 * 8 + 8, stride);
+  int sum, i;
+  v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
+  v4i32 vec_w = { 0 };
+
+  for (i = 0; i < 4; ++i) {
+    LD_SH2(input, 8, in0, in1);
+    input += stride;
+    LD_SH2(input, 8, in2, in3);
+    input += stride;
+    LD_SH2(input, 8, in4, in5);
+    input += stride;
+    LD_SH2(input, 8, in6, in7);
+    input += stride;
+    ADD4(in0, in1, in2, in3, in4, in5, in6, in7, in0, in2, in4, in6);
+    ADD2(in0, in2, in4, in6, in0, in4);
+    vec_w += __msa_hadd_s_w(in0, in0);
+    vec_w += __msa_hadd_s_w(in4, in4);
+  }
+
+  sum = HADD_SW_S32(vec_w);
   out[0] = (int16_t)(sum >> 1);
 }
+#endif  // !CONFIG_VP9_HIGHBITDEPTH

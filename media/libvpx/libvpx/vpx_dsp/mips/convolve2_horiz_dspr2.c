@@ -628,9 +628,10 @@ static void convolve_bi_horiz_64_dspr2(const uint8_t *src_ptr,
 
 void vpx_convolve2_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                uint8_t *dst, ptrdiff_t dst_stride,
-                               const int16_t *filter_x, int x_step_q4,
-                               const int16_t *filter_y, int y_step_q4, int w,
-                               int h) {
+                               const InterpKernel *filter, int x0_q4,
+                               int32_t x_step_q4, int y0_q4, int y_step_q4,
+                               int w, int h) {
+  const int16_t *const filter_x = filter[x0_q4];
   uint32_t pos = 38;
 
   assert(x_step_q4 == 16);
@@ -672,8 +673,8 @@ void vpx_convolve2_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                  (int32_t)dst_stride, filter_x, (int32_t)h);
       break;
     default:
-      vpx_convolve8_horiz_c(src, src_stride, dst, dst_stride, filter_x,
-                            x_step_q4, filter_y, y_step_q4, w, h);
+      vpx_convolve8_horiz_c(src, src_stride, dst, dst_stride, filter, x0_q4,
+                            x_step_q4, y0_q4, y_step_q4, w, h);
       break;
   }
 }

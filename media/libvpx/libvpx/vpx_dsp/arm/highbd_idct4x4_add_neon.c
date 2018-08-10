@@ -51,16 +51,15 @@ static INLINE void highbd_idct4x4_1_add_kernel2(uint16_t **dest,
   *dest += stride;
 }
 
-void vpx_highbd_idct4x4_1_add_neon(const tran_low_t *input, uint8_t *dest8,
+void vpx_highbd_idct4x4_1_add_neon(const tran_low_t *input, uint16_t *dest,
                                    int stride, int bd) {
   const int16x8_t max = vdupq_n_s16((1 << bd) - 1);
-  const tran_low_t out0 =
-      HIGHBD_WRAPLOW(dct_const_round_shift(input[0] * cospi_16_64), bd);
-  const tran_low_t out1 =
-      HIGHBD_WRAPLOW(dct_const_round_shift(out0 * cospi_16_64), bd);
+  const tran_low_t out0 = HIGHBD_WRAPLOW(
+      dct_const_round_shift(input[0] * (tran_high_t)cospi_16_64), bd);
+  const tran_low_t out1 = HIGHBD_WRAPLOW(
+      dct_const_round_shift(out0 * (tran_high_t)cospi_16_64), bd);
   const int16_t a1 = ROUND_POWER_OF_TWO(out1, 4);
   const int16x8_t dc = vdupq_n_s16(a1);
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
 
   highbd_idct4x4_1_add_kernel1(&dest, stride, dc, max);
   highbd_idct4x4_1_add_kernel1(&dest, stride, dc, max);
@@ -82,10 +81,10 @@ static INLINE void idct4x4_16_kernel_bd10(const int32x4_t cospis,
   b3 = vmulq_lane_s32(*a1, vget_low_s32(cospis), 1);
   b2 = vmlsq_lane_s32(b2, *a3, vget_low_s32(cospis), 1);
   b3 = vmlaq_lane_s32(b3, *a3, vget_high_s32(cospis), 1);
-  b0 = vrshrq_n_s32(b0, 14);
-  b1 = vrshrq_n_s32(b1, 14);
-  b2 = vrshrq_n_s32(b2, 14);
-  b3 = vrshrq_n_s32(b3, 14);
+  b0 = vrshrq_n_s32(b0, DCT_CONST_BITS);
+  b1 = vrshrq_n_s32(b1, DCT_CONST_BITS);
+  b2 = vrshrq_n_s32(b2, DCT_CONST_BITS);
+  b3 = vrshrq_n_s32(b3, DCT_CONST_BITS);
   *a0 = vaddq_s32(b0, b3);
   *a1 = vaddq_s32(b1, b2);
   *a2 = vsubq_s32(b1, b2);
@@ -119,26 +118,27 @@ static INLINE void idct4x4_16_kernel_bd12(const int32x4_t cospis,
   c5 = vsubq_s64(c5, c9);
   c6 = vaddq_s64(c6, c10);
   c7 = vaddq_s64(c7, c11);
-  b0 = vcombine_s32(vrshrn_n_s64(c0, 14), vrshrn_n_s64(c1, 14));
-  b1 = vcombine_s32(vrshrn_n_s64(c2, 14), vrshrn_n_s64(c3, 14));
-  b2 = vcombine_s32(vrshrn_n_s64(c4, 14), vrshrn_n_s64(c5, 14));
-  b3 = vcombine_s32(vrshrn_n_s64(c6, 14), vrshrn_n_s64(c7, 14));
+  b0 = vcombine_s32(vrshrn_n_s64(c0, DCT_CONST_BITS),
+                    vrshrn_n_s64(c1, DCT_CONST_BITS));
+  b1 = vcombine_s32(vrshrn_n_s64(c2, DCT_CONST_BITS),
+                    vrshrn_n_s64(c3, DCT_CONST_BITS));
+  b2 = vcombine_s32(vrshrn_n_s64(c4, DCT_CONST_BITS),
+                    vrshrn_n_s64(c5, DCT_CONST_BITS));
+  b3 = vcombine_s32(vrshrn_n_s64(c6, DCT_CONST_BITS),
+                    vrshrn_n_s64(c7, DCT_CONST_BITS));
   *a0 = vaddq_s32(b0, b3);
   *a1 = vaddq_s32(b1, b2);
   *a2 = vsubq_s32(b1, b2);
   *a3 = vsubq_s32(b0, b3);
 }
 
-void vpx_highbd_idct4x4_16_add_neon(const tran_low_t *input, uint8_t *dest8,
+void vpx_highbd_idct4x4_16_add_neon(const tran_low_t *input, uint16_t *dest,
                                     int stride, int bd) {
-  DECLARE_ALIGNED(16, static const int32_t, kCospi32[4]) = { 0, 15137, 11585,
-                                                             6270 };
   const int16x8_t max = vdupq_n_s16((1 << bd) - 1);
   int32x4_t c0 = vld1q_s32(input);
   int32x4_t c1 = vld1q_s32(input + 4);
   int32x4_t c2 = vld1q_s32(input + 8);
   int32x4_t c3 = vld1q_s32(input + 12);
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
   int16x8_t a0, a1;
 
   if (bd == 8) {

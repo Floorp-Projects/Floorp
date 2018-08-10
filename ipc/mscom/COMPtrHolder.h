@@ -210,8 +210,9 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
 
     mozilla::mscom::ProxyStream proxyStream(_IID, buf.get(), length, &env);
     if (!proxyStream.IsValid()) {
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamValid"),
-                                         NS_LITERAL_CSTRING("false"));
+      CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::ProxyStreamValid,
+        NS_LITERAL_CSTRING("false"));
       return false;
     }
 

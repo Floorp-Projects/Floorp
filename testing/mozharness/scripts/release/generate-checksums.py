@@ -167,6 +167,11 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
                 for pattern in self.config["includes"]:
                     if re.search(pattern, f):
                         if f in self.checksums:
+                            if info == self.checksums[f]:
+                                self.debug("Duplicate checksum for file {}"
+                                           " but the data matches;"
+                                           " continuing...".format(f))
+                                continue
                             self.fatal("Found duplicate checksum entry for {}, "
                                        "don't know which one to pick.".format(f))
                         if not set(self.config["formats"]) <= set(info["hashes"]):

@@ -17,6 +17,7 @@ extern sym(vp8_bilinear_filters_x86_8)
 %define vp8_filter_weight 128
 %define VP8_FILTER_SHIFT  7
 
+SECTION .text
 
 ;void vp8_filter_block1d_h6_mmx
 ;(

@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+#include "vpx/vpx_integer.h"
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -29,7 +31,12 @@ void *vpx_calloc(size_t num, size_t size);
 void vpx_free(void *memblk);
 
 #if CONFIG_VP9_HIGHBITDEPTH
-void *vpx_memset16(void *dest, int val, size_t length);
+static INLINE void *vpx_memset16(void *dest, int val, size_t length) {
+  size_t i;
+  uint16_t *dest16 = (uint16_t *)dest;
+  for (i = 0; i < length; i++) *dest16++ = val;
+  return dest;
+}
 #endif
 
 #include <string.h>

@@ -327,9 +327,10 @@ class Scope : public js::gc::TenuredCell
     static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
                          HandleShape envShape);
 
-    template <typename T, typename D>
-    static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
-                         HandleShape envShape, mozilla::UniquePtr<T, D> data);
+    template <typename ConcreteScope>
+    static ConcreteScope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
+                                 HandleShape envShape,
+                                 MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
 
     template <typename ConcreteScope, XDRMode mode>
     static XDRResult XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
@@ -337,11 +338,8 @@ class Scope : public js::gc::TenuredCell
 
     Shape* maybeCloneEnvironmentShape(JSContext* cx);
 
-    template <typename T, typename D>
-    void initData(mozilla::UniquePtr<T, D> data) {
-        MOZ_ASSERT(!data_);
-        data_ = data.release();
-    }
+    template <typename ConcreteScope>
+    void initData(MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
 
   public:
     static const JS::TraceKind TraceKind = JS::TraceKind::Scope;

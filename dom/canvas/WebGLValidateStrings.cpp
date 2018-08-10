@@ -174,22 +174,20 @@ IsValidGLSLPreprocChar(char16_t c)
 ////
 
 bool
-ValidateGLSLPreprocString(WebGLContext* webgl, const char* funcName,
-                          const nsAString& string)
+ValidateGLSLPreprocString(WebGLContext* webgl, const nsAString& string)
 {
     for (size_t i = 0; i < string.Length(); ++i) {
         const auto& cur = string[i];
 
         if (!IsValidGLSLPreprocChar(cur)) {
-            webgl->ErrorInvalidValue("%s: String contains the illegal character 0x%x.",
-                                     funcName, cur);
+            webgl->ErrorInvalidValue("String contains the illegal character 0x%x.", cur);
             return false;
         }
 
         if (cur == '\\' && !webgl->IsWebGL2()) {
             // Todo: Backslash is technically still invalid in WebGLSL 1 under even under
             // WebGL 2.
-            webgl->ErrorInvalidValue("%s: Backslash is not valid in WebGL 1.", funcName);
+            webgl->ErrorInvalidValue("Backslash is not valid in WebGL 1.");
             return false;
         }
     }
@@ -198,24 +196,23 @@ ValidateGLSLPreprocString(WebGLContext* webgl, const char* funcName,
 }
 
 bool
-ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl, const char* funcName)
+ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl)
 {
     if (name.IsEmpty())
         return false;
 
     const uint32_t maxSize = webgl->IsWebGL2() ? 1024 : 256;
     if (name.Length() > maxSize) {
-        webgl->ErrorInvalidValue("%s: Identifier is %u characters long, exceeds the"
+        webgl->ErrorInvalidValue("Identifier is %u characters long, exceeds the"
                                  " maximum allowed length of %u characters.",
-                                 funcName, name.Length(), maxSize);
+                                 name.Length(), maxSize);
         return false;
     }
 
     for (size_t i = 0; i < name.Length(); ++i) {
         const auto& cur = name[i];
         if (!IsValidGLSLChar(cur)) {
-           webgl->ErrorInvalidValue("%s: String contains the illegal character 0x%x'.",
-                                    funcName, cur);
+           webgl->ErrorInvalidValue("String contains the illegal character 0x%x'.", cur);
            return false;
         }
     }
@@ -226,8 +223,7 @@ ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl, const char*
     if (Substring(name, 0, prefix1.Length()).Equals(prefix1) ||
         Substring(name, 0, prefix2.Length()).Equals(prefix2))
     {
-        webgl->ErrorInvalidOperation("%s: String contains a reserved GLSL prefix.",
-                                     funcName);
+        webgl->ErrorInvalidOperation("String contains a reserved GLSL prefix.");
         return false;
     }
 

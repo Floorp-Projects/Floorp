@@ -242,7 +242,7 @@ Compatibility::Init()
   InitConsumers();
 
   CrashReporter::
-    AnnotateCrashReport(NS_LITERAL_CSTRING("AccessibilityInProcClient"),
+    AnnotateCrashReport(CrashReporter::Annotation::AccessibilityInProcClient,
                         nsPrintfCString("0x%X", sConsumers));
 
   // Gather telemetry
@@ -436,8 +436,9 @@ UseIAccessibleProxyStub()
   // If we reach this point then something is seriously wrong with the
   // IAccessible configuration in the computer's registry. Let's annotate this
   // so that we can easily determine this condition during crash analysis.
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IAccessibleConfig"),
-                                     NS_LITERAL_CSTRING("NoSystemTypeLibOrPS"));
+  CrashReporter::AnnotateCrashReport(
+    CrashReporter::Annotation::IAccessibleConfig,
+    NS_LITERAL_CSTRING("NoSystemTypeLibOrPS"));
   return false;
 }
 

@@ -7,7 +7,9 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include <assert.h>
 #include <stdlib.h>
+#include "./vpx_dsp_rtcd.h"
 #include "vpx/vpx_integer.h"
 
 const int16_t vpx_rv[] = {
@@ -47,6 +49,9 @@ void vpx_post_proc_down_and_across_mb_row_c(unsigned char *src_ptr,
   int col;
   unsigned char v;
   unsigned char d[4];
+
+  assert(size >= 8);
+  assert(cols >= 8);
 
   for (row = 0; row < size; row++) {
     /* post_proc_down for one row */

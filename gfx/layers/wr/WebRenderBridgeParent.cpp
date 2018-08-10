@@ -200,7 +200,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mIdNamespace(aApi->GetNamespace())
   , mPaused(false)
   , mDestroyed(false)
-  , mForceRendering(false)
   , mReceivedDisplayList(false)
 {
   MOZ_ASSERT(mAsyncImageManager);
@@ -221,7 +220,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
   , mIdNamespace{0}
   , mPaused(false)
   , mDestroyed(true)
-  , mForceRendering(false)
   , mReceivedDisplayList(false)
 {
 }
@@ -1041,9 +1039,12 @@ WebRenderBridgeParent::FlushFrameGeneration()
 
   // This forces a new GenerateFrame transaction to be sent to the render
   // backend thread, if one is pending. This doesn't block on any other threads.
-  mForceRendering = true;
-  mCompositorScheduler->FlushPendingComposite();
-  mForceRendering = false;
+  if (mCompositorScheduler->NeedsComposite()) {
+    mCompositorScheduler->CancelCurrentCompositeTask();
+    // Update timestamp of scheduler for APZ and animation.
+    mCompositorScheduler->UpdateLastComposeTime();
+    MaybeGenerateFrame(/* aForceGenerateFrame */ true);
+  }
 }
 
 void
@@ -1497,14 +1498,18 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
-  if (!mForceRendering &&
-      wr::RenderThread::Get()->TooManyPendingFrames(mApi->GetId())) {
+  if (wr::RenderThread::Get()->TooManyPendingFrames(mApi->GetId())) {
     // Render thread is busy, try next time.
     mCompositorScheduler->ScheduleComposition();
     mPreviousFrameTimeStamp = TimeStamp();
     return;
   }
+  MaybeGenerateFrame(/* aForceGenerateFrame */ false);
+}
 
+void
+WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame)
+{
   TimeStamp start = TimeStamp::Now();
   mAsyncImageManager->SetCompositionTime(start);
 
@@ -1531,7 +1536,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
   if (!mAsyncImageManager->GetAndResetWillGenerateFrame() &&
       fastTxn.IsEmpty() &&
-      !mForceRendering) {
+      !aForceGenerateFrame) {
     // Could skip generating frame now.
     mPreviousFrameTimeStamp = TimeStamp();
     return;

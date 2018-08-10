@@ -380,7 +380,7 @@ int vp9_post_proc_frame(struct VP9Common *cm, YV12_BUFFER_CONFIG *dest,
     // if mfqe is enabled. Need to take both the quality and the speed
     // into consideration.
     if ((flags & VP9D_DEMACROBLOCK) || (flags & VP9D_DEBLOCK)) {
-      vp8_yv12_copy_frame(ppbuf, &cm->post_proc_buffer_int);
+      vpx_yv12_copy_frame(ppbuf, &cm->post_proc_buffer_int);
     }
     if ((flags & VP9D_DEMACROBLOCK) && cm->post_proc_buffer_int.buffer_alloc) {
       deblock_and_de_macro_block(&cm->post_proc_buffer_int, ppbuf,
@@ -390,7 +390,7 @@ int vp9_post_proc_frame(struct VP9Common *cm, YV12_BUFFER_CONFIG *dest,
       vp9_deblock(&cm->post_proc_buffer_int, ppbuf, q,
                   cm->postproc_state.limits);
     } else {
-      vp8_yv12_copy_frame(&cm->post_proc_buffer_int, ppbuf);
+      vpx_yv12_copy_frame(&cm->post_proc_buffer_int, ppbuf);
     }
   } else if (flags & VP9D_DEMACROBLOCK) {
     deblock_and_de_macro_block(cm->frame_to_show, ppbuf,
@@ -399,7 +399,7 @@ int vp9_post_proc_frame(struct VP9Common *cm, YV12_BUFFER_CONFIG *dest,
   } else if (flags & VP9D_DEBLOCK) {
     vp9_deblock(cm->frame_to_show, ppbuf, q, cm->postproc_state.limits);
   } else {
-    vp8_yv12_copy_frame(cm->frame_to_show, ppbuf);
+    vpx_yv12_copy_frame(cm->frame_to_show, ppbuf);
   }
 
   ppstate->last_base_qindex = cm->base_qindex;

@@ -33,7 +33,9 @@
 #include "vp9/encoder/vp9_aq_cyclicrefresh.h"
 #include "vp9/encoder/vp9_context_tree.h"
 #include "vp9/encoder/vp9_encodemb.h"
+#include "vp9/encoder/vp9_ethread.h"
 #include "vp9/encoder/vp9_firstpass.h"
+#include "vp9/encoder/vp9_job_queue.h"
 #include "vp9/encoder/vp9_lookahead.h"
 #include "vp9/encoder/vp9_mbgraph.h"
 #include "vp9/encoder/vp9_mcomp.h"
@@ -129,6 +131,16 @@ typedef enum {
   RESIZE_DYNAMIC = 2  // Coded size of each frame is determined by the codec.
 } RESIZE_TYPE;
 
+typedef enum {
+  kInvalid = 0,
+  kLowSadLowSumdiff = 1,
+  kLowSadHighSumdiff = 2,
+  kHighSadLowSumdiff = 3,
+  kHighSadHighSumdiff = 4,
+  kLowVarHighSumdiff = 5,
+  kVeryHighSad = 6,
+} CONTENT_STATE_SB;
+
 typedef struct VP9EncoderConfig {
   BITSTREAM_PROFILE profile;
   vpx_bit_depth_t bit_depth;     // Codec bit-depth.
@@ -197,6 +209,7 @@ typedef struct VP9EncoderConfig {
   int two_pass_vbrbias;  // two pass datarate control tweaks
   int two_pass_vbrmin_section;
   int two_pass_vbrmax_section;
+  int vbr_corpus_complexity;  // 0 indicates corpus vbr disabled
   // END DATARATE CONTROL OPTIONS
   // ----------------------------------------------------------------
 
@@ -256,6 +269,9 @@ typedef struct VP9EncoderConfig {
   int render_width;
   int render_height;
   VP9E_TEMPORAL_LAYERING_MODE temporal_layering_mode;
+
+  int row_mt;
+  unsigned int motion_vector_unit_test;
 } VP9EncoderConfig;
 
 static INLINE int is_lossless_requested(const VP9EncoderConfig *cfg) {
@@ -267,9 +283,42 @@ typedef struct TileDataEnc {
   TileInfo tile_info;
   int thresh_freq_fact[BLOCK_SIZES][MAX_MODES];
   int mode_map[BLOCK_SIZES][MAX_MODES];
-  int m_search_count;
-  int ex_search_count;
+  FIRSTPASS_DATA fp_data;
+  VP9RowMTSync row_mt_sync;
+
+  // Used for adaptive_rd_thresh with row multithreading
+  int *row_base_thresh_freq_fact;
 } TileDataEnc;
+
+typedef struct RowMTInfo {
+  JobQueueHandle job_queue_hdl;
+#if CONFIG_MULTITHREAD
+  pthread_mutex_t job_mutex;
+#endif
+} RowMTInfo;
+
+typedef struct {
+  TOKENEXTRA *start;
+  TOKENEXTRA *stop;
+  unsigned int count;
+} TOKENLIST;
+
+typedef struct MultiThreadHandle {
+  int allocated_tile_rows;
+  int allocated_tile_cols;
+  int allocated_vert_unit_rows;
+
+  // Frame level params
+  int num_tile_vert_sbs[MAX_NUM_TILE_ROWS];
+
+  // Job Queue structure and handles
+  JobQueue *job_queue;
+
+  int jobs_per_tile_col;
+
+  RowMTInfo row_mt_info[MAX_NUM_TILE_COLS];
+  int thread_id_to_tile_id[MAX_NUM_THREADS];  // Mapping of threads to tiles
+} MultiThreadHandle;
 
 typedef struct RD_COUNTS {
   vp9_coeff_count coef_counts[TX_SIZES][PLANE_TYPES];
@@ -312,6 +361,7 @@ typedef struct IMAGE_STAT {
 
 typedef enum {
   LEVEL_UNKNOWN = 0,
+  LEVEL_AUTO = 1,
   LEVEL_1 = 10,
   LEVEL_1_1 = 11,
   LEVEL_2 = 20,
@@ -333,6 +383,7 @@ typedef struct {
   VP9_LEVEL level;
   uint64_t max_luma_sample_rate;
   uint32_t max_luma_picture_size;
+  uint32_t max_luma_picture_breadth;
   double average_bitrate;  // in kilobits per second
   double max_cpb_size;     // in kilobits
   double compression_ratio;
@@ -372,14 +423,15 @@ typedef struct {
 
 typedef enum {
   BITRATE_TOO_LARGE = 0,
-  LUMA_PIC_SIZE_TOO_LARGE = 1,
-  LUMA_SAMPLE_RATE_TOO_LARGE = 2,
-  CPB_TOO_LARGE = 3,
-  COMPRESSION_RATIO_TOO_SMALL = 4,
-  TOO_MANY_COLUMN_TILE = 5,
-  ALTREF_DIST_TOO_SMALL = 6,
-  TOO_MANY_REF_BUFFER = 7,
-  TARGET_LEVEL_FAIL_IDS = 8
+  LUMA_PIC_SIZE_TOO_LARGE,
+  LUMA_PIC_BREADTH_TOO_LARGE,
+  LUMA_SAMPLE_RATE_TOO_LARGE,
+  CPB_TOO_LARGE,
+  COMPRESSION_RATIO_TOO_SMALL,
+  TOO_MANY_COLUMN_TILE,
+  ALTREF_DIST_TOO_SMALL,
+  TOO_MANY_REF_BUFFER,
+  TARGET_LEVEL_FAIL_IDS
 } TARGET_LEVEL_FAIL_ID;
 
 typedef struct {
@@ -389,6 +441,14 @@ typedef struct {
   int max_frame_size;   // in bits
   double max_cpb_size;  // in bits
 } LevelConstraint;
+
+typedef struct ARNRFilterData {
+  YV12_BUFFER_CONFIG *frames[MAX_LAG_BUFFERS];
+  int strength;
+  int frame_count;
+  int alt_ref_index;
+  struct scale_factors sf;
+} ARNRFilterData;
 
 typedef struct VP9_COMP {
   QUANTS quants;
@@ -440,6 +500,7 @@ typedef struct VP9_COMP {
 
   TOKENEXTRA *tile_tok[4][1 << 6];
   uint32_t tok_count[4][1 << 6];
+  TOKENLIST *tplist[4][1 << 6];
 
   // Ambient reconstruction err target for force key frames
   int64_t ambient_err;
@@ -485,6 +546,8 @@ typedef struct VP9_COMP {
 
   uint8_t *segmentation_map;
 
+  uint8_t *skin_map;
+
   // segment threashold for encode breakout
   int segment_encode_breakout[MAX_SEGMENTS];
 
@@ -492,7 +555,6 @@ typedef struct VP9_COMP {
   ActiveMap active_map;
 
   fractional_mv_step_fp *find_fractional_mv_step;
-  vp9_full_search_fn_t full_search_sad;
   vp9_diamond_search_fn_t diamond_search_sad;
   vp9_variance_fn_ptr_t fn_ptr[BLOCK_SIZES];
   uint64_t time_receive_data;
@@ -593,7 +655,7 @@ typedef struct VP9_COMP {
 #endif
 
   int resize_pending;
-  int resize_state;
+  RESIZE_STATE resize_state;
   int external_resize;
   int resize_scale_num;
   int resize_scale_den;
@@ -629,12 +691,38 @@ typedef struct VP9_COMP {
 
   int keep_level_stats;
   Vp9LevelInfo level_info;
+  MultiThreadHandle multi_thread_ctxt;
+  void (*row_mt_sync_read_ptr)(VP9RowMTSync *const, int, int);
+  void (*row_mt_sync_write_ptr)(VP9RowMTSync *const, int, int, const int);
+  ARNRFilterData arnr_filter_data;
+
+  int row_mt;
+  unsigned int row_mt_bit_exact;
 
   // Previous Partition Info
   BLOCK_SIZE *prev_partition;
   int8_t *prev_segment_id;
+  // Used to save the status of whether a block has a low variance in
+  // choose_partitioning. 0 for 64x64, 1~2 for 64x32, 3~4 for 32x64, 5~8 for
+  // 32x32, 9~24 for 16x16.
+  // This is for the last frame and is copied to the current frame
+  // when partition copy happens.
+  uint8_t *prev_variance_low;
+  uint8_t *copied_frame_cnt;
+  uint8_t max_copied_frame;
+  // If the last frame is dropped, we don't copy partition.
+  uint8_t last_frame_dropped;
+
+  // For each superblock: keeps track of the last time (in frame distance) the
+  // the superblock did not have low source sad.
+  uint8_t *content_state_sb_fd;
+
+  int compute_source_sad_onepass;
 
   LevelConstraint level_constraint;
+
+  uint8_t *count_arf_frame_usage;
+  uint8_t *count_lastgolden_frame_usage;
 } VP9_COMP;
 
 void vp9_initialize_enc(void);
@@ -733,6 +821,20 @@ static INLINE int allocated_tokens(TileInfo tile) {
   return get_token_alloc(tile_mb_rows, tile_mb_cols);
 }
 
+static INLINE void get_start_tok(VP9_COMP *cpi, int tile_row, int tile_col,
+                                 int mi_row, TOKENEXTRA **tok) {
+  VP9_COMMON *const cm = &cpi->common;
+  const int tile_cols = 1 << cm->log2_tile_cols;
+  TileDataEnc *this_tile = &cpi->tile_data[tile_row * tile_cols + tile_col];
+  const TileInfo *const tile_info = &this_tile->tile_info;
+
+  int tile_mb_cols = (tile_info->mi_col_end - tile_info->mi_col_start + 1) >> 1;
+  const int mb_row = (mi_row - tile_info->mi_row_start) >> 1;
+
+  *tok =
+      cpi->tile_tok[tile_row][tile_col] + get_token_alloc(mb_row, tile_mb_cols);
+}
+
 int64_t vp9_get_y_sse(const YV12_BUFFER_CONFIG *a, const YV12_BUFFER_CONFIG *b);
 #if CONFIG_VP9_HIGHBITDEPTH
 int64_t vp9_highbd_get_y_sse(const YV12_BUFFER_CONFIG *a,
@@ -745,15 +847,14 @@ void vp9_update_reference_frames(VP9_COMP *cpi);
 
 void vp9_set_high_precision_mv(VP9_COMP *cpi, int allow_high_precision_mv);
 
-YV12_BUFFER_CONFIG *vp9_svc_twostage_scale(VP9_COMMON *cm,
-                                           YV12_BUFFER_CONFIG *unscaled,
-                                           YV12_BUFFER_CONFIG *scaled,
-                                           YV12_BUFFER_CONFIG *scaled_temp);
+YV12_BUFFER_CONFIG *vp9_svc_twostage_scale(
+    VP9_COMMON *cm, YV12_BUFFER_CONFIG *unscaled, YV12_BUFFER_CONFIG *scaled,
+    YV12_BUFFER_CONFIG *scaled_temp, INTERP_FILTER filter_type,
+    int phase_scaler, INTERP_FILTER filter_type2, int phase_scaler2);
 
-YV12_BUFFER_CONFIG *vp9_scale_if_required(VP9_COMMON *cm,
-                                          YV12_BUFFER_CONFIG *unscaled,
-                                          YV12_BUFFER_CONFIG *scaled,
-                                          int use_normative_scaler);
+YV12_BUFFER_CONFIG *vp9_scale_if_required(
+    VP9_COMMON *cm, YV12_BUFFER_CONFIG *unscaled, YV12_BUFFER_CONFIG *scaled,
+    int use_normative_scaler, INTERP_FILTER filter_type, int phase_scaler);
 
 void vp9_apply_encoding_flags(VP9_COMP *cpi, vpx_enc_frame_flags_t flags);
 
@@ -765,9 +866,18 @@ static INLINE int is_one_pass_cbr_svc(const struct VP9_COMP *const cpi) {
   return (cpi->use_svc && cpi->oxcf.pass == 0);
 }
 
+#if CONFIG_VP9_TEMPORAL_DENOISING
+static INLINE int denoise_svc(const struct VP9_COMP *const cpi) {
+  return (!cpi->use_svc ||
+          (cpi->use_svc &&
+           cpi->svc.spatial_layer_id >= cpi->svc.first_layer_denoise));
+}
+#endif
+
+#define MIN_LOOKAHEAD_FOR_ARFS 4
 static INLINE int is_altref_enabled(const VP9_COMP *const cpi) {
   return !(cpi->oxcf.mode == REALTIME && cpi->oxcf.rc_mode == VPX_CBR) &&
-         cpi->oxcf.lag_in_frames > 0 &&
+         cpi->oxcf.lag_in_frames >= MIN_LOOKAHEAD_FOR_ARFS &&
          (cpi->oxcf.enable_auto_arf &&
           (!is_two_pass_svc(cpi) ||
            cpi->oxcf.ss_enable_auto_arf[cpi->svc.spatial_layer_id]));
@@ -790,6 +900,18 @@ static INLINE int *cond_cost_list(const struct VP9_COMP *cpi, int *cost_list) {
   return cpi->sf.mv.subpel_search_method != SUBPEL_TREE ? cost_list : NULL;
 }
 
+static INLINE int get_num_vert_units(TileInfo tile, int shift) {
+  int num_vert_units =
+      (tile.mi_row_end - tile.mi_row_start + (1 << shift) - 1) >> shift;
+  return num_vert_units;
+}
+
+static INLINE int get_num_cols(TileInfo tile, int shift) {
+  int num_cols =
+      (tile.mi_col_end - tile.mi_col_start + (1 << shift) - 1) >> shift;
+  return num_cols;
+}
+
 static INLINE int get_level_index(VP9_LEVEL level) {
   int i;
   for (i = 0; i < VP9_LEVELS; ++i) {
@@ -798,9 +920,27 @@ static INLINE int get_level_index(VP9_LEVEL level) {
   return -1;
 }
 
+// Return the log2 value of max column tiles corresponding to the level that
+// the picture size fits into.
+static INLINE int log_tile_cols_from_picsize_level(uint32_t width,
+                                                   uint32_t height) {
+  int i;
+  const uint32_t pic_size = width * height;
+  const uint32_t pic_breadth = VPXMAX(width, height);
+  for (i = LEVEL_1; i < LEVEL_MAX; ++i) {
+    if (vp9_level_defs[i].max_luma_picture_size >= pic_size &&
+        vp9_level_defs[i].max_luma_picture_breadth >= pic_breadth) {
+      return get_msb(vp9_level_defs[i].max_col_tiles);
+    }
+  }
+  return INT_MAX;
+}
+
 VP9_LEVEL vp9_get_level(const Vp9LevelSpec *const level_spec);
 
 void vp9_new_framerate(VP9_COMP *cpi, double framerate);
+
+void vp9_set_row_mt(VP9_COMP *cpi);
 
 #define LAYER_IDS_TO_IDX(sl, tl, num_tl) ((sl) * (num_tl) + (tl))
 

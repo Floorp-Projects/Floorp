@@ -7,7 +7,7 @@
 async function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.addTab(null, { recordExecution: "*" });
+  let tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
   gBrowser.selectedTab = tab;
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
   await once(Services.ppmm, "RecordingFinished");

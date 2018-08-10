@@ -84,7 +84,7 @@ add_task(async function setup_test_preference() {
 
 add_task(async function block_multiple_media() {
   info("- open new background tab -");
-  let tab = window.gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   browser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(browser);

@@ -85,8 +85,8 @@ class SkipLoopFilterTest {
   // TODO(fgalligan): Move the MD5 testing code into another class.
   void OpenMd5File(const std::string &md5_file_name) {
     md5_file_ = libvpx_test::OpenTestDataFile(md5_file_name);
-    ASSERT_TRUE(md5_file_ != NULL) << "MD5 file open failed. Filename: "
-                                   << md5_file_name;
+    ASSERT_TRUE(md5_file_ != NULL)
+        << "MD5 file open failed. Filename: " << md5_file_name;
   }
 
   // Reads the next line of the MD5 file.

@@ -15,6 +15,8 @@
 #include "vpx/vpx_integer.h"
 #include "vpx_dsp/arm/transpose_neon.h"
 
+extern const int16_t vpx_rv[];
+
 static uint8x8_t average_k_out(const uint8x8_t a2, const uint8x8_t a1,
                                const uint8x8_t v0, const uint8x8_t b1,
                                const uint8x8_t b2) {
@@ -382,5 +384,102 @@ void vpx_mbpost_proc_across_ip_neon(uint8_t *src, int pitch, int rows, int cols,
     }
 
     src += pitch;
+  }
+}
+
+// Apply filter of (vpx_rv + sum + s[c]) >> 4.
+static uint8x8_t filter_pixels_rv(const int16x8_t sum, const uint8x8_t s,
+                                  const int16x8_t rv) {
+  const int16x8_t s16 = vreinterpretq_s16_u16(vmovl_u8(s));
+  const int16x8_t sum_s = vaddq_s16(sum, s16);
+  const int16x8_t rounded = vaddq_s16(sum_s, rv);
+
+  return vqshrun_n_s16(rounded, 4);
+}
+
+void vpx_mbpost_proc_down_neon(uint8_t *dst, int pitch, int rows, int cols,
+                               int flimit) {
+  int row, col, i;
+  const int32x4_t f = vdupq_n_s32(flimit);
+  uint8x8_t below_context = vdup_n_u8(0);
+
+  // 8 columns are processed at a time.
+  // If rows is less than 8 the bottom border extension fails.
+  assert(cols % 8 == 0);
+  assert(rows >= 8);
+
+  // Load and keep the first 8 values in memory. Process a vertical stripe that
+  // is 8 wide.
+  for (col = 0; col < cols; col += 8) {
+    uint8x8_t s, above_context[8];
+    int16x8_t sum, sum_tmp;
+    int32x4_t sumsq_low, sumsq_high;
+
+    // Load and extend the top border.
+    s = vld1_u8(dst);
+    for (i = 0; i < 8; i++) {
+      above_context[i] = s;
+    }
+
+    sum_tmp = vreinterpretq_s16_u16(vmovl_u8(s));
+
+    // sum * 9
+    sum = vmulq_n_s16(sum_tmp, 9);
+
+    // (sum * 9) * sum == sum * sum * 9
+    sumsq_low = vmull_s16(vget_low_s16(sum), vget_low_s16(sum_tmp));
+    sumsq_high = vmull_s16(vget_high_s16(sum), vget_high_s16(sum_tmp));
+
+    // Load and discard the next 6 values to prime sum and sumsq.
+    for (i = 1; i <= 6; ++i) {
+      const uint8x8_t a = vld1_u8(dst + i * pitch);
+      const int16x8_t b = vreinterpretq_s16_u16(vmovl_u8(a));
+      sum = vaddq_s16(sum, b);
+
+      sumsq_low = vmlal_s16(sumsq_low, vget_low_s16(b), vget_low_s16(b));
+      sumsq_high = vmlal_s16(sumsq_high, vget_high_s16(b), vget_high_s16(b));
+    }
+
+    for (row = 0; row < rows; ++row) {
+      uint8x8_t mask, output;
+      int16x8_t x, y;
+      int32x4_t xy_low, xy_high;
+
+      s = vld1_u8(dst + row * pitch);
+
+      // Extend the bottom border.
+      if (row + 7 < rows) {
+        below_context = vld1_u8(dst + (row + 7) * pitch);
+      }
+
+      x = vreinterpretq_s16_u16(vsubl_u8(below_context, above_context[0]));
+      y = vreinterpretq_s16_u16(vaddl_u8(below_context, above_context[0]));
+      xy_low = vmull_s16(vget_low_s16(x), vget_low_s16(y));
+      xy_high = vmull_s16(vget_high_s16(x), vget_high_s16(y));
+
+      sum = vaddq_s16(sum, x);
+
+      sumsq_low = vaddq_s32(sumsq_low, xy_low);
+      sumsq_high = vaddq_s32(sumsq_high, xy_high);
+
+      mask = combine_mask(vget_low_s16(sum), vget_high_s16(sum), sumsq_low,
+                          sumsq_high, f);
+
+      output = filter_pixels_rv(sum, s, vld1q_s16(vpx_rv + (row & 127)));
+      output = vbsl_u8(mask, output, s);
+
+      vst1_u8(dst + row * pitch, output);
+
+      above_context[0] = above_context[1];
+      above_context[1] = above_context[2];
+      above_context[2] = above_context[3];
+      above_context[3] = above_context[4];
+      above_context[4] = above_context[5];
+      above_context[5] = above_context[6];
+      above_context[6] = above_context[7];
+      above_context[7] = s;
+    }
+
+    dst += 8;
   }
 }

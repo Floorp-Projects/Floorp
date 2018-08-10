@@ -172,8 +172,8 @@ function onStateRestored(aSubject, aTopic, aData) {
       // new window is opened below (in onWindowUnloaded). On OS X we'll just
       // restore the pinned tabs, leaving the unpinned tab in the closedWindowsData.
       if (shouldOpenTabs) {
-        let newTab = newWin.gBrowser.addTab("about:config");
-        let newTab2 = newWin.gBrowser.addTab("about:buildconfig");
+        let newTab = BrowserTestUtils.addTab(newWin.gBrowser, "about:config");
+        let newTab2 = BrowserTestUtils.addTab(newWin.gBrowser, "about:buildconfig");
 
         newTab.linkedBrowser.addEventListener("load", function() {
           if (shouldCloseTab == "one") {

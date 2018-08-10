@@ -476,7 +476,7 @@ AccessibleWrap::get_accRole(
   uint32_t msaaRole = 0;
 
 #define ROLE(_geckoRole, stringRole, atkRole, macRole, \
-             _msaaRole, ia2Role, nameRule) \
+             _msaaRole, ia2Role, androidClass, nameRule) \
   case roles::_geckoRole: \
     msaaRole = _msaaRole; \
     break;

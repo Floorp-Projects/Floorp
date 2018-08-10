@@ -11,6 +11,7 @@
 
 %include "vpx_ports/x86_abi_support.asm"
 
+SECTION .text
 
 ;void vp8_dequantize_b_impl_mmx(short *sq, short *dq, short *q)
 global sym(vp8_dequantize_b_impl_mmx) PRIVATE

@@ -14,14 +14,7 @@
 #include "./vp9_rtcd.h"
 #include "./vpx_config.h"
 #include "vp9/common/vp9_common.h"
-
-static int16_t sinpi_1_9 = 0x14a3;
-static int16_t sinpi_2_9 = 0x26c9;
-static int16_t sinpi_3_9 = 0x3441;
-static int16_t sinpi_4_9 = 0x3b6c;
-static int16_t cospi_8_64 = 0x3b21;
-static int16_t cospi_16_64 = 0x2d41;
-static int16_t cospi_24_64 = 0x187e;
+#include "vpx_dsp/txfm_common.h"
 
 static INLINE void TRANSPOSE4X4(int16x8_t *q8s16, int16x8_t *q9s16) {
   int32x4_t q8s32, q9s32;

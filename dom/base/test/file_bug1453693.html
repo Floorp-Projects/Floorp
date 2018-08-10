@@ -254,6 +254,56 @@
         // Back to beginning, outside of Shadow DOM.
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (2)");
+
+        host.remove();
+      }
+
+      function testTabbingThroughLightDOMShadowDOMLightDOM() {
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        var host = document.createElement("span");
+        host.innerHTML = "\n";
+        host.id = "host";
+        document.body.appendChild(host);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.innerHTML = document.getElementById("template").innerHTML;
+        var p1 = sr0.getElementById("p1");
+        p1.onfocus = focusLogger;
+        var p2 = sr0.getElementById("p2");
+        p2.onfocus = focusLogger;
+
+        var p = document.createElement("p");
+        p.innerHTML = " <a href='#p'>link 1</a> ";
+        var a = p.firstElementChild;
+        a.onfocus = focusLogger;
+        document.body.appendChild(p);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, p1, "Should have focused p1.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, p2, "Should have focused p2.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, a, "Should have focused a.");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, p2, "Should have focused p2.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, p1, "Should have focused p1.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host.remove();
+        p.remove();
       }
 
       function runTest() {
@@ -262,6 +312,7 @@
         testTabbingThroughSimpleShadowDOM();
         testTabbingThroughNestedShadowDOM();
         testTabbingThroughDisplayContentsHost();
+        testTabbingThroughLightDOMShadowDOMLightDOM();
 
         opener.didRunTests();
         window.close();
@@ -273,6 +324,10 @@
     </script>
     <style>
     </style>
+    <template id="template">
+      <p tabindex="0" id="p1">component</p>
+      <p tabindex="0" id="p2">/component</p>
+    </template>
   </head>
   <body onload="init()">
   </body>

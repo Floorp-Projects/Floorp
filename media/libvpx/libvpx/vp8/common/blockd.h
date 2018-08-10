@@ -169,6 +169,11 @@ typedef struct {
 typedef struct {
   FRAME_TYPE frame_type;
   int is_frame_dropped;
+  // If frame is dropped due to overshoot after encode_frame. This triggers a
+  // drop and resets rate control with Q forced to max for following frame.
+  // The check for this dropping due to overshoot is only done on lowest stream,
+  // and if set will force drop on all spatial streams for that current frame.
+  int is_frame_dropped_overshoot_maxqp;
   // The frame rate for the lowest resolution.
   double low_res_framerate;
   /* The frame number of each reference frames */

@@ -40,13 +40,21 @@ var Tabs = {
       async applyConfig() {
         fiveTabsHelper();
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        let tab = browserWindow.gBrowser.addTab(PREFS_TAB);
+        let tab = browserWindow.gBrowser.addTab(PREFS_TAB, {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
         browserWindow.gBrowser.pinTab(tab);
-        tab = browserWindow.gBrowser.addTab(CUST_TAB);
+        tab = browserWindow.gBrowser.addTab(CUST_TAB, {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
         browserWindow.gBrowser.pinTab(tab);
-        tab = browserWindow.gBrowser.addTab("about:privatebrowsing");
+        tab = browserWindow.gBrowser.addTab("about:privatebrowsing", {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
         browserWindow.gBrowser.pinTab(tab);
-        tab = browserWindow.gBrowser.addTab("about:home");
+        tab = browserWindow.gBrowser.addTab("about:home", {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
         browserWindow.gBrowser.pinTab(tab);
         browserWindow.gBrowser.selectTabAtIndex(5);
         hoverTab(browserWindow.gBrowser.tabs[2]);

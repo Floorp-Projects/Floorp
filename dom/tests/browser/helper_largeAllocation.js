@@ -420,7 +420,8 @@ async function largeAllocSuccessTests() {
 
     let newWindow = await BrowserTestUtils.openNewBrowserWindow();
 
-    newWindow.gBrowser.adoptTab(gBrowser.getTabForBrowser(aBrowser), 0);
+    newWindow.gBrowser.adoptTab(gBrowser.getTabForBrowser(aBrowser), 0, null,
+                                Services.scriptSecurityManager.getSystemPrincipal());
     let newTab = newWindow.gBrowser.tabs[0];
 
     is(newTab.linkedBrowser.currentURI.spec, TEST_URI);
