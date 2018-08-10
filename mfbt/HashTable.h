@@ -2112,16 +2112,6 @@ public:
     return aMallocSizeOf(this) + shallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
-  MOZ_ALWAYS_INLINE Ptr lookup(const Lookup& aLookup) const
-  {
-    ReentrancyGuard g(*this);
-    if (!HasHash<HashPolicy>(aLookup)) {
-      return Ptr();
-    }
-    HashNumber keyHash = prepareHash(aLookup);
-    return Ptr(lookup<ForNonAdd>(aLookup, keyHash), *this);
-  }
-
   MOZ_ALWAYS_INLINE Ptr readonlyThreadsafeLookup(const Lookup& aLookup) const
   {
     if (!HasHash<HashPolicy>(aLookup)) {
@@ -2129,6 +2119,12 @@ public:
     }
     HashNumber keyHash = prepareHash(aLookup);
     return Ptr(lookup<ForNonAdd>(aLookup, keyHash), *this);
+  }
+
+  MOZ_ALWAYS_INLINE Ptr lookup(const Lookup& aLookup) const
+  {
+    ReentrancyGuard g(*this);
+    return readonlyThreadsafeLookup(aLookup);
   }
 
   MOZ_ALWAYS_INLINE AddPtr lookupForAdd(const Lookup& aLookup) const
