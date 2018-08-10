@@ -10,14 +10,12 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
 const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
-const SEARCH_SHORTCUTS_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
 
 // use time at the start of the tests, chnaging it inside timeDaysAgo()
 // may cause tiny time differences, which break expected sql ordering
 const TIME_NOW = (new Date()).getTime();
 
 Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, true);
-Services.prefs.setBoolPref(SEARCH_SHORTCUTS_EXPERIMENT_PREF, false);
 
 do_get_profile();
 
