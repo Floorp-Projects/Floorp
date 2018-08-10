@@ -349,11 +349,6 @@ IndirectBindingMap::put(JSContext* cx, HandleId name,
     if (!map_) {
         MOZ_ASSERT(!cx->zone()->createdForHelperThread());
         map_.emplace(cx->zone());
-        if (!map_->init()) {
-            map_.reset();
-            ReportOutOfMemory(cx);
-            return false;
-        }
     }
 
     RootedShape shape(cx, environment->lookup(cx, localName));
@@ -1230,14 +1225,6 @@ ModuleBuilder::ModuleBuilder(JSContext* cx, HandleModuleObject module,
     indirectExportEntries_(cx, ExportEntryVector(cx)),
     starExportEntries_(cx, ExportEntryVector(cx))
 {}
-
-bool
-ModuleBuilder::init()
-{
-    return requestedModuleSpecifiers_.init() &&
-           importEntries_.init() &&
-           exportNames_.init();
-}
 
 bool
 ModuleBuilder::buildTables()

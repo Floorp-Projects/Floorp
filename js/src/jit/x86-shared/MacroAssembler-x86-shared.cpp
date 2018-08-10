@@ -139,11 +139,6 @@ MacroAssemblerX86Shared::getConstant(const typename T::Pod& value, Map& map,
                                      Vector<T, 0, SystemAllocPolicy>& vec)
 {
     typedef typename Map::AddPtr AddPtr;
-    if (!map.initialized()) {
-        enoughMemory_ &= map.init();
-        if (!enoughMemory_)
-            return nullptr;
-    }
     size_t index;
     if (AddPtr p = map.lookupForAdd(value)) {
         index = p->value();

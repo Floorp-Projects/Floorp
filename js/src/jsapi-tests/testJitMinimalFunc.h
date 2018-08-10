@@ -86,8 +86,6 @@ struct MinimalFunc : MinimalAlloc
         if (!BuildPhiReverseMapping(graph))
             return false;
         ValueNumberer gvn(&mir, graph);
-        if (!gvn.init())
-            return false;
         if (!gvn.run(ValueNumberer::DontUpdateAliasAnalysis))
             return false;
         return true;

@@ -1282,7 +1282,10 @@ Simulator::~Simulator()
 SimulatorProcess::SimulatorProcess()
   : cacheLock_(mutexid::SimulatorCacheLock)
   , redirection_(nullptr)
-{}
+{
+    if (getenv("ARM_SIM_ICACHE_CHECKS"))
+        ICacheCheckingDisableCount = 0;
+}
 
 SimulatorProcess::~SimulatorProcess()
 {
@@ -1292,15 +1295,6 @@ SimulatorProcess::~SimulatorProcess()
         js_delete(r);
         r = next;
     }
-}
-
-bool
-SimulatorProcess::init()
-{
-    if (getenv("ARM_SIM_ICACHE_CHECKS"))
-        ICacheCheckingDisableCount = 0;
-
-    return icache_.init();
 }
 
 /* static */ void*

@@ -88,9 +88,6 @@ struct BreadthFirst {
         traversalBegun(false), stopRequested(false), abandonRequested(false)
     { }
 
-    // Initialize this traversal object. Return false on OOM.
-    bool init() { return visited.init(); }
-
     // Add |node| as a starting point for the traversal. You may add
     // as many starting points as you like. Return false on OOM.
     bool addStart(Node node) { return pending.append(node); }

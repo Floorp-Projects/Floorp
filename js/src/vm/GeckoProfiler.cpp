@@ -42,16 +42,6 @@ GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
     MOZ_ASSERT(rt != nullptr);
 }
 
-bool
-GeckoProfilerRuntime::init()
-{
-    auto locked = strings.lock();
-    if (!locked->init())
-        return false;
-
-    return true;
-}
-
 void
 GeckoProfilerThread::setProfilingStack(ProfilingStack* profilingStack)
 {
@@ -163,7 +153,6 @@ const char*
 GeckoProfilerRuntime::profileString(JSScript* script, JSFunction* maybeFun)
 {
     auto locked = strings.lock();
-    MOZ_ASSERT(locked->initialized());
 
     ProfileStringMap::AddPtr s = locked->lookupForAdd(script);
 
@@ -187,8 +176,6 @@ GeckoProfilerRuntime::onScriptFinalized(JSScript* script)
      * done.
      */
     auto locked = strings.lock();
-    if (!locked->initialized())
-        return;
     if (ProfileStringMap::Ptr entry = locked->lookup(script))
         locked->remove(entry);
 }
@@ -334,9 +321,6 @@ void
 GeckoProfilerRuntime::fixupStringsMapAfterMovingGC()
 {
     auto locked = strings.lock();
-    if (!locked->initialized())
-        return;
-
     for (ProfileStringMap::Enum e(locked.get()); !e.empty(); e.popFront()) {
         JSScript* script = e.front().key();
         if (IsForwarded(script)) {
@@ -351,9 +335,6 @@ void
 GeckoProfilerRuntime::checkStringsMapAfterMovingGC()
 {
     auto locked = strings.lock();
-    if (!locked->initialized())
-        return;
-
     for (auto r = locked->all(); !r.empty(); r.popFront()) {
         JSScript* script = r.front().key();
         CheckGCThingAfterMovingGC(script);

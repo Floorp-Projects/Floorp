@@ -212,9 +212,6 @@ gc::GCRuntime::startVerifyPreBarriers()
     trc->edgeptr = (char*)trc->root;
     trc->term = trc->edgeptr + size;
 
-    if (!trc->nodemap.init())
-        goto oom;
-
     /* Create the root node. */
     trc->curnode = MakeNode(trc, nullptr, JS::TraceKind(0));
 
@@ -458,7 +455,6 @@ class HeapCheckTracerBase : public JS::CallbackTracer
 {
   public:
     explicit HeapCheckTracerBase(JSRuntime* rt, WeakMapTraceKind weakTraceKind);
-    bool init();
     bool traceHeap(AutoTraceSession& session);
     virtual void checkCell(Cell* cell) = 0;
 
@@ -503,12 +499,6 @@ HeapCheckTracerBase::HeapCheckTracerBase(JSRuntime* rt, WeakMapTraceKind weakTra
 #ifdef DEBUG
     setCheckEdges(false);
 #endif
-}
-
-bool
-HeapCheckTracerBase::init()
-{
-    return visited.init();
 }
 
 void
@@ -674,8 +664,7 @@ js::gc::CheckHeapAfterGC(JSRuntime* rt)
         gcType = CheckHeapTracer::GCType::NonMoving;
 
     CheckHeapTracer tracer(rt, gcType);
-    if (tracer.init())
-        tracer.check(session);
+    tracer.check(session);
 }
 
 #endif /* JSGC_HASH_TABLE_CHECKS */
@@ -743,8 +732,6 @@ js::CheckGrayMarkingState(JSRuntime* rt)
     gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
     AutoTraceSession session(rt);
     CheckGrayMarkingTracer tracer(rt);
-    if (!tracer.init())
-        return true; // Ignore failure
 
     return tracer.check(session);
 }

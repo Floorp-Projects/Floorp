@@ -837,9 +837,6 @@ using TypedNativeToFuncPtrMap =
 static bool
 PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives)
 {
-    if (!typedNatives->init())
-        return false;
-
 #define ADD_OVERLOAD(funcName, native, abiType)                                           \
     if (!typedNatives->putNew(TypedNative(InlinableNative::native, abiType),              \
                               FuncCast(funcName, abiType)))                               \
@@ -954,9 +951,6 @@ wasm::EnsureBuiltinThunksInitialized()
 
     TypedNativeToFuncPtrMap typedNatives;
     if (!PopulateTypedNatives(&typedNatives))
-        return false;
-
-    if (!thunks->typedNativeToCodeRange.init())
         return false;
 
     for (TypedNativeToFuncPtrMap::Range r = typedNatives.all(); !r.empty(); r.popFront()) {

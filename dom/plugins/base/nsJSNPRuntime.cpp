@@ -369,12 +369,6 @@ CreateJSObjWrapperTable()
   }
 
   sJSObjWrappers = MakeUnique<JSObjWrapperTable>();
-  if (!sJSObjWrappers->init(16)) {
-    sJSObjWrappers = nullptr;
-    NS_ERROR("Error initializing sJSObjWrappers!");
-    return false;
-  }
-
   sJSObjWrappersAccessible = true;
   return true;
 }

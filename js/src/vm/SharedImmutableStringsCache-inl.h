@@ -21,9 +21,6 @@ SharedImmutableStringsCache::getOrCreate(const char* chars, size_t length,
     Hasher::Lookup lookup(Hasher::hashLongString(chars, length), chars, length);
 
     auto locked = inner_->lock();
-    if (!locked->set.initialized() && !locked->set.init())
-        return mozilla::Nothing();
-
     auto entry = locked->set.lookupForAdd(lookup);
     if (!entry) {
         OwnedChars ownedChars(intoOwnedChars());
@@ -51,9 +48,6 @@ SharedImmutableStringsCache::getOrCreate(const char16_t* chars, size_t length,
     Hasher::Lookup lookup(hash, chars, length);
 
     auto locked = inner_->lock();
-    if (!locked->set.initialized() && !locked->set.init())
-        return mozilla::Nothing();
-
     auto entry = locked->set.lookupForAdd(lookup);
     if (!entry) {
         OwnedTwoByteChars ownedTwoByteChars(intoOwnedTwoByteChars());

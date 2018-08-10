@@ -38,19 +38,9 @@ using namespace js::gc;
 
 Compartment::Compartment(Zone* zone)
   : zone_(zone),
-    runtime_(zone->runtimeFromAnyThread())
+    runtime_(zone->runtimeFromAnyThread()),
+    crossCompartmentWrappers(0)
 {}
-
-bool
-Compartment::init(JSContext* cx)
-{
-    if (!crossCompartmentWrappers.init(0)) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return true;
-}
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 

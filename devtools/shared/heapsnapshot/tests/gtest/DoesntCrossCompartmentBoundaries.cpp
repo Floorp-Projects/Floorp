@@ -28,7 +28,6 @@ DEF_TEST(DoesntCrossCompartmentBoundaries, {
     // Our set of target compartments is only the pre-existing compartment and
     // does not include the new compartment.
     JS::CompartmentSet targetCompartments;
-    ASSERT_TRUE(targetCompartments.init());
     ASSERT_TRUE(targetCompartments.put(compartment));
 
     FakeNode nodeA;
