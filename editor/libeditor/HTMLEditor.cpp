@@ -76,6 +76,17 @@ using namespace widget;
 
 const char16_t kNBSP = 160;
 
+static already_AddRefed<nsAtom>
+GetLowerCaseNameAtom(const nsAString& aTagName)
+{
+  if (aTagName.IsEmpty()) {
+    return nullptr;
+  }
+  nsAutoString lowerTagName;
+  nsContentUtils::ASCIIToLower(aTagName, lowerTagName);
+  return NS_Atomize(lowerTagName);
+}
+
 // Some utilities to handle overloading of "A" tag for link and named anchor.
 static bool
 IsLinkTag(const nsString& s)
@@ -84,9 +95,22 @@ IsLinkTag(const nsString& s)
 }
 
 static bool
+IsLinkTag(const nsAtom& aTagName)
+{
+  return aTagName.Equals(NS_LITERAL_STRING("href"));
+}
+
+static bool
 IsNamedAnchorTag(const nsString& s)
 {
   return s.EqualsIgnoreCase("anchor") || s.EqualsIgnoreCase("namedanchor");
+}
+
+static bool
+IsNamedAnchorTag(const nsAtom& aTagName)
+{
+  return aTagName.Equals(NS_LITERAL_STRING("anchor")) ||
+         aTagName.Equals(NS_LITERAL_STRING("namedanchor"));
 }
 
 template EditorDOMPoint
@@ -2617,7 +2641,8 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   }
 
   ErrorResult error;
-  RefPtr<nsINode> selectedNode = GetSelectedNode(*selection, aTagName, error);
+  RefPtr<nsAtom> tagName = GetLowerCaseNameAtom(aTagName);
+  RefPtr<nsINode> selectedNode = GetSelectedNode(*selection, tagName, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -2627,20 +2652,17 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
 
 already_AddRefed<nsINode>
 HTMLEditor::GetSelectedNode(Selection& aSelection,
-                            const nsAString& aTagName,
+                            const nsAtom* aTagName,
                             ErrorResult& aRv)
 {
   MOZ_ASSERT(!aRv.Failed());
 
   bool isCollapsed = aSelection.IsCollapsed();
 
-  nsAutoString domTagName;
-  nsAutoString TagName(aTagName);
-  ToLowerCase(TagName);
-  // Empty string indicates we should match any element tag
-  bool anyTag = (TagName.IsEmpty());
-  bool isLinkTag = IsLinkTag(TagName);
-  bool isNamedAnchorTag = IsNamedAnchorTag(TagName);
+  // nullptr indicates we should look for any element.
+  bool anyTag = !aTagName;
+  bool isLinkTag = aTagName && IsLinkTag(*aTagName);
+  bool isNamedAnchorTag = aTagName && IsNamedAnchorTag(*aTagName);
 
   RefPtr<nsRange> range = aSelection.GetRangeAt(0);
   if (NS_WARN_IF(!range)) {
@@ -2659,11 +2681,8 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
       startNode && endNode && startNode->GetNextSibling() == endNode) {
     nsCOMPtr<nsINode> selectedNode = startNode;
     if (selectedNode) {
-      domTagName = selectedNode->NodeName();
-      ToLowerCase(domTagName);
-
       // Test for appropriate node type requested
-      if (anyTag || (TagName == domTagName) ||
+      if (anyTag || aTagName == selectedNode->NodeInfo()->NameAtom() ||
           (isLinkTag && HTMLEditUtils::IsLink(selectedNode)) ||
           (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(selectedNode))) {
         return selectedNode.forget();
@@ -2728,6 +2747,7 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
         return nullptr;
       }
 
+      const nsAtom* tagNameLookingFor = aTagName;
       iter->Init(currange);
       // loop through the content iterator for each content node
       while (!iter->IsDone()) {
@@ -2743,13 +2763,9 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
             break;
           }
 
-          domTagName = selectedElement->NodeName();
-          ToLowerCase(domTagName);
-
           if (anyTag) {
             // Get name of first selected element
-            selectedElement->GetTagName(TagName);
-            ToLowerCase(TagName);
+            tagNameLookingFor = selectedElement->NodeInfo()->NameAtom();
             anyTag = false;
           }
 
@@ -2760,7 +2776,10 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
               (isNamedAnchorTag &&
                HTMLEditUtils::IsNamedAnchor(selectedElement))) {
             bNodeFound = true;
-          } else if (TagName == domTagName) { // All other tag names are handled here
+          }
+          // All other tag names are handled here.
+          else if (tagNameLookingFor ==
+                     selectedElement->NodeInfo()->NameAtom()) {
             bNodeFound = true;
           }
           if (!bNodeFound) {
