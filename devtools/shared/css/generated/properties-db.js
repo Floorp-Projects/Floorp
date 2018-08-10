@@ -7416,6 +7416,20 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "offset-path": {
+    "isInherited": false,
+    "subproperties": [
+      "offset-path"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "path",
+      "unset"
+    ]
+  },
   "opacity": {
     "isInherited": false,
     "subproperties": [
