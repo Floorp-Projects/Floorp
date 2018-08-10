@@ -9,7 +9,7 @@ permalink: /contributing/release-checklist
 - Update [CHANGELOG](https://github.com/mozilla-mobile/android-components/blob/master/docs/changelog.md)
   - Use milestone and commit log for identifying interesting changes
 - Generate API docs for release
-  - [(To be defined _how_)](https://github.com/mozilla-mobile/android-components/issues/549)
+  - In the repository root run: `./automation/docs/generate_api-reference_release.sh`
 - Close milestone
   - Milestone should be 100% complete. Incomplete issues should have been moved in planning meeting.
 
