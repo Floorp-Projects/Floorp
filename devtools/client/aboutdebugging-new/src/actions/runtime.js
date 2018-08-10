@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { BrowserToolboxProcess } =
+  require("resource://devtools/client/framework/ToolboxProcess.jsm");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
@@ -22,6 +24,8 @@ const {
   REQUEST_TABS_START,
   REQUEST_TABS_SUCCESS,
 } = require("../constants");
+
+let browserToolboxProcess = null;
 
 function connectRuntime() {
   return async (dispatch, getState) => {
@@ -63,6 +67,18 @@ function disconnectRuntime() {
 function inspectDebugTarget(type, id) {
   if (type === DEBUG_TARGETS.TAB) {
     window.open(`about:devtools-toolbox?type=tab&id=${ id }`);
+  } else if (type === DEBUG_TARGETS.EXTENSION) {
+    // Close previous addon debugging toolbox.
+    if (browserToolboxProcess) {
+      browserToolboxProcess.close();
+    }
+
+    browserToolboxProcess = BrowserToolboxProcess.init({
+      addonID: id,
+      onClose: () => {
+        browserToolboxProcess = null;
+      }
+    });
   } else {
     console.error(`Failed to inspect the debug target of type: ${ type } id: ${ id }`);
   }
