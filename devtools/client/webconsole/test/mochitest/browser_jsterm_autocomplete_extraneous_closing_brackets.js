@@ -23,7 +23,7 @@ async function performTests() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   try {
-    await setInputValueForAutocompletion(jsterm, "document.getElementById)");
+    await jstermSetValueAndComplete(jsterm, "document.getElementById)");
     ok(true, "no error was thrown when an extraneous bracket was inserted");
   } catch (ex) {
     ok(false, "an error was thrown when an extraneous bracket was inserted");
