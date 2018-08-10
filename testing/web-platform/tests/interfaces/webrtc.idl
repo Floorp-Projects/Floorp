@@ -587,7 +587,6 @@ partial interface RTCPeerConnection {
           };
 
 [Exposed=Window] interface RTCStatsReport {
-
     readonly maplike<DOMString, object>;
 };
 

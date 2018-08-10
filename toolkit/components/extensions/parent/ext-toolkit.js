@@ -5,12 +5,12 @@
 /* exported getCookieStoreIdForTab, getCookieStoreIdForContainer,
             getContainerForCookieStoreId,
             isValidCookieStoreId, isContainerCookieStoreId,
-            EventManager, InputEventManager, URL */
+            EventManager, URL */
 /* global getCookieStoreIdForTab:false, getCookieStoreIdForContainer:false,
           getContainerForCookieStoreId: false,
           isValidCookieStoreId:false, isContainerCookieStoreId:false,
           isDefaultCookieStoreId: false, isPrivateCookieStoreId:false,
-          EventManager: false, InputEventManager: false */
+          EventManager: false */
 
 ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
                                "resource://gre/modules/ContextualIdentityService.jsm");
