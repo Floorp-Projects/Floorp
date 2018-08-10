@@ -897,3 +897,4 @@ Picture-in-picture mini window -->
 <!-- Notification channels names -->
 <!ENTITY default_notification_channel "&brandShortName;">
 <!ENTITY mls_notification_channel "&vendorShortName; Location Service">
+<!ENTITY download_notification_channel "Downloads">
