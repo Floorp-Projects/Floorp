@@ -122,8 +122,6 @@ class GeckoProfilerRuntime
   public:
     explicit GeckoProfilerRuntime(JSRuntime* rt);
 
-    bool init();
-
     /* management of whether instrumentation is on or off */
     bool enabled() { return enabled_; }
     void enable(bool enabled);

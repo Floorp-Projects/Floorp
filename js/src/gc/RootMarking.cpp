@@ -432,8 +432,7 @@ js::gc::GCRuntime::finishRoots()
 
     rt->finishAtoms();
 
-    if (rootsHash.ref().initialized())
-        rootsHash.ref().clear();
+    rootsHash.ref().clear();
 
     rt->finishPersistentRoots();
 

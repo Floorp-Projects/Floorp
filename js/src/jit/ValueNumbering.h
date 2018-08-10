@@ -41,7 +41,6 @@ class ValueNumberer
 
       public:
         explicit VisibleValues(TempAllocator& alloc);
-        MOZ_MUST_USE bool init();
 
         typedef ValueSet::Ptr Ptr;
         typedef ValueSet::AddPtr AddPtr;
@@ -108,7 +107,6 @@ class ValueNumberer
 
   public:
     ValueNumberer(MIRGenerator* mir, MIRGraph& graph);
-    MOZ_MUST_USE bool init();
 
     enum UpdateAliasAnalysisFlag {
         DontUpdateAliasAnalysis,

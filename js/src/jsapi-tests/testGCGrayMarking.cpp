@@ -344,7 +344,6 @@ TestUnassociatedWeakMaps()
     // Make a weakmap that's not associated with a JSObject.
     auto weakMap = cx->make_unique<GCManagedObjectWeakMap>(cx);
     CHECK(weakMap);
-    CHECK(weakMap->init());
 
     // Make sure this gets traced during GC.
     Rooted<GCManagedObjectWeakMap*> rootMap(cx, weakMap.get());

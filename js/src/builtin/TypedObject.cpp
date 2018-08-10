@@ -2163,11 +2163,6 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
         if (!table)
             return nullptr;
 
-        if (!table->init()) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-
         realm.lazyArrayBuffers = std::move(table);
     }
 

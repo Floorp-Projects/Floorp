@@ -75,7 +75,7 @@ AllocationIntegrityState::record()
         }
     }
 
-    return seen.init();
+    return true;
 }
 
 bool

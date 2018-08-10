@@ -30,12 +30,6 @@ CountDeleter::operator()(CountBase* ptr)
     js_free(ptr);
 }
 
-JS_PUBLIC_API(bool)
-Census::init() {
-    return targetZones.init();
-}
-
-
 /*** Count Types ***********************************************************************************/
 
 // The simplest type: just count everything.
@@ -467,8 +461,6 @@ class ByObjectClass : public CountType {
           : CountBase(type),
             other(std::move(other))
         { }
-
-        bool init() { return table.init(); }
     };
 
     CountTypePtr classesType;
@@ -500,7 +492,7 @@ ByObjectClass::makeCount()
         return nullptr;
 
     auto count = js::MakeUnique<Count>(*this, otherCount);
-    if (!count || !count->init())
+    if (!count)
         return nullptr;
 
     return CountBasePtr(count.release());
@@ -581,8 +573,6 @@ class ByDomObjectClass : public CountType {
         Table table;
 
         explicit Count(CountType& type) : CountBase(type) { }
-
-        bool init() { return table.init(); }
     };
 
     CountTypePtr classesType;
@@ -608,7 +598,7 @@ CountBasePtr
 ByDomObjectClass::makeCount()
 {
     auto count = js::MakeUnique<Count>(*this);
-    if (!count || !count->init())
+    if (!count)
         return nullptr;
 
     return CountBasePtr(count.release());
@@ -672,8 +662,6 @@ class ByUbinodeType : public CountType {
         Table table;
 
         explicit Count(CountType& type) : CountBase(type) { }
-
-        bool init() { return table.init(); }
     };
 
     CountTypePtr entryType;
@@ -699,7 +687,7 @@ CountBasePtr
 ByUbinodeType::makeCount()
 {
     auto count = js::MakeUnique<Count>(*this);
-    if (!count || !count->init())
+    if (!count)
         return nullptr;
 
     return CountBasePtr(count.release());
@@ -814,7 +802,6 @@ class ByAllocationStack : public CountType {
           : CountBase(type),
             noStack(std::move(noStack))
         { }
-        bool init() { return table.init(); }
     };
 
     CountTypePtr entryType;
@@ -846,7 +833,7 @@ ByAllocationStack::makeCount()
         return nullptr;
 
     auto count = js::MakeUnique<Count>(*this, noStackCount);
-    if (!count || !count->init())
+    if (!count)
         return nullptr;
     return CountBasePtr(count.release());
 }
@@ -985,8 +972,6 @@ class ByFilename : public CountType {
           , then(std::move(then))
           , noFilename(std::move(noFilename))
         { }
-
-        bool init() { return table.init(); }
     };
 
     CountTypePtr thenType;
@@ -1022,7 +1007,7 @@ ByFilename::makeCount()
         return nullptr;
 
     auto count = js::MakeUnique<Count>(*this, std::move(thenCount), std::move(noFilenameCount));
-    if (!count || !count->init())
+    if (!count)
         return nullptr;
 
     return CountBasePtr(count.release());

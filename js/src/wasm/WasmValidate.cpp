@@ -1863,8 +1863,6 @@ DecodeExportSection(Decoder& d, ModuleEnvironment* env)
         return true;
 
     CStringSet dupSet;
-    if (!dupSet.init())
-        return false;
 
     uint32_t numExports;
     if (!d.readVarU32(&numExports))

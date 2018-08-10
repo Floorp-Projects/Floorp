@@ -661,9 +661,7 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, const V
             // is passed in.  If we end up having to add elements past this
             // size, the set will naturally resize to accommodate them.
             const uint32_t MaxInitialSize = 32;
-            Rooted<GCHashSet<jsid>> idSet(cx, GCHashSet<jsid>(cx));
-            if (!idSet.init(Min(len, MaxInitialSize)))
-                return false;
+            Rooted<GCHashSet<jsid>> idSet(cx, GCHashSet<jsid>(cx, Min(len, MaxInitialSize)));
 
             /* Step 4b(iii)(4). */
             uint32_t k = 0;

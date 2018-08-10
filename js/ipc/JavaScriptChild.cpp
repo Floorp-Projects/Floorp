@@ -42,11 +42,6 @@ JavaScriptChild::~JavaScriptChild()
 bool
 JavaScriptChild::init()
 {
-    if (!WrapperOwner::init())
-        return false;
-    if (!WrapperAnswer::init())
-        return false;
-
     JSContext* cx = dom::danger::GetJSContext();
     JS_AddWeakPointerZonesCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup, this);
     JS_AddExtraGCRootsTracer(cx, TraceChild, this);

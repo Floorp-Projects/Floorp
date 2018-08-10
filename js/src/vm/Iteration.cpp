@@ -108,10 +108,8 @@ Enumerate(JSContext* cx, HandleObject pobj, jsid id,
 {
     if (CheckForDuplicates) {
         if (!ht) {
-            ht.emplace(cx);
             // Most of the time there are only a handful of entries.
-            if (!ht->init(5))
-                return false;
+            ht.emplace(cx, 5);
         }
 
         // If we've already seen this, we definitely won't add it.

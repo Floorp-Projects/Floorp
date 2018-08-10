@@ -78,13 +78,6 @@ ValueNumberer::VisibleValues::VisibleValues(TempAllocator& alloc)
   : set_(alloc)
 {}
 
-// Initialize the set.
-bool
-ValueNumberer::VisibleValues::init()
-{
-    return set_.init();
-}
-
 // Look up the first entry for |def|.
 ValueNumberer::VisibleValues::Ptr
 ValueNumberer::VisibleValues::findLeader(const MDefinition* def) const
@@ -1208,6 +1201,12 @@ bool ValueNumberer::cleanupOSRFixups()
 
 ValueNumberer::ValueNumberer(MIRGenerator* mir, MIRGraph& graph)
   : mir_(mir), graph_(graph),
+    // Initialize the value set. It's tempting to pass in a length that is a
+    // function of graph_.getNumInstructionIds(). But if we start out with a
+    // large capacity, it will be far larger than the actual element count for
+    // most of the pass, so when we remove elements, it would often think it
+    // needs to compact itself. Empirically, just letting the HashTable grow as
+    // needed on its own seems to work pretty well.
     values_(graph.alloc()),
     deadDefs_(graph.alloc()),
     remainingBlocks_(graph.alloc()),
@@ -1219,18 +1218,6 @@ ValueNumberer::ValueNumberer(MIRGenerator* mir, MIRGraph& graph)
     dependenciesBroken_(false),
     hasOSRFixups_(false)
 {}
-
-bool
-ValueNumberer::init()
-{
-    // Initialize the value set. It's tempting to pass in a size here of some
-    // function of graph_.getNumInstructionIds(), however if we start out with a
-    // large capacity, it will be far larger than the actual element count for
-    // most of the pass, so when we remove elements, it would often think it
-    // needs to compact itself. Empirically, just letting the HashTable grow as
-    // needed on its own seems to work pretty well.
-    return values_.init();
-}
 
 bool
 ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)

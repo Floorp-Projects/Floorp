@@ -1898,7 +1898,7 @@ class LIRGraph
     explicit LIRGraph(MIRGraph* mir);
 
     MOZ_MUST_USE bool init() {
-        return constantPoolMap_.init() && blocks_.init(mir_.alloc(), mir_.numBlocks());
+        return blocks_.init(mir_.alloc(), mir_.numBlocks());
     }
     MIRGraph& mir() const {
         return mir_;

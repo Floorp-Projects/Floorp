@@ -32,7 +32,6 @@ BEGIN_TEST(testWeakCacheSet)
                                 SystemAllocPolicy>;
     using Cache = JS::WeakCache<ObjectSet>;
     Cache cache(JS::GetObjectZone(tenured1));
-    CHECK(cache.init());
 
     cache.put(tenured1);
     cache.put(tenured2);
@@ -73,7 +72,6 @@ BEGIN_TEST(testWeakCacheMap)
                                     js::MovableCellHasher<JS::Heap<JSObject*>>>;
     using Cache = JS::WeakCache<ObjectMap>;
     Cache cache(JS::GetObjectZone(tenured1), cx);
-    CHECK(cache.init());
 
     cache.put(tenured1, 1);
     cache.put(tenured2, 2);
@@ -284,8 +282,6 @@ TestSet()
                                 TempAllocPolicy>;
     using Cache = JS::WeakCache<ObjectSet>;
     Cache cache(JS::GetObjectZone(global), cx);
-    CHECK(cache.init());
-    CHECK(cache.initialized());
 
     // Sweep empty cache.
 
@@ -405,7 +401,6 @@ TestSet()
     CHECK(cache.has(obj4));
 
     cache.clear();
-    cache.finish();
 
     return true;
 }
@@ -418,8 +413,6 @@ TestMap()
                                 TempAllocPolicy>;
     using Cache = JS::WeakCache<ObjectMap>;
     Cache cache(JS::GetObjectZone(global), cx);
-    CHECK(cache.init());
-    CHECK(cache.initialized());
 
     // Sweep empty cache.
 
@@ -541,7 +534,6 @@ TestMap()
     CHECK(cache.has(obj4));
 
     cache.clear();
-    cache.finish();
 
     return true;
 }
@@ -556,7 +548,6 @@ TestReplaceDyingInSet()
                                           MovableCellHasher<NumberAndObjectEntry>,
                                           TempAllocPolicy>>;
     Cache cache(JS::GetObjectZone(global), cx);
-    CHECK(cache.init());
 
     RootedObject value1(cx, JS_NewPlainObject(cx));
     RootedObject value2(cx, JS_NewPlainObject(cx));
@@ -620,7 +611,6 @@ TestReplaceDyingInMap()
                                           DefaultHasher<uint32_t>,
                                           TempAllocPolicy>>;
     Cache cache(JS::GetObjectZone(global), cx);
-    CHECK(cache.init());
 
     RootedObject value1(cx, JS_NewPlainObject(cx));
     RootedObject value2(cx, JS_NewPlainObject(cx));
@@ -687,7 +677,6 @@ TestUniqueIDLookups()
                                           MovableCellHasher<ObjectEntry>,
                                           TempAllocPolicy>>;
     Cache cache(JS::GetObjectZone(global), cx);
-    CHECK(cache.init());
 
     Rooted<GCVector<JSObject*, 0, SystemAllocPolicy>> liveObjects(cx);
 

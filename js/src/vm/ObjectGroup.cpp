@@ -531,13 +531,6 @@ ObjectGroup::defaultNewGroup(JSContext* cx, const Class* clasp,
         table = cx->new_<ObjectGroupRealm::NewTable>(cx->zone());
         if (!table)
             return nullptr;
-
-        if (!table->init()) {
-            js_delete(table);
-            table = nullptr;
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
     }
 
     if (proto.isObject() && !proto.toObject()->isDelegate()) {
@@ -639,13 +632,6 @@ ObjectGroup::lazySingletonGroup(JSContext* cx, ObjectGroup* oldGroup, const Clas
         table = cx->new_<ObjectGroupRealm::NewTable>(cx->zone());
         if (!table)
             return nullptr;
-
-        if (!table->init()) {
-            ReportOutOfMemory(cx);
-            js_delete(table);
-            table = nullptr;
-            return nullptr;
-        }
     }
 
     ObjectGroupRealm::NewTable::AddPtr p =
@@ -870,13 +856,6 @@ ObjectGroup::newArrayObject(JSContext* cx,
         table = cx->new_<ObjectGroupRealm::ArrayObjectTable>();
         if (!table)
             return nullptr;
-
-        if (!table->init()) {
-            ReportOutOfMemory(cx);
-            js_delete(table);
-            table = nullptr;
-            return nullptr;
-        }
     }
 
     ObjectGroupRealm::ArrayObjectKey key(elementType);
@@ -1196,13 +1175,6 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
         table = cx->new_<ObjectGroupRealm::PlainObjectTable>();
         if (!table)
             return nullptr;
-
-        if (!table->init()) {
-            ReportOutOfMemory(cx);
-            js_delete(table);
-            table = nullptr;
-            return nullptr;
-        }
     }
 
     ObjectGroupRealm::PlainObjectKey::Lookup lookup(properties, nproperties);
@@ -1461,13 +1433,6 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* scriptArg, jsbytecode*
         table = cx->new_<ObjectGroupRealm::AllocationSiteTable>(cx->zone());
         if (!table)
             return nullptr;
-
-        if (!table->init()) {
-            ReportOutOfMemory(cx);
-            js_delete(table);
-            table = nullptr;
-            return nullptr;
-        }
     }
 
     RootedScript script(cx, scriptArg);
@@ -1774,11 +1739,11 @@ ObjectGroupRealm::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
 void
 ObjectGroupRealm::clearTables()
 {
-    if (allocationSiteTable && allocationSiteTable->initialized())
+    if (allocationSiteTable)
         allocationSiteTable->clear();
-    if (arrayObjectTable && arrayObjectTable->initialized())
+    if (arrayObjectTable)
         arrayObjectTable->clear();
-    if (plainObjectTable && plainObjectTable->initialized()) {
+    if (plainObjectTable) {
         for (PlainObjectTable::Enum e(*plainObjectTable); !e.empty(); e.popFront()) {
             const PlainObjectKey& key = e.front().key();
             PlainObjectEntry& entry = e.front().value();
@@ -1787,9 +1752,9 @@ ObjectGroupRealm::clearTables()
         }
         plainObjectTable->clear();
     }
-    if (defaultNewTable && defaultNewTable->initialized())
+    if (defaultNewTable)
         defaultNewTable->clear();
-    if (lazyTable && lazyTable->initialized())
+    if (lazyTable)
         lazyTable->clear();
     defaultNewGroupCache.purge();
 }
@@ -1831,7 +1796,7 @@ ObjectGroupRealm::fixupNewTableAfterMovingGC(NewTable* table)
      * Each entry's hash depends on the object's prototype and we can't tell
      * whether that has been moved or not in sweepNewObjectGroupTable().
      */
-    if (table && table->initialized()) {
+    if (table) {
         for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
             NewEntry& entry = e.mutableFront();
 
@@ -1862,7 +1827,7 @@ ObjectGroupRealm::checkNewTableAfterMovingGC(NewTable* table)
      * Assert that nothing points into the nursery or needs to be relocated, and
      * that the hash table entries are discoverable.
      */
-    if (!table || !table->initialized())
+    if (!table)
         return;
 
     for (auto r = table->all(); !r.empty(); r.popFront()) {

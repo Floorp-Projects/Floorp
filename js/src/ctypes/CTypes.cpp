@@ -6104,11 +6104,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
     return false;
 
   // Create a FieldInfoHash to stash on the type object.
-  Rooted<FieldInfoHash> fields(cx);
-  if (!fields.init(len)) {
-    JS_ReportOutOfMemory(cx);
-    return false;
-  }
+  Rooted<FieldInfoHash> fields(cx, len);
 
   // Process the field types.
   size_t structSize, structAlign;
@@ -6215,7 +6211,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
     JS_ReportOutOfMemory(cx);
     return false;
   }
-  MOZ_ASSERT(heapHash->initialized());
   JS_SetReservedSlot(typeObj, SLOT_FIELDINFO, PrivateValue(heapHash));
 
   JS_SetReservedSlot(typeObj, SLOT_SIZE, sizeVal);
