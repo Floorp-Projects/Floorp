@@ -10,6 +10,18 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["btoa", "URL"]);
 
+// Android tests don't import these properly, so guard against that
+let shortURL = {};
+let searchShortcuts = {};
+let didSuccessfulImport = false;
+try {
+  ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", shortURL);
+  ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm", searchShortcuts);
+  didSuccessfulImport = true;
+} catch (e) {
+  // The test failed to import these files
+}
+
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -1168,6 +1180,16 @@ var ActivityStreamProvider = {
         combiner(link, other);
       }
       map.set(host, link);
+    }
+
+    // Convert all links that are supposed to be a seach shortcut to its canonical URL
+    if (didSuccessfulImport && Services.prefs.getBoolPref(`browser.newtabpage.activity-stream.${searchShortcuts.SEARCH_SHORTCUTS_EXPERIMENT}`)) {
+      links.forEach(link => {
+        let searchProvider = searchShortcuts.getSearchProvider(shortURL.shortURL(link));
+        if (searchProvider) {
+          link.url = searchProvider.url;
+        }
+      });
     }
 
     // Remove any blocked links.
