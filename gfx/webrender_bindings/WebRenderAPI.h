@@ -198,6 +198,8 @@ public:
 
   void Readback(const TimeStamp& aStartTime, gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
 
+  void ClearAllCaches();
+
   void Pause();
   bool Resume();
 
