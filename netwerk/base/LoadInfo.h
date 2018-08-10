@@ -97,6 +97,7 @@ private:
            nsIPrincipal* aTriggeringPrincipal,
            nsIPrincipal* aPrincipalToInherit,
            nsIPrincipal* aSandboxedLoadingPrincipal,
+           nsIPrincipal* aTopLevelPrincipal,
            nsIPrincipal* aTopLevelStorageAreaPrincipal,
            nsIURI* aResultPrincipalURI,
            const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
@@ -161,6 +162,7 @@ private:
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal>           mPrincipalToInherit;
   nsCOMPtr<nsIPrincipal>           mSandboxedLoadingPrincipal;
+  nsCOMPtr<nsIPrincipal>           mTopLevelPrincipal;
   nsCOMPtr<nsIPrincipal>           mTopLevelStorageAreaPrincipal;
   nsCOMPtr<nsIURI>                 mResultPrincipalURI;
 
