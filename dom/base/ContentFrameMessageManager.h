@@ -11,6 +11,7 @@
 #include "mozilla/dom/MessageManagerGlobal.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
 #include "nsContentUtils.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,30 +25,6 @@ class ContentFrameMessageManager : public DOMEventTargetHelper,
 public:
   using DOMEventTargetHelper::AddRef;
   using DOMEventTargetHelper::Release;
-
-  bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                 JS::Handle<jsid> aId,
-                 JS::MutableHandle<JS::PropertyDescriptor> aDesc)
-  {
-    bool found;
-    if (!SystemGlobalResolve(aCx, aObj, aId, &found)) {
-      return false;
-    }
-    if (found) {
-      FillPropertyDescriptor(aDesc, aObj, JS::UndefinedValue(), false);
-    }
-    return true;
-  }
-  static bool MayResolve(jsid aId)
-  {
-    return MayResolveAsSystemBindingName(aId);
-  }
-  void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
-                           bool aEnumerableOnly, mozilla::ErrorResult& aRv)
-  {
-    JS::Rooted<JSObject*> thisObj(aCx, GetWrapper());
-    GetSystemBindingNames(aCx, thisObj, aNames, aEnumerableOnly, aRv);
-  }
 
   virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) = 0;
@@ -64,9 +41,12 @@ public:
     mMessageManager = nullptr;
   }
 
+  JSObject* GetOrCreateWrapper();
+
 protected:
   explicit ContentFrameMessageManager(nsFrameMessageManager* aMessageManager)
-    : MessageManagerGlobal(aMessageManager)
+    : DOMEventTargetHelper(xpc::NativeGlobal(xpc::PrivilegedJunkScope()))
+    , MessageManagerGlobal(aMessageManager)
   {}
 };
 

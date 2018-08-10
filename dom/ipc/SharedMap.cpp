@@ -285,7 +285,7 @@ WritableSharedMap::GetReadOnly()
 {
   if (!mReadOnly) {
     nsTArray<RefPtr<BlobImpl>> blobs(mBlobImpls);
-    mReadOnly = new SharedMap(ContentProcessMessageManager::Get(),
+    mReadOnly = new SharedMap(ContentProcessMessageManager::Get()->GetParentObject(),
                               CloneMapFile(), MapSize(), std::move(blobs));
   }
   return mReadOnly;
