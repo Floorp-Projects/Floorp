@@ -4,7 +4,7 @@
 
 pref("security.tls.version.min", 1);
 pref("security.tls.version.max", 4);
-pref("security.tls.version.fallback-limit", 3);
+pref("security.tls.version.fallback-limit", 4);
 pref("security.tls.insecure_fallback_hosts", "");
 pref("security.tls.enable_0rtt_data", false);
 
