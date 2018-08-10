@@ -177,6 +177,10 @@ _Supporting components with generic helper code._
 
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
+## Tooling
+
+* 🔵 [**Lint**](components/tooling/lint/README.md) - Custom Lint rules for the components repository.
+
 # Sample apps
 
 _Sample apps using various components._
