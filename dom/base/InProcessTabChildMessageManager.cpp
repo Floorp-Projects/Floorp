@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsInProcessTabChildGlobal.h"
+#include "InProcessTabChildMessageManager.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -25,13 +25,13 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
 bool
-nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
-                                                 const nsAString& aMessage,
-                                                 StructuredCloneData& aData,
-                                                 JS::Handle<JSObject *> aCpows,
-                                                 nsIPrincipal* aPrincipal,
-                                                 nsTArray<StructuredCloneData>* aRetVal,
-                                                 bool aIsSync)
+InProcessTabChildMessageManager::DoSendBlockingMessage(JSContext* aCx,
+                                                       const nsAString& aMessage,
+                                                       StructuredCloneData& aData,
+                                                       JS::Handle<JSObject *> aCpows,
+                                                       nsIPrincipal* aPrincipal,
+                                                       nsTArray<StructuredCloneData>* aRetVal,
+                                                       bool aIsSync)
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
   queue->Flush();
@@ -52,7 +52,7 @@ class nsAsyncMessageToParent : public nsSameProcessAsyncMessageBase,
 public:
   nsAsyncMessageToParent(JS::RootingContext* aRootingCx,
                          JS::Handle<JSObject*> aCpows,
-                         nsInProcessTabChildGlobal* aTabChild)
+                         InProcessTabChildMessageManager* aTabChild)
     : nsSameProcessAsyncMessageBase(aRootingCx, aCpows)
     , mTabChild(aTabChild)
   { }
@@ -63,15 +63,15 @@ public:
     ReceiveMessage(mTabChild->mOwner, fl, mTabChild->mChromeMessageManager);
     return NS_OK;
   }
-  RefPtr<nsInProcessTabChildGlobal> mTabChild;
+  RefPtr<InProcessTabChildMessageManager> mTabChild;
 };
 
 nsresult
-nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
-                                              const nsAString& aMessage,
-                                              StructuredCloneData& aData,
-                                              JS::Handle<JSObject *> aCpows,
-                                              nsIPrincipal* aPrincipal)
+InProcessTabChildMessageManager::DoSendAsyncMessage(JSContext* aCx,
+                                                    const nsAString& aMessage,
+                                                    StructuredCloneData& aData,
+                                                    JS::Handle<JSObject *> aCpows,
+                                                    nsIPrincipal* aPrincipal)
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
   JS::RootingContext* rcx = JS::RootingContext::get(aCx);
@@ -87,9 +87,9 @@ nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
   return NS_OK;
 }
 
-nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
-                                                     nsIContent* aOwner,
-                                                     nsFrameMessageManager* aChrome)
+InProcessTabChildMessageManager::InProcessTabChildMessageManager(nsIDocShell* aShell,
+                                                                 nsIContent* aOwner,
+                                                                 nsFrameMessageManager* aChrome)
 : ContentFrameMessageManager(new nsFrameMessageManager(this)),
   mDocShell(aShell), mLoadingScript(false),
   mPreventEventsEscaping(false),
@@ -108,7 +108,7 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
   }
 }
 
-nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
+InProcessTabChildMessageManager::~InProcessTabChildMessageManager()
 {
   mAnonymousGlobalScopes.Clear();
   mozilla::DropJSObjects(this);
@@ -117,14 +117,14 @@ nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
 // This method isn't automatically forwarded safely because it's notxpcom, so
 // the IDL binding doesn't know what value to return.
 void
-nsInProcessTabChildGlobal::MarkForCC()
+InProcessTabChildMessageManager::MarkForCC()
 {
   MarkScopesForCC();
   MessageManagerGlobal::MarkForCC();
 }
 
 bool
-nsInProcessTabChildGlobal::Init()
+InProcessTabChildMessageManager::Init()
 {
   // If you change this, please change GetCompartmentName() in XPCJSContext.cpp
   // accordingly.
@@ -141,22 +141,22 @@ nsInProcessTabChildGlobal::Init()
   return InitChildGlobalInternal(id);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsInProcessTabChildGlobal)
+NS_IMPL_CYCLE_COLLECTION_CLASS(InProcessTabChildMessageManager)
 
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsInProcessTabChildGlobal,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(InProcessTabChildMessageManager,
                                                   DOMEventTargetHelper)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
    tmp->TraverseHostObjectURIs(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsInProcessTabChildGlobal,
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(InProcessTabChildMessageManager,
                                                DOMEventTargetHelper)
   tmp->nsMessageManagerScriptExecutor::Trace(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsInProcessTabChildGlobal,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(InProcessTabChildMessageManager,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
@@ -164,7 +164,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsInProcessTabChildGlobal,
   tmp->UnlinkHostObjectURIs();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsInProcessTabChildGlobal)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InProcessTabChildMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIInProcessContentFrameMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
@@ -172,13 +172,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsInProcessTabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(nsInProcessTabChildGlobal, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(nsInProcessTabChildGlobal, DOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(InProcessTabChildMessageManager, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(InProcessTabChildMessageManager, DOMEventTargetHelper)
 
 bool
-nsInProcessTabChildGlobal::WrapGlobalObject(JSContext* aCx,
-                                            JS::RealmOptions& aOptions,
-                                            JS::MutableHandle<JSObject*> aReflector)
+InProcessTabChildMessageManager::WrapGlobalObject(JSContext* aCx,
+                                                  JS::RealmOptions& aOptions,
+                                                  JS::MutableHandle<JSObject*> aReflector)
 {
   bool ok = ContentFrameMessageManager_Binding::Wrap(aCx, this, this, aOptions,
                                                        nsJSPrincipals::get(mPrincipal),
@@ -191,13 +191,13 @@ nsInProcessTabChildGlobal::WrapGlobalObject(JSContext* aCx,
 }
 
 void
-nsInProcessTabChildGlobal::CacheFrameLoader(nsFrameLoader* aFrameLoader)
+InProcessTabChildMessageManager::CacheFrameLoader(nsFrameLoader* aFrameLoader)
 {
   mFrameLoader = aFrameLoader;
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
-nsInProcessTabChildGlobal::GetContent(ErrorResult& aError)
+InProcessTabChildMessageManager::GetContent(ErrorResult& aError)
 {
   nsCOMPtr<nsPIDOMWindowOuter> content;
   if (mDocShell) {
@@ -207,14 +207,14 @@ nsInProcessTabChildGlobal::GetContent(ErrorResult& aError)
 }
 
 already_AddRefed<nsIEventTarget>
-nsInProcessTabChildGlobal::GetTabEventTarget()
+InProcessTabChildMessageManager::GetTabEventTarget()
 {
   nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
   return target.forget();
 }
 
 uint64_t
-nsInProcessTabChildGlobal::ChromeOuterWindowID()
+InProcessTabChildMessageManager::ChromeOuterWindowID()
 {
   if (!mDocShell) {
     return 0;
@@ -236,7 +236,7 @@ nsInProcessTabChildGlobal::ChromeOuterWindowID()
 }
 
 void
-nsInProcessTabChildGlobal::FireUnloadEvent()
+InProcessTabChildMessageManager::FireUnloadEvent()
 {
   // We're called from nsDocument::MaybeInitializeFinalizeFrameLoaders, so it
   // should be safe to run script.
@@ -252,7 +252,7 @@ nsInProcessTabChildGlobal::FireUnloadEvent()
 }
 
 void
-nsInProcessTabChildGlobal::DisconnectEventListeners()
+InProcessTabChildMessageManager::DisconnectEventListeners()
 {
   if (mDocShell) {
     if (nsCOMPtr<nsPIDOMWindowOuter> win = mDocShell->GetWindow()) {
@@ -267,7 +267,7 @@ nsInProcessTabChildGlobal::DisconnectEventListeners()
 }
 
 void
-nsInProcessTabChildGlobal::Disconnect()
+InProcessTabChildMessageManager::Disconnect()
 {
   mChromeMessageManager = nullptr;
   mOwner = nullptr;
@@ -278,13 +278,13 @@ nsInProcessTabChildGlobal::Disconnect()
 }
 
 NS_IMETHODIMP_(nsIContent *)
-nsInProcessTabChildGlobal::GetOwnerContent()
+InProcessTabChildMessageManager::GetOwnerContent()
 {
   return mOwner;
 }
 
 void
-nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
+InProcessTabChildMessageManager::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mForceContentDispatch = true;
   aVisitor.mCanHandle = true;
@@ -294,7 +294,7 @@ nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
     RefPtr<nsFrameLoader> fl = owner->GetFrameLoader();
     if (fl) {
-      NS_ASSERTION(this == fl->GetTabChildGlobal(),
+      NS_ASSERTION(this == fl->GetTabChildMessageManager(),
                    "Wrong event target!");
       NS_ASSERTION(fl->mMessageManager == mChromeMessageManager,
                    "Wrong message manager!");
@@ -324,7 +324,7 @@ nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 class nsAsyncScriptLoad : public Runnable
 {
 public:
-  nsAsyncScriptLoad(nsInProcessTabChildGlobal* aTabChild,
+  nsAsyncScriptLoad(InProcessTabChildMessageManager* aTabChild,
                     const nsAString& aURL,
                     bool aRunInGlobalScope)
     : mozilla::Runnable("nsAsyncScriptLoad")
@@ -339,13 +339,13 @@ public:
     mTabChild->LoadFrameScript(mURL, mRunInGlobalScope);
     return NS_OK;
   }
-  RefPtr<nsInProcessTabChildGlobal> mTabChild;
+  RefPtr<InProcessTabChildMessageManager> mTabChild;
   nsString mURL;
   bool mRunInGlobalScope;
 };
 
 void
-nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
+InProcessTabChildMessageManager::LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
 {
   if (!nsContentUtils::IsSafeToRunScript()) {
     nsContentUtils::AddScriptRunner(new nsAsyncScriptLoad(this, aURL, aRunInGlobalScope));
@@ -359,7 +359,7 @@ nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL, bool aRunInGlo
 }
 
 already_AddRefed<nsFrameLoader>
-nsInProcessTabChildGlobal::GetFrameLoader()
+InProcessTabChildMessageManager::GetFrameLoader()
 {
   nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
   RefPtr<nsFrameLoader> fl = owner ? owner->GetFrameLoader() : nullptr;

@@ -26,31 +26,38 @@
 
 namespace mozilla {
 class EventChainPreVisitor;
-} // namespace mozilla
 
-class nsInProcessTabChildGlobal final : public mozilla::dom::ContentFrameMessageManager,
-                                        public nsMessageManagerScriptExecutor,
-                                        public nsIInProcessContentFrameMessageManager,
-                                        public nsIGlobalObject,
-                                        public nsIScriptObjectPrincipal,
-                                        public nsSupportsWeakReference,
-                                        public mozilla::dom::ipc::MessageManagerCallback
+namespace dom {
+
+/**
+ * This class implements a ContentFrameMessageManager for use by frame loaders
+ * in the parent process. It is bound to a DocShell rather than a TabChild, and
+ * does not use any IPC infrastructure for its message passing.
+ */
+
+class InProcessTabChildMessageManager final : public ContentFrameMessageManager,
+                                              public nsMessageManagerScriptExecutor,
+                                              public nsIInProcessContentFrameMessageManager,
+                                              public nsIGlobalObject,
+                                              public nsIScriptObjectPrincipal,
+                                              public nsSupportsWeakReference,
+                                              public mozilla::dom::ipc::MessageManagerCallback
 {
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
 
 private:
-  nsInProcessTabChildGlobal(nsIDocShell* aShell, nsIContent* aOwner,
-                            nsFrameMessageManager* aChrome);
+  InProcessTabChildMessageManager(nsIDocShell* aShell, nsIContent* aOwner,
+                                  nsFrameMessageManager* aChrome);
 
   bool Init();
 
 public:
-  static already_AddRefed<nsInProcessTabChildGlobal> Create(nsIDocShell* aShell,
-                                                            nsIContent* aOwner,
-                                                            nsFrameMessageManager* aChrome)
+  static already_AddRefed<InProcessTabChildMessageManager> Create(nsIDocShell* aShell,
+                                                                  nsIContent* aOwner,
+                                                                  nsFrameMessageManager* aChrome)
   {
-    RefPtr<nsInProcessTabChildGlobal> global =
-      new nsInProcessTabChildGlobal(aShell, aOwner, aChrome);
+    RefPtr<InProcessTabChildMessageManager> global =
+      new InProcessTabChildMessageManager(aShell, aOwner, aChrome);
 
     NS_ENSURE_TRUE(global->Init(), nullptr);
 
@@ -58,8 +65,8 @@ public:
   }
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsInProcessTabChildGlobal,
-                                                         mozilla::DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(InProcessTabChildMessageManager,
+                                                         DOMEventTargetHelper)
 
   void MarkForCC();
 
@@ -73,9 +80,9 @@ public:
                                 JS::MutableHandle<JSObject*> aReflector) override;
 
   virtual already_AddRefed<nsPIDOMWindowOuter>
-    GetContent(mozilla::ErrorResult& aError) override;
+    GetContent(ErrorResult& aError) override;
   virtual already_AddRefed<nsIDocShell>
-    GetDocShell(mozilla::ErrorResult& aError) override
+    GetDocShell(ErrorResult& aError) override
   {
     nsCOMPtr<nsIDocShell> docShell(mDocShell);
     return docShell.forget();
@@ -105,7 +112,7 @@ public:
                                       JS::Handle<JSObject *> aCpows,
                                       nsIPrincipal* aPrincipal) override;
 
-  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
   void LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope);
@@ -138,7 +145,7 @@ public:
   already_AddRefed<nsFrameLoader> GetFrameLoader();
 
 protected:
-  virtual ~nsInProcessTabChildGlobal();
+  virtual ~InProcessTabChildMessageManager();
 
   nsCOMPtr<nsIDocShell> mDocShell;
   bool mLoadingScript;
@@ -156,5 +163,8 @@ public:
   nsIContent* mOwner;
   nsFrameMessageManager* mChromeMessageManager;
 };
+
+} // namespace dom
+} // namespace mozilla
 
 #endif
