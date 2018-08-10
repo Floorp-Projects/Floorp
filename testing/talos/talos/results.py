@@ -415,13 +415,17 @@ class BrowserLogResults(object):
     def xperf(self, counter_results):
         """record xperf counters in counter_results dictionary"""
 
+        session_store_counter = 'time_to_session_store_window_restored_ms'
+
         counters = ['main_startup_fileio',
                     'main_startup_netio',
                     'main_normal_fileio',
                     'main_normal_netio',
                     'nonmain_startup_fileio',
                     'nonmain_normal_fileio',
-                    'nonmain_normal_netio']
+                    'nonmain_normal_netio',
+                    session_store_counter,
+                    ]
 
         mainthread_counter_keys = ['readcount', 'readbytes', 'writecount',
                                    'writebytes']
@@ -490,6 +494,15 @@ class BrowserLogResults(object):
                         counter_results.setdefault(mainthread_counter, [])\
                             .append([int(values[mainthread_counter_keys[i]]),
                                      values['filename']])
+
+        if session_store_counter in counter_results.keys():
+            filename = 'etl_output_session_restore_stats.csv'
+            # This file is a csv but it only contains one field, so we'll just
+            # obtain the value by converting the second line in the file.
+            with open(filename, 'r') as contents:
+                lines = contents.read().splitlines()
+                value = float(lines[1].strip())
+                counter_results.setdefault(session_store_counter, []).append(value)
 
     def mainthread_io(self, counter_results):
         """record mainthread IO counters in counter_results dictionary"""
