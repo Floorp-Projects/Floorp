@@ -86,6 +86,8 @@ AccessibilityPanel.prototype = {
       this.picker = new Picker(this);
     }
 
+    this.startup.updatePanelPromoteCount();
+
     this.updateA11YServiceDurationTimer();
     this.front.on("init", this.updateA11YServiceDurationTimer);
     this.front.on("shutdown", this.updateA11YServiceDurationTimer);
