@@ -464,28 +464,13 @@ FontPrefChanged(const char* aPref, void* aData)
     gfxPlatform::GetPlatform()->FontsPrefsChanged(aPref);
 }
 
-class MemoryPressureObserver final : public nsIObserver
+void
+gfxPlatform::OnMemoryPressure(layers::MemoryPressureReason aWhy)
 {
-    ~MemoryPressureObserver() = default;
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-};
-
-NS_IMPL_ISUPPORTS(MemoryPressureObserver, nsIObserver)
-
-NS_IMETHODIMP
-MemoryPressureObserver::Observe(nsISupports *aSubject,
-                                const char *aTopic,
-                                const char16_t *someData)
-{
-    NS_ASSERTION(strcmp(aTopic, "memory-pressure") == 0, "unexpected event topic");
     Factory::PurgeAllCaches();
     gfxGradientCache::PurgeAllCaches();
-
-    gfxPlatform::PurgeSkiaFontCache();
-    gfxPlatform::GetPlatform()->PurgeSkiaGPUCache();
-    return NS_OK;
+    PurgeSkiaFontCache();
+    PurgeSkiaGPUCache();
 }
 
 gfxPlatform::gfxPlatform()
@@ -819,11 +804,7 @@ gfxPlatform::Init()
     CreateCMSOutputProfile();
 
     // Listen to memory pressure event so we can purge DrawTarget caches
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-        gPlatform->mMemoryPressureObserver = new MemoryPressureObserver();
-        obs->AddObserver(gPlatform->mMemoryPressureObserver, "memory-pressure", false);
-    }
+    gPlatform->mMemoryPressureObserver = layers::MemoryPressureObserver::Create(gPlatform);
 
     // Request the imgITools service, implicitly initializing ImageLib.
     nsCOMPtr<imgITools> imgTools = do_GetService("@mozilla.org/image/tools;1");
@@ -872,6 +853,7 @@ gfxPlatform::Init()
       gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
     }
 
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
     }
@@ -988,12 +970,10 @@ gfxPlatform::Shutdown()
     Preferences::UnregisterPrefixCallbacks(FontPrefChanged, kObservedPrefs);
 
     NS_ASSERTION(gPlatform->mMemoryPressureObserver, "mMemoryPressureObserver has already gone");
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-        obs->RemoveObserver(gPlatform->mMemoryPressureObserver, "memory-pressure");
+    if (gPlatform->mMemoryPressureObserver) {
+      gPlatform->mMemoryPressureObserver->Unregister();
+      gPlatform->mMemoryPressureObserver = nullptr;
     }
-
-    gPlatform->mMemoryPressureObserver = nullptr;
     gPlatform->mSkiaGlue = nullptr;
 
     if (XRE_IsParentProcess()) {
