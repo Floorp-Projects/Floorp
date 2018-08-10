@@ -327,12 +327,12 @@ cglobal filter_block1d16_%1, 6, 6, 14, LOCAL_VARS_SIZE, \
 %endm
 
 INIT_XMM ssse3
-SUBPIX_HFILTER16 h8
-SUBPIX_HFILTER16 h8_avg
-SUBPIX_HFILTER8  h8
-SUBPIX_HFILTER8  h8_avg
-SUBPIX_HFILTER4  h8
-SUBPIX_HFILTER4  h8_avg
+SUBPIX_HFILTER16 h8      ; vpx_filter_block1d16_h8_ssse3
+SUBPIX_HFILTER16 h8_avg  ; vpx_filter_block1d16_h8_avg_ssse3
+SUBPIX_HFILTER8  h8      ; vpx_filter_block1d8_h8_ssse3
+SUBPIX_HFILTER8  h8_avg  ; vpx_filter_block1d8_h8_avg_ssse3
+SUBPIX_HFILTER4  h8      ; vpx_filter_block1d4_h8_ssse3
+SUBPIX_HFILTER4  h8_avg  ; vpx_filter_block1d4_h8_avg_ssse3
 
 ;-------------------------------------------------------------------------------
 
@@ -795,9 +795,9 @@ cglobal filter_block1d16_%1, 6, NUM_GENERAL_REG_USED, 16, LOCAL_VARS_SIZE, \
 %endm
 
 INIT_XMM ssse3
-SUBPIX_VFILTER16     v8
-SUBPIX_VFILTER16 v8_avg
-SUBPIX_VFILTER       v8, 8
-SUBPIX_VFILTER   v8_avg, 8
-SUBPIX_VFILTER       v8, 4
-SUBPIX_VFILTER   v8_avg, 4
+SUBPIX_VFILTER16     v8     ; vpx_filter_block1d16_v8_ssse3
+SUBPIX_VFILTER16 v8_avg     ; vpx_filter_block1d16_v8_avg_ssse3
+SUBPIX_VFILTER       v8, 8  ; vpx_filter_block1d8_v8_ssse3
+SUBPIX_VFILTER   v8_avg, 8  ; vpx_filter_block1d8_v8_avg_ssse3
+SUBPIX_VFILTER       v8, 4  ; vpx_filter_block1d4_v8_ssse3
+SUBPIX_VFILTER   v8_avg, 4  ; vpx_filter_block1d4_v8_avg_ssse3

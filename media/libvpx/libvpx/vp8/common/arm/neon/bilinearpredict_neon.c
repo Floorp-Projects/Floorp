@@ -11,6 +11,7 @@
 #include <arm_neon.h>
 #include <string.h>
 #include "./vpx_config.h"
+#include "vpx_dsp/arm/mem_neon.h"
 
 static const uint8_t bifilter4_coeff[8][2] = { { 128, 0 }, { 112, 16 },
                                                { 96, 32 }, { 80, 48 },
@@ -19,35 +20,6 @@ static const uint8_t bifilter4_coeff[8][2] = { { 128, 0 }, { 112, 16 },
 
 static INLINE uint8x8_t load_and_shift(const unsigned char *a) {
   return vreinterpret_u8_u64(vshl_n_u64(vreinterpret_u64_u8(vld1_u8(a)), 32));
-}
-
-static INLINE void store4x4(unsigned char *dst, int dst_stride,
-                            const uint8x8_t a0, const uint8x8_t a1) {
-  if (!((uintptr_t)dst & 0x3) && !(dst_stride & 0x3)) {
-    vst1_lane_u32((uint32_t *)dst, vreinterpret_u32_u8(a0), 0);
-    dst += dst_stride;
-    vst1_lane_u32((uint32_t *)dst, vreinterpret_u32_u8(a0), 1);
-    dst += dst_stride;
-    vst1_lane_u32((uint32_t *)dst, vreinterpret_u32_u8(a1), 0);
-    dst += dst_stride;
-    vst1_lane_u32((uint32_t *)dst, vreinterpret_u32_u8(a1), 1);
-  } else {
-    // Store to the aligned local buffer and memcpy instead of vget_lane_u8
-    // which is really really slow.
-    uint32_t output_buffer[4];
-    vst1_lane_u32(output_buffer, vreinterpret_u32_u8(a0), 0);
-    vst1_lane_u32(output_buffer + 1, vreinterpret_u32_u8(a0), 1);
-    vst1_lane_u32(output_buffer + 2, vreinterpret_u32_u8(a1), 0);
-    vst1_lane_u32(output_buffer + 3, vreinterpret_u32_u8(a1), 1);
-
-    memcpy(dst, output_buffer, 4);
-    dst += dst_stride;
-    memcpy(dst, output_buffer + 1, 4);
-    dst += dst_stride;
-    memcpy(dst, output_buffer + 2, 4);
-    dst += dst_stride;
-    memcpy(dst, output_buffer + 3, 4);
-  }
 }
 
 void vp8_bilinear_predict4x4_neon(unsigned char *src_ptr,
@@ -122,7 +94,7 @@ void vp8_bilinear_predict4x4_neon(unsigned char *src_ptr,
 
   // secondpass_filter
   if (yoffset == 0) {  // skip_2ndpass_filter
-    store4x4(dst_ptr, dst_pitch, e0, e1);
+    store_unaligned_u8q(dst_ptr, dst_pitch, vcombine_u8(e0, e1));
   } else {
     uint8x8_t f0, f1;
     const uint8x8_t filter0 = vdup_n_u8(bifilter4_coeff[yoffset][0]);
@@ -140,7 +112,7 @@ void vp8_bilinear_predict4x4_neon(unsigned char *src_ptr,
     f0 = vqrshrn_n_u16(b0, 7);
     f1 = vqrshrn_n_u16(b1, 7);
 
-    store4x4(dst_ptr, dst_pitch, f0, f1);
+    store_unaligned_u8q(dst_ptr, dst_pitch, vcombine_u8(f0, f1));
   }
 }
 

@@ -9,7 +9,6 @@
 #include <algorithm>                    // for max
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayersImpl.h"            // for ToData
-#include "BufferUnrotate.h"             // for BufferUnrotate
 #include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
 #include "Layers.h"                     // for PaintedLayer, Layer, etc
 #include "gfxPlatform.h"                // for gfxPlatform
@@ -43,9 +42,7 @@ BorrowDrawTarget::ReturnDrawTarget(gfx::DrawTarget*& aReturned)
   MOZ_ASSERT(mLoanedDrawTarget);
   MOZ_ASSERT(aReturned == mLoanedDrawTarget);
   if (mLoanedDrawTarget) {
-    if (mSetTransform) {
-      mLoanedDrawTarget->SetTransform(mLoanedTransform);
-    }
+    mLoanedDrawTarget->SetTransform(mLoanedTransform);
     mLoanedDrawTarget = nullptr;
   }
   aReturned = nullptr;
@@ -79,6 +76,23 @@ RotatedBuffer::GetSourceRectangle(XSide aXSide, YSide aYSide) const
   return result;
 }
 
+void
+RotatedBuffer::BeginCapture()
+{
+  RefPtr<gfx::DrawTarget> target = GetBufferTarget();
+
+  MOZ_ASSERT(!mCapture);
+  MOZ_ASSERT(target);
+  mCapture = Factory::CreateCaptureDrawTargetForTarget(target, gfxPrefs::LayersOMTPCaptureLimit());
+}
+
+RefPtr<gfx::DrawTargetCapture>
+RotatedBuffer::EndCapture()
+{
+  MOZ_ASSERT(mCapture);
+  return std::move(mCapture);
+}
+
 /**
  * @param aXSide LEFT means we draw from the left side of the buffer (which
  * is drawn on the right side of mBufferRect). RIGHT means we draw from
@@ -92,7 +106,6 @@ RotatedBuffer::GetSourceRectangle(XSide aXSide, YSide aYSide) const
 void
 RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
                                   XSide aXSide, YSide aYSide,
-                                  ContextSource aSource,
                                   float aOpacity,
                                   gfx::CompositionOp aOperator,
                                   gfx::SourceSurface* aMask,
@@ -109,8 +122,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
 
   gfx::Point quadrantTranslation(quadrantRect.X(), quadrantRect.Y());
 
-  MOZ_ASSERT(aSource != BUFFER_BOTH);
-  RefPtr<SourceSurface> snapshot = GetSourceSurface(aSource);
+  RefPtr<SourceSurface> snapshot = GetBufferSource();
 
   if (!snapshot) {
     gfxCriticalError() << "Invalid snapshot in RotatedBuffer::DrawBufferQuadrant";
@@ -177,7 +189,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
 }
 
 void
-RotatedBuffer::DrawBufferWithRotation(gfx::DrawTarget *aTarget, ContextSource aSource,
+RotatedBuffer::DrawBufferWithRotation(gfx::DrawTarget *aTarget,
                                       float aOpacity,
                                       gfx::CompositionOp aOperator,
                                       gfx::SourceSurface* aMask,
@@ -188,10 +200,10 @@ RotatedBuffer::DrawBufferWithRotation(gfx::DrawTarget *aTarget, ContextSource aS
   // See above, in Azure Repeat should always be a safe, even faster choice
   // though! Particularly on D2D Repeat should be a lot faster, need to look
   // into that. TODO[Bas]
-  DrawBufferQuadrant(aTarget, LEFT, TOP, aSource, aOpacity, aOperator, aMask, aMaskTransform);
-  DrawBufferQuadrant(aTarget, RIGHT, TOP, aSource, aOpacity, aOperator, aMask, aMaskTransform);
-  DrawBufferQuadrant(aTarget, LEFT, BOTTOM, aSource, aOpacity, aOperator, aMask, aMaskTransform);
-  DrawBufferQuadrant(aTarget, RIGHT, BOTTOM, aSource, aOpacity, aOperator,aMask, aMaskTransform);
+  DrawBufferQuadrant(aTarget, LEFT, TOP, aOpacity, aOperator, aMask, aMaskTransform);
+  DrawBufferQuadrant(aTarget, RIGHT, TOP, aOpacity, aOperator, aMask, aMaskTransform);
+  DrawBufferQuadrant(aTarget, LEFT, BOTTOM, aOpacity, aOperator, aMask, aMaskTransform);
+  DrawBufferQuadrant(aTarget, RIGHT, BOTTOM, aOpacity, aOperator,aMask, aMaskTransform);
 }
 
 bool IsClippingCheap(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion)
@@ -229,7 +241,7 @@ RotatedBuffer::DrawTo(PaintedLayer* aLayer,
     clipped = true;
   }
 
-  DrawBufferWithRotation(aTarget, BUFFER_BLACK, aOpacity, aOp, aMask, aMaskTransform);
+  DrawBufferWithRotation(aTarget, aOpacity, aOp, aMask, aMaskTransform);
   if (clipped) {
     aTarget->PopClip();
   }
@@ -241,34 +253,17 @@ RotatedBuffer::UpdateDestinationFrom(const RotatedBuffer& aSource,
 {
   DrawIterator iter;
   while (DrawTarget* destDT =
-    BorrowDrawTargetForQuadrantUpdate(aUpdateRect, BUFFER_BLACK, &iter)) {
+    BorrowDrawTargetForQuadrantUpdate(aUpdateRect, &iter)) {
     bool isClippingCheap = IsClippingCheap(destDT, iter.mDrawRegion);
     if (isClippingCheap) {
       gfxUtils::ClipToRegion(destDT, iter.mDrawRegion);
     }
 
-    aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, CompositionOp::OP_SOURCE);
+    aSource.DrawBufferWithRotation(destDT, 1.0, CompositionOp::OP_SOURCE);
     if (isClippingCheap) {
       destDT->PopClip();
     }
     ReturnDrawTarget(destDT);
-  }
-
-  if (aSource.HaveBufferOnWhite() && HaveBufferOnWhite()) {
-    DrawIterator whiteIter;
-    while (DrawTarget* destDT =
-      BorrowDrawTargetForQuadrantUpdate(aUpdateRect, BUFFER_WHITE, &whiteIter)) {
-      bool isClippingCheap = IsClippingCheap(destDT, whiteIter.mDrawRegion);
-      if (isClippingCheap) {
-        gfxUtils::ClipToRegion(destDT, whiteIter.mDrawRegion);
-      }
-
-      aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, CompositionOp::OP_SOURCE);
-      if (isClippingCheap) {
-        destDT->PopClip();
-      }
-      ReturnDrawTarget(destDT);
-    }
   }
 }
 
@@ -331,52 +326,18 @@ RotatedBuffer::AdjustedParameters(const gfx::IntRect& aDestBufferRect) const
 bool
 RotatedBuffer::UnrotateBufferTo(const Parameters& aParameters)
 {
-  RefPtr<gfx::DrawTarget> dtBuffer = GetDTBuffer();
-  RefPtr<gfx::DrawTarget> dtBufferOnWhite = GetDTBufferOnWhite();
+  RefPtr<gfx::DrawTarget> drawTarget = GetDrawTarget();
+  MOZ_ASSERT(drawTarget && drawTarget->IsValid());
 
   if (mBufferRotation == IntPoint(0,0)) {
     IntRect srcRect(IntPoint(0, 0), mBufferRect.Size());
     IntPoint dest = mBufferRect.TopLeft() - aParameters.mBufferRect.TopLeft();
 
-    MOZ_ASSERT(dtBuffer && dtBuffer->IsValid());
-    dtBuffer->CopyRect(srcRect, dest);
-    if (HaveBufferOnWhite()) {
-      MOZ_ASSERT(dtBufferOnWhite && dtBufferOnWhite->IsValid());
-      dtBufferOnWhite->CopyRect(srcRect, dest);
-    }
+    drawTarget->CopyRect(srcRect, dest);
+    return true;
   } else {
-    // With azure and a data surface perform an buffer unrotate
-    // (SelfCopy).
-    unsigned char* data;
-    IntSize size;
-    int32_t stride;
-    SurfaceFormat format;
-
-    if (dtBuffer->LockBits(&data, &size, &stride, &format)) {
-      uint8_t bytesPerPixel = BytesPerPixel(format);
-      BufferUnrotate(data,
-                     size.width * bytesPerPixel,
-                     size.height, stride,
-                     aParameters.mBufferRotation.x * bytesPerPixel,
-                     aParameters.mBufferRotation.y);
-      dtBuffer->ReleaseBits(data);
-
-      if (HaveBufferOnWhite()) {
-        MOZ_ASSERT(dtBufferOnWhite && dtBufferOnWhite->IsValid());
-        dtBufferOnWhite->LockBits(&data, &size, &stride, &format);
-        uint8_t bytesPerPixel = BytesPerPixel(format);
-        BufferUnrotate(data,
-                       size.width * bytesPerPixel,
-                       size.height, stride,
-                       aParameters.mBufferRotation.x * bytesPerPixel,
-                       aParameters.mBufferRotation.y);
-        dtBufferOnWhite->ReleaseBits(data);
-      }
-    } else {
-      return false;
-    }
+    return drawTarget->Unrotate(aParameters.mBufferRotation);
   }
-  return true;
 }
 
 void
@@ -395,10 +356,7 @@ RotatedBuffer::GetContentType() const
 
 DrawTarget*
 RotatedBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
-                                                 ContextSource aSource,
-                                                 DrawIterator* aIter,
-                                                 bool aSetTransform,
-                                                 Matrix* aOutMatrix)
+                                                 DrawIterator* aIter)
 {
   IntRect bounds = aBounds;
   if (aIter) {
@@ -423,19 +381,8 @@ RotatedBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
     bounds = aIter->mDrawRegion.GetBounds();
   }
 
-  gfx::DrawTarget* dtBuffer = GetDTBuffer();
-  gfx::DrawTarget* dtBufferOnWhite = GetDTBufferOnWhite();
-
   MOZ_ASSERT(!mLoanedDrawTarget, "draw target has been borrowed and not returned");
-  if (aSource == BUFFER_BOTH && HaveBufferOnWhite()) {
-    MOZ_ASSERT(dtBuffer && dtBuffer->IsValid() && dtBufferOnWhite && dtBufferOnWhite->IsValid());
-    mLoanedDrawTarget = Factory::CreateDualDrawTarget(dtBuffer, dtBufferOnWhite);
-  } else if (aSource == BUFFER_WHITE) {
-    mLoanedDrawTarget = dtBufferOnWhite;
-  } else {
-    // BUFFER_BLACK, or BUFFER_BOTH with a single buffer.
-    mLoanedDrawTarget = dtBuffer;
-  }
+  mLoanedDrawTarget = GetDrawTarget();
 
   // Figure out which quadrant to draw in
   int32_t xBoundary = mBufferRect.XMost() - mBufferRotation.x;
@@ -445,18 +392,11 @@ RotatedBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
   IntRect quadrantRect = GetQuadrantRectangle(sideX, sideY);
   NS_ASSERTION(quadrantRect.Contains(bounds), "Messed up quadrants");
 
-  if (aSetTransform) {
-    mLoanedTransform = mLoanedDrawTarget->GetTransform();
-    Matrix transform = Matrix(mLoanedTransform)
-                            .PreTranslate(-quadrantRect.X(),
-                                          -quadrantRect.Y());
-    mLoanedDrawTarget->SetTransform(transform);
-    mSetTransform = true;
-  } else {
-    MOZ_ASSERT(aOutMatrix);
-    *aOutMatrix = Matrix::Translation(-quadrantRect.X(), -quadrantRect.Y());
-    mSetTransform = false;
-  }
+  mLoanedTransform = mLoanedDrawTarget->GetTransform();
+  Matrix transform = Matrix(mLoanedTransform)
+                          .PreTranslate(-quadrantRect.X(),
+                                        -quadrantRect.Y());
+  mLoanedDrawTarget->SetTransform(transform);
 
   return mLoanedDrawTarget;
 }
@@ -505,6 +445,19 @@ RemoteRotatedBuffer::Lock(OpenMode aMode)
     }
   }
 
+  if (mTargetOnWhite) {
+    mTargetDual = Factory::CreateDualDrawTarget(mTarget, mTargetOnWhite);
+
+    if (!mTargetDual || !mTargetDual->IsValid()) {
+      gfxCriticalNote << "Invalid dual draw target " << hexa(mTargetDual)
+                      << " in RemoteRotatedBuffer::Lock";
+      Unlock();
+      return false;
+    }
+  } else {
+    mTargetDual = mTarget;
+  }
+
   return true;
 }
 
@@ -513,6 +466,7 @@ RemoteRotatedBuffer::Unlock()
 {
   mTarget = nullptr;
   mTargetOnWhite = nullptr;
+  mTargetDual = nullptr;
 
   if (mClient->IsLocked()) {
     mClient->Unlock();
@@ -539,27 +493,10 @@ RemoteRotatedBuffer::Clear()
   mClientOnWhite = nullptr;
 }
 
-already_AddRefed<gfx::SourceSurface>
-RemoteRotatedBuffer::GetSourceSurface(ContextSource aSource) const
-{
-  if (aSource == ContextSource::BUFFER_BLACK) {
-    return mTarget->Snapshot();
-  } else {
-    MOZ_ASSERT(aSource == ContextSource::BUFFER_WHITE);
-    return mTargetOnWhite->Snapshot();
-  }
-}
-
 gfx::DrawTarget*
-RemoteRotatedBuffer::GetDTBuffer() const
+RemoteRotatedBuffer::GetBufferTarget() const
 {
-  return mTarget;
-}
-
-gfx::DrawTarget*
-RemoteRotatedBuffer::GetDTBufferOnWhite() const
-{
-  return mTargetOnWhite;
+  return mTargetDual;
 }
 
 gfx::SurfaceFormat
@@ -568,27 +505,10 @@ DrawTargetRotatedBuffer::GetFormat() const
   return mTarget->GetFormat();
 }
 
-already_AddRefed<gfx::SourceSurface>
-DrawTargetRotatedBuffer::GetSourceSurface(ContextSource aSource) const
-{
-  if (aSource == ContextSource::BUFFER_BLACK) {
-    return mTarget->Snapshot();
-  } else {
-    MOZ_ASSERT(aSource == ContextSource::BUFFER_WHITE);
-    return mTargetOnWhite->Snapshot();
-  }
-}
-
 gfx::DrawTarget*
-DrawTargetRotatedBuffer::GetDTBuffer() const
+DrawTargetRotatedBuffer::GetBufferTarget() const
 {
-  return mTarget;
-}
-
-gfx::DrawTarget*
-DrawTargetRotatedBuffer::GetDTBufferOnWhite() const
-{
-  return mTargetOnWhite;
+  return mTargetDual;
 }
 
 gfx::SurfaceFormat
@@ -598,18 +518,10 @@ SourceRotatedBuffer::GetFormat() const
 }
 
 already_AddRefed<SourceSurface>
-SourceRotatedBuffer::GetSourceSurface(ContextSource aSource) const
+SourceRotatedBuffer::GetBufferSource() const
 {
-  RefPtr<SourceSurface> surf;
-  if (aSource == BUFFER_BLACK) {
-    surf = mSource;
-  } else {
-    MOZ_ASSERT(aSource == BUFFER_WHITE);
-    surf = mSourceOnWhite;
-  }
-
-  MOZ_ASSERT(surf);
-  return surf.forget();
+  RefPtr<SourceSurface> sourceDual = mSourceDual;
+  return sourceDual.forget();
 }
 
 } // namespace layers

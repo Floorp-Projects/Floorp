@@ -33,12 +33,12 @@ Mutable(const T& x)
 }
 
 void
-WebGLTexture::ImageInfo::Clear(const char* funcName)
+WebGLTexture::ImageInfo::Clear()
 {
     if (!IsDefined())
         return;
 
-    OnRespecify(funcName);
+    OnRespecify();
 
     Mutable(mFormat) = LOCAL_GL_NONE;
     Mutable(mWidth) = 0;
@@ -49,7 +49,7 @@ WebGLTexture::ImageInfo::Clear(const char* funcName)
 }
 
 void
-WebGLTexture::ImageInfo::Set(const char* funcName, const ImageInfo& a)
+WebGLTexture::ImageInfo::Set(const ImageInfo& a)
 {
     MOZ_ASSERT(a.IsDefined());
 
@@ -62,7 +62,7 @@ WebGLTexture::ImageInfo::Set(const char* funcName, const ImageInfo& a)
 
     // But *don't* transfer mAttachPoints!
     MOZ_ASSERT(a.mAttachPoints.empty());
-    OnRespecify(funcName);
+    OnRespecify();
 }
 
 bool
@@ -89,10 +89,10 @@ WebGLTexture::ImageInfo::RemoveAttachPoint(WebGLFBAttachPoint* attachPoint)
 }
 
 void
-WebGLTexture::ImageInfo::OnRespecify(const char* funcName) const
+WebGLTexture::ImageInfo::OnRespecify() const
 {
     for (auto cur : mAttachPoints) {
-        cur->OnBackingStoreRespecified(funcName);
+        cur->OnBackingStoreRespecified();
     }
 }
 
@@ -143,9 +143,8 @@ WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)
 void
 WebGLTexture::Delete()
 {
-    const char funcName[] = "WebGLTexture::Delete";
     for (auto& cur : mImageInfoArr) {
-        cur.Clear(funcName);
+        cur.Clear();
     }
 
     mContext->gl->fDeleteTextures(1, &mGLName);
@@ -167,27 +166,27 @@ WebGLTexture::MemoryUsage() const
 }
 
 void
-WebGLTexture::SetImageInfo(const char* funcName, ImageInfo* target,
+WebGLTexture::SetImageInfo(ImageInfo* target,
                            const ImageInfo& newInfo)
 {
-    target->Set(funcName, newInfo);
+    target->Set(newInfo);
 
     InvalidateResolveCache();
 }
 
 void
-WebGLTexture::SetImageInfosAtLevel(const char* funcName, uint32_t level,
+WebGLTexture::SetImageInfosAtLevel(uint32_t level,
                                    const ImageInfo& newInfo)
 {
     for (uint8_t i = 0; i < mFaceCount; i++) {
-        ImageInfoAtFace(i, level).Set(funcName, newInfo);
+        ImageInfoAtFace(i, level).Set(newInfo);
     }
 
     InvalidateResolveCache();
 }
 
 bool
-WebGLTexture::IsMipmapComplete(const char* funcName, uint32_t texUnit,
+WebGLTexture::IsMipmapComplete(uint32_t texUnit,
                                bool* const out_initFailed)
 {
     *out_initFailed = false;
@@ -211,7 +210,7 @@ WebGLTexture::IsMipmapComplete(const char* funcName, uint32_t texUnit,
     MOZ_ASSERT(refWidth && refHeight && refDepth);
 
     for (uint32_t level = mBaseMipmapLevel; level <= maxLevel; level++) {
-        if (!EnsureLevelInitialized(funcName, level)) {
+        if (!EnsureLevelInitialized(level)) {
             *out_initFailed = true;
             return false;
         }
@@ -303,7 +302,7 @@ WebGLTexture::IsCubeComplete() const
 }
 
 bool
-WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
+WebGLTexture::IsComplete(uint32_t texUnit,
                          const char** const out_reason, bool* const out_initFailed)
 {
     *out_initFailed = false;
@@ -350,7 +349,7 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
     //    the texture is not mipmap complete."
     const bool requiresMipmap = (minFilter != LOCAL_GL_NEAREST &&
                                  minFilter != LOCAL_GL_LINEAR);
-    if (requiresMipmap && !IsMipmapComplete(funcName, texUnit, out_initFailed)) {
+    if (requiresMipmap && !IsMipmapComplete(texUnit, out_initFailed)) {
         if (*out_initFailed)
             return false;
 
@@ -444,7 +443,7 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
         // (already covered)
     }
 
-    if (!EnsureLevelInitialized(funcName, mBaseMipmapLevel)) {
+    if (!EnsureLevelInitialized(mBaseMipmapLevel)) {
         *out_initFailed = true;
         return false;
     }
@@ -480,23 +479,22 @@ WebGLTexture::MaxEffectiveMipmapLevel(uint32_t texUnit, uint32_t* const out) con
 }
 
 bool
-WebGLTexture::GetFakeBlackType(const char* funcName, uint32_t texUnit,
+WebGLTexture::GetFakeBlackType(uint32_t texUnit,
                                FakeBlackType* const out_fakeBlack)
 {
     const char* incompleteReason;
     bool initFailed = false;
-    if (!IsComplete(funcName, texUnit, &incompleteReason, &initFailed)) {
+    if (!IsComplete(texUnit, &incompleteReason, &initFailed)) {
         if (initFailed) {
-            mContext->ErrorOutOfMemory("%s: Failed to initialize texture data.",
-                                       funcName);
+            mContext->ErrorOutOfMemory("Failed to initialize texture data.");
             return false; // The world just exploded.
         }
 
         if (incompleteReason) {
-            mContext->GenerateWarning("%s: Active texture %u for target 0x%04x is"
+            mContext->GenerateWarning("Active texture %u for target 0x%04x is"
                                       " 'incomplete', and will be rendered as"
                                       " RGBA(0,0,0,1), as per the GLES 2.0.24 $3.8.2: %s",
-                                      funcName, texUnit, mTarget.get(),
+                                      texUnit, mTarget.get(),
                                       incompleteReason);
         }
         *out_fakeBlack = FakeBlackType::RGBA0001;
@@ -526,11 +524,11 @@ SetSwizzle(gl::GLContext* gl, TexTarget target, const GLint* swizzle)
 }
 
 bool
-WebGLTexture::ResolveForDraw(const char* funcName, uint32_t texUnit,
+WebGLTexture::ResolveForDraw(uint32_t texUnit,
                              FakeBlackType* const out_fakeBlack)
 {
     if (!mIsResolved) {
-        if (!GetFakeBlackType(funcName, texUnit, &mResolved_FakeBlack))
+        if (!GetFakeBlackType(texUnit, &mResolved_FakeBlack))
             return false;
 
         // Check which swizzle we should use. Since the texture must be complete at this
@@ -559,7 +557,7 @@ WebGLTexture::ResolveForDraw(const char* funcName, uint32_t texUnit,
 }
 
 bool
-WebGLTexture::EnsureImageDataInitialized(const char* funcName, TexImageTarget target,
+WebGLTexture::EnsureImageDataInitialized(TexImageTarget target,
                                          uint32_t level)
 {
     auto& imageInfo = ImageInfoAt(target, level);
@@ -569,20 +567,20 @@ WebGLTexture::EnsureImageDataInitialized(const char* funcName, TexImageTarget ta
     if (imageInfo.IsDataInitialized())
         return true;
 
-    return InitializeImageData(funcName, target, level);
+    return InitializeImageData(target, level);
 }
 
 bool
-WebGLTexture::EnsureLevelInitialized(const char* funcName, uint32_t level)
+WebGLTexture::EnsureLevelInitialized(uint32_t level)
 {
     if (mTarget != LOCAL_GL_TEXTURE_CUBE_MAP)
-        return EnsureImageDataInitialized(funcName, mTarget.get(), level);
+        return EnsureImageDataInitialized(mTarget.get(), level);
 
     for (GLenum texImageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
          texImageTarget <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
          ++texImageTarget)
     {
-        if (!EnsureImageDataInitialized(funcName, texImageTarget, level))
+        if (!EnsureImageDataInitialized(texImageTarget, level))
             return false;
     }
     return true;
@@ -630,7 +628,7 @@ ZeroANGLEDepthTexture(WebGLContext* webgl, GLuint tex,
 }
 
 static bool
-ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
+ZeroTextureData(WebGLContext* webgl, GLuint tex,
                 TexImageTarget target, uint32_t level,
                 const webgl::FormatUsageInfo* usage, uint32_t width, uint32_t height,
                 uint32_t depth)
@@ -644,9 +642,8 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
     // We have no sympathy for any of these cases.
 
     // "Doctor, it hurts when I do this!" "Well don't do that!"
-    webgl->GenerateWarning("%s: This operation requires zeroing texture data. This is"
-                           " slow.",
-                           funcName);
+    webgl->GenerateWarning("This operation requires zeroing texture data. This is"
+                           " slow.");
 
     gl::GLContext* gl = webgl->GL();
 
@@ -742,7 +739,7 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
 }
 
 bool
-WebGLTexture::InitializeImageData(const char* funcName, TexImageTarget target,
+WebGLTexture::InitializeImageData(TexImageTarget target,
                                   uint32_t level)
 {
     auto& imageInfo = ImageInfoAt(target, level);
@@ -754,7 +751,7 @@ WebGLTexture::InitializeImageData(const char* funcName, TexImageTarget target,
     const auto& height = imageInfo.mHeight;
     const auto& depth = imageInfo.mDepth;
 
-    if (!ZeroTextureData(mContext, funcName, mGLName, target, level, usage, width, height,
+    if (!ZeroTextureData(mContext, mGLName, target, level, usage, width, height,
                          depth))
     {
         return false;
@@ -781,7 +778,7 @@ WebGLTexture::ClampLevelBaseAndMax()
 }
 
 void
-WebGLTexture::PopulateMipChain(const char* funcName, uint32_t firstLevel,
+WebGLTexture::PopulateMipChain(uint32_t firstLevel,
                                uint32_t lastLevel)
 {
     const ImageInfo& baseImageInfo = ImageInfoAtFace(0, firstLevel);
@@ -813,7 +810,7 @@ WebGLTexture::PopulateMipChain(const char* funcName, uint32_t firstLevel,
         const ImageInfo cur(baseImageInfo.mFormat, refWidth, refHeight, refDepth,
                             baseImageInfo.IsDataInitialized());
 
-        SetImageInfosAtLevel(funcName, level, cur);
+        SetImageInfosAtLevel(level, cur);
     }
 }
 
@@ -862,8 +859,7 @@ WebGLTexture::BindTexture(TexTarget texTarget)
 
 void
 WebGLTexture::GenerateMipmap(TexTarget texTarget)
-{
-    const char funcName[] = "generateMipmap";
+{\
     // GLES 3.0.4 p160:
     // "Mipmap generation replaces texel array levels level base + 1 through q with arrays
     //  derived from the level base array, regardless of their previous contents. All
@@ -871,43 +867,37 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     //  computation."
     const ImageInfo& baseImageInfo = BaseImageInfo();
     if (!baseImageInfo.IsDefined()) {
-        mContext->ErrorInvalidOperation("%s: The base level of the texture is not"
-                                        " defined.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("The base level of the texture is not"
+                                        " defined.");
         return;
     }
 
     if (IsCubeMap() && !IsCubeComplete()) {
-      mContext->ErrorInvalidOperation("%s: Cube maps must be \"cube complete\".",
-                                      funcName);
+      mContext->ErrorInvalidOperation("Cube maps must be \"cube complete\".");
       return;
     }
 
     const auto format = baseImageInfo.mFormat->format;
     if (!mContext->IsWebGL2()) {
         if (!baseImageInfo.IsPowerOfTwo()) {
-            mContext->ErrorInvalidOperation("%s: The base level of the texture does not"
-                                            " have power-of-two dimensions.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("The base level of the texture does not"
+                                            " have power-of-two dimensions.");
             return;
         }
         if (format->isSRGB) {
-            mContext->ErrorInvalidOperation("%s: EXT_sRGB forbids GenerateMipmap with"
-                                            " sRGB.",
-                                            funcName);
+            mContext->ErrorInvalidOperation("EXT_sRGB forbids GenerateMipmap with"
+                                            " sRGB.");
             return;
         }
     }
 
     if (format->compression) {
-        mContext->ErrorInvalidOperation("%s: Texture data at base level is compressed.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("Texture data at base level is compressed.");
         return;
     }
 
     if (format->d) {
-        mContext->ErrorInvalidOperation("%s: Depth textures are not supported.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("Depth textures are not supported.");
         return;
     }
 
@@ -930,10 +920,9 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     }
 
     if (!canGenerateMipmap) {
-        mContext->ErrorInvalidOperation("%s: Texture at base level is not unsized"
+        mContext->ErrorInvalidOperation("Texture at base level is not unsized"
                                         " internal format or is not"
-                                        " color-renderable or texture-filterable.",
-                                        funcName);
+                                        " color-renderable or texture-filterable.");
         return;
     }
 
@@ -960,7 +949,7 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     // Note that we don't use MaxEffectiveMipmapLevel() here, since that returns
     // mBaseMipmapLevel if the min filter doesn't require mipmaps.
     const uint32_t maxLevel = mBaseMipmapLevel + baseImageInfo.PossibleMipmapLevels() - 1;
-    PopulateMipChain(funcName, mBaseMipmapLevel, maxLevel);
+    PopulateMipChain(mBaseMipmapLevel, maxLevel);
 }
 
 JS::Value
@@ -1135,11 +1124,11 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& 
 
     if (paramBadEnum) {
         if (!param.isFloat) {
-            mContext->ErrorInvalidEnum("texParameteri: pname 0x%04x: Invalid param"
+            mContext->ErrorInvalidEnum("pname 0x%04x: Invalid param"
                                        " 0x%04x.",
                                        pname, param.i);
         } else {
-            mContext->ErrorInvalidEnum("texParameterf: pname 0x%04x: Invalid param %g.",
+            mContext->ErrorInvalidEnum("pname 0x%04x: Invalid param %g.",
                                        pname, param.f);
         }
         return;
@@ -1147,11 +1136,11 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& 
 
     if (paramBadValue) {
         if (!param.isFloat) {
-            mContext->ErrorInvalidValue("texParameteri: pname 0x%04x: Invalid param %i"
+            mContext->ErrorInvalidValue("pname 0x%04x: Invalid param %i"
                                         " (0x%x).",
                                         pname, param.i, param.i);
         } else {
-            mContext->ErrorInvalidValue("texParameterf: pname 0x%04x: Invalid param %g.",
+            mContext->ErrorInvalidValue("pname 0x%04x: Invalid param %g.",
                                         pname, param.f);
         }
         return;

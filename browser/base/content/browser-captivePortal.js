@@ -247,7 +247,12 @@ var CaptivePortalWatcher = {
 
     // If the tab is gone or going, we need to open a new one.
     if (!tab || tab.closing || !tab.parentNode) {
-      tab = gBrowser.addTab(this.canonicalURL, { ownerTab: gBrowser.selectedTab });
+      tab = gBrowser.addWebTab(this.canonicalURL, {
+        ownerTab: gBrowser.selectedTab,
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
+          userContextId: gBrowser.contentPrincipal.userContextId,
+        }),
+      });
       this._captivePortalTab = Cu.getWeakReference(tab);
     }
 

@@ -48,8 +48,7 @@ class TexUnpackBlob;
 
 
 bool
-DoesTargetMatchDimensions(WebGLContext* webgl, TexImageTarget target, uint8_t dims,
-                          const char* funcName);
+DoesTargetMatchDimensions(WebGLContext* webgl, TexImageTarget target, uint8_t dims);
 
 namespace webgl {
 
@@ -118,19 +117,17 @@ public:
     // And in turn, it needs these forwards:
 protected:
     // We need to forward these.
-    void SetImageInfo(const char* funcName, ImageInfo* target, const ImageInfo& newInfo);
-    void SetImageInfosAtLevel(const char* funcName, uint32_t level,
-                              const ImageInfo& newInfo);
+    void SetImageInfo(ImageInfo* target, const ImageInfo& newInfo);
+    void SetImageInfosAtLevel(uint32_t level, const ImageInfo& newInfo);
 
 public:
     // We store information about the various images that are part of this
     // texture. (cubemap faces, mipmap levels)
     class ImageInfo
     {
-        friend void WebGLTexture::SetImageInfo(const char* funcName, ImageInfo* target,
+        friend void WebGLTexture::SetImageInfo(ImageInfo* target,
                                                const ImageInfo& newInfo);
-        friend void WebGLTexture::SetImageInfosAtLevel(const char* funcName,
-                                                       uint32_t level,
+        friend void WebGLTexture::SetImageInfosAtLevel(uint32_t level,
                                                        const ImageInfo& newInfo);
 
     public:
@@ -170,14 +167,14 @@ public:
             MOZ_ASSERT(mFormat);
         }
 
-        void Clear(const char* funcName);
+        void Clear();
 
         ~ImageInfo() {
             MOZ_ASSERT(!mAttachPoints.size());
         }
 
     protected:
-        void Set(const char* funcName, const ImageInfo& a);
+        void Set(const ImageInfo& a);
 
     public:
         uint32_t PossibleMipmapLevels() const {
@@ -191,7 +188,7 @@ public:
 
         void AddAttachPoint(WebGLFBAttachPoint* attachPoint);
         void RemoveAttachPoint(WebGLFBAttachPoint* attachPoint);
-        void OnRespecify(const char* funcName) const;
+        void OnRespecify() const;
 
         size_t MemoryUsage() const;
 
@@ -247,55 +244,55 @@ public:
     // WebGLTextureUpload.cpp
 
 protected:
-    void TexOrSubImageBlob(bool isSubImage, const char* funcName, TexImageTarget target,
+    void TexOrSubImageBlob(bool isSubImage, TexImageTarget target,
                            GLint level, GLenum internalFormat, GLint xOffset,
                            GLint yOffset, GLint zOffset,
                            const webgl::PackingInfo& pi,
                            const webgl::TexUnpackBlob* blob);
 
-    bool ValidateTexImageSpecification(const char* funcName, TexImageTarget target,
+    bool ValidateTexImageSpecification(TexImageTarget target,
                                        GLint level, uint32_t width, uint32_t height,
                                        uint32_t depth,
                                        WebGLTexture::ImageInfo** const out_imageInfo);
-    bool ValidateTexImageSelection(const char* funcName, TexImageTarget target,
+    bool ValidateTexImageSelection(TexImageTarget target,
                                    GLint level, GLint xOffset, GLint yOffset,
                                    GLint zOffset, uint32_t width, uint32_t height,
                                    uint32_t depth,
                                    WebGLTexture::ImageInfo** const out_imageInfo);
-    bool ValidateCopyTexImageForFeedback(const char* funcName, uint32_t level, GLint layer = 0) const;
+    bool ValidateCopyTexImageForFeedback(uint32_t level, GLint layer = 0) const;
 
-    bool ValidateUnpack(const char* funcName, const webgl::TexUnpackBlob* blob,
+    bool ValidateUnpack(const webgl::TexUnpackBlob* blob,
                         bool isFunc3D, const webgl::PackingInfo& srcPI) const;
 public:
-    void TexStorage(const char* funcName, TexTarget target, GLsizei levels,
+    void TexStorage(TexTarget target, GLsizei levels,
                     GLenum sizedFormat, GLsizei width, GLsizei height, GLsizei depth);
-    void TexImage(const char* funcName, TexImageTarget target, GLint level,
+    void TexImage(TexImageTarget target, GLint level,
                   GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth,
                   GLint border, const webgl::PackingInfo& pi, const TexImageSource& src);
-    void TexSubImage(const char* funcName, TexImageTarget target, GLint level,
+    void TexSubImage(TexImageTarget target, GLint level,
                      GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
                      GLsizei height, GLsizei depth, const webgl::PackingInfo& pi,
                      const TexImageSource& src);
 protected:
-    void TexImage(const char* funcName, TexImageTarget target, GLint level,
+    void TexImage(TexImageTarget target, GLint level,
                   GLenum internalFormat, const webgl::PackingInfo& pi,
                   const webgl::TexUnpackBlob* blob);
-    void TexSubImage(const char* funcName, TexImageTarget target, GLint level,
+    void TexSubImage(TexImageTarget target, GLint level,
                      GLint xOffset, GLint yOffset, GLint zOffset,
                      const webgl::PackingInfo& pi, const webgl::TexUnpackBlob* blob);
 public:
-    void CompressedTexImage(const char* funcName, TexImageTarget target, GLint level,
+    void CompressedTexImage(TexImageTarget target, GLint level,
                             GLenum internalFormat, GLsizei width, GLsizei height,
                             GLsizei depth, GLint border, const TexImageSource& src,
                             const Maybe<GLsizei>& expectedImageSize);
-    void CompressedTexSubImage(const char* funcName, TexImageTarget target, GLint level,
+    void CompressedTexSubImage(TexImageTarget target, GLint level,
                                GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
                                GLsizei height, GLsizei depth, GLenum sizedUnpackFormat,
                                const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize);
 
     void CopyTexImage2D(TexImageTarget target, GLint level, GLenum internalFormat,
                         GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
-    void CopyTexSubImage(const char* funcName, TexImageTarget target, GLint level,
+    void CopyTexSubImage(TexImageTarget target, GLint level,
                          GLint xOffset, GLint yOffset, GLint zOffset, GLint x, GLint y,
                          GLsizei width, GLsizei height);
 
@@ -304,7 +301,7 @@ public:
 protected:
     void ClampLevelBaseAndMax();
 
-    void PopulateMipChain(const char* funcName, uint32_t baseLevel, uint32_t maxLevel);
+    void PopulateMipChain(uint32_t baseLevel, uint32_t maxLevel);
 
     bool MaxEffectiveMipmapLevel(uint32_t texUnit, uint32_t* const out) const;
 
@@ -345,11 +342,11 @@ public:
         return const_cast<WebGLTexture*>(this)->ImageInfoAt(texImageTarget, level);
     }
 
-    void SetImageInfoAt(const char* funcName, TexImageTarget texImageTarget, GLint level,
+    void SetImageInfoAt(TexImageTarget texImageTarget, GLint level,
                         const ImageInfo& val)
     {
         ImageInfo* target = &ImageInfoAt(texImageTarget, level);
-        SetImageInfo(funcName, target, val);
+        SetImageInfo(target, val);
     }
 
     const ImageInfo& BaseImageInfo() const {
@@ -361,11 +358,11 @@ public:
 
     size_t MemoryUsage() const;
 
-    bool InitializeImageData(const char* funcName, TexImageTarget target, uint32_t level);
+    bool InitializeImageData(TexImageTarget target, uint32_t level);
 protected:
-    bool EnsureImageDataInitialized(const char* funcName, TexImageTarget target,
+    bool EnsureImageDataInitialized(TexImageTarget target,
                                     uint32_t level);
-    bool EnsureLevelInitialized(const char* funcName, uint32_t level);
+    bool EnsureLevelInitialized(uint32_t level);
 
 public:
     void SetGeneratedMipmap();
@@ -374,12 +371,12 @@ public:
 
     bool AreAllLevel0ImageInfosEqual() const;
 
-    bool IsMipmapComplete(const char* funcName, uint32_t texUnit,
+    bool IsMipmapComplete(uint32_t texUnit,
                           bool* const out_initFailed);
 
     bool IsCubeComplete() const;
 
-    bool IsComplete(const char* funcName, uint32_t texUnit, const char** const out_reason,
+    bool IsComplete(uint32_t texUnit, const char** const out_reason,
                     bool* const out_initFailed);
 
     bool IsMipmapCubeComplete() const;
@@ -388,13 +385,13 @@ public:
 
     // Resolve cache optimizations
 protected:
-    bool GetFakeBlackType(const char* funcName, uint32_t texUnit,
+    bool GetFakeBlackType(uint32_t texUnit,
                           FakeBlackType* const out_fakeBlack);
 public:
-    bool IsFeedback(WebGLContext* webgl, const char* funcName, uint32_t texUnit,
+    bool IsFeedback(WebGLContext* webgl, uint32_t texUnit,
                     const std::vector<const WebGLFBAttachPoint*>& fbAttachments) const;
 
-    bool ResolveForDraw(const char* funcName, uint32_t texUnit,
+    bool ResolveForDraw(uint32_t texUnit,
                         FakeBlackType* const out_fakeBlack);
 
     void InvalidateResolveCache() { mIsResolved = false; }

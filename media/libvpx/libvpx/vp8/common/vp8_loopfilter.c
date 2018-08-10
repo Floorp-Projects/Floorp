@@ -111,11 +111,9 @@ void vp8_loop_filter_frame_init(VP8_COMMON *cm, MACROBLOCKD *mbd,
 
     /* Note the baseline filter values for each segment */
     if (mbd->segmentation_enabled) {
-      /* Abs value */
       if (mbd->mb_segement_abs_delta == SEGMENT_ABSDATA) {
         lvl_seg = mbd->segment_feature_data[MB_LVL_ALT_LF][seg];
-      } else /* Delta Value */
-      {
+      } else { /* Delta Value */
         lvl_seg += mbd->segment_feature_data[MB_LVL_ALT_LF][seg];
       }
       lvl_seg = (lvl_seg > 0) ? ((lvl_seg > 63) ? 63 : lvl_seg) : 0;
@@ -344,8 +342,7 @@ void vp8_loop_filter_frame(VP8_COMMON *cm, MACROBLOCKD *mbd, int frame_type) {
 
       mode_info_context++; /* Skip border mb */
     }
-  } else /* SIMPLE_LOOPFILTER */
-  {
+  } else { /* SIMPLE_LOOPFILTER */
     for (mb_row = 0; mb_row < mb_rows; ++mb_row) {
       for (mb_col = 0; mb_col < mb_cols; ++mb_col) {
         int skip_lf = (mode_info_context->mbmi.mode != B_PRED &&

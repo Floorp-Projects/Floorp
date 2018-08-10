@@ -101,4 +101,9 @@ INSTANTIATE_TEST_CASE_P(MSA, VP9SubtractBlockTest,
                         ::testing::Values(vpx_subtract_block_msa));
 #endif
 
+#if HAVE_MMI
+INSTANTIATE_TEST_CASE_P(MMI, VP9SubtractBlockTest,
+                        ::testing::Values(vpx_subtract_block_mmi));
+#endif
+
 }  // namespace vp9

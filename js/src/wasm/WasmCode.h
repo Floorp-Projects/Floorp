@@ -139,7 +139,6 @@ typedef UniquePtr<ModuleSegment> UniqueModuleSegment;
 class ModuleSegment : public CodeSegment
 {
     const Tier      tier_;
-    uint8_t* const  outOfBoundsCode_;
     uint8_t* const  unalignedAccessCode_;
     uint8_t* const  trapCode_;
 
@@ -166,7 +165,6 @@ class ModuleSegment : public CodeSegment
 
     // Pointers to stubs to which PC is redirected from the signal-handler.
 
-    uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
     uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
     uint8_t* trapCode() const { return trapCode_; }
 

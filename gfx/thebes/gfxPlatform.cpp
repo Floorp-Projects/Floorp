@@ -199,7 +199,7 @@ public:
 class CrashStatsLogForwarder: public mozilla::gfx::LogForwarder
 {
 public:
-  explicit CrashStatsLogForwarder(const char* aKey);
+  explicit CrashStatsLogForwarder(CrashReporter::Annotation aKey);
   void Log(const std::string& aString) override;
   void CrashAction(LogReason aReason) override;
   bool UpdateStringsVector(const std::string& aString) override;
@@ -214,13 +214,13 @@ private:
 
 private:
   LoggingRecord mBuffer;
-  nsCString mCrashCriticalKey;
+  CrashReporter::Annotation mCrashCriticalKey;
   uint32_t mMaxCapacity;
   int32_t mIndex;
   Mutex mMutex;
 };
 
-CrashStatsLogForwarder::CrashStatsLogForwarder(const char* aKey)
+CrashStatsLogForwarder::CrashStatsLogForwarder(CrashReporter::Annotation aKey)
   : mBuffer()
   , mCrashCriticalKey(aKey)
   , mMaxCapacity(0)
@@ -298,11 +298,13 @@ void CrashStatsLogForwarder::UpdateCrashReport()
   }
 
   nsCString reportString(message.str().c_str());
-  nsresult annotated = CrashReporter::AnnotateCrashReport(mCrashCriticalKey, reportString);
+  nsresult annotated = CrashReporter::AnnotateCrashReport(mCrashCriticalKey,
+                                                          reportString);
 
   if (annotated != NS_OK) {
     printf("Crash Annotation %s: %s",
-           mCrashCriticalKey.get(), message.str().c_str());
+           CrashReporter::AnnotationToString(mCrashCriticalKey),
+           message.str().c_str());
   }
 }
 
@@ -922,7 +924,8 @@ gfxPlatform::MaxAllocSize()
 /* static */ void
 gfxPlatform::InitMoz2DLogging()
 {
-  auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
+  auto fwd = new CrashStatsLogForwarder(
+    CrashReporter::Annotation::GraphicsCriticalError);
   fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
 
   mozilla::gfx::Config cfg;

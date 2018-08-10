@@ -1225,6 +1225,7 @@ static vpx_codec_enc_cfg_map_t vp8e_usage_cfg_map[] = {
         50,  /* rc_two_pass_vbrbias  */
         0,   /* rc_two_pass_vbrmin_section */
         400, /* rc_two_pass_vbrmax_section */
+        0,   // rc_2pass_vbr_corpus_complexity (only has meaningfull for VP9)
 
         /* keyframing settings (kf) */
         VPX_KF_AUTO, /* g_kfmode*/

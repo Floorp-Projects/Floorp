@@ -17,7 +17,7 @@
 
 |vpx_convolve_copy_neon| PROC
     push                {r4-r5, lr}
-    ldrd                r4, r5, [sp, #28]
+    ldrd                r4, r5, [sp, #32]
 
     cmp                 r4, #32
     bgt                 copy64

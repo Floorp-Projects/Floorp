@@ -191,47 +191,18 @@ static inline int sem_destroy(sem_t *sem) {
 #define x86_pause_hint()
 #endif
 
-#if defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#define USE_MUTEX_LOCK 1
-#endif
-#endif
-
 #include "vpx_util/vpx_thread.h"
+#include "vpx_util/vpx_atomics.h"
 
-static INLINE int protected_read(pthread_mutex_t *const mutex, const int *p) {
-  (void)mutex;
-#if defined(USE_MUTEX_LOCK)
-  int ret;
-  pthread_mutex_lock(mutex);
-  ret = *p;
-  pthread_mutex_unlock(mutex);
-  return ret;
-#endif
-  return *p;
-}
-
-static INLINE void sync_read(pthread_mutex_t *const mutex, int mb_col,
-                             const int *last_row_current_mb_col,
-                             const int nsync) {
-  while (mb_col > (protected_read(mutex, last_row_current_mb_col) - nsync)) {
+static INLINE void vp8_atomic_spin_wait(
+    int mb_col, const vpx_atomic_int *last_row_current_mb_col,
+    const int nsync) {
+  while (mb_col > (vpx_atomic_load_acquire(last_row_current_mb_col) - nsync)) {
     x86_pause_hint();
     thread_sleep(0);
   }
 }
 
-static INLINE void protected_write(pthread_mutex_t *mutex, int *p, int v) {
-  (void)mutex;
-#if defined(USE_MUTEX_LOCK)
-  pthread_mutex_lock(mutex);
-  *p = v;
-  pthread_mutex_unlock(mutex);
-  return;
-#endif
-  *p = v;
-}
-
-#undef USE_MUTEX_LOCK
 #endif /* CONFIG_OS_SUPPORT && CONFIG_MULTITHREAD */
 
 #ifdef __cplusplus

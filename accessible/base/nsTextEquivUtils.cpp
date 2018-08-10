@@ -352,7 +352,7 @@ uint32_t
 nsTextEquivUtils::GetRoleRule(role aRole)
 {
 #define ROLE(geckoRole, stringRole, atkRole, \
-             macRole, msaaRole, ia2Role, nameRule) \
+             macRole, msaaRole, ia2Role, androidClass, nameRule) \
   case roles::geckoRole: \
     return nameRule;
 

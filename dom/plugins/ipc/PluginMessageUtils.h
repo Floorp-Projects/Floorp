@@ -23,7 +23,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Logging.h"
-#include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
 
 #ifdef XP_MACOSX

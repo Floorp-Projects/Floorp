@@ -6100,44 +6100,6 @@ IonBuilder::newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, u
 }
 
 AbortReasonOr<Ok>
-IonBuilder::newArrayTrySharedStub(bool* emitted)
-{
-    MOZ_ASSERT(*emitted == false);
-
-    // TODO: Support tracking optimizations for inlining a call and regular
-    // optimization tracking at the same time. Currently just drop optimization
-    // tracking when that happens.
-    bool canTrackOptimization = !IsCallPC(pc);
-
-    // Try to emit a shared stub cache.
-
-    if (JitOptions.disableSharedStubs)
-        return Ok();
-
-    if (*pc != JSOP_NEWINIT && *pc != JSOP_NEWARRAY)
-        return Ok();
-
-    if (canTrackOptimization)
-        trackOptimizationAttempt(TrackedStrategy::NewArray_SharedCache);
-
-    MInstruction* stub = MNullarySharedStub::New(alloc());
-    current->add(stub);
-    current->push(stub);
-
-    MOZ_TRY(resumeAfter(stub));
-
-    MUnbox* unbox = MUnbox::New(alloc(), current->pop(), MIRType::Object, MUnbox::Infallible);
-    current->add(unbox);
-    current->push(unbox);
-
-    if (canTrackOptimization)
-        trackOptimizationSuccess();
-
-    *emitted = true;
-    return Ok();
-}
-
-AbortReasonOr<Ok>
 IonBuilder::newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t length)
 {
     MOZ_ASSERT(*emitted == false);
@@ -6199,13 +6161,7 @@ IonBuilder::jsop_newarray(JSObject* templateObject, uint32_t length)
     if (canTrackOptimization)
         startTrackingOptimizations();
 
-    if (!forceInlineCaches()) {
-        MOZ_TRY(newArrayTryTemplateObject(&emitted, templateObject, length));
-        if (emitted)
-            return Ok();
-    }
-
-    MOZ_TRY(newArrayTrySharedStub(&emitted));
+    MOZ_TRY(newArrayTryTemplateObject(&emitted, templateObject, length));
     if (emitted)
         return Ok();
 

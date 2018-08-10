@@ -110,14 +110,13 @@ extern const uint8_t mc_filt_mask_arr[16 * 3];
     ST_UB(tmp_m, (pdst));                                 \
   }
 
-#define PCKEV_AVG_ST8x4_UB(in1, dst0, in2, dst1, in3, dst2, in4, dst3, pdst, \
-                           stride)                                           \
-  {                                                                          \
-    v16u8 tmp0_m, tmp1_m, tmp2_m, tmp3_m;                                    \
-                                                                             \
-    PCKEV_B2_UB(in2, in1, in4, in3, tmp0_m, tmp1_m);                         \
-    PCKEV_D2_UB(dst1, dst0, dst3, dst2, tmp2_m, tmp3_m);                     \
-    AVER_UB2_UB(tmp0_m, tmp2_m, tmp1_m, tmp3_m, tmp0_m, tmp1_m);             \
-    ST8x4_UB(tmp0_m, tmp1_m, pdst, stride);                                  \
+#define PCKEV_AVG_ST8x4_UB(in0, in1, in2, in3, dst0, dst1, pdst, stride) \
+  {                                                                      \
+    v16u8 tmp0_m, tmp1_m;                                                \
+    uint8_t *pdst_m = (uint8_t *)(pdst);                                 \
+                                                                         \
+    PCKEV_B2_UB(in1, in0, in3, in2, tmp0_m, tmp1_m);                     \
+    AVER_UB2_UB(tmp0_m, dst0, tmp1_m, dst1, tmp0_m, tmp1_m);             \
+    ST8x4_UB(tmp0_m, tmp1_m, pdst_m, stride);                            \
   }
 #endif /* VPX_DSP_MIPS_VPX_CONVOLVE_MSA_H_ */

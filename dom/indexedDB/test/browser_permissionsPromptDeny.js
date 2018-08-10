@@ -49,7 +49,7 @@ add_task(async function test2() {
   }, win);
 
   info("creating private tab");
-  win.gBrowser.selectedTab = win.gBrowser.addTab();
+  win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
 
   info("loading test page: " + testPageURL);
   win.gBrowser.selectedBrowser.loadURI(testPageURL);

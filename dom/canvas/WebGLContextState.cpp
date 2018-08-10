@@ -26,10 +26,11 @@ namespace mozilla {
 void
 WebGLContext::SetEnabled(const char* const funcName, const GLenum cap, const bool enabled)
 {
+    const FuncScope funcScope(*this, funcName);
     if (IsContextLost())
         return;
 
-    if (!ValidateCapabilityEnum(cap, funcName))
+    if (!ValidateCapabilityEnum(cap))
         return;
 
     const auto& slot = GetStateTrackingSlot(cap);
@@ -77,7 +78,7 @@ WebGLContext::GetStencilBits(GLint* const out_stencilBits) const
 JS::Value
 WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 {
-    const char funcName[] = "getParameter";
+    const FuncScope funcScope(*this, "getParameter");
 
     if (IsContextLost())
         return JS::NullValue();
@@ -247,7 +248,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
             const webgl::FormatUsageInfo* usage;
             uint32_t width, height;
-            if (!BindCurFBForColorRead(funcName, &usage, &width, &height))
+            if (!BindCurFBForColorRead(&usage, &width, &height))
                 return JS::NullValue();
 
             const auto implPI = ValidImplementationColorReadPI(usage);
@@ -282,12 +283,12 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             const auto& fb = mBoundDrawFramebuffer;
             auto samples = [&]() -> Maybe<uint32_t> {
                 if (!fb) {
-                    if (!EnsureDefaultFB(funcName))
+                    if (!EnsureDefaultFB())
                         return Nothing();
                     return Some(mDefaultFB->mSamples);
                 }
 
-                if (!fb->IsCheckFramebufferStatusComplete(funcName))
+                if (!fb->IsCheckFramebufferStatusComplete())
                     return Some(0);
 
                 DoBindFB(fb, LOCAL_GL_FRAMEBUFFER);
@@ -590,7 +591,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             break;
     }
 
-    ErrorInvalidEnumInfo("getParameter: parameter", pname);
+    ErrorInvalidEnumInfo("pname", pname);
     return JS::NullValue();
 }
 
@@ -598,6 +599,7 @@ void
 WebGLContext::GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index,
                                   JS::MutableHandle<JS::Value> retval)
 {
+    const FuncScope funcScope(*this, "getParameterIndexed");
     if (IsContextLost()) {
         retval.setNull();
         return;
@@ -607,7 +609,7 @@ WebGLContext::GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index,
         case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
         {
             if (index >= mGLMaxTransformFeedbackSeparateAttribs) {
-                ErrorInvalidValue("getParameterIndexed: index should be less than MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
+                ErrorInvalidValue("`index` should be less than MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
                 retval.setNull();
                 return;
             }
@@ -619,17 +621,18 @@ WebGLContext::GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index,
             break;
     }
 
-    ErrorInvalidEnumInfo("getParameterIndexed: parameter", pname);
+    ErrorInvalidEnumInfo("pname", pname);
     retval.setNull();
 }
 
 bool
 WebGLContext::IsEnabled(GLenum cap)
 {
+    const FuncScope funcScope(*this, "isEnabled");
     if (IsContextLost())
         return false;
 
-    if (!ValidateCapabilityEnum(cap, "isEnabled"))
+    if (!ValidateCapabilityEnum(cap))
         return false;
 
     const auto& slot = GetStateTrackingSlot(cap);
@@ -640,7 +643,7 @@ WebGLContext::IsEnabled(GLenum cap)
 }
 
 bool
-WebGLContext::ValidateCapabilityEnum(GLenum cap, const char* info)
+WebGLContext::ValidateCapabilityEnum(GLenum cap)
 {
     switch (cap) {
         case LOCAL_GL_BLEND:
@@ -656,7 +659,7 @@ WebGLContext::ValidateCapabilityEnum(GLenum cap, const char* info)
         case LOCAL_GL_RASTERIZER_DISCARD:
             return IsWebGL2();
         default:
-            ErrorInvalidEnumInfo(info, cap);
+            ErrorInvalidEnumInfo("cap", cap);
             return false;
     }
 }

@@ -28,7 +28,11 @@ function receiveProfile(profile) {
   const browser = win.gBrowser;
   Services.focus.activeWindow = win;
 
-  const tab = browser.addTab("https://perf-html.io/from-addon");
+  const tab = browser.addWebTab("https://perf-html.io/from-addon", {
+    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
+      userContextId: browser.contentPrincipal.userContextId,
+    })
+  });
   browser.selectedTab = tab;
   const mm = tab.linkedBrowser.messageManager;
   mm.loadFrameScript(

@@ -3598,10 +3598,13 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
       // skip Shadow DOM in frame traversal.
       nsIContent* currentContent = frame->GetContent();
       nsIContent* oldTopLevelHost = currentTopLevelHost;
-      nsIContent* topLevel = GetTopLevelHost(currentContent);
-      currentTopLevelHost = topLevel;
-      if (topLevel) {
-        if (topLevel == oldTopLevelHost) {
+      if (oldTopLevelHost != currentContent) {
+        currentTopLevelHost = GetTopLevelHost(currentContent);
+      } else {
+        currentTopLevelHost = currentContent;
+      }
+      if (currentTopLevelHost) {
+        if (currentTopLevelHost == oldTopLevelHost) {
           // We're within Shadow DOM, continue.
           do {
             if (aForward) {
@@ -3615,7 +3618,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
           } while (frame && frame->GetPrevContinuation());
           continue;
         }
-        currentContent = topLevel;
+        currentContent = currentTopLevelHost;
       }
 
       // For document navigation, check if this element is an open panel. Since

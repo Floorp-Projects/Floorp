@@ -710,6 +710,83 @@ static INLINE void transpose_u16_8x8(uint16x8_t *a0, uint16x8_t *a1,
   *a7 = d3.val[1];
 }
 
+static INLINE void transpose_s32_8x8(int32x4x2_t *a0, int32x4x2_t *a1,
+                                     int32x4x2_t *a2, int32x4x2_t *a3,
+                                     int32x4x2_t *a4, int32x4x2_t *a5,
+                                     int32x4x2_t *a6, int32x4x2_t *a7) {
+  // Swap 32 bit elements. Goes from:
+  // a0: 00 01 02 03 04 05 06 07
+  // a1: 10 11 12 13 14 15 16 17
+  // a2: 20 21 22 23 24 25 26 27
+  // a3: 30 31 32 33 34 35 36 37
+  // a4: 40 41 42 43 44 45 46 47
+  // a5: 50 51 52 53 54 55 56 57
+  // a6: 60 61 62 63 64 65 66 67
+  // a7: 70 71 72 73 74 75 76 77
+  // to:
+  // b0: 00 10 02 12 01 11 03 13
+  // b1: 20 30 22 32 21 31 23 33
+  // b2: 40 50 42 52 41 51 43 53
+  // b3: 60 70 62 72 61 71 63 73
+  // b4: 04 14 06 16 05 15 07 17
+  // b5: 24 34 26 36 25 35 27 37
+  // b6: 44 54 46 56 45 55 47 57
+  // b7: 64 74 66 76 65 75 67 77
+
+  const int32x4x2_t b0 = vtrnq_s32(a0->val[0], a1->val[0]);
+  const int32x4x2_t b1 = vtrnq_s32(a2->val[0], a3->val[0]);
+  const int32x4x2_t b2 = vtrnq_s32(a4->val[0], a5->val[0]);
+  const int32x4x2_t b3 = vtrnq_s32(a6->val[0], a7->val[0]);
+  const int32x4x2_t b4 = vtrnq_s32(a0->val[1], a1->val[1]);
+  const int32x4x2_t b5 = vtrnq_s32(a2->val[1], a3->val[1]);
+  const int32x4x2_t b6 = vtrnq_s32(a4->val[1], a5->val[1]);
+  const int32x4x2_t b7 = vtrnq_s32(a6->val[1], a7->val[1]);
+
+  // Swap 64 bit elements resulting in:
+  // c0: 00 10 20 30 02 12 22 32
+  // c1: 01 11 21 31 03 13 23 33
+  // c2: 40 50 60 70 42 52 62 72
+  // c3: 41 51 61 71 43 53 63 73
+  // c4: 04 14 24 34 06 16 26 36
+  // c5: 05 15 25 35 07 17 27 37
+  // c6: 44 54 64 74 46 56 66 76
+  // c7: 45 55 65 75 47 57 67 77
+  const int32x4x2_t c0 = vpx_vtrnq_s64_to_s32(b0.val[0], b1.val[0]);
+  const int32x4x2_t c1 = vpx_vtrnq_s64_to_s32(b0.val[1], b1.val[1]);
+  const int32x4x2_t c2 = vpx_vtrnq_s64_to_s32(b2.val[0], b3.val[0]);
+  const int32x4x2_t c3 = vpx_vtrnq_s64_to_s32(b2.val[1], b3.val[1]);
+  const int32x4x2_t c4 = vpx_vtrnq_s64_to_s32(b4.val[0], b5.val[0]);
+  const int32x4x2_t c5 = vpx_vtrnq_s64_to_s32(b4.val[1], b5.val[1]);
+  const int32x4x2_t c6 = vpx_vtrnq_s64_to_s32(b6.val[0], b7.val[0]);
+  const int32x4x2_t c7 = vpx_vtrnq_s64_to_s32(b6.val[1], b7.val[1]);
+
+  // Swap 128 bit elements resulting in:
+  // a0: 00 10 20 30 40 50 60 70
+  // a1: 01 11 21 31 41 51 61 71
+  // a2: 02 12 22 32 42 52 62 72
+  // a3: 03 13 23 33 43 53 63 73
+  // a4: 04 14 24 34 44 54 64 74
+  // a5: 05 15 25 35 45 55 65 75
+  // a6: 06 16 26 36 46 56 66 76
+  // a7: 07 17 27 37 47 57 67 77
+  a0->val[0] = c0.val[0];
+  a0->val[1] = c2.val[0];
+  a1->val[0] = c1.val[0];
+  a1->val[1] = c3.val[0];
+  a2->val[0] = c0.val[1];
+  a2->val[1] = c2.val[1];
+  a3->val[0] = c1.val[1];
+  a3->val[1] = c3.val[1];
+  a4->val[0] = c4.val[0];
+  a4->val[1] = c6.val[0];
+  a5->val[0] = c5.val[0];
+  a5->val[1] = c7.val[0];
+  a6->val[0] = c4.val[1];
+  a6->val[1] = c6.val[1];
+  a7->val[0] = c5.val[1];
+  a7->val[1] = c7.val[1];
+}
+
 static INLINE void transpose_u8_16x8(
     const uint8x16_t i0, const uint8x16_t i1, const uint8x16_t i2,
     const uint8x16_t i3, const uint8x16_t i4, const uint8x16_t i5,
@@ -1203,5 +1280,37 @@ static INLINE void load_and_transpose_s16_8x8(const int16_t *a,
   *a7 = vld1q_s16(a);
 
   transpose_s16_8x8(a0, a1, a2, a3, a4, a5, a6, a7);
+}
+
+static INLINE void load_and_transpose_s32_8x8(
+    const int32_t *a, const int a_stride, int32x4x2_t *const a0,
+    int32x4x2_t *const a1, int32x4x2_t *const a2, int32x4x2_t *const a3,
+    int32x4x2_t *const a4, int32x4x2_t *const a5, int32x4x2_t *const a6,
+    int32x4x2_t *const a7) {
+  a0->val[0] = vld1q_s32(a);
+  a0->val[1] = vld1q_s32(a + 4);
+  a += a_stride;
+  a1->val[0] = vld1q_s32(a);
+  a1->val[1] = vld1q_s32(a + 4);
+  a += a_stride;
+  a2->val[0] = vld1q_s32(a);
+  a2->val[1] = vld1q_s32(a + 4);
+  a += a_stride;
+  a3->val[0] = vld1q_s32(a);
+  a3->val[1] = vld1q_s32(a + 4);
+  a += a_stride;
+  a4->val[0] = vld1q_s32(a);
+  a4->val[1] = vld1q_s32(a + 4);
+  a += a_stride;
+  a5->val[0] = vld1q_s32(a);
+  a5->val[1] = vld1q_s32(a + 4);
+  a += a_stride;
+  a6->val[0] = vld1q_s32(a);
+  a6->val[1] = vld1q_s32(a + 4);
+  a += a_stride;
+  a7->val[0] = vld1q_s32(a);
+  a7->val[1] = vld1q_s32(a + 4);
+
+  transpose_s32_8x8(a0, a1, a2, a3, a4, a5, a6, a7);
 }
 #endif  // VPX_DSP_ARM_TRANSPOSE_NEON_H_

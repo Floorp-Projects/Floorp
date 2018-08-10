@@ -12,7 +12,6 @@
 
 #include "./vpx_dsp_rtcd.h"
 #include "vpx_ports/mem.h"
-#include "vpx_ports/emmintrin_compat.h"
 
 static INLINE __m128i signed_char_clamp_bd_sse2(__m128i value, int bd) {
   __m128i ubounded;

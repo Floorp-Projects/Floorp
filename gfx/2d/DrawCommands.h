@@ -364,6 +364,46 @@ private:
   IntPoint mDestination;
 };
 
+class CopyRectCommand : public DrawingCommand
+{
+public:
+  CopyRectCommand(const IntRect& aSourceRect,
+                  const IntPoint& aDestination)
+    : mSourceRect(aSourceRect)
+    , mDestination(aDestination)
+  {
+  }
+
+  CommandType GetType() const override
+  {
+    return CopyRectCommand::Type;
+  }
+
+  void CloneInto(CaptureCommandList* aList) override
+  {
+    CLONE_INTO(CopyRectCommand)(mSourceRect, mDestination);
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform) const override
+  {
+    aDT->CopyRect(mSourceRect, mDestination);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[CopyRect src=" << mSourceRect;
+    aStream << " dest=" << mDestination;
+    aStream << "]";
+  }
+
+  static const bool AffectsSnapshot = true;
+  static const CommandType Type = CommandType::COPYRECT;
+
+private:
+  IntRect mSourceRect;
+  IntPoint mDestination;
+};
+
 class FillRectCommand : public DrawingCommand
 {
 public:
@@ -1124,6 +1164,40 @@ public:
 
 private:
   AlphaBoxBlur mBlur;
+};
+
+class PadEdgesCommand : public DrawingCommand
+{
+public:
+  explicit PadEdgesCommand(const IntRegion& aRegion)
+   : mRegion(aRegion)
+  {}
+
+  CommandType GetType() const override
+  {
+    return PadEdgesCommand::Type;
+  }
+
+  void CloneInto(CaptureCommandList* aList) override
+  {
+    CLONE_INTO(PadEdgesCommand)(IntRegion(mRegion));
+  }
+
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  {
+    aDT->PadEdges(mRegion);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[PADEDGES]";
+  }
+
+  static const bool AffectsSnapshot = true;
+  static const CommandType Type = CommandType::PADEDGES;
+
+private:
+  IntRegion mRegion;
 };
 
 #undef CLONE_INTO
