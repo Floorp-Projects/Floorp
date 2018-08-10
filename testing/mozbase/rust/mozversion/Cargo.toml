@@ -8,6 +8,6 @@ repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/ru
 license = "MPL-2.0"
 
 [dependencies]
-regex = "0.2"
+regex = "1"
 rust-ini = "0.10"
 semver = "0.6"
