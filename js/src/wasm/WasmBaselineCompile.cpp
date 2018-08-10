@@ -5668,6 +5668,10 @@ class BaseCompiler final : public BaseCompilerInterface
     void emitPostBarrier(const Maybe<RegPtr>& object, RegPtr otherScratch, RegPtr valueAddr, RegPtr setValue) {
         Label skipBarrier;
 
+        // One of the branches (in case we need the C++ call) will cause a sync,
+        // so ensure the stack is sync'd before, so that the join is sync'd too.
+        sync();
+
         // If the pointer being stored is null, no barrier.
         masm.branchTestPtr(Assembler::Zero, setValue, setValue, &skipBarrier);
 

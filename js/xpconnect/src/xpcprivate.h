@@ -833,8 +833,8 @@ public:
 
     nsIPrincipal*
     GetPrincipal() const {
-        JS::Compartment* c = js::GetObjectCompartment(mGlobalJSObject);
-        return nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+        JS::Realm* r = js::GetNonCCWObjectRealm(mGlobalJSObject);
+        return nsJSPrincipals::get(JS::GetRealmPrincipals(r));
     }
 
     JSObject*
@@ -3066,6 +3066,8 @@ bool IsOutObject(JSContext* cx, JSObject* obj);
 
 nsresult HasInstance(JSContext* cx, JS::HandleObject objArg, const nsID* iid, bool* bp);
 
+// Returns the principal associated with |obj|'s realm. The object must not be a
+// cross-compartment wrapper.
 nsIPrincipal* GetObjectPrincipal(JSObject* obj);
 
 // Attempt to clean up the passed in value pointer. The pointer `value` must be
