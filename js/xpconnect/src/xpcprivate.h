@@ -3066,6 +3066,8 @@ bool IsOutObject(JSContext* cx, JSObject* obj);
 
 nsresult HasInstance(JSContext* cx, JS::HandleObject objArg, const nsID* iid, bool* bp);
 
+// Returns the principal associated with |obj|'s realm. The object must not be a
+// cross-compartment wrapper.
 nsIPrincipal* GetObjectPrincipal(JSObject* obj);
 
 // Attempt to clean up the passed in value pointer. The pointer `value` must be
