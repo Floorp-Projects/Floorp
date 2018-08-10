@@ -1697,7 +1697,13 @@ Inspector.prototype = {
       click: () => this.showAccessibilityProperties(),
       disabled: true
     });
-    this._updateA11YMenuItem(showA11YPropsItem);
+    // Accessibility startup component maintains accessibilityFront that is up-to-date
+    // with the state of the accessibility service on the server side.
+    const startup = this._toolbox.getToolStartup("accessibility");
+    if (startup && startup.accessibility.enabled) {
+      this._updateA11YMenuItem(showA11YPropsItem);
+    }
+
     menu.append(showA11YPropsItem);
   },
 
