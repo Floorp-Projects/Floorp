@@ -12,6 +12,7 @@
 #include "nsIAddonPolicyService.h"
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
+#include "nsICookieService.h"
 #include "nsIChannel.h"
 #include "nsIClassOfService.h"
 #include "nsIDocShell.h"
@@ -951,7 +952,8 @@ TrackingURICallback::OnClassifyComplete(nsresult aErrorCode,
     mChannelClassifier->ShouldEnableTrackingProtection();
   const bool shouldEnableTrackingAnnotation =
     mChannelClassifier->ShouldEnableTrackingAnnotation() ||
-    StaticPrefs::privacy_restrict3rdpartystorage_enabled();
+    StaticPrefs::network_cookie_cookieBehavior() ==
+      nsICookieService::BEHAVIOR_REJECT_TRACKER;
   MOZ_ASSERT(shouldEnableTrackingProtection || shouldEnableTrackingAnnotation);
 
   LOG(("TrackingURICallback[%p]:OnClassifyComplete "
@@ -1199,7 +1201,8 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
   } else {
     MOZ_ASSERT(aErrorCode == NS_ERROR_TRACKING_ANNOTATION_URI);
     MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation() ||
-               StaticPrefs::privacy_restrict3rdpartystorage_enabled());
+               StaticPrefs::network_cookie_cookieBehavior() ==
+                 nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
     LOG(("TrackingURICallback[%p]::OnTrackerFound, annotating channel[%p]",
          mChannelClassifier.get(), channel.get()));
@@ -1421,7 +1424,8 @@ nsChannelClassifier::CheckIsTrackerWithLocalTable(std::function<void()>&& aCallb
   }
 
   const bool shouldEnableTrackingProtection = ShouldEnableTrackingProtection();
-  const bool shouldEnableTrackingAnnotation = ShouldEnableTrackingAnnotation() || StaticPrefs::privacy_restrict3rdpartystorage_enabled();
+  const bool shouldEnableTrackingAnnotation = ShouldEnableTrackingAnnotation() ||
+    StaticPrefs::network_cookie_cookieBehavior() == nsICookieService::BEHAVIOR_REJECT_TRACKER;
   if (!shouldEnableTrackingProtection && !shouldEnableTrackingAnnotation) {
     return NS_ERROR_FAILURE;
   }

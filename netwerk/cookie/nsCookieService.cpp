@@ -2410,7 +2410,7 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 {
   int32_t val;
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookieBehavior, &val)))
-    mCookieBehavior = (uint8_t) LIMIT(val, 0, 3, 0);
+    mCookieBehavior = (uint8_t) LIMIT(val, 0, nsICookieService::BEHAVIOR_LAST, 0);
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxNumberOfCookies, &val)))
     mMaxNumberOfCookies = (uint16_t) LIMIT(val, 1, 0xFFFF, kMaxNumberOfCookies);
@@ -4199,14 +4199,6 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
     return STATUS_REJECTED_WITH_ERROR;
   }
 
-  // No cookies allowed if this request comes from a tracker, in a 3rd party
-  // context, when anti-tracking protection is enabled and when we don't have
-  // access to the first-party cookie jar.
-  if (aIsForeign && aIsTrackingResource && !aFirstPartyStorageAccessGranted &&
-      StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
-      return STATUS_REJECTED;
-  }
-
   // check the permission list first; if we find an entry, it overrides
   // default prefs. see bug 184059.
   if (aPermissionService) {
@@ -4250,6 +4242,15 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
     }
   }
 
+  // No cookies allowed if this request comes from a tracker, in a 3rd party
+  // context, when anti-tracking protection is enabled and when we don't have
+  // access to the first-party cookie jar.
+  if (aIsForeign && aIsTrackingResource && !aFirstPartyStorageAccessGranted &&
+      aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are disabled in trackers");
+      return STATUS_REJECTED;
+  }
+
   // check default prefs
   if (aCookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are disabled");
@@ -4271,7 +4272,9 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
     }
 
     MOZ_ASSERT(aCookieBehavior == nsICookieService::BEHAVIOR_ACCEPT ||
-               aCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN);
+               aCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
+               // But with permission granted.
+               aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
     if (aThirdPartySession)
       return STATUS_ACCEPT_SESSION;

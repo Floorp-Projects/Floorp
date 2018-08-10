@@ -39,7 +39,7 @@ this.AntiTracking = {
   async _setupTest(blocking, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
     await SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.restrict3rdpartystorage.enabled", blocking],
+      ["network.cookie.cookieBehavior", blocking ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER : Ci.nsICookieService.BEHAVIOR_ACCEPT],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", blocking],

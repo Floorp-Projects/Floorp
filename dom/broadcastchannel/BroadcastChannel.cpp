@@ -17,10 +17,10 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 
 #include "nsIBFCacheEntry.h"
+#include "nsICookieService.h"
 #include "nsIDocument.h"
 #include "nsISupportsPrimitives.h"
 
@@ -73,12 +73,14 @@ class InitializeRunnable final : public WorkerMainThreadRunnable
 {
 public:
   InitializeRunnable(ThreadSafeWorkerRef* aWorkerRef, nsACString& aOrigin,
-                     PrincipalInfo& aPrincipalInfo, ErrorResult& aRv)
+                     PrincipalInfo& aPrincipalInfo, bool* aThirdPartyWindow,
+                     ErrorResult& aRv)
     : WorkerMainThreadRunnable(aWorkerRef->Private(),
                                NS_LITERAL_CSTRING("BroadcastChannel :: Initialize"))
     , mWorkerRef(aWorkerRef)
     , mOrigin(aOrigin)
     , mPrincipalInfo(aPrincipalInfo)
+    , mThirdPartyWindow(aThirdPartyWindow)
     , mRv(aRv)
   {
     MOZ_ASSERT(mWorkerRef);
@@ -116,6 +118,9 @@ public:
       return true;
     }
 
+    *mThirdPartyWindow =
+      nsContentUtils::IsThirdPartyWindowOrChannel(window, nullptr, nullptr);
+
     return true;
   }
 
@@ -123,6 +128,7 @@ private:
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   nsACString& mOrigin;
   PrincipalInfo& mPrincipalInfo;
+  bool* mThirdPartyWindow;
   ErrorResult& mRv;
 };
 
@@ -301,7 +307,8 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    if (StaticPrefs::privacy_restrict3rdpartystorage_enabled() &&
+    if (nsContentUtils::IsThirdPartyWindowOrChannel(window, nullptr,
+                                                    nullptr) &&
         nsContentUtils::StorageAllowedForWindow(window) !=
           nsContentUtils::StorageAccess::eAllow) {
       aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -312,12 +319,6 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
     MOZ_ASSERT(workerPrivate);
-
-    if (StaticPrefs::privacy_restrict3rdpartystorage_enabled() &&
-        !workerPrivate->IsStorageAllowed()) {
-      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
 
     RefPtr<StrongWorkerRef> workerRef =
       StrongWorkerRef::Create(workerPrivate, "BroadcastChannel",
@@ -331,10 +332,18 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 
     RefPtr<ThreadSafeWorkerRef> tsr = new ThreadSafeWorkerRef(workerRef);
 
+    bool thirdPartyWindow = false;
+
     RefPtr<InitializeRunnable> runnable =
-      new InitializeRunnable(tsr, origin, principalInfo, aRv);
+      new InitializeRunnable(tsr, origin, principalInfo, &thirdPartyWindow,
+                             aRv);
     runnable->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
+      return nullptr;
+    }
+
+    if (thirdPartyWindow && !workerPrivate->IsStorageAllowed()) {
+      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
 
