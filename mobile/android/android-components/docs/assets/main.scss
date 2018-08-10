@@ -1,0 +1,9 @@
+---
+---
+
+@import "minima";
+
+.wrapper {
+    max-width: -webkit-calc(1024px - (30px * 2));
+    max-width: calc(1024px - (30px * 2));
+}
