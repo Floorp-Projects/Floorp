@@ -461,7 +461,7 @@ interface GlobalProcessScriptLoader : ProcessScriptLoader
   readonly attribute MozWritableSharedMap sharedData;
 };
 
-[ChromeOnly, Global, NeedResolve]
+[ChromeOnly]
 interface ContentFrameMessageManager : EventTarget
 {
   /**
@@ -495,7 +495,7 @@ interface ContentFrameMessageManager : EventTarget
 // WebIDL spec.
 ContentFrameMessageManager implements MessageManagerGlobal;
 
-[ChromeOnly, Global, NeedResolve]
+[ChromeOnly]
 interface ContentProcessMessageManager
 {
   /**

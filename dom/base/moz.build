@@ -249,6 +249,7 @@ UNIFIED_SOURCES += [
     'ChromeNodeList.cpp',
     'ChromeUtils.cpp',
     'Comment.cpp',
+    'ContentFrameMessageManager.cpp',
     'ContentProcessMessageManager.cpp',
     'Crypto.cpp',
     'CustomElementRegistry.cpp',

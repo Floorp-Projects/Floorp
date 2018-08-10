@@ -12,15 +12,13 @@
 #include "nsCOMPtr.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIClassInfo.h"
 #include "nsIRunnable.h"
-#include "nsIGlobalObject.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 namespace dom {
@@ -39,8 +37,6 @@ namespace ipc {
 class ContentProcessMessageManager :
   public nsIMessageSender,
   public nsMessageManagerScriptExecutor,
-  public nsIGlobalObject,
-  public nsIScriptObjectPrincipal,
   public nsSupportsWeakReference,
   public ipc::MessageManagerCallback,
   public MessageManagerGlobal,
@@ -48,13 +44,6 @@ class ContentProcessMessageManager :
 {
 public:
   explicit ContentProcessMessageManager(nsFrameMessageManager* aMessageManager);
-
-  bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                 JS::Handle<jsid> aId,
-                 JS::MutableHandle<JS::PropertyDescriptor> aDesc);
-  static bool MayResolve(jsid aId);
-  void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
-                           bool aEnumerableOnly, ErrorResult& aRv);
 
   using ipc::MessageManagerCallback::GetProcessMessageManager;
   using MessageManagerGlobal::GetProcessMessageManager;
@@ -70,13 +59,9 @@ public:
   void MarkForCC();
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override
-  {
-    MOZ_CRASH("We should never get here!");
-  }
-  virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::RealmOptions& aOptions,
-                                JS::MutableHandle<JSObject*> aReflector) override;
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+  JSObject* GetOrCreateWrapper();
 
   using MessageManagerGlobal::AddMessageListener;
   using MessageManagerGlobal::RemoveMessageListener;
@@ -99,13 +84,9 @@ public:
 
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
 
-  virtual void LoadScript(const nsAString& aURL);
+  nsIGlobalObject* GetParentObject() const { return xpc::NativeGlobal(xpc::PrivilegedJunkScope()); }
 
-  virtual JSObject* GetGlobalJSObject() override
-  {
-    return GetWrapper();
-  }
-  virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
+  virtual void LoadScript(const nsAString& aURL);
 
   bool IsProcessScoped() const override
   {

@@ -123,24 +123,6 @@ InProcessTabChildMessageManager::MarkForCC()
   MessageManagerGlobal::MarkForCC();
 }
 
-bool
-InProcessTabChildMessageManager::Init()
-{
-  // If you change this, please change GetCompartmentName() in XPCJSContext.cpp
-  // accordingly.
-  nsAutoCString id;
-  id.AssignLiteral("inProcessTabChildGlobal");
-  nsIURI* uri = mOwner->OwnerDoc()->GetDocumentURI();
-  if (uri) {
-    nsAutoCString u;
-    nsresult rv = uri->GetSpec(u);
-    NS_ENSURE_SUCCESS(rv, false);
-    id.AppendLiteral("?ownedBy=");
-    id.Append(u);
-  }
-  return InitChildGlobalInternal(id);
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(InProcessTabChildMessageManager)
 
 
@@ -148,7 +130,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(InProcessTabChildMessageManage
                                                   DOMEventTargetHelper)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
-   tmp->TraverseHostObjectURIs(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(InProcessTabChildMessageManager,
@@ -161,33 +142,22 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(InProcessTabChildMessageManager,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   tmp->nsMessageManagerScriptExecutor::Unlink();
-  tmp->UnlinkHostObjectURIs();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InProcessTabChildMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIInProcessContentFrameMessageManager)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(InProcessTabChildMessageManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(InProcessTabChildMessageManager, DOMEventTargetHelper)
 
-bool
-InProcessTabChildMessageManager::WrapGlobalObject(JSContext* aCx,
-                                                  JS::RealmOptions& aOptions,
-                                                  JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+InProcessTabChildMessageManager::WrapObject(JSContext* aCx,
+                                            JS::Handle<JSObject*> aGivenProto)
 {
-  bool ok = ContentFrameMessageManager_Binding::Wrap(aCx, this, this, aOptions,
-                                                       nsJSPrincipals::get(mPrincipal),
-                                                       true, aReflector);
-  if (ok) {
-    // Since we can't rewrap we have to preserve the global's wrapper here.
-    PreserveWrapper(ToSupports(this));
-  }
-  return ok;
+  return ContentFrameMessageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -353,8 +323,8 @@ InProcessTabChildMessageManager::LoadFrameScript(const nsAString& aURL, bool aRu
   }
   bool tmp = mLoadingScript;
   mLoadingScript = true;
-  JS::Rooted<JSObject*> global(mozilla::dom::RootingCx(), GetWrapper());
-  LoadScriptInternal(global, aURL, aRunInGlobalScope);
+  JS::Rooted<JSObject*> mm(mozilla::dom::RootingCx(), GetOrCreateWrapper());
+  LoadScriptInternal(mm, aURL, !aRunInGlobalScope);
   mLoadingScript = tmp;
 }
 
