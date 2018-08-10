@@ -106,12 +106,6 @@ AccessCheck::isChrome(JSObject* obj)
     return isChrome(js::GetObjectCompartment(obj));
 }
 
-nsIPrincipal*
-AccessCheck::getPrincipal(JS::Compartment* compartment)
-{
-    return GetCompartmentPrincipal(compartment);
-}
-
 // Hardcoded policy for cross origin property access. See the HTML5 Spec.
 static bool
 IsPermitted(CrossOriginObjectType type, JSFlatString* prop, bool set)
