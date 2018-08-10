@@ -819,13 +819,19 @@ protected: // Shouldn't be used by friend classes
    *     bug.
    *
    * @param aSelection          The Selection.
-   * @param aTagName            The name of element which you looking for.
+   * @param aTagName            The atom of tag name in lower case.
+   *                            If nullptr, look for any element node.
+   *                            If nsGkAtoms::href, look for an <a> element
+   *                            which has non-empty href attribute.
+   *                            If nsGkAtoms::anchor or atomized "namedanchor",
+   *                            look for an <a> element which has non-empty
+   *                            name attribute.
    * @param aRv                 Returns error code.
    * @return                    An element in first range of aSelection.
    */
   already_AddRefed<nsINode>
   GetSelectedNode(Selection& aSelection,
-                  const nsAString& aTagName,
+                  const nsAtom* aTagName,
                   ErrorResult& aRv);
 
   /**
