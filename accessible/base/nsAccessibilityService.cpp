@@ -786,7 +786,7 @@ void
 nsAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString)
 {
 #define ROLE(geckoRole, stringRole, atkRole, \
-             macRole, msaaRole, ia2Role, nameRule) \
+             macRole, msaaRole, ia2Role, androidClass, nameRule) \
   case roles::geckoRole: \
     aString.AssignLiteral(stringRole); \
     return;
@@ -1393,7 +1393,7 @@ nsAccessibilityService::Init()
   gApplicationAccessible->Init();
 
   CrashReporter::
-    AnnotateCrashReport(NS_LITERAL_CSTRING("Accessibility"),
+    AnnotateCrashReport(CrashReporter::Annotation::Accessibility,
                         NS_LITERAL_CSTRING("Active"));
 
 #ifdef XP_WIN

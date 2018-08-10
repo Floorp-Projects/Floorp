@@ -603,8 +603,8 @@ nsTerminator::UpdateCrashReport(const char* aTopic)
   // In case of crash, we wish to know where in shutdown we are
   nsAutoCString report(aTopic);
 
-  Unused << CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ShutdownProgress"),
-                                               report);
+  Unused << CrashReporter::AnnotateCrashReport(
+    CrashReporter::Annotation::ShutdownProgress, report);
 }
 
 void

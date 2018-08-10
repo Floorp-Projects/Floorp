@@ -1185,9 +1185,9 @@ static int estimate_kf_group_q(VP8_COMP *cpi, double section_err,
     current_spend_ratio = (double)cpi->long_rolling_actual_bits /
                           (double)cpi->long_rolling_target_bits;
     current_spend_ratio =
-        (current_spend_ratio > 10.0) ? 10.0 : (current_spend_ratio < 0.1)
-                                                  ? 0.1
-                                                  : current_spend_ratio;
+        (current_spend_ratio > 10.0)
+            ? 10.0
+            : (current_spend_ratio < 0.1) ? 0.1 : current_spend_ratio;
   }
 
   /* Calculate a correction factor based on the quality of prediction in
@@ -1273,8 +1273,9 @@ void vp8_init_second_pass(VP8_COMP *cpi) {
    * sum duration is not. Its calculated based on the actual durations of
    * all frames from the first pass.
    */
-  vp8_new_framerate(cpi, 10000000.0 * cpi->twopass.total_stats.count /
-                             cpi->twopass.total_stats.duration);
+  vp8_new_framerate(cpi,
+                    10000000.0 * cpi->twopass.total_stats.count /
+                        cpi->twopass.total_stats.duration);
 
   cpi->output_framerate = cpi->framerate;
   cpi->twopass.bits_left = (int64_t)(cpi->twopass.total_stats.duration *

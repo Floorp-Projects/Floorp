@@ -90,6 +90,15 @@ vpxenc_rt_params() {
     --undershoot-pct=50"
 }
 
+# Forces --passes to 1 with CONFIG_REALTIME_ONLY.
+vpxenc_passes_param() {
+  if [ "$(vpx_config_option_enabled CONFIG_REALTIME_ONLY)" = "yes" ]; then
+    echo "--passes=1"
+  else
+    echo "--passes=2"
+  fi
+}
+
 # Wrapper function for running vpxenc with pipe input. Requires that
 # LIBVPX_BIN_PATH points to the directory containing vpxenc. $1 is used as the
 # input file path and shifted away. All remaining parameters are passed through
@@ -218,9 +227,11 @@ vpxenc_vp8_ivf_piped_input() {
 vpxenc_vp9_ivf() {
   if [ "$(vpxenc_can_encode_vp9)" = "yes" ]; then
     local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9.ivf"
+    local readonly passes=$(vpxenc_passes_param)
     vpxenc $(yuv_input_hantro_collage) \
       --codec=vp9 \
       --limit="${TEST_FRAMES}" \
+      "${passes}" \
       --ivf \
       --output="${output}"
 
@@ -235,9 +246,11 @@ vpxenc_vp9_webm() {
   if [ "$(vpxenc_can_encode_vp9)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
     local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9.webm"
+    local readonly passes=$(vpxenc_passes_param)
     vpxenc $(yuv_input_hantro_collage) \
       --codec=vp9 \
       --limit="${TEST_FRAMES}" \
+      "${passes}" \
       --output="${output}"
 
     if [ ! -e "${output}" ]; then
@@ -339,11 +352,13 @@ vpxenc_vp9_webm_2pass() {
 vpxenc_vp9_ivf_lossless() {
   if [ "$(vpxenc_can_encode_vp9)" = "yes" ]; then
     local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9_lossless.ivf"
+    local readonly passes=$(vpxenc_passes_param)
     vpxenc $(yuv_input_hantro_collage) \
       --codec=vp9 \
       --limit="${TEST_FRAMES}" \
       --ivf \
       --output="${output}" \
+      "${passes}" \
       --lossless=1
 
     if [ ! -e "${output}" ]; then
@@ -356,11 +371,13 @@ vpxenc_vp9_ivf_lossless() {
 vpxenc_vp9_ivf_minq0_maxq0() {
   if [ "$(vpxenc_can_encode_vp9)" = "yes" ]; then
     local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9_lossless_minq0_maxq0.ivf"
+    local readonly passes=$(vpxenc_passes_param)
     vpxenc $(yuv_input_hantro_collage) \
       --codec=vp9 \
       --limit="${TEST_FRAMES}" \
       --ivf \
       --output="${output}" \
+      "${passes}" \
       --min-q=0 \
       --max-q=0
 
@@ -377,12 +394,13 @@ vpxenc_vp9_webm_lag10_frames20() {
     local readonly lag_total_frames=20
     local readonly lag_frames=10
     local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9_lag10_frames20.webm"
+    local readonly passes=$(vpxenc_passes_param)
     vpxenc $(yuv_input_hantro_collage) \
       --codec=vp9 \
       --limit="${lag_total_frames}" \
       --lag-in-frames="${lag_frames}" \
       --output="${output}" \
-      --passes=2 \
+      "${passes}" \
       --auto-alt-ref=1
 
     if [ ! -e "${output}" ]; then
@@ -397,9 +415,11 @@ vpxenc_vp9_webm_non_square_par() {
   if [ "$(vpxenc_can_encode_vp9)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
     local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9_non_square_par.webm"
+    local readonly passes=$(vpxenc_passes_param)
     vpxenc $(y4m_input_non_square_par) \
       --codec=vp9 \
       --limit="${TEST_FRAMES}" \
+      "${passes}" \
       --output="${output}"
 
     if [ ! -e "${output}" ]; then
@@ -412,18 +432,21 @@ vpxenc_vp9_webm_non_square_par() {
 vpxenc_tests="vpxenc_vp8_ivf
               vpxenc_vp8_webm
               vpxenc_vp8_webm_rt
-              vpxenc_vp8_webm_2pass
-              vpxenc_vp8_webm_lag10_frames20
               vpxenc_vp8_ivf_piped_input
               vpxenc_vp9_ivf
               vpxenc_vp9_webm
               vpxenc_vp9_webm_rt
               vpxenc_vp9_webm_rt_multithread_tiled
               vpxenc_vp9_webm_rt_multithread_tiled_frameparallel
-              vpxenc_vp9_webm_2pass
               vpxenc_vp9_ivf_lossless
               vpxenc_vp9_ivf_minq0_maxq0
               vpxenc_vp9_webm_lag10_frames20
               vpxenc_vp9_webm_non_square_par"
+if [ "$(vpx_config_option_enabled CONFIG_REALTIME_ONLY)" != "yes" ]; then
+  vpxenc_tests="$vpxenc_tests
+                vpxenc_vp8_webm_2pass
+                vpxenc_vp8_webm_lag10_frames20
+                vpxenc_vp9_webm_2pass"
+fi
 
 run_tests vpxenc_verify_environment "${vpxenc_tests}"

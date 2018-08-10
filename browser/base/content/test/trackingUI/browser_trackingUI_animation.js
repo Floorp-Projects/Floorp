@@ -14,7 +14,7 @@ add_task(async function testShieldAnimation() {
   await UrlClassifierTestUtils.addTestTrackers();
   Services.prefs.setBoolPref(TP_PREF, true);
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   let animationIcon = document.getElementById("tracking-protection-icon-animatable-image");
   let noAnimationIcon = document.getElementById("tracking-protection-icon");

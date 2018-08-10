@@ -151,7 +151,7 @@ static void write_ivf_frame_header(FILE *outfile,
   if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) return;
 
   pts = pkt->data.frame.pts;
-  mem_put_le32(header, pkt->data.frame.sz);
+  mem_put_le32(header, (int)pkt->data.frame.sz);
   mem_put_le32(header + 4, pts & 0xFFFFFFFF);
   mem_put_le32(header + 8, pts >> 32);
 
@@ -190,7 +190,7 @@ static void set_temporal_layer_pattern(int num_temporal_layers,
       cfg->ts_layer_id[0] = 0;
       cfg->ts_layer_id[1] = 1;
       // Use 60/40 bit allocation as example.
-      cfg->ts_target_bitrate[0] = 0.6f * bitrate;
+      cfg->ts_target_bitrate[0] = (int)(0.6f * bitrate);
       cfg->ts_target_bitrate[1] = bitrate;
 
       /* 0=L, 1=GF */
@@ -241,8 +241,8 @@ static void set_temporal_layer_pattern(int num_temporal_layers,
       cfg->ts_layer_id[2] = 1;
       cfg->ts_layer_id[3] = 2;
       // Use 45/20/35 bit allocation as example.
-      cfg->ts_target_bitrate[0] = 0.45f * bitrate;
-      cfg->ts_target_bitrate[1] = 0.65f * bitrate;
+      cfg->ts_target_bitrate[0] = (int)(0.45f * bitrate);
+      cfg->ts_target_bitrate[1] = (int)(0.65f * bitrate);
       cfg->ts_target_bitrate[2] = bitrate;
 
       /* 0=L, 1=GF, 2=ARF */
@@ -294,8 +294,8 @@ int main(int argc, char **argv) {
   vpx_codec_err_t res[NUM_ENCODERS];
 
   int i;
-  long width;
-  long height;
+  int width;
+  int height;
   int length_frame;
   int frame_avail;
   int got_data;
@@ -347,9 +347,9 @@ int main(int argc, char **argv) {
 
   printf("Using %s\n", vpx_codec_iface_name(interface));
 
-  width = strtol(argv[1], NULL, 0);
-  height = strtol(argv[2], NULL, 0);
-  framerate = strtol(argv[3], NULL, 0);
+  width = (int)strtol(argv[1], NULL, 0);
+  height = (int)strtol(argv[2], NULL, 0);
+  framerate = (int)strtol(argv[3], NULL, 0);
 
   if (width < 16 || width % 2 || height < 16 || height % 2)
     die("Invalid resolution: %ldx%ld", width, height);
@@ -371,12 +371,13 @@ int main(int argc, char **argv) {
 
   // Bitrates per spatial layer: overwrite default rates above.
   for (i = 0; i < NUM_ENCODERS; i++) {
-    target_bitrate[i] = strtol(argv[NUM_ENCODERS + 5 + i], NULL, 0);
+    target_bitrate[i] = (int)strtol(argv[NUM_ENCODERS + 5 + i], NULL, 0);
   }
 
   // Temporal layers per spatial layers: overwrite default settings above.
   for (i = 0; i < NUM_ENCODERS; i++) {
-    num_temporal_layers[i] = strtol(argv[2 * NUM_ENCODERS + 5 + i], NULL, 0);
+    num_temporal_layers[i] =
+        (int)strtol(argv[2 * NUM_ENCODERS + 5 + i], NULL, 0);
     if (num_temporal_layers[i] < 1 || num_temporal_layers[i] > 3)
       die("Invalid temporal layers: %d, Must be 1, 2, or 3. \n",
           num_temporal_layers);
@@ -391,9 +392,9 @@ int main(int argc, char **argv) {
     downsampled_input[i] = fopen(filename, "wb");
   }
 
-  key_frame_insert = strtol(argv[3 * NUM_ENCODERS + 5], NULL, 0);
+  key_frame_insert = (int)strtol(argv[3 * NUM_ENCODERS + 5], NULL, 0);
 
-  show_psnr = strtol(argv[3 * NUM_ENCODERS + 6], NULL, 0);
+  show_psnr = (int)strtol(argv[3 * NUM_ENCODERS + 6], NULL, 0);
 
   /* Populate default encoder configuration */
   for (i = 0; i < NUM_ENCODERS; i++) {
@@ -469,7 +470,7 @@ int main(int argc, char **argv) {
     if (!vpx_img_alloc(&raw[i], VPX_IMG_FMT_I420, cfg[i].g_w, cfg[i].g_h, 32))
       die("Failed to allocate image", cfg[i].g_w, cfg[i].g_h);
 
-  if (raw[0].stride[VPX_PLANE_Y] == raw[0].d_w)
+  if (raw[0].stride[VPX_PLANE_Y] == (int)raw[0].d_w)
     read_frame_p = read_frame;
   else
     read_frame_p = read_frame_by_row;
@@ -558,7 +559,8 @@ int main(int argc, char **argv) {
         /* Write out down-sampled input. */
         length_frame = cfg[i].g_w * cfg[i].g_h * 3 / 2;
         if (fwrite(raw[i].planes[0], 1, length_frame,
-                   downsampled_input[NUM_ENCODERS - i - 1]) != length_frame) {
+                   downsampled_input[NUM_ENCODERS - i - 1]) !=
+            (unsigned int)length_frame) {
           return EXIT_FAILURE;
         }
       }
@@ -619,10 +621,6 @@ int main(int argc, char **argv) {
             break;
           default: break;
         }
-        printf(pkt[i]->kind == VPX_CODEC_CX_FRAME_PKT &&
-                       (pkt[i]->data.frame.flags & VPX_FRAME_IS_KEY)
-                   ? "K"
-                   : "");
         fflush(stdout);
       }
     }
@@ -663,7 +661,6 @@ int main(int argc, char **argv) {
       write_ivf_file_header(outfile[i], &cfg[i], frame_cnt - 1);
     fclose(outfile[i]);
   }
-  printf("\n");
 
   return EXIT_SUCCESS;
 }

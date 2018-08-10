@@ -140,8 +140,9 @@ static INLINE void thread_loop_filter_rows(
 }
 
 // Row-based multi-threaded loopfilter hook
-static int loop_filter_row_worker(VP9LfSync *const lf_sync,
-                                  LFWorkerData *const lf_data) {
+static int loop_filter_row_worker(void *arg1, void *arg2) {
+  VP9LfSync *const lf_sync = (VP9LfSync *)arg1;
+  LFWorkerData *const lf_data = (LFWorkerData *)arg2;
   thread_loop_filter_rows(lf_data->frame_buffer, lf_data->cm, lf_data->planes,
                           lf_data->start, lf_data->stop, lf_data->y_only,
                           lf_sync);
@@ -183,7 +184,7 @@ static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame, VP9_COMMON *cm,
     VPxWorker *const worker = &workers[i];
     LFWorkerData *const lf_data = &lf_sync->lfdata[i];
 
-    worker->hook = (VPxWorkerHook)loop_filter_row_worker;
+    worker->hook = loop_filter_row_worker;
     worker->data1 = lf_sync;
     worker->data2 = lf_data;
 

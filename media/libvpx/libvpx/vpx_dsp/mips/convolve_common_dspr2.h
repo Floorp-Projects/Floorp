@@ -24,21 +24,21 @@ extern "C" {
 #if HAVE_DSPR2
 void vpx_convolve2_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                uint8_t *dst, ptrdiff_t dst_stride,
-                               const int16_t *filter_x, int x_step_q4,
-                               const int16_t *filter_y, int y_step_q4, int w,
-                               int h);
+                               const InterpKernel *filter, int x0_q4,
+                               int32_t x_step_q4, int y0_q4, int y_step_q4,
+                               int w, int h);
 
 void vpx_convolve2_avg_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                    uint8_t *dst, ptrdiff_t dst_stride,
-                                   const int16_t *filter_x, int x_step_q4,
-                                   const int16_t *filter_y, int y_step_q4,
+                                   const InterpKernel *filter, int x0_q4,
+                                   int32_t x_step_q4, int y0_q4, int y_step_q4,
                                    int w, int h);
 
 void vpx_convolve2_avg_vert_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                   uint8_t *dst, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x, int x_step_q4,
-                                  const int16_t *filter_y, int y_step_q4, int w,
-                                  int h);
+                                  const InterpKernel *filter, int x0_q4,
+                                  int32_t x_step_q4, int y0_q4, int y_step_q4,
+                                  int w, int h);
 
 void vpx_convolve2_dspr2(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
                          ptrdiff_t dst_stride, const int16_t *filter, int w,
@@ -46,9 +46,9 @@ void vpx_convolve2_dspr2(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
 
 void vpx_convolve2_vert_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                               uint8_t *dst, ptrdiff_t dst_stride,
-                              const int16_t *filter_x, int x_step_q4,
-                              const int16_t *filter_y, int y_step_q4, int w,
-                              int h);
+                              const InterpKernel *filter, int x0_q4,
+                              int32_t x_step_q4, int y0_q4, int y_step_q4,
+                              int w, int h);
 
 #endif  // #if HAVE_DSPR2
 #ifdef __cplusplus

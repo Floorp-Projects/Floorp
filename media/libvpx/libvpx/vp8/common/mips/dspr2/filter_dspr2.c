@@ -673,9 +673,9 @@ void vp8_filter_block2d_first_pass16_6tap(unsigned char *RESTRICT src_ptr,
 
         : [tn1] "=&r"(tn1), [tp2] "=&r"(tp2), [n2] "=&r"(n2), [p4] "=&r"(p4),
           [n4] "=&r"(n4), [Temp1] "=&r"(Temp1), [Temp2] "=&r"(Temp2),
-          [Temp3] "=&r"(Temp3), [Temp4] "=r"(Temp4)
+          [Temp3] "=&r"(Temp3), [Temp4] "=r"(Temp4), [p1] "+r"(p1)
         : [vector1b] "r"(vector1b), [vector2b] "r"(vector2b), [tp1] "r"(tp1),
-          [n1] "r"(n1), [p1] "r"(p1), [vector4a] "r"(vector4a), [p2] "r"(p2),
+          [n1] "r"(n1), [vector4a] "r"(vector4a), [p2] "r"(p2),
           [vector3b] "r"(vector3b), [p3] "r"(p3), [n3] "r"(n3),
           [src_ptr] "r"(src_ptr));
 
@@ -724,9 +724,9 @@ void vp8_filter_block2d_first_pass16_6tap(unsigned char *RESTRICT src_ptr,
 
         : [tn1] "=&r"(tn1), [tp1] "=&r"(tp1), [n1] "=&r"(n1), [p3] "=&r"(p3),
           [n3] "=&r"(n3), [Temp1] "=&r"(Temp1), [Temp2] "=&r"(Temp2),
-          [Temp3] "=&r"(Temp3), [Temp4] "=r"(Temp4)
+          [Temp3] "=&r"(Temp3), [Temp4] "=r"(Temp4), [p4] "+r"(p4)
         : [vector1b] "r"(vector1b), [vector2b] "r"(vector2b), [tp2] "r"(tp2),
-          [p2] "r"(p2), [n2] "r"(n2), [p4] "r"(p4), [n4] "r"(n4), [p1] "r"(p1),
+          [p2] "r"(p2), [n2] "r"(n2), [n4] "r"(n4), [p1] "r"(p1),
           [src_ptr] "r"(src_ptr), [vector4a] "r"(vector4a),
           [vector3b] "r"(vector3b));
 
@@ -781,9 +781,9 @@ void vp8_filter_block2d_first_pass16_6tap(unsigned char *RESTRICT src_ptr,
 
         : [tn1] "=&r"(tn1), [p2] "=&r"(p2), [n2] "=&r"(n2), [n4] "=&r"(n4),
           [Temp1] "=&r"(Temp1), [Temp2] "=&r"(Temp2), [Temp3] "=&r"(Temp3),
-          [Temp4] "=r"(Temp4)
-        : [vector1b] "r"(vector1b), [vector2b] "r"(vector2b), [tp1] "r"(tp1),
-          [p4] "r"(p4), [n1] "r"(n1), [p1] "r"(p1), [vector4a] "r"(vector4a),
+          [Temp4] "=r"(Temp4), [tp1] "+r"(tp1)
+        : [vector1b] "r"(vector1b), [vector2b] "r"(vector2b), [p4] "r"(p4),
+          [n1] "r"(n1), [p1] "r"(p1), [vector4a] "r"(vector4a),
           [vector3b] "r"(vector3b), [p3] "r"(p3), [n3] "r"(n3),
           [src_ptr] "r"(src_ptr), [cm] "r"(cm), [dst_ptr] "r"(dst_ptr));
 

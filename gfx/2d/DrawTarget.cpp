@@ -7,8 +7,12 @@
 #include "2D.h"
 #include "Logging.h"
 #include "PathHelpers.h"
+#include "Tools.h"
 
 #include "DrawTargetCapture.h"
+
+#include "BufferEdgePad.h"
+#include "BufferUnrotate.h"
 
 #ifdef BUILD_ARM_NEON
 #include "mozilla/arm.h"
@@ -286,6 +290,33 @@ DrawTarget::Blur(const AlphaBoxBlur& aBlur)
   aBlur.Blur(data);
 
   ReleaseBits(data);
+}
+
+void
+DrawTarget::PadEdges(const IntRegion& aRegion)
+{
+  PadDrawTargetOutFromRegion(this, aRegion);
+}
+
+bool
+DrawTarget::Unrotate(IntPoint aRotation)
+{
+  unsigned char* data;
+  IntSize size;
+  int32_t stride;
+  SurfaceFormat format;
+
+  if (LockBits(&data, &size, &stride, &format)) {
+    uint8_t bytesPerPixel = BytesPerPixel(format);
+    BufferUnrotate(data,
+                   size.width * bytesPerPixel,
+                   size.height, stride,
+                   aRotation.x * bytesPerPixel,
+                   aRotation.y);
+    ReleaseBits(data);
+    return true;
+  }
+  return false;
 }
 
 } // namespace gfx

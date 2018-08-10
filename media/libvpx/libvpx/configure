@@ -109,10 +109,13 @@ all_platforms="${all_platforms} armv7-none-rvct"     #neon Cortex-A8
 all_platforms="${all_platforms} armv7-win32-vs11"
 all_platforms="${all_platforms} armv7-win32-vs12"
 all_platforms="${all_platforms} armv7-win32-vs14"
+all_platforms="${all_platforms} armv7-win32-vs15"
 all_platforms="${all_platforms} armv7s-darwin-gcc"
 all_platforms="${all_platforms} armv8-linux-gcc"
 all_platforms="${all_platforms} mips32-linux-gcc"
 all_platforms="${all_platforms} mips64-linux-gcc"
+all_platforms="${all_platforms} ppc64-linux-gcc"
+all_platforms="${all_platforms} ppc64le-linux-gcc"
 all_platforms="${all_platforms} sparc-solaris-gcc"
 all_platforms="${all_platforms} x86-android-gcc"
 all_platforms="${all_platforms} x86-darwin8-gcc"
@@ -125,6 +128,7 @@ all_platforms="${all_platforms} x86-darwin12-gcc"
 all_platforms="${all_platforms} x86-darwin13-gcc"
 all_platforms="${all_platforms} x86-darwin14-gcc"
 all_platforms="${all_platforms} x86-darwin15-gcc"
+all_platforms="${all_platforms} x86-darwin16-gcc"
 all_platforms="${all_platforms} x86-iphonesimulator-gcc"
 all_platforms="${all_platforms} x86-linux-gcc"
 all_platforms="${all_platforms} x86-linux-icc"
@@ -135,6 +139,7 @@ all_platforms="${all_platforms} x86-win32-vs10"
 all_platforms="${all_platforms} x86-win32-vs11"
 all_platforms="${all_platforms} x86-win32-vs12"
 all_platforms="${all_platforms} x86-win32-vs14"
+all_platforms="${all_platforms} x86-win32-vs15"
 all_platforms="${all_platforms} x86_64-android-gcc"
 all_platforms="${all_platforms} x86_64-darwin9-gcc"
 all_platforms="${all_platforms} x86_64-darwin10-gcc"
@@ -143,6 +148,7 @@ all_platforms="${all_platforms} x86_64-darwin12-gcc"
 all_platforms="${all_platforms} x86_64-darwin13-gcc"
 all_platforms="${all_platforms} x86_64-darwin14-gcc"
 all_platforms="${all_platforms} x86_64-darwin15-gcc"
+all_platforms="${all_platforms} x86_64-darwin16-gcc"
 all_platforms="${all_platforms} x86_64-iphonesimulator-gcc"
 all_platforms="${all_platforms} x86_64-linux-gcc"
 all_platforms="${all_platforms} x86_64-linux-icc"
@@ -152,6 +158,7 @@ all_platforms="${all_platforms} x86_64-win64-vs10"
 all_platforms="${all_platforms} x86_64-win64-vs11"
 all_platforms="${all_platforms} x86_64-win64-vs12"
 all_platforms="${all_platforms} x86_64-win64-vs14"
+all_platforms="${all_platforms} x86_64-win64-vs15"
 all_platforms="${all_platforms} generic-gnu"
 
 # all_targets is a list of all targets that can be configured
@@ -163,10 +170,13 @@ for t in ${all_targets}; do
     [ -f "${source_path}/${t}.mk" ] && enable_feature ${t}
 done
 
+if ! diff --version >/dev/null; then
+  die "diff missing: Try installing diffutils via your package manager."
+fi
+
 if ! perl --version >/dev/null; then
     die "Perl is required to build"
 fi
-
 
 if [ "`cd \"${source_path}\" && pwd`" != "`pwd`" ]; then
   # test to see if source_path already configured
@@ -223,6 +233,7 @@ ARCH_LIST="
     mips
     x86
     x86_64
+    ppc
 "
 ARCH_EXT_LIST_X86="
     mmx
@@ -233,7 +244,13 @@ ARCH_EXT_LIST_X86="
     sse4_1
     avx
     avx2
+    avx512
 "
+
+ARCH_EXT_LIST_LOONGSON="
+    mmi
+"
+
 ARCH_EXT_LIST="
     neon
     neon_asm
@@ -244,6 +261,10 @@ ARCH_EXT_LIST="
     mips64
 
     ${ARCH_EXT_LIST_X86}
+
+    vsx
+
+    ${ARCH_EXT_LIST_LOONGSON}
 "
 HAVE_LIST="
     ${ARCH_EXT_LIST}
@@ -255,7 +276,6 @@ EXPERIMENT_LIST="
     spatial_svc
     fp_mb_stats
     emulate_hardware
-    misc_fixes
 "
 CONFIG_LIST="
     dependency_tracking
@@ -310,6 +330,7 @@ CONFIG_LIST="
     better_hw_compatibility
     experimental
     size_limit
+    always_adjust_bpm
     ${EXPERIMENT_LIST}
 "
 CMDLINE_SELECT="
@@ -369,6 +390,7 @@ CMDLINE_SELECT="
     better_hw_compatibility
     vp9_highbitdepth
     experimental
+    always_adjust_bpm
 "
 
 process_cmdline() {
@@ -570,6 +592,7 @@ process_toolchain() {
         check_add_cflags -Wdeclaration-after-statement
         check_add_cflags -Wdisabled-optimization
         check_add_cflags -Wfloat-conversion
+        check_add_cflags -Wparentheses-equality
         check_add_cflags -Wpointer-arith
         check_add_cflags -Wtype-limits
         check_add_cflags -Wcast-qual
@@ -588,11 +611,9 @@ process_toolchain() {
         if enabled mips || [ -z "${INLINE}" ]; then
           enabled extra_warnings || check_add_cflags -Wno-unused-function
         fi
-        if ! enabled vp9_highbitdepth; then
-          # Avoid this warning for third_party C++ sources. Some reorganization
-          # would be needed to apply this only to test/*.cc.
-          check_cflags -Wshorten-64-to-32 && add_cflags_only -Wshorten-64-to-32
-        fi
+        # Avoid this warning for third_party C++ sources. Some reorganization
+        # would be needed to apply this only to test/*.cc.
+        check_cflags -Wshorten-64-to-32 && add_cflags_only -Wshorten-64-to-32
     fi
 
     if enabled icc; then

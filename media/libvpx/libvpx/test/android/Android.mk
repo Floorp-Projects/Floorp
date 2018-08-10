@@ -32,6 +32,7 @@ LOCAL_CPP_EXTENSION := .cc
 LOCAL_MODULE := gtest
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/third_party/googletest/src/
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/third_party/googletest/src/include/
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/third_party/googletest/src/include/
 LOCAL_SRC_FILES := ./third_party/googletest/src/src/gtest-all.cc
 include $(BUILD_STATIC_LIBRARY)
 

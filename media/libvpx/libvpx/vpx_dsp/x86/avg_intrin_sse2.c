@@ -11,6 +11,8 @@
 #include <emmintrin.h>
 
 #include "./vpx_dsp_rtcd.h"
+#include "vpx/vpx_integer.h"
+#include "vpx_dsp/x86/bitdepth_conversion_sse2.h"
 #include "vpx_ports/mem.h"
 
 void vpx_minmax_8x8_sse2(const uint8_t *s, int p, const uint8_t *d, int dp,
@@ -212,8 +214,8 @@ static void hadamard_col8_sse2(__m128i *in, int iter) {
   }
 }
 
-void vpx_hadamard_8x8_sse2(int16_t const *src_diff, int src_stride,
-                           int16_t *coeff) {
+void vpx_hadamard_8x8_sse2(int16_t const *src_diff, ptrdiff_t src_stride,
+                           tran_low_t *coeff) {
   __m128i src[8];
   src[0] = _mm_load_si128((const __m128i *)src_diff);
   src[1] = _mm_load_si128((const __m128i *)(src_diff += src_stride));
@@ -227,25 +229,25 @@ void vpx_hadamard_8x8_sse2(int16_t const *src_diff, int src_stride,
   hadamard_col8_sse2(src, 0);
   hadamard_col8_sse2(src, 1);
 
-  _mm_store_si128((__m128i *)coeff, src[0]);
+  store_tran_low(src[0], coeff);
   coeff += 8;
-  _mm_store_si128((__m128i *)coeff, src[1]);
+  store_tran_low(src[1], coeff);
   coeff += 8;
-  _mm_store_si128((__m128i *)coeff, src[2]);
+  store_tran_low(src[2], coeff);
   coeff += 8;
-  _mm_store_si128((__m128i *)coeff, src[3]);
+  store_tran_low(src[3], coeff);
   coeff += 8;
-  _mm_store_si128((__m128i *)coeff, src[4]);
+  store_tran_low(src[4], coeff);
   coeff += 8;
-  _mm_store_si128((__m128i *)coeff, src[5]);
+  store_tran_low(src[5], coeff);
   coeff += 8;
-  _mm_store_si128((__m128i *)coeff, src[6]);
+  store_tran_low(src[6], coeff);
   coeff += 8;
-  _mm_store_si128((__m128i *)coeff, src[7]);
+  store_tran_low(src[7], coeff);
 }
 
-void vpx_hadamard_16x16_sse2(int16_t const *src_diff, int src_stride,
-                             int16_t *coeff) {
+void vpx_hadamard_16x16_sse2(int16_t const *src_diff, ptrdiff_t src_stride,
+                             tran_low_t *coeff) {
   int idx;
   for (idx = 0; idx < 4; ++idx) {
     int16_t const *src_ptr =
@@ -254,10 +256,10 @@ void vpx_hadamard_16x16_sse2(int16_t const *src_diff, int src_stride,
   }
 
   for (idx = 0; idx < 64; idx += 8) {
-    __m128i coeff0 = _mm_load_si128((const __m128i *)coeff);
-    __m128i coeff1 = _mm_load_si128((const __m128i *)(coeff + 64));
-    __m128i coeff2 = _mm_load_si128((const __m128i *)(coeff + 128));
-    __m128i coeff3 = _mm_load_si128((const __m128i *)(coeff + 192));
+    __m128i coeff0 = load_tran_low(coeff);
+    __m128i coeff1 = load_tran_low(coeff + 64);
+    __m128i coeff2 = load_tran_low(coeff + 128);
+    __m128i coeff3 = load_tran_low(coeff + 192);
 
     __m128i b0 = _mm_add_epi16(coeff0, coeff1);
     __m128i b1 = _mm_sub_epi16(coeff0, coeff1);
@@ -271,25 +273,25 @@ void vpx_hadamard_16x16_sse2(int16_t const *src_diff, int src_stride,
 
     coeff0 = _mm_add_epi16(b0, b2);
     coeff1 = _mm_add_epi16(b1, b3);
-    _mm_store_si128((__m128i *)coeff, coeff0);
-    _mm_store_si128((__m128i *)(coeff + 64), coeff1);
+    store_tran_low(coeff0, coeff);
+    store_tran_low(coeff1, coeff + 64);
 
     coeff2 = _mm_sub_epi16(b0, b2);
     coeff3 = _mm_sub_epi16(b1, b3);
-    _mm_store_si128((__m128i *)(coeff + 128), coeff2);
-    _mm_store_si128((__m128i *)(coeff + 192), coeff3);
+    store_tran_low(coeff2, coeff + 128);
+    store_tran_low(coeff3, coeff + 192);
 
     coeff += 8;
   }
 }
 
-int vpx_satd_sse2(const int16_t *coeff, int length) {
+int vpx_satd_sse2(const tran_low_t *coeff, int length) {
   int i;
   const __m128i zero = _mm_setzero_si128();
   __m128i accum = zero;
 
   for (i = 0; i < length; i += 8) {
-    const __m128i src_line = _mm_load_si128((const __m128i *)coeff);
+    const __m128i src_line = load_tran_low(coeff);
     const __m128i inv = _mm_sub_epi16(zero, src_line);
     const __m128i abs = _mm_max_epi16(src_line, inv);  // abs(src_line)
     const __m128i abs_lo = _mm_unpacklo_epi16(abs, zero);

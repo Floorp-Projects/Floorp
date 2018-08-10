@@ -675,7 +675,8 @@ PtrInfo::AnnotatedReleaseAssert(bool aCondition, const char* aMessage)
     piName = mParticipant->ClassName();
   }
   nsPrintfCString msg("%s, for class %s", aMessage, piName);
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("CycleCollector"), msg);
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::CycleCollector,
+                                     msg);
 
   MOZ_CRASH();
 }

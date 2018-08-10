@@ -1473,19 +1473,35 @@ CycleCollectedJSRuntime::FinalizeDeferredThings(CycleCollectedJSContext::Deferre
   }
 }
 
+const char*
+CycleCollectedJSRuntime::OOMStateToString(const OOMState aOomState) const
+{
+  switch (aOomState) {
+    case OOMState::OK:
+      return "OK";
+    case OOMState::Reporting:
+      return "Reporting";
+    case OOMState::Reported:
+      return "Reported";
+    case OOMState::Recovered:
+      return "Recovered";
+    default:
+      MOZ_ASSERT_UNREACHABLE("OOMState holds an invalid value");
+      return "Unknown";
+  }
+}
+
 void
 CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
                                                    OOMState aNewState)
 {
   *aStatePtr = aNewState;
-  CrashReporter::AnnotateCrashReport(aStatePtr == &mOutOfMemoryState
-                                     ? NS_LITERAL_CSTRING("JSOutOfMemory")
-                                     : NS_LITERAL_CSTRING("JSLargeAllocationFailure"),
-                                     aNewState == OOMState::Reporting
-                                     ? NS_LITERAL_CSTRING("Reporting")
-                                     : aNewState == OOMState::Reported
-                                     ? NS_LITERAL_CSTRING("Reported")
-                                     : NS_LITERAL_CSTRING("Recovered"));
+  CrashReporter::Annotation annotation = (aStatePtr == &mOutOfMemoryState)
+    ? CrashReporter::Annotation::JSOutOfMemory
+    : CrashReporter::Annotation::JSLargeAllocationFailure;
+
+  CrashReporter::AnnotateCrashReport(
+    annotation, nsDependentCString(OOMStateToString(aNewState)));
 }
 
 void

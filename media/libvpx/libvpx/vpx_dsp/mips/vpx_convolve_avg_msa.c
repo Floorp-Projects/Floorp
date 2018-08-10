@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/mips/macros_msa.h"
 
 static void avg_width4_msa(const uint8_t *src, int32_t src_stride, uint8_t *dst,
@@ -188,13 +189,14 @@ static void avg_width64_msa(const uint8_t *src, int32_t src_stride,
 
 void vpx_convolve_avg_msa(const uint8_t *src, ptrdiff_t src_stride,
                           uint8_t *dst, ptrdiff_t dst_stride,
-                          const int16_t *filter_x, int32_t filter_x_stride,
-                          const int16_t *filter_y, int32_t filter_y_stride,
+                          const InterpKernel *filter, int x0_q4,
+                          int32_t x_step_q4, int y0_q4, int32_t y_step_q4,
                           int32_t w, int32_t h) {
-  (void)filter_x;
-  (void)filter_y;
-  (void)filter_x_stride;
-  (void)filter_y_stride;
+  (void)filter;
+  (void)x0_q4;
+  (void)x_step_q4;
+  (void)y0_q4;
+  (void)y_step_q4;
 
   switch (w) {
     case 4: {

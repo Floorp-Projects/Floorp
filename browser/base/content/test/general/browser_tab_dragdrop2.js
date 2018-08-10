@@ -17,7 +17,7 @@ add_task(async function() {
   ok(true, "tests succeeded");
 
   // Create a second tab so that we can move the original one out.
-  win.gBrowser.addTab("about:blank", {skipAnimation: true});
+  BrowserTestUtils.addTab(win.gBrowser, "about:blank", {skipAnimation: true});
 
   // Tear off the original tab.
   let browser = win.gBrowser.selectedBrowser;

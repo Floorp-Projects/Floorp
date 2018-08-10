@@ -1722,60 +1722,6 @@ ICUpdatedStub::addUpdateStubForValue(JSContext* cx, HandleScript outerScript, Ha
 }
 
 //
-// NewArray_Fallback
-//
-
-static bool
-DoNewArray(JSContext* cx, void* payload, ICNewArray_Fallback* stub, uint32_t length,
-           MutableHandleValue res)
-{
-    SharedStubInfo info(cx, payload, stub->icEntry());
-
-    FallbackICSpew(cx, stub, "NewArray");
-
-    RootedObject obj(cx);
-    if (stub->templateObject()) {
-        RootedObject templateObject(cx, stub->templateObject());
-        obj = NewArrayOperationWithTemplate(cx, templateObject);
-        if (!obj)
-            return false;
-    } else {
-        HandleScript script = info.script();
-        jsbytecode* pc = info.pc();
-        obj = NewArrayOperation(cx, script, pc, length);
-        if (!obj)
-            return false;
-
-        if (!obj->isSingleton() && !obj->group()->maybePreliminaryObjectsDontCheckGeneration()) {
-            JSObject* templateObject = NewArrayOperation(cx, script, pc, length, TenuredObject);
-            if (!templateObject)
-                return false;
-            stub->setTemplateObject(templateObject);
-        }
-    }
-
-    res.setObject(*obj);
-    return true;
-}
-
-typedef bool(*DoNewArrayFn)(JSContext*, void*, ICNewArray_Fallback*, uint32_t,
-                            MutableHandleValue);
-static const VMFunction DoNewArrayInfo =
-    FunctionInfo<DoNewArrayFn>(DoNewArray, "DoNewArray", TailCall);
-
-bool
-ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    EmitRestoreTailCallReg(masm);
-
-    masm.push(R0.scratchReg()); // length
-    masm.push(ICStubReg); // stub.
-    pushStubPayload(masm, R0.scratchReg());
-
-    return tailCallVM(DoNewArrayInfo, masm);
-}
-
-//
 // NewObject_Fallback
 //
 

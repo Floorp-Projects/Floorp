@@ -34,7 +34,7 @@ static void print_mi_data(VP9_COMMON *cm, FILE *file, const char *descriptor,
   for (mi_row = 0; mi_row < rows; mi_row++) {
     fprintf(file, "%c ", prefix);
     for (mi_col = 0; mi_col < cols; mi_col++) {
-      fprintf(file, "%2d ", *((int *)((char *)(mi[0]) + member_offset)));
+      fprintf(file, "%2d ", *((char *)((char *)(mi[0]) + member_offset)));
       mi++;
     }
     fprintf(file, "\n");

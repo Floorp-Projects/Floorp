@@ -16,207 +16,149 @@
 #include "./vpx_config.h"
 #include "vpx/vpx_integer.h"
 
-#define LD_B(RTYPE, psrc) *((const RTYPE *)(psrc))
-#define LD_UB(...) LD_B(v16u8, __VA_ARGS__)
-#define LD_SB(...) LD_B(v16i8, __VA_ARGS__)
+#define LD_V(RTYPE, psrc) *((const RTYPE *)(psrc))
+#define LD_UB(...) LD_V(v16u8, __VA_ARGS__)
+#define LD_SB(...) LD_V(v16i8, __VA_ARGS__)
+#define LD_UH(...) LD_V(v8u16, __VA_ARGS__)
+#define LD_SH(...) LD_V(v8i16, __VA_ARGS__)
+#define LD_SW(...) LD_V(v4i32, __VA_ARGS__)
 
-#define LD_H(RTYPE, psrc) *((const RTYPE *)(psrc))
-#define LD_UH(...) LD_H(v8u16, __VA_ARGS__)
-#define LD_SH(...) LD_H(v8i16, __VA_ARGS__)
-
-#define LD_W(RTYPE, psrc) *((const RTYPE *)(psrc))
-#define LD_SW(...) LD_W(v4i32, __VA_ARGS__)
-
-#define ST_B(RTYPE, in, pdst) *((RTYPE *)(pdst)) = (in)
-#define ST_UB(...) ST_B(v16u8, __VA_ARGS__)
-#define ST_SB(...) ST_B(v16i8, __VA_ARGS__)
-
-#define ST_H(RTYPE, in, pdst) *((RTYPE *)(pdst)) = (in)
-#define ST_SH(...) ST_H(v8i16, __VA_ARGS__)
-
-#define ST_W(RTYPE, in, pdst) *((RTYPE *)(pdst)) = (in)
-#define ST_SW(...) ST_W(v4i32, __VA_ARGS__)
+#define ST_V(RTYPE, in, pdst) *((RTYPE *)(pdst)) = (in)
+#define ST_UB(...) ST_V(v16u8, __VA_ARGS__)
+#define ST_SB(...) ST_V(v16i8, __VA_ARGS__)
+#define ST_SH(...) ST_V(v8i16, __VA_ARGS__)
+#define ST_SW(...) ST_V(v4i32, __VA_ARGS__)
 
 #if (__mips_isa_rev >= 6)
-#define LH(psrc)                                          \
-  ({                                                      \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);      \
-    uint16_t val_m;                                       \
-                                                          \
-    __asm__ __volatile__("lh  %[val_m],  %[psrc_m]  \n\t" \
-                                                          \
-                         : [val_m] "=r"(val_m)            \
-                         : [psrc_m] "m"(*psrc_m));        \
-                                                          \
-    val_m;                                                \
+#define LH(psrc)                                   \
+  ({                                               \
+    uint16_t val_lh_m = *(const uint16_t *)(psrc); \
+    val_lh_m;                                      \
   })
 
-#define LW(psrc)                                          \
-  ({                                                      \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);      \
-    uint32_t val_m;                                       \
-                                                          \
-    __asm__ __volatile__("lw  %[val_m],  %[psrc_m]  \n\t" \
-                                                          \
-                         : [val_m] "=r"(val_m)            \
-                         : [psrc_m] "m"(*psrc_m));        \
-                                                          \
-    val_m;                                                \
+#define LW(psrc)                                   \
+  ({                                               \
+    uint32_t val_lw_m = *(const uint32_t *)(psrc); \
+    val_lw_m;                                      \
   })
 
 #if (__mips == 64)
-#define LD(psrc)                                          \
-  ({                                                      \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);      \
-    uint64_t val_m = 0;                                   \
-                                                          \
-    __asm__ __volatile__("ld  %[val_m],  %[psrc_m]  \n\t" \
-                                                          \
-                         : [val_m] "=r"(val_m)            \
-                         : [psrc_m] "m"(*psrc_m));        \
-                                                          \
-    val_m;                                                \
+#define LD(psrc)                                   \
+  ({                                               \
+    uint64_t val_ld_m = *(const uint64_t *)(psrc); \
+    val_ld_m;                                      \
   })
 #else  // !(__mips == 64)
-#define LD(psrc)                                            \
-  ({                                                        \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);        \
-    uint32_t val0_m, val1_m;                                \
-    uint64_t val_m = 0;                                     \
-                                                            \
-    val0_m = LW(psrc_m);                                    \
-    val1_m = LW(psrc_m + 4);                                \
-                                                            \
-    val_m = (uint64_t)(val1_m);                             \
-    val_m = (uint64_t)((val_m << 32) & 0xFFFFFFFF00000000); \
-    val_m = (uint64_t)(val_m | (uint64_t)val0_m);           \
-                                                            \
-    val_m;                                                  \
+#define LD(psrc)                                                  \
+  ({                                                              \
+    const uint8_t *psrc_ld_m = (const uint8_t *)(psrc);           \
+    uint32_t val0_ld_m, val1_ld_m;                                \
+    uint64_t val_ld_m = 0;                                        \
+                                                                  \
+    val0_ld_m = LW(psrc_ld_m);                                    \
+    val1_ld_m = LW(psrc_ld_m + 4);                                \
+                                                                  \
+    val_ld_m = (uint64_t)(val1_ld_m);                             \
+    val_ld_m = (uint64_t)((val_ld_m << 32) & 0xFFFFFFFF00000000); \
+    val_ld_m = (uint64_t)(val_ld_m | (uint64_t)val0_ld_m);        \
+                                                                  \
+    val_ld_m;                                                     \
   })
 #endif  // (__mips == 64)
 
-#define SH(val, pdst)                                     \
-  {                                                       \
-    uint8_t *pdst_m = (uint8_t *)(pdst);                  \
-    const uint16_t val_m = (val);                         \
-                                                          \
-    __asm__ __volatile__("sh  %[val_m],  %[pdst_m]  \n\t" \
-                                                          \
-                         : [pdst_m] "=m"(*pdst_m)         \
-                         : [val_m] "r"(val_m));           \
-  }
-
-#define SW(val, pdst)                                     \
-  {                                                       \
-    uint8_t *pdst_m = (uint8_t *)(pdst);                  \
-    const uint32_t val_m = (val);                         \
-                                                          \
-    __asm__ __volatile__("sw  %[val_m],  %[pdst_m]  \n\t" \
-                                                          \
-                         : [pdst_m] "=m"(*pdst_m)         \
-                         : [val_m] "r"(val_m));           \
-  }
-
-#define SD(val, pdst)                                     \
-  {                                                       \
-    uint8_t *pdst_m = (uint8_t *)(pdst);                  \
-    const uint64_t val_m = (val);                         \
-                                                          \
-    __asm__ __volatile__("sd  %[val_m],  %[pdst_m]  \n\t" \
-                                                          \
-                         : [pdst_m] "=m"(*pdst_m)         \
-                         : [val_m] "r"(val_m));           \
-  }
+#define SH(val, pdst) *(uint16_t *)(pdst) = (val);
+#define SW(val, pdst) *(uint32_t *)(pdst) = (val);
+#define SD(val, pdst) *(uint64_t *)(pdst) = (val);
 #else  // !(__mips_isa_rev >= 6)
-#define LH(psrc)                                           \
-  ({                                                       \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);       \
-    uint16_t val_m;                                        \
-                                                           \
-    __asm__ __volatile__("ulh  %[val_m],  %[psrc_m]  \n\t" \
-                                                           \
-                         : [val_m] "=r"(val_m)             \
-                         : [psrc_m] "m"(*psrc_m));         \
-                                                           \
-    val_m;                                                 \
+#define LH(psrc)                                                 \
+  ({                                                             \
+    const uint8_t *psrc_lh_m = (const uint8_t *)(psrc);          \
+    uint16_t val_lh_m;                                           \
+                                                                 \
+    __asm__ __volatile__("ulh  %[val_lh_m],  %[psrc_lh_m]  \n\t" \
+                                                                 \
+                         : [val_lh_m] "=r"(val_lh_m)             \
+                         : [psrc_lh_m] "m"(*psrc_lh_m));         \
+                                                                 \
+    val_lh_m;                                                    \
   })
 
-#define LW(psrc)                                           \
-  ({                                                       \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);       \
-    uint32_t val_m;                                        \
-                                                           \
-    __asm__ __volatile__("ulw  %[val_m],  %[psrc_m]  \n\t" \
-                                                           \
-                         : [val_m] "=r"(val_m)             \
-                         : [psrc_m] "m"(*psrc_m));         \
-                                                           \
-    val_m;                                                 \
+#define LW(psrc)                                                 \
+  ({                                                             \
+    const uint8_t *psrc_lw_m = (const uint8_t *)(psrc);          \
+    uint32_t val_lw_m;                                           \
+                                                                 \
+    __asm__ __volatile__("ulw  %[val_lw_m],  %[psrc_lw_m]  \n\t" \
+                                                                 \
+                         : [val_lw_m] "=r"(val_lw_m)             \
+                         : [psrc_lw_m] "m"(*psrc_lw_m));         \
+                                                                 \
+    val_lw_m;                                                    \
   })
 
 #if (__mips == 64)
-#define LD(psrc)                                           \
-  ({                                                       \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);       \
-    uint64_t val_m = 0;                                    \
-                                                           \
-    __asm__ __volatile__("uld  %[val_m],  %[psrc_m]  \n\t" \
-                                                           \
-                         : [val_m] "=r"(val_m)             \
-                         : [psrc_m] "m"(*psrc_m));         \
-                                                           \
-    val_m;                                                 \
+#define LD(psrc)                                                 \
+  ({                                                             \
+    const uint8_t *psrc_ld_m = (const uint8_t *)(psrc);          \
+    uint64_t val_ld_m = 0;                                       \
+                                                                 \
+    __asm__ __volatile__("uld  %[val_ld_m],  %[psrc_ld_m]  \n\t" \
+                                                                 \
+                         : [val_ld_m] "=r"(val_ld_m)             \
+                         : [psrc_ld_m] "m"(*psrc_ld_m));         \
+                                                                 \
+    val_ld_m;                                                    \
   })
 #else  // !(__mips == 64)
-#define LD(psrc)                                                              \
-  ({                                                                          \
-    const uint8_t *psrc_m1 = (const uint8_t *)(psrc);                         \
-    uint32_t val0_m, val1_m;                                                  \
-    uint64_t val_m_combined = 0;                                              \
-                                                                              \
-    val0_m = LW(psrc_m1);                                                     \
-    val1_m = LW(psrc_m1 + 4);                                                 \
-                                                                              \
-    val_m_combined = (uint64_t)(val1_m);                                      \
-    val_m_combined = (uint64_t)((val_m_combined << 32) & 0xFFFFFFFF00000000); \
-    val_m_combined = (uint64_t)(val_m_combined | (uint64_t)val0_m);           \
-                                                                              \
-    val_m_combined;                                                           \
+#define LD(psrc)                                                  \
+  ({                                                              \
+    const uint8_t *psrc_ld_m = (const uint8_t *)(psrc);           \
+    uint32_t val0_ld_m, val1_ld_m;                                \
+    uint64_t val_ld_m = 0;                                        \
+                                                                  \
+    val0_ld_m = LW(psrc_ld_m);                                    \
+    val1_ld_m = LW(psrc_ld_m + 4);                                \
+                                                                  \
+    val_ld_m = (uint64_t)(val1_ld_m);                             \
+    val_ld_m = (uint64_t)((val_ld_m << 32) & 0xFFFFFFFF00000000); \
+    val_ld_m = (uint64_t)(val_ld_m | (uint64_t)val0_ld_m);        \
+                                                                  \
+    val_ld_m;                                                     \
   })
 #endif  // (__mips == 64)
 
-#define SH(val, pdst)                                      \
-  {                                                        \
-    uint8_t *pdst_m = (uint8_t *)(pdst);                   \
-    const uint16_t val_m = (val);                          \
-                                                           \
-    __asm__ __volatile__("ush  %[val_m],  %[pdst_m]  \n\t" \
-                                                           \
-                         : [pdst_m] "=m"(*pdst_m)          \
-                         : [val_m] "r"(val_m));            \
+#define SH(val, pdst)                                            \
+  {                                                              \
+    uint8_t *pdst_sh_m = (uint8_t *)(pdst);                      \
+    const uint16_t val_sh_m = (val);                             \
+                                                                 \
+    __asm__ __volatile__("ush  %[val_sh_m],  %[pdst_sh_m]  \n\t" \
+                                                                 \
+                         : [pdst_sh_m] "=m"(*pdst_sh_m)          \
+                         : [val_sh_m] "r"(val_sh_m));            \
   }
 
-#define SW(val, pdst)                                      \
-  {                                                        \
-    uint8_t *pdst_m = (uint8_t *)(pdst);                   \
-    const uint32_t val_m = (val);                          \
-                                                           \
-    __asm__ __volatile__("usw  %[val_m],  %[pdst_m]  \n\t" \
-                                                           \
-                         : [pdst_m] "=m"(*pdst_m)          \
-                         : [val_m] "r"(val_m));            \
+#define SW(val, pdst)                                            \
+  {                                                              \
+    uint8_t *pdst_sw_m = (uint8_t *)(pdst);                      \
+    const uint32_t val_sw_m = (val);                             \
+                                                                 \
+    __asm__ __volatile__("usw  %[val_sw_m],  %[pdst_sw_m]  \n\t" \
+                                                                 \
+                         : [pdst_sw_m] "=m"(*pdst_sw_m)          \
+                         : [val_sw_m] "r"(val_sw_m));            \
   }
 
-#define SD(val, pdst)                                        \
-  {                                                          \
-    uint8_t *pdst_m1 = (uint8_t *)(pdst);                    \
-    uint32_t val0_m, val1_m;                                 \
-                                                             \
-    val0_m = (uint32_t)((val)&0x00000000FFFFFFFF);           \
-    val1_m = (uint32_t)(((val) >> 32) & 0x00000000FFFFFFFF); \
-                                                             \
-    SW(val0_m, pdst_m1);                                     \
-    SW(val1_m, pdst_m1 + 4);                                 \
+#define SD(val, pdst)                                           \
+  {                                                             \
+    uint8_t *pdst_sd_m = (uint8_t *)(pdst);                     \
+    uint32_t val0_sd_m, val1_sd_m;                              \
+                                                                \
+    val0_sd_m = (uint32_t)((val)&0x00000000FFFFFFFF);           \
+    val1_sd_m = (uint32_t)(((val) >> 32) & 0x00000000FFFFFFFF); \
+                                                                \
+    SW(val0_sd_m, pdst_sd_m);                                   \
+    SW(val1_sd_m, pdst_sd_m + 4);                               \
   }
 #endif  // (__mips_isa_rev >= 6)
 
@@ -283,97 +225,73 @@
     SD(in3, (pdst) + 3 * stride);             \
   }
 
-/* Description : Load vectors with 16 byte elements with stride
+/* Description : Load vector elements with stride
    Arguments   : Inputs  - psrc, stride
                  Outputs - out0, out1
                  Return Type - as per RTYPE
    Details     : Load 16 byte elements in 'out0' from (psrc)
                  Load 16 byte elements in 'out1' from (psrc + stride)
 */
-#define LD_B2(RTYPE, psrc, stride, out0, out1) \
+#define LD_V2(RTYPE, psrc, stride, out0, out1) \
   {                                            \
-    out0 = LD_B(RTYPE, (psrc));                \
-    out1 = LD_B(RTYPE, (psrc) + stride);       \
+    out0 = LD_V(RTYPE, (psrc));                \
+    out1 = LD_V(RTYPE, (psrc) + stride);       \
   }
-#define LD_UB2(...) LD_B2(v16u8, __VA_ARGS__)
-#define LD_SB2(...) LD_B2(v16i8, __VA_ARGS__)
+#define LD_UB2(...) LD_V2(v16u8, __VA_ARGS__)
+#define LD_SB2(...) LD_V2(v16i8, __VA_ARGS__)
+#define LD_SH2(...) LD_V2(v8i16, __VA_ARGS__)
+#define LD_SW2(...) LD_V2(v4i32, __VA_ARGS__)
 
-#define LD_B3(RTYPE, psrc, stride, out0, out1, out2) \
+#define LD_V3(RTYPE, psrc, stride, out0, out1, out2) \
   {                                                  \
-    LD_B2(RTYPE, (psrc), stride, out0, out1);        \
-    out2 = LD_B(RTYPE, (psrc) + 2 * stride);         \
+    LD_V2(RTYPE, (psrc), stride, out0, out1);        \
+    out2 = LD_V(RTYPE, (psrc) + 2 * stride);         \
   }
-#define LD_UB3(...) LD_B3(v16u8, __VA_ARGS__)
+#define LD_UB3(...) LD_V3(v16u8, __VA_ARGS__)
 
-#define LD_B4(RTYPE, psrc, stride, out0, out1, out2, out3) \
+#define LD_V4(RTYPE, psrc, stride, out0, out1, out2, out3) \
   {                                                        \
-    LD_B2(RTYPE, (psrc), stride, out0, out1);              \
-    LD_B2(RTYPE, (psrc) + 2 * stride, stride, out2, out3); \
+    LD_V2(RTYPE, (psrc), stride, out0, out1);              \
+    LD_V2(RTYPE, (psrc) + 2 * stride, stride, out2, out3); \
   }
-#define LD_UB4(...) LD_B4(v16u8, __VA_ARGS__)
-#define LD_SB4(...) LD_B4(v16i8, __VA_ARGS__)
+#define LD_UB4(...) LD_V4(v16u8, __VA_ARGS__)
+#define LD_SB4(...) LD_V4(v16i8, __VA_ARGS__)
+#define LD_SH4(...) LD_V4(v8i16, __VA_ARGS__)
 
-#define LD_B5(RTYPE, psrc, stride, out0, out1, out2, out3, out4) \
+#define LD_V5(RTYPE, psrc, stride, out0, out1, out2, out3, out4) \
   {                                                              \
-    LD_B4(RTYPE, (psrc), stride, out0, out1, out2, out3);        \
-    out4 = LD_B(RTYPE, (psrc) + 4 * stride);                     \
+    LD_V4(RTYPE, (psrc), stride, out0, out1, out2, out3);        \
+    out4 = LD_V(RTYPE, (psrc) + 4 * stride);                     \
   }
-#define LD_UB5(...) LD_B5(v16u8, __VA_ARGS__)
-#define LD_SB5(...) LD_B5(v16i8, __VA_ARGS__)
+#define LD_UB5(...) LD_V5(v16u8, __VA_ARGS__)
+#define LD_SB5(...) LD_V5(v16i8, __VA_ARGS__)
 
-#define LD_B7(RTYPE, psrc, stride, out0, out1, out2, out3, out4, out5, out6) \
+#define LD_V7(RTYPE, psrc, stride, out0, out1, out2, out3, out4, out5, out6) \
   {                                                                          \
-    LD_B5(RTYPE, (psrc), stride, out0, out1, out2, out3, out4);              \
-    LD_B2(RTYPE, (psrc) + 5 * stride, stride, out5, out6);                   \
+    LD_V5(RTYPE, (psrc), stride, out0, out1, out2, out3, out4);              \
+    LD_V2(RTYPE, (psrc) + 5 * stride, stride, out5, out6);                   \
   }
-#define LD_SB7(...) LD_B7(v16i8, __VA_ARGS__)
+#define LD_SB7(...) LD_V7(v16i8, __VA_ARGS__)
 
-#define LD_B8(RTYPE, psrc, stride, out0, out1, out2, out3, out4, out5, out6, \
+#define LD_V8(RTYPE, psrc, stride, out0, out1, out2, out3, out4, out5, out6, \
               out7)                                                          \
   {                                                                          \
-    LD_B4(RTYPE, (psrc), stride, out0, out1, out2, out3);                    \
-    LD_B4(RTYPE, (psrc) + 4 * stride, stride, out4, out5, out6, out7);       \
+    LD_V4(RTYPE, (psrc), stride, out0, out1, out2, out3);                    \
+    LD_V4(RTYPE, (psrc) + 4 * stride, stride, out4, out5, out6, out7);       \
   }
-#define LD_UB8(...) LD_B8(v16u8, __VA_ARGS__)
-#define LD_SB8(...) LD_B8(v16i8, __VA_ARGS__)
+#define LD_UB8(...) LD_V8(v16u8, __VA_ARGS__)
+#define LD_SB8(...) LD_V8(v16i8, __VA_ARGS__)
+#define LD_SH8(...) LD_V8(v8i16, __VA_ARGS__)
 
-/* Description : Load vectors with 8 halfword elements with stride
-   Arguments   : Inputs  - psrc, stride
-                 Outputs - out0, out1
-   Details     : Load 8 halfword elements in 'out0' from (psrc)
-                 Load 8 halfword elements in 'out1' from (psrc + stride)
-*/
-#define LD_H2(RTYPE, psrc, stride, out0, out1) \
-  {                                            \
-    out0 = LD_H(RTYPE, (psrc));                \
-    out1 = LD_H(RTYPE, (psrc) + (stride));     \
-  }
-#define LD_SH2(...) LD_H2(v8i16, __VA_ARGS__)
-
-#define LD_H4(RTYPE, psrc, stride, out0, out1, out2, out3) \
-  {                                                        \
-    LD_H2(RTYPE, (psrc), stride, out0, out1);              \
-    LD_H2(RTYPE, (psrc) + 2 * stride, stride, out2, out3); \
-  }
-#define LD_SH4(...) LD_H4(v8i16, __VA_ARGS__)
-
-#define LD_H8(RTYPE, psrc, stride, out0, out1, out2, out3, out4, out5, out6, \
-              out7)                                                          \
-  {                                                                          \
-    LD_H4(RTYPE, (psrc), stride, out0, out1, out2, out3);                    \
-    LD_H4(RTYPE, (psrc) + 4 * stride, stride, out4, out5, out6, out7);       \
-  }
-#define LD_SH8(...) LD_H8(v8i16, __VA_ARGS__)
-
-#define LD_H16(RTYPE, psrc, stride, out0, out1, out2, out3, out4, out5, out6,  \
+#define LD_V16(RTYPE, psrc, stride, out0, out1, out2, out3, out4, out5, out6,  \
                out7, out8, out9, out10, out11, out12, out13, out14, out15)     \
   {                                                                            \
-    LD_H8(RTYPE, (psrc), stride, out0, out1, out2, out3, out4, out5, out6,     \
+    LD_V8(RTYPE, (psrc), stride, out0, out1, out2, out3, out4, out5, out6,     \
           out7);                                                               \
-    LD_H8(RTYPE, (psrc) + 8 * stride, stride, out8, out9, out10, out11, out12, \
+    LD_V8(RTYPE, (psrc) + 8 * stride, stride, out8, out9, out10, out11, out12, \
           out13, out14, out15);                                                \
   }
-#define LD_SH16(...) LD_H16(v8i16, __VA_ARGS__)
+#define LD_SH16(...) LD_V16(v8i16, __VA_ARGS__)
 
 /* Description : Load 4x4 block of signed halfword elements from 1D source
                  data into 4 vectors (Each vector with 4 signed halfwords)
@@ -388,79 +306,35 @@
     out3 = (v8i16)__msa_ilvl_d((v2i64)out2, (v2i64)out2); \
   }
 
-/* Description : Load 2 vectors of signed word elements with stride
-   Arguments   : Inputs  - psrc, stride
-                 Outputs - out0, out1
-                 Return Type - signed word
-*/
-#define LD_SW2(psrc, stride, out0, out1) \
-  {                                      \
-    out0 = LD_SW((psrc));                \
-    out1 = LD_SW((psrc) + stride);       \
-  }
-
-/* Description : Store vectors of 16 byte elements with stride
+/* Description : Store vectors with stride
    Arguments   : Inputs - in0, in1, pdst, stride
    Details     : Store 16 byte elements from 'in0' to (pdst)
                  Store 16 byte elements from 'in1' to (pdst + stride)
 */
-#define ST_B2(RTYPE, in0, in1, pdst, stride) \
+#define ST_V2(RTYPE, in0, in1, pdst, stride) \
   {                                          \
-    ST_B(RTYPE, in0, (pdst));                \
-    ST_B(RTYPE, in1, (pdst) + stride);       \
+    ST_V(RTYPE, in0, (pdst));                \
+    ST_V(RTYPE, in1, (pdst) + stride);       \
   }
-#define ST_UB2(...) ST_B2(v16u8, __VA_ARGS__)
+#define ST_UB2(...) ST_V2(v16u8, __VA_ARGS__)
+#define ST_SH2(...) ST_V2(v8i16, __VA_ARGS__)
+#define ST_SW2(...) ST_V2(v4i32, __VA_ARGS__)
 
-#define ST_B4(RTYPE, in0, in1, in2, in3, pdst, stride)   \
+#define ST_V4(RTYPE, in0, in1, in2, in3, pdst, stride)   \
   {                                                      \
-    ST_B2(RTYPE, in0, in1, (pdst), stride);              \
-    ST_B2(RTYPE, in2, in3, (pdst) + 2 * stride, stride); \
+    ST_V2(RTYPE, in0, in1, (pdst), stride);              \
+    ST_V2(RTYPE, in2, in3, (pdst) + 2 * stride, stride); \
   }
-#define ST_UB4(...) ST_B4(v16u8, __VA_ARGS__)
+#define ST_UB4(...) ST_V4(v16u8, __VA_ARGS__)
+#define ST_SH4(...) ST_V4(v8i16, __VA_ARGS__)
 
-#define ST_B8(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7, pdst, stride) \
+#define ST_V8(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7, pdst, stride) \
   {                                                                        \
-    ST_B4(RTYPE, in0, in1, in2, in3, pdst, stride);                        \
-    ST_B4(RTYPE, in4, in5, in6, in7, (pdst) + 4 * stride, stride);         \
+    ST_V4(RTYPE, in0, in1, in2, in3, pdst, stride);                        \
+    ST_V4(RTYPE, in4, in5, in6, in7, (pdst) + 4 * stride, stride);         \
   }
-#define ST_UB8(...) ST_B8(v16u8, __VA_ARGS__)
-
-/* Description : Store vectors of 8 halfword elements with stride
-   Arguments   : Inputs - in0, in1, pdst, stride
-   Details     : Store 8 halfword elements from 'in0' to (pdst)
-                 Store 8 halfword elements from 'in1' to (pdst + stride)
-*/
-#define ST_H2(RTYPE, in0, in1, pdst, stride) \
-  {                                          \
-    ST_H(RTYPE, in0, (pdst));                \
-    ST_H(RTYPE, in1, (pdst) + stride);       \
-  }
-#define ST_SH2(...) ST_H2(v8i16, __VA_ARGS__)
-
-#define ST_H4(RTYPE, in0, in1, in2, in3, pdst, stride)   \
-  {                                                      \
-    ST_H2(RTYPE, in0, in1, (pdst), stride);              \
-    ST_H2(RTYPE, in2, in3, (pdst) + 2 * stride, stride); \
-  }
-#define ST_SH4(...) ST_H4(v8i16, __VA_ARGS__)
-
-#define ST_H8(RTYPE, in0, in1, in2, in3, in4, in5, in6, in7, pdst, stride) \
-  {                                                                        \
-    ST_H4(RTYPE, in0, in1, in2, in3, (pdst), stride);                      \
-    ST_H4(RTYPE, in4, in5, in6, in7, (pdst) + 4 * stride, stride);         \
-  }
-#define ST_SH8(...) ST_H8(v8i16, __VA_ARGS__)
-
-/* Description : Store vectors of word elements with stride
-   Arguments   : Inputs - in0, in1, pdst, stride
-   Details     : Store 4 word elements from 'in0' to (pdst)
-                 Store 4 word elements from 'in1' to (pdst + stride)
-*/
-#define ST_SW2(in0, in1, pdst, stride) \
-  {                                    \
-    ST_SW(in0, (pdst));                \
-    ST_SW(in1, (pdst) + stride);       \
-  }
+#define ST_UB8(...) ST_V8(v16u8, __VA_ARGS__)
+#define ST_SH8(...) ST_V8(v8i16, __VA_ARGS__)
 
 /* Description : Store 2x4 byte block to destination memory from input vector
    Arguments   : Inputs - in, stidx, pdst, stride
@@ -681,6 +555,7 @@
 #define VSHF_B2_UB(...) VSHF_B2(v16u8, __VA_ARGS__)
 #define VSHF_B2_SB(...) VSHF_B2(v16i8, __VA_ARGS__)
 #define VSHF_B2_UH(...) VSHF_B2(v8u16, __VA_ARGS__)
+#define VSHF_B2_SH(...) VSHF_B2(v8i16, __VA_ARGS__)
 
 #define VSHF_B4(RTYPE, in0, in1, mask0, mask1, mask2, mask3, out0, out1, out2, \
                 out3)                                                          \
@@ -1049,6 +924,7 @@
   }
 #define INSERT_D2_UB(...) INSERT_D2(v16u8, __VA_ARGS__)
 #define INSERT_D2_SB(...) INSERT_D2(v16i8, __VA_ARGS__)
+#define INSERT_D2_SH(...) INSERT_D2(v8i16, __VA_ARGS__)
 
 /* Description : Interleave even byte elements from vectors
    Arguments   : Inputs  - in0, in1, in2, in3
@@ -1307,6 +1183,7 @@
     out1 = (RTYPE)__msa_ilvl_w((v4i32)in0, (v4i32)in1); \
   }
 #define ILVRL_W2_UB(...) ILVRL_W2(v16u8, __VA_ARGS__)
+#define ILVRL_W2_SB(...) ILVRL_W2(v16i8, __VA_ARGS__)
 #define ILVRL_W2_SH(...) ILVRL_W2(v8i16, __VA_ARGS__)
 #define ILVRL_W2_SW(...) ILVRL_W2(v4i32, __VA_ARGS__)
 
@@ -1559,6 +1436,12 @@
    Details     : Each element of vector 'in0' is right shifted by 'shift' and
                  the result is written in-place. 'shift' is a GP variable.
 */
+#define SRA_2V(in0, in1, shift) \
+  {                             \
+    in0 = in0 >> shift;         \
+    in1 = in1 >> shift;         \
+  }
+
 #define SRA_4V(in0, in1, in2, in3, shift) \
   {                                       \
     in0 = in0 >> shift;                   \
@@ -1712,6 +1595,25 @@
                                                   \
     sign_m = __msa_clti_s_h((v8i16)in, 0);        \
     out = (v4i32)__msa_ilvr_h(sign_m, (v8i16)in); \
+  }
+
+/* Description : Sign extend byte elements from input vector and return
+                 halfword results in pair of vectors
+   Arguments   : Input   - in           (byte vector)
+                 Outputs - out0, out1   (sign extended halfword vectors)
+                 Return Type - signed halfword
+   Details     : Sign bit of byte elements from input vector 'in' is
+                 extracted and interleaved right with same vector 'in0' to
+                 generate 8 signed halfword elements in 'out0'
+                 Then interleaved left with same vector 'in0' to
+                 generate 8 signed halfword elements in 'out1'
+*/
+#define UNPCK_SB_SH(in, out0, out1)       \
+  {                                       \
+    v16i8 tmp_m;                          \
+                                          \
+    tmp_m = __msa_clti_s_b((v16i8)in, 0); \
+    ILVRL_B2_SH(tmp_m, in, out0, out1);   \
   }
 
 /* Description : Zero extend unsigned byte elements to halfword elements
@@ -1872,8 +1774,6 @@
     out5 = (v16u8)__msa_ilvod_w((v4i32)tmp3_m, (v4i32)tmp2_m);                \
                                                                               \
     tmp2_m = (v16u8)__msa_ilvod_h((v8i16)tmp5_m, (v8i16)tmp4_m);              \
-    tmp2_m = (v16u8)__msa_ilvod_h((v8i16)tmp5_m, (v8i16)tmp4_m);              \
-    tmp3_m = (v16u8)__msa_ilvod_h((v8i16)tmp7_m, (v8i16)tmp6_m);              \
     tmp3_m = (v16u8)__msa_ilvod_h((v8i16)tmp7_m, (v8i16)tmp6_m);              \
     out3 = (v16u8)__msa_ilvev_w((v4i32)tmp3_m, (v4i32)tmp2_m);                \
     out7 = (v16u8)__msa_ilvod_w((v4i32)tmp3_m, (v4i32)tmp2_m);                \
@@ -2027,19 +1927,17 @@
 
 /* Description : Converts inputs to unsigned bytes, interleave, average & store
                  as 8x4 unsigned byte block
-   Arguments   : Inputs - in0, in1, in2, in3, dst0, dst1, dst2, dst3,
-                          pdst, stride
+   Arguments   : Inputs  - in0, in1, in2, in3, dst0, dst1, pdst, stride
 */
-#define CONVERT_UB_AVG_ST8x4_UB(in0, in1, in2, in3, dst0, dst1, dst2, dst3, \
-                                pdst, stride)                               \
-  {                                                                         \
-    v16u8 tmp0_m, tmp1_m, tmp2_m, tmp3_m;                                   \
-                                                                            \
-    tmp0_m = PCKEV_XORI128_UB(in0, in1);                                    \
-    tmp1_m = PCKEV_XORI128_UB(in2, in3);                                    \
-    ILVR_D2_UB(dst1, dst0, dst3, dst2, tmp2_m, tmp3_m);                     \
-    AVER_UB2_UB(tmp0_m, tmp2_m, tmp1_m, tmp3_m, tmp0_m, tmp1_m);            \
-    ST8x4_UB(tmp0_m, tmp1_m, pdst, stride);                                 \
+#define CONVERT_UB_AVG_ST8x4_UB(in0, in1, in2, in3, dst0, dst1, pdst, stride) \
+  {                                                                           \
+    v16u8 tmp0_m, tmp1_m;                                                     \
+    uint8_t *pdst_m = (uint8_t *)(pdst);                                      \
+                                                                              \
+    tmp0_m = PCKEV_XORI128_UB(in0, in1);                                      \
+    tmp1_m = PCKEV_XORI128_UB(in2, in3);                                      \
+    AVER_UB2_UB(tmp0_m, dst0, tmp1_m, dst1, tmp0_m, tmp1_m);                  \
+    ST8x4_UB(tmp0_m, tmp1_m, pdst_m, stride);                                 \
   }
 
 /* Description : Pack even byte elements and store byte vector in destination
