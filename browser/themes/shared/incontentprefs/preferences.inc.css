@@ -304,6 +304,11 @@ button > hbox > label {
 }
 
 /* Home Pane */
+#homepageGroup > .groupbox-title {
+  /* The Restore Defaults button will make this heading taller than the other
+   * sections, so lower the top margin to account for it. */
+  margin-top: 6px;
+}
 #homepageGroup menulist,
 #homepageGroup textbox {
   margin: 5px 0;
