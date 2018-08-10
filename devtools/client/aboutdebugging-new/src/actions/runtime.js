@@ -131,4 +131,5 @@ module.exports = {
   disconnectRuntime,
   inspectDebugTarget,
   requestTabs,
+  requestExtensions,
 };
