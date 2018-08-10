@@ -4,12 +4,14 @@
 
 @import "chrome://global/skin/in-content/common.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/App.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/ConnectPage.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/DebugTargetItem.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/DebugTargetList.css";
-@import "resource://devtools/client/aboutdebugging-new/src/components/ConnectPage.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/RuntimeInfo.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/Sidebar.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/SidebarItem.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/ExtensionDetail.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/TabDetail.css";
 
 :root {
   /* Import css variables from common.css */
@@ -20,6 +22,11 @@ html, body {
   margin: 0;
   padding: 0;
   color: var(--text-color);
+}
+
+dd {
+  margin: 0;
+  padding: 0;
 }
 
 ul {

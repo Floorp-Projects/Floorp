@@ -17,7 +17,7 @@ class DebugTargetList extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      targets: PropTypes.arrayOf(PropTypes.Object).isRequired,
+      targets: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
@@ -28,16 +28,7 @@ class DebugTargetList extends PureComponent {
       {
         className: "debug-target-list",
       },
-      targets.map(target =>
-        DebugTargetItem({
-          dispatch,
-          icon: target.icon,
-          id: target.id,
-          name: target.name,
-          type: target.type,
-          url: target.url,
-        })
-      ),
+      targets.map(target => DebugTargetItem({ dispatch, target })),
     );
   }
 }

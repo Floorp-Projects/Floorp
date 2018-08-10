@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * The current layout of extension detail is
+ *
+ *  +----------------+--------------------+
+ *  | detail name dt | detail value dd    |
+ *  | (120px)        | (auto)             |
+ *  +----------------+--------------------+
+ *  | detail name dt | detail value dd    |
+ *  +----------------+--------------------+
+ *  | detail name dt | detail value dd    |
+ *  +----------------+--------------------+
+ */
+.extension-detail {
+  display: grid;
+  grid-template-columns: 120px auto;
+  margin-block-start: 4px;
+}
+
+.extension-detail__manifest {
+  margin-inline-start: 1ch;
+}
