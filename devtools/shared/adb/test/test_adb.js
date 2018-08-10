@@ -178,7 +178,7 @@ add_task({
 
   ok(await check(), "adb is now running");
 
-  await ADB.stop(true /* sync */);
+  await ADB.stop();
   ok(!ADB.ready);
 
   await extension.unload();
@@ -221,7 +221,7 @@ add_task({
 
   equal(receivedDeviceId, "1234567890");
 
-  await ADB.stop(true /* sync */);
+  await ADB.stop();
   ok(!ADB.ready);
 
   await extension.unload();

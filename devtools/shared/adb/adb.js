@@ -124,16 +124,12 @@ const ADB = {
   /**
    * Stop the ADB server, but only if we started it.  If it was started before
    * us, we return immediately.
-   *
-   * @param boolean sync
-   *        In case, we do need to kill the server, this param is passed through
-   *        to kill to determine whether it's a sync operation.
    */
-  async stop(sync) {
+  async stop() {
     if (!this.didRunInitially) {
       return; // We didn't start the server, nothing to do
     }
-    await this.kill(sync);
+    await this.kill();
     // Make sure the ADB server stops listening because kill() above doesn't
     // mean that the ADB server stops, it means that 'adb kill-server' command
     // just finished, so that it's possible that the ADB server is still alive.
@@ -145,16 +141,8 @@ const ADB = {
   /**
    * Kill the ADB server.  We do this by running ADB again, passing it
    * the "kill-server" argument.
-   *
-   * @param {Boolean} sync
-   *        Whether or not to kill the server synchronously.  In general,
-   *        this should be false.  But on Windows, an add-on may fail to update
-   *        if its copy of ADB is running when Firefox tries to update it.
-   *        So add-ons who observe their own updates and kill the ADB server
-   *        beforehand should do so synchronously on Windows to make sure
-   *        the update doesn't race the killing.
    */
-  async kill(sync) {
+  async kill() {
     const process = Cc["@mozilla.org/process/util;1"]
                     .createInstance(Ci.nsIProcess);
     const adbFile = await this.adbFilePromise;
@@ -164,35 +152,10 @@ const ADB = {
     process.noShell = true;
     const params = ["kill-server"];
 
-    if (sync) {
-      process.run(true, params, params.length);
-      dumpn("adb kill-server: " + process.exitValue);
-      this.ready = false;
-      this.didRunInitially = false;
-    } else {
-      const self = this;
-      process.runAsync(params, params.length, {
-        observe(subject, topic, data) {
-          switch (topic) {
-            case "process-finished":
-              dumpn("adb kill-server: " + process.exitValue);
-              Services.obs.notifyObservers(null, "adb-killed");
-              self.ready = false;
-              self.didRunInitially = false;
-              break;
-            case "process-failed":
-              dumpn("adb kill-server failure: " + process.exitValue);
-              // It's hard to say whether or not ADB is ready at this point,
-              // but it seems safer to assume that it isn't, so code that wants
-              // to use it later will try to restart it.
-              Services.obs.notifyObservers(null, "adb-killed");
-              self.ready = false;
-              self.didRunInitially = false;
-              break;
-          }
-        }
-      }, false);
-    }
+    process.run(true, params, params.length);
+    dumpn("adb kill-server: " + process.exitValue);
+    this.ready = false;
+    this.didRunInitially = false;
   },
 
   // Start tracking devices connecting and disconnecting from the host.
