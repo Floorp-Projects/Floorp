@@ -339,6 +339,15 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
     sandboxedLoadingPrincipalInfo = sandboxedLoadingPrincipalInfoTemp;
   }
 
+  OptionalPrincipalInfo topLevelPrincipalInfo = mozilla::void_t();
+  if (aLoadInfo->TopLevelPrincipal()) {
+    PrincipalInfo topLevelPrincipalInfoTemp;
+    rv = PrincipalToPrincipalInfo(aLoadInfo->TopLevelPrincipal(),
+                                  &topLevelPrincipalInfoTemp);
+    NS_ENSURE_SUCCESS(rv, rv);
+    topLevelPrincipalInfo = topLevelPrincipalInfoTemp;
+  }
+
   OptionalPrincipalInfo topLevelStorageAreaPrincipalInfo = mozilla::void_t();
   if (aLoadInfo->TopLevelStorageAreaPrincipal()) {
     PrincipalInfo topLevelStorageAreaPrincipalInfoTemp;
@@ -408,6 +417,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       triggeringPrincipalInfo,
       principalToInheritInfo,
       sandboxedLoadingPrincipalInfo,
+      topLevelPrincipalInfo,
       topLevelStorageAreaPrincipalInfo,
       optionalResultPrincipalURI,
       aLoadInfo->GetSecurityFlags(),
@@ -488,6 +498,13 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsCOMPtr<nsIPrincipal> topLevelPrincipal;
+  if (loadInfoArgs.topLevelPrincipalInfo().type() != OptionalPrincipalInfo::Tvoid_t) {
+    topLevelPrincipal =
+      PrincipalInfoToPrincipal(loadInfoArgs.topLevelPrincipalInfo(), &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsCOMPtr<nsIPrincipal> topLevelStorageAreaPrincipal;
   if (loadInfoArgs.topLevelStorageAreaPrincipalInfo().type() != OptionalPrincipalInfo::Tvoid_t) {
     topLevelStorageAreaPrincipal =
@@ -561,6 +578,7 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           triggeringPrincipal,
                           principalToInherit,
                           sandboxedLoadingPrincipal,
+                          topLevelPrincipal,
                           topLevelStorageAreaPrincipal,
                           resultPrincipalURI,
                           clientInfo,

@@ -42,6 +42,7 @@ struct LoadInfoArgs
   PrincipalInfo               triggeringPrincipalInfo;
   OptionalPrincipalInfo       principalToInheritInfo;
   OptionalPrincipalInfo       sandboxedLoadingPrincipalInfo;
+  OptionalPrincipalInfo       topLevelPrincipalInfo;
   OptionalPrincipalInfo       topLevelStorageAreaPrincipalInfo;
   OptionalURIParams           resultPrincipalURI;
   uint32_t                    securityFlags;

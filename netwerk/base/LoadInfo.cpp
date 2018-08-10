@@ -155,6 +155,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       nsGlobalWindowInner* innerWindow =
         nsGlobalWindowInner::Cast(contextOuter->GetCurrentInnerWindow());
       if (innerWindow) {
+        mTopLevelPrincipal = innerWindow->GetTopLevelPrincipal();
         mTopLevelStorageAreaPrincipal =
           innerWindow->GetTopLevelStorageAreaPrincipal();
       }
@@ -346,6 +347,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   nsGlobalWindowInner* innerWindow =
     nsGlobalWindowInner::Cast(aOuterWindow->GetCurrentInnerWindow());
   if (innerWindow) {
+    mTopLevelPrincipal = innerWindow->GetTopLevelPrincipal();
     mTopLevelStorageAreaPrincipal =
       innerWindow->GetTopLevelStorageAreaPrincipal();
   }
@@ -371,6 +373,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mTriggeringPrincipal(rhs.mTriggeringPrincipal)
   , mPrincipalToInherit(rhs.mPrincipalToInherit)
   , mSandboxedLoadingPrincipal(rhs.mSandboxedLoadingPrincipal)
+  , mTopLevelPrincipal(rhs.mTopLevelPrincipal)
   , mTopLevelStorageAreaPrincipal(rhs.mTopLevelStorageAreaPrincipal)
   , mResultPrincipalURI(rhs.mResultPrincipalURI)
   , mClientInfo(rhs.mClientInfo)
@@ -423,6 +426,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsIPrincipal* aPrincipalToInherit,
                    nsIPrincipal* aSandboxedLoadingPrincipal,
+                   nsIPrincipal* aTopLevelPrincipal,
                    nsIPrincipal* aTopLevelStorageAreaPrincipal,
                    nsIURI* aResultPrincipalURI,
                    const Maybe<ClientInfo>& aClientInfo,
@@ -464,6 +468,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
+  , mTopLevelPrincipal(aTopLevelPrincipal)
   , mTopLevelStorageAreaPrincipal(aTopLevelStorageAreaPrincipal)
   , mResultPrincipalURI(aResultPrincipalURI)
   , mClientInfo(aClientInfo)
@@ -645,6 +650,19 @@ LoadInfo::GetSandboxedLoadingPrincipal(nsIPrincipal** aPrincipal)
   nsCOMPtr<nsIPrincipal> copy(mSandboxedLoadingPrincipal);
   copy.forget(aPrincipal);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetTopLevelPrincipal(nsIPrincipal** aTopLevelPrincipal)
+{
+  NS_IF_ADDREF(*aTopLevelPrincipal = mTopLevelPrincipal);
+  return NS_OK;
+}
+
+nsIPrincipal*
+LoadInfo::TopLevelPrincipal()
+{
+  return mTopLevelPrincipal;
 }
 
 NS_IMETHODIMP
