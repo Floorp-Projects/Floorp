@@ -23,7 +23,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsFrameMessageManager.h"
 #include "nsIPresShell.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
 #include "nsITooltipListener.h"
@@ -82,8 +81,7 @@ class CoalescedWheelData;
 
 class TabChildMessageManager : public ContentFrameMessageManager,
                                public nsIMessageSender,
-                               public nsIScriptObjectPrincipal,
-                               public nsIGlobalObject,
+                               public DispatcherTrait,
                                public nsSupportsWeakReference
 {
 public:
@@ -94,14 +92,8 @@ public:
 
   void MarkForCC();
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override
-  {
-    MOZ_CRASH("We should never get here!");
-  }
-  bool WrapGlobalObject(JSContext* aCx,
-                        JS::RealmOptions& aOptions,
-                        JS::MutableHandle<JSObject*> aReflector);
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(ErrorResult& aError) override;
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) override;
@@ -115,9 +107,6 @@ public:
   {
     aVisitor.mForceContentDispatch = true;
   }
-
-  virtual nsIPrincipal* GetPrincipal() override;
-  virtual JSObject* GetGlobalJSObject() override;
 
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
@@ -163,12 +152,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TabChildBase)
 
-  virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::RealmOptions& aOptions,
-                                JS::MutableHandle<JSObject*> aReflector) override
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto)
   {
-    return mTabChildGlobal->WrapGlobalObject(aCx, aOptions, aReflector);
+    return mTabChildMessageManager->WrapObject(aCx, aGivenProto);
   }
+
 
   virtual nsIWebNavigation* WebNavigation() const = 0;
   virtual PuppetWidget* WebWidget() = 0;
@@ -201,7 +190,7 @@ protected:
   bool UpdateFrameHandler(const mozilla::layers::FrameMetrics& aFrameMetrics);
 
 protected:
-  RefPtr<TabChildMessageManager> mTabChildGlobal;
+  RefPtr<TabChildMessageManager> mTabChildMessageManager;
   nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
@@ -281,7 +270,7 @@ public:
 
   TabChildMessageManager* GetMessageManager()
   {
-    return mTabChildGlobal;
+    return mTabChildMessageManager;
   }
 
   /**
@@ -773,7 +762,7 @@ private:
 
   void ActorDestroy(ActorDestroyReason why) override;
 
-  bool InitTabChildGlobal();
+  bool InitTabChildMessageManager();
 
   void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const layers::LayersId& aLayersId,

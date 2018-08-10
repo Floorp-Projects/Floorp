@@ -2612,8 +2612,8 @@ ContentChild::RecvUpdateSharedData(const FileDescriptor& aMapFile,
                         std::move(blobImpls),
                         std::move(aChangedKeys));
   } else {
-    mSharedData = new SharedMap(ContentProcessMessageManager::Get(), aMapFile,
-                                aMapSize, std::move(blobImpls));
+    mSharedData = new SharedMap(ContentProcessMessageManager::Get()->GetParentObject(),
+                                aMapFile, aMapSize, std::move(blobImpls));
   }
 
   return IPC_OK();

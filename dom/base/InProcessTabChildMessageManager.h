@@ -20,8 +20,6 @@
 #include "nsIDocShell.h"
 #include "nsCOMArray.h"
 #include "nsIRunnable.h"
-#include "nsIGlobalObject.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsWeakReference.h"
 
 namespace mozilla {
@@ -38,8 +36,6 @@ namespace dom {
 class InProcessTabChildMessageManager final : public ContentFrameMessageManager,
                                               public nsMessageManagerScriptExecutor,
                                               public nsIInProcessContentFrameMessageManager,
-                                              public nsIGlobalObject,
-                                              public nsIScriptObjectPrincipal,
                                               public nsSupportsWeakReference,
                                               public mozilla::dom::ipc::MessageManagerCallback
 {
@@ -49,19 +45,17 @@ private:
   InProcessTabChildMessageManager(nsIDocShell* aShell, nsIContent* aOwner,
                                   nsFrameMessageManager* aChrome);
 
-  bool Init();
-
 public:
   static already_AddRefed<InProcessTabChildMessageManager> Create(nsIDocShell* aShell,
                                                                   nsIContent* aOwner,
                                                                   nsFrameMessageManager* aChrome)
   {
-    RefPtr<InProcessTabChildMessageManager> global =
+    RefPtr<InProcessTabChildMessageManager> mm =
       new InProcessTabChildMessageManager(aShell, aOwner, aChrome);
 
-    NS_ENSURE_TRUE(global->Init(), nullptr);
+    NS_ENSURE_TRUE(mm->Init(), nullptr);
 
-    return global.forget();
+    return mm.forget();
   }
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -71,13 +65,7 @@ public:
   void MarkForCC();
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override
-  {
-    MOZ_CRASH("We should never get here!");
-  }
-  virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::RealmOptions& aOptions,
-                                JS::MutableHandle<JSObject*> aReflector) override;
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   virtual already_AddRefed<nsPIDOMWindowOuter>
     GetContent(ErrorResult& aError) override;
@@ -114,7 +102,6 @@ public:
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
-  virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
   void LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope);
   void FireUnloadEvent();
   void DisconnectEventListeners();
@@ -135,11 +122,6 @@ public:
   void SetChromeMessageManager(nsFrameMessageManager* aParent)
   {
     mChromeMessageManager = aParent;
-  }
-
-  virtual JSObject* GetGlobalJSObject() override
-  {
-    return GetWrapper();
   }
 
   already_AddRefed<nsFrameLoader> GetFrameLoader();
