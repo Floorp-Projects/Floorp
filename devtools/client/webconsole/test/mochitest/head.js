@@ -347,27 +347,29 @@ function hasFocus(node) {
 }
 
 /**
- * Set the value of the JsTerm and its caret position, and wait for the autocompletion
- * to be updated.
+ * Set the value of the JsTerm and its caret position, and fire a completion request.
  *
  * @param {JsTerm} jsterm
  * @param {String} value : The value to set the jsterm to.
  * @param {Integer} caretPosition : The index where to place the cursor. A negative
  *                  number will place the caret at (value.length - offset) position.
  *                  Default to value.length (caret set at the end).
+ * @param {Integer} completionType : One of the following jsterm property
+ *                   - COMPLETE_FORWARD
+ *                   - COMPLETE_BACKWARD
+ *                   - COMPLETE_HINT_ONLY
+ *                   - COMPLETE_PAGEUP
+ *                   - COMPLETE_PAGEDOWN
+ *                  Will default to COMPLETE_HINT_ONLY.
  * @returns {Promise} resolves when the jsterm is completed.
  */
-async function setInputValueForAutocompletion(
+function jstermSetValueAndComplete(
   jsterm,
   value,
   caretPosition = value.length,
+  completionType
 ) {
-  jsterm.setInputValue("");
-  jsterm.focus();
-
-  const updated = jsterm.once("autocomplete-updated");
-  EventUtils.sendString(value);
-  await updated;
+  jsterm.setInputValue(value);
 
   if (caretPosition < 0) {
     caretPosition = value.length + caretPosition;
@@ -384,6 +386,27 @@ async function setInputValueForAutocompletion(
       jsterm.editor.setCursor(jsterm.editor.getPosition(caretPosition));
     }
   }
+
+  return jstermComplete(jsterm, completionType);
+}
+
+/**
+ * Fires a completion request on the jsterm with the specified completionType
+ *
+ * @param {JsTerm} jsterm
+ * @param {Integer} completionType : One of the following jsterm property
+ *                   - COMPLETE_FORWARD
+ *                   - COMPLETE_BACKWARD
+ *                   - COMPLETE_HINT_ONLY
+ *                   - COMPLETE_PAGEUP
+ *                   - COMPLETE_PAGEDOWN
+ *                  Will default to COMPLETE_HINT_ONLY.
+ * @returns {Promise} resolves when the jsterm is completed.
+ */
+function jstermComplete(jsterm, completionType = jsterm.COMPLETE_HINT_ONLY) {
+  const updated = jsterm.once("autocomplete-updated");
+  jsterm.complete(completionType);
+  return updated;
 }
 
 /**
