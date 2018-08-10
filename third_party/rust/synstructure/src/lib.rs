@@ -22,8 +22,9 @@
 //! extern crate synstructure;
 //! #[macro_use]
 //! extern crate quote;
+//! extern crate proc_macro2;
 //!
-//! fn walkfields_derive(s: synstructure::Structure) -> quote::Tokens {
+//! fn walkfields_derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
 //!     let body = s.each(|bi| quote!{
 //!         walk(#bi)
 //!     });
@@ -95,8 +96,9 @@
 //! extern crate synstructure;
 //! #[macro_use]
 //! extern crate quote;
+//! extern crate proc_macro2;
 //!
-//! fn interest_derive(mut s: synstructure::Structure) -> quote::Tokens {
+//! fn interest_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream {
 //!     let body = s.fold(false, |acc, bi| quote!{
 //!         #acc || synstructure_test_traits::Interest::interesting(#bi)
 //!     });
@@ -179,6 +181,7 @@ use syn::visit::{self, Visit};
 // implementations.
 #[doc(hidden)]
 pub use quote::*;
+use proc_macro2::TokenStream;
 
 use unicode_xid::UnicodeXID;
 
@@ -204,7 +207,7 @@ pub enum BindStyle {
 }
 
 impl ToTokens for BindStyle {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         match *self {
             BindStyle::Move => {}
             BindStyle::MoveMut => quote_spanned!(Span::call_site() => mut).to_tokens(tokens),
@@ -249,7 +252,7 @@ fn sanitize_ident(s: &str) -> Ident {
         if res.ends_with('_') && c == '_' { continue }
         res.push(c);
     }
-    Ident::from(res)
+    Ident::new(&res, Span::call_site())
 }
 
 // Internal method to merge two Generics objects together intelligently.
@@ -307,7 +310,7 @@ pub struct BindingInfo<'a> {
 }
 
 impl<'a> ToTokens for BindingInfo<'a> {
-    fn to_tokens(&self, tokens: &mut Tokens) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         self.binding.to_tokens(tokens);
     }
 }
@@ -337,14 +340,14 @@ impl<'a> BindingInfo<'a> {
     /// let s = Structure::new(&di);
     ///
     /// assert_eq!(
-    ///     s.variants()[0].bindings()[0].pat(),
+    ///     s.variants()[0].bindings()[0].pat().to_string(),
     ///     quote! {
     ///         ref __binding_0
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn pat(&self) -> Tokens {
+    pub fn pat(&self) -> TokenStream {
         let BindingInfo {
             ref binding,
             ref style,
@@ -367,6 +370,7 @@ impl<'a> BindingInfo<'a> {
     /// # #[macro_use] extern crate quote;
     /// # extern crate synstructure;
     /// # #[macro_use] extern crate syn;
+    /// # extern crate proc_macro2;
     /// # use synstructure::*;
     /// # fn main() {
     /// let di: syn::DeriveInput = parse_quote! {
@@ -379,7 +383,7 @@ impl<'a> BindingInfo<'a> {
     ///
     /// assert_eq!(
     ///     s.variants()[0].bindings()[0].referenced_ty_params(),
-    ///     &[&(syn::Ident::from("T"))]
+    ///     &[&(syn::Ident::new("T", proc_macro2::Span::call_site()))]
     /// );
     /// # }
     /// ```
@@ -428,7 +432,7 @@ fn get_ty_params<'a>(field: &Field, generics: &Generics) -> Vec<bool> {
         fn visit_ident(&mut self, id: &Ident) {
             for (idx, i) in self.generics.params.iter().enumerate() {
                 if let GenericParam::Type(ref tparam) = *i {
-                    if tparam.ident == id {
+                    if tparam.ident == *id {
                         self.result[idx] = true;
                     }
                 }
@@ -529,15 +533,15 @@ impl<'a> VariantInfo<'a> {
     /// let s = Structure::new(&di);
     ///
     /// assert_eq!(
-    ///     s.variants()[0].pat(),
+    ///     s.variants()[0].pat().to_string(),
     ///     quote!{
     ///         A::B(ref __binding_0, ref __binding_1,)
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn pat(&self) -> Tokens {
-        let mut t = Tokens::new();
+    pub fn pat(&self) -> TokenStream {
+        let mut t = TokenStream::empty();
         if let Some(prefix) = self.prefix {
             prefix.to_tokens(&mut t);
             quote!(::).to_tokens(&mut t);
@@ -596,28 +600,28 @@ impl<'a> VariantInfo<'a> {
     /// let s = Structure::new(&di);
     ///
     /// assert_eq!(
-    ///     s.variants()[0].construct(|_, i| quote!(#i)),
+    ///     s.variants()[0].construct(|_, i| quote!(#i)).to_string(),
     ///
     ///     quote!{
     ///         A::B(0usize, 1usize,)
-    ///     }
+    ///     }.to_string()
     /// );
     ///
     /// assert_eq!(
-    ///     s.variants()[1].construct(|_, i| quote!(#i)),
+    ///     s.variants()[1].construct(|_, i| quote!(#i)).to_string(),
     ///
     ///     quote!{
     ///         A::C{ v: 0usize, }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn construct<F, T>(&self, mut func: F) -> Tokens
+    pub fn construct<F, T>(&self, mut func: F) -> TokenStream
     where
         F: FnMut(&Field, usize) -> T,
         T: ToTokens,
     {
-        let mut t = Tokens::new();
+        let mut t = TokenStream::empty();
         if let Some(prefix) = self.prefix {
             quote!(#prefix ::).to_tokens(&mut t);
         }
@@ -669,24 +673,24 @@ impl<'a> VariantInfo<'a> {
     /// let s = Structure::new(&di);
     ///
     /// assert_eq!(
-    ///     s.variants()[0].each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.variants()[0].each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B(ref __binding_0, ref __binding_1,) => {
     ///             { println!("{:?}", __binding_0) }
     ///             { println!("{:?}", __binding_1) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn each<F, R>(&self, mut f: F) -> Tokens
+    pub fn each<F, R>(&self, mut f: F) -> TokenStream
     where
         F: FnMut(&BindingInfo) -> R,
         R: ToTokens,
     {
         let pat = self.pat();
-        let mut body = Tokens::new();
+        let mut body = TokenStream::empty();
         for binding in &self.bindings {
             token::Brace::default().surround(&mut body, |body| {
                 f(binding).to_tokens(body);
@@ -718,19 +722,19 @@ impl<'a> VariantInfo<'a> {
     /// let s = Structure::new(&di);
     ///
     /// assert_eq!(
-    ///     s.variants()[0].fold(quote!(0), |acc, bi| quote!(#acc + #bi)),
+    ///     s.variants()[0].fold(quote!(0), |acc, bi| quote!(#acc + #bi)).to_string(),
     ///
     ///     quote!{
     ///         A::B(ref __binding_0, ref __binding_1,) => {
     ///             0 + __binding_0 + __binding_1
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn fold<F, I, R>(&self, init: I, mut f: F) -> Tokens
+    pub fn fold<F, I, R>(&self, init: I, mut f: F) -> TokenStream
     where
-        F: FnMut(Tokens, &BindingInfo) -> R,
+        F: FnMut(TokenStream, &BindingInfo) -> R,
         I: ToTokens,
         R: ToTokens,
     {
@@ -756,6 +760,7 @@ impl<'a> VariantInfo<'a> {
     /// # #[macro_use] extern crate quote;
     /// # extern crate synstructure;
     /// # #[macro_use] extern crate syn;
+    /// # extern crate proc_macro2;
     /// # use synstructure::*;
     /// # fn main() {
     /// let di: syn::DeriveInput = parse_quote! {
@@ -767,11 +772,11 @@ impl<'a> VariantInfo<'a> {
     /// let mut s = Structure::new(&di);
     ///
     /// s.variants_mut()[0].filter(|bi| {
-    ///     bi.ast().ident == Some("b".into())
+    ///     bi.ast().ident == Some(syn::Ident::new("b", proc_macro2::Span::call_site()))
     /// });
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B{ b: ref __binding_1, .. } => {
@@ -780,7 +785,7 @@ impl<'a> VariantInfo<'a> {
     ///         A::C{ a: ref __binding_0, } => {
     ///             { println!("{:?}", __binding_0) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -828,7 +833,7 @@ impl<'a> VariantInfo<'a> {
     /// s.variants_mut()[0].bind_with(|bi| BindStyle::RefMut);
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B(ref mut __binding_0, ref mut __binding_1,) => {
@@ -838,7 +843,7 @@ impl<'a> VariantInfo<'a> {
     ///         A::C(ref __binding_0,) => {
     ///             { println!("{:?}", __binding_0) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -879,7 +884,7 @@ impl<'a> VariantInfo<'a> {
     /// s.variants_mut()[0].binding_name(|bi, i| bi.ident.clone().unwrap());
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B{ a: ref a, b: ref b, } => {
@@ -889,7 +894,7 @@ impl<'a> VariantInfo<'a> {
     ///         A::C{ a: ref __binding_0, } => {
     ///             { println!("{:?}", __binding_0) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -917,6 +922,7 @@ impl<'a> VariantInfo<'a> {
     /// # #[macro_use] extern crate quote;
     /// # extern crate synstructure;
     /// # #[macro_use] extern crate syn;
+    /// # extern crate proc_macro2;
     /// # use synstructure::*;
     /// # fn main() {
     /// let di: syn::DeriveInput = parse_quote! {
@@ -929,7 +935,7 @@ impl<'a> VariantInfo<'a> {
     ///
     /// assert_eq!(
     ///     s.variants()[0].bindings()[0].referenced_ty_params(),
-    ///     &[&(syn::Ident::from("T"))]
+    ///     &[&(syn::Ident::new("T", proc_macro2::Span::call_site()))]
     /// );
     /// # }
     /// ```
@@ -1053,7 +1059,7 @@ impl<'a> Structure<'a> {
     /// let s = Structure::new(&di);
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B(ref __binding_0, ref __binding_1,) => {
@@ -1063,16 +1069,16 @@ impl<'a> Structure<'a> {
     ///         A::C(ref __binding_0,) => {
     ///             { println!("{:?}", __binding_0) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn each<F, R>(&self, mut f: F) -> Tokens
+    pub fn each<F, R>(&self, mut f: F) -> TokenStream
     where
         F: FnMut(&BindingInfo) -> R,
         R: ToTokens,
     {
-        let mut t = Tokens::new();
+        let mut t = TokenStream::empty();
         for variant in &self.variants {
             variant.each(&mut f).to_tokens(&mut t);
         }
@@ -1107,7 +1113,7 @@ impl<'a> Structure<'a> {
     /// let s = Structure::new(&di);
     ///
     /// assert_eq!(
-    ///     s.fold(quote!(0), |acc, bi| quote!(#acc + #bi)),
+    ///     s.fold(quote!(0), |acc, bi| quote!(#acc + #bi)).to_string(),
     ///
     ///     quote!{
     ///         A::B(ref __binding_0, ref __binding_1,) => {
@@ -1116,17 +1122,17 @@ impl<'a> Structure<'a> {
     ///         A::C(ref __binding_0,) => {
     ///             0 + __binding_0
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn fold<F, I, R>(&self, init: I, mut f: F) -> Tokens
+    pub fn fold<F, I, R>(&self, init: I, mut f: F) -> TokenStream
     where
-        F: FnMut(Tokens, &BindingInfo) -> R,
+        F: FnMut(TokenStream, &BindingInfo) -> R,
         I: ToTokens,
         R: ToTokens,
     {
-        let mut t = Tokens::new();
+        let mut t = TokenStream::empty();
         for variant in &self.variants {
             variant.fold(&init, &mut f).to_tokens(&mut t);
         }
@@ -1162,7 +1168,7 @@ impl<'a> Structure<'a> {
     ///     s.each_variant(|v| {
     ///         let name = &v.ast().ident;
     ///         quote!(println!(stringify!(#name)))
-    ///     }),
+    ///     }).to_string(),
     ///
     ///     quote!{
     ///         A::B(ref __binding_0, ref __binding_1,) => {
@@ -1171,16 +1177,16 @@ impl<'a> Structure<'a> {
     ///         A::C(ref __binding_0,) => {
     ///             println!(stringify!(C))
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn each_variant<F, R>(&self, mut f: F) -> Tokens
+    pub fn each_variant<F, R>(&self, mut f: F) -> TokenStream
     where
         F: FnMut(&VariantInfo) -> R,
         R: ToTokens,
     {
-        let mut t = Tokens::new();
+        let mut t = TokenStream::empty();
         for variant in &self.variants {
             let pat = variant.pat();
             let body = f(variant);
@@ -1206,6 +1212,7 @@ impl<'a> Structure<'a> {
     /// # #[macro_use] extern crate quote;
     /// # extern crate synstructure;
     /// # #[macro_use] extern crate syn;
+    /// # extern crate proc_macro2;
     /// # use synstructure::*;
     /// # fn main() {
     /// let di: syn::DeriveInput = parse_quote! {
@@ -1216,10 +1223,12 @@ impl<'a> Structure<'a> {
     /// };
     /// let mut s = Structure::new(&di);
     ///
-    /// s.filter(|bi| { bi.ast().ident == Some("a".into()) });
+    /// s.filter(|bi| {
+    ///     bi.ast().ident == Some(syn::Ident::new("a", proc_macro2::Span::call_site()))
+    /// });
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B{ a: ref __binding_0, .. } => {
@@ -1228,7 +1237,7 @@ impl<'a> Structure<'a> {
     ///         A::C{ a: ref __binding_0, } => {
     ///             { println!("{:?}", __binding_0) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -1270,14 +1279,14 @@ impl<'a> Structure<'a> {
     /// s.filter_variants(|v| v.ast().ident != "B");
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::C(ref __binding_0,) => {
     ///             { println!("{:?}", __binding_0) }
     ///         }
     ///         _ => {}
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -1325,7 +1334,7 @@ impl<'a> Structure<'a> {
     /// s.bind_with(|bi| BindStyle::RefMut);
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B(ref mut __binding_0, ref mut __binding_1,) => {
@@ -1335,7 +1344,7 @@ impl<'a> Structure<'a> {
     ///         A::C(ref mut __binding_0,) => {
     ///             { println!("{:?}", __binding_0) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -1376,7 +1385,7 @@ impl<'a> Structure<'a> {
     /// s.binding_name(|bi, i| bi.ident.clone().unwrap());
     ///
     /// assert_eq!(
-    ///     s.each(|bi| quote!(println!("{:?}", #bi))),
+    ///     s.each(|bi| quote!(println!("{:?}", #bi))).to_string(),
     ///
     ///     quote!{
     ///         A::B{ a: ref a, b: ref b, } => {
@@ -1386,7 +1395,7 @@ impl<'a> Structure<'a> {
     ///         A::C{ a: ref a, } => {
     ///             { println!("{:?}", a) }
     ///         }
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -1414,6 +1423,7 @@ impl<'a> Structure<'a> {
     /// # #[macro_use] extern crate quote;
     /// # extern crate synstructure;
     /// # #[macro_use] extern crate syn;
+    /// # extern crate proc_macro2;
     /// # use synstructure::*;
     /// # fn main() {
     /// let di: syn::DeriveInput = parse_quote! {
@@ -1428,7 +1438,7 @@ impl<'a> Structure<'a> {
     ///
     /// assert_eq!(
     ///     s.referenced_ty_params(),
-    ///     &[&(syn::Ident::from("T"))]
+    ///     &[&(syn::Ident::new("T", proc_macro2::Span::call_site()))]
     /// );
     /// # }
     /// ```
@@ -1468,7 +1478,7 @@ impl<'a> Structure<'a> {
     ///         quote!{
     ///                 fn a() {}
     ///         }
-    ///     ),
+    ///     ).to_string(),
     ///     quote!{
     ///         #[allow(non_upper_case_globals)]
     ///         const _DERIVE_krate_Trait_X_FOR_A: () = {
@@ -1481,7 +1491,7 @@ impl<'a> Structure<'a> {
     ///                 fn a() {}
     ///             }
     ///         };
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
@@ -1593,7 +1603,7 @@ impl<'a> Structure<'a> {
     /// assert_eq!(
     ///     s.bound_impl(quote!(krate::Trait), quote!{
     ///         fn a() {}
-    ///     }),
+    ///     }).to_string(),
     ///     quote!{
     ///         #[allow(non_upper_case_globals)]
     ///         const _DERIVE_krate_Trait_FOR_A: () = {
@@ -1605,14 +1615,14 @@ impl<'a> Structure<'a> {
     ///                 fn a() {}
     ///             }
     ///         };
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn bound_impl<P: ToTokens,B: ToTokens>(&self, path: P, body: B) -> Tokens {
+    pub fn bound_impl<P: ToTokens,B: ToTokens>(&self, path: P, body: B) -> TokenStream {
         self.impl_internal(
-            path.into_tokens(),
-            body.into_tokens(),
+            path.into_token_stream(),
+            body.into_token_stream(),
             quote!(),
             true,
         )
@@ -1667,7 +1677,7 @@ impl<'a> Structure<'a> {
     /// assert_eq!(
     ///     s.unsafe_bound_impl(quote!(krate::Trait), quote!{
     ///         fn a() {}
-    ///     }),
+    ///     }).to_string(),
     ///     quote!{
     ///         #[allow(non_upper_case_globals)]
     ///         const _DERIVE_krate_Trait_FOR_A: () = {
@@ -1679,14 +1689,14 @@ impl<'a> Structure<'a> {
     ///                 fn a() {}
     ///             }
     ///         };
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn unsafe_bound_impl<P: ToTokens, B: ToTokens>(&self, path: P, body: B) -> Tokens {
+    pub fn unsafe_bound_impl<P: ToTokens, B: ToTokens>(&self, path: P, body: B) -> TokenStream {
         self.impl_internal(
-            path.into_tokens(),
-            body.into_tokens(),
+            path.into_token_stream(),
+            body.into_token_stream(),
             quote!(unsafe),
             true,
         )
@@ -1734,7 +1744,7 @@ impl<'a> Structure<'a> {
     /// assert_eq!(
     ///     s.unbound_impl(quote!(krate::Trait), quote!{
     ///         fn a() {}
-    ///     }),
+    ///     }).to_string(),
     ///     quote!{
     ///         #[allow(non_upper_case_globals)]
     ///         const _DERIVE_krate_Trait_FOR_A: () = {
@@ -1743,14 +1753,14 @@ impl<'a> Structure<'a> {
     ///                 fn a() {}
     ///             }
     ///         };
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn unbound_impl<P: ToTokens, B: ToTokens>(&self, path: P, body: B) -> Tokens {
+    pub fn unbound_impl<P: ToTokens, B: ToTokens>(&self, path: P, body: B) -> TokenStream {
         self.impl_internal(
-            path.into_tokens(),
-            body.into_tokens(),
+            path.into_token_stream(),
+            body.into_token_stream(),
             quote!(),
             false,
         )
@@ -1798,7 +1808,7 @@ impl<'a> Structure<'a> {
     /// assert_eq!(
     ///     s.unsafe_unbound_impl(quote!(krate::Trait), quote!{
     ///         fn a() {}
-    ///     }),
+    ///     }).to_string(),
     ///     quote!{
     ///         #[allow(non_upper_case_globals)]
     ///         const _DERIVE_krate_Trait_FOR_A: () = {
@@ -1807,15 +1817,15 @@ impl<'a> Structure<'a> {
     ///                 fn a() {}
     ///             }
     ///         };
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
     #[deprecated]
-    pub fn unsafe_unbound_impl<P: ToTokens, B: ToTokens>(&self, path: P, body: B) -> Tokens {
+    pub fn unsafe_unbound_impl<P: ToTokens, B: ToTokens>(&self, path: P, body: B) -> TokenStream {
         self.impl_internal(
-            path.into_tokens(),
-            body.into_tokens(),
+            path.into_token_stream(),
+            body.into_token_stream(),
             quote!(unsafe),
             false,
         )
@@ -1823,11 +1833,11 @@ impl<'a> Structure<'a> {
 
     fn impl_internal(
         &self,
-        path: Tokens,
-        body: Tokens,
-        safety: Tokens,
+        path: TokenStream,
+        body: TokenStream,
+        safety: TokenStream,
         add_bounds: bool,
-    ) -> Tokens {
+    ) -> TokenStream {
         let name = &self.ast.ident;
         let mut gen_clone = self.ast.generics.clone();
         gen_clone.params.extend(self.extra_impl.clone().into_iter());
@@ -1844,8 +1854,8 @@ impl<'a> Structure<'a> {
 
         let dummy_const: Ident = sanitize_ident(&format!(
             "_DERIVE_{}_FOR_{}",
-            (&bound).into_tokens(),
-            name.into_tokens(),
+            (&bound).into_token_stream(),
+            name.into_token_stream(),
         ));
 
         // This function is smart. If a global path is passed, no extern crate
@@ -1878,7 +1888,7 @@ impl<'a> Structure<'a> {
     ///
     /// # Syntax
     ///
-    /// This function accepts its arguments as a `Tokens`. The recommended way
+    /// This function accepts its arguments as a `TokenStream`. The recommended way
     /// to call this function is passing the result of invoking the `quote!`
     /// macro to it.
     ///
@@ -1963,7 +1973,7 @@ impl<'a> Structure<'a> {
     ///
     /// # Panics
     ///
-    /// This function will panic if the input `Tokens` is not well-formed, or
+    /// This function will panic if the input `TokenStream` is not well-formed, or
     /// if additional type parameters added by `impl<..>` conflict with generic
     /// type parameters on the original struct.
     ///
@@ -1992,7 +2002,7 @@ impl<'a> Structure<'a> {
     ///         gen impl krate::Trait for @Self {
     ///             fn a() {}
     ///         }
-    ///     }),
+    ///     }).to_string(),
     ///     quote!{
     ///         #[allow(non_upper_case_globals)]
     ///         const _DERIVE_krate_Trait_FOR_A: () = {
@@ -2005,7 +2015,7 @@ impl<'a> Structure<'a> {
     ///                 fn a() {}
     ///             }
     ///         };
-    ///     }
+    ///     }.to_string()
     /// );
     ///
     /// // NOTE: You can also add extra generics after the impl
@@ -2018,7 +2028,7 @@ impl<'a> Structure<'a> {
     ///         {
     ///             fn a() {}
     ///         }
-    ///     }),
+    ///     }).to_string(),
     ///     quote!{
     ///         #[allow(non_upper_case_globals)]
     ///         const _DERIVE_krate_Trait_X_FOR_A: () = {
@@ -2032,11 +2042,11 @@ impl<'a> Structure<'a> {
     ///                 fn a() {}
     ///             }
     ///         };
-    ///     }
+    ///     }.to_string()
     /// );
     /// # }
     /// ```
-    pub fn gen_impl(&self, cfg: Tokens) -> Tokens {
+    pub fn gen_impl(&self, cfg: TokenStream) -> TokenStream {
         use syn::buffer::{TokenBuffer, Cursor};
         use syn::synom::PResult;
         use proc_macro2::TokenStream;
@@ -2054,7 +2064,7 @@ impl<'a> Structure<'a> {
         > {
             // `gen`
             let (id, c) = syn!(c, Ident)?;
-            if id.as_ref() != "gen" {
+            if id != "gen" {
                 let ((), _) = reject!(c,)?;
                 unreachable!()
             }
@@ -2132,8 +2142,8 @@ impl<'a> Structure<'a> {
 
         let dummy_const: Ident = sanitize_ident(&format!(
             "_DERIVE_{}_FOR_{}",
-            (&bound).into_tokens(),
-            name.into_tokens(),
+            (&bound).into_token_stream(),
+            name.into_token_stream(),
         ));
 
         quote! {

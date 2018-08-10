@@ -5,12 +5,12 @@
 
 # XXX: We mark fails-if to these tests for now to enable styled border in WR.
 # We should remove them after Bug 1399485 is fixed.
-fuzzy(80,1500) fails-if(webrender) == border-dotted-interaction.html masked.html
-fuzzy(80,1500) fails-if(webrender) == border-dotted-no-radius.html masked.html
-fuzzy(80,1500) fails-if(webrender) == border-dotted-radius.html masked.html
-fuzzy(80,1500) fails-if(webrender) == border-dashed-no-radius.html masked.html
-fuzzy(80,1500) fails-if(webrender) == border-dashed-radius.html masked.html
-fuzzy(80,1500) fails-if(webrender) == border-mixed.html masked.html
-fuzzy(80,1500) fails-if(webrender) == border-dashed-non-integer.html masked.html
-fuzzy(80,1500) fails-if(webrender) == border-dashed-radius-zoom.html masked-zoom.html
-fuzzy(80,1500) fails-if(webrender) == border-dotted-radius-zero.html masked-small.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dotted-interaction.html masked.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dotted-no-radius.html masked.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dotted-radius.html masked.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-no-radius.html masked.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-radius.html masked.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-mixed.html masked.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-non-integer.html masked.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dashed-radius-zoom.html masked-zoom.html
+fuzzy(0-80,0-1500) fails-if(webrender) == border-dotted-radius-zero.html masked-small.html

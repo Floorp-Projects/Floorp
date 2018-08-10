@@ -13,7 +13,7 @@ export class _LinkMenu extends React.PureComponent {
     const {site, index, source, isPrivateBrowsingEnabled, siteInfo, platform} = props;
 
     // Handle special case of default site
-    const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
+    const propOptions = (!site.isDefault || site.searchTopSite) ? props.options : DEFAULT_SITE_MENU_OPTIONS;
 
     const options = propOptions.map(o => LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled, siteInfo, platform)).map(option => {
       const {action, impression, id, string_id, type, userEvent} = option;

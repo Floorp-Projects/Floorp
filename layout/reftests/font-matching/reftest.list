@@ -78,18 +78,18 @@ fails-if(gtkWidget) == familyname-escapedidents.html familyname-escapedidents-re
 != normalmedium.html normalmedium-notref.html
 
 # Linux fails due to bug 604815
-fuzzy-if(OSX==1010&&browserIsRemote,1,23) == weightmapping-12.html weightmapping-12-ref.html
+fuzzy-if(OSX==1010&&browserIsRemote,0-1,0-23) == weightmapping-12.html weightmapping-12-ref.html
 == weightmapping-25.html weightmapping-25-ref.html
 == weightmapping-45.html weightmapping-45-ref.html
 == weightmapping-458.html weightmapping-458-ref.html
 == weightmapping-478.html weightmapping-478-ref.html
 == weightmapping-7.html weightmapping-7-ref.html
-fuzzy-if(OSX==1010,1,30) == weightmapping-12579.html weightmapping-12579-ref.html
+fuzzy-if(OSX==1010,0-1,0-30) == weightmapping-12579.html weightmapping-12579-ref.html
 
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == stretchmapping-all.html stretchmapping-all-ref.html # Bug 1392106
 == stretchmapping-reverse.html stretchmapping-reverse-ref.html
-fuzzy-if(OSX==1010&&browserIsRemote,1,17) fuzzy-if(Android,4,8) == stretchmapping-35.html stretchmapping-35-ref.html
-fuzzy-if(OSX==1010,3,5) == stretchmapping-137.html stretchmapping-137-ref.html
+fuzzy-if(OSX==1010&&browserIsRemote,0-1,0-17) fuzzy-if(Android,0-4,0-8) == stretchmapping-35.html stretchmapping-35-ref.html
+fuzzy-if(OSX==1010,0-3,0-5) == stretchmapping-137.html stretchmapping-137-ref.html
 
 # test for font-stretch using @font-face
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == font-stretch-1.html font-stretch-1-ref.html # Bug 1392106

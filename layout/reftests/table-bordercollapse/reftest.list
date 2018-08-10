@@ -110,11 +110,11 @@ fails-if(webrender) == frame_vsides_rules_none.html frame_vsides_rules_none_ref.
 # Fuzzy because for some reason the corner beveling is antialiased differently.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(255,40) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
+fuzzy(0-255,0-40) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
 # Fuzzy because for some reason the corner beveling is antialiased differently.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(255,40) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
-fuzzy(2,11000) == 1324524.html 1324524-ref.html
+fuzzy(0-255,0-40) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
+fuzzy(0-2,0-11000) == 1324524.html 1324524-ref.html
 == 1384602-1a.html 1384602-1-ref.html
 == 1384602-1b.html 1384602-1-ref.html

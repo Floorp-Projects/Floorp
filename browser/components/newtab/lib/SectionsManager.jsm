@@ -422,7 +422,7 @@ class SectionsFeed {
     this.store.dispatch(ac.SetPref("sectionOrder", orderedSections.join(",")));
   }
 
-  onAction(action) {
+  async onAction(action) {
     switch (action.type) {
       case at.INIT:
         SectionsManager.onceInitialized(this.init);
@@ -435,7 +435,7 @@ class SectionsFeed {
         if (action.data) {
           const matched = action.data.name.match(/^(feeds.section.(\S+)).options$/i);
           if (matched) {
-            SectionsManager.addBuiltInSection(matched[1], action.data.value);
+            await SectionsManager.addBuiltInSection(matched[1], action.data.value);
             this.store.dispatch({type: at.SECTION_OPTIONS_CHANGED, data: matched[2]});
           }
         }

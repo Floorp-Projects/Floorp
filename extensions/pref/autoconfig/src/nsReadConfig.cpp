@@ -8,6 +8,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIAppStartup.h"
+#include "nsContentUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIAutoConfig.h"
 #include "nsIComponentManager.h"
@@ -24,7 +25,8 @@
 #include "nsCRT.h"
 #include "nspr.h"
 #include "nsXULAppAPI.h"
-#include "nsContentUtils.h"
+
+extern bool sandboxEnabled;
 
 extern mozilla::LazyLogModule MCD;
 
@@ -95,14 +97,23 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
 
     if (!nsCRT::strcmp(aTopic, NS_PREFSERVICE_READ_TOPIC_ID)) {
         rv = readConfigFile();
-        // Don't show error alerts if the sandbox is enabled
-        if (NS_FAILED(rv) && !sandboxEnabled) {
-            rv = DisplayError();
-            if (NS_FAILED(rv)) {
-                nsCOMPtr<nsIAppStartup> appStartup =
-                    do_GetService(NS_APPSTARTUP_CONTRACTID);
-                if (appStartup)
-                    appStartup->Quit(nsIAppStartup::eAttemptQuit);
+        // Don't show error alerts if the sandbox is enabled, just show
+        // sandbox warning.
+        if (NS_FAILED(rv)) {
+            if (sandboxEnabled) {
+                nsContentUtils::ReportToConsoleNonLocalized(
+                NS_LITERAL_STRING("Autoconfig is sandboxed by default. See https://www.mozilla.org/firefox/enterprise/releasenotes/ for more information."),
+                nsIScriptError::warningFlag,
+                NS_LITERAL_CSTRING("autoconfig"),
+                nullptr);
+            } else {
+                rv = DisplayError();
+                if (NS_FAILED(rv)) {
+                    nsCOMPtr<nsIAppStartup> appStartup =
+                        do_GetService(NS_APPSTARTUP_CONTRACTID);
+                    if (appStartup)
+                        appStartup->Quit(nsIAppStartup::eAttemptQuit);
+                }
             }
         }
     }
@@ -133,19 +144,20 @@ nsresult nsReadConfig::readConfigFile()
     if (NS_FAILED(rv))
         return rv;
 
-    // This preference is set in the all.js or all-ns.js (depending whether
-    // running mozilla or netscp6)
+    NS_NAMED_LITERAL_CSTRING(channel, NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
 
-    bool sandboxEnabled = false;
-    rv = defaultPrefBranch->GetBoolPref("general.config.sandbox_enabled",
-                                        &sandboxEnabled);
+    bool sandboxEnabled = channel.EqualsLiteral("beta") || channel.EqualsLiteral("release");
+
+    mozilla::Unused << defaultPrefBranch->GetBoolPref("general.config.sandbox_enabled",
+                                             &sandboxEnabled);
 
     rv = defaultPrefBranch->GetCharPref("general.config.filename",
                                         lockFileName);
 
-    MOZ_LOG(MCD, LogLevel::Debug, ("general.config.filename = %s\n", lockFileName.get()));
     if (NS_FAILED(rv))
         return rv;
+
+    MOZ_LOG(MCD, LogLevel::Debug, ("general.config.filename = %s\n", lockFileName.get()));
 
     for (size_t index = 0, len = mozilla::ArrayLength(gBlockedConfigs); index < len;
          ++index) {

@@ -87,15 +87,15 @@ add_task(async function clickWithPrefSet() {
     gBrowser.selectedTab = tab1;
   }, [tab1, tab2, tab3]);
 
-  info("Switching tab with gBrowser.selectedTab should trigger event");
+  info("Clearing multiselection by switching tab with gBrowser.selectedTab should trigger event");
   await expectEvent(async () => {
     await BrowserTestUtils.switchTab(gBrowser, () => {
       gBrowser.selectedTab = tab3;
     });
-  }, [tab1, tab2, tab3]);
+  }, [tab3]);
 
-  info("Clearing multiselection with click should trigger event");
-  await expectEvent(async () => {
+  info("Click on the active and the only mutliselected tab should not trigger event");
+  await expectNoEvent(async () => {
     await triggerClickOn(tab3, {});
   }, [tab3]);
 
