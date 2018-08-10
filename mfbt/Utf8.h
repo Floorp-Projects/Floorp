@@ -263,7 +263,7 @@ IsTrailingUnit(Utf8Unit aUnit)
 /**
  * Given |aLeadUnit| that is a non-ASCII code unit, a pointer to an |Iter aIter|
  * that (initially) itself points one unit past |aLeadUnit|, and
- * |const EndIter aEnd| that denotes the end of the UTF-8 data when compared
+ * |const EndIter& aEnd| that denotes the end of the UTF-8 data when compared
  * against |*aIter| using |aEnd - *aIter|:
  *
  * If |aLeadUnit| and subsequent code units computed using |*aIter| (up to
@@ -299,7 +299,7 @@ template<typename Iter,
          class OnNotShortestForm>
 MOZ_ALWAYS_INLINE Maybe<char32_t>
 DecodeOneUtf8CodePointInline(const Utf8Unit aLeadUnit,
-                             Iter* aIter, const EndIter aEnd,
+                             Iter* aIter, const EndIter& aEnd,
                              OnBadLeadUnit aOnBadLeadUnit,
                              OnNotEnoughUnits aOnNotEnoughUnits,
                              OnBadTrailingUnit aOnBadTrailingUnit,
@@ -391,7 +391,7 @@ template<typename Iter,
          class OnNotShortestForm>
 inline Maybe<char32_t>
 DecodeOneUtf8CodePoint(const Utf8Unit aLeadUnit,
-                       Iter* aIter, const EndIter aEnd,
+                       Iter* aIter, const EndIter& aEnd,
                        OnBadLeadUnit aOnBadLeadUnit,
                        OnNotEnoughUnits aOnNotEnoughUnits,
                        OnBadTrailingUnit aOnBadTrailingUnit,
@@ -414,7 +414,7 @@ DecodeOneUtf8CodePoint(const Utf8Unit aLeadUnit,
 template<typename Iter, typename EndIter>
 MOZ_ALWAYS_INLINE Maybe<char32_t>
 DecodeOneUtf8CodePointInline(const Utf8Unit aLeadUnit,
-                             Iter* aIter, const EndIter aEnd)
+                             Iter* aIter, const EndIter& aEnd)
 {
   // aOnBadLeadUnit is called when |aLeadUnit| itself is an invalid lead unit in
   // a multi-unit code point.  It is passed no arguments: the caller already has
@@ -466,7 +466,7 @@ DecodeOneUtf8CodePointInline(const Utf8Unit aLeadUnit,
 template<typename Iter, typename EndIter>
 inline Maybe<char32_t>
 DecodeOneUtf8CodePoint(const Utf8Unit aLeadUnit,
-                       Iter* aIter, const EndIter aEnd)
+                       Iter* aIter, const EndIter& aEnd)
 {
   return DecodeOneUtf8CodePointInline(aLeadUnit, aIter, aEnd);
 }
