@@ -75,7 +75,6 @@ class GeckoEngineSession(
      * is used so we're not blocking anything else. In case of calling this
      * method from onPause or similar, we also want a synchronous response.
      */
-    @Throws(GeckoEngineException::class)
     override fun saveState(): Map<String, Any> = runBlocking {
         val stateMap = CompletableDeferred<Map<String, Any>>()
 

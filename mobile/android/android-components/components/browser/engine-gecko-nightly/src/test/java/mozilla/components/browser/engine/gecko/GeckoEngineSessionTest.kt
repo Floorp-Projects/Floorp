@@ -12,7 +12,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -194,20 +193,6 @@ class GeckoEngineSessionTest {
 
         `when`(engineSession.geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
         assertEquals(stateMap, engineSession.saveState())
-    }
-
-    @Test
-    fun testSaveStateThrowsException() {
-        ThreadUtils.sGeckoHandler = Handler()
-
-        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
-        engineSession.geckoSession = mock(GeckoSession::class.java)
-        `when`(engineSession.geckoSession.saveState()).thenThrow(GeckoEngineException("test"))
-
-        try {
-            engineSession.saveState()
-            fail("Expected GeckoEngineException")
-        } catch (e: GeckoEngineException) { }
     }
 
     @Test
