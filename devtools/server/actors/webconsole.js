@@ -1430,7 +1430,7 @@ WebConsoleActor.prototype =
       try {
         string = formatCommand(string);
       } catch (e) {
-        string = `throw "${e}"`;
+        string = `throw "${e.message || e}"`;
       }
     }
 
