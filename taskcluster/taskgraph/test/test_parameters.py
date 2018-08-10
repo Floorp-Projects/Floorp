@@ -75,7 +75,7 @@ class TestParameters(unittest.TestCase):
         When ``load_parameters_file`` is passed overrides, they are included in
         the generated parameters.
         """
-        self.assert_equal(
+        self.assertEqual(
             load_parameters_file('', overrides={'some': 'data'}),
             {'some': 'data'})
 
@@ -85,7 +85,7 @@ class TestParameters(unittest.TestCase):
         loaded from a file.
         """
         with MockedOpen({"params.json": '{"some": "data"}'}):
-            self.assert_equal(
+            self.assertEqual(
                 load_parameters_file('params.json', overrides={'some': 'other'}),
                 {'some': 'other'})
 
