@@ -1016,7 +1016,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "media.media-capabilities.enabled",
    MediaCapabilitiesEnabled,
-  RelaxedAtomicBool, true
+  RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
