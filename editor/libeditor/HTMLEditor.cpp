@@ -2660,17 +2660,17 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
   bool isLinkTag = aTagName && IsLinkTag(*aTagName);
   bool isNamedAnchorTag = aTagName && IsNamedAnchorTag(*aTagName);
 
-  RefPtr<nsRange> range = aSelection.GetRangeAt(0);
-  if (NS_WARN_IF(!range)) {
+  RefPtr<nsRange> firstRange = aSelection.GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
-  nsIContent* startNode = range->GetChildAtStartOffset();
+  nsCOMPtr<nsINode> startContainer = firstRange->GetStartContainer();
+  nsIContent* startNode = firstRange->GetChildAtStartOffset();
 
-  nsCOMPtr<nsINode> endContainer = range->GetEndContainer();
-  nsIContent* endNode = range->GetChildAtEndOffset();
+  nsCOMPtr<nsINode> endContainer = firstRange->GetEndContainer();
+  nsIContent* endNode = firstRange->GetChildAtEndOffset();
 
   // Optimization for a single selected element
   if (startContainer && startContainer == endContainer &&
@@ -2725,66 +2725,74 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
     }
   }
 
-  if (!aSelection.IsCollapsed()) {
-    RefPtr<nsRange> currange = aSelection.GetRangeAt(0);
-    if (currange) {
-      nsresult rv;
-      nsCOMPtr<nsIContentIterator> iter =
-        do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
-                          &rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        aRv.Throw(rv);
-        return nullptr;
-      }
-
-      bool found = !!selectedElement;
-      const nsAtom* tagNameLookingFor = aTagName;
-      iter->Init(currange);
-      // loop through the content iterator for each content node
-      while (!iter->IsDone()) {
-        // Query interface to cast nsIContent to Element
-        //  then get tagType to compare to  aTagName
-        // Clone node of each desired type and append it to the aDomFrag
-        selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
-        if (selectedElement) {
-          // If we already found a node, then we have another element,
-          //  thus there's not just one element selected
-          if (found) {
-            break;
-          }
-
-          if (!tagNameLookingFor) {
-            // Get name of first selected element
-            tagNameLookingFor = selectedElement->NodeInfo()->NameAtom();
-          }
-
-          // The "A" tag is a pain,
-          //  used for both link(href is set) and "Named Anchor"
-          if ((isLinkTag &&
-               HTMLEditUtils::IsLink(selectedElement)) ||
-              (isNamedAnchorTag &&
-               HTMLEditUtils::IsNamedAnchor(selectedElement))) {
-            found = true;
-          }
-          // All other tag names are handled here.
-          else if (tagNameLookingFor ==
-                     selectedElement->NodeInfo()->NameAtom()) {
-            found = true;
-          }
-
-          if (!found) {
-            // Check if node we have is really part of the selection???
-            break;
-          }
-        }
-        iter->Next();
-      }
-    } else {
-      // Should never get here?
-      NS_WARNING("isCollapsed was FALSE, but no elements found in selection\n");
-    }
+  if (aSelection.IsCollapsed()) {
+    return selectedElement.forget();
   }
 
+  nsresult rv;
+  nsCOMPtr<nsIContentIterator> iter =
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
+                      &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  bool found = !!selectedElement;
+  const nsAtom* tagNameLookingFor = aTagName;
+  iter->Init(firstRange);
+  // loop through the content iterator for each content node
+  while (!iter->IsDone()) {
+    // Update selectedElement with new node.  If it's not an element node,
+    // clear it.
+    // XXX This is really odd since this means that the result depends on
+    //     what is the last node.  If the last node is an element node,
+    //     it may be returned even if it does not match with aTagName.
+    //     On the other hand, if last node is not an element, i.e., we have
+    //     not found proper element node, we return nullptr as this method
+    //     name explains.
+    selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
+    if (selectedElement) {
+      // If we already found a node, then we have another element,
+      // thus there's not just one element selected.
+      // XXX Really odd.  The new element node may be different name element.
+      //     So, this means that we return any next element node if we find
+      //     proper element as first element in the range.
+      if (found) {
+        break;
+      }
+
+      if (!tagNameLookingFor) {
+        // Get name of first selected element
+        // XXX Looks like that this is necessary only for making the following
+        //     handler work as expected...  Why don't you check this below??
+        tagNameLookingFor = selectedElement->NodeInfo()->NameAtom();
+      }
+
+      // The "A" tag is a pain,
+      //  used for both link(href is set) and "Named Anchor"
+      if ((isLinkTag &&
+           HTMLEditUtils::IsLink(selectedElement)) ||
+          (isNamedAnchorTag &&
+           HTMLEditUtils::IsNamedAnchor(selectedElement))) {
+        found = true;
+      }
+      // All other tag names are handled here.
+      else if (tagNameLookingFor ==
+                 selectedElement->NodeInfo()->NameAtom()) {
+        found = true;
+      }
+
+      if (!found) {
+        // Check if node we have is really part of the selection???
+        // XXX This is odd.  This means that we return element node whose
+        //     tag name does not match with aTagName if we find such element
+        //     node first.
+        break;
+      }
+    }
+    iter->Next();
+  }
   return selectedElement.forget();
 }
 
