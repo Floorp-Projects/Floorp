@@ -79,23 +79,23 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
     }
 
     /* Step 20 (reordered).
-     * Set the |index| property. (TemplateObject positions it in slot 0) */
-    arr->setSlot(0, Int32Value(matches[0].start));
+     * Set the |index| property. */
+    arr->setSlot(RegExpRealm::MatchResultObjectIndexSlot, Int32Value(matches[0].start));
 
     /* Step 21 (reordered).
-     * Set the |input| property. (TemplateObject positions it in slot 1) */
-    arr->setSlot(1, StringValue(input));
+     * Set the |input| property. */
+    arr->setSlot(RegExpRealm::MatchResultObjectInputSlot, StringValue(input));
 
 #ifdef DEBUG
     RootedValue test(cx);
     RootedId id(cx, NameToId(cx->names().index));
     if (!NativeGetProperty(cx, arr, id, &test))
         return false;
-    MOZ_ASSERT(test == arr->getSlot(0));
+    MOZ_ASSERT(test == arr->getSlot(RegExpRealm::MatchResultObjectIndexSlot));
     id = NameToId(cx->names().input);
     if (!NativeGetProperty(cx, arr, id, &test))
         return false;
-    MOZ_ASSERT(test == arr->getSlot(1));
+    MOZ_ASSERT(test == arr->getSlot(RegExpRealm::MatchResultObjectInputSlot));
 #endif
 
     /* Step 25. */
@@ -1030,7 +1030,7 @@ js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
 {
     // The MatchPairs will always be passed in, but RegExp execution was
     // successful only if the pairs have actually been filled in.
-    if (maybeMatches && maybeMatches->pairsRaw()[0] >= 0)
+    if (maybeMatches && maybeMatches->pairsRaw()[0] > MatchPair::NoMatch)
         return CreateRegExpMatchResult(cx, input, *maybeMatches, output);
 
     // |maybeLastIndex| only contains a valid value when the RegExp execution
@@ -1108,7 +1108,7 @@ js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
 
     // The MatchPairs will always be passed in, but RegExp execution was
     // successful only if the pairs have actually been filled in.
-    if (maybeMatches && maybeMatches->pairsRaw()[0] >= 0) {
+    if (maybeMatches && maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
         *result = CreateRegExpSearchResult(*maybeMatches);
         return true;
     }
