@@ -3,6 +3,7 @@ layout: post
 title:  "🎉 Release: Android Components 0.17"
 date:   2018-08-03 18:00:00 +0200
 categories: releases
+author: sebastian
 ---
 
 * Compiled against:
