@@ -393,28 +393,31 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
     rv = aChannel->GetURI(getter_AddRefs(chanURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Third party checks don't work for chrome:// URIs in mochitests, so just
-    // default to isThirdParty = true. We check isThirdPartyWindow to expand
-    // the list of domains that are considered first party (e.g., if
-    // facebook.com includes an iframe from fatratgames.com, all subsources
-    // included in that iframe are considered third-party with
-    // isThirdPartyChannel, even if they are not third-party w.r.t.
-    // facebook.com), and isThirdPartyChannel to prevent top-level navigations
-    // from being detected as third-party.
-    bool isThirdPartyChannel = true;
-    bool isThirdPartyWindow = true;
-    thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
-    thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
-    if (!isThirdPartyWindow || !isThirdPartyChannel) {
-      *result = false;
-      if (LOG_ENABLED()) {
-        nsCString spec = chanURI->GetSpecOrDefault();
-        spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
-        LOG(("nsChannelClassifier[%p]: Skipping tracking protection checks "
-             "for first party or top-level load channel[%p] with uri %s",
-             this, aChannel, spec.get()));
+    // Only perform third-party checks for tracking protection
+    if (!aAnnotationsOnly) {
+      // Third party checks don't work for chrome:// URIs in mochitests, so just
+      // default to isThirdParty = true. We check isThirdPartyWindow to expand
+      // the list of domains that are considered first party (e.g., if
+      // facebook.com includes an iframe from fatratgames.com, all subsources
+      // included in that iframe are considered third-party with
+      // isThirdPartyChannel, even if they are not third-party w.r.t.
+      // facebook.com), and isThirdPartyChannel to prevent top-level navigations
+      // from being detected as third-party.
+      bool isThirdPartyChannel = true;
+      bool isThirdPartyWindow = true;
+      thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
+      thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
+      if (!isThirdPartyWindow || !isThirdPartyChannel) {
+        *result = false;
+        if (LOG_ENABLED()) {
+          nsCString spec = chanURI->GetSpecOrDefault();
+          spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
+          LOG(("nsChannelClassifier[%p]: Skipping tracking protection checks "
+               "for first party or top-level load channel[%p] with uri %s",
+               this, aChannel, spec.get()));
+        }
+        return NS_OK;
       }
-      return NS_OK;
     }
 
     if (AddonMayLoad(aChannel, chanURI)) {
