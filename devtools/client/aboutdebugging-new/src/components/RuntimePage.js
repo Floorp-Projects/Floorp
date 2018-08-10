@@ -38,18 +38,19 @@ class RuntimePage extends PureComponent {
       }),
       DebugTargetPane({
         dispatch,
+        name: "Temporary Extensions",
+        targets: temporaryExtensions,
+      }),
+      DebugTargetPane({
+        dispatch,
+        name: "Extensions",
+        targets: installedExtensions,
+      }),
+      DebugTargetPane({
+        dispatch,
         name: "Tabs",
         targets: tabs
       }),
-      // Temporary implementation
-      dom.ul(
-        {},
-        temporaryExtensions.map(e => dom.li({}, e.name))
-      ),
-      dom.ul(
-        {},
-        installedExtensions.map(e => dom.li({}, e.name))
-      ),
     );
   }
 }
