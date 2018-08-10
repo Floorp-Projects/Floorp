@@ -63,15 +63,3 @@ Object.keys(_select).forEach(function (key) {
     }
   });
 });
-
-var _tabs = require("./tabs");
-
-Object.keys(_tabs).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _tabs[key];
-    }
-  });
-});

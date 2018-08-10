@@ -53,8 +53,14 @@ function loadSourceMaps(sources) {
       return;
     }
 
-    const originalSources = await Promise.all(sources.map(source => dispatch(loadSourceMap(source.id))));
-    await dispatch(newSources((0, _lodash.flatten)(originalSources)));
+    let originalSources = await Promise.all(sources.map(({
+      id
+    }) => dispatch(loadSourceMap(id))));
+    originalSources = (0, _lodash.flatten)(originalSources).filter(Boolean);
+
+    if (originalSources.length > 0) {
+      await dispatch(newSources(originalSources));
+    }
   };
 }
 /**
@@ -185,25 +191,25 @@ function newSources(sources) {
     dispatch,
     getState
   }) => {
-    const filteredSources = sources.filter(source => source && !(0, _selectors.getSource)(getState(), source.id));
+    sources = sources.filter(source => !(0, _selectors.getSource)(getState(), source.id));
 
-    if (filteredSources.length == 0) {
+    if (sources.length == 0) {
       return;
     }
 
     dispatch({
       type: "ADD_SOURCES",
-      sources: filteredSources
+      sources: sources
     });
 
-    for (const source of filteredSources) {
+    for (const source of sources) {
       dispatch(checkSelectedSource(source.id));
       dispatch(checkPendingBreakpoints(source.id));
     }
 
-    await dispatch(loadSourceMaps(filteredSources)); // We would like to restore the blackboxed state
+    await dispatch(loadSourceMaps(sources)); // We would like to restore the blackboxed state
     // after loading all states to make sure the correctness.
 
-    await dispatch(restoreBlackBoxedSources(filteredSources));
+    await dispatch(restoreBlackBoxedSources(sources));
   };
 }
