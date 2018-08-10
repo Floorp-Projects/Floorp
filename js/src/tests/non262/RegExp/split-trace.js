@@ -181,7 +181,7 @@ lastIndexResult   = [ ,  ,     ,     ,     ,    ];
 lastIndexExpected = [ 0, 1,    3,    4,         ];
 ret = RegExp.prototype[Symbol.split].call(myRegExp, target);
 assertEq(arraySetterObserved, false);
-assertEq(JSON.stringify(ret), `["-\uD83D\uDC38\uDC38\uD83D"]`);
+assertEq(JSON.stringify(ret), `["-\uD83D\uDC38\\udc38\\ud83d"]`);
 assertEq(log,
          "get:constructor," +
          "get:species," +
@@ -203,7 +203,7 @@ lastIndexResult   = [ ,  0, 1, 1, 3, 3, 4, 4 ];
 lastIndexExpected = [ 0, 1, 1, 3, 3, 4, 4,   ];
 ret = RegExp.prototype[Symbol.split].call(myRegExp, target);
 assertEq(arraySetterObserved, false);
-assertEq(JSON.stringify(ret), `["-","X","\uD83D\uDC38","X","\uDC38","X","\uD83D"]`);
+assertEq(JSON.stringify(ret), `["-","X","\uD83D\uDC38","X","\\udc38","X","\\ud83d"]`);
 assertEq(log,
          "get:constructor," +
          "get:species," +

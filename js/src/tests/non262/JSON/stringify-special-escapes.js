@@ -219,6 +219,56 @@ assertEq(JSON.stringify("\\u001EQ"), '"\\\\u001EQ"');
 assertEq(JSON.stringify("\\u001FQ"), '"\\\\u001FQ"');
 assertEq(JSON.stringify("\\u0020Q"), '"\\\\u0020Q"');
 
+// https://tc39.github.io/proposal-well-formed-stringify/
+
+assertEq(JSON.stringify("\ud7ff"), '"\ud7ff"');
+assertEq(JSON.stringify("\ud800"), '"\\ud800"');
+assertEq(JSON.stringify("\ud937"), '"\\ud937"');
+assertEq(JSON.stringify("\uda20"), '"\\uda20"');
+assertEq(JSON.stringify("\udbff"), '"\\udbff"');
+
+assertEq(JSON.stringify("\udc00"), '"\\udc00"');
+assertEq(JSON.stringify("\udddd"), '"\\udddd"');
+assertEq(JSON.stringify("\udeaf"), '"\\udeaf"');
+assertEq(JSON.stringify("\udfff"), '"\\udfff"');
+assertEq(JSON.stringify("\ue000"), '"\ue000"');
+
+assertEq(JSON.stringify("\ud7ffa"), '"\ud7ffa"');
+assertEq(JSON.stringify("\ud800a"), '"\\ud800a"');
+assertEq(JSON.stringify("\ud937a"), '"\\ud937a"');
+assertEq(JSON.stringify("\uda20a"), '"\\uda20a"');
+assertEq(JSON.stringify("\udbffa"), '"\\udbffa"');
+
+assertEq(JSON.stringify("\udc00a"), '"\\udc00a"');
+assertEq(JSON.stringify("\udddda"), '"\\udddda"');
+assertEq(JSON.stringify("\udeafa"), '"\\udeafa"');
+assertEq(JSON.stringify("\udfffa"), '"\\udfffa"');
+assertEq(JSON.stringify("\ue000a"), '"\ue000a"');
+
+assertEq(JSON.stringify("\ud7ff\ud800"), '"\ud7ff\\ud800"');
+assertEq(JSON.stringify("\ud800\ud800"), '"\\ud800\\ud800"');
+assertEq(JSON.stringify("\ud937\ud800"), '"\\ud937\\ud800"');
+assertEq(JSON.stringify("\uda20\ud800"), '"\\uda20\\ud800"');
+assertEq(JSON.stringify("\udbff\ud800"), '"\\udbff\\ud800"');
+
+assertEq(JSON.stringify("\udc00\ud800"), '"\\udc00\\ud800"');
+assertEq(JSON.stringify("\udddd\ud800"), '"\\udddd\\ud800"');
+assertEq(JSON.stringify("\udeaf\ud800"), '"\\udeaf\\ud800"');
+assertEq(JSON.stringify("\udfff\ud800"), '"\\udfff\\ud800"');
+assertEq(JSON.stringify("\ue000\ud800"), '"\ue000\\ud800"');
+
+assertEq(JSON.stringify("\ud7ff\udc00"), '"\ud7ff\\udc00"');
+assertEq(JSON.stringify("\ud800\udc00"), '"\ud800\udc00"');
+assertEq(JSON.stringify("\ud937\udc00"), '"\ud937\udc00"');
+assertEq(JSON.stringify("\uda20\udc00"), '"\uda20\udc00"');
+assertEq(JSON.stringify("\udbff\udc00"), '"\udbff\udc00"');
+
+assertEq(JSON.stringify("\udc00\udc00"), '"\\udc00\\udc00"');
+assertEq(JSON.stringify("\udddd\udc00"), '"\\udddd\\udc00"');
+assertEq(JSON.stringify("\udeaf\udc00"), '"\\udeaf\\udc00"');
+assertEq(JSON.stringify("\udfff\udc00"), '"\\udfff\\udc00"');
+assertEq(JSON.stringify("\ue000\udc00"), '"\ue000\\udc00"');
+
 /******************************************************************************/
 
 if (typeof reportCompare === "function")
