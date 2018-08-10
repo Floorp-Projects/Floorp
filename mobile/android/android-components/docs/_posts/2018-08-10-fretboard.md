@@ -94,14 +94,14 @@ Fretboard allows you to specify the following filters:
 * [Issue #572: Fretboard: Complete kdoc](https://github.com/mozilla-mobile/android-components/commit/c874c343cab18fe64f45ba8eb9a726f829fe06b9)
 * [Issue #577: Fretboard: Pass original exception to ExperimentDownloadException](https://github.com/mozilla-mobile/android-components/pull/579)
 * [Issue #576: Fretboard: Log ExperimentDownloadException](https://github.com/mozilla-mobile/android-components/pull/582)
-* [Issue #590: Fretboard: Blog post](https://github.com/mozilla-mobile/android-components/pull/591)
+* [Issue #590: Fretboard: Blog post](https://github.com/mozilla-mobile/android-components/commit/75a87f8774e2848769e7d18e0253b7bf49464d68)
+* [Issue #434: Fretboard: Verify signatures of experiments collection](https://github.com/mozilla-mobile/android-components/commit/f65aad40e6f8ec84009a3f809f816c1c969c7082)
 
 ## Open pull requests
-There are three open pull requests. The first two are open pending a review from the security team and the last one is waiting for a non-alpha version of WorkManager to be released by Google:
+There are two open pull requests. The first one is open pending a review from the security team and the last one is waiting for a non-alpha version of WorkManager to be released by Google:
 
-1. [Issue #434: Fretboard: Verify signatures of experiments collection](https://github.com/mozilla-mobile/android-components/pull/447)
-2. [Issue #433: Fretboard: Certificate pinning](https://github.com/mozilla-mobile/android-components/pull/446)
-3. [Issue #493: Use WorkManager in fretboard](https://github.com/mozilla-mobile/android-components/pull/503)
+1. [Issue #433: Fretboard: Certificate pinning](https://github.com/mozilla-mobile/android-components/pull/446)
+2. [Issue #493: Use WorkManager in fretboard](https://github.com/mozilla-mobile/android-components/pull/503)
 
 ## Project progress and difficulties faced
 Prior to starting the project, I became familiar with Kinto and the diff response format, as well as with the existing code of the Switchboard fork from Fennec. I also thought it was a good idea to send a pull request to Firefox Focus because this library was going to be integrated into it, and also to become familiar with a code review process at Mozilla. I looked at the issue list and discovered a problem with display cutouts, so I sent two pull requests to address the issue: [the first one](https://github.com/mozilla-mobile/focus-android/pull/2264) and [the second one](https://github.com/mozilla-mobile/focus-android/pull/2278).
