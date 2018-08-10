@@ -482,15 +482,25 @@ XMLHttpRequestMainThread::DetectCharset()
   }
 
   mResponseCharset = encoding;
-  mDecoder = encoding->NewDecoderWithBOMRemoval();
+
+  // Only sniff the BOM for non-JSON responseTypes
+  if (mResponseType == XMLHttpRequestResponseType::Json) {
+    mDecoder = encoding->NewDecoderWithBOMRemoval();
+  } else {
+    mDecoder = encoding->NewDecoder();
+  }
 
   return NS_OK;
 }
 
 nsresult
 XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
-                                               uint32_t aSrcBufferLen)
+                                               uint32_t aSrcBufferLen,
+                                               bool aLast)
 {
+  // Call this with an empty buffer to send the decoder the signal
+  // that we have hit the end of the stream.
+
   NS_ENSURE_STATE(mDecoder);
 
   CheckedInt<size_t> destBufferLen =
@@ -511,7 +521,6 @@ XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // XXX there's no handling for incomplete byte sequences on EOF!
   uint32_t result;
   size_t read;
   size_t written;
@@ -519,7 +528,7 @@ XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
   Tie(result, read, written, hadErrors) = mDecoder->DecodeToUTF16(
     AsBytes(MakeSpan(aSrcBuffer, aSrcBufferLen)),
     MakeSpan(helper.EndOfExistingData(), destBufferLen.value()),
-    false);
+    aLast);
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == aSrcBufferLen);
   MOZ_ASSERT(written <= destBufferLen.value());
@@ -1511,6 +1520,7 @@ XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   mFlagHadUploadListenersOnSend = false;
   mFlagAborted = false;
   mFlagTimedOut = false;
+  mDecoder = nullptr;
 
   // Per spec we should only create the channel on send(), but we have internal
   // code that relies on the channel being created now, and that code is not
@@ -1816,12 +1826,11 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     return NS_OK;
   }
 
-  /* Apparently, Abort() should set UNSENT.  See bug 361773.
-     XHR2 spec says this is correct. */
+  // Don't do anything if we're in mid-abort, but let the request
+  // know (this can happen due to race conditions in valid XHRs,
+  // see bz1070763 for info).
   if (mFlagAborted) {
-    NS_ERROR("Ugh, still getting data on an aborted XMLHttpRequest!");
-
-    return NS_ERROR_UNEXPECTED;
+    return NS_BINDING_ABORTED;
   }
 
   // Don't do anything if we have timed out.
@@ -2075,6 +2084,12 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     return NS_OK;
   }
 
+  // Send the decoder the signal that we've hit the end of the stream,
+  // but only when parsing text (not XML, which does this already).
+  if (mDecoder && !mFlagParseBody) {
+    AppendToResponseText(nullptr, 0, true);
+  }
+
   mWaitingForOnStopRequest = false;
 
   if (mRequestObserver) {
@@ -2261,7 +2276,7 @@ XMLHttpRequestMainThread::MatchCharsetAndDecoderToResponseDocument()
     mResponseCharset = mResponseXML->GetDocumentCharacterSet();
     TruncateResponseText();
     mResponseBodyDecodedPos = 0;
-    mDecoder = mResponseCharset->NewDecoderWithBOMRemoval();
+    mDecoder = mResponseCharset->NewDecoder();
   }
 }
 
