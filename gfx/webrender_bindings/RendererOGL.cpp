@@ -95,6 +95,12 @@ RendererOGL::Update()
   }
 }
 
+static void
+DoNotifyWebRenderContextPurge(layers::CompositorBridgeParent* aBridge)
+{
+  aBridge->NotifyWebRenderContextPurge();
+}
+
 bool
 RendererOGL::UpdateAndRender(bool aReadback)
 {
@@ -149,6 +155,18 @@ RendererOGL::UpdateAndRender(bool aReadback)
   // Clear frame start time
   mFrameStartTime = TimeStamp();
 #endif
+
+  gl::GLContext* gl = mCompositor->gl();
+  if (gl->IsSupported(gl::GLFeature::robustness)) {
+    GLenum resetStatus = gl->fGetGraphicsResetStatus();
+    if (resetStatus == LOCAL_GL_PURGED_CONTEXT_RESET_NV) {
+      layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+        "DoNotifyWebRenderContextPurgeRunnable",
+        &DoNotifyWebRenderContextPurge,
+        mBridge
+      ));
+    }
+  }
 
   // TODO: Flush pending actions such as texture deletions/unlocks and
   //       textureHosts recycling.
