@@ -12,8 +12,12 @@
 
 #include "./vpx_config.h"
 #include "vpx_dsp/txfm_common.h"
+#include "vpx_dsp/vpx_dsp_common.h"
+#include "vpx_dsp/arm/idct_neon.h"
+#include "vpx_dsp/arm/mem_neon.h"
 
-void vpx_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
+void vpx_fdct8x8_neon(const int16_t *input, tran_low_t *final_output,
+                      int stride) {
   int i;
   // stage 1
   int16x8_t input_0 = vshlq_n_s16(vld1q_s16(&input[0 * stride]), 2);
@@ -44,18 +48,18 @@ void vpx_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
     int32x4_t v_t0_hi = vaddl_s16(vget_high_s16(v_x0), vget_high_s16(v_x1));
     int32x4_t v_t1_lo = vsubl_s16(vget_low_s16(v_x0), vget_low_s16(v_x1));
     int32x4_t v_t1_hi = vsubl_s16(vget_high_s16(v_x0), vget_high_s16(v_x1));
-    int32x4_t v_t2_lo = vmull_n_s16(vget_low_s16(v_x2), (int16_t)cospi_24_64);
-    int32x4_t v_t2_hi = vmull_n_s16(vget_high_s16(v_x2), (int16_t)cospi_24_64);
-    int32x4_t v_t3_lo = vmull_n_s16(vget_low_s16(v_x3), (int16_t)cospi_24_64);
-    int32x4_t v_t3_hi = vmull_n_s16(vget_high_s16(v_x3), (int16_t)cospi_24_64);
-    v_t2_lo = vmlal_n_s16(v_t2_lo, vget_low_s16(v_x3), (int16_t)cospi_8_64);
-    v_t2_hi = vmlal_n_s16(v_t2_hi, vget_high_s16(v_x3), (int16_t)cospi_8_64);
-    v_t3_lo = vmlsl_n_s16(v_t3_lo, vget_low_s16(v_x2), (int16_t)cospi_8_64);
-    v_t3_hi = vmlsl_n_s16(v_t3_hi, vget_high_s16(v_x2), (int16_t)cospi_8_64);
-    v_t0_lo = vmulq_n_s32(v_t0_lo, (int32_t)cospi_16_64);
-    v_t0_hi = vmulq_n_s32(v_t0_hi, (int32_t)cospi_16_64);
-    v_t1_lo = vmulq_n_s32(v_t1_lo, (int32_t)cospi_16_64);
-    v_t1_hi = vmulq_n_s32(v_t1_hi, (int32_t)cospi_16_64);
+    int32x4_t v_t2_lo = vmull_n_s16(vget_low_s16(v_x2), cospi_24_64);
+    int32x4_t v_t2_hi = vmull_n_s16(vget_high_s16(v_x2), cospi_24_64);
+    int32x4_t v_t3_lo = vmull_n_s16(vget_low_s16(v_x3), cospi_24_64);
+    int32x4_t v_t3_hi = vmull_n_s16(vget_high_s16(v_x3), cospi_24_64);
+    v_t2_lo = vmlal_n_s16(v_t2_lo, vget_low_s16(v_x3), cospi_8_64);
+    v_t2_hi = vmlal_n_s16(v_t2_hi, vget_high_s16(v_x3), cospi_8_64);
+    v_t3_lo = vmlsl_n_s16(v_t3_lo, vget_low_s16(v_x2), cospi_8_64);
+    v_t3_hi = vmlsl_n_s16(v_t3_hi, vget_high_s16(v_x2), cospi_8_64);
+    v_t0_lo = vmulq_n_s32(v_t0_lo, cospi_16_64);
+    v_t0_hi = vmulq_n_s32(v_t0_hi, cospi_16_64);
+    v_t1_lo = vmulq_n_s32(v_t1_lo, cospi_16_64);
+    v_t1_hi = vmulq_n_s32(v_t1_hi, cospi_16_64);
     {
       const int16x4_t a = vrshrn_n_s32(v_t0_lo, DCT_CONST_BITS);
       const int16x4_t b = vrshrn_n_s32(v_t0_hi, DCT_CONST_BITS);
@@ -73,10 +77,10 @@ void vpx_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
     // Stage 2
     v_x0 = vsubq_s16(v_s6, v_s5);
     v_x1 = vaddq_s16(v_s6, v_s5);
-    v_t0_lo = vmull_n_s16(vget_low_s16(v_x0), (int16_t)cospi_16_64);
-    v_t0_hi = vmull_n_s16(vget_high_s16(v_x0), (int16_t)cospi_16_64);
-    v_t1_lo = vmull_n_s16(vget_low_s16(v_x1), (int16_t)cospi_16_64);
-    v_t1_hi = vmull_n_s16(vget_high_s16(v_x1), (int16_t)cospi_16_64);
+    v_t0_lo = vmull_n_s16(vget_low_s16(v_x0), cospi_16_64);
+    v_t0_hi = vmull_n_s16(vget_high_s16(v_x0), cospi_16_64);
+    v_t1_lo = vmull_n_s16(vget_low_s16(v_x1), cospi_16_64);
+    v_t1_hi = vmull_n_s16(vget_high_s16(v_x1), cospi_16_64);
     {
       const int16x4_t a = vrshrn_n_s32(v_t0_lo, DCT_CONST_BITS);
       const int16x4_t b = vrshrn_n_s32(v_t0_hi, DCT_CONST_BITS);
@@ -91,22 +95,22 @@ void vpx_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
       v_x3 = vaddq_s16(v_s7, cd);
     }
     // Stage 4
-    v_t0_lo = vmull_n_s16(vget_low_s16(v_x3), (int16_t)cospi_4_64);
-    v_t0_hi = vmull_n_s16(vget_high_s16(v_x3), (int16_t)cospi_4_64);
-    v_t0_lo = vmlal_n_s16(v_t0_lo, vget_low_s16(v_x0), (int16_t)cospi_28_64);
-    v_t0_hi = vmlal_n_s16(v_t0_hi, vget_high_s16(v_x0), (int16_t)cospi_28_64);
-    v_t1_lo = vmull_n_s16(vget_low_s16(v_x1), (int16_t)cospi_12_64);
-    v_t1_hi = vmull_n_s16(vget_high_s16(v_x1), (int16_t)cospi_12_64);
-    v_t1_lo = vmlal_n_s16(v_t1_lo, vget_low_s16(v_x2), (int16_t)cospi_20_64);
-    v_t1_hi = vmlal_n_s16(v_t1_hi, vget_high_s16(v_x2), (int16_t)cospi_20_64);
-    v_t2_lo = vmull_n_s16(vget_low_s16(v_x2), (int16_t)cospi_12_64);
-    v_t2_hi = vmull_n_s16(vget_high_s16(v_x2), (int16_t)cospi_12_64);
-    v_t2_lo = vmlsl_n_s16(v_t2_lo, vget_low_s16(v_x1), (int16_t)cospi_20_64);
-    v_t2_hi = vmlsl_n_s16(v_t2_hi, vget_high_s16(v_x1), (int16_t)cospi_20_64);
-    v_t3_lo = vmull_n_s16(vget_low_s16(v_x3), (int16_t)cospi_28_64);
-    v_t3_hi = vmull_n_s16(vget_high_s16(v_x3), (int16_t)cospi_28_64);
-    v_t3_lo = vmlsl_n_s16(v_t3_lo, vget_low_s16(v_x0), (int16_t)cospi_4_64);
-    v_t3_hi = vmlsl_n_s16(v_t3_hi, vget_high_s16(v_x0), (int16_t)cospi_4_64);
+    v_t0_lo = vmull_n_s16(vget_low_s16(v_x3), cospi_4_64);
+    v_t0_hi = vmull_n_s16(vget_high_s16(v_x3), cospi_4_64);
+    v_t0_lo = vmlal_n_s16(v_t0_lo, vget_low_s16(v_x0), cospi_28_64);
+    v_t0_hi = vmlal_n_s16(v_t0_hi, vget_high_s16(v_x0), cospi_28_64);
+    v_t1_lo = vmull_n_s16(vget_low_s16(v_x1), cospi_12_64);
+    v_t1_hi = vmull_n_s16(vget_high_s16(v_x1), cospi_12_64);
+    v_t1_lo = vmlal_n_s16(v_t1_lo, vget_low_s16(v_x2), cospi_20_64);
+    v_t1_hi = vmlal_n_s16(v_t1_hi, vget_high_s16(v_x2), cospi_20_64);
+    v_t2_lo = vmull_n_s16(vget_low_s16(v_x2), cospi_12_64);
+    v_t2_hi = vmull_n_s16(vget_high_s16(v_x2), cospi_12_64);
+    v_t2_lo = vmlsl_n_s16(v_t2_lo, vget_low_s16(v_x1), cospi_20_64);
+    v_t2_hi = vmlsl_n_s16(v_t2_hi, vget_high_s16(v_x1), cospi_20_64);
+    v_t3_lo = vmull_n_s16(vget_low_s16(v_x3), cospi_28_64);
+    v_t3_hi = vmull_n_s16(vget_high_s16(v_x3), cospi_28_64);
+    v_t3_lo = vmlsl_n_s16(v_t3_lo, vget_low_s16(v_x0), cospi_4_64);
+    v_t3_hi = vmlsl_n_s16(v_t3_hi, vget_high_s16(v_x0), cospi_4_64);
     {
       const int16x4_t a = vrshrn_n_s32(v_t0_lo, DCT_CONST_BITS);
       const int16x4_t b = vrshrn_n_s32(v_t0_hi, DCT_CONST_BITS);
@@ -122,6 +126,8 @@ void vpx_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
       out_7 = vcombine_s16(f, h);  // 34 35 36 37 74 75 76 77
     }
     // transpose 8x8
+    // Can't use transpose_s16_8x8() because the values are arranged in two 4x8
+    // columns.
     {
       // 00 01 02 03 40 41 42 43
       // 10 11 12 13 50 51 52 53
@@ -191,30 +197,13 @@ void vpx_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
     input_6 = vhsubq_s16(input_6, sign_in6);
     input_7 = vhsubq_s16(input_7, sign_in7);
     // store results
-    vst1q_s16(&final_output[0 * 8], input_0);
-    vst1q_s16(&final_output[1 * 8], input_1);
-    vst1q_s16(&final_output[2 * 8], input_2);
-    vst1q_s16(&final_output[3 * 8], input_3);
-    vst1q_s16(&final_output[4 * 8], input_4);
-    vst1q_s16(&final_output[5 * 8], input_5);
-    vst1q_s16(&final_output[6 * 8], input_6);
-    vst1q_s16(&final_output[7 * 8], input_7);
-  }
-}
-
-void vpx_fdct8x8_1_neon(const int16_t *input, int16_t *output, int stride) {
-  int r;
-  int16x8_t sum = vld1q_s16(&input[0]);
-  for (r = 1; r < 8; ++r) {
-    const int16x8_t input_00 = vld1q_s16(&input[r * stride]);
-    sum = vaddq_s16(sum, input_00);
-  }
-  {
-    const int32x4_t a = vpaddlq_s16(sum);
-    const int64x2_t b = vpaddlq_s32(a);
-    const int32x2_t c = vadd_s32(vreinterpret_s32_s64(vget_low_s64(b)),
-                                 vreinterpret_s32_s64(vget_high_s64(b)));
-    output[0] = vget_lane_s16(vreinterpret_s16_s32(c), 0);
-    output[1] = 0;
+    store_s16q_to_tran_low(final_output + 0 * 8, input_0);
+    store_s16q_to_tran_low(final_output + 1 * 8, input_1);
+    store_s16q_to_tran_low(final_output + 2 * 8, input_2);
+    store_s16q_to_tran_low(final_output + 3 * 8, input_3);
+    store_s16q_to_tran_low(final_output + 4 * 8, input_4);
+    store_s16q_to_tran_low(final_output + 5 * 8, input_5);
+    store_s16q_to_tran_low(final_output + 6 * 8, input_6);
+    store_s16q_to_tran_low(final_output + 7 * 8, input_7);
   }
 }

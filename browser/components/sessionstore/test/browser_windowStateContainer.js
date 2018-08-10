@@ -13,7 +13,9 @@ add_task(async function() {
 
   // Create 4 tabs with different userContextId.
   for (let userContextId = 1; userContextId < 5; userContextId++) {
-    let tab = win.gBrowser.addTab("http://example.com/", {userContextId});
+    let tab = BrowserTestUtils.addTab(win.gBrowser, "http://example.com/", {
+      userContextId,
+    });
     await promiseBrowserLoaded(tab.linkedBrowser);
     await TabStateFlusher.flush(tab.linkedBrowser);
   }
@@ -36,7 +38,9 @@ add_task(async function() {
   // Create tabs with different userContextId, but this time we create them with
   // fewer tabs and with different order with win.
   for (let userContextId = 3; userContextId > 0; userContextId--) {
-    let tab = win2.gBrowser.addTab("http://example.com/", {userContextId});
+    let tab = BrowserTestUtils.addTab(win2.gBrowser, "http://example.com/", {
+      userContextId,
+    });
     await promiseBrowserLoaded(tab.linkedBrowser);
     await TabStateFlusher.flush(tab.linkedBrowser);
   }
@@ -76,7 +80,9 @@ add_task(async function() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
 
-  let tab = win.gBrowser.addTab("http://example.com/", { userContextId: 1 });
+  let tab = BrowserTestUtils.addTab(win.gBrowser, "http://example.com/", {
+    userContextId: 1,
+  });
   await promiseBrowserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);
 
@@ -92,7 +98,9 @@ add_task(async function() {
 
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
-  let tab2 = win2.gBrowser.addTab("http://example.com/", { userContextId: 1 });
+  let tab2 = BrowserTestUtils.addTab(win2.gBrowser, "http://example.com/", {
+    userContextId: 1,
+  });
   await promiseBrowserLoaded(tab2.linkedBrowser);
   await TabStateFlusher.flush(tab2.linkedBrowser);
 

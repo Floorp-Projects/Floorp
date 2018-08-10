@@ -25,224 +25,12 @@ class DrawTargetCapture;
 
 namespace layers {
 
-// Holds the key parts from a RotatedBuffer::PaintState
-// required to draw the captured paint state
-class CapturedPaintState {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
-public:
-  CapturedPaintState(nsIntRegion& aRegionToDraw,
-                     gfx::DrawTarget* aTargetDual,
-                     gfx::DrawTarget* aTarget,
-                     gfx::DrawTarget* aTargetOnWhite,
-                     const gfx::Matrix& aTargetTransform,
-                     SurfaceMode aSurfaceMode,
-                     gfxContentType aContentType)
-  : mRegionToDraw(aRegionToDraw)
-  , mTargetDual(aTargetDual)
-  , mTarget(aTarget)
-  , mTargetOnWhite(aTargetOnWhite)
-  , mTargetTransform(aTargetTransform)
-  , mSurfaceMode(aSurfaceMode)
-  , mContentType(aContentType)
-  {}
-
-  template<typename F>
-  void ForEachTextureClient(F aClosure) const
-  {
-    aClosure(mTextureClient);
-    if (mTextureClientOnWhite) {
-      aClosure(mTextureClientOnWhite);
-    }
-  }
-
-  void DropTextureClients()
-  {
-    mTextureClient = nullptr;
-    mTextureClientOnWhite = nullptr;
-  }
-
-  nsIntRegion mRegionToDraw;
-  RefPtr<TextureClient> mTextureClient;
-  RefPtr<TextureClient> mTextureClientOnWhite;
-  RefPtr<gfx::DrawTargetCapture> mCapture;
-  RefPtr<gfx::DrawTarget> mTargetDual;
-  RefPtr<gfx::DrawTarget> mTarget;
-  RefPtr<gfx::DrawTarget> mTargetOnWhite;
-  gfx::Matrix mTargetTransform;
-  SurfaceMode mSurfaceMode;
-  gfxContentType mContentType;
-
-protected:
-  virtual ~CapturedPaintState() {}
-};
-
-// Holds the key operations for a ContentClient to prepare
-// its buffers for painting
-class CapturedBufferState final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedBufferState)
-public:
-  struct Copy {
-    Copy(RefPtr<RotatedBuffer> aSource,
-         RefPtr<RotatedBuffer> aDestination,
-         gfx::IntRect aBounds)
-      : mSource(aSource)
-      , mDestination(aDestination)
-      , mBounds(aBounds)
-    {}
-
-    bool CopyBuffer();
-
-    RefPtr<RotatedBuffer> mSource;
-    RefPtr<RotatedBuffer> mDestination;
-    gfx::IntRect mBounds;
-  };
-
-  struct Unrotate {
-    Unrotate(RotatedBuffer::Parameters aParameters,
-             RefPtr<RotatedBuffer> aBuffer)
-      : mParameters(aParameters)
-      , mBuffer(aBuffer)
-    {}
-
-    bool UnrotateBuffer();
-
-    RotatedBuffer::Parameters mParameters;
-    RefPtr<RotatedBuffer> mBuffer;
-  };
-
-  /**
-   * Prepares the rotated buffers for painting by copying a previous frame
-   * into the buffer and/or unrotating the pixels and returns whether the
-   * operations were successful. If this fails a new buffer should be created
-   * for the frame.
-   */
-  bool PrepareBuffer();
-
-  bool HasOperations() const
-  {
-    return mBufferFinalize || mBufferUnrotate || mBufferInitialize;
-  }
-
-  template<typename F>
-  void ForEachTextureClient(F aClosure) const
-  {
-    if (mBufferFinalize) {
-      if (TextureClient* source = mBufferFinalize->mSource->GetClient()) {
-        aClosure(source);
-      }
-      if (TextureClient* sourceOnWhite = mBufferFinalize->mSource->GetClientOnWhite()) {
-        aClosure(sourceOnWhite);
-      }
-      if (TextureClient* destination = mBufferFinalize->mDestination->GetClient()) {
-        aClosure(destination);
-      }
-      if (TextureClient* destinationOnWhite = mBufferFinalize->mDestination->GetClientOnWhite()) {
-        aClosure(destinationOnWhite);
-      }
-    }
-
-    if (mBufferUnrotate) {
-      if (TextureClient* client = mBufferUnrotate->mBuffer->GetClient()) {
-        aClosure(client);
-      }
-      if (TextureClient* clientOnWhite = mBufferUnrotate->mBuffer->GetClientOnWhite()) {
-        aClosure(clientOnWhite);
-      }
-    }
-
-    if (mBufferInitialize) {
-      if (TextureClient* source = mBufferInitialize->mSource->GetClient()) {
-        aClosure(source);
-      }
-      if (TextureClient* sourceOnWhite = mBufferInitialize->mSource->GetClientOnWhite()) {
-        aClosure(sourceOnWhite);
-      }
-      if (TextureClient* destination = mBufferInitialize->mDestination->GetClient()) {
-        aClosure(destination);
-      }
-      if (TextureClient* destinationOnWhite = mBufferInitialize->mDestination->GetClientOnWhite()) {
-        aClosure(destinationOnWhite);
-      }
-    }
-  }
-
-  void DropTextureClients()
-  {
-    mBufferFinalize = Nothing();
-    mBufferUnrotate = Nothing();
-    mBufferInitialize = Nothing();
-  }
-
-  Maybe<Copy> mBufferFinalize;
-  Maybe<Unrotate> mBufferUnrotate;
-  Maybe<Copy> mBufferInitialize;
-
-protected:
-  ~CapturedBufferState() {}
-};
-
-typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintState);
-
 // Holds the key operations needed to update a tiled content client on the
 // paint thread.
-class CapturedTiledPaintState {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedTiledPaintState)
+class PaintTask {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PaintTask)
 public:
-  struct Copy {
-    Copy(RefPtr<gfx::DrawTarget> aSource,
-         RefPtr<gfx::DrawTarget> aDestination,
-         gfx::IntRect aSourceBounds,
-         gfx::IntPoint aDestinationPoint)
-      : mSource(aSource)
-      , mDestination(aDestination)
-      , mSourceBounds(aSourceBounds)
-      , mDestinationPoint(aDestinationPoint)
-    {}
-
-    bool CopyBuffer();
-
-    RefPtr<gfx::DrawTarget> mSource;
-    RefPtr<gfx::DrawTarget> mDestination;
-    gfx::IntRect mSourceBounds;
-    gfx::IntPoint mDestinationPoint;
-  };
-
-  struct Clear {
-    Clear(RefPtr<gfx::DrawTarget> aTarget,
-            RefPtr<gfx::DrawTarget> aTargetOnWhite,
-            nsIntRegion aDirtyRegion)
-      : mTarget(aTarget)
-      , mTargetOnWhite(aTargetOnWhite)
-      , mDirtyRegion(aDirtyRegion)
-    {}
-
-    void ClearBuffer();
-
-    RefPtr<gfx::DrawTarget> mTarget;
-    RefPtr<gfx::DrawTarget> mTargetOnWhite;
-    nsIntRegion mDirtyRegion;
-  };
-
-  struct EdgePad {
-    EdgePad(RefPtr<gfx::DrawTarget> aTarget,
-            nsIntRegion&& aValidRegion)
-      : mTarget(aTarget)
-      , mValidRegion(aValidRegion)
-    {}
-
-    void EdgePadBuffer();
-
-    RefPtr<gfx::DrawTarget> mTarget;
-    nsIntRegion mValidRegion;
-  };
-
-  CapturedTiledPaintState()
-  {}
-  CapturedTiledPaintState(gfx::DrawTarget* aTarget,
-                          gfx::DrawTargetCapture* aCapture)
-  : mTarget(aTarget)
-  , mCapture(aCapture)
-  {}
+  PaintTask() {}
 
   template<typename F>
   void ForEachTextureClient(F aClosure) const
@@ -257,20 +45,12 @@ public:
     mClients.clear();
   }
 
-  void PrePaint();
-  void Paint();
-  void PostPaint();
-
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTargetCapture> mCapture;
-  std::vector<Copy> mCopies;
-  std::vector<Clear> mClears;
-  Maybe<EdgePad> mEdgePad;
-
   std::vector<RefPtr<TextureClient>> mClients;
 
 protected:
-  virtual ~CapturedTiledPaintState() {}
+  virtual ~PaintTask() {}
 };
 
 class CompositorBridgeChild;
@@ -290,17 +70,7 @@ public:
 
   void UpdateRenderMode();
 
-  void PrepareBuffer(CapturedBufferState* aState);
-
-  void PaintContents(CapturedPaintState* aState,
-                     PrepDrawTargetForPaintingCallback aCallback);
-
-  void PaintTiledContents(CapturedTiledPaintState* aState);
-
-  // Must be called on the main thread. Signifies that the current
-  // batch of CapturedPaintStates* for PaintContents have been recorded
-  // and the main thread is finished recording this layer.
-  void EndLayer();
+  void QueuePaintTask(PaintTask* aTask);
 
   // This allows external users to run code on the paint thread.
   void Dispatch(RefPtr<Runnable>& aRunnable);
@@ -330,16 +100,11 @@ private:
   void InitOnPaintThread();
   void InitPaintWorkers();
 
-  void AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
-                          CapturedBufferState* aState);
-  void AsyncPaintContents(CompositorBridgeChild* aBridge,
-                          CapturedPaintState* aState,
-                          PrepDrawTargetForPaintingCallback aCallback);
-  void AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
-                               CapturedTiledPaintState* aState);
-  void AsyncPaintTiledContentsFinished(CompositorBridgeChild* aBridge,
-                                       CapturedTiledPaintState* aState);
-  void AsyncEndLayer();
+  void AsyncPaintTask(CompositorBridgeChild* aBridge,
+                      PaintTask* aTask);
+  void AsyncPaintTaskFinished(CompositorBridgeChild* aBridge,
+                              PaintTask* aTask);
+
   void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge);
 
   void DispatchEndLayerTransaction(CompositorBridgeChild* aBridge);
@@ -349,10 +114,6 @@ private:
   static PlatformThreadId sThreadId;
 
   RefPtr<nsIThreadPool> mPaintWorkers;
-
-  // This shouldn't be very many elements, so a list should be fine.
-  // Should only be accessed on the paint thread.
-  nsTArray<RefPtr<gfx::DrawTarget>> mDrawTargetsToFlush;
 };
 
 } // namespace layers

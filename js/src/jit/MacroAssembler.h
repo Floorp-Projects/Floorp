@@ -1670,7 +1670,6 @@ class MacroAssembler : public MacroAssemblerSpecific
                          Register expected, Register replacement, Register output)
         DEFINED_ON(arm, arm64, x86_shared);
 
-
     void compareExchange(Scalar::Type type, const Synchronization& sync, const Address& mem,
                          Register expected, Register replacement, Register valueTemp,
                          Register offsetTemp, Register maskTemp, Register output)
@@ -1741,33 +1740,102 @@ class MacroAssembler : public MacroAssemblerSpecific
                        Register offsetTemp, Register maskTemp, Register output)
         DEFINED_ON(mips_shared);
 
+    // ========================================================================
+    // Wasm atomic operations.
+    //
+    // Constraints, when omitted, are exactly as for the primitive operations above.
+
+    void wasmCompareExchange(const wasm::MemoryAccessDesc& access, const Address& mem,
+                             Register expected, Register replacement, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void wasmCompareExchange(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                             Register expected, Register replacement, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void wasmCompareExchange(const wasm::MemoryAccessDesc& access, const Address& mem,
+                             Register expected, Register replacement, Register valueTemp,
+                             Register offsetTemp, Register maskTemp, Register output)
+        DEFINED_ON(mips_shared);
+
+    void wasmCompareExchange(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                             Register expected, Register replacement, Register valueTemp,
+                             Register offsetTemp, Register maskTemp, Register output)
+        DEFINED_ON(mips_shared);
+
+    void wasmAtomicExchange(const wasm::MemoryAccessDesc& access, const Address& mem,
+                            Register value, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void wasmAtomicExchange(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                            Register value, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void wasmAtomicExchange(const wasm::MemoryAccessDesc& access, const Address& mem,
+                            Register value, Register valueTemp, Register offsetTemp,
+                            Register maskTemp, Register output)
+        DEFINED_ON(mips_shared);
+
+    void wasmAtomicExchange(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                            Register value, Register valueTemp, Register offsetTemp,
+                            Register maskTemp, Register output)
+        DEFINED_ON(mips_shared);
+
+    void wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Register value,
+                           const Address& mem, Register temp, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Imm32 value,
+                           const Address& mem, Register temp, Register output)
+        DEFINED_ON(x86_shared);
+
+    void wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Register value,
+                           const BaseIndex& mem, Register temp, Register output)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    void wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Imm32 value,
+                           const BaseIndex& mem, Register temp, Register output)
+        DEFINED_ON(x86_shared);
+
+    void wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                           Register value, const Address& mem, Register valueTemp,
+                           Register offsetTemp, Register maskTemp, Register output)
+        DEFINED_ON(mips_shared);
+
+    void wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                           Register value, const BaseIndex& mem, Register valueTemp,
+                           Register offsetTemp, Register maskTemp, Register output)
+        DEFINED_ON(mips_shared);
+
     // Read-modify-write with memory.  Return no value.
+    //
     // MIPS: `valueTemp`, `offsetTemp` and `maskTemp` must be defined for 8-bit
     // and 16-bit wide operations.
 
-    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Register value,
-                        const Address& mem, Register temp)
+    void wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Register value,
+                            const Address& mem, Register temp)
         DEFINED_ON(arm, arm64, x86_shared);
 
-    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Imm32 value,
-                        const Address& mem, Register temp)
+    void wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Imm32 value,
+                            const Address& mem, Register temp)
         DEFINED_ON(x86_shared);
 
-    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Register value,
-                        const BaseIndex& mem, Register temp)
+    void wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Register value,
+                            const BaseIndex& mem, Register temp)
         DEFINED_ON(arm, arm64, x86_shared);
 
-    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Imm32 value,
-                        const BaseIndex& mem, Register temp)
+    void wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Imm32 value,
+                            const BaseIndex& mem, Register temp)
         DEFINED_ON(x86_shared);
 
-
-    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Register value,
-                    const Address& mem, Register valueTemp, Register offsetTemp, Register maskTemp)
+    void wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Register value,
+                            const Address& mem, Register valueTemp, Register offsetTemp,
+                            Register maskTemp)
         DEFINED_ON(mips_shared);
 
-    void atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op, Register value,
-                    const BaseIndex& mem, Register valueTemp, Register offsetTemp, Register maskTemp)
+    void wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op, Register value,
+                            const BaseIndex& mem, Register valueTemp, Register offsetTemp,
+                            Register maskTemp)
         DEFINED_ON(mips_shared);
 
     // 64-bit wide operations.
@@ -1779,12 +1847,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ARM: `temp` should be invalid; `output` must be (even,odd) pair.
     // MIPS32: `temp` should be invalid.
 
-    void atomicLoad64(const Synchronization& sync, const Address& mem, Register64 temp,
-                      Register64 output)
+    void wasmAtomicLoad64(const wasm::MemoryAccessDesc& access, const Address& mem,
+                          Register64 temp, Register64 output)
         DEFINED_ON(arm, mips32, x86);
 
-    void atomicLoad64(const Synchronization& sync, const BaseIndex& mem, Register64 temp,
-                      Register64 output)
+    void wasmAtomicLoad64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                          Register64 temp, Register64 output)
         DEFINED_ON(arm, mips32, x86);
 
     // x86: `expected` must be the same as `output`, and must be edx:eax
@@ -1793,21 +1861,25 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ARM: Registers must be distinct; `replacement` and `output` must be (even,odd) pairs.
     // MIPS: Registers must be distinct.
 
-    void compareExchange64(const Synchronization& sync, const Address& mem, Register64 expected,
-                           Register64 replacement, Register64 output) PER_ARCH;
+    void wasmCompareExchange64(const wasm::MemoryAccessDesc& access, const Address& mem,
+                               Register64 expected, Register64 replacement, Register64 output)
+        PER_ARCH;
 
-    void compareExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 expected,
-                           Register64 replacement, Register64 output) PER_ARCH;
+    void wasmCompareExchange64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                               Register64 expected, Register64 replacement, Register64 output)
+        PER_ARCH;
 
     // x86: `value` must be ecx:ebx; `output` must be edx:eax.
     // ARM: Registers must be distinct; `value` and `output` must be (even,odd) pairs.
     // MIPS: Registers must be distinct.
 
-    void atomicExchange64(const Synchronization& sync, const Address& mem, Register64 value,
-                          Register64 output) PER_ARCH;
+    void wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const Address& mem,
+                              Register64 value, Register64 output)
+        PER_ARCH;
 
-    void atomicExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 value,
-                          Register64 output) PER_ARCH;
+    void wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                              Register64 value, Register64 output)
+        PER_ARCH;
 
     // x86: `output` must be edx:eax, `temp` must be ecx:ebx.
     // x64: For And, Or, and Xor `output` must be rax.
@@ -1815,24 +1887,28 @@ class MacroAssembler : public MacroAssemblerSpecific
     // MIPS: Registers must be distinct.
     // MIPS32: `temp` should be invalid.
 
-    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
-                         const Address& mem, Register64 temp, Register64 output)
+    void wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access, AtomicOp op, Register64 value,
+                             const Address& mem, Register64 temp, Register64 output)
         DEFINED_ON(arm, arm64, mips32, mips64, x64);
 
-    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
-                         const BaseIndex& mem, Register64 temp, Register64 output)
+    void wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access, AtomicOp op, Register64 value,
+                             const BaseIndex& mem, Register64 temp, Register64 output)
         DEFINED_ON(arm, arm64, mips32, mips64, x64);
 
-    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, const Address& value,
-                         const Address& mem, Register64 temp, Register64 output)
+    void wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                             const Address& value, const Address& mem, Register64 temp,
+                             Register64 output)
         DEFINED_ON(x86);
 
-    void atomicFetchOp64(const Synchronization& sync, AtomicOp op, const Address& value,
-                         const BaseIndex& mem, Register64 temp, Register64 output)
+    void wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                             const Address& value, const BaseIndex& mem, Register64 temp,
+                             Register64 output)
         DEFINED_ON(x86);
 
-    void atomicEffectOp64(const Synchronization& sync, AtomicOp op, Register64 value,
-                          const BaseIndex& mem)
+    // Here `value` can be any register.
+
+    void wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                              Register64 value, const BaseIndex& mem)
         DEFINED_ON(x64);
 
     // ========================================================================
@@ -1851,7 +1927,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // (`temp1` must always be valid.)
     //
     // For additional register constraints, see the primitive 32-bit operations
-    // above.
+    // and/or wasm operations above.
 
     void compareExchangeJS(Scalar::Type arrayType, const Synchronization& sync, const Address& mem,
                            Register expected, Register replacement, Register temp,

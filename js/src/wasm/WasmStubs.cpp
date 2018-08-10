@@ -1628,13 +1628,6 @@ GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, 
 }
 
 static bool
-GenerateOutOfBoundsExit(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
-{
-    return GenerateGenericMemoryAccessTrap(masm, SymbolicAddress::ReportOutOfBounds, throwLabel,
-                                           offsets);
-}
-
-static bool
 GenerateUnalignedExit(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
 {
     return GenerateGenericMemoryAccessTrap(masm, SymbolicAddress::ReportUnalignedAccess, throwLabel,
@@ -1811,11 +1804,6 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
     JitSpew(JitSpew_Codegen, "# Emitting wasm exit stubs");
 
     Offsets offsets;
-
-    if (!GenerateOutOfBoundsExit(masm, &throwLabel, &offsets))
-        return false;
-    if (!code->codeRanges.emplaceBack(CodeRange::OutOfBoundsExit, offsets))
-        return false;
 
     if (!GenerateUnalignedExit(masm, &throwLabel, &offsets))
         return false;

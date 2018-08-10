@@ -139,6 +139,7 @@ void vp9_decoder_remove(VP9Decoder *pbi) {
     vp9_loop_filter_dealloc(&pbi->lf_row_sync);
   }
 
+  vp9_remove_common(&pbi->common);
   vpx_free(pbi);
 }
 
@@ -169,7 +170,7 @@ vpx_codec_err_t vp9_copy_reference_dec(VP9Decoder *pbi,
       vpx_internal_error(&cm->error, VPX_CODEC_ERROR,
                          "Incorrect buffer dimensions");
     else
-      vp8_yv12_copy_frame(cfg, sd);
+      vpx_yv12_copy_frame(cfg, sd);
   } else {
     vpx_internal_error(&cm->error, VPX_CODEC_ERROR, "Invalid reference frame");
   }
@@ -217,7 +218,7 @@ vpx_codec_err_t vp9_set_reference_dec(VP9_COMMON *cm,
                        "Incorrect buffer dimensions");
   } else {
     // Overwrite the reference frame buffer.
-    vp8_yv12_copy_frame(sd, ref_buf);
+    vpx_yv12_copy_frame(sd, ref_buf);
   }
 
   return cm->error.error_code;
@@ -230,7 +231,6 @@ static void swap_frame_buffers(VP9Decoder *pbi) {
   BufferPool *const pool = cm->buffer_pool;
   RefCntBuffer *const frame_bufs = cm->buffer_pool->frame_bufs;
 
-  lock_buffer_pool(pool);
   for (mask = pbi->refresh_frame_flags; mask; mask >>= 1) {
     const int old_idx = cm->ref_frame_map[ref_index];
     // Current thread releases the holding of reference frame.
@@ -250,15 +250,10 @@ static void swap_frame_buffers(VP9Decoder *pbi) {
     decrease_ref_count(old_idx, frame_bufs, pool);
     cm->ref_frame_map[ref_index] = cm->next_ref_frame_map[ref_index];
   }
-  unlock_buffer_pool(pool);
   pbi->hold_ref_buf = 0;
   cm->frame_to_show = get_frame_new_buffer(cm);
 
-  if (!pbi->frame_parallel_decode || !cm->show_frame) {
-    lock_buffer_pool(pool);
-    --frame_bufs[cm->new_fb_idx].ref_count;
-    unlock_buffer_pool(pool);
-  }
+  --frame_bufs[cm->new_fb_idx].ref_count;
 
   // Invalidate these references until the next frame starts.
   for (ref_index = 0; ref_index < 3; ref_index++)
@@ -292,11 +287,13 @@ int vp9_receive_compressed_data(VP9Decoder *pbi, size_t size,
   pbi->ready_for_new_data = 0;
 
   // Check if the previous frame was a frame without any references to it.
-  // Release frame buffer if not decoding in frame parallel mode.
-  if (!pbi->frame_parallel_decode && cm->new_fb_idx >= 0 &&
-      frame_bufs[cm->new_fb_idx].ref_count == 0)
+  if (cm->new_fb_idx >= 0 && frame_bufs[cm->new_fb_idx].ref_count == 0 &&
+      !frame_bufs[cm->new_fb_idx].released) {
     pool->release_fb_cb(pool->cb_priv,
                         &frame_bufs[cm->new_fb_idx].raw_frame_buffer);
+    frame_bufs[cm->new_fb_idx].released = 1;
+  }
+
   // Find a free frame buffer. Return error if can not find any.
   cm->new_fb_idx = get_free_fb(cm);
   if (cm->new_fb_idx == INVALID_IDX) {
@@ -309,18 +306,7 @@ int vp9_receive_compressed_data(VP9Decoder *pbi, size_t size,
   cm->cur_frame = &pool->frame_bufs[cm->new_fb_idx];
 
   pbi->hold_ref_buf = 0;
-  if (pbi->frame_parallel_decode) {
-    VPxWorker *const worker = pbi->frame_worker_owner;
-    vp9_frameworker_lock_stats(worker);
-    frame_bufs[cm->new_fb_idx].frame_worker_owner = worker;
-    // Reset decoding progress.
-    pbi->cur_buf = &frame_bufs[cm->new_fb_idx];
-    pbi->cur_buf->row = -1;
-    pbi->cur_buf->col = -1;
-    vp9_frameworker_unlock_stats(worker);
-  } else {
-    pbi->cur_buf = &frame_bufs[cm->new_fb_idx];
-  }
+  pbi->cur_buf = &frame_bufs[cm->new_fb_idx];
 
   if (setjmp(cm->error.jmp)) {
     const VPxWorkerInterface *const winterface = vpx_get_worker_interface();
@@ -336,7 +322,6 @@ int vp9_receive_compressed_data(VP9Decoder *pbi, size_t size,
       winterface->sync(&pbi->tile_workers[i]);
     }
 
-    lock_buffer_pool(pool);
     // Release all the reference buffers if worker thread is holding them.
     if (pbi->hold_ref_buf == 1) {
       int ref_index = 0, mask;
@@ -361,7 +346,6 @@ int vp9_receive_compressed_data(VP9Decoder *pbi, size_t size,
     }
     // Release current frame.
     decrease_ref_count(cm->new_fb_idx, frame_bufs, pool);
-    unlock_buffer_pool(pool);
 
     vpx_clear_system_state();
     return -1;
@@ -377,31 +361,14 @@ int vp9_receive_compressed_data(VP9Decoder *pbi, size_t size,
   if (!cm->show_existing_frame) {
     cm->last_show_frame = cm->show_frame;
     cm->prev_frame = cm->cur_frame;
-    if (cm->seg.enabled && !pbi->frame_parallel_decode)
-      vp9_swap_current_and_last_seg_map(cm);
+    if (cm->seg.enabled) vp9_swap_current_and_last_seg_map(cm);
   }
 
   // Update progress in frame parallel decode.
-  if (pbi->frame_parallel_decode) {
-    // Need to lock the mutex here as another thread may
-    // be accessing this buffer.
-    VPxWorker *const worker = pbi->frame_worker_owner;
-    FrameWorkerData *const frame_worker_data = worker->data1;
-    vp9_frameworker_lock_stats(worker);
-
-    if (cm->show_frame) {
-      cm->current_video_frame++;
-    }
-    frame_worker_data->frame_decoded = 1;
-    frame_worker_data->frame_context_ready = 1;
-    vp9_frameworker_signal_stats(worker);
-    vp9_frameworker_unlock_stats(worker);
-  } else {
-    cm->last_width = cm->width;
-    cm->last_height = cm->height;
-    if (cm->show_frame) {
-      cm->current_video_frame++;
-    }
+  cm->last_width = cm->width;
+  cm->last_height = cm->height;
+  if (cm->show_frame) {
+    cm->current_video_frame++;
   }
 
   cm->error.setjmp = 0;

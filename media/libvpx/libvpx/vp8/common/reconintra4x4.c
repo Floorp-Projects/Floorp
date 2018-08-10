@@ -31,7 +31,7 @@ void vp8_init_intra4x4_predictors_internal(void) {
   pred[B_LD_PRED] = vpx_d45e_predictor_4x4;
   pred[B_RD_PRED] = vpx_d135_predictor_4x4;
   pred[B_VR_PRED] = vpx_d117_predictor_4x4;
-  pred[B_VL_PRED] = vpx_d63f_predictor_4x4;
+  pred[B_VL_PRED] = vpx_d63e_predictor_4x4;
   pred[B_HD_PRED] = vpx_d153_predictor_4x4;
   pred[B_HU_PRED] = vpx_d207_predictor_4x4;
 }
@@ -40,7 +40,15 @@ void vp8_intra4x4_predict(unsigned char *above, unsigned char *yleft,
                           int left_stride, B_PREDICTION_MODE b_mode,
                           unsigned char *dst, int dst_stride,
                           unsigned char top_left) {
-  unsigned char Aboveb[12], *Above = Aboveb + 4;
+/* Power PC implementation uses "vec_vsx_ld" to read 16 bytes from
+   Above (aka, Aboveb + 4). Play it safe by reserving enough stack
+   space here. Similary for "Left". */
+#if HAVE_VSX
+  unsigned char Aboveb[20];
+#else
+  unsigned char Aboveb[12];
+#endif
+  unsigned char *Above = Aboveb + 4;
 #if HAVE_NEON
   // Neon intrinsics are unable to load 32 bits, or 4 8 bit values. Instead, it
   // over reads but does not use the extra 4 values.
@@ -50,6 +58,8 @@ void vp8_intra4x4_predict(unsigned char *above, unsigned char *yleft,
   // indeed read, they are not used.
   vp8_zero_array(Left, 8);
 #endif  // VPX_WITH_ASAN
+#elif HAVE_VSX
+  unsigned char Left[16];
 #else
   unsigned char Left[4];
 #endif  // HAVE_NEON

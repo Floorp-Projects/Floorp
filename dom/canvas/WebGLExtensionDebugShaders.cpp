@@ -28,17 +28,13 @@ WebGLExtensionDebugShaders::GetTranslatedShaderSource(const WebGLShader& shader,
                                                       nsAString& retval) const
 {
     retval.SetIsVoid(true);
-
-    if (mIsLost) {
-        mContext->ErrorInvalidOperation("%s: Extension is lost.",
-                                        "getTranslatedShaderSource");
-        return;
-    }
-
-    if (mContext->IsContextLost())
+    if (mIsLost)
         return;
 
-    if (!mContext->ValidateObject("getShaderTranslatedSource: shader", shader))
+    const WebGLContext::FuncScope funcScope(*mContext, "getShaderTranslatedSource");
+    MOZ_ASSERT(!mContext->IsContextLost());
+
+    if (!mContext->ValidateObject("shader", shader))
         return;
 
     shader.GetShaderTranslatedSource(&retval);

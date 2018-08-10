@@ -19,6 +19,9 @@ extern "C" {
 
 #define RDCOST(RM, DM, R, D) (((128 + (R) * (RM)) >> 8) + (DM) * (D))
 
+void vp8cx_initialize_me_consts(VP8_COMP *cpi, int QIndex);
+void vp8_auto_select_speed(VP8_COMP *cpi);
+
 static INLINE void insertsortmv(int arr[], int len) {
   int i, j, k;
 

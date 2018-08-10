@@ -713,7 +713,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     return nil;
   }
 
-#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, nameRule) \
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, androidClass, nameRule) \
   case roles::geckoRole: \
     return macRole;
 

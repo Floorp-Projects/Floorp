@@ -24,6 +24,7 @@ class DrawTargetCaptureImpl : public DrawTargetCapture
   friend class SourceSurfaceCapture;
 
 public:
+  DrawTargetCaptureImpl(gfx::DrawTarget* aTarget, size_t aFlushBytes);
   DrawTargetCaptureImpl(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat);
 
   bool Init(const IntSize& aSize, DrawTarget* aRefDT);
@@ -63,6 +64,8 @@ public:
   virtual void CopySurface(SourceSurface *aSurface,
                            const IntRect &aSourceRect,
                            const IntPoint &aDestination) override;
+  virtual void CopyRect(const IntRect &aSourceRect,
+                        const IntPoint &aDestination) override;
 
   virtual void FillRect(const Rect &aRect,
                         const Pattern &aPattern,
@@ -106,6 +109,7 @@ public:
                          bool aCopyBackground) override;
   virtual void PopLayer() override;
   virtual void Blur(const AlphaBoxBlur& aBlur) override;
+  virtual void PadEdges(const IntRegion& aRegion) override;
 
   virtual void SetTransform(const Matrix &aTransform) override;
 
@@ -147,6 +151,7 @@ public:
 
   void ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform);
 
+  bool IsEmpty() const override;
   void Dump() override;
 
 protected:
@@ -155,6 +160,12 @@ protected:
   void MarkChanged();
 
 private:
+  void FlushCommandBuffer()
+  {
+    ReplayToDrawTarget(mRefDT, Matrix());
+    mCommands.Clear();
+  }
+
   // This storage system was used to minimize the amount of heap allocations
   // that are required while recording. It should be noted there's no
   // guarantees on the alignments of DrawingCommands allocated in this array.
@@ -163,12 +174,22 @@ private:
     if (T::AffectsSnapshot) {
       MarkChanged();
     }
+    if (mFlushBytes &&
+        mCommands.BufferWillAlloc<T>() &&
+        mCommands.BufferCapacity() > mFlushBytes) {
+      FlushCommandBuffer();
+    }
     return mCommands.Append<T>();
   }
   template<typename T>
   T* ReuseOrAppendToCommandList() {
     if (T::AffectsSnapshot) {
       MarkChanged();
+    }
+    if (mFlushBytes &&
+        mCommands.BufferWillAlloc<T>() &&
+        mCommands.BufferCapacity() > mFlushBytes) {
+      FlushCommandBuffer();
     }
     return mCommands.ReuseOrAppend<T>();
   }
@@ -191,6 +212,7 @@ private:
   std::vector<PushedLayer> mPushedLayers;
 
   CaptureCommandList mCommands;
+  size_t mFlushBytes;
 };
 
 } // namespace gfx

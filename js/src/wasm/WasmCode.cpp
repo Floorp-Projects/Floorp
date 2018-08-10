@@ -278,7 +278,6 @@ ModuleSegment::ModuleSegment(Tier tier,
                              const LinkDataTier& linkData)
   : CodeSegment(std::move(codeBytes), codeLength, CodeSegment::Kind::Module),
     tier_(tier),
-    outOfBoundsCode_(base() + linkData.outOfBoundsOffset),
     unalignedAccessCode_(base() + linkData.unalignedAccessOffset),
     trapCode_(base() + linkData.trapOffset)
 {

@@ -12,6 +12,8 @@
 #define VP9_ENCODER_VP9_SKIN_MAP_H_
 
 #include "vp9/common/vp9_blockd.h"
+#include "vpx_dsp/skin_detection.h"
+#include "vpx_util/vpx_write_yuv_frame.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,19 +21,16 @@ extern "C" {
 
 struct VP9_COMP;
 
-// #define OUTPUT_YUV_SKINMAP
-
-int vp9_skin_pixel(const uint8_t y, const uint8_t cb, const uint8_t cr,
-                   int motion);
-
 int vp9_compute_skin_block(const uint8_t *y, const uint8_t *u, const uint8_t *v,
                            int stride, int strideuv, int bsize,
                            int consec_zeromv, int curr_motion_magn);
 
+void vp9_compute_skin_sb(struct VP9_COMP *const cpi, BLOCK_SIZE bsize,
+                         int mi_row, int mi_col);
+
 #ifdef OUTPUT_YUV_SKINMAP
 // For viewing skin map on input source.
-void vp9_compute_skin_map(struct VP9_COMP *const cpi, FILE *yuv_skinmap_file);
-extern void vp9_write_yuv_frame_420(YV12_BUFFER_CONFIG *s, FILE *f);
+void vp9_output_skin_map(struct VP9_COMP *const cpi, FILE *yuv_skinmap_file);
 #endif
 
 #ifdef __cplusplus

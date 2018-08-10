@@ -54,7 +54,7 @@ struct ALT_REF_AQ;
  *
  * \return Instance of the class
  */
-struct ALT_REF_AQ *vp9_alt_ref_aq_create();
+struct ALT_REF_AQ *vp9_alt_ref_aq_create(void);
 
 /*!\brief Upload segmentation_map to self object
  *

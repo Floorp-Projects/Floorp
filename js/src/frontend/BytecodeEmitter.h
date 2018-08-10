@@ -549,11 +549,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     void patchJumpsToTarget(JumpList jump, JumpTarget target);
     MOZ_MUST_USE bool emitJumpTargetAndPatch(JumpList jump);
 
+    MOZ_MUST_USE bool emitCall(JSOp op, uint16_t argc,
+                               const mozilla::Maybe<uint32_t>& sourceCoordOffset);
     MOZ_MUST_USE bool emitCall(JSOp op, uint16_t argc, ParseNode* pn = nullptr);
     MOZ_MUST_USE bool emitCallIncDec(ParseNode* incDec);
 
-    MOZ_MUST_USE bool emitLoopHead(ParseNode* nextpn, JumpTarget* top);
-    MOZ_MUST_USE bool emitLoopEntry(ParseNode* nextpn, JumpList entryJump);
+    mozilla::Maybe<uint32_t> getOffsetForLoop(ParseNode* nextpn);
 
     MOZ_MUST_USE bool emitGoto(NestableControl* target, JumpList* jumplist,
                                SrcNoteType noteType = SRC_NULL);
@@ -747,7 +748,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
-    MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, IteratorKind kind = IteratorKind::Sync,
+    MOZ_MUST_USE bool emitIteratorNext(const mozilla::Maybe<uint32_t>& callSourceCoordOffset,
+                                       IteratorKind kind = IteratorKind::Sync,
                                        bool allowSelfHosted = false);
     MOZ_MUST_USE bool emitIteratorCloseInScope(EmitterScope& currentScope,
                                                IteratorKind iterKind = IteratorKind::Sync,
@@ -818,10 +820,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitDo(ParseNode* pn);
     MOZ_MUST_USE bool emitWhile(ParseNode* pn);
 
-    MOZ_MUST_USE bool emitFor(ParseNode* pn, EmitterScope* headLexicalEmitterScope = nullptr);
-    MOZ_MUST_USE bool emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterScope);
-    MOZ_MUST_USE bool emitForIn(ParseNode* pn, EmitterScope* headLexicalEmitterScope);
-    MOZ_MUST_USE bool emitForOf(ParseNode* pn, EmitterScope* headLexicalEmitterScope);
+    MOZ_MUST_USE bool emitFor(ParseNode* pn,
+                              const EmitterScope* headLexicalEmitterScope = nullptr);
+    MOZ_MUST_USE bool emitCStyleFor(ParseNode* pn, const EmitterScope* headLexicalEmitterScope);
+    MOZ_MUST_USE bool emitForIn(ParseNode* pn, const EmitterScope* headLexicalEmitterScope);
+    MOZ_MUST_USE bool emitForOf(ParseNode* pn, const EmitterScope* headLexicalEmitterScope);
 
     MOZ_MUST_USE bool emitInitializeForInOrOfTarget(ParseNode* forHead);
 

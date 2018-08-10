@@ -8,13 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "vpx_ports/mem.h"
+#include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/mips/loopfilter_msa.h"
+#include "vpx_ports/mem.h"
 
-int32_t vpx_hz_lpf_t4_and_t8_16w(uint8_t *src, int32_t pitch, uint8_t *filter48,
-                                 const uint8_t *b_limit_ptr,
-                                 const uint8_t *limit_ptr,
-                                 const uint8_t *thresh_ptr) {
+static int32_t hz_lpf_t4_and_t8_16w(uint8_t *src, int32_t pitch,
+                                    uint8_t *filter48,
+                                    const uint8_t *b_limit_ptr,
+                                    const uint8_t *limit_ptr,
+                                    const uint8_t *thresh_ptr) {
   v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
   v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
   v16u8 flat, mask, hev, thresh, b_limit, limit;
@@ -77,7 +79,7 @@ int32_t vpx_hz_lpf_t4_and_t8_16w(uint8_t *src, int32_t pitch, uint8_t *filter48,
   }
 }
 
-void vpx_hz_lpf_t16_16w(uint8_t *src, int32_t pitch, uint8_t *filter48) {
+static void hz_lpf_t16_16w(uint8_t *src, int32_t pitch, uint8_t *filter48) {
   v16u8 flat, flat2, filter8;
   v16i8 zero = { 0 };
   v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
@@ -413,11 +415,11 @@ static void mb_lpf_horizontal_edge_dual(uint8_t *src, int32_t pitch,
 
   (void)count;
 
-  early_exit = vpx_hz_lpf_t4_and_t8_16w(src, pitch, &filter48[0], b_limit_ptr,
-                                        limit_ptr, thresh_ptr);
+  early_exit = hz_lpf_t4_and_t8_16w(src, pitch, &filter48[0], b_limit_ptr,
+                                    limit_ptr, thresh_ptr);
 
   if (0 == early_exit) {
-    vpx_hz_lpf_t16_16w(src, pitch, filter48);
+    hz_lpf_t16_16w(src, pitch, filter48);
   }
 }
 
@@ -753,11 +755,11 @@ static void transpose_16x16(uint8_t *input, int32_t in_pitch, uint8_t *output,
   ST_UB8(q0, q1, q2, q3, q4, q5, q6, q7, output, out_pitch);
 }
 
-int32_t vpx_vt_lpf_t4_and_t8_8w(uint8_t *src, uint8_t *filter48,
-                                uint8_t *src_org, int32_t pitch_org,
-                                const uint8_t *b_limit_ptr,
-                                const uint8_t *limit_ptr,
-                                const uint8_t *thresh_ptr) {
+static int32_t vt_lpf_t4_and_t8_8w(uint8_t *src, uint8_t *filter48,
+                                   uint8_t *src_org, int32_t pitch_org,
+                                   const uint8_t *b_limit_ptr,
+                                   const uint8_t *limit_ptr,
+                                   const uint8_t *thresh_ptr) {
   v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
   v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
   v16u8 flat, mask, hev, thresh, b_limit, limit;
@@ -820,8 +822,8 @@ int32_t vpx_vt_lpf_t4_and_t8_8w(uint8_t *src, uint8_t *filter48,
   }
 }
 
-int32_t vpx_vt_lpf_t16_8w(uint8_t *src, uint8_t *src_org, int32_t pitch,
-                          uint8_t *filter48) {
+static int32_t vt_lpf_t16_8w(uint8_t *src, uint8_t *src_org, int32_t pitch,
+                             uint8_t *filter48) {
   v16i8 zero = { 0 };
   v16u8 filter8, flat, flat2;
   v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
@@ -1051,12 +1053,12 @@ void vpx_lpf_vertical_16_msa(uint8_t *src, int32_t pitch,
   transpose_16x8_to_8x16(src - 8, pitch, transposed_input, 16);
 
   early_exit =
-      vpx_vt_lpf_t4_and_t8_8w((transposed_input + 16 * 8), &filter48[0], src,
-                              pitch, b_limit_ptr, limit_ptr, thresh_ptr);
+      vt_lpf_t4_and_t8_8w((transposed_input + 16 * 8), &filter48[0], src, pitch,
+                          b_limit_ptr, limit_ptr, thresh_ptr);
 
   if (0 == early_exit) {
-    early_exit = vpx_vt_lpf_t16_8w((transposed_input + 16 * 8), src, pitch,
-                                   &filter48[0]);
+    early_exit =
+        vt_lpf_t16_8w((transposed_input + 16 * 8), src, pitch, &filter48[0]);
 
     if (0 == early_exit) {
       transpose_8x16_to_16x8(transposed_input, 16, src - 8, pitch);
@@ -1064,11 +1066,11 @@ void vpx_lpf_vertical_16_msa(uint8_t *src, int32_t pitch,
   }
 }
 
-int32_t vpx_vt_lpf_t4_and_t8_16w(uint8_t *src, uint8_t *filter48,
-                                 uint8_t *src_org, int32_t pitch,
-                                 const uint8_t *b_limit_ptr,
-                                 const uint8_t *limit_ptr,
-                                 const uint8_t *thresh_ptr) {
+static int32_t vt_lpf_t4_and_t8_16w(uint8_t *src, uint8_t *filter48,
+                                    uint8_t *src_org, int32_t pitch,
+                                    const uint8_t *b_limit_ptr,
+                                    const uint8_t *limit_ptr,
+                                    const uint8_t *thresh_ptr) {
   v16u8 p3, p2, p1, p0, q3, q2, q1, q0;
   v16u8 p2_out, p1_out, p0_out, q0_out, q1_out, q2_out;
   v16u8 flat, mask, hev, thresh, b_limit, limit;
@@ -1141,8 +1143,8 @@ int32_t vpx_vt_lpf_t4_and_t8_16w(uint8_t *src, uint8_t *filter48,
   }
 }
 
-int32_t vpx_vt_lpf_t16_16w(uint8_t *src, uint8_t *src_org, int32_t pitch,
-                           uint8_t *filter48) {
+static int32_t vt_lpf_t16_16w(uint8_t *src, uint8_t *src_org, int32_t pitch,
+                              uint8_t *filter48) {
   v16u8 flat, flat2, filter8;
   v16i8 zero = { 0 };
   v16u8 p7, p6, p5, p4, p3, p2, p1, p0, q0, q1, q2, q3, q4, q5, q6, q7;
@@ -1473,12 +1475,12 @@ void vpx_lpf_vertical_16_dual_msa(uint8_t *src, int32_t pitch,
   transpose_16x16((src - 8), pitch, &transposed_input[0], 16);
 
   early_exit =
-      vpx_vt_lpf_t4_and_t8_16w((transposed_input + 16 * 8), &filter48[0], src,
-                               pitch, b_limit_ptr, limit_ptr, thresh_ptr);
+      vt_lpf_t4_and_t8_16w((transposed_input + 16 * 8), &filter48[0], src,
+                           pitch, b_limit_ptr, limit_ptr, thresh_ptr);
 
   if (0 == early_exit) {
-    early_exit = vpx_vt_lpf_t16_16w((transposed_input + 16 * 8), src, pitch,
-                                    &filter48[0]);
+    early_exit =
+        vt_lpf_t16_16w((transposed_input + 16 * 8), src, pitch, &filter48[0]);
 
     if (0 == early_exit) {
       transpose_16x16(transposed_input, 16, (src - 8), pitch);

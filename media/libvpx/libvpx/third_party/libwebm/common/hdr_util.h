@@ -47,7 +47,15 @@ struct Vp9CodecFeatures {
   int chroma_subsampling;
 };
 
+// disable deprecation warnings for auto_ptr
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 typedef std::auto_ptr<mkvmuxer::PrimaryChromaticity> PrimaryChromaticityPtr;
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic pop
+#endif
 
 bool CopyPrimaryChromaticity(const mkvparser::PrimaryChromaticity& parser_pc,
                              PrimaryChromaticityPtr* muxer_pc);

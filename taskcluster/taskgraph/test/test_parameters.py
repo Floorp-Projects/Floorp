@@ -70,6 +70,25 @@ class TestParameters(unittest.TestCase):
                     load_parameters_file('params.json'),
                     {'some': 'data'})
 
+    def test_load_parameters_override(self):
+        """
+        When ``load_parameters_file`` is passed overrides, they are included in
+        the generated parameters.
+        """
+        self.assertEqual(
+            load_parameters_file('', overrides={'some': 'data'}),
+            {'some': 'data'})
+
+    def test_load_parameters_override_file(self):
+        """
+        When ``load_parameters_file`` is passed overrides, they overwrite data
+        loaded from a file.
+        """
+        with MockedOpen({"params.json": '{"some": "data"}'}):
+            self.assertEqual(
+                load_parameters_file('params.json', overrides={'some': 'other'}),
+                {'some': 'other'})
+
 
 class TestCommParameters(unittest.TestCase):
     vals = {n: n for n in PARAMETERS.keys() + COMM_PARAMETERS.keys()}

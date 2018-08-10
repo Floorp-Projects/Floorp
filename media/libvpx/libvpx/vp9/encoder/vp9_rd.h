@@ -38,6 +38,7 @@ extern "C" {
 #define MAX_MODES 30
 #define MAX_REFS 6
 
+#define RD_THRESH_INIT_FACT 32
 #define RD_THRESH_MAX_FACT 64
 #define RD_THRESH_INC 1
 
@@ -128,6 +129,9 @@ struct TileDataEnc;
 struct VP9_COMP;
 struct macroblock;
 
+int64_t vp9_compute_rd_mult_based_on_qindex(const struct VP9_COMP *cpi,
+                                            int qindex);
+
 int vp9_compute_rd_mult(const struct VP9_COMP *cpi, int qindex);
 
 void vp9_initialize_rd_consts(struct VP9_COMP *cpi);
@@ -136,6 +140,11 @@ void vp9_initialize_me_consts(struct VP9_COMP *cpi, MACROBLOCK *x, int qindex);
 
 void vp9_model_rd_from_var_lapndz(unsigned int var, unsigned int n,
                                   unsigned int qstep, int *rate, int64_t *dist);
+
+void vp9_model_rd_from_var_lapndz_vec(unsigned int var[MAX_MB_PLANE],
+                                      unsigned int n_log2[MAX_MB_PLANE],
+                                      unsigned int qstep[MAX_MB_PLANE],
+                                      int64_t *rate_sum, int64_t *dist_sum);
 
 int vp9_get_switchable_rate(const struct VP9_COMP *cpi,
                             const MACROBLOCKD *const xd);
@@ -164,8 +173,8 @@ void vp9_update_rd_thresh_fact(int (*fact)[MAX_MODES], int rd_thresh, int bsize,
                                int best_mode_index);
 
 static INLINE int rd_less_than_thresh(int64_t best_rd, int thresh,
-                                      int thresh_fact) {
-  return best_rd < ((int64_t)thresh * thresh_fact >> 5) || thresh == INT_MAX;
+                                      const int *const thresh_fact) {
+  return best_rd < ((int64_t)thresh * (*thresh_fact) >> 5) || thresh == INT_MAX;
 }
 
 static INLINE void set_error_per_bit(MACROBLOCK *x, int rdmult) {
@@ -182,13 +191,18 @@ void vp9_setup_pred_block(const MACROBLOCKD *xd,
                           const struct scale_factors *scale,
                           const struct scale_factors *scale_uv);
 
-int vp9_get_intra_cost_penalty(int qindex, int qdelta,
-                               vpx_bit_depth_t bit_depth);
+int vp9_get_intra_cost_penalty(const struct VP9_COMP *const cpi,
+                               BLOCK_SIZE bsize, int qindex, int qdelta);
 
+unsigned int vp9_get_sby_variance(struct VP9_COMP *cpi,
+                                  const struct buf_2d *ref, BLOCK_SIZE bs);
 unsigned int vp9_get_sby_perpixel_variance(struct VP9_COMP *cpi,
                                            const struct buf_2d *ref,
                                            BLOCK_SIZE bs);
 #if CONFIG_VP9_HIGHBITDEPTH
+unsigned int vp9_high_get_sby_variance(struct VP9_COMP *cpi,
+                                       const struct buf_2d *ref, BLOCK_SIZE bs,
+                                       int bd);
 unsigned int vp9_high_get_sby_perpixel_variance(struct VP9_COMP *cpi,
                                                 const struct buf_2d *ref,
                                                 BLOCK_SIZE bs, int bd);

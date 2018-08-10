@@ -22,6 +22,7 @@ from mozpack.executables import (
 
 STDCXX_MAX_VERSION = Version('3.4.16')
 GLIBC_MAX_VERSION = Version('2.12')
+LIBGCC_MAX_VERSION = Version('4.8')
 
 HOST = {
     'MOZ_LIBSTDCXX_VERSION':
@@ -130,6 +131,10 @@ def check_dep_versions(target, binary, lib, prefix, max_version):
 def check_stdcxx(target, binary):
     check_dep_versions(
         target, binary, 'libstdc++', 'GLIBCXX', STDCXX_MAX_VERSION)
+
+
+def check_libgcc(target, binary):
+    check_dep_versions(target, binary, 'libgcc', 'GCC', LIBGCC_MAX_VERSION)
 
 
 def check_glibc(target, binary):
@@ -292,6 +297,7 @@ def checks(target, binary):
     checks = []
     if target['MOZ_LIBSTDCXX_VERSION']:
         checks.append(check_stdcxx)
+        checks.append(check_libgcc)
         checks.append(check_glibc)
     checks.append(check_textrel)
     checks.append(check_nsmodules)

@@ -66,34 +66,34 @@ class LevelTest
   int level_;
 };
 
-TEST_P(LevelTest, TestTargetLevel11) {
+TEST_P(LevelTest, TestTargetLevel11Large) {
   ASSERT_NE(encoding_mode_, ::libvpx_test::kRealTime);
   ::libvpx_test::I420VideoSource video("hantro_odd.yuv", 208, 144, 30, 1, 0,
-                                       90);
+                                       60);
   target_level_ = 11;
   cfg_.rc_target_bitrate = 150;
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-  ASSERT_EQ(target_level_, level_);
+  ASSERT_GE(target_level_, level_);
 }
 
-TEST_P(LevelTest, TestTargetLevel20) {
+TEST_P(LevelTest, TestTargetLevel20Large) {
   ASSERT_NE(encoding_mode_, ::libvpx_test::kRealTime);
   ::libvpx_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                       30, 1, 0, 90);
+                                       30, 1, 0, 60);
   target_level_ = 20;
   cfg_.rc_target_bitrate = 1200;
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-  ASSERT_EQ(target_level_, level_);
+  ASSERT_GE(target_level_, level_);
 }
 
-TEST_P(LevelTest, TestTargetLevel31) {
+TEST_P(LevelTest, TestTargetLevel31Large) {
   ASSERT_NE(encoding_mode_, ::libvpx_test::kRealTime);
   ::libvpx_test::I420VideoSource video("niklas_1280_720_30.y4m", 1280, 720, 30,
                                        1, 0, 60);
   target_level_ = 31;
   cfg_.rc_target_bitrate = 8000;
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-  ASSERT_EQ(target_level_, level_);
+  ASSERT_GE(target_level_, level_);
 }
 
 // Test for keeping level stats only
@@ -103,11 +103,11 @@ TEST_P(LevelTest, TestTargetLevel0) {
   target_level_ = 0;
   min_gf_internal_ = 4;
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-  ASSERT_EQ(11, level_);
+  ASSERT_GE(11, level_);
 
   cfg_.rc_target_bitrate = 1600;
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-  ASSERT_EQ(20, level_);
+  ASSERT_GE(20, level_);
 }
 
 // Test for level control being turned off
@@ -130,7 +130,7 @@ TEST_P(LevelTest, TestTargetLevelApi) {
     if (level == 10 || level == 11 || level == 20 || level == 21 ||
         level == 30 || level == 31 || level == 40 || level == 41 ||
         level == 50 || level == 51 || level == 52 || level == 60 ||
-        level == 61 || level == 62 || level == 0 || level == 255)
+        level == 61 || level == 62 || level == 0 || level == 1 || level == 255)
       EXPECT_EQ(VPX_CODEC_OK,
                 vpx_codec_control(&enc, VP9E_SET_TARGET_LEVEL, level));
     else
