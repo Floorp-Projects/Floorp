@@ -1408,10 +1408,9 @@ class JSTerm extends Component {
    */
   updateCompleteNode(suffix) {
     if (this.completeNode) {
-      const lines = this.getInputValueBeforeCursor().split("\n");
-      const lastLine = lines[lines.length - 1];
-      const prefix = ("\n".repeat(lines.length - 1)) + lastLine.replace(/[\S]/g, " ");
-      this.completeNode.value = suffix ? prefix + suffix : "";
+      // completion prefix = input, with non-control chars replaced by spaces
+      const prefix = suffix ? this.getInputValue().replace(/[\S]/g, " ") : "";
+      this.completeNode.value = prefix + suffix;
     }
 
     if (this.editor) {

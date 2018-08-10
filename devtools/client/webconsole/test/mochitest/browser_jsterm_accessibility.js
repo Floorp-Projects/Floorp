@@ -11,10 +11,9 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
 add_task(async function() {
-  // Only run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const jsterm = hud.jsterm;
   const input = jsterm.inputNode;
 
   info("Test that the console input is not treated as a live region");
@@ -24,12 +23,9 @@ add_task(async function() {
   ok(!input.hasAttribute("aria-activedescendant"), "no aria-activedescendant");
 
   info("Type 'd' to open the autocomplete popup");
-  const {autocompletePopup} = jsterm;
-  const onPopupOpen = autocompletePopup.once("popup-opened");
-  EventUtils.sendString("d");
+  const onPopupOpen = jsterm.autocompletePopup.once("popup-opened");
+  autocomplete(jsterm, "d");
   await onPopupOpen;
-  ok(autocompletePopup.isOpen && autocompletePopup.itemCount > 0,
-    "Autocomplete popup is open and contains suggestions");
 
   info("Test the console input has an aria-activedescendant attribute");
   ok(input.hasAttribute("aria-activedescendant"), "aria-activedescendant");
@@ -62,6 +58,18 @@ add_task(async function() {
   info("Test the console input has no aria-activedescendant attribute no more");
   ok(!input.hasAttribute("aria-activedescendant"), "no aria-activedescendant");
 });
+
+async function autocomplete(jsterm, value) {
+  const popup = jsterm.autocompletePopup;
+
+  await new Promise(resolve => {
+    jsterm.setInputValue(value);
+    jsterm.complete(jsterm.COMPLETE_HINT_ONLY, resolve);
+  });
+
+  ok(popup.isOpen && popup.itemCount > 0,
+    "Autocomplete popup is open and contains suggestions");
+}
 
 function isElementInLiveRegion(element) {
   if (!element) {

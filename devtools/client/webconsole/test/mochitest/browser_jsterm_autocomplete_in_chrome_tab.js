@@ -26,6 +26,6 @@ async function performTests() {
   ok(hud.outputNode, "we have an output node");
 
   // Test typing 'docu'.
-  await setInputValueForAutocompletion(jsterm, "docu");
+  await jstermSetValueAndComplete(jsterm, "docu");
   checkJsTermCompletionValue(jsterm, "    ment", "'docu' completion");
 }
