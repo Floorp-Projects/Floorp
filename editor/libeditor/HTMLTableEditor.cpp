@@ -109,8 +109,7 @@ HTMLEditor::InsertCell(Element* aCell,
   }
 
   RefPtr<Element> newCell =
-    CreateElementWithDefaults(aIsHeader ? NS_LITERAL_STRING("th") :
-                                          NS_LITERAL_STRING("tb"));
+    CreateElementWithDefaults(aIsHeader ? *nsGkAtoms::th : *nsGkAtoms::td);
   if (NS_WARN_IF(!newCell)) {
     return NS_ERROR_FAILURE;
   }
@@ -202,10 +201,8 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   for (int32_t i = 0; i < aNumber; i++) {
-    RefPtr<Element> newCell;
-    rv = CreateElementWithDefaults(NS_LITERAL_STRING("td"),
-                                   getter_AddRefs(newCell));
-    if (NS_SUCCEEDED(rv) && newCell) {
+    RefPtr<Element> newCell = CreateElementWithDefaults(*nsGkAtoms::td);
+    if (newCell) {
       if (aAfter) {
         cellOffset++;
       }
@@ -214,6 +211,8 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
       if (NS_FAILED(rv)) {
         break;
       }
+    } else {
+      rv = NS_ERROR_FAILURE;
     }
   }
   // XXX This is perhaps the result of the last call of
@@ -625,13 +624,16 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
 
     for (int32_t row = 0; row < aNumber; row++) {
       // Create a new row
-      nsCOMPtr<Element> newRow = CreateElementWithDefaults(trStr);
-      NS_ENSURE_TRUE(newRow, NS_ERROR_FAILURE);
+      RefPtr<Element> newRow = CreateElementWithDefaults(*nsGkAtoms::tr);
+      if (NS_WARN_IF(!newRow)) {
+        return NS_ERROR_FAILURE;
+      }
 
       for (int32_t i = 0; i < cellsInRow; i++) {
-        nsCOMPtr<Element> newCell =
-          CreateElementWithDefaults(NS_LITERAL_STRING("td"));
-        NS_ENSURE_TRUE(newCell, NS_ERROR_FAILURE);
+        RefPtr<Element> newCell = CreateElementWithDefaults(*nsGkAtoms::td);
+        if (NS_WARN_IF(!newCell)) {
+          return NS_ERROR_FAILURE;
+        }
 
         // Don't use transaction system yet! (not until entire row is
         // inserted)

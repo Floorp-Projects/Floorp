@@ -1536,12 +1536,16 @@ InsertTagCommand::DoCommand(const char* aCmdName, nsISupports* refCon)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<Element> newElement;
-  nsresult rv = htmlEditor->CreateElementWithDefaults(
-    nsDependentAtomString(mTagName), getter_AddRefs(newElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return htmlEditor->InsertElementAtSelection(newElement, true);
+  RefPtr<Element> newElement =
+    htmlEditor->CreateElementWithDefaults(*mTagName);
+  if (NS_WARN_IF(!newElement)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = htmlEditor->InsertElementAtSelection(newElement, true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1591,22 +1595,32 @@ InsertTagCommand::DoCommandParams(const char *aCommandName,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  RefPtr<Element> elem;
-  rv = htmlEditor->CreateElementWithDefaults(nsDependentAtomString(mTagName),
-                                             getter_AddRefs(elem));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Element> newElement =
+    htmlEditor->CreateElementWithDefaults(*mTagName);
+  if (NS_WARN_IF(!newElement)) {
+    return NS_ERROR_FAILURE;
+  }
 
   ErrorResult err;
-  elem->SetAttribute(attributeType, attribute, err);
+  newElement->SetAttribute(attributeType, attribute, err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
 
   // do actual insertion
   if (mTagName == nsGkAtoms::a) {
-    return htmlEditor->InsertLinkAroundSelection(elem);
+    rv = htmlEditor->InsertLinkAroundSelection(newElement);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
-  return htmlEditor->InsertElementAtSelection(elem, true);
+
+  rv = htmlEditor->InsertElementAtSelection(newElement, true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
