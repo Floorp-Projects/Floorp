@@ -6381,45 +6381,6 @@ nsHttpChannel::BeginConnect()
              this, static_cast<uint32_t>(rv)));
     }
 
-    return BeginConnectContinue();
-}
-
-void
-nsHttpChannel::HandleBeginConnectContinue()
-{
-    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
-    nsresult rv;
-
-    if (mSuspendCount) {
-        LOG(("Waiting until resume BeginConnect [this=%p]\n", this));
-        mCallOnResume = &nsHttpChannel::HandleBeginConnectContinue;
-        return;
-    }
-
-    LOG(("nsHttpChannel::HandleBeginConnectContinue [this=%p]\n", this));
-    rv = BeginConnectContinue();
-    if (NS_FAILED(rv)) {
-        CloseCacheEntry(false);
-        Unused << AsyncAbort(rv);
-    }
-}
-
-nsresult
-nsHttpChannel::BeginConnectContinue()
-{
-    nsresult rv;
-
-    // Check if request was cancelled during suspend AFTER on-opening-request.
-    if (mCanceled) {
-        return mStatus;
-    }
-
-    // Check to see if we should redirect this channel elsewhere by
-    // nsIHttpChannel.redirectTo API request
-    if (mAPIRedirectToURI) {
-        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
-    }
-
     // If mTimingEnabled flag is not set after OnModifyRequest() then
     // clear the already recorded AsyncOpen value for consistency.
     if (!mTimingEnabled)
