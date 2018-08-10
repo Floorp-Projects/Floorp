@@ -11,14 +11,22 @@ const rootReducer = require("./reducers/index");
 const { RuntimeState } = require("./reducers/runtime-state");
 const { UiState } = require("./reducers/ui-state");
 const debugTargetListenerMiddleware = require("./middleware/debug-target-listener");
+const { getNetworkLocations } = require("./modules/network-locations");
 
-exports.configureStore = function() {
+function configureStore() {
   const initialState = {
     runtime: new RuntimeState(),
-    ui: new UiState()
+    ui: getUiState()
   };
 
   const middleware = applyMiddleware(thunk, debugTargetListenerMiddleware);
 
   return createStore(rootReducer, initialState, middleware);
-};
+}
+
+function getUiState() {
+  const locations = getNetworkLocations();
+  return new UiState(locations);
+}
+
+exports.configureStore = configureStore;
