@@ -76,7 +76,7 @@ ImageBlockingPolicy.prototype = {
         }
 
         // Reject any image that is not associated with a DOM element
-        return Ci.nsIContentPolicy.REJECT;
+        return Ci.nsIContentPolicy.REJECT_REQUEST;
       }
     }
 
