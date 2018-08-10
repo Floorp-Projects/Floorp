@@ -6,11 +6,19 @@
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
+const NETWORK_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-network-icon.svg";
 
 class ConnectPage extends PureComponent {
+  static get propTypes() {
+    return {
+      networkLocations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    };
+  }
+
   renderSteps(steps) {
     return dom.ul(
       {
@@ -72,6 +80,39 @@ class ConnectPage extends PureComponent {
     );
   }
 
+  renderNetwork() {
+    const { networkLocations } = this.props;
+    return dom.section(
+      {},
+      dom.h2(
+        {
+          className: "connect-page__section__title"
+        },
+        dom.img(
+          {
+            className: "connect-page__section__icon",
+            src: NETWORK_ICON_SRC
+          }
+        ),
+        "Via Network Location"
+      ),
+      dom.ul(
+        {},
+        networkLocations.map(location =>
+          dom.li(
+            {},
+            dom.span(
+              {
+                className: "ellipsis-text"
+              },
+              location
+            ),
+          )
+        )
+      )
+    );
+  }
+
   render() {
     return dom.article(
       {
@@ -85,6 +126,7 @@ class ConnectPage extends PureComponent {
       ),
       this.renderWifi(),
       this.renderUsb(),
+      this.renderNetwork(),
     );
   }
 }

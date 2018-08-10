@@ -18,7 +18,9 @@
 }
 
 .connect-page__section__icon {
+  fill: currentColor;
   height: 32px;
   margin-inline-end: 5px;
   width: 32px;
+  -moz-context-properties: fill;
 }
