@@ -101,15 +101,17 @@ var ContentPolicy = {
       return Ci.nsIContentPolicy.ACCEPT;
     }
 
-    let ids = [];
-    for (let [id, {filter}] of this.contentPolicies.entries()) {
+    // Break out early if there are no extension listeners.
+    let haveListeners = false;
+    for (let {filter} of this.contentPolicies.values()) {
       if (WebRequestCommon.typeMatches(policyType, filter.types) &&
           WebRequestCommon.urlMatches(contentLocation, filter.urls)) {
-        ids.push(id);
+        haveListeners = true;
+        break;
       }
     }
 
-    if (!ids.length) {
+    if (!haveListeners) {
       return Ci.nsIContentPolicy.ACCEPT;
     }
 
@@ -171,8 +173,7 @@ var ContentPolicy = {
       }
     }
 
-    let data = {ids,
-                url,
+    let data = {url,
                 type: WebRequestCommon.typeForPolicyType(policyType),
                 windowId,
                 parentWindowId};

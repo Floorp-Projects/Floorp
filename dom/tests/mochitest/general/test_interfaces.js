@@ -208,6 +208,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ChromeNodeList", insecureContext: true, xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "Clipboard"},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ClipboardEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CloseEvent", insecureContext: true},

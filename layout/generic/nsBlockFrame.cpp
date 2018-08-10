@@ -1790,7 +1790,8 @@ nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
 static void
 ConsiderBlockEndEdgeOfChildren(const WritingMode aWritingMode,
                                nscoord aBEndEdgeOfChildren,
-                               nsOverflowAreas& aOverflowAreas)
+                               nsOverflowAreas& aOverflowAreas,
+                               const nsStyleDisplay* aDisplay)
 {
   // Factor in the block-end edge of the children.  Child frames will be added
   // to the overflow area as we iterate through the lines, but their margins
@@ -1804,21 +1805,31 @@ ConsiderBlockEndEdgeOfChildren(const WritingMode aWritingMode,
   if (aWritingMode.IsVertical()) {
     if (aWritingMode.IsVerticalLR()) {
       NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-        nsRect& o = aOverflowAreas.Overflow(otype);
-        o.width = std::max(o.XMost(), aBEndEdgeOfChildren) - o.x;
+        if (!(aDisplay->IsContainLayout() && otype == eScrollableOverflow)) {
+          // Layout containment should force all overflow to be ink (visual)
+          // overflow, so if we're layout-contained, we only add our children's
+          // block-end edge to the ink (visual) overflow -- not to the
+          // scrollable overflow.
+          nsRect& o = aOverflowAreas.Overflow(otype);
+          o.width = std::max(o.XMost(), aBEndEdgeOfChildren) - o.x;
+        }
       }
     } else {
       NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-        nsRect& o = aOverflowAreas.Overflow(otype);
-        nscoord xmost = o.XMost();
-        o.x = std::min(o.x, xmost - aBEndEdgeOfChildren);
-        o.width = xmost - o.x;
+        if (!(aDisplay->IsContainLayout() && otype == eScrollableOverflow)) {
+          nsRect& o = aOverflowAreas.Overflow(otype);
+          nscoord xmost = o.XMost();
+          o.x = std::min(o.x, xmost - aBEndEdgeOfChildren);
+          o.width = xmost - o.x;
+        }
       }
     }
   } else {
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-      nsRect& o = aOverflowAreas.Overflow(otype);
-      o.height = std::max(o.YMost(), aBEndEdgeOfChildren) - o.y;
+      if (!(aDisplay->IsContainLayout() && otype == eScrollableOverflow)) {
+        nsRect& o = aOverflowAreas.Overflow(otype);
+        o.height = std::max(o.YMost(), aBEndEdgeOfChildren) - o.y;
+      }
     }
   }
 }
@@ -1833,11 +1844,34 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsOverflowAreas areas(aBounds, aBounds);
+  if (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::scrolledContent &&
+      mParent->StyleDisplay()->IsContainLayout()) {
+    // If we are a scrollframe's inner anonymous box and our parent
+    // has layout containment, we want to pass our parent's style to
+    // ConsiderBlockEndEdgeOfChildren to make sure all overflow from the
+    // layout contained element is processed as ink (visual) overflow.
+    aDisplay = mParent->StyleDisplay();
+  }
   if (!ShouldApplyOverflowClipping(this, aDisplay)) {
     for (LineIterator line = LinesBegin(), line_end = LinesEnd();
          line != line_end;
          ++line) {
-      areas.UnionWith(line->GetOverflowAreas());
+      if (aDisplay->IsContainLayout()) {
+        // If we have layout containment (or, per above, we are a scrollframe's
+        // inner anonymous box and our parent has layout containment), we should
+        // only consider our child's visual overflow, leaving the scrollable
+        // regions of the parent unaffected.
+        // Note: scrollable overflow is a subset of visual overflow,
+        // so this has the same affect as unioning the child's visual and
+        // scrollable overflow with its parent's visual overflow.
+        nsRect childVisualRect = line->GetVisualOverflowArea();
+        nsOverflowAreas childVisualArea = nsOverflowAreas(
+          childVisualRect,
+          nsRect());
+        areas.UnionWith(childVisualArea);
+      } else {
+        areas.UnionWith(line->GetOverflowAreas());
+      }
     }
 
     // Factor an outside bullet in; normally the bullet will be factored into
@@ -1851,7 +1885,7 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
     }
 
     ConsiderBlockEndEdgeOfChildren(GetWritingMode(),
-                                   aBEndEdgeOfChildren, areas);
+                                   aBEndEdgeOfChildren, areas, aDisplay);
   }
 
 #ifdef NOISY_COMBINED_AREA
@@ -1909,7 +1943,8 @@ nsBlockFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
     GetProperty(BlockEndEdgeOfChildrenProperty(), &found);
   if (found) {
     ConsiderBlockEndEdgeOfChildren(GetWritingMode(),
-                                   blockEndEdgeOfChildren, aOverflowAreas);
+                                   blockEndEdgeOfChildren, aOverflowAreas,
+                                   StyleDisplay());
   }
 
   // Line cursor invariants depend on the overflow areas of the lines, so
@@ -7057,12 +7092,13 @@ nsBlockFrame::Init(nsIContent*       aContent,
   //   If the box is a block container, then it establishes a new block
   //   formatting context.
   // (http://dev.w3.org/csswg/css-writing-modes/#block-flow)
-  // If the box has contain: paint (or contain: strict), then it should also
-  // establish a formatting context.
+  // If the box has contain: paint or contain:layout (or contain:strict),
+  // then it should also establish a formatting context.
   if (StyleDisplay()->mDisplay == mozilla::StyleDisplay::FlowRoot ||
       (GetParent() && StyleVisibility()->mWritingMode !=
                       GetParent()->StyleVisibility()->mWritingMode) ||
-      StyleDisplay()->IsContainPaint()) {
+      StyleDisplay()->IsContainPaint() ||
+      StyleDisplay()->IsContainLayout()) {
     AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   }
 

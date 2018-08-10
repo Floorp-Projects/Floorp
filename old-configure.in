@@ -2706,9 +2706,6 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
   fi
 fi # MOZ_ANGLE_RENDERER
 
-fi # COMPILE_ENVIRONMENT
-
-
 dnl ========================================================
 dnl Gamepad support
 dnl ========================================================
@@ -2720,6 +2717,9 @@ if test "$OS_TARGET" = "Linux"; then
       AC_MSG_ERROR([Can't find header linux/joystick.h, needed for gamepad support. Please install Linux kernel headers.])
     fi
 fi
+
+fi # COMPILE_ENVIRONMENT
+
 
 dnl ========================================================
 dnl = Breakpad crash reporting (on by default on supported platforms)
