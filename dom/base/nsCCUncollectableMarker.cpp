@@ -11,6 +11,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "XULDocument.h"
+#include "InProcessTabChildMessageManager.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
@@ -25,7 +26,6 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsJSEnvironment.h"
-#include "nsInProcessTabChildGlobal.h"
 #include "nsFrameLoader.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -120,7 +120,7 @@ MarkChildMessageManagers(MessageBroadcaster* aMM)
     mozilla::dom::ipc::MessageManagerCallback* cb = tabMM->GetCallback();
     if (cb) {
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
-      nsInProcessTabChildGlobal* et = fl->GetTabChildGlobal();
+      InProcessTabChildMessageManager* et = fl->GetTabChildMessageManager();
       if (!et) {
         continue;
       }
