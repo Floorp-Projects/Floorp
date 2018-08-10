@@ -248,3 +248,9 @@ task printModules {
         }
     }
 }
+
+task printVersion {
+    doLast {
+        println("version: " + library.version)
+    }
+}
