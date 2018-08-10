@@ -292,7 +292,10 @@ class ObjectRealm
 
     js::LexicalEnvironmentObject*
     getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, js::HandleObject enclosing);
-    js::LexicalEnvironmentObject* getNonSyntacticLexicalEnvironment(JSObject* enclosing) const;
+    js::LexicalEnvironmentObject*
+    getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, js::HandleObject enclosing,
+                                              js::HandleObject key, js::HandleObject thisv);
+    js::LexicalEnvironmentObject* getNonSyntacticLexicalEnvironment(JSObject* key) const;
 };
 
 } // namespace js
