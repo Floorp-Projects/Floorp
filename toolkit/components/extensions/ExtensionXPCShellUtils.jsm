@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
   return Management;
 });
 
-Services.mm.loadFrameScript("chrome://global/content/browser-content.js", true);
+Services.mm.loadFrameScript("chrome://global/content/browser-content.js", true, true);
 
 ActorManagerParent.flush();
 
@@ -168,7 +168,7 @@ class ContentPage {
 
   loadFrameScript(func) {
     let frameScript = `data:text/javascript,(${encodeURI(func)}).call(this)`;
-    this.browser.messageManager.loadFrameScript(frameScript, true);
+    this.browser.messageManager.loadFrameScript(frameScript, true, true);
   }
 
   addFrameScriptHelper(func) {
@@ -678,7 +678,7 @@ var ExtensionTestUtils = {
     // fail sanity checks on debug builds the first time we try to
     // create a wrapper, because we should never have a global without a
     // cached wrapper.
-    Services.mm.loadFrameScript("data:text/javascript,//", true);
+    Services.mm.loadFrameScript("data:text/javascript,//", true, true);
 
 
     let tmpD = this.profileDir.clone();

@@ -64,12 +64,12 @@ function getBrowser(sidebar) {
   document.documentElement.appendChild(stack);
 
   return readyPromise.then(() => {
-    browser.messageManager.loadFrameScript("chrome://browser/content/content.js", false);
+    browser.messageManager.loadFrameScript("chrome://browser/content/content.js", false, true);
     ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
 
     if (sidebar.browserStyle) {
       browser.messageManager.loadFrameScript(
-        "chrome://extensions/content/ext-browser-content.js", false);
+        "chrome://extensions/content/ext-browser-content.js", false, true);
 
       browser.messageManager.sendAsyncMessage("Extension:InitBrowser", {
         stylesheets: ExtensionParent.extensionStylesheets,

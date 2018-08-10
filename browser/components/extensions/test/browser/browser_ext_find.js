@@ -142,7 +142,7 @@ add_task(async function testDuplicatePinnedTab() {
   let {selectedBrowser} = gBrowser;
 
   let frameScriptUrl = `data:,(${frameScript}).call(this)`;
-  selectedBrowser.messageManager.loadFrameScript(frameScriptUrl, false);
+  selectedBrowser.messageManager.loadFrameScript(frameScriptUrl, false, true);
   let message = await waitForMessage(selectedBrowser.messageManager, "test:find:selectionTest");
 
   info("Test that text was highlighted properly.");
