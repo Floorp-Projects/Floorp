@@ -18,8 +18,6 @@ internal interface FxaClient : Library {
 
         init {
             try {
-                System.loadLibrary("crypto")
-                System.loadLibrary("ssl")
                 System.loadLibrary("fxa_client")
                 INSTANCE = Native.loadLibrary(JNA_LIBRARY_NAME, FxaClient::class.java) as FxaClient
             } catch (e: UnsatisfiedLinkError) {

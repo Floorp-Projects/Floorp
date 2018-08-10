@@ -58,7 +58,6 @@ dependencies {
     jnaForTest "net.java.dev.jna:jna:${rootProject.ext.dependencies['jna']}@jar"
 
     fxa "mozilla:fxa_client_android:${rootProject.ext.dependencies['fxa']}@zip"
-    fxa "mozilla:fxa_client_android_deps:${rootProject.ext.dependencies['fxa']}@zip"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
     implementation "net.java.dev.jna:jna:${rootProject.ext.dependencies['jna']}@aar"
