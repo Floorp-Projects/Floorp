@@ -22,6 +22,7 @@ permalink: /changelog/
 * **engine-gecko-beta**: Since the [Load Progress Tracking API](https://bugzilla.mozilla.org/show_bug.cgi?id=1437988) was uplifted to GeckoView Beta  _engine-gecko-beta_ now reports progress via `EngineSession.Observer.onProgress()`.
 * **service-fretboard**: KintoExperimentSource can now validate the signature of the downloaded experiments configuration (`validateSignature` flag). This ensures that the configuration was signed by Mozilla and was not modified by a bad actor. For now the `validateSignature` flag is off by default until this has been tested in production. Various bugfixes and refactorings.
 * **service-firefox-accounts**: JNA native libraries are no longer part of the AAR and instead referenced as a dependency. This avoids duplication when multiple libraries depend on JNA.
+* **ui-tabcounter**: New UI component - A button that shows the current tab count and can animate state changes. Extracted from Firefox Rocket.
 * API references for every release are now generated and hosted online: [https://mozilla-mobile.github.io/android-components/reference/](https://mozilla-mobile.github.io/android-components/reference/)
 * Documentation and more is now hosted at: [https://mozilla-mobile.github.io/android-components/](https://mozilla-mobile.github.io/android-components/). More content coming soon.
 * **tooling-lint**: New (internal-only) component containing custom lint rules.
