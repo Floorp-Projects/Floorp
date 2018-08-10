@@ -1604,8 +1604,8 @@ nssCKFWSession_InitPIN(
 NSS_EXTERN CK_RV
 nssCKFWSession_SetPIN(
     NSSCKFWSession *fwSession,
-    NSSItem *newPin,
-    NSSItem *oldPin);
+    const NSSItem *oldPin,
+    NSSItem *newPin);
 
 /*
  * nssCKFWSession_GetOperationStateLen

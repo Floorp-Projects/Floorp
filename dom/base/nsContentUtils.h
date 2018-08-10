@@ -665,7 +665,9 @@ public:
   static nsIPrincipal* SubjectPrincipal();
 
   // Returns the prinipal of the given JS object. This may only be called on
-  // the main thread for objects from the main thread's JSRuntime.
+  // the main thread for objects from the main thread's JSRuntime. The object
+  // must not be a cross-compartment wrapper, because CCWs are not associated
+  // with a single realm.
   static nsIPrincipal* ObjectPrincipal(JSObject* aObj);
 
   static nsresult GenerateStateKey(nsIContent* aContent,

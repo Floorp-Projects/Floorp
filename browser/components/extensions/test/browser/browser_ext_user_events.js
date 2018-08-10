@@ -47,6 +47,7 @@ add_task(async function testSources() {
 
       browser.pageAction.onClicked.addListener(() => request("bookmarks"));
       browser.browserAction.onClicked.addListener(() => request("tabs"));
+      browser.commands.onCommand.addListener(() => request("downloads"));
 
       browser.test.onMessage.addListener(msg => {
         if (msg === "contextMenus.update") {
@@ -123,9 +124,17 @@ add_task(async function testSources() {
       browser_action: {default_title: "test"},
       page_action: {default_title: "test"},
       permissions: ["contextMenus"],
-      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest", "cookies"],
+      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest",
+                             "cookies", "downloads"],
       options_ui: {page: "options.html"},
       content_security_policy: "script-src 'self' https://example.com; object-src 'none';",
+      commands: {
+        command: {
+          suggested_key: {
+            "default": "Alt+Shift+J",
+          },
+        },
+      },
     },
 
     useAddonManager: "temporary",
@@ -177,6 +186,12 @@ add_task(async function testSources() {
   is(items.length, 1, "Found context menu item again");
   EventUtils.synthesizeMouseAtCenter(items[0], {});
   await check("context menu in onClicked");
+
+  EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
+  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
+    panel.button.click();
+  });
+  await check("commands shortcut");
 
   promisePopupNotificationShown("addon-webext-permissions").then(panel => {
     panel.button.click();

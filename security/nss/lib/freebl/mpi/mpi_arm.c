@@ -29,17 +29,17 @@ s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
         "1:\n"
         "mov     r4, #0\n"
         "ldr     r6, [%0], #4\n"
-        "umlal   r5, r4, r6, %2\n"
-        "str     r5, [%3], #4\n"
+        "umlal   r5, r4, r6, %3\n"
+        "str     r5, [%2], #4\n"
         "mov     r5, r4\n"
 
         "subs    %1, #1\n"
         "bne     1b\n"
 
         "2:\n"
-        "str     r5, [%3]\n"
-        :
-        : "r"(a), "l"(a_len), "r"(b), "r"(c)
+        "str     r5, [%2]\n"
+        : "+r"(a), "+l"(a_len), "+r"(c)
+        : "r"(b)
         : "memory", "cc", "%r4", "%r5", "%r6");
 }
 
@@ -57,22 +57,22 @@ s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 
         "1:\n"
         "mov     r4, #0\n"
-        "ldr     r6, [%3]\n"
+        "ldr     r6, [%2]\n"
         "adds    r5, r6\n"
         "adc     r4, r4, #0\n"
 
         "ldr     r6, [%0], #4\n"
-        "umlal   r5, r4, r6, %2\n"
-        "str     r5, [%3], #4\n"
+        "umlal   r5, r4, r6, %3\n"
+        "str     r5, [%2], #4\n"
         "mov     r5, r4\n"
 
         "subs    %1, #1\n"
         "bne     1b\n"
 
         "2:\n"
-        "str     r5, [%3]\n"
-        :
-        : "r"(a), "l"(a_len), "r"(b), "r"(c)
+        "str     r5, [%2]\n"
+        : "+r"(a), "+l"(a_len), "+r"(c)
+        : "r"(b)
         : "memory", "cc", "%r4", "%r5", "%r6");
 }
 
@@ -87,12 +87,12 @@ s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 
         "1:\n"
         "mov     r4, #0\n"
-        "ldr     r6, [%3]\n"
+        "ldr     r6, [%2]\n"
         "adds    r5, r6\n"
         "adc     r4, r4, #0\n"
         "ldr     r6, [%0], #4\n"
-        "umlal   r5, r4, r6, %2\n"
-        "str     r5, [%3], #4\n"
+        "umlal   r5, r4, r6, %3\n"
+        "str     r5, [%2], #4\n"
         "mov     r5, r4\n"
 
         "subs    %1, #1\n"
@@ -107,16 +107,16 @@ s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 
         "2:\n"
         "mov     r4, #0\n"
-        "ldr     r6, [%3]\n"
+        "ldr     r6, [%2]\n"
         "adds    r5, r6\n"
         "adc     r4, r4, #0\n"
-        "str     r5, [%3], #4\n"
+        "str     r5, [%2], #4\n"
         "movs    r5, r4\n"
         "bne     2b\n"
 
         "3:\n"
-        :
-        : "r"(a), "r"(a_len), "r"(b), "r"(c)
+        : "+r"(a), "+l"(a_len), "+r"(c)
+        : "r"(b)
         : "memory", "cc", "%r4", "%r5", "%r6");
 }
 #endif
@@ -167,8 +167,8 @@ s_mpv_sqr_add_prop(const mp_digit *pa, mp_size a_len, mp_digit *ps)
         "bne     2b\n"
 
         "3:"
+        : "+r"(pa), "+r"(a_len), "+r"(ps)
         :
-        : "r"(pa), "r"(a_len), "r"(ps)
         : "memory", "cc", "%r3", "%r4", "%r5", "%r6");
 }
 #endif

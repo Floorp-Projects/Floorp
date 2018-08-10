@@ -3097,10 +3097,10 @@ nsContentUtils::ObjectPrincipal(JSObject* aObj)
   JS::AssertObjectBelongsToCurrentThread(aObj);
 #endif
 
-  // This is duplicated from nsScriptSecurityManager. We don't call through there
-  // because the API unnecessarily requires a JSContext for historical reasons.
-  JS::Compartment* compartment = js::GetObjectCompartment(aObj);
-  JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+  MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(aObj));
+
+  JS::Realm* realm = js::GetNonCCWObjectRealm(aObj);
+  JSPrincipals* principals = JS::GetRealmPrincipals(realm);
   return nsJSPrincipals::get(principals);
 }
 

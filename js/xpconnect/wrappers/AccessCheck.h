@@ -25,7 +25,6 @@ class AccessCheck {
                                                      JS::Compartment* b);
     static bool isChrome(JS::Compartment* compartment);
     static bool isChrome(JSObject* obj);
-    static nsIPrincipal* getPrincipal(JS::Compartment* compartment);
     static bool isCrossOriginAccessPermitted(JSContext* cx, JS::HandleObject obj,
                                              JS::HandleId id, js::Wrapper::Action act);
     static bool checkPassToPrivilegedCode(JSContext* cx, JS::HandleObject wrapper,
