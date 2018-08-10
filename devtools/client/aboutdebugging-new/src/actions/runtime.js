@@ -15,6 +15,9 @@ const {
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
+  REQUEST_EXTENSIONS_FAILURE,
+  REQUEST_EXTENSIONS_START,
+  REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_FAILURE,
   REQUEST_TABS_START,
   REQUEST_TABS_SUCCESS,
@@ -32,6 +35,7 @@ function connectRuntime() {
       await client.connect();
 
       dispatch({ type: CONNECT_RUNTIME_SUCCESS, client });
+      dispatch(requestExtensions());
       dispatch(requestTabs());
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
@@ -79,6 +83,29 @@ function requestTabs() {
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
     } catch (e) {
       dispatch({ type: REQUEST_TABS_FAILURE, error: e.message });
+    }
+  };
+}
+
+function requestExtensions() {
+  return async (dispatch, getState) => {
+    dispatch({ type: REQUEST_EXTENSIONS_START });
+
+    const client = getState().runtime.client;
+
+    try {
+      const { addons } = await client.listAddons();
+      const extensions = addons.filter(a => a.debuggable);
+      const installedExtensions = extensions.filter(e => !e.temporarilyInstalled);
+      const temporaryExtensions = extensions.filter(e => e.temporarilyInstalled);
+
+      dispatch({
+        type: REQUEST_EXTENSIONS_SUCCESS,
+        installedExtensions,
+        temporaryExtensions,
+      });
+    } catch (e) {
+      dispatch({ type: REQUEST_EXTENSIONS_FAILURE, error: e.message });
     }
   };
 }

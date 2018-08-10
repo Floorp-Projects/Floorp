@@ -8,13 +8,16 @@ const {
   CONNECT_RUNTIME_SUCCESS,
   DEBUG_TARGETS,
   DISCONNECT_RUNTIME_SUCCESS,
+  REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_SUCCESS,
 } = require("../constants");
 
 function RuntimeState() {
   return {
     client: null,
+    installedExtensions: [],
     tabs: [],
+    temporaryExtensions: [],
   };
 }
 
@@ -26,6 +29,10 @@ function runtimeReducer(state = RuntimeState(), action) {
     }
     case DISCONNECT_RUNTIME_SUCCESS: {
       return RuntimeState();
+    }
+    case REQUEST_EXTENSIONS_SUCCESS: {
+      const { installedExtensions, temporaryExtensions } = action;
+      return Object.assign({}, state, { installedExtensions, temporaryExtensions });
     }
     case REQUEST_TABS_SUCCESS: {
       const { tabs } = action;
