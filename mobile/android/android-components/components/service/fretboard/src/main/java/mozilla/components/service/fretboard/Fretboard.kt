@@ -5,6 +5,7 @@
 package mozilla.components.service.fretboard
 
 import android.content.Context
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Entry point of the library
@@ -21,6 +22,7 @@ class Fretboard(
     private var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
     private var experimentsLoaded: Boolean = false
     private val evaluator = ExperimentEvaluator(valuesProvider)
+    private val logger = Logger(LOG_TAG)
 
     /**
      * Provides the list of experiments (active or not)
@@ -52,6 +54,7 @@ class Fretboard(
             storage.save(serverExperiments)
         } catch (e: ExperimentDownloadException) {
             // Keep using the local experiments
+            logger.error(e.message, e)
         }
     }
 
@@ -129,5 +132,9 @@ class Fretboard(
      */
     fun clearAllOverrides(context: Context) {
         evaluator.clearAllOverrides(context)
+    }
+
+    companion object {
+        private const val LOG_TAG = "fretboard"
     }
 }
