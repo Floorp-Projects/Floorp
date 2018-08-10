@@ -324,6 +324,23 @@ class Bootstrapper(object):
         else:
             name, application = APPLICATIONS[self.choice]
 
+        if self.instance.no_system_changes:
+            state_dir_available, state_dir = self.try_to_create_state_dir()
+            # We need to enable the loading of hgrc in case extensions are
+            # required to open the repo.
+            r = current_firefox_checkout(
+                check_output=self.instance.check_output,
+                env=self.instance._hg_cleanenv(load_hgrc=True),
+                hg=self.instance.which('hg'))
+            (checkout_type, checkout_root) = r
+            have_clone = bool(checkout_type)
+
+            self.maybe_install_private_packages_or_exit(state_dir,
+                                                        state_dir_available,
+                                                        have_clone,
+                                                        checkout_root)
+            sys.exit(0)
+
         self.instance.install_system_packages()
 
         # Like 'install_browser_packages' or 'install_mobile_android_packages'.
