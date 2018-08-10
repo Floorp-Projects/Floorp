@@ -163,6 +163,31 @@ const PREFS_CONFIG = new Map([
     title: "Experiment to show special top sites that perform keyword searches",
     value: true
   }],
+  ["improvesearch.topSiteSearchShortcuts.searchEngines", {
+    title: "An ordered, comma-delimited list of search shortcuts that we should try and pin",
+    // This pref is dynamic as the shortcuts vary depending on the region
+    getValue: ({geo}) => {
+      if (!geo) {
+        return "";
+      }
+      const searchShortcuts = [];
+      if (geo === "CN") {
+        searchShortcuts.push("baidu");
+      } else if (["BY", "KZ", "RU", "TR"].includes(geo)) {
+        searchShortcuts.push("yandex");
+      } else {
+        searchShortcuts.push("google");
+      }
+      // Always include Amazon - we will only be able to actually pin it if it
+      // is available as a default search engine in that region
+      searchShortcuts.push("amazon");
+      return searchShortcuts.join(",");
+    }
+  }],
+  ["improvesearch.topSiteSearchShortcuts.havePinned", {
+    title: "A comma-delimited list of search shortcuts that have previously been pinned",
+    value: ""
+  }],
   ["asrouterExperimentEnabled", {
     title: "Is the message center experiment on?",
     value: false

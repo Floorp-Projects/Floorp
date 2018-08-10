@@ -1,0 +1,10 @@
+image: "rust:latest"
+
+pages:
+  script:
+    - sh ./build-docs.sh
+  artifacts:
+    paths:
+      - public
+  only:
+    - master

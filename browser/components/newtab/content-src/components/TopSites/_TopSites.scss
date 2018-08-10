@@ -178,7 +178,8 @@ $half-base-gutter: $base-gutter / 2;
     width: 100%;
   }
 
-  .default-icon { // sass-lint:disable block property-sort-order
+  .default-icon,
+  .search-topsite {
     background-size: $default-icon-size;
     bottom: -$default-icon-offset;
     height: $default-icon-wrapper-size;
@@ -194,6 +195,16 @@ $half-base-gutter: $base-gutter / 2;
     &[data-fallback]::before {
       content: attr(data-fallback);
     }
+  }
+
+  .search-topsite {
+    background-image: url('#{$image-path}glyph-search-16.svg');
+    background-size: 26px;
+    background-color: $blue-60;
+    border-radius: 42px;
+    -moz-context-properties: fill;
+    fill: $white;
+    box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), var(--newtab-card-shadow);
   }
 
   .title {

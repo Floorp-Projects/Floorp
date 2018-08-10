@@ -67,7 +67,7 @@ enum ScreenColorGamut {
   "rec2020",
 };
 
-[Func="mozilla::dom::MediaCapabilities::Enabled"]
+[Func="nsScreen::MediaCapabilitiesEnabled"]
 interface ScreenLuminance {
   readonly attribute double min;
   readonly attribute double max;
@@ -75,11 +75,11 @@ interface ScreenLuminance {
 };
 
 partial interface Screen {
-  [Func="mozilla::dom::MediaCapabilities::Enabled"]
+  [Func="nsScreen::MediaCapabilitiesEnabled"]
   readonly attribute ScreenColorGamut colorGamut;
-  [Func="mozilla::dom::MediaCapabilities::Enabled"]
+  [Func="nsScreen::MediaCapabilitiesEnabled"]
   readonly attribute ScreenLuminance? luminance;
 
-  [Func="mozilla::dom::MediaCapabilities::Enabled"]
+  [Func="nsScreen::MediaCapabilitiesEnabled"]
   attribute EventHandler onchange;
 };

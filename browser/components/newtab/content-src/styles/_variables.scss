@@ -23,9 +23,11 @@ $grey-10-20: rgba($grey-10, 0.2);
 $grey-10-40: rgba($grey-10, 0.4);
 $grey-10-60: rgba($grey-10, 0.6);
 $grey-10-80: rgba($grey-10, 0.8);
+$grey-10-95: rgba($grey-10, 0.95);
 $grey-20-60: rgba($grey-20, 0.6);
 $grey-20-80: rgba($grey-20, 0.8);
 $grey-30-60: rgba($grey-30, 0.6);
+$grey-80-95: rgba($grey-80, 0.95);
 $grey-90-10: rgba($grey-90, 0.1);
 $grey-90-20: rgba($grey-90, 0.2);
 $grey-90-30: rgba($grey-90, 0.3);
@@ -88,6 +90,8 @@ $break-point-small: $wrapper-max-width-small + $base-gutter * 2 + $scrollbar-wid
 $break-point-medium: $wrapper-max-width-medium + $base-gutter * 2 + $scrollbar-width;
 $break-point-large: $wrapper-max-width-large + $base-gutter * 2 + $scrollbar-width;
 $break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-width;
+
+$max-searchbar-width: $grid-unit * 6 + $base-gutter * 5;
 
 $section-title-font-size: 13px;
 

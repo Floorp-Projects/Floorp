@@ -13,7 +13,7 @@ gleam = "0.6"
 log = "0.4"
 nsstring = { path = "../../servo/support/gecko/nsstring" }
 bincode = "1.0"
-uuid = {version = "0.1.18"}
+uuid = { version = "0.5", features = ["v4"] }
 fxhash = "0.2.1"
 
 [dependencies.webrender]

@@ -727,6 +727,8 @@ pub mod parsing {
         |
         syn!(ItemFn) => { Item::Fn }
         |
+        call!(unstable_async_fn) => { Item::Verbatim }
+        |
         syn!(ItemMod) => { Item::Mod }
         |
         syn!(ItemForeignMod) => { Item::ForeignMod }
@@ -832,6 +834,8 @@ pub mod parsing {
         keyword!(super) => { Into::into }
         |
         keyword!(crate) => { Into::into }
+        |
+        keyword!(extern) => { Into::into }
     ));
 
     impl_synom!(UseTree "use tree" alt!(
@@ -952,7 +956,7 @@ pub mod parsing {
         where_clause: option!(syn!(WhereClause)) >>
         inner_attrs_stmts: braces!(tuple!(
             many0!(Attribute::parse_inner),
-            call!(Block::parse_within)
+            call!(Block::parse_within),
         )) >>
         (ItemFn {
             attrs: {
@@ -972,7 +976,7 @@ pub mod parsing {
                 variadic: None,
                 generics: Generics {
                     where_clause: where_clause,
-                    .. generics
+                    ..generics
                 },
             }),
             ident: ident,
@@ -980,6 +984,30 @@ pub mod parsing {
                 brace_token: inner_attrs_stmts.0,
                 stmts: (inner_attrs_stmts.1).1,
             }),
+        })
+    ));
+
+    named!(unstable_async_fn -> ItemVerbatim, do_parse!(
+        begin: call!(verbatim::grab_cursor) >>
+        many0!(Attribute::parse_outer) >>
+        syn!(Visibility) >>
+        option!(keyword!(const)) >>
+        option!(keyword!(unsafe)) >>
+        keyword!(async) >>
+        option!(syn!(Abi)) >>
+        keyword!(fn) >>
+        syn!(Ident) >>
+        syn!(Generics) >>
+        parens!(Punctuated::<FnArg, Token![,]>::parse_terminated) >>
+        syn!(ReturnType) >>
+        option!(syn!(WhereClause)) >>
+        braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        )) >>
+        end: call!(verbatim::grab_cursor) >>
+        (ItemVerbatim {
+            tts: verbatim::token_range(begin..end),
         })
     ));
 
@@ -1043,7 +1071,7 @@ pub mod parsing {
             braces!(
                 tuple!(
                     many0!(Attribute::parse_inner),
-                    many0!(Item::parse)
+                    many0!(Item::parse),
                 )
             ) => {|(brace, (inner_attrs, items))| (
                 inner_attrs,
@@ -1066,14 +1094,21 @@ pub mod parsing {
     ));
 
     impl_synom!(ItemForeignMod "foreign mod item" do_parse!(
-        attrs: many0!(Attribute::parse_outer) >>
+        outer_attrs: many0!(Attribute::parse_outer) >>
         abi: syn!(Abi) >>
-        items: braces!(many0!(ForeignItem::parse)) >>
+        braced_content: braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            many0!(ForeignItem::parse),
+        )) >>
         (ItemForeignMod {
-            attrs: attrs,
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend((braced_content.1).0);
+                attrs
+            },
             abi: abi,
-            brace_token: items.0,
-            items: items.1,
+            brace_token: braced_content.0,
+            items: (braced_content.1).1,
         })
     ));
 
@@ -1083,6 +1118,8 @@ pub mod parsing {
         syn!(ForeignItemStatic) => { ForeignItem::Static }
         |
         syn!(ForeignItemType) => { ForeignItem::Type }
+        |
+        call!(foreign_item_macro) => { ForeignItem::Verbatim }
     ));
 
     impl_synom!(ForeignItemFn "foreign function" do_parse!(
@@ -1113,7 +1150,7 @@ pub mod parsing {
                     output: ret,
                     generics: Generics {
                         where_clause: where_clause,
-                        .. generics
+                        ..generics
                     },
                 }),
                 vis: vis,
@@ -1154,6 +1191,17 @@ pub mod parsing {
             type_token: type_,
             ident: ident,
             semi_token: semi,
+        })
+    ));
+
+    named!(foreign_item_macro -> ForeignItemVerbatim, do_parse!(
+        begin: call!(verbatim::grab_cursor) >>
+        many0!(Attribute::parse_outer) >>
+        mac: syn!(Macro) >>
+        cond!(!is_brace(&mac.delimiter), punct!(;)) >>
+        end: call!(verbatim::grab_cursor) >>
+        (ForeignItemVerbatim {
+            tts: verbatim::token_range(begin..end),
         })
     ));
 
@@ -1211,7 +1259,7 @@ pub mod parsing {
             ident: ident,
             generics: Generics {
                 where_clause: where_clause,
-                .. generics
+                ..generics
             },
             fields: fields,
         })
@@ -1238,7 +1286,7 @@ pub mod parsing {
             ident: ident,
             generics: Generics {
                 where_clause: where_clause,
-                .. generics
+                ..generics
             },
             colon_token: colon,
             supertraits: bounds.unwrap_or_default(),
@@ -1287,10 +1335,10 @@ pub mod parsing {
         inputs: parens!(Punctuated::parse_terminated) >>
         ret: syn!(ReturnType) >>
         where_clause: option!(syn!(WhereClause)) >>
-        body: option!(braces!(
-            tuple!(many0!(Attribute::parse_inner),
-                   call!(Block::parse_within))
-        )) >>
+        body: option!(braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        ))) >>
         semi: cond!(body.is_none(), punct!(;)) >>
         ({
             let (inner_attrs, stmts) = match body {
@@ -1316,7 +1364,7 @@ pub mod parsing {
                         variadic: None,
                         generics: Generics {
                             where_clause: where_clause,
-                            .. generics
+                            ..generics
                         },
                     },
                 },
@@ -1347,7 +1395,7 @@ pub mod parsing {
             ident: ident,
             generics: Generics {
                 where_clause: where_clause,
-                .. generics
+                ..generics
             },
             colon_token: colon,
             bounds: bounds.unwrap_or_default(),
@@ -1387,7 +1435,7 @@ pub mod parsing {
         where_clause: option!(syn!(WhereClause)) >>
         inner: braces!(tuple!(
             many0!(Attribute::parse_inner),
-            many0!(ImplItem::parse)
+            many0!(ImplItem::parse),
         )) >>
         (ItemImpl {
             attrs: {
@@ -1400,7 +1448,7 @@ pub mod parsing {
             impl_token: impl_,
             generics: Generics {
                 where_clause: where_clause,
-                .. generics
+                ..generics
             },
             trait_: polarity_path,
             self_ty: Box::new(self_ty),
@@ -1413,6 +1461,8 @@ pub mod parsing {
         syn!(ImplItemConst) => { ImplItem::Const }
         |
         syn!(ImplItemMethod) => { ImplItem::Method }
+        |
+        call!(unstable_async_method) => { ImplItem::Verbatim }
         |
         syn!(ImplItemType) => { ImplItem::Type }
         |
@@ -1459,7 +1509,7 @@ pub mod parsing {
         where_clause: option!(syn!(WhereClause)) >>
         inner_attrs_stmts: braces!(tuple!(
             many0!(Attribute::parse_inner),
-            call!(Block::parse_within)
+            call!(Block::parse_within),
         )) >>
         (ImplItemMethod {
             attrs: {
@@ -1481,7 +1531,7 @@ pub mod parsing {
                     output: ret,
                     generics: Generics {
                         where_clause: where_clause,
-                        .. generics
+                        ..generics
                     },
                     variadic: None,
                 },
@@ -1493,6 +1543,31 @@ pub mod parsing {
         })
     ));
 
+    named!(unstable_async_method -> ImplItemVerbatim, do_parse!(
+        begin: call!(verbatim::grab_cursor) >>
+        many0!(Attribute::parse_outer) >>
+        syn!(Visibility) >>
+        option!(keyword!(default)) >>
+        option!(keyword!(const)) >>
+        option!(keyword!(unsafe)) >>
+        keyword!(async) >>
+        option!(syn!(Abi)) >>
+        keyword!(fn) >>
+        syn!(Ident) >>
+        syn!(Generics) >>
+        parens!(Punctuated::<FnArg, Token![,]>::parse_terminated) >>
+        syn!(ReturnType) >>
+        option!(syn!(WhereClause)) >>
+        braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        )) >>
+        end: call!(verbatim::grab_cursor) >>
+        (ImplItemVerbatim {
+            tts: verbatim::token_range(begin..end),
+        })
+    ));
+
     impl_synom!(ImplItemType "type in impl block" do_parse!(
         attrs: many0!(Attribute::parse_outer) >>
         vis: syn!(Visibility) >>
@@ -1500,6 +1575,7 @@ pub mod parsing {
         type_: keyword!(type) >>
         ident: syn!(Ident) >>
         generics: syn!(Generics) >>
+        where_clause: option!(syn!(WhereClause)) >>
         eq: punct!(=) >>
         ty: syn!(Type) >>
         semi: punct!(;) >>
@@ -1509,7 +1585,10 @@ pub mod parsing {
             defaultness: defaultness,
             type_token: type_,
             ident: ident,
-            generics: generics,
+            generics: Generics {
+                where_clause: where_clause,
+                ..generics
+            },
             eq_token: eq,
             ty: ty,
             semi_token: semi,
@@ -1634,6 +1713,7 @@ mod printing {
             tokens.append_all(self.attrs.outer());
             self.abi.to_tokens(tokens);
             self.brace_token.surround(tokens, |tokens| {
+                tokens.append_all(self.attrs.inner());
                 tokens.append_all(&self.items);
             });
         }
@@ -1925,6 +2005,7 @@ mod printing {
             self.type_token.to_tokens(tokens);
             self.ident.to_tokens(tokens);
             self.generics.to_tokens(tokens);
+            self.generics.where_clause.to_tokens(tokens);
             self.eq_token.to_tokens(tokens);
             self.ty.to_tokens(tokens);
             self.semi_token.to_tokens(tokens);

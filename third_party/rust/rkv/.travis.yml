@@ -1,0 +1,22 @@
+language: rust
+cache: cargo
+rust:
+  - stable
+  - beta
+  - nightly
+os:
+  - linux
+  - osx
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+before_script:
+  - rustup toolchain install nightly-2018-07-18
+  - rustup component add rustfmt-preview --toolchain nightly-2018-07-18
+  - command -v rustfmt || cargo install --force rustfmt-nightly
+script:
+  - cargo +nightly-2018-07-18 fmt --all -- --check
+  - cargo build --verbose
+  - cargo test --verbose
+  - ./run-all-examples.sh

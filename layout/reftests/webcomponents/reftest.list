@@ -7,7 +7,7 @@ pref(dom.webcomponents.shadowdom.enabled,true) == fallback-content-1.html fallba
 pref(dom.webcomponents.shadowdom.enabled,true) == remove-insertion-point-1.html remove-insertion-point-1-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == nested-insertion-point-1.html nested-insertion-point-1-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) fuzzy-if(Android,2,7) == input-transition-1.html input-transition-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) fuzzy-if(Android,0-2,0-7) == input-transition-1.html input-transition-1-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html

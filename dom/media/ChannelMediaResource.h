@@ -255,6 +255,8 @@ protected:
   bool mClosed = false;
   // The last reported seekability state for the underlying channel
   bool mIsTransportSeekable = false;
+  // Length of the content first reported.
+  int64_t mFirstReadLength = -1;
   RefPtr<Listener> mListener;
   // A mono-increasing integer to uniquely identify the channel we are loading.
   uint32_t mLoadID = 0;

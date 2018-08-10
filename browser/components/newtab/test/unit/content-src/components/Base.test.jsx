@@ -27,6 +27,30 @@ describe("<Base>", () => {
     assert.equal("NEW_TAB_REHYDRATED", action.type);
   });
 
+  it("should also fire NEW_TAB_REHYDRATED event when a section changes", () => {
+    const dispatch = sinon.spy();
+    const wrapper = shallow(<Base {...Object.assign({}, DEFAULT_PROPS, {
+      dispatch,
+      Sections: [{id: "topstories", options: {show_spocs: false}}]
+    })} />);
+
+    sinon.spy(wrapper.instance(), "hasTopStoriesSectionChanged");
+    wrapper.setProps(Object.assign({}, DEFAULT_PROPS, {
+      Sections: [{
+        id: "topstories",
+        options: {
+          show_spocs: true,
+          stories_endpoint: "https://foo.json"
+        }
+      }]
+    }));
+
+    assert.calledOnce(wrapper.instance().hasTopStoriesSectionChanged);
+    assert.calledTwice(dispatch);
+    const [action] = dispatch.firstCall.args;
+    assert.equal("NEW_TAB_REHYDRATED", action.type);
+  });
+
   it("should render an ErrorBoundary with class base-content-fallback", () => {
     const wrapper = shallow(<Base {...DEFAULT_PROPS} />);
 

@@ -1,5 +1,5 @@
 == default-size.html default-size-ref.html
-fuzzy-if(Android,8,1000) == size-1.html size-1-ref.html
+fuzzy-if(Android,0-8,0-1000) == size-1.html size-1-ref.html
 
 == empty-transaction-1.html empty-transaction-1-ref.html
 
@@ -27,8 +27,8 @@ random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enab
 == text-ltr-alignment-test.html text-ltr-alignment-ref.html
 == text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,256) == text-horzline-with-bottom.html text-horzline.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,256) fails-if(azureSkia&&OSX) == text-horzline-with-top.html text-horzline.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256) == text-horzline-with-bottom.html text-horzline.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256) fails-if(azureSkia&&OSX) == text-horzline-with-top.html text-horzline.html
 
 != text-big-stroke.html text-blank.html
 != text-big-stroke.html text-big-fill.html
@@ -39,7 +39,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,256) fails-if(azureSkia&&O
 
 == text-no-frame-test.html text-no-frame-ref.html
 == text-no-frame-2-test.html text-not-in-doc-ref.html
-fuzzy-if(azureSkiaGL,10,400) == text-not-in-doc-test.html text-not-in-doc-ref.html
+fuzzy-if(azureSkiaGL,0-10,0-400) == text-not-in-doc-test.html text-not-in-doc-ref.html
 
 == text-bidi-ltr-test.html text-bidi-ltr-ref.html
 != text-bidi-ltr-test.html text-bidi-ltr-notref.html # for bug 698185
@@ -70,7 +70,7 @@ random != text-emoji.html text-emoji-notref.html
 == evenodd-fill-1.html evenodd-fill-ref.html
 
 == dash-sanity.html data:text/html,<body>Pass
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||skiaContent,9,470) random-if(Android) fails-if(webrender) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||skiaContent,0-9,0-470) random-if(Android) fails-if(webrender) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
 
 == ctm-sanity.html data:text/html,<body>Pass
 == ctm-singular-sanity.html data:text/html,<body>Pass
@@ -84,26 +84,26 @@ skip-if(verify&&/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 674003-alpha-radi
 == 726951-shadow-clips.html 726951-shadow-clips-ref.html
 
 == transformed-clip.html transformed-clip-ref.html
-fuzzy-if(azureSkia,1,15) fuzzy-if(skiaContent,1,20) == transformed-gradient.html transformed-gradient-ref.html
+fuzzy-if(azureSkia,0-1,0-15) fuzzy-if(skiaContent,0-1,0-20) == transformed-gradient.html transformed-gradient-ref.html
 == transformed-path.html transformed-path.html
 
 == 749467-1.html 749467-1-ref.html
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
-fuzzy-if(d2d,12,21) fuzzy-if(skiaContent,16,84) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,153) == 784573-1.html 784573-1-ref.html
+fuzzy-if(d2d,0-12,0-21) fuzzy-if(skiaContent,0-16,0-84) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-153) == 784573-1.html 784573-1-ref.html
 
 == 802658-1.html 802658-1-ref.html
 == 1074733-1.html 1074733-1-ref.html
 == 1107096-invisibles.html 1107096-invisibles-ref.html
 == 1151821-1.html 1151821-1-ref.html
-fuzzy-if(skiaContent,1,43) == 1201272-1.html 1201272-1-ref.html
+fuzzy-if(skiaContent,0-1,0-43) == 1201272-1.html 1201272-1-ref.html
 == 1224976-1.html 1224976-1-ref.html
 == 1238795-1.html 1238795-1-ref.html
 == 1303534-1.html 1303534-1-ref.html
 
 == 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1-ref.html
-fuzzy-if(winWidget,1,578) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2-ref.html
-fuzzy-if(winWidget,94,1575) fuzzy-if(cocoaWidget,1,24) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1-ref.html
+fuzzy-if(winWidget,0-1,0-578) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2-ref.html
+fuzzy-if(winWidget,0-94,0-1575) fuzzy-if(cocoaWidget,0-1,0-24) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1-ref.html
 
 == text-indent-1a.html text-indent-1-ref.html
 == text-indent-1b.html text-indent-1-ref.html

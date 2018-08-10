@@ -39,8 +39,7 @@ impl Lifetime {
     pub fn new(s: &str, span: Span) -> Self {
         if !s.starts_with('\'') {
             panic!(
-                "lifetime name must start with apostrophe as in \"'a\", \
-                 got {:?}",
+                "lifetime name must start with apostrophe as in \"'a\", got {:?}",
                 s
             );
         }
@@ -68,7 +67,7 @@ impl Lifetime {
         }
 
         Lifetime {
-            apostrophe: Default::default(),
+            apostrophe: Apostrophe::default(),
             ident: Ident::new(&s[1..], span),
         }
     }

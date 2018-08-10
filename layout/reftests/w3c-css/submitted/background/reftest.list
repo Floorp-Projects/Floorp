@@ -35,7 +35,7 @@ fuzzy-if(webrender,7-7,216-224) == border-image-repeat-round-2.html border-image
 == border-image-repeat-1.html border-image-repeat-1-ref.html
 
 # background-attachment test cases
-fuzzy-if(webrender,1,10) == background-attachment-fixed-inside-transform-1.html background-attachment-fixed-inside-transform-1-ref.html
+fuzzy-if(webrender,0-1,0-10) == background-attachment-fixed-inside-transform-1.html background-attachment-fixed-inside-transform-1-ref.html
 
 # box-shadow with currentcolor test cases
 == box-shadow-currentcolor.html box-shadow-currentcolor-ref.html

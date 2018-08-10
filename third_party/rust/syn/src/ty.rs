@@ -278,6 +278,9 @@ pub mod parsing {
         // must be before TypePath
         syn!(TypeMacro) => { Type::Macro }
         |
+        // must be before TypePath
+        syn!(TypeBareFn) => { Type::BareFn }
+        |
         // must be before TypeTraitObject
         call!(TypePath::parse, allow_plus) => { Type::Path }
         |
@@ -292,8 +295,6 @@ pub mod parsing {
         syn!(TypePtr) => { Type::Ptr }
         |
         syn!(TypeReference) => { Type::Reference }
-        |
-        syn!(TypeBareFn) => { Type::BareFn }
         |
         syn!(TypeNever) => { Type::Never }
         |

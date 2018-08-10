@@ -1,8 +1,8 @@
-fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1-ref.html
+fuzzy-if(Android,0-8,0-30) == background-image-zoom-1.html background-image-zoom-1-ref.html
 fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == background-image-zoom-2.html about:blank
 == image-seam-1a.html image-seam-1-ref.html
 == image-seam-1b.html image-seam-1-ref.html
-fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
+fuzzy-if(Android,0-255,0-154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
 == image-zoom-1.html image-zoom-1-ref.html
 == image-zoom-2.html image-zoom-1-ref.html
 == invalid-url-image-1.html invalid-url-image-1-ref.html
@@ -17,33 +17,33 @@ fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 112
 == image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
 == image-object-position-dyn-1.html image-object-position-dyn-1-ref.html
 == image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
-fuzzy-if(winWidget,117,374) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
+fuzzy-if(winWidget,0-117,0-374) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
 
 # Tests for image-orientation used with 'from-image' (note that all
 # image-orientation tests are fuzzy because the JPEG images do not perfectly
 # reproduce blocks of solid color, even at maximum quality):
-fuzzy(2,5) == image-orientation-from-image.html?none     image-orientation-ref.html?0
-fuzzy(1,1) == image-orientation-from-image.html?0        image-orientation-ref.html?0
-fuzzy(1,1) == image-orientation-from-image.html?90       image-orientation-ref.html?90
-fuzzy(1,1) == image-orientation-from-image.html?180      image-orientation-ref.html?180
-fuzzy(1,1) == image-orientation-from-image.html?270      image-orientation-ref.html?270
-fuzzy(1,1) == image-orientation-from-image.html?0&flip   image-orientation-ref.html?0&flip
-fuzzy(1,1) == image-orientation-from-image.html?90&flip  image-orientation-ref.html?90&flip
-fuzzy(1,1) == image-orientation-from-image.html?180&flip image-orientation-ref.html?180&flip
-fuzzy(1,1) == image-orientation-from-image.html?270&flip image-orientation-ref.html?270&flip
+fuzzy(0-2,0-5) == image-orientation-from-image.html?none     image-orientation-ref.html?0
+fuzzy(0-1,0-1) == image-orientation-from-image.html?0        image-orientation-ref.html?0
+fuzzy(0-1,0-1) == image-orientation-from-image.html?90       image-orientation-ref.html?90
+fuzzy(0-1,0-1) == image-orientation-from-image.html?180      image-orientation-ref.html?180
+fuzzy(0-1,0-1) == image-orientation-from-image.html?270      image-orientation-ref.html?270
+fuzzy(0-1,0-1) == image-orientation-from-image.html?0&flip   image-orientation-ref.html?0&flip
+fuzzy(0-1,0-1) == image-orientation-from-image.html?90&flip  image-orientation-ref.html?90&flip
+fuzzy(0-1,0-1) == image-orientation-from-image.html?180&flip image-orientation-ref.html?180&flip
+fuzzy(0-1,0-1) == image-orientation-from-image.html?270&flip image-orientation-ref.html?270&flip
 
 # Tests for image-orientation used with an explicit 'none' orientation:
-fuzzy(1,1) == image-orientation-explicit-none.html image-orientation-ref.html?0
+fuzzy(0-1,0-1) == image-orientation-explicit-none.html image-orientation-ref.html?0
 
 # Tests for image-orientation:from-image used on generated content:
-fuzzy(1,1) == image-orientation-generated-content.html image-orientation-generated-content-ref.html
+fuzzy(0-1,0-1) == image-orientation-generated-content.html image-orientation-generated-content-ref.html
 
 # Tests that image-orientation does not apply to decorative images:
-fuzzy(1,1) == image-orientation-background.html?from-image   image-orientation-ref.html?none
+fuzzy(0-1,0-1) == image-orientation-background.html?from-image   image-orientation-ref.html?none
 == image-orientation-border-image.html?from-image            image-orientation-border-image.html?none
 == image-orientation-list-style-image.html?from-image        image-orientation-list-style-image.html?none
 
-fuzzy(1,1) == image-orientation-dynamic.html image-orientation-dynamic-ref.html
+fuzzy(0-1,0-1) == image-orientation-dynamic.html image-orientation-dynamic-ref.html
 
 # <img srcset> tests
 == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x-ref.html
