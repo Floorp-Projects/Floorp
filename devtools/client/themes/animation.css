@@ -96,7 +96,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   -moz-user-select: none;
 }
 
-.animation-list-container.active-scrubber {
+.animation-list-container.active-scrubber,
+.animation-list-container.active-scrubber .animation-summary-graph {
   cursor: col-resize;
 }
 
