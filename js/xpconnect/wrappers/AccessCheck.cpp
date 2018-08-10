@@ -45,7 +45,7 @@ GetRealmPrincipal(JS::Realm* realm)
 nsIPrincipal*
 GetObjectPrincipal(JSObject* obj)
 {
-    return GetCompartmentPrincipal(js::GetObjectCompartment(obj));
+    return GetRealmPrincipal(js::GetNonCCWObjectRealm(obj));
 }
 
 // Does the principal of compartment a subsume the principal of compartment b?
