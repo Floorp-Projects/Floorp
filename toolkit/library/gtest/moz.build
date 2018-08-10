@@ -32,7 +32,8 @@ if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
 
 # This needs to come after static:xul to avoid things like libfallible coming
 # before StaticXULComponentStart.
-Libxul('xul-gtest-real')
+Libxul('xul-gtest-real',
+       output_category=None if CONFIG['LINK_GTEST_DURING_COMPILE'] else 'gtest')
 
 DIRS += [
     'static',
