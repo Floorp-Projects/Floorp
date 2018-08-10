@@ -1429,26 +1429,28 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 
     Label done;
     Label notPointerEqual;
-    // Fast path for identical strings.
+    // If operands point to the same instance, the strings are trivially equal.
     branchPtr(Assembler::NotEqual, left, right, &notPointerEqual);
     move32(Imm32(op == JSOP_EQ || op == JSOP_STRICTEQ), result);
     jump(&done);
 
     bind(&notPointerEqual);
 
-    Label notAtom;
-    // Optimize the equality operation to a pointer compare for two atoms.
+    Label leftIsNotAtom;
+    Label setNotEqualResult;
+    // Atoms cannot be equal to each other if they point to different strings.
     Imm32 nonAtomBit(JSString::NON_ATOM_BIT);
-    branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfFlags()), nonAtomBit, &notAtom);
-    branchTest32(Assembler::NonZero, Address(right, JSString::offsetOfFlags()), nonAtomBit, &notAtom);
+    branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfFlags()), nonAtomBit,
+                 &leftIsNotAtom);
+    branchTest32(Assembler::Zero, Address(right, JSString::offsetOfFlags()), nonAtomBit,
+                 &setNotEqualResult);
 
-    cmpPtrSet(JSOpToCondition(MCompare::Compare_String, op), left, right, result);
-    jump(&done);
-
-    bind(&notAtom);
+    bind(&leftIsNotAtom);
     // Strings of different length can never be equal.
     loadStringLength(left, result);
     branch32(Assembler::Equal, Address(right, JSString::offsetOfLength()), result, fail);
+
+    bind(&setNotEqualResult);
     move32(Imm32(op == JSOP_NE || op == JSOP_STRICTNE), result);
 
     bind(&done);
