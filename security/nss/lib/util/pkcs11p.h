@@ -13,7 +13,10 @@
  * though it's still needed. put in a central file to help merging..
  */
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WINDOWS)
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wpragma-pack"
+#endif
 #ifdef _MSC_VER
 #pragma warning(disable : 4103)
 #endif
