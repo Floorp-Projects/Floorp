@@ -37,7 +37,13 @@ import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 
 class SearchSuggestionsFragment : Fragment() {
-    private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
+    lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        searchSuggestionsViewModel = ViewModelProviders.of(parentFragment!!).get(SearchSuggestionsViewModel::class.java)
+    }
 
     override fun onResume() {
         super.onResume()
@@ -45,10 +51,9 @@ class SearchSuggestionsFragment : Fragment() {
         searchSuggestionsViewModel.refresh()
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
 
-        searchSuggestionsViewModel = ViewModelProviders.of(activity!!).get(SearchSuggestionsViewModel::class.java)
         searchSuggestionsViewModel.searchQuery.observe(this, Observer {
             searchView.text = it
         })

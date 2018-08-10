@@ -10,19 +10,20 @@ import org.junit.Rule
 import org.mockito.Mockito.mock
 import android.arch.core.executor.testing.InstantTaskExecutorRule
 import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
+@RunWith(RobolectricTestRunner::class)
 class SearchSuggestionsViewModelTest {
     @get:Rule
     var rule: TestRule = InstantTaskExecutorRule()
 
     @Test
     fun setSearchQuery() {
-        val service = mock(SearchSuggestionsFetcher::class.java)
-        val preferences = mock(SearchSuggestionsPreferences::class.java)
         val lifecycle = LifecycleRegistry(mock(LifecycleOwner::class.java))
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-
-        val viewModel = SearchSuggestionsViewModel(service, preferences)
+        val viewModel = SearchSuggestionsViewModel(RuntimeEnvironment.application)
 
         viewModel.setSearchQuery("Mozilla")
 

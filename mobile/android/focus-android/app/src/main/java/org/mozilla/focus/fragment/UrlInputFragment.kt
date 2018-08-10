@@ -138,15 +138,21 @@ class UrlInputFragment :
         super.onCreate(savedInstanceState)
 
         model = ViewModelProviders.of(activity!!).get(MainViewModel::class.java)
-        searchSuggestionsViewModel = ViewModelProviders
-                .of(activity!!, SearchSuggestionsViewModel.Factory(activity!!))
-                .get(SearchSuggestionsViewModel::class.java)
+        searchSuggestionsViewModel = ViewModelProviders.of(this).get(SearchSuggestionsViewModel::class.java)
 
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let {
             session = if (SessionManager.getInstance().hasSessionWithUUID(it)) SessionManager
                 .getInstance().getSessionByUUID(it) else null
         }
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        childFragmentManager.beginTransaction()
+                .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
+                .commit()
 
         searchSuggestionsViewModel.selectedSearchSuggestion.observe(this, Observer {
             onSearch(it)
@@ -227,10 +233,6 @@ class UrlInputFragment :
             clearView?.visibility = View.VISIBLE
             searchViewContainer?.visibility = View.GONE
         }
-
-        fragmentManager!!.beginTransaction()
-                .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
-                .commit()
     }
 
     override fun applyLocale() {
