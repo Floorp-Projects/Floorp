@@ -73,15 +73,17 @@ const char* describeBinVariant(const BinVariant& variant)
 
 } // namespace frontend
 
+BinaryASTSupport::BinaryASTSupport()
+  : binKindMap_(frontend::BINKIND_LIMIT)
+  , binFieldMap_(frontend::BINFIELD_LIMIT)
+  , binVariantMap_(frontend::BINVARIANT_LIMIT)
+{
+}
 
 JS::Result<const js::frontend::BinKind*>
 BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
 {
-    if (!binKindMap_.initialized()) {
-        // Initialize lazily.
-        if (!binKindMap_.init(frontend::BINKIND_LIMIT))
-            return ReportOutOfMemoryResult(cx);
-
+    if (binKindMap_.empty()) {
         for (size_t i = 0; i < frontend::BINKIND_LIMIT; ++i) {
             const BinKind variant = static_cast<BinKind>(i);
             const CharSlice& key = getBinKind(variant);
@@ -100,12 +102,9 @@ BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
 }
 
 JS::Result<const js::frontend::BinVariant*>
-BinaryASTSupport::binVariant(JSContext* cx, const CharSlice key) {
-    if (!binVariantMap_.initialized()) {
-        // Initialize lazily.
-        if (!binVariantMap_.init(frontend::BINVARIANT_LIMIT))
-            return ReportOutOfMemoryResult(cx);
-
+BinaryASTSupport::binVariant(JSContext* cx, const CharSlice key)
+{
+    if (binVariantMap_.empty()) {
         for (size_t i = 0; i < frontend::BINVARIANT_LIMIT; ++i) {
             const BinVariant variant = static_cast<BinVariant>(i);
             const CharSlice& key = getBinVariant(variant);

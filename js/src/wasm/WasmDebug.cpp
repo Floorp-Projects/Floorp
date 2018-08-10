@@ -147,7 +147,7 @@ DebugState::totalSourceLines(JSContext* cx, uint32_t* count)
 bool
 DebugState::stepModeEnabled(uint32_t funcIndex) const
 {
-    return stepModeCounters_.initialized() && stepModeCounters_.lookup(funcIndex);
+    return stepModeCounters_.lookup(funcIndex).found();
 }
 
 bool
@@ -156,11 +156,6 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
     MOZ_ASSERT(debugEnabled());
     const CodeRange& codeRange = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
-
-    if (!stepModeCounters_.initialized() && !stepModeCounters_.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
 
     StepModeCounters::AddPtr p = stepModeCounters_.lookupForAdd(funcIndex);
     if (p) {
@@ -194,7 +189,7 @@ DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex)
     const CodeRange& codeRange = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
 
-    MOZ_ASSERT(stepModeCounters_.initialized() && !stepModeCounters_.empty());
+    MOZ_ASSERT(!stepModeCounters_.empty());
     StepModeCounters::Ptr p = stepModeCounters_.lookup(funcIndex);
     MOZ_ASSERT(p);
     if (--p->value())
@@ -211,7 +206,7 @@ DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex)
             continue;
         uint32_t offset = callSite.returnAddressOffset();
         if (codeRange.begin() <= offset && offset <= codeRange.end()) {
-            bool enabled = breakpointSites_.initialized() && breakpointSites_.has(offset);
+            bool enabled = breakpointSites_.has(offset);
             toggleDebugTrap(offset, enabled);
         }
     }
@@ -239,7 +234,7 @@ DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled)
     const CodeRange* codeRange = code_->lookupFuncRange(codeSegment.base() + debugTrapOffset);
     MOZ_ASSERT(codeRange);
 
-    if (stepModeCounters_.initialized() && stepModeCounters_.lookup(codeRange->funcIndex()))
+    if (stepModeCounters_.lookup(codeRange->funcIndex()))
         return; // no need to toggle when step mode is enabled
 
     AutoWritableJitCode awjc(rt, codeSegment.base(), codeSegment.length());
@@ -252,10 +247,6 @@ WasmBreakpointSite*
 DebugState::getOrCreateBreakpointSite(JSContext* cx, uint32_t offset)
 {
     WasmBreakpointSite* site;
-    if (!breakpointSites_.initialized() && !breakpointSites_.init()) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
 
     WasmBreakpointSiteMap::AddPtr p = breakpointSites_.lookupForAdd(offset);
     if (!p) {
@@ -277,13 +268,12 @@ DebugState::getOrCreateBreakpointSite(JSContext* cx, uint32_t offset)
 bool
 DebugState::hasBreakpointSite(uint32_t offset)
 {
-    return breakpointSites_.initialized() && breakpointSites_.has(offset);
+    return breakpointSites_.has(offset);
 }
 
 void
 DebugState::destroyBreakpointSite(FreeOp* fop, uint32_t offset)
 {
-    MOZ_ASSERT(breakpointSites_.initialized());
     WasmBreakpointSiteMap::Ptr p = breakpointSites_.lookup(offset);
     MOZ_ASSERT(p);
     fop->delete_(p->value());
@@ -294,7 +284,7 @@ bool
 DebugState::clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance, js::Debugger* dbg, JSObject* handler)
 {
     MOZ_ASSERT(instance);
-    if (!breakpointSites_.initialized())
+    if (breakpointSites_.empty())
         return true;
 
     // Make copy of all sites list, so breakpointSites_ can be modified by

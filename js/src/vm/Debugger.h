@@ -165,10 +165,6 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
     using Base::all;
     using Base::trace;
 
-    MOZ_MUST_USE bool init(uint32_t len = 16) {
-        return Base::init(len) && zoneCounts.init();
-    }
-
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr& p, const KeyInput& k, const ValueInput& v) {
         MOZ_ASSERT(v->compartment() == this->compartment);
@@ -881,7 +877,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     Debugger(JSContext* cx, NativeObject* dbg);
     ~Debugger();
 
-    MOZ_MUST_USE bool init(JSContext* cx);
     inline const js::GCPtrNativeObject& toJSObject() const;
     inline js::GCPtrNativeObject& toJSObjectRef();
     static inline Debugger* fromJSObject(const JSObject* obj);

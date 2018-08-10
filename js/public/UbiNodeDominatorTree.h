@@ -338,7 +338,6 @@ class JS_PUBLIC_API(DominatorTree)
             if (!p) {
                 mozilla::UniquePtr<NodeSet, DeletePolicy<NodeSet>> set(js_new<NodeSet>());
                 if (!set ||
-                    !set->init() ||
                     !predecessorSets.add(p, edge.referent, std::move(set)))
                 {
                     return false;
@@ -349,8 +348,7 @@ class JS_PUBLIC_API(DominatorTree)
         };
 
         PostOrder traversal(cx, noGC);
-        return traversal.init() &&
-               traversal.addStart(root) &&
+        return traversal.addStart(root) &&
                traversal.traverse(onNode, onEdge);
     }
 
@@ -358,10 +356,10 @@ class JS_PUBLIC_API(DominatorTree)
     // `postOrder`.
     static MOZ_MUST_USE bool mapNodesToTheirIndices(JS::ubi::Vector<Node>& postOrder,
                                                     NodeToIndexMap& map) {
-        MOZ_ASSERT(!map.initialized());
+        MOZ_ASSERT(map.empty());
         MOZ_ASSERT(postOrder.length() < UINT32_MAX);
         uint32_t length = postOrder.length();
-        if (!map.init(length))
+        if (!map.reserve(length))
             return false;
         for (uint32_t i = 0; i < length; i++)
             map.putNewInfallible(postOrder[i], i);
@@ -403,7 +401,7 @@ class JS_PUBLIC_API(DominatorTree)
                 predecessorVectors[i].infallibleAppend(ptr->value());
             }
         }
-        predecessorSets.finish();
+        predecessorSets.clearAndCompact();
         return true;
     }
 
@@ -515,7 +513,7 @@ class JS_PUBLIC_API(DominatorTree)
     Create(JSContext* cx, AutoCheckCannotGC& noGC, const Node& root) {
         JS::ubi::Vector<Node> postOrder;
         PredecessorSets predecessorSets;
-        if (!predecessorSets.init() || !doTraversal(cx, noGC, root, postOrder, predecessorSets))
+        if (!doTraversal(cx, noGC, root, postOrder, predecessorSets))
             return mozilla::Nothing();
 
         MOZ_ASSERT(postOrder.length() < UINT32_MAX);
@@ -528,7 +526,7 @@ class JS_PUBLIC_API(DominatorTree)
         // implementation, but we have to pay a little bit of upfront cost to
         // convert our data structures to play along first.
 
-        NodeToIndexMap nodeToPostOrderIndex;
+        NodeToIndexMap nodeToPostOrderIndex(postOrder.length());
         if (!mapNodesToTheirIndices(postOrder, nodeToPostOrderIndex))
             return mozilla::Nothing();
 

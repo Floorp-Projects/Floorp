@@ -352,7 +352,6 @@ class MOZ_STACK_CLASS ModuleBuilder
   public:
     explicit ModuleBuilder(JSContext* cx, HandleModuleObject module,
                            const frontend::TokenStreamAnyChars& tokenStream);
-    bool init();
 
     bool processImport(frontend::ParseNode* pn);
     bool processExport(frontend::ParseNode* pn);

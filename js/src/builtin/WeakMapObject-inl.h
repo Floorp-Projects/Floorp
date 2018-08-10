@@ -41,10 +41,6 @@ WeakCollectionPutEntryInternal(JSContext* cx, Handle<WeakCollectionObject*> obj,
         auto newMap = cx->make_unique<ObjectValueMap>(cx, obj.get());
         if (!newMap)
             return false;
-        if (!newMap->init()) {
-            JS_ReportOutOfMemory(cx);
-            return false;
-        }
         map = newMap.release();
         obj->setPrivate(map);
     }

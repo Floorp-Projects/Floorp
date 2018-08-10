@@ -145,9 +145,7 @@ using MyHashMap = js::GCHashMap<js::Shape*, JSObject*>;
 
 BEGIN_TEST(testGCRootedHashMap)
 {
-    JS::Rooted<MyHashMap> map(cx, MyHashMap(cx));
-    CHECK(map.init(15));
-    CHECK(map.initialized());
+    JS::Rooted<MyHashMap> map(cx, MyHashMap(cx, 15));
 
     for (size_t i = 0; i < 10; ++i) {
         RootedObject obj(cx, JS_NewObject(cx, nullptr));
@@ -205,9 +203,7 @@ CheckMyHashMap(JSContext* cx, Handle<MyHashMap> map)
 
 BEGIN_TEST(testGCHandleHashMap)
 {
-    JS::Rooted<MyHashMap> map(cx, MyHashMap(cx));
-    CHECK(map.init(15));
-    CHECK(map.initialized());
+    JS::Rooted<MyHashMap> map(cx, MyHashMap(cx, 15));
 
     CHECK(FillMyHashMap(cx, &map));
 

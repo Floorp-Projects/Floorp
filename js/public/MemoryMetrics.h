@@ -569,7 +569,7 @@ struct RuntimeSizes
         notableScriptSources()
     {
         allScriptSources = js_new<ScriptSourcesHashMap>();
-        if (!allScriptSources || !allScriptSources->init())
+        if (!allScriptSources)
             MOZ_CRASH("oom");
     }
 

@@ -4579,9 +4579,6 @@ OffThreadPromiseRuntimeState::OffThreadPromiseRuntimeState()
     numCanceled_(0),
     internalDispatchQueueClosed_(false)
 {
-    AutoEnterOOMUnsafeRegion noOOM;
-    if (!live_.init())
-        noOOM.crash("OffThreadPromiseRuntimeState");
 }
 
 OffThreadPromiseRuntimeState::~OffThreadPromiseRuntimeState()

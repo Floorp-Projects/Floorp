@@ -383,8 +383,6 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
     Census census(cx);
-    if (!census.init())
-        return false;
     CountTypePtr rootType;
 
     RootedObject options(cx);
@@ -417,10 +415,6 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
         }
 
         JS::ubi::CensusTraversal traversal(cx, handler, maybeNoGC.ref());
-        if (!traversal.init()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
         traversal.wantNames = false;
 
         if (!traversal.addStart(JS::ubi::Node(&rootList)) ||

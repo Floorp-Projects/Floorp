@@ -111,12 +111,7 @@ js::intl::SharedIntlData::ensureTimeZones(JSContext* cx)
 
     // If ensureTimeZones() was called previously, but didn't complete due to
     // OOM, clear all sets/maps and start from scratch.
-    if (availableTimeZones.initialized())
-        availableTimeZones.finish();
-    if (!availableTimeZones.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+    availableTimeZones.clearAndCompact();
 
     UErrorCode status = U_ZERO_ERROR;
     UEnumeration* values = ucal_openTimeZones(&status);
@@ -158,12 +153,7 @@ js::intl::SharedIntlData::ensureTimeZones(JSContext* cx)
         }
     }
 
-    if (ianaZonesTreatedAsLinksByICU.initialized())
-        ianaZonesTreatedAsLinksByICU.finish();
-    if (!ianaZonesTreatedAsLinksByICU.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+    ianaZonesTreatedAsLinksByICU.clearAndCompact();
 
     for (const char* rawTimeZone : timezone::ianaZonesTreatedAsLinksByICU) {
         MOZ_ASSERT(rawTimeZone != nullptr);
@@ -181,12 +171,7 @@ js::intl::SharedIntlData::ensureTimeZones(JSContext* cx)
         }
     }
 
-    if (ianaLinksCanonicalizedDifferentlyByICU.initialized())
-        ianaLinksCanonicalizedDifferentlyByICU.finish();
-    if (!ianaLinksCanonicalizedDifferentlyByICU.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+    ianaLinksCanonicalizedDifferentlyByICU.clearAndCompact();
 
     RootedAtom linkName(cx);
     RootedAtom& target = timeZone;
@@ -308,12 +293,7 @@ js::intl::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx)
 
     // If ensureUpperCaseFirstLocales() was called previously, but didn't
     // complete due to OOM, clear all data and start from scratch.
-    if (upperCaseFirstLocales.initialized())
-        upperCaseFirstLocales.finish();
-    if (!upperCaseFirstLocales.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+    upperCaseFirstLocales.clearAndCompact();
 
     UErrorCode status = U_ZERO_ERROR;
     UEnumeration* available = ucol_openAvailableLocales(&status);
@@ -393,10 +373,10 @@ js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx, HandleString locale, b
 void
 js::intl::SharedIntlData::destroyInstance()
 {
-    availableTimeZones.finish();
-    ianaZonesTreatedAsLinksByICU.finish();
-    ianaLinksCanonicalizedDifferentlyByICU.finish();
-    upperCaseFirstLocales.finish();
+    availableTimeZones.clearAndCompact();
+    ianaZonesTreatedAsLinksByICU.clearAndCompact();
+    ianaLinksCanonicalizedDifferentlyByICU.clearAndCompact();
+    upperCaseFirstLocales.clearAndCompact();
 }
 
 void

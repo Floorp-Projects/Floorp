@@ -10217,9 +10217,6 @@ CodeGenerator::generate()
     if (!addNativeToBytecodeEntry(startSite))
         return false;
 
-    if (!snapshots_.init())
-        return false;
-
     if (!safepoints_.init(gen->alloc()))
         return false;
 

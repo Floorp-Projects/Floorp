@@ -373,7 +373,6 @@ class jit::UniqueTrackedTypes
         list_(cx)
     { }
 
-    bool init() { return map_.init(); }
     bool getIndexOf(TypeSet::Type ty, uint8_t* indexp);
 
     uint32_t count() const { MOZ_ASSERT(map_.count() == list_.length()); return list_.length(); }
@@ -965,8 +964,6 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
 
     // Write out type info payloads.
     UniqueTrackedTypes uniqueTypes(cx);
-    if (!uniqueTypes.init())
-        return false;
 
     for (const UniqueTrackedOptimizations::SortEntry* p = vec.begin(); p != vec.end(); p++) {
         const TempOptimizationTypeInfoVector* v = p->types;

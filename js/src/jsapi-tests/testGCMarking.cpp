@@ -122,7 +122,6 @@ BEGIN_TEST(testTracingIncomingCCWs)
     // Ensure that |TraceIncomingCCWs| finds the object wrapped by the CCW.
 
     JS::CompartmentSet compartments;
-    CHECK(compartments.init());
     CHECK(compartments.put(global2->compartment()));
 
     void* thing = wrappee.get();

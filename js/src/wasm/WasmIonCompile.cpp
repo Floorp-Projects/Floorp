@@ -1479,7 +1479,7 @@ class FunctionCompiler
             IndexToCaseMap;
 
         IndexToCaseMap indexToCase;
-        if (!indexToCase.init() || !indexToCase.put(defaultDepth, defaultIndex))
+        if (!indexToCase.put(defaultDepth, defaultIndex))
             return false;
 
         for (size_t i = 0; i < numCases; i++) {

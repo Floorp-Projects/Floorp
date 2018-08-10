@@ -172,10 +172,8 @@ Table::grow(uint32_t delta, JSContext* cx)
     PodZero(newArray + length_, delta);
     length_ = newLength.value();
 
-    if (observers_.initialized()) {
-        for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront())
-            r.front()->instance().onMovingGrowTable();
-    }
+    for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront())
+        r.front()->instance().onMovingGrowTable();
 
     return oldLength;
 }
@@ -190,11 +188,6 @@ bool
 Table::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance)
 {
     MOZ_ASSERT(movingGrowable());
-
-    if (!observers_.initialized() && !observers_.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
 
     if (!observers_.putNew(instance)) {
         ReportOutOfMemory(cx);

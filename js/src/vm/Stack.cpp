@@ -1662,11 +1662,6 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JSJitFrameIter& 
         rematerializedFrames_ = cx->make_unique<RematerializedFrameTable>(cx);
         if (!rematerializedFrames_)
             return nullptr;
-        if (!rematerializedFrames_->init()) {
-            rematerializedFrames_.reset();
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
     }
 
     uint8_t* top = iter.fp();

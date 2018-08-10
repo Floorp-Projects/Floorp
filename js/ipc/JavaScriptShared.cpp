@@ -20,16 +20,8 @@ using namespace mozilla;
 using namespace mozilla::jsipc;
 
 IdToObjectMap::IdToObjectMap()
-  : table_(SystemAllocPolicy())
+  : table_(SystemAllocPolicy(), 32)
 {
-}
-
-bool
-IdToObjectMap::init()
-{
-    if (table_.initialized())
-        return true;
-    return table_.init(32);
 }
 
 void
@@ -105,10 +97,9 @@ IdToObjectMap::has(const ObjectId& id, const JSObject* obj) const
 }
 #endif
 
-bool
-ObjectToIdMap::init()
+ObjectToIdMap::ObjectToIdMap()
+  : table_(SystemAllocPolicy(), 32)
 {
-    return table_.initialized() || table_.init(32);
 }
 
 void
@@ -177,21 +168,6 @@ JavaScriptShared::JavaScriptShared()
 JavaScriptShared::~JavaScriptShared()
 {
     MOZ_RELEASE_ASSERT(cpows_.empty());
-}
-
-bool
-JavaScriptShared::init()
-{
-    if (!objects_.init())
-        return false;
-    if (!cpows_.init())
-        return false;
-    if (!unwaivedObjectIds_.init())
-        return false;
-    if (!waivedObjectIds_.init())
-        return false;
-
-    return true;
 }
 
 void

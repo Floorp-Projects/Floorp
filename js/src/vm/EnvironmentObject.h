@@ -994,8 +994,6 @@ class DebugEnvironments
     Zone* zone() const { return zone_; }
 
   private:
-    bool init();
-
     static DebugEnvironments* ensureRealmData(JSContext* cx);
 
     template <typename Environment, typename Scope>

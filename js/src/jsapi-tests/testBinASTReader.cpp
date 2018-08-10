@@ -166,8 +166,6 @@ runTestFromPath(JSContext* cx, const char* path)
         txtOptions.setFileAndLine(txtPath.begin(), 0);
 
         UsedNameTracker txtUsedNames(cx);
-        if (!txtUsedNames.init())
-            MOZ_CRASH("Couldn't initialize used names");
 
         RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(
                                                   cx, txtOptions, mozilla::Nothing()));
@@ -206,8 +204,6 @@ runTestFromPath(JSContext* cx, const char* path)
         binOptions.setFileAndLine(binPath.begin(), 0);
 
         js::frontend::UsedNameTracker binUsedNames(cx);
-        if (!binUsedNames.init())
-            MOZ_CRASH("Couldn't initialized binUsedNames");
 
         js::frontend::BinASTParser<Tok> binParser(cx, allocScope.alloc(), binUsedNames, binOptions);
 
