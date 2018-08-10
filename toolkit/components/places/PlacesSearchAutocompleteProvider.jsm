@@ -18,11 +18,6 @@ ChromeUtils.defineModuleGetter(this, "SearchSuggestionController",
 
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
-const ENGINE_ALIASES = new Map([
-  ["Google", "@google"],
-  ["Amazon", "@amazon"],
-]);
-
 const SearchAutocompleteProviderInternal = {
   /**
    * Array of objects in the format returned by findMatchByToken.
@@ -108,18 +103,10 @@ const SearchAutocompleteProviderInternal = {
 
     let aliases = [];
 
-    for (let [name, alias] of ENGINE_ALIASES) {
-      if (!engine.wrappedJSObject._isDefault ||
-          !engine.name.startsWith(name)) {
-        continue;
-      }
-      aliases.push(alias);
-      break;
-    }
-
     if (engine.alias) {
       aliases.push(engine.alias);
     }
+    aliases.push(...engine.wrappedJSObject._internalAliases);
 
     if (aliases.length) {
       this.aliasMatches.push({
