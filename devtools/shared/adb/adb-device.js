@@ -19,25 +19,6 @@ Device.prototype = {
 
   shell: ADB.shell.bind(ADB),
   forwardPort: ADB.forwardPort.bind(ADB),
-  push: ADB.push.bind(ADB),
-  pull: ADB.pull.bind(ADB),
-  reboot: ADB.reboot.bind(ADB),
-  rebootRecovery: ADB.rebootRecovery.bind(ADB),
-  rebootBootloader: ADB.rebootBootloader.bind(ADB),
-
-  isRoot() {
-    return ADB.shell("id").then(stdout => {
-      if (stdout) {
-        const uid = stdout.match(/uid=(\d+)/)[1];
-        return uid == "0";
-      }
-      return false;
-    });
-  },
-
-  summonRoot() {
-    return ADB.root();
-  },
 
   getModel() {
     if (this._modelPromise) {
@@ -47,6 +28,7 @@ Device.prototype = {
                              .then(model => model.trim());
     return this._modelPromise;
   }
+  // push, pull were removed in Bug 1481691.
 };
 
 module.exports = Device;
