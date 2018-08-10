@@ -833,8 +833,8 @@ public:
 
     nsIPrincipal*
     GetPrincipal() const {
-        JS::Compartment* c = js::GetObjectCompartment(mGlobalJSObject);
-        return nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+        JS::Realm* r = js::GetNonCCWObjectRealm(mGlobalJSObject);
+        return nsJSPrincipals::get(JS::GetRealmPrincipals(r));
     }
 
     JSObject*
