@@ -4,11 +4,15 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
+const TabDetail = createFactory(require("./debugtarget/TabDetail"));
+
 const Actions = require("../actions/index");
+const { DEBUG_TARGETS } = require("../constants");
 
 /**
  * This component displays debug target.
@@ -17,27 +21,39 @@ class DebugTargetItem extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      icon: PropTypes.string.isRequired,
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      type: PropTypes.string.isRequired,
-      url: PropTypes.string.isRequired,
+      target: PropTypes.object.isRequired,
     };
   }
 
   inspect() {
-    const { dispatch, type, id } = this.props;
-    dispatch(Actions.inspectDebugTarget(type, id));
+    const { dispatch, target } = this.props;
+    dispatch(Actions.inspectDebugTarget(target.type, target.id));
+  }
+
+  renderDetail() {
+    const { target } = this.props;
+
+    switch (target.type) {
+      case DEBUG_TARGETS.EXTENSION:
+        return ExtensionDetail({ target });
+      case DEBUG_TARGETS.TAB:
+        return TabDetail({ target });
+
+      default:
+        return null;
+    }
   }
 
   renderIcon() {
     return dom.img({
       className: "debug-target-item__icon",
-      src: this.props.icon,
+      src: this.props.target.icon,
     });
   }
 
   renderInfo() {
+    const { target } = this.props;
+
     return dom.div(
       {
         className: "debug-target-item__info",
@@ -45,16 +61,11 @@ class DebugTargetItem extends PureComponent {
       dom.div(
         {
           className: "debug-target-item__info__name ellipsis-text",
-          title: this.props.name,
+          title: target.name,
         },
-        this.props.name
+        target.name
       ),
-      dom.div(
-        {
-          className: "debug-target-item__info__url ellipsis-text",
-        },
-        this.props.url
-      ),
+      this.renderDetail(),
     );
   }
 

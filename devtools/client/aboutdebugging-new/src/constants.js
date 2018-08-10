@@ -21,6 +21,7 @@ const actionTypes = {
 };
 
 const DEBUG_TARGETS = {
+  EXTENSION: "EXTENSION",
   TAB: "TAB",
 };
 
