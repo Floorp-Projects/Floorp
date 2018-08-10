@@ -119,6 +119,13 @@
   mask-image: linear-gradient(to right, transparent 0, black 6px);
 }
 
+.devtools-tab .devtools-tab-badge {
+  color: var(--theme-highlight-blue);
+  font-size: 80%;
+  font-weight: 500;
+  margin-inline-start: 5px;
+}
+
 .devtools-tab-icon-only {
   min-width: 24px;
 }
