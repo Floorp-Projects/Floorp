@@ -22,6 +22,7 @@ extern "C" {
 #include "vpx/vp8.h"
 
 struct VP8D_COMP;
+struct VP8Common;
 
 typedef struct {
   int Width;
@@ -45,6 +46,7 @@ int vp8dx_receive_compressed_data(struct VP8D_COMP *comp, size_t size,
 int vp8dx_get_raw_frame(struct VP8D_COMP *comp, YV12_BUFFER_CONFIG *sd,
                         int64_t *time_stamp, int64_t *time_end_stamp,
                         vp8_ppflags_t *flags);
+int vp8dx_references_buffer(struct VP8Common *oci, int ref_frame);
 
 vpx_codec_err_t vp8dx_get_reference(struct VP8D_COMP *comp,
                                     enum vpx_ref_frame_type ref_frame_flag,
@@ -52,6 +54,7 @@ vpx_codec_err_t vp8dx_get_reference(struct VP8D_COMP *comp,
 vpx_codec_err_t vp8dx_set_reference(struct VP8D_COMP *comp,
                                     enum vpx_ref_frame_type ref_frame_flag,
                                     YV12_BUFFER_CONFIG *sd);
+int vp8dx_get_quantizer(const struct VP8D_COMP *c);
 
 #ifdef __cplusplus
 }

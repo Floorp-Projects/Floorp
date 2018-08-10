@@ -7,6 +7,8 @@
 // be found in the AUTHORS file in the root of the source tree.
 #include "mkvparser/mkvreader.h"
 
+#include <sys/types.h>
+
 #include <cassert>
 
 namespace mkvparser {

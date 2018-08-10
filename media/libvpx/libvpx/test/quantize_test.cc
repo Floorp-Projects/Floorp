@@ -200,4 +200,12 @@ INSTANTIATE_TEST_CASE_P(
         make_tuple(&vp8_fast_quantize_b_msa, &vp8_fast_quantize_b_c),
         make_tuple(&vp8_regular_quantize_b_msa, &vp8_regular_quantize_b_c)));
 #endif  // HAVE_MSA
+
+#if HAVE_MMI
+INSTANTIATE_TEST_CASE_P(
+    MMI, QuantizeTest,
+    ::testing::Values(
+        make_tuple(&vp8_fast_quantize_b_mmi, &vp8_fast_quantize_b_c),
+        make_tuple(&vp8_regular_quantize_b_mmi, &vp8_regular_quantize_b_c)));
+#endif  // HAVE_MMI
 }  // namespace

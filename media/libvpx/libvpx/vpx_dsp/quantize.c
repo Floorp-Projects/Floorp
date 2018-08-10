@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <assert.h>
+
 #include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/quantize.h"
 #include "vpx_mem/vpx_mem.h"
@@ -123,40 +125,40 @@ void vpx_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   const int zbins[2] = { zbin_ptr[0], zbin_ptr[1] };
   const int nzbins[2] = { zbins[0] * -1, zbins[1] * -1 };
   (void)iscan;
+  (void)skip_block;
+  assert(!skip_block);
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
   memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
 
-  if (!skip_block) {
-    // Pre-scan pass
-    for (i = (int)n_coeffs - 1; i >= 0; i--) {
-      const int rc = scan[i];
-      const int coeff = coeff_ptr[rc];
+  // Pre-scan pass
+  for (i = (int)n_coeffs - 1; i >= 0; i--) {
+    const int rc = scan[i];
+    const int coeff = coeff_ptr[rc];
 
-      if (coeff < zbins[rc != 0] && coeff > nzbins[rc != 0])
-        non_zero_count--;
-      else
-        break;
-    }
+    if (coeff < zbins[rc != 0] && coeff > nzbins[rc != 0])
+      non_zero_count--;
+    else
+      break;
+  }
 
-    // Quantization pass: All coefficients with index >= zero_flag are
-    // skippable. Note: zero_flag can be zero.
-    for (i = 0; i < non_zero_count; i++) {
-      const int rc = scan[i];
-      const int coeff = coeff_ptr[rc];
-      const int coeff_sign = (coeff >> 31);
-      const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
+  // Quantization pass: All coefficients with index >= zero_flag are
+  // skippable. Note: zero_flag can be zero.
+  for (i = 0; i < non_zero_count; i++) {
+    const int rc = scan[i];
+    const int coeff = coeff_ptr[rc];
+    const int coeff_sign = (coeff >> 31);
+    const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
 
-      if (abs_coeff >= zbins[rc != 0]) {
-        int tmp = clamp(abs_coeff + round_ptr[rc != 0], INT16_MIN, INT16_MAX);
-        tmp = ((((tmp * quant_ptr[rc != 0]) >> 16) + tmp) *
-               quant_shift_ptr[rc != 0]) >>
-              16;  // quantization
-        qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
-        dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0];
+    if (abs_coeff >= zbins[rc != 0]) {
+      int tmp = clamp(abs_coeff + round_ptr[rc != 0], INT16_MIN, INT16_MAX);
+      tmp = ((((tmp * quant_ptr[rc != 0]) >> 16) + tmp) *
+             quant_shift_ptr[rc != 0]) >>
+            16;  // quantization
+      qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
+      dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0];
 
-        if (tmp) eob = i;
-      }
+      if (tmp) eob = i;
     }
   }
   *eob_ptr = eob + 1;
@@ -174,39 +176,38 @@ void vpx_highbd_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   const int zbins[2] = { zbin_ptr[0], zbin_ptr[1] };
   const int nzbins[2] = { zbins[0] * -1, zbins[1] * -1 };
   (void)iscan;
+  (void)skip_block;
+  assert(!skip_block);
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
   memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
 
-  if (!skip_block) {
-    // Pre-scan pass
-    for (i = (int)n_coeffs - 1; i >= 0; i--) {
-      const int rc = scan[i];
-      const int coeff = coeff_ptr[rc];
+  // Pre-scan pass
+  for (i = (int)n_coeffs - 1; i >= 0; i--) {
+    const int rc = scan[i];
+    const int coeff = coeff_ptr[rc];
 
-      if (coeff < zbins[rc != 0] && coeff > nzbins[rc != 0])
-        non_zero_count--;
-      else
-        break;
-    }
+    if (coeff < zbins[rc != 0] && coeff > nzbins[rc != 0])
+      non_zero_count--;
+    else
+      break;
+  }
 
-    // Quantization pass: All coefficients with index >= zero_flag are
-    // skippable. Note: zero_flag can be zero.
-    for (i = 0; i < non_zero_count; i++) {
-      const int rc = scan[i];
-      const int coeff = coeff_ptr[rc];
-      const int coeff_sign = (coeff >> 31);
-      const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
+  // Quantization pass: All coefficients with index >= zero_flag are
+  // skippable. Note: zero_flag can be zero.
+  for (i = 0; i < non_zero_count; i++) {
+    const int rc = scan[i];
+    const int coeff = coeff_ptr[rc];
+    const int coeff_sign = (coeff >> 31);
+    const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
 
-      if (abs_coeff >= zbins[rc != 0]) {
-        const int64_t tmp1 = abs_coeff + round_ptr[rc != 0];
-        const int64_t tmp2 = ((tmp1 * quant_ptr[rc != 0]) >> 16) + tmp1;
-        const uint32_t abs_qcoeff =
-            (uint32_t)((tmp2 * quant_shift_ptr[rc != 0]) >> 16);
-        qcoeff_ptr[rc] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
-        dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0];
-        if (abs_qcoeff) eob = i;
-      }
+    if (abs_coeff >= zbins[rc != 0]) {
+      const int64_t tmp1 = abs_coeff + round_ptr[rc != 0];
+      const int64_t tmp2 = ((tmp1 * quant_ptr[rc != 0]) >> 16) + tmp1;
+      const int abs_qcoeff = (int)((tmp2 * quant_shift_ptr[rc != 0]) >> 16);
+      qcoeff_ptr[rc] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
+      dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0];
+      if (abs_qcoeff) eob = i;
     }
   }
   *eob_ptr = eob + 1;
@@ -228,41 +229,40 @@ void vpx_quantize_b_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   int idx_arr[1024];
   int i, eob = -1;
   (void)iscan;
+  (void)skip_block;
+  assert(!skip_block);
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
   memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
 
-  if (!skip_block) {
-    // Pre-scan pass
-    for (i = 0; i < n_coeffs; i++) {
-      const int rc = scan[i];
-      const int coeff = coeff_ptr[rc];
+  // Pre-scan pass
+  for (i = 0; i < n_coeffs; i++) {
+    const int rc = scan[i];
+    const int coeff = coeff_ptr[rc];
 
-      // If the coefficient is out of the base ZBIN range, keep it for
-      // quantization.
-      if (coeff >= zbins[rc != 0] || coeff <= nzbins[rc != 0])
-        idx_arr[idx++] = i;
-    }
+    // If the coefficient is out of the base ZBIN range, keep it for
+    // quantization.
+    if (coeff >= zbins[rc != 0] || coeff <= nzbins[rc != 0]) idx_arr[idx++] = i;
+  }
 
-    // Quantization pass: only process the coefficients selected in
-    // pre-scan pass. Note: idx can be zero.
-    for (i = 0; i < idx; i++) {
-      const int rc = scan[idx_arr[i]];
-      const int coeff = coeff_ptr[rc];
-      const int coeff_sign = (coeff >> 31);
-      int tmp;
-      int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
-      abs_coeff += ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
-      abs_coeff = clamp(abs_coeff, INT16_MIN, INT16_MAX);
-      tmp = ((((abs_coeff * quant_ptr[rc != 0]) >> 16) + abs_coeff) *
-             quant_shift_ptr[rc != 0]) >>
-            15;
+  // Quantization pass: only process the coefficients selected in
+  // pre-scan pass. Note: idx can be zero.
+  for (i = 0; i < idx; i++) {
+    const int rc = scan[idx_arr[i]];
+    const int coeff = coeff_ptr[rc];
+    const int coeff_sign = (coeff >> 31);
+    int tmp;
+    int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
+    abs_coeff += ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
+    abs_coeff = clamp(abs_coeff, INT16_MIN, INT16_MAX);
+    tmp = ((((abs_coeff * quant_ptr[rc != 0]) >> 16) + abs_coeff) *
+           quant_shift_ptr[rc != 0]) >>
+          15;
 
-      qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
-      dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 2;
+    qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
+    dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 2;
 
-      if (tmp) eob = idx_arr[i];
-    }
+    if (tmp) eob = idx_arr[i];
   }
   *eob_ptr = eob + 1;
 }
@@ -282,38 +282,35 @@ void vpx_highbd_quantize_b_32x32_c(
   int idx_arr[1024];
   int i, eob = -1;
   (void)iscan;
+  (void)skip_block;
+  assert(!skip_block);
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
   memset(dqcoeff_ptr, 0, n_coeffs * sizeof(*dqcoeff_ptr));
 
-  if (!skip_block) {
-    // Pre-scan pass
-    for (i = 0; i < n_coeffs; i++) {
-      const int rc = scan[i];
-      const int coeff = coeff_ptr[rc];
+  // Pre-scan pass
+  for (i = 0; i < n_coeffs; i++) {
+    const int rc = scan[i];
+    const int coeff = coeff_ptr[rc];
 
-      // If the coefficient is out of the base ZBIN range, keep it for
-      // quantization.
-      if (coeff >= zbins[rc != 0] || coeff <= nzbins[rc != 0])
-        idx_arr[idx++] = i;
-    }
+    // If the coefficient is out of the base ZBIN range, keep it for
+    // quantization.
+    if (coeff >= zbins[rc != 0] || coeff <= nzbins[rc != 0]) idx_arr[idx++] = i;
+  }
 
-    // Quantization pass: only process the coefficients selected in
-    // pre-scan pass. Note: idx can be zero.
-    for (i = 0; i < idx; i++) {
-      const int rc = scan[idx_arr[i]];
-      const int coeff = coeff_ptr[rc];
-      const int coeff_sign = (coeff >> 31);
-      const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
-      const int64_t tmp1 =
-          abs_coeff + ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
-      const int64_t tmp2 = ((tmp1 * quant_ptr[rc != 0]) >> 16) + tmp1;
-      const uint32_t abs_qcoeff =
-          (uint32_t)((tmp2 * quant_shift_ptr[rc != 0]) >> 15);
-      qcoeff_ptr[rc] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
-      dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 2;
-      if (abs_qcoeff) eob = idx_arr[i];
-    }
+  // Quantization pass: only process the coefficients selected in
+  // pre-scan pass. Note: idx can be zero.
+  for (i = 0; i < idx; i++) {
+    const int rc = scan[idx_arr[i]];
+    const int coeff = coeff_ptr[rc];
+    const int coeff_sign = (coeff >> 31);
+    const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
+    const int64_t tmp1 = abs_coeff + ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
+    const int64_t tmp2 = ((tmp1 * quant_ptr[rc != 0]) >> 16) + tmp1;
+    const int abs_qcoeff = (int)((tmp2 * quant_shift_ptr[rc != 0]) >> 15);
+    qcoeff_ptr[rc] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
+    dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 2;
+    if (abs_qcoeff) eob = idx_arr[i];
   }
   *eob_ptr = eob + 1;
 }

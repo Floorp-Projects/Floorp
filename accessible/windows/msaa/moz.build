@@ -12,7 +12,6 @@ EXPORTS.mozilla.a11y += [
     'AccessibleWrap.h',
     'Compatibility.h',
     'HyperTextAccessibleWrap.h',
-    'IDSet.h',
     'LazyInstantiator.h',
     'MsaaIdGenerator.h',
     'nsWinUtils.h',

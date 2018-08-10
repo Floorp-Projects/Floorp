@@ -326,3 +326,10 @@ pref("devtools.aboutdebugging.new-enabled", false);
 #else
   pref("devtools.aboutdebugging.showSystemAddons", true);
 #endif
+
+// Map top-level await expressions in the console
+#if defined(RELEASE_OR_BETA)
+pref("devtools.debugger.features.map-await-expression", false);
+#else
+pref("devtools.debugger.features.map-await-expression", true);
+#endif

@@ -34,7 +34,7 @@ add_task(async function setup_test_preference() {
 
 add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   info("- open new background tab -");
-  let tab = window.gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   tab.linkedBrowser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -64,7 +64,7 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
 
 add_task(async function should_not_show_sound_indicator_after_resume_tab() {
   info("- open new background tab -");
-  let tab = window.gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   tab.linkedBrowser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 

@@ -1,7 +1,7 @@
-URL: http://code.google.com/p/googletest/
-Version: 1.7.0
+URL: https://github.com/google/googletest
+Version: 1.8.0
 License: BSD
-License File: COPYING
+License File: LICENSE
 
 Description:
 Google's framework for writing C++ tests on a variety of platforms
@@ -12,10 +12,13 @@ failures, various options for running the tests, and XML test report
 generation.
 
 Local Modifications:
-- Removed unused declarations of kPathSeparatorString to have warning
-  free build.
-- Added GTEST_ATTRIBUTE_UNUSED_ to test registering dummies in TEST_P
-  and INSTANTIATE_TEST_CASE_P to remove warnings about unused variables
-  under GCC 5.
-- Only define g_in_fast_death_test_child for non-Windows builds; quiets an
-  unused variable warning.
+- Remove everything but:
+  googletest-release-1.8.0/googletest/
+   CHANGES
+   CONTRIBUTORS
+   include
+   LICENSE
+   README.md
+   src
+- Suppress unsigned overflow instrumentation in the LCG
+  https://github.com/google/googletest/pull/1066

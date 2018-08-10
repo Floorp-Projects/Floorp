@@ -193,6 +193,7 @@ cd $TEMP_DIR
 echo "Generate config files."
 all_platforms="--enable-external-build --disable-examples --disable-install-docs --disable-unit-tests"
 all_platforms="${all_platforms} --enable-multi-res-encoding --size-limit=8192x4608 --enable-pic"
+all_platforms="${all_platforms} --disable-avx512"
 x86_platforms="--enable-postproc --enable-vp9-postproc --as=yasm"
 arm_platforms="--enable-runtime-cpu-detect --enable-realtime-only"
 

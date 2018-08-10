@@ -26,7 +26,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
     template <typename T> void emitWasmLoad(T* ins);
     template <typename T> void emitWasmStore(T* ins);
-    template <typename T> void emitWasmStoreOrExchangeAtomicI64(T* ins, uint32_t offset);
+    template <typename T> void emitWasmStoreOrExchangeAtomicI64(T* ins, const wasm::MemoryAccessDesc& access);
 
   public:
     void visitOutOfLineTruncate(OutOfLineTruncate* ool);

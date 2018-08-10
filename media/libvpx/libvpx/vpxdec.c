@@ -47,6 +47,8 @@ struct VpxDecInputContext {
   struct WebmInputContext *webm_ctx;
 };
 
+static const arg_def_t help =
+    ARG_DEF(NULL, "help", 0, "Show usage options and exit");
 static const arg_def_t looparg =
     ARG_DEF(NULL, "loops", 1, "Number of times to decode the file");
 static const arg_def_t codecarg = ARG_DEF(NULL, "codec", 1, "Codec to use");
@@ -75,7 +77,7 @@ static const arg_def_t outputfile =
 static const arg_def_t threadsarg =
     ARG_DEF("t", "threads", 1, "Max threads to use");
 static const arg_def_t frameparallelarg =
-    ARG_DEF(NULL, "frame-parallel", 0, "Frame parallel decode");
+    ARG_DEF(NULL, "frame-parallel", 0, "Frame parallel decode (ignored)");
 static const arg_def_t verbosearg =
     ARG_DEF("v", "verbose", 0, "Show version string");
 static const arg_def_t error_concealment =
@@ -94,16 +96,21 @@ static const arg_def_t outbitdeptharg =
 #endif
 static const arg_def_t svcdecodingarg = ARG_DEF(
     NULL, "svc-decode-layer", 1, "Decode SVC stream up to given spatial layer");
+static const arg_def_t framestatsarg =
+    ARG_DEF(NULL, "framestats", 1, "Output per-frame stats (.csv format)");
 
 static const arg_def_t *all_args[] = {
-  &codecarg,       &use_yv12,    &use_i420,   &flipuvarg,         &rawvideo,
-  &noblitarg,      &progressarg, &limitarg,   &skiparg,           &postprocarg,
-  &summaryarg,     &outputfile,  &threadsarg, &frameparallelarg,  &verbosearg,
-  &scalearg,       &fb_arg,      &md5arg,     &error_concealment, &continuearg,
+  &help,           &codecarg,          &use_yv12,
+  &use_i420,       &flipuvarg,         &rawvideo,
+  &noblitarg,      &progressarg,       &limitarg,
+  &skiparg,        &postprocarg,       &summaryarg,
+  &outputfile,     &threadsarg,        &frameparallelarg,
+  &verbosearg,     &scalearg,          &fb_arg,
+  &md5arg,         &error_concealment, &continuearg,
 #if CONFIG_VP9_HIGHBITDEPTH
   &outbitdeptharg,
 #endif
-  &svcdecodingarg, NULL
+  &svcdecodingarg, &framestatsarg,     NULL
 };
 
 #if CONFIG_VP8_DECODER
@@ -147,41 +154,47 @@ static INLINE int libyuv_scale(vpx_image_t *src, vpx_image_t *dst,
                    dst->d_h, mode);
 }
 #endif
-
-void usage_exit(void) {
+void show_help(FILE *fout, int shorthelp) {
   int i;
 
-  fprintf(stderr,
-          "Usage: %s <options> filename\n\n"
-          "Options:\n",
-          exec_name);
-  arg_show_usage(stderr, all_args);
+  fprintf(fout, "Usage: %s <options> filename\n\n", exec_name);
+
+  if (shorthelp) {
+    fprintf(fout, "Use --help to see the full list of options.\n");
+    return;
+  }
+
+  fprintf(fout, "Options:\n");
+  arg_show_usage(fout, all_args);
 #if CONFIG_VP8_DECODER
-  fprintf(stderr, "\nVP8 Postprocessing Options:\n");
-  arg_show_usage(stderr, vp8_pp_args);
+  fprintf(fout, "\nVP8 Postprocessing Options:\n");
+  arg_show_usage(fout, vp8_pp_args);
 #endif
-  fprintf(stderr,
+  fprintf(fout,
           "\nOutput File Patterns:\n\n"
           "  The -o argument specifies the name of the file(s) to "
           "write to. If the\n  argument does not include any escape "
           "characters, the output will be\n  written to a single file. "
           "Otherwise, the filename will be calculated by\n  expanding "
           "the following escape characters:\n");
-  fprintf(stderr,
+  fprintf(fout,
           "\n\t%%w   - Frame width"
           "\n\t%%h   - Frame height"
           "\n\t%%<n> - Frame number, zero padded to <n> places (1..9)"
           "\n\n  Pattern arguments are only supported in conjunction "
           "with the --yv12 and\n  --i420 options. If the -o option is "
           "not specified, the output will be\n  directed to stdout.\n");
-  fprintf(stderr, "\nIncluded decoders:\n\n");
+  fprintf(fout, "\nIncluded decoders:\n\n");
 
   for (i = 0; i < get_vpx_decoder_count(); ++i) {
     const VpxInterface *const decoder = get_vpx_decoder_by_index(i);
-    fprintf(stderr, "    %-6s - %s\n", decoder->name,
+    fprintf(fout, "    %-6s - %s\n", decoder->name,
             vpx_codec_iface_name(decoder->codec_interface()));
   }
+}
 
+void usage_exit(void) {
+  show_help(stderr, 1);
   exit(EXIT_FAILURE);
 }
 
@@ -488,7 +501,7 @@ static int main_loop(int argc, const char **argv_) {
   size_t bytes_in_buffer = 0, buffer_size = 0;
   FILE *infile;
   int frame_in = 0, frame_out = 0, flipuv = 0, noblit = 0;
-  int do_md5 = 0, progress = 0, frame_parallel = 0;
+  int do_md5 = 0, progress = 0;
   int stop_after = 0, postproc = 0, summary = 0, quiet = 1;
   int arg_skip = 0;
   int ec_enabled = 0;
@@ -527,6 +540,8 @@ static int main_loop(int argc, const char **argv_) {
   char outfile_name[PATH_MAX] = { 0 };
   FILE *outfile = NULL;
 
+  FILE *framestats_file = NULL;
+
   MD5Context md5_ctx;
   unsigned char md5_digest[16];
 
@@ -547,7 +562,10 @@ static int main_loop(int argc, const char **argv_) {
     memset(&arg, 0, sizeof(arg));
     arg.argv_step = 1;
 
-    if (arg_match(&arg, &codecarg, argi)) {
+    if (arg_match(&arg, &help, argi)) {
+      show_help(stdout, 0);
+      exit(EXIT_SUCCESS);
+    } else if (arg_match(&arg, &codecarg, argi)) {
       interface = get_vpx_decoder_by_name(arg.val);
       if (!interface)
         die("Error: Unrecognized argument (%s) to --codec\n", arg.val);
@@ -584,8 +602,9 @@ static int main_loop(int argc, const char **argv_) {
     else if (arg_match(&arg, &threadsarg, argi))
       cfg.threads = arg_parse_uint(&arg);
 #if CONFIG_VP9_DECODER
-    else if (arg_match(&arg, &frameparallelarg, argi))
-      frame_parallel = 1;
+    else if (arg_match(&arg, &frameparallelarg, argi)) {
+      /* ignored for compatibility */
+    }
 #endif
     else if (arg_match(&arg, &verbosearg, argi))
       quiet = 0;
@@ -603,6 +622,12 @@ static int main_loop(int argc, const char **argv_) {
     else if (arg_match(&arg, &svcdecodingarg, argi)) {
       svc_decoding = 1;
       svc_spatial_layer = arg_parse_uint(&arg);
+    } else if (arg_match(&arg, &framestatsarg, argi)) {
+      framestats_file = fopen(arg.val, "w");
+      if (!framestats_file) {
+        die("Error: Could not open --framestats file (%s) for writing.\n",
+            arg.val);
+      }
     }
 #if CONFIG_VP8_DECODER
     else if (arg_match(&arg, &addnoise_level, argi)) {
@@ -637,6 +662,7 @@ static int main_loop(int argc, const char **argv_) {
 
   if (!fn) {
     free(argv);
+    fprintf(stderr, "No input file specified!\n");
     usage_exit();
   }
   /* Open file */
@@ -712,8 +738,7 @@ static int main_loop(int argc, const char **argv_) {
   if (!interface) interface = get_vpx_decoder_by_index(0);
 
   dec_flags = (postproc ? VPX_CODEC_USE_POSTPROC : 0) |
-              (ec_enabled ? VPX_CODEC_USE_ERROR_CONCEALMENT : 0) |
-              (frame_parallel ? VPX_CODEC_USE_FRAME_THREADING : 0);
+              (ec_enabled ? VPX_CODEC_USE_ERROR_CONCEALMENT : 0);
   if (vpx_codec_dec_init(&decoder, interface->codec_interface(), &cfg,
                          dec_flags)) {
     fprintf(stderr, "Failed to initialize decoder: %s\n",
@@ -761,6 +786,8 @@ static int main_loop(int argc, const char **argv_) {
   frame_avail = 1;
   got_data = 0;
 
+  if (framestats_file) fprintf(framestats_file, "bytes,qp\n");
+
   /* Decode file */
   while (frame_avail || got_data) {
     vpx_codec_iter_t iter = NULL;
@@ -784,6 +811,16 @@ static int main_loop(int argc, const char **argv_) {
           if (detail) warn("Additional information: %s", detail);
           corrupted = 1;
           if (!keep_going) goto fail;
+        }
+
+        if (framestats_file) {
+          int qp;
+          if (vpx_codec_control(&decoder, VPXD_GET_LAST_QUANTIZER, &qp)) {
+            warn("Failed VPXD_GET_LAST_QUANTIZER: %s",
+                 vpx_codec_error(&decoder));
+            if (!keep_going) goto fail;
+          }
+          fprintf(framestats_file, "%d,%d\n", (int)bytes_in_buffer, qp);
         }
 
         vpx_usec_timer_mark(&timer);
@@ -815,7 +852,7 @@ static int main_loop(int argc, const char **argv_) {
     vpx_usec_timer_mark(&timer);
     dx_time += (unsigned int)vpx_usec_timer_elapsed(&timer);
 
-    if (!frame_parallel && !corrupted &&
+    if (!corrupted &&
         vpx_codec_control(&decoder, VP8D_GET_FRAME_CORRUPTED, &corrupted)) {
       warn("Failed VP8_GET_FRAME_CORRUPTED: %s", vpx_codec_error(&decoder));
       if (!keep_going) goto fail;
@@ -952,7 +989,7 @@ static int main_loop(int argc, const char **argv_) {
         if (do_md5) {
           update_image_md5(img, planes, &md5_ctx);
         } else {
-          write_image_file(img, planes, outfile);
+          if (!corrupted) write_image_file(img, planes, outfile);
         }
       } else {
         generate_filename(outfile_pattern, outfile_name, PATH_MAX, img->d_w,
@@ -1018,6 +1055,8 @@ fail2:
   free(ext_fb_list.ext_fb);
 
   fclose(infile);
+  if (framestats_file) fclose(framestats_file);
+
   free(argv);
 
   return ret;

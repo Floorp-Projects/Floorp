@@ -691,7 +691,7 @@ DevToolsStartup.prototype = {
     }
 
     // Set relatedToCurrent: true to open the tab next to the current one.
-    gBrowser.selectedTab = gBrowser.addTab(url, {relatedToCurrent: true});
+    gBrowser.selectedTab = gBrowser.addTrustedTab(url, {relatedToCurrent: true});
   },
 
   handleConsoleFlag: function(cmdLine) {

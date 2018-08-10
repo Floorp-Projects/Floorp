@@ -2144,7 +2144,8 @@ MacroAssembler::enterFakeExitFrameForWasm(Register cxreg, Register scratch, Exit
 
 template<typename T>
 static void
-CompareExchange(MacroAssembler& masm, Scalar::Type type, const Synchronization& sync, const T& mem,
+CompareExchange(MacroAssembler& masm, const wasm::MemoryAccessDesc* access,
+                Scalar::Type type, const Synchronization& sync, const T& mem,
                 Register oldval, Register newval, Register valueTemp, Register offsetTemp,
                 Register maskTemp, Register output)
 {
@@ -2167,6 +2168,8 @@ CompareExchange(MacroAssembler& masm, Scalar::Type type, const Synchronization& 
     Label again, end;
 
     masm.computeEffectiveAddress(mem, SecondScratchReg);
+
+    // FIXME: emit signal handling information if access != nullptr.
 
     if (nbytes == 4) {
 
@@ -2246,7 +2249,7 @@ MacroAssembler::compareExchange(Scalar::Type type, const Synchronization& sync, 
                                 Register oldval, Register newval, Register valueTemp,
                                 Register offsetTemp, Register maskTemp, Register output)
 {
-    CompareExchange(*this, type, sync, mem, oldval, newval, valueTemp, offsetTemp, maskTemp,
+    CompareExchange(*this, nullptr, type, sync, mem, oldval, newval, valueTemp, offsetTemp, maskTemp,
                     output);
 }
 
@@ -2255,14 +2258,33 @@ MacroAssembler::compareExchange(Scalar::Type type, const Synchronization& sync, 
                                 Register oldval, Register newval, Register valueTemp,
                                 Register offsetTemp, Register maskTemp, Register output)
 {
-    CompareExchange(*this, type, sync, mem, oldval, newval, valueTemp, offsetTemp, maskTemp,
+    CompareExchange(*this, nullptr, type, sync, mem, oldval, newval, valueTemp, offsetTemp, maskTemp,
                     output);
+}
+
+void
+MacroAssembler::wasmCompareExchange(const wasm::MemoryAccessDesc& access, const Address& mem,
+                                    Register oldval, Register newval, Register valueTemp,
+                                    Register offsetTemp, Register maskTemp, Register output)
+{
+    CompareExchange(*this, &access, access.type(), access.sync(), mem, oldval, newval, valueTemp,
+                    offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssembler::wasmCompareExchange(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                                    Register oldval, Register newval, Register valueTemp,
+                                    Register offsetTemp, Register maskTemp, Register output)
+{
+    CompareExchange(*this, &access, access.type(), access.sync(), mem, oldval, newval, valueTemp,
+                    offsetTemp, maskTemp, output);
 }
 
 
 template<typename T>
 static void
-AtomicExchange(MacroAssembler& masm, Scalar::Type type, const Synchronization& sync, const T& mem,
+AtomicExchange(MacroAssembler& masm, const wasm::MemoryAccessDesc* access,
+               Scalar::Type type, const Synchronization& sync, const T& mem,
                Register value, Register valueTemp, Register offsetTemp, Register maskTemp,
                Register output)
 {
@@ -2285,6 +2307,8 @@ AtomicExchange(MacroAssembler& masm, Scalar::Type type, const Synchronization& s
     Label again;
 
     masm.computeEffectiveAddress(mem, SecondScratchReg);
+
+    // FIXME: emit signal handling information if access != nullptr.
 
     if (nbytes == 4) {
 
@@ -2360,7 +2384,7 @@ MacroAssembler::atomicExchange(Scalar::Type type, const Synchronization& sync, c
                                Register value, Register valueTemp, Register offsetTemp,
                                Register maskTemp, Register output)
 {
-    AtomicExchange(*this, type, sync, mem, value, valueTemp, offsetTemp, maskTemp, output);
+    AtomicExchange(*this, nullptr, type, sync, mem, value, valueTemp, offsetTemp, maskTemp, output);
 }
 
 void
@@ -2368,13 +2392,31 @@ MacroAssembler::atomicExchange(Scalar::Type type, const Synchronization& sync, c
                                Register value, Register valueTemp, Register offsetTemp,
                                Register maskTemp, Register output)
 {
-    AtomicExchange(*this, type, sync, mem, value, valueTemp, offsetTemp, maskTemp, output);
+    AtomicExchange(*this, nullptr, type, sync, mem, value, valueTemp, offsetTemp, maskTemp, output);
 }
 
+void
+MacroAssembler::wasmAtomicExchange(const wasm::MemoryAccessDesc& access, const Address& mem,
+                                   Register value, Register valueTemp, Register offsetTemp,
+                                   Register maskTemp, Register output)
+{
+    AtomicExchange(*this, &access, access.type(), access.sync(), mem, value, valueTemp, offsetTemp,
+                   maskTemp, output);
+}
+
+void
+MacroAssembler::wasmAtomicExchange(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                                   Register value, Register valueTemp, Register offsetTemp,
+                                   Register maskTemp, Register output)
+{
+    AtomicExchange(*this, &access, access.type(), access.sync(), mem, value, valueTemp, offsetTemp,
+                   maskTemp, output);
+}
 
 template<typename T>
 static void
-AtomicFetchOp(MacroAssembler& masm, Scalar::Type type, const Synchronization& sync,
+AtomicFetchOp(MacroAssembler& masm, const wasm::MemoryAccessDesc* access,
+              Scalar::Type type, const Synchronization& sync,
               AtomicOp op, const T& mem, Register value, Register valueTemp,
               Register offsetTemp, Register maskTemp, Register output)
 {
@@ -2397,6 +2439,8 @@ AtomicFetchOp(MacroAssembler& masm, Scalar::Type type, const Synchronization& sy
     Label again;
 
     masm.computeEffectiveAddress(mem, SecondScratchReg);
+
+    // FIXME: emit signal handling information if access != nullptr.
 
     if (nbytes == 4) {
 
@@ -2514,7 +2558,7 @@ MacroAssembler::atomicFetchOp(Scalar::Type type, const Synchronization& sync, At
                               Register value, const Address& mem, Register valueTemp,
                               Register offsetTemp, Register maskTemp, Register output)
 {
-    AtomicFetchOp(*this, type, sync, op, mem, value, valueTemp, offsetTemp, maskTemp, output);
+    AtomicFetchOp(*this, nullptr, type, sync, op, mem, value, valueTemp, offsetTemp, maskTemp, output);
 }
 
 void
@@ -2522,13 +2566,32 @@ MacroAssembler::atomicFetchOp(Scalar::Type type, const Synchronization& sync, At
                               Register value, const BaseIndex& mem, Register valueTemp,
                               Register offsetTemp, Register maskTemp, Register output)
 {
-    AtomicFetchOp(*this, type, sync, op, mem, value, valueTemp, offsetTemp, maskTemp, output);
+    AtomicFetchOp(*this, nullptr, type, sync, op, mem, value, valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssembler::wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                                  Register value, const Address& mem, Register valueTemp,
+                                  Register offsetTemp, Register maskTemp, Register output)
+{
+    AtomicFetchOp(*this, &access, access.type(), access.sync(), op, mem, value, valueTemp, offsetTemp,
+                  maskTemp, output);
+}
+
+void
+MacroAssembler::wasmAtomicFetchOp(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                                  Register value, const BaseIndex& mem, Register valueTemp,
+                                  Register offsetTemp, Register maskTemp, Register output)
+{
+    AtomicFetchOp(*this, &access, access.type(), access.sync(), op, mem, value, valueTemp, offsetTemp,
+                  maskTemp, output);
 }
 
 template<typename T>
 static void
-AtomicEffectOp(MacroAssembler& masm, Scalar::Type type, const Synchronization& sync, AtomicOp op,
-        const T& mem, Register value, Register valueTemp, Register offsetTemp, Register maskTemp)
+AtomicEffectOp(MacroAssembler& masm, const wasm::MemoryAccessDesc* access, Scalar::Type type,
+               const Synchronization& sync, AtomicOp op, const T& mem, Register value,
+               Register valueTemp, Register offsetTemp, Register maskTemp)
 {
     unsigned nbytes = Scalar::byteSize(type);
 
@@ -2548,6 +2611,8 @@ AtomicEffectOp(MacroAssembler& masm, Scalar::Type type, const Synchronization& s
     Label again;
 
     masm.computeEffectiveAddress(mem, SecondScratchReg);
+
+    // FIXME: emit signal handling information if access != nullptr.
 
     if (nbytes == 4) {
 
@@ -2642,21 +2707,22 @@ AtomicEffectOp(MacroAssembler& masm, Scalar::Type type, const Synchronization& s
     masm.memoryBarrierAfter(sync);
 }
 
-
 void
-MacroAssembler::atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
-                               Register value, const Address& mem, Register valueTemp,
-                               Register offsetTemp, Register maskTemp)
+MacroAssembler::wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                                   Register value, const Address& mem, Register valueTemp,
+                                   Register offsetTemp, Register maskTemp)
 {
-    AtomicEffectOp(*this, type, sync, op, mem, value, valueTemp, offsetTemp, maskTemp);
+    AtomicEffectOp(*this, &access, access.type(), access.sync(), op, mem, value, valueTemp,
+                   offsetTemp, maskTemp);
 }
 
 void
-MacroAssembler::atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
-                               Register value, const BaseIndex& mem, Register valueTemp,
-                               Register offsetTemp, Register maskTemp)
+MacroAssembler::wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access, AtomicOp op,
+                                   Register value, const BaseIndex& mem, Register valueTemp,
+                                   Register offsetTemp, Register maskTemp)
 {
-    AtomicEffectOp(*this, type, sync, op, mem, value, valueTemp, offsetTemp, maskTemp);
+    AtomicEffectOp(*this, &access, access.type(), access.sync(), op, mem, value, valueTemp,
+                   offsetTemp, maskTemp);
 }
 
 // ========================================================================
@@ -2773,7 +2839,7 @@ MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& 
                                  Register value, const BaseIndex& mem, Register valueTemp,
                                  Register offsetTemp, Register maskTemp)
 {
-    atomicEffectOp(arrayType, sync, op, value, mem, valueTemp, offsetTemp, maskTemp);
+    AtomicEffectOp(*this, nullptr, arrayType, sync, op, mem, value, valueTemp, offsetTemp, maskTemp);
 }
 
 void
@@ -2781,7 +2847,7 @@ MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& 
                                  Register value, const Address& mem, Register valueTemp,
                                  Register offsetTemp, Register maskTemp)
 {
-    atomicEffectOp(arrayType, sync, op, value, mem, valueTemp, offsetTemp, maskTemp);
+    AtomicEffectOp(*this, nullptr, arrayType, sync, op, mem, value, valueTemp, offsetTemp, maskTemp);
 }
 
 void

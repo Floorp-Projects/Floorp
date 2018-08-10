@@ -31,7 +31,7 @@ add_task(async function() {
   const privateWindow = await openNewBrowserWindow({ private: true });
   ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "window is private");
   const privateBrowser = privateWindow.gBrowser;
-  privateBrowser.selectedTab = privateBrowser.addTab(PRIVATE_TEST_URI);
+  privateBrowser.selectedTab = BrowserTestUtils.addTab(privateBrowser, PRIVATE_TEST_URI);
   const privateTab = privateBrowser.selectedTab;
 
   info("private tab opened");

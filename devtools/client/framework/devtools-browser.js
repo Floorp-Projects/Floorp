@@ -285,7 +285,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    // Used by browser-sets.inc, command
   openAboutDebugging(gBrowser, hash) {
     const url = "about:debugging" + (hash ? "#" + hash : "");
-    gBrowser.selectedTab = gBrowser.addTab(url);
+    gBrowser.selectedTab = gBrowser.addTrustedTab(url);
   },
 
   /**
@@ -293,7 +293,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
    // Used by browser-sets.inc, command
   openConnectScreen(gBrowser) {
-    gBrowser.selectedTab = gBrowser.addTab("chrome://devtools/content/framework/connect/connect.xhtml");
+    gBrowser.selectedTab = gBrowser.addTrustedTab("chrome://devtools/content/framework/connect/connect.xhtml");
   },
 
   /**

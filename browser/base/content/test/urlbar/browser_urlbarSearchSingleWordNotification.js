@@ -162,7 +162,7 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     browser.removeTab(tab);
 
     // Now try again with the pref set.
-    tab = browser.selectedTab = browser.addTab("about:blank");
+    tab = browser.selectedTab = BrowserTestUtils.addTab(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     // In a private window, the notification should appear again.
     await runURLBarSearchTest({

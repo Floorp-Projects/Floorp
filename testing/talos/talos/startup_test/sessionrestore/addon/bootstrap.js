@@ -128,7 +128,7 @@ const sessionRestoreTest = {
       queryString = url.search;
     }
 
-    win.gBrowser.addTab("chrome://session-restore-test/content/index.html" + queryString);
+    win.gBrowser.addTrustedTab("chrome://session-restore-test/content/index.html" + queryString);
   }
 };
 

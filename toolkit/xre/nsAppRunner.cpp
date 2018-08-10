@@ -1235,7 +1235,40 @@ NS_IMETHODIMP
 nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   const nsACString& data)
 {
-  return CrashReporter::AnnotateCrashReport(key, data);
+  CrashReporter::Annotation annotation;
+
+  if (!AnnotationFromString(annotation, PromiseFlatCString(key).get())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return CrashReporter::AnnotateCrashReport(annotation, data);
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::RemoveCrashReportAnnotation(const nsACString& key)
+{
+  CrashReporter::Annotation annotation;
+
+  if (!AnnotationFromString(annotation, PromiseFlatCString(key).get())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return CrashReporter::RemoveCrashReportAnnotation(annotation);
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::IsAnnotationWhitelistedForPing(const nsACString& aValue,
+                                             bool* aIsWhitelisted)
+{
+  CrashReporter::Annotation annotation;
+
+  if (!AnnotationFromString(annotation, PromiseFlatCString(aValue).get())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aIsWhitelisted = CrashReporter::IsAnnotationWhitelistedForPing(annotation);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3390,39 +3423,39 @@ XREMain::XRE_mainInit(bool* aExitFlag)
       CrashReporter::SetServerURL(nsDependentCString(mAppData->crashReporterURL));
 
     // We overwrite this once we finish starting up.
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("StartupCrash"),
-                                       NS_LITERAL_CSTRING("1"));
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::StartupCrash,
+                                       true);
 
     // pass some basic info from the app data
     if (mAppData->vendor)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Vendor,
                                          nsDependentCString(mAppData->vendor));
     if (mAppData->name)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::ProductName,
                                          nsDependentCString(mAppData->name));
     if (mAppData->ID)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductID"),
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::ProductID,
                                          nsDependentCString(mAppData->ID));
     if (mAppData->version)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Version,
                                          nsDependentCString(mAppData->version));
     if (mAppData->buildID)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::BuildID,
                                          nsDependentCString(mAppData->buildID));
 
     nsDependentCString releaseChannel(NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ReleaseChannel"),
-                                       releaseChannel);
+    CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ReleaseChannel, releaseChannel);
 #ifdef MOZ_LINKER
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("CrashAddressLikelyWrong"),
-                                       IsSignalHandlingBroken() ? NS_LITERAL_CSTRING("1")
-                                                                : NS_LITERAL_CSTRING("0"));
+    CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::CrashAddressLikelyWrong,
+      IsSignalHandlingBroken());
 #endif
 
 #ifdef XP_WIN
     nsAutoString appInitDLLs;
     if (widget::WinUtils::GetAppInitDLLs(appInitDLLs)) {
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AppInitDLLs"),
+      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AppInitDLLs,
                                          NS_ConvertUTF16toUTF8(appInitDLLs));
     }
 #endif
@@ -3583,16 +3616,15 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     }
 
     if (cpuUpdateRevision > 0) {
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("CPUMicrocodeVersion"),
-                                         nsPrintfCString("0x%x",
-                                                         cpuUpdateRevision));
+      CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::CPUMicrocodeVersion,
+        nsPrintfCString("0x%x", cpuUpdateRevision));
     }
   }
 #endif
 
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("SafeMode"),
-                                       gSafeMode ? NS_LITERAL_CSTRING("1") :
-                                                   NS_LITERAL_CSTRING("0"));
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::SafeMode,
+                                       gSafeMode);
 
   // Handle --no-remote and --new-instance command line arguments. Setup
   // the environment to better accommodate other components and various
@@ -3715,8 +3747,9 @@ static void AnnotateSystemManufacturer()
   hr = classObject->Get(L"Manufacturer", 0, &value, 0, 0);
 
   if (SUCCEEDED(hr) && V_VT(&value) == VT_BSTR) {
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BIOS_Manufacturer"),
-                                       NS_ConvertUTF16toUTF8(V_BSTR(&value)));
+    CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::BIOS_Manufacturer,
+      NS_ConvertUTF16toUTF8(V_BSTR(&value)));
   }
 
   VariantClear(&value);
@@ -4360,7 +4393,7 @@ void AddSandboxAnnotations()
   levelString.AppendInt(level);
 
   CrashReporter::AnnotateCrashReport(
-    NS_LITERAL_CSTRING("ContentSandboxLevel"), levelString);
+    CrashReporter::Annotation::ContentSandboxLevel, levelString);
 
   // Include whether or not this instance is capable of content sandboxing
   bool sandboxCapable = false;
@@ -4376,8 +4409,7 @@ void AddSandboxAnnotations()
 #endif
 
   CrashReporter::AnnotateCrashReport(
-    NS_LITERAL_CSTRING("ContentSandboxCapable"),
-    sandboxCapable ? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0"));
+    CrashReporter::Annotation::ContentSandboxCapable, sandboxCapable);
 }
 #endif /* MOZ_CONTENT_SANDBOX */
 
@@ -4431,16 +4463,18 @@ XREMain::XRE_mainRun()
       nsAutoCString sval;
       rv = defaultPrefBranch->GetCharPref("app.update.channel", sval);
       if (NS_SUCCEEDED(rv)) {
-        CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ReleaseChannel"),
-                                            sval);
+        CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::ReleaseChannel, sval);
       }
     }
   }
   // Needs to be set after xpcom initialization.
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
-                                     nsPrintfCString("%.16" PRIu64, uint64_t(gMozillaPoisonBase)));
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
-                                     nsPrintfCString("%" PRIu32, uint32_t(gMozillaPoisonSize)));
+  CrashReporter::AnnotateCrashReport(
+    CrashReporter::Annotation::FramePoisonBase,
+    nsPrintfCString("%.16" PRIu64, uint64_t(gMozillaPoisonBase)));
+  CrashReporter::AnnotateCrashReport(
+    CrashReporter::Annotation::FramePoisonSize,
+    uint32_t(gMozillaPoisonSize));
 
   bool includeContextHeap =
     Preferences::GetBool("toolkit.crashreporter.include_context_heap", false);
@@ -4599,7 +4633,8 @@ XREMain::XRE_mainRun()
 
   nsCString userAgentLocale;
   LocaleService::GetInstance()->GetAppLocaleAsLangTag(userAgentLocale);
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("useragent_locale"), userAgentLocale);
+  CrashReporter::AnnotateCrashReport(
+    CrashReporter::Annotation::useragent_locale, userAgentLocale);
 
   appStartup->GetShuttingDown(&mShuttingDown);
 
@@ -4695,8 +4730,8 @@ XREMain::XRE_mainRun()
 
     (void)appStartup->DoneStartingUp();
 
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("StartupCrash"),
-                                       NS_LITERAL_CSTRING("0"));
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::StartupCrash,
+                                       false);
 
     appStartup->GetShuttingDown(&mShuttingDown);
   }
@@ -4753,7 +4788,7 @@ XREMain::XRE_mainRun()
   flagsString.AppendInt(sandboxInfo.AsInteger());
 
   CrashReporter::AnnotateCrashReport(
-    NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
+    CrashReporter::Annotation::ContentSandboxCapabilities, flagsString);
 #endif /* MOZ_SANDBOX && XP_LINUX */
 
 #if defined(MOZ_CONTENT_SANDBOX)

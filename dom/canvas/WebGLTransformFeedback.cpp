@@ -41,10 +41,8 @@ WebGLTransformFeedback::Delete()
 void
 WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode)
 {
-    const char funcName[] = "beginTransformFeedback";
-
     if (mIsActive)
-        return mContext->ErrorInvalidOperation("%s: Already active.", funcName);
+        return mContext->ErrorInvalidOperation("Already active.");
 
     switch (primMode) {
     case LOCAL_GL_POINTS:
@@ -52,9 +50,8 @@ WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode)
     case LOCAL_GL_TRIANGLES:
         break;
     default:
-        mContext->ErrorInvalidEnum("%s: `primitiveMode` must be one of POINTS, LINES, or"
-                                   " TRIANGLES.",
-                                   funcName);
+        mContext->ErrorInvalidEnum("`primitiveMode` must be one of POINTS, LINES, or"
+                                   " TRIANGLES.");
         return;
     }
 
@@ -63,9 +60,8 @@ WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode)
         !prog->IsLinked() ||
         prog->LinkInfo()->componentsPerTFVert.empty())
     {
-        mContext->ErrorInvalidOperation("%s: Current program not valid for transform"
-                                        " feedback.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("Current program not valid for transform"
+                                        " feedback.");
         return;
     }
 
@@ -79,9 +75,9 @@ WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode)
 
         const auto& buffer = indexedBinding.mBufferBinding;
         if (!buffer) {
-            mContext->ErrorInvalidOperation("%s: No buffer attached to required transform"
+            mContext->ErrorInvalidOperation("No buffer attached to required transform"
                                             " feedback index %u.",
-                                            funcName, (uint32_t)i);
+                                            (uint32_t)i);
             return;
         }
 
@@ -113,10 +109,8 @@ WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode)
 void
 WebGLTransformFeedback::EndTransformFeedback()
 {
-    const char funcName[] = "endTransformFeedback";
-
     if (!mIsActive)
-        return mContext->ErrorInvalidOperation("%s: Not active.", funcName);
+        return mContext->ErrorInvalidOperation("Not active.");
 
     ////
 
@@ -148,12 +142,10 @@ WebGLTransformFeedback::EndTransformFeedback()
 void
 WebGLTransformFeedback::PauseTransformFeedback()
 {
-    const char funcName[] = "pauseTransformFeedback";
-
     if (!mIsActive ||
         mIsPaused)
     {
-        mContext->ErrorInvalidOperation("%s: Not active or is paused.", funcName);
+        mContext->ErrorInvalidOperation("Not active or is paused.");
         return;
     }
 
@@ -170,14 +162,11 @@ WebGLTransformFeedback::PauseTransformFeedback()
 void
 WebGLTransformFeedback::ResumeTransformFeedback()
 {
-    const char funcName[] = "resumeTransformFeedback";
-
     if (!mIsPaused)
-        return mContext->ErrorInvalidOperation("%s: Not paused.", funcName);
+        return mContext->ErrorInvalidOperation("Not paused.");
 
     if (mContext->mCurrentProgram != mActive_Program) {
-        mContext->ErrorInvalidOperation("%s: Active program differs from original.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("Active program differs from original.");
         return;
     }
 

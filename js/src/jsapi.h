@@ -3137,10 +3137,17 @@ extern JS_PUBLIC_API(JSString*)
 JS_GetFunctionDisplayId(JSFunction* fun);
 
 /*
- * Return the arity (length) of fun.
+ * Return the arity of fun, which includes default parameters and rest
+ * parameter.  This can be used as `nargs` parameter for other functions.
  */
 extern JS_PUBLIC_API(uint16_t)
 JS_GetFunctionArity(JSFunction* fun);
+
+/*
+ * Return the length of fun, which is the original value of .length property.
+ */
+JS_PUBLIC_API(bool)
+JS_GetFunctionLength(JSContext* cx, JS::HandleFunction fun, uint16_t* length);
 
 /**
  * Infallible predicate to test whether obj is a function object (faster than

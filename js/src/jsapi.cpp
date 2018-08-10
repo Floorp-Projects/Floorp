@@ -3691,6 +3691,13 @@ JS_GetFunctionArity(JSFunction* fun)
 }
 
 JS_PUBLIC_API(bool)
+JS_GetFunctionLength(JSContext* cx, HandleFunction fun, uint16_t* length)
+{
+    assertSameCompartment(cx, fun);
+    return JSFunction::getLength(cx, fun, length);
+}
+
+JS_PUBLIC_API(bool)
 JS_ObjectIsFunction(JSContext* cx, JSObject* obj)
 {
     return obj->is<JSFunction>();

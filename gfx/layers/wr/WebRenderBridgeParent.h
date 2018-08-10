@@ -252,6 +252,8 @@ private:
   void FlushFrameGeneration();
   void FlushFramePresentation();
 
+  void MaybeGenerateFrame(bool aForceGenerateFrame);
+
 private:
   struct PendingTransactionId {
     PendingTransactionId(const wr::Epoch& aEpoch,
@@ -313,7 +315,6 @@ private:
 
   bool mPaused;
   bool mDestroyed;
-  bool mForceRendering;
   bool mReceivedDisplayList;
 };
 

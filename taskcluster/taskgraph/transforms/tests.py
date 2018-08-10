@@ -840,7 +840,8 @@ def split_chunks(config, tests):
            test['suite'].startswith('test-coverage'):
             env = config.params.get('try_task_config', {}) or {}
             env = env.get('templates', {}).get('env', {})
-            test['chunks'] = perfile_number_of_chunks(env.get('MOZHARNESS_TEST_PATHS', ''),
+            test['chunks'] = perfile_number_of_chunks(config.params.is_try(),
+                                                      env.get('MOZHARNESS_TEST_PATHS', ''),
                                                       config.params.get('head_repository', ''),
                                                       config.params.get('head_rev', ''),
                                                       test['test-name'])

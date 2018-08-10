@@ -335,7 +335,6 @@ class IonBuilder
     AbortReasonOr<Ok> compareTrySharedStub(bool* emitted, MDefinition* left, MDefinition* right);
 
     // jsop_newarray helpers.
-    AbortReasonOr<Ok> newArrayTrySharedStub(bool* emitted);
     AbortReasonOr<Ok> newArrayTryTemplateObject(bool* emitted, JSObject* templateObject,
                                                 uint32_t length);
     AbortReasonOr<Ok> newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t length);

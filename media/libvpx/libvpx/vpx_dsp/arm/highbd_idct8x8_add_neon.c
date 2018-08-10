@@ -15,37 +15,56 @@
 #include "vpx_dsp/arm/transpose_neon.h"
 #include "vpx_dsp/inv_txfm.h"
 
-static INLINE void highbd_idct8x8_1_add_kernel(uint16_t **dest,
-                                               const int stride,
-                                               const int16x8_t res,
-                                               const int16x8_t max) {
+static INLINE void highbd_idct8x8_1_add_pos_kernel(uint16_t **dest,
+                                                   const int stride,
+                                                   const int16x8_t res,
+                                                   const int16x8_t max) {
   const uint16x8_t a = vld1q_u16(*dest);
   const int16x8_t b = vaddq_s16(res, vreinterpretq_s16_u16(a));
   const int16x8_t c = vminq_s16(b, max);
-  const uint16x8_t d = vqshluq_n_s16(c, 0);
-  vst1q_u16(*dest, d);
+  vst1q_u16(*dest, vreinterpretq_u16_s16(c));
   *dest += stride;
 }
 
-void vpx_highbd_idct8x8_1_add_neon(const tran_low_t *input, uint8_t *dest8,
+static INLINE void highbd_idct8x8_1_add_neg_kernel(uint16_t **dest,
+                                                   const int stride,
+                                                   const int16x8_t res) {
+  const uint16x8_t a = vld1q_u16(*dest);
+  const int16x8_t b = vaddq_s16(res, vreinterpretq_s16_u16(a));
+  const uint16x8_t c = vqshluq_n_s16(b, 0);
+  vst1q_u16(*dest, c);
+  *dest += stride;
+}
+
+void vpx_highbd_idct8x8_1_add_neon(const tran_low_t *input, uint16_t *dest,
                                    int stride, int bd) {
-  const int16x8_t max = vdupq_n_s16((1 << bd) - 1);
-  const tran_low_t out0 =
-      HIGHBD_WRAPLOW(dct_const_round_shift(input[0] * cospi_16_64), bd);
-  const tran_low_t out1 =
-      HIGHBD_WRAPLOW(dct_const_round_shift(out0 * cospi_16_64), bd);
+  const tran_low_t out0 = HIGHBD_WRAPLOW(
+      dct_const_round_shift(input[0] * (tran_high_t)cospi_16_64), bd);
+  const tran_low_t out1 = HIGHBD_WRAPLOW(
+      dct_const_round_shift(out0 * (tran_high_t)cospi_16_64), bd);
   const int16_t a1 = ROUND_POWER_OF_TWO(out1, 5);
   const int16x8_t dc = vdupq_n_s16(a1);
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
 
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
-  highbd_idct8x8_1_add_kernel(&dest, stride, dc, max);
+  if (a1 >= 0) {
+    const int16x8_t max = vdupq_n_s16((1 << bd) - 1);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+    highbd_idct8x8_1_add_pos_kernel(&dest, stride, dc, max);
+  } else {
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+    highbd_idct8x8_1_add_neg_kernel(&dest, stride, dc);
+  }
 }
 
 static INLINE void idct8x8_12_half1d_bd10(
@@ -62,18 +81,18 @@ static INLINE void idct8x8_12_half1d_bd10(
   step1[5] = vmulq_lane_s32(*io3, vget_high_s32(cospis1), 0);
   step1[6] = vmulq_lane_s32(*io3, vget_low_s32(cospis1), 1);
   step1[7] = vmulq_lane_s32(*io1, vget_low_s32(cospis1), 0);
-  step1[4] = vrshrq_n_s32(step1[4], 14);
-  step1[5] = vrshrq_n_s32(step1[5], 14);
-  step1[6] = vrshrq_n_s32(step1[6], 14);
-  step1[7] = vrshrq_n_s32(step1[7], 14);
+  step1[4] = vrshrq_n_s32(step1[4], DCT_CONST_BITS);
+  step1[5] = vrshrq_n_s32(step1[5], DCT_CONST_BITS);
+  step1[6] = vrshrq_n_s32(step1[6], DCT_CONST_BITS);
+  step1[7] = vrshrq_n_s32(step1[7], DCT_CONST_BITS);
 
   // stage 2
   step2[1] = vmulq_lane_s32(*io0, vget_high_s32(cospis0), 0);
   step2[2] = vmulq_lane_s32(*io2, vget_high_s32(cospis0), 1);
   step2[3] = vmulq_lane_s32(*io2, vget_low_s32(cospis0), 1);
-  step2[1] = vrshrq_n_s32(step2[1], 14);
-  step2[2] = vrshrq_n_s32(step2[2], 14);
-  step2[3] = vrshrq_n_s32(step2[3], 14);
+  step2[1] = vrshrq_n_s32(step2[1], DCT_CONST_BITS);
+  step2[2] = vrshrq_n_s32(step2[2], DCT_CONST_BITS);
+  step2[3] = vrshrq_n_s32(step2[3], DCT_CONST_BITS);
 
   step2[4] = vaddq_s32(step1[4], step1[5]);
   step2[5] = vsubq_s32(step1[4], step1[5]);
@@ -89,8 +108,8 @@ static INLINE void idct8x8_12_half1d_bd10(
   step1[6] = vmulq_lane_s32(step2[6], vget_high_s32(cospis0), 0);
   step1[5] = vmlsq_lane_s32(step1[6], step2[5], vget_high_s32(cospis0), 0);
   step1[6] = vmlaq_lane_s32(step1[6], step2[5], vget_high_s32(cospis0), 0);
-  step1[5] = vrshrq_n_s32(step1[5], 14);
-  step1[6] = vrshrq_n_s32(step1[6], 14);
+  step1[5] = vrshrq_n_s32(step1[5], DCT_CONST_BITS);
+  step1[6] = vrshrq_n_s32(step1[6], DCT_CONST_BITS);
 
   // stage 4
   *io0 = vaddq_s32(step1[0], step2[7]);
@@ -134,14 +153,14 @@ static INLINE void idct8x8_12_half1d_bd12(
   t64[5] = vmull_lane_s32(input_3h, vget_low_s32(cospis1), 1);
   t64[6] = vmull_lane_s32(input_1l, vget_low_s32(cospis1), 0);
   t64[7] = vmull_lane_s32(input_1h, vget_low_s32(cospis1), 0);
-  t32[0] = vrshrn_n_s64(t64[0], 14);
-  t32[1] = vrshrn_n_s64(t64[1], 14);
-  t32[2] = vrshrn_n_s64(t64[2], 14);
-  t32[3] = vrshrn_n_s64(t64[3], 14);
-  t32[4] = vrshrn_n_s64(t64[4], 14);
-  t32[5] = vrshrn_n_s64(t64[5], 14);
-  t32[6] = vrshrn_n_s64(t64[6], 14);
-  t32[7] = vrshrn_n_s64(t64[7], 14);
+  t32[0] = vrshrn_n_s64(t64[0], DCT_CONST_BITS);
+  t32[1] = vrshrn_n_s64(t64[1], DCT_CONST_BITS);
+  t32[2] = vrshrn_n_s64(t64[2], DCT_CONST_BITS);
+  t32[3] = vrshrn_n_s64(t64[3], DCT_CONST_BITS);
+  t32[4] = vrshrn_n_s64(t64[4], DCT_CONST_BITS);
+  t32[5] = vrshrn_n_s64(t64[5], DCT_CONST_BITS);
+  t32[6] = vrshrn_n_s64(t64[6], DCT_CONST_BITS);
+  t32[7] = vrshrn_n_s64(t64[7], DCT_CONST_BITS);
   step1[4] = vcombine_s32(t32[0], t32[1]);
   step1[5] = vcombine_s32(t32[2], t32[3]);
   step1[6] = vcombine_s32(t32[4], t32[5]);
@@ -154,12 +173,12 @@ static INLINE void idct8x8_12_half1d_bd12(
   t64[5] = vmull_lane_s32(step1h[1], vget_high_s32(cospis0), 1);
   t64[6] = vmull_lane_s32(step1l[1], vget_low_s32(cospis0), 1);
   t64[7] = vmull_lane_s32(step1h[1], vget_low_s32(cospis0), 1);
-  t32[2] = vrshrn_n_s64(t64[2], 14);
-  t32[3] = vrshrn_n_s64(t64[3], 14);
-  t32[4] = vrshrn_n_s64(t64[4], 14);
-  t32[5] = vrshrn_n_s64(t64[5], 14);
-  t32[6] = vrshrn_n_s64(t64[6], 14);
-  t32[7] = vrshrn_n_s64(t64[7], 14);
+  t32[2] = vrshrn_n_s64(t64[2], DCT_CONST_BITS);
+  t32[3] = vrshrn_n_s64(t64[3], DCT_CONST_BITS);
+  t32[4] = vrshrn_n_s64(t64[4], DCT_CONST_BITS);
+  t32[5] = vrshrn_n_s64(t64[5], DCT_CONST_BITS);
+  t32[6] = vrshrn_n_s64(t64[6], DCT_CONST_BITS);
+  t32[7] = vrshrn_n_s64(t64[7], DCT_CONST_BITS);
   step2[1] = vcombine_s32(t32[2], t32[3]);
   step2[2] = vcombine_s32(t32[4], t32[5]);
   step2[3] = vcombine_s32(t32[6], t32[7]);
@@ -185,10 +204,10 @@ static INLINE void idct8x8_12_half1d_bd12(
       vmlal_lane_s32(t64[2], vget_low_s32(step2[5]), vget_high_s32(cospis0), 0);
   t64[3] = vmlal_lane_s32(t64[3], vget_high_s32(step2[5]),
                           vget_high_s32(cospis0), 0);
-  t32[0] = vrshrn_n_s64(t64[0], 14);
-  t32[1] = vrshrn_n_s64(t64[1], 14);
-  t32[2] = vrshrn_n_s64(t64[2], 14);
-  t32[3] = vrshrn_n_s64(t64[3], 14);
+  t32[0] = vrshrn_n_s64(t64[0], DCT_CONST_BITS);
+  t32[1] = vrshrn_n_s64(t64[1], DCT_CONST_BITS);
+  t32[2] = vrshrn_n_s64(t64[2], DCT_CONST_BITS);
+  t32[3] = vrshrn_n_s64(t64[3], DCT_CONST_BITS);
   step1[5] = vcombine_s32(t32[0], t32[1]);
   step1[6] = vcombine_s32(t32[2], t32[3]);
 
@@ -272,9 +291,8 @@ static INLINE void highbd_add8x8(int16x8_t a0, int16x8_t a1, int16x8_t a2,
   vst1q_u16(dest, d7_u16);
 }
 
-void vpx_highbd_idct8x8_12_add_neon(const tran_low_t *input, uint8_t *dest8,
+void vpx_highbd_idct8x8_12_add_neon(const tran_low_t *input, uint16_t *dest,
                                     int stride, int bd) {
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
   int32x4_t a0 = vld1q_s32(input);
   int32x4_t a1 = vld1q_s32(input + 8);
   int32x4_t a2 = vld1q_s32(input + 16);
@@ -357,10 +375,10 @@ static INLINE void idct8x8_64_half1d_bd10(
   step1[6] = vmlsq_lane_s32(step1[6], *io5, vget_high_s32(cospis1), 0);
   step1[7] = vmlaq_lane_s32(step1[7], *io7, vget_high_s32(cospis1), 1);
 
-  step1[4] = vrshrq_n_s32(step1[4], 14);
-  step1[5] = vrshrq_n_s32(step1[5], 14);
-  step1[6] = vrshrq_n_s32(step1[6], 14);
-  step1[7] = vrshrq_n_s32(step1[7], 14);
+  step1[4] = vrshrq_n_s32(step1[4], DCT_CONST_BITS);
+  step1[5] = vrshrq_n_s32(step1[5], DCT_CONST_BITS);
+  step1[6] = vrshrq_n_s32(step1[6], DCT_CONST_BITS);
+  step1[7] = vrshrq_n_s32(step1[7], DCT_CONST_BITS);
 
   // stage 2
   step2[1] = vmulq_lane_s32(*io0, vget_high_s32(cospis0), 0);
@@ -372,10 +390,10 @@ static INLINE void idct8x8_64_half1d_bd10(
   step2[2] = vmlsq_lane_s32(step2[2], *io6, vget_low_s32(cospis0), 1);
   step2[3] = vmlaq_lane_s32(step2[3], *io6, vget_high_s32(cospis0), 1);
 
-  step2[0] = vrshrq_n_s32(step2[0], 14);
-  step2[1] = vrshrq_n_s32(step2[1], 14);
-  step2[2] = vrshrq_n_s32(step2[2], 14);
-  step2[3] = vrshrq_n_s32(step2[3], 14);
+  step2[0] = vrshrq_n_s32(step2[0], DCT_CONST_BITS);
+  step2[1] = vrshrq_n_s32(step2[1], DCT_CONST_BITS);
+  step2[2] = vrshrq_n_s32(step2[2], DCT_CONST_BITS);
+  step2[3] = vrshrq_n_s32(step2[3], DCT_CONST_BITS);
 
   step2[4] = vaddq_s32(step1[4], step1[5]);
   step2[5] = vsubq_s32(step1[4], step1[5]);
@@ -391,8 +409,8 @@ static INLINE void idct8x8_64_half1d_bd10(
   step1[6] = vmulq_lane_s32(step2[6], vget_high_s32(cospis0), 0);
   step1[5] = vmlsq_lane_s32(step1[6], step2[5], vget_high_s32(cospis0), 0);
   step1[6] = vmlaq_lane_s32(step1[6], step2[5], vget_high_s32(cospis0), 0);
-  step1[5] = vrshrq_n_s32(step1[5], 14);
-  step1[6] = vrshrq_n_s32(step1[6], 14);
+  step1[5] = vrshrq_n_s32(step1[5], DCT_CONST_BITS);
+  step1[6] = vrshrq_n_s32(step1[6], DCT_CONST_BITS);
 
   // stage 4
   *io0 = vaddq_s32(step1[0], step2[7]);
@@ -453,14 +471,14 @@ static INLINE void idct8x8_64_half1d_bd12(
   t64[5] = vmlsl_lane_s32(t64[5], input_5h, vget_high_s32(cospis1), 0);
   t64[6] = vmlal_lane_s32(t64[6], input_7l, vget_high_s32(cospis1), 1);
   t64[7] = vmlal_lane_s32(t64[7], input_7h, vget_high_s32(cospis1), 1);
-  t32[0] = vrshrn_n_s64(t64[0], 14);
-  t32[1] = vrshrn_n_s64(t64[1], 14);
-  t32[2] = vrshrn_n_s64(t64[2], 14);
-  t32[3] = vrshrn_n_s64(t64[3], 14);
-  t32[4] = vrshrn_n_s64(t64[4], 14);
-  t32[5] = vrshrn_n_s64(t64[5], 14);
-  t32[6] = vrshrn_n_s64(t64[6], 14);
-  t32[7] = vrshrn_n_s64(t64[7], 14);
+  t32[0] = vrshrn_n_s64(t64[0], DCT_CONST_BITS);
+  t32[1] = vrshrn_n_s64(t64[1], DCT_CONST_BITS);
+  t32[2] = vrshrn_n_s64(t64[2], DCT_CONST_BITS);
+  t32[3] = vrshrn_n_s64(t64[3], DCT_CONST_BITS);
+  t32[4] = vrshrn_n_s64(t64[4], DCT_CONST_BITS);
+  t32[5] = vrshrn_n_s64(t64[5], DCT_CONST_BITS);
+  t32[6] = vrshrn_n_s64(t64[6], DCT_CONST_BITS);
+  t32[7] = vrshrn_n_s64(t64[7], DCT_CONST_BITS);
   step1[4] = vcombine_s32(t32[0], t32[1]);
   step1[5] = vcombine_s32(t32[2], t32[3]);
   step1[6] = vcombine_s32(t32[4], t32[5]);
@@ -481,14 +499,14 @@ static INLINE void idct8x8_64_half1d_bd12(
   t64[5] = vmlsl_lane_s32(t64[5], step1h[3], vget_low_s32(cospis0), 1);
   t64[6] = vmlal_lane_s32(t64[6], step1l[3], vget_high_s32(cospis0), 1);
   t64[7] = vmlal_lane_s32(t64[7], step1h[3], vget_high_s32(cospis0), 1);
-  t32[0] = vrshrn_n_s64(t64[0], 14);
-  t32[1] = vrshrn_n_s64(t64[1], 14);
-  t32[2] = vrshrn_n_s64(t64[2], 14);
-  t32[3] = vrshrn_n_s64(t64[3], 14);
-  t32[4] = vrshrn_n_s64(t64[4], 14);
-  t32[5] = vrshrn_n_s64(t64[5], 14);
-  t32[6] = vrshrn_n_s64(t64[6], 14);
-  t32[7] = vrshrn_n_s64(t64[7], 14);
+  t32[0] = vrshrn_n_s64(t64[0], DCT_CONST_BITS);
+  t32[1] = vrshrn_n_s64(t64[1], DCT_CONST_BITS);
+  t32[2] = vrshrn_n_s64(t64[2], DCT_CONST_BITS);
+  t32[3] = vrshrn_n_s64(t64[3], DCT_CONST_BITS);
+  t32[4] = vrshrn_n_s64(t64[4], DCT_CONST_BITS);
+  t32[5] = vrshrn_n_s64(t64[5], DCT_CONST_BITS);
+  t32[6] = vrshrn_n_s64(t64[6], DCT_CONST_BITS);
+  t32[7] = vrshrn_n_s64(t64[7], DCT_CONST_BITS);
   step2[0] = vcombine_s32(t32[0], t32[1]);
   step2[1] = vcombine_s32(t32[2], t32[3]);
   step2[2] = vcombine_s32(t32[4], t32[5]);
@@ -515,10 +533,10 @@ static INLINE void idct8x8_64_half1d_bd12(
       vmlal_lane_s32(t64[2], vget_low_s32(step2[5]), vget_high_s32(cospis0), 0);
   t64[3] = vmlal_lane_s32(t64[3], vget_high_s32(step2[5]),
                           vget_high_s32(cospis0), 0);
-  t32[0] = vrshrn_n_s64(t64[0], 14);
-  t32[1] = vrshrn_n_s64(t64[1], 14);
-  t32[2] = vrshrn_n_s64(t64[2], 14);
-  t32[3] = vrshrn_n_s64(t64[3], 14);
+  t32[0] = vrshrn_n_s64(t64[0], DCT_CONST_BITS);
+  t32[1] = vrshrn_n_s64(t64[1], DCT_CONST_BITS);
+  t32[2] = vrshrn_n_s64(t64[2], DCT_CONST_BITS);
+  t32[3] = vrshrn_n_s64(t64[3], DCT_CONST_BITS);
   step1[5] = vcombine_s32(t32[0], t32[1]);
   step1[6] = vcombine_s32(t32[2], t32[3]);
 
@@ -533,9 +551,8 @@ static INLINE void idct8x8_64_half1d_bd12(
   *io7 = vsubq_s32(step1[0], step2[7]);
 }
 
-void vpx_highbd_idct8x8_64_add_neon(const tran_low_t *input, uint8_t *dest8,
+void vpx_highbd_idct8x8_64_add_neon(const tran_low_t *input, uint16_t *dest,
                                     int stride, int bd) {
-  uint16_t *dest = CONVERT_TO_SHORTPTR(dest8);
   int32x4_t a0 = vld1q_s32(input);
   int32x4_t a1 = vld1q_s32(input + 4);
   int32x4_t a2 = vld1q_s32(input + 8);

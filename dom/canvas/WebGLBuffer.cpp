@@ -70,7 +70,7 @@ WebGLBuffer::Delete()
 ////////////////////////////////////////
 
 static bool
-ValidateBufferUsageEnum(WebGLContext* webgl, const char* funcName, GLenum usage)
+ValidateBufferUsageEnum(WebGLContext* webgl, GLenum usage)
 {
     switch (usage) {
     case LOCAL_GL_STREAM_DRAW:
@@ -92,21 +92,19 @@ ValidateBufferUsageEnum(WebGLContext* webgl, const char* funcName, GLenum usage)
         break;
     }
 
-    webgl->ErrorInvalidEnum("%s: Invalid `usage`: 0x%04x", funcName, usage);
+    webgl->ErrorInvalidEnumInfo("usage", usage);
     return false;
 }
 
 void
 WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usage)
 {
-    const char funcName[] = "bufferData";
-
     // Careful: data.Length() could conceivably be any uint32_t, but GLsizeiptr
     // is like intptr_t.
     if (!CheckedInt<GLsizeiptr>(size).isValid())
-        return mContext->ErrorOutOfMemory("%s: bad size", funcName);
+        return mContext->ErrorOutOfMemory("bad size");
 
-    if (!ValidateBufferUsageEnum(mContext, funcName, usage))
+    if (!ValidateBufferUsageEnum(mContext, usage))
         return;
 
 #ifdef XP_MACOSX
@@ -114,7 +112,7 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
     if (mContext->gl->WorkAroundDriverBugs() &&
         size > INT32_MAX)
     {
-        mContext->ErrorOutOfMemory("%s: Allocation size too large.", funcName);
+        mContext->ErrorOutOfMemory("Allocation size too large.");
         return;
     }
 #endif
@@ -127,7 +125,7 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
     {
         newIndexCache = malloc(size);
         if (!newIndexCache) {
-            mContext->ErrorOutOfMemory("%s: Failed to alloc index cache.", funcName);
+            mContext->ErrorOutOfMemory("Failed to alloc index cache.");
             return;
         }
         memcpy(newIndexCache.get(), data, size);
@@ -145,7 +143,7 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
 
         if (error) {
             MOZ_ASSERT(error == LOCAL_GL_OUT_OF_MEMORY);
-            mContext->ErrorOutOfMemory("%s: Error from driver: 0x%04x", funcName, error);
+            mContext->ErrorOutOfMemory("Error from driver: 0x%04x", error);
             return;
         }
     } else {
@@ -174,13 +172,11 @@ void
 WebGLBuffer::BufferSubData(GLenum target, size_t dstByteOffset, size_t dataLen,
                            const void* data) const
 {
-    const char funcName[] = "bufferSubData";
-
-    if (!ValidateRange(funcName, dstByteOffset, dataLen))
+    if (!ValidateRange(dstByteOffset, dataLen))
         return;
 
     if (!CheckedInt<GLintptr>(dataLen).isValid())
-        return mContext->ErrorOutOfMemory("%s: Size too large.", funcName);
+        return mContext->ErrorOutOfMemory("Size too large.");
 
     ////
 
@@ -204,18 +200,17 @@ WebGLBuffer::BufferSubData(GLenum target, size_t dstByteOffset, size_t dataLen,
 }
 
 bool
-WebGLBuffer::ValidateRange(const char* funcName, size_t byteOffset, size_t byteLen) const
+WebGLBuffer::ValidateRange(size_t byteOffset, size_t byteLen) const
 {
     auto availLength = mByteLength;
     if (byteOffset > availLength) {
-        mContext->ErrorInvalidValue("%s: Offset passes the end of the buffer.", funcName);
+        mContext->ErrorInvalidValue("Offset passes the end of the buffer.");
         return false;
     }
     availLength -= byteOffset;
 
     if (byteLen > availLength) {
-        mContext->ErrorInvalidValue("%s: Offset+size passes the end of the buffer.",
-                                    funcName);
+        mContext->ErrorInvalidValue("Offset+size passes the end of the buffer.");
         return false;
     }
 
@@ -361,7 +356,7 @@ WebGLBuffer::GetIndexedFetchMaxVert(const GLenum type, const uint64_t byteOffset
 ////
 
 bool
-WebGLBuffer::ValidateCanBindToTarget(const char* funcName, GLenum target)
+WebGLBuffer::ValidateCanBindToTarget(GLenum target)
 {
     /* https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.1
      *
@@ -408,7 +403,7 @@ WebGLBuffer::ValidateCanBindToTarget(const char* funcName, GLenum target)
 
     const auto dataType = (mContent == WebGLBuffer::Kind::OtherData) ? "other"
                                                                      : "element";
-    mContext->ErrorInvalidOperation("%s: Buffer already contains %s data.", funcName,
+    mContext->ErrorInvalidOperation("Buffer already contains %s data.",
                                     dataType);
     return false;
 }

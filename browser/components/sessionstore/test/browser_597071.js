@@ -20,7 +20,7 @@ add_task(async function test_close_last_nonpopup_window() {
 
   // Open a new window with a tab.
   let win = await BrowserTestUtils.openNewBrowserWindow({private: false});
-  let tab = win.gBrowser.addTab("http://example.com/");
+  let tab = BrowserTestUtils.addTab(win.gBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Make sure sessionstore sees this window.

@@ -266,11 +266,9 @@ Simulator::handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes)
 
     js::wasm::Trap trap;
     js::wasm::BytecodeOffset bytecode;
-    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
-        act->startWasmTrap(js::wasm::Trap::OutOfBounds, 0, registerState());
-        set_pc((Instruction*)moduleSegment->outOfBoundsCode());
-        return true;
-    }
+    MOZ_ALWAYS_TRUE(moduleSegment->code().lookupTrap(pc, &trap, &bytecode));
+
+    MOZ_RELEASE_ASSERT(trap == js::wasm::Trap::OutOfBounds);
 
     act->startWasmTrap(js::wasm::Trap::OutOfBounds, bytecode.offset(), registerState());
     set_pc((Instruction*)moduleSegment->trapCode());

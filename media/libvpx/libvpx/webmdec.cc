@@ -165,10 +165,11 @@ int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer,
     }
     if (get_new_block) {
       block = block_entry->GetBlock();
+      if (block == NULL) return -1;
       webm_ctx->block_frame_index = 0;
     }
-  } while (block->GetTrackNumber() != webm_ctx->video_track_index ||
-           block_entry_eos);
+  } while (block_entry_eos ||
+           block->GetTrackNumber() != webm_ctx->video_track_index);
 
   webm_ctx->cluster = cluster;
   webm_ctx->block_entry = block_entry;

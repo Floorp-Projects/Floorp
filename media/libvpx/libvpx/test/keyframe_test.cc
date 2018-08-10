@@ -135,8 +135,8 @@ TEST_P(KeyframeTest, TestAutoKeyframe) {
   for (std::vector<vpx_codec_pts_t>::const_iterator iter = kf_pts_list_.begin();
        iter != kf_pts_list_.end(); ++iter) {
     if (deadline_ == VPX_DL_REALTIME && *iter > 0)
-      EXPECT_EQ(0, (*iter - 1) % 30) << "Unexpected keyframe at frame "
-                                     << *iter;
+      EXPECT_EQ(0, (*iter - 1) % 30)
+          << "Unexpected keyframe at frame " << *iter;
     else
       EXPECT_EQ(0, *iter % 30) << "Unexpected keyframe at frame " << *iter;
   }
