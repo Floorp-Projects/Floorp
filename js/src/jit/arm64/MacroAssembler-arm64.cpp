@@ -283,43 +283,49 @@ MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Registe
 
     asMasm().memoryBarrierBefore(access.sync());
 
+    // Reg+Reg addressing is directly encodable in one Load instruction, hence
+    // the AutoForbidPools will ensure that the access metadata is emitted at
+    // the address of the Load.
     MemOperand srcAddr(memoryBase, ptr);
 
-    append(access, asMasm().currentOffset());
-    switch (access.type()) {
-      case Scalar::Int8:
-        Ldrsb(SelectGPReg(outany, out64), srcAddr);
-        break;
-      case Scalar::Uint8:
-        Ldrb(SelectGPReg(outany, out64), srcAddr);
-        break;
-      case Scalar::Int16:
-        Ldrsh(SelectGPReg(outany, out64), srcAddr);
-        break;
-      case Scalar::Uint16:
-        Ldrh(SelectGPReg(outany, out64), srcAddr);
-        break;
-      case Scalar::Int32:
-        if (out64 != Register64::Invalid())
-            Ldrsw(SelectGPReg(outany, out64), srcAddr);
-        else
+    {
+        AutoForbidPools afp(this, /* max number of instructions in scope = */ 1);
+        append(access, asMasm().currentOffset());
+        switch (access.type()) {
+          case Scalar::Int8:
+            Ldrsb(SelectGPReg(outany, out64), srcAddr);
+            break;
+          case Scalar::Uint8:
+            Ldrb(SelectGPReg(outany, out64), srcAddr);
+            break;
+          case Scalar::Int16:
+            Ldrsh(SelectGPReg(outany, out64), srcAddr);
+            break;
+          case Scalar::Uint16:
+            Ldrh(SelectGPReg(outany, out64), srcAddr);
+            break;
+          case Scalar::Int32:
+            if (out64 != Register64::Invalid())
+                Ldrsw(SelectGPReg(outany, out64), srcAddr);
+            else
+                Ldr(SelectGPReg(outany, out64, 32), srcAddr);
+            break;
+          case Scalar::Uint32:
             Ldr(SelectGPReg(outany, out64, 32), srcAddr);
-        break;
-      case Scalar::Uint32:
-        Ldr(SelectGPReg(outany, out64, 32), srcAddr);
-        break;
-      case Scalar::Int64:
-        Ldr(SelectGPReg(outany, out64), srcAddr);
-        break;
-      case Scalar::Float32:
-        Ldr(SelectFPReg(outany, out64, 32), srcAddr);
-        break;
-      case Scalar::Float64:
-        Ldr(SelectFPReg(outany, out64, 64), srcAddr);
-        break;
-      case Scalar::Uint8Clamped:
-      case Scalar::MaxTypedArrayViewType:
-        MOZ_CRASH("unexpected array type");
+            break;
+          case Scalar::Int64:
+            Ldr(SelectGPReg(outany, out64), srcAddr);
+            break;
+          case Scalar::Float32:
+            Ldr(SelectFPReg(outany, out64, 32), srcAddr);
+            break;
+          case Scalar::Float64:
+            Ldr(SelectFPReg(outany, out64, 64), srcAddr);
+            break;
+          case Scalar::Uint8Clamped:
+          case Scalar::MaxTypedArrayViewType:
+            MOZ_CRASH("unexpected array type");
+        }
     }
 
     asMasm().memoryBarrierAfter(access.sync());
@@ -342,34 +348,40 @@ MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyReg
 
     asMasm().memoryBarrierBefore(access.sync());
 
+    // Reg+Reg addressing is directly encodable in one Store instruction, hence
+    // the AutoForbidPools will ensure that the access metadata is emitted at
+    // the address of the Store.
     MemOperand dstAddr(memoryBase, ptr);
 
-    append(access, asMasm().currentOffset());
-    switch (access.type()) {
-      case Scalar::Int8:
-      case Scalar::Uint8:
-        Strb(SelectGPReg(valany, val64), dstAddr);
-        break;
-      case Scalar::Int16:
-      case Scalar::Uint16:
-        Strh(SelectGPReg(valany, val64), dstAddr);
-        break;
-      case Scalar::Int32:
-      case Scalar::Uint32:
-        Str(SelectGPReg(valany, val64), dstAddr);
-        break;
-      case Scalar::Int64:
-        Str(SelectGPReg(valany, val64), dstAddr);
-        break;
-      case Scalar::Float32:
-        Str(SelectFPReg(valany, val64, 32), dstAddr);
-        break;
-      case Scalar::Float64:
-        Str(SelectFPReg(valany, val64, 64), dstAddr);
-        break;
-      case Scalar::Uint8Clamped:
-      case Scalar::MaxTypedArrayViewType:
-        MOZ_CRASH("unexpected array type");
+    {
+        AutoForbidPools afp(this, /* max number of instructions in scope = */ 1);
+        append(access, asMasm().currentOffset());
+        switch (access.type()) {
+          case Scalar::Int8:
+          case Scalar::Uint8:
+            Strb(SelectGPReg(valany, val64), dstAddr);
+            break;
+          case Scalar::Int16:
+          case Scalar::Uint16:
+            Strh(SelectGPReg(valany, val64), dstAddr);
+            break;
+          case Scalar::Int32:
+          case Scalar::Uint32:
+            Str(SelectGPReg(valany, val64), dstAddr);
+            break;
+          case Scalar::Int64:
+            Str(SelectGPReg(valany, val64), dstAddr);
+            break;
+          case Scalar::Float32:
+            Str(SelectFPReg(valany, val64, 32), dstAddr);
+            break;
+          case Scalar::Float64:
+            Str(SelectFPReg(valany, val64, 64), dstAddr);
+            break;
+          case Scalar::Uint8Clamped:
+          case Scalar::MaxTypedArrayViewType:
+            MOZ_CRASH("unexpected array type");
+        }
     }
 
     asMasm().memoryBarrierAfter(access.sync());
@@ -1509,32 +1521,62 @@ SignOrZeroExtend(MacroAssembler& masm, Scalar::Type srcType, Width targetWidth, 
 // the targetWidth is 32.
 
 static void
-LoadExclusive(MacroAssembler& masm, Scalar::Type srcType, Width targetWidth, MemOperand ptr,
-              Register dest)
+LoadExclusive(MacroAssembler& masm, const wasm::MemoryAccessDesc* access,
+              Scalar::Type srcType, Width targetWidth, MemOperand ptr, Register dest)
 {
     bool signExtend = Scalar::isSignedIntType(srcType);
 
+    // With this address form, a single native ldxr* will be emitted, and the
+    // AutoForbidPools ensures that the metadata is emitted at the address of
+    // the ldxr*.
+    MOZ_ASSERT(ptr.IsImmediateOffset() && ptr.offset() == 0);
+
     switch (Scalar::byteSize(srcType)) {
-      case 1:
-        masm.Ldxrb(W(dest), ptr);
+      case 1: {
+        {
+            AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
+            if (access)
+                masm.append(*access, masm.currentOffset());
+            masm.Ldxrb(W(dest), ptr);
+        }
         if (signExtend)
             masm.Sbfm(R(dest, targetWidth), R(dest, targetWidth), 0, 7);
         break;
-      case 2:
-        masm.Ldxrh(W(dest), ptr);
+      }
+      case 2: {
+        {
+            AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
+            if (access)
+                masm.append(*access, masm.currentOffset());
+            masm.Ldxrh(W(dest), ptr);
+        }
         if (signExtend)
             masm.Sbfm(R(dest, targetWidth), R(dest, targetWidth), 0, 15);
         break;
-      case 4:
-        masm.Ldxr(W(dest), ptr);
+      }
+      case 4: {
+        {
+            AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
+            if (access)
+                masm.append(*access, masm.currentOffset());
+            masm.Ldxr(W(dest), ptr);
+        }
         if (targetWidth == Width::_64 && signExtend)
             masm.Sbfm(X(dest), X(dest), 0, 31);
         break;
-      case 8:
-        masm.Ldxr(X(dest), ptr);
+      }
+      case 8: {
+        {
+            AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
+            if (access)
+                masm.append(*access, masm.currentOffset());
+            masm.Ldxr(X(dest), ptr);
+        }
         break;
-      default:
+      }
+      default: {
         MOZ_CRASH();
+      }
     }
 }
 
@@ -1578,9 +1620,7 @@ CompareExchange(MacroAssembler& masm, const wasm::MemoryAccessDesc* access, Scal
 
     masm.bind(&again);
     SignOrZeroExtend(masm, type, targetWidth, oldval, scratch);
-    if (access)
-        masm.append(*access, masm.currentOffset());
-    LoadExclusive(masm, type, targetWidth, ptr, output);
+    LoadExclusive(masm, access, type, targetWidth, ptr, output);
     masm.Cmp(R(output, targetWidth), R(scratch, targetWidth));
     masm.B(&done, MacroAssembler::NotEqual);
     StoreExclusive(masm, type, scratch, newval, ptr);
@@ -1608,9 +1648,7 @@ AtomicExchange(MacroAssembler& masm, const wasm::MemoryAccessDesc* access, Scala
     Register scratch = temps.AcquireX().asUnsized();
 
     masm.bind(&again);
-    if (access)
-        masm.append(*access, masm.currentOffset());
-    LoadExclusive(masm, type, targetWidth, ptr, output);
+    LoadExclusive(masm, access, type, targetWidth, ptr, output);
     StoreExclusive(masm, type, scratch, value, ptr);
     masm.Cbnz(W(scratch), &again);
 
@@ -1635,9 +1673,7 @@ AtomicFetchOp(MacroAssembler& masm, const wasm::MemoryAccessDesc* access, Scalar
     Register scratch = temps.AcquireX().asUnsized();
 
     masm.bind(&again);
-    if (access)
-        masm.append(*access, masm.currentOffset());
-    LoadExclusive(masm, type, targetWidth, ptr, output);
+    LoadExclusive(masm, access, type, targetWidth, ptr, output);
     switch (op) {
       case AtomicFetchAddOp: masm.Add(X(temp), X(output), X(value)); break;
       case AtomicFetchSubOp: masm.Sub(X(temp), X(output), X(value)); break;
