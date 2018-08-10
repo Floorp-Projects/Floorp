@@ -109,6 +109,8 @@ class SingleTestMixin(object):
             file = file.replace(posixpath.sep, os.sep)
             entry = tests_by_path.get(file)
             if not entry:
+                if os.environ.get('MOZHARNESS_TEST_PATHS', None) is not None:
+                    self.fatal("Per-test run could not find requested test '%s'" % file)
                 continue
 
             if gpu and not self._is_gpu_suite(entry[1]):
@@ -170,7 +172,7 @@ class SingleTestMixin(object):
             # automation-relevance uses posixpath.sep
             repo_path = repo_path.replace(os.sep, posixpath.sep)
             if repo_path in changed_files:
-                self.info("found web-platform test file '%s', type %s" % (path, type))
+                self.info("Per-test run found web-platform test '%s', type %s" % (path, type))
                 suite_files = self.suites.get(type)
                 if not suite_files:
                     suite_files = []
@@ -178,6 +180,11 @@ class SingleTestMixin(object):
                 suite_files.append(test_path)
                 self.suites[type] = suite_files
                 self._map_test_path_to_source(test_path, repo_path)
+                changed_files.remove(repo_path)
+        if os.environ.get('MOZHARNESS_TEST_PATHS', None) is not None:
+            for file in changed_files:
+                self.fatal("Per-test run could not find requested web-platform test '%s'" %
+                           file)
 
     def find_modified_tests(self):
         """
@@ -212,6 +219,8 @@ class SingleTestMixin(object):
         changed_files = set()
         if os.environ.get('MOZHARNESS_TEST_PATHS', None) is not None:
             changed_files |= set(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
+            self.info("Per-test run found explicit request in MOZHARNESS_TEST_PATHS:")
+            self.info(str(changed_files))
         else:
             # determine which files were changed on this push
             url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
