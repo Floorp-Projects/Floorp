@@ -2606,16 +2606,33 @@ NS_IMETHODIMP
 HTMLEditor::GetSelectedElement(const nsAString& aTagName,
                                nsISupports** aReturn)
 {
-  NS_ENSURE_TRUE(aReturn , NS_ERROR_NULL_POINTER);
-
-  // default is null - no element found
+  if (NS_WARN_IF(!aReturn)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   *aReturn = nullptr;
 
-  // First look for a single element in selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  bool isCollapsed = selection->IsCollapsed();
+  ErrorResult error;
+  RefPtr<nsINode> selectedNode = GetSelectedNode(*selection, aTagName, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  selectedNode.forget(aReturn);
+  return NS_OK;
+}
+
+already_AddRefed<nsINode>
+HTMLEditor::GetSelectedNode(Selection& aSelection,
+                            const nsAString& aTagName,
+                            ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
+
+  bool isCollapsed = aSelection.IsCollapsed();
 
   nsAutoString domTagName;
   nsAutoString TagName(aTagName);
@@ -2625,8 +2642,11 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   bool isLinkTag = IsLinkTag(TagName);
   bool isNamedAnchorTag = IsNamedAnchorTag(TagName);
 
-  RefPtr<nsRange> range = selection->GetRangeAt(0);
-  NS_ENSURE_STATE(range);
+  RefPtr<nsRange> range = aSelection.GetRangeAt(0);
+  if (NS_WARN_IF(!range)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
   nsIContent* startNode = range->GetChildAtStartOffset();
@@ -2646,8 +2666,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       if (anyTag || (TagName == domTagName) ||
           (isLinkTag && HTMLEditUtils::IsLink(selectedNode)) ||
           (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(selectedNode))) {
-        selectedNode.forget(aReturn);
-        return NS_OK;
+        return selectedNode.forget();
       }
     }
   }
@@ -2658,8 +2677,8 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     // Link tag is a special case - we return the anchor node
     //  found for any selection that is totally within a link,
     //  included a collapsed selection (just a caret in a link)
-    const RangeBoundary& anchor = selection->AnchorRef();
-    const RangeBoundary& focus = selection->FocusRef();
+    const RangeBoundary& anchor = aSelection.AnchorRef();
+    const RangeBoundary& focus = aSelection.FocusRef();
     // Link node must be the same for both ends of selection
     if (anchor.IsSet()) {
       RefPtr<Element> parentLinkOfAnchor =
@@ -2682,8 +2701,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
 
         // We found a link node parent
         if (bNodeFound) {
-          parentLinkOfAnchor.forget(aReturn);
-          return NS_OK;
+          return parentLinkOfAnchor.forget();
         }
       } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
         // Check if link node is the only thing selected
@@ -2699,13 +2717,16 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   }
 
   if (!isCollapsed) {
-    RefPtr<nsRange> currange = selection->GetRangeAt(0);
+    RefPtr<nsRange> currange = aSelection.GetRangeAt(0);
     if (currange) {
       nsresult rv;
       nsCOMPtr<nsIContentIterator> iter =
         do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
                           &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return nullptr;
+      }
 
       iter->Init(currange);
       // loop through the content iterator for each content node
@@ -2756,8 +2777,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     }
   }
 
-  selectedElement.forget(aReturn);
-  return NS_OK;
+  return selectedElement.forget();
 }
 
 already_AddRefed<Element>
