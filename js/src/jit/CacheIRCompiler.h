@@ -494,8 +494,10 @@ class MOZ_RAII CacheRegisterAllocator
     Register defineRegister(MacroAssembler& masm, TypedOperandId typedId);
     ValueOperand defineValueRegister(MacroAssembler& masm, ValOperandId val);
 
-    // Loads (and unboxes) a value into a float register (caller guarded)
-    void loadDouble(MacroAssembler&, ValOperandId, FloatRegister);
+    // Loads (potentially coercing) and unboxes a value into a float register
+    // This is infallible, as there should have been a previous guard
+    // to ensure the ValOperandId is already a number.
+    void ensureDoubleRegister(MacroAssembler&, ValOperandId, FloatRegister);
 
     // Returns |val|'s JSValueType or JSVAL_TYPE_UNKNOWN.
     JSValueType knownType(ValOperandId val) const;
