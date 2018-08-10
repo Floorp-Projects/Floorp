@@ -12643,7 +12643,8 @@ nsIDocument::SetDocTreeHadPlayRevoked()
 void
 nsIDocument::MaybeAllowStorageForOpener()
 {
-  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
+  if (StaticPrefs::network_cookie_cookieBehavior() !=
+        nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     return;
   }
 
