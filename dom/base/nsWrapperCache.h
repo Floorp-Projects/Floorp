@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 class ContentProcessMessageManager;
 class InProcessTabChildMessageManager;
-class TabChildGlobal;
+class TabChildMessageManager;
 } // namespace dom
 } // namespace mozilla
 class SandboxPrivate;
