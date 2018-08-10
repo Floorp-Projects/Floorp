@@ -1212,7 +1212,12 @@ public:
 public:
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
 
-  // Get the parent principal, returns null if this is a toplevel window.
+  // Get the toplevel principal, returns null if this is a toplevel window.
+  nsIPrincipal* GetTopLevelPrincipal();
+
+  // Get the parent principal, returns null if this or the parent are not a
+  // toplevel window. This is mainly used to determine the anti-tracking storage
+  // area.
   nsIPrincipal* GetTopLevelStorageAreaPrincipal();
 
 protected:
