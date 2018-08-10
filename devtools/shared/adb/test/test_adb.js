@@ -34,6 +34,7 @@ const ADB_JSON = {
     ]
   }
 };
+let extension_version = 1.0;
 
 ExtensionTestUtils.init(this);
 
@@ -65,7 +66,7 @@ add_task(async function testAdbIsNotRunningInitially() {
 add_task(async function testNoAdbExtension() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      version: "1.0",
+      version: (extension_version++).toString(),
       applications: {
         gecko: { id: "not-adb@mozilla.org" }
       }
@@ -83,7 +84,7 @@ add_task(async function testNoAdbExtension() {
 add_task(async function testNoAdbJSON() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      version: "1.0",
+      version: (extension_version++).toString(),
       applications: {
         // The extension id here and in later test cases should match the
         // corresponding prefrece value.
@@ -105,7 +106,7 @@ add_task({
 }, async function testNoTargetBinaries() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      version: "1.0",
+      version: (extension_version++).toString(),
       applications: {
         gecko: { id: "adb@mozilla.org" }
       }
@@ -126,7 +127,7 @@ add_task({
 add_task(async function testExtract() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      version: "1.0",
+      version: (extension_version++).toString(),
       applications: {
         gecko: { id: "adb@mozilla.org" }
       }
@@ -155,7 +156,7 @@ add_task({
 }, async function testStartAndStop() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      version: "1.0",
+      version: (extension_version++).toString(),
       applications: {
         gecko: { id: "adb@mozilla.org" }
       }
@@ -189,7 +190,7 @@ add_task({
 }, async function testTrackDevices() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      version: "1.0",
+      version: (extension_version++).toString(),
       applications: {
         gecko: { id: "adb@mozilla.org" }
       }
