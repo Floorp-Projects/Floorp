@@ -1304,7 +1304,7 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(JS::Handle<JSObject*> aGlobal
       JS::CloneAndExecuteScript(cx, script, &rval);
     } else {
       JS::Rooted<JSObject*> scope(cx);
-      bool ok = js::ExecuteInGlobalAndReturnScope(cx, aGlobal, script, &scope);
+      bool ok = js::ExecuteInFrameScriptEnvironment(cx, aGlobal, script, &scope);
       if (ok) {
         // Force the scope to stay alive.
         mAnonymousGlobalScopes.AppendElement(scope);

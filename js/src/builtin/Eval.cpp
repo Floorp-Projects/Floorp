@@ -457,23 +457,35 @@ ExecuteInExtensibleLexicalEnvironment(JSContext* cx, HandleScript scriptArg, Han
 }
 
 JS_FRIEND_API(bool)
-js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScript scriptArg,
-                                  MutableHandleObject envArg)
+js::ExecuteInFrameScriptEnvironment(JSContext* cx, HandleObject objArg, HandleScript scriptArg,
+                                    MutableHandleObject envArg)
 {
     RootedObject varEnv(cx, NonSyntacticVariablesObject::create(cx));
     if (!varEnv)
         return false;
 
-    // Create lexical environment with |this| == global.
-    // NOTE: This is required behavior for Gecko FrameScriptLoader
-    RootedObject lexEnv(cx, LexicalEnvironmentObject::createNonSyntactic(cx, varEnv, global));
-    if (!lexEnv)
+    AutoObjectVector envChain(cx);
+    if (!envChain.append(objArg))
         return false;
 
-    if (!ExecuteInExtensibleLexicalEnvironment(cx, scriptArg, lexEnv))
+    RootedObject env(cx);
+    if (!js::CreateObjectsForEnvironmentChain(cx, envChain, varEnv, &env))
         return false;
 
-    envArg.set(lexEnv);
+    // Create lexical environment with |this| == objArg, which should be a Gecko
+    // MessageManager.
+    // NOTE: This is required behavior for Gecko FrameScriptLoader, where some
+    // callers try to bind methods from the message manager in their scope chain
+    // to |this|, and will fail if it is not bound to a message manager.
+    ObjectRealm& realm = ObjectRealm::get(varEnv);
+    env = realm.getOrCreateNonSyntacticLexicalEnvironment(cx, env, varEnv, objArg);
+    if (!env)
+        return false;
+
+    if (!ExecuteInExtensibleLexicalEnvironment(cx, scriptArg, env))
+        return false;
+
+    envArg.set(env);
     return true;
 }
 
