@@ -12,7 +12,6 @@ const client = require("./adb-client");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { getFileForBinary } = require("./adb-binary");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
-const { PromiseUtils } = require("resource://gre/modules/PromiseUtils.jsm");
 const { Services } = require("resource://gre/modules/Services.jsm");
 loader.lazyRequireGetter(this, "check",
                          "devtools/shared/adb/adb-running-checker", true);
@@ -324,92 +323,91 @@ const ADB = {
   },
 
   // Run a shell command
-  shell(command) {
-    const deferred = PromiseUtils.defer();
+  async shell(command) {
     let state;
     let stdout = "";
 
     dumpn("shell " + command);
 
-    const shutdown = function() {
-      dumpn("shell shutdown");
-      socket.close();
-      deferred.reject("BAD_RESPONSE");
-    };
+    return new Promise((resolve, reject) => {
+      const shutdown = function() {
+        dumpn("shell shutdown");
+        socket.close();
+        reject("BAD_RESPONSE");
+      };
 
-    const runFSM = function runFSM(data) {
-      dumpn("runFSM " + state);
-      let req;
-      let ignoreResponseCode = false;
-      switch (state) {
-        case "start":
-          state = "send-transport";
-          runFSM();
-          break;
-        case "send-transport":
-          req = client.createRequest("host:transport-any");
-          socket.send(req);
-          state = "wait-transport";
-          break;
-        case "wait-transport":
-          if (!client.checkResponse(data, OKAY)) {
-            shutdown();
-            return;
-          }
-          state = "send-shell";
-          runFSM();
-          break;
-        case "send-shell":
-          req = client.createRequest("shell:" + command);
-          socket.send(req);
-          state = "rec-shell";
-          break;
-        case "rec-shell":
-          if (!client.checkResponse(data, OKAY)) {
-            shutdown();
-            return;
-          }
-          state = "decode-shell";
-          if (client.getBuffer(data).byteLength == 4) {
+      const runFSM = function runFSM(data) {
+        dumpn("runFSM " + state);
+        let req;
+        let ignoreResponseCode = false;
+        switch (state) {
+          case "start":
+            state = "send-transport";
+            runFSM();
             break;
-          }
-          ignoreResponseCode = true;
-          // eslint-disable-next-lined no-fallthrough
-        case "decode-shell":
-          const decoder = new TextDecoder();
-          const text = new Uint8Array(client.getBuffer(data),
-                                      ignoreResponseCode ? 4 : 0);
-          stdout += decoder.decode(text);
-          break;
-        default:
-          dumpn("shell Unexpected State: " + state);
-          deferred.reject("UNEXPECTED_STATE");
-      }
-    };
+          case "send-transport":
+            req = client.createRequest("host:transport-any");
+            socket.send(req);
+            state = "wait-transport";
+            break;
+          case "wait-transport":
+            if (!client.checkResponse(data, OKAY)) {
+              shutdown();
+              return;
+            }
+            state = "send-shell";
+            runFSM();
+            break;
+          case "send-shell":
+            req = client.createRequest("shell:" + command);
+            socket.send(req);
+            state = "rec-shell";
+            break;
+          case "rec-shell":
+            if (!client.checkResponse(data, OKAY)) {
+              shutdown();
+              return;
+            }
+            state = "decode-shell";
+            if (client.getBuffer(data).byteLength == 4) {
+              break;
+            }
+            ignoreResponseCode = true;
+            // eslint-disable-next-lined no-fallthrough
+          case "decode-shell":
+            const decoder = new TextDecoder();
+            const text = new Uint8Array(client.getBuffer(data),
+                                        ignoreResponseCode ? 4 : 0);
+            stdout += decoder.decode(text);
+            break;
+          default:
+            dumpn("shell Unexpected State: " + state);
+            reject("UNEXPECTED_STATE");
+        }
+      };
 
-    const socket = client.connect();
-    socket.s.onerror = function(event) {
-      dumpn("shell onerror");
-      deferred.reject("SOCKET_ERROR");
-    };
+      const socket = client.connect();
+      socket.s.onerror = function(event) {
+        dumpn("shell onerror");
+        reject("SOCKET_ERROR");
+      };
 
-    socket.s.onopen = function(event) {
-      dumpn("shell onopen");
-      state = "start";
-      runFSM();
-    };
+      socket.s.onopen = function(event) {
+        dumpn("shell onopen");
+        state = "start";
+        runFSM();
+      };
 
-    socket.s.onclose = function(event) {
-      deferred.resolve(stdout);
-      dumpn("shell onclose");
-    };
+      socket.s.onclose = function(event) {
+        resolve(stdout);
+        dumpn("shell onclose");
+      };
 
-    socket.s.ondata = function(event) {
-      dumpn("shell ondata");
-      runFSM(event.data);
-    };
-
-    return deferred.promise;
+      socket.s.ondata = function(event) {
+        dumpn("shell ondata");
+        runFSM(event.data);
+      };
+    });
   },
 
   // Asynchronously runs an adb command.
@@ -417,47 +415,46 @@ const ADB = {
   // http://androidxref.com/4.0.4/xref/system/core/adb/SERVICES.TXT
   runCommand(command) {
     dumpn("runCommand " + command);
-    const deferred = PromiseUtils.defer();
-    if (!this.ready) {
-      setTimeout(function() {
-        deferred.reject("ADB_NOT_READY");
-      });
-      return deferred.promise;
-    }
-
-    const socket = client.connect();
-
-    socket.s.onopen = function() {
-      dumpn("runCommand onopen");
-      const req = client.createRequest(command);
-      socket.send(req);
-    };
-
-    socket.s.onerror = function() {
-      dumpn("runCommand onerror");
-      deferred.reject("NETWORK_ERROR");
-    };
-
-    socket.s.onclose = function() {
-      dumpn("runCommand onclose");
-    };
-
-    socket.s.ondata = function(event) {
-      dumpn("runCommand ondata");
-      const data = event.data;
-
-      const packet = client.unpackPacket(data, false);
-      if (!client.checkResponse(data, OKAY)) {
-        socket.close();
-        dumpn("Error: " + packet.data);
-        deferred.reject("PROTOCOL_ERROR");
+    return new Promise((resolve, reject) => {
+      if (!this.ready) {
+        setTimeout(function() {
+          reject("ADB_NOT_READY");
+        });
         return;
       }
 
-      deferred.resolve(packet.data);
-    };
+      const socket = client.connect();
 
-    return deferred.promise;
+      socket.s.onopen = function() {
+        dumpn("runCommand onopen");
+        const req = client.createRequest(command);
+        socket.send(req);
+      };
+
+      socket.s.onerror = function() {
+        dumpn("runCommand onerror");
+        reject("NETWORK_ERROR");
+      };
+
+      socket.s.onclose = function() {
+        dumpn("runCommand onclose");
+      };
+
+      socket.s.ondata = function(event) {
+        dumpn("runCommand ondata");
+        const data = event.data;
+
+        const packet = client.unpackPacket(data, false);
+        if (!client.checkResponse(data, OKAY)) {
+          socket.close();
+          dumpn("Error: " + packet.data);
+          reject("PROTOCOL_ERROR");
+          return;
+        }
+
+        resolve(packet.data);
+      };
+    });
   }
 };
 
