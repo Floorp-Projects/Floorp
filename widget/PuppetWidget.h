@@ -27,6 +27,7 @@
 #include "mozilla/ContentCache.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcherListener.h"
+#include "mozilla/layers/MemoryPressureObserver.h"
 
 namespace mozilla {
 
@@ -40,6 +41,7 @@ struct AutoCacheNativeKeyCommands;
 
 class PuppetWidget : public nsBaseWidget
                    , public TextEventDispatcherListener
+                   , public layers::MemoryPressureListener
 {
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::dom::TabChild TabChild;
@@ -322,6 +324,7 @@ public:
                       uint32_t aIndexOfKeypress,
                       void* aData) override;
 
+  virtual void OnMemoryPressure(layers::MemoryPressureReason aWhy) override;
 private:
   nsresult Paint();
 
@@ -358,18 +361,6 @@ private:
     PuppetWidget* mWidget;
   };
 
-  class MemoryPressureObserver : public nsIObserver {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-    explicit MemoryPressureObserver(PuppetWidget* aWidget) : mWidget(aWidget) {}
-    void Remove();
-  private:
-    virtual ~MemoryPressureObserver() {}
-    PuppetWidget* mWidget;
-  };
-  friend class MemoryPressureObserver;
-
   // TabChild normally holds a strong reference to this PuppetWidget
   // or its root ancestor, but each PuppetWidget also needs a
   // reference back to TabChild (e.g. to delegate nsIWidget IME calls
@@ -382,7 +373,7 @@ private:
   RefPtr<PuppetWidget> mChild;
   LayoutDeviceIntRegion mDirtyRegion;
   nsRevocableEventPtr<PaintTask> mPaintTask;
-  RefPtr<MemoryPressureObserver> mMemoryPressureObserver;
+  RefPtr<layers::MemoryPressureObserver> mMemoryPressureObserver;
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
   RefPtr<DrawTarget> mDrawTarget;
