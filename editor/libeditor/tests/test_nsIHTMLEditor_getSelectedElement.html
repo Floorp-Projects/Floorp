@@ -257,11 +257,9 @@ SimpleTest.waitForFocus(function() {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  // XXX This is a bug obviously since nsIHTMLEditor.idl defines that
-  //     getSelectedElement() won't return non-element node.
-  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
-          null,
-          "#1-11 nsIHTMLEditor::getSelectedElement(\"\") should return null when only a text node is selected");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-11 nsIHTMLEditor::getSelectedElement(\"\") should return null when only a text node is selected");
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
      null,
      "#1-11 nsIHTMLEditor::getSelectedElement(\"b\") should return null when only a text node is selected");
