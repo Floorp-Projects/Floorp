@@ -1046,7 +1046,7 @@ protected: // May be called by friends.
    *
    * @param aTag        Tag you want.
    */
-  already_AddRefed<Element> CreateHTMLContent(nsAtom* aTag);
+  already_AddRefed<Element> CreateHTMLContent(const nsAtom* aTag);
 
   /**
    * Creates text node which is marked as "maybe modified frequently".
