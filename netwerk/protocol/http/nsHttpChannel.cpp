@@ -22,6 +22,7 @@
 #include "nsICacheStorage.h"
 #include "nsICacheEntry.h"
 #include "nsICaptivePortalService.h"
+#include "nsICookieService.h"
 #include "nsICryptoHash.h"
 #include "nsINetworkInterceptController.h"
 #include "nsINSSErrorsService.h"
@@ -55,6 +56,7 @@
 #include "nsThreadUtils.h"
 #include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
@@ -103,7 +105,6 @@
 #include "mozilla/net/Predictor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NullPrincipal.h"
-#include "mozilla/StaticPrefs.h"
 #include "CacheControlParser.h"
 #include "nsMixedContentBlocker.h"
 #include "CacheStorageService.h"
@@ -3827,28 +3828,18 @@ nsHttpChannel::OpenCacheEntryInternal(bool isHttps,
         extension.Append("TRR");
     }
 
-    if (StaticPrefs::privacy_restrict3rdpartystorage_enabled() &&
-        mIsTrackingResource) {
-        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-            services::GetThirdPartyUtil();
-        if (thirdPartyUtil) {
-            bool thirdParty = false;
-            Unused << thirdPartyUtil->IsThirdPartyChannel(this,
-                                                          nullptr,
-                                                          &thirdParty);
-            if (thirdParty) {
-                nsCOMPtr<nsIURI> topWindowURI;
-                rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
-                NS_ENSURE_SUCCESS(rv, rv);
+    if (!AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(this, mURI)) {
+        nsCOMPtr<nsIURI> topWindowURI;
+        rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-                nsAutoString topWindowOrigin;
-                rv = nsContentUtils::GetUTFOrigin(topWindowURI, topWindowOrigin);
-                NS_ENSURE_SUCCESS(rv, rv);
+        nsAutoString topWindowOrigin;
+        rv = nsContentUtils::GetUTFOrigin(topWindowURI ? topWindowURI : mURI,
+                                          topWindowOrigin);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-                extension.Append("-trackerFor:");
-                extension.Append(NS_ConvertUTF16toUTF8(topWindowOrigin));
-            }
-        }
+        extension.Append("-unique:");
+        extension.Append(NS_ConvertUTF16toUTF8(topWindowOrigin));
     }
 
     mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;

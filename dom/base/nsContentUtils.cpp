@@ -217,8 +217,8 @@
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "nsContentTypeParser.h"
 #include "nsICookiePermission.h"
-#include "mozIThirdPartyUtil.h"
 #include "nsICookieService.h"
+#include "mozIThirdPartyUtil.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/BloomFilter.h"
 #include "TabChild.h"
@@ -8751,12 +8751,10 @@ nsContentUtils::StorageAllowedForPrincipal(nsIPrincipal* aPrincipal)
 
 // static, private
 void
-nsContentUtils::GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
-                                              uint32_t* aLifetimePolicy,
-                                              uint32_t* aBehavior)
+nsContentUtils::GetCookieLifetimePolicyForPrincipal(nsIPrincipal* aPrincipal,
+                                                    uint32_t* aLifetimePolicy)
 {
   *aLifetimePolicy = sCookiesLifetimePolicy;
-  *aBehavior = StaticPrefs::network_cookie_cookieBehavior();
 
   // Any permissions set for the given principal will override our default
   // settings from preferences.
@@ -8770,19 +8768,15 @@ nsContentUtils::GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
   permissionManager->TestPermissionFromPrincipal(aPrincipal, "cookie", &perm);
   switch (perm) {
     case nsICookiePermission::ACCESS_ALLOW:
-      *aBehavior = nsICookieService::BEHAVIOR_ACCEPT;
       *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
       break;
     case nsICookiePermission::ACCESS_DENY:
-      *aBehavior = nsICookieService::BEHAVIOR_REJECT;
       *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
       break;
     case nsICookiePermission::ACCESS_SESSION:
-      *aBehavior = nsICookieService::BEHAVIOR_ACCEPT;
       *aLifetimePolicy = nsICookieService::ACCEPT_SESSION;
       break;
     case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
-      *aBehavior = nsICookieService::BEHAVIOR_REJECT_FOREIGN;
       // NOTE: The decision was made here to override the lifetime policy to be
       // ACCEPT_NORMALLY for consistency with ACCESS_ALLOW, but this does
       // prevent us from expressing BEHAVIOR_REJECT_FOREIGN/ACCEPT_SESSION for a
@@ -8791,7 +8785,6 @@ nsContentUtils::GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
       *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
       break;
     case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
-      *aBehavior = nsICookieService::BEHAVIOR_LIMIT_FOREIGN;
       // NOTE: The decision was made here to override the lifetime policy to be
       // ACCEPT_NORMALLY for consistency with ACCESS_ALLOW, but this does
       // prevent us from expressing BEHAVIOR_REJECT_FOREIGN/ACCEPT_SESSION for a
@@ -8861,71 +8854,47 @@ nsContentUtils::IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow)
 static bool
 StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
                                       nsIChannel* aChannel,
+                                      nsIPrincipal* aPrincipal,
                                       nsIURI* aURI)
 {
-  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
-    return false;
-  }
-
-  // Let's check if this is a 3rd party context.
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, aChannel, aURI)) {
-    return false;
-  }
+  MOZ_ASSERT(aWindow || aChannel || aPrincipal);
 
   if (aWindow) {
-    nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(aWindow);
-    nsGlobalWindowOuter* outerWindow =
-      nsGlobalWindowOuter::Cast(innerWindow->GetOuterWindow());
-    if (NS_WARN_IF(!outerWindow)) {
-      return false;
-    }
-
-    // We are a first party resource.
-    if (outerWindow->IsTopLevelWindow()) {
-      return false;
-    }
-
     nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
-    if (documentURI &&
-        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(aWindow,
-                                                                documentURI)) {
+    return !documentURI ||
+           !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(aWindow,
+                                                                    documentURI);
+  }
+
+  if (aChannel) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    if (!httpChannel) {
       return false;
     }
 
-    return true;
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = httpChannel->GetURI(getter_AddRefs(uri));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    return !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
+                                                                    uri);
   }
 
-  // aChannel and aWindow are mutually exclusive.
-  MOZ_ASSERT(aChannel);
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
-    return false;
-  }
-
-  // If this is not a tracking resource, nothing is disabled.
-  if (!httpChannel->GetIsTrackingResource()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = httpChannel->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
-                                                                 uri);
+  MOZ_ASSERT(aPrincipal);
+  return !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(aPrincipal);
 }
 
 // static public
 bool
 nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                               nsIChannel* aChannel,
+                                              nsIPrincipal* aPrincipal,
                                               nsIURI* aURI)
 {
   bool disabled =
-    StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aURI);
+    StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI);
   if (disabled &&
       StaticPrefs::privacy_restrict3rdpartystorage_ui_enabled()) {
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
@@ -8933,6 +8902,8 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
       return false;
     }
 
+    // FIXME: this is wrong. This method is called also with aWindow and a null
+    // aChannel.
     nsCOMPtr<mozIDOMWindowProxy> win;
     nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel,
                                                          getter_AddRefs(win));
@@ -8962,10 +8933,6 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
     return StorageAccess::eDeny;
   }
 
-  if (StorageDisabledByAntiTracking(aWindow, aChannel, aURI)) {
-    return StorageAccess::eDeny;
-  }
-
   if (aWindow) {
     // If the document is sandboxed, then it is not permitted to use storage
     nsIDocument* document = aWindow->GetExtantDoc();
@@ -8980,17 +8947,15 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
   }
 
   uint32_t lifetimePolicy;
-  uint32_t behavior;
 
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // and ACCEPT_NORMALLY as lifetimePolicy (See Bug 1406675 for rationale).
   auto policy = BasePrincipal::Cast(aPrincipal)->AddonPolicy();
 
   if (policy) {
-    behavior = nsICookieService::BEHAVIOR_ACCEPT;
     lifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
   } else {
-    GetCookieBehaviorForPrincipal(aPrincipal, &lifetimePolicy, &behavior);
+    GetCookieLifetimePolicyForPrincipal(aPrincipal, &lifetimePolicy);
   }
 
   // Check if we should only allow storage for the session, and record that fact
@@ -9036,19 +9001,7 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
     }
   }
 
-  // We don't want to prompt for every attempt to access permissions.
-  if (behavior == nsICookieService::BEHAVIOR_REJECT) {
-    return StorageAccess::eDeny;
-  }
-
-  if ((behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
-       behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) &&
-      IsThirdPartyWindowOrChannel(aWindow, aChannel, aURI)) {
-    // XXX For non-cookie forms of storage, we handle BEHAVIOR_LIMIT_FOREIGN by
-    // simply rejecting the request to use the storage. In the future, if we
-    // change the meaning of BEHAVIOR_LIMIT_FOREIGN to be one which makes sense
-    // for non-cookie storage types, this may change.
-
+  if (StorageDisabledByAntiTracking(aWindow, aChannel, aPrincipal, aURI)) {
     return StorageAccess::eDeny;
   }
 
