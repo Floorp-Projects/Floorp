@@ -292,7 +292,7 @@
   <hbox id="confirmBrowserLanguage" class="message-bar" align="center" hidden="true">
     <image class="message-bar-icon"/>
     <hbox class="message-bar-content" align="center" flex="1">
-      <description flex="1"/>
+      <description class="message-bar-description" flex="1"/>
       <button class="message-bar-button" oncommand="gMainPane.confirmBrowserLanguageChange()"/>
     </hbox>
   </hbox>
