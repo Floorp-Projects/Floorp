@@ -5949,18 +5949,18 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
         return Ok();
     }
 
-    // Objects that emulate undefined are not supported.
-    if (left->maybeEmulatesUndefined(constraints()) ||
-        right->maybeEmulatesUndefined(constraints()))
-    {
-        if (canTrackOptimization)
-            trackOptimizationOutcome(TrackedOutcome::OperandMaybeEmulatesUndefined);
-        return Ok();
-    }
-
     // In the loose comparison more values could be the same,
     // but value comparison reporting otherwise.
     if (op == JSOP_EQ || op == JSOP_NE) {
+
+        // Objects that emulate undefined are not supported.
+        if (left->maybeEmulatesUndefined(constraints()) ||
+            right->maybeEmulatesUndefined(constraints()))
+        {
+            if (canTrackOptimization)
+                trackOptimizationOutcome(TrackedOutcome::OperandMaybeEmulatesUndefined);
+            return Ok();
+        }
 
         // Undefined compared loosy to Null is not supported,
         // because tag is different, but value can be the same (undefined == null).
