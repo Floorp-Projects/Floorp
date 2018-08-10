@@ -1052,14 +1052,6 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
     ptr->AllowRBFormat(LOCAL_GL_DEPTH_STENCIL,
                        ptr->GetUsage(EffectiveFormat::DEPTH24_STENCIL8));
 
-    if (gfxPrefs::WebGL2CompatMode()) {
-        AddSimpleUnsized(ptr, LOCAL_GL_RGBA, LOCAL_GL_FLOAT, EffectiveFormat::RGBA32F);
-        AddSimpleUnsized(ptr, LOCAL_GL_RGB , LOCAL_GL_FLOAT, EffectiveFormat::RGB32F );
-
-        AddSimpleUnsized(ptr, LOCAL_GL_RGBA, LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGBA16F);
-        AddSimpleUnsized(ptr, LOCAL_GL_RGB , LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGB16F );
-    }
-
     ////////////////////////////////////
 
     return ret;
