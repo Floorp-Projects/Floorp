@@ -319,6 +319,7 @@ pref("devtools.responsive.reloadNotification.enabled", true);
 
 // Enable new about:debugging.
 pref("devtools.aboutdebugging.new-enabled", false);
+pref("devtools.aboutdebugging.network-locations", "[]");
 
 // about:debugging: only show system add-ons in local builds by default.
 #ifdef MOZILLA_OFFICIAL
