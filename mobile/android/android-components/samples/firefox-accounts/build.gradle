@@ -26,22 +26,13 @@ android {
         }
     }
 
-    flavorDimensions "abi"
+    splits {
+        abi {
+            enable true
 
-    productFlavors {
-        // Processor architecture
-        arm {
-            dimension "abi"
-        }
-        x86 {
-            dimension "abi"
-        }
-        aarch64 {
-            dimension "abi"
         }
     }
 }
-
 
 dependencies {
     implementation project(':service-firefox-accounts')   
