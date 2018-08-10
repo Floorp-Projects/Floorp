@@ -256,23 +256,29 @@ class TupBackend(CommonBackend):
 
         # These are 'group' dependencies - All rules that list these as an output
         # will be built before any rules that list this as an input.
-        self._installed_idls = '$(MOZ_OBJ_ROOT)/<installed-idls>'
-        self._installed_files = '$(MOZ_OBJ_ROOT)/<installed-files>'
-        self._rust_libs = '$(MOZ_OBJ_ROOT)/<rust-libs>'
+        self._installed_idls = self._output_group('installed-idls')
+        self._installed_files = self._output_group('installed-files')
+        self._rust_libs = self._output_group('rust-libs')
         # The preprocessor including source-repo.h and buildid.h creates
         # dependencies that aren't specified by moz.build and cause errors
         # in Tup. Express these as a group dependency.
-        self._early_generated_files = '$(MOZ_OBJ_ROOT)/<early-generated-files>'
+        self._early_generated_files = self._output_group('early-generated-files')
 
-        self._shlibs = '$(MOZ_OBJ_ROOT)/<shlibs>'
-        self._gtests = '$(MOZ_OBJ_ROOT)/<gtest>'
-        self._default_group = '$(MOZ_OBJ_ROOT)/<default>'
+        self._shlibs = self._output_group('shlibs')
+        self._default_group = self._output_group('default')
 
         self._rust_cmds = set()
 
         self._built_in_addons = set()
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
 
+    def _output_group(self, label):
+        if label:
+            return '$(MOZ_OBJ_ROOT)/<%s>' % label
+
+    def _rust_output_group(self, label):
+        if label:
+            return self._output_group('rust-' + label)
 
     def _get_mozconfig_env(self, config):
         env = {}
@@ -343,8 +349,8 @@ class TupBackend(CommonBackend):
         shlib = backend_file.shared_lib
 
         output_group = self._shlibs
-        if 'toolkit/library/gtest' in backend_file.objdir:
-            output_group = self._gtests
+        if shlib.output_category:
+            output_group = self._output_group(shlib.output_category)
 
         if shlib.cxx_link:
             mkshlib = (
@@ -371,16 +377,16 @@ class TupBackend(CommonBackend):
         list_file_name = '%s.list' % shlib.name.replace('.', '_')
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
 
-        rust_linked = self._lib_paths(backend_file.objdir,
-                                      (l for l in backend_file.shared_lib.linked_libraries
-                                       if isinstance(l, RustLibrary)))
+        rust_linked = [l for l in backend_file.shared_lib.linked_libraries
+                       if isinstance(l, RustLibrary)]
 
         inputs = objs + static_libs + shared_libs
 
         extra_inputs = []
         if rust_linked:
-            extra_inputs = [self._rust_libs]
-            static_libs += rust_linked
+            extra_inputs = [self._rust_output_group(rust_linked[0].output_category) or
+                            self._rust_libs]
+            static_libs += self._lib_paths(backend_file.objdir, rust_linked)
 
         symbols_file = []
         if (shlib.symbols_file and
@@ -739,7 +745,7 @@ class TupBackend(CommonBackend):
 
         return env
 
-    def _gen_cargo_rules(self, backend_file, build_plan, cargo_env):
+    def _gen_cargo_rules(self, backend_file, build_plan, cargo_env, output_group):
         invocations = build_plan['invocations']
         processed = set()
 
@@ -831,14 +837,14 @@ class TupBackend(CommonBackend):
                     command,
                     inputs=sorted(inputs),
                     outputs=outputs,
-                    output_group=self._rust_libs,
+                    output_group=output_group,
                     extra_inputs=[self._installed_files],
                     display='%s %s' % (header, display_name(invocation)),
                     check_unchanged=check_unchanged,
                 )
 
                 for dst, link in invocation['links'].iteritems():
-                    rust_backend_file.symlink_rule(link, dst, self._rust_libs)
+                    rust_backend_file.symlink_rule(link, dst, output_group)
 
         for val in enumerate(invocations):
             _process(*val)
@@ -862,7 +868,10 @@ class TupBackend(CommonBackend):
                             '\n'.join(output_lines))
 
         cargo_plan = json.loads(''.join(output_lines))
-        self._gen_cargo_rules(backend_file, cargo_plan, cargo_env)
+
+        self._gen_cargo_rules(backend_file, cargo_plan, cargo_env,
+                              self._rust_output_group(obj.output_category) or
+                              self._rust_libs)
         self.backend_input_files |= set(cargo_plan['inputs'])
 
 
