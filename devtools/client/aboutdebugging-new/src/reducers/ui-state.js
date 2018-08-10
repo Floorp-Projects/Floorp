@@ -9,9 +9,10 @@ const {
   PAGES
 } = require("../constants");
 
-function UiState() {
+function UiState(locations = []) {
   return {
-    selectedPage: PAGES.THIS_FIREFOX
+    networkLocations: locations,
+    selectedPage: PAGES.THIS_FIREFOX,
   };
 }
 
@@ -19,7 +20,7 @@ function uiReducer(state = UiState(), action) {
   switch (action.type) {
     case PAGE_SELECTED: {
       const { page } = action;
-      return { selectedPage: page };
+      return Object.assign({}, state, { selectedPage: page });
     }
 
     default:
