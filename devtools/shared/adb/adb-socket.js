@@ -8,11 +8,9 @@ const { Cu } = require("chrome");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 
 function createTCPSocket(location, port, options) {
-  // Starting with FF57, jsm share the same global and requires some special code
   const { TCPSocket } =
     Cu.getGlobalForObject(Cu.import("resource://gre/modules/Services.jsm", {}));
 
-  // Starting with FF43, TCPSocket is now exposed via WebIDL
   return new TCPSocket(location, port, options);
 }
 
