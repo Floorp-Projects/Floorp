@@ -7,8 +7,8 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { ConnectionManager } =
   require("devtools/shared/client/connection-manager");
-const { Devices } =
-  require("devtools/shared/apps/Devices.jsm");
+const { Devices } = require("devtools/shared/apps/Devices.jsm");
+const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { RuntimeTypes } =
   require("devtools/client/webide/modules/runtime-types");
 
@@ -122,7 +122,7 @@ FirefoxOSRuntime.detect = async function(device, model) {
   }
   if (b2gExists === "0\r\n") {
     const runtime = new FirefoxOSRuntime(device, model);
-    console.log("Found " + runtime.name);
+    dumpn("Found " + runtime.name);
     runtimes.push(runtime);
   }
   return runtimes;
@@ -159,7 +159,7 @@ FirefoxOnAndroidRuntime.detect = async function(device, model) {
   }
   for (const socketPath of socketPaths) {
     const runtime = new FirefoxOnAndroidRuntime(device, model, socketPath);
-    console.log("Found " + runtime.name);
+    dumpn("Found " + runtime.name);
     runtimes.push(runtime);
   }
   return runtimes;

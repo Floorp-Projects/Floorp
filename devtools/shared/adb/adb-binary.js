@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { dumpn } = require("devtools/shared/DevToolsUtils");
+
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
 loader.lazyRequireGetter(this, "Services");
@@ -28,7 +30,7 @@ async function getAdbInfo(adbUri) {
         const string = NetUtil.readInputStreamToString(input, input.available());
         resolve(JSON.parse(string));
       } catch (e) {
-        console.log(`Could not read adb.json in the extension: ${e}`);
+        dumpn(`Could not read adb.json in the extension: ${e}`);
         resolve(null);
       }
     });
@@ -63,7 +65,7 @@ async function unpackFile(file) {
         const output = FileUtils.openAtomicFileOutputStream(outputFile);
         NetUtil.asyncCopy(input, output, resolve);
       } catch (e) {
-        console.log(`Could not unpack file ${file} in the extension: ${e}`);
+        dumpn(`Could not unpack file ${file} in the extension: ${e}`);
         reject(e);
       }
     });
@@ -139,7 +141,7 @@ async function getFileForBinary() {
   if (!path) {
     return null;
   }
-  console.log(`Binary path: ${path}`);
+  dumpn(`Binary path: ${path}`);
   return new FileUtils.File(path);
 }
 exports.getFileForBinary = getFileForBinary;
