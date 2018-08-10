@@ -4,6 +4,9 @@ ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
 ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 
+// Disable top site search shortcuts for this test
+Services.prefs.setBoolPref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", false);
+
 // A small 1x1 test png
 const IMAGE_1x1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
 
