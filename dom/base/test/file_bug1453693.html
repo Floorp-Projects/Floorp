@@ -306,6 +306,56 @@
         p.remove();
       }
 
+      function testFocusableHost() {
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        var host = document.createElement("div");
+        host.id = "host";
+        host.tabIndex = 0;
+        host.onfocus = focusLogger;
+        document.body.appendChild(host);
+
+        var slotted = document.createElement("div");
+        slotted.tabIndex = 0;
+        slotted.onfocus = focusLogger;
+        host.appendChild(slotted);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.appendChild(document.createElement("slot"));
+
+        var p = document.createElement("p");
+        p.innerHTML = " <a href='#p'>link 1</a> ";
+        var a = p.firstElementChild;
+        a.onfocus = focusLogger;
+        document.body.appendChild(p);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, host, "Should have focused host.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slotted, "Should have focused slotted.");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, a, "Should have focused a.");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slotted, "Should have focused slotted.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, host, "Should have focused host.");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host.remove();
+        p.remove();
+      }
+
       function runTest() {
 
         testTabbingThroughShadowDOMWithTabIndexes();
@@ -313,6 +363,7 @@
         testTabbingThroughNestedShadowDOM();
         testTabbingThroughDisplayContentsHost();
         testTabbingThroughLightDOMShadowDOMLightDOM();
+        testFocusableHost();
 
         opener.didRunTests();
         window.close();
