@@ -30,20 +30,39 @@ public:
 
   ImageKeyData(ImageKeyData&& aOther)
     : mManager(std::move(aOther.mManager))
+    , mDirtyRect(std::move(aOther.mDirtyRect))
     , mImageKey(aOther.mImageKey)
   { }
 
   ImageKeyData& operator=(ImageKeyData&& aOther)
   {
     mManager = std::move(aOther.mManager);
+    mDirtyRect = std::move(aOther.mDirtyRect);
     mImageKey = aOther.mImageKey;
     return *this;
+  }
+
+  void MergeDirtyRect(const Maybe<IntRect>& aDirtyRect)
+  {
+    if (mDirtyRect) {
+      if (aDirtyRect) {
+        mDirtyRect->UnionRect(mDirtyRect.ref(), aDirtyRect.ref());
+      }
+    } else {
+      mDirtyRect = aDirtyRect;
+    }
+  }
+
+  Maybe<IntRect> TakeDirtyRect()
+  {
+    return std::move(mDirtyRect);
   }
 
   ImageKeyData(const ImageKeyData&) = delete;
   ImageKeyData& operator=(const ImageKeyData&) = delete;
 
   RefPtr<WebRenderLayerManager> mManager;
+  Maybe<IntRect> mDirtyRect;
   wr::ImageKey mImageKey;
 };
 
@@ -143,14 +162,23 @@ public:
         bool ownsKey = wrBridge->GetNamespace() == entry.mImageKey.mNamespace;
         if (!ownsKey) {
           entry.mImageKey = wrBridge->GetNextImageKey();
+          entry.TakeDirtyRect();
           aResources.AddExternalImage(mId, entry.mImageKey);
-        } else if (aDirtyRect) {
-          aResources.UpdateExternalImage(mId, entry.mImageKey,
-                                         ViewAs<ImagePixel>(aDirtyRect.ref()));
+        } else {
+          entry.MergeDirtyRect(aDirtyRect);
+          Maybe<IntRect> dirtyRect = entry.TakeDirtyRect();
+          if (dirtyRect) {
+            aResources.UpdateExternalImage(mId, entry.mImageKey,
+                                           ViewAs<ImagePixel>(dirtyRect.ref()));
+          }
         }
 
         key = entry.mImageKey;
         found = true;
+      } else {
+        // We don't have the resource update queue for this manager, so just
+        // accumulate the dirty rects until it is requested.
+        entry.MergeDirtyRect(aDirtyRect);
       }
     }
 
@@ -316,7 +344,7 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
   // Each time the surface changes, the producers of SourceSurfaceSharedData
   // surfaces promise to increment the invalidation counter each time the
   // surface has changed. We can use this counter to determine whether or not
-  // we should upate our paired ImageKey.
+  // we should update our paired ImageKey.
   Maybe<IntRect> dirtyRect = aSurface->TakeDirtyRect();
   SharedUserData* data = nullptr;
   nsresult rv = SharedSurfacesChild::ShareInternal(aSurface, &data);
