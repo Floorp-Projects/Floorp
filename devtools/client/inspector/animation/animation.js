@@ -662,6 +662,14 @@ class AnimationInspector {
 
     this.stopAnimationsCurrentTimeTimer();
 
+    // Although it is not possible to set a delay or end delay of infinity using
+    // the animation API, if the value passed exceeds the limit of our internal
+    // representation of times, it will be treated as infinity. Rather than
+    // adding special case code to represent this very rare case, we simply omit
+    // such animations from the graph.
+    animations = animations.filter(anim => anim.state.delay !== Infinity &&
+                                           anim.state.endDelay !== Infinity);
+
     this.inspector.store.dispatch(updateAnimations(animations));
 
     if (hasRunningAnimation(animations)) {

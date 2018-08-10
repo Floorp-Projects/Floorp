@@ -11,6 +11,7 @@
 %define private_prefix vp9
 
 %include "third_party/x86inc/x86inc.asm"
+%include "vpx_dsp/x86/bitdepth_conversion_sse2.asm"
 
 SECTION_RODATA
 pw_1: times 8 dw 1
@@ -18,17 +19,14 @@ pw_1: times 8 dw 1
 SECTION .text
 
 %macro QUANTIZE_FP 2
-cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
-                                shift, qcoeff, dqcoeff, dequant, \
+cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, round, quant, \
+                                qcoeff, dqcoeff, dequant, \
                                 eob, scan, iscan
-  cmp                    dword skipm, 0
-  jne .blank
 
   ; actual quantize loop - setup pointers, rounders, etc.
   movifnidn                   coeffq, coeffmp
   movifnidn                  ncoeffq, ncoeffmp
   mov                             r2, dequantmp
-  movifnidn                    zbinq, zbinmp
   movifnidn                   roundq, roundmp
   movifnidn                   quantq, quantmp
   mova                            m1, [roundq]             ; m1 = round
@@ -48,15 +46,15 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
 %endif
   pxor                            m5, m5                   ; m5 = dedicated zero
 
-  lea                         coeffq, [  coeffq+ncoeffq*2]
-  lea                            r5q, [  r5q+ncoeffq*2]
-  lea                            r3q, [ r3q+ncoeffq*2]
-  lea                            r4q, [r4q+ncoeffq*2]
+  INCREMENT_ELEMENTS_TRAN_LOW coeffq, ncoeffq
+  lea                            r5q, [r5q+ncoeffq*2]
+  INCREMENT_ELEMENTS_TRAN_LOW    r3q, ncoeffq
+  INCREMENT_ELEMENTS_TRAN_LOW    r4q, ncoeffq
   neg                        ncoeffq
 
   ; get DC and first 15 AC coeffs
-  mova                            m9, [  coeffq+ncoeffq*2+ 0] ; m9 = c[i]
-  mova                           m10, [  coeffq+ncoeffq*2+16] ; m10 = c[i]
+  LOAD_TRAN_LOW  9, coeffq, ncoeffq                        ; m9 = c[i]
+  LOAD_TRAN_LOW 10, coeffq, ncoeffq + 8                    ; m10 = c[i]
   pabsw                           m6, m9                   ; m6 = abs(m9)
   pabsw                          m11, m10                  ; m11 = abs(m10)
   pcmpeqw                         m7, m7
@@ -69,8 +67,8 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pmulhw                         m13, m11, m2              ; m13 = m11*q>>16
   psignw                          m8, m9                   ; m8 = reinsert sign
   psignw                         m13, m10                  ; m13 = reinsert sign
-  mova            [r3q+ncoeffq*2+ 0], m8
-  mova            [r3q+ncoeffq*2+16], m13
+  STORE_TRAN_LOW  8, r3q, ncoeffq,     6, 11, 12
+  STORE_TRAN_LOW 13, r3q, ncoeffq + 8, 6, 11, 12
 %ifidn %1, fp_32x32
   pabsw                           m8, m8
   pabsw                          m13, m13
@@ -87,8 +85,8 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
 %else
   psrlw                           m0, m3, 1
 %endif
-  mova            [r4q+ncoeffq*2+ 0], m8
-  mova            [r4q+ncoeffq*2+16], m13
+  STORE_TRAN_LOW  8, r4q, ncoeffq,     6, 11, 12
+  STORE_TRAN_LOW 13, r4q, ncoeffq + 8, 6, 11, 12
   pcmpeqw                         m8, m5                   ; m8 = c[i] == 0
   pcmpeqw                        m13, m5                   ; m13 = c[i] == 0
   mova                            m6, [  r5q+ncoeffq*2+ 0] ; m6 = scan[i]
@@ -102,8 +100,8 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   jz .accumulate_eob
 
 .ac_only_loop:
-  mova                            m9, [  coeffq+ncoeffq*2+ 0] ; m9 = c[i]
-  mova                           m10, [  coeffq+ncoeffq*2+16] ; m10 = c[i]
+  LOAD_TRAN_LOW  9, coeffq, ncoeffq                        ; m9 = c[i]
+  LOAD_TRAN_LOW 10, coeffq, ncoeffq + 8                    ; m10 = c[i]
   pabsw                           m6, m9                   ; m6 = abs(m9)
   pabsw                          m11, m10                  ; m11 = abs(m10)
 
@@ -123,8 +121,8 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pmulhw                         m13, m11, m2              ; m13 = m11*q>>16
   psignw                         m14, m9                   ; m14 = reinsert sign
   psignw                         m13, m10                  ; m13 = reinsert sign
-  mova            [r3q+ncoeffq*2+ 0], m14
-  mova            [r3q+ncoeffq*2+16], m13
+  STORE_TRAN_LOW 14, r3q, ncoeffq,     6, 11, 12
+  STORE_TRAN_LOW 13, r3q, ncoeffq + 8, 6, 11, 12
 %ifidn %1, fp_32x32
   pabsw                          m14, m14
   pabsw                          m13, m13
@@ -137,8 +135,8 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   psignw                         m14, m9
   psignw                         m13, m10
 %endif
-  mova            [r4q+ncoeffq*2+ 0], m14
-  mova            [r4q+ncoeffq*2+16], m13
+  STORE_TRAN_LOW 14, r4q, ncoeffq,     6, 11, 12
+  STORE_TRAN_LOW 13, r4q, ncoeffq + 8, 6, 11, 12
   pcmpeqw                        m14, m5                   ; m14 = c[i] == 0
   pcmpeqw                        m13, m5                   ; m13 = c[i] == 0
   mova                            m6, [  r5q+ncoeffq*2+ 0] ; m6 = scan[i]
@@ -154,10 +152,10 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
 
   jmp .accumulate_eob
 .skip_iter:
-  mova            [r3q+ncoeffq*2+ 0], m5
-  mova            [r3q+ncoeffq*2+16], m5
-  mova            [r4q+ncoeffq*2+ 0], m5
-  mova            [r4q+ncoeffq*2+16], m5
+  STORE_ZERO_TRAN_LOW 5, r3q, ncoeffq
+  STORE_ZERO_TRAN_LOW 5, r3q, ncoeffq + 8
+  STORE_ZERO_TRAN_LOW 5, r4q, ncoeffq
+  STORE_ZERO_TRAN_LOW 5, r4q, ncoeffq + 8
   add                        ncoeffq, mmsize
   jl .ac_only_loop
 
@@ -172,27 +170,6 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pmaxsw                          m8, m7
   pextrw                          r6, m8, 0
   mov                           [r2], r6w
-  RET
-
-  ; skip-block, i.e. just write all zeroes
-.blank:
-  mov                             r0, dqcoeffmp
-  movifnidn                  ncoeffq, ncoeffmp
-  mov                             r2, qcoeffmp
-  mov                             r3, eobmp
-
-  lea                            r0q, [r0q+ncoeffq*2]
-  lea                            r2q, [r2q+ncoeffq*2]
-  neg                        ncoeffq
-  pxor                            m7, m7
-.blank_loop:
-  mova            [r0q+ncoeffq*2+ 0], m7
-  mova            [r0q+ncoeffq*2+16], m7
-  mova            [r2q+ncoeffq*2+ 0], m7
-  mova            [r2q+ncoeffq*2+16], m7
-  add                        ncoeffq, mmsize
-  jl .blank_loop
-  mov                     word [r3q], 0
   RET
 %endmacro
 

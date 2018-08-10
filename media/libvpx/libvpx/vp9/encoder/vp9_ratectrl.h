@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+// Used to control aggressive VBR mode.
+// #define AGGRESSIVE_VBR 1
+
 // Bits Per MB at different Q (Multiplied by 512)
 #define BPER_MB_NORMBITS 9
 
@@ -28,6 +31,8 @@ extern "C" {
 #define MAX_GF_INTERVAL 16
 #define FIXED_GF_INTERVAL 8  // Used in some testing modes only
 #define ONEHALFONLY_RESIZE 0
+
+#define FRAME_OVERHEAD_BITS 200
 
 typedef enum {
   INTER_NORMAL = 0,
@@ -147,6 +152,8 @@ typedef struct {
   int rc_2_frame;
   int q_1_frame;
   int q_2_frame;
+  // Keep track of the last target average frame bandwidth.
+  int last_avg_frame_bandwidth;
 
   // Auto frame-scaling variables.
   FRAME_SCALE_LEVEL frame_size_selector;
@@ -161,11 +168,14 @@ typedef struct {
   uint64_t prev_avg_source_sad_lag;
   int high_source_sad_lagindex;
   int alt_ref_gf_group;
+  int last_frame_is_src_altref;
   int high_source_sad;
   int count_last_scene_change;
   int avg_frame_low_motion;
   int af_ratio_onepass_vbr;
   int force_qpmin;
+  int reset_high_source_sad;
+  double perc_arf_usage;
 } RATE_CONTROL;
 
 struct VP9_COMP;
@@ -178,6 +188,8 @@ int vp9_estimate_bits_at_q(FRAME_TYPE frame_kind, int q, int mbs,
                            double correction_factor, vpx_bit_depth_t bit_depth);
 
 double vp9_convert_qindex_to_q(int qindex, vpx_bit_depth_t bit_depth);
+
+int vp9_convert_q_to_qindex(double q_val, vpx_bit_depth_t bit_depth);
 
 void vp9_rc_init_minq_luts(void);
 
@@ -278,7 +290,7 @@ void vp9_set_target_rate(struct VP9_COMP *cpi);
 
 int vp9_resize_one_pass_cbr(struct VP9_COMP *cpi);
 
-void vp9_avg_source_sad(struct VP9_COMP *cpi);
+void vp9_scene_detection_onepass(struct VP9_COMP *cpi);
 
 int vp9_encodedframe_overshoot(struct VP9_COMP *cpi, int frame_size, int *q);
 

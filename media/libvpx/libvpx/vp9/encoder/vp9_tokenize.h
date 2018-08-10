@@ -76,25 +76,18 @@ extern const TOKENVALUE *vp9_dct_value_tokens_ptr;
 extern const TOKENVALUE *vp9_dct_cat_lt_10_value_tokens;
 extern const int *vp9_dct_cat_lt_10_value_cost;
 extern const int16_t vp9_cat6_low_cost[256];
-extern const int vp9_cat6_high_cost[64];
-extern const int vp9_cat6_high10_high_cost[256];
-extern const int vp9_cat6_high12_high_cost[1024];
-static INLINE int vp9_get_cost(int16_t token, EXTRABIT extrabits,
-                               const int *cat6_high_table) {
-  if (token != CATEGORY6_TOKEN)
-    return vp9_extra_bits[token].cost[extrabits >> 1];
-  return vp9_cat6_low_cost[(extrabits >> 1) & 0xff] +
-         cat6_high_table[extrabits >> 9];
-}
+extern const uint16_t vp9_cat6_high_cost[64];
+extern const uint16_t vp9_cat6_high10_high_cost[256];
+extern const uint16_t vp9_cat6_high12_high_cost[1024];
 
 #if CONFIG_VP9_HIGHBITDEPTH
-static INLINE const int *vp9_get_high_cost_table(int bit_depth) {
+static INLINE const uint16_t *vp9_get_high_cost_table(int bit_depth) {
   return bit_depth == 8 ? vp9_cat6_high_cost
                         : (bit_depth == 10 ? vp9_cat6_high10_high_cost
                                            : vp9_cat6_high12_high_cost);
 }
 #else
-static INLINE const int *vp9_get_high_cost_table(int bit_depth) {
+static INLINE const uint16_t *vp9_get_high_cost_table(int bit_depth) {
   (void)bit_depth;
   return vp9_cat6_high_cost;
 }
@@ -118,7 +111,7 @@ static INLINE int16_t vp9_get_token(int v) {
 }
 
 static INLINE int vp9_get_token_cost(int v, int16_t *token,
-                                     const int *cat6_high_table) {
+                                     const uint16_t *cat6_high_table) {
   if (v >= CAT6_MIN_VAL || v <= -CAT6_MIN_VAL) {
     EXTRABIT extrabits;
     *token = CATEGORY6_TOKEN;

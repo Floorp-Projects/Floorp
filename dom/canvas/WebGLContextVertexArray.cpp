@@ -15,10 +15,11 @@ namespace mozilla {
 void
 WebGLContext::BindVertexArray(WebGLVertexArray* array)
 {
+    const FuncScope funcScope(*this, "bindVertexArray");
     if (IsContextLost())
         return;
 
-    if (array && !ValidateObject("bindVertexArrayObject", *array))
+    if (array && !ValidateObject("array", *array))
         return;
 
     if (mBoundVertexArray) {
@@ -40,6 +41,7 @@ WebGLContext::BindVertexArray(WebGLVertexArray* array)
 already_AddRefed<WebGLVertexArray>
 WebGLContext::CreateVertexArray()
 {
+    const FuncScope funcScope(*this, "createVertexArray");
     if (IsContextLost())
         return nullptr;
 
@@ -59,22 +61,14 @@ WebGLContext::CreateVertexArrayImpl()
 void
 WebGLContext::DeleteVertexArray(WebGLVertexArray* array)
 {
-    if (!ValidateDeleteObject("deleteVertexArray", array))
+    const FuncScope funcScope(*this, "deleteVertexArray");
+    if (!ValidateDeleteObject(array))
         return;
 
     if (mBoundVertexArray == array)
         BindVertexArray(static_cast<WebGLVertexArray*>(nullptr));
 
     array->RequestDelete();
-}
-
-bool
-WebGLContext::IsVertexArray(const WebGLVertexArray* array)
-{
-    if (!ValidateIsObject("isVertexArray", array))
-        return false;
-
-    return array->IsVertexArray();
 }
 
 } // namespace mozilla

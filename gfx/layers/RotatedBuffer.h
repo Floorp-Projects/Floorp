@@ -24,7 +24,6 @@ namespace mozilla {
 namespace layers {
 
 class PaintedLayer;
-class CapturedBufferState;
 class ContentClient;
 
 // Mixin class for classes which need logic for loaning out a draw target.
@@ -40,11 +39,6 @@ protected:
   // correctly restore state when it is returned.
   RefPtr<gfx::DrawTarget> mLoanedDrawTarget;
   gfx::Matrix mLoanedTransform;
-
-  // This flag denotes whether or not a transform was already applied
-  // to mLoanedDrawTarget and thus needs to be reset to mLoanedTransform
-  // upon returning the drawtarget.
-  bool mSetTransform;
 };
 
 /**
@@ -71,29 +65,44 @@ public:
 
   RotatedBuffer(const gfx::IntRect& aBufferRect,
                 const gfx::IntPoint& aBufferRotation)
-    : mBufferRect(aBufferRect)
+    : mCapture(nullptr)
+    , mBufferRect(aBufferRect)
     , mBufferRotation(aBufferRotation)
     , mDidSelfCopy(false)
   { }
   RotatedBuffer()
-    : mDidSelfCopy(false)
+    : mCapture(nullptr)
+    , mDidSelfCopy(false)
   { }
 
-  /*
-   * Which buffer should be drawn to/read from.
+  /**
+   * Initializes the rotated buffer to begin capturing all drawing performed
+   * on it, to be eventually replayed. Callers must call EndCapture, or
+   * FlushCapture before the rotated buffer is destroyed.
    */
-  enum ContextSource {
-    BUFFER_BLACK, // The normal buffer, or buffer with black background when using component alpha.
-    BUFFER_WHITE, // The buffer with white background, only valid with component alpha.
-    BUFFER_BOTH // The combined black/white buffers, only valid for writing operations, not reading.
-  };
+  void BeginCapture();
+
+  /**
+   * Finishes a capture and returns it. The capture must be replayed to the
+   * buffer before it is presented or it will contain invalid contents.
+   */
+  RefPtr<gfx::DrawTargetCapture> EndCapture();
+
+  /**
+   * Returns whether the RotatedBuffer is currently capturing all drawing
+   * performed on it, to be eventually replayed.
+   */
+  bool IsCapturing() const
+  {
+    return !!mCapture;
+  }
 
   /**
    * Draws the contents of this rotated buffer into the specified draw target.
    * It is the callers repsonsibility to ensure aTarget is flushed after calling
    * this method.
    */
-  void DrawBufferWithRotation(gfx::DrawTarget* aTarget, ContextSource aSource,
+  void DrawBufferWithRotation(gfx::DrawTarget* aTarget,
                               float aOpacity = 1.0,
                               gfx::CompositionOp aOperator = gfx::CompositionOp::OP_OVER,
                               gfx::SourceSurface* aMask = nullptr,
@@ -150,10 +159,7 @@ public:
    */
   gfx::DrawTarget*
   BorrowDrawTargetForQuadrantUpdate(const gfx::IntRect& aBounds,
-                                    ContextSource aSource,
-                                    DrawIterator* aIter,
-                                    bool aSetTransform = true,
-                                    gfx::Matrix* aOutTransform = nullptr);
+                                    DrawIterator* aIter);
 
   struct Parameters {
     Parameters(const gfx::IntRect& aBufferRect,
@@ -238,10 +244,11 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const = 0;
 
-  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const = 0;
-
-  virtual gfx::DrawTarget* GetDTBuffer() const = 0;
-  virtual gfx::DrawTarget* GetDTBufferOnWhite() const = 0;
+  virtual already_AddRefed<gfx::SourceSurface> GetBufferSource() const
+  {
+    return GetBufferTarget()->Snapshot();
+  }
+  virtual gfx::DrawTarget* GetBufferTarget() const = 0;
 
   virtual TextureClient* GetClient() const {
     return nullptr;
@@ -250,15 +257,11 @@ public:
     return nullptr;
   }
 
-  /**
-   * Creates a shallow copy of the rotated buffer with the same underlying
-   * texture clients and draw targets. Rotated buffers are not thread safe,
-   * so a copy needs to be sent for off main thread painting.
-   */
-  virtual RefPtr<RotatedBuffer> ShallowCopy() const = 0;
-
 protected:
-  virtual ~RotatedBuffer() {}
+  virtual ~RotatedBuffer()
+  {
+    MOZ_ASSERT(!mCapture);
+  }
 
   enum XSide {
     LEFT, RIGHT
@@ -270,17 +273,26 @@ protected:
 
   gfx::Rect GetSourceRectangle(XSide aXSide, YSide aYSide) const;
 
+  gfx::DrawTarget* GetDrawTarget() const
+  {
+    if (mCapture) {
+      return mCapture;
+    }
+    return GetBufferTarget();
+  }
+
   /*
    * If aMask is non-null, then it is used as an alpha mask for rendering this
    * buffer. aMaskTransform must be non-null if aMask is non-null, and is used
    * to adjust the coordinate space of the mask.
    */
   void DrawBufferQuadrant(gfx::DrawTarget* aTarget, XSide aXSide, YSide aYSide,
-                          ContextSource aSource,
                           float aOpacity,
                           gfx::CompositionOp aOperator,
                           gfx::SourceSurface* aMask,
                           const gfx::Matrix* aMaskTransform) const;
+
+  RefPtr<gfx::DrawTargetCapture> mCapture;
 
   /** The area of the PaintedLayer that is covered by the buffer as a whole */
   gfx::IntRect  mBufferRect;
@@ -329,28 +341,17 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const override;
-
-  virtual gfx::DrawTarget* GetDTBuffer() const override;
-  virtual gfx::DrawTarget* GetDTBufferOnWhite() const override;
+  virtual gfx::DrawTarget* GetBufferTarget() const override;
 
   virtual TextureClient* GetClient() const override { return mClient; }
   virtual TextureClient* GetClientOnWhite() const override { return mClientOnWhite; }
-
-  virtual RefPtr<RotatedBuffer> ShallowCopy() const override {
-    return new RemoteRotatedBuffer {
-      mClient, mClientOnWhite,
-      mTarget, mTargetOnWhite,
-      mBufferRect, mBufferRotation
-    };
-  }
 
   void SyncWithObject(SyncObjectClient* aSyncObject);
   void Clear();
 
 private:
   RemoteRotatedBuffer(TextureClient* aClient, TextureClient* aClientOnWhite,
-                      gfx::DrawTarget* aTarget, gfx::DrawTarget* aTargetOnWhite,
+                      gfx::DrawTarget* aTarget, gfx::DrawTarget* aTargetOnWhite, gfx::DrawTarget* aTargetDual,
                       const gfx::IntRect& aBufferRect,
                       const gfx::IntPoint& aBufferRotation)
     : RotatedBuffer(aBufferRect, aBufferRotation)
@@ -358,6 +359,7 @@ private:
     , mClientOnWhite(aClientOnWhite)
     , mTarget(aTarget)
     , mTargetOnWhite(aTargetOnWhite)
+    , mTargetDual(aTargetDual)
   { }
 
   RefPtr<TextureClient> mClient;
@@ -365,6 +367,7 @@ private:
 
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTarget> mTargetOnWhite;
+  RefPtr<gfx::DrawTarget> mTargetDual;
 };
 
 /**
@@ -380,32 +383,29 @@ public:
     : RotatedBuffer(aBufferRect, aBufferRotation)
     , mTarget(aTarget)
     , mTargetOnWhite(aTargetOnWhite)
-  { }
+  {
+    if (mTargetOnWhite) {
+      mTargetDual = gfx::Factory::CreateDualDrawTarget(mTarget, mTargetOnWhite);
+    } else {
+      mTargetDual = mTarget;
+    }
+  }
 
   virtual bool IsLocked() override { return false; }
   virtual bool Lock(OpenMode aMode) override { return true; }
   virtual void Unlock() override {}
 
-  virtual bool HaveBuffer() const override { return !!mTarget; }
+  virtual bool HaveBuffer() const override { return !!mTargetDual; }
   virtual bool HaveBufferOnWhite() const override { return !!mTargetOnWhite; }
 
   virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const override;
-
-  virtual gfx::DrawTarget* GetDTBuffer() const override;
-  virtual gfx::DrawTarget* GetDTBufferOnWhite() const override;
-
-  virtual RefPtr<RotatedBuffer> ShallowCopy() const override {
-    return new DrawTargetRotatedBuffer {
-        mTarget, mTargetOnWhite,
-        mBufferRect, mBufferRotation
-      };
-  }
+  virtual gfx::DrawTarget* GetBufferTarget() const override;
 
 private:
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTarget> mTargetOnWhite;
+  RefPtr<gfx::DrawTarget> mTargetDual;
 };
 
 /**
@@ -421,29 +421,27 @@ public:
     : RotatedBuffer(aBufferRect, aBufferRotation)
     , mSource(aSource)
     , mSourceOnWhite(aSourceOnWhite)
-  { }
+  {
+    mSourceDual = gfx::Factory::CreateDualSourceSurface(mSource, mSourceOnWhite);
+  }
 
   virtual bool IsLocked() override { return false; }
   virtual bool Lock(OpenMode aMode) override { return false; }
   virtual void Unlock() override {}
 
-  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const override;
+  virtual already_AddRefed<gfx::SourceSurface> GetBufferSource() const override;
 
   virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual bool HaveBuffer() const override { return !!mSource; }
+  virtual bool HaveBuffer() const override { return !!mSourceDual; }
   virtual bool HaveBufferOnWhite() const override { return !!mSourceOnWhite; }
 
-  virtual gfx::DrawTarget* GetDTBuffer() const override { return nullptr; }
-  virtual gfx::DrawTarget* GetDTBufferOnWhite() const override { return nullptr; }
-
-  virtual RefPtr<RotatedBuffer> ShallowCopy() const override {
-    return nullptr;
-  }
+  virtual gfx::DrawTarget* GetBufferTarget() const override { return nullptr; }
 
 private:
   RefPtr<gfx::SourceSurface> mSource;
   RefPtr<gfx::SourceSurface> mSourceOnWhite;
+  RefPtr<gfx::SourceSurface> mSourceDual;
 };
 
 } // namespace layers

@@ -11,16 +11,18 @@
 namespace mozilla {
 
 void
-WebGL2Context::TexStorage(const char* funcName, uint8_t funcDims, GLenum rawTarget,
+WebGL2Context::TexStorage(uint8_t funcDims, GLenum rawTarget,
                           GLsizei levels, GLenum internalFormat, GLsizei width,
                           GLsizei height, GLsizei depth)
 {
+    const FuncScope funcScope(*this, "texStorage");
+
     TexTarget target;
     WebGLTexture* tex;
-    if (!ValidateTexTarget(this, funcName, funcDims, rawTarget, &target, &tex))
+    if (!ValidateTexTarget(this, funcDims, rawTarget, &target, &tex))
         return;
 
-    tex->TexStorage(funcName, target, levels, internalFormat, width, height, depth);
+    tex->TexStorage(target, levels, internalFormat, width, height, depth);
 }
 
 ////////////////////

@@ -17,7 +17,7 @@
 
 |vpx_convolve_avg_neon| PROC
     push                {r4-r6, lr}
-    ldrd                r4, r5, [sp, #32]
+    ldrd                r4, r5, [sp, #36]
     mov                 r6, r2
 
     cmp                 r4, #32

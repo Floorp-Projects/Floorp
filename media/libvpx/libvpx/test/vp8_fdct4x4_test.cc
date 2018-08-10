@@ -17,11 +17,15 @@
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
+#include "./vpx_config.h"
 #include "./vp8_rtcd.h"
 #include "test/acm_random.h"
 #include "vpx/vpx_integer.h"
+#include "vpx_ports/mem.h"
 
 namespace {
+
+typedef void (*FdctFunc)(int16_t *a, int16_t *b, int a_stride);
 
 const int cospi8sqrt2minus1 = 20091;
 const int sinpi8sqrt2 = 35468;
@@ -68,10 +72,21 @@ void reference_idct4x4(const int16_t *input, int16_t *output) {
 
 using libvpx_test::ACMRandom;
 
-TEST(VP8FdctTest, SignBiasCheck) {
-  ACMRandom rnd(ACMRandom::DeterministicSeed());
+class FdctTest : public ::testing::TestWithParam<FdctFunc> {
+ public:
+  virtual void SetUp() {
+    fdct_func_ = GetParam();
+    rnd_.Reset(ACMRandom::DeterministicSeed());
+  }
+
+ protected:
+  FdctFunc fdct_func_;
+  ACMRandom rnd_;
+};
+
+TEST_P(FdctTest, SignBiasCheck) {
   int16_t test_input_block[16];
-  int16_t test_output_block[16];
+  DECLARE_ALIGNED(16, int16_t, test_output_block[16]);
   const int pitch = 8;
   int count_sign_block[16][2];
   const int count_test_block = 1000000;
@@ -81,10 +96,10 @@ TEST(VP8FdctTest, SignBiasCheck) {
   for (int i = 0; i < count_test_block; ++i) {
     // Initialize a test block with input range [-255, 255].
     for (int j = 0; j < 16; ++j) {
-      test_input_block[j] = rnd.Rand8() - rnd.Rand8();
+      test_input_block[j] = rnd_.Rand8() - rnd_.Rand8();
     }
 
-    vp8_short_fdct4x4_c(test_input_block, test_output_block, pitch);
+    fdct_func_(test_input_block, test_output_block, pitch);
 
     for (int j = 0; j < 16; ++j) {
       if (test_output_block[j] < 0) {
@@ -110,10 +125,10 @@ TEST(VP8FdctTest, SignBiasCheck) {
   for (int i = 0; i < count_test_block; ++i) {
     // Initialize a test block with input range [-15, 15].
     for (int j = 0; j < 16; ++j) {
-      test_input_block[j] = (rnd.Rand8() >> 4) - (rnd.Rand8() >> 4);
+      test_input_block[j] = (rnd_.Rand8() >> 4) - (rnd_.Rand8() >> 4);
     }
 
-    vp8_short_fdct4x4_c(test_input_block, test_output_block, pitch);
+    fdct_func_(test_input_block, test_output_block, pitch);
 
     for (int j = 0; j < 16; ++j) {
       if (test_output_block[j] < 0) {
@@ -135,23 +150,22 @@ TEST(VP8FdctTest, SignBiasCheck) {
       << "Error: 4x4 FDCT has a sign bias > 10% for input range [-15, 15]";
 };
 
-TEST(VP8FdctTest, RoundTripErrorCheck) {
-  ACMRandom rnd(ACMRandom::DeterministicSeed());
+TEST_P(FdctTest, RoundTripErrorCheck) {
   int max_error = 0;
   double total_error = 0;
   const int count_test_block = 1000000;
   for (int i = 0; i < count_test_block; ++i) {
     int16_t test_input_block[16];
-    int16_t test_temp_block[16];
     int16_t test_output_block[16];
+    DECLARE_ALIGNED(16, int16_t, test_temp_block[16]);
 
     // Initialize a test block with input range [-255, 255].
     for (int j = 0; j < 16; ++j) {
-      test_input_block[j] = rnd.Rand8() - rnd.Rand8();
+      test_input_block[j] = rnd_.Rand8() - rnd_.Rand8();
     }
 
     const int pitch = 8;
-    vp8_short_fdct4x4_c(test_input_block, test_temp_block, pitch);
+    fdct_func_(test_input_block, test_temp_block, pitch);
     reference_idct4x4(test_temp_block, test_output_block);
 
     for (int j = 0; j < 16; ++j) {
@@ -169,4 +183,24 @@ TEST(VP8FdctTest, RoundTripErrorCheck) {
       << "Error: FDCT/IDCT has average roundtrip error > 1 per block";
 };
 
+INSTANTIATE_TEST_CASE_P(C, FdctTest, ::testing::Values(vp8_short_fdct4x4_c));
+
+#if HAVE_NEON
+INSTANTIATE_TEST_CASE_P(NEON, FdctTest,
+                        ::testing::Values(vp8_short_fdct4x4_neon));
+#endif  // HAVE_NEON
+
+#if HAVE_SSE2
+INSTANTIATE_TEST_CASE_P(SSE2, FdctTest,
+                        ::testing::Values(vp8_short_fdct4x4_sse2));
+#endif  // HAVE_SSE2
+
+#if HAVE_MSA
+INSTANTIATE_TEST_CASE_P(MSA, FdctTest,
+                        ::testing::Values(vp8_short_fdct4x4_msa));
+#endif  // HAVE_MSA
+#if HAVE_MMI
+INSTANTIATE_TEST_CASE_P(MMI, FdctTest,
+                        ::testing::Values(vp8_short_fdct4x4_mmi));
+#endif  // HAVE_MMI
 }  // namespace

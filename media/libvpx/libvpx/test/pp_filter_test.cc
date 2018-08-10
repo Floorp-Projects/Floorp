@@ -11,6 +11,7 @@
 #include "./vpx_config.h"
 #include "./vpx_dsp_rtcd.h"
 #include "test/acm_random.h"
+#include "test/buffer.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "third_party/googletest/src/include/gtest/gtest.h"
@@ -18,6 +19,7 @@
 #include "vpx_mem/vpx_mem.h"
 
 using libvpx_test::ACMRandom;
+using libvpx_test::Buffer;
 
 typedef void (*VpxPostProcDownAndAcrossMbRowFunc)(
     unsigned char *src_ptr, unsigned char *dst_ptr, int src_pixels_per_line,
@@ -54,31 +56,16 @@ TEST_P(VpxPostProcDownAndAcrossMbRowTest, CheckFilterOutput) {
   const int block_height = 16;
 
   // 5-tap filter needs 2 padding rows above and below the block in the input.
-  const int input_width = block_width;
-  const int input_height = block_height + 4;
-  const int input_stride = input_width;
-  const int input_size = input_width * input_height;
+  Buffer<uint8_t> src_image = Buffer<uint8_t>(block_width, block_height, 2);
+  ASSERT_TRUE(src_image.Init());
 
   // Filter extends output block by 8 samples at left and right edges.
-  const int output_width = block_width + 16;
-  const int output_height = block_height;
-  const int output_stride = output_width;
-  const int output_size = output_width * output_height;
-
-  uint8_t *const src_image = new uint8_t[input_size];
-  ASSERT_TRUE(src_image != NULL);
-
   // Though the left padding is only 8 bytes, the assembly code tries to
   // read 16 bytes before the pointer.
-  uint8_t *const dst_image = new uint8_t[output_size + 8];
-  ASSERT_TRUE(dst_image != NULL);
+  Buffer<uint8_t> dst_image =
+      Buffer<uint8_t>(block_width, block_height, 8, 16, 8, 8);
+  ASSERT_TRUE(dst_image.Init());
 
-  // Pointers to top-left pixel of block in the input and output images.
-  uint8_t *const src_image_ptr = src_image + (input_stride << 1);
-
-  // The assembly works in increments of 16. The first read may be offset by
-  // this amount.
-  uint8_t *const dst_image_ptr = dst_image + 16;
   uint8_t *const flimits =
       reinterpret_cast<uint8_t *>(vpx_memalign(16, block_width));
   (void)memset(flimits, 255, block_width);
@@ -86,37 +73,29 @@ TEST_P(VpxPostProcDownAndAcrossMbRowTest, CheckFilterOutput) {
   // Initialize pixels in the input:
   //   block pixels to value 1,
   //   border pixels to value 10.
-  (void)memset(src_image, 10, input_size);
-  uint8_t *pixel_ptr = src_image_ptr;
-  for (int i = 0; i < block_height; ++i) {
-    for (int j = 0; j < block_width; ++j) {
-      pixel_ptr[j] = 1;
-    }
-    pixel_ptr += input_stride;
-  }
+  src_image.SetPadding(10);
+  src_image.Set(1);
 
   // Initialize pixels in the output to 99.
-  (void)memset(dst_image, 99, output_size);
+  dst_image.Set(99);
 
-  ASM_REGISTER_STATE_CHECK(GetParam()(src_image_ptr, dst_image_ptr,
-                                      input_stride, output_stride, block_width,
-                                      flimits, 16));
+  ASM_REGISTER_STATE_CHECK(GetParam()(
+      src_image.TopLeftPixel(), dst_image.TopLeftPixel(), src_image.stride(),
+      dst_image.stride(), block_width, flimits, 16));
 
   static const uint8_t kExpectedOutput[block_height] = {
     4, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 4
   };
 
-  pixel_ptr = dst_image_ptr;
+  uint8_t *pixel_ptr = dst_image.TopLeftPixel();
   for (int i = 0; i < block_height; ++i) {
     for (int j = 0; j < block_width; ++j) {
-      ASSERT_EQ(kExpectedOutput[i], pixel_ptr[j]) << "at (" << i << ", " << j
-                                                  << ")";
+      ASSERT_EQ(kExpectedOutput[i], pixel_ptr[j])
+          << "at (" << i << ", " << j << ")";
     }
-    pixel_ptr += output_stride;
+    pixel_ptr += dst_image.stride();
   }
 
-  delete[] src_image;
-  delete[] dst_image;
   vpx_free(flimits);
 };
 
@@ -129,35 +108,20 @@ TEST_P(VpxPostProcDownAndAcrossMbRowTest, CheckCvsAssembly) {
 
   // 5-tap filter needs 2 padding rows above and below the block in the input.
   // SSE2 reads in blocks of 16. Pad an extra 8 in case the width is not %16.
-  const int input_width = block_width;
-  const int input_height = block_height + 4 + 8;
-  const int input_stride = input_width;
-  const int input_size = input_stride * input_height;
+  Buffer<uint8_t> src_image =
+      Buffer<uint8_t>(block_width, block_height, 2, 2, 10, 2);
+  ASSERT_TRUE(src_image.Init());
 
   // Filter extends output block by 8 samples at left and right edges.
+  // Though the left padding is only 8 bytes, there is 'above' padding as well
+  // so when the assembly code tries to read 16 bytes before the pointer it is
+  // not a problem.
   // SSE2 reads in blocks of 16. Pad an extra 8 in case the width is not %16.
-  const int output_width = block_width + 24;
-  const int output_height = block_height;
-  const int output_stride = output_width;
-  const int output_size = output_stride * output_height;
-
-  uint8_t *const src_image = new uint8_t[input_size];
-  ASSERT_TRUE(src_image != NULL);
-
-  // Though the left padding is only 8 bytes, the assembly code tries to
-  // read 16 bytes before the pointer.
-  uint8_t *const dst_image = new uint8_t[output_size + 8];
-  ASSERT_TRUE(dst_image != NULL);
-  uint8_t *const dst_image_ref = new uint8_t[output_size + 8];
-  ASSERT_TRUE(dst_image_ref != NULL);
-
-  // Pointers to top-left pixel of block in the input and output images.
-  uint8_t *const src_image_ptr = src_image + (input_stride << 1);
-
-  // The assembly works in increments of 16. The first read may be offset by
-  // this amount.
-  uint8_t *const dst_image_ptr = dst_image + 16;
-  uint8_t *const dst_image_ref_ptr = dst_image + 16;
+  Buffer<uint8_t> dst_image =
+      Buffer<uint8_t>(block_width, block_height, 8, 8, 16, 8);
+  ASSERT_TRUE(dst_image.Init());
+  Buffer<uint8_t> dst_image_ref = Buffer<uint8_t>(block_width, block_height, 8);
+  ASSERT_TRUE(dst_image_ref.Init());
 
   // Filter values are set in blocks of 16 for Y and 8 for U/V. Each macroblock
   // can have a different filter. SSE2 assembly reads flimits in blocks of 16 so
@@ -171,14 +135,8 @@ TEST_P(VpxPostProcDownAndAcrossMbRowTest, CheckCvsAssembly) {
   // Initialize pixels in the input:
   //   block pixels to random values.
   //   border pixels to value 10.
-  (void)memset(src_image, 10, input_size);
-  uint8_t *pixel_ptr = src_image_ptr;
-  for (int i = 0; i < block_height; ++i) {
-    for (int j = 0; j < block_width; ++j) {
-      pixel_ptr[j] = rnd.Rand8();
-    }
-    pixel_ptr += input_stride;
-  }
+  src_image.SetPadding(10);
+  src_image.Set(&rnd, &ACMRandom::Rand8);
 
   for (int blocks = 0; blocks < block_width; blocks += 8) {
     (void)memset(flimits, 0, sizeof(*flimits) * flimits_width);
@@ -186,29 +144,22 @@ TEST_P(VpxPostProcDownAndAcrossMbRowTest, CheckCvsAssembly) {
     for (int f = 0; f < 255; f++) {
       (void)memset(flimits + blocks, f, sizeof(*flimits) * 8);
 
-      (void)memset(dst_image, 0, output_size);
-      (void)memset(dst_image_ref, 0, output_size);
+      dst_image.Set(0);
+      dst_image_ref.Set(0);
 
       vpx_post_proc_down_and_across_mb_row_c(
-          src_image_ptr, dst_image_ref_ptr, input_stride, output_stride,
-          block_width, flimits, block_height);
-      ASM_REGISTER_STATE_CHECK(GetParam()(src_image_ptr, dst_image_ptr,
-                                          input_stride, output_stride,
-                                          block_width, flimits, 16));
+          src_image.TopLeftPixel(), dst_image_ref.TopLeftPixel(),
+          src_image.stride(), dst_image_ref.stride(), block_width, flimits,
+          block_height);
+      ASM_REGISTER_STATE_CHECK(
+          GetParam()(src_image.TopLeftPixel(), dst_image.TopLeftPixel(),
+                     src_image.stride(), dst_image.stride(), block_width,
+                     flimits, block_height));
 
-      for (int i = 0; i < block_height; ++i) {
-        for (int j = 0; j < block_width; ++j) {
-          ASSERT_EQ(dst_image_ref_ptr[j + i * output_stride],
-                    dst_image_ptr[j + i * output_stride])
-              << "at (" << i << ", " << j << ")";
-        }
-      }
+      ASSERT_TRUE(dst_image.CheckValues(dst_image_ref));
     }
   }
 
-  delete[] src_image;
-  delete[] dst_image;
-  delete[] dst_image_ref;
   vpx_free(flimits);
 }
 
@@ -231,8 +182,8 @@ class VpxMbPostProcAcrossIpTest
                      int rows, int cols, int src_pitch) {
     for (int r = 0; r < rows; r++) {
       for (int c = 0; c < cols; c++) {
-        ASSERT_EQ(expected_output[c], src_c[c]) << "at (" << r << ", " << c
-                                                << ")";
+        ASSERT_EQ(expected_output[c], src_c[c])
+            << "at (" << r << ", " << c << ")";
       }
       src_c += src_pitch;
     }
@@ -249,108 +200,83 @@ class VpxMbPostProcAcrossIpTest
 TEST_P(VpxMbPostProcAcrossIpTest, CheckLowFilterOutput) {
   const int rows = 16;
   const int cols = 16;
-  const int src_left_padding = 8;
-  const int src_right_padding = 17;
-  const int src_width = cols + src_left_padding + src_right_padding;
-  const int src_size = rows * src_width;
 
-  unsigned char *const src = new unsigned char[src_size];
-  ASSERT_TRUE(src != NULL);
-  memset(src, 10, src_size);
-  unsigned char *const s = src + src_left_padding;
-  SetCols(s, rows, cols, src_width);
+  Buffer<uint8_t> src = Buffer<uint8_t>(cols, rows, 8, 8, 17, 8);
+  ASSERT_TRUE(src.Init());
+  src.SetPadding(10);
+  SetCols(src.TopLeftPixel(), rows, cols, src.stride());
 
-  unsigned char *expected_output = new unsigned char[rows * cols];
-  ASSERT_TRUE(expected_output != NULL);
-  SetCols(expected_output, rows, cols, cols);
+  Buffer<uint8_t> expected_output = Buffer<uint8_t>(cols, rows, 0);
+  ASSERT_TRUE(expected_output.Init());
+  SetCols(expected_output.TopLeftPixel(), rows, cols, expected_output.stride());
 
-  RunFilterLevel(s, rows, cols, src_width, q2mbl(0), expected_output);
-  delete[] src;
-  delete[] expected_output;
+  RunFilterLevel(src.TopLeftPixel(), rows, cols, src.stride(), q2mbl(0),
+                 expected_output.TopLeftPixel());
 }
 
 TEST_P(VpxMbPostProcAcrossIpTest, CheckMediumFilterOutput) {
   const int rows = 16;
   const int cols = 16;
-  const int src_left_padding = 8;
-  const int src_right_padding = 17;
-  const int src_width = cols + src_left_padding + src_right_padding;
-  const int src_size = rows * src_width;
 
-  unsigned char *const src = new unsigned char[src_size];
-  ASSERT_TRUE(src != NULL);
-  memset(src, 10, src_size);
-  unsigned char *const s = src + src_left_padding;
+  Buffer<uint8_t> src = Buffer<uint8_t>(cols, rows, 8, 8, 17, 8);
+  ASSERT_TRUE(src.Init());
+  src.SetPadding(10);
+  SetCols(src.TopLeftPixel(), rows, cols, src.stride());
 
-  SetCols(s, rows, cols, src_width);
   static const unsigned char kExpectedOutput[cols] = {
     2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 13
   };
 
-  RunFilterLevel(s, rows, cols, src_width, q2mbl(70), kExpectedOutput);
-
-  delete[] src;
+  RunFilterLevel(src.TopLeftPixel(), rows, cols, src.stride(), q2mbl(70),
+                 kExpectedOutput);
 }
 
 TEST_P(VpxMbPostProcAcrossIpTest, CheckHighFilterOutput) {
   const int rows = 16;
   const int cols = 16;
-  const int src_left_padding = 8;
-  const int src_right_padding = 17;
-  const int src_width = cols + src_left_padding + src_right_padding;
-  const int src_size = rows * src_width;
 
-  unsigned char *const src = new unsigned char[src_size];
-  ASSERT_TRUE(src != NULL);
-  unsigned char *const s = src + src_left_padding;
+  Buffer<uint8_t> src = Buffer<uint8_t>(cols, rows, 8, 8, 17, 8);
+  ASSERT_TRUE(src.Init());
+  src.SetPadding(10);
+  SetCols(src.TopLeftPixel(), rows, cols, src.stride());
 
-  memset(src, 10, src_size);
-  SetCols(s, rows, cols, src_width);
   static const unsigned char kExpectedOutput[cols] = {
     2, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 11, 12, 13, 13
   };
 
-  RunFilterLevel(s, rows, cols, src_width, INT_MAX, kExpectedOutput);
+  RunFilterLevel(src.TopLeftPixel(), rows, cols, src.stride(), INT_MAX,
+                 kExpectedOutput);
 
-  memset(src, 10, src_size);
-  SetCols(s, rows, cols, src_width);
-  RunFilterLevel(s, rows, cols, src_width, q2mbl(100), kExpectedOutput);
+  SetCols(src.TopLeftPixel(), rows, cols, src.stride());
 
-  delete[] src;
+  RunFilterLevel(src.TopLeftPixel(), rows, cols, src.stride(), q2mbl(100),
+                 kExpectedOutput);
 }
 
 TEST_P(VpxMbPostProcAcrossIpTest, CheckCvsAssembly) {
   const int rows = 16;
   const int cols = 16;
-  const int src_left_padding = 8;
-  const int src_right_padding = 17;
-  const int src_width = cols + src_left_padding + src_right_padding;
-  const int src_size = rows * src_width;
 
-  unsigned char *const c_mem = new unsigned char[src_size];
-  unsigned char *const asm_mem = new unsigned char[src_size];
-  ASSERT_TRUE(c_mem != NULL);
-  ASSERT_TRUE(asm_mem != NULL);
-  unsigned char *const src_c = c_mem + src_left_padding;
-  unsigned char *const src_asm = asm_mem + src_left_padding;
+  Buffer<uint8_t> c_mem = Buffer<uint8_t>(cols, rows, 8, 8, 17, 8);
+  ASSERT_TRUE(c_mem.Init());
+  Buffer<uint8_t> asm_mem = Buffer<uint8_t>(cols, rows, 8, 8, 17, 8);
+  ASSERT_TRUE(asm_mem.Init());
 
   // When level >= 100, the filter behaves the same as the level = INT_MAX
   // When level < 20, it behaves the same as the level = 0
   for (int level = 0; level < 100; level++) {
-    memset(c_mem, 10, src_size);
-    memset(asm_mem, 10, src_size);
-    SetCols(src_c, rows, cols, src_width);
-    SetCols(src_asm, rows, cols, src_width);
+    c_mem.SetPadding(10);
+    asm_mem.SetPadding(10);
+    SetCols(c_mem.TopLeftPixel(), rows, cols, c_mem.stride());
+    SetCols(asm_mem.TopLeftPixel(), rows, cols, asm_mem.stride());
 
-    vpx_mbpost_proc_across_ip_c(src_c, src_width, rows, cols, q2mbl(level));
-    ASM_REGISTER_STATE_CHECK(
-        GetParam()(src_asm, src_width, rows, cols, q2mbl(level)));
+    vpx_mbpost_proc_across_ip_c(c_mem.TopLeftPixel(), c_mem.stride(), rows,
+                                cols, q2mbl(level));
+    ASM_REGISTER_STATE_CHECK(GetParam()(
+        asm_mem.TopLeftPixel(), asm_mem.stride(), rows, cols, q2mbl(level)));
 
-    RunComparison(src_c, src_asm, rows, cols, src_width);
+    ASSERT_TRUE(asm_mem.CheckValues(c_mem));
   }
-
-  delete[] c_mem;
-  delete[] asm_mem;
 }
 
 class VpxMbPostProcDownTest
@@ -359,44 +285,10 @@ class VpxMbPostProcDownTest
   virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void SetRows(unsigned char *src_c, int rows, int cols) {
+  void SetRows(unsigned char *src_c, int rows, int cols, int src_width) {
     for (int r = 0; r < rows; r++) {
       memset(src_c, r, cols);
-      src_c += cols;
-    }
-  }
-
-  void SetRandom(unsigned char *src_c, unsigned char *src_asm, int rows,
-                 int cols, int src_pitch) {
-    ACMRandom rnd;
-    rnd.Reset(ACMRandom::DeterministicSeed());
-
-    // Add some random noise to the input
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        const int noise = rnd(4);
-        src_c[c] = r + noise;
-        src_asm[c] = r + noise;
-      }
-      src_c += src_pitch;
-      src_asm += src_pitch;
-    }
-  }
-
-  void SetRandomSaturation(unsigned char *src_c, unsigned char *src_asm,
-                           int rows, int cols, int src_pitch) {
-    ACMRandom rnd;
-    rnd.Reset(ACMRandom::DeterministicSeed());
-
-    // Add some random noise to the input
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        const int noise = 3 * rnd(2);
-        src_c[c] = r + noise;
-        src_asm[c] = r + noise;
-      }
-      src_c += src_pitch;
-      src_asm += src_pitch;
+      src_c += src_width;
     }
   }
 
@@ -404,21 +296,10 @@ class VpxMbPostProcDownTest
                      int rows, int cols, int src_pitch) {
     for (int r = 0; r < rows; r++) {
       for (int c = 0; c < cols; c++) {
-        ASSERT_EQ(expected_output[r * rows + c], src_c[c]) << "at (" << r
-                                                           << ", " << c << ")";
+        ASSERT_EQ(expected_output[r * rows + c], src_c[c])
+            << "at (" << r << ", " << c << ")";
       }
       src_c += src_pitch;
-    }
-  }
-
-  void RunComparison(unsigned char *src_c, unsigned char *src_asm, int rows,
-                     int cols, int src_pitch) {
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        ASSERT_EQ(src_c[c], src_asm[c]) << "at (" << r << ", " << c << ")";
-      }
-      src_c += src_pitch;
-      src_asm += src_pitch;
     }
   }
 
@@ -433,17 +314,12 @@ class VpxMbPostProcDownTest
 TEST_P(VpxMbPostProcDownTest, CheckHighFilterOutput) {
   const int rows = 16;
   const int cols = 16;
-  const int src_pitch = cols;
-  const int src_top_padding = 8;
-  const int src_bottom_padding = 17;
 
-  const int src_size = cols * (rows + src_top_padding + src_bottom_padding);
-  unsigned char *const c_mem = new unsigned char[src_size];
-  ASSERT_TRUE(c_mem != NULL);
-  memset(c_mem, 10, src_size);
-  unsigned char *const src_c = c_mem + src_top_padding * src_pitch;
+  Buffer<uint8_t> src_c = Buffer<uint8_t>(cols, rows, 8, 8, 8, 17);
+  ASSERT_TRUE(src_c.Init());
+  src_c.SetPadding(10);
 
-  SetRows(src_c, rows, cols);
+  SetRows(src_c.TopLeftPixel(), rows, cols, src_c.stride());
 
   static const unsigned char kExpectedOutput[rows * cols] = {
     2,  2,  1,  1,  2,  2,  2,  2,  2,  2,  1,  1,  2,  2,  2,  2,  2,  2,  2,
@@ -462,29 +338,24 @@ TEST_P(VpxMbPostProcDownTest, CheckHighFilterOutput) {
     13, 13, 13, 13, 14, 13, 13, 13, 13
   };
 
-  RunFilterLevel(src_c, rows, cols, src_pitch, INT_MAX, kExpectedOutput);
+  RunFilterLevel(src_c.TopLeftPixel(), rows, cols, src_c.stride(), INT_MAX,
+                 kExpectedOutput);
 
-  memset(c_mem, 10, src_size);
-  SetRows(src_c, rows, cols);
-  RunFilterLevel(src_c, rows, cols, src_pitch, q2mbl(100), kExpectedOutput);
-
-  delete[] c_mem;
+  src_c.SetPadding(10);
+  SetRows(src_c.TopLeftPixel(), rows, cols, src_c.stride());
+  RunFilterLevel(src_c.TopLeftPixel(), rows, cols, src_c.stride(), q2mbl(100),
+                 kExpectedOutput);
 }
 
 TEST_P(VpxMbPostProcDownTest, CheckMediumFilterOutput) {
   const int rows = 16;
   const int cols = 16;
-  const int src_pitch = cols;
-  const int src_top_padding = 8;
-  const int src_bottom_padding = 17;
 
-  const int src_size = cols * (rows + src_top_padding + src_bottom_padding);
-  unsigned char *const c_mem = new unsigned char[src_size];
-  ASSERT_TRUE(c_mem != NULL);
-  memset(c_mem, 10, src_size);
-  unsigned char *const src_c = c_mem + src_top_padding * src_pitch;
+  Buffer<uint8_t> src_c = Buffer<uint8_t>(cols, rows, 8, 8, 8, 17);
+  ASSERT_TRUE(src_c.Init());
+  src_c.SetPadding(10);
 
-  SetRows(src_c, rows, cols);
+  SetRows(src_c.TopLeftPixel(), rows, cols, src_c.stride());
 
   static const unsigned char kExpectedOutput[rows * cols] = {
     2,  2,  1,  1,  2,  2,  2,  2,  2,  2,  1,  1,  2,  2,  2,  2,  2,  2,  2,
@@ -503,70 +374,65 @@ TEST_P(VpxMbPostProcDownTest, CheckMediumFilterOutput) {
     13, 13, 13, 13, 14, 13, 13, 13, 13
   };
 
-  RunFilterLevel(src_c, rows, cols, src_pitch, q2mbl(70), kExpectedOutput);
-
-  delete[] c_mem;
+  RunFilterLevel(src_c.TopLeftPixel(), rows, cols, src_c.stride(), q2mbl(70),
+                 kExpectedOutput);
 }
 
 TEST_P(VpxMbPostProcDownTest, CheckLowFilterOutput) {
   const int rows = 16;
   const int cols = 16;
-  const int src_pitch = cols;
-  const int src_top_padding = 8;
-  const int src_bottom_padding = 17;
 
-  const int src_size = cols * (rows + src_top_padding + src_bottom_padding);
-  unsigned char *const c_mem = new unsigned char[src_size];
-  ASSERT_TRUE(c_mem != NULL);
-  memset(c_mem, 10, src_size);
-  unsigned char *const src_c = c_mem + src_top_padding * src_pitch;
+  Buffer<uint8_t> src_c = Buffer<uint8_t>(cols, rows, 8, 8, 8, 17);
+  ASSERT_TRUE(src_c.Init());
+  src_c.SetPadding(10);
 
-  SetRows(src_c, rows, cols);
+  SetRows(src_c.TopLeftPixel(), rows, cols, src_c.stride());
 
   unsigned char *expected_output = new unsigned char[rows * cols];
   ASSERT_TRUE(expected_output != NULL);
-  SetRows(expected_output, rows, cols);
+  SetRows(expected_output, rows, cols, cols);
 
-  RunFilterLevel(src_c, rows, cols, src_pitch, q2mbl(0), expected_output);
+  RunFilterLevel(src_c.TopLeftPixel(), rows, cols, src_c.stride(), q2mbl(0),
+                 expected_output);
 
-  delete[] c_mem;
   delete[] expected_output;
 }
 
 TEST_P(VpxMbPostProcDownTest, CheckCvsAssembly) {
   const int rows = 16;
   const int cols = 16;
-  const int src_pitch = cols;
-  const int src_top_padding = 8;
-  const int src_bottom_padding = 17;
-  const int src_size = cols * (rows + src_top_padding + src_bottom_padding);
-  unsigned char *const c_mem = new unsigned char[src_size];
-  unsigned char *const asm_mem = new unsigned char[src_size];
-  ASSERT_TRUE(c_mem != NULL);
-  ASSERT_TRUE(asm_mem != NULL);
-  unsigned char *const src_c = c_mem + src_top_padding * src_pitch;
-  unsigned char *const src_asm = asm_mem + src_top_padding * src_pitch;
+
+  ACMRandom rnd;
+  rnd.Reset(ACMRandom::DeterministicSeed());
+
+  Buffer<uint8_t> src_c = Buffer<uint8_t>(cols, rows, 8, 8, 8, 17);
+  ASSERT_TRUE(src_c.Init());
+  Buffer<uint8_t> src_asm = Buffer<uint8_t>(cols, rows, 8, 8, 8, 17);
+  ASSERT_TRUE(src_asm.Init());
 
   for (int level = 0; level < 100; level++) {
-    memset(c_mem, 10, src_size);
-    memset(asm_mem, 10, src_size);
-    SetRandom(src_c, src_asm, rows, cols, src_pitch);
-    vpx_mbpost_proc_down_c(src_c, src_pitch, rows, cols, q2mbl(level));
-    ASM_REGISTER_STATE_CHECK(
-        GetParam()(src_asm, src_pitch, rows, cols, q2mbl(level)));
-    RunComparison(src_c, src_asm, rows, cols, src_pitch);
+    src_c.SetPadding(10);
+    src_asm.SetPadding(10);
+    src_c.Set(&rnd, &ACMRandom::Rand8);
+    src_asm.CopyFrom(src_c);
 
-    memset(c_mem, 10, src_size);
-    memset(asm_mem, 10, src_size);
-    SetRandomSaturation(src_c, src_asm, rows, cols, src_pitch);
-    vpx_mbpost_proc_down_c(src_c, src_pitch, rows, cols, q2mbl(level));
-    ASM_REGISTER_STATE_CHECK(
-        GetParam()(src_asm, src_pitch, rows, cols, q2mbl(level)));
-    RunComparison(src_c, src_asm, rows, cols, src_pitch);
+    vpx_mbpost_proc_down_c(src_c.TopLeftPixel(), src_c.stride(), rows, cols,
+                           q2mbl(level));
+    ASM_REGISTER_STATE_CHECK(GetParam()(
+        src_asm.TopLeftPixel(), src_asm.stride(), rows, cols, q2mbl(level)));
+    ASSERT_TRUE(src_asm.CheckValues(src_c));
+
+    src_c.SetPadding(10);
+    src_asm.SetPadding(10);
+    src_c.Set(&rnd, &ACMRandom::Rand8Extremes);
+    src_asm.CopyFrom(src_c);
+
+    vpx_mbpost_proc_down_c(src_c.TopLeftPixel(), src_c.stride(), rows, cols,
+                           q2mbl(level));
+    ASM_REGISTER_STATE_CHECK(GetParam()(
+        src_asm.TopLeftPixel(), src_asm.stride(), rows, cols, q2mbl(level)));
+    ASSERT_TRUE(src_asm.CheckValues(src_c));
   }
-
-  delete[] c_mem;
-  delete[] asm_mem;
 }
 
 INSTANTIATE_TEST_CASE_P(
@@ -598,6 +464,9 @@ INSTANTIATE_TEST_CASE_P(
 
 INSTANTIATE_TEST_CASE_P(NEON, VpxMbPostProcAcrossIpTest,
                         ::testing::Values(vpx_mbpost_proc_across_ip_neon));
+
+INSTANTIATE_TEST_CASE_P(NEON, VpxMbPostProcDownTest,
+                        ::testing::Values(vpx_mbpost_proc_down_neon));
 #endif  // HAVE_NEON
 
 #if HAVE_MSA

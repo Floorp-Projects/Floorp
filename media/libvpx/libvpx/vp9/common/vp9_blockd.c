@@ -53,8 +53,9 @@ void vp9_foreach_transformed_block_in_plane(
   // the current block size extends into the UMV and we won't
   // visit the sub blocks that are wholly within the UMV.
   const int max_blocks_wide =
-      num_4x4_w + (xd->mb_to_right_edge >= 0 ? 0 : xd->mb_to_right_edge >>
-                                                       (5 + pd->subsampling_x));
+      num_4x4_w + (xd->mb_to_right_edge >= 0
+                       ? 0
+                       : xd->mb_to_right_edge >> (5 + pd->subsampling_x));
   const int max_blocks_high =
       num_4x4_h + (xd->mb_to_bottom_edge >= 0
                        ? 0

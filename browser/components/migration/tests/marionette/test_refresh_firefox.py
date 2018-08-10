@@ -171,7 +171,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
           });
           let expectedTabs = new Set();
           for (let url of expectedURLs) {
-            expectedTabs.add(gBrowser.addTab(url));
+            expectedTabs.add(gBrowser.addTab(url, {
+              triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            }));
           }
           // Close any other tabs that might be open:
           let allTabs = Array.from(gBrowser.tabs);

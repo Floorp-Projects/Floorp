@@ -2431,9 +2431,12 @@ var SessionStoreInternal = {
 
     // Create a new tab.
     let userContextId = aTab.getAttribute("usercontextid");
-    let newTab = aTab == aWindow.gBrowser.selectedTab ?
-      aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab, userContextId}) :
-      aWindow.gBrowser.addTab(null, {userContextId});
+
+    let tabOptions = {
+      userContextId,
+      ...(aTab == aWindow.gBrowser.selectedTab ? {relatedToCurrent: true, ownerTab: aTab} : {})
+    };
+    let newTab = aWindow.gBrowser.addTrustedTab(null, tabOptions);
 
     // Start the throbber to pretend we're doing something while actually
     // waiting for data from the frame script.
@@ -2522,7 +2525,7 @@ var SessionStoreInternal = {
     // create a new tab
     let tabbrowser = aWindow.gBrowser;
     let tab = tabbrowser.selectedTab =
-      tabbrowser.addTab(null, {
+      tabbrowser.addTrustedTab(null, {
         index: pos,
         pinned: state.pinned,
         userContextId: state.userContextId,
@@ -3492,13 +3495,13 @@ var SessionStoreInternal = {
         // Setting noInitialLabel is a perf optimization. Rendering tab labels
         // would make resizing the tabs more expensive as we're adding them.
         // Each tab will get its initial label set in restoreTab.
-        tab = tabbrowser.addTab(url,
-                                { createLazyBrowser,
-                                  skipAnimation: true,
-                                  noInitialLabel: true,
-                                  userContextId,
-                                  skipBackgroundNotify: true,
-                                  bulkOrderedOpen: true });
+        tab = tabbrowser.addTrustedTab(url,
+                                       { createLazyBrowser,
+                                         skipAnimation: true,
+                                         noInitialLabel: true,
+                                         userContextId,
+                                         skipBackgroundNotify: true,
+                                         bulkOrderedOpen: true });
 
         if (select) {
           let leftoverTab = tabbrowser.selectedTab;

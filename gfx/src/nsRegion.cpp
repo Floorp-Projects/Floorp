@@ -289,7 +289,7 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
 
 typedef void (*visit_fn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
 
-void nsRegion::VisitEdges (visit_fn visit, void *closure)
+void nsRegion::VisitEdges (visit_fn visit, void *closure) const
 {
   if (mBands.IsEmpty()) {
     visit(closure, VisitSide::LEFT, mBounds.X(), mBounds.Y(), mBounds.X(), mBounds.YMost());
@@ -310,7 +310,7 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure)
 
   if (band != bandFinal) {
     do {
-      Band& topBand = *band;
+      const Band& topBand = *band;
       band++;
 
       for (const Strip& strip : band->mStrips) {
@@ -320,7 +320,7 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure)
 
       if (band->top == topBand.bottom) {
         // Two bands touching each other vertically.
-        Band& bottomBand = *band;
+        const Band& bottomBand = *band;
         auto topStrip = std::begin(topBand.mStrips);
         auto bottomStrip = std::begin(bottomBand.mStrips);
 

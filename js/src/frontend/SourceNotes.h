@@ -37,6 +37,76 @@ namespace js {
 
 class SrcNote {
   public:
+    // SRC_FOR: Source note for JSOP_NOP at the top of C-style for loop,
+    //          which is placed after init expression/declaration ops.
+    class For {
+      public:
+        enum Fields {
+            // The offset of the condition expression ops from JSOP_NOP.
+            CondOffset,
+
+            // The offset of the update expression ops from JSOP_NOP.
+            UpdateOffset,
+
+            // The offset of JSOP_GOTO/JSOP_IFNE at the end of the loop from
+            // JSOP_NOP.
+            BackJumpOffset,
+            Count,
+        };
+    };
+    // SRC_WHILE: Source note for JSOP_GOTO at the top of while loop,
+    //            which jumps to JSOP_LOOPENTRY.
+    class While {
+      public:
+        enum Fields {
+            // The offset of JSOP_IFNE at the end of the loop from JSOP_GOTO.
+            BackJumpOffset,
+            Count,
+        };
+    };
+    // SRC_WHILE for do-while: Source note for JSOP_NOP at the top of do-while
+    //                         loop
+    // FIXME: Add SRC_DO_WHILE (bug 1477896).
+    class DoWhile1 {
+      public:
+        enum Fields {
+            // The offset of the condition ops from JSOP_NOP.
+            CondOffset,
+            Count,
+        };
+    };
+    // SRC_WHILE for do-while: Source note for JSOP_LOOPHEAD at the top of
+    //                         do-while loop
+    // FIXME: Add SRC_DO_WHILE (bug 1477896).
+    class DoWhile2 {
+      public:
+        enum Fields {
+            // The offset of JSOP_IFNE at the end of the loop from
+            // JSOP_LOOPHEAD.
+            BackJumpOffset,
+            Count,
+        };
+    };
+    // SRC_FOR_IN: Source note for JSOP_GOTO at the top of for-in loop,
+    //             which jumps to JSOP_LOOPENTRY.
+    class ForIn {
+      public:
+        enum Fields {
+            // The offset of JSOP_IFEQ at the end of the loop from JSOP_GOTO.
+            BackJumpOffset,
+            Count,
+        };
+    };
+    // SRC_FOR_OF: Source note for JSOP_GOTO at the top of for-of loop,
+    //             which jumps to JSOP_LOOPENTRY.
+    class ForOf {
+      public:
+        enum Fields {
+            // The offset of JSOP_IFEQ at the end of the loop from JSOP_GOTO.
+            BackJumpOffset,
+            Count,
+        };
+    };
     // SRC_TABLESWITCH: Source note for JSOP_TABLESWITCH.
     class TableSwitch {
       public:
@@ -101,18 +171,21 @@ class SrcNote {
     };
 };
 
+// FIXME: Add SRC_DO_WHILE (bug 1477896).
+static_assert(unsigned(SrcNote::While::Count) == unsigned(SrcNote::DoWhile1::Count),
+              "SRC_WHILE can be shared between while and do-while");
+static_assert(unsigned(SrcNote::While::Count) == unsigned(SrcNote::DoWhile2::Count),
+              "SRC_WHILE can be shared between while and do-while");
+
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
     M(SRC_IF,           "if",          0)  /* JSOP_IFEQ bytecode is from an if-then. */            \
     M(SRC_IF_ELSE,      "if-else",     0)  /* JSOP_IFEQ bytecode is from an if-then-else. */       \
     M(SRC_COND,         "cond",        0)  /* JSOP_IFEQ is from conditional ?: operator. */        \
-    M(SRC_FOR,          "for",         3)  /* JSOP_NOP or JSOP_POP in for(;;) loop head. */        \
-    M(SRC_WHILE,        "while",       1)  /* JSOP_GOTO to for or while loop condition from before \
-                                              loop, else JSOP_NOP at top of do-while loop. */      \
-    M(SRC_FOR_IN,       "for-in",      1)  /* JSOP_GOTO to for-in loop condition from before       \
-                                              loop. */                                             \
-    M(SRC_FOR_OF,       "for-of",      1)  /* JSOP_GOTO to for-of loop condition from before       \
-                                              loop. */                                             \
+    M(SRC_FOR,          "for",         SrcNote::For::Count) \
+    M(SRC_WHILE,        "while",       SrcNote::While::Count) \
+    M(SRC_FOR_IN,       "for-in",      SrcNote::ForIn::Count) \
+    M(SRC_FOR_OF,       "for-of",      SrcNote::ForOf::Count) \
     M(SRC_CONTINUE,     "continue",    0)  /* JSOP_GOTO is a continue. */                          \
     M(SRC_BREAK,        "break",       0)  /* JSOP_GOTO is a break. */                             \
     M(SRC_BREAK2LABEL,  "break2label", 0)  /* JSOP_GOTO for 'break label'. */                      \

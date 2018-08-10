@@ -47,7 +47,7 @@ public:
 
     Maybe<uint32_t> GetIndexedFetchMaxVert(GLenum type, uint64_t byteOffset,
                                            uint32_t indexCount) const;
-    bool ValidateRange(const char* funcName, size_t byteOffset, size_t byteLen) const;
+    bool ValidateRange(size_t byteOffset, size_t byteLen) const;
 
     WebGLContext* GetParentObject() const {
         return mContext;
@@ -55,7 +55,7 @@ public:
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
-    bool ValidateCanBindToTarget(const char* funcName, GLenum target);
+    bool ValidateCanBindToTarget(GLenum target);
     void BufferData(GLenum target, size_t size, const void* data, GLenum usage);
     void BufferSubData(GLenum target, size_t dstByteOffset, size_t dataLen,
                        const void* data) const;

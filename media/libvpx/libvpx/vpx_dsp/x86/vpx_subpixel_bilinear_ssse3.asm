@@ -105,6 +105,8 @@
     dec         rcx
 %endm
 
+SECTION .text
+
 global sym(vpx_filter_block1d4_v2_ssse3) PRIVATE
 sym(vpx_filter_block1d4_v2_ssse3):
     push        rbp

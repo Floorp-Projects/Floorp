@@ -31,6 +31,7 @@
 ; *
 ; **************************************************************************/
 
+SECTION .text
 
 ;void vp8_short_idct4x4llm_mmx(short *input, unsigned char *pred,
 ;int pitch, unsigned char *dest,int stride)

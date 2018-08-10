@@ -2138,7 +2138,6 @@ void
 CodeGenerator::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
 {
     MWasmCompareExchangeHeap* mir = ins->mir();
-    Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
@@ -2149,7 +2148,7 @@ CodeGenerator::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
     Register offsetTemp = ToTempRegisterOrInvalid(ins->offsetTemp());
     Register maskTemp = ToTempRegisterOrInvalid(ins->maskTemp());
 
-    masm.compareExchange(vt, Synchronization::Full(), srcAddr, oldval, newval, valueTemp,
+    masm.wasmCompareExchange(mir->access(), srcAddr, oldval, newval, valueTemp,
                          offsetTemp, maskTemp, ToRegister(ins->output()));
 }
 
@@ -2157,7 +2156,6 @@ void
 CodeGenerator::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
 {
     MWasmAtomicExchangeHeap* mir = ins->mir();
-    Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
@@ -2167,8 +2165,8 @@ CodeGenerator::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
     Register offsetTemp = ToTempRegisterOrInvalid(ins->offsetTemp());
     Register maskTemp = ToTempRegisterOrInvalid(ins->maskTemp());
 
-    masm.atomicExchange(vt, Synchronization::Full(), srcAddr, value, valueTemp, offsetTemp,
-                        maskTemp, ToRegister(ins->output()));
+    masm.wasmAtomicExchange(mir->access(), srcAddr, value, valueTemp, offsetTemp,
+                            maskTemp, ToRegister(ins->output()));
 }
 
 void
@@ -2178,7 +2176,6 @@ CodeGenerator::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins)
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     MWasmAtomicBinopHeap* mir = ins->mir();
-    Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register valueTemp = ToTempRegisterOrInvalid(ins->valueTemp());
     Register offsetTemp = ToTempRegisterOrInvalid(ins->offsetTemp());
@@ -2186,8 +2183,8 @@ CodeGenerator::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins)
 
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
 
-    masm.atomicFetchOp(vt, Synchronization::Full(), mir->operation(), ToRegister(ins->value()),
-                       srcAddr, valueTemp, offsetTemp, maskTemp, ToRegister(ins->output()));
+    masm.wasmAtomicFetchOp(mir->access(), mir->operation(), ToRegister(ins->value()),
+                           srcAddr, valueTemp, offsetTemp, maskTemp, ToRegister(ins->output()));
 }
 
 void
@@ -2197,15 +2194,14 @@ CodeGenerator::visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* 
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     MWasmAtomicBinopHeap* mir = ins->mir();
-    Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register valueTemp = ToTempRegisterOrInvalid(ins->valueTemp());
     Register offsetTemp = ToTempRegisterOrInvalid(ins->offsetTemp());
     Register maskTemp = ToTempRegisterOrInvalid(ins->maskTemp());
 
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
-    masm.atomicEffectOp(vt, Synchronization::Full(), mir->operation(), ToRegister(ins->value()),
-                        srcAddr, valueTemp, offsetTemp, maskTemp);
+    masm.wasmAtomicEffectOp(mir->access(), mir->operation(), ToRegister(ins->value()),
+                            srcAddr, valueTemp, offsetTemp, maskTemp);
 }
 
 void
@@ -2518,7 +2514,7 @@ CodeGenerator::visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir)
     uint32_t offset = lir->mir()->access().offset();
 
     BaseIndex addr(HeapReg, ptr, TimesOne, offset);
-    masm.compareExchange64(Synchronization::Full(), addr, oldValue, newValue, output);
+    masm.wasmCompareExchange64(lir->mir()->access(), addr, oldValue, newValue, output);
 }
 
 void
@@ -2530,7 +2526,7 @@ CodeGenerator::visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* lir)
     uint32_t offset = lir->mir()->access().offset();
 
     BaseIndex addr(HeapReg, ptr, TimesOne, offset);
-    masm.atomicExchange64(Synchronization::Full(), addr, value, output);
+    masm.wasmAtomicExchange64(lir->mir()->access(), addr, value, output);
 }
 
 void
@@ -2548,8 +2544,8 @@ CodeGenerator::visitWasmAtomicBinopI64(LWasmAtomicBinopI64* lir)
 
     BaseIndex addr(HeapReg, ptr, TimesOne, offset);
 
-    masm.atomicFetchOp64(Synchronization::Full(), lir->mir()->operation(), value, addr, temp,
-                         output);
+    masm.wasmAtomicFetchOp64(lir->mir()->access(), lir->mir()->operation(), value, addr, temp,
+                             output);
 }
 
 void

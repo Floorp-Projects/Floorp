@@ -333,11 +333,12 @@ enum vp8e_enc_control_id {
    *             2 = 4 tile columns
    *             .....
    *             n = 2**n tile columns
-   * The requested tile columns will be capped by encoder based on image size
-   * limitation (The minimum width of a tile column is 256 pixel, the maximum
-   * is 4096).
+   * The requested tile columns will be capped by the encoder based on image
+   * size limitations (The minimum width of a tile column is 256 pixels, the
+   * maximum is 4096).
    *
-   * By default, the value is 0, i.e. one single column tile for entire image.
+   * By default, the value is 6, i.e., the maximum number of tiles supported by
+   * the resolution.
    *
    * Supported in codecs: VP9
    */
@@ -368,10 +369,10 @@ enum vp8e_enc_control_id {
    * VP9 has a bitstream feature to reduce decoding dependency between frames
    * by turning off backward update of probability context used in encoding
    * and decoding. This allows staged parallel processing of more than one
-   * video frames in the decoder. This control function provides a mean to
+   * video frame in the decoder. This control function provides a means to
    * turn this feature on or off for bitstreams produced by encoder.
    *
-   * By default, this feature is off.
+   * By default, this feature is on.
    *
    * Supported in codecs: VP9
    */
@@ -407,7 +408,7 @@ enum vp8e_enc_control_id {
 
   /*!\brief Codec control function to set noise sensitivity.
    *
-   *  0: off, 1: On(YOnly)
+   *  0: off, 1: On(YOnly), 2: For SVC only, on top two spatial layers(YOnly)
    *
    * Supported in codecs: VP9
    */
@@ -443,6 +444,7 @@ enum vp8e_enc_control_id {
    * \note Valid parameter range:
    *              VP9E_CONTENT_DEFAULT = Regular video content (Default)
    *              VP9E_CONTENT_SCREEN  = Screen capture content
+   *              VP9E_CONTENT_FILM    = Film content: improves grain retention
    *
    * Supported in codecs: VP9
    */
@@ -547,6 +549,14 @@ enum vp8e_enc_control_id {
    */
   VP9E_SET_TARGET_LEVEL,
 
+  /*!\brief Codec control function to set row level multi-threading.
+  *
+  * 0 : off, 1 : on
+  *
+  * Supported in codecs: VP9
+  */
+  VP9E_SET_ROW_MT,
+
   /*!\brief Codec control function to get bitstream level.
    *
    * Supported in codecs: VP9
@@ -577,6 +587,15 @@ enum vp8e_enc_control_id {
     * Supported in codecs: VP8
     */
   VP8E_SET_GF_CBR_BOOST_PCT,
+
+  /*!\brief Codec control function to enable the extreme motion vector unit test
+   * in VP9. Please note that this is only used in motion vector unit test.
+   *
+   * 0 : off, 1 : MAX_EXTREME_MV, 2 : MIN_EXTREME_MV
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_ENABLE_MOTION_VECTOR_UNIT_TEST,
 };
 
 /*!\brief vpx 1-D scaling mode
@@ -678,6 +697,7 @@ typedef enum {
 typedef enum {
   VP9E_CONTENT_DEFAULT,
   VP9E_CONTENT_SCREEN,
+  VP9E_CONTENT_FILM,
   VP9E_CONTENT_INVALID
 } vp9e_tune_content;
 
@@ -838,8 +858,14 @@ VPX_CTRL_USE_TYPE(VP9E_SET_RENDER_SIZE, int *)
 VPX_CTRL_USE_TYPE(VP9E_SET_TARGET_LEVEL, unsigned int)
 #define VPX_CTRL_VP9E_SET_TARGET_LEVEL
 
+VPX_CTRL_USE_TYPE(VP9E_SET_ROW_MT, unsigned int)
+#define VPX_CTRL_VP9E_SET_ROW_MT
+
 VPX_CTRL_USE_TYPE(VP9E_GET_LEVEL, int *)
 #define VPX_CTRL_VP9E_GET_LEVEL
+
+VPX_CTRL_USE_TYPE(VP9E_ENABLE_MOTION_VECTOR_UNIT_TEST, unsigned int)
+#define VPX_CTRL_VP9E_ENABLE_MOTION_VECTOR_UNIT_TEST
 
 /*!\endcond */
 /*! @} - end defgroup vp8_encoder */

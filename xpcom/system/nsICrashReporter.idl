@@ -76,16 +76,39 @@ interface nsICrashReporter : nsISupports
    * Add some extra data to be submitted with a crash report.
    *
    * @param key
-   *        Name of the data to be added.
+   *        Name of a known crash annotation constant.
    * @param data
    *        Data to be added.
    *
    * @throw NS_ERROR_NOT_INITIALIZED if crash reporting not initialized
-   * @throw NS_ERROR_INVALID_ARG if key or data contain invalid characters.
-   *                             Invalid characters for key are '=' and
-   *                             '\n'.  Invalid character for data is '\0'.
+   * @throw NS_ERROR_INVALID_ARG if key contains an invalid value or data
+   *                             contains invalid characters.  Invalid
+   *                             character for data is '\0'.
    */
   void annotateCrashReport(in AUTF8String key, in AUTF8String data);
+
+  /**
+   * Remove a crash report annotation.
+   *
+   * @param key
+   *        Name of a known crash annotation constant.
+   *
+   * @throw NS_ERROR_NOT_INITIALIZED if crash reporting not initialized
+   * @throw NS_ERROR_INVALID_ARG if key contains an invalid value.
+   */
+  void removeCrashReportAnnotation(in AUTF8String key);
+
+  /**
+   * Checks if an annotation is whitelisted for inclusion in the crash ping.
+   *
+   * @param key
+   *        Name of a known crash annotation constant.
+   *
+   * @return True if the specified value is a valid annotation and can be
+             included in the crash ping, false otherwise.
+   * @throw NS_ERROR_INVALID_ARG if key contains an invalid value.
+   */
+  boolean isAnnotationWhitelistedForPing(in ACString value);
 
   /**
    * Append some data to the "Notes" field, to be submitted with a crash report.
@@ -121,7 +144,7 @@ interface nsICrashReporter : nsISupports
    * @param aExceptionInfo  EXCEPTION_INFO* provided by Window's SEH
    */
   [noscript] void writeMinidumpForException(in voidPtr aExceptionInfo);
-  
+
   /**
    * Append note containing an Obj-C exception's info.
    *

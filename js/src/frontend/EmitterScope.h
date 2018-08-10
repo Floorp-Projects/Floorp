@@ -87,7 +87,7 @@ class EmitterScope : public Nestable<EmitterScope>
     MOZ_MUST_USE bool appendScopeNote(BytecodeEmitter* bce);
 
     MOZ_MUST_USE bool deadZoneFrameSlotRange(BytecodeEmitter* bce, uint32_t slotStart,
-                                             uint32_t slotEnd);
+                                             uint32_t slotEnd) const;
 
   public:
     explicit EmitterScope(BytecodeEmitter* bce);
@@ -104,7 +104,7 @@ class EmitterScope : public Nestable<EmitterScope>
     MOZ_MUST_USE bool enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc);
     MOZ_MUST_USE bool enterModule(BytecodeEmitter* module, ModuleSharedContext* modulesc);
     MOZ_MUST_USE bool enterWith(BytecodeEmitter* bce);
-    MOZ_MUST_USE bool deadZoneFrameSlots(BytecodeEmitter* bce);
+    MOZ_MUST_USE bool deadZoneFrameSlots(BytecodeEmitter* bce) const;
 
     MOZ_MUST_USE bool leave(BytecodeEmitter* bce, bool nonLocal = false);
 

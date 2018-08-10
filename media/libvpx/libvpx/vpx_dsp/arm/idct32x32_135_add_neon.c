@@ -13,6 +13,7 @@
 #include "./vpx_config.h"
 #include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/arm/idct_neon.h"
+#include "vpx_dsp/arm/mem_neon.h"
 #include "vpx_dsp/arm/transpose_neon.h"
 #include "vpx_dsp/txfm_common.h"
 
@@ -87,614 +88,577 @@ static INLINE void load_4x8_s16(const tran_low_t *input, int16x4_t *const in0,
 // 13  84  93 103 110 125
 // 14  98 106 115 127
 // 15 117 128
-static void idct32_12_neon(const tran_low_t *input, int16_t *output) {
-  int16x8_t in0, in1, in2, in3, in4, in5, in6, in7;
-  int16x4_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-  int16x8_t in8, in9, in10, in11;
-  int16x8_t s1_16, s1_18, s1_19, s1_20, s1_21, s1_23, s1_24, s1_26, s1_27,
-      s1_28, s1_29, s1_31;
-  int16x8_t s2_8, s2_10, s2_11, s2_12, s2_13, s2_15, s2_18, s2_19, s2_20, s2_21,
-      s2_26, s2_27, s2_28, s2_29;
-  int16x8_t s3_4, s3_7, s3_10, s3_11, s3_12, s3_13, s3_17, s3_18, s3_21, s3_22,
-      s3_25, s3_26, s3_29, s3_30;
-  int16x8_t s4_0, s4_2, s4_3, s4_9, s4_10, s4_13, s4_14, s4_16, s4_17, s4_18,
-      s4_19, s4_20, s4_21, s4_22, s4_23, s4_24, s4_25, s4_26, s4_27, s4_28,
-      s4_29, s4_30, s4_31;
-  int16x8_t s5_0, s5_1, s5_2, s5_3, s5_5, s5_6, s5_8, s5_9, s5_10, s5_11, s5_12,
-      s5_13, s5_14, s5_15, s5_18, s5_19, s5_20, s5_21, s5_26, s5_27, s5_28,
-      s5_29;
-  int16x8_t s6_0, s6_1, s6_2, s6_3, s6_4, s6_5, s6_6, s6_7, s6_10, s6_11, s6_12,
-      s6_13, s6_16, s6_17, s6_18, s6_19, s6_20, s6_21, s6_22, s6_23, s6_24,
-      s6_25, s6_26, s6_27, s6_28, s6_29, s6_30, s6_31;
-  int16x8_t s7_0, s7_1, s7_2, s7_3, s7_4, s7_5, s7_6, s7_7, s7_8, s7_9, s7_10,
-      s7_11, s7_12, s7_13, s7_14, s7_15, s7_20, s7_21, s7_22, s7_23, s7_24,
-      s7_25, s7_26, s7_27;
+void vpx_idct32_12_neon(const tran_low_t *const input, int16_t *output) {
+  int16x4_t tmp[8];
+  int16x8_t in[12], s1[32], s2[32], s3[32], s4[32], s5[32], s6[32], s7[32];
 
-  load_8x8_s16(input, &in0, &in1, &in2, &in3, &in4, &in5, &in6, &in7);
-  transpose_s16_8x8(&in0, &in1, &in2, &in3, &in4, &in5, &in6, &in7);
+  load_8x8_s16(input, &in[0], &in[1], &in[2], &in[3], &in[4], &in[5], &in[6],
+               &in[7]);
+  transpose_s16_8x8(&in[0], &in[1], &in[2], &in[3], &in[4], &in[5], &in[6],
+                    &in[7]);
 
-  load_4x8_s16(input + 8, &tmp0, &tmp1, &tmp2, &tmp3, &tmp4, &tmp5, &tmp6,
-               &tmp7);
-  transpose_s16_4x8(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, &in8, &in9,
-                    &in10, &in11);
+  load_4x8_s16(input + 8, &tmp[0], &tmp[1], &tmp[2], &tmp[3], &tmp[4], &tmp[5],
+               &tmp[6], &tmp[7]);
+  transpose_s16_4x8(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6],
+                    tmp[7], &in[8], &in[9], &in[10], &in[11]);
 
   // stage 1
-  s1_16 = multiply_shift_and_narrow_s16(in1, cospi_31_64);
-  s1_31 = multiply_shift_and_narrow_s16(in1, cospi_1_64);
+  s1[16] = multiply_shift_and_narrow_s16(in[1], cospi_31_64);
+  s1[31] = multiply_shift_and_narrow_s16(in[1], cospi_1_64);
 
-  s1_18 = multiply_shift_and_narrow_s16(in9, cospi_23_64);
-  s1_29 = multiply_shift_and_narrow_s16(in9, cospi_9_64);
+  s1[18] = multiply_shift_and_narrow_s16(in[9], cospi_23_64);
+  s1[29] = multiply_shift_and_narrow_s16(in[9], cospi_9_64);
 
-  s1_19 = multiply_shift_and_narrow_s16(in7, -cospi_25_64);
-  s1_28 = multiply_shift_and_narrow_s16(in7, cospi_7_64);
+  s1[19] = multiply_shift_and_narrow_s16(in[7], -cospi_25_64);
+  s1[28] = multiply_shift_and_narrow_s16(in[7], cospi_7_64);
 
-  s1_20 = multiply_shift_and_narrow_s16(in5, cospi_27_64);
-  s1_27 = multiply_shift_and_narrow_s16(in5, cospi_5_64);
+  s1[20] = multiply_shift_and_narrow_s16(in[5], cospi_27_64);
+  s1[27] = multiply_shift_and_narrow_s16(in[5], cospi_5_64);
 
-  s1_21 = multiply_shift_and_narrow_s16(in11, -cospi_21_64);
-  s1_26 = multiply_shift_and_narrow_s16(in11, cospi_11_64);
+  s1[21] = multiply_shift_and_narrow_s16(in[11], -cospi_21_64);
+  s1[26] = multiply_shift_and_narrow_s16(in[11], cospi_11_64);
 
-  s1_23 = multiply_shift_and_narrow_s16(in3, -cospi_29_64);
-  s1_24 = multiply_shift_and_narrow_s16(in3, cospi_3_64);
+  s1[23] = multiply_shift_and_narrow_s16(in[3], -cospi_29_64);
+  s1[24] = multiply_shift_and_narrow_s16(in[3], cospi_3_64);
 
   // stage 2
-  s2_8 = multiply_shift_and_narrow_s16(in2, cospi_30_64);
-  s2_15 = multiply_shift_and_narrow_s16(in2, cospi_2_64);
+  s2[8] = multiply_shift_and_narrow_s16(in[2], cospi_30_64);
+  s2[15] = multiply_shift_and_narrow_s16(in[2], cospi_2_64);
 
-  s2_10 = multiply_shift_and_narrow_s16(in10, cospi_22_64);
-  s2_13 = multiply_shift_and_narrow_s16(in10, cospi_10_64);
+  s2[10] = multiply_shift_and_narrow_s16(in[10], cospi_22_64);
+  s2[13] = multiply_shift_and_narrow_s16(in[10], cospi_10_64);
 
-  s2_11 = multiply_shift_and_narrow_s16(in6, -cospi_26_64);
-  s2_12 = multiply_shift_and_narrow_s16(in6, cospi_6_64);
+  s2[11] = multiply_shift_and_narrow_s16(in[6], -cospi_26_64);
+  s2[12] = multiply_shift_and_narrow_s16(in[6], cospi_6_64);
 
-  s2_18 = vsubq_s16(s1_19, s1_18);
-  s2_19 = vaddq_s16(s1_18, s1_19);
-  s2_20 = vaddq_s16(s1_20, s1_21);
-  s2_21 = vsubq_s16(s1_20, s1_21);
-  s2_26 = vsubq_s16(s1_27, s1_26);
-  s2_27 = vaddq_s16(s1_26, s1_27);
-  s2_28 = vaddq_s16(s1_28, s1_29);
-  s2_29 = vsubq_s16(s1_28, s1_29);
+  s2[18] = vsubq_s16(s1[19], s1[18]);
+  s2[19] = vaddq_s16(s1[18], s1[19]);
+  s2[20] = vaddq_s16(s1[20], s1[21]);
+  s2[21] = vsubq_s16(s1[20], s1[21]);
+  s2[26] = vsubq_s16(s1[27], s1[26]);
+  s2[27] = vaddq_s16(s1[26], s1[27]);
+  s2[28] = vaddq_s16(s1[28], s1[29]);
+  s2[29] = vsubq_s16(s1[28], s1[29]);
 
   // stage 3
-  s3_4 = multiply_shift_and_narrow_s16(in4, cospi_28_64);
-  s3_7 = multiply_shift_and_narrow_s16(in4, cospi_4_64);
+  s3[4] = multiply_shift_and_narrow_s16(in[4], cospi_28_64);
+  s3[7] = multiply_shift_and_narrow_s16(in[4], cospi_4_64);
 
-  s3_10 = vsubq_s16(s2_11, s2_10);
-  s3_11 = vaddq_s16(s2_10, s2_11);
-  s3_12 = vaddq_s16(s2_12, s2_13);
-  s3_13 = vsubq_s16(s2_12, s2_13);
+  s3[10] = vsubq_s16(s2[11], s2[10]);
+  s3[11] = vaddq_s16(s2[10], s2[11]);
+  s3[12] = vaddq_s16(s2[12], s2[13]);
+  s3[13] = vsubq_s16(s2[12], s2[13]);
 
-  s3_17 = multiply_accumulate_shift_and_narrow_s16(s1_16, -cospi_4_64, s1_31,
-                                                   cospi_28_64);
-  s3_30 = multiply_accumulate_shift_and_narrow_s16(s1_16, cospi_28_64, s1_31,
-                                                   cospi_4_64);
+  s3[17] = multiply_accumulate_shift_and_narrow_s16(s1[16], -cospi_4_64, s1[31],
+                                                    cospi_28_64);
+  s3[30] = multiply_accumulate_shift_and_narrow_s16(s1[16], cospi_28_64, s1[31],
+                                                    cospi_4_64);
 
-  s3_18 = multiply_accumulate_shift_and_narrow_s16(s2_18, -cospi_28_64, s2_29,
-                                                   -cospi_4_64);
-  s3_29 = multiply_accumulate_shift_and_narrow_s16(s2_18, -cospi_4_64, s2_29,
-                                                   cospi_28_64);
+  s3[18] = multiply_accumulate_shift_and_narrow_s16(s2[18], -cospi_28_64,
+                                                    s2[29], -cospi_4_64);
+  s3[29] = multiply_accumulate_shift_and_narrow_s16(s2[18], -cospi_4_64, s2[29],
+                                                    cospi_28_64);
 
-  s3_21 = multiply_accumulate_shift_and_narrow_s16(s2_21, -cospi_20_64, s2_26,
-                                                   cospi_12_64);
-  s3_26 = multiply_accumulate_shift_and_narrow_s16(s2_21, cospi_12_64, s2_26,
-                                                   cospi_20_64);
+  s3[21] = multiply_accumulate_shift_and_narrow_s16(s2[21], -cospi_20_64,
+                                                    s2[26], cospi_12_64);
+  s3[26] = multiply_accumulate_shift_and_narrow_s16(s2[21], cospi_12_64, s2[26],
+                                                    cospi_20_64);
 
-  s3_22 = multiply_accumulate_shift_and_narrow_s16(s1_23, -cospi_12_64, s1_24,
-                                                   -cospi_20_64);
-  s3_25 = multiply_accumulate_shift_and_narrow_s16(s1_23, -cospi_20_64, s1_24,
-                                                   cospi_12_64);
+  s3[22] = multiply_accumulate_shift_and_narrow_s16(s1[23], -cospi_12_64,
+                                                    s1[24], -cospi_20_64);
+  s3[25] = multiply_accumulate_shift_and_narrow_s16(s1[23], -cospi_20_64,
+                                                    s1[24], cospi_12_64);
 
   // stage 4
-  s4_0 = multiply_shift_and_narrow_s16(in0, cospi_16_64);
-  s4_2 = multiply_shift_and_narrow_s16(in8, cospi_24_64);
-  s4_3 = multiply_shift_and_narrow_s16(in8, cospi_8_64);
+  s4[0] = multiply_shift_and_narrow_s16(in[0], cospi_16_64);
+  s4[2] = multiply_shift_and_narrow_s16(in[8], cospi_24_64);
+  s4[3] = multiply_shift_and_narrow_s16(in[8], cospi_8_64);
 
-  s4_9 = multiply_accumulate_shift_and_narrow_s16(s2_8, -cospi_8_64, s2_15,
-                                                  cospi_24_64);
-  s4_14 = multiply_accumulate_shift_and_narrow_s16(s2_8, cospi_24_64, s2_15,
-                                                   cospi_8_64);
-
-  s4_10 = multiply_accumulate_shift_and_narrow_s16(s3_10, -cospi_24_64, s3_13,
-                                                   -cospi_8_64);
-  s4_13 = multiply_accumulate_shift_and_narrow_s16(s3_10, -cospi_8_64, s3_13,
+  s4[9] = multiply_accumulate_shift_and_narrow_s16(s2[8], -cospi_8_64, s2[15],
                                                    cospi_24_64);
+  s4[14] = multiply_accumulate_shift_and_narrow_s16(s2[8], cospi_24_64, s2[15],
+                                                    cospi_8_64);
 
-  s4_16 = vaddq_s16(s1_16, s2_19);
-  s4_17 = vaddq_s16(s3_17, s3_18);
-  s4_18 = vsubq_s16(s3_17, s3_18);
-  s4_19 = vsubq_s16(s1_16, s2_19);
-  s4_20 = vsubq_s16(s1_23, s2_20);
-  s4_21 = vsubq_s16(s3_22, s3_21);
-  s4_22 = vaddq_s16(s3_21, s3_22);
-  s4_23 = vaddq_s16(s2_20, s1_23);
-  s4_24 = vaddq_s16(s1_24, s2_27);
-  s4_25 = vaddq_s16(s3_25, s3_26);
-  s4_26 = vsubq_s16(s3_25, s3_26);
-  s4_27 = vsubq_s16(s1_24, s2_27);
-  s4_28 = vsubq_s16(s1_31, s2_28);
-  s4_29 = vsubq_s16(s3_30, s3_29);
-  s4_30 = vaddq_s16(s3_29, s3_30);
-  s4_31 = vaddq_s16(s2_28, s1_31);
+  s4[10] = multiply_accumulate_shift_and_narrow_s16(s3[10], -cospi_24_64,
+                                                    s3[13], -cospi_8_64);
+  s4[13] = multiply_accumulate_shift_and_narrow_s16(s3[10], -cospi_8_64, s3[13],
+                                                    cospi_24_64);
+
+  s4[16] = vaddq_s16(s1[16], s2[19]);
+  s4[17] = vaddq_s16(s3[17], s3[18]);
+  s4[18] = vsubq_s16(s3[17], s3[18]);
+  s4[19] = vsubq_s16(s1[16], s2[19]);
+  s4[20] = vsubq_s16(s1[23], s2[20]);
+  s4[21] = vsubq_s16(s3[22], s3[21]);
+  s4[22] = vaddq_s16(s3[21], s3[22]);
+  s4[23] = vaddq_s16(s2[20], s1[23]);
+  s4[24] = vaddq_s16(s1[24], s2[27]);
+  s4[25] = vaddq_s16(s3[25], s3[26]);
+  s4[26] = vsubq_s16(s3[25], s3[26]);
+  s4[27] = vsubq_s16(s1[24], s2[27]);
+  s4[28] = vsubq_s16(s1[31], s2[28]);
+  s4[29] = vsubq_s16(s3[30], s3[29]);
+  s4[30] = vaddq_s16(s3[29], s3[30]);
+  s4[31] = vaddq_s16(s2[28], s1[31]);
 
   // stage 5
-  s5_0 = vaddq_s16(s4_0, s4_3);
-  s5_1 = vaddq_s16(s4_0, s4_2);
-  s5_2 = vsubq_s16(s4_0, s4_2);
-  s5_3 = vsubq_s16(s4_0, s4_3);
+  s5[0] = vaddq_s16(s4[0], s4[3]);
+  s5[1] = vaddq_s16(s4[0], s4[2]);
+  s5[2] = vsubq_s16(s4[0], s4[2]);
+  s5[3] = vsubq_s16(s4[0], s4[3]);
 
-  s5_5 = sub_multiply_shift_and_narrow_s16(s3_7, s3_4, cospi_16_64);
-  s5_6 = add_multiply_shift_and_narrow_s16(s3_4, s3_7, cospi_16_64);
+  s5[5] = sub_multiply_shift_and_narrow_s16(s3[7], s3[4], cospi_16_64);
+  s5[6] = add_multiply_shift_and_narrow_s16(s3[4], s3[7], cospi_16_64);
 
-  s5_8 = vaddq_s16(s2_8, s3_11);
-  s5_9 = vaddq_s16(s4_9, s4_10);
-  s5_10 = vsubq_s16(s4_9, s4_10);
-  s5_11 = vsubq_s16(s2_8, s3_11);
-  s5_12 = vsubq_s16(s2_15, s3_12);
-  s5_13 = vsubq_s16(s4_14, s4_13);
-  s5_14 = vaddq_s16(s4_13, s4_14);
-  s5_15 = vaddq_s16(s2_15, s3_12);
+  s5[8] = vaddq_s16(s2[8], s3[11]);
+  s5[9] = vaddq_s16(s4[9], s4[10]);
+  s5[10] = vsubq_s16(s4[9], s4[10]);
+  s5[11] = vsubq_s16(s2[8], s3[11]);
+  s5[12] = vsubq_s16(s2[15], s3[12]);
+  s5[13] = vsubq_s16(s4[14], s4[13]);
+  s5[14] = vaddq_s16(s4[13], s4[14]);
+  s5[15] = vaddq_s16(s2[15], s3[12]);
 
-  s5_18 = multiply_accumulate_shift_and_narrow_s16(s4_18, -cospi_8_64, s4_29,
-                                                   cospi_24_64);
-  s5_29 = multiply_accumulate_shift_and_narrow_s16(s4_18, cospi_24_64, s4_29,
-                                                   cospi_8_64);
+  s5[18] = multiply_accumulate_shift_and_narrow_s16(s4[18], -cospi_8_64, s4[29],
+                                                    cospi_24_64);
+  s5[29] = multiply_accumulate_shift_and_narrow_s16(s4[18], cospi_24_64, s4[29],
+                                                    cospi_8_64);
 
-  s5_19 = multiply_accumulate_shift_and_narrow_s16(s4_19, -cospi_8_64, s4_28,
-                                                   cospi_24_64);
-  s5_28 = multiply_accumulate_shift_and_narrow_s16(s4_19, cospi_24_64, s4_28,
-                                                   cospi_8_64);
+  s5[19] = multiply_accumulate_shift_and_narrow_s16(s4[19], -cospi_8_64, s4[28],
+                                                    cospi_24_64);
+  s5[28] = multiply_accumulate_shift_and_narrow_s16(s4[19], cospi_24_64, s4[28],
+                                                    cospi_8_64);
 
-  s5_20 = multiply_accumulate_shift_and_narrow_s16(s4_20, -cospi_24_64, s4_27,
-                                                   -cospi_8_64);
-  s5_27 = multiply_accumulate_shift_and_narrow_s16(s4_20, -cospi_8_64, s4_27,
-                                                   cospi_24_64);
+  s5[20] = multiply_accumulate_shift_and_narrow_s16(s4[20], -cospi_24_64,
+                                                    s4[27], -cospi_8_64);
+  s5[27] = multiply_accumulate_shift_and_narrow_s16(s4[20], -cospi_8_64, s4[27],
+                                                    cospi_24_64);
 
-  s5_21 = multiply_accumulate_shift_and_narrow_s16(s4_21, -cospi_24_64, s4_26,
-                                                   -cospi_8_64);
-  s5_26 = multiply_accumulate_shift_and_narrow_s16(s4_21, -cospi_8_64, s4_26,
-                                                   cospi_24_64);
+  s5[21] = multiply_accumulate_shift_and_narrow_s16(s4[21], -cospi_24_64,
+                                                    s4[26], -cospi_8_64);
+  s5[26] = multiply_accumulate_shift_and_narrow_s16(s4[21], -cospi_8_64, s4[26],
+                                                    cospi_24_64);
 
   // stage 6
-  s6_0 = vaddq_s16(s5_0, s3_7);
-  s6_1 = vaddq_s16(s5_1, s5_6);
-  s6_2 = vaddq_s16(s5_2, s5_5);
-  s6_3 = vaddq_s16(s5_3, s3_4);
-  s6_4 = vsubq_s16(s5_3, s3_4);
-  s6_5 = vsubq_s16(s5_2, s5_5);
-  s6_6 = vsubq_s16(s5_1, s5_6);
-  s6_7 = vsubq_s16(s5_0, s3_7);
+  s6[0] = vaddq_s16(s5[0], s3[7]);
+  s6[1] = vaddq_s16(s5[1], s5[6]);
+  s6[2] = vaddq_s16(s5[2], s5[5]);
+  s6[3] = vaddq_s16(s5[3], s3[4]);
+  s6[4] = vsubq_s16(s5[3], s3[4]);
+  s6[5] = vsubq_s16(s5[2], s5[5]);
+  s6[6] = vsubq_s16(s5[1], s5[6]);
+  s6[7] = vsubq_s16(s5[0], s3[7]);
 
-  s6_10 = sub_multiply_shift_and_narrow_s16(s5_13, s5_10, cospi_16_64);
-  s6_13 = add_multiply_shift_and_narrow_s16(s5_10, s5_13, cospi_16_64);
+  s6[10] = sub_multiply_shift_and_narrow_s16(s5[13], s5[10], cospi_16_64);
+  s6[13] = add_multiply_shift_and_narrow_s16(s5[10], s5[13], cospi_16_64);
 
-  s6_11 = sub_multiply_shift_and_narrow_s16(s5_12, s5_11, cospi_16_64);
-  s6_12 = add_multiply_shift_and_narrow_s16(s5_11, s5_12, cospi_16_64);
+  s6[11] = sub_multiply_shift_and_narrow_s16(s5[12], s5[11], cospi_16_64);
+  s6[12] = add_multiply_shift_and_narrow_s16(s5[11], s5[12], cospi_16_64);
 
-  s6_16 = vaddq_s16(s4_16, s4_23);
-  s6_17 = vaddq_s16(s4_17, s4_22);
-  s6_18 = vaddq_s16(s5_18, s5_21);
-  s6_19 = vaddq_s16(s5_19, s5_20);
-  s6_20 = vsubq_s16(s5_19, s5_20);
-  s6_21 = vsubq_s16(s5_18, s5_21);
-  s6_22 = vsubq_s16(s4_17, s4_22);
-  s6_23 = vsubq_s16(s4_16, s4_23);
+  s6[16] = vaddq_s16(s4[16], s4[23]);
+  s6[17] = vaddq_s16(s4[17], s4[22]);
+  s6[18] = vaddq_s16(s5[18], s5[21]);
+  s6[19] = vaddq_s16(s5[19], s5[20]);
+  s6[20] = vsubq_s16(s5[19], s5[20]);
+  s6[21] = vsubq_s16(s5[18], s5[21]);
+  s6[22] = vsubq_s16(s4[17], s4[22]);
+  s6[23] = vsubq_s16(s4[16], s4[23]);
 
-  s6_24 = vsubq_s16(s4_31, s4_24);
-  s6_25 = vsubq_s16(s4_30, s4_25);
-  s6_26 = vsubq_s16(s5_29, s5_26);
-  s6_27 = vsubq_s16(s5_28, s5_27);
-  s6_28 = vaddq_s16(s5_27, s5_28);
-  s6_29 = vaddq_s16(s5_26, s5_29);
-  s6_30 = vaddq_s16(s4_25, s4_30);
-  s6_31 = vaddq_s16(s4_24, s4_31);
+  s6[24] = vsubq_s16(s4[31], s4[24]);
+  s6[25] = vsubq_s16(s4[30], s4[25]);
+  s6[26] = vsubq_s16(s5[29], s5[26]);
+  s6[27] = vsubq_s16(s5[28], s5[27]);
+  s6[28] = vaddq_s16(s5[27], s5[28]);
+  s6[29] = vaddq_s16(s5[26], s5[29]);
+  s6[30] = vaddq_s16(s4[25], s4[30]);
+  s6[31] = vaddq_s16(s4[24], s4[31]);
 
   // stage 7
-  s7_0 = vaddq_s16(s6_0, s5_15);
-  s7_1 = vaddq_s16(s6_1, s5_14);
-  s7_2 = vaddq_s16(s6_2, s6_13);
-  s7_3 = vaddq_s16(s6_3, s6_12);
-  s7_4 = vaddq_s16(s6_4, s6_11);
-  s7_5 = vaddq_s16(s6_5, s6_10);
-  s7_6 = vaddq_s16(s6_6, s5_9);
-  s7_7 = vaddq_s16(s6_7, s5_8);
-  s7_8 = vsubq_s16(s6_7, s5_8);
-  s7_9 = vsubq_s16(s6_6, s5_9);
-  s7_10 = vsubq_s16(s6_5, s6_10);
-  s7_11 = vsubq_s16(s6_4, s6_11);
-  s7_12 = vsubq_s16(s6_3, s6_12);
-  s7_13 = vsubq_s16(s6_2, s6_13);
-  s7_14 = vsubq_s16(s6_1, s5_14);
-  s7_15 = vsubq_s16(s6_0, s5_15);
+  s7[0] = vaddq_s16(s6[0], s5[15]);
+  s7[1] = vaddq_s16(s6[1], s5[14]);
+  s7[2] = vaddq_s16(s6[2], s6[13]);
+  s7[3] = vaddq_s16(s6[3], s6[12]);
+  s7[4] = vaddq_s16(s6[4], s6[11]);
+  s7[5] = vaddq_s16(s6[5], s6[10]);
+  s7[6] = vaddq_s16(s6[6], s5[9]);
+  s7[7] = vaddq_s16(s6[7], s5[8]);
+  s7[8] = vsubq_s16(s6[7], s5[8]);
+  s7[9] = vsubq_s16(s6[6], s5[9]);
+  s7[10] = vsubq_s16(s6[5], s6[10]);
+  s7[11] = vsubq_s16(s6[4], s6[11]);
+  s7[12] = vsubq_s16(s6[3], s6[12]);
+  s7[13] = vsubq_s16(s6[2], s6[13]);
+  s7[14] = vsubq_s16(s6[1], s5[14]);
+  s7[15] = vsubq_s16(s6[0], s5[15]);
 
-  s7_20 = sub_multiply_shift_and_narrow_s16(s6_27, s6_20, cospi_16_64);
-  s7_27 = add_multiply_shift_and_narrow_s16(s6_20, s6_27, cospi_16_64);
+  s7[20] = sub_multiply_shift_and_narrow_s16(s6[27], s6[20], cospi_16_64);
+  s7[27] = add_multiply_shift_and_narrow_s16(s6[20], s6[27], cospi_16_64);
 
-  s7_21 = sub_multiply_shift_and_narrow_s16(s6_26, s6_21, cospi_16_64);
-  s7_26 = add_multiply_shift_and_narrow_s16(s6_21, s6_26, cospi_16_64);
+  s7[21] = sub_multiply_shift_and_narrow_s16(s6[26], s6[21], cospi_16_64);
+  s7[26] = add_multiply_shift_and_narrow_s16(s6[21], s6[26], cospi_16_64);
 
-  s7_22 = sub_multiply_shift_and_narrow_s16(s6_25, s6_22, cospi_16_64);
-  s7_25 = add_multiply_shift_and_narrow_s16(s6_22, s6_25, cospi_16_64);
+  s7[22] = sub_multiply_shift_and_narrow_s16(s6[25], s6[22], cospi_16_64);
+  s7[25] = add_multiply_shift_and_narrow_s16(s6[22], s6[25], cospi_16_64);
 
-  s7_23 = sub_multiply_shift_and_narrow_s16(s6_24, s6_23, cospi_16_64);
-  s7_24 = add_multiply_shift_and_narrow_s16(s6_23, s6_24, cospi_16_64);
+  s7[23] = sub_multiply_shift_and_narrow_s16(s6[24], s6[23], cospi_16_64);
+  s7[24] = add_multiply_shift_and_narrow_s16(s6[23], s6[24], cospi_16_64);
 
   // final stage
-  vst1q_s16(output, vaddq_s16(s7_0, s6_31));
+  vst1q_s16(output, vaddq_s16(s7[0], s6[31]));
   output += 16;
-  vst1q_s16(output, vaddq_s16(s7_1, s6_30));
+  vst1q_s16(output, vaddq_s16(s7[1], s6[30]));
   output += 16;
-  vst1q_s16(output, vaddq_s16(s7_2, s6_29));
+  vst1q_s16(output, vaddq_s16(s7[2], s6[29]));
   output += 16;
-  vst1q_s16(output, vaddq_s16(s7_3, s6_28));
+  vst1q_s16(output, vaddq_s16(s7[3], s6[28]));
   output += 16;
-  vst1q_s16(output, vaddq_s16(s7_4, s7_27));
+  vst1q_s16(output, vaddq_s16(s7[4], s7[27]));
   output += 16;
-  vst1q_s16(output, vaddq_s16(s7_5, s7_26));
+  vst1q_s16(output, vaddq_s16(s7[5], s7[26]));
   output += 16;
-  vst1q_s16(output, vaddq_s16(s7_6, s7_25));
+  vst1q_s16(output, vaddq_s16(s7[6], s7[25]));
   output += 16;
-  vst1q_s16(output, vaddq_s16(s7_7, s7_24));
-  output += 16;
-
-  vst1q_s16(output, vaddq_s16(s7_8, s7_23));
-  output += 16;
-  vst1q_s16(output, vaddq_s16(s7_9, s7_22));
-  output += 16;
-  vst1q_s16(output, vaddq_s16(s7_10, s7_21));
-  output += 16;
-  vst1q_s16(output, vaddq_s16(s7_11, s7_20));
-  output += 16;
-  vst1q_s16(output, vaddq_s16(s7_12, s6_19));
-  output += 16;
-  vst1q_s16(output, vaddq_s16(s7_13, s6_18));
-  output += 16;
-  vst1q_s16(output, vaddq_s16(s7_14, s6_17));
-  output += 16;
-  vst1q_s16(output, vaddq_s16(s7_15, s6_16));
+  vst1q_s16(output, vaddq_s16(s7[7], s7[24]));
   output += 16;
 
-  vst1q_s16(output, vsubq_s16(s7_15, s6_16));
+  vst1q_s16(output, vaddq_s16(s7[8], s7[23]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_14, s6_17));
+  vst1q_s16(output, vaddq_s16(s7[9], s7[22]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_13, s6_18));
+  vst1q_s16(output, vaddq_s16(s7[10], s7[21]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_12, s6_19));
+  vst1q_s16(output, vaddq_s16(s7[11], s7[20]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_11, s7_20));
+  vst1q_s16(output, vaddq_s16(s7[12], s6[19]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_10, s7_21));
+  vst1q_s16(output, vaddq_s16(s7[13], s6[18]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_9, s7_22));
+  vst1q_s16(output, vaddq_s16(s7[14], s6[17]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_8, s7_23));
+  vst1q_s16(output, vaddq_s16(s7[15], s6[16]));
   output += 16;
 
-  vst1q_s16(output, vsubq_s16(s7_7, s7_24));
+  vst1q_s16(output, vsubq_s16(s7[15], s6[16]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_6, s7_25));
+  vst1q_s16(output, vsubq_s16(s7[14], s6[17]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_5, s7_26));
+  vst1q_s16(output, vsubq_s16(s7[13], s6[18]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_4, s7_27));
+  vst1q_s16(output, vsubq_s16(s7[12], s6[19]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_3, s6_28));
+  vst1q_s16(output, vsubq_s16(s7[11], s7[20]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_2, s6_29));
+  vst1q_s16(output, vsubq_s16(s7[10], s7[21]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_1, s6_30));
+  vst1q_s16(output, vsubq_s16(s7[9], s7[22]));
   output += 16;
-  vst1q_s16(output, vsubq_s16(s7_0, s6_31));
+  vst1q_s16(output, vsubq_s16(s7[8], s7[23]));
+  output += 16;
+
+  vst1q_s16(output, vsubq_s16(s7[7], s7[24]));
+  output += 16;
+  vst1q_s16(output, vsubq_s16(s7[6], s7[25]));
+  output += 16;
+  vst1q_s16(output, vsubq_s16(s7[5], s7[26]));
+  output += 16;
+  vst1q_s16(output, vsubq_s16(s7[4], s7[27]));
+  output += 16;
+  vst1q_s16(output, vsubq_s16(s7[3], s6[28]));
+  output += 16;
+  vst1q_s16(output, vsubq_s16(s7[2], s6[29]));
+  output += 16;
+  vst1q_s16(output, vsubq_s16(s7[1], s6[30]));
+  output += 16;
+  vst1q_s16(output, vsubq_s16(s7[0], s6[31]));
 }
 
-static void idct32_16_neon(const int16_t *input, uint8_t *output, int stride) {
-  int16x8_t in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12,
-      in13, in14, in15;
-  int16x8_t s1_16, s1_17, s1_18, s1_19, s1_20, s1_21, s1_22, s1_23, s1_24,
-      s1_25, s1_26, s1_27, s1_28, s1_29, s1_30, s1_31;
-  int16x8_t s2_8, s2_9, s2_10, s2_11, s2_12, s2_13, s2_14, s2_15, s2_16, s2_17,
-      s2_18, s2_19, s2_20, s2_21, s2_22, s2_23, s2_24, s2_25, s2_26, s2_27,
-      s2_28, s2_29, s2_30, s2_31;
-  int16x8_t s3_4, s3_5, s3_6, s3_7, s3_8, s3_9, s3_10, s3_11, s3_12, s3_13,
-      s3_14, s3_15, s3_17, s3_18, s3_21, s3_22, s3_25, s3_26, s3_29, s3_30;
-  int16x8_t s4_0, s4_2, s4_3, s4_4, s4_5, s4_6, s4_7, s4_9, s4_10, s4_13, s4_14,
-      s4_16, s4_17, s4_18, s4_19, s4_20, s4_21, s4_22, s4_23, s4_24, s4_25,
-      s4_26, s4_27, s4_28, s4_29, s4_30, s4_31;
-  int16x8_t s5_0, s5_1, s5_2, s5_3, s5_5, s5_6, s5_8, s5_9, s5_10, s5_11, s5_12,
-      s5_13, s5_14, s5_15, s5_18, s5_19, s5_20, s5_21, s5_26, s5_27, s5_28,
-      s5_29;
-  int16x8_t s6_0, s6_1, s6_2, s6_3, s6_4, s6_5, s6_6, s6_7, s6_10, s6_11, s6_12,
-      s6_13, s6_16, s6_17, s6_18, s6_19, s6_20, s6_21, s6_22, s6_23, s6_24,
-      s6_25, s6_26, s6_27, s6_28, s6_29, s6_30, s6_31;
-  int16x8_t s7_0, s7_1, s7_2, s7_3, s7_4, s7_5, s7_6, s7_7, s7_8, s7_9, s7_10,
-      s7_11, s7_12, s7_13, s7_14, s7_15, s7_20, s7_21, s7_22, s7_23, s7_24,
-      s7_25, s7_26, s7_27;
-  int16x8_t out0, out1, out2, out3, out4, out5, out6, out7;
+void vpx_idct32_16_neon(const int16_t *const input, void *const output,
+                        const int stride, const int highbd_flag) {
+  int16x8_t in[16], s1[32], s2[32], s3[32], s4[32], s5[32], s6[32], s7[32],
+      out[32];
 
-  load_and_transpose_s16_8x8(input, 16, &in0, &in1, &in2, &in3, &in4, &in5,
-                             &in6, &in7);
+  load_and_transpose_s16_8x8(input, 16, &in[0], &in[1], &in[2], &in[3], &in[4],
+                             &in[5], &in[6], &in[7]);
 
-  load_and_transpose_s16_8x8(input + 8, 16, &in8, &in9, &in10, &in11, &in12,
-                             &in13, &in14, &in15);
+  load_and_transpose_s16_8x8(input + 8, 16, &in[8], &in[9], &in[10], &in[11],
+                             &in[12], &in[13], &in[14], &in[15]);
 
   // stage 1
-  s1_16 = multiply_shift_and_narrow_s16(in1, cospi_31_64);
-  s1_31 = multiply_shift_and_narrow_s16(in1, cospi_1_64);
+  s1[16] = multiply_shift_and_narrow_s16(in[1], cospi_31_64);
+  s1[31] = multiply_shift_and_narrow_s16(in[1], cospi_1_64);
 
-  s1_17 = multiply_shift_and_narrow_s16(in15, -cospi_17_64);
-  s1_30 = multiply_shift_and_narrow_s16(in15, cospi_15_64);
+  s1[17] = multiply_shift_and_narrow_s16(in[15], -cospi_17_64);
+  s1[30] = multiply_shift_and_narrow_s16(in[15], cospi_15_64);
 
-  s1_18 = multiply_shift_and_narrow_s16(in9, cospi_23_64);
-  s1_29 = multiply_shift_and_narrow_s16(in9, cospi_9_64);
+  s1[18] = multiply_shift_and_narrow_s16(in[9], cospi_23_64);
+  s1[29] = multiply_shift_and_narrow_s16(in[9], cospi_9_64);
 
-  s1_19 = multiply_shift_and_narrow_s16(in7, -cospi_25_64);
-  s1_28 = multiply_shift_and_narrow_s16(in7, cospi_7_64);
+  s1[19] = multiply_shift_and_narrow_s16(in[7], -cospi_25_64);
+  s1[28] = multiply_shift_and_narrow_s16(in[7], cospi_7_64);
 
-  s1_20 = multiply_shift_and_narrow_s16(in5, cospi_27_64);
-  s1_27 = multiply_shift_and_narrow_s16(in5, cospi_5_64);
+  s1[20] = multiply_shift_and_narrow_s16(in[5], cospi_27_64);
+  s1[27] = multiply_shift_and_narrow_s16(in[5], cospi_5_64);
 
-  s1_21 = multiply_shift_and_narrow_s16(in11, -cospi_21_64);
-  s1_26 = multiply_shift_and_narrow_s16(in11, cospi_11_64);
+  s1[21] = multiply_shift_and_narrow_s16(in[11], -cospi_21_64);
+  s1[26] = multiply_shift_and_narrow_s16(in[11], cospi_11_64);
 
-  s1_22 = multiply_shift_and_narrow_s16(in13, cospi_19_64);
-  s1_25 = multiply_shift_and_narrow_s16(in13, cospi_13_64);
+  s1[22] = multiply_shift_and_narrow_s16(in[13], cospi_19_64);
+  s1[25] = multiply_shift_and_narrow_s16(in[13], cospi_13_64);
 
-  s1_23 = multiply_shift_and_narrow_s16(in3, -cospi_29_64);
-  s1_24 = multiply_shift_and_narrow_s16(in3, cospi_3_64);
+  s1[23] = multiply_shift_and_narrow_s16(in[3], -cospi_29_64);
+  s1[24] = multiply_shift_and_narrow_s16(in[3], cospi_3_64);
 
   // stage 2
-  s2_8 = multiply_shift_and_narrow_s16(in2, cospi_30_64);
-  s2_15 = multiply_shift_and_narrow_s16(in2, cospi_2_64);
+  s2[8] = multiply_shift_and_narrow_s16(in[2], cospi_30_64);
+  s2[15] = multiply_shift_and_narrow_s16(in[2], cospi_2_64);
 
-  s2_9 = multiply_shift_and_narrow_s16(in14, -cospi_18_64);
-  s2_14 = multiply_shift_and_narrow_s16(in14, cospi_14_64);
+  s2[9] = multiply_shift_and_narrow_s16(in[14], -cospi_18_64);
+  s2[14] = multiply_shift_and_narrow_s16(in[14], cospi_14_64);
 
-  s2_10 = multiply_shift_and_narrow_s16(in10, cospi_22_64);
-  s2_13 = multiply_shift_and_narrow_s16(in10, cospi_10_64);
+  s2[10] = multiply_shift_and_narrow_s16(in[10], cospi_22_64);
+  s2[13] = multiply_shift_and_narrow_s16(in[10], cospi_10_64);
 
-  s2_11 = multiply_shift_and_narrow_s16(in6, -cospi_26_64);
-  s2_12 = multiply_shift_and_narrow_s16(in6, cospi_6_64);
+  s2[11] = multiply_shift_and_narrow_s16(in[6], -cospi_26_64);
+  s2[12] = multiply_shift_and_narrow_s16(in[6], cospi_6_64);
 
-  s2_16 = vaddq_s16(s1_16, s1_17);
-  s2_17 = vsubq_s16(s1_16, s1_17);
-  s2_18 = vsubq_s16(s1_19, s1_18);
-  s2_19 = vaddq_s16(s1_18, s1_19);
-  s2_20 = vaddq_s16(s1_20, s1_21);
-  s2_21 = vsubq_s16(s1_20, s1_21);
-  s2_22 = vsubq_s16(s1_23, s1_22);
-  s2_23 = vaddq_s16(s1_22, s1_23);
-  s2_24 = vaddq_s16(s1_24, s1_25);
-  s2_25 = vsubq_s16(s1_24, s1_25);
-  s2_26 = vsubq_s16(s1_27, s1_26);
-  s2_27 = vaddq_s16(s1_26, s1_27);
-  s2_28 = vaddq_s16(s1_28, s1_29);
-  s2_29 = vsubq_s16(s1_28, s1_29);
-  s2_30 = vsubq_s16(s1_31, s1_30);
-  s2_31 = vaddq_s16(s1_30, s1_31);
+  s2[16] = vaddq_s16(s1[16], s1[17]);
+  s2[17] = vsubq_s16(s1[16], s1[17]);
+  s2[18] = vsubq_s16(s1[19], s1[18]);
+  s2[19] = vaddq_s16(s1[18], s1[19]);
+  s2[20] = vaddq_s16(s1[20], s1[21]);
+  s2[21] = vsubq_s16(s1[20], s1[21]);
+  s2[22] = vsubq_s16(s1[23], s1[22]);
+  s2[23] = vaddq_s16(s1[22], s1[23]);
+  s2[24] = vaddq_s16(s1[24], s1[25]);
+  s2[25] = vsubq_s16(s1[24], s1[25]);
+  s2[26] = vsubq_s16(s1[27], s1[26]);
+  s2[27] = vaddq_s16(s1[26], s1[27]);
+  s2[28] = vaddq_s16(s1[28], s1[29]);
+  s2[29] = vsubq_s16(s1[28], s1[29]);
+  s2[30] = vsubq_s16(s1[31], s1[30]);
+  s2[31] = vaddq_s16(s1[30], s1[31]);
 
   // stage 3
-  s3_4 = multiply_shift_and_narrow_s16(in4, cospi_28_64);
-  s3_7 = multiply_shift_and_narrow_s16(in4, cospi_4_64);
+  s3[4] = multiply_shift_and_narrow_s16(in[4], cospi_28_64);
+  s3[7] = multiply_shift_and_narrow_s16(in[4], cospi_4_64);
 
-  s3_5 = multiply_shift_and_narrow_s16(in12, -cospi_20_64);
-  s3_6 = multiply_shift_and_narrow_s16(in12, cospi_12_64);
+  s3[5] = multiply_shift_and_narrow_s16(in[12], -cospi_20_64);
+  s3[6] = multiply_shift_and_narrow_s16(in[12], cospi_12_64);
 
-  s3_8 = vaddq_s16(s2_8, s2_9);
-  s3_9 = vsubq_s16(s2_8, s2_9);
-  s3_10 = vsubq_s16(s2_11, s2_10);
-  s3_11 = vaddq_s16(s2_10, s2_11);
-  s3_12 = vaddq_s16(s2_12, s2_13);
-  s3_13 = vsubq_s16(s2_12, s2_13);
-  s3_14 = vsubq_s16(s2_15, s2_14);
-  s3_15 = vaddq_s16(s2_14, s2_15);
+  s3[8] = vaddq_s16(s2[8], s2[9]);
+  s3[9] = vsubq_s16(s2[8], s2[9]);
+  s3[10] = vsubq_s16(s2[11], s2[10]);
+  s3[11] = vaddq_s16(s2[10], s2[11]);
+  s3[12] = vaddq_s16(s2[12], s2[13]);
+  s3[13] = vsubq_s16(s2[12], s2[13]);
+  s3[14] = vsubq_s16(s2[15], s2[14]);
+  s3[15] = vaddq_s16(s2[14], s2[15]);
 
-  s3_17 = multiply_accumulate_shift_and_narrow_s16(s2_17, -cospi_4_64, s2_30,
-                                                   cospi_28_64);
-  s3_30 = multiply_accumulate_shift_and_narrow_s16(s2_17, cospi_28_64, s2_30,
-                                                   cospi_4_64);
+  s3[17] = multiply_accumulate_shift_and_narrow_s16(s2[17], -cospi_4_64, s2[30],
+                                                    cospi_28_64);
+  s3[30] = multiply_accumulate_shift_and_narrow_s16(s2[17], cospi_28_64, s2[30],
+                                                    cospi_4_64);
 
-  s3_18 = multiply_accumulate_shift_and_narrow_s16(s2_18, -cospi_28_64, s2_29,
-                                                   -cospi_4_64);
-  s3_29 = multiply_accumulate_shift_and_narrow_s16(s2_18, -cospi_4_64, s2_29,
-                                                   cospi_28_64);
+  s3[18] = multiply_accumulate_shift_and_narrow_s16(s2[18], -cospi_28_64,
+                                                    s2[29], -cospi_4_64);
+  s3[29] = multiply_accumulate_shift_and_narrow_s16(s2[18], -cospi_4_64, s2[29],
+                                                    cospi_28_64);
 
-  s3_21 = multiply_accumulate_shift_and_narrow_s16(s2_21, -cospi_20_64, s2_26,
-                                                   cospi_12_64);
-  s3_26 = multiply_accumulate_shift_and_narrow_s16(s2_21, cospi_12_64, s2_26,
-                                                   cospi_20_64);
+  s3[21] = multiply_accumulate_shift_and_narrow_s16(s2[21], -cospi_20_64,
+                                                    s2[26], cospi_12_64);
+  s3[26] = multiply_accumulate_shift_and_narrow_s16(s2[21], cospi_12_64, s2[26],
+                                                    cospi_20_64);
 
-  s3_22 = multiply_accumulate_shift_and_narrow_s16(s2_22, -cospi_12_64, s2_25,
-                                                   -cospi_20_64);
-  s3_25 = multiply_accumulate_shift_and_narrow_s16(s2_22, -cospi_20_64, s2_25,
-                                                   cospi_12_64);
+  s3[22] = multiply_accumulate_shift_and_narrow_s16(s2[22], -cospi_12_64,
+                                                    s2[25], -cospi_20_64);
+  s3[25] = multiply_accumulate_shift_and_narrow_s16(s2[22], -cospi_20_64,
+                                                    s2[25], cospi_12_64);
 
   // stage 4
-  s4_0 = multiply_shift_and_narrow_s16(in0, cospi_16_64);
-  s4_2 = multiply_shift_and_narrow_s16(in8, cospi_24_64);
-  s4_3 = multiply_shift_and_narrow_s16(in8, cospi_8_64);
+  s4[0] = multiply_shift_and_narrow_s16(in[0], cospi_16_64);
+  s4[2] = multiply_shift_and_narrow_s16(in[8], cospi_24_64);
+  s4[3] = multiply_shift_and_narrow_s16(in[8], cospi_8_64);
 
-  s4_4 = vaddq_s16(s3_4, s3_5);
-  s4_5 = vsubq_s16(s3_4, s3_5);
-  s4_6 = vsubq_s16(s3_7, s3_6);
-  s4_7 = vaddq_s16(s3_6, s3_7);
+  s4[4] = vaddq_s16(s3[4], s3[5]);
+  s4[5] = vsubq_s16(s3[4], s3[5]);
+  s4[6] = vsubq_s16(s3[7], s3[6]);
+  s4[7] = vaddq_s16(s3[6], s3[7]);
 
-  s4_9 = multiply_accumulate_shift_and_narrow_s16(s3_9, -cospi_8_64, s3_14,
-                                                  cospi_24_64);
-  s4_14 = multiply_accumulate_shift_and_narrow_s16(s3_9, cospi_24_64, s3_14,
-                                                   cospi_8_64);
-
-  s4_10 = multiply_accumulate_shift_and_narrow_s16(s3_10, -cospi_24_64, s3_13,
-                                                   -cospi_8_64);
-  s4_13 = multiply_accumulate_shift_and_narrow_s16(s3_10, -cospi_8_64, s3_13,
+  s4[9] = multiply_accumulate_shift_and_narrow_s16(s3[9], -cospi_8_64, s3[14],
                                                    cospi_24_64);
+  s4[14] = multiply_accumulate_shift_and_narrow_s16(s3[9], cospi_24_64, s3[14],
+                                                    cospi_8_64);
 
-  s4_16 = vaddq_s16(s2_16, s2_19);
-  s4_17 = vaddq_s16(s3_17, s3_18);
-  s4_18 = vsubq_s16(s3_17, s3_18);
-  s4_19 = vsubq_s16(s2_16, s2_19);
-  s4_20 = vsubq_s16(s2_23, s2_20);
-  s4_21 = vsubq_s16(s3_22, s3_21);
-  s4_22 = vaddq_s16(s3_21, s3_22);
-  s4_23 = vaddq_s16(s2_20, s2_23);
-  s4_24 = vaddq_s16(s2_24, s2_27);
-  s4_25 = vaddq_s16(s3_25, s3_26);
-  s4_26 = vsubq_s16(s3_25, s3_26);
-  s4_27 = vsubq_s16(s2_24, s2_27);
-  s4_28 = vsubq_s16(s2_31, s2_28);
-  s4_29 = vsubq_s16(s3_30, s3_29);
-  s4_30 = vaddq_s16(s3_29, s3_30);
-  s4_31 = vaddq_s16(s2_28, s2_31);
+  s4[10] = multiply_accumulate_shift_and_narrow_s16(s3[10], -cospi_24_64,
+                                                    s3[13], -cospi_8_64);
+  s4[13] = multiply_accumulate_shift_and_narrow_s16(s3[10], -cospi_8_64, s3[13],
+                                                    cospi_24_64);
+
+  s4[16] = vaddq_s16(s2[16], s2[19]);
+  s4[17] = vaddq_s16(s3[17], s3[18]);
+  s4[18] = vsubq_s16(s3[17], s3[18]);
+  s4[19] = vsubq_s16(s2[16], s2[19]);
+  s4[20] = vsubq_s16(s2[23], s2[20]);
+  s4[21] = vsubq_s16(s3[22], s3[21]);
+  s4[22] = vaddq_s16(s3[21], s3[22]);
+  s4[23] = vaddq_s16(s2[20], s2[23]);
+  s4[24] = vaddq_s16(s2[24], s2[27]);
+  s4[25] = vaddq_s16(s3[25], s3[26]);
+  s4[26] = vsubq_s16(s3[25], s3[26]);
+  s4[27] = vsubq_s16(s2[24], s2[27]);
+  s4[28] = vsubq_s16(s2[31], s2[28]);
+  s4[29] = vsubq_s16(s3[30], s3[29]);
+  s4[30] = vaddq_s16(s3[29], s3[30]);
+  s4[31] = vaddq_s16(s2[28], s2[31]);
 
   // stage 5
-  s5_0 = vaddq_s16(s4_0, s4_3);
-  s5_1 = vaddq_s16(s4_0, s4_2);
-  s5_2 = vsubq_s16(s4_0, s4_2);
-  s5_3 = vsubq_s16(s4_0, s4_3);
+  s5[0] = vaddq_s16(s4[0], s4[3]);
+  s5[1] = vaddq_s16(s4[0], s4[2]);
+  s5[2] = vsubq_s16(s4[0], s4[2]);
+  s5[3] = vsubq_s16(s4[0], s4[3]);
 
-  s5_5 = sub_multiply_shift_and_narrow_s16(s4_6, s4_5, cospi_16_64);
-  s5_6 = add_multiply_shift_and_narrow_s16(s4_5, s4_6, cospi_16_64);
+  s5[5] = sub_multiply_shift_and_narrow_s16(s4[6], s4[5], cospi_16_64);
+  s5[6] = add_multiply_shift_and_narrow_s16(s4[5], s4[6], cospi_16_64);
 
-  s5_8 = vaddq_s16(s3_8, s3_11);
-  s5_9 = vaddq_s16(s4_9, s4_10);
-  s5_10 = vsubq_s16(s4_9, s4_10);
-  s5_11 = vsubq_s16(s3_8, s3_11);
-  s5_12 = vsubq_s16(s3_15, s3_12);
-  s5_13 = vsubq_s16(s4_14, s4_13);
-  s5_14 = vaddq_s16(s4_13, s4_14);
-  s5_15 = vaddq_s16(s3_15, s3_12);
+  s5[8] = vaddq_s16(s3[8], s3[11]);
+  s5[9] = vaddq_s16(s4[9], s4[10]);
+  s5[10] = vsubq_s16(s4[9], s4[10]);
+  s5[11] = vsubq_s16(s3[8], s3[11]);
+  s5[12] = vsubq_s16(s3[15], s3[12]);
+  s5[13] = vsubq_s16(s4[14], s4[13]);
+  s5[14] = vaddq_s16(s4[13], s4[14]);
+  s5[15] = vaddq_s16(s3[15], s3[12]);
 
-  s5_18 = multiply_accumulate_shift_and_narrow_s16(s4_18, -cospi_8_64, s4_29,
-                                                   cospi_24_64);
-  s5_29 = multiply_accumulate_shift_and_narrow_s16(s4_18, cospi_24_64, s4_29,
-                                                   cospi_8_64);
+  s5[18] = multiply_accumulate_shift_and_narrow_s16(s4[18], -cospi_8_64, s4[29],
+                                                    cospi_24_64);
+  s5[29] = multiply_accumulate_shift_and_narrow_s16(s4[18], cospi_24_64, s4[29],
+                                                    cospi_8_64);
 
-  s5_19 = multiply_accumulate_shift_and_narrow_s16(s4_19, -cospi_8_64, s4_28,
-                                                   cospi_24_64);
-  s5_28 = multiply_accumulate_shift_and_narrow_s16(s4_19, cospi_24_64, s4_28,
-                                                   cospi_8_64);
+  s5[19] = multiply_accumulate_shift_and_narrow_s16(s4[19], -cospi_8_64, s4[28],
+                                                    cospi_24_64);
+  s5[28] = multiply_accumulate_shift_and_narrow_s16(s4[19], cospi_24_64, s4[28],
+                                                    cospi_8_64);
 
-  s5_20 = multiply_accumulate_shift_and_narrow_s16(s4_20, -cospi_24_64, s4_27,
-                                                   -cospi_8_64);
-  s5_27 = multiply_accumulate_shift_and_narrow_s16(s4_20, -cospi_8_64, s4_27,
-                                                   cospi_24_64);
+  s5[20] = multiply_accumulate_shift_and_narrow_s16(s4[20], -cospi_24_64,
+                                                    s4[27], -cospi_8_64);
+  s5[27] = multiply_accumulate_shift_and_narrow_s16(s4[20], -cospi_8_64, s4[27],
+                                                    cospi_24_64);
 
-  s5_21 = multiply_accumulate_shift_and_narrow_s16(s4_21, -cospi_24_64, s4_26,
-                                                   -cospi_8_64);
-  s5_26 = multiply_accumulate_shift_and_narrow_s16(s4_21, -cospi_8_64, s4_26,
-                                                   cospi_24_64);
+  s5[21] = multiply_accumulate_shift_and_narrow_s16(s4[21], -cospi_24_64,
+                                                    s4[26], -cospi_8_64);
+  s5[26] = multiply_accumulate_shift_and_narrow_s16(s4[21], -cospi_8_64, s4[26],
+                                                    cospi_24_64);
 
   // stage 6
-  s6_0 = vaddq_s16(s5_0, s4_7);
-  s6_1 = vaddq_s16(s5_1, s5_6);
-  s6_2 = vaddq_s16(s5_2, s5_5);
-  s6_3 = vaddq_s16(s5_3, s4_4);
-  s6_4 = vsubq_s16(s5_3, s4_4);
-  s6_5 = vsubq_s16(s5_2, s5_5);
-  s6_6 = vsubq_s16(s5_1, s5_6);
-  s6_7 = vsubq_s16(s5_0, s4_7);
+  s6[0] = vaddq_s16(s5[0], s4[7]);
+  s6[1] = vaddq_s16(s5[1], s5[6]);
+  s6[2] = vaddq_s16(s5[2], s5[5]);
+  s6[3] = vaddq_s16(s5[3], s4[4]);
+  s6[4] = vsubq_s16(s5[3], s4[4]);
+  s6[5] = vsubq_s16(s5[2], s5[5]);
+  s6[6] = vsubq_s16(s5[1], s5[6]);
+  s6[7] = vsubq_s16(s5[0], s4[7]);
 
-  s6_10 = sub_multiply_shift_and_narrow_s16(s5_13, s5_10, cospi_16_64);
-  s6_13 = add_multiply_shift_and_narrow_s16(s5_10, s5_13, cospi_16_64);
+  s6[10] = sub_multiply_shift_and_narrow_s16(s5[13], s5[10], cospi_16_64);
+  s6[13] = add_multiply_shift_and_narrow_s16(s5[10], s5[13], cospi_16_64);
 
-  s6_11 = sub_multiply_shift_and_narrow_s16(s5_12, s5_11, cospi_16_64);
-  s6_12 = add_multiply_shift_and_narrow_s16(s5_11, s5_12, cospi_16_64);
+  s6[11] = sub_multiply_shift_and_narrow_s16(s5[12], s5[11], cospi_16_64);
+  s6[12] = add_multiply_shift_and_narrow_s16(s5[11], s5[12], cospi_16_64);
 
-  s6_16 = vaddq_s16(s4_16, s4_23);
-  s6_17 = vaddq_s16(s4_17, s4_22);
-  s6_18 = vaddq_s16(s5_18, s5_21);
-  s6_19 = vaddq_s16(s5_19, s5_20);
-  s6_20 = vsubq_s16(s5_19, s5_20);
-  s6_21 = vsubq_s16(s5_18, s5_21);
-  s6_22 = vsubq_s16(s4_17, s4_22);
-  s6_23 = vsubq_s16(s4_16, s4_23);
-  s6_24 = vsubq_s16(s4_31, s4_24);
-  s6_25 = vsubq_s16(s4_30, s4_25);
-  s6_26 = vsubq_s16(s5_29, s5_26);
-  s6_27 = vsubq_s16(s5_28, s5_27);
-  s6_28 = vaddq_s16(s5_27, s5_28);
-  s6_29 = vaddq_s16(s5_26, s5_29);
-  s6_30 = vaddq_s16(s4_25, s4_30);
-  s6_31 = vaddq_s16(s4_24, s4_31);
+  s6[16] = vaddq_s16(s4[16], s4[23]);
+  s6[17] = vaddq_s16(s4[17], s4[22]);
+  s6[18] = vaddq_s16(s5[18], s5[21]);
+  s6[19] = vaddq_s16(s5[19], s5[20]);
+  s6[20] = vsubq_s16(s5[19], s5[20]);
+  s6[21] = vsubq_s16(s5[18], s5[21]);
+  s6[22] = vsubq_s16(s4[17], s4[22]);
+  s6[23] = vsubq_s16(s4[16], s4[23]);
+  s6[24] = vsubq_s16(s4[31], s4[24]);
+  s6[25] = vsubq_s16(s4[30], s4[25]);
+  s6[26] = vsubq_s16(s5[29], s5[26]);
+  s6[27] = vsubq_s16(s5[28], s5[27]);
+  s6[28] = vaddq_s16(s5[27], s5[28]);
+  s6[29] = vaddq_s16(s5[26], s5[29]);
+  s6[30] = vaddq_s16(s4[25], s4[30]);
+  s6[31] = vaddq_s16(s4[24], s4[31]);
 
   // stage 7
-  s7_0 = vaddq_s16(s6_0, s5_15);
-  s7_1 = vaddq_s16(s6_1, s5_14);
-  s7_2 = vaddq_s16(s6_2, s6_13);
-  s7_3 = vaddq_s16(s6_3, s6_12);
-  s7_4 = vaddq_s16(s6_4, s6_11);
-  s7_5 = vaddq_s16(s6_5, s6_10);
-  s7_6 = vaddq_s16(s6_6, s5_9);
-  s7_7 = vaddq_s16(s6_7, s5_8);
-  s7_8 = vsubq_s16(s6_7, s5_8);
-  s7_9 = vsubq_s16(s6_6, s5_9);
-  s7_10 = vsubq_s16(s6_5, s6_10);
-  s7_11 = vsubq_s16(s6_4, s6_11);
-  s7_12 = vsubq_s16(s6_3, s6_12);
-  s7_13 = vsubq_s16(s6_2, s6_13);
-  s7_14 = vsubq_s16(s6_1, s5_14);
-  s7_15 = vsubq_s16(s6_0, s5_15);
+  s7[0] = vaddq_s16(s6[0], s5[15]);
+  s7[1] = vaddq_s16(s6[1], s5[14]);
+  s7[2] = vaddq_s16(s6[2], s6[13]);
+  s7[3] = vaddq_s16(s6[3], s6[12]);
+  s7[4] = vaddq_s16(s6[4], s6[11]);
+  s7[5] = vaddq_s16(s6[5], s6[10]);
+  s7[6] = vaddq_s16(s6[6], s5[9]);
+  s7[7] = vaddq_s16(s6[7], s5[8]);
+  s7[8] = vsubq_s16(s6[7], s5[8]);
+  s7[9] = vsubq_s16(s6[6], s5[9]);
+  s7[10] = vsubq_s16(s6[5], s6[10]);
+  s7[11] = vsubq_s16(s6[4], s6[11]);
+  s7[12] = vsubq_s16(s6[3], s6[12]);
+  s7[13] = vsubq_s16(s6[2], s6[13]);
+  s7[14] = vsubq_s16(s6[1], s5[14]);
+  s7[15] = vsubq_s16(s6[0], s5[15]);
 
-  s7_20 = sub_multiply_shift_and_narrow_s16(s6_27, s6_20, cospi_16_64);
-  s7_27 = add_multiply_shift_and_narrow_s16(s6_20, s6_27, cospi_16_64);
+  s7[20] = sub_multiply_shift_and_narrow_s16(s6[27], s6[20], cospi_16_64);
+  s7[27] = add_multiply_shift_and_narrow_s16(s6[20], s6[27], cospi_16_64);
 
-  s7_21 = sub_multiply_shift_and_narrow_s16(s6_26, s6_21, cospi_16_64);
-  s7_26 = add_multiply_shift_and_narrow_s16(s6_21, s6_26, cospi_16_64);
+  s7[21] = sub_multiply_shift_and_narrow_s16(s6[26], s6[21], cospi_16_64);
+  s7[26] = add_multiply_shift_and_narrow_s16(s6[21], s6[26], cospi_16_64);
 
-  s7_22 = sub_multiply_shift_and_narrow_s16(s6_25, s6_22, cospi_16_64);
-  s7_25 = add_multiply_shift_and_narrow_s16(s6_22, s6_25, cospi_16_64);
+  s7[22] = sub_multiply_shift_and_narrow_s16(s6[25], s6[22], cospi_16_64);
+  s7[25] = add_multiply_shift_and_narrow_s16(s6[22], s6[25], cospi_16_64);
 
-  s7_23 = sub_multiply_shift_and_narrow_s16(s6_24, s6_23, cospi_16_64);
-  s7_24 = add_multiply_shift_and_narrow_s16(s6_23, s6_24, cospi_16_64);
+  s7[23] = sub_multiply_shift_and_narrow_s16(s6[24], s6[23], cospi_16_64);
+  s7[24] = add_multiply_shift_and_narrow_s16(s6[23], s6[24], cospi_16_64);
 
   // final stage
-  out0 = vaddq_s16(s7_0, s6_31);
-  out1 = vaddq_s16(s7_1, s6_30);
-  out2 = vaddq_s16(s7_2, s6_29);
-  out3 = vaddq_s16(s7_3, s6_28);
-  out4 = vaddq_s16(s7_4, s7_27);
-  out5 = vaddq_s16(s7_5, s7_26);
-  out6 = vaddq_s16(s7_6, s7_25);
-  out7 = vaddq_s16(s7_7, s7_24);
+  out[0] = final_add(s7[0], s6[31]);
+  out[1] = final_add(s7[1], s6[30]);
+  out[2] = final_add(s7[2], s6[29]);
+  out[3] = final_add(s7[3], s6[28]);
+  out[4] = final_add(s7[4], s7[27]);
+  out[5] = final_add(s7[5], s7[26]);
+  out[6] = final_add(s7[6], s7[25]);
+  out[7] = final_add(s7[7], s7[24]);
+  out[8] = final_add(s7[8], s7[23]);
+  out[9] = final_add(s7[9], s7[22]);
+  out[10] = final_add(s7[10], s7[21]);
+  out[11] = final_add(s7[11], s7[20]);
+  out[12] = final_add(s7[12], s6[19]);
+  out[13] = final_add(s7[13], s6[18]);
+  out[14] = final_add(s7[14], s6[17]);
+  out[15] = final_add(s7[15], s6[16]);
+  out[16] = final_sub(s7[15], s6[16]);
+  out[17] = final_sub(s7[14], s6[17]);
+  out[18] = final_sub(s7[13], s6[18]);
+  out[19] = final_sub(s7[12], s6[19]);
+  out[20] = final_sub(s7[11], s7[20]);
+  out[21] = final_sub(s7[10], s7[21]);
+  out[22] = final_sub(s7[9], s7[22]);
+  out[23] = final_sub(s7[8], s7[23]);
+  out[24] = final_sub(s7[7], s7[24]);
+  out[25] = final_sub(s7[6], s7[25]);
+  out[26] = final_sub(s7[5], s7[26]);
+  out[27] = final_sub(s7[4], s7[27]);
+  out[28] = final_sub(s7[3], s6[28]);
+  out[29] = final_sub(s7[2], s6[29]);
+  out[30] = final_sub(s7[1], s6[30]);
+  out[31] = final_sub(s7[0], s6[31]);
 
-  add_and_store_u8_s16(out0, out1, out2, out3, out4, out5, out6, out7, output,
-                       stride);
-
-  out0 = vaddq_s16(s7_8, s7_23);
-  out1 = vaddq_s16(s7_9, s7_22);
-  out2 = vaddq_s16(s7_10, s7_21);
-  out3 = vaddq_s16(s7_11, s7_20);
-  out4 = vaddq_s16(s7_12, s6_19);
-  out5 = vaddq_s16(s7_13, s6_18);
-  out6 = vaddq_s16(s7_14, s6_17);
-  out7 = vaddq_s16(s7_15, s6_16);
-
-  add_and_store_u8_s16(out0, out1, out2, out3, out4, out5, out6, out7,
-                       output + (8 * stride), stride);
-
-  out0 = vsubq_s16(s7_15, s6_16);
-  out1 = vsubq_s16(s7_14, s6_17);
-  out2 = vsubq_s16(s7_13, s6_18);
-  out3 = vsubq_s16(s7_12, s6_19);
-  out4 = vsubq_s16(s7_11, s7_20);
-  out5 = vsubq_s16(s7_10, s7_21);
-  out6 = vsubq_s16(s7_9, s7_22);
-  out7 = vsubq_s16(s7_8, s7_23);
-
-  add_and_store_u8_s16(out0, out1, out2, out3, out4, out5, out6, out7,
-                       output + (16 * stride), stride);
-
-  out0 = vsubq_s16(s7_7, s7_24);
-  out1 = vsubq_s16(s7_6, s7_25);
-  out2 = vsubq_s16(s7_5, s7_26);
-  out3 = vsubq_s16(s7_4, s7_27);
-  out4 = vsubq_s16(s7_3, s6_28);
-  out5 = vsubq_s16(s7_2, s6_29);
-  out6 = vsubq_s16(s7_1, s6_30);
-  out7 = vsubq_s16(s7_0, s6_31);
-
-  add_and_store_u8_s16(out0, out1, out2, out3, out4, out5, out6, out7,
-                       output + (24 * stride), stride);
+  if (highbd_flag) {
+    highbd_add_and_store_bd8(out, output, stride);
+  } else {
+    uint8_t *const outputT = (uint8_t *)output;
+    add_and_store_u8_s16(out[0], out[1], out[2], out[3], out[4], out[5], out[6],
+                         out[7], outputT, stride);
+    add_and_store_u8_s16(out[8], out[9], out[10], out[11], out[12], out[13],
+                         out[14], out[15], outputT + (8 * stride), stride);
+    add_and_store_u8_s16(out[16], out[17], out[18], out[19], out[20], out[21],
+                         out[22], out[23], outputT + (16 * stride), stride);
+    add_and_store_u8_s16(out[24], out[25], out[26], out[27], out[28], out[29],
+                         out[30], out[31], outputT + (24 * stride), stride);
+  }
 }
 
 void vpx_idct32x32_135_add_neon(const tran_low_t *input, uint8_t *dest,
@@ -703,11 +667,11 @@ void vpx_idct32x32_135_add_neon(const tran_low_t *input, uint8_t *dest,
   int16_t temp[32 * 16];
   int16_t *t = temp;
 
-  idct32_12_neon(input, temp);
-  idct32_12_neon(input + 32 * 8, temp + 8);
+  vpx_idct32_12_neon(input, temp);
+  vpx_idct32_12_neon(input + 32 * 8, temp + 8);
 
   for (i = 0; i < 32; i += 8) {
-    idct32_16_neon(t, dest, stride);
+    vpx_idct32_16_neon(t, dest, stride, 0);
     t += (16 * 8);
     dest += 8;
   }

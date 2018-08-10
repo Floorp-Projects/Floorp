@@ -481,7 +481,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /**
      * Gets the display density override value.
      *
-     * @returns Returns a positive number. Will return null if not set.
+     * @return Returns a positive number. Will return null if not set.
      */
     public Float getDisplayDensityOverride() {
         if (mDisplayDensityOverride > 0.0f) {
