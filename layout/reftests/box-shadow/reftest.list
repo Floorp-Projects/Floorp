@@ -11,38 +11,38 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 == boxshadow-rounding.html boxshadow-rounding-ref.html
 # One uses old path, one uses WR box shadow.
 fails-if(Android) == boxshadow-button.html boxshadow-button-ref.html
-fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,999) fuzzy-if(skiaContent,1,12) fuzzy-if(webrender,5-9,1560-1680) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
+fuzzy-if(OSX==1010,0-1,0-24) fuzzy-if(d2d,0-16,0-999) fuzzy-if(skiaContent,0-1,0-12) fuzzy-if(webrender,5-9,1560-1680) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
 fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),98,152) fuzzy-if(skiaContent,13,28) fuzzy-if(webrender,19-19,50-50) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
-fuzzy-if(skiaContent,1,17) random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
-fuzzy-if(skiaContent,1,17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
-random-if(d2d) fuzzy-if(skiaContent,1,212) fuzzy-if(webrender,127,3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
-fuzzy-if(skiaContent,1,50) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
-random-if(d2d) fuzzy-if(skiaContent,1,14) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
-random-if(d2d) fuzzy-if(skiaContent,1,22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
-random-if(d2d) fuzzy-if(skiaContent,1,36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
-fuzzy(2,440) fails-if(webrender) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-98,0-152) fuzzy-if(skiaContent,0-13,0-28) fuzzy-if(webrender,19-19,50-50) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
+fuzzy-if(skiaContent,0-1,0-17) random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
+fuzzy-if(skiaContent,0-1,0-17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
+random-if(d2d) fuzzy-if(skiaContent,0-1,0-212) fuzzy-if(webrender,0-127,0-3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
+fuzzy-if(skiaContent,0-1,0-50) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
+random-if(d2d) fuzzy-if(skiaContent,0-1,0-14) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
+random-if(d2d) fuzzy-if(skiaContent,0-1,0-22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
+random-if(d2d) fuzzy-if(skiaContent,0-1,0-36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
+fuzzy(0-2,0-440) fails-if(webrender) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
-fuzzy(3,500) fuzzy-if(d2d,2,1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
+fuzzy(0-3,0-500) fuzzy-if(d2d,0-2,0-1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html
-fuzzy(26,3610) fuzzy-if(d2d,26,5910) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
+fuzzy(0-26,0-3610) fuzzy-if(d2d,0-26,0-5910) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius-ref.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.
-fuzzy(13,9445) fuzzy-if(d2d,13,10926) fails-if(webrender) == boxshadow-inset-large-offset.html boxshadow-inset-large-offset-ref.html
+fuzzy(0-13,0-9445) fuzzy-if(d2d,0-13,0-10926) fails-if(webrender) == boxshadow-inset-large-offset.html boxshadow-inset-large-offset-ref.html
 
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
-fuzzy-if(webrender,1,655) == 611574-1.html 611574-1-ref.html
-fuzzy-if(webrender,4,144) == 611574-2.html 611574-2-ref.html
-fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) fuzzy-if(webrender,34-34,82-82) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
-fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) fails-if(webrender) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
+fuzzy-if(webrender,0-1,0-655) == 611574-1.html 611574-1-ref.html
+fuzzy-if(webrender,0-4,0-144) == 611574-2.html 611574-2-ref.html
+fuzzy-if(winWidget,0-5,0-30) fuzzy-if(skiaContent,0-16,0-10) fuzzy-if(webrender,34-34,82-82) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
+fuzzy-if(winWidget,0-5,0-30) fuzzy-if(skiaContent,0-16,0-10) fails-if(webrender) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
-fuzzy(159,2) fails-if(!dwrite) == 1212823-1.html 1212823-1-ref.html
+fuzzy(0-159,0-2) fails-if(!dwrite) == 1212823-1.html 1212823-1-ref.html
 == boxshadow-large-offset.html boxshadow-large-offset-ref.html

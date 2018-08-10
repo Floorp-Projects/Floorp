@@ -81,25 +81,37 @@ pub mod parsing {
 
     use synom::Synom;
 
+    enum DeriveInputKind {
+        Struct(Token![struct]),
+        Enum(Token![enum]),
+        Union(Token![union]),
+    }
+
+    impl Synom for DeriveInputKind {
+        named!(parse -> Self, alt!(
+            keyword!(struct) => { DeriveInputKind::Struct }
+            |
+            keyword!(enum) => { DeriveInputKind::Enum }
+            |
+            keyword!(union) => { DeriveInputKind::Union }
+        ));
+    }
+
     impl Synom for DeriveInput {
         named!(parse -> Self, do_parse!(
             attrs: many0!(Attribute::parse_outer) >>
             vis: syn!(Visibility) >>
-            which: alt!(
-                keyword!(struct) => { Ok }
-                |
-                keyword!(enum) => { Err }
-            ) >>
+            which: syn!(DeriveInputKind) >>
             id: syn!(Ident) >>
             generics: syn!(Generics) >>
             item: switch!(value!(which),
-                Ok(s) => map!(data_struct, move |(wh, fields, semi)| DeriveInput {
+                DeriveInputKind::Struct(s) => map!(data_struct, move |(wh, fields, semi)| DeriveInput {
                     ident: id,
                     vis: vis,
                     attrs: attrs,
                     generics: Generics {
                         where_clause: wh,
-                        .. generics
+                        ..generics
                     },
                     data: Data::Struct(DataStruct {
                         struct_token: s,
@@ -108,18 +120,32 @@ pub mod parsing {
                     }),
                 })
                 |
-                Err(e) => map!(data_enum, move |(wh, brace, variants)| DeriveInput {
+                DeriveInputKind::Enum(e) => map!(data_enum, move |(wh, brace, variants)| DeriveInput {
                     ident: id,
                     vis: vis,
                     attrs: attrs,
                     generics: Generics {
                         where_clause: wh,
-                        .. generics
+                        ..generics
                     },
                     data: Data::Enum(DataEnum {
                         variants: variants,
                         brace_token: brace,
                         enum_token: e,
+                    }),
+                })
+                |
+                DeriveInputKind::Union(u) => map!(data_union, move |(wh, fields)| DeriveInput {
+                    ident: id,
+                    vis: vis,
+                    attrs: attrs,
+                    generics: Generics {
+                        where_clause: wh,
+                        ..generics
+                    },
+                    data: Data::Union(DataUnion {
+                        union_token: u,
+                        fields: fields,
                     }),
                 })
             ) >>
@@ -156,6 +182,11 @@ pub mod parsing {
         wh: option!(syn!(WhereClause)) >>
         data: braces!(Punctuated::parse_terminated) >>
         (wh, data.0, data.1)
+    ));
+
+    named!(data_union -> (Option<WhereClause>, FieldsNamed), tuple!(
+        option!(syn!(WhereClause)),
+        syn!(FieldsNamed),
     ));
 }
 

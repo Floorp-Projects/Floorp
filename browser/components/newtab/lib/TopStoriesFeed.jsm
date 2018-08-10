@@ -25,7 +25,7 @@ const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
 const SECTION_ID = "topstories";
 const SPOC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.spoc.impressions";
 const REC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.rec.impressions";
-const MAX_LIFETIME_CAP = 100; // Guard against misconfiguration on the server
+const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 
 this.TopStoriesFeed = class TopStoriesFeed {
   constructor() {
@@ -35,33 +35,52 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this._prefs = new Prefs();
   }
 
-  init() {
-    const initFeed = () => {
-      SectionsManager.enableSection(SECTION_ID);
-      try {
-        const {options} = SectionsManager.sections.get(SECTION_ID);
-        const apiKey = this.getApiKeyFromPref(options.api_key_pref);
-        this.stories_endpoint = this.produceFinalEndpointUrl(options.stories_endpoint, apiKey);
-        this.topics_endpoint = this.produceFinalEndpointUrl(options.topics_endpoint, apiKey);
-        this.read_more_endpoint = options.read_more_endpoint;
-        this.stories_referrer = options.stories_referrer;
-        this.personalized = options.personalized;
-        this.show_spocs = options.show_spocs;
-        this.maxHistoryQueryResults = options.maxHistoryQueryResults;
-        this.storiesLastUpdated = 0;
-        this.topicsLastUpdated = 0;
-        this.domainAffinitiesLastUpdated = 0;
+  async onInit() {
+    SectionsManager.enableSection(SECTION_ID);
+    try {
+      const {options} = SectionsManager.sections.get(SECTION_ID);
+      const apiKey = this.getApiKeyFromPref(options.api_key_pref);
+      // Set this to true if we're not loading from cache.
+      let shouldBroadcast = false;
+      this.stories_endpoint = this.produceFinalEndpointUrl(options.stories_endpoint, apiKey);
+      this.topics_endpoint = this.produceFinalEndpointUrl(options.topics_endpoint, apiKey);
+      this.read_more_endpoint = options.read_more_endpoint;
+      this.stories_referrer = options.stories_referrer;
+      this.personalized = options.personalized;
+      this.show_spocs = options.show_spocs;
+      this.maxHistoryQueryResults = options.maxHistoryQueryResults;
+      this.storiesLastUpdated = 0;
+      this.topicsLastUpdated = 0;
+      this.storiesLoaded = false;
+      this.domainAffinitiesLastUpdated = 0;
 
-        this.loadCachedData();
-        this.fetchStories();
-        this.fetchTopics();
-
-        Services.obs.addObserver(this, "idle-daily");
-      } catch (e) {
-        Cu.reportError(`Problem initializing top stories feed: ${e.message}`);
+      // Cache is used for new page loads, which shouldn't have changed data.
+      // If we have changed data, cache should be cleared,
+      // and last updated should be 0, and we can fetch.
+      // Think there is a bug here.
+      await this.loadCachedData();
+      if (this.storiesLastUpdated === 0) {
+        shouldBroadcast = true;
+        await this.fetchStories();
       }
-    };
-    SectionsManager.onceInitialized(initFeed);
+      if (this.topicsLastUpdated === 0) {
+        shouldBroadcast = true;
+        await this.fetchTopics();
+      }
+      this.doContentUpdate(shouldBroadcast);
+      this.storiesLoaded = true;
+
+      // This is filtered so an update function can return true to retry on the next run
+      this.contentUpdateQueue = this.contentUpdateQueue.filter(update => update());
+
+      Services.obs.addObserver(this, "idle-daily");
+    } catch (e) {
+      Cu.reportError(`Problem initializing top stories feed: ${e.message}`);
+    }
+  }
+
+  init() {
+    SectionsManager.onceInitialized(this.onInit.bind(this));
   }
 
   observe(subject, topic, data) {
@@ -73,8 +92,24 @@ this.TopStoriesFeed = class TopStoriesFeed {
   }
 
   uninit() {
+    this.storiesLoaded = false;
+    this.cache.set("stories", {});
+    this.cache.set("topics", {});
     Services.obs.removeObserver(this, "idle-daily");
     SectionsManager.disableSection(SECTION_ID);
+  }
+
+  doContentUpdate(shouldBroadcast) {
+    let updateProps = {};
+    if (this.stories) {
+      updateProps.rows = this.stories;
+    }
+    if (this.topics) {
+      Object.assign(updateProps, {topics: this.topics, read_more_endpoint: this.read_more_endpoint});
+    }
+
+    // We should only be calling this once per init.
+    this.dispatchUpdateEvent(shouldBroadcast, updateProps);
   }
 
   async fetchStories() {
@@ -97,13 +132,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.spocs = this.transform(body.spocs).filter(s => s.score >= s.min_score);
         this.cleanUpCampaignImpressionPref();
       }
-
-      this.dispatchUpdateEvent(this.storiesLastUpdated, {rows: this.stories});
       this.storiesLastUpdated = Date.now();
       body._timestamp = this.storiesLastUpdated;
-      // This is filtered so an update function can return true to retry on the next run
-      this.contentUpdateQueue = this.contentUpdateQueue.filter(update => update());
-
       this.cache.set("stories", body);
     } catch (error) {
       Cu.reportError(`Failed to fetch content: ${error.message}`);
@@ -123,11 +153,11 @@ this.TopStoriesFeed = class TopStoriesFeed {
     if (stories && stories.length > 0 && this.storiesLastUpdated === 0) {
       this.updateSettings(data.stories.settings);
       const rows = this.transform(stories);
-      this.dispatchUpdateEvent(this.storiesLastUpdated, {rows});
+      this.stories = rows;
       this.storiesLastUpdated = data.stories._timestamp;
     }
     if (topics && topics.length > 0 && this.topicsLastUpdated === 0) {
-      this.dispatchUpdateEvent(this.topicsLastUpdated, {topics, read_more_endpoint: this.read_more_endpoint});
+      this.topics = topics;
       this.topicsLastUpdated = data.topics._timestamp;
     }
   }
@@ -169,7 +199,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       const body = await response.json();
       const {topics} = body;
       if (topics) {
-        this.dispatchUpdateEvent(this.topicsLastUpdated, {topics, read_more_endpoint: this.read_more_endpoint});
+        this.topics = topics;
         this.topicsLastUpdated = Date.now();
         body._timestamp = this.topicsLastUpdated;
         this.cache.set("topics", body);
@@ -179,8 +209,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
     }
   }
 
-  dispatchUpdateEvent(lastUpdated, data) {
-    SectionsManager.updateSection(SECTION_ID, data, lastUpdated === 0);
+  dispatchUpdateEvent(shouldBroadcast, data) {
+    SectionsManager.updateSection(SECTION_ID, data, shouldBroadcast);
   }
 
   compareScore(a, b) {
@@ -320,7 +350,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return false;
     };
 
-    if (this.stories) {
+    if (this.storiesLoaded) {
       updateContent();
     } else {
       // Delay updating tab content until initial data has been fetched
@@ -448,18 +478,20 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.init();
   }
 
-  onAction(action) {
+  async onAction(action) {
     switch (action.type) {
       case at.INIT:
         this.init();
         break;
       case at.SYSTEM_TICK:
         if (Date.now() - this.storiesLastUpdated >= STORIES_UPDATE_TIME) {
-          this.fetchStories();
+          await this.fetchStories();
         }
         if (Date.now() - this.topicsLastUpdated >= TOPICS_UPDATE_TIME) {
-          this.fetchTopics();
+          await this.fetchTopics();
         }
+
+        this.doContentUpdate(false);
         break;
       case at.UNINIT:
         this.uninit();

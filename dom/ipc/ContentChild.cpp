@@ -1647,6 +1647,9 @@ StartMacOSContentSandbox()
     CGSShutdownServerConnections();
     CGError result = CGSSetDenyWindowServerConnections(true);
     MOZ_DIAGNOSTIC_ASSERT(result == kCGErrorSuccess);
+#if !MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    Unused << result;
+#endif
   }
 
   nsAutoCString appPath, appBinaryPath, appDir;

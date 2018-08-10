@@ -495,7 +495,7 @@ class tp5n(PageloaderTest):
     tppagecycles = 1
     cycles = 1
     tpmozafterpaint = True
-    tptimeout = 5000
+    tptimeout = 10000
     mainthread = True
     w7_counters = []
     win_counters = []

@@ -1,21 +1,38 @@
 .search-wrapper {
-  $search-height: 35px;
-  $search-icon-size: 18px;
-  $search-icon-padding: 8px;
-  $search-icon-width: 2 * $search-icon-padding + $search-icon-size;
-  $search-input-left-label-width: 35px;
-  $search-button-width: 36px;
+  $search-height: 48px;
+  $search-icon-size: 24px;
+  $search-icon-padding: 12px;
+  $search-icon-width: 2 * $search-icon-padding + $search-icon-size -2;
+  $search-button-width: 48px;
   $glyph-forward: url('chrome://browser/skin/forward.svg');
 
-  cursor: default;
-  display: flex;
-  height: $search-height;
-  margin-bottom: $section-spacing;
-  position: relative;
-  width: 100%;
+  background-color: var(--newtab-background-color);
+  padding: 34px 0 64px;
+
+  @media (max-height: 700px) {
+    & {
+      padding: 0 0 30px;
+    }
+  }
+
+  .search-inner-wrapper {
+    cursor: default;
+    display: flex;
+    height: $search-height;
+    position: relative;
+    width: 100%;
+  }
+
+  @media (min-width: $break-point-large) {
+    .search-inner-wrapper {
+      margin: 0 auto;
+      width: $max-searchbar-width;
+    }
+  }
 
   input {
-    background: var(--newtab-textbox-background-color) var(--newtab-search-icon) $search-icon-padding center / $search-icon-size no-repeat;
+    background: var(--newtab-textbox-background-color) var(--newtab-search-icon) $search-icon-padding center no-repeat;
+    background-size: $search-icon-size;
     border: solid 1px var(--newtab-search-border-color);
     box-shadow: $shadow-secondary, 0 0 0 1px $black-15;
     font-size: 15px;
@@ -65,6 +82,44 @@
 
     &:dir(rtl) {
       transform: scaleX(-1);
+    }
+  }
+}
+
+@media (min-height: 701px) {
+  .fixed-search {
+    main {
+      padding-top: 146px;
+    }
+
+    .search-wrapper {
+      $search-header-bar-height: 95px;
+      $search-height: 35px;
+      $search-icon-size: 16px;
+      $search-icon-padding: 16px;
+
+      background-color: var(--newtab-search-header-background-color);
+      border-bottom: solid 1px var(--newtab-border-secondary-color);
+      height: $search-header-bar-height;
+      left: 0;
+      padding: 30px 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 9;
+
+      .search-inner-wrapper {
+        height: $search-height;
+      }
+
+      input {
+        background-position-x: $search-icon-padding;
+        background-size: $search-icon-size;
+
+        &:dir(rtl) {
+          background-position-x: right $search-icon-padding;
+        }
+      }
     }
   }
 }
@@ -149,5 +204,11 @@
         color: var(--newtab-text-primary-color);
       }
     }
+  }
+
+  .contentSearchHeaderRow > td > img,
+  .contentSearchSuggestionRow > td > .historyIcon {
+    margin-inline-start: 7px;
+    margin-inline-end: 15px;
   }
 }

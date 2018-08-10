@@ -1,22 +1,22 @@
 # The following tests test the async positioning of the scrollbars.
 # Basic root-frame scrollbar with async scrolling
 fuzzy-if(Android,1-1,2-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html # bug 1392259
-fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
-fuzzy-if(Android,3,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
+fuzzy-if(Android,0-4,0-5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
+fuzzy-if(Android,0-3,0-5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
 fuzzy-if(Android,1-1,2-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html # bug 1392259
-fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
-fuzzy-if(Android,3,7) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
+fuzzy-if(Android,0-4,0-5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
+fuzzy-if(Android,0-3,0-7) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
 
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
-fuzzy-if(Android,54,20) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
-fuzzy-if(Android,45,26) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
+fuzzy-if(Android,0-54,0-20) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
+fuzzy-if(Android,0-45,0-26) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
 
 # Test scrollbars working properly with pinch-zooming, i.e. different document resolutions.
 # As above, the end of the scrollthumb won't match perfectly, but the bulk of the scrollbar should be present and identical.
-fuzzy-if(Android,54,14) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
-fuzzy-if(Android,51,22) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
+fuzzy-if(Android,0-54,0-14) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
+fuzzy-if(Android,0-51,0-22) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
 
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html
