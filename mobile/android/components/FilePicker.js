@@ -72,11 +72,8 @@ FilePicker.prototype = {
       this.appendFilter("*.xml");
     }
 
-    if (aFilterMask & Ci.nsIFilePicker.xulFilter) {
+    if (aFilterMask & Ci.nsIFilePicker.filterXUL) {
       this.appendFilter("*.xul");
-    }
-
-    if (aFilterMask & Ci.nsIFilePicker.xulFilter) {
       this.appendFilter("..apps");
     }
   },
