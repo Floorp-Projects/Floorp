@@ -796,6 +796,39 @@ protected: // Shouldn't be used by friend classes
                                   Element& aElement);
 
   /**
+   * GetSelectedNode() returns an element node which is in first range of
+   * aSelection.  The rule is a little bit complicated and the rules do not
+   * make sense except in a few cases.  If you want to use this newly,
+   * you should create new method instead.  This needs to be here for
+   * comm-central.
+   * The rules are:
+   *   1. If Selection selects an element node, i.e., both containers are
+   *      same node and start offset and end offset is start offset + 1.
+   *      (XXX However, if last child is selected, this path is not used.)
+   *   2. If the argument is "href", look for anchor elements whose href
+   *      attribute is not empty from container of anchor/focus of Selection
+   *      to <body> element.  Then, both result are same one, returns the node.
+   *      (i.e., this allows collapsed selection.)
+   *   3. If the Selection is collapsed, returns null.
+   *   4. Otherwise, listing up all nodes with content iterator (post-order).
+   *     4-1. When first element node does *not* match with the argument,
+   *          *returns* the element.
+   *     4-2. When first element node matches with the argument, returns
+   *          *next* element node.
+   * XXX This may return non-element node in some cases.  Perhaps, it's a
+   *     bug.
+   *
+   * @param aSelection          The Selection.
+   * @param aTagName            The name of element which you looking for.
+   * @param aRv                 Returns error code.
+   * @return                    An element in first range of aSelection.
+   */
+  already_AddRefed<nsINode>
+  GetSelectedNode(Selection& aSelection,
+                  const nsAString& aTagName,
+                  ErrorResult& aRv);
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
