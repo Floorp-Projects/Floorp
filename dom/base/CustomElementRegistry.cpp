@@ -302,7 +302,13 @@ CustomElementRegistry::IsCustomElementEnabled(JSContext* aCx, JSObject* aObject)
     return true;
   }
 
-  return XRE_IsParentProcess() && nsContentUtils::AllowXULXBLForPrincipal(nsContentUtils::ObjectPrincipal(aObject));
+  if (!XRE_IsParentProcess()) {
+    return false;
+  }
+
+  nsIPrincipal* principal =
+    nsContentUtils::ObjectPrincipal(js::UncheckedUnwrap(aObject));
+  return nsContentUtils::AllowXULXBLForPrincipal(principal);
 }
 
 bool
