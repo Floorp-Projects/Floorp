@@ -1022,7 +1022,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "112544416a2d"
+        "revision": "13c641ab0e76"
     }, 
     "ne-NP": {
         "platforms": [
@@ -1472,6 +1472,6 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "c970ffcee374"
+        "revision": "487a635162cc"
     }
 }
