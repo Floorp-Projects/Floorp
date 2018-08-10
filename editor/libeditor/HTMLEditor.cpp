@@ -2642,7 +2642,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
 
   ErrorResult error;
   RefPtr<nsAtom> tagName = GetLowerCaseNameAtom(aTagName);
-  RefPtr<nsINode> selectedNode = GetSelectedNode(*selection, tagName, error);
+  RefPtr<nsINode> selectedNode = GetSelectedElement(*selection, tagName, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -2650,10 +2650,10 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   return NS_OK;
 }
 
-already_AddRefed<nsINode>
-HTMLEditor::GetSelectedNode(Selection& aSelection,
-                            const nsAtom* aTagName,
-                            ErrorResult& aRv)
+already_AddRefed<Element>
+HTMLEditor::GetSelectedElement(Selection& aSelection,
+                               const nsAtom* aTagName,
+                               ErrorResult& aRv)
 {
   MOZ_ASSERT(!aRv.Failed());
 
@@ -2675,14 +2675,22 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
   // Optimization for a single selected element
   if (startContainer && startContainer == endContainer &&
       startNode && endNode && startNode->GetNextSibling() == endNode) {
-    nsCOMPtr<nsINode> selectedNode = startNode;
-    if (selectedNode) {
-      // Test for appropriate node type requested
-      if (!aTagName || aTagName == selectedNode->NodeInfo()->NameAtom() ||
-          (isLinkTag && HTMLEditUtils::IsLink(selectedNode)) ||
-          (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(selectedNode))) {
-        return selectedNode.forget();
+    if (!aTagName) {
+      if (NS_WARN_IF(!startNode->IsElement())) {
+        // XXX Keep not returning error in this case, but perhaps, we should
+        //     look for element node.
+        return nullptr;
       }
+      RefPtr<Element> selectedElement = startNode->AsElement();
+      return selectedElement.forget();
+    }
+    // Test for appropriate node type requested
+    if (aTagName == startNode->NodeInfo()->NameAtom() ||
+        (isLinkTag && HTMLEditUtils::IsLink(startNode)) ||
+        (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(startNode))) {
+      MOZ_ASSERT(startNode->IsElement());
+      RefPtr<Element> selectedElement = startNode->AsElement();
+      return selectedElement.forget();
     }
   }
 
@@ -2794,15 +2802,6 @@ HTMLEditor::GetSelectedNode(Selection& aSelection,
     iter->Next();
   }
   return selectedElement.forget();
-}
-
-already_AddRefed<Element>
-HTMLEditor::GetSelectedElement(const nsAString& aTagName)
-{
-  nsCOMPtr<nsISupports> domElement;
-  GetSelectedElement(aTagName, getter_AddRefs(domElement));
-  nsCOMPtr<Element> element = do_QueryInterface(domElement);
-  return element.forget();
 }
 
 already_AddRefed<Element>
@@ -4740,7 +4739,9 @@ HTMLEditor::GetSelectionContainer()
 
       if (startContainer == endContainer && startOffset + 1 == endOffset) {
         MOZ_ASSERT(!focusNode, "How did it get set already?");
-        focusNode = GetSelectedElement(EmptyString());
+        IgnoredErrorResult error;
+        focusNode = GetSelectedElement(*selection, nullptr, error);
+        NS_WARNING_ASSERTION(!error.Failed(), "Failed to get selected element");
       }
       if (!focusNode) {
         focusNode = range->GetCommonAncestor();
