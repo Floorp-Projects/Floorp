@@ -25,7 +25,7 @@ Services
   addEventListener("load", function(event) {
     let subframe = event.target != content.document;
     sendAsyncMessage("tps:loadEvent", {subframe: subframe, url: event.target.documentURI});
-  }, true)`), true);
+  }, true)`), true, true);
 
 var BrowserTabs = {
   /**
