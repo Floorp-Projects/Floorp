@@ -291,7 +291,7 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS)
 
       RefPtr<TabChild> tabChild = TabChild::GetFrom(rootDocShell);
       if (tabChild) {
-        RefPtr<TabChildGlobal> mm = tabChild->GetMessageManager();
+        RefPtr<TabChildMessageManager> mm = tabChild->GetMessageManager();
         if (mm) {
           // MarkForCC ends up calling UnmarkGray on message listeners, which
           // TraceBlackJS can't do yet.
@@ -503,8 +503,8 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
         }
 
         if (window->IsRootOuterWindow()) {
-          // In child process trace all the TabChildGlobals.
-          // Since there is one root outer window per TabChildGlobal, we need
+          // In child process trace all the TabChildMessageManagers.
+          // Since there is one root outer window per TabChildMessageManager, we need
           // to look for only those windows, not all.
           nsIDocShell* ds = window->GetDocShell();
           if (ds) {

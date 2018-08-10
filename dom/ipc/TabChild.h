@@ -80,17 +80,17 @@ class ClonedMessageData;
 class CoalescedMouseData;
 class CoalescedWheelData;
 
-class TabChildGlobal : public ContentFrameMessageManager,
-                       public nsIMessageSender,
-                       public nsIScriptObjectPrincipal,
-                       public nsIGlobalObject,
-                       public nsSupportsWeakReference
+class TabChildMessageManager : public ContentFrameMessageManager,
+                               public nsIMessageSender,
+                               public nsIScriptObjectPrincipal,
+                               public nsIGlobalObject,
+                               public nsSupportsWeakReference
 {
 public:
-  explicit TabChildGlobal(TabChild* aTabChild);
+  explicit TabChildMessageManager(TabChild* aTabChild);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildMessageManager, DOMEventTargetHelper)
 
   void MarkForCC();
 
@@ -132,7 +132,7 @@ public:
   RefPtr<TabChild> mTabChild;
 
 protected:
-  ~TabChildGlobal();
+  ~TabChildMessageManager();
 };
 
 class ContentListener final : public nsIDOMEventListener
@@ -201,7 +201,7 @@ protected:
   bool UpdateFrameHandler(const mozilla::layers::FrameMetrics& aFrameMetrics);
 
 protected:
-  RefPtr<TabChildGlobal> mTabChildGlobal;
+  RefPtr<TabChildMessageManager> mTabChildGlobal;
   nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
@@ -279,7 +279,7 @@ public:
 
   FORWARD_SHMEM_ALLOCATOR_TO(PBrowserChild)
 
-  TabChildGlobal* GetMessageManager()
+  TabChildMessageManager* GetMessageManager()
   {
     return mTabChildGlobal;
   }

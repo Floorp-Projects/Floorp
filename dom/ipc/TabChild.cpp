@@ -2771,7 +2771,7 @@ TabChild::InitTabChildGlobal()
     nsCOMPtr<EventTarget> chromeHandler = window->GetChromeEventHandler();
     NS_ENSURE_TRUE(chromeHandler, false);
 
-    RefPtr<TabChildGlobal> scope = mTabChildGlobal = new TabChildGlobal(this);
+    RefPtr<TabChildMessageManager> scope = mTabChildGlobal = new TabChildMessageManager(this);
 
     NS_NAMED_LITERAL_CSTRING(globalId, "outOfProcessTabChildGlobal");
     if (NS_WARN_IF(!InitChildGlobalInternal(globalId))) {
@@ -3538,50 +3538,50 @@ TabChild::SetHasSiblings(bool aHasSiblings)
   return NS_OK;
 }
 
-TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
+TabChildMessageManager::TabChildMessageManager(TabChild* aTabChild)
 : ContentFrameMessageManager(new nsFrameMessageManager(aTabChild)),
   mTabChild(aTabChild)
 {
 }
 
-TabChildGlobal::~TabChildGlobal()
+TabChildMessageManager::~TabChildMessageManager()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildGlobal)
+NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildMessageManager)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChildGlobal,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChildMessageManager,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild);
   tmp->UnlinkHostObjectURIs();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TabChildGlobal,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TabChildMessageManager,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
   tmp->TraverseHostObjectURIs(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabChildGlobal)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabChildMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(TabChildGlobal, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(TabChildGlobal, DOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(TabChildMessageManager, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(TabChildMessageManager, DOMEventTargetHelper)
 
 bool
-TabChildGlobal::WrapGlobalObject(JSContext* aCx,
-                                 JS::RealmOptions& aOptions,
-                                 JS::MutableHandle<JSObject*> aReflector)
+TabChildMessageManager::WrapGlobalObject(JSContext* aCx,
+                                         JS::RealmOptions& aOptions,
+                                         JS::MutableHandle<JSObject*> aReflector)
 {
   bool ok = ContentFrameMessageManager_Binding::Wrap(aCx, this, this, aOptions,
-                                                       nsJSPrincipals::get(mTabChild->GetPrincipal()),
-                                                       true, aReflector);
+                                                     nsJSPrincipals::get(mTabChild->GetPrincipal()),
+                                                     true, aReflector);
   if (ok) {
     // Since we can't rewrap we have to preserve the global's wrapper here.
     PreserveWrapper(ToSupports(this));
@@ -3590,7 +3590,7 @@ TabChildGlobal::WrapGlobalObject(JSContext* aCx,
 }
 
 void
-TabChildGlobal::MarkForCC()
+TabChildMessageManager::MarkForCC()
 {
   if (mTabChild) {
     mTabChild->MarkScopesForCC();
@@ -3603,7 +3603,7 @@ TabChildGlobal::MarkForCC()
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
-TabChildGlobal::GetContent(ErrorResult& aError)
+TabChildMessageManager::GetContent(ErrorResult& aError)
 {
   if (!mTabChild) {
     aError.Throw(NS_ERROR_NULL_POINTER);
@@ -3615,7 +3615,7 @@ TabChildGlobal::GetContent(ErrorResult& aError)
 }
 
 already_AddRefed<nsIDocShell>
-TabChildGlobal::GetDocShell(ErrorResult& aError)
+TabChildMessageManager::GetDocShell(ErrorResult& aError)
 {
   if (!mTabChild) {
     aError.Throw(NS_ERROR_NULL_POINTER);
@@ -3626,14 +3626,14 @@ TabChildGlobal::GetDocShell(ErrorResult& aError)
 }
 
 already_AddRefed<nsIEventTarget>
-TabChildGlobal::GetTabEventTarget()
+TabChildMessageManager::GetTabEventTarget()
 {
   nsCOMPtr<nsIEventTarget> target = EventTargetFor(TaskCategory::Other);
   return target.forget();
 }
 
 uint64_t
-TabChildGlobal::ChromeOuterWindowID()
+TabChildMessageManager::ChromeOuterWindowID()
 {
   if (!mTabChild) {
     return 0;
@@ -3642,7 +3642,7 @@ TabChildGlobal::ChromeOuterWindowID()
 }
 
 nsIPrincipal*
-TabChildGlobal::GetPrincipal()
+TabChildMessageManager::GetPrincipal()
 {
   if (!mTabChild)
     return nullptr;
@@ -3650,14 +3650,14 @@ TabChildGlobal::GetPrincipal()
 }
 
 JSObject*
-TabChildGlobal::GetGlobalJSObject()
+TabChildMessageManager::GetGlobalJSObject()
 {
   NS_ENSURE_TRUE(mTabChild, nullptr);
   return GetWrapper();
 }
 
 nsresult
-TabChildGlobal::Dispatch(TaskCategory aCategory,
+TabChildMessageManager::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
 {
   if (mTabChild && mTabChild->TabGroup()) {
@@ -3667,7 +3667,7 @@ TabChildGlobal::Dispatch(TaskCategory aCategory,
 }
 
 nsISerialEventTarget*
-TabChildGlobal::EventTargetFor(TaskCategory aCategory) const
+TabChildMessageManager::EventTargetFor(TaskCategory aCategory) const
 {
   if (mTabChild && mTabChild->TabGroup()) {
     return mTabChild->TabGroup()->EventTargetFor(aCategory);
@@ -3676,7 +3676,7 @@ TabChildGlobal::EventTargetFor(TaskCategory aCategory) const
 }
 
 AbstractThread*
-TabChildGlobal::AbstractMainThreadFor(TaskCategory aCategory)
+TabChildMessageManager::AbstractMainThreadFor(TaskCategory aCategory)
 {
   if (mTabChild && mTabChild->TabGroup()) {
     return mTabChild->TabGroup()->AbstractMainThreadFor(aCategory);
