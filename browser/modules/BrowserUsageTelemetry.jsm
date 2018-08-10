@@ -281,7 +281,7 @@ let URICountListener = {
         } else {
           type = "organic";
         }
-        let payload = `google.in-content.${type}:${code || "none"}`;
+        let payload = `google.in-content:${type}:${code || "none"}`;
 
         let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
         histogram.add(payload);
