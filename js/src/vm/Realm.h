@@ -451,7 +451,7 @@ class JS::Realm : public JS::shadow::Realm
     Realm(JS::Compartment* comp, const JS::RealmOptions& options);
     ~Realm();
 
-    MOZ_MUST_USE bool init(JSContext* cx);
+    MOZ_MUST_USE bool init(JSContext* cx, JSPrincipals* principals);
     void destroy(js::FreeOp* fop);
     void clearTables();
 
@@ -500,6 +500,7 @@ class JS::Realm : public JS::shadow::Realm
     }
     void setIsSelfHostingRealm() {
         isSelfHostingRealm_ = true;
+        isSystem_ = true;
     }
 
     /* The global object for this realm.
@@ -678,19 +679,6 @@ class JS::Realm : public JS::shadow::Realm
 
     bool isSystem() const {
         return isSystem_;
-    }
-    void setIsSystem(bool isSystem) {
-        if (isSystem_ == isSystem)
-            return;
-
-        // If we change `isSystem*(`, we need to unlink immediately this realm
-        // from its PerformanceGroup. For one thing, the performance data we
-        // collect should not be improperly associated to a group to which we
-        // do not belong anymore. For another thing, we use `isSystem()` as part
-        // of the key to map realms to a `PerformanceGroup`, so if we do not
-        // unlink now, this will be too late once we have updated `isSystem_`.
-        performanceMonitoring.unlink();
-        isSystem_ = isSystem;
     }
 
     // Used to approximate non-content code when reporting telemetry.

@@ -5314,6 +5314,13 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
         if (v.isBoolean())
             behaviors.setDisableLazyParsing(v.toBoolean());
 
+        if (!JS_GetProperty(cx, opts, "systemPrincipal", &v))
+            return false;
+        if (v.isBoolean()) {
+            principals = &ShellPrincipals::fullyTrusted;
+            JS_HoldPrincipals(principals);
+        }
+
         if (!JS_GetProperty(cx, opts, "principal", &v))
             return false;
         if (!v.isUndefined()) {
@@ -5324,6 +5331,17 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
             if (!principals)
                 return false;
             JS_HoldPrincipals(principals);
+        }
+    }
+
+    if (creationOptions.compartmentSpecifier() == JS::CompartmentSpecifier::ExistingCompartment) {
+        JS::Compartment* comp = creationOptions.compartment();
+        bool isSystem = principals && principals == cx->runtime()->trustedPrincipals();
+        if (isSystem != IsSystemCompartment(comp)) {
+            JS_ReportErrorASCII(cx,
+                                "Cannot create system and non-system realms in the "
+                                "same compartment");
+            return false;
         }
     }
 
@@ -7288,13 +7306,15 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "      disableLazyParsing: If true, don't create lazy scripts for functions\n"
 "         (default false).\n"
 "      principal: if present, its value converted to a number must be an\n"
-"         integer that fits in 32 bits; use that as the new compartment's\n"
+"         integer that fits in 32 bits; use that as the new realm's\n"
 "         principal. Shell principals are toys, meant only for testing; one\n"
 "         shell principal subsumes another if its set bits are a superset of\n"
 "         the other's. Thus, a principal of 0 subsumes nothing, while a\n"
 "         principals of ~0 subsumes all other principals. The absence of a\n"
 "         principal is treated as if its bits were 0xffff, for subsumption\n"
-"         purposes. If this property is omitted, supply no principal."),
+"         purposes. If this property is omitted, supply no principal.\n"
+"      systemPrincipal: If true, use the shell's trusted principals for the\n"
+"         new realm. This creates a realm that's marked as a 'system' realm."),
 
     JS_FN_HELP("nukeCCW", NukeCCW, 1, 0,
 "nukeCCW(wrapper)",
