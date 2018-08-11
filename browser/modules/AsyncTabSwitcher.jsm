@@ -104,6 +104,12 @@ class AsyncTabSwitcher {
     // True if we're in the midst of switching tabs.
     this.switchInProgress = false;
 
+    // Transaction id for the composite that will show the requested
+    // tab for the first tab after a tab switch.
+    // Set to -1 when we're not waiting for notification of a
+    // completed switch.
+    this.switchPaintId = -1;
+
     // Set of tabs that might be visible right now. We maintain
     // this set because we can't be sure when a tab is actually
     // drawn. A tab is added to this set when we ask to make it
@@ -733,7 +739,18 @@ class AsyncTabSwitcher {
   // Fires when we paint the screen. Any tab switches we initiated
   // previously are done, so there's no need to keep the old layers
   // around.
-  onPaint() {
+  onPaint(event) {
+    if (this.switchPaintId != -1 &&
+        event.transactionId >= this.switchPaintId) {
+      let time = TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+      if (time != -1) {
+        TelemetryStopwatch.finish("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+        this.log("DEBUG: tab switch time including compositing = " + time);
+      }
+      this.addMarker("AsyncTabSwitch:Composited");
+      this.switchPaintId = -1;
+    }
+
     this.maybeVisibleTabs.clear();
   }
 
@@ -1027,7 +1044,7 @@ class AsyncTabSwitcher {
         this.onLayersReady(event.originalTarget);
         break;
       case "MozAfterPaint":
-        this.onPaint();
+        this.onPaint(event);
         break;
       case "MozLayerTreeCleared":
         this.onLayersCleared(event.originalTarget);
@@ -1059,6 +1076,9 @@ class AsyncTabSwitcher {
   startTabSwitch() {
     TelemetryStopwatch.cancel("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
     TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
+
+    TelemetryStopwatch.cancel("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+    TelemetryStopwatch.start("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
     this.addMarker("AsyncTabSwitch:Start");
     this.switchInProgress = true;
   }
