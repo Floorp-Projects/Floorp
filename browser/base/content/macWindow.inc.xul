@@ -17,7 +17,7 @@
 
 <script type="application/javascript" src="chrome://browser/content/nonbrowser-mac.js"></script>
 
-# All sets except for popupsets (commands, keys, stringbundles and broadcasters)
+# All sets except for popupsets (commands, keys, and stringbundles)
 # *must* go into the browser-sets.inc file so that they can be shared with
 # browser.xul
 #include browser-sets.inc

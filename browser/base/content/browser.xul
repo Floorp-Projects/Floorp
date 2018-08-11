@@ -81,7 +81,7 @@ xmlns="http://www.w3.org/1999/xhtml"
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
 </script>
 
-# All sets except for popupsets (commands, keys, stringbundles and broadcasters)
+# All sets except for popupsets (commands, keys, and stringbundles)
 # *must* go into the browser-sets.inc file so that they can be shared with other
 # top level windows in macWindow.inc.xul.
 #include browser-sets.inc
