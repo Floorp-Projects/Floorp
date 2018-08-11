@@ -28,6 +28,18 @@ Object.keys(_sources).forEach(function (key) {
   });
 });
 
+var _tabs = require("../reducers/tabs");
+
+Object.keys(_tabs).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _tabs[key];
+    }
+  });
+});
+
 var _pause = require("../reducers/pause");
 
 Object.keys(_pause).forEach(function (key) {

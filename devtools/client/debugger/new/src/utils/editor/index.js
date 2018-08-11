@@ -193,9 +193,13 @@ function isVisible(codeMirror, top, left) {
 
   const scrollArea = codeMirror.getScrollInfo();
   const charWidth = codeMirror.defaultCharWidth();
-  const inXView = withinBounds(left, scrollArea.left, scrollArea.left + (scrollArea.clientWidth - 30) - charWidth);
   const fontHeight = codeMirror.defaultTextHeight();
-  const inYView = withinBounds(top, scrollArea.top, scrollArea.top + scrollArea.clientHeight - fontHeight);
+  const {
+    scrollTop,
+    scrollLeft
+  } = codeMirror.doc;
+  const inXView = withinBounds(left, scrollLeft, scrollLeft + (scrollArea.clientWidth - 30) - charWidth);
+  const inYView = withinBounds(top, scrollTop, scrollTop + scrollArea.clientHeight - fontHeight);
   return inXView && inYView;
 }
 

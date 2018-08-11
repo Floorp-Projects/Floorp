@@ -11,6 +11,7 @@
 "use strict";
 
 const { AdbSocket } = require("./adb-socket");
+const { dumpn } = require("devtools/shared/DevToolsUtils");
 
 const OKAY = 0x59414b4f;
 const FAIL = 0x4c494146;
@@ -27,9 +28,9 @@ function getBuffer(packet) {
 // @return                A js object { length:...; data:... }
 function unpackPacket(packet, ignoreResponse) {
   const buffer = getBuffer(packet);
-  console.debug("Len buffer: " + buffer.byteLength);
+  dumpn("Len buffer: " + buffer.byteLength);
   if (buffer.byteLength === 4 && !ignoreResponse) {
-    console.debug("Packet empty");
+    dumpn("Packet empty");
     return { length: 0, data: "" };
   }
   const lengthView = new Uint8Array(buffer, ignoreResponse ? 0 : 4, 4);
@@ -45,9 +46,9 @@ function checkResponse(packet, expected = OKAY) {
   const buffer = getBuffer(packet);
   const view = new Uint32Array(buffer, 0, 1);
   if (view[0] == FAIL) {
-    console.debug("Response: FAIL");
+    dumpn("Response: FAIL");
   }
-  console.debug("view[0] = " + view[0]);
+  dumpn("view[0] = " + view[0]);
   return view[0] == expected;
 }
 
@@ -62,7 +63,7 @@ function createRequest(command) {
   }
 
   const encoder = new TextEncoder();
-  console.debug("Created request: " + length + command);
+  dumpn("Created request: " + length + command);
   return encoder.encode(length + command);
 }
 

@@ -15,6 +15,7 @@
 # include "dlfcn.h"
 #endif
 #include <stdio.h>
+#include <string.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Sprintf.h"
