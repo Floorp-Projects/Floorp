@@ -855,6 +855,7 @@ nsContextMenu.prototype = {
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     let referrer = gContextMenuContentData.referrer;
     openWebLinkIn(gContextMenuContentData.docLocation, "current", {
+      disallowInheritPrincipal: true,
       referrerURI: referrer ? makeURI(referrer) : null,
       triggeringPrincipal: this.browser.contentPrincipal,
     });
@@ -912,7 +913,8 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.imageDescURL,
                      this.principal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    openUILink(this.imageDescURL, e, { referrerURI: gContextMenuContentData.documentURIObject,
+    openUILink(this.imageDescURL, e, { disallowInheritPrincipal: true,
+                                       referrerURI: gContextMenuContentData.documentURIObject,
                                        triggeringPrincipal: this.principal,
     });
   },
@@ -950,14 +952,16 @@ nsContextMenu.prototype = {
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     if (this.onCanvas) {
       this._canvasToBlobURL(this.target).then(function(blobURL) {
-        openUILink(blobURL, e, { referrerURI,
+        openUILink(blobURL, e, { disallowInheritPrincipal: true,
+                                 referrerURI,
                                  triggeringPrincipal: systemPrincipal});
       }, Cu.reportError);
     } else {
       urlSecurityCheck(this.mediaURL,
                        this.principal,
                        Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-      openUILink(this.mediaURL, e, { referrerURI,
+      openUILink(this.mediaURL, e, { disallowInheritPrincipal: true,
+                                     referrerURI,
                                      forceAllowDataURI: true,
                                      triggeringPrincipal: this.principal,
       });
@@ -1014,7 +1018,8 @@ nsContextMenu.prototype = {
                      this.principal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
 
-    openUILink(this.bgImageURL, e, { referrerURI: gContextMenuContentData.documentURIObject,
+    openUILink(this.bgImageURL, e, { disallowInheritPrincipal: true,
+                                     referrerURI: gContextMenuContentData.documentURIObject,
                                      triggeringPrincipal: this.principal,
     });
   },

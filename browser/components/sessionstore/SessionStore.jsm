@@ -3498,7 +3498,6 @@ var SessionStoreInternal = {
         tab = tabbrowser.addTrustedTab(url,
                                        { createLazyBrowser,
                                          skipAnimation: true,
-                                         allowInheritPrincipal: true,
                                          noInitialLabel: true,
                                          userContextId,
                                          skipBackgroundNotify: true,
