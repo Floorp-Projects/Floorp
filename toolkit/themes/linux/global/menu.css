@@ -10,6 +10,11 @@
 
 /* ::::: menu/menuitem ::::: */
 
+menupopup,
+menubar {
+  font: menu;
+}
+
 menu,
 menuitem,
 menucaption {
@@ -17,13 +22,8 @@ menucaption {
   -moz-box-align: center;
   max-width: 42em;
   color: MenuText;
-  font: menu;
   list-style-image: none;
   -moz-image-region: auto;
-}
-
-menuitem[default="true"] {
-  font-weight: bold;
 }
 
 menu[_moz-menuactive="true"],
@@ -71,18 +71,24 @@ menubar > menu[open] {
   color: -moz-menubarhovertext;
   background-color: -moz-menuhover;
 }
-menuitem.spell-suggestion {
-  font-weight:bold;
+
+menuitem[default="true"],
+menuitem.spell-suggestion,
+menucaption {
+  font-weight: bold;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */
+
+menulist > menupopup {
+  font: message-box;
+}
 
 menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   padding: 1px 5px;
   max-width: none;
-  font: message-box;
 }
 
 /* ..... internal content .... */
@@ -94,18 +100,15 @@ menulist > menupopup > menu {
   margin-bottom: 0px !important;
   margin-inline-start: 0px !important;
   margin-inline-end: 2px !important;
-  color: inherit;
 }
 
 .menu-text {
   /* This is (18 + the size of end-padding on .menu-iconic-left)px */
   margin-inline-start: 21px !important;
-  font-weight: inherit;
 }
 
 menucaption > .menu-iconic-text {
   margin-inline-start: 0 !important;
-  font-weight: bold;
 }
 
 .menu-accel,
@@ -113,7 +116,6 @@ menucaption > .menu-iconic-text {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
   margin-inline-start: 7px !important;
-  color: inherit;
 }
 
 .menu-accel-container {
@@ -149,12 +151,10 @@ menucaption > .menu-iconic-text {
   margin-bottom: 0px;
   margin-inline-start: 0px;
   margin-inline-end: 2px;
-  color: inherit;
 }
 
 .menubar-text {
   margin: 0 1px !important;
-  color: inherit;
 }
 
 

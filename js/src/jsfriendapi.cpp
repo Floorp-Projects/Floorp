@@ -178,20 +178,18 @@ JS::SetRealmPrincipals(JS::Realm* realm, JSPrincipals* principals)
     if (principals == realm->principals())
         return;
 
-    // Any realm with the trusted principals -- and there can be
-    // multiple -- is a system realm.
+    // We'd like to assert that our new principals is always same-origin
+    // with the old one, but JSPrincipals doesn't give us a way to do that.
+    // But we can at least assert that we're not switching between system
+    // and non-system.
     const JSPrincipals* trusted = realm->runtimeFromMainThread()->trustedPrincipals();
     bool isSystem = principals && principals == trusted;
+    MOZ_RELEASE_ASSERT(realm->isSystem() == isSystem);
 
     // Clear out the old principals, if any.
     if (realm->principals()) {
         JS_DropPrincipals(TlsContext.get(), realm->principals());
         realm->setPrincipals(nullptr);
-        // We'd like to assert that our new principals is always same-origin
-        // with the old one, but JSPrincipals doesn't give us a way to do that.
-        // But we can at least assert that we're not switching between system
-        // and non-system.
-        MOZ_ASSERT(realm->isSystem() == isSystem);
     }
 
     // Set up the new principals.
@@ -199,9 +197,6 @@ JS::SetRealmPrincipals(JS::Realm* realm, JSPrincipals* principals)
         JS_HoldPrincipals(principals);
         realm->setPrincipals(principals);
     }
-
-    // Update the system flag.
-    realm->setIsSystem(isSystem);
 }
 
 JS_FRIEND_API(JSPrincipals*)
@@ -350,12 +345,10 @@ js::GetRealmZone(JS::Realm* realm)
 JS_FRIEND_API(bool)
 js::IsSystemCompartment(JS::Compartment* comp)
 {
-    // Note: for now we assume a single realm per compartment. This API will
-    // hopefully go away once Gecko supports same-compartment realms. Another
-    // option is to return comp->zone()->isSystem here, but we'd have to make
-    // sure that's equivalent.
-    MOZ_RELEASE_ASSERT(comp->realms().length() == 1);
-
+    // Realms in the same compartment must either all be system realms or
+    // non-system realms. We assert this in NewRealm and SetRealmPrincipals,
+    // but do an extra sanity check here.
+    MOZ_ASSERT(comp->realms()[0]->isSystem() == comp->realms().back()->isSystem());
     return comp->realms()[0]->isSystem();
 }
 

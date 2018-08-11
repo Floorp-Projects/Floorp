@@ -879,9 +879,6 @@ toolbarspring {
 menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   display: none;
 }
-menuitem.spell-suggestion {
-  font-weight: bold;
-}
 
 /* Hide extension toolbars that neglected to set the proper class */
 window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar),

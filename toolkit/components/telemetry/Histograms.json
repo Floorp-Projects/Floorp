@@ -5808,6 +5808,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "Firefox: Time in ms between tab selection and tab content paint in e10s windows"
   },
+  "FX_TAB_SWITCH_COMPOSITE_E10S_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["mwoodrow@mozilla.com"],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 20,
+    "bug_numbers": [1481704],
+    "releaseChannelCollection": "opt-out",
+    "description": "Firefox: Time in ms between tab selection and first composite of the tab content in e10s windows"
+  },
   "FX_TAB_SWITCH_SPINNER_VISIBLE_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["mconley@mozilla.com", "dothayer@mozilla.com"],

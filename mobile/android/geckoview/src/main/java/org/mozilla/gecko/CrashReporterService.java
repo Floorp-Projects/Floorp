@@ -86,7 +86,7 @@ public class CrashReporterService extends JobIntentService {
             enqueueWork(this, intent);
         }
 
-        return Service.START_NOT_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override

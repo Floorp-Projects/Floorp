@@ -415,11 +415,6 @@ public class WebAppActivity extends AppCompatActivity
             return GeckoResult.fromValue(false);
         }
 
-        if ("javascript".equals(uri.getScheme())) {
-            // These URIs will fail the scope check but should still be loaded in the PWA.
-            return GeckoResult.fromValue(false);
-        }
-
         if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()) ||
             "data".equals(uri.getScheme()) || "blob".equals(uri.getScheme())) {
             final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder()

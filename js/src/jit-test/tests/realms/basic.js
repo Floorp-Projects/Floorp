@@ -24,3 +24,22 @@ function testCrossRealmProto() {
     }
 }
 testCrossRealmProto();
+
+function testSystemNonSystemRealms() {
+    var systemRealm = newGlobal({systemPrincipal: true});
+    var ex;
+    try {
+        var nonSystemRealm = newGlobal({sameCompartmentAs: systemRealm, principal: 10});
+    } catch(e) {
+        ex = e;
+    }
+    assertEq(ex.toString().includes("non-system realms"), true);
+    ex = null;
+    try {
+        systemRealm = newGlobal({systemPrincipal: true, sameCompartmentAs: this});
+    } catch(e) {
+        ex = e;
+    }
+    assertEq(ex.toString().includes("non-system realms"), true);
+}
+testSystemNonSystemRealms();
