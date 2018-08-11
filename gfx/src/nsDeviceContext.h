@@ -109,12 +109,6 @@ public:
     { return mAppUnitsPerPhysicalInch; }
 
     /**
-     * Gets the number of app units in one CSS inch; this is
-     * 96 times AppUnitsPerCSSPixel.
-     */
-    static int32_t AppUnitsPerCSSInch() { return mozilla::AppUnitsPerCSSInch(); }
-
-    /**
      * Get the ratio of app units to dev pixels that would be used at unit
      * (100%) full zoom.
      */
