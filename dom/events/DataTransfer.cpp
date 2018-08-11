@@ -40,8 +40,6 @@
 #include "mozilla/dom/Promise.h"
 #include "nsNetUtil.h"
 
-#define MOZ_CALLS_ENABLED_PREF "dom.datatransfer.mozAtAPIs"
-
 namespace mozilla {
 namespace dom {
 
@@ -1523,23 +1521,6 @@ DataTransfer::SetMode(DataTransfer::Mode aMode)
   } else {
     mMode = aMode;
   }
-}
-
-/* static */
-bool
-DataTransfer::MozAtAPIsEnabled(JSContext* aCx, JSObject* aObj /*unused*/)
-{
-  // Read the pref
-  static bool sPrefCached = false;
-  static bool sPrefCacheValue = false;
-
-  if (!sPrefCached) {
-    sPrefCached = true;
-    Preferences::AddBoolVarCache(&sPrefCacheValue, MOZ_CALLS_ENABLED_PREF);
-  }
-
-  // We can expose moz* APIs if we are chrome code or if pref is enabled
-  return nsContentUtils::IsSystemCaller(aCx) || sPrefCacheValue;
 }
 
 } // namespace dom

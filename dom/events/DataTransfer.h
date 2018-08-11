@@ -428,11 +428,6 @@ public:
                               const bool& aPlainTextOnly,
                               nsTArray<nsCString>* aResult);
 
-  // Returns true if moz* APIs should be exposed (true for chrome code or if
-  // dom.datatransfer.moz pref is enabled).
-  // The affected moz* APIs are mozItemCount, mozTypesAt, mozClearDataAt, mozSetDataAt, mozGetDataAt
-  static bool MozAtAPIsEnabled(JSContext* cx, JSObject* obj);
-
 protected:
 
   // caches text and uri-list data formats that exist in the drag service or

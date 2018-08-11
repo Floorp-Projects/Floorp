@@ -2584,7 +2584,7 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
       for (var i = 0; i < aDragData.length; i++) {
         var item = aDragData[i];
         for (var j = 0; j < item.length; j++) {
-          SpecialPowers.wrap(event.dataTransfer).mozSetDataAt(item[j].type, item[j].data, i);
+          event.dataTransfer.mozSetDataAt(item[j].type, item[j].data, i);
         }
       }
     }
