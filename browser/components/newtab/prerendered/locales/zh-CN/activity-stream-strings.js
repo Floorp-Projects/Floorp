@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "管理板块",
   "section_menu_action_manage_webext": "管理扩展",
   "section_menu_action_add_topsite": "添加常用网站",
+  "section_menu_action_add_search_engine": "添加搜索引擎",
   "section_menu_action_move_up": "上移",
   "section_menu_action_move_down": "下移",
   "section_menu_action_privacy_notice": "隐私声明",

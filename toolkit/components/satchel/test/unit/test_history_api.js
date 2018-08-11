@@ -383,26 +383,26 @@ add_task(async function() {
     Services.prefs.setBoolPref("browser.formfill.enable", false);
 
     // Cannot use arrow functions, see bug 1237961.
-    Assert.rejects(promiseUpdate(
+    await Assert.rejects(promiseUpdate(
       { op: "bump", fieldname: "field5", value: "value5" }),
-                   function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                   "bumping when form history is disabled should fail");
-    Assert.rejects(promiseUpdate(
+                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                         "bumping when form history is disabled should fail");
+    await Assert.rejects(promiseUpdate(
       { op: "add", fieldname: "field5", value: "value5" }),
-                   function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                   "Adding when form history is disabled should fail");
-    Assert.rejects(promiseUpdate([
+                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                         "Adding when form history is disabled should fail");
+    await Assert.rejects(promiseUpdate([
       { op: "update", fieldname: "field5", value: "value5" },
       { op: "remove", fieldname: "field5", value: "value5" },
     ]),
-                   function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                   "mixed operations when form history is disabled should fail");
-    Assert.rejects(promiseUpdate([
+                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                         "mixed operations when form history is disabled should fail");
+    await Assert.rejects(promiseUpdate([
       null, undefined, "", 1, {},
       { op: "remove", fieldname: "field5", value: "value5" },
     ]),
-                   function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
-                   "Invalid entries when form history is disabled should fail");
+                         function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                         "Invalid entries when form history is disabled should fail");
 
     // Remove should work though.
     await promiseUpdate([{ op: "remove", fieldname: "field5", value: null },

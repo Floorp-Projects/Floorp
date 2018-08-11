@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Tinuk'samajïx Peraj",
   "section_menu_action_manage_webext": "Tinuk'samajïx K'amal",
   "section_menu_action_add_topsite": "Titz'aqatisäx K'ïy Ruwinaq Ruxaq K'amaya'l",
+  "section_menu_action_add_search_engine": "Titz'aqatisäx Kanob'äl",
   "section_menu_action_move_up": "Tijotob'äx",
   "section_menu_action_move_down": "Tiqasäx qa",
   "section_menu_action_privacy_notice": "Ichinan na'oj",

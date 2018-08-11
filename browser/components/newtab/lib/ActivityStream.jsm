@@ -178,9 +178,9 @@ const PREFS_CONFIG = new Map([
       } else {
         searchShortcuts.push("google");
       }
-      // Always include Amazon - we will only be able to actually pin it if it
-      // is available as a default search engine in that region
-      searchShortcuts.push("amazon");
+      if (["DE", "FR", "GB", "IT", "JP", "US"].includes(geo)) {
+        searchShortcuts.push("amazon");
+      }
       return searchShortcuts.join(",");
     }
   }],

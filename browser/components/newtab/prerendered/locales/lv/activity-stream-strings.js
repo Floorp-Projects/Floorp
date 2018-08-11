@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Pārvaldīt sadaļu",
   "section_menu_action_manage_webext": "Pārvaldīt paplašinājumu",
   "section_menu_action_add_topsite": "Pievienot populāru lapu",
+  "section_menu_action_add_search_engine": "Pievienot meklētāju",
   "section_menu_action_move_up": "Pārvietot augšup",
   "section_menu_action_move_down": "Pārvietot lejup",
   "section_menu_action_privacy_notice": "Privātuma politika",

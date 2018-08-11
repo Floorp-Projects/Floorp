@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Manage Section",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Add Top Site",
+  "section_menu_action_add_search_engine": "Add Search Engine",
   "section_menu_action_move_up": "ඉහළට ගෙනයන්න",
   "section_menu_action_move_down": "පහළට ගෙනයන්න",
   "section_menu_action_privacy_notice": "පෞද්ගලිකත්ව සටහන",

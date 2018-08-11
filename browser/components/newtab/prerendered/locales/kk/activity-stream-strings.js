@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Санатты басқару",
   "section_menu_action_manage_webext": "Кеңейтуді басқару",
   "section_menu_action_add_topsite": "Үздік сайт қосу",
+  "section_menu_action_add_search_engine": "Іздеу жүйесін қосу",
   "section_menu_action_move_up": "Жоғары жылжыту",
   "section_menu_action_move_down": "Төмен жылжыту",
   "section_menu_action_privacy_notice": "Жекелік ескертуі",

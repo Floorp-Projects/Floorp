@@ -135,6 +135,11 @@
               "enum": ["Shift", "Alt", "Command", "Ctrl", "MacCtrl"]
             },
             "description": "An array of keyboard modifiers that were held while the menu item was clicked."
+          },
+          "targetElementId": {
+            "type": "integer",
+            "optional": true,
+            "description": "An identifier of the clicked element, if any. Use menus.getTargetElement in the page to find the corresponding element."
           }
         }
       }
@@ -199,7 +204,7 @@
                 "parameters": [
                   {
                     "name": "info",
-                    "$ref": "contextMenusInternal.OnClickData",
+                    "$ref": "OnClickData",
                     "description": "Information about the item clicked and the context where the click happened."
                   },
                   {
@@ -295,7 +300,7 @@
                 "parameters": [
                   {
                     "name": "info",
-                    "$ref": "menusInternal.OnClickData"
+                    "$ref": "OnClickData"
                   },
                   {
                     "name": "tab",
@@ -410,7 +415,7 @@
           {
             "name": "info",
             "type": "object",
-            "description": "Information about the context of the menu action and the created menu items. For more information about each property, see contextMenusInternal.OnClickData. The following properties are only set if the extension has host permissions for the given context: linkUrl, linkText, srcUrl, pageUrl, frameUrl, selectionText.",
+            "description": "Information about the context of the menu action and the created menu items. For more information about each property, see OnClickData. The following properties are only set if the extension has host permissions for the given context: linkUrl, linkText, srcUrl, pageUrl, frameUrl, selectionText.",
             "properties": {
               "menuIds": {
                 "description": "A list of IDs of the menu items that were shown.",
@@ -456,6 +461,10 @@
               },
               "selectionText": {
                 "type": "string",
+                "optional": true
+              },
+              "targetElementId": {
+                "type": "integer",
                 "optional": true
               }
             }
