@@ -14,16 +14,16 @@ ChromeUtils.defineModuleGetter(this, "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AboutReader",
   "resource://gre/modules/AboutReader.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 ChromeUtils.defineModuleGetter(this, "PageStyleHandler",
   "resource:///modules/PageStyleHandler.jsm");
+
+ChromeUtils.import("resource://gre/modules/ActorManagerChild.jsm");
+
+ActorManagerChild.attach(this, "browsers");
 
 // TabChildGlobal
 var global = this;

@@ -8,6 +8,12 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
+ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
+                               "resource://gre/modules/ActorManagerParent.jsm");
+
+let ACTORS = {
+};
+
 (function earlyBlankFirstPaint() {
   if (!Services.prefs.getBoolPref("browser.startup.blankWindow", false))
     return;
@@ -645,6 +651,9 @@ BrowserGlue.prototype = {
     os.addObserver(this, "sync-ui-state:update");
     os.addObserver(this, "handlersvc-store-initialized");
     os.addObserver(this, "shield-init-complete");
+
+    ActorManagerParent.addActors(ACTORS);
+    ActorManagerParent.flush();
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);

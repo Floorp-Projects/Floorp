@@ -5,6 +5,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   GeckoViewTelemetryController: "resource://gre/modules/GeckoViewTelemetryController.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
@@ -68,6 +69,8 @@ GeckoViewStartup.prototype = {
         });
 
         if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
+          ActorManagerParent.flush();
+
           // Parent process only.
           this.setResourceSubstitutions();
 

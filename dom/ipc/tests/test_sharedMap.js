@@ -39,6 +39,15 @@ function getContents(sharedMap = Services.cpmm.sharedData) {
 function checkMap(contents, expected) {
   expected = Array.from(expected);
 
+  // Remove keys already defined by ActorManagerParent.jsm
+  for (let i = contents.keys.length - 1; i >= 0; i--) {
+    if (/^Child(Singleton)?Actors/.test(contents.keys[i])) {
+      contents.keys.splice(i, 1);
+      contents.values.splice(i, 1);
+      contents.entries.splice(i, 1);
+    }
+  }
+
   equal(contents.keys.length, expected.length,
         "Got correct number of keys");
   equal(contents.values.length, expected.length,
