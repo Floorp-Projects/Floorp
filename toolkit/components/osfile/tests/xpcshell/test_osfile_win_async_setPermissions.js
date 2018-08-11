@@ -87,9 +87,9 @@ add_task(async function test_file_setPermissions() {
 add_task(async function test_non_existant_file_path_setPermissions() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_win_async_setPermissions_path.tmp");
-  Assert.rejects(OS.File.setPermissions(path, {winAttributes: {readOnly: true}}),
-                 /The system cannot find the file specified/,
-                 "setPermissions failed as expected on a non-existant file path");
+  await Assert.rejects(OS.File.setPermissions(path, {winAttributes: {readOnly: true}}),
+                       /The system cannot find the file specified/,
+                       "setPermissions failed as expected on a non-existant file path");
 });
 
 // Test application to Check setPermissions on a invalid file handle.
@@ -101,9 +101,9 @@ add_task(async function test_closed_file_handle_setPermissions() {
   try {
     let fd = await OS.File.open(path, { write: true });
     await fd.close();
-    Assert.rejects(fd.setPermissions(path, {winAttributes: {readOnly: true}}),
-                   /The handle is invalid/,
-                   "setPermissions failed as expected on a invalid file handle");
+    await Assert.rejects(fd.setPermissions(path, {winAttributes: {readOnly: true}}),
+                         /The handle is invalid/,
+                         "setPermissions failed as expected on a invalid file handle");
   } finally {
     await OS.File.remove(path);
   }

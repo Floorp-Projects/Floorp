@@ -167,6 +167,23 @@ describe("Reducers", () => {
       const nextState = TopSites(oldState, deleteAction);
       assert.deepEqual(nextState.rows, [{url: "bar.com"}]);
     });
+    it("should set showSearchShortcutsForm to true on TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", () => {
+      const data = {index: 7};
+      const nextState = TopSites(undefined, {type: at.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL, data});
+      assert.isTrue(nextState.showSearchShortcutsForm);
+    });
+    it("should set showSearchShortcutsForm to false on TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", () => {
+      const nextState = TopSites(undefined, {type: at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL});
+      assert.isFalse(nextState.showSearchShortcutsForm);
+    });
+    it("should update searchShortcuts on UPDATE_SEARCH_SHORTCUTS", () => {
+      const shortcuts = [
+        {keyword: "@google", shortURL: "google", url: "https://google.com", searchIdentifier: /^google/},
+        {keyword: "@baidu", shortURL: "baidu", url: "https://baidu.com", searchIdentifier: /^baidu/}
+      ];
+      const nextState = TopSites(undefined, {type: at.UPDATE_SEARCH_SHORTCUTS, data: {searchShortcuts: shortcuts}});
+      assert.deepEqual(shortcuts, nextState.searchShortcuts);
+    });
   });
   describe("Prefs", () => {
     function prevState(custom = {}) {

@@ -228,7 +228,7 @@ add_task(async function test_html_restore_nonexist() {
   info("HTML restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 2");
-  Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path),
+  await Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path),
     /Cannot import from nonexisting html file/, "Restore should reject for a non-existent file.");
 
   await checkObservers(expectPromises, expectedData);
@@ -288,7 +288,7 @@ add_task(async function test_html_init_restore_nonexist() {
   info("HTML initial restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 3");
-  Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path, { replace: true }),
+  await Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path, { replace: true }),
     /Cannot import from nonexisting html file/, "Restore should reject for a non-existent file.");
 
   await checkObservers(expectPromises, expectedData);

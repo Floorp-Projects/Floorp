@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Stiùirich an earrann",
   "section_menu_action_manage_webext": "Stiùirich an leudachan",
   "section_menu_action_add_topsite": "Cuir ris brod làraich",
+  "section_menu_action_add_search_engine": "Cuir einnsean-luirg ris",
   "section_menu_action_move_up": "Gluais suas",
   "section_menu_action_move_down": "Gluais sìos",
   "section_menu_action_privacy_notice": "Sanas prìobhaideachd",

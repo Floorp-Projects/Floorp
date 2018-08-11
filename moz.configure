@@ -259,10 +259,16 @@ def build_backend(backends):
 imply_option('--build-backends', build_backend)
 
 
-@depends('--enable-artifact-builds', '--disable-compile-environment', '--help')
+@depends('--enable-artifact-builds', '--disable-compile-environment',
+         '--enable-build-backend', '--help')
 @imports('sys')
-def build_backend_defaults(artifact_builds, compile_environment, _):
-    if artifact_builds:
+def build_backend_defaults(artifact_builds, compile_environment, requested_backends,
+                           _):
+    if 'Tup' in requested_backends:
+        # As a special case, if Tup was requested, do not combine it with any
+        # Make based backend by default.
+        all_backends = []
+    elif artifact_builds:
         all_backends = ['FasterMake+RecursiveMake']
     else:
         all_backends = ['RecursiveMake', 'FasterMake']
@@ -271,7 +277,7 @@ def build_backend_defaults(artifact_builds, compile_environment, _):
     # and this is not a can of worms we can open at the moment.
     if sys.platform == 'win32' and compile_environment:
         all_backends.append('VisualStudio')
-    return tuple(all_backends)
+    return tuple(all_backends) or None
 
 option('--build-backends', nargs='+', default=build_backend_defaults,
        choices=build_backends_choices, help='Build backends to generate')

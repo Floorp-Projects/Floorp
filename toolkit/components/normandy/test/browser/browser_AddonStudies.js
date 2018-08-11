@@ -119,7 +119,7 @@ add_task(async function testStartRequiredArguments() {
   for (const key in requiredArguments) {
     const args = Object.assign({}, requiredArguments);
     delete args[key];
-    Assert.rejects(
+    await Assert.rejects(
       AddonStudies.start(args),
       /Required arguments/,
       `start rejects when missing required argument ${key}.`
@@ -132,7 +132,7 @@ decorate_task(
     studyFactory(),
   ]),
   async function testStartExisting([study]) {
-    Assert.rejects(
+    await Assert.rejects(
       AddonStudies.start(startArgsFactory({recipeId: study.recipeId})),
       /already exists/,
       "start rejects when a study exists with the given recipeId already."

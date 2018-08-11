@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Seksje beheare",
   "section_menu_action_manage_webext": "Utwreiding beheare",
   "section_menu_action_add_topsite": "Topwebsite tafoegje",
+  "section_menu_action_add_search_engine": "Sykmasine tafoegje",
   "section_menu_action_move_up": "Omheech ferpleatse",
   "section_menu_action_move_down": "Omleech ferpleatse",
   "section_menu_action_privacy_notice": "Privacyferklearring",

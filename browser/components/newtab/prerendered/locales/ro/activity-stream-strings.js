@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gestionează secțiunea",
   "section_menu_action_manage_webext": "Gestionează extensia",
   "section_menu_action_add_topsite": "Adaugă site de top",
+  "section_menu_action_add_search_engine": "Adaugă motor de căutare",
   "section_menu_action_move_up": "Mută în sus",
   "section_menu_action_move_down": "Mută în jos",
   "section_menu_action_privacy_notice": "Politica de confidențialitate",

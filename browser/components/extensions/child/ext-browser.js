@@ -38,6 +38,13 @@ extensions.registerModules({
       ["menus"],
     ],
   },
+  menusChild: {
+    url: "chrome://browser/content/child/ext-menus-child.js",
+    scopes: ["addon_child", "devtools_child"],
+    paths: [
+      ["menus"],
+    ],
+  },
   omnibox: {
     url: "chrome://browser/content/child/ext-omnibox.js",
     scopes: ["addon_child"],

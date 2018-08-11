@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Wotrězk rjadować",
   "section_menu_action_manage_webext": "Rozšěrjenje rjadować",
   "section_menu_action_add_topsite": "Woblubowane sydło přidać",
+  "section_menu_action_add_search_engine": "Pytawu přidać",
   "section_menu_action_move_up": "Horje",
   "section_menu_action_move_down": "Dele",
   "section_menu_action_privacy_notice": "Zdźělenka priwatnosće",

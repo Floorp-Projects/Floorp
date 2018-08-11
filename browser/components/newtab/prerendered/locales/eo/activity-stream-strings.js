@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Administri sekcion",
   "section_menu_action_manage_webext": "Administri etendaĵon",
   "section_menu_action_add_topsite": "Aldoni oftan retejon",
+  "section_menu_action_add_search_engine": "Aldoni serĉilon",
   "section_menu_action_move_up": "Movi supren",
   "section_menu_action_move_down": "Movi malsupren",
   "section_menu_action_privacy_notice": "Rimarko pri privateco",

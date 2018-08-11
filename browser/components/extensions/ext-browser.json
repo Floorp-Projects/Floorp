@@ -99,6 +99,10 @@
       ["identity"]
     ]
   },
+  "menusChild": {
+    "schema": "chrome://browser/content/schemas/menus_child.json",
+    "scopes": ["addon_child", "content_child", "devtools_child"]
+  },
   "menusInternal": {
     "url": "chrome://browser/content/parent/ext-menus.js",
     "schema": "chrome://browser/content/schemas/menus.json",
