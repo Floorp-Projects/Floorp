@@ -106,7 +106,7 @@ decorate_task(
     await action.runRecipe(recipe1);
     await action.finalize();
 
-    Assert.rejects(
+    await Assert.rejects(
       action.runRecipe(recipe2),
       /^Error: Action has already been finalized$/,
       "running recipes after finalization is an error",

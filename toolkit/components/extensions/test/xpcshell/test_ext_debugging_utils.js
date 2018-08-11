@@ -60,8 +60,8 @@ add_task(async function testExtensionDebuggingUtilsCleanup() {
 
   const waitRejection = ExtensionParent.DebugUtils.getExtensionProcessBrowser(nonExistentAddonActor);
 
-  Assert.rejects(waitRejection, /Extension not found/,
-                 "Reject with the expected message for non existent addons");
+  await Assert.rejects(waitRejection, /Extension not found/,
+                       "Reject with the expected message for non existent addons");
 
   equal(debugBrowserPromises.size, 1, "No additional debugging resources has been allocated");
 
