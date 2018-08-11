@@ -20,7 +20,7 @@ def min_android_version(target):
     if target.cpu in ['aarch64', 'x86_64', 'mips64']:
         # 64-bit support was added in API 21.
         return '21'
-    return '16'
+    return '9'
 
 
 js_option('--with-android-version',
