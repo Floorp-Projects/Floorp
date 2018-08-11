@@ -31,9 +31,6 @@ toolkit.jar:
     content/extensions/parent/ext-runtime.js (parent/ext-runtime.js)
     content/extensions/parent/ext-storage.js (parent/ext-storage.js)
     content/extensions/parent/ext-tabs-base.js (parent/ext-tabs-base.js)
-#ifndef ANDROID
-    content/extensions/parent/ext-telemetry.js (parent/ext-telemetry.js)
-#endif
     content/extensions/parent/ext-theme.js (parent/ext-theme.js)
     content/extensions/parent/ext-toolkit.js (parent/ext-toolkit.js)
     content/extensions/parent/ext-topSites.js (parent/ext-topSites.js)
