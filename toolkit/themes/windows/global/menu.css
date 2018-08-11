@@ -10,19 +10,19 @@
 
 /* ::::: menu/menuitem ::::: */
 
+menupopup,
+menubar {
+  font: menu;
+}
+
 menu,
 menuitem,
 menucaption {
   -moz-appearance: menuitem;
   -moz-box-align: center;
   color: MenuText;
-  font: menu;
   list-style-image: none;
   -moz-image-region: auto;
-}
-
-menuitem[default="true"] {
-  font-weight: bold;
 }
 
 menu[disabled="true"],
@@ -42,7 +42,9 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   }
 }
 
-menuitem.spell-suggestion {
+menuitem[default="true"],
+menuitem.spell-suggestion,
+menucaption {
   font-weight: bold;
 }
 
@@ -54,7 +56,6 @@ menuitem.spell-suggestion {
 .menu-iconic-text {
   margin: 0px !important;
   padding: 1px 0px;
-  color: inherit;
 }
 
 .menu-text {
@@ -64,19 +65,16 @@ menuitem.spell-suggestion {
 
 .menu-text,
 .menu-iconic-text {
-  font-weight: inherit;
   margin-inline-start: 2px !important;
   padding-inline-end: 2px;
 }
 
 menucaption > .menu-iconic-text {
-  font-weight: bold;
   padding-inline-start: 0 !important;
 }
 
 .menu-accel,
 .menu-iconic-accel {
-  color: inherit;
   margin-inline-start: 0.74em !important;
   margin-inline-end: 1.35em !important;
 }
@@ -156,13 +154,8 @@ menubar > menu:-moz-window-inactive {
 
 /* ..... internal content .... */
 
-.menubar-left {
-  color: inherit;
-}
-
 .menubar-text {
   margin: 1px 6px 2px 6px !important;
-  color: inherit;
 }
 
 /* ::::: menu/menuitems in popups ::::: */
@@ -181,6 +174,10 @@ menuitem[_moz-menuactive="true"] {
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
+menulist > menupopup {
+  font: message-box;
+}
+
 menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
@@ -189,7 +186,6 @@ menulist > menupopup > menu {
   padding-inline-start: 5px;
   padding-inline-end: 5px;
   max-width: none;
-  font: message-box;
   color: -moz-FieldText;
 }
 
