@@ -104,7 +104,7 @@ ObjectRealm::init(JSContext* cx)
 }
 
 bool
-Realm::init(JSContext* cx)
+Realm::init(JSContext* cx, JSPrincipals* principals)
 {
     /*
      * As a hack, we clear our timezone cache every time we create a new realm.
@@ -122,6 +122,14 @@ Realm::init(JSContext* cx)
     {
         ReportOutOfMemory(cx);
         return false;
+    }
+
+    if (principals) {
+        // Any realm with the trusted principals -- and there can be
+        // multiple -- is a system realm.
+        isSystem_ = (principals == cx->runtime()->trustedPrincipals());
+        JS_HoldPrincipals(principals);
+        principals_ = principals;
     }
 
     return true;
