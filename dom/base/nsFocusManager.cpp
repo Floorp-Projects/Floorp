@@ -3207,9 +3207,20 @@ nsFocusManager::IsHostOrSlot(nsIContent* aContent)
 }
 
 int32_t
-nsFocusManager::HostOrSlotTabIndexValue(nsIContent* aContent)
+nsFocusManager::HostOrSlotTabIndexValue(nsIContent* aContent,
+                                        bool* aIsFocusable)
 {
   MOZ_ASSERT(IsHostOrSlot(aContent));
+
+  if (aIsFocusable) {
+    *aIsFocusable = false;
+    nsIFrame* frame = aContent->GetPrimaryFrame();
+    if (frame) {
+      int32_t tabIndex;
+      frame->IsFocusable(&tabIndex, 0);
+      *aIsFocusable = tabIndex >= 0;
+    }
+  }
 
   const nsAttrValue* attrVal =
     aContent->AsElement()->GetParsedAttr(nsGkAtoms::tabindex);
@@ -3673,8 +3684,12 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
       // hosts and slots are handled before other elements.
       if (currentContent && nsDocument::IsShadowDOMEnabled(currentContent) &&
           IsHostOrSlot(currentContent)) {
-        int32_t tabIndex = HostOrSlotTabIndexValue(currentContent);
-        if (tabIndex >= 0 &&
+        bool focusableHostSlot;
+        int32_t tabIndex = HostOrSlotTabIndexValue(currentContent,
+                                                   &focusableHostSlot);
+        // Host or slot itself isn't focusable, enter its scope.
+        if (!focusableHostSlot &&
+            tabIndex >= 0 &&
             (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
           nsIContent* contentToFocus =
             GetNextTabbableContentInScope(currentContent, currentContent,

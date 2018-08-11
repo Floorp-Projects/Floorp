@@ -407,7 +407,7 @@ MediaCapabilities::DecodingInfo(
     WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(wp, "Must be called from a worker thread");
     targetThread = wp->HybridEventTarget();
-    RefPtr<StrongWorkerRef> strongWorkerRef = StrongWorkerRef::Create(
+    workerRef = StrongWorkerRef::Create(
       wp, "MediaCapabilities", [holder, targetThread]() {
         MOZ_ASSERT(targetThread->IsOnCurrentThread());
         holder->DisconnectIfExists();

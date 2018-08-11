@@ -1313,7 +1313,7 @@ var gBrowserInit = {
     LanguageDetectionListener.init();
     BrowserOnClick.init();
     FeedHandler.init();
-    TrackingProtection.init();
+    ContentBlocking.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
 
@@ -1874,7 +1874,7 @@ var gBrowserInit = {
 
     FeedHandler.uninit();
 
-    TrackingProtection.uninit();
+    ContentBlocking.uninit();
 
     CaptivePortalWatcher.uninit();
 
@@ -4864,7 +4864,7 @@ var XULBrowserWindow = {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}
     gIdentityHandler.updateIdentity(this._state, uri);
-    TrackingProtection.onSecurityChange(this._state, aWebProgress, aIsSimulated);
+    ContentBlocking.onSecurityChange(this._state, aWebProgress, aIsSimulated);
   },
 
   // simulate all change notifications after switching tabs

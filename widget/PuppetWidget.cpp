@@ -139,11 +139,7 @@ PuppetWidget::InfallibleCreate(nsIWidget* aParent,
   else {
     Resize(mBounds.X(), mBounds.Y(), mBounds.Width(), mBounds.Height(), false);
   }
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    mMemoryPressureObserver = new MemoryPressureObserver(this);
-    obs->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
-  }
+  mMemoryPressureObserver = MemoryPressureObserver::Create(this);
 }
 
 nsresult
@@ -193,9 +189,9 @@ PuppetWidget::Destroy()
   Base::Destroy();
   mPaintTask.Revoke();
   if (mMemoryPressureObserver) {
-    mMemoryPressureObserver->Remove();
+    mMemoryPressureObserver->Unregister();
+    mMemoryPressureObserver = nullptr;
   }
-  mMemoryPressureObserver = nullptr;
   mChild = nullptr;
   if (mLayerManager) {
     mLayerManager->Destroy();
@@ -1137,36 +1133,15 @@ PuppetWidget::PaintNowIfNeeded()
   }
 }
 
-NS_IMPL_ISUPPORTS(PuppetWidget::MemoryPressureObserver, nsIObserver)
-
-NS_IMETHODIMP
-PuppetWidget::MemoryPressureObserver::Observe(nsISupports* aSubject,
-                                              const char* aTopic,
-                                              const char16_t* aData)
-{
-  if (!mWidget) {
-    return NS_OK;
-  }
-
-  if (strcmp("memory-pressure", aTopic) == 0 &&
-      !StringBeginsWith(nsDependentString(aData),
-                        NS_LITERAL_STRING("low-memory-ongoing"))) {
-    if (!mWidget->mVisible && mWidget->mLayerManager &&
-        XRE_IsContentProcess()) {
-      mWidget->mLayerManager->ClearCachedResources();
-    }
-  }
-  return NS_OK;
-}
-
 void
-PuppetWidget::MemoryPressureObserver::Remove()
+PuppetWidget::OnMemoryPressure(layers::MemoryPressureReason aWhy)
 {
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    obs->RemoveObserver(this, "memory-pressure");
+  if (aWhy != MemoryPressureReason::LOW_MEMORY_ONGOING &&
+      mVisible &&
+      mLayerManager &&
+      XRE_IsContentProcess()) {
+    mLayerManager->ClearCachedResources();
   }
-  mWidget = nullptr;
 }
 
 bool

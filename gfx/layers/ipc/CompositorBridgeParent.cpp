@@ -2354,6 +2354,14 @@ CompositorBridgeParent::NotifyWebRenderError(wr::WebRenderError aError)
   Unused << SendNotifyWebRenderError(aError);
 }
 
+void
+CompositorBridgeParent::NotifyWebRenderContextPurge()
+{
+  MOZ_ASSERT(CompositorLoop() == MessageLoop::current());
+  RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+  api->ClearAllCaches();
+}
+
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 //#define PLUGINS_LOG(...) printf_stderr("CP [%s]: ", __FUNCTION__);
 //                         printf_stderr(__VA_ARGS__);

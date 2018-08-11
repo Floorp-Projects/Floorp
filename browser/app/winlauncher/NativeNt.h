@@ -125,9 +125,9 @@ FindCharInUnicodeString(const UNICODE_STRING& aStr, WCHAR aChar, uint16_t& aPos,
 inline bool
 IsHexDigit(WCHAR aChar)
 {
-  return aChar >= L'0' && aChar <= L'9' ||
-         aChar >= L'A' && aChar <= L'F' ||
-         aChar >= L'a' && aChar <= L'f';
+  return (aChar >= L'0' && aChar <= L'9') ||
+         (aChar >= L'A' && aChar <= L'F') ||
+         (aChar >= L'a' && aChar <= L'f');
 }
 
 inline bool

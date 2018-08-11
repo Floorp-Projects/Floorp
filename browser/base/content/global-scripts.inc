@@ -15,6 +15,7 @@ for (let script of [
 
   "chrome://browser/content/browser-captivePortal.js",
   "chrome://browser/content/browser-compacttheme.js",
+  "chrome://browser/content/browser-contentblocking.js",
   "chrome://browser/content/browser-feeds.js",
   "chrome://browser/content/browser-media.js",
   "chrome://browser/content/browser-pageActions.js",
@@ -23,7 +24,6 @@ for (let script of [
   "chrome://browser/content/browser-sidebar.js",
   "chrome://browser/content/browser-siteIdentity.js",
   "chrome://browser/content/browser-tabsintitlebar.js",
-  "chrome://browser/content/browser-trackingprotection.js",
 
   "chrome://global/content/globalOverlay.js",
   "chrome://browser/content/utilityOverlay.js",

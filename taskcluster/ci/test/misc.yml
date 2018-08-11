@@ -31,6 +31,14 @@ geckoview-junit:
     e10s: true
     target: geckoview-androidTest.apk
     max-run-time: 3600
+    tier:
+        by-test-platform:
+            android-em-7.0-x86/opt: 3
+            default: default
+    run-on-projects:
+        by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
+            default: built-projects
     chunks:
         by-test-platform:
             android-em-4.3-arm7-api-16-ccov/debug: 4

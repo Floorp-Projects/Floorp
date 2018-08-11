@@ -16,6 +16,10 @@ namespace gl {
 class SurfaceFactory;
 } // namespace gl
 
+namespace gfx {
+class DrawTarget;
+} // namespace gfx
+
 namespace layers {
 
 class ShareableCanvasRenderer : public CopyableCanvasRenderer
