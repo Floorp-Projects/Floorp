@@ -264,35 +264,31 @@ nsROCSSPrimitiveValue::GetFloatValue(uint16_t aUnitType, ErrorResult& aRv)
       break;
     case CSS_CM:
       if (mType == CSS_PX) {
-        return mValue.mAppUnits * CM_PER_INCH_FLOAT /
-          nsPresContext::AppUnitsPerCSSInch();
+        return mValue.mAppUnits * CM_PER_INCH_FLOAT / AppUnitsPerCSSInch();
       }
 
       break;
     case CSS_MM:
       if (mType == CSS_PX) {
-        return mValue.mAppUnits * MM_PER_INCH_FLOAT /
-          nsPresContext::AppUnitsPerCSSInch();
+        return mValue.mAppUnits * MM_PER_INCH_FLOAT / AppUnitsPerCSSInch();
       }
 
       break;
     case CSS_IN:
       if (mType == CSS_PX) {
-        return mValue.mAppUnits / nsPresContext::AppUnitsPerCSSInch();
+        return mValue.mAppUnits / AppUnitsPerCSSInch();
       }
 
       break;
     case CSS_PT:
       if (mType == CSS_PX) {
-        return mValue.mAppUnits * POINTS_PER_INCH_FLOAT /
-          nsPresContext::AppUnitsPerCSSInch();
+        return mValue.mAppUnits * POINTS_PER_INCH_FLOAT / AppUnitsPerCSSInch();
       }
 
       break;
     case CSS_PC:
       if (mType == CSS_PX) {
-        return mValue.mAppUnits * 6.0f /
-          nsPresContext::AppUnitsPerCSSInch();
+        return mValue.mAppUnits * 6.0f / AppUnitsPerCSSInch();
       }
 
       break;
