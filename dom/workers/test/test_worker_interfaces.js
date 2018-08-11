@@ -50,6 +50,8 @@ var ecmaGlobals =
     {name: "Intl", insecureContext: true},
     {name: "JSON", insecureContext: true},
     {name: "Map", insecureContext: true},
+    {name: "MediaCapabilities", insecureContext: true},
+    {name: "MediaCapabilitiesInfo", insecureContext: true},
     {name: "Math", insecureContext: true},
     {name: "NaN", insecureContext: true},
     {name: "Number", insecureContext: true},
