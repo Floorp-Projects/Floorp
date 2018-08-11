@@ -126,11 +126,6 @@
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>
 
-    <!-- Sync broadcasters -->
-    <!-- A broadcaster of a number of attributes suitable for "sync now" UI -
-        A 'syncstatus' attribute is set while actively syncing, and the label
-        attribute which changes from "sync now" to "syncing" etc. -->
-    <broadcaster id="sync-status" onmouseover="gSync.refreshSyncButtonsTooltip();"/>
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
                  label="&devtoolsRecordExecution.label;"
