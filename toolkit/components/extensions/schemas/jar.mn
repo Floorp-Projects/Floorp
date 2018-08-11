@@ -31,9 +31,6 @@ toolkit.jar:
     content/extensions/schemas/privacy.json
     content/extensions/schemas/runtime.json
     content/extensions/schemas/storage.json
-#ifndef ANDROID
-    content/extensions/schemas/telemetry.json
-#endif
     content/extensions/schemas/test.json
     content/extensions/schemas/theme.json
     content/extensions/schemas/top_sites.json
