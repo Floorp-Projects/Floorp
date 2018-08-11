@@ -423,6 +423,12 @@ WebRenderAPI::Readback(const TimeStamp& aStartTime,
 }
 
 void
+WebRenderAPI::ClearAllCaches()
+{
+  wr_api_clear_all_caches(mDocHandle);
+}
+
+void
 WebRenderAPI::Pause()
 {
     class PauseEvent : public RendererEvent

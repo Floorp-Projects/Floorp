@@ -45,52 +45,6 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-void
-ClientLayerManager::MemoryPressureObserver::Destroy()
-{
-  UnregisterMemoryPressureEvent();
-  mClientLayerManager = nullptr;
-}
-
-NS_IMETHODIMP
-ClientLayerManager::MemoryPressureObserver::Observe(nsISupports* aSubject,
-                                                    const char* aTopic,
-                                                    const char16_t* aSomeData)
-{
-  if (!mClientLayerManager || strcmp(aTopic, "memory-pressure")) {
-    return NS_OK;
-  }
-
-  mClientLayerManager->HandleMemoryPressure();
-  return NS_OK;
-}
-
-void
-ClientLayerManager::MemoryPressureObserver::RegisterMemoryPressureEvent()
-{
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-
-  MOZ_ASSERT(observerService);
-
-  if (observerService) {
-    observerService->AddObserver(this, "memory-pressure", false);
-  }
-}
-
-void
-ClientLayerManager::MemoryPressureObserver::UnregisterMemoryPressureEvent()
-{
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-
-  if (observerService) {
-      observerService->RemoveObserver(this, "memory-pressure");
-  }
-}
-
-NS_IMPL_ISUPPORTS(ClientLayerManager::MemoryPressureObserver, nsIObserver)
-
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
   , mWidget(aWidget)
@@ -109,13 +63,13 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   , mForwarder(new ShadowLayerForwarder(this))
 {
   MOZ_COUNT_CTOR(ClientLayerManager);
-  mMemoryPressureObserver = new MemoryPressureObserver(this);
+  mMemoryPressureObserver = MemoryPressureObserver::Create(this);
 }
 
 
 ClientLayerManager::~ClientLayerManager()
 {
-  mMemoryPressureObserver->Destroy();
+  mMemoryPressureObserver->Unregister();
   ClearCachedResources();
   // Stop receiveing AsyncParentMessage at Forwarder.
   // After the call, the message is directly handled by LayerTransactionChild.
@@ -875,7 +829,7 @@ ClientLayerManager::ClearCachedResources(Layer* aSubtree)
 }
 
 void
-ClientLayerManager::HandleMemoryPressure()
+ClientLayerManager::OnMemoryPressure(MemoryPressureReason aWhy)
 {
   if (mRoot) {
     HandleMemoryPressureLayer(mRoot);

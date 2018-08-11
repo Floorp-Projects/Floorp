@@ -5,8 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "NativeNt.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stdio.h>
+#include <windows.h>
 
 const wchar_t kNormal[] = L"Foo.dll";
 const wchar_t kHex12[] = L"Foo.ABCDEF012345.dll";
@@ -34,6 +36,7 @@ const char kFailFmt[] = "TEST-FAILED | NativeNt | %s(%s) should have returned %s
 #define EXPECT_SUCCESS(fn, varName) \
   RUN_TEST(fn, varName, true)
 
+using namespace mozilla;
 using namespace mozilla::nt;
 
 int main(int argc, char* argv[])
@@ -89,6 +92,53 @@ int main(int argc, char* argv[])
 
   if (RtlGetProcessHeap() != ::GetProcessHeap()) {
     printf("TEST-FAILED | NativeNt | RtlGetProcessHeap() is broken\n");
+    return 1;
+  }
+
+  const wchar_t kKernel32[] = L"kernel32.dll";
+  DWORD verInfoSize = ::GetFileVersionInfoSizeW(kKernel32, nullptr);
+  if (!verInfoSize) {
+    printf("TEST-FAILED | NativeNt | Call to GetFileVersionInfoSizeW failed with code %lu\n",
+           ::GetLastError());
+    return 1;
+  }
+
+  auto verInfoBuf = MakeUnique<char[]>(verInfoSize);
+
+  if (!::GetFileVersionInfoW(kKernel32, 0, verInfoSize, verInfoBuf.get())) {
+    printf("TEST-FAILED | NativeNt | Call to GetFileVersionInfoW failed with code %lu\n",
+           ::GetLastError());
+    return 1;
+  }
+
+  UINT len;
+  VS_FIXEDFILEINFO* fixedFileInfo = nullptr;
+  if (!::VerQueryValueW(verInfoBuf.get(), L"\\", (LPVOID*)&fixedFileInfo, &len)) {
+    printf("TEST-FAILED | NativeNt | Call to VerQueryValueW failed with code %lu\n",
+           ::GetLastError());
+    return 1;
+  }
+
+  const uint64_t expectedVersion =
+    (static_cast<uint64_t>(fixedFileInfo->dwFileVersionMS) << 32) |
+    static_cast<uint64_t>(fixedFileInfo->dwFileVersionLS);
+
+  PEHeaders k32headers(::GetModuleHandleW(kKernel32));
+  if (!k32headers) {
+    printf("TEST-FAILED | NativeNt | Failed parsing kernel32.dll's PE headers\n");
+    return 1;
+  }
+
+  uint64_t version;
+  if (!k32headers.GetVersionInfo(version)) {
+    printf("TEST-FAILED | NativeNt | Unable to obtain version information from kernel32.dll\n");
+    return 1;
+  }
+
+  if (version != expectedVersion) {
+    printf("TEST-FAILED | NativeNt | kernel32.dll's detected version "
+           "(0x%016llX) does not match expected version (0x%016llX)\n",
+           version, expectedVersion);
     return 1;
   }
 

@@ -26,6 +26,7 @@
 #include "GfxInfoCollector.h"
 
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/MemoryPressureObserver.h"
 
 class gfxASurface;
 class gfxFont;
@@ -155,7 +156,7 @@ struct BackendPrefsData
   mozilla::gfx::BackendType mContentDefault = mozilla::gfx::BackendType::NONE;
 };
 
-class gfxPlatform {
+class gfxPlatform: public mozilla::layers::MemoryPressureListener {
     friend class SRGBOverrideObserver;
 
 public:
@@ -747,6 +748,8 @@ public:
     // you probably want to use gfxVars::UseWebRender() instead of this
     static bool WebRenderEnvvarEnabled();
 
+    virtual void
+    OnMemoryPressure(mozilla::layers::MemoryPressureReason aWhy) override;
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
@@ -888,7 +891,7 @@ private:
 
     RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
-    nsCOMPtr<nsIObserver> mMemoryPressureObserver;
+    RefPtr<mozilla::layers::MemoryPressureObserver> mMemoryPressureObserver;
 
     // The preferred draw target backend to use for canvas
     mozilla::gfx::BackendType mPreferredCanvasBackend;

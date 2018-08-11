@@ -534,11 +534,7 @@ var Policies = {
         setAndLockPref("pref.browser.homepage.disable_button.bookmark_page", true);
         setAndLockPref("pref.browser.homepage.disable_button.restore_default", true);
       } else {
-        // The default pref for homepage is actually a complex pref. We need to
-        // set it in a special way such that it works properly
-        let homepagePrefVal = "data:text/plain,browser.startup.homepage=" +
-                               homepages;
-        setDefaultPref("browser.startup.homepage", homepagePrefVal);
+        setDefaultPref("browser.startup.homepage", homepages);
         setDefaultPref("browser.startup.page", 1);
         runOncePerModification("setHomepage", homepages, () => {
           Services.prefs.clearUserPref("browser.startup.homepage");

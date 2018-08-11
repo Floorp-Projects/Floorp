@@ -884,6 +884,18 @@ interface nsILoadInfo : nsISupports
   [noscript] readonly attribute nsIPrincipal sandboxedLoadingPrincipal;
 
   /**
+   * Return the top-level principal, which is the principal of the top-level
+   * window.
+   */
+  [noscript] readonly attribute nsIPrincipal topLevelPrincipal;
+
+  /**
+   * A C++-friendly version of topLevelPrincipal.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(TopLevelPrincipal)]
+  nsIPrincipal binaryTopLevelPrincipal();
+
+  /**
    * Return the top-level storage area principal, which is the principal of
    * the top-level window if it's not a 3rd party context, non tracking
    * resource.

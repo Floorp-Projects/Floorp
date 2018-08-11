@@ -8,6 +8,8 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
+import android.graphics.Rect
+
 import android.os.Build
 import android.os.Bundle
 
@@ -30,12 +32,16 @@ import org.junit.Before
 import org.junit.After
 import org.junit.runner.RunWith
 
+const val DISPLAY_WIDTH = 480
+const val DISPLAY_HEIGHT = 640
+
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-@WithDisplay(width = 480, height = 640)
+@WithDisplay(width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT)
 @WithDevToolsAPI
 class AccessibilityTest : BaseSessionTest() {
     lateinit var view: View
+    val screenRect = Rect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
     val provider: AccessibilityNodeProvider get() = view.accessibilityNodeProvider
 
     // Given a child ID, return the virtual descendent ID.
@@ -64,9 +70,12 @@ class AccessibilityTest : BaseSessionTest() {
         fun onAccessibilityFocused(event: AccessibilityEvent) { }
         fun onClicked(event: AccessibilityEvent) { }
         fun onFocused(event: AccessibilityEvent) { }
+        fun onSelected(event: AccessibilityEvent) { }
+        fun onScrolled(event: AccessibilityEvent) { }
         fun onTextSelectionChanged(event: AccessibilityEvent) { }
         fun onTextChanged(event: AccessibilityEvent) { }
         fun onTextTraversal(event: AccessibilityEvent) { }
+        fun onWinStateChanged(event: AccessibilityEvent) { }
     }
 
     @Before fun setup() {
@@ -90,9 +99,12 @@ class AccessibilityTest : BaseSessionTest() {
                     AccessibilityEvent.TYPE_VIEW_FOCUSED -> newDelegate.onFocused(event)
                     AccessibilityEvent.TYPE_VIEW_CLICKED -> newDelegate.onClicked(event)
                     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED -> newDelegate.onAccessibilityFocused(event)
+                    AccessibilityEvent.TYPE_VIEW_SELECTED -> newDelegate.onSelected(event)
+                    AccessibilityEvent.TYPE_VIEW_SCROLLED -> newDelegate.onScrolled(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> newDelegate.onTextSelectionChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> newDelegate.onTextChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY -> newDelegate.onTextTraversal(event)
+                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> newDelegate.onWinStateChanged(event)
                     else -> {}
                 }
                 return false
@@ -204,21 +216,25 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    private fun waitUntilClick(checked: Boolean? = null, selected: Boolean? = null) {
+    private fun waitUntilClick(checked: Boolean) {
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onClicked(event: AccessibilityEvent) {
                 var nodeId = getSourceId(event)
                 var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Event's checked state matches", event.isChecked, equalTo(checked))
+                assertThat("Checkbox node has correct checked state", node.isChecked, equalTo(checked))
+            }
+        })
+    }
 
-                if (checked != null) {
-                    assertThat("Event's checked state matches", event.isChecked, equalTo(checked))
-                    assertThat("Checkbox node has correct checked state", node.isChecked, equalTo(checked))
-                }
-
-                if (selected != null) {
-                    assertThat("Selectable node has correct selected state", node.isSelected, equalTo(selected))
-                }
+    private fun waitUntilSelect(selected: Boolean) {
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onSelected(event: AccessibilityEvent) {
+                var nodeId = getSourceId(event)
+                var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Selectable node has correct selected state", node.isSelected, equalTo(selected))
             }
         })
     }
@@ -407,10 +423,10 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(checked = true)
+        waitUntilClick(true)
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(checked = false)
+        waitUntilClick(false)
     }
 
     @Test fun testSelectable() {
@@ -435,9 +451,115 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(selected = true)
+        waitUntilSelect(true)
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
-        waitUntilClick(selected = false)
+        waitUntilSelect(false)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SELECT, null)
+        waitUntilSelect(true)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SELECT, null)
+        waitUntilSelect(false)
+    }
+
+    private fun screenContainsNode(nodeId: Int): Boolean {
+        var node = provider.createAccessibilityNodeInfo(nodeId)
+        var nodeBounds = Rect()
+        node.getBoundsInScreen(nodeBounds)
+        return screenRect.contains(nodeBounds)
+    }
+
+    @Test fun testScroll() {
+        var nodeId = View.NO_ID
+        sessionRule.session.loadString(
+                """<body style="margin: 0;">
+                        <div style="height: 100vh;"></div>
+                        <button>Hello</button>
+                        <p style="margin: 0;">Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </body>""",
+                "text/html")
+        sessionRule.waitForPageStop()
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                var node = provider.createAccessibilityNodeInfo(nodeId)
+                var nodeBounds = Rect()
+                node.getBoundsInParent(nodeBounds)
+                assertThat("Default root node bounds are correct", nodeBounds, equalTo(screenRect))
+            }
+        })
+
+        provider.performAction(View.NO_ID, AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                assertThat("Focused node is onscreen", screenContainsNode(nodeId), equalTo(true))
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onScrolled(event: AccessibilityEvent) {
+                assertThat("View is scrolled for focused node to be onscreen", event.scrollY, greaterThan(0))
+                assertThat("View is not scrolled to the end", event.scrollY, lessThan(event.maxScrollY))
+            }
+
+            @AssertCalled(count = 1, order = [3])
+            override fun onWinStateChanged(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                assertThat("Focused node is onscreen", screenContainsNode(nodeId), equalTo(true))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onScrolled(event: AccessibilityEvent) {
+                assertThat("View is scrolled to the end", event.scrollY, equalTo(event.maxScrollY))
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onWinStateChanged(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                assertThat("Focused node is still onscreen", screenContainsNode(nodeId), equalTo(true))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onScrolled(event: AccessibilityEvent) {
+                assertThat("View is scrolled to the beginning", event.scrollY, equalTo(0))
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onWinStateChanged(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                assertThat("Focused node is offscreen", screenContainsNode(nodeId), equalTo(false))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                assertThat("Focused node is onscreen", screenContainsNode(nodeId), equalTo(true))
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onScrolled(event: AccessibilityEvent) {
+                assertThat("View is scrolled to the end", event.scrollY, equalTo(event.maxScrollY))
+            }
+
+            @AssertCalled(count = 1, order = [3])
+            override fun onWinStateChanged(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                assertThat("Focused node is onscreen", screenContainsNode(nodeId), equalTo(true))
+            }
+        })
     }
 }

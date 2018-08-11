@@ -6256,6 +6256,38 @@ nsGlobalWindowInner::GetParentInternal()
 }
 
 nsIPrincipal*
+nsGlobalWindowInner::GetTopLevelPrincipal()
+{
+  nsPIDOMWindowOuter* outerWindow = GetOuterWindowInternal();
+  if (!outerWindow) {
+    return nullptr;
+  }
+
+  nsPIDOMWindowOuter* topLevelOuterWindow = GetTopInternal();
+  if (!topLevelOuterWindow) {
+    return nullptr;
+  }
+
+  if (topLevelOuterWindow == outerWindow) {
+    return nullptr;
+  }
+
+  nsPIDOMWindowInner* topLevelInnerWindow =
+    topLevelOuterWindow->GetCurrentInnerWindow();
+  if (NS_WARN_IF(!topLevelInnerWindow)) {
+    return nullptr;
+  }
+
+  nsIPrincipal* topLevelPrincipal =
+    nsGlobalWindowInner::Cast(topLevelInnerWindow)->GetPrincipal();
+  if (NS_WARN_IF(!topLevelPrincipal)) {
+    return nullptr;
+  }
+
+  return topLevelPrincipal;
+}
+
+nsIPrincipal*
 nsGlobalWindowInner::GetTopLevelStorageAreaPrincipal()
 {
   nsPIDOMWindowOuter* outerWindow = GetParentInternal();

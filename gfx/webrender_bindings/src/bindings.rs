@@ -1029,6 +1029,12 @@ pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
     dh.api.shut_down();
 }
 
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_clear_all_caches(dh: &mut DocumentHandle) {
+    dh.api.send_debug_cmd(DebugCommand::ClearCaches(ClearCache::all()));
+}
+
 fn make_transaction(do_async: bool) -> Transaction {
     let mut transaction = Transaction::new();
     // Ensure that we either use async scene building or not based on the

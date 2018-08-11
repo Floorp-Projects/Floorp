@@ -189,6 +189,9 @@ public class SessionAccessibility {
                         case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
                             mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollBackward", null);
                             return true;
+                        case AccessibilityNodeInfo.ACTION_SELECT:
+                            mSession.getEventDispatcher().dispatch("GeckoView:AccessibilitySelect", null);
+                            return true;
                         case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
                             if (mLastItem) {
                                 return false;
@@ -483,8 +486,9 @@ public class SessionAccessibility {
             // Bounds for the virtual content can be updated from any event.
             updateBounds(mVirtualContentNode, message);
 
-            // State for the virtual content can be updated when view is clicked.
-            if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+            // State for the virtual content can be updated when view is clicked/selected.
+            if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED ||
+                eventType == AccessibilityEvent.TYPE_VIEW_SELECTED) {
                 updateState(mVirtualContentNode, message);
             }
         }

@@ -3,6 +3,10 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86/opt: geckoview-androidTest.apk
             default: null
+    tier:
+        by-test-platform:
+            android-em-7.0-x86/opt: 3
+            default: default
     mozharness:
         script:
             by-test-platform:
@@ -205,6 +209,10 @@ mochitest-clipboard:
         by-test-platform:
             linux32/debug: both
             default: true
+    run-on-projects:
+        by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
+            default: built-projects
     mozharness:
         mochitest-flavor: plain
         extra-options:
@@ -249,7 +257,10 @@ mochitest-gpu:
     description: "Mochitest GPU run"
     suite: mochitest/gpu
     treeherder-symbol: M(gpu)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
+            default: built-projects
     loopback-video: true
     instance-size:
         by-test-platform:

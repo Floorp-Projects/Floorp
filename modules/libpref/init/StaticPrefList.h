@@ -867,6 +867,18 @@ VARCACHE_PREF(
   bool, false
 )
 
+#if defined(MOZ_WEBM_ENCODER)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "media.encoder.webm.enabled",
+   MediaEncoderWebMEnabled,
+  RelaxedAtomicBool, true
+)
+#undef PREF_VALUE
+
 #if defined(RELEASE_OR_BETA)
 # define PREF_VALUE 3
 #else
