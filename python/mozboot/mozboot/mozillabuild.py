@@ -13,8 +13,9 @@ from mozboot.base import BaseBootstrapper
 
 class MozillaBuildBootstrapper(BaseBootstrapper):
     '''Bootstrapper for MozillaBuild to install rustup.'''
-    def __init__(self, no_interactive=False):
-        BaseBootstrapper.__init__(self, no_interactive=no_interactive)
+    def __init__(self, no_interactive=False, no_system_changes=False):
+        BaseBootstrapper.__init__(self, no_interactive=no_interactive,
+                                  no_system_changes=no_system_changes)
         print("mach bootstrap is not fully implemented in MozillaBuild")
 
     def which(self, name):
@@ -47,6 +48,11 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def ensure_stylo_packages(self, state_dir, checkout_root):
         from mozboot import stylo
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS)
+
+    def ensure_node_packages(self, state_dir, checkout_root):
+        from mozboot import node
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, node.WINDOWS)
 
     def _update_package_manager(self):
         pass

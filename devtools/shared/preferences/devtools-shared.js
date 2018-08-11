@@ -59,6 +59,9 @@ pref("devtools.remote.wifi.scan", true);
 // Client must complete TLS handshake within this window (ms)
 pref("devtools.remote.tls-handshake-timeout", 10000);
 
+// The extension ID for devtools-adb-extension
+pref("devtools.remote.adb.extensionID", "adb@mozilla.org");
+
 // URL of the remote JSON catalog used for device simulation
 pref("devtools.devices.url", "https://code.cdn.mozilla.net/devices/devices.json");
 
