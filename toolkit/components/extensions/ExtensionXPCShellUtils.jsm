@@ -7,6 +7,7 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionTestUtils"];
 
+ChromeUtils.import("resource://gre/modules/ActorManagerParent.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -33,6 +34,10 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
   const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
   return Management;
 });
+
+Services.mm.loadFrameScript("chrome://global/content/browser-content.js", true);
+
+ActorManagerParent.flush();
 
 /* exported ExtensionTestUtils */
 

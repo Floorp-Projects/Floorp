@@ -9,6 +9,9 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/ActorManagerChild.jsm");
+
+ActorManagerChild.attach(this);
 
 ChromeUtils.defineModuleGetter(this, "AutoCompletePopup",
   "resource://gre/modules/AutoCompletePopupContent.jsm");

@@ -169,6 +169,9 @@ with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
 EXTRA_JS_MODULES += [
+    'ActorChild.jsm',
+    'ActorManagerChild.jsm',
+    'ActorManagerParent.jsm',
     'addons/MatchURLFilters.jsm',
     'addons/SecurityInfo.jsm',
     'addons/WebNavigation.jsm',
