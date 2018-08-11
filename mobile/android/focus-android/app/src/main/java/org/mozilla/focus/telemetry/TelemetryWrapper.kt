@@ -130,6 +130,7 @@ object TelemetryWrapper {
         val REMOVE_SEARCH_ENGINES = "remove_search_engines"
         val GECKO_ENGINE = "gecko_engine"
         val TIP = "tip"
+        val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
     }
 
     private object Value {
@@ -178,6 +179,7 @@ object TelemetryWrapper {
         val SOURCE = "source"
         val SUCCESS = "success"
         val ERROR_CODE = "error_code"
+        val SEARCH_SUGGESTION = "search_suggestion"
     }
 
     enum class BrowserContextMenuValue {
@@ -250,7 +252,8 @@ object TelemetryWrapper {
                             resources.getString(R.string.pref_key_autocomplete_preinstalled),
                             resources.getString(R.string.pref_key_autocomplete_custom),
                             resources.getString(R.string.pref_key_remote_debugging),
-                            resources.getString(R.string.pref_key_homescreen_tips))
+                            resources.getString(R.string.pref_key_homescreen_tips),
+                            resources.getString(R.string.pref_key_show_search_suggestions))
                     .setSettingsProvider(TelemetrySettingsProvider(context))
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled)
@@ -452,10 +455,13 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun searchSelectEvent() {
+    fun searchSelectEvent(isSearchSuggestion: Boolean) {
         val telemetry = TelemetryHolder.get()
 
-        TelemetryEvent.create(Category.ACTION, Method.TYPE_SELECT_QUERY, Object.SEARCH_BAR).queue()
+        TelemetryEvent
+                .create(Category.ACTION, Method.TYPE_SELECT_QUERY, Object.SEARCH_BAR)
+                .extra(Extra.SEARCH_SUGGESTION, "$isSearchSuggestion")
+                .queue()
 
         val searchEngineIdentifier = getDefaultSearchEngineIdentifierForTelemetry(telemetry.configuration.context)
 
@@ -830,6 +836,13 @@ object TelemetryWrapper {
     @JvmStatic
     fun reportSiteIssueEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.REPORT_ISSUE).queue()
+    }
+
+    @JvmStatic
+    fun respondToSearchSuggestionPrompt(enable: Boolean) {
+        TelemetryEvent
+                .create(Category.ACTION, Method.CLICK, Object.SEARCH_SUGGESTION_PROMPT, "$enable")
+                .queue()
     }
 
     @JvmStatic
