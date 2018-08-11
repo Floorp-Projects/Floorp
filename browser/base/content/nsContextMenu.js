@@ -375,9 +375,6 @@ nsContextMenu.prototype = {
 
     this.showItem("context-reload", stopReloadItem == "reload");
     this.showItem("context-stop", stopReloadItem == "stop");
-
-    // XXX: Stop is determined in browser.js; the canStop broadcaster is broken
-    // this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
   },
 
   initLeaveDOMFullScreenItems: function CM_initLeaveFullScreenItem() {
@@ -1341,16 +1338,6 @@ nsContextMenu.prototype = {
         elem.setAttribute(aAttr, aVal);
       }
     }
-  },
-
-  // Set context menu attribute according to like attribute of another node
-  // (such as a broadcaster).
-  setItemAttrFromNode(aItem_id, aAttr, aOther_id) {
-    var elem = document.getElementById(aOther_id);
-    if (elem && elem.getAttribute(aAttr) == "true")
-      this.setItemAttr(aItem_id, aAttr, "true");
-    else
-      this.setItemAttr(aItem_id, aAttr, null);
   },
 
   // Temporary workaround for DOM api not yet implemented by XUL nodes.
