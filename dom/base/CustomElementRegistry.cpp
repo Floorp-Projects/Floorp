@@ -14,6 +14,7 @@
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
 #include "xpcprivate.h"
