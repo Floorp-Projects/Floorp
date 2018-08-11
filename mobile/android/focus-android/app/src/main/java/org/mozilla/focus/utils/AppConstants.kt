@@ -12,6 +12,7 @@ import org.mozilla.focus.web.WebViewProvider
 
 object AppConstants {
     private const val BUILD_TYPE_RELEASE = "release"
+    private const val BUILD_TYPE_DEBUG = "debug"
     private const val PRODUCT_FLAVOR_KLAR = "klar"
 
     val isKlarBuild: Boolean
@@ -25,7 +26,7 @@ object AppConstants {
                 (WebViewProvider.engine?.javaClass?.simpleName == GeckoWebViewProvider::class.java.simpleName)
 
     val isDevBuild: Boolean
-        get() = !isReleaseBuild
+        get() = BUILD_TYPE_DEBUG == BuildConfig.BUILD_TYPE
 
     fun supportsDownloadingFiles(): Boolean {
         return true
