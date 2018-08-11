@@ -451,7 +451,7 @@ nsTableRowFrame::GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
 
 inline nscoord nsTableRowFrame::GetOuterBStartContBCBorderWidth()
 {
-  int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
+  int32_t aPixelsToTwips = mozilla::AppUnitsPerCSSPixel();
   return BC_BORDER_START_HALF_COORD(aPixelsToTwips, mBStartContBorderWidth);
 }
 

@@ -3059,7 +3059,7 @@ nsNativeThemeCocoa::IsParentScrollbarRolledOver(nsIFrame* aFrame)
 static bool
 IsHiDPIContext(nsDeviceContext* aContext)
 {
-  return nsPresContext::AppUnitsPerCSSPixel() >=
+  return AppUnitsPerCSSPixel() >=
     2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
 }
 
