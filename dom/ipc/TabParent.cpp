@@ -1183,7 +1183,7 @@ TabParent::GetLayoutDeviceToCSSScale()
   nsIDocument* doc = (content ? content->OwnerDoc() : nullptr);
   nsPresContext* ctx = (doc ? doc->GetPresContext() : nullptr);
   return LayoutDeviceToCSSScale(ctx
-    ? (float)ctx->AppUnitsPerDevPixel() / nsPresContext::AppUnitsPerCSSPixel()
+    ? (float)ctx->AppUnitsPerDevPixel() / AppUnitsPerCSSPixel()
     : 0.0f);
 }
 

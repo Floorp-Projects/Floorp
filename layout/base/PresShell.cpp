@@ -4679,7 +4679,7 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
 
   gfxPoint offset(-nsPresContext::AppUnitsToFloatCSSPixels(aRect.x),
                   -nsPresContext::AppUnitsToFloatCSSPixels(aRect.y));
-  gfxFloat scale = gfxFloat(devCtx->AppUnitsPerDevPixel())/nsPresContext::AppUnitsPerCSSPixel();
+  gfxFloat scale = gfxFloat(devCtx->AppUnitsPerDevPixel())/AppUnitsPerCSSPixel();
 
   // Since canvas APIs use floats to set up their matrices, we may have some
   // slight rounding errors here.  We use NudgeToIntegers() here to adjust
@@ -5073,7 +5073,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
 
     // Convert aRegion from CSS pixels to dev pixels
     nsIntRegion region =
-        aRegion->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel())
+        aRegion->ToAppUnits(AppUnitsPerCSSPixel())
           .ToOutsidePixels(pc->AppUnitsPerDevPixel());
     for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
@@ -5168,7 +5168,7 @@ PresShell::RenderNode(nsINode* aNode,
     // combine the area with the supplied region
     CSSIntRect rrectPixels = region->GetBounds();
 
-    nsRect rrect = ToAppUnits(rrectPixels, nsPresContext::AppUnitsPerCSSPixel());
+    nsRect rrect = ToAppUnits(rrectPixels, AppUnitsPerCSSPixel());
     area.IntersectRect(area, rrect);
 
     nsPresContext* pc = GetPresContext();

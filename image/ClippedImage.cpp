@@ -153,7 +153,7 @@ ClippedImage::ClippedImage(Image* aImage,
                 aImage->GetType() == imgIContainer::TYPE_VECTOR);
   if (aSVGViewportSize) {
     mSVGViewportSize = Some(aSVGViewportSize->ToNearestPixels(
-                                        nsPresContext::AppUnitsPerCSSPixel()));
+                                        AppUnitsPerCSSPixel()));
   }
 }
 

@@ -1181,7 +1181,7 @@ protected:
     pc = ps->GetPresContext();
     if (!pc) goto FINISH;
     devPixel = pc->AppUnitsPerDevPixel();
-    cssPixel = nsPresContext::AppUnitsPerCSSPixel();
+    cssPixel = AppUnitsPerCSSPixel();
 
   FINISH:
     if (aPerDevPixel)

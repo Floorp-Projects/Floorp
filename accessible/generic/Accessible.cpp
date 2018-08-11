@@ -712,7 +712,7 @@ Accessible::Bounds() const
 nsIntRect
 Accessible::BoundsInCSSPixels() const
 {
-  return BoundsInAppUnits().ToNearestPixels(mDoc->PresContext()->AppUnitsPerCSSPixel());
+  return BoundsInAppUnits().ToNearestPixels(AppUnitsPerCSSPixel());
 }
 
 void
