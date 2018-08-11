@@ -768,16 +768,8 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
     // Don't falsely inherit the host's global trace hook.
     creationOptions.setTrace(nullptr);
 
-    JSObject* obj = JS_NewGlobalObject(cx, &parseTaskGlobalClass, nullptr,
-                                       JS::DontFireOnNewGlobalHook, realmOptions);
-    if (!obj)
-        return nullptr;
-
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-
-    JS::SetRealmPrincipals(global->realm(), currentRealm->principals());
-
-    return global;
+    return JS_NewGlobalObject(cx, &parseTaskGlobalClass, currentRealm->principals(),
+                              JS::DontFireOnNewGlobalHook, realmOptions);
 }
 
 static bool
