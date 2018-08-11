@@ -20,7 +20,7 @@ var _ui = require("../ui");
 
 var _prettyPrint = require("./prettyPrint");
 
-var _tabs = require("./tabs");
+var _tabs = require("../tabs");
 
 var _loadSourceText = require("./loadSourceText");
 
