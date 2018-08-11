@@ -5901,10 +5901,3 @@ pref("dom.events.asyncClipboard", true);
 pref("dom.events.asyncClipboard.dataTransfer", false);
 // Should only be enabled in tests
 pref("dom.events.testing.asyncClipboard", false);
-
-#ifdef NIGHTLY_BUILD
-// Disable moz* APIs in DataTransfer
-pref("dom.datatransfer.mozAtAPIs", false);
-#else
-pref("dom.datatransfer.mozAtAPIs", true);
-#endif
