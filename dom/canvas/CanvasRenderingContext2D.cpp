@@ -2850,7 +2850,7 @@ public:
   virtual float GetEmLength() const override
   {
     return NSAppUnitsToFloatPixels(mFont.size,
-                                   nsPresContext::AppUnitsPerCSSPixel());
+                                   AppUnitsPerCSSPixel());
   }
 
   virtual float GetExLength() const override
@@ -2862,7 +2862,7 @@ public:
     params.textPerf = mPresContext->GetTextPerfMetrics();
     RefPtr<nsFontMetrics> fontMetrics = dc->GetMetricsFor(mFont, params);
     return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
-                                   nsPresContext::AppUnitsPerCSSPixel());
+                                   AppUnitsPerCSSPixel());
   }
 
   virtual gfx::Size GetSize() const override
@@ -3741,7 +3741,7 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   // pixels to CSS pixels, to adjust for the difference in expectations from
   // other nsFontMetrics clients.
   resizedFont.size =
-    (fontStyle->mSize * c->AppUnitsPerDevPixel()) / nsPresContext::AppUnitsPerCSSPixel();
+    (fontStyle->mSize * c->AppUnitsPerDevPixel()) / AppUnitsPerCSSPixel();
 
   nsFontMetrics::Params params;
   params.language = fontStyle->mLanguage;

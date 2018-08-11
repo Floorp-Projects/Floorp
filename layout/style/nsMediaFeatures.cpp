@@ -295,7 +295,7 @@ GetResolution(nsIDocument* aDocument, const nsMediaFeature*,
     } else {
       // Get the actual device pixel ratio, which also takes zoom into account.
       dppx =
-        float(nsPresContext::AppUnitsPerCSSPixel()) / dx->AppUnitsPerDevPixel();
+        float(AppUnitsPerCSSPixel()) / dx->AppUnitsPerDevPixel();
     }
   }
 
