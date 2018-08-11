@@ -107,10 +107,6 @@ menulist > menupopup > menu {
   margin-inline-start: 21px !important;
 }
 
-menucaption > .menu-iconic-text {
-  margin-inline-start: 0 !important;
-}
-
 .menu-accel,
 .menu-iconic-accel {
   margin-top: 0px !important;
