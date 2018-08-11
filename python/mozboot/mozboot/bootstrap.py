@@ -75,19 +75,19 @@ Would you like to create this directory?
 
 Your choice: '''
 
-STYLO_DIRECTORY_MESSAGE = '''
-Stylo packages require a directory to store shared, persistent state.
-On this machine, that directory is:
+STYLO_NODEJS_DIRECTORY_MESSAGE = '''
+Stylo and NodeJS packages require a directory to store shared, persistent
+state.  On this machine, that directory is:
 
   {statedir}
 
 Please restart bootstrap and create that directory when prompted.
 '''
 
-STYLO_REQUIRES_CLONE = '''
-Installing Stylo packages requires a checkout of mozilla-central. Once you
-have such a checkout, please re-run `./mach bootstrap` from the checkout
-directory.
+STYLE_NODEJS_REQUIRES_CLONE = '''
+Installing Stylo and NodeJS packages requires a checkout of mozilla-central.
+Once you have such a checkout, please re-run `./mach bootstrap` from the
+checkout directory.
 '''
 
 FINISHED = '''
@@ -171,13 +171,15 @@ class Bootstrapper(object):
     """Main class that performs system bootstrap."""
 
     def __init__(self, finished=FINISHED, choice=None, no_interactive=False,
-                 hg_configure=False):
+                 hg_configure=False, no_system_changes=False):
         self.instance = None
         self.finished = finished
         self.choice = choice
         self.hg_configure = hg_configure
+        self.no_system_changes = no_system_changes
         cls = None
-        args = {'no_interactive': no_interactive}
+        args = {'no_interactive': no_interactive,
+                'no_system_changes': no_system_changes}
 
         if sys.platform.startswith('linux'):
             distro, version, dist_id = platform.linux_distribution()
@@ -262,33 +264,12 @@ class Bootstrapper(object):
                 continue
             return ''
 
-    def bootstrap(self):
-        if self.choice is None:
-            # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
-            labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS_LIST)]
-            prompt = APPLICATION_CHOICE % '\n'.join(labels)
-            prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
-            name, application = APPLICATIONS_LIST[prompt_choice-1]
-        elif self.choice not in APPLICATIONS.keys():
-            raise Exception('Please pick a valid application choice: (%s)' %
-                            '/'.join(APPLICATIONS.keys()))
-        else:
-            name, application = APPLICATIONS[self.choice]
-
-        self.instance.install_system_packages()
-
-        # Like 'install_browser_packages' or 'install_mobile_android_packages'.
-        getattr(self.instance, 'install_%s_packages' % application)()
-
-        hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
-        self.instance.ensure_python_modern()
-        self.instance.ensure_rust_modern()
-
-        # The state directory code is largely duplicated from mach_bootstrap.py.
-        # We can't easily import mach_bootstrap.py because the bootstrapper may
-        # run in self-contained mode and only the files in this directory will
-        # be available. We /could/ refactor parts of mach_bootstrap.py to be
-        # part of this directory to avoid the code duplication.
+    # The state directory code is largely duplicated from mach_bootstrap.py.
+    # We can't easily import mach_bootstrap.py because the bootstrapper may
+    # run in self-contained mode and only the files in this directory will
+    # be available. We /could/ refactor parts of mach_bootstrap.py to be
+    # part of this directory to avoid the code duplication.
+    def try_to_create_state_dir(self):
         state_dir, _ = get_state_dir()
 
         if not os.path.exists(state_dir):
@@ -303,6 +284,73 @@ class Bootstrapper(object):
                     os.makedirs(state_dir, mode=0o770)
 
         state_dir_available = os.path.exists(state_dir)
+        return state_dir_available, state_dir
+
+    def maybe_install_private_packages_or_exit(self, state_dir,
+                                               state_dir_available,
+                                               have_clone,
+                                               checkout_root):
+        # Install the clang packages needed for developing stylo, as well
+        # as the version of NodeJS that we currently support.
+        if not self.instance.no_interactive:
+            # The best place to install our packages is in the state directory
+            # we have.  If the user doesn't have one, we need them to re-run
+            # bootstrap and create the directory.
+            #
+            # XXX Android bootstrap just assumes the existence of the state
+            # directory and writes the NDK into it.  Should we do the same?
+            if not state_dir_available:
+                print(STYLO_NODEJS_DIRECTORY_MESSAGE.format(statedir=state_dir))
+                sys.exit(1)
+
+            if not have_clone:
+                print(STYLE_NODEJS_REQUIRES_CLONE)
+                sys.exit(1)
+
+            self.instance.state_dir = state_dir
+            self.instance.ensure_stylo_packages(state_dir, checkout_root)
+            self.instance.ensure_node_packages(state_dir, checkout_root)
+
+    def bootstrap(self):
+        if self.choice is None:
+            # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
+            labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS_LIST)]
+            prompt = APPLICATION_CHOICE % '\n'.join(labels)
+            prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
+            name, application = APPLICATIONS_LIST[prompt_choice-1]
+        elif self.choice not in APPLICATIONS.keys():
+            raise Exception('Please pick a valid application choice: (%s)' %
+                            '/'.join(APPLICATIONS.keys()))
+        else:
+            name, application = APPLICATIONS[self.choice]
+
+        if self.instance.no_system_changes:
+            state_dir_available, state_dir = self.try_to_create_state_dir()
+            # We need to enable the loading of hgrc in case extensions are
+            # required to open the repo.
+            r = current_firefox_checkout(
+                check_output=self.instance.check_output,
+                env=self.instance._hg_cleanenv(load_hgrc=True),
+                hg=self.instance.which('hg'))
+            (checkout_type, checkout_root) = r
+            have_clone = bool(checkout_type)
+
+            self.maybe_install_private_packages_or_exit(state_dir,
+                                                        state_dir_available,
+                                                        have_clone,
+                                                        checkout_root)
+            sys.exit(0)
+
+        self.instance.install_system_packages()
+
+        # Like 'install_browser_packages' or 'install_mobile_android_packages'.
+        getattr(self.instance, 'install_%s_packages' % application)()
+
+        hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
+        self.instance.ensure_python_modern()
+        self.instance.ensure_rust_modern()
+
+        state_dir_available, state_dir = self.try_to_create_state_dir()
 
         # We need to enable the loading of hgrc in case extensions are
         # required to open the repo.
@@ -340,24 +388,10 @@ class Bootstrapper(object):
         if not have_clone:
             print(SOURCE_ADVERTISE)
 
-        # Install the clang packages needed for developing stylo.
-        if not self.instance.no_interactive:
-            # The best place to install our packages is in the state directory
-            # we have.  If the user doesn't have one, we need them to re-run
-            # bootstrap and create the directory.
-            #
-            # XXX Android bootstrap just assumes the existence of the state
-            # directory and writes the NDK into it.  Should we do the same?
-            if not state_dir_available:
-                print(STYLO_DIRECTORY_MESSAGE.format(statedir=state_dir))
-                sys.exit(1)
-
-            if not have_clone:
-                print(STYLO_REQUIRES_CLONE)
-                sys.exit(1)
-
-            self.instance.state_dir = state_dir
-            self.instance.ensure_stylo_packages(state_dir, checkout_root)
+        self.maybe_install_private_packages_or_exit(state_dir,
+                                                    state_dir_available,
+                                                    have_clone,
+                                                    checkout_root)
 
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc')

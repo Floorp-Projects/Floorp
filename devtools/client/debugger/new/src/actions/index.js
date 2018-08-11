@@ -60,6 +60,10 @@ var _sources = require("./sources/index");
 
 var sources = _interopRequireWildcard(_sources);
 
+var _tabs = require("./tabs");
+
+var tabs = _interopRequireWildcard(_tabs);
+
 var _debuggee = require("./debuggee");
 
 var debuggee = _interopRequireWildcard(_debuggee);
@@ -82,6 +86,7 @@ exports.default = { ...navigation,
   ...expressions,
   ...eventListeners,
   ...sources,
+  ...tabs,
   ...pause,
   ...ui,
   ...fileSearch,

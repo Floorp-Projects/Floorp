@@ -25,6 +25,7 @@ DevToolsModules(
     'quick-open.js',
     'replay.js',
     'source-tree.js',
+    'tabs.js',
     'toolbox.js',
     'ui.js',
 )

@@ -16,6 +16,10 @@ var _sources = require("./sources");
 
 var _sources2 = _interopRequireDefault(_sources);
 
+var _tabs = require("./tabs");
+
+var _tabs2 = _interopRequireDefault(_tabs);
+
 var _breakpoints = require("./breakpoints");
 
 var _breakpoints2 = _interopRequireDefault(_breakpoints);
@@ -82,6 +86,7 @@ exports.default = {
   expressions: _expressions2.default,
   eventListeners: _eventListeners2.default,
   sources: _sources2.default,
+  tabs: _tabs2.default,
   breakpoints: _breakpoints2.default,
   pendingBreakpoints: _pendingBreakpoints2.default,
   asyncRequests: _asyncRequests2.default,

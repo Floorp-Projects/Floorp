@@ -75,6 +75,11 @@ class WindowsBootstrapper(BaseBootstrapper):
         from mozboot import stylo
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS)
 
+    def ensure_node_packages(self, state_dir, checkout_root):
+        from mozboot import node
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, node.WINDOWS)
+
     def _update_package_manager(self):
         self.pacman_update()
 

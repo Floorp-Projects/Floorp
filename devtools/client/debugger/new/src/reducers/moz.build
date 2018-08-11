@@ -24,5 +24,6 @@ DevToolsModules(
     'replay.js',
     'source-tree.js',
     'sources.js',
+    'tabs.js',
     'ui.js',
 )
