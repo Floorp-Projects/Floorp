@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<style id="A">
+  @font-face {
+    font-family: test;
+    src: url("bug-1481905-cancel-load.sjs");
+  }
+</style>
+<style>
+  @font-face {
+    font-family: test;
+    src: url("bug-1481905-cancel-load.sjs");
+  }
+</style>
+<div style="font-family: test, serif">ABC</div>
+<div style="font-family: serif">ABC</div>
+<script>
+  document.body.offsetTop;
+  document.getElementById("A").remove();
+  document.documentElement.className = "";
+</script>
