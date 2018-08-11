@@ -6887,7 +6887,7 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
                                const nsPoint*         aAnchorPoint,
                                const nsRect*          aSourceArea)
 {
-  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
+  nscoord appUnitsPerCSSPixel = AppUnitsPerCSSPixel();
   CSSIntSize pixelImageSize(ComputeSizeForDrawingWithFallback(aImage, aDest.Size()));
   if (pixelImageSize.width < 1 || pixelImageSize.height < 1) {
     NS_ASSERTION(pixelImageSize.width >= 0 && pixelImageSize.height >= 0,
