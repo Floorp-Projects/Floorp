@@ -659,7 +659,6 @@ public:
   gfxSize ScreenSizeInchesForFontInflation(bool* aChanged = nullptr);
 
   int32_t AppUnitsPerDevPixel() const;
-  static int32_t AppUnitsPerCSSInch() { return mozilla::AppUnitsPerCSSInch(); }
 
   static nscoord CSSPixelsToAppUnits(int32_t aPixels)
   { return NSToCoordRoundWithClamp(float(aPixels) *
