@@ -3,6 +3,10 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86/opt: geckoview-androidTest.apk
             default: null
+    tier:
+        by-test-platform:
+            android-em-7.0-x86/opt: 3
+            default: default
     mozharness:
         script:
             by-test-platform:
@@ -28,7 +32,10 @@ crashtest:
     description: "Crashtest run"
     suite: reftest/crashtest
     treeherder-symbol: R(C)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
+            default: built-projects
     instance-size:
         by-test-platform:
             android-em.*: xlarge
@@ -53,7 +60,10 @@ jsreftest:
     suite: reftest/jsreftest
     schedules-component: jsreftest  # scheduling for this reftest is different from the others..
     treeherder-symbol: R(J)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
+            default: built-projects
     instance-size:
         by-test-platform:
             android-em.*: xlarge

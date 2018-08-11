@@ -23,12 +23,13 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
         }
       }
 
-      function verifyCheckboxOrRadio(type, element, expected) {
+      function verifyCheckboxOrRadio(element, expected) {
         let style = window.getComputedStyle(element);
+        let styledBackground = element.checked ? "rgb(9, 150, 248)" : "rgb(255, 255, 255)";
         if (browserStyle && expected.hasBrowserStyleClass) {
-          browser.test.assertEq("none", style.display, `Expected ${type} item to be hidden`);
+          browser.test.assertEq(styledBackground, style.backgroundColor, assertMessage);
         } else {
-          browser.test.assertTrue(style.display != "none", `Expected ${type} item to be visible`);
+          browser.test.assertTrue(style.backgroundColor != styledBackground, assertMessage);
         }
       }
 
@@ -40,16 +41,16 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
       let normalCheckbox1 = document.getElementById("normalCheckbox1");
       let normalCheckbox2 = document.getElementById("normalCheckbox2");
       let browserStyleCheckbox = document.getElementById("browserStyleCheckbox");
-      verifyCheckboxOrRadio("checkbox", normalCheckbox1, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio("checkbox", normalCheckbox2, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio("checkbox", browserStyleCheckbox, {hasBrowserStyleClass: true});
+      verifyCheckboxOrRadio(normalCheckbox1, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio(normalCheckbox2, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio(browserStyleCheckbox, {hasBrowserStyleClass: true});
 
       let normalRadio1 = document.getElementById("normalRadio1");
       let normalRadio2 = document.getElementById("normalRadio2");
       let browserStyleRadio = document.getElementById("browserStyleRadio");
-      verifyCheckboxOrRadio("radio", normalRadio1, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio("radio", normalRadio2, {hasBrowserStyleClass: false});
-      verifyCheckboxOrRadio("radio", browserStyleRadio, {hasBrowserStyleClass: true});
+      verifyCheckboxOrRadio(normalRadio1, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio(normalRadio2, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio(browserStyleRadio, {hasBrowserStyleClass: true});
 
       browser.test.notifyPass("options-ui-browser_style");
     });

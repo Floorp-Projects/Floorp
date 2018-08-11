@@ -17,16 +17,17 @@ if (Utils.MozBuildApp === "mobile/android") {
 
 const GECKOVIEW_MESSAGE = {
   ACTIVATE: "GeckoView:AccessibilityActivate",
-  VIEW_FOCUSED: "GeckoView:AccessibilityViewFocused",
-  LONG_PRESS: "GeckoView:AccessibilityLongPress",
   BY_GRANULARITY: "GeckoView:AccessibilityByGranularity",
+  CLIPBOARD: "GeckoView:AccessibilityClipboard",
+  EXPLORE_BY_TOUCH: "GeckoView:AccessibilityExploreByTouch",
+  LONG_PRESS: "GeckoView:AccessibilityLongPress",
   NEXT: "GeckoView:AccessibilityNext",
   PREVIOUS: "GeckoView:AccessibilityPrevious",
   SCROLL_BACKWARD: "GeckoView:AccessibilityScrollBackward",
   SCROLL_FORWARD: "GeckoView:AccessibilityScrollForward",
-  EXPLORE_BY_TOUCH: "GeckoView:AccessibilityExploreByTouch",
+  SELECT: "GeckoView:AccessibilitySelect",
   SET_SELECTION: "GeckoView:AccessibilitySetSelection",
-  CLIPBOARD: "GeckoView:AccessibilityClipboard",
+  VIEW_FOCUSED: "GeckoView:AccessibilityViewFocused",
 };
 
 const ACCESSFU_MESSAGE = {
@@ -238,6 +239,9 @@ var AccessFu = {
       case GECKOVIEW_MESSAGE.CLIPBOARD:
         this.Input.clipboard(data);
         break;
+      case GECKOVIEW_MESSAGE.SELECT:
+        this.Input.selectCurrent(data);
+        break;
     }
   },
 
@@ -346,6 +350,11 @@ var Input = {
   activateCurrent: function activateCurrent(aData) {
     let mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:Activate", { offset: 0 });
+  },
+
+  selectCurrent: function selectCurrent(aData) {
+    let mm = Utils.getMessageManager();
+    mm.sendAsyncMessage("AccessFu:Select", aData);
   },
 
   doScroll: function doScroll(aDetails, aBrowser) {

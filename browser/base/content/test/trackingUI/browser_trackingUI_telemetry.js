@@ -3,9 +3,8 @@
  */
 
 const PREF = "privacy.trackingprotection.enabled";
-const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/benignPage.html";
-const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/trackingPage.html";
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
 /**
  * Enable local telemetry recording for the duration of the tests.
@@ -52,8 +51,8 @@ add_task(async function setup() {
   ok(!TrackingProtection.enabled, "TP is not enabled");
 
   // Open a window with TP disabled to make sure 'enabled' is logged correctly.
-  let newWin = await promiseOpenAndLoadWindow({}, true);
-  await promiseWindowClosed(newWin);
+  let newWin = await BrowserTestUtils.openNewBrowserWindow({});
+  newWin.close();
 
   is(getEnabledCounts()[0], 1, "TP was disabled once on start up");
   is(getEnabledCounts()[1], 0, "TP was not enabled on start up");
@@ -64,7 +63,7 @@ add_task(async function setup() {
 
 
 add_task(async function testNewWindow() {
-  let newWin = await promiseOpenAndLoadWindow({}, true);
+  let newWin = await BrowserTestUtils.openNewBrowserWindow({});
   let tab = await BrowserTestUtils.openNewForegroundTab(newWin.gBrowser);
   let TrackingProtection = newWin.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
@@ -111,7 +110,7 @@ add_task(async function testNewWindow() {
   is(getEventCounts()[2], 1, "Enable actions");
   todo_is(getShieldCounts()[0], 1, "FIXME: TOTAL PAGE LOADS WITHOUT TRACKING IS DOUBLE COUNTING");
 
-  await promiseWindowClosed(newWin);
+  newWin.close();
 
   // Reset these to make counting easier for the next test
   getEventsHistogram().clear();
@@ -120,7 +119,7 @@ add_task(async function testNewWindow() {
 });
 
 add_task(async function testPrivateBrowsing() {
-  let privateWin = await promiseOpenAndLoadWindow({private: true}, true);
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
   let tab = await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser);
   let TrackingProtection = privateWin.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
@@ -140,5 +139,5 @@ add_task(async function testPrivateBrowsing() {
   is(getEventCounts().reduce((p, c) => p + c), 0, "Telemetry logging off in PB mode");
   is(getShieldCounts().reduce((p, c) => p + c), 0, "Telemetry logging off in PB mode");
 
-  await promiseWindowClosed(privateWin);
+  privateWin.close();
 });

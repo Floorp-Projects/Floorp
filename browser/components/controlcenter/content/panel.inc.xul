@@ -51,53 +51,66 @@
       <hbox id="tracking-protection-container"
             class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden extension">
-        <vbox id="tracking-protection-content" flex="1">
+        <vbox id="identity-popup-content-blocking-content" flex="1">
           <hbox>
-            <label id="tracking-protection-label-on"
+            <label id="tracking-protection-label"
                    class="identity-popup-headline"
-                   flex="1">&trackingProtection.on;</label>
-            <label id="tracking-protection-label-off"
+                   flex="1">&trackingProtection.title;</label>
+            <label id="content-blocking-label"
                    class="identity-popup-headline"
-                   flex="1">&trackingProtection.off;</label>
+                   flex="1">&contentBlocking.title;</label>
+            <hbox id="identity-popup-content-blocking-disabled-label">
+              <image/>
+              <label id="identity-popup-content-blocking-disabled-label-exception"
+                     tooltiptext="&contentBlocking.exception.tooltip;">&contentBlocking.disabled.label;</label>
+              <label id="identity-popup-content-blocking-disabled-label-global"
+                     tooltiptext="&contentBlocking.disabled.tooltip;">&contentBlocking.disabled.label;</label>
+            </hbox>
             <toolbarbutton id="tracking-protection-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
                            tooltiptext="&trackingProtection.tooltip;"
-                           oncommand="TrackingProtection.openPreferences('identityPopup-TP-preferencesButton');" />
+                           oncommand="ContentBlocking.openPreferences('identityPopup-TP-preferencesButton');" />
           </hbox>
 
-          <description id="tracking-blocked"
-                       crop="end">&trackingProtection.detectedBlocked4;</description>
-          <description id="tracking-loaded"
-                       crop="end">&trackingProtection.detectedNotBlocked5;</description>
-          <description id="tracking-not-detected"
-                       crop="end">&trackingProtection.notDetected5;</description>
-          <description id="tracking-loaded-exception"
-                       crop="end">&trackingProtection.detectedException;</description>
-          <description id="tracking-not-detected-exception"
-                       crop="end">&trackingProtection.notDetectedException;</description>
-          <description id="tracking-reload-required"
-                       crop="end">&trackingProtection.reloadRequired2;</description>
+          <description id="identity-popup-content-blocking-detected"
+                       crop="end">&contentBlocking.detected;</description>
+          <description id="identity-popup-content-blocking-not-detected"
+                       crop="end">&contentBlocking.notDetected;</description>
 
-          <button id="tracking-action-reload"
-                  class="tracking-protection-button"
-                  label="&trackingProtection.reload2.label;"
-                  accesskey="&trackingProtection.reload2.accesskey;"
-                  oncommand="TrackingProtection.hideIdentityPopupAndReload();" />
+          <vbox id="identity-popup-content-blocking-category-list">
+            <hbox id="identity-popup-content-blocking-category-fastblock"
+                  class="identity-popup-content-blocking-category" align="center" role="group">
+              <image class="identity-popup-content-blocking-category-icon fastblock-icon"/>
+              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.fastBlock.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.fastBlock.blocked.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
+                     onclick="ContentBlocking.openPreferences('identityPopup-CB-fastblock');">&contentBlocking.fastBlock.add.label;</label>
+            </hbox>
+            <hbox id="identity-popup-content-blocking-category-tracking-protection"
+                  class="identity-popup-content-blocking-category" align="center" role="group">
+              <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>
+              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.trackingProtection.blocked.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
+                     onclick="ContentBlocking.openPreferences('identityPopup-CB-tracking-protection');">&contentBlocking.trackingProtection.add.label;</label>
+            </hbox>
+          </vbox>
+
           <button id="tracking-action-unblock"
                   class="tracking-protection-button"
-                  label="&trackingProtection.unblock3.label;"
-                  accesskey="&trackingProtection.unblock3.accesskey;"
-                  oncommand="TrackingProtection.disableForCurrentPage();" />
+                  label="&trackingProtection.unblock4.label;"
+                  accesskey="&trackingProtection.unblock4.accesskey;"
+                  oncommand="ContentBlocking.disableForCurrentPage();" />
           <button id="tracking-action-unblock-private"
                   class="tracking-protection-button"
-                  label="&trackingProtection.unblockPrivate3.label;"
-                  accesskey="&trackingProtection.unblockPrivate3.accesskey;"
-                  oncommand="TrackingProtection.disableForCurrentPage();" />
+                  label="&trackingProtection.unblockPrivate4.label;"
+                  accesskey="&trackingProtection.unblockPrivate4.accesskey;"
+                  oncommand="ContentBlocking.disableForCurrentPage();" />
           <button id="tracking-action-block"
                   class="tracking-protection-button"
-                  label="&trackingProtection.block4.label;"
-                  accesskey="&trackingProtection.block4.accesskey;"
-                  oncommand="TrackingProtection.enableForCurrentPage();" />
+                  label="&trackingProtection.block5.label;"
+                  accesskey="&trackingProtection.block5.accesskey;"
+                  oncommand="ContentBlocking.enableForCurrentPage();" />
         </vbox>
       </hbox>
 
