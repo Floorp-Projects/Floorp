@@ -125,7 +125,7 @@ class SourceTreeItem extends _react.Component {
       return _react2.default.createElement(_Svg2.default, {
         name: "angular"
       });
-    } else if (item.path === "moz-extension://") {
+    } else if (item.path.startsWith("moz-extension://") && depth === 0) {
       return _react2.default.createElement("img", {
         className: "extension"
       });
@@ -175,9 +175,6 @@ class SourceTreeItem extends _react.Component {
 
       case "webpack://":
         return "Webpack";
-
-      case "moz-extension://":
-        return L10N.getStr("extensionsText");
 
       default:
         return name;

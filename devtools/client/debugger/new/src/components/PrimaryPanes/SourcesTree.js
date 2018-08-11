@@ -162,8 +162,7 @@ class SourcesTree extends _react.Component {
     }, _react2.default.createElement(_Svg2.default, {
       name: "home"
     }), _react2.default.createElement(_Svg2.default, {
-      name: "breadcrumb",
-      "class": true
+      name: "breadcrumb"
     }), _react2.default.createElement("span", {
       className: "sources-clear-root-label"
     }, rootLabel)));

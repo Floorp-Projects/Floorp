@@ -182,7 +182,7 @@ class Editor extends _react.PureComponent {
 
       const sourceLine = (0, _editor.toSourceLine)(selectedSource.id, line);
 
-      if (ev.altKey) {
+      if (ev.metaKey) {
         return continueToHere(sourceLine);
       }
 
@@ -423,7 +423,8 @@ class Editor extends _react.PureComponent {
 
     const isFirstLoad = (!selectedSource || !(0, _source.isLoaded)(selectedSource)) && (0, _source.isLoaded)(nextProps.selectedSource);
     const locationChanged = selectedLocation !== nextProps.selectedLocation;
-    return isFirstLoad || locationChanged;
+    const symbolsChanged = nextProps.symbols != this.props.symbols;
+    return isFirstLoad || locationChanged || symbolsChanged;
   }
 
   scrollToLocation(nextProps) {

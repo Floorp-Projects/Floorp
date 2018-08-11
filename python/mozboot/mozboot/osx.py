@@ -506,6 +506,11 @@ class OSXBootstrapper(BaseBootstrapper):
         # We installed these via homebrew earlier.
         pass
 
+    def ensure_node_packages(self, state_dir, checkout_root):
+        # XXX from necessary?
+        from mozboot import node
+        self.install_toolchain_artifact(state_dir, checkout_root, node.OSX)
+
     def install_homebrew(self):
         print(PACKAGE_MANAGER_INSTALL % ('Homebrew', 'Homebrew', 'Homebrew', 'brew'))
         bootstrap = urlopen(url=HOMEBREW_BOOTSTRAP, timeout=20).read()
