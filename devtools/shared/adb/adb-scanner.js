@@ -7,8 +7,8 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { ConnectionManager } =
   require("devtools/shared/client/connection-manager");
-const { Devices } =
-  require("devtools/shared/apps/Devices.jsm");
+const { Devices } = require("devtools/shared/apps/Devices.jsm");
+const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { RuntimeTypes } =
   require("devtools/client/webide/modules/runtime-types");
 
@@ -56,9 +56,8 @@ const ADBScanner = {
 
   _detectRuntimes: async function(device) {
     const model = await device.getModel();
-    let detectedRuntimes = await FirefoxOSRuntime.detect(device, model);
-    this._runtimes.push(...detectedRuntimes);
-    detectedRuntimes = await FirefoxOnAndroidRuntime.detect(device, model);
+    const detectedRuntimes =
+      await FirefoxOnAndroidRuntime.detect(device, model);
     this._runtimes.push(...detectedRuntimes);
   },
 
@@ -102,40 +101,6 @@ Runtime.prototype = {
   },
 };
 
-// FIXME: Bug 1481691 - Drop code for support FirefoxOS.
-function FirefoxOSRuntime(device, model) {
-  Runtime.call(this, device, model, "/data/local/debugger-socket");
-}
-
-FirefoxOSRuntime.detect = async function(device, model) {
-  const runtimes = [];
-  const query = "test -f /system/b2g/b2g; echo $?";
-  let b2gExists = await device.shell(query);
-  // XXX: Sometimes we get an empty response back.  Likely a bug in our shell
-  // code in this add-on.
-  // There are also some Android devices that do not have `test` installed.
-  for (let attempts = 3; attempts > 0; attempts--) {
-    b2gExists = await device.shell(query);
-    if (b2gExists.length == 3) {
-      break;
-    }
-  }
-  if (b2gExists === "0\r\n") {
-    const runtime = new FirefoxOSRuntime(device, model);
-    console.log("Found " + runtime.name);
-    runtimes.push(runtime);
-  }
-  return runtimes;
-};
-
-FirefoxOSRuntime.prototype = Object.create(Runtime.prototype);
-
-Object.defineProperty(FirefoxOSRuntime.prototype, "name", {
-  get() {
-    return this._model || this.device.id;
-  }
-});
-
 function FirefoxOnAndroidRuntime(device, model, socketPath) {
   Runtime.call(this, device, model, socketPath);
 }
@@ -159,7 +124,7 @@ FirefoxOnAndroidRuntime.detect = async function(device, model) {
   }
   for (const socketPath of socketPaths) {
     const runtime = new FirefoxOnAndroidRuntime(device, model, socketPath);
-    console.log("Found " + runtime.name);
+    dumpn("Found " + runtime.name);
     runtimes.push(runtime);
   }
   return runtimes;

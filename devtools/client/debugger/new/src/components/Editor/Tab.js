@@ -165,7 +165,7 @@ class Tab extends _react.PureComponent {
     return _react2.default.createElement("div", {
       className: className,
       key: sourceId,
-      onMouseUp: handleTabClick,
+      onClick: handleTabClick,
       onContextMenu: e => this.onTabContextMenu(e, sourceId),
       title: (0, _source.getFileURL)(source)
     }, _react2.default.createElement(_SourceIcon2.default, {
