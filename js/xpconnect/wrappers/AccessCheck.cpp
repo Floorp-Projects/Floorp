@@ -96,8 +96,7 @@ AccessCheck::wrapperSubsumes(JSObject* wrapper)
 bool
 AccessCheck::isChrome(JS::Compartment* compartment)
 {
-    nsIPrincipal* principal = GetCompartmentPrincipal(compartment);
-    return nsXPConnect::SystemPrincipal() == principal;
+    return js::IsSystemCompartment(compartment);
 }
 
 bool
