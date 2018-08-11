@@ -486,7 +486,7 @@ const getMenuContexts = contextData => {
   return contexts;
 };
 
-function addMenuEventInfo(info, contextData, includeSensitiveData) {
+function addMenuEventInfo(info, contextData, extension, includeSensitiveData) {
   if (contextData.onVideo) {
     info.mediaType = "video";
   } else if (contextData.onAudio) {
@@ -502,6 +502,12 @@ function addMenuEventInfo(info, contextData, includeSensitiveData) {
   }
   info.editable = contextData.onEditable || false;
   if (includeSensitiveData) {
+    // menus.getTargetElement requires the "menus" permission, so do not set
+    // targetElementId for extensions with only the "contextMenus" permission.
+    if (contextData.timeStamp && extension.hasPermission("menus")) {
+      // Convert to integer, in case the DOMHighResTimeStamp has a fractional part.
+      info.targetElementId = Math.floor(contextData.timeStamp);
+    }
     if (contextData.onLink) {
       info.linkText = contextData.linkText;
       info.linkUrl = contextData.linkUrl;
@@ -688,7 +694,7 @@ MenuItem.prototype = {
       info.parentMenuItemId = this.parentId;
     }
 
-    addMenuEventInfo(info, contextData, true);
+    addMenuEventInfo(info, contextData, this.extension, true);
 
     if ((this.type === "checkbox") || (this.type === "radio")) {
       info.checked = this.checked;
@@ -849,7 +855,7 @@ this.menusInternal = class extends ExtensionAPI {
               (nativeTab && extension.tabManager.hasActiveTabPermission(nativeTab)) ||
               (contextUrl && extension.whiteListedHosts.matches(contextUrl));
 
-            addMenuEventInfo(info, contextData, includeSensitiveData);
+            addMenuEventInfo(info, contextData, extension, includeSensitiveData);
 
             let tab = nativeTab && extension.tabManager.convert(nativeTab);
             fire.sync(info, tab);

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Zarządzaj sekcją",
   "section_menu_action_manage_webext": "Zarządzaj rozszerzeniem",
   "section_menu_action_add_topsite": "Dodaj stronę do popularnych",
+  "section_menu_action_add_search_engine": "Dodaj wyszukiwarkę",
   "section_menu_action_move_up": "Przesuń w górę",
   "section_menu_action_move_down": "Przesuń w dół",
   "section_menu_action_privacy_notice": "Uwagi dotyczące prywatności",

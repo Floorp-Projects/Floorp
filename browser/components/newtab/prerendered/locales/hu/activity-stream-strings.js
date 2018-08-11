@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Szakasz kezelése",
   "section_menu_action_manage_webext": "Kiterjesztés kezelése",
   "section_menu_action_add_topsite": "Hozzáadás a népszerű oldalakhoz",
+  "section_menu_action_add_search_engine": "Keresőszolgáltatás hozzáadása",
   "section_menu_action_move_up": "Mozgatás felfelé",
   "section_menu_action_move_down": "Mozgatás lefelé",
   "section_menu_action_privacy_notice": "Adatvédelmi nyilatkozat",

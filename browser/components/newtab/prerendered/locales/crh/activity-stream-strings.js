@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Kesimni İdare Et",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Zirvedeki Sayt Ekle",
+  "section_menu_action_add_search_engine": "Qıdırma Motorı Ekle",
   "section_menu_action_move_up": "Yuqarı Avuştır",
   "section_menu_action_move_down": "Aşağı Avuştır",
   "section_menu_action_privacy_notice": "Hususiyat Tebliği",

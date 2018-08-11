@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "مدیریت قسمت",
   "section_menu_action_manage_webext": "مدیریت افزودنی",
   "section_menu_action_add_topsite": "اضافه کردن سایت برتر",
+  "section_menu_action_add_search_engine": "افزودن موتور جست‌وجو",
   "section_menu_action_move_up": "جابه‌جایی به بالا",
   "section_menu_action_move_down": "جابه‌جایی به پایین",
   "section_menu_action_privacy_notice": "نکات حریم‌خصوصی",

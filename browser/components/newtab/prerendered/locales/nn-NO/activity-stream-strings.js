@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Handter seksjon",
   "section_menu_action_manage_webext": "Handter utviding",
   "section_menu_action_add_topsite": "Legg til mest besøkte",
+  "section_menu_action_add_search_engine": "Legg til søkemotor",
   "section_menu_action_move_up": "Flytt opp",
   "section_menu_action_move_down": "Flytt ned",
   "section_menu_action_privacy_notice": "Personvernmerknad",

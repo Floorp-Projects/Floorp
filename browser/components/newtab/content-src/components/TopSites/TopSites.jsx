@@ -5,6 +5,7 @@ import {ComponentPerfTimer} from "content-src/components/ComponentPerfTimer/Comp
 import {connect} from "react-redux";
 import {injectIntl} from "react-intl";
 import React from "react";
+import {SearchShortcutsForm} from "./SearchShortcutsForm";
 import {TOP_SITES_MAX_SITES_PER_ROW} from "common/Reducers.jsm";
 import {TopSiteForm} from "./TopSiteForm";
 import {TopSiteList} from "./TopSite";
@@ -52,7 +53,8 @@ function countTopSitesIconsTypes(topSites) {
 export class _TopSites extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.onFormClose = this.onFormClose.bind(this);
+    this.onEditFormClose = this.onEditFormClose.bind(this);
+    this.onSearchShortcutsFormClose = this.onSearchShortcutsFormClose.bind(this);
   }
 
   /**
@@ -90,7 +92,7 @@ export class _TopSites extends React.PureComponent {
     this._dispatchTopSitesStats();
   }
 
-  onFormClose() {
+  onEditFormClose() {
     this.props.dispatch(ac.UserEvent({
       source: TOP_SITES_SOURCE,
       event: "TOP_SITES_EDIT_CLOSE"
@@ -98,9 +100,21 @@ export class _TopSites extends React.PureComponent {
     this.props.dispatch({type: at.TOP_SITES_CANCEL_EDIT});
   }
 
+  onSearchShortcutsFormClose() {
+    this.props.dispatch(ac.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "TOP_SITES_SEARCH_SHORTCUTS_CLOSE"
+    }));
+    this.props.dispatch({type: at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL});
+  }
+
   render() {
     const {props} = this;
-    const {editForm} = props.TopSites;
+    const {editForm, showSearchShortcutsForm} = props.TopSites;
+    const extraMenuOptions = ["AddTopSite"];
+    if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
+      extraMenuOptions.push("AddSearchShortcut");
+    }
 
     return (<ComponentPerfTimer id="topsites" initialized={props.TopSites.initialized} dispatch={props.dispatch}>
       <CollapsibleSection
@@ -108,7 +122,7 @@ export class _TopSites extends React.PureComponent {
         icon="topsites"
         id="topsites"
         title={{id: "header_top_sites"}}
-        extraMenuOptions={["AddTopSite"]}
+        extraMenuOptions={extraMenuOptions}
         showPrefName="feeds.topsites"
         eventSource={TOP_SITES_SOURCE}
         collapsed={props.TopSites.pref ? props.TopSites.pref.collapsed : undefined}
@@ -119,14 +133,25 @@ export class _TopSites extends React.PureComponent {
         <div className="edit-topsites-wrapper">
           {editForm &&
             <div className="edit-topsites">
-              <div className="modal-overlay" onClick={this.onFormClose} />
+              <div className="modal-overlay" onClick={this.onEditFormClose} />
               <div className="modal">
                 <TopSiteForm
                   site={props.TopSites.rows[editForm.index]}
-                  onClose={this.onFormClose}
+                  onClose={this.onEditFormClose}
                   dispatch={this.props.dispatch}
                   intl={this.props.intl}
                   {...editForm} />
+              </div>
+            </div>
+          }
+          {showSearchShortcutsForm &&
+            <div className="edit-search-shortcuts">
+              <div className="modal-overlay" onClick={this.onSearchShortcutsFormClose} />
+              <div className="modal">
+                <SearchShortcutsForm
+                  TopSites={props.TopSites}
+                  onClose={this.onSearchShortcutsFormClose}
+                  dispatch={this.props.dispatch} />
               </div>
             </div>
           }

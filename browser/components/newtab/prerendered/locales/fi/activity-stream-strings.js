@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Muokkaa osiota",
   "section_menu_action_manage_webext": "Hallitse laajennusta",
   "section_menu_action_add_topsite": "Lisää ykkössivusto",
+  "section_menu_action_add_search_engine": "Lisää hakukone",
   "section_menu_action_move_up": "Siirrä ylös",
   "section_menu_action_move_down": "Siirrä alas",
   "section_menu_action_privacy_notice": "Tietosuojakäytäntö",

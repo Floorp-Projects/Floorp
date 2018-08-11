@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Tvarkyti skiltį",
   "section_menu_action_manage_webext": "Tvarkyti priedą",
   "section_menu_action_add_topsite": "Pridėti lankomą svetainę",
+  "section_menu_action_add_search_engine": "Pridėti ieškyklę",
   "section_menu_action_move_up": "Pakelti",
   "section_menu_action_move_down": "Nuleisti",
   "section_menu_action_privacy_notice": "Privatumo nuostatai",

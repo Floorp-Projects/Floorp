@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Upravljaj sekcijom",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Dodajte omiljenu stranicu",
+  "section_menu_action_add_search_engine": "Dodaj pretraživač",
   "section_menu_action_move_up": "Pomjeri gore",
   "section_menu_action_move_down": "Pomjeri dole",
   "section_menu_action_privacy_notice": "Polica privatnosti",

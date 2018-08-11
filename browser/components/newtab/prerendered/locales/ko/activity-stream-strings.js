@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "섹션 관리",
   "section_menu_action_manage_webext": "부가 기능 관리",
   "section_menu_action_add_topsite": "인기 사이트 추가",
+  "section_menu_action_add_search_engine": "검색 엔진 추가",
   "section_menu_action_move_up": "위로 이동",
   "section_menu_action_move_down": "아래로 이동",
   "section_menu_action_privacy_notice": "개인 정보 보호 정책",

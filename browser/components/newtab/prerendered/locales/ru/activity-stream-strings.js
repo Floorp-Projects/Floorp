@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Управление разделом",
   "section_menu_action_manage_webext": "Управление расширением",
   "section_menu_action_add_topsite": "Добавить в топ сайтов",
+  "section_menu_action_add_search_engine": "Добавить поисковую систему",
   "section_menu_action_move_up": "Вверх",
   "section_menu_action_move_down": "Вниз",
   "section_menu_action_privacy_notice": "Уведомление о приватности",

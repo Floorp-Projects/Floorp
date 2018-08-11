@@ -39,15 +39,5 @@ module.exports = {
     "env": {
       "mozilla/browser-window": true
     }
-  }, {
-    // XXX Bug 1452706. These directories are still being fixed, so turn off
-    //  mozilla/require-expected-throws-or-rejects for now.
-    "files": [
-      "services/fxaccounts/**",
-      "toolkit/components/**",
-    ],
-    "rules": {
-      "mozilla/rejects-requires-await": "off",
-    }
   }]
 };
