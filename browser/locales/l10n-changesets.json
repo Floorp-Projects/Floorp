@@ -207,7 +207,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "2649ccf12898"
+        "revision": "164fa25166b1"
     }, 
     "cak": {
         "platforms": [
@@ -812,7 +812,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "13c54a09b278"
+        "revision": "4bbb1c86e3c3"
     }, 
     "kk": {
         "platforms": [
@@ -1127,7 +1127,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "afbe25a196a6"
+        "revision": "479be5fdb274"
     }, 
     "pt-BR": {
         "platforms": [
