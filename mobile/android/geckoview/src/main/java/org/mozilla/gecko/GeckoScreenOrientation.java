@@ -154,7 +154,7 @@ public class GeckoScreenOrientation {
      *
      * @return Whether the screen orientation has changed.
      */
-    public boolean update(ScreenOrientation aScreenOrientation) {
+    public synchronized boolean update(ScreenOrientation aScreenOrientation) {
         if (mScreenOrientation == aScreenOrientation) {
             return false;
         }
@@ -236,11 +236,13 @@ public class GeckoScreenOrientation {
         Log.d(LOGTAG, "locking to " + aScreenOrientation);
         final ScreenOrientationDelegate delegate = GeckoAppShell.getScreenOrientationDelegate();
         final int activityInfoOrientation = screenOrientationToActivityInfoOrientation(aScreenOrientation);
-        if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
-            update(aScreenOrientation);
-            return true;
-        } else {
-            return false;
+        synchronized (this) {
+            if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
+                update(aScreenOrientation);
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -253,11 +255,13 @@ public class GeckoScreenOrientation {
         Log.d(LOGTAG, "unlocking");
         final ScreenOrientationDelegate delegate = GeckoAppShell.getScreenOrientationDelegate();
         final int activityInfoOrientation = screenOrientationToActivityInfoOrientation(ScreenOrientation.DEFAULT);
-        if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
-            update();
-            return true;
-        } else {
-            return false;
+        synchronized (this) {
+            if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
+                update();
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 

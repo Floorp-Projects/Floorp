@@ -1067,8 +1067,6 @@ public abstract class GeckoApp extends GeckoActivity
 
         super.onCreate(savedInstanceState);
 
-        GeckoScreenOrientation.getInstance().update(getResources().getConfiguration().orientation);
-
         setContentView(getLayout());
 
         // Set up Gecko layout.
@@ -2176,11 +2174,6 @@ public abstract class GeckoApp extends GeckoActivity
         if (changed != null) {
             onLocaleChanged(Locales.getLanguageTag(changed));
         }
-
-        // onConfigurationChanged is not called for 180 degree orientation changes,
-        // we will miss such rotations and the screen orientation will not be
-        // updated.
-        GeckoScreenOrientation.getInstance().update(newConfig.orientation);
 
         if (mPromptService != null) {
             mPromptService.changePromptOrientation(newConfig.orientation);
