@@ -41,8 +41,6 @@
 #include "common/mac/scoped_task_suspend-inl.h"
 #include "google_breakpad/common/minidump_exception_mac.h"
 
-#include "mozilla/RecordReplay.h"
-
 #ifndef __EXCEPTIONS
 // This file uses C++ try/catch (but shouldn't). Duplicate the macros from
 // <c++/4.2.1/exception_defines.h> allowing this file to work properly with
@@ -639,21 +637,6 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
 #endif
 }
 
-// static
-bool ExceptionHandler::WriteForwardedExceptionMinidump(int exception_type,
-						       int exception_code,
-						       int exception_subcode,
-						       mach_port_t thread)
-{
-  if (!gProtectedData.handler) {
-    return false;
-  }
-  return gProtectedData.handler->WriteMinidumpWithException(exception_type, exception_code,
-							    exception_subcode, NULL, thread,
-							    /* exit_after_write = */ false,
-							    /* report_current_thread = */ true);
-}
-
 bool ExceptionHandler::InstallHandler() {
   // If a handler is already installed, something is really wrong.
   if (gProtectedData.handler != NULL) {
@@ -688,12 +671,6 @@ bool ExceptionHandler::InstallHandler() {
   }
   catch (std::bad_alloc) {
     return false;
-  }
-
-  // Don't modify exception ports when replaying, to avoid interfering with the
-  // record/replay system's exception handler.
-  if (mozilla::recordreplay::IsReplaying()) {
-    return true;
   }
 
   // Save the current exception ports so that we can forward to them
@@ -785,9 +762,7 @@ bool ExceptionHandler::Setup(bool install_handler) {
     if (!InstallHandler())
       return false;
 
-  // Don't spawn the handler thread when replaying, as we have not set up
-  // exception ports for it to monitor.
-  if (result == KERN_SUCCESS && !mozilla::recordreplay::IsReplaying()) {
+  if (result == KERN_SUCCESS) {
     // Install the handler in its own thread, detached as we won't be joining.
     pthread_attr_t attr;
     pthread_attr_init(&attr);
