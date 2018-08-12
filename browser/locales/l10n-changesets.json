@@ -1202,7 +1202,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "aec9c1e5f16b"
+        "revision": "9ed08c6e9c1d"
     }, 
     "si": {
         "platforms": [
@@ -1457,7 +1457,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "9ae928318641"
+        "revision": "6f5a2bb78f7a"
     }, 
     "zh-TW": {
         "platforms": [
