@@ -153,6 +153,15 @@ add_task(async function checkBadStsCert() {
       advancedButton.click();
       return doc.getElementById("badCertTechnicalInfo").textContent;
     });
+    if (Services.prefs.getBoolPref("browser.security.newcerterrorpage.enabled", false)) {
+      ok(message.includes("SSL_ERROR_BAD_CERT_DOMAIN"), "Didn't find SSL_ERROR_BAD_CERT_DOMAIN.");
+      ok(message.includes("The certificate is only valid for"), "Didn't find error message.");
+      ok(message.includes("a security certificate that is not valid for"), "Didn't find error message.");
+      ok(message.includes("badchain.include-subdomains.pinning.example.com"), "Didn't find domain in error message.");
+
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
+      return;
+    }
     ok(message.includes("SSL_ERROR_BAD_CERT_DOMAIN"), "Didn't find SSL_ERROR_BAD_CERT_DOMAIN.");
     ok(message.includes("The certificate is only valid for"), "Didn't find error message.");
     ok(message.includes("uses an invalid security certificate"), "Didn't find error message.");
