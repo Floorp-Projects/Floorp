@@ -2268,7 +2268,7 @@ nsDisplayListBuilder::ShouldBuildCompositorHitTestInfo(const nsIFrame* aFrame,
 {
   MOZ_ASSERT(mBuildCompositorHitTestInfo);
 
-  if (aInfo == CompositorHitTestInfo::eInvisibleToHitTest) {
+  if (aInfo == CompositorHitTestInvisibleToHit) {
     return false;
   }
 
@@ -5069,12 +5069,12 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
   // compositor hit-test info or if the computed hit info indicated the
   // frame is invisible to hit-testing
   MOZ_ASSERT(aBuilder->BuildCompositorHitTestInfo());
-  MOZ_ASSERT(mHitTestInfo != mozilla::gfx::CompositorHitTestInfo::eInvisibleToHitTest);
+  MOZ_ASSERT(mHitTestInfo != CompositorHitTestInvisibleToHit);
 
   if (aBuilder->GetCurrentScrollbarDirection().isSome()) {
     // In the case of scrollbar frames, we use the scrollbar's target scrollframe
     // instead of the scrollframe with which the scrollbar actually moves.
-    MOZ_ASSERT(mHitTestInfo & CompositorHitTestInfo::eScrollbar);
+    MOZ_ASSERT(mHitTestInfo.contains(CompositorHitTestFlags::eScrollbar));
     mScrollTarget = Some(aBuilder->GetCurrentScrollbarTarget());
   }
 
@@ -5132,7 +5132,7 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
 void
 nsDisplayCompositorHitTestInfo::WriteDebugInfo(std::stringstream& aStream)
 {
-  aStream << nsPrintfCString(" (hitTestInfo 0x%x)", (int)mHitTestInfo).get();
+  aStream << nsPrintfCString(" (hitTestInfo 0x%x)", mHitTestInfo.serialize()).get();
   AppendToString(aStream, mArea, " hitTestArea");
 }
 

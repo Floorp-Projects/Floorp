@@ -3651,7 +3651,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // if we are checkerboarding.
       if (aBuilder->BuildCompositorHitTestInfo()) {
         CompositorHitTestInfo info = mScrolledFrame->GetCompositorHitTestInfo(aBuilder);
-        if (info != CompositorHitTestInfo::eInvisibleToHitTest) {
+        if (info != CompositorHitTestInvisibleToHit) {
           nsDisplayCompositorHitTestInfo* hitInfo =
               MakeDisplayItem<nsDisplayCompositorHitTestInfo>(aBuilder, mScrolledFrame, info, 1);
           aBuilder->SetCompositorHitTestInfo(hitInfo);
@@ -3759,8 +3759,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // a displayport for this frame. We'll add the item later on.
     if (!mWillBuildScrollableLayer) {
       if (aBuilder->BuildCompositorHitTestInfo()) {
-        CompositorHitTestInfo info = CompositorHitTestInfo::eVisibleToHitTest
-                                   | CompositorHitTestInfo::eDispatchToContent;
+        CompositorHitTestInfo info(CompositorHitTestFlags::eVisibleToHitTest,
+                                   CompositorHitTestFlags::eDispatchToContent);
         // If the scroll frame has non-default overscroll-behavior, instruct
         // APZ to require a target confirmation before processing events that
         // hit this scroll frame (that is, to drop the events if a confirmation
@@ -3770,7 +3770,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         ScrollStyles scrollStyles = GetScrollStylesFromFrame();
         if (scrollStyles.mOverscrollBehaviorX != StyleOverscrollBehavior::Auto ||
             scrollStyles.mOverscrollBehaviorY != StyleOverscrollBehavior::Auto) {
-          info |= CompositorHitTestInfo::eRequiresTargetConfirmation;
+          info += CompositorHitTestFlags::eRequiresTargetConfirmation;
         }
         nsDisplayCompositorHitTestInfo* hitInfo =
             MakeDisplayItem<nsDisplayCompositorHitTestInfo>(aBuilder, mScrolledFrame, info, 1,
