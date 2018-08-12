@@ -17,12 +17,16 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.privacy_security_settings)
 
+        val preference = findPreference(getString(R.string.pref_key_biometric))
+        val appName = resources.getString(R.string.app_name)
+        preference.summary = resources.getString(R.string.preference_security_biometric_summary, appName)
+
         // Remove the biometric toggle if the software or hardware do not support it
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !Biometrics.hasFingerprintHardware(
                 context!!
             )
         ) {
-            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_biometric)))
+            preferenceScreen.removePreference(preference)
         }
 
         updateStealthToggleAvailability()

@@ -248,8 +248,9 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Use fingerprint to unlock app</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session. -->
-    <string name="preference_security_biometric_summary">Your fingerprint can unlock Firefox Focus if a URL is already opened in the app.
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Your fingerprint can unlock %1$s if a URL is already opened in the app.
     Stealth will be turned on.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -258,10 +259,8 @@
     <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
      app's content (in our case especially the content of webpages) to show up in the "recent apps"
      screen. Additionally Android will prevent the user from taking screenshots or casting the app
-     to other displays. However we try to keep this description short and brief to avoid confusion. -->
+     to other displays. -->
     <string name="preference_privacy_stealth_summary">Hide webpages when switching apps and block taking screenshots.</string>
-
-
 
     <string name="preference_category_security">Security</string>
 
@@ -664,17 +663,19 @@ be temporary, and you can try again later.</li>
     <string name="enable_search_suggestion_title">Would you like to turn on search suggestions?</string>
 
     <!-- Description for the prompt to enable search suggestions
-         %1$s will be replaced by the app name (e.g. Firefox Focus)
-          %2$s will be replaced with the "Learn more" string with the name: enable_search_suggestion_subtitle_learnmore -->
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
     <string name="enable_search_suggestion_subtitle">To get search suggestions, %1$s needs to send what you type in the address bar to the search engine you\'ve chosen. %2$s.</string>
 
-    <!-- Learn more string to be placed inside: enable_search_suggestion_subtitle -->
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
     <string name="enable_search_suggestion_subtitle_learnmore">Learn more</string>
 
-    <!-- Label used for the no button for the prompt to enable search suggestions -->
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">No</string>
 
-    <!-- Label used for the yes button for the prompt to enable search suggestions -->
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">Yes</string>
 
     <!-- Message displayed when using a search engine that doesn't provide suggestions -->
@@ -684,38 +685,39 @@ be temporary, and you can try again later.</li>
     <string name="dismiss_no_suggestions_prompt_button">Dismiss</string>
 
     <!-- Tips displayed on the home view -->
+
     <!-- Tip displayed on home view explaining how to disable tracking protection
-    The newline here must be kept as the second half of the string is clickable for the user. -->
+    The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Site behaving unexpectedly?\n
     Try turning off Tracking Protection</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
-    The newline here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_add_to_homescreen">Get one-tap access to sites you use most\n
-        Menu > Add to Home screen</string>
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_add_to_homescreen"><![CDATA[Get one-tap access to sites you use most\n
+        Menu > Add to Home screen]]></string>
 
     <!-- Tip displayed on home view explaining how to make Focus the default browser
     Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
-    The newline here must be kept as the second half of the string is clickable for the user. -->
+    The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_set_default_browser">Open every link in %1$s\n
         Set %1$s as default browser
     </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
-    The newline here must be kept as the second half of the string is clickable for the user. -->
+    The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_autocomplete_url">Autocomplete URLs for sites you use most\n
         Long-press any URL in the address bar
     </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
-    The newline here must be kept as the second half of the string is clickable for the user. -->
+    The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Open a link in a new tab\n
         Long-press any link on a page
     </string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     The newline here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_request_desktop">Rather see the full desktop site?\n
+     The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_request_desktop"><![CDATA[Rather see the full desktop site?\n
     Menu > Request desktop site
-    </string>
+    ]]></string>
 </resources>
