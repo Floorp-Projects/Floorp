@@ -18,7 +18,7 @@ import thread
 HOST = '127.0.0.1'
 PORT = 5037
 
-class ADBServer(SocketServer.BaseRequestHandler):
+class ADBRequestHandler(SocketServer.BaseRequestHandler):
     def sendData(self, data):
         header = 'OKAY%04x' % len(data)
         all_data = header + data
@@ -61,7 +61,7 @@ if len(sys.argv) == 2:
 
         # Create a SocketServer with 'False' for bind_and_activate to set
         # allow_reuse_address before binding.
-        server = SocketServer.TCPServer((HOST, PORT), ADBServer, False)
+        server = SocketServer.TCPServer((HOST, PORT), ADBRequestHandler, False)
         server.allow_reuse_address = True
         server.server_bind()
         server.server_activate()
