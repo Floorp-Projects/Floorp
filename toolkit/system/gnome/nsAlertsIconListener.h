@@ -57,6 +57,7 @@ protected:
   typedef void (*notify_notification_set_icon_from_pixbuf_t)(void*, GdkPixbuf*);
   typedef void (*notify_notification_add_action_t)(void*, const char*, const char*, NotifyActionCallback, gpointer, GFreeFunc);
   typedef bool (*notify_notification_close_t)(void*, GError**);
+  typedef void (*notify_notification_set_hint_t)(NotifyNotification*, const char*, GVariant*);
 
   nsCOMPtr<nsICancelable> mIconRequest;
   nsCString mAlertTitle;
@@ -80,6 +81,7 @@ protected:
   static notify_notification_set_icon_from_pixbuf_t notify_notification_set_icon_from_pixbuf;
   static notify_notification_add_action_t notify_notification_add_action;
   static notify_notification_close_t notify_notification_close;
+  static notify_notification_set_hint_t notify_notification_set_hint;
   NotifyNotification* mNotification;
   gulong mClosureHandler;
 
