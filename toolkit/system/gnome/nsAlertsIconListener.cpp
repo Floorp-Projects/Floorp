@@ -16,9 +16,12 @@
 #include "nsIObserverService.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
+#include "mozilla/XREAppData.h"
 
 #include <dlfcn.h>
 #include <gdk/gdk.h>
+
+extern const mozilla::StaticXREAppData* gAppData;
 
 static bool gHasActions = false;
 static bool gHasCaps = false;
@@ -33,6 +36,7 @@ nsAlertsIconListener::notify_notification_show_t nsAlertsIconListener::notify_no
 nsAlertsIconListener::notify_notification_set_icon_from_pixbuf_t nsAlertsIconListener::notify_notification_set_icon_from_pixbuf = nullptr;
 nsAlertsIconListener::notify_notification_add_action_t nsAlertsIconListener::notify_notification_add_action = nullptr;
 nsAlertsIconListener::notify_notification_close_t nsAlertsIconListener::notify_notification_close = nullptr;
+nsAlertsIconListener::notify_notification_set_hint_t nsAlertsIconListener::notify_notification_set_hint = nullptr;
 
 static void notify_action_cb(NotifyNotification *notification,
                              gchar *action, gpointer user_data)
@@ -111,6 +115,7 @@ nsAlertsIconListener::nsAlertsIconListener(nsSystemAlertsService* aBackend,
     notify_notification_set_icon_from_pixbuf = (notify_notification_set_icon_from_pixbuf_t)dlsym(libNotifyHandle, "notify_notification_set_icon_from_pixbuf");
     notify_notification_add_action = (notify_notification_add_action_t)dlsym(libNotifyHandle, "notify_notification_add_action");
     notify_notification_close = (notify_notification_close_t)dlsym(libNotifyHandle, "notify_notification_close");
+    notify_notification_set_hint = (notify_notification_set_hint_t)dlsym(libNotifyHandle, "notify_notification_set_hint");
     if (!notify_is_initted || !notify_init || !notify_get_server_caps || !notify_notification_new || !notify_notification_show || !notify_notification_set_icon_from_pixbuf || !notify_notification_add_action || !notify_notification_close) {
       dlclose(libNotifyHandle);
       libNotifyHandle = nullptr;
@@ -173,6 +178,20 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
     // rather than creating a button.
     notify_notification_add_action(mNotification, "default", "Activate",
                                    notify_action_cb, this, nullptr);
+  }
+
+  if (notify_notification_set_hint) {
+    // If MOZ_DESKTOP_FILE_NAME variable is set, use it as the application id,
+    // otherwise use gAppData->name
+    if (getenv("MOZ_DESKTOP_FILE_NAME")) {
+      // Send the desktop name to identify the application
+      // The desktop-entry is the part before the .desktop
+      notify_notification_set_hint(mNotification, "desktop-entry",
+                                  g_variant_new("s", getenv("MOZ_DESKTOP_FILE_NAME")));
+    } else {
+      notify_notification_set_hint(mNotification, "desktop-entry",
+                                  g_variant_new("s", gAppData->remotingName));
+    }
   }
 
   // Fedora 10 calls NotifyNotification "closed" signal handlers with a
