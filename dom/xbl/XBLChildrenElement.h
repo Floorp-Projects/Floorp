@@ -73,7 +73,9 @@ public:
   void ClearInsertedChildren()
   {
     for (auto* child : mInsertedChildren) {
-      child->SetXBLInsertionPoint(nullptr);
+      if (child->GetXBLInsertionPoint() == this) {
+        child->SetXBLInsertionPoint(nullptr);
+      }
     }
     mInsertedChildren.Clear();
 
