@@ -3,6 +3,8 @@
 
 // See also browser/base/content/test/newtab/.
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
 // A small 1x1 test png
 const image1x1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
 
@@ -679,7 +681,8 @@ add_task(async function getTopFrecentSites() {
   Assert.equal(links[0].url, testURI, "added visit corresponds to added url");
 });
 
-add_task(async function getTopFrecentSites_improveSearch() {
+add_task({ skip_if: () => AppConstants.MOZ_APP_NAME == "thunderbird" },
+         async function getTopFrecentSites_improveSearch() {
   await setUpActivityStreamTest();
   const SEARCH_SHORTCUTS_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
   Services.prefs.setBoolPref(SEARCH_SHORTCUTS_EXPERIMENT_PREF, true);
