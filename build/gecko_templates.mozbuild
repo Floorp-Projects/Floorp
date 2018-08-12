@@ -107,13 +107,13 @@ def GeckoCppUnitTests(names, **kwargs):
 
 
 @template
-def GeckoSharedLibrary(name, output_category=None, **kwargs):
+def GeckoSharedLibrary(name, **kwargs):
     '''Template for shared libraries related to Gecko.
 
     `name` identifies the library base name.
     See the documentation for `GeckoBinary` for other possible arguments.
     '''
-    SharedLibrary(name, output_category)
+    SharedLibrary(name)
 
     kwargs.setdefault('mozglue', 'library')
 
@@ -121,13 +121,13 @@ def GeckoSharedLibrary(name, output_category=None, **kwargs):
 
 
 @template
-def GeckoFramework(name, output_category=None, **kwargs):
+def GeckoFramework(name, **kwargs):
     '''Template for OSX frameworks related to Gecko.
 
     `name` identifies the library base name.
     See the documentation for `GeckoBinary` for other possible arguments.
     '''
-    Framework(name, output_category)
+    Framework(name)
 
     kwargs.setdefault('mozglue', 'library')
 
