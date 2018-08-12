@@ -130,12 +130,6 @@ const ADB = {
       return; // We didn't start the server, nothing to do
     }
     await this.kill();
-    // Make sure the ADB server stops listening because kill() above doesn't
-    // mean that the ADB server stops, it means that 'adb kill-server' command
-    // just finished, so that it's possible that the ADB server is still alive.
-    await this._waitUntil(async () => {
-      return !await check();
-    });
   },
 
   /**

@@ -33,12 +33,16 @@ class ADBRequestHandler(SocketServer.BaseRequestHandler):
             sent_length = sent_length + sent
 
     def handle(self):
+        if server.is_shuttingdown:
+            return
+
         while True:
             data = self.request.recv(4096)
             if 'kill-server' in data:
                 def shutdown(server):
                     server.shutdown()
                     thread.exit()
+                server.is_shuttingdown = True
                 self.sendData('')
                 self.request.close()
                 thread.start_new_thread(shutdown, (server, ))
@@ -51,6 +55,16 @@ class ADBRequestHandler(SocketServer.BaseRequestHandler):
                 self.sendData('1234567890\tdevice')
                 break
 
+class ADBServer(SocketServer.TCPServer):
+    def __init__(self, server_address):
+        # Create a SocketServer with bind_and_activate 'False' to set
+        # allow_reuse_address before binding.
+        SocketServer.TCPServer.__init__(self, \
+                                        server_address, \
+                                        ADBRequestHandler, \
+                                        bind_and_activate = False)
+        self.is_shuttingdown = False
+
 if len(sys.argv) == 2:
     if sys.argv[1] == 'start-server':
         # daemonize
@@ -60,9 +74,7 @@ if len(sys.argv) == 2:
         if os.fork() > 0:
             sys.exit(0)
 
-        # Create a SocketServer with 'False' for bind_and_activate to set
-        # allow_reuse_address before binding.
-        server = SocketServer.TCPServer((HOST, PORT), ADBRequestHandler, False)
+        server = ADBServer((HOST, PORT))
         server.allow_reuse_address = True
         server.server_bind()
         server.server_activate()
