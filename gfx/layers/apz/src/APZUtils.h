@@ -90,10 +90,10 @@ struct TargetConfirmationFlags {
     , mRequiresTargetConfirmation(false)
   {}
 
-  explicit TargetConfirmationFlags(gfx::CompositorHitTestInfo aHitTestInfo)
-    : mTargetConfirmed(aHitTestInfo != gfx::CompositorHitTestInfo::eInvisibleToHitTest &&
-                       !(aHitTestInfo & gfx::CompositorHitTestInfo::eDispatchToContent))
-    , mRequiresTargetConfirmation(aHitTestInfo & gfx::CompositorHitTestInfo::eRequiresTargetConfirmation)
+  explicit TargetConfirmationFlags(const gfx::CompositorHitTestInfo& aHitTestInfo)
+    : mTargetConfirmed((aHitTestInfo != gfx::CompositorHitTestInvisibleToHit) &&
+                       !aHitTestInfo.contains(gfx::CompositorHitTestFlags::eDispatchToContent))
+    , mRequiresTargetConfirmation(aHitTestInfo.contains(gfx::CompositorHitTestFlags::eRequiresTargetConfirmation))
   {}
 
   bool mTargetConfirmed : 1;
