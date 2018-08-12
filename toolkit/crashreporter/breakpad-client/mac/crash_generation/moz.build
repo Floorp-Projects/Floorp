@@ -12,7 +12,6 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/ipc/chromium/src',
     '/toolkit/crashreporter/breakpad-client',
     '/toolkit/crashreporter/google-breakpad/src',
 ]
