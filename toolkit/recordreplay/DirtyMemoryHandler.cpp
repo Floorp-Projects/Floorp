@@ -6,7 +6,7 @@
 
 #include "DirtyMemoryHandler.h"
 
-#include "ipc/ChildInternal.h"
+#include "ipc/ChildIPC.h"
 #include "mozilla/Sprintf.h"
 #include "MemorySnapshot.h"
 #include "Thread.h"
@@ -65,15 +65,11 @@ DirtyMemoryExceptionHandlerThread(void*)
       if (HandleDirtyMemoryFault(faultingAddress)) {
         replyCode = KERN_SUCCESS;
       } else {
-        child::MinidumpInfo info(request.body.exception,
-                                 request.body.code[0], request.body.code[1],
-                                 request.body.thread.name);
-        child::ReportFatalError(Some(info), "HandleDirtyMemoryFault failed %p %s",
-                                faultingAddress, gMozCrashReason ? gMozCrashReason : "");
+        child::ReportFatalError("HandleDirtyMemoryFault failed %p %s", faultingAddress,
+                                gMozCrashReason ? gMozCrashReason : "");
       }
     } else {
-      child::ReportFatalError(Nothing(),
-                              "DirtyMemoryExceptionHandlerThread mach_msg returned unexpected data");
+      child::ReportFatalError("DirtyMemoryExceptionHandlerThread mach_msg returned unexpected data");
     }
 
     __Reply__exception_raise_t reply;
