@@ -38,7 +38,7 @@ class ADBRequestHandler(SocketServer.BaseRequestHandler):
 
         while True:
             data = self.request.recv(4096)
-            if 'kill-server' in data:
+            if 'host:kill' in data:
                 def shutdown(server):
                     server.shutdown()
                     thread.exit()
@@ -79,9 +79,3 @@ if len(sys.argv) == 2:
         server.server_bind()
         server.server_activate()
         server.serve_forever()
-    elif sys.argv[1] == 'kill-server':
-        sock = socket.socket()
-        sock.connect((HOST, PORT))
-        sock.send('kill-server')
-        sock.shutdown(socket.SHUT_RDWR)
-        sock.close()
