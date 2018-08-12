@@ -673,7 +673,6 @@ class RustLibrary(StaticLibrary):
         'deps_path',
         'features',
         'target_dir',
-        'output_category',
     )
     TARGET_SUBST_VAR = 'RUST_TARGET'
     FEATURES_VAR = 'RUST_LIBRARY_FEATURES'
@@ -695,7 +694,6 @@ class RustLibrary(StaticLibrary):
         self.dependencies = dependencies
         self.features = features
         self.target_dir = target_dir
-        self.output_category = context.get('RUST_LIBRARY_OUTPUT_CATEGORY')
         # Skip setting properties below which depend on cargo
         # when we don't have a compile environment. The required
         # config keys won't be available, but the instance variables
@@ -715,7 +713,6 @@ class SharedLibrary(Library):
         'soname',
         'variant',
         'symbols_file',
-        'output_category',
     )
 
     DICT_ATTRS = {
@@ -736,7 +733,6 @@ class SharedLibrary(Library):
         Library.__init__(self, context, basename, real_name)
         self.variant = variant
         self.lib_name = real_name or basename
-        self.output_category = context.get('SHARED_LIBRARY_OUTPUT_CATEGORY')
         assert self.lib_name
 
         if variant == self.FRAMEWORK:
