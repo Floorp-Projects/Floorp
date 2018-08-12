@@ -39,8 +39,9 @@ class ADBRequestHandler(SocketServer.BaseRequestHandler):
                 def shutdown(server):
                     server.shutdown()
                     thread.exit()
-                thread.start_new_thread(shutdown, (server, ))
+                self.sendData('')
                 self.request.close()
+                thread.start_new_thread(shutdown, (server, ))
                 break
             elif 'host:version' in data:
                 self.sendData('001F')
