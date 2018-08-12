@@ -949,8 +949,8 @@ const ENGINE_ALIASES = new Map([
   ["ebay", ["@ebay"]],
   ["bing", ["@bing"]],
   ["ddg", ["@duckduckgo", "@ddg"]],
-  ["yandex", ["@yandex"]],
-  ["baidu", ["@baidu"]],
+  ["yandex", ["@\u044F\u043D\u0434\u0435\u043A\u0441", "@yandex"]],
+  ["baidu", ["@\u767E\u5EA6", "@baidu"]],
 ]);
 
 function getInternalAliases(engine) {
