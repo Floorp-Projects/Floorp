@@ -32,6 +32,11 @@ worker.onmessage = function(event) {
     return;
   }
 
+  if (args.name === "mediaCapabilities") {
+    is(typeof navigator.mediaCapabilities, typeof args.value, "mediaCapabilities type matches");
+    return;
+  }
+
   is(navigator[args.name], args.value,
      "Mismatched navigator string for " + args.name + "!");
 };
