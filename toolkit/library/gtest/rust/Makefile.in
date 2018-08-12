@@ -2,13 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This file looks quite similar to toolkit/library/gtest/Makefile.in.
+# We only want to build gkrust-gtest when we are building libxul-gtest.
+
 # Enforce that the clean/distclean rules removes everything that needs
 # to be removed from this directory.
 ifneq (,$(filter clean distclean,$(MAKECMDGOALS)))
 LINK_GTEST_DURING_COMPILE = 1
 endif
 
-# Don't link the gtest xul during MOZ_PROFILE_GENERATE, it doesn't get
+# Don't build gkrust-gtest during MOZ_PROFILE_GENERATE, it doesn't get
 # used during profiling anyway.
 ifdef MOZ_PROFILE_GENERATE
 LINK_GTEST_DURING_COMPILE =
@@ -20,8 +23,6 @@ ifndef LINK_GTEST_DURING_COMPILE
 STANDALONE_MAKEFILE = 1
 
 else
-
-include $(topsrcdir)/toolkit/library/libxul.mk
 
 include $(topsrcdir)/config/config.mk
 
