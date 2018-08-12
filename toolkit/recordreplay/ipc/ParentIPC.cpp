@@ -849,22 +849,12 @@ MainThreadMessageLoop()
   return gMainThreadMessageLoop;
 }
 
-static base::ProcessId gParentPid;
-
-base::ProcessId
-ParentProcessId()
-{
-  return gParentPid;
-}
-
 void
 InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
                     const base::SharedMemoryHandle& aPrefsHandle,
                     const ipc::FileDescriptor& aPrefMapHandle)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  gParentPid = aParentPid;
 
   // Construct the message that will be sent to each child when starting up.
   IntroductionMessage* msg =

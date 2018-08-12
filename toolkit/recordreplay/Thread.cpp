@@ -256,7 +256,7 @@ Thread::StartThread(Callback aStart, void* aArgument, bool aNeedsJoin)
       }
     }
     if (id >= MaxRecordedThreadId) {
-      child::ReportFatalError(Nothing(), "Too many threads");
+      child::ReportFatalError("Too many threads");
     }
     MOZ_RELEASE_ASSERT(id <= MaxRecordedThreadId);
   }

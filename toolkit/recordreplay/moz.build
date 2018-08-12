@@ -49,8 +49,6 @@ LOCAL_INCLUDES += [
     '!/ipc/ipdl/_ipdlheaders',
     '/ipc/chromium/src',
     '/js/xpconnect/src',
-    '/toolkit/crashreporter/breakpad-client',
-    '/toolkit/crashreporter/google-breakpad/src',
 ]
 
 FINAL_LIBRARY = 'xul'

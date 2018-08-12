@@ -93,6 +93,12 @@ NotifyAlwaysMarkMajorCheckpoints()
 }
 
 void
+ReportFatalError(const char* aFormat, ...)
+{
+  MOZ_CRASH();
+}
+
+void
 BeginIdleTime()
 {
   MOZ_CRASH();
@@ -155,12 +161,6 @@ void
 GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
                             const char* aRecordingFile, bool aRecording,
                             std::vector<std::string>& aExtraArgs)
-{
-  MOZ_CRASH();
-}
-
-base::ProcessId
-ParentProcessId()
 {
   MOZ_CRASH();
 }
