@@ -361,7 +361,7 @@ SVGFilterObserverListForCSSProp::OnRenderingChange()
 }
 
 void
-nsSVGMarkerProperty::OnRenderingChange()
+SVGMarkerObserver::OnRenderingChange()
 {
   nsSVGRenderingObserverProperty::OnRenderingChange();
 
@@ -549,9 +549,9 @@ GetEffectProperty(nsIURI* aURI, nsIFrame* aFrame,
   return prop;
 }
 
-nsSVGMarkerProperty*
+SVGMarkerObserver*
 SVGObserverUtils::GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<nsSVGMarkerProperty>* aProperty)
+  const mozilla::FramePropertyDescriptor<SVGMarkerObserver>* aProperty)
 {
   MOZ_ASSERT(aFrame->IsSVGGeometryFrame() &&
              static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable(),
