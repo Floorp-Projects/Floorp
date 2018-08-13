@@ -256,6 +256,28 @@ win64-sccache:
     toolchains:
         - win64-rust-1.28
 
+win64-cbindgen:
+    description: "cbindgen toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(cbindgen)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+    run:
+        using: toolchain-script
+        script: build-cbindgen.sh
+        arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cbindgen.tar.bz2
+    toolchains:
+        - win64-rust-1.28
+
 win64-rust-size:
     description: "rust-size toolchain build"
     treeherder:
