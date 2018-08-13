@@ -93,12 +93,6 @@ NotifyAlwaysMarkMajorCheckpoints()
 }
 
 void
-ReportFatalError(const char* aFormat, ...)
-{
-  MOZ_CRASH();
-}
-
-void
 BeginIdleTime()
 {
   MOZ_CRASH();
