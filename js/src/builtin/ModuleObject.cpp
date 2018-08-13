@@ -1157,6 +1157,22 @@ ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self)
     return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate);
 }
 
+/* static */ ModuleNamespaceObject*
+ModuleObject::GetOrCreateModuleNamespace(JSContext* cx, HandleModuleObject self)
+{
+    FixedInvokeArgs<1> args(cx);
+    args[0].setObject(*self);
+
+    RootedValue result(cx);
+    if (!CallSelfHostedFunction(cx, cx->names().GetModuleNamespace, UndefinedHandleValue, args,
+                                &result))
+    {
+        return nullptr;
+    }
+
+    return &result.toObject().as<ModuleNamespaceObject>();
+}
+
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluationError, EvaluationErrorSlot)
