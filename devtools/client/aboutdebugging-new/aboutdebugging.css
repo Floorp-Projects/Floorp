@@ -11,7 +11,6 @@
 @import "resource://devtools/client/aboutdebugging-new/src/components/Sidebar.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/SidebarItem.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/ExtensionDetail.css";
-@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/TabDetail.css";
 
 :root {
   /* Import css variables from common.css */
