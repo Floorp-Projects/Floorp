@@ -345,7 +345,7 @@ nsHtml5StreamParser::SetupDecodingFromBom(NotNull<const Encoding*> aEncoding)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   mEncoding = aEncoding;
-  mUnicodeDecoder = mEncoding->NewDecoderWithBOMRemoval();
+  mUnicodeDecoder = mEncoding->NewDecoderWithoutBOMHandling();
   mCharsetSource = kCharsetFromByteOrderMark;
   mFeedChardet = false;
   mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);

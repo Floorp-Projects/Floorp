@@ -32,7 +32,7 @@ async function performTests() {
   const target = TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  const jstermComplete = value => jstermSetValueAndComplete(jsterm, value);
+  const jstermComplete = value => setInputValueForAutocompletion(jsterm, value);
 
   // Test that document.title gives string methods. Native getters must execute.
   await jstermComplete("document.title.");
@@ -50,6 +50,7 @@ async function performTests() {
 
   // Test if 'foo1Obj.' gives 'prop1' and 'prop2'
   await jstermComplete("foo1Obj.");
+  checkJsTermCompletionValue(jsterm, "        prop1", "foo1Obj completion");
   is(getPopupLabels(popup).join("-"), "prop1-prop2",
     `"foo1Obj." gave the expected suggestions`);
 

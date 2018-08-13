@@ -20,34 +20,16 @@
     await pushPrefs(["media.cubeb.force_null_context", true],
                     ["media.navigator.streams.fake", false]);
 
-    // Android has its own codepath which means it works even when cubeb is
-    // disabled. For examples see MediaEngineWebRTC::GetNumOfRecordingDevices and
-    // MediaEngineWebRTC::GetRecordingDeviceName.
-    let isAndroid = navigator.appVersion.includes("Android");
-    // We're on android we expect to get an audio stream, create an elem for it
-    let testAudio = createMediaElement('audio', 'testAudio');
-
     // Request audio only, to avoid cams
     let constraints = {audio: true, video: false};
     let stream;
     try {
       stream = await getUserMedia(constraints);
     } catch (e) {
-      if (isAndroid) {
-        ok(false, `getUserMedia expected to succeed on android, even with null cubeb context, but got ${e}`);
-        return;
-      }
-      // !isAndroid
       // We've got no audio backend, so we expect gUM to fail.
       ok(e.name == "NotFoundError", "Expected NotFoundError due to no audio tracks!");
       return;
     }
-    if (isAndroid) {
-      ok(stream, "getUserMedia expected to return a stream on Android even when cubeb context null!");
-      let playback = new LocalMediaStreamPlayback(testAudio, stream);
-      return playback.playMedia(false);
-    }
-    // !isAndroid
     // If we're not on android we should not have gotten a stream without a cubeb context!
     ok(false, "getUserMedia not expected to succeed when cubeb is disabled, but it did!");
   });

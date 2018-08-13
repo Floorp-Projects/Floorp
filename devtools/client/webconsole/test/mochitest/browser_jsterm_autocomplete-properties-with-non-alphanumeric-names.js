@@ -40,9 +40,7 @@ async function performTests() {
 }
 
 async function testAutocomplete(jsterm, inputString) {
-  jsterm.setInputValue(inputString);
-  await new Promise(resolve => jsterm.complete(jsterm.COMPLETE_HINT_ONLY, resolve));
-
+  await setInputValueForAutocompletion(jsterm, inputString);
   const popup = jsterm.autocompletePopup;
   ok(popup.itemCount > 0, `There's ${popup.itemCount} suggestions for '${inputString}'`);
 }

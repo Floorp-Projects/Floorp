@@ -383,27 +383,7 @@ var NetErrorContent = {
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
 
         learnMoreLink.href = baseURL + "time-errors";
-        if (newErrorPagesEnabled) {
-          let dateOptions = { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
-          let systemDate = new Services.intl.DateTimeFormat(undefined, dateOptions).format(new Date());
-          doc.getElementById("wrongSystemTime_systemDate").textContent = systemDate;
-          let errDesc = doc.getElementById("ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
-          let sd = doc.getElementById("errorShortDescText2");
-          if (sd) {
-            // eslint-disable-next-line no-unsanitized/property
-            sd.innerHTML = errDesc.innerHTML;
-          }
-          if (es) {
-            // eslint-disable-next-line no-unsanitized/property
-            es.innerHTML = errWhatToDo.innerHTML;
-          }
-          if (est) {
-            // eslint-disable-next-line no-unsanitized/property
-            est.innerHTML = errWhatToDoTitle.innerHTML;
-          }
-          updateContainerPosition();
-        break;
-        }
+        let clockSkew = false;
         // We check against the remote-settings server time first if available, because that allows us
         // to give the user an approximation of what the correct time is.
         let difference = Services.prefs.getIntPref(PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, 0);
@@ -417,6 +397,7 @@ var NetErrorContent = {
         // and adjusting the date per the interval would make the cert valid, warn the user:
         if (Math.abs(difference) > 60 * 60 * 24 && (now - lastFetched) <= 60 * 60 * 24 * 5 &&
             certRange.notBefore < approximateDate && certRange.notAfter > approximateDate) {
+          clockSkew = true;
           let formatter = new Services.intl.DateTimeFormat(undefined, {
             dateStyle: "short"
           });
@@ -448,6 +429,7 @@ var NetErrorContent = {
           // so we shouldn't exclude the possibility that the cert has become valid
           // since the build date.
           if (buildDate > systemDate && new Date(certRange.notAfter) > buildDate) {
+            clockSkew = true;
             let formatter = new Services.intl.DateTimeFormat(undefined, {
               dateStyle: "short"
             });
@@ -456,10 +438,49 @@ var NetErrorContent = {
               .textContent = doc.location.hostname;
             doc.getElementById("wrongSystemTimeWithoutReference_systemDate")
               .textContent = formatter.format(systemDate);
-
-            doc.getElementById("errorShortDesc").style.display = "none";
-            doc.getElementById("wrongSystemTimeWithoutReferencePanel").style.display = "block";
           }
+        }
+        if (!newErrorPagesEnabled) {
+          break;
+        }
+        let dateOptions = { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
+        let systemDate = new Services.intl.DateTimeFormat(undefined, dateOptions).format(new Date());
+        doc.getElementById("wrongSystemTime_systemDate1").textContent = systemDate;
+        if (clockSkew) {
+          doc.body.classList.add("illustrated", "clockSkewError");
+          let clockErrTitle = doc.getElementById("et_clockSkewError");
+          let clockErrDesc = doc.getElementById("ed_clockSkewError");
+          // eslint-disable-next-line no-unsanitized/property
+          doc.querySelector(".title-text").textContent = clockErrTitle.textContent;
+          let desc = doc.getElementById("errorShortDescText");
+          doc.getElementById("errorShortDesc").style.display = "block";
+          doc.getElementById("wrongSystemTimePanel").style.display = "none";
+          doc.getElementById("certificateErrorReporting").style.display = "none";
+          if (desc) {
+            // eslint-disable-next-line no-unsanitized/property
+            desc.innerHTML = clockErrDesc.innerHTML;
+          }
+          let errorPageContainer = doc.getElementById("errorPageContainer");
+          let textContainer = doc.getElementById("text-container");
+          errorPageContainer.style.backgroundPosition = `left top calc(50vh - ${textContainer.clientHeight / 2}px)`;
+        } else {
+            doc.getElementById("wrongSystemTime_systemDate2").textContent = systemDate;
+            let errDesc = doc.getElementById("ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
+            let sd = doc.getElementById("errorShortDescText2");
+            if (sd) {
+              // eslint-disable-next-line no-unsanitized/property
+              sd.innerHTML = errDesc.innerHTML;
+            }
+            if (es) {
+              // eslint-disable-next-line no-unsanitized/property
+              es.innerHTML = errWhatToDo.innerHTML;
+            }
+            if (est) {
+              // eslint-disable-next-line no-unsanitized/property
+              est.textContent = errWhatToDoTitle.textContent;
+              est.style.fontWeight = "bold";
+            }
+            updateContainerPosition();
         }
         break;
     }

@@ -23,14 +23,14 @@ async function performTests() {
   const {autocompletePopup} = jsterm;
 
   // Test typing 'docu'.
-  await jstermSetValueAndComplete(jsterm, "docu");
+  await setInputValueForAutocompletion(jsterm, "docu");
   is(jsterm.getInputValue(), "docu", "'docu' completion (input.value)");
   checkJsTermCompletionValue(jsterm, "    ment", "'docu' completion (completeNode)");
   is(autocompletePopup.items.length, 1, "autocomplete popup has 1 item");
-  ok(autocompletePopup.isOpen, "autocomplete popup is open with 1 item");
+  is(autocompletePopup.isOpen, false, "autocomplete popup is not open");
 
   // Test typing 'docu' and press tab.
-  await jstermSetValueAndComplete(jsterm, "docu", undefined, jsterm.COMPLETE_FORWARD);
+  EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "document", "'docu' tab completion");
 
   checkJsTermCursor(jsterm, "document".length, "cursor is at the end of 'document'");
@@ -38,47 +38,64 @@ async function performTests() {
 
   // Test typing 'window.Ob' and press tab.  Just 'window.O' is
   // ambiguous: could be window.Object, window.Option, etc.
-  await jstermSetValueAndComplete(jsterm, "window.Ob", undefined,
-                                  jsterm.COMPLETE_FORWARD);
+  await setInputValueForAutocompletion(jsterm, "window.Ob");
+  EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "window.Object", "'window.Ob' tab completion");
 
   // Test typing 'document.getElem'.
-  await jstermSetValueAndComplete(
-    jsterm, "document.getElem", undefined, jsterm.COMPLETE_FORWARD);
+  const onPopupOpened = autocompletePopup.once("popup-opened");
+  await setInputValueForAutocompletion(jsterm, "document.getElem");
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' completion");
   checkJsTermCompletionValue(jsterm, "                entById",
      "'document.getElem' completion");
 
-  // Test pressing tab another time.
-  await jsterm.complete(jsterm.COMPLETE_FORWARD);
+  // Test pressing key down.
+  await onPopupOpened;
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' completion");
   checkJsTermCompletionValue(jsterm, "                entsByClassName",
      "'document.getElem' another tab completion");
 
-  // Test pressing shift_tab.
-  await jstermComplete(jsterm, jsterm.COMPLETE_BACKWARD);
+  // Test pressing key up.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  await waitFor(() => (getJsTermCompletionValue(jsterm) || "").includes("entById"));
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' untab completion");
   checkJsTermCompletionValue(jsterm, "                entById",
      "'document.getElem' completion");
 
   ui.clearOutput();
 
-  await jstermSetValueAndComplete(jsterm, "docu");
+  await setInputValueForAutocompletion(jsterm, "docu");
   checkJsTermCompletionValue(jsterm, "    ment", "'docu' completion");
 
+  let onAutocompletUpdated = jsterm.once("autocomplete-updated");
   await jsterm.execute();
   checkJsTermCompletionValue(jsterm, "", "clear completion on execute()");
 
-  // Test multi-line completion works
-  await jstermSetValueAndComplete(jsterm, "console.log('one');\nconsol");
-  checkJsTermCompletionValue(jsterm, "                   \n      e",
-     "multi-line completion");
+  // Test multi-line completion works. We can't use setInputValueForAutocompletion because
+  // it would trigger an evaluation (because of the new line, an Enter keypress is
+  // simulated).
+  onAutocompletUpdated = jsterm.once("autocomplete-updated");
+  jsterm.setInputValue("console.log('one');\n");
+  EventUtils.sendString("consol");
+  await onAutocompletUpdated;
+  checkJsTermCompletionValue(jsterm, "\n      e", "multi-line completion");
+
+  // Test multi-line completion works even if there is text after the cursor
+  onAutocompletUpdated = jsterm.once("autocomplete-updated");
+  jsterm.setInputValue("{\n\n}");
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  EventUtils.sendString("console.g");
+  await onAutocompletUpdated;
+  checkJsTermValueAndCursor(jsterm, "{\nconsole.g|\n}");
+  checkJsTermCompletionValue(jsterm, "\n         roup", "multi-line completion");
+  is(autocompletePopup.isOpen, true, "popup is opened");
 
   // Test non-object autocompletion.
-  await jstermSetValueAndComplete(jsterm, "Object.name.sl");
+  await setInputValueForAutocompletion(jsterm, "Object.name.sl");
   checkJsTermCompletionValue(jsterm, "              ice", "non-object completion");
 
   // Test string literal autocompletion.
-  await jstermSetValueAndComplete(jsterm, "'Asimov'.sl");
+  await setInputValueForAutocompletion(jsterm, "'Asimov'.sl");
   checkJsTermCompletionValue(jsterm, "           ice", "string literal completion");
 }
