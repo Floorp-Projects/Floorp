@@ -87,6 +87,7 @@ ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
         schema.WriteField("implementation");
         schema.WriteField("optimizations");
         schema.WriteField("line");
+        schema.WriteField("column");
         schema.WriteField("category");
       }
 
