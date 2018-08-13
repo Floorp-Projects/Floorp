@@ -91,7 +91,10 @@ class SearchSuggestionsFragment : Fragment() {
                 BitmapDrawable(resources, it)
             } ?: resources.getDrawable(R.drawable.ic_search, null)
 
-            searchView.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
+            val size = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
+            icon.setBounds(0, 0, size, size)
+
+            searchView.setCompoundDrawables(icon, null, null, null)
         })
     }
 
