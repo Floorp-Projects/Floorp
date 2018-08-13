@@ -4491,7 +4491,7 @@ JSScript::AutoDelazify::dropScript()
     script_ = nullptr;
 }
 
-JS::ubi::Node::Size
+JS::ubi::Base::Size
 JS::ubi::Concrete<JSScript>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
     Size size = Arena::thingSize(get().asTenured().getAllocKind());

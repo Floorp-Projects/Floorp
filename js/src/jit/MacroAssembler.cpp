@@ -1603,16 +1603,6 @@ MacroAssembler::loadDependentStringBase(Register str, Register dest)
 }
 
 void
-MacroAssembler::leaNewDependentStringBase(Register str, Register dest)
-{
-    MOZ_ASSERT(str != dest);
-
-    // Spectre-safe because this is a newly allocated dependent string, thus we
-    // are certain of its type and the type of its base field.
-    computeEffectiveAddress(Address(str, JSDependentString::offsetOfBase()), dest);
-}
-
-void
 MacroAssembler::storeDependentStringBase(Register base, Register str)
 {
     storePtr(base, Address(str, JSDependentString::offsetOfBase()));
@@ -1649,12 +1639,12 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, Re
     // because a TwoByte rope might have a Latin1 child.
     branchLatin1String(output, &isLatin1);
     loadStringChars(output, scratch, CharEncoding::TwoByte);
-    load16ZeroExtend(BaseIndex(scratch, index, TimesTwo), output);
+    loadChar(scratch, index, output, CharEncoding::TwoByte);
     jump(&done);
 
     bind(&isLatin1);
     loadStringChars(output, scratch, CharEncoding::Latin1);
-    load8ZeroExtend(BaseIndex(scratch, index, TimesOne), output);
+    loadChar(scratch, index, output, CharEncoding::Latin1);
 
     bind(&done);
 }
@@ -1671,6 +1661,27 @@ MacroAssembler::loadStringIndexValue(Register str, Register dest, Label* fail)
 
     // Extract the index.
     rshift32(Imm32(JSString::INDEX_VALUE_SHIFT), dest);
+}
+
+void
+MacroAssembler::loadChar(Register chars, Register index, Register dest, CharEncoding encoding,
+                         int32_t offset/* = 0 */)
+{
+    if (encoding == CharEncoding::Latin1)
+        loadChar(BaseIndex(chars, index, TimesOne, offset), dest, encoding);
+    else
+        loadChar(BaseIndex(chars, index, TimesTwo, offset), dest, encoding);
+}
+
+void
+MacroAssembler::addToCharPtr(Register chars, Register index, CharEncoding encoding)
+{
+    if (encoding == CharEncoding::Latin1) {
+        static_assert(sizeof(char) == 1, "Latin-1 string index shouldn't need scaling");
+        addPtr(index, chars);
+    } else {
+        computeEffectiveAddress(BaseIndex(chars, index, TimesTwo), chars);
+    }
 }
 
 void

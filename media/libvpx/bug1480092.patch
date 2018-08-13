@@ -1,0 +1,22 @@
+diff --git a/media/libvpx/libvpx/vp8/common/postproc.c b/media/libvpx/libvpx/vp8/common/postproc.c
+--- a/media/libvpx/libvpx/vp8/common/postproc.c
++++ b/media/libvpx/libvpx/vp8/common/postproc.c
+@@ -60,17 +60,17 @@ static void vp8_de_mblock(YV12_BUFFER_CO
+ }
+ 
+ void vp8_deblock(VP8_COMMON *cm, YV12_BUFFER_CONFIG *source,
+                  YV12_BUFFER_CONFIG *post, int q, int low_var_thresh,
+                  int flag) {
+   double level = 6.0e-05 * q * q * q - .0067 * q * q + .306 * q + .0065;
+   int ppl = (int)(level + .5);
+ 
+-  const MODE_INFO *mode_info_context = cm->show_frame_mi;
++  const MODE_INFO *mode_info_context = cm->mi;
+   int mbr, mbc;
+ 
+   /* The pixel thresholds are adjusted according to if or not the macroblock
+    * is a skipped block.  */
+   unsigned char *ylimits = cm->pp_limits_buffer;
+   unsigned char *uvlimits = cm->pp_limits_buffer + 16 * cm->mb_cols;
+   (void)low_var_thresh;
+   (void)flag;

@@ -15,15 +15,6 @@ namespace jit {
     _(BinaryArith_Fallback)                      \
                                                  \
     _(Compare_Fallback)                          \
-    _(Compare_Int32)                             \
-    _(Compare_Double)                            \
-    _(Compare_NumberWithUndefined)               \
-    _(Compare_String)                            \
-    _(Compare_Symbol)                            \
-    _(Compare_Boolean)                           \
-    _(Compare_Object)                            \
-    _(Compare_ObjectWithUndefined)               \
-    _(Compare_Int32WithBoolean)                  \
                                                  \
     _(GetProp_Fallback)                          \
                                                  \
