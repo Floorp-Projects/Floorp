@@ -580,6 +580,8 @@ main {
     -moz-context-properties: fill;
     fill: #FFF;
     box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), var(--newtab-card-shadow); }
+  .top-site-outer.search-shortcut .rich-icon {
+    background-color: #FFF; }
   .top-site-outer .title {
     color: var(--newtab-topsites-label-color);
     font: message-box;
@@ -619,6 +621,8 @@ main {
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   left: 0;
   margin: 0 auto;
+  max-height: calc(100% - 40px);
+  overflow-y: auto;
   position: fixed;
   right: 0;
   top: 40px;
@@ -648,11 +652,11 @@ main {
   max-width: 700px;
   margin: 0 auto;
   padding: 32px; }
+  .topsite-form .search-shortcuts-container > div {
+    margin-inline-end: -39px; }
   .topsite-form .search-shortcuts-container .top-site-outer {
     margin-inline-start: 0;
     margin-inline-end: 39px; }
-    .topsite-form .search-shortcuts-container .top-site-outer:nth-child(5n) {
-      margin-inline-end: 0; }
 
 .topsite-form .top-site-outer {
   padding: 0;
@@ -1225,12 +1229,18 @@ a.firstrun-link {
     cursor: default;
     display: flex;
     height: 48px;
+    margin: 0 auto;
     position: relative;
-    width: 100%; }
-  @media (min-width: 866px) {
-    .search-wrapper .search-inner-wrapper {
-      margin: 0 auto;
-      width: 736px; } }
+    width: 224px; }
+    @media (min-width: 482px) {
+      .search-wrapper .search-inner-wrapper {
+        width: 352px; } }
+    @media (min-width: 610px) {
+      .search-wrapper .search-inner-wrapper {
+        width: 480px; } }
+    @media (min-width: 866px) {
+      .search-wrapper .search-inner-wrapper {
+        width: 736px; } }
   .search-wrapper input {
     background: var(--newtab-textbox-background-color) var(--newtab-search-icon) 12px center no-repeat;
     background-size: 24px;
@@ -1247,7 +1257,7 @@ a.firstrun-link {
       background-position-x: right 12px; }
   .search-wrapper:hover input {
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.25); }
-  .search-wrapper:active input,
+  .search-wrapper .search-inner-wrapper:active input,
   .search-wrapper input:focus {
     border: 1px solid var(--newtab-textbox-focus-color);
     box-shadow: var(--newtab-textbox-focus-boxshadow); }

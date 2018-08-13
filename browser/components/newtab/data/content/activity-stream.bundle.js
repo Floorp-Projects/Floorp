@@ -3597,7 +3597,7 @@ const SectionMenuOptions = {
     id: "section_menu_action_add_search_engine",
     icon: "search",
     action: { type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL },
-    userEvent: "MENU_ADD_SEARCH_SHORTCUTS"
+    userEvent: "MENU_ADD_SEARCH"
   }),
   PrivacyNotice: section => ({
     id: "section_menu_action_privacy_notice",
@@ -4104,7 +4104,7 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
   onSearchShortcutsFormClose() {
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
       source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__["TOP_SITES_SOURCE"],
-      event: "TOP_SITES_SEARCH_SHORTCUTS_CLOSE"
+      event: "SEARCH_EDIT_CLOSE"
     }));
     this.props.dispatch({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL });
   }
@@ -4221,7 +4221,7 @@ class SelectableSearchShortcut extends react__WEBPACK_IMPORTED_MODULE_2___defaul
     const imageStyle = { backgroundImage: `url("${shortcut.tippyTopIcon}")` };
     return react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
       "div",
-      { className: "top-site-outer" },
+      { className: "top-site-outer search-shortcut" },
       react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", { type: "checkbox", id: shortcut.keyword, name: shortcut.keyword, checked: selected, onChange: this.props.onChange }),
       react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
         "label",
@@ -4453,6 +4453,10 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
         }
         break;
       case "mousedown":
+        // Block the scroll wheel from appearing for middle clicks on search top sites
+        if (event.button === 1 && this.props.link.searchTopSite) {
+          event.preventDefault();
+        }
         // Reset at the first mouse event of a potential drag
         this.dragged = false;
         break;
@@ -4509,7 +4513,7 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
 
   render() {
     const { children, className, defaultStyle, isDraggable, link, onClick, title } = this.props;
-    const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}`;
+    const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
     const { tippyTopIcon, faviconSize } = link;
     const [letterFallback] = title;
     let imageClassName;

@@ -16,6 +16,7 @@ const {
   SEARCH_SHORTCUTS_EXPERIMENT,
   SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
   SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+  checkHasSearchEngine,
   getSearchProvider
 } = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm", {});
 
@@ -190,7 +191,7 @@ this.TopSitesFeed = class TopSitesFeed {
           !pinnedSites.find(s => s && s.hostname === shortcut.shortURL) &&
           !prevInsertedShortcuts.includes(shortcut.shortURL) &&
           nextAvailable > -1 &&
-          Services.search.getEngines().find(e => e.identifier && e.identifier.match(shortcut.searchIdentifier))
+          checkHasSearchEngine(shortcut.keyword)
         ) {
           const site = this.topSiteToSearchTopSite({url: shortcut.url});
           this._pinSiteAt(site, nextAvailable);
@@ -376,11 +377,9 @@ this.TopSitesFeed = class TopSitesFeed {
     // Populate the state with available search shortcuts
     await new Promise(resolve => Services.search.init(resolve));
     const searchShortcuts = Services.search.getDefaultEngines().reduce((result, engine) => {
-      if (engine.identifier) {
-        const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s => engine.identifier.match(s.searchIdentifier));
-        if (shortcut) {
-          result.push(this._tippyTopProvider.processSite({...shortcut}));
-        }
+      const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s => engine.wrappedJSObject._internalAliases.includes(s.keyword));
+      if (shortcut) {
+        result.push(this._tippyTopProvider.processSite({...shortcut}));
       }
       return result;
     }, []);
@@ -392,7 +391,7 @@ this.TopSitesFeed = class TopSitesFeed {
 
   topSiteToSearchTopSite(site) {
     const searchProvider = getSearchProvider(shortURL(site));
-    if (!searchProvider) {
+    if (!searchProvider || !checkHasSearchEngine(searchProvider.keyword)) {
       return site;
     }
     return {
