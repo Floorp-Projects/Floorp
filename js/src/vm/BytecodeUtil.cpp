@@ -12,7 +12,6 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
@@ -69,8 +68,6 @@ const JSCodeSpec js::CodeSpec[] = {
     FOR_EACH_OPCODE(MAKE_CODESPEC)
 #undef MAKE_CODESPEC
 };
-
-const unsigned js::NumCodeSpecs = mozilla::ArrayLength(CodeSpec);
 
 /*
  * Each element of the array is either a source literal associated with JS
@@ -958,7 +955,9 @@ BytecodeParser::parse()
             uint32_t targetOffset = offset + GET_JUMP_OFFSET(pc);
             if (!addJump(targetOffset, &nextOffset, newStackDepth, offsetStack,
                          pc, JumpKind::Simple))
+            {
                 return false;
+            }
         }
 
         // Handle any fallthrough from this opcode.
@@ -2411,36 +2410,6 @@ js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
         return nullptr;
 
     return UniqueChars(JS_EncodeString(cx, fallback));
-}
-
-bool
-js::CallResultEscapes(jsbytecode* pc)
-{
-    /*
-     * If we see any of these sequences, the result is unused:
-     * - call / pop
-     *
-     * If we see any of these sequences, the result is only tested for nullness:
-     * - call / ifeq
-     * - call / not / ifeq
-     */
-
-    if (*pc == JSOP_CALL)
-        pc += JSOP_CALL_LENGTH;
-    else if (*pc == JSOP_CALL_IGNORES_RV)
-        pc += JSOP_CALL_IGNORES_RV_LENGTH;
-    else if (*pc == JSOP_SPREADCALL)
-        pc += JSOP_SPREADCALL_LENGTH;
-    else
-        return true;
-
-    if (*pc == JSOP_POP)
-        return false;
-
-    if (*pc == JSOP_NOT)
-        pc += JSOP_NOT_LENGTH;
-
-    return *pc != JSOP_IFEQ;
 }
 
 extern bool

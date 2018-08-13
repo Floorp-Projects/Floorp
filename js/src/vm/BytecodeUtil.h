@@ -394,8 +394,7 @@ struct JSCodeSpec {
 namespace js {
 
 extern const JSCodeSpec CodeSpec[];
-extern const unsigned   NumCodeSpecs;
-extern const char       * const CodeName[];
+extern const char* const CodeName[];
 
 /* Shorthand for type from opcode. */
 
@@ -535,20 +534,6 @@ DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
  */
 UniqueChars
 DecompileArgument(JSContext* cx, int formalIndex, HandleValue v);
-
-extern bool
-CallResultEscapes(jsbytecode* pc);
-
-static inline unsigned
-GetDecomposeLength(jsbytecode* pc, size_t len)
-{
-    /*
-     * The last byte of a DECOMPOSE op stores the decomposed length.  This is a
-     * constant: perhaps we should just hardcode values instead?
-     */
-    MOZ_ASSERT(size_t(CodeSpec[*pc].length) == len);
-    return (unsigned) pc[len - 1];
-}
 
 static inline unsigned
 GetBytecodeLength(jsbytecode* pc)
