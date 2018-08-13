@@ -9,16 +9,6 @@ add_task(async function() {
   await target.makeRemote();
   is(target.tab, gBrowser.selectedTab, "Target linked to the right tab.");
 
-  const hidden = once(target, "hidden");
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  await hidden;
-  ok(true, "Hidden event received");
-
-  const visible = once(target, "visible");
-  gBrowser.removeCurrentTab();
-  await visible;
-  ok(true, "Visible event received");
-
   const willNavigate = once(target, "will-navigate");
   const navigate = once(target, "navigate");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
