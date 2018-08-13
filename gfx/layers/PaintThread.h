@@ -32,18 +32,7 @@ class PaintTask {
 public:
   PaintTask() {}
 
-  template<typename F>
-  void ForEachTextureClient(F aClosure) const
-  {
-    for (auto client : mClients) {
-      aClosure(client);
-    }
-  }
-
-  void DropTextureClients()
-  {
-    mClients.clear();
-  }
+  void DropTextureClients();
 
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTargetCapture> mCapture;
