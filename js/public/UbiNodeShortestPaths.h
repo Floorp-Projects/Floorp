@@ -188,18 +188,11 @@ struct JS_PUBLIC_API(ShortestPaths)
       : maxNumPaths_(maxNumPaths)
       , root_(root)
       , targets_(std::move(targets))
-      , paths_()
+      , paths_(targets_.count())
       , backEdges_()
     {
         MOZ_ASSERT(maxNumPaths_ > 0);
         MOZ_ASSERT(root_);
-        MOZ_ASSERT(targets_.initialized());
-    }
-
-    bool initialized() const {
-        return targets_.initialized() &&
-               paths_.initialized() &&
-               backEdges_.initialized();
     }
 
   public:
@@ -249,15 +242,12 @@ struct JS_PUBLIC_API(ShortestPaths)
         MOZ_ASSERT(targets.count() > 0);
         MOZ_ASSERT(maxNumPaths > 0);
 
-        size_t count = targets.count();
         ShortestPaths paths(maxNumPaths, root, std::move(targets));
-        if (!paths.paths_.init(count))
-            return mozilla::Nothing();
 
         Handler handler(paths);
         Traversal traversal(cx, handler, noGC);
         traversal.wantNames = true;
-        if (!traversal.init() || !traversal.addStart(root) || !traversal.traverse())
+        if (!traversal.addStart(root) || !traversal.traverse())
             return mozilla::Nothing();
 
         // Take ownership of the back edges we created while traversing the
@@ -265,7 +255,6 @@ struct JS_PUBLIC_API(ShortestPaths)
         // use-after-free.
         paths.backEdges_ = std::move(traversal.visited);
 
-        MOZ_ASSERT(paths.initialized());
         return mozilla::Some(std::move(paths));
     }
 
@@ -275,7 +264,6 @@ struct JS_PUBLIC_API(ShortestPaths)
      * instance.
      */
     NodeSet::Iterator targetIter() const {
-        MOZ_ASSERT(initialized());
         return targets_.iter();
     }
 
@@ -291,7 +279,6 @@ struct JS_PUBLIC_API(ShortestPaths)
      */
     template <class Func>
     MOZ_MUST_USE bool forEachPath(const Node& target, Func func) {
-        MOZ_ASSERT(initialized());
         MOZ_ASSERT(targets_.has(target));
 
         auto ptr = paths_.lookup(target);

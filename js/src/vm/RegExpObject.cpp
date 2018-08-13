@@ -1266,15 +1266,6 @@ RegExpRealm::createMatchResultTemplateObject(JSContext* cx)
     return matchResultTemplateObject_;
 }
 
-bool
-RegExpZone::init()
-{
-    if (!set_.init(0))
-        return false;
-
-    return true;
-}
-
 void
 RegExpRealm::sweep()
 {

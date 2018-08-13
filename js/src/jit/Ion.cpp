@@ -221,7 +221,7 @@ JitRuntime::initialize(JSContext* cx)
     JitContext jctx(cx, nullptr);
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
-    if (!functionWrappers_ || !functionWrappers_->init())
+    if (!functionWrappers_)
         return false;
 
     StackMacroAssembler masm;
@@ -410,11 +410,6 @@ JitRealm::initialize(JSContext* cx)
     if (!stubCodes_)
         return false;
 
-    if (!stubCodes_->init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
     stringsCanBeInNursery = cx->nursery().canAllocateStrings();
 
     return true;
@@ -441,17 +436,6 @@ JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const
         MOZ_ASSERT(jitCode);
         jitCode.get();
     }
-}
-
-bool
-JitZone::init(JSContext* cx)
-{
-    if (!baselineCacheIRStubCodes_.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return true;
 }
 
 void
@@ -686,7 +670,6 @@ TrampolinePtr
 JitRuntime::getVMWrapper(const VMFunction& f) const
 {
     MOZ_ASSERT(functionWrappers_);
-    MOZ_ASSERT(functionWrappers_->initialized());
     MOZ_ASSERT(trampolineCode_);
 
     JitRuntime::VMWrapperMap::Ptr p = functionWrappers_->readonlyThreadsafeLookup(&f);
@@ -1483,8 +1466,6 @@ OptimizeMIR(MIRGenerator* mir)
     }
 
     ValueNumberer gvn(mir, graph);
-    if (!gvn.init())
-        return false;
 
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.

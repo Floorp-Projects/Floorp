@@ -28,17 +28,9 @@ static T* extractUnbarriered(T* v)
 template <class K, class V, class HP>
 WeakMap<K, V, HP>::WeakMap(JSContext* cx, JSObject* memOf)
   : Base(cx->zone()), WeakMapBase(memOf, cx->zone())
-{}
-
-template <class K, class V, class HP>
-bool
-WeakMap<K, V, HP>::init(uint32_t len)
 {
-    if (!Base::init(len))
-        return false;
     zone()->gcWeakMapList().insertFront(this);
     marked = JS::IsIncrementalGCInProgress(TlsContext.get());
-    return true;
 }
 
 // Trace a WeakMap entry based on 'markedCell' getting marked, where 'origKey'
@@ -79,9 +71,6 @@ WeakMap<K, V, HP>::trace(JSTracer* trc)
     MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy(), isInList());
 
     TraceNullableEdge(trc, &memberOf, "WeakMap owner");
-
-    if (!Base::initialized())
-        return;
 
     if (trc->isMarkingTracer()) {
         MOZ_ASSERT(trc->weakMapAction() == ExpandWeakMaps);

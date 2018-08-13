@@ -1254,8 +1254,7 @@ ClearSavedFrames(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     js::SavedStacks& savedStacks = cx->realm()->savedStacks();
-    if (savedStacks.initialized())
-        savedStacks.clear();
+    savedStacks.clear();
 
     for (ActivationIterator iter(cx); !iter.done(); ++iter)
         iter->clearLiveSavedFrameCache();
@@ -3593,7 +3592,7 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
 
         heaptools::FindPathHandler handler(cx, start, target, &nodes, edges);
         heaptools::FindPathHandler::Traversal traversal(cx, handler, autoCannotGC);
-        if (!traversal.init() || !traversal.addStart(start)) {
+        if (!traversal.addStart(start)) {
             ReportOutOfMemory(cx);
             return false;
         }
@@ -3719,10 +3718,6 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
         JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
-        if (!targets.init()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
 
         for (size_t i = 0; i < length; i++) {
             RootedValue val(cx, objs->getDenseElement(i));

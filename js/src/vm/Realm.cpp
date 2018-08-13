@@ -89,11 +89,6 @@ Realm::~Realm()
 bool
 ObjectRealm::init(JSContext* cx)
 {
-    if (!iteratorCache.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
     NativeIteratorSentinel sentinel(NativeIterator::allocateSentinel(cx));
     if (!sentinel)
         return false;
@@ -116,13 +111,6 @@ Realm::init(JSContext* cx, JSPrincipals* principals)
 
     if (!objects_.init(cx))
         return false;
-
-    if (!savedStacks_.init() ||
-        !varNames_.init())
-    {
-        ReportOutOfMemory(cx);
-        return false;
-    }
 
     if (principals) {
         // Any realm with the trusted principals -- and there can be
@@ -211,11 +199,6 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObje
         auto map = cx->make_unique<ObjectWeakMap>(cx);
         if (!map)
             return nullptr;
-
-        if (!map->init()) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
 
         nonSyntacticLexicalEnvironments_ = std::move(map);
     }
@@ -602,7 +585,7 @@ Realm::purge()
     dtoaCache.purge();
     newProxyCache.purge();
     objectGroups_.purge();
-    objects_.iteratorCache.clearAndShrink();
+    objects_.iteratorCache.clearAndCompact();
     arraySpeciesLookup.purge();
     promiseLookup.purge();
 }
@@ -620,10 +603,8 @@ Realm::clearTables()
     MOZ_ASSERT(objects_.enumerators->next() == objects_.enumerators);
 
     objectGroups_.clearTables();
-    if (savedStacks_.initialized())
-        savedStacks_.clear();
-    if (varNames_.initialized())
-        varNames_.clear();
+    savedStacks_.clear();
+    varNames_.clear();
 }
 
 void
@@ -662,7 +643,7 @@ Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 
         if (!objects_.objectMetadataTable) {
             auto table = cx->make_unique<ObjectWeakMap>(cx);
-            if (!table || !table->init())
+            if (!table)
                 oomUnsafe.crash("setNewObjectMetadata");
 
             objects_.objectMetadataTable = std::move(table);

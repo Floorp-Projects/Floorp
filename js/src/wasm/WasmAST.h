@@ -1258,9 +1258,6 @@ class AstModule : public AstNode
         globals_(lifo),
         numGlobalImports_(0)
     {}
-    bool init() {
-        return funcTypeMap_.init();
-    }
     bool addMemory(AstName name, const Limits& memory) {
         return memories_.append(AstResizable(memory, false, name));
     }

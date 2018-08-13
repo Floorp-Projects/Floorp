@@ -1500,11 +1500,6 @@ InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer, ArrayBufferVie
     // ArrayBufferObject entries are only added when there are multiple views.
     MOZ_ASSERT(buffer->firstView());
 
-    if (!map.initialized() && !map.init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
     Map::AddPtr p = map.lookupForAdd(buffer);
 
     MOZ_ASSERT(!gc::IsInsideNursery(buffer));
@@ -1553,9 +1548,6 @@ InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer, ArrayBufferVie
 InnerViewTable::ViewVector*
 InnerViewTable::maybeViewsUnbarriered(ArrayBufferObject* buffer)
 {
-    if (!map.initialized())
-        return nullptr;
-
     Map::Ptr p = map.lookup(buffer);
     if (p)
         return &p->value();
@@ -1628,9 +1620,6 @@ InnerViewTable::sweepAfterMinorGC()
 size_t
 InnerViewTable::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
-    if (!map.initialized())
-        return 0;
-
     size_t vectorSize = 0;
     for (Map::Enum e(map); !e.empty(); e.popFront())
         vectorSize += e.front().value().sizeOfExcludingThis(mallocSizeOf);
