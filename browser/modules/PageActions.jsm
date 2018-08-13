@@ -1081,9 +1081,6 @@ var gBuiltInActions = [
     // BookmarkingUI.updateBookmarkPageMenuItem().
     title: "",
     pinnedToUrlbar: true,
-    nodeAttributes: {
-      observes: "bookmarkThisPageBroadcaster",
-    },
     onShowingInPanel(buttonNode) {
       browserPageActions(buttonNode).bookmark.onShowingInPanel(buttonNode);
     },
