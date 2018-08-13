@@ -231,35 +231,35 @@ nsSVGRenderingObserverProperty::OnRenderingChange()
 }
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGFilterReference)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGFilterReference)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGFilterObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGFilterObserver)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterReference)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGFilterObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsSVGFilterReference)
+  NS_INTERFACE_MAP_ENTRY(SVGFilterObserver)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGFilterReference)
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGFilterObserver)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsSVGFilterReference)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SVGFilterObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObservedElementTracker)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterReference)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SVGFilterObserver)
   tmp->StopObserving();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservedElementTracker);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsSVGFilterFrame *
-nsSVGFilterReference::GetFilterFrame()
+SVGFilterObserver::GetFilterFrame()
 {
   return static_cast<nsSVGFilterFrame*>(
     GetReferencedFrame(LayoutFrameType::SVGFilter, nullptr));
 }
 
 void
-nsSVGFilterReference::OnRenderingChange()
+SVGFilterObserver::OnRenderingChange()
 {
   SVGIDRenderingObserver::OnRenderingChange();
 
@@ -274,12 +274,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGFilterChainObserver)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGFilterChainObserver)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsSVGFilterChainObserver)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReferences)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObservers)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterChainObserver)
-  tmp->DetachReferences();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReferences);
+  tmp->DetachObservers();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservers);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterChainObserver)
@@ -300,23 +300,24 @@ nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>
       ? SVGObserverUtils::GetFilterURI(aFilteredFrame, i)
       : aFilters[i].GetURL()->ResolveLocalRef(aFilteredElement);
 
-    RefPtr<nsSVGFilterReference> reference =
-      new nsSVGFilterReference(filterURL, aFilteredElement, this);
-    mReferences.AppendElement(reference);
+    RefPtr<SVGFilterObserver> observer =
+      new SVGFilterObserver(filterURL, aFilteredElement, this);
+    mObservers.AppendElement(observer);
   }
 }
 
 nsSVGFilterChainObserver::~nsSVGFilterChainObserver()
 {
-  DetachReferences();
+  DetachObservers();
 }
 
 bool
 nsSVGFilterChainObserver::ReferencesValidResources()
 {
-  for (uint32_t i = 0; i < mReferences.Length(); i++) {
-    if (!mReferences[i]->ReferencesValidResource())
+  for (uint32_t i = 0; i < mObservers.Length(); i++) {
+    if (!mObservers[i]->ReferencesValidResource()) {
       return false;
+    }
   }
   return true;
 }
@@ -324,9 +325,10 @@ nsSVGFilterChainObserver::ReferencesValidResources()
 bool
 nsSVGFilterChainObserver::IsInObserverLists() const
 {
-  for (uint32_t i = 0; i < mReferences.Length(); i++) {
-    if (!mReferences[i]->IsInObserverList())
+  for (uint32_t i = 0; i < mObservers.Length(); i++) {
+    if (!mObservers[i]->IsInObserverList()) {
       return false;
+    }
   }
   return true;
 }

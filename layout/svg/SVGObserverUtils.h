@@ -236,14 +236,14 @@ protected:
  * It fires invalidations when the SVG filter element's id changes or when
  * the SVG filter element's content changes.
  *
- * The nsSVGFilterChainObserver class manages a list of nsSVGFilterReferences.
+ * The nsSVGFilterChainObserver class manages a list of SVGFilterObservers.
  */
-class nsSVGFilterReference final : public SVGIDRenderingObserver
+class SVGFilterObserver final : public SVGIDRenderingObserver
 {
 public:
-  nsSVGFilterReference(nsIURI* aURI,
-                       nsIContent* aObservingContent,
-                       nsSVGFilterChainObserver* aFilterChainObserver)
+  SVGFilterObserver(nsIURI* aURI,
+                    nsIContent* aObservingContent,
+                    nsSVGFilterChainObserver* aFilterChainObserver)
     : SVGIDRenderingObserver(aURI, aObservingContent, false)
     , mFilterChainObserver(aFilterChainObserver)
   {
@@ -261,12 +261,12 @@ public:
   // nsISupports
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVGFILTEROBSERVER_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsSVGFilterReference)
+  NS_DECL_CYCLE_COLLECTION_CLASS(SVGFilterObserver)
 
   void Invalidate() { OnRenderingChange(); };
 
 protected:
-  virtual ~nsSVGFilterReference() {}
+  virtual ~SVGFilterObserver() {}
 
   // SVGIDRenderingObserver
   virtual void OnRenderingChange() override;
@@ -275,17 +275,18 @@ private:
   nsSVGFilterChainObserver* mFilterChainObserver;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGFilterReference, NS_SVGFILTEROBSERVER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGFilterObserver, NS_SVGFILTEROBSERVER_IID)
 
 /**
- * This class manages a list of nsSVGFilterReferences, which represent SVG
- * reference filters in a filter chain.
+ * This class manages a list of SVGFilterObservers, which correspond to
+ * reference to SVG filters in a list of filters in a given 'filter' property.
  * e.g. filter: url(#svg-filter-1) blur(10px) url(#svg-filter-2);
  *
  * In the above example, the nsSVGFilterChainObserver will manage two
- * nsSVGFilterReferences, one for each SVG reference filter. CSS filters like
- * "blur(10px)" don't reference filter elements, so they don't need an
- * nsSVGFilterReference. The style system invalidates changes to CSS filters.
+ * SVGFilterObservers, one for each of the references to SVG filters.  CSS
+ * filters like "blur(10px)" don't reference filter elements, so they don't
+ * need an SVGFilterObserver.  The style system invalidates changes to CSS
+ * filters.
  */
 class nsSVGFilterChainObserver : public nsISupports
 {
@@ -309,14 +310,14 @@ protected:
 
 private:
 
-  void DetachReferences()
+  void DetachObservers()
   {
-    for (uint32_t i = 0; i < mReferences.Length(); i++) {
-      mReferences[i]->DetachFromChainObserver();
+    for (uint32_t i = 0; i < mObservers.Length(); i++) {
+      mObservers[i]->DetachFromChainObserver();
     }
   }
 
-  nsTArray<RefPtr<nsSVGFilterReference>> mReferences;
+  nsTArray<RefPtr<SVGFilterObserver>> mObservers;
 };
 
 class nsSVGFilterProperty : public nsSVGFilterChainObserver
