@@ -906,12 +906,10 @@ CopyingStructuredCloneReadCallback(JSContext* aCx,
 
     if (aTag == SCTAG_DOM_BLOB) {
       MOZ_ASSERT(file.mType == StructuredCloneFile::eBlob);
-
-      RefPtr<Blob> blob = file.mBlob;
-      MOZ_ASSERT(!blob->IsFile());
+      MOZ_ASSERT(!file.mBlob->IsFile());
 
       JS::Rooted<JS::Value> wrappedBlob(aCx);
-      if (NS_WARN_IF(!ToJSValue(aCx, blob, &wrappedBlob))) {
+      if (NS_WARN_IF(!ToJSValue(aCx, file.mBlob, &wrappedBlob))) {
         return nullptr;
       }
 
@@ -923,18 +921,22 @@ CopyingStructuredCloneReadCallback(JSContext* aCx,
     if (aTag == SCTAG_DOM_FILE) {
       MOZ_ASSERT(file.mType == StructuredCloneFile::eBlob);
 
-      RefPtr<Blob> blob = file.mBlob;
-      MOZ_ASSERT(blob->IsFile());
+      {
+        // Create a scope so ~RefPtr fires before returning an unwrapped
+        // JS::Value.
+        RefPtr<Blob> blob = file.mBlob;
+        MOZ_ASSERT(blob->IsFile());
 
-      RefPtr<File> file = blob->ToFile();
-      MOZ_ASSERT(file);
+        RefPtr<File> file = blob->ToFile();
+        MOZ_ASSERT(file);
 
-      JS::Rooted<JS::Value> wrappedFile(aCx);
-      if (NS_WARN_IF(!ToJSValue(aCx, file, &wrappedFile))) {
-        return nullptr;
+        JS::Rooted<JS::Value> wrappedFile(aCx);
+        if (NS_WARN_IF(!ToJSValue(aCx, file, &wrappedFile))) {
+          return nullptr;
+        }
+
+        result.set(&wrappedFile.toObject());
       }
-
-      result.set(&wrappedFile.toObject());
 
       return result;
     }
