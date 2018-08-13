@@ -1638,13 +1638,19 @@ StartMacOSContentSandbox()
     return false;
   }
 
+  // Close all current connections to the WindowServer. This ensures that the
+  // Activity Monitor will not label the content process as "Not responding"
+  // because it's not running a native event loop. See bug 1384336.
+  if (!recordreplay::IsRecordingOrReplaying()) {
+    // Because of the WebReplay system for proxying system API calls, for the
+    // time being we skip this when running under WebReplay (bug 1482668).
+    CGSShutdownServerConnections();
+  }
+  // Actual security benefits are only acheived when we additionally deny
+  // future connections, however this currently breaks WebGL so it's not done
+  // by default.
   if (Preferences::GetBool(
         "security.sandbox.content.mac.disconnect-windowserver")) {
-    // If we've opened a connection to the window server, shut it down now. Forbid
-    // future connections as well. We do this for sandboxing, but it also ensures
-    // that the Activity Monitor will not label the content process as "Not
-    // responding" because it's not running a native event loop. See bug 1384336.
-    CGSShutdownServerConnections();
     CGError result = CGSSetDenyWindowServerConnections(true);
     MOZ_DIAGNOSTIC_ASSERT(result == kCGErrorSuccess);
 #if !MOZ_DIAGNOSTIC_ASSERT_ENABLED
