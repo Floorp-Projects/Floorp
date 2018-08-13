@@ -37,6 +37,33 @@ CacheIRWriter::assertSameCompartment(JSObject* obj) {
     assertSameCompartmentDebugOnly(cx_, obj);
 }
 
+StubField
+CacheIRWriter::readStubFieldForIon(uint32_t offset, StubField::Type type) const
+{
+    size_t index = 0;
+    size_t currentOffset = 0;
+
+    // If we've seen an offset earlier than this before, we know we can start the search
+    // there at least, otherwise, we start the search from the beginning.
+    if (lastOffset_ < offset) {
+        currentOffset = lastOffset_;
+        index = lastIndex_;
+    }
+
+    while (currentOffset != offset) {
+        currentOffset += StubField::sizeInBytes(stubFields_[index].type());
+        index++;
+        MOZ_ASSERT(index < stubFields_.length());
+    }
+
+    MOZ_ASSERT(stubFields_[index].type() == type);
+
+    lastOffset_ = currentOffset;
+    lastIndex_ = index;
+
+    return stubFields_[index];
+}
+
 IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                          ICState::Mode mode)
   : writer(cx),
@@ -4814,6 +4841,122 @@ CompareIRGenerator::tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperand
 }
 
 bool
+CompareIRGenerator::tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if ((!lhsVal_.isInt32() && !lhsVal_.isBoolean()) ||
+        (!rhsVal_.isInt32() && !rhsVal_.isBoolean()))
+    {
+        return false;
+    }
+
+    Int32OperandId lhsIntId = lhsVal_.isBoolean() ? writer.guardIsBoolean(lhsId)
+                                                  : writer.guardIsInt32(lhsId);
+    Int32OperandId rhsIntId = rhsVal_.isBoolean() ? writer.guardIsBoolean(rhsId)
+                                                  : writer.guardIsInt32(rhsId);
+
+    // Strictly different types should have been handed by
+    // tryAttachStrictDifferentTypes
+    MOZ_ASSERT_IF(op_ == JSOP_STRICTEQ || op_ == JSOP_STRICTNE,
+                  lhsVal_.isInt32() == rhsVal_.isInt32());
+
+    writer.compareInt32Result(op_, lhsIntId, rhsIntId);
+    writer.returnFromIC();
+
+    trackAttached(lhsVal_.isBoolean() ? "Boolean" : "Int32");
+    return true;
+}
+
+bool
+CompareIRGenerator::tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    if (!lhsVal_.isNumber() || !rhsVal_.isNumber())
+        return false;
+
+    writer.guardIsNumber(lhsId);
+    writer.guardIsNumber(rhsId);
+    writer.compareDoubleResult(op_, lhsId, rhsId);
+    writer.returnFromIC();
+
+    trackAttached("Number");
+    return true;
+}
+
+bool
+CompareIRGenerator::tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!(lhsVal_.isNullOrUndefined() && rhsVal_.isObject()) &&
+        !(rhsVal_.isNullOrUndefined() && lhsVal_.isObject()))
+        return false;
+
+    if (op_ != JSOP_EQ && op_ != JSOP_NE)
+        return false;
+
+    ValOperandId obj = rhsVal_.isObject() ? rhsId : lhsId;
+    ValOperandId undefOrNull = rhsVal_.isObject() ? lhsId : rhsId;
+
+    writer.guardIsNullOrUndefined(undefOrNull);
+    ObjOperandId objOperand = writer.guardIsObject(obj);
+    writer.compareObjectUndefinedNullResult(op_, objOperand);
+    writer.returnFromIC();
+
+    trackAttached("ObjectUndefined");
+    return true;
+}
+
+// Handle NumberUndefined comparisons
+bool
+CompareIRGenerator::tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!(lhsVal_.isUndefined() && rhsVal_.isNumber()) &&
+        !(rhsVal_.isUndefined() && lhsVal_.isNumber()))
+    {
+        return false;
+    }
+
+    lhsVal_.isNumber() ? writer.guardIsNumber(lhsId) : writer.guardIsUndefined(lhsId);
+    rhsVal_.isNumber() ? writer.guardIsNumber(rhsId) : writer.guardIsUndefined(rhsId);
+
+    // Comparing a number with undefined will always be true for NE/STRICTNE,
+    // and always be false for other compare ops.
+    writer.loadBooleanResult(op_ == JSOP_NE || op_ == JSOP_STRICTNE);
+    writer.returnFromIC();
+
+    trackAttached("NumberUndefined");
+    return true;
+}
+
+// Handle {null/undefined} x {null,undefined} equality comparisons
+bool
+CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!lhsVal_.isNullOrUndefined() || !rhsVal_.isNullOrUndefined())
+        return false;
+
+    if (op_ == JSOP_EQ || op_ == JSOP_NE) {
+        writer.guardIsNullOrUndefined(lhsId);
+        writer.guardIsNullOrUndefined(rhsId);
+        // Sloppy equality means we actually only care about the op:
+        writer.loadBooleanResult(op_ == JSOP_EQ);
+        trackAttached("SloppyNullUndefined");
+    } else {
+        // Strict equality only hits this branch, and only in the
+        // undef {!,=}==  undef and null {!,=}== null cases.
+        // The other cases should have hit compareStrictlyDifferentTypes.
+        MOZ_ASSERT(lhsVal_.isNull() == rhsVal_.isNull());
+        lhsVal_.isNull() ? writer.guardIsNull(lhsId) : writer.guardIsUndefined(lhsId);
+        rhsVal_.isNull() ? writer.guardIsNull(rhsId) : writer.guardIsUndefined(rhsId);
+        writer.loadBooleanResult(op_ == JSOP_STRICTEQ);
+        trackAttached("StrictNullUndefinedEquality");
+    }
+
+    writer.returnFromIC();
+    return true;
+}
+
+bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -4822,6 +4965,12 @@ CompareIRGenerator::tryAttachStub()
                op_ == JSOP_GE || op_ == JSOP_GT);
 
     AutoAssertNoPendingException aanpe(cx_);
+
+    constexpr uint8_t lhsIndex = 0;
+    constexpr uint8_t rhsIndex = 1;
+
+    static_assert(lhsIndex == 0 && rhsIndex == 1,
+        "Indexes relied upon by baseline inspector");
 
     ValOperandId lhsId(writer.setInputOperandId(0));
     ValOperandId rhsId(writer.setInputOperandId(1));
@@ -4833,12 +4982,29 @@ CompareIRGenerator::tryAttachStub()
             return true;
         if (tryAttachSymbol(lhsId, rhsId))
             return true;
+        if (tryAttachObjectUndefined(lhsId, rhsId))
+            return true;
         if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
 
-        trackAttached(IRGenerator::NotAttached);
-        return false;
+        // This should come after strictDifferent types to
+        // allow it to only handle sloppy equality.
+        if (tryAttachNullUndefined(lhsId, rhsId))
+            return true;
     }
+
+    // This should preceed the Int32/Number cases to allow
+    // them to not concern themselves with handling undefined
+    // or null.
+    if (tryAttachNumberUndefined(lhsId, rhsId))
+        return true;
+
+    // We want these to be last, to allow us to bypass the
+    // strictly-different-types cases in the below attachment code
+    if (tryAttachInt32(lhsId, rhsId))
+        return true;
+    if (tryAttachNumber(lhsId, rhsId))
+        return true;
 
     trackAttached(IRGenerator::NotAttached);
     return false;
@@ -4851,6 +5017,7 @@ CompareIRGenerator::trackAttached(const char* name)
     if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
         sp.valueProperty("lhs", lhsVal_);
         sp.valueProperty("rhs", rhsVal_);
+        sp.opcodeProperty("op", op_);
     }
 #endif
 }

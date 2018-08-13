@@ -537,8 +537,21 @@ IonCacheIRCompiler::init()
         allocator.initInputLocation(1, ic->rhs());
         break;
       }
+      case CacheKind::Compare: {
+        IonCompareIC *ic = ic_->asCompareIC();
+        ValueOperand output = ic->output();
+
+        available.add(output);
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(TypedOrValueRegister(output));
+
+        MOZ_ASSERT(numInputs == 2);
+        allocator.initInputLocation(0, ic->lhs());
+        allocator.initInputLocation(1, ic->rhs());
+        break;
+      }
       case CacheKind::Call:
-      case CacheKind::Compare:
       case CacheKind::TypeOf:
       case CacheKind::ToBool:
       case CacheKind::GetIntrinsic:
@@ -578,8 +591,6 @@ IonCacheIRCompiler::compile()
 
         allocator.nextOp();
     } while (reader.more());
-
-    MOZ_RELEASE_ASSERT(nextStubField_ == writer_.numStubFields());
 
     masm.assumeUnreachable("Should have returned from IC");
 
