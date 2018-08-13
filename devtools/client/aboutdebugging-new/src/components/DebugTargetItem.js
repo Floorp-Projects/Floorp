@@ -73,7 +73,7 @@ class DebugTargetItem extends PureComponent {
     return dom.button(
       {
         onClick: e => this.inspect(),
-        className: "debug-target-item__inspect-button",
+        className: "aboutdebugging-button",
       },
       "Inspect"
     );

@@ -355,19 +355,22 @@ ScreenConfigurationObservers()
   return sScreenConfigurationObservers;
 }
 
-void
-RegisterBatteryObserver(BatteryObserver* aObserver)
-{
-  AssertMainThread();
-  BatteryObservers().AddObserver(aObserver);
+#define MOZ_IMPL_HAL_OBSERVER(name_)                    \
+void                                                    \
+Register##name_##Observer(name_##Observer* aObserver)   \
+{                                                       \
+  AssertMainThread();                                   \
+  name_##Observers().AddObserver(aObserver);            \
+}                                                       \
+                                                        \
+void                                                    \
+Unregister##name_##Observer(name_##Observer* aObserver) \
+{                                                       \
+  AssertMainThread();                                   \
+  name_##Observers().RemoveObserver(aObserver);         \
 }
 
-void
-UnregisterBatteryObserver(BatteryObserver* aObserver)
-{
-  AssertMainThread();
-  BatteryObservers().RemoveObserver(aObserver);
-}
+MOZ_IMPL_HAL_OBSERVER(Battery)
 
 void
 GetCurrentBatteryInformation(BatteryInformation* aInfo)
@@ -470,19 +473,7 @@ NotifySensorChange(const SensorData &aSensorData) {
   observers.Broadcast(aSensorData);
 }
 
-void
-RegisterNetworkObserver(NetworkObserver* aObserver)
-{
-  AssertMainThread();
-  NetworkObservers().AddObserver(aObserver);
-}
-
-void
-UnregisterNetworkObserver(NetworkObserver* aObserver)
-{
-  AssertMainThread();
-  NetworkObservers().RemoveObserver(aObserver);
-}
+MOZ_IMPL_HAL_OBSERVER(Network)
 
 void
 GetCurrentNetworkInformation(NetworkInformation* aInfo)
@@ -498,19 +489,7 @@ NotifyNetworkChange(const NetworkInformation& aInfo)
   NetworkObservers().BroadcastCachedInformation();
 }
 
-void
-RegisterWakeLockObserver(WakeLockObserver* aObserver)
-{
-  AssertMainThread();
-  WakeLockObservers().AddObserver(aObserver);
-}
-
-void
-UnregisterWakeLockObserver(WakeLockObserver* aObserver)
-{
-  AssertMainThread();
-  WakeLockObservers().RemoveObserver(aObserver);
-}
+MOZ_IMPL_HAL_OBSERVER(WakeLock)
 
 void
 ModifyWakeLock(const nsAString& aTopic,
@@ -543,19 +522,7 @@ NotifyWakeLockChange(const WakeLockInformation& aInfo)
   WakeLockObservers().BroadcastInformation(aInfo);
 }
 
-void
-RegisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
-{
-  AssertMainThread();
-  ScreenConfigurationObservers().AddObserver(aObserver);
-}
-
-void
-UnregisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
-{
-  AssertMainThread();
-  ScreenConfigurationObservers().RemoveObserver(aObserver);
-}
+MOZ_IMPL_HAL_OBSERVER(ScreenConfiguration)
 
 void
 GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)

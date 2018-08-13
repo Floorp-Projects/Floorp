@@ -9,12 +9,15 @@ with Files('**'):
 
 EXPORTS.mozilla += [
     'Hal.h',
+    'HalBatteryInformation.h',
     'HalImpl.h',
+    'HalNetworkInformation.h',
     'HalSandbox.h',
     'HalScreenConfiguration.h',
     'HalSensor.h',
     'HalTypes.h',
     'HalWakeLock.h',
+    'HalWakeLockInformation.h',
 ]
 
 EXPORTS.mozilla.fallback += [
