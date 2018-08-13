@@ -347,7 +347,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         private fun createProgressDelegate(): GeckoSession.ProgressDelegate {
             return object : GeckoSession.ProgressDelegate {
                 override fun onProgressChange(session: GeckoSession?, progress: Int) {
-                    if (progress == 100) {
+                    if (progress == PROGRESS_100) {
                         if (UrlUtils.isLocalizedContent(url)) {
                             // When the url is a localized content, then the page is secure
                             isSecure = true
@@ -614,5 +614,6 @@ class GeckoWebViewProvider : IWebViewProvider {
         private const val USER_AGENT =
             "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0"
         const val PREF_FIRST_GECKO_RUN: String = "first_gecko_run"
+        const val PROGRESS_100 = 100
     }
 }
