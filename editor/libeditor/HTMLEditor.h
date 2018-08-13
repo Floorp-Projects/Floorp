@@ -267,7 +267,14 @@ public:
                                           bool* aAll,
                                           nsAString& outValue);
   nsresult RemoveInlineProperty(nsAtom* aProperty,
-                                nsAtom* aAttribute);
+                                nsAtom* aAttribute)
+  {
+    nsresult rv = RemoveInlinePropertyInternal(aProperty, aAttribute);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
 
   /**
    * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
@@ -820,6 +827,8 @@ protected: // Shouldn't be used by friend classes
   nsresult SetInlinePropertyInternal(nsAtom& aProperty,
                                      nsAtom* aAttribute,
                                      const nsAString& aValue);
+  nsresult RemoveInlinePropertyInternal(nsAtom* aProperty,
+                                        nsAtom* aAttribute);
 
   /**
    * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
