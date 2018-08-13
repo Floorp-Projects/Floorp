@@ -132,8 +132,6 @@
                  sidebarurl="chrome://browser/content/places/historySidebar.xul"
                  oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
-    <broadcaster id="bookmarkThisPageBroadcaster"
-                 label="&bookmarkThisPageCmd.label;"/>
     <broadcaster id="isImage"/>
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>
