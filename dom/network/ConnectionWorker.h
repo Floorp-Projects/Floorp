@@ -8,8 +8,6 @@
 #define mozilla_dom_network_ConnectionWorker_h
 
 #include "Connection.h"
-#include "mozilla/Observer.h"
-#include "Types.h"
 
 namespace mozilla {
 namespace dom {
