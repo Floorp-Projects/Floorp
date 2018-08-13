@@ -2088,6 +2088,8 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   // but only when parsing text (not XML, which does this already).
   if (mDecoder && !mFlagParseBody) {
     AppendToResponseText(nullptr, 0, true);
+    // Null out the decoder to ignore subsequent OnStopRequest calls
+    mDecoder = nullptr;
   }
 
   mWaitingForOnStopRequest = false;
