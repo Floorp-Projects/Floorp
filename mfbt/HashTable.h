@@ -1785,8 +1785,8 @@ private:
 
   // This is a copy of lookup() hardcoded to the assumptions:
   //   1. the lookup is for an add;
-  //   2. the key, whose |keyHash| has been passed is not in the table.
-  Entry& findFreeEntry(HashNumber aKeyHash)
+  //   2. the key, whose |keyHash| has been passed, is not in the table.
+  Entry& findNonLiveEntry(HashNumber aKeyHash)
   {
     MOZ_ASSERT(!(aKeyHash & sCollisionBit));
     MOZ_ASSERT(mTable);
@@ -1858,7 +1858,7 @@ private:
     for (Entry* src = oldTable; src < end; ++src) {
       if (src->isLive()) {
         HashNumber hn = src->getKeyHash();
-        findFreeEntry(hn).setLive(
+        findNonLiveEntry(hn).setLive(
           hn, std::move(const_cast<typename Entry::NonConstT&>(src->get())));
       }
 
@@ -1978,7 +1978,7 @@ private:
     MOZ_ASSERT(mTable);
 
     HashNumber keyHash = prepareHash(aLookup);
-    Entry* entry = &findFreeEntry(keyHash);
+    Entry* entry = &findNonLiveEntry(keyHash);
     MOZ_ASSERT(entry);
 
     if (entry->isRemoved()) {
@@ -2177,7 +2177,7 @@ public:
         return false;
       }
       if (status == Rehashed) {
-        aPtr.mEntry = &findFreeEntry(aPtr.mKeyHash);
+        aPtr.mEntry = &findNonLiveEntry(aPtr.mKeyHash);
       }
     }
 
