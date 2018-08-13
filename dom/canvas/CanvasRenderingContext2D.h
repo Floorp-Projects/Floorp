@@ -1052,7 +1052,7 @@ protected:
           lineJoin(aOther.lineJoin),
           filterString(aOther.filterString),
           filterChain(aOther.filterChain),
-          filterChainObserver(aOther.filterChainObserver),
+          filterObserverList(aOther.filterObserverList),
           filter(aOther.filter),
           filterAdditionalImages(aOther.filterAdditionalImages),
           filterSourceGraphicTainted(aOther.filterSourceGraphicTainted),
@@ -1130,7 +1130,7 @@ protected:
 
     nsString filterString;
     nsTArray<nsStyleFilter> filterChain;
-    RefPtr<nsSVGFilterChainObserver> filterChainObserver;
+    RefPtr<SVGFilterObserverList> filterObserverList;
     mozilla::gfx::FilterDescription filter;
     nsTArray<RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
 
