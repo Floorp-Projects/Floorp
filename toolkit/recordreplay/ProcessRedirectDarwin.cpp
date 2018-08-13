@@ -405,7 +405,9 @@ namespace recordreplay {
   MACRO(SLDisplayCopyColorSpace)                \
   MACRO(SLDisplayIOServicePort)                 \
   MACRO(SLEventSourceCounterForEventType)       \
-  MACRO(SLMainDisplayID)
+  MACRO(SLMainDisplayID)                        \
+  MACRO(SLSSetDenyWindowServerConnections)      \
+  MACRO(SLSShutdownServerConnections)
 
 #define MAKE_CALL_EVENT(aName)  CallEvent_ ##aName ,
 
@@ -2679,6 +2681,8 @@ RRFunction2(SLEventSourceCounterForEventType)
 RRFunction1(SLDisplayCopyColorSpace)
 RRFunction1(SLDisplayIOServicePort)
 RRFunction0(SLMainDisplayID)
+RRFunction1(SLSSetDenyWindowServerConnections)
+RRFunctionVoid0(SLSShutdownServerConnections)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Redirection generation

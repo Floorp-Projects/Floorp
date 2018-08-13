@@ -6,6 +6,7 @@
 
 #include "jit/BaselineInspector.h"
 
+#include "mozilla/Array.h"
 #include "mozilla/DebugOnly.h"
 
 #include "jit/BaselineIC.h"
@@ -412,20 +413,144 @@ BaselineInspector::expectedResultType(jsbytecode* pc)
     }
 }
 
-// Whether a baseline stub kind is suitable for a double comparison that
-// converts its operands to doubles.
+// Return the MIRtype corresponding to the guard the reader is pointing
+// to, and ensure that afterwards the reader is pointing to the next op
+// (consume operands).
+//
+// An expected parameter is provided to allow GuardType to check we read
+// the guard from the expected operand in debug builds.
 static bool
-CanUseDoubleCompare(ICStub::Kind kind)
+GuardType(CacheIRReader& reader, mozilla::Array<MIRType,2>& guardType)
 {
-    return kind == ICStub::Compare_Double || kind == ICStub::Compare_NumberWithUndefined;
+    CacheOp op = reader.readOp();
+    uint8_t guardOperand = reader.readByte();
+
+    // We only have two entries for guard types.
+    if (guardOperand > 1)
+        return false;
+
+    // Already assigned this guard a type, fail.
+    if (guardType[guardOperand] != MIRType::None)
+        return false;
+
+    switch (op) {
+        // 0 Skip cases
+        case CacheOp::GuardIsString:
+            guardType[guardOperand] = MIRType::String;
+            break;
+        case CacheOp::GuardIsSymbol:
+            guardType[guardOperand] = MIRType::Symbol;
+            break;
+        case CacheOp::GuardIsNumber:
+            guardType[guardOperand] = MIRType::Double;
+            break;
+        case CacheOp::GuardIsUndefined:
+            guardType[guardOperand] = MIRType::Undefined;
+            break;
+        // 1 skip
+        case CacheOp::GuardIsInt32:
+            guardType[guardOperand] = MIRType::Int32;
+            // Skip over result
+            reader.skip();
+            break;
+        case CacheOp::GuardIsBoolean:
+            guardType[guardOperand] = MIRType::Boolean;
+            // Skip over result
+            reader.skip();
+            break;
+        // Unknown op --
+        default:
+            return false;
+    }
+    return true;
 }
 
-// Whether a baseline stub kind is suitable for an int32 comparison that
-// converts its operands to int32.
-static bool
-CanUseInt32Compare(ICStub::Kind kind)
+// This code works for all Compare ICs where the pattern is
+//
+//  <Guard LHS/RHS>
+//  <Guard RHS/LHS>
+//  <CompareResult>
+//
+// in other cases (like StrictlyDifferentTypes) it will just
+// return CompareUnknown
+static MCompare::CompareType
+ParseCacheIRStubForCompareType(ICCacheIR_Regular* stub)
 {
-    return kind == ICStub::Compare_Int32 || kind == ICStub::Compare_Int32WithBoolean;
+    CacheIRReader reader(stub->stubInfo());
+
+    // Two element array to allow parsing the guards
+    // in whichever order they appear.
+    mozilla::Array<MIRType, 2> guards = { MIRType::None, MIRType::None };
+
+    // Parse out two guards
+    if (!GuardType(reader, guards))
+        return MCompare::Compare_Unknown;
+    if (!GuardType(reader, guards))
+        return MCompare::Compare_Unknown;
+
+    // The lhs and rhs ids are asserted in
+    // CompareIRGenerator::tryAttachStub.
+    MIRType lhs_guard = guards[0];
+    MIRType rhs_guard = guards[1];
+
+    if (lhs_guard == rhs_guard)
+    {
+        if (lhs_guard == MIRType::Int32)
+            return MCompare::Compare_Int32;
+        if (lhs_guard == MIRType::Double)
+            return MCompare::Compare_Double;
+        return MCompare::Compare_Unknown;
+    }
+
+    if ((lhs_guard == MIRType::Int32 && rhs_guard == MIRType::Boolean) ||
+        (lhs_guard == MIRType::Boolean && rhs_guard == MIRType::Int32))
+    {
+        // RHS is converting
+        if (rhs_guard == MIRType::Boolean)
+            return MCompare::Compare_Int32MaybeCoerceRHS;
+
+        return MCompare::Compare_Int32MaybeCoerceLHS;
+    }
+
+    if ((lhs_guard == MIRType::Double && rhs_guard == MIRType::Undefined) ||
+        (lhs_guard == MIRType::Undefined && rhs_guard == MIRType::Double))
+    {
+        // RHS is converting
+        if (rhs_guard == MIRType::Undefined)
+            return MCompare::Compare_DoubleMaybeCoerceRHS;
+
+        return MCompare::Compare_DoubleMaybeCoerceLHS;
+    }
+
+    return MCompare::Compare_Unknown;
+}
+
+static bool
+CoercingCompare(MCompare::CompareType type)
+{
+    //Prefer the coercing types if they exist, otherwise just use first's type.
+    if (type == MCompare::Compare_DoubleMaybeCoerceLHS ||
+        type == MCompare::Compare_DoubleMaybeCoerceRHS ||
+        type == MCompare::Compare_Int32MaybeCoerceLHS  ||
+        type == MCompare::Compare_Int32MaybeCoerceRHS)
+        return true;
+    return false;
+}
+
+static MCompare::CompareType
+CompatibleType(MCompare::CompareType first, MCompare::CompareType second)
+{
+    // Caller should have dealt with this case.
+    MOZ_ASSERT(first != second);
+
+    //Prefer the coercing types if they exist, otherwise just use first's type.
+    if (CoercingCompare(first))
+        return first;
+
+    if (CoercingCompare(second))
+        return second;
+
+    return first;
 }
 
 MCompare::CompareType
@@ -442,37 +567,19 @@ BaselineInspector::expectedCompareType(jsbytecode* pc)
             return MCompare::Compare_Unknown;
     }
 
-    if (CanUseInt32Compare(first->kind()) && (!second || CanUseInt32Compare(second->kind()))) {
-        ICCompare_Int32WithBoolean* coerce =
-            first->isCompare_Int32WithBoolean()
-            ? first->toCompare_Int32WithBoolean()
-            : ((second && second->isCompare_Int32WithBoolean())
-               ? second->toCompare_Int32WithBoolean()
-               : nullptr);
-        if (coerce) {
-            return coerce->lhsIsInt32()
-                   ? MCompare::Compare_Int32MaybeCoerceRHS
-                   : MCompare::Compare_Int32MaybeCoerceLHS;
-        }
-        return MCompare::Compare_Int32;
-    }
+    MCompare::CompareType first_type = ParseCacheIRStubForCompareType(first->toCacheIR_Regular());
+    if (!second)
+        return first_type;
 
-    if (CanUseDoubleCompare(first->kind()) && (!second || CanUseDoubleCompare(second->kind()))) {
-        ICCompare_NumberWithUndefined* coerce =
-            first->isCompare_NumberWithUndefined()
-            ? first->toCompare_NumberWithUndefined()
-            : (second && second->isCompare_NumberWithUndefined())
-              ? second->toCompare_NumberWithUndefined()
-              : nullptr;
-        if (coerce) {
-            return coerce->lhsIsUndefined()
-                   ? MCompare::Compare_DoubleMaybeCoerceLHS
-                   : MCompare::Compare_DoubleMaybeCoerceRHS;
-        }
-        return MCompare::Compare_Double;
-    }
+    MCompare::CompareType second_type = ParseCacheIRStubForCompareType(second->toCacheIR_Regular());
 
-    return MCompare::Compare_Unknown;
+    if (first_type == MCompare::Compare_Unknown || second_type == MCompare::Compare_Unknown)
+        return MCompare::Compare_Unknown;
+
+    if (first_type == second_type)
+        return first_type;
+
+    return CompatibleType(first_type, second_type);
 }
 
 static bool
