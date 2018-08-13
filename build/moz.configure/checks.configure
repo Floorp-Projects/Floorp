@@ -90,6 +90,10 @@ def checking(what, callback=None):
 #   that will cause the given path(s) to be searched rather than $PATH. Input
 #   paths may either be individual paths or delimited by os.pathsep, to allow
 #   passing $PATH (for example) as an element.
+# - `paths_have_priority` means that any programs found early in the PATH
+#   will be prioritized over programs found later in the PATH.  The default is
+#   False, meaning that any of the programs earlier in the program list will be
+#   given priority, no matter where in the PATH they are found.
 #
 # The simplest form is:
 #   check_prog('PROG', ('a', 'b'))
@@ -99,7 +103,7 @@ def checking(what, callback=None):
 @template
 @imports(_from='mozbuild.shellutil', _import='quote')
 def check_prog(var, progs, what=None, input=None, allow_missing=False,
-               paths=None, when=None):
+               paths=None, paths_have_priority=False, when=None):
     if input is not None:
         # Wrap input with type checking and normalization.
         @depends(input, when=when)
@@ -131,11 +135,19 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
         if not isinstance(progs, (tuple, list)):
             configure_error('progs must resolve to a list or tuple!')
 
-        for prog in value or progs:
-            log.debug('%s: Trying %s', var.lower(), quote(prog))
-            result = find_program(prog, paths)
-            if result:
-                return result
+        if paths_have_priority:
+            for path in paths:
+                for prog in value or progs:
+                    log.debug('%s: Trying %s', var.lower(), quote(prog))
+                    result = find_program(prog, [path])
+                    if result:
+                        return result
+        else:
+            for prog in value or progs:
+                log.debug('%s: Trying %s', var.lower(), quote(prog))
+                result = find_program(prog, paths)
+                if result:
+                    return result
 
         if not allow_missing or value:
             raise FatalCheckError('Cannot find %s' % what)
