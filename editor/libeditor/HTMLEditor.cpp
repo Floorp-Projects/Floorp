@@ -2795,8 +2795,10 @@ HTMLEditor::InsertLinkAroundSelection(Element* aAnchorElement)
 
       attribute->GetValue(value);
 
-      rv = SetInlineProperty(nsGkAtoms::a, name, value);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = SetInlinePropertyInternal(*nsGkAtoms::a, name, value);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
   return NS_OK;
