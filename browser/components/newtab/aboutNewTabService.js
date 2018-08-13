@@ -161,7 +161,7 @@ AboutNewTabService.prototype = {
           }
 
           for (let script of scripts) {
-            Services.scriptloader.loadSubScript(script, win); // Synchronous call
+            Services.scriptloader.loadSubScript(script, win, "UTF-8"); // Synchronous call
           }
         };
         subject.addEventListener("DOMContentLoaded", onLoaded, {once: true});

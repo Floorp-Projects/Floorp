@@ -2049,11 +2049,7 @@ pref("network.dns.ipv4OnlyDomains", "");
 pref("network.dns.disableIPv6", false);
 
 // This is the number of dns cache entries allowed
-#ifdef ANDROID
 pref("network.dnsCacheEntries", 400);
-#else
-pref("network.dnsCacheEntries", 800);
-#endif
 
 // In the absence of OS TTLs, the DNS cache TTL value
 pref("network.dnsCacheExpiration", 60);
@@ -5382,6 +5378,8 @@ pref("network.trr.blacklist-duration", 60);
 pref("network.trr.request-timeout", 3000);
 // Allow AAAA entries to be used "early", before the A results are in
 pref("network.trr.early-AAAA", false);
+// Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
+pref("network.trr.disable-ECS", true);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");

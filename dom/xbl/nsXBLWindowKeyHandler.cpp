@@ -228,8 +228,7 @@ nsXBLWindowKeyHandler::EnsureHandlers()
     if (mHandler)
       return NS_OK;
 
-    nsCOMPtr<nsIContent> content(do_QueryInterface(el));
-    BuildHandlerChain(content, &mHandler);
+    BuildHandlerChain(el, &mHandler);
   } else { // We are an XBL file of handlers.
     EnsureSpecialDocInfo();
 
@@ -844,38 +843,35 @@ nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
   MOZ_ASSERT(aElementForHandler);
   *aElementForHandler = nullptr;
 
-  RefPtr<Element> keyContent = aHandler->GetHandlerElement();
-  if (!keyContent) {
+  RefPtr<Element> keyElement = aHandler->GetHandlerElement();
+  if (!keyElement) {
     return true; // XXX Even though no key element?
   }
 
   nsCOMPtr<Element> chromeHandlerElement = GetElement();
   if (!chromeHandlerElement) {
-    NS_WARNING_ASSERTION(keyContent->IsInUncomposedDoc(), "uncomposed");
-    nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
+    NS_WARNING_ASSERTION(keyElement->IsInUncomposedDoc(), "uncomposed");
     keyElement.swap(*aElementForHandler);
     return true;
   }
 
   // We are in a XUL doc.  Obtain our command attribute.
   nsAutoString command;
-  keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
+  keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
   if (command.IsEmpty()) {
     // There is no command element associated with the key element.
-    NS_WARNING_ASSERTION(keyContent->IsInUncomposedDoc(), "uncomposed");
-    nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
+    NS_WARNING_ASSERTION(keyElement->IsInUncomposedDoc(), "uncomposed");
     keyElement.swap(*aElementForHandler);
     return true;
   }
 
   // XXX Shouldn't we check this earlier?
-  nsIDocument* doc = keyContent->GetUncomposedDoc();
+  nsIDocument* doc = keyElement->GetUncomposedDoc();
   if (NS_WARN_IF(!doc)) {
     return false;
   }
 
-  nsCOMPtr<Element> commandElement =
-    do_QueryInterface(doc->GetElementById(command));
+  nsCOMPtr<Element> commandElement = doc->GetElementById(command);
   if (!commandElement) {
     NS_ERROR("A XUL <key> is observing a command that doesn't exist. "
              "Unable to execute key binding!");

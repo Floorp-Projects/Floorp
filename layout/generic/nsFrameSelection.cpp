@@ -2613,8 +2613,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, TableSelection aTa
       if (NS_FAILED(result)) return result;
       mStartSelectedCell = firstCell;
     }
-    nsCOMPtr<nsIContent> lastCellContent = do_QueryInterface(lastCell);
-    result = SelectBlockOfCells(mStartSelectedCell, lastCellContent);
+    result = SelectBlockOfCells(mStartSelectedCell, lastCell);
 
     // This gets set to the cell at end of row/col,
     //   but we need it to be the cell under cursor

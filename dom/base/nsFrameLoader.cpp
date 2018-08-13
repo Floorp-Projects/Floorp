@@ -1452,10 +1452,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   nsCOMPtr<Element> otherFrameElement =
     otherWindow->GetFrameElementInternal();
 
-  nsCOMPtr<EventTarget> ourChromeEventHandler =
-    do_QueryInterface(ourWindow->GetChromeEventHandler());
-  nsCOMPtr<EventTarget> otherChromeEventHandler =
-    do_QueryInterface(otherWindow->GetChromeEventHandler());
+  nsCOMPtr<EventTarget> ourChromeEventHandler = ourWindow->GetChromeEventHandler();
+  nsCOMPtr<EventTarget> otherChromeEventHandler = otherWindow->GetChromeEventHandler();
 
   nsCOMPtr<EventTarget> ourEventTarget = ourWindow->GetParentTarget();
   nsCOMPtr<EventTarget> otherEventTarget = otherWindow->GetParentTarget();

@@ -1249,8 +1249,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             (aEvent->IsTrusted() || listener->mFlags.mAllowUntrustedEvents)) {
           if (!*aDOMEvent) {
             // This is tiny bit slow, but happens only once per event.
-            nsCOMPtr<EventTarget> et =
-              do_QueryInterface(aEvent->mOriginalTarget);
+            nsCOMPtr<EventTarget> et = aEvent->mOriginalTarget;
             RefPtr<Event> event = EventDispatcher::CreateEvent(et, aPresContext,
                                                                aEvent,
                                                                EmptyString());
@@ -1592,7 +1591,7 @@ EventListenerManager::HasListeners() const
 nsresult
 EventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
 {
-  nsCOMPtr<EventTarget> target = do_QueryInterface(mTarget);
+  nsCOMPtr<EventTarget> target = mTarget;
   NS_ENSURE_STATE(target);
   aList->Clear();
   nsAutoTObserverArray<Listener, 2>::ForwardIterator iter(mListeners);

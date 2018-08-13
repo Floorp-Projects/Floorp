@@ -26,7 +26,7 @@ add_task(async function test_highlighted() {
         let highlightedTabs = await browser.tabs.query({currentWindow: true, highlighted: true});
         browser.test.assertEq(
           highlightedIndices.concat(activeIndex).sort((a, b) => a - b).join(),
-          highlightedTabs.map(tab => tab.index).sort((a, b) => a - b).join(),
+          highlightedTabs.map(tab => tab.index).join(),
           "Check tabs.query with highlighted:true provides the expected tabs");
       }
 
