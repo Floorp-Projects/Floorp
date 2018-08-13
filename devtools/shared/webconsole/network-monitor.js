@@ -480,7 +480,16 @@ NetworkResponseListener.prototype = {
       // Accessing `alternativeDataType` for some SW requests throws.
     }
     if (isOptimizedContent) {
-      const charset = this.request.contentCharset || this.httpActivity.charset;
+      let charset;
+      try {
+        charset = this.request.contentCharset;
+      } catch (e) {
+        // Accessing the charset sometimes throws NS_ERROR_NOT_AVAILABLE when
+        // reloading the page
+      }
+      if (!charset) {
+        charset = this.httpActivity.charset;
+      }
       NetworkHelper.loadFromCache(this.httpActivity.url, charset,
                                   this._onComplete.bind(this));
       return;
@@ -636,7 +645,16 @@ NetworkResponseListener.prototype = {
     } else if (!this.httpActivity.discardResponseBody &&
                this.httpActivity.responseStatus == 304) {
       // Response is cached, so we load it from cache.
-      const charset = this.request.contentCharset || this.httpActivity.charset;
+      let charset;
+      try {
+        charset = this.request.contentCharset;
+      } catch (e) {
+        // Accessing the charset sometimes throws NS_ERROR_NOT_AVAILABLE when
+        // reloading the page
+      }
+      if (!charset) {
+        charset = this.httpActivity.charset;
+      }
       NetworkHelper.loadFromCache(this.httpActivity.url, charset,
                                   this._onComplete.bind(this));
     } else {
