@@ -45,14 +45,14 @@ function checkSimplestRequest(payRequest) {
     emitTestFail("total item's value should be '1.00'.");
   }
 
-  if (details.displayItems) {
-    emitTestFail("details.displayItems should be undefined.");
+  if (details.displayItems.length !== 0) {
+    emitTestFail("details.displayItems should be an empty array.");
   }
-  if (details.modifiers) {
-    emitTestFail("details.displayItems should be undefined.");
+  if (details.modifiers.length !== 0) {
+    emitTestFail("details.modifiers should be an empty array.");
   }
-  if (details.shippingOptions) {
-    emitTestFail("details.shippingOptions should be undefined.");
+  if (details.shippingOptions.length !== 0) {
+    emitTestFail("details.shippingOptions should be an empty array.");
   }
 
   // checking the default generated PaymentOptions parameter
@@ -319,14 +319,14 @@ function checkNonBasicCardRequest(payRequest) {
     emitTestFail("total item's value should be '1.00'.");
   }
 
-  if (details.displayItems) {
-    emitTestFail("details.displayItems should be undefined.");
+  if (details.displayItems.length !== 0) {
+    emitTestFail("details.displayItems should be an zero length array.");
   }
-  if (details.modifiers) {
-    emitTestFail("details.displayItems should be undefined.");
+  if (details.displayItems.length !== 0) {
+    emitTestFail("details.modifiers should be an zero length array.");
   }
-  if (details.shippingOptions) {
-    emitTestFail("details.shippingOptions should be undefined.");
+  if (details.displayItems.length !== 0) {
+    emitTestFail("details.shippingOptions should be an zero length array.");
   }
 
   // checking the default generated PaymentOptions parameter
