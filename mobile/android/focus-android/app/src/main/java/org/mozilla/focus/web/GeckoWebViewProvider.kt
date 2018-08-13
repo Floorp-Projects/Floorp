@@ -347,7 +347,15 @@ class GeckoWebViewProvider : IWebViewProvider {
         private fun createProgressDelegate(): GeckoSession.ProgressDelegate {
             return object : GeckoSession.ProgressDelegate {
                 override fun onProgressChange(session: GeckoSession?, progress: Int) {
-                    callback?.onProgress(progress)
+                    if (progress == 100) {
+                        if (UrlUtils.isLocalizedContent(url)) {
+                            // When the url is a localized content, then the page is secure
+                            isSecure = true
+                        }
+                        callback?.onPageFinished(isSecure)
+                    } else {
+                        callback?.onProgress(progress)
+                    }
                 }
 
                 override fun onPageStart(session: GeckoSession, url: String) {
