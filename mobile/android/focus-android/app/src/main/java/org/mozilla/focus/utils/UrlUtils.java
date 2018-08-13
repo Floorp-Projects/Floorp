@@ -67,10 +67,6 @@ public class UrlUtils {
         return url.startsWith("http:") || url.startsWith("https:");
     }
 
-    public static boolean isSearchQuery(String text) {
-        return text.contains(" ");
-    }
-
     public static String createSearchUrl(Context context, String searchTerm) {
         final String defaultIdentifier = Settings.getInstance(context).getDefaultSearchEngineName();
 

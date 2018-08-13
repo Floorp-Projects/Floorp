@@ -106,14 +106,6 @@ public class UrlUtilsTest {
     }
 
     @Test
-    public void testIsSearchQuery() {
-        assertTrue(UrlUtils.isSearchQuery("hello world"));
-
-        assertFalse(UrlUtils.isSearchQuery("mozilla.org"));
-        assertFalse(UrlUtils.isSearchQuery("mozilla"));
-    }
-
-    @Test
     @SuppressLint("AuthLeak")
     public void testStripUserInfo() {
         assertEquals("", UrlUtils.stripUserInfo(null));
