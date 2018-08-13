@@ -31,9 +31,7 @@ import org.mozilla.focus.utils.IntentUtils
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.webview.SystemWebView
-import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.gecko.util.ThreadUtils
-import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -574,7 +572,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         private fun sendTelemetrySnapshots() {
-            val response = GeckoResponse<GeckoBundle> { value ->
+            geckoRuntime!!.telemetry.getSnapshots(true).then({ value ->
                 if (value != null) {
                     try {
                         val jsonData = value.toJSONObject()
@@ -583,9 +581,10 @@ class GeckoWebViewProvider : IWebViewProvider {
                         Log.e("getSnapshots failed", e.message)
                     }
                 }
-            }
-
-            geckoRuntime!!.telemetry.getSnapshots(true, response)
+                GeckoResult<Void>()
+            }, { _ ->
+                GeckoResult<Void>()
+            })
         }
 
         override fun onDetachedFromWindow() {
