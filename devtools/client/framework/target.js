@@ -506,7 +506,6 @@ TabTarget.prototype = {
    */
   _setupListeners: function() {
     this.tab.addEventListener("TabClose", this);
-    this.tab.parentNode.addEventListener("TabSelect", this);
     this.tab.ownerDocument.defaultView.addEventListener("unload", this);
     this.tab.addEventListener("TabRemotenessChange", this);
   },
@@ -517,7 +516,6 @@ TabTarget.prototype = {
   _teardownListeners: function() {
     this._tab.ownerDocument.defaultView.removeEventListener("unload", this);
     this._tab.removeEventListener("TabClose", this);
-    this._tab.parentNode.removeEventListener("TabSelect", this);
     this._tab.removeEventListener("TabRemotenessChange", this);
   },
 
@@ -598,13 +596,6 @@ TabTarget.prototype = {
       case "TabClose":
       case "unload":
         this.destroy();
-        break;
-      case "TabSelect":
-        if (this.tab.selected) {
-          this.emit("visible", event);
-        } else {
-          this.emit("hidden", event);
-        }
         break;
       case "TabRemotenessChange":
         this.onRemotenessChange();
