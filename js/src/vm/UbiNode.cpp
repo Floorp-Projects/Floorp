@@ -450,8 +450,6 @@ RootList::init(CompartmentSet& debuggees)
     EdgeVectorTracer tracer(cx->runtime(), &allRootEdges, wantNames);
 
     ZoneSet debuggeeZones;
-    if (!debuggeeZones.init())
-        return false;
     for (auto range = debuggees.all(); !range.empty(); range.popFront()) {
         if (!debuggeeZones.put(range.front()->zone()))
             return false;
@@ -490,8 +488,6 @@ RootList::init(HandleObject debuggees)
     js::Debugger* dbg = js::Debugger::fromJSObject(debuggees.get());
 
     CompartmentSet debuggeeCompartments;
-    if (!debuggeeCompartments.init())
-        return false;
 
     for (js::WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
         if (!debuggeeCompartments.put(r.front()->compartment()))

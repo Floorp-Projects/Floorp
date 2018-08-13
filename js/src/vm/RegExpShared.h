@@ -266,10 +266,8 @@ class RegExpZone
     explicit RegExpZone(Zone* zone);
 
     ~RegExpZone() {
-        MOZ_ASSERT_IF(set_.initialized(), set_.empty());
+        MOZ_ASSERT(set_.empty());
     }
-
-    bool init();
 
     bool empty() const { return set_.empty(); }
 

@@ -27,7 +27,6 @@ DEF_TEST(DoesCrossCompartmentBoundaries, {
 
     // Our set of target compartments is both the old and new compartments.
     JS::CompartmentSet targetCompartments;
-    ASSERT_TRUE(targetCompartments.init());
     ASSERT_TRUE(targetCompartments.put(compartment));
     ASSERT_TRUE(targetCompartments.put(newCompartment));
 

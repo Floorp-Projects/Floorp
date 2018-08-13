@@ -907,15 +907,6 @@ WrapperOwner::updatePointer(JSObject* obj, const JSObject* old)
 }
 
 bool
-WrapperOwner::init()
-{
-    if (!JavaScriptShared::init())
-        return false;
-
-    return true;
-}
-
-bool
 WrapperOwner::getPropertyKeys(JSContext* cx, HandleObject proxy, uint32_t flags, AutoIdVector& props)
 {
     ObjectId objId = idOf(proxy);

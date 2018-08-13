@@ -54,7 +54,7 @@ dumpPaths(JSContext* cx, Node node, uint32_t maxNumPaths /* = 10 */)
     MOZ_ASSERT(rootList.init());
 
     NodeSet targets;
-    bool ok = targets.init() && targets.putNew(node);
+    bool ok = targets.putNew(node);
     MOZ_ASSERT(ok);
 
     auto paths = ShortestPaths::Create(cx, nogc.ref(), maxNumPaths, &rootList, std::move(targets));

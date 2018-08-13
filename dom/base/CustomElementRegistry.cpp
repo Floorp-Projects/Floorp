@@ -285,7 +285,6 @@ CustomElementRegistry::CustomElementRegistry(nsPIDOMWindowInner* aWindow)
  , mIsCustomDefinitionRunning(false)
 {
   MOZ_ASSERT(aWindow);
-  MOZ_ALWAYS_TRUE(mConstructors.init());
 
   mozilla::HoldJSObjects(this);
 }

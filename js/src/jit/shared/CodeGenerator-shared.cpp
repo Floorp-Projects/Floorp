@@ -880,8 +880,6 @@ CodeGeneratorShared::generateCompactTrackedOptimizationsMap(JSContext* cx, JitCo
         return true;
 
     UniqueTrackedOptimizations unique(cx);
-    if (!unique.init())
-        return false;
 
     // Iterate through all entries to deduplicate their optimization attempts.
     for (size_t i = 0; i < trackedOptimizations_.length(); i++) {

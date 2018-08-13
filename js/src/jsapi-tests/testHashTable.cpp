@@ -143,8 +143,6 @@ template <class NewKeyFunction>
 static bool
 SlowRekey(IntMap* m) {
     IntMap tmp;
-    if (!tmp.init())
-        return false;
 
     for (auto iter = m->iter(); !iter.done(); iter.next()) {
         if (NewKeyFunction::shouldBeRemoved(iter.get().key()))
@@ -169,8 +167,6 @@ template <class NewKeyFunction>
 static bool
 SlowRekey(IntSet* s) {
     IntSet tmp;
-    if (!tmp.init())
-        return false;
 
     for (auto iter = s->iter(); !iter.done(); iter.next()) {
         if (NewKeyFunction::shouldBeRemoved(iter.get()))
@@ -194,8 +190,6 @@ SlowRekey(IntSet* s) {
 BEGIN_TEST(testHashRekeyManual)
 {
     IntMap am, bm;
-    CHECK(am.init());
-    CHECK(bm.init());
     for (size_t i = 0; i < TestIterations; ++i) {
 #ifdef FUZZ
         fprintf(stderr, "map1: %lu\n", i);
@@ -216,8 +210,6 @@ BEGIN_TEST(testHashRekeyManual)
     }
 
     IntSet as, bs;
-    CHECK(as.init());
-    CHECK(bs.init());
     for (size_t i = 0; i < TestIterations; ++i) {
 #ifdef FUZZ
         fprintf(stderr, "set1: %lu\n", i);
@@ -244,8 +236,6 @@ END_TEST(testHashRekeyManual)
 BEGIN_TEST(testHashRekeyManualRemoval)
 {
     IntMap am, bm;
-    CHECK(am.init());
-    CHECK(bm.init());
     for (size_t i = 0; i < TestIterations; ++i) {
 #ifdef FUZZ
         fprintf(stderr, "map2: %lu\n", i);
@@ -270,8 +260,6 @@ BEGIN_TEST(testHashRekeyManualRemoval)
     }
 
     IntSet as, bs;
-    CHECK(as.init());
-    CHECK(bs.init());
     for (size_t i = 0; i < TestIterations; ++i) {
 #ifdef FUZZ
         fprintf(stderr, "set1: %lu\n", i);
@@ -338,7 +326,6 @@ BEGIN_TEST(testHashSetOfMoveOnlyType)
     typedef js::HashSet<MoveOnlyType, MoveOnlyType::HashPolicy, js::SystemAllocPolicy> Set;
 
     Set set;
-    CHECK(set.init());
 
     MoveOnlyType a(1);
 
@@ -357,9 +344,6 @@ GrowUntilResize()
 {
     IntMap m;
 
-    if (!m.init())
-        return false;
-
     // Add entries until we've resized the table four times.
     size_t lastCapacity = m.capacity();
     size_t resizes = 0;
@@ -367,7 +351,7 @@ GrowUntilResize()
     while (resizes < 4) {
         auto p = m.lookupForAdd(key);
         if (!p && !m.add(p, key, 0))
-            return false;   // OOM'd while adding
+            return false;   // OOM'd in lookupForAdd() or add()
 
         size_t capacity = m.capacity();
         if (capacity != lastCapacity) {
@@ -398,7 +382,6 @@ END_TEST(testHashMapGrowOOM)
 BEGIN_TEST(testHashTableMovableModIterator)
 {
     IntSet set;
-    CHECK(set.init());
 
     // Exercise returning a hash table ModIterator object from a function.
 
@@ -435,3 +418,84 @@ IntSet::ModIterator setModIter(IntSet& set)
 }
 
 END_TEST(testHashTableMovableModIterator)
+
+BEGIN_TEST(testHashLazyStorage)
+{
+    // The following code depends on the current capacity computation, which
+    // could change in the future.
+    uint32_t defaultCap = 32;
+    uint32_t minCap = 4;
+
+    IntSet set;
+    CHECK(set.capacity() == 0);
+
+    CHECK(set.put(1));
+    CHECK(set.capacity() == defaultCap);
+
+    set.compact();                  // effectively a no-op
+    CHECK(set.capacity() == minCap);
+
+    set.clear();
+    CHECK(set.capacity() == minCap);
+
+    set.compact();
+    CHECK(set.capacity() == 0);
+
+    CHECK(set.putNew(1));
+    CHECK(set.capacity() == minCap);
+
+    set.clear();
+    set.compact();
+    CHECK(set.capacity() == 0);
+
+    // lookupForAdd() instantiates, even if not followed by add().
+    set.lookupForAdd(1);
+    CHECK(set.capacity() == minCap);
+
+    set.clear();
+    set.compact();
+    CHECK(set.capacity() == 0);
+
+    CHECK(set.reserve(0));          // a no-op
+    CHECK(set.capacity() == 0);
+
+    CHECK(set.reserve(1));
+    CHECK(set.capacity() == minCap);
+
+    CHECK(set.reserve(0));          // a no-op
+    CHECK(set.capacity() == minCap);
+
+    CHECK(set.reserve(2));          // effectively a no-op
+    CHECK(set.capacity() == minCap);
+
+    // No need to clear here because we didn't add anything.
+    set.compact();
+    CHECK(set.capacity() == 0);
+
+    CHECK(set.reserve(128));
+    CHECK(set.capacity() == 256);
+    CHECK(set.reserve(3));          // effectively a no-op
+    CHECK(set.capacity() == 256);
+    for (int i = 0; i < 8; i++) {
+      CHECK(set.putNew(i));
+    }
+    CHECK(set.count() == 8);
+    CHECK(set.capacity() == 256);
+    set.compact();
+    CHECK(set.capacity() == 16);
+    set.compact();                  // effectively a no-op
+    CHECK(set.capacity() == 16);
+    for (int i = 8; i < 16; i++) {
+      CHECK(set.putNew(i));
+    }
+    CHECK(set.count() == 16);
+    CHECK(set.capacity() == 32);
+    set.clear();
+    CHECK(set.capacity() == 32);
+    set.compact();
+    CHECK(set.capacity() == 0);
+
+    return true;
+}
+END_TEST(testHashLazyStorage)
+

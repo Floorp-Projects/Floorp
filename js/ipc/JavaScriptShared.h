@@ -98,7 +98,6 @@ class IdToObjectMap
   public:
     IdToObjectMap();
 
-    bool init();
     void trace(JSTracer* trc, uint64_t minimumId = 0);
     void sweep();
 
@@ -125,7 +124,8 @@ class ObjectToIdMap
     using Table = JS::GCHashMap<JS::Heap<JSObject*>, ObjectId, Hasher, js::SystemAllocPolicy>;
 
   public:
-    bool init();
+    ObjectToIdMap();
+
     void trace(JSTracer* trc);
     void sweep();
 
@@ -145,8 +145,6 @@ class JavaScriptShared : public CPOWManager
   public:
     JavaScriptShared();
     virtual ~JavaScriptShared();
-
-    bool init();
 
     void decref();
     void incref();

@@ -18,12 +18,14 @@ class RuntimePage extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
+      installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
+      temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
   render() {
-    const { dispatch, tabs } = this.props;
+    const { dispatch, installedExtensions, tabs, temporaryExtensions } = this.props;
 
     return dom.article(
       {
@@ -36,6 +38,16 @@ class RuntimePage extends PureComponent {
       }),
       DebugTargetPane({
         dispatch,
+        name: "Temporary Extensions",
+        targets: temporaryExtensions,
+      }),
+      DebugTargetPane({
+        dispatch,
+        name: "Extensions",
+        targets: installedExtensions,
+      }),
+      DebugTargetPane({
+        dispatch,
         name: "Tabs",
         targets: tabs
       }),
@@ -45,7 +57,9 @@ class RuntimePage extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    installedExtensions: state.runtime.installedExtensions,
     tabs: state.runtime.tabs,
+    temporaryExtensions: state.runtime.temporaryExtensions,
   };
 };
 
