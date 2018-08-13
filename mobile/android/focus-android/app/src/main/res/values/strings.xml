@@ -666,7 +666,7 @@ be temporary, and you can try again later.</li>
         %1$s will be replaced by the app name (e.g. Firefox Focus)
         %2$s will be replaced with "Learn more" which will be a tappable link
         using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">To get search suggestions, %1$s needs to send what you type in the address bar to the search engine you\'ve chosen. %2$s.</string>
+    <string name="enable_search_suggestion_subtitle">To get search suggestions, %1$s needs to send what you type in the address bar to the search engine you’ve chosen. %2$s.</string>
 
     <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
         which will be a "Learn More" link. -->
@@ -693,7 +693,7 @@ be temporary, and you can try again later.</li>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_add_to_homescreen"><![CDATA[Get one-tap access to sites you use most\n
+    <string name="tip_add_to_homescreen"><![CDATA[Get one-tap access to sites you use most
         Menu > Add to Home screen]]></string>
 
     <!-- Tip displayed on home view explaining how to make Focus the default browser
@@ -717,7 +717,7 @@ be temporary, and you can try again later.</li>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
      The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_request_desktop"><![CDATA[Rather see the full desktop site?\n
+    <string name="tip_request_desktop"><![CDATA[Rather see the full desktop site?
     Menu > Request desktop site
     ]]></string>
 </resources>
