@@ -9,6 +9,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 
@@ -80,7 +81,12 @@ public class SupportUtils {
 
     public static void openDefaultBrowserSumoPage(Context context) {
         SessionManager.getInstance().createSession(Source.MENU, SupportUtils.DEFAULT_BROWSER_URL);
-        ((Activity) context).onBackPressed();
+
+        if (context instanceof Activity) {
+            ((Activity) context).finish();
+        } else {
+            openDefaultBrowserSumoPage(((ContextWrapper) context).getBaseContext());
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.N)
