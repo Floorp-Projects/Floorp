@@ -674,10 +674,21 @@ class JSTerm extends Component {
   setInputValue(newValue = "") {
     if (this.props.codeMirrorEnabled) {
       if (this.editor) {
-        this.editor.setText(newValue);
-        // Set the cursor at the end of the input.
-        this.editor.setCursor({line: this.editor.getDoc().lineCount(), ch: 0});
-        this.editor.setAutoCompletionText();
+        // In order to get the autocomplete popup to work properly, we need to set the
+        // editor text and the cursor in the same operation. If we don't, the text change
+        // is done before the cursor is moved, and the autocompletion call to the server
+        // sends an erroneous query.
+        this.editor.codeMirror.operation(() => {
+          this.editor.setText(newValue);
+
+          // Set the cursor at the end of the input.
+          const lines = newValue.split("\n");
+          this.editor.setCursor({
+            line: lines.length - 1,
+            ch: lines[lines.length - 1].length
+          });
+          this.editor.setAutoCompletionText();
+        });
       }
     } else {
       if (!this.inputNode) {
