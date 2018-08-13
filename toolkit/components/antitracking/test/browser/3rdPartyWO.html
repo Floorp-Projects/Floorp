@@ -21,8 +21,6 @@ function is(a, b, msg) {
 onmessage = function(e) {
   let runnableStr = `(() => {return (${e.data.blockingCallback});})();`;
   let runnable = eval(runnableStr); // eslint-disable-line no-eval
-  // Phase 2: Here we want to test that a third-party context doesn't
-  // get blocked with when the same origin is opened through window.open().
   runnable.call(this, /* Phase */ 2).then(_ => {
     info("Let's do a window.open()");
     return new Promise(resolve => {

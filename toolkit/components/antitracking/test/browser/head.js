@@ -20,17 +20,19 @@ this.AntiTracking = {
     this._createCleanupTask(cleanupFunction);
 
     if (callbackNonTracking) {
-      // Here we want to test that a 3rd party context is not blocked if pref is off.
+      // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off.
       this._createTask(name, false, callbackNonTracking);
       this._createCleanupTask(cleanupFunction);
 
-      // Permission granted when there is a window.open()
+      // Phase 2: Here we want to test that a third-party context doesn't
+      // get blocked with when the same origin is opened through window.open().
       if (windowOpenTest) {
         this._createWindowOpenTask(name, callbackTracking, callbackNonTracking, extraPrefs);
         this._createCleanupTask(cleanupFunction);
       }
 
-      // Permission granted when there is user-interaction.
+      // Phase 3: Here we want to test that a third-party context doesn't
+      // get blocked with user interaction present
       if (userInteractionTest) {
         this._createUserInteractionTask(name, callbackTracking, callbackNonTracking, extraPrefs);
         this._createCleanupTask(cleanupFunction);
