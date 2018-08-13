@@ -3469,8 +3469,6 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
     options.allowHTMLComments = target == ParseGoal::Script;
     mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
     UsedNameTracker usedNames(cx);
-    if (!usedNames.init())
-        return false;
 
     RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(cx, options,
                                                                                  mozilla::Nothing()));
@@ -3500,8 +3498,6 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
             return false;
 
         ModuleBuilder builder(cx, module, parser.anyChars);
-        if (!builder.init())
-            return false;
 
         ModuleSharedContext modulesc(cx, module, &cx->global()->emptyGlobalScope(), builder);
         pn = parser.moduleBody(&modulesc);

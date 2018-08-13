@@ -406,9 +406,6 @@ readSizeOfNextMessage(ZeroCopyInputStream& stream, uint32_t* sizep)
 bool
 HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
 {
-  if (!nodes.init() || !frames.init())
-    return false;
-
   ArrayInputStream stream(buffer, size);
   GzipInputStream gzipStream(&stream);
   uint32_t sizeOfMessage = 0;
@@ -439,8 +436,6 @@ HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
 
   // The set of all node ids we've found edges pointing to.
   NodeIdSet edgeReferents(cx);
-  if (NS_WARN_IF(!edgeReferents.init()))
-    return false;
 
   if (NS_WARN_IF(!saveNode(root, edgeReferents)))
     return false;
@@ -478,10 +473,6 @@ HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
                          JS::MutableHandleValue rval, ErrorResult& rv)
 {
   JS::ubi::Census census(cx);
-  if (NS_WARN_IF(!census.init())) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
 
   JS::ubi::CountTypePtr rootType;
   if (NS_WARN_IF(!JS::ubi::ParseCensusOptions(cx,  census, options, rootType))) {
@@ -501,10 +492,6 @@ HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
     JS::AutoCheckCannotGC nogc;
 
     JS::ubi::CensusTraversal traversal(cx, handler, nogc);
-    if (NS_WARN_IF(!traversal.init())) {
-      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
 
     if (NS_WARN_IF(!traversal.addStart(getRoot()))) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -610,10 +597,6 @@ HeapSnapshot::ComputeShortestPaths(JSContext*cx, uint64_t start,
   // snapshot.
 
   JS::ubi::NodeSet targetsSet;
-  if (NS_WARN_IF(!targetsSet.init())) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
 
   for (const auto& target : targets) {
     Maybe<JS::ubi::Node> targetNode = getNodeById(target);
@@ -722,9 +705,6 @@ HeapSnapshot::ComputeShortestPaths(JSContext*cx, uint64_t start,
 static bool
 PopulateCompartmentsWithGlobals(CompartmentSet& compartments, AutoObjectVector& globals)
 {
-  if (!compartments.init())
-    return false;
-
   unsigned length = globals.length();
   for (unsigned i = 0; i < length; i++) {
     if (!compartments.put(GetObjectCompartment(globals[i])))
@@ -768,7 +748,7 @@ EstablishBoundaries(JSContext* cx,
                     CompartmentSet& compartments)
 {
   MOZ_ASSERT(!roots.initialized());
-  MOZ_ASSERT(!compartments.initialized());
+  MOZ_ASSERT(compartments.empty());
 
   bool foundBoundaryProperty = false;
 
@@ -851,8 +831,6 @@ EstablishBoundaries(JSContext* cx,
   }
 
   MOZ_ASSERT(roots.initialized());
-  MOZ_ASSERT_IF(boundaries.mDebugger.WasPassed(), compartments.initialized());
-  MOZ_ASSERT_IF(boundaries.mGlobals.WasPassed(), compartments.initialized());
   return true;
 }
 
@@ -1257,12 +1235,6 @@ public:
     , compartments(compartments)
   { }
 
-  bool init() {
-    return framesAlreadySerialized.init() &&
-           twoByteStringsAlreadySerialized.init() &&
-           oneByteStringsAlreadySerialized.init();
-  }
-
   ~StreamWriter() override { }
 
   bool writeMetadata(uint64_t timestamp) final {
@@ -1440,8 +1412,6 @@ WriteHeapGraph(JSContext* cx,
 
   HeapSnapshotHandler handler(writer, compartments);
   HeapSnapshotHandler::Traversal traversal(cx, handler, noGC);
-  if (!traversal.init())
-    return false;
   traversal.wantNames = wantNames;
 
   bool ok = traversal.addStartVisited(node) &&
@@ -1621,11 +1591,7 @@ ChromeUtils::SaveHeapSnapshotShared(GlobalObject& global,
       return;
 
     StreamWriter writer(cx, gzipStream, wantNames,
-                        compartments.initialized() ? &compartments : nullptr);
-    if (NS_WARN_IF(!writer.init())) {
-      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
+                        !compartments.empty() ? &compartments : nullptr);
 
     MOZ_ASSERT(maybeNoGC.isSome());
     ubi::Node roots(&rootList);
@@ -1638,7 +1604,7 @@ ChromeUtils::SaveHeapSnapshotShared(GlobalObject& global,
                         roots,
                         writer,
                         wantNames,
-                        compartments.initialized() ? &compartments : nullptr,
+                        !compartments.empty() ? &compartments : nullptr,
                         maybeNoGC.ref(),
                         nodeCount,
                         edgeCount))

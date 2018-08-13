@@ -247,8 +247,6 @@ class RuntimeCaches
     js::UncompressedSourceCache uncompressedSourceCache;
     js::EvalCache evalCache;
 
-    bool init();
-
     void purgeForMinorGC(JSRuntime* rt) {
         newObjectCache.clearNurseryObjects(rt);
         evalCache.sweep();
@@ -256,8 +254,7 @@ class RuntimeCaches
 
     void purgeForCompaction() {
         newObjectCache.purge();
-        if (evalCache.initialized())
-            evalCache.clear();
+        evalCache.clear();
     }
 
     void purge() {

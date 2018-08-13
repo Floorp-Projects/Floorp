@@ -121,10 +121,6 @@ class UsedNameTracker
         scopeCounter_(0)
     { }
 
-    MOZ_MUST_USE bool init() {
-        return map_.init();
-    }
-
     uint32_t nextScriptId() {
         MOZ_ASSERT(scriptCounter_ != UINT32_MAX,
                    "ParseContext::Scope::init should have prevented wraparound");

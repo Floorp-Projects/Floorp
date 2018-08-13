@@ -37,8 +37,6 @@ LIRGraph::LIRGraph(MIRGraph* mir)
 bool
 LIRGraph::addConstantToPool(const Value& v, uint32_t* index)
 {
-    MOZ_ASSERT(constantPoolMap_.initialized());
-
     ConstantPoolMap::AddPtr p = constantPoolMap_.lookupForAdd(v);
     if (p) {
         *index = p->value();

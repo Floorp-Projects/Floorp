@@ -400,7 +400,7 @@ class SnapshotWriter
     SnapshotOffset lastStart_;
 
   public:
-    MOZ_MUST_USE bool init();
+    SnapshotWriter();
 
     SnapshotOffset startSnapshot(RecoverOffset recoverOffset, BailoutKind kind);
 #ifdef TRACK_SNAPSHOTS

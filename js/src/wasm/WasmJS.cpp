@@ -1081,13 +1081,13 @@ WasmInstanceObject::create(JSContext* cx,
                            HandleObject proto)
 {
     UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
-    if (!exports || !exports->init()) {
+    if (!exports) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
     UniquePtr<ScopeMap> scopes = js::MakeUnique<ScopeMap>(cx->zone());
-    if (!scopes || !scopes->init()) {
+    if (!scopes) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -1689,7 +1689,7 @@ WasmMemoryObject::getOrCreateObservers(JSContext* cx)
 {
     if (!hasObservers()) {
         auto observers = MakeUnique<InstanceSet>(cx->zone());
-        if (!observers || !observers->init()) {
+        if (!observers) {
             ReportOutOfMemory(cx);
             return nullptr;
         }

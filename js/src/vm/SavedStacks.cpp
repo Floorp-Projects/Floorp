@@ -1227,17 +1227,9 @@ SavedFrame::toStringMethod(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-SavedStacks::init()
-{
-    return frames.init() &&
-           pcLocationMap.init();
-}
-
-bool
 SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
                               JS::StackCapture&& capture /* = JS::StackCapture(JS::AllFrames()) */)
 {
-    MOZ_ASSERT(initialized());
     MOZ_RELEASE_ASSERT(cx->realm());
     MOZ_DIAGNOSTIC_ASSERT(&cx->realm()->savedStacks() == this);
 
@@ -1259,7 +1251,6 @@ SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString
                             MutableHandleSavedFrame adoptedStack,
                             const Maybe<size_t>& maxFrameCount)
 {
-    MOZ_ASSERT(initialized());
     MOZ_RELEASE_ASSERT(cx->realm());
     MOZ_DIAGNOSTIC_ASSERT(&cx->realm()->savedStacks() == this);
 
@@ -1294,7 +1285,6 @@ SavedStacks::trace(JSTracer* trc)
 uint32_t
 SavedStacks::count()
 {
-    MOZ_ASSERT(initialized());
     return frames.count();
 }
 

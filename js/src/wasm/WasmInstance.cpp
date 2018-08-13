@@ -42,16 +42,7 @@ class FuncTypeIdSet
 
   public:
     ~FuncTypeIdSet() {
-        MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !map_.initialized() || map_.empty());
-    }
-
-    bool ensureInitialized(JSContext* cx) {
-        if (!map_.initialized() && !map_.init()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-
-        return true;
+        MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), map_.empty());
     }
 
     bool allocateFuncTypeId(JSContext* cx, const FuncType& funcType, const void** funcTypeId) {
@@ -618,9 +609,6 @@ Instance::init(JSContext* cx)
 
     if (!metadata().funcTypeIds.empty()) {
         ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet = funcTypeIdSet.lock();
-
-        if (!lockedFuncTypeIdSet->ensureInitialized(cx))
-            return false;
 
         for (const FuncTypeWithId& funcType : metadata().funcTypeIds) {
             const void* funcTypeId;

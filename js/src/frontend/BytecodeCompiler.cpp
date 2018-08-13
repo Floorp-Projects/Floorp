@@ -223,8 +223,6 @@ bool
 BytecodeCompiler::createParser(ParseGoal goal)
 {
     usedNames.emplace(cx);
-    if (!usedNames->init())
-        return false;
 
     if (canLazilyParse()) {
         syntaxParser.emplace(cx, alloc, options, sourceBuffer.get(), sourceBuffer.length(),
@@ -410,8 +408,6 @@ BytecodeCompiler::compileModule()
     module->init(script);
 
     ModuleBuilder builder(cx, module, parser->anyChars);
-    if (!builder.init())
-        return nullptr;
 
     ModuleSharedContext modulesc(cx, module, enclosingScope, builder);
     ParseNode* pn = parser->moduleBody(&modulesc);
@@ -629,8 +625,6 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
     AutoAssertReportedException assertException(cx);
 
     frontend::UsedNameTracker usedNames(cx);
-    if (!usedNames.init())
-        return nullptr;
 
     RootedScriptSourceObject sourceObj(cx, CreateScriptSourceObject(cx, options));
 
@@ -819,8 +813,6 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     }
 
     UsedNameTracker usedNames(cx);
-    if (!usedNames.init())
-        return false;
 
     RootedScriptSourceObject sourceObject(cx, &lazy->sourceObject());
     Parser<FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options, chars, length,

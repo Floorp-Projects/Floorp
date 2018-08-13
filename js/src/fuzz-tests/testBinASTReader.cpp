@@ -51,10 +51,6 @@ testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
     }
 
     js::frontend::UsedNameTracker binUsedNames(gCx);
-    if (!binUsedNames.init()) {
-        ReportOutOfMemory(gCx);
-        return 0;
-    }
 
     js::frontend::BinASTParser<js::frontend::BinTokenReaderTester> reader(gCx, gCx->tempLifoAlloc(), binUsedNames, options);
 

@@ -1445,11 +1445,6 @@ BaseShape::getUnowned(JSContext* cx, StackBaseShape& base)
 {
     auto& table = cx->zone()->baseShapes();
 
-    if (!table.initialized() && !table.init()) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
-
     auto p = MakeDependentAddPtr(cx, table, base);
     if (p)
         return *p;
@@ -1532,9 +1527,6 @@ BaseShape::canSkipMarkingShapeTable(Shape* lastShape)
 void
 Zone::checkBaseShapeTableAfterMovingGC()
 {
-    if (!baseShapes().initialized())
-        return;
-
     for (auto r = baseShapes().all(); !r.empty(); r.popFront()) {
         UnownedBaseShape* base = r.front().unbarrieredGet();
         CheckGCThingAfterMovingGC(base);
@@ -1571,9 +1563,6 @@ InitialShapeEntry::InitialShapeEntry(Shape* shape, const Lookup::ShapeProto& pro
 void
 Zone::checkInitialShapesTableAfterMovingGC()
 {
-    if (!initialShapes().initialized())
-        return;
-
     /*
      * Assert that the postbarriers have worked and that nothing is left in
      * initialShapes that points into the nursery, and that the hash table
@@ -1630,7 +1619,7 @@ static KidsHash*
 HashChildren(Shape* kid1, Shape* kid2)
 {
     auto hash = MakeUnique<KidsHash>();
-    if (!hash || !hash->init(2))
+    if (!hash || !hash->reserve(2))
         return nullptr;
 
     hash->putNewInfallible(StackShape(kid1), kid1);
@@ -2094,11 +2083,6 @@ EmptyShape::getInitialShape(JSContext* cx, const Class* clasp, TaggedProto proto
 
     auto& table = cx->zone()->initialShapes();
 
-    if (!table.initialized() && !table.init()) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
-
     using Lookup = InitialShapeEntry::Lookup;
     auto protoPointer = MakeDependentAddPtr(cx, table,
                                             Lookup(clasp, Lookup::ShapeProto(proto),
@@ -2248,9 +2232,6 @@ EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape, HandleObject pr
 void
 Zone::fixupInitialShapeTable()
 {
-    if (!initialShapes().initialized())
-        return;
-
     for (InitialShapeSet::Enum e(initialShapes()); !e.empty(); e.popFront()) {
         // The shape may have been moved, but we can update that in place.
         Shape* shape = e.front().shape.unbarrieredGet();

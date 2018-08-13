@@ -49,7 +49,6 @@ struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTaskHelper<FreeMa
     explicit FreeMallocedBuffersTask(FreeOp* fop)
       : GCParallelTaskHelper(fop->runtime()),
         fop_(fop) {}
-    bool init() { return buffers_.init(); }
     void transferBuffersToFree(MallocedBuffersSet& buffersToFree,
                                const AutoLockHelperThreadState& lock);
     ~FreeMallocedBuffersTask() { join(); }
@@ -149,11 +148,8 @@ js::Nursery::Nursery(JSRuntime* rt)
 bool
 js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
 {
-    if (!mallocedBuffers.init())
-        return false;
-
     freeMallocedBuffersTask = js_new<FreeMallocedBuffersTask>(runtime()->defaultFreeOp());
-    if (!freeMallocedBuffersTask || !freeMallocedBuffersTask->init())
+    if (!freeMallocedBuffersTask)
         return false;
 
     // The nursery is permanently disabled when recording or replaying. Nursery
@@ -500,8 +496,6 @@ Nursery::setIndirectForwardingPointer(void* oldData, void* newData)
     MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & ChunkMask) == 0);
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!forwardedBuffers.initialized() && !forwardedBuffers.init())
-        oomUnsafe.crash("Nursery::setForwardingPointer");
 #ifdef DEBUG
     if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(oldData))
         MOZ_ASSERT(p->value() == newData);
@@ -530,11 +524,9 @@ js::Nursery::forwardBufferPointer(HeapSlot** pSlotsElems)
     // The new location for this buffer is either stored inline with it or in
     // the forwardedBuffers table.
     do {
-        if (forwardedBuffers.initialized()) {
-            if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(old)) {
-                *pSlotsElems = reinterpret_cast<HeapSlot*>(p->value());
-                break;
-            }
+        if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(old)) {
+            *pSlotsElems = reinterpret_cast<HeapSlot*>(p->value());
+            break;
         }
 
         *pSlotsElems = *reinterpret_cast<HeapSlot**>(old);
@@ -929,7 +921,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason, TenureCountCache& tenureC
     // Update any slot or element pointers whose destination has been tenured.
     startProfile(ProfileKey::UpdateJitActivations);
     js::jit::UpdateJitActivationsForMinorGC(rt);
-    forwardedBuffers.finish();
+    forwardedBuffers.clearAndCompact();
     endProfile(ProfileKey::UpdateJitActivations);
 
     startProfile(ProfileKey::ObjectsTenuredCallback);
