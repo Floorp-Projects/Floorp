@@ -4,19 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_network_Types_h
-#define mozilla_dom_network_Types_h
+#ifndef mozilla_HalBatteryInformation_h
+#define mozilla_HalBatteryInformation_h
+
+#include "mozilla/Observer.h"
 
 namespace mozilla {
 namespace hal {
-class NetworkInformation;
+class BatteryInformation;
+typedef Observer<hal::BatteryInformation> BatteryObserver;
 } // namespace hal
-
-template <class T>
-class Observer;
-
-typedef Observer<hal::NetworkInformation> NetworkObserver;
-
 } // namespace mozilla
 
-#endif // mozilla_dom_network_Types_h
+#endif // mozilla_HalBatteryInformation_h
+

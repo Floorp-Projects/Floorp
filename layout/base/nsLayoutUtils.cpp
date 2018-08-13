@@ -968,13 +968,12 @@ static bool
 HasVisibleAnonymousContents(nsIDocument* aDoc)
 {
   for (RefPtr<AnonymousContent>& ac : aDoc->GetAnonymousContents()) {
-    Element* elem = ac->GetContentNode();
     // We check to see if the anonymous content node has a frame. If it doesn't,
     // that means that's not visible to the user because e.g. it's display:none.
     // For now we assume that if it has a frame, it is visible. We might be able
     // to refine this further by adding complexity if it turns out this condition
     // results in a lot of false positives.
-    if (elem && elem->GetPrimaryFrame()) {
+    if (ac->ContentNode().GetPrimaryFrame()) {
       return true;
     }
   }
