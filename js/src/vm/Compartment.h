@@ -273,7 +273,8 @@ class WrapperMap
         Ptr(const InnerMap::Ptr& p, InnerMap& m) : InnerMap::Ptr(p), map(&m) {}
     };
 
-    MOZ_MUST_USE bool init(uint32_t len) { return map.init(len); }
+    WrapperMap() {}
+    explicit WrapperMap(size_t aLen) : map(aLen) {}
 
     bool empty() {
         if (map.empty())
@@ -305,8 +306,8 @@ class WrapperMap
         MOZ_ASSERT(k.is<JSString*>() == !c);
         auto p = map.lookupForAdd(c);
         if (!p) {
-            InnerMap m;
-            if (!m.init(InitialInnerMapSize) || !map.add(p, c, std::move(m)))
+            InnerMap m(InitialInnerMapSize);
+            if (!map.add(p, c, std::move(m)))
                 return false;
         }
         return p->value().put(k, v);
@@ -436,7 +437,6 @@ class JS::Compartment
   public:
     explicit Compartment(JS::Zone* zone);
 
-    MOZ_MUST_USE bool init(JSContext* cx);
     void destroy(js::FreeOp* fop);
 
     MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);

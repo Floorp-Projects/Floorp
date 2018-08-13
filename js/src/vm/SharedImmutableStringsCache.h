@@ -139,8 +139,6 @@ class SharedImmutableStringsCache
         size_t n = mallocSizeOf(inner_);
 
         auto locked = inner_->lock();
-        if (!locked->set.initialized())
-            return n;
 
         // Size of the table.
         n += locked->set.shallowSizeOfExcludingThis(mallocSizeOf);
@@ -213,9 +211,6 @@ class SharedImmutableStringsCache
     void purge() {
         auto locked = inner_->lock();
         MOZ_ASSERT(locked->refcount > 0);
-
-        if (!locked->set.initialized())
-            return;
 
         for (Inner::Set::Enum e(locked->set); !e.empty(); e.popFront()) {
             if (e.front()->refcount == 0) {

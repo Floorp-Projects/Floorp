@@ -398,7 +398,6 @@ class JitZone
     BaselineCacheIRStubCodeMap baselineCacheIRStubCodes_;
 
   public:
-    MOZ_MUST_USE bool init(JSContext* cx);
     void sweep();
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -433,22 +432,18 @@ class JitZone
     }
 
     CacheIRStubInfo* getIonCacheIRStubInfo(const CacheIRStubKey::Lookup& key) {
-        if (!ionCacheIRStubInfoSet_.initialized())
-            return nullptr;
         IonCacheIRStubInfoSet::Ptr p = ionCacheIRStubInfoSet_.lookup(key);
         return p ? p->stubInfo.get() : nullptr;
     }
     MOZ_MUST_USE bool putIonCacheIRStubInfo(const CacheIRStubKey::Lookup& lookup,
                                             CacheIRStubKey& key)
     {
-        if (!ionCacheIRStubInfoSet_.initialized() && !ionCacheIRStubInfoSet_.init())
-            return false;
         IonCacheIRStubInfoSet::AddPtr p = ionCacheIRStubInfoSet_.lookupForAdd(lookup);
         MOZ_ASSERT(!p);
         return ionCacheIRStubInfoSet_.add(p, std::move(key));
     }
     void purgeIonCacheIRStubInfo() {
-        ionCacheIRStubInfoSet_.finish();
+        ionCacheIRStubInfoSet_.clearAndCompact();
     }
 };
 

@@ -24,7 +24,6 @@ class WrapperOwner : public virtual JavaScriptShared
            ActorDestroyReason;
 
     WrapperOwner();
-    bool init();
 
     // Standard internal methods.
     // (The traps should be in the same order like js/Proxy.h)

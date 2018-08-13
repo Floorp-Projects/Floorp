@@ -420,8 +420,6 @@ ModuleGenerator::linkCallSites()
     // all possible calls/traps have been emitted.
 
     OffsetMap existingCallFarJumps;
-    if (!existingCallFarJumps.init())
-        return false;
 
     TrapMaybeOffsetArray existingTrapFarJumps;
 

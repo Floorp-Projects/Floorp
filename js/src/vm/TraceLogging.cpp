@@ -356,11 +356,9 @@ TraceLoggerThreadState::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 
     size_t size = 0;
     size += pointerMap.shallowSizeOfExcludingThis(mallocSizeOf);
-    if (textIdPayloads.initialized()) {
-        size += textIdPayloads.shallowSizeOfExcludingThis(mallocSizeOf);
-        for (TextIdHashMap::Range r = textIdPayloads.all(); !r.empty(); r.popFront())
-            r.front().value()->sizeOfIncludingThis(mallocSizeOf);
-    }
+    size += textIdPayloads.shallowSizeOfExcludingThis(mallocSizeOf);
+    for (TextIdHashMap::Range r = textIdPayloads.all(); !r.empty(); r.popFront())
+        r.front().value()->sizeOfIncludingThis(mallocSizeOf);
     return size;
 }
 
@@ -692,10 +690,8 @@ TraceLoggerThreadState::~TraceLoggerThreadState()
 
     threadLoggers.clear();
 
-    if (textIdPayloads.initialized()) {
-        for (TextIdHashMap::Range r = textIdPayloads.all(); !r.empty(); r.popFront())
-            js_delete(r.front().value());
-    }
+    for (TextIdHashMap::Range r = textIdPayloads.all(); !r.empty(); r.popFront())
+        js_delete(r.front().value());
 
 #ifdef DEBUG
     initialized = false;
@@ -874,11 +870,6 @@ TraceLoggerThreadState::init()
         if (strstr(options, "Errors"))
             spewErrors = true;
     }
-
-    if (!pointerMap.init())
-        return false;
-    if (!textIdPayloads.init())
-        return false;
 
     startupTime = rdtsc();
 

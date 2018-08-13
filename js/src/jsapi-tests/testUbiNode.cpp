@@ -368,7 +368,6 @@ BEGIN_TEST(test_ubiPostOrder)
     FakeNode g('g');
 
     js::HashSet<ExpectedEdge> expectedEdges(cx);
-    CHECK(expectedEdges.init());
 
     auto declareEdge = [&](FakeNode& from, FakeNode& to) {
         return from.addEdgeTo(to) && expectedEdges.putNew(ExpectedEdge(from, to));
@@ -395,7 +394,6 @@ BEGIN_TEST(test_ubiPostOrder)
 
         JS::AutoCheckCannotGC nogc(cx);
         JS::ubi::PostOrder traversal(cx, nogc);
-        CHECK(traversal.init());
         CHECK(traversal.addStart(&r));
 
         auto onNode = [&](const JS::ubi::Node& node) {
@@ -590,7 +588,6 @@ BEGIN_TEST(test_JS_ubi_DominatorTree)
         fprintf(stderr, "Checking %c's dominated set:\n", node.name);
 
         js::HashSet<char> expectedDominatedSet(cx);
-        CHECK(expectedDominatedSet.init());
         for (auto& rel : domination) {
             if (&rel.dominator == &node) {
                 fprintf(stderr, "    Expecting %c\n", rel.dominated.name);
@@ -714,7 +711,6 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_no_path)
         JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
-        CHECK(targets.init());
         CHECK(targets.put(&b));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
@@ -756,7 +752,6 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_one_path)
         JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
-        CHECK(targets.init());
         CHECK(targets.put(&b));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
@@ -823,7 +818,6 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_multiple_paths)
         JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
-        CHECK(targets.init());
         CHECK(targets.put(&f));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,
@@ -915,7 +909,6 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_more_paths_than_max)
         JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
-        CHECK(targets.init());
         CHECK(targets.put(&f));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 1, &a,
@@ -965,7 +958,6 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_multiple_edges_to_target)
         JS::AutoCheckCannotGC noGC(cx);
 
         JS::ubi::NodeSet targets;
-        CHECK(targets.init());
         CHECK(targets.put(&b));
 
         maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, 10, &a,

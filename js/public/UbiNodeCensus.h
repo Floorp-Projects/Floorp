@@ -206,8 +206,6 @@ struct Census {
     JS::ZoneSet targetZones;
 
     explicit Census(JSContext* cx) : cx(cx) { }
-
-    MOZ_MUST_USE JS_PUBLIC_API(bool) init();
 };
 
 // A BreadthFirst handler type that conducts a census, using a CountBase to

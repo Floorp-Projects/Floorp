@@ -4484,8 +4484,6 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
            .setFileAndLine("<ArrayBuffer>", 1);
 
     UsedNameTracker usedNames(cx);
-    if (!usedNames.init())
-        return false;
 
     JS::Result<ParseNode*> parsed(nullptr);
     if (useMultipart) {
@@ -4581,8 +4579,6 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
            .setAllowSyntaxParser(allowSyntaxParser);
 
     UsedNameTracker usedNames(cx);
-    if (!usedNames.init())
-        return false;
 
     RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(cx, options,
                                                                                  Nothing()));
@@ -4638,8 +4634,6 @@ SyntaxParse(JSContext* cx, unsigned argc, Value* vp)
     const char16_t* chars = stableChars.twoByteRange().begin().get();
     size_t length = scriptContents->length();
     UsedNameTracker usedNames(cx);
-    if (!usedNames.init())
-        return false;
 
     RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(cx, options,
                                                                                  Nothing()));
