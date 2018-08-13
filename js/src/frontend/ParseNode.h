@@ -55,6 +55,7 @@ class ObjectBox;
     F(PostIncrement) \
     F(PreDecrement) \
     F(PostDecrement) \
+    F(PropertyName) \
     F(Dot) \
     F(Elem) \
     F(Array) \
@@ -63,6 +64,7 @@ class ObjectBox;
     F(Label) \
     F(Object) \
     F(Call) \
+    F(Arguments) \
     F(Name) \
     F(ObjectPropertyName) \
     F(ComputedName) \
@@ -371,9 +373,8 @@ IsTypeofKind(ParseNodeKind kind)
  * PostIncrement,
  * PreDecrement,
  * PostDecrement
- * New      list        pn_head: list of ctor, arg1, arg2, ... argN
- *                          pn_count: 1 + N (where N is number of args)
- *                          ctor is a MEMBER expr
+ * New      binary      pn_left: ctor expression on the left of the (
+ *                          pn_right: Arguments
  * DeleteName unary     pn_kid: Name expr
  * DeleteProp unary     pn_kid: Dot expr
  * DeleteElem unary     pn_kid: Elem expr
@@ -382,13 +383,15 @@ IsTypeofKind(ParseNodeKind kind)
  *                          for a more-specific PNK_DELETE* unless constant
  *                          folding (or a similar parse tree manipulation) has
  *                          occurred
- * Dot      name        pn_expr: MEMBER expr to left of .
- *                          pn_atom: name to right of .
+ * PropertyName name    pn_atom: property name being accessed
+ * Dot      binary      pn_left: MEMBER expr to left of .
+ *                          pn_right: PropertyName to right of .
  * Elem     binary      pn_left: MEMBER expr to left of [
  *                          pn_right: expr between [ and ]
- * Call     list        pn_head: list of call, arg1, arg2, ... argN
- *                          pn_count: 1 + N (where N is number of args)
- *                          call is a MEMBER expr naming a callable object
+ * Call     binary      pn_left: callee expression on the left of the (
+ *                          pn_right: Arguments
+ * Arguments list       pn_head: list of arg1, arg2, ... argN
+ *                          pn_count: N (where N is number of args)
  * Array    list        pn_head: list of pn_count array element exprs
  *                          [,,] holes are represented by Elision nodes
  *                          pn_xflags: PN_ENDCOMMA if extra comma at end
@@ -408,8 +411,9 @@ IsTypeofKind(ParseNodeKind kind)
  *              list
  * TemplateString      pn_atom: template string atom
                 nullary     pn_op: JSOP_NOP
- * TaggedTemplate      pn_head: list of call, call site object, arg1, arg2, ... argN
- *              list        pn_count: 2 + N (N is the number of substitutions)
+ * TaggedTemplate      pn_left: tag expression
+ *              binary       pn_right: Arguments, with the first being the
+ *                           call site object, then arg1, arg2, ... argN
  * CallSiteObj list     pn_head: a Array node followed by
  *                          list of pn_count - 1 TemplateString nodes
  * RegExp   nullary     pn_objbox: RegExp model object
@@ -421,7 +425,7 @@ IsTypeofKind(ParseNodeKind kind)
  *
  * This,        unary   pn_kid: '.this' Name if function `this`, else nullptr
  * SuperBase    unary   pn_kid: '.this' Name
- *
+ * SuperCall    binary  pn_left: SuperBase pn_right: Arguments
  * SetThis      binary  pn_left: '.this' Name, pn_right: SuperCall
  *
  * LexicalScope scope   pn_u.scope.bindings: scope bindings
@@ -571,8 +575,7 @@ class ParseNode
                 FunctionBox* funbox;    /* function object */
             };
             ParseNode*  expr;           /* module or function body, var
-                                           initializer, argument default, or
-                                           base object of ParseNodeKind::Dot */
+                                           initializer, or argument default */
         } name;
         struct {
             LexicalScope::Data* bindings;
@@ -1176,30 +1179,33 @@ class RegExpLiteral : public NullaryNode
     }
 };
 
-class PropertyAccess : public ParseNode
+class PropertyAccess : public BinaryNode
 {
   public:
-    PropertyAccess(ParseNode* lhs, PropertyName* name, uint32_t begin, uint32_t end)
-      : ParseNode(ParseNodeKind::Dot, JSOP_NOP, PN_NAME, TokenPos(begin, end))
+    /*
+     * PropertyAccess nodes can have any expression/'super' as left-hand
+     * side, but the name must be a ParseNodeKind::PropertyName node.
+     */
+    PropertyAccess(ParseNode* lhs, ParseNode* name, uint32_t begin, uint32_t end)
+      : BinaryNode(ParseNodeKind::Dot, JSOP_NOP, TokenPos(begin, end), lhs, name)
     {
         MOZ_ASSERT(lhs != nullptr);
         MOZ_ASSERT(name != nullptr);
-        pn_u.name.expr = lhs;
-        pn_u.name.atom = name;
     }
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::Dot);
-        MOZ_ASSERT_IF(match, node.isArity(PN_NAME));
+        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
+        MOZ_ASSERT_IF(match, node.pn_right->isKind(ParseNodeKind::PropertyName));
         return match;
     }
 
     ParseNode& expression() const {
-        return *pn_u.name.expr;
+        return *pn_u.binary.left;
     }
 
     PropertyName& name() const {
-        return *pn_u.name.atom->asPropertyName();
+        return *pn_u.binary.right->pn_atom->asPropertyName();
     }
 
     bool isSuper() const {

@@ -182,6 +182,9 @@ extern const char* CacheKindNames[];
     _(GuardIsObject)                      \
     _(GuardIsObjectOrNull)                \
     _(GuardIsNullOrUndefined)             \
+    _(GuardIsNotNullOrUndefined)          \
+    _(GuardIsNull)                        \
+    _(GuardIsUndefined)                   \
     _(GuardIsBoolean)                     \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
@@ -324,6 +327,9 @@ extern const char* CacheKindNames[];
     _(CompareStringResult)                \
     _(CompareObjectResult)                \
     _(CompareSymbolResult)                \
+    _(CompareInt32Result)                 \
+    _(CompareDoubleResult)                \
+    _(CompareObjectUndefinedNullResult)   \
                                           \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
@@ -438,6 +444,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     static const size_t MaxStubDataSizeInBytes = 20 * sizeof(uintptr_t);
     bool tooLarge_;
 
+    // Basic caching to avoid quadatic lookup behaviour in readStubFieldForIon.
+    mutable uint32_t lastOffset_;
+    mutable uint32_t lastIndex_;
+
     void assertSameCompartment(JSObject*);
 
     void writeOp(CacheOp op) {
@@ -501,7 +511,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         nextInstructionId_(0),
         numInputOperands_(0),
         stubDataSize_(0),
-        tooLarge_(false)
+        tooLarge_(false),
+        lastOffset_(0),
+        lastIndex_(0)
     {}
 
     bool failed() const { return buffer_.oom() || tooLarge_; }
@@ -551,10 +563,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
 
     // This should not be used when compiling Baseline code, as Baseline code
     // shouldn't bake in stub values.
-    StubField readStubFieldForIon(size_t i, StubField::Type type) const {
-        MOZ_ASSERT(stubFields_[i].type() == type);
-        return stubFields_[i];
-    }
+    StubField readStubFieldForIon(uint32_t offset, StubField::Type type) const;
 
     ObjOperandId guardIsObject(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsObject, val);
@@ -599,6 +608,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void guardIsNullOrUndefined(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsNullOrUndefined, val);
+    }
+    void guardIsNotNullOrUndefined(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsNotNullOrUndefined, val);
+    }
+    void guardIsNull(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsNull, val);
+    }
+    void guardIsUndefined(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsUndefined, val);
     }
     void guardShape(ObjOperandId obj, Shape* shape) {
         MOZ_ASSERT(shape);
@@ -1257,8 +1275,22 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(op));
     }
+    void compareObjectUndefinedNullResult(uint32_t op, ObjOperandId object) {
+        writeOpWithOperandId(CacheOp::CompareObjectUndefinedNullResult, object);
+        buffer_.writeByte(uint32_t(op));
+    }
     void compareSymbolResult(uint32_t op, SymbolOperandId lhs, SymbolOperandId rhs) {
         writeOpWithOperandId(CacheOp::CompareSymbolResult, lhs);
+        writeOperandId(rhs);
+        buffer_.writeByte(uint32_t(op));
+    }
+    void compareInt32Result(uint32_t op, Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::CompareInt32Result, lhs);
+        writeOperandId(rhs);
+        buffer_.writeByte(uint32_t(op));
+    }
+    void compareDoubleResult(uint32_t op, ValOperandId lhs, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::CompareDoubleResult, lhs);
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(op));
     }
@@ -1816,6 +1848,11 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 

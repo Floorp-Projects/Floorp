@@ -3462,9 +3462,8 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
             op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
         }
     }
-    auto result = arguments;
-    result->setKind(ParseNodeKind::Call);
-    result->prepend(callee);
+
+    BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
     result->setOp(op);
     return result;
 }
@@ -3742,7 +3741,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(const size_t sta
 
     BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
-    BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
+    BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
     return result;
 }
 
@@ -3786,7 +3785,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberExpression(const size_t start, co
 
     BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
-    BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
+    BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
     return result;
 }
 
@@ -5677,10 +5676,7 @@ BinASTParser<Tok>::parseInterfaceNewExpression(const size_t start, const BinKind
 
     BINJS_MOZ_TRY_DECL(arguments, parseArguments());
 
-    auto result = arguments;
-    result->setKind(ParseNodeKind::New);
-    result->prepend(callee);
-    result->setOp(JSOP_NEW);
+    BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
     return result;
 }
 
@@ -6197,13 +6193,18 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(const size_t start
     const BinField expected_fields[2] = { BinField::Object, BinField::Property };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
+    size_t nameStart;
 
     BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper());
-
     RootedAtom property(cx_);
-    MOZ_TRY_VAR(property, tokenizer_->readAtom());
+    {
+        nameStart = tokenizer_->offset();
+        MOZ_TRY_VAR(property, tokenizer_->readAtom());
 
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+    }
+
+    BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
     return result;
 }
 
@@ -6242,13 +6243,18 @@ BinASTParser<Tok>::parseInterfaceStaticMemberExpression(const size_t start, cons
     const BinField expected_fields[2] = { BinField::Object, BinField::Property };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
+    size_t nameStart;
 
     BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper());
-
     RootedAtom property(cx_);
-    MOZ_TRY_VAR(property, tokenizer_->readAtom());
+    {
+        nameStart = tokenizer_->offset();
+        MOZ_TRY_VAR(property, tokenizer_->readAtom());
 
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+    }
+
+    BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
     return result;
 }
 
@@ -7381,7 +7387,7 @@ BinASTParser<Tok>::parseArguments()
 
     const auto start = tokenizer_->offset();
     MOZ_TRY(tokenizer_->enterList(length, guard));
-    BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments, tokenizer_->pos(start)));
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseSpreadElementOrExpression());

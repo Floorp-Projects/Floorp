@@ -93,7 +93,7 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
 // Load a value operand directly into a float register. Caller must have
 // guarded isNumber on the provided val.
 void
-CacheRegisterAllocator::loadDouble(MacroAssembler& masm, ValOperandId op, FloatRegister dest)
+CacheRegisterAllocator::ensureDoubleRegister(MacroAssembler& masm, ValOperandId op, FloatRegister dest)
 {
     OperandLocation& loc = operandLocations_[op.id()];
 
@@ -125,12 +125,12 @@ CacheRegisterAllocator::loadDouble(MacroAssembler& masm, ValOperandId op, FloatR
       case OperandLocation::PayloadStack:
       case OperandLocation::PayloadReg:
       case OperandLocation::Uninitialized:
-        MOZ_CRASH("Unhandled operand type in loadDouble");
+        MOZ_CRASH("Unhandled operand type in ensureDoubleRegister");
         return;
     }
     masm.jump(&done);
     masm.bind(&failure);
-    masm.assumeUnreachable("Missing guard allowed non-number to hit loadDouble");
+    masm.assumeUnreachable("Missing guard allowed non-number to hit ensureDoubleRegister");
     masm.bind(&done);
 }
 
@@ -1377,6 +1377,63 @@ CacheIRCompiler::emitGuardIsNullOrUndefined()
     return true;
 }
 
+
+bool
+CacheIRCompiler::emitGuardIsNotNullOrUndefined()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
+        return false;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestNull(Assembler::Equal, input, failure->label());
+    masm.branchTestUndefined(Assembler::Equal, input, failure->label());
+
+    return true;
+}
+
+
+bool
+CacheIRCompiler::emitGuardIsNull()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_NULL)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label success;
+    masm.branchTestNull(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardIsUndefined()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_UNDEFINED)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+
 bool
 CacheIRCompiler::emitGuardIsObjectOrNull()
 {
@@ -1994,8 +2051,8 @@ CacheIRCompiler::emitDoubleAddResult()
     // Float register must be preserved. The BinaryArith ICs use
     // the fact that baseline has them available, as well as fixed temps on
     // LBinaryCache.
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
 
     masm.addDouble(FloatReg1, FloatReg0);
     masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2007,8 +2064,8 @@ CacheIRCompiler::emitDoubleSubResult()
 {
     AutoOutputRegister output(*this);
 
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
 
     masm.subDouble(FloatReg1, FloatReg0);
     masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2020,8 +2077,8 @@ CacheIRCompiler::emitDoubleMulResult()
 {
     AutoOutputRegister output(*this);
 
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
 
     masm.mulDouble(FloatReg1, FloatReg0);
     masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2033,8 +2090,8 @@ CacheIRCompiler::emitDoubleDivResult()
 {
     AutoOutputRegister output(*this);
 
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
 
     masm.divDouble(FloatReg1, FloatReg0);
     masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
@@ -2047,8 +2104,8 @@ CacheIRCompiler::emitDoubleModResult()
     AutoOutputRegister output(*this);
     AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
-    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
 
     LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
@@ -3090,6 +3147,79 @@ bool
 CacheIRCompiler::emitCompareSymbolResult()
 {
     return emitComparePointerResultShared(true);
+}
+
+bool
+CacheIRCompiler::emitCompareInt32Result()
+{
+    AutoOutputRegister output(*this);
+    Register left = allocator.useRegister(masm, reader.int32OperandId());
+    Register right = allocator.useRegister(masm, reader.int32OperandId());
+    JSOp op = reader.jsop();
+
+    Label ifTrue, done;
+    masm.branch32(JSOpToCondition(op, /* signed = */true), left, right, &ifTrue);
+
+    masm.moveValue(BooleanValue(false), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifTrue);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitCompareDoubleResult()
+{
+    AutoOutputRegister output(*this);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg0);
+    allocator.ensureDoubleRegister(masm, reader.valOperandId(), FloatReg1);
+    JSOp op = reader.jsop();
+
+    Label done, ifTrue;
+    masm.branchDouble(JSOpToDoubleCondition(op), FloatReg0, FloatReg1, &ifTrue);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifTrue);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitCompareObjectUndefinedNullResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    JSOp op = reader.jsop();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
+        // obj !== undefined/null for all objects.
+        masm.moveValue(BooleanValue(op == JSOP_STRICTNE), output.valueReg());
+    } else {
+        MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE);
+        AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+        Label done, emulatesUndefined;
+        masm.branchIfObjectEmulatesUndefined(obj, scratch, failure->label(), &emulatesUndefined);
+        masm.moveValue(BooleanValue(op == JSOP_NE), output.valueReg());
+        masm.jump(&done);
+        masm.bind(&emulatesUndefined);
+        masm.moveValue(BooleanValue(op == JSOP_EQ), output.valueReg());
+        masm.bind(&done);
+    }
+    return true;
 }
 
 bool
