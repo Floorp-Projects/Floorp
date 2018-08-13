@@ -338,10 +338,10 @@ protected:
   nsSVGFrameReferenceFromProperty mFrameReference;
 };
 
-class nsSVGMarkerProperty final: public nsSVGRenderingObserverProperty
+class SVGMarkerObserver final: public nsSVGRenderingObserverProperty
 {
 public:
-  nsSVGMarkerProperty(nsIURI* aURI, nsIFrame* aFrame, bool aReferenceImage)
+  SVGMarkerObserver(nsIURI* aURI, nsIFrame* aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
 protected:
@@ -490,9 +490,9 @@ public:
                                       DestroyFilterProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsSVGMaskProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsSVGPaintingProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, nsSVGMarkerProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, nsSVGMarkerProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerEndProperty, nsSVGMarkerProperty)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, SVGMarkerObserver)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, SVGMarkerObserver)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerEndProperty, SVGMarkerObserver)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(FillProperty, nsSVGPaintingProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, nsSVGPaintingProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsTextPathProperty,
@@ -653,11 +653,11 @@ public:
   static void InvalidateDirectRenderingObservers(nsIFrame* aFrame, uint32_t aFlags = 0);
 
   /**
-   * Get an nsSVGMarkerProperty for the frame, creating a fresh one if necessary
+   * Get an SVGMarkerObserver for the frame, creating a fresh one if necessary
    */
-  static nsSVGMarkerProperty *
+  static SVGMarkerObserver *
   GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
-    const mozilla::FramePropertyDescriptor<nsSVGMarkerProperty>* aProperty);
+    const mozilla::FramePropertyDescriptor<SVGMarkerObserver>* aProperty);
   /**
    * Get an nsSVGTextPathProperty for the frame, creating a fresh one if necessary
    */
