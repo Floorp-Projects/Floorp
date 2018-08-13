@@ -10,12 +10,12 @@
 #include "base/basictypes.h"
 #include "base/platform_thread.h"
 #include "nsTArray.h"
-#include "mozilla/dom/power/Types.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/HalBatteryInformation.h"
 #include "mozilla/HalNetworkInformation.h"
 #include "mozilla/HalScreenConfiguration.h"
+#include "mozilla/HalWakeLockInformation.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/Types.h"
 
@@ -184,13 +184,13 @@ void DisableWakeLockNotifications();
  * Inform the wake lock backend there is a new wake lock observer.
  * @param aWakeLockObserver The observer that should be added.
  */
-void RegisterWakeLockObserver(WakeLockObserver* aObserver);
+void RegisterWakeLockObserver(hal::WakeLockObserver* aObserver);
 
 /**
  * Inform the wake lock backend a wake lock observer unregistered.
  * @param aWakeLockObserver The observer that should be removed.
  */
-void UnregisterWakeLockObserver(WakeLockObserver* aObserver);
+void UnregisterWakeLockObserver(hal::WakeLockObserver* aObserver);
 
 /**
  * Adjust a wake lock's counts on behalf of a given process.

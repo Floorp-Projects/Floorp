@@ -17,6 +17,7 @@ EXPORTS.mozilla += [
     'HalSensor.h',
     'HalTypes.h',
     'HalWakeLock.h',
+    'HalWakeLockInformation.h',
 ]
 
 EXPORTS.mozilla.fallback += [
