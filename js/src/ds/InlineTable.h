@@ -71,13 +71,7 @@ class InlineTable : private AllocPolicy
     MOZ_MUST_USE bool switchToTable() {
         MOZ_ASSERT(inlNext_ == InlineEntries);
 
-        if (table_.initialized()) {
-            table_.clear();
-        } else {
-            if (!table_.init(count()))
-                return false;
-            MOZ_ASSERT(table_.initialized());
-        }
+        table_.clear();
 
         InlineEntry* end = inlineEnd();
         for (InlineEntry* it = inlineStart(); it != end; ++it) {
@@ -330,7 +324,7 @@ class InlineTable : private AllocPolicy
             --inlCount_;
             return;
         }
-        MOZ_ASSERT(table_.initialized() && usingTable());
+        MOZ_ASSERT(usingTable());
         table_.remove(p.tablePtr_);
     }
 

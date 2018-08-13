@@ -595,8 +595,6 @@ class XDRIncrementalEncoder : public XDREncoder
     AutoXDRTree::Key getTopLevelTreeKey() const override;
     AutoXDRTree::Key getTreeKey(JSFunction* fun) const override;
 
-    MOZ_MUST_USE bool init();
-
     void createOrReplaceSubTree(AutoXDRTree* child) override;
     void endSubTree() override;
 

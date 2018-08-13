@@ -247,14 +247,6 @@ XDRIncrementalEncoder::getTreeKey(JSFunction* fun) const
     return AutoXDRTree::noKey;
 }
 
-bool
-XDRIncrementalEncoder::init()
-{
-    if (!tree_.init())
-        return false;
-    return true;
-}
-
 void
 XDRIncrementalEncoder::createOrReplaceSubTree(AutoXDRTree* child)
 {
@@ -397,7 +389,7 @@ XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer)
         }
     }
 
-    tree_.finish();
+    tree_.clearAndCompact();
     slices_.clearAndFree();
     return Ok();
 }

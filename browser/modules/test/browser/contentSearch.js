@@ -30,7 +30,7 @@ addMessageListener(TEST_MSG, msg => {
 
     content.dispatchEvent(
       new content.CustomEvent(CLIENT_EVENT_TYPE, {
-        detail: msg.data,
+        detail: Cu.cloneInto(msg.data, content),
       })
     );
 

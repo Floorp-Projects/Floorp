@@ -50,10 +50,7 @@ StoreBuffer::enable()
 
     checkEmpty();
 
-    if (!bufferVal.init() ||
-        !bufferCell.init() ||
-        !bufferSlot.init() ||
-        !bufferWholeCell.init() ||
+    if (!bufferWholeCell.init() ||
         !bufferGeneric.init())
     {
         return false;

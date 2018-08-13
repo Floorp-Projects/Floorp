@@ -1064,11 +1064,6 @@ JSScript::initScriptCounts(JSContext* cx)
         if (!map)
             return false;
 
-        if (!map->init()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-
         realm()->scriptCountsMap = std::move(map);
     }
 
@@ -1541,7 +1536,7 @@ UncompressedSourceCache::put(const ScriptSourceChunk& ssc, UniqueTwoByteChars st
 
     if (!map_) {
         UniquePtr<Map> map = MakeUnique<Map>();
-        if (!map || !map->init())
+        if (!map)
             return false;
 
         map_ = std::move(map);
@@ -2025,11 +2020,6 @@ ScriptSource::xdrEncodeTopLevel(JSContext* cx, HandleScript script)
         xdrEncoder_.reset(nullptr);
     });
 
-    if (!xdrEncoder_->init()) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
     RootedScript s(cx, script);
     XDRResult res = xdrEncoder_->codeScript(&s);
     if (res.isErr()) {
@@ -2501,8 +2491,6 @@ js::FreeScriptData(JSRuntime* rt)
     AutoLockScriptData lock(rt);
 
     ScriptDataTable& table = rt->scriptDataTable(lock);
-    if (!table.initialized())
-        return;
 
     // The table should be empty unless the embedding leaked GC things.
     MOZ_ASSERT_IF(rt->gc.shutdownCollectedEverything(), table.empty());
@@ -2720,11 +2708,6 @@ JSScript::initScriptName(JSContext* cx)
         auto map = cx->make_unique<ScriptNameMap>();
         if (!map)
             return false;
-
-        if (!map->init()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
 
         realm()->scriptNameMap = std::move(map);
     }
@@ -3184,8 +3167,7 @@ void
 GSNCache::purge()
 {
     code = nullptr;
-    if (map.initialized())
-        map.finish();
+    map.clearAndCompact();
 }
 
 jssrcnote*
@@ -3196,7 +3178,6 @@ js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc)
         return nullptr;
 
     if (cache.code == script->code()) {
-        MOZ_ASSERT(cache.map.initialized());
         GSNCache::Map::Ptr p = cache.map.lookup(pc);
         return p ? p->value() : nullptr;
     }
@@ -3217,18 +3198,15 @@ js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc)
 
     if (cache.code != script->code() && script->length() >= GSN_CACHE_THRESHOLD) {
         unsigned nsrcnotes = 0;
-        for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
-             sn = SN_NEXT(sn))
-        {
+        for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
             if (SN_IS_GETTABLE(sn))
                 ++nsrcnotes;
         }
         if (cache.code) {
-            MOZ_ASSERT(cache.map.initialized());
-            cache.map.finish();
+            cache.map.clear();
             cache.code = nullptr;
         }
-        if (cache.map.init(nsrcnotes)) {
+        if (cache.map.reserve(nsrcnotes)) {
             pc = script->code();
             for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
                  sn = SN_NEXT(sn))
@@ -3795,11 +3773,6 @@ JSScript::ensureHasDebugScript(JSContext* cx)
         auto map = cx->make_unique<DebugScriptMap>();
         if (!map)
             return false;
-
-        if (!map->init()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
 
         realm()->debugScriptMap = std::move(map);
     }

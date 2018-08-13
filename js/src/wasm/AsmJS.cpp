@@ -1547,11 +1547,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
                                  !parser_.pc->sc()->hasExplicitUseStrict();
         asmJSMetadata_->scriptSource.reset(parser_.ss);
 
-        if (!globalMap_.init() || !sigSet_.init() || !funcImportMap_.init())
-            return false;
-
-        if (!standardLibraryMathNames_.init() ||
-            !addStandardLibraryMathName("sin", AsmJSMathBuiltin_sin) ||
+        if (!addStandardLibraryMathName("sin", AsmJSMathBuiltin_sin) ||
             !addStandardLibraryMathName("cos", AsmJSMathBuiltin_cos) ||
             !addStandardLibraryMathName("tan", AsmJSMathBuiltin_tan) ||
             !addStandardLibraryMathName("asin", AsmJSMathBuiltin_asin) ||
@@ -2342,12 +2338,6 @@ class MOZ_STACK_CLASS FunctionValidator
     ModuleValidator& m() const        { return m_; }
     JSContext* cx() const             { return m_.cx(); }
     ParseNode* fn() const             { return fn_; }
-
-    bool init() {
-        return locals_.init() &&
-               breakLabels_.init() &&
-               continueLabels_.init();
-    }
 
     void define(ModuleValidator::Func* func, unsigned line) {
         MOZ_ASSERT(!blockDepth_);
@@ -5416,8 +5406,6 @@ CheckFunction(ModuleValidator& m)
         return false;
 
     FunctionValidator f(m, fn);
-    if (!f.init())
-        return m.fail(fn, "internal compiler failure (probably out of memory)");
 
     ParseNode* stmtIter = ListHead(FunctionStatementList(fn));
 

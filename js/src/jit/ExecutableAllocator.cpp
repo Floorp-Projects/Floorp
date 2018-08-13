@@ -99,8 +99,7 @@ ExecutableAllocator::~ExecutableAllocator()
         m_smallPools[i]->release(/* willDestroy = */true);
 
     // If this asserts we have a pool leak.
-    MOZ_ASSERT_IF((m_pools.initialized() &&
-                   TlsContext.get()->runtime()->gc.shutdownCollectedEverything()),
+    MOZ_ASSERT_IF(TlsContext.get()->runtime()->gc.shutdownCollectedEverything(),
                   m_pools.empty());
 }
 
@@ -180,9 +179,6 @@ ExecutableAllocator::createPool(size_t n)
     if (allocSize == OVERSIZE_ALLOCATION)
         return nullptr;
 
-    if (!m_pools.initialized() && !m_pools.init())
-        return nullptr;
-
     ExecutablePool::Allocation a = systemAlloc(allocSize);
     if (!a.pages)
         return nullptr;
@@ -235,8 +231,6 @@ ExecutableAllocator::releasePoolPages(ExecutablePool* pool)
     MOZ_ASSERT(pool->m_allocation.pages);
     systemRelease(pool->m_allocation);
 
-    MOZ_ASSERT(m_pools.initialized());
-
     // Pool may not be present in m_pools if we hit OOM during creation.
     if (auto ptr = m_pools.lookup(pool))
         m_pools.remove(ptr);
@@ -263,15 +257,13 @@ ExecutableAllocator::purge()
 void
 ExecutableAllocator::addSizeOfCode(JS::CodeSizes* sizes) const
 {
-    if (m_pools.initialized()) {
-        for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
-            ExecutablePool* pool = r.front();
-            sizes->ion      += pool->m_codeBytes[CodeKind::Ion];
-            sizes->baseline += pool->m_codeBytes[CodeKind::Baseline];
-            sizes->regexp   += pool->m_codeBytes[CodeKind::RegExp];
-            sizes->other    += pool->m_codeBytes[CodeKind::Other];
-            sizes->unused   += pool->m_allocation.size - pool->usedCodeBytes();
-        }
+    for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
+        ExecutablePool* pool = r.front();
+        sizes->ion      += pool->m_codeBytes[CodeKind::Ion];
+        sizes->baseline += pool->m_codeBytes[CodeKind::Baseline];
+        sizes->regexp   += pool->m_codeBytes[CodeKind::RegExp];
+        sizes->other    += pool->m_codeBytes[CodeKind::Other];
+        sizes->unused   += pool->m_allocation.size - pool->usedCodeBytes();
     }
 }
 

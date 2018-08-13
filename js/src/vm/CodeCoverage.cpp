@@ -114,7 +114,7 @@ LCovSource::exportInto(GenericPrinter& out) const
     out.printf("BRF:%zu\n", numBranchesFound_);
     out.printf("BRH:%zu\n", numBranchesHit_);
 
-    if (linesHit_.initialized()) {
+    if (!linesHit_.empty()) {
         for (size_t lineno = 1; lineno <= maxLineHit_; ++lineno) {
             if (auto p = linesHit_.lookup(lineno))
                 out.printf("DA:%zu,%" PRIu64 "\n", lineno, p->value());
@@ -140,9 +140,6 @@ LCovSource::writeScriptName(LSprinter& out, JSScript* script)
 bool
 LCovSource::writeScript(JSScript* script)
 {
-    if (!linesHit_.initialized() && !linesHit_.init())
-        return false;
-
     numFunctionsFound_++;
     outFN_.printf("FN:%u,", script->lineno());
     if (!writeScriptName(outFN_, script))

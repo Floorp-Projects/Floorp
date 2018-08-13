@@ -222,12 +222,6 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
 
     gc.atomsZone = atomsZone.release();
 
-    if (!symbolRegistry_.ref().init())
-        return false;
-
-    if (!scriptDataTable_.ref().init())
-        return false;
-
     /* The garbage collector depends on everything before this point being initialized. */
     gcInitialized = true;
 
@@ -240,17 +234,11 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     jitSupportsUnalignedAccesses = js::jit::JitSupportsUnalignedAccesses();
     jitSupportsSimd = js::jit::JitSupportsSimd();
 
-    if (!geckoProfiler().init())
-        return false;
-
     if (!parentRuntime) {
         sharedImmutableStrings_ = js::SharedImmutableStringsCache::Create();
         if (!sharedImmutableStrings_)
             return false;
     }
-
-    if (!caches().init())
-        return false;
 
     return true;
 }

@@ -524,7 +524,6 @@ bool
 JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunction& f)
 {
     MOZ_ASSERT(functionWrappers_);
-    MOZ_ASSERT(functionWrappers_->initialized());
 
     uint32_t wrapperOffset = startTrampolineCode(masm);
 

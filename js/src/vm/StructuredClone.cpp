@@ -491,10 +491,6 @@ struct JSStructuredCloneWriter {
     ~JSStructuredCloneWriter();
 
     bool init() {
-        if (!memory.init()) {
-            ReportOutOfMemory(context());
-            return false;
-        }
         return parseTransferable() && writeHeader() && writeTransferMap();
     }
 
@@ -1075,11 +1071,11 @@ JSStructuredCloneWriter::parseTransferable()
     // NOTE: The transferables set is tested for non-emptiness at various
     //       junctures in structured cloning, so this set must be initialized
     //       by this method in all non-error cases.
-    MOZ_ASSERT(!transferableObjects.initialized(),
+    MOZ_ASSERT(transferableObjects.empty(),
                "parseTransferable called with stale data");
 
     if (transferable.isNull() || transferable.isUndefined())
-        return transferableObjects.init(0);
+        return true;
 
     if (!transferable.isObject())
         return reportDataCloneError(JS_SCERR_TRANSFERABLE);
@@ -1097,7 +1093,7 @@ JSStructuredCloneWriter::parseTransferable()
         return false;
 
     // Initialize the set for the provided array's length.
-    if (!transferableObjects.init(length))
+    if (!transferableObjects.reserve(length))
         return false;
 
     if (length == 0)

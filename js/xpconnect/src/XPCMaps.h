@@ -34,14 +34,7 @@ class JSObject2WrappedJSMap
 
 public:
     static JSObject2WrappedJSMap* newMap(int length) {
-        auto* map = new JSObject2WrappedJSMap();
-        if (!map->mTable.init(length)) {
-            // This is a decent estimate of the size of the hash table's
-            // entry storage. The |2| is because on average the capacity is
-            // twice the requested length.
-            NS_ABORT_OOM(length * 2 * sizeof(Map::Entry));
-        }
-        return map;
+        return new JSObject2WrappedJSMap(length);
     }
 
     inline nsXPCWrappedJS* Find(JSObject* Obj) {
@@ -94,7 +87,7 @@ public:
     size_t SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
-    JSObject2WrappedJSMap() {}
+    explicit JSObject2WrappedJSMap(size_t length) : mTable(length) {}
 
     Map mTable;
 };
@@ -506,14 +499,7 @@ class JSObject2JSObjectMap
 
 public:
     static JSObject2JSObjectMap* newMap(int length) {
-        auto* map = new JSObject2JSObjectMap();
-        if (!map->mTable.init(length)) {
-            // This is a decent estimate of the size of the hash table's
-            // entry storage. The |2| is because on average the capacity is
-            // twice the requested length.
-            NS_ABORT_OOM(length * 2 * sizeof(Map::Entry));
-        }
-        return map;
+        return new JSObject2JSObjectMap(length);
     }
 
     inline JSObject* Find(JSObject* key) {
@@ -547,7 +533,7 @@ public:
     }
 
 private:
-    JSObject2JSObjectMap() {}
+    explicit JSObject2JSObjectMap(size_t length) : mTable(length) {}
 
     Map mTable;
 };

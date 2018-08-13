@@ -123,9 +123,6 @@ struct PostOrder {
 #endif
     { }
 
-    // Initialize this traversal object. Return false on OOM.
-    MOZ_MUST_USE bool init() { return seen.init(); }
-
     // Add `node` as a starting point for the traversal. You may add
     // as many starting points as you like. Returns false on OOM.
     MOZ_MUST_USE bool addStart(const Node& node) {

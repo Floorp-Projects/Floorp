@@ -12,15 +12,6 @@ using namespace js;
 
 using mozilla::PodZero;
 
-bool
-RuntimeCaches::init()
-{
-    if (!evalCache.init())
-        return false;
-
-    return true;
-}
-
 void
 NewObjectCache::clearNurseryObjects(JSRuntime* rt)
 {
