@@ -13115,23 +13115,20 @@ nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection)
 {
   *aUseTrackingProtection  = false;
 
-  static bool sCBEnabled = false;
   static bool sTPEnabled = false;
   static bool sTPInPBEnabled = false;
   static bool sPrefsInit = false;
 
   if (!sPrefsInit) {
     sPrefsInit = true;
-    Preferences::AddBoolVarCache(&sCBEnabled,
-      "browser.contentblocking.enabled", true);
     Preferences::AddBoolVarCache(&sTPEnabled,
       "privacy.trackingprotection.enabled", false);
     Preferences::AddBoolVarCache(&sTPInPBEnabled,
       "privacy.trackingprotection.pbmode.enabled", false);
   }
 
-  if (mUseTrackingProtection || (sCBEnabled && sTPEnabled) ||
-      (sCBEnabled && UsePrivateBrowsing() && sTPInPBEnabled)) {
+  if (mUseTrackingProtection || sTPEnabled ||
+      (UsePrivateBrowsing() && sTPInPBEnabled)) {
     *aUseTrackingProtection = true;
     return NS_OK;
   }
