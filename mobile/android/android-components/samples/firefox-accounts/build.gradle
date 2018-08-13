@@ -29,7 +29,8 @@ android {
     splits {
         abi {
             enable true
-
+            reset()
+            include 'x86', 'arm64', 'armeabi-v7a'
         }
     }
 }
