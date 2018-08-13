@@ -929,7 +929,7 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   // use a weak frame as the popup will set an open attribute if it is a menu
   AutoWeakFrame weakFrame(aPopupFrame);
   aPopupFrame->ShowPopup(aIsContextMenu);
-  ENSURE_TRUE(weakFrame.IsAlive());
+  NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   // popups normally hide when an outside click occurs. Panels may use
   // the noautohide attribute to disable this behaviour. It is expected
@@ -1152,7 +1152,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 
   AutoWeakFrame weakFrame(aPopupFrame);
   aPopupFrame->HidePopup(aDeselectMenu, ePopupClosed);
-  ENSURE_TRUE(weakFrame.IsAlive());
+  NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   // send the popuphidden event synchronously. This event has no default
   // behaviour.
@@ -1161,7 +1161,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
                          WidgetMouseEvent::eReal);
   EventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(),
                             &event, nullptr, &status);
-  ENSURE_TRUE(weakFrame.IsAlive());
+  NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   // Force any popups that might be anchored on elements within this popup to update.
   UpdatePopupPositions(aPopupFrame->PresContext()->RefreshDriver());
