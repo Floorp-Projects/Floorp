@@ -3893,7 +3893,15 @@ nsHttpChannel::OpenCacheEntryInternal(bool isHttps,
     if (!AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(this, mURI)) {
         nsCOMPtr<nsIURI> topWindowURI;
         rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
-        NS_ENSURE_SUCCESS(rv, rv);
+        bool isDocument = false;
+        if (NS_FAILED(rv) &&
+            NS_SUCCEEDED(GetIsMainDocumentChannel(&isDocument)) &&
+            isDocument) {
+          // For top-level documents, use the document channel's origin to compute
+          // the unique storage space identifier instead of the top Window URI.
+          rv = NS_GetFinalChannelURI(this, getter_AddRefs(topWindowURI));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         nsAutoString topWindowOrigin;
         rv = nsContentUtils::GetUTFOrigin(topWindowURI ? topWindowURI : mURI,
