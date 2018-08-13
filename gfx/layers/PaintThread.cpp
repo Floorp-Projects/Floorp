@@ -175,6 +175,16 @@ PaintThread::IsOnPaintWorkerThread()
 }
 
 void
+PaintThread::Dispatch(RefPtr<Runnable>& aRunnable)
+{
+#ifndef OMTP_FORCE_SYNC
+  sThread->Dispatch(aRunnable.forget());
+#else
+  SyncRunnable::DispatchToThread(sThread, aRunnable);
+#endif
+}
+
+void
 PaintThread::UpdateRenderMode()
 {
   if (!!mPaintWorkers != gfxPlatform::GetPlatform()->UsesTiling()) {
@@ -247,19 +257,7 @@ PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
 }
 
 void
-
-void
-PaintThread::Dispatch(RefPtr<Runnable>& aRunnable)
-{
-#ifndef OMTP_FORCE_SYNC
-  sThread->Dispatch(aRunnable.forget());
-#else
-  SyncRunnable::DispatchToThread(sThread, aRunnable);
-#endif
-}
-
-void
-PaintThread::EndLayerTransaction(SyncObjectClient* aSyncObject)
+PaintThread::QueueEndLayerTransaction(SyncObjectClient* aSyncObject)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
