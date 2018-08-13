@@ -21,8 +21,6 @@ function is(a, b, msg) {
 onmessage = function(e) {
   let runnableStr = `(() => {return (${e.data.callback});})();`;
   let runnable = eval(runnableStr); // eslint-disable-line no-eval
-  // Phase 3: Here we want to test that a third-party context doesn't
-  // get blocked with user interaction present
   runnable.call(this, /* Phase */ 3).then(_ => {
     parent.postMessage({ type: "finish" }, "*");
   });
