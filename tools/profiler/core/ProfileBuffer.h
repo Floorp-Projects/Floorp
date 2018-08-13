@@ -44,7 +44,9 @@ public:
   uint64_t AddThreadIdEntry(int aThreadId);
 
   void CollectCodeLocation(
-    const char* aLabel, const char* aStr, int aLineNumber,
+    const char* aLabel, const char* aStr,
+    const mozilla::Maybe<uint32_t>& aLineNumber,
+    const mozilla::Maybe<uint32_t>& aColumnNumber,
     const mozilla::Maybe<js::ProfilingStackFrame::Category>& aCategory);
 
   // Maximum size of a frameKey string that we'll handle.
