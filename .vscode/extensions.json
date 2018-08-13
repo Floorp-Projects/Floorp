@@ -11,7 +11,7 @@
         // C/C++ language support.
         "ms-vscode.cpptools",
         // Rust language support.
-        "kalitaalexey.vscode-rust",
+        "rust-lang.rust",
         // CSS support for HTML documents.
         "ecmel.vscode-html-css"
     ]
