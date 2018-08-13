@@ -278,6 +278,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsHTMLTags.h"
 #include "NodeUbiReporting.h"
+#include "nsICookieService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
