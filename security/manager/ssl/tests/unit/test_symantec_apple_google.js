@@ -27,6 +27,8 @@ add_tls_server_setup("SymantecSanctionsServer", "test_symantec_apple_google");
 add_test(function() {
   addCertFromFile(certDB, "test_symantec_apple_google/intermediate-whitelisted.pem", ",,");
   addCertFromFile(certDB, "test_symantec_apple_google/intermediate-other.pem", ",,");
+  Services.prefs.setIntPref("security.pki.distrust_ca_policy",
+                            /* DistrustedCAPolicy::DistrustSymantecRoots */ 0b01);
   run_next_test();
 });
 
