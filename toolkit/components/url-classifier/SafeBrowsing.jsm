@@ -60,6 +60,7 @@ var SafeBrowsing = {
       return;
     }
 
+    Services.prefs.addObserver("browser.contentblocking.enabled", this);
     Services.prefs.addObserver("browser.safebrowsing", this);
     Services.prefs.addObserver("privacy.trackingprotection", this);
     Services.prefs.addObserver("urlclassifier", this);
@@ -230,11 +231,13 @@ var SafeBrowsing = {
     loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
     log("reading prefs");
 
+    let contentBlockingEnabled = Services.prefs.getBoolPref("browser.contentblocking.enabled", true);
+
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.downloadsEnabled = Services.prefs.getBoolPref("browser.safebrowsing.downloads.enabled");
     this.passwordsEnabled = Services.prefs.getBoolPref("browser.safebrowsing.passwords.enabled");
-    this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
+    this.trackingEnabled = contentBlockingEnabled && (Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled"));
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
     this.trackingAnnotations = Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels");
     this.flashBlockEnabled = Services.prefs.getBoolPref("plugins.flashBlock.enabled");
