@@ -559,7 +559,7 @@ nsSplitterFrameInner::AddListener()
 void
 nsSplitterFrameInner::RemoveListener()
 {
-  ENSURE_TRUE(mOuter);
+  NS_ENSURE_TRUE_VOID(mOuter);
   mOuter->GetContent()->
     RemoveEventListener(NS_LITERAL_STRING("mouseup"), this, false);
   mOuter->GetContent()->
@@ -983,7 +983,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChil
 
   AutoWeakFrame weakBox(aChildBox);
   content->AsElement()->SetAttr(kNameSpaceID_None, attribute, prefValue, true);
-  ENSURE_TRUE(weakBox.IsAlive());
+  NS_ENSURE_TRUE_VOID(weakBox.IsAlive());
   aState.PresShell()->FrameNeedsReflow(aChildBox, nsIPresShell::eStyleChange,
                                        NS_FRAME_IS_DIRTY);
 }
