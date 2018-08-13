@@ -449,29 +449,29 @@ class BytecodeParser
     bool parse();
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-    bool isReachable(const jsbytecode* pc) { return maybeCode(pc); }
+    bool isReachable(const jsbytecode* pc) const { return maybeCode(pc); }
 #endif
 
-    uint32_t stackDepthAtPC(uint32_t offset) {
+    uint32_t stackDepthAtPC(uint32_t offset) const {
         // Sometimes the code generator in debug mode asks about the stack depth
         // of unreachable code (bug 932180 comment 22).  Assume that unreachable
         // code has no operands on the stack.
         return getCode(offset).stackDepth;
     }
-    uint32_t stackDepthAtPC(const jsbytecode* pc) {
+    uint32_t stackDepthAtPC(const jsbytecode* pc) const {
         return stackDepthAtPC(script_->pcToOffset(pc));
     }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-    uint32_t stackDepthAfterPC(uint32_t offset) {
+    uint32_t stackDepthAfterPC(uint32_t offset) const {
         return getCode(offset).stackDepthAfter;
     }
-    uint32_t stackDepthAfterPC(const jsbytecode* pc) {
+    uint32_t stackDepthAfterPC(const jsbytecode* pc) const {
         return stackDepthAfterPC(script_->pcToOffset(pc));
     }
 #endif
 
-    const OffsetAndDefIndex& offsetForStackOperand(uint32_t offset, int operand) {
+    const OffsetAndDefIndex& offsetForStackOperand(uint32_t offset, int operand) const {
         Bytecode& code = getCode(offset);
         if (operand < 0) {
             operand += code.stackDepth;
@@ -480,7 +480,7 @@ class BytecodeParser
         MOZ_ASSERT(uint32_t(operand) < code.stackDepth);
         return code.offsetStack[operand];
     }
-    jsbytecode* pcForStackOperand(jsbytecode* pc, int operand, uint8_t* defIndex) {
+    jsbytecode* pcForStackOperand(jsbytecode* pc, int operand, uint8_t* defIndex) const {
         size_t offset = script_->pcToOffset(pc);
         const OffsetAndDefIndex& offsetAndDefIndex = offsetForStackOperand(offset, operand);
         if (offsetAndDefIndex.isSpecial())
@@ -490,7 +490,7 @@ class BytecodeParser
     }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-    const OffsetAndDefIndex& offsetForStackOperandAfterPC(uint32_t offset, int operand) {
+    const OffsetAndDefIndex& offsetForStackOperandAfterPC(uint32_t offset, int operand) const {
         Bytecode& code = getCode(offset);
         if (operand < 0) {
             operand += code.stackDepthAfter;
@@ -501,7 +501,7 @@ class BytecodeParser
     }
 
     template <typename Callback>
-    bool forEachJumpOrigins(jsbytecode* pc, Callback callback) {
+    bool forEachJumpOrigins(jsbytecode* pc, Callback callback) const {
         Bytecode& code = getCode(script_->pcToOffset(pc));
 
         for (Bytecode::JumpInfo& info : code.jumpOrigins) {
@@ -527,23 +527,23 @@ class BytecodeParser
         ReportOutOfMemory(cx_);
     }
 
-    uint32_t maximumStackDepth() {
+    uint32_t maximumStackDepth() const {
         return script_->nslots() - script_->nfixed();
     }
 
-    Bytecode& getCode(uint32_t offset) {
+    Bytecode& getCode(uint32_t offset) const {
         MOZ_ASSERT(offset < script_->length());
         MOZ_ASSERT(codeArray_[offset]);
         return *codeArray_[offset];
     }
 
-    Bytecode* maybeCode(uint32_t offset) {
+    Bytecode* maybeCode(uint32_t offset) const {
         MOZ_ASSERT(offset < script_->length());
         return codeArray_[offset];
     }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-    Bytecode* maybeCode(const jsbytecode* pc) { return maybeCode(script_->pcToOffset(pc)); }
+    Bytecode* maybeCode(const jsbytecode* pc) const { return maybeCode(script_->pcToOffset(pc)); }
 #endif
 
     uint32_t simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetStack,
@@ -990,7 +990,7 @@ js::ReconstructStackDepth(JSContext* cx, JSScript* script, jsbytecode* pc, uint3
 
 static unsigned
 Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
-             unsigned loc, bool lines, BytecodeParser* parser, Sprinter* sp);
+             unsigned loc, bool lines, const BytecodeParser* parser, Sprinter* sp);
 
 /*
  * If pc != nullptr, include a prefix indicating whether the PC is at the
@@ -1257,7 +1257,7 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
 }
 
 static bool
-DumpJumpOrigins(HandleScript script, jsbytecode* pc, BytecodeParser* parser, Sprinter* sp)
+DumpJumpOrigins(HandleScript script, jsbytecode* pc, const BytecodeParser* parser, Sprinter* sp)
 {
     bool called = false;
     auto callback = [&script, &sp, &called](jsbytecode* pc, BytecodeParser::JumpKind kind) {
@@ -1316,7 +1316,7 @@ DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
 
 static unsigned
 Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
-             unsigned loc, bool lines, BytecodeParser* parser, Sprinter* sp)
+             unsigned loc, bool lines, const BytecodeParser* parser, Sprinter* sp)
 {
     if (parser && parser->isReachable(pc)) {
         if (!DumpJumpOrigins(script, pc, parser, sp))
