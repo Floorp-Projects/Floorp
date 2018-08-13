@@ -73,7 +73,7 @@ const JSCodeSpec js::CodeSpec[] = {
  * Each element of the array is either a source literal associated with JS
  * bytecode or null.
  */
-static const char * const CodeToken[] = {
+static const char* const CodeToken[] = {
 #define TOKEN(op, val, name, token, ...)  token,
     FOR_EACH_OPCODE(TOKEN)
 #undef TOKEN
@@ -83,7 +83,7 @@ static const char * const CodeToken[] = {
  * Array of JS bytecode names used by PC count JSON, DEBUG-only Disassemble
  * and JIT debug spew.
  */
-const char * const js::CodeName[] = {
+const char* const js::CodeName[] = {
 #define OPNAME(op, val, name, ...)  name,
     FOR_EACH_OPCODE(OPNAME)
 #undef OPNAME
@@ -114,7 +114,8 @@ js::GetVariableBytecodeLength(jsbytecode* pc)
     }
 }
 
-const char * PCCounts::numExecName = "interp";
+/* static */ const char
+PCCounts::numExecName[] = "interp";
 
 static MOZ_MUST_USE bool
 DumpIonScriptCounts(Sprinter* sp, HandleScript script, jit::IonScriptCounts* ionCounts)
