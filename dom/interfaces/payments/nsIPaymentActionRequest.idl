@@ -29,6 +29,7 @@ interface nsIPaymentActionRequest : nsISupports
   const uint32_t ABORT_ACTION = 4;
   const uint32_t COMPLETE_ACTION = 5;
   const uint32_t UPDATE_ACTION = 6;
+  const uint32_t CLEANUP_ACTION = 7;
 
   /*
    *  The payment request identifier.
@@ -96,7 +97,7 @@ interface nsIPaymentCreateActionRequest : nsIPaymentActionRequest
                    in nsIArray aMethodData,
                    in nsIPaymentDetails aDetails,
                    in nsIPaymentOptions aOptions,
-		   in AString aShippingOption);
+                   in AString aShippingOption);
 };
 
 [builtinclass, uuid(4429697d-1135-47de-a46e-5196d399ec55)]
@@ -134,7 +135,7 @@ interface nsIPaymentUpdateActionRequest : nsIPaymentActionRequest
   void initRequest(in AString aRequestId,
                    in nsIPaymentActionCallback aCallback,
                    in nsIPaymentDetails aDetails,
-		   in AString aShippingOption);
+                   in AString aShippingOption);
 };
 
 %{C++
