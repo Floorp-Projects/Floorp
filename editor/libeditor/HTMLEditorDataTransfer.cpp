@@ -1032,7 +1032,7 @@ HTMLEditor::InsertObject(const nsACString& aType,
       do_GetService("@mozilla.org/editor-utils;1");
     NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsINode> node = do_QueryInterface(aDestinationNode);
+    nsCOMPtr<nsINode> node = aDestinationNode;
     MOZ_ASSERT(node);
 
     RefPtr<Blob> domBlob = Blob::Create(node->GetOwnerGlobal(), blob);

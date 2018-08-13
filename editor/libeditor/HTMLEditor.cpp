@@ -4350,7 +4350,7 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
         // *whole* nodes.
         if (NS_SUCCEEDED(rv)) {
           for (; !iter->IsDone(); iter->Next()) {
-            node = do_QueryInterface(iter->GetCurrentNode());
+            node = iter->GetCurrentNode();
             NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
             if (IsEditable(node)) {

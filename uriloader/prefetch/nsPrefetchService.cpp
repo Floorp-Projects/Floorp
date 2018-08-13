@@ -728,10 +728,9 @@ nsPrefetchService::Preload(nsIURI *aURI,
     //
 
     if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
-        nsCOMPtr<nsINode> domNode = do_QueryInterface(aSource);
-        if (domNode && domNode->IsInComposedDoc()) {
+        if (aSource && aSource->IsInComposedDoc()) {
             RefPtr<AsyncEventDispatcher> asyncDispatcher =
-                new AsyncEventDispatcher(domNode,
+                new AsyncEventDispatcher(aSource,
                                          NS_LITERAL_STRING("error"),
                                          CanBubble::eNo,
                                          ChromeOnlyDispatch::eNo);
@@ -772,10 +771,9 @@ nsPrefetchService::Preload(nsIURI *aURI,
     if (NS_SUCCEEDED(rv)) {
         mCurrentNodes.AppendElement(enqueuedNode);
     } else {
-        nsCOMPtr<nsINode> domNode = do_QueryInterface(aSource);
-        if (domNode && domNode->IsInComposedDoc()) {
+        if (aSource && aSource->IsInComposedDoc()) {
             RefPtr<AsyncEventDispatcher> asyncDispatcher =
-                new AsyncEventDispatcher(domNode,
+                new AsyncEventDispatcher(aSource,
                                          NS_LITERAL_STRING("error"),
                                          CanBubble::eNo,
                                          ChromeOnlyDispatch::eNo);
