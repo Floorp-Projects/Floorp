@@ -12,7 +12,6 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/battery/Types.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/fallback/FallbackScreenConfiguration.h"
 #include "mozilla/EnumeratedRange.h"

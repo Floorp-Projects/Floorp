@@ -9,6 +9,7 @@ with Files('**'):
 
 EXPORTS.mozilla += [
     'Hal.h',
+    'HalBatteryInformation.h',
     'HalImpl.h',
     'HalNetworkInformation.h',
     'HalSandbox.h',
