@@ -1245,6 +1245,11 @@ var BookmarkingUI = {
     return this.broadcaster = broadcaster;
   },
 
+  get stringbundleset() {
+    delete this.stringbundleset;
+    return this.stringbundleset = document.getElementById("stringbundleset");
+  },
+
   STATUS_UPDATING: -1,
   STATUS_UNSTARRED: 0,
   STATUS_STARRED: 1,
@@ -1509,11 +1514,14 @@ var BookmarkingUI = {
    * to the default (Bookmark This Page) for OS X.
    */
   updateBookmarkPageMenuItem: function BUI_updateBookmarkPageMenuItem(forceReset) {
-    let isStarred = !forceReset && this._itemGuids.size > 0;
-    let label = isStarred ? "editlabel" : "bookmarklabel";
-    if (this.broadcaster) {
-      this.broadcaster.setAttribute("label", this.broadcaster.getAttribute(label));
+    if (!this.stringbundleset) {
+      // We are loaded in a non-browser context, like the sidebar.
+      return;
     }
+    let isStarred = !forceReset && this._itemGuids.size > 0;
+    let label = this.stringbundleset.getAttribute(
+      isStarred ? "string-editthisbookmark" : "string-bookmarkthispage");
+    this.broadcaster.setAttribute("label", label);
   },
 
   onMainMenuPopupShowing: function BUI_onMainMenuPopupShowing(event) {
