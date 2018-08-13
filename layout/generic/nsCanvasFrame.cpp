@@ -78,12 +78,25 @@ nsCanvasFrame::HideCustomContentContainer()
 nsresult
 nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
+  MOZ_ASSERT(!mCustomContentContainer);
+
   if (!mContent) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIDocument> doc = mContent->OwnerDoc();
-  nsresult rv = NS_OK;
+
+  RefPtr<AccessibleCaretEventHub> eventHub =
+    PresShell()->GetAccessibleCaretEventHub();
+
+  // This will go through InsertAnonymousContent and such, and we don't really
+  // want it to end up inserting into our content container.
+  //
+  // FIXME(emilio): The fact that this enters into InsertAnonymousContent is a
+  // bit nasty, can we avoid it, maybe doing this off a scriptrunner?
+  if (eventHub) {
+    eventHub->Init();
+  }
 
   // Create the custom content container.
   mCustomContentContainer = doc->CreateHTMLElement(nsGkAtoms::div);
@@ -99,35 +112,46 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mCustomContentContainer->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
                                        reinterpret_cast<void*>(true));
 
+  // This will usually be done by the caller, but in this case we do it here,
+  // since we reuse the document's AnoymousContent list, and those survive
+  // across reframes and thus may already be flagged as being in an anonymous
+  // subtree. We don't really want to have this semi-broken state where
+  // anonymous nodes have a non-anonymous.
+  mCustomContentContainer->SetIsNativeAnonymousRoot();
+
   aElements.AppendElement(mCustomContentContainer);
 
   // Do not create an accessible object for the container.
   mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
                                    NS_LITERAL_STRING("presentation"), false);
 
-  // XXX add :moz-native-anonymous or will that be automatically set?
-  rv = mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                        NS_LITERAL_STRING("moz-custom-content-container"),
-                                        true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Append all existing AnonymousContent nodes stored at document level if any.
-  size_t len = doc->GetAnonymousContents().Length();
-  for (size_t i = 0; i < len; ++i) {
-    nsCOMPtr<Element> node = doc->GetAnonymousContents()[i]->GetContentNode();
-    mCustomContentContainer->AppendChildTo(node->AsContent(), true);
-  }
+  mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                   NS_LITERAL_STRING("moz-custom-content-container"),
+                                   false);
 
   // Only create a frame for mCustomContentContainer if it has some children.
-  if (len == 0) {
+  if (doc->GetAnonymousContents().IsEmpty()) {
     HideCustomContentContainer();
   }
 
-  RefPtr<AccessibleCaretEventHub> eventHub =
-    PresContext()->GetPresShell()->GetAccessibleCaretEventHub();
-  if (eventHub) {
-    // AccessibleCaret will insert anonymous caret elements.
-    eventHub->Init();
+  for (RefPtr<AnonymousContent>& anonContent : doc->GetAnonymousContents()) {
+    if (nsCOMPtr<nsINode> parent = anonContent->ContentNode().GetParentNode()) {
+      // Parent had better be an old custom content container already removed
+      // from a reframe. Forget about it since we're about to get inserted in a
+      // new one.
+      //
+      // TODO(emilio): Maybe we should extend PostDestroyData and do this stuff
+      // there instead, or something...
+      MOZ_ASSERT(parent != mCustomContentContainer);
+      MOZ_ASSERT(parent->IsElement());
+      MOZ_ASSERT(parent->AsElement()->IsRootOfNativeAnonymousSubtree());
+      MOZ_ASSERT(!parent->IsInComposedDoc());
+      MOZ_ASSERT(!parent->GetParentNode());
+
+      parent->RemoveChildNode(&anonContent->ContentNode(), false);
+    }
+
+    mCustomContentContainer->AppendChildTo(&anonContent->ContentNode(), false);
   }
 
   // Create a popupgroup element for chrome privileged top level non-XUL
@@ -140,8 +164,9 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                                    nullptr, kNameSpaceID_XUL,
                                    nsINode::ELEMENT_NODE);
 
-    rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent),
-                          nodeInfo.forget(), dom::NOT_FROM_PARSER);
+    nsresult rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent),
+                                   nodeInfo.forget(),
+                                   dom::NOT_FROM_PARSER);
     NS_ENSURE_SUCCESS(rv, rv);
 
     aElements.AppendElement(mPopupgroupContent);
@@ -190,21 +215,6 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestro
     sf->RemoveScrollPositionListener(this);
   }
 
-  // Elements inserted in the custom content container have the same lifetime as
-  // the document, so before destroying the container, make sure to keep a clone
-  // of each of them at document level so they can be re-appended on reframe.
-  if (mCustomContentContainer) {
-    nsCOMPtr<nsIDocument> doc = mContent->OwnerDoc();
-    ErrorResult rv;
-
-    nsTArray<RefPtr<mozilla::dom::AnonymousContent>>& docAnonContents =
-      doc->GetAnonymousContents();
-    for (size_t i = 0, len = docAnonContents.Length(); i < len; ++i) {
-      AnonymousContent* content = docAnonContents[i];
-      nsCOMPtr<nsINode> clonedElement = content->GetContentNode()->CloneNode(true, rv);
-      content->SetContentNode(clonedElement->AsElement());
-    }
-  }
   aPostDestroyData.AddAnonymousContent(mCustomContentContainer.forget());
   if (mPopupgroupContent) {
     aPostDestroyData.AddAnonymousContent(mPopupgroupContent.forget());
@@ -879,8 +889,7 @@ nsresult
 nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent, nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);
-  nsresult rv = nsFrame::GetContentForEvent(aEvent,
-                                            aContent);
+  nsresult rv = nsFrame::GetContentForEvent(aEvent, aContent);
   if (NS_FAILED(rv) || !*aContent) {
     nsIFrame* kid = mFrames.FirstChild();
     if (kid) {

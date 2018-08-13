@@ -7,9 +7,8 @@
 #ifndef mozilla_dom_battery_BatteryManager_h
 #define mozilla_dom_battery_BatteryManager_h
 
-#include "Types.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/Observer.h"
+#include "mozilla/HalBatteryInformation.h"
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
@@ -22,7 +21,7 @@ namespace dom {
 namespace battery {
 
 class BatteryManager : public DOMEventTargetHelper
-                     , public BatteryObserver
+                     , public hal::BatteryObserver
 {
 public:
   explicit BatteryManager(nsPIDOMWindowInner* aWindow);

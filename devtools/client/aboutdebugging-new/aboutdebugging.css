@@ -33,3 +33,20 @@ ul {
   margin: 0;
   padding: 0;
 }
+
+.ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aboutdebugging-button {
+  height: 36px;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 4px;
+  margin-inline-end: 4px;
+  min-width: 100px;
+  padding-inline-start: 20px;
+  padding-inline-end: 20px;
+}

@@ -12,8 +12,7 @@
 #include "nsTArray.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
-#include "mozilla/Observer.h"
-#include "Types.h"
+#include "mozilla/HalWakeLockInformation.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/WakeLock.h"
 
@@ -26,7 +25,7 @@ namespace power {
 
 class PowerManagerService
   : public nsIPowerManagerService
-  , public WakeLockObserver
+  , public hal::WakeLockObserver
 {
 public:
   NS_DECL_ISUPPORTS

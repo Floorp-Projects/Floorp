@@ -25,11 +25,16 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnonymousContent)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(AnonymousContent)
 
-  explicit AnonymousContent(Element* aContentNode);
-  Element* GetContentNode();
+  explicit AnonymousContent(already_AddRefed<Element> aContentNode);
+  Element& ContentNode()
+  {
+    return *mContentNode;
+  }
+
   Element* GetElementById(const nsAString& aElementId);
-  void SetContentNode(Element* aContentNode);
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  bool WrapObject(JSContext* aCx,
+                  JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector);
 
   // WebIDL methods
   void SetTextContentForElement(const nsAString& aElementId,
@@ -76,7 +81,7 @@ public:
 
 private:
   ~AnonymousContent();
-  nsCOMPtr<Element> mContentNode;
+  RefPtr<Element> mContentNode;
 };
 
 } // namespace dom

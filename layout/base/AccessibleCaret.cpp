@@ -78,9 +78,6 @@ AccessibleCaret::AccessibleCaret(nsIPresShell* aPresShell)
   if (mPresShell) {
     MOZ_ASSERT(RootFrame());
     MOZ_ASSERT(mPresShell->GetDocument());
-    MOZ_ASSERT(mPresShell->GetCanvasFrame());
-    MOZ_ASSERT(mPresShell->GetCanvasFrame()->GetCustomContentContainer());
-
     InjectCaretElement(mPresShell->GetDocument());
   }
 
@@ -109,10 +106,10 @@ AccessibleCaret::SetAppearance(Appearance aAppearance)
   }
 
   ErrorResult rv;
-  CaretElement()->ClassList()->Remove(AppearanceString(mAppearance), rv);
+  CaretElement().ClassList()->Remove(AppearanceString(mAppearance), rv);
   MOZ_ASSERT(!rv.Failed(), "Remove old appearance failed!");
 
-  CaretElement()->ClassList()->Add(AppearanceString(aAppearance), rv);
+  CaretElement().ClassList()->Add(AppearanceString(aAppearance), rv);
   MOZ_ASSERT(!rv.Failed(), "Add new appearance failed!");
 
   AC_LOG("%s: %s -> %s", __FUNCTION__, ToString(mAppearance).c_str(),
@@ -137,8 +134,8 @@ AccessibleCaret::SetSelectionBarEnabled(bool aEnabled)
   AC_LOG("Set selection bar %s", aEnabled ? "Enabled" : "Disabled");
 
   ErrorResult rv;
-  CaretElement()->ClassList()->Toggle(NS_LITERAL_STRING("no-bar"),
-                                      Optional<bool>(!aEnabled), rv);
+  CaretElement().ClassList()->Toggle(NS_LITERAL_STRING("no-bar"),
+                                     Optional<bool>(!aEnabled), rv);
   MOZ_ASSERT(!rv.Failed());
 
   mSelectionBarEnabled = aEnabled;
@@ -175,8 +172,8 @@ AccessibleCaret::Intersects(const AccessibleCaret& aCaret) const
     return false;
   }
 
-  nsRect rect = nsLayoutUtils::GetRectRelativeToFrame(CaretElement(), RootFrame());
-  nsRect rhsRect = nsLayoutUtils::GetRectRelativeToFrame(aCaret.CaretElement(), RootFrame());
+  nsRect rect = nsLayoutUtils::GetRectRelativeToFrame(&CaretElement(), RootFrame());
+  nsRect rhsRect = nsLayoutUtils::GetRectRelativeToFrame(&aCaret.CaretElement(), RootFrame());
   return rect.Intersects(rhsRect);
 }
 
@@ -206,9 +203,10 @@ AccessibleCaret::EnsureApzAware()
   // If the caret element was cloned, the listener might have been lost. So
   // if that's the case we register a dummy listener if there isn't one on
   // the element already.
-  if (!CaretElement()->IsApzAware()) {
-    CaretElement()->AddEventListener(NS_LITERAL_STRING("touchstart"),
-                                     mDummyTouchListener, false);
+  if (!CaretElement().IsApzAware()) {
+    // FIXME(emilio): Is this needed anymore?
+    CaretElement().AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                    mDummyTouchListener, false);
   }
 }
 
@@ -216,11 +214,11 @@ void
 AccessibleCaret::InjectCaretElement(nsIDocument* aDocument)
 {
   ErrorResult rv;
-  nsCOMPtr<Element> element = CreateCaretElement(aDocument);
+  RefPtr<Element> element = CreateCaretElement(aDocument);
   mCaretElementHolder = aDocument->InsertAnonymousContent(*element, rv);
 
   MOZ_ASSERT(!rv.Failed(), "Insert anonymous content should not fail!");
-  MOZ_ASSERT(mCaretElementHolder.get(), "We must have anonymous content!");
+  MOZ_ASSERT(mCaretElementHolder, "We must have anonymous content!");
 
   // InsertAnonymousContent will clone the element to make an AnonymousContent.
   // Since event listeners are not being cloned when cloning a node, we need to
@@ -238,7 +236,7 @@ AccessibleCaret::CreateCaretElement(nsIDocument* aDocument) const
   //   <div id="bar">                   <- SelectionBarElement()
 
   ErrorResult rv;
-  nsCOMPtr<Element> parent = aDocument->CreateHTMLElement(nsGkAtoms::div);
+  RefPtr<Element> parent = aDocument->CreateHTMLElement(nsGkAtoms::div);
   parent->ClassList()->Add(NS_LITERAL_STRING("moz-accessiblecaret"), rv);
   parent->ClassList()->Add(NS_LITERAL_STRING("none"), rv);
   parent->ClassList()->Add(NS_LITERAL_STRING("no-bar"), rv);
@@ -246,7 +244,7 @@ AccessibleCaret::CreateCaretElement(nsIDocument* aDocument) const
   auto CreateAndAppendChildElement = [aDocument, &parent](
     const nsLiteralString& aElementId)
   {
-    nsCOMPtr<Element> child = aDocument->CreateHTMLElement(nsGkAtoms::div);
+    RefPtr<Element> child = aDocument->CreateHTMLElement(nsGkAtoms::div);
     child->SetAttr(kNameSpaceID_None, nsGkAtoms::id, aElementId, true);
     parent->AppendChildTo(child, false);
   };
@@ -261,10 +259,15 @@ AccessibleCaret::CreateCaretElement(nsIDocument* aDocument) const
 void
 AccessibleCaret::RemoveCaretElement(nsIDocument* aDocument)
 {
-  CaretElement()->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
-                                      mDummyTouchListener, false);
+  CaretElement().RemoveEventListener(NS_LITERAL_STRING("touchstart"),
+                                     mDummyTouchListener, false);
 
-  if (nsIFrame* frame = CaretElement()->GetPrimaryFrame()) {
+  // FIXME(emilio): This shouldn't be needed and should be done by
+  // ContentRemoved via RemoveAnonymousContent, but the current setup tears down
+  // the accessible caret manager after the shell has stopped observing the
+  // document, but before the frame tree has gone away. This could clearly be
+  // better...
+  if (nsIFrame* frame = CaretElement().GetPrimaryFrame()) {
     if (frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
       frame = frame->GetPlaceholderFrame();
     }
@@ -272,10 +275,7 @@ AccessibleCaret::RemoveCaretElement(nsIDocument* aDocument)
     frame->GetParent()->RemoveFrame(nsIFrame::kPrincipalList, frame);
   }
 
-  ErrorResult rv;
-  aDocument->RemoveAnonymousContent(*mCaretElementHolder, rv);
-  // It's OK rv is failed since nsCanvasFrame might not exists now.
-  rv.SuppressException();
+  aDocument->RemoveAnonymousContent(*mCaretElementHolder, IgnoreErrors());
 }
 
 AccessibleCaret::PositionChangedResult
@@ -346,7 +346,7 @@ AccessibleCaret::SetCaretElementStyle(const nsRect& aRect, float aZoomLevel)
   styleStr.AppendFloat(sMarginLeft/aZoomLevel);
   styleStr.AppendLiteral("px");
 
-  CaretElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr, true);
+  CaretElement().SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr, true);
   AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
 
   // Set style string for children.
