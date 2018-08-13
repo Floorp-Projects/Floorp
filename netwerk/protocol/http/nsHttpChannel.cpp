@@ -688,11 +688,13 @@ nsHttpChannel::CheckFastBlocked()
     LOG(("nsHttpChannel::CheckFastBlocked [this=%p]\n", this));
 
     static bool sFastBlockInited = false;
+    static bool sIsContentBlockingEnabled = false;
     static bool sIsFastBlockEnabled = false;
     static uint32_t sFastBlockTimeout = 0;
 
     if (!sFastBlockInited) {
         sFastBlockInited = true;
+        Preferences::AddBoolVarCache(&sIsContentBlockingEnabled, "browser.contentblocking.enabled");
         Preferences::AddBoolVarCache(&sIsFastBlockEnabled, "browser.fastblock.enabled");
         Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
     }
@@ -702,7 +704,7 @@ nsHttpChannel::CheckFastBlocked()
         return false;
     }
 
-    if (!sIsFastBlockEnabled ||
+    if (!sIsContentBlockingEnabled || !sIsFastBlockEnabled ||
         IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo) ||
         !timestamp) {
         return false;

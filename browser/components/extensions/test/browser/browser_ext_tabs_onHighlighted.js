@@ -3,180 +3,120 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-add_task(async function testTabEvents() {
-  async function background() {
-    /** The list of active tab ID's */
-    let tabIds = [];
-
-    /**
-     * Stores the events that fire for each tab.
-     *
-     * events {
-     *   tabId1: [event1, event2, ...],
-     *   tabId2: [event1, event2, ...],
-     * }
-     */
-    let events = {};
-
-    browser.tabs.onActivated.addListener((info) => {
-      if (info.tabId in events) {
-        events[info.tabId].push("onActivated");
-      } else {
-        events[info.tabId] = ["onActivated"];
-      }
-    });
-
-    browser.tabs.onCreated.addListener((info) => {
-      if (info.id in events) {
-        events[info.id].push("onCreated");
-      } else {
-        events[info.id] = ["onCreated"];
-      }
-    });
-
-    browser.tabs.onHighlighted.addListener((info) => {
-      if (info.tabIds[0] in events) {
-        events[info.tabIds[0]].push("onHighlighted");
-      } else {
-        events[info.tabIds[0]] = ["onHighlighted"];
-      }
-    });
-
-    /**
-     * Asserts that the expected events are fired for the tab with id = tabId.
-     * The events associated to the specified tab are removed after this check is made.
-     *
-     * @param {number} tabId
-     * @param {Array<string>} expectedEvents
-     */
-    async function expectEvents(tabId, expectedEvents) {
-      browser.test.log(`Expecting events: ${expectedEvents.join(", ")}`);
-
-      // Wait up to 5000 ms for the expected number of events.
-      for (let i = 0; i < 50 && (!events[tabId] || events[tabId].length < expectedEvents.length); i++) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      browser.test.assertEq(expectedEvents.length, events[tabId].length,
-                            `Got expected number of events for ${tabId}`);
-
-      for (let [i, name] of expectedEvents.entries()) {
-        browser.test.assertEq(name, i in events[tabId] && events[tabId][i],
-                              `Got expected ${name} event`);
-      }
-      delete events[tabId];
-    }
-
-    /**
-     * Opens a new tab and asserts that the correct events are fired.
-     *
-     * @param {number} windowId
-     */
-    async function openTab(windowId) {
-      browser.test.assertEq(0, Object.keys(events).length,
-                            "No events remaining before testing openTab.");
-
-      let tab = await browser.tabs.create({windowId});
-
-      tabIds.push(tab.id);
-      browser.test.log(`Opened tab ${tab.id}`);
-
-      await expectEvents(tab.id, [
-        "onCreated",
-        "onActivated",
-        "onHighlighted",
-      ]);
-    }
-
-    /**
-     * Opens a new window and asserts that the correct events are fired.
-     *
-     * @param {Array} urls A list of urls for which to open tabs in the new window.
-     */
-    async function openWindow(urls) {
-      browser.test.assertEq(0, Object.keys(events).length,
-                            "No events remaining before testing openWindow.");
-
-      let window = await browser.windows.create({url: urls});
-      browser.test.log(`Opened new window ${window.id}`);
-
-      for (let [i] of urls.entries()) {
-        let tab = window.tabs[i];
-        tabIds.push(tab.id);
-
-        let expectedEvents = [
-          "onCreated",
-          "onActivated",
-          "onHighlighted",
-        ];
-        if (i !== 0) {
-          expectedEvents.splice(1);
-        }
-        await expectEvents(window.tabs[i].id, expectedEvents);
-      }
-    }
-
-    /**
-     * Highlights an existing tab and asserts that the correct events are fired.
-     *
-     * @param {number} tabId
-     */
-    async function highlightTab(tabId) {
-      browser.test.assertEq(0, Object.keys(events).length,
-                            "No events remaining before testing highlightTab.");
-
-      browser.test.log(`Highlighting tab ${tabId}`);
-      let tab = await browser.tabs.update(tabId, {active: true});
-
-      browser.test.assertEq(tab.id, tabId, `Tab ${tab.id} highlighted`);
-
-      await expectEvents(tab.id, [
-        "onActivated",
-        "onHighlighted",
-      ]);
-    }
-
-    /**
-     * The main entry point to the tests.
-     */
-    let tabs = await browser.tabs.query({active: true, currentWindow: true});
-
-    let activeWindow = tabs[0].windowId;
-    await Promise.all([
-      openTab(activeWindow),
-      openTab(activeWindow),
-      openTab(activeWindow),
-    ]);
-
-    await Promise.all([
-      highlightTab(tabIds[0]),
-      highlightTab(tabIds[1]),
-      highlightTab(tabIds[2]),
-    ]);
-
-    await Promise.all([
-      openWindow(["http://example.com"]),
-      openWindow(["http://example.com", "http://example.org"]),
-      openWindow(["http://example.com", "http://example.org", "http://example.net"]),
-    ]);
-
-    browser.test.assertEq(0, Object.keys(events).length,
-                          "No events remaining after tests.");
-
-    await Promise.all(tabIds.map(id => browser.tabs.remove(id)));
-
-    browser.test.notifyPass("tabs.highlight");
-  }
+add_task(async function test_onHighlighted() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.tabs.multiselect", true],
+    ],
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
     },
 
-    background,
+    background: async function() {
+      async function expectHighlighted(fn, action) {
+        let resolve;
+        let promise = new Promise((r) => {
+          resolve = r;
+        });
+        let expected;
+        let events = [];
+        let listener = (highlightInfo) => {
+          events.push(highlightInfo);
+          if (expected && expected.length >= events.length) {
+            resolve();
+          }
+        };
+        browser.tabs.onHighlighted.addListener(listener);
+        expected = await fn() || [];
+        if (events.length < expected.length) {
+          await promise;
+        }
+        let unexpected = events.splice(expected.length);
+        browser.test.assertEq(
+          JSON.stringify(expected), JSON.stringify(events),
+          `Should get ${expected.length} expected onHighlighted events when ${action}`);
+        if (unexpected.length) {
+          browser.test.fail(
+            `${unexpected.length} unexpected onHighlighted events when ${action}: ` +
+            JSON.stringify(unexpected));
+        }
+        browser.tabs.onHighlighted.removeListener(listener);
+      }
+
+      let [{id, windowId}] = await browser.tabs.query({active: true, currentWindow: true});
+      let windows = [windowId];
+      let tabs = [id];
+
+      await expectHighlighted(async () => {
+        let tab = await browser.tabs.create({active: true, url: "about:blank?1"});
+        tabs.push(tab.id);
+        return [{tabIds: [tabs[1]], windowId: windows[0]}];
+      }, "creating a new active tab");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.update(tabs[0], {active: true});
+        return [{tabIds: [tabs[0]], windowId: windows[0]}];
+      }, "selecting former tab");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.highlight({tabs: [0, 1]});
+        return [{tabIds: [tabs[0], tabs[1]], windowId: windows[0]}];
+      }, "highlighting both tabs");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.highlight({tabs: [1, 0]});
+        return [{tabIds: [tabs[0], tabs[1]], windowId: windows[0]}];
+      }, "highlighting same tabs but changing selected one");
+
+      await expectHighlighted(async () => {
+        let tab = await browser.tabs.create({active: false, url: "about:blank?2"});
+        tabs.push(tab.id);
+      }, "create a new inactive tab");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.highlight({tabs: [2, 0, 1]});
+        return [{tabIds: [tabs[0], tabs[1], tabs[2]], windowId: windows[0]}];
+      }, "highlighting all tabs");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.move(tabs[1], {index: 0});
+      }, "reordering tabs");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.highlight({tabs: [0]});
+        return [{tabIds: [tabs[1]], windowId: windows[0]}];
+      }, "highlighting moved tab");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.highlight({tabs: [0]});
+      }, "highlighting again");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.highlight({tabs: [2, 1, 0]});
+        return [{tabIds: [tabs[1], tabs[0], tabs[2]], windowId: windows[0]}];
+      }, "highlighting all tabs");
+
+      await expectHighlighted(async () => {
+        await browser.tabs.highlight({tabs: [2, 0, 1]});
+      }, "highlighting same tabs with different order");
+
+      await expectHighlighted(async () => {
+        let window = await browser.windows.create({tabId: tabs[2]});
+        windows.push(window.id);
+        // Bug 1481185: on Chrome it's [tabs[1], tabs[0]] instead of [tabs[0]]
+        return [{tabIds: [tabs[0]], windowId: windows[0]},
+                {tabIds: [tabs[2]], windowId: windows[1]}];
+      }, "moving selected tab into a new window");
+
+      await browser.tabs.remove(tabs.slice(1));
+      browser.test.notifyPass("test-finished");
+    },
   });
 
   await extension.startup();
-  await extension.awaitFinish("tabs.highlight");
+  await extension.awaitFinish("test-finished");
   await extension.unload();
 });

@@ -334,16 +334,13 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
 
     // Flush out frame construction to make sure that the subframe's
     // presshell is set up if it needs to be.
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
-    if (document) {
-      document->FlushPendingNotifications(mozilla::FlushType::Frames);
-      if (mMakeWholeDocumentEditable) {
-        document->SetEditableFlag(true);
-        nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(document);
-        if (htmlDocument) {
-          // Enable usage of the execCommand API
-          htmlDocument->SetEditingState(nsIHTMLDocument::eDesignMode);
-        }
+    doc->FlushPendingNotifications(mozilla::FlushType::Frames);
+    if (mMakeWholeDocumentEditable) {
+      doc->SetEditableFlag(true);
+      nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(doc);
+      if (htmlDocument) {
+        // Enable usage of the execCommand API
+        htmlDocument->SetEditingState(nsIHTMLDocument::eDesignMode);
       }
     }
   }

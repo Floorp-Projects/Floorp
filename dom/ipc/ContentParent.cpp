@@ -1054,9 +1054,8 @@ static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement)
 {
   // Propagate the private-browsing status of the element's parent
   // docshell to the remote docshell, via the chrome flags.
-  nsCOMPtr<Element> frameElement = do_QueryInterface(aFrameElement);
-  MOZ_ASSERT(frameElement);
-  nsPIDOMWindowOuter* win = frameElement->OwnerDoc()->GetWindow();
+  MOZ_ASSERT(aFrameElement);
+  nsPIDOMWindowOuter* win = aFrameElement->OwnerDoc()->GetWindow();
   if (!win) {
     NS_WARNING("Remote frame has no window");
     return nullptr;

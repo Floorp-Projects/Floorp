@@ -2117,7 +2117,7 @@ nsGlobalWindowOuter::SetDocShell(nsIDocShell* aDocShell)
   // that we can do some forwarding to the chrome document.
   RefPtr<EventTarget> chromeEventHandler;
   mDocShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
-  mChromeEventHandler = do_QueryInterface(chromeEventHandler);
+  mChromeEventHandler = chromeEventHandler;
   if (!mChromeEventHandler) {
     // We have no chrome event handler. If we have a parent,
     // get our chrome event handler from the parent. If

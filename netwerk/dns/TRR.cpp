@@ -58,7 +58,7 @@ TRR::Notify(nsITimer *aTimer)
 // convert a given host request to a DOH 'body'
 //
 nsresult
-TRR::DohEncode(nsCString &aBody)
+TRR::DohEncode(nsCString &aBody, bool aDisableECS)
 {
   aBody.Truncate();
   // Header
@@ -72,8 +72,9 @@ TRR::DohEncode(nsCString &aBody)
   aBody += '\0'; // ANCOUNT
   aBody += '\0';
   aBody += '\0'; // NSCOUNT
-  aBody += '\0';
+
   aBody += '\0'; // ARCOUNT
+  aBody += aDisableECS ? 1 : '\0';   // ARCOUNT low byte for EDNS(0)
 
   // Question
 
@@ -114,6 +115,38 @@ TRR::DohEncode(nsCString &aBody)
   aBody += '\0'; // upper 8 bit CLASS
   aBody += kDNS_CLASS_IN;  // IN - "the Internet"
 
+  if (aDisableECS) {
+    // EDNS(0) is RFC 6891, ECS is RFC 7871
+    aBody += '\0'; // NAME       | domain name  | MUST be 0 (root domain)      |
+    aBody += '\0';
+    aBody += 41;   // TYPE       | u_int16_t    | OPT (41)                     |
+    aBody += 16;   // CLASS      | u_int16_t    | requestor's UDP payload size |
+    aBody += '\0'; // advertise 4K (high-byte: 16 | low-byte: 0), ignored by DoH
+    aBody += '\0'; // TTL        | u_int32_t    | extended RCODE and flags     |
+    aBody += '\0';
+    aBody += '\0';
+    aBody += '\0';
+
+    aBody += '\0'; // upper 8 bit RDLEN
+    aBody += 8;    // RDLEN      | u_int16_t    | length of all RDATA          |
+
+    // RDATA      | octet stream | {attribute,value} pairs      |
+    // The RDATA is just the ECS option setting zero subnet prefix
+
+    aBody += '\0'; // upper 8 bit OPTION-CODE ECS
+    aBody += 8;    // OPTION-CODE, 2 octets, for ECS is 8
+
+    aBody += '\0'; // upper 8 bit OPTION-LENGTH
+    aBody += 4;    // OPTION-LENGTH, 2 octets, contains the length of the payload
+                   // after OPTION-LENGTH
+    aBody += '\0'; // upper 8 bit FAMILY
+    aBody += AF_INET; // FAMILY, 2 octets
+
+    aBody += '\0'; // SOURCE PREFIX-LENGTH      |     SCOPE PREFIX-LENGTH       |
+    aBody += '\0';
+
+    // ADDRESS, minimum number of octets == nothing because zero bits
+  }
   return NS_OK;
 }
 
@@ -163,12 +196,13 @@ TRR::SendHTTPRequest()
   bool useGet = gTRRService->UseGET();
   nsAutoCString body;
   nsCOMPtr<nsIURI> dnsURI;
+  bool disableECS = gTRRService->DisableECS();
 
   LOG(("TRR::SendHTTPRequest resolve %s type %u\n", mHost.get(), mType));
 
   if (useGet) {
     nsAutoCString tmp;
-    rv = DohEncode(tmp);
+    rv = DohEncode(tmp, disableECS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     /* For GET requests, the outgoing packet needs to be Base64url-encoded and
@@ -183,7 +217,7 @@ TRR::SendHTTPRequest()
     uri.Append(body);
     rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
   } else {
-    rv = DohEncode(body);
+    rv = DohEncode(body, disableECS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString uri;
