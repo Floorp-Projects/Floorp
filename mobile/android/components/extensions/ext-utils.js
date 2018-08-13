@@ -5,7 +5,6 @@
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-/* globals TabBase, WindowBase, TabTrackerBase, WindowTrackerBase, TabManagerBase, WindowManagerBase */
 /* globals EventDispatcher */
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
