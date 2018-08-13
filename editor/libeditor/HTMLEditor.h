@@ -758,6 +758,16 @@ protected: // Shouldn't be used by friend classes
   virtual nsresult SelectAllInternal() override;
 
   /**
+   * PasteInternal() pasts text with replacing selected content.
+   * This tries to dispatch ePaste event first.  If its defaultPrevent() is
+   * called, this does nothing but returns NS_OK.
+   *
+   * @param aClipboardType  nsIClipboard::kGlobalClipboard or
+   *                        nsIClipboard::kSelectionClipboard.
+   */
+  nsresult PasteInternal(int32_t aClipboardType);
+
+  /**
    * InsertNodeIntoProperAncestorWithTransaction() attempts to insert aNode
    * into the document, at aPointToInsert.  Checks with strict dtd to see if
    * containment is allowed.  If not allowed, will attempt to find a parent
