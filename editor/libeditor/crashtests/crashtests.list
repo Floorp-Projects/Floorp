@@ -104,3 +104,4 @@ load 1425091.html
 load 1443664.html
 skip-if(Android) needs-focus load 1444630.html
 load 1446451.html
+asserts(0-2) load 1464251.html # assertion is that mutation event listener modifies content

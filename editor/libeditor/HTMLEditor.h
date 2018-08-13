@@ -136,7 +136,6 @@ public:
   NS_IMETHOD BeginningOfDocument() override;
   NS_IMETHOD SetFlags(uint32_t aFlags) override;
 
-  NS_IMETHOD Paste(int32_t aSelectionType) override;
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
 
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
@@ -243,9 +242,17 @@ public:
    */
   nsresult AddZIndex(int32_t aChange);
 
-  nsresult SetInlineProperty(nsAtom* aProperty,
+  nsresult SetInlineProperty(nsAtom& aProperty,
                              nsAtom* aAttribute,
-                             const nsAString& aValue);
+                             const nsAString& aValue)
+  {
+    nsresult rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
   nsresult GetInlineProperty(nsAtom* aProperty,
                              nsAtom* aAttribute,
                              const nsAString& aValue,
@@ -260,7 +267,14 @@ public:
                                           bool* aAll,
                                           nsAString& outValue);
   nsresult RemoveInlineProperty(nsAtom* aProperty,
-                                nsAtom* aAttribute);
+                                nsAtom* aAttribute)
+  {
+    nsresult rv = RemoveInlinePropertyInternal(aProperty, aAttribute);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
 
   /**
    * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
@@ -758,6 +772,16 @@ protected: // Shouldn't be used by friend classes
   virtual nsresult SelectAllInternal() override;
 
   /**
+   * PasteInternal() pasts text with replacing selected content.
+   * This tries to dispatch ePaste event first.  If its defaultPrevent() is
+   * called, this does nothing but returns NS_OK.
+   *
+   * @param aClipboardType  nsIClipboard::kGlobalClipboard or
+   *                        nsIClipboard::kSelectionClipboard.
+   */
+  nsresult PasteInternal(int32_t aClipboardType);
+
+  /**
    * InsertNodeIntoProperAncestorWithTransaction() attempts to insert aNode
    * into the document, at aPointToInsert.  Checks with strict dtd to see if
    * containment is allowed.  If not allowed, will attempt to find a parent
@@ -799,6 +823,12 @@ protected: // Shouldn't be used by friend classes
   nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
 
   nsresult LoadHTML(const nsAString& aInputString);
+
+  nsresult SetInlinePropertyInternal(nsAtom& aProperty,
+                                     nsAtom* aAttribute,
+                                     const nsAString& aValue);
+  nsresult RemoveInlinePropertyInternal(nsAtom* aProperty,
+                                        nsAtom* aAttribute);
 
   /**
    * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
@@ -1535,6 +1565,7 @@ protected:
   friend class CSSEditUtils;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
+  friend class TextEditor;
   friend class WSRunObject;
 };
 
