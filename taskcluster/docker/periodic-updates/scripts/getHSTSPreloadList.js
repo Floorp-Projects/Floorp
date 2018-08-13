@@ -23,6 +23,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 const SOURCE = "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT";
+const TOOL_SOURCE = "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/docker/periodic-updates/scripts/getHSTSPreloadList.js";
 const OUTPUT = "nsSTSPreloadList.inc";
 const ERROR_OUTPUT = "nsSTSPreloadList.errors";
 const MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
@@ -115,7 +116,7 @@ function processStsHeader(host, header, status, securityInfo) {
   if (header != null && securityInfo != null) {
     try {
       let uri = Services.io.newURI("https://" + host.name);
-      let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+      let sslStatus = securityInfo.QueryInterface(Ci.nsITransportSecurityInfo).SSLStatus;
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, header, sslStatus, 0, Ci.nsISiteSecurityService.SOURCE_PRELOAD_LIST, {}, maxAge, includeSubdomains);
     } catch (e) {
       dump("ERROR: could not process header '" + header + "' from " + host.name + ": " + e + "\n");
@@ -167,32 +168,39 @@ RedirectAndAuthStopper.prototype = {
 };
 
 function fetchstatus(host) {
-  let xhr = new XMLHttpRequest();
-  let uri = "https://" + host.name + "/";
+  return new Promise((resolve, reject) => {
+    let xhr = new XMLHttpRequest();
+    let uri = "https://" + host.name + "/";
 
-  xhr.open("head", uri, true);
-  xhr.setRequestHeader("X-Automated-Tool", "https://hg.mozilla.org/mozilla-central/file/tip/security/manager/tools/getHSTSPreloadList.js");
-  xhr.timeout = REQUEST_TIMEOUT;
+    xhr.open("head", uri, true);
+    xhr.setRequestHeader("X-Automated-Tool", TOOL_SOURCE);
+    xhr.timeout = REQUEST_TIMEOUT;
 
-  try {
+    let errorHandler = () => {
+      dump("ERROR: exception making request to " + host.name + "\n");
+      resolve(processStsHeader(host, null, xhr.status,
+                               xhr.channel && xhr.channel.securityInfo));
+    };
+
+    xhr.onerror = errorHandler;
+    xhr.ontimeout = errorHandler;
+    xhr.onabort = errorHandler;
+
+    xhr.onload = () => {
+      let header = xhr.getResponseHeader("strict-transport-security");
+      resolve(processStsHeader(host, header, xhr.status, xhr.channel.securityInfo));
+    };
+
     xhr.channel.notificationCallbacks = new RedirectAndAuthStopper();
     xhr.send();
-  } catch (e) {
-    dump("ERROR: exception making request to " + host.name + ": " + e + "\n");
-    return processStsHeader(host, null, xhr.status, xhr.channel.securityInfo);
-  }
-
-  let header = xhr.getResponseHeader("strict-transport-security");
-  return processStsHeader(host, header, xhr.status, xhr.channel.securityInfo);
+  });
 }
 
 async function getHSTSStatus(host) {
-  return new Promise((resolve, reject) => {
-    do {
-      host = fetchstatus(host);
-    } while (shouldRetry(host));
-    resolve(host);
-  });
+  do {
+    host = await fetchstatus(host);
+  } while (shouldRetry(host));
+  return host;
 }
 
 function compareHSTSStatus(a, b) {
