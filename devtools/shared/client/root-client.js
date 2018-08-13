@@ -35,6 +35,9 @@ function RootClient(client, greeting) {
   this.traits = greeting.traits;
 
   // Cache root form as this will always be the same value.
+  //
+  // Note that rootForm is overloaded by DebuggerClient.checkRuntimeVersion
+  // in order to support <FF59 that doesn't support getRoot request.
   Object.defineProperty(this, "rootForm", {
     get() {
       delete this.rootForm;
@@ -277,6 +280,9 @@ RootClient.prototype = {
   /*
    * This function returns a protocol.js Front for any root actor.
    * i.e. the one directly served from RootActor.listTabs or getRoot.
+   *
+   * @param String typeName
+   *        The type name used in protocol.js's spec for this actor.
    */
   async getFront(typeName) {
     let front = this.fronts.get(typeName);

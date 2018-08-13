@@ -22,16 +22,14 @@ window.onload = function() {
 
   SimpleTest.waitForExplicitFinish();
 
-  const {getDeviceFront} = require("devtools/shared/fronts/device");
-
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
     client.listTabs().then(function onListTabs(response) {
-      const d = getDeviceFront(client, response);
-
+      return client.mainRoot.getFront("device");
+    }).then(function(d) {
       let desc;
       const appInfo = Services.appinfo;
       const utils = window.windowUtils;
