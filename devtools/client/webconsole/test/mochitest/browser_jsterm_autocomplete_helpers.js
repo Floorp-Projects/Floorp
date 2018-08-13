@@ -28,16 +28,13 @@ async function performTests() {
 }
 
 async function testInspectAutoCompletion(jsterm, inputValue, expectInspect) {
-  jsterm.setInputValue(inputValue);
-  await complete(jsterm);
+  jsterm.setInputValue("");
+  jsterm.focus();
+  const updated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString(inputValue);
+  await updated;
   is(getPopupItemsLabel(jsterm.autocompletePopup).includes("inspect"), expectInspect,
     `autocomplete results${expectInspect ? "" : " does not"} contain helper 'inspect'`);
-}
-
-function complete(jsterm) {
-  const updated = jsterm.once("autocomplete-updated");
-  jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
-  return updated;
 }
 
 function getPopupItemsLabel(popup) {

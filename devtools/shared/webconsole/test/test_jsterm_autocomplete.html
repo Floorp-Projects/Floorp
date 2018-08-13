@@ -24,9 +24,7 @@ function evaluateJS(input, options = {}) {
 }
 
 function autocompletePromise(str, cursor = str.length, frameActor) {
-  return new Promise(resolve => {
-    gState.client.autocomplete(str, cursor, resolve, frameActor);
-  });
+  return gState.client.autocomplete(str, cursor, frameActor);
 }
 
 // This test runs all of its assertions twice - once with

@@ -27,8 +27,7 @@ add_task(async function() {
   const popup = jsterm.autocompletePopup;
   const onPopupShown = popup.once("popup-opened");
   jsterm.focus();
-  jsterm.setInputValue("document.location.");
-  EventUtils.sendKey("TAB", hud.iframeWindow);
+  EventUtils.sendString("document.location.");
   await onPopupShown;
 
   info("Send ESCAPE key and check that it only hides the autocomplete suggestions");
