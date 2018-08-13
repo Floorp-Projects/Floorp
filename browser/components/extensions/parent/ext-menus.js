@@ -129,6 +129,10 @@ var gMenuBuilder = {
     // Display the extension icon on the root element.
     if (root.extension.manifest.icons) {
       this.setMenuItemIcon(rootElement, root.extension, contextData, root.extension.manifest.icons);
+    } else {
+      // Undo changes from setMenuItemIcon:
+      rootElement.removeAttribute("class");
+      rootElement.removeAttribute("image");
     }
     return rootElement;
   },
