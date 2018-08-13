@@ -13,7 +13,7 @@ onload = t.step_func(function() {
   img.onerror = t.step_func(function() {assert_unreached()})
   img.src = "missing";
   iframe.contentDocument.body.appendChild(img);
-  iframe.contentDocument.open()
+  assert_equals(iframe.contentDocument.open(), iframe.contentDocument);
   setTimeout(function() {t.done();}, 500);
 });
 </script>
