@@ -33,6 +33,12 @@ namespace layers {
 
 using namespace gfx;
 
+void
+PaintTask::DropTextureClients()
+{
+  mClients.clear();
+}
+
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;
