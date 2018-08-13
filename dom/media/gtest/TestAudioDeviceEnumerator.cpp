@@ -572,3 +572,13 @@ TEST(CubebDeviceEnumerator, EnumerateAndroid)
   EXPECT_TRUE(inputDevices[0]->Preferred()) << "it's always the prefered device.";
 }
 #endif
+
+TEST(CubebDeviceEnumerator, ForceNullCubebContext)
+{
+  mozilla::CubebUtils::ForceSetCubebContext(nullptr);
+  CubebDeviceEnumerator enumerator;
+  nsTArray<RefPtr<AudioDeviceInfo>> inputDevices;
+  enumerator.EnumerateAudioInputDevices(inputDevices);
+  EXPECT_EQ(inputDevices.Length(), 0u) << "Enumeration must fail device list must be empty.";
+}
+

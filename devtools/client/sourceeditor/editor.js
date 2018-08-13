@@ -64,6 +64,7 @@ const CM_MAPPING = [
   "extendSelection",
   "focus",
   "getCursor",
+  "getLine",
   "getScrollInfo",
   "getSelection",
   "getViewport",

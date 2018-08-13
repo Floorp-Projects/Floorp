@@ -32,6 +32,7 @@
 #include <cairo-gobject.h>
 #include "WidgetStyleCache.h"
 #include "prenv.h"
+#include "nsCSSColorUtils.h"
 
 using namespace mozilla;
 using mozilla::LookAndFeel;
@@ -215,6 +216,58 @@ GetBorderColors(GtkStyleContext* aContext,
     return ret;
 }
 
+// Finds ideal cell highlight colors used for unfocused+selected cells distinct
+// from both Highlight, used as focused+selected background, and the listbox
+// background which is assumed to be similar to -moz-field
+nsresult
+nsLookAndFeel::InitCellHighlightColors() {
+    // NS_SUFFICIENT_LUMINOSITY_DIFFERENCE is the a11y standard for text
+    // on a background. Use 20% of that standard since we have a background
+    // on top of another background
+    int32_t minLuminosityDifference = NS_SUFFICIENT_LUMINOSITY_DIFFERENCE / 5;
+    int32_t backLuminosityDifference = NS_LUMINOSITY_DIFFERENCE(
+        mMozWindowBackground, mMozFieldBackground);
+    if (backLuminosityDifference >= minLuminosityDifference) {
+        mMozCellHighlightBackground = mMozWindowBackground;
+        mMozCellHighlightText = mMozWindowText;
+        return NS_OK;
+    }
+
+    uint16_t hue, sat, luminance;
+    uint8_t alpha;
+    mMozCellHighlightBackground = mMozFieldBackground;
+    mMozCellHighlightText = mMozFieldText;
+
+    NS_RGB2HSV(mMozCellHighlightBackground, hue, sat, luminance, alpha);
+
+    uint16_t step = 30;
+    // Lighten the color if the color is very dark
+    if (luminance <= step) {
+        luminance += step;
+    }
+    // Darken it if it is very light
+    else if (luminance >= 255 - step) {
+        luminance -= step;
+    }
+    // Otherwise, compute what works best depending on the text luminance.
+    else {
+        uint16_t textHue, textSat, textLuminance;
+        uint8_t textAlpha;
+        NS_RGB2HSV(mMozCellHighlightText, textHue, textSat, textLuminance,
+            textAlpha);
+        // Text is darker than background, use a lighter shade
+        if (textLuminance < luminance) {
+            luminance += step;
+        }
+        // Otherwise, use a darker shade
+        else {
+            luminance -= step;
+        }
+    }
+    NS_HSV2RGB(mMozCellHighlightBackground, hue, sat, luminance, alpha);
+    return NS_OK;
+}
+
 void
 nsLookAndFeel::NativeInit()
 {
@@ -271,7 +324,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID_IMESelectedRawTextBackground:
     case eColorID_IMESelectedConvertedTextBackground:
     case eColorID__moz_dragtargetzone:
-    case eColorID__moz_cellhighlight:
     case eColorID__moz_html_cellhighlight:
     case eColorID_highlight: // preference selected item,
         aColor = mTextSelectedBackground;
@@ -281,9 +333,14 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID_IMESelectedRawTextForeground:
     case eColorID_IMESelectedConvertedTextForeground:
     case eColorID_highlighttext:
-    case eColorID__moz_cellhighlighttext:
     case eColorID__moz_html_cellhighlighttext:
         aColor = mTextSelectedText;
+        break;
+    case eColorID__moz_cellhighlight:
+        aColor = mMozCellHighlightBackground;
+        break;
+    case eColorID__moz_cellhighlighttext:
+        aColor = mMozCellHighlightText;
         break;
     case eColorID_Widget3DHighlight:
         aColor = NS_RGB(0xa0,0xa0,0xa0);
@@ -1021,6 +1078,9 @@ nsLookAndFeel::EnsureInit()
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     mOddCellBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_restore(style);
+
+    // Compute cell highlight colors
+    InitCellHighlightColors();
 
     // GtkFrame has a "border" subnode on which Adwaita draws the border.
     // Some themes do not draw on this node but draw a border on the widget

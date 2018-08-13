@@ -77,6 +77,8 @@ protected:
     nscolor mMozWindowActiveBorder;
     nscolor mMozWindowInactiveBorder;
     nscolor mMozWindowInactiveCaption;
+    nscolor mMozCellHighlightBackground;
+    nscolor mMozCellHighlightText;
     nscolor mTextSelectedText;
     nscolor mTextSelectedBackground;
     nscolor mMozScrollbar;
@@ -91,6 +93,9 @@ protected:
     bool    mInitialized;
 
     void EnsureInit();
+
+private:
+    nsresult InitCellHighlightColors();
 };
 
 #endif

@@ -55,6 +55,14 @@ body:not(.neterror) #netErrorButtonContainer {
   display: none;
 }
 
+#advancedPanelErrorTryAgain {
+  display: none;
+}
+
+#moreInformationButton {
+  display: none;
+}
+
 #errorTryAgain {
   margin-top: 1.2em;
 }

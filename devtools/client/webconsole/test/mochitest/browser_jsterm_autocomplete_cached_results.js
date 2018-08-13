@@ -24,7 +24,7 @@ async function performTests() {
   const { autocompletePopup: popup } = jsterm;
 
   const jstermComplete = (value, caretPosition) =>
-    jstermSetValueAndComplete(jsterm, value, caretPosition);
+    setInputValueForAutocompletion(jsterm, value, caretPosition);
 
   // Test if 'doc' gives 'document'
   await jstermComplete("doc");
@@ -76,7 +76,10 @@ async function performTests() {
   ok(popup.getItems().length > 0, "'dump(d' gives non-zero results");
 
   // Test that 'dump(window.)' works.
-  await jstermComplete("dump(window.)", -1);
+  await jstermComplete("dump(window)", -1);
+  onUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString(".");
+  await onUpdated;
   ok(popup.getItems().length > 0, "'dump(window.' gave a list of suggestions");
 
   info("Add a property on the window object");
@@ -86,8 +89,9 @@ async function performTests() {
 
   // Make sure 'dump(window.d)' does not contain 'docfoobar'.
   onUpdated = jsterm.once("autocomplete-updated");
-  EventUtils.synthesizeKey("d");
+  EventUtils.sendString("d");
   await onUpdated;
+
   ok(!getPopupLabels(popup).includes("docfoobar"),
     "autocomplete cached results do not contain docfoobar. list has not been updated");
 }
