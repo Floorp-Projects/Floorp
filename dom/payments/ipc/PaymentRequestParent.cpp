@@ -147,6 +147,16 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
       MOZ_ASSERT(action);
       break;
     }
+    case IPCPaymentActionRequest::TIPCPaymentCleanupActionRequest: {
+      const IPCPaymentCleanupActionRequest& request = aRequest;
+      rv = CreateActionRequest(request.requestId(),
+                               nsIPaymentActionRequest::CLEANUP_ACTION,
+                               getter_AddRefs(action));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+      break;
+    }
     default: {
       return IPC_FAIL(this, "Unexpected request type");
     }

@@ -57,6 +57,7 @@ public:
                          const PaymentDetailsUpdate& aDetails,
                          bool aRequestShipping,
                          bool aDeferredShow);
+  nsresult CleanupPayment(PaymentRequest* aRequest);
 
   nsresult RespondPayment(PaymentRequest* aRequest,
                           const IPCPaymentActionResponse& aResponse);
