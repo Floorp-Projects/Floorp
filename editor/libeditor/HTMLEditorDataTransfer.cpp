@@ -1346,17 +1346,6 @@ HTMLEditor::HavePrivateHTMLFlavor(nsIClipboard* aClipboard)
   return false;
 }
 
-
-NS_IMETHODIMP
-HTMLEditor::Paste(int32_t aClipboardType)
-{
-  nsresult rv = PasteInternal(aClipboardType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
-
 nsresult
 HTMLEditor::PasteInternal(int32_t aClipboardType)
 {

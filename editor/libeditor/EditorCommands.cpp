@@ -559,7 +559,7 @@ PasteCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->Paste(nsIClipboard::kGlobalClipboard);
+  return textEditor->PasteAsAction(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP
