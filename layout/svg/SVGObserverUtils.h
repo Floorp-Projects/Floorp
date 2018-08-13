@@ -379,15 +379,15 @@ protected:
   virtual void OnRenderingChange() override;
 };
 
-class nsSVGMaskProperty final : public nsISupports
+class SVGMaskObserverList final : public nsISupports
 {
 public:
-  explicit nsSVGMaskProperty(nsIFrame* aFrame);
+  explicit SVGMaskObserverList(nsIFrame* aFrame);
 
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  const nsTArray<RefPtr<nsSVGPaintingProperty>>& GetProps() const
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& GetObservers() const
   {
     return mProperties;
   }
@@ -395,7 +395,7 @@ public:
   void ResolveImage(uint32_t aIndex);
 
 private:
-  virtual ~nsSVGMaskProperty() {}
+  virtual ~SVGMaskObserverList() {}
   nsTArray<RefPtr<nsSVGPaintingProperty>> mProperties;
   nsIFrame* mFrame;
 };
@@ -488,7 +488,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty,
                                       SVGFilterObserverListForCSSProp,
                                       DestroyFilterProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsSVGMaskProperty)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, SVGMaskObserverList)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsSVGPaintingProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, SVGMarkerObserver)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, SVGMarkerObserver)
@@ -511,7 +511,7 @@ public:
 
   struct EffectProperties {
     SVGFilterObserverListForCSSProp* mFilterObservers;
-    nsSVGMaskProperty*     mMask;
+    SVGMaskObserverList* mMaskObservers;
     nsSVGPaintingProperty* mClipPath;
 
     /**

@@ -383,9 +383,9 @@ SVGMarkerObserver::OnRenderingChange()
     nsChangeHint_RepaintFrame);
 }
 
-NS_IMPL_ISUPPORTS(nsSVGMaskProperty, nsISupports)
+NS_IMPL_ISUPPORTS(SVGMaskObserverList, nsISupports)
 
-nsSVGMaskProperty::nsSVGMaskProperty(nsIFrame* aFrame)
+SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame)
  : mFrame(aFrame)
 {
   const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
@@ -411,7 +411,7 @@ nsSVGMaskProperty::nsSVGMaskProperty(nsIFrame* aFrame)
 }
 
 void
-nsSVGMaskProperty::ResolveImage(uint32_t aIndex)
+SVGMaskObserverList::ResolveImage(uint32_t aIndex)
 {
   const nsStyleSVGReset* svgReset = mFrame->StyleSVGReset();
   MOZ_ASSERT(aIndex < svgReset->mMask.mImageCount);
@@ -518,15 +518,15 @@ GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
   return observers;
 }
 
-static nsSVGMaskProperty*
+static SVGMaskObserverList*
 GetOrCreateMaskProperty(nsIFrame* aFrame)
 {
-  nsSVGMaskProperty *prop =
+  SVGMaskObserverList *prop =
     aFrame->GetProperty(SVGObserverUtils::MaskProperty());
   if (prop)
     return prop;
 
-  prop = new nsSVGMaskProperty(aFrame);
+  prop = new SVGMaskObserverList(aFrame);
   NS_ADDREF(prop);
   aFrame->SetProperty(SVGObserverUtils::MaskProperty(), prop);
   return prop;
@@ -615,8 +615,8 @@ SVGObserverUtils::GetEffectProperties(nsIFrame* aFrame)
   }
 
   MOZ_ASSERT(style->mMask.mImageCount > 0);
-  result.mMask = style->HasMask()
-                 ? GetOrCreateMaskProperty(aFrame) : nullptr;
+  result.mMaskObservers = style->HasMask()
+                          ? GetOrCreateMaskProperty(aFrame) : nullptr;
 
   return result;
 }
@@ -678,14 +678,16 @@ nsTArray<nsSVGMaskFrame *>
 SVGObserverUtils::EffectProperties::GetMaskFrames()
 {
   nsTArray<nsSVGMaskFrame *> result;
-  if (!mMask)
+  if (!mMaskObservers) {
     return result;
+  }
 
   bool ok = true;
-  const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
-  for (size_t i = 0; i < props.Length(); i++) {
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& observers =
+    mMaskObservers->GetObservers();
+  for (size_t i = 0; i < observers.Length(); i++) {
     nsSVGMaskFrame* maskFrame = static_cast<nsSVGMaskFrame*>(
-      props[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok));
+      observers[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok));
     MOZ_ASSERT(!maskFrame || ok);
     if (!ok) {
       // We can not find the specific SVG mask resource in the downloaded SVG
@@ -694,7 +696,7 @@ SVGObserverUtils::EffectProperties::GetMaskFrames()
       // 2. The given resource id refers to a viewbox.
       //
       // Hand it over to the style image.
-      mMask->ResolveImage(i);
+      mMaskObservers->ResolveImage(i);
     }
     result.AppendElement(maskFrame);
   }
@@ -726,11 +728,12 @@ SVGObserverUtils::EffectProperties::HasNoOrValidClipPath()
 bool
 SVGObserverUtils::EffectProperties::HasNoOrValidMask()
 {
-  if (mMask) {
+  if (mMaskObservers) {
     bool ok = true;
-    const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
-    for (size_t i = 0; i < props.Length(); i++) {
-      props[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok);
+    const nsTArray<RefPtr<nsSVGPaintingProperty>>& observers =
+      mMaskObservers->GetObservers();
+    for (size_t i = 0; i < observers.Length(); i++) {
+      observers[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok);
       if (!ok) {
         return false;
       }
