@@ -32,7 +32,7 @@ class nsSVGPaintServerFrame;
 class nsSVGFilterFrame;
 class nsSVGMaskFrame;
 namespace mozilla {
-class nsSVGFilterChainObserver;
+class SVGFilterObserverList;
 }
 
 namespace mozilla {
@@ -236,22 +236,22 @@ protected:
  * It fires invalidations when the SVG filter element's id changes or when
  * the SVG filter element's content changes.
  *
- * The nsSVGFilterChainObserver class manages a list of SVGFilterObservers.
+ * The SVGFilterObserverList class manages a list of SVGFilterObservers.
  */
 class SVGFilterObserver final : public SVGIDRenderingObserver
 {
 public:
   SVGFilterObserver(nsIURI* aURI,
                     nsIContent* aObservingContent,
-                    nsSVGFilterChainObserver* aFilterChainObserver)
+                    SVGFilterObserverList* aFilterChainObserver)
     : SVGIDRenderingObserver(aURI, aObservingContent, false)
-    , mFilterChainObserver(aFilterChainObserver)
+    , mFilterObserverList(aFilterChainObserver)
   {
   }
 
   bool ReferencesValidResource() { return GetFilterFrame(); }
 
-  void DetachFromChainObserver() { mFilterChainObserver = nullptr; }
+  void DetachFromChainObserver() { mFilterObserverList = nullptr; }
 
   /**
    * @return the filter frame, or null if there is no filter frame
@@ -272,7 +272,7 @@ protected:
   virtual void OnRenderingChange() override;
 
 private:
-  nsSVGFilterChainObserver* mFilterChainObserver;
+  SVGFilterObserverList* mFilterObserverList;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGFilterObserver, NS_SVGFILTEROBSERVER_IID)
@@ -282,18 +282,18 @@ NS_DEFINE_STATIC_IID_ACCESSOR(SVGFilterObserver, NS_SVGFILTEROBSERVER_IID)
  * reference to SVG filters in a list of filters in a given 'filter' property.
  * e.g. filter: url(#svg-filter-1) blur(10px) url(#svg-filter-2);
  *
- * In the above example, the nsSVGFilterChainObserver will manage two
+ * In the above example, the SVGFilterObserverList will manage two
  * SVGFilterObservers, one for each of the references to SVG filters.  CSS
  * filters like "blur(10px)" don't reference filter elements, so they don't
  * need an SVGFilterObserver.  The style system invalidates changes to CSS
  * filters.
  */
-class nsSVGFilterChainObserver : public nsISupports
+class SVGFilterObserverList : public nsISupports
 {
 public:
-  nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
-                           nsIContent* aFilteredElement,
-                           nsIFrame* aFiltedFrame = nullptr);
+  SVGFilterObserverList(const nsTArray<nsStyleFilter>& aFilters,
+                        nsIContent* aFilteredElement,
+                        nsIFrame* aFiltedFrame = nullptr);
 
   bool ReferencesValidResources();
   bool IsInObserverLists() const;
@@ -301,10 +301,10 @@ public:
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsSVGFilterChainObserver)
+  NS_DECL_CYCLE_COLLECTION_CLASS(SVGFilterObserverList)
 
 protected:
-  virtual ~nsSVGFilterChainObserver();
+  virtual ~SVGFilterObserverList();
 
   virtual void OnRenderingChange() = 0;
 
@@ -320,13 +320,13 @@ private:
   nsTArray<RefPtr<SVGFilterObserver>> mObservers;
 };
 
-class nsSVGFilterProperty : public nsSVGFilterChainObserver
+class nsSVGFilterProperty : public SVGFilterObserverList
 {
 public:
   nsSVGFilterProperty(const nsTArray<nsStyleFilter>& aFilters,
                       nsIFrame* aFilteredFrame)
-    : nsSVGFilterChainObserver(aFilters, aFilteredFrame->GetContent(),
-                               aFilteredFrame)
+    : SVGFilterObserverList(aFilters, aFilteredFrame->GetContent(),
+                            aFilteredFrame)
     , mFrameReference(aFilteredFrame)
   {}
 
