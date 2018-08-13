@@ -428,8 +428,7 @@ HTMLEditor::SetFinalPosition(int32_t aX,
   // we want one transaction only from a user's point of view
   AutoPlaceholderBatch batchIt(this);
 
-  nsCOMPtr<Element> absolutelyPositionedObject =
-    do_QueryInterface(mAbsolutelyPositionedObject);
+  nsCOMPtr<Element> absolutelyPositionedObject = mAbsolutelyPositionedObject;
   NS_ENSURE_STATE(absolutelyPositionedObject);
   mCSSEditUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
                                       *nsGkAtoms::top, newY);

@@ -373,8 +373,8 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     if (! Matches(updater->mTargets, id))
       continue;
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(updater->mElement);
-    NS_ASSERTION(content != nullptr, "not an nsIContent");
+    nsIContent* content = updater->mElement;
+    NS_ASSERTION(content != nullptr, "mElement is null");
     if (! content)
       return NS_ERROR_UNEXPECTED;
 

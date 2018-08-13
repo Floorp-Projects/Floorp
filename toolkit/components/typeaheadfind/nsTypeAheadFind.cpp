@@ -541,8 +541,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
         mPresShell = do_GetWeakReference(presShell);
       }
 
-      nsCOMPtr<nsIDocument> document =
-        do_QueryInterface(presShell->GetDocument());
+      nsCOMPtr<nsIDocument> document = presShell->GetDocument();
       NS_ASSERTION(document, "Wow, presShell doesn't have document!");
       if (!document)
         return NS_ERROR_UNEXPECTED;
@@ -1086,8 +1085,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
       nsPresContext* presContext = presShell->GetPresContext();
       NS_ENSURE_TRUE(presContext, NS_OK);
 
-      nsCOMPtr<nsIDocument> document =
-        do_QueryInterface(presShell->GetDocument());
+      nsCOMPtr<nsIDocument> document = presShell->GetDocument();
       if (!document)
         return NS_ERROR_UNEXPECTED;
 
