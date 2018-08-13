@@ -143,6 +143,10 @@
           "enum": ["always", "never", "from-visited"]
         },
 
+        "RejectTracker": {
+          "type": "boolean"
+        },
+
         "ExpireAtSessionEnd": {
           "type": "boolean"
         },
