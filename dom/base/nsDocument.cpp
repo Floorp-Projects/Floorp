@@ -5318,83 +5318,80 @@ nsIDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
 
 #undef DO_STYLESHEET_NOTIFICATION
 
+static Element*
+GetCustomContentContainer(nsIPresShell* aShell)
+{
+  if (!aShell || !aShell->GetCanvasFrame()) {
+    return nullptr;
+  }
+
+  return aShell->GetCanvasFrame()->GetCustomContentContainer();
+}
+
+static void
+InsertAnonContentIntoCanvas(AnonymousContent& aAnonContent,
+                            nsIPresShell* aShell)
+{
+  Element* container = GetCustomContentContainer(aShell);
+  if (!container) {
+    return;
+  }
+
+  nsresult rv = container->AppendChildTo(&aAnonContent.ContentNode(), true);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  aShell->GetCanvasFrame()->ShowCustomContentContainer();
+}
+
 already_AddRefed<AnonymousContent>
 nsIDocument::InsertAnonymousContent(Element& aElement, ErrorResult& aRv)
 {
-  nsIPresShell* shell = GetShell();
-  if (!shell || !shell->GetCanvasFrame()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
   nsAutoScriptBlocker scriptBlocker;
-  nsCOMPtr<Element> container = shell->GetCanvasFrame()
-                                     ->GetCustomContentContainer();
-  if (!container) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
 
-  // Clone the node to avoid returning a direct reference
-  nsCOMPtr<nsINode> clonedElement = aElement.CloneNode(true, aRv);
+  // Clone the node to avoid returning a direct reference.
+  nsCOMPtr<nsINode> clone = aElement.CloneNode(true, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  // Insert the element into the container
-  nsresult rv;
-  rv = container->AppendChildTo(clonedElement->AsContent(), true);
-  if (NS_FAILED(rv)) {
-    return nullptr;
+  auto anonContent =
+    MakeRefPtr<AnonymousContent>(clone.forget().downcast<Element>());
+  mAnonymousContents.AppendElement(anonContent);
+
+  InsertAnonContentIntoCanvas(*anonContent, GetShell());
+
+  return anonContent.forget();
+}
+
+static void
+RemoveAnonContentFromCanvas(AnonymousContent& aAnonContent,
+                            nsIPresShell* aShell)
+{
+  RefPtr<Element> container = GetCustomContentContainer(aShell);
+  if (!container) {
+    return;
   }
-
-  RefPtr<AnonymousContent> anonymousContent =
-    new AnonymousContent(clonedElement->AsElement());
-  mAnonymousContents.AppendElement(anonymousContent);
-
-  shell->GetCanvasFrame()->ShowCustomContentContainer();
-
-  return anonymousContent.forget();
+  container->RemoveChild(aAnonContent.ContentNode(), IgnoreErrors());
 }
 
 void
 nsIDocument::RemoveAnonymousContent(AnonymousContent& aContent,
                                     ErrorResult& aRv)
 {
-  nsIPresShell* shell = GetShell();
-  if (!shell || !shell->GetCanvasFrame()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
   nsAutoScriptBlocker scriptBlocker;
-  nsCOMPtr<Element> container = shell->GetCanvasFrame()
-                                     ->GetCustomContentContainer();
-  if (!container) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+
+  auto index = mAnonymousContents.IndexOf(&aContent);
+  if (index == mAnonymousContents.NoIndex) {
     return;
   }
 
-  // Iterate over mAnonymousContents to find and remove the given node.
-  for (size_t i = 0, len = mAnonymousContents.Length(); i < len; ++i) {
-    if (mAnonymousContents[i] == &aContent) {
-      // Get the node from the customContent
-      nsCOMPtr<Element> node = aContent.GetContentNode();
+  mAnonymousContents.RemoveElementAt(index);
+  RemoveAnonContentFromCanvas(aContent, GetShell());
 
-      // Remove the entry in mAnonymousContents
-      mAnonymousContents.RemoveElementAt(i);
-
-      // Remove the node from its container
-      container->RemoveChild(*node, aRv);
-      if (aRv.Failed()) {
-        return;
-      }
-
-      break;
-    }
-  }
-  if (mAnonymousContents.IsEmpty()) {
-    shell->GetCanvasFrame()->HideCustomContentContainer();
+  if (mAnonymousContents.IsEmpty() && GetCustomContentContainer(GetShell())) {
+    GetShell()->GetCanvasFrame()->HideCustomContentContainer();
   }
 }
 

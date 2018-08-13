@@ -3,7 +3,7 @@
 <?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
-Check that XUL windows aren't supported, that the API throws, but doesn't crash.
+Check that XUL windows don't make insertAnonymousContent crash.
 -->
 <window title="Anonymous content in a XUL window"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -16,15 +16,8 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript">
     // Insert content
     let testElement = document.querySelector("box");
-
-    let didThrow = false;
-    try {
-      document.insertAnonymousContent(testElement);
-    } catch (e) {
-      didThrow = true;
-    }
-
-    ok(didThrow,
-      "Inserting anonymous content in a XUL document did throw an exception")
+    document.insertAnonymousContent(testElement);
+    ok(true,
+      "Inserting anonymous content in a XUL document did not crash")
   </script>
 </window>
