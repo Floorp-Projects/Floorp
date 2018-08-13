@@ -1,0 +1,507 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsIHTMLEditor.getSelectedElement()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = window.getSelection();
+
+  // nsIHTMLEditor.getSelectedElement() is probably designed to retrieve
+  // a[href]:not([href=""]), a[name]:not([name=""]), or void element like
+  // img since the behavior of normal inline elements are really odd.
+  // For example, if Selection is collapsed, it returns null unless the
+  // argument is "href".  If starting to look for an element with content
+  // iterator, it returns null if last node is not element and all elements
+  // in the selection matches with the argument, etc.  So, this API shouldn't
+  // be used as far as possible in mozilla-central.  However, this is still
+  // used by comm-central, so, this automated test is intended to keep the
+  // odd behavior.
+  // General rules:
+  //   1. If Selection selects an element node, i.e., both containers are
+  //      same node and start offset and end offset is start offset + 1.
+  //      (XXX However, if last child is selected, this path is not used.)
+  //   2. If the argument is "href", look for anchor elements whose href
+  //      attribute is not empty from container of anchor/focus of Selection
+  //      to <body> element.  Then, both result are same one, returns the node.
+  //      (i.e., this allows collapsed selection.)
+  //   3. If the Selection is collapsed, returns null.
+  //   4. Otherwise, listing up all nodes with content iterator (post-order).
+  //     4-1. When first element node does *not* match with the argument,
+  //          *returns* the element.
+  //     4-2. When first element node matches with the argument, returns
+  //          *next* element node.
+
+  editor.innerHTML = "<p>p1<b>b1</b><i>i1</i></p>";
+  editor.focus();
+
+  // <p>[]p1...
+  let range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild.firstChild, 0);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when selection is collapsed in a text node");
+
+  // <p>[p1]<b>...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild.firstChild, 2);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-2 nsIHTMLEditor::getSelectedElement(\"\") should return null when selection ends in a text node");
+
+  // <p>[p1<b>]b1</b>...
+  // In this case, only <b> element is listed up by the content iterator and
+  // the last node is the text node in the <b> element.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.firstChild, 0);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-3 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection ends at start of text node in <b> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#1-3 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection ends at start of text node in <b> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.nextSibling,
+     "#1-3 nsIHTMLEditor::getSelectedElement(\"i\") should return the <b> element when Selection ends at start of text node in <b> element");
+
+  // <p>[p1<b>b1]</b>...
+  // Same as above.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.firstChild, 2);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-4 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection ends at end of text node in a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#1-4 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection ends at end of text node in a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.nextSibling,
+     "#1-4 nsIHTMLEditor::getSelectedElement(\"i\") should return the <b> element when Selection ends at end of text node in <b> element");
+
+  // <p>[p1}<b>b1...
+  // Same above.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild.firstChild.nextSibling, 0);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-5 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection ends at text node and there are no elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#1-5 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection ends at text node and there are no elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     null,
+     "#1-5 nsIHTMLEditor::getSelectedElement(\"i\") should return null when Selection ends at text node and there are no elements");
+
+  // <p>p1<b>{b1}</b>...
+  // Same above.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling, 0);
+  range.setEnd(editor.firstChild.firstChild.nextSibling, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#1-6 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection only selects a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#1-6 nsIHTMLEditor::getSelectedElement(\"b\") should return null when Selection only selects a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     null,
+     "#1-6 nsIHTMLEditor::getSelectedElement(\"i\") should return null when Selection only selects a text node");
+
+  // <p>[p1<b>b1</b>}<i>...
+  // In this case, last listed up node is the <b> element.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild, 2);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"\") should return <b> element when Selection ends the <b> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"b\") should return <b> element when Selection ends the <b> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"i\") should return <b> element when Selection ends the <b> element but it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"href\") should return <b> element when Selection ends the <b> element but it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"anchor\") should return <b> element when Selection ends the <b> element but it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-7 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return <b> element when Selection ends the <b> element but it is unmatched");
+
+  // <p>[p1<b>b1</b><i>i1</i>}...
+  // In this case, last listed up node is the <i> element.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild, 3);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"\") should return <i> element when Selection ends <i> and it's second element node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"b\") should return <i> element when first element in Selection is matches and its next element is the <i>");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"i\") should return <b> element when first element in Selection is <b> and it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"href\") should return <b> element when first element in Selection is <b> and it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"anchor\") should return <b> element when first element in Selection is <b> and it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-8 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return <b> element when first element in Selection is <b> and it is unmatched");
+
+  // <p>p1{<b>b1</b>}<i>i1</i>...
+  range = document.createRange();
+  range.setStart(editor.firstChild, 1);
+  range.setEnd(editor.firstChild, 2);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-9 nsIHTMLEditor::getSelectedElement(\"\") should return <b> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-9 nsIHTMLEditor::getSelectedElement(\"b\") should return <b> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-9 nsIHTMLEditor::getSelectedElement(\"i\") should return <b> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-9 nsIHTMLEditor::getSelectedElement(\"href\") should return <b> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-9 nsIHTMLEditor::getSelectedElement(\"anchor\") should return <b> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#1-9 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return <b> element when only it is selected and unmatched");
+
+  // <p>p1<b>b1</b>{<i>i1</i>}</p>...
+  // XXX This case is not handled in #1 since it's last child, but should
+  //     behave same as there were next nodes.
+  range = document.createRange();
+  range.setStart(editor.firstChild, 2);
+  range.setEnd(editor.firstChild, 3);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-10 nsIHTMLEditor::getSelectedElement(\"\") should return <i> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-10 nsIHTMLEditor::getSelectedElement(\"b\") should return <i> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-10 nsIHTMLEditor::getSelectedElement(\"i\") should return <i> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-10 nsIHTMLEditor::getSelectedElement(\"href\") should return <i> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-10 nsIHTMLEditor::getSelectedElement(\"anchor\") should return <i> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#1-10 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return <i> element when only it is selected and unmatched");
+
+  // <p>{p1}<b>b1</b><i>...
+  range = document.createRange();
+  range.setStart(editor.firstChild, 0);
+  range.setEnd(editor.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  // XXX This is a bug obviously since nsIHTMLEditor.idl defines that
+  //     getSelectedElement() won't return non-element node.
+  todo_is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+          null,
+          "#1-11 nsIHTMLEditor::getSelectedElement(\"\") should return null when only a text node is selected");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#1-11 nsIHTMLEditor::getSelectedElement(\"b\") should return null when only a text node is selected");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     null,
+     "#1-11 nsIHTMLEditor::getSelectedElement(\"i\") should return null when only a text node is selected");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     null,
+     "#1-11 nsIHTMLEditor::getSelectedElement(\"href\") should return null when only a text node is selected");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     null,
+     "#1-11 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when only a text node is selected");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     null,
+     "#1-11 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return null when only a text node is selected");
+
+  editor.innerHTML = "<p>p1<b>b1</b><b>b2</b><b>b3</b></p>";
+  editor.focus();
+
+  // <p>p1<b>b[1</b><b>b2</b><b>b]3</b>...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#2-1 nsIHTMLEditor::getSelectedElement(\"\") should return the second <b> element when Selection is across 3 <b> elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#2-1 nsIHTMLEditor::getSelectedElement(\"b\") should return the second <b> element when Selection is across 3 <b> elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.firstChild.nextSibling,
+     "#2-1 nsIHTMLEditor::getSelectedElement(\"i\") should return the first <b> element when Selection is across 3 <b> elements and it is unmatched");
+
+  // <p>p[1<b>b1</b><b>b2</b><b>b]3</b>...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#2-2 nsIHTMLEditor::getSelectedElement(\"\") should return the second <b> element when Selection is across a text node and 3 <b> elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     editor.firstChild.firstChild.nextSibling.nextSibling,
+     "#2-2 nsIHTMLEditor::getSelectedElement(\"b\") should return the second <b> element when Selection is across a text node and 3 <b> elements");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.firstChild.nextSibling,
+     "#2-2 nsIHTMLEditor::getSelectedElement(\"i\") should return the first <b> element when Selection is across a text node and 3 <b> elements and it is unmatched");
+
+  editor.innerHTML = "<p>p1<b>b1<b>b2<b>b3</b></b></b>p2</p>";
+  editor.focus();
+
+  // <p>p1<b>b[1<b>b1-2<b>b]1-3</b>...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.firstChild.nextSibling.firstChild.nextSibling.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#3-1 nsIHTMLEditor::getSelectedElement(\"\") should return the second <b> element when Selection is across 3 <b> elements which are nested");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#3-1 nsIHTMLEditor::getSelectedElement(\"b\") should return the second <b> element when Selection is across 3 <b> elements which are nested");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     null,
+     "#3-1 nsIHTMLEditor::getSelectedElement(\"i\") should return the first <b> element when Selection is across 3 <b> elements which are nested and it is unmatched");
+
+  // <p>p[1<b>b1<b>b1-2<b>b]1-3</b>...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.firstChild.nextSibling.firstChild.nextSibling.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#3-2 nsIHTMLEditor::getSelectedElement(\"\") should return the second <b> element when Selection is across a text node and 3 <b> elements which are nested");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     null,
+     "#3-2 nsIHTMLEditor::getSelectedElement(\"b\") should return the second <b> element when Selection is across a text node and 3 <b> elements which are nested");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     null,
+     "#3-2 nsIHTMLEditor::getSelectedElement(\"i\") should return the first <b> element when Selection is across a text node and 3 <b> elements which are nested and it is unmatched");
+
+  // <p>p1<b>b1<b>b1-2<b>b[1-3</b></b></b>p]2...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling.firstChild.nextSibling.firstChild.nextSibling.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.nextSibling, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling.firstChild.nextSibling,
+     "#3-3 nsIHTMLEditor::getSelectedElement(\"\") should return the second <b> element when Selection is across 3 <b> elements which are nested and a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("b")),
+     editor.firstChild.firstChild.nextSibling.firstChild.nextSibling,
+     "#3-3 nsIHTMLEditor::getSelectedElement(\"b\") should return the second <b> element when Selection is across 3 <b> elements which are nested and a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("i")),
+     editor.firstChild.firstChild.nextSibling.firstChild.nextSibling.firstChild.nextSibling,
+     "#3-3 nsIHTMLEditor::getSelectedElement(\"i\") should return the third <b> element when Selection is across 3 <b> elements which are nested and a text node, and it is unmatched");
+
+  editor.innerHTML = "<p><b>b1</b><a href=\"about:blank\">a1</a><a href=\"about:blank\">a2</a><a name=\"foo\">a3</a><b>b2</b></p>";
+  editor.focus();
+
+  // <p><b>b1</b>{<a href="...">a1</a>}<a href="...">a2...
+  range = document.createRange();
+  range.setStart(editor.firstChild, 1);
+  range.setEnd(editor.firstChild, 2);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-1 nsIHTMLEditor::getSelectedElement(\"\") should return the first <a> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-1 nsIHTMLEditor::getSelectedElement(\"href\") should return the first <a> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-1 nsIHTMLEditor::getSelectedElement(\"anchor\") should return the first <a> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-1 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return the first <a> element when only it is selected and unmatched");
+
+  // <p><b>b1</b><a href="...">a[]1</a><a href="...">a2...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#4-2 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is collapsed");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-2 nsIHTMLEditor::getSelectedElement(\"href\") should return the first <a> element when Selection is collapsed in the element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     null,
+     "#4-2 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection is collapsed");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     null,
+     "#4-2 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return null when Selection is collapsed");
+
+  // <p><b>b1</b><a href="...">a[1]</a><a href="...">a2...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.firstChild, 2);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#4-3 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is in a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-3 nsIHTMLEditor::getSelectedElement(\"href\") should return the first <a> element when Selection is in the element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     null,
+     "#4-3 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection is in a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     null,
+     "#4-3 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return null when Selection is in a text node");
+
+  // <p><b>b1</b><a href="...">a[1</a><a href="...">a]2...
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.nextSibling.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#4-4 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection ends in a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     null,
+     "#4-4 nsIHTMLEditor::getSelectedElement(\"href\") should return null when Selection crosses multiple <a> elements and ends in a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-4 nsIHTMLEditor::getSelectedElement(\"anchor\") should return the first <a> element when it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     editor.firstChild.firstChild.nextSibling,
+     "#4-4 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return the first <a> element when it is unmatched");
+
+  // <p><b>b1</b><a href="...">a1</a><a href="...">a2</a>{<a name="...">a3</a>}<b>b2</b></p>
+  range = document.createRange();
+  range.setStart(editor.firstChild, 3);
+  range.setEnd(editor.firstChild, 4);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling,
+     "#4-5 nsIHTMLEditor::getSelectedElement(\"\") should return the third <a> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling,
+     "#4-5 nsIHTMLEditor::getSelectedElement(\"href\") should return the third <a> element when only it is selected and unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling,
+     "#4-5 nsIHTMLEditor::getSelectedElement(\"anchor\") should return the third <a> element when only it is selected and matched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling,
+     "#4-5 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return the third <a> element when only it is selected and matched");
+
+  // <p><b>b1</b><a href="...">a1</a><a href="...">a2</a><a name="...">a[]3</a><b>b2</b></p>
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild, 1);
+  range.setEnd(editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#4-6 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection is collapsed in a text node");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     editor.firstChild.firstChild.nextSibling.nextSibling.nextSibling,
+     "#4-6 nsIHTMLEditor::getSelectedElement(\"href\") should return the 3rd <a> element when Selection is collapsed in named anchor and it is unmatched");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     null,
+     "#4-6 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection is collapsed in a text node even in named <a> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("namedanchor")),
+     null,
+     "#4-6 nsIHTMLEditor::getSelectedElement(\"namedanchor\") should return null when Selection is collapsed in a text node even in named <a> element");
+
+  SimpleTest.finish();
+});
+
+function getHTMLEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsIHTMLEditor);
+}
+
+</script>
+</body>
+
+</html>
