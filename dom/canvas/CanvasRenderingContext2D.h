@@ -45,7 +45,7 @@ class ImageData;
 class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
-class CanvasFilterChainObserver;
+class SVGFilterObserverListForCanvas;
 class CanvasPath;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
@@ -1162,7 +1162,7 @@ protected:
   }
 
   friend class CanvasGeneralPattern;
-  friend class CanvasFilterChainObserver;
+  friend class SVGFilterObserverListForCanvas;
   friend class AdjustedTarget;
   friend class AdjustedTargetForShadow;
   friend class AdjustedTargetForFilter;
