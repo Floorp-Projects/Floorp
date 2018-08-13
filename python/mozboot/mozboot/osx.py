@@ -503,8 +503,8 @@ class OSXBootstrapper(BaseBootstrapper):
         return active_name.lower()
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
-        # We installed these via homebrew earlier.
-        pass
+        # We installed clang via homebrew earlier.
+        self.ensure_rust_package('cbindgen')
 
     def ensure_node_packages(self, state_dir, checkout_root):
         # XXX from necessary?
