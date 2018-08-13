@@ -4491,6 +4491,35 @@ JSScript::AutoDelazify::dropScript()
     script_ = nullptr;
 }
 
+void
+JSScript::setTopLevelPrivate(void* value)
+{
+    MOZ_ASSERT(module() || isGlobalCode());
+
+    Scope* scope = bodyScope();
+    if (scope->is<GlobalScope>())
+        scope->as<GlobalScope>().setTopLevelPrivate(value);
+    else if (scope->is<ModuleScope>())
+        scope->as<ModuleScope>().setTopLevelPrivate(value);
+    else
+        MOZ_CRASH("Unexpected scope kind");
+}
+
+void*
+JSScript::maybeTopLevelPrivate() const
+{
+    if (!module() && !isGlobalCode())
+        return nullptr;
+
+    Scope* scope = bodyScope();
+    if (scope->is<GlobalScope>())
+        return scope->as<GlobalScope>().topLevelPrivate();
+    else if (scope->is<ModuleScope>())
+        return scope->as<ModuleScope>().topLevelPrivate();
+
+    MOZ_CRASH("Unexpected scope kind");
+}
+
 JS::ubi::Base::Size
 JS::ubi::Concrete<JSScript>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
