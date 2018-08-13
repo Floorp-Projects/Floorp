@@ -391,45 +391,43 @@ CubebDeviceEnumerator::EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInf
 {
   aOutDevices.Clear();
 
-#ifdef ANDROID
-  // Bug 1473346: enumerating devices is not supported on Android in cubeb,
-  // simply state that there is a single mic, that it is the default, and has a
-  // single channel. All the other values are made up and are not to be used.
-  RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(nullptr,
-                                                     NS_ConvertUTF8toUTF16(""),
-                                                     NS_ConvertUTF8toUTF16(""),
-                                                     NS_ConvertUTF8toUTF16(""),
-                                                     CUBEB_DEVICE_TYPE_INPUT,
-                                                     CUBEB_DEVICE_STATE_ENABLED,
-                                                     CUBEB_DEVICE_PREF_ALL,
-                                                     CUBEB_DEVICE_FMT_ALL,
-                                                     CUBEB_DEVICE_FMT_S16NE,
-                                                     1,
-                                                     44100,
-                                                     44100,
-                                                     41000,
-                                                     410,
-                                                     128);
-  if (mDevices.IsEmpty()) {
-    mDevices.AppendElement(info);
-  }
-  aOutDevices.AppendElements(mDevices);
-#else
   cubeb* context = GetCubebContext();
-
   if (!context) {
     return;
   }
 
   MutexAutoLock lock(mMutex);
 
+#ifdef ANDROID
+  if (mDevices.IsEmpty()) {
+    // Bug 1473346: enumerating devices is not supported on Android in cubeb,
+    // simply state that there is a single mic, that it is the default, and has a
+    // single channel. All the other values are made up and are not to be used.
+    RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(nullptr,
+                                                       NS_ConvertUTF8toUTF16(""),
+                                                       NS_ConvertUTF8toUTF16(""),
+                                                       NS_ConvertUTF8toUTF16(""),
+                                                       CUBEB_DEVICE_TYPE_INPUT,
+                                                       CUBEB_DEVICE_STATE_ENABLED,
+                                                       CUBEB_DEVICE_PREF_ALL,
+                                                       CUBEB_DEVICE_FMT_ALL,
+                                                       CUBEB_DEVICE_FMT_S16NE,
+                                                       1,
+                                                       44100,
+                                                       44100,
+                                                       41000,
+                                                       410,
+                                                       128);
+    mDevices.AppendElement(info);
+  }
+#else
   if (mDevices.IsEmpty() || mManualInvalidation) {
     mDevices.Clear();
     CubebUtils::GetDeviceCollection(mDevices, CubebUtils::Input);
   }
+#endif
 
   aOutDevices.AppendElements(mDevices);
-#endif
 }
 
 already_AddRefed<AudioDeviceInfo>
