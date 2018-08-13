@@ -15,3 +15,12 @@ assorted-dom:
     url: https://github.com/mozilla/perf-automation/releases/download/assorted-dom-v1/assorted-dom-4befd28725c6.zip
     sha256: e4eafe4a8e70c7ae6d42d668d3b1640b9fd9b696c486ff35aab754c368f78c2c
     size: 402665
+
+web-tooling-benchmark:
+  description: Web Tooling Benchmark
+  fetch:
+    type: static-url
+    artifact-name: web-tooling-benchmark.zip
+    url: https://github.com/mozilla/perf-automation/releases/download/V1/web-tooling-benchmark-b2ac25c897c9.zip
+    sha256: 93b0b51df0cec3ca9bfa0bdf81d782306dcf18532e39b3ff3180409125daaff1
+    size: 5444135
