@@ -44,6 +44,8 @@ def apply_patches():
     # Cherry-pick upstream patch for avoiding --enable-experimental
     # from https://codereview.webrtc.org/2654633002
     os.system("patch -p1 < vp9_svc.patch")
+    # Cherrypick fix from upstream
+    os.system("patch -p3 < bug1480092.patch")
 
 
 def update_readme(commit):
