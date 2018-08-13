@@ -230,6 +230,8 @@ protected:
 
   void ForEachColumnRule(const std::function<void(const nsRect& lineRect)>& aSetLineRect,
                          const nsPoint& aPt);
+
+  static nscoord ClampUsedColumnWidth(const nsStyleCoord& aColumnWidth);
 };
 
 #endif // nsColumnSetFrame_h___
