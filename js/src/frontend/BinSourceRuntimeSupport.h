@@ -64,6 +64,8 @@ struct BinaryASTSupport {
         }
     };
 
+    BinaryASTSupport();
+
     JS::Result<const BinVariant*>  binVariant(JSContext*, const CharSlice);
     JS::Result<const BinField*> binField(JSContext*, const CharSlice);
     JS::Result<const BinKind*> binKind(JSContext*,  const CharSlice);

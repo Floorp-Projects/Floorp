@@ -58,8 +58,7 @@ void
 EnvironmentCoordinateNameCache::purge()
 {
     shape = nullptr;
-    if (map.initialized())
-        map.finish();
+    map.clearAndCompact();
 }
 
 PropertyName*
@@ -69,14 +68,11 @@ js::EnvironmentCoordinateName(EnvironmentCoordinateNameCache& cache, JSScript* s
     Shape* shape = EnvironmentCoordinateToEnvironmentShape(script, pc);
     if (shape != cache.shape && shape->slot() >= ENV_COORDINATE_NAME_THRESHOLD) {
         cache.purge();
-        if (cache.map.init(shape->slot())) {
+        if (cache.map.reserve(shape->slot())) {
             cache.shape = shape;
             Shape::Range<NoGC> r(shape);
             while (!r.empty()) {
-                if (!cache.map.putNew(r.front().slot(), r.front().propid())) {
-                    cache.purge();
-                    break;
-                }
+                cache.map.putNewInfallible(r.front().slot(), r.front().propid());
                 r.popFront();
             }
         }
@@ -2414,13 +2410,7 @@ DebugEnvironments::DebugEnvironments(JSContext* cx, Zone* zone)
 
 DebugEnvironments::~DebugEnvironments()
 {
-    MOZ_ASSERT_IF(missingEnvs.initialized(), missingEnvs.empty());
-}
-
-bool
-DebugEnvironments::init()
-{
-    return proxiedEnvs.init() && missingEnvs.init() && liveEnvs.init();
+    MOZ_ASSERT(missingEnvs.empty());
 }
 
 void
@@ -2524,11 +2514,6 @@ DebugEnvironments::ensureRealmData(JSContext* cx)
     auto debugEnvs = cx->make_unique<DebugEnvironments>(cx, cx->zone());
     if (!debugEnvs)
         return nullptr;
-
-    if (!debugEnvs->init()) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
 
     realm->debugEnvsRef() = std::move(debugEnvs);
     return realm->debugEnvs();
@@ -3687,8 +3672,6 @@ static bool
 AnalyzeEntrainedVariablesInScript(JSContext* cx, HandleScript script, HandleScript innerScript)
 {
     PropertyNameSet remainingNames(cx);
-    if (!remainingNames.init())
-        return false;
 
     for (BindingIter bi(script); bi; bi++) {
         if (bi.closedOver()) {

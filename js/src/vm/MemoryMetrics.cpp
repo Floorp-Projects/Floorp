@@ -270,14 +270,6 @@ struct StatsClosure
         opv(v),
         anonymize(anon)
     {}
-
-    bool init() {
-        return seenSources.init() &&
-               wasmSeenMetadata.init() &&
-               wasmSeenBytes.init() &&
-               wasmSeenCode.init() &&
-               wasmSeenTables.init();
-    }
 };
 
 static void
@@ -626,7 +618,7 @@ ZoneStats::initStrings()
 {
     isTotals = false;
     allStrings = js_new<StringsHashMap>();
-    if (!allStrings || !allStrings->init()) {
+    if (!allStrings) {
         js_delete(allStrings);
         allStrings = nullptr;
         return false;
@@ -639,7 +631,7 @@ RealmStats::initClasses()
 {
     isTotals = false;
     allClasses = js_new<ClassesHashMap>();
-    if (!allClasses || !allClasses->init()) {
+    if (!allClasses) {
         js_delete(allClasses);
         allClasses = nullptr;
         return false;
@@ -772,8 +764,6 @@ CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVis
 
     // Take the per-compartment measurements.
     StatsClosure closure(rtStats, opv, anonymize);
-    if (!closure.init())
-        return false;
     IterateHeapUnbarriered(cx, &closure,
                            StatsZoneCallback,
                            StatsRealmCallback,
@@ -935,8 +925,6 @@ AddSizeOfTab(JSContext* cx, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
     // Take the per-compartment measurements. No need to anonymize because
     // these measurements will be aggregated.
     StatsClosure closure(&rtStats, opv, /* anonymize = */ false);
-    if (!closure.init())
-        return false;
     IterateHeapUnbarrieredForZone(cx, zone, &closure,
                                   StatsZoneCallback,
                                   StatsRealmCallback,

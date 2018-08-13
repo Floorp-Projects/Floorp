@@ -171,8 +171,8 @@ JSRuntime::initializeAtoms(JSContext* cx)
         return atoms_->init();
     }
 
-    permanentAtomsDuringInit_ = js_new<AtomSet>();
-    if (!permanentAtomsDuringInit_ || !permanentAtomsDuringInit_->init(JS_PERMANENT_ATOM_SIZE))
+    permanentAtomsDuringInit_ = js_new<AtomSet>(JS_PERMANENT_ATOM_SIZE);
+    if (!permanentAtomsDuringInit_)
         return false;
 
     staticStrings = js_new<StaticStrings>();
@@ -270,6 +270,7 @@ class AtomsTable::AutoLock
 
 AtomsTable::Partition::Partition(uint32_t index)
   : lock(MutexId { mutexid::AtomsTable.name, mutexid::AtomsTable.order + index }),
+    atoms(InitialTableSize),
     atomsAddedWhileSweeping(nullptr)
 {}
 
@@ -290,8 +291,6 @@ AtomsTable::init()
     for (size_t i = 0; i < PartitionCount; i++) {
         partitions[i] = js_new<Partition>(i);
         if (!partitions[i])
-            return false;
-        if (!partitions[i]->atoms.init(InitialTableSize))
             return false;
     }
     return true;
@@ -495,7 +494,7 @@ AtomsTable::startIncrementalSweep()
         auto& part = *partitions[i];
 
         auto newAtoms = js_new<AtomSet>();
-        if (!newAtoms || !newAtoms->init()) {
+        if (!newAtoms) {
             ok = false;
             break;
         }

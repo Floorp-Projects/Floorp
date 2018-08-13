@@ -585,8 +585,8 @@ class StringTable
 {
 public:
   StringTable()
+    : mSet(64)
   {
-    MOZ_ALWAYS_TRUE(mSet.init(64));
   }
 
   const char*
@@ -1131,8 +1131,8 @@ GatherUsedStackTraces(StackTraceSet& aStackTraces)
   MOZ_ASSERT(gStateLock->IsLocked());
   MOZ_ASSERT(Thread::Fetch()->InterceptsAreBlocked());
 
-  aStackTraces.finish();
-  MOZ_ALWAYS_TRUE(aStackTraces.init(512));
+  aStackTraces.clear();
+  MOZ_ALWAYS_TRUE(aStackTraces.reserve(512));
 
   for (auto iter = gLiveBlockTable->iter(); !iter.done(); iter.next()) {
     iter.get().AddStackTracesToTable(aStackTraces);
@@ -1576,18 +1576,14 @@ Init(malloc_table_t* aMallocTable)
   {
     AutoLockState lock;
 
-    gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>();
-    MOZ_ALWAYS_TRUE(gStackTraceTable->init(8192));
-
-    gLiveBlockTable = InfallibleAllocPolicy::new_<LiveBlockTable>();
-    MOZ_ALWAYS_TRUE(gLiveBlockTable->init(8192));
+    gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>(8192);
+    gLiveBlockTable = InfallibleAllocPolicy::new_<LiveBlockTable>(8192);
 
     // Create this even if the mode isn't Cumulative (albeit with a small
     // size), in case the mode is changed later on (as is done by SmokeDMD.cpp,
     // for example).
-    gDeadBlockTable = InfallibleAllocPolicy::new_<DeadBlockTable>();
     size_t tableSize = gOptions->IsCumulativeMode() ? 8192 : 4;
-    MOZ_ALWAYS_TRUE(gDeadBlockTable->init(tableSize));
+    gDeadBlockTable = InfallibleAllocPolicy::new_<DeadBlockTable>(tableSize);
   }
 
   return true;
@@ -1712,9 +1708,9 @@ class ToIdStringConverter final
 {
 public:
   ToIdStringConverter()
-    : mNextId(0)
+    : mIdMap(512)
+    , mNextId(0)
   {
-    MOZ_ALWAYS_TRUE(mIdMap.init(512));
   }
 
   // Converts a pointer to a unique ID. Reuses the existing ID for the pointer
@@ -1829,11 +1825,8 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
   // Allocate this on the heap instead of the stack because it's fairly large.
   auto locService = InfallibleAllocPolicy::new_<CodeAddressService>();
 
-  StackTraceSet usedStackTraces;
-  MOZ_ALWAYS_TRUE(usedStackTraces.init(512));
-
-  PointerSet usedPcs;
-  MOZ_ALWAYS_TRUE(usedPcs.init(512));
+  StackTraceSet usedStackTraces(512);
+  PointerSet usedPcs(512);
 
   size_t iscSize;
 
@@ -1910,8 +1903,7 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
       if (!gOptions->IsScanMode()) {
         // At this point we typically have many LiveBlocks that differ only in
         // their address. Aggregate them to reduce the size of the output file.
-        AggregatedLiveBlockTable agg;
-        MOZ_ALWAYS_TRUE(agg.init(8192));
+        AggregatedLiveBlockTable agg(8192);
         for (auto iter = gLiveBlockTable->iter(); !iter.done(); iter.next()) {
           const LiveBlock& b = iter.get();
           b.AddStackTracesToTable(usedStackTraces);

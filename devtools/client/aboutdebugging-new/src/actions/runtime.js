@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { BrowserToolboxProcess } =
+  require("resource://devtools/client/framework/ToolboxProcess.jsm");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
@@ -15,10 +17,15 @@ const {
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
+  REQUEST_EXTENSIONS_FAILURE,
+  REQUEST_EXTENSIONS_START,
+  REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_FAILURE,
   REQUEST_TABS_START,
   REQUEST_TABS_SUCCESS,
 } = require("../constants");
+
+let browserToolboxProcess = null;
 
 function connectRuntime() {
   return async (dispatch, getState) => {
@@ -32,6 +39,7 @@ function connectRuntime() {
       await client.connect();
 
       dispatch({ type: CONNECT_RUNTIME_SUCCESS, client });
+      dispatch(requestExtensions());
       dispatch(requestTabs());
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
@@ -59,6 +67,18 @@ function disconnectRuntime() {
 function inspectDebugTarget(type, id) {
   if (type === DEBUG_TARGETS.TAB) {
     window.open(`about:devtools-toolbox?type=tab&id=${ id }`);
+  } else if (type === DEBUG_TARGETS.EXTENSION) {
+    // Close previous addon debugging toolbox.
+    if (browserToolboxProcess) {
+      browserToolboxProcess.close();
+    }
+
+    browserToolboxProcess = BrowserToolboxProcess.init({
+      addonID: id,
+      onClose: () => {
+        browserToolboxProcess = null;
+      }
+    });
   } else {
     console.error(`Failed to inspect the debug target of type: ${ type } id: ${ id }`);
   }
@@ -83,9 +103,33 @@ function requestTabs() {
   };
 }
 
+function requestExtensions() {
+  return async (dispatch, getState) => {
+    dispatch({ type: REQUEST_EXTENSIONS_START });
+
+    const client = getState().runtime.client;
+
+    try {
+      const { addons } = await client.listAddons();
+      const extensions = addons.filter(a => a.debuggable);
+      const installedExtensions = extensions.filter(e => !e.temporarilyInstalled);
+      const temporaryExtensions = extensions.filter(e => e.temporarilyInstalled);
+
+      dispatch({
+        type: REQUEST_EXTENSIONS_SUCCESS,
+        installedExtensions,
+        temporaryExtensions,
+      });
+    } catch (e) {
+      dispatch({ type: REQUEST_EXTENSIONS_FAILURE, error: e.message });
+    }
+  };
+}
+
 module.exports = {
   connectRuntime,
   disconnectRuntime,
   inspectDebugTarget,
   requestTabs,
+  requestExtensions,
 };

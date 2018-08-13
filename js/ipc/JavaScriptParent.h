@@ -17,10 +17,9 @@ namespace jsipc {
 class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
 {
   public:
-    JavaScriptParent() : savedNextCPOWNumber_(1) {}
+    JavaScriptParent();
     virtual ~JavaScriptParent();
 
-    bool init();
     void trace(JSTracer* trc);
 
     void drop(JSObject* obj);

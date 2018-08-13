@@ -174,7 +174,6 @@ void
 Bench_Cpp_MozHashSet(const Params* aParams, void** aVals, size_t aLen)
 {
   mozilla::HashSet<void*, mozilla::DefaultHasher<void*>, MallocAllocPolicy> hs;
-  MOZ_RELEASE_ASSERT(hs.init());
 
   for (size_t j = 0; j < aParams->mNumInserts; j++) {
     auto p = hs.lookupForAdd(aVals[j]);

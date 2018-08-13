@@ -4030,7 +4030,7 @@ ParseModule(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo, UniqueC
         return nullptr;
 
     auto* module = new(c.lifo) AstModule(c.lifo);
-    if (!module || !module->init())
+    if (!module)
         return nullptr;
 
     if (c.ts.peek().kind() == WasmToken::Text) {
@@ -4172,16 +4172,6 @@ class Resolver
         typeMap_(lifo),
         targetStack_(lifo)
     {}
-    bool init() {
-        return funcTypeMap_.init() &&
-               funcMap_.init() &&
-               importMap_.init() &&
-               tableMap_.init() &&
-               memoryMap_.init() &&
-               typeMap_.init() &&
-               varMap_.init() &&
-               globalMap_.init();
-    }
     void beginFunc() {
         varMap_.clear();
         MOZ_ASSERT(targetStack_.empty());
@@ -4721,9 +4711,6 @@ static bool
 ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
 {
     Resolver r(lifo, error);
-
-    if (!r.init())
-        return false;
 
     size_t numTypes = module->types().length();
     for (size_t i = 0; i < numTypes; i++) {
