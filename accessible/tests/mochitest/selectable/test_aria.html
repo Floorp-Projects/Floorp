@@ -37,10 +37,29 @@
       // ////////////////////////////////////////////////////////////////////////
       // role="tablist"
 
-      id = "tablist";
+      id = "tablist_single";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
 
+      testSelectableSelection(id, [ ]);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // role="tablist" aria-multiselectable
+
+      id = "tablist_multi";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      testSelectableSelection(id, [ ]);
+
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+      select.addItemToSelection(0);
+      testSelectableSelection(id, [ "tab_multi1" ]);
+      select.removeItemFromSelection(0);
+      testSelectableSelection(id, [ ]);
+      select.selectAll();
+      testSelectableSelection(id, [ "tab_multi1", "tab_multi2" ]);
+      select.unselectAll();
       testSelectableSelection(id, [ ]);
 
       // ////////////////////////////////////////////////////////////////////////
@@ -145,9 +164,14 @@
   <pre id="test">
   </pre>
 
-  <div role="tablist" id="tablist">
+  <div role="tablist" id="tablist_single">
     <div role="tab">tab1</div>
     <div role="tab">tab2</div>
+  </div>
+
+  <div role="tablist" id="tablist_multi" aria-multiselectable="true">
+    <div role="tab" id="tab_multi1">tab1</div>
+    <div role="tab" id="tab_multi2">tab2</div>
   </div>
 
   <div role="listbox" id="listbox1">

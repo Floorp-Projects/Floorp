@@ -1,0 +1,21 @@
+<script>
+var count = 0;
+
+function go() {
+  document.execCommand("delete", false);
+}
+function eh() {
+  count++;
+  if (count >= 3) {
+    return;
+  }
+  window.addEventListener("DOMNodeInserted", eh);
+  document.execCommand("removeFormat", false);
+  document.execCommand("insertText", false, "1");
+}
+</script>
+<body onload=go()>
+<ol oninput="eh()" contenteditable="true">
+<!-- x -->
+<s>
+<!-- x -->

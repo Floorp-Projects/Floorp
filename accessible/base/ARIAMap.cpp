@@ -1133,7 +1133,8 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eNoLiveAttr,
     eSelect,
     states::HORIZONTAL,
-    eARIAOrientation
+    eARIAOrientation,
+    eARIAMultiSelectable
   },
   { // tabpanel
     &nsGkAtoms::tabpanel,
