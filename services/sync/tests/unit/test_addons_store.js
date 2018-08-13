@@ -17,6 +17,9 @@ const HTTP_PORT = 8888;
 const prefs = new Preferences();
 
 prefs.set("extensions.getAddons.get.url", "http://localhost:8888/search/guid:%IDS%");
+// Note that all compat-override URLs currently 404, but that's OK - the main
+// thing is to avoid us hitting the real AMO.
+prefs.set("extensions.getAddons.compatOverides.url", "http://localhost:8888/compat-override/guid:%IDS%");
 prefs.set("extensions.install.requireSecureOrigin", false);
 
 const SYSTEM_ADDON_ID = "system1@tests.mozilla.org";
@@ -609,8 +612,56 @@ add_task(async function test_wipe_and_install() {
   let fetched = await AddonManager.getAddonByID(record.addonID);
   Assert.ok(!!fetched);
 
+  // wipe again to we are left with a clean slate.
+  await store.wipe();
+
   await promiseStopServer(server);
 });
+
+// STR for what this is testing:
+// * Either:
+//   * Install then remove an addon, then delete addons.json from the profile
+//     or corrupt it (in which case the addon manager will remove it)
+//   * Install then remove an addon while addon caching is disabled, then
+//     re-enable addon caching.
+// * Install the same addon in a different profile, sync it.
+// * Sync this profile
+// Before bug 1467904, the addon would fail to install because this profile
+// has a copy of the addon in our addonsreconciler.json, but the addon manager
+// does *not* have a copy in its cache, and repopulating that cache would not
+// re-add it as the addon is no longer installed locally.
+add_task(async function test_incoming_reconciled_but_not_cached() {
+  _("Ensure we handle incoming records our reconciler has but the addon cache does not");
+
+  let addonid = "bootstrap1@tests.mozilla.org";
+  // Make sure addon is not installed.
+  let addon = await AddonManager.getAddonByID(addonid);
+  Assert.equal(null, addon);
+
+  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
+
+  addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
+  Assert.notEqual((await AddonManager.getAddonByID(addonid)), null);
+  await uninstallAddon(addon, reconciler);
+
+  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
+
+  // now pretend it is incoming.
+  let server = createAndStartHTTPServer(HTTP_PORT);
+  let guid = Utils.makeGUID();
+  let record = createRecordForThisApp(guid, addonid, true, false);
+
+  let failed = await store.applyIncomingBatch([record]);
+  Assert.equal(0, failed.length);
+
+  Assert.notEqual((await AddonManager.getAddonByID(addonid)), null);
+
+  await promiseStopServer(server);
+});
+// NOTE: The test above must be the last test run due to the addon cache
+// being trashed. It is probably possible to fix that by running, eg,
+// AddonRespository.backgroundUpdateCheck() to rebuild the cache, but that
+// requires implementing more AMO functionality in our test server
 
 add_task(async function cleanup() {
   // There's an xpcom-shutdown hook for this, but let's give this a shot.
