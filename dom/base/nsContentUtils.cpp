@@ -8902,16 +8902,24 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
       return false;
     }
 
-    // FIXME: this is wrong. This method is called also with aWindow and a null
-    // aChannel.
-    nsCOMPtr<mozIDOMWindowProxy> win;
-    nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel,
-                                                         getter_AddRefs(win));
-    NS_ENSURE_SUCCESS(rv, false);
-    auto* pwin = nsPIDOMWindowOuter::From(win);
+    nsCOMPtr<nsPIDOMWindowOuter> pwin;
+    if (aWindow) {
+      auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
+      if (outer) {
+        pwin = outer->GetTopOuter();
+      }
+    } else if (aChannel) {
+      nsCOMPtr<mozIDOMWindowProxy> win;
+      nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel,
+                                                           getter_AddRefs(win));
+      NS_ENSURE_SUCCESS(rv, false);
+      pwin = nsPIDOMWindowOuter::From(win);
+    }
 
-    pwin->NotifyContentBlockingState(
-      nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, aChannel);
+    if (pwin) {
+      pwin->NotifyContentBlockingState(
+        nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, aChannel);
+    }
   }
   return disabled;
 }
