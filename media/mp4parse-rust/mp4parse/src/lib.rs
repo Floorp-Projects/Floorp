@@ -25,6 +25,9 @@ extern crate mp4parse_fallible;
 #[cfg(feature = "mp4parse_fallible")]
 use mp4parse_fallible::FallibleVec;
 
+#[macro_use]
+mod macros;
+
 mod boxes;
 use boxes::{BoxType, FourCC};
 
@@ -436,6 +439,7 @@ impl MediaContext {
 pub enum TrackType {
     Audio,
     Video,
+    Metadata,
     Unknown,
 }
 
@@ -657,15 +661,6 @@ fn skip_box_remain<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
         len
     };
     skip(src, remain)
-}
-
-macro_rules! check_parser_state {
-    ( $src:expr ) => {
-        if $src.limit() > 0 {
-            debug!("bad parser state: {} content bytes left", $src.limit());
-            return Err(Error::InvalidData("unread box content or bad parser sync"));
-        }
-    }
 }
 
 /// Read the contents of a box, including sub boxes.
@@ -918,6 +913,7 @@ fn read_mdia<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
                 match hdlr.handler_type.value.as_ref() {
                     "vide" => track.track_type = TrackType::Video,
                     "soun" => track.track_type = TrackType::Audio,
+                    "meta" => track.track_type = TrackType::Metadata,
                     _ => (),
                 }
                 debug!("{:?}", hdlr);
@@ -2005,6 +2001,7 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
             let description = match track.track_type {
                 TrackType::Video => read_video_sample_entry(&mut b),
                 TrackType::Audio => read_audio_sample_entry(&mut b),
+                TrackType::Metadata => Err(Error::Unsupported("metadata track")),
                 TrackType::Unknown => Err(Error::Unsupported("unknown track type")),
             };
             let description = match description {

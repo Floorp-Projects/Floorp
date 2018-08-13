@@ -43,6 +43,7 @@ typedef enum {
 typedef enum {
   MP4PARSE_TRACK_TYPE_VIDEO = 0,
   MP4PARSE_TRACK_TYPE_AUDIO = 1,
+  MP4PARSE_TRACK_TYPE_METADATA = 2,
 } Mp4parseTrackType;
 
 typedef struct Mp4parseParser Mp4parseParser;
