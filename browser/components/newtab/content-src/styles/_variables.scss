@@ -77,6 +77,11 @@ $icon-size: 16px;
 $smaller-icon-size: 12px;
 $larger-icon-size: 32px;
 
+$searchbar-width-smallest: $grid-unit * 2 + $base-gutter * 1;
+$searchbar-width-small: $grid-unit * 3 + $base-gutter * 2;
+$searchbar-width-medium: $grid-unit * 4 + $base-gutter * 3;
+$searchbar-width-large: $grid-unit * 6 + $base-gutter * 5;
+
 $wrapper-default-width: $grid-unit * 2 + $base-gutter * 1 + $section-horizontal-padding * 2; // 2 top sites
 $wrapper-max-width-small: $grid-unit * 3 + $base-gutter * 2 + $section-horizontal-padding * 2; // 3 top sites
 $wrapper-max-width-medium: $grid-unit * 4 + $base-gutter * 3 + $section-horizontal-padding * 2; // 4 top sites
@@ -90,8 +95,6 @@ $break-point-small: $wrapper-max-width-small + $base-gutter * 2 + $scrollbar-wid
 $break-point-medium: $wrapper-max-width-medium + $base-gutter * 2 + $scrollbar-width;
 $break-point-large: $wrapper-max-width-large + $base-gutter * 2 + $scrollbar-width;
 $break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-width;
-
-$max-searchbar-width: $grid-unit * 6 + $base-gutter * 5;
 
 $section-title-font-size: 13px;
 

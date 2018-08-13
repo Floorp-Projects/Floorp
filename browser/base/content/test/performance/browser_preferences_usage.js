@@ -83,14 +83,14 @@ add_task(async function startup() {
     },
     "browser.search.log": {
       min: 100,
-      max: 200,
+      max: 214,
     },
     "layout.css.dpi": {
       min: 45,
       max: 75,
     },
     "network.loadinfo.skip_type_assertion": {
-      max: 654,
+      max: 658,
     },
     "extensions.getAddons.cache.enabled": {
       min: 7,
