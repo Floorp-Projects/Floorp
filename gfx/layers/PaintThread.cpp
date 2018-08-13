@@ -36,7 +36,7 @@ using namespace gfx;
 void
 PaintTask::DropTextureClients()
 {
-  mClients.clear();
+  mClients.Clear();
 }
 
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;

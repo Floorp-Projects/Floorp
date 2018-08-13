@@ -36,7 +36,7 @@ public:
 
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTargetCapture> mCapture;
-  std::vector<RefPtr<TextureClient>> mClients;
+  AutoTArray<RefPtr<TextureClient>, 4> mClients;
 
 protected:
   virtual ~PaintTask() {}
