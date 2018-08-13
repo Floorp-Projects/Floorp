@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Urus Seksyen",
   "section_menu_action_manage_webext": "Urus Ekstensi",
   "section_menu_action_add_topsite": "Tambah Laman Teratas",
+  "section_menu_action_add_search_engine": "Tambah Enjin Carian",
   "section_menu_action_move_up": "Pindah Atas",
   "section_menu_action_move_down": "Pindah Bawah",
   "section_menu_action_privacy_notice": "Notis Privasi",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Masukkan e-mel anda",
   "firstrun_form_sub_header": "untuk ke Firefox Sync",
   "firstrun_email_input_placeholder": "E-mel",
+  "firstrun_invalid_input": "Perlu e-mel yang sah",
   "firstrun_extra_legal_links": "Dengan meneruskan, anda bersetuju dengan {terms} dan {privacy}.",
   "firstrun_terms_of_service": "Terma Perkhidmatan",
   "firstrun_privacy_notice": "Notis Privasi",
   "firstrun_continue_to_login": "Teruskan",
-  "firstrun_skip_login": "Langkau langkah ini",
-  "firstrun_invalid_input": "Perlu e-mel yang sah"
+  "firstrun_skip_login": "Langkau langkah ini"
 };

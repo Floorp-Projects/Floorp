@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Управление разделом",
   "section_menu_action_manage_webext": "Управление расширением",
   "section_menu_action_add_topsite": "Добавить в топ сайтов",
+  "section_menu_action_add_search_engine": "Добавить поисковую систему",
   "section_menu_action_move_up": "Вверх",
   "section_menu_action_move_down": "Вниз",
   "section_menu_action_privacy_notice": "Уведомление о приватности",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Введите ваш адрес электронной почты",
   "firstrun_form_sub_header": "чтобы продолжить использовать синхронизацию Firefox.",
   "firstrun_email_input_placeholder": "Эл. почта",
+  "firstrun_invalid_input": "Введите действующий адрес электронной почты",
   "firstrun_extra_legal_links": "Продолжая, вы соглашаетесь с {terms} и {privacy}.",
   "firstrun_terms_of_service": "условиями службы",
   "firstrun_privacy_notice": "политикой приватности",
   "firstrun_continue_to_login": "Продолжить",
-  "firstrun_skip_login": "Пропустить этот шаг",
-  "firstrun_invalid_input": "Введите действующий адрес электронной почты"
+  "firstrun_skip_login": "Пропустить этот шаг"
 };

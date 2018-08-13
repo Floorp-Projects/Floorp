@@ -90,6 +90,11 @@ describe("<SectionMenu>", () => {
     const {options} = wrapper.find(ContextMenu).props();
     assert.equal(options[0].id, "section_menu_action_add_topsite");
   });
+  it("should show Add Search Engine option", () => {
+    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} extraOptions={["AddSearchShortcut"]} />);
+    const {options} = wrapper.find(ContextMenu).props();
+    assert.equal(options[0].id, "section_menu_action_add_search_engine");
+  });
   it("should show Privacy Notice option if privacyNoticeURL is passed", () => {
     wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} privacyNoticeURL="https://mozilla.org/privacy" />);
     const {options} = wrapper.find(ContextMenu).props();

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Lo bute",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Med Kakube maloyo",
+  "section_menu_action_add_search_engine": "Med ingin me yeny",
   "section_menu_action_move_up": "Kob Malo",
   "section_menu_action_move_down": "Kob Piny",
   "section_menu_action_privacy_notice": "Ngec me mung",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Ket email mamegi",
   "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "Email",
+  "firstrun_invalid_input": "Email ma tye atir mite",
   "firstrun_extra_legal_links": "Mede anyim nyuto ni i yee {terms} ki {privacy}.",
   "firstrun_terms_of_service": "Cik me Tic",
   "firstrun_privacy_notice": "Ngec me mung",
   "firstrun_continue_to_login": "Mede",
-  "firstrun_skip_login": "Kal citep man",
-  "firstrun_invalid_input": "Email ma tye atir mite"
+  "firstrun_skip_login": "Kal citep man"
 };

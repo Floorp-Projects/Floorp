@@ -4,6 +4,7 @@ import {
   MIN_CORNER_FAVICON_SIZE,
   MIN_RICH_FAVICON_SIZE,
   TOP_SITES_CONTEXT_MENU_OPTIONS,
+  TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SOURCE
 } from "./TopSitesConstants";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
@@ -16,6 +17,7 @@ export class TopSiteLink extends React.PureComponent {
     super(props);
     this.state = {screenshotImage: null};
     this.onDragEvent = this.onDragEvent.bind(this);
+    this.onKeyPress = this.onKeyPress.bind(this);
   }
 
   /*
@@ -53,6 +55,10 @@ export class TopSiteLink extends React.PureComponent {
         }
         break;
       case "mousedown":
+        // Block the scroll wheel from appearing for middle clicks on search top sites
+        if (event.button === 1 && this.props.link.searchTopSite) {
+          event.preventDefault();
+        }
         // Reset at the first mouse event of a potential drag
         this.dragged = false;
         break;
@@ -107,9 +113,18 @@ export class TopSiteLink extends React.PureComponent {
     ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.screenshotImage);
   }
 
+  onKeyPress(event) {
+    // If we have tabbed to a search shortcut top site, and we click 'enter',
+    // we should execute the onClick function. This needs to be added because
+    // search top sites are anchor tags without an href. See bug 1483135
+    if (this.props.link.searchTopSite && event.key === "Enter") {
+      this.props.onClick(event);
+    }
+  }
+
   render() {
     const {children, className, defaultStyle, isDraggable, link, onClick, title} = this.props;
-    const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}`;
+    const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
     const {tippyTopIcon, faviconSize} = link;
     const [letterFallback] = title;
     let imageClassName;
@@ -120,6 +135,13 @@ export class TopSiteLink extends React.PureComponent {
     let hasScreenshotImage = this.state.screenshotImage && this.state.screenshotImage.url;
     if (defaultStyle) { // force no styles (letter fallback) even if the link has imagery
       smallFaviconFallback = false;
+    } else if (link.searchTopSite) {
+      imageClassName = "top-site-icon rich-icon";
+      imageStyle = {
+        backgroundColor: link.backgroundColor,
+        backgroundImage: `url(${tippyTopIcon})`
+      };
+      smallFaviconStyle = {backgroundImage:  `url(${tippyTopIcon})`};
     } else if (link.customScreenshotURL) {
       // assume high quality custom screenshot and use rich icon styles and class names
       imageClassName = "top-site-icon rich-icon";
@@ -161,9 +183,10 @@ export class TopSiteLink extends React.PureComponent {
     }
     return (<li className={topSiteOuterClassName} onDrop={this.onDragEvent} onDragOver={this.onDragEvent} onDragEnter={this.onDragEvent} onDragLeave={this.onDragEvent} {...draggableProps}>
       <div className="top-site-inner">
-         <a href={link.url} onClick={onClick}>
+         <a href={!link.searchTopSite && link.url} tabIndex="0" onKeyPress={this.onKeyPress} onClick={onClick} draggable={true}>
             <div className="tile" aria-hidden={true} data-fallback={letterFallback}>
               <div className={imageClassName} style={imageStyle} />
+              {link.searchTopSite && <div className="top-site-icon search-topsite" />}
               {showSmallFavicon && <div
                 className="top-site-icon default-icon"
                 data-fallback={smallFaviconFallback && letterFallback}
@@ -203,6 +226,11 @@ export class TopSite extends React.PureComponent {
     if (this.props.link.isPinned) {
       value.card_type = "pinned";
     }
+    if (this.props.link.searchTopSite) {
+      // Set the card_type as "search" regardless of its pinning status
+      value.card_type = "search";
+      value.search_vendor = this.props.link.hostname;
+    }
     return {value};
   }
 
@@ -221,10 +249,17 @@ export class TopSite extends React.PureComponent {
     // specified as a property on the link.
     event.preventDefault();
     const {altKey, button, ctrlKey, metaKey, shiftKey} = event;
-    this.props.dispatch(ac.OnlyToMain({
-      type: at.OPEN_LINK,
-      data: Object.assign(this.props.link, {event: {altKey, button, ctrlKey, metaKey, shiftKey}})
-    }));
+    if (!this.props.link.searchTopSite) {
+      this.props.dispatch(ac.OnlyToMain({
+        type: at.OPEN_LINK,
+        data: Object.assign(this.props.link, {event: {altKey, button, ctrlKey, metaKey, shiftKey}})
+      }));
+    } else {
+      this.props.dispatch(ac.OnlyToMain({
+        type: at.FILL_SEARCH_TERM,
+        data: {label: this.props.link.label}
+      }));
+    }
   }
 
   onMenuButtonClick(event) {
@@ -254,7 +289,7 @@ export class TopSite extends React.PureComponent {
               dispatch={props.dispatch}
               index={props.index}
               onUpdate={this.onMenuUpdate}
-              options={TOP_SITES_CONTEXT_MENU_OPTIONS}
+              options={link.searchTopSite ? TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS : TOP_SITES_CONTEXT_MENU_OPTIONS}
               site={link}
               siteInfo={this._getTelemetryInfo()}
               source={TOP_SITES_SOURCE} />
@@ -361,7 +396,9 @@ export class _TopSiteList extends React.PureComponent {
               site: {
                 url: this.state.draggedSite.url,
                 label: this.state.draggedTitle,
-                customScreenshotURL: this.state.draggedSite.customScreenshotURL
+                customScreenshotURL: this.state.draggedSite.customScreenshotURL,
+                // Only if the search topsites experiment is enabled
+                ...(this.state.draggedSite.searchTopSite && {searchTopSite: true})
               },
               index,
               draggedFromIndex: this.state.draggedIndex

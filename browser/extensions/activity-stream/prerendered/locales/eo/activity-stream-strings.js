@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Administri sekcion",
   "section_menu_action_manage_webext": "Administri etendaĵon",
   "section_menu_action_add_topsite": "Aldoni oftan retejon",
+  "section_menu_action_add_search_engine": "Aldoni serĉilon",
   "section_menu_action_move_up": "Movi supren",
   "section_menu_action_move_down": "Movi malsupren",
   "section_menu_action_privacy_notice": "Rimarko pri privateco",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Tajpu vian retpoŝtan adreson",
   "firstrun_form_sub_header": "por pluiri al Spegulado de Firefox.",
   "firstrun_email_input_placeholder": "Retpoŝta adreso",
+  "firstrun_invalid_input": "Valida retpoŝta adreso postulata",
   "firstrun_extra_legal_links": "Se vi daŭrigas vi akceptas la {terms} kaj {privacy}.",
   "firstrun_terms_of_service": "kondiĉojn de uzo",
   "firstrun_privacy_notice": "rimarkon pri privateco",
   "firstrun_continue_to_login": "Daŭrigi",
-  "firstrun_skip_login": "Pretersalti tiun ĉi paŝon",
-  "firstrun_invalid_input": "Valida retpoŝta adreso postulata"
+  "firstrun_skip_login": "Pretersalti tiun ĉi paŝon"
 };

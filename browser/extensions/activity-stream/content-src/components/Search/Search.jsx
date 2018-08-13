@@ -64,23 +64,25 @@ export class _Search extends React.PureComponent {
    */
   render() {
     return (<div className="search-wrapper">
-      <label htmlFor="newtab-search-text" className="search-label">
-        <span className="sr-only"><FormattedMessage id="search_web_placeholder" /></span>
-      </label>
-      <input
-        id="newtab-search-text"
-        maxLength="256"
-        placeholder={this.props.intl.formatMessage({id: "search_web_placeholder"})}
-        ref={this.onInputMount}
-        title={this.props.intl.formatMessage({id: "search_web_placeholder"})}
-        type="search" />
-      <button
-        id="searchSubmit"
-        className="search-button"
-        onClick={this.onClick}
-        title={this.props.intl.formatMessage({id: "search_button"})}>
-        <span className="sr-only"><FormattedMessage id="search_button" /></span>
-      </button>
+      <div className="search-inner-wrapper">
+        <label htmlFor="newtab-search-text" className="search-label">
+          <span className="sr-only"><FormattedMessage id="search_web_placeholder" /></span>
+        </label>
+        <input
+          id="newtab-search-text"
+          maxLength="256"
+          placeholder={this.props.intl.formatMessage({id: "search_web_placeholder"})}
+          ref={this.onInputMount}
+          title={this.props.intl.formatMessage({id: "search_web_placeholder"})}
+          type="search" />
+        <button
+          id="searchSubmit"
+          className="search-button"
+          onClick={this.onClick}
+          title={this.props.intl.formatMessage({id: "search_button"})}>
+          <span className="sr-only"><FormattedMessage id="search_button" /></span>
+        </button>
+      </div>
     </div>);
   }
 }

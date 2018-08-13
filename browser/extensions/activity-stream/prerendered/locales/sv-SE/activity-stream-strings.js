@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Hantera sektion",
   "section_menu_action_manage_webext": "Hantera tillägg",
   "section_menu_action_add_topsite": "Lägg till mest besökta",
+  "section_menu_action_add_search_engine": "Lägg till sökmotor",
   "section_menu_action_move_up": "Flytta upp",
   "section_menu_action_move_down": "Flytta ner",
   "section_menu_action_privacy_notice": "Sekretesspolicy",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Ange din e-postadress",
   "firstrun_form_sub_header": "för att fortsätta till Firefox Sync.",
   "firstrun_email_input_placeholder": "E-post",
+  "firstrun_invalid_input": "Giltig e-postadress krävs",
   "firstrun_extra_legal_links": "Genom att fortsätta godkänner du {terms} och {privacy}.",
   "firstrun_terms_of_service": "Användarvillkor",
   "firstrun_privacy_notice": "Sekretesspolicy",
   "firstrun_continue_to_login": "Fortsätt",
-  "firstrun_skip_login": "Hoppa över det här steget",
-  "firstrun_invalid_input": "Giltig e-postadress krävs"
+  "firstrun_skip_login": "Hoppa över det här steget"
 };

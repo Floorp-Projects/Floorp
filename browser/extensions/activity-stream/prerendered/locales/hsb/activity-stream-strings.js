@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Wotrězk rjadować",
   "section_menu_action_manage_webext": "Rozšěrjenje rjadować",
   "section_menu_action_add_topsite": "Woblubowane sydło přidać",
+  "section_menu_action_add_search_engine": "Pytawu přidać",
   "section_menu_action_move_up": "Horje",
   "section_menu_action_move_down": "Dele",
   "section_menu_action_privacy_notice": "Zdźělenka priwatnosće",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Zapodajće swoju e-mejlowu adresu,",
   "firstrun_form_sub_header": "zo byšće z Firefox Sync pokročował.",
   "firstrun_email_input_placeholder": "E-mejl",
+  "firstrun_invalid_input": "Płaćiwa e-mejlowa adresa trěbna",
   "firstrun_extra_legal_links": "Hdyž pokročujeće, zwoliće do {terms} a {privacy}.",
   "firstrun_terms_of_service": "Wužiwanske wuměnjenja",
   "firstrun_privacy_notice": "Zdźělenka priwatnosće",
   "firstrun_continue_to_login": "Pokročować",
-  "firstrun_skip_login": "Tutón krok přeskočić",
-  "firstrun_invalid_input": "Płaćiwa e-mejlowa adresa trěbna"
+  "firstrun_skip_login": "Tutón krok přeskočić"
 };

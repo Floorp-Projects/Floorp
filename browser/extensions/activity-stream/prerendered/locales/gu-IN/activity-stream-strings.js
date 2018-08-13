@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "વિભાગ સંચાલિત કરો",
   "section_menu_action_manage_webext": "એક્સ્ટેંશનનો વહીવટ કરો",
   "section_menu_action_add_topsite": "ટોચની સાઇટ ઉમેરો",
+  "section_menu_action_add_search_engine": "શોધ યંત્ર ઉમેરો",
   "section_menu_action_move_up": "ઉપર કરો",
   "section_menu_action_move_down": "નીચે કરો",
   "section_menu_action_privacy_notice": "ખાનગી સૂચના",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "તમારા ઇમેઇલ દાખલ કરો",
   "firstrun_form_sub_header": "Firefox સમન્વયન ચાલુ રાખવા માટે.",
   "firstrun_email_input_placeholder": "ઇમેઇલ",
+  "firstrun_invalid_input": "માન્ય ઇમેઇલ આવશ્યક છે",
   "firstrun_extra_legal_links": "આગળ વધીને, તમે {terms} અને {privacy} સાથે સંમત થાઓ છો.",
   "firstrun_terms_of_service": "સેવાની શરતો",
   "firstrun_privacy_notice": "ખાનગી સૂચના",
   "firstrun_continue_to_login": "ચાલુ રાખો",
-  "firstrun_skip_login": "આ પગલું છોડી દો",
-  "firstrun_invalid_input": "માન્ય ઇમેઇલ આવશ્યક છે"
+  "firstrun_skip_login": "આ પગલું છોડી દો"
 };

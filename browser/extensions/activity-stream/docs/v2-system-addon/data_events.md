@@ -90,8 +90,52 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "source": "TOP_SITES",
   "action_position": 2,
   "value": {
-    "card_type": "pinned",
-    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"]
+    "card_type": ["pinned" | "search"],
+    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"],
+    // only exists if its card_type = "search"
+    "search_vendor": "google"
+  }
+
+  // Basic metadata
+  "action": "activity_stream_event",
+  "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7
+}
+```
+
+#### Adding a search shortcut
+```js
+{
+  "event": "SEARCH_EDIT_ADD",
+  "source": "TOP_SITES",
+  "action_position": 2,
+  "value": {
+    "search_vendor": "google"
+  }
+
+  // Basic metadata
+  "action": "activity_stream_event",
+  "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7
+}
+```
+
+#### Deleting a search shortcut
+```js
+{
+  "event": "SEARCH_EDIT_DELETE",
+  "source": "TOP_SITES",
+  "action_position": 2,
+  "value": {
+    "search_vendor": "google"
   }
 
   // Basic metadata
@@ -136,8 +180,10 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "source": "TOP_SITES",
   "action_position": 2,
   "value": {
-    "card_type": "pinned",
-    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"]
+    "card_type": ["pinned" | "search"],
+    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"],
+    // only exists if its card_type = "search"
+    "search_vendor": "google"
   }
 
   // Basic metadata
@@ -392,6 +438,9 @@ perf: {
 
   // The number of Top Sites that are pinned.
   "topsites_pinned": 3,
+
+  // The number of search shortcut Top Sites.
+  "topsites_search_shortcuts": 2,
 
   // How much longer the data took, in milliseconds, to be ready for display
   // than it would have been in the ideal case. The user currently sees placeholder

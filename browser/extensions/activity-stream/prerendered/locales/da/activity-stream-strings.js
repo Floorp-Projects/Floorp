@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Håndter afsnit",
   "section_menu_action_manage_webext": "Håndter udvidelse",
   "section_menu_action_add_topsite": "Tilføj ny webside",
+  "section_menu_action_add_search_engine": "Tilføj søgetjeneste",
   "section_menu_action_move_up": "Flyt op",
   "section_menu_action_move_down": "Flyt ned",
   "section_menu_action_privacy_notice": "Privatlivspolitik",
@@ -96,6 +97,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Indtast din mailadresse",
   "firstrun_form_sub_header": "for at fortsætte til Firefox Sync.",
   "firstrun_email_input_placeholder": "Mailadresse",
+  "firstrun_invalid_input": "En gyldig mailadresse er påkrævet",
   "firstrun_extra_legal_links": "Ved at fortsætte godkender du vores {terms} og {privacy}.",
   "firstrun_terms_of_service": "tjenestevilkår",
   "firstrun_privacy_notice": "privatlivspolitik",
@@ -113,6 +115,5 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_body": "Læs korte opdateringer fra Mozilla om Firefox, internet-kultur og lidt underholdning fra tid til anden.",
   "settings_pane_done_button": "Færdig",
   "settings_pane_topstories_options_sponsored": "Vis sponsorerede historier",
-  "pocket_description": "Opdag indhold af høj kvalitet, som du måske ellers ikke ville have opdaget. Indholdet kommer fra Pocket, der nu er en del af Mozilla.",
-  "firstrun_invalid_input": "En gyldig mailadresse er påkrævet"
+  "pocket_description": "Opdag indhold af høj kvalitet, som du måske ellers ikke ville have opdaget. Indholdet kommer fra Pocket, der nu er en del af Mozilla."
 };

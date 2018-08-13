@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "管理段落",
   "section_menu_action_manage_webext": "管理擴充套件",
   "section_menu_action_add_topsite": "新增熱門網站",
+  "section_menu_action_add_search_engine": "新增搜尋引擎",
   "section_menu_action_move_up": "上移",
   "section_menu_action_move_down": "下移",
   "section_menu_action_privacy_notice": "隱私權公告",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "輸入您的電子郵件地址",
   "firstrun_form_sub_header": "繼續前往 Firefox Sync",
   "firstrun_email_input_placeholder": "電子郵件",
+  "firstrun_invalid_input": "必須輸入有效的電子郵件地址",
   "firstrun_extra_legal_links": "若繼續，代表您同意{terms}及{privacy}。",
   "firstrun_terms_of_service": "服務條款",
   "firstrun_privacy_notice": "隱私權公告",
   "firstrun_continue_to_login": "繼續",
-  "firstrun_skip_login": "跳過這步",
-  "firstrun_invalid_input": "必須輸入有效的電子郵件地址"
+  "firstrun_skip_login": "跳過這步"
 };

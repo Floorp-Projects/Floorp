@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Διαχείριση ενότητας",
   "section_menu_action_manage_webext": "Διαχείριση επέκτασης",
   "section_menu_action_add_topsite": "Προσθήκη κορυφαίας ιστοσελίδας",
+  "section_menu_action_add_search_engine": "Προσθήκη μηχανής αναζήτησης",
   "section_menu_action_move_up": "Μετακίνηση επάνω",
   "section_menu_action_move_down": "Μετακίνηση κάτω",
   "section_menu_action_privacy_notice": "Σημείωση απορρήτου",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Εισάγετε το email σας",
   "firstrun_form_sub_header": "για να συνεχίσετε στο Firefox Sync.",
   "firstrun_email_input_placeholder": "Email",
+  "firstrun_invalid_input": "Απαιτείται έγκυρο email",
   "firstrun_extra_legal_links": "Συνεχίζοντας, συμφωνείτε με τους {terms} και τη {privacy}.",
   "firstrun_terms_of_service": "Όρους Υπηρεσίας",
   "firstrun_privacy_notice": "Σημείωση Απορρήτου",
   "firstrun_continue_to_login": "Συνέχεια",
-  "firstrun_skip_login": "Παράλειψη βήματος",
-  "firstrun_invalid_input": "Απαιτείται έγκυρο email"
+  "firstrun_skip_login": "Παράλειψη βήματος"
 };

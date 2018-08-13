@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Tvarkyti skiltį",
   "section_menu_action_manage_webext": "Tvarkyti priedą",
   "section_menu_action_add_topsite": "Pridėti lankomą svetainę",
+  "section_menu_action_add_search_engine": "Pridėti ieškyklę",
   "section_menu_action_move_up": "Pakelti",
   "section_menu_action_move_down": "Nuleisti",
   "section_menu_action_privacy_notice": "Privatumo nuostatai",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Įveskite savo el. paštą",
   "firstrun_form_sub_header": "norėdami tęsti su „Firefox Sync“.",
   "firstrun_email_input_placeholder": "El. paštas",
+  "firstrun_invalid_input": "Reikalingas galiojantis el. pašto adresas",
   "firstrun_extra_legal_links": "Tęsdami sutinkate su {terms} ir {privacy}.",
   "firstrun_terms_of_service": "paslaugos teikimo nuostatais",
   "firstrun_privacy_notice": "privatumo nuostatais",
   "firstrun_continue_to_login": "Tęsti",
-  "firstrun_skip_login": "Praleisti šį žingsnį",
-  "firstrun_invalid_input": "Reikalingas galiojantis el. pašto adresas"
+  "firstrun_skip_login": "Praleisti šį žingsnį"
 };

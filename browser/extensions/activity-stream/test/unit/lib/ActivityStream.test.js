@@ -260,4 +260,53 @@ describe("ActivityStream", () => {
       assert.calledOnce(telemetry.handleUndesiredEvent);
     });
   });
+
+  describe("searchs shortcuts shouldPin pref", () => {
+    const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF = "improvesearch.topSiteSearchShortcuts.searchEngines";
+    let stub;
+
+    beforeEach(() => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+      stub = sandbox.stub(global.Services.prefs, "getStringPref");
+    });
+
+    it("should be an empty string when no geo is available", () => {
+      as._updateDynamicPrefs();
+      assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "");
+    });
+
+    it("should be 'baidu' in China", () => {
+      stub.returns("CN");
+      as._updateDynamicPrefs();
+      assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "baidu");
+    });
+
+    it("should be 'yandex' in Russia, Belarus, Kazakhstan, and Turkey", () => {
+      const geos = ["BY", "KZ", "RU", "TR"];
+      for (const geo of geos) {
+        stub.returns(geo);
+        as._updateDynamicPrefs();
+        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "yandex");
+      }
+    });
+
+    it("should be 'google,amazon' in Germany, France, the UK, Japan, Italy, and the US", () => {
+      const geos = ["DE", "FR", "GB", "IT", "JP", "US"];
+      for (const geo of geos) {
+        stub.returns(geo);
+        as._updateDynamicPrefs();
+        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "google,amazon");
+      }
+    });
+
+    it("should be 'google' elsewhere", () => {
+      // A selection of other geos
+      const geos = ["BR", "CA", "ES", "ID", "IN"];
+      for (const geo of geos) {
+        stub.returns(geo);
+        as._updateDynamicPrefs();
+        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "google");
+      }
+    });
+  });
 });

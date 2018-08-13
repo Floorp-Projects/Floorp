@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "გვერდის ნაწილების მართვა",
   "section_menu_action_manage_webext": "გაფართოების მართვა",
   "section_menu_action_add_topsite": "რჩეული საიტის დამატება",
+  "section_menu_action_add_search_engine": "საძიებო სისტემის დამატება",
   "section_menu_action_move_up": "აწევა",
   "section_menu_action_move_down": "ჩამოწევა",
   "section_menu_action_privacy_notice": "პირადი მონაცემების დაცვის განაცხადი",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "შეიყვანეთ თქვენი ელფოსტა",
   "firstrun_form_sub_header": "Firefox Sync-ზე გადასასვლელად.",
   "firstrun_email_input_placeholder": "ელფოსტა",
+  "firstrun_invalid_input": "მართებული ელფოსტის მითითება აუცილებელია",
   "firstrun_extra_legal_links": "გაგრძელების შემთხვევაში, თქვენ ეთანხმებით {terms} და {privacy}.",
   "firstrun_terms_of_service": "გამოყენების პირობებსა",
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",
   "firstrun_continue_to_login": "გაგრძელება",
-  "firstrun_skip_login": "გამოტოვება",
-  "firstrun_invalid_input": "მართებული ელფოსტის მითითება აუცილებელია"
+  "firstrun_skip_login": "გამოტოვება"
 };

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Håndter seksjon",
   "section_menu_action_manage_webext": "Behandle utvidelse",
   "section_menu_action_add_topsite": "Legg til toppsted",
+  "section_menu_action_add_search_engine": "Legg til søkemotor",
   "section_menu_action_move_up": "Flytt opp",
   "section_menu_action_move_down": "Flytt ned",
   "section_menu_action_privacy_notice": "Personvernbestemmelser",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Skriv inn e-postadressen din",
   "firstrun_form_sub_header": "for å fortsette til Firefox Sync.",
   "firstrun_email_input_placeholder": "E-post",
+  "firstrun_invalid_input": "Gyldig e-post er nødvendig",
   "firstrun_extra_legal_links": "Ved å fortsette, godtar du {terms} og {privacy}.",
   "firstrun_terms_of_service": "Tjenestevilkår",
   "firstrun_privacy_notice": "Personvernbestemmelser",
   "firstrun_continue_to_login": "Fortsett",
-  "firstrun_skip_login": "Hopp over dette trinnet",
-  "firstrun_invalid_input": "Gyldig e-post er nødvendig"
+  "firstrun_skip_login": "Hopp over dette trinnet"
 };

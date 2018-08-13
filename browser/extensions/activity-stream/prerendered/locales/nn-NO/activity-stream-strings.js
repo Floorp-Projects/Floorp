@@ -42,7 +42,7 @@ window.gActivityStreamStrings = {
   "prefs_home_description": "Vel kva for innhald du vil ha på Firefox-startsida di.",
   "prefs_section_rows_option": "{num} rekke;{num} rekkjer",
   "prefs_search_header": "Nettsøk",
-  "prefs_topsites_description": "Sidene du besøker mest",
+  "prefs_topsites_description": "Sidene du besøkjer mest",
   "prefs_topstories_description2": "Bra innhald frå heile nettet, tilpassa for deg",
   "prefs_topstories_options_sponsored_label": "Sponsa historiar",
   "prefs_topstories_sponsored_learn_more": "Les meir",
@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Handter seksjon",
   "section_menu_action_manage_webext": "Handter utviding",
   "section_menu_action_add_topsite": "Legg til mest besøkte",
+  "section_menu_action_add_search_engine": "Legg til søkjemotor",
   "section_menu_action_move_up": "Flytt opp",
   "section_menu_action_move_down": "Flytt ned",
   "section_menu_action_privacy_notice": "Personvernmerknad",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Skriv inn e-postadressa di",
   "firstrun_form_sub_header": "for å fortsetje til Firefox Sync.",
   "firstrun_email_input_placeholder": "E-post",
+  "firstrun_invalid_input": "Gyldig e-post påkravd",
   "firstrun_extra_legal_links": "Ved å fortsetje, godtek du {terms} og {privacy}.",
   "firstrun_terms_of_service": "Tenestevilkår",
   "firstrun_privacy_notice": "Personvernpraksis",
   "firstrun_continue_to_login": "Fortset",
-  "firstrun_skip_login": "Hopp over dette steget",
-  "firstrun_invalid_input": "Gyldig e-post påkravd"
+  "firstrun_skip_login": "Hopp over dette steget"
 };

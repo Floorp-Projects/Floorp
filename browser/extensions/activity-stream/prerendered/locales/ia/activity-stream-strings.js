@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gerer le section",
   "section_menu_action_manage_webext": "Gerer extension",
   "section_menu_action_add_topsite": "Adder a sito popular",
+  "section_menu_action_add_search_engine": "Adder un motor de recerca",
   "section_menu_action_move_up": "Mover in alto",
   "section_menu_action_move_down": "Mover in basso",
   "section_menu_action_privacy_notice": "Notification de confidentialitate",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Insere tu email",
   "firstrun_form_sub_header": "pro continuar con Firefox Sync.",
   "firstrun_email_input_placeholder": "Email",
+  "firstrun_invalid_input": "Il es necesse un valide adresse email",
   "firstrun_extra_legal_links": "Si tu procede, tu consenti a {terms} e {privacy}.",
   "firstrun_terms_of_service": "Terminos de servicio",
   "firstrun_privacy_notice": "Notification de confidentialitate",
   "firstrun_continue_to_login": "Continuar",
-  "firstrun_skip_login": "Saltar iste grado",
-  "firstrun_invalid_input": "Il es necesse un valide adresse email"
+  "firstrun_skip_login": "Saltar iste grado"
 };

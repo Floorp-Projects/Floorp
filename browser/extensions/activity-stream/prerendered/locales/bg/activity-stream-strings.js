@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Управление на раздела",
   "section_menu_action_manage_webext": "Управление на добавката",
   "section_menu_action_add_topsite": "Добавяне на често посещавана страница",
+  "section_menu_action_add_search_engine": "Добавяне на търсеща машина",
   "section_menu_action_move_up": "Преместване нагоре",
   "section_menu_action_move_down": "Преместване надолу",
   "section_menu_action_privacy_notice": "Политика за личните данни",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Въведете своята ел. поща,",
   "firstrun_form_sub_header": "за да продължите към Firefox Sync",
   "firstrun_email_input_placeholder": "адрес на електронна поща",
+  "firstrun_invalid_input": "Необходим е валиден адрес на ел. поща",
   "firstrun_extra_legal_links": "Продължавайки, вие се съгласявате с {terms} и {privacy}.",
   "firstrun_terms_of_service": "Условията на услугата",
   "firstrun_privacy_notice": "Политиката за лични данни",
   "firstrun_continue_to_login": "Продължаване",
-  "firstrun_skip_login": "Пропускане",
-  "firstrun_invalid_input": "Необходим е валиден адрес на ел. поща"
+  "firstrun_skip_login": "Пропускане"
 };
