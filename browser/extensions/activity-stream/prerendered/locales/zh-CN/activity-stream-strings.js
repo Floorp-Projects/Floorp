@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "管理板块",
   "section_menu_action_manage_webext": "管理扩展",
   "section_menu_action_add_topsite": "添加常用网站",
+  "section_menu_action_add_search_engine": "添加搜索引擎",
   "section_menu_action_move_up": "上移",
   "section_menu_action_move_down": "下移",
   "section_menu_action_privacy_notice": "隐私声明",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "请输入您的电子邮箱",
   "firstrun_form_sub_header": "继续使用 Firefox 同步服务。",
   "firstrun_email_input_placeholder": "电子邮件",
+  "firstrun_invalid_input": "需要有效的电子邮件地址",
   "firstrun_extra_legal_links": "若您选择继续，即表示您同意我们的{terms}和{privacy}。",
   "firstrun_terms_of_service": "服务条款",
   "firstrun_privacy_notice": "隐私声明",
   "firstrun_continue_to_login": "继续",
-  "firstrun_skip_login": "跳过此步骤",
-  "firstrun_invalid_input": "需要有效的电子邮件地址"
+  "firstrun_skip_login": "跳过此步骤"
 };

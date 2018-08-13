@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "பகுதியை நிர்வகி",
   "section_menu_action_manage_webext": "நீட்சிகளை நிர்வகி",
   "section_menu_action_add_topsite": "முதன்மை தளத்தைச் சேர்",
+  "section_menu_action_add_search_engine": "தேடும் பொறியைச் சேர்",
   "section_menu_action_move_up": "மேலே நகர்த்து",
   "section_menu_action_move_down": "கீழே நகர்த்து",
   "section_menu_action_privacy_notice": "தனியுரிமை அறிவிப்பு",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "உங்களின் மின்னஞ்சலை உள்ளிடுக",
   "firstrun_form_sub_header": "பயர்பாக்சு ஒத்திசையைத் தொடர.",
   "firstrun_email_input_placeholder": "மின்னஞ்சல்",
+  "firstrun_invalid_input": "நம்பகரமான மின்னஞ்சல் தேவை",
   "firstrun_extra_legal_links": "தொடர்வதன் மூலம், தாங்கள் {terms} மற்றும் {privacy} ஒப்புக்கொள்கின்றீர்கள்.",
   "firstrun_terms_of_service": "சேவையின் விதிமுறைகள்",
   "firstrun_privacy_notice": "தனியுரிமை அறிவிப்பு",
   "firstrun_continue_to_login": "தொடர்க",
-  "firstrun_skip_login": "இந்த படிநிலையைத் தவிர்",
-  "firstrun_invalid_input": "நம்பகரமான மின்னஞ்சல் தேவை"
+  "firstrun_skip_login": "இந்த படிநிலையைத் தவிர்"
 };

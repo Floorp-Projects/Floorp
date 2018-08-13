@@ -97,7 +97,8 @@ export const UserEventAction = Joi.object().keys({
     action_position: Joi.number().integer(),
     value: Joi.object().keys({
       icon_type: Joi.valid(["tippytop", "rich_icon", "screenshot_with_icon", "screenshot", "no_image"]),
-      card_type: Joi.valid(["bookmark", "trending", "pinned", "pocket"])
+      card_type: Joi.valid(["bookmark", "trending", "pinned", "pocket", "search"]),
+      search_vendor: Joi.valid(["google", "amazon"])
     })
   }).required(),
   meta: Joi.object().keys({
@@ -184,6 +185,9 @@ export const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
 
     // The count of pinned Top Sites.
     topsites_pinned: Joi.number(),
+
+    // The count of search shortcut Top Sites.
+    topsites_search_shortcuts: Joi.number(),
 
     // When the page itself receives an event that document.visibilityState
     // == visible.

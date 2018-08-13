@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "セクションを管理",
   "section_menu_action_manage_webext": "拡張機能を管理",
   "section_menu_action_add_topsite": "トップサイトを追加",
+  "section_menu_action_add_search_engine": "検索エンジンを追加",
   "section_menu_action_move_up": "上へ移動",
   "section_menu_action_move_down": "下へ移動",
   "section_menu_action_privacy_notice": "プライバシー通知",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "メールアドレスを入力してください",
   "firstrun_form_sub_header": "Firefox Sync の利用を続けるために必要です",
   "firstrun_email_input_placeholder": "メールアドレス",
+  "firstrun_invalid_input": "メールアドレスを正しく入力してください",
   "firstrun_extra_legal_links": "続行すると、{terms} と {privacy} に同意したものとみなします。",
   "firstrun_terms_of_service": "サービス利用規約",
   "firstrun_privacy_notice": "プライバシーに関する通知",
   "firstrun_continue_to_login": "続ける",
-  "firstrun_skip_login": "この手順をスキップ",
-  "firstrun_invalid_input": "メールアドレスを正しく入力してください"
+  "firstrun_skip_login": "この手順をスキップ"
 };

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Eñagareko vorére",
   "section_menu_action_manage_webext": "Emongu'e jepysokue",
   "section_menu_action_add_topsite": "Embojuaju Tenda ojeikeveha",
+  "section_menu_action_add_search_engine": "Embojuaju jehekaha mongu’eha",
   "section_menu_action_move_up": "Jupi",
   "section_menu_action_move_down": "Guejy",
   "section_menu_action_privacy_notice": "Marandu’i ñemiguáva",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Emoinge ne ñandutiveve",
   "firstrun_form_sub_header": "eike hag̃ua Firefox Sync-pe.",
   "firstrun_email_input_placeholder": "Ñandutiveve",
+  "firstrun_invalid_input": "Eikotevẽ peteĩ ñanduti veve oikóva",
   "firstrun_extra_legal_links": "Ejapóva, emoneĩ ko'ã {terms} ha {privacy}.",
   "firstrun_terms_of_service": "Mba'epytyvõrã ñemboguata",
   "firstrun_privacy_notice": "Ñemigua purureko",
   "firstrun_continue_to_login": "Eku'ejey",
-  "firstrun_skip_login": "Ehejánte kóva",
-  "firstrun_invalid_input": "Eikotevẽ peteĩ ñanduti veve oikóva"
+  "firstrun_skip_login": "Ehejánte kóva"
 };

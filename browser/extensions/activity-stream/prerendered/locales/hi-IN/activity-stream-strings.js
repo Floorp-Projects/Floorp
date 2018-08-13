@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "अनुभाग प्रबंधित करें",
   "section_menu_action_manage_webext": "विस्तारक प्रबंधित करें",
   "section_menu_action_add_topsite": "शीर्ष साइट जोड़ें",
+  "section_menu_action_add_search_engine": "सर्च इंजन जोड़े",
   "section_menu_action_move_up": "ऊपर जाएँ",
   "section_menu_action_move_down": "नीचे जाएँ",
   "section_menu_action_privacy_notice": "गोपनीयता नीति",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "अपना ईमेल प्रविष्ट करें",
   "firstrun_form_sub_header": "Firefox सिंक के लिए जारी रखें.",
   "firstrun_email_input_placeholder": "ईमेल",
+  "firstrun_invalid_input": "वैध ईमेल आवश्यक",
   "firstrun_extra_legal_links": "आगे बढ़ने से, आप {terms} और {privacy} से सहमत हैं|",
   "firstrun_terms_of_service": "सेवा की शर्तें",
   "firstrun_privacy_notice": "गोपनीयता नीति",
   "firstrun_continue_to_login": "जारी रखें",
-  "firstrun_skip_login": "इस चरण को छोड़ दें",
-  "firstrun_invalid_input": "वैध ईमेल आवश्यक"
+  "firstrun_skip_login": "इस चरण को छोड़ दें"
 };

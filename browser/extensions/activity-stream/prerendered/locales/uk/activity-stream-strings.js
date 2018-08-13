@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Керувати розділом",
   "section_menu_action_manage_webext": "Керувати розширенням",
   "section_menu_action_add_topsite": "Додати до популярних сайтів",
+  "section_menu_action_add_search_engine": "Додати засіб пошуку",
   "section_menu_action_move_up": "Вгору",
   "section_menu_action_move_down": "Вниз",
   "section_menu_action_privacy_notice": "Повідомлення про приватність",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Введіть свою адресу е-пошти",
   "firstrun_form_sub_header": "для продовження в Синхронізації Firefox.",
   "firstrun_email_input_placeholder": "Е-пошта",
+  "firstrun_invalid_input": "Необхідна адреса електронної пошти",
   "firstrun_extra_legal_links": "Продовжуючи, ви приймаєте {terms} і {privacy}.",
   "firstrun_terms_of_service": "Умови надання послуги",
   "firstrun_privacy_notice": "Повідомлення про приватність",
   "firstrun_continue_to_login": "Продовжити",
-  "firstrun_skip_login": "Пропустити цей крок",
-  "firstrun_invalid_input": "Необхідна адреса електронної пошти"
+  "firstrun_skip_login": "Пропустити цей крок"
 };

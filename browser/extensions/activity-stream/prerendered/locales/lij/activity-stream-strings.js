@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gestisci seçion",
   "section_menu_action_manage_webext": "Gestisci estenscioin",
   "section_menu_action_add_topsite": "Azonzi scito prinçipâ",
+  "section_menu_action_add_search_engine": "Azonzi motô de riçerca",
   "section_menu_action_move_up": "Mescia in sciù",
   "section_menu_action_move_down": "Mescia in zu",
   "section_menu_action_privacy_notice": "Informativa in sciâ privacy",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Scrivi a teu email",
   "firstrun_form_sub_header": "pe continoâ con Firefox Sync.",
   "firstrun_email_input_placeholder": "Email",
+  "firstrun_invalid_input": "Serve 'na email bonn-a",
   "firstrun_extra_legal_links": "Se ti væ avanti t'ê d'acòrdio co-i {terms} e l'{privacy}.",
   "firstrun_terms_of_service": "Termini do serviçio",
   "firstrun_privacy_notice": "Informativa in sciâ privacy",
   "firstrun_continue_to_login": "Continoa",
-  "firstrun_skip_login": "Sata sto passo",
-  "firstrun_invalid_input": "Serve 'na email bonn-a"
+  "firstrun_skip_login": "Sata sto passo"
 };

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Bölümü yönet",
   "section_menu_action_manage_webext": "Eklentiyi yönet",
   "section_menu_action_add_topsite": "Sık kullanılan site ekle",
+  "section_menu_action_add_search_engine": "Arama motoru ekle",
   "section_menu_action_move_up": "Yukarı taşı",
   "section_menu_action_move_down": "Aşağı taşı",
   "section_menu_action_privacy_notice": "Gizlilik bildirimi",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Firefox Sync’e devam etmek için",
   "firstrun_form_sub_header": "e-posta adresinizi yazın.",
   "firstrun_email_input_placeholder": "E-posta",
+  "firstrun_invalid_input": "Geçerli bir e-posta gerekiyor",
   "firstrun_extra_legal_links": "Devam ederseniz {terms} ve {privacy} kabul etmiş sayılırsınız.",
   "firstrun_terms_of_service": "Kullanım Koşullarını",
   "firstrun_privacy_notice": "Gizlilik Bildirimini",
   "firstrun_continue_to_login": "Devam et",
-  "firstrun_skip_login": "Bu adımı atla",
-  "firstrun_invalid_input": "Geçerli bir e-posta gerekiyor"
+  "firstrun_skip_login": "Bu adımı atla"
 };

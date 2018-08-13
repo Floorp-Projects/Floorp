@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Seksje beheare",
   "section_menu_action_manage_webext": "Utwreiding beheare",
   "section_menu_action_add_topsite": "Topwebsite tafoegje",
+  "section_menu_action_add_search_engine": "Sykmasine tafoegje",
   "section_menu_action_move_up": "Omheech ferpleatse",
   "section_menu_action_move_down": "Omleech ferpleatse",
   "section_menu_action_privacy_notice": "Privacyferklearring",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Fier jo e-mailadres yn",
   "firstrun_form_sub_header": "om troch te gean nei Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mailadres",
+  "firstrun_invalid_input": "Jildich e-mailadres fereaske",
   "firstrun_extra_legal_links": "Troch fierder te gean, gean jo akkoard mei de {terms} en {privacy}.",
   "firstrun_terms_of_service": "Tsjinstbetingsten",
   "firstrun_privacy_notice": "Privacyferklearring",
   "firstrun_continue_to_login": "Trochgean",
-  "firstrun_skip_login": "Dizze stap oerslaan",
-  "firstrun_invalid_input": "Jildich e-mailadres fereaske"
+  "firstrun_skip_login": "Dizze stap oerslaan"
 };

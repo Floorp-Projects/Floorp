@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Sefrek tigezmi",
   "section_menu_action_manage_webext": "Sefrek asiɣzef",
   "section_menu_action_add_topsite": "Rnu asmel ifazen",
+  "section_menu_action_add_search_engine": "Rnu amsedday n unadi",
   "section_menu_action_move_up": "Ali",
   "section_menu_action_move_down": "Ader",
   "section_menu_action_privacy_notice": "Tasertit n tbaḍnit",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Sekcem imayl inek",
   "firstrun_form_sub_header": "akken ad tkemleḍ akked Firefox Sync",
   "firstrun_email_input_placeholder": "Imayl",
+  "firstrun_invalid_input": "Imayl ameɣtu ilaq",
   "firstrun_extra_legal_links": "Ma tkemmleḍ, ad tqebleḍ {terms} d {privacy}.",
   "firstrun_terms_of_service": "Tiwtilin n useqdec",
   "firstrun_privacy_notice": "Tasertit n tbaḍnit",
   "firstrun_continue_to_login": "Kemmel",
-  "firstrun_skip_login": "Zgel amecwaṛ-agi",
-  "firstrun_invalid_input": "Imayl ameɣtu ilaq"
+  "firstrun_skip_login": "Zgel amecwaṛ-agi"
 };

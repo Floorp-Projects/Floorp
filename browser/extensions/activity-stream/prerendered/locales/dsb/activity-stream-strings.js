@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Wótrězk zastojaś",
   "section_menu_action_manage_webext": "Rozšyrjenje zastojaś",
   "section_menu_action_add_topsite": "Woblubowane sedło pśidaś",
+  "section_menu_action_add_search_engine": "Pytnicu pśidaś",
   "section_menu_action_move_up": "Górjej",
   "section_menu_action_move_down": "Dołoj",
   "section_menu_action_privacy_notice": "Powěźeńka priwatnosći",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Zapódajśo swóju e-mailowu adresu",
   "firstrun_form_sub_header": "aby z Firefox Sync pókšacował.",
   "firstrun_email_input_placeholder": "E-mail",
+  "firstrun_invalid_input": "Płaśiwa e-mailowa adresa trěbna",
   "firstrun_extra_legal_links": "Gaž pókšacujośo, zwolijośo do {terms} a {privacy}.",
   "firstrun_terms_of_service": "Wužywańske wuměnjenja",
   "firstrun_privacy_notice": "Powěźeńka priwatnosći",
   "firstrun_continue_to_login": "Dalej",
-  "firstrun_skip_login": "Toś ten kšac pśeskócyś",
-  "firstrun_invalid_input": "Płaśiwa e-mailowa adresa trěbna"
+  "firstrun_skip_login": "Toś ten kšac pśeskócyś"
 };

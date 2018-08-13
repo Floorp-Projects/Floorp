@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Sectie beheren",
   "section_menu_action_manage_webext": "Extensie beheren",
   "section_menu_action_add_topsite": "Topwebsite toevoegen",
+  "section_menu_action_add_search_engine": "Zoekmachine toevoegen",
   "section_menu_action_move_up": "Omhoog verplaatsen",
   "section_menu_action_move_down": "Omlaag verplaatsen",
   "section_menu_action_privacy_notice": "Privacyverklaring",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Voer uw e-mailadres in",
   "firstrun_form_sub_header": "om door te gaan naar Firefox Sync",
   "firstrun_email_input_placeholder": "E-mailadres",
+  "firstrun_invalid_input": "Geldig e-mailadres vereist",
   "firstrun_extra_legal_links": "Door verder te gaan, gaat u akkoord met de {terms} en {privacy}.",
   "firstrun_terms_of_service": "Servicevoorwaarden",
   "firstrun_privacy_notice": "Privacyverklaring",
   "firstrun_continue_to_login": "Doorgaan",
-  "firstrun_skip_login": "Deze stap overslaan",
-  "firstrun_invalid_input": "Geldig e-mailadres vereist"
+  "firstrun_skip_login": "Deze stap overslaan"
 };

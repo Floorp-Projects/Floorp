@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Szakasz kezelése",
   "section_menu_action_manage_webext": "Kiterjesztés kezelése",
   "section_menu_action_add_topsite": "Hozzáadás a népszerű oldalakhoz",
+  "section_menu_action_add_search_engine": "Keresőszolgáltatás hozzáadása",
   "section_menu_action_move_up": "Mozgatás felfelé",
   "section_menu_action_move_down": "Mozgatás lefelé",
   "section_menu_action_privacy_notice": "Adatvédelmi nyilatkozat",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Adja meg az e-mail címét",
   "firstrun_form_sub_header": "és lépjen tovább a Firefox Synchez.",
   "firstrun_email_input_placeholder": "E-mail",
+  "firstrun_invalid_input": "Érvényes e-mail szükséges",
   "firstrun_extra_legal_links": "A folytatással elfogadja a {terms} és az {privacy}.",
   "firstrun_terms_of_service": "Felhasználási feltételeket",
   "firstrun_privacy_notice": "Adatvédelmi nyilatkozatot",
   "firstrun_continue_to_login": "Folytatás",
-  "firstrun_skip_login": "Lépés kihagyása",
-  "firstrun_invalid_input": "Érvényes e-mail szükséges"
+  "firstrun_skip_login": "Lépés kihagyása"
 };

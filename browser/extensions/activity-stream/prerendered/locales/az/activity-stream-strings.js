@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Bölməni İdarə et",
   "section_menu_action_manage_webext": "Uzantını idarə et",
   "section_menu_action_add_topsite": "Qabaqcıl Sayt əlavə et",
+  "section_menu_action_add_search_engine": "Axtarış mühərriyi əlavə et",
   "section_menu_action_move_up": "Yuxarı daşı",
   "section_menu_action_move_down": "Aşağı daşı",
   "section_menu_action_privacy_notice": "Məxfilik Bildirişi",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "E-poçtunuzu daxil edin",
   "firstrun_form_sub_header": "və Firefox Sync ilə davam edin.",
   "firstrun_email_input_placeholder": "E-poçt",
+  "firstrun_invalid_input": "Doğru e-poçt tələb olunur",
   "firstrun_extra_legal_links": "Davam etməklə {terms} və {privacy} ilə razılaşmış olursuz.",
   "firstrun_terms_of_service": "İstifadə Şərtləri",
   "firstrun_privacy_notice": "Məxfilik Bildirişi",
   "firstrun_continue_to_login": "Davam et",
-  "firstrun_skip_login": "Bu addımı keç",
-  "firstrun_invalid_input": "Doğru e-poçt tələb olunur"
+  "firstrun_skip_login": "Bu addımı keç"
 };

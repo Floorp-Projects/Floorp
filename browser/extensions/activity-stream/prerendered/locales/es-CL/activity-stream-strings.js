@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gestionar sección",
   "section_menu_action_manage_webext": "Gestionar extensión",
   "section_menu_action_add_topsite": "Añadir sitio frecuente",
+  "section_menu_action_add_search_engine": "Añadir motor de búsqueda",
   "section_menu_action_move_up": "Subir",
   "section_menu_action_move_down": "Bajar",
   "section_menu_action_privacy_notice": "Aviso de privacidad",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Ingresa tu correo",
   "firstrun_form_sub_header": "para conectarte a Firefox Sync.",
   "firstrun_email_input_placeholder": "Correo",
+  "firstrun_invalid_input": "Se requiere un correo válido",
   "firstrun_extra_legal_links": "Al proceder, aceptas los {terms} y la {privacy}.",
   "firstrun_terms_of_service": "Términos del servicio",
   "firstrun_privacy_notice": "Política de privacidad",
   "firstrun_continue_to_login": "Continuar",
-  "firstrun_skip_login": "Saltar este paso",
-  "firstrun_invalid_input": "Se requiere un correo válido"
+  "firstrun_skip_login": "Saltar este paso"
 };

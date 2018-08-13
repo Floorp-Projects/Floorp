@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Pārvaldīt sadaļu",
   "section_menu_action_manage_webext": "Pārvaldīt paplašinājumu",
   "section_menu_action_add_topsite": "Pievienot populāru lapu",
+  "section_menu_action_add_search_engine": "Pievienot meklētāju",
   "section_menu_action_move_up": "Pārvietot augšup",
   "section_menu_action_move_down": "Pārvietot lejup",
   "section_menu_action_privacy_notice": "Privātuma politika",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Ievadiet savu epastu",
   "firstrun_form_sub_header": "lai turpinātu Firefox Sync.",
   "firstrun_email_input_placeholder": "Epasts",
+  "firstrun_invalid_input": "Nepieciešams derīgs epasts",
   "firstrun_extra_legal_links": "Turpinot jūs piekrītat {terms} un {privacy}.",
   "firstrun_terms_of_service": "Lietošanas noteikumiem",
   "firstrun_privacy_notice": "Privātuma politikai",
   "firstrun_continue_to_login": "Turpināt",
-  "firstrun_skip_login": "Izlaist šo soli",
-  "firstrun_invalid_input": "Nepieciešams derīgs epasts"
+  "firstrun_skip_login": "Izlaist šo soli"
 };

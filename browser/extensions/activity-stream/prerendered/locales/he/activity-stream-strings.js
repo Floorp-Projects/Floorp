@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "ניהול מדור",
   "section_menu_action_manage_webext": "ניהול הרחבה",
   "section_menu_action_add_topsite": "הוספת אתר מוביל",
+  "section_menu_action_add_search_engine": "הוספת מנוע חיפוש",
   "section_menu_action_move_up": "העברה למעלה",
   "section_menu_action_move_down": "העברה למטה",
   "section_menu_action_privacy_notice": "הצהרת פרטיות",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "נא להקליד את כתובת הדוא״ל שלך",
   "firstrun_form_sub_header": "כדי להמשיך אל Firefox Sync.",
   "firstrun_email_input_placeholder": "דוא״ל",
+  "firstrun_invalid_input": "נדרשת כתובת דוא״ל חוקית",
   "firstrun_extra_legal_links": "בחירתך להמשיך בתהליך מהווה את הסכמתך ל{terms} ול{privacy}.",
   "firstrun_terms_of_service": "תנאי השירות",
   "firstrun_privacy_notice": "הצהרת הפרטיות",
   "firstrun_continue_to_login": "להמשיך",
-  "firstrun_skip_login": "לדלג על שלב זה",
-  "firstrun_invalid_input": "נדרשת כתובת דוא״ל חוקית"
+  "firstrun_skip_login": "לדלג על שלב זה"
 };

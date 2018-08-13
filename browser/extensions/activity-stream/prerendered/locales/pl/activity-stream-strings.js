@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Zarządzaj sekcją",
   "section_menu_action_manage_webext": "Zarządzaj rozszerzeniem",
   "section_menu_action_add_topsite": "Dodaj stronę do popularnych",
+  "section_menu_action_add_search_engine": "Dodaj wyszukiwarkę",
   "section_menu_action_move_up": "Przesuń w górę",
   "section_menu_action_move_down": "Przesuń w dół",
   "section_menu_action_privacy_notice": "Uwagi dotyczące prywatności",
@@ -96,6 +97,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Wprowadź adres e-mail",
   "firstrun_form_sub_header": "i zacznij korzystać z Firefox Sync",
   "firstrun_email_input_placeholder": "Adres e-mail",
+  "firstrun_invalid_input": "Wymagany jest prawidłowy adres e-mail",
   "firstrun_extra_legal_links": "Kontynuując, akceptujesz {terms} i {privacy}.",
   "firstrun_terms_of_service": "warunki korzystania z usługi",
   "firstrun_privacy_notice": "uwagi dotyczące prywatności",
@@ -113,6 +115,5 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_body": "Krótkie i słodkie informacje od Mozilli o Firefoksie i kulturze internetowej, a od czasu do czasu także jakiś żart.",
   "settings_pane_done_button": "Gotowe",
   "settings_pane_topstories_options_sponsored": "Sponsorowane treści",
-  "pocket_description": "Odkrywaj wysokiej jakości treści dzięki serwisowi Pocket, który jest teraz częścią Mozilli.",
-  "firstrun_invalid_input": "Wymagany jest prawidłowy adres e-mail"
+  "pocket_description": "Odkrywaj wysokiej jakości treści dzięki serwisowi Pocket, który jest teraz częścią Mozilli."
 };

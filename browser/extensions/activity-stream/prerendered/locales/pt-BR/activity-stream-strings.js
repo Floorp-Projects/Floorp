@@ -65,7 +65,7 @@ window.gActivityStreamStrings = {
   "topsites_form_url_label": "URL",
   "topsites_form_image_url_label": "URL de imagem personalizada",
   "topsites_form_url_placeholder": "Digite ou cole um URL",
-  "topsites_form_use_image_link": "Utilizar uma imagem personalizada…",
+  "topsites_form_use_image_link": "Usar uma imagem personalizada…",
   "topsites_form_preview_button": "Visualizar",
   "topsites_form_add_button": "Adicionar",
   "topsites_form_save_button": "Salvar",
@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gerenciar seção",
   "section_menu_action_manage_webext": "Gerenciar extensão",
   "section_menu_action_add_topsite": "Adicionar ao sites preferidos",
+  "section_menu_action_add_search_engine": "Adicionar mecanismo de busca",
   "section_menu_action_move_up": "Mover para cima",
   "section_menu_action_move_down": "Mover para baixo",
   "section_menu_action_privacy_notice": "Política de privacidade",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Insira seu email",
   "firstrun_form_sub_header": "para continuar com o Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mail",
+  "firstrun_invalid_input": "Necessário e-mail válido",
   "firstrun_extra_legal_links": "Ao continuar você concorda com os {terms} e {privacy}.",
   "firstrun_terms_of_service": "Termos de serviço",
   "firstrun_privacy_notice": "Política de privacidade",
   "firstrun_continue_to_login": "Continuar",
-  "firstrun_skip_login": "Pular essa etapa",
-  "firstrun_invalid_input": "Necessário e-mail válido"
+  "firstrun_skip_login": "Pular essa etapa"
 };

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "విభాగ నిర్వహణ",
   "section_menu_action_manage_webext": "పొడగింత నిర్వహణ",
   "section_menu_action_add_topsite": "మేటి సైటును చేర్చు",
+  "section_menu_action_add_search_engine": "శోధన యంత్రాన్ని చేర్చు",
   "section_menu_action_move_up": "పైకి జరుపు",
   "section_menu_action_move_down": "కిందకి జరుపు",
   "section_menu_action_privacy_notice": "అంతరంగికత గమనిక",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "ఈ ఈమెయిలును ఇవ్వండి",
   "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "ఈమెయిలు",
+  "firstrun_invalid_input": "సరైన ఈమెయిలు తప్పనిసరి",
   "firstrun_extra_legal_links": "కొనసాగడం ద్వారా మీరు {terms}, {privacy} లను అంగీకరిస్తున్నారు.",
   "firstrun_terms_of_service": "సేవా నియమాలు",
   "firstrun_privacy_notice": "అంతరంగికత గమనిక",
   "firstrun_continue_to_login": "కొనసాగు",
-  "firstrun_skip_login": "ఈ అంచెను దాటవేయి",
-  "firstrun_invalid_input": "సరైన ఈమెయిలు తప్పనిసరి"
+  "firstrun_skip_login": "ఈ అంచెను దాటవేయి"
 };
