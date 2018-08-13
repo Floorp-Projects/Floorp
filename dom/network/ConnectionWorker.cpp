@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 namespace network {
 
-class ConnectionProxy final : public NetworkObserver
+class ConnectionProxy final : public hal::NetworkObserver
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ConnectionProxy)
