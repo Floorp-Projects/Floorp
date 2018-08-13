@@ -2,12 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.ellipsis-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /*
  * The current layout of debug target item is
  *
@@ -40,13 +34,4 @@
 .debug-target-item__info__name {
   font-size: 20px;
   margin-block-end: 2px;
-}
-
-.debug-target-item__inspect-button {
-  height: 36px;
-  margin-inline-start: 4px;
-  margin-inline-end: 4px;
-  min-width: 100px;
-  padding-inline-start: 20px;
-  padding-inline-end: 20px;
 }

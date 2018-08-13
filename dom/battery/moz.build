@@ -9,7 +9,6 @@ with Files("**"):
 
 EXPORTS.mozilla.dom.battery += [
     'Constants.h',
-    'Types.h',
 ]
 
 SOURCES += [

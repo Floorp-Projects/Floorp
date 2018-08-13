@@ -383,8 +383,7 @@ AccessibleCaretEventHub::Init()
     mManager->OnFrameReconstruction();
   }
 
-  if (mInitialized || !mPresShell || !mPresShell->GetCanvasFrame() ||
-      !mPresShell->GetCanvasFrame()->GetCustomContentContainer()) {
+  if (mInitialized || !mPresShell || !mPresShell->GetCanvasFrame()) {
     return;
   }
 

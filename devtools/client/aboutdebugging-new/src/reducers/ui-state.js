@@ -5,13 +5,15 @@
 "use strict";
 
 const {
+  NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
-  PAGES
+  PAGES,
 } = require("../constants");
 
-function UiState() {
+function UiState(locations = []) {
   return {
-    selectedPage: PAGES.THIS_FIREFOX
+    networkLocations: locations,
+    selectedPage: PAGES.THIS_FIREFOX,
   };
 }
 
@@ -19,7 +21,12 @@ function uiReducer(state = UiState(), action) {
   switch (action.type) {
     case PAGE_SELECTED: {
       const { page } = action;
-      return { selectedPage: page };
+      return Object.assign({}, state, { selectedPage: page });
+    }
+
+    case NETWORK_LOCATIONS_UPDATED: {
+      const { locations } = action;
+      return Object.assign({}, state, { networkLocations: locations });
     }
 
     default:

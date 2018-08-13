@@ -22,6 +22,10 @@ const Provider =
 
 const actions = require("./src/actions/index");
 const { configureStore } = require("./src/create-store");
+const {
+  addNetworkLocationsObserver,
+  getNetworkLocations,
+} = require("./src/modules/network-locations");
 
 const App = createFactory(require("./src/components/App"));
 
@@ -41,6 +45,9 @@ const AboutDebugging = {
     render(Provider({ store: this.store }, App()), this.mount);
 
     this.actions.selectPage(PAGES.THIS_FIREFOX);
+    addNetworkLocationsObserver(() => {
+      this.actions.updateNetworkLocations(getNetworkLocations());
+    });
   },
 
   destroy() {

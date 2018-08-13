@@ -141,9 +141,9 @@ public:
   }
 
   // Element for 'Intersects' test. Container of image and bar elements.
-  dom::Element* CaretElement() const
+  dom::Element& CaretElement() const
   {
-    return mCaretElementHolder->GetContentNode();
+    return mCaretElementHolder->ContentNode();
   }
 
   // Ensures that the caret element is made "APZ aware" so that the APZ code
