@@ -188,6 +188,8 @@ class MarionetteBranch extends Branch {
    * @return {Log.Level}
    */
   get logLevel() {
+    // TODO: when geckodriver's minimum supported Firefox version reaches 62,
+    // the lower-casing here can be dropped (https://bugzil.la/1482829)
     switch (this.get("log.level", "info").toLowerCase()) {
       case "fatal":
         return Log.Level.Fatal;
