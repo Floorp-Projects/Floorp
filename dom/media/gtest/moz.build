@@ -87,7 +87,10 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = 'xul-gtest'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow', '-Wno-unused-private-field']
+    CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['CC_TYPE'] == 'clang':
+    CXXFLAGS += ['-Wno-unused-private-field']
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497
