@@ -1038,7 +1038,7 @@ GCRuntime::getZealBits(uint32_t* zealBits, uint32_t* frequency, uint32_t* schedu
     *scheduled = nextScheduled;
 }
 
-const char* gc::ZealModeHelpText =
+const char gc::ZealModeHelpText[] =
     "  Specifies how zealous the garbage collector should be. Some of these modes can\n"
     "  be set simultaneously, by passing multiple level options, e.g. \"2;4\" will activate\n"
     "  both modes 2 and 4. Modes can be specified by name or number.\n"
@@ -1244,7 +1244,7 @@ GCRuntime::parseAndSetZeal(const char* str)
 static const char*
 AllocKindName(AllocKind kind)
 {
-    static const char* names[] = {
+    static const char* const names[] = {
 #define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) \
         #allocKind,
 FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
