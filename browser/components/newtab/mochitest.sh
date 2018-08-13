@@ -14,7 +14,7 @@ cd /activity-stream && npm install . && npm run buildmc
 # Build latest m-c with Activity Stream changes
 cd /mozilla-central && ./mach build \
   && ./mach test browser_parsable_css \
-  && ./mach lint -l eslint -l codespell browser/components/newtab \
+  && ./mach lint -l codespell browser/components/newtab \
   && ./mach test browser/components/newtab/test/browser --headless \
   && ./mach test browser/components/newtab/test/xpcshell \
   && ./mach test browser/components/preferences/in-content/tests/browser_hometab_restore_defaults.js --headless \

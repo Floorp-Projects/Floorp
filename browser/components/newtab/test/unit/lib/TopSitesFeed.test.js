@@ -1182,14 +1182,11 @@ describe("Top Sites Feed", () => {
       feed.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = true;
       feed.store.state.Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF] = "google,amazon";
       feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "";
-      global.Services.search.getEngines = () => [
-        {identifier: "google"},
-        {identifier: "amazon"}
+      const searchEngines = [
+        {wrappedJSObject: {_internalAliases: ["@google"]}},
+        {wrappedJSObject: {_internalAliases: ["@amazon"]}}
       ];
-      global.Services.search.getDefaultEngines = () => [
-        {identifier: "google"},
-        {identifier: "amazon"}
-      ];
+      global.Services.search.getDefaultEngines = () => searchEngines;
       fakeNewTabUtils.pinnedLinks.pin = sinon.stub().callsFake((site, index) => {
         fakeNewTabUtils.pinnedLinks.links[index] = site;
       });
@@ -1295,12 +1292,10 @@ describe("Top Sites Feed", () => {
         data: {
           searchShortcuts: [{
             keyword: "@google",
-            searchIdentifier: /^google/,
             shortURL: "google",
             url: "https://google.com"
           }, {
             keyword: "@amazon",
-            searchIdentifier: /^amazon/,
             shortURL: "amazon",
             url: "https://amazon.com"
           }]
@@ -1355,7 +1350,7 @@ describe("Top Sites Feed", () => {
 
       it("should not pin a shortcut if the corresponding search engine is not available", async () => {
         // Make Amazon search engine unavailable
-        global.Services.search.getEngines = () => [{identifier: "google"}];
+        global.Services.search.getDefaultEngines = () => [{wrappedJSObject: {_internalAliases: ["@google"]}}];
         fakeNewTabUtils.pinnedLinks.links.fill(null);
         await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
         assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://amazon.com"));
