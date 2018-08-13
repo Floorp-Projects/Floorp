@@ -155,6 +155,12 @@ class ExceptionHandler {
 				    MinidumpCallback callback,
 				    void *callback_context);
 
+  // Write a minidump for an exception that was received by another handler.
+  static bool WriteForwardedExceptionMinidump(int exception_type,
+					      int exception_code,
+					      int exception_subcode,
+					      mach_port_t thread);
+
   // Returns whether out-of-process dump generation is used or not.
   bool IsOutOfProcess() const {
 #if TARGET_OS_IPHONE
