@@ -73,7 +73,7 @@ add_task(async function() {
 
   // Now set up our prefs
   await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.restrict3rdpartystorage.enabled", true],
+    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
   ]});
 
   info("Creating a new tab");
