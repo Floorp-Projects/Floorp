@@ -4353,12 +4353,10 @@ BytecodeEmitter::emitIf(ParseNode* pn)
 {
     IfEmitter ifThenElse(this);
 
-  if_again:
-    // Make sure this code is attributed to the "if" so that it gets a useful
-    // column number, instead of the default 0 value.
-    if (!updateSourceCoordNotes(pn->pn_pos.begin))
+    if (!ifThenElse.emitIf(Some(pn->pn_pos.begin)))
         return false;
 
+  if_again:
     /* Emit code for the condition before pushing stmtInfo. */
     if (!emitTree(pn->pn_kid1))
         return false;
@@ -4380,7 +4378,7 @@ BytecodeEmitter::emitIf(ParseNode* pn)
         if (elseNode->isKind(ParseNodeKind::If)) {
             pn = elseNode;
 
-            if (!ifThenElse.emitElseIf())
+            if (!ifThenElse.emitElseIf(Some(pn->pn_pos.begin)))
                 return false;
 
             goto if_again;
@@ -6846,26 +6844,28 @@ bool
 BytecodeEmitter::emitConditionalExpression(ConditionalExpression& conditional,
                                            ValueUsage valueUsage /* = ValueUsage::WantValue */)
 {
-    /* Emit the condition, then branch if false to the else part. */
+    CondEmitter cond(this);
+    if (!cond.emitCond())
+        return false;
+
     if (!emitTree(&conditional.condition()))
         return false;
 
-    IfEmitter ifThenElse(this);
-    if (!ifThenElse.emitCond())
+    if (!cond.emitThenElse())
         return false;
 
     if (!emitTree(&conditional.thenExpression(), valueUsage))
         return false;
 
-    if (!ifThenElse.emitElse())
+    if (!cond.emitElse())
         return false;
 
     if (!emitTree(&conditional.elseExpression(), valueUsage))
         return false;
 
-    if (!ifThenElse.emitEnd())
+    if (!cond.emitEnd())
         return false;
-    MOZ_ASSERT(ifThenElse.pushed() == 1);
+    MOZ_ASSERT(cond.pushed() == 1);
 
     return true;
 }
