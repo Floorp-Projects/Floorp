@@ -2906,14 +2906,17 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
 
   nscoord deltaICoord = 0;
   for (PerFrameData* pfd = aPSD->mFirstFrame; pfd != nullptr; pfd = pfd->mNext) {
-    // Don't reposition bullets (and other frames that occur out of X-order?)
-    if (!pfd->mIsBullet) {
-      nscoord dw = 0;
-      WritingMode lineWM = mRootSpan->mWritingMode;
-      const auto& assign = pfd->mJustificationAssignment;
-      bool isInlineText = pfd->mIsTextFrame &&
-                          !pfd->mWritingMode.IsOrthogonalTo(lineWM);
+    nscoord dw = 0;
+    WritingMode lineWM = mRootSpan->mWritingMode;
+    const auto& assign = pfd->mJustificationAssignment;
+    bool isInlineText = pfd->mIsTextFrame &&
+                        !pfd->mWritingMode.IsOrthogonalTo(lineWM);
 
+    // Don't apply justification if the frame doesn't participate. Same
+    // as the condition used in ComputeFrameJustification. Note that,
+    // we still need to move the frame based on deltaICoord even if the
+    // frame itself doesn't expand.
+    if (pfd->ParticipatesInJustification()) {
       if (isInlineText) {
         if (aState.IsJustifiable()) {
           // Set corresponding justification gaps here, so that the
@@ -2927,30 +2930,32 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
         if (dw) {
           pfd->mRecomputeOverflow = true;
         }
-      }
-      else {
+      } else {
         if (nullptr != pfd->mSpan) {
           dw = ApplyFrameJustification(pfd->mSpan, aState);
         }
       }
-
-      pfd->mBounds.ISize(lineWM) += dw;
-      nscoord gapsAtEnd = 0;
-      if (!isInlineText && assign.TotalGaps()) {
-        // It is possible that we assign gaps to non-text frame or an
-        // orthogonal text frame. Apply the gaps as margin for them.
-        deltaICoord += aState.Consume(assign.mGapsAtStart);
-        gapsAtEnd = aState.Consume(assign.mGapsAtEnd);
-        dw += gapsAtEnd;
-      }
-      pfd->mBounds.IStart(lineWM) += deltaICoord;
-
-      // The gaps added to the end of the frame should also be
-      // excluded from the isize added to the annotation.
-      ApplyLineJustificationToAnnotations(pfd, deltaICoord, dw - gapsAtEnd);
-      deltaICoord += dw;
-      pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerSizeForSpan(aPSD));
+    } else {
+      MOZ_ASSERT(!assign.TotalGaps(),
+                 "Non-participants shouldn't have assigned gaps");
     }
+
+    pfd->mBounds.ISize(lineWM) += dw;
+    nscoord gapsAtEnd = 0;
+    if (!isInlineText && assign.TotalGaps()) {
+      // It is possible that we assign gaps to non-text frame or an
+      // orthogonal text frame. Apply the gaps as margin for them.
+      deltaICoord += aState.Consume(assign.mGapsAtStart);
+      gapsAtEnd = aState.Consume(assign.mGapsAtEnd);
+      dw += gapsAtEnd;
+    }
+    pfd->mBounds.IStart(lineWM) += deltaICoord;
+
+    // The gaps added to the end of the frame should also be
+    // excluded from the isize added to the annotation.
+    ApplyLineJustificationToAnnotations(pfd, deltaICoord, dw - gapsAtEnd);
+    deltaICoord += dw;
+    pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerSizeForSpan(aPSD));
   }
   return deltaICoord;
 }
