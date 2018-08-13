@@ -81,17 +81,19 @@ void Vibrate(const nsTArray<uint32_t>& pattern,
 void CancelVibrate(nsPIDOMWindowInner* aWindow);
 void CancelVibrate(const hal::WindowIdentifier &id);
 
-/**
- * Inform the battery backend there is a new battery observer.
- * @param aBatteryObserver The observer that should be added.
- */
-void RegisterBatteryObserver(hal::BatteryObserver* aBatteryObserver);
+#define MOZ_DEFINE_HAL_OBSERVER(name_)                              \
+/**                                                                 \
+ * Inform the backend there is a new |name_| observer.              \
+ * @param aObserver The observer that should be added.              \
+ */                                                                 \
+void Register##name_##Observer(hal::name_##Observer* aObserver);    \
+/**                                                                 \
+ * Inform the backend a |name_| observer unregistered.              \
+ * @param aObserver The observer that should be removed.            \
+ */                                                                 \
+void Unregister##name_##Observer(hal::name_##Observer* aObserver);
 
-/**
- * Inform the battery backend a battery observer unregistered.
- * @param aBatteryObserver The observer that should be removed.
- */
-void UnregisterBatteryObserver(hal::BatteryObserver* aBatteryObserver);
+MOZ_DEFINE_HAL_OBSERVER(Battery);
 
 /**
  * Returns the current battery information.
@@ -143,17 +145,7 @@ void EnableSensorNotifications(hal::SensorType aSensor);
 void DisableSensorNotifications(hal::SensorType aSensor);
 
 
-/**
- * Inform the network backend there is a new network observer.
- * @param aNetworkObserver The observer that should be added.
- */
-void RegisterNetworkObserver(hal::NetworkObserver* aNetworkObserver);
-
-/**
- * Inform the network backend a network observer unregistered.
- * @param aNetworkObserver The observer that should be removed.
- */
-void UnregisterNetworkObserver(hal::NetworkObserver* aNetworkObserver);
+MOZ_DEFINE_HAL_OBSERVER(Network);
 
 /**
  * Returns the current network information.
@@ -180,17 +172,7 @@ void EnableWakeLockNotifications();
  */
 void DisableWakeLockNotifications();
 
-/**
- * Inform the wake lock backend there is a new wake lock observer.
- * @param aWakeLockObserver The observer that should be added.
- */
-void RegisterWakeLockObserver(hal::WakeLockObserver* aObserver);
-
-/**
- * Inform the wake lock backend a wake lock observer unregistered.
- * @param aWakeLockObserver The observer that should be removed.
- */
-void UnregisterWakeLockObserver(hal::WakeLockObserver* aObserver);
+MOZ_DEFINE_HAL_OBSERVER(WakeLock);
 
 /**
  * Adjust a wake lock's counts on behalf of a given process.
@@ -226,17 +208,7 @@ void GetWakeLockInfo(const nsAString &aTopic, hal::WakeLockInformation *aWakeLoc
  */
 void NotifyWakeLockChange(const hal::WakeLockInformation& aWakeLockInfo);
 
-/**
- * Inform the backend there is a new screen configuration observer.
- * @param aScreenConfigurationObserver The observer that should be added.
- */
-void RegisterScreenConfigurationObserver(hal::ScreenConfigurationObserver* aScreenConfigurationObserver);
-
-/**
- * Inform the backend a screen configuration observer unregistered.
- * @param aScreenConfigurationObserver The observer that should be removed.
- */
-void UnregisterScreenConfigurationObserver(hal::ScreenConfigurationObserver* aScreenConfigurationObserver);
+MOZ_DEFINE_HAL_OBSERVER(ScreenConfiguration);
 
 /**
  * Returns the current screen configuration.
