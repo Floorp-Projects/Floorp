@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.750';
-var pdfjsBuild = 'c8ee6331';
+var pdfjsVersion = '2.0.760';
+var pdfjsBuild = '1268aea2';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -4223,7 +4223,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.750',
+    apiVersion: '2.0.760',
     source: {
       data: source.data,
       url: source.url,
@@ -5314,6 +5314,9 @@ var WorkerTransport = function WorkerTransportClosure() {
       return this.messageHandler.sendWithPromise('GetDestinations', null);
     },
     getDestination: function WorkerTransport_getDestination(id) {
+      if (typeof id !== 'string') {
+        return Promise.reject(new Error('Invalid destination request.'));
+      }
       return this.messageHandler.sendWithPromise('GetDestination', { id });
     },
     getPageLabels: function WorkerTransport_getPageLabels() {
@@ -5563,8 +5566,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.750';
-  exports.build = build = 'c8ee6331';
+  exports.version = version = '2.0.760';
+  exports.build = build = '1268aea2';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
