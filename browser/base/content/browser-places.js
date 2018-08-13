@@ -1239,12 +1239,6 @@ var BookmarkingUI = {
     return BrowserPageActions.panelAnchorNodeForAction(action);
   },
 
-  get broadcaster() {
-    delete this.broadcaster;
-    let broadcaster = document.getElementById("bookmarkThisPageBroadcaster");
-    return this.broadcaster = broadcaster;
-  },
-
   get stringbundleset() {
     delete this.stringbundleset;
     return this.stringbundleset = document.getElementById("stringbundleset");
@@ -1256,8 +1250,8 @@ var BookmarkingUI = {
   get status() {
     if (this._pendingUpdate)
       return this.STATUS_UPDATING;
-    return this.broadcaster.hasAttribute("starred") ? this.STATUS_STARRED
-                                                    : this.STATUS_UNSTARRED;
+    return this.star.hasAttribute("starred") ? this.STATUS_STARRED
+                                             : this.STATUS_UNSTARRED;
   },
 
   get _starredTooltip() {
@@ -1499,13 +1493,36 @@ var BookmarkingUI = {
   },
 
   _updateStar: function BUI__updateStar() {
-    if (this._itemGuids.size > 0) {
-      this.broadcaster.setAttribute("starred", "true");
-      this.broadcaster.setAttribute("tooltiptext", this._starredTooltip);
-    } else {
+    let starred = this._itemGuids.size > 0;
+    if (!starred) {
       this.star.removeAttribute("animate");
-      this.broadcaster.removeAttribute("starred");
-      this.broadcaster.setAttribute("tooltiptext", this._unstarredTooltip);
+    }
+
+    // Update the image for all elements.
+    for (let element of [
+      this.star,
+      document.getElementById("context-bookmarkpage"),
+      document.getElementById("panelMenuBookmarkThisPage"),
+      document.getElementById("pageAction-panel-bookmark"),
+    ]) {
+      if (!element) {
+        // The page action panel element may not have been created yet.
+        continue;
+      }
+      if (starred) {
+        element.setAttribute("starred", "true");
+      } else {
+        element.removeAttribute("starred");
+      }
+    }
+
+    // Update the tooltip for elements that require it.
+    for (let element of [
+      this.star,
+      document.getElementById("context-bookmarkpage"),
+    ]) {
+      element.setAttribute("tooltiptext", starred ? this._starredTooltip
+                                                  : this._unstarredTooltip);
     }
   },
 
@@ -1521,7 +1538,18 @@ var BookmarkingUI = {
     let isStarred = !forceReset && this._itemGuids.size > 0;
     let label = this.stringbundleset.getAttribute(
       isStarred ? "string-editthisbookmark" : "string-bookmarkthispage");
-    this.broadcaster.setAttribute("label", label);
+    for (let element of [
+      document.getElementById("menu_bookmarkThisPage"),
+      document.getElementById("context-bookmarkpage"),
+      document.getElementById("panelMenuBookmarkThisPage"),
+    ]) {
+      element.setAttribute("label", label);
+    }
+
+    // Update the title and the starred state for the page action panel.
+    PageActions.actionForID(PageActions.ACTION_ID_BOOKMARK)
+               .setTitle(label, window);
+    this._updateStar();
   },
 
   onMainMenuPopupShowing: function BUI_onMainMenuPopupShowing(event) {

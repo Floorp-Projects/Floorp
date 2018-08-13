@@ -933,8 +933,7 @@
                       onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('bookmark'), event, this);">
                   <image id="star-button"
                          class="urlbar-icon"
-                         role="button"
-                         observes="bookmarkThisPageBroadcaster"/>
+                         role="button"/>
                   <hbox id="star-button-animatable-box">
                     <image id="star-button-animatable-image"
                            role="presentation"/>
