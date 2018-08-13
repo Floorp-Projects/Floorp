@@ -719,7 +719,7 @@ EditorEventListener::HandleMiddleClickPaste(MouseEvent* aMouseEvent)
   if (clickEvent->IsControl()) {
     textEditor->PasteAsQuotationAsAction(clipboard);
   } else {
-    textEditor->Paste(clipboard);
+    textEditor->PasteAsAction(clipboard);
   }
 
   // Prevent the event from propagating up to be possibly handled

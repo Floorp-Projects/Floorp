@@ -294,32 +294,52 @@ TextEditor::OnDrop(DragEvent* aDropEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::Paste(int32_t aSelectionType)
+nsresult
+TextEditor::PasteAsAction(int32_t aClipboardType)
 {
-  if (!FireClipboardEvent(ePaste, aSelectionType)) {
+  if (AsHTMLEditor()) {
+    nsresult rv = AsHTMLEditor()->PasteInternal(aClipboardType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  if (!FireClipboardEvent(ePaste, aClipboardType)) {
     return NS_OK;
   }
 
   // Get Clipboard Service
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsIClipboard> clipboard =
+    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Get the nsITransferable interface for getting the data from the clipboard
-  nsCOMPtr<nsITransferable> trans;
-  rv = PrepareTransferable(getter_AddRefs(trans));
-  if (NS_SUCCEEDED(rv) && trans) {
-    // Get the Data from the clipboard
-    if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) &&
-        IsModifiable()) {
-      rv = InsertTextFromTransferable(trans);
-    }
+  nsCOMPtr<nsITransferable> transferable;
+  rv = PrepareTransferable(getter_AddRefs(transferable));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-
-  return rv;
+  if (NS_WARN_IF(!transferable)) {
+    return NS_OK; // XXX Why?
+  }
+  // Get the Data from the clipboard.
+  rv = clipboard->GetData(transferable, aClipboardType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK; // XXX Why?
+  }
+  // XXX Why don't we check this first?
+  if (!IsModifiable()) {
+    return NS_OK;
+  }
+  rv = InsertTextFromTransferable(transferable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -136,7 +136,6 @@ public:
   NS_IMETHOD BeginningOfDocument() override;
   NS_IMETHOD SetFlags(uint32_t aFlags) override;
 
-  NS_IMETHOD Paste(int32_t aSelectionType) override;
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
 
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
@@ -1545,6 +1544,7 @@ protected:
   friend class CSSEditUtils;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
+  friend class TextEditor;
   friend class WSRunObject;
 };
 

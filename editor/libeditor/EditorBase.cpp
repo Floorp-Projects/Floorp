@@ -1198,9 +1198,13 @@ EditorBase::CanDelete(bool* aCanDelete)
 }
 
 NS_IMETHODIMP
-EditorBase::Paste(int32_t aSelectionType)
+EditorBase::Paste(int32_t aClipboardType)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = AsTextEditor()->PasteAsAction(aClipboardType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
