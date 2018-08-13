@@ -432,14 +432,14 @@ nsSVGMaskProperty::ResolveImage(uint32_t aIndex)
 }
 
 bool
-nsSVGTextPathProperty::TargetIsValid()
+SVGTextPathObserver::TargetIsValid()
 {
   Element* target = GetTarget();
   return target && target->IsSVGElement(nsGkAtoms::path);
 }
 
 void
-nsSVGTextPathProperty::OnRenderingChange()
+SVGTextPathObserver::OnRenderingChange()
 {
   nsSVGRenderingObserverProperty::OnRenderingChange();
 
@@ -454,7 +454,7 @@ nsSVGTextPathProperty::OnRenderingChange()
   // Avoid getting into an infinite loop of reflows if the <textPath> is
   // pointing to one of its ancestors.  TargetIsValid returns true iff
   // the target element is a <path> element, and we would not have this
-  // nsSVGTextPathProperty if this <textPath> were a descendant of the
+  // SVGTextPathObserver if this <textPath> were a descendant of the
   // target <path>.
   //
   // Note that we still have to post the restyle event when we
@@ -559,9 +559,9 @@ SVGObserverUtils::GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
-nsSVGTextPathProperty*
+SVGTextPathObserver*
 SVGObserverUtils::GetTextPathProperty(nsIURI* aURI, nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<nsSVGTextPathProperty>* aProperty)
+  const mozilla::FramePropertyDescriptor<SVGTextPathObserver>* aProperty)
 {
   return GetEffectProperty(aURI, aFrame, aProperty);
 }

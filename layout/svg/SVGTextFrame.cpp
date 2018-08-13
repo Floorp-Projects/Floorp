@@ -4986,7 +4986,7 @@ SVGTextFrame::AdjustPositionsForClusters()
 SVGGeometryElement*
 SVGTextFrame::GetTextPathGeometryElement(nsIFrame* aTextPathFrame)
 {
-  nsSVGTextPathProperty *property =
+  SVGTextPathObserver *property =
     aTextPathFrame->GetProperty(SVGObserverUtils::HrefAsTextPathProperty());
 
   if (!property) {
