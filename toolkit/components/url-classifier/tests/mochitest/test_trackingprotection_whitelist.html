@@ -56,14 +56,8 @@ var alwaysbadids = [
   "badscript",
 ];
 
-function checkLoads(aWindow, aWhitelisted, tpEnabled) {
+function checkLoads(aWindow, aWhitelisted) {
   var win = aWindow.content;
-  if (!tpEnabled) {
-    is(win.document.getElementById("badscript").dataset.touched, "yes", "Should load tracking javascript");
-    is(win.document.blockedTrackingNodeCount, 0, "Should not identify any tracking elements");
-    return;
-  }
-
   is(win.document.getElementById("badscript").dataset.touched, "no", "Should not load tracking javascript");
   is(win.document.getElementById("goodscript").dataset.touched, aWhitelisted ? "yes" : "no", "Should load whitelisted tracking javascript");
 
@@ -115,30 +109,22 @@ async function test() {
   SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
   await UrlClassifierTestUtils.addTestTrackers();
 
-  // Load the test from a URL that's NOT on the whitelist with content blocking disabled
-  await SpecialPowers.setBoolPref("browser.contentblocking.enabled", false);
-  await testOnWindow(contentPage2).then(function(aWindow) {
-    checkLoads(aWindow, false, false);
+  // Load the test from a URL on the whitelist
+  await testOnWindow(contentPage1).then(function(aWindow) {
+    checkLoads(aWindow, true);
     aWindow.close();
   });
-  await SpecialPowers.clearUserPref("browser.contentblocking.enabled");
 
   // Load the test from a URL that's NOT on the whitelist
   await testOnWindow(contentPage2).then(function(aWindow) {
-    checkLoads(aWindow, false, true);
-    aWindow.close();
-  });
-
-  // Load the test from a URL on the whitelist
-  await testOnWindow(contentPage1).then(function(aWindow) {
-    checkLoads(aWindow, true, true);
+    checkLoads(aWindow, false);
     aWindow.close();
   });
 
   // Load the test from a URL on the whitelist but without the whitelist
   await SpecialPowers.setCharPref("urlclassifier.trackingWhitelistTable", "");
   await testOnWindow(contentPage1).then(function(aWindow) {
-    checkLoads(aWindow, false, true);
+    checkLoads(aWindow, false);
     aWindow.close();
   });
   await SpecialPowers.clearUserPref("urlclassifier.trackingWhitelistTable");

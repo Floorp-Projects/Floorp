@@ -104,11 +104,9 @@ function checkLoads(aWindow, aBlocked) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set": [
-      ["browser.contentblocking.enabled", true],
-      ["privacy.trackingprotection.enabled", false],
-      ["privacy.trackingprotection.pbmode.enabled", true],
-  ]}, test);
+  {"set": [["privacy.trackingprotection.enabled", false],
+           ["privacy.trackingprotection.pbmode.enabled", true]]},
+  test);
 
 async function test() {
   SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
@@ -132,15 +130,6 @@ async function test() {
     checkLoads(aWindow, false);
     aWindow.close();
   });
-
-  // Private Browsing, without the content blocking pref (trackers should be loaded)
-  await SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
-  await SpecialPowers.setBoolPref("browser.contentblocking.enabled", false);
-  await testOnWindow(true).then(function(aWindow) {
-    checkLoads(aWindow, false);
-    aWindow.close();
-  });
-
   SimpleTest.finish();
 }
 
