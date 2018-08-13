@@ -1909,7 +1909,7 @@ toolbar#nav-bar {
             "idle.lastDailyNotification": int(time.time()),
             # Enable tracing output for detailed failures in case of
             # failing connection attempts, and hangs (bug 1397201)
-            "marionette.log.level": "TRACE",
+            "marionette.log.level": "Trace",
         }
 
         if options.flavor == 'browser' and options.timeout:

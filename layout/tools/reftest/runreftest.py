@@ -396,7 +396,7 @@ class RefTest(object):
 
         # Enable tracing output for detailed failures in case of
         # failing connection attempts, and hangs (bug 1397201)
-        prefs["marionette.log.level"] = "TRACE"
+        prefs["marionette.log.level"] = "Trace"
 
         # Third, set preferences passed in via the command line.
         for v in options.extraPrefs:
