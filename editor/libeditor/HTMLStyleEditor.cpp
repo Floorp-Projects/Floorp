@@ -1222,7 +1222,7 @@ HTMLEditor::RemoveAllInlineProperties()
                                       EditSubAction::eRemoveAllTextProperties,
                                       nsIEditor::eNext);
 
-  nsresult rv = RemoveInlineProperty(nullptr, nullptr);
+  nsresult rv = RemoveInlinePropertyInternal(nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -1233,18 +1233,23 @@ HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
 {
   RefPtr<nsAtom> property = NS_Atomize(aProperty);
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return RemoveInlineProperty(property, attribute);
+  return RemoveInlinePropertyInternal(property, attribute);
 }
 
 nsresult
-HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
-                                 nsAtom* aAttribute)
+HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
+                                         nsAtom* aAttribute)
 {
-  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!mRules)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   CommitComposition();
 
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (selection->IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
@@ -1304,7 +1309,9 @@ HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
       // Remove this style from ancestors of our range endpoints, splitting
       // them as appropriate
       rv = SplitStyleAboveRange(range, aProperty, aAttribute);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       // Check for easy case: both range endpoints in same text node
       nsCOMPtr<nsINode> startNode = range->GetStartContainer();
@@ -1341,8 +1348,9 @@ HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
         // Iterate range and build up array
         for (iter->Init(range); !iter->IsDone(); iter->Next()) {
           nsCOMPtr<nsINode> node = iter->GetCurrentNode();
-          NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
+          if (NS_WARN_IF(!node)) {
+            return NS_ERROR_FAILURE;
+          }
           if (IsEditable(node) && node->IsContent()) {
             arrayOfNodes.AppendElement(*node->AsContent());
           }
@@ -1351,7 +1359,9 @@ HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
         // Loop through the list, remove the property on each node
         for (auto& node : arrayOfNodes) {
           rv = RemoveStyleInside(node, aProperty, aAttribute);
-          NS_ENSURE_SUCCESS(rv, rv);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
           if (IsCSSEnabled() &&
               CSSEditUtils::IsCSSEditableProperty(node, aProperty,
                                                   aAttribute) &&
@@ -1371,10 +1381,14 @@ HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
       }
     }
   }
-  if (!cancel) {
-    // Post-process
-    rv = rules->DidDoAction(selection, subActionInfo, rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+
+  if (cancel) {
+    return NS_OK;
+  }
+
+  rv = rules->DidDoAction(selection, subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
