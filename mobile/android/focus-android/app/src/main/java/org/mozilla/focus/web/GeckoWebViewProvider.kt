@@ -344,6 +344,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             }
         }
 
+        @Suppress("ComplexMethod")
         private fun createProgressDelegate(): GeckoSession.ProgressDelegate {
             return object : GeckoSession.ProgressDelegate {
                 override fun onProgressChange(session: GeckoSession?, progress: Int) {
