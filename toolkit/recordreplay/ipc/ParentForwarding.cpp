@@ -100,6 +100,7 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
       type == dom::PContent::Msg_PBrowserConstructor__ID ||
       type == dom::PContent::Msg_RegisterChrome__ID ||
       type == dom::PContent::Msg_SetXPCOMProcessAttributes__ID ||
+      type == dom::PContent::Msg_UpdateSharedData__ID ||
       type == dom::PContent::Msg_SetProcessSandbox__ID ||
       // Graphics messages that affect both processes.
       type == dom::PBrowser::Msg_InitRendering__ID ||
