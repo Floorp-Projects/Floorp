@@ -221,27 +221,26 @@ exports.modules = {
 };
 
 defineLazyGetter(exports.modules, "Debugger", () => {
-  // addDebuggerToGlobal only allows adding the Debugger object to a global. The
-  // this object is not guaranteed to be a global (in particular on B2G, due to
-  // compartment sharing), so add the Debugger object to a sandbox instead.
-  const sandbox = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")());
-  Cu.evalInSandbox(
-    "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
-    "addDebuggerToGlobal(this);",
-    sandbox
-  );
-  return sandbox.Debugger;
+  const global = Cu.getGlobalForObject(this);
+  // Debugger may already have been added by RecordReplayControl getter
+  if (global.Debugger) {
+    return global.Debugger;
+  }
+  const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
+  addDebuggerToGlobal(global);
+  return global.Debugger;
 });
 
 defineLazyGetter(exports.modules, "RecordReplayControl", () => {
   // addDebuggerToGlobal also adds the RecordReplayControl object.
-  const sandbox = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")());
-  Cu.evalInSandbox(
-    "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
-    "addDebuggerToGlobal(this);",
-    sandbox
-  );
-  return sandbox.RecordReplayControl;
+  const global = Cu.getGlobalForObject(this);
+  // RecordReplayControl may already have been added by Debugger getter
+  if (global.RecordReplayControl) {
+    return global.RecordReplayControl;
+  }
+  const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
+  addDebuggerToGlobal(global);
+  return global.RecordReplayControl;
 });
 
 defineLazyGetter(exports.modules, "Timer", () => {
