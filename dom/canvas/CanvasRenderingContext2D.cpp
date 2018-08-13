@@ -958,12 +958,12 @@ private:
   CanvasRenderingContext2D* mContext;
 };
 
-class CanvasFilterChainObserver : public SVGFilterObserverList
+class SVGFilterObserverListForCanvas final : public SVGFilterObserverList
 {
 public:
-  CanvasFilterChainObserver(nsTArray<nsStyleFilter>& aFilters,
-                            Element* aCanvasElement,
-                            CanvasRenderingContext2D* aContext)
+  SVGFilterObserverListForCanvas(nsTArray<nsStyleFilter>& aFilters,
+                                 Element* aCanvasElement,
+                                 CanvasRenderingContext2D* aContext)
     : SVGFilterObserverList(aFilters, aCanvasElement)
     , mContext(aContext)
   {
@@ -1005,7 +1005,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[Style::STROKE]);
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[Style::FILL]);
     auto filterObserverList =
-      static_cast<CanvasFilterChainObserver*>(tmp->mStyleStack[i].filterObserverList.get());
+      static_cast<SVGFilterObserverListForCanvas*>(tmp->mStyleStack[i].filterObserverList.get());
     if (filterObserverList) {
       filterObserverList->DetachFromContext();
     }
@@ -2826,8 +2826,8 @@ CanvasRenderingContext2D::SetFilter(const nsAString& aFilter, ErrorResult& aErro
     filterChain.SwapElements(CurrentState().filterChain);
     if (mCanvasElement) {
       CurrentState().filterObserverList =
-        new CanvasFilterChainObserver(CurrentState().filterChain,
-                                      mCanvasElement, this);
+        new SVGFilterObserverListForCanvas(CurrentState().filterChain,
+                                           mCanvasElement, this);
       UpdateFilter();
     }
   }
