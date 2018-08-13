@@ -334,7 +334,7 @@ SVGFilterObserverList::IsInObserverLists() const
 }
 
 void
-nsSVGFilterProperty::OnRenderingChange()
+SVGFilterObserverListForCSSProp::OnRenderingChange()
 {
   nsIFrame* frame = mFrameReference.Get();
   if (!frame)
@@ -500,21 +500,22 @@ nsSVGPaintingProperty::OnRenderingChange()
   }
 }
 
-static nsSVGFilterProperty*
-GetOrCreateFilterProperty(nsIFrame* aFrame)
+static SVGFilterObserverListForCSSProp*
+GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
 {
   const nsStyleEffects* effects = aFrame->StyleEffects();
   if (!effects->HasFilters())
     return nullptr;
 
-  nsSVGFilterProperty *prop =
+  SVGFilterObserverListForCSSProp* observers =
     aFrame->GetProperty(SVGObserverUtils::FilterProperty());
-  if (prop)
-    return prop;
-  prop = new nsSVGFilterProperty(effects->mFilters, aFrame);
-  NS_ADDREF(prop);
-  aFrame->SetProperty(SVGObserverUtils::FilterProperty(), prop);
-  return prop;
+  if (observers) {
+    return observers;
+  }
+  observers = new SVGFilterObserverListForCSSProp(effects->mFilters, aFrame);
+  NS_ADDREF(observers);
+  aFrame->SetProperty(SVGObserverUtils::FilterProperty(), observers);
+  return observers;
 }
 
 static nsSVGMaskProperty*
@@ -603,7 +604,7 @@ SVGObserverUtils::GetEffectProperties(nsIFrame* aFrame)
   EffectProperties result;
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
 
-  result.mFilter = GetOrCreateFilterProperty(aFrame);
+  result.mFilterObservers = GetOrCreateFilterObserverListForCSS(aFrame);
 
   if (style->mClipPath.GetType() == StyleShapeSourceType::URL) {
     nsCOMPtr<nsIURI> pathURI = SVGObserverUtils::GetClipPathURI(aFrame);
@@ -758,7 +759,7 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
   // Ensure that the filter is repainted correctly
   // We can't do that in OnRenderingChange as the referenced frame may
   // not be valid
-  GetOrCreateFilterProperty(aFrame);
+  GetOrCreateFilterObserverListForCSS(aFrame);
 
   if (aFrame->IsSVGGeometryFrame() &&
       static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
@@ -773,8 +774,8 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
   }
 }
 
-nsSVGFilterProperty*
-SVGObserverUtils::GetFilterProperty(nsIFrame* aFrame)
+SVGFilterObserverListForCSSProp*
+SVGObserverUtils::GetFilterObserverList(nsIFrame* aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
