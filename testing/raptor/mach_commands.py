@@ -22,7 +22,7 @@ from mozpack.manifests import InstallManifest
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 BENCHMARK_REPOSITORY = 'https://github.com/mozilla/perf-automation'
-BENCHMARK_REVISION = '6beb3d3e22abce8cf8e2e89bc45acd4152258f12'
+BENCHMARK_REVISION = '4befd28725c687b91ce749420eab29352ecbcab4'
 
 
 class RaptorRunner(MozbuildObject):
