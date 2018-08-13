@@ -1140,8 +1140,7 @@ extern JS_FRIEND_API(int)
 JS::IsGCPoisoning()
 {
 #ifdef JS_GC_POISONING
-    static bool disablePoison = bool(getenv("JSGC_DISABLE_POISONING"));
-    return !disablePoison;
+    return !js::gDisablePoisoning;
 #else
     return false;
 #endif
