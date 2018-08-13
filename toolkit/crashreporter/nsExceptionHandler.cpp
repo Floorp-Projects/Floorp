@@ -94,6 +94,7 @@ using mozilla::InjectCrashRunnable;
 #include "mozilla/IOInterposer.h"
 #include "mozilla/mozalloc_oom.h"
 #include "mozilla/WindowsDllBlocklist.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
@@ -3252,6 +3253,24 @@ OnChildProcessDumpRequested(void* aContext,
   }
 }
 
+#ifdef XP_MACOSX
+
+// Middleman processes do not have their own crash generation server.
+// Any crashes in the middleman's children are forwarded to the UI process.
+static bool
+MaybeForwardCrashesIfMiddleman()
+{
+  if (recordreplay::IsMiddleman()) {
+    childCrashNotifyPipe =
+      mozilla::Smprintf("gecko-crash-server-pipe.%i",
+                        static_cast<int>(recordreplay::parent::ParentProcessId())).release();
+    return true;
+  }
+  return false;
+}
+
+#endif // XP_MACOSX
+
 static bool
 OOPInitialized()
 {
@@ -3340,6 +3359,10 @@ OOPInit()
     &dumpPath);
 
 #elif defined(XP_MACOSX)
+  if (MaybeForwardCrashesIfMiddleman()) {
+    return;
+  }
+
   childCrashNotifyPipe =
     mozilla::Smprintf("gecko-crash-server-pipe.%i",
                static_cast<int>(getpid())).release();
