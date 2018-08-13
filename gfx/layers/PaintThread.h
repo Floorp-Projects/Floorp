@@ -91,12 +91,7 @@ private:
 
   void AsyncPaintTask(CompositorBridgeChild* aBridge,
                       PaintTask* aTask);
-  void AsyncPaintTaskFinished(CompositorBridgeChild* aBridge,
-                              PaintTask* aTask);
-
   void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge);
-
-  void DispatchEndLayerTransaction(CompositorBridgeChild* aBridge);
 
   static StaticAutoPtr<PaintThread> sSingleton;
   static StaticRefPtr<nsIThread> sThread;
