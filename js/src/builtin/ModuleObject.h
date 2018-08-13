@@ -315,6 +315,9 @@ class ModuleObject : public NativeObject
     static bool Instantiate(JSContext* cx, HandleModuleObject self);
     static bool Evaluate(JSContext* cx, HandleModuleObject self);
 
+    static ModuleNamespaceObject* GetOrCreateModuleNamespace(JSContext* cx,
+                                                             HandleModuleObject self);
+
     void setMetaObject(JSObject* obj);
 
     // For BytecodeEmitter.
