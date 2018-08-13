@@ -13,15 +13,15 @@
 using namespace js;
 using namespace js::frontend;
 
-IfEmitter::IfEmitter(BytecodeEmitter* bce, Kind kind)
+using mozilla::Maybe;
+
+BranchEmitterBase::BranchEmitterBase(BytecodeEmitter* bce, Kind kind)
   : bce_(bce),
-    thenDepth_(0),
     kind_(kind)
-#ifdef DEBUG
-  , pushed_(0),
-    calculatedPushed_(false),
-    state_(State::Start)
-#endif
+{}
+
+IfEmitter::IfEmitter(BytecodeEmitter* bce, Kind kind)
+  : BranchEmitterBase(bce, kind)
 {}
 
 IfEmitter::IfEmitter(BytecodeEmitter* bce)
@@ -29,11 +29,8 @@ IfEmitter::IfEmitter(BytecodeEmitter* bce)
 {}
 
 bool
-IfEmitter::emitIfInternal(SrcNoteType type)
+BranchEmitterBase::emitThenInternal(SrcNoteType type)
 {
-    MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
-    MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
-
     // The end of TDZCheckCache for cond for else-if.
     if (kind_ == Kind::MayContainLexicalAccessInBranch)
         tdzCache_.reset();
@@ -61,7 +58,7 @@ IfEmitter::emitIfInternal(SrcNoteType type)
 }
 
 void
-IfEmitter::calculateOrCheckPushed()
+BranchEmitterBase::calculateOrCheckPushed()
 {
 #ifdef DEBUG
     if (!calculatedPushed_) {
@@ -74,46 +71,7 @@ IfEmitter::calculateOrCheckPushed()
 }
 
 bool
-IfEmitter::emitThen()
-{
-    MOZ_ASSERT(state_ == State::Start || state_ == State::ElseIf);
-    if (!emitIfInternal(SRC_IF))
-        return false;
-
-#ifdef DEBUG
-    state_ = State::Then;
-#endif
-    return true;
-}
-
-bool
-IfEmitter::emitCond()
-{
-    MOZ_ASSERT(state_ == State::Start);
-    if (!emitIfInternal(SRC_COND))
-        return false;
-
-#ifdef DEBUG
-    state_ = State::Cond;
-#endif
-    return true;
-}
-
-bool
-IfEmitter::emitThenElse()
-{
-    MOZ_ASSERT(state_ == State::Start || state_ == State::ElseIf);
-    if (!emitIfInternal(SRC_IF_ELSE))
-        return false;
-
-#ifdef DEBUG
-    state_ = State::ThenElse;
-#endif
-    return true;
-}
-
-bool
-IfEmitter::emitElseInternal()
+BranchEmitterBase::emitElseInternal()
 {
     calculateOrCheckPushed();
 
@@ -138,57 +96,17 @@ IfEmitter::emitElseInternal()
 
     // Restore stack depth of the then part.
     bce_->stackDepth = thenDepth_;
-#ifdef DEBUG
-    state_ = State::Else;
-#endif
-    return true;
-}
-
-bool
-IfEmitter::emitElse()
-{
-    MOZ_ASSERT(state_ == State::ThenElse || state_ == State::Cond);
-
-    if (!emitElseInternal())
-        return false;
 
     // Enclose else-branch with TDZCheckCache.
     if (kind_ == Kind::MayContainLexicalAccessInBranch)
         tdzCache_.emplace(bce_);
 
-#ifdef DEBUG
-    state_ = State::Else;
-#endif
     return true;
 }
 
 bool
-IfEmitter::emitElseIf()
+BranchEmitterBase::emitEndInternal()
 {
-    MOZ_ASSERT(state_ == State::ThenElse);
-
-    if (!emitElseInternal())
-        return false;
-
-    // Enclose cond for else-if with TDZCheckCache.
-    if (kind_ == Kind::MayContainLexicalAccessInBranch)
-        tdzCache_.emplace(bce_);
-
-#ifdef DEBUG
-    state_ = State::ElseIf;
-#endif
-    return true;
-}
-
-bool
-IfEmitter::emitEnd()
-{
-    MOZ_ASSERT(state_ == State::Then || state_ == State::Else);
-    // If there was an else part for the last branch, jumpAroundThen_ is
-    // already fixed up when emitting the else part.
-    MOZ_ASSERT_IF(state_ == State::Then, jumpAroundThen_.offset != -1);
-    MOZ_ASSERT_IF(state_ == State::Else, jumpAroundThen_.offset == -1);
-
     // The end of TDZCheckCache for then or else-clause.
     if (kind_ == Kind::MayContainLexicalAccessInBranch) {
         MOZ_ASSERT(tdzCache_.isSome());
@@ -208,6 +126,106 @@ IfEmitter::emitEnd()
     if (!bce_->emitJumpTargetAndPatch(jumpsAroundElse_))
         return false;
 
+    return true;
+}
+
+bool
+IfEmitter::emitIf(const Maybe<uint32_t>& ifPos)
+{
+    MOZ_ASSERT(state_ == State::Start);
+
+    if (ifPos) {
+        // Make sure this code is attributed to the "if" so that it gets a
+        // useful column number, instead of the default 0 value.
+        if (!bce_->updateSourceCoordNotes(*ifPos))
+            return false;
+    }
+
+#ifdef DEBUG
+    state_ = State::If;
+#endif
+    return true;
+}
+
+bool
+IfEmitter::emitThen()
+{
+    MOZ_ASSERT(state_ == State::If || state_ == State::ElseIf);
+    MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
+    MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
+
+    if (!emitThenInternal(SRC_IF))
+        return false;
+
+#ifdef DEBUG
+    state_ = State::Then;
+#endif
+    return true;
+}
+
+bool
+IfEmitter::emitThenElse()
+{
+    MOZ_ASSERT(state_ == State::If || state_ == State::ElseIf);
+    MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
+    MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
+
+    if (!emitThenInternal(SRC_IF_ELSE))
+        return false;
+
+#ifdef DEBUG
+    state_ = State::ThenElse;
+#endif
+    return true;
+}
+
+bool
+IfEmitter::emitElseIf(const Maybe<uint32_t>& ifPos)
+{
+    MOZ_ASSERT(state_ == State::ThenElse);
+
+    if (!emitElseInternal())
+        return false;
+
+    if (ifPos) {
+        // Make sure this code is attributed to the "if" so that it gets a
+        // useful column number, instead of the default 0 value.
+        if (!bce_->updateSourceCoordNotes(*ifPos))
+            return false;
+    }
+
+#ifdef DEBUG
+    state_ = State::ElseIf;
+#endif
+    return true;
+}
+
+bool
+IfEmitter::emitElse()
+{
+    MOZ_ASSERT(state_ == State::ThenElse);
+
+    if (!emitElseInternal())
+        return false;
+
+#ifdef DEBUG
+    state_ = State::Else;
+#endif
+    return true;
+}
+
+bool
+IfEmitter::emitEnd()
+{
+    MOZ_ASSERT(state_ == State::Then || state_ == State::Else);
+    // If there was an else part for the last branch, jumpAroundThen_ is
+    // already fixed up when emitting the else part.
+    MOZ_ASSERT_IF(state_ == State::Then, jumpAroundThen_.offset != -1);
+    MOZ_ASSERT_IF(state_ == State::Else, jumpAroundThen_.offset == -1);
+
+    if (!emitEndInternal())
+        return false;
+
 #ifdef DEBUG
     state_ = State::End;
 #endif
@@ -216,4 +234,65 @@ IfEmitter::emitEnd()
 
 InternalIfEmitter::InternalIfEmitter(BytecodeEmitter* bce)
   : IfEmitter(bce, Kind::NoLexicalAccessInBranch)
+{
+#ifdef DEBUG
+    // Skip emitIf (see the comment above InternalIfEmitter declaration).
+    state_ = State::If;
+#endif
+}
+
+CondEmitter::CondEmitter(BytecodeEmitter* bce)
+  : BranchEmitterBase(bce, Kind::MayContainLexicalAccessInBranch)
 {}
+
+bool
+CondEmitter::emitCond()
+{
+    MOZ_ASSERT(state_ == State::Start);
+#ifdef DEBUG
+    state_ = State::Cond;
+#endif
+    return true;
+}
+
+bool
+CondEmitter::emitThenElse()
+{
+    MOZ_ASSERT(state_ == State::Cond);
+    if (!emitThenInternal(SRC_COND))
+        return false;
+
+#ifdef DEBUG
+    state_ = State::ThenElse;
+#endif
+    return true;
+}
+
+bool
+CondEmitter::emitElse()
+{
+    MOZ_ASSERT(state_ == State::ThenElse);
+
+    if (!emitElseInternal())
+        return false;
+
+#ifdef DEBUG
+    state_ = State::Else;
+#endif
+    return true;
+}
+
+bool
+CondEmitter::emitEnd()
+{
+    MOZ_ASSERT(state_ == State::Else);
+    MOZ_ASSERT(jumpAroundThen_.offset == -1);
+
+    if (!emitEndInternal())
+        return false;
+
+#ifdef DEBUG
+    state_ = State::End;
+#endif
+    return true;
+}
