@@ -320,11 +320,11 @@ private:
   nsTArray<RefPtr<SVGFilterObserver>> mObservers;
 };
 
-class nsSVGFilterProperty : public SVGFilterObserverList
+class SVGFilterObserverListForCSSProp final : public SVGFilterObserverList
 {
 public:
-  nsSVGFilterProperty(const nsTArray<nsStyleFilter>& aFilters,
-                      nsIFrame* aFilteredFrame)
+  SVGFilterObserverListForCSSProp(const nsTArray<nsStyleFilter>& aFilters,
+                                  nsIFrame* aFilteredFrame)
     : SVGFilterObserverList(aFilters, aFilteredFrame->GetContent(),
                             aFilteredFrame)
     , mFrameReference(aFilteredFrame)
@@ -475,17 +475,18 @@ public:
   using URIObserverHashtablePropertyDescriptor =
     const mozilla::FramePropertyDescriptor<URIObserverHashtable>*;
 
-  static void DestroyFilterProperty(nsSVGFilterProperty* aProp)
+  static void DestroyFilterProperty(SVGFilterObserverListForCSSProp* aProp)
   {
-    // nsSVGFilterProperty is cycle-collected, so dropping the last reference
-    // doesn't necessarily destroy it. We need to tell it that the frame
-    // has now become invalid.
+    // SVGFilterObserverListForCSSProp is cycle-collected, so dropping the last
+    // reference doesn't necessarily destroy it. We need to tell it that the
+    // frame has now become invalid.
     aProp->DetachFromFrame();
 
     aProp->Release();
   }
 
-  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty, nsSVGFilterProperty,
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty,
+                                      SVGFilterObserverListForCSSProp,
                                       DestroyFilterProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsSVGMaskProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsSVGPaintingProperty)
@@ -509,7 +510,7 @@ public:
                                                PaintingPropertyDescriptor aProperty);
 
   struct EffectProperties {
-    nsSVGFilterProperty*   mFilter;
+    SVGFilterObserverListForCSSProp* mFilterObservers;
     nsSVGMaskProperty*     mMask;
     nsSVGPaintingProperty* mClipPath;
 
@@ -563,7 +564,7 @@ public:
     }
 
     bool HasValidFilter() {
-      return mFilter && mFilter->ReferencesValidResources();
+      return mFilterObservers && mFilterObservers->ReferencesValidResources();
     }
 
     /*
@@ -571,7 +572,7 @@ public:
      * are valid.
      */
     bool HasNoOrValidFilter() {
-      return !mFilter || mFilter->ReferencesValidResources();
+      return !mFilterObservers || mFilterObservers->ReferencesValidResources();
     }
 
     /*
@@ -605,7 +606,7 @@ public:
   /**
    * @param aFrame should be the first continuation
    */
-  static nsSVGFilterProperty *GetFilterProperty(nsIFrame* aFrame);
+  static SVGFilterObserverListForCSSProp* GetFilterObserverList(nsIFrame* aFrame);
 
   /**
    * @param aFrame must be a first-continuation.
