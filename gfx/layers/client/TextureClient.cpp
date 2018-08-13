@@ -1775,7 +1775,7 @@ TextureClient::AddPaintThreadRef()
 void
 TextureClient::DropPaintThreadRef()
 {
-  MOZ_RELEASE_ASSERT(PaintThread::IsOnPaintThread());
+  MOZ_RELEASE_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
   MOZ_RELEASE_ASSERT(mPaintThreadRefs >= 1);
   mPaintThreadRefs -= 1;
 }

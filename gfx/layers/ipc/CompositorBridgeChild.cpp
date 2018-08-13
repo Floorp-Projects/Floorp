@@ -1210,7 +1210,7 @@ CompositorBridgeChild::NotifyBeginAsyncPaint(PaintTask* aTask)
 bool
 CompositorBridgeChild::NotifyFinishedAsyncWorkerPaint(PaintTask* aTask)
 {
-  MOZ_ASSERT(PaintThread::IsOnPaintThread());
+  MOZ_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
 
   MonitorAutoLock lock(mPaintLock);
   mOutstandingAsyncPaints--;
@@ -1240,7 +1240,7 @@ CompositorBridgeChild::NotifyBeginAsyncEndLayerTransaction(SyncObjectClient* aSy
 void
 CompositorBridgeChild::NotifyFinishedAsyncEndLayerTransaction()
 {
-  MOZ_ASSERT(PaintThread::IsOnPaintThread());
+  MOZ_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
 
   if (mOutstandingAsyncSyncObject) {
     mOutstandingAsyncSyncObject->Synchronize();
@@ -1273,7 +1273,7 @@ CompositorBridgeChild::ResumeIPCAfterAsyncPaint()
 {
   // Note: the caller is responsible for holding the lock.
   mPaintLock.AssertCurrentThreadOwns();
-  MOZ_ASSERT(PaintThread::IsOnPaintThread());
+  MOZ_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
   MOZ_ASSERT(mOutstandingAsyncPaints == 0);
   MOZ_ASSERT(!mOutstandingAsyncEndTransaction);
   MOZ_ASSERT(mIsDelayingForAsyncPaints);

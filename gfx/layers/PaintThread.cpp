@@ -158,7 +158,6 @@ PaintThread::ShutdownOnPaintThread()
 /* static */ PaintThread*
 PaintThread::Get()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   return PaintThread::sSingleton.get();
 }
 
@@ -242,34 +241,12 @@ PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
     NS_ReleaseOnMainThreadSystemGroup("PaintTask::DrawTargetCapture", aTask->mCapture.forget());
   }
 
-  {
-    RefPtr<CompositorBridgeChild> cbc(aBridge);
-    RefPtr<PaintTask> Task(aTask);
-
-    RefPtr<PaintThread> self = this;
-    RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncPaintTaskFinished",
-      [self, cbc, Task]() -> void
-    {
-      self->AsyncPaintTaskFinished(cbc, Task);
-    });
-
-  #ifndef OMTP_FORCE_SYNC
-    sThread->Dispatch(task.forget());
-  #else
-    SyncRunnable::DispatchToThread(sThread, task);
-  #endif
+  if (aBridge->NotifyFinishedAsyncWorkerPaint(aTask)) {
+    AsyncEndLayerTransaction(aBridge);
   }
 }
 
 void
-PaintThread::AsyncPaintTaskFinished(CompositorBridgeChild* aBridge,
-                                    PaintTask* aTask)
-{
-  MOZ_ASSERT(IsOnPaintThread());
-  if (aBridge->NotifyFinishedAsyncWorkerPaint(aTask)) {
-    aBridge->NotifyFinishedAsyncEndLayerTransaction();
-  }
-}
 
 void
 PaintThread::Dispatch(RefPtr<Runnable>& aRunnable)
@@ -307,25 +284,9 @@ PaintThread::EndLayerTransaction(SyncObjectClient* aSyncObject)
 void
 PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge)
 {
-  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(IsOnPaintWorkerThread());
 
   aBridge->NotifyFinishedAsyncEndLayerTransaction();
-}
-
-void
-PaintThread::DispatchEndLayerTransaction(CompositorBridgeChild* aBridge)
-{
-  MOZ_ASSERT(IsOnPaintThread());
-
-  RefPtr<CompositorBridgeChild> cbc = aBridge;
-  RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncEndLayerTransaction",
-    [self, cbc]() -> void
-  {
-    self->AsyncEndLayerTransaction(cbc);
-  });
-
-  sThread->Dispatch(task.forget());
 }
 
 } // namespace layers
