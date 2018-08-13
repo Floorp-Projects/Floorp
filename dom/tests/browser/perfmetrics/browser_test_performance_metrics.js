@@ -8,7 +8,9 @@ const ROOT_URL = "http://example.com/browser/dom/tests/browser/perfmetrics";
 const DUMMY_URL = ROOT_URL + "/dummy.html";
 const WORKER_URL = ROOT_URL + "/ping_worker.html";
 const WORKER_URL2 = ROOT_URL + "/ping_worker2.html";
-
+const INTERVAL_URL = ROOT_URL + "/setinterval.html";
+const TIMEOUT_URL = ROOT_URL + "/settimeout.html";
+const CATEGORY_TIMER = 2;
 
 let nextId = 0;
 
@@ -72,9 +74,13 @@ add_task(async function test() {
     let topLevelIds = [];
     let sharedWorker = false;
     let counterIds = [];
+    let timerCalls = 0;
 
-    function exploreResults(data) {
+    function exploreResults(data, filterByWindowId) {
       for (let entry of data) {
+        if (filterByWindowId && entry.windowId != filterByWindowId) {
+          continue;
+        }
         if (!counterIds.includes(entry.pid + ":" + entry.counterId)) {
           counterIds.push(entry.pid + ":" + entry.counterId);
         }
@@ -110,6 +116,9 @@ add_task(async function test() {
             workerTotal += item.count;
           } else {
             total += item.count;
+          }
+          if (item.category == CATEGORY_TIMER) {
+            timerCalls += item.count;
           }
         }
       }
@@ -148,6 +157,26 @@ add_task(async function test() {
     Assert.ok(workerTotal > previousWorkerTotal, "Worker count should be positive");
     Assert.ok(duration > previousDuration, "Duration should be positive");
     Assert.ok(total > previousTotal, "Should get a positive count");
+
+    // load a tab with a setInterval, we should get counters on TaskCategory::Timer
+    await BrowserTestUtils.withNewTab({ gBrowser, url: INTERVAL_URL },
+      async function(browser) {
+        let tabId = gBrowser.selectedBrowser.outerWindowID;
+        let previousTimerCalls = timerCalls;
+        results = await ChromeUtils.requestPerformanceMetrics();
+        exploreResults(results, tabId);
+        Assert.ok(timerCalls > previousTimerCalls, "Got timer calls");
+    });
+
+    // load a tab with a setTimeout, we should get counters on TaskCategory::Timer
+    await BrowserTestUtils.withNewTab({ gBrowser, url: TIMEOUT_URL },
+      async function(browser) {
+        let tabId = gBrowser.selectedBrowser.outerWindowID;
+        let previousTimerCalls = timerCalls;
+        results = await ChromeUtils.requestPerformanceMetrics();
+        exploreResults(results, tabId);
+        Assert.ok(timerCalls > previousTimerCalls, "Got timer calls");
+    });
   });
 
   BrowserTestUtils.removeTab(page1);
