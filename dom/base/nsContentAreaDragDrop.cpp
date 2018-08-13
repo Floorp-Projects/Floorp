@@ -748,12 +748,12 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
           linkNode = parentLink;
           nodeToSerialize = linkNode;
         } else {
-          nodeToSerialize = do_QueryInterface(draggedNode);
+          nodeToSerialize = draggedNode;
         }
         dragNode = nodeToSerialize;
       } else if (draggedNode && draggedNode->IsHTMLElement(nsGkAtoms::a)) {
         // set linkNode. The code below will handle this
-        linkNode = do_QueryInterface(draggedNode);    // XXX test this
+        linkNode = draggedNode;    // XXX test this
         GetNodeString(draggedNode, mTitleString);
       } else if (parentLink) {
         // parentLink will always be null if there's selected content

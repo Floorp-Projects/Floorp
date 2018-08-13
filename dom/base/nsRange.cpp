@@ -2229,8 +2229,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
 
       ErrorResult res;
       if (farthestAncestor) {
-        nsCOMPtr<nsINode> n = do_QueryInterface(commonCloneAncestor);
-        n->AppendChild(*farthestAncestor, res);
+        commonCloneAncestor->AppendChild(*farthestAncestor, res);
         res.WouldReportJSException();
         if (NS_WARN_IF(res.Failed())) {
           return res.StealNSResult();
@@ -3174,8 +3173,8 @@ nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
 {
   NS_ENSURE_TRUE(mStart.Container(), NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsINode> startContainer = do_QueryInterface(mStart.Container());
-  nsCOMPtr<nsINode> endContainer = do_QueryInterface(mEnd.Container());
+  nsCOMPtr<nsINode> startContainer = mStart.Container();
+  nsCOMPtr<nsINode> endContainer = mEnd.Container();
 
   // Flush out layout so our frames are up to date.
   nsIDocument* doc = mStart.Container()->OwnerDoc();

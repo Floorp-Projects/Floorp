@@ -135,7 +135,7 @@ nsInputStreamPump::EnsureWaiting()
                 ? mLabeledMainThreadTarget
                 : do_AddRef(GetMainThreadEventTarget());
             if (mTargetThread != mainThread) {
-                mTargetThread = do_QueryInterface(mainThread);
+                mTargetThread = mainThread;
             }
         }
         MOZ_ASSERT(mTargetThread);

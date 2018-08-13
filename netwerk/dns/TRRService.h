@@ -38,6 +38,7 @@ public:
   bool UseGET() { return mUseGET; }
   bool EarlyAAAA() { return mEarlyAAAA; }
   bool DisableIPv6() { return mDisableIPv6; }
+  bool DisableECS() { return mDisableECS; }
   nsresult GetURI(nsCString &result);
   nsresult GetCredentials(nsCString &result);
   uint32_t GetRequestTimeout() { return mTRRTimeout; }
@@ -71,6 +72,7 @@ private:
   Atomic<bool, Relaxed> mUseGET; // do DOH using GET requests (instead of POST)
   Atomic<bool, Relaxed> mEarlyAAAA; // allow use of AAAA results before A is in
   Atomic<bool, Relaxed> mDisableIPv6; // don't even try
+  Atomic<bool, Relaxed> mDisableECS;  // disable EDNS Client Subnet in requests
 
   // TRR Blacklist storage
   RefPtr<DataStorage> mTRRBLStorage;

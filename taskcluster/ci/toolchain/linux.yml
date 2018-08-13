@@ -572,6 +572,26 @@ linux64-sccache:
     toolchains:
         - linux64-rust-1.28
 
+linux64-cbindgen:
+    description: "cbindgen toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(cbindgen)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-cbindgen.sh
+        arguments: ['x86_64-unknown-linux-gnu']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cbindgen.tar.xz
+    toolchains:
+        - linux64-rust-1.28
+
 linux64-rust-size:
     description: "rust-size toolchain build"
     treeherder:

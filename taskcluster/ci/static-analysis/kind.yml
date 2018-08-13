@@ -46,6 +46,7 @@ jobs:
         toolchains:
             - linux64-clang
             - linux64-rust
+            - linux64-cbindgen
             - linux64-sccache
             - linux64-node
 
@@ -72,6 +73,7 @@ jobs:
         toolchains:
             - linux64-clang
             - linux64-rust
+            - linux64-cbindgen
             - linux64-sccache
             - linux64-node
 
@@ -102,6 +104,7 @@ jobs:
         toolchains:
             - win32-clang-cl-st-an
             - win32-rust
+            - win64-cbindgen
             - win64-sccache
             - win64-node
 
@@ -132,6 +135,7 @@ jobs:
         toolchains:
             - win32-clang-cl-st-an
             - win32-rust
+            - win64-cbindgen
             - win64-sccache
             - win64-node
 
@@ -162,6 +166,7 @@ jobs:
         toolchains:
             - win64-clang-cl-st-an
             - win64-rust
+            - win64-cbindgen
             - win64-sccache
             - win64-node
 
@@ -192,5 +197,6 @@ jobs:
         toolchains:
             - win64-clang-cl-st-an
             - win64-rust
+            - win64-cbindgen
             - win64-sccache
             - win64-node

@@ -268,6 +268,19 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_node_packages()'
             % __name__)
 
+    def ensure_rust_package(self, crate_name):
+        if self.which(crate_name):
+            return
+        cargo_home, cargo_bin = self.cargo_home()
+        cargo_bin_path = os.path.join(cargo_bin, crate_name)
+        if os.path.exists(cargo_bin_path) and os.access(cargo_bin_path, os.X_OK):
+            return
+        print('%s not found, installing via cargo install.' % crate_name)
+        cargo = self.which('cargo')
+        if not cargo:
+            cargo = os.path.join(cargo_bin, 'cargo')
+        subprocess.check_call([cargo, 'install', crate_name])
+
     def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):
         mach_binary = os.path.join(checkout_root, 'mach')
         mach_binary = os.path.abspath(mach_binary)
