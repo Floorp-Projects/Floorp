@@ -18,7 +18,7 @@ import thread
 HOST = '127.0.0.1'
 PORT = 5037
 
-class ADBServer(SocketServer.BaseRequestHandler):
+class ADBRequestHandler(SocketServer.BaseRequestHandler):
     def sendData(self, data):
         header = 'OKAY%04x' % len(data)
         all_data = header + data
@@ -33,14 +33,19 @@ class ADBServer(SocketServer.BaseRequestHandler):
             sent_length = sent_length + sent
 
     def handle(self):
+        if server.is_shuttingdown:
+            return
+
         while True:
             data = self.request.recv(4096)
-            if 'kill-server' in data:
+            if 'host:kill' in data:
                 def shutdown(server):
                     server.shutdown()
                     thread.exit()
-                thread.start_new_thread(shutdown, (server, ))
+                server.is_shuttingdown = True
+                self.sendData('')
                 self.request.close()
+                thread.start_new_thread(shutdown, (server, ))
                 break
             elif 'host:version' in data:
                 self.sendData('001F')
@@ -49,6 +54,16 @@ class ADBServer(SocketServer.BaseRequestHandler):
             elif 'host:track-devices' in data:
                 self.sendData('1234567890\tdevice')
                 break
+
+class ADBServer(SocketServer.TCPServer):
+    def __init__(self, server_address):
+        # Create a SocketServer with bind_and_activate 'False' to set
+        # allow_reuse_address before binding.
+        SocketServer.TCPServer.__init__(self, \
+                                        server_address, \
+                                        ADBRequestHandler, \
+                                        bind_and_activate = False)
+        self.is_shuttingdown = False
 
 if len(sys.argv) == 2:
     if sys.argv[1] == 'start-server':
@@ -59,16 +74,8 @@ if len(sys.argv) == 2:
         if os.fork() > 0:
             sys.exit(0)
 
-        # Create a SocketServer with 'False' for bind_and_activate to set
-        # allow_reuse_address before binding.
-        server = SocketServer.TCPServer((HOST, PORT), ADBServer, False)
+        server = ADBServer((HOST, PORT))
         server.allow_reuse_address = True
         server.server_bind()
         server.server_activate()
         server.serve_forever()
-    elif sys.argv[1] == 'kill-server':
-        sock = socket.socket()
-        sock.connect((HOST, PORT))
-        sock.send('kill-server')
-        sock.shutdown(socket.SHUT_RDWR)
-        sock.close()
