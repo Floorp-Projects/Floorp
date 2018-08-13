@@ -15,7 +15,6 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
-      "clang-tidy-cxx14.patch",
-      "clang-tidy-sync-output.patch"
+      "clang-tidy-cxx14.patch"
     ]
 }

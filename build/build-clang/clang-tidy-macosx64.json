@@ -24,7 +24,6 @@
       "llvm-debug-frame-for-5.patch",
       "compiler-rt-cross-compile.patch",
       "compiler-rt-no-codesign.patch",
-      "clang-tidy-cxx14.patch",
-      "clang-tidy-sync-output.patch"
+      "clang-tidy-cxx14.patch"
     ]
 }
