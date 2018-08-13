@@ -146,9 +146,10 @@ SVGFilterElement::Invalidate()
     nsAutoTObserverArray<nsIMutationObserver*, 1>::ForwardIterator iter(*observers);
     while (iter.HasMore()) {
       nsCOMPtr<nsIMutationObserver> obs(iter.GetNext());
-      RefPtr<nsSVGFilterReference> filter = do_QueryObject(obs);
-      if (filter)
+      RefPtr<SVGFilterObserver> filter = do_QueryObject(obs);
+      if (filter) {
         filter->Invalidate();
+      }
     }
   }
 }
