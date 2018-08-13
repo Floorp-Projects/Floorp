@@ -283,6 +283,8 @@ var gPlayTests = [
   // Ambisonics AAC, requires AAC extradata to be set when creating decoder (see bug 1431169)
   // Also test 4.0 decoding.
   { name:"ambisonics.mp4", type:"audio/mp4", duration:16.48 },
+  // Opus in MP4 channel mapping=0 sample file
+  { name:"opus-sample.mp4", type:"audio/mp4; codecs=opus", duration:10.92 },
 
   { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
   { name:"small-shot.mp3", type:"audio/mpeg", duration:0.27 },
