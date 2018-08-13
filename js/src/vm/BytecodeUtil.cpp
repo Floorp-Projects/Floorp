@@ -1623,7 +1623,7 @@ struct ExpressionDecompiler
 {
     JSContext* cx;
     RootedScript script;
-    BytecodeParser parser;
+    const BytecodeParser& parser;
     Sprinter sprinter;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -1633,10 +1633,10 @@ struct ExpressionDecompiler
     bool isStackDump;
 #endif
 
-    ExpressionDecompiler(JSContext* cx, JSScript* script)
+    ExpressionDecompiler(JSContext* cx, JSScript* script, const BytecodeParser& parser)
         : cx(cx),
           script(cx, script),
-          parser(cx, script),
+          parser(parser),
           sprinter(cx)
 #if defined(DEBUG) || defined(JS_JITSPEW)
           ,
@@ -1656,7 +1656,6 @@ struct ExpressionDecompiler
 #if defined(DEBUG) || defined(JS_JITSPEW)
     void setStackDump() {
         isStackDump = true;
-        parser.setStackDump();
     }
 #endif
 };
@@ -2101,14 +2100,7 @@ bool
 ExpressionDecompiler::init()
 {
     assertSameCompartment(cx, script);
-
-    if (!sprinter.init())
-        return false;
-
-    if (!parser.parse())
-        return false;
-
-    return true;
+    return sprinter.init();
 }
 
 bool
@@ -2176,7 +2168,12 @@ static bool
 DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
                           const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp)
 {
-    ExpressionDecompiler ed(cx, script);
+    BytecodeParser parser(cx, script);
+    parser.setStackDump();
+    if (!parser.parse())
+        return false;
+
+    ExpressionDecompiler ed(cx, script, parser);
     ed.setStackDump();
     if (!ed.init())
         return false;
@@ -2193,8 +2190,8 @@ DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 static bool
-FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits, const Value& v,
-            jsbytecode** valuepc, uint8_t* defIndex)
+FindStartPC(JSContext* cx, const FrameIter& iter, const BytecodeParser& parser, int spindex,
+            int skipStackHits, const Value& v, jsbytecode** valuepc, uint8_t* defIndex)
 {
     jsbytecode* current = *valuepc;
     *valuepc = nullptr;
@@ -2209,10 +2206,6 @@ FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits
      */
     if (iter.isIon())
         return true;
-
-    BytecodeParser parser(cx, iter.script());
-    if (!parser.parse())
-        return false;
 
     if (spindex < 0 && spindex + int(parser.stackDepthAtPC(current)) < 0)
         spindex = JSDVG_SEARCH_STACK;
@@ -2287,13 +2280,17 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
     if (valuepc < script->main())
         return true;
 
+    BytecodeParser parser(cx, frameIter.script());
+    if (!parser.parse())
+        return false;
+
     uint8_t defIndex;
-    if (!FindStartPC(cx, frameIter, spindex, skipStackHits, v, &valuepc, &defIndex))
+    if (!FindStartPC(cx, frameIter, parser, spindex, skipStackHits, v, &valuepc, &defIndex))
         return false;
     if (!valuepc)
         return true;
 
-    ExpressionDecompiler ed(cx, script);
+    ExpressionDecompiler ed(cx, script, parser);
     if (!ed.init())
         return false;
     if (!ed.decompilePC(valuepc, defIndex))
@@ -2386,7 +2383,7 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, UniqueChars* res)
     if (uint32_t(formalStackIndex) >= parser.stackDepthAtPC(current))
         return true;
 
-    ExpressionDecompiler ed(cx, script);
+    ExpressionDecompiler ed(cx, script, parser);
     if (!ed.init())
         return false;
     if (!ed.decompilePCForStackOperand(current, formalStackIndex))
@@ -2738,7 +2735,10 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
         }
 
         {
-            ExpressionDecompiler ed(cx, script);
+            BytecodeParser parser(cx, script);
+            if (!parser.parse())
+                return false;
+            ExpressionDecompiler ed(cx, script, parser);
             if (!ed.init())
                 return false;
             // defIndex passed here is not used.
