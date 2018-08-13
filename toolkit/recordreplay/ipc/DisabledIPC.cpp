@@ -165,6 +165,12 @@ GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
   MOZ_CRASH();
 }
 
+base::ProcessId
+ParentProcessId()
+{
+  MOZ_CRASH();
+}
+
 } // namespace parent
 
 } // namespace recordreplay
