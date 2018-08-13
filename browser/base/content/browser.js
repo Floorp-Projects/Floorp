@@ -3013,6 +3013,7 @@ var BrowserOnClick = {
         break;
 
       case "advancedButton":
+      case "moreInformationButton":
         if (isTopFrame) {
           secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_UNDERSTAND_RISKS);
         }

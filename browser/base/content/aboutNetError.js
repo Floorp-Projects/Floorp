@@ -82,8 +82,10 @@ function setupAdvancedButton() {
   }
 
   // Register click handler for the weakCryptoAdvancedPanel
-  document.getElementById("advancedButton")
-          .addEventListener("click", function togglePanelVisibility() {
+  document.getElementById("advancedButton").addEventListener("click", togglePanelVisibility);
+  document.getElementById("moreInformationButton").addEventListener("click", togglePanelVisibility);
+
+  function togglePanelVisibility() {
     toggleDisplay(panel);
     if (gIsCertError) {
       // Toggling the advanced panel must ensure that the debugging
@@ -98,7 +100,7 @@ function setupAdvancedButton() {
       var event = new CustomEvent("AboutNetErrorUIExpanded", {bubbles: true});
       document.dispatchEvent(event);
     }
-  });
+  }
 
   if (!gIsCertError) {
     return;
@@ -374,6 +376,11 @@ function addAutofocus(buttonId, position = "afterbegin") {
 
 let errorTryAgain = document.getElementById("errorTryAgain");
 errorTryAgain.addEventListener("click", function() {
+  retryThis(this);
+});
+
+let advancedPanelErrorTryAgain = document.getElementById("advancedPanelErrorTryAgain");
+advancedPanelErrorTryAgain.addEventListener("click", function() {
   retryThis(this);
 });
 

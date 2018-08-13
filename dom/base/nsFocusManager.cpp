@@ -3896,7 +3896,7 @@ nsFocusManager::TryToMoveFocusToSubDocument(nsIContent* aCurrentContent,
   nsIDocument* subdoc = doc->GetSubDocumentFor(aCurrentContent);
   if (subdoc && !subdoc->EventHandlingSuppressed()) {
     if (aForward) {
-      // when tabbing forward into a frame, return the root
+      // When tabbing forward into a frame, return the root
       // frame so that the canvas becomes focused.
       nsCOMPtr<nsPIDOMWindowOuter> subframe = subdoc->GetWindow();
       if (subframe) {
