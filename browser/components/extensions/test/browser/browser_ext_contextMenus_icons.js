@@ -174,3 +174,74 @@ add_task(async function test_child_icon() {
   await extension.unload();
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_manifest_without_icons() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+
+  let redIconData = "iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QYGEgw1XkM0ygAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAYSURBVCjPY/zPQA5gYhjVNqptVNsg1wYAItkBI/GNR3YAAAAASUVORK5CYII=";
+  const IMAGE_ARRAYBUFFER_RED = imageBufferFromDataURI(redIconData);
+
+  let greenIconData = "iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QYGEg0rvVc46AAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAaSURBVCjPY+Q8xkAGYGJgGNU2qm1U2+DWBgBolADz1beTnwAAAABJRU5ErkJggg==";
+  const IMAGE_ARRAYBUFFER_GREEN = imageBufferFromDataURI(greenIconData);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "name": "contextMenus icons",
+      "permissions": ["contextMenus"],
+    },
+    files: {
+      "red.png": IMAGE_ARRAYBUFFER_RED,
+      "green.png": IMAGE_ARRAYBUFFER_GREEN,
+    },
+
+    background() {
+      browser.contextMenus.create({
+        title: "first item",
+        icons: {
+          18: "red.png",
+        },
+        onclick() {
+          browser.contextMenus.create({
+            title: "second item",
+            icons: {
+              18: "green.png",
+            },
+          }, () => {
+            browser.test.sendMessage("added-second-item");
+          });
+        },
+      }, () => {
+        browser.test.sendMessage("contextmenus-icons");
+      });
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("contextmenus-icons");
+
+  let menu = await openContextMenu();
+  let items = menu.getElementsByAttribute("label", "first item");
+  is(items.length, 1, "Found first item");
+  // manifest.json does not declare icons, so the root menu item shouldn't have an icon either.
+  is(items[0].getAttribute("image"), "", "Root menu must not have an icon");
+
+  await closeExtensionContextMenu(items[0]);
+  await extension.awaitMessage("added-second-item");
+
+  menu = await openExtensionContextMenu();
+  items = document.querySelectorAll("#contentAreaContextMenu [ext-type='top-level-menu']");
+  is(items.length, 1, "Auto-generated root item exists");
+  is(items[0].getAttribute("image"), "", "Auto-generated menu root must not have an icon");
+
+  items = menu.getElementsByAttribute("label", "first item");
+  is(items.length, 1, "First child item should exist");
+  is(items[0].getAttribute("image").split("/").pop(), "red.png", "First item should have an icon");
+
+  items = menu.getElementsByAttribute("label", "second item");
+  is(items.length, 1, "Secobnd child item should exist");
+  is(items[0].getAttribute("image").split("/").pop(), "green.png", "Second item should have an icon");
+
+  await closeExtensionContextMenu();
+  await extension.unload();
+  BrowserTestUtils.removeTab(tab);
+});
