@@ -263,32 +263,32 @@ SVGFilterObserver::OnRenderingChange()
 {
   SVGIDRenderingObserver::OnRenderingChange();
 
-  if (mFilterChainObserver) {
-    mFilterChainObserver->Invalidate();
+  if (mFilterObserverList) {
+    mFilterObserverList->Invalidate();
   }
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGFilterChainObserver)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGFilterChainObserver)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGFilterObserverList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGFilterObserverList)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGFilterChainObserver)
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGFilterObserverList)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsSVGFilterChainObserver)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SVGFilterObserverList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObservers)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterChainObserver)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SVGFilterObserverList)
   tmp->DetachObservers();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservers);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterChainObserver)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGFilterObserverList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
-                                                   nsIContent* aFilteredElement,
-                                                   nsIFrame* aFilteredFrame)
+SVGFilterObserverList::SVGFilterObserverList(const nsTArray<nsStyleFilter>& aFilters,
+                                             nsIContent* aFilteredElement,
+                                             nsIFrame* aFilteredFrame)
 {
   for (uint32_t i = 0; i < aFilters.Length(); i++) {
     if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
@@ -306,13 +306,13 @@ nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>
   }
 }
 
-nsSVGFilterChainObserver::~nsSVGFilterChainObserver()
+SVGFilterObserverList::~SVGFilterObserverList()
 {
   DetachObservers();
 }
 
 bool
-nsSVGFilterChainObserver::ReferencesValidResources()
+SVGFilterObserverList::ReferencesValidResources()
 {
   for (uint32_t i = 0; i < mObservers.Length(); i++) {
     if (!mObservers[i]->ReferencesValidResource()) {
@@ -323,7 +323,7 @@ nsSVGFilterChainObserver::ReferencesValidResources()
 }
 
 bool
-nsSVGFilterChainObserver::IsInObserverLists() const
+SVGFilterObserverList::IsInObserverLists() const
 {
   for (uint32_t i = 0; i < mObservers.Length(); i++) {
     if (!mObservers[i]->IsInObserverList()) {
