@@ -63,8 +63,6 @@ loader.lazyRequireGetter(this, "HUDService",
   "devtools/client/webconsole/hudservice", true);
 loader.lazyRequireGetter(this, "viewSource",
   "devtools/client/shared/view-source");
-loader.lazyRequireGetter(this, "StyleSheetsFront",
-  "devtools/shared/fronts/stylesheets", true);
 loader.lazyRequireGetter(this, "buildHarLog",
   "devtools/client/netmonitor/src/har/har-builder-utils", true);
 loader.lazyRequireGetter(this, "getKnownDeviceFront",
@@ -125,7 +123,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
 
   this._initInspector = null;
   this._inspector = null;
-  this._styleSheets = null;
   this._netMonitorAPI = null;
 
   // Map of frames (id => frame-info) and currently selected frame id.
@@ -2938,12 +2935,6 @@ Toolbox.prototype = {
     // Destroy the preference front
     outstanding.push(this.destroyPreference());
 
-    // Destroy the style sheet front.
-    if (this._styleSheets) {
-      this._styleSheets.destroy();
-      this._styleSheets = null;
-    }
-
     // Destroy the device front for the current client if any.
     // A given DeviceFront instance can cached and shared between different panels, so
     // destroying it is the responsibility of the toolbox.
@@ -3132,17 +3123,6 @@ Toolbox.prototype = {
     this.performance.off("*", this._onPerformanceFrontEvent);
     await this.performance.destroy();
     this._performance = null;
-  },
-
-  /**
-   * Return the style sheets front, creating it if necessary.  If the
-   * style sheets front is not supported by the target, returns null.
-   */
-  initStyleSheetsFront: function() {
-    if (!this._styleSheets && this.target.hasActor("styleSheets")) {
-      this._styleSheets = StyleSheetsFront(this.target.client, this.target.form);
-    }
-    return this._styleSheets;
   },
 
   /**

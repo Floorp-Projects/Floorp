@@ -47,7 +47,7 @@ StyleEditorPanel.prototype = {
 
     this.target.on("close", this.destroy);
 
-    this._debuggee = this._toolbox.initStyleSheetsFront();
+    this._debuggee = await this._target.getFront("stylesheets");
 
     // Initialize the CSS properties database.
     const {cssProperties} = await initCssProperties(this._toolbox);
