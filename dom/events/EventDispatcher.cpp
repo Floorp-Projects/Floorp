@@ -1014,7 +1014,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   } else {
     // At least the original target can handle the event.
     // Setting the retarget to the |target| simplifies retargeting code.
-    nsCOMPtr<EventTarget> t = do_QueryInterface(aEvent->mTarget);
+    nsCOMPtr<EventTarget> t = aEvent->mTarget;
     targetEtci->SetNewTarget(t);
     // In order to not change the targetTouches array passed to TouchEvents
     // when dispatching events from JS, we need to store the initial Touch
