@@ -26,7 +26,7 @@ using namespace js::jit;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
-const char* js::jit::CacheKindNames[] = {
+const char* const js::jit::CacheKindNames[] = {
 #define DEFINE_KIND(kind) #kind,
     CACHE_IR_KINDS(DEFINE_KIND)
 #undef DEFINE_KIND

@@ -15,7 +15,7 @@ using namespace js::jit;
 namespace js {
 namespace jit {
 
-OptimizationLevelInfo IonOptimizations;
+const OptimizationLevelInfo IonOptimizations;
 
 const uint32_t OptimizationInfo::CompilerWarmupThreshold = 1000;
 const uint32_t OptimizationInfo::CompilerSmallFunctionWarmupThreshold = CompilerWarmupThreshold;
