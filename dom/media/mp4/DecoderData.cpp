@@ -74,12 +74,16 @@ MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
     // The Opus decoder expects the container's codec delay or
     // pre-skip value, in microseconds, as a 64-bit int at the
     // start of the codec-specific config blob.
-    MOZ_ASSERT(audio->extra_data.data);
-    MOZ_ASSERT(audio->extra_data.length >= 12);
-    uint16_t preskip =
-      mozilla::LittleEndian::readUint16(audio->extra_data.data + 10);
-    mozilla::OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig,
-        mozilla::FramesToUsecs(preskip, 48000).value());
+    if (audio->codec_specific_config.data &&
+        audio->codec_specific_config.length >= 12) {
+      uint16_t preskip = mozilla::LittleEndian::readUint16(
+        audio->codec_specific_config.data + 10);
+      mozilla::OpusDataDecoder::AppendCodecDelay(
+        mCodecSpecificConfig, mozilla::FramesToUsecs(preskip, 48000).value());
+    } else {
+      // This file will error later as it will be rejected by the opus decoder.
+      mozilla::OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig, 0);
+    }
   } else if (track->codec == MP4PARSE_CODEC_AAC) {
     mMimeType = NS_LITERAL_CSTRING("audio/mp4a-latm");
   } else if (track->codec == MP4PARSE_CODEC_FLAC) {
