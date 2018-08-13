@@ -10,6 +10,9 @@ transforms:
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
+kind-dependencies:
+   - fetch
+
 jobs-from:
    - cram.yml
    - doc.yml
