@@ -43,6 +43,7 @@ TRRService::TRRService()
   , mRfc1918(false)
   , mCaptiveIsPassed(false)
   , mUseGET(false)
+  , mDisableECS(true)
   , mClearTRRBLStorage(false)
   , mConfirmationState(CONFIRM_INIT)
   , mRetryConfirmInterval(1000)
@@ -223,6 +224,12 @@ TRRService::ReadPrefs(const char *name)
     bool tmp;
     if (NS_SUCCEEDED(Preferences::GetBool(kDisableIpv6Pref, &tmp))) {
       mDisableIPv6 = tmp;
+    }
+  }
+  if (!name || !strcmp(name, TRR_PREF("disable-ECS"))) {
+    bool tmp;
+    if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("disable-ECS"), &tmp))) {
+      mDisableECS = tmp;
     }
   }
 
