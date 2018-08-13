@@ -60,9 +60,6 @@ void NotifyFlushedRecording();
 // Notify the middleman about an AlwaysMarkMajorCheckpoints directive.
 void NotifyAlwaysMarkMajorCheckpoints();
 
-// Report a fatal error to the middleman process.
-void ReportFatalError(const char* aFormat, ...);
-
 // Mark a time span when the main thread is idle.
 void BeginIdleTime();
 void EndIdleTime();

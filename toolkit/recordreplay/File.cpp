@@ -6,7 +6,7 @@
 
 #include "File.h"
 
-#include "ipc/ChildIPC.h"
+#include "ipc/ChildInternal.h"
 #include "mozilla/Compression.h"
 #include "mozilla/Sprintf.h"
 #include "ProcessRewind.h"
@@ -161,7 +161,8 @@ Stream::CheckInput(size_t aValue)
   size_t oldValue = aValue;
   RecordOrReplayScalar(&oldValue);
   if (oldValue != aValue) {
-    child::ReportFatalError("Input Mismatch: Recorded: %zu Replayed %zu\n", oldValue, aValue);
+    child::ReportFatalError(Nothing(), "Input Mismatch: Recorded: %zu Replayed %zu\n",
+                            oldValue, aValue);
     Unreachable();
   }
 }
