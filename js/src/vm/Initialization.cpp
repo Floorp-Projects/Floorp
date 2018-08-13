@@ -106,6 +106,8 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     RETURN_IF_FAIL(js::oom::InitThreadType());
 #endif
 
+    js::gDisablePoisoning = bool(getenv("JSGC_DISABLE_POISONING"));
+
     js::InitMallocAllocator();
 
     RETURN_IF_FAIL(js::Mutex::Init());
