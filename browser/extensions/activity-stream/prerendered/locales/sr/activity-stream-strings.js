@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Управљај секцијом",
   "section_menu_action_manage_webext": "Управљај екстензијама",
   "section_menu_action_add_topsite": "Додај омиљени сајт",
+  "section_menu_action_add_search_engine": "Додај претраживач",
   "section_menu_action_move_up": "Помери горе",
   "section_menu_action_move_down": "Помери доле",
   "section_menu_action_privacy_notice": "Обавештење о приватности",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Унесите вашу адресу е-поште",
   "firstrun_form_sub_header": "да бисте наставили на Firefox Sync.",
   "firstrun_email_input_placeholder": "Адреса е-поште",
+  "firstrun_invalid_input": "Исправна е-пошта се захтева",
   "firstrun_extra_legal_links": "Наставком, прихватате {terms} и {privacy}.",
   "firstrun_terms_of_service": "услове коришћења",
   "firstrun_privacy_notice": "обавештење о приватности",
   "firstrun_continue_to_login": "Настави",
-  "firstrun_skip_login": "Прескочи овај корак",
-  "firstrun_invalid_input": "Исправна е-пошта се захтева"
+  "firstrun_skip_login": "Прескочи овај корак"
 };

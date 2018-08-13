@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Наладзіць раздзел",
   "section_menu_action_manage_webext": "Кіраваць пашырэннем",
   "section_menu_action_add_topsite": "Дадаць папулярны сайт",
+  "section_menu_action_add_search_engine": "Дадаць пашукавік",
   "section_menu_action_move_up": "Пасунуць вышэй",
   "section_menu_action_move_down": "Пасунуць ніжэй",
   "section_menu_action_privacy_notice": "Паведамленне аб прыватнасці",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Увядзіце сваю электронную пошту",
   "firstrun_form_sub_header": "каб прадоўжыць з Firefox Sync.",
   "firstrun_email_input_placeholder": "Эл.пошта",
+  "firstrun_invalid_input": "Патрабуецца сапраўдны адрас эл.пошты",
   "firstrun_extra_legal_links": "Працягваючы, вы згаджаецеся з {terms} і {privacy}.",
   "firstrun_terms_of_service": "умовамі абслугоўвання",
   "firstrun_privacy_notice": "паведамленнем аб прыватнасці",
   "firstrun_continue_to_login": "Працягнуць",
-  "firstrun_skip_login": "Прапусціць гэты крок",
-  "firstrun_invalid_input": "Патрабуецца сапраўдны адрас эл.пошты"
+  "firstrun_skip_login": "Прапусціць гэты крок"
 };

@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Feewnu taƴre",
   "section_menu_action_manage_webext": "Yiil Timmitere",
   "section_menu_action_add_topsite": "Ɓeydu lowre rowrowre",
+  "section_menu_action_add_search_engine": "Ɓeydu Masiŋ Njiilaw",
   "section_menu_action_move_up": "Dirtin dow",
   "section_menu_action_move_down": "Dirtin les",
   "section_menu_action_privacy_notice": "Tintinal sirlu",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Naatnu iimeel maa",
   "firstrun_form_sub_header": "ngam jokkude to Firefox Sync",
   "firstrun_email_input_placeholder": "Iimeel",
+  "firstrun_invalid_input": "Iimeel gollotooɗo hatojinaa",
   "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
   "firstrun_terms_of_service": "Laabi Carwol",
   "firstrun_privacy_notice": "Tintinol Suturo",
   "firstrun_continue_to_login": "Jokku",
-  "firstrun_skip_login": "Diw ngal daawal",
-  "firstrun_invalid_input": "Iimeel gollotooɗo hatojinaa"
+  "firstrun_skip_login": "Diw ngal daawal"
 };

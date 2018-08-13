@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Санатты басқару",
   "section_menu_action_manage_webext": "Кеңейтуді басқару",
   "section_menu_action_add_topsite": "Үздік сайт қосу",
+  "section_menu_action_add_search_engine": "Іздеу жүйесін қосу",
   "section_menu_action_move_up": "Жоғары жылжыту",
   "section_menu_action_move_down": "Төмен жылжыту",
   "section_menu_action_privacy_notice": "Жекелік ескертуі",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Эл. поштаны енгізіңіз",
   "firstrun_form_sub_header": "Firefox синхрондауына жалғастыру үшін.",
   "firstrun_email_input_placeholder": "Эл. пошта",
+  "firstrun_invalid_input": "Жарамды эл. пошта адресі керек",
   "firstrun_extra_legal_links": "Жалғастырсаңыз, {terms} және {privacy} шарттарымен келісесіз.",
   "firstrun_terms_of_service": "Қолдану шарттары",
   "firstrun_privacy_notice": "Жекелік ескертуі",
   "firstrun_continue_to_login": "Жалғастыру",
-  "firstrun_skip_login": "Бұл қадамды аттап кету",
-  "firstrun_invalid_input": "Жарамды эл. пошта адресі керек"
+  "firstrun_skip_login": "Бұл қадамды аттап кету"
 };

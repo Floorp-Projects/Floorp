@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Gestiona la secció",
   "section_menu_action_manage_webext": "Gestiona l'extensió",
   "section_menu_action_add_topsite": "Afegeix com a lloc principal",
+  "section_menu_action_add_search_engine": "Afegeix un motor de cerca",
   "section_menu_action_move_up": "Mou cap amunt",
   "section_menu_action_move_down": "Mou cap avall",
   "section_menu_action_privacy_notice": "Avís de privadesa",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Introduïu la vostra adreça electrònica",
   "firstrun_form_sub_header": "per continuar al Firefox Sync.",
   "firstrun_email_input_placeholder": "Adreça electrònica",
+  "firstrun_invalid_input": "Cal una adreça electrònica vàlida",
   "firstrun_extra_legal_links": "Si continueu, accepteu les {terms} i l'{privacy}.",
   "firstrun_terms_of_service": "Condicions del servei",
   "firstrun_privacy_notice": "Avís de privadesa",
   "firstrun_continue_to_login": "Continua",
-  "firstrun_skip_login": "Omet aquest pas",
-  "firstrun_invalid_input": "Cal una adreça electrònica vàlida"
+  "firstrun_skip_login": "Omet aquest pas"
 };

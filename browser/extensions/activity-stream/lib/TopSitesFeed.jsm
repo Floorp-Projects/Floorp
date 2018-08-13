@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {TippyTopProvider} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
@@ -11,6 +11,14 @@ const {insertPinned, TOP_SITES_MAX_SITES_PER_ROW} = ChromeUtils.import("resource
 const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
 const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
 const {getDefaultOptions} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
+const {
+  CUSTOM_SEARCH_SHORTCUTS,
+  SEARCH_SHORTCUTS_EXPERIMENT,
+  SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
+  SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+  checkHasSearchEngine,
+  getSearchProvider
+} = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "filterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm");
@@ -32,9 +40,26 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = ["favicon", "faviconRef", "faviconSize"]
 const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
 
+// Search experiment stuff
+const NO_DEFAULT_SEARCH_TILE_EXP_PREF = "improvesearch.noDefaultSearchTile";
+const SEARCH_FILTERS = [
+  "google",
+  "search.yahoo",
+  "yahoo",
+  "bing",
+  "ask",
+  "duckduckgo"
+];
+
+function getShortURLForCurrentSearch() {
+  const url = shortURL({url: Services.search.currentEngine.searchForm});
+  return url;
+}
+
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
+    this._currentSearchHostname = null;
     this.dedupe = new Dedupe(this._dedupeKey);
     this.frecentCache = new LinksCache(NewTabUtils.activityStreamLinks,
       "getTopSites", CACHED_LINK_PROPS_TO_MIGRATE, (oldOptions, newOptions) =>
@@ -50,10 +75,23 @@ this.TopSitesFeed = class TopSitesFeed {
     this.refreshDefaults(this.store.getState().Prefs.values[DEFAULT_SITES_PREF]);
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({broadcast: true});
+    Services.obs.addObserver(this, "browser-search-engine-modified");
+    this._currentSearchHostname = getShortURLForCurrentSearch();
   }
 
   uninit() {
     PageThumbs.removeExpirationFilter(this);
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
+    this._currentSearchHostname = null;
+  }
+
+  observe(subj, topic, data) {
+    // We should update the current top sites if the search engine has been changed since
+    // the search engine that gets filtered out of top sites has changed.
+    if (topic === "browser-search-engine-modified" && data === "engine-current" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
+      this._currentSearchHostname = getShortURLForCurrentSearch();
+      this.refresh({broadcast: true});
+    }
   }
 
   _dedupeKey(site) {
@@ -88,19 +126,142 @@ this.TopSitesFeed = class TopSitesFeed {
     }, []));
   }
 
+  /**
+   * isExperimentOnAndLinkFilteredSearch - is the experiment on and does a given hostname match the user's default search engine?
+   *
+   * @param {string} hostname a top site hostname, such as "amazon" or "foo"
+   * @returns {bool}
+   */
+  isExperimentOnAndLinkFilteredSearch(hostname) {
+    if (!this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
+      return false;
+    }
+    // If TopSite Search Shortcuts is enabled we don't want to filter those sites out
+    if (this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT] && getSearchProvider(hostname)) {
+      return false;
+    }
+    if (SEARCH_FILTERS.includes(hostname) || hostname === this._currentSearchHostname) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * _maybeInsertSearchShortcuts - if the search shortcuts experiment is running,
+   *                               insert search shortcuts if needed
+   * @param {Array} plainPinnedSites (from the pinnedSitesCache)
+   * @returns {Boolean} Did we insert any search shortcuts?
+   */
+  async _maybeInsertSearchShortcuts(plainPinnedSites) {
+    // Only insert shortcuts if the experiment is running
+    if (this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT]) {
+      // We don't want to insert shortcuts we've previously inserted
+      const prevInsertedShortcuts = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF]
+        .split(",").filter(s => s); // Filter out empty strings
+      const newInsertedShortcuts = [];
+
+      const shouldPin = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF]
+        .split(",")
+        .map(getSearchProvider)
+        .filter(s => s);
+
+      // If we've previously inserted all search shortcuts return early
+      if (shouldPin.every(shortcut => prevInsertedShortcuts.includes(shortcut.shortURL))) {
+        return false;
+      }
+
+      const numberOfSlots = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+
+      // The plainPinnedSites array is populated with pinned sites at their
+      // respective indices, and null everywhere else, but is not always the
+      // right length
+      const emptySlots = Math.max(numberOfSlots - plainPinnedSites.length, 0);
+      const pinnedSites = [...plainPinnedSites].concat(
+        Array(emptySlots).fill(null)
+      );
+
+      await new Promise(resolve => Services.search.init(resolve));
+
+      const tryToInsertSearchShortcut = shortcut => {
+        const nextAvailable = pinnedSites.indexOf(null);
+        // Only add a search shortcut if the site isn't already pinned, we
+        // haven't previously inserted it, there's space to pin it, and the
+        // search engine is available in Firefox
+        if (
+          !pinnedSites.find(s => s && s.hostname === shortcut.shortURL) &&
+          !prevInsertedShortcuts.includes(shortcut.shortURL) &&
+          nextAvailable > -1 &&
+          checkHasSearchEngine(shortcut.keyword)
+        ) {
+          const site = this.topSiteToSearchTopSite({url: shortcut.url});
+          this._pinSiteAt(site, nextAvailable);
+          pinnedSites[nextAvailable] = site;
+          newInsertedShortcuts.push(shortcut.shortURL);
+        }
+      };
+
+      shouldPin.forEach(shortcut => tryToInsertSearchShortcut(shortcut));
+
+      if (newInsertedShortcuts.length) {
+        this.store.dispatch(ac.SetPref(SEARCH_SHORTCUTS_HAVE_PINNED_PREF, prevInsertedShortcuts.concat(newInsertedShortcuts).join(",")));
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   async getLinksWithDefaults() {
     const numItems = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+    const searchShortcutsExperiment = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT];
+
+    // Get all frecent sites from history
     const frecent = (await this.frecentCache.request({
-      numItems,
+      // We need to overquery due to the top 5 alexa search + default search possibly being removed
+      numItems: numItems + SEARCH_FILTERS.length + 1,
       topsiteFrecency: FRECENCY_THRESHOLD
-    })).map(link => Object.assign({}, link, {hostname: shortURL(link)}));
+    }))
+    .reduce((validLinks, link) => {
+      const hostname = shortURL(link);
+      if (!this.isExperimentOnAndLinkFilteredSearch(hostname)) {
+        validLinks.push({
+          ...(searchShortcutsExperiment ? this.topSiteToSearchTopSite(link) : link),
+          hostname
+        });
+      }
+      return validLinks;
+    }, []);
 
     // Remove any defaults that have been blocked
-    const notBlockedDefaultSites = DEFAULT_TOP_SITES.filter(link =>
-      !NewTabUtils.blockedLinks.isBlocked({url: link.url}));
+    const notBlockedDefaultSites = DEFAULT_TOP_SITES
+      .reduce((topsites, link) => {
+        const searchProvider = getSearchProvider(shortURL(link));
+        if (NewTabUtils.blockedLinks.isBlocked({url: link.url})) {
+          return topsites;
+        } else if (this.isExperimentOnAndLinkFilteredSearch(link.hostname)) {
+          return topsites;
+          // If we've previously blocked a search shortcut, remove the default top site
+          // that matches the hostname
+        } else if (searchProvider && NewTabUtils.blockedLinks.isBlocked({url: searchProvider.url})) {
+          return topsites;
+        }
+        return [
+          ...topsites,
+          searchShortcutsExperiment ? this.topSiteToSearchTopSite(link) : link
+        ];
+      }, []);
 
     // Get pinned links augmented with desired properties
-    const plainPinned = await this.pinnedCache.request();
+    let plainPinned = await this.pinnedCache.request();
+
+    // Insert search shortcuts if we need to.
+    // _maybeInsertSearchShortcuts returns true if any search shortcuts are
+    // inserted, meaning we need to expire and refresh the pinnedCache
+    if (await this._maybeInsertSearchShortcuts(plainPinned)) {
+      this.pinnedCache.expire();
+      plainPinned = await this.pinnedCache.request();
+    }
+
     const pinned = await Promise.all(plainPinned.map(async link => {
       if (!link) {
         return link;
@@ -116,8 +277,13 @@ this.TopSitesFeed = class TopSitesFeed {
       }
       // If the link is a frecent site, do not copy over 'isDefault', else check
       // if the site is a default site
-      const copy = Object.assign({}, frecentSite ||
-        {isDefault: !!notBlockedDefaultSites.find(finder)}, link, {hostname: shortURL(link)});
+      const copy = Object.assign(
+        {},
+        frecentSite || {isDefault: !!notBlockedDefaultSites.find(finder)},
+        link,
+        {hostname: shortURL(link)},
+        {searchTopSite: !!link.searchTopSite}
+      );
 
       // Add in favicons if we don't already have it
       if (!copy.favicon) {
@@ -154,6 +320,8 @@ this.TopSitesFeed = class TopSitesFeed {
         // If there is a custom screenshot this is the only image we display
         if (link.customScreenshotURL) {
           this._fetchScreenshot(link, link.customScreenshotURL);
+        } else if (link.searchTopSite && !link.isDefault) {
+          this._tippyTopProvider.processSite(link);
         } else {
           this._fetchIcon(link);
         }
@@ -177,6 +345,7 @@ this.TopSitesFeed = class TopSitesFeed {
     if (!this._tippyTopProvider.initialized) {
       await this._tippyTopProvider.init();
     }
+
     const links = await this.getLinksWithDefaults();
     const newAction = {type: at.TOP_SITES_UPDATED, data: {links}};
     let storedPrefs;
@@ -195,6 +364,42 @@ this.TopSitesFeed = class TopSitesFeed {
       // Don't broadcast only update the state and update the preloaded tab.
       this.store.dispatch(ac.AlsoToPreloaded(newAction));
     }
+  }
+
+  async updateCustomSearchShortcuts() {
+    if (!this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT]) {
+      return;
+    }
+
+    if (!this._tippyTopProvider.initialized) {
+      await this._tippyTopProvider.init();
+    }
+
+    // Populate the state with available search shortcuts
+    await new Promise(resolve => Services.search.init(resolve));
+    const searchShortcuts = Services.search.getDefaultEngines().reduce((result, engine) => {
+      const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s => engine.wrappedJSObject._internalAliases.includes(s.keyword));
+      if (shortcut) {
+        result.push(this._tippyTopProvider.processSite({...shortcut}));
+      }
+      return result;
+    }, []);
+    this.store.dispatch(ac.BroadcastToContent({
+      type: at.UPDATE_SEARCH_SHORTCUTS,
+      data: {searchShortcuts}
+    }));
+  }
+
+  topSiteToSearchTopSite(site) {
+    const searchProvider = getSearchProvider(shortURL(site));
+    if (!searchProvider || !checkHasSearchEngine(searchProvider.keyword)) {
+      return site;
+    }
+    return {
+      ...site,
+      searchTopSite: true,
+      label: searchProvider.keyword
+    };
   }
 
   /**
@@ -275,13 +480,16 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param customScreenshotURL {string} User set URL of preview image for site
    * @param label {string} User set string of custom site name
    */
-  async _pinSiteAt({customScreenshotURL, label, url}, index) {
+  async _pinSiteAt({customScreenshotURL, label, url, searchTopSite}, index) {
     const toPin = {url};
     if (label) {
       toPin.label = label;
     }
     if (customScreenshotURL) {
       toPin.customScreenshotURL = customScreenshotURL;
+    }
+    if (searchTopSite) {
+      toPin.searchTopSite = searchTopSite;
     }
     NewTabUtils.pinnedLinks.pin(toPin, index);
 
@@ -320,6 +528,20 @@ this.TopSitesFeed = class TopSitesFeed {
     const {site} = action.data;
     NewTabUtils.pinnedLinks.unpin(site);
     this._broadcastPinnedSitesUpdated();
+  }
+
+  disableSearchImprovements() {
+    Services.prefs.clearUserPref(`browser.newtabpage.activity-stream.${SEARCH_SHORTCUTS_HAVE_PINNED_PREF}`);
+    this.unpinAllSearchShortcuts();
+  }
+
+  unpinAllSearchShortcuts() {
+    for (let pinnedLink of NewTabUtils.pinnedLinks.links) {
+      if (pinnedLink && pinnedLink.searchTopSite) {
+        NewTabUtils.pinnedLinks.unpin(pinnedLink);
+      }
+    }
+    this.pinnedCache.expire();
   }
 
   /**
@@ -384,10 +606,37 @@ this.TopSitesFeed = class TopSitesFeed {
     this._broadcastPinnedSitesUpdated();
   }
 
+  updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts}) {
+    // Unpin the deletedShortcuts.
+    deletedShortcuts.forEach(({url}) => {
+      NewTabUtils.pinnedLinks.unpin({url});
+    });
+
+    // Pin the addedShortcuts.
+    const numberOfSlots = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+    addedShortcuts.forEach(shortcut => {
+      // Find first hole in pinnedLinks.
+      let index = NewTabUtils.pinnedLinks.links.findIndex(link => !link);
+      if (index < 0 && NewTabUtils.pinnedLinks.links.length + 1 < numberOfSlots) {
+        // pinnedLinks can have less slots than the total available.
+        index = NewTabUtils.pinnedLinks.links.length;
+      }
+      if (index >= 0) {
+        NewTabUtils.pinnedLinks.pin(shortcut, index);
+      } else {
+        // No slots available, we need to do an insert in first slot and push over other pinned links.
+        this._insertPin(shortcut, 0, numberOfSlots);
+      }
+    });
+
+    this._broadcastPinnedSitesUpdated();
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
         this.init();
+        this.updateCustomSearchShortcuts();
         break;
       case at.SYSTEM_TICK:
         this.refresh({broadcast: false});
@@ -409,10 +658,22 @@ this.TopSitesFeed = class TopSitesFeed {
         this.refresh({broadcast: true});
         break;
       case at.PREF_CHANGED:
-        if (action.data.name === DEFAULT_SITES_PREF) {
-          this.refreshDefaults(action.data.value);
-        } else if (action.data.name === ROWS_PREF) {
-          this.refresh({broadcast: true});
+        switch (action.data.name) {
+          case DEFAULT_SITES_PREF:
+            this.refreshDefaults(action.data.value);
+            break;
+          case ROWS_PREF:
+          case NO_DEFAULT_SEARCH_TILE_EXP_PREF:
+          case SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF:
+            this.refresh({broadcast: true});
+            break;
+          case SEARCH_SHORTCUTS_EXPERIMENT:
+            if (action.data.value) {
+              this.updateCustomSearchShortcuts();
+            } else {
+              this.disableSearchImprovements();
+            }
+            this.refresh({broadcast: true});
         }
         break;
       case at.UPDATE_SECTION_PREFS:
@@ -434,6 +695,9 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
       case at.PREVIEW_REQUEST:
         this.getScreenshotPreview(action.data.url, action.meta.fromTarget);
+        break;
+      case at.UPDATE_PINNED_SEARCH_SHORTCUTS:
+        this.updatePinnedSearchShortcuts(action.data);
         break;
       case at.UNINIT:
         this.uninit();

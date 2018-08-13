@@ -15,6 +15,9 @@ const FAKE_LINKS = new Array(2 * TOP_SITES_MAX_SITES_PER_ROW).fill(null).map((v,
   url: `http://www.site${i}.com`
 }));
 const FAKE_SCREENSHOT = "data123";
+const SEARCH_SHORTCUTS_EXPERIMENT_PREF = "improvesearch.topSiteSearchShortcuts";
+const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF = "improvesearch.topSiteSearchShortcuts.searchEngines";
+const SEARCH_SHORTCUTS_HAVE_PINNED_PREF = "improvesearch.topSiteSearchShortcuts.havePinned";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -65,7 +68,7 @@ describe("Top Sites Feed", () => {
       _shouldGetScreenshots: sinon.stub().returns(true)
     };
     filterAdultStub = sinon.stub().returns([]);
-    shortURLStub = sinon.stub().callsFake(site => site.url);
+    shortURLStub = sinon.stub().callsFake(site => site.url.replace(/(.com|.ca)/, "").replace("https://", ""));
     const fakeDedupe = function() {};
     fakePageThumbs = {
       addExpirationFilter: sinon.stub(),
@@ -103,6 +106,9 @@ describe("Top Sites Feed", () => {
     };
     feed.dedupe.group = (...sites) => sites;
     links = FAKE_LINKS;
+    // Turn off the search shortcuts experiment by default for other tests
+    feed.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = false;
+    feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "google,amazon";
   });
   afterEach(() => {
     globals.restore();
@@ -356,6 +362,16 @@ describe("Top Sites Feed", () => {
 
         assert.equal(result[0].screenshot, "bar");
       });
+      it("should not set searchTopSite from frecent site", async () => {
+        links = [{url: "https://foo.com/", searchTopSite: true, screenshot: "screenshot"}];
+        fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/"}];
+
+        const result = await feed.getLinksWithDefaults();
+
+        assert.propertyVal(result[0], "searchTopSite", false);
+        // But it should copy over other properties
+        assert.propertyVal(result[0], "screenshot", "screenshot");
+      });
       describe("concurrency", () => {
         let resolvers;
         beforeEach(() => {
@@ -459,7 +475,7 @@ describe("Top Sites Feed", () => {
     });
     it("should call _fetchScreenshot when customScreenshotURL is set", async () => {
       links = [];
-      fakeNewTabUtils.pinnedLinks.links = [{url: "foo", customScreenshotURL: "custom"}];
+      fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com", customScreenshotURL: "custom"}];
       sinon.stub(feed, "_fetchScreenshot");
 
       await feed.getLinksWithDefaults();
@@ -825,6 +841,12 @@ describe("Top Sites Feed", () => {
 
       assert.calledOnce(fakePageThumbs.removeExpirationFilter);
     });
+    it("should call updatePinnedSearchShortcuts on UPDATE_PINNED_SEARCH_SHORTCUTS action", async () => {
+      sinon.stub(feed, "updatePinnedSearchShortcuts");
+      const addedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      await feed.onAction({type: at.UPDATE_PINNED_SEARCH_SHORTCUTS, data: {addedShortcuts}});
+      assert.calledOnce(feed.updatePinnedSearchShortcuts);
+    });
   });
   describe("#add", () => {
     it("should pin site in first slot of empty pinned list", () => {
@@ -920,6 +942,13 @@ describe("Top Sites Feed", () => {
       feed.pin({data: {index: 2, site}});
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
+    });
+    it("should save the searchTopSite attribute if set", () => {
+      fakeNewTabUtils.pinnedLinks.links = [null, {url: "example.com"}];
+      const site = {url: "foo.bar", label: "foo", searchTopSite: true};
+      feed.pin({data: {index: 2, site}});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.propertyVal(fakeNewTabUtils.pinnedLinks.pin.firstCall.args[0], "searchTopSite", true);
     });
     it("should NOT move a pinned site in specified slot to the next slot", () => {
       fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "example.com"}];
@@ -1060,7 +1089,7 @@ describe("Top Sites Feed", () => {
 
     it("should add a pinned site and remove it", async () => {
       feed._requestRichIcon = sinon.stub();
-      const url = "pin.me";
+      const url = "https://pin.me";
       fakeNewTabUtils.pinnedLinks.pin = sandbox.stub().callsFake(link => {
         fakeNewTabUtils.pinnedLinks.links.push(link);
       });
@@ -1072,6 +1101,342 @@ describe("Top Sites Feed", () => {
       assert.calledTwice(feed.store.dispatch);
       assert.equal(feed.store.dispatch.firstCall.args[0].data.links[0].url, url);
       assert.equal(feed.store.dispatch.secondCall.args[0].data.links[0].url, FAKE_LINKS[0].url);
+    });
+  });
+
+  describe("improvesearch.noDefaultSearchTile experiment", () => {
+    const NO_DEFAULT_SEARCH_TILE_PREF = "improvesearch.noDefaultSearchTile";
+    let cachedDefaultSearch;
+    beforeEach(() => {
+      cachedDefaultSearch = global.Services.search.currentEngine;
+      global.Services.search.currentEngine = {identifier: "google", searchForm: "google.com"};
+      feed.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
+    });
+    afterEach(() => {
+      global.Services.search.currentEngine = cachedDefaultSearch;
+    });
+    it("should filter out alexa top 5 search from the default sites", async () => {
+      const TOP_5_TEST = [
+        "google.com",
+        "search.yahoo.com",
+        "yahoo.com",
+        "bing.com",
+        "ask.com",
+        "duckduckgo.com"
+      ];
+      links = [{url: "amazon.com"}, ...TOP_5_TEST.map(url => ({url}))];
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.include(urlsReturned, "amazon.com");
+      TOP_5_TEST.forEach(url => assert.notInclude(urlsReturned, url));
+    });
+    it("should not filter out alexa, default search from the query results if the experiment pref is off", async () => {
+      links = [{url: "google.com"}, {url: "foo.com"}, {url: "duckduckgo"}];
+      feed.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = false;
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.include(urlsReturned, "google.com");
+    });
+    it("should filter out the current default search from the default sites", async () => {
+      feed._currentSearchHostname = "amazon";
+      feed.onAction({type: at.PREFS_INITIAL_VALUES, data: {"default.sites": "google.com,amazon.com"}});
+      links = [{url: "foo.com"}];
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.notInclude(urlsReturned, "amazon.com");
+    });
+    it("should not filter out current default search from pinned sites even if it matches the current default search", async () => {
+      links = [{url: "foo.com"}];
+      fakeNewTabUtils.pinnedLinks.links = [{url: "google.com"}];
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.include(urlsReturned, "google.com");
+    });
+    it("should set ._currentSearchHostname to the current engine hostname on init", async () => {
+      global.Services.search.currentEngine = {identifier: "ddg", searchForm: "duckduckgo.com"};
+      sandbox.stub(feed, "refresh");
+
+      await feed.init();
+
+      assert.equal(feed._currentSearchHostname, "duckduckgo");
+    });
+    it("should call refresh and set ._currentSearchHostname to the new engine hostname when the the default search engine has been set", () => {
+      sinon.stub(feed, "refresh");
+      global.Services.search.currentEngine = {identifier: "ddg", searchForm: "duckduckgo.com"};
+      feed.observe(null, "browser-search-engine-modified", "engine-current");
+      assert.equal(feed._currentSearchHostname, "duckduckgo");
+      assert.calledOnce(feed.refresh);
+    });
+    it("should call refresh when the experiment pref has changed", () => {
+      sinon.stub(feed, "refresh");
+
+      feed.onAction({type: at.PREF_CHANGED, data: {name: NO_DEFAULT_SEARCH_TILE_PREF, value: true}});
+      assert.calledOnce(feed.refresh);
+
+      feed.onAction({type: at.PREF_CHANGED, data: {name: NO_DEFAULT_SEARCH_TILE_PREF, value: false}});
+      assert.calledTwice(feed.refresh);
+    });
+  });
+
+  describe("improvesearch.topSitesSearchShortcuts", () => {
+    beforeEach(() => {
+      feed.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = true;
+      feed.store.state.Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF] = "google,amazon";
+      feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "";
+      const searchEngines = [
+        {wrappedJSObject: {_internalAliases: ["@google"]}},
+        {wrappedJSObject: {_internalAliases: ["@amazon"]}}
+      ];
+      global.Services.search.getDefaultEngines = () => searchEngines;
+      fakeNewTabUtils.pinnedLinks.pin = sinon.stub().callsFake((site, index) => {
+        fakeNewTabUtils.pinnedLinks.links[index] = site;
+      });
+    });
+
+    it("should properly disable search improvements if the pref is off", async () => {
+      sandbox.stub(global.Services.prefs, "clearUserPref");
+      sandbox.spy(feed.pinnedCache, "expire");
+      sandbox.spy(feed, "refresh");
+
+      // an actual implementation of unpin (until we can get a mochitest for search improvements)
+      fakeNewTabUtils.pinnedLinks.unpin = sinon.stub().callsFake(site => {
+        let index = -1;
+        for (let i = 0; i < fakeNewTabUtils.pinnedLinks.links.length; i++) {
+          let link = fakeNewTabUtils.pinnedLinks.links[i];
+          if (link && link.url === site.url) {
+            index = i;
+          }
+        }
+        if (index > -1) {
+          fakeNewTabUtils.pinnedLinks.links[index] = null;
+        }
+      });
+
+      // ensure we've inserted search shorcuts + pin an additional site in space 4
+      await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+      fakeNewTabUtils.pinnedLinks.pin({url: "https://dontunpinme.com"}, 3);
+
+      // turn the experiment off
+      feed.onAction({type: at.PREF_CHANGED, data: {name: SEARCH_SHORTCUTS_EXPERIMENT_PREF, value: false}});
+
+      // check we cleared the pref, expired the pinned cache, and refreshed the feed
+      assert.calledWith(global.Services.prefs.clearUserPref, `browser.newtabpage.activity-stream.${SEARCH_SHORTCUTS_HAVE_PINNED_PREF}`);
+      assert.calledOnce(feed.pinnedCache.expire);
+      assert.calledWith(feed.refresh, {broadcast: true});
+
+      // check that the search shortcuts were removed from the list of pinned sites
+      const urlsReturned = fakeNewTabUtils.pinnedLinks.links.filter(s => s).map(link => link.url);
+      assert.notInclude(urlsReturned, "https://amazon.com");
+      assert.notInclude(urlsReturned, "https://google.com");
+      assert.include(urlsReturned, "https://dontunpinme.com");
+
+      // check that the positions where the search shortcuts were null, and the additional pinned site is untouched in space 4
+      assert.equal(fakeNewTabUtils.pinnedLinks.links[0], null);
+      assert.equal(fakeNewTabUtils.pinnedLinks.links[1], null);
+      assert.equal(fakeNewTabUtils.pinnedLinks.links[2], undefined);
+      assert.deepEqual(fakeNewTabUtils.pinnedLinks.links[3], {url: "https://dontunpinme.com"});
+    });
+
+    it("should updateCustomSearchShortcuts when experiment pref is turned on", async () => {
+      feed.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = false;
+      feed.updateCustomSearchShortcuts = sinon.spy();
+
+      // turn the experiment on
+      feed.onAction({type: at.PREF_CHANGED, data: {name: SEARCH_SHORTCUTS_EXPERIMENT_PREF, value: true}});
+
+      assert.calledOnce(feed.updateCustomSearchShortcuts);
+    });
+
+    it("should filter out default top sites that match a hostname of a search shortcut if previously blocked", async () => {
+      feed.refreshDefaults("https://amazon.ca");
+      fakeNewTabUtils.blockedLinks.links = [{url: "https://amazon.com"}];
+      fakeNewTabUtils.blockedLinks.isBlocked = site => (fakeNewTabUtils.blockedLinks.links[0].url === site.url);
+      const urlsReturned = (await feed.getLinksWithDefaults()).map(link => link.url);
+      assert.notInclude(urlsReturned, "https://amazon.ca");
+    });
+
+    it("should update frecent search topsite icon", async () => {
+      feed._tippyTopProvider.processSite = site => {
+        site.tippyTopIcon = "icon.png";
+        site.backgroundColor = "#fff";
+        return site;
+      };
+      links = [{url: "google.com"}];
+
+      const urlsReturned = await feed.getLinksWithDefaults();
+
+      const defaultSearchTopsite = urlsReturned.find(s => s.url === "google.com");
+      assert.propertyVal(defaultSearchTopsite, "searchTopSite", true);
+      assert.equal(defaultSearchTopsite.tippyTopIcon, "icon.png");
+      assert.equal(defaultSearchTopsite.backgroundColor, "#fff");
+    });
+    it("should update default search topsite icon", async () => {
+      feed._tippyTopProvider.processSite = site => {
+        site.tippyTopIcon = "icon.png";
+        site.backgroundColor = "#fff";
+        return site;
+      };
+      links = [{url: "foo.com"}];
+      feed.onAction({type: at.PREFS_INITIAL_VALUES, data: {"default.sites": "google.com,amazon.com"}});
+
+      const urlsReturned = await feed.getLinksWithDefaults();
+
+      const defaultSearchTopsite = urlsReturned.find(s => s.url === "amazon.com");
+      assert.propertyVal(defaultSearchTopsite, "searchTopSite", true);
+      assert.equal(defaultSearchTopsite.tippyTopIcon, "icon.png");
+      assert.equal(defaultSearchTopsite.backgroundColor, "#fff");
+    });
+    it("should not overlap with improvesearch.noDefaultSearchTile and still provide search tiles", async () => {
+      feed.store.state.Prefs.values["improvesearch.noDefaultSearchTile"] = true;
+      links = [{url: "google.com"}];
+
+      const urlsReturned = await feed.getLinksWithDefaults();
+
+      const defaultSearchTopsite = urlsReturned.find(s => s.url === "google.com");
+      assert.isTrue(defaultSearchTopsite.searchTopSite);
+    });
+    it("should dispatch UPDATE_SEARCH_SHORTCUTS on updateCustomSearchShortcuts", async () => {
+      feed.store.state.Prefs.values["improvesearch.noDefaultSearchTile"] = true;
+      await feed.updateCustomSearchShortcuts();
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        data: {
+          searchShortcuts: [{
+            keyword: "@google",
+            shortURL: "google",
+            url: "https://google.com"
+          }, {
+            keyword: "@amazon",
+            shortURL: "amazon",
+            url: "https://amazon.com"
+          }]
+        },
+        meta: {from: "ActivityStream:Main", to: "ActivityStream:Content"},
+        type: "UPDATE_SEARCH_SHORTCUTS"
+      });
+    });
+
+    describe("_maybeInsertSearchShortcuts", () => {
+      beforeEach(() => {
+        // Default is one row
+        feed.store.state.Prefs.values.topSitesRows = TOP_SITES_DEFAULT_ROWS;
+        // Eight slots per row
+        fakeNewTabUtils.pinnedLinks.links = [{url: ""}, {url: ""}, {url: ""}, null, {url: ""}, {url: ""}, null, {url: ""}];
+      });
+
+      it("should be called on getLinksWithDefaults", async () => {
+        sandbox.spy(feed, "_maybeInsertSearchShortcuts");
+        await feed.getLinksWithDefaults();
+        assert.calledOnce(feed._maybeInsertSearchShortcuts);
+      });
+
+      it("should do nothing and return false if the experiment is disabled", async () => {
+        feed.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = false;
+        assert.isFalse(await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links));
+        assert.notCalled(fakeNewTabUtils.pinnedLinks.pin);
+      });
+
+      it("should pin shortcuts in the correct order, into the available unpinned slots", async () => {
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        // The shouldPin pref is "google,amazon" so expect the shortcuts in that order
+        assert.deepEqual(fakeNewTabUtils.pinnedLinks.links[3], {url: "https://google.com", searchTopSite: true, label: "@google"});
+        assert.deepEqual(fakeNewTabUtils.pinnedLinks.links[6], {url: "https://amazon.com", searchTopSite: true, label: "@amazon"});
+      });
+
+      it("should only pin the first shortcut if there's only one available slot", async () => {
+        fakeNewTabUtils.pinnedLinks.links[3] = {url: ""};
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        // The first item in the shouldPin pref is "google" so expect only Google to be pinned
+        assert.ok(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://google.com"));
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://amazon.com"));
+      });
+
+      it("should pin none if there's no available slot", async () => {
+        fakeNewTabUtils.pinnedLinks.links[3] = {url: ""};
+        fakeNewTabUtils.pinnedLinks.links[6] = {url: ""};
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://google.com"));
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://amazon.com"));
+      });
+
+      it("should not pin a shortcut if the corresponding search engine is not available", async () => {
+        // Make Amazon search engine unavailable
+        global.Services.search.getDefaultEngines = () => [{wrappedJSObject: {_internalAliases: ["@google"]}}];
+        fakeNewTabUtils.pinnedLinks.links.fill(null);
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://amazon.com"));
+      });
+
+      it("should not pin a search shortcut if it's been pinned before", async () => {
+        fakeNewTabUtils.pinnedLinks.links.fill(null);
+        feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "google,amazon";
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://google.com"));
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://amazon.com"));
+
+        fakeNewTabUtils.pinnedLinks.links.fill(null);
+        feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "amazon";
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        assert.ok(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://google.com"));
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://amazon.com"));
+
+        fakeNewTabUtils.pinnedLinks.links.fill(null);
+        feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "google";
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        assert.notOk(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://google.com"));
+        assert.ok(fakeNewTabUtils.pinnedLinks.links.find(s => s && s.url === "https://amazon.com"));
+      });
+
+      it("should record the insertion of a search shortcut", async () => {
+        feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "";
+        // Fill up one slot, so there's only one left - to be filled by Google
+        fakeNewTabUtils.pinnedLinks.links[3] = {url: ""};
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        assert.calledWithExactly(feed.store.dispatch, {
+          data: {name: SEARCH_SHORTCUTS_HAVE_PINNED_PREF, value: "google"},
+          meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+          type: "SET_PREF"
+        });
+      });
+    });
+  });
+
+  describe("updatePinnedSearchShortcuts", () => {
+    it("should unpin a shortcut in deletedShortcuts", () => {
+      const deletedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      const addedShortcuts = [];
+      fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.notCalled(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.unpin, {url: "https://google.com"});
+    });
+
+    it("should pin a shortcut in addedShortcuts", () => {
+      const addedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      const deletedShortcuts = [];
+      fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.notCalled(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, {label: "google", searchTopSite: true, searchVendor: "google", url: "https://google.com"}, 0);
+    });
+
+    it("should pin and unpin in the same action", () => {
+      const addedShortcuts = [
+        {url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true},
+        {url: "https://ebay.com", searchVendor: "ebay", label: "ebay", searchTopSite: true}
+      ];
+      const deletedShortcuts = [{url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com"}, {url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
+    });
+
+    it("should pin a shortcut in addedShortcuts even if pinnedLinks is full", () => {
+      const addedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      const deletedShortcuts = [];
+      fakeNewTabUtils.pinnedLinks.links = FAKE_LINKS;
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.notCalled(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, {label: "google", searchTopSite: true, url: "https://google.com"}, 0);
     });
   });
 });

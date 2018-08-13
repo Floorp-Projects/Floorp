@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Tinuk'samajïx Peraj",
   "section_menu_action_manage_webext": "Tinuk'samajïx K'amal",
   "section_menu_action_add_topsite": "Titz'aqatisäx K'ïy Ruwinaq Ruxaq K'amaya'l",
+  "section_menu_action_add_search_engine": "Titz'aqatisäx kanob'äl",
   "section_menu_action_move_up": "Tijotob'äx",
   "section_menu_action_move_down": "Tiqasäx qa",
   "section_menu_action_privacy_notice": "Ichinan na'oj",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Tatz'ib'aj ri ataqoya'l",
   "firstrun_form_sub_header": "richin yatok pa Firefox Sync.",
   "firstrun_email_input_placeholder": "Taqoya'l",
+  "firstrun_invalid_input": "Najowäx ütz chi taqoya'l",
   "firstrun_extra_legal_links": "Toq nasamajij qa, nawojqaj ri {terms} chuqa' {privacy}.",
   "firstrun_terms_of_service": "Kojqanem Samaj",
   "firstrun_privacy_notice": "Ichinan Na'oj",
   "firstrun_continue_to_login": "Titikïr chik el",
-  "firstrun_skip_login": "Tixakalüx re jun ruxak re'",
-  "firstrun_invalid_input": "Najowäx ütz chi taqoya'l"
+  "firstrun_skip_login": "Tixakalüx re jun ruxak re'"
 };

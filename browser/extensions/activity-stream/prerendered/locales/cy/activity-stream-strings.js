@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Rheoli'r Adran",
   "section_menu_action_manage_webext": "Rheoli Estyniad",
   "section_menu_action_add_topsite": "Ychwanegu Hoff Wefan",
+  "section_menu_action_add_search_engine": "Ychwanegu Peiriant Chwilio",
   "section_menu_action_move_up": "Symud i Fyny",
   "section_menu_action_move_down": "Symud i Lawr",
   "section_menu_action_privacy_notice": "Hysbysiad Preifatrwydd",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Rhowch eich e-bost",
   "firstrun_form_sub_header": "i barhau i Firefox Sync",
   "firstrun_email_input_placeholder": "E-bost",
+  "firstrun_invalid_input": "Mae angen e-bost dilys",
   "firstrun_extra_legal_links": "Gan barhau, rydych yn cytuno i delerau'r {terms} a'r {privacy}.",
   "firstrun_terms_of_service": "Amodau Gwasanaeth",
   "firstrun_privacy_notice": "Hysbysiad Preifatrwydd",
   "firstrun_continue_to_login": "Parhau",
-  "firstrun_skip_login": "Hepgor y cam hwn",
-  "firstrun_invalid_input": "Mae angen e-bost dilys"
+  "firstrun_skip_login": "Hepgor y cam hwn"
 };

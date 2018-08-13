@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Manage Section",
   "section_menu_action_manage_webext": "Manage Extension",
   "section_menu_action_add_topsite": "Add Top Site",
+  "section_menu_action_add_search_engine": "Add Search Engine",
   "section_menu_action_move_up": "ಮೇಲೆ ಜರುಗಿಸು",
   "section_menu_action_move_down": "Move Down",
   "section_menu_action_privacy_notice": "Privacy Notice",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Enter your email",
   "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "ಇಮೇಲ್",
+  "firstrun_invalid_input": "ಸರಿಯಾದ ಇಮೇಲ್ ಬೇಕಾಗಿದೆ",
   "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
   "firstrun_terms_of_service": "ಸೇವೆಯ ನಿಯಮಗಳು",
   "firstrun_privacy_notice": "ಗೌಪ್ಯತಾ ಸೂಚನೆ",
   "firstrun_continue_to_login": "ಮುಂದುವರೆ",
-  "firstrun_skip_login": "ಈ ಹಂತವನ್ನು ಹಾರಿಸಿ",
-  "firstrun_invalid_input": "ಸರಿಯಾದ ಇಮೇಲ್ ಬೇಕಾಗಿದೆ"
+  "firstrun_skip_login": "ಈ ಹಂತವನ್ನು ಹಾರಿಸಿ"
 };

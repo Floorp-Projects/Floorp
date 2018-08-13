@@ -87,6 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Nastavení sekce",
   "section_menu_action_manage_webext": "Správa rozšíření",
   "section_menu_action_add_topsite": "Přidat mezi top stránky",
+  "section_menu_action_add_search_engine": "Přidat vyhledávací modul",
   "section_menu_action_move_up": "Posunout nahoru",
   "section_menu_action_move_down": "Posunout dolů",
   "section_menu_action_privacy_notice": "Zásady ochrany osobních údajů",
@@ -96,10 +97,10 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Zadejte svoji e-mailovou adresu",
   "firstrun_form_sub_header": "a používejte službu Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mail",
+  "firstrun_invalid_input": "Je požadován platný e-mail",
   "firstrun_extra_legal_links": "Pokračováním souhlasíte s {terms} a {privacy}.",
   "firstrun_terms_of_service": "Podmínkami používání služby",
   "firstrun_privacy_notice": "Zásadami ochrany soukromí",
   "firstrun_continue_to_login": "Pokračovat",
-  "firstrun_skip_login": "Přeskočit tento krok",
-  "firstrun_invalid_input": "Je požadován platný e-mail"
+  "firstrun_skip_login": "Přeskočit tento krok"
 };
