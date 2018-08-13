@@ -467,7 +467,7 @@ class MarionetteProtocol(Protocol):
                     raise
 
         self.logger.debug("Starting Marionette session")
-        self.marionette.start_session()
+        self.marionette.start_session(self.capabilities)
         self.logger.debug("Marionette session started")
 
     def after_connect(self):
