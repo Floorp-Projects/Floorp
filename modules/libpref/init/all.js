@@ -2049,11 +2049,7 @@ pref("network.dns.ipv4OnlyDomains", "");
 pref("network.dns.disableIPv6", false);
 
 // This is the number of dns cache entries allowed
-#ifdef ANDROID
 pref("network.dnsCacheEntries", 400);
-#else
-pref("network.dnsCacheEntries", 800);
-#endif
 
 // In the absence of OS TTLs, the DNS cache TTL value
 pref("network.dnsCacheExpiration", 60);
