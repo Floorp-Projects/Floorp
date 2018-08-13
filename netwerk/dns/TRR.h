@@ -142,7 +142,7 @@ public:
 private:
   ~TRR() = default;
   nsresult SendHTTPRequest();
-  nsresult DohEncode(nsCString &target);
+  nsresult DohEncode(nsCString &target, bool aDisableECS);
   nsresult PassQName(unsigned int &index);
   nsresult GetQname(nsAutoCString &aQname, unsigned int &aIndex);
   nsresult DohDecode(nsCString &aHost);

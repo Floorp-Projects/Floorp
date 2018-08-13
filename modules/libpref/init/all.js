@@ -5378,6 +5378,8 @@ pref("network.trr.blacklist-duration", 60);
 pref("network.trr.request-timeout", 3000);
 // Allow AAAA entries to be used "early", before the A results are in
 pref("network.trr.early-AAAA", false);
+// Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
+pref("network.trr.disable-ECS", true);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");
