@@ -242,9 +242,17 @@ public:
    */
   nsresult AddZIndex(int32_t aChange);
 
-  nsresult SetInlineProperty(nsAtom* aProperty,
+  nsresult SetInlineProperty(nsAtom& aProperty,
                              nsAtom* aAttribute,
-                             const nsAString& aValue);
+                             const nsAString& aValue)
+  {
+    nsresult rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
   nsresult GetInlineProperty(nsAtom* aProperty,
                              nsAtom* aAttribute,
                              const nsAString& aValue,
@@ -808,6 +816,10 @@ protected: // Shouldn't be used by friend classes
   nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
 
   nsresult LoadHTML(const nsAString& aInputString);
+
+  nsresult SetInlinePropertyInternal(nsAtom& aProperty,
+                                     nsAtom* aAttribute,
+                                     const nsAString& aValue);
 
   /**
    * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of

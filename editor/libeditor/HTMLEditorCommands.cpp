@@ -286,7 +286,7 @@ StyleUpdatingCommand::ToggleState(HTMLEditor* aHTMLEditor)
   }
 
   nsresult rv =
-    aHTMLEditor->SetInlineProperty(mTagName, nullptr, EmptyString());
+    aHTMLEditor->SetInlineProperty(*mTagName, nullptr, EmptyString());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -738,9 +738,11 @@ FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
 
   if (newState.EqualsLiteral("tt")) {
     // The old "teletype" attribute
-    nsresult rv = aHTMLEditor->SetInlineProperty(nsGkAtoms::tt, nullptr,
+    nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::tt, nullptr,
                                                  EmptyString());
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     // Clear existing font face
     return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font, nsGkAtoms::face);
   }
@@ -753,8 +755,13 @@ FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
     return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font, nsGkAtoms::face);
   }
 
-  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font, nsGkAtoms::face,
-                                        newState);
+  rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
+                                      nsGkAtoms::face,
+                                      newState);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 FontSizeStateCommand::FontSizeStateCommand()
@@ -811,8 +818,13 @@ FontSizeStateCommand::SetState(HTMLEditor* aHTMLEditor,
   if (!newState.IsEmpty() &&
       !newState.EqualsLiteral("normal") &&
       !newState.EqualsLiteral("medium")) {
-    return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
-                                          nsGkAtoms::size, newState);
+    nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
+                                                 nsGkAtoms::size,
+                                                 newState);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
 
   // remove any existing font size, big or small
@@ -865,8 +877,13 @@ FontColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
                                              nsGkAtoms::color);
   }
 
-  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font, nsGkAtoms::color,
-                                        newState);
+  nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
+                                               nsGkAtoms::color,
+                                               newState);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 HighlightColorStateCommand::HighlightColorStateCommand()
@@ -908,9 +925,13 @@ HighlightColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
                                              nsGkAtoms::bgcolor);
   }
 
-  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
-                                        nsGkAtoms::bgcolor,
-                                        newState);
+  nsresult rv = aHTMLEditor->SetInlineProperty(*nsGkAtoms::font,
+                                               nsGkAtoms::bgcolor,
+                                               newState);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
