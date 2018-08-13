@@ -269,7 +269,7 @@ class GeckoInstance(object):
             args["preferences"].update(self.prefs)
 
         if self.verbose:
-            level = "TRACE" if self.verbose >= 2 else "DEBUG"
+            level = "Trace" if self.verbose >= 2 else "Debug"
             args["preferences"]["marionette.log.level"] = level
             args["preferences"]["marionette.logging"] = level
 
