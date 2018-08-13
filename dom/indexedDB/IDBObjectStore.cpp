@@ -942,10 +942,8 @@ CopyingStructuredCloneReadCallback(JSContext* aCx,
     if (aTag == SCTAG_DOM_MUTABLEFILE) {
       MOZ_ASSERT(file.mType == StructuredCloneFile::eMutableFile);
 
-      RefPtr<IDBMutableFile> mutableFile = file.mMutableFile;
-
       JS::Rooted<JS::Value> wrappedMutableFile(aCx);
-      if (NS_WARN_IF(!ToJSValue(aCx, mutableFile, &wrappedMutableFile))) {
+      if (NS_WARN_IF(!ToJSValue(aCx, file.mMutableFile, &wrappedMutableFile))) {
         return nullptr;
       }
 
@@ -956,9 +954,7 @@ CopyingStructuredCloneReadCallback(JSContext* aCx,
 
     MOZ_ASSERT(file.mType == StructuredCloneFile::eWasmBytecode);
 
-    RefPtr<JS::WasmModule> module = file.mWasmModule;
-
-    JS::Rooted<JSObject*> wrappedModule(aCx, module->createObject(aCx));
+    JS::Rooted<JSObject*> wrappedModule(aCx, file.mWasmModule->createObject(aCx));
     if (NS_WARN_IF(!wrappedModule)) {
       return nullptr;
     }

@@ -5830,7 +5830,7 @@ IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
             return Ok();
     }
 
-    MOZ_TRY(compareTrySharedStub(&emitted, left, right));
+    MOZ_TRY(compareTryBinaryStub(&emitted, left, right));
     if (emitted)
         return Ok();
 
@@ -6025,7 +6025,7 @@ IonBuilder::compareTrySpecializedOnBaselineInspector(bool* emitted, JSOp op, MDe
 }
 
 AbortReasonOr<Ok>
-IonBuilder::compareTrySharedStub(bool* emitted, MDefinition* left, MDefinition* right)
+IonBuilder::compareTryBinaryStub(bool* emitted, MDefinition* left, MDefinition* right)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -6037,9 +6037,7 @@ IonBuilder::compareTrySharedStub(bool* emitted, MDefinition* left, MDefinition* 
     if (JSOp(*pc) == JSOP_CASE)
         return Ok();
 
-    trackOptimizationAttempt(TrackedStrategy::Compare_SharedCache);
-
-    MBinarySharedStub* stub = MBinarySharedStub::New(alloc(), left, right);
+    MBinaryCache* stub = MBinaryCache::New(alloc(), left, right);
     current->add(stub);
     current->push(stub);
     MOZ_TRY(resumeAfter(stub));

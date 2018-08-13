@@ -35,7 +35,8 @@ def node_toolchain_search_path(host):
 # exist on systems (probably linux distros) where there is a program in the path
 # called "node" that does something else.
 nodejs = check_prog('NODEJS', ('nodejs', 'node',),
-                    allow_missing=True, paths=node_toolchain_search_path)
+                    allow_missing=True, paths=node_toolchain_search_path,
+                    paths_have_priority=True)
 
 
 @depends_if(nodejs)

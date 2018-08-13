@@ -1060,10 +1060,6 @@ class Assembler : public AssemblerX86Shared
         masm.vmovups_rm(src.encoding(), dest.addr);
         return CodeOffset(masm.currentOffset());
     }
-
-    static bool canUseInSingleByteInstruction(Register reg) {
-        return X86Encoding::HasSubregL(reg.encoding());
-    }
 };
 
 // Get a register in which we plan to put a quantity that will be used as an

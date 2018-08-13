@@ -21,13 +21,15 @@
 
 namespace js {
 
-struct MatchPair
+struct MatchPair final
 {
     int32_t start;
     int32_t limit;
 
+    static constexpr int32_t NoMatch = -1;
+
     MatchPair()
-      : start(-1), limit(-1)
+      : start(NoMatch), limit(NoMatch)
     { }
 
     MatchPair(int32_t start, int32_t limit)
@@ -39,8 +41,8 @@ struct MatchPair
 
     inline bool check() const {
         MOZ_ASSERT(limit >= start);
-        MOZ_ASSERT_IF(start < 0, start == -1);
-        MOZ_ASSERT_IF(limit < 0, limit == -1);
+        MOZ_ASSERT_IF(start < 0, start == NoMatch);
+        MOZ_ASSERT_IF(limit < 0, limit == NoMatch);
         return true;
     }
 };

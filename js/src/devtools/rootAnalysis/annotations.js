@@ -394,6 +394,10 @@ function isOverridableField(initialCSU, csu, field)
         return false;
     if (field == "GetThreadFromPRThread")
         return false;
+    if (field == "ConstructUbiNode")
+        return false;
+    if (initialCSU == 'nsIXPCScriptable' && field == "GetScriptableFlags")
+        return false;
     if (initialCSU == 'nsIXPConnectJSObjectHolder' && field == 'GetJSObject')
         return false;
     if (initialCSU == 'nsIXPConnect' && field == 'GetSafeJSContext')

@@ -140,7 +140,8 @@ class ADBCommand(object):
                  adb_port=None,
                  logger_name='adb',
                  timeout=300,
-                 verbose=False):
+                 verbose=False,
+                 require_root=True):
         """Initializes the ADBCommand object.
 
         :param str adb: path to adb executable. Defaults to 'adb'.
@@ -149,6 +150,8 @@ class ADBCommand(object):
         :param adb_port: port of the adb server.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param bool verbose: provide verbose output
+        :param bool require_root: check that we have root permissions on device
 
         :raises: * ADBError
                  * ADBTimeoutError
@@ -158,6 +161,7 @@ class ADBCommand(object):
 
         self._logger = self._get_logger(logger_name)
         self._verbose = verbose
+        self._require_root = require_root
         self._adb_path = adb
         self._adb_host = adb_host
         self._adb_port = adb_port
@@ -818,15 +822,15 @@ class ADBDevice(ADBCommand):
 
     def _try_test_root(self, test_root):
         base_path, sub_path = posixpath.split(test_root)
-        if not self.is_dir(base_path, root=True):
+        if not self.is_dir(base_path, root=self._require_root):
             return False
 
         try:
             dummy_dir = posixpath.join(test_root, 'dummy')
-            if self.is_dir(dummy_dir, root=True):
-                self.rm(dummy_dir, recursive=True, root=True)
-            self.mkdir(dummy_dir, parents=True, root=True)
-            self.chmod(test_root, recursive=True, root=True)
+            if self.is_dir(dummy_dir, root=self._require_root):
+                self.rm(dummy_dir, recursive=True, root=self._require_root)
+            self.mkdir(dummy_dir, parents=True, root=self._require_root)
+            self.chmod(test_root, recursive=True, root=self._require_root)
         except ADBError:
             self._logger.debug("%s is not writable" % test_root)
             return False

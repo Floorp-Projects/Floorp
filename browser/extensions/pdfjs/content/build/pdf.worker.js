@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.750';
-var pdfjsBuild = 'c8ee6331';
+var pdfjsVersion = '2.0.760';
+var pdfjsBuild = '1268aea2';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.750';
+    let workerVersion = '2.0.760';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -581,9 +581,9 @@ var WorkerMessageHandler = {
     handler.on('GetStats', function wphSetupGetStats(data) {
       return pdfManager.pdfDocument.xref.stats;
     });
-    handler.on('GetAnnotations', function wphSetupGetAnnotations(data) {
-      return pdfManager.getPage(data.pageIndex).then(function (page) {
-        return pdfManager.ensure(page, 'getAnnotationsData', [data.intent]);
+    handler.on('GetAnnotations', function ({ pageIndex, intent }) {
+      return pdfManager.getPage(pageIndex).then(function (page) {
+        return page.getAnnotationsData(intent);
       });
     });
     handler.on('RenderPageRequest', function wphSetupRenderPage(data) {
@@ -5393,8 +5393,7 @@ var Page = function PageClosure() {
           return opList;
         });
       });
-      var annotationsPromise = this.pdfManager.ensure(this, 'annotations');
-      return Promise.all([pageListPromise, annotationsPromise]).then(function ([pageOpList, annotations]) {
+      return Promise.all([pageListPromise, this._parsedAnnotations]).then(function ([pageOpList, annotations]) {
         if (annotations.length === 0) {
           pageOpList.flush(true);
           return pageOpList;
@@ -5444,27 +5443,37 @@ var Page = function PageClosure() {
         });
       });
     },
-    getAnnotationsData: function Page_getAnnotationsData(intent) {
-      var annotations = this.annotations;
-      var annotationsData = [];
-      for (var i = 0, n = annotations.length; i < n; ++i) {
-        if (!intent || isAnnotationRenderable(annotations[i], intent)) {
-          annotationsData.push(annotations[i].data);
+    getAnnotationsData(intent) {
+      return this._parsedAnnotations.then(function (annotations) {
+        let annotationsData = [];
+        for (let i = 0, ii = annotations.length; i < ii; i++) {
+          if (!intent || isAnnotationRenderable(annotations[i], intent)) {
+            annotationsData.push(annotations[i].data);
+          }
         }
-      }
-      return annotationsData;
+        return annotationsData;
+      });
     },
     get annotations() {
-      var annotations = [];
-      var annotationRefs = this._getInheritableProperty('Annots') || [];
-      for (var i = 0, n = annotationRefs.length; i < n; ++i) {
-        var annotationRef = annotationRefs[i];
-        var annotation = _annotation.AnnotationFactory.create(this.xref, annotationRef, this.pdfManager, this.idFactory);
-        if (annotation) {
-          annotations.push(annotation);
+      return (0, _util.shadow)(this, 'annotations', this._getInheritableProperty('Annots') || []);
+    },
+    get _parsedAnnotations() {
+      const parsedAnnotations = this.pdfManager.ensure(this, 'annotations').then(() => {
+        const annotationRefs = this.annotations;
+        const annotationPromises = [];
+        for (let i = 0, ii = annotationRefs.length; i < ii; i++) {
+          annotationPromises.push(_annotation.AnnotationFactory.create(this.xref, annotationRefs[i], this.pdfManager, this.idFactory));
         }
-      }
-      return (0, _util.shadow)(this, 'annotations', annotations);
+        return Promise.all(annotationPromises).then(function (annotations) {
+          return annotations.filter(function isDefined(annotation) {
+            return !!annotation;
+          });
+        }, function (reason) {
+          (0, _util.warn)(`_parsedAnnotations: "${reason}".`);
+          return [];
+        });
+      });
+      return (0, _util.shadow)(this, '_parsedAnnotations', parsedAnnotations);
     }
   };
   return Page;
@@ -5759,6 +5768,9 @@ var _crypto = __w_pdfjs_require__(24);
 
 var _colorspace = __w_pdfjs_require__(25);
 
+function fetchDestination(dest) {
+  return (0, _primitives.isDict)(dest) ? dest.get('D') : dest;
+}
 var Catalog = function CatalogClosure() {
   function Catalog(pdfManager, xref) {
     this.pdfManager = pdfManager;
@@ -5898,62 +5910,36 @@ var Catalog = function CatalogClosure() {
       return (0, _util.shadow)(this, 'numPages', obj);
     },
     get destinations() {
-      function fetchDestination(dest) {
-        return (0, _primitives.isDict)(dest) ? dest.get('D') : dest;
-      }
-      var xref = this.xref;
-      var dests = {},
-          nameTreeRef,
-          nameDictionaryRef;
-      var obj = this.catDict.get('Names');
-      if (obj && obj.has('Dests')) {
-        nameTreeRef = obj.getRaw('Dests');
-      } else if (this.catDict.has('Dests')) {
-        nameDictionaryRef = this.catDict.get('Dests');
-      }
-      if (nameDictionaryRef) {
-        obj = nameDictionaryRef;
-        obj.forEach(function catalogForEach(key, value) {
-          if (!value) {
-            return;
-          }
-          dests[key] = fetchDestination(value);
-        });
-      }
-      if (nameTreeRef) {
-        var nameTree = new NameTree(nameTreeRef, xref);
-        var names = nameTree.getAll();
-        for (var name in names) {
+      const obj = this._readDests(),
+            dests = Object.create(null);
+      if (obj instanceof NameTree) {
+        const names = obj.getAll();
+        for (let name in names) {
           dests[name] = fetchDestination(names[name]);
         }
+      } else if (obj instanceof _primitives.Dict) {
+        obj.forEach(function (key, value) {
+          if (value) {
+            dests[key] = fetchDestination(value);
+          }
+        });
       }
       return (0, _util.shadow)(this, 'destinations', dests);
     },
-    getDestination: function Catalog_getDestination(destinationId) {
-      function fetchDestination(dest) {
-        return (0, _primitives.isDict)(dest) ? dest.get('D') : dest;
+    getDestination(destinationId) {
+      const obj = this._readDests();
+      if (obj instanceof NameTree || obj instanceof _primitives.Dict) {
+        return fetchDestination(obj.get(destinationId) || null);
       }
-      var xref = this.xref;
-      var dest = null,
-          nameTreeRef,
-          nameDictionaryRef;
-      var obj = this.catDict.get('Names');
+      return null;
+    },
+    _readDests() {
+      const obj = this.catDict.get('Names');
       if (obj && obj.has('Dests')) {
-        nameTreeRef = obj.getRaw('Dests');
+        return new NameTree(obj.getRaw('Dests'), this.xref);
       } else if (this.catDict.has('Dests')) {
-        nameDictionaryRef = this.catDict.get('Dests');
+        return this.catDict.get('Dests');
       }
-      if (nameDictionaryRef) {
-        var value = nameDictionaryRef.get(destinationId);
-        if (value) {
-          dest = fetchDestination(value);
-        }
-      }
-      if (nameTreeRef) {
-        var nameTree = new NameTree(nameTreeRef, xref);
-        dest = fetchDestination(nameTree.get(destinationId));
-      }
-      return dest;
     },
     get pageLabels() {
       var obj = null;
@@ -17710,6 +17696,9 @@ var _stream = __w_pdfjs_require__(14);
 
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory) {
+    return pdfManager.ensure(this, '_create', [xref, ref, pdfManager, idFactory]);
+  }
+  static _create(xref, ref, pdfManager, idFactory) {
     let dict = xref.fetchIfRef(ref);
     if (!(0, _primitives.isDict)(dict)) {
       return;
@@ -22812,17 +22801,15 @@ var Font = function FontClosure() {
     } else if (isType1File(file)) {
       if (composite) {
         fileType = 'CIDFontType0';
-      } else if (type === 'MMType1') {
-        fileType = 'MMType1';
       } else {
-        fileType = 'Type1';
+        fileType = type === 'MMType1' ? 'MMType1' : 'Type1';
       }
     } else if (isCFFFile(file)) {
       if (composite) {
         fileType = 'CIDFontType0';
         fileSubtype = 'CIDFontType0C';
       } else {
-        fileType = 'Type1';
+        fileType = type === 'MMType1' ? 'MMType1' : 'Type1';
         fileSubtype = 'Type1C';
       }
     } else {

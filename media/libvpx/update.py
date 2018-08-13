@@ -41,6 +41,8 @@ def apply_patches():
     # Avoid c/asm name collision for loopfilter_sse2
     os.system("patch -p1 < rename_duplicate_files.patch")
     os.system("mv libvpx/vpx_dsp/x86/loopfilter_sse2.c libvpx/vpx_dsp/x86/loopfilter_intrin_sse2.c")
+    # Cherrypick fix from upstream
+    os.system("patch -p3 < bug1480092.patch")
 
 
 def update_readme(commit):
