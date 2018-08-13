@@ -6,6 +6,7 @@
     <meta content="utf-8" http-equiv="encoding">
   </head>
   <body>
+    <h1>simple payment request.html</h1>
     <script type="text/javascript">
 
     const supportedInstruments = [{
@@ -21,6 +22,17 @@
 
     try {
       const payRequest = new PaymentRequest(supportedInstruments, details);
+      window.onmessage = async (e) => {
+        if (e.data === "show PaymentRequest") {
+          if (payRequest) {
+            payRequest.show();
+            window.parent.postMessage("successful", '*');
+          } else {
+            window.parent.postMessage("PaymentRequest does not exist", "*");
+          }
+        }
+      }
+
       if(window.parent) {
         window.parent.postMessage("successful", '*');
       }
