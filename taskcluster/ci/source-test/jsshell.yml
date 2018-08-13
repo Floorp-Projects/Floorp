@@ -42,3 +42,13 @@ bench-sunspider:
         symbol: js-bench(sunspider)
     run:
         mach: jsshell-bench --binary $JSSHELL --perfherder sunspider
+
+bench-web-tooling:
+    description: Web Tooling shell benchmark suite
+    treeherder:
+        symbol: js-bench(webtool)
+    run:
+        mach: jsshell-bench --binary $JSSHELL --perfherder web-tooling-benchmark
+    fetches:
+        fetch:
+            - web-tooling-benchmark
