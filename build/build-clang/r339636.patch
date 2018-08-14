@@ -1,0 +1,110 @@
+From 3ea7b0a0b1e41cf3871891919a3a1567f3865d42 Mon Sep 17 00:00:00 2001
+From: Reid Kleckner <rnk@google.com>
+Date: Tue, 14 Aug 2018 01:24:35 +0000
+Subject: [PATCH] [BasicAA] Don't assume tail calls with byval don't alias
+ allocas
+
+Summary:
+Calls marked 'tail' cannot read or write allocas from the current frame
+because the current frame might be destroyed by the time they run.
+However, a tail call may use an alloca with byval. Calling with byval
+copies the contents of the alloca into argument registers or stack
+slots, so there is no lifetime issue. Tail calls never modify allocas,
+so we can return just ModRefInfo::Ref.
+
+Fixes PR38466, a longstanding bug.
+
+Reviewers: hfinkel, nlewycky, gbiv, george.burgess.iv
+
+Subscribers: hiraditya, llvm-commits
+
+Differential Revision: https://reviews.llvm.org/D50679
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@339636 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ lib/Analysis/BasicAliasAnalysis.cpp           | 13 ++++++-----
+ test/Analysis/BasicAA/tail-byval.ll           | 15 ++++++++++++
+ .../DeadStoreElimination/tail-byval.ll        | 23 +++++++++++++++++++
+ 3 files changed, 45 insertions(+), 6 deletions(-)
+ create mode 100644 test/Analysis/BasicAA/tail-byval.ll
+ create mode 100644 test/Transforms/DeadStoreElimination/tail-byval.ll
+
+diff --git a/llvm/lib/Analysis/BasicAliasAnalysis.cpp b/llvm/lib/Analysis/BasicAliasAnalysis.cpp
+index 1a24ae3dba1..f9ecbc04326 100644
+--- a/llvm/lib/Analysis/BasicAliasAnalysis.cpp
++++ b/llvm/lib/Analysis/BasicAliasAnalysis.cpp
+@@ -801,14 +801,15 @@ ModRefInfo BasicAAResult::getModRefInfo(ImmutableCallSite CS,
+ 
+   const Value *Object = GetUnderlyingObject(Loc.Ptr, DL);
+ 
+-  // If this is a tail call and Loc.Ptr points to a stack location, we know that
+-  // the tail call cannot access or modify the local stack.
+-  // We cannot exclude byval arguments here; these belong to the caller of
+-  // the current function not to the current function, and a tail callee
+-  // may reference them.
++  // Calls marked 'tail' cannot read or write allocas from the current frame
++  // because the current frame might be destroyed by the time they run. However,
++  // a tail call may use an alloca with byval. Calling with byval copies the
++  // contents of the alloca into argument registers or stack slots, so there is
++  // no lifetime issue.
+   if (isa<AllocaInst>(Object))
+     if (const CallInst *CI = dyn_cast<CallInst>(CS.getInstruction()))
+-      if (CI->isTailCall())
++      if (CI->isTailCall() &&
++          !CI->getAttributes().hasAttrSomewhere(Attribute::ByVal))
+         return ModRefInfo::NoModRef;
+ 
+   // If the pointer is to a locally allocated object that does not escape,
+diff --git a/llvm/test/Analysis/BasicAA/tail-byval.ll b/llvm/test/Analysis/BasicAA/tail-byval.ll
+new file mode 100644
+index 00000000000..0aa8dfdaedf
+--- /dev/null
++++ b/llvm/test/Analysis/BasicAA/tail-byval.ll
+@@ -0,0 +1,15 @@
++; RUN: opt -basicaa -aa-eval -print-all-alias-modref-info -disable-output < %s 2>&1 | FileCheck %s
++
++declare void @takebyval(i32* byval %p)
++
++define i32 @tailbyval() {
++entry:
++  %p = alloca i32
++  store i32 42, i32* %p
++  tail call void @takebyval(i32* byval %p)
++  %rv = load i32, i32* %p
++  ret i32 %rv
++}
++; FIXME: This should be Just Ref.
++; CHECK-LABEL: Function: tailbyval: 1 pointers, 1 call sites
++; CHECK-NEXT:   Both ModRef:  Ptr: i32* %p       <->  tail call void @takebyval(i32* byval %p)
+diff --git a/llvm/test/Transforms/DeadStoreElimination/tail-byval.ll b/llvm/test/Transforms/DeadStoreElimination/tail-byval.ll
+new file mode 100644
+index 00000000000..ed2fbd434a7
+--- /dev/null
++++ b/llvm/test/Transforms/DeadStoreElimination/tail-byval.ll
+@@ -0,0 +1,23 @@
++; RUN: opt -dse -S < %s | FileCheck %s
++
++; Don't eliminate stores to allocas before tail calls to functions that use
++; byval. It's correct to mark calls like these as 'tail'. To implement this tail
++; call, the backend should copy the bytes from the alloca into the argument area
++; before clearing the stack.
++
++target datalayout = "e-m:e-p:32:32-f64:32:64-f80:32-n8:16:32-S128"
++target triple = "i386-unknown-linux-gnu"
++
++declare void @g(i32* byval %p)
++
++define void @f(i32* byval %x) {
++entry:
++  %p = alloca i32
++  %v = load i32, i32* %x
++  store i32 %v, i32* %p
++  tail call void @g(i32* byval %p)
++  ret void
++}
++; CHECK-LABEL: define void @f(i32* byval %x)
++; CHECK:   store i32 %v, i32* %p
++; CHECK:   tail call void @g(i32* byval %p)
+-- 
+2.18.0
+

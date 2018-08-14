@@ -18,6 +18,7 @@
     "patches": [
       "find_symbolizer_linux.patch",
       "r322401.patch",
-      "r325356.patch"
+      "r325356.patch",
+      "r339636.patch"
     ]
 }
