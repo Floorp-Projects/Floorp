@@ -207,7 +207,7 @@ var listener = {
   },
 
   onWindowLoaded() {
-    let browser = this.win.document.createElementNS(XUL_NS, "browser");
+    let browser = this.win.document.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
 

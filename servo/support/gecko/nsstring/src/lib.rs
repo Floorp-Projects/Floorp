@@ -144,6 +144,11 @@ pub use self::conversions::nsstring_fallible_append_utf8_impl;
 /// this type!
 pub struct BulkWriteOk;
 
+/// Semi-arbitrary threshold below which we don't care about shrinking
+/// buffers to size. Currently matches `CACHE_LINE` in the `conversions`
+/// module.
+const SHRINKING_THRESHOLD: usize = 64;
+
 ///////////////////////////////////
 // Internal Implementation Flags //
 ///////////////////////////////////
@@ -336,6 +341,7 @@ macro_rules! define_string_types {
         StringAdapter = $StringAdapter: ident;
 
         StringRepr = $StringRepr: ident;
+        AutoStringRepr = $AutoStringRepr: ident;
 
         BulkWriteHandle = $BulkWriteHandle: ident;
 
@@ -395,6 +401,13 @@ macro_rules! define_string_types {
             }
         }
 
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct $AutoStringRepr {
+            super_repr: $StringRepr,
+            inline_capacity: u32,
+        }
+
         pub struct $BulkWriteHandle<'a> {
             string: &'a mut $AString,
             capacity: usize,
@@ -430,7 +443,7 @@ macro_rules! define_string_types {
                     mem::forget(self); // Don't run the failure path in drop()
                     return BulkWriteOk{};
                 }
-                if allow_shrinking {
+                if allow_shrinking && length > SHRINKING_THRESHOLD {
                     unsafe {
                         let _ = self.restart_bulk_write(length, length, true);
                     }
@@ -622,7 +635,7 @@ macro_rules! define_string_types {
                     let rounded = $start_bulk_write(self,
                                                     capacity32,
                                                     units_to_preserve as u32,
-                                                    allow_shrinking);
+                                                    allow_shrinking && capacity > SHRINKING_THRESHOLD);
                     if rounded == u32::max_value() {
                         return Err(())
                     }
@@ -632,6 +645,27 @@ macro_rules! define_string_types {
 
             fn as_repr(&mut self) -> ptr::NonNull<$StringRepr> {
                 unsafe { ptr::NonNull::new_unchecked(self as *mut _ as *mut $StringRepr)}
+            }
+
+            /// If this is an autostring, returns the capacity (excluding the zero
+            /// terminator) of the inline buffer within `Some()`. Otherwise returns
+            /// `None`.
+            pub fn inline_capacity(&self) -> Option<usize> {
+                if unsafe {
+                    // All $AString values point to a struct prefix which is
+                    // identical to $StringRepr, this we can transmute `self`
+                    // into $StringRepr to get the reference to the underlying
+                    // data.
+                    let this: &$StringRepr = mem::transmute(self);
+                    this.classflags.contains(ClassFlags::INLINE)
+                } {
+                    unsafe {
+                        let this: &$AutoStringRepr = mem::transmute(self);
+                        Some(this.inline_capacity as usize)
+                    }
+                } else {
+                    None
+                }
             }
         }
 
@@ -1016,6 +1050,7 @@ define_string_types! {
     StringAdapter = nsCStringAdapter;
 
     StringRepr = nsCStringRepr;
+    AutoStringRepr = nsAutoCStringRepr;
 
     BulkWriteHandle = nsACStringBulkWriteHandle;
 
@@ -1146,6 +1181,7 @@ define_string_types! {
     StringAdapter = nsStringAdapter;
 
     StringRepr = nsStringRepr;
+    AutoStringRepr = nsAutoStringRepr;
 
     BulkWriteHandle = nsAStringBulkWriteHandle;
 
@@ -1259,6 +1295,7 @@ pub mod test_helpers {
     //! It is public to ensure that these testing functions are avaliable to
     //! gtest code.
 
+    use super::{nsACString, nsAString};
     use super::{nsCStr, nsCString, nsCStringRepr};
     use super::{nsStr, nsString, nsStringRepr};
     use super::{ClassFlags, DataFlags};
@@ -1398,6 +1435,18 @@ pub mod test_helpers {
             *f_literal = DataFlags::LITERAL.bits();
             *f_class_inline = ClassFlags::INLINE.bits();
             *f_class_null_terminated = ClassFlags::NULL_TERMINATED.bits();
+        }
+    }
+
+    #[no_mangle]
+    #[allow(non_snake_case)]
+    pub extern fn Rust_InlineCapacityFromRust(cstring: *const nsACString,
+                                              string: *const nsAString,
+                                              cstring_capacity: *mut usize,
+                                              string_capacity: *mut usize) {
+        unsafe {
+            *cstring_capacity = (*cstring).inline_capacity().unwrap();
+            *string_capacity = (*string).inline_capacity().unwrap();
         }
     }
 }

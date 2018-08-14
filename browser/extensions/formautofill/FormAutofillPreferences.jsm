@@ -15,7 +15,6 @@ var EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const MANAGE_ADDRESSES_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const MANAGE_CREDITCARDS_URL = "chrome://formautofill/content/manageCreditCards.xhtml";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
@@ -68,17 +67,17 @@ FormAutofillPreferences.prototype = {
    */
   createPreferenceGroup(document) {
     let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "autofill-card-address";
-    let formAutofillGroup = document.createElementNS(XUL_NS, "vbox");
-    let addressAutofill = document.createElementNS(XUL_NS, "hbox");
-    let addressAutofillCheckboxGroup = document.createElementNS(XUL_NS, "hbox");
-    let addressAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
-    let addressAutofillCheckboxLabel = document.createElementNS(XUL_NS, "label");
-    let addressAutofillCheckboxLabelSpacer = document.createElementNS(XUL_NS, "spacer");
-    let addressAutofillLearnMore = document.createElementNS(XUL_NS, "label");
-    let savedAddressesBtn = document.createElementNS(XUL_NS, "button");
+    let formAutofillGroup = document.createXULElement("vbox");
+    let addressAutofill = document.createXULElement("hbox");
+    let addressAutofillCheckboxGroup = document.createXULElement("hbox");
+    let addressAutofillCheckbox = document.createXULElement("checkbox");
+    let addressAutofillCheckboxLabel = document.createXULElement("label");
+    let addressAutofillCheckboxLabelSpacer = document.createXULElement("spacer");
+    let addressAutofillLearnMore = document.createXULElement("label");
+    let savedAddressesBtn = document.createXULElement("button");
     // Wrappers are used to properly compute the search tooltip positions
-    let savedAddressesBtnWrapper = document.createElementNS(XUL_NS, "hbox");
-    let savedCreditCardsBtnWrapper = document.createElementNS(XUL_NS, "hbox");
+    let savedAddressesBtnWrapper = document.createXULElement("hbox");
+    let savedCreditCardsBtnWrapper = document.createXULElement("hbox");
 
     savedAddressesBtn.className = "accessory-button";
     addressAutofillCheckboxLabelSpacer.className = "tail-with-learn-more";
@@ -129,13 +128,13 @@ FormAutofillPreferences.prototype = {
     };
 
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      let creditCardAutofill = document.createElementNS(XUL_NS, "hbox");
-      let creditCardAutofillCheckboxGroup = document.createElementNS(XUL_NS, "hbox");
-      let creditCardAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
-      let creditCardAutofillCheckboxLabel = document.createElementNS(XUL_NS, "label");
-      let creditCardAutofillCheckboxLabelSpacer = document.createElementNS(XUL_NS, "spacer");
-      let creditCardAutofillLearnMore = document.createElementNS(XUL_NS, "label");
-      let savedCreditCardsBtn = document.createElementNS(XUL_NS, "button");
+      let creditCardAutofill = document.createXULElement("hbox");
+      let creditCardAutofillCheckboxGroup = document.createXULElement("hbox");
+      let creditCardAutofillCheckbox = document.createXULElement("checkbox");
+      let creditCardAutofillCheckboxLabel = document.createXULElement("label");
+      let creditCardAutofillCheckboxLabelSpacer = document.createXULElement("spacer");
+      let creditCardAutofillLearnMore = document.createXULElement("label");
+      let savedCreditCardsBtn = document.createXULElement("button");
       savedCreditCardsBtn.className = "accessory-button";
       creditCardAutofillCheckboxLabelSpacer.className = "tail-with-learn-more";
       creditCardAutofillLearnMore.className = "learnMore text-link";
