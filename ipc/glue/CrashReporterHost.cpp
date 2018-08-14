@@ -8,6 +8,7 @@
 #include "CrashReporterMetadataShmem.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
@@ -59,6 +60,22 @@ CrashReporterHost::AdoptMinidump(nsIFile* aFile)
   return CrashReporter::GetIDFromMinidump(aFile, mDumpID);
 }
 
+int32_t
+CrashReporterHost::GetCrashType(const CrashReporter::AnnotationTable& aAnnotations)
+{
+  // RecordReplayHang is set in the middleman content process, so check aAnnotations.
+  if (aAnnotations[CrashReporter::Annotation::RecordReplayHang].EqualsLiteral("1")) {
+    return nsICrashService::CRASH_TYPE_HANG;
+  }
+
+  // PluginHang is set in the parent process, so check mExtraAnnotations.
+  if (mExtraAnnotations[CrashReporter::Annotation::PluginHang].EqualsLiteral("1")) {
+    return nsICrashService::CRASH_TYPE_HANG;
+  }
+
+  return nsICrashService::CRASH_TYPE_CRASH;
+}
+
 bool
 CrashReporterHost::FinalizeCrashReport()
 {
@@ -97,9 +114,8 @@ CrashReporterHost::FinalizeCrashReport()
   CrashReporter::AppendExtraData(mDumpID, mExtraAnnotations);
   CrashReporter::AppendExtraData(mDumpID, annotations);
 
-  // Use mExtraAnnotations, since NotifyCrashService looks for "PluginHang"
-  // which is set in the parent process.
-  NotifyCrashService(mProcessType, mDumpID, mExtraAnnotations);
+  int32_t crashType = GetCrashType(annotations);
+  NotifyCrashService(mProcessType, crashType, mDumpID);
 
   mFinalized = true;
   return true;
@@ -221,14 +237,13 @@ CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
 
 /* static */ void
 CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
-                                      const nsString& aChildDumpID,
-                                      const AnnotationTable& aNotes)
+                                      int32_t aCrashType,
+                                      const nsString& aChildDumpID)
 {
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> runnable = NS_NewRunnableFunction(
       "ipc::CrashReporterHost::NotifyCrashService", [&]() -> void {
-        CrashReporterHost::NotifyCrashService(
-          aProcessType, aChildDumpID, aNotes);
+        CrashReporterHost::NotifyCrashService(aProcessType, aCrashType, aChildDumpID);
       });
     RefPtr<nsIThread> mainThread = do_GetMainThread();
     SyncRunnable::DispatchToThread(mainThread, runnable);
@@ -244,8 +259,6 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
   }
 
   int32_t processType;
-  int32_t crashType = nsICrashService::CRASH_TYPE_CRASH;
-
   nsCString telemetryKey;
 
   switch (aProcessType) {
@@ -253,16 +266,14 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
       processType = nsICrashService::PROCESS_TYPE_CONTENT;
       telemetryKey.AssignLiteral("content");
       break;
-    case GeckoProcessType_Plugin: {
+    case GeckoProcessType_Plugin:
       processType = nsICrashService::PROCESS_TYPE_PLUGIN;
-      telemetryKey.AssignLiteral("plugin");
-      nsCString val = aNotes[CrashReporter::Annotation::PluginHang];
-      if (val.Equals(NS_LITERAL_CSTRING("1"))) {
-        crashType = nsICrashService::CRASH_TYPE_HANG;
+      if (aCrashType == nsICrashService::CRASH_TYPE_HANG) {
         telemetryKey.AssignLiteral("pluginhang");
+      } else {
+        telemetryKey.AssignLiteral("plugin");
       }
       break;
-    }
     case GeckoProcessType_GMPlugin:
       processType = nsICrashService::PROCESS_TYPE_GMPLUGIN;
       telemetryKey.AssignLiteral("gmplugin");
@@ -277,7 +288,7 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
   }
 
   RefPtr<Promise> promise;
-  crashService->AddCrash(processType, crashType, aChildDumpID, getter_AddRefs(promise));
+  crashService->AddCrash(processType, aCrashType, aChildDumpID, getter_AddRefs(promise));
   Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey, 1);
 }
 
