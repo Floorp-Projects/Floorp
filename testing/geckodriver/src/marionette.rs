@@ -510,7 +510,7 @@ impl MarionetteHandler {
         }
 
         prefs.insert("marionette.log.level", Pref::new(logging::max_level().to_string()));
-        prefs.insert("marionette.port", Pref::new(port as i64));
+        prefs.insert("marionette.port", Pref::new(port));
 
         prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
                                                       "Unable to write Firefox profile"))
