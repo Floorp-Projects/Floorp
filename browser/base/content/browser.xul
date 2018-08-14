@@ -321,6 +321,7 @@ xmlns="http://www.w3.org/1999/xhtml"
            orient="vertical"
            position="bottomcenter topleft">
       <toolbarbutton id="sidebar-switcher-bookmarks"
+                     label="&bookmarksButton.label;"
                      class="subviewbutton subviewbutton-iconic"
                      key="viewBookmarksSidebarKb"
                      observes="viewBookmarksSidebar"
@@ -1220,7 +1221,7 @@ xmlns="http://www.w3.org/1999/xhtml"
         <sidebarheader id="sidebar-header" align="center">
           <toolbarbutton id="sidebar-switcher-target" flex="1" class="tabbable">
             <image id="sidebar-icon" consumeanchor="sidebar-switcher-target"/>
-            <label id="sidebar-title" persist="value" crop="end" flex="1" control="sidebar"/>
+            <label id="sidebar-title" crop="end" flex="1" control="sidebar"/>
             <image id="sidebar-switcher-arrow"/>
           </toolbarbutton>
           <image id="sidebar-throbber"/>

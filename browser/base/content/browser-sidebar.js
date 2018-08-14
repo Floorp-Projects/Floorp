@@ -4,22 +4,31 @@
 
 /**
  * SidebarUI controls showing and hiding the browser sidebar.
- *
- * @note
- * Some of these methods take a commandID argument - we expect to find a
- * xul:broadcaster element with the specified ID.
- * The following attributes on that element may be used and/or modified:
- *  - id           (required) the string to match commandID. The convention
- *                 is to use this naming scheme: 'view<sidebar-name>Sidebar'.
- *  - sidebarurl   (required) specifies the URL to load in this sidebar.
- *  - sidebartitle or label (in that order) specify the title to
- *                 display on the sidebar.
- *  - checked      indicates whether the sidebar is currently displayed.
- *                 Note that this attribute is updated when
- *                 the sidebar's visibility is changed.
- *  - group        this attribute must be set to "sidebar".
  */
 var SidebarUI = {
+  get sidebars() {
+    if (this._sidebars) {
+      return this._sidebars;
+    }
+    return this._sidebars = new Map([
+      ["viewBookmarksSidebar", {
+        title: document.getElementById("sidebar-switcher-bookmarks")
+                       .getAttribute("label"),
+        url: "chrome://browser/content/places/bookmarksSidebar.xul",
+      }],
+      ["viewHistorySidebar", {
+        title: document.getElementById("sidebar-switcher-history")
+                       .getAttribute("label"),
+        url: "chrome://browser/content/places/historySidebar.xul",
+      }],
+      ["viewTabsSidebar", {
+        title: document.getElementById("sidebar-switcher-tabs")
+                       .getAttribute("label"),
+        url: "chrome://browser/content/syncedtabs/sidebar.xhtml",
+      }],
+    ]);
+  },
+
   // Avoid getting the browser element from init() to avoid triggering the
   // <browser> constructor during startup if the sidebar is hidden.
   get browser() {
@@ -441,17 +450,8 @@ var SidebarUI = {
       this._box.setAttribute("sidebarcommand", sidebarBroadcaster.id);
       this.lastOpenedId = sidebarBroadcaster.id;
 
-      let title = sidebarBroadcaster.getAttribute("sidebartitle") ||
-                  sidebarBroadcaster.getAttribute("label");
-
-      // When loading a web page in the sidebar there is no title set on the
-      // broadcaster, as it is instead set by openWebPanel. Don't clear out
-      // the title in this case.
-      if (title) {
-        this.title = title;
-      }
-
-      let url = sidebarBroadcaster.getAttribute("sidebarurl");
+      let {url, title} = this.sidebars.get(commandID);
+      this.title = title;
       this.browser.setAttribute("src", url); // kick off async load
 
       if (this.browser.contentDocument.location.href != url) {
