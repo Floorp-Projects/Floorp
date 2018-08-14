@@ -1072,6 +1072,17 @@ class BuildDriver(MozbuildObject):
                             mozpath.join(self.topobjdir, 'config.status')]
                     self.run_process(args, cwd=self.topobjdir, pass_thru=True)
 
+                # client.mk has its own handling of MOZ_PARALLEL_BUILD so the
+                # make backend can determine when to run in single-threaded mode
+                # or parallel mode. For other backends, we can pass in the value
+                # of MOZ_PARALLEL_BUILD if -jX was not specified on the
+                # commandline.
+                if jobs == 0 and 'make_extra' in self.mozconfig:
+                    for param in self.mozconfig['make_extra']:
+                        key, value = param.split('=')
+                        if key == 'MOZ_PARALLEL_BUILD':
+                            jobs = int(value)
+
                 backend_cls = get_backend_class(active_backend)(config)
                 status = backend_cls.build(self, output, jobs, verbose, what)
 
