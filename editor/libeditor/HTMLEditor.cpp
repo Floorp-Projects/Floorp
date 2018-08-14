@@ -1637,8 +1637,10 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
       // Set caret after element, but check for special case
       //  of inserting table-related elements: set in first cell instead
       if (!SetCaretInTableCell(aElement)) {
-        rv = SetCaretAfterElement(aElement);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = CollapseSelectionAfter(*selection, *aElement);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
       // check for inserting a whole table at the end of a block. If so insert
       // a br after it.
@@ -1781,21 +1783,43 @@ HTMLEditor::SelectContentInternal(Selection& aSelection,
 NS_IMETHODIMP
 HTMLEditor::SetCaretAfterElement(Element* aElement)
 {
-  // Be sure the element is contained in the document body
-  if (!aElement || !IsDescendantOfEditorRoot(aElement)) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aElement)) {
+    return NS_ERROR_INVALID_ARG;
   }
-
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsINode> parent = aElement->GetParentNode();
-  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = CollapseSelectionAfter(*selection, *aElement);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::CollapseSelectionAfter(Selection& aSelection,
+                                   Element& aElement)
+{
+  // Be sure the element is contained in the document body
+  if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsINode* parent = aElement.GetParentNode();
+  if (NS_WARN_IF(!parent)) {
+    return NS_ERROR_FAILURE;
+  }
   // Collapse selection to just after desired element,
-  EditorRawDOMPoint afterElement(aElement);
+  EditorRawDOMPoint afterElement(&aElement);
   if (NS_WARN_IF(!afterElement.AdvanceOffset())) {
     return NS_ERROR_FAILURE;
   }
-  return selection->Collapse(afterElement);
+  ErrorResult error;
+  aSelection.Collapse(afterElement, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
