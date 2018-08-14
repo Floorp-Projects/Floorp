@@ -782,8 +782,8 @@ AboutReader.prototype = {
   },
 
   _showError() {
-    this._headerElement.classList.remove("reader-show-element");
-    this._contentElement.classList.remove("reader-show-element");
+    this._headerElement.style.display = "none";
+    this._contentElement.style.display = "none";
 
     let errorMessage = gStrings.GetStringFromName("aboutReader.loadError");
     this._messageElement.textContent = errorMessage;
@@ -817,7 +817,7 @@ AboutReader.prototype = {
   },
 
   _showContent(article) {
-    this._messageElement.classList.remove("reader-show-element");
+    this._messageElement.style.display = "none";
 
     this._article = article;
 
@@ -830,7 +830,7 @@ AboutReader.prototype = {
     this._readTimeElement.textContent = this._formatReadTime(article.readingTimeMinsSlow, article.readingTimeMinsFast);
     this._doc.title = article.title;
 
-    this._headerElement.classList.add("reader-show-element");
+    this._headerElement.style.display = "block";
 
     let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
     let contentFragment = parserUtils.parseFragment(article.content,
@@ -841,7 +841,7 @@ AboutReader.prototype = {
     this._maybeSetTextDirection(article);
     this._foundLanguage(article.language);
 
-    this._contentElement.classList.add("reader-show-element");
+    this._contentElement.style.display = "block";
     this._updateImageMargins();
 
     this._requestFavicon();
@@ -856,8 +856,8 @@ AboutReader.prototype = {
   },
 
   _hideContent() {
-    this._headerElement.classList.remove("reader-show-element");
-    this._contentElement.classList.remove("reader-show-element");
+    this._headerElement.style.display = "none";
+    this._contentElement.style.display = "none";
   },
 
   _showProgressDelayed() {
@@ -869,11 +869,11 @@ AboutReader.prototype = {
         return;
       }
 
-      this._headerElement.classList.remove("reader-show-element");
-      this._contentElement.classList.remove("reader-show-element");
+      this._headerElement.style.display = "none";
+      this._contentElement.style.display = "none";
 
       this._messageElement.textContent = gStrings.GetStringFromName("aboutReader.loading2");
-      this._messageElement.classList.add("reader-show-element");
+      this._messageElement.style.display = "block";
     }, 300);
   },
 
