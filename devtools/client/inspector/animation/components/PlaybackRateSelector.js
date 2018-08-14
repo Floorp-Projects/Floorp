@@ -7,6 +7,7 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const { getFormatStr } = require("../utils/l10n");
 
@@ -16,7 +17,30 @@ class PlaybackRateSelector extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      playbackRates: PropTypes.arrayOf(PropTypes.number).isRequired,
       setAnimationsPlaybackRate: PropTypes.func.isRequired,
+    };
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    const { animations, playbackRates } = props;
+
+    const currentPlaybackRates = sortAndUnique(animations.map(a => a.state.playbackRate));
+    const options =
+      sortAndUnique([...PLAYBACK_RATES, ...playbackRates, ...currentPlaybackRates]);
+
+    if (currentPlaybackRates.length === 1) {
+      return {
+        options,
+        selected: currentPlaybackRates[0],
+      };
+    }
+
+    // When the animations displayed have mixed playback rates, we can't
+    // select any of the predefined ones.
+    return {
+      options: ["", ...options],
+      selected: "",
     };
   }
 
@@ -29,22 +53,6 @@ class PlaybackRateSelector extends PureComponent {
     };
   }
 
-  componentWillMount() {
-    this.updateState(this.props);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.updateState(nextProps);
-  }
-
-  getPlaybackRates(animations) {
-    return sortAndUnique(animations.map(a => a.state.playbackRate));
-  }
-
-  getSelectablePlaybackRates(animationsRates) {
-    return sortAndUnique(PLAYBACK_RATES.concat(animationsRates));
-  }
-
   onChange(e) {
     const { setAnimationsPlaybackRate } = this.props;
 
@@ -53,26 +61,6 @@ class PlaybackRateSelector extends PureComponent {
     }
 
     setAnimationsPlaybackRate(e.target.value);
-  }
-
-  updateState(props) {
-    const { animations } = props;
-
-    let options;
-    let selected;
-    const rates = this.getPlaybackRates(animations);
-
-    if (rates.length === 1) {
-      options = this.getSelectablePlaybackRates(rates);
-      selected = rates[0];
-    } else {
-      // When the animations displayed have mixed playback rates, we can't
-      // select any of the predefined ones.
-      options = ["", ...PLAYBACK_RATES];
-      selected = "";
-    }
-
-    this.setState({ options, selected });
   }
 
   render() {
@@ -100,4 +88,10 @@ function sortAndUnique(array) {
   return [...new Set(array)].sort((a, b) => a > b);
 }
 
-module.exports = PlaybackRateSelector;
+const mapStateToProps = state => {
+  return {
+    playbackRates: state.animations.playbackRates,
+  };
+};
+
+module.exports = connect(mapStateToProps)(PlaybackRateSelector);
