@@ -108,12 +108,12 @@ button.plain {
 button[type="disclosure"] {
   margin: 0;
   -moz-appearance: none;
-  list-style-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
+  list-style-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
   -moz-context-properties: fill;
   fill: currentColor;
   min-width: 0;
 }
 
 button[type="disclosure"][open="true"] {
-  list-style-image: url("chrome://global/skin/tree/twisty-expanded.svg");
+  list-style-image: url("chrome://global/skin/icons/twisty-expanded.svg");
 }

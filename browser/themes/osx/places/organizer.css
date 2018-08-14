@@ -5,14 +5,10 @@
 /* Places Organizer Sidebars */
 
 #placesList > treechildren::-moz-tree-row {
-  background-color: transparent;
-  border-color: transparent;
   padding-bottom: 1px;
-  height: 24px;
 }
 
 #placesList > treechildren::-moz-tree-cell-text {
-  font-size: 12px;
   margin-inline-end: 6px;
 }
 
@@ -45,27 +41,6 @@
   color: #fff;
   fill-opacity: 1;
   font-weight: bold;
-}
-
-#placesList > treechildren::-moz-tree-twisty {
-  -moz-appearance: none;
-  padding: 0 2px;
-  list-style-image: url("chrome://global/skin/tree/arrow-collapsed.svg");
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.6;
-}
-
-#placesList > treechildren::-moz-tree-twisty(selected) {
-  fill: currentColor;
-}
-
-#placesList > treechildren::-moz-tree-twisty(open) {
-  list-style-image: url("chrome://global/skin/tree/arrow-expanded.svg");
-}
-
-#placesList > treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed) {
-  list-style-image: url("chrome://global/skin/tree/arrow-collapsed-rtl.svg");
 }
 
 @media (-moz-mac-yosemite-theme) {

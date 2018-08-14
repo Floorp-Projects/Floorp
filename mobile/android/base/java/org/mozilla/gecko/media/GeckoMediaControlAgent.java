@@ -418,7 +418,7 @@ public class GeckoMediaControlAgent {
 
         if (!AppConstants.Versions.preO) {
             notificationBuilder.setChannelId(NotificationHelper.getInstance(mContext)
-                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+                    .getNotificationChannel(NotificationHelper.Channel.MEDIA).getId());
         }
 
         return notificationBuilder.build();

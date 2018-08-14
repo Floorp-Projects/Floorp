@@ -12,7 +12,6 @@ loader.lazyRequireGetter(this, "naturalSortCaseInsensitive",
   "devtools/client/shared/natural-sort", true);
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const AFTER_SCROLL_DELAY = 100;
 
@@ -77,7 +76,7 @@ function TableWidget(node, options = {}) {
   this.removableColumns = removableColumns !== false;
   this.cellContextMenuId = cellContextMenuId;
 
-  this.tbody = this.document.createElementNS(XUL_NS, "hbox");
+  this.tbody = this.document.createXULElement("hbox");
   this.tbody.className = "table-widget-body theme-body";
   this.tbody.setAttribute("flex", "1");
   this.tbody.setAttribute("tabindex", "0");
@@ -85,7 +84,7 @@ function TableWidget(node, options = {}) {
   this.afterScroll = this.afterScroll.bind(this);
   this.tbody.addEventListener("scroll", this.onScroll.bind(this));
 
-  this.placeholder = this.document.createElementNS(XUL_NS, "label");
+  this.placeholder = this.document.createXULElement("label");
   this.placeholder.className = "plain table-widget-empty-text";
   this.placeholder.setAttribute("flex", "1");
   this._parent.appendChild(this.placeholder);
@@ -644,11 +643,11 @@ TableWidget.prototype = {
   setupHeadersContextMenu: function() {
     let popupset = this.document.getElementsByTagName("popupset")[0];
     if (!popupset) {
-      popupset = this.document.createElementNS(XUL_NS, "popupset");
+      popupset = this.document.createXULElement("popupset");
       this.document.documentElement.appendChild(popupset);
     }
 
-    this.menupopup = this.document.createElementNS(XUL_NS, "menupopup");
+    this.menupopup = this.document.createXULElement("menupopup");
     this.menupopup.id = "table-widget-column-select";
     this.menupopup.addEventListener("command", this.onPopupCommand);
     popupset.appendChild(this.menupopup);
@@ -678,7 +677,7 @@ TableWidget.prototype = {
         continue;
       }
 
-      const menuitem = this.document.createElementNS(XUL_NS, "menuitem");
+      const menuitem = this.document.createXULElement("menuitem");
       menuitem.setAttribute("label", column.header.getAttribute("value"));
       menuitem.setAttribute("data-id", column.id);
       menuitem.setAttribute("type", "checkbox");
@@ -1045,13 +1044,13 @@ function Column(table, id, header) {
 
   // This wrapping element is required solely so that position:sticky works on
   // the headers of the columns.
-  this.wrapper = this.document.createElementNS(XUL_NS, "vbox");
+  this.wrapper = this.document.createXULElement("vbox");
   this.wrapper.className = "table-widget-wrapper";
   this.wrapper.setAttribute("flex", "1");
   this.wrapper.setAttribute("tabindex", "0");
   this.tbody.appendChild(this.wrapper);
 
-  this.splitter = this.document.createElementNS(XUL_NS, "splitter");
+  this.splitter = this.document.createXULElement("splitter");
   this.splitter.className = "devtools-side-splitter";
   this.tbody.appendChild(this.splitter);
 
@@ -1060,7 +1059,7 @@ function Column(table, id, header) {
   this.column.className = "table-widget-column";
   this.wrapper.appendChild(this.column);
 
-  this.header = this.document.createElementNS(XUL_NS, "label");
+  this.header = this.document.createXULElement("label");
   this.header.className = "devtools-toolbar table-widget-column-header";
   this.header.setAttribute("value", header);
   this.column.appendChild(this.header);
@@ -1565,7 +1564,7 @@ function Cell(column, item, nextCell) {
   const document = column.document;
 
   this.wrapTextInElements = column.wrapTextInElements;
-  this.label = document.createElementNS(XUL_NS, "label");
+  this.label = document.createXULElement("label");
   this.label.setAttribute("crop", "end");
   this.label.className = "plain table-widget-cell";
 
@@ -1737,7 +1736,7 @@ EditableFieldsEngine.prototype = {
   get textbox() {
     if (!this._textbox) {
       const doc = this.root.ownerDocument;
-      this._textbox = doc.createElementNS(XUL_NS, "textbox");
+      this._textbox = doc.createXULElement("textbox");
       this._textbox.id = this.INPUT_ID;
 
       this._textbox.setAttribute("flex", "1");

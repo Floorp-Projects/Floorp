@@ -8076,8 +8076,7 @@ TabModalPromptBox.prototype = {
   },
 
   appendPrompt(args, onCloseCallback) {
-    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
+    let newPrompt = document.createXULElement("tabmodalprompt");
     let browser = this.browser;
     browser.parentNode.insertBefore(newPrompt, browser.nextElementSibling);
     browser.setAttribute("tabmodalPromptShowing", true);
@@ -8099,9 +8098,9 @@ TabModalPromptBox.prototype = {
       hostForAllowFocusCheckbox = principalToAllowFocusFor.URI.host;
     } catch (ex) { /* Ignore exceptions for host-less URIs */ }
     if (hostForAllowFocusCheckbox) {
-      let allowFocusRow = document.createElementNS(XUL_NS, "row");
-      allowFocusCheckbox = document.createElementNS(XUL_NS, "checkbox");
-      let spacer = document.createElementNS(XUL_NS, "spacer");
+      let allowFocusRow = document.createXULElement("row");
+      allowFocusCheckbox = document.createXULElement("checkbox");
+      let spacer = document.createXULElement("spacer");
       allowFocusRow.appendChild(spacer);
       let label = gTabBrowserBundle.formatStringFromName("tabs.allowTabFocusByPromptForSite",
                                                       [hostForAllowFocusCheckbox], 1);

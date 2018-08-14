@@ -831,6 +831,7 @@ nsContextMenu.prototype = {
     let referrer = gContextMenuContentData.referrer;
     openLinkIn(gContextMenuContentData.docLocation, "tab",
                { charset: gContextMenuContentData.charSet,
+                 triggeringPrincipal: this.browser.contentPrincipal,
                  referrerURI: referrer ? makeURI(referrer) : null });
   },
 

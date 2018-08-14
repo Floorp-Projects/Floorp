@@ -221,3 +221,32 @@ raptor-unity-webgl-chrome:
     fetches:
         fetch:
             - unity-webgl
+
+raptor-assorted-dom-firefox:
+    description: "Raptor Assorted-Dom on Firefox"
+    try-name: raptor-assorted-dom-firefox
+    treeherder-symbol: Rap(dom)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 3
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-assorted-dom
+    fetches:
+        fetch:
+            - assorted-dom
+
+raptor-assorted-dom-chrome:
+    description: "Raptor Assorted-Dom on Chrome"
+    try-name: raptor-assorted-dom-chrome
+    treeherder-symbol: Rap-C(dom)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 3
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-assorted-dom
+            - --app=chrome
+    fetches:
+        fetch:
+            - assorted-dom

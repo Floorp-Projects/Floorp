@@ -12,214 +12,236 @@
 <p>Test for JavaScript terminal autocomplete functionality</p>
 
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
+  const {
+    MAX_AUTOCOMPLETE_ATTEMPTS,
+    MAX_AUTOCOMPLETIONS
+  } = require("devtools/shared/webconsole/js-property-provider");
 
-let gState;
-let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = require("devtools/shared/webconsole/js-property-provider");
+  addEventListener("load", startTest);
 
-function evaluateJS(input, options = {}) {
-  return new Promise((resolve, reject) => {
-    gState.client.evaluateJSAsync(input, resolve, options);
-  });
-}
+  async function startTest() {
+    // First run the tests with a tab as a target.
+    let state = await new Promise(resolve => attachConsoleToTab(["PageError"], resolve));
+    await performTests({state, isWorker: false});
 
-function autocompletePromise(str, cursor = str.length, frameActor) {
-  return gState.client.autocomplete(str, cursor, frameActor);
-}
+    // Then run the tests with a worker as a target.
+    state = await new Promise(resolve => attachConsoleToWorker(["PageError"], resolve));
+    await performTests({state, isWorker: true});
 
-// This test runs all of its assertions twice - once with
-// the tab as a target and once with a worker
-let runningInTab = true;
-function startTest({worker}) {
-  if (worker) {
-    attachConsoleToWorker(["PageError"], onAttach.bind(null, true));
-  } else {
-    attachConsoleToTab(["PageError"], onAttach.bind(null, false));
-  }
-};
-
-let onAttach = async function (isWorker, aState, response) {
-  gState = aState;
-
-  let longStrLength = DebuggerServer.LONG_STRING_LENGTH;
-
-  // Set up the global variables needed to test autocompletion
-  // in the target.
-  let script = `
-    // This is for workers so autocomplete acts the same
-    if (!this.window) {
-      window = this;
-    }
-
-    window.foobarObject = Object.create(null);
-    window.foobarObject.foo = 1;
-    window.foobarObject.foobar = 2;
-    window.foobarObject.foobaz = 3;
-    window.foobarObject.omg = 4;
-    window.foobarObject.omgfoo = 5;
-    window.foobarObject.strfoo = "foobarz";
-    window.foobarObject.omgstr = "foobarz" +
-      (new Array(${longStrLength})).join("abb");
-    window.largeObject1 = Object.create(null);
-    for (let i = 0; i < ${MAX_AUTOCOMPLETE_ATTEMPTS + 1}; i++) {
-      window.largeObject1['a' + i] = i;
-    }
-
-    window.largeObject2 = Object.create(null);
-    for (let i = 0; i < ${MAX_AUTOCOMPLETIONS * 2}; i++) {
-      window.largeObject2['a' + i] = i;
-    }
-
-    window.proxy1 = new Proxy({foo: 1}, {
-      getPrototypeOf() { throw new Error() }
-    });
-    window.proxy2 = new Proxy(Object.create(Object.create(null, {foo:{}})), {
-      ownKeys() { throw new Error() }
-    });
-  `;
-
-  await evaluateJS(script);
-
-  let tests = [doAutocomplete1, doAutocomplete2, doAutocomplete3,
-               doAutocomplete4, doAutocompleteLarge1,
-               doAutocompleteLarge2, doAutocompleteProxyThrowsPrototype,
-               doAutocompleteProxyThrowsOwnKeys];
-  if (!isWorker) {
-    // `Cu` is not defined in workers, then we can't test `Cu.Sandbox`
-    tests.push(doAutocompleteSandbox);
+    SimpleTest.finish();
   }
 
-  runTests(tests, testEnd);
-};
+  async function performTests({state, isWorker}) {
+    // Set up the global variables needed to test autocompletion in the target.
+    const script = `
+      // This is for workers so autocomplete acts the same
+      if (!this.window) {
+        window = this;
+      }
 
-async function doAutocomplete1() {
-  info("test autocomplete for 'window.foo'");
-  let response = await autocompletePromise("window.foo");
-  let matches = response.matches;
+      window.foobarObject = Object.create(null);
+      window.foobarObject.foo = 1;
+      window.foobarObject.foobar = 2;
+      window.foobarObject.foobaz = 3;
+      window.foobarObject.omg = 4;
+      window.foobarObject.omgfoo = 5;
+      window.foobarObject.strfoo = "foobarz";
+      window.foobarObject.omgstr = "foobarz" +
+        (new Array(${DebuggerServer.LONG_STRING_LENGTH})).join("abb");
+      window.largeObject1 = Object.create(null);
+      for (let i = 0; i < ${MAX_AUTOCOMPLETE_ATTEMPTS + 1}; i++) {
+        window.largeObject1['a' + i] = i;
+      }
 
-  is(response.matchProp, "foo", "matchProp");
-  is(matches.length, 1, "matches.length");
-  is(matches[0], "foobarObject", "matches[0]");
+      window.largeObject2 = Object.create(null);
+      for (let i = 0; i < ${MAX_AUTOCOMPLETIONS * 2}; i++) {
+        window.largeObject2['a' + i] = i;
+      }
 
-  nextTest();
-}
-
-async function doAutocomplete2() {
-  info("test autocomplete for 'window.foobarObject.'");
-  let response = await autocompletePromise("window.foobarObject.");
-  let matches = response.matches;
-
-  ok(!response.matchProp, "matchProp");
-  is(matches.length, 7, "matches.length");
-  checkObject(matches,
-    ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
-
-  nextTest();
-}
-
-async function doAutocomplete3() {
-  // Check that completion suggestions are offered inside the string.
-  info("test autocomplete for 'dump(window.foobarObject.)'");
-  let response = await autocompletePromise("dump(window.foobarObject.)", 25);
-  let matches = response.matches;
-
-  ok(!response.matchProp, "matchProp");
-  is(matches.length, 7, "matches.length");
-  checkObject(matches,
-    ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
-
-  nextTest();
-}
-
-async function doAutocomplete4() {
-  // Check that completion requests can have no suggestions.
-  info("test autocomplete for 'dump(window.foobarObject.)'");
-  let response = await autocompletePromise("dump(window.foobarObject.)");
-  ok(!response.matchProp, "matchProp");
-  is(response.matches.length, 0, "matches.length");
-
-  nextTest();
-}
-
-async function doAutocompleteLarge1() {
-  // Check that completion requests with too large objects will
-  // have no suggestions.
-  info("test autocomplete for 'window.largeObject1.'");
-  let response = await autocompletePromise("window.largeObject1.");
-  ok(!response.matchProp, "matchProp");
-  info (response.matches.join("|"));
-  is(response.matches.length, 0, "Bailed out with too many properties");
-
-  nextTest();
-}
-
-async function doAutocompleteLarge2() {
-  // Check that completion requests with pretty large objects will
-  // have MAX_AUTOCOMPLETIONS suggestions
-  info("test autocomplete for 'window.largeObject2.'");
-  let response = await autocompletePromise("window.largeObject2.");
-  ok(!response.matchProp, "matchProp");
-  is(response.matches.length, MAX_AUTOCOMPLETIONS, "matches.length is MAX_AUTOCOMPLETIONS");
-
-  nextTest();
-}
-
-async function doAutocompleteProxyThrowsPrototype() {
-  // Check that completion provides own properties even if [[GetPrototypeOf]] throws.
-  info("test autocomplete for 'window.proxy1.'");
-  let response = await autocompletePromise("window.proxy1.");
-  ok(!response.matchProp, "matchProp");
-  is(response.matches.length, 1, "matches.length");
-  checkObject(response.matches, ["foo"]);
-
-  nextTest();
-}
-
-async function doAutocompleteProxyThrowsOwnKeys() {
-  // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
-  info("test autocomplete for 'window.proxy2.'");
-  let response = await autocompletePromise("window.proxy2.");
-  ok(!response.matchProp, "matchProp");
-  is(response.matches.length, 1, "matches.length");
-  checkObject(response.matches, ["foo"]);
-
-  nextTest();
-}
-
-async function doAutocompleteSandbox() {
-  // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
-  info("test autocomplete for 'Cu.Sandbox.'");
-  let response = await autocompletePromise("Cu.Sandbox.");
-  ok(!response.matchProp, "matchProp");
-  let keys = Object.getOwnPropertyNames(Object.prototype).sort();
-  is(response.matches.length, keys.length, "matches.length");
-  checkObject(response.matches, keys);
-
-  nextTest();
-}
-
-function testEnd()
-{
-  // If this is the first run, reload the page and do it again
-  // in a worker.  Otherwise, end the test.
-  closeDebugger(gState, function() {
-    gState = null;
-    if (runningInTab) {
-      runningInTab = false;
-      startTest({
-        worker: true
+      window.proxy1 = new Proxy({foo: 1}, {
+        getPrototypeOf() { throw new Error() }
       });
-    } else {
-      SimpleTest.finish();
-    }
-  });
-}
+      window.proxy2 = new Proxy(Object.create(Object.create(null, {foo:{}})), {
+        ownKeys() { throw new Error() }
+      });
+      window.emojiObject = Object.create(null);
+      window.emojiObject["😎"] = "😎";
+    `;
+    await state.client.evaluateJSAsync(script);
 
-addEventListener("load", () => {
-  startTest({
-    worker: false
-  });
-});
+    const tests = [
+      doAutocomplete1,
+      doAutocomplete2,
+      doAutocomplete3,
+      doAutocomplete4,
+      doAutocompleteLarge1,
+      doAutocompleteLarge2,
+      doAutocompleteProxyThrowsPrototype,
+      doAutocompleteProxyThrowsOwnKeys,
+      doAutocompleteDotSurroundedBySpaces,
+      doAutocompleteAfterOr,
+    ];
+
+    if (!isWorker) {
+      // `Cu` is not defined in workers, then we can't test `Cu.Sandbox`
+      tests.push(doAutocompleteSandbox);
+      // Array literal completion isn't handled in Workers yet.
+      tests.push(doAutocompleteArray);
+    }
+
+    for (const test of tests) {
+      await test(state.client);
+    }
+
+    await closeDebugger(state);
+  }
+
+  async function doAutocomplete1(client) {
+    info("test autocomplete for 'window.foo'");
+    let response = await client.autocomplete("window.foo");
+    let matches = response.matches;
+
+    is(response.matchProp, "foo", "matchProp");
+    is(matches.length, 1, "matches.length");
+    is(matches[0], "foobarObject", "matches[0]");
+  }
+
+  async function doAutocomplete2(client) {
+    info("test autocomplete for 'window.foobarObject.'");
+    let response = await client.autocomplete("window.foobarObject.");
+    let matches = response.matches;
+
+    ok(!response.matchProp, "matchProp");
+    is(matches.length, 7, "matches.length");
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+  }
+
+  async function doAutocomplete3(client) {
+    // Check that completion suggestions are offered inside the string.
+    info("test autocomplete for 'dump(window.foobarObject.)'");
+    let response = await client.autocomplete("dump(window.foobarObject.)", 25);
+    let matches = response.matches;
+
+    ok(!response.matchProp, "matchProp");
+    is(matches.length, 7, "matches.length");
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+  }
+
+  async function doAutocomplete4(client) {
+    // Check that completion requests can have no suggestions.
+    info("test autocomplete for 'dump(window.foobarObject.)'");
+    let response = await client.autocomplete("dump(window.foobarObject.)");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches.length, 0, "matches.length");
+  }
+
+  async function doAutocompleteLarge1(client) {
+    // Check that completion requests with too large objects will
+    // have no suggestions.
+    info("test autocomplete for 'window.largeObject1.'");
+    let response = await client.autocomplete("window.largeObject1.");
+    ok(!response.matchProp, "matchProp");
+    info (response.matches.join("|"));
+    is(response.matches.length, 0, "Bailed out with too many properties");
+  }
+
+  async function doAutocompleteLarge2(client) {
+    // Check that completion requests with pretty large objects will
+    // have MAX_AUTOCOMPLETIONS suggestions
+    info("test autocomplete for 'window.largeObject2.'");
+    let response = await client.autocomplete("window.largeObject2.");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches.length, MAX_AUTOCOMPLETIONS, "matches.length is MAX_AUTOCOMPLETIONS");
+  }
+
+  async function doAutocompleteProxyThrowsPrototype(client) {
+    // Check that completion provides own properties even if [[GetPrototypeOf]] throws.
+    info("test autocomplete for 'window.proxy1.'");
+    let response = await client.autocomplete("window.proxy1.");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches.length, 1, "matches.length");
+    checkObject(response.matches, ["foo"]);
+  }
+
+  async function doAutocompleteProxyThrowsOwnKeys(client) {
+    // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
+    info("test autocomplete for 'window.proxy2.'");
+    let response = await client.autocomplete("window.proxy2.");
+    ok(!response.matchProp, "matchProp");
+    is(response.matches.length, 1, "matches.length");
+    checkObject(response.matches, ["foo"]);
+  }
+
+  async function doAutocompleteSandbox(client) {
+    // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
+    info("test autocomplete for 'Cu.Sandbox.'");
+    let response = await client.autocomplete("Cu.Sandbox.");
+    ok(!response.matchProp, "matchProp");
+    let keys = Object.getOwnPropertyNames(Object.prototype).sort();
+    is(response.matches.length, keys.length, "matches.length");
+    checkObject(response.matches, keys);
+  }
+
+  async function doAutocompleteArray(client) {
+    info("test autocomplete for [1,2,3]");
+    let response = await client.autocomplete("[1,2,3].");
+    let {matches} = response;
+
+    ok(matches.length > 0, "There are completion results for the array");
+    ok(matches.includes("length") && matches.includes("filter"),
+      "Array autocomplete contains expected results");
+
+    info("test autocomplete for '[] . '");
+    matches = (await client.autocomplete("[] . ")).matches;
+    ok(matches.length > 1);
+    ok(matches.includes("length") && matches.includes("filter"),
+      "Array autocomplete contains expected results");
+    ok(!matches.includes("copy"), "Array autocomplete does not contain helpers");
+  }
+
+  async function doAutocompleteDotSurroundedBySpaces(client) {
+    info("test autocomplete for 'window.foobarObject\n  .'");
+    let {matches} = await client.autocomplete("window.foobarObject\n  .");
+    is(matches.length, 7);
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+    info("test autocomplete for 'window.foobarObject\n  .o'");
+    matches = (await client.autocomplete("window.foobarObject\n  .o")).matches;
+    is(matches.length, 3);
+    checkObject(matches, ["omg", "omgfoo", "omgstr"]);
+
+    info("test autocomplete for 'window.foobarObject\n  .\n  s'");
+    matches = (await client.autocomplete("window.foobarObject\n  .\n  s")).matches;
+    is(matches.length, 1);
+    checkObject(matches, ["strfoo"]);
+
+    info("test autocomplete for 'window.foobarObject\n  .  '");
+    matches = (await client.autocomplete("window.foobarObject\n  .  ")).matches;
+    is(matches.length, 7);
+    checkObject(matches,
+      ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+    matches =
+      (await client.autocomplete("window.foobarObject.  foo ; window.foo")).matches;
+    is(matches.length, 1);
+    checkObject(matches, ["foobarObject"]);
+
+    matches =
+      (await client.autocomplete("window.emojiObject  .  ")).matches;
+    is(matches.length, 1);
+    checkObject(matches, ["😎"]);
+  }
+
+  async function doAutocompleteAfterOr(client) {
+    info("test autocomplete for 'true || foo'");
+    const {matches} = await client.autocomplete("true || foobar");
+    is(matches.length, 1, "autocomplete returns expected results");
+    is(matches.join("-"), "foobarObject");
+  }
 </script>
 </body>
 </html>

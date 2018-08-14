@@ -144,3 +144,13 @@ TEST(RustNsString, WriteToBufferFromRust) {
   EXPECT_TRUE(fallibleStr.EqualsASCII("ABC"));
 }
 
+extern "C" void Rust_InlineCapacityFromRust(const nsACString* aCStr, const nsAString* aStr, size_t* aCStrCapacity, size_t* aStrCapacity);
+TEST(RustNsString, InlineCapacityFromRust) {
+  size_t cStrCapacity;
+  size_t strCapacity;
+  nsAutoCStringN<93> cs;
+  nsAutoStringN<93> s;
+  Rust_InlineCapacityFromRust(&cs, &s, &cStrCapacity, &strCapacity);
+  EXPECT_EQ(cStrCapacity, 92U);
+  EXPECT_EQ(strCapacity, 92U);
+}

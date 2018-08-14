@@ -10,12 +10,13 @@ const {
   TOGGLE_REQUEST_FILTER_TYPE,
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   SET_REQUEST_FILTER_TEXT,
+  SELECT_DETAILS_PANEL_TAB,
 } = require("../constants");
 
 /**
  * Event telemetry middleware is responsible for logging
- * specific filter events to telemetry. This telemetry
- * helps to track Net panel filtering usage.
+ * various events to telemetry. This helps to track Network
+ * panel usage.
  */
 function eventTelemetryMiddleware(connector, telemetry) {
   return store => next => action => {
@@ -27,6 +28,7 @@ function eventTelemetryMiddleware(connector, telemetry) {
     }
 
     const state = store.getState();
+    const sessionId = toolbox.sessionId;
 
     const filterChangeActions = [
       TOGGLE_REQUEST_FILTER_TYPE,
@@ -34,13 +36,25 @@ function eventTelemetryMiddleware(connector, telemetry) {
       SET_REQUEST_FILTER_TEXT,
     ];
 
+    // Record telemetry event when filter changes.
     if (filterChangeActions.includes(action.type)) {
       filterChange({
         action,
         state,
         oldState,
         telemetry,
-        sessionId: toolbox.sessionId,
+        sessionId,
+      });
+    }
+
+    // Record telemetry event when side panel is selected.
+    if (action.type == SELECT_DETAILS_PANEL_TAB) {
+      sidePanelChange({
+        action,
+        state,
+        oldState,
+        telemetry,
+        sessionId,
       });
     }
 
@@ -48,6 +62,10 @@ function eventTelemetryMiddleware(connector, telemetry) {
   };
 }
 
+/**
+ * This helper function is executed when filter related action is fired.
+ * It's responsible for recording "filters_changed" telemetry event.
+ */
 function filterChange({action, state, oldState, telemetry, sessionId}) {
   const oldFilterState = oldState.filters;
   const filterState = state.filters;
@@ -79,7 +97,20 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
     "trigger": trigger,
     "active": activeFilters.join(","),
     "inactive": inactiveFilters.join(","),
-    "session_id": sessionId
+    "session_id": sessionId,
+  });
+}
+
+/**
+ * This helper function is executed when side panel is selected.
+ * It's responsible for recording "sidepanel_tool_changed"
+ * telemetry event.
+ */
+function sidePanelChange({action, state, oldState, telemetry, sessionId}) {
+  telemetry.recordEvent("devtools.main", "sidepanel_changed", "netmonitor", null, {
+    "oldpanel": oldState.ui.detailsPanelSelectedTab,
+    "newpanel": state.ui.detailsPanelSelectedTab,
+    "session_id": sessionId,
   });
 }
 

@@ -4,7 +4,6 @@
 
 treechildren:-moz-tree-image {
   -moz-context-properties: fill, fill-opacity;
-  fill: -moz-FieldText;
   fill-opacity: 0.7;
 }
 

@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function
 
+import hashlib
 import json
 import os
 import sys
@@ -44,7 +45,9 @@ MAX_HISTORY = 10
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 vcs = get_repository_object(build.topsrcdir)
-history_path = os.path.join(get_state_dir()[0], 'history', 'try_task_configs.json')
+topsrcdir_hash = hashlib.sha256(os.path.abspath(build.topsrcdir)).hexdigest()
+history_path = os.path.join(get_state_dir()[0], 'history', topsrcdir_hash, 'try_task_configs.json')
+old_history_path = os.path.join(get_state_dir()[0], 'history', 'try_task_configs.json')
 
 
 def write_task_config(try_task_config):

@@ -6,7 +6,6 @@
 
 "use strict";
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const EventEmitter = require("devtools/shared/event-emitter");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
@@ -84,7 +83,7 @@ Menu.prototype.popup = function(screenX, screenY, toolbox) {
 
   let popupset = doc.querySelector("popupset");
   if (!popupset) {
-    popupset = doc.createElementNS(XUL_NS, "popupset");
+    popupset = doc.createXULElement("popupset");
     doc.documentElement.appendChild(popupset);
   }
   // See bug 1285229, on Windows, opening the same popup multiple times in a
@@ -96,7 +95,7 @@ Menu.prototype.popup = function(screenX, screenY, toolbox) {
     popup.hidePopup();
   }
 
-  popup = doc.createElementNS(XUL_NS, "menupopup");
+  popup = doc.createXULElement("menupopup");
   popup.setAttribute("menu-api", "true");
   popup.setAttribute("consumeoutsideclicks", "true");
 
@@ -131,18 +130,18 @@ Menu.prototype._createMenuItems = function(parent) {
     }
 
     if (item.submenu) {
-      const menupopup = doc.createElementNS(XUL_NS, "menupopup");
+      const menupopup = doc.createXULElement("menupopup");
       item.submenu._createMenuItems(menupopup);
 
-      const menu = doc.createElementNS(XUL_NS, "menu");
+      const menu = doc.createXULElement("menu");
       menu.appendChild(menupopup);
       applyItemAttributesToNode(item, menu);
       parent.appendChild(menu);
     } else if (item.type === "separator") {
-      const menusep = doc.createElementNS(XUL_NS, "menuseparator");
+      const menusep = doc.createXULElement("menuseparator");
       parent.appendChild(menusep);
     } else {
-      const menuitem = doc.createElementNS(XUL_NS, "menuitem");
+      const menuitem = doc.createXULElement("menuitem");
       applyItemAttributesToNode(item, menuitem);
 
       menuitem.addEventListener("command", () => {

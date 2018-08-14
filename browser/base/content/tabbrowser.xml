@@ -128,6 +128,11 @@
 
           this._tabMinWidth = this._tabMinWidthPref;
 
+          XPCOMUtils.defineLazyPreferenceGetter(this, "_multiselectEnabledPref",
+            "browser.tabs.multiselect", null,
+            (pref, prevValue, newValue) => this._multiselectEnabled = newValue);
+          this._multiselectEnabled = this._multiselectEnabledPref;
+
           this._setPositionalAttributes();
 
           CustomizableUI.addListener(this);
@@ -170,6 +175,17 @@
           this.style.setProperty("--tab-min-width", val + "px");
           return val;
         </setter>
+      </property>
+
+      <property name="_multiselectEnabled">
+        <setter>
+          // Unlike boolean HTML attributes, the value of boolean ARIA attributes actually matters.
+          this.setAttribute("aria-multiselectable", !!val);
+          return val;
+        </setter>
+        <getter>
+          return this.getAttribute("aria-multiselectable") == "true";
+        </getter>
       </property>
 
       <method name="observe">
@@ -2069,7 +2085,7 @@
         } else {
           // When browser.tabs.multiselect config is set to false,
           // then we ignore the state of multi-selection keys (Ctrl/Cmd).
-          const tabSelectionToggled = Services.prefs.getBoolPref("browser.tabs.multiselect") &&
+          const tabSelectionToggled = tabContainer._multiselectEnabled &&
             (event.getModifierState("Accel") || event.shiftKey);
 
           if (this.mOverCloseButton || this._overPlayingIcon || tabSelectionToggled) {
@@ -2092,7 +2108,8 @@
       </handler>
 
       <handler event="click" button="0"><![CDATA[
-        if (Services.prefs.getBoolPref("browser.tabs.multiselect")) {
+        let tabContainer = this.parentNode;
+        if (tabContainer._multiselectEnabled) {
           let shiftKey = event.shiftKey;
           let accelKey = event.getModifierState("Accel");
           if (shiftKey) {
@@ -2188,41 +2205,4 @@
       </handler>
     </handlers>
   </binding>
-
-  <binding id="tabbrowser-browser"
-           extends="chrome://global/content/bindings/browser.xml#browser">
-    <implementation>
-      <field name="tabModalPromptBox">null</field>
-
-      <!-- throws exception for unknown schemes -->
-      <method name="loadURI">
-        <parameter name="aURI"/>
-        <parameter name="aParams"/>
-        <body>
-          <![CDATA[
-            _loadURI(this, aURI, aParams);
-          ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
-  <binding id="tabbrowser-remote-browser"
-           extends="chrome://global/content/bindings/remote-browser.xml#remote-browser">
-    <implementation>
-      <field name="tabModalPromptBox">null</field>
-
-      <!-- throws exception for unknown schemes -->
-      <method name="loadURI">
-        <parameter name="aURI"/>
-        <parameter name="aParams"/>
-        <body>
-          <![CDATA[
-            _loadURI(this, aURI, aParams);
-          ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
 </bindings>

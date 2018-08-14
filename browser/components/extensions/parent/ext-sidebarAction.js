@@ -12,8 +12,6 @@ var {
   IconDetails,
 } = ExtensionParent;
 
-var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 // WeakMap[Extension -> SidebarAction]
 let sidebarActionMap = new WeakMap();
 
@@ -149,7 +147,7 @@ this.sidebarAction = class extends ExtensionAPI {
 
     // Use of the broadcaster allows browser-sidebar.js to properly manage the
     // checkmarks in the menus.
-    let broadcaster = document.createElementNS(XUL_NS, "broadcaster");
+    let broadcaster = document.createXULElement("broadcaster");
     broadcaster.setAttribute("id", this.id);
     broadcaster.setAttribute("autoCheck", "false");
     broadcaster.setAttribute("type", "checkbox");
@@ -172,14 +170,14 @@ this.sidebarAction = class extends ExtensionAPI {
     header.addEventListener("SidebarShown", this.updateHeader);
 
     // Insert a menuitem for View->Show Sidebars.
-    let menuitem = document.createElementNS(XUL_NS, "menuitem");
+    let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("id", this.menuId);
     menuitem.setAttribute("observes", this.id);
     menuitem.setAttribute("class", "menuitem-iconic webextension-menuitem");
     this.setMenuIcon(menuitem, details);
 
     // Insert a toolbarbutton for the sidebar dropdown selector.
-    let toolbarbutton = document.createElementNS(XUL_NS, "toolbarbutton");
+    let toolbarbutton = document.createXULElement("toolbarbutton");
     toolbarbutton.setAttribute("id", this.buttonId);
     toolbarbutton.setAttribute("observes", this.id);
     toolbarbutton.setAttribute("class", "subviewbutton subviewbutton-iconic webextension-menuitem");

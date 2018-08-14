@@ -16,8 +16,6 @@ var {
   promiseEvent,
 } = ExtensionUtils;
 
-var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 /**
  * Represents an addon devtools panel in the main process.
  *
@@ -218,13 +216,13 @@ class ParentDevToolsPanel {
     // extension sidebar pages).
     let stack = document.getElementById("webext-panels-stack");
     if (!stack) {
-      stack = document.createElementNS(XUL_NS, "stack");
+      stack = document.createXULElement("stack");
       stack.setAttribute("flex", "1");
       stack.setAttribute("id", "webext-panels-stack");
       document.documentElement.appendChild(stack);
     }
 
-    const browser = document.createElementNS(XUL_NS, "browser");
+    const browser = document.createXULElement("browser");
     browser.setAttribute("id", "webext-panels-browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");

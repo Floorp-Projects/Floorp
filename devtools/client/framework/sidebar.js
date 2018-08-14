@@ -11,8 +11,6 @@ var Telemetry = require("devtools/client/shared/telemetry");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 /**
  * ToolSidebar provides methods to register tabs in the sidebar.
  * It's assumed that the sidebar contains a xul:tabbox.
@@ -118,7 +116,7 @@ ToolSidebar.prototype = {
     const tabs = this._tabbox.tabs;
 
     // Create a container and insert it first in the tabbox
-    const allTabsContainer = this._panelDoc.createElementNS(XULNS, "stack");
+    const allTabsContainer = this._panelDoc.createXULElement("stack");
     this._tabbox.insertBefore(allTabsContainer, tabs);
 
     // Move the tabs inside and make them flex
@@ -126,7 +124,7 @@ ToolSidebar.prototype = {
     tabs.setAttribute("flex", "1");
 
     // Create the dropdown menu next to the tabs
-    this._allTabsBtn = this._panelDoc.createElementNS(XULNS, "toolbarbutton");
+    this._allTabsBtn = this._panelDoc.createXULElement("toolbarbutton");
     this._allTabsBtn.setAttribute("class", "devtools-sidebar-alltabs");
     this._allTabsBtn.setAttribute("end", "0");
     this._allTabsBtn.setAttribute("top", "0");
@@ -137,7 +135,7 @@ ToolSidebar.prototype = {
     this._allTabsBtn.setAttribute("hidden", "true");
     allTabsContainer.appendChild(this._allTabsBtn);
 
-    const menuPopup = this._panelDoc.createElementNS(XULNS, "menupopup");
+    const menuPopup = this._panelDoc.createXULElement("menupopup");
     this._allTabsBtn.appendChild(menuPopup);
 
     // Listening to tabs overflow event to toggle the alltabs button
@@ -189,7 +187,7 @@ ToolSidebar.prototype = {
       return;
     }
 
-    const item = this._panelDoc.createElementNS(XULNS, "menuitem");
+    const item = this._panelDoc.createXULElement("menuitem");
     const idPrefix = "sidebar-alltabs-item-";
     item.setAttribute("id", idPrefix + id);
     item.setAttribute("label", tab.getAttribute("label"));
@@ -230,14 +228,14 @@ ToolSidebar.prototype = {
    * tabbox, pass the ID of an existing tab to insert it before that tab instead.
    */
   addTab: function(id, url, options = {}) {
-    const iframe = this._panelDoc.createElementNS(XULNS, "iframe");
+    const iframe = this._panelDoc.createXULElement("iframe");
     iframe.className = "iframe-" + id;
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("src", url);
     iframe.tooltip = "aHTMLTooltip";
 
     // Creating the tab and adding it to the tabbox
-    const tab = this._panelDoc.createElementNS(XULNS, "tab");
+    const tab = this._panelDoc.createXULElement("tab");
 
     tab.setAttribute("id", this.TAB_ID_PREFIX + id);
     tab.setAttribute("crop", "end");
@@ -272,7 +270,7 @@ ToolSidebar.prototype = {
 
     iframe.addEventListener("load", onIFrameLoaded, true);
 
-    const tabpanel = this._panelDoc.createElementNS(XULNS, "tabpanel");
+    const tabpanel = this._panelDoc.createXULElement("tabpanel");
     tabpanel.setAttribute("id", this.TABPANEL_ID_PREFIX + id);
     tabpanel.appendChild(iframe);
 
@@ -283,7 +281,7 @@ ToolSidebar.prototype = {
       this._tabbox.tabpanels.appendChild(tabpanel);
     }
 
-    this._tooltip = this._panelDoc.createElementNS(XULNS, "tooltip");
+    this._tooltip = this._panelDoc.createXULElement("tooltip");
     this._tooltip.id = "aHTMLTooltip";
     tabpanel.appendChild(this._tooltip);
     this._tooltip.page = true;

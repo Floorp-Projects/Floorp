@@ -2362,13 +2362,20 @@ nsRange::CloneParentsBetween(nsINode *aAncestor,
   if (aAncestor == aNode)
     return NS_OK;
 
-  nsCOMPtr<nsINode> firstParent, lastParent;
-  nsCOMPtr<nsINode> parent = aNode->GetParentNode();
+  AutoTArray<nsCOMPtr<nsINode>, 16> parentStack;
 
+  nsCOMPtr<nsINode> parent = aNode->GetParentNode();
   while(parent && parent != aAncestor)
   {
+    parentStack.AppendElement(parent);
+    parent = parent->GetParentNode();
+  }
+
+  nsCOMPtr<nsINode> firstParent;
+  nsCOMPtr<nsINode> lastParent;
+  for (int32_t i = parentStack.Length() - 1; i >= 0; i--) {
     ErrorResult rv;
-    nsCOMPtr<nsINode> clone = parent->CloneNode(false, rv);
+    nsCOMPtr<nsINode> clone = parentStack[i]->CloneNode(false, rv);
 
     if (rv.Failed()) {
       return rv.StealNSResult();
@@ -2377,23 +2384,20 @@ nsRange::CloneParentsBetween(nsINode *aAncestor,
       return NS_ERROR_FAILURE;
     }
 
-    if (! firstParent) {
-      firstParent = lastParent = clone;
-    } else {
-      clone->AppendChild(*lastParent, rv);
-      if (rv.Failed()) return rv.StealNSResult();
-
+    if (!lastParent) {
       lastParent = clone;
+    } else {
+      firstParent->AppendChild(*clone, rv);
+      if (rv.Failed()) {
+        return rv.StealNSResult();
+      }
     }
 
-    parent = parent->GetParentNode();
+    firstParent = clone;
   }
 
-  *aClosestAncestor  = firstParent;
-  NS_IF_ADDREF(*aClosestAncestor);
-
-  *aFarthestAncestor = lastParent;
-  NS_IF_ADDREF(*aFarthestAncestor);
+  firstParent.forget(aClosestAncestor);
+  lastParent.forget(aFarthestAncestor);
 
   return NS_OK;
 }

@@ -56,6 +56,3 @@ toolkit.jar:
   skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
 * skin/classic/global/in-content/common.css                (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css            (in-content/info-pages.css)
-  skin/classic/global/tree/twisty-collapsed.svg            (tree/twisty-collapsed.svg)
-  skin/classic/global/tree/twisty-collapsed-rtl.svg        (tree/twisty-collapsed-rtl.svg)
-  skin/classic/global/tree/twisty-expanded.svg             (tree/twisty-expanded.svg)

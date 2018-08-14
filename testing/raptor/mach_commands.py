@@ -11,18 +11,18 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 import json
+import shutil
 import socket
 import subprocess
 
+import mozfile
 from mach.decorators import CommandProvider, Command
 from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject, MachCommandBase
-from mozpack.copier import FileCopier
-from mozpack.manifests import InstallManifest
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 BENCHMARK_REPOSITORY = 'https://github.com/mozilla/perf-automation'
-BENCHMARK_REVISION = '6beb3d3e22abce8cf8e2e89bc45acd4152258f12'
+BENCHMARK_REVISION = '4befd28725c687b91ce749420eab29352ecbcab4'
 
 
 class RaptorRunner(MozbuildObject):
@@ -74,24 +74,30 @@ class RaptorRunner(MozbuildObject):
 
         subprocess.check_call(['git', 'checkout', BENCHMARK_REVISION], cwd=external_repo_path)
 
-        # Link benchmarks to the objdir
+        # Link or copy benchmarks to the objdir
         benchmark_paths = (
             os.path.join(external_repo_path, 'benchmarks'),
             os.path.join(self.topsrcdir, 'third_party', 'webkit', 'PerformanceTests'),
         )
-        manifest = InstallManifest()
+
+        benchmark_dest = os.path.join(self.topobjdir, 'testing', 'raptor', 'benchmarks')
+        if not os.path.isdir(benchmark_dest):
+            os.makedirs(benchmark_dest)
 
         for benchmark_path in benchmark_paths:
-            for path in os.listdir(benchmark_path):
-                abspath = os.path.join(benchmark_path, path)
-                if not os.path.isdir(abspath) or path.startswith('.'):
+            for name in os.listdir(benchmark_path):
+                path = os.path.join(benchmark_path, name)
+                dest = os.path.join(benchmark_dest, name)
+                if not os.path.isdir(path) or name.startswith('.'):
                     continue
 
-                manifest.add_link(abspath, path)
-
-        copier = FileCopier()
-        manifest.populate_registry(copier)
-        copier.copy(os.path.join(self.topobjdir, 'testing', 'raptor', 'benchmarks'))
+                if hasattr(os, 'symlink'):
+                    if not os.path.exists(dest):
+                        os.symlink(path, dest)
+                else:
+                    # Clobber the benchmark in case a recent update removed any files.
+                    mozfile.remove(dest)
+                    shutil.copytree(path, dest)
 
     def make_config(self):
         default_actions = ['populate-webroot', 'install-chrome', 'create-virtualenv', 'run-tests']

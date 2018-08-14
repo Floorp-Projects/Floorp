@@ -258,7 +258,7 @@ window._gBrowser = {
     }
     let stack = this.selectedBrowser.parentNode;
     // Create an anchor for the popup
-    let popupAnchor = document.createElementNS(this._XUL_NS, "hbox");
+    let popupAnchor = document.createXULElement("hbox");
     popupAnchor.className = "popup-anchor";
     popupAnchor.hidden = true;
     stack.appendChild(popupAnchor);
@@ -293,6 +293,7 @@ window._gBrowser = {
 
     browser.permanentKey = {};
     browser.droppedLinkHandler = handleDroppedLink;
+    browser.loadURI = _loadURI.bind(null, browser);
 
     let autoScrollPopup = browser._createAutoScrollPopup();
     autoScrollPopup.id = "autoscroller";
@@ -513,7 +514,7 @@ window._gBrowser = {
    * @return the created findbar, or null if the window or tab is closed/closing.
    */
   async _createFindBar(aTab) {
-    let findBar = document.createElementNS(this._XUL_NS, "findbar");
+    let findBar = document.createXULElement("findbar");
     let browser = this.getBrowserForTab(aTab);
     let browserContainer = this.getBrowserContainer(browser);
     browserContainer.appendChild(findBar);
@@ -1799,7 +1800,7 @@ window._gBrowser = {
     uriIsAboutBlank,
     userContextId,
   } = {}) {
-    let b = document.createElementNS(this._XUL_NS, "browser");
+    let b = document.createXULElement("browser");
     b.permanentKey = {};
 
     for (let attribute in this._defaultBrowserAttributes) {
@@ -1874,25 +1875,25 @@ window._gBrowser = {
     }
 
     // Create the browserStack container
-    let stack = document.createElementNS(this._XUL_NS, "stack");
+    let stack = document.createXULElement("stack");
     stack.className = "browserStack";
     stack.appendChild(b);
     stack.setAttribute("flex", "1");
 
     // Create the browserContainer
-    let browserContainer = document.createElementNS(this._XUL_NS, "vbox");
+    let browserContainer = document.createXULElement("vbox");
     browserContainer.className = "browserContainer";
     browserContainer.appendChild(stack);
     browserContainer.setAttribute("flex", "10000");
 
     // Create the sidebar container
-    let browserSidebarContainer = document.createElementNS(this._XUL_NS, "hbox");
+    let browserSidebarContainer = document.createXULElement("hbox");
     browserSidebarContainer.className = "browserSidebarContainer";
     browserSidebarContainer.appendChild(browserContainer);
     browserSidebarContainer.setAttribute("flex", "10000");
 
     // Add the Message and the Browser to the box
-    let notificationbox = document.createElementNS(this._XUL_NS, "notificationbox");
+    let notificationbox = document.createXULElement("notificationbox");
     notificationbox.setAttribute("flex", "1");
     notificationbox.setAttribute("notificationside", "top");
     notificationbox.appendChild(browserSidebarContainer);
@@ -2040,6 +2041,7 @@ window._gBrowser = {
     this._tabFilters.set(aTab, filter);
 
     browser.droppedLinkHandler = handleDroppedLink;
+    browser.loadURI = _loadURI.bind(null, browser);
 
     // Most of the time, we start our browser's docShells out as inactive,
     // and then maintain activeness in the tab switcher. Preloaded about:newtab's
@@ -2233,7 +2235,7 @@ window._gBrowser = {
     let openerTab = ((openerBrowser && this.getTabForBrowser(openerBrowser)) ||
       (relatedToCurrent && this.selectedTab));
 
-    var t = document.createElementNS(this._XUL_NS, "tab");
+    var t = document.createXULElement("tab");
 
     t.openerTab = openerTab;
 
@@ -3724,6 +3726,7 @@ window._gBrowser = {
     }
 
     aTab.setAttribute("multiselected", "true");
+    aTab.setAttribute("aria-selected", "true");
     this._multiSelectedTabsSet.add(aTab);
     this._startMultiSelectChange();
     if (this._multiSelectChangeRemovals.has(aTab)) {
@@ -3763,6 +3766,7 @@ window._gBrowser = {
       return;
     }
     aTab.removeAttribute("multiselected");
+    aTab.removeAttribute("aria-selected");
     this._multiSelectedTabsSet.delete(aTab);
     this._startMultiSelectChange();
     if (this._multiSelectChangeAdditions.has(aTab)) {
