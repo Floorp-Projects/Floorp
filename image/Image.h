@@ -353,19 +353,18 @@ protected:
    * the same as the size of the surface in the image container, but it is the
    * best effort estimate.
    */
-  virtual Tuple<ImgDrawResult, gfx::IntSize>
-    GetImageContainerSize(layers::LayerManager* aManager,
-                          const gfx::IntSize& aSize,
-                          uint32_t aFlags)
+  virtual gfx::IntSize GetImageContainerSize(layers::LayerManager* aManager,
+                                             const gfx::IntSize& aSize,
+                                             uint32_t aFlags)
   {
-    return MakeTuple(ImgDrawResult::NOT_SUPPORTED, gfx::IntSize(0, 0));
+    return gfx::IntSize(0, 0);
   }
 
-  ImgDrawResult GetImageContainerImpl(layers::LayerManager* aManager,
-                                      const gfx::IntSize& aSize,
-                                      const Maybe<SVGImageContext>& aSVGContext,
-                                      uint32_t aFlags,
-                                      layers::ImageContainer** aContainer);
+  already_AddRefed<layers::ImageContainer>
+    GetImageContainerImpl(layers::LayerManager* aManager,
+                          const gfx::IntSize& aSize,
+                          const Maybe<SVGImageContext>& aSVGContext,
+                          uint32_t aFlags);
 
   void UpdateImageContainer();
 

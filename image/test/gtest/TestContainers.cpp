@@ -70,13 +70,12 @@ TEST_F(ImageContainers, RasterImageContainer)
   // Upscaling should give the native size.
   IntSize requestedSize = testCase.mSize;
   requestedSize.Scale(2, 2);
-  RefPtr<layers::ImageContainer> upscaleContainer;
-  image->GetImageContainerAtSize(layerManager,
-                                 requestedSize,
-                                 Nothing(),
-                                 imgIContainer::FLAG_SYNC_DECODE |
-                                 imgIContainer::FLAG_HIGH_QUALITY_SCALING,
-                                 getter_AddRefs(upscaleContainer));
+  RefPtr<layers::ImageContainer> upscaleContainer =
+    image->GetImageContainerAtSize(layerManager,
+                                   requestedSize,
+                                   Nothing(),
+                                   imgIContainer::FLAG_SYNC_DECODE |
+                                   imgIContainer::FLAG_HIGH_QUALITY_SCALING);
   ASSERT_TRUE(upscaleContainer != nullptr);
   containerSize = upscaleContainer->GetCurrentSize();
   EXPECT_EQ(testCase.mSize.width, containerSize.width);
@@ -86,23 +85,21 @@ TEST_F(ImageContainers, RasterImageContainer)
   requestedSize = testCase.mSize;
   requestedSize.width /= 2;
   requestedSize.height /= 2;
-  RefPtr<layers::ImageContainer> downscaleContainer;
-  image->GetImageContainerAtSize(layerManager,
-                                 requestedSize,
-                                 Nothing(),
-                                 imgIContainer::FLAG_SYNC_DECODE |
-                                 imgIContainer::FLAG_HIGH_QUALITY_SCALING,
-                                 getter_AddRefs(downscaleContainer));
+  RefPtr<layers::ImageContainer> downscaleContainer =
+    image->GetImageContainerAtSize(layerManager,
+                                   requestedSize,
+                                   Nothing(),
+                                   imgIContainer::FLAG_SYNC_DECODE |
+                                   imgIContainer::FLAG_HIGH_QUALITY_SCALING);
   containerSize = downscaleContainer->GetCurrentSize();
   EXPECT_EQ(requestedSize.width, containerSize.width);
   EXPECT_EQ(requestedSize.height, containerSize.height);
 
   // Get at native size again. Should give same container.
-  RefPtr<layers::ImageContainer> againContainer;
-  image->GetImageContainerAtSize(layerManager,
-                                 testCase.mSize,
-                                 Nothing(),
-                                 imgIContainer::FLAG_SYNC_DECODE,
-                                 getter_AddRefs(againContainer));
+  RefPtr<layers::ImageContainer> againContainer =
+    image->GetImageContainerAtSize(layerManager,
+                                   testCase.mSize,
+                                   Nothing(),
+                                   imgIContainer::FLAG_SYNC_DECODE);
   ASSERT_EQ(nativeContainer.get(), againContainer.get());
 }

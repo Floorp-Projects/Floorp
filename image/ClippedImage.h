@@ -51,12 +51,11 @@ public:
     IsImageContainerAvailableAtSize(layers::LayerManager* aManager,
                                     const gfx::IntSize& aSize,
                                     uint32_t aFlags) override;
-  NS_IMETHOD_(ImgDrawResult)
+  NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
     GetImageContainerAtSize(layers::LayerManager* aManager,
                             const gfx::IntSize& aSize,
                             const Maybe<SVGImageContext>& aSVGContext,
-                            uint32_t aFlags,
-                            layers::ImageContainer** aOutContainer) override;
+                            uint32_t aFlags) override;
   NS_IMETHOD_(ImgDrawResult) Draw(gfxContext* aContext,
                                const nsIntSize& aSize,
                                const ImageRegion& aRegion,
