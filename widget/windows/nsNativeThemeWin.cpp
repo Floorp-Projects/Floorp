@@ -1559,7 +1559,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
 
   if (IsWidgetScrollbarPart(aWidgetType)) {
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (style->StyleUserInterface()->HasCustomScrollbars()) {
+    if (style->StyleUI()->HasCustomScrollbars()) {
       return DrawCustomScrollbarPart(aContext, aFrame, style,
                                      aWidgetType, aRect, aDirtyRect);
     }
@@ -3192,7 +3192,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, WidgetT
       else {
         if (contentState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)) {
           aState |= DFCS_PUSHED;
-          const nsStyleUserInterface *uiData = aFrame->StyleUserInterface();
+          const nsStyleUI *uiData = aFrame->StyleUI();
           // The down state is flat if the button is focusable
           if (uiData->mUserFocus == StyleUserFocus::Normal) {
             if (!aFrame->GetContent()->IsHTMLElement())
@@ -4231,8 +4231,8 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
                                           const nsRect& aRect,
                                           const nsRect& aClipRect)
 {
-  MOZ_ASSERT(!aStyle->StyleUserInterface()->mScrollbarFaceColor.IsAuto() ||
-             !aStyle->StyleUserInterface()->mScrollbarTrackColor.IsAuto());
+  MOZ_ASSERT(!aStyle->StyleUI()->mScrollbarFaceColor.IsAuto() ||
+             !aStyle->StyleUI()->mScrollbarTrackColor.IsAuto());
 
   gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
           dr(aClipRect.X(), aClipRect.Y(),

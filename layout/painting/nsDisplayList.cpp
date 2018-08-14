@@ -2851,7 +2851,7 @@ static bool
 IsFrameReceivingPointerEvents(nsIFrame* aFrame)
 {
   return NS_STYLE_POINTER_EVENTS_NONE !=
-    aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame);
+    aFrame->StyleUI()->GetEffectivePointerEvents(aFrame);
 }
 
 // A list of frames, and their z depth. Used for sorting
