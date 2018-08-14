@@ -177,10 +177,3 @@ menuseparator {
   margin: 5px 0;
   padding: 1px 0;
 }
-
-/* ::::: autocomplete ::::: */
-
-.autocomplete-history-popup > menuitem {
-  max-width: none !important;
-  font: message-box;
-}

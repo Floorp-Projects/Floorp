@@ -269,10 +269,3 @@ menulist > menupopup > menuseparator {
   border-top: 1px solid #000000;
   border-bottom: none;
 }
-
-/* ::::: autocomplete ::::: */
-
-.autocomplete-history-popup > menuitem {
-  max-width: none !important;
-  font: message-box;
-}
