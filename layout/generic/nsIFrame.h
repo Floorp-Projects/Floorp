@@ -4773,6 +4773,17 @@ nsFrameList::FrameLinkEnumerator::Next()
   Enumerator::Next();
 }
 
+template<typename Predicate>
+inline void
+nsFrameList::FrameLinkEnumerator::Find(Predicate&& aPredicate)
+{
+  for (; !AtEnd(); Next()) {
+    if (aPredicate(mFrame)) {
+      return;
+    }
+  }
+}
+
 // Operators of nsFrameList::Iterator
 // ---------------------------------------------------
 
