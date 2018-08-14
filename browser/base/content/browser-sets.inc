@@ -122,14 +122,12 @@
 #include ../../components/places/content/placesCommands.inc.xul
 
   <broadcasterset id="mainBroadcasterSet">
-    <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
+    <broadcaster id="viewBookmarksSidebar"
                  type="checkbox" group="sidebar"
-                 sidebarurl="chrome://browser/content/places/bookmarksSidebar.xul"
                  oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
 
-    <broadcaster id="viewHistorySidebar" autoCheck="false" sidebartitle="&historyButton.label;"
+    <broadcaster id="viewHistorySidebar"
                  type="checkbox" group="sidebar"
-                 sidebarurl="chrome://browser/content/places/historySidebar.xul"
                  oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
     <broadcaster id="isImage"/>
@@ -147,9 +145,8 @@
     <broadcaster id="sync-unverified-state" hidden="true"/>
     <broadcaster id="sync-syncnow-state" hidden="true"/>
     <broadcaster id="sync-reauth-state" hidden="true"/>
-    <broadcaster id="viewTabsSidebar" autoCheck="false" sidebartitle="&syncedTabs.sidebar.label;"
+    <broadcaster id="viewTabsSidebar"
                  type="checkbox" group="sidebar"
-                 sidebarurl="chrome://browser/content/syncedtabs/sidebar.xhtml"
                  oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
