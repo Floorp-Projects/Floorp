@@ -1180,9 +1180,10 @@ WebConsoleActor.prototype =
       matches = result.matches || [];
       matchProp = result.matchProp;
 
-      // We consider '$' as alphanumerc because it is used in the names of some
-      // helper functions.
-      const lastNonAlphaIsDot = /[.][a-zA-Z0-9$]*$/.test(reqText);
+      // We consider '$' as alphanumeric because it is used in the names of some
+      // helper functions; we also consider whitespace as alphanum since it should not
+      // be seen as break in the evaled string.
+      const lastNonAlphaIsDot = /[.][a-zA-Z0-9$\s]*$/.test(reqText);
       if (!lastNonAlphaIsDot) {
         matches = matches.concat(this._getWebConsoleCommandsCache().filter(n =>
           // filter out `screenshot` command as it is inaccessible without
