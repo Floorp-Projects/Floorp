@@ -309,6 +309,12 @@ ParentProcessId()
 }
 
 void
+MaybeCreateInitialCheckpoint()
+{
+  NewCheckpoint(/* aTemporary = */ false);
+}
+
+void
 ReportFatalError(const Maybe<MinidumpInfo>& aMinidump, const char* aFormat, ...)
 {
   // Unprotect any memory which might be written while producing the minidump.
