@@ -515,7 +515,11 @@ IndentCommand::DoCommand(const char* aCommandName, nsISupports* refCon)
   if (!htmlEditor) {
     return NS_OK;
   }
-  return htmlEditor->Indent(NS_LITERAL_STRING("indent"));
+  nsresult rv = htmlEditor->IndentAsAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -566,7 +570,11 @@ OutdentCommand::DoCommand(const char* aCommandName, nsISupports* refCon)
   if (!htmlEditor) {
     return NS_OK;
   }
-  return htmlEditor->Indent(NS_LITERAL_STRING("outdent"));
+  nsresult rv = htmlEditor->OutdentAsAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

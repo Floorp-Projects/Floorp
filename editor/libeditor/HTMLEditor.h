@@ -181,6 +181,12 @@ public:
   nsresult OnInputLineBreak();
 
   /**
+   * Indent or outdent content around Selection.
+   */
+  nsresult IndentAsAction();
+  nsresult OutdentAsAction();
+
+  /**
    * event callback when a mouse button is pressed
    * @param aX      [IN] horizontal position of the pointer
    * @param aY      [IN] vertical position of the pointer
@@ -839,6 +845,16 @@ protected: // Shouldn't be used by friend classes
    * inserted as normal text.
    */
   nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
+
+  /**
+   * IndentOrOutdentAsSubAction() indents or outdents the content around
+   * Selection.  Callers have to guarantee that there is a placeholder
+   * transaction.
+   *
+   * @param aEditSubAction      Must be EditSubAction::eIndent or
+   *                            EditSubAction::eOutdent.
+   */
+  nsresult IndentOrOutdentAsSubAction(EditSubAction aEditSubAction);
 
   nsresult LoadHTML(const nsAString& aInputString);
 
