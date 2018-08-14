@@ -105,6 +105,7 @@ typedef DPI_AWARENESS_CONTEXT(WINAPI * SetThreadDpiAwarenessContextProc)(DPI_AWA
 typedef BOOL(WINAPI * EnableNonClientDpiScalingProc)(HWND);
 
 namespace mozilla {
+enum class PointerCapabilities : uint8_t;
 #if defined(ACCESSIBILITY)
 namespace a11y {
 class Accessible;
@@ -473,6 +474,11 @@ public:
    * Returns the windows power platform role, which is useful for detecting tablets.
    */
   static POWER_PLATFORM_ROLE GetPowerPlatformRole();
+
+  // For pointer and hover media queries features.
+  static PointerCapabilities GetPrimaryPointerCapabilities();
+  // For any-pointer and any-hover media queries features.
+  static PointerCapabilities GetAllPointerCapabilities();
 
   /**
    * Fully resolves a path to its final path name. So if path contains
