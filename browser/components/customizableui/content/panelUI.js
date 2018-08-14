@@ -623,7 +623,6 @@ const PanelUI = {
     let helpMenu = document.getElementById("menu_HelpPopup");
     let items = this.getElementsByTagName("vbox")[0];
     let attrs = ["oncommand", "onclick", "label", "key", "disabled"];
-    let NSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     // Remove all buttons from the view
     while (items.firstChild) {
@@ -636,7 +635,7 @@ const PanelUI = {
     for (let node of menuItems) {
       if (node.hidden)
         continue;
-      let button = document.createElementNS(NSXUL, "toolbarbutton");
+      let button = document.createXULElement("toolbarbutton");
       // Copy specific attributes from a menuitem of the Help menu
       for (let attrName of attrs) {
         if (!node.hasAttribute(attrName))

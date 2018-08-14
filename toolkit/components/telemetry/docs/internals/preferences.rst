@@ -106,7 +106,8 @@ Preferences
 
 ``toolkit.telemetry.log.level``
 
-  This sets the Telemetry logging verbosity per ``Log.jsm``, with ``Trace`` or ``0`` being the most verbose and the default being ``Warn``.
+  This sets the Telemetry logging verbosity per ``Log.jsm``. The available levels, in descending order of verbosity, are ``Trace``, ``Debug``, ``Config``, ``Info``, ``Warn``, ``Error`` and ``Fatal`` with the default being ``Warn``.
+
   By default logging goes only the console service.
 
 ``toolkit.telemetry.log.dump``

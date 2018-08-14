@@ -31,8 +31,6 @@ const POPUP_PRELOAD_TIMEOUT_MS = 200;
 const POPUP_OPEN_MS_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_OPEN_MS";
 const POPUP_RESULT_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT";
 
-var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 // WeakMap[Extension -> BrowserAction]
 const browserActionMap = new WeakMap();
 
@@ -143,7 +141,7 @@ this.browserAction = class extends ExtensionAPI {
       localized: false,
 
       onBeforeCreated: document => {
-        let view = document.createElementNS(XUL_NS, "panelview");
+        let view = document.createXULElement("panelview");
         view.id = this.viewId;
         view.setAttribute("flex", "1");
         view.setAttribute("extension", true);

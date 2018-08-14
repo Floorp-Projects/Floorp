@@ -28,8 +28,6 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
 XPCOMUtils.defineLazyServiceGetter(this, "gELS",
   "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
 
-const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 const kSpecialWidgetPfx = "customizableui-special-";
 
 const kPrefCustomizationState        = "browser.uiCustomization.state";
@@ -1364,7 +1362,7 @@ var CustomizableUIInternal = {
 
   createSpecialWidget(aId, aDocument) {
     let nodeName = "toolbar" + aId.match(/spring|spacer|separator/)[0];
-    let node = aDocument.createElementNS(kNSXUL, nodeName);
+    let node = aDocument.createXULElement(nodeName);
     node.className = "chromeclass-toolbar-additional";
     node.id = this.ensureSpecialWidgetId(aId);
     return node;
@@ -1459,7 +1457,7 @@ var CustomizableUIInternal = {
       if (aWidget.onBeforeCreated) {
         aWidget.onBeforeCreated(aDocument);
       }
-      node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+      node = aDocument.createXULElement("toolbarbutton");
 
       node.setAttribute("id", aWidget.id);
       node.setAttribute("widget-id", aWidget.id);
@@ -3906,9 +3904,9 @@ var CustomizableUI = {
         if (!fragment.lastElementChild || fragment.lastElementChild.localName == "menuseparator") {
           continue;
         }
-        subviewItem = doc.createElementNS(kNSXUL, "menuseparator");
+        subviewItem = doc.createXULElement("menuseparator");
       } else if (menuChild.localName == "menuitem") {
-        subviewItem = doc.createElementNS(kNSXUL, "toolbarbutton");
+        subviewItem = doc.createXULElement("toolbarbutton");
         CustomizableUI.addShortcut(menuChild, subviewItem);
 
         let item = menuChild;
