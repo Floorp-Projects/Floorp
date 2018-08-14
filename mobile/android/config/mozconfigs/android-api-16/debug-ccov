@@ -18,7 +18,7 @@ ac_add_options --enable-java-coverage
 ac_add_options --with-android-min-sdk=16
 ac_add_options --target=arm-linux-androideabi
 
-. "$topsrcdir/mobile/android/config/mozconfigs/android-api-16/nightly"
+. "$topsrcdir/mobile/android/config/mozconfigs/android-api-16/debug"
 
 . "$topsrcdir/build/mozconfig.artifact"
 
