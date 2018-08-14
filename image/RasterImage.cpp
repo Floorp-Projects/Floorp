@@ -627,34 +627,20 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
   return MakeTuple(ImgDrawResult::SUCCESS, suggestedSize, std::move(surface));
 }
 
-Tuple<ImgDrawResult, IntSize>
+IntSize
 RasterImage::GetImageContainerSize(LayerManager* aManager,
                                    const IntSize& aSize,
                                    uint32_t aFlags)
 {
-  if (!mHasSize) {
-    return MakeTuple(ImgDrawResult::NOT_READY, IntSize(0, 0));
-  }
-
-  if (aSize.IsEmpty()) {
-    return MakeTuple(ImgDrawResult::BAD_ARGS, IntSize(0, 0));
-  }
-
-  // We check the minimum size because while we support downscaling, we do not
-  // support upscaling. If aSize > mSize, we will never give a larger surface
-  // than mSize. If mSize > aSize, and mSize > maxTextureSize, we still want to
-  // use image containers if aSize <= maxTextureSize.
-  int32_t maxTextureSize = aManager->GetMaxTextureSize();
-  if (min(mSize.width, aSize.width) > maxTextureSize ||
-      min(mSize.height, aSize.height) > maxTextureSize) {
-    return MakeTuple(ImgDrawResult::NOT_SUPPORTED, IntSize(0, 0));
+  if (!IsImageContainerAvailableAtSize(aManager, aSize, aFlags)) {
+    return IntSize(0, 0);
   }
 
   if (!CanDownscaleDuringDecode(aSize, aFlags)) {
-    return MakeTuple(ImgDrawResult::SUCCESS, mSize);
+    return mSize;
   }
 
-  return MakeTuple(ImgDrawResult::SUCCESS, aSize);
+  return aSize;
 }
 
 NS_IMETHODIMP_(bool)
@@ -666,10 +652,7 @@ RasterImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
-  RefPtr<ImageContainer> container;
-  GetImageContainerImpl(aManager, mSize, Nothing(), aFlags,
-                        getter_AddRefs(container));
-  return container.forget();
+  return GetImageContainerImpl(aManager, mSize, Nothing(), aFlags);
 }
 
 NS_IMETHODIMP_(bool)
@@ -691,18 +674,16 @@ RasterImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
   return true;
 }
 
-NS_IMETHODIMP_(ImgDrawResult)
-RasterImage::GetImageContainerAtSize(layers::LayerManager* aManager,
-                                     const gfx::IntSize& aSize,
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+RasterImage::GetImageContainerAtSize(LayerManager* aManager,
+                                     const IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
-                                     uint32_t aFlags,
-                                     layers::ImageContainer** aOutContainer)
+                                     uint32_t aFlags)
 {
   // We do not pass in the given SVG context because in theory it could differ
   // between calls, but actually have no impact on the actual contents of the
   // image container.
-  return GetImageContainerImpl(aManager, aSize, Nothing(),
-                               aFlags, aOutContainer);
+  return GetImageContainerImpl(aManager, aSize, Nothing(), aFlags);
 }
 
 size_t
