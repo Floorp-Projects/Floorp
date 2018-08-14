@@ -373,7 +373,7 @@ public:
   nsIScrollableFrame* GetScrollFrame(nsIFrame* aStart);
 
   void SetOverrideConstraintRect(mozilla::LayoutDeviceIntRect aRect) {
-    mOverrideConstraintRect = ToAppUnits(aRect, PresContext()->AppUnitsPerCSSPixel());
+    mOverrideConstraintRect = ToAppUnits(aRect, mozilla::AppUnitsPerCSSPixel());
   }
 
   // For a popup that should appear anchored at the given rect, determine

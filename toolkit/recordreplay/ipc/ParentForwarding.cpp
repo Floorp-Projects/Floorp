@@ -322,7 +322,7 @@ public:
   }
 
   virtual void OnChannelError() override {
-    MOZ_CRASH("MiddlemanProtocol::OnChannelError");
+    MainThreadMessageLoop()->PostTask(NewRunnableFunction("Shutdown", Shutdown));
   }
 };
 

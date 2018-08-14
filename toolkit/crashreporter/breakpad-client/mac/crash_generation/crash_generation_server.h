@@ -52,6 +52,7 @@ struct ExceptionInfo {
   int32_t exception_type;
   int32_t exception_code;
   int32_t exception_subcode;
+  int32_t child_pid;
 };
 
 class CrashGenerationServer {

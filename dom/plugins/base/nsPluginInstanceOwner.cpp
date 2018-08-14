@@ -1030,7 +1030,7 @@ NPBool nsPluginInstanceOwner::ConvertPointPuppet(PuppetWidget *widget,
 
   nsPresContext* presContext = pluginFrame->PresContext();
   CSSToLayoutDeviceScale scaleFactor(
-    double(nsPresContext::AppUnitsPerCSSPixel()) /
+    double(AppUnitsPerCSSPixel()) /
     presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   PuppetWidget *puppetWidget = static_cast<PuppetWidget*>(widget);
@@ -1139,7 +1139,7 @@ NPBool nsPluginInstanceOwner::ConvertPointNoPuppet(nsIWidget *widget,
   }
 
   nsPresContext* presContext = pluginFrame->PresContext();
-  double scaleFactor = double(nsPresContext::AppUnitsPerCSSPixel())/
+  double scaleFactor = double(AppUnitsPerCSSPixel())/
     presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
 
   nsCOMPtr<nsIScreen> screen = widget->GetWidgetScreen();
@@ -1949,7 +1949,7 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
     nsPresContext* presContext = aObjectFrame->PresContext();
     // Plugin event coordinates need to be translated from device pixels
     // into "display pixels" in HiDPI modes.
-    double scaleFactor = double(nsPresContext::AppUnitsPerCSSPixel())/
+    double scaleFactor = double(AppUnitsPerCSSPixel())/
       aObjectFrame->PresContext()->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
     size_t intScaleFactor = ceil(scaleFactor);
     nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x) / intScaleFactor,
@@ -3300,7 +3300,7 @@ nsPluginInstanceOwner::GetContentsScaleFactor(double *result)
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
   nsIPresShell* presShell = nsContentUtils::FindPresShellForDocument(content->OwnerDoc());
   if (presShell) {
-    scaleFactor = double(nsPresContext::AppUnitsPerCSSPixel())/
+    scaleFactor = double(AppUnitsPerCSSPixel())/
       presShell->GetPresContext()->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
   }
 #endif

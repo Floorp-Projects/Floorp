@@ -833,7 +833,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
                                       aDirtyRect->width, aDirtyRect->height));
       tmpDirtyRegion =
         nsLayoutUtils::RoundGfxRectToAppRect(
-          dirtyBounds, aFrame->PresContext()->AppUnitsPerCSSPixel()) -
+          dirtyBounds, AppUnitsPerCSSPixel()) -
         aFrame->GetPosition();
       dirtyRegion = &tmpDirtyRegion;
     }
@@ -962,7 +962,7 @@ nsSVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
                                          nsPresContext* aPresContext)
 {
   gfxRect r(aRect.x, aRect.y, aRect.width, aRect.height);
-  r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());
+  r.Scale(1.0 / AppUnitsPerCSSPixel());
   return nsLayoutUtils::RoundGfxRectToAppRect(
     aMatrix.TransformBounds(r), aPresContext->AppUnitsPerDevPixel());
 }
@@ -1218,7 +1218,7 @@ nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame *aFrame)
   if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
       nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     return nsLayoutUtils::RectToGfxRect(aFrame->GetRect(),
-                                         nsPresContext::AppUnitsPerCSSPixel()).TopLeft();
+                                         AppUnitsPerCSSPixel()).TopLeft();
   }
 
   // For foreignObject frames, nsSVGUtils::GetBBox applies their local

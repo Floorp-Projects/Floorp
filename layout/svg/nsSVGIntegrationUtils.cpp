@@ -238,7 +238,7 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame,
                                   GetOffsetToBoundingBox(firstFrame));
 
   return nsLayoutUtils::RectToGfxRect(r,
-           aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
+           AppUnitsPerCSSPixel());
 }
 
 // XXX Since we're called during reflow, this method is broken for frames with
@@ -300,7 +300,7 @@ nsRect
                                        aPreEffectsOverflowRect,
                                        firstFrameToBoundingBox,
                                        true),
-      aFrame->PresContext()->AppUnitsPerCSSPixel());
+      AppUnitsPerCSSPixel());
   overrideBBox.RoundOut();
 
   nsRect overflowRect =
@@ -394,7 +394,7 @@ nsSVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& a
   }
   nsPoint pt = aPt + toUserSpace;
   gfxPoint userSpacePt =
-    gfxPoint(pt.x, pt.y) / aFrame->PresContext()->AppUnitsPerCSSPixel();
+    gfxPoint(pt.x, pt.y) / AppUnitsPerCSSPixel();
   return nsSVGUtils::HitTestClip(firstFrame, userSpacePt);
 }
 

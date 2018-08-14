@@ -1382,7 +1382,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
     // If anchored to a rectangle, use that rectangle. Otherwise, determine the
     // rectangle from the anchor.
     if (mAnchorType == MenuPopupAnchorType_Rect) {
-      anchorRect = ToAppUnits(mScreenRect, nsPresContext::AppUnitsPerCSSPixel());
+      anchorRect = ToAppUnits(mScreenRect, AppUnitsPerCSSPixel());
     }
     else {
       // if the frame is not specified, use the anchor node passed to OpenPopup. If
