@@ -139,8 +139,9 @@ const ADB = {
     try {
       await this.runCommand("host:kill");
     } catch (e) {
+      dumpn("Failed to send host:kill command");
     }
-    dumpn("adb kill-server");
+    dumpn("adb server was terminated by host:kill");
     this.ready = false;
     this.didRunInitially = false;
   },

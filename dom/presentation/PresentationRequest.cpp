@@ -216,7 +216,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
   char buffer[NSID_LENGTH];
   uuid.ToProvidedString(buffer);
   nsAutoString id;
-  CopyASCIItoUTF16(buffer, id);
+  CopyASCIItoUTF16(MakeSpan(buffer, NSID_LENGTH - 1), id);
 
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);

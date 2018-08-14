@@ -451,9 +451,6 @@ var PageActions = {
  *        some reason.  You can also pass an object that maps pixel sizes to
  *        URLs, like { 16: url16, 32: url32 }.  The best size for the user's
  *        screen will be used.
- * @param nodeAttributes (object, optional)
- *        An object of name-value pairs.  Each pair will be added as an
- *        attribute to DOM nodes created for this action.
  * @param onBeforePlacedInWindow (function, optional)
  *        Called before the action is placed in the window:
  *        onBeforePlacedInWindow(window)
@@ -535,7 +532,6 @@ function Action(options) {
     extensionID: false,
     iconURL: false,
     labelForHistogram: false,
-    nodeAttributes: false,
     onBeforePlacedInWindow: false,
     onCommand: false,
     onIframeHiding: false,
@@ -619,14 +615,6 @@ Action.prototype = {
    */
   get id() {
     return this._id;
-  },
-
-  /**
-   * Attribute name => value mapping to set on nodes created for this action
-   * (object)
-   */
-  get nodeAttributes() {
-    return this._nodeAttributes;
   },
 
   /**
@@ -1081,9 +1069,6 @@ var gBuiltInActions = [
     // BookmarkingUI.updateBookmarkPageMenuItem().
     title: "",
     pinnedToUrlbar: true,
-    nodeAttributes: {
-      observes: "bookmarkThisPageBroadcaster",
-    },
     onShowingInPanel(buttonNode) {
       browserPageActions(buttonNode).bookmark.onShowingInPanel(buttonNode);
     },

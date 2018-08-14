@@ -106,12 +106,11 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
   }
 
   // put a reasonable bound on the length of the metadata
-  NS_LossyConvertUTF16toASCII metadataList(aMetadataList);
+  NS_ConvertUTF16toUTF8 metadataList(aMetadataList);
   if (metadataList.Length() > SRICheck::MAX_METADATA_LENGTH) {
     metadataList.Truncate(SRICheck::MAX_METADATA_LENGTH);
   }
   SRILOG(("SRICheck::IntegrityMetadata, metadataList=%s", metadataList.get()));
-  MOZ_ASSERT(metadataList.Length() <= aMetadataList.Length());
 
   // the integrity attribute is a list of whitespace-separated hashes
   // and options so we need to look at them one by one and pick the

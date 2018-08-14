@@ -933,12 +933,10 @@
                       onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('bookmark'), event, this);">
                   <image id="star-button"
                          class="urlbar-icon"
-                         role="button"
-                         observes="bookmarkThisPageBroadcaster"/>
+                         role="button"/>
                   <hbox id="star-button-animatable-box">
                     <image id="star-button-animatable-image"
-                           role="presentation"
-                           observes="bookmarkThisPageBroadcaster"/>
+                           role="presentation"/>
                   </hbox>
                 </hbox>
               </hbox>
@@ -1119,8 +1117,6 @@
                      ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
                      ondrop="PlacesMenuDNDHandler.onDrop(event);"
                      oncommand="BookmarkingUI.onCommand(event);">
-        <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
-        <observes element="bookmarkThisPageBroadcaster" attribute="buttontooltiptext"/>
         <menupopup id="BMB_bookmarksPopup"
                    class="cui-widget-panel cui-widget-panelview cui-widget-panelWithFooter PanelUI-subView"
                    placespopup="true"

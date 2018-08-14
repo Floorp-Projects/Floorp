@@ -170,8 +170,7 @@ nsHtml5String::FromLiteral(const char* aLiteral)
     MOZ_CRASH("Out of memory.");
   }
   char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
-  LossyConvertEncoding8to16 converter(data);
-  converter.write(aLiteral, length);
+  ConvertLatin1toUTF16(MakeSpan(aLiteral, length), MakeSpan(data, length));
   data[length] = 0;
   return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
                        eStringBuffer);
