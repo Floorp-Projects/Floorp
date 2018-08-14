@@ -17,7 +17,6 @@ TEST(TextFormatter, Tests)
   char16_t buf[256];
   nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2);
   nsAutoString out(buf);
-  ASSERT_STREQ("Hello World", NS_LossyConvertUTF16toASCII(out).get());
 
   const char16_t *uout = out.get();
   const char16_t expected[] = {0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20,

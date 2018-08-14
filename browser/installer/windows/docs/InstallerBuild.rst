@@ -33,7 +33,7 @@ Build process
 
 Both the full and stub installers are built through a similar process, which is summarized here along with references to the relevant bits of code.
 
-Most of this procedure is done in `makensis.mk <http://searchfox.org/mozilla-central/source/toolkit/mozapps/installer/windows/nsis/makensis.mk>`_ and in the `mach repackage <https://searchfox.org/mozilla-central/rev/2b9779c59390ecc47be7a70d99753653d8eb5afc/python/mozbuild/mozbuild/mach_commands.py#2166>`_ command.
+Most of this procedure is done in `makensis.mk <https://searchfox.org/mozilla-central/source/toolkit/mozapps/installer/windows/nsis/makensis.mk>`_ and in the `mach repackage <https://searchfox.org/mozilla-central/rev/2b9779c59390ecc47be7a70d99753653d8eb5afc/python/mozbuild/mozbuild/mach_commands.py#2166>`_ command.
 
 0. A prerequisite is for the application to be in a packaged state, so ``mach package`` first creates a release-style package and puts it in ``$OBJDIR/dist/firefox``.
 1. All required files are copied into the instgen directory. This includes .nsi and .nsh script files, plugin DLL files, image and icon files, and the 7-zip SFX module and its configuration files.

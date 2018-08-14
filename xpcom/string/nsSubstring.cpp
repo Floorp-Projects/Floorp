@@ -459,6 +459,15 @@ char* Gecko_FallibleBeginWritingCString(nsACString* aThis)
   return aThis->BeginWriting(mozilla::fallible);
 }
 
+uint32_t
+Gecko_StartBulkWriteCString(nsACString* aThis,
+                            uint32_t aCapacity,
+                            uint32_t aUnitsToPreserve,
+                            bool aAllowShrinking)
+{
+  return aThis->StartBulkWrite(aCapacity, aUnitsToPreserve, aAllowShrinking).unwrapOr(UINT32_MAX);
+}
+
 void Gecko_FinalizeString(nsAString* aThis)
 {
   aThis->~nsAString();
@@ -512,6 +521,15 @@ char16_t* Gecko_BeginWritingString(nsAString* aThis)
 char16_t* Gecko_FallibleBeginWritingString(nsAString* aThis)
 {
   return aThis->BeginWriting(mozilla::fallible);
+}
+
+uint32_t
+Gecko_StartBulkWriteString(nsAString* aThis,
+                           uint32_t aCapacity,
+                           uint32_t aUnitsToPreserve,
+                           bool aAllowShrinking)
+{
+  return aThis->StartBulkWrite(aCapacity, aUnitsToPreserve, aAllowShrinking).unwrapOr(UINT32_MAX);
 }
 
 } // extern "C"

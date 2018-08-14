@@ -56,6 +56,5 @@ addMessageListener("set-update-with-invalid-details-ui-service", function() {
 });
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   sendAsyncMessage("teardown-complete");
 });

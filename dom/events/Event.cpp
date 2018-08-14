@@ -1142,7 +1142,7 @@ Event::GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType)
   const char* name = GetEventName(aEvent->mMessage);
 
   if (name) {
-    CopyASCIItoUTF16(name, aType);
+    CopyASCIItoUTF16(mozilla::MakeStringSpan(name), aType);
     return;
   } else if (aEvent->mMessage == eUnidentifiedEvent &&
              aEvent->mSpecifiedEventType) {

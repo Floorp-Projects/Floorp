@@ -340,6 +340,20 @@ class Zone : public JS::shadow::Zone,
 
     js::gc::ArenaLists arenas;
 
+  private:
+    // Number of allocations since the most recent minor GC for this thread.
+    mozilla::Atomic<uint32_t, mozilla::Relaxed, mozilla::recordreplay::Behavior::DontPreserve>
+        tenuredAllocsSinceMinorGC_;
+
+  public:
+    void addTenuredAllocsSinceMinorGC(uint32_t allocs) {
+        tenuredAllocsSinceMinorGC_ += allocs;
+    }
+
+    uint32_t getAndResetTenuredAllocsSinceMinorGC() {
+        return tenuredAllocsSinceMinorGC_.exchange(0);
+    }
+
     js::TypeZone types;
 
   private:

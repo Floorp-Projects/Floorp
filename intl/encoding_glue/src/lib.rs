@@ -12,13 +12,13 @@
 // third_party/rust/encoding_rs/.
 
 extern crate encoding_rs;
-extern crate nsstring;
 extern crate nserror;
+extern crate nsstring;
 
-use std::slice;
 use encoding_rs::*;
-use nsstring::*;
 use nserror::*;
+use nsstring::*;
+use std::slice;
 
 // nsStringBuffer's internal bookkeeping takes 8 bytes from
 // the allocation. Plus one for termination.
@@ -589,4 +589,96 @@ fn checked_min(one: Option<usize>, other: Option<usize>) -> Option<usize> {
 #[no_mangle]
 pub unsafe extern "C" fn encoding_mem_is_utf16_bidi(buffer: *const u16, len: usize) -> bool {
     encoding_rs::mem::is_utf16_bidi(::std::slice::from_raw_parts(buffer, len))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_is_ascii(buffer: *const u8, len: usize) -> bool {
+    encoding_rs::mem::is_ascii(::std::slice::from_raw_parts(buffer, len))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_is_basic_latin(buffer: *const u16, len: usize) -> bool {
+    encoding_rs::mem::is_basic_latin(::std::slice::from_raw_parts(buffer, len))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_is_utf8_latin1(buffer: *const u8, len: usize) -> bool {
+    encoding_rs::mem::is_utf8_latin1(::std::slice::from_raw_parts(buffer, len))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_is_utf16_latin1(buffer: *const u16, len: usize) -> bool {
+    encoding_rs::mem::is_utf16_latin1(::std::slice::from_raw_parts(buffer, len))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_is_str_latin1(buffer: *const u8, len: usize) -> bool {
+    encoding_rs::mem::is_str_latin1(::std::str::from_utf8_unchecked(
+        ::std::slice::from_raw_parts(buffer, len),
+    ))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_convert_utf16_to_latin1_lossy(
+    src: *const u16,
+    src_len: usize,
+    dst: *mut u8,
+    dst_len: usize,
+) {
+    encoding_rs::mem::convert_utf16_to_latin1_lossy(
+        ::std::slice::from_raw_parts(src, src_len),
+        ::std::slice::from_raw_parts_mut(dst, dst_len),
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_convert_utf8_to_latin1_lossy(
+    src: *const u8,
+    src_len: usize,
+    dst: *mut u8,
+    dst_len: usize,
+) -> usize {
+    encoding_rs::mem::convert_utf8_to_latin1_lossy(
+        ::std::slice::from_raw_parts(src, src_len),
+        ::std::slice::from_raw_parts_mut(dst, dst_len),
+    )
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_convert_latin1_to_utf16(
+    src: *const u8,
+    src_len: usize,
+    dst: *mut u16,
+    dst_len: usize,
+) {
+    encoding_rs::mem::convert_latin1_to_utf16(
+        ::std::slice::from_raw_parts(src, src_len),
+        ::std::slice::from_raw_parts_mut(dst, dst_len),
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_convert_utf16_to_utf8(
+    src: *const u16,
+    src_len: usize,
+    dst: *mut u8,
+    dst_len: usize,
+) -> usize {
+    encoding_rs::mem::convert_utf16_to_utf8(
+        ::std::slice::from_raw_parts(src, src_len),
+        ::std::slice::from_raw_parts_mut(dst, dst_len),
+    )
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_convert_utf8_to_utf16(
+    src: *const u8,
+    src_len: usize,
+    dst: *mut u16,
+    dst_len: usize,
+) -> usize {
+    encoding_rs::mem::convert_utf8_to_utf16(
+        ::std::slice::from_raw_parts(src, src_len),
+        ::std::slice::from_raw_parts_mut(dst, dst_len),
+    )
 }

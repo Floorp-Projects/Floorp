@@ -34,6 +34,7 @@ JS::Zone::Zone(JSRuntime* rt)
     uniqueIds_(this),
     suppressAllocationMetadataBuilder(this, false),
     arenas(this),
+    tenuredAllocsSinceMinorGC_(0),
     types(this),
     gcWeakMapList_(this),
     compartments_(),

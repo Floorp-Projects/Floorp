@@ -124,9 +124,25 @@ use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
+use std::ptr;
 use std::slice;
 use std::str;
 use std::u32;
+
+mod conversions;
+
+pub use self::conversions::nscstring_fallible_append_latin1_to_utf8_check;
+pub use self::conversions::nscstring_fallible_append_utf16_to_latin1_lossy_impl;
+pub use self::conversions::nscstring_fallible_append_utf16_to_utf8_impl;
+pub use self::conversions::nscstring_fallible_append_utf8_to_latin1_lossy_check;
+pub use self::conversions::nsstring_fallible_append_latin1_impl;
+pub use self::conversions::nsstring_fallible_append_utf8_impl;
+
+/// A type for showing that `finish()` was called on a `BulkWriteHandle`.
+/// Instantiating this type from elsewhere is basically an assertion that
+/// there is no `BulkWriteHandle` around, so be very careful with instantiating
+/// this type!
+pub struct BulkWriteOk;
 
 ///////////////////////////////////
 // Internal Implementation Flags //
@@ -168,6 +184,146 @@ use data_flags::DataFlags;
 // Generic String Bindings Macros //
 ////////////////////////////////////
 
+macro_rules! string_like {
+    {
+        char_t = $char_t: ty;
+
+        AString = $AString: ident;
+        String = $String: ident;
+        Str = $Str: ident;
+
+        StringLike = $StringLike: ident;
+        StringAdapter = $StringAdapter: ident;
+    } => {
+        /// This trait is implemented on types which are `ns[C]String`-like, in
+        /// that they can at very low cost be converted to a borrowed
+        /// `&nsA[C]String`. Unfortunately, the intermediate type
+        /// `ns[C]StringAdapter` is required as well due to types like `&[u8]`
+        /// needing to be (cheaply) wrapped in a `nsCString` on the stack to
+        /// create the `&nsACString`.
+        ///
+        /// This trait is used to DWIM when calling the methods on
+        /// `nsA[C]String`.
+        pub trait $StringLike {
+            fn adapt(&self) -> $StringAdapter;
+        }
+
+        impl<'a, T: $StringLike + ?Sized> $StringLike for &'a T {
+            fn adapt(&self) -> $StringAdapter {
+                <T as $StringLike>::adapt(*self)
+            }
+        }
+
+        impl<'a, T> $StringLike for borrow::Cow<'a, T>
+            where T: $StringLike + borrow::ToOwned + ?Sized {
+            fn adapt(&self) -> $StringAdapter {
+                <T as $StringLike>::adapt(self.as_ref())
+            }
+        }
+
+        impl $StringLike for $AString {
+            fn adapt(&self) -> $StringAdapter {
+                $StringAdapter::Abstract(self)
+            }
+        }
+
+        impl<'a> $StringLike for $Str<'a> {
+            fn adapt(&self) -> $StringAdapter {
+                $StringAdapter::Abstract(self)
+            }
+        }
+
+        impl $StringLike for $String {
+            fn adapt(&self) -> $StringAdapter {
+                $StringAdapter::Abstract(self)
+            }
+        }
+
+        impl $StringLike for [$char_t] {
+            fn adapt(&self) -> $StringAdapter {
+                $StringAdapter::Borrowed($Str::from(self))
+            }
+        }
+
+        impl $StringLike for Vec<$char_t> {
+            fn adapt(&self) -> $StringAdapter {
+                $StringAdapter::Borrowed($Str::from(&self[..]))
+            }
+        }
+
+        impl $StringLike for Box<[$char_t]> {
+            fn adapt(&self) -> $StringAdapter {
+                $StringAdapter::Borrowed($Str::from(&self[..]))
+            }
+        }
+    }
+}
+
+impl<'a> Drop for nsAStringBulkWriteHandle<'a> {
+    /// This only runs in error cases. In success cases, `finish()`
+    /// calls `forget(self)`.
+    fn drop(&mut self) {
+        if self.capacity == 0 {
+            // If capacity is 0, the string is a zero-length
+            // string, so we have nothing to do.
+            return;
+        }
+        // The old zero terminator may be gone by now, so we need
+        // to write a new one somewhere and make length match.
+        // We can use a length between 1 and self.capacity.
+        // Seems prudent to overwrite the uninitialized memory.
+        // Using the length 1 leaves the shortest memory to overwrite.
+        // U+FFFD is the safest placeholder. Merely truncating the
+        // string to a zero-length string might be dangerous in some
+        // scenarios. See
+        // https://www.unicode.org/reports/tr36/#Substituting_for_Ill_Formed_Subsequences
+        // for closely related scenario.
+        unsafe {
+            let mut this = self.string.as_repr();
+            this.as_mut().length = 1u32;
+            *(this.as_mut().data.as_mut()) = 0xFFFDu16;
+            *(this.as_mut().data.as_ptr().offset(1isize)) = 0;
+        }
+    }
+}
+
+impl<'a> Drop for nsACStringBulkWriteHandle<'a> {
+    /// This only runs in error cases. In success cases, `finish()`
+    /// calls `forget(self)`.
+    fn drop(&mut self) {
+        if self.capacity == 0 {
+            // If capacity is 0, the string is a zero-length
+            // string, so we have nothing to do.
+            return;
+        }
+        // The old zero terminator may be gone by now, so we need
+        // to write a new one somewhere and make length match.
+        // We can use a length between 1 and self.capacity.
+        // Seems prudent to overwrite the uninitialized memory.
+        // Using the length 1 leaves the shortest memory to overwrite.
+        // U+FFFD is the safest placeholder, but when it doesn't fit,
+        // let's use ASCII substitute. Merely truncating the
+        // string to a zero-length string might be dangerous in some
+        // scenarios. See
+        // https://www.unicode.org/reports/tr36/#Substituting_for_Ill_Formed_Subsequences
+        // for closely related scenario.
+        unsafe {
+            let mut this = self.string.as_repr();
+            if self.capacity >= 3 {
+                this.as_mut().length = 3u32;
+                *(this.as_mut().data.as_mut()) = 0xEFu8;
+                *(this.as_mut().data.as_ptr().offset(1isize)) = 0xBFu8;
+                *(this.as_mut().data.as_ptr().offset(2isize)) = 0xBDu8;
+                *(this.as_mut().data.as_ptr().offset(3isize)) = 0;
+            } else {
+                this.as_mut().length = 1u32;
+                *(this.as_mut().data.as_mut()) = 0x1Au8; // U+FFFD doesn't fit
+                *(this.as_mut().data.as_ptr().offset(1isize)) = 0;
+            }
+        }
+    }
+}
+
 macro_rules! define_string_types {
     {
         char_t = $char_t: ty;
@@ -181,12 +337,15 @@ macro_rules! define_string_types {
 
         StringRepr = $StringRepr: ident;
 
+        BulkWriteHandle = $BulkWriteHandle: ident;
+
         drop = $drop: ident;
         assign = $assign: ident, $fallible_assign: ident;
         take_from = $take_from: ident, $fallible_take_from: ident;
         append = $append: ident, $fallible_append: ident;
         set_length = $set_length: ident, $fallible_set_length: ident;
         begin_writing = $begin_writing: ident, $fallible_begin_writing: ident;
+        start_bulk_write = $start_bulk_write: ident;
     } => {
         /// The representation of a ns[C]String type in C++. This type is
         /// used internally by our definition of ns[C]String to ensure layout
@@ -201,7 +360,7 @@ macro_rules! define_string_types {
         #[repr(C)]
         #[derive(Debug)]
         pub struct $StringRepr {
-            data: *const $char_t,
+            data: ptr::NonNull<$char_t>,
             length: u32,
             dataflags: DataFlags,
             classflags: ClassFlags,
@@ -211,7 +370,7 @@ macro_rules! define_string_types {
             fn new(classflags: ClassFlags) -> $StringRepr {
                 static NUL: $char_t = 0;
                 $StringRepr {
-                    data: &NUL,
+                    data: unsafe { ptr::NonNull::new_unchecked(&NUL as *const _ as *mut _) },
                     length: 0,
                     dataflags: DataFlags::TERMINATED | DataFlags::LITERAL,
                     classflags: classflags,
@@ -232,6 +391,63 @@ macro_rules! define_string_types {
             fn deref_mut(&mut self) -> &mut $AString {
                 unsafe {
                     mem::transmute(self)
+                }
+            }
+        }
+
+        pub struct $BulkWriteHandle<'a> {
+            string: &'a mut $AString,
+            capacity: usize,
+        }
+
+        impl<'a> $BulkWriteHandle<'a> {
+            fn new(string: &'a mut $AString, capacity: usize) -> Self {
+                $BulkWriteHandle{ string: string, capacity: capacity }
+            }
+
+            pub unsafe fn restart_bulk_write(&mut self,
+                                             capacity: usize,
+                                             units_to_preserve: usize,
+                                             allow_shrinking: bool) -> Result<(), ()> {
+                self.capacity =
+                    self.string.start_bulk_write_impl(capacity,
+                                                      units_to_preserve,
+                                                      allow_shrinking)?;
+                Ok(())
+            }
+
+            pub fn finish(mut self, length: usize, allow_shrinking: bool) -> BulkWriteOk {
+                // NOTE: Drop is implemented outside the macro earlier in this file,
+                // because it needs to deal with different code unit representations
+                // for the REPLACEMENT CHARACTER in the UTF-16 and UTF-8 cases and
+                // needs to deal with a REPLACEMENT CHARACTER not fitting in the
+                // buffer in the UTF-8 case.
+                assert!(length <= self.capacity);
+                if length == 0 {
+                    // `truncate()` is OK even when the string
+                    // is in invalid state.
+                    self.string.truncate();
+                    mem::forget(self); // Don't run the failure path in drop()
+                    return BulkWriteOk{};
+                }
+                if allow_shrinking {
+                    unsafe {
+                        let _ = self.restart_bulk_write(length, length, true);
+                    }
+                }
+                unsafe {
+                    let mut this = self.string.as_repr();
+                    this.as_mut().length = length as u32;
+                    *(this.as_mut().data.as_ptr().offset(length as isize)) = 0;
+                }
+                mem::forget(self); // Don't run the failure path in drop()
+                BulkWriteOk{}
+            }
+
+            pub fn as_mut_slice(&mut self) -> &mut [$char_t] {
+                unsafe {
+                    let mut this = self.string.as_repr();
+                    slice::from_raw_parts_mut(this.as_mut().data.as_ptr(), self.capacity)
                 }
             }
         }
@@ -345,8 +561,8 @@ macro_rules! define_string_types {
                 unsafe {
                     let len = self.len();
                     if len == 0 {
-                        // Use an arbitrary non-null value as the pointer
-                        slice::from_raw_parts_mut(0x1 as *mut $char_t, 0)
+                        // Use an arbitrary but aligned non-null value as the pointer
+                        slice::from_raw_parts_mut(ptr::NonNull::<$char_t>::dangling().as_ptr(), 0)
                     } else {
                         slice::from_raw_parts_mut($begin_writing(self), len)
                     }
@@ -363,8 +579,9 @@ macro_rules! define_string_types {
                 unsafe {
                     let len = self.len();
                     if len == 0 {
-                        // Use an arbitrary non-null value as the pointer
-                        Ok(slice::from_raw_parts_mut(0x1 as *mut $char_t, 0))
+                        // Use an arbitrary but aligned non-null value as the pointer
+                        Ok(slice::from_raw_parts_mut(
+                            ptr::NonNull::<$char_t>::dangling().as_ptr() as *mut $char_t, 0))
                     } else {
                         let ptr = $fallible_begin_writing(self);
                         if ptr.is_null() {
@@ -376,6 +593,46 @@ macro_rules! define_string_types {
                 }
             }
 
+            /// Unshares the buffer of the string and returns a handle
+            /// from which a writable slice whose length is the rounded-up
+            /// capacity can be obtained.
+            ///
+            /// Fails also if the new length doesn't fit in 32 bits.
+            ///
+            /// # Safety
+            ///
+            /// Unsafe because of exposure of uninitialized memory.
+            pub unsafe fn bulk_write(&mut self,
+                                     capacity: usize,
+                                     units_to_preserve: usize,
+                                     allow_shrinking: bool) -> Result<$BulkWriteHandle, ()> {
+                let capacity =
+                    self.start_bulk_write_impl(capacity, units_to_preserve, allow_shrinking)?;
+                Ok($BulkWriteHandle::new(self, capacity))
+            }
+
+            unsafe fn start_bulk_write_impl(&mut self,
+                                            capacity: usize,
+                                            units_to_preserve: usize,
+                                            allow_shrinking: bool) -> Result<usize, ()> {
+                if capacity > u32::max_value() as usize {
+                    Err(())
+                } else {
+                    let capacity32 = capacity as u32;
+                    let rounded = $start_bulk_write(self,
+                                                    capacity32,
+                                                    units_to_preserve as u32,
+                                                    allow_shrinking);
+                    if rounded == u32::max_value() {
+                        return Err(())
+                    }
+                    Ok(rounded as usize)
+                }
+            }
+
+            fn as_repr(&mut self) -> ptr::NonNull<$StringRepr> {
+                unsafe { ptr::NonNull::new_unchecked(self as *mut _ as *mut $StringRepr)}
+            }
         }
 
         impl Deref for $AString {
@@ -387,13 +644,7 @@ macro_rules! define_string_types {
                     // into $StringRepr to get the reference to the underlying
                     // data.
                     let this: &$StringRepr = mem::transmute(self);
-                    if this.data.is_null() {
-                        debug_assert_eq!(this.length, 0);
-                        // Use an arbitrary non-null value as the pointer
-                        slice::from_raw_parts(0x1 as *const $char_t, 0)
-                    } else {
-                        slice::from_raw_parts(this.data, this.length as usize)
-                    }
+                    slice::from_raw_parts(this.data.as_ptr(), this.length as usize)
                 }
             }
         }
@@ -478,7 +729,7 @@ macro_rules! define_string_types {
                 }
                 $Str {
                     hdr: $StringRepr {
-                        data: s.as_ptr(),
+                        data: unsafe { ptr::NonNull::new_unchecked(s.as_ptr() as *mut _) },
                         length: s.len() as u32,
                         dataflags: DataFlags::empty(),
                         classflags: ClassFlags::empty(),
@@ -638,14 +889,14 @@ macro_rules! define_string_types {
                 // because in the Gecko tree, we use the same allocator for
                 // Rust code as for C++ code, meaning that our box can be
                 // legally freed with libc::free().
-                let ptr = s.as_ptr();
+                let ptr = s.as_mut_ptr();
                 mem::forget(s);
                 unsafe {
                     Gecko_IncrementStringAdoptCount(ptr as *mut _);
                 }
                 $String {
                     hdr: $StringRepr {
-                        data: ptr,
+                        data: unsafe { ptr::NonNull::new_unchecked(ptr) },
                         length: length,
                         dataflags: DataFlags::OWNED | DataFlags::TERMINATED,
                         classflags: ClassFlags::NULL_TERMINATED,
@@ -727,66 +978,25 @@ macro_rules! define_string_types {
             }
         }
 
-        /// This trait is implemented on types which are `ns[C]String`-like, in
-        /// that they can at very low cost be converted to a borrowed
-        /// `&nsA[C]String`. Unfortunately, the intermediate type
-        /// `ns[C]StringAdapter` is required as well due to types like `&[u8]`
-        /// needing to be (cheaply) wrapped in a `nsCString` on the stack to
-        /// create the `&nsACString`.
-        ///
-        /// This trait is used to DWIM when calling the methods on
-        /// `nsA[C]String`.
-        pub trait $StringLike {
-            fn adapt(&self) -> $StringAdapter;
-        }
-
-        impl<'a, T: $StringLike + ?Sized> $StringLike for &'a T {
-            fn adapt(&self) -> $StringAdapter {
-                <T as $StringLike>::adapt(*self)
+        impl<'a> $StringAdapter<'a> {
+            #[allow(dead_code)]
+            fn is_abstract(&self) -> bool {
+                match *self {
+                    $StringAdapter::Borrowed(_) => false,
+                    $StringAdapter::Abstract(_) => true,
+                }
             }
         }
 
-        impl<'a, T> $StringLike for borrow::Cow<'a, T>
-            where T: $StringLike + borrow::ToOwned + ?Sized {
-            fn adapt(&self) -> $StringAdapter {
-                <T as $StringLike>::adapt(self.as_ref())
-            }
-        }
+        string_like! {
+            char_t = $char_t;
 
-        impl $StringLike for $AString {
-            fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Abstract(self)
-            }
-        }
+            AString = $AString;
+            String = $String;
+            Str = $Str;
 
-        impl<'a> $StringLike for $Str<'a> {
-            fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Abstract(self)
-            }
-        }
-
-        impl $StringLike for $String {
-            fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Abstract(self)
-            }
-        }
-
-        impl $StringLike for [$char_t] {
-            fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Borrowed($Str::from(self))
-            }
-        }
-
-        impl $StringLike for Vec<$char_t> {
-            fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Borrowed($Str::from(&self[..]))
-            }
-        }
-
-        impl $StringLike for Box<[$char_t]> {
-            fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Borrowed($Str::from(&self[..]))
-            }
+            StringLike = $StringLike;
+            StringAdapter = $StringAdapter;
         }
     }
 }
@@ -807,39 +1017,18 @@ define_string_types! {
 
     StringRepr = nsCStringRepr;
 
+    BulkWriteHandle = nsACStringBulkWriteHandle;
+
     drop = Gecko_FinalizeCString;
     assign = Gecko_AssignCString, Gecko_FallibleAssignCString;
     take_from = Gecko_TakeFromCString, Gecko_FallibleTakeFromCString;
     append = Gecko_AppendCString, Gecko_FallibleAppendCString;
     set_length = Gecko_SetLengthCString, Gecko_FallibleSetLengthCString;
     begin_writing = Gecko_BeginWritingCString, Gecko_FallibleBeginWritingCString;
+    start_bulk_write = Gecko_StartBulkWriteCString;
 }
 
 impl nsACString {
-    pub fn assign_utf16<T: nsStringLike + ?Sized>(&mut self, other: &T) {
-        self.truncate();
-        self.append_utf16(other);
-    }
-
-    pub fn fallible_assign_utf16<T: nsStringLike + ?Sized>(&mut self, other: &T) -> Result<(), ()> {
-        self.truncate();
-        self.fallible_append_utf16(other)
-    }
-
-    pub fn append_utf16<T: nsStringLike + ?Sized>(&mut self, other: &T) {
-        unsafe {
-            Gecko_AppendUTF16toCString(self, other.adapt().as_ptr());
-        }
-    }
-
-    pub fn fallible_append_utf16<T: nsStringLike + ?Sized>(&mut self, other: &T) -> Result<(), ()> {
-        if unsafe { Gecko_FallibleAppendUTF16toCString(self, other.adapt().as_ptr()) } {
-            Ok(())
-        } else {
-            Err(())
-        }
-    }
-
     pub unsafe fn as_str_unchecked(&self) -> &str {
         str::from_utf8_unchecked(self)
     }
@@ -925,6 +1114,23 @@ impl nsCStringLike for Box<str> {
     }
 }
 
+/// This trait is implemented on types which are Latin1 `nsCString`-like,
+/// in that they can at very low cost be converted to a borrowed
+/// `&nsACString` and do not denote UTF-8ness in the Rust type system.
+///
+/// This trait is used to DWIM when calling the methods on
+/// `nsACString`.
+string_like! {
+    char_t = u8;
+
+    AString = nsACString;
+    String = nsCString;
+    Str = nsCStr;
+
+    StringLike = Latin1StringLike;
+    StringAdapter = nsCStringAdapter;
+}
+
 ///////////////////////////////////////////
 // Bindings for nsString (u16 char type) //
 ///////////////////////////////////////////
@@ -941,38 +1147,15 @@ define_string_types! {
 
     StringRepr = nsStringRepr;
 
+    BulkWriteHandle = nsAStringBulkWriteHandle;
+
     drop = Gecko_FinalizeString;
     assign = Gecko_AssignString, Gecko_FallibleAssignString;
     take_from = Gecko_TakeFromString, Gecko_FallibleTakeFromString;
     append = Gecko_AppendString, Gecko_FallibleAppendString;
     set_length = Gecko_SetLengthString, Gecko_FallibleSetLengthString;
     begin_writing = Gecko_BeginWritingString, Gecko_FallibleBeginWritingString;
-}
-
-impl nsAString {
-    pub fn assign_utf8<T: nsCStringLike + ?Sized>(&mut self, other: &T) {
-        self.truncate();
-        self.append_utf8(other);
-    }
-
-    pub fn fallible_assign_utf8<T: nsCStringLike + ?Sized>(&mut self, other: &T) -> Result<(), ()> {
-        self.truncate();
-        self.fallible_append_utf8(other)
-    }
-
-    pub fn append_utf8<T: nsCStringLike + ?Sized>(&mut self, other: &T) {
-        unsafe {
-            Gecko_AppendUTF8toString(self, other.adapt().as_ptr());
-        }
-    }
-
-    pub fn fallible_append_utf8<T: nsCStringLike + ?Sized>(&mut self, other: &T) -> Result<(), ()> {
-        if unsafe { Gecko_FallibleAppendUTF8toString(self, other.adapt().as_ptr()) } {
-            Ok(())
-        } else {
-            Err(())
-        }
-    }
+    start_bulk_write = Gecko_StartBulkWriteString;
 }
 
 // NOTE: The From impl for a string slice for nsString produces a <'static>
@@ -994,7 +1177,7 @@ impl fmt::Write for nsAString {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
         // Directly invoke gecko's routines for appending utf8 strings to
         // nsAString values, to avoid as much overhead as possible
-        self.append_utf8(s);
+        self.append_str(s);
         Ok(())
     }
 }
@@ -1038,6 +1221,12 @@ extern "C" {
     fn Gecko_FallibleAppendCString(this: *mut nsACString, other: *const nsACString) -> bool;
     fn Gecko_FallibleSetLengthCString(this: *mut nsACString, length: u32) -> bool;
     fn Gecko_FallibleBeginWritingCString(this: *mut nsACString) -> *mut u8;
+    fn Gecko_StartBulkWriteCString(
+        this: *mut nsACString,
+        capacity: u32,
+        units_to_preserve: u32,
+        allow_shrinking: bool,
+    ) -> u32;
 
     fn Gecko_FinalizeString(this: *mut nsAString);
 
@@ -1051,12 +1240,12 @@ extern "C" {
     fn Gecko_FallibleAppendString(this: *mut nsAString, other: *const nsAString) -> bool;
     fn Gecko_FallibleSetLengthString(this: *mut nsAString, length: u32) -> bool;
     fn Gecko_FallibleBeginWritingString(this: *mut nsAString) -> *mut u16;
-
-    // Gecko implementation in nsReadableUtils.cpp
-    fn Gecko_AppendUTF16toCString(this: *mut nsACString, other: *const nsAString);
-    fn Gecko_AppendUTF8toString(this: *mut nsAString, other: *const nsACString);
-    fn Gecko_FallibleAppendUTF16toCString(this: *mut nsACString, other: *const nsAString) -> bool;
-    fn Gecko_FallibleAppendUTF8toString(this: *mut nsAString, other: *const nsACString) -> bool;
+    fn Gecko_StartBulkWriteString(
+        this: *mut nsAString,
+        capacity: u32,
+        units_to_preserve: u32,
+        allow_shrinking: bool,
+    ) -> u32;
 }
 
 //////////////////////////////////////
@@ -1070,10 +1259,10 @@ pub mod test_helpers {
     //! It is public to ensure that these testing functions are avaliable to
     //! gtest code.
 
-    use std::mem;
-    use super::{ClassFlags, DataFlags};
     use super::{nsCStr, nsCString, nsCStringRepr};
     use super::{nsStr, nsString, nsStringRepr};
+    use super::{ClassFlags, DataFlags};
+    use std::mem;
 
     /// Generates an #[no_mangle] extern "C" function which returns the size and
     /// alignment of the given type with the given name.

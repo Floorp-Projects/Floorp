@@ -367,7 +367,7 @@ NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress)
 {
   if (mCert->emailAddr) {
-    LossyUTF8ToUTF16(mCert->emailAddr, strlen(mCert->emailAddr), aEmailAddress);
+    CopyUTF8toUTF16(MakeStringSpan(mCert->emailAddr), aEmailAddress);
   } else {
     GetPIPNSSBundleString("CertNoEmailAddress", aEmailAddress);
   }

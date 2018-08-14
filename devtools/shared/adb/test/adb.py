@@ -65,17 +65,16 @@ class ADBServer(SocketServer.TCPServer):
                                         bind_and_activate = False)
         self.is_shuttingdown = False
 
-if len(sys.argv) == 2:
-    if sys.argv[1] == 'start-server':
-        # daemonize
-        if os.fork() > 0:
-            sys.exit(0)
-        os.setsid()
-        if os.fork() > 0:
-            sys.exit(0)
+if len(sys.argv) == 2 and sys.argv[1] == 'start-server':
+    # daemonize
+    if os.fork() > 0:
+        sys.exit(0)
+    os.setsid()
+    if os.fork() > 0:
+        sys.exit(0)
 
-        server = ADBServer((HOST, PORT))
-        server.allow_reuse_address = True
-        server.server_bind()
-        server.server_activate()
-        server.serve_forever()
+    server = ADBServer((HOST, PORT))
+    server.allow_reuse_address = True
+    server.server_bind()
+    server.server_activate()
+    server.serve_forever()

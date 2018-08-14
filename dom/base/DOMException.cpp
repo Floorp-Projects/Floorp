@@ -239,7 +239,7 @@ Exception::GetName(nsAString& aName)
     nsXPCException::NameAndFormatForNSResult(mResult, &name, nullptr);
 
     if (name) {
-      CopyUTF8toUTF16(name, aName);
+      CopyUTF8toUTF16(mozilla::MakeStringSpan(name), aName);
     }
   }
 }

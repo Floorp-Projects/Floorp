@@ -2488,19 +2488,26 @@ IonBuilder::inlineObjectIs(CallInfo& callInfo)
     MIRType leftType = left->type();
     MIRType rightType = right->type();
 
+    auto mightBeFloatingPointType = [](MDefinition* def) {
+        return def->mightBeType(MIRType::Double) || def->mightBeType(MIRType::Float32);
+    };
+
     bool strictEq;
     bool incompatibleTypes = false;
     if (leftType == rightType) {
         // We can only compare the arguments with strict-equals semantics if
-        // they aren't floating-point types or values. Otherwise we need to
-        // use MSameValue.
-        strictEq = !(IsFloatingPointType(leftType) || leftType == MIRType::Value);
+        // they aren't floating-point types or values which might be floating-
+        // point types. Otherwise we need to use MSameValue.
+        strictEq = leftType != MIRType::Value
+                   ? !IsFloatingPointType(leftType)
+                   : (!mightBeFloatingPointType(left) && !mightBeFloatingPointType(right));
     } else if (leftType == MIRType::Value) {
-        // Also use strict-equals when comparing a value with a non-number.
-        strictEq = !IsNumberType(rightType);
+        // Also use strict-equals when comparing a value with a non-number or
+        // the value cannot be a floating-point type.
+        strictEq = !IsNumberType(rightType) || !mightBeFloatingPointType(left);
     } else if (rightType == MIRType::Value) {
         // Dual case to the previous one, only with reversed operands.
-        strictEq = !IsNumberType(leftType);
+        strictEq = !IsNumberType(leftType) || !mightBeFloatingPointType(right);
     } else if (IsNumberType(leftType) && IsNumberType(rightType)) {
         // Both arguments are numbers, but with different representations. We
         // can't use strict-equals semantics to compare the operands, but
@@ -2513,23 +2520,18 @@ IonBuilder::inlineObjectIs(CallInfo& callInfo)
     if (incompatibleTypes) {
         // The result is always |false| when comparing incompatible types.
         pushConstant(BooleanValue(false));
+    } else if (strictEq) {
+        // Specialize |Object.is(lhs, rhs)| as |lhs === rhs|.
+        MOZ_TRY(jsop_compare(JSOP_STRICTEQ, left, right));
     } else {
-        bool emitted = false;
-        if (strictEq) {
-            // Specialize |Object.is(lhs, rhs)| as |lhs === rhs|.
-            MOZ_TRY(compareTrySpecialized(&emitted, JSOP_STRICTEQ, left, right, false));
-        }
+        MSameValue* ins = MSameValue::New(alloc(), left, right);
 
-        if (!emitted) {
-            MSameValue* ins = MSameValue::New(alloc(), left, right);
+        // The more specific operand is expected to be in the rhs.
+        if (IsNumberType(leftType) && rightType == MIRType::Value)
+            ins->swapOperands();
 
-            // The more specific operand is expected to be in the rhs.
-            if (IsNumberType(leftType) && rightType == MIRType::Value)
-                ins->swapOperands();
-
-            current->add(ins);
-            current->push(ins);
-        }
+        current->add(ins);
+        current->push(ins);
     }
 
     callInfo.setImplicitlyUsedUnchecked();

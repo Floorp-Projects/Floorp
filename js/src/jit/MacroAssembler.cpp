@@ -831,6 +831,13 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
     Pop(result);
 
     bind(&success);
+
+#ifdef NIGHTLY_BUILD
+    // Only burden the nightly population with this.
+    uint32_t* countAddress = GetJitContext()->runtime->addressOfTenuredAllocCount();
+    movePtr(ImmPtr(countAddress), temp);
+    add32(Imm32(1), Address(temp, 0));
+#endif
 }
 
 void
@@ -993,6 +1000,21 @@ MacroAssembler::bumpPointerAllocate(Register result, Register temp, Label* fail,
     branchPtr(Assembler::Below, Address(temp, endOffset.value()), result, fail);
     storePtr(result, Address(temp, 0));
     subPtr(Imm32(size), result);
+
+#if defined(NIGHTLY_BUILD)
+    // Only burden the nightly population with this,
+    // since this is the allocation fast path.
+    CompileZone* zone = GetJitContext()->realm->zone();
+    uint32_t* countAddress = zone->addressOfNurseryAllocCount();
+    CheckedInt<int32_t> counterOffset = (CheckedInt<uintptr_t>(uintptr_t(countAddress)) -
+        CheckedInt<uintptr_t>(uintptr_t(posAddr))).toChecked<int32_t>();
+    if (counterOffset.isValid()) {
+        add32(Imm32(1), Address(temp, counterOffset.value()));
+    } else {
+        movePtr(ImmPtr(countAddress), temp);
+        add32(Imm32(1), Address(temp, 0));
+    }
+#endif
 }
 
 // Inlined equivalent of gc::AllocateString, jumping to fail if nursery

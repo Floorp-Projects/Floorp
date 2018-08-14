@@ -79,7 +79,6 @@ addMessageListener("set-normal-ui-service", function() {
 });
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage('teardown-complete');
 });

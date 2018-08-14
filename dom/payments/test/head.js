@@ -57,10 +57,3 @@ function checkDupShippingOptionsPayment(aPayment) {
   ok(paymentOptions.requestShipping, "requestShipping option should be true");
   is(paymentOptions.shippingType, "shipping", "shippingType option should be 'shipping'");
 }
-
-function cleanup() {
-  const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
-  if (paymentSrv) {
-    paymentSrv.cleanup();
-  }
-}

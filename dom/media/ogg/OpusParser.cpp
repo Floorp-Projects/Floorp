@@ -15,6 +15,8 @@ extern "C" {
 #include "opus/opus_multistream.h"
 }
 
+#include <cmath>
+
 namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
@@ -80,7 +82,8 @@ bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
       mCoupledStreams = mChannels - 1;
       mMappingTable[0] = 0;
       mMappingTable[1] = 1;
-    } else if (mChannelMapping == 1 || mChannelMapping == 255) {
+    } else if (mChannelMapping == 1 || mChannelMapping == 2 ||
+               mChannelMapping == 255) {
       // Currently only up to 8 channels are defined for mapping family 1
       if (mChannelMapping == 1 && mChannels > 8) {
         OPUS_LOG(LogLevel::Debug,
@@ -89,20 +92,48 @@ bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
                   mChannels));
         return false;
       }
+      if (mChannelMapping == 2) {
+        // https://tools.ietf.org/html/draft-ietf-codec-ambisonics-08#page-3
+        // For both channel mapping family 2 and family 3, the allowed numbers
+        // of channels: (1 + n)^2 + 2j for n = 0, 1, ..., 14 and j = 0 or 1,
+        // where n denotes the (highest) ambisonic order and j denotes whether
+        // or not there is a separate non-diegetic stereo stream Explicitly the
+        // allowed number of channels are 1, 3, 4, 6, 9, 11, 16, 18, 25, 27, 36,
+        // 38, 49, 51, 64, 66, 81, 83, 100, 102, 121, 123, 144, 146, 169, 171,
+        // 196, 198, 225, and 227.
+
+        // We use the property that int(sqrt(n)) == int(sqrt(n+2)) for n != 3
+        // which is handled by the test n^2 + 2 != channel
+        double val = sqrt(mChannels);
+        if (val == 0 || val > 15) {
+          return false;
+        }
+        if (val != int32_t(val)) {
+          if (val * val + 2 != mChannels) {
+            // Not a valid channel count.
+            return false;
+          }
+        }
+      }
       if (aLength > static_cast<unsigned>(20 + mChannels)) {
         mStreams = aData[19];
         mCoupledStreams = aData[20];
         int i;
-        for (i=0; i<mChannels; i++)
-          mMappingTable[i] = aData[21+i];
+        for (i = 0; i < mChannels; i++) {
+          mMappingTable[i] = aData[21 + i];
+        }
       } else {
-        OPUS_LOG(LogLevel::Debug, ("Invalid Opus file: channel mapping %d,"
-                           " but no channel mapping table", mChannelMapping));
+        OPUS_LOG(LogLevel::Debug,
+                 ("Invalid Opus file: channel mapping %d,"
+                  " but no channel mapping table",
+                  mChannelMapping));
         return false;
       }
     } else {
-      OPUS_LOG(LogLevel::Debug, ("Invalid Opus file: unsupported channel mapping "
-                         "family %d", mChannelMapping));
+      OPUS_LOG(LogLevel::Debug,
+               ("Invalid Opus file: unsupported channel mapping "
+                "family %d",
+                mChannelMapping));
       return false;
     }
     if (mStreams < 1) {

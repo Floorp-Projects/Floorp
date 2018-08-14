@@ -5815,11 +5815,17 @@ IonBuilder::jsop_compare(JSOp op)
 AbortReasonOr<Ok>
 IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
 {
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+
     bool emitted = false;
-    startTrackingOptimizations();
+    if (canTrackOptimization)
+        startTrackingOptimizations();
 
     if (!forceInlineCaches()) {
-        MOZ_TRY(compareTrySpecialized(&emitted, op, left, right, true));
+        MOZ_TRY(compareTrySpecialized(&emitted, op, left, right));
         if (emitted)
             return Ok();
         MOZ_TRY(compareTryBitwise(&emitted, op, left, right));
@@ -5834,7 +5840,8 @@ IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
     if (emitted)
         return Ok();
 
-    trackOptimizationAttempt(TrackedStrategy::Compare_Call);
+    if (canTrackOptimization)
+        trackOptimizationAttempt(TrackedStrategy::Compare_Call);
 
     // Not possible to optimize. Do a slow vm call.
     MCompare* ins = MCompare::New(alloc(), left, right, op);
@@ -5845,7 +5852,8 @@ IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
     if (ins->isEffectful())
         MOZ_TRY(resumeAfter(ins));
 
-    trackOptimizationSuccess();
+    if (canTrackOptimization)
+        trackOptimizationSuccess();
     return Ok();
 }
 
@@ -5862,10 +5870,14 @@ ObjectOrSimplePrimitive(MDefinition* op)
 }
 
 AbortReasonOr<Ok>
-IonBuilder::compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right,
-                                  bool canTrackOptimization)
+IonBuilder::compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
 {
     MOZ_ASSERT(*emitted == false);
+
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
     if (canTrackOptimization)
         trackOptimizationAttempt(TrackedStrategy::Compare_SpecializedTypes);
 
@@ -5911,21 +5923,29 @@ AbortReasonOr<Ok>
 IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
 {
     MOZ_ASSERT(*emitted == false);
-    trackOptimizationAttempt(TrackedStrategy::Compare_Bitwise);
+
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+    if (canTrackOptimization)
+        trackOptimizationAttempt(TrackedStrategy::Compare_Bitwise);
 
     // Try to emit a bitwise compare. Check if a bitwise compare equals the wanted
     // result for all observed operand types.
 
     // Only allow loose and strict equality.
     if (op != JSOP_EQ && op != JSOP_NE && op != JSOP_STRICTEQ && op != JSOP_STRICTNE) {
-        trackOptimizationOutcome(TrackedOutcome::RelationalCompare);
+        if (canTrackOptimization)
+            trackOptimizationOutcome(TrackedOutcome::RelationalCompare);
         return Ok();
     }
 
     // Only primitive (not double/string) or objects are supported.
     // I.e. Undefined/Null/Boolean/Int32/Symbol and Object
     if (!ObjectOrSimplePrimitive(left) || !ObjectOrSimplePrimitive(right)) {
-        trackOptimizationOutcome(TrackedOutcome::OperandTypeNotBitwiseComparable);
+        if (canTrackOptimization)
+            trackOptimizationOutcome(TrackedOutcome::OperandTypeNotBitwiseComparable);
         return Ok();
     }
 
@@ -5933,7 +5953,8 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
     if (left->maybeEmulatesUndefined(constraints()) ||
         right->maybeEmulatesUndefined(constraints()))
     {
-        trackOptimizationOutcome(TrackedOutcome::OperandMaybeEmulatesUndefined);
+        if (canTrackOptimization)
+            trackOptimizationOutcome(TrackedOutcome::OperandMaybeEmulatesUndefined);
         return Ok();
     }
 
@@ -5946,7 +5967,8 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
         if ((left->mightBeType(MIRType::Undefined) && right->mightBeType(MIRType::Null)) ||
             (left->mightBeType(MIRType::Null) && right->mightBeType(MIRType::Undefined)))
         {
-            trackOptimizationOutcome(TrackedOutcome::LoosyUndefinedNullCompare);
+            if (canTrackOptimization)
+                trackOptimizationOutcome(TrackedOutcome::LoosyUndefinedNullCompare);
             return Ok();
         }
 
@@ -5955,7 +5977,8 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
         if ((left->mightBeType(MIRType::Int32) && right->mightBeType(MIRType::Boolean)) ||
             (left->mightBeType(MIRType::Boolean) && right->mightBeType(MIRType::Int32)))
         {
-            trackOptimizationOutcome(TrackedOutcome::LoosyInt32BooleanCompare);
+            if (canTrackOptimization)
+                trackOptimizationOutcome(TrackedOutcome::LoosyInt32BooleanCompare);
             return Ok();
         }
 
@@ -5970,7 +5993,8 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
         if ((left->mightBeType(MIRType::Object) && simpleRHS) ||
             (right->mightBeType(MIRType::Object) && simpleLHS))
         {
-            trackOptimizationOutcome(TrackedOutcome::CallsValueOf);
+            if (canTrackOptimization)
+                trackOptimizationOutcome(TrackedOutcome::CallsValueOf);
             return Ok();
         }
     }
@@ -5983,7 +6007,8 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
     current->push(ins);
 
     MOZ_ASSERT(!ins->isEffectful());
-    trackOptimizationSuccess();
+    if (canTrackOptimization)
+        trackOptimizationSuccess();
     *emitted = true;
     return Ok();
 }
@@ -5993,6 +6018,11 @@ IonBuilder::compareTrySpecializedOnBaselineInspector(bool* emitted, JSOp op, MDe
                                                      MDefinition* right)
 {
     MOZ_ASSERT(*emitted == false);
+
+    // Not supported for call expressions.
+    if (IsCallPC(pc))
+        return Ok();
+
     trackOptimizationAttempt(TrackedStrategy::Compare_SpecializedOnBaselineTypes);
 
     // Try to specialize based on any baseline caches that have been generated
@@ -6034,7 +6064,7 @@ IonBuilder::compareTryBinaryStub(bool* emitted, MDefinition* left, MDefinition* 
     if (JitOptions.disableSharedStubs)
         return Ok();
 
-    if (JSOp(*pc) == JSOP_CASE)
+    if (JSOp(*pc) == JSOP_CASE || IsCallPC(pc))
         return Ok();
 
     MBinaryCache* stub = MBinaryCache::New(alloc(), left, right);

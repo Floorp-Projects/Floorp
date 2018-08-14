@@ -447,6 +447,5 @@ addMessageListener("check-nonbasiccard-request", checkNonBasicCardRequestHandler
 addMessageListener("check-cross-origin-top-level-principal", checkCrossOriginTopLevelPrincipalHandler);
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   sendAsyncMessage("teardown-complete");
 });

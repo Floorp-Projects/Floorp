@@ -51,6 +51,5 @@ addMessageListener("set-ui-service", function() {
 });
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   sendAsyncMessage("teardown-complete");
 });
