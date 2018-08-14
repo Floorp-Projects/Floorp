@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript">
+  var interval;
+
+  function doSomething() {
+    console.log("We are doing something here");
+    clearInterval(interval);
+  }
+
+  interval = setInterval(doSomething, 10);
+  </script>
+</head>
+<body>
+  <h1>A page with setInterval() calls</h1>
+</body>
+</html>

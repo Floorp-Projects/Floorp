@@ -46,7 +46,7 @@ DelayBuffer::Write(const AudioBlock& aInputChunk)
 }
 
 void
-DelayBuffer::Read(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
+DelayBuffer::Read(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
                   AudioBlock* aOutputChunk,
                   ChannelInterpretation aChannelInterpretation)
 {
@@ -63,16 +63,16 @@ DelayBuffer::Read(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
   // First find the range of "delay" offsets backwards from the current
   // position.  Note that these may be negative for frames that are after the
   // current position (including i).
-  double minDelay = aPerFrameDelays[0];
-  double maxDelay = minDelay;
+  float minDelay = aPerFrameDelays[0];
+  float maxDelay = minDelay;
   for (unsigned i = 1; i < WEBAUDIO_BLOCK_SIZE; ++i) {
     minDelay = std::min(minDelay, aPerFrameDelays[i] - i);
     maxDelay = std::max(maxDelay, aPerFrameDelays[i] - i);
   }
 
   // Now find the chunks touched by this range and check their channel counts.
-  int oldestChunk = ChunkForDelay(int(maxDelay) + 1);
-  int youngestChunk = ChunkForDelay(minDelay);
+  int oldestChunk = ChunkForDelay(std::ceil(maxDelay));
+  int youngestChunk = ChunkForDelay(std::floor(minDelay));
 
   uint32_t channelCount = 0;
   for (int i = oldestChunk; true; i = (i + 1) % chunkCount) {
@@ -90,13 +90,10 @@ DelayBuffer::Read(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
   } else {
     aOutputChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
   }
-
-  // Remember currentDelayFrames for the next ProcessBlock call
-  mCurrentDelay = aPerFrameDelays[WEBAUDIO_BLOCK_SIZE - 1];
 }
 
 void
-DelayBuffer::ReadChannel(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
+DelayBuffer::ReadChannel(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
                          AudioBlock* aOutputChunk, uint32_t aChannel,
                          ChannelInterpretation aChannelInterpretation)
 {
@@ -111,7 +108,7 @@ DelayBuffer::ReadChannel(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
 }
 
 void
-DelayBuffer::ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
+DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
                           AudioBlock* aOutputChunk,
                           uint32_t aFirstChannel, uint32_t aNumChannelsToRead,
                           ChannelInterpretation aChannelInterpretation)
@@ -130,7 +127,7 @@ DelayBuffer::ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
   }
 
   for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
-    double currentDelay = aPerFrameDelays[i];
+    float currentDelay = aPerFrameDelays[i];
     MOZ_ASSERT(currentDelay >= 0.0);
     MOZ_ASSERT(currentDelay <= (mChunks.Length() - 1) * WEBAUDIO_BLOCK_SIZE);
 
@@ -139,20 +136,23 @@ DelayBuffer::ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
     // Use the larger delay, for the older frame, first, as this is more
     // likely to use the cached upmixed channel arrays.
     int floorDelay = int(currentDelay);
-    double interpolationFactor = currentDelay - floorDelay;
+    float interpolationFactor = currentDelay - floorDelay;
     int positions[2];
     positions[1] = PositionForDelay(floorDelay) + i;
     positions[0] = positions[1] - 1;
 
     for (unsigned tick = 0; tick < ArrayLength(positions); ++tick) {
       int readChunk = ChunkForPosition(positions[tick]);
-      // mVolume is not set on default initialized chunks so handle null
+      // The zero check on interpolationFactor is important because, when
+      // currentDelay is integer, positions[0] may be outside the range
+      // considered for determining totalChannelCount.
+      // mVolume is not set on default initialized chunks so also handle null
       // chunks specially.
-      if (!mChunks[readChunk].IsNull()) {
+      if (interpolationFactor != 0.0 && !mChunks[readChunk].IsNull()) {
         int readOffset = OffsetForPosition(positions[tick]);
         UpdateUpmixChannels(readChunk, totalChannelCount,
                             aChannelInterpretation);
-        double multiplier = interpolationFactor * mChunks[readChunk].mVolume;
+        float multiplier = interpolationFactor * mChunks[readChunk].mVolume;
         for (uint32_t channel = aFirstChannel;
              channel < readChannelsEnd; ++channel) {
           aOutputChunk->ChannelFloatsForWrite(channel)[i] += multiplier *
@@ -166,10 +166,10 @@ DelayBuffer::ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
 }
 
 void
-DelayBuffer::Read(double aDelayTicks, AudioBlock* aOutputChunk,
+DelayBuffer::Read(float aDelayTicks, AudioBlock* aOutputChunk,
                   ChannelInterpretation aChannelInterpretation)
 {
-  double computedDelay[WEBAUDIO_BLOCK_SIZE];
+  float computedDelay[WEBAUDIO_BLOCK_SIZE];
 
   for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
     computedDelay[i] = aDelayTicks;

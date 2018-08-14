@@ -37,7 +37,7 @@ namespace WebCore {
 
 // The value of 2 milliseconds is larger than the largest delay which exists in any HRTFKernel from the default HRTFDatabase (0.0136 seconds).
 // We ASSERT the delay values used in process() with this value.
-const double MaxDelayTimeSeconds = 0.002;
+const float MaxDelayTimeSeconds = 0.002;
 
 const int UninitializedAzimuth = -1;
 const unsigned RenderingQuantum = WEBAUDIO_BLOCK_SIZE;
@@ -220,8 +220,8 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBlock* 
     MOZ_ASSERT(frameDelayL2 / sampleRate() < MaxDelayTimeSeconds && frameDelayR2 / sampleRate() < MaxDelayTimeSeconds);
 
     // Crossfade inter-aural delays based on transitions.
-    double frameDelaysL[WEBAUDIO_BLOCK_SIZE];
-    double frameDelaysR[WEBAUDIO_BLOCK_SIZE];
+    float frameDelaysL[WEBAUDIO_BLOCK_SIZE];
+    float frameDelaysR[WEBAUDIO_BLOCK_SIZE];
     {
       float x = m_crossfadeX;
       float incr = m_crossfadeIncr;

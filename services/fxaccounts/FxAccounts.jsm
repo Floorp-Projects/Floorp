@@ -1741,6 +1741,7 @@ FxAccountsInternal.prototype = {
         log.debug("registering new device details");
         device = await this.fxAccountsClient.registerDevice(
           sessionToken, deviceName, this._getDeviceType(), deviceOptions);
+        Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
       }
 
       // Get the freshest device props before updating them.

@@ -18,14 +18,20 @@
     cursor: default;
     display: flex;
     height: $search-height;
+    margin: 0 auto;
     position: relative;
-    width: 100%;
-  }
+    width: $searchbar-width-smallest;
 
-  @media (min-width: $break-point-large) {
-    .search-inner-wrapper {
-      margin: 0 auto;
-      width: $max-searchbar-width;
+    @media (min-width: $break-point-small) {
+      width: $searchbar-width-small;
+    }
+
+    @media (min-width: $break-point-medium) {
+      width: $searchbar-width-medium;
+    }
+
+    @media (min-width: $break-point-large) {
+      width: $searchbar-width-large;
     }
   }
 
@@ -51,7 +57,7 @@
     box-shadow: $shadow-secondary, 0 0 0 1px $black-25;
   }
 
-  &:active input,
+  .search-inner-wrapper:active input,
   input:focus {
     border: $input-border-active;
     box-shadow: var(--newtab-textbox-focus-boxshadow);

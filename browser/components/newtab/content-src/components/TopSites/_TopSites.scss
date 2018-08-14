@@ -208,6 +208,13 @@ $half-base-gutter: $base-gutter / 2;
     box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), var(--newtab-card-shadow);
   }
 
+  // We want all search shortcuts to have a white background in case they have transparency.
+  &.search-shortcut {
+    .rich-icon {
+      background-color: $white;
+    }
+  }
+
   .title {
     color: var(--newtab-topsites-label-color);
     font: message-box;
@@ -275,6 +282,8 @@ $half-base-gutter: $base-gutter / 2;
     box-shadow: $shadow-secondary;
     left: 0;
     margin: 0 auto;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
     position: fixed;
     right: 0;
     top: 40px;
@@ -318,13 +327,13 @@ $half-base-gutter: $base-gutter / 2;
     margin: 0 auto;
     padding: $form-spacing;
 
+    > div {
+      margin-inline-end: -39px;
+    }
+
     .top-site-outer {
       margin-inline-start: 0;
       margin-inline-end: 39px;
-
-      &:nth-child(5n) {
-        margin-inline-end: 0;
-      }
     }
   }
 
