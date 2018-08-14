@@ -3338,17 +3338,6 @@ MUrsh::fallible() const
     return !range() || !range()->hasInt32Bounds();
 }
 
-static inline bool
-SimpleArithOperand(MDefinition* op)
-{
-    return !op->mightBeType(MIRType::Object)
-        && !op->mightBeType(MIRType::String)
-        && !op->mightBeType(MIRType::Symbol)
-        && !op->mightBeType(MIRType::MagicOptimizedArguments)
-        && !op->mightBeType(MIRType::MagicHole)
-        && !op->mightBeType(MIRType::MagicIsConstructing);
-}
-
 static bool
 SafelyCoercesToDouble(MDefinition* op)
 {
