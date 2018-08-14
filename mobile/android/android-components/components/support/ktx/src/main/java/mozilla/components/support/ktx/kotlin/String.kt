@@ -8,19 +8,19 @@ import android.net.Uri
 import android.text.TextUtils
 
 /**
- * Normalizes a URL string.
+ * Normalizes a URL String.
  */
 fun String.toNormalizedUrl(): String {
     val trimmedInput = this.trim()
     var uri = Uri.parse(trimmedInput)
     if (TextUtils.isEmpty(uri.scheme)) {
-        uri = Uri.parse("http://" + trimmedInput)
+        uri = Uri.parse("http://$trimmedInput")
     }
     return uri.toString()
 }
 
 /**
- * Checks if this string is a URL.
+ * Checks if this String is a URL.
  */
 fun String.isUrl(): Boolean {
     val trimmedUrl = this.trim()
