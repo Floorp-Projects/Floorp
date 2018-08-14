@@ -102,7 +102,7 @@ nsDisplaySVGGeometry::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRec
                                    (ToReferenceFrame() - frame->GetPosition());
   gfxPoint userSpacePt =
     gfxPoint(userSpacePtInAppUnits.x, userSpacePtInAppUnits.y) /
-      frame->PresContext()->AppUnitsPerCSSPixel();
+      AppUnitsPerCSSPixel();
   if (frame->GetFrameForPoint(userSpacePt)) {
     aOutFrames->AppendElement(frame);
   }
@@ -322,7 +322,7 @@ SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint)
     }
     if (hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) {
       gfxRect rect =
-        nsLayoutUtils::RectToGfxRect(mRect, PresContext()->AppUnitsPerCSSPixel());
+        nsLayoutUtils::RectToGfxRect(mRect, AppUnitsPerCSSPixel());
       if (!rect.Contains(aPoint)) {
         return nullptr;
       }
@@ -403,7 +403,7 @@ SVGGeometryFrame::ReflowSVG()
 
   gfxRect extent = GetBBoxContribution(Matrix(), flags).ToThebesRect();
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
-            PresContext()->AppUnitsPerCSSPixel());
+            AppUnitsPerCSSPixel());
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
     // Make sure we have our filter property (if any) before calling
@@ -478,7 +478,7 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
 
   if ((aFlags & nsSVGUtils::eForGetClientRects) &&
       aToBBoxUserspace.PreservesAxisAlignedRectangles()) {
-    Rect rect = NSRectToRect(mRect, PresContext()->AppUnitsPerCSSPixel());
+    Rect rect = NSRectToRect(mRect, AppUnitsPerCSSPixel());
     bbox = aToBBoxUserspace.TransformBounds(rect);
     return bbox;
   }

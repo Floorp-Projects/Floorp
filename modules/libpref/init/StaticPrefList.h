@@ -1091,12 +1091,13 @@ VARCACHE_PREF(
   bool, false
 )
 
-// 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign
+// 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign,
+// 4-rejectTracker
 // Keep the old default of accepting all cookies
 VARCACHE_PREF(
   "network.cookie.cookieBehavior",
   network_cookie_cookieBehavior,
-  int32_t, 0
+  RelaxedAtomicInt32, 0
 )
 
 // Enables the predictive service.
@@ -1230,12 +1231,6 @@ PREF("preferences.allow.omt-write", bool, true)
 //---------------------------------------------------------------------------
 // Privacy prefs
 //---------------------------------------------------------------------------
-
-VARCACHE_PREF(
-  "privacy.restrict3rdpartystorage.enabled",
-   privacy_restrict3rdpartystorage_enabled,
-  RelaxedAtomicBool, false
-)
 
 VARCACHE_PREF(
   "privacy.restrict3rdpartystorage.ui.enabled",

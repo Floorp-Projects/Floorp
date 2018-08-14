@@ -295,10 +295,7 @@ XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/,
 XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/)
 #endif
 {
-  // Crash reporting is disabled for now when recording or replaying executions.
-  if (recordreplay::IsRecordingOrReplaying() || recordreplay::IsMiddleman()) {
-    return true;
-  }
+  recordreplay::AutoPassThroughThreadEvents pt;
 #if defined(XP_WIN)
   return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe),
                                                   aCrashTimeAnnotationFile);

@@ -3653,7 +3653,7 @@ nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
       if (subArea.IsEmpty())
         continue;
 
-      nsIntRect intSubArea = subArea.ToOutsidePixels(nsPresContext::AppUnitsPerCSSPixel());
+      nsIntRect intSubArea = subArea.ToOutsidePixels(AppUnitsPerCSSPixel());
       result &=
         mImageRenderer.DrawBorderImageComponent(aPresContext,
                                                  aRenderingContext, aDirtyRect,

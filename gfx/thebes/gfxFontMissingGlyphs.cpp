@@ -259,7 +259,7 @@ gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar,
     // We always want integer scaling, otherwise the "bitmap" glyphs will look
     // even uglier than usual when zoomed
     int32_t devPixelsPerCSSPx =
-        std::max<int32_t>(1, nsDeviceContext::AppUnitsPerCSSPixel() /
+        std::max<int32_t>(1, AppUnitsPerCSSPixel() /
                              aAppUnitsPerDevPixel);
 
     Matrix tempMat;
@@ -337,6 +337,6 @@ gfxFontMissingGlyphs::GetDesiredMinWidth(uint32_t aChar,
         HEX_CHAR_GAP + BOX_BORDER_WIDTH + BOX_HORIZONTAL_INSET;
     // Note that this will give us floating-point division, so the width will
     // -not- be snapped to integer multiples of its basic pixel value
-    width *= Float(nsDeviceContext::AppUnitsPerCSSPixel()) / aAppUnitsPerDevPixel;
+    width *= Float(AppUnitsPerCSSPixel()) / aAppUnitsPerDevPixel;
     return width;
 }

@@ -259,8 +259,8 @@ SetDisplayPortMargins(nsIPresShell* aPresShell,
 
   CSSSize baseSize = aMetrics.CalculateCompositedSizeInCssPixels();
   nsRect base(0, 0,
-              baseSize.width * nsPresContext::AppUnitsPerCSSPixel(),
-              baseSize.height * nsPresContext::AppUnitsPerCSSPixel());
+              baseSize.width * AppUnitsPerCSSPixel(),
+              baseSize.height * AppUnitsPerCSSPixel());
   nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
 }
 
