@@ -470,6 +470,11 @@ public:
   static uint32_t GetMaxTouchPoints();
 
   /**
+   * Returns the windows power platform role, which is useful for detecting tablets.
+   */
+  static POWER_PLATFORM_ROLE GetPowerPlatformRole();
+
+  /**
    * Fully resolves a path to its final path name. So if path contains
    * junction points or symlinks to other folders, we'll resolve the path
    * fully to the actual path that the links target.
