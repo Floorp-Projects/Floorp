@@ -643,6 +643,7 @@ ChildProcessInfo::WaitUntil(const std::function<bool()>& aCallback)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
+  bool sentTerminateMessage = false;
   while (!aCallback()) {
     MonitorAutoLock lock(*gMonitor);
     if (!MaybeProcessPendingMessage(this)) {
@@ -653,7 +654,19 @@ ChildProcessInfo::WaitUntil(const std::function<bool()>& aCallback)
         TimeStamp deadline = mLastMessageTime + TimeDuration::FromSeconds(HangSeconds);
         if (TimeStamp::Now() >= deadline) {
           MonitorAutoUnlock unlock(*gMonitor);
-          AttemptRestart("Child process non-responsive");
+          if (!sentTerminateMessage) {
+            // Try to get the child to crash, so that we can get a minidump.
+            // Sending the message will reset mLastMessageTime so we get to
+            // wait another HangSeconds before hitting the restart case below.
+            CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RecordReplayHang,
+                                               true);
+            SendMessage(TerminateMessage());
+            sentTerminateMessage = true;
+          } else {
+            // The child is still non-responsive after sending the terminate
+            // message, fail without producing a minidump.
+            AttemptRestart("Child process non-responsive");
+          }
         }
         gMonitor->WaitUntil(deadline);
       }
