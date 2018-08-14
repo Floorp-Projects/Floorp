@@ -5024,9 +5024,15 @@ CompareIRGenerator::tryAttachStub()
     static_assert(lhsIndex == 0 && rhsIndex == 1,
         "Indexes relied upon by baseline inspector");
 
-    ValOperandId lhsId(writer.setInputOperandId(0));
-    ValOperandId rhsId(writer.setInputOperandId(1));
+    ValOperandId lhsId(writer.setInputOperandId(lhsIndex));
+    ValOperandId rhsId(writer.setInputOperandId(rhsIndex));
 
+    // For sloppy equality ops, there are cases this IC does not handle:
+    // - {Symbol} x {Null, Undefined, String, Bool, Number}.
+    // - {String} x {Null, Undefined, Symbol, Bool, Number}. Bug 1467907 will add support
+    //   for {String} x {Int32}.
+    // - {Bool} x {Double}.
+    // - {Object} x {String, Symbol, Bool, Number}.
     if (IsEqualityOp(op_)) {
         if (tryAttachString(lhsId, rhsId))
             return true;
@@ -5034,8 +5040,14 @@ CompareIRGenerator::tryAttachStub()
             return true;
         if (tryAttachSymbol(lhsId, rhsId))
             return true;
+
+        // Handle the special case of Object compared to null/undefined.
+        // This is special due to the IsHTMLDDA internal slot semantic,
         if (tryAttachObjectUndefined(lhsId, rhsId))
             return true;
+
+        // This covers -strict- equality/inequality using a type tag check, so catches all
+        // different type pairs outside of Numbers, which cannot be checked on tags alone.
         if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
 
@@ -5044,8 +5056,6 @@ CompareIRGenerator::tryAttachStub()
         if (tryAttachPrimitiveUndefined(lhsId, rhsId))
             return true;
 
-        // This should come after strictDifferent types to
-        // allow it to only handle sloppy equality.
         if (tryAttachNullUndefined(lhsId, rhsId))
             return true;
     }
