@@ -24,6 +24,7 @@
       "compiler-rt-cross-compile.patch",
       "compiler-rt-no-codesign.patch",
       "r322401.patch",
-      "r325356.patch"
+      "r325356.patch",
+      "r339636.patch"
     ]
 }
