@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["RecentlyClosedTabsAndWindowsMenuUtils"];
 
-const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PluralForm",
@@ -138,7 +136,7 @@ function setImage(aItem, aElement) {
  */
 function createEntry(aTagName, aIsWindowsFragment, aIndex, aClosedTab,
                      aDocument, aMenuLabel, aFragment) {
-  let element = aDocument.createElementNS(kNSXUL, aTagName);
+  let element = aDocument.createXULElement(aTagName);
 
   element.setAttribute("label", aMenuLabel);
   if (aClosedTab.image) {
@@ -196,7 +194,7 @@ function createEntry(aTagName, aIsWindowsFragment, aIndex, aClosedTab,
 function createRestoreAllEntry(aDocument, aFragment, aPrefixRestoreAll,
                                 aIsWindowsFragment, aRestoreAllLabel,
                                 aEntryCount, aTagName) {
-  let restoreAllElements = aDocument.createElementNS(kNSXUL, aTagName);
+  let restoreAllElements = aDocument.createXULElement(aTagName);
   restoreAllElements.classList.add("restoreallitem");
   restoreAllElements.setAttribute("label", navigatorBundle.GetStringFromName(aRestoreAllLabel));
   restoreAllElements.setAttribute("oncommand",
@@ -205,7 +203,7 @@ function createRestoreAllEntry(aDocument, aFragment, aPrefixRestoreAll,
   if (aPrefixRestoreAll) {
     aFragment.insertBefore(restoreAllElements, aFragment.firstChild);
   } else {
-    aFragment.appendChild(aDocument.createElementNS(kNSXUL, "menuseparator"));
+    aFragment.appendChild(aDocument.createXULElement("menuseparator"));
     aFragment.appendChild(restoreAllElements);
   }
 }
