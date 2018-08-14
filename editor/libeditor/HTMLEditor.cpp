@@ -1731,27 +1731,51 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
 NS_IMETHODIMP
 HTMLEditor::SelectElement(Element* aElement)
 {
+  if (NS_WARN_IF(!aElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = SelectContentInternal(*selection, *aElement);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::SelectContentInternal(Selection& aSelection,
+                                  nsIContent& aContentToSelect)
+{
   // Must be sure that element is contained in the document body
-  if (!IsDescendantOfEditorRoot(aElement)) {
-    return NS_ERROR_NULL_POINTER;
+  if (!IsDescendantOfEditorRoot(&aContentToSelect)) {
+    return NS_ERROR_FAILURE;
   }
 
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsINode* parent = aElement->GetParentNode();
+  nsINode* parent = aContentToSelect.GetParentNode();
   if (NS_WARN_IF(!parent)) {
     return NS_ERROR_FAILURE;
   }
 
-  int32_t offsetInParent = parent->ComputeIndexOf(aElement);
+  // Don't notify selection change at collapse.
+  AutoUpdateViewBatch notifySelectionChangeOnce(this);
+
+  // XXX Perhaps, Selection should have SelectNode(nsIContent&).
+  int32_t offsetInParent = parent->ComputeIndexOf(&aContentToSelect);
 
   // Collapse selection to just before desired element,
-  nsresult rv = selection->Collapse(parent, offsetInParent);
-  if (NS_SUCCEEDED(rv)) {
-    // then extend it to just after
-    rv = selection->Extend(parent, offsetInParent + 1);
+  nsresult rv = aSelection.Collapse(parent, offsetInParent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-  return rv;
+  // then extend it to just after
+  rv = aSelection.Extend(parent, offsetInParent + 1);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
