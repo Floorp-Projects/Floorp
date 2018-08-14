@@ -787,8 +787,6 @@ PopupNotifications.prototype = {
   _refreshPanel: function PopupNotifications_refreshPanel(notificationsToShow) {
     this._clearPanel();
 
-    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
     notificationsToShow.forEach(function(n) {
       let doc = this.window.document;
 
@@ -802,7 +800,7 @@ PopupNotifications.prototype = {
       if (popupnotification)
         gNotificationParents.set(popupnotification, popupnotification.parentNode);
       else
-        popupnotification = doc.createElementNS(XUL_NS, "popupnotification");
+        popupnotification = doc.createXULElement("popupnotification");
 
       // Create the notification description element.
       let desc = this._formatDescriptionMessage(n);
@@ -884,7 +882,7 @@ PopupNotifications.prototype = {
 
         for (let i = 1; i < n.secondaryActions.length; i++) {
           let action = n.secondaryActions[i];
-          let item = doc.createElementNS(XUL_NS, "menuitem");
+          let item = doc.createXULElement("menuitem");
           item.setAttribute("label", action.label);
           item.setAttribute("accesskey", action.accessKey);
           item.notification = n;

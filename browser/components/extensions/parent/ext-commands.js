@@ -12,8 +12,6 @@ var {
   ExtensionError,
 } = ExtensionUtils;
 
-var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 const EXECUTE_PAGE_ACTION = "_execute_page_action";
 const EXECUTE_BROWSER_ACTION = "_execute_browser_action";
 const EXECUTE_SIDEBAR_ACTION = "_execute_sidebar_action";
@@ -154,7 +152,7 @@ this.commands = class extends ExtensionAPI {
    */
   registerKeysToDocument(window, commands) {
     let doc = window.document;
-    let keyset = doc.createElementNS(XUL_NS, "keyset");
+    let keyset = doc.createXULElement("keyset");
     keyset.id = `ext-keyset-id-${this.id}`;
     if (this.keysetsMap.has(window)) {
       this.keysetsMap.get(window).remove();
@@ -232,7 +230,7 @@ this.commands = class extends ExtensionAPI {
    * @returns {Document} The newly created Key element.
    */
   buildKeyFromShortcut(doc, name, shortcut) {
-    let keyElement = doc.createElementNS(XUL_NS, "key");
+    let keyElement = doc.createXULElement("key");
 
     let parts = shortcut.split("+");
 
