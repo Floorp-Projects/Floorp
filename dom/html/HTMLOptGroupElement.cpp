@@ -53,7 +53,7 @@ HTMLOptGroupElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   if (nsIFrame* frame = GetPrimaryFrame()) {
     // FIXME(emilio): This poking at the style of the frame is broken unless we
     // flush before every event handling, which we don't really want to.
-    if (frame->StyleUserInterface()->mUserInput == StyleUserInput::None) {
+    if (frame->StyleUI()->mUserInput == StyleUserInput::None) {
       return;
     }
   }
