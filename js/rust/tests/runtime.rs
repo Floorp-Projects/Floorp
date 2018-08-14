@@ -24,7 +24,7 @@ fn runtime() {
                                                        ptr::null_mut(),
                                                        h_option,
                                                        &c_option));
-        let _ac = js::ar::AutoCompartment::with_obj(cx, global.get());
+        let _ar = js::ar::AutoRealm::with_obj(cx, global.get());
         rooted!(in(cx) let _object = JS_NewObject(cx, &CLASS as *const _));
     }
 

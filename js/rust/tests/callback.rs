@@ -6,7 +6,7 @@
 extern crate js;
 extern crate libc;
 
-use js::ar::AutoCompartment;
+use js::ar::AutoRealm;
 use js::jsapi::root::JS::CallArgs;
 use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JSContext;
@@ -34,7 +34,7 @@ fn callback() {
         let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
-        let _ac = AutoCompartment::with_obj(context, global.get());
+        let _ar = AutoRealm::with_obj(context, global.get());
         let function = JS_DefineFunction(context, global, b"puts\0".as_ptr() as *const libc::c_char,
                                          Some(puts), 1, 0);
         assert!(!function.is_null());
