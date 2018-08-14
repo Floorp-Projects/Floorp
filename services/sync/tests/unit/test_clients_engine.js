@@ -369,6 +369,37 @@ add_task(async function test_client_name_change() {
   await cleanup();
 });
 
+add_task(async function test_fxa_device_id_change() {
+  _("Ensure an FxA device ID change incurs a client record update.");
+
+  let tracker = engine._tracker;
+
+  engine.localID; // Needed to increase the tracker changedIDs count.
+
+  tracker.start();
+
+  // Tracker already has data, so clear it.
+  await tracker.clearChangedIDs();
+
+  let initialScore = tracker.score;
+
+  let changedIDs = await tracker.getChangedIDs();
+  equal(Object.keys(changedIDs).length, 0);
+
+  Services.obs.notifyObservers(null, "fxaccounts:new_device_id");
+  await tracker.asyncObserver.promiseObserversComplete();
+
+  changedIDs = await tracker.getChangedIDs();
+  equal(Object.keys(changedIDs).length, 1);
+  ok(engine.localID in changedIDs);
+  ok(tracker.score > initialScore);
+  ok(tracker.score >= SINGLE_USER_THRESHOLD);
+
+  await tracker.stop();
+
+  await cleanup();
+});
+
 add_task(async function test_last_modified() {
   _("Ensure that remote records have a sane serverLastModified attribute.");
 
