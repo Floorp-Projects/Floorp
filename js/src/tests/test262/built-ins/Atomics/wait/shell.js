@@ -7,7 +7,7 @@ description: >
 ---*/
 
 /**
- * The amount of slack allowed for testing time-related Atomics methods (i.e. wait and wake).
+ * The amount of slack allowed for testing time-related Atomics methods (i.e. wait and notify).
  * The absolute value of the difference of the observed time and the expected time must
  * be epsilon-close.
  */
