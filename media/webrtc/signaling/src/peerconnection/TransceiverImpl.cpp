@@ -932,6 +932,12 @@ TransceiverImpl::UpdateVideoConduit()
       return rv;
     }
 
+    if (configs.values.empty()) {
+      MOZ_MTLOG(ML_INFO, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
+                          " No codecs were negotiated (send).");
+      return NS_OK;
+    }
+
     auto error = conduit->ConfigureSendMediaCodec(configs.values[0]);
     if (error) {
       MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
