@@ -124,6 +124,7 @@ this.sidebarAction = class extends ExtensionAPI {
       }
       let header = document.getElementById("sidebar-switcher-target");
       header.removeEventListener("SidebarShown", this.updateHeader);
+      SidebarUI.sidebars.delete(this.id);
     }
     windowTracker.removeOpenListener(this.windowOpenListener);
     windowTracker.removeCloseListener(this.windowCloseListener);
@@ -147,15 +148,17 @@ this.sidebarAction = class extends ExtensionAPI {
   createMenuItem(window, details) {
     let {document, SidebarUI} = window;
 
+    SidebarUI.sidebars.set(this.id, {
+      title: details.title,
+      url: sidebarURL,
+    });
+
     // Use of the broadcaster allows browser-sidebar.js to properly manage the
     // checkmarks in the menus.
     let broadcaster = document.createElementNS(XUL_NS, "broadcaster");
     broadcaster.setAttribute("id", this.id);
-    broadcaster.setAttribute("autoCheck", "false");
     broadcaster.setAttribute("type", "checkbox");
     broadcaster.setAttribute("group", "sidebar");
-    broadcaster.setAttribute("label", details.title);
-    broadcaster.setAttribute("sidebarurl", sidebarURL);
     broadcaster.setAttribute("panel", details.panel);
     if (this.browserStyle) {
       broadcaster.setAttribute("browserStyle", "true");
@@ -174,6 +177,7 @@ this.sidebarAction = class extends ExtensionAPI {
     // Insert a menuitem for View->Show Sidebars.
     let menuitem = document.createElementNS(XUL_NS, "menuitem");
     menuitem.setAttribute("id", this.menuId);
+    menuitem.setAttribute("label", details.title);
     menuitem.setAttribute("observes", this.id);
     menuitem.setAttribute("class", "menuitem-iconic webextension-menuitem");
     this.setMenuIcon(menuitem, details);
@@ -181,6 +185,7 @@ this.sidebarAction = class extends ExtensionAPI {
     // Insert a toolbarbutton for the sidebar dropdown selector.
     let toolbarbutton = document.createElementNS(XUL_NS, "toolbarbutton");
     toolbarbutton.setAttribute("id", this.buttonId);
+    toolbarbutton.setAttribute("label", details.title);
     toolbarbutton.setAttribute("observes", this.id);
     toolbarbutton.setAttribute("class", "subviewbutton subviewbutton-iconic webextension-menuitem");
     this.setMenuIcon(toolbarbutton, details);
@@ -221,19 +226,17 @@ this.sidebarAction = class extends ExtensionAPI {
       menu = this.createMenuItem(window, tabData);
     }
 
-    // Update the broadcaster first, it will update both menus.
     let broadcaster = document.getElementById(this.id);
-    broadcaster.setAttribute("tooltiptext", title);
-    broadcaster.setAttribute("label", title);
-
     let urlChanged = tabData.panel !== broadcaster.getAttribute("panel");
     if (urlChanged) {
       broadcaster.setAttribute("panel", tabData.panel);
     }
 
+    menu.setAttribute("label", title);
     this.setMenuIcon(menu, tabData);
 
     let button = document.getElementById(this.buttonId);
+    button.setAttribute("label", title);
     this.setMenuIcon(button, tabData);
 
     // Update the sidebar if this extension is the current sidebar.
