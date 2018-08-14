@@ -57,6 +57,7 @@ function checkLoads(aWindow, aBlocked) {
 SpecialPowers.pushPrefEnv(
   {"set": [["urlclassifier.trackingTable", "test-track-simple"],
            ["privacy.trackingprotection.enabled", true],
+           ["browser.contentblocking.enabled", true],
            ["browser.safebrowsing.malware.enabled", false],
            ["browser.safebrowsing.phishing.enabled", false],
            ["channelclassifier.allowlist_example", true]]},

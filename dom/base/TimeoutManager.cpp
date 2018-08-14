@@ -8,12 +8,15 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/Logging.h"
+#include "mozilla/PerformanceCounter.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIDocShell.h"
 #include "nsINamed.h"
 #include "nsITimeoutHandler.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #include "OrderedTimeoutIterator.h"
 #include "TimeoutExecutor.h"
@@ -298,11 +301,28 @@ TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   return result;
 }
 
+PerformanceCounter*
+TimeoutManager::GetPerformanceCounter()
+{
+  if (!StaticPrefs::dom_performance_enable_scheduler_timing()) {
+    return nullptr;
+  }
+  nsIDocument* doc = mWindow.GetDocument();
+  if (doc) {
+    dom::DocGroup* docGroup = doc->GetDocGroup();
+    if (docGroup) {
+      return docGroup->GetPerformanceCounter();
+    }
+  }
+  return nullptr;
+}
+
 void
 TimeoutManager::RecordExecution(Timeout* aRunningTimeout,
                                 Timeout* aTimeout)
 {
-  if (mWindow.IsChromeWindow()) {
+  if (!StaticPrefs::dom_performance_enable_scheduler_timing() &&
+      mWindow.IsChromeWindow()) {
     return;
   }
 
@@ -317,11 +337,22 @@ TimeoutManager::RecordExecution(Timeout* aRunningTimeout,
     budgetManager.MaybeCollectTelemetry(now);
 
     UpdateBudget(now, duration);
+
+    // This is an ad-hoc way to use the counters for the timers
+    // that should be removed at somepoint. See Bug 1482834
+    PerformanceCounter* counter = GetPerformanceCounter();
+    if (counter) {
+      counter->IncrementExecutionDuration(duration.ToMicroseconds());
+    }
   }
 
   if (aTimeout) {
     // If we're starting a new timeout callback, start recording.
     budgetManager.StartRecording(now);
+    PerformanceCounter* counter = GetPerformanceCounter();
+    if (counter) {
+      counter->IncrementDispatchCounter(DispatchCategory(TaskCategory::Timer));
+    }
   } else {
     // Else stop by clearing the start timestamp.
     budgetManager.StopRecording();
@@ -875,6 +906,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
 
       // This timeout is good to run
       bool timeout_was_cleared = mWindow.RunTimeoutHandler(timeout, scx);
+
       MOZ_LOG(gLog, LogLevel::Debug,
               ("Run%s(TimeoutManager=%p, timeout=%p, tracking=%d) returned %d\n", timeout->mIsInterval ? "Interval" : "Timeout",
                this, timeout.get(),

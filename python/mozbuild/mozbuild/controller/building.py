@@ -30,6 +30,7 @@ except Exception:
     psutil = None
 
 from mach.mixin.logging import LoggingMixin
+import mozfile
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from mozterm.widgets import Footer
 
@@ -94,6 +95,15 @@ and proceed with running tests. To do this run:
  $ touch {clobber_file}
 '''.splitlines()])
 
+CLOBBER_REQUESTED_MESSAGE = '''
+===================
+The CLOBBER file was updated prior to this build. A clobber build may be
+required to succeed, but we weren't expecting it to.
+
+Please consider filing a bug for this failure if you have reason to believe
+this is a clobber bug and not due to local changes.
+===================
+'''.strip()
 
 
 BuildOutputResult = namedtuple('BuildOutputResult',
@@ -1018,22 +1028,6 @@ class BuildDriver(MozbuildObject):
                 dep_file = '%s.in' % backend_file
                 return build_out_of_date(backend_file, dep_file)
 
-            def maybe_invoke_backend(active_backend):
-                # Attempt to bypass the make-oriented logic below. Note this
-                # will only succeed in case we're building with a non-make
-                # backend (Tup), and otherwise be harmless.
-                if active_backend:
-                    if backend_out_of_date(mozpath.join(self.topobjdir,
-                                                        'backend.%sBackend' %
-                                                        active_backend)):
-                        print('Build configuration changed. Regenerating backend.')
-                        args = [config.substs['PYTHON'],
-                                mozpath.join(self.topobjdir, 'config.status')]
-                        self.run_process(args, cwd=self.topobjdir, pass_thru=True)
-                    backend_cls = get_backend_class(active_backend)(config)
-                    return backend_cls.build(self, output, jobs, verbose, what)
-                return None
-
             monitor.start_resource_recording()
 
             config = None
@@ -1053,6 +1047,9 @@ class BuildDriver(MozbuildObject):
             status = None
             active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
             if active_backend and 'Make' not in active_backend:
+                # Record whether a clobber was requested so we can print
+                # a special message later if the build fails.
+                clobber_requested = False
                 # Write out any changes to the current mozconfig in case
                 # they should invalidate configure.
                 self._write_mozconfig_json()
@@ -1062,12 +1059,26 @@ class BuildDriver(MozbuildObject):
                                                   'config.status'),
                                      mozpath.join(self.topobjdir,
                                                   'config_status_deps.in')):
+                    clobber_requested = self._clobber_configure()
                     config_rc = self.configure(buildstatus_messages=True,
                                                line_handler=output.on_line)
                     if config_rc != 0:
                         return config_rc
+                elif backend_out_of_date(mozpath.join(self.topobjdir,
+                                                      'backend.%sBackend' %
+                                                      active_backend)):
+                    print('Build configuration changed. Regenerating backend.')
+                    args = [config.substs['PYTHON'],
+                            mozpath.join(self.topobjdir, 'config.status')]
+                    self.run_process(args, cwd=self.topobjdir, pass_thru=True)
 
-                status = maybe_invoke_backend(active_backend)
+                backend_cls = get_backend_class(active_backend)(config)
+                status = backend_cls.build(self, output, jobs, verbose, what)
+
+                if status and clobber_requested:
+                    for line in CLOBBER_REQUESTED_MESSAGE.splitlines():
+                        self.log(logging.WARNING, 'clobber',
+                                 {'msg': line.rstrip()}, '{msg}')
 
             if what and status is None:
                 # Collect target pairs.
@@ -1362,6 +1373,50 @@ class BuildDriver(MozbuildObject):
         else:
             install_test_files(mozpath.normpath(self.topsrcdir), self.topobjdir,
                                '_tests', test_objs)
+
+    def _clobber_configure(self):
+        # This is an optimistic treatment of the CLOBBER file for when we have
+        # some trust in the build system: an update to the CLOBBER file is
+        # interpreted to mean that configure will fail during an incremental
+        # build, which is handled by removing intermediate configure artifacts
+        # and subsections of the objdir related to python and testing before
+        # proceeding.
+        clobberer = Clobberer(self.topsrcdir, self.topobjdir)
+        clobber_output = io.BytesIO()
+        res = clobberer.maybe_do_clobber(os.getcwd(), False,
+                                         clobber_output)
+        required, performed, message = res
+        assert not performed
+        if not required:
+            return False
+
+        def remove_objdir_path(path):
+            path = mozpath.join(self.topobjdir, path)
+            self.log(logging.WARNING,
+                     'clobber',
+                     {'path': path},
+                     'CLOBBER file has been updated, removing {path}.')
+            mozfile.remove(path)
+
+        # Remove files we think could cause "configure" clobber bugs.
+        for f in ('old-configure.vars', 'config.cache', 'configure.pkl'):
+            remove_objdir_path(f)
+            remove_objdir_path(mozpath.join('js', 'src', f))
+
+        rm_dirs = [
+            # Stale paths in our virtualenv may cause build-backend
+            # to fail.
+            '_virtualenvs',
+            # Some tests may accumulate state in the objdir that may
+            # become invalid after srcdir changes.
+            '_tests',
+        ]
+
+        for d in rm_dirs:
+            remove_objdir_path(d)
+
+        os.utime(mozpath.join(self.topobjdir, 'CLOBBER'), None)
+        return True
 
     def _write_mozconfig_json(self):
         mozconfig_json = os.path.join(self.topobjdir, '.mozconfig.json')

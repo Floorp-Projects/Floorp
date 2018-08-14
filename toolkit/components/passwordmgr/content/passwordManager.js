@@ -101,8 +101,10 @@ function Startup() {
       window.arguments[0].filterString) {
     setFilter(window.arguments[0].filterString);
     Services.telemetry.getHistogramById("PWMGR_MANAGE_OPENED").add(1);
+    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_OPENED");
   } else {
     Services.telemetry.getHistogramById("PWMGR_MANAGE_OPENED").add(0);
+    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_OPENED");
   }
 
   FocusFilterBox();
@@ -409,6 +411,7 @@ function DeleteAllSignons() {
   removeAllButton.setAttribute("disabled", "true");
   FinalizeSignonDeletions(syncNeeded);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED_ALL").add(1);
+  Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_DELETED_ALL");
 }
 
 function TogglePasswordVisible() {
@@ -424,6 +427,7 @@ function TogglePasswordVisible() {
   // completed.  (Mostly useful for tests)
   Services.obs.notifyObservers(null, "passwordmgr-password-toggle-complete");
   Services.telemetry.getHistogramById("PWMGR_MANAGE_VISIBILITY_TOGGLED").add(showingPasswords);
+  Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_VISIBILITY_TOGGLED");
 }
 
 function AskUserShowPasswords() {
@@ -440,6 +444,7 @@ function FinalizeSignonDeletions(syncNeeded) {
   for (let s = 0; s < deletedSignons.length; s++) {
     Services.logins.removeLogin(deletedSignons[s]);
     Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED").add(1);
+    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_DELETED");
   }
   // If the deletion has been performed in a filtered view, reflect the deletion in the unfiltered table.
   // See bug 405389.
@@ -625,6 +630,7 @@ function CopyPassword() {
   let password = signonsTreeView.getCellText(row, {id: "passwordCol" });
   clipboard.copyString(password);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_PASSWORD").add(1);
+  Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_COPIED_PASSWORD");
 }
 
 function CopyUsername() {
@@ -635,6 +641,7 @@ function CopyUsername() {
   let username = signonsTreeView.getCellText(row, {id: "userCol" });
   clipboard.copyString(username);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_USERNAME").add(1);
+  Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_COPIED_USERNAME");
 }
 
 function EditCellInSelectedRow(columnName) {

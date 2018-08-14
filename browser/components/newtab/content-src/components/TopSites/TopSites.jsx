@@ -103,7 +103,7 @@ export class _TopSites extends React.PureComponent {
   onSearchShortcutsFormClose() {
     this.props.dispatch(ac.UserEvent({
       source: TOP_SITES_SOURCE,
-      event: "TOP_SITES_SEARCH_SHORTCUTS_CLOSE"
+      event: "SEARCH_EDIT_CLOSE"
     }));
     this.props.dispatch({type: at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL});
   }

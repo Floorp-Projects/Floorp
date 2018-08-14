@@ -1007,6 +1007,17 @@ describe("Top Stories Feed", () => {
       await instance.loadCachedData();
       assert.notCalled(sectionsManagerStub.updateSection);
     });
+    it("should broadcast in doContentUpdate when updating from cache", async () => {
+      sectionsManagerStub.sections.set("topstories", {options: {stories_referrer: "referrer"}});
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: () => {}}});
+      const stories = {"recommendations": [{}]};
+      const topics = {"topics": [{}]};
+      sinon.spy(instance, "doContentUpdate");
+      instance.cache.get = () => ({stories, topics});
+      await instance.onInit();
+      assert.calledOnce(instance.doContentUpdate);
+      assert.calledWith(instance.doContentUpdate, true);
+    });
     it("should initialize user domain affinity provider from cache if personalization is preffed on", async () => {
       const domainAffinities = {
         "parameterSets": {
