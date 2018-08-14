@@ -378,17 +378,8 @@ private:
   GetActiveWorkerInfoForScope(const OriginAttributes& aOriginAttributes,
                               const nsACString& aScope);
 
-  ServiceWorkerInfo*
-  GetActiveWorkerInfoForDocument(nsIDocument* aDocument);
-
   void
   StopControllingRegistration(ServiceWorkerRegistrationInfo* aRegistration);
-
-  already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWindow) const;
-
-  already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(nsIDocument* aDoc) const;
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(const ClientInfo& aClientInfo) const;
