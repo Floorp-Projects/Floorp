@@ -20,23 +20,6 @@
 namespace mozilla {
 
 /**
- * A structure representing a single attribute name and value.
- *
- * This is pretty similar to the private nsAttrAndChildArray::InternalAttr.
- */
-struct ServoAttrSnapshot
-{
-  nsAttrName mName;
-  nsAttrValue mValue;
-
-  ServoAttrSnapshot(const nsAttrName& aName, const nsAttrValue& aValue)
-    : mName(aName)
-    , mValue(aValue)
-  {
-  }
-};
-
-/**
  * A bitflags enum class used to determine what data does a ServoElementSnapshot
  * contains.
  */
@@ -179,7 +162,7 @@ private:
   // we're dealing with attribute changes when we take snapshots of attributes,
   // though it can be wasted space if we deal with a lot of state-only
   // snapshots.
-  nsTArray<ServoAttrSnapshot> mAttrs;
+  nsTArray<AttrArray::InternalAttr> mAttrs;
   nsAttrValue mClass;
   ServoStateType mState;
   Flags mContains;
@@ -220,7 +203,7 @@ ServoElementSnapshot::AddAttrs(const Element& aElement,
   for (uint32_t i = 0; i < attrCount; ++i) {
     const BorrowedAttrInfo info = aElement.GetAttrInfoAt(i);
     MOZ_ASSERT(info);
-    mAttrs.AppendElement(ServoAttrSnapshot { *info.mName, *info.mValue });
+    mAttrs.AppendElement(AttrArray::InternalAttr { *info.mName, *info.mValue });
   }
 
   mContains |= Flags::Attributes;
