@@ -6,4 +6,5 @@
 
 DevToolsModules(
     'console-progress.js',
+    'console-service.js',
 )
