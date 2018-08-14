@@ -334,12 +334,14 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        final IWebView webView = getWebView();
-                        if (webView == null) {
-                            return;
-                        }
+                        if (!TextUtils.isEmpty(s)) {
+                            final IWebView webView = getWebView();
+                            if (webView == null) {
+                                return;
+                            }
 
-                        webView.findAllAsync(s.toString());
+                            webView.findAllAsync(s.toString());
+                        }
                     }
                 }
         );
