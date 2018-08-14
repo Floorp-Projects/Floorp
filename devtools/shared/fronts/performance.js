@@ -131,7 +131,3 @@ const PerformanceFront = FrontClassWithSpec(performanceSpec, {
 });
 
 exports.PerformanceFront = PerformanceFront;
-
-exports.createPerformanceFront = function createPerformanceFront(target) {
-  return new PerformanceFront(target.client, target.form);
-};
