@@ -530,14 +530,12 @@
       <method name="initContextMenu">
         <parameter name="aMenu"/>
         <body><![CDATA[
-          const kXULNS =
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           let stringBundle = document.getBindingParent(this)._stringBundle;
 
           let pasteAndSearch, suggestMenuItem;
           let element, label, akey;
 
-          element = document.createElementNS(kXULNS, "menuseparator");
+          element = document.createXULElement("menuseparator");
           aMenu.appendChild(element);
 
           let insertLocation = aMenu.firstElementChild;
@@ -545,7 +543,7 @@
                  insertLocation.getAttribute("cmd") != "cmd_paste")
             insertLocation = insertLocation.nextElementSibling;
           if (insertLocation) {
-            element = document.createElementNS(kXULNS, "menuitem");
+            element = document.createXULElement("menuitem");
             label = stringBundle.getString("cmd_pasteAndSearch");
             element.setAttribute("label", label);
             element.setAttribute("anonid", "paste-and-search");
@@ -554,7 +552,7 @@
             pasteAndSearch = element;
           }
 
-          element = document.createElementNS(kXULNS, "menuitem");
+          element = document.createXULElement("menuitem");
           label = stringBundle.getString("cmd_clearHistory");
           akey = stringBundle.getString("cmd_clearHistory_accesskey");
           element.setAttribute("label", label);
@@ -562,7 +560,7 @@
           element.setAttribute("cmd", "cmd_clearhistory");
           aMenu.appendChild(element);
 
-          element = document.createElementNS(kXULNS, "menuitem");
+          element = document.createXULElement("menuitem");
           label = stringBundle.getString("cmd_showSuggestions");
           akey = stringBundle.getString("cmd_showSuggestions_accesskey");
           element.setAttribute("anonid", "toggle-suggest-item");
@@ -1508,13 +1506,10 @@
           this.settingsButton.id = origin + "-anon-search-settings";
           this.settingsButtonCompact.id = origin + "-anon-search-settings-compact";
 
-          const kXULNS =
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
           let dummyItems = enginesPerRow - (oneOffCount % enginesPerRow || enginesPerRow);
           for (let i = 0; i < engines.length; ++i) {
             let engine = engines[i];
-            let button = document.createElementNS(kXULNS, "button");
+            let button = document.createXULElement("button");
             button.id = this._buttonIDForEngine(engine);
             let uri = "chrome://browser/skin/search-engine-placeholder.png";
             if (engine.iconURI) {
@@ -1540,7 +1535,7 @@
 
           let hasDummyItems = !!dummyItems;
           while (dummyItems) {
-            let button = document.createElementNS(kXULNS, "button");
+            let button = document.createXULElement("button");
             button.setAttribute("class", "searchbar-engine-one-off-item dummy last-row");
             button.setAttribute("width", buttonWidth);
 
@@ -1589,15 +1584,12 @@
           return;
         }
 
-        const kXULNS =
-          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
         let engines = gBrowser.selectedBrowser.engines;
         let tooManyEngines = engines.length > this._addEngineMenuThreshold;
 
         if (tooManyEngines) {
           // Make the top-level menu button.
-          let button = document.createElementNS(kXULNS, "toolbarbutton");
+          let button = document.createXULElement("toolbarbutton");
           list.appendChild(button);
           button.classList.add("addengine-item", "badged-button");
           button.setAttribute("anonid", "addengine-menu-button");
@@ -1616,7 +1608,7 @@
           }
 
           // Now make the button's child menupopup.
-          list = document.createElementNS(kXULNS, "menupopup");
+          list = document.createXULElement("menupopup");
           button.appendChild(list);
           list.setAttribute("anonid", "addengine-menu");
           list.setAttribute("position", "topright topleft");
@@ -1643,7 +1635,7 @@
         // handling for free inside menupopups.
         let eltType = tooManyEngines ? "menuitem" : "toolbarbutton";
         for (let engine of engines) {
-          let button = document.createElementNS(kXULNS, eltType);
+          let button = document.createXULElement(eltType);
           button.classList.add("addengine-item");
           if (!tooManyEngines) {
             button.classList.add("badged-button");

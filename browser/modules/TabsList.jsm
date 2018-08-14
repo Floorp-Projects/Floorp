@@ -8,7 +8,6 @@ ChromeUtils.defineModuleGetter(this, "PanelMultiView",
                                "resource:///modules/PanelMultiView.jsm");
 
 var EXPORTED_SYMBOLS = ["TabsPanel"];
-const NSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function setAttributes(element, attrs) {
   for (let [name, value] of Object.entries(attrs)) {
@@ -216,7 +215,7 @@ class TabsPanel extends TabsListBase {
 
   _createRow(tab) {
     let {doc} = this;
-    let row = doc.createElementNS(NSXUL, "toolbaritem");
+    let row = doc.createXULElement("toolbaritem");
     row.setAttribute("class", "all-tabs-item");
     if (this.className) {
       row.classList.add(this.className);
@@ -225,7 +224,7 @@ class TabsPanel extends TabsListBase {
     row.addEventListener("command", this);
     this.tabToElement.set(tab, row);
 
-    let button = doc.createElementNS(NSXUL, "toolbarbutton");
+    let button = doc.createXULElement("toolbarbutton");
     button.setAttribute("class", "all-tabs-button subviewbutton subviewbutton-iconic");
     button.setAttribute("flex", "1");
     button.setAttribute("crop", "right");
@@ -233,7 +232,7 @@ class TabsPanel extends TabsListBase {
 
     row.appendChild(button);
 
-    let secondaryButton = doc.createElementNS(NSXUL, "toolbarbutton");
+    let secondaryButton = doc.createXULElement("toolbarbutton");
     secondaryButton.setAttribute(
       "class", "all-tabs-secondary-button subviewbutton subviewbutton-iconic");
     secondaryButton.setAttribute("closemenu", "none");
