@@ -3520,7 +3520,7 @@ pub extern "C" fn Servo_DeclarationBlock_GetNthProperty(
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
         if let Some(decl) = decls.declarations().get(index as usize) {
             let result = unsafe { result.as_mut().unwrap() };
-            result.assign_utf8(&decl.id().name());
+            result.assign_str(&decl.id().name());
             true
         } else {
             false

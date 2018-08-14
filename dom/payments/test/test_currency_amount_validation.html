@@ -138,7 +138,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   }
 
   function testWithLowerCaseCurrency() {
-    info("testWithLowerCaseCurrency");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
       ok(payRequest, "PaymentRequest should be created");
@@ -151,7 +150,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   }
 
   function testWithWellFormedCurrencyCodes() {
-    info("testWithWellFormedCurrencyCodes");
     return new Promise((resolve, reject) => {
       for (const currency of wellFormedCurrencyCodes) {
         let details = {
@@ -175,7 +173,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   }
 
   function testWithInvalidCurrencyCodes() {
-    info("testWithInvalidCurrencyCodes");
     return new Promise((resolve, reject) => {
       for (const invalidCurrency of invalidCurrencyCodes) {
         let invalidDetails = {
@@ -201,7 +198,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   function testUpdateWithInvalidCurrency() {
     const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
 
-    info("testUpdateWithInvalidCurrency");
     gScript.sendAsyncMessage("set-update-with-invalid-details-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
@@ -227,7 +223,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   function testUpdateWithInvalidAmount() {
     const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
 
-    info("testUpdateWithInvalidAmount");
     gScript.sendAsyncMessage("set-update-with-invalid-details-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
@@ -251,7 +246,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   }
 
   function testSpecialAmount() {
-    info("testSpecailAmount");
     return new Promise((resolve, reject) => {
       try {
         new PaymentRequest([{supportedMethods: "basic-card"}],
@@ -266,7 +260,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   }
 
   function testInvalidTotalAmounts() {
-    info("testInvalidTotalAmounts");
     return new Promise((resolve, reject) => {
       for (const amount of invalidTotalAmounts) {
         try {
@@ -300,7 +293,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1388661
   }
 
   function testInvalidAmounts() {
-     info("testInvalidAmounts");
      return new Promise((resolve, reject) => {
       for (const amount of invalidAmounts) {
         try {

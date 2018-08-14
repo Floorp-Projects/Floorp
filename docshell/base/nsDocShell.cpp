@@ -4773,7 +4773,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
     nsresult rv = aURI->GetSpec(url);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (aURL) {
-    CopyUTF16toUTF8(aURL, url);
+    CopyUTF16toUTF8(MakeStringSpan(aURL), url);
   } else {
     return NS_ERROR_INVALID_POINTER;
   }

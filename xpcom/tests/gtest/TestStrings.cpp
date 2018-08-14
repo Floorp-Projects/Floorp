@@ -769,12 +769,10 @@ TEST_F(Strings, replace_substr)
 
 TEST_F(Strings, replace_substr_2)
 {
-  const char *oldName = nullptr;
   const char *newName = "user";
   nsString acctName; acctName.AssignLiteral("forums.foo.com");
   nsAutoString newAcctName, oldVal, newVal;
-  CopyASCIItoUTF16(oldName, oldVal);
-  CopyASCIItoUTF16(newName, newVal);
+  CopyASCIItoUTF16(mozilla::MakeStringSpan(newName), newVal);
   newAcctName.Assign(acctName);
 
   // here, oldVal is empty.  we are testing that this function
@@ -1285,6 +1283,47 @@ TEST(String, strip_chars)
   test_strip_chars_helper(u" foo",
                           u" ",
                           NS_LITERAL_STRING("foo"));
+}
+
+TEST_F(Strings, append_with_capacity)
+{
+  nsAutoString s;
+  const char16_t* origPtr = s.BeginReading();
+  s.SetCapacity(100);
+  const char16_t* ptr = s.BeginReading();
+  EXPECT_NE(origPtr, ptr);
+  for (int i = 0; i < 100; i++) {
+    s.Append(u'a');
+    EXPECT_EQ(s.BeginReading(), ptr);
+    EXPECT_EQ(s.Length(), uint32_t(i + 1));
+  }
+}
+
+TEST_F(Strings, append_string_with_capacity)
+{
+  nsAutoString aa;
+  aa.Append(u'a');
+  aa.Append(u'a');
+  nsAutoString s;
+  const char16_t* origPtr = s.BeginReading();
+  s.SetCapacity(200);
+  const char16_t* ptr = s.BeginReading();
+  EXPECT_NE(origPtr, ptr);
+  for (int i = 0; i < 100; i++) {
+    s.Append(aa);
+    EXPECT_EQ(s.BeginReading(), ptr);
+    EXPECT_EQ(s.Length(), uint32_t(2 * (i + 1)));
+  }
+}
+
+TEST_F(Strings, legacy_set_length_semantics)
+{
+  const char* foobar = "foobar";
+  nsCString s;
+  s.SetCapacity(2048);
+  memcpy(s.BeginWriting(), foobar, strlen(foobar));
+  s.SetLength(strlen(foobar));
+  EXPECT_TRUE(s.EqualsASCII(foobar));
 }
 
 TEST_F(Strings, huge_capacity)

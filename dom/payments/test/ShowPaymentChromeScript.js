@@ -258,7 +258,6 @@ addMessageListener("set-complete-status-unknown", function() {
 });
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage('teardown-complete');
 });

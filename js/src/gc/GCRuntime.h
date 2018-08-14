@@ -1023,6 +1023,9 @@ class GCRuntime
     const void* addressOfStringNurseryCurrentEnd() {
         return nursery_.refNoCheck().addressOfCurrentStringEnd();
     }
+    uint32_t* addressOfNurseryAllocCount() {
+        return stats().addressOfAllocsSinceMinorGCNursery();
+    }
 
     void minorGC(JS::gcreason::Reason reason,
                  gcstats::PhaseKind phase = gcstats::PhaseKind::MINOR_GC) JS_HAZ_GC_CALL;

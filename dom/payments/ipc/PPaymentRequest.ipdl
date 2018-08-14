@@ -108,6 +108,11 @@ struct IPCPaymentUpdateActionRequest
   nsString shippingOption;
 };
 
+struct IPCPaymentCleanupActionRequest
+{
+  nsString requestId;
+};
+
 union IPCPaymentActionRequest
 {
   IPCPaymentCreateActionRequest;
@@ -116,6 +121,7 @@ union IPCPaymentActionRequest
   IPCPaymentAbortActionRequest;
   IPCPaymentCompleteActionRequest;
   IPCPaymentUpdateActionRequest;
+  IPCPaymentCleanupActionRequest;
 };
 
 struct IPCPaymentCanMakeActionResponse

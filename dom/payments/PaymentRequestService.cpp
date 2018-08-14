@@ -378,6 +378,20 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       }
       break;
     }
+    case nsIPaymentActionRequest::CLEANUP_ACTION: {
+      nsCOMPtr<nsIPaymentRequest> payment;
+      rv = GetPaymentRequestById(requestId, getter_AddRefs(payment));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (mShowingRequest == payment) {
+        // might need to notify the PaymentRequest is cleanup
+        mShowingRequest = nullptr;
+      }
+      mRequestQueue.RemoveElement(payment);
+      //RemoveActionCallback(requestId);
+      break;
+    }
     default: {
       return NS_ERROR_FAILURE;
     }

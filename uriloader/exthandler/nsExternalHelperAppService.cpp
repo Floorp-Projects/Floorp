@@ -2791,7 +2791,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
     {
       if (fileName[i] == char16_t('.'))
       {
-        CopyUTF16toUTF8(fileName.get() + i + 1, fileExt);
+        CopyUTF16toUTF8(Substring(fileName, i + 1), fileExt);
         break;
       }
     }

@@ -157,6 +157,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/HoldDropJSObjects.h"
 /* This must occur *after* base/process_util.h to avoid typedefs conflicts. */
 #include "mozilla/LinkedList.h"
@@ -849,28 +850,20 @@ private:
   PtrInfo* mLast;
 };
 
-
-// Declarations for mPtrToNodeMap.
-
-struct PtrToNodeEntry : public PLDHashEntryHdr
+struct PtrToNodeHashPolicy
 {
-  // The key is mNode->mPointer
-  PtrInfo* mNode;
-};
+  using Key = PtrInfo*;
+  using Lookup = void*;
 
-static bool
-PtrToNodeMatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
-{
-  const PtrToNodeEntry* n = static_cast<const PtrToNodeEntry*>(aEntry);
-  return n->mNode->mPointer == aKey;
-}
+  static js::HashNumber hash(const Lookup& aLookup)
+  {
+    return mozilla::HashGeneric(aLookup);
+  }
 
-static PLDHashTableOps PtrNodeOps = {
-  PLDHashTable::HashVoidPtrKeyStub,
-  PtrToNodeMatchEntry,
-  PLDHashTable::MoveEntryStub,
-  PLDHashTable::ClearEntryStub,
-  nullptr
+  static bool match(const Key& aKey, const Lookup& aLookup)
+  {
+    return aKey->mPointer == aLookup;
+  }
 };
 
 
@@ -893,7 +886,10 @@ struct CCGraph
   uint32_t mRootCount;
 
 private:
-  PLDHashTable mPtrToNodeMap;
+  friend CCGraphBuilder;
+
+  mozilla::HashSet<PtrInfo*, PtrToNodeHashPolicy> mPtrInfoMap;
+
   bool mOutOfMemory;
 
   static const uint32_t kInitialMapLength = 16384;
@@ -901,9 +897,10 @@ private:
 public:
   CCGraph()
     : mRootCount(0)
-    , mPtrToNodeMap(&PtrNodeOps, sizeof(PtrToNodeEntry), kInitialMapLength)
+    , mPtrInfoMap(kInitialMapLength)
     , mOutOfMemory(false)
-  {}
+  {
+  }
 
   ~CCGraph() {}
 
@@ -918,7 +915,7 @@ public:
     mEdges.Clear();
     mWeakMaps.Clear();
     mRootCount = 0;
-    mPtrToNodeMap.ClearAndPrepareForLength(kInitialMapLength);
+    mPtrInfoMap.clearAndCompact();
     mOutOfMemory = false;
   }
 
@@ -927,17 +924,16 @@ public:
   {
     return mNodes.IsEmpty() && mEdges.IsEmpty() &&
            mWeakMaps.IsEmpty() && mRootCount == 0 &&
-           mPtrToNodeMap.EntryCount() == 0;
+           mPtrInfoMap.empty();
   }
 #endif
 
   PtrInfo* FindNode(void* aPtr);
-  PtrToNodeEntry* AddNodeToMap(void* aPtr);
   void RemoveObjectFromMap(void* aObject);
 
   uint32_t MapCount() const
   {
-    return mPtrToNodeMap.EntryCount();
+    return mPtrInfoMap.count();
   }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
@@ -951,52 +947,28 @@ public:
     // pointers are non-owning.
     n += mWeakMaps.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-    n += mPtrToNodeMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    n += mPtrInfoMap.shallowSizeOfExcludingThis(aMallocSizeOf);
 
     return n;
-  }
-
-private:
-  PtrToNodeEntry* FindNodeEntry(void* aPtr) const
-  {
-    return static_cast<PtrToNodeEntry*>(mPtrToNodeMap.Search(aPtr));
   }
 };
 
 PtrInfo*
 CCGraph::FindNode(void* aPtr)
 {
-  PtrToNodeEntry* e = FindNodeEntry(aPtr);
-  return e ? e->mNode : nullptr;
-}
-
-PtrToNodeEntry*
-CCGraph::AddNodeToMap(void* aPtr)
-{
-  JS::AutoSuppressGCAnalysis suppress;
-  if (mOutOfMemory) {
-    return nullptr;
-  }
-
-  auto e = static_cast<PtrToNodeEntry*>(mPtrToNodeMap.Add(aPtr, fallible));
-  if (!e) {
-    mOutOfMemory = true;
-    MOZ_ASSERT(false, "Ran out of memory while building cycle collector graph");
-    return nullptr;
-  }
-  return e;
+  auto p = mPtrInfoMap.lookup(aPtr);
+  return p ? *p : nullptr;
 }
 
 void
 CCGraph::RemoveObjectFromMap(void* aObj)
 {
-  PtrToNodeEntry* e = FindNodeEntry(aObj);
-  PtrInfo* pinfo = e ? e->mNode : nullptr;
-  if (pinfo) {
-    mPtrToNodeMap.RemoveEntry(e);
-
+  auto p = mPtrInfoMap.lookup(aObj);
+  if (p) {
+    PtrInfo* pinfo = *p;
     pinfo->mPointer = nullptr;
     pinfo->mParticipant = nullptr;
+    mPtrInfoMap.remove(p);
   }
 }
 
@@ -2271,26 +2243,33 @@ CCGraphBuilder::~CCGraphBuilder()
 PtrInfo*
 CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
 {
-  PtrToNodeEntry* e = mGraph.AddNodeToMap(aPtr);
-  if (!e) {
+  if (mGraph.mOutOfMemory) {
     return nullptr;
   }
 
   PtrInfo* result;
-  if (!e->mNode) {
-    // New entry.
+  auto p = mGraph.mPtrInfoMap.lookupForAdd(aPtr);
+  if (!p) {
+    // New entry
     result = mNodeBuilder.Add(aPtr, aParticipant);
     if (!result) {
       return nullptr;
     }
 
-    e->mNode = result;
-    NS_ASSERTION(result, "mNodeBuilder.Add returned null");
+    if (!mGraph.mPtrInfoMap.add(p, result)) {
+      // `result` leaks here, but we can't free it because it's
+      // pool-allocated within NodePool.
+      mGraph.mOutOfMemory = true;
+      MOZ_ASSERT(false, "OOM while building cycle collector graph");
+      return nullptr;
+    }
+
   } else {
-    result = e->mNode;
+    result = *p;
     MOZ_ASSERT(result->mParticipant == aParticipant,
                "nsCycleCollectionParticipant shouldn't change!");
   }
+
   return result;
 }
 

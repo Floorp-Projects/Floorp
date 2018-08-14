@@ -1878,7 +1878,7 @@ IMContextWrapper::GetCompositionString(GtkIMContext* aContext,
     gtk_im_context_get_preedit_string(aContext, &preedit_string,
                                       &feedback_list, &cursor_pos);
     if (preedit_string && *preedit_string) {
-        CopyUTF8toUTF16(preedit_string, aCompositionString);
+      CopyUTF8toUTF16(MakeStringSpan(preedit_string), aCompositionString);
     } else {
         aCompositionString.Truncate();
     }

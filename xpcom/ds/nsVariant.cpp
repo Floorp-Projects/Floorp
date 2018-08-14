@@ -829,7 +829,7 @@ nsDiscriminatedUnion::ConvertToAString(nsAString& aResult) const
       CopyUTF8toUTF16(*u.mUTF8StringValue, aResult);
       return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
-      CopyASCIItoUTF16(u.str.mStringValue, aResult);
+      CopyASCIItoUTF16(mozilla::MakeStringSpan(u.str.mStringValue), aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
       aResult.Assign(u.wstr.mWStringValue);
@@ -924,7 +924,7 @@ nsDiscriminatedUnion::ConvertToAUTF8String(nsAUTF8String& aResult) const
                       aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-      CopyUTF16toUTF8(u.wstr.mWStringValue, aResult);
+      CopyUTF16toUTF8(mozilla::MakeStringSpan(u.wstr.mWStringValue), aResult);
       return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
       // XXX Extra copy, can be removed if we're sure CHAR_STR can

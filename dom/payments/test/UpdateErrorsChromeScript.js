@@ -152,7 +152,6 @@ const DummyUIService = {
 paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage('teardown-complete');
 });

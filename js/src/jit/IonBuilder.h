@@ -326,7 +326,7 @@ class IonBuilder
 
     // jsop_compare helpers.
     AbortReasonOr<Ok> compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left,
-                                            MDefinition* right, bool canTrackOptimization);
+                                            MDefinition* right);
     AbortReasonOr<Ok> compareTryBitwise(bool* emitted, JSOp op, MDefinition* left,
                                         MDefinition* right);
     AbortReasonOr<Ok> compareTrySpecializedOnBaselineInspector(bool* emitted, JSOp op,

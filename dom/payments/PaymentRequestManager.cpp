@@ -530,6 +530,22 @@ PaymentRequestManager::UpdatePayment(JSContext* aCx,
 }
 
 nsresult
+PaymentRequestManager::CleanupPayment(PaymentRequest* aRequest)
+{
+  // for the case, the payment request is waiting for response from user.
+  if (auto entry = mActivePayments.Lookup(aRequest)) {
+    NotifyRequestDone(aRequest);
+  }
+  if (mShowingRequest == aRequest) {
+    mShowingRequest = nullptr;
+  }
+  nsAutoString requestId;
+  aRequest->GetInternalId(requestId);
+  IPCPaymentCleanupActionRequest action(requestId);
+  return SendRequestPayment(aRequest, action, false);
+}
+
+nsresult
 PaymentRequestManager::RespondPayment(PaymentRequest* aRequest,
                                       const IPCPaymentActionResponse& aResponse)
 {

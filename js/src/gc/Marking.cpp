@@ -3002,6 +3002,7 @@ js::TenuringTracer::moveToTenuredSlow(JSObject* src)
     }
 
     tenuredSize += dstSize;
+    tenuredCells++;
 
     // Copy the Cell contents.
     MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
@@ -3050,6 +3051,7 @@ js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
 
     size_t srcSize = Arena::thingSize(dstKind);
     tenuredSize += srcSize;
+    tenuredCells++;
 
     // Copy the Cell contents.
     MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
@@ -3166,6 +3168,7 @@ js::TenuringTracer::moveToTenured(JSString* src)
 
     JSString* dst = allocTenured<JSString>(zone, dstKind);
     tenuredSize += moveStringToTenured(dst, src, dstKind);
+    tenuredCells++;
 
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
     overlay->forwardTo(dst);

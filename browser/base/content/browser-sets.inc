@@ -9,7 +9,9 @@
 #endif
 #endif
 
-  <stringbundleset id="stringbundleset">
+  <stringbundleset id="stringbundleset"
+                   string-bookmarkthispage="&bookmarkThisPageCmd.label;"
+                   string-editthisbookmark="&editThisBookmarkCmd.label;">
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
@@ -130,10 +132,6 @@
                  sidebarurl="chrome://browser/content/places/historySidebar.xul"
                  oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
-    <broadcaster id="bookmarkThisPageBroadcaster"
-                 label="&bookmarkThisPageCmd.label;"
-                 bookmarklabel="&bookmarkThisPageCmd.label;"
-                 editlabel="&editThisBookmarkCmd.label;"/>
     <broadcaster id="isImage"/>
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>

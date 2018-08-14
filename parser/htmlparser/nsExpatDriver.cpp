@@ -31,6 +31,7 @@
 
 using mozilla::fallible;
 using mozilla::LogLevel;
+using mozilla::MakeStringSpan;
 
 #define kExpatSeparatorChar 0xFFFF
 
@@ -578,11 +579,11 @@ nsExpatDriver::HandleExternalEntityRef(const char16_t *openEntityNames,
   if (NS_FAILED(rv)) {
 #ifdef DEBUG
     nsCString message("Failed to open external DTD: publicId \"");
-    AppendUTF16toUTF8(publicId, message);
+    AppendUTF16toUTF8(MakeStringSpan(publicId), message);
     message += "\" systemId \"";
-    AppendUTF16toUTF8(systemId, message);
+    AppendUTF16toUTF8(MakeStringSpan(systemId), message);
     message += "\" base \"";
-    AppendUTF16toUTF8(base, message);
+    AppendUTF16toUTF8(MakeStringSpan(base), message);
     message += "\" URL \"";
     AppendUTF16toUTF8(absURL, message);
     message += "\"";

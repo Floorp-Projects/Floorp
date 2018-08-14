@@ -6345,15 +6345,15 @@ nsHttpChannel::BeginConnect()
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (consoleService) {
             nsAutoString message(NS_LITERAL_STRING("Alternate Service Mapping found: "));
-            AppendASCIItoUTF16(scheme.get(), message);
+            AppendASCIItoUTF16(scheme, message);
             message.AppendLiteral(u"://");
-            AppendASCIItoUTF16(host.get(), message);
+            AppendASCIItoUTF16(host, message);
             message.AppendLiteral(u":");
             message.AppendInt(port);
             message.AppendLiteral(u" to ");
-            AppendASCIItoUTF16(scheme.get(), message);
+            AppendASCIItoUTF16(scheme, message);
             message.AppendLiteral(u"://");
-            AppendASCIItoUTF16(mapping->AlternateHost().get(), message);
+            AppendASCIItoUTF16(mapping->AlternateHost(), message);
             message.AppendLiteral(u":");
             message.AppendInt(mapping->AlternatePort());
             consoleService->LogStringMessage(message.get());
