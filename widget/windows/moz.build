@@ -99,6 +99,11 @@ SOURCES += [
     'WinMouseScrollHandler.cpp',
 ]
 
+# Needs INITGUID and we don't allow INITGUID in unified sources since bug 970429.
+SOURCES += [
+    'InputDeviceUtils.cpp',
+]
+
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecWin.cpp',

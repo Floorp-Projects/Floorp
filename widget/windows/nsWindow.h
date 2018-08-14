@@ -537,6 +537,7 @@ protected:
   WNDPROC               mPrevWndProc;
   HBRUSH                mBrush;
   IMEContext            mDefaultIMC;
+  HDEVNOTIFY            mDeviceNotifyHandle;
   bool                  mIsTopWidgetWindow;
   bool                  mInDtor;
   bool                  mIsVisible;
