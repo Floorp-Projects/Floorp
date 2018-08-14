@@ -3,19 +3,19 @@ use jsapi::root::*;
 use std::ptr;
 
 #[derive(Debug)]
-pub struct AutoCompartment(JSAutoRealmAllowCCW);
+pub struct AutoRealm(JSAutoRealmAllowCCW);
 
-impl AutoCompartment {
+impl AutoRealm {
     #[cfg(feature = "debugmozjs")]
     pub unsafe fn with_obj(cx: *mut JSContext,
                            target: *mut JSObject)
-                           -> AutoCompartment
+                           -> AutoRealm
     {
         let mut notifier = mozilla::detail::GuardObjectNotifier {
             mStatementDone: ptr::null_mut(),
         };
 
-        AutoCompartment(
+        AutoRealm(
             JSAutoRealmAllowCCW::new(
                 cx,
                 target,
@@ -25,21 +25,21 @@ impl AutoCompartment {
     #[cfg(not(feature = "debugmozjs"))]
     pub unsafe fn with_obj(cx: *mut JSContext,
                            target: *mut JSObject)
-                           -> AutoCompartment
+                           -> AutoRealm
     {
-        AutoCompartment(JSAutoRealmAllowCCW::new(cx, target))
+        AutoRealm(JSAutoRealmAllowCCW::new(cx, target))
     }
 
     #[cfg(feature = "debugmozjs")]
     pub unsafe fn with_script(cx: *mut JSContext,
                               target: *mut JSScript)
-                              -> AutoCompartment
+                              -> AutoRealm
     {
         let mut notifier = mozilla::detail::GuardObjectNotifier {
             mStatementDone: ptr::null_mut(),
         };
 
-        AutoCompartment(
+        AutoRealm(
             JSAutoRealmAllowCCW::new1(
                 cx,
                 target,
@@ -49,8 +49,8 @@ impl AutoCompartment {
     #[cfg(not(feature = "debugmozjs"))]
     pub unsafe fn with_script(cx: *mut JSContext,
                               target: *mut JSScript)
-                              -> AutoCompartment
+                              -> AutoRealm
     {
-        AutoCompartment(JSAutoRealmAllowCCW::new1(cx, target))
+        AutoRealm(JSAutoRealmAllowCCW::new1(cx, target))
     }
 }
