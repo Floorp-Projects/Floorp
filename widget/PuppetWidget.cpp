@@ -1137,7 +1137,7 @@ void
 PuppetWidget::OnMemoryPressure(layers::MemoryPressureReason aWhy)
 {
   if (aWhy != MemoryPressureReason::LOW_MEMORY_ONGOING &&
-      mVisible &&
+      !mVisible &&
       mLayerManager &&
       XRE_IsContentProcess()) {
     mLayerManager->ClearCachedResources();
