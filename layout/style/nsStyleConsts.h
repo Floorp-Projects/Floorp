@@ -382,7 +382,7 @@ enum class StyleContent : uint8_t {
   AltContent
 };
 
-// See nsStyleUserInterface
+// See nsStyleUI
 #define NS_STYLE_CURSOR_AUTO                    1
 #define NS_STYLE_CURSOR_CROSSHAIR               2
 #define NS_STYLE_CURSOR_DEFAULT                 3    // ie: an arrow

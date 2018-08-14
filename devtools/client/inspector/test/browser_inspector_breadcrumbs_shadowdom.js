@@ -48,7 +48,7 @@ add_task(async function() {
   await onBreadcrumbsUpdated;
 
   checkBreadcrumbsContent(breadcrumbs,
-    ["html", "body", "test-component", "slot.slot-class"]);
+    ["html", "body", "test-component", "#shadow-root", "slot.slot-class"]);
 
   info("Expand the slot");
   await expandContainer(inspector, slotContainer);

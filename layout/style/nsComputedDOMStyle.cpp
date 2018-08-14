@@ -727,7 +727,7 @@ CollectImageURLsForProperty(nsCSSPropertyID aProp,
 
   switch (aProp) {
     case eCSSProperty_cursor:
-      for (auto& image : aStyle.StyleUserInterface()->mCursorImages) {
+      for (auto& image : aStyle.StyleUI()->mCursorImages) {
         AddImageURL(*image.mImage, aURLs);
       }
       break;
@@ -2985,7 +2985,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetScrollbarFaceColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueForWidgetColor(val, StyleUserInterface()->mScrollbarFaceColor,
+  SetValueForWidgetColor(val, StyleUI()->mScrollbarFaceColor,
                          StyleAppearance::ScrollbarthumbVertical);
   return val.forget();
 }
@@ -2994,7 +2994,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetScrollbarTrackColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueForWidgetColor(val, StyleUserInterface()->mScrollbarTrackColor,
+  SetValueForWidgetColor(val, StyleUI()->mScrollbarTrackColor,
                          StyleAppearance::ScrollbarVertical);
   return val.forget();
 }
@@ -3477,7 +3477,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetCaretColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueFromComplexColor(val, StyleUserInterface()->mCaretColor);
+  SetValueFromComplexColor(val, StyleUI()->mCaretColor);
   return val.forget();
 }
 
@@ -3486,7 +3486,7 @@ nsComputedDOMStyle::DoGetCursor()
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
 
-  const nsStyleUserInterface *ui = StyleUserInterface();
+  const nsStyleUI *ui = StyleUI();
 
   for (const nsCursorImage& item : ui->mCursorImages) {
     RefPtr<nsDOMCSSValueList> itemList = GetROCSSValueList(false);

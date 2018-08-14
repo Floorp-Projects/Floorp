@@ -21,6 +21,8 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 // Some margin may be required for visible element detection.
 const SCROLL_MARGIN = 1;
 
+const SHADOW_ROOT_TAGNAME = "#shadow-root";
+
 /**
  * Component to replicate functionality of XUL arrowscrollbox
  * for breadcrumbs
@@ -417,7 +419,7 @@ HTMLBreadcrumbs.prototype = {
    * @return {String}
    */
   prettyPrintNodeAsText: function(node) {
-    let text = node.displayName;
+    let text = node.isShadowRoot ? SHADOW_ROOT_TAGNAME : node.displayName;
     if (node.isPseudoElement) {
       text = node.isBeforePseudoElement ? "::before" : "::after";
     }
@@ -461,7 +463,7 @@ HTMLBreadcrumbs.prototype = {
     const pseudosLabel = this.doc.createElementNS(NS_XHTML, "span");
     pseudosLabel.className = "breadcrumbs-widget-item-pseudo-classes plain";
 
-    let tagText = node.displayName;
+    let tagText = node.isShadowRoot ? SHADOW_ROOT_TAGNAME : node.displayName;
     if (node.isPseudoElement) {
       tagText = node.isBeforePseudoElement ? "::before" : "::after";
     }
@@ -729,7 +731,7 @@ HTMLBreadcrumbs.prototype = {
       stopNode = this.nodeHierarchy[originalLength - 1].node;
     }
     while (node && node != stopNode) {
-      if (node.tagName) {
+      if (node.tagName || node.isShadowRoot) {
         const button = this.buildButton(node);
         fragment.insertBefore(button, lastButtonInserted);
         lastButtonInserted = button;
@@ -880,7 +882,7 @@ HTMLBreadcrumbs.prototype = {
       }
     }
 
-    if (!this.selection.isElementNode()) {
+    if (!this.selection.isElementNode() && !this.selection.isShadowRootNode()) {
       // no selection
       this.setCursor(-1);
       if (trimmed) {

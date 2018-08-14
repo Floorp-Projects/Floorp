@@ -4633,7 +4633,7 @@ nsresult
 nsTextFrame::GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor)
 {
-  FillCursorInformationFromStyle(StyleUserInterface(), aCursor);
+  FillCursorInformationFromStyle(StyleUI(), aCursor);
   if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
     if (!IsSelectable(nullptr)) {
       aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;

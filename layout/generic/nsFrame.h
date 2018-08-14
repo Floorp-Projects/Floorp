@@ -685,7 +685,7 @@ protected:
                                     mozilla::TableSelection* aTarget);
 
   // Fills aCursor with the appropriate information from ui
-  static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
+  static void FillCursorInformationFromStyle(const nsStyleUI* ui,
                                              nsIFrame::Cursor& aCursor);
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
