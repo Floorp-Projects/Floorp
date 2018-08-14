@@ -459,26 +459,6 @@ skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1406171
 skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1469019
-skip script test262/built-ins/Object/fromEntries/to-property-key.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-string-entry.js.js
-skip script test262/built-ins/Object/fromEntries/supports-symbols.js
-skip script test262/built-ins/Object/fromEntries/evaluation-order.js
-skip script test262/built-ins/Object/fromEntries/length.js
-skip script test262/built-ins/Object/fromEntries/uses-keys-not-iterator.js
-skip script test262/built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js
-skip script test262/built-ins/Object/fromEntries/uses-define-semantics.js
-skip script test262/built-ins/Object/fromEntries/key-order.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-null-entry.js.js
-skip script test262/built-ins/Object/fromEntries/simple-properties.js
-skip script test262/built-ins/Object/fromEntries/empty-iterable.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-accessor.js
-skip script test262/built-ins/Object/fromEntries/string-entry-object-succeeds.js
-skip script test262/built-ins/Object/fromEntries/iterator-not-closed-for-throwing-done-accessor.js
-skip script test262/built-ins/Object/fromEntries/prototype.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-key-tostring.js
-skip script test262/built-ins/Object/fromEntries/name.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1291407
 skip script test262/intl402/ListFormat/prototype/toStringTag/toString.js
 skip script test262/intl402/ListFormat/prototype/toStringTag/toStringTag.js

@@ -286,3 +286,23 @@ function ObjectDefineProperty(obj, propertyKey, attributes) {
     // Step 5.
     return obj;
 }
+
+// Proposal https://tc39.github.io/proposal-object-from-entries/
+// 1. Object.fromEntries ( iterable )
+function ObjectFromEntries(iter) {
+    // We omit the usual step number comments here because they don't help.
+    // This implementation inlines AddEntriesFromIterator and
+    // CreateDataPropertyOnObject, so it looks more like the polyfill
+    // <https://github.com/tc39/proposal-object-from-entries/blob/master/polyfill.js>
+    // than the spec algorithm.
+    const obj = {};
+
+    for (const pair of allowContentIter(iter)) {
+        if (!IsObject(pair))
+            ThrowTypeError(JSMSG_INVALID_MAP_ITERABLE, "Object.fromEntries");
+        _DefineDataProperty(obj, pair[0], pair[1]);
+    }
+
+    return obj;
+}
+
