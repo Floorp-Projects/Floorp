@@ -3075,9 +3075,7 @@ HTMLEditor::SetSelectionAfterTableEdit(Element* aTable,
     if (cell) {
       if (aSelected) {
         // Reselect the cell
-        nsresult rv = SelectContentInternal(*selection, *cell);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-          "Failed to select the cell");
+        SelectElement(cell);
         return;
       }
 
