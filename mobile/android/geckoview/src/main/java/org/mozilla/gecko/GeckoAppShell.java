@@ -82,6 +82,7 @@ import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Display;
 import android.view.HapticFeedbackConstants;
+import android.view.InputDevice;
 import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 
@@ -1845,6 +1846,89 @@ public class GeckoAppShell
             return 1;
         }
         return 0;
+    }
+
+    /*
+     * Keep in sync with PointerCapabilities in ServoTypes.h
+    */
+    static private final int NO_POINTER            = 0x00000000;
+    static private final int COARSE_POINTER        = 0x00000001;
+    static private final int FINE_POINTER          = 0x00000002;
+    static private final int HOVER_CAPABLE_POINTER = 0x00000004;
+    private static int getPointerCapabilities(InputDevice inputDevice) {
+        int result = NO_POINTER;
+        int sources = inputDevice.getSources();
+
+        if (hasInputDeviceSource(sources, InputDevice.SOURCE_TOUCHSCREEN) ||
+            hasInputDeviceSource(sources, InputDevice.SOURCE_JOYSTICK)) {
+            result |= COARSE_POINTER;
+        } else if (hasInputDeviceSource(sources, InputDevice.SOURCE_MOUSE) ||
+                   hasInputDeviceSource(sources, InputDevice.SOURCE_STYLUS) ||
+                   hasInputDeviceSource(sources, InputDevice.SOURCE_TOUCHPAD) ||
+                   hasInputDeviceSource(sources, InputDevice.SOURCE_TRACKBALL)) {
+            result |= FINE_POINTER;
+        }
+
+        if (hasInputDeviceSource(sources, InputDevice.SOURCE_MOUSE) ||
+            hasInputDeviceSource(sources, InputDevice.SOURCE_TOUCHPAD) ||
+            hasInputDeviceSource(sources, InputDevice.SOURCE_TRACKBALL) ||
+            hasInputDeviceSource(sources, InputDevice.SOURCE_JOYSTICK)) {
+            result |= HOVER_CAPABLE_POINTER;
+        }
+
+        return result;
+    }
+
+    private static boolean isPointerTypeDevice(InputDevice inputDevice) {
+        int sources = inputDevice.getSources();
+        return (sources & (InputDevice.SOURCE_CLASS_JOYSTICK |
+                           InputDevice.SOURCE_CLASS_POINTER |
+                           InputDevice.SOURCE_CLASS_POSITION |
+                           InputDevice.SOURCE_CLASS_TRACKBALL)) != 0;
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    // For any-pointer and any-hover media queries features.
+    private static int getAllPointerCapabilities() {
+        int result = NO_POINTER;
+
+        for (int deviceId : InputDevice.getDeviceIds()) {
+            InputDevice inputDevice = InputDevice.getDevice(deviceId);
+            if (inputDevice == null ||
+                !isPointerTypeDevice(inputDevice)) {
+                continue;
+            }
+
+            result |= getPointerCapabilities(inputDevice);
+        }
+
+        return result;
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    // For pointer and hover media queries features.
+    private static int getPrimaryPointerCapabilities() {
+        int result = NO_POINTER;
+
+        for (int deviceId : InputDevice.getDeviceIds()) {
+            InputDevice inputDevice = InputDevice.getDevice(deviceId);
+            if (inputDevice == null ||
+                !isPointerTypeDevice(inputDevice)) {
+                continue;
+            }
+
+            result = getPointerCapabilities(inputDevice);
+
+            // We need information only for the primary pointer.
+            // (Assumes that the primary pointer appears first in the list)
+            break;
+        }
+
+        return result;
+    }
+
+    private static boolean hasInputDeviceSource(int sources, int inputDeviceSource) {
+        return (sources & inputDeviceSource) == inputDeviceSource;
     }
 
     public static synchronized void setScreenSizeOverride(final Rect size) {
