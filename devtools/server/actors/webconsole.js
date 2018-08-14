@@ -44,7 +44,7 @@ if (isWorker) {
 } else {
   loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/webconsole/listeners/console-api", true);
   loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/webconsole/listeners/console-service", true);
-  loader.lazyRequireGetter(this, "ConsoleReflowListener", "devtools/server/actors/webconsole/listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleReflowListener", "devtools/server/actors/webconsole/listeners/console-reflow", true);
   loader.lazyRequireGetter(this, "ContentProcessListener", "devtools/server/actors/webconsole/listeners", true);
   loader.lazyRequireGetter(this, "DocumentEventsListener", "devtools/server/actors/webconsole/listeners", true);
 }
