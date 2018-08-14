@@ -749,3 +749,7 @@ body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
 .moz-reader-content .invisible {
   display: none;
 }
+
+.reader-show-element {
+  display: initial;
+}
