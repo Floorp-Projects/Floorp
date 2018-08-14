@@ -122,14 +122,6 @@
 #include ../../components/places/content/placesCommands.inc.xul
 
   <broadcasterset id="mainBroadcasterSet">
-    <broadcaster id="viewBookmarksSidebar"
-                 type="checkbox" group="sidebar"
-                 oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
-
-    <broadcaster id="viewHistorySidebar"
-                 type="checkbox" group="sidebar"
-                 oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
-
     <broadcaster id="isImage"/>
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>
@@ -145,9 +137,6 @@
     <broadcaster id="sync-unverified-state" hidden="true"/>
     <broadcaster id="sync-syncnow-state" hidden="true"/>
     <broadcaster id="sync-reauth-state" hidden="true"/>
-    <broadcaster id="viewTabsSidebar"
-                 type="checkbox" group="sidebar"
-                 oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
                  label="&devtoolsRecordExecution.label;"
