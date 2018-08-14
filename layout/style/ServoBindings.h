@@ -244,8 +244,8 @@ Gecko_GetActiveLinkAttrDeclarationBlock(RawGeckoElementBorrowed element);
 
 // Visited handling.
 
-// Returns whether private browsing is enabled for a given element.
-bool Gecko_IsPrivateBrowsingEnabled(const nsIDocument* aDoc);
+// Returns whether visited styles are enabled for a given document.
+bool Gecko_VisitedStylesEnabled(const nsIDocument*);
 
 // Animations
 bool

@@ -3182,6 +3182,16 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
     return;
   }
 
+  const EventStates kVisitedAndUnvisited =
+    NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED;
+  if (aChangedBits.HasAtLeastOneOfStates(kVisitedAndUnvisited) &&
+      !Gecko_VisitedStylesEnabled(element.OwnerDoc())) {
+    aChangedBits &= ~kVisitedAndUnvisited;
+    if (aChangedBits.IsEmpty()) {
+      return;
+    }
+  }
+
   nsChangeHint changeHint;
   ContentStateChangedInternal(element, aChangedBits, &changeHint);
 
