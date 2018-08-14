@@ -116,6 +116,32 @@ function installTemporaryExtension() {
   return () => {};
 }
 
+function reloadTemporaryExtension(actor) {
+  return async (_, getState) => {
+    const client = getState().runtime.client;
+
+    try {
+      await client.request({ to: actor, type: "reload" });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+}
+
+function removeTemporaryExtension(id) {
+  return async () => {
+    try {
+      const addon = await AddonManager.getAddonByID(id);
+
+      if (addon) {
+        await addon.uninstall();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+}
+
 function requestTabs() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_TABS_START });
@@ -160,6 +186,8 @@ module.exports = {
   disconnectRuntime,
   inspectDebugTarget,
   installTemporaryExtension,
+  reloadTemporaryExtension,
+  removeTemporaryExtension,
   requestTabs,
   requestExtensions,
 };

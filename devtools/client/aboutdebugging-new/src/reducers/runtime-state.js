@@ -70,11 +70,23 @@ function getExtensionFilePath(extension) {
 function toExtensionComponentData(extensions) {
   return extensions.map(extension => {
     const type = DEBUG_TARGETS.EXTENSION;
-    const { iconURL, id, manifestURL, name } = extension;
+    const { actor, iconURL, id, manifestURL, name, temporarilyInstalled } = extension;
     const icon = iconURL || "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     const location = getExtensionFilePath(extension);
     const uuid = manifestURL ? /moz-extension:\/\/([^/]*)/.exec(manifestURL)[1] : null;
-    return { type, id, icon, location, manifestURL, name, uuid };
+    return {
+      name,
+      icon,
+      id,
+      type,
+      details: {
+        actor,
+        location,
+        manifestURL,
+        temporarilyInstalled,
+        uuid,
+      },
+    };
   });
 }
 
@@ -87,7 +99,15 @@ function toTabComponentData(tabs) {
       : "chrome://devtools/skin/images/globe.svg";
     const name = tab.title || tab.url;
     const url = tab.url;
-    return { type, id, icon, name, url };
+    return {
+      name,
+      icon,
+      id,
+      type,
+      details: {
+        url,
+      },
+    };
   });
 }
 

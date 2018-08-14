@@ -6,5 +6,6 @@ DevToolsModules(
     'ExtensionDetail.css',
     'ExtensionDetail.js',
     'TabDetail.js',
+    'TemporaryExtensionAction.js',
     'TemporaryExtensionInstaller.js',
 )
