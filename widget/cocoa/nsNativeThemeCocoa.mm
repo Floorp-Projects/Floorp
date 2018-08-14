@@ -2748,7 +2748,7 @@ nsNativeThemeCocoa::ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal)
   // generally good enough for use cases of custom scrollbars.
   if (!params.overlay) {
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (style->StyleUserInterface()->HasCustomScrollbars()) {
+    if (style->StyleUI()->HasCustomScrollbars()) {
       params.custom = true;
       params.trackColor =
         GetScrollbarTrackColor(style, &GetAutoScrollbarTrackColor);

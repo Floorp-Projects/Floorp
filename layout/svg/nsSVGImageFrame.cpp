@@ -502,7 +502,7 @@ nsSVGImageFrame::GetHitTestFlags()
 {
   uint16_t flags = 0;
 
-  switch (StyleUserInterface()->mPointerEvents) {
+  switch (StyleUI()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:

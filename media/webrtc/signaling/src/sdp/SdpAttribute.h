@@ -1283,6 +1283,13 @@ public:
     virtual ~Parameters() {}
     virtual Parameters* Clone() const = 0;
     virtual void Serialize(std::ostream& os) const = 0;
+    virtual bool CompareEq(const Parameters& other) const = 0;
+
+    bool operator==(const Parameters& other) const
+    {
+        return codec_type == other.codec_type &&
+               CompareEq(other);
+    }
 
     SdpRtpmapAttributeList::CodecType codec_type;
   };
@@ -1308,6 +1315,12 @@ public:
         os << (i != 0 ? "/" : "")
            << std::to_string(encodings[i]);
       }
+    }
+
+    virtual bool
+    CompareEq(const Parameters& other) const override
+    {
+      return encodings == static_cast<const RedParameters&>(other).encodings;
     }
 
     std::vector<uint8_t> encodings;
@@ -1377,6 +1390,22 @@ public:
       }
     }
 
+    virtual bool
+    CompareEq(const Parameters& other) const override
+    {
+      const auto& otherH264 = static_cast<const H264Parameters&>(other);
+
+      // sprop is not comapred here as it does not get parsed in the rsdparsa
+      return packetization_mode == otherH264.packetization_mode &&
+             level_asymmetry_allowed == otherH264.level_asymmetry_allowed &&
+             profile_level_id == otherH264.profile_level_id &&
+             max_mbps == otherH264.max_mbps &&
+             max_fs == otherH264.max_fs &&
+             max_cpb == otherH264.max_cpb &&
+             max_dpb == otherH264.max_dpb &&
+             max_br == otherH264.max_br;
+    }
+
     static const size_t max_sprop_len = 128;
     char sprop_parameter_sets[max_sprop_len];
     unsigned int packetization_mode;
@@ -1413,6 +1442,15 @@ public:
       os << ";max-fr=" << max_fr;
     }
 
+    virtual bool
+    CompareEq(const Parameters& other) const override
+    {
+      const auto& otherVP8 = static_cast<const VP8Parameters&>(other);
+
+      return max_fs == otherVP8.max_fs &&
+             max_fr == otherVP8.max_fr;
+    }
+
     unsigned int max_fs;
     unsigned int max_fr;
   };
@@ -1444,6 +1482,25 @@ public:
          << ";useinbandfec=" << useInBandFec;
     }
 
+    virtual bool
+    CompareEq(const Parameters& other) const override
+    {
+      const auto& otherOpus = static_cast<const OpusParameters&>(other);
+
+      bool maxplaybackrateIsEq = (maxplaybackrate == otherOpus.maxplaybackrate);
+
+      // This is due to a bug in sipcc that causes maxplaybackrate to
+      // always be 0 if it appears in the fmtp
+      if (((maxplaybackrate == 0) && (otherOpus.maxplaybackrate != 0)) ||
+          ((maxplaybackrate != 0) && (otherOpus.maxplaybackrate == 0))) {
+           maxplaybackrateIsEq = true;
+       }
+
+      return maxplaybackrateIsEq &&
+             stereo == otherOpus.stereo &&
+             useInBandFec == otherOpus.useInBandFec;
+    }
+
     unsigned int maxplaybackrate;
     unsigned int stereo;
     unsigned int useInBandFec;
@@ -1467,6 +1524,13 @@ public:
     Serialize(std::ostream& os) const override
     {
       os << dtmfTones;
+    }
+
+    virtual bool
+    CompareEq(const Parameters& other) const override
+    {
+      return dtmfTones == static_cast<const TelephoneEventParameters&>(other)
+                          .dtmfTones;
     }
 
     std::string dtmfTones;
@@ -1499,6 +1563,12 @@ public:
       return *this;
     }
 
+    bool operator==(const Fmtp& other) const
+    {
+      return format == other.format &&
+             *parameters == *other.parameters;
+    }
+
     // The contract around these is as follows:
     // * |parameters| is only set if we recognized the media type and had
     //   a subclass of Parameters to represent that type of parameters
@@ -1509,6 +1579,8 @@ public:
     std::string format;
     UniquePtr<Parameters> parameters;
   };
+
+  bool operator==(const SdpFmtpAttributeList& other) const;
 
   virtual void Serialize(std::ostream& os) const override;
 

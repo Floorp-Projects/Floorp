@@ -287,7 +287,7 @@ value can be held for the layout objects to use.<br>
 First look into <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsStyleStruct.h">
 nsStyleStruct.h</a>
  to see the existing style strucs. Find the one that you want to store the
-data on. In this example, we want to put it on the nsStyleUserInterface struct,
+data on. In this example, we want to put it on the nsStyleUI struct,
 however there is also a class nsStyleUIReset that holds the non-inherited
 values, so we will use that one (remember, our property is not inherited).
 Add a <a href="#ComputedStyleMember">data member</a>

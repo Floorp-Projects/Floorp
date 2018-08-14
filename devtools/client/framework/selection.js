@@ -266,4 +266,8 @@ Selection.prototype = {
   isSlotted: function() {
     return this._isSlotted;
   },
+
+  isShadowRootNode: function() {
+    return this.isNode() && this.nodeFront.isShadowRoot;
+  },
 };

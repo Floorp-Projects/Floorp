@@ -351,7 +351,7 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
   bool frameIsPointerEventsNone =
-    aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame) ==
+    aFrame->StyleUI()->GetEffectivePointerEvents(aFrame) ==
       NS_STYLE_POINTER_EVENTS_NONE;
   if (aBuilder->IsInsidePointerEventsNoneDoc() || frameIsPointerEventsNone) {
     mEventRegionsOverride |= EventRegionsOverride::ForceEmptyHitRegion;

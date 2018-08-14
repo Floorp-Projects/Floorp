@@ -33,4 +33,4 @@ STYLE_STRUCT(Text, (mTextEmphasisColor,
                     mWebkitTextStrokeColor))
 STYLE_STRUCT(TextReset, (mTextDecorationColor))
 STYLE_STRUCT(SVG, (mFill, mStroke))
-STYLE_STRUCT(UserInterface, (mCaretColor))
+STYLE_STRUCT(UI, (mCaretColor))
