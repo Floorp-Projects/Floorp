@@ -57,22 +57,22 @@ $262.agent.broadcast(i64a.buffer);
 // Wait until all agents started.
 $262.agent.waitUntil(i64a, RUNNING, BigInt(NUMAGENT));
 
-// Wake index 1, wakes nothing
-assert.sameValue(Atomics.wake(i64a, 1), 0, 'Atomics.wake(i64a, 1) returns 0');
+// Notify index 1, notifies nothing
+assert.sameValue(Atomics.notify(i64a, 1), 0, 'Atomics.notify(i64a, 1) returns 0');
 
-// Wake index 3, wakes nothing
-assert.sameValue(Atomics.wake(i64a, 3), 0, 'Atomics.wake(i64a, 3) returns 0');
+// Notify index 3, notifies nothing
+assert.sameValue(Atomics.notify(i64a, 3), 0, 'Atomics.notify(i64a, 3) returns 0');
 
-// Wake index 2, wakes 1
+// Notify index 2, notifies 1
 var woken = 0;
-while ((woken = Atomics.wake(i64a, 2)) === 0) ;
-assert.sameValue(woken, 1, 'Atomics.wake(i64a, 2) returns 1');
+while ((woken = Atomics.notify(i64a, 2)) === 0) ;
+assert.sameValue(woken, 1, 'Atomics.notify(i64a, 2) returns 1');
 assert.sameValue($262.agent.getReport(), 'ok', '$262.agent.getReport() returns "ok"');
 
-// Wake index 0, wakes 1
+// Notify index 0, notifies 1
 var woken = 0;
-while ((woken = Atomics.wake(i64a, 0)) === 0) ;
-assert.sameValue(woken, 1, 'Atomics.wake(i64a, 0) returns 1');
+while ((woken = Atomics.notify(i64a, 0)) === 0) ;
+assert.sameValue(woken, 1, 'Atomics.notify(i64a, 0) returns 1');
 assert.sameValue($262.agent.getReport(), 'ok', '$262.agent.getReport() returns "ok"');
 
 reportCompare(0, 0);
