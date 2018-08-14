@@ -35,7 +35,7 @@ const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
 /*
  * Custom request panel component
  * A network request editor which simply provide edit and resend interface
- * for netowrk development.
+ * for network development.
  */
 class CustomRequestPanel extends Component {
   static get propTypes() {

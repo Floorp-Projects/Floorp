@@ -539,6 +539,16 @@ devtools.main:
       oldpanel: The panel the user is switching from
       newpanel: The panel the user is switching to
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  edit_resend:
+    objects: ["netmonitor"]
+    bug_numbers: [1463171]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has executed edit / resend in the netmonitor.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The toolbox session start time e.g. 13963.
   execute_js:
     objects: ["webconsole"]
     bug_numbers: [1463083]
