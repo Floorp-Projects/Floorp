@@ -2293,6 +2293,21 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
   return IPC_OK();
 }
 
+// Return whether a remote script should be loaded in middleman processes in
+// addition to any child recording process they have.
+static bool
+LoadScriptInMiddleman(const nsString& aURL)
+{
+  return // Middleman processes run devtools server side scripts.
+         StringBeginsWith(aURL, NS_LITERAL_STRING("resource://devtools/"))
+         // This script includes event listeners needed to propagate document
+         // title changes.
+      || aURL.EqualsLiteral("chrome://global/content/browser-child.js")
+         // This script is needed to respond to session store requests from the
+         // UI process.
+      || aURL.EqualsLiteral("chrome://browser/content/content-sessionStore.js");
+}
+
 mozilla::ipc::IPCResult
 TabChild::RecvLoadRemoteScript(const nsString& aURL, const bool& aRunInGlobalScope)
 {
@@ -2304,6 +2319,11 @@ TabChild::RecvLoadRemoteScript(const nsString& aURL, const bool& aRunInGlobalSco
   JS::Rooted<JSObject*> global(RootingCx(), mTabChildGlobal->GetWrapper());
   if (!global) {
     // This can happen if we're half-destroyed.  It's not a fatal error.
+    return IPC_OK();
+  }
+
+  // Make sure we only load whitelisted scripts in middleman processes.
+  if (recordreplay::IsMiddleman() && !LoadScriptInMiddleman(aURL)) {
     return IPC_OK();
   }
 
