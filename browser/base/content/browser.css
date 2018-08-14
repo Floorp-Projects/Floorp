@@ -66,14 +66,6 @@ searchbar {
   min-width: 25px;
 }
 
-.browserStack > browser {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-browser");
-}
-
-.browserStack > browser[remote="true"] {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-remote-browser");
-}
-
 toolbar[customizable="true"] {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar");
 }

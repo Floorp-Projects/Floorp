@@ -293,6 +293,7 @@ window._gBrowser = {
 
     browser.permanentKey = {};
     browser.droppedLinkHandler = handleDroppedLink;
+    browser.loadURI = _loadURI.bind(null, browser);
 
     let autoScrollPopup = browser._createAutoScrollPopup();
     autoScrollPopup.id = "autoscroller";
@@ -2040,6 +2041,7 @@ window._gBrowser = {
     this._tabFilters.set(aTab, filter);
 
     browser.droppedLinkHandler = handleDroppedLink;
+    browser.loadURI = _loadURI.bind(null, browser);
 
     // Most of the time, we start our browser's docShells out as inactive,
     // and then maintain activeness in the tab switcher. Preloaded about:newtab's

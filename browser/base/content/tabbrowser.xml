@@ -2188,41 +2188,4 @@
       </handler>
     </handlers>
   </binding>
-
-  <binding id="tabbrowser-browser"
-           extends="chrome://global/content/bindings/browser.xml#browser">
-    <implementation>
-      <field name="tabModalPromptBox">null</field>
-
-      <!-- throws exception for unknown schemes -->
-      <method name="loadURI">
-        <parameter name="aURI"/>
-        <parameter name="aParams"/>
-        <body>
-          <![CDATA[
-            _loadURI(this, aURI, aParams);
-          ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
-  <binding id="tabbrowser-remote-browser"
-           extends="chrome://global/content/bindings/remote-browser.xml#remote-browser">
-    <implementation>
-      <field name="tabModalPromptBox">null</field>
-
-      <!-- throws exception for unknown schemes -->
-      <method name="loadURI">
-        <parameter name="aURI"/>
-        <parameter name="aParams"/>
-        <body>
-          <![CDATA[
-            _loadURI(this, aURI, aParams);
-          ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
 </bindings>
