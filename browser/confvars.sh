@@ -40,11 +40,7 @@ MOZ_ENABLE_SIGNMAR=1
 MOZ_APP_VERSION=$FIREFOX_VERSION
 MOZ_APP_VERSION_DISPLAY=$FIREFOX_VERSION_DISPLAY
 
-if [ "${MOZ_BROWSER_XHTML}" = "1" ]; then
-  BROWSER_CHROME_URL=chrome://browser/content/browser.xhtml
-else
-  BROWSER_CHROME_URL=chrome://browser/content/browser.xul
-fi
+BROWSER_CHROME_URL=chrome://browser/content/browser.xul
 
 # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
 # MOZ_BRANDING_DIRECTORY is the default branding directory used when none is

@@ -72,11 +72,7 @@
 # that they can be shared with macWindow.inc.xul.
 #include global-scripts.inc
 
-<script type="application/javascript"
-#ifdef BROWSER_XHTML
-xmlns="http://www.w3.org/1999/xhtml"
-#endif
->
+<script type="application/javascript">
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
 </script>
