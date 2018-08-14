@@ -197,7 +197,6 @@ addMessageListener("error-response-test", function() {
 });
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

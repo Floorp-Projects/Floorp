@@ -77,14 +77,17 @@ static char*
 AllocConvertUTF16toUTF8(char16ptr_t arg)
 {
   // be generous... UTF16 units can expand up to 3 UTF8 units
-  int len = wcslen(arg);
-  char *s = new char[len * 3 + 1];
+  size_t len = wcslen(arg);
+  // ConvertUTF16toUTF8 requires +1. Let's do that here, too, lacking
+  // knowledge of Windows internals.
+  size_t dstLen = len * 3 + 1;
+  char* s = new char[dstLen + 1]; // Another +1 for zero terminator
   if (!s)
     return nullptr;
 
-  ConvertUTF16toUTF8 convert(s);
-  convert.write(arg, len);
-  convert.write_terminator();
+  int written =
+    ::WideCharToMultiByte(CP_UTF8, 0, arg, len, s, dstLen, nullptr, nullptr);
+  s[written] = 0;
   return s;
 }
 

@@ -47,6 +47,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentRequest,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaymentRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(PaymentRequest, DOMEventTargetHelper)
@@ -642,6 +643,7 @@ PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aIn
   , mIPC(nullptr)
 {
   MOZ_ASSERT(aWindow);
+  RegisterActivityObserver();
 }
 
 already_AddRefed<Promise>
@@ -1058,6 +1060,44 @@ PaymentRequest::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   mDeferredShow = false;
 }
 
+void
+PaymentRequest::RegisterActivityObserver()
+{
+  if (nsPIDOMWindowInner* window = GetOwner()) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    if (doc) {
+      doc->RegisterActivityObserver(
+        NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
+    }
+  }
+}
+
+void
+PaymentRequest::UnregisterActivityObserver()
+{
+  if (nsPIDOMWindowInner* window = GetOwner()) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    if (doc) {
+      doc->UnregisterActivityObserver(
+        NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
+    }
+  }
+}
+
+void
+PaymentRequest::NotifyOwnerDocumentActivityChanged()
+{
+  nsPIDOMWindowInner* window = GetOwner();
+  NS_ENSURE_TRUE_VOID(window);
+  nsIDocument* doc = window->GetExtantDoc();
+  NS_ENSURE_TRUE_VOID(doc);
+
+  if (!doc->IsCurrentActiveDocument()) {
+    RefPtr<PaymentRequestManager> mgr = PaymentRequestManager::GetSingleton();
+    mgr->CleanupPayment(this);
+  }
+}
+
 PaymentRequest::~PaymentRequest()
 {
   if (mIPC) {
@@ -1065,6 +1105,7 @@ PaymentRequest::~PaymentRequest()
     // references to us and we can't be waiting for any replies.
     mIPC->MaybeDelete(false);
   }
+  UnregisterActivityObserver();
 }
 
 JSObject*

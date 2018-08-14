@@ -522,7 +522,9 @@ struct MessageWindow {
         // Construct a narrow UTF8 buffer <commandline>\0<workingdir>\0
         NS_ConvertUTF16toUTF8 utf8buffer(cmd);
         utf8buffer.Append('\0');
-        AppendUTF16toUTF8(cwd, utf8buffer);
+        WCHAR* cwdPtr = cwd;
+        AppendUTF16toUTF8(MakeStringSpan(reinterpret_cast<char16_t*>(cwdPtr)),
+                          utf8buffer);
         utf8buffer.Append('\0');
 
         // We used to set dwData to zero, when we didn't send the working dir.
