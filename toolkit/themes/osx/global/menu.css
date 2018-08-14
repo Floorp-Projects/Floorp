@@ -137,6 +137,10 @@ menuitem[customoptionstyling="true"] {
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
+menulist > menupopup {
+  font: inherit;
+}
+
 menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
