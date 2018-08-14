@@ -263,7 +263,7 @@ IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
   Matrix4x4 transform =
     nsStyleTransformMatrix::ReadTransforms(transformList->mHead,
                                            refBox,
-                                           nsPresContext::AppUnitsPerCSSPixel(),
+                                           AppUnitsPerCSSPixel(),
                                            &dummyBool);
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {

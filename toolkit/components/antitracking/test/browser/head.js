@@ -9,6 +9,8 @@ const TEST_3RD_PARTY_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_3RD_PARTY_PAGE_WO = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyWO.html";
 const TEST_3RD_PARTY_PAGE_UI = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyUI.html";
 
+var gFeatures = undefined;
+
 let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 this.AntiTracking = {
@@ -18,17 +20,19 @@ this.AntiTracking = {
     this._createCleanupTask(cleanupFunction);
 
     if (callbackNonTracking) {
-      // Here we want to test that a 3rd party context is not blocked if pref is off.
+      // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off.
       this._createTask(name, false, callbackNonTracking);
       this._createCleanupTask(cleanupFunction);
 
-      // Permission granted when there is a window.open()
+      // Phase 2: Here we want to test that a third-party context doesn't
+      // get blocked with when the same origin is opened through window.open().
       if (windowOpenTest) {
         this._createWindowOpenTask(name, callbackTracking, callbackNonTracking, extraPrefs);
         this._createCleanupTask(cleanupFunction);
       }
 
-      // Permission granted when there is user-interaction.
+      // Phase 3: Here we want to test that a third-party context doesn't
+      // get blocked with user interaction present
       if (userInteractionTest) {
         this._createUserInteractionTask(name, callbackTracking, callbackNonTracking, extraPrefs);
         this._createCleanupTask(cleanupFunction);
@@ -39,7 +43,7 @@ this.AntiTracking = {
   async _setupTest(blocking, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
     await SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.restrict3rdpartystorage.enabled", blocking],
+      ["network.cookie.cookieBehavior", blocking ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER : Ci.nsICookieService.BEHAVIOR_ACCEPT],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", blocking],
@@ -130,9 +134,14 @@ this.AntiTracking = {
       let browser = gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
+      let pageURL = TEST_3RD_PARTY_PAGE_WO;
+      if (gFeatures == "noopener") {
+        pageURL += "?noopener";
+      }
+
       info("Creating a 3rd party content");
       await ContentTask.spawn(browser,
-                              { page: TEST_3RD_PARTY_PAGE_WO,
+                              { page: pageURL,
                                 blockingCallback: blockingCallback.toString(),
                                 nonBlockingCallback: nonBlockingCallback.toString(),
                               },

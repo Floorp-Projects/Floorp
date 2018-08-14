@@ -37,6 +37,9 @@ const char* SaveAllRecordingsDirectory();
 
 // Middleman process API
 
+// Get the pid of the UI process.
+base::ProcessId ParentProcessId();
+
 // Save the recording up to the current point in execution.
 void SaveRecording(const ipc::FileDescriptor& aFile);
 

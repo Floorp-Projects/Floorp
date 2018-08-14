@@ -550,9 +550,9 @@ ChildProcessInfo::AttemptRestart(const char* aWhy)
   PrintSpew("Warning: Child process died [%d]: %s\n", (int) GetId(), aWhy);
 
   if (!CanRestart()) {
-    nsAutoCString why(aWhy);
-    dom::ContentChild::GetSingleton()->SendRecordReplayFatalError(why);
-    Thread::WaitForeverNoIdle();
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RecordReplayError,
+                                       nsAutoCString(aWhy));
+    Shutdown();
   }
 
   mNumRestarts++;

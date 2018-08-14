@@ -46,12 +46,15 @@ public:
   MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aFirstPartyWindow,
                                            nsIURI* aURI);
 
-  // This can be called only if the a3rdPartyTrackingChannel is _really_ a 3rd
-  // party context and marked as tracking resource.
   // It returns true if the URI has access to the first party storage.
+  // aChannel can be a 3rd party channel, or not.
   static bool
-  IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* a3rdPartyTrackingChannel,
-                                      nsIURI* aURI);
+  IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel, nsIURI* aURI);
+
+  // This method checks if the principal has the permission to access to the
+  // first party storage.
+  static bool
+  IsFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal);
 
   // Grant the permission for aOrigin to have access to the first party storage.
   // This method can handle 2 different scenarios:

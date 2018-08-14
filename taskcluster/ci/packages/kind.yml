@@ -138,12 +138,25 @@ jobs:
     description: "Valgrind for Debian Wheezy"
     treeherder:
       symbol: Deb7(valgrind)
+    worker:
+      env:
+        VERSION: 3.14.0.git20180806
+        COMMIT: 2eb2df759f51b15702934dee108f4c20c3db5fef
     run:
       using: debian-package
       dsc:
         url: http://snapshot.debian.org/archive/debian/20170725T040438Z/pool/main/v/valgrind/valgrind_3.13.0-1.dsc
         sha256: ab84e017d1660efd30e9e0593a4c8b976aeda013cefb8c416dd284cc7222c11c
+      packages:
+        - deb7-git
       patch: valgrind-wheezy.diff
+      pre-build-command: >-
+        git clone -n git://sourceware.org/git/valgrind.git ../valgrind-git &&
+        git -C ../valgrind-git archive --format=tar --prefix=valgrind-$VERSION/ $COMMIT | bzip2 > ../valgrind_$VERSION.orig.tar.bz2 &&
+        tar -C .. -jxf ../valgrind_$VERSION.orig.tar.bz2 &&
+        cp -r debian ../valgrind-$VERSION &&
+        cd ../valgrind-$VERSION &&
+        debchange -v 1:$VERSION-1.deb7moz1 --distribution wheezy "Mozilla backport of git master as of 2018-08-06." < /dev/null
 
   deb7-dh-python:
     description: "dh-python for Debian wheezy"

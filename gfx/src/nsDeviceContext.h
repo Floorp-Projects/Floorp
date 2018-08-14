@@ -82,12 +82,6 @@ public:
     already_AddRefed<gfxContext> CreateReferenceRenderingContext();
 
     /**
-     * Gets the number of app units in one CSS pixel; this number is global,
-     * not unique to each device context.
-     */
-    static int32_t AppUnitsPerCSSPixel() { return mozilla::AppUnitsPerCSSPixel(); }
-
-    /**
      * Gets the number of app units in one device pixel; this number
      * is usually a factor of AppUnitsPerCSSPixel(), although that is
      * not guaranteed.
@@ -113,12 +107,6 @@ public:
      */
     int32_t AppUnitsPerPhysicalInch() const
     { return mAppUnitsPerPhysicalInch; }
-
-    /**
-     * Gets the number of app units in one CSS inch; this is
-     * 96 times AppUnitsPerCSSPixel.
-     */
-    static int32_t AppUnitsPerCSSInch() { return mozilla::AppUnitsPerCSSInch(); }
 
     /**
      * Get the ratio of app units to dev pixels that would be used at unit

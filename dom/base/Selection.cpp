@@ -2025,7 +2025,7 @@ Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint)
       dx->GetRect(screen);
       nsPoint screenPoint = globalPoint +
                             rootmostFrame->GetScreenRectInAppUnits().TopLeft();
-      nscoord onePx = nsPresContext::AppUnitsPerCSSPixel();
+      nscoord onePx = AppUnitsPerCSSPixel();
       nscoord scrollAmount = 10 * onePx;
       if (std::abs(screen.x - screenPoint.x) <= onePx) {
         aPoint.x -= scrollAmount;

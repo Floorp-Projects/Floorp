@@ -244,7 +244,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           appUnitsRect.width = mRect.width;
         if (appUnitsRect.height < mRect.height && mouseMove.y)
           appUnitsRect.height = mRect.height;
-        nsIntRect cssRect = appUnitsRect.ToInsidePixels(nsPresContext::AppUnitsPerCSSPixel());
+        nsIntRect cssRect = appUnitsRect.ToInsidePixels(AppUnitsPerCSSPixel());
 
         LayoutDeviceIntRect oldRect;
         AutoWeakFrame weakFrame(menuPopupFrame);

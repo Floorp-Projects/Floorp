@@ -52,7 +52,7 @@ interface nsICookiePermission : nsISupports
   /**
    * canAccess
    *
-   * this method is called to test whether or not the given URI/channel may
+   * this method is called to test whether or not the given principal may
    * access the cookie database, either to set or get cookies.
    *
    * @param aPrincipal

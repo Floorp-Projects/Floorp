@@ -127,9 +127,7 @@ PassThroughThreadEventsAllowCallbacks(const std::function<void()>& aFn)
     while (true) {
       ThreadEvent ev = (ThreadEvent) thread->Events().ReadScalar();
       if (ev != ThreadEvent::ExecuteCallback) {
-        if (ev != ThreadEvent::CallbacksFinished) {
-          child::ReportFatalError("Unexpected event while replaying callback events");
-        }
+        MOZ_RELEASE_ASSERT(ev == ThreadEvent::CallbacksFinished);
         break;
       }
       size_t id = thread->Events().ReadScalar();

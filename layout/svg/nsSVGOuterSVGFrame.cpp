@@ -585,7 +585,7 @@ nsDisplayOuterSVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
 
   gfxPoint svgViewportRelativePoint =
     gfxPoint(pointRelativeToContentBox.x, pointRelativeToContentBox.y) /
-      outerSVGFrame->PresContext()->AppUnitsPerCSSPixel();
+      AppUnitsPerCSSPixel();
 
   nsSVGOuterSVGAnonChildFrame *anonKid =
     static_cast<nsSVGOuterSVGAnonChildFrame*>(
