@@ -171,6 +171,11 @@ class WindowTracker extends WindowTrackerBase {
     this.progressListeners = new DefaultWeakMap(() => new WeakMap());
   }
 
+  get topWindow() {
+    return Services.wm.getMostRecentWindow("navigator:browser") ||
+      Services.wm.getMostRecentWindow("navigator:geckoview");
+  }
+
   addProgressListener(window, listener) {
     let listeners = this.progressListeners.get(window);
     if (!listeners.has(listener)) {
