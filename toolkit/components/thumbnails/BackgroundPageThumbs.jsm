@@ -12,8 +12,6 @@ const FRAME_SCRIPT_URL = "chrome://global/content/backgroundPageThumbsContent.js
 
 const TELEMETRY_HISTOGRAM_ID_PREFIX = "FX_THUMBNAILS_BG_";
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 const ABOUT_NEWTAB_SEGREGATION_PREF = "privacy.usercontext.about_newtab_segregation.enabled";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -256,7 +254,7 @@ const BackgroundPageThumbs = {
     this._destroyBrowser();
     this._renewThumbBrowser = false;
 
-    let browser = this._parentWin.document.createElementNS(XUL_NS, "browser");
+    let browser = this._parentWin.document.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.setAttribute("disableglobalhistory", "true");

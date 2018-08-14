@@ -26,7 +26,6 @@ XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
   return Services.strings.createBundle(kCharsetBundle);
 });
 
-const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -196,10 +195,10 @@ const CustomizableWidgets = [
     onCreated(aNode) {
       // Add an observer so the button is checked while the sidebar is open
       let doc = aNode.ownerDocument;
-      let obChecked = doc.createElementNS(kNSXUL, "observes");
+      let obChecked = doc.createXULElement("observes");
       obChecked.setAttribute("element", "sidebar-box");
       obChecked.setAttribute("attribute", "checked");
-      let obPosition = doc.createElementNS(kNSXUL, "observes");
+      let obPosition = doc.createXULElement("observes");
       obPosition.setAttribute("element", "sidebar-box");
       obPosition.setAttribute("attribute", "positionend");
 
@@ -244,7 +243,7 @@ const CustomizableWidgets = [
         "class": "toolbarbutton-1 toolbarbutton-combined",
       }];
 
-      let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
+      let node = aDocument.createXULElement("toolbaritem");
       node.setAttribute("id", "zoom-controls");
       node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
@@ -255,8 +254,8 @@ const CustomizableWidgets = [
 
       buttons.forEach(function(aButton, aIndex) {
         if (aIndex != 0)
-          node.appendChild(aDocument.createElementNS(kNSXUL, "separator"));
-        let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+          node.appendChild(aDocument.createXULElement("separator"));
+        let btnNode = aDocument.createXULElement("toolbarbutton");
         setAttributes(btnNode, aButton);
         node.appendChild(btnNode);
       });
@@ -290,7 +289,7 @@ const CustomizableWidgets = [
         "class": "toolbarbutton-1 toolbarbutton-combined",
       }];
 
-      let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
+      let node = aDocument.createXULElement("toolbaritem");
       node.setAttribute("id", "edit-controls");
       node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
@@ -301,8 +300,8 @@ const CustomizableWidgets = [
 
       buttons.forEach(function(aButton, aIndex) {
         if (aIndex != 0)
-          node.appendChild(aDocument.createElementNS(kNSXUL, "separator"));
-        let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+          node.appendChild(aDocument.createXULElement("separator"));
+        let btnNode = aDocument.createXULElement("toolbarbutton");
         setAttributes(btnNode, aButton);
         node.appendChild(btnNode);
       });
@@ -386,7 +385,7 @@ const CustomizableWidgets = [
       let list = this.charsetInfo[aSection];
 
       for (let item of list) {
-        let elem = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+        let elem = aDocument.createXULElement("toolbarbutton");
         elem.setAttribute("label", item.label);
         elem.setAttribute("type", "checkbox");
         elem.section = aSection;
@@ -644,7 +643,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
         for (let client of clients) {
           // add a menu separator for all clients other than the first.
           if (fragment.lastElementChild) {
-            let separator = doc.createElementNS(kNSXUL, "menuseparator");
+            let separator = doc.createXULElement("menuseparator");
             fragment.appendChild(separator);
           }
           if (paginationInfo && paginationInfo.clientId == client.id) {
@@ -678,7 +677,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       }
       let message = this._tabsList.getAttribute(messageAttr);
       let doc = this._tabsList.ownerDocument;
-      let messageLabel = doc.createElementNS(kNSXUL, "label");
+      let messageLabel = doc.createXULElement("label");
       messageLabel.textContent = message;
       appendTo.appendChild(messageLabel);
       return messageLabel;
@@ -686,7 +685,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
     _appendClient(client, attachFragment, maxTabs = this.TABS_PER_PAGE) {
       let doc = attachFragment.ownerDocument;
       // Create the element for the remote client.
-      let clientItem = doc.createElementNS(kNSXUL, "label");
+      let clientItem = doc.createXULElement("label");
       clientItem.setAttribute("itemtype", "client");
       let window = doc.defaultView;
       clientItem.setAttribute("tooltiptext",
@@ -726,7 +725,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       }
     },
     _createTabElement(doc, tabInfo) {
-      let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+      let item = doc.createXULElement("toolbarbutton");
       let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
       item.setAttribute("itemtype", "tab");
       item.setAttribute("class", "subviewbutton");
@@ -758,7 +757,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
         labelAttr = "showMoreLabel";
         tooltipAttr = "showMoreTooltipText";
       }
-      let showAllItem = doc.createElementNS(kNSXUL, "toolbarbutton");
+      let showAllItem = doc.createXULElement("toolbarbutton");
       showAllItem.setAttribute("itemtype", "showmorebutton");
       showAllItem.setAttribute("class", "subviewbutton");
       let label = this._tabsList.getAttribute(labelAttr);
