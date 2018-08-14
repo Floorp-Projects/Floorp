@@ -4,11 +4,7 @@
 
 /* Sidebars */
 
-#history-panel,
-#bookmarksPanel {
-  -moz-appearance: none;
-  background-color: transparent;
-}
+%include ../../shared/places/places.inc.css
 
 #sidebar-search-container {
   padding: 8px;
@@ -19,24 +15,12 @@
 }
 
 #viewButton {
-  -moz-appearance: none;
-  border-radius: 4px;
   margin: 1px 0;
   margin-inline-start: 4px;
-  padding: 2px 4px;
-  color: inherit;
 }
 
 #viewButton:-moz-focusring:not(:hover):not([open]) {
   outline: 1px dotted -moz-DialogText;
-}
-
-#viewButton:hover {
-  background: hsla(240, 5%, 5%, 0.1);
-}
-
-#viewButton[open] {
-  background: hsla(240, 5%, 5%, 0.15);
 }
 
 .sidebar-placesTree {
