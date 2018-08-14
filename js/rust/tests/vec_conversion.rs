@@ -5,7 +5,7 @@
 #[macro_use]
 extern crate js;
 
-use js::ac::AutoCompartment;
+use js::ar::AutoCompartment;
 use js::conversions::ConversionBehavior;
 use js::conversions::ConversionResult;
 use js::conversions::FromJSValConvertible;

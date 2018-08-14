@@ -4,7 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-use ac::AutoCompartment;
+use ar::AutoCompartment;
 use libc::c_uint;
 use std::cell::{Cell, UnsafeCell};
 use std::char;
