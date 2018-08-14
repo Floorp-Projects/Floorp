@@ -29,7 +29,7 @@ fn rooting() {
                                                        ptr::null_mut(),
                                                        h_option,
                                                        &c_option));
-        let _ac = js::ac::AutoCompartment::with_obj(cx, global.get());
+        let _ac = js::ar::AutoCompartment::with_obj(cx, global.get());
         rooted!(in(cx) let prototype_proto = JS::GetRealmObjectPrototype(cx));
         rooted!(in(cx) let proto = JS_NewObjectWithUniqueType(cx,
                                                               &CLASS as *const _,
