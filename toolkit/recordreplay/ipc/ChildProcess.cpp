@@ -647,8 +647,10 @@ ChildProcessInfo::WaitUntil(const std::function<bool()>& aCallback)
   while (!aCallback()) {
     MonitorAutoLock lock(*gMonitor);
     if (!MaybeProcessPendingMessage(this)) {
-      if (gChildrenAreDebugging) {
-        // Don't watch for hangs when children are being debugged.
+      if (gChildrenAreDebugging || IsRecording()) {
+        // Don't watch for hangs when children are being debugged. Recording
+        // children are never treated as hanged both because they cannot be
+        // restarted and because they may just be idling.
         gMonitor->Wait();
       } else {
         TimeStamp deadline = mLastMessageTime + TimeDuration::FromSeconds(HangSeconds);

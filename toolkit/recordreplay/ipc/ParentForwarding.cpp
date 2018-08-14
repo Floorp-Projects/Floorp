@@ -174,6 +174,7 @@ struct MOZ_RAII AutoMarkMainThreadWaitingForIPDLReply
   AutoMarkMainThreadWaitingForIPDLReply() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     MOZ_RELEASE_ASSERT(!gMainThreadIsWaitingForIPDLReply);
+    ResumeBeforeWaitingForIPDLReply();
     gMainThreadIsWaitingForIPDLReply = true;
   }
 

@@ -1091,6 +1091,20 @@ ResumeForwardOrBackward()
   }
 }
 
+void
+ResumeBeforeWaitingForIPDLReply()
+{
+  MOZ_RELEASE_ASSERT(gActiveChild->IsRecording());
+
+  // The main thread is about to block while it waits for a sync reply from the
+  // recording child process. If the child is paused, resume it immediately so
+  // that we don't deadlock.
+  if (gActiveChild->IsPaused()) {
+    MOZ_RELEASE_ASSERT(gChildExecuteForward);
+    Resume(true);
+  }
+}
+
 static void
 RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
 {
