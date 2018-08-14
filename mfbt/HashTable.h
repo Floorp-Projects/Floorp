@@ -1444,7 +1444,7 @@ public:
     {
       if (mRekeyed) {
         mTable.mGen++;
-        mTable.rehashIfOverRemoved();
+        mTable.infallibleRehashIfOverloaded();
       }
 
       if (mRemoved) {
@@ -1892,13 +1892,10 @@ private:
     return changeTableSize(newCapacity, aReportFailure);
   }
 
-  // Infallibly rehash the table if we are overloaded with removals.
-  void rehashIfOverRemoved()
+  void infallibleRehashIfOverloaded()
   {
-    if (overloaded()) {
-      if (rehashIfOverloaded(DontReportFailure) == RehashFailed) {
-        rehashTableInPlace();
-      }
+    if (rehashIfOverloaded(DontReportFailure) == RehashFailed) {
+      rehashTableInPlace();
     }
   }
 
@@ -2269,7 +2266,7 @@ public:
   void rekeyAndMaybeRehash(Ptr aPtr, const Lookup& aLookup, const Key& aKey)
   {
     rekeyWithoutRehash(aPtr, aLookup, aKey);
-    rehashIfOverRemoved();
+    infallibleRehashIfOverloaded();
   }
 };
 
