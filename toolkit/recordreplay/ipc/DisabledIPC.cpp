@@ -18,6 +18,8 @@ namespace child {
 void
 InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
 {
+  // This is called from all child processes, and is a no-op if not
+  // recording or replaying.
 }
 
 char*
@@ -38,6 +40,11 @@ ParentProcessId()
   MOZ_CRASH();
 }
 
+void MaybeCreateInitialCheckpoint()
+{
+  MOZ_CRASH();
+}
+
 void
 SetVsyncObserver(VsyncObserver* aObserver)
 {
@@ -46,12 +53,6 @@ SetVsyncObserver(VsyncObserver* aObserver)
 
 void
 NotifyVsyncObserver()
-{
-  MOZ_CRASH();
-}
-
-void
-NotifyPaint()
 {
   MOZ_CRASH();
 }
@@ -80,30 +81,6 @@ DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
   MOZ_CRASH();
 }
 
-void
-NotifyFlushedRecording()
-{
-  MOZ_CRASH();
-}
-
-void
-NotifyAlwaysMarkMajorCheckpoints()
-{
-  MOZ_CRASH();
-}
-
-void
-BeginIdleTime()
-{
-  MOZ_CRASH();
-}
-
-void
-EndIdleTime()
-{
-  MOZ_CRASH();
-}
-
 } // namespace child
 
 namespace parent {
@@ -111,11 +88,15 @@ namespace parent {
 void
 InitializeUIProcess(int aArgc, char** aArgv)
 {
+  // This is called from UI processes, and has no state to initialize if
+  // recording/replaying is disabled on this platform.
 }
 
 const char*
 SaveAllRecordingsDirectory()
 {
+  // This is called from UI processes, and recordings are never saved if
+  // recording/replaying is disabled on this platform.
   return nullptr;
 }
 
