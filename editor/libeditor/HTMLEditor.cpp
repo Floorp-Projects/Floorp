@@ -1033,11 +1033,8 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
   // Let's look after the break
   selOffset++;
   WSRunObject wsObj(this, selNode, selOffset);
-  nsCOMPtr<nsINode> unused;
-  int32_t visOffset = 0;
   WSType visType;
-  wsObj.NextVisibleNode(EditorRawDOMPoint(selNode, selOffset),
-                        address_of(unused), &visOffset, &visType);
+  wsObj.NextVisibleNode(EditorRawDOMPoint(selNode, selOffset), &visType);
   if (visType & WSType::block) {
     return false;
   }
@@ -1522,10 +1519,9 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   // i.e., the insertion position is just before a visible line break <br>,
   // we want to skip to the position just after the line break (see bug 68767).
   nsCOMPtr<nsINode> nextVisibleNode;
-  int32_t nextVisibleOffset = 0;
   WSType nextVisibleType;
   wsObj.NextVisibleNode(pointToInsert, address_of(nextVisibleNode),
-                        &nextVisibleOffset, &nextVisibleType);
+                        nullptr, &nextVisibleType);
   // So, if the next visible node isn't a <br> element, we can insert the block
   // level element to the point.
   if (!nextVisibleNode ||
@@ -1538,10 +1534,9 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   // would not insert the <br> at the caret position, but after the current
   // empty line.
   nsCOMPtr<nsINode> previousVisibleNode;
-  int32_t previousVisibleOffset = 0;
   WSType previousVisibleType;
   wsObj.PriorVisibleNode(pointToInsert, address_of(previousVisibleNode),
-                         &previousVisibleOffset, &previousVisibleType);
+                         nullptr, &previousVisibleType);
   // So, if there is no previous visible node,
   // or, if both nodes of the insertion point is <br> elements,
   // or, if the previous visible node is different block,
@@ -4113,11 +4108,10 @@ HTMLEditor::IsVisibleTextNode(Text& aText)
 
   WSRunObject wsRunObj(this, &aText, 0);
   nsCOMPtr<nsINode> nextVisibleNode;
-  int32_t unused = 0;
   WSType visibleNodeType;
   wsRunObj.NextVisibleNode(EditorRawDOMPoint(&aText, 0),
                            address_of(nextVisibleNode),
-                           &unused, &visibleNodeType);
+                           nullptr, &visibleNodeType);
   return (visibleNodeType == WSType::normalWS ||
           visibleNodeType == WSType::text) &&
          &aText == nextVisibleNode;
