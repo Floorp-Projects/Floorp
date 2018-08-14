@@ -1581,17 +1581,17 @@ JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
 
 #ifdef JS_CRASH_DIAGNOSTICS
 void
-CompartmentChecker::check(InterpreterFrame* fp)
+CompartmentChecker::check(InterpreterFrame* fp, int argIndex)
 {
     if (fp)
-        check(fp->environmentChain());
+        check(fp->environmentChain(), argIndex);
 }
 
 void
-CompartmentChecker::check(AbstractFramePtr frame)
+CompartmentChecker::check(AbstractFramePtr frame, int argIndex)
 {
     if (frame)
-        check(frame.environmentChain());
+        check(frame.environmentChain(), argIndex);
 }
 #endif
 
