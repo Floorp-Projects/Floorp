@@ -45,8 +45,6 @@ loader.lazyRequireGetter(this, "InspectorFront",
   "devtools/shared/fronts/inspector", true);
 loader.lazyRequireGetter(this, "flags",
   "devtools/shared/flags");
-loader.lazyRequireGetter(this, "createPerformanceFront",
-  "devtools/shared/fronts/performance", true);
 loader.lazyRequireGetter(this, "KeyShortcuts",
   "devtools/client/shared/key-shortcuts");
 loader.lazyRequireGetter(this, "ZoomKeys",
@@ -3074,7 +3072,7 @@ Toolbox.prototype = {
       resolvePerformance = resolve;
     });
 
-    this._performance = createPerformanceFront(this._target);
+    this._performance = this.target.getFront("performance");
     await this.performance.connect();
 
     // Emit an event when connected, but don't wait on startup for this.
