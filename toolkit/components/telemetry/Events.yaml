@@ -633,15 +633,15 @@ devtools.main:
     extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   filters_changed:
-    objects: ["webconsole"]
-    bug_numbers: [1463095]
+    objects: ["netmonitor", "webconsole"]
+    bug_numbers: [1463144, 1463095]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
     description: User has changed filters in the web console.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      trigger: "The cause of the filter change: error, warn, log, info, debug, css, netxhr, net, text or reset"
+      trigger: "The cause of the filter change: error, warn, log, info, debug, css, netxhr, net, text or reset and all, html, css, js, xhr, fonts, images, media, ws or other for netmonitor"
       active: Comma separated list of active filters.
       inactive: Comma separated list of inactive filters.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
