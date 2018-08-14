@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BuiltDisplayList, ColorF, DeviceIntPoint, DeviceIntRect, DevicePixelScale};
+use api::{ColorF, DeviceIntPoint, DeviceIntRect, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, WorldPoint};
-use clip::{ClipChain, ClipStore};
+use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
@@ -24,7 +24,7 @@ use std::{mem, f32};
 use std::sync::Arc;
 use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
 use tiling::{ScrollbarPrimitive, SpecialRenderPasses};
-use util::{self, WorldToLayoutFastTransform};
+use util;
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -58,6 +58,7 @@ pub struct FrameBuilder {
     background_color: Option<ColorF>,
     window_size: DeviceUintSize,
     scene_id: u64,
+    pub next_picture_id: u64,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub hit_testing_runs: Vec<HitTestingRun>,
@@ -72,7 +73,6 @@ pub struct FrameBuildingContext<'a> {
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
     pub screen_rect: DeviceIntRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
-    pub clip_chains: &'a [ClipChain],
     pub transforms: &'a TransformPalette,
     pub max_local_clip: LayoutRect,
 }
@@ -86,12 +86,11 @@ pub struct FrameBuildingState<'a> {
     pub special_render_passes: &'a mut SpecialRenderPasses,
 }
 
-pub struct PictureContext<'a> {
+pub struct PictureContext {
     pub pipeline_id: PipelineId,
     pub prim_runs: Vec<PrimitiveRun>,
-    pub original_reference_frame_index: Option<SpatialNodeIndex>,
-    pub display_list: &'a BuiltDisplayList,
-    pub inv_world_transform: Option<WorldToLayoutFastTransform>,
+    pub spatial_node_index: SpatialNodeIndex,
+    pub original_spatial_node_index: SpatialNodeIndex,
     pub apply_local_clip_rect: bool,
     pub inflation_factor: f32,
     pub allow_subpixel_aa: bool,
@@ -114,25 +113,19 @@ impl PictureState {
 }
 
 pub struct PrimitiveRunContext<'a> {
-    pub clip_chain: &'a ClipChain,
     pub scroll_node: &'a SpatialNode,
     pub spatial_node_index: SpatialNodeIndex,
     pub transform: Transform<'a>,
-    pub local_clip_rect: LayoutRect,
 }
 
 impl<'a> PrimitiveRunContext<'a> {
     pub fn new(
-        clip_chain: &'a ClipChain,
         scroll_node: &'a SpatialNode,
         spatial_node_index: SpatialNodeIndex,
-        local_clip_rect: LayoutRect,
         transform: Transform<'a>,
     ) -> Self {
         PrimitiveRunContext {
-            clip_chain,
             scroll_node,
-            local_clip_rect,
             spatial_node_index,
             transform,
         }
@@ -150,6 +143,7 @@ impl FrameBuilder {
             window_size: DeviceUintSize::zero(),
             background_color: None,
             scene_id: 0,
+            next_picture_id: 0,
             config: FrameBuilderConfig {
                 enable_scrollbars: false,
                 default_font_render_mode: FontRenderMode::Mono,
@@ -177,6 +171,7 @@ impl FrameBuilder {
             window_size,
             scene_id,
             config: flattener.config,
+            next_picture_id: flattener.next_picture_id,
         }
     }
 
@@ -197,18 +192,14 @@ impl FrameBuilder {
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
-        if self.prim_store.pictures.is_empty() {
+        if self.prim_store.primitives.is_empty() {
             return None
         }
 
         // The root picture is always the first one added.
-        let root_spatial_node =
-            &clip_scroll_tree.spatial_nodes[clip_scroll_tree.root_reference_frame_index().0];
-
-        let display_list = &pipelines
-            .get(&root_spatial_node.pipeline_id)
-            .expect("No display list?")
-            .display_list;
+        let root_prim_index = PrimitiveIndex(0);
+        let root_spatial_node_index = clip_scroll_tree.root_reference_frame_index();
+        let root_spatial_node = &clip_scroll_tree.spatial_nodes[root_spatial_node_index.0];
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
 
@@ -219,7 +210,6 @@ impl FrameBuilder {
             pipelines,
             screen_rect: self.screen_rect.to_i32(),
             clip_scroll_tree,
-            clip_chains: &clip_scroll_tree.clip_chains,
             transforms: transform_palette,
             max_local_clip: LayoutRect::new(
                 LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
@@ -238,10 +228,12 @@ impl FrameBuilder {
 
         let pic_context = PictureContext {
             pipeline_id: root_spatial_node.pipeline_id,
-            prim_runs: mem::replace(&mut self.prim_store.pictures[0].runs, Vec::new()),
-            original_reference_frame_index: None,
-            display_list,
-            inv_world_transform: None,
+            prim_runs: mem::replace(
+                &mut self.prim_store.get_pic_mut(root_prim_index).runs,
+                Vec::new(),
+            ),
+            spatial_node_index: root_spatial_node_index,
+            original_spatial_node_index: root_spatial_node_index,
             apply_local_clip_rect: true,
             inflation_factor: 0.0,
             allow_subpixel_aa: true,
@@ -257,12 +249,12 @@ impl FrameBuilder {
             &mut frame_state,
         );
 
-        let pic = &mut self.prim_store.pictures[0];
+        let pic = self.prim_store.get_pic_mut(root_prim_index);
         pic.runs = pic_context.prim_runs;
 
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(frame_context.screen_rect),
-            PrimitiveIndex(0),
+            root_prim_index,
             DeviceIntPoint::zero(),
             pic_state.tasks,
             UvRectKind::Rect,
@@ -277,7 +269,7 @@ impl FrameBuilder {
         static SCROLLBAR_PADDING: f32 = 8.0;
 
         for scrollbar_prim in &self.scrollbar_prims {
-            let metadata = &mut self.prim_store.cpu_metadata[scrollbar_prim.prim_index.0];
+            let metadata = &mut self.prim_store.primitives[scrollbar_prim.prim_index.0].metadata;
             let scroll_frame = &clip_scroll_tree.spatial_nodes[scrollbar_prim.scroll_frame_index.0];
 
             // Invalidate what's in the cache so it will get rebuilt.
@@ -331,11 +323,6 @@ impl FrameBuilder {
         gpu_cache.begin_frame();
 
         let transform_palette = clip_scroll_tree.update_tree(
-            &self.screen_rect.to_i32(),
-            device_pixel_scale,
-            &mut self.clip_store,
-            resource_cache,
-            gpu_cache,
             pan,
             scene_properties,
         );

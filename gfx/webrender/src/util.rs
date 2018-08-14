@@ -452,14 +452,6 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     }
 
     #[inline(always)]
-    pub fn has_perspective_component(&self) -> bool {
-        match *self {
-            FastTransform::Offset(..) => false,
-            FastTransform::Transform { ref transform, .. } => transform.has_perspective_component(),
-        }
-    }
-
-    #[inline(always)]
     pub fn is_backface_visible(&self) -> bool {
         match *self {
             FastTransform::Offset(..) => false,
@@ -486,15 +478,6 @@ impl<Src, Dst> FastTransform<Src, Dst> {
                 HomogeneousVector::new(new_point.x, new_point.y, 0.0, 1.0)
             }
             FastTransform::Transform { ref transform, .. } => transform.transform_point2d_homogeneous(point),
-        }
-    }
-
-    #[inline(always)]
-    pub fn transform_rect(&self, rect: &TypedRect<f32, Src>) -> Option<TypedRect<f32, Dst>> {
-        match *self {
-            FastTransform::Offset(offset) =>
-                Some(TypedRect::from_untyped(&rect.to_untyped().translate(&offset.to_untyped()))),
-            FastTransform::Transform { ref transform, .. } => transform.transform_rect(rect),
         }
     }
 
@@ -554,4 +537,3 @@ impl<Src, Dst> From<TypedVector2D<f32, Src>> for FastTransform<Src, Dst> {
 
 pub type LayoutFastTransform = FastTransform<LayoutPixel, LayoutPixel>;
 pub type LayoutToWorldFastTransform = FastTransform<LayoutPixel, WorldPixel>;
-pub type WorldToLayoutFastTransform = FastTransform<WorldPixel, LayoutPixel>;
