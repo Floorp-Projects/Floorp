@@ -918,14 +918,6 @@ Gecko_IsBrowserFrame(RawGeckoElementBorrowed aElement)
 
 template <typename Implementor>
 static nsAtom*
-AtomAttrValue(Implementor* aElement, nsAtom* aName)
-{
-  const nsAttrValue* attr = aElement->GetParsedAttr(aName);
-  return attr ? attr->GetAtomValue() : nullptr;
-}
-
-template <typename Implementor>
-static nsAtom*
 LangValue(Implementor* aElement)
 {
   // TODO(emilio): Deduplicate a bit with nsIContent::GetLang().
@@ -1074,94 +1066,7 @@ AttrHasSuffix(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
   return DoMatch(aElement, aNS, aName, match);
 }
 
-/**
- * Returns whether an element contains a class in its class list or not.
- */
-template <typename Implementor>
-static bool
-HasClass(Implementor* aElement, nsAtom* aClass, bool aIgnoreCase)
-{
-  const nsAttrValue* attr = aElement->DoGetClasses();
-  if (!attr) {
-    return false;
-  }
-
-  return attr->Contains(aClass, aIgnoreCase ? eIgnoreCase : eCaseMatters);
-}
-
-/**
- * Gets the class or class list (if any) of the implementor. The calling
- * convention here is rather hairy, and is optimized for getting Servo the
- * information it needs for hot calls.
- *
- * The return value indicates the number of classes. If zero, neither outparam
- * is valid. If one, the class_ outparam is filled with the atom of the class.
- * If two or more, the classList outparam is set to point to an array of atoms
- * representing the class list.
- *
- * The array is borrowed and the atoms are not addrefed. These values can be
- * invalidated by any DOM mutation. Use them in a tight scope.
- */
-template <typename Implementor>
-static uint32_t
-ClassOrClassList(Implementor* aElement, nsAtom** aClass, nsAtom*** aClassList)
-{
-  const nsAttrValue* attr = aElement->DoGetClasses();
-  if (!attr) {
-    return 0;
-  }
-
-  // For class values with only whitespace, Gecko just stores a string. For the
-  // purposes of the style system, there is no class in this case.
-  nsAttrValue::ValueType type = attr->Type();
-  if (MOZ_UNLIKELY(type == nsAttrValue::eString)) {
-    MOZ_ASSERT(nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
-                 attr->GetStringValue()).IsEmpty());
-    return 0;
-  }
-
-  // Single tokens are generally stored as an atom. Check that case.
-  if (type == nsAttrValue::eAtom) {
-    *aClass = attr->GetAtomValue();
-    return 1;
-  }
-
-  // At this point we should have an atom array. It is likely, but not
-  // guaranteed, that we have two or more elements in the array.
-  MOZ_ASSERT(type == nsAttrValue::eAtomArray);
-  nsTArray<RefPtr<nsAtom>>* atomArray = attr->GetAtomArrayValue();
-  uint32_t length = atomArray->Length();
-
-  // Special case: zero elements.
-  if (length == 0) {
-    return 0;
-  }
-
-  // Special case: one element.
-  if (length == 1) {
-    *aClass = atomArray->ElementAt(0);
-    return 1;
-  }
-
-  // General case: Two or more elements.
-  //
-  // Note: We could also expose this array as an array of nsCOMPtrs, since
-  // bindgen knows what those look like, and eliminate the reinterpret_cast.
-  // But it's not obvious that that would be preferable.
-  static_assert(sizeof(RefPtr<nsAtom>) == sizeof(nsAtom*), "Bad simplification");
-  static_assert(alignof(RefPtr<nsAtom>) == alignof(nsAtom*), "Bad simplification");
-
-  RefPtr<nsAtom>* elements = atomArray->Elements();
-  nsAtom** rawElements = reinterpret_cast<nsAtom**>(elements);
-  *aClassList = rawElements;
-  return atomArray->Length();
-}
-
 #define SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)        \
-  nsAtom* prefix_##AtomAttrValue(implementor_ aElement, nsAtom* aName)           \
-  {                                                                              \
-    return AtomAttrValue(aElement, aName);                                       \
-  }                                                                              \
   nsAtom* prefix_##LangValue(implementor_ aElement)                              \
   {                                                                              \
     return LangValue(aElement);                                                  \
@@ -1199,16 +1104,7 @@ ClassOrClassList(Implementor* aElement, nsAtom** aClass, nsAtom*** aClassList)
                               nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)     \
   {                                                                              \
     return AttrHasSuffix(aElement, aNS, aName, aStr, aIgnoreCase);               \
-  }                                                                              \
-  uint32_t prefix_##ClassOrClassList(implementor_ aElement, nsAtom** aClass,     \
-                                     nsAtom*** aClassList)                       \
-  {                                                                              \
-    return ClassOrClassList(aElement, aClass, aClassList);                       \
-  }                                                                              \
-  bool prefix_##HasClass(implementor_ aElement, nsAtom* aClass, bool aIgnoreCase)\
-  {                                                                              \
-    return HasClass(aElement, aClass, aIgnoreCase);                              \
-  }                                                                              \
+  }
 
 
 SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_, RawGeckoElementBorrowed)
@@ -2968,4 +2864,23 @@ bool
 Gecko_IsMainThread()
 {
   return NS_IsMainThread();
+}
+
+const nsAttrValue*
+Gecko_GetSVGAnimatedClass(RawGeckoElementBorrowed aElement)
+{
+  MOZ_ASSERT(aElement->IsSVGElement());
+  return static_cast<const nsSVGElement*>(aElement)->GetAnimatedClassName();
+}
+
+bool
+Gecko_AssertClassAttrValueIsSane(const nsAttrValue* aValue)
+{
+  MOZ_ASSERT(aValue->Type() == nsAttrValue::eAtom ||
+             aValue->Type() == nsAttrValue::eString ||
+             aValue->Type() == nsAttrValue::eAtomArray);
+  MOZ_ASSERT_IF(aValue->Type() == nsAttrValue::eString,
+                nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
+                  aValue->GetStringValue()).IsEmpty());
+  return true;
 }
