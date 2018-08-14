@@ -57,6 +57,6 @@ assert.sameValue(
   'timed-out',
   '$262.agent.getReport() returns "timed-out"'
 );
-assert.sameValue(Atomics.wake(i64a, 0), 0, 'Atomics.wake(i64a, 0) returns 0');
+assert.sameValue(Atomics.notify(i64a, 0), 0, 'Atomics.notify(i64a, 0) returns 0');
 
 reportCompare(0, 0);
