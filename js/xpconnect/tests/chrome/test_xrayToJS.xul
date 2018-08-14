@@ -193,9 +193,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     constructorProps(["setPrototypeOf", "getOwnPropertyDescriptor", "getOwnPropertyDescriptors",
                       "keys", "is", "defineProperty", "defineProperties", "create",
                       "getOwnPropertyNames", "getOwnPropertySymbols",
-                      "preventExtensions", "freeze", "isFrozen", "seal",
+                      "preventExtensions", "freeze", "fromEntries", "isFrozen", "seal",
                       "isSealed", "assign", "getPrototypeOf", "values",
-                      "entries", "isExtensible"])
+                      "entries", "isExtensible"]);
   gPrototypeProperties['Array'] =
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
