@@ -42,6 +42,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.stopLoading]
+     */
+    override fun stopLoading() {
+        geckoSession.stop()
+    }
+
+    /**
      * See [EngineSession.reload]
      */
     override fun reload() {

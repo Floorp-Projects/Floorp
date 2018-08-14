@@ -119,6 +119,19 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun testStopLoading() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var stopLoadingReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> stopLoadingReceived = true },
+                "GeckoView:Stop"
+        )
+
+        engineSession.stopLoading()
+        assertTrue(stopLoadingReceived)
+    }
+
+    @Test
     fun testReload() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.loadUrl("http://mozilla.org")

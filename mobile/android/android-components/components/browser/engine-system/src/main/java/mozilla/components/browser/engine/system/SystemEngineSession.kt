@@ -33,6 +33,13 @@ class SystemEngineSession : EngineSession() {
     }
 
     /**
+     * See [EngineSession.stopLoading]
+     */
+    override fun stopLoading() {
+        currentView()?.stopLoading()
+    }
+
+    /**
      * See [EngineSession.reload]
      */
     override fun reload() {

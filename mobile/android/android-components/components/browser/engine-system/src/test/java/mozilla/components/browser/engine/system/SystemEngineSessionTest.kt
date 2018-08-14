@@ -7,10 +7,12 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.never
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -40,6 +42,10 @@ class SystemEngineSessionTest {
     fun testLoadUrl() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
+
+        engineSession.loadUrl("")
+        verify(webView, never()).loadUrl(anyString())
+
         `when`(engineSession.currentView()).thenReturn(webView)
 
         engineSession.loadUrl("http://mozilla.org")
@@ -47,9 +53,27 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun testStopLoading() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+
+        engineSession.stopLoading()
+        verify(webView, never()).stopLoading()
+
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        engineSession.stopLoading()
+        verify(webView).stopLoading()
+    }
+
+    @Test
     fun testReload() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
+
+        engineSession.reload()
+        verify(webView, never()).reload()
+
         `when`(engineSession.currentView()).thenReturn(webView)
 
         engineSession.reload()
@@ -60,6 +84,10 @@ class SystemEngineSessionTest {
     fun testGoBack() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
+
+        engineSession.goBack()
+        verify(webView, never()).goBack()
+
         `when`(engineSession.currentView()).thenReturn(webView)
 
         engineSession.goBack()
@@ -70,6 +98,10 @@ class SystemEngineSessionTest {
     fun testSaveState() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
+
+        engineSession.saveState()
+        verify(webView, never()).saveState(any(Bundle::class.java))
+
         `when`(engineSession.currentView()).thenReturn(webView)
 
         engineSession.saveState()
@@ -80,6 +112,10 @@ class SystemEngineSessionTest {
     fun testRestoreState() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
+
+        engineSession.restoreState(emptyMap())
+        verify(webView, never()).restoreState(any(Bundle::class.java))
+
         `when`(engineSession.currentView()).thenReturn(webView)
 
         engineSession.restoreState(emptyMap())

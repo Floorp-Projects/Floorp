@@ -89,7 +89,14 @@ class Components(private val applicationContext: Context) {
             sessionUseCases.reload.invoke()
         }
 
-        BrowserMenuItemToolbar(listOf(forward, refresh))
+        val stop = BrowserMenuItemToolbar.Button(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
+                iconTintColorResource = R.color.photonBlue90,
+                contentDescription = "Stop") {
+            sessionUseCases.stopLoading.invoke()
+        }
+
+        BrowserMenuItemToolbar(listOf(forward, refresh, stop))
     }
 
     // Tabs

@@ -66,6 +66,11 @@ abstract class EngineSession(
     abstract fun loadUrl(url: String)
 
     /**
+     * Stops loading the current session.
+     */
+    abstract fun stopLoading()
+
+    /**
      * Reloads the current URL.
      */
     abstract fun reload()

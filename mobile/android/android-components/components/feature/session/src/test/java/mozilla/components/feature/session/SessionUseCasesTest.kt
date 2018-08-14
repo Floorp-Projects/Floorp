@@ -52,6 +52,20 @@ class SessionUseCasesTest {
     }
 
     @Test
+    fun testStopLoading() {
+        val engineSession = mock(EngineSession::class.java)
+        val session = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.stopLoading.invoke(session)
+        verify(engineSession).stopLoading()
+
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        useCases.stopLoading.invoke()
+        verify(selectedEngineSession).stopLoading()
+    }
+
+    @Test
     fun testGoBack() {
         useCases.goBack.invoke()
         verify(selectedEngineSession).goBack()

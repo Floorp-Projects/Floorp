@@ -21,6 +21,7 @@ class EngineObserverTest {
             override fun goBack() {}
             override fun goForward() {}
             override fun reload() {}
+            override fun stopLoading() {}
             override fun restoreState(state: Map<String, Any>) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
@@ -52,6 +53,7 @@ class EngineObserverTest {
         val engineSession = object : EngineSession() {
             override fun goBack() {}
             override fun goForward() {}
+            override fun stopLoading() {}
             override fun reload() {}
             override fun restoreState(state: Map<String, Any>) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
@@ -83,6 +85,7 @@ class EngineObserverTest {
         val engineSession = object : EngineSession() {
             override fun goBack() {}
             override fun goForward() {}
+            override fun stopLoading() {}
             override fun reload() {}
             override fun restoreState(state: Map<String, Any>) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
