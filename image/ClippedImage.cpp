@@ -365,12 +365,11 @@ ClippedImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
   return false;
 }
 
-NS_IMETHODIMP_(ImgDrawResult)
-ClippedImage::GetImageContainerAtSize(layers::LayerManager* aManager,
-                                      const gfx::IntSize& aSize,
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+ClippedImage::GetImageContainerAtSize(LayerManager* aManager,
+                                      const IntSize& aSize,
                                       const Maybe<SVGImageContext>& aSVGContext,
-                                      uint32_t aFlags,
-                                      layers::ImageContainer** aOutContainer)
+                                      uint32_t aFlags)
 {
   // XXX(seth): We currently don't have a way of clipping the result of
   // GetImageContainer. We work around this by always returning null, but if it
@@ -379,11 +378,11 @@ ClippedImage::GetImageContainerAtSize(layers::LayerManager* aManager,
   // that method for performance reasons.
 
   if (!ShouldClip()) {
-    return InnerImage()->GetImageContainerAtSize(aManager, aSize, aSVGContext,
-                                                 aFlags, aOutContainer);
+    return InnerImage()->GetImageContainerAtSize(aManager, aSize,
+                                                 aSVGContext, aFlags);
   }
 
-  return ImgDrawResult::NOT_SUPPORTED;
+  return nullptr;
 }
 
 static bool

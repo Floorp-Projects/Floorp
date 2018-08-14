@@ -104,12 +104,11 @@ ImageResource::SetCurrentImage(ImageContainer* aContainer,
   }
 }
 
-ImgDrawResult
+already_AddRefed<ImageContainer>
 ImageResource::GetImageContainerImpl(LayerManager* aManager,
                                      const IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
-                                     uint32_t aFlags,
-                                     ImageContainer** aOutContainer)
+                                     uint32_t aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
@@ -120,14 +119,10 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
                == FLAG_NONE,
              "Unsupported flag passed to GetImageContainer");
 
-  ImgDrawResult drawResult;
-  IntSize size;
-  Tie(drawResult, size) = GetImageContainerSize(aManager, aSize, aFlags);
-  if (drawResult != ImgDrawResult::SUCCESS) {
-    return drawResult;
+  IntSize size = GetImageContainerSize(aManager, aSize, aFlags);
+  if (size.IsEmpty()) {
+    return nullptr;
   }
-
-  MOZ_ASSERT(!size.IsEmpty());
 
   if (mAnimationConsumers == 0) {
     SendOnUnlockedDraw(aFlags);
@@ -160,8 +155,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
       case ImgDrawResult::SUCCESS:
       case ImgDrawResult::BAD_IMAGE:
       case ImgDrawResult::BAD_ARGS:
-        container.forget(aOutContainer);
-        return entry->mLastDrawResult;
+        return container.forget();
       case ImgDrawResult::NOT_READY:
       case ImgDrawResult::INCOMPLETE:
       case ImgDrawResult::TEMPORARY_ERROR:
@@ -171,8 +165,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
         // Unused by GetFrameInternal
       default:
         MOZ_ASSERT_UNREACHABLE("Unhandled ImgDrawResult type!");
-        container.forget(aOutContainer);
-        return entry->mLastDrawResult;
+        return container.forget();
     }
   }
 
@@ -180,6 +173,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
   NotifyDrawingObservers();
 #endif
 
+  ImgDrawResult drawResult;
   IntSize bestSize;
   RefPtr<SourceSurface> surface;
   Tie(drawResult, bestSize, surface) =
@@ -218,8 +212,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
             case ImgDrawResult::SUCCESS:
             case ImgDrawResult::BAD_IMAGE:
             case ImgDrawResult::BAD_ARGS:
-              container.forget(aOutContainer);
-              return entry->mLastDrawResult;
+              return container.forget();
             case ImgDrawResult::NOT_READY:
             case ImgDrawResult::INCOMPLETE:
             case ImgDrawResult::TEMPORARY_ERROR:
@@ -230,8 +223,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
               // Unused by GetFrameInternal
             default:
               MOZ_ASSERT_UNREACHABLE("Unhandled DrawResult type!");
-              container.forget(aOutContainer);
-              return entry->mLastDrawResult;
+              return container.forget();
           }
         }
         break;
@@ -253,8 +245,7 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
 
   SetCurrentImage(container, surface, true);
   entry->mLastDrawResult = drawResult;
-  container.forget(aOutContainer);
-  return drawResult;
+  return container.forget();
 }
 
 void
