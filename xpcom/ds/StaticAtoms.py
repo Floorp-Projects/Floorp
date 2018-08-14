@@ -1383,6 +1383,7 @@ STATIC_ATOMS = [
     Atom("patternTransform", "patternTransform"),
     Atom("patternUnits", "patternUnits"),
     Atom("pc", "pc"),
+    Atom("pointer", "pointer"),
     Atom("pointer_events", "pointer-events"),
     Atom("points", "points"),
     Atom("pointsAtX", "pointsAtX"),
