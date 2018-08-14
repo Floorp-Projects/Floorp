@@ -265,9 +265,9 @@ GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize)
 
     checkIncrementalZoneState(cx, t);
     gcTracer.traceTenuredAlloc(t, kind);
-#if defined(NIGHTLY_BUILD)
+    // We count this regardless of the profiler's state, assuming that it costs just as much to
+    // count it, as to check the profiler's state and decide not to count it.
     cx->noteTenuredAlloc();
-#endif
     return t;
 }
 
