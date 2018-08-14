@@ -56,7 +56,7 @@ MemoryPressureObserver::Observe(nsISupports* aSubject,
                                 const char* aTopic,
                                 const char16_t* aData)
 {
-  if (mListener && strcmp(aTopic, "memory-pressure")) {
+  if (mListener && strcmp(aTopic, "memory-pressure") == 0) {
     MemoryPressureReason reason = MemoryPressureReason::LOW_MEMORY;
     auto reason_string = nsDependentString(aData);
     if (StringBeginsWith(reason_string, NS_LITERAL_STRING("low-memory-ongoing"))) {
