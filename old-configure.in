@@ -3469,6 +3469,17 @@ if test -n "$MOZ_OPTIMIZE"; then
         AC_MSG_ERROR([These compiler flags for C are invalid: $MOZ_OPTIMIZE_FLAGS])
     fi
     CFLAGS=$_SAVE_CFLAGS
+    if test -n "$MOZ_LTO" -a -n "$CLANG_CC"; then
+        # When using llvm-based LTO, non numeric optimization levels are
+        # not supported by the linker, so force the linker to use -O2 (
+        # which doesn't influence the level compilation units are actually
+        # compiled at).
+        case " $MOZ_OPTIMIZE_FLAGS " in
+        *\ -Os\ *|*\ -Oz\ *)
+            MOZ_OPTIMIZE_LDFLAGS="$MOZ_OPTIMIZE_LDFLAGS -O2"
+            ;;
+        esac
+    fi
 fi
 fi # COMPILE_ENVIRONMENT
 

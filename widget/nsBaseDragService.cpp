@@ -649,7 +649,7 @@ nsBaseDragService::DrawDrag(nsINode* aDOMNode,
     }
 
     nsIntRect dragRectDev =
-      ToAppUnits(dragRect, nsPresContext::AppUnitsPerCSSPixel()).
+      ToAppUnits(dragRect, AppUnitsPerCSSPixel()).
       ToOutsidePixels((*aPresContext)->AppUnitsPerDevPixel());
     aScreenDragRect->SizeTo(dragRectDev.Width(), dragRectDev.Height());
     return NS_OK;

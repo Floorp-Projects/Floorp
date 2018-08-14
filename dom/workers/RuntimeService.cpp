@@ -9,6 +9,7 @@
 #include "nsAutoPtr.h"
 #include "nsIChannel.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsICookieService.h"
 #include "nsIDocument.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIEffectiveTLDService.h"
@@ -2268,7 +2269,8 @@ RuntimeService::PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWin
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(StaticPrefs::privacy_restrict3rdpartystorage_enabled());
+  MOZ_ASSERT(StaticPrefs::network_cookie_cookieBehavior() ==
+               nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
   nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
@@ -2881,7 +2883,8 @@ void
 PropagateFirstPartyStorageAccessGrantedToWorkers(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(StaticPrefs::privacy_restrict3rdpartystorage_enabled());
+  MOZ_ASSERT(StaticPrefs::network_cookie_cookieBehavior() ==
+               nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {

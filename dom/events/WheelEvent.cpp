@@ -75,7 +75,7 @@ WheelEvent::DeltaX()
     return mEvent->AsWheelEvent()->mDeltaX;
   }
   return mEvent->AsWheelEvent()->mDeltaX *
-    mAppUnitsPerDevPixel / nsPresContext::AppUnitsPerCSSPixel();
+    mAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
 }
 
 double
@@ -85,7 +85,7 @@ WheelEvent::DeltaY()
     return mEvent->AsWheelEvent()->mDeltaY;
   }
   return mEvent->AsWheelEvent()->mDeltaY *
-    mAppUnitsPerDevPixel / nsPresContext::AppUnitsPerCSSPixel();
+    mAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
 }
 
 double
@@ -95,7 +95,7 @@ WheelEvent::DeltaZ()
     return mEvent->AsWheelEvent()->mDeltaZ;
   }
   return mEvent->AsWheelEvent()->mDeltaZ *
-    mAppUnitsPerDevPixel / nsPresContext::AppUnitsPerCSSPixel();
+    mAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
 }
 
 uint32_t

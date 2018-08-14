@@ -619,7 +619,7 @@ AccessibleCaretEventHub::MoveDistanceIsLarge(const nsPoint& aPoint) const
 {
   nsPoint delta = aPoint - mPressPoint;
   return NS_hypot(delta.x, delta.y) >
-         nsPresContext::AppUnitsPerCSSPixel() * kMoveStartToleranceInPixel;
+         AppUnitsPerCSSPixel() * kMoveStartToleranceInPixel;
 }
 
 void

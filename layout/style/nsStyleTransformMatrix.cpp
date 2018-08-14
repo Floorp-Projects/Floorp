@@ -173,13 +173,13 @@ ProcessTranslatePart(const nsCSSValue& aValue,
   }
 
   float translation =
-    NSAppUnitsToFloatPixels(offset, nsPresContext::AppUnitsPerCSSPixel());
+    NSAppUnitsToFloatPixels(offset, AppUnitsPerCSSPixel());
   // We want to avoid calling aDimensionGetter if there's no percentage to be
   // resolved (for performance reasons - see TransformReferenceBox).
   if (percent != 0.0f && aRefBox && !aRefBox->IsEmpty()) {
     translation +=
       percent * NSAppUnitsToFloatPixels((aRefBox->*aDimensionGetter)(),
-                                        nsPresContext::AppUnitsPerCSSPixel());
+                                        AppUnitsPerCSSPixel());
   }
   return translation;
 }
@@ -508,7 +508,7 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
       return matrix;
     }
 
-    float appUnitPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
+    float appUnitPerCSSPixel = AppUnitsPerCSSPixel();
     matrix = nsStyleTransformMatrix::ReadTransforms(list,
                                                     aRefBox,
                                                     appUnitPerCSSPixel,
@@ -951,7 +951,7 @@ ReadTransforms(const nsCSSValueList* aList,
                                aContains3dTransform);
   }
 
-  float scale = float(nsPresContext::AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
+  float scale = float(AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
   result.PreScale(1/scale, 1/scale, 1/scale);
   result.PostScale(scale, scale, scale);
 

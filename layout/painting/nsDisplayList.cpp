@@ -7929,7 +7929,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                                                     &dummyBool);
   } else if (hasSVGTransforms) {
     // Correct the translation components for zoom:
-    float pixelsPerCSSPx = frame->PresContext()->AppUnitsPerCSSPixel() /
+    float pixelsPerCSSPx = AppUnitsPerCSSPixel() /
                              aAppUnitsPerPixel;
     svgTransform._31 *= pixelsPerCSSPx;
     svgTransform._32 *= pixelsPerCSSPx;
@@ -7946,7 +7946,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 
   if (parentHasChildrenOnlyTransform) {
     float pixelsPerCSSPx =
-      frame->PresContext()->AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
+      AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
     parentsChildrenOnlyTransform._31 *= pixelsPerCSSPx;
     parentsChildrenOnlyTransform._32 *= pixelsPerCSSPx;
 
@@ -8109,7 +8109,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   }
 
   if (frameArea > maxLimitArea) {
-    uint64_t appUnitsPerPixel = nsPresContext::AppUnitsPerCSSPixel();
+    uint64_t appUnitsPerPixel = AppUnitsPerCSSPixel();
     EffectCompositor::SetPerformanceWarning(
       aFrame, eCSSProperty_transform,
       AnimationPerformanceWarning(

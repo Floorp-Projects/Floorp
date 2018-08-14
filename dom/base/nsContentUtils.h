@@ -2951,11 +2951,13 @@ public:
   static StorageAccess StorageAllowedForPrincipal(nsIPrincipal* aPrincipal);
 
   /*
-   * Returns true if this window/channel should disable storages because of the
-   * anti-tracking feature.
+   * Returns true if this window/channel/aPrincipal should disable storages
+   * because of the anti-tracking feature.
+   * Note that either aWindow or aChannel may be null when calling this function.
    */
   static bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                             nsIChannel* aChannel,
+                                            nsIPrincipal* aPrincipal,
                                             nsIURI* aURI);
 
   /*
@@ -3342,14 +3344,13 @@ private:
                                       void* aArg);
 
   /**
-   * Gets the current cookie lifetime policy and cookie behavior for a given
-   * principal by checking with preferences and the permission manager.
+   * Gets the current cookie lifetime policy for a given principal by checking
+   * with preferences and the permission manager.
    *
    * Used in the implementation of InternalStorageAllowedForPrincipal.
    */
-  static void GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
-                                            uint32_t* aLifetimePolicy,
-                                            uint32_t* aBehavior);
+  static void GetCookieLifetimePolicyForPrincipal(nsIPrincipal* aPrincipal,
+                                                  uint32_t* aLifetimePolicy);
 
   /*
    * Checks if storage for a given principal is permitted by the user's
