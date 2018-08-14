@@ -74,6 +74,7 @@ exports.FXA_PUSH_SCOPE_ACCOUNT_UPDATE = "chrome://fxa-device-update";
 
 exports.ON_PROFILE_CHANGE_NOTIFICATION = "fxaccounts:profilechange"; // WebChannel
 exports.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION = "fxaccounts:statechange";
+exports.ON_NEW_DEVICE_ID = "fxaccounts:new_device_id";
 
 exports.COMMAND_SENDTAB = "https://identity.mozilla.com/cmd/open-uri";
 

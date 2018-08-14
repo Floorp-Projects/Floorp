@@ -298,6 +298,16 @@ GetColumnGap(nsColumnSetFrame* aFrame,
   return nsLayoutUtils::ResolveGapToLength(columnGap, aPercentageBasis);
 }
 
+/* static */ nscoord
+nsColumnSetFrame::ClampUsedColumnWidth(const nsStyleCoord& aColumnWidth)
+{
+  MOZ_ASSERT(aColumnWidth.GetUnit() == eStyleUnit_Coord,
+             "This should only be called when column-width is a <length>!");
+
+  // Per spec, used values will be clamped to a minimum of 1px.
+  return std::max(CSSPixel::ToAppUnits(1), aColumnWidth.GetCoordValue());
+}
+
 nsColumnSetFrame::ReflowConfig
 nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
                                        bool aForceAuto = false,
@@ -353,7 +363,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
   // In vertical writing-mode, "column-width" (inline size) will actually be
   // physical height, but its CSS name is still column-width.
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colISize = colStyle->mColumnWidth.GetCoordValue();
+    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth);
     NS_ASSERTION(colISize >= 0, "negative column width");
     // Reduce column count if necessary to make columns fit in the
     // available width. Compute max number of columns that fit in
@@ -504,7 +514,7 @@ nsColumnSetFrame::GetMinISize(gfxContext *aRenderingContext)
   const nsStyleColumn* colStyle = StyleColumn();
   nscoord colISize;
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colISize = colStyle->mColumnWidth.GetCoordValue();
+    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth);
     // As available width reduces to zero, we reduce our number of columns
     // to one, and don't enforce the column width, so just return the min
     // of the child's min-width with any specified column width.
@@ -542,7 +552,7 @@ nsColumnSetFrame::GetPrefISize(gfxContext *aRenderingContext)
 
   nscoord colISize;
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colISize = colStyle->mColumnWidth.GetCoordValue();
+    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth);
   } else if (mFrames.FirstChild() && !StyleDisplay()->IsContainSize()) {
     // We want to ignore this in the case that we're size contained
     // because our children should not contribute to our

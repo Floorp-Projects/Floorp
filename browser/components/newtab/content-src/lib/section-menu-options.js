@@ -65,7 +65,7 @@ export const SectionMenuOptions = {
     id: "section_menu_action_add_search_engine",
     icon: "search",
     action: {type: at.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL},
-    userEvent: "MENU_ADD_SEARCH_SHORTCUTS"
+    userEvent: "MENU_ADD_SEARCH"
   }),
   PrivacyNotice: section => ({
     id: "section_menu_action_privacy_notice",

@@ -23,26 +23,32 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
-function testOnWindow(aPrivate, aCallback) {
-  var win = mainWindow.OpenBrowserWindow({private: aPrivate});
-  win.addEventListener("load", function() {
-    TestUtils.topicObserved("browser-delayed-startup-finished",
-                                  subject => subject == win).then(() => {
-      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-        if (win.content.location.href != contentPage) {
-          win.gBrowser.loadURI(contentPage);
-          return;
-        }
-        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+function testOnWindow(aPrivate) {
+  return new Promise((resolve, reject) => {
+    let win = mainWindow.OpenBrowserWindow({private: aPrivate});
+    win.addEventListener("load", function() {
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => {
+        win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+          if (win.content.location.href != contentPage) {
+            win.gBrowser.loadURI(contentPage);
+            return;
+          }
+          win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener("load", function innerLoad2() {
-          win.content.removeEventListener("load", innerLoad2);
-          SimpleTest.executeSoon(function() { aCallback(win); });
-        }, false, true);
-      }, true);
-      SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
-    });
-  }, {capture: true, once: true});
+          win.content.addEventListener("load", function innerLoad2() {
+            win.content.removeEventListener("load", innerLoad2);
+            SimpleTest.executeSoon(function() {
+              resolve(win);
+            });
+          }, false, true);
+        }, true);
+        SimpleTest.executeSoon(function() {
+          win.gBrowser.loadURI(contentPage);
+        });
+      });
+    }, {capture: true, once: true});
+  });
 }
 
 var badids = [
@@ -98,33 +104,44 @@ function checkLoads(aWindow, aBlocked) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set": [["privacy.trackingprotection.enabled", false],
-           ["privacy.trackingprotection.pbmode.enabled", true]]},
-  test);
+  {"set": [
+      ["browser.contentblocking.enabled", true],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.pbmode.enabled", true],
+  ]}, test);
 
-function test() {
+async function test() {
   SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
-  UrlClassifierTestUtils.addTestTrackers().then(() => {
-    // Normal mode, with the pref (trackers should be loaded)
-    testOnWindow(false, function(aWindow) {
-      checkLoads(aWindow, false);
-      aWindow.close();
+  await UrlClassifierTestUtils.addTestTrackers();
 
-      // Private Browsing, with the pref (trackers should be blocked)
-      testOnWindow(true, function(aWindow1) {
-        checkLoads(aWindow1, true);
-        aWindow1.close();
-
-        // Private Browsing, without the pref (trackers should be loaded)
-        SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
-        testOnWindow(true, function(aWindow2) {
-          checkLoads(aWindow2, false);
-          aWindow2.close();
-          SimpleTest.finish();
-        });
-      });
-    });
+  // Normal mode, with the pref (trackers should be loaded)
+  await testOnWindow(false).then(function(aWindow) {
+    checkLoads(aWindow, false);
+    aWindow.close();
   });
+
+  // Private Browsing, with the pref (trackers should be blocked)
+  await testOnWindow(true).then(function(aWindow) {
+    checkLoads(aWindow, true);
+    aWindow.close();
+  });
+
+  // Private Browsing, without the pref (trackers should be loaded)
+  await SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
+  await testOnWindow(true).then(function(aWindow) {
+    checkLoads(aWindow, false);
+    aWindow.close();
+  });
+
+  // Private Browsing, without the content blocking pref (trackers should be loaded)
+  await SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
+  await SpecialPowers.setBoolPref("browser.contentblocking.enabled", false);
+  await testOnWindow(true).then(function(aWindow) {
+    checkLoads(aWindow, false);
+    aWindow.close();
+  });
+
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();

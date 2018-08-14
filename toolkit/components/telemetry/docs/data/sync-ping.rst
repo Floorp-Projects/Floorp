@@ -102,7 +102,8 @@ Structure:
         }],
         events: [
           event_array // See events below.
-        ]
+        ],
+        histograms: { ... } // See histograms below
       }
     }
 
@@ -203,6 +204,35 @@ reason. It is included to improve flow analysis across multiple clients.
 
 Every event recorded in this ping will have a category of ``sync``. The following
 events are defined, categorized by the event method.
+
+Histograms in the "sync" ping
+-----------------------------
+
+The sync ping includes histograms relating to measurements of password manager usage.
+These histograms are duplicated in the main ping. Histograms are only included in a ping if they have been set by the pwmgr code.
+Currently, the histograms that can be included are:
+
+PWMGR_BLOCKLIST_NUM_SITES
+PWMGR_FORM_AUTOFILL_RESULT
+PWMGR_LOGIN_LAST_USED_DAYS
+PWMGR_LOGIN_PAGE_SAFETY
+PWMGR_MANAGE_COPIED_PASSWORD
+PWMGR_MANAGE_COPIED_USERNAME
+PWMGR_MANAGE_DELETED
+PWMGR_MANAGE_OPENED
+PWMGR_MANAGE_VISIBILITY_TOGGLED
+PWMGR_NUM_PASSWORDS_PER_HOSTNAME
+PWMGR_NUM_SAVED_PASSWORDS
+PWMGR_PROMPT_REMEMBER_ACTION
+PWMGR_PROMPT_UPDATE_ACTION
+PWMGR_SAVING_ENABLED
+
+Histograms are objects with the following 6 properties:
+- min - minimum bucket size
+- max - maximum bucket size
+- histogram_type
+- counts - array representing contents of the buckets in the histogram
+- ranges - array with calculated bucket sizes
 
 sendcommand
 ~~~~~~~~~~~

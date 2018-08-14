@@ -1075,18 +1075,22 @@ ClientsTracker.prototype = {
   _enabled: false,
 
   onStart() {
+    Svc.Obs.add("fxaccounts:new_device_id", this.asyncObserver);
     Svc.Prefs.observe("client.name", this.asyncObserver);
   },
   onStop() {
     Svc.Prefs.ignore("client.name", this.asyncObserver);
+    Svc.Obs.remove("fxaccounts:new_device_id", this.asyncObserver);
   },
 
   async observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
         this._log.debug("client.name preference changed");
+        // Fallthrough intended.
+      case "fxaccounts:new_device_id":
         await this.addChangedID(this.engine.localID);
-        this.score += SCORE_INCREMENT_XLARGE;
+        this.score += SINGLE_USER_THRESHOLD + 1; // ALWAYS SYNC NOW.
         break;
     }
   }

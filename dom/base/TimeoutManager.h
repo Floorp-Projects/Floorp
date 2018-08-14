@@ -16,6 +16,9 @@ class nsITimer;
 class nsGlobalWindowInner;
 
 namespace mozilla {
+
+class PerformanceCounter;
+
 namespace dom {
 
 class OrderedTimeoutIterator;
@@ -151,6 +154,7 @@ private:
   void UpdateBudget(const TimeStamp& aNow,
                     const TimeDuration& aDuration = TimeDuration());
 
+  mozilla::PerformanceCounter* GetPerformanceCounter();
 private:
   struct Timeouts {
     explicit Timeouts(const TimeoutManager& aManager)
