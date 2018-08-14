@@ -16,8 +16,7 @@ use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, T
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveStore};
-use prim_store::{BrushKind, DeferredResolve};
+use prim_store::{PrimitiveIndex, PrimitiveStore, DeferredResolve};
 use profiler::FrameProfileCounters;
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree};
@@ -348,32 +347,24 @@ impl RenderTarget for ColorRenderTarget {
 
             match task.kind {
                 RenderTaskKind::Picture(ref pic_task) => {
-                    let brush_index = ctx.prim_store.cpu_metadata[pic_task.prim_index.0].cpu_prim_index;
-                    let brush = &ctx.prim_store.cpu_brushes[brush_index.0];
-                    match brush.kind {
-                        BrushKind::Picture { pic_index, .. } => {
-                            let pic = &ctx.prim_store.pictures[pic_index.0];
-                            let (target_rect, _) = task.get_target_rect();
+                    let pic = ctx.prim_store.get_pic(pic_task.prim_index);
 
-                            let mut batch_builder = AlphaBatchBuilder::new(self.screen_size, target_rect);
+                    let (target_rect, _) = task.get_target_rect();
 
-                            batch_builder.add_pic_to_batch(
-                                pic,
-                                *task_id,
-                                ctx,
-                                gpu_cache,
-                                render_tasks,
-                                deferred_resolves,
-                                prim_headers,
-                            );
+                    let mut batch_builder = AlphaBatchBuilder::new(self.screen_size, target_rect);
 
-                            if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
-                                self.alpha_batch_containers.push(batch_container);
-                            }
-                        }
-                        _ => {
-                            unreachable!();
-                        }
+                    batch_builder.add_pic_to_batch(
+                        pic,
+                        *task_id,
+                        ctx,
+                        gpu_cache,
+                        render_tasks,
+                        deferred_resolves,
+                        prim_headers,
+                    );
+
+                    if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
+                        self.alpha_batch_containers.push(batch_container);
                     }
                 }
                 _ => {
@@ -414,27 +405,16 @@ impl RenderTarget for ColorRenderTarget {
                 );
             }
             RenderTaskKind::Picture(ref task_info) => {
-                let prim_metadata = ctx.prim_store.get_metadata(task_info.prim_index);
-                match prim_metadata.prim_kind {
-                    PrimitiveKind::Brush => {
-                        let brush = &ctx.prim_store.cpu_brushes[prim_metadata.cpu_prim_index.0];
-                        let pic = &ctx.prim_store.pictures[brush.get_picture_index().0];
+                let pic = ctx.prim_store.get_pic(task_info.prim_index);
+                self.alpha_tasks.push(task_id);
 
-                        self.alpha_tasks.push(task_id);
-
-                        // If this pipeline is registered as a frame output
-                        // store the information necessary to do the copy.
-                        if let Some(pipeline_id) = pic.frame_output_pipeline_id {
-                            self.outputs.push(FrameOutput {
-                                pipeline_id,
-                                task_id,
-                            });
-                        }
-                    }
-                    _ => {
-                        // No other primitives make use of primitive caching yet!
-                        unreachable!()
-                    }
+                // If this pipeline is registered as a frame output
+                // store the information necessary to do the copy.
+                if let Some(pipeline_id) = pic.frame_output_pipeline_id {
+                    self.outputs.push(FrameOutput {
+                        pipeline_id,
+                        task_id,
+                    });
                 }
             }
             RenderTaskKind::ClipRegion(..) |
@@ -595,8 +575,7 @@ impl RenderTarget for AlphaRenderTarget {
                 let task_address = render_tasks.get_task_address(task_id);
                 self.clip_batcher.add(
                     task_address,
-                    &task_info.clips,
-                    task_info.coordinate_system_id,
+                    task_info.clip_node_range,
                     ctx.resource_cache,
                     gpu_cache,
                     clip_store,

@@ -57,7 +57,10 @@
         out vec4 oFragColor;
     #endif
 
-    #define EPSILON     0.0001
+    #define EPSILON                     0.0001
+
+    // "Show Overdraw" color. Premultiplied.
+    #define WR_DEBUG_OVERDRAW_COLOR     vec4(0.110, 0.077, 0.027, 0.125)
 
     float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
         vec2 dir_to_p0 = p0 - p;
