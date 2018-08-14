@@ -949,23 +949,12 @@ public:
    * class attribute).  This may be null if there are no classes, but that's not
    * guaranteed (e.g. we could have class="").
    */
-  const nsAttrValue* GetClasses() const {
-    if (MayHaveClass()) {
-      return DoGetClasses();
-    }
-    return nullptr;
-  }
-
-  /**
-   * Hook for implementing GetClasses. This should only be called if the
-   * ElementMayHaveClass flag is set.
-   *
-   * Public only because Servo needs to call it too, and it ensures the
-   * precondition before calling this.
-   */
-  const nsAttrValue* DoGetClasses() const
+  const nsAttrValue* GetClasses() const
   {
-    MOZ_ASSERT(MayHaveClass(), "Unexpected call");
+    if (!MayHaveClass()) {
+      return nullptr;
+    }
+
     if (IsSVGElement()) {
       if (const nsAttrValue* value = GetSVGAnimatedClass()) {
         return value;
@@ -1967,7 +1956,7 @@ protected:
 
 private:
   /**
-   * Slow path for DoGetClasses, this should only be called for SVG elements.
+   * Slow path for GetClasses, this should only be called for SVG elements.
    */
   const nsAttrValue* GetSVGAnimatedClass() const;
 

@@ -134,12 +134,6 @@ public:
     return nullptr;
   }
 
-  const nsAttrValue* DoGetClasses() const
-  {
-    MOZ_ASSERT(HasAttrs());
-    return &mClass;
-  }
-
   bool IsInChromeDocument() const { return mIsInChromeDocument; }
   bool SupportsLangAttr() const { return mSupportsLangAttr; }
 

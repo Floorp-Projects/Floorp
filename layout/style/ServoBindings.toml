@@ -197,6 +197,7 @@ rusty-enums = [
 whitelist-vars = [
     "NS_AUTHOR_SPECIFIED_.*",
     "NS_THEME_.*",
+    "NS_ATTRVALUE_.*",
     "NODE_.*",
     "ELEMENT_.*",
     "NS_FONT_.*",
@@ -476,6 +477,7 @@ structs-types = [
     "mozilla::StyleDisplayMode",
     "ServoRawOffsetArc",
     "DeclarationBlockMutationClosure",
+    "nsAttrValue",
     "nsIContent",
     "nsINode",
     "nsIDocument",
