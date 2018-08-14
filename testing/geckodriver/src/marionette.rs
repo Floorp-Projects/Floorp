@@ -486,12 +486,19 @@ impl MarionetteHandler {
         Ok(())
     }
 
-    pub fn set_prefs(&self, port: u16, profile: &mut Profile, custom_profile: bool,
-                     extra_prefs: Vec<(String, Pref)>)
-                 -> WebDriverResult<()> {
-        let prefs = try!(profile.user_prefs()
-                         .map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
-                                                          "Unable to read profile preferences file")));
+    pub fn set_prefs(
+        &self,
+        port: u16,
+        profile: &mut Profile,
+        custom_profile: bool,
+        extra_prefs: Vec<(String, Pref)>,
+    ) -> WebDriverResult<()> {
+        let prefs = profile.user_prefs().map_err(|_| {
+            WebDriverError::new(
+                ErrorStatus::UnknownError,
+                "Unable to read profile preferences file",
+            )
+        })?;
 
         for &(ref name, ref value) in prefs::DEFAULT.iter() {
             if !custom_profile || !prefs.contains_key(name) {
@@ -509,11 +516,12 @@ impl MarionetteHandler {
             prefs.insert("marionette.debugging.clicktostart", Pref::new(true));
         }
 
-        prefs.insert("marionette.log.level", Pref::new(logging::max_level().to_string()));
+        prefs.insert("marionette.log.level", logging::max_level().into());
         prefs.insert("marionette.port", Pref::new(port));
 
-        prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
-                                                      "Unable to write Firefox profile"))
+        prefs.write().map_err(|_| {
+            WebDriverError::new(ErrorStatus::UnknownError, "Unable to write Firefox profile")
+        })
     }
 }
 
