@@ -9,4 +9,5 @@ DevToolsModules(
     'console-progress.js',
     'console-reflow.js',
     'console-service.js',
+    'content-process.js',
 )
