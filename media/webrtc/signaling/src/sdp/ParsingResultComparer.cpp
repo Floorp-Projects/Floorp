@@ -212,6 +212,13 @@ ParsingResultComparer::CompareAttrLists(const SdpAttributeList& rustAttrlist,
       auto rustAttrStr = ToString(*rustAttrlist.GetAttribute(type, false));
 
       if (rustAttrStr != sipccAttrStr) {
+
+        if (type == AttributeType::kFmtpAttribute) {
+          if (rustAttrlist.GetFmtp() == sipccAttrlist.GetFmtp()) {
+            continue;
+          }
+        }
+
         std::string originalAttrStr = GetAttributeLines(attrStr, level);
         if (rustAttrStr != originalAttrStr) {
           nsString typeStr;
