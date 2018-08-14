@@ -394,7 +394,7 @@ ul.children + .tag-line::before {
 /* Markup Badges */
 .markup-badge {
   display: inline-block;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: normal;
   line-height: 11px;
   vertical-align: 1px;
@@ -405,12 +405,6 @@ ul.children + .tag-line::before {
   -moz-user-select: none;
   background-color: var(--markup-badge-background-color);
   color: var(--markup-badge-color);
-}
-
-@media (min-resolution: 1.1dppx) {
-  .markup-badge {
-    font-size: 9px;
-  }
 }
 
 .markup-badge.active {
