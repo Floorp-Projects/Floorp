@@ -131,7 +131,7 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);
-  DO_STRUCT_DIFFERENCE(UserInterface);
+  DO_STRUCT_DIFFERENCE(UI);
   DO_STRUCT_DIFFERENCE(Visibility);
   DO_STRUCT_DIFFERENCE(Outline);
   DO_STRUCT_DIFFERENCE(TableBorder);

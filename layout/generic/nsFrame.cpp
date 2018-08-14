@@ -2393,7 +2393,7 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
 nscolor
 nsIFrame::GetCaretColorAt(int32_t aOffset)
 {
-  return nsLayoutUtils::GetColor(this, &nsStyleUserInterface::mCaretColor);
+  return nsLayoutUtils::GetColor(this, &nsStyleUI::mCaretColor);
 }
 
 bool
@@ -5202,7 +5202,7 @@ nsresult
 nsFrame::GetCursor(const nsPoint& aPoint,
                    nsIFrame::Cursor& aCursor)
 {
-  FillCursorInformationFromStyle(StyleUserInterface(), aCursor);
+  FillCursorInformationFromStyle(StyleUI(), aCursor);
   if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
     // If this is editable, I-beam cursor is better for most elements.
     aCursor.mCursor =
@@ -6503,7 +6503,7 @@ nsIFrame::IsContentDisabled() const
 {
   // FIXME(emilio): Doing this via CSS means callers must ensure the style is up
   // to date, and they don't!
-  if (StyleUserInterface()->mUserInput == StyleUserInput::None) {
+  if (StyleUI()->mUserInput == StyleUserInput::None) {
     return true;
   }
 
@@ -9997,7 +9997,7 @@ nsIFrame::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
   if (mContent && mContent->IsElement() && IsVisibleConsideringAncestors() &&
       Style()->GetPseudo() != nsCSSAnonBoxes::anonymousFlexItem &&
       Style()->GetPseudo() != nsCSSAnonBoxes::anonymousGridItem) {
-    const nsStyleUserInterface* ui = StyleUserInterface();
+    const nsStyleUI* ui = StyleUI();
     if (ui->mUserFocus != StyleUserFocus::Ignore &&
         ui->mUserFocus != StyleUserFocus::None) {
       // Pass in default tabindex of -1 for nonfocusable and 0 for focusable
@@ -10097,7 +10097,7 @@ nsIFrame::VerticalAlignEnum() const
 }
 
 /* static */
-void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
+void nsFrame::FillCursorInformationFromStyle(const nsStyleUI* ui,
                                              nsIFrame::Cursor& aCursor)
 {
   aCursor.mCursor = ui->mCursor;
@@ -11262,7 +11262,7 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     // are the event targets for any regions viewport frames may cover.
     return result;
   }
-  const uint8_t pointerEvents = StyleUserInterface()->GetEffectivePointerEvents(this);
+  const uint8_t pointerEvents = StyleUI()->GetEffectivePointerEvents(this);
   if (pointerEvents == NS_STYLE_POINTER_EVENTS_NONE) {
     return result;
   }

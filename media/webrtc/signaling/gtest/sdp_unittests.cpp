@@ -4147,6 +4147,73 @@ TEST(NewSdpTestNoFixture, CheckParsingResultComparer) {
 
   ASSERT_TRUE(check_comparison(kBasicAudioVideoOffer));
   ASSERT_TRUE(check_comparison(kH264AudioVideoOffer));
+
+  // Check the Fmtp comprison
+  const std::string kBasicOpusFmtp1 =
+  "v=0" CRLF
+  "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+  "s=SIP Call" CRLF
+  "c=IN IP4 224.0.0.1/100/12" CRLF
+  "t=0 0" CRLF
+  "m=video 9 RTP/SAVPF 120" CRLF
+  "a=rtpmap:120 opus/48000" CRLF
+  "a=fmtp:120 stereo=1;useinbandfec=1" CRLF;
+  ASSERT_TRUE(check_comparison(kBasicOpusFmtp1));
+
+  const std::string kBasicOpusFmtp2 =
+  "v=0" CRLF
+  "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+  "s=SIP Call" CRLF
+  "c=IN IP4 224.0.0.1/100/12" CRLF
+  "t=0 0" CRLF
+  "m=video 9 RTP/SAVPF 120" CRLF
+  "a=rtpmap:120 opus/48000" CRLF
+  "a=fmtp:120 useinbandfec=1;stereo=1;maxplaybackrate=32000" CRLF;
+  ASSERT_TRUE(check_comparison(kBasicOpusFmtp2));
+
+  const std::string kBasicVP8Fmtp1 =
+  "v=0" CRLF
+  "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+  "s=SIP Call" CRLF
+  "c=IN IP4 224.0.0.1/100/12" CRLF
+  "t=0 0" CRLF
+  "m=video 9 RTP/SAVPF 120" CRLF
+  "a=rtpmap:120 VP8/90000" CRLF
+  "a=fmtp:120 max-fs=3600;max-fr=60" CRLF;
+  ASSERT_TRUE(check_comparison(kBasicVP8Fmtp1));
+  //
+  const std::string kBasicVP8Fmtp2 =
+  "v=0" CRLF
+  "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+  "s=SIP Call" CRLF
+  "c=IN IP4 224.0.0.1/100/12" CRLF
+  "t=0 0" CRLF
+  "m=video 9 RTP/SAVPF 120" CRLF
+  "a=rtpmap:120 VP8/90000" CRLF
+  "a=fmtp:120 max-fr=60;max-fs=3600" CRLF;
+  ASSERT_TRUE(check_comparison(kBasicVP8Fmtp2));
+
+  const std::string kBasicH264Fmtp1 =
+  "v=0" CRLF
+  "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+  "s=SIP Call" CRLF
+  "c=IN IP4 224.0.0.1/100/12" CRLF
+  "t=0 0" CRLF
+  "m=video 9 RTP/SAVPF 120" CRLF
+  "a=rtpmap:120 H264/90000" CRLF
+  "a=fmtp:120 profile-level-id=42a01e;level_asymmetry_allowed=1" CRLF;
+  ASSERT_TRUE(check_comparison(kBasicH264Fmtp1));
+
+  const std::string kBasicH264Fmtp2 =
+  "v=0" CRLF
+  "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+  "s=SIP Call" CRLF
+  "c=IN IP4 224.0.0.1/100/12" CRLF
+  "t=0 0" CRLF
+  "m=video 9 RTP/SAVPF 120" CRLF
+  "a=rtpmap:120 H264/90000" CRLF
+  "a=fmtp:120 level_asymmetry_allowed=1;profile-level-id=42a01e;max_fs=3600" CRLF;
+  ASSERT_TRUE(check_comparison(kBasicH264Fmtp2));
 }
 
 TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {

@@ -379,11 +379,10 @@ void Gecko_SetListStyleImageImageValue(nsStyleList* style_struct,
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
 // cursor style.
-void Gecko_SetCursorArrayLength(nsStyleUserInterface* ui, size_t len);
+void Gecko_SetCursorArrayLength(nsStyleUI* ui, size_t len);
 void Gecko_SetCursorImageValue(nsCursorImage* aCursor,
                                mozilla::css::ImageValue* aImageValue);
-void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
-                               const nsStyleUserInterface* src);
+void Gecko_CopyCursorArrayFrom(nsStyleUI* dest, const nsStyleUI* src);
 
 void Gecko_SetContentDataImageValue(nsStyleContentData* aList,
                                     mozilla::css::ImageValue* aImageValue);
