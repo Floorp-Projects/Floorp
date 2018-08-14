@@ -14,6 +14,7 @@
 #include "chrome/common/child_thread.h"
 #include "chrome/common/mach_ipc_mac.h"
 #include "ipc/Channel.h"
+#include "mac/handler/exception_handler.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/Sprintf.h"
@@ -282,7 +283,7 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
 
   // If we failed to initialize then report it to the user.
   if (gInitializationFailureMessage) {
-    ReportFatalError("%s", gInitializationFailureMessage);
+    ReportFatalError(Nothing(), "%s", gInitializationFailureMessage);
     Unreachable();
   }
 }
@@ -300,8 +301,21 @@ ParentProcessId()
 }
 
 void
-ReportFatalError(const char* aFormat, ...)
+ReportFatalError(const Maybe<MinidumpInfo>& aMinidump, const char* aFormat, ...)
 {
+  // Unprotect any memory which might be written while producing the minidump.
+  UnrecoverableSnapshotFailure();
+
+  AutoEnsurePassThroughThreadEvents pt;
+
+#ifdef MOZ_CRASHREPORTER
+  MinidumpInfo info = aMinidump.isSome()
+                      ? aMinidump.ref()
+                      : MinidumpInfo(EXC_CRASH, 1, 0, mach_thread_self());
+  google_breakpad::ExceptionHandler::WriteForwardedExceptionMinidump
+    (info.mExceptionType, info.mCode, info.mSubcode, info.mThread);
+#endif
+
   va_list ap;
   va_start(ap, aFormat);
   char buf[2048];
@@ -322,8 +336,6 @@ ReportFatalError(const char* aFormat, ...)
   DirectPrint("***** Fatal Record/Replay Error *****\n");
   DirectPrint(buf);
   DirectPrint("\n");
-
-  UnrecoverableSnapshotFailure();
 
   // Block until we get a terminate message and die.
   Thread::WaitForeverNoIdle();

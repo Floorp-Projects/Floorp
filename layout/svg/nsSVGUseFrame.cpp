@@ -111,7 +111,7 @@ nsSVGUseFrame::ReflowSVG()
     GetAnimatedLengthValues(&x, &y, nullptr);
   mRect.MoveTo(nsLayoutUtils::RoundGfxRectToAppRect(
                  gfxRect(x, y, 0.0, 0.0),
-                 PresContext()->AppUnitsPerCSSPixel()).TopLeft());
+                 AppUnitsPerCSSPixel()).TopLeft());
 
   // If we have a filter, we need to invalidate ourselves because filter
   // output can change even if none of our descendants need repainting.

@@ -63,7 +63,7 @@ nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
   RefPtr<DrawTarget> drawTarget =
     gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   RefPtr<Path> path = instance.CreateClipPath(drawTarget);
-  float pixelRatio = float(nsPresContext::AppUnitsPerCSSPixel()) /
+  float pixelRatio = float(AppUnitsPerCSSPixel()) /
                      aFrame->PresContext()->AppUnitsPerDevPixel();
   return path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
 }

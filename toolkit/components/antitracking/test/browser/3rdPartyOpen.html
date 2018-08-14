@@ -6,7 +6,9 @@
 <h1>hi!</h1>
 <script>
 
-opener.postMessage("hello!", "*");
+if (opener) {
+  opener.postMessage("hello!", "*");
+}
 window.close();
 
 </script>

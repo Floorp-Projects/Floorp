@@ -278,6 +278,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsHTMLTags.h"
 #include "NodeUbiReporting.h"
+#include "nsICookieService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -12643,7 +12644,8 @@ nsIDocument::SetDocTreeHadPlayRevoked()
 void
 nsIDocument::MaybeAllowStorageForOpener()
 {
-  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
+  if (StaticPrefs::network_cookie_cookieBehavior() !=
+        nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     return;
   }
 

@@ -72,7 +72,7 @@ CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const
       // nsStyleTransformMatrix::ProcessTranslatePart which is called from
       // nsDisplayTransform::GetResultingTransformMatrix)
       double devPerCss =
-        double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
+        double(scale) / double(AppUnitsPerCSSPixel());
       transform._41 *= devPerCss;
       transform._42 *= devPerCss;
       transform._43 *= devPerCss;

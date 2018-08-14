@@ -1109,7 +1109,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     if (eh_frame_hdr && (!eh_frame || strcmp(eh_frame->getName(), ".eh_frame"))) {
         throw std::runtime_error("Expected to find an .eh_frame section adjacent to .eh_frame_hdr");
     }
-    if (eh_frame && first->getAddr() > relhack->getAddr() && second->getAddr() < relhackcode->getAddr()) {
+    if (eh_frame && first->getAddr() > relhack->getAddr() && second->getAddr() < first_executable->getAddr()) {
         // The distance between both sections needs to be preserved because eh_frame_hdr
         // contains relative offsets to eh_frame. Well, they could be relocated too, but
         // it's not worth the effort for the few number of bytes this would save.

@@ -205,9 +205,9 @@ MOZ_EXPORT void
 RecordReplayInterface_InternalInvalidateRecording(const char* aWhy)
 {
   if (IsRecording()) {
-    child::ReportFatalError("Recording invalidated: %s", aWhy);
+    child::ReportFatalError(Nothing(), "Recording invalidated: %s", aWhy);
   } else {
-    child::ReportFatalError("Recording invalidated while replaying: %s", aWhy);
+    child::ReportFatalError(Nothing(), "Recording invalidated while replaying: %s", aWhy);
   }
   Unreachable();
 }
@@ -471,7 +471,8 @@ RecordReplayInterface_InternalRecordReplayAssert(const char* aFormat, va_list aA
         SetCurrentStackString(text, text + strlen(text), sizeof(text) - strlen(text));
       }
 
-      child::ReportFatalError("Assertion Mismatch: Thread %d\n"
+      child::ReportFatalError(Nothing(),
+                              "Assertion Mismatch: Thread %d\n"
                               "Recorded: %s [%d,%d]\n"
                               "Replayed: %s [%d,%d]\n",
                               (int) thread->Id(), buffer, (int) streamPos, (int) progress, text,
@@ -547,7 +548,8 @@ RecordReplayInterface_InternalRecordReplayAssertBytes(const void* aData, size_t 
         }
       }
 
-      child::ReportFatalError("Byte Comparison Check Failed: Position %d %d Length %d %d\n",
+      child::ReportFatalError(Nothing(),
+                              "Byte Comparison Check Failed: Position %d %d Length %d %d\n",
                               (int) streamPos, (int) thread->Events().StreamPosition(),
                               (int) oldSize, (int) aSize);
       Unreachable();

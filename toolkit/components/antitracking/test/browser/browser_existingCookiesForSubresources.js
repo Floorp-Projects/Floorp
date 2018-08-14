@@ -5,7 +5,6 @@ add_task(async function() {
 
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],
@@ -14,13 +13,13 @@ add_task(async function() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   info("Creating a new tab");
-  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_3RD_PARTY_PAGE);
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  info("Loading tracking scripts and tracking images");
+  info("Loading tracking scripts and tracking images before restricting 3rd party cookies");
   await ContentTask.spawn(browser, null, async function() {
     // Let's load the script twice here.
     {
@@ -58,27 +57,43 @@ add_task(async function() {
   await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "Cookies received for images");
+      is(text, 1, "Cookies received for images");
     });
 
   await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "Cookies received for scripts");
+      is(text, 1, "Cookies received for scripts");
     });
+
+  info("Removing the tab");
+  BrowserTestUtils.removeTab(tab);
+
+  Services.perms.removeAll();
+
+  // Now set up our prefs
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+  ]});
+
+  info("Creating a new tab");
+  tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+  gBrowser.selectedTab = tab;
+
+  browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
 
   info("Creating a 3rd party content");
   await ContentTask.spawn(browser,
-                          { page: TEST_3RD_PARTY_PAGE_WO,
-                            blockingCallback: (async _ => {}).toString(),
-                            nonBlockingCallback: (async _ => {}).toString(),
+                          { page: TEST_3RD_PARTY_PAGE,
+                            callback: (async _ => {}).toString(),
                           },
                           async function(obj) {
     await new content.Promise(resolve => {
       let ifr = content.document.createElement("iframe");
       ifr.onload = function() {
         info("Sending code to the 3rd party content");
-        ifr.contentWindow.postMessage(obj, "*");
+        ifr.contentWindow.postMessage(obj.callback, "*");
       };
 
       content.addEventListener("message", function msg(event) {
@@ -144,13 +159,13 @@ add_task(async function() {
   await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "One cookie received for images.");
+      is(text, 0, "No cookie received for images.");
     });
 
   await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "One cookie received received for scripts.");
+      is(text, 0, "No cookie received received for scripts.");
     });
 
   info("Removing the tab");
