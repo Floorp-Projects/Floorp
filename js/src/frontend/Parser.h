@@ -249,6 +249,9 @@ enum AwaitHandling : uint8_t { AwaitIsName, AwaitIsKeyword, AwaitIsModuleKeyword
 template <class ParseHandler, typename CharT>
 class AutoAwaitIsKeyword;
 
+template <class ParseHandler, typename CharT>
+class AutoInParametersOfAsyncFunction;
+
 class MOZ_STACK_CLASS ParserBase
   : public StrictModeGetter,
     private JS::AutoGCRooter
@@ -297,6 +300,8 @@ class MOZ_STACK_CLASS ParserBase
 
     /* AwaitHandling */ uint8_t awaitHandling_:2;
 
+    bool inParametersOfAsyncFunction_:1;
+
     /* ParseGoal */ uint8_t parseGoal_:1;
 
   public:
@@ -304,11 +309,16 @@ class MOZ_STACK_CLASS ParserBase
       return awaitHandling_ != AwaitIsName;
     }
 
+    bool inParametersOfAsyncFunction() const {
+        return inParametersOfAsyncFunction_;
+    }
+
     ParseGoal parseGoal() const {
         return ParseGoal(parseGoal_);
     }
 
     template<class, typename> friend class AutoAwaitIsKeyword;
+    template<class, typename> friend class AutoInParametersOfAsyncFunction;
 
     ParserBase(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                bool foldConstants, UsedNameTracker& usedNames,
@@ -690,6 +700,7 @@ class MOZ_STACK_CLASS GeneralParser
 
     using Base::alloc;
     using Base::awaitIsKeyword;
+    using Base::inParametersOfAsyncFunction;
     using Base::parseGoal;
 #if DEBUG
     using Base::checkOptionsCalled;
@@ -896,6 +907,7 @@ class MOZ_STACK_CLASS GeneralParser
                   ParseGoal parseGoal);
 
     inline void setAwaitHandling(AwaitHandling awaitHandling);
+    inline void setInParametersOfAsyncFunction(bool inParameters);
 
     /*
      * Parse a top-level JS script.
@@ -1355,6 +1367,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, CharT> final
     // Functions present in both Parser<ParseHandler, CharT> specializations.
 
     inline void setAwaitHandling(AwaitHandling awaitHandling);
+    inline void setInParametersOfAsyncFunction(bool inParameters);
 
     Node newRegExp();
 
@@ -1472,6 +1485,9 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, CharT> final
 
     friend class AutoAwaitIsKeyword<SyntaxParseHandler, CharT>;
     inline void setAwaitHandling(AwaitHandling awaitHandling);
+
+    friend class AutoInParametersOfAsyncFunction<SyntaxParseHandler, CharT>;
+    inline void setInParametersOfAsyncFunction(bool inParameters);
 
     Node newRegExp();
 
@@ -1609,6 +1625,27 @@ class MOZ_STACK_CLASS AutoAwaitIsKeyword
 
     ~AutoAwaitIsKeyword() {
         parser_->setAwaitHandling(oldAwaitHandling_);
+    }
+};
+
+template <class ParseHandler, typename CharT>
+class MOZ_STACK_CLASS AutoInParametersOfAsyncFunction
+{
+    using GeneralParser = frontend::GeneralParser<ParseHandler, CharT>;
+
+  private:
+    GeneralParser* parser_;
+    bool oldInParametersOfAsyncFunction_;
+
+  public:
+    AutoInParametersOfAsyncFunction(GeneralParser* parser, bool inParameters) {
+        parser_ = parser;
+        oldInParametersOfAsyncFunction_ = parser_->inParametersOfAsyncFunction_;
+        parser_->setInParametersOfAsyncFunction(inParameters);
+    }
+
+    ~AutoInParametersOfAsyncFunction() {
+        parser_->setInParametersOfAsyncFunction(oldInParametersOfAsyncFunction_);
     }
 };
 
