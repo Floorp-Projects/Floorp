@@ -527,3 +527,7 @@ body.dark > .container > .content blockquote {
 .moz-reader-content .sr-only {
   display: none;
 }
+
+.reader-show-element {
+  display: initial;
+}
