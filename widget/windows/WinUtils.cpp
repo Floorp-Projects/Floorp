@@ -1785,6 +1785,24 @@ WinUtils::GetMaxTouchPoints()
 }
 
 /* static */
+POWER_PLATFORM_ROLE
+WinUtils::GetPowerPlatformRole()
+{
+  typedef POWER_PLATFORM_ROLE (WINAPI* PowerDeterminePlatformRoleEx)
+    (ULONG Version);
+  static PowerDeterminePlatformRoleEx power_determine_platform_role =
+    reinterpret_cast<PowerDeterminePlatformRoleEx>(::GetProcAddress(
+      ::LoadLibraryW(L"PowrProf.dll"), "PowerDeterminePlatformRoleEx"));
+
+  POWER_PLATFORM_ROLE powerPlatformRole = PlatformRoleUnspecified;
+  if (!power_determine_platform_role) {
+    return powerPlatformRole;
+  }
+
+  return power_determine_platform_role(POWER_PLATFORM_ROLE_V2);
+}
+
+/* static */
 bool
 WinUtils::ResolveJunctionPointsAndSymLinks(std::wstring& aPath)
 {
