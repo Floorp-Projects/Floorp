@@ -789,7 +789,8 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                          imgIContainer::FRAME_CURRENT,
                          SamplingFilter::GOOD, /* no SVGImageContext */ Nothing(),
                          imgIContainer::FLAG_SYNC_DECODE, 1.0);
-    if (res == ImgDrawResult::BAD_IMAGE || res == ImgDrawResult::BAD_ARGS) {
+    if (res == ImgDrawResult::BAD_IMAGE || res == ImgDrawResult::BAD_ARGS ||
+        res == ImgDrawResult::NOT_SUPPORTED) {
       return NS_ERROR_FAILURE;
     }
     *aSurface = dt->Snapshot();
