@@ -772,17 +772,6 @@ protected: // Shouldn't be used by friend classes
   virtual nsresult SelectAllInternal() override;
 
   /**
-   * SelectContentInternal() sets Selection to aContentToSelect to
-   * aContentToSelect + 1 in parent of aContentToSelect.
-   *
-   * @param aSelection          The Selection, callers have to guarantee the
-   *                            lifetime.
-   * @param aContentToSelect    The content which should be selected.
-   */
-  nsresult SelectContentInternal(Selection& aSelection,
-                                 nsIContent& aContentToSelect);
-
-  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
