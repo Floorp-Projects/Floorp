@@ -42,11 +42,13 @@ NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
         aBreakBefore[++u16Offset] = false; // Skip high surrogate
       ++u16Offset;
 
-      bool err;
-      uint32_t ch = UTF8CharEnumerator::NextChar(&p, end, &err);
+      // We're iterating over text obtained from NS_ConvertUTF16toUTF8,
+      // so we know we have valid UTF-8 and don't need to check for
+      // errors.
+      uint32_t ch = UTF8CharEnumerator::NextChar(&p, end);
       ++attr;
 
-      if (ch == 0 || err) {
+      if (!ch) {
         // pango_break (pango 1.16.2) only analyses text before the
         // first NUL (but sets one extra attr). Workaround loop to call
         // pango_break again to analyse after the NUL is done somewhere else

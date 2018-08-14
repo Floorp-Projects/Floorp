@@ -196,18 +196,15 @@ struct AtomTableKey
     *aHashOut = mHash;
   }
 
-  AtomTableKey(const char* aUTF8String, uint32_t aLength, uint32_t* aHashOut)
+  AtomTableKey(const char* aUTF8String,
+               uint32_t aLength,
+               uint32_t* aHashOut,
+               bool* aErr)
     : mUTF16String(nullptr)
     , mUTF8String(aUTF8String)
     , mLength(aLength)
   {
-    bool err;
-    mHash = HashUTF8AsUTF16(mUTF8String, mLength, &err);
-    if (err) {
-      mUTF8String = nullptr;
-      mLength = 0;
-      mHash = 0;
-    }
+    mHash = HashUTF8AsUTF16(mUTF8String, mLength, aErr);
     *aHashOut = mHash;
   }
 
@@ -333,10 +330,12 @@ AtomTableMatchKey(const PLDHashEntryHdr* aEntry, const void* aKey)
   const AtomTableKey* k = static_cast<const AtomTableKey*>(aKey);
 
   if (k->mUTF8String) {
-    return
-      CompareUTF8toUTF16(nsDependentCSubstring(k->mUTF8String,
-                                               k->mUTF8String + k->mLength),
-                         nsDependentAtomString(he->mAtom)) == 0;
+    bool err = false;
+    return (CompareUTF8toUTF16(nsDependentCSubstring(
+                                 k->mUTF8String, k->mUTF8String + k->mLength),
+                               nsDependentAtomString(he->mAtom),
+                               &err) == 0) &&
+           !err;
   }
 
   return he->mAtom->Equals(k->mUTF16String, k->mLength);
@@ -687,7 +686,16 @@ already_AddRefed<nsAtom>
 nsAtomTable::Atomize(const nsACString& aUTF8String)
 {
   uint32_t hash;
-  AtomTableKey key(aUTF8String.Data(), aUTF8String.Length(), &hash);
+  bool err;
+  AtomTableKey key(aUTF8String.Data(), aUTF8String.Length(), &hash, &err);
+  if (MOZ_UNLIKELY(err)) {
+    MOZ_ASSERT_UNREACHABLE("Tried to atomize invalid UTF-8.");
+    // The input was invalid UTF-8. Let's replace the errors with U+FFFD
+    // and atomize the result.
+    nsString str;
+    CopyUTF8toUTF16(aUTF8String, str);
+    return Atomize(str);
+  }
   nsAtomSubTable& table = SelectSubTable(key);
   MutexAutoLock lock(table.mLock);
   AtomTableEntry* he = table.Add(key);

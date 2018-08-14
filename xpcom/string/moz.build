@@ -49,16 +49,4 @@ UNIFIED_SOURCES += [
     'precompiled_templates.cpp',
 ]
 
-# Are we targeting x86 or x86-64?  If so, compile the SSE2 functions for
-# nsUTF8Utils.cpp and nsReadableUtils.cpp.
-if CONFIG['INTEL_ARCHITECTURE']:
-    SOURCES += ['nsUTF8UtilsSSE2.cpp']
-    SOURCES['nsUTF8UtilsSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-    SOURCES += ['nsReadableUtilsSSE2.cpp']
-    SOURCES['nsReadableUtilsSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-
-if CONFIG['HAVE_ARM_NEON'] or CONFIG['CPU_ARCH'] == 'aarch64':
-    SOURCES += ['nsUTF8UtilsNEON.cpp']
-    SOURCES['nsUTF8UtilsNEON.cpp'].flags += CONFIG['NEON_FLAGS']
-
 FINAL_LIBRARY = 'xul'

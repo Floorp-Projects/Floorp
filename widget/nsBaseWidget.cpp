@@ -3293,11 +3293,8 @@ case _value: eventName.AssignLiteral(_name) ; break
 
   default:
     {
-      char buf[32];
-
-      SprintfLiteral(buf,"UNKNOWN: %d",aGuiEvent->mMessage);
-
-      CopyASCIItoUTF16(buf, eventName);
+    eventName.AssignLiteral("UNKNOWN: ");
+    eventName.AppendInt(aGuiEvent->mMessage);
     }
     break;
   }

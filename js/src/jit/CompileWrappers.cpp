@@ -107,6 +107,12 @@ CompileRuntime::mainContextPtr()
     return runtime()->mainContextFromAnyThread();
 }
 
+uint32_t*
+CompileRuntime::addressOfTenuredAllocCount()
+{
+    return runtime()->mainContextFromAnyThread()->addressOfTenuredAllocCount();
+}
+
 const void*
 CompileRuntime::addressOfJitStackLimit()
 {
@@ -212,6 +218,12 @@ CompileZone::addressOfStringNurseryCurrentEnd()
     //
     // This function returns _a pointer to_ that end address.
     return zone()->runtimeFromAnyThread()->gc.addressOfStringNurseryCurrentEnd();
+}
+
+uint32_t*
+CompileZone::addressOfNurseryAllocCount()
+{
+    return zone()->runtimeFromAnyThread()->gc.addressOfNurseryAllocCount();
 }
 
 bool

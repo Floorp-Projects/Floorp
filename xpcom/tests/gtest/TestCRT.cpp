@@ -42,8 +42,8 @@ static void Check(const char* s1, const char* s2, size_t n)
   }
 
   nsAutoString t1,t2;
-  CopyASCIItoUTF16(s1, t1);
-  CopyASCIItoUTF16(s2, t2);
+  CopyASCIItoUTF16(mozilla::MakeStringSpan(s1), t1);
+  CopyASCIItoUTF16(mozilla::MakeStringSpan(s2), t2);
   const char16_t* us1 = t1.get();
   const char16_t* us2 = t2.get();
 

@@ -102,7 +102,7 @@ static void logMessage(nsIContent*      aContent,
 
 void Area::ParseCoords(const nsAString& aSpec)
 {
-  char* cp = ToNewCString(aSpec);
+  char* cp = ToNewUTF8String(aSpec);
   if (cp) {
     char *tptr;
     char *n_str;

@@ -5,9 +5,9 @@
 // Bug 624734 - Star UI has no tooltip until bookmarked page is visited
 
 function finishTest() {
-  is(BookmarkingUI.button.getAttribute("buttontooltiptext"),
+  is(document.getElementById("context-bookmarkpage").getAttribute("tooltiptext"),
      BookmarkingUI._unstarredTooltip,
-     "Star icon should have the unstarred tooltip text");
+     "Context menu should have the unstarred tooltip text");
   is(BookmarkingUI.star.getAttribute("tooltiptext"),
      BookmarkingUI._unstarredTooltip,
      "Star icon should have the unstarred tooltip text");

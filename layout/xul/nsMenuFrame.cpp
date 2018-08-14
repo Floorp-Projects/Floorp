@@ -921,7 +921,7 @@ nsMenuFrame::UpdateMenuType()
         AutoWeakFrame weakFrame(this);
         mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                                          true);
-        ENSURE_TRUE(weakFrame.IsAlive());
+        NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
       }
       mType = eMenuType_Normal;
       break;
@@ -1015,7 +1015,7 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
   // If anything below fails, just leave the accelerator text blank.
   AutoWeakFrame weakFrame(this);
   mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, aNotify);
-  ENSURE_TRUE(weakFrame.IsAlive());
+  NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   // See if we have a key node and use that instead.
   nsAutoString keyValue;
@@ -1153,7 +1153,7 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
   mIgnoreAccelTextChange = true;
   mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::acceltext,
                                  accelText, aNotify);
-  ENSURE_TRUE(weakFrame.IsAlive());
+  NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   mIgnoreAccelTextChange = false;
 }

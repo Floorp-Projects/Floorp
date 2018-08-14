@@ -48,6 +48,7 @@ class CompileRuntime
     const WellKnownSymbols& wellKnownSymbols();
 
     const void* mainContextPtr();
+    uint32_t* addressOfTenuredAllocCount();
     const void* addressOfJitStackLimit();
     const void* addressOfInterruptBits();
 
@@ -81,6 +82,8 @@ class CompileZone
     void* addressOfStringNurseryPosition();
     const void* addressOfNurseryCurrentEnd();
     const void* addressOfStringNurseryCurrentEnd();
+
+    uint32_t* addressOfNurseryAllocCount();
 
     bool nurseryExists();
     bool canNurseryAllocateStrings();

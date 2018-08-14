@@ -130,14 +130,14 @@ GetFaceNames(FcPattern* aFont, const nsAString& aFamilyName,
     // get the Postscript name
     FcChar8* psname;
     if (FcPatternGetString(aFont, FC_POSTSCRIPT_NAME, 0, &psname) == FcResultMatch) {
-        AppendUTF8toUTF16(ToCharPtr(psname), aPostscriptName);
+      AppendUTF8toUTF16(MakeStringSpan(ToCharPtr(psname)), aPostscriptName);
     }
 
     // get the canonical fullname (i.e. en name or first name)
     uint32_t en = FindCanonicalNameIndex(aFont, FC_FULLNAMELANG);
     FcChar8* fullname;
     if (FcPatternGetString(aFont, FC_FULLNAME, en, &fullname) == FcResultMatch) {
-        AppendUTF8toUTF16(ToCharPtr(fullname), aFullname);
+      AppendUTF8toUTF16(MakeStringSpan(ToCharPtr(fullname)), aFullname);
     }
 
     // if have fullname, done
@@ -154,7 +154,7 @@ GetFaceNames(FcPattern* aFont, const nsAString& aFamilyName,
     FcChar8* stylename = nullptr;
     FcPatternGetString(aFont, FC_STYLE, en, &stylename);
     if (stylename) {
-        AppendUTF8toUTF16(ToCharPtr(stylename), style);
+      AppendUTF8toUTF16(MakeStringSpan(ToCharPtr(stylename)), style);
     }
 
     if (!style.IsEmpty() && !style.EqualsLiteral("Regular")) {
@@ -1578,7 +1578,7 @@ gfxFcPlatformFontList::AddPatternToFontList(FcPattern* aFont,
 
         // add new family if one doesn't already exist
         aFamilyName.Truncate();
-        AppendUTF8toUTF16(ToCharPtr(canonical), aFamilyName);
+        AppendUTF8toUTF16(MakeStringSpan(ToCharPtr(canonical)), aFamilyName);
         nsAutoString keyName(aFamilyName);
         ToLowerCase(keyName);
 
@@ -1810,7 +1810,7 @@ GetSystemFontList(nsTArray<nsString>& aListOfFonts, nsAtom *aLangGroup)
 
         // Remove duplicates...
         nsAutoString strFamily;
-        AppendUTF8toUTF16(family, strFamily);
+        AppendUTF8toUTF16(MakeStringSpan(family), strFamily);
         if (aListOfFonts.Contains(strFamily)) {
             continue;
         }

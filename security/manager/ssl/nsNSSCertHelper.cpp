@@ -909,7 +909,8 @@ AppendBMPtoUTF16(const UniquePLArenaPool& arena,
         false, data, len, utf8Val, utf8ValLen, &utf8ValLen)) {
     return NS_ERROR_FAILURE;
   }
-  AppendUTF8toUTF16((char*)utf8Val, text);
+  AppendUTF8toUTF16(MakeSpan(reinterpret_cast<char*>(utf8Val), utf8ValLen),
+                    text);
   return NS_OK;
 }
 

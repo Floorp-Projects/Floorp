@@ -18,10 +18,172 @@
 
 #include "nsTArrayForwardDeclare.h"
 
-// Can't include mozilla/Encoding.h here
+// Can't include mozilla/Encoding.h here. The implementations are in
+// the encoding_rs and encoding_glue crates.
 extern "C" {
-  size_t encoding_utf8_valid_up_to(uint8_t const* buffer, size_t buffer_len);
-  size_t encoding_ascii_valid_up_to(uint8_t const* buffer, size_t buffer_len);
+  size_t
+  encoding_utf8_valid_up_to(uint8_t const* buffer, size_t buffer_len);
+
+  bool
+  encoding_mem_is_ascii(uint8_t const* buffer, size_t buffer_len);
+
+  bool
+  encoding_mem_is_basic_latin(char16_t const* buffer, size_t buffer_len);
+
+  bool
+  encoding_mem_is_utf8_latin1(uint8_t const* buffer, size_t buffer_len);
+
+  bool
+  encoding_mem_is_str_latin1(uint8_t const* buffer, size_t buffer_len);
+
+  bool
+  encoding_mem_is_utf16_latin1(char16_t const* buffer, size_t buffer_len);
+
+  void
+  encoding_mem_convert_utf16_to_latin1_lossy(const char16_t* src,
+                                             size_t src_len,
+                                             char* dst,
+                                             size_t dst_len);
+
+  size_t
+  encoding_mem_convert_utf8_to_latin1_lossy(const char* src,
+                                            size_t src_len,
+                                            char* dst,
+                                            size_t dst_len);
+
+  void
+  encoding_mem_convert_latin1_to_utf16(const char* src,
+                                       size_t src_len,
+                                       char16_t* dst,
+                                       size_t dst_len);
+
+  size_t
+  encoding_mem_convert_utf16_to_utf8(const char16_t* src,
+                                     size_t src_len,
+                                     char* dst,
+                                     size_t dst_len);
+
+  size_t
+  encoding_mem_convert_utf8_to_utf16(const char* src,
+                                     size_t src_len,
+                                     char16_t* dst,
+                                     size_t dst_len);
+}
+
+// From the nsstring crate
+extern "C" {
+  bool
+  nsstring_fallible_append_utf8_impl(nsAString* aThis,
+                                     const char* aOther,
+                                     size_t aOtherLen,
+                                     size_t aOldLen);
+
+  bool
+  nsstring_fallible_append_latin1_impl(nsAString* aThis,
+                                       const char* aOther,
+                                       size_t aOtherLen,
+                                       size_t aOldLen);
+
+  bool
+  nscstring_fallible_append_utf16_to_utf8_impl(nsACString* aThis,
+                                               const char16_t*,
+                                               size_t aOtherLen,
+                                               size_t aOldLen);
+
+  bool
+  nscstring_fallible_append_utf16_to_latin1_lossy_impl(nsACString* aThis,
+                                                       const char16_t*,
+                                                       size_t aOtherLen,
+                                                       size_t aOldLen);
+
+  bool
+  nscstring_fallible_append_utf8_to_latin1_lossy_check(nsACString* aThis,
+                                                       const nsACString* aOther,
+                                                       size_t aOldLen);
+
+  bool
+  nscstring_fallible_append_latin1_to_utf8_check(nsACString* aThis,
+                                                 const nsACString* aOther,
+                                                 size_t aOldLen);
+}
+
+/**
+ * If all the code points in the input are below U+0100, converts to Latin1,
+ * i.e. unsigned byte value is Unicode scalar value; not windows-1252. If
+ * there are code points above U+00FF, produces garbage in a memory-safe way
+ * and will likely start asserting in future debug builds. The nature of the
+ * garbage depends on the CPU architecture and must not be relied upon.
+ *
+ * The length of aDest must be not be less than the length of aSource.
+ */
+inline void
+LossyConvertUTF16toLatin1(mozilla::Span<const char16_t> aSource,
+                          mozilla::Span<char> aDest)
+{
+  encoding_mem_convert_utf16_to_latin1_lossy(
+    aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+}
+
+/**
+ * If all the code points in the input are below U+0100, converts to Latin1,
+ * i.e. unsigned byte value is Unicode scalar value; not windows-1252. If
+ * there are code points above U+00FF, asserts in debug builds and produces
+ * garbage in memory-safe way in release builds. The nature of the garbage
+ * may depend on the CPU architecture and must not be relied upon.
+ *
+ * The length of aDest must be not be less than the length of aSource.
+ */
+inline size_t
+LossyConvertUTF8toLatin1(mozilla::Span<const char> aSource,
+                         mozilla::Span<char> aDest)
+{
+  return encoding_mem_convert_utf8_to_latin1_lossy(
+    aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+}
+
+/**
+ * Interprets unsigned byte value as Unicode scalar value (i.e. not
+ * windows-1252!).
+ *
+ * The length of aDest must be not be less than the length of aSource.
+ */
+inline void
+ConvertLatin1toUTF16(mozilla::Span<const char> aSource,
+                     mozilla::Span<char16_t> aDest)
+{
+  encoding_mem_convert_latin1_to_utf16(
+    aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+}
+
+/**
+ * Lone surrogates are replaced with the REPLACEMENT CHARACTER.
+ *
+ * The length of aDest must be at least the length of aSource times three
+ * _plus one_.
+ *
+ * Returns the number of code units written.
+ */
+inline size_t
+ConvertUTF16toUTF8(mozilla::Span<const char16_t> aSource,
+                   mozilla::Span<char> aDest)
+{
+  return encoding_mem_convert_utf16_to_utf8(
+    aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+}
+
+/**
+ * Malformed byte sequences are replaced with the REPLACEMENT CHARACTER.
+ *
+ * The length of aDest must at least one greater than the length of aSource.
+ *
+ * Returns the number of code units written.
+ */
+inline size_t
+ConvertUTF8toUTF16(mozilla::Span<const char> aSource,
+                   mozilla::Span<char16_t> aDest)
+{
+  return encoding_mem_convert_utf8_to_utf16(
+    aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
 }
 
 inline size_t
@@ -31,6 +193,7 @@ Distance(const nsReadingIterator<char16_t>& aStart,
   MOZ_ASSERT(aStart.get() <= aEnd.get());
   return static_cast<size_t>(aEnd.get() - aStart.get());
 }
+
 inline size_t
 Distance(const nsReadingIterator<char>& aStart,
          const nsReadingIterator<char>& aEnd)
@@ -39,65 +202,185 @@ Distance(const nsReadingIterator<char>& aStart,
   return static_cast<size_t>(aEnd.get() - aStart.get());
 }
 
-void LossyCopyUTF16toASCII(const nsAString& aSource, nsACString& aDest);
-void CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest);
-MOZ_MUST_USE bool CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest,
-                                   const mozilla::fallible_t&);
+// UTF-8 to UTF-16
+// Invalid UTF-8 byte sequences are replaced with the REPLACEMENT CHARACTER.
 
-void LossyCopyUTF16toASCII(const char16ptr_t aSource, nsACString& aDest);
-void CopyASCIItoUTF16(const char* aSource, nsAString& aDest);
+inline MOZ_MUST_USE bool
+CopyUTF8toUTF16(mozilla::Span<const char> aSource,
+                nsAString& aDest,
+                const mozilla::fallible_t&)
+{
+  return nsstring_fallible_append_utf8_impl(
+    &aDest, aSource.Elements(), aSource.Length(), 0);
+}
 
-void CopyUTF16toUTF8(const nsAString& aSource, nsACString& aDest);
-MOZ_MUST_USE bool CopyUTF16toUTF8(const nsAString& aSource, nsACString& aDest,
-                                  const mozilla::fallible_t&);
-void CopyUTF8toUTF16(const nsACString& aSource, nsAString& aDest);
+inline void
+CopyUTF8toUTF16(mozilla::Span<const char> aSource, nsAString& aDest)
+{
+  if (MOZ_UNLIKELY(!CopyUTF8toUTF16(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aSource.Length());
+  }
+}
 
-void CopyUTF16toUTF8(const char16ptr_t aSource, nsACString& aDest);
-void CopyUTF8toUTF16(const char* aSource, nsAString& aDest);
+inline MOZ_MUST_USE bool
+AppendUTF8toUTF16(mozilla::Span<const char> aSource,
+                  nsAString& aDest,
+                  const mozilla::fallible_t&)
+{
+  return nsstring_fallible_append_utf8_impl(
+    &aDest, aSource.Elements(), aSource.Length(), aDest.Length());
+}
 
-void LossyAppendUTF16toASCII(const nsAString& aSource, nsACString& aDest);
-void AppendASCIItoUTF16(const nsACString& aSource, nsAString& aDest);
-MOZ_MUST_USE bool AppendASCIItoUTF16(const nsACString& aSource,
-                                     nsAString& aDest,
-                                     const mozilla::fallible_t&);
+inline void
+AppendUTF8toUTF16(mozilla::Span<const char> aSource, nsAString& aDest)
+{
+  if (MOZ_UNLIKELY(!AppendUTF8toUTF16(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
+  }
+}
 
-void LossyAppendUTF16toASCII(const char16ptr_t aSource, nsACString& aDest);
-MOZ_MUST_USE bool AppendASCIItoUTF16(const char* aSource,
-                                     nsAString& aDest,
-                                     const mozilla::fallible_t&);
-void AppendASCIItoUTF16(const char* aSource, nsAString& aDest);
+// Latin1 to UTF-16
+// Interpret each incoming unsigned byte value as a Unicode scalar value (not
+// windows-1252!). The function names say "ASCII" instead of "Latin1" for
+// legacy reasons.
 
-void AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest);
-MOZ_MUST_USE bool AppendUTF16toUTF8(const nsAString& aSource,
-                                    nsACString& aDest,
-                                    const mozilla::fallible_t&);
-void AppendUTF8toUTF16(const nsACString& aSource, nsAString& aDest);
-MOZ_MUST_USE bool AppendUTF8toUTF16(const nsACString& aSource,
-                                    nsAString& aDest,
-                                    const mozilla::fallible_t&);
+inline MOZ_MUST_USE bool
+CopyASCIItoUTF16(mozilla::Span<const char> aSource,
+                 nsAString& aDest,
+                 const mozilla::fallible_t&)
+{
+  return nsstring_fallible_append_latin1_impl(
+    &aDest, aSource.Elements(), aSource.Length(), 0);
+}
 
-void AppendUTF16toUTF8(const char16ptr_t aSource, nsACString& aDest);
-void AppendUTF8toUTF16(const char* aSource, nsAString& aDest);
+inline void
+CopyASCIItoUTF16(mozilla::Span<const char> aSource, nsAString& aDest)
+{
+  if (MOZ_UNLIKELY(!CopyASCIItoUTF16(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aSource.Length());
+  }
+}
+
+inline MOZ_MUST_USE bool
+AppendASCIItoUTF16(mozilla::Span<const char> aSource,
+                   nsAString& aDest,
+                   const mozilla::fallible_t&)
+{
+  return nsstring_fallible_append_latin1_impl(
+    &aDest, aSource.Elements(), aSource.Length(), aDest.Length());
+}
+
+inline void
+AppendASCIItoUTF16(mozilla::Span<const char> aSource, nsAString& aDest)
+{
+  if (MOZ_UNLIKELY(!AppendASCIItoUTF16(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
+  }
+}
+
+// UTF-16 to UTF-8
+// Unpaired surrogates are replaced with the REPLACEMENT CHARACTER.
+
+inline MOZ_MUST_USE bool
+CopyUTF16toUTF8(mozilla::Span<const char16_t> aSource,
+                nsACString& aDest,
+                const mozilla::fallible_t&)
+{
+  return nscstring_fallible_append_utf16_to_utf8_impl(
+    &aDest, aSource.Elements(), aSource.Length(), 0);
+}
+
+inline void
+CopyUTF16toUTF8(mozilla::Span<const char16_t> aSource, nsACString& aDest)
+{
+  if (MOZ_UNLIKELY(!CopyUTF16toUTF8(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aSource.Length());
+  }
+}
+
+inline MOZ_MUST_USE bool
+AppendUTF16toUTF8(mozilla::Span<const char16_t> aSource,
+                  nsACString& aDest,
+                  const mozilla::fallible_t&)
+{
+  return nscstring_fallible_append_utf16_to_utf8_impl(
+    &aDest, aSource.Elements(), aSource.Length(), aDest.Length());
+}
+
+inline void
+AppendUTF16toUTF8(mozilla::Span<const char16_t> aSource, nsACString& aDest)
+{
+  if (MOZ_UNLIKELY(!AppendUTF16toUTF8(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
+  }
+}
+
+// UTF-16 to Latin1
+// If all code points in the input are below U+0100, represents each scalar
+// value as an unsigned byte. (This is not windows-1252!) If there are code
+// points above U+00FF, memory-safely produces garbage and will likely start
+// asserting in future debug builds. The nature of the garbage may differ
+// based on CPU architecture and must not be relied upon. The names say 
+// "ASCII" instead of "Latin1" for legacy reasons.
+
+inline MOZ_MUST_USE bool
+LossyCopyUTF16toASCII(mozilla::Span<const char16_t> aSource,
+                      nsACString& aDest,
+                      const mozilla::fallible_t&)
+{
+  return nscstring_fallible_append_utf16_to_latin1_lossy_impl(
+    &aDest, aSource.Elements(), aSource.Length(), 0);
+}
+
+inline void
+LossyCopyUTF16toASCII(mozilla::Span<const char16_t> aSource, nsACString& aDest)
+{
+  if (MOZ_UNLIKELY(!LossyCopyUTF16toASCII(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aSource.Length());
+  }
+}
+
+inline MOZ_MUST_USE bool
+LossyAppendUTF16toASCII(mozilla::Span<const char16_t> aSource,
+                        nsACString& aDest,
+                        const mozilla::fallible_t&)
+{
+  return nscstring_fallible_append_utf16_to_latin1_lossy_impl(
+    &aDest, aSource.Elements(), aSource.Length(), aDest.Length());
+}
+
+inline void
+LossyAppendUTF16toASCII(mozilla::Span<const char16_t> aSource,
+                        nsACString& aDest)
+{
+  if (MOZ_UNLIKELY(
+        !LossyAppendUTF16toASCII(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
+  }
+}
 
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
  * Allocates and returns a new |char| buffer which you must free with |free|.
- * Performs a lossy encoding conversion by chopping 16-bit wide characters down to 8-bits wide while copying |aSource| to your new buffer.
- * This conversion is not well defined; but it reproduces legacy string behavior.
- * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+ * Performs a conversion with LossyConvertUTF16toLatin1() writing into the
+ * newly-allocated buffer.
+ *
+ * The new buffer is zero-terminated, but that may not help you if |aSource|
+ * contains embedded nulls.
  *
  * @param aSource a 16-bit wide string
  * @return a new |char| buffer you must free with |free|.
  */
 char* ToNewCString(const nsAString& aSource);
 
-
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
  * Allocates and returns a new |char| buffer which you must free with |free|.
- * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+ *
+ * The new buffer is zero-terminated, but that may not help you if |aSource|
+ * contains embedded nulls.
  *
  * @param aSource an 8-bit wide string
  * @return a new |char| buffer you must free with |free|.
@@ -109,8 +392,10 @@ char* ToNewCString(const nsACString& aSource);
  *
  * Allocates and returns a new |char| buffer which you must free with
  * |free|.
- * Performs an encoding conversion from a UTF-16 string to a UTF-8 string
- * copying |aSource| to your new buffer.
+ * Performs an encoding conversion from a UTF-16 string to a UTF-8 string with
+ * unpaired surrogates replaced with the REPLACEMENT CHARACTER copying
+ * |aSource| to your new buffer.
+ *
  * The new buffer is zero-terminated, but that may not help you if |aSource|
  * contains embedded nulls.
  *
@@ -128,6 +413,7 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count = nullptr);
  *
  * Allocates and returns a new |char16_t| buffer which you must free with
  * |free|.
+ *
  * The new buffer is zero-terminated, but that may not help you if |aSource|
  * contains embedded nulls.
  *
@@ -138,49 +424,23 @@ char16_t* ToNewUnicode(const nsAString& aSource);
 
 
 /**
- * Returns a new |char16_t| buffer containing a zero-terminated copy of |aSource|.
+ * Returns a new |char16_t| buffer containing a zero-terminated copy of
+ * |aSource|.
  *
- * Allocates and returns a new |char16_t| buffer which you must free with |free|.
- * Performs an encoding conversion by 0-padding 8-bit wide characters up to 16-bits wide while copying |aSource| to your new buffer.
- * This conversion is not well defined; but it reproduces legacy string behavior.
- * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+ * Allocates and returns a new |char16_t| buffer which you must free with
+ * |free|.
  *
- * @param aSource an 8-bit wide string (a C-string, NOT UTF-8)
+ * Performs an encoding conversion by 0-padding 8-bit wide characters up to
+ * 16-bits wide (i.e. Latin1 to UTF-16 conversion) while copying |aSource|
+ * to your new buffer.
+ *
+ * The new buffer is zero-terminated, but that may not help you if |aSource|
+ * contains embedded nulls.
+ *
+ * @param aSource a Latin1 string
  * @return a new |char16_t| buffer you must free with |free|.
  */
 char16_t* ToNewUnicode(const nsACString& aSource);
-
-/**
- * Returns the required length for a char16_t buffer holding
- * a copy of aSource, using UTF-8 to UTF-16 conversion.
- * The length does NOT include any space for zero-termination.
- *
- * @param aSource an 8-bit wide string, UTF-8 encoded
- * @return length of UTF-16 encoded string copy, not zero-terminated
- */
-uint32_t CalcUTF8ToUnicodeLength(const nsACString& aSource);
-
-/**
- * Copies the source string into the specified buffer, converting UTF-8 to
- * UTF-16 in the process. The conversion is well defined for valid UTF-8
- * strings.
- * The copied string will be zero-terminated! Any embedded nulls will be
- * copied nonetheless. It is the caller's responsiblity to ensure the buffer
- * is large enough to hold the string copy plus one char16_t for
- * zero-termination!
- *
- * @see CalcUTF8ToUnicodeLength( const nsACString& )
- * @see UTF8ToNewUnicode( const nsACString&, uint32_t* )
- *
- * @param aSource an 8-bit wide string, UTF-8 encoded
- * @param aBuffer the buffer holding the converted string copy
- * @param aUTF16Count receiving optionally the number of 16-bit units that
- *                    were copied
- * @return aBuffer pointer, for convenience
- */
-char16_t* UTF8ToUnicodeBuffer(const nsACString& aSource,
-                              char16_t* aBuffer,
-                              uint32_t* aUTF16Count = nullptr);
 
 /**
  * Returns a new |char16_t| buffer containing a zero-terminated copy
@@ -188,9 +448,11 @@ char16_t* UTF8ToUnicodeBuffer(const nsACString& aSource,
  *
  * Allocates and returns a new |char| buffer which you must free with
  * |free|.  Performs an encoding conversion from UTF-8 to UTF-16
- * while copying |aSource| to your new buffer.  This conversion is well defined
- * for a valid UTF-8 string.  The new buffer is zero-terminated, but that
- * may not help you if |aSource| contains embedded nulls.
+ * while copying |aSource| to your new buffer.  Malformed byte sequences
+ * are replaced with the REPLACEMENT CHARACTER.
+ *
+ * The new buffer is zero-terminated, but that may not help you if |aSource|
+ * contains embedded nulls.
  *
  * @param aSource an 8-bit wide string, UTF-8 encoded
  * @param aUTF16Count the number of 16-bit units that was returned
@@ -217,68 +479,136 @@ char16_t* CopyUnicodeTo(const nsAString& aSource,
                         char16_t* aDest,
                         uint32_t aLength);
 
-
 /**
- * Copies 16-bit characters between iterators |aSrcStart| and
- * |aSrcEnd| to the writable string |aDest|. Similar to the
- * |nsString::Mid| method.
- *
- * After this operation |aDest| is not null terminated.
- *
- * @param aSrcStart start source iterator
- * @param aSrcEnd end source iterator
- * @param aDest destination for the copy
- */
-void CopyUnicodeTo(const nsAString::const_iterator& aSrcStart,
-                   const nsAString::const_iterator& aSrcEnd,
-                   nsAString& aDest);
-
-/**
- * Appends 16-bit characters between iterators |aSrcStart| and
- * |aSrcEnd| to the writable string |aDest|.
- *
- * After this operation |aDest| is not null terminated.
- *
- * @param aSrcStart start source iterator
- * @param aSrcEnd end source iterator
- * @param aDest destination for the copy
- */
-void AppendUnicodeTo(const nsAString::const_iterator& aSrcStart,
-                     const nsAString::const_iterator& aSrcEnd,
-                     nsAString& aDest);
-
-/**
- * Returns |true| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
+ * Returns |true| if |aString| contains only ASCII characters, that is,
+ * characters in the range (0x00, 0x7F).
  *
  * @param aString a 16-bit wide string to scan
  */
-bool IsASCII(const nsAString& aString);
-
-/**
- * Returns |true| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
- *
- * @param aString a 8-bit wide string to scan
- */
-inline bool IsASCII(const nsACString& aString)
+inline bool
+IsASCII(mozilla::Span<const char16_t> aString)
 {
   size_t length = aString.Length();
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.BeginReading());
+  const char16_t* ptr = aString.Elements();
   // For short strings, calling into Rust is a pessimization, and the SIMD
-  // code won't have a chance to kick in anyway. Additionally, handling the
-  // case of the empty string here makes null-checking ptr unnecessary.
-  // (Passing nullptr to Rust would technically be UB.)
+  // code won't have a chance to kick in anyway.
   if (length < 16) {
-    size_t accu = 0;
+    char16_t accu = 0;
     for (size_t i = 0; i < length; i++) {
       accu |= ptr[i];
     }
-    return accu < 0x80;
+    return accu < 0x80U;
   }
-  // This is not quite optimal, because it's not fail-fast when the by-register
-  // check already finds non-ASCII. Also, input to this function is almost
-  // always ASCII, so even the by-register check wouldn't need to be fail-fast
-  // and could be more like the loop above.
-  return length == encoding_ascii_valid_up_to(ptr, length);
+  return encoding_mem_is_basic_latin(ptr, length);
+}
+
+/**
+ * Returns |true| if |aString| contains only ASCII characters, that is,
+ * characters in the range (0x00, 0x7F).
+ *
+ * @param aString a 8-bit wide string to scan
+ */
+inline bool
+IsASCII(mozilla::Span<const char> aString)
+{
+  size_t length = aString.Length();
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway.
+  if (length < 16) {
+    uint8_t accu = 0;
+    for (size_t i = 0; i < length; i++) {
+      accu |= ptr[i];
+    }
+    return accu < 0x80U;
+  }
+  return encoding_mem_is_ascii(ptr, length);
+}
+
+/**
+ * Returns |true| if |aString| contains only Latin1 characters, that is,
+ * characters in the range (U+0000, U+00FF).
+ *
+ * @param aString a potentially-invalid UTF-16 string to scan
+ */
+inline bool
+IsUTF16Latin1(mozilla::Span<const char16_t> aString)
+{
+  size_t length = aString.Length();
+  const char16_t* ptr = aString.Elements();
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway.
+  if (length < 16) {
+    char16_t accu = 0;
+    for (size_t i = 0; i < length; i++) {
+      accu |= ptr[i];
+    }
+    return accu < 0x100U;
+  }
+  return encoding_mem_is_utf16_latin1(ptr, length);
+}
+
+/**
+ * Returns |true| if |aString| contains only Latin1 characters, that is,
+ * characters in the range (U+0000, U+00FF).
+ *
+ * If you know that the argument is always absolutely guaranteed to be valid
+ * UTF-8, use the faster UnsafeIsValidUTF8Latin1() instead.
+ *
+ * @param aString potentially-invalid UTF-8 string to scan
+ */
+inline bool
+IsUTF8Latin1(mozilla::Span<const char> aString)
+{
+  size_t length = aString.Length();
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway.
+  if (length < 16) {
+    for (size_t i = 0; i < length; i++) {
+      if (ptr[i] >= 0x80U) {
+        ptr += i;
+        length -= i;
+        // This loop can't handle non-ASCII, but the Rust code can, so
+        // upon seeing non-ASCII, break the loop and let the Rust code
+        // handle the rest of the buffer (including the non-ASCII byte).
+        goto end;
+      }
+    }
+    return true;
+  }
+end:
+  return encoding_mem_is_utf8_latin1(ptr, length);
+}
+
+/**
+ * Returns |true| if |aString| contains only Latin1 characters, that is,
+ * characters in the range (U+0000, U+00FF).
+ *
+ * The argument MUST be valid UTF-8. If you are at all unsure, use IsUTF8Latin1
+ * instead!
+ *
+ * @param aString known-valid UTF-8 string to scan
+ */
+inline bool
+UnsafeIsValidUTF8Latin1(mozilla::Span<const char> aString)
+{
+  size_t length = aString.Length();
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway.
+  if (length < 16) {
+    for (size_t i = 0; i < length; i++) {
+      if (ptr[i] >= 0x80U) {
+        ptr += i;
+        length -= i;
+        goto end;
+      }
+    }
+    return true;
+  }
+end:
+  return encoding_mem_is_str_latin1(ptr, length);
 }
 
 /**
@@ -289,17 +619,16 @@ inline bool IsASCII(const nsACString& aString)
  *
  * @param aString an 8-bit wide string to scan
  */
-inline bool IsUTF8(const nsACString& aString)
+inline bool
+IsUTF8(mozilla::Span<const char> aString)
 {
   size_t length = aString.Length();
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.BeginReading());
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
   // For short strings, calling into Rust is a pessimization, and the SIMD
-  // code won't have a chance to kick in anyway. Additionally, handling the
-  // case of the empty string here makes null-checking ptr unnecessary.
-  // (Passing nullptr to Rust would technically be UB.)
+  // code won't have a chance to kick in anyway.
   if (length < 16) {
     for (size_t i = 0; i < length; i++) {
-      if (ptr[i] >= 0x80) {
+      if (ptr[i] >= 0x80U) {
         ptr += i;
         length -= i;
         goto end;
@@ -333,12 +662,16 @@ void ToUpperCase(const nsACString& aSource, nsACString& aDest);
 void ToLowerCase(const nsACString& aSource, nsACString& aDest);
 
 /**
- * Finds the leftmost occurrence of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
+ * Finds the leftmost occurrence of |aPattern|, if any in the range
+ * |aSearchStart|..|aSearchEnd|.
  *
- * Returns |true| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
- * point to the match.  If no match was found, returns |false| and makes |aSearchStart == aSearchEnd|.
+ * Returns |true| if a match was found, and adjusts |aSearchStart| and
+ * |aSearchEnd| to point to the match.  If no match was found, returns |false|
+ * and makes |aSearchStart == aSearchEnd|.
  *
- * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
+ * Currently, this is equivalent to the O(m*n) implementation previously on
+ * |ns[C]String|.
+ *
  * If we need something faster, then we can implement that later.
  */
 
@@ -378,9 +711,9 @@ bool CaseInsensitiveFindInReadable(const nsACString& aPattern,
 
 /**
  * Finds the rightmost occurrence of |aPattern|
- * Returns |true| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
- * point to the match.  If no match was found, returns |false| and makes |aSearchStart == aSearchEnd|.
- *
+ * Returns |true| if a match was found, and adjusts |aSearchStart| and
+ * |aSearchEnd| to point to the match.  If no match was found, returns |false|
+ * and makes |aSearchStart == aSearchEnd|.
  */
 bool RFindInReadable(const nsAString& aPattern, nsAString::const_iterator&,
                      nsAString::const_iterator&,
@@ -430,15 +763,18 @@ const nsString& VoidString();
 const nsCString& VoidCString();
 
 /**
-* Compare a UTF-8 string to an UTF-16 string.
-*
-* Returns 0 if the strings are equal, -1 if aUTF8String is less
-* than aUTF16Count, and 1 in the reverse case.  In case of fatal
-* error (eg the strings are not valid UTF8 and UTF16 respectively),
-* this method will return INT32_MIN.
-*/
-int32_t CompareUTF8toUTF16(const nsACString& aUTF8String,
-                           const nsAString& aUTF16String);
+ * Compare a UTF-8 string to an UTF-16 string.
+ *
+ * Returns 0 if the strings are equal, -1 if aUTF8String is less
+ * than aUTF16Count, and 1 in the reverse case. Errors are replaced
+ * with U+FFFD and then the U+FFFD is compared as if it had occurred
+ * in the input. If aErr is not nullptr, *aErr is set to true if
+ * either string had malformed sequences.
+ */
+int32_t
+CompareUTF8toUTF16(const nsACString& aUTF8String,
+                   const nsAString& aUTF16String,
+                   bool* aErr = nullptr);
 
 void AppendUCS4ToUTF16(const uint32_t aSource, nsAString& aDest);
 

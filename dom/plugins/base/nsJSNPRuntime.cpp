@@ -606,15 +606,15 @@ ThrowJSExceptionASCII(JSContext *cx, const char *message)
     nsAutoString ucex;
 
     if (message) {
-      AppendASCIItoUTF16(message, ucex);
+      AppendASCIItoUTF16(mozilla::MakeStringSpan(message), ucex);
 
-      AppendASCIItoUTF16(" [plugin exception: ", ucex);
+      ucex.AppendLiteral(" [plugin exception: ");
     }
 
-    AppendUTF8toUTF16(ex, ucex);
+    AppendUTF8toUTF16(mozilla::MakeStringSpan(ex), ucex);
 
     if (message) {
-      AppendASCIItoUTF16("].", ucex);
+      ucex.AppendLiteral("].");
     }
 
     JSString *str = ::JS_NewUCStringCopyN(cx, ucex.get(), ucex.Length());

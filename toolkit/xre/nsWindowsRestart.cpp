@@ -28,14 +28,15 @@ static char16_t*
 AllocConvertUTF8toUTF16(const char *arg)
 {
   // UTF16 can't be longer in units than UTF8
-  int len = strlen(arg);
+  size_t len = strlen(arg);
   char16_t *s = new char16_t[(len + 1) * sizeof(char16_t)];
   if (!s)
     return nullptr;
 
-  ConvertUTF8toUTF16 convert(s);
-  convert.write(arg, len);
-  convert.write_terminator();
+  size_t dstLen = ::MultiByteToWideChar(
+    CP_UTF8, 0, arg, len, reinterpret_cast<wchar_t*>(s), len);
+  s[dstLen] = 0;
+
   return s;
 }
 
