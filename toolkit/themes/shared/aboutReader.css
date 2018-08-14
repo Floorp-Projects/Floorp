@@ -761,7 +761,3 @@ body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
   margin: 0 .07em;
   padding: 0;
 }
-
-.reader-show-element {
-  display: initial;
-}
