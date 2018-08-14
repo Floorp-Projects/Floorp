@@ -1155,10 +1155,6 @@ IonCacheIRCompiler::emitCallProxyGetResult()
     return true;
 }
 
-typedef bool (*ProxyGetPropertyByValueFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-static const VMFunction ProxyGetPropertyByValueInfo =
-    FunctionInfo<ProxyGetPropertyByValueFn>(ProxyGetPropertyByValue, "ProxyGetPropertyByValue");
-
 bool
 IonCacheIRCompiler::emitCallProxyGetByValueResult()
 {
@@ -1181,12 +1177,6 @@ IonCacheIRCompiler::emitCallProxyGetByValueResult()
     masm.storeCallResultValue(output);
     return true;
 }
-
-typedef bool (*ProxyHasFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-static const VMFunction ProxyHasInfo = FunctionInfo<ProxyHasFn>(ProxyHas, "ProxyHas");
-
-typedef bool (*ProxyHasOwnFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-static const VMFunction ProxyHasOwnInfo = FunctionInfo<ProxyHasOwnFn>(ProxyHasOwn, "ProxyHasOwn");
 
 bool
 IonCacheIRCompiler::emitCallProxyHasPropResult()
@@ -1302,11 +1292,6 @@ IonCacheIRCompiler::emitLoadStringResult()
 {
     MOZ_CRASH("not used in ion");
 }
-
-typedef bool (*StringSplitHelperFn)(JSContext*, HandleString, HandleString, HandleObjectGroup,
-                              uint32_t limit, MutableHandleValue);
-static const VMFunction StringSplitHelperInfo =
-    FunctionInfo<StringSplitHelperFn>(StringSplitHelper, "StringSplitHelper");
 
 bool
 IonCacheIRCompiler::emitCallStringSplitResult()
@@ -2170,10 +2155,6 @@ IonCacheIRCompiler::emitCallScriptedSetter()
     return true;
 }
 
-typedef bool (*SetArrayLengthFn)(JSContext*, HandleObject, HandleValue, bool);
-static const VMFunction SetArrayLengthInfo =
-    FunctionInfo<SetArrayLengthFn>(SetArrayLength, "SetArrayLength");
-
 bool
 IonCacheIRCompiler::emitCallSetArrayLength()
 {
@@ -2192,10 +2173,6 @@ IonCacheIRCompiler::emitCallSetArrayLength()
 
     return callVM(masm, SetArrayLengthInfo);
 }
-
-typedef bool (*ProxySetPropertyFn)(JSContext*, HandleObject, HandleId, HandleValue, bool);
-static const VMFunction ProxySetPropertyInfo =
-    FunctionInfo<ProxySetPropertyFn>(ProxySetProperty, "ProxySetProperty");
 
 bool
 IonCacheIRCompiler::emitCallProxySet()
@@ -2219,10 +2196,6 @@ IonCacheIRCompiler::emitCallProxySet()
 
     return callVM(masm, ProxySetPropertyInfo);
 }
-
-typedef bool (*ProxySetPropertyByValueFn)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
-static const VMFunction ProxySetPropertyByValueInfo =
-    FunctionInfo<ProxySetPropertyByValueFn>(ProxySetPropertyByValue, "ProxySetPropertyByValue");
 
 bool
 IonCacheIRCompiler::emitCallProxySetByValue()
@@ -2512,10 +2485,6 @@ IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind k
     attachStub(newStub, code);
     *attached = true;
 }
-
-typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
-static const VMFunction ConcatStringsInfo =
-    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>, "ConcatStrings", NonTailCall);
 
 bool
 IonCacheIRCompiler::emitCallStringConcatResult()
