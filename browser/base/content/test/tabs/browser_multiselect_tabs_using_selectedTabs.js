@@ -12,6 +12,8 @@ add_task(async function() {
   });
 
   function testSelectedTabs(tabs) {
+    is(gBrowser.tabContainer.getAttribute("aria-multiselectable"), "true",
+       "tabbrowser should be marked as aria-multiselectable");
     gBrowser.selectedTabs = tabs;
     let {selectedTab, selectedTabs, _multiSelectedTabsSet} = gBrowser;
     is(selectedTab, tabs[0], "The selected tab should be the expected one");
@@ -20,12 +22,15 @@ add_task(async function() {
       ok(!_multiSelectedTabsSet.has(selectedTab), "Selected tab shouldn't be in _multiSelectedTabsSet");
       is(selectedTabs.length, 1, "selectedTabs should contain a single tab");
       is(selectedTabs[0], selectedTab, "selectedTabs should contain the selected tab");
+      ok(!selectedTab.hasAttribute("aria-selected"),
+         "Selected tab shouldn't be marked as aria-selected when only one tab is selected");
     } else {
       ok(selectedTabs.length, tabs.length, "Check number of selected tabs");
       for (let tab of tabs) {
         ok(tab.multiselected, "Tab should be multi-selected");
         ok(_multiSelectedTabsSet.has(tab), "Tab should be in _multiSelectedTabsSet");
         ok(selectedTabs.includes(tab), "Tab should be in selectedTabs");
+        is(tab.getAttribute("aria-selected"), "true", "Selected tab should be marked as aria-selected");
       }
     }
   }

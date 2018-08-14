@@ -799,3 +799,42 @@ function waitForRequestData(store, fields, id) {
     return true;
   });
 }
+
+// Telemetry
+
+/**
+ * Helper for verifying telemetry event.
+ *
+ * @param Object expectedEvent object representing expected event data.
+ * @param Object query fields specifying category, method and object
+ *                     of the target telemetry event.
+ */
+function checkTelemetryEvent(expectedEvent, query) {
+  const events = queryTelemetryEvents(query);
+  is(events.length, 1, "There was only 1 event logged");
+
+  const [event] = events;
+  ok(event.session_id > 0, "There is a valid session_id in the logged event");
+
+  const f = e => JSON.stringify(e, null, 2);
+  is(f(event), f({
+    ...expectedEvent,
+    "session_id": event.session_id
+  }), "The event has the expected data");
+}
+
+function queryTelemetryEvents(query) {
+  const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const category = query.category || "devtools.main";
+  const object = query.object || "netmonitor";
+
+  const filtersChangedEvents = snapshot.parent.filter(event =>
+    event[1] === category &&
+    event[2] === query.method &&
+    event[3] === object
+  );
+
+  // Return the `extra` field (which is event[5]e).
+  return filtersChangedEvents.map(event => event[5]);
+}

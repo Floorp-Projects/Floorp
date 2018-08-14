@@ -50,7 +50,6 @@
 .sidebar-placesTreechildren::-moz-tree-twisty(selected),
 .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
   color: #fff;
-  fill-opacity: 1;
   font-weight: bold;
 }
 
@@ -60,39 +59,16 @@
   padding: 4px;
 }
 
-.sidebar-placesTreechildren::-moz-tree-twisty {
-  -moz-appearance: none;
-  padding: 0 2px;
-  list-style-image: url("chrome://global/skin/tree/arrow-collapsed.svg");
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.6;
-}
-
-.sidebar-placesTreechildren::-moz-tree-twisty(selected) {
-  fill: currentColor;
-}
-
-.sidebar-placesTreechildren::-moz-tree-twisty(open) {
-  list-style-image: url("chrome://global/skin/tree/arrow-expanded.svg");
-}
-
-.sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed) {
-  list-style-image: url("chrome://global/skin/tree/arrow-collapsed-rtl.svg");
-}
-
 @media (-moz-mac-yosemite-theme) {
   .sidebar-placesTreechildren::-moz-tree-twisty(selected),
   .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
     color: -moz-dialogtext;
-    fill-opacity: 0.6;
     font-weight: 500;
   }
 
   .sidebar-placesTreechildren::-moz-tree-twisty(selected, focus),
   .sidebar-placesTreechildren::-moz-tree-cell-text(selected, focus) {
     color: #fff;
-    fill-opacity: 1;
   }
 }
 
@@ -110,7 +86,3 @@
 /* Trees */
 
 %include ../../shared/places/tree-icons.inc.css
-
-treechildren:-moz-tree-image(selected,focus) {
-  fill: HighlightText;
-}

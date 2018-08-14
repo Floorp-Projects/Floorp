@@ -30,10 +30,6 @@
   background: transparent;
 }
 
-.sidebar-placesTreechildren::-moz-tree-row {
-  min-height: 24px;
-}
-
 :root[uidensity=touch] #search-box,
 :root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
   min-height: 32px;
@@ -56,8 +52,3 @@
 /* Trees */
 
 %include ../../shared/places/tree-icons.inc.css
-
-treechildren:-moz-tree-image(container,selected),
-treechildren:-moz-tree-image(selected,focus) {
-  fill: HighlightText;
-}
