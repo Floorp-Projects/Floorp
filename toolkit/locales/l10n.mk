@@ -168,8 +168,8 @@ $(NULL)
 # Dealing with app sub dirs: If DIST_SUBDIRS is defined it contains a
 # listing of app sub-dirs we should include in langpack xpis. If not,
 # check DIST_SUBDIR, and if that isn't present, just package the default
-# chrome directory.
-PKG_ZIP_DIRS = chrome $(or $(DIST_SUBDIRS),$(DIST_SUBDIR))
+# chrome directory and top-level localization for Fluent.
+PKG_ZIP_DIRS = chrome localization $(or $(DIST_SUBDIRS),$(DIST_SUBDIR))
 
 # Clone a l10n repository, either via hg or git
 # Make this a variable as it's embedded in a sh conditional
