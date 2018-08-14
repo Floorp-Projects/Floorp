@@ -32,6 +32,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.StrictModeContext;
@@ -1879,14 +1880,6 @@ public class GeckoAppShell
         return result;
     }
 
-    private static boolean isPointerTypeDevice(InputDevice inputDevice) {
-        int sources = inputDevice.getSources();
-        return (sources & (InputDevice.SOURCE_CLASS_JOYSTICK |
-                           InputDevice.SOURCE_CLASS_POINTER |
-                           InputDevice.SOURCE_CLASS_POSITION |
-                           InputDevice.SOURCE_CLASS_TRACKBALL)) != 0;
-    }
-
     @WrapForJNI(calledFrom = "gecko")
     // For any-pointer and any-hover media queries features.
     private static int getAllPointerCapabilities() {
@@ -1895,7 +1888,7 @@ public class GeckoAppShell
         for (int deviceId : InputDevice.getDeviceIds()) {
             InputDevice inputDevice = InputDevice.getDevice(deviceId);
             if (inputDevice == null ||
-                !isPointerTypeDevice(inputDevice)) {
+                !InputDeviceUtils.isPointerTypeDevice(inputDevice)) {
                 continue;
             }
 
@@ -1913,7 +1906,7 @@ public class GeckoAppShell
         for (int deviceId : InputDevice.getDeviceIds()) {
             InputDevice inputDevice = InputDevice.getDevice(deviceId);
             if (inputDevice == null ||
-                !isPointerTypeDevice(inputDevice)) {
+                !InputDeviceUtils.isPointerTypeDevice(inputDevice)) {
                 continue;
             }
 
