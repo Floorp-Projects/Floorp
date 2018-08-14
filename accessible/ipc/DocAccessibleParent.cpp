@@ -427,6 +427,32 @@ DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
 }
 
 mozilla::ipc::IPCResult
+DocAccessibleParent::RecvScrollingEvent(const uint64_t& aID,
+                                        const uint64_t& aType,
+                                        const uint32_t& aScrollX,
+                                        const uint32_t& aScrollY,
+                                        const uint32_t& aMaxScrollX,
+                                        const uint32_t& aMaxScrollY)
+{
+  ProxyAccessible* target = GetAccessible(aID);
+
+#if defined(ANDROID)
+  ProxyScrollingEvent(target, aScrollX, aScrollY, aMaxScrollX, aMaxScrollY);
+#endif
+
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  nsINode* node = nullptr;
+  bool fromUser = true; // XXX: Determine if this was from user input.
+  RefPtr<xpcAccScrollingEvent> event =
+    new xpcAccScrollingEvent(aType, xpcAcc, doc, node, fromUser, aScrollX,
+                             aScrollY, aMaxScrollX, aMaxScrollY);
+  nsCoreUtils::DispatchAccEvent(std::move(event));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 DocAccessibleParent::RecvRoleChangedEvent(const a11y::role& aRole)
 {
   if (mShutdown) {
