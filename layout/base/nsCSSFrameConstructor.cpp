@@ -641,11 +641,7 @@ ParentIsWrapperAnonBox(nsIFrame* aParent)
 static void
 FindFirstBlock(nsFrameList::FrameLinkEnumerator& aLink)
 {
-  for ( ; !aLink.AtEnd(); aLink.Next()) {
-    if (!aLink.NextFrame()->IsInlineOutside()) {
-      return;
-    }
-  }
+  aLink.Find([](nsIFrame* aFrame) { return !aFrame->IsInlineOutside(); });
 }
 
 // This function returns a frame link enumerator pointing to the first link in
@@ -655,11 +651,7 @@ static nsFrameList::FrameLinkEnumerator
 FindFirstNonBlock(const nsFrameList& aList)
 {
   nsFrameList::FrameLinkEnumerator link(aList);
-  for (; !link.AtEnd(); link.Next()) {
-    if (link.NextFrame()->IsInlineOutside()) {
-      break;
-    }
-  }
+  link.Find([](nsIFrame* aFrame) { return aFrame->IsInlineOutside(); });
   return link;
 }
 

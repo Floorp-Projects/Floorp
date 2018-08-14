@@ -465,6 +465,19 @@ public:
 
     inline void Next();
 
+    /**
+     * Find the first frame from the current position that satisfies
+     * aPredicate, and stop at it. If no such frame exists, then this method
+     * advances to the end of the list.
+     *
+     * aPredicate should be of this function signature: bool(nsIFrame*).
+     *
+     * Note: Find() needs to see the definition of Next(), so put this
+     * definition in nsIFrame.h.
+     */
+    template<typename Predicate>
+    inline void Find(Predicate&& aPredicate);
+
     bool AtEnd() const { return Enumerator::AtEnd(); }
 
     nsIFrame* PrevFrame() const { return mPrev; }
