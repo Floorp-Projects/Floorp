@@ -81,10 +81,6 @@
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
 
-  /* Images */
-  --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
-  --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
-
   /* Icon filters */
   --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-light);
 
@@ -190,10 +186,6 @@
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
 
-  /* Images */
-  --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
-  --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
-
   /* Icon filters */
   --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-dark);
 
@@ -243,6 +235,11 @@
 
   /* The photon animation curve */
   --animation-curve: cubic-bezier(.07,.95,0,1);
+
+  /* Images */
+  --select-arrow-image: url(chrome://devtools/skin/images/select-arrow.svg);
+  --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
+  --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
 
   /* Firefox Colors CSS Variables v1.0.3
    * Colors are taken from: https://github.com/FirefoxUX/design-tokens */
