@@ -4,12 +4,6 @@
 
 "use strict";
 
-const {Cc, Ci, components} = require("chrome");
-const {isWindowIncluded} = require("devtools/shared/layout/utils");
-const Services = require("Services");
-const ChromeUtils = require("ChromeUtils");
-const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/webconsole/utils");
-
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 /**
@@ -90,4 +84,3 @@ DocumentEventsListener.prototype = {
     this.listener = null;
   }
 };
-
