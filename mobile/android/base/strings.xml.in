@@ -650,5 +650,6 @@
 
   <string name="default_notification_channel">&default_notification_channel;</string>
   <string name="mls_notification_channel">&mls_notification_channel;</string>
+  <string name="media_notification_channel">&media_notification_channel;</string>
   <string name="download_notification_channel">&download_notification_channel;</string>
 </resources>
