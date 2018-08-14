@@ -953,8 +953,6 @@ GetPrototypeOf(JSContext* cx, HandleObject target, MutableHandleValue rval);
 void
 CloseIteratorFromIon(JSContext* cx, JSObject* obj);
 
-extern const VMFunction SetObjectElementInfo;
-
 bool
 DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
                      MutableHandleValue res);
@@ -966,11 +964,24 @@ DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
 MOZ_MUST_USE bool
 TrySkipAwait(JSContext* cx, HandleValue val, MutableHandleValue resolved);
 
-// This is the tailcall version of DoConcatStringObject
-extern const VMFunction DoConcatStringObjectInfo;
+// VMFunctions shared by JITs
+extern const VMFunction SetArrayLengthInfo;
+extern const VMFunction SetObjectElementInfo;
 
 extern const VMFunction StringsEqualInfo;
 extern const VMFunction StringsNotEqualInfo;
+extern const VMFunction ConcatStringsInfo;
+extern const VMFunction StringSplitHelperInfo;
+
+extern const VMFunction ProxyGetPropertyInfo;
+extern const VMFunction ProxyGetPropertyByValueInfo;
+extern const VMFunction ProxySetPropertyInfo;
+extern const VMFunction ProxySetPropertyByValueInfo;
+extern const VMFunction ProxyHasInfo;
+extern const VMFunction ProxyHasOwnInfo;
+
+// TailCall VMFunctions
+extern const VMFunction DoConcatStringObjectInfo;
 
 } // namespace jit
 } // namespace js
