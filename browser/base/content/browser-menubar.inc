@@ -199,16 +199,19 @@
                       accesskey="&viewSidebarMenu.accesskey;">
                   <menupopup id="viewSidebarMenu">
                     <menuitem id="menu_bookmarksSidebar"
+                              type="checkbox"
                               key="viewBookmarksSidebarKb"
-                              observes="viewBookmarksSidebar"
+                              oncommand="SidebarUI.toggle('viewBookmarksSidebar');"
                               label="&bookmarksButton.label;"/>
                     <menuitem id="menu_historySidebar"
+                              type="checkbox"
                               key="key_gotoHistory"
-                              observes="viewHistorySidebar"
+                              oncommand="SidebarUI.toggle('viewHistorySidebar');"
                               label="&historyButton.label;"/>
                     <menuitem id="menu_tabsSidebar"
+                              type="checkbox"
                               class="sync-ui-item"
-                              observes="viewTabsSidebar"
+                              oncommand="SidebarUI.toggle('viewTabsSidebar');"
                               label="&syncedTabs.sidebar.label;"/>
                   </menupopup>
                 </menu>
