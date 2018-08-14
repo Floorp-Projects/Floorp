@@ -6,7 +6,7 @@
 extern crate js;
 extern crate libc;
 
-use js::ac::AutoCompartment;
+use js::ar::AutoCompartment;
 use js::jsapi::root::JS::CallArgs;
 use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JSContext;
