@@ -324,7 +324,7 @@ add_task(async function setup_head() {
       // Ignore unknown CSP error.
       return;
     }
-    if (msg.message.match(/docShell is null.*BrowserUtils.jsm/)) {
+    if (msg.message && msg.message.match(/docShell is null.*BrowserUtils.jsm/)) {
       // Bug 1478142 - Console spam from the Find Toolbar.
       return;
     }
