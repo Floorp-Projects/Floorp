@@ -497,7 +497,8 @@ ExtensionPolicyService::ExtensionURIToAddonId(nsIURI* aURI, nsAString& aResult)
 }
 
 
-NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mExtensionHosts)
+NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mExtensionHosts,
+                         mObservers)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPolicyService)
   NS_INTERFACE_MAP_ENTRY(nsIAddonPolicyService)
