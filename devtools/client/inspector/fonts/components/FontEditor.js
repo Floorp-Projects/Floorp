@@ -58,7 +58,7 @@ class FontEditor extends PureComponent {
   }
 
   /**
-   * Get an array of FontPropertyValue components with editing controls
+   * Get a container with the rendered FontPropertyValue components with editing controls
    * for of the given variable font axes. If no axes were given, return null.
    * If an axis has a value in the fontEditor store (i.e.: it was declared in CSS or
    * it was changed using the font editor), use its value, otherwise use the font axis
@@ -69,27 +69,33 @@ class FontEditor extends PureComponent {
    * @param  {Object} editedAxes
    *         Object with axes and values edited by the user or predefined in the CSS
    *         declaration for font-variation-settings.
-   * @return {Array|null}
+   * @return {DOMNode|null}
    */
   renderAxes(fontAxes = [], editedAxes) {
     if (!fontAxes.length) {
       return null;
     }
 
-    return fontAxes.map(axis => {
+    const controls = fontAxes.map(axis => {
       return FontPropertyValue({
         key: axis.tag,
-        className: "font-control-axis",
-        label: axis.name,
         min: axis.minValue,
         max: axis.maxValue,
+        value: editedAxes[axis.tag] || axis.defaultValue,
+        step: this.getAxisStep(axis.minValue, axis.maxValue),
+        label: axis.name,
         name: axis.tag,
         onChange: this.props.onPropertyChange,
-        step: this.getAxisStep(axis.minValue, axis.maxValue),
-        unit: null,
-        value: editedAxes[axis.tag] || axis.defaultValue,
+        unit: null
       });
     });
+
+    return dom.div(
+      {
+        className: "font-axes-controls"
+      },
+      controls
+    );
   }
 
   renderFamilesNotUsed(familiesNotUsed = []) {
@@ -251,7 +257,7 @@ class FontEditor extends PureComponent {
     // Generate the dropdown.
     const instanceSelect = dom.select(
       {
-        className: "font-control-input font-value-select",
+        className: "font-control-input",
         onChange: (e) => {
           const instance = fontInstances.find(inst => e.target.value === inst.name);
           instance && this.props.onInstanceChange(instance.name, instance.values);
