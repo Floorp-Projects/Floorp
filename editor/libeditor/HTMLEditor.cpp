@@ -786,12 +786,12 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
           ScrollSelectionIntoView(false);
         }
       } else if (HTMLEditUtils::IsListItem(blockParent)) {
-        rv = Indent(aKeyboardEvent->IsShift()
-                    ? NS_LITERAL_STRING("outdent")
-                    : NS_LITERAL_STRING("indent"));
+        rv = !aKeyboardEvent->IsShift() ? IndentAsAction() : OutdentAsAction();
         handled = true;
       }
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       if (handled) {
         aKeyboardEvent->PreventDefault(); // consumed
         return NS_OK;
@@ -2321,33 +2321,83 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
 NS_IMETHODIMP
 HTMLEditor::Indent(const nsAString& aIndent)
 {
+  if (aIndent.LowerCaseEqualsLiteral("indent")) {
+    nsresult rv = IndentAsAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+  if (aIndent.LowerCaseEqualsLiteral("outdent")) {
+    nsresult rv = OutdentAsAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
+HTMLEditor::IndentAsAction()
+{
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  AutoPlaceholderBatch beginBatching(this);
+  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eIndent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::OutdentAsAction()
+{
+  if (!mRules) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  AutoPlaceholderBatch beginBatching(this);
+  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eOutdent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::IndentOrOutdentAsSubAction(EditSubAction aIndentOrOutdent)
+{
+  MOZ_ASSERT(mRules);
+  MOZ_ASSERT(mPlaceholderBatch);
+  MOZ_ASSERT(aIndentOrOutdent == EditSubAction::eIndent ||
+             aIndentOrOutdent == EditSubAction::eOutdent);
 
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
   bool cancel, handled;
-  EditSubAction indentOrOutdent =
-    aIndent.LowerCaseEqualsLiteral("outdent") ? EditSubAction::eOutdent :
-                                                EditSubAction::eIndent;
-  AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, indentOrOutdent, nsIEditor::eNext);
+                                      *this, aIndentOrOutdent,
+                                      nsIEditor::eNext);
 
-  // pre-process
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  EditSubActionInfo subActionInfo(indentOrOutdent);
+  EditSubActionInfo subActionInfo(aIndentOrOutdent);
   nsresult rv =
     rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  if (!handled && selection->IsCollapsed() && aIndent.EqualsLiteral("indent")) {
+  if (!handled && selection->IsCollapsed() &&
+      aIndentOrOutdent == EditSubAction::eIndent) {
     nsRange* firstRange = selection->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -2417,7 +2467,11 @@ HTMLEditor::Indent(const nsAString& aIndent)
       return error.StealNSResult();
     }
   }
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(selection, subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 //TODO: IMPLEMENT ALIGNMENT!
