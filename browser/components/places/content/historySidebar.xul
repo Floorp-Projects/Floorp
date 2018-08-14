@@ -17,6 +17,7 @@
 ]>
 
 <page id="history-panel"
+      class="sidebar-panel"
       orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="HistorySidebarInit();"
