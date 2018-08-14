@@ -5,7 +5,7 @@
 /*---
 esid: sec-atomics.wait
 description: >
-  Waiter does not spuriously wake on index which is subject to Or operation
+  Waiter does not spuriously notify on index which is subject to Or operation
 includes: [atomicsHelper.js]
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
@@ -50,6 +50,6 @@ assert.sameValue(
   'timed-out',
   '$262.agent.getReport() returns "timed-out"'
 );
-assert.sameValue(Atomics.wake(i32a, 0), 0, 'Atomics.wake(i32a, 0) returns 0');
+assert.sameValue(Atomics.notify(i32a, 0), 0, 'Atomics.notify(i32a, 0) returns 0');
 
 reportCompare(0, 0);

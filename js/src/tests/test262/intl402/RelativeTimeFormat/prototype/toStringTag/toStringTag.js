@@ -8,7 +8,7 @@ description: >
 info: |
     Intl.RelativeTimeFormat.prototype[ @@toStringTag ]
 
-    The initial value of the @@toStringTag property is the string value "Object".
+    The initial value of the @@toStringTag property is the string value "Intl.RelativeTimeFormat".
 
     This property has the attributes { [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }.
 includes: [propertyHelper.js]
@@ -16,7 +16,7 @@ features: [Intl.RelativeTimeFormat, Symbol.toStringTag]
 ---*/
 
 verifyProperty(Intl.RelativeTimeFormat.prototype, Symbol.toStringTag, {
-  value: "Object",
+  value: "Intl.RelativeTimeFormat",
   writable: false,
   enumerable: false,
   configurable: true
