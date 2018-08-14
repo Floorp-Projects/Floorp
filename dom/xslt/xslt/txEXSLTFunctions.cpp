@@ -312,8 +312,9 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            AppendASCIItoUTF16(sTypes[exprResult->getResultType()],
-                               strRes->mValue);
+            AppendASCIItoUTF16(
+              MakeStringSpan(sTypes[exprResult->getResultType()]),
+              strRes->mValue);
 
             NS_ADDREF(*aResult = strRes);
 

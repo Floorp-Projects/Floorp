@@ -1290,7 +1290,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
     }
   }
 
-  ENSURE_TRUE(weakFrame.IsAlive());
+  NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
   if (change != 0) {
     mDrag.Reset(mDragger->mVertical, mDragger->mPrevNeighbor, change, this);
   }

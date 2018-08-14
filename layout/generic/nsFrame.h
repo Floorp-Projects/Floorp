@@ -896,12 +896,4 @@ public:
 #endif
 // End Display Reflow Debugging
 
-// similar to NS_ENSURE_TRUE but with no return value
-#define ENSURE_TRUE(x)                                        \
-  PR_BEGIN_MACRO                                              \
-    if (!(x)) {                                               \
-       NS_WARNING("ENSURE_TRUE(" #x ") failed");              \
-       return;                                                \
-    }                                                         \
-  PR_END_MACRO
 #endif /* nsFrame_h___ */

@@ -172,7 +172,7 @@ mozilla::GetLibraryName(mozilla::pathstr_t aDirectory, const char* aLib)
     fullName.Assign(aDirectory);
     fullName.Append('\\');
   }
-  AppendUTF8toUTF16(aLib, fullName);
+  AppendUTF8toUTF16(MakeStringSpan(aLib), fullName);
   if (!strstr(aLib, ".dll")) {
     fullName.AppendLiteral(".dll");
   }

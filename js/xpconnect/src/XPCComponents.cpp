@@ -2104,7 +2104,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack, JSConte
     if (err) {
         // It's a proper JS Error
         nsAutoString fileUni;
-        CopyUTF8toUTF16(err->filename, fileUni);
+        CopyUTF8toUTF16(mozilla::MakeStringSpan(err->filename), fileUni);
 
         uint32_t column = err->tokenOffset();
 

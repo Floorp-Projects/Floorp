@@ -1534,7 +1534,7 @@ nsWebBrowserPersist::GetExtensionForContentType(const char16_t *aContentType, ch
     }
 
     nsAutoCString contentType;
-    LossyCopyUTF16toASCII(aContentType, contentType);
+    LossyCopyUTF16toASCII(MakeStringSpan(aContentType), contentType);
     nsAutoCString ext;
     rv = mMIMEService->GetPrimaryExtension(contentType, EmptyCString(), ext);
     if (NS_SUCCEEDED(rv))

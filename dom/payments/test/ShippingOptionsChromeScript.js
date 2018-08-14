@@ -86,7 +86,6 @@ addMessageListener("set-expected-results", function(results) {
 });
 
 addMessageListener("teardown", function() {
-  paymentSrv.cleanup();
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage('teardown-complete');
 });

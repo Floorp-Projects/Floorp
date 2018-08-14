@@ -13,6 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/IntegerTypeTraits.h"
+#include "mozilla/Result.h"
 #include "mozilla/Span.h"
 
 #include "nsTStringRepr.h"
@@ -886,26 +887,70 @@ protected:
    */
   void NS_FASTCALL Finalize();
 
+public:
   /**
-   * this function prepares mData to be mutated.
+   * THIS IS NOT REALLY A PUBLIC METHOD! DO NOT CALL FROM OUTSIDE
+   * THE STRING IMPLEMENTATION. (It's public only because friend
+   * declarations don't allow extern or static and this needs to
+   * be called from Rust FFI glue.)
    *
-   * @param aCapacity    specifies the required capacity of mData
-   * @param aOldData     returns null or the old value of mData
-   * @param aOldFlags    returns 0 or the old value of mDataFlags
+   * Prepares mData to be mutated such that the capacity of the string
+   * (not counting the zero-terminator) is at least aCapacity.
+   * Returns the actual capacity, which may be larger than what was
+   * requested or Err(NS_ERROR_OUT_OF_MEMORY) on allocation failure.
    *
-   * if mData is already mutable and of sufficient capacity, then this
-   * function will return immediately.  otherwise, it will either resize
-   * mData or allocate a new shared buffer.  if it needs to allocate a
-   * new buffer, then it will return the old buffer and the corresponding
-   * flags.  this allows the caller to decide when to free the old data.
+   * mLength is ignored by this method. If the buffer is reallocated,
+   * aUnitsToPreserve specifies how many code units to copy over to
+   * the new buffer. The old buffer is freed if applicable.
    *
-   * this function returns false if is unable to allocate sufficient
-   * memory.
+   * Unless the return value is Err(NS_ERROR_OUT_OF_MEMORY) to signal
+   * failure or 0 to signal that the string has been set to
+   * the special empty state, this method leaves the string in an
+   * invalid state! The caller is responsible for calling
+   * FinishBulkWrite() (or in Rust calling
+   * nsA[C]StringBulkWriteHandle::finish()), which put the string
+   * into a valid state by setting mLength and zero-terminating.
+   * This method sets the flag to claim that the string is
+   * zero-terminated before it actually is.
    *
-   * XXX we should expose a way for subclasses to free old_data.
+   * Once this method has been called and before FinishBulkWrite()
+   * has been called, only accessing mData or calling this method
+   * again are valid operations. Do not call any other methods or
+   * access other fields between calling this method and
+   * FinishBulkWrite().
+   *
+   * @param aCapacity The requested capacity. The return value
+   *                  will be greater than or equal to this value.
+   * @param aPrefixToPreserve The number of code units at the start
+   *                          of the old buffer to copy into the
+   *                          new buffer.
+   * @parem aAllowShrinking If true, an allocation may be performed
+   *                        if the requested capacity is smaller
+   *                        than the current capacity.
+   * @param aSuffixLength The length, in code units, of a suffix
+   *                      to move.
+   * @param aOldSuffixStart The old start index of the suffix to
+   *                        move.
+   * @param aNewSuffixStart The new start index of the suffix to
+   *                        move.
+   *
    */
-  bool NS_FASTCALL MutatePrep(size_type aCapacity,
-                              char_type** aOldData, DataFlags* aOldDataFlags);
+  mozilla::Result<uint32_t, nsresult>
+  NS_FASTCALL StartBulkWrite(size_type aCapacity,
+                             size_type aPrefixToPreserve = 0,
+                             bool aAllowShrinking = true,
+                             size_type aSuffixLength = 0,
+                             size_type aOldSuffixStart = 0,
+                             size_type aNewSuffixStart = 0);
+
+protected:
+  /**
+   * Restores the string to a valid state after a call to StartBulkWrite()
+   * that returned a non-error result. The argument to this method
+   * must be less than or equal to the value returned by the most recent
+   * StartBulkWrite() call.
+   */
+  void NS_FASTCALL FinishBulkWrite(size_type aLength);
 
   /**
    * this function prepares a section of mData to be modified.  if

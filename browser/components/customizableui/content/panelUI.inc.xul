@@ -529,7 +529,6 @@
       <vbox class="panel-subview-body">
         <toolbarbutton id="panelMenuBookmarkThisPage"
                        class="subviewbutton subviewbutton-iconic"
-                       observes="bookmarkThisPageBroadcaster"
                        command="Browser:AddBookmarkAs"
                        onclick="PanelUI.hide();"/>
         <toolbarbutton id="panelMenu_bookmarkingTools"

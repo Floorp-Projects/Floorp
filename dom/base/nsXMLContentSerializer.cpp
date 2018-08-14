@@ -592,9 +592,7 @@ void
 nsXMLContentSerializer::GenerateNewPrefix(nsAString& aPrefix)
 {
   aPrefix.Assign('a');
-  char buf[128];
-  SprintfLiteral(buf, "%d", mPrefixIndex++);
-  AppendASCIItoUTF16(buf, aPrefix);
+  aPrefix.AppendInt(mPrefixIndex++);
 }
 
 bool
@@ -1251,7 +1249,10 @@ nsXMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
 
     NS_ENSURE_TRUE(aOutputStr.Append(fragmentStart, advanceLength, mozilla::fallible), false);
     if (entityText) {
-      NS_ENSURE_TRUE(AppendASCIItoUTF16(entityText, aOutputStr, mozilla::fallible), false);
+      NS_ENSURE_TRUE(AppendASCIItoUTF16(mozilla::MakeStringSpan(entityText),
+                                        aOutputStr,
+                                        mozilla::fallible),
+                     false);
       advanceLength++;
     }
   }

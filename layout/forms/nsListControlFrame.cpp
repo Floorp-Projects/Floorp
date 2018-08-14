@@ -137,7 +137,7 @@ void
 nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   // get the receiver interface from the browser button's content node
-  ENSURE_TRUE(mContent);
+  NS_ENSURE_TRUE_VOID(mContent);
 
   // Clear the frame pointer on our event listener, just in case the
   // event listener can outlive the frame.

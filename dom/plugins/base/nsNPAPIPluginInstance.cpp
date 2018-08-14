@@ -855,7 +855,7 @@ nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
   if (NS_FAILED(rv) || !value)
     return NS_ERROR_FAILURE;
 
-  CopyUTF8toUTF16(value, aValue);
+  CopyUTF8toUTF16(MakeStringSpan(value), aValue);
 
   // NPPVformValue allocates with NPN_MemAlloc(), which uses
   // nsMemory.
