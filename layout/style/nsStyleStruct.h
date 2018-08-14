@@ -2776,16 +2776,16 @@ struct nsCursorImage
   }
 };
 
-struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
+struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI
 {
-  explicit nsStyleUserInterface(const nsPresContext* aContext);
-  nsStyleUserInterface(const nsStyleUserInterface& aOther);
-  ~nsStyleUserInterface();
+  explicit nsStyleUI(const nsPresContext* aContext);
+  nsStyleUI(const nsStyleUI& aOther);
+  ~nsStyleUI();
 
-  void FinishStyle(nsPresContext*, const nsStyleUserInterface*);
+  void FinishStyle(nsPresContext*, const nsStyleUI*);
   const static bool kHasFinishStyle = true;
 
-  nsChangeHint CalcDifference(const nsStyleUserInterface& aNewData) const;
+  nsChangeHint CalcDifference(const nsStyleUI& aNewData) const;
 
   mozilla::StyleUserInput   mUserInput;
   mozilla::StyleUserModify  mUserModify;      // (modify-content)

@@ -1576,7 +1576,7 @@ Gecko_InitializeImageCropRect(nsStyleImage* aImage)
 }
 
 void
-Gecko_SetCursorArrayLength(nsStyleUserInterface* aStyleUI, size_t aLen)
+Gecko_SetCursorArrayLength(nsStyleUI* aStyleUI, size_t aLen)
 {
   aStyleUI->mCursorImages.Clear();
   aStyleUI->mCursorImages.SetLength(aLen);
@@ -1593,8 +1593,7 @@ Gecko_SetCursorImageValue(nsCursorImage* aCursor,
 }
 
 void
-Gecko_CopyCursorArrayFrom(nsStyleUserInterface* aDest,
-                          const nsStyleUserInterface* aSrc)
+Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc)
 {
   aDest->mCursorImages = aSrc->mCursorImages;
 }
