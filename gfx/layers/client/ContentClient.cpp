@@ -295,7 +295,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 void
 ContentClient::EndPaint(PaintState& aPaintState, nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
-  if (aPaintState.mAsyncTask) {
+  if (aPaintState.mAsyncTask && mBuffer) {
     aPaintState.mAsyncTask->mCapture = mBuffer->EndCapture();
   }
 }
