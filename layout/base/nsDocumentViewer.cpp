@@ -3928,7 +3928,7 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
     printJob = new nsPrintJob();
 
     rv = printJob->Initialize(this, mContainer, mDocument,
-                              float(mDeviceContext->AppUnitsPerCSSInch()) /
+                              float(AppUnitsPerCSSInch()) /
                               float(mDeviceContext->AppUnitsPerDevPixel()) /
                               mPageZoom);
     if (NS_FAILED(rv)) {
@@ -4012,7 +4012,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     printJob = new nsPrintJob();
 
     rv = printJob->Initialize(this, mContainer, doc,
-                              float(mDeviceContext->AppUnitsPerCSSInch()) /
+                              float(AppUnitsPerCSSInch()) /
                               float(mDeviceContext->AppUnitsPerDevPixel()) /
                               mPageZoom);
     if (NS_FAILED(rv)) {

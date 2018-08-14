@@ -21,17 +21,26 @@ function is(a, b, msg) {
 onmessage = function(e) {
   let runnableStr = `(() => {return (${e.data.blockingCallback});})();`;
   let runnable = eval(runnableStr); // eslint-disable-line no-eval
-  runnable.call(this).then(_ => {
+  runnable.call(this, /* Phase */ 2).then(_ => {
     info("Let's do a window.open()");
     return new Promise(resolve => {
-      onmessage = resolve;
-      window.open("3rdPartyOpen.html");
+
+      if (location.search == "?noopener") {
+        let features = "noopener";
+
+        window.open("3rdPartyOpen.html", undefined, features);
+        setTimeout(resolve, 1000);
+      } else {
+        onmessage = resolve;
+
+        window.open("3rdPartyOpen.html");
+      }
     });
   }).then(_ => {
     info("The popup has been dismissed!");
     let runnableStr = `(() => {return (${e.data.nonBlockingCallback});})();`;
     let runnable = eval(runnableStr); // eslint-disable-line no-eval
-    return runnable.call(this);
+    return runnable.call(this, /* Phase */ 2);
   }).then(_ => {
     parent.postMessage({ type: "finish" }, "*");
   });

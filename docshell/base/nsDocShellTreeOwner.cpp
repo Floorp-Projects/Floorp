@@ -1370,7 +1370,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
         double scaleFactor = 1.0;
         if (shell->GetPresContext()) {
           nsDeviceContext* dc = shell->GetPresContext()->DeviceContext();
-          scaleFactor = double(nsPresContext::AppUnitsPerCSSPixel()) /
+          scaleFactor = double(AppUnitsPerCSSPixel()) /
                         dc->AppUnitsPerDevPixelAtUnitFullZoom();
         }
         // ShowTooltip expects widget-relative position.

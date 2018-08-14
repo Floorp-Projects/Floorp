@@ -479,7 +479,7 @@ interface nsIHttpChannel : nsIChannel
      * protection list.  This is only available if the
      * privacy.trackingprotection.annotate_channels pref is set and its value
      * should only be relied on after the channel has established a connection.
-     * Note that, if privacy.restrict3rdpartystorage.enabled pref is set, also
+     * Note that, if the privacy.trackingprotection.annotate_channels pref is set, also
      * top-level channels could be marked as tracking resource.
      */
     [infallible] readonly attribute boolean isTrackingResource;

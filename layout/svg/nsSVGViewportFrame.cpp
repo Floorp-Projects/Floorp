@@ -66,7 +66,7 @@ nsSVGViewportFrame::ReflowSVG()
     GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(x, y, width, height),
-                           PresContext()->AppUnitsPerCSSPixel());
+                           AppUnitsPerCSSPixel());
 
   // If we have a filter, we need to invalidate ourselves because filter
   // output can change even if none of our descendants need repainting.

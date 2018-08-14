@@ -578,7 +578,7 @@ nsTreeBodyFrame::GetSelectionRegion()
 
 
   RefPtr<nsPresContext> presContext = PresContext();
-  nsIntRect rect = mRect.ToOutsidePixels(presContext->AppUnitsPerCSSPixel());
+  nsIntRect rect = mRect.ToOutsidePixels(AppUnitsPerCSSPixel());
 
   nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
   nsPoint origin = GetOffsetTo(rootFrame);
