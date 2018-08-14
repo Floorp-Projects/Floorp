@@ -6,4 +6,5 @@
 
 DevToolsModules(
     'channel-event-sink.js',
+    'stack-trace-collector.js',
 )
