@@ -78,13 +78,13 @@ for (var i = 0; i < NUMAGENT; i++) {
   Atomics.store(i64a, LOCK_INDEX, 0n);
 }
 
-// Agents must wake in the order they waited.
+// Agents must notify in the order they waited.
 for (var i = 0; i < NUMAGENT; i++) {
   var woken = 0;
-  while ((woken = Atomics.wake(i64a, WAIT_INDEX, 1)) === 0) ;
+  while ((woken = Atomics.notify(i64a, WAIT_INDEX, 1)) === 0) ;
 
   assert.sameValue(woken, 1,
-                   'Atomics.wake(i64a, WAIT_INDEX, 1) returns 1, at index = ' + i);
+                   'Atomics.notify(i64a, WAIT_INDEX, 1) returns 1, at index = ' + i);
 
   assert.sameValue($262.agent.getReport(), 'ok',
                    '$262.agent.getReport() returns "ok", at index = ' + i);

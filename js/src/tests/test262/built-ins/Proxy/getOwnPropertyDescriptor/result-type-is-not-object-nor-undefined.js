@@ -11,7 +11,7 @@ info: |
     11. If Type(trapResultObj) is neither Object nor Undefined, throw a
     TypeError exception.
     ...
-features: [Symbol]
+features: [Proxy, Symbol]
 ---*/
 
 var target = {
