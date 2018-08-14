@@ -1872,6 +1872,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachPrimitiveUndefined(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
 

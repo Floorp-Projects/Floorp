@@ -4928,6 +4928,58 @@ CompareIRGenerator::tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rh
     return true;
 }
 
+// Handle Primitive x {undefined,null} equality comparisons
+bool
+CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsEqualityOp(op_));
+
+    // The set of primitive cases we want to handle here (excluding null, undefined)
+    auto isPrimitive = [](HandleValue& x) {
+        return x.isString() || x.isSymbol() || x.isBoolean() || x.isNumber();
+    };
+
+    if (!(lhsVal_.isNullOrUndefined() && isPrimitive(rhsVal_)) &&
+        !(rhsVal_.isNullOrUndefined() && isPrimitive(lhsVal_)))
+    {
+        return false;
+    }
+
+    auto guardPrimitive = [&](HandleValue v, ValOperandId id) {
+        if (v.isNumber()) {
+            writer.guardIsNumber(id);
+            return;
+        }
+        switch (v.extractNonDoubleType()) {
+          case JSVAL_TYPE_BOOLEAN:
+            writer.guardIsBoolean(id);
+            return;
+          case JSVAL_TYPE_SYMBOL:
+            writer.guardIsSymbol(id);
+            return;
+          case JSVAL_TYPE_STRING:
+            writer.guardIsString(id);
+            return;
+          default:
+            MOZ_CRASH("unexpected type");
+            return;
+        }
+    };
+
+    isPrimitive(lhsVal_) ? guardPrimitive(lhsVal_, lhsId)
+                         : writer.guardIsNullOrUndefined(lhsId);
+    isPrimitive(rhsVal_) ? guardPrimitive(rhsVal_, rhsId)
+                         : writer.guardIsNullOrUndefined(rhsId);
+
+    // Comparing a primitive with undefined/null will always be true for NE/STRICTNE,
+    // and always be false for other compare ops.
+    writer.loadBooleanResult(op_ == JSOP_NE || op_ == JSOP_STRICTNE);
+    writer.returnFromIC();
+
+    trackAttached("PrimitiveUndefined");
+    return true;
+}
+
 // Handle {null/undefined} x {null,undefined} equality comparisons
 bool
 CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId)
@@ -4985,6 +5037,11 @@ CompareIRGenerator::tryAttachStub()
         if (tryAttachObjectUndefined(lhsId, rhsId))
             return true;
         if (tryAttachStrictDifferentTypes(lhsId, rhsId))
+            return true;
+
+        // These checks should come after tryAttachStrictDifferentTypes since it handles
+        // strict inequality with a more generic IC.
+        if (tryAttachPrimitiveUndefined(lhsId, rhsId))
             return true;
 
         // This should come after strictDifferent types to
