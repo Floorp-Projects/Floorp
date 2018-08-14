@@ -247,6 +247,37 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mDisplayDensityOverride = density;
             return this;
         }
+
+        /** Set whether or not known malware sites should be blocked.
+         *
+         * Note: For each blocked site, {@link NavigationDelegate#onLoadError}
+         * with error category {@link NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+         * is called.
+         *
+         * @param enabled A flag determining whether or not to block malware
+         *                sites.
+         * @return The builder instance.
+         */
+        public @NonNull Builder blockMalware(boolean enabled) {
+            mSettings.mSafebrowsingMalware.set(enabled);
+            return this;
+        }
+
+        /**
+         * Set whether or not known phishing sites should be blocked.
+         *
+         * Note: For each blocked site, {@link NavigationDelegate#onLoadError}
+         * with error category {@link NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+         * is called.
+         *
+         * @param enabled A flag determining whether or not to block phishing
+         *                sites.
+         * @return The builder instance.
+         */
+        public @NonNull Builder blockPhishing(boolean enabled) {
+            mSettings.mSafebrowsingPhishing.set(enabled);
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -305,6 +336,10 @@ public final class GeckoRuntimeSettings implements Parcelable {
             TrackingProtectionDelegate.CATEGORY_AD));
     /* package */ Pref<Boolean> mConsoleOutput = new Pref<Boolean>(
         "geckoview.console.enabled", false);
+    /* package */ Pref<Boolean> mSafebrowsingMalware = new Pref<Boolean>(
+        "browser.safebrowsing.malware.enabled", true);
+    /* package */ Pref<Boolean> mSafebrowsingPhishing = new Pref<Boolean>(
+        "browser.safebrowsing.phishing.enabled", true);
 
     /* package */ boolean mNativeCrashReporting;
     /* package */ boolean mJavaCrashReporting;
@@ -314,7 +349,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mCookieBehavior, mCookieLifetime, mConsoleOutput,
-        mJavaScript, mRemoteDebugging, mTrackingProtection, mWebFonts
+        mJavaScript, mRemoteDebugging, mSafebrowsingMalware,
+        mSafebrowsingPhishing, mTrackingProtection, mWebFonts,
     };
 
     /* package */ GeckoRuntimeSettings() {
@@ -623,10 +659,58 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /**
      * Get whether or not web console messages are sent to logcat.
      *
-     * @return This GeckoRuntimeSettings instance.
+     * @return True if console output is enabled.
      */
     public boolean getConsoleOutputEnabled() {
         return mConsoleOutput.get();
+    }
+
+    /**
+     * Set whether or not known malware sites should be blocked.
+     *
+     * Note: For each blocked site, {@link NavigationDelegate#onLoadError}
+     * with error category {@link NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+     * is called.
+     *
+     * @param enabled A flag determining whether or not to block malware sites.
+     * @return The GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setBlockMalware(boolean enabled) {
+        mSafebrowsingMalware.set(enabled);
+        return this;
+    }
+
+    /**
+     * Get whether or not known malware sites are blocked.
+     *
+     * @return True if malware site blocking is enabled.
+     */
+    public boolean getBlockMalware() {
+        return mSafebrowsingMalware.get();
+    }
+
+    /**
+     * Set whether or not known phishing sites should be blocked.
+     *
+     * Note: For each blocked site, {@link NavigationDelegate#onLoadError}
+     * with error category {@link NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+     * is called.
+     *
+     * @param enabled A flag determining whether or not to block phishing sites.
+     * @return The GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setBlockPhishing(boolean enabled) {
+        mSafebrowsingPhishing.set(enabled);
+        return this;
+    }
+
+    /**
+     * Get whether or not known phishing sites are blocked.
+     *
+     * @return True if phishing site blocking is enabled.
+     */
+    public boolean getBlockPhishing() {
+        return mSafebrowsingPhishing.get();
     }
 
     @Override // Parcelable
