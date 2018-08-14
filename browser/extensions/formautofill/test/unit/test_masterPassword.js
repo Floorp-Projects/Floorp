@@ -5,11 +5,7 @@
 "use strict";
 const {MockRegistrar} =
   ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
-
-let MasterPassword;
-add_task(async function setup() {
-  ({MasterPassword} = ChromeUtils.import("resource://formautofill/MasterPassword.jsm", {}));
-});
+let {MasterPassword} = ChromeUtils.import("resource://formautofill/MasterPassword.jsm", {});
 
 const TESTCASES = [{
   description: "With master password set",
@@ -71,10 +67,10 @@ registerCleanupFunction(() => {
 });
 
 TESTCASES.forEach(testcase => {
+  let token = MasterPassword._token;
+
   add_task(async function test_encrypt_decrypt() {
     info("Starting testcase: " + testcase.description);
-
-    let token = MasterPassword._token;
     token.initPassword(testcase.masterPassword);
 
     // Test only: Force the token login without asking for master password

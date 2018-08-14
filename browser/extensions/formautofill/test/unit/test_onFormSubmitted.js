@@ -1,8 +1,6 @@
 "use strict";
 
-add_task(async function setup() {
-  ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
-});
+ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
 
 const MOCK_DOC = MockDocument.createTestDocument("http://localhost:8080/test/",
                    `<form id="form1">
