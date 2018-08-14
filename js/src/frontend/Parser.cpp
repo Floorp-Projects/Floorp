@@ -848,6 +848,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
 #endif
     isUnexpectedEOF_(false),
     awaitHandling_(AwaitIsName),
+    inParametersOfAsyncFunction_(false),
     parseGoal_(uint8_t(parseGoal))
 {
     cx->frontendCollectionPool().addActiveCompilation();
@@ -930,6 +931,29 @@ inline void
 GeneralParser<ParseHandler, CharT>::setAwaitHandling(AwaitHandling awaitHandling)
 {
     asFinalParser()->setAwaitHandling(awaitHandling);
+}
+
+template <typename CharT>
+void
+Parser<SyntaxParseHandler, CharT>::setInParametersOfAsyncFunction(bool inParameters)
+{
+    this->inParametersOfAsyncFunction_ = inParameters;
+}
+
+template <typename CharT>
+void
+Parser<FullParseHandler, CharT>::setInParametersOfAsyncFunction(bool inParameters)
+{
+    this->inParametersOfAsyncFunction_ = inParameters;
+    if (SyntaxParser* syntaxParser = getSyntaxParser())
+        syntaxParser->setInParametersOfAsyncFunction(inParameters);
+}
+
+template <class ParseHandler, typename CharT>
+inline void
+GeneralParser<ParseHandler, CharT>::setInParametersOfAsyncFunction(bool inParameters)
+{
+    asFinalParser()->setInParametersOfAsyncFunction(inParameters);
 }
 
 ObjectBox*
@@ -3822,6 +3846,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
             ? AwaitIsKeyword
             : AwaitIsName;
         AutoAwaitIsKeyword<ParseHandler, CharT> awaitIsKeyword(this, awaitHandling);
+        AutoInParametersOfAsyncFunction<ParseHandler, CharT> inParameters(this, funbox->isAsync());
         if (!functionArguments(yieldHandling, kind, *pn))
             return false;
     }
@@ -3883,6 +3908,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
     Node body;
     {
         AutoAwaitIsKeyword<ParseHandler, CharT> awaitIsKeyword(this, bodyAwaitHandling);
+        AutoInParametersOfAsyncFunction<ParseHandler, CharT> inParameters(this, false);
         body = functionBody(inHandling, bodyYieldHandling, kind, bodyType);
         if (!body)
             return false;
@@ -8586,6 +8612,10 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
 
       case TokenKind::Await: {
         if (pc->isAsync()) {
+            if (inParametersOfAsyncFunction()) {
+                error(JSMSG_AWAIT_IN_DEFAULT);
+                return null();
+            }
             Node kid = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
             if (!kid)
                 return null();

@@ -23,7 +23,9 @@ activity_stream:
       "PREVIEW_REQUEST",
       "SAVE_TO_POCKET",
       "SEARCH",
+      "SEARCH_EDIT_ADD",
       "SEARCH_EDIT_CLOSE",
+      "SEARCH_EDIT_DELETE",
       "SKIPPED_SIGNIN",
       "SUBMIT_EMAIL",
       "DISCLAIMER_ACKED",
@@ -526,8 +528,8 @@ devtools.main:
     extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   sidepanel_changed:
-    objects: ["inspector"]
-    bug_numbers: [1463083]
+    objects: ["inspector", "netmonitor"]
+    bug_numbers: [1463083, 1463169]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
     description: User has switched sidepanel tabs.

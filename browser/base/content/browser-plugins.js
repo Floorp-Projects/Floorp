@@ -653,8 +653,7 @@ var gPluginHandler = {
                                                       iconURL, priority, buttons);
 
     // Add the "learn more" link.
-    let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let link = notification.ownerDocument.createElementNS(XULNS, "label");
+    let link = notification.ownerDocument.createXULElement("label");
     link.className = "text-link";
     link.setAttribute("value", gNavigatorBundle.getString("crashedpluginsMessage.learnMore"));
     let crashurl = formatURL("app.support.baseURL", true);

@@ -767,8 +767,7 @@ var gHistorySwipeAnimation = {
    * @return the newly created element.
    */
   _createElement: function HSA__createElement(aID, aTagName) {
-    let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let element = document.createElementNS(XULNS, aTagName);
+    let element = document.createXULElement(aTagName);
     element.id = aID;
     return element;
   },

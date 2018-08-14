@@ -1,0 +1,208 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== tree.css ===================================================
+  == Styles used by the XUL tree element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: tree ::::: */
+
+tree {
+  margin: 0 4px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-appearance: listbox;
+}
+
+/* ::::: tree focusring ::::: */
+
+.focusring > .tree-stack > .tree-rows > .tree-bodybox {
+  border: 1px solid transparent;
+}
+
+.focusring:focus > .tree-stack > .tree-rows > .tree-bodybox {
+  border: 1px solid #000000;
+}
+
+
+/* ::::: tree rows ::::: */
+
+treechildren::-moz-tree-row {
+  border: 1px solid transparent;
+  min-height: 24px;
+  height: 1.3em;
+}
+
+treechildren::-moz-tree-row(multicol, odd) {
+  background-color: -moz-oddtreerow;
+}
+
+treechildren::-moz-tree-row(selected) {
+  background-color: -moz-cellhighlight;
+}
+
+treechildren::-moz-tree-row(selected, focus) {
+  background-color: Highlight;
+}
+
+
+/* ::::: tree cells ::::: */
+
+treechildren::-moz-tree-cell {
+  padding: 0 2px;
+}
+
+treechildren::-moz-tree-cell-text {
+  color: inherit;
+}
+
+treechildren::-moz-tree-image(selected),
+treechildren::-moz-tree-twisty(selected),
+treechildren::-moz-tree-cell-text(selected) {
+  color: -moz-cellhighlighttext;
+}
+
+treechildren::-moz-tree-image(selected, focus),
+treechildren::-moz-tree-twisty(selected, focus),
+treechildren::-moz-tree-cell-text(selected, focus) {
+  color: HighlightText;
+}
+
+
+/* ::::: lines connecting cells ::::: */
+
+treechildren::-moz-tree-line {
+  border: 1px dotted ThreeDShadow;
+}
+
+treechildren::-moz-tree-line(selected, focus) {
+  border: 1px dotted HighlightText;
+}
+
+
+/* ::::: tree separator ::::: */
+
+treechildren::-moz-tree-separator {
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+}
+
+
+/* ::::: drop feedback ::::: */
+
+treechildren::-moz-tree-cell-text(primary, dropOn) {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+treechildren::-moz-tree-drop-feedback {
+  background-color: Highlight;
+  width: 50px;
+  height: 2px;
+  margin-inline-start: 5px;
+}
+
+/* ::::: tree columns ::::: */
+
+treecol,
+treecolpicker {
+  -moz-appearance: treeheadercell;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  color: -moz-DialogText;
+  padding: 0 4px;
+}
+
+.treecol-image {
+  padding: 0 1px;
+}
+
+.treecol-text {
+  margin: 0 !important;
+}
+
+treecol[hideheader="true"] {
+  -moz-appearance: none;
+}
+
+/* ::::: column drag and drop styles ::::: */
+
+treecol[dragging="true"] {
+  color: Graytext;
+}
+
+treechildren::-moz-tree-column(insertbefore) {
+  border-inline-start: 1px solid ThreeDShadow;
+}
+
+treechildren::-moz-tree-column(insertafter) {
+  border-inline-end: 1px solid ThreeDShadow;
+}
+
+/* ::::: column picker :::::  */
+
+.tree-columnpicker-icon {
+  list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
+}
+
+/* ::::: tree icons ::::: */
+
+treechildren::-moz-tree-image {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* ::::: twisty :::::  */
+
+treechildren::-moz-tree-twisty {
+  padding-inline-end: 4px;
+  padding-inline-start: 4px;
+  padding-top: 1px;
+  width: 8px; /* The image's width is 8 pixels */
+  list-style-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed) {
+  list-style-image: url("chrome://global/skin/icons/twisty-collapsed-rtl.svg");
+}
+
+treechildren::-moz-tree-twisty(open) {
+  list-style-image: url("chrome://global/skin/icons/twisty-expanded.svg");
+}
+
+treechildren::-moz-tree-indentation {
+  width: 16px;
+}
+
+/* ::::: editable tree ::::: */
+
+treechildren::-moz-tree-row(selected, editing) {
+  background-color: transparent;
+  border: none;
+}
+
+treechildren::-moz-tree-cell-text(selected, editing) {
+  color: inherit;
+}
+
+treechildren::-moz-tree-cell(active, selected, focus, editing) {
+  background-color: transparent;
+  border: none;
+}
+
+treechildren::-moz-tree-cell-text(active, selected, editing) {
+  opacity: 0;
+}
+
+.tree-input {
+  -moz-appearance: none;
+  border: 1px solid Highlight;
+  margin: 0;
+  margin-inline-start: -4px;
+  padding: 1px;
+}

@@ -25,10 +25,10 @@ function getBrowser(sidebar) {
     return Promise.resolve(browser);
   }
 
-  let stack = document.createElementNS(XUL_NS, "stack");
+  let stack = document.createXULElement("stack");
   stack.setAttribute("flex", "1");
 
-  browser = document.createElementNS(XUL_NS, "browser");
+  browser = document.createXULElement("browser");
   browser.setAttribute("id", "webext-panels-browser");
   browser.setAttribute("type", "content");
   browser.setAttribute("flex", "1");
