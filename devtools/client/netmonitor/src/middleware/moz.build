@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'batching.js',
+    'event-telemetry.js',
     'prefs.js',
     'recording.js',
     'throttling.js',

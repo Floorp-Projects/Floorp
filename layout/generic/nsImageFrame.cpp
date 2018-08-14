@@ -2201,8 +2201,7 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
         PresShell()->StyleSet()->
           ResolveStyleFor(area->AsElement(), Style(),
                           LazyComputeBehavior::Allow);
-      FillCursorInformationFromStyle(areaStyle->StyleUserInterface(),
-                                     aCursor);
+      FillCursorInformationFromStyle(areaStyle->StyleUI(), aCursor);
       if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
         aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
       }

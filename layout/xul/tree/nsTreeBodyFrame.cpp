@@ -2442,8 +2442,7 @@ nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
       // Our scratch array is already prefilled.
       ComputedStyle* childContext = GetPseudoComputedStyle(child);
 
-      FillCursorInformationFromStyle(childContext->StyleUserInterface(),
-                                     aCursor);
+      FillCursorInformationFromStyle(childContext->StyleUI(), aCursor);
       if (aCursor.mCursor == NS_STYLE_CURSOR_AUTO)
         aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
 

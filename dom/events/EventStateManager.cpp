@@ -3191,7 +3191,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         bool suppressBlur = false;
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(newFocus));
-          const nsStyleUserInterface* ui = mCurrentTarget->StyleUserInterface();
+          const nsStyleUI* ui = mCurrentTarget->StyleUI();
           activeContent = mCurrentTarget->GetContent();
 
           // In some cases, we do not want to even blur the current focused
@@ -5221,7 +5221,7 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
     // XXX Is this even what we want?
     if (mCurrentTarget)
     {
-      const nsStyleUserInterface* ui = mCurrentTarget->StyleUserInterface();
+      const nsStyleUI* ui = mCurrentTarget->StyleUI();
       if (ui->mUserInput == StyleUserInput::None) {
         return false;
       }

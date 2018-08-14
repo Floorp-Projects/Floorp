@@ -849,8 +849,7 @@ nscolor
 nsNativeTheme::GetScrollbarFaceColor(ComputedStyle* aStyle,
                                      AutoColorGetter aAutoGetter)
 {
-  StyleComplexColor complexColor =
-    aStyle->StyleUserInterface()->mScrollbarFaceColor;
+  StyleComplexColor complexColor = aStyle->StyleUI()->mScrollbarFaceColor;
   if (complexColor.IsAuto()) {
     return aAutoGetter(aStyle);
   }
@@ -866,8 +865,7 @@ nscolor
 nsNativeTheme::GetScrollbarTrackColor(ComputedStyle* aStyle,
                                       AutoColorGetter aAutoGetter)
 {
-  StyleComplexColor complexColor =
-    aStyle->StyleUserInterface()->mScrollbarTrackColor;
+  StyleComplexColor complexColor = aStyle->StyleUI()->mScrollbarTrackColor;
   nscolor color;
   if (complexColor.IsAuto()) {
     color = aAutoGetter(aStyle);

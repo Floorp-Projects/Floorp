@@ -809,7 +809,7 @@ var Impl = {
     }
 
     if (clearSubsession) {
-      this._subsessionStartActiveTicks = activeTicks;
+      this._subsessionStartActiveTicks = this._sessionActiveTicks;
     }
 
     ret.activeTicks = activeTicks;

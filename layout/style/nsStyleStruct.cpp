@@ -4559,7 +4559,7 @@ nsStyleText::TextEmphasisSide(WritingMode aWM) const
 }
 
 //-----------------------
-// nsStyleUserInterface
+// nsStyleUI
 //
 
 nsCursorImage::nsCursorImage()
@@ -4605,7 +4605,7 @@ nsCursorImage::operator==(const nsCursorImage& aOther) const
          DefinitelyEqualImages(mImage, aOther.mImage);
 }
 
-nsStyleUserInterface::nsStyleUserInterface(const nsPresContext* aContext)
+nsStyleUI::nsStyleUI(const nsPresContext* aContext)
   : mUserInput(StyleUserInput::Auto)
   , mUserModify(StyleUserModify::ReadOnly)
   , mUserFocus(StyleUserFocus::None)
@@ -4615,10 +4615,10 @@ nsStyleUserInterface::nsStyleUserInterface(const nsPresContext* aContext)
   , mScrollbarFaceColor(StyleComplexColor::Auto())
   , mScrollbarTrackColor(StyleComplexColor::Auto())
 {
-  MOZ_COUNT_CTOR(nsStyleUserInterface);
+  MOZ_COUNT_CTOR(nsStyleUI);
 }
 
-nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
+nsStyleUI::nsStyleUI(const nsStyleUI& aSource)
   : mUserInput(aSource.mUserInput)
   , mUserModify(aSource.mUserModify)
   , mUserFocus(aSource.mUserFocus)
@@ -4629,17 +4629,17 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
   , mScrollbarFaceColor(aSource.mScrollbarFaceColor)
   , mScrollbarTrackColor(aSource.mScrollbarTrackColor)
 {
-  MOZ_COUNT_CTOR(nsStyleUserInterface);
+  MOZ_COUNT_CTOR(nsStyleUI);
 }
 
-nsStyleUserInterface::~nsStyleUserInterface()
+nsStyleUI::~nsStyleUI()
 {
-  MOZ_COUNT_DTOR(nsStyleUserInterface);
+  MOZ_COUNT_DTOR(nsStyleUI);
 }
 
 void
-nsStyleUserInterface::FinishStyle(
-  nsPresContext* aPresContext, const nsStyleUserInterface* aOldStyle)
+nsStyleUI::FinishStyle(nsPresContext* aPresContext,
+                       const nsStyleUI* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -4658,7 +4658,7 @@ nsStyleUserInterface::FinishStyle(
 }
 
 nsChangeHint
-nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
+nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
   if (mCursor != aNewData.mCursor) {

@@ -177,6 +177,12 @@ SdpFingerprintAttributeList::ParseFingerprint(const std::string& str)
   return fp;
 }
 
+bool
+SdpFmtpAttributeList::operator==(const SdpFmtpAttributeList& other) const
+{
+  return mFmtps == other.mFmtps;
+}
+
 void
 SdpFmtpAttributeList::Serialize(std::ostream& os) const
 {
