@@ -54,7 +54,8 @@ namespace recordreplay {
   /* Sent at startup. */                                       \
   _Macro(Introduction)                                         \
                                                                \
-  /* Sent to recording processes when exiting. */              \
+  /* Sent to recording processes when exiting, or to force a hanged replaying */ \
+  /* process to crash. */                                      \
   _Macro(Terminate)                                            \
                                                                \
   /* Flush the current recording to disk. */                   \
