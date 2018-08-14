@@ -1938,6 +1938,9 @@ void
 Client::ShutdownWorkThreads()
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mShutdownRequested);
+
+  mShutdownRequested = true;
 
   if (sLiveParentActors) {
     MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
