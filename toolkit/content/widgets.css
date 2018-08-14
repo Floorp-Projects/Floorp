@@ -8,8 +8,8 @@
 
 @import url("chrome://global/content/autocomplete.css");
 @import url("chrome://global/skin/autocomplete.css");
-@import url("resource://formautofill/autocomplete-item-shared.css");
-@import url("resource://formautofill/autocomplete-item.css");
+@import url("chrome://formautofill-shared/skin/autocomplete-item.css");
+@import url("chrome://formautofill/skin/autocomplete-item.css");
 @import url("chrome://global/skin/dialog.css");
 @import url("chrome://global/skin/dropmarker.css");
 @import url("chrome://global/skin/groupbox.css");

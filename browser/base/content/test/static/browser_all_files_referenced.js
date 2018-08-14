@@ -239,23 +239,13 @@ function getBaseUriForChromeUri(chromeUri) {
   return fileUri.resolve(".");
 }
 
-function trackChromeUri(uri) {
-  gChromeMap.set(getBaseUriForChromeUri(uri), uri);
-}
-
-// formautofill registers resource://formautofill/ and
-// chrome://formautofill/content/ dynamically at runtime.
-// Bug 1480276 is about addressing this without this hard-coding.
-trackResourcePrefix("formautofill");
-trackChromeUri("chrome://formautofill/content/");
-
 function parseManifest(manifestUri) {
   return fetchFile(manifestUri.spec).then(data => {
     for (let line of data.split("\n")) {
       let [type, ...argv] = line.split(/\s+/);
       if (type == "content" || type == "skin" || type == "locale") {
         let chromeUri = `chrome://${argv[0]}/${type}/`;
-        trackChromeUri(chromeUri);
+        gChromeMap.set(getBaseUriForChromeUri(chromeUri), chromeUri);
       } else if (type == "override" || type == "overlay") {
         // Overlays aren't really overrides, but behave the same in
         // that the overlay is only referenced if the original xul
@@ -274,35 +264,6 @@ function parseManifest(manifestUri) {
       }
     }
   });
-}
-
-// If the given URI is a webextension manifest, extract the scripts
-// for any embedded APIs.  Returns the passed in URI if the manifest
-// is not a webextension manifest, null otherwise.
-async function parseJsonManifest(uri) {
-  let raw = await fetchFile(uri.spec);
-  let data;
-  try {
-    data = JSON.parse(raw);
-  } catch (ex) {
-    return uri;
-  }
-
-  // Simplistic test for whether this is a webextension manifest:
-  if (data.manifest_version !== 2) {
-    return uri;
-  }
-
-  if (data.experiment_apis) {
-    for (let api of Object.values(data.experiment_apis)) {
-      if (api.parent && api.parent.script) {
-        let script = uri.resolve(api.parent.script);
-        gReferencesFromCode.set(script, null);
-      }
-    }
-  }
-
-  return null;
 }
 
 function addCodeReference(url, fromURI) {
@@ -565,14 +526,10 @@ add_task(async function checkAllTheFiles() {
   // NOTE that this must be done before filtering out devtools paths
   // so that all chrome paths can be recorded.
   let manifestURIs = [];
-  let jsonManifests = [];
   uris = uris.filter(uri => {
     let path = uri.pathQueryRef;
     if (path.endsWith(".manifest")) {
       manifestURIs.push(uri);
-      return false;
-    } else if (path.endsWith("/manifest.json")) {
-      jsonManifests.push(uri);
       return false;
     }
 
@@ -581,15 +538,6 @@ add_task(async function checkAllTheFiles() {
 
   // Wait for all manifest to be parsed
   await throttledMapPromises(manifestURIs, parseManifest);
-
-  // manifest.json is a common name, it is used for WebExtension manifests
-  // but also for other things.  To tell them apart, we have to actually
-  // read the contents.  This will populate gExtensionRoots with all
-  // embedded extension APIs, and return any manifest.json files that aren't
-  // webextensions.
-  let nonWebextManifests = (await Promise.all(jsonManifests.map(parseJsonManifest)))
-                                         .filter(uri => !!uri);
-  uris.push(...nonWebextManifests);
 
   // We build a list of promises that get resolved when their respective
   // files have loaded and produced no errors.
