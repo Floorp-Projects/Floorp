@@ -783,6 +783,13 @@ protected: // Shouldn't be used by friend classes
                                  nsIContent& aContentToSelect);
 
   /**
+   * CollapseSelectionAfter() collapses Selection after aElement.
+   * If aElement is an orphan node or not in editing host, returns error.
+   */
+  nsresult CollapseSelectionAfter(Selection& aSelection,
+                                  Element& aElement);
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
