@@ -262,6 +262,28 @@ Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument* aDocument)
   return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
 }
 
+PointerCapabilities
+Gecko_MediaFeatures_PrimaryPointerCapabilities(nsIDocument* aDocument)
+{
+  // The default value is mouse-type pointer.
+  const PointerCapabilities kDefaultCapabilities =
+    PointerCapabilities::Fine | PointerCapabilities::Hover;
+
+  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+    return kDefaultCapabilities;
+  }
+
+  int32_t intValue;
+  nsresult rv =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_PrimaryPointerCapabilities,
+                        &intValue);
+  if (NS_FAILED(rv)) {
+    return kDefaultCapabilities;
+  }
+
+  return static_cast<PointerCapabilities>(intValue);
+}
+
 /* static */ void
 nsMediaFeatures::InitSystemMetrics()
 {
