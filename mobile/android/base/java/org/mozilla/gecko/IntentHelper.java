@@ -11,9 +11,9 @@ import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
@@ -310,21 +310,41 @@ public final class IntentHelper implements BundleEventListener {
                                         context.getResources().getString(R.string.share_title));
         }
 
-        Uri uri = IntentUtils.normalizeUri(targetURI);
-
+        Uri uri = normalizeUriScheme(targetURI.indexOf(':') >= 0 ? Uri.parse(targetURI) : new Uri.Builder().scheme(targetURI).build());
         if (!TextUtils.isEmpty(mimeType)) {
             Intent intent = getIntentForActionString(action);
             intent.setDataAndType(uri, mimeType);
             return intent;
         }
 
-        if (!IntentUtils.isUriSafeForScheme(targetURI)) {
+        if (!GeckoAppShell.isUriSafeForScheme(uri)) {
             return null;
         }
 
         final String scheme = uri.getScheme();
         if ("intent".equals(scheme) || "android-app".equals(scheme)) {
-            return IntentUtils.getSafeIntent(uri);
+            final Intent intent;
+            try {
+                intent = Intent.parseUri(targetURI, 0);
+            } catch (final URISyntaxException e) {
+                Log.e(LOGTAG, "Unable to parse URI - " + e);
+                return null;
+            }
+
+            final Uri data = intent.getData();
+            if (data != null && "file".equals(normalizeUriScheme(data).getScheme())) {
+                Log.w(LOGTAG, "Blocked intent with \"file://\" data scheme.");
+                return null;
+            }
+
+            // Only open applications which can accept arbitrary data from a browser.
+            intent.addCategory(Intent.CATEGORY_BROWSABLE);
+
+            // Prevent site from explicitly opening our internal activities, which can leak data.
+            intent.setComponent(null);
+            nullIntentSelector(intent);
+
+            return intent;
         }
 
         // Compute our most likely intent, then check to see if there are any
@@ -397,6 +417,31 @@ public final class IntentHelper implements BundleEventListener {
         intent.setData(pruned);
 
         return intent;
+    }
+
+    // We create a separate method to better encapsulate the @TargetApi use.
+    @TargetApi(15)
+    private static void nullIntentSelector(final Intent intent) {
+        intent.setSelector(null);
+    }
+
+    /**
+     * Return a <code>Uri</code> instance which is equivalent to <code>u</code>,
+     * but with a guaranteed-lowercase scheme as if the API level 16 method
+     * <code>u.normalizeScheme</code> had been called.
+     *
+     * @param u the <code>Uri</code> to normalize.
+     * @return a <code>Uri</code>, which might be <code>u</code>.
+     */
+    private static Uri normalizeUriScheme(final Uri u) {
+        final String scheme = u.getScheme();
+        final String lower  = scheme.toLowerCase(Locale.US);
+        if (lower.equals(scheme)) {
+            return u;
+        }
+
+        // Otherwise, return a new URI with a normalized scheme.
+        return u.buildUpon().scheme(lower).build();
     }
 
     @Override // BundleEventHandler
