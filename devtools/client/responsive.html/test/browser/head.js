@@ -273,7 +273,7 @@ const selectDevicePixelRatio = (ui, value) =>
 
 const selectNetworkThrottling = (ui, value) => Promise.all([
   once(ui, "network-throttling-changed"),
-  changeSelectValue(ui, "#global-network-throttling-selector", value)
+  changeSelectValue(ui, "#network-throttling-selector", value)
 ]);
 
 function getSessionHistory(browser) {

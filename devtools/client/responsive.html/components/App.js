@@ -31,7 +31,7 @@ const {
 } = require("../actions/viewports");
 
 const DeviceModal = createFactory(require("./DeviceModal"));
-const GlobalToolbar = createFactory(require("./GlobalToolbar"));
+const Toolbar = createFactory(require("./Toolbar"));
 const Viewports = createFactory(require("./Viewports"));
 
 const Types = require("../types");
@@ -216,7 +216,7 @@ class App extends Component {
       {
         id: "app",
       },
-      GlobalToolbar({
+      Toolbar({
         devices,
         displayPixelRatio,
         networkThrottling,
