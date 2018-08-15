@@ -21,7 +21,7 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const message = require("./utils/message");
-const App = createFactory(require("./app"));
+const App = createFactory(require("./components/App"));
 const Store = require("./store");
 const { loadDevices } = require("./actions/devices");
 const { changeDisplayPixelRatio } = require("./actions/display-pixel-ratio");
