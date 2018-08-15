@@ -88,6 +88,12 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
         supportedCountries: PaymentDialogUtils.supportedCountries,
       });
 
+      // The EditAddress constructor adds `input` event listeners on the same element,
+      // which update field validity. By adding our event listeners after this constructor,
+      // validity will be updated before our handlers get the event
+      this.form.addEventListener("input", this);
+      this.form.addEventListener("invalid", this);
+
       this.body.appendChild(this.persistCheckbox);
       this.body.appendChild(this.genericErrorText);
 
@@ -197,12 +203,22 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
         data.span.style.left = data.left + "px";
       }
     }
+
+    this.updateSaveButtonState();
   }
 
   handleEvent(event) {
     switch (event.type) {
       case "click": {
         this.onClick(event);
+        break;
+      }
+      case "input": {
+        this.onInput(event);
+        break;
+      }
+      case "invalid": {
+        this.onInvalid(event);
         break;
       }
     }
@@ -231,7 +247,9 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
         break;
       }
       case this.saveButton: {
-        this.saveRecord();
+        if (this.form.checkValidity()) {
+          this.saveRecord();
+        }
         break;
       }
       default: {
@@ -240,21 +258,34 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     }
   }
 
+  onInput(event) {
+    this.updateSaveButtonState();
+  }
+
+  onInvalid(event) {
+    this.saveButton.disabled = true;
+  }
+
   updateRequiredState() {
-    for (let formElement of this.form.elements) {
-      let container = formElement.closest(`#${formElement.id}-container`);
-      if (formElement.localName == "button" || !container) {
+    for (let field of this.form.elements) {
+      let container = field.closest(`#${field.id}-container`);
+      if (field.localName == "button" || !container) {
         continue;
       }
       let span = container.querySelector("span");
       span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
-      let required = formElement.required && !formElement.disabled;
+      let required = field.required && !field.disabled;
       if (required) {
         container.setAttribute("required", "true");
       } else {
         container.removeAttribute("required");
       }
     }
+  }
+
+  updateSaveButtonState() {
+    this.saveButton.disabled = !this.form.checkValidity();
+    log.debug("updateSaveButtonState", this.saveButton.disabled);
   }
 
   async saveRecord() {
