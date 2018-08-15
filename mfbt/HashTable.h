@@ -1697,27 +1697,6 @@ private:
     return (aHash1 - aDoubleHash.mHash2) & aDoubleHash.mSizeMask;
   }
 
-  // True if the current load is equal to or exceeds the maximum.
-  bool overloaded()
-  {
-    static_assert(sMaxCapacity <= UINT32_MAX / sMaxAlphaNumerator,
-                  "multiplication below could overflow");
-
-    // Note: if capacity() is zero, this will always succeed, which is
-    // what we want.
-    return mEntryCount + mRemovedCount >=
-           capacity() * sMaxAlphaNumerator / sAlphaDenominator;
-  }
-
-  // True if the current load is equal to or below the minimum.
-  bool underloaded()
-  {
-    static_assert(sMaxCapacity <= UINT32_MAX / sMinAlphaNumerator,
-                  "multiplication below could overflow");
-    return capacity() > sMinCapacity &&
-           mEntryCount <= capacity() * sMinAlphaNumerator / sAlphaDenominator;
-  }
-
   static MOZ_ALWAYS_INLINE bool match(Entry& aEntry, const Lookup& aLookup)
   {
     return HashPolicy::match(HashPolicy::getKey(aEntry.get()), aLookup);
@@ -1871,7 +1850,15 @@ private:
   RebuildStatus rehashIfOverloaded(
     FailureBehavior aReportFailure = ReportFailure)
   {
-    if (!overloaded()) {
+    static_assert(sMaxCapacity <= UINT32_MAX / sMaxAlphaNumerator,
+                  "multiplication below could overflow");
+
+    // Note: if capacity() is zero, this will always succeed, which is
+    // what we want.
+    bool overloaded = mEntryCount + mRemovedCount >=
+                      capacity() * sMaxAlphaNumerator / sAlphaDenominator;
+
+    if (!overloaded) {
       return NotOverloaded;
     }
 
@@ -1909,7 +1896,13 @@ private:
 
   void shrinkIfUnderloaded()
   {
-    if (underloaded()) {
+    static_assert(sMaxCapacity <= UINT32_MAX / sMinAlphaNumerator,
+                  "multiplication below could overflow");
+    bool underloaded =
+      capacity() > sMinCapacity &&
+      mEntryCount <= capacity() * sMinAlphaNumerator / sAlphaDenominator;
+
+    if (underloaded) {
       (void)changeTableSize(capacity() / 2, DontReportFailure);
     }
   }
