@@ -60,6 +60,7 @@ DOM4_MSG_DEF(TypeError, "The expression cannot be converted to return the specif
 DOM4_MSG_DEF(UnknownError, "The operation failed for reasons unrelated to the database itself and not covered by any other error code.", NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR)
 DOM4_MSG_DEF(ConstraintError, "A mutation operation in the transaction failed because a constraint was not satisfied. For example, an object such as an object store or index already exists and a new one was being attempted to be created.", NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR)
 DOM4_MSG_DEF(DataError, "Data provided to an operation does not meet requirements.", NS_ERROR_DOM_INDEXEDDB_DATA_ERR)
+DOM4_MSG_DEF(DataError, "No key or key range specified.", NS_ERROR_DOM_INDEXEDDB_KEY_ERR)
 DOM4_MSG_DEF(TransactionInactiveError, "A request was placed against a transaction which is currently not active, or which is finished.", NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR)
 DOM4_MSG_DEF(ReadOnlyError, "A mutation operation was attempted in a READ_ONLY transaction.", NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR)
 DOM4_MSG_DEF(VersionError, "The operation failed because the stored database is a higher version than the version requested.", NS_ERROR_DOM_INDEXEDDB_VERSION_ERR)
