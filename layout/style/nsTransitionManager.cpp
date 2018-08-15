@@ -11,7 +11,6 @@
 #include "mozilla/dom/CSSTransitionBinding.h"
 
 #include "nsIContent.h"
-#include "nsContentUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"

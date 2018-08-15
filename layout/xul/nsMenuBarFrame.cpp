@@ -24,7 +24,6 @@
 #include "nsISound.h"
 #include "nsWidgetsCID.h"
 #endif
-#include "nsContentUtils.h"
 #include "nsUTF8Utils.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"

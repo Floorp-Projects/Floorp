@@ -18,7 +18,6 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIURI.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "nsContentUtils.h"
 #include "nsQueryObject.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 

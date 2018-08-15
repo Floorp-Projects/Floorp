@@ -21,7 +21,6 @@
 
 #include "nsPresContext.h"
 #include "nsStyleChangeList.h"
-#include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
