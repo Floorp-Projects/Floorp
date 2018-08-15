@@ -1596,28 +1596,30 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
 {
   TransactionId id{0};
   while (!mPendingTransactionIds.empty()) {
-    if (aEpoch.mHandle < mPendingTransactionIds.front().mEpoch.mHandle) {
+    const auto& transactionId = mPendingTransactionIds.front();
+
+    if (aEpoch.mHandle < transactionId.mEpoch.mHandle) {
       break;
     }
 
     if (!IsRootWebRenderBridgeParent() && !mVsyncRate.IsZero()) {
-      double latencyMs = (aEndTime - mPendingTransactionIds.front().mTxnStartTime).ToMilliseconds();
+      double latencyMs = (aEndTime - transactionId.mTxnStartTime).ToMilliseconds();
       double latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
       int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
       Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
     }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
-    if (mPendingTransactionIds.front().mRefreshStartTime) {
-      int32_t latencyMs = lround((aEndTime - mPendingTransactionIds.front().mRefreshStartTime).ToMilliseconds());
+    if (transactionId.mRefreshStartTime) {
+      int32_t latencyMs = lround((aEndTime - transactionId.mRefreshStartTime).ToMilliseconds());
       printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
     }
-    if (mPendingTransactionIds.front().mFwdTime) {
-      int32_t latencyMs = lround((aEndTime - mPendingTransactionIds.front().mFwdTime).ToMilliseconds());
+    if (transactionId.mFwdTime) {
+      int32_t latencyMs = lround((aEndTime - transactionId.mFwdTime).ToMilliseconds());
       printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
     }
 #endif
-    id = mPendingTransactionIds.front().mId;
+    id = transactionId.mId;
     mPendingTransactionIds.pop();
   }
   return id;
