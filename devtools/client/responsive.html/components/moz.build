@@ -9,7 +9,7 @@ DevToolsModules(
     'Browser.js',
     'DeviceAdder.js',
     'DeviceModal.js',
-    'DevicePixelRatioSelector.js',
+    'DevicePixelRatioMenu.js',
     'DeviceSelector.js',
     'ResizableViewport.js',
     'SettingsMenu.js',
