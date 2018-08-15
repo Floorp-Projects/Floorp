@@ -277,7 +277,10 @@ class L10nBumper(VCSScript):
                 continue
 
             # Write to disk
-            content_string = json.dumps(new_contents, sort_keys=True, indent=4)
+            content_string = json.dumps(
+                new_contents, sort_keys=True, indent=4,
+                separators=(',', ': '),
+            )
             fh = codecs.open(path, encoding='utf-8', mode='w+')
             fh.write(content_string + "\n")
             fh.close()

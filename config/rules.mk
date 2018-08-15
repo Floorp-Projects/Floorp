@@ -446,7 +446,7 @@ compile:: host target
 
 host:: $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(HOST_RUST_PROGRAMS) $(HOST_RUST_LIBRARY_FILE) $(HOST_SHARED_LIBRARY)
 
-target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(RUST_LIBRARY_FILE) $(RUST_PROGRAMS)
+target:: $(filter-out $(MOZBUILD_NON_DEFAULT_TARGETS),$(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(RUST_LIBRARY_FILE) $(RUST_PROGRAMS))
 
 ifndef LIBRARY
 ifdef OBJS
@@ -984,7 +984,7 @@ ifndef MOZ_TSAN
 # cause problems on macOS 10.7; see bug 1365993 for details.
 # Also, we don't want to pass PGO flags until cargo supports them.
 target_cargo_env_vars := \
-	MOZ_CARGO_WRAP_LDFLAGS="$(filter-out -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))" \
+	MOZ_CARGO_WRAP_LDFLAGS="$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))" \
 	MOZ_CARGO_WRAP_LD="$(CC)" \
 	$(cargo_linker_env_var)=$(topsrcdir)/build/cargo-linker
 endif # MOZ_TSAN

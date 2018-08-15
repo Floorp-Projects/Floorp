@@ -28,6 +28,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 const BROWSER_SEARCH_PREF = "browser.search.";
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "resetStatus", BROWSER_SEARCH_PREF + "reset.status", "");
+XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled", BROWSER_SEARCH_PREF + "log", false);
 XPCOMUtils.defineLazyGetter(this, "resetEnabled", () => {
   return Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled");
 });
@@ -195,25 +196,11 @@ const SEARCH_LOG_PREFIX = "*** Search: ";
 /**
  * Outputs aText to the JavaScript console as well as to stdout.
  */
-function DO_LOG(aText) {
-  dump(SEARCH_LOG_PREFIX + aText + "\n");
-  Services.console.logStringMessage(aText);
-}
-
-/**
- * In debug builds, use a live, pref-based (browser.search.log) LOG function
- * to allow enabling/disabling without a restart. Otherwise, don't log at all by
- * default. This can be overridden at startup by the pref, see SearchService's
- * _init method.
- */
-var LOG = function() {};
-
-if (AppConstants.DEBUG) {
-  LOG = function(aText) {
-    if (getBoolPref(BROWSER_SEARCH_PREF + "log", false)) {
-      DO_LOG(aText);
-    }
-  };
+function LOG(aText) {
+  if (loggingEnabled) {
+    dump(SEARCH_LOG_PREFIX + aText + "\n");
+    Services.console.logStringMessage(aText);
+  }
 }
 
 /**
@@ -2578,10 +2565,6 @@ function checkForSyncCompletion(aPromise) {
 
 // nsIBrowserSearchService
 function SearchService() {
-  // Replace empty LOG function with the useful one if the log pref is set.
-  if (getBoolPref(BROWSER_SEARCH_PREF + "log", false))
-    LOG = DO_LOG;
-
   this._initObservers = PromiseUtils.defer();
 }
 

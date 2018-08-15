@@ -1,6 +1,7 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {FormattedMessage} from "react-intl";
 import React from "react";
+import {TOP_SITES_SOURCE} from "./TopSitesConstants";
 
 class SelectableSearchShortcut extends React.PureComponent {
   render() {
@@ -74,7 +75,7 @@ export class SearchShortcutsForm extends React.PureComponent {
       if (shortcut.isSelected && !alreadyPinned) {
         pinQueue.push(this._searchTopSite(shortcut));
       } else if (!shortcut.isSelected && alreadyPinned) {
-        unpinQueue.push({url: alreadyPinned.url});
+        unpinQueue.push({url: alreadyPinned.url, searchVendor: shortcut.shortURL});
       }
     });
 
@@ -97,6 +98,11 @@ export class SearchShortcutsForm extends React.PureComponent {
             index: availableSlots.shift()
           }
         }));
+        this.props.dispatch(ac.UserEvent({
+          source: TOP_SITES_SOURCE,
+          event: "SEARCH_EDIT_ADD",
+          value: {search_vendor: shortcut.searchVendor}
+        }));
       });
     }
 
@@ -105,6 +111,11 @@ export class SearchShortcutsForm extends React.PureComponent {
       this.props.dispatch(ac.OnlyToMain({
         type: at.TOP_SITES_UNPIN,
         data: {site: shortcut}
+      }));
+      this.props.dispatch(ac.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "SEARCH_EDIT_DELETE",
+        value: {search_vendor: shortcut.searchVendor}
       }));
     });
 
@@ -115,7 +126,8 @@ export class SearchShortcutsForm extends React.PureComponent {
     return {
       url: shortcut.url,
       searchTopSite: true,
-      label: shortcut.keyword
+      label: shortcut.keyword,
+      searchVendor: shortcut.shortURL
     };
   }
 

@@ -1552,6 +1552,18 @@ VARIABLES = {
         Implies FORCE_SHARED_LIB.
         """),
 
+    'SHARED_LIBRARY_OUTPUT_CATEGORY': (unicode, unicode,
+        """The output category for this context's shared library. If set this will
+        correspond to the build command that will build this shared library, and
+        the library will not be built as part of the default build.
+        """),
+
+    'RUST_LIBRARY_OUTPUT_CATEGORY': (unicode, unicode,
+        """The output category for this context's rust library. If set this will
+        correspond to the build command that will build this rust library, and
+        the library will not be built as part of the default build.
+        """),
+
     'IS_FRAMEWORK': (bool, bool,
         """Whether the library to build should be built as a framework on OSX.
 
