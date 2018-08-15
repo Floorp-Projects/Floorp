@@ -11,6 +11,10 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
+const DeviceModal = createFactory(require("./DeviceModal"));
+const Toolbar = createFactory(require("./Toolbar"));
+const Viewports = createFactory(require("./Viewports"));
+
 const {
   addCustomDevice,
   removeCustomDevice,
@@ -30,10 +34,6 @@ const {
   rotateViewport,
 } = require("../actions/viewports");
 
-const DeviceModal = createFactory(require("./DeviceModal"));
-const Toolbar = createFactory(require("./Toolbar"));
-const Viewports = createFactory(require("./Viewports"));
-
 const Types = require("../types");
 
 class App extends Component {
@@ -52,6 +52,7 @@ class App extends Component {
 
   constructor(props) {
     super(props);
+
     this.onAddCustomDevice = this.onAddCustomDevice.bind(this);
     this.onBrowserMounted = this.onBrowserMounted.bind(this);
     this.onChangeDevice = this.onChangeDevice.bind(this);
@@ -199,13 +200,12 @@ class App extends Component {
       onUpdateDeviceModal,
     } = this;
 
-    let selectedDevice = "";
-    let selectedPixelRatio = { value: 0 };
-
-    if (viewports.length) {
-      selectedDevice = viewports[0].device;
-      selectedPixelRatio = viewports[0].pixelRatio;
+    if (!viewports.length) {
+      return null;
     }
+
+    const selectedDevice = viewports[0].device;
+    const selectedPixelRatio = viewports[0].pixelRatio;
 
     let deviceAdderViewportTemplate = {};
     if (devices.modalOpenedFromViewport !== null) {
@@ -225,12 +225,14 @@ class App extends Component {
         selectedDevice,
         selectedPixelRatio,
         touchSimulation,
+        viewport: viewports[0],
         onChangeDevice,
         onChangeNetworkThrottling,
         onChangePixelRatio,
         onChangeReloadCondition,
         onChangeTouchSimulation,
         onExit,
+        onRemoveDeviceAssociation,
         onResizeViewport,
         onScreenshot,
         onUpdateDeviceModal,
