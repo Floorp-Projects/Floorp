@@ -12,7 +12,7 @@ const {
 } = require("./index");
 
 const { getFormatStr } = require("../utils/l10n");
-const { getToplevelWindow } = require("../utils/window");
+const { getTopLevelWindow } = require("../utils/window");
 const e10s = require("../utils/e10s");
 const Services = require("Services");
 
@@ -40,7 +40,7 @@ function createScreenshotFor(node) {
 }
 
 function saveToFile(data, filename) {
-  const chromeWindow = getToplevelWindow(window);
+  const chromeWindow = getTopLevelWindow(window);
   const chromeDocument = chromeWindow.document;
 
   // append .png extension to filename if it doesn't exist

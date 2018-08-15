@@ -56,7 +56,7 @@ const NO_THROTTLING_LABEL = new LocalizationHelper(
   ).getStr("responsive.noThrottling");
 
 // Menu
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/netmonitor/src/utils/menu", true);
+loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
 loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/har/har-menu-utils", true);
 
 // Throttling
