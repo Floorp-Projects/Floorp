@@ -276,6 +276,13 @@ a11y::MakeXPCEvent(AccEvent* aEvent)
     return xpEvent.forget();
   }
 
+  if (eventGroup & (1 << AccEvent::eScrollingEvent)) {
+    AccScrollingEvent* sa = downcast_accEvent(aEvent);
+    xpEvent = new xpcAccScrollingEvent(type, ToXPC(acc), ToXPCDocument(doc), node,
+                                       fromUser, sa->ScrollX(), sa->ScrollY(),
+                                       sa->MaxScrollX(), sa->MaxScrollY());
+  }
+
   xpEvent = new xpcAccEvent(type, ToXPC(acc), ToXPCDocument(doc), node, fromUser);
   return xpEvent.forget();
   }
