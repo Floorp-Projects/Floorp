@@ -10,7 +10,6 @@
 #include "nsTreeContentView.h"
 #include "nsITreeSelection.h"
 #include "ChildIterator.h"
-#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"

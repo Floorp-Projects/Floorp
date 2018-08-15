@@ -11,7 +11,6 @@
 
 #include "gfxContext.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsCheckboxRadioFrame.h"

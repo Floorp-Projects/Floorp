@@ -21,7 +21,6 @@
 #include "mozilla/UndisplayedNode.h"
 #include "nsIDocument.h"
 
-#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsAutoPtr.h"
 #include "nsAbsoluteContainingBlock.h"

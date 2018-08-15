@@ -146,6 +146,11 @@ class TTest(object):
             # remove the browser  error file
             mozfile.remove(browser_config['error_filename'])
 
+            # individual tests can have different frameworks
+            # TODO: ensure that we don't run >1 test with custom frameworks
+            if test_config.get('perfherder_framework', None) is not None:
+                test_results.framework = test_config['perfherder_framework']
+
             # reinstall any file whose stability we need to ensure across
             # the cycles
             if test_config.get('reinstall', ''):

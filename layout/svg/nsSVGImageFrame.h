@@ -22,7 +22,6 @@
 #include "SVGGeometryFrame.h"
 #include "SVGImageContext.h"
 #include "mozilla/dom/SVGImageElement.h"
-#include "nsContentUtils.h"
 #include "nsIReflowCallback.h"
 #include "mozilla/Unused.h"
 

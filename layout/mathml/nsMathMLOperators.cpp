@@ -12,7 +12,6 @@
 
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
-#include "nsContentUtils.h"
 #include "nsCRT.h"
 
 // operator dictionary entry

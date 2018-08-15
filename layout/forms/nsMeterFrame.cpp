@@ -14,7 +14,6 @@
 #include "nsIPresShell.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsContentUtils.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsFontMetrics.h"
 #include "mozilla/dom/Element.h"
