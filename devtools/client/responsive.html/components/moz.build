@@ -18,5 +18,4 @@ DevToolsModules(
     'Viewport.js',
     'ViewportDimension.js',
     'Viewports.js',
-    'ViewportToolbar.js',
 )

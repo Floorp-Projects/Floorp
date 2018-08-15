@@ -15,35 +15,21 @@ const ViewportDimension = createFactory(require("./ViewportDimension"));
 class Viewport extends Component {
   static get propTypes() {
     return {
-      devices: PropTypes.shape(Types.devices).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       swapAfterMount: PropTypes.bool.isRequired,
       viewport: PropTypes.shape(Types.viewport).isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
-      onChangeDevice: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
-      onRotateViewport: PropTypes.func.isRequired,
-      onUpdateDeviceModal: PropTypes.func.isRequired,
     };
   }
 
   constructor(props) {
     super(props);
-    this.onChangeDevice = this.onChangeDevice.bind(this);
+
     this.onRemoveDeviceAssociation = this.onRemoveDeviceAssociation.bind(this);
     this.onResizeViewport = this.onResizeViewport.bind(this);
-    this.onRotateViewport = this.onRotateViewport.bind(this);
-  }
-
-  onChangeDevice(device, deviceType) {
-    const {
-      viewport,
-      onChangeDevice,
-    } = this.props;
-
-    onChangeDevice(viewport.id, device, deviceType);
   }
 
   onRemoveDeviceAssociation() {
@@ -64,30 +50,17 @@ class Viewport extends Component {
     onResizeViewport(viewport.id, width, height);
   }
 
-  onRotateViewport() {
-    const {
-      viewport,
-      onRotateViewport,
-    } = this.props;
-
-    onRotateViewport(viewport.id);
-  }
-
   render() {
     const {
-      devices,
       screenshot,
       swapAfterMount,
       viewport,
       onBrowserMounted,
       onContentResize,
-      onUpdateDeviceModal,
     } = this.props;
 
     const {
-      onChangeDevice,
       onRemoveDeviceAssociation,
-      onRotateViewport,
       onResizeViewport,
     } = this;
 
@@ -101,17 +74,13 @@ class Viewport extends Component {
         onRemoveDeviceAssociation,
       }),
       ResizableViewport({
-        devices,
         screenshot,
         swapAfterMount,
         viewport,
         onBrowserMounted,
-        onChangeDevice,
         onContentResize,
         onRemoveDeviceAssociation,
         onResizeViewport,
-        onRotateViewport,
-        onUpdateDeviceModal,
       })
     );
   }
