@@ -54,6 +54,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
@@ -2255,8 +2256,9 @@ public abstract class GeckoApp extends GeckoActivity
                 // the res/fonts directory: we no longer need to copy our
                 // bundled fonts out of the APK in order to use them.
                 // See https://bugzilla.mozilla.org/show_bug.cgi?id=878674.
-                File dir = new File("res/fonts");
-                if (dir.exists() && dir.isDirectory()) {
+                final File dataDir = new File(context.getApplicationInfo().dataDir);
+                final File dir = new File(dataDir, "res/fonts");
+                if (dir.exists() && dir.isDirectory() && dir.listFiles() != null) {
                     for (File file : dir.listFiles()) {
                         if (file.isFile() && file.getName().endsWith(".ttf")) {
                             file.delete();
