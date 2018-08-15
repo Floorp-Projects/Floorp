@@ -310,6 +310,8 @@ pref("devtools.editor.detectindentation", true);
 pref("devtools.editor.enableCodeFolding", true);
 pref("devtools.editor.autocomplete", true);
 
+// Whether or not the viewports are left aligned.
+pref("devtools.responsive.leftAlignViewport.enabled", false);
 // Whether to reload when touch simulation is toggled
 pref("devtools.responsive.reloadConditions.touchSimulation", false);
 // Whether to reload when user agent is changed
