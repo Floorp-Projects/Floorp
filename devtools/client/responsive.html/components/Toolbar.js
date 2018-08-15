@@ -95,6 +95,7 @@ class Toolbar extends PureComponent {
           onClick: () => onRotateViewport(viewport.id),
           title: getStr("responsive.rotate"),
         }),
+        dom.div({ className: "devtools-separator" }),
         DevicePixelRatioSelector({
           devices,
           displayPixelRatio,
@@ -102,10 +103,12 @@ class Toolbar extends PureComponent {
           selectedPixelRatio,
           onChangePixelRatio,
         }),
+        dom.div({ className: "devtools-separator" }),
         NetworkThrottlingSelector({
           networkThrottling,
           onChangeNetworkThrottling,
         }),
+        dom.div({ className: "devtools-separator" }),
         dom.button({
           id: "touch-simulation-button",
           className: touchButtonClass,
@@ -127,6 +130,7 @@ class Toolbar extends PureComponent {
           reloadConditions,
           onChangeReloadCondition,
         }),
+        dom.div({ className: "devtools-separator" }),
         dom.button({
           id: "exit-button",
           className: "toolbar-button devtools-button",
