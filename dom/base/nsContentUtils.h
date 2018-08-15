@@ -2954,6 +2954,8 @@ public:
    * Returns true if this window/channel/aPrincipal should disable storages
    * because of the anti-tracking feature.
    * Note that either aWindow or aChannel may be null when calling this function.
+   * If the caller wants the UI to be notified when the storage gets disabled,
+   * it must pass a non-null channel object.
    */
   static bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                             nsIChannel* aChannel,

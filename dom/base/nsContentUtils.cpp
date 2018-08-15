@@ -8916,7 +8916,7 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
       pwin = nsPIDOMWindowOuter::From(win);
     }
 
-    if (pwin) {
+    if (pwin && aChannel) {
       pwin->NotifyContentBlockingState(
         nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, aChannel);
     }
