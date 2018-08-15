@@ -73,6 +73,7 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   , mIgnoreProgress(false)
   , mSentRedirect1BeginFailed(false)
   , mReceivedRedirect2Verify(false)
+  , mHasSuspendedByBackPressure(false)
   , mPendingDiversion(false)
   , mDivertingFromChild(false)
   , mDivertedOnStartRequest(false)
@@ -1585,6 +1586,10 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (NeedFlowControl()) {
+    Telemetry::Accumulate(Telemetry::NETWORK_BACK_PRESSURE_SUSPENSION_RATE, mHasSuspendedByBackPressure);
+  }
+
   return NS_OK;
 }
 
@@ -1653,6 +1658,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
       MOZ_ASSERT(!mSuspendedForFlowControl);
       Unused << mChannel->Suspend();
       mSuspendedForFlowControl = true;
+      mHasSuspendedByBackPressure = true;
     }
     mSendWindowSize -= count;
   }

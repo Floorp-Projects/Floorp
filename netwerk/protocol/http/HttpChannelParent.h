@@ -319,6 +319,7 @@ private:
 
   uint8_t mSentRedirect1BeginFailed    : 1;
   uint8_t mReceivedRedirect2Verify     : 1;
+  uint8_t mHasSuspendedByBackPressure  : 1;
 
   // Indicates that diversion has been requested, but we could not start it
   // yet because the channel is still being opened with a synthesized response.
