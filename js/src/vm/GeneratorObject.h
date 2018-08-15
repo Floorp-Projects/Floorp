@@ -154,6 +154,10 @@ class GeneratorObject : public NativeObject
         MOZ_ASSERT_IF(yieldAndAwaitIndex == 0,
                       getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).isUndefined());
         MOZ_ASSERT_IF(yieldAndAwaitIndex != 0, isRunning() || isClosing());
+        setYieldAndAwaitIndexNoAssert(yieldAndAwaitIndex);
+    }
+    // Debugger has to flout the state machine rules a bit.
+    void setYieldAndAwaitIndexNoAssert(uint32_t yieldAndAwaitIndex) {
         MOZ_ASSERT(yieldAndAwaitIndex < uint32_t(YIELD_AND_AWAIT_INDEX_CLOSING));
         setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, Int32Value(yieldAndAwaitIndex));
         MOZ_ASSERT(isSuspended());
