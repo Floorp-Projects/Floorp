@@ -155,7 +155,7 @@ class DeviceModal extends PureComponent {
       },
       dom.div(
         {
-          className: "device-modal container",
+          className: "device-modal",
         },
         dom.button({
           id: "device-close-button",
