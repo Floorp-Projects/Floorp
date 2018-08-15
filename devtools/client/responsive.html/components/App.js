@@ -183,6 +183,7 @@ class App extends Component {
     const {
       onAddCustomDevice,
       onBrowserMounted,
+      onChangeDevice,
       onChangeNetworkThrottling,
       onChangePixelRatio,
       onChangeReloadCondition,
@@ -224,12 +225,15 @@ class App extends Component {
         selectedDevice,
         selectedPixelRatio,
         touchSimulation,
+        onChangeDevice,
         onChangeNetworkThrottling,
         onChangePixelRatio,
         onChangeReloadCondition,
         onChangeTouchSimulation,
         onExit,
+        onResizeViewport,
         onScreenshot,
+        onUpdateDeviceModal,
       }),
       Viewports({
         screenshot,
