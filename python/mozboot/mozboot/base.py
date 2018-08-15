@@ -305,7 +305,7 @@ class BaseBootstrapper(object):
         """
         for path in os.environ['PATH'].split(os.pathsep):
             test = os.path.join(path, name)
-            if os.path.exists(test) and os.access(test, os.X_OK):
+            if os.path.isfile(test) and os.access(test, os.X_OK):
                 return test
 
         return None
