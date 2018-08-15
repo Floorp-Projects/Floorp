@@ -40,7 +40,8 @@ add_task(async function setup() {
   SpecialPowers.loadChromeScript(clearCache);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["network.http.rcwn.enabled", false]],
+    set: [["network.http.rcwn.enabled", false],
+          ["browser.chrome.guess_favicon", false]],
   });
 
   extension = makeExtension();
@@ -277,14 +278,6 @@ add_task(async function test_webRequest_tabId() {
     },
   };
 
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: SimpleTest.getTestFileURL(linkUrl),
-      cached: false,
-    };
-  }
-
   extension.sendMessage("set-expected", {expect, origin: location.href});
   await extension.awaitMessage("continue");
   let a = addLink(linkUrl);
@@ -330,14 +323,6 @@ add_task(async function test_webRequest_tabId_browser() {
       type: "main_frame",
     },
   };
-
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: pageUrl,
-      cached: true,
-    };
-  }
 
   await tabExt.startup();
   let origin = await tabExt.awaitMessage("origin");
