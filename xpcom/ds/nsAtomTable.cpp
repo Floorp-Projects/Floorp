@@ -647,6 +647,11 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen)
     MOZ_ASSERT(nsCRT::IsAscii(atom->String()));
     MOZ_ASSERT(NS_strlen(atom->String()) == atom->GetLength());
 
+    // This assertion ensures the static atom's precomputed hash value matches
+    // what would be computed by mozilla::HashString(aStr), which is what we use
+    // when atomizing strings. We compute this hash in Atom.py.
+    MOZ_ASSERT(HashString(atom->String()) == atom->hash());
+
     AtomTableKey key(atom);
     nsAtomSubTable& table = SelectSubTable(key);
     MutexAutoLock lock(table.mLock);
