@@ -167,7 +167,6 @@
 #include "nsIParserUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIPluginHost.h"
-#include "nsIRemoteBrowser.h"
 #include "nsIRequest.h"
 #include "nsIRunnable.h"
 #include "nsIScriptContext.h"
@@ -226,6 +225,7 @@
 #include "mozilla/dom/TabGroup.h"
 #include "nsIWebNavigationInfo.h"
 #include "nsPluginHost.h"
+#include "nsIBrowser.h"
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/Encoding.h"
 #include "nsXULElement.h"
@@ -10547,8 +10547,13 @@ bool
 nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent)
 {
   nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIRemoteBrowser> targetBrowser = do_QueryInterface(aKeyEvent->mOriginalTarget);
+  nsCOMPtr<nsIBrowser> targetBrowser = do_QueryInterface(aKeyEvent->mOriginalTarget);
+  bool isRemoteBrowser = false;
   if (targetBrowser) {
+    targetBrowser->GetIsRemoteBrowser(&isRemoteBrowser);
+  }
+
+  if (isRemoteBrowser) {
     targetBrowser->GetContentPrincipal(getter_AddRefs(principal));
   }
   else {
