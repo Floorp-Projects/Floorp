@@ -13,11 +13,12 @@
 #include <algorithm>
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CachedInheritingStyles.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ServoComputedData.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
-#include "mozilla/CachedInheritingStyles.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 
