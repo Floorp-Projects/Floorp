@@ -25,6 +25,8 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     super();
 
     this.genericErrorText = document.createElement("div");
+    this.genericErrorText.setAttribute("aria-live", "polite");
+    this.genericErrorText.classList.add("page-error");
 
     this.cancelButton = document.createElement("button");
     this.cancelButton.className = "cancel-button";
@@ -129,12 +131,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     this.backButton.hidden = page.onboardingWizard;
     this.cancelButton.hidden = !page.onboardingWizard;
 
-    if (addressPage.addressFields) {
-      this.setAttribute("address-fields", addressPage.addressFields);
-    } else {
-      this.removeAttribute("address-fields");
-    }
-
     this.pageTitleHeading.textContent = addressPage.title;
     this.genericErrorText.textContent = page.error;
 
@@ -160,6 +156,11 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
                                                        saveAddressDefaultChecked;
     }
 
+    if (addressPage.addressFields) {
+      this.form.dataset.addressFields = addressPage.addressFields;
+    } else {
+      this.form.dataset.addressFields = "mailing-address tel";
+    }
     this.formHandler.loadRecord(record);
 
     // Add validation to some address fields
