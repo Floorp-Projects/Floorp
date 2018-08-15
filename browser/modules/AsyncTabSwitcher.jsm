@@ -425,6 +425,19 @@ class AsyncTabSwitcher {
         this.log(`Switch to tab ${index} - ${this.tinfo(showTab)}`);
         tabpanels.setAttribute("selectedIndex", index);
         if (showTab === this.requestedTab) {
+          if (requestedTabState == this.STATE_LOADED) {
+            // The new tab will be made visible in the next paint, record the expected
+            // transaction id for that, and we'll mark when we get notified of its
+            // completion.
+            this.switchPaintId = this.window.windowUtils.lastTransactionId + 1;
+          } else {
+            // We're making the tab visible even though we haven't yet got layers for it.
+            // It's hard to know which composite the layers will first be available in (and
+            // the parent process might not even get MozAfterPaint delivered for it), so just
+            // give up measuring this for now. :(
+            TelemetryStopwatch.cancel("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+          }
+
           if (this._requestingTab) {
             /*
              * If _requestingTab is set, that means that we're switching the

@@ -6312,12 +6312,6 @@ IonBuilder::newObjectTryTemplateObject(bool* emitted, JSObject* templateObject)
         return Ok();
     }
 
-    if (templateObject->is<PlainObject>() && templateObject->as<PlainObject>().hasDynamicSlots()) {
-        if (canTrackOptimization)
-            trackOptimizationOutcome(TrackedOutcome::TemplateObjectIsPlainObjectWithDynamicSlots);
-        return Ok();
-    }
-
     // Emit fastpath.
 
     MNewObject::Mode mode;
@@ -6335,40 +6329,6 @@ IonBuilder::newObjectTryTemplateObject(bool* emitted, JSObject* templateObject)
     current->push(ins);
 
     MOZ_TRY(resumeAfter(ins));
-
-    if (canTrackOptimization)
-        trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
-}
-
-AbortReasonOr<Ok>
-IonBuilder::newObjectTrySharedStub(bool* emitted)
-{
-    MOZ_ASSERT(*emitted == false);
-
-    // TODO: Support tracking optimizations for inlining a call and regular
-    // optimization tracking at the same time. Currently just drop optimization
-    // tracking when that happens.
-    bool canTrackOptimization = !IsCallPC(pc);
-
-    // Try to emit a shared stub cache.
-
-    if (JitOptions.disableSharedStubs)
-        return Ok();
-
-    if (canTrackOptimization)
-        trackOptimizationAttempt(TrackedStrategy::NewObject_SharedCache);
-
-    MInstruction* stub = MNullarySharedStub::New(alloc());
-    current->add(stub);
-    current->push(stub);
-
-    MOZ_TRY(resumeAfter(stub));
-
-    MUnbox* unbox = MUnbox::New(alloc(), current->pop(), MIRType::Object, MUnbox::Infallible);
-    current->add(unbox);
-    current->push(unbox);
 
     if (canTrackOptimization)
         trackOptimizationSuccess();
@@ -6414,12 +6374,7 @@ IonBuilder::jsop_newobject()
 
     JSObject* templateObject = inspector->getTemplateObject(pc);
 
-    if (!forceInlineCaches()) {
-        MOZ_TRY(newObjectTryTemplateObject(&emitted, templateObject));
-        if (emitted)
-            return Ok();
-    }
-    MOZ_TRY(newObjectTrySharedStub(&emitted));
+    MOZ_TRY(newObjectTryTemplateObject(&emitted, templateObject));
     if (emitted)
         return Ok();
 

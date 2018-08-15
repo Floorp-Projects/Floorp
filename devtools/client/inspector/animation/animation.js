@@ -18,6 +18,7 @@ const {
   updateDetailVisibility,
   updateElementPickerEnabled,
   updateHighlightedNode,
+  updatePlaybackRates,
   updateSelectedAnimation,
   updateSidebarSize
 } = require("./actions/animations");
@@ -58,6 +59,7 @@ class AnimationInspector {
     this.onCurrentTimeTimerUpdated = this.onCurrentTimeTimerUpdated.bind(this);
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
     this.onElementPickerStopped = this.onElementPickerStopped.bind(this);
+    this.onNavigate = this.onNavigate.bind(this);
     this.onSidebarResized = this.onSidebarResized.bind(this);
     this.onSidebarSelectionChanged = this.onSidebarSelectionChanged.bind(this);
 
@@ -149,6 +151,7 @@ class AnimationInspector {
 
   destroy() {
     this.setAnimationStateChangedListenerEnabled(false);
+    this.inspector.off("new-root", this.onNavigate);
     this.inspector.selection.off("new-node-front", this.update);
     this.inspector.sidebar.off("select", this.onSidebarSelectionChanged);
     this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
@@ -341,6 +344,10 @@ class AnimationInspector {
     this.inspector.store.dispatch(updateElementPickerEnabled(false));
   }
 
+  onNavigate() {
+    this.inspector.store.dispatch(updatePlaybackRates());
+  }
+
   async onSidebarSelectionChanged() {
     const isPanelVisibled = this.isPanelVisible();
 
@@ -356,11 +363,13 @@ class AnimationInspector {
       await this.update();
       this.onSidebarResized(null, this.inspector.getSidebarSize());
       this.animationsFront.on("mutations", this.onAnimationsMutation);
+      this.inspector.on("new-root", this.onNavigate);
       this.inspector.selection.on("new-node-front", this.update);
       this.inspector.toolbox.on("inspector-sidebar-resized", this.onSidebarResized);
     } else {
       this.stopAnimationsCurrentTimeTimer();
       this.animationsFront.off("mutations", this.onAnimationsMutation);
+      this.inspector.off("new-root", this.onNavigate);
       this.inspector.selection.off("new-node-front", this.update);
       this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
       this.setAnimationStateChangedListenerEnabled(false);
