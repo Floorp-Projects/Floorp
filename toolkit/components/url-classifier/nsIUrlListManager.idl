@@ -51,7 +51,12 @@ interface nsIUrlListManager : nsISupports
     void enableUpdate(in ACString tableName);
 
     /**
-     * Turn off update checking for a table.
+     * Turn off update checking for all tables.
+     */
+    void disableAllUpdates();
+
+    /**
+     * Turn off update checking for a single table. Only used in tests.
      */
     void disableUpdate(in ACString tableName);
 

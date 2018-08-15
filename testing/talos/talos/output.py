@@ -120,6 +120,12 @@ class Output(object):
                         if test.test_config.get('alert_threshold') is not None:
                             subtest['alertThreshold'] = \
                                 test.test_config['alert_threshold']
+                        if test.test_config.get('subtest_alerts') is not None:
+                            subtest['shouldAlert'] = \
+                                test.test_config['subtest_alerts']
+                        if test.test_config.get('alert_threshold') is not None:
+                            subtest['alertThreshold'] = \
+                                test.test_config['alert_threshold']
                         if test.test_config.get('unit'):
                             subtest['unit'] = test.test_config['unit']
 

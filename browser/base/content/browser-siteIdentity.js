@@ -1015,7 +1015,9 @@ var gIdentityHandler = {
     let nameLabelId = "identity-popup-permission-label-" + aPermission.id;
     nameLabel.setAttribute("id", nameLabelId);
 
-    let isPolicyPermission = aPermission.scope == SitePermissions.SCOPE_POLICY;
+    let isPolicyPermission = [
+      SitePermissions.SCOPE_POLICY, SitePermissions.SCOPE_GLOBAL
+    ].includes(aPermission.scope);
 
     if (aPermission.id == "popup" && !isPolicyPermission) {
       let menulist = document.createXULElement("menulist");
@@ -1083,8 +1085,8 @@ var gIdentityHandler = {
     container.setAttribute("aria-labelledby", nameLabelId + " " + stateLabelId);
 
     /* We return the permission item here without a remove button if the permission is a
-       SCOPE_POLICY permission. Policy permissions cannot be removed/changed for the duration
-       of the browser session. */
+       SCOPE_POLICY or SCOPE_GLOBAL permission. Policy permissions cannot be
+       removed/changed for the duration of the browser session. */
     if (isPolicyPermission) {
       return container;
     }

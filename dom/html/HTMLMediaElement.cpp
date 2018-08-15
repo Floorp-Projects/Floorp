@@ -2010,7 +2010,7 @@ HTMLMediaElement::Load()
        HasSourceChildren(this),
        EventStateManager::IsHandlingUserInput(),
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay),
-       AutoplayPolicy::IsAllowedToPlay(*this) == nsIAutoplay::ALLOWED,
+       AutoplayPolicy::IsAllowedToPlay(*this),
        OwnerDoc(),
        DocumentOrigin(OwnerDoc()).get(),
        OwnerDoc() ? OwnerDoc()->HasBeenUserGestureActivated() : 0,
@@ -2529,7 +2529,7 @@ HTMLMediaElement::ResumeLoad(PreloadAction aAction)
 bool
 HTMLMediaElement::AllowedToPlay() const
 {
-  return AutoplayPolicy::IsAllowedToPlay(*this) == nsIAutoplay::ALLOWED;
+  return AutoplayPolicy::IsAllowedToPlay(*this);
 }
 
 void
@@ -2538,7 +2538,7 @@ HTMLMediaElement::UpdatePreloadAction()
   PreloadAction nextAction = PRELOAD_UNDEFINED;
   // If autoplay is set, or we're playing, we should always preload data,
   // as we'll need it to play.
-  if ((AutoplayPolicy::IsAllowedToPlay(*this) == nsIAutoplay::ALLOWED &&
+  if ((AutoplayPolicy::IsAllowedToPlay(*this) &&
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) ||
       !mPaused) {
     nextAction = HTMLMediaElement::PRELOAD_ENOUGH;
@@ -3071,7 +3071,7 @@ HTMLMediaElement::PauseIfShouldNotBePlaying()
   if (GetPaused()) {
     return;
   }
-  if (AutoplayPolicy::IsAllowedToPlay(*this) != nsIAutoplay::ALLOWED) {
+  if (!AutoplayPolicy::IsAllowedToPlay(*this)) {
     AUTOPLAY_LOG("pause because not allowed to play, element=%p", this);
     ErrorResult rv;
     Pause(rv);
@@ -4103,27 +4103,14 @@ HTMLMediaElement::Play(ErrorResult& aRv)
   UpdateHadAudibleAutoplayState();
 
   const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
-  switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
-    case nsIAutoplay::ALLOWED: {
-      mPendingPlayPromises.AppendElement(promise);
-      PlayInternal(handlingUserInput);
-      UpdateCustomPolicyAfterPlayed();
-      break;
-    }
-    case nsIAutoplay::BLOCKED: {
-      AUTOPLAY_LOG("%p play blocked.", this);
-      promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
-      if (StaticPrefs::MediaBlockEventEnabled()) {
-        DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
-      }
-      break;
-    }
-    case nsIAutoplay::PROMPT: {
-      // Prompt the user for permission to play.
-      mPendingPlayPromises.AppendElement(promise);
-      EnsureAutoplayRequested(handlingUserInput);
-      break;
-    }
+  if (AutoplayPolicy::IsAllowedToPlay(*this)) {
+    mPendingPlayPromises.AppendElement(promise);
+    PlayInternal(handlingUserInput);
+    UpdateCustomPolicyAfterPlayed();
+  } else {
+    // Prompt the user for permission to play.
+    mPendingPlayPromises.AppendElement(promise);
+    EnsureAutoplayRequested(handlingUserInput);
   }
   return promise.forget();
 }
@@ -6151,8 +6138,7 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
       if (mDecoder && !mPausedForInactiveDocumentOrChannel) {
-        MOZ_ASSERT(AutoplayPolicy::IsAllowedToPlay(*this) ==
-                   nsIAutoplay::ALLOWED);
+        MOZ_ASSERT(AutoplayPolicy::IsAllowedToPlay(*this));
         mDecoder->Play();
       }
       NotifyAboutPlaying();
@@ -6264,14 +6250,9 @@ HTMLMediaElement::CheckAutoplayDataReady()
   }
 
   UpdateHadAudibleAutoplayState();
-  switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
-    case nsIAutoplay::BLOCKED:
-      return;
-    case nsIAutoplay::PROMPT:
-      EnsureAutoplayRequested(false);
-      return;
-    case nsIAutoplay::ALLOWED:
-      break;
+  if (!AutoplayPolicy::IsAllowedToPlay(*this)) {
+    EnsureAutoplayRequested(false);
+    return;
   }
 
   mPaused = false;

@@ -4,7 +4,10 @@ from __future__ import absolute_import, print_function
 
 import argparse
 import collections
-import ConfigParser
+try:
+    import configparser as ConfigParser
+except ImportError:
+    import ConfigParser
 import multiprocessing
 import time
 

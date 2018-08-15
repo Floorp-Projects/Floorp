@@ -73,7 +73,6 @@
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "ActiveLayerTracker.h"
-#include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 #include "UnitTransforms.h"
 #include "LayersLogging.h"

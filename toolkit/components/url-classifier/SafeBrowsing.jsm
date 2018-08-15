@@ -410,88 +410,66 @@ var SafeBrowsing = {
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
 
+    listManager.disableAllUpdates();
+
     for (let i = 0; i < this.phishingLists.length; ++i) {
       if (this.phishingEnabled) {
         listManager.enableUpdate(this.phishingLists[i]);
-      } else {
-        listManager.disableUpdate(this.phishingLists[i]);
       }
     }
     for (let i = 0; i < this.malwareLists.length; ++i) {
       if (this.malwareEnabled) {
         listManager.enableUpdate(this.malwareLists[i]);
-      } else {
-        listManager.disableUpdate(this.malwareLists[i]);
       }
     }
     for (let i = 0; i < this.downloadBlockLists.length; ++i) {
       if (this.malwareEnabled && this.downloadsEnabled) {
         listManager.enableUpdate(this.downloadBlockLists[i]);
-      } else {
-        listManager.disableUpdate(this.downloadBlockLists[i]);
       }
     }
     for (let i = 0; i < this.downloadAllowLists.length; ++i) {
       if (this.malwareEnabled && this.downloadsEnabled) {
         listManager.enableUpdate(this.downloadAllowLists[i]);
-      } else {
-        listManager.disableUpdate(this.downloadAllowLists[i]);
       }
     }
     for (let i = 0; i < this.passwordAllowLists.length; ++i) {
       if (this.passwordsEnabled) {
         listManager.enableUpdate(this.passwordAllowLists[i]);
-      } else {
-        listManager.disableUpdate(this.passwordAllowLists[i]);
       }
     }
     for (let i = 0; i < this.trackingAnnotationLists.length; ++i) {
       if (this.trackingAnnotations) {
         listManager.enableUpdate(this.trackingAnnotationLists[i]);
-      } else {
-        listManager.disableUpdate(this.trackingAnnotationLists[i]);
       }
     }
     for (let i = 0; i < this.trackingAnnotationWhitelists.length; ++i) {
       if (this.trackingAnnotations) {
         listManager.enableUpdate(this.trackingAnnotationWhitelists[i]);
-      } else {
-        listManager.disableUpdate(this.trackingAnnotationWhitelists[i]);
       }
     }
     for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
       if (this.trackingEnabled) {
         listManager.enableUpdate(this.trackingProtectionLists[i]);
-      } else {
-        listManager.disableUpdate(this.trackingProtectionLists[i]);
       }
     }
     for (let i = 0; i < this.trackingProtectionWhitelists.length; ++i) {
       if (this.trackingEnabled) {
         listManager.enableUpdate(this.trackingProtectionWhitelists[i]);
-      } else {
-        listManager.disableUpdate(this.trackingProtectionWhitelists[i]);
       }
     }
     for (let i = 0; i < this.blockedLists.length; ++i) {
       if (this.blockedEnabled) {
         listManager.enableUpdate(this.blockedLists[i]);
-      } else {
-        listManager.disableUpdate(this.blockedLists[i]);
       }
     }
     for (let i = 0; i < this.flashLists.length; ++i) {
       if (this.flashBlockEnabled) {
         listManager.enableUpdate(this.flashLists[i]);
-      } else {
-        listManager.disableUpdate(this.flashLists[i]);
       }
     }
     for (let i = 0; i < this.flashInfobarLists.length; ++i) {
       if (this.flashInfobarListEnabled) {
         listManager.enableUpdate(this.flashInfobarLists[i]);
-      } else {
-        listManager.disableUpdate(this.flashInfobarLists[i]);
       }
     }
     listManager.maybeToggleUpdateChecking();
