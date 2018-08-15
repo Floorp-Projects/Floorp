@@ -56,5 +56,6 @@ class FetchesMixin(object):
 
             path = self.download_file(url, parent_dir=extdir)
 
-            mozfile.extract(path, extdir)
-            os.remove(path)
+            if fetch['extract']:
+                mozfile.extract(path, extdir)
+                os.remove(path)

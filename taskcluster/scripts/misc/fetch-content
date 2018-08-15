@@ -218,7 +218,7 @@ def extract_archive(path, dest_dir, typ):
     log('%s extracted in %.3fs' % (path, time.time() - t0))
 
 
-def fetch_and_extract(url, dest_dir, sha256=None, size=None):
+def fetch_and_extract(url, dest_dir, extract=True, sha256=None, size=None):
     """Fetch a URL and extract it to a destination path.
 
     If the downloaded URL is an archive, it is extracted automatically
@@ -230,6 +230,9 @@ def fetch_and_extract(url, dest_dir, sha256=None, size=None):
     dest_path = dest_dir / basename
 
     download_to_path(url, dest_path, sha256=sha256, size=size)
+
+    if not extract:
+        return
 
     typ = archive_type(dest_path)
     if typ:
@@ -290,7 +293,7 @@ def command_task_artifacts(args):
         extdir.mkdir(parents=True, exist_ok=True)
         url = ARTIFACT_URL.format(task=fetch['task'],
                                   artifact=fetch['artifact'])
-        downloads.append((url, extdir))
+        downloads.append((url, extdir, fetch['extract']))
 
     fetch_urls(downloads)
 
