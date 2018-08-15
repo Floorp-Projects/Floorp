@@ -168,8 +168,7 @@ PROT_ListManager.prototype.getUpdateUrl = function(tableName) {
 };
 
 /**
- * Enable updates for some tables
- * @param tables - an array of table names that need updating
+ * Enable updates for a single table.
  */
 PROT_ListManager.prototype.enableUpdate = function(tableName) {
   var table = this.tablesData[tableName];
@@ -194,8 +193,17 @@ PROT_ListManager.prototype.updatesNeeded_ = function(updateUrl) {
 };
 
 /**
- * Disables updates for some tables
- * @param tables - an array of table names that no longer need updating
+ * Disable updates for all tables.
+ */
+PROT_ListManager.prototype.disableAllUpdates = function() {
+  for (const tableName of Object.keys(this.tablesData)) {
+    this.disableUpdate(tableName);
+  }
+};
+
+/**
+ * Disables updates for a single table. Avoid this internal function
+ * and use disableAllUpdates() instead.
  */
 PROT_ListManager.prototype.disableUpdate = function(tableName) {
   var table = this.tablesData[tableName];
