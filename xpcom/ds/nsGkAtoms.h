@@ -15,12 +15,12 @@ namespace detail {
 
 struct GkAtoms
 {
-  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
+  #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 
   enum class Atoms {
-    #define GK_ATOM(name_, value_) NS_STATIC_ATOM_ENUM(name_)
+    #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_ENUM(name_)
     #include "nsGkAtomList.h"
     #undef GK_ATOM
     AtomsCount
@@ -42,7 +42,7 @@ private:
 public:
   static void RegisterStaticAtoms();
 
-  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(nsStaticAtom, name_)
+  #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_DECL_PTR(type_, name_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 };
