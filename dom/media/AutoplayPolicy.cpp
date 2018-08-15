@@ -156,7 +156,7 @@ AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(const HTMLMediaElement& a
   return IsMediaElementAllowedToPlay(aElement);
 }
 
-/* static */ uint32_t
+/* static */ bool
 AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
 {
   const uint32_t autoplayDefault = DefaultAutoplayBehaviour();
@@ -166,15 +166,19 @@ AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
     // If element is blessed, it would always be allowed to play().
     return (autoplayDefault == nsIAutoplay::ALLOWED ||
             aElement.IsBlessed() ||
-            EventStateManager::IsHandlingUserInput())
-              ? nsIAutoplay::ALLOWED : nsIAutoplay::BLOCKED;
+            EventStateManager::IsHandlingUserInput());
   }
 
-  const uint32_t result = IsMediaElementAllowedToPlay(aElement) ?
-    nsIAutoplay::ALLOWED : autoplayDefault;
+  if (IsMediaElementAllowedToPlay(aElement)) {
+    return true;
+  }
+
+  const bool result = IsMediaElementAllowedToPlay(aElement) ||
+    autoplayDefault == nsIAutoplay::ALLOWED;
 
   AUTOPLAY_LOG("IsAllowedToPlay, mediaElement=%p, isAllowToPlay=%s",
                 &aElement, AllowAutoplayToStr(result));
+
   return result;
 }
 

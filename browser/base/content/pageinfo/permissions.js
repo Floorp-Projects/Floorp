@@ -97,7 +97,7 @@ function initRow(aPartId) {
     command.setAttribute("disabled", "true");
   }
 
-  if (scope == SitePermissions.SCOPE_POLICY) {
+  if ([SitePermissions.SCOPE_POLICY, SitePermissions.SCOPE_GLOBAL].includes(scope)) {
     checkbox.setAttribute("disabled", "true");
     command.setAttribute("disabled", "true");
   }

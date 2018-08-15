@@ -37,6 +37,8 @@ class Test(object):
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     lower_is_better = True
     alert_threshold = 2.0
+    perfherder_framework = 'talos'
+    subtest_alerts = False
 
     @classmethod
     def name(cls):
@@ -245,6 +247,7 @@ class PageloaderTest(Test):
     tpcycles = 1  # number of time to run each page
     cycles = None
     timeout = None
+
     keys = ['tpmanifest', 'tpcycles', 'tppagecycles', 'tprender', 'tpchrome',
             'tpmozafterpaint', 'fnbpaint', 'tphero', 'tploadnocache', 'firstpaint',
             'userready', 'testeventmap', 'base_vs_ref', 'mainthread', 'resolution',
@@ -253,7 +256,8 @@ class PageloaderTest(Test):
             'tpscrolltest', 'xperf_counters', 'timeout', 'responsiveness',
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
-            'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile']
+            'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile',
+            'subtest_alerts', 'perfherder_framework']
 
 
 class QuantumPageloadTest(PageloaderTest):
@@ -430,6 +434,8 @@ class damp(PageloaderTest):
     preferences = {'devtools.memory.enabled': True,
                    'addon.test.damp.webserver': '${webserver}'}
     unit = 'ms'
+    subtest_alerts = True
+    perfherder_framework = 'devtools'
 
 
 @register_test()

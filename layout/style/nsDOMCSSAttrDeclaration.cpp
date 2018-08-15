@@ -13,7 +13,6 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozAutoDocUpdate.h"
-#include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
