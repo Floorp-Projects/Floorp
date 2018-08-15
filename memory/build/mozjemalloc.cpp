@@ -207,6 +207,11 @@ getenv(const char* name)
 #endif
 
 #ifndef XP_WIN
+// Newer Linux systems support MADV_FREE, but we're not supporting
+// that properly. bug #1406304.
+#if defined(XP_LINUX) && defined(MADV_FREE)
+#undef MADV_FREE
+#endif
 #ifndef MADV_FREE
 #define MADV_FREE MADV_DONTNEED
 #endif
