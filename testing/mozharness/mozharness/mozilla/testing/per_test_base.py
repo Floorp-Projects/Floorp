@@ -122,6 +122,10 @@ class SingleTestMixin(object):
 
             self.info("Per-test run found test %s (%s)" % (file, entry[0]))
             subsuite_mapping = {
+                # Map (<suite>, <subsuite>): <full-suite>
+                #   <suite> is associated with a manifest, explicitly in code above
+                #   <subsuite> comes from "subsuite" tags in some manifest entries
+                #   <full-suite> is a unique id for the suite, matching desktop mozharness configs
                 ('browser-chrome', 'clipboard'): 'browser-chrome-clipboard',
                 ('chrome', 'clipboard'): 'chrome-clipboard',
                 ('plain', 'clipboard'): 'plain-clipboard',
