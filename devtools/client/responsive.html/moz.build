@@ -20,7 +20,6 @@ DevToolsModules(
     'index.js',
     'manager.js',
     'reducers.js',
-    'responsive-ua.css',
     'setting-onboarding-tooltip.js',
     'store.js',
     'types.js',
