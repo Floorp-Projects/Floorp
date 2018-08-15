@@ -4660,8 +4660,7 @@ nsINode::OwnerDocAsNode() const
 template<typename T>
 inline bool ShouldUseXBLScope(const T* aNode)
 {
-  // TODO(emilio): Is the <svg:use> shadow tree check needed now?
-  return aNode->IsInAnonymousSubtree() && !aNode->IsInSVGUseShadowTree();
+  return aNode->IsInAnonymousSubtree();
 }
 
 inline mozilla::dom::ParentObject
