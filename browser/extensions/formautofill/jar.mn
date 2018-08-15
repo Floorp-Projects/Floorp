@@ -3,9 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [features/formautofill@mozilla.org] chrome.jar:
+% resource formautofill %res/
   res/ (*.jsm)
   res/phonenumberutils/ (phonenumberutils/*.jsm)
   res/addressmetadata/ (addressmetadata/*)
-  res/ (skin/shared/*)
 
+% content formautofill %content/
   content/ (content/*)
+
+% skin formautofill classic/1.0 %skin/linux/ os=LikeUnix
+% skin formautofill classic/1.0 %skin/osx/ os=Darwin
+% skin formautofill classic/1.0 %skin/windows/ os=WINNT
+% skin formautofill-shared classic/1.0 %skin/shared/
+  skin/  (skin/*)

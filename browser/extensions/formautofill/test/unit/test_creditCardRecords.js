@@ -4,14 +4,10 @@
 
 "use strict";
 
+const {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
-
-let FormAutofillStorage;
-add_task(async function setup() {
-  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {}));
-});
 
 const TEST_STORE_FILE_NAME = "test-credit-card.json";
 const COLLECTION_NAME = "creditCards";
