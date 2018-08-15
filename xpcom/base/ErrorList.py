@@ -976,6 +976,7 @@ with modules["DOM_INDEXEDDB"]:
     errors["NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR"] = FAILURE(11)
     errors["NS_ERROR_DOM_INDEXEDDB_VERSION_ERR"] = FAILURE(12)
     errors["NS_ERROR_DOM_INDEXEDDB_RECOVERABLE_ERR"] = FAILURE(1001)
+    errors["NS_ERROR_DOM_INDEXEDDB_KEY_ERR"] = FAILURE(1002)
 
 
 # =======================================================================

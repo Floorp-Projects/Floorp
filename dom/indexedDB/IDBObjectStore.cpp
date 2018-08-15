@@ -2119,7 +2119,7 @@ IDBObjectStore::GetInternal(bool aKeyOnly,
 
   if (!keyRange) {
     // Must specify a key or keyRange for get().
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
     return nullptr;
   }
 
@@ -2185,7 +2185,7 @@ IDBObjectStore::DeleteInternal(JSContext* aCx,
 
   if (!keyRange) {
     // Must specify a key or keyRange for delete().
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_KEY_ERR);
     return nullptr;
   }
 
