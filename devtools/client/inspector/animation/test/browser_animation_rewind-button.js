@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test for following RewindButton component:
 // * element existence
 // * make animations to rewind to zero
@@ -10,9 +12,9 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
+  await removeAnimatedElementsExcept([".delay-negative",
+                                      ".delay-positive"]);
   const { animationInspector, panel } = await openAnimationInspector();
-  await removeAnimatedElementsExcept([".animated",
-                                      ".negative-delay"]);
 
   info("Checking button existence");
   ok(panel.querySelector(".rewind-button"), "Rewind button should exist");
