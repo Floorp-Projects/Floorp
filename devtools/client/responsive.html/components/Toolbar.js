@@ -39,6 +39,7 @@ class Toolbar extends PureComponent {
       onResizeViewport: PropTypes.func.isRequired,
       onRotateViewport: PropTypes.func.isRequired,
       onScreenshot: PropTypes.func.isRequired,
+      onToggleLeftAlignment: PropTypes.func.isRequired,
       onUpdateDeviceModal: PropTypes.func.isRequired,
     };
   }
@@ -64,6 +65,7 @@ class Toolbar extends PureComponent {
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
+      onToggleLeftAlignment,
       onUpdateDeviceModal,
     } = this.props;
 
@@ -126,6 +128,7 @@ class Toolbar extends PureComponent {
         SettingsMenu({
           reloadConditions,
           onChangeReloadCondition,
+          onToggleLeftAlignment,
         }),
         dom.div({ className: "devtools-separator" }),
         dom.button({

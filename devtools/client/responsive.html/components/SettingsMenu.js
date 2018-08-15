@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -16,8 +17,10 @@ loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/me
 class SettingsMenu extends PureComponent {
   static get propTypes() {
     return {
+      leftAlignmentEnabled: PropTypes.bool.isRequired,
       reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       onChangeReloadCondition: PropTypes.func.isRequired,
+      onToggleLeftAlignment: PropTypes.func.isRequired,
     };
   }
 
@@ -28,11 +31,23 @@ class SettingsMenu extends PureComponent {
 
   onToggleSettingMenu(event) {
     const {
+      leftAlignmentEnabled,
       reloadConditions,
       onChangeReloadCondition,
+      onToggleLeftAlignment,
     } = this.props;
 
     const menuItems = [
+      {
+        id: "toggleLeftAlignment",
+        checked: leftAlignmentEnabled,
+        label: getStr("responsive.leftAlignViewport"),
+        type: "checkbox",
+        click: () => {
+          onToggleLeftAlignment();
+        },
+      },
+      "-",
       {
         id: "touchSimulation",
         checked: reloadConditions.touchSimulation,
@@ -70,4 +85,10 @@ class SettingsMenu extends PureComponent {
   }
 }
 
-module.exports = SettingsMenu;
+const mapStateToProps = state => {
+  return {
+    leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
+  };
+};
+
+module.exports = connect(mapStateToProps)(SettingsMenu);
