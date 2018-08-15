@@ -10,27 +10,12 @@ DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
 DIRS += ['locales']
 
 FINAL_TARGET_FILES.features['formautofill@mozilla.org'] += [
-  'api.js',
-  'background.js',
-  'manifest.json',
-  'schema.json',
+  'bootstrap.js'
 ]
 
-if CONFIG['OS_ARCH'] == 'Linux':
-    FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.res += [
-        'skin/linux/autocomplete-item.css',
-        'skin/linux/editDialog.css',
-    ]
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.res += [
-        'skin/osx/autocomplete-item.css',
-        'skin/osx/editDialog.css',
-    ]
-elif CONFIG['OS_ARCH'] == 'WINNT':
-    FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.res += [
-        'skin/windows/autocomplete-item.css',
-        'skin/windows/editDialog.css',
-    ]
+FINAL_TARGET_PP_FILES.features['formautofill@mozilla.org'] += [
+  'install.rdf.in'
+]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 

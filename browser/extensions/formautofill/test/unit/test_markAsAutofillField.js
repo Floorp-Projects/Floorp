@@ -1,5 +1,7 @@
 "use strict";
 
+ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
+
 const TESTCASES = [
   {
     description: "Form containing 8 fields with autocomplete attribute.",
@@ -59,14 +61,9 @@ const TESTCASES = [
 ];
 
 let markedFieldId = [];
-
-add_task(async function setup() {
-  ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
-
-  FormAutofillContent._markAsAutofillField = function(field) {
-    markedFieldId.push(field.id);
-  };
-});
+FormAutofillContent._markAsAutofillField = function(field) {
+  markedFieldId.push(field.id);
+};
 
 TESTCASES.forEach(testcase => {
   add_task(async function() {
