@@ -192,11 +192,6 @@ select > option.divider {
   -moz-user-select: none;
 }
 
-#global-toolbar > .title {
-  border-right: 1px solid var(--theme-splitter-color);
-  padding: 1px 6px 0 2px;
-}
-
 #global-toolbar > .toolbar-button:first-of-type {
   margin-inline-start: 8px;
 }

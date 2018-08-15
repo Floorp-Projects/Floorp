@@ -11,6 +11,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
+const DeviceSelector = createFactory(require("./DeviceSelector"));
 const NetworkThrottlingSelector = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingSelector"));
 const ReloadConditions = createFactory(require("./ReloadConditions"));
 
@@ -25,12 +26,15 @@ class GlobalToolbar extends PureComponent {
       selectedDevice: PropTypes.string.isRequired,
       selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
       touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
+      onChangeDevice: PropTypes.func.isRequired,
       onChangeNetworkThrottling: PropTypes.func.isRequired,
       onChangePixelRatio: PropTypes.func.isRequired,
       onChangeReloadCondition: PropTypes.func.isRequired,
       onChangeTouchSimulation: PropTypes.func.isRequired,
       onExit: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
       onScreenshot: PropTypes.func.isRequired,
+      onUpdateDeviceModal: PropTypes.func.isRequired,
     };
   }
 
@@ -44,12 +48,15 @@ class GlobalToolbar extends PureComponent {
       selectedDevice,
       selectedPixelRatio,
       touchSimulation,
+      onChangeDevice,
       onChangeNetworkThrottling,
       onChangePixelRatio,
       onChangeReloadCondition,
       onChangeTouchSimulation,
       onExit,
+      onResizeViewport,
       onScreenshot,
+      onUpdateDeviceModal,
     } = this.props;
 
     let touchButtonClass = "toolbar-button devtools-button";
@@ -62,12 +69,14 @@ class GlobalToolbar extends PureComponent {
         id: "global-toolbar",
         className: "container",
       },
-      dom.span(
-        {
-          className: "title",
-        },
-        getStr("responsive.title")
-      ),
+      DeviceSelector({
+        devices,
+        selectedDevice,
+        viewportId: 0,
+        onChangeDevice,
+        onResizeViewport,
+        onUpdateDeviceModal,
+      }),
       NetworkThrottlingSelector({
         networkThrottling,
         onChangeNetworkThrottling,
