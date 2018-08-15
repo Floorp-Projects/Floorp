@@ -1,11 +1,31 @@
-#!/bin/sh
+#!/bin/bash
 
-mkdir tmp/
-git clone --no-checkout --depth 1 https://chromium.googlesource.com/chromium/llvm-project/compiler-rt/lib/fuzzer tmp/
-(cd tmp && git reset --hard c2b235ee789fd452ba37c57957cc280fb37f9c52)
+# Optionally get revision from cmd line
+# Changelog: https://reviews.llvm.org/source/compiler-rt/history/compiler-rt/trunk/lib/fuzzer/
+[ $1 ] && REVISION=$1 || REVISION=329438
 
-# Copy only source code and includes
-cp tmp/*.cpp tmp/*.h tmp/*.def .
+mkdir tmp
+svn co -qr $REVISION http://llvm.org/svn/llvm-project/compiler-rt/trunk tmp || exit
+
+if [ $1 ]; then
+  # libFuzzer source files
+  CPPS=($(ls -rv tmp/lib/fuzzer/*.cpp))
+  CPPS=(${CPPS[@]##*/})
+  CPPS=(${CPPS[@]##FuzzerMain*}) # ignored
+
+  # Update SOURCES entries
+  sed -e "/^SOURCES/,/^]/ {/'/d}" -i moz.build
+  for CPP in ${CPPS[@]}; do sed -e "/^SOURCES/ a \\\t'${CPP}'," -i moz.build; done
+
+  # Remove previous files
+  rm *.{cpp,h,def}
+fi
+
+# Copy files
+cp tmp/lib/fuzzer/*.{cpp,h,def} .
 
 # Remove the temporary directory
 rm -Rf tmp/
+
+[ $1 ] && echo "Updated libFuzzer to ${REVISION}"
+
