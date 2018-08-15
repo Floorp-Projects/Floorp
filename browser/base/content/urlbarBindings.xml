@@ -1628,6 +1628,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           this.focus();
           this.textValue = value;
+          // Avoid selecting the url bar text if `search` is called twice in a row
+          this.selectionStart = -1;
 
           options = options || {};
 
