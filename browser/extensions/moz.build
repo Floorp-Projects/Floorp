@@ -8,7 +8,6 @@ DIRS += [
     'activity-stream',
     'aushelper',
     'formautofill',
-    'fxmonitor',
     'onboarding',
     'pdfjs',
     'pocket',
