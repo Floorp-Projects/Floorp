@@ -90,8 +90,6 @@ SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI)
  * @param aOuterContextPaint pattern information from the outer text context
  * @param aTargetPaint where to store the current pattern information
  * @param aFillOrStroke member pointer to the paint we are setting up
- * @param aProperty the frame property descriptor of the fill or stroke paint
- *   server frame
  */
 static void
 SetupInheritablePaint(const DrawTarget* aDrawTarget,
@@ -101,12 +99,11 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
                       SVGContextPaint* aOuterContextPaint,
                       SVGContextPaintImpl::Paint& aTargetPaint,
                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                      SVGObserverUtils::PaintingPropertyDescriptor aProperty,
                       imgDrawingParams& aImgParams)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   nsSVGPaintServerFrame *ps =
-    SVGObserverUtils::GetPaintServer(aFrame, aFillOrStroke, aProperty);
+    SVGObserverUtils::GetPaintServer(aFrame, aFillOrStroke);
 
   if (ps) {
     RefPtr<gfxPattern> pattern =
@@ -167,7 +164,7 @@ SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
 
     SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
                           aOuterContextPaint, mFillPaint, &nsStyleSVG::mFill,
-                          SVGObserverUtils::FillProperty(), aImgParams);
+                          aImgParams);
 
     SetFillOpacity(opacity);
 
@@ -184,9 +181,7 @@ SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
 
     SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
                           aOuterContextPaint, mStrokePaint,
-                          &nsStyleSVG::mStroke,
-                          SVGObserverUtils::StrokeProperty(),
-                          aImgParams);
+                          &nsStyleSVG::mStroke, aImgParams);
 
     SetStrokeOpacity(opacity);
 

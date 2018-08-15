@@ -646,8 +646,7 @@ SVGObserverUtils::GetEffectProperties(nsIFrame* aFrame)
 
 nsSVGPaintServerFrame *
 SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
-                                 nsStyleSVGPaint nsStyleSVG::* aPaint,
-                                 PaintingPropertyDescriptor aType)
+                                 nsStyleSVGPaint nsStyleSVG::* aPaint)
 {
   // If we're looking at a frame within SVG text, then we need to look up
   // to find the right frame to get the painting property off.  We should at
@@ -668,8 +667,12 @@ SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
 
   RefPtr<URLAndReferrerInfo> paintServerURL =
     SVGObserverUtils::GetPaintURI(frame, aPaint);
+  MOZ_ASSERT(aPaint == &nsStyleSVG::mFill || aPaint == &nsStyleSVG::mStroke);
+  PaintingPropertyDescriptor propDesc = (aPaint == &nsStyleSVG::mFill) ?
+                                        SVGObserverUtils::FillProperty() :
+                                        SVGObserverUtils::StrokeProperty();
   nsSVGPaintingProperty *property =
-    SVGObserverUtils::GetPaintingProperty(paintServerURL, frame, aType);
+    SVGObserverUtils::GetPaintingProperty(paintServerURL, frame, propDesc);
   if (!property)
     return nullptr;
   nsIFrame* result = property->GetReferencedFrame();
