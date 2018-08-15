@@ -110,11 +110,10 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 #### Adding a search shortcut
 ```js
 {
-  "event": "ADD_SEARCH_SHORTCUT",
+  "event": "SEARCH_EDIT_ADD",
   "source": "TOP_SITES",
   "action_position": 2,
   "value": {
-    "card_type": "search",
     "search_vendor": "google"
   }
 
@@ -129,14 +128,13 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 }
 ```
 
-#### Editing a search shortcut
+#### Deleting a search shortcut
 ```js
 {
-  "event": "EDIT_SEARCH_SHORTCUT",
+  "event": "SEARCH_EDIT_DELETE",
   "source": "TOP_SITES",
   "action_position": 2,
   "value": {
-    "card_type": "search",
     "search_vendor": "google"
   }
 
@@ -440,6 +438,9 @@ perf: {
 
   // The number of Top Sites that are pinned.
   "topsites_pinned": 3,
+
+  // The number of search shortcut Top Sites.
+  "topsites_search_shortcuts": 2,
 
   // How much longer the data took, in milliseconds, to be ready for display
   // than it would have been in the ideal case. The user currently sees placeholder

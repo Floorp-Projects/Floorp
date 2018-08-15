@@ -1236,6 +1236,16 @@ describe("Top Sites Feed", () => {
       assert.deepEqual(fakeNewTabUtils.pinnedLinks.links[3], {url: "https://dontunpinme.com"});
     });
 
+    it("should updateCustomSearchShortcuts when experiment pref is turned on", async () => {
+      feed.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = false;
+      feed.updateCustomSearchShortcuts = sinon.spy();
+
+      // turn the experiment on
+      feed.onAction({type: at.PREF_CHANGED, data: {name: SEARCH_SHORTCUTS_EXPERIMENT_PREF, value: true}});
+
+      assert.calledOnce(feed.updateCustomSearchShortcuts);
+    });
+
     it("should filter out default top sites that match a hostname of a search shortcut if previously blocked", async () => {
       feed.refreshDefaults("https://amazon.ca");
       fakeNewTabUtils.blockedLinks.links = [{url: "https://amazon.com"}];
