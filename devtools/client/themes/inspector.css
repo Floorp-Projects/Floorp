@@ -19,6 +19,7 @@ window {
 /* The main Inspector panel container. */
 .inspector-responsive-container {
   height: 100vh;
+  overflow: hidden;
 }
 
 /* The main panel layout. This area consists of a toolbar, markup view
