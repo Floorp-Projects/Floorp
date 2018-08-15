@@ -183,7 +183,6 @@ class App extends Component {
     const {
       onAddCustomDevice,
       onBrowserMounted,
-      onChangeDevice,
       onChangeNetworkThrottling,
       onChangePixelRatio,
       onChangeReloadCondition,
@@ -194,7 +193,6 @@ class App extends Component {
       onRemoveCustomDevice,
       onRemoveDeviceAssociation,
       onResizeViewport,
-      onRotateViewport,
       onScreenshot,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
@@ -234,16 +232,12 @@ class App extends Component {
         onScreenshot,
       }),
       Viewports({
-        devices,
         screenshot,
         viewports,
         onBrowserMounted,
-        onChangeDevice,
         onContentResize,
         onRemoveDeviceAssociation,
-        onRotateViewport,
         onResizeViewport,
-        onUpdateDeviceModal,
       }),
       DeviceModal({
         deviceAdderViewportTemplate,

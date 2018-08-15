@@ -264,6 +264,15 @@ select > option.divider {
   padding: 5px;
 }
 
+.viewport-rotate-button {
+  position: absolute;
+  right: 0;
+}
+
+.viewport-rotate-button::before {
+  background-image: url("./images/rotate-viewport.svg");
+}
+
 #viewports {
   /* Make sure left-most viewport is visible when there's horizontal overflow.
      That is, when the horizontal space become smaller than the viewports and a
@@ -289,28 +298,6 @@ select > option.divider {
   border: 1px solid var(--theme-splitter-color);
   box-shadow: var(--rdm-box-shadow);
   position: relative;
-}
-
-/**
- * Viewport Toolbar
- */
-
-.viewport-toolbar {
-  border-width: 0;
-  border-bottom-width: 1px;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  height: 16px;
-}
-
-.viewport-rotate-button {
-  position: absolute;
-  right: 0;
-}
-
-.viewport-rotate-button::before {
-  background-image: url("./images/rotate-viewport.svg");
 }
 
 /**
