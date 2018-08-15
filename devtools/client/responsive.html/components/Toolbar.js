@@ -10,7 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
 const DeviceSelector = createFactory(require("./DeviceSelector"));
-const NetworkThrottlingSelector = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingSelector"));
+const NetworkThrottlingMenu = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingMenu"));
 const SettingsMenu = createFactory(require("./SettingsMenu"));
 const ViewportDimension = createFactory(require("./ViewportDimension"));
 
@@ -104,9 +104,10 @@ class Toolbar extends PureComponent {
           onChangePixelRatio,
         }),
         dom.div({ className: "devtools-separator" }),
-        NetworkThrottlingSelector({
+        NetworkThrottlingMenu({
           networkThrottling,
           onChangeNetworkThrottling,
+          useTopLevelWindow: true,
         }),
         dom.div({ className: "devtools-separator" }),
         dom.button({
