@@ -57,7 +57,7 @@ class ViewportDimension extends Component {
    * and false otherwise.
    */
   isInputValid(value) {
-    return /^\d{3,4}$/.test(value) && parseInt(value, 10) >= MIN_VIEWPORT_DIMENSION;
+    return /^\d{2,4}$/.test(value) && parseInt(value, 10) >= MIN_VIEWPORT_DIMENSION;
   }
 
   onInputBlur() {
