@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from setuptools import setup
 
-PACKAGE_VERSION = '1.0.0'
+PACKAGE_VERSION = '0.26'
 
 setup(name='mozprocess',
       version=PACKAGE_VERSION,
@@ -17,8 +17,7 @@ setup(name='mozprocess',
                    'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
                    'Natural Language :: English',
                    'Operating System :: OS Independent',
-                   'Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 3.5'
+                   'Programming Language :: Python',
                    'Topic :: Software Development :: Libraries :: Python Modules',
                    ],
       keywords='mozilla',
