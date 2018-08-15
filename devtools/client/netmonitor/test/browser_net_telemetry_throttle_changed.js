@@ -25,7 +25,7 @@ add_task(async function() {
   const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
-  document.querySelector("#global-network-throttling-selector").click();
+  document.getElementById("network-throttling-menu").click();
   monitor.panelWin.parent.document.querySelector("menuitem[label='GPRS']").click();
   await waitFor(monitor.panelWin.api, EVENTS.THROTTLING_CHANGED);
 
