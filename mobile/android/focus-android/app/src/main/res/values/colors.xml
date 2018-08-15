@@ -65,7 +65,7 @@
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
-    <color name="dialogAccent">@color/photonBlue50</color>
+    <color name="dialogAccent">@color/photonMagenta70</color>
 
     <color name="colorSession">@color/photonInk80</color>
     <color name="colorActiveSession">#353852</color>
@@ -102,5 +102,5 @@
     <color name="home_screen_dialog_text">@color/photonGrey10</color>
 
     <color name="home_screen_dialog_warning_bg">#353852</color>
-    <color name="home_screen_dialog__warning_text">#99f9f9fa</color>
+    <color name="home_screen_dialog_warning_text">#96f9f9fa</color>
 </resources>

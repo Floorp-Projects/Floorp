@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.internal.NavigationMenuView;
 import android.support.design.widget.NavigationView;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
@@ -90,6 +91,12 @@ public class WebContextMenu {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         final NavigationView menu = (NavigationView) view.findViewById(R.id.context_menu);
+        menu.setElevation(0);
+        NavigationMenuView navigationMenuView = (NavigationMenuView) menu.getChildAt(0);
+        if (navigationMenuView != null) {
+            navigationMenuView.setVerticalScrollBarEnabled(false);
+        }
+
         setupMenuForHitTarget(dialog, menu, callback, hitTarget, context);
 
         final TextView warningView = (TextView) view.findViewById(R.id.warning);

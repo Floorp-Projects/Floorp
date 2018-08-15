@@ -69,8 +69,8 @@
     <LinearLayout
         android:id="@+id/homescreen_dialog_warning_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/home_screen_dialog_warning_bg"
+        android:layout_height="68dp"
+        android:background="@drawable/dialog_warning_background"
         android:orientation="horizontal"
         android:paddingBottom="16dp"
         android:paddingEnd="@dimen/dialogHorizontalPadding"
@@ -80,6 +80,7 @@
 
         <ImageView
             android:id="@+id/homescreen_dialog_block_icon"
+            android:layout_gravity="center_vertical"
             android:layout_width="24dp"
             android:layout_height="24dp" />
 
@@ -88,10 +89,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:paddingStart="10dp"
+            android:paddingStart="16dp"
             android:text="@string/dialog_addtohomescreen_tracking_protection"
-            android:textColor="@color/home_screen_dialog__warning_text"
-            android:textSize="14dp"
+            android:textColor="@color/home_screen_dialog_warning_text"
+            android:textSize="14sp"
             android:fontFamily="@string/font_roboto_regular" />
     </LinearLayout>
 

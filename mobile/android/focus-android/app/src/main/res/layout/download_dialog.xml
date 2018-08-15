@@ -68,9 +68,9 @@
             android:id="@+id/download_dialog_warning"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#ff262626"
-            android:textColor="#ff8b8b8b"
-            android:textSize="12sp"
+            android:background="@color/images_removal_warning_background_color"
+            android:textColor="@color/home_screen_dialog_warning_text"
+            android:textSize="14sp"
             android:padding="18dp" />
 
 </LinearLayout>
