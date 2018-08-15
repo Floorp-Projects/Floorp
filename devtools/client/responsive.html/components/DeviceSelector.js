@@ -45,8 +45,8 @@ class DeviceSelector extends PureComponent {
     for (const type of devices.types) {
       for (const device of devices[type]) {
         if (device.name === target.value) {
-          onResizeViewport(device.width, device.height);
-          onChangeDevice(device, type);
+          onResizeViewport(viewportId, device.width, device.height);
+          onChangeDevice(viewportId, device, type);
           return;
         }
       }
