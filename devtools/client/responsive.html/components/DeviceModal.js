@@ -159,7 +159,7 @@ class DeviceModal extends PureComponent {
         },
         dom.button({
           id: "device-close-button",
-          className: "toolbar-button devtools-button",
+          className: "devtools-button",
           onClick: () => onUpdateDeviceModal(false),
         }),
         dom.div(
@@ -187,7 +187,7 @@ class DeviceModal extends PureComponent {
                 let removeDeviceButton;
                 if (type == "custom") {
                   removeDeviceButton = dom.button({
-                    className: "device-remove-button toolbar-button devtools-button",
+                    className: "device-remove-button devtools-button",
                     onClick: () => onRemoveCustomDevice(device),
                   });
                 }
