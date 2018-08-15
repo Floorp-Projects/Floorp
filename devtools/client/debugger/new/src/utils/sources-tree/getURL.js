@@ -48,8 +48,7 @@ function _getURL(source, defaultDomain) {
   const {
     pathname,
     protocol,
-    host,
-    path
+    host
   } = (0, _url.parse)(url);
   const filename = (0, _devtoolsModules.getUnicodeUrlPath)(getFilenameFromPath(pathname));
 
@@ -61,7 +60,7 @@ function _getURL(source, defaultDomain) {
     case "moz-extension:":
     case "resource:":
       return { ...def,
-        path,
+        path: pathname,
         filename,
         group: `${protocol}//${host || ""}`
       };
@@ -69,7 +68,7 @@ function _getURL(source, defaultDomain) {
     case "webpack:":
     case "ng:":
       return { ...def,
-        path: path,
+        path: pathname,
         filename,
         group: `${protocol}//`
       };
@@ -93,7 +92,7 @@ function _getURL(source, defaultDomain) {
       if (pathname && pathname.startsWith("/")) {
         // use file protocol for a URL like "/foo/bar.js"
         return { ...def,
-          path: path,
+          path: pathname,
           filename,
           group: "file://"
         };
@@ -117,7 +116,7 @@ function _getURL(source, defaultDomain) {
   }
 
   return { ...def,
-    path: path,
+    path: pathname,
     group: protocol ? `${protocol}//` : "",
     filename
   };
