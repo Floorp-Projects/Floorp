@@ -648,7 +648,9 @@ this.TopSitesFeed = class TopSitesFeed {
             this.refresh({broadcast: true});
             break;
           case SEARCH_SHORTCUTS_EXPERIMENT:
-            if (!action.data.value) {
+            if (action.data.value) {
+              this.updateCustomSearchShortcuts();
+            } else {
               this.disableSearchImprovements();
             }
             this.refresh({broadcast: true});
