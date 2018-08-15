@@ -157,6 +157,7 @@ struct CustomElementDefinition
 
   CustomElementDefinition(nsAtom* aType,
                           nsAtom* aLocalName,
+                          int32_t aNamespaceID,
                           Function* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
                           UniquePtr<LifecycleCallbacks>&& aCallbacks);
@@ -167,6 +168,9 @@ struct CustomElementDefinition
 
   // The localname to (e.g. <button is=type> -- this would be button).
   RefPtr<nsAtom> mLocalName;
+
+  // The namespace for this custom element
+  int32_t mNamespaceID;
 
   // The custom element constructor.
   RefPtr<CustomElementConstructor> mConstructor;
@@ -399,7 +403,7 @@ public:
    * https://html.spec.whatwg.org/#look-up-a-custom-element-definition
    */
   CustomElementDefinition* LookupCustomElementDefinition(
-    nsAtom* aNameAtom, nsAtom* aTypeAtom);
+    nsAtom* aNameAtom, int32_t aNameSpaceID, nsAtom* aTypeAtom);
 
   CustomElementDefinition* LookupCustomElementDefinition(
     JSContext* aCx, JSObject *aConstructor) const;
@@ -554,6 +558,8 @@ private:
     private:
       CustomElementRegistry* mRegistry;
   };
+
+  int32_t InferNamespace(JSContext* aCx, JS::Handle<JSObject*> constructor);
 
 public:
   nsISupports* GetParentObject() const;

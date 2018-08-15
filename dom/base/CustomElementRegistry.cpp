@@ -10,6 +10,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
+#include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/DocGroup.h"
@@ -356,6 +357,7 @@ CustomElementRegistry::RunCustomElementCreationCallback::Run()
 
 CustomElementDefinition*
 CustomElementRegistry::LookupCustomElementDefinition(nsAtom* aNameAtom,
+                                                     int32_t aNameSpaceID,
                                                      nsAtom* aTypeAtom)
 {
   CustomElementDefinition* data = mCustomDefinitions.GetWeak(aTypeAtom);
@@ -373,7 +375,7 @@ CustomElementRegistry::LookupCustomElementDefinition(nsAtom* aNameAtom,
     }
   }
 
-  if (data && data->mLocalName == aNameAtom) {
+  if (data && data->mLocalName == aNameAtom && data->mNamespaceID == aNameSpaceID) {
     return data;
   }
 
@@ -688,6 +690,24 @@ CustomElementRegistry::GetDocGroup() const
   return mWindow ? mWindow->GetDocGroup() : nullptr;
 }
 
+int32_t
+CustomElementRegistry::InferNamespace(JSContext* aCx,
+                                      JS::Handle<JSObject*> constructor)
+{
+  JSObject* XULConstructor = XULElement_Binding::GetConstructorObject(aCx);
+
+  JS::Rooted<JSObject*> proto(aCx, constructor);
+  while (proto) {
+    if (proto == XULConstructor) {
+      return kNameSpaceID_XUL;
+    }
+
+    JS_GetPrototype(aCx, proto, &proto);
+  }
+
+  return kNameSpaceID_XHTML;
+}
+
 // https://html.spec.whatwg.org/multipage/scripting.html#element-definition
 void
 CustomElementRegistry::Define(JSContext* aCx,
@@ -720,12 +740,13 @@ CustomElementRegistry::Define(JSContext* aCx,
     return;
   }
 
+  int32_t nameSpaceID = InferNamespace(aCx, constructor);
+
   /**
    * 2. If name is not a valid custom element name, then throw a "SyntaxError"
    *    DOMException and abort these steps.
    */
   nsIDocument* doc = mWindow->GetExtantDoc();
-  uint32_t nameSpaceID = doc ? doc->GetDefaultNamespaceID() : kNameSpaceID_XHTML;
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
   if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
@@ -945,6 +966,7 @@ CustomElementRegistry::Define(JSContext* aCx,
   RefPtr<CustomElementDefinition> definition =
     new CustomElementDefinition(nameAtom,
                                 localNameAtom,
+                                nameSpaceID,
                                 &aFunctionConstructor,
                                 std::move(observedAttributes),
                                 std::move(callbacksHolder));
@@ -1471,11 +1493,13 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CustomElementDefinition, Release)
 
 CustomElementDefinition::CustomElementDefinition(nsAtom* aType,
                                                  nsAtom* aLocalName,
+                                                 int32_t aNamespaceID,
                                                  Function* aConstructor,
                                                  nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
                                                  UniquePtr<LifecycleCallbacks>&& aCallbacks)
   : mType(aType),
     mLocalName(aLocalName),
+    mNamespaceID(aNamespaceID),
     mConstructor(new CustomElementConstructor(aConstructor)),
     mObservedAttributes(std::move(aObservedAttributes)),
     mCallbacks(std::move(aCallbacks))

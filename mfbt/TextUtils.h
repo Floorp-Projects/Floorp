@@ -48,6 +48,21 @@ IsAscii(Char aChar)
 }
 
 /**
+ * Returns true iff |aChar| matches Ascii Whitespace.
+ *
+ * This function is intended to match the Infra standard
+ * (https://infra.spec.whatwg.org/#ascii-whitespace)
+ */
+template<typename Char>
+constexpr bool
+IsAsciiWhitespace(Char aChar)
+{
+  using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
+  auto uc = static_cast<UnsignedChar>(aChar);
+  return uc == 0x9 || uc == 0xA || uc == 0xC || uc == 0xD || uc == 0x20;
+}
+
+/**
  * Returns true iff |aChar| matches [a-z].
  *
  * This function is basically what you thought islower was, except its behavior

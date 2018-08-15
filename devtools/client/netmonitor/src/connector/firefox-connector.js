@@ -442,6 +442,8 @@ class FirefoxConnector {
         latency,
       });
     }
+
+    this.emit(EVENTS.THROTTLING_CHANGED, { profile });
   }
 
   /**
