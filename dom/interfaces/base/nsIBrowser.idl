@@ -66,4 +66,30 @@ interface nsIBrowser : nsISupports
    * Close the browser (usually means to remove a tab).
    */
   void closeBrowser();
+
+  /**
+   * A browser can change from remote to non-remote and vice versa.
+   * For example, when navigating from an in-process chrome page to
+   * a web page, this value would change from false to true.
+   */
+  readonly attribute boolean isRemoteBrowser;
+
+  /**
+   * Called by the child to inform the parent that a command update has occurred
+   * and the supplied set of commands are now enabled and disabled.
+   *
+   * @param action command updater action
+   * @param enabledLength length of enabledCommands array
+   * @param enabledCommands commands to enable
+   * @param disabledLength length of disabledCommands array
+   * @param disabledCommand commands to disable
+   */
+  void enableDisableCommandsRemoteOnly(in AString action,
+                                       in unsigned long enabledLength,
+                                       [array, size_is(enabledLength)] in string enabledCommands,
+                                       in unsigned long disabledLength,
+                                       [array, size_is(disabledLength)] in string disabledCommands);
+
+  readonly attribute nsIPrincipal contentPrincipal;
+
 };

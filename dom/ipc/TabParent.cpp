@@ -65,7 +65,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIXULWindow.h"
-#include "nsIRemoteBrowser.h"
 #include "nsViewManager.h"
 #include "nsVariant.h"
 #include "nsIWidget.h"
@@ -2060,8 +2059,12 @@ TabParent::RecvEnableDisableCommands(const nsString& aAction,
                                      nsTArray<nsCString>&& aEnabledCommands,
                                      nsTArray<nsCString>&& aDisabledCommands)
 {
-  nsCOMPtr<nsIRemoteBrowser> remoteBrowser = do_QueryInterface(mFrameElement);
-  if (remoteBrowser) {
+  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
+  bool isRemoteBrowser = false;
+  if (browser) {
+    browser->GetIsRemoteBrowser(&isRemoteBrowser);
+  }
+  if (isRemoteBrowser) {
     UniquePtr<const char*[]> enabledCommands, disabledCommands;
 
     if (aEnabledCommands.Length()) {
@@ -2078,9 +2081,9 @@ TabParent::RecvEnableDisableCommands(const nsString& aAction,
       }
     }
 
-    remoteBrowser->EnableDisableCommands(aAction,
-                                         aEnabledCommands.Length(), enabledCommands.get(),
-                                         aDisabledCommands.Length(), disabledCommands.get());
+    browser->EnableDisableCommandsRemoteOnly(aAction,
+                                             aEnabledCommands.Length(), enabledCommands.get(),
+                                             aDisabledCommands.Length(), disabledCommands.get());
   }
 
   return IPC_OK();
