@@ -134,9 +134,6 @@ nsLayoutStatics::Initialize()
 
   ContentParent::StartUp();
 
-  // Register static atoms. Note that nsGkAtoms must be initialized earlier
-  // than here, so it's done in NS_InitAtomTable() instead.
-  nsCSSAnonBoxes::RegisterStaticAtoms();
   nsCSSKeywords::AddRefTable();
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
@@ -145,6 +142,7 @@ nsLayoutStatics::Initialize()
 
 #ifdef DEBUG
   nsCSSPseudoElements::AssertAtoms();
+  nsCSSAnonBoxes::AssertAtoms();
 #endif
 
   StartupJSEnvironment();

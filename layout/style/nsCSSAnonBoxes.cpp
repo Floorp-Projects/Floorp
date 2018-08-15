@@ -9,51 +9,22 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCSSAnonBoxes.h"
+#include "nsGkAtomConsts.h"
 
 using namespace mozilla;
 
-namespace mozilla {
-namespace detail {
-
-MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
-extern constexpr CSSAnonBoxAtoms gCSSAnonBoxAtoms = {
-  #define CSS_ANON_BOX(name_, value_) \
-    NS_STATIC_ATOM_INIT_STRING(value_)
-  #include "nsCSSAnonBoxList.h"
-  #undef CSS_ANON_BOX
-  {
-    #define CSS_ANON_BOX(name_, value_) \
-      NS_STATIC_ATOM_INIT_ATOM( \
-        nsICSSAnonBoxPseudo, CSSAnonBoxAtoms, name_, value_)
-    #include "nsCSSAnonBoxList.h"
-    #undef CSS_ANON_BOX
-  }
-};
-MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
-
-} // namespace detail
-} // namespace mozilla
-
-// Non-inheriting boxes must come first in nsCSSAnonBoxList.h so that
-// `NonInheriting` values can index into this array and other similar arrays.
-const nsStaticAtom* const nsCSSAnonBoxes::sAtoms =
-  mozilla::detail::gCSSAnonBoxAtoms.mAtoms;
-
-#define CSS_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM_DEFN_PTR( \
-    nsICSSAnonBoxPseudo, mozilla::detail::CSSAnonBoxAtoms, \
-    mozilla::detail::gCSSAnonBoxAtoms, nsCSSAnonBoxes, name_)
-#include "nsCSSAnonBoxList.h"
-#undef CSS_ANON_BOX
-
-void nsCSSAnonBoxes::RegisterStaticAtoms()
+static nsStaticAtom*
+GetAtomBase()
 {
-  NS_RegisterStaticAtoms(sAtoms, sAtomsLen);
+  return const_cast<nsStaticAtom*>(
+      nsGkAtoms::GetAtomByIndex(kAtomIndex_AnonBoxes));
 }
 
-bool nsCSSAnonBoxes::IsAnonBox(nsAtom *aAtom)
+bool
+nsCSSAnonBoxes::IsAnonBox(nsAtom* aAtom)
 {
-  return nsStaticAtomUtils::IsMember(aAtom, sAtoms, sAtomsLen);
+  return nsStaticAtomUtils::IsMember(aAtom, GetAtomBase(),
+                                     kAtomCount_AnonBoxes);
 }
 
 #ifdef MOZ_XUL
@@ -70,7 +41,28 @@ nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo)
 nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 {
   MOZ_ASSERT(IsNonInheritingAnonBox(aPseudo));
-  Maybe<uint32_t> index = nsStaticAtomUtils::Lookup(aPseudo, sAtoms, sAtomsLen);
+  Maybe<uint32_t> index =
+    nsStaticAtomUtils::Lookup(aPseudo, GetAtomBase(), kAtomCount_AnonBoxes);
   MOZ_RELEASE_ASSERT(index.isSome());
   return static_cast<NonInheriting>(*index);
 }
+
+#ifdef DEBUG
+/* static */ void
+nsCSSAnonBoxes::AssertAtoms()
+{
+  nsStaticAtom* base = GetAtomBase();
+  size_t index = 0;
+#define CSS_ANON_BOX(name_, value_)                                  \
+  {                                                                  \
+    RefPtr<nsAtom> atom = NS_Atomize(value_);                        \
+    MOZ_ASSERT(atom == nsGkAtoms::AnonBox_##name_,                   \
+               "Static atom for " #name_ " has incorrect value");    \
+    MOZ_ASSERT(atom == &base[index],                                 \
+               "Static atom for " #name_ " not at expected index");  \
+    ++index;                                                         \
+  }
+#include "nsCSSAnonBoxList.h"
+#undef CSS_ANON_BOX
+}
+#endif
