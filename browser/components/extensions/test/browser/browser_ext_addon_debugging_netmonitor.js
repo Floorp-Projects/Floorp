@@ -2,10 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-// There are shutdown issues for which multiple rejections are left uncaught.
-// See bug 1018184 for resolving these issues.
-PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
-
 ChromeUtils.defineModuleGetter(this, "BrowserToolboxProcess",
                                "resource://devtools/client/framework/ToolboxProcess.jsm");
 
@@ -115,8 +111,6 @@ add_task(async function test_addon_debugging_netmonitor_panel() {
     // Call a function defined in the target extension to make assertions
     // on the network requests collected by the netmonitor panel.
     await jsterm.execute(`testNetworkRequestReceived(${JSON.stringify(requests)});`);
-
-    await toolbox.destroy();
     /* eslint-enable no-undef */
   };
 
@@ -125,8 +119,11 @@ add_task(async function test_addon_debugging_netmonitor_panel() {
     addonID: EXTENSION_ID,
   });
 
-  let onToolboxClose = browserToolboxProcess.once("close");
   await extension.awaitFinish("netmonitor_request_logged");
+
+  let onToolboxClose = browserToolboxProcess.once("close");
+  await browserToolboxProcess.close();
+
   await onToolboxClose;
 
   info("Addon Toolbox closed");

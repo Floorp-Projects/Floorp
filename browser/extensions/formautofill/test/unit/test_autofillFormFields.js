@@ -5,11 +5,8 @@
 
 "use strict";
 
-let MasterPassword;
-add_task(async function setup() {
-  ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
-  ({MasterPassword} = ChromeUtils.import("resource://formautofill/MasterPassword.jsm", {}));
-});
+ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
+let {MasterPassword} = ChromeUtils.import("resource://formautofill/MasterPassword.jsm", {});
 
 const TESTCASES = [
   {

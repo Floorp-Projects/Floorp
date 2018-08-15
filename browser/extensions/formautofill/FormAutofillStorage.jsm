@@ -1790,10 +1790,6 @@ FormAutofillStorage.prototype = {
   _saveImmediately() {
     return this._store._save();
   },
-
-  _finalize() {
-    return this._store.finalize();
-  },
 };
 
 // The singleton exposed by this module.
