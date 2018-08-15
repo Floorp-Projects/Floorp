@@ -57,6 +57,11 @@ body,
   border: 1px solid var(--theme-splitter-color);
 }
 
+.devtools-separator {
+  height: 100%;
+  margin: 0 1px;
+}
+
 .toolbar-button {
   margin: 0;
   padding: 0;
@@ -176,7 +181,6 @@ select > option.divider {
 
 .toolbar-dropdown {
   background-position-x: right 5px;
-  border-right: 1px solid var(--theme-splitter-color);
   padding-right: 15px;
 }
 
@@ -202,10 +206,6 @@ select > option.divider {
   width: 12px;
   height: 12px;
   background-size: cover;
-}
-
-#device-selector {
-  border-right: none;
 }
 
 #toolbar-center-controls,
