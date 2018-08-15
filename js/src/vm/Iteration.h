@@ -310,7 +310,7 @@ struct NativeIterator
         prev_ = nullptr;
     }
 
-    static NativeIterator* allocateSentinel(JSContext* maybecx);
+    static NativeIterator* allocateSentinel(JSContext* cx);
 
     void trace(JSTracer* trc);
 
