@@ -2,12 +2,6 @@ import os
 
 platform = "win64"
 
-download_config = {
-        "target.zip": os.environ.get("SIGNED_ZIP"),
-        "setup.exe": os.environ.get("SIGNED_SETUP"),
-        "mar.exe": os.environ.get("UNSIGNED_MAR"),
-    }
-
 repackage_config = [[
         "installer",
         "--package-name", "firefox",
@@ -25,8 +19,6 @@ repackage_config = [[
 
 config = {
     "locale": os.environ.get("LOCALE"),
-
-    "download_config": download_config,
 
     "repackage_config": repackage_config,
 

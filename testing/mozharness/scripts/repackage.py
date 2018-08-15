@@ -23,25 +23,17 @@ class Repackage(BaseScript):
             **script_kwargs
         )
 
-    def download_input(self):
-        config = self.config
+    def setup(self):
         dirs = self.query_abs_dirs()
 
-        input_dir = dirs['abs_input_dir']
-
-        for path, url in config["download_config"].items():
-            status = self.download_file(url=url,
-                                        file_name=path,
-                                        parent_dir=input_dir)
-            if not status:
-                self.fatal("Unable to fetch signed input from %s" % url)
-
-            if 'mar' in path:
-                # Ensure mar is executable
-                self.chmod(os.path.join(input_dir, path), 0755)
-
-    def setup(self):
         self._run_tooltool()
+
+        mar_path = os.path.join(dirs['abs_input_dir'], 'mar')
+        if self._is_windows():
+            mar_path += '.exe'
+        if mar_path:
+            self.chmod(mar_path, 0755)
+
         if self.config.get("run_configure", True):
             self._get_mozconfig()
             self._run_configure()
@@ -55,7 +47,10 @@ class Repackage(BaseScript):
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
         dirs['abs_mozilla_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
-        dirs['abs_input_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'inputs')
+        dirs['abs_input_dir'] = os.path.join(
+            abs_dirs['base_work_dir'],
+            os.environ.get('MOZ_FETCHES_DIR', 'fetches'),
+        )
         output_dir_suffix = []
         if config.get('locale'):
             output_dir_suffix.append(config['locale'])

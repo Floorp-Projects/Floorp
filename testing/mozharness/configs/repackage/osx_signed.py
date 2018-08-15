@@ -5,11 +5,6 @@ config = {
 
     "locale": os.environ.get("LOCALE"),
 
-    "download_config": {
-        "target.tar.gz": os.environ.get("SIGNED_INPUT"),
-        "mar": os.environ.get("UNSIGNED_MAR"),
-    },
-
     "repackage_config": [[
         "dmg",
         "-i", "{abs_input_dir}/target.tar.gz",
