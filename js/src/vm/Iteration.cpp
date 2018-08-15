@@ -656,12 +656,12 @@ NativeIterator::NativeIterator()
 }
 
 NativeIterator*
-NativeIterator::allocateSentinel(JSContext* maybecx)
+NativeIterator::allocateSentinel(JSContext* cx)
 {
     NativeIterator* ni = js_new<NativeIterator>();
     if (!ni) {
-        if (maybecx)
-            ReportOutOfMemory(maybecx);
+        ReportOutOfMemory(cx);
+        return nullptr;
     }
 
     return ni;
