@@ -17,8 +17,6 @@ include pagination/reftest.list
 # usage accordingly:
 == flexbox-align-content-horizrev-001.xhtml flexbox-align-content-horizrev-001-ref.xhtml
 == flexbox-align-content-vertrev-001.xhtml flexbox-align-content-vertrev-001-ref.xhtml
-== flexbox-justify-content-horizrev-001.xhtml flexbox-justify-content-horizrev-001-ref.xhtml
-== flexbox-justify-content-vertrev-001.xhtml flexbox-justify-content-vertrev-001-ref.xhtml
 
 # Tests for cross-axis alignment (align-self / align-items properties)
 fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
