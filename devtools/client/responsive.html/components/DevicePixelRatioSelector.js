@@ -6,14 +6,14 @@
 
 "use strict";
 
-const { PureComponent} = require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("../types");
 const { getStr, getFormatStr } = require("../utils/l10n");
-const labelForOption = value => getFormatStr("responsive.devicePixelRatioOption", value);
+const Types = require("../types");
 
+const labelForOption = value => getFormatStr("responsive.devicePixelRatioOption", value);
 const PIXEL_RATIO_PRESET = [1, 2, 3];
 
 const createVisibleOption = value => {
