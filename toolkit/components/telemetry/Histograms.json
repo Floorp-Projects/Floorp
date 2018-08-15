@@ -13919,5 +13919,20 @@
     "high": 1000,
     "n_buckets": 50,
     "description": "WebRender render time in milliseconds"
+  },
+  "AUDIO_TRACK_SILENCE_PROPORTION": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "cpearce@mozilla.com",
+      "nohlmeier@mozilla.com"
+    ],
+    "expires_in_version": "68",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 10,
+    "bug_numbers": [1482259],
+    "description": "In order to know how many silent audio track in the web comparing to other normal media, we record the silence proportion of audio track of media element. The range of value is from 0% - 100%.",
+    "releaseChannelCollection": "opt-out"
   }
 }
