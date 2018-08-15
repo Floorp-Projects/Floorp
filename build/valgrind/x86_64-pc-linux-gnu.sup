@@ -510,6 +510,23 @@
 ##############################################################################
 
 
+# Another suppression for Stylo, August 2018.  See bug 1479055.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at style::[..]::clip_path::cascade_property (gecko_properties.rs:17152)
+#    by style::properties::cascade_rules (properties.rs:83642)
+#    by [..]::cascade_style_and_visited (properties.rs:83129)
+#    by [..]::cascade_primary_style (style/style_resolver.rs:216)
+{
+   Bug 1479055: style::properties::longhands::clip_path::cascade_property
+   Memcheck:Cond
+   fun:_ZN5style10properties9longhands9clip_path16cascade_property*
+   fun:_ZN5style10properties13cascade_rules*
+   fun:_ZN109_$LT$style*style_resolver*cascade_style_and_visited*
+   fun:_ZN109_$LT$style*cascade_primary_style*
+}
+
+
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
 #  See bug 1248365.
