@@ -11,11 +11,11 @@ namespace detail {
 
 MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 extern constexpr GkAtoms gGkAtoms = {
-  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_INIT_STRING(value_)
+  #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_INIT_STRING(value_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
   {
-    #define GK_ATOM(name_, value_) \
+    #define GK_ATOM(name_, value_, type_) \
       NS_STATIC_ATOM_INIT_ATOM(nsStaticAtom, GkAtoms, name_, value_)
     #include "nsGkAtomList.h"
     #undef GK_ATOM
@@ -28,9 +28,9 @@ MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 
 const nsStaticAtom* const nsGkAtoms::sAtoms = mozilla::detail::gGkAtoms.mAtoms;
 
-#define GK_ATOM(name_, value_) \
+#define GK_ATOM(name_, value_, type_) \
   NS_STATIC_ATOM_DEFN_PTR( \
-    nsStaticAtom, mozilla::detail::GkAtoms, mozilla::detail::gGkAtoms, \
+    type_, mozilla::detail::GkAtoms, mozilla::detail::gGkAtoms, \
     nsGkAtoms, name_)
 #include "nsGkAtomList.h"
 #undef GK_ATOM

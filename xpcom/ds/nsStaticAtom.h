@@ -226,8 +226,8 @@
 // Definition of the pointer to the static atom. `type_` must be `nsStaticAtom`
 // or a subclass thereof.
 #define NS_STATIC_ATOM_DEFN_PTR(type_, detailClass_, detailObj_, class_, name_) \
-  type_* class_::name_ = const_cast<type_*>( \
-    &detailObj_.mAtoms[static_cast<size_t>(detailClass_::Atoms::name_)]);
+  type_* class_::name_ = const_cast<type_*>(static_cast<const type_*>( \
+    &detailObj_.mAtoms[static_cast<size_t>(detailClass_::Atoms::name_)]));
 
 // Register an array of static atoms with the atom table.
 void
