@@ -738,6 +738,19 @@ bool Gecko_IsInServoTraversal();
 // Returns true if we're currently on the main thread.
 bool Gecko_IsMainThread();
 
+// Media feature helpers.
+mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(nsIDocument*);
+uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument*);
+void Gecko_MediaFeatures_GetDeviceSize(nsIDocument*, nscoord* width, nscoord* height);
+float Gecko_MediaFeatures_GetResolution(nsIDocument*);
+bool Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument*);
+float Gecko_MediaFeatures_GetDevicePixelRatio(nsIDocument*);
+bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument*,
+                                         nsAtom* metric,
+                                         bool is_accessible_from_content);
+bool Gecko_MediaFeatures_IsResourceDocument(nsIDocument*);
+nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument*);
+
 } // extern "C"
 
 #endif // mozilla_ServoBindings_h
