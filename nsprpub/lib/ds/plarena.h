@@ -95,13 +95,24 @@ struct PLArenaPool {
 
 #if defined(PL_SANITIZE_ADDRESS)
 
+#if defined(_MSC_VER)
+/* We can't use dllimport due to DLL linkage mismatch with
+ * sanitizer/asan_interface.h.
+ */
+#define PL_ASAN_VISIBILITY(type_) type_
+#else
+#define PL_ASAN_VISIBILITY(type_) PR_IMPORT(type_)
+#endif
+
 /* These definitions are usually provided through the
  * sanitizer/asan_interface.h header installed by ASan.
  * See https://github.com/google/sanitizers/wiki/AddressSanitizerManualPoisoning
  */
 
-PR_IMPORT(void) __asan_poison_memory_region(void const volatile *addr, size_t size);
-PR_IMPORT(void) __asan_unpoison_memory_region(void const volatile *addr, size_t size);
+PL_ASAN_VISIBILITY(void) __asan_poison_memory_region(
+    void const volatile *addr, size_t size);
+PL_ASAN_VISIBILITY(void) __asan_unpoison_memory_region(
+    void const volatile *addr, size_t size);
 
 #define PL_MAKE_MEM_NOACCESS(addr, size) \
     __asan_poison_memory_region((addr), (size))
