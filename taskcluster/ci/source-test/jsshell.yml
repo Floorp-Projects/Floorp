@@ -8,47 +8,57 @@ job-defaults:
         by-platform:
             linux64.*:
                 env:
-                    SHELL: /bin/bash
-                    JSSHELL: /home/cltbld/fetches/js
+                    by-shell:
+                        sm:
+                            SHELL: /bin/bash
+                            JSSHELL: /home/cltbld/fetches/js
+                        v8:
+                            SHELL: /bin/bash
+                            JSSHELL: /home/cltbld/fetches/d8/d8
                 max-run-time: 1800
     treeherder:
         kind: test
         tier: 2
     run:
-        using: mach
+        using: run-task
         workdir: /home/cltbld
+        command: >
+            cd $GECKO_PATH &&
+            ./mach jsshell-bench --perfherder={shell} --binary=$JSSHELL {test}
     run-on-projects: ['mozilla-central', 'try']
     fetches:
         build:
             - target.jsshell.zip
+        fetch:
+            - d8
 
 bench-ares6:
     description: Ares6 JavaScript shell benchmark suite
+    shell: ['sm', 'v8']
+    test: ares6
     treeherder:
-        symbol: js-bench(ares6)
-    run:
-        mach: jsshell-bench --binary $JSSHELL --perfherder ares6
+        symbol: ares6
 
 bench-sixspeed:
     description: Six-Speed JavaScript shell benchmark suite
+    shell: ['sm', 'v8']
+    test: six-speed
     treeherder:
-        symbol: js-bench(6speed)
-    run:
-        mach: jsshell-bench --binary $JSSHELL --perfherder six-speed
+        symbol: 6speed
 
 bench-sunspider:
     description: SunSpider JavaScript shell benchmark suite
+    shell: ['sm']
+    test: sunspider
     treeherder:
-        symbol: js-bench(sunspider)
-    run:
-        mach: jsshell-bench --binary $JSSHELL --perfherder sunspider
+        symbol: sunspider
 
 bench-web-tooling:
     description: Web Tooling shell benchmark suite
+    shell: ['sm', 'v8']
+    test: web-tooling-benchmark
     treeherder:
-        symbol: js-bench(webtool)
-    run:
-        mach: jsshell-bench --binary $JSSHELL --perfherder web-tooling-benchmark
+        symbol: webtool
     fetches:
         fetch:
             - web-tooling-benchmark

@@ -128,6 +128,36 @@ def split_python(config, jobs):
             yield pyjob
 
 
+@transforms.add
+def split_jsshell(config, jobs):
+    all_shells = {
+        'sm': "Spidermonkey",
+        'v8': "Google V8"
+    }
+
+    for job in jobs:
+        if not job['name'].startswith('jsshell'):
+            yield job
+            continue
+
+        test = job.pop('test')
+        for shell in job.get('shell', all_shells.keys()):
+            assert shell in all_shells
+
+            new_job = copy.deepcopy(job)
+            new_job['name'] = '{}-{}'.format(new_job['name'], shell)
+            new_job['description'] = '{} on {}'.format(new_job['description'], all_shells[shell])
+            new_job['shell'] = shell
+
+            group = 'js-bench-{}'.format(shell)
+            symbol = split_symbol(new_job['treeherder']['symbol'])[1]
+            new_job['treeherder']['symbol'] = join_symbol(group, symbol)
+
+            run = new_job['run']
+            run['command'] = run['command'].format(shell=shell, SHELL=shell.upper(), test=test)
+            yield new_job
+
+
 def add_build_dependency(config, job):
     """
     Add build dependency to the job and installer_url to env.
@@ -171,4 +201,26 @@ def handle_platform(config, jobs):
             add_build_dependency(config, job)
 
         del job['platform']
+        yield job
+
+
+@transforms.add
+def handle_shell(config, jobs):
+    """
+    Handle the 'shell' property.
+    """
+    fields = [
+        'run-on-projects',
+        'worker.env',
+    ]
+
+    for job in jobs:
+        if not job.get('shell'):
+            yield job
+            continue
+
+        for field in fields:
+            resolve_keyed_by(job, field, item_name=job['name'])
+
+        del job['shell']
         yield job
