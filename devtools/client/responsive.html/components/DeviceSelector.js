@@ -72,7 +72,7 @@ class DeviceSelector extends PureComponent {
       return a.name.localeCompare(b.name);
     });
 
-    let selectClass = "viewport-device-selector toolbar-dropdown";
+    let selectClass = "toolbar-dropdown";
     if (selectedDevice) {
       selectClass += " selected";
     }
@@ -117,6 +117,7 @@ class DeviceSelector extends PureComponent {
 
     return dom.select(
       {
+        id: "device-selector",
         className: selectClass,
         value: selectedDevice,
         title: selectedDevice,

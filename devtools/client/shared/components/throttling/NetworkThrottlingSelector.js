@@ -99,7 +99,7 @@ class NetworkThrottlingSelector extends PureComponent {
 
     return dom.select(
       {
-        id: "global-network-throttling-selector",
+        id: "network-throttling-selector",
         className: selectClass,
         value: selectedProfile,
         onChange: this.onSelectChange,
