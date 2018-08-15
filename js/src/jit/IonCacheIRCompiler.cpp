@@ -555,6 +555,7 @@ IonCacheIRCompiler::init()
       case CacheKind::TypeOf:
       case CacheKind::ToBool:
       case CacheKind::GetIntrinsic:
+      case CacheKind::NewObject:
         MOZ_CRASH("Unsupported IC");
     }
 

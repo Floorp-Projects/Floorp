@@ -20,6 +20,9 @@ createEnum([
   // Update highlighted node.
   "UPDATE_HIGHLIGHTED_NODE",
 
+  // Update playback rate.
+  "UPDATE_PLAYBACK_RATES",
+
   // Update selected animation.
   "UPDATE_SELECTED_ANIMATION",
 

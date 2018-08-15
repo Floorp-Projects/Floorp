@@ -55,7 +55,6 @@
   "Extension.jsm": ["Extension", "ExtensionData"],
   "ExtensionAPI.jsm": ["ExtensionAPI", "ExtensionAPIs"],
   "ExtensionsUI.jsm": ["ExtensionsUI"],
-  "ExtensionTabs.jsm": ["TabTrackerBase", "TabManagerBase", "TabBase", "WindowTrackerBase", "WindowManagerBase", "WindowBase"],
   "extension-storage.js": ["ExtensionStorageEngine", "EncryptionRemoteTransformer", "KeyRingEncryptionRemoteTransformer"],
   "ExtensionXPCShellUtils.jsm": ["ExtensionTestUtils"],
   "NativeManifests.jsm": ["NativeManifests"],

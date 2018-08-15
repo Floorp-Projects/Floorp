@@ -9,6 +9,7 @@ const {
   UPDATE_DETAIL_VISIBILITY,
   UPDATE_ELEMENT_PICKER_ENABLED,
   UPDATE_HIGHLIGHTED_NODE,
+  UPDATE_PLAYBACK_RATES,
   UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE
 } = require("./index");
@@ -51,6 +52,15 @@ module.exports = {
     return {
       type: UPDATE_HIGHLIGHTED_NODE,
       highlightedNode: nodeFront ? nodeFront.actorID : null,
+    };
+  },
+
+  /**
+   * Update the playback rates.
+   */
+  updatePlaybackRates() {
+    return {
+      type: UPDATE_PLAYBACK_RATES,
     };
   },
 

@@ -163,6 +163,9 @@ class JitRuntime
     MainThreadData<IonBuilderList> ionLazyLinkList_;
     MainThreadData<size_t> ionLazyLinkListSize_;
 
+    // Counter used to help dismbiguate stubs in CacheIR
+    MainThreadData<uint64_t> disambiguationId_;
+
   private:
     void generateLazyLinkStub(MacroAssembler& masm);
     void generateInterpreterStub(MacroAssembler& masm);
@@ -329,6 +332,10 @@ class JitRuntime
 
     void ionLazyLinkListRemove(JSRuntime* rt, js::jit::IonBuilder* builder);
     void ionLazyLinkListAdd(JSRuntime* rt, js::jit::IonBuilder* builder);
+
+    uint64_t nextDisambiguationId() {
+        return disambiguationId_++;
+    }
 };
 
 enum class CacheKind : uint8_t;

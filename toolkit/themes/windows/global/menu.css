@@ -69,10 +69,6 @@ menucaption {
   padding-inline-end: 2px;
 }
 
-menucaption > .menu-iconic-text {
-  padding-inline-start: 0 !important;
-}
-
 .menu-accel,
 .menu-iconic-accel {
   margin-inline-start: 0.74em !important;

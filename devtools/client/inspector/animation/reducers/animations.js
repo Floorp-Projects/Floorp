@@ -9,6 +9,7 @@ const {
   UPDATE_DETAIL_VISIBILITY,
   UPDATE_ELEMENT_PICKER_ENABLED,
   UPDATE_HIGHLIGHTED_NODE,
+  UPDATE_PLAYBACK_RATES,
   UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE,
 } = require("../actions/index");
@@ -20,6 +21,7 @@ const INITIAL_STATE = {
   detailVisibility: false,
   elementPickerEnabled: false,
   highlightedNode: null,
+  playbackRates: [],
   selectedAnimation: null,
   sidebarSize: {
     height: 0,
@@ -39,9 +41,12 @@ const reducers = {
       detailVisibility = !!selectedAnimation;
     }
 
+    const playbackRates = getPlaybackRates(state.playbackRates, animations);
+
     return Object.assign({}, state, {
       animations,
       detailVisibility,
+      playbackRates,
       selectedAnimation,
       timeScale: new TimeScale(animations),
     });
@@ -69,6 +74,12 @@ const reducers = {
     });
   },
 
+  [UPDATE_PLAYBACK_RATES](state) {
+    return Object.assign({}, state, {
+      playbackRates: getPlaybackRates([], state.animations),
+    });
+  },
+
   [UPDATE_SELECTED_ANIMATION](state, { selectedAnimation }) {
     const detailVisibility = !!selectedAnimation;
 
@@ -84,6 +95,10 @@ const reducers = {
     });
   },
 };
+
+function getPlaybackRates(basePlaybackRate, animations) {
+  return [...new Set(animations.map(a => a.state.playbackRate).concat(basePlaybackRate))];
+}
 
 module.exports = function(state = INITIAL_STATE, action) {
   const reducer = reducers[action.type];

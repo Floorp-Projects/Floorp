@@ -5598,3 +5598,55 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
     writer.returnFromIC();
     return true;
 }
+
+NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
+                                           jsbytecode* pc, ICState::Mode mode, JSOp op,
+                                           HandleObject templateObj)
+  : IRGenerator(cx, script, pc, CacheKind::NewObject, mode),
+    op_(op),
+    templateObject_(templateObj)
+{
+    MOZ_ASSERT(templateObject_);
+}
+
+void
+NewObjectIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+        sp.opcodeProperty("op", op_);
+    }
+#endif
+}
+
+bool
+NewObjectIRGenerator::tryAttachStub()
+{
+    if (!templateObject_->is<UnboxedPlainObject>() &&
+        templateObject_->as<PlainObject>().hasDynamicSlots())
+    {
+        trackAttached(IRGenerator::NotAttached);
+        return false;
+    }
+
+    // Don't attach stub if group is pretenured, as the stub
+    // won't succeed.
+    AutoSweepObjectGroup sweep(templateObject_->group());
+    if (templateObject_->group()->shouldPreTenure(sweep)) {
+        trackAttached(IRGenerator::NotAttached);
+        return false;
+    }
+    // Stub doesn't support metadata builder
+    if (cx_->realm()->hasAllocationMetadataBuilder()) {
+        trackAttached(IRGenerator::NotAttached);
+        return false;
+    }
+
+    writer.guardNoAllocationMetadataBuilder();
+    writer.guardObjectGroupNotPretenured(templateObject_->group());
+    writer.loadNewObjectFromTemplateResult(templateObject_);
+    writer.returnFromIC();
+
+    trackAttached("NewObjectWithTemplate");
+    return true;
+}

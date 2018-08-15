@@ -3325,9 +3325,16 @@ void
 MacroAssembler::branchIfPretenuredGroup(const ObjectGroup* group, Register scratch, Label* label)
 {
     movePtr(ImmGCPtr(group), scratch);
-    branchTest32(Assembler::NonZero, Address(scratch, ObjectGroup::offsetOfFlags()),
+    branchIfPretenuredGroup(scratch, label);
+}
+
+void
+MacroAssembler::branchIfPretenuredGroup(Register group, Label* label)
+{
+    branchTest32(Assembler::NonZero, Address(group, ObjectGroup::offsetOfFlags()),
                  Imm32(OBJECT_FLAG_PRE_TENURE), label);
 }
+
 
 void
 MacroAssembler::branchIfNonNativeObj(Register obj, Register scratch, Label* label)
