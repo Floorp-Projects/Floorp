@@ -10,9 +10,7 @@
 #include "nsIDirectoryService.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIFile.h"
-#include "nsAtom.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsStaticAtom.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
@@ -20,28 +18,6 @@
 #define NS_XPCOM_INIT_CURRENT_PROCESS_DIR       "MozBinD"   // Can be used to set NS_XPCOM_CURRENT_PROCESS_DIR
                                                             // CANNOT be used to GET a location
 #define NS_DIRECTORY_SERVICE_CID  {0xf00152d0,0xb40b,0x11d3,{0x8c, 0x9c, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
-
-namespace mozilla {
-namespace detail {
-
-struct DirectoryAtoms
-{
-  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
-  #include "nsDirectoryServiceAtomList.h"
-  #undef DIR_ATOM
-
-  enum class Atoms {
-    #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_ENUM(name_)
-    #include "nsDirectoryServiceAtomList.h"
-    #undef DIR_ATOM
-    AtomsCount
-  };
-
-  const nsStaticAtom mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
-};
-
-} // namespace detail
-} // namespace mozilla
 
 class nsDirectoryService final
   : public nsIDirectoryService
@@ -76,15 +52,6 @@ private:
 
   nsInterfaceHashtable<nsCStringHashKey, nsIFile> mHashtable;
   nsTArray<nsCOMPtr<nsIDirectoryServiceProvider>> mProviders;
-
-  static const nsStaticAtom* const sAtoms;
-  static constexpr size_t sAtomsLen =
-    static_cast<size_t>(mozilla::detail::DirectoryAtoms::Atoms::AtomsCount);
-
-public:
-  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(nsStaticAtom, name_)
-  #include "nsDirectoryServiceAtomList.h"
-  #undef DIR_ATOM
 };
 
 #endif
