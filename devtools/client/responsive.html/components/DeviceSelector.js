@@ -11,7 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
-const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
+loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
 
 class DeviceSelector extends PureComponent {
   static get propTypes() {
@@ -27,31 +27,54 @@ class DeviceSelector extends PureComponent {
 
   constructor(props) {
     super(props);
-    this.onSelectChange = this.onSelectChange.bind(this);
+    this.onShowDeviceMenu = this.onShowDeviceMenu.bind(this);
   }
 
-  onSelectChange({ target }) {
+  onShowDeviceMenu(event) {
     const {
       devices,
+      selectedDevice,
       viewportId,
       onChangeDevice,
       onResizeViewport,
       onUpdateDeviceModal,
     } = this.props;
 
-    if (target.value === OPEN_DEVICE_MODAL_VALUE) {
-      onUpdateDeviceModal(true, viewportId);
-      return;
-    }
+    const menuItems = [];
+
     for (const type of devices.types) {
       for (const device of devices[type]) {
-        if (device.name === target.value) {
-          onResizeViewport(viewportId, device.width, device.height);
-          onChangeDevice(viewportId, device, type);
-          return;
+        if (device.displayed) {
+          menuItems.push({
+            label: device.name,
+            type: "checkbox",
+            checked: selectedDevice === device.name,
+            click: () => {
+              onResizeViewport(viewportId, device.width, device.height);
+              onChangeDevice(viewportId, device, type);
+            },
+          });
         }
       }
     }
+
+    menuItems.sort(function(a, b) {
+      return a.label.localeCompare(b.label);
+    });
+
+    if (menuItems.length > 0) {
+      menuItems.push("-");
+    }
+
+    menuItems.push({
+      label: getStr("responsive.editDeviceList2"),
+      click: () => onUpdateDeviceModal(true, viewportId),
+    });
+
+    showMenu(menuItems, {
+      button: event.target,
+      useTopLevelWindow: true,
+    });
   }
 
   render() {
@@ -60,72 +83,19 @@ class DeviceSelector extends PureComponent {
       selectedDevice,
     } = this.props;
 
-    const options = [];
-    for (const type of devices.types) {
-      for (const device of devices[type]) {
-        if (device.displayed) {
-          options.push(device);
-        }
-      }
-    }
-
-    options.sort(function(a, b) {
-      return a.name.localeCompare(b.name);
-    });
-
-    let selectClass = "toolbar-dropdown";
-    if (selectedDevice) {
-      selectClass += " selected";
-    }
-
-    const state = devices.listState;
-    let listContent;
-
-    if (state == Types.loadableState.LOADED) {
-      listContent = [
-        dom.option({
-          value: "",
-          title: "",
-          disabled: true,
-          hidden: true,
+    return (
+      dom.button(
+        {
+          id: "device-selector",
+          className: "devtools-button devtools-dropdown-button",
+          disabled: devices.listState !== Types.loadableState.LOADED,
+          title: selectedDevice,
+          onClick: this.onShowDeviceMenu,
         },
-        getStr("responsive.noDeviceSelected")),
-        options.map(device => {
-          return dom.option({
-            key: device.name,
-            value: device.name,
-            title: "",
-          }, device.name);
-        }),
-        dom.option({
-          value: OPEN_DEVICE_MODAL_VALUE,
-          title: "",
-        }, getStr("responsive.editDeviceList"))];
-    } else if (state == Types.loadableState.LOADING
-      || state == Types.loadableState.INITIALIZED) {
-      listContent = [dom.option({
-        value: "",
-        title: "",
-        disabled: true,
-      }, getStr("responsive.deviceListLoading"))];
-    } else if (state == Types.loadableState.ERROR) {
-      listContent = [dom.option({
-        value: "",
-        title: "",
-        disabled: true,
-      }, getStr("responsive.deviceListError"))];
-    }
-
-    return dom.select(
-      {
-        id: "device-selector",
-        className: selectClass,
-        value: selectedDevice,
-        title: selectedDevice,
-        onChange: this.onSelectChange,
-        disabled: (state !== Types.loadableState.LOADED),
-      },
-      ...listContent
+        dom.span({ className: "title" },
+          selectedDevice || getStr("responsive.responsiveMode")
+        )
+      )
     );
   }
 }
