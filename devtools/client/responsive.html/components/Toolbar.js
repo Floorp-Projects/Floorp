@@ -37,6 +37,7 @@ class Toolbar extends PureComponent {
       onExit: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
+      onRotateViewport: PropTypes.func.isRequired,
       onScreenshot: PropTypes.func.isRequired,
       onUpdateDeviceModal: PropTypes.func.isRequired,
     };
@@ -61,6 +62,7 @@ class Toolbar extends PureComponent {
       onExit,
       onRemoveDeviceAssociation,
       onResizeViewport,
+      onRotateViewport,
       onScreenshot,
       onUpdateDeviceModal,
     } = this.props;
@@ -86,6 +88,12 @@ class Toolbar extends PureComponent {
           viewport,
           onRemoveDeviceAssociation,
           onResizeViewport,
+        }),
+        dom.button({
+          id: "rotate-button",
+          className: "toolbar-button devtools-button",
+          onClick: () => onRotateViewport(viewport.id),
+          title: getStr("responsive.rotate"),
         }),
         DevicePixelRatioSelector({
           devices,
