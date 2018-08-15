@@ -2,13 +2,13 @@
 
 from __future__ import absolute_import
 
+import io
 import os
 
 import mozunit
 
 import proctest
 from mozprocess import processhandler
-import six
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -49,24 +49,26 @@ class ProcTestOutput(proctest.ProcTest):
         """
         expected = '\n'.join([str(n) for n in range(0, 10)])
 
-        stream = six.StringIO()
+        stream = io.BytesIO()
+        buf = io.BufferedRandom(stream)
 
         p = processhandler.ProcessHandler([self.python,
                                            os.path.join("scripts", "proccountfive.py")],
                                           cwd=here,
-                                          stream=stream)
+                                          stream=buf)
 
         p.run()
         p.wait()
         for i in range(5, 10):
             stream.write(str(i) + '\n')
 
+        buf.flush()
         self.assertEquals(stream.getvalue().strip(), expected)
 
         # make sure mozprocess doesn't close the stream
         # since mozprocess didn't create it
-        self.assertFalse(stream.closed)
-        stream.close()
+        self.assertFalse(buf.closed)
+        buf.close()
 
         self.determine_status(p, False, ())
 
