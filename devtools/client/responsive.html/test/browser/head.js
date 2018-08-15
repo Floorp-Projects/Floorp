@@ -55,6 +55,8 @@ Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "devices.json
 // The appearance of this notification causes intermittent behavior in some tests that
 // send mouse events, since it causes the content to shift when it appears.
 Services.prefs.setBoolPref("devtools.responsive.reloadNotification.enabled", false);
+// Don't show the setting onboarding tooltip in the test suites.
+Services.prefs.setBoolPref("devtools.responsive.show-setting-tooltip", false);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.devices.url");
@@ -62,6 +64,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
   Services.prefs.clearUserPref("devtools.responsive.reloadConditions.touchSimulation");
   Services.prefs.clearUserPref("devtools.responsive.reloadConditions.userAgent");
+  Services.prefs.clearUserPref("devtools.responsive.show-setting-tooltip");
   await asyncStorage.removeItem("devtools.devices.url_cache");
   await removeLocalDevices();
 });
