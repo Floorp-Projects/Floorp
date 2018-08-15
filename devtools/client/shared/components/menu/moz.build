@@ -5,7 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-  'MenuButton.js',
-  'MenuItem.js',
-  'MenuList.js',
+    'MenuButton.js',
+    'MenuItem.js',
+    'MenuList.js',
+    'utils.js',
 )
