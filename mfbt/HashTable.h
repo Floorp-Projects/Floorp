@@ -1870,15 +1870,6 @@ private:
     return Rehashed;
   }
 
-  bool overRemoved()
-  {
-    // Succeed if a quarter or more of all entries are removed. Note that this
-    // always succeeds if capacity() == 0 (i.e. entry storage has not been
-    // allocated), which is what we want, because it means changeTableSize()
-    // will allocate the requested capacity rather than doubling it.
-    return mRemovedCount >= (capacity() >> 2);
-  }
-
   RebuildStatus rehashIfOverloaded(
     FailureBehavior aReportFailure = ReportFailure)
   {
@@ -1886,9 +1877,12 @@ private:
       return NotOverloaded;
     }
 
-    uint32_t newCapacity = overRemoved()
-                         ? rawCapacity()
-                         : rawCapacity() * 2;
+    // Succeed if a quarter or more of all entries are removed. Note that this
+    // always succeeds if capacity() == 0 (i.e. entry storage has not been
+    // allocated), which is what we want, because it means changeTableSize()
+    // will allocate the requested capacity rather than doubling it.
+    bool manyRemoved = mRemovedCount >= (capacity() >> 2);
+    uint32_t newCapacity = manyRemoved ? rawCapacity() : rawCapacity() * 2;
     return changeTableSize(newCapacity, aReportFailure);
   }
 
