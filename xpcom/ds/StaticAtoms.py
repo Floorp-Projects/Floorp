@@ -2211,6 +2211,32 @@ STATIC_ATOMS = [
     # Atom("kLiAtom", "li"),  # "li" is present above
     # Atom("kXMLNSAtom", "xmlns"),  # "xmlns" is present above
     Atom("parseType", "parseType"),
+
+    # Directory service
+    Atom("DirectoryService_CurrentProcess", "XCurProcD"),
+    Atom("DirectoryService_GRE_Directory", "GreD"),
+    Atom("DirectoryService_GRE_BinDirectory", "GreBinD"),
+    Atom("DirectoryService_OS_TemporaryDirectory", "TmpD"),
+    Atom("DirectoryService_OS_CurrentProcessDirectory", "CurProcD"),
+    Atom("DirectoryService_OS_CurrentWorkingDirectory", "CurWorkD"),
+    # Atom("DirectoryService_OS_HomeDirectory", "Home"),  # "Home" is present above
+    Atom("DirectoryService_OS_DesktopDirectory", "Desk"),
+    Atom("DirectoryService_InitCurrentProcess_dummy", "MozBinD"),
+    Atom("DirectoryService_SystemDirectory", "SysD"),
+    Atom("DirectoryService_UserLibDirectory", "ULibDir"),
+    Atom("DirectoryService_DefaultDownloadDirectory", "DfltDwnld"),
+    Atom("DirectoryService_LocalApplicationsDirectory", "LocApp"),
+    Atom("DirectoryService_UserPreferencesDirectory", "UsrPrfs"),
+    Atom("DirectoryService_PictureDocumentsDirectory", "Pct"),
+    Atom("DirectoryService_WindowsDirectory", "WinD"),
+    Atom("DirectoryService_WindowsProgramFiles", "ProgF"),
+    Atom("DirectoryService_Programs", "Progs"),
+    Atom("DirectoryService_Favorites", "Favs"),
+    Atom("DirectoryService_Appdata", "AppData"),
+    Atom("DirectoryService_LocalAppdata", "LocalAppData"),
+    Atom("DirectoryService_LocalAppdataLow", "LocalAppDataLow"),
+    Atom("DirectoryService_LowIntegrityTempBase", "LowTmpDBase"),
+    Atom("DirectoryService_WinCookiesDirectory", "CookD"),
 ] + HTML_PARSER_ATOMS
 
 
