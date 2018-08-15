@@ -137,12 +137,15 @@ nsLayoutStatics::Initialize()
   // Register static atoms. Note that nsGkAtoms must be initialized earlier
   // than here, so it's done in NS_InitAtomTable() instead.
   nsCSSAnonBoxes::RegisterStaticAtoms();
-  nsCSSPseudoElements::RegisterStaticAtoms();
   nsCSSKeywords::AddRefTable();
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
 
   NS_SetStaticAtomsDone();
+
+#ifdef DEBUG
+  nsCSSPseudoElements::AssertAtoms();
+#endif
 
   StartupJSEnvironment();
   nsJSContext::EnsureStatics();
