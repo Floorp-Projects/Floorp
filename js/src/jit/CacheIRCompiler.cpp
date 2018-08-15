@@ -2683,6 +2683,36 @@ CacheIRCompiler::emitGuardTagNotEqual()
 }
 
 bool
+CacheIRCompiler::emitGuardNoAllocationMetadataBuilder()
+{
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx_->realm()->addressOfMetadataBuilder()),
+                   ImmWord(0), failure->label());
+
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardObjectGroupNotPretenured()
+{
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    StubFieldOffset group(reader.stubOffset(), StubField::Type::ObjectGroup);
+    emitLoadStubField(group, scratch);
+
+    masm.branchIfPretenuredGroup(scratch, failure->label());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadDenseElementHoleResult()
 {
     AutoOutputRegister output(*this);
@@ -3108,6 +3138,28 @@ CacheIRCompiler::emitLoadObjectTruthyResult()
     masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, output.valueReg());
 
     masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadNewObjectFromTemplateResult()
+{
+    AutoOutputRegister output(*this);
+    AutoScratchRegister obj(allocator, masm);
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    TemplateObject templateObj(objectStubFieldUnchecked(reader.stubOffset()));
+
+    // Consume the disambiguation id (2 halves)
+    mozilla::Unused << reader.uint32Immediate();
+    mozilla::Unused << reader.uint32Immediate();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.createGCObject(obj, scratch, templateObj, gc::DefaultHeap, failure->label());
+    masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
     return true;
 }
 

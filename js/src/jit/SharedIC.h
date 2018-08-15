@@ -1779,50 +1779,6 @@ ReferenceTypeFromSimpleTypeDescrKey(uint32_t key)
     return ReferenceType(key >> 1);
 }
 
-// JSOP_NEWOBJECT
-
-class ICNewObject_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    GCPtrObject templateObject_;
-
-    explicit ICNewObject_Fallback(JitCode* stubCode)
-      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode), templateObject_(nullptr)
-    {}
-
-  public:
-    class Compiler : public ICStubCompiler {
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
-
-      public:
-        explicit Compiler(JSContext* cx, Engine engine)
-          : ICStubCompiler(cx, ICStub::NewObject_Fallback, engine)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) override {
-            return newStub<ICNewObject_Fallback>(space, getStubCode());
-        }
-    };
-
-    GCPtrObject& templateObject() {
-        return templateObject_;
-    }
-
-    void setTemplateObject(JSObject* obj) {
-        templateObject_ = obj;
-    }
-};
-
-class ICNewObject_WithTemplate : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICNewObject_WithTemplate(JitCode* stubCode)
-      : ICStub(ICStub::NewObject_WithTemplate, stubCode)
-    {}
-};
-
 } // namespace jit
 } // namespace js
 
