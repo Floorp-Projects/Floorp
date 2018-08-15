@@ -200,7 +200,8 @@ describe("TelemetryFeed", () => {
           "rich_icon": 1,
           "no_image": 0
         },
-        topsites_pinned: 3
+        topsites_pinned: 3,
+        topsites_search_shortcuts: 2
       });
 
       // Create a ping referencing the session
@@ -209,6 +210,7 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(instance.sessions.get("foo").perf.topsites_icon_stats,
         "screenshot_with_icon", 2);
       assert.equal(instance.sessions.get("foo").perf.topsites_pinned, 3);
+      assert.equal(instance.sessions.get("foo").perf.topsites_search_shortcuts, 2);
     });
   });
 

@@ -223,6 +223,7 @@ and losing focus. | :one:
 | `rich_icon` | [Optional] Number of topsites that display a high quality favicon. | :one:
 | `no_image` | [Optional] Number of topsites that have no screenshot. | :one:
 | `topsites_pinned` | [Optional] Number of topsites that are pinned. | :one:
+| `topsites_search_shortcuts` | [Optional] Number of search shortcut topsites. | :one:
 | `visibility_event_rcvd_ts` | [Optional][Server Counter][Server Alert for too many omissions] DOMHighResTimeStamp of when the page itself receives an event that document.visibilityState == visible. | :one:
 | `tiles` | [Required] A list of tile objects for the Pocket articles. Each tile object mush have a ID, and optionally a "pos" property to indicate the tile position | :one:
 | `click` | [Optional] An integer to record the 0-based index when user clicks on a Pocket tile. | :one:
