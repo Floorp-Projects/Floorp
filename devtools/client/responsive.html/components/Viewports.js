@@ -33,22 +33,42 @@ class Viewports extends Component {
       onResizeViewport,
     } = this.props;
 
-    return dom.div(
-      {
-        id: "viewports",
-      },
-      viewports.map((viewport, i) => {
-        return ResizableViewport({
-          key: viewport.id,
-          screenshot,
-          swapAfterMount: i == 0,
-          viewport,
-          onBrowserMounted,
-          onContentResize,
-          onRemoveDeviceAssociation,
-          onResizeViewport,
-        });
-      })
+    const viewportSize = window.getViewportSize();
+    // The viewport may not have been created yet. Default to justify-content: center
+    // for the container.
+    let justifyContent = "center";
+
+    // If the RDM viewport is bigger than the window's inner width, set the container's
+    // justify-content to start so that the left-most viewport is visible when there's
+    // horizontal overflow. That is when the horizontal space become smaller than the
+    // viewports and a scrollbar appears, then the first viewport will still be visible.
+    if (viewportSize && viewportSize.width > window.innerWidth) {
+      justifyContent = "start";
+    }
+
+    return (
+      dom.div(
+        {
+          id: "viewports-container",
+          style: {
+            justifyContent,
+          },
+        },
+        dom.div({ id: "viewports" },
+          viewports.map((viewport, i) => {
+            return ResizableViewport({
+              key: viewport.id,
+              screenshot,
+              swapAfterMount: i == 0,
+              viewport,
+              onBrowserMounted,
+              onContentResize,
+              onRemoveDeviceAssociation,
+              onResizeViewport,
+            });
+          })
+        )
+      )
     );
   }
 }

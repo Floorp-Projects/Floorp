@@ -26,7 +26,7 @@ class ReloadConditions extends PureComponent {
     } = this.props;
 
     return ToggleMenu({
-      id: "global-reload-conditions-menu",
+      id: "reload-conditions-menu",
       items: [
         {
           id: "touchSimulation",

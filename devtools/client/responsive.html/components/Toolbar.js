@@ -15,7 +15,7 @@ const DeviceSelector = createFactory(require("./DeviceSelector"));
 const NetworkThrottlingSelector = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingSelector"));
 const ReloadConditions = createFactory(require("./ReloadConditions"));
 
-class GlobalToolbar extends PureComponent {
+class Toolbar extends PureComponent {
   static get propTypes() {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
@@ -65,10 +65,7 @@ class GlobalToolbar extends PureComponent {
     }
 
     return dom.header(
-      {
-        id: "global-toolbar",
-        className: "container",
-      },
+      { id: "toolbar" },
       DeviceSelector({
         devices,
         selectedDevice,
@@ -77,43 +74,49 @@ class GlobalToolbar extends PureComponent {
         onResizeViewport,
         onUpdateDeviceModal,
       }),
-      NetworkThrottlingSelector({
-        networkThrottling,
-        onChangeNetworkThrottling,
-      }),
-      DevicePixelRatioSelector({
-        devices,
-        displayPixelRatio,
-        selectedDevice,
-        selectedPixelRatio,
-        onChangePixelRatio,
-      }),
-      ReloadConditions({
-        reloadConditions,
-        onChangeReloadCondition,
-      }),
-      dom.button({
-        id: "global-touch-simulation-button",
-        className: touchButtonClass,
-        title: (touchSimulation.enabled ?
-          getStr("responsive.disableTouch") : getStr("responsive.enableTouch")),
-        onClick: () => onChangeTouchSimulation(!touchSimulation.enabled),
-      }),
-      dom.button({
-        id: "global-screenshot-button",
-        className: "toolbar-button devtools-button",
-        title: getStr("responsive.screenshot"),
-        onClick: onScreenshot,
-        disabled: screenshot.isCapturing,
-      }),
-      dom.button({
-        id: "global-exit-button",
-        className: "toolbar-button devtools-button",
-        title: getStr("responsive.exit"),
-        onClick: onExit,
-      })
+      dom.div(
+        { id: "toolbar-center-controls" },
+        DevicePixelRatioSelector({
+          devices,
+          displayPixelRatio,
+          selectedDevice,
+          selectedPixelRatio,
+          onChangePixelRatio,
+        }),
+        NetworkThrottlingSelector({
+          networkThrottling,
+          onChangeNetworkThrottling,
+        }),
+        dom.button({
+          id: "touch-simulation-button",
+          className: touchButtonClass,
+          title: (touchSimulation.enabled ?
+            getStr("responsive.disableTouch") : getStr("responsive.enableTouch")),
+          onClick: () => onChangeTouchSimulation(!touchSimulation.enabled),
+        })
+      ),
+      dom.div(
+        { id: "toolbar-end-controls" },
+        dom.button({
+          id: "screenshot-button",
+          className: "toolbar-button devtools-button",
+          title: getStr("responsive.screenshot"),
+          onClick: onScreenshot,
+          disabled: screenshot.isCapturing,
+        }),
+        ReloadConditions({
+          reloadConditions,
+          onChangeReloadCondition,
+        }),
+        dom.button({
+          id: "exit-button",
+          className: "toolbar-button devtools-button",
+          title: getStr("responsive.exit"),
+          onClick: onExit,
+        })
+      )
     );
   }
 }
 
-module.exports = GlobalToolbar;
+module.exports = Toolbar;
