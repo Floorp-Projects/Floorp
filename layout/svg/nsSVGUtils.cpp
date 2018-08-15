@@ -523,6 +523,7 @@ nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
       break;
     case StyleShapeSourceType::Shape:
     case StyleShapeSourceType::Box:
+    case StyleShapeSourceType::Path:
       aUsage.shouldApplyBasicShape = true;
       break;
     case StyleShapeSourceType::None:
