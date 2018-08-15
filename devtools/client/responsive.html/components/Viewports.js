@@ -5,11 +5,12 @@
 "use strict";
 
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const ResizableViewport = createFactory(require("./ResizableViewport"));
 
 const Types = require("../types");
-const ResizableViewport = createFactory(require("./ResizableViewport"));
 
 class Viewports extends Component {
   static get propTypes() {
