@@ -133,37 +133,6 @@ select > option.divider {
 }
 
 /**
- * Toggle Menu
- */
-
-.devtools-toggle-menu {
-  position: relative;
-}
-
-.devtools-toggle-menu .devtools-menu {
-  display: none;
-  flex-direction: column;
-  align-items: start;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  z-index: 1;
-  padding: 5px;
-  border-radius: 2px;
-  background-color: var(--theme-toolbar-background);
-  box-shadow: var(--rdm-box-shadow);
-}
-
-.devtools-toggle-menu .devtools-menu.opened {
-  display: flex;
-}
-
-.devtools-toggle-menu .devtools-menu-item {
-  display: flex;
-  align-items: center;
-}
-
-/**
  * Common background for dropdowns like select and toggle menu
  */
 
@@ -228,6 +197,10 @@ select > option.divider {
 
 #screenshot-button::before {
   background-image: url("./images/screenshot.svg");
+}
+
+#settings-button::before {
+  background-image: url("chrome://devtools/skin/images/settings.svg");
 }
 
 #exit-button::before {
