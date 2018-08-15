@@ -6,7 +6,7 @@ for (const ev of ["unload", "beforeunload", "pagehide"]) {
     iframe.onload = t.step_func(() => {
       iframe.contentWindow.addEventListener(ev, t.step_func_done(() => {
         assert_not_equals(iframe.contentDocument.childNodes.length, 0);
-        iframe.contentDocument.open();
+        assert_equals(iframe.contentDocument.open(), iframe.contentDocument);
         assert_not_equals(iframe.contentDocument.childNodes.length, 0);
       }));
       iframe.src = "about:blank";

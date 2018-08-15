@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["WebProgressChild"];
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
@@ -22,6 +23,8 @@ class WebProgressChild {
   constructor(mm) {
     this.mm = mm;
 
+    this.inLoadURI = false;
+
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
                      .createInstance(Ci.nsIWebProgress);
     this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
@@ -30,6 +33,9 @@ class WebProgressChild {
     let webProgress = this.mm.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this._filter, Ci.nsIWebProgress.NOTIFY_ALL);
+
+    // This message is used for measuring this.mm.content process startup performance.
+    this.mm.sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
   }
 
   _requestSpec(aRequest, aPropertyName) {
@@ -121,7 +127,7 @@ class WebProgressChild {
       json.documentURI = this.mm.content.document.documentURIObject.spec;
       json.charset = this.mm.content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
-      json.inLoadURI = this.mm.WebNavigation.inLoadURI;
+      json.inLoadURI = this.inLoadURI;
     }
 
     this._send("Content:StateChange", json, objects);
@@ -165,7 +171,7 @@ class WebProgressChild {
       json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
       json.principal = this.mm.content.document.nodePrincipal;
       json.synthetic = this.mm.content.document.mozSyntheticDocument;
-      json.inLoadURI = this.mm.WebNavigation.inLoadURI;
+      json.inLoadURI = this.inLoadURI;
       json.requestContextID = this.mm.content.document.documentLoadGroup
         ? this.mm.content.document.documentLoadGroup.requestContextID
         : null;

@@ -38,7 +38,7 @@ function processScript() {
   });
   sendSyncMessage("ProcessTest:Loaded");
 }
-var processScriptURL = "data:,(" + processScript.toString() + ")()";
+var processScriptURL = "data:,(" + processScript.toString() + ").call(this)";
 
 function initTestScript() {
   let init = initialProcessData;

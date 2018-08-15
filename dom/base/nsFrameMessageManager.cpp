@@ -40,9 +40,9 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/ProcessMessageManager.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
@@ -797,7 +797,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
       if (JS::IsCallable(object)) {
         // A small hack to get 'this' value right on content side where
-        // messageManager is wrapped in TabChildGlobal.
+        // messageManager is wrapped in TabChildMessageManager's global.
         nsCOMPtr<nsISupports> defaultThisValue;
         if (mChrome) {
           defaultThisValue = do_QueryObject(this);
@@ -1235,7 +1235,7 @@ nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>*
 StaticRefPtr<nsScriptCacheCleaner> nsMessageManagerScriptExecutor::sScriptCacheCleaner;
 
 void
-nsMessageManagerScriptExecutor::DidCreateGlobal()
+nsMessageManagerScriptExecutor::DidCreateScriptLoader()
 {
   if (!sCachedScripts) {
     sCachedScripts =
@@ -1271,9 +1271,9 @@ nsMessageManagerScriptExecutor::Shutdown()
 }
 
 void
-nsMessageManagerScriptExecutor::LoadScriptInternal(JS::Handle<JSObject*> aGlobal,
+nsMessageManagerScriptExecutor::LoadScriptInternal(JS::Handle<JSObject*> aMessageManager,
                                                    const nsAString& aURL,
-                                                   bool aRunInGlobalScope)
+                                                   bool aRunInUniqueScope)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
     "nsMessageManagerScriptExecutor::LoadScriptInternal", OTHER, aURL);
@@ -1286,29 +1286,30 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(JS::Handle<JSObject*> aGlobal
   JS::Rooted<JSScript*> script(rcx);
 
   nsMessageManagerScriptHolder* holder = sCachedScripts->Get(aURL);
-  if (holder && holder->WillRunInGlobalScope() == aRunInGlobalScope) {
+  if (holder) {
     script = holder->mScript;
   } else {
-    // Don't put anything in the cache if we already have an entry
-    // with a different WillRunInGlobalScope() value.
-    bool shouldCache = !holder;
-    TryCacheLoadAndCompileScript(aURL, aRunInGlobalScope,
-                                 shouldCache, aGlobal, &script);
+    TryCacheLoadAndCompileScript(aURL, aRunInUniqueScope, true,
+                                 aMessageManager, &script);
   }
 
-  AutoEntryScript aes(aGlobal, "message manager script load");
+  AutoEntryScript aes(aMessageManager, "message manager script load");
   JSContext* cx = aes.cx();
   if (script) {
-    if (aRunInGlobalScope) {
-      JS::RootedValue rval(cx);
-      JS::CloneAndExecuteScript(cx, script, &rval);
-    } else {
+    if (aRunInUniqueScope) {
       JS::Rooted<JSObject*> scope(cx);
-      bool ok = js::ExecuteInGlobalAndReturnScope(cx, aGlobal, script, &scope);
+      bool ok = js::ExecuteInFrameScriptEnvironment(cx, aMessageManager, script, &scope);
       if (ok) {
         // Force the scope to stay alive.
         mAnonymousGlobalScopes.AppendElement(scope);
       }
+    } else {
+      JS::RootedValue rval(cx);
+      JS::AutoObjectVector envChain(cx);
+      if (!envChain.append(aMessageManager)) {
+        return;
+      }
+      JS::CloneAndExecuteScript(cx, envChain, script, &rval);
     }
   }
 }
@@ -1316,9 +1317,9 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(JS::Handle<JSObject*> aGlobal
 void
 nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   const nsAString& aURL,
-  bool aRunInGlobalScope,
+  bool aRunInUniqueScope,
   bool aShouldCache,
-  JS::Handle<JSObject*> aGlobal,
+  JS::Handle<JSObject*> aMessageManager,
   JS::MutableHandle<JSScript*> aScriptp)
 {
   nsCString url = NS_ConvertUTF16toUTF8(aURL);
@@ -1347,7 +1348,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   // scope instead of the current global to avoid keeping the current
   // compartment alive.
   AutoJSAPI jsapi;
-  if (!jsapi.Init(isRunOnce ? aGlobal : xpc::CompilationScope())) {
+  if (!jsapi.Init(isRunOnce ? aMessageManager : xpc::CompilationScope())) {
     return;
   }
   JSContext* cx = jsapi.cx();
@@ -1397,12 +1398,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     options.setFileAndLine(url.get(), 1);
     options.setNoScriptRval(true);
 
-    if (aRunInGlobalScope) {
-      if (!JS::Compile(cx, options, srcBuf, &script)) {
-        return;
-      }
-    // We're going to run these against some non-global scope.
-    } else if (!JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script)) {
+    if (!JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script)) {
       return;
     }
   }
@@ -1420,7 +1416,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     // preloader cache, not the session cache.
     if (!isRunOnce) {
       // Root the object also for caching.
-      auto* holder = new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
+      auto* holder = new nsMessageManagerScriptHolder(cx, script);
       sCachedScripts->Put(aURL, holder);
     }
   }
@@ -1441,31 +1437,9 @@ nsMessageManagerScriptExecutor::Unlink()
 }
 
 bool
-nsMessageManagerScriptExecutor::InitChildGlobalInternal(const nsACString& aID)
+nsMessageManagerScriptExecutor::Init()
 {
-  AutoSafeJSContext cx;
-  if (!SystemBindingInitIds(cx)) {
-    return false;
-  }
-
-  nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
-
-  JS::RealmOptions options;
-  options.creationOptions().setNewCompartmentInSystemZone();
-
-  xpc::InitGlobalObjectOptions(options, mPrincipal);
-  JS::Rooted<JSObject*> global(cx);
-  if (!WrapGlobalObject(cx, options, &global)) {
-    return false;
-  }
-
-  xpc::InitGlobalObject(cx, global, 0);
-
-  // Set the location information for the new global, so that tools like
-  // about:memory may use that information.
-  xpc::SetLocationForGlobal(global, aID);
-
-  DidCreateGlobal();
+  DidCreateScriptLoader();
   return true;
 }
 
@@ -1519,7 +1493,7 @@ public:
   bool DoLoadMessageManagerScript(const nsAString& aURL,
                                   bool aRunInGlobalScope) override
   {
-    ProcessGlobal* global = ProcessGlobal::Get();
+    auto* global = ContentProcessMessageManager::Get();
     MOZ_ASSERT(!aRunInGlobalScope);
     global->LoadScript(aURL);
     return true;
@@ -1748,7 +1722,7 @@ NS_NewChildProcessMessageManager(nsISupports** aResult)
   }
   auto* mm = new ChildProcessMessageManager(cb);
   nsFrameMessageManager::SetChildProcessManager(mm);
-  RefPtr<ProcessGlobal> global = new ProcessGlobal(mm);
+  auto global = MakeRefPtr<ContentProcessMessageManager>(mm);
   NS_ENSURE_TRUE(global->Init(), NS_ERROR_UNEXPECTED);
   return CallQueryInterface(global, aResult);
 }

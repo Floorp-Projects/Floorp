@@ -86,7 +86,7 @@ static_assert(JitSpew_Terminator <= 64, "Increase the size of the LoggingBits gl
 static uint64_t LoggingBits = 0;
 static mozilla::Atomic<uint32_t, mozilla::Relaxed> filteredOutCompilations(0);
 
-static const char * const ChannelNames[] =
+static const char* const ChannelNames[] =
 {
 #define JITSPEW_CHANNEL(name) #name,
     JITSPEW_CHANNEL_LIST(JITSPEW_CHANNEL)
@@ -100,13 +100,15 @@ static size_t ChannelIndentLevel[] =
 #undef JITSPEW_CHANNEL
 };
 
+// The IONFILTER environment variable specifies an expression to select only
+// certain functions for spewing to reduce amount of log data generated.
+static const char* gSpewFilter = nullptr;
+
 static bool
 FilterContainsLocation(JSScript* function)
 {
-    static const char* filter = getenv("IONFILTER");
-
     // If there is no filter we accept all outputs.
-    if (!filter || !filter[0])
+    if (!gSpewFilter || !gSpewFilter[0])
         return true;
 
     // Disable wasm output when filter is set.
@@ -116,9 +118,9 @@ FilterContainsLocation(JSScript* function)
     const char* filename = function->filename();
     const size_t line = function->lineno();
     const size_t filelen = strlen(filename);
-    const char* index = strstr(filter, filename);
+    const char* index = strstr(gSpewFilter, filename);
     while (index) {
-        if (index == filter || index[-1] == ',') {
+        if (index == gSpewFilter || index[-1] == ',') {
             if (index[filelen] == 0 || index[filelen] == ',')
                 return true;
             if (index[filelen] == ':' && line != size_t(-1)) {
@@ -162,6 +164,9 @@ IonSpewer::init()
 {
     if (inited_)
         return true;
+
+    // Filter expression for spewing
+    gSpewFilter = getenv("IONFILTER");
 
     const size_t bufferLength = 256;
     char c1Buffer[bufferLength];

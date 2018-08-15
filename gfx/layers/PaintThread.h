@@ -25,29 +25,24 @@ class DrawTargetCapture;
 
 namespace layers {
 
-// Holds the key operations needed to update a tiled content client on the
-// paint thread.
+// A paint task contains a description of a rasterization work to be done
+// on the paint thread or paint worker pool.
+//
+// More specifically it contains:
+// 1. A capture command list of drawing commands
+// 2. A destination draw target to replay the draw commands upon
+// 3. A list of dependent texture clients that must be kept alive for the
+//    task's duration, and then destroyed on the main thread
 class PaintTask {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PaintTask)
 public:
   PaintTask() {}
 
-  template<typename F>
-  void ForEachTextureClient(F aClosure) const
-  {
-    for (auto client : mClients) {
-      aClosure(client);
-    }
-  }
-
-  void DropTextureClients()
-  {
-    mClients.clear();
-  }
+  void DropTextureClients();
 
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTargetCapture> mCapture;
-  std::vector<RefPtr<TextureClient>> mClients;
+  AutoTArray<RefPtr<TextureClient>, 4> mClients;
 
 protected:
   virtual ~PaintTask() {}
@@ -68,12 +63,17 @@ public:
   static bool IsOnPaintThread();
   bool IsOnPaintWorkerThread();
 
-  void UpdateRenderMode();
-
-  void QueuePaintTask(PaintTask* aTask);
-
   // This allows external users to run code on the paint thread.
   void Dispatch(RefPtr<Runnable>& aRunnable);
+
+  // This allows the paint thread to dynamically toggle between a paint worker
+  // thread pool used with tiling, and a single paint thread used with rotated
+  // buffer.
+  void UpdateRenderMode();
+
+  // Must be called on the main thread. Queues an async paint
+  // task to be completed on the paint thread.
+  void QueuePaintTask(PaintTask* aTask);
 
   // Must be called on the main thread. Signifies that the current
   // layer tree transaction has been finished and any async paints
@@ -81,7 +81,7 @@ public:
   // at the end of a layer transaction as it will be used to do an optional
   // texture sync and then unblock the main thread if it is waiting to paint
   // a new frame.
-  void EndLayerTransaction(SyncObjectClient* aSyncObject);
+  void QueueEndLayerTransaction(SyncObjectClient* aSyncObject);
 
   // Sync Runnables need threads to be ref counted,
   // But this thread lives through the whole process.
@@ -102,12 +102,7 @@ private:
 
   void AsyncPaintTask(CompositorBridgeChild* aBridge,
                       PaintTask* aTask);
-  void AsyncPaintTaskFinished(CompositorBridgeChild* aBridge,
-                              PaintTask* aTask);
-
   void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge);
-
-  void DispatchEndLayerTransaction(CompositorBridgeChild* aBridge);
 
   static StaticAutoPtr<PaintThread> sSingleton;
   static StaticRefPtr<nsIThread> sThread;

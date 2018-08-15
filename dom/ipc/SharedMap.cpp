@@ -11,8 +11,8 @@
 #include "ScriptPreloader-inl.h"
 
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla::loader;
@@ -285,8 +285,8 @@ WritableSharedMap::GetReadOnly()
 {
   if (!mReadOnly) {
     nsTArray<RefPtr<BlobImpl>> blobs(mBlobImpls);
-    mReadOnly = new SharedMap(ProcessGlobal::Get(), CloneMapFile(),
-                              MapSize(), std::move(blobs));
+    mReadOnly = new SharedMap(ContentProcessMessageManager::Get()->GetParentObject(),
+                              CloneMapFile(), MapSize(), std::move(blobs));
   }
   return mReadOnly;
 }

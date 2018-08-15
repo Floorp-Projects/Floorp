@@ -55,9 +55,6 @@ with Files("ContentCrashHandlers.jsm"):
 with Files("ContentSearch.jsm"):
     BUG_COMPONENT = ("Firefox", "Search")
 
-with Files("ContentWebRTC.jsm"):
-    BUG_COMPONENT = ("Firefox", "Device Permissions")
-
 with Files("ExtensionsUI.jsm"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
@@ -67,23 +64,11 @@ with Files("LaterRun.jsm"):
 with Files("LightweightThemeChildHelper.jsm"):
     BUG_COMPONENT = ("WebExtensions", "Themes")
 
-with Files("LightWeightThemeWebInstallListener.jsm"):
-    BUG_COMPONENT = ("Firefox", "Theme")
-
 with Files("OpenInTabsUtils.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("PageInfoListener.jsm"):
-    BUG_COMPONENT = ("Firefox", "Page Info Window")
-
-with Files("PageStyleHandler.jsm"):
-    BUG_COMPONENT = ("Firefox", "Menus")
-
 with Files("PermissionUI.jsm"):
    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
-
-with Files("PluginContent.jsm"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
 
 with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
@@ -134,19 +119,15 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 EXTRA_JS_MODULES += [
     'AboutNewTab.jsm',
     'AsyncTabSwitcher.jsm',
-    'BlockedSiteContent.jsm',
     'BrowserErrorReporter.jsm',
     'BrowserUsageTelemetry.jsm',
     'BrowserWindowTracker.jsm',
-    'ClickEventHandler.jsm',
     'ContentClick.jsm',
     'ContentCrashHandlers.jsm',
     'ContentLinkHandler.jsm',
     'ContentMetaHandler.jsm',
     'ContentObservers.js',
     'ContentSearch.jsm',
-    'ContentWebRTC.jsm',
-    'ContextMenu.jsm',
     'ExtensionsUI.jsm',
     'Feeds.jsm',
     'FormSubmitObserver.jsm',
@@ -154,15 +135,10 @@ EXTRA_JS_MODULES += [
     'HomePage.jsm',
     'LaterRun.jsm',
     'LightweightThemeChildHelper.jsm',
-    'LightWeightThemeWebInstallListener.jsm',
-    'NetErrorContent.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
-    'PageInfoListener.jsm',
-    'PageStyleHandler.jsm',
     'PermissionUI.jsm',
     'PingCentre.jsm',
-    'PluginContent.jsm',
     'ProcessHangMonitor.jsm',
     'ReaderParent.jsm',
     'RemotePrompt.jsm',

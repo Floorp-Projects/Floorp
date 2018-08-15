@@ -407,6 +407,8 @@ add_task(async function test_show_hide_frame() {
     },
     async doOpenMenu() {
       frameId = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+        ChromeUtils.import("resource://gre/modules/WebNavigationFrames.jsm");
+
         let {contentWindow} = content.document.getElementById("frame");
         return WebNavigationFrames.getFrameId(contentWindow);
       });

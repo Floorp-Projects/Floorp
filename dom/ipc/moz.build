@@ -14,7 +14,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'dom'
 
 EXTRA_JS_MODULES += [
-    'ManifestMessages.jsm',
+    'ManifestMessagesChild.jsm',
 ]
 
 EXPORTS.mozilla.dom.ipc += [

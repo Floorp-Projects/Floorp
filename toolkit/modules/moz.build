@@ -127,9 +127,6 @@ with Files('Promise*.jsm'):
 with Files('RemoteController.js'):
     BUG_COMPONENT = ('Core', 'Widget')
 
-with Files('RemoteFinder.jsm'):
-    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
-
 with Files('RemoteSecurityUI.jsm'):
     BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
 
@@ -169,6 +166,9 @@ with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
 EXTRA_JS_MODULES += [
+    'ActorChild.jsm',
+    'ActorManagerChild.jsm',
+    'ActorManagerParent.jsm',
     'addons/MatchURLFilters.jsm',
     'addons/SecurityInfo.jsm',
     'addons/WebNavigation.jsm',
@@ -193,17 +193,17 @@ EXTRA_JS_MODULES += [
     'Console.jsm',
     'CreditCard.jsm',
     'css-selector.js',
-    'DateTimePickerContent.jsm',
     'DateTimePickerParent.jsm',
     'DeferredTask.jsm',
     'Deprecated.jsm',
     'E10SUtils.jsm',
     'EventEmitter.jsm',
     'FileUtils.jsm',
-    'FindBarChild.jsm',
+    'FindBarContent.jsm',
     'Finder.jsm',
     'FinderHighlighter.jsm',
     'FinderIterator.jsm',
+    'FinderParent.jsm',
     'FormLikeFactory.jsm',
     'Geometry.jsm',
     'GMPExtractorWorker.js',
@@ -223,10 +223,8 @@ EXTRA_JS_MODULES += [
     'PageMenu.jsm',
     'PageMetadata.jsm',
     'PermissionsUtils.jsm',
-    'PopupBlocking.jsm',
     'PopupNotifications.jsm',
     'Preferences.jsm',
-    'PrintingContent.jsm',
     'PrivateBrowsingUtils.jsm',
     'ProfileAge.jsm',
     'Promise-backend.js',
@@ -234,13 +232,10 @@ EXTRA_JS_MODULES += [
     'PromiseMessage.jsm',
     'PromiseUtils.jsm',
     'RemoteController.js',
-    'RemoteFinder.jsm',
     'RemoteSecurityUI.jsm',
     'RemoteWebProgress.jsm',
     'ResetProfile.jsm',
     'ResponsivenessMonitor.jsm',
-    'SelectContentHelper.jsm',
-    'SelectionSourceContent.jsm',
     'SelectParentHelper.jsm',
     'ServiceRequest.jsm',
     'Services.jsm',
@@ -253,8 +248,6 @@ EXTRA_JS_MODULES += [
     'Troubleshoot.jsm',
     'UpdateUtils.jsm',
     'WebChannel.jsm',
-    'WebChannelContent.jsm',
-    'WebNavigationChild.jsm',
     'WebProgressChild.jsm',
     'WindowDraggingUtils.jsm',
     'ZipUtils.jsm',

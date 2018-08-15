@@ -309,10 +309,10 @@ class BasePopup {
       let mm = browser.messageManager;
 
       // Sets the context information for context menus.
-      mm.loadFrameScript("chrome://browser/content/content.js", true);
+      mm.loadFrameScript("chrome://browser/content/content.js", true, true);
 
       mm.loadFrameScript(
-        "chrome://extensions/content/ext-browser-content.js", false);
+        "chrome://extensions/content/ext-browser-content.js", false, true);
 
       mm.sendAsyncMessage("Extension:InitBrowser", {
         allowScriptsToClose: true,

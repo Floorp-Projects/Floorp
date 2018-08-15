@@ -14,6 +14,9 @@
 namespace mozilla {
 namespace recordreplay {
 
+// This file has internal definitions for communication between the main
+// record/replay infrastructure and child side IPC code.
+
 // The navigation namespace has definitions for managing breakpoints and all
 // other state that persists across rewinds, and for keeping track of the
 // precise execution position of the child process. The middleman will send the
@@ -69,13 +72,11 @@ void AfterCheckpoint(const CheckpointId& aCheckpoint);
 
 } // namespace navigation
 
-// IPC activity that can be triggered by navigation.
 namespace child {
 
+// IPC activity that can be triggered by navigation.
 void RespondToRequest(const js::CharBuffer& aBuffer);
-
 void HitCheckpoint(size_t aId, bool aRecordingEndpoint);
-
 void HitBreakpoint(bool aRecordingEndpoint, const uint32_t* aBreakpoints, size_t aNumBreakpoints);
 
 // Optional information about a crash that occurred. If not provided to
@@ -98,6 +99,19 @@ void ReportFatalError(const Maybe<MinidumpInfo>& aMinidumpInfo,
 
 // Monitor used for various synchronization tasks.
 extern Monitor* gMonitor;
+
+// Notify the middleman that the recording was flushed.
+void NotifyFlushedRecording();
+
+// Notify the middleman about an AlwaysMarkMajorCheckpoints directive.
+void NotifyAlwaysMarkMajorCheckpoints();
+
+// Report a fatal error to the middleman process.
+void ReportFatalError(const char* aFormat, ...);
+
+// Mark a time span when the main thread is idle.
+void BeginIdleTime();
+void EndIdleTime();
 
 } // namespace child
 

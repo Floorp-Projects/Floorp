@@ -11,17 +11,12 @@ textbox[nomatch="true"][highlightnonmatches="true"] {
 
 /* ::::: autocomplete popups ::::: */
 
-panel[type="autocomplete-richlistbox"],
-.autocomplete-history-popup {
+panel[type="autocomplete-richlistbox"] {
   padding: 0px !important;
   color: -moz-FieldText;
   background-color: -moz-Field;
   font: icon;
   -moz-appearance: none;
-}
-
-.autocomplete-history-popup {
-  max-height: 180px;
 }
 
 /* ::::: richlistbox autocomplete ::::: */

@@ -262,6 +262,46 @@ PathAppendSafe(LPWSTR base, LPCWSTR extra)
 }
 
 /**
+ * Build a temporary file path whose name component is a UUID.
+ *
+ * @param  basePath  The base directory path for the temp file
+ * @param  prefix    Optional prefix for the beginning of the file name
+ * @param  tmpPath   Output full path, with the base directory and the file name.
+ *                   Must already have been allocated with size >= MAX_PATH.
+ * @return TRUE if tmpPath was successfully filled in, FALSE on errors
+ */
+BOOL
+GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath)
+{
+  WCHAR filename[MAX_PATH + 1] = { L"\0" };
+  if (prefix) {
+    wcsncpy(filename, prefix, MAX_PATH);
+  }
+
+  UUID tmpFileNameUuid;
+  RPC_WSTR tmpFileNameString = nullptr;
+  if (UuidCreate(&tmpFileNameUuid) != RPC_S_OK) {
+    return FALSE;
+  }
+  if (UuidToStringW(&tmpFileNameUuid, &tmpFileNameString) != RPC_S_OK) {
+    return FALSE;
+  }
+  if (!tmpFileNameString) {
+    return FALSE;
+  }
+
+  wcsncat(filename, (LPCWSTR)tmpFileNameString, MAX_PATH);
+  RpcStringFreeW(&tmpFileNameString);
+
+  wcsncpy(tmpPath, basePath, MAX_PATH);
+  if (!PathAppendSafe(tmpPath, filename)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
  * Sets update.status to a specific failure code
  *
  * @param  updateDirPath The path of the update directory
@@ -273,7 +313,7 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
   // The temp file is not removed on failure since there is client code that
   // will remove it.
   WCHAR tmpUpdateStatusFilePath[MAX_PATH + 1] = { L'\0' };
-  if (GetTempFileNameW(updateDirPath, L"svc", 0, tmpUpdateStatusFilePath) == 0) {
+  if (!GetUUIDTempFilePath(updateDirPath, L"svc", tmpUpdateStatusFilePath)) {
     return FALSE;
   }
 

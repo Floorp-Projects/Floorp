@@ -20,6 +20,8 @@
 
 namespace js {
 
+#ifdef JS_CRASH_DIAGNOSTICS
+
 class CompartmentChecker
 {
     JS::Compartment* compartment;
@@ -34,56 +36,51 @@ class CompartmentChecker
      * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
      * compartment mismatches.
      */
-    static void fail(JS::Compartment* c1, JS::Compartment* c2) {
-        printf("*** Compartment mismatch %p vs. %p\n", (void*) c1, (void*) c2);
-        MOZ_CRASH();
+    static void fail(JS::Compartment* c1, JS::Compartment* c2, int argIndex) {
+        MOZ_CRASH_UNSAFE_PRINTF("*** Compartment mismatch %p vs. %p at argument %d\n",
+                                (void*) c1, (void*) c2, argIndex);
     }
 
-    static void fail(JS::Zone* z1, JS::Zone* z2) {
-        printf("*** Zone mismatch %p vs. %p\n", (void*) z1, (void*) z2);
-        MOZ_CRASH();
+    static void fail(JS::Zone* z1, JS::Zone* z2, int argIndex) {
+        MOZ_CRASH_UNSAFE_PRINTF("*** Zone mismatch %p vs. %p at argument %d\n",
+                                (void*) z1, (void*) z2, argIndex);
     }
 
-    static void check(JS::Compartment* c1, JS::Compartment* c2) {
-        if (c1 != c2)
-            fail(c1, c2);
-    }
-
-    void check(JS::Compartment* c) {
+    void check(JS::Compartment* c, int argIndex) {
         if (c && c != compartment)
-            fail(compartment, c);
+            fail(compartment, c, argIndex);
     }
 
-    void checkZone(JS::Zone* z) {
+    void checkZone(JS::Zone* z, int argIndex) {
         if (compartment && z != compartment->zone())
-            fail(compartment->zone(), z);
+            fail(compartment->zone(), z, argIndex);
     }
 
-    void check(JSObject* obj) {
+    void check(JSObject* obj, int argIndex) {
         if (obj) {
             MOZ_ASSERT(JS::ObjectIsNotGray(obj));
             MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
-            check(obj->compartment());
+            check(obj->compartment(), argIndex);
         }
     }
 
     template<typename T>
-    void check(const Rooted<T>& rooted) {
-        check(rooted.get());
+    void check(const Rooted<T>& rooted, int argIndex) {
+        check(rooted.get(), argIndex);
     }
 
     template<typename T>
-    void check(Handle<T> handle) {
-        check(handle.get());
+    void check(Handle<T> handle, int argIndex) {
+        check(handle.get(), argIndex);
     }
 
     template<typename T>
-    void check(MutableHandle<T> handle) {
-        check(handle.get());
+    void check(MutableHandle<T> handle, int argIndex) {
+        check(handle.get(), argIndex);
     }
 
     template <typename T>
-    void checkAtom(T* thing) {
+    void checkAtom(T* thing, int argIndex) {
         static_assert(mozilla::IsSame<T, JSAtom>::value ||
                       mozilla::IsSame<T, JS::Symbol>::value,
                       "Should only be called with JSAtom* or JS::Symbol* argument");
@@ -93,31 +90,33 @@ class CompartmentChecker
         // zone, see JS_MarkCrossZoneId.
         if (compartment) {
             JSRuntime* rt = compartment->runtimeFromAnyThread();
-            MOZ_ASSERT(rt->gc.atomMarking.atomIsMarked(compartment->zone(), thing));
+            if (!rt->gc.atomMarking.atomIsMarked(compartment->zone(), thing)) {
+                MOZ_CRASH_UNSAFE_PRINTF("*** Atom not marked for zone %p at argument %d\n",
+                                        compartment->zone(), argIndex);
+            }
         }
 #endif
     }
 
-    void check(JSString* str) {
+    void check(JSString* str, int argIndex) {
         MOZ_ASSERT(JS::CellIsNotGray(str));
-        if (str->isAtom()) {
-            checkAtom(&str->asAtom());
-        } else {
-            checkZone(str->zone());
-        }
+        if (str->isAtom())
+            checkAtom(&str->asAtom(), argIndex);
+        else
+            checkZone(str->zone(), argIndex);
     }
 
-    void check(JS::Symbol* symbol) {
-        checkAtom(symbol);
+    void check(JS::Symbol* symbol, int argIndex) {
+        checkAtom(symbol, argIndex);
     }
 
-    void check(const js::Value& v) {
+    void check(const js::Value& v, int argIndex) {
         if (v.isObject())
-            check(&v.toObject());
+            check(&v.toObject(), argIndex);
         else if (v.isString())
-            check(v.toString());
+            check(v.toString(), argIndex);
         else if (v.isSymbol())
-            check(v.toSymbol());
+            check(v.toSymbol(), argIndex);
     }
 
     // Check the contents of any container class that supports the C++
@@ -129,59 +128,61 @@ class CompartmentChecker
             decltype(((Container*)nullptr)->end())
         >::value
     >::Type
-    check(const Container& container) {
+    check(const Container& container, int argIndex) {
         for (auto i : container)
-            check(i);
+            check(i, argIndex);
     }
 
-    void check(const JS::HandleValueArray& arr) {
+    void check(const JS::HandleValueArray& arr, int argIndex) {
         for (size_t i = 0; i < arr.length(); i++)
-            check(arr[i]);
+            check(arr[i], argIndex);
     }
 
-    void check(const CallArgs& args) {
+    void check(const CallArgs& args, int argIndex) {
         for (Value* p = args.base(); p != args.end(); ++p)
-            check(*p);
+            check(*p, argIndex);
     }
 
-    void check(jsid id) {
+    void check(jsid id, int argIndex) {
         if (JSID_IS_ATOM(id))
-            checkAtom(JSID_TO_ATOM(id));
+            checkAtom(JSID_TO_ATOM(id), argIndex);
         else if (JSID_IS_SYMBOL(id))
-            checkAtom(JSID_TO_SYMBOL(id));
+            checkAtom(JSID_TO_SYMBOL(id), argIndex);
         else
             MOZ_ASSERT(!JSID_IS_GCTHING(id));
     }
 
-    void check(JSScript* script) {
+    void check(JSScript* script, int argIndex) {
         MOZ_ASSERT(JS::CellIsNotGray(script));
         if (script)
-            check(script->compartment());
+            check(script->compartment(), argIndex);
     }
 
-    void check(InterpreterFrame* fp);
-    void check(AbstractFramePtr frame);
+    void check(InterpreterFrame* fp, int argIndex);
+    void check(AbstractFramePtr frame, int argIndex);
 
-    void check(Handle<PropertyDescriptor> desc) {
-        check(desc.object());
+    void check(Handle<PropertyDescriptor> desc, int argIndex) {
+        check(desc.object(), argIndex);
         if (desc.hasGetterObject())
-            check(desc.getterObject());
+            check(desc.getterObject(), argIndex);
         if (desc.hasSetterObject())
-            check(desc.setterObject());
-        check(desc.value());
+            check(desc.setterObject(), argIndex);
+        check(desc.value(), argIndex);
     }
 
-    void check(TypeSet::Type type) {
-        check(type.maybeCompartment());
+    void check(TypeSet::Type type, int argIndex) {
+        check(type.maybeCompartment(), argIndex);
     }
 };
+
+#endif // JS_CRASH_DIAGNOSTICS
 
 /*
  * Don't perform these checks when called from a finalizer. The checking
  * depends on other objects not having been swept yet.
  */
 #define START_ASSERT_SAME_COMPARTMENT()                                 \
-    if (JS::RuntimeHeapIsCollecting())                            \
+    if (JS::RuntimeHeapIsCollecting())                                  \
         return;                                                         \
     CompartmentChecker c(cx)
 
@@ -189,7 +190,7 @@ template <class T1> inline void
 releaseAssertSameCompartment(JSContext* cx, const T1& t1)
 {
     START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1);
+    c.check(t1, 2);
 }
 
 template <class T1> inline void
@@ -197,7 +198,7 @@ assertSameCompartment(JSContext* cx, const T1& t1)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1);
+    c.check(t1, 2);
 #endif
 }
 
@@ -206,7 +207,7 @@ assertSameCompartmentDebugOnly(JSContext* cx, const T1& t1)
 {
 #if defined(DEBUG) && defined(JS_CRASH_DIAGNOSTICS)
     START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1);
+    c.check(t1, 2);
 #endif
 }
 
@@ -215,8 +216,8 @@ assertSameCompartment(JSContext* cx, const T1& t1, const T2& t2)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1);
-    c.check(t2);
+    c.check(t1, 2);
+    c.check(t2, 3);
 #endif
 }
 
@@ -225,9 +226,9 @@ assertSameCompartment(JSContext* cx, const T1& t1, const T2& t2, const T3& t3)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1);
-    c.check(t2);
-    c.check(t3);
+    c.check(t1, 2);
+    c.check(t2, 3);
+    c.check(t3, 4);
 #endif
 }
 
@@ -237,10 +238,10 @@ assertSameCompartment(JSContext* cx,
 {
 #ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1);
-    c.check(t2);
-    c.check(t3);
-    c.check(t4);
+    c.check(t1, 2);
+    c.check(t2, 3);
+    c.check(t3, 4);
+    c.check(t4, 5);
 #endif
 }
 
@@ -250,11 +251,11 @@ assertSameCompartment(JSContext* cx,
 {
 #ifdef JS_CRASH_DIAGNOSTICS
     START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1);
-    c.check(t2);
-    c.check(t3);
-    c.check(t4);
-    c.check(t5);
+    c.check(t1, 2);
+    c.check(t2, 3);
+    c.check(t3, 4);
+    c.check(t4, 5);
+    c.check(t5, 6);
 #endif
 }
 
