@@ -1817,6 +1817,15 @@ Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp)
     RootedValue scriptFrame(cx);
 
     FrameIter iter(cx);
+
+#if DEBUG
+    // Assert that the hook won't be able to re-enter the generator.
+    if (iter.hasScript() && *iter.pc() == JSOP_DEBUGAFTERYIELD) {
+        GeneratorObject* genObj = GetGeneratorObjectForFrame(cx, iter.abstractFramePtr());
+        MOZ_ASSERT(genObj->isRunning() || genObj->isClosing());
+    }
+#endif
+
     if (!getFrame(cx, iter, &scriptFrame))
         return reportUncaughtException(ar);
 

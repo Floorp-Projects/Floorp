@@ -4286,6 +4286,20 @@ CASE(JSOP_RESUME)
         TraceLogStartEvent(logger, scriptEvent);
         TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
+        switch (Debugger::onEnterFrame(cx, REGS.fp())) {
+          case ResumeMode::Continue:
+            break;
+          case ResumeMode::Throw:
+          case ResumeMode::Terminate:
+            goto error;
+          case ResumeMode::Return:
+            MOZ_ASSERT_IF(REGS.fp()->callee().isGenerator(),  // as opposed to an async function
+                          gen->isClosed());
+            if (!ForcedReturn(cx, REGS))
+                goto error;
+            goto successful_return_continuation;
+        }
+
         switch (resumeKind) {
           case GeneratorObject::NEXT:
             break;
