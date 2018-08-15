@@ -69,13 +69,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "164fa25166b1"
+        "revision": "55bd1ddf1190"
     }, 
     "cak": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "6d63b307d1ad"
+        "revision": "20ef95636d6b"
     }, 
     "cs": {
         "platforms": [
@@ -129,7 +129,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "b83e4a6d9064"
+        "revision": "e04f27d7c730"
     }, 
     "es-AR": {
         "platforms": [
@@ -141,7 +141,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "803a05044646"
+        "revision": "a212fa4278be"
     }, 
     "es-ES": {
         "platforms": [
@@ -183,13 +183,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "98bf60561539"
+        "revision": "0df405d541f0"
     }, 
     "fr": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "278205f647bc"
+        "revision": "b3667aa13bbc"
     }, 
     "fy-NL": {
         "platforms": [
@@ -279,7 +279,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "fa76bccf8531"
+        "revision": "c38376fe8c95"
     }, 
     "ja": {
         "platforms": [
@@ -351,13 +351,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "05a4005bafc7"
+        "revision": "5252366e68e0"
     }, 
     "ms": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "062472ade578"
+        "revision": "95857f6bc1bf"
     }, 
     "my": {
         "platforms": [
@@ -381,13 +381,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "91048b998f9e"
+        "revision": "5cd29229699e"
     }, 
     "nn-NO": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "cac94f982e9a"
+        "revision": "ef6a41387618"
     }, 
     "oc": {
         "platforms": [
