@@ -202,3 +202,37 @@ splitter.devtools-horizontal-splitter,
 .devtools-side-splitter {
   background-color: var(--theme-splitter-color);
 }
+
+/* Dropdown Menu Button */
+.devtools-dropdown-button {
+  background-image: url("chrome://devtools/skin/images/select-arrow.svg") !important;
+  background-repeat: no-repeat !important;
+  overflow: hidden;
+  fill: var(--theme-toolbar-photon-icon-color);
+  -moz-context-properties: fill;
+}
+
+.devtools-dropdown-button:not(:hover) {
+  background-color: transparent;
+}
+
+/* Style for title holder inside the dropdown menu button */
+.devtools-dropdown-button .title {
+  display: inline-block;
+  overflow: hidden;
+  padding-top: 0.15em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#network-throttling-menu {
+  background-position: right 4px center;
+  padding-left: 0;
+  width: 92px;
+}
+
+/* Make sure spacing between text and icon is uniform */
+#network-throttling-menu .title {
+  width: 85%;
+}
