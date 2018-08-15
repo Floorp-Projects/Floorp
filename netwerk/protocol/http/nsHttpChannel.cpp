@@ -638,11 +638,6 @@ nsHttpChannel::Connect()
             NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
                                                              &result)) &&
             result) {
-            if (CheckFastBlocked()) {
-                Unused << AsyncAbort(NS_ERROR_ABORT);
-                CloseCacheEntry(false);
-                return NS_OK;
-            }
 
             AddClassFlags(nsIClassOfService::Tail);
         }
@@ -699,6 +694,14 @@ nsHttpChannel::CheckFastBlocked()
         Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
     }
 
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+    bool result = false;
+    if (!thirdPartyUtil ||
+        NS_FAILED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr, &result)) ||
+        !result) {
+        return false;
+    }
+
     TimeStamp timestamp;
     if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp))) {
         return false;
@@ -725,6 +728,13 @@ nsHttpChannel::ConnectOnTailUnblock()
     nsresult rv;
 
     LOG(("nsHttpChannel::ConnectOnTailUnblock [this=%p]\n", this));
+
+    bool isTrackingResource = mIsTrackingResource; // is atomic
+    if (isTrackingResource && CheckFastBlocked()) {
+        Unused << AsyncAbort(NS_ERROR_ABORT);
+        CloseCacheEntry(false);
+        return NS_OK;
+    }
 
     // Consider opening a TCP connection right away.
     SpeculativeConnect();
