@@ -212,31 +212,14 @@ select > option.divider {
   opacity: 1 !important;
 }
 
-#device-pixel-ratio-selector {
-  -moz-user-select: none;
-  color: var(--viewport-color);
-  height: 15px;
+#device-pixel-ratio-menu {
+  width: 6em;
   /* `max-width` is here to keep the UI compact if the device pixel ratio changes to a
      repeating decimal value.  This can happen if you zoom the UI (Cmd + Plus / Minus on
      macOS for example). */
   max-width: 8em;
-}
-
-#device-pixel-ratio-selector.focused,
-#device-pixel-ratio-selector:not(.disabled):hover {
-  color: var(--viewport-hover-color);
-}
-
-#device-pixel-ratio-selector:focus {
-  color: var(--viewport-active-color);
-}
-
-#device-pixel-ratio-selector.selected {
-  color: var(--viewport-active-color);
-}
-
-#device-pixel-ratio-selector > option {
-  padding: 5px;
+  background-position: right 4px center;
+  padding-left: 0;
 }
 
 #viewports-container {

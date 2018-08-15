@@ -8,7 +8,7 @@ const { PureComponent, createFactory } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
+const DevicePixelRatioMenu = createFactory(require("./DevicePixelRatioMenu"));
 const DeviceSelector = createFactory(require("./DeviceSelector"));
 const NetworkThrottlingMenu = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingMenu"));
 const SettingsMenu = createFactory(require("./SettingsMenu"));
@@ -96,7 +96,7 @@ class Toolbar extends PureComponent {
           title: getStr("responsive.rotate"),
         }),
         dom.div({ className: "devtools-separator" }),
-        DevicePixelRatioSelector({
+        DevicePixelRatioMenu({
           devices,
           displayPixelRatio,
           selectedDevice,
