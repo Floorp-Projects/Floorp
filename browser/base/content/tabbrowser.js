@@ -1685,9 +1685,7 @@ window._gBrowser = {
     return true;
   },
 
-  updateBrowserRemotenessByURL(aBrowser, aURL, aOptions) {
-    aOptions = aOptions || {};
-
+  updateBrowserRemotenessByURL(aBrowser, aURL, aOptions = {}) {
     if (!gMultiProcessBrowser)
       return this.updateBrowserRemoteness(aBrowser, false);
 
