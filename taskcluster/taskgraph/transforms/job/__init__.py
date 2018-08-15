@@ -84,6 +84,7 @@ job_description_schema = Schema({
         basestring: [basestring, {
             Required('artifact'): basestring,
             Optional('dest'): basestring,
+            Optional('extract'): bool,
         }],
     },
 
@@ -189,6 +190,7 @@ def use_fetches(config, jobs):
                     job_fetches.append({
                         'artifact': path,
                         'task': '<{dep}>'.format(dep=dep),
+                        'extract': True,
                     })
 
             else:
@@ -200,13 +202,16 @@ def use_fetches(config, jobs):
                     if isinstance(artifact, basestring):
                         path = artifact
                         dest = None
+                        extract = True
                     else:
                         path = artifact['artifact']
                         dest = artifact.get('dest')
+                        extract = artifact.get('extract', True)
 
                     fetch = {
                         'artifact': '{prefix}/{path}'.format(prefix=prefix, path=path),
                         'task': '<{dep}>'.format(dep=kind),
+                        'extract': extract,
                     }
                     if dest is not None:
                         fetch['dest'] = dest
