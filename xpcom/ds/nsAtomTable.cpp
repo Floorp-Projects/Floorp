@@ -671,8 +671,10 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen)
 void
 NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(gAtomTable);
   gAtomTable->RegisterStaticAtoms(aAtoms, aAtomsLen);
+  gStaticAtomsDone = true;
 }
 
 already_AddRefed<nsAtom>
@@ -832,13 +834,6 @@ nsAtomTable::GetStaticAtom(const nsAString& aUTF16String)
   return he && he->mAtom->IsStatic()
        ? static_cast<nsStaticAtom*>(he->mAtom)
        : nullptr;
-}
-
-void
-NS_SetStaticAtomsDone()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  gStaticAtomsDone = true;
 }
 
 void ToLowerCaseASCII(RefPtr<nsAtom>& aAtom)
