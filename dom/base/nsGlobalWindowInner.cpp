@@ -3207,52 +3207,17 @@ void
 nsGlobalWindowInner::SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                                ErrorResult& aError)
 {
-  // Check if we were called from a privileged chrome script.  If not, and if
-  // aOpener is not null, just define aOpener on our inner window's JS object,
-  // wrapped into the current compartment so that for Xrays we define on the
-  // Xray expando object, but don't set it on the outer window, so that it'll
-  // get reset on navigation.  This is just like replaceable properties, but
-  // we're not quite readonly.
-  if (!aOpener.isNull() && !nsContentUtils::IsCallerChrome()) {
-    RedefineProperty(aCx, "opener", aOpener, aError);
+  if (aOpener.isNull()) {
+    SetOpenerWindow(nullptr, false);
     return;
   }
 
-  if (!aOpener.isObjectOrNull()) {
-    // Chrome code trying to set some random value as opener
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  nsPIDOMWindowInner* win = nullptr;
-  if (aOpener.isObject()) {
-    JSObject* unwrapped = js::CheckedUnwrap(&aOpener.toObject(),
-                                            /* stopAtWindowProxy = */ false);
-    if (!unwrapped) {
-      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return;
-    }
-
-    auto* globalWindow = xpc::WindowOrNull(unwrapped);
-    if (!globalWindow) {
-      // Wasn't a window
-      aError.Throw(NS_ERROR_INVALID_ARG);
-      return;
-    }
-
-    win = globalWindow;
-  }
-
-  nsPIDOMWindowOuter* outer = nullptr;
-  if (win) {
-    if (!win->IsCurrentInnerWindow()) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-    outer = win->GetOuterWindow();
-  }
-
-  SetOpenerWindow(outer, false);
+  // If something other than null is passed, just define aOpener on our inner
+  // window's JS object, wrapped into the current compartment so that for Xrays
+  // we define on the Xray expando object, but don't set it on the outer window,
+  // so that it'll get reset on navigation.  This is just like replaceable
+  // properties, but we're not quite readonly.
+  RedefineProperty(aCx, "opener", aOpener, aError);
 }
 
 void
