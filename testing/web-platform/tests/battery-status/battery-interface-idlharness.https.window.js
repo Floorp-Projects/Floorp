@@ -6,7 +6,7 @@
 'use strict';
 
 idl_test(
-  ['battery'],
+  ['battery-status'],
   ['dom', 'html'],
   async idl_array => {
     idl_array.add_objects({
