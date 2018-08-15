@@ -2,6 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* CSS Variables specific to the font editor that aren't defined by the themes */
+:root {
+  --slider-thumb-color: var(--grey-50);
+  --slider-track-color: var(--grey-30);
+  --toggle-thumb-color: white;
+  --toggle-track-color: var(--grey-30);
+  --input-background-color: white;
+  --input-border-color: var(--grey-30);
+  --input-text-color: var(--grey-90);
+}
+
+:root.theme-dark {
+  --slider-thumb-color: var(--grey-40);
+  --slider-track-color: var(--grey-50);
+  --toggle-thumb-color: var(--grey-40);
+  --toggle-track-color: var(--grey-50);
+  --input-background-color: var(--grey-70);
+  --input-border-color: var(--grey-70);
+  --input-text-color: var(--grey-40);
+}
+
 #sidebar-panel-fontinspector {
   margin: 0;
   display: flex;
@@ -16,14 +37,18 @@
 }
 
 #font-editor {
-  padding-bottom: .8em;
+  padding-bottom: .5em;
 }
 
 #font-editor summary {
   -moz-user-select: none;
   cursor: pointer;
-  margin-bottom: .7em;
+  margin-bottom: .4em;
   width: -moz-fit-content;
+}
+
+#font-editor details {
+  padding-bottom: .5em;
 }
 
 #font-editor details .label-open,
@@ -47,7 +72,7 @@
 
 .font {
   border: 1px solid var(--theme-splitter-color);
-  border-width: 0 1px 1px 0;
+  border-width: 0 0 1px 0;
   display: grid;
   grid-template-columns: 1fr auto;
   grid-column-gap: 10px;
@@ -144,27 +169,35 @@
   vertical-align: middle;
 }
 
-.font-axes-controls {
-  border-top: 1px solid var(--theme-splitter-color);
-  margin-top: .8em;
-  padding-top: .8em;
-}
-
 .font-control {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 18px;
+  padding: 0 18px;
+  margin: .6em 0;
+}
+
+/* Style *all* axis controls with a top separator. See reset below. */
+.font-control-axis {
+  border-top: 1px solid var(--theme-splitter-color);
+  padding-top: 1.1em;
+}
+
+/* Remove styles form all axis controls aside from the first one.
+   Workaround for :first-of-type which doesn't work with class names. */
+.font-control-axis ~ .font-control-axis {
+  border-top: unset;
+  padding-top: unset;
 }
 
 .font-control-family {
   align-items: flex-start;
   border-bottom: 1px solid var(--theme-splitter-color);
-  margin-bottom: .8em;
-  padding-top: .6em;
-  padding-bottom: .4em;
+  margin-top: 0;
+  margin-bottom: 1em;
+  padding-top: 1em;
 }
 
 .font-control-box,
@@ -190,17 +223,22 @@
 
 .font-family-unused {
   margin-bottom: .3em;
+  margin-left: 1.15em;
   color: var(--grey-50);
-}
-
-.font-instance-select:active{
-  outline: none;
 }
 
 .font-value-input {
   margin-left: 10px;
   text-align: right;
   width: 60px;
+  padding: 2px 3px;
+}
+
+.font-value-input,
+.font-value-select {
+  color: var(--input-text-color);
+  border: 1px solid var(--input-border-color);
+  background-color: var(--input-background-color);
 }
 
 /* Do not use browser "invalid" state */
@@ -215,19 +253,48 @@
 }
 
 /* Add space between input text from number stepper */
-.font-value-input[type=number]::-moz-number-spin-box{
+.font-value-input[type=number]::-moz-number-spin-box {
   margin-left: 3px;
+}
+
+/* Make native number steppers darker to fit the dark theme */
+.theme-dark .font-value-input[type=number]::-moz-number-spin-box {
+  filter: invert(25%);
 }
 
 /* Do not show number stepper for font-size */
 .font-value-input[name=font-size] {
   -moz-appearance: textfield;
-  margin-right: 5px;
   padding-right: 5px;
+  border-right: none;
 }
 
-.font-unit-select {
-  padding: 2px;
+/* Mock separator because inputs don't have distinguishable borders in dark theme */
+.theme-dark .font-value-input + .font-value-select {
+  margin-left: 2px;
+}
+
+/* Custom styles for <select> elements within the font editor. */
+.font-value-select {
+  background-image: var(--select-arrow-image);
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  fill: var(--theme-toolbar-photon-icon-color);
+  -moz-context-properties: fill;
+  -moz-appearance: none;
+  box-shadow: none;
+  padding: 1px 10px 1px 2px;
+}
+
+.font-value-select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 var(--input-text-color);
+}
+
+.font-value-input:focus,
+.font-value-select:focus {
+  outline: 1px solid var(--blue-55);
+  outline-offset: -1px;
 }
 
 .font-value-slider {
@@ -243,7 +310,8 @@
 .font-value-slider[name=font-weight] {
   --notch-size: 3px;
   /* Draw a vertical line to get one notch per background-image instance */
-  background-image: linear-gradient(90deg, var(--grey-30) var(--notch-size), transparent 0);
+  background-image: linear-gradient(90deg, var(--slider-track-color) var(--notch-size),
+   transparent 0);
   /* Offset the background so the notch aligns with the center of the slider thumb */
   background-position: 5px center;
   /* Repeat the background-image horizontally */
@@ -261,12 +329,16 @@
 }
 
 .font-value-slider::-moz-range-thumb {
-  background: var(--grey-50);
+  background-color: var(--slider-thumb-color);
   border: 0;
 }
 
+.font-value-slider:focus::-moz-range-thumb {
+  background-color: var(--blue-55);
+}
+
 .font-value-slider::-moz-range-track {
-  background: var(--grey-30);
+  background-color: var(--slider-track-color);
   height: 3px;
 }
 
@@ -279,7 +351,7 @@
   --x-pos: .15em;
   /* Reset native checkbox styling. */
   -moz-appearance: none;
-  background-color: var(--grey-30);
+  background-color: var(--toggle-track-color);
   cursor: pointer;
   /* Change font-size to scale. */
   font-size: 16px;
@@ -288,6 +360,17 @@
   border-radius: 1em;
   /* Animate the thumb position between states of the checkbox. */
   transition: background-color .1s ease-out;
+  /* border: 1px solid transparent; */
+  /* box-sizing: content-box; */
+}
+
+.font-value-toggle:focus {
+  box-shadow: 0 0 0 1px var(--blue-55);
+}
+
+.font-value-toggle:checked:focus {
+  background-color: var(--blue-40);
+  box-shadow: none;
 }
 
 .font-value-toggle:checked {
@@ -303,13 +386,17 @@
   border-radius: 100%;
   display: block;
   content: "";
-  background-color: white;
+  background-color: var(--toggle-thumb-color);
   transition: transform .1s ease-out;
 }
 
+.font-value-toggle:checked::before {
+  background-color: white;
+}
+
 .font-origin {
-  margin-top: .2em;
-  color: var(--grey-50);
+  margin-top: -.25em;
+  color: var(--theme-comment);
   justify-self: start;
 }
 
@@ -341,12 +428,15 @@
   background-size: 12px;
   background-position-x: -1px;
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-color);
-
+  fill: var(--grey-50);
 }
 
 #font-container .accordion {
   border-top: 1px solid var(--theme-splitter-color);
+}
+
+#font-container .accordion ._content {
+  padding: 0;
 }
 
 #font-container .accordion + .accordion {
