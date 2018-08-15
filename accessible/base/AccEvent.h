@@ -104,8 +104,7 @@ public:
     eSelectionChangeEvent,
     eTableChangeEvent,
     eVirtualCursorChangeEvent,
-    eObjectAttrChangedEvent,
-    eScrollingEvent,
+    eObjectAttrChangedEvent
   };
 
   static const EventGroup kEventGroup = eGenericEvent;
@@ -546,46 +545,6 @@ private:
   RefPtr<nsAtom> mAttribute;
 
   virtual ~AccObjectAttrChangedEvent() { }
-};
-
-/**
- * Accessible scroll event.
- */
-class AccScrollingEvent : public AccEvent
-{
-public:
-  AccScrollingEvent(uint32_t aEventType, Accessible* aAccessible,
-                    uint32_t aScrollX, uint32_t aScrollY,
-                    uint32_t aMaxScrollX, uint32_t aMaxScrollY) :
-    AccEvent(aEventType, aAccessible),
-    mScrollX(aScrollX),
-    mScrollY(aScrollY),
-    mMaxScrollX(aMaxScrollX),
-    mMaxScrollY(aMaxScrollY) { }
-
-  virtual ~AccScrollingEvent() { }
-
-  // AccEvent
-  static const EventGroup kEventGroup = eScrollingEvent;
-  virtual unsigned int GetEventGroups() const override
-  {
-    return AccEvent::GetEventGroups() | (1U << eScrollingEvent);
-  }
-
-  // The X scrolling offset of the container when the event was fired.
-  uint32_t ScrollX() { return mScrollX; }
-  // The Y scrolling offset of the container when the event was fired.
-  uint32_t ScrollY() { return mScrollY; }
-  // The max X offset of the container.
-  uint32_t MaxScrollX() { return mMaxScrollX; }
-  // The max Y offset of the container.
-  uint32_t MaxScrollY() { return mMaxScrollY; }
-
-private:
-  uint32_t mScrollX;
-  uint32_t mScrollY;
-  uint32_t mMaxScrollX;
-  uint32_t mMaxScrollY;
 };
 
 /**

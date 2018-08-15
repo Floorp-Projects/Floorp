@@ -610,10 +610,17 @@ DocAccessible::ScrollTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   DocAccessible* docAcc = reinterpret_cast<DocAccessible*>(aClosure);
 
-  if (docAcc) {
-    docAcc->DispatchScrollingEvent(nsIAccessibleEvent::EVENT_SCROLLING_END);
+  if (docAcc && docAcc->mScrollPositionChangedTicks &&
+      ++docAcc->mScrollPositionChangedTicks > 2) {
+    // Whenever scroll position changes, mScrollPositionChangeTicks gets reset to 1
+    // We only want to fire accessibilty scroll event when scrolling stops or pauses
+    // Therefore, we wait for no scroll events to occur between 2 ticks of this timer
+    // That indicates a pause in scrolling, so we fire the accessibilty scroll event
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_END, docAcc);
 
+    docAcc->mScrollPositionChangedTicks = 0;
     if (docAcc->mScrollWatchTimer) {
+      docAcc->mScrollWatchTimer->Cancel();
       docAcc->mScrollWatchTimer = nullptr;
       NS_RELEASE(docAcc); // Release kung fu death grip
     }
@@ -626,31 +633,24 @@ DocAccessible::ScrollTimerCallback(nsITimer* aTimer, void* aClosure)
 void
 DocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
 {
-  const uint32_t kScrollEventInterval = 100;
-  TimeStamp timestamp = TimeStamp::Now();
-  if (mLastScrollingDispatch.IsNull() ||
-      (timestamp - mLastScrollingDispatch).ToMilliseconds() >= kScrollEventInterval) {
-    DispatchScrollingEvent(nsIAccessibleEvent::EVENT_SCROLLING);
-    mLastScrollingDispatch = timestamp;
-  }
-
-  // If timer callback is still pending, push it 100ms into the future.
-  // When scrolling ends and we don't fire this callback anymore, the
-  // timer callback will fire and dispatch an EVENT_SCROLLING_END.
+  // Start new timer, if the timer cycles at least 1 full cycle without more scroll position changes,
+  // then the ::Notify() method will fire the accessibility event for scroll position changes
+  const uint32_t kScrollPosCheckWait = 50;
   if (mScrollWatchTimer) {
-    mScrollWatchTimer->SetDelay(kScrollEventInterval);
+    mScrollWatchTimer->SetDelay(kScrollPosCheckWait);  // Create new timer, to avoid leaks
   }
   else {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mScrollWatchTimer),
                                 ScrollTimerCallback,
                                 this,
-                                kScrollEventInterval,
-                                nsITimer::TYPE_ONE_SHOT,
+                                kScrollPosCheckWait,
+                                nsITimer::TYPE_REPEATING_SLACK,
                                 "a11y::DocAccessible::ScrollPositionDidChange");
     if (mScrollWatchTimer) {
       NS_ADDREF_THIS(); // Kung fu death grip
     }
   }
+  mScrollPositionChangedTicks = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2442,25 +2442,4 @@ DocAccessible::IsLoadEventTarget() const
 
   // It's content (not chrome) root document.
   return (treeItem->ItemType() == nsIDocShellTreeItem::typeContent);
-}
-
-void
-DocAccessible::DispatchScrollingEvent(uint32_t aEventType)
-{
-  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
-
-  int32_t appUnitsPerDevPixel = mPresShell->GetPresContext()->AppUnitsPerDevPixel();
-  LayoutDevicePoint scrollPoint = LayoutDevicePoint::FromAppUnits(
-    sf->GetScrollPosition(), appUnitsPerDevPixel) * mPresShell->GetResolution();
-
-  LayoutDeviceRect scrollRange = LayoutDeviceRect::FromAppUnits(
-    sf->GetScrollRange(), appUnitsPerDevPixel);
-  scrollRange.ScaleRoundOut(mPresShell->GetResolution());
-
-  RefPtr<AccEvent> event = new AccScrollingEvent(aEventType, this,
-                                                 scrollPoint.x, scrollPoint.y,
-                                                 scrollRange.width,
-                                                 scrollRange.height);
-
-  nsEventShell::FireEvent(event);
 }
