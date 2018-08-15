@@ -155,6 +155,7 @@ class WrapperHandler(object):
 
 class HtmlWrapperHandler(WrapperHandler):
     global_type = None
+    headers = [('Content-Type', 'text/html')]
 
     def check_exposure(self, request):
         if self.global_type:
