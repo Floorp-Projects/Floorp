@@ -18,15 +18,8 @@ add_task(async function() {
   ok(selectEl, "scrubber controller should exist");
 
   info("Checking playback rate existence which includes custom rate of animations");
-  const selectableRates = [0.1, 0.25, 0.5, 1, 1.5, 2, 5, 10];
-  is(selectEl.options.length, selectableRates.length,
-    `Length of options should be ${ selectableRates.length }`);
-  for (let i = 0; i < selectEl.options.length; i++) {
-    const optionEl = selectEl.options[i];
-    const selectableRate = selectableRates[i];
-    is(Number(optionEl.value), selectableRate,
-      `Option of index[${ i }] should be ${ selectableRate }`);
-  }
+  const expectedPlaybackRates = [0.1, 0.25, 0.5, 1, 1.5, 2, 5, 10];
+  assertPlaybackRateOptions(selectEl, expectedPlaybackRates);
 
   info("Checking selected playback rate");
   is(Number(selectEl.value), 1.5, "Selected option should be 1.5");
@@ -45,10 +38,26 @@ add_task(async function() {
   info("Checking playback rate after re-setting");
   await clickOnPlaybackRateSelector(animationInspector, panel, 1);
   assertPlaybackRate(animationInspector, 1);
+
+  info("Checking whether custom playback rate exist " +
+       "after selecting another playback rate");
+  assertPlaybackRateOptions(selectEl, expectedPlaybackRates);
 });
 
 async function assertPlaybackRate(animationInspector, rate) {
   const isRateEqual =
     animationInspector.state.animations.every(({state}) => state.playbackRate === rate);
   ok(isRateEqual, `Playback rate of animations should be ${ rate }`);
+}
+
+function assertPlaybackRateOptions(selectEl, expectedPlaybackRates) {
+  is(selectEl.options.length, expectedPlaybackRates.length,
+    `Length of options should be ${ expectedPlaybackRates.length }`);
+
+  for (let i = 0; i < selectEl.options.length; i++) {
+    const optionEl = selectEl.options[i];
+    const expectedPlaybackRate = expectedPlaybackRates[i];
+    is(Number(optionEl.value), expectedPlaybackRate,
+      `Option of index[${ i }] should be ${ expectedPlaybackRate }`);
+  }
 }

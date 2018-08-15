@@ -167,7 +167,8 @@ class TypedOperandId : public OperandId
     _(ToBool)               \
     _(Call)                 \
     _(UnaryArith)           \
-    _(BinaryArith)
+    _(BinaryArith)          \
+    _(NewObject)
 
 enum class CacheKind : uint8_t
 {
@@ -221,6 +222,8 @@ extern const char* const CacheKindNames[];
     _(GuardTagNotEqual)                   \
     _(GuardXrayExpandoShapeAndDefaultProto) \
     _(GuardFunctionPrototype)             \
+    _(GuardNoAllocationMetadataBuilder)   \
+    _(GuardObjectGroupNotPretenured)      \
     _(LoadStackValue)                     \
     _(LoadObject)                         \
     _(LoadProto)                          \
@@ -319,6 +322,7 @@ extern const char* const CacheKindNames[];
     _(LoadStringTruthyResult)             \
     _(LoadObjectTruthyResult)             \
     _(LoadValueResult)                    \
+    _(LoadNewObjectFromTemplateResult)    \
                                           \
     _(CallStringSplitResult)              \
     _(CallStringConcatResult)             \
@@ -645,6 +649,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardFunctionPrototype, rhs);
         writeOperandId(protoId);
         addStubField(slot, StubField::Type::RawWord);
+    }
+    void guardNoAllocationMetadataBuilder() {
+        writeOp(CacheOp::GuardNoAllocationMetadataBuilder);
+    }
+    void guardObjectGroupNotPretenured(ObjectGroup* group) {
+        writeOp(CacheOp::GuardObjectGroupNotPretenured);
+        addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
     }
   private:
     // Use (or create) a specialization below to clarify what constaint the
@@ -1249,6 +1260,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadValueResult(const Value& val) {
         writeOp(CacheOp::LoadValueResult);
         addStubField(val.asRawBits(), StubField::Type::Value);
+    }
+    void loadNewObjectFromTemplateResult(JSObject* templateObj) {
+        writeOp(CacheOp::LoadNewObjectFromTemplateResult);
+        addStubField(uintptr_t(templateObj), StubField::Type::JSObject);
+        // Bake in a monotonically increasing number to ensure we differentiate
+        // between different baseline stubs that otherwise might share
+        // stub code.
+        uint64_t id = cx_->runtime()->jitRuntime()->nextDisambiguationId();
+        writeUint32Immediate(id & UINT32_MAX);
+        writeUint32Immediate(id >> 32);
     }
     void callStringConcatResult(StringOperandId lhs, StringOperandId rhs) {
         writeOpWithOperandId(CacheOp::CallStringConcatResult, lhs);
@@ -1936,6 +1957,20 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
 
     bool tryAttachStub();
 
+};
+
+class MOZ_RAII NewObjectIRGenerator : public IRGenerator
+{
+    JSOp op_;
+    HandleObject templateObject_;
+
+    void trackAttached(const char* name);
+
+  public:
+    NewObjectIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
+                         JSOp op, HandleObject templateObj);
+
+    bool tryAttachStub();
 };
 
 } // namespace jit
