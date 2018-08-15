@@ -49,7 +49,6 @@ const mozilla::Module::ContractIDEntry kPlacesContracts[] = {
   { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-anno", &kNS_ANNOPROTOCOLHANDLER_CID },
   { NS_NAVBOOKMARKSSERVICE_CONTRACTID, &kNS_NAVBOOKMARKSSERVICE_CID },
   { NS_FAVICONSERVICE_CONTRACTID, &kNS_FAVICONSERVICE_CID },
-  { "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1", &kNS_NAVHISTORYSERVICE_CID },
   { NS_IHISTORY_CONTRACTID, &kNS_HISTORYSERVICE_CID },
   { nullptr }
 };
