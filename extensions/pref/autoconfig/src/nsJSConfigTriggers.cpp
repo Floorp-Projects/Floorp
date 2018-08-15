@@ -41,7 +41,7 @@ nsresult CentralizedAdminPrefManagerInit(bool aSandboxEnabled)
     if (autoconfigSb.initialized())
         return NS_OK;
 
-    sandboxEnabled = aSandboxEnabled;
+    sandboxEnabled = aSandboxEnabled || !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "release");
 
     // Grab XPConnect.
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
