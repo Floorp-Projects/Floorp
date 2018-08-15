@@ -14,6 +14,10 @@ const {
   SEND_CUSTOM_REQUEST,
 } = require("../constants");
 
+const {
+  CHANGE_NETWORK_THROTTLING,
+} = require("devtools/client/shared/components/throttling/actions");
+
 /**
  * Event telemetry middleware is responsible for logging
  * various events to telemetry. This helps to track Network
@@ -61,6 +65,15 @@ function eventTelemetryMiddleware(connector, telemetry) {
     // Record telemetry event when a request is resent.
     if (action.type == SEND_CUSTOM_REQUEST) {
       sendCustomRequest({
+        telemetry,
+        sessionId,
+      });
+    }
+
+    // Record telemetry event when throttling is changed.
+    if (action.type == CHANGE_NETWORK_THROTTLING) {
+      throttlingChange({
+        action,
         telemetry,
         sessionId,
       });
@@ -128,6 +141,17 @@ function sidePanelChange({state, oldState, telemetry, sessionId}) {
  */
 function sendCustomRequest({telemetry, sessionId}) {
   telemetry.recordEvent("devtools.main", "edit_resend", "netmonitor", null, {
+    "session_id": sessionId,
+  });
+}
+
+/**
+ * This helper function is executed when network throttling is changed.
+ * It's responsible for recording "throttle_changed" telemetry event.
+ */
+function throttlingChange({action, telemetry, sessionId}) {
+  telemetry.recordEvent("devtools.main", "throttle_changed", "netmonitor", null, {
+    "mode": action.profile,
     "session_id": sessionId,
   });
 }

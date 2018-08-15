@@ -574,7 +574,7 @@ with Files("tests/websockets/**"):
     BUG_COMPONENT = ("Core", "Networking: WebSockets")
 
 with Files("tests/webstorage/**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Web Storage")
 
 with Files("tests/webusb/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")

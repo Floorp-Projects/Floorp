@@ -2172,7 +2172,11 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     // Smaller files may be written in cache map instead of separate files.
     // Also, no-store response cannot be written in persistent cache.
     nsAutoCString contentType;
-    mChannel->GetContentType(contentType);
+    if (!mOverrideMimeType.IsEmpty()) {
+      contentType.Assign(NS_ConvertUTF16toUTF8(mOverrideMimeType));
+    } else {
+      mChannel->GetContentType(contentType);
+    }
 
     // mBlobStorage can be null if the channel is non-file non-cacheable
     // and if the response length is zero.
@@ -3135,7 +3139,12 @@ XMLHttpRequestMainThread::OverrideMimeType(const nsAString& aMimeType,
     return;
   }
 
-  mOverrideMimeType = aMimeType;
+  UniquePtr<MimeType> parsed = MimeType::Parse(aMimeType);
+  if (parsed) {
+    parsed->Serialize(mOverrideMimeType);
+  } else {
+    mOverrideMimeType.AssignLiteral(APPLICATION_OCTET_STREAM);
+  }
 }
 
 bool

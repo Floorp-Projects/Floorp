@@ -786,12 +786,12 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
           ScrollSelectionIntoView(false);
         }
       } else if (HTMLEditUtils::IsListItem(blockParent)) {
-        rv = Indent(aKeyboardEvent->IsShift()
-                    ? NS_LITERAL_STRING("outdent")
-                    : NS_LITERAL_STRING("indent"));
+        rv = !aKeyboardEvent->IsShift() ? IndentAsAction() : OutdentAsAction();
         handled = true;
       }
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       if (handled) {
         aKeyboardEvent->PreventDefault(); // consumed
         return NS_OK;
@@ -1637,8 +1637,10 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
       // Set caret after element, but check for special case
       //  of inserting table-related elements: set in first cell instead
       if (!SetCaretInTableCell(aElement)) {
-        rv = SetCaretAfterElement(aElement);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = CollapseSelectionAfter(*selection, *aElement);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
       // check for inserting a whole table at the end of a block. If so insert
       // a br after it.
@@ -1731,47 +1733,93 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
 NS_IMETHODIMP
 HTMLEditor::SelectElement(Element* aElement)
 {
+  if (NS_WARN_IF(!aElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = SelectContentInternal(*selection, *aElement);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::SelectContentInternal(Selection& aSelection,
+                                  nsIContent& aContentToSelect)
+{
   // Must be sure that element is contained in the document body
-  if (!IsDescendantOfEditorRoot(aElement)) {
-    return NS_ERROR_NULL_POINTER;
+  if (!IsDescendantOfEditorRoot(&aContentToSelect)) {
+    return NS_ERROR_FAILURE;
   }
 
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsINode* parent = aElement->GetParentNode();
+  nsINode* parent = aContentToSelect.GetParentNode();
   if (NS_WARN_IF(!parent)) {
     return NS_ERROR_FAILURE;
   }
 
-  int32_t offsetInParent = parent->ComputeIndexOf(aElement);
+  // Don't notify selection change at collapse.
+  AutoUpdateViewBatch notifySelectionChangeOnce(this);
+
+  // XXX Perhaps, Selection should have SelectNode(nsIContent&).
+  int32_t offsetInParent = parent->ComputeIndexOf(&aContentToSelect);
 
   // Collapse selection to just before desired element,
-  nsresult rv = selection->Collapse(parent, offsetInParent);
-  if (NS_SUCCEEDED(rv)) {
-    // then extend it to just after
-    rv = selection->Extend(parent, offsetInParent + 1);
+  nsresult rv = aSelection.Collapse(parent, offsetInParent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-  return rv;
+  // then extend it to just after
+  rv = aSelection.Extend(parent, offsetInParent + 1);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditor::SetCaretAfterElement(Element* aElement)
 {
-  // Be sure the element is contained in the document body
-  if (!aElement || !IsDescendantOfEditorRoot(aElement)) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aElement)) {
+    return NS_ERROR_INVALID_ARG;
   }
-
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsINode> parent = aElement->GetParentNode();
-  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = CollapseSelectionAfter(*selection, *aElement);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::CollapseSelectionAfter(Selection& aSelection,
+                                   Element& aElement)
+{
+  // Be sure the element is contained in the document body
+  if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsINode* parent = aElement.GetParentNode();
+  if (NS_WARN_IF(!parent)) {
+    return NS_ERROR_FAILURE;
+  }
   // Collapse selection to just after desired element,
-  EditorRawDOMPoint afterElement(aElement);
+  EditorRawDOMPoint afterElement(&aElement);
   if (NS_WARN_IF(!afterElement.AdvanceOffset())) {
     return NS_ERROR_FAILURE;
   }
-  return selection->Collapse(afterElement);
+  ErrorResult error;
+  aSelection.Collapse(afterElement, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2273,33 +2321,83 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
 NS_IMETHODIMP
 HTMLEditor::Indent(const nsAString& aIndent)
 {
+  if (aIndent.LowerCaseEqualsLiteral("indent")) {
+    nsresult rv = IndentAsAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+  if (aIndent.LowerCaseEqualsLiteral("outdent")) {
+    nsresult rv = OutdentAsAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
+HTMLEditor::IndentAsAction()
+{
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  AutoPlaceholderBatch beginBatching(this);
+  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eIndent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::OutdentAsAction()
+{
+  if (!mRules) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  AutoPlaceholderBatch beginBatching(this);
+  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eOutdent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::IndentOrOutdentAsSubAction(EditSubAction aIndentOrOutdent)
+{
+  MOZ_ASSERT(mRules);
+  MOZ_ASSERT(mPlaceholderBatch);
+  MOZ_ASSERT(aIndentOrOutdent == EditSubAction::eIndent ||
+             aIndentOrOutdent == EditSubAction::eOutdent);
 
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
   bool cancel, handled;
-  EditSubAction indentOrOutdent =
-    aIndent.LowerCaseEqualsLiteral("outdent") ? EditSubAction::eOutdent :
-                                                EditSubAction::eIndent;
-  AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, indentOrOutdent, nsIEditor::eNext);
+                                      *this, aIndentOrOutdent,
+                                      nsIEditor::eNext);
 
-  // pre-process
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  EditSubActionInfo subActionInfo(indentOrOutdent);
+  EditSubActionInfo subActionInfo(aIndentOrOutdent);
   nsresult rv =
     rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  if (!handled && selection->IsCollapsed() && aIndent.EqualsLiteral("indent")) {
+  if (!handled && selection->IsCollapsed() &&
+      aIndentOrOutdent == EditSubAction::eIndent) {
     nsRange* firstRange = selection->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -2369,7 +2467,11 @@ HTMLEditor::Indent(const nsAString& aIndent)
       return error.StealNSResult();
     }
   }
-  return rules->DidDoAction(selection, subActionInfo, rv);
+  rv = rules->DidDoAction(selection, subActionInfo, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 //TODO: IMPLEMENT ALIGNMENT!

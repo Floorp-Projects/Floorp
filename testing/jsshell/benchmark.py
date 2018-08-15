@@ -31,9 +31,10 @@ class Benchmark(object):
     should_alert = False
     units = 'score'
 
-    def __init__(self, shell, args=None):
+    def __init__(self, shell, args=None, shell_name=None):
         self.shell = shell
         self.args = args
+        self.shell_name = shell_name
 
     @abstractproperty
     def name(self):
@@ -70,6 +71,10 @@ class Benchmark(object):
 
     def reset(self):
         """Resets state between runs."""
+        name = self.name
+        if self.shell_name:
+            name = '{}-{}'.format(name, self.shell_name)
+
         self.perfherder_data = {
             'framework': {
                 'name': 'js-bench',
@@ -77,7 +82,7 @@ class Benchmark(object):
             'suites': [
                 {
                     'lowerIsBetter': self.lower_is_better,
-                    'name': self.name,
+                    'name': name,
                     'shouldAlert': self.should_alert,
                     'subtests': [],
                     'units': self.units,
@@ -266,8 +271,11 @@ class WebToolingBenchmark(Benchmark):
                 if score_name == 'mean':
                     bench_mean = mean
         self.suite['value'] = bench_mean
-    
+
     def _provision_benchmark_script(self):
+        if os.path.isdir(self.path):
+            return
+
         # Some benchmarks may have been downloaded from a fetch task, make
         # sure they get copied over.
         fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
@@ -275,7 +283,7 @@ class WebToolingBenchmark(Benchmark):
             webtool_fetchdir = os.path.join(fetches_dir, 'web-tooling-benchmark')
             if os.path.isdir(webtool_fetchdir):
                 shutil.copytree(webtool_fetchdir, self.path)
-    
+
     def run(self):
         self._provision_benchmark_script()
         return super(WebToolingBenchmark, self).run()
@@ -289,7 +297,7 @@ all_benchmarks = {
 }
 
 
-def run(benchmark, binary=None, extra_args=None, perfherder=False):
+def run(benchmark, binary=None, extra_args=None, perfherder=None):
     if not binary:
         try:
             binary = os.path.join(build.bindir, 'js' + build.substs['BIN_SUFFIX'])
@@ -300,7 +308,7 @@ def run(benchmark, binary=None, extra_args=None, perfherder=False):
             print(JSSHELL_NOT_FOUND)
             return 1
 
-    bench = all_benchmarks.get(benchmark)(binary, args=extra_args)
+    bench = all_benchmarks.get(benchmark)(binary, args=extra_args, shell_name=perfherder)
     res = bench.run()
 
     if perfherder:
@@ -316,8 +324,8 @@ def get_parser():
                         help="Path to the JS shell binary to use.")
     parser.add_argument('--arg', dest='extra_args', action='append', default=None,
                         help="Extra arguments to pass to the JS shell.")
-    parser.add_argument('--perfherder', action='store_true', default=False,
-                        help="Log PERFHERDER_DATA to stdout.")
+    parser.add_argument('--perfherder', default=None,
+                        help="Log PERFHERDER_DATA to stdout using the given suite name.")
     return parser
 
 

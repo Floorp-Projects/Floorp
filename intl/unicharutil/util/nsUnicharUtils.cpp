@@ -59,6 +59,33 @@ ToLowerCaseASCII(nsAString& aString)
   ToLowerCaseASCII(buf, buf, aString.Length());
 }
 
+char
+ToLowerCaseASCII(char aChar)
+{
+  if (aChar >= 'A' && aChar <= 'Z') {
+    return aChar + 0x20;
+  }
+  return aChar;
+}
+
+char16_t
+ToLowerCaseASCII(char16_t aChar)
+{
+  if (aChar >= 'A' && aChar <= 'Z') {
+    return aChar + 0x20;
+  }
+  return aChar;
+}
+
+char32_t
+ToLowerCaseASCII(char32_t aChar)
+{
+  if (aChar >= 'A' && aChar <= 'Z') {
+    return aChar + 0x20;
+  }
+  return aChar;
+}
+
 void
 ToLowerCase(const nsAString& aSource,
             nsAString& aDest)

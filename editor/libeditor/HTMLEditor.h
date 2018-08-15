@@ -181,6 +181,12 @@ public:
   nsresult OnInputLineBreak();
 
   /**
+   * Indent or outdent content around Selection.
+   */
+  nsresult IndentAsAction();
+  nsresult OutdentAsAction();
+
+  /**
    * event callback when a mouse button is pressed
    * @param aX      [IN] horizontal position of the pointer
    * @param aY      [IN] vertical position of the pointer
@@ -772,6 +778,24 @@ protected: // Shouldn't be used by friend classes
   virtual nsresult SelectAllInternal() override;
 
   /**
+   * SelectContentInternal() sets Selection to aContentToSelect to
+   * aContentToSelect + 1 in parent of aContentToSelect.
+   *
+   * @param aSelection          The Selection, callers have to guarantee the
+   *                            lifetime.
+   * @param aContentToSelect    The content which should be selected.
+   */
+  nsresult SelectContentInternal(Selection& aSelection,
+                                 nsIContent& aContentToSelect);
+
+  /**
+   * CollapseSelectionAfter() collapses Selection after aElement.
+   * If aElement is an orphan node or not in editing host, returns error.
+   */
+  nsresult CollapseSelectionAfter(Selection& aSelection,
+                                  Element& aElement);
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
@@ -821,6 +845,16 @@ protected: // Shouldn't be used by friend classes
    * inserted as normal text.
    */
   nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
+
+  /**
+   * IndentOrOutdentAsSubAction() indents or outdents the content around
+   * Selection.  Callers have to guarantee that there is a placeholder
+   * transaction.
+   *
+   * @param aEditSubAction      Must be EditSubAction::eIndent or
+   *                            EditSubAction::eOutdent.
+   */
+  nsresult IndentOrOutdentAsSubAction(EditSubAction aEditSubAction);
 
   nsresult LoadHTML(const nsAString& aInputString);
 

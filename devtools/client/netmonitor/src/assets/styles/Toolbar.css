@@ -80,7 +80,7 @@
 
 /* style for dropdown button */
 .devtools-drop-down-button {
-  background-image: var(--drop-down-icon-url)  !important;
+  background-image: var(--select-arrow-image)  !important;
   background-repeat: no-repeat !important;
   margin-inline-start: 6px;
   fill: var(--theme-toolbar-photon-icon-color);

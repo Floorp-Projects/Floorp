@@ -264,6 +264,7 @@ devtools.jar:
     skin/images/help.svg (themes/images/help.svg)
     skin/images/read-only.svg (themes/images/read-only.svg)
     skin/images/reveal.svg (themes/images/reveal.svg)
+    skin/images/select-arrow.svg (themes/images/select-arrow.svg)
 
     # Debugger
     skin/images/debugger/angular.svg (themes/images/debugger/angular.svg)
@@ -301,7 +302,6 @@ devtools.jar:
     content/netmonitor/src/assets/styles/Toolbar.css (netmonitor/src/assets/styles/Toolbar.css)
     content/netmonitor/src/assets/styles/variables.css (netmonitor/src/assets/styles/variables.css)
     content/netmonitor/src/assets/icons/play.svg (netmonitor/src/assets/icons/play.svg)
-    content/netmonitor/src/assets/icons/drop-down.svg (netmonitor/src/assets/icons/drop-down.svg)
     content/netmonitor/index.html (netmonitor/index.html)
 
     # Application panel

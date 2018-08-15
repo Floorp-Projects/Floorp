@@ -3811,10 +3811,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   // determination of what sort of element we're planning to construct.
   // Technically, this should happen (implicitly) in step 8, but this
   // determination is side-effect-free, so it's OK.
-  int32_t ns = doc->GetDefaultNamespaceID();
-  if (ns != kNameSpaceID_XUL) {
-    ns = kNameSpaceID_XHTML;
-  }
+  int32_t ns = definition->mNamespaceID;
 
   constructorGetterCallback cb = nullptr;
   if (ns == kNameSpaceID_XUL) {

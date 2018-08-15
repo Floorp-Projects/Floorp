@@ -12,7 +12,6 @@
   --viewport-color: #999797;
   --viewport-hover-color: var(--theme-body-color);
   --viewport-active-color: #3b3b3b;
-  --viewport-selection-arrow: url("./images/select-arrow.svg");
 }
 
 .theme-dark {
@@ -22,7 +21,6 @@
   --viewport-color: #c6ccd0;
   --viewport-hover-color: #dde1e4;
   --viewport-active-color: #fcfcfc;
-  --viewport-selection-arrow: url("./images/select-arrow.svg");
 }
 
 * {
@@ -171,7 +169,7 @@ select > option.divider {
 .toolbar-dropdown.devtools-button,
 .toolbar-dropdown.devtools-button:hover:not(:empty):not(:disabled):not(.checked) {
   background-color: var(--theme-toolbar-background);
-  background-image: var(--viewport-selection-arrow);
+  background-image: var(--select-arrow-image);
   background-position: 100% 50%;
   background-repeat: no-repeat;
   background-size: 7px;

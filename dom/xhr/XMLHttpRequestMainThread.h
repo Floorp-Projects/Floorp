@@ -39,6 +39,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
+#include "mozilla/dom/MimeType.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/URLSearchParams.h"

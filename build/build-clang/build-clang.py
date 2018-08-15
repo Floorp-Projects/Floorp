@@ -356,6 +356,9 @@ if __name__ == "__main__":
     parser.add_argument('--skip-tar', required=False,
                         action='store_true',
                         help="Skip tar packaging stage")
+    parser.add_argument('--skip-checkout', required=False,
+                        action='store_true',
+                        help="Do not checkout/revert source")
 
     args = parser.parse_args()
 
@@ -487,18 +490,19 @@ if __name__ == "__main__":
         else:
             svn_co(source_dir, repo, checkout_dir, llvm_revision)
 
-    checkout_or_update(llvm_repo, llvm_source_dir)
-    checkout_or_update(clang_repo, clang_source_dir)
-    checkout_or_update(compiler_repo, compiler_rt_source_dir)
-    checkout_or_update(libcxx_repo, libcxx_source_dir)
-    if lld_repo:
-        checkout_or_update(lld_repo, lld_source_dir)
-    if libcxxabi_repo:
-        checkout_or_update(libcxxabi_repo, libcxxabi_source_dir)
-    if extra_repo:
-        checkout_or_update(extra_repo, extra_source_dir)
-    for p in config.get("patches", []):
-        patch(p, source_dir)
+    if not args.skip_checkout:
+        checkout_or_update(llvm_repo, llvm_source_dir)
+        checkout_or_update(clang_repo, clang_source_dir)
+        checkout_or_update(compiler_repo, compiler_rt_source_dir)
+        checkout_or_update(libcxx_repo, libcxx_source_dir)
+        if lld_repo:
+            checkout_or_update(lld_repo, lld_source_dir)
+        if libcxxabi_repo:
+            checkout_or_update(libcxxabi_repo, libcxxabi_source_dir)
+        if extra_repo:
+            checkout_or_update(extra_repo, extra_source_dir)
+        for p in config.get("patches", []):
+            patch(p, source_dir)
 
     symlinks = [(clang_source_dir,
                  llvm_source_dir + "/tools/clang"),

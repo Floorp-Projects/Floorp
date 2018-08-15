@@ -125,6 +125,15 @@ class Raptor(object):
         raptor_webext = os.path.join(webext_dir, 'raptor')
         self.log.info("installing webext %s" % raptor_webext)
         self.profile.addons.install(raptor_webext)
+
+        # add test specific preferences
+        if test.get("preferences", None) is not None:
+            if self.config['app'] == "firefox":
+                self.profile.set_preferences(json.loads(test['preferences']))
+            else:
+                self.log.info("preferences were configured for the test, \
+                              but we do not install them on non Firefox browsers.")
+
         # on firefox we can get an addon id; chrome addon actually is just cmd line arg
         if self.config['app'] == "firefox":
             webext_id = self.profile.addons.addon_details(raptor_webext)['id']

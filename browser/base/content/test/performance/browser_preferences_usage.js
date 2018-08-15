@@ -86,7 +86,7 @@ add_task(async function startup() {
       max: 75,
     },
     "network.loadinfo.skip_type_assertion": {
-      max: 658,
+      // This is accessed in debug only.
     },
     "extensions.getAddons.cache.enabled": {
       min: 7,
@@ -141,7 +141,7 @@ add_task(async function open_10_tabs() {
       max: 25,
     },
     "network.loadinfo.skip_type_assertion": {
-      max: 70,
+      // This is accessed in debug only.
     },
     "toolkit.cosmeticAnimations.enabled": {
       min: 5,
@@ -173,7 +173,7 @@ add_task(async function navigate_around() {
       max: 110,
     },
     "network.loadinfo.skip_type_assertion": {
-      max: 130,
+      // This is accessed in debug only.
     },
     "security.insecure_connection_icon.pbmode.enabled": {
       min: 20,

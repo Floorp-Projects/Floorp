@@ -42,7 +42,6 @@
   /* Icons */
   --play-icon-url: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
   --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");
-  --drop-down-icon-url: url("chrome://devtools/content/netmonitor/src/assets/icons/drop-down.svg");
 
   /* HTTP status codes */
   --status-code-color-1xx: var(--theme-highlight-blue);

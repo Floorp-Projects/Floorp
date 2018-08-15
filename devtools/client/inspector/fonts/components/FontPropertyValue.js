@@ -17,6 +17,7 @@ class FontPropertyValue extends PureComponent {
   static get propTypes() {
     return {
       allowAutoIncrement: PropTypes.bool,
+      className: PropTypes.string,
       defaultValue: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       label: PropTypes.string.isRequired,
       min: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
@@ -288,7 +289,7 @@ class FontPropertyValue extends PureComponent {
 
       unitDropdown = dom.select(
         {
-          className: "font-unit-select",
+          className: "font-value-select",
           onChange: this.onUnitChange,
         },
         options.map(unit => {
@@ -305,7 +306,7 @@ class FontPropertyValue extends PureComponent {
 
     return dom.label(
       {
-        className: "font-control",
+        className: `font-control ${this.props.className || ""}`,
       },
       dom.span(
         {
