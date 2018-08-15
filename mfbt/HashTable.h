@@ -289,11 +289,11 @@ public:
   // Like putNew(), but should be only used when the table is known to be big
   // enough for the insertion, and hashing cannot fail. Typically this is used
   // to populate an empty map with known-unique keys after reserving space with
-  // init(), e.g.
+  // reserve(), e.g.
   //
   //   using HM = HashMap<int,char>;
   //   HM h;
-  //   if (!h.init(3)) {
+  //   if (!h.reserve(3)) {
   //     MOZ_CRASH("OOM");
   //   }
   //   h.putNewInfallible(1, 'a');    // unique key
@@ -603,11 +603,11 @@ public:
   // Like putNew(), but should be only used when the table is known to be big
   // enough for the insertion, and hashing cannot fail. Typically this is used
   // to populate an empty set with known-unique elements after reserving space
-  // with init(), e.g.
+  // with reserve(), e.g.
   //
   //   using HS = HashMap<int>;
   //   HS h;
-  //   if (!h.init(3)) {
+  //   if (!h.reserve(3)) {
   //     MOZ_CRASH("OOM");
   //   }
   //   h.putNewInfallible(1);     // unique element
