@@ -1394,7 +1394,7 @@ nsComboboxControlFrame::CreateFrameForDisplayNode()
   // create the ComputedStyle for the anonymous block frame and text frame
   RefPtr<ComputedStyle> computedStyle;
   computedStyle = styleSet->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame(),
+    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                                        mComputedStyle);
 
   RefPtr<ComputedStyle> textComputedStyle;

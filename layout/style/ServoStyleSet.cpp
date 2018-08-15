@@ -468,9 +468,9 @@ ResolveStyleForTextOrFirstLetterContinuation(
     ComputedStyle& aParent,
     nsAtom* aAnonBox)
 {
-  MOZ_ASSERT(aAnonBox == nsCSSAnonBoxes::mozText() ||
-             aAnonBox == nsCSSAnonBoxes::firstLetterContinuation());
-  auto inheritTarget = aAnonBox == nsCSSAnonBoxes::mozText()
+  MOZ_ASSERT(aAnonBox == nsCSSAnonBoxes::mozText ||
+             aAnonBox == nsCSSAnonBoxes::firstLetterContinuation);
+  auto inheritTarget = aAnonBox == nsCSSAnonBoxes::mozText
     ? InheritTarget::Text
     : InheritTarget::FirstLetterContinuation;
 
@@ -497,7 +497,7 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   MOZ_ASSERT(aParentContext);
 
   return ResolveStyleForTextOrFirstLetterContinuation(
-      mRawSet.get(), *aParentContext, nsCSSAnonBoxes::mozText());
+      mRawSet.get(), *aParentContext, nsCSSAnonBoxes::mozText);
 }
 
 already_AddRefed<ComputedStyle>
@@ -506,7 +506,7 @@ ServoStyleSet::ResolveStyleForFirstLetterContinuation(ComputedStyle* aParentCont
   MOZ_ASSERT(aParentContext);
 
   return ResolveStyleForTextOrFirstLetterContinuation(
-      mRawSet.get(), *aParentContext, nsCSSAnonBoxes::firstLetterContinuation());
+      mRawSet.get(), *aParentContext, nsCSSAnonBoxes::firstLetterContinuation);
 }
 
 already_AddRefed<ComputedStyle>
@@ -521,7 +521,7 @@ ServoStyleSet::ResolveStyleForPlaceholder()
 
   RefPtr<ComputedStyle> computedValues =
     Servo_ComputedValues_Inherit(mRawSet.get(),
-                                 nsCSSAnonBoxes::oofPlaceholder(),
+                                 nsCSSAnonBoxes::oofPlaceholder,
                                  nullptr,
                                  InheritTarget::PlaceholderFrame)
                                  .Consume();
@@ -627,8 +627,8 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag)
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
              nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
-  MOZ_ASSERT(aPseudoTag != nsCSSAnonBoxes::pageContent(),
-             "If nsCSSAnonBoxes::pageContent() ends up non-inheriting, check "
+  MOZ_ASSERT(aPseudoTag != nsCSSAnonBoxes::pageContent,
+             "If nsCSSAnonBoxes::pageContent ends up non-inheriting, check "
              "whether we need to do anything to move the "
              "@page handling from ResolveInheritingAnonymousBoxStyle to "
              "ResolveNonInheritingAnonymousBoxStyle");
@@ -647,7 +647,7 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag)
   // sense for non-inheriting anonymous boxes.  (Static assertions in
   // nsCSSAnonBoxes.cpp ensure that all non-inheriting non-anonymous boxes
   // are indeed annotated as skipping this fixup.)
-  MOZ_ASSERT(!nsCSSAnonBoxes::IsNonInheritingAnonBox(nsCSSAnonBoxes::viewport()),
+  MOZ_ASSERT(!nsCSSAnonBoxes::IsNonInheritingAnonBox(nsCSSAnonBoxes::viewport),
              "viewport needs fixup to handle blockifying it");
   RefPtr<ComputedStyle> computedValues =
     Servo_ComputedValues_GetForAnonymousBox(nullptr,

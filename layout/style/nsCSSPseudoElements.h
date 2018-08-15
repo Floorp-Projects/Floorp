@@ -9,7 +9,8 @@
 #ifndef nsCSSPseudoElements_h___
 #define nsCSSPseudoElements_h___
 
-#include "nsGkAtoms.h"
+#include "nsAtom.h"
+#include "nsStaticAtom.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/Compiler.h"
 
@@ -55,6 +56,17 @@
 // grid containers) and thus needs parent display-based style fixup?
 #define CSS_PSEUDO_ELEMENT_IS_FLEX_OR_GRID_ITEM        (1<<7)
 
+// Trivial subclass of nsStaticAtom so that function signatures can require an
+// atom from this atom list.
+class nsICSSPseudoElement : public nsStaticAtom
+{
+public:
+  constexpr nsICSSPseudoElement(const char16_t* aStr, uint32_t aLength,
+                                uint32_t aStringOffset)
+    : nsStaticAtom(aStr, aLength, aStringOffset)
+  {}
+};
+
 namespace mozilla {
 
 // The total count of CSSPseudoElement is less than 256,
@@ -78,6 +90,28 @@ enum class CSSPseudoElementType : CSSPseudoElementTypeBase {
   MAX
 };
 
+namespace detail {
+
+struct CSSPseudoElementAtoms
+{
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_DECL_STRING(name_, value_)
+  #include "nsCSSPseudoElementList.h"
+  #undef CSS_PSEUDO_ELEMENT
+
+  enum class Atoms {
+    #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+      NS_STATIC_ATOM_ENUM(name_)
+    #include "nsCSSPseudoElementList.h"
+    #undef CSS_PSEUDO_ELEMENT
+    AtomsCount
+  };
+
+  const nsICSSPseudoElement mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
+};
+
+} // namespace detail
+
 } // namespace mozilla
 
 class nsCSSPseudoElements
@@ -86,6 +120,8 @@ class nsCSSPseudoElements
   typedef mozilla::CSSEnabledState EnabledState;
 
 public:
+  static void RegisterStaticAtoms();
+
   static bool IsPseudoElement(nsAtom *aAtom);
 
   static bool IsCSS2PseudoElement(nsAtom *aAtom);
@@ -98,19 +134,14 @@ public:
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_IS_CSS2);
   }
 
-public:
-#ifdef DEBUG
-  static void AssertAtoms();
-#endif
+private:
+  static const nsStaticAtom* const sAtoms;
+  static constexpr size_t sAtomsLen =
+    static_cast<size_t>(mozilla::detail::CSSPseudoElementAtoms::Atoms::AtomsCount);
 
-  // Alias nsCSSPseudoElements::foo() to alias nsGkAtoms::foo.
-  // XXX Once nsGkAtoms::foo become constexpr variables, these can too.
-  // See bug 1449787.
-  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_)       \
-    static constexpr nsICSSPseudoElement* const& name_()  \
-    {                                                     \
-      return nsGkAtoms::PseudoElement_##name_;            \
-    }
+public:
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_DECL_PTR(nsICSSPseudoElement, name_);
   #include "nsCSSPseudoElementList.h"
   #undef CSS_PSEUDO_ELEMENT
 
