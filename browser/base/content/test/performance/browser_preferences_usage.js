@@ -81,10 +81,6 @@ add_task(async function startup() {
       min: 135,
       max: 150,
     },
-    "browser.search.log": {
-      min: 100,
-      max: 150,
-    },
     "layout.css.dpi": {
       min: 45,
       max: 75,
