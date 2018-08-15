@@ -350,6 +350,15 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         ]
         SYMBOLS_FILE = '!symverscript'
 
+    # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
+    # too old to support Python pretty-printers; if this changes, we could
+    # make this 'ifdef GNU_CC'.
+    if CONFIG['OS_ARCH'] == 'Linux':
+        # Create a GDB Python auto-load file alongside the libxul shared library
+        # in the build directory.
+        DEFINES['topsrcdir'] = TOPSRCDIR
+        OBJDIR_PP_FILES.toolkit.library += ['libxul.so-gdb.py.in']
+
 # This library is entirely composed of Rust code, and needs to come after
 # all the C++ code so any possible C++ -> Rust calls can be resolved.
 USE_LIBS += ['gkrust']
