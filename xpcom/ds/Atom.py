@@ -8,8 +8,24 @@ class Atom():
         self.ident = ident
         self.string = string
         self.ty = ty
+        self.atom_type = self.__class__.__name__
 
 
 class PseudoElementAtom(Atom):
     def __init__(self, ident, string):
         Atom.__init__(self, ident, string, ty="nsICSSPseudoElement")
+
+
+class AnonBoxAtom(Atom):
+    def __init__(self, ident, string):
+        Atom.__init__(self, ident, string, ty="nsICSSAnonBoxPseudo")
+
+
+class NonInheritingAnonBoxAtom(AnonBoxAtom):
+    def __init__(self, ident, string):
+        AnonBoxAtom.__init__(self, ident, string)
+
+
+class InheritingAnonBoxAtom(AnonBoxAtom):
+    def __init__(self, ident, string):
+        AnonBoxAtom.__init__(self, ident, string)

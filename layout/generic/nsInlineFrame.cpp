@@ -959,7 +959,7 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
   // ComputedStyle.
   RefPtr<ComputedStyle> newContext =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
-      nsCSSAnonBoxes::mozBlockInsideInlineWrapper, ourStyle);
+      nsCSSAnonBoxes::mozBlockInsideInlineWrapper(), ourStyle);
 
   // We're guaranteed that newContext only differs from the old ComputedStyle on
   // the block in things they might inherit from us.  And changehint processing
@@ -972,7 +972,7 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
                "Must be first continuation");
 
     MOZ_ASSERT(blockFrame->Style()->GetPseudo() ==
-               nsCSSAnonBoxes::mozBlockInsideInlineWrapper,
+               nsCSSAnonBoxes::mozBlockInsideInlineWrapper(),
                "Unexpected kind of ComputedStyle");
 
     // We don't want to just walk through using GetNextContinuationWithSameStyle
@@ -1032,13 +1032,13 @@ nsFirstLineFrame::Init(nsIContent*       aContent,
     // of the parent frame.
     ComputedStyle* parentContext = aParent->Style();
     RefPtr<ComputedStyle> newSC = PresContext()->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame,
+      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame(),
                                          parentContext);
     SetComputedStyle(newSC);
   } else {
     MOZ_ASSERT(FirstInFlow() != aPrevInFlow);
     MOZ_ASSERT(aPrevInFlow->Style()->GetPseudo() ==
-                 nsCSSAnonBoxes::mozLineFrame);
+                 nsCSSAnonBoxes::mozLineFrame());
   }
 }
 

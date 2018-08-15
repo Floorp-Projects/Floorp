@@ -89,7 +89,7 @@ public:
   /**
    * Return the anonymous frame that contains all descendants except
    * the legend frame.  This is currently always a block frame with
-   * pseudo nsCSSAnonBoxes::fieldsetContent -- this may change in the
+   * pseudo nsCSSAnonBoxes::fieldsetContent() -- this may change in the
    * future when we add support for CSS overflow for <fieldset>.  This really
    * can't return null, though callers seem to feel that it can.
    */
