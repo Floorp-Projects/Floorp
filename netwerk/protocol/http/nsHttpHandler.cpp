@@ -221,7 +221,6 @@ nsHttpHandler::nsHttpHandler()
     , mThrottleReadInterval(500)
     , mThrottleHoldTime(600)
     , mThrottleMaxTime(3000)
-    , mSendWindowSize(1024)
     , mUrgentStartEnabled(true)
     , mTailBlockingEnabled(true)
     , mTailDelayQuantum(600)
@@ -1744,11 +1743,6 @@ nsHttpHandler::PrefsChanged(const char *pref)
         Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_MAX_TIME,
                                         mThrottleMaxTime);
       }
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("send_window_size"))) {
-      Unused << Preferences::GetInt(HTTP_PREF("send_window_size"), &val);
-      mSendWindowSize = val >= 0 ? val : 0;
     }
 
     if (PREF_CHANGED(HTTP_PREF("on_click_priority"))) {
