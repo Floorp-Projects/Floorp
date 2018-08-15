@@ -5,7 +5,7 @@
  * CSS Variables specific to the responsive design mode
  */
 
-.theme-light {
+:root {
   --rdm-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
   --submit-button-active-background-color: rgba(0,0,0,0.12);
   --submit-button-active-color: var(--theme-body-color);
@@ -14,7 +14,7 @@
   --viewport-active-color: #3b3b3b;
 }
 
-.theme-dark {
+:root.theme-dark {
   --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
   --submit-button-active-background-color: var(--theme-toolbar-hover-active);
   --submit-button-active-color: var(--theme-selection-color);
@@ -210,12 +210,6 @@ select > option.divider {
 #screenshot-button:disabled {
   filter: var(--theme-icon-checked-filter);
   opacity: 1 !important;
-}
-
-#network-throttling-selector {
-  height: 15px;
-  padding-left: 0;
-  width: 103px;
 }
 
 #device-pixel-ratio-selector {
