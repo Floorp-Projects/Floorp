@@ -34,14 +34,14 @@ class ThreePaneOnboardingTooltip {
     this.onLearnMoreLinkClick = this.onLearnMoreLinkClick.bind(this);
 
     const container = doc.createElementNS(XHTML_NS, "div");
-    container.className = "three-pane-onboarding-container";
+    container.className = "onboarding-container";
 
     const icon = doc.createElementNS(XHTML_NS, "span");
-    icon.className = "three-pane-onboarding-icon";
+    icon.className = "onboarding-icon";
     container.appendChild(icon);
 
     const content = doc.createElementNS(XHTML_NS, "div");
-    content.className = "three-pane-onboarding-content";
+    content.className = "onboarding-content";
     container.appendChild(content);
 
     const message = doc.createElementNS(XHTML_NS, "div");
@@ -53,7 +53,7 @@ class ThreePaneOnboardingTooltip {
     message.append(messageString.substring(0, learnMoreStartIndex));
 
     this.learnMoreLink = doc.createElementNS(XHTML_NS, "a");
-    this.learnMoreLink.className = "three-pane-onboarding-link";
+    this.learnMoreLink.className = "onboarding-link";
     this.learnMoreLink.href = "#";
     this.learnMoreLink.textContent = learnMoreString;
 
@@ -62,7 +62,7 @@ class ThreePaneOnboardingTooltip {
     content.append(message);
 
     this.closeButton = doc.createElementNS(XHTML_NS, "button");
-    this.closeButton.className = "three-pane-onboarding-close-button devtools-button";
+    this.closeButton.className = "onboarding-close-button devtools-button";
     container.appendChild(this.closeButton);
 
     this.closeButton.addEventListener("click", this.onCloseButtonClick);
