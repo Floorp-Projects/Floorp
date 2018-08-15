@@ -119,7 +119,7 @@ class DevicePixelRatioSelector extends PureComponent {
 
     return dom.select(
       {
-        id: "global-device-pixel-ratio-selector",
+        id: "device-pixel-ratio-selector",
         value: selectedPixelRatio.value || displayPixelRatio,
         disabled: isDisabled,
         onChange: this.onSelectChange,

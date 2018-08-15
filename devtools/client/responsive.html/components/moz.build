@@ -11,10 +11,10 @@ DevToolsModules(
     'DeviceModal.js',
     'DevicePixelRatioSelector.js',
     'DeviceSelector.js',
-    'GlobalToolbar.js',
     'ReloadConditions.js',
     'ResizableViewport.js',
     'ToggleMenu.js',
+    'Toolbar.js',
     'ViewportDimension.js',
     'Viewports.js',
 )
