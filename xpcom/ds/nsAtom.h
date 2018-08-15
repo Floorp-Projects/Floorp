@@ -155,7 +155,7 @@ public:
 
 private:
   // This is an offset to the string chars, which must be at a lower address in
-  // memory. This should be achieved by using the macros in nsStaticAtom.h.
+  // memory.
   uint32_t mStringOffset;
 };
 

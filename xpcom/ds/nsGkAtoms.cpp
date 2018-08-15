@@ -6,17 +6,32 @@
 
 #include "nsGkAtoms.h"
 
+// Register an array of static atoms with the atom table.
+void
+NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen);
+
 namespace mozilla {
 namespace detail {
 
 MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 extern constexpr GkAtoms gGkAtoms = {
-  #define GK_ATOM(name_, value_, type_, atom_type_) NS_STATIC_ATOM_INIT_STRING(value_)
+  // The initialization of each atom's string.
+  #define GK_ATOM(name_, value_, type_, atom_type_) \
+    u"" value_,
   #include "nsGkAtomList.h"
   #undef GK_ATOM
   {
-    #define GK_ATOM(name_, value_, type_, atom_type_) \
-      NS_STATIC_ATOM_INIT_ATOM(nsStaticAtom, GkAtoms, name_, value_)
+    // The initialization of the atoms themselves.
+    //
+    // Note that |value_| is an 8-bit string, and so |sizeof(value_)| is equal
+    // to the number of chars (including the terminating '\0'). The |u""| prefix
+    // converts |value_| to a 16-bit string.
+    #define GK_ATOM(name_, value_, type_, atom_type_)                     \
+      nsStaticAtom(u"" value_,                                            \
+          sizeof(value_) - 1,                                             \
+          offsetof(GkAtoms,                                               \
+                   mAtoms[static_cast<size_t>(GkAtoms::Atoms::name_)]) -  \
+          offsetof(GkAtoms, name_##_string)),
     #include "nsGkAtomList.h"
     #undef GK_ATOM
   }
@@ -28,10 +43,11 @@ MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 
 const nsStaticAtom* const nsGkAtoms::sAtoms = mozilla::detail::gGkAtoms.mAtoms;
 
-#define GK_ATOM(name_, value_, type_, atom_type_) \
-  NS_STATIC_ATOM_DEFN_PTR( \
-    type_, mozilla::detail::GkAtoms, mozilla::detail::gGkAtoms, \
-    nsGkAtoms, name_)
+// Definition of the pointer to the static atom.
+#define GK_ATOM(name_, value_, type_, atom_type_)                          \
+  type_* nsGkAtoms::name_ = const_cast<type_*>(static_cast<const type_*>(  \
+    &mozilla::detail::gGkAtoms.mAtoms[                                     \
+      static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::name_)]));
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 
