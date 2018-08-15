@@ -67,11 +67,6 @@ class Toolbar extends PureComponent {
       onUpdateDeviceModal,
     } = this.props;
 
-    let touchButtonClass = "toolbar-button devtools-button";
-    if (touchSimulation.enabled) {
-      touchButtonClass += " checked";
-    }
-
     return dom.header(
       { id: "toolbar" },
       DeviceSelector({
@@ -91,7 +86,7 @@ class Toolbar extends PureComponent {
         }),
         dom.button({
           id: "rotate-button",
-          className: "toolbar-button devtools-button",
+          className: "devtools-button",
           onClick: () => onRotateViewport(viewport.id),
           title: getStr("responsive.rotate"),
         }),
@@ -112,7 +107,8 @@ class Toolbar extends PureComponent {
         dom.div({ className: "devtools-separator" }),
         dom.button({
           id: "touch-simulation-button",
-          className: touchButtonClass,
+          className: "devtools-button" +
+                     (touchSimulation.enabled ? " checked" : ""),
           title: (touchSimulation.enabled ?
             getStr("responsive.disableTouch") : getStr("responsive.enableTouch")),
           onClick: () => onChangeTouchSimulation(!touchSimulation.enabled),
@@ -122,7 +118,7 @@ class Toolbar extends PureComponent {
         { id: "toolbar-end-controls" },
         dom.button({
           id: "screenshot-button",
-          className: "toolbar-button devtools-button",
+          className: "devtools-button",
           title: getStr("responsive.screenshot"),
           onClick: onScreenshot,
           disabled: screenshot.isCapturing,
@@ -134,7 +130,7 @@ class Toolbar extends PureComponent {
         dom.div({ className: "devtools-separator" }),
         dom.button({
           id: "exit-button",
-          className: "toolbar-button devtools-button",
+          className: "devtools-button",
           title: getStr("responsive.exit"),
           onClick: onExit,
         })

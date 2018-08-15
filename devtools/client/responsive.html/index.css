@@ -9,8 +9,6 @@
   --rdm-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
   --submit-button-active-background-color: rgba(0,0,0,0.12);
   --submit-button-active-color: var(--theme-body-color);
-  --viewport-color: #999797;
-  --viewport-hover-color: var(--theme-body-color);
   --viewport-active-color: #3b3b3b;
 }
 
@@ -18,8 +16,6 @@
   --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
   --submit-button-active-background-color: var(--theme-toolbar-hover-active);
   --submit-button-active-color: var(--theme-selection-color);
-  --viewport-color: #c6ccd0;
-  --viewport-hover-color: #dde1e4;
   --viewport-active-color: #fcfcfc;
 }
 
@@ -61,33 +57,6 @@ body,
   margin: 0 1px;
 }
 
-.toolbar-button {
-  margin: 0;
-  padding: 0;
-  border: none;
-  color: var(--viewport-color);
-}
-
-.toolbar-button:empty:hover:not(:disabled),
-.toolbar-button:empty:-moz-any(:hover:active, .checked):not(:disabled),
-.toolbar-button:not(:empty),
-.toolbar-button:hover:not(:empty):not(:disabled):not(.checked) {
-  /* Reset background from .devtools-button */
-  background: none;
-}
-
-.toolbar-button:active::before {
-  filter: var(--theme-icon-checked-filter);
-}
-
-.toolbar-button.selected {
-  color: var(--viewport-active-color);
-}
-
-.toolbar-button:not(:disabled):hover {
-  color: var(--viewport-hover-color);
-}
-
 /**
  * Toolbar
  */
@@ -100,16 +69,6 @@ body,
   width: 100%;
   min-height: 29px;
   -moz-user-select: none;
-}
-
-#toolbar > .toolbar-button:first-of-type {
-  margin-inline-start: 8px;
-}
-
-#toolbar > .toolbar-button::before {
-  width: 12px;
-  height: 12px;
-  background-size: cover;
 }
 
 #toolbar-center-controls,
@@ -364,18 +323,14 @@ body,
   margin: 20px 20px 0;
 }
 
-#device-close-button,
-#device-close-button::before {
+#device-close-button {
   position: absolute;
   top: 5px;
   right: 2px;
-  width: 12px;
-  height: 12px;
 }
 
 #device-close-button::before {
   background-image: url("chrome://devtools/skin/images/close.svg");
-  margin: -6px 0 0 -6px;
 }
 
 .device-type {
@@ -406,15 +361,8 @@ body,
   flex: 1;
 }
 
-.device-remove-button,
-.device-remove-button:empty::before {
-  width: 12px;
-  height: 12px;
-}
-
 .device-remove-button:empty::before {
   background-image: url("chrome://devtools/skin/images/close.svg");
-  margin: -6px 0 0 -6px;
 }
 
 #device-submit-button {
