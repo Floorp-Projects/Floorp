@@ -26,6 +26,7 @@ const { changeNetworkThrottling } = require("devtools/client/shared/components/t
 const { changeReloadCondition } = require("../actions/reload-conditions");
 const { takeScreenshot } = require("../actions/screenshot");
 const { changeTouchSimulation } = require("../actions/touch-simulation");
+const { toggleLeftAlignment } = require("../actions/ui");
 const {
   changeDevice,
   changePixelRatio,
@@ -68,6 +69,7 @@ class App extends Component {
     this.onResizeViewport = this.onResizeViewport.bind(this);
     this.onRotateViewport = this.onRotateViewport.bind(this);
     this.onScreenshot = this.onScreenshot.bind(this);
+    this.onToggleLeftAlignment = this.onToggleLeftAlignment.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);
     this.onUpdateDeviceModal = this.onUpdateDeviceModal.bind(this);
   }
@@ -162,6 +164,10 @@ class App extends Component {
     this.props.dispatch(takeScreenshot());
   }
 
+  onToggleLeftAlignment() {
+    this.props.dispatch(toggleLeftAlignment());
+  }
+
   onUpdateDeviceDisplayed(device, deviceType, displayed) {
     this.props.dispatch(updateDeviceDisplayed(device, deviceType, displayed));
   }
@@ -197,6 +203,7 @@ class App extends Component {
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
+      onToggleLeftAlignment,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
     } = this;
@@ -237,6 +244,7 @@ class App extends Component {
         onResizeViewport,
         onRotateViewport,
         onScreenshot,
+        onToggleLeftAlignment,
         onUpdateDeviceModal,
       }),
       Viewports({
