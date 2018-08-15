@@ -28,6 +28,7 @@ import org.robolectric.annotation.Config
 
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.Companion.AUTOCOMPLETE_SPAN
+import org.mockito.ArgumentMatchers.any
 
 @RunWith(RobolectricTestRunner::class)
 @Config(constants = BuildConfig::class)
@@ -320,6 +321,17 @@ class InlineAutocompleteEditTextTest {
         icw?.setComposingText("text", 4)
         assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
         assertEquals("text", et.text.toString())
+    }
+
+    @Test
+    fun testPostIsCalledWhenAutocompletedTextIsDeleted() {
+        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val icw = et.onCreateInputConnection(mock(EditorInfo::class.java))
+
+        et.setText("text")
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
+        icw?.deleteSurroundingText(0, 1)
+        verify(et).post(any<Runnable>())
     }
 
     @Test
