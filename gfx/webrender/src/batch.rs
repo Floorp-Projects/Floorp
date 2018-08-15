@@ -5,8 +5,7 @@
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize, DeviceIntPoint};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
 use api::{YuvColorSpace, YuvFormat, WorldPixel};
-use clip::{ClipSource, ClipStore, ClipWorkItem};
-use clip_scroll_tree::{CoordinateSystemId};
+use clip::{ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use euclid::vec3;
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheAddress};
@@ -18,9 +17,9 @@ use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
 use plane_split::{BspSplitter, Clipper, Polygon, Splitter};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
-use prim_store::{EdgeAaSegmentMask, ImageSource, PictureIndex, PrimitiveIndex, PrimitiveKind};
-use prim_store::{PrimitiveMetadata, PrimitiveRun, PrimitiveStore, VisibleGradientTile};
-use prim_store::{BorderSource};
+use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveIndex};
+use prim_store::{PrimitiveMetadata, PrimitiveRun, VisibleGradientTile};
+use prim_store::{BorderSource, Primitive, PrimitiveDetails};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKind, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use renderer::BLOCKS_PER_UV_RECT;
@@ -476,7 +475,7 @@ impl AlphaBatchBuilder {
         for run in &pic.runs {
             let transform_id = ctx
                 .transforms
-                .get_id(run.clip_and_scroll.spatial_node_index);
+                .get_id(run.spatial_node_index);
             self.add_run_to_batch(
                 run,
                 transform_id,
@@ -512,9 +511,8 @@ impl AlphaBatchBuilder {
                 BlendMode::PremultipliedAlpha,
                 BatchTextures::no_texture(),
             );
-            let pic_metadata = &ctx.prim_store.cpu_metadata[prim_index.0];
-            let brush = &ctx.prim_store.cpu_brushes[pic_metadata.cpu_prim_index.0];
-            let pic = &ctx.prim_store.pictures[brush.get_picture_index().0];
+            let pic_metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
+            let pic = ctx.prim_store.get_pic(prim_index);
             let batch = self.batch_list.get_suitable_batch(key, &pic_metadata.screen_rect.as_ref().expect("bug").clipped);
 
             let source_task_id = pic
@@ -555,7 +553,7 @@ impl AlphaBatchBuilder {
     ) {
         for i in 0 .. run.count {
             let prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
-            let metadata = &ctx.prim_store.cpu_metadata[prim_index.0];
+            let metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
 
             if metadata.screen_rect.is_some() {
                 self.add_prim_to_batch(
@@ -593,7 +591,8 @@ impl AlphaBatchBuilder {
         content_origin: DeviceIntPoint,
         prim_headers: &mut PrimitiveHeaders,
     ) {
-        let prim_metadata = ctx.prim_store.get_metadata(prim_index);
+        let prim = &ctx.prim_store.primitives[prim_index.0];
+        let prim_metadata = &prim.metadata;
         #[cfg(debug_assertions)] //TODO: why is this needed?
         debug_assert_eq!(prim_metadata.prepared_frame_id, render_tasks.frame_id());
 
@@ -614,9 +613,8 @@ impl AlphaBatchBuilder {
         // If the primitive is internally decomposed into multiple sub-primitives we may not
         // use some of the per-primitive data typically stored in PrimitiveMetadata and get
         // it from each sub-primitive instead.
-        let is_multiple_primitives = match prim_metadata.prim_kind {
-            PrimitiveKind::Brush => {
-                let brush = &ctx.prim_store.cpu_brushes[prim_metadata.cpu_prim_index.0];
+        let is_multiple_primitives = match prim.details {
+            PrimitiveDetails::Brush(ref brush) => {
                 match brush.kind {
                     BrushKind::Image { ref visible_tiles, .. } => !visible_tiles.is_empty(),
                     BrushKind::LinearGradient { ref visible_tiles, .. } => !visible_tiles.is_empty(),
@@ -637,7 +635,7 @@ impl AlphaBatchBuilder {
             .clip_task_id
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
-        let specified_blend_mode = ctx.prim_store.get_blend_mode(prim_metadata);
+        let specified_blend_mode = prim.get_blend_mode();
 
         let non_segmented_blend_mode = if !prim_metadata.opacity.is_opaque ||
             prim_metadata.clip_task_id.is_some() ||
@@ -661,14 +659,10 @@ impl AlphaBatchBuilder {
             println!("\t{:?}", prim_header);
         }
 
-        match prim_metadata.prim_kind {
-            PrimitiveKind::Brush => {
-                let brush = &ctx.prim_store.cpu_brushes[prim_metadata.cpu_prim_index.0];
-
+        match prim.details {
+            PrimitiveDetails::Brush(ref brush) => {
                 match brush.kind {
-                    BrushKind::Picture { pic_index, .. } => {
-                        let picture = &ctx.prim_store.pictures[pic_index.0];
-
+                    BrushKind::Picture(ref picture) => {
                         // If this picture is participating in a 3D rendering context,
                         // then don't add it to any batches here. Instead, create a polygon
                         // for it and add it to the current plane splitter.
@@ -676,7 +670,7 @@ impl AlphaBatchBuilder {
                             // Push into parent plane splitter.
                             debug_assert!(picture.surface.is_some());
                             let transform = &ctx.transforms
-                                .get_transform(picture.reference_frame_index);
+                                .get_transform(picture.original_spatial_node_index);
 
                             match transform.transform_kind {
                                 TransformedRectKind::AxisAligned => {
@@ -1098,10 +1092,7 @@ impl AlphaBatchBuilder {
                     }
                 }
             }
-            PrimitiveKind::TextRun => {
-                let text_cpu =
-                    &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
-
+            PrimitiveDetails::TextRun(ref text_cpu) => {
                 let subpx_dir = text_cpu.used_font.get_subpx_dir();
 
                 let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
@@ -1391,17 +1382,6 @@ fn get_image_tile_params(
 }
 
 impl BrushPrimitive {
-    pub fn get_picture_index(&self) -> PictureIndex {
-        match self.kind {
-            BrushKind::Picture { pic_index, .. } => {
-                pic_index
-            }
-            _ => {
-                panic!("bug: not a picture brush!!");
-            }
-        }
-    }
-
     fn get_batch_params(
         &self,
         resource_cache: &ResourceCache,
@@ -1585,23 +1565,15 @@ impl BrushPrimitive {
     }
 }
 
-trait AlphaBatchHelpers {
-    fn get_blend_mode(
-        &self,
-        metadata: &PrimitiveMetadata,
-    ) -> BlendMode;
-}
-
-impl AlphaBatchHelpers for PrimitiveStore {
-    fn get_blend_mode(&self, metadata: &PrimitiveMetadata) -> BlendMode {
-        match metadata.prim_kind {
+impl Primitive {
+    fn get_blend_mode(&self) -> BlendMode {
+        match self.details {
             // Can only resolve the TextRun's blend mode once glyphs are fetched.
-            PrimitiveKind::TextRun => {
+            PrimitiveDetails::TextRun(..) => {
                 BlendMode::PremultipliedAlpha
             }
 
-            PrimitiveKind::Brush => {
-                let brush = &self.cpu_brushes[metadata.cpu_prim_index.0];
+            PrimitiveDetails::Brush(ref brush) => {
                 match brush.kind {
                     BrushKind::Clear => {
                         BlendMode::PremultipliedDestOut
@@ -1762,68 +1734,35 @@ impl ClipBatcher {
     pub fn add(
         &mut self,
         task_address: RenderTaskAddress,
-        clips: &[ClipWorkItem],
-        coordinate_system_id: CoordinateSystemId,
+        clip_node_range: ClipNodeRange,
         resource_cache: &ResourceCache,
         gpu_cache: &GpuCache,
         clip_store: &ClipStore,
         transforms: &TransformPalette,
     ) {
-        let mut coordinate_system_id = coordinate_system_id;
-        for work_item in clips.iter() {
-            let info = &clip_store[work_item.clip_sources_index];
+        for i in 0 .. clip_node_range.count {
+            let (clip_node, flags) = clip_store.get_node_from_range(&clip_node_range, i);
+
             let instance = ClipMaskInstance {
                 render_task_address: task_address,
-                transform_id: transforms.get_id(info.spatial_node_index),
+                transform_id: transforms.get_id(clip_node.spatial_node_index),
                 segment: 0,
                 clip_data_address: GpuCacheAddress::invalid(),
                 resource_address: GpuCacheAddress::invalid(),
             };
 
-            for &(ref source, ref handle) in &info.clips {
-                let gpu_address = gpu_cache.get_address(handle);
+            let gpu_address = gpu_cache.get_address(&clip_node.gpu_cache_handle);
 
-                match *source {
-                    ClipSource::Image(ref mask) => {
-                        if let Ok(cache_item) = resource_cache.get_cached_image(
-                            ImageRequest {
-                                key: mask.image,
-                                rendering: ImageRendering::Auto,
-                                tile: None,
-                            }
-                        ) {
-                            self.images
-                                .entry(cache_item.texture_id)
-                                .or_insert(Vec::new())
-                                .push(ClipMaskInstance {
-                                    clip_data_address: gpu_address,
-                                    resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-                                    ..instance
-                                });
-                        } else {
-                            warn!("Warnings: skip a image mask");
-                            debug!("Key:{:?} Rect::{:?}", mask.image, mask.rect);
-                            continue;
+            match clip_node.item {
+                ClipItem::Image(ref mask) => {
+                    if let Ok(cache_item) = resource_cache.get_cached_image(
+                        ImageRequest {
+                            key: mask.image,
+                            rendering: ImageRendering::Auto,
+                            tile: None,
                         }
-                    }
-                    ClipSource::LineDecoration(..) => {
-                        self.line_decorations.push(ClipMaskInstance {
-                            clip_data_address: gpu_address,
-                            ..instance
-                        });
-                    }
-                    ClipSource::BoxShadow(ref info) => {
-                        let rt_handle = info
-                            .cache_handle
-                            .as_ref()
-                            .expect("bug: render task handle not allocated");
-                        let rt_cache_entry = resource_cache
-                            .get_cached_render_task(rt_handle);
-                        let cache_item = resource_cache
-                            .get_texture_cache_item(&rt_cache_entry.handle);
-                        debug_assert_ne!(cache_item.texture_id, SourceTexture::Invalid);
-
-                        self.box_shadows
+                    ) {
+                        self.images
                             .entry(cache_item.texture_id)
                             .or_insert(Vec::new())
                             .push(ClipMaskInstance {
@@ -1831,23 +1770,52 @@ impl ClipBatcher {
                                 resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
                                 ..instance
                             });
+                    } else {
+                        warn!("Warnings: skip a image mask");
+                        debug!("Key:{:?} Rect::{:?}", mask.image, mask.rect);
+                        continue;
                     }
-                    ClipSource::Rectangle(_, mode) => {
-                        if work_item.coordinate_system_id != coordinate_system_id ||
-                           mode == ClipMode::ClipOut {
-                            self.rectangles.push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                ..instance
-                            });
-                            coordinate_system_id = work_item.coordinate_system_id;
-                        }
-                    }
-                    ClipSource::RoundedRectangle(..) => {
+                }
+                ClipItem::LineDecoration(..) => {
+                    self.line_decorations.push(ClipMaskInstance {
+                        clip_data_address: gpu_address,
+                        ..instance
+                    });
+                }
+                ClipItem::BoxShadow(ref info) => {
+                    let rt_handle = info
+                        .cache_handle
+                        .as_ref()
+                        .expect("bug: render task handle not allocated");
+                    let rt_cache_entry = resource_cache
+                        .get_cached_render_task(rt_handle);
+                    let cache_item = resource_cache
+                        .get_texture_cache_item(&rt_cache_entry.handle);
+                    debug_assert_ne!(cache_item.texture_id, SourceTexture::Invalid);
+
+                    self.box_shadows
+                        .entry(cache_item.texture_id)
+                        .or_insert(Vec::new())
+                        .push(ClipMaskInstance {
+                            clip_data_address: gpu_address,
+                            resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+                            ..instance
+                        });
+                }
+                ClipItem::Rectangle(_, mode) => {
+                    if !flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) ||
+                        mode == ClipMode::ClipOut {
                         self.rectangles.push(ClipMaskInstance {
                             clip_data_address: gpu_address,
                             ..instance
                         });
                     }
+                }
+                ClipItem::RoundedRectangle(..) => {
+                    self.rectangles.push(ClipMaskInstance {
+                        clip_data_address: gpu_address,
+                        ..instance
+                    });
                 }
             }
         }

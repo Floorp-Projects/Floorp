@@ -122,16 +122,6 @@ public:
                           std::function<void(bool)>&& aCallback,
                           bool aAsync);
 
-  // This is a static helper function to notify the crash service that a
-  // crash has occurred. When PCrashReporter is removed, we can make this
-  // a member function. This can be called from any thread, and if not
-  // called from the main thread, will post a synchronous message to the
-  // main thread.
-  static void NotifyCrashService(
-    GeckoProcessType aProcessType,
-    const nsString& aChildDumpID,
-    const AnnotationTable& aNotes);
-
   void AddAnnotation(CrashReporter::Annotation aKey, bool aValue);
   void AddAnnotation(CrashReporter::Annotation aKey, int aValue);
   void AddAnnotation(CrashReporter::Annotation aKey, unsigned int aValue);
@@ -148,6 +138,18 @@ public:
 private:
   static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
                             const nsString& aChildDumpID);
+
+  // Get the nsICrashService crash type to use for an impending crash.
+  int32_t GetCrashType(const CrashReporter::AnnotationTable& aAnnotations);
+
+  // This is a static helper function to notify the crash service that a
+  // crash has occurred. This can be called from any thread, and if not
+  // called from the main thread, will post a synchronous message to the
+  // main thread.
+  static void NotifyCrashService(
+    GeckoProcessType aProcessType,
+    int32_t aCrashType,
+    const nsString& aChildDumpID);
 
 private:
   CallbackWrapper<bool> mCreateMinidumpCallback;

@@ -4,7 +4,7 @@
 
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, DeviceIntSize, LayoutPrimitiveInfo};
 use api::{LayoutRect, LayoutSize, LayoutVector2D};
-use clip::ClipSource;
+use clip::ClipItem;
 use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuCacheHandle;
 use gpu_types::BoxShadowStretchMode;
@@ -122,7 +122,7 @@ impl<'a> DisplayListFlattener<'a> {
                     }
 
                     // TODO(gw): Add a fast path for ClipOut + zero border radius!
-                    clips.push(ClipSource::new_rounded_rect(
+                    clips.push(ClipItem::new_rounded_rect(
                         prim_info.rect,
                         border_radius,
                         ClipMode::ClipOut
@@ -132,7 +132,7 @@ impl<'a> DisplayListFlattener<'a> {
                 }
                 BoxShadowClipMode::Inset => {
                     if shadow_rect.is_well_formed_and_nonempty() {
-                        clips.push(ClipSource::new_rounded_rect(
+                        clips.push(ClipItem::new_rounded_rect(
                             shadow_rect,
                             shadow_radius,
                             ClipMode::ClipOut
@@ -143,7 +143,7 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             };
 
-            clips.push(ClipSource::new_rounded_rect(final_prim_rect, clip_radius, ClipMode::Clip));
+            clips.push(ClipItem::new_rounded_rect(final_prim_rect, clip_radius, ClipMode::Clip));
 
             self.add_primitive(
                 clip_and_scroll,
@@ -163,7 +163,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Add a normal clip mask to clip out the contents
             // of the surrounding primitive.
-            extra_clips.push(ClipSource::new_rounded_rect(
+            extra_clips.push(ClipItem::new_rounded_rect(
                 prim_info.rect,
                 border_radius,
                 prim_clip_mode,
@@ -174,14 +174,14 @@ impl<'a> DisplayListFlattener<'a> {
             let dest_rect = shadow_rect.inflate(blur_offset, blur_offset);
 
             // Draw the box-shadow as a solid rect, using a box-shadow
-            // clip mask source.
+            // clip mask item.
             let prim = BrushPrimitive::new(
                 BrushKind::new_solid(*color),
                 None,
             );
 
-            // Create the box-shadow clip source.
-            let shadow_clip_source = ClipSource::new_box_shadow(
+            // Create the box-shadow clip item.
+            let shadow_clip_source = ClipItem::new_box_shadow(
                 shadow_rect,
                 shadow_radius,
                 dest_rect,

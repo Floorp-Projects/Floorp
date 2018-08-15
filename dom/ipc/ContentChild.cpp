@@ -30,6 +30,7 @@
 #include "mozilla/dom/ChildProcessMessageManager.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -41,7 +42,6 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/PLoginReputationChild.h"
-#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/TabGroup.h"
@@ -1288,7 +1288,7 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
     if (NS_WARN_IF(rv.Failed())) {
       MOZ_CRASH();
     }
-    ProcessGlobal* global = ProcessGlobal::Get();
+    auto* global = ContentProcessMessageManager::Get();
     global->SetInitialProcessData(data);
   }
 
@@ -2556,7 +2556,7 @@ ContentChild::RecvNotifyVisited(nsTArray<URIParams>&& aURIs)
 mozilla::ipc::IPCResult
 ContentChild::RecvLoadProcessScript(const nsString& aURL)
 {
-  ProcessGlobal* global = ProcessGlobal::Get();
+  auto* global = ContentProcessMessageManager::Get();
   global->LoadScript(aURL);
   return IPC_OK();
 }
@@ -2612,8 +2612,8 @@ ContentChild::RecvUpdateSharedData(const FileDescriptor& aMapFile,
                         std::move(blobImpls),
                         std::move(aChangedKeys));
   } else {
-    mSharedData = new SharedMap(ProcessGlobal::Get(), aMapFile,
-                                aMapSize, std::move(blobImpls));
+    mSharedData = new SharedMap(ContentProcessMessageManager::Get()->GetParentObject(),
+                                aMapFile, aMapSize, std::move(blobImpls));
   }
 
   return IPC_OK();

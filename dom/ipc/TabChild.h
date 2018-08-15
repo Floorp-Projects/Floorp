@@ -23,7 +23,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsFrameMessageManager.h"
 #include "nsIPresShell.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
 #include "nsITooltipListener.h"
@@ -80,28 +79,21 @@ class ClonedMessageData;
 class CoalescedMouseData;
 class CoalescedWheelData;
 
-class TabChildGlobal : public ContentFrameMessageManager,
-                       public nsIMessageSender,
-                       public nsIScriptObjectPrincipal,
-                       public nsIGlobalObject,
-                       public nsSupportsWeakReference
+class TabChildMessageManager : public ContentFrameMessageManager,
+                               public nsIMessageSender,
+                               public DispatcherTrait,
+                               public nsSupportsWeakReference
 {
 public:
-  explicit TabChildGlobal(TabChild* aTabChild);
+  explicit TabChildMessageManager(TabChild* aTabChild);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildMessageManager, DOMEventTargetHelper)
 
   void MarkForCC();
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override
-  {
-    MOZ_CRASH("We should never get here!");
-  }
-  bool WrapGlobalObject(JSContext* aCx,
-                        JS::RealmOptions& aOptions,
-                        JS::MutableHandle<JSObject*> aReflector);
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(ErrorResult& aError) override;
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) override;
@@ -116,9 +108,6 @@ public:
     aVisitor.mForceContentDispatch = true;
   }
 
-  virtual nsIPrincipal* GetPrincipal() override;
-  virtual JSObject* GetGlobalJSObject() override;
-
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
@@ -132,7 +121,7 @@ public:
   RefPtr<TabChild> mTabChild;
 
 protected:
-  ~TabChildGlobal();
+  ~TabChildMessageManager();
 };
 
 class ContentListener final : public nsIDOMEventListener
@@ -163,12 +152,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TabChildBase)
 
-  virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::RealmOptions& aOptions,
-                                JS::MutableHandle<JSObject*> aReflector) override
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto)
   {
-    return mTabChildGlobal->WrapGlobalObject(aCx, aOptions, aReflector);
+    return mTabChildMessageManager->WrapObject(aCx, aGivenProto);
   }
+
 
   virtual nsIWebNavigation* WebNavigation() const = 0;
   virtual PuppetWidget* WebWidget() = 0;
@@ -201,7 +190,7 @@ protected:
   bool UpdateFrameHandler(const mozilla::layers::FrameMetrics& aFrameMetrics);
 
 protected:
-  RefPtr<TabChildGlobal> mTabChildGlobal;
+  RefPtr<TabChildMessageManager> mTabChildMessageManager;
   nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
@@ -279,9 +268,9 @@ public:
 
   FORWARD_SHMEM_ALLOCATOR_TO(PBrowserChild)
 
-  TabChildGlobal* GetMessageManager()
+  TabChildMessageManager* GetMessageManager()
   {
-    return mTabChildGlobal;
+    return mTabChildMessageManager;
   }
 
   /**
@@ -773,7 +762,7 @@ private:
 
   void ActorDestroy(ActorDestroyReason why) override;
 
-  bool InitTabChildGlobal();
+  bool InitTabChildMessageManager();
 
   void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const layers::LayersId& aLayersId,

@@ -8,6 +8,260 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
+ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
+                               "resource://gre/modules/ActorManagerParent.jsm");
+
+let ACTORS = {
+  AboutReader: {
+    child: {
+      module: "resource:///actors/AboutReaderChild.jsm",
+      group: "browsers",
+      events: {
+        "AboutReaderContentLoaded": {wantUntrusted: true},
+        "DOMContentLoaded": {},
+        "pageshow": {},
+        "pagehide": {},
+      },
+      messages: [
+        "Reader:ToggleReaderMode",
+        "Reader:PushState",
+      ],
+    },
+  },
+
+  BlockedSite: {
+    child: {
+      module: "resource:///actors/BlockedSiteChild.jsm",
+      events: {
+        "AboutBlockedLoaded": {wantUntrusted: true},
+        "click": {},
+      },
+      matches: ["about:blocked?*"],
+      allFrames: true,
+      messages: [
+        "DeceptiveBlockedDetails",
+      ],
+    },
+  },
+
+  BrowserTab: {
+    child: {
+      module: "resource:///actors/BrowserTabChild.jsm",
+      group: "browsers",
+
+      events: {
+        "DOMWindowCreated": {once: true},
+        "MozAfterPaint": {once: true},
+        "MozDOMPointerLock:Entered": {},
+        "MozDOMPointerLock:Exited": {},
+      },
+
+      messages: [
+        "AllowScriptsToClose",
+        "Browser:AppTab",
+        "Browser:HasSiblings",
+        "Browser:Reload",
+        "MixedContent:ReenableProtection",
+        "SwitchDocumentDirection",
+        "UpdateCharacterSet",
+      ],
+    },
+  },
+
+  ClickHandler: {
+    child: {
+      module: "resource:///actors/ClickHandlerChild.jsm",
+      group: "browsers",
+      events: {
+        "click": {capture: true, mozSystemGroup: true},
+      }
+    },
+  },
+
+  ContextMenu: {
+    child: {
+      module: "resource:///actors/ContextMenuChild.jsm",
+      events: {
+        "contextmenu": {mozSystemGroup: true},
+      },
+    },
+  },
+
+  ContentSearch: {
+    child: {
+      module: "resource:///actors/ContentSearchChild.jsm",
+      group: "browsers",
+      matches: ["about:home", "about:newtab", "about:welcome",
+                "chrome://mochitests/content/*"],
+      events: {
+        "ContentSearchClient": {capture: true, wantUntrusted: true},
+      },
+      messages: [
+        "ContentSearch",
+      ]
+    },
+  },
+
+  DOMFullscreen: {
+    child: {
+      module: "resource:///actors/DOMFullscreenChild.jsm",
+      group: "browsers",
+      events: {
+        "MozDOMFullscreen:Request": {},
+        "MozDOMFullscreen:Entered": {},
+        "MozDOMFullscreen:NewOrigin": {},
+        "MozDOMFullscreen:Exit": {},
+        "MozDOMFullscreen:Exited": {},
+      },
+      messages: [
+        "DOMFullscreen:Entered",
+        "DOMFullscreen:CleanUp",
+      ]
+    },
+  },
+
+  LightWeightThemeInstall: {
+    child: {
+      module: "resource:///actors/LightWeightThemeInstallChild.jsm",
+      events: {
+        "InstallBrowserTheme": {wantUntrusted: true},
+        "PreviewBrowserTheme": {wantUntrusted: true},
+        "ResetBrowserThemePreview": {wantUntrusted: true},
+      },
+    },
+  },
+
+  NetError: {
+    child: {
+      module: "resource:///actors/NetErrorChild.jsm",
+      events: {
+        "AboutNetErrorLoad": {wantUntrusted: true},
+        "AboutNetErrorOpenCaptivePortal": {wantUntrusted: true},
+        "AboutNetErrorSetAutomatic": {wantUntrusted: true},
+        "AboutNetErrorResetPreferences": {wantUntrusted: true},
+        "click": {},
+      },
+      matches: ["about:certerror?*", "about:neterror?*"],
+      allFrames: true,
+      messages: [
+        "Browser:CaptivePortalFreed",
+        "CertErrorDetails",
+      ],
+    },
+  },
+
+  OfflineApps: {
+    child: {
+      module: "resource:///actors/OfflineAppsChild.jsm",
+      events: {
+        "MozApplicationManifest": {},
+      },
+      messages: [
+        "OfflineApps:StartFetching",
+      ],
+    },
+  },
+
+  PageInfo: {
+    child: {
+      module: "resource:///actors/PageInfoChild.jsm",
+      messages: ["PageInfo:getData"],
+    },
+  },
+
+  PageMetadata: {
+    child: {
+      module: "resource:///actors/PageMetadataChild.jsm",
+      messages: [
+        "PageMetadata:GetPageData",
+        "PageMetadata:GetMicroformats",
+      ],
+    },
+  },
+
+  PageStyle: {
+    child: {
+      module: "resource:///actors/PageStyleChild.jsm",
+      group: "browsers",
+      events: {
+        "pageshow": {},
+      },
+      messages: [
+        "PageStyle:Switch",
+        "PageStyle:Disable",
+      ]
+    },
+  },
+
+  Plugin: {
+    child: {
+      module: "resource:///actors/PluginChild.jsm",
+      events: {
+        "PluginBindingAttached": {capture: true, wantUntrusted: true},
+        "PluginCrashed": {capture: true},
+        "PluginOutdated": {capture: true},
+        "PluginInstantiated": {capture: true},
+        "PluginRemoved": {capture: true},
+        "HiddenPlugin": {capture: true},
+      },
+
+      messages: [
+        "BrowserPlugins:ActivatePlugins",
+        "BrowserPlugins:NotificationShown",
+        "BrowserPlugins:ContextMenuCommand",
+        "BrowserPlugins:NPAPIPluginProcessCrashed",
+        "BrowserPlugins:CrashReportSubmitted",
+        "BrowserPlugins:Test:ClearCrashData",
+      ],
+
+      observers: [
+        "decoder-doctor-notification",
+      ],
+    },
+  },
+
+  ShieldFrame: {
+    child: {
+      module: "resource://normandy-content/ShieldFrameChild.jsm",
+      events: {
+        "ShieldPageEvent": {wantUntrusted: true},
+      },
+      matches: ["about:studies"],
+    },
+  },
+
+  UITour: {
+    child: {
+      module: "resource:///modules/UITourChild.jsm",
+      events: {
+        "mozUITour": {wantUntrusted: true},
+      },
+      permissions: ["uitour"],
+    },
+  },
+
+  URIFixup: {
+    child: {
+      module: "resource:///actors/URIFixupChild.jsm",
+      group: "browsers",
+      observers: ["keyword-uri-fixup"],
+    },
+  },
+
+  WebRTC: {
+    child: {
+      module: "resource:///actors/WebRTCChild.jsm",
+      messages: [
+        "rtcpeer:Allow",
+        "rtcpeer:Deny",
+        "webrtc:Allow",
+        "webrtc:Deny",
+        "webrtc:StopSharing",
+      ],
+    },
+  },
+};
+
 (function earlyBlankFirstPaint() {
   if (!Services.prefs.getBoolPref("browser.startup.blankWindow", false))
     return;
@@ -645,6 +899,9 @@ BrowserGlue.prototype = {
     os.addObserver(this, "sync-ui-state:update");
     os.addObserver(this, "handlersvc-store-initialized");
     os.addObserver(this, "shield-init-complete");
+
+    ActorManagerParent.addActors(ACTORS);
+    ActorManagerParent.flush();
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);

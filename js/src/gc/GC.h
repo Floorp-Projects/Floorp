@@ -145,7 +145,7 @@ enum VerifierType {
 
 #ifdef JS_GC_ZEAL
 
-extern const char* ZealModeHelpText;
+extern const char ZealModeHelpText[];
 
 /* Check that write barriers have been used correctly. See gc/Verifier.cpp. */
 void

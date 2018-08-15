@@ -35,10 +35,10 @@
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
 #include "jsapi.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
-#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 // Initial size for the cache holding visited status observers.

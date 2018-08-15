@@ -245,6 +245,7 @@
 
 ; Modules
 @BINPATH@/modules/*
+@BINPATH@/actors/*
 
 ; Safe Browsing
 @BINPATH@/components/nsURLClassifier.manifest

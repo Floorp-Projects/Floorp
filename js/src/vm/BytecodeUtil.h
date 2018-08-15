@@ -812,7 +812,7 @@ class PCCounts
         return numExec_;
     }
 
-    static const char* numExecName;
+    static const char numExecName[];
 };
 
 static inline jsbytecode*

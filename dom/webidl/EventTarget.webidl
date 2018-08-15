@@ -21,6 +21,8 @@ dictionary EventListenerOptions {
 dictionary AddEventListenerOptions : EventListenerOptions {
   boolean passive;
   boolean once = false;
+  [ChromeOnly]
+  boolean wantUntrusted;
 };
 
 [Constructor,

@@ -34,7 +34,9 @@ class nsInputStreamTransport : public nsITransport
                              , public nsIInputStream
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    // Record refcount changes to ensure that stream transports are destroyed
+    // on consistent threads when recording/replaying.
+    NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(recordreplay::Behavior::Preserve)
     NS_DECL_NSITRANSPORT
     NS_DECL_NSIINPUTSTREAM
 

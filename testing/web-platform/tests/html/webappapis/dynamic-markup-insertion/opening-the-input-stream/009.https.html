@@ -28,7 +28,7 @@ function(x) {
 );
 }
 onload = function() {
-  iframe.contentDocument.open();
+  assert_equals(iframe.contentDocument.open(), iframe.contentDocument);
   steps.forEach(function(x) {x()});
 }
 </script>

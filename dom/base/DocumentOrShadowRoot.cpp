@@ -6,6 +6,7 @@
 
 #include "DocumentOrShadowRoot.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/StyleSheetList.h"
 #include "nsDocument.h"
 #include "nsFocusManager.h"

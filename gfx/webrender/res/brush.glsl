@@ -122,6 +122,9 @@ struct Fragment {
 Fragment brush_fs();
 
 void main(void) {
+#ifdef WR_FEATURE_DEBUG_OVERDRAW
+    oFragColor = WR_DEBUG_OVERDRAW_COLOR;
+#else
     // Run the specific brush FS code to output the color.
     Fragment frag = brush_fs();
 
@@ -138,5 +141,6 @@ void main(void) {
 
     // TODO(gw): Handle pre-multiply common code here as required.
     oFragColor = frag.color;
+#endif
 }
 #endif

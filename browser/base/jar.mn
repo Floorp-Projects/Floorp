@@ -29,6 +29,9 @@ browser.jar:
         content/browser/aboutTabCrashed.xhtml         (content/aboutTabCrashed.xhtml)
 *       content/browser/browser.css                   (content/browser.css)
         content/browser/browser.js                    (content/browser.js)
+#ifdef MOZ_BROWSER_XHTML
+*       content/browser/browser.xhtml                 (content/browser.xhtml)
+#endif
 *       content/browser/browser.xul                   (content/browser.xul)
         content/browser/browser-addons.js             (content/browser-addons.js)
         content/browser/browser-allTabsMenu.js        (content/browser-allTabsMenu.js)

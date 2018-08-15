@@ -407,18 +407,14 @@ class nsScriptCacheCleaner;
 struct nsMessageManagerScriptHolder
 {
   nsMessageManagerScriptHolder(JSContext* aCx,
-                               JSScript* aScript,
-                               bool aRunInGlobalScope)
-   : mScript(aCx, aScript), mRunInGlobalScope(aRunInGlobalScope)
+                               JSScript* aScript)
+   : mScript(aCx, aScript)
   { MOZ_COUNT_CTOR(nsMessageManagerScriptHolder); }
 
   ~nsMessageManagerScriptHolder()
   { MOZ_COUNT_DTOR(nsMessageManagerScriptHolder); }
 
-  bool WillRunInGlobalScope() { return mRunInGlobalScope; }
-
   JS::PersistentRooted<JSScript*> mScript;
-  bool mRunInGlobalScope;
 };
 
 class nsMessageManagerScriptExecutor
@@ -433,18 +429,15 @@ protected:
   nsMessageManagerScriptExecutor() { MOZ_COUNT_CTOR(nsMessageManagerScriptExecutor); }
   ~nsMessageManagerScriptExecutor() { MOZ_COUNT_DTOR(nsMessageManagerScriptExecutor); }
 
-  void DidCreateGlobal();
-  void LoadScriptInternal(JS::Handle<JSObject*> aGlobal, const nsAString& aURL,
-                          bool aRunInGlobalScope);
+  void DidCreateScriptLoader();
+  void LoadScriptInternal(JS::Handle<JSObject*> aMessageManager, const nsAString& aURL,
+                          bool aRunInUniqueScope);
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
-                                    bool aRunInGlobalScope,
+                                    bool aRunInUniqueScope,
                                     bool aShouldCache,
-                                    JS::Handle<JSObject*> aGlobal,
+                                    JS::Handle<JSObject*> aMessageManager,
                                     JS::MutableHandle<JSScript*> aScriptp);
-  bool InitChildGlobalInternal(const nsACString& aID);
-  virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::RealmOptions& aOptions,
-                                JS::MutableHandle<JSObject*> aReflector) = 0;
+  bool Init();
   void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
   void Unlink();
   nsCOMPtr<nsIPrincipal> mPrincipal;

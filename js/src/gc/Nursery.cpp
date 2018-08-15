@@ -626,7 +626,7 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
     json.beginObjectProperty("phase_times");
 
 #define EXTRACT_NAME(name, text) #name,
-    static const char* names[] = {
+    static const char* const names[] = {
 FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
 #undef EXTRACT_NAME
     "" };

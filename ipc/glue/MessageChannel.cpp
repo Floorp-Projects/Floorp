@@ -2190,7 +2190,10 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
 
     int nestedLevel = aMsg.nested_level();
 
-    MOZ_RELEASE_ASSERT(nestedLevel == IPC::Message::NOT_NESTED || NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(nestedLevel == IPC::Message::NOT_NESTED ||
+                       NS_IsMainThread() ||
+                       // Middleman processes forward sync messages on a non-main thread.
+                       recordreplay::IsMiddleman());
 #ifdef MOZ_TASK_TRACER
     AutoScopedLabel autolabel("sync message %s", aMsg.name());
 #endif

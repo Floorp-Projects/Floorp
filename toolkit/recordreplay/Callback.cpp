@@ -6,7 +6,7 @@
 
 #include "Callback.h"
 
-#include "ipc/ChildIPC.h"
+#include "ipc/ChildInternal.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RecordReplay.h"
 #include "mozilla/StaticMutex.h"

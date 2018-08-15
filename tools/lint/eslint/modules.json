@@ -167,7 +167,6 @@
   "recursive_importA.jsm": ["foo", "bar"],
   "recursive_importB.jsm": ["baz", "qux"],
   "reflect.jsm": ["Reflect"],
-  "RemoteFinder.jsm": ["RemoteFinder", "RemoteFinderListener"],
   "RemotePageManagerChild.jsm": ["ChildMessagePort"],
   "RemotePageManagerParent.jsm": ["RemotePages", "RemotePageManager"],
   "RemoteWebProgress.jsm": ["RemoteWebProgressManager"],

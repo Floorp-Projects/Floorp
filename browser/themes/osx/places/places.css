@@ -4,11 +4,7 @@
 
 /* Sidebars */
 
-#bookmarksPanel,
-#history-panel {
-  -moz-appearance: none;
-  background-color: transparent;
-}
+%include ../../shared/places/places.inc.css
 
 .sidebar-placesTree,
 .sidebar-placesTreechildren::-moz-tree-row {
@@ -57,10 +53,6 @@
   font-weight: bold;
 }
 
-#sidebar-search-label {
-  display: none;
-}
-
 #sidebar-search-container {
   /* Native searchbar styling already adds 4px margin on Mac, so
    * adding 4px padding results in 8px of total whitespace. */
@@ -81,9 +73,6 @@
 }
 
 #viewButton {
-  -moz-appearance: none;
-  border-radius: 4px;
-  padding: 2px 4px;
   margin: 4px 0;
   margin-inline-end: 4px;
   /* Default font size is 11px on mac, so this is 12px */
@@ -92,21 +81,6 @@
 
 #viewButton:focus {
   box-shadow: var(--focus-ring-box-shadow);
-}
-
-#viewButton:hover {
-  background: hsla(240, 5%, 5%, 0.1);
-}
-
-#viewButton[open] {
-  background: hsla(240, 5%, 5%, 0.15);
-}
-
-#viewButton > .button-box > .button-menu-dropmarker {
-  display: -moz-box;
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
-  width: 12px;
-  height: 12px;
 }
 
 /* Trees */
