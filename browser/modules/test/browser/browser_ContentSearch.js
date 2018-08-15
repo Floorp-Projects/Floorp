@@ -15,6 +15,10 @@ Services.scriptloader.loadSubScript(
 let originalEngine = Services.search.currentEngine;
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtab.preload", false]],
+  });
+
   await promiseNewEngine("testEngine.xml", {
     setAsCurrent: true,
     testPath: "chrome://mochitests/content/browser/browser/components/search/test/",
@@ -346,18 +350,11 @@ function waitForNewEngine(basename, numImages) {
 }
 
 async function addTab() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab");
   registerCleanupFunction(() => gBrowser.removeTab(tab));
 
   let url = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
   gMsgMan = tab.linkedBrowser.messageManager;
-  gMsgMan.sendAsyncMessage(CONTENT_SEARCH_MSG, {
-    type: "AddToWhitelist",
-    data: ["about:blank"],
-  });
-
-  await waitForMsg(CONTENT_SEARCH_MSG, "AddToWhitelistAck");
-
   gMsgMan.loadFrameScript(url, false);
 }
 

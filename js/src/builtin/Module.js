@@ -186,7 +186,7 @@ function IsResolvedBinding(resolution)
 function GetModuleNamespace(module)
 {
     // Step 1
-    assert(IsModule(module), "GetModuleNamespace called with non-module");
+    assert(IsObject(module) && IsModule(module), "GetModuleNamespace called with non-module");
 
     // Until issue https://github.com/tc39/ecma262/issues/1155 is resolved,
     // violate the spec here and throw if called on an errored module.
@@ -238,13 +238,13 @@ function ModuleNamespaceCreate(module, exports)
 
 function GetModuleEnvironment(module)
 {
-    assert(IsModule(module), "Non-module passed to GetModuleEnvironment");
+    assert(IsObject(module) && IsModule(module), "Non-module passed to GetModuleEnvironment");
 
     assert(module.status >= MODULE_STATUS_INSTANTIATING,
            "Attempt to access module environement before instantation");
 
     let env = UnsafeGetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT);
-    assert(IsModuleEnvironment(env),
+    assert(IsObject(env) && IsModuleEnvironment(env),
            "Module environment slot contains unexpected value");
 
     return env;

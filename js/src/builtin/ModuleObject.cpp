@@ -1010,18 +1010,6 @@ ModuleObject::setMetaObject(JSObject* obj)
     setReservedSlot(MetaObjectSlot, ObjectValue(*obj));
 }
 
-Value
-ModuleObject::hostDefinedField() const
-{
-    return getReservedSlot(HostDefinedSlot);
-}
-
-void
-ModuleObject::setHostDefinedField(const JS::Value& value)
-{
-    setReservedSlot(HostDefinedSlot, value);
-}
-
 Scope*
 ModuleObject::enclosingScope() const
 {
@@ -1155,6 +1143,22 @@ ModuleObject::Instantiate(JSContext* cx, HandleModuleObject self)
 ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self)
 {
     return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate);
+}
+
+/* static */ ModuleNamespaceObject*
+ModuleObject::GetOrCreateModuleNamespace(JSContext* cx, HandleModuleObject self)
+{
+    FixedInvokeArgs<1> args(cx);
+    args[0].setObject(*self);
+
+    RootedValue result(cx);
+    if (!CallSelfHostedFunction(cx, cx->names().GetModuleNamespace, UndefinedHandleValue, args,
+                                &result))
+    {
+        return nullptr;
+    }
+
+    return &result.toObject().as<ModuleNamespaceObject>();
 }
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)

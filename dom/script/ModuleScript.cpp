@@ -56,9 +56,8 @@ ModuleScript::UnlinkScript()
 {
   // Remove module's back reference to this object request if present.
   if (mScript) {
-    MOZ_ASSERT(JS::GetModuleHostDefinedField(mScript).toPrivate() ==
-               this);
-    JS::SetModuleHostDefinedField(mScript, JS::UndefinedValue());
+    MOZ_ASSERT(JS::GetTopLevelScriptPrivate(mScript) == this);
+    JS::SetTopLevelScriptPrivate(mScript, nullptr);
     mScript = nullptr;
   }
 }
@@ -81,7 +80,9 @@ ModuleScript::SetScript(JS::Handle<JSScript*> aScript)
 
   // Make module's host defined field point to this module script object.
   // This is cleared in the UnlinkScript().
-  JS::SetModuleHostDefinedField(mScript, JS::PrivateValue(this));
+  MOZ_ASSERT(!JS::GetTopLevelScriptPrivate(mScript));
+  JS::SetTopLevelScriptPrivate(mScript, this);
+
   HoldJSObjects(this);
 }
 

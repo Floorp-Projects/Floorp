@@ -435,7 +435,7 @@ TileClient::ValidateFromFront(const nsIntRegion& aDirtyRegion,
                               gfx::DrawTarget* aBackBuffer,
                               TilePaintFlags aFlags,
                               IntRect* aCopiedRect,
-                              std::vector<RefPtr<TextureClient>>* aClients)
+                              AutoTArray<RefPtr<TextureClient>, 4>* aClients)
 {
   if (!mBackBuffer || !mFrontBuffer) {
     return;
@@ -479,9 +479,9 @@ TileClient::ValidateFromFront(const nsIntRegion& aDirtyRegion,
   aBackBuffer->CopySurface(frontSurface, rectToCopy, rectToCopy.TopLeft());
 
   if (aFlags & TilePaintFlags::Async) {
-    aClients->push_back(mFrontBuffer);
+    aClients->AppendElement(mFrontBuffer);
     if (mFrontBufferOnWhite) {
-      aClients->push_back(mFrontBufferOnWhite);
+      aClients->AppendElement(mFrontBufferOnWhite);
     }
   }
 
@@ -716,10 +716,10 @@ TileClient::AcquireBackBuffer(CompositableClient& aCompositable,
   }
 
   // Gather texture clients
-  std::vector<RefPtr<TextureClient>> clients;
-  clients.push_back(RefPtr<TextureClient>(mBackBuffer));
+  AutoTArray<RefPtr<TextureClient>, 4> clients;
+  clients.AppendElement(RefPtr<TextureClient>(mBackBuffer));
   if (mBackBufferOnWhite) {
-    clients.push_back(mBackBufferOnWhite);
+    clients.AppendElement(mBackBufferOnWhite);
   }
 
   // Copy from the front buerr to the back if necessary

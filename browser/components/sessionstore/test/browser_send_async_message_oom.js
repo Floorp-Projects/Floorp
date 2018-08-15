@@ -29,8 +29,8 @@ function frameScript() {
     };
   };
 
-  mm.sendAsyncMessage = wrap(mm.sendAsyncMessage);
-  mm.sendSyncMessage = wrap(mm.sendSyncMessage);
+  mm.sendAsyncMessage = wrap(mm.sendAsyncMessage.bind(mm));
+  mm.sendSyncMessage = wrap(mm.sendSyncMessage.bind(mm));
 }
 
 add_task(async function() {

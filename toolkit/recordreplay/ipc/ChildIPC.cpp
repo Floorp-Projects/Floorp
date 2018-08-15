@@ -86,9 +86,17 @@ ChannelMessageHandler(Message* aMsg)
     break;
   }
   case MessageType::Terminate: {
-    PrintSpew("Terminate message received, exiting...\n");
-    MOZ_RELEASE_ASSERT(IsRecording());
-    _exit(0);
+    // Terminate messages behave differently in recording vs. replaying
+    // processes. When sent to a recording process (which the middleman manages
+    // directly) they signal that a clean shutdown is needed, while when sent
+    // to a replaying process (which the UI process manages) they signal that
+    // the process should crash, since it seems to be hanged.
+    if (IsRecording()) {
+      PrintSpew("Terminate message received, exiting...\n");
+      _exit(0);
+    } else {
+      MOZ_CRASH("Hanged replaying process");
+    }
   }
   case MessageType::SetIsActive: {
     const SetIsActiveMessage& nmsg = (const SetIsActiveMessage&) *aMsg;
@@ -298,6 +306,12 @@ base::ProcessId
 ParentProcessId()
 {
   return gParentPid;
+}
+
+void
+MaybeCreateInitialCheckpoint()
+{
+  NewCheckpoint(/* aTemporary = */ false);
 }
 
 void

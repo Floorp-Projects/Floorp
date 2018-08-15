@@ -57,7 +57,7 @@ struct AcquiredBackBuffer
                      gfx::DrawTargetCapture* aCapture,
                      gfx::DrawTarget* aBackBuffer,
                      const gfx::IntRect& aUpdatedRect,
-                     std::vector<RefPtr<TextureClient>>&& aTextureClients)
+                     AutoTArray<RefPtr<TextureClient>, 4>&& aTextureClients)
     : mTarget(aTarget)
     , mCapture(aCapture)
     , mBackBuffer(aBackBuffer)
@@ -75,7 +75,7 @@ struct AcquiredBackBuffer
   RefPtr<gfx::DrawTargetCapture> mCapture;
   RefPtr<gfx::DrawTarget> mBackBuffer;
   gfx::IntRect mUpdatedRect;
-  std::vector<RefPtr<TextureClient>> mTextureClients;
+  AutoTArray<RefPtr<TextureClient>, 4> mTextureClients;
 };
 
 /**
@@ -204,7 +204,7 @@ private:
                          gfx::DrawTarget* aBackBuffer,
                          TilePaintFlags aFlags,
                          gfx::IntRect* aCopiedRegion,
-                         std::vector<RefPtr<TextureClient>>* aClients);
+                         AutoTArray<RefPtr<TextureClient>, 4>* aClients);
 };
 
 /**

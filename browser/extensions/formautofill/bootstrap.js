@@ -131,7 +131,7 @@ function startup(data) {
     ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
   }, true);
   /* eslint-enable no-unused-vars */
-  Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillFrameScript.js", true);
+  Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillFrameScript.js", true, true);
 }
 
 function shutdown() {

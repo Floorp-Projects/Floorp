@@ -946,11 +946,14 @@ impl BorderRenderTaskInfo {
         instances
     }
 
-    /// Computes the maximum scale that we allow for this set of border radii.
+    /// Computes the maximum scale that we allow for this set of border parameters.
     /// capping the scale will result in rendering very large corners at a lower
     /// resolution and stretching them, so they will have the right shape, but
     /// blurrier.
-    pub fn get_max_scale(radii: &BorderRadius) -> LayoutToDeviceScale {
+    pub fn get_max_scale(
+        radii: &BorderRadius,
+        widths: &BorderWidths
+    ) -> LayoutToDeviceScale {
         let r = radii.top_left.width
             .max(radii.top_left.height)
             .max(radii.top_right.width)
@@ -958,7 +961,11 @@ impl BorderRenderTaskInfo {
             .max(radii.bottom_left.width)
             .max(radii.bottom_left.height)
             .max(radii.bottom_right.width)
-            .max(radii.bottom_right.height);
+            .max(radii.bottom_right.height)
+            .max(widths.top)
+            .max(widths.bottom)
+            .max(widths.left)
+            .max(widths.right);
 
         LayoutToDeviceScale::new(MAX_BORDER_RESOLUTION as f32 / r)
     }

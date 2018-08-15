@@ -484,6 +484,12 @@ fn main() {
         notifier,
     );
 
+    if let Some(window_title) = wrench.take_title() {
+        if !cfg!(windows) {
+            window.set_title(&window_title);
+        }
+    }
+
     if let Some(subargs) = args.subcommand_matches("show") {
         render(&mut wrench, &mut window, size, &mut events_loop, subargs);
     } else if let Some(subargs) = args.subcommand_matches("png") {
@@ -562,12 +568,6 @@ fn render<'a>(
     thing.do_frame(wrench);
 
     let mut body = |wrench: &mut Wrench, global_event: winit::Event| {
-        if let Some(window_title) = wrench.take_title() {
-            if !cfg!(windows) { //TODO: calling `set_title` from inside the `run_forever` loop is illegal...
-                window.set_title(&window_title);
-            }
-        }
-
         let mut do_frame = false;
         let mut do_render = false;
 
@@ -618,6 +618,10 @@ fn render<'a>(
                         wrench.renderer.toggle_debug_flags(
                             DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES
                         );
+                        do_render = true;
+                    }
+                    VirtualKeyCode::V => {
+                        wrench.renderer.toggle_debug_flags(DebugFlags::SHOW_OVERDRAW);
                         do_render = true;
                     }
                     VirtualKeyCode::R => {

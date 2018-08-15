@@ -8,14 +8,19 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
 // it rely on the |window| global.
-var EventUtils = {};
+var EventUtils = {
+  get KeyboardEvent() {
+    return content.KeyboardEvent;
+  },
+  // EventUtils' `sendChar` function relies on the navigator to synthetize events.
+  get navigator() {
+    return content.navigator;
+  },
+};
 EventUtils.window = {};
 EventUtils.parent = EventUtils.window;
 EventUtils._EU_Ci = Ci;
 EventUtils._EU_Cc = Cc;
-// EventUtils' `sendChar` function relies on the navigator to synthetize events.
-EventUtils.navigator = content.document.defaultView.navigator;
-EventUtils.KeyboardEvent = content.document.defaultView.KeyboardEvent;
 
 Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
