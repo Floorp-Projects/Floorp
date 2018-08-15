@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat
 // system.
 
 ext {
+    def base = "3"
     def today = new Date()
 
     // We use the current year (double digit) and substract 16. We first released Focus in
@@ -37,7 +38,7 @@ ext {
     // minute.
     def time = new SimpleDateFormat("HHmm").format(today)
 
-    generatedVersionCode = (year + day + time) as int
+    generatedVersionCode = (base + year + day + time) as int
 
     println("Generated versionCode: $generatedVersionCode")
     println()
