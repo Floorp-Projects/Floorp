@@ -10,6 +10,20 @@
 #include "nsAtom.h"
 #include "nsStaticAtom.h"
 
+// Trivial subclasses of nsStaticAtom so that function signatures can require
+// an atom from a specific atom list.
+#define DEFINE_STATIC_ATOM_SUBCLASS(name_)                                    \
+  class name_ : public nsStaticAtom                                           \
+  {                                                                           \
+  public:                                                                     \
+    constexpr name_(const char16_t* aStr, uint32_t aLength, uint32_t aOffset) \
+      : nsStaticAtom(aStr, aLength, aOffset) {}                               \
+  };
+
+DEFINE_STATIC_ATOM_SUBCLASS(nsICSSPseudoElement)
+
+#undef DEFINE_STATIC_ATOM_SUBCLASS
+
 namespace mozilla {
 namespace detail {
 
@@ -41,6 +55,12 @@ private:
 
 public:
   static void RegisterStaticAtoms();
+
+  static nsStaticAtom* GetAtomByIndex(size_t aIndex)
+  {
+    MOZ_ASSERT(aIndex < sAtomsLen);
+    return const_cast<nsStaticAtom*>(&sAtoms[aIndex]);
+  }
 
   #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_DECL_PTR(type_, name_)
   #include "nsGkAtomList.h"
