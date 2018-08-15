@@ -131,7 +131,6 @@ body,
 
 #viewports-container {
   display: flex;
-  justify-content: center;
   overflow: auto;
   height: 100%;
   width: 100%;
@@ -145,7 +144,11 @@ body,
   /* Individual viewports are inline elements, make sure they stay on a single
      line */
   white-space: nowrap;
-  padding-top: 30px;
+  margin-top: 16px;
+}
+
+#viewports.left-aligned {
+  margin-left: 16px;
 }
 
 /**

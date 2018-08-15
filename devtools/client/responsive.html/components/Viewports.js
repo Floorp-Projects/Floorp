@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -15,6 +16,7 @@ const Types = require("../types");
 class Viewports extends Component {
   static get propTypes() {
     return {
+      leftAlignmentEnabled: PropTypes.bool.isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
@@ -26,6 +28,7 @@ class Viewports extends Component {
 
   render() {
     const {
+      leftAlignmentEnabled,
       screenshot,
       viewports,
       onBrowserMounted,
@@ -43,7 +46,8 @@ class Viewports extends Component {
     // justify-content to start so that the left-most viewport is visible when there's
     // horizontal overflow. That is when the horizontal space become smaller than the
     // viewports and a scrollbar appears, then the first viewport will still be visible.
-    if (viewportSize && viewportSize.width > window.innerWidth) {
+    if (leftAlignmentEnabled ||
+        (viewportSize && viewportSize.width > window.innerWidth)) {
       justifyContent = "start";
     }
 
@@ -55,10 +59,15 @@ class Viewports extends Component {
             justifyContent,
           },
         },
-        dom.div({ id: "viewports" },
+        dom.div(
+          {
+            id: "viewports",
+            className: leftAlignmentEnabled ? "left-aligned" : "",
+          },
           viewports.map((viewport, i) => {
             return ResizableViewport({
               key: viewport.id,
+              leftAlignmentEnabled,
               screenshot,
               swapAfterMount: i == 0,
               viewport,
@@ -74,4 +83,10 @@ class Viewports extends Component {
   }
 }
 
-module.exports = Viewports;
+const mapStateToProps = state => {
+  return {
+    leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
+  };
+};
+
+module.exports = connect(mapStateToProps)(Viewports);

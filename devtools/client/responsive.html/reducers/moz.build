@@ -11,5 +11,6 @@ DevToolsModules(
     'reload-conditions.js',
     'screenshot.js',
     'touch-simulation.js',
+    'ui.js',
     'viewports.js',
 )
