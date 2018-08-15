@@ -95,6 +95,8 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
     mNestedFrameId = iframeEmbedding.get_TabId();
   }
 
+  mSendWindowSize = gHttpHandler->SendWindowSize();
+
   mEventQ = new ChannelEventQueue(static_cast<nsIParentRedirectingChannel*>(this));
 }
 
@@ -1622,6 +1624,8 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  int32_t count = static_cast<int32_t>(aCount);
+
   while (aCount) {
     nsresult rv = NS_ReadInputStreamToString(aInputStream, data, toRead);
     if (NS_FAILED(rv)) {
@@ -1643,7 +1647,63 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
     toRead = std::min<uint32_t>(aCount, kCopyChunkSize);
   }
 
+  if (NeedFlowControl()) {
+    // We're going to run out of sending window size
+    if (mSendWindowSize > 0 && mSendWindowSize <= count) {
+      MOZ_ASSERT(!mSuspendedForFlowControl);
+      Unused << mChannel->Suspend();
+      mSuspendedForFlowControl = true;
+    }
+    mSendWindowSize -= count;
+  }
+
   return NS_OK;
+}
+
+bool
+HttpChannelParent::NeedFlowControl()
+{
+  if (mCacheNeedFlowControlInitialized) {
+    return mNeedFlowControl;
+  }
+
+  int64_t contentLength = -1;
+
+  RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
+
+  // By design, we won't trigger the flow control if
+  // a. pref-out
+  // b. the resource is from cache or partial cache
+  // c. the resource is small
+  // Note that we served the cached resource first for partical cache, which is
+  // ignored here since we only take the first ODA into consideration.
+  if (gHttpHandler->SendWindowSize() == 0 ||
+      !httpChannelImpl ||
+      httpChannelImpl->IsReadingFromCache() ||
+      NS_FAILED(httpChannelImpl->GetContentLength(&contentLength)) ||
+      contentLength < gHttpHandler->SendWindowSize()) {
+    mNeedFlowControl = false;
+  }
+  mCacheNeedFlowControlInitialized = true;
+  return mNeedFlowControl;
+}
+
+mozilla::ipc::IPCResult
+HttpChannelParent::RecvBytesRead(const int32_t& aCount)
+{
+  if (!NeedFlowControl()) {
+    return IPC_OK();
+  }
+
+  LOG(("HttpBackgroundChannelParent::RecvBytesRead [this=%p count=%" PRId32 "]\n", this, aCount));
+
+  if (mSendWindowSize <= 0 && mSendWindowSize + aCount > 0) {
+    MOZ_ASSERT(mSuspendedForFlowControl);
+    Unused << mChannel->Resume();
+    mSuspendedForFlowControl = false;
+  }
+  mSendWindowSize += aCount;
+  return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------

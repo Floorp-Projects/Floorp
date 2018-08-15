@@ -209,6 +209,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
                                                                     const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
+  virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
@@ -261,6 +262,15 @@ private:
   // is about to be destroyed or no further event is going to be sent, i.e.,
   // DocumentChannelCleanup.
   void CleanupBackgroundChannel();
+
+  // Check if the channel needs to enable the flow control on the IPC channel.
+  // That is, we may suspend the channel if the ODA-s to child process are not
+  // consumed quickly enough. Otherwise, memory explosion could happen.
+  bool NeedFlowControl();
+  bool mCacheNeedFlowControlInitialized = false;
+  bool mNeedFlowControl = true;
+  bool mSuspendedForFlowControl = false;
+  int32_t mSendWindowSize;
 
   friend class HttpBackgroundChannelParent;
   friend class DivertDataAvailableEvent;
