@@ -15,6 +15,5 @@ idl_test(
     })
 
     self.manager = await navigator.getBattery();
-  },
-  'Test IDL implementation of Battery Status API'
+  }
 );
