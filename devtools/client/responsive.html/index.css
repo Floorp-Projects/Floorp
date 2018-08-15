@@ -36,6 +36,12 @@ body,
   overflow: hidden;
 }
 
+.theme-dark body,
+.theme-dark button,
+.theme-dark input {
+  color: var(--theme-toolbar-color);
+}
+
 #app {
   display: flex;
   flex-direction: column;
@@ -47,11 +53,6 @@ body,
  * Common styles for shared components
  */
 
-.container {
-  background-color: var(--theme-toolbar-background);
-  border: 1px solid var(--theme-splitter-color);
-}
-
 .devtools-separator {
   height: 100%;
   margin: 0 1px;
@@ -62,7 +63,7 @@ body,
  */
 
 #toolbar {
-  background-color: var(--theme-toolbar-background);
+  background-color: var(--theme-tab-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   display: grid;
   grid-template-columns: min-content auto min-content;
@@ -134,6 +135,10 @@ body,
   overflow: auto;
   height: 100%;
   width: 100%;
+}
+
+.theme-light #viewports-container {
+  background-color: #F5F5F6;
 }
 
 #viewports {
@@ -247,6 +252,10 @@ body,
   border: 1px solid #d92215;
 }
 
+.theme-dark .viewport-dimension-input {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
 .viewport-dimension-separator {
   -moz-user-select: none;
   padding: 0 0.3em;
@@ -280,6 +289,8 @@ body,
 }
 
 .device-modal {
+  background-color: var(--theme-toolbar-background);
+  border: 1px solid var(--theme-splitter-color);
   border-radius: 2px;
   box-shadow: var(--rdm-box-shadow);
   position: absolute;
@@ -346,6 +357,7 @@ body,
 }
 
 .device-label {
+  color: var(--theme-body-color);
   padding-bottom: 3px;
   display: flex;
   align-items: center;
