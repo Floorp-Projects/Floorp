@@ -534,13 +534,6 @@ public:
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
                                       URIObserverHashtable)
 
-  /**
-   * Get the paint server for a aTargetFrame.
-   */
-  static nsSVGPaintServerFrame *GetPaintServer(nsIFrame* aTargetFrame,
-                                               nsStyleSVGPaint nsStyleSVG::* aPaint,
-                                               PaintingPropertyDescriptor aProperty);
-
   struct EffectProperties {
     SVGFilterObserverListForCSSProp* mFilterObservers;
     SVGMaskObserverList* mMaskObservers;
@@ -683,6 +676,12 @@ public:
    */
   static void InvalidateDirectRenderingObservers(Element* aElement, uint32_t aFlags = 0);
   static void InvalidateDirectRenderingObservers(nsIFrame* aFrame, uint32_t aFlags = 0);
+
+  /**
+   * Get the paint server for a aTargetFrame.
+   */
+  static nsSVGPaintServerFrame *GetPaintServer(nsIFrame* aTargetFrame,
+                                               nsStyleSVGPaint nsStyleSVG::* aPaint);
 
   /**
    * Get an SVGMarkerObserver for the frame, creating a fresh one if necessary
