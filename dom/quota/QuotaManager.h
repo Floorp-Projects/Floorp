@@ -301,6 +301,10 @@ public:
   nsresult
   EnsureTemporaryStorageIsInitialized();
 
+  nsresult
+  EnsureOriginDirectory(nsIFile* aDirectory,
+                        bool* aCreated);
+
   void
   OriginClearCompleted(PersistenceType aPersistenceType,
                        const nsACString& aOrigin);
@@ -522,6 +526,9 @@ private:
   DirectoryLockTable&
   GetDirectoryLockTable(PersistenceType aPersistenceType);
 
+  bool
+  IsSanitizedOriginValid(const nsACString& aSanitizedOrigin);
+
   static void
   ShutdownTimerCallback(nsITimer* aTimer, void* aClosure);
 
@@ -545,9 +552,14 @@ private:
   // A timer that gets activated at shutdown to ensure we close all storages.
   nsCOMPtr<nsITimer> mShutdownTimer;
 
-  // A list of all successfully initialized origins. This list isn't protected
-  // by any mutex but it is only ever touched on the IO thread.
+  // A list of all successfully initialized persistent origins. This list isn't
+  // protected by any mutex but it is only ever touched on the IO thread.
   nsTArray<nsCString> mInitializedOrigins;
+
+  // A hash table that is used to cache origin parser results for given
+  // sanitized origin strings. This hash table isn't protected by any mutex but
+  // it is only ever touched on the IO thread.
+  nsDataHashtable<nsCStringHashKey, bool> mValidOrigins;
 
   // This array is populated at initialization time and then never modified, so
   // it can be iterated on any thread.
