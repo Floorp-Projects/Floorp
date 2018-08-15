@@ -79,39 +79,24 @@ export class SearchShortcutsForm extends React.PureComponent {
       }
     });
 
-    // Pin the pinQueue
-    if (pinQueue.length > 0) {
-      // First find the available slots. A slot is available if it isn't pinned
-      // or if it's a pinned shortcut that we are about to unpin.
-      const availableSlots = [];
-      rows.forEach((row, index) => {
-        if (!row || !row.isPinned || (row.searchTopSite && unpinQueue.find(site => row.url === site.url))) {
-          availableSlots.push(index);
-        }
-      });
+    // Tell the feed to do the work.
+    this.props.dispatch(ac.OnlyToMain({
+      type: at.UPDATE_PINNED_SEARCH_SHORTCUTS,
+      data: {
+        addedShortcuts: pinQueue,
+        deletedShortcuts: unpinQueue
+      }
+    }));
 
-      pinQueue.forEach(shortcut => {
-        this.props.dispatch(ac.OnlyToMain({
-          type: at.TOP_SITES_PIN,
-          data: {
-            site: shortcut,
-            index: availableSlots.shift()
-          }
-        }));
-        this.props.dispatch(ac.UserEvent({
-          source: TOP_SITES_SOURCE,
-          event: "SEARCH_EDIT_ADD",
-          value: {search_vendor: shortcut.searchVendor}
-        }));
-      });
-    }
-
-    // Unpin the unpinQueue.
-    unpinQueue.forEach(shortcut => {
-      this.props.dispatch(ac.OnlyToMain({
-        type: at.TOP_SITES_UNPIN,
-        data: {site: shortcut}
+    // Send the Telemetry pings.
+    pinQueue.forEach(shortcut => {
+      this.props.dispatch(ac.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "SEARCH_EDIT_ADD",
+        value: {search_vendor: shortcut.searchVendor}
       }));
+    });
+    unpinQueue.forEach(shortcut => {
       this.props.dispatch(ac.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "SEARCH_EDIT_DELETE",

@@ -11,7 +11,6 @@ const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // These "section" objects are formatted in a way to be similar to the ones from
 // SectionsManager to construct the preferences view.
