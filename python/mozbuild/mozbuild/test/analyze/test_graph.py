@@ -27,7 +27,7 @@ NODE_DATA = [(1, 0 ,2, -1, '.'),
         (5, -1, 1, 9426, 'CDD Unified_cpp_xpcom_io0.cpp'),
         (6, -1, 1, 5921, 'CXX Unified_cpp_xpcom_ds0.cpp'),
         (7, -1, 1, 11077, 'CXX /builds/worker/workspace/build/src/dom/\
-            plugins/base/snNPAPIPlugin.cpp'),
+            plugins/base/nsNPAPIPlugin.cpp'),
         (8, -1, 1, 7677, 'CXX Unified_cpp_xpcom_io1.cpp'),
         (9, -1, 1, 8672, 'CXX Unified_cpp_modules_libjar0.cpp'),
         (10, -1, 4, 1, 'Unified_cpp_xpcom_io0.o'),

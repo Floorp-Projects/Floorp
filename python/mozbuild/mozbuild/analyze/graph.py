@@ -111,7 +111,7 @@ class Graph(object):
                 sec = node.cost / 1000.0
                 m, s = sec / 60, sec % 60
                 print ("\n------ Summary for %s ------\
-                    \nTotal cost (mm:ss) = %d:%d\nNum Downstream Commands = %d"
+                    \nTotal Build Time (mm:ss) = %d:%d\nNum Downstream Commands = %d"
                     % (f, m, s, node.num_cmds))
 
     def populate(self):
