@@ -5,4 +5,4 @@
 "use strict";
 
 // The minimum viewport width and height
-exports.MIN_VIEWPORT_DIMENSION = 280;
+exports.MIN_VIEWPORT_DIMENSION = 50;
