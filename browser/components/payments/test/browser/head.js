@@ -435,7 +435,7 @@ async function submitAddressForm(frame, aAddress, aOptions = {}) {
 
     let currState = await PaymentTestUtils.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "payment-summary";
-    }, "Switched back to payment-summary");
+    }, "submitAddressForm: Switched back to payment-summary");
 
     let savedCount = Object.keys(currState.savedAddresses).length;
     let tempCount = Object.keys(currState.tempAddresses).length;
