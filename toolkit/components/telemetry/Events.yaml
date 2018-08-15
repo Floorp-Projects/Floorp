@@ -549,6 +549,17 @@ devtools.main:
     expiry_version: never
     extra_keys:
       session_id: The toolbox session start time e.g. 13963.
+  throttle_changed:
+    objects: ["netmonitor"]
+    bug_numbers: [1463147]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has changed the throttle setting in the netmonitor.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      mode: No throttling, GPRS, Regular 2G, Good 2G, Regular 3G, Good 3G, Regular 4G / LTE, DSL or WI-FI.
+      session_id: The toolbox session start time e.g. 13963.
   execute_js:
     objects: ["webconsole"]
     bug_numbers: [1463083]
