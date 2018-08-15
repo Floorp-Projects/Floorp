@@ -4,12 +4,13 @@
 
 "use strict";
 
-const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("../types");
-const { getStr } = require("../utils/l10n");
 const ToggleMenu = createFactory(require("./ToggleMenu"));
+
+const { getStr } = require("../utils/l10n");
+const Types = require("../types");
 
 class ReloadConditions extends PureComponent {
   static get propTypes() {
