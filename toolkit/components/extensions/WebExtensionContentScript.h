@@ -62,6 +62,14 @@ public:
     return nullptr;
   }
 
+  nsILoadInfo* GetLoadInfo() const
+  {
+    if (mObj.is<LoadInfo>()) {
+      return mObj.as<LoadInfo>();
+    }
+    return nullptr;
+  }
+
 private:
   void SetURL(const URLInfo& aURL);
 
@@ -80,22 +88,18 @@ private:
 };
 
 
-class WebExtensionContentScript final : public nsISupports
-                                      , public nsWrapperCache
+class MozDocumentMatcher : public nsISupports
+                         , public nsWrapperCache
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebExtensionContentScript)
-
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MozDocumentMatcher)
 
   using MatchGlobArray = nsTArray<RefPtr<MatchGlob>>;
-  using RunAtEnum = dom::ContentScriptRunAt;
 
-  static already_AddRefed<WebExtensionContentScript>
+  static already_AddRefed<MozDocumentMatcher>
   Constructor(dom::GlobalObject& aGlobal,
-              WebExtensionPolicy& aExtension,
-              const ContentScriptInit& aInit,
+              const dom::MozDocumentMatcherInit& aInit,
               ErrorResult& aRv);
-
 
   bool Matches(const DocInfo& aDoc) const;
   bool MatchesURI(const URLInfo& aURL) const;
@@ -110,14 +114,13 @@ class WebExtensionContentScript final : public nsISupports
   }
 
 
+  WebExtensionPolicy* GetExtension() { return mExtension; }
+
   WebExtensionPolicy* Extension() { return mExtension; }
   const WebExtensionPolicy* Extension() const { return mExtension; }
 
   bool AllFrames() const { return mAllFrames; }
   bool MatchAboutBlank() const { return mMatchAboutBlank; }
-  RunAtEnum RunAt() const { return mRunAt; }
-
-  Nullable<uint64_t> GetFrameID() const { return mFrameID; }
 
   MatchPatternSet* Matches() { return mMatches; }
   const MatchPatternSet* GetMatches() const { return mMatches; }
@@ -134,6 +137,63 @@ class WebExtensionContentScript final : public nsISupports
     ToNullable(mExcludeGlobs, aGlobs);
   }
 
+  Nullable<uint64_t> GetFrameID() const { return mFrameID; }
+
+
+  WebExtensionPolicy* GetParentObject() const { return mExtension; }
+  virtual JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+
+protected:
+  friend class WebExtensionPolicy;
+
+  virtual ~MozDocumentMatcher() = default;
+
+  MozDocumentMatcher(const dom::MozDocumentMatcherInit& aInit,
+                     ErrorResult& aRv);
+
+  RefPtr<WebExtensionPolicy> mExtension;
+
+  bool mHasActiveTabPermission;
+  bool mRestricted;
+
+  RefPtr<MatchPatternSet> mMatches;
+  RefPtr<MatchPatternSet> mExcludeMatches;
+
+  Nullable<MatchGlobSet> mIncludeGlobs;
+  Nullable<MatchGlobSet> mExcludeGlobs;
+
+
+  bool mAllFrames;
+  Nullable<uint64_t> mFrameID;
+  bool mMatchAboutBlank;
+
+private:
+  template <typename T, typename U>
+  void
+  ToNullable(const Nullable<T>& aInput, Nullable<U>& aOutput)
+  {
+    if (aInput.IsNull()) {
+      aOutput.SetNull();
+    } else {
+      aOutput.SetValue(aInput.Value());
+    }
+  }
+};
+
+class WebExtensionContentScript final : public MozDocumentMatcher
+{
+public:
+
+  using RunAtEnum = dom::ContentScriptRunAt;
+
+  static already_AddRefed<WebExtensionContentScript>
+  Constructor(dom::GlobalObject& aGlobal,
+              WebExtensionPolicy& aExtension,
+              const ContentScriptInit& aInit,
+              ErrorResult& aRv);
+
+  RunAtEnum RunAt() const { return mRunAt; }
+
   void GetCssPaths(nsTArray<nsString>& aPaths) const
   {
     aPaths.AppendElements(mCssPaths);
@@ -142,9 +202,6 @@ class WebExtensionContentScript final : public nsISupports
   {
     aPaths.AppendElements(mJsPaths);
   }
-
-
-  WebExtensionPolicy* GetParentObject() const { return mExtension; }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
 
@@ -158,36 +215,10 @@ protected:
                             ErrorResult& aRv);
 
 private:
-  RefPtr<WebExtensionPolicy> mExtension;
-
-  bool mHasActiveTabPermission;
-  bool mRestricted;
-
-  RefPtr<MatchPatternSet> mMatches;
-  RefPtr<MatchPatternSet> mExcludeMatches;
-
-  Nullable<MatchGlobSet> mIncludeGlobs;
-  Nullable<MatchGlobSet> mExcludeGlobs;
-
   nsTArray<nsString> mCssPaths;
   nsTArray<nsString> mJsPaths;
 
   RunAtEnum mRunAt;
-
-  bool mAllFrames;
-  Nullable<uint64_t> mFrameID;
-  bool mMatchAboutBlank;
-
-  template <typename T, typename U>
-  void
-  ToNullable(const Nullable<T>& aInput, Nullable<U>& aOutput)
-  {
-    if (aInput.IsNull()) {
-      aOutput.SetNull();
-    } else {
-      aOutput.SetValue(aInput.Value());
-    }
-  }
 };
 
 } // namespace extensions

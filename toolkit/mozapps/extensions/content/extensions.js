@@ -3094,8 +3094,8 @@ var gDetailView = {
       }
 
       mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
-                         false);
-      mm.loadFrameScript("chrome://browser/content/content.js", false);
+                         false, true);
+      mm.loadFrameScript("chrome://browser/content/content.js", false, true);
       mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
       mm.addMessageListener("Extension:BrowserResized", messageListener);
 

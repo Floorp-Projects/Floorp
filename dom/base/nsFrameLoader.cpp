@@ -64,7 +64,7 @@
 #include "nsThreadUtils.h"
 
 #include "nsIDOMChromeWindow.h"
-#include "nsInProcessTabChildGlobal.h"
+#include "InProcessTabChildMessageManager.h"
 
 #include "Layers.h"
 #include "ClientLayerManager.h"
@@ -1599,12 +1599,12 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   RefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
   // Swap pointers in child message managers.
   if (mChildMessageManager) {
-    nsInProcessTabChildGlobal* tabChild = mChildMessageManager;
+    InProcessTabChildMessageManager* tabChild = mChildMessageManager;
     tabChild->SetOwner(otherContent);
     tabChild->SetChromeMessageManager(otherMessageManager);
   }
   if (aOther->mChildMessageManager) {
-    nsInProcessTabChildGlobal* otherTabChild = aOther->mChildMessageManager;
+    InProcessTabChildMessageManager* otherTabChild = aOther->mChildMessageManager;
     otherTabChild->SetOwner(ourContent);
     otherTabChild->SetChromeMessageManager(ourMessageManager);
   }
@@ -2822,7 +2822,7 @@ nsFrameLoader::DoLoadMessageManagerScript(const nsAString& aURL, bool aRunInGlob
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL), aRunInGlobalScope);
   }
-  RefPtr<nsInProcessTabChildGlobal> tabChild = GetTabChildGlobal();
+  RefPtr<InProcessTabChildMessageManager> tabChild = GetTabChildMessageManager();
   if (tabChild) {
     tabChild->LoadFrameScript(aURL, aRunInGlobalScope);
   }
@@ -2844,7 +2844,7 @@ public:
 
   NS_IMETHOD Run() override
   {
-    nsInProcessTabChildGlobal* tabChild = mFrameLoader->mChildMessageManager;
+    InProcessTabChildMessageManager* tabChild = mFrameLoader->mChildMessageManager;
     // Since bug 1126089, messages can arrive even when the docShell is destroyed.
     // Here we make sure that those messages are not delivered.
     if (tabChild && tabChild->GetInnerManager() && mFrameLoader->GetExistingDocShell()) {
@@ -2961,7 +2961,7 @@ nsFrameLoader::EnsureMessageManager()
       return NS_ERROR_FAILURE;
     }
     mChildMessageManager =
-      nsInProcessTabChildGlobal::Create(mDocShell, mOwnerContent, mMessageManager);
+      InProcessTabChildMessageManager::Create(mDocShell, mOwnerContent, mMessageManager);
     NS_ENSURE_TRUE(mChildMessageManager, NS_ERROR_UNEXPECTED);
   }
   return NS_OK;

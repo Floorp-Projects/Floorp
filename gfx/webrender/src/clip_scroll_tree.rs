@@ -2,16 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceIntRect, DevicePixelScale, ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D};
-use api::{PipelineId, ScrollClamping, ScrollLocation, ScrollNodeState};
+use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D};
+use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation};
 use api::{LayoutSize, LayoutTransform, PropertyBinding, ScrollSensitivity, WorldPoint};
-use clip::{ClipChain, ClipSourcesIndex, ClipStore};
-use clip_node::ClipNode;
-use gpu_cache::GpuCache;
+use clip::{ClipStore};
 use gpu_types::TransformPalette;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
-use resource_cache::ResourceCache;
 use scene::SceneProperties;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo};
 use util::LayoutToWorldFastTransform;
@@ -32,9 +29,6 @@ pub struct CoordinateSystemId(pub u32);
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(pub usize);
 
-#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
-pub struct ClipNodeIndex(pub usize);
-
 const ROOT_REFERENCE_FRAME_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
 const TOPMOST_SCROLL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(1);
 
@@ -53,35 +47,10 @@ impl CoordinateSystemId {
     }
 }
 
-pub struct ClipChainDescriptor {
-    pub index: ClipChainIndex,
-    pub parent: Option<ClipChainIndex>,
-    pub clips: Vec<ClipNodeIndex>,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ClipChainIndex(pub usize);
-
-impl ClipChainIndex {
-    pub const NO_CLIP: Self = ClipChainIndex(0);
-}
-
 pub struct ClipScrollTree {
     /// Nodes which determine the positions (offsets and transforms) for primitives
     /// and clips.
     pub spatial_nodes: Vec<SpatialNode>,
-
-    /// Nodes which clip primitives.
-    pub clip_nodes: Vec<ClipNode>,
-
-    /// A Vec of all descriptors that describe ClipChains in the order in which they are
-    /// encountered during display list flattening. ClipChains are expected to never be
-    /// the children of ClipChains later in the list.
-    pub clip_chains_descriptors: Vec<ClipChainDescriptor>,
-
-    /// A vector of all ClipChains in this ClipScrollTree including those from
-    /// ClipChainDescriptors and also those defined by the clipping node hierarchy.
-    pub clip_chains: Vec<ClipChain>,
 
     pub pending_scroll_offsets: FastHashMap<ExternalScrollId, (LayoutPoint, ScrollClamping)>,
 
@@ -116,9 +85,6 @@ impl ClipScrollTree {
     pub fn new() -> Self {
         ClipScrollTree {
             spatial_nodes: Vec::new(),
-            clip_nodes: Vec::new(),
-            clip_chains_descriptors: Vec::new(),
-            clip_chains: vec![ClipChain::empty(&DeviceIntRect::zero())],
             pending_scroll_offsets: FastHashMap::default(),
             pipelines_to_discard: FastHashSet::default(),
         }
@@ -167,10 +133,7 @@ impl ClipScrollTree {
             }
         }
 
-        self.clip_nodes.clear();
         self.pipelines_to_discard.clear();
-        self.clip_chains = vec![ClipChain::empty(&DeviceIntRect::zero())];
-        self.clip_chains_descriptors.clear();
         scroll_states
     }
 
@@ -220,11 +183,6 @@ impl ClipScrollTree {
 
     pub fn update_tree(
         &mut self,
-        screen_rect: &DeviceIntRect,
-        device_pixel_scale: DevicePixelScale,
-        clip_store: &mut ClipStore,
-        resource_cache: &mut ResourceCache,
-        gpu_cache: &mut GpuCache,
         pan: WorldPoint,
         scene_properties: &SceneProperties,
     ) -> TransformPalette {
@@ -232,8 +190,6 @@ impl ClipScrollTree {
         if self.spatial_nodes.is_empty() {
             return transform_palette;
         }
-
-        self.clip_chains[0] = ClipChain::empty(screen_rect);
 
         let root_reference_frame_index = self.root_reference_frame_index();
         let mut state = TransformUpdateState {
@@ -254,18 +210,6 @@ impl ClipScrollTree {
             &mut transform_palette,
             scene_properties,
         );
-
-        for clip_node in &mut self.clip_nodes {
-            clip_node.update(
-                device_pixel_scale,
-                clip_store,
-                resource_cache,
-                gpu_cache,
-                &mut self.clip_chains,
-                &self.spatial_nodes,
-            );
-        }
-        self.build_clip_chains(screen_rect);
 
         transform_palette
     }
@@ -309,32 +253,6 @@ impl ClipScrollTree {
         }
     }
 
-    pub fn build_clip_chains(&mut self, screen_rect: &DeviceIntRect) {
-        for descriptor in &self.clip_chains_descriptors {
-            // A ClipChain is an optional parent (which is another ClipChain) and a list of
-            // SpatialNode clipping nodes. Here we start the ClipChain with a clone of the
-            // parent's node, if necessary.
-            let mut chain = match descriptor.parent {
-                Some(index) => self.clip_chains[index.0].clone(),
-                None => ClipChain::empty(screen_rect),
-            };
-
-            // Now we walk through each ClipNode in the vector and extract their ClipChain nodes to
-            // construct the final list.
-            for clip_index in &descriptor.clips {
-                match self.clip_nodes[clip_index.0] {
-                    ClipNode { clip_chain_node: Some(ref node), .. } => {
-                        chain.add_node(node.clone());
-                    }
-                    ClipNode { .. } => warn!("Found uninitialized clipping ClipNode."),
-                };
-            }
-
-            chain.parent_index = descriptor.parent;
-            self.clip_chains[descriptor.index.0] = chain;
-        }
-    }
-
     pub fn finalize_and_apply_pending_scroll_offsets(&mut self, old_states: ScrollStates) {
         for node in &mut self.spatial_nodes {
             let external_id = match node.node_type {
@@ -350,22 +268,6 @@ impl ClipScrollTree {
                 node.set_scroll_origin(&offset, clamping);
             }
         }
-    }
-
-    pub fn add_clip_node(
-        &mut self,
-        parent_clip_chain_index: ClipChainIndex,
-        clip_sources_index: ClipSourcesIndex,
-    ) -> (ClipNodeIndex, ClipChainIndex) {
-        let clip_chain_index = self.allocate_clip_chain();
-        let node = ClipNode {
-            parent_clip_chain_index,
-            clip_sources_index,
-            clip_chain_index,
-            clip_chain_node: None,
-        };
-        let node_index = self.push_clip_node(node);
-        (node_index, clip_chain_index)
     }
 
     pub fn add_scroll_frame(
@@ -418,22 +320,6 @@ impl ClipScrollTree {
             pipeline_id,
         );
         self.add_spatial_node(node)
-    }
-
-    pub fn add_clip_chain_descriptor(
-        &mut self,
-        parent: Option<ClipChainIndex>,
-        clips: Vec<ClipNodeIndex>
-    ) -> ClipChainIndex {
-        let index = self.allocate_clip_chain();
-        self.clip_chains_descriptors.push(ClipChainDescriptor { index, parent, clips });
-        index
-    }
-
-    pub fn push_clip_node(&mut self, node: ClipNode) -> ClipNodeIndex {
-        let index = ClipNodeIndex(self.clip_nodes.len());
-        self.clip_nodes.push(node);
-        index
     }
 
     pub fn add_spatial_node(&mut self, node: SpatialNode) -> SpatialNodeIndex {
@@ -501,16 +387,5 @@ impl ClipScrollTree {
         if !self.spatial_nodes.is_empty() {
             self.print_node(self.root_reference_frame_index(), pt, clip_store);
         }
-    }
-
-    pub fn allocate_clip_chain(&mut self) -> ClipChainIndex {
-        debug_assert!(!self.clip_chains.is_empty());
-        let new_clip_chain =self.clip_chains[0].clone();
-        self.clip_chains.push(new_clip_chain);
-        ClipChainIndex(self.clip_chains.len() - 1)
-    }
-
-    pub fn get_clip_chain(&self, index: ClipChainIndex) -> &ClipChain {
-        &self.clip_chains[index.0]
     }
 }

@@ -6,6 +6,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   DelayedInit: "resource://gre/modules/DelayedInit.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
@@ -40,6 +41,8 @@ BrowserCLH.prototype = {
 
         Services.obs.addObserver(this, "chrome-document-interactive");
         Services.obs.addObserver(this, "content-document-interactive");
+
+        ActorManagerParent.flush();
 
         GeckoViewUtils.addLazyGetter(this, "DownloadNotifications", {
           module: "resource://gre/modules/DownloadNotifications.jsm",

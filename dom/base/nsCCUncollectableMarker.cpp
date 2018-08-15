@@ -11,6 +11,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "XULDocument.h"
+#include "InProcessTabChildMessageManager.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
@@ -25,16 +26,15 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsJSEnvironment.h"
-#include "nsInProcessTabChildGlobal.h"
 #include "nsFrameLoader.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
-#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "xpcpublic.h"
@@ -120,7 +120,7 @@ MarkChildMessageManagers(MessageBroadcaster* aMM)
     mozilla::dom::ipc::MessageManagerCallback* cb = tabMM->GetCallback();
     if (cb) {
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
-      nsInProcessTabChildGlobal* et = fl->GetTabChildGlobal();
+      InProcessTabChildMessageManager* et = fl->GetTabChildMessageManager();
       if (!et) {
         continue;
       }
@@ -137,8 +137,8 @@ static void
 MarkMessageManagers()
 {
   if (nsFrameMessageManager::GetChildProcessManager()) {
-    // ProcessGlobal's MarkForCC marks also ChildProcessManager.
-    ProcessGlobal* pg = ProcessGlobal::Get();
+    // ContentProcessMessageManager's MarkForCC also marks ChildProcessManager.
+    ContentProcessMessageManager* pg = ContentProcessMessageManager::Get();
     if (pg) {
       pg->MarkForCC();
     }
@@ -291,7 +291,7 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS)
 
       RefPtr<TabChild> tabChild = TabChild::GetFrom(rootDocShell);
       if (tabChild) {
-        RefPtr<TabChildGlobal> mm = tabChild->GetMessageManager();
+        RefPtr<TabChildMessageManager> mm = tabChild->GetMessageManager();
         if (mm) {
           // MarkForCC ends up calling UnmarkGray on message listeners, which
           // TraceBlackJS can't do yet.
@@ -471,8 +471,9 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
     return;
   }
 
-  if (ProcessGlobal::WasCreated() && nsFrameMessageManager::GetChildProcessManager()) {
-    ProcessGlobal* pg = ProcessGlobal::Get();
+  if (ContentProcessMessageManager::WasCreated() &&
+      nsFrameMessageManager::GetChildProcessManager()) {
+    auto* pg = ContentProcessMessageManager::Get();
     if (pg) {
       mozilla::TraceScriptHolder(ToSupports(pg), aTrc);
     }
@@ -502,8 +503,8 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
         }
 
         if (window->IsRootOuterWindow()) {
-          // In child process trace all the TabChildGlobals.
-          // Since there is one root outer window per TabChildGlobal, we need
+          // In child process trace all the TabChildMessageManagers.
+          // Since there is one root outer window per TabChildMessageManager, we need
           // to look for only those windows, not all.
           nsIDocShell* ds = window->GetDocShell();
           if (ds) {

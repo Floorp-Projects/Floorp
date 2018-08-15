@@ -2798,8 +2798,9 @@ SetPropertyIgnoringNamedGetter(JSContext* cx, JS::HandleObject obj, JS::HandleId
 
 // This function is for one specific use case, please don't use this for anything else!
 extern JS_FRIEND_API(bool)
-ExecuteInGlobalAndReturnScope(JSContext* cx, JS::HandleObject obj, JS::HandleScript script,
-                              JS::MutableHandleObject scope);
+ExecuteInFrameScriptEnvironment(JSContext* cx, JS::HandleObject obj,
+                                JS::HandleScript script,
+                                JS::MutableHandleObject scope);
 
 // These functions are provided for the JSM component loader in Gecko.
 //

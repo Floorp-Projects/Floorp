@@ -191,7 +191,8 @@ struct CheckGCThingAfterMovingGCFunctor {
 #endif // JSGC_HASH_TABLE_CHECKS
 
 LexicalEnvironmentObject*
-ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObject enclosing)
+ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObject enclosing,
+                                                       HandleObject key, HandleObject thisv)
 {
     MOZ_ASSERT(&ObjectRealm::get(enclosing) == this);
 
@@ -203,27 +204,11 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObje
         nonSyntacticLexicalEnvironments_ = std::move(map);
     }
 
-    // If a wrapped WithEnvironmentObject was passed in, unwrap it, as we may
-    // be creating different WithEnvironmentObject wrappers each time.
-    RootedObject key(cx, enclosing);
-    if (enclosing->is<WithEnvironmentObject>()) {
-        MOZ_ASSERT(!enclosing->as<WithEnvironmentObject>().isSyntactic());
-        key = &enclosing->as<WithEnvironmentObject>().object();
-    }
     RootedObject lexicalEnv(cx, nonSyntacticLexicalEnvironments_->lookup(key));
 
     if (!lexicalEnv) {
-        // NOTE: The default global |this| value is set to key for compatibility
-        // with existing users of the lexical environment cache.
-        //  - When used by shared-global JSM loader, |this| must be the
-        //    NonSyntacticVariablesObject passed as enclosing.
-        //  - When used by SubscriptLoader, |this| must be the target object of
-        //    the WithEnvironmentObject wrapper.
-        //  - When used by XBL/DOM Events, we execute directly as a function and
-        //    do not access the |this| value.
-        // See js::GetFunctionThis / js::GetNonSyntacticGlobalThis
         MOZ_ASSERT(key->is<NonSyntacticVariablesObject>() || !key->is<EnvironmentObject>());
-        lexicalEnv = LexicalEnvironmentObject::createNonSyntactic(cx, enclosing, /*thisv = */key);
+        lexicalEnv = LexicalEnvironmentObject::createNonSyntactic(cx, enclosing, thisv);
         if (!lexicalEnv)
             return nullptr;
         if (!nonSyntacticLexicalEnvironments_->add(cx, key, lexicalEnv))
@@ -234,18 +219,40 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObje
 }
 
 LexicalEnvironmentObject*
-ObjectRealm::getNonSyntacticLexicalEnvironment(JSObject* enclosing) const
+ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObject enclosing)
 {
-    MOZ_ASSERT(&ObjectRealm::get(enclosing) == this);
+    // If a wrapped WithEnvironmentObject was passed in, unwrap it, as we may
+    // be creating different WithEnvironmentObject wrappers each time.
+    RootedObject key(cx, enclosing);
+    if (enclosing->is<WithEnvironmentObject>()) {
+        MOZ_ASSERT(!enclosing->as<WithEnvironmentObject>().isSyntactic());
+        key = &enclosing->as<WithEnvironmentObject>().object();
+    }
+
+    // NOTE: The default global |this| value is set to key for compatibility
+    // with existing users of the lexical environment cache.
+    //  - When used by shared-global JSM loader, |this| must be the
+    //    NonSyntacticVariablesObject passed as enclosing.
+    //  - When used by SubscriptLoader, |this| must be the target object of
+    //    the WithEnvironmentObject wrapper.
+    //  - When used by XBL/DOM Events, we execute directly as a function and
+    //    do not access the |this| value.
+    // See js::GetFunctionThis / js::GetNonSyntacticGlobalThis
+    return getOrCreateNonSyntacticLexicalEnvironment(cx, enclosing, key, /*thisv = */key);
+}
+
+LexicalEnvironmentObject*
+ObjectRealm::getNonSyntacticLexicalEnvironment(JSObject* key) const
+{
+    MOZ_ASSERT(&ObjectRealm::get(key) == this);
 
     if (!nonSyntacticLexicalEnvironments_)
         return nullptr;
     // If a wrapped WithEnvironmentObject was passed in, unwrap it as in
     // getOrCreateNonSyntacticLexicalEnvironment.
-    JSObject* key = enclosing;
-    if (enclosing->is<WithEnvironmentObject>()) {
-        MOZ_ASSERT(!enclosing->as<WithEnvironmentObject>().isSyntactic());
-        key = &enclosing->as<WithEnvironmentObject>().object();
+    if (key->is<WithEnvironmentObject>()) {
+        MOZ_ASSERT(!key->as<WithEnvironmentObject>().isSyntactic());
+        key = &key->as<WithEnvironmentObject>().object();
     }
     JSObject* lexicalEnv = nonSyntacticLexicalEnvironments_->lookup(key);
     if (!lexicalEnv)

@@ -343,12 +343,13 @@ AlwaysPoison(void* ptr, uint8_t value, size_t num, MemCheckKind kind)
     SetMemCheckKind(ptr, num, kind);
 }
 
+// JSGC_DISABLE_POISONING environment variable
+extern bool gDisablePoisoning;
+
 static inline void
 Poison(void* ptr, uint8_t value, size_t num, MemCheckKind kind)
 {
-    static bool disablePoison = !mozilla::recordreplay::IsRecordingOrReplaying()
-                             && bool(getenv("JSGC_DISABLE_POISONING"));
-    if (!disablePoison)
+    if (!js::gDisablePoisoning)
         AlwaysPoison(ptr, value, num, kind);
 }
 

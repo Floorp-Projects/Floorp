@@ -107,7 +107,7 @@ async function testPolicy(customCSP = null) {
     }, true);
   }
   let frameScriptURL = `data:,(${encodeURI(frameScript)}).call(this)`;
-  Services.mm.loadFrameScript(frameScriptURL, true);
+  Services.mm.loadFrameScript(frameScriptURL, true, true);
 
 
   info(`Testing CSP for policy: ${content_security_policy}`);

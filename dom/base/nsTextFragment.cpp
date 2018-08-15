@@ -30,7 +30,7 @@ static char* sSpaceSharedString[TEXTFRAG_MAX_NEWLINES + 1];
 static char* sTabSharedString[TEXTFRAG_MAX_NEWLINES + 1];
 static char sSingleCharSharedString[256];
 
-using mozilla::CheckedUint32;
+using namespace mozilla;
 
 // static
 nsresult

@@ -56,7 +56,7 @@ MOZ_FORMAT_PRINTF(1, 2)
 AllocTraceLogFilename(const char* pattern, ...) {
     va_list ap;
 
-    static const char* outdir = getenv("TLDIR") ? getenv("TLDIR") : DEFAULT_TRACE_LOG_DIR;
+    const char* outdir = getenv("TLDIR") ? getenv("TLDIR") : DEFAULT_TRACE_LOG_DIR;
     size_t len = strlen(outdir) + 1; // "+ 1" is for the '/'
 
     for (const char* p = pattern; *p; p++) {

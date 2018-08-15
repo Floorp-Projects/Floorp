@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsContentTypeParser.h"
+#include "nsContentUtils.h"
 #include "nsNetUtil.h"
+
+using namespace mozilla;
 
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
   : mString(aString)

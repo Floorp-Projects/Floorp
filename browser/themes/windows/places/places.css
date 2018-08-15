@@ -4,10 +4,7 @@
 
 /* Sidebars */
 
-#history-panel,
-#bookmarksPanel {
-  background-color: transparent;
-}
+%include ../../shared/places/places.inc.css
 
 .sidebar-placesTree {
   -moz-appearance: none;
@@ -55,24 +52,9 @@
 
 /* Default button vert. margins are 1px/2px, and this can cause misalignment */
 #viewButton {
-  -moz-appearance: none;
   margin: 0;
   margin-inline-start: 4px;
   border-radius: 2px;
-}
-
-#viewButton:hover {
-  background-color: hsla(240, 5%, 5%, .1);
-}
-
-#viewButton[open] {
-  background-color: hsla(240, 5%, 5%, .15);
-}
-
-#viewButton > .button-box > .button-menu-dropmarker {
-  height: auto;
-  width: auto;
-  margin-inline-end: -3px;
 }
 
 #sidebar-search-container {

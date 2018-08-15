@@ -4,6 +4,7 @@
 
 BOOL StartServiceUpdate(LPCWSTR installDir);
 DWORD LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR *argv);
+BOOL GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath);
 BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode);
 DWORD WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds);
 DWORD WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds);

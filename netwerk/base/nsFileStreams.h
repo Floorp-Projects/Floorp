@@ -27,7 +27,9 @@ class nsFileStreamBase : public nsISeekableStream,
                          public nsIFileMetadata
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    // Record refcount changes to ensure that streams are destroyed on
+    // consistent threads when recording/replaying.
+    NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(mozilla::recordreplay::Behavior::Preserve)
     NS_DECL_NSISEEKABLESTREAM
     NS_DECL_NSIFILEMETADATA
 

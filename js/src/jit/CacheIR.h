@@ -176,7 +176,7 @@ enum class CacheKind : uint8_t
 #undef DEFINE_KIND
 };
 
-extern const char* CacheKindNames[];
+extern const char* const CacheKindNames[];
 
 #define CACHE_IR_OPS(_)                   \
     _(GuardIsObject)                      \

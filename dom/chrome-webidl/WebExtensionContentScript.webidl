@@ -6,32 +6,8 @@ interface LoadInfo;
 interface URI;
 interface WindowProxy;
 
-/**
- * Describes the earliest point in the load cycle at which a script should
- * run.
- */
-enum ContentScriptRunAt {
-  /**
-   * The point in the load cycle just after the document element has been
-   * inserted, before any page scripts have been allowed to run.
-   */
-  "document_start",
-  /**
-   * The point after which the page DOM has fully loaded, but before all page
-   * resources have necessarily been loaded. Corresponds approximately to the
-   * DOMContentLoaded event.
-   */
-  "document_end",
-  /**
-   * The first point after the page and all of its resources has fully loaded
-   * when the event loop is idle, and can run scripts without delaying a paint
-   * event.
-   */
-  "document_idle",
-};
-
-[Constructor(WebExtensionPolicy extension, WebExtensionContentScriptInit options), ChromeOnly, Exposed=System]
-interface WebExtensionContentScript {
+[Constructor(MozDocumentMatcherInit options), ChromeOnly, Exposed=System]
+interface MozDocumentMatcher {
   /**
    * Returns true if the script's match and exclude patterns match the given
    * URI, without reference to attributes such as `allFrames`.
@@ -39,51 +15,32 @@ interface WebExtensionContentScript {
   boolean matchesURI(URI uri);
 
   /**
-   * Returns true if the script matches the given URI and LoadInfo objects.
+   * Returns true if the the given URI and LoadInfo objects match.
    * This should be used to determine whether to begin pre-loading a content
    * script based on network events.
    */
   boolean matchesLoadInfo(URI uri, LoadInfo loadInfo);
 
   /**
-   * Returns true if the script matches the given window. This should be used
+   * Returns true if the given window matches. This should be used
    * to determine whether to run a script in a window at load time.
    */
   boolean matchesWindow(WindowProxy window);
 
   /**
-   * The policy object for the extension that this script belongs to.
-   */
-  [Constant]
-  readonly attribute WebExtensionPolicy extension;
-
-  /**
-   * If true, this script runs in all frames. If false, it only runs in
-   * top-level frames.
+   * If true, match all frames. If false, match only top-level frames.
    */
   [Constant]
   readonly attribute boolean allFrames;
 
   /**
    * If true, this (misleadingly-named, but inherited from Chrome) attribute
-   * causes the script to run in frames with URLs which inherit a principal
-   * that matches one of the match patterns, such as about:blank or
-   * about:srcdoc. If false, the script only runs in frames with an explicit
-   * matching URL.
+   * causes us to match frames with URLs which inherit a principal that
+   * matches one of the match patterns, such as about:blank or about:srcdoc.
+   * If false, we only match frames with an explicit matching URL.
    */
   [Constant]
   readonly attribute boolean matchAboutBlank;
-
-  /**
-   * The earliest point in the load cycle at which this script should run. For
-   * static content scripts, in extensions which were present at browser
-   * startup, the browser makes every effort to make sure that the script runs
-   * no later than this point in the load cycle. For dynamic content scripts,
-   * and scripts from extensions installed during this session, the scripts
-   * may run at a later point.
-   */
-  [Constant]
-  readonly attribute ContentScriptRunAt runAt;
 
   /**
    * The outer window ID of the frame in which to run the script, or 0 if it
@@ -124,6 +81,68 @@ interface WebExtensionContentScript {
   readonly attribute sequence<MatchGlob>? excludeGlobs;
 
   /**
+   * The policy object for the extension that this matcher belongs to.
+   */
+  [Constant]
+  readonly attribute WebExtensionPolicy? extension;
+};
+
+dictionary MozDocumentMatcherInit {
+  boolean allFrames = false;
+
+  boolean matchAboutBlank = false;
+
+  unsigned long long? frameID = null;
+
+  required MatchPatternSet matches;
+
+  MatchPatternSet? excludeMatches = null;
+
+  sequence<MatchGlob>? includeGlobs = null;
+
+  sequence<MatchGlob>? excludeGlobs = null;
+
+  boolean hasActiveTabPermission = false;
+};
+
+/**
+ * Describes the earliest point in the load cycle at which a script should
+ * run.
+ */
+enum ContentScriptRunAt {
+  /**
+   * The point in the load cycle just after the document element has been
+   * inserted, before any page scripts have been allowed to run.
+   */
+  "document_start",
+  /**
+   * The point after which the page DOM has fully loaded, but before all page
+   * resources have necessarily been loaded. Corresponds approximately to the
+   * DOMContentLoaded event.
+   */
+  "document_end",
+  /**
+   * The first point after the page and all of its resources has fully loaded
+   * when the event loop is idle, and can run scripts without delaying a paint
+   * event.
+   */
+  "document_idle",
+};
+
+[Constructor(WebExtensionPolicy extension, WebExtensionContentScriptInit options), ChromeOnly, Exposed=System]
+interface WebExtensionContentScript : MozDocumentMatcher {
+  /**
+   * The earliest point in the load cycle at which this script should run. For
+   * static content scripts, in extensions which were present at browser
+   * startup, the browser makes every effort to make sure that the script runs
+   * no later than this point in the load cycle. For dynamic content scripts,
+   * and scripts from extensions installed during this session, the scripts
+   * may run at a later point.
+   */
+  [Constant]
+  readonly attribute ContentScriptRunAt runAt;
+
+  /**
    * A set of paths, relative to the extension root, of CSS sheets to inject
    * into matching pages.
    */
@@ -138,24 +157,8 @@ interface WebExtensionContentScript {
   readonly attribute sequence<DOMString> jsPaths;
 };
 
-dictionary WebExtensionContentScriptInit {
-  boolean allFrames = false;
-
-  boolean matchAboutBlank = false;
-
+dictionary WebExtensionContentScriptInit : MozDocumentMatcherInit {
   ContentScriptRunAt runAt = "document_idle";
-
-  unsigned long long? frameID = null;
-
-  boolean hasActiveTabPermission = false;
-
-  required MatchPatternSet matches;
-
-  MatchPatternSet? excludeMatches = null;
-
-  sequence<MatchGlob>? includeGlobs = null;
-
-  sequence<MatchGlob>? excludeGlobs = null;
 
   sequence<DOMString> cssPaths = [];
 

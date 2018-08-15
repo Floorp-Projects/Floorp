@@ -1,0 +1,23 @@
+<html lang="en" dir="ltr">
+<body>
+<div id="maindiv">Hello World!</div>
+</body>
+<script>
+const cpmm = SpecialPowers.Services.cpmm;
+function recordingFinished() {
+  cpmm.sendAsyncMessage("RecordingFinished");
+}
+var number = 0;
+function f() {
+  number++;
+  document.getElementById("maindiv").innerHTML = "Number: " + number;
+  if (number >= 10) {
+    window.setTimeout(recordingFinished);
+    return;
+  }
+  window.setTimeout(f, 1);
+  throw new Error("Number " + number);
+}
+window.setTimeout(f, 1);
+</script>
+</html>

@@ -43,7 +43,7 @@ function amManager() {
   ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
   /* globals AddonManagerPrivate*/
 
-  Services.mm.loadFrameScript(CHILD_SCRIPT, true);
+  Services.mm.loadFrameScript(CHILD_SCRIPT, true, true);
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);
   Services.mm.addMessageListener(MSG_INSTALL_ADDON, this);
   Services.mm.addMessageListener(MSG_PROMISE_REQUEST, this);

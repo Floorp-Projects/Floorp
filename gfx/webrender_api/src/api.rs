@@ -571,6 +571,8 @@ pub enum DebugCommand {
     EnableNewFrameIndicator(bool),
     /// Show an indicator that moves every time a scene is built.
     EnableNewSceneIndicator(bool),
+    /// Show an overlay displaying overdraw amount.
+    EnableShowOverdraw(bool),
     /// Fetch current documents and display lists.
     FetchDocuments,
     /// Fetch current passes and batches.

@@ -1492,7 +1492,7 @@ ArrayBufferObject::addView(JSContext* cx, JSObject* viewArg)
  * InnerViewTable
  */
 
-static size_t VIEW_LIST_MAX_LENGTH = 500;
+constexpr size_t VIEW_LIST_MAX_LENGTH = 500;
 
 bool
 InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer, ArrayBufferViewObject* view)

@@ -160,6 +160,7 @@
     macro(get, get, "get") \
     macro(GetInternalError, GetInternalError, "GetInternalError") \
     macro(getInternals, getInternals, "getInternals") \
+    macro(GetModuleNamespace, GetModuleNamespace, "GetModuleNamespace") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
     macro(getPrefix, getPrefix, "get ") \
