@@ -21,6 +21,7 @@ const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
 class ResizableViewport extends Component {
   static get propTypes() {
     return {
+      leftAlignmentEnabled: PropTypes.bool.isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       swapAfterMount: PropTypes.bool.isRequired,
       viewport: PropTypes.shape(Types.viewport).isRequired,
@@ -64,10 +65,14 @@ class ResizableViewport extends Component {
     }
 
     let { lastClientX, lastClientY, ignoreX, ignoreY } = this.state;
-    // the viewport is centered horizontally, so horizontal resize resizes
-    // by twice the distance the mouse was dragged - on left and right side.
-    let deltaX = 2 * (clientX - lastClientX);
-    let deltaY = (clientY - lastClientY);
+    let deltaX = clientX - lastClientX;
+    let deltaY = clientY - lastClientY;
+
+    if (!this.props.leftAlignmentEnabled) {
+      // The viewport is centered horizontally, so horizontal resize resizes
+      // by twice the distance the mouse was dragged - on left and right side.
+      deltaX = deltaX * 2;
+    }
 
     if (ignoreX) {
       deltaX = 0;
