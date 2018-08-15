@@ -476,6 +476,10 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
          (iokit-user-client-class "AGPMClient")
          (iokit-user-client-class "AppleGraphicsControlClient")
          (iokit-user-client-class "AppleGraphicsPolicyClient"))
+  ; Camera access
+  (allow iokit-open
+         (iokit-user-client-class "IOUSBDeviceUserClientV2")
+         (iokit-user-client-class "IOUSBInterfaceUserClientV2"))
 
   ; Network
   (allow file-read*
@@ -642,7 +646,6 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (local-name "com.apple.tsm.portname")
       (global-name "com.apple.axserver")
       (global-name "com.apple.pbs.fetch_services")
-      (global-name "com.apple.tccd.system")
       (global-name "com.apple.tsm.uiserver")
       (global-name "com.apple.inputmethodkit.launchagent")
       (global-name "com.apple.inputmethodkit.launcher")
@@ -651,6 +654,14 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (global-name "com.apple.windowserver.active")
       (global-name "com.apple.trustd.agent")
       (global-name "com.apple.ocspd"))
+  ; Required for camera access
+  (allow mach-lookup
+      (global-name "com.apple.tccd")
+      (global-name "com.apple.tccd.system")
+      (global-name "com.apple.cmio.AppleCameraAssistant")
+      (global-name "com.apple.cmio.IIDCVideoAssistant")
+      (global-name "com.apple.cmio.AVCAssistant")
+      (global-name "com.apple.cmio.VDCAssistant"))
   ; bug 1475707
   (if (= macosMinorVersion 9)
      (allow mach-lookup (global-name "com.apple.xpcd")))

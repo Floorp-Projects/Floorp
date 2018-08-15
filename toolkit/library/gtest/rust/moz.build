@@ -6,4 +6,5 @@
 
 include('../../rust/gkrust-features.mozbuild')
 
-RustLibrary('gkrust-gtest', gkrust_features, '../..')
+RustLibrary('gkrust-gtest', gkrust_features, '../..',
+            output_category=None if CONFIG['LINK_GTEST_DURING_COMPILE'] else 'gtest')

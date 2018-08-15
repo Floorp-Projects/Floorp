@@ -367,7 +367,7 @@ public final class NotificationHelper implements BundleEventListener {
         }
 
         if (!AppConstants.Versions.preO) {
-            if (message.getString(HANDLER_ATTR).equals("downloads")) {
+            if ("downloads".equals(message.getString(HANDLER_ATTR))) {
                 builder.setChannelId(getNotificationChannel(Channel.DOWNLOAD).getId());
                 builder.setOnlyAlertOnce(true);
             } else {

@@ -186,6 +186,9 @@ export const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
     // The count of pinned Top Sites.
     topsites_pinned: Joi.number(),
 
+    // The count of search shortcut Top Sites.
+    topsites_search_shortcuts: Joi.number(),
+
     // When the page itself receives an event that document.visibilityState
     // == visible.
     //

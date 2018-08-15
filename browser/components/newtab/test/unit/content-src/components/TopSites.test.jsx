@@ -107,7 +107,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 0
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -128,7 +129,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 0
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -149,7 +151,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 0
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -170,7 +173,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 0
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -191,7 +195,8 @@ describe("<TopSites>", () => {
             "rich_icon": 1,
             "no_image": 0
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -212,7 +217,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 1
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -233,7 +239,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 1
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -254,7 +261,30 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 3
           },
-          topsites_pinned: 2
+          topsites_pinned: 2,
+          topsites_search_shortcuts: 0
+        }
+      }));
+    });
+    it("should correctly count search shortcut Top Sites", () => {
+      const rows = [{searchTopSite: true}, {searchTopSite: true}];
+      sandbox.stub(DEFAULT_PROPS.TopSites, "rows").value(rows);
+      wrapper.instance()._dispatchTopSitesStats();
+
+      assert.calledOnce(DEFAULT_PROPS.dispatch);
+      assert.calledWithExactly(DEFAULT_PROPS.dispatch, ac.AlsoToMain({
+        type: at.SAVE_SESSION_PERF_DATA,
+        data: {
+          topsites_icon_stats: {
+            "custom_screenshot": 0,
+            "screenshot_with_icon": 0,
+            "screenshot": 0,
+            "tippytop": 0,
+            "rich_icon": 0,
+            "no_image": 2
+          },
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 2
         }
       }));
     });
@@ -276,7 +306,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 8
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });
@@ -297,7 +328,8 @@ describe("<TopSites>", () => {
             "rich_icon": 0,
             "no_image": 6
           },
-          topsites_pinned: 0
+          topsites_pinned: 0,
+          topsites_search_shortcuts: 0
         }
       }));
     });

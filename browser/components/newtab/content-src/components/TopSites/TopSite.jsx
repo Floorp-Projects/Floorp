@@ -17,6 +17,7 @@ export class TopSiteLink extends React.PureComponent {
     super(props);
     this.state = {screenshotImage: null};
     this.onDragEvent = this.onDragEvent.bind(this);
+    this.onKeyPress = this.onKeyPress.bind(this);
   }
 
   /*
@@ -112,6 +113,15 @@ export class TopSiteLink extends React.PureComponent {
     ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.screenshotImage);
   }
 
+  onKeyPress(event) {
+    // If we have tabbed to a search shortcut top site, and we click 'enter',
+    // we should execute the onClick function. This needs to be added because
+    // search top sites are anchor tags without an href. See bug 1483135
+    if (this.props.link.searchTopSite && event.key === "Enter") {
+      this.props.onClick(event);
+    }
+  }
+
   render() {
     const {children, className, defaultStyle, isDraggable, link, onClick, title} = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
@@ -173,7 +183,7 @@ export class TopSiteLink extends React.PureComponent {
     }
     return (<li className={topSiteOuterClassName} onDrop={this.onDragEvent} onDragOver={this.onDragEvent} onDragEnter={this.onDragEvent} onDragLeave={this.onDragEvent} {...draggableProps}>
       <div className="top-site-inner">
-         <a href={!link.searchTopSite && link.url} onClick={onClick} draggable={true}>
+         <a href={!link.searchTopSite && link.url} tabIndex="0" onKeyPress={this.onKeyPress} onClick={onClick} draggable={true}>
             <div className="tile" aria-hidden={true} data-fallback={letterFallback}>
               <div className={imageClassName} style={imageStyle} />
               {link.searchTopSite && <div className="top-site-icon search-topsite" />}

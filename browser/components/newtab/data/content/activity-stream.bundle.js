@@ -4065,10 +4065,15 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
     const topSites = this._getVisibleTopSites();
     const topSitesIconsStats = countTopSitesIconsTypes(topSites);
     const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
+    const searchShortcuts = topSites.filter(site => !!site.searchTopSite).length;
     // Dispatch telemetry event with the count of TopSites images types.
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({
       type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].SAVE_SESSION_PERF_DATA,
-      data: { topsites_icon_stats: topSitesIconsStats, topsites_pinned: topSitesPinned }
+      data: {
+        topsites_icon_stats: topSitesIconsStats,
+        topsites_pinned: topSitesPinned,
+        topsites_search_shortcuts: searchShortcuts
+      }
     }));
   }
 
@@ -4211,6 +4216,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_intl__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _TopSitesConstants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(34);
+
 
 
 
@@ -4300,7 +4307,7 @@ class SearchShortcutsForm extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
       if (shortcut.isSelected && !alreadyPinned) {
         pinQueue.push(this._searchTopSite(shortcut));
       } else if (!shortcut.isSelected && alreadyPinned) {
-        unpinQueue.push({ url: alreadyPinned.url });
+        unpinQueue.push({ url: alreadyPinned.url, searchVendor: shortcut.shortURL });
       }
     });
 
@@ -4323,6 +4330,11 @@ class SearchShortcutsForm extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
             index: availableSlots.shift()
           }
         }));
+        this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
+          source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_3__["TOP_SITES_SOURCE"],
+          event: "SEARCH_EDIT_ADD",
+          value: { search_vendor: shortcut.searchVendor }
+        }));
       });
     }
 
@@ -4331,6 +4343,11 @@ class SearchShortcutsForm extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
         type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TOP_SITES_UNPIN,
         data: { site: shortcut }
+      }));
+      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
+        source: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_3__["TOP_SITES_SOURCE"],
+        event: "SEARCH_EDIT_DELETE",
+        value: { search_vendor: shortcut.searchVendor }
       }));
     });
 
@@ -4341,7 +4358,8 @@ class SearchShortcutsForm extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
     return {
       url: shortcut.url,
       searchTopSite: true,
-      label: shortcut.keyword
+      label: shortcut.keyword,
+      searchVendor: shortcut.shortURL
     };
   }
 
@@ -4416,6 +4434,7 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
     super(props);
     this.state = { screenshotImage: null };
     this.onDragEvent = this.onDragEvent.bind(this);
+    this.onKeyPress = this.onKeyPress.bind(this);
   }
 
   /*
@@ -4511,6 +4530,15 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
     content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_5__["ScreenshotUtils"].maybeRevokeBlobObjectURL(this.state.screenshotImage);
   }
 
+  onKeyPress(event) {
+    // If we have tabbed to a search shortcut top site, and we click 'enter',
+    // we should execute the onClick function. This needs to be added because
+    // search top sites are anchor tags without an href. See bug 1483135
+    if (this.props.link.searchTopSite && event.key === "Enter") {
+      this.props.onClick(event);
+    }
+  }
+
   render() {
     const { children, className, defaultStyle, isDraggable, link, onClick, title } = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
@@ -4579,7 +4607,7 @@ class TopSiteLink extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompo
         { className: "top-site-inner" },
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
           "a",
-          { href: !link.searchTopSite && link.url, onClick: onClick, draggable: true },
+          { href: !link.searchTopSite && link.url, tabIndex: "0", onKeyPress: this.onKeyPress, onClick: onClick, draggable: true },
           react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
             "div",
             { className: "tile", "aria-hidden": true, "data-fallback": letterFallback },
