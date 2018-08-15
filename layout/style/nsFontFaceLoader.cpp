@@ -12,7 +12,6 @@
 #include "nsFontFaceLoader.h"
 
 #include "nsError.h"
-#include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"

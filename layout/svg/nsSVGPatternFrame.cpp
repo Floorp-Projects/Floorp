@@ -15,7 +15,6 @@
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
-#include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsSVGDisplayableFrame.h"
 #include "mozilla/ComputedStyle.h"
