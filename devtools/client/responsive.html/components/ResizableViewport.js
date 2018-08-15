@@ -13,7 +13,6 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Constants = require("../constants");
 const Types = require("../types");
 const Browser = createFactory(require("./Browser"));
-const ViewportToolbar = createFactory(require("./ViewportToolbar"));
 
 const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
@@ -21,17 +20,13 @@ const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
 class ResizableViewport extends Component {
   static get propTypes() {
     return {
-      devices: PropTypes.shape(Types.devices).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       swapAfterMount: PropTypes.bool.isRequired,
       viewport: PropTypes.shape(Types.viewport).isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
-      onChangeDevice: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
-      onRotateViewport: PropTypes.func.isRequired,
-      onUpdateDeviceModal: PropTypes.func.isRequired,
     };
   }
 
@@ -130,16 +125,11 @@ class ResizableViewport extends Component {
 
   render() {
     const {
-      devices,
       screenshot,
       swapAfterMount,
       viewport,
       onBrowserMounted,
-      onChangeDevice,
       onContentResize,
-      onResizeViewport,
-      onRotateViewport,
-      onUpdateDeviceModal,
     } = this.props;
 
     let resizeHandleClass = "viewport-resize-handle";
@@ -156,14 +146,6 @@ class ResizableViewport extends Component {
       {
         className: "resizable-viewport",
       },
-      ViewportToolbar({
-        devices,
-        viewport,
-        onChangeDevice,
-        onResizeViewport,
-        onRotateViewport,
-        onUpdateDeviceModal,
-      }),
       dom.div(
         {
           className: contentClass,
