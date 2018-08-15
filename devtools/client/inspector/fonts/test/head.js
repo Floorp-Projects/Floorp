@@ -229,8 +229,8 @@ function getPropertyValue(viewDoc, name) {
     value: viewDoc.querySelector(selector) &&
            parseFloat(viewDoc.querySelector(selector).value),
     // Ensure unit dropdown exists before querying its value
-    unit: viewDoc.querySelector(selector + ` ~ .font-unit-select`) &&
-          viewDoc.querySelector(selector + ` ~ .font-unit-select`).value
+    unit: viewDoc.querySelector(selector + ` ~ .font-value-select`) &&
+          viewDoc.querySelector(selector + ` ~ .font-value-select`).value
   };
 }
 
