@@ -56,7 +56,7 @@ function createSyncData(id, pendingBreakpoint, location, generatedLocation, prev
 async function syncBreakpointPromise(getState, client, sourceMaps, sourceId, pendingBreakpoint) {
   (0, _breakpoint.assertPendingBreakpoint)(pendingBreakpoint);
   const source = (0, _selectors.getSource)(getState(), sourceId);
-  const generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
+  const generatedSourceId = (0, _devtoolsSourceMap.isOriginalId)(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
   const generatedSource = (0, _selectors.getSource)(getState(), generatedSourceId);
 
   if (!source) {
@@ -109,7 +109,7 @@ async function syncBreakpointPromise(getState, client, sourceMaps, sourceId, pen
   const {
     id,
     actualLocation
-  } = await client.setBreakpoint(scopedGeneratedLocation, pendingBreakpoint.condition, sourceMaps.isOriginalId(sourceId)); // the breakpoint might have slid server side, so we want to get the location
+  } = await client.setBreakpoint(scopedGeneratedLocation, pendingBreakpoint.condition, (0, _devtoolsSourceMap.isOriginalId)(sourceId)); // the breakpoint might have slid server side, so we want to get the location
   // based on the server's return value
 
   const newGeneratedLocation = actualLocation;

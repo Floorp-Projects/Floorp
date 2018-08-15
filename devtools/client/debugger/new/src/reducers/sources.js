@@ -10,6 +10,7 @@ exports.getBlackBoxList = getBlackBoxList;
 exports.getSource = getSource;
 exports.getSourceFromId = getSourceFromId;
 exports.getSourceByURL = getSourceByURL;
+exports.getSourcesByURL = getSourcesByURL;
 exports.getGeneratedSource = getGeneratedSource;
 exports.getPendingSelectedLocation = getPendingSelectedLocation;
 exports.getPrettySource = getPrettySource;
@@ -247,6 +248,10 @@ function getSourceFromId(state, id) {
 
 function getSourceByURL(state, url) {
   return getSourceByUrlInSources(getSources(state), getUrls(state), url);
+}
+
+function getSourcesByURL(state, url) {
+  return getSourcesByUrlInSources(getSources(state), getUrls(state), url);
 }
 
 function getGeneratedSource(state, source) {

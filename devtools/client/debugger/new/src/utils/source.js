@@ -51,7 +51,8 @@ const sourceTypes = exports.sourceTypes = {
   coffee: "coffeescript",
   js: "javascript",
   jsx: "react",
-  ts: "typescript"
+  ts: "typescript",
+  vue: "vue"
 };
 /**
  * Trims the query part or reference identifier of a url string, if necessary.

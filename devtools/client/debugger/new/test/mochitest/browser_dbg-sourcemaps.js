@@ -49,7 +49,7 @@ add_task(async function() {
   ok(true, "Original sources exist");
   const bundleSrc = findSource(dbg, "bundle.js");
 
-  await selectSource(dbg, bundleSrc);
+  await selectSpecificSource(dbg, bundleSrc);
 
   await clickGutter(dbg, 13);
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
@@ -61,7 +61,7 @@ add_task(async function() {
 
   const entrySrc = findSource(dbg, "entry.js");
 
-  await selectSource(dbg, entrySrc);
+  await selectSpecificSource(dbg, entrySrc);
   ok(
     getCM(dbg)
       .getValue()
