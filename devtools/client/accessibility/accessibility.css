@@ -12,6 +12,13 @@
   --accessibility-horizontal-padding: 5px;
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
+  --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
+  --accessibility-tree-focused-node-twisty-brightness: brightness(20%);
+}
+
+:root.theme-dark {
+  --accessibility-unfocused-tree-focused-node-background: var(--grey-70);
+  --accessibility-tree-focused-node-twisty-brightness: unset;
 }
 
 /* General */
@@ -155,9 +162,21 @@ body {
   border: 0;
 }
 
-.treeTable:focus > tbody {
-  outline: var(--theme-focus-outline);
-  outline-offset: -1px;
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected {
+  background-color: var(--accessibility-unfocused-tree-focused-node-background);
+}
+
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .theme-twisty {
+  filter: var(--accessibility-tree-focused-node-twisty-brightness);
+}
+
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected *,
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .treeLabelCell:after {
+  color: inherit;
+}
+
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .objectBox-string {
+  color: var(--string-color);
 }
 
 .treeTable > thead {
@@ -260,23 +279,44 @@ body {
   align-items: center;
 }
 
-.accessible .tree .node.focused {
-  background-color: var(--theme-selection-background);
+.accessible .tree:focus {
+  outline: 0;
 }
 
-.accessible .tree .tree-node:hover:not(.focused) {
+.accessible .tree::-moz-focus-inner {
+  border: 0;
+}
+
+/* Unset tree styles leaking from reps.css */
+.accessible .tree .tree-node:not(.focused):hover {
+  background-color: transparent;
+}
+
+.accessible .tree:not(:focus) .node.focused {
+  background-color: var(--accessibility-unfocused-tree-focused-node-background);
+}
+
+.accessible .tree:not(:focus) .node.focused .theme-twisty {
+  filter: var(--accessibility-tree-focused-node-twisty-brightness);
+}
+
+.accessible .tree .node:not(.focused):hover {
   background-color: var(--theme-selection-background-hover);
 }
 
-.accessible .tree .node.focused * {
+.accessible .tree:focus .node.focused {
+  background-color: var(--theme-selection-background);
+}
+
+.accessible .tree:focus .node.focused * {
   color: var(--theme-selection-color);
 }
 
-.accessible .tree .node.focused .open-inspector {
+.accessible .tree:focus .node.focused .open-inspector {
   background-color: var(--grey-30);
 }
 
-.accessible .tree .node.focused:hover .open-inspector {
+.accessible .tree:focus .node.focused:hover .open-inspector {
   background-color: var(--theme-selection-color);
 }
 
