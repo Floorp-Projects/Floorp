@@ -31,7 +31,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 function testNetworkThrottlingSelectorLabel(ui, expected) {
-  const selector = "#global-network-throttling-selector";
+  const selector = "#network-throttling-selector";
   const select = ui.toolWindow.document.querySelector(selector);
   is(select.selectedOptions[0].textContent, expected,
     `Select label should be changed to ${expected}`);
