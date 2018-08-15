@@ -6,7 +6,6 @@
 
 // Keep in (case-insensitive) order:
 #include "nsContainerFrame.h"
-#include "nsContentUtils.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 #include "nsLiteralString.h"

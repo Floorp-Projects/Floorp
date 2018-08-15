@@ -18,7 +18,6 @@
 #include "nsIServiceManager.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FromParser.h"
 

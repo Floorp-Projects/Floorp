@@ -11,7 +11,6 @@
 // Keep others in (case-insensitive) order:
 #include "gfxUtils.h"
 #include "mozilla/Preferences.h"
-#include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
