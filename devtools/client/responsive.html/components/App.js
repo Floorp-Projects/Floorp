@@ -17,22 +17,24 @@ const {
   updateDeviceDisplayed,
   updateDeviceModal,
   updatePreferredDevices,
-} = require("./actions/devices");
+} = require("../actions/devices");
 const { changeNetworkThrottling } = require("devtools/client/shared/components/throttling/actions");
-const { changeReloadCondition } = require("./actions/reload-conditions");
-const { takeScreenshot } = require("./actions/screenshot");
-const { changeTouchSimulation } = require("./actions/touch-simulation");
+const { changeReloadCondition } = require("../actions/reload-conditions");
+const { takeScreenshot } = require("../actions/screenshot");
+const { changeTouchSimulation } = require("../actions/touch-simulation");
 const {
   changeDevice,
   changePixelRatio,
   removeDeviceAssociation,
   resizeViewport,
   rotateViewport,
-} = require("./actions/viewports");
-const DeviceModal = createFactory(require("./components/DeviceModal"));
-const GlobalToolbar = createFactory(require("./components/GlobalToolbar"));
-const Viewports = createFactory(require("./components/Viewports"));
-const Types = require("./types");
+} = require("../actions/viewports");
+
+const DeviceModal = createFactory(require("./DeviceModal"));
+const GlobalToolbar = createFactory(require("./GlobalToolbar"));
+const Viewports = createFactory(require("./Viewports"));
+
+const Types = require("../types");
 
 class App extends Component {
   static get propTypes() {
