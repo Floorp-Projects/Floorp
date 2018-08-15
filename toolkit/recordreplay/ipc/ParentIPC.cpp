@@ -12,7 +12,7 @@
 #include "base/task.h"
 #include "ipc/Channel.h"
 #include "js/Proxy.h"
-#include "mozilla/dom/ProcessGlobal.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "InfallibleVector.h"
 #include "Monitor.h"
 #include "ProcessRecordReplay.h"
@@ -692,7 +692,7 @@ static void
 SendMessageToUIProcess(const char* aMessage)
 {
   AutoSafeJSContext cx;
-  dom::ProcessGlobal* cpmm = dom::ProcessGlobal::Get();
+  auto* cpmm = dom::ContentProcessMessageManager::Get();
   ErrorResult err;
   nsAutoString message;
   message.Append(NS_ConvertUTF8toUTF16(aMessage));
@@ -1088,6 +1088,20 @@ ResumeForwardOrBackward()
 
   if (gResumeForwardOrBackward && (gChildExecuteForward || gChildExecuteBackward)) {
     Resume(gChildExecuteForward);
+  }
+}
+
+void
+ResumeBeforeWaitingForIPDLReply()
+{
+  MOZ_RELEASE_ASSERT(gActiveChild->IsRecording());
+
+  // The main thread is about to block while it waits for a sync reply from the
+  // recording child process. If the child is paused, resume it immediately so
+  // that we don't deadlock.
+  if (gActiveChild->IsPaused()) {
+    MOZ_RELEASE_ASSERT(gChildExecuteForward);
+    Resume(true);
   }
 }
 

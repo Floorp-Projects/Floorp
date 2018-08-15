@@ -2181,6 +2181,10 @@ impl Device {
         self.gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC1_COLOR);
         self.gl.blend_equation(gl::FUNC_ADD);
     }
+    pub fn set_blend_mode_show_overdraw(&self) {
+        self.gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
+        self.gl.blend_equation(gl::FUNC_ADD);
+    }
 
     pub fn supports_extension(&self, extension: &str) -> bool {
         supports_extension(&self.extensions, extension)

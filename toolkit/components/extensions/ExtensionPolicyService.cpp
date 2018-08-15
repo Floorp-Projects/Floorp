@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/extensions/DocumentObserver.h"
 #include "mozilla/extensions/WebExtensionContentScript.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
@@ -153,6 +154,28 @@ ExtensionPolicyService::UnregisterExtension(WebExtensionPolicy& aPolicy)
 
   mExtensions.Remove(aPolicy.Id());
   mExtensionHosts.Remove(aPolicy.MozExtensionHostname());
+  return true;
+}
+
+bool
+ExtensionPolicyService::RegisterObserver(DocumentObserver& aObserver)
+{
+  if (mObservers.GetWeak(&aObserver)) {
+    return false;
+  }
+
+  mObservers.Put(&aObserver, &aObserver);
+  return true;
+}
+
+bool
+ExtensionPolicyService::UnregisterObserver(DocumentObserver& aObserver)
+{
+  if (!mObservers.GetWeak(&aObserver)) {
+    return false;
+  }
+
+  mObservers.Remove(&aObserver);
   return true;
 }
 
@@ -351,6 +374,20 @@ ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo, bool aIsPre
       }
     }
   }
+
+  for (auto iter = mObservers.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<DocumentObserver> observer = iter.Data();
+
+    for (auto& matcher : observer->Matchers()) {
+      if (matcher->Matches(aDocInfo)) {
+        if (aIsPreload) {
+          observer->NotifyMatch(*matcher, aDocInfo.GetLoadInfo());
+        } else {
+          observer->NotifyMatch(*matcher, aDocInfo.GetWindow());
+        }
+      }
+    }
+  }
 }
 
 
@@ -460,7 +497,8 @@ ExtensionPolicyService::ExtensionURIToAddonId(nsIURI* aURI, nsAString& aResult)
 }
 
 
-NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mExtensionHosts)
+NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mExtensionHosts,
+                         mObservers)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPolicyService)
   NS_INTERFACE_MAP_ENTRY(nsIAddonPolicyService)

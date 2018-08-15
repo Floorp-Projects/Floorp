@@ -137,6 +137,10 @@ menuitem[customoptionstyling="true"] {
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
+menulist > menupopup {
+  font: inherit;
+}
+
 menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
@@ -176,11 +180,4 @@ menuseparator {
   -moz-appearance: menuseparator;
   margin: 5px 0;
   padding: 1px 0;
-}
-
-/* ::::: autocomplete ::::: */
-
-.autocomplete-history-popup > menuitem {
-  max-width: none !important;
-  font: message-box;
 }

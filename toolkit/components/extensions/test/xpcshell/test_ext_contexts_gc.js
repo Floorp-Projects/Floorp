@@ -33,7 +33,11 @@ async function assertContextReleased(contentPage, description) {
     let gcCount = 0;
     while (gcCount < 30 && this.contextWeakRef.get() !== null) {
       ++gcCount;
-      Cu.forceGC();
+      // The JS engine will sometimes hold IC stubs for function
+      // environments alive across multiple CCs, which can keep
+      // closed-over JS objects alive. A shrinking GC will throw those
+      // stubs away, and therefore side-step the problem.
+      Cu.forceShrinkingGC();
       Cu.forceCC();
       Cu.forceGC();
       await new Promise(resolve => this.content.setTimeout(resolve, 0));

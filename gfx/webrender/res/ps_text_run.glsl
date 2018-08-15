@@ -271,7 +271,9 @@ void main(void) {
     alpha *= float(all(greaterThanEqual(vUvClip, vec4(0.0))));
 #endif
 
-#ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+#if defined(WR_FEATURE_DEBUG_OVERDRAW)
+    oFragColor = WR_DEBUG_OVERDRAW_COLOR;
+#elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
     vec4 alpha_mask = mask * alpha;
     oFragColor = vColor * alpha_mask;
     oFragBlend = alpha_mask * vColor.a;

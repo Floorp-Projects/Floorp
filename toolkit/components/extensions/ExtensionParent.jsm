@@ -523,7 +523,7 @@ GlobalManager = {
       Components.utils.import("resource://gre/modules/Services.jsm");
 
       Services.obs.notifyObservers(this, "tab-content-frameloader-created", "");
-    `, false);
+    `, false, true);
 
     let viewType = browser.getAttribute("webextension-view-type");
     if (viewType) {

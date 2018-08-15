@@ -7,7 +7,7 @@
 #ifndef nsContentTypeParser_h
 #define nsContentTypeParser_h
 
-#include "nsAString.h"
+#include "nsString.h"
 
 class nsContentTypeParser
 {

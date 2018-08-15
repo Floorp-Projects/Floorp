@@ -132,7 +132,7 @@ ChildSHistory::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 nsISupports*
 ChildSHistory::GetParentObject() const
 {
-  // We want to get the TabChildGlobal, which is the
+  // We want to get the TabChildMessageManager, which is the
   // messageManager on mDocShell.
   RefPtr<ContentFrameMessageManager> mm;
   if (mDocShell) {

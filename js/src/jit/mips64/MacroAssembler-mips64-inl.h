@@ -785,6 +785,15 @@ MacroAssembler::cmp32Set(Assembler::Condition cond, Register lhs, Address rhs,
     cmp32Set(cond, lhs, ScratchRegister, dest);
 }
 
+template<>
+inline void
+MacroAssembler::cmp32Set(Assembler::Condition cond, Address lhs, Register rhs,
+                         Register dest)
+{
+    load32(lhs, ScratchRegister);
+    cmp32Set(cond, ScratchRegister, rhs, dest);
+}
+
 void
 MacroAssemblerMIPS64Compat::incrementInt32Value(const Address& addr)
 {

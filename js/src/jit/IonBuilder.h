@@ -333,6 +333,8 @@ class IonBuilder
                                                                MDefinition* left,
                                                                MDefinition* right);
     AbortReasonOr<Ok> compareTryBinaryStub(bool* emitted, MDefinition* left, MDefinition* right);
+    AbortReasonOr<Ok> compareTryCharacter(bool* emitted, JSOp op, MDefinition* left,
+                                          MDefinition* right);
 
     // jsop_newarray helpers.
     AbortReasonOr<Ok> newArrayTryTemplateObject(bool* emitted, JSObject* templateObject,

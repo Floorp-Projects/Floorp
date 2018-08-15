@@ -276,9 +276,9 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 
   if (result.mAsyncPaint) {
     result.mAsyncTask->mTarget = mBuffer->GetBufferTarget();
-    result.mAsyncTask->mClients.push_back(mBuffer->GetClient());
+    result.mAsyncTask->mClients.AppendElement(mBuffer->GetClient());
     if (mBuffer->GetClientOnWhite()) {
-      result.mAsyncTask->mClients.push_back(mBuffer->GetClientOnWhite());
+      result.mAsyncTask->mClients.AppendElement(mBuffer->GetClientOnWhite());
     }
   }
 
@@ -295,7 +295,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 void
 ContentClient::EndPaint(PaintState& aPaintState, nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
-  if (aPaintState.mAsyncTask) {
+  if (aPaintState.mAsyncTask && mBuffer) {
     aPaintState.mAsyncTask->mCapture = mBuffer->EndCapture();
   }
 }
@@ -887,9 +887,9 @@ ContentClientDoubleBuffered::FinalizeFrame(PaintState& aPaintState)
     mBuffer->UpdateDestinationFrom(*mFrontBuffer, updateRegion.GetBounds());
 
     if (aPaintState.mAsyncPaint) {
-      aPaintState.mAsyncTask->mClients.push_back(mFrontBuffer->GetClient());
+      aPaintState.mAsyncTask->mClients.AppendElement(mFrontBuffer->GetClient());
       if (mFrontBuffer->GetClientOnWhite()) {
-        aPaintState.mAsyncTask->mClients.push_back(mFrontBuffer->GetClientOnWhite());
+        aPaintState.mAsyncTask->mClients.AppendElement(mFrontBuffer->GetClientOnWhite());
       }
     }
 

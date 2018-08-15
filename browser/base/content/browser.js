@@ -489,9 +489,6 @@ const gSessionHistoryObserver = {
     var fwdCommand = document.getElementById("Browser:Forward");
     fwdCommand.setAttribute("disabled", "true");
 
-    // Hide session restore button on about:home
-    window.messageManager.broadcastAsyncMessage("Browser:HideSessionRestoreButton");
-
     // Clear undo history of the URL bar
     gURLBar.editor.transactionManager.clear();
   }
@@ -1318,8 +1315,8 @@ var gBrowserInit = {
     ZoomUI.init(window);
 
     let mm = window.getGroupMessageManager("browsers");
-    mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
-    mm.loadFrameScript("chrome://browser/content/content.js", true);
+    mm.loadFrameScript("chrome://browser/content/tab-content.js", true, true);
+    mm.loadFrameScript("chrome://browser/content/content.js", true, true);
     mm.loadFrameScript("chrome://global/content/content-HybridContentTelemetry.js", true);
 
     window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
@@ -5209,7 +5206,7 @@ const AccessibilityRefreshBlocker = {
     if (!this._loaded) {
       this._loaded = true;
       let mm = window.getGroupMessageManager("browsers");
-      mm.loadFrameScript("chrome://browser/content/content-refreshblocker.js", true);
+      mm.loadFrameScript("chrome://browser/content/content-refreshblocker.js", true, true);
     }
   }
 };

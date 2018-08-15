@@ -8,6 +8,9 @@
 // Slow on asan builds.
 requestLongerTimeout(5);
 
+ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
+                               "resource://gre/modules/ActorManagerParent.jsm");
+
 var isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
 
 var gExceptionPaths = [
@@ -160,6 +163,8 @@ var whitelist = [
   // Bug 1463225 (on Mac this is only used by a test)
   {file: "chrome://global/content/bindings/toolbar.xml",
    platforms: ["macosx"]},
+  // Bug 1483277 (temporarily unreferenced)
+  {file: "chrome://browser/content/browser.xhtml"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>
@@ -415,7 +420,11 @@ function parseCodeFile(fileUri) {
 
         // Make urls like chrome://browser/skin/ point to an actual file,
         // and remove the ref if any.
-        url = Services.io.newURI(url).specIgnoringRef;
+        try {
+          url = Services.io.newURI(url).specIgnoringRef;
+        } catch (e) {
+          continue;
+        }
 
         if (isDevtools && line.includes("require(") &&
             !/\.(properties|js|jsm|json|css)$/.test(url))
@@ -502,6 +511,17 @@ function findChromeUrlsFromArray(array, prefix) {
   }
 }
 
+function addActorModules() {
+  let groups = [...ActorManagerParent.parentGroups.values(),
+                ...ActorManagerParent.childGroups.values(),
+                ...ActorManagerParent.singletons.values()];
+  for (let group of groups) {
+    for (let {module} of group.actors.values()) {
+      gReferencesFromCode.set(module, null);
+    }
+  }
+}
+
 add_task(async function checkAllTheFiles() {
   let libxulPath = OS.Constants.Path.libxul;
   if (AppConstants.platform != "macosx")
@@ -538,6 +558,8 @@ add_task(async function checkAllTheFiles() {
 
   // Wait for all manifest to be parsed
   await throttledMapPromises(manifestURIs, parseManifest);
+
+  addActorModules();
 
   // We build a list of promises that get resolved when their respective
   // files have loaded and produced no errors.

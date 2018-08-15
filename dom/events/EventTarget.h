@@ -289,8 +289,12 @@ protected:
   /**
    * A method to compute the right wantsUntrusted value for AddEventListener.
    * This will call the above hook as needed.
+   *
+   * If aOptions is non-null, and it contains a value for mWantUntrusted, that
+   * value takes precedence over aWantsUntrusted.
    */
   bool ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
+                             const AddEventListenerOptionsOrBoolean* aOptions,
                              ErrorResult& aRv);
 
   /**

@@ -32,7 +32,6 @@
 class nsIURI;
 class nsSubDocumentFrame;
 class nsView;
-class nsInProcessTabChildGlobal;
 class AutoResetInShow;
 class AutoResetInFrameSwap;
 class nsITabParent;
@@ -51,6 +50,7 @@ class OriginAttributes;
 namespace dom {
 class ChromeMessageSender;
 class ContentParent;
+class InProcessTabChildMessageManager;
 class MessageSender;
 class PBrowserParent;
 class ProcessMessageManager;
@@ -106,7 +106,7 @@ public:
   void DestroyDocShell();
   void DestroyComplete();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
-  nsInProcessTabChildGlobal* GetTabChildGlobal() const
+  mozilla::dom::InProcessTabChildMessageManager* GetTabChildMessageManager() const
   {
     return mChildMessageManager;
   }
@@ -341,7 +341,7 @@ public:
 
   // public because a callback needs these.
   RefPtr<mozilla::dom::ChromeMessageSender> mMessageManager;
-  RefPtr<nsInProcessTabChildGlobal> mChildMessageManager;
+  RefPtr<mozilla::dom::InProcessTabChildMessageManager> mChildMessageManager;
 
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 

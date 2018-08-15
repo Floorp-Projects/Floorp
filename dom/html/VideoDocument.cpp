@@ -46,8 +46,7 @@ protected:
   // Sets document <title> to reflect the file name and description.
   void UpdateTitle(nsIChannel* aChannel);
 
-  nsresult CreateSyntheticVideoDocument(nsIChannel* aChannel,
-                                        nsIStreamListener** aListener);
+  nsresult CreateSyntheticVideoDocument();
 
   RefPtr<MediaDocumentStreamListener> mStreamListener;
 };
@@ -67,12 +66,6 @@ VideoDocument::StartDocumentLoad(const char*         aCommand,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStreamListener = new MediaDocumentStreamListener(this);
-
-  // Create synthetic document
-  rv = CreateSyntheticVideoDocument(aChannel,
-      getter_AddRefs(mStreamListener->mNextStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   NS_ADDREF(*aDocListener = mStreamListener);
   return rv;
 }
@@ -85,6 +78,15 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject && !InitialSetupHasBeenDone()) {
+    if (!GetRootElement()) {
+      // Create synthetic document
+#ifdef DEBUG
+      nsresult rv =
+#endif
+        CreateSyntheticVideoDocument();
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic video document");
+    }
+
     if (!nsContentUtils::IsChildOfSameType(this)) {
       LinkStylesheet(NS_LITERAL_STRING("resource://content-accessible/TopLevelVideoDocument.css"));
       LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/media/TopLevelVideoDocument.css"));
@@ -95,8 +97,7 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 }
 
 nsresult
-VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
-                                            nsIStreamListener** aListener)
+VideoDocument::CreateSyntheticVideoDocument()
 {
   // make our generic document
   nsresult rv = MediaDocument::CreateSyntheticDocument();
@@ -121,8 +122,9 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
     return NS_ERROR_OUT_OF_MEMORY;
   element->SetAutoplay(true, IgnoreErrors());
   element->SetControls(true, IgnoreErrors());
-  element->LoadWithChannel(aChannel, aListener);
-  UpdateTitle(aChannel);
+  element->LoadWithChannel(mChannel,
+                           getter_AddRefs(mStreamListener->mNextStream));
+  UpdateTitle(mChannel);
 
   if (nsContentUtils::IsChildOfSameType(this)) {
     // Video documents that aren't toplevel should fill their frames and

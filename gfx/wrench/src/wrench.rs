@@ -552,6 +552,7 @@ impl Wrench {
             "O - Toggle showing intermediate targets",
             "I - Toggle showing texture caches",
             "B - Toggle showing alpha primitive rects",
+            "V - Toggle showing overdraw",
             "S - Toggle compact profiler",
             "Q - Toggle GPU queries for time and samples",
             "M - Trigger memory pressure event",

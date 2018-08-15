@@ -899,7 +899,7 @@ static int remove_recursive_on_reboot(const NS_tchar *path, const NS_tchar *dele
 
   if (!S_ISDIR(sInfo.st_mode)) {
     NS_tchar tmpDeleteFile[MAXPATHLEN];
-    GetTempFileNameW(deleteDir, L"rep", 0, tmpDeleteFile);
+    GetUUIDTempFilePath(deleteDir, L"rep", tmpDeleteFile);
     NS_tremove(tmpDeleteFile);
     rv = rename_file(path, tmpDeleteFile, false);
     if (MoveFileEx(rv ? path : tmpDeleteFile, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT)) {
@@ -1004,7 +1004,7 @@ static int backup_discard(const NS_tchar *path, const NS_tchar *relPath)
   if (rv && !sStagedUpdate && !sReplaceRequest) {
     LOG(("backup_discard: unable to remove: " LOG_S, relBackup));
     NS_tchar path[MAXPATHLEN];
-    GetTempFileNameW(gDeleteDirPath, L"moz", 0, path);
+    GetUUIDTempFilePath(gDeleteDirPath, L"moz", path);
     if (rename_file(backup, path)) {
       LOG(("backup_discard: failed to rename file:" LOG_S ", dst:" LOG_S,
            relBackup, relPath));
@@ -2121,7 +2121,7 @@ WriteStatusFile(const char* aStatus)
 #if defined(XP_WIN)
   // The temp file is not removed on failure since there is client code that
   // will remove it.
-  if (GetTempFileNameW(gPatchDirPath, L"sta", 0, filename) == 0) {
+  if (!GetUUIDTempFilePath(gPatchDirPath, L"sta", filename)) {
     return false;
   }
 #else

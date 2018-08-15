@@ -73,6 +73,7 @@ namespace JS {
     _(Compare_SpecializedOnBaselineTypes)               \
     _(Compare_SharedCache)                              \
     _(Compare_Call)                                     \
+    _(Compare_Character)                                \
                                                         \
     _(Call_Inline)
 

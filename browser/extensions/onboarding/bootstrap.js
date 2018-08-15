@@ -174,7 +174,7 @@ function onBrowserReady() {
 
   OnboardingTourType.check();
   OnboardingTelemetry.init(startupData);
-  Services.mm.loadFrameScript("resource://onboarding/onboarding.js", true);
+  Services.mm.loadFrameScript("resource://onboarding/onboarding.js", true, true);
   initContentMessageListener();
 }
 
