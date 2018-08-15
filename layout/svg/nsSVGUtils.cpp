@@ -1500,8 +1500,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
   const DrawTarget* dt = aContext->GetDrawTarget();
 
   nsSVGPaintServerFrame *ps =
-    SVGObserverUtils::GetPaintServer(aFrame, &nsStyleSVG::mFill,
-                                     SVGObserverUtils::FillProperty());
+    SVGObserverUtils::GetPaintServer(aFrame, &nsStyleSVG::mFill);
 
   if (ps) {
     RefPtr<gfxPattern> pattern =
@@ -1576,8 +1575,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
   const DrawTarget* dt = aContext->GetDrawTarget();
 
   nsSVGPaintServerFrame *ps =
-    SVGObserverUtils::GetPaintServer(aFrame, &nsStyleSVG::mStroke,
-                                     SVGObserverUtils::StrokeProperty());
+    SVGObserverUtils::GetPaintServer(aFrame, &nsStyleSVG::mStroke);
 
   if (ps) {
     RefPtr<gfxPattern> pattern =
