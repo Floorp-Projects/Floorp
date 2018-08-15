@@ -712,15 +712,10 @@ async function promiseTab() {
   tab.linkedBrowser.addEventListener("load", function onLoad(event) {
     tab.linkedBrowser.removeEventListener("load", onLoad, true);
     gMsgMan = tab.linkedBrowser.messageManager;
-    gMsgMan.sendAsyncMessage("ContentSearch", {
-      type: "AddToWhitelist",
-      data: [pageURL],
-    });
-    promiseMsg("ContentSearch", "AddToWhitelistAck", gMsgMan).then(() => {
-      let jsURL = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
-      gMsgMan.loadFrameScript(jsURL, false);
-      deferred.resolve(msg("init"));
-    });
+
+    let jsURL = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
+    gMsgMan.loadFrameScript(jsURL, false);
+    deferred.resolve(msg("init"));
   }, true, true);
   openTrustedLinkIn(pageURL, "current");
   return deferred.promise;

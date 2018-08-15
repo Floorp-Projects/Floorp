@@ -6,7 +6,7 @@ async_test(t => {
   self.testSynchronousScript = t.step_func_done(() => {
     const origURL = iframe.contentDocument.URL;
     assertDocumentIsReadyForSideEffectsTest(iframe.contentDocument, "active parser whose script nesting level is greater than 0");
-    iframe.contentDocument.open();
+    assert_equals(iframe.contentDocument.open(), iframe.contentDocument);
     assertOpenHasNoSideEffects(iframe.contentDocument, origURL, "active parser whose script nesting level is greater than 0");
   });
   iframe.src = "resources/bailout-order-synchronous-script-frame.html";

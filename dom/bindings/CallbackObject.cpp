@@ -203,9 +203,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     }
   }
 
-  // Bail out if there's no useful global. This seems to happen intermittently
-  // on gaia-ui tests, probably because nsInProcessTabChildGlobal is returning
-  // null in some kind of teardown state.
+  // Bail out if there's no useful global.
   if (!globalObject->GetGlobalJSObject()) {
     aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
       NS_LITERAL_CSTRING("Refusing to execute function from global which is "

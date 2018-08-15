@@ -121,7 +121,6 @@
 #include "nsHtml5StringParser.h"
 #include "nsHTMLDocument.h"
 #include "nsHTMLTags.h"
-#include "nsInProcessTabChildGlobal.h"
 #include "nsIAddonPolicyService.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -215,6 +214,7 @@
 #include "nsXULPopupManager.h"
 #include "xpcprivate.h" // nsXPConnect
 #include "HTMLSplitOnSpacesTokenizer.h"
+#include "InProcessTabChildMessageManager.h"
 #include "nsContentTypeParser.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"
@@ -11029,7 +11029,7 @@ nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom)
     return nullptr;
   }
 
-  RefPtr<ContentFrameMessageManager> manager = frameLoader->GetTabChildGlobal();
+  RefPtr<ContentFrameMessageManager> manager = frameLoader->GetTabChildMessageManager();
   return manager.forget();
 }
 

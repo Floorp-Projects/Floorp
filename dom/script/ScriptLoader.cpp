@@ -760,8 +760,13 @@ HostResolveImportedModule(JSContext* aCx, JS::Handle<JSScript*> aScript,
                           JS::Handle<JSString*> aSpecifier)
 {
   // Let referencing module script be referencingModule.[[HostDefined]].
-  JS::Value value = JS::GetModuleHostDefinedField(aScript);
-  auto script = static_cast<ModuleScript*>(value.toPrivate());
+  void* value = JS::GetTopLevelScriptPrivate(aScript);
+  if (!value) {
+    JS_ReportErrorASCII(aCx, "Module script not found");
+    return nullptr;
+  }
+
+  auto script = static_cast<ModuleScript*>(value);
   MOZ_ASSERT(script->Script() == aScript);
 
   // Let url be the result of resolving a module specifier given referencing
@@ -794,13 +799,13 @@ HostPopulateImportMeta(JSContext* aCx, JS::Handle<JSScript*> aScript,
 {
   MOZ_DIAGNOSTIC_ASSERT(aScript);
 
-  JS::Value value = JS::GetModuleHostDefinedField(aScript);
-  if (value.isUndefined()) {
+  void* value = JS::GetTopLevelScriptPrivate(aScript);
+  if (!value) {
     JS_ReportErrorASCII(aCx, "Module script not found");
     return false;
   }
 
-  auto script = static_cast<ModuleScript*>(value.toPrivate());
+  auto script = static_cast<ModuleScript*>(value);
   MOZ_DIAGNOSTIC_ASSERT(script->Script() == aScript);
 
   nsAutoCString url;

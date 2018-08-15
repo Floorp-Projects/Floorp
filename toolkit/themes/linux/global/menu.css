@@ -185,10 +185,3 @@ menuitem[type="radio"] {
 menuseparator {
   -moz-appearance: menuseparator;
 }
-
-/* ::::: autocomplete ::::: */
-
-.autocomplete-history-popup > menuitem {
-  max-width: none !important;
-  font: message-box;
-}

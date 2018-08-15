@@ -48,15 +48,17 @@ const whitelist = {
     "resource://formautofill/FormAutofillContent.jsm",
 
     // Browser front-end
+    "resource:///actors/AboutReaderChild.jsm",
+    "resource:///actors/BrowserTabChild.jsm",
     "resource:///modules/ContentLinkHandler.jsm",
     "resource:///modules/ContentMetaHandler.jsm",
-    "resource:///modules/PageStyleHandler.jsm",
-    "resource://gre/modules/BrowserUtils.jsm",
+    "resource:///actors/PageStyleChild.jsm",
+    "resource://gre/modules/ActorChild.jsm",
+    "resource://gre/modules/ActorManagerChild.jsm",
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/PrivateBrowsingUtils.jsm",
     "resource://gre/modules/ReaderMode.jsm",
     "resource://gre/modules/WebProgressChild.jsm",
-    "resource://gre/modules/WebNavigationChild.jsm",
 
     // Pocket
     "chrome://pocket/content/AboutPocket.jsm",

@@ -11,7 +11,7 @@ onload = t.step_func(function() {
   var iframe = document.getElementsByTagName("iframe")[0];
   var handle = Object.getPrototypeOf(iframe.contentDocument);
   handle.test_state = 1;
-  iframe.contentDocument.open();
+  assert_equals(iframe.contentDocument.open(), iframe.contentDocument);
   var new_handle = Object.getPrototypeOf(iframe.contentDocument);
   assert_equals(new_handle.test_state, undefined);
   assert_not_equals(new_handle, handle);

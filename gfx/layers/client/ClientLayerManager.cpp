@@ -433,7 +433,7 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     // ShadowLayerForwarder transaction open; the following
     // EndTransaction will complete it.
     if (PaintThread::Get() && mQueuedAsyncPaints) {
-      PaintThread::Get()->EndLayerTransaction(nullptr);
+      PaintThread::Get()->QueueEndLayerTransaction(nullptr);
     }
     return false;
   }
@@ -722,7 +722,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // thread if it is waiting before doing a new layer transaction.
   if (mQueuedAsyncPaints) {
     MOZ_ASSERT(PaintThread::Get());
-    PaintThread::Get()->EndLayerTransaction(syncObject);
+    PaintThread::Get()->QueueEndLayerTransaction(syncObject);
   } else if (syncObject) {
     syncObject->Synchronize();
   }

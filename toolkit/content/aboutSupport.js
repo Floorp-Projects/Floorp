@@ -95,17 +95,8 @@ var snapshotFormatters = {
           break;
       }
 
-      if (data.policiesStatus == Services.policies.ACTIVE) {
-        let activePolicies = $.new("a", policiesText);
-        activePolicies.addEventListener("click", function(event) {
-          let activePoliciesJson = {};
-          activePoliciesJson.policies = Services.policies.getActivePolicies();
-          let activePoliciesJsonBlob = new Blob([JSON.stringify(activePoliciesJson)],
-                                                {type: "application/json"});
-          let jsonURL = URL.createObjectURL(activePoliciesJsonBlob);
-          window.open(jsonURL);
-          URL.revokeObjectURL(jsonURL);
-        });
+      if (data.policiesStatus != Services.policies.INACTIVE) {
+        let activePolicies = $.new("a", policiesText, null, {href: "about:policies"});
         $("policies-status").appendChild(activePolicies);
       } else {
         $("policies-status").textContent = policiesText;

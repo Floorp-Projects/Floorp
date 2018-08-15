@@ -16,12 +16,12 @@
 
 namespace mozilla {
 namespace dom {
-class TabChildGlobal;
-class ProcessGlobal;
+class ContentProcessMessageManager;
+class InProcessTabChildMessageManager;
+class TabChildMessageManager;
 } // namespace dom
 } // namespace mozilla
 class SandboxPrivate;
-class nsInProcessTabChildGlobal;
 class nsWindowRoot;
 
 #define NS_WRAPPERCACHE_IID \

@@ -30,7 +30,7 @@ using namespace mozilla::dom;
 
 static const char* kPrefSVGDisabled = "svg.disabled";
 static const char* kPrefMathMLDisabled = "mathml.disabled";
-static const char* kObservedPrefs[] = {
+static const char* kObservedNSPrefs[] = {
   kPrefMathMLDisabled,
   kPrefSVGDisabled,
   nullptr
@@ -65,7 +65,7 @@ bool nsNameSpaceManager::Init()
 
   mozilla::Preferences::RegisterCallbacks(
     PREF_CHANGE_METHOD(nsNameSpaceManager::PrefChanged),
-    kObservedPrefs, this);
+    kObservedNSPrefs, this);
 
   PrefChanged(nullptr);
 
