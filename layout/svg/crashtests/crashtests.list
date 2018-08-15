@@ -213,3 +213,4 @@ load conditional-outer-svg-nondirty-reflow-assert.xhtml
 load extref-test-1.xhtml
 load blob-merging-and-retained-display-list.html
 load grouping-empty-bounds.html
+load 1480224.html
