@@ -7,12 +7,13 @@
 "use strict";
 
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const Browser = createFactory(require("./Browser"));
 
 const Constants = require("../constants");
 const Types = require("../types");
-const Browser = createFactory(require("./Browser"));
 
 const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;

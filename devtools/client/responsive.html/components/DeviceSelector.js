@@ -4,12 +4,13 @@
 
 "use strict";
 
-const { getStr } = require("../utils/l10n");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const { getStr } = require("../utils/l10n");
 const Types = require("../types");
+
 const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
 class DeviceSelector extends PureComponent {

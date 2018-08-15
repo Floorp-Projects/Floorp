@@ -371,48 +371,34 @@ select > option.divider {
 }
 
 /**
- * Viewport Dimension Label
+ * Viewport Dimension Input
  */
 
 .viewport-dimension {
   display: flex;
-  justify-content: center;
-  font: 10px sans-serif;
-  margin-bottom: 10px;
+  align-items: center;
+  margin: 1px;
 }
 
-.viewport-dimension-editable {
-  border-bottom: 1px solid transparent;
-}
-
-.viewport-dimension-editable,
 .viewport-dimension-input {
-  color: var(--theme-body-color-inactive);
-  transition: all 0.25s ease;
-}
-
-.viewport-dimension-editable.editing,
-.viewport-dimension-input.editing {
-  color: var(--viewport-active-color);
+  border: 1px solid var(--theme-splitter-color);
   outline: none;
-}
-
-.viewport-dimension-editable.editing {
-  border-bottom: 1px solid var(--theme-selection-background);
-}
-
-.viewport-dimension-editable.editing.invalid {
-  border-bottom: 1px solid #d92215;
-}
-
-.viewport-dimension-input {
-  background: transparent;
-  border: none;
   text-align: center;
+  width: 3em;
+}
+
+.viewport-dimension-input:focus {
+  border: 1px solid var(--theme-selection-background);
+  transition: all 0.2s ease-in-out;
+}
+
+.viewport-dimension-input.invalid:focus {
+  border: 1px solid #d92215;
 }
 
 .viewport-dimension-separator {
   -moz-user-select: none;
+  padding: 0 0.3em;
 }
 
 /**
@@ -602,6 +588,23 @@ select > option.divider {
 #device-adder label > .viewport-dimension {
   flex: 1;
   margin: 0;
+}
+
+#device-adder label > .viewport-dimension {
+  border-bottom: 1px solid transparent;
+  color: var(--theme-body-color-inactive);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+#device-adder label > .viewport-dimension.editing {
+  border-bottom-color: var(--theme-selection-background);
+}
+
+#device-adder label > .viewport-dimension.editing.invalid {
+  border-bottom-color: #d92215;
 }
 
 #device-adder input {

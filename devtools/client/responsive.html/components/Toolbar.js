@@ -5,15 +5,17 @@
 "use strict";
 
 const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { getStr } = require("../utils/l10n");
-const Types = require("../types");
 const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
 const DeviceSelector = createFactory(require("./DeviceSelector"));
 const NetworkThrottlingSelector = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingSelector"));
 const ReloadConditions = createFactory(require("./ReloadConditions"));
+const ViewportDimension = createFactory(require("./ViewportDimension"));
+
+const { getStr } = require("../utils/l10n");
+const Types = require("../types");
 
 class Toolbar extends PureComponent {
   static get propTypes() {
@@ -26,12 +28,14 @@ class Toolbar extends PureComponent {
       selectedDevice: PropTypes.string.isRequired,
       selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
       touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
+      viewport: PropTypes.shape(Types.viewport).isRequired,
       onChangeDevice: PropTypes.func.isRequired,
       onChangeNetworkThrottling: PropTypes.func.isRequired,
       onChangePixelRatio: PropTypes.func.isRequired,
       onChangeReloadCondition: PropTypes.func.isRequired,
       onChangeTouchSimulation: PropTypes.func.isRequired,
       onExit: PropTypes.func.isRequired,
+      onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
       onScreenshot: PropTypes.func.isRequired,
       onUpdateDeviceModal: PropTypes.func.isRequired,
@@ -48,12 +52,14 @@ class Toolbar extends PureComponent {
       selectedDevice,
       selectedPixelRatio,
       touchSimulation,
+      viewport,
       onChangeDevice,
       onChangeNetworkThrottling,
       onChangePixelRatio,
       onChangeReloadCondition,
       onChangeTouchSimulation,
       onExit,
+      onRemoveDeviceAssociation,
       onResizeViewport,
       onScreenshot,
       onUpdateDeviceModal,
@@ -69,13 +75,18 @@ class Toolbar extends PureComponent {
       DeviceSelector({
         devices,
         selectedDevice,
-        viewportId: 0,
+        viewportId: viewport.id,
         onChangeDevice,
         onResizeViewport,
         onUpdateDeviceModal,
       }),
       dom.div(
         { id: "toolbar-center-controls" },
+        ViewportDimension({
+          viewport,
+          onRemoveDeviceAssociation,
+          onResizeViewport,
+        }),
         DevicePixelRatioSelector({
           devices,
           displayPixelRatio,
