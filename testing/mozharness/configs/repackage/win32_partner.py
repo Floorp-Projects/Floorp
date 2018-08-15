@@ -2,11 +2,6 @@ import os
 
 platform = "win32"
 
-download_config = {
-        "target.zip": os.environ.get("SIGNED_ZIP"),
-        "setup.exe": os.environ.get("SIGNED_SETUP"),
-    }
-
 repackage_config = [[
         "installer",
         "--package-name", "firefox",
@@ -19,8 +14,6 @@ repackage_config = [[
 
 config = {
     "repack_id": os.environ.get("REPACK_ID"),
-
-    "download_config": download_config,
 
     "repackage_config": repackage_config,
 
