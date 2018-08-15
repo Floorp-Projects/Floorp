@@ -18,6 +18,7 @@
 #include "nsIReflowCallback.h"
 #include "nsCycleCollectionParticipant.h"
 #include "SVGGeometryElement.h"
+#include "SVGTextPathElement.h"
 #include "SVGUseElement.h"
 #include "ImageLoader.h"
 #include "mozilla/net/ReferrerPolicy.h"
@@ -581,11 +582,48 @@ SVGObserverUtils::GetMarkerProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
-SVGTextPathObserver*
-SVGObserverUtils::GetTextPathProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<SVGTextPathObserver>* aProperty)
+SVGGeometryElement*
+SVGObserverUtils::GetTextPathsReferencedPath(nsIFrame* aTextPathFrame)
 {
-  return GetEffectProperty(aURI, aFrame, aProperty);
+  SVGTextPathObserver* property =
+    aTextPathFrame->GetProperty(SVGObserverUtils::HrefAsTextPathProperty());
+
+  if (!property) {
+    nsIContent* content = aTextPathFrame->GetContent();
+    nsAutoString href;
+    static_cast<SVGTextPathElement*>(content)->HrefAsString(href);
+    if (href.IsEmpty()) {
+      return nullptr; // no URL
+    }
+
+    nsCOMPtr<nsIURI> targetURI;
+    nsCOMPtr<nsIURI> base = content->GetBaseURI();
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
+                                              content->GetUncomposedDoc(), base);
+
+    // There's no clear refererer policy spec about non-CSS SVG resource references
+    // Bug 1415044 to investigate which referrer we should use
+    RefPtr<URLAndReferrerInfo> target =
+      new URLAndReferrerInfo(targetURI,
+                             content->OwnerDoc()->GetDocumentURI(),
+                             content->OwnerDoc()->GetReferrerPolicy());
+
+    property = GetEffectProperty(target, aTextPathFrame,
+                                 HrefAsTextPathProperty());
+    if (!property) {
+      return nullptr;
+    }
+  }
+
+  Element* element = property->GetReferencedElement();
+  return (element && element->IsNodeOfType(nsINode::eSHAPE)) ?
+    static_cast<SVGGeometryElement*>(element) : nullptr;
+}
+
+void
+SVGObserverUtils::RemoveTextPathObserver(nsIFrame* aTextPathFrame)
+{
+  aTextPathFrame->DeleteProperty(HrefAsTextPathProperty());
 }
 
 nsSVGPaintingProperty*
