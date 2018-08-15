@@ -41,35 +41,20 @@ class ResizableViewport extends Component {
       ignoreY: false,
     };
 
+    this.onRemoveDeviceAssociation = this.onRemoveDeviceAssociation.bind(this);
+    this.onResizeDrag = this.onResizeDrag.bind(this);
     this.onResizeStart = this.onResizeStart.bind(this);
     this.onResizeStop = this.onResizeStop.bind(this);
-    this.onResizeDrag = this.onResizeDrag.bind(this);
+    this.onResizeViewport = this.onResizeViewport.bind(this);
   }
 
-  onResizeStart({ target, clientX, clientY }) {
-    window.addEventListener("mousemove", this.onResizeDrag, true);
-    window.addEventListener("mouseup", this.onResizeStop, true);
+  onRemoveDeviceAssociation() {
+    const {
+      viewport,
+      onRemoveDeviceAssociation,
+    } = this.props;
 
-    this.setState({
-      isResizing: true,
-      lastClientX: clientX,
-      lastClientY: clientY,
-      ignoreX: target === this.refs.resizeBarY,
-      ignoreY: target === this.refs.resizeBarX,
-    });
-  }
-
-  onResizeStop() {
-    window.removeEventListener("mousemove", this.onResizeDrag, true);
-    window.removeEventListener("mouseup", this.onResizeStop, true);
-
-    this.setState({
-      isResizing: false,
-      lastClientX: 0,
-      lastClientY: 0,
-      ignoreX: false,
-      ignoreY: false,
-    });
+    onRemoveDeviceAssociation(viewport.id);
   }
 
   onResizeDrag({ clientX, clientY }) {
@@ -106,7 +91,7 @@ class ResizableViewport extends Component {
     }
 
     // Update the viewport store with the new width and height.
-    this.props.onResizeViewport(width, height);
+    this.onResizeViewport(width, height);
     // Change the device selector back to an unselected device
     // TODO: Bug 1332754: Logic like this probably belongs in the action creator.
     if (this.props.viewport.device) {
@@ -114,13 +99,48 @@ class ResizableViewport extends Component {
       // the properties of the device on resize.  However, at the moment, there is no
       // way to edit dPR when a device is selected, and there is no UI at all for editing
       // UA, so it's important to keep doing this for now.
-      this.props.onRemoveDeviceAssociation();
+      this.onRemoveDeviceAssociation();
     }
 
     this.setState({
       lastClientX,
       lastClientY
     });
+  }
+
+  onResizeStart({ target, clientX, clientY }) {
+    window.addEventListener("mousemove", this.onResizeDrag, true);
+    window.addEventListener("mouseup", this.onResizeStop, true);
+
+    this.setState({
+      isResizing: true,
+      lastClientX: clientX,
+      lastClientY: clientY,
+      ignoreX: target === this.refs.resizeBarY,
+      ignoreY: target === this.refs.resizeBarX,
+    });
+  }
+
+  onResizeStop() {
+    window.removeEventListener("mousemove", this.onResizeDrag, true);
+    window.removeEventListener("mouseup", this.onResizeStop, true);
+
+    this.setState({
+      isResizing: false,
+      lastClientX: 0,
+      lastClientY: 0,
+      ignoreX: false,
+      ignoreY: false,
+    });
+  }
+
+  onResizeViewport(width, height) {
+    const {
+      viewport,
+      onResizeViewport,
+    } = this.props;
+
+    onResizeViewport(viewport.id, width, height);
   }
 
   render() {
@@ -142,39 +162,40 @@ class ResizableViewport extends Component {
       contentClass += " resizing";
     }
 
-    return dom.div(
-      {
-        className: "resizable-viewport",
-      },
-      dom.div(
-        {
-          className: contentClass,
-          style: {
-            width: viewport.width + "px",
-            height: viewport.height + "px",
-          },
-        },
-        Browser({
-          swapAfterMount,
-          userContextId: viewport.userContextId,
-          onBrowserMounted,
-          onContentResize,
-        })
-      ),
-      dom.div({
-        className: resizeHandleClass,
-        onMouseDown: this.onResizeStart,
-      }),
-      dom.div({
-        ref: "resizeBarX",
-        className: "viewport-horizontal-resize-handle",
-        onMouseDown: this.onResizeStart,
-      }),
-      dom.div({
-        ref: "resizeBarY",
-        className: "viewport-vertical-resize-handle",
-        onMouseDown: this.onResizeStart,
-      })
+    return (
+      dom.div({ className: "viewport" },
+        dom.div({ className: "resizable-viewport" },
+          dom.div(
+            {
+              className: contentClass,
+              style: {
+                width: viewport.width + "px",
+                height: viewport.height + "px",
+              },
+            },
+            Browser({
+              swapAfterMount,
+              userContextId: viewport.userContextId,
+              onBrowserMounted,
+              onContentResize,
+            })
+          ),
+          dom.div({
+            className: resizeHandleClass,
+            onMouseDown: this.onResizeStart,
+          }),
+          dom.div({
+            ref: "resizeBarX",
+            className: "viewport-horizontal-resize-handle",
+            onMouseDown: this.onResizeStart,
+          }),
+          dom.div({
+            ref: "resizeBarY",
+            className: "viewport-vertical-resize-handle",
+            onMouseDown: this.onResizeStart,
+          })
+        )
+      )
     );
   }
 }
