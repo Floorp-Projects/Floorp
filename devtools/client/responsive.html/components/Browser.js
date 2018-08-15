@@ -14,7 +14,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const e10s = require("../utils/e10s");
 const message = require("../utils/message");
-const { getToplevelWindow } = require("../utils/window");
+const { getTopLevelWindow } = require("../utils/window");
 
 const FRAME_SCRIPT = "resource://devtools/client/responsive.html/browser/content.js";
 
@@ -114,7 +114,7 @@ class Browser extends PureComponent {
     mm.loadFrameScript(FRAME_SCRIPT, true);
     await ready;
 
-    const browserWindow = getToplevelWindow(window);
+    const browserWindow = getTopLevelWindow(window);
     const requiresFloatingScrollbars =
       !browserWindow.matchMedia("(-moz-overlay-scrollbars)").matches;
 

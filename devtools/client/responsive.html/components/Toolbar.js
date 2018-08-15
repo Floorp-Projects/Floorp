@@ -11,7 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
 const DeviceSelector = createFactory(require("./DeviceSelector"));
 const NetworkThrottlingSelector = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingSelector"));
-const ReloadConditions = createFactory(require("./ReloadConditions"));
+const SettingsMenu = createFactory(require("./SettingsMenu"));
 const ViewportDimension = createFactory(require("./ViewportDimension"));
 
 const { getStr } = require("../utils/l10n");
@@ -126,7 +126,7 @@ class Toolbar extends PureComponent {
           onClick: onScreenshot,
           disabled: screenshot.isCapturing,
         }),
-        ReloadConditions({
+        SettingsMenu({
           reloadConditions,
           onChangeReloadCondition,
         }),
