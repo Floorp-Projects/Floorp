@@ -1986,6 +1986,8 @@ const {
 
 const { clearSourceMaps } = __webpack_require__(3704);
 
+const { getOriginalStackFrames } = __webpack_require__(3783);
+
 const {
   workerUtils: { workerHandler }
 } = __webpack_require__(3651);
@@ -2001,6 +2003,7 @@ self.onmessage = workerHandler({
   getOriginalLocation,
   getLocationScopes,
   getOriginalSourceText,
+  getOriginalStackFrames,
   hasMappedSource,
   applySourceMap,
   clearSourceMaps
@@ -4491,6 +4494,27 @@ exports.WasmRemap = WasmRemap;
 
 module.exports = __webpack_require__(3709);
 
+
+/***/ }),
+
+/***/ 3783:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// Returns expanded stack frames details based on the generated location.
+// The function return null if not information was found.
+async function getOriginalStackFrames(generatedLocation) {
+  // Reserved for experemental source maps formats.
+  return null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+module.exports = {
+  getOriginalStackFrames
+};
 
 /***/ })
 
