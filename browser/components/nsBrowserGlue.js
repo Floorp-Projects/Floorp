@@ -120,6 +120,15 @@ let ACTORS = {
     },
   },
 
+  FormSubmit: {
+    child: {
+      module: "resource:///actors/FormSubmitChild.jsm",
+      events: {
+        "MozInvalidForm": {},
+      },
+    },
+  },
+
   LightWeightThemeInstall: {
     child: {
       module: "resource:///actors/LightWeightThemeInstallChild.jsm",
