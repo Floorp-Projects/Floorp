@@ -13,7 +13,6 @@ const { require } = BrowserLoader({
   window
 });
 const Telemetry = require("devtools/client/shared/telemetry");
-const { loadAgentSheet } = require("./utils/css");
 
 const { createFactory, createElement } =
   require("devtools/client/shared/vendor/react");
@@ -39,13 +38,6 @@ const bootstrap = {
   store: null,
 
   async init() {
-    // Load a special UA stylesheet to reset certain styles such as dropdown
-    // lists.
-    loadAgentSheet(
-      window,
-      "resource://devtools/client/responsive.html/responsive-ua.css"
-    );
-
     this.telemetry.toolOpened("responsive");
 
     const store = this.store = Store();
