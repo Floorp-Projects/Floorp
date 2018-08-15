@@ -14,7 +14,10 @@
  * subclass). Keys whose definition ends in "LIST" return an nsISimpleEnumerator
  * which enumerates a list of file objects.
  *
- * Defines listed in this file are FROZEN.  This list may grow.
+ * Defines listed in this file are FROZEN.  This list may grow.  Each unique
+ * string in this file should have a corresponding atom defined in
+ * StaticAtoms.py (search for "DirectoryService"), regardless of whether it
+ * is defined here due to conditional compilation.
  */
 
 #ifndef nsDirectoryServiceDefs_h___
@@ -22,9 +25,6 @@
 
 /* General OS specific locations */
 
-// If this value ever changes, the special handling of the
-// nsDirectoryService::sOS_HomeDirectory static atom -- i.e. the use of
-// nsGkAtoms::Home in its place -- must be removed.
 #define NS_OS_HOME_DIR                          "Home"
 
 #define NS_OS_TEMP_DIR                          "TmpD"
