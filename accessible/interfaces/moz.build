@@ -23,7 +23,6 @@ XPIDL_SOURCES += [
     'nsIAccessiblePivot.idl',
     'nsIAccessibleRelation.idl',
     'nsIAccessibleRole.idl',
-    'nsIAccessibleScrollingEvent.idl',
     'nsIAccessibleSelectable.idl',
     'nsIAccessibleStateChangeEvent.idl',
     'nsIAccessibleStates.idl',
