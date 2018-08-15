@@ -1425,8 +1425,9 @@ main {
   .compact-cards .card-outer .card-text:not(.no-description) .card-title {
     font-size: 12px;
     line-height: 13px;
-    max-height: 13px;
+    max-height: 17px;
     overflow: hidden;
+    padding: 0 0 4px;
     text-overflow: ellipsis;
     white-space: nowrap; }
   .compact-cards .card-outer .card-description {
