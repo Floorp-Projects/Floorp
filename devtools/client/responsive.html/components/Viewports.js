@@ -14,31 +14,23 @@ const Viewport = createFactory(require("./Viewport"));
 class Viewports extends Component {
   static get propTypes() {
     return {
-      devices: PropTypes.shape(Types.devices).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
-      onChangeDevice: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
-      onRotateViewport: PropTypes.func.isRequired,
-      onUpdateDeviceModal: PropTypes.func.isRequired,
     };
   }
 
   render() {
     const {
-      devices,
       screenshot,
       viewports,
       onBrowserMounted,
-      onChangeDevice,
       onContentResize,
       onRemoveDeviceAssociation,
       onResizeViewport,
-      onRotateViewport,
-      onUpdateDeviceModal,
     } = this.props;
 
     return dom.div(
@@ -48,17 +40,13 @@ class Viewports extends Component {
       viewports.map((viewport, i) => {
         return Viewport({
           key: viewport.id,
-          devices,
           screenshot,
           swapAfterMount: i == 0,
           viewport,
           onBrowserMounted,
-          onChangeDevice,
           onContentResize,
           onRemoveDeviceAssociation,
           onResizeViewport,
-          onRotateViewport,
-          onUpdateDeviceModal,
         });
       })
     );
