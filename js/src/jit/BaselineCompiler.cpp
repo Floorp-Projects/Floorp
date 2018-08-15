@@ -4647,7 +4647,7 @@ BaselineCompiler::emit_JSOP_AWAIT()
     return emit_JSOP_YIELD();
 }
 
-typedef bool (*DebugAfterYieldFn)(JSContext*, BaselineFrame*);
+typedef bool (*DebugAfterYieldFn)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
 static const VMFunction DebugAfterYieldInfo =
     FunctionInfo<DebugAfterYieldFn>(jit::DebugAfterYield, "DebugAfterYield");
 
@@ -4660,8 +4660,21 @@ BaselineCompiler::emit_JSOP_DEBUGAFTERYIELD()
     frame.assertSyncedStack();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
     prepareVMCall();
+    pushArg(ImmPtr(pc));
     pushArg(R0.scratchReg());
-    return callVM(DebugAfterYieldInfo);
+    if (!callVM(DebugAfterYieldInfo))
+        return false;
+
+    icEntries_.back().setFakeKind(ICEntry::Kind_DebugAfterYield);
+
+    Label done;
+    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
+    {
+        masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+        masm.jump(&return_);
+    }
+    masm.bind(&done);
+    return true;
 }
 
 typedef bool (*FinalSuspendFn)(JSContext*, HandleObject, jsbytecode*);
