@@ -1750,6 +1750,7 @@ HTMLMediaElement::ShutdownDecoder()
   mDecoder->Shutdown();
   DDUNLINKCHILD(mDecoder.get());
   mDecoder = nullptr;
+  ReportAudioTrackSilenceProportionTelemetry();
 }
 
 void
@@ -1827,6 +1828,7 @@ HTMLMediaElement::AbortExistingLoads()
   mSourcePointer = nullptr;
 
   mTags = nullptr;
+  mAudioTrackSilenceStartedTime = 0.0;
 
   if (mNetworkState != NETWORK_EMPTY) {
     NS_ASSERTION(!mDecoder && !mSrcStream,
@@ -2902,6 +2904,18 @@ HTMLMediaElement::Seek(double aTime,
   //       MediaDecoderReaders.
 
   mPlayingBeforeSeek = IsPotentiallyPlaying();
+
+  // If the audio track is silent before seeking, we should end current silence
+  // range and start a new range after seeking. Since seek() could be called
+  // multiple times before seekEnd() executed, we should only calculate silence
+  // range when first time seek() called. Calculating on other seek() calls
+  // would cause a wrong result. In order to get correct time, this checking
+  // should be called before decoder->seek().
+  if (IsAudioTrackCurrentlySilent() &&
+      !mHasAccumulatedSilenceRangeBeforeSeekEnd) {
+    AccumulateAudioTrackSilence();
+    mHasAccumulatedSilenceRangeBeforeSeekEnd = true;
+  }
 
   // The media backend is responsible for dispatching the timeupdate
   // event if it changes the playback position as a result of the seek.
@@ -5715,6 +5729,13 @@ HTMLMediaElement::SeekCompleted()
   if (mCurrentPlayRangeStart == -1.0) {
     mCurrentPlayRangeStart = CurrentTime();
   }
+
+  // After seeking completed, if the audio track is silent, start another new
+  // silence range.
+  mHasAccumulatedSilenceRangeBeforeSeekEnd = false;
+  if (IsAudioTrackCurrentlySilent()) {
+    UpdateAudioTrackSilenceRange(mIsAudioTrackAudible);
+  }
 }
 
 void
@@ -7584,10 +7605,81 @@ void
 HTMLMediaElement::SetAudibleState(bool aAudible)
 {
   if (mIsAudioTrackAudible != aAudible) {
+    UpdateAudioTrackSilenceRange(aAudible);
     mIsAudioTrackAudible = aAudible;
     NotifyAudioPlaybackChanged(
       AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
   }
+}
+
+bool
+HTMLMediaElement::IsAudioTrackCurrentlySilent() const
+{
+  return HasAudio() && !mIsAudioTrackAudible;
+}
+
+void
+HTMLMediaElement::UpdateAudioTrackSilenceRange(bool aAudible)
+{
+  if (!HasAudio()) {
+    return;
+  }
+
+  if (!aAudible) {
+    mAudioTrackSilenceStartedTime = CurrentTime();
+    return;
+  }
+
+  AccumulateAudioTrackSilence();
+}
+
+void
+HTMLMediaElement::AccumulateAudioTrackSilence()
+{
+  MOZ_ASSERT(HasAudio());
+  const double current = CurrentTime();
+  if (current < mAudioTrackSilenceStartedTime) {
+    return;
+  }
+  const auto start = media::TimeUnit::FromSeconds(mAudioTrackSilenceStartedTime);
+  const auto end = media::TimeUnit::FromSeconds(current);
+  mSilenceTimeRanges += media::TimeInterval(start, end);
+}
+
+void
+HTMLMediaElement::ReportAudioTrackSilenceProportionTelemetry()
+{
+  if (!HasAudio()) {
+    return;
+  }
+
+  // Add last silence range to our ranges set.
+  if (!mIsAudioTrackAudible) {
+    AccumulateAudioTrackSilence();
+  }
+
+  RefPtr<TimeRanges> ranges = Played();
+  const uint32_t lengthPlayedRange = ranges->Length();
+  const uint32_t lengthSilenceRange = mSilenceTimeRanges.Length();
+  if (!lengthPlayedRange || !lengthSilenceRange) {
+    return;
+  }
+
+  double playedTime = 0.0, silenceTime = 0.0;
+  for (uint32_t idx = 0; idx < lengthPlayedRange; idx++) {
+    playedTime += ranges->End(idx) - ranges->Start(idx);
+  }
+
+  for (uint32_t idx = 0; idx < lengthSilenceRange; idx++) {
+    silenceTime +=
+      mSilenceTimeRanges.End(idx).ToSeconds() - mSilenceTimeRanges.Start(idx).ToSeconds();
+  }
+
+  double silenceProportion = (silenceTime / playedTime) * 100;
+  // silenceProportion should be in the range [0, 100]
+  silenceProportion = std::min(100.0, std::max(silenceProportion, 0.0));
+  Telemetry::Accumulate(Telemetry::AUDIO_TRACK_SILENCE_PROPORTION,
+                        silenceProportion);
 }
 
 void
