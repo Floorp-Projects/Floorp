@@ -318,6 +318,12 @@ pref("devtools.responsive.reloadConditions.touchSimulation", false);
 pref("devtools.responsive.reloadConditions.userAgent", false);
 // Whether to show the notification about reloading to apply emulation
 pref("devtools.responsive.reloadNotification.enabled", true);
+// Whether to show the settings onboarding tooltip only in release or beta builds.
+#if defined(RELEASE_OR_BETA)
+pref("devtools.responsive.show-setting-tooltip", true);
+#else
+pref("devtools.responsive.show-setting-tooltip", false);
+#endif
 
 // Enable new about:debugging.
 pref("devtools.aboutdebugging.new-enabled", false);
