@@ -152,7 +152,8 @@ public:
                                 TransactionId aTransactionId,
                                 const TimeStamp& aRefreshStartTime,
                                 const TimeStamp& aTxnStartTime,
-                                const TimeStamp& aFwdTime);
+                                const TimeStamp& aFwdTime,
+                                const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
   TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
 
@@ -260,18 +261,21 @@ private:
                          TransactionId aId,
                          const TimeStamp& aRefreshStartTime,
                          const TimeStamp& aTxnStartTime,
-                         const TimeStamp& aFwdTime)
+                         const TimeStamp& aFwdTime,
+                         const bool aUseForTelemetry)
       : mEpoch(aEpoch)
       , mId(aId)
       , mRefreshStartTime(aRefreshStartTime)
       , mTxnStartTime(aTxnStartTime)
       , mFwdTime(aFwdTime)
+      , mUseForTelemetry(aUseForTelemetry)
     {}
     wr::Epoch mEpoch;
     TransactionId mId;
     TimeStamp mRefreshStartTime;
     TimeStamp mTxnStartTime;
     TimeStamp mFwdTime;
+    bool mUseForTelemetry;
   };
 
   struct CompositorAnimationIdsForEpoch {
