@@ -3220,7 +3220,7 @@ function idl_test(srcs, deps, idl_setup_func) {
                 }
             })
             .catch(function(e) { setup_error = e || 'IDL setup failed.'; })
-            .finally(function () {
+            .then(function () {
                 var error = setup_error;
                 try {
                     idl_array.test(); // Test what we can.
