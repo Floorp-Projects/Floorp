@@ -138,8 +138,6 @@ nsLayoutStatics::Initialize()
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
 
-  NS_SetStaticAtomsDone();
-
 #ifdef DEBUG
   nsCSSPseudoElements::AssertAtoms();
   nsCSSAnonBoxes::AssertAtoms();
