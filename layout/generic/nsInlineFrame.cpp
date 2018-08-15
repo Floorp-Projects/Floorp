@@ -1018,13 +1018,13 @@ nsFirstLineFrame::Init(nsIContent*       aContent,
 {
   nsInlineFrame::Init(aContent, aParent, aPrevInFlow);
   if (!aPrevInFlow) {
-    MOZ_ASSERT(Style()->GetPseudo() == nsCSSPseudoElements::firstLine);
+    MOZ_ASSERT(Style()->GetPseudo() == nsCSSPseudoElements::firstLine());
     return;
   }
 
   // This frame is a continuation - fixup the computed style if aPrevInFlow
   // is the first-in-flow (the only one with a ::first-line pseudo).
-  if (aPrevInFlow->Style()->GetPseudo() == nsCSSPseudoElements::firstLine) {
+  if (aPrevInFlow->Style()->GetPseudo() == nsCSSPseudoElements::firstLine()) {
     MOZ_ASSERT(FirstInFlow() == aPrevInFlow);
     // Create a new ComputedStyle that is a child of the parent
     // ComputedStyle thus removing the ::first-line style. This way

@@ -5714,7 +5714,7 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
   }
   nsIFrame* styleParent =
     CorrectStyleParentFrame(inFlowFrame->GetParent(),
-                            nsCSSPseudoElements::firstLetter);
+                            nsCSSPseudoElements::firstLetter());
   ComputedStyle* parentStyle = styleParent->Style();
   RefPtr<ComputedStyle> firstLetterStyle =
     aRestyleState.StyleSet()
@@ -7645,7 +7645,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
   if (nsIFrame* firstLineFrame = GetFirstLineFrame()) {
     nsIFrame* styleParent =
       CorrectStyleParentFrame(firstLineFrame->GetParent(),
-                              nsCSSPseudoElements::firstLine);
+                              nsCSSPseudoElements::firstLine());
 
     ComputedStyle* parentStyle = styleParent->Style();
     RefPtr<ComputedStyle> firstLineStyle =
