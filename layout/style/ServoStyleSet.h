@@ -154,7 +154,7 @@ public:
 
   // Get a CopmutedStyle for a text node (which no rules will match).
   //
-  // The returned ComputedStyle will have nsCSSAnonBoxes::mozText as its pseudo.
+  // The returned ComputedStyle will have nsCSSAnonBoxes::mozText() as its pseudo.
   //
   // (Perhaps mozText should go away and we shouldn't even create style
   // contexts for such content nodes, when text-combine-upright is not
@@ -166,9 +166,9 @@ public:
   // match).
   //
   // The returned ComputedStyle will have
-  // nsCSSAnonBoxes::firstLetterContinuation as its pseudo.
+  // nsCSSAnonBoxes::firstLetterContinuation() as its pseudo.
   //
-  // (Perhaps nsCSSAnonBoxes::firstLetterContinuation should go away and we
+  // (Perhaps nsCSSAnonBoxes::firstLetterContinuation() should go away and we
   // shouldn't even create ComputedStyles for such frames.  However, not doing
   // any rule matching for them is a first step.  And right now we do use this
   // ComputedStyle for some things)
@@ -177,10 +177,10 @@ public:
 
   // Get a ComputedStyle for a placeholder frame (which no rules will match).
   //
-  // The returned ComputedStyle will have nsCSSAnonBoxes::oofPlaceholder as
+  // The returned ComputedStyle will have nsCSSAnonBoxes::oofPlaceholder() as
   // its pseudo.
   //
-  // (Perhaps nsCSSAnonBoxes::oofPaceholder should go away and we shouldn't even
+  // (Perhaps nsCSSAnonBoxes::oofPaceholder() should go away and we shouldn't even
   // create ComputedStyle for placeholders.  However, not doing any rule
   // matching for them is a first step.)
   already_AddRefed<ComputedStyle>

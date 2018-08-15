@@ -1284,7 +1284,7 @@ nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
   }
 
   MOZ_ASSERT(column->Style()->GetPseudo() ==
-               nsCSSAnonBoxes::columnContent,
+               nsCSSAnonBoxes::columnContent(),
              "What sort of child is this?");
   aResult.AppendElement(OwnedAnonBox(column));
 }
