@@ -9,7 +9,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const Types = require("../types");
-const Viewport = createFactory(require("./Viewport"));
+const ResizableViewport = createFactory(require("./ResizableViewport"));
 
 class Viewports extends Component {
   static get propTypes() {
@@ -38,7 +38,7 @@ class Viewports extends Component {
         id: "viewports",
       },
       viewports.map((viewport, i) => {
-        return Viewport({
+        return ResizableViewport({
           key: viewport.id,
           screenshot,
           swapAfterMount: i == 0,
