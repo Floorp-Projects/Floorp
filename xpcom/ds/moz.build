@@ -39,6 +39,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 XPIDL_MODULE = 'xpcom_ds'
 
 EXPORTS += [
+    '!nsGkAtomList.h',
     'nsArray.h',
     'nsArrayEnumerator.h',
     'nsArrayUtils.h',
@@ -53,7 +54,6 @@ EXPORTS += [
     'nsDeque.h',
     'nsEnumeratorUtils.h',
     'nsExpirationTracker.h',
-    'nsGkAtomList.h',
     'nsGkAtoms.h',
     'nsHashKeys.h',
     'nsHashPropertyBag.h',
@@ -136,5 +136,9 @@ EXTRA_COMPONENTS += [
 LOCAL_INCLUDES += [
     '../io',
 ]
+
+GENERATED_FILES += ['nsGkAtomList.h']
+GENERATED_FILES['nsGkAtomList.h'].script = 'StaticAtoms.py:generate_nsgkatomlist_h'
+GENERATED_FILES['nsGkAtomList.h'].inputs = ['Atom.py', 'HTMLAtoms.py']
 
 FINAL_LIBRARY = 'xul'
