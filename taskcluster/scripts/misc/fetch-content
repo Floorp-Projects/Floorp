@@ -60,6 +60,9 @@ def stream_download(url, sha256=None, size=None):
 
     t0 = time.time()
     with urllib.request.urlopen(url) as fh:
+        if not url.endswith('.gz') and fh.info().get('Content-Encoding') == 'gzip':
+            fh = gzip.GzipFile(fileobj=fh)
+
         while True:
             chunk = fh.read(65536)
             if not chunk:
