@@ -330,7 +330,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
     RefPtr<ComputedStyle> pseudoComputedStyle;
     pseudoComputedStyle = shell->StyleSet()->
-      ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::framesetBlank);
+      ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::framesetBlank());
 
     // XXX the blank frame is using the content of its parent - at some point it
     // should just have null content, if we support that
@@ -906,7 +906,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
 
         RefPtr<ComputedStyle> pseudoComputedStyle;
         pseudoComputedStyle = styleSet->
-          ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::horizontalFramesetBorder);
+          ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::horizontalFramesetBorder());
 
         borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoComputedStyle,
                                                             borderWidth,
@@ -935,7 +935,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
 
             RefPtr<ComputedStyle> pseudoComputedStyle;
             pseudoComputedStyle = styleSet->
-              ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::verticalFramesetBorder);
+              ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::verticalFramesetBorder());
 
             borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoComputedStyle,
                                                                 borderWidth,

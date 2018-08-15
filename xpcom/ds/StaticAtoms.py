@@ -2,13 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from Atom import Atom, PseudoElementAtom
+# flake8: noqa
+
+from Atom import Atom, InheritingAnonBoxAtom, NonInheritingAnonBoxAtom
+from Atom import PseudoElementAtom
 from HTMLAtoms import HTML_PARSER_ATOMS
 import sys
 
 # Static atom definitions, used to generate nsGkAtomList.h.
 #
-# Each atom is defined by a call to Atom or PseudoElementAtom.
+# Each atom is defined by a call to Atom, PseudoElementAtom,
+# NonInheritingAnonBoxAtom or InheritingAnonBoxAtom.
 #
 # The first argument is the atom's identifier.
 # The second argument is the atom's string value.
@@ -2264,6 +2268,66 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozMeterBar", ":-moz-meter-bar"),
     PseudoElementAtom("PseudoElement_placeholder", ":placeholder"),
     PseudoElementAtom("PseudoElement_mozColorSwatch", ":-moz-color-swatch"),
+
+    # CSS anonymous boxes -- these must appear in the same order as
+    # in nsCSSAnonBoxList.h
+    NonInheritingAnonBoxAtom("AnonBox_oofPlaceholder", ":-moz-oof-placeholder"),
+    NonInheritingAnonBoxAtom("AnonBox_horizontalFramesetBorder", ":-moz-hframeset-border"),
+    NonInheritingAnonBoxAtom("AnonBox_verticalFramesetBorder", ":-moz-vframeset-border"),
+    NonInheritingAnonBoxAtom("AnonBox_framesetBlank", ":-moz-frameset-blank"),
+    NonInheritingAnonBoxAtom("AnonBox_tableColGroup", ":-moz-table-column-group"),
+    NonInheritingAnonBoxAtom("AnonBox_tableCol", ":-moz-table-column"),
+    NonInheritingAnonBoxAtom("AnonBox_pageBreak", ":-moz-pagebreak"),
+    InheritingAnonBoxAtom("AnonBox_mozText", ":-moz-text"),
+    InheritingAnonBoxAtom("AnonBox_firstLetterContinuation", ":-moz-first-letter-continuation"),
+    InheritingAnonBoxAtom("AnonBox_mozBlockInsideInlineWrapper", ":-moz-block-inside-inline-wrapper"),
+    InheritingAnonBoxAtom("AnonBox_mozMathMLAnonymousBlock", ":-moz-mathml-anonymous-block"),
+    InheritingAnonBoxAtom("AnonBox_mozXULAnonymousBlock", ":-moz-xul-anonymous-block"),
+    InheritingAnonBoxAtom("AnonBox_mozLineFrame", ":-moz-line-frame"),
+    InheritingAnonBoxAtom("AnonBox_buttonContent", ":-moz-button-content"),
+    InheritingAnonBoxAtom("AnonBox_cellContent", ":-moz-cell-content"),
+    InheritingAnonBoxAtom("AnonBox_dropDownList", ":-moz-dropdown-list"),
+    InheritingAnonBoxAtom("AnonBox_fieldsetContent", ":-moz-fieldset-content"),
+    InheritingAnonBoxAtom("AnonBox_mozDisplayComboboxControlFrame", ":-moz-display-comboboxcontrol-frame"),
+    InheritingAnonBoxAtom("AnonBox_htmlCanvasContent", ":-moz-html-canvas-content"),
+    InheritingAnonBoxAtom("AnonBox_inlineTable", ":-moz-inline-table"),
+    InheritingAnonBoxAtom("AnonBox_table", ":-moz-table"),
+    InheritingAnonBoxAtom("AnonBox_tableCell", ":-moz-table-cell"),
+    InheritingAnonBoxAtom("AnonBox_tableWrapper", ":-moz-table-wrapper"),
+    InheritingAnonBoxAtom("AnonBox_tableRowGroup", ":-moz-table-row-group"),
+    InheritingAnonBoxAtom("AnonBox_tableRow", ":-moz-table-row"),
+    InheritingAnonBoxAtom("AnonBox_canvas", ":-moz-canvas"),
+    InheritingAnonBoxAtom("AnonBox_page", ":-moz-page"),
+    InheritingAnonBoxAtom("AnonBox_pageContent", ":-moz-pagecontent"),
+    InheritingAnonBoxAtom("AnonBox_pageSequence", ":-moz-page-sequence"),
+    InheritingAnonBoxAtom("AnonBox_scrolledContent", ":-moz-scrolled-content"),
+    InheritingAnonBoxAtom("AnonBox_scrolledCanvas", ":-moz-scrolled-canvas"),
+    InheritingAnonBoxAtom("AnonBox_scrolledPageSequence", ":-moz-scrolled-page-sequence"),
+    InheritingAnonBoxAtom("AnonBox_columnContent", ":-moz-column-content"),
+    InheritingAnonBoxAtom("AnonBox_viewport", ":-moz-viewport"),
+    InheritingAnonBoxAtom("AnonBox_viewportScroll", ":-moz-viewport-scroll"),
+    InheritingAnonBoxAtom("AnonBox_anonymousFlexItem", ":-moz-anonymous-flex-item"),
+    InheritingAnonBoxAtom("AnonBox_anonymousGridItem", ":-moz-anonymous-grid-item"),
+    InheritingAnonBoxAtom("AnonBox_ruby", ":-moz-ruby"),
+    InheritingAnonBoxAtom("AnonBox_rubyBase", ":-moz-ruby-base"),
+    InheritingAnonBoxAtom("AnonBox_rubyBaseContainer", ":-moz-ruby-base-container"),
+    InheritingAnonBoxAtom("AnonBox_rubyText", ":-moz-ruby-text"),
+    InheritingAnonBoxAtom("AnonBox_rubyTextContainer", ":-moz-ruby-text-container"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeColumn", ":-moz-tree-column"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeRow", ":-moz-tree-row"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeSeparator", ":-moz-tree-separator"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeCell", ":-moz-tree-cell"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeIndentation", ":-moz-tree-indentation"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeLine", ":-moz-tree-line"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeTwisty", ":-moz-tree-twisty"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeImage", ":-moz-tree-image"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeCellText", ":-moz-tree-cell-text"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeCheckbox", ":-moz-tree-checkbox"),
+    InheritingAnonBoxAtom("AnonBox_mozTreeDropFeedback", ":-moz-tree-drop-feedback"),
+    InheritingAnonBoxAtom("AnonBox_mozSVGMarkerAnonChild", ":-moz-svg-marker-anon-child"),
+    InheritingAnonBoxAtom("AnonBox_mozSVGOuterSVGAnonChild", ":-moz-svg-outer-svg-anon-child"),
+    InheritingAnonBoxAtom("AnonBox_mozSVGForeignContent", ":-moz-svg-foreign-content"),
+    InheritingAnonBoxAtom("AnonBox_mozSVGText", ":-moz-svg-text"),
 ] + HTML_PARSER_ATOMS
 
 
@@ -2287,24 +2351,33 @@ def verify():
 def generate_nsgkatomlist_h(output, *ignore):
     verify()
     output.write("/* THIS FILE IS AUTOGENERATED BY StaticAtoms.py.  DO NOT EDIT */\n\n"
-                 "// GK_ATOM(identifier, string, gecko_type)\n" +
-                 "".join(["GK_ATOM(%s, \"%s\", %s)\n" % (a.ident, a.string, a.ty)
+                 "// GK_ATOM(identifier, string, gecko_type, atom_type)\n" +
+                 "".join(["GK_ATOM(%s, \"%s\", %s, %s)\n" %
+                            (a.ident, a.string, a.ty, a.atom_type)
                           for a in STATIC_ATOMS]))
 
 
 def generate_nsgkatomconsts_h(output, *ignore):
     pseudo_index = None
+    anon_box_index = None
     pseudo_count = 0
+    anon_box_count = 0
     for i, atom in enumerate(STATIC_ATOMS):
-        if atom.ty is "nsICSSPseudoElement":
+        if atom.atom_type is "PseudoElementAtom":
             if pseudo_index is None:
                 pseudo_index = i
             pseudo_count += 1
+        elif atom.atom_type is "NonInheritingAnonBoxAtom" or atom.atom_type is "InheritingAnonBoxAtom":
+            if anon_box_index is None:
+                anon_box_index = i
+            anon_box_count += 1
     output.write("/* THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT */\n\n"
                  "namespace mozilla {\n"
                  "  constexpr uint32_t kAtomIndex_PseudoElements = %d;\n"
                  "  constexpr uint32_t kAtomCount_PseudoElements = %d;\n"
-                 "}\n" % (pseudo_index, pseudo_count))
+                 "  constexpr uint32_t kAtomIndex_AnonBoxes = %d;\n"
+                 "  constexpr uint32_t kAtomCount_AnonBoxes = %d;\n"
+                 "}\n" % (pseudo_index, pseudo_count, anon_box_index, anon_box_count))
 
 
 if __name__ == '__main__':
