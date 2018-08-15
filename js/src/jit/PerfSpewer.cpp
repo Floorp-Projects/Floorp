@@ -7,6 +7,7 @@
 #include "jit/PerfSpewer.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Printf.h"
 
 #ifdef XP_UNIX
 # include <unistd.h>
@@ -213,7 +214,7 @@ PerfSpewer::writeProfile(JSScript* script,
         uint32_t thisFunctionIndex = nextFunctionIndex++;
         size_t size = code->instructionsSize();
         if (size > 0) {
-            WriteEntry(lock, reinterpret_cast<uintptr_t>(code->raw()), size, "%s:%zu: Func%02" PRIu32,
+            WriteEntry(lock, reinterpret_cast<uintptr_t>(code->raw()), size, "%s:%u: Func%02" PRIu32,
                        script->filename(), script->lineno(), thisFunctionIndex);
         }
         return;
@@ -229,7 +230,7 @@ PerfSpewer::writeProfile(JSScript* script,
         size_t prologueSize = basicBlocks_[0].start.offset();
 
         if (prologueSize > 0) {
-            WriteEntry(lock, funcStart, prologueSize, "%s:%zu: Func%02" PRIu32 "-Prologue",
+            WriteEntry(lock, funcStart, prologueSize, "%s:%u: Func%02" PRIu32 "-Prologue",
                        script->filename(), script->lineno(), thisFunctionIndex);
         }
 
@@ -242,7 +243,7 @@ PerfSpewer::writeProfile(JSScript* script,
 
             MOZ_ASSERT(cur <= blockStart);
             if (cur < blockStart) {
-                WriteEntry(lock, cur, blockStart - cur, "%s:%zu: Func%02" PRIu32 "-Block?",
+                WriteEntry(lock, cur, blockStart - cur, "%s:%u: Func%02" PRIu32 "-Block?",
                            script->filename(), script->lineno(), thisFunctionIndex);
             }
             cur = blockEnd;
@@ -257,14 +258,14 @@ PerfSpewer::writeProfile(JSScript* script,
 
         MOZ_ASSERT(cur <= funcEndInlineCode);
         if (cur < funcEndInlineCode) {
-            WriteEntry(lock, cur, funcEndInlineCode - cur, "%s:%zu: Func%02" PRIu32 "-Epilogue",
+            WriteEntry(lock, cur, funcEndInlineCode - cur, "%s:%u: Func%02" PRIu32 "-Epilogue",
                        script->filename(), script->lineno(), thisFunctionIndex);
         }
 
         MOZ_ASSERT(funcEndInlineCode <= funcEnd);
         if (funcEndInlineCode < funcEnd) {
             WriteEntry(lock, funcEndInlineCode, funcEnd - funcEndInlineCode,
-                       "%s:%zu: Func%02" PRIu32 "-OOL",
+                       "%s:%u: Func%02" PRIu32 "-OOL",
                        script->filename(), script->lineno(), thisFunctionIndex);
         }
     }
@@ -280,7 +281,7 @@ js::jit::writePerfSpewerBaselineProfile(JSScript* script, JitCode* code)
     if (size > 0) {
         AutoLockPerfMap lock;
         PerfSpewer::WriteEntry(lock, reinterpret_cast<uintptr_t>(code->raw()), size,
-                               "%s:%zu: Baseline", script->filename(), script->lineno());
+                               "%s:%u: Baseline", script->filename(), script->lineno());
     }
 }
 
