@@ -36,6 +36,7 @@ class LinkHandlerChild extends ActorChild {
       // thing with about:-style error pages. See bug 453442
       let baseURI = this.content.document.documentURIObject;
       if (["http", "https"].includes(baseURI.scheme)) {
+        this.seenTabIcon = true;
         this.iconLoader.addDefaultIcon(baseURI);
       }
     }
