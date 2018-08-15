@@ -218,6 +218,10 @@ select > option.divider {
   justify-self: center;
 }
 
+#rotate-button::before {
+  background-image: url("./images/rotate-viewport.svg");
+}
+
 #touch-simulation-button::before {
   background-image: url("./images/touch-events.svg");
 }
@@ -266,15 +270,6 @@ select > option.divider {
 
 #device-pixel-ratio-selector > option {
   padding: 5px;
-}
-
-.viewport-rotate-button {
-  position: absolute;
-  right: 0;
-}
-
-.viewport-rotate-button::before {
-  background-image: url("./images/rotate-viewport.svg");
 }
 
 #viewports-container {
