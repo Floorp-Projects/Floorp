@@ -3392,8 +3392,8 @@ FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame)
     NS_ASSERTION(f->IsGeneratedContentFrame(),
                  "should not have exited generated content");
     nsAtom* pseudo = f->Style()->GetPseudo();
-    if (pseudo == nsCSSPseudoElements::before ||
-        pseudo == nsCSSPseudoElements::after)
+    if (pseudo == nsCSSPseudoElements::before() ||
+        pseudo == nsCSSPseudoElements::after())
       return f;
   }
   return nullptr;
@@ -10275,7 +10275,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
     // Create line frame
     ComputedStyle* parentStyle =
       nsFrame::CorrectStyleParentFrame(aBlockFrame,
-                                       nsCSSPseudoElements::firstLine)->
+                                       nsCSSPseudoElements::firstLine())->
         Style();
     RefPtr<ComputedStyle> firstLineStyle = GetFirstLineStyle(aBlockContent,
                                                                 parentStyle);
@@ -10539,7 +10539,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
   // Keep this in sync with nsBlockFrame::UpdatePseudoElementStyles.
   nsIFrame* parentFrame =
     nsFrame::CorrectStyleParentFrame(aParentFrame,
-                                     nsCSSPseudoElements::firstLetter);
+                                     nsCSSPseudoElements::firstLetter());
 
   ComputedStyle* parentComputedStyle = parentFrame->Style();
 
@@ -10555,7 +10555,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
     if (parentFrame->IsLineFrame()) {
       nsIFrame* parentIgnoringFirstLine =
         nsFrame::CorrectStyleParentFrame(aBlockFrame,
-                                         nsCSSPseudoElements::firstLetter);
+                                         nsCSSPseudoElements::firstLetter());
 
       sc =
         mPresShell->StyleSet()->ReparentComputedStyle(
