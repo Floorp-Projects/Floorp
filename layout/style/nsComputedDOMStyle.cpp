@@ -141,11 +141,11 @@ DocumentNeedsRestyle(
 
   // If the pseudo-element is animating, make sure to flush.
   if (aElement->MayHaveAnimations() && aPseudo) {
-    if (aPseudo == nsCSSPseudoElements::before()) {
+    if (aPseudo == nsCSSPseudoElements::before) {
       if (EffectSet::GetEffectSet(aElement, CSSPseudoElementType::before)) {
         return true;
       }
-    } else if (aPseudo == nsCSSPseudoElements::after()) {
+    } else if (aPseudo == nsCSSPseudoElements::after) {
       if (EffectSet::GetEffectSet(aElement, CSSPseudoElementType::after)) {
         return true;
       }
@@ -579,9 +579,9 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
       aStyleType == eAll &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
     nsIFrame* frame = nullptr;
-    if (aPseudo == nsCSSPseudoElements::before()) {
+    if (aPseudo == nsCSSPseudoElements::before) {
       frame = nsLayoutUtils::GetBeforeFrame(aElement);
-    } else if (aPseudo == nsCSSPseudoElements::after()) {
+    } else if (aPseudo == nsCSSPseudoElements::after) {
       frame = nsLayoutUtils::GetAfterFrame(aElement);
     } else if (!aPseudo) {
       frame = nsLayoutUtils::GetStyleFrame(aElement);
@@ -947,9 +947,9 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 
     if (!mPseudo) {
       mOuterFrame = mElement->GetPrimaryFrame();
-    } else if (mPseudo == nsCSSPseudoElements::before() ||
-               mPseudo == nsCSSPseudoElements::after()) {
-      nsAtom* property = mPseudo == nsCSSPseudoElements::before()
+    } else if (mPseudo == nsCSSPseudoElements::before ||
+               mPseudo == nsCSSPseudoElements::after) {
+      nsAtom* property = mPseudo == nsCSSPseudoElements::before
                             ? nsGkAtoms::beforePseudoProperty
                             : nsGkAtoms::afterPseudoProperty;
 

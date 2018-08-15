@@ -32,8 +32,8 @@ bool
 nsRubyContentFrame::IsIntraLevelWhitespace() const
 {
   nsAtom* pseudoType = Style()->GetPseudo();
-  if (pseudoType != nsCSSAnonBoxes::rubyBase() &&
-      pseudoType != nsCSSAnonBoxes::rubyText()) {
+  if (pseudoType != nsCSSAnonBoxes::rubyBase &&
+      pseudoType != nsCSSAnonBoxes::rubyText) {
     return false;
   }
 

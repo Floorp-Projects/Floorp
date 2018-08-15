@@ -2399,8 +2399,8 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
   if (!isLegacyBox && styleDisp->mDisplay == mozilla::StyleDisplay::Block) {
     ComputedStyle* parentComputedStyle = GetParent()->Style();
     NS_ASSERTION(parentComputedStyle &&
-                 (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::buttonContent() ||
-                  mComputedStyle->GetPseudo() == nsCSSAnonBoxes::scrolledContent()),
+                 (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
+                  mComputedStyle->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
                  "The only way a nsFlexContainerFrame can have 'display:block' "
                  "should be if it's the inner part of a scrollable or button "
                  "element");
@@ -3828,8 +3828,8 @@ nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
   // Check our parent's display value, if we're an anonymous box (with a
   // potentially-untrustworthy display value):
   auto pseudoType = Style()->GetPseudo();
-  if (pseudoType == nsCSSAnonBoxes::scrolledContent() ||
-      pseudoType == nsCSSAnonBoxes::buttonContent()) {
+  if (pseudoType == nsCSSAnonBoxes::scrolledContent ||
+      pseudoType == nsCSSAnonBoxes::buttonContent) {
     const nsStyleDisplay* disp = GetParent()->StyleDisplay();
     if (disp->mDisplay == mozilla::StyleDisplay::MozBox ||
         disp->mDisplay == mozilla::StyleDisplay::MozInlineBox) {

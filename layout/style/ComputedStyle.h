@@ -13,12 +13,11 @@
 #include <algorithm>
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/CachedInheritingStyles.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/ServoComputedData.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
+#include "mozilla/CachedInheritingStyles.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 
@@ -176,7 +175,7 @@ public:
   }
 
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
-  // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText().
+  // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText.
   bool IsTextCombined() const
   {
     return bool(mBits & Bit::IsTextCombined);

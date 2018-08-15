@@ -12,10 +12,40 @@
 
 #include "nsCSSAnonBoxes.h"
 #include "nsDOMString.h"
-#include "nsGkAtomConsts.h"
-#include "nsStaticAtomUtils.h"
 
 using namespace mozilla;
+
+namespace mozilla {
+namespace detail {
+
+MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+extern constexpr CSSPseudoElementAtoms gCSSPseudoElementAtoms = {
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_INIT_STRING(value_)
+  #include "nsCSSPseudoElementList.h"
+  #undef CSS_PSEUDO_ELEMENT
+  {
+    #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+      NS_STATIC_ATOM_INIT_ATOM( \
+        nsICSSPseudoElement, CSSPseudoElementAtoms, name_, value_)
+    #include "nsCSSPseudoElementList.h"
+    #undef CSS_PSEUDO_ELEMENT
+  }
+};
+MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+
+} // namespace detail
+} // namespace mozilla
+
+const nsStaticAtom* const nsCSSPseudoElements::sAtoms =
+  mozilla::detail::gCSSPseudoElementAtoms.mAtoms;
+
+#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+  NS_STATIC_ATOM_DEFN_PTR( \
+    nsICSSPseudoElement, mozilla::detail::CSSPseudoElementAtoms, \
+    mozilla::detail::gCSSPseudoElementAtoms, nsCSSPseudoElements, name_);
+#include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
 
 // Flags data for each of the pseudo-elements.
 /* static */ const uint32_t
@@ -26,18 +56,14 @@ nsCSSPseudoElements::kPseudoElementFlags[] = {
 #undef CSS_PSEUDO_ELEMENT
 };
 
-static nsStaticAtom*
-GetAtomBase()
+void nsCSSPseudoElements::RegisterStaticAtoms()
 {
-  return const_cast<nsStaticAtom*>(
-      nsGkAtoms::GetAtomByIndex(kAtomIndex_PseudoElements));
+  NS_RegisterStaticAtoms(sAtoms, sAtomsLen);
 }
 
-bool
-nsCSSPseudoElements::IsPseudoElement(nsAtom* aAtom)
+bool nsCSSPseudoElements::IsPseudoElement(nsAtom *aAtom)
 {
-  return nsStaticAtomUtils::IsMember(aAtom, GetAtomBase(),
-                                     kAtomCount_PseudoElements);
+  return nsStaticAtomUtils::IsMember(aAtom, sAtoms, sAtomsLen);
 }
 
 /* static */ bool
@@ -48,10 +74,10 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom *aAtom)
   NS_ASSERTION(nsCSSPseudoElements::IsPseudoElement(aAtom) ||
                nsCSSAnonBoxes::IsAnonBox(aAtom),
                "must be pseudo element or anon box");
-  bool result = aAtom == nsCSSPseudoElements::after() ||
-                  aAtom == nsCSSPseudoElements::before() ||
-                  aAtom == nsCSSPseudoElements::firstLetter() ||
-                  aAtom == nsCSSPseudoElements::firstLine();
+  bool result = aAtom == nsCSSPseudoElements::after ||
+                  aAtom == nsCSSPseudoElements::before ||
+                  aAtom == nsCSSPseudoElements::firstLetter ||
+                  aAtom == nsCSSPseudoElements::firstLine;
   NS_ASSERTION(nsCSSAnonBoxes::IsAnonBox(aAtom) ||
                result == PseudoElementHasFlags(
                    GetPseudoType(aAtom, EnabledState::eIgnoreEnabledState),
@@ -63,8 +89,7 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom *aAtom)
 /* static */ CSSPseudoElementType
 nsCSSPseudoElements::GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState)
 {
-  Maybe<uint32_t> index =
-    nsStaticAtomUtils::Lookup(aAtom, GetAtomBase(), kAtomCount_PseudoElements);
+  Maybe<uint32_t> index = nsStaticAtomUtils::Lookup(aAtom, sAtoms, sAtomsLen);
   if (index.isSome()) {
     auto type = static_cast<Type>(*index);
     return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
@@ -91,8 +116,8 @@ nsCSSPseudoElements::GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState)
 nsCSSPseudoElements::GetPseudoAtom(Type aType)
 {
   MOZ_ASSERT(aType < Type::Count, "Unexpected type");
-  size_t index = kAtomIndex_PseudoElements + static_cast<size_t>(aType);
-  return nsGkAtoms::GetAtomByIndex(index);
+  return const_cast<nsStaticAtom*>(
+    &sAtoms[static_cast<CSSPseudoElementTypeBase>(aType)]);
 }
 
 /* static */ already_AddRefed<nsAtom>
@@ -150,21 +175,3 @@ nsCSSPseudoElements::PseudoTypeAsString(Type aPseudoType)
   }
 }
 
-#ifdef DEBUG
-/* static */ void
-nsCSSPseudoElements::AssertAtoms()
-{
-  nsStaticAtom* base = GetAtomBase();
-#define CSS_PSEUDO_ELEMENT(name_, value_, flags_)                    \
-  {                                                                  \
-    RefPtr<nsAtom> atom = NS_Atomize(value_);                        \
-    size_t index = static_cast<size_t>(CSSPseudoElementType::name_); \
-    MOZ_ASSERT(atom == nsGkAtoms::PseudoElement_##name_,             \
-               "Static atom for " #name_ " has incorrect value");    \
-    MOZ_ASSERT(atom == &base[index],                                 \
-               "Static atom for " #name_ " not at expected index");  \
-  }
-#include "nsCSSPseudoElementList.h"
-#undef CSS_PSEUDO_ELEMENT
-}
-#endif

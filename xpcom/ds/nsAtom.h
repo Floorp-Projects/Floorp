@@ -9,6 +9,7 @@
 
 #include "nsISupportsImpl.h"
 #include "nsString.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -103,10 +104,10 @@ public:
 
 protected:
   // Used by nsStaticAtom.
-  constexpr nsAtom(const char16_t* aStr, uint32_t aLength, uint32_t aHash)
+  constexpr nsAtom(const char16_t* aStr, uint32_t aLength)
     : mLength(aLength)
     , mKind(static_cast<uint32_t>(nsAtom::AtomKind::Static))
-    , mHash(aHash)
+    , mHash(mozilla::HashString(aStr))
   {}
 
   // Used by nsDynamicAtom.
@@ -137,14 +138,9 @@ public:
   MozExternalRefCountType AddRef() = delete;
   MozExternalRefCountType Release() = delete;
 
-  // The static atom's precomputed hash value is an argument here, but it
-  // must be the same as would be computed by mozilla::HashString(aStr),
-  // which is what we use when atomizing strings. We compute this hash in
-  // Atom.py and assert in nsAtomTable::RegisterStaticAtoms that the two
-  // hashes match.
   constexpr nsStaticAtom(const char16_t* aStr, uint32_t aLength,
-                         uint32_t aHash, uint32_t aStringOffset)
-    : nsAtom(aStr, aLength, aHash)
+                         uint32_t aStringOffset)
+    : nsAtom(aStr, aLength)
     , mStringOffset(aStringOffset)
   {}
 
@@ -159,7 +155,7 @@ public:
 
 private:
   // This is an offset to the string chars, which must be at a lower address in
-  // memory.
+  // memory. This should be achieved by using the macros in nsStaticAtom.h.
   uint32_t mStringOffset;
 };
 
@@ -238,6 +234,9 @@ nsrefcnt NS_GetNumberOfAtoms();
 // Return a pointer for a static atom for the string or null if there's no
 // static atom for this string.
 nsStaticAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
+
+// Record that all static atoms have been inserted.
+void NS_SetStaticAtomsDone();
 
 class nsAtomString : public nsString
 {

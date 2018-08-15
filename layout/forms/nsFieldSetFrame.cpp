@@ -60,7 +60,7 @@ nsFieldSetFrame::GetInner() const
 {
   nsIFrame* last = mFrames.LastChild();
   if (last &&
-      last->Style()->GetPseudo() == nsCSSAnonBoxes::fieldsetContent()) {
+      last->Style()->GetPseudo() == nsCSSAnonBoxes::fieldsetContent) {
     return last;
   }
   MOZ_ASSERT(mFrames.LastChild() == mFrames.FirstChild());

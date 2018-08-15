@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* list of CSS pseudo-elements */
+/* atom list for CSS pseudo-elements */
 
 /*
- * This file contains the list of support CSS pseudo-elements and some flags.
- * It is designed to be used as inline input to nsCSSPseudoElements.cpp *only*
- * through the magic of C preprocessing.  All entries must be enclosed either
- * in the macro CSS_PSEUDO_ELEMENT; these macros will have cruel and unusual
- * things done to them.  The entries should be kept in some sort of logical
- * order.
+ * This file contains the list of nsAtoms and their values for CSS
+ * pseudo-elements.  It is designed to be used as inline input to
+ * nsCSSPseudoElements.cpp *only* through the magic of C preprocessing.  All
+ * entries must be enclosed either in the macro CSS_PSEUDO_ELEMENT;
+ * these macros will have cruel and unusual things done to them.  The
+ * entries should be kept in some sort of logical order.
  *
  * Code including this file MUST define CSS_PSEUDO_ELEMENT, which takes
  * three parameters:
@@ -21,9 +21,6 @@
  * value_ : The pseudo-element as a string, with single-colon syntax,
  *          used as the string value of the atom.
  * flags_ : A bitfield containing flags defined in nsCSSPseudoElements.h
- *
- * A corresponding atom must also be defined in StaticAtoms.py with a name of
- * "PseudoElement_<name_>" and whose value matches the definition in this file.
  */
 
 // OUTPUT_CLASS=nsCSSPseudoElements
