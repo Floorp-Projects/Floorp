@@ -6,13 +6,14 @@
 
 "use strict";
 
-const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const DeviceAdder = createFactory(require("./DeviceAdder"));
 
 const { getStr, getFormatStr } = require("../utils/l10n");
 const Types = require("../types");
-const DeviceAdder = createFactory(require("./DeviceAdder"));
 
 class DeviceModal extends PureComponent {
   static get propTypes() {
@@ -29,7 +30,9 @@ class DeviceModal extends PureComponent {
 
   constructor(props) {
     super(props);
+
     this.state = {};
+
     this.onAddCustomDevice = this.onAddCustomDevice.bind(this);
     this.onDeviceCheckboxChange = this.onDeviceCheckboxChange.bind(this);
     this.onDeviceModalSubmit = this.onDeviceModalSubmit.bind(this);
