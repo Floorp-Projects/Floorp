@@ -20,6 +20,7 @@
       : nsStaticAtom(aStr, aLength, aOffset) {}                               \
   };
 
+DEFINE_STATIC_ATOM_SUBCLASS(nsICSSAnonBoxPseudo)
 DEFINE_STATIC_ATOM_SUBCLASS(nsICSSPseudoElement)
 
 #undef DEFINE_STATIC_ATOM_SUBCLASS
@@ -29,12 +30,12 @@ namespace detail {
 
 struct GkAtoms
 {
-  #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
+  #define GK_ATOM(name_, value_, type_, atom_type_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 
   enum class Atoms {
-    #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_ENUM(name_)
+    #define GK_ATOM(name_, value_, type_, atom_type_) NS_STATIC_ATOM_ENUM(name_)
     #include "nsGkAtomList.h"
     #undef GK_ATOM
     AtomsCount
@@ -62,7 +63,7 @@ public:
     return const_cast<nsStaticAtom*>(&sAtoms[aIndex]);
   }
 
-  #define GK_ATOM(name_, value_, type_) NS_STATIC_ATOM_DECL_PTR(type_, name_)
+  #define GK_ATOM(name_, value_, type_, atom_type_) NS_STATIC_ATOM_DECL_PTR(type_, name_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 };

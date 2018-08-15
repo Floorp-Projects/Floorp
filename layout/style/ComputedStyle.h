@@ -175,7 +175,7 @@ public:
   }
 
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
-  // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText.
+  // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText().
   bool IsTextCombined() const
   {
     return bool(mBits & Bit::IsTextCombined);
