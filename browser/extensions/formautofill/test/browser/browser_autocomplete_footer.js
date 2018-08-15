@@ -72,6 +72,8 @@ add_task(async function test_phishing_warning_single_category() {
     ok(warningBox, "Got phishing warning box");
 
     await expectWarningText(browser, "Autofills phone");
+    is(warningBox.ownerGlobal.getComputedStyle(warningBox).backgroundColor,
+       "rgba(248, 232, 28, 0.2)", "Check warning text background color");
 
     await closePopup(browser);
   });
