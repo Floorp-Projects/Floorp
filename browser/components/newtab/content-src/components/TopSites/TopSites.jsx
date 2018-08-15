@@ -64,10 +64,15 @@ export class _TopSites extends React.PureComponent {
     const topSites = this._getVisibleTopSites();
     const topSitesIconsStats = countTopSitesIconsTypes(topSites);
     const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
+    const searchShortcuts = topSites.filter(site => !!site.searchTopSite).length;
     // Dispatch telemetry event with the count of TopSites images types.
     this.props.dispatch(ac.AlsoToMain({
       type: at.SAVE_SESSION_PERF_DATA,
-      data: {topsites_icon_stats: topSitesIconsStats, topsites_pinned: topSitesPinned}
+      data: {
+        topsites_icon_stats: topSitesIconsStats,
+        topsites_pinned: topSitesPinned,
+        topsites_search_shortcuts: searchShortcuts
+      }
     }));
   }
 
