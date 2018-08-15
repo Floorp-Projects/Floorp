@@ -2263,8 +2263,9 @@ def generate_nsgkatomlist_h(output, *ignore):
                  "#ifdef small\n"
                  "#undef small\n"
                  "#endif\n\n"
-                 "// GK_ATOM(identifier, string)\n" +
-                 "".join(["GK_ATOM(%s, \"%s\")\n" % (a.ident, a.string) for a in STATIC_ATOMS]))
+                 "// GK_ATOM(identifier, string, gecko_type)\n" +
+                 "".join(["GK_ATOM(%s, \"%s\", %s)\n" % (a.ident, a.string, a.ty)
+                          for a in STATIC_ATOMS]))
 
 
 if __name__ == '__main__':
