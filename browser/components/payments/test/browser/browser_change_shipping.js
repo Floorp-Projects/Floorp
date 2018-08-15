@@ -100,6 +100,7 @@ add_task(async function test_change_shipping() {
       is(items.length, 1, "1 additional display item");
       is(items[0].amountCurrency, "EUR", "First display item is in Euros");
       is(items[0].amountValue, "1.00", "First display item has 1.00 value");
+      btn.click();
     });
 
     info("clicking pay");
