@@ -29,7 +29,6 @@
 
 :root,
 input,
-select,
 button {
   font-size: 12px;
 }
@@ -89,70 +88,6 @@ body,
   color: var(--viewport-hover-color);
 }
 
-select {
-  -moz-appearance: none;
-  color: var(--viewport-color);
-  border: none;
-  height: 100%;
-  padding: 0 8px;
-  text-align: center;
-  text-overflow: ellipsis;
-}
-
-select.selected {
-  color: var(--viewport-active-color);
-}
-
-select:not(:disabled):hover {
-  color: var(--viewport-hover-color);
-}
-
-/* This is (believed to be?) separate from the identical select.selected rule
-   set so that it overrides select:hover because of file ordering once the
-   select is focused.  It's unclear whether the visual effect that results here
-   is intentional and desired. */
-select:focus {
-  color: var(--viewport-active-color);
-}
-
-select > option {
-  text-align: left;
-  padding: 5px 10px;
-}
-
-select > option,
-select > option:hover {
-  color: var(--viewport-active-color);
-}
-
-select > option.divider {
-  border-top: 1px solid var(--theme-splitter-color);
-  height: 0px;
-  padding: 0;
-  font-size: 0px;
-}
-
-/**
- * Common background for dropdowns like select and toggle menu
- */
-
-.toolbar-dropdown,
-.toolbar-dropdown.devtools-button,
-.toolbar-dropdown.devtools-button:hover:not(:empty):not(:disabled):not(.checked) {
-  background-color: var(--theme-toolbar-background);
-  background-image: var(--select-arrow-image);
-  background-position: 100% 50%;
-  background-repeat: no-repeat;
-  background-size: 7px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.toolbar-dropdown {
-  background-position-x: right 5px;
-  padding-right: 15px;
-}
-
 /**
  * Toolbar
  */
@@ -210,6 +145,18 @@ select > option.divider {
 #screenshot-button:disabled {
   filter: var(--theme-icon-checked-filter);
   opacity: 1 !important;
+}
+
+#device-selector {
+  align-self: center;
+  background-position: right 4px center;
+  margin-inline-start: 4px;
+  padding-left: 0;
+  width: 8em;
+}
+
+#device-selector .title {
+  width: 85%;
 }
 
 #device-pixel-ratio-menu {
