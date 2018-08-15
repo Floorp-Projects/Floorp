@@ -1954,14 +1954,6 @@
     "labels": ["NotSent", "CachedContentUsed", "CachedContentNotUsed"],
     "description": "Stats for validation requests when cache won the race."
   },
-  "NETWORK_BACK_PRESSURE_SUSPENSION_RATE": {
-    "record_in_processes": ["main"],
-    "expires_in_version": "68",
-    "alert_emails": ["necko@mozilla.com", "junior@mozilla.com"],
-    "bug_numbers": [1280629],
-    "kind": "boolean",
-    "description": "Collect whether the flow control to enable e10s back pressure triggers the suspension (true) or not (false)"
-  },
   "NETWORK_HTTP_REDIRECT_TO_SCHEME" :{
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "seceng-telemetry@mozilla.com", "jkt@mozilla.com"],

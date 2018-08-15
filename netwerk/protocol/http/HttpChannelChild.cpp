@@ -920,50 +920,6 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
 
   DoOnDataAvailable(this, mListenerContext, stringStream, offset, count);
   stringStream->Close();
-
-  if (NeedToReportBytesRead()) {
-    mUnreportBytesRead += count;
-    if (mUnreportBytesRead >= gHttpHandler->SendWindowSize() >> 2) {
-      if (NS_IsMainThread()) {
-        Unused << SendBytesRead(mUnreportBytesRead);
-      } else {
-        // PHttpChannel connects to the main thread
-        RefPtr<HttpChannelChild> self = this;
-        int32_t bytesRead = mUnreportBytesRead;
-        nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
-        MOZ_ASSERT(neckoTarget);
-
-        DebugOnly<nsresult> rv = neckoTarget->Dispatch(
-          NS_NewRunnableFunction("net::HttpChannelChild::SendBytesRead",
-                                 [self, bytesRead]() {
-                                   Unused << self->SendBytesRead(bytesRead);
-                                 }),
-          NS_DISPATCH_NORMAL);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-      }
-      mUnreportBytesRead = 0;
-    }
-  }
-}
-
-bool
-HttpChannelChild::NeedToReportBytesRead() {
- if (mCacheNeedToReportBytesReadInitialized) {
-    return mNeedToReportBytesRead;
-  }
-
-  // Might notify parent for partial cache, and the IPC message is ignored by
-  // parent.
-  int64_t contentLength = -1;
-  if (gHttpHandler->SendWindowSize() == 0 ||
-      mIsFromCache ||
-      NS_FAILED(GetContentLength(&contentLength)) ||
-      contentLength < gHttpHandler->SendWindowSize()) {
-    mNeedToReportBytesRead = false;
-  }
-
-  mCacheNeedToReportBytesReadInitialized = true;
-  return mNeedToReportBytesRead;
 }
 
 void

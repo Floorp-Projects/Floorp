@@ -258,12 +258,6 @@ private:
                                        const nsCString& aProvider,
                                        const nsCString& aFullHash);
 
-  // Return true if we need to tell the parent the size of unreported received
-  // data
-  bool NeedToReportBytesRead();
-  bool mCacheNeedToReportBytesReadInitialized = false;
-  bool mNeedToReportBytesRead = true;
-  int32_t mUnreportBytesRead = 0;
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
   void DoOnStatus(nsIRequest* aRequest, nsresult status);
