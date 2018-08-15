@@ -73,9 +73,9 @@ protected:
 
     NS_ASSERTION(mContentIndex < 0 ||
                  mPseudoFrame->Style()->GetPseudo() ==
-                   nsCSSPseudoElements::before() ||
+                   nsCSSPseudoElements::before ||
                  mPseudoFrame->Style()->GetPseudo() ==
-                   nsCSSPseudoElements::after(),
+                   nsCSSPseudoElements::after,
                  "not :before/:after generated content and not counter change");
     NS_ASSERTION(mContentIndex < 0 ||
                  mPseudoFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT,

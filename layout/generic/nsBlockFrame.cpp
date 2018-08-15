@@ -1844,7 +1844,7 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsOverflowAreas areas(aBounds, aBounds);
-  if (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::scrolledContent() &&
+  if (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::scrolledContent &&
       mParent->StyleDisplay()->IsContainLayout()) {
     // If we are a scrollframe's inner anonymous box and our parent
     // has layout containment, we want to pass our parent's style to
@@ -5714,7 +5714,7 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
   }
   nsIFrame* styleParent =
     CorrectStyleParentFrame(inFlowFrame->GetParent(),
-                            nsCSSPseudoElements::firstLetter());
+                            nsCSSPseudoElements::firstLetter);
   ComputedStyle* parentStyle = styleParent->Style();
   RefPtr<ComputedStyle> firstLetterStyle =
     aRestyleState.StyleSet()
@@ -7131,14 +7131,14 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     nsAtom *pseudo = Style()->GetPseudo();
     bool haveFirstLetterStyle =
       (!pseudo ||
-       (pseudo == nsCSSAnonBoxes::cellContent() &&
+       (pseudo == nsCSSAnonBoxes::cellContent &&
         GetParent()->Style()->GetPseudo() == nullptr) ||
-       pseudo == nsCSSAnonBoxes::fieldsetContent() ||
-       pseudo == nsCSSAnonBoxes::buttonContent() ||
-       pseudo == nsCSSAnonBoxes::columnContent() ||
-       (pseudo == nsCSSAnonBoxes::scrolledContent() &&
+       pseudo == nsCSSAnonBoxes::fieldsetContent ||
+       pseudo == nsCSSAnonBoxes::buttonContent ||
+       pseudo == nsCSSAnonBoxes::columnContent ||
+       (pseudo == nsCSSAnonBoxes::scrolledContent &&
         !GetParent()->IsListControlFrame()) ||
-       pseudo == nsCSSAnonBoxes::mozSVGText()) &&
+       pseudo == nsCSSAnonBoxes::mozSVGText) &&
       !IsComboboxControlFrame() &&
       !IsFrameOfType(eMathML) &&
       RefPtr<ComputedStyle>(GetFirstLetterStyle(PresContext())) != nullptr;
@@ -7645,7 +7645,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
   if (nsIFrame* firstLineFrame = GetFirstLineFrame()) {
     nsIFrame* styleParent =
       CorrectStyleParentFrame(firstLineFrame->GetParent(),
-                              nsCSSPseudoElements::firstLine());
+                              nsCSSPseudoElements::firstLine);
 
     ComputedStyle* parentStyle = styleParent->Style();
     RefPtr<ComputedStyle> firstLineStyle =
@@ -7658,7 +7658,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
     // FIXME(bz): Can we make first-line continuations be non-inheriting anon
     // boxes?
     RefPtr<ComputedStyle> continuationStyle = aRestyleState.StyleSet().
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame(),
+      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame,
                                          parentStyle);
 
     UpdateStyleOfOwnedChildFrame(firstLineFrame, firstLineStyle, aRestyleState,

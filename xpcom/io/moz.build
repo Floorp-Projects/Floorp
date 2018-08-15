@@ -65,6 +65,7 @@ EXPORTS += [
     'nsAnonymousTemporaryFile.h',
     'nsAppDirectoryServiceDefs.h',
     'nsDirectoryService.h',
+    'nsDirectoryServiceAtomList.h',
     'nsDirectoryServiceDefs.h',
     'nsDirectoryServiceUtils.h',
     'nsEscape.h',

@@ -59,7 +59,7 @@ nsFirstLetterFrame::Init(nsIContent*       aContent,
     // that represents everything *except* the first letter, so just create
     // a ComputedStyle that inherits from our style parent, with no extra rules.
     nsIFrame* styleParent =
-      CorrectStyleParentFrame(aParent, nsCSSPseudoElements::firstLetter());
+      CorrectStyleParentFrame(aParent, nsCSSPseudoElements::firstLetter);
     ComputedStyle* parentComputedStyle = styleParent->Style();
     newSC = PresContext()->StyleSet()->
       ResolveStyleForFirstLetterContinuation(parentComputedStyle);
@@ -236,7 +236,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     bool          pushedFrame;
 
     ll->SetInFirstLetter(
-      mComputedStyle->GetPseudo() == nsCSSPseudoElements::firstLetter());
+      mComputedStyle->GetPseudo() == nsCSSPseudoElements::firstLetter);
     ll->BeginSpan(this, &aReflowInput, bp.IStart(wm),
                   availSize.ISize(wm), &mBaseline);
     ll->ReflowFrame(kid, aReflowStatus, &kidMetrics, pushedFrame);
@@ -384,7 +384,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
         // This is for the rest of the content not in the first-letter.
         nsIFrame* styleParent =
           CorrectStyleParentFrame(GetParent(),
-                                  nsCSSPseudoElements::firstLetter());
+                                  nsCSSPseudoElements::firstLetter);
         parentSC = styleParent->Style();
       } else {
         // And this for the first-letter style.
