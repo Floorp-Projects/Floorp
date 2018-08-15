@@ -13,5 +13,5 @@ idl_test(
       HTMLScriptElement: ['document.createElement("script")'],
       HTMLLinkElement: ['document.createElement("link")'],
     });
-  },
-  'webappsec-subresource-integrity interfaces');
+  }
+);
