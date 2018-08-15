@@ -55,6 +55,7 @@ check_and_add_gcc_warning('-Wloop-analysis')
 
 # catches C++ version forward-compat issues
 check_and_add_gcc_warning('-Wc++1z-compat', cxx_compiler)
+check_and_add_gcc_warning('-Wc++2a-compat', cxx_compiler)
 
 # catches possible misuse of the comma operator
 check_and_add_gcc_warning('-Wcomma', cxx_compiler)
