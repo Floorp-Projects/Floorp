@@ -15,9 +15,8 @@
     <script src="/resources/testharnessreport.js"></script>
     <script src="../testcommon.js"></script>
   </head>
-  <body>
-    <div id="log"></div>
-    <script type="text/javascript">
+  <div id="log"></div>
+  <script type="text/javascript">
 
 'use strict';
 
@@ -246,6 +245,5 @@ promise_test(async t => {
   assert_equals(animation.currentTime, pauseTime,
     'Animation.currentTime is unchanged after pausing');
 }, 'Animation.currentTime after pausing');
-    </script>
-  </body>
+  </script>
 </html>

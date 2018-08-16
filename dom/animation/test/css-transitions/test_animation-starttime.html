@@ -15,9 +15,8 @@
     <script src="/resources/testharnessreport.js"></script>
     <script src="../testcommon.js"></script>
   </head>
-  <body>
-    <div id="log"></div>
-    <script type="text/javascript">
+  <div id="log"></div>
+  <script type="text/javascript">
 
 'use strict';
 
@@ -244,6 +243,5 @@ promise_test(async t => {
   assert_equals(animation.playState, 'paused',
     'Animation.playState is "paused" after pause() call');
 }, 'Animation.startTime after paused');
-    </script>
-  </body>
+  </script>
 </html>
