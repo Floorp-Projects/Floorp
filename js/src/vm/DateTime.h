@@ -144,9 +144,10 @@ class DateTimeInfo
     // only js::ResetTimeZoneInternal() can call this via access restrictions.
     friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
 
-    static void updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
+    // Returns true iff the internal DST offset cache was purged.
+    static bool updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
         auto guard = instance->lock();
-        guard->internalUpdateTimeZoneAdjustment(mode);
+        return guard->internalUpdateTimeZoneAdjustment(mode);
     }
 
     /*
@@ -186,7 +187,7 @@ class DateTimeInfo
     static const int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
     int64_t internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds);
-    void internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
+    bool internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
 
     void sanityCheck();
 };

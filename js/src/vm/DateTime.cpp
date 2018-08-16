@@ -6,6 +6,8 @@
 
 #include "vm/DateTime.h"
 
+#include "mozilla/Unused.h"
+
 #if defined(XP_WIN)
 #include "mozilla/UniquePtr.h"
 
@@ -142,7 +144,7 @@ UTCToLocalStandardOffsetSeconds()
     return local_secs - (utc_secs + SecondsPerDay);
 }
 
-void
+bool
 js::DateTimeInfo::internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode)
 {
     /*
@@ -153,7 +155,7 @@ js::DateTimeInfo::internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode)
 
     double newTZA = utcToLocalStandardOffsetSeconds * msPerSecond;
     if (mode == ResetTimeZoneMode::DontResetIfOffsetUnchanged && newTZA == localTZA_)
-        return;
+        return false;
 
     localTZA_ = newTZA;
 
@@ -168,6 +170,8 @@ js::DateTimeInfo::internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode)
     oldRangeStartSeconds = oldRangeEndSeconds = INT64_MIN;
 
     sanityCheck();
+
+    return true;
 }
 
 js::DateTimeInfo::DateTimeInfo()
@@ -295,6 +299,11 @@ js::DateTimeInfo::instance;
 /* static */ js::ExclusiveData<js::IcuTimeZoneStatus>*
 js::IcuTimeZoneState;
 
+#if defined(XP_WIN)
+static bool
+IsOlsonCompatibleWindowsTimeZoneId(const char* tz);
+#endif
+
 bool
 js::InitDateTimeState()
 {
@@ -309,7 +318,21 @@ js::InitDateTimeState()
     MOZ_ASSERT(!IcuTimeZoneState,
                "we should be initializing only once");
 
-    IcuTimeZoneState = js_new<ExclusiveData<IcuTimeZoneStatus>>(mutexid::IcuTimeZoneStateMutex);
+    IcuTimeZoneStatus initialStatus = IcuTimeZoneStatus::Valid;
+
+#if defined(XP_WIN)
+    // Directly set the ICU time zone status into the invalid state when we
+    // need to compute the actual default time zone from the TZ environment
+    // variable. We don't yet want to initialize ICU's time zone classes,
+    // because that may cause I/O operations slowing down the JS engine
+    // initialization, which we're currently in the middle of.
+    const char* tz = std::getenv("TZ");
+    if (tz && IsOlsonCompatibleWindowsTimeZoneId(tz))
+        initialStatus = IcuTimeZoneStatus::NeedsUpdate;
+#endif
+
+    IcuTimeZoneState = js_new<ExclusiveData<IcuTimeZoneStatus>>(mutexid::IcuTimeZoneStateMutex,
+                                                                initialStatus);
     if (!IcuTimeZoneState) {
         js_delete(DateTimeInfo::instance);
         DateTimeInfo::instance = nullptr;
@@ -332,11 +355,15 @@ js::FinishDateTimeState()
 void
 js::ResetTimeZoneInternal(ResetTimeZoneMode mode)
 {
-    js::DateTimeInfo::updateTimeZoneAdjustment(mode);
+    bool needsUpdate = js::DateTimeInfo::updateTimeZoneAdjustment(mode);
 
 #if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-    auto guard = js::IcuTimeZoneState->lock();
-    guard.get() = js::IcuTimeZoneStatus::NeedsUpdate;
+    if (needsUpdate) {
+        auto guard = js::IcuTimeZoneState->lock();
+        guard.get() = js::IcuTimeZoneStatus::NeedsUpdate;
+    }
+#else
+    mozilla::Unused << needsUpdate;
 #endif
 }
 
