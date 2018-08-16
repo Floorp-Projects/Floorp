@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: Shared Mode</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=Web Locks API: Shared Mode
+
 'use strict';
 
 promise_test(async t => {
@@ -40,5 +35,3 @@ promise_test(async t => {
   assert_true(a_acquired, 'first lock acquired');
   assert_true(a_acquired_again, 'second lock acquired');
 }, 'Shared locks are not exclusive');
-
-</script>

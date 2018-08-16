@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: navigator.locks.query ordering</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: navigator.locks.query ordering
+// META: script=resources/helpers.js
+
 'use strict';
 
 // Grab a lock and hold until a release function is called. Resolves
@@ -112,5 +107,3 @@ promise_test(async t => {
   assert_array_equals(relevant_held_names, [res3, res1, res2],
                       'Held locks should appear in granted order.');
 }, 'Held locks appear in state in order granted, including when stolen');
-
-</script>

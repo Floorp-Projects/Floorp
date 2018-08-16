@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: Resources DOMString edge cases</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=Web Locks API: Resources DOMString edge cases
+
 'use strict';
 
 function code_points(s) {
@@ -58,5 +53,3 @@ promise_test(async t => {
   });
   assert_true(got_lock, 'Names with embedded "-" should be accepted');
 }, 'Names cannot start with "-"');
-
-</script>

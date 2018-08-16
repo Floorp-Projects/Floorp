@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: Lock Attributes</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=Web Locks API: Lock Attributes
+
 'use strict';
 
 promise_test(async t => {
@@ -20,5 +15,3 @@ promise_test(async t => {
     assert_equals(lock.mode, 'shared');
   });
 }, 'Lock attributes reflect requested properties (shared)');
-
-</script>

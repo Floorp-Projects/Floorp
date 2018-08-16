@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: Mixed Modes</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=Web Locks API: Mixed Modes
+
 'use strict';
 
 promise_test(async t => {
@@ -47,5 +42,3 @@ promise_test(async t => {
     ['a-shared-1', 'a-shared-2', 'a-shared-3', 'b-exclusive', 'a-exclusive']);
 
 }, 'Lock requests are granted in order');
-
-</script>

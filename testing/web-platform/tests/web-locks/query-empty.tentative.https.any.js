@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: navigator.locks.query method - no locks held</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: navigator.locks.query method - no locks held
+// META: script=resources/helpers.js
+
 'use strict';
 
 promise_test(async t => {
@@ -20,5 +15,3 @@ promise_test(async t => {
   assert_true(Array.isArray(state.held), 'State `held` property is an array');
   assert_array_equals(state.held, [], 'Held array is empty');
 }, 'query() returns dictionary with empty arrays when no locks are held');
-
-</script>
