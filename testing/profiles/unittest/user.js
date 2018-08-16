@@ -118,7 +118,7 @@ user_pref("dom.successive_dialog_time_limit", 0);
 user_pref("dom.use_xbl_scopes_for_remote_xul", true);
 user_pref("dom.w3c_touch_events.enabled", 1);
 user_pref("dom.webcomponents.customelements.enabled", true);
-user_pref("dom.webcomponents.shadowdom.enabled", true);
+user_pref("dom.webcomponents.shadowdom.enabled", false);
 user_pref("extensions.autoDisableScopes", 0);
 user_pref("extensions.blocklist.detailsURL", "http://{server}/extensions-dummy/blocklistDetailsURL");
 user_pref("extensions.blocklist.itemURL", "http://{server}/extensions-dummy/blocklistItemURL");
