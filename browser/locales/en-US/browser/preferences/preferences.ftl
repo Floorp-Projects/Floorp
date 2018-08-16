@@ -912,6 +912,8 @@ autoplay-option-allow =
 autoplay-option-dont =
     .label = Don't Autoplay
 
+permissions-autoplay-link = Learn more
+
 permissions-block-popups =
     .label = Block pop-up windows
     .accesskey = B

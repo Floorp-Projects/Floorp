@@ -660,6 +660,8 @@
           <menuitem data-l10n-id="autoplay-option-dont" value="1"/>
         </menupopup>
       </menulist>
+      <label id="autoplayLearnMoreLink" class="learnMore text-link"
+             data-l10n-id="permissions-autoplay-link"/>
     </hbox>
 
     <hbox pack="end">
