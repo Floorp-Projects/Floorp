@@ -304,7 +304,8 @@ ImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 
 void
 ImageDocument::OnPageShow(bool aPersisted,
-                          EventTarget* aDispatchStartTarget)
+                          EventTarget* aDispatchStartTarget,
+                          bool aOnlySystemGroup)
 {
   if (aPersisted) {
     mOriginalZoomLevel = IsSiteSpecific() ? 1.0 : GetZoomLevel();
@@ -315,7 +316,8 @@ ImageDocument::OnPageShow(bool aPersisted,
   RefPtr<ImageDocument> kungFuDeathGrip(this);
   UpdateSizeFromLayout();
 
-  MediaDocument::OnPageShow(aPersisted, aDispatchStartTarget);
+  MediaDocument::OnPageShow(aPersisted, aDispatchStartTarget,
+                            aOnlySystemGroup);
 }
 
 NS_IMETHODIMP
