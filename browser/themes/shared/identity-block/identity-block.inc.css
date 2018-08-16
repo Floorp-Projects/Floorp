@@ -272,10 +272,11 @@
   }
 }
 
-/* CONNECTION ICON, EXTENSION ICON */
+/* CONNECTION ICON, EXTENSION ICON, REMOTE CONTROL ICON */
 
 #connection-icon,
-#extension-icon {
+#extension-icon,
+#remote-control-icon {
   visibility: collapse;
 }
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
@@ -307,8 +308,6 @@
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
   visibility: visible;
 }
-
-/* REMOTE CONTROL ICON */
 
 #main-window[remotecontrol] #remote-control-icon {
   list-style-image: url(chrome://browser/content/static-robot.png);
