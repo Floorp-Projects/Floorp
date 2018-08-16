@@ -29,7 +29,6 @@ class CurrentTimeScrubber extends PureComponent {
     this.onCurrentTimeUpdated = this.onCurrentTimeUpdated.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
-    this.onMouseOut = this.onMouseOut.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
 
     this.state = {
@@ -61,11 +60,11 @@ class CurrentTimeScrubber extends PureComponent {
     event.stopPropagation();
     const thisEl = ReactDOM.findDOMNode(this);
     this.controllerArea = thisEl.getBoundingClientRect();
-    this.listenerTarget = thisEl.closest(".animation-list-container");
+    this.listenerTarget = thisEl.ownerGlobal.top;
     this.listenerTarget.addEventListener("mousemove", this.onMouseMove);
-    this.listenerTarget.addEventListener("mouseout", this.onMouseOut);
     this.listenerTarget.addEventListener("mouseup", this.onMouseUp);
-    this.listenerTarget.classList.add("active-scrubber");
+    this.decorationTarget = thisEl.closest(".animation-list-container");
+    this.decorationTarget.classList.add("active-scrubber");
 
     this.updateAnimationsCurrentTime(event.pageX, true);
   }
@@ -74,17 +73,6 @@ class CurrentTimeScrubber extends PureComponent {
     event.stopPropagation();
     this.isMouseMoved = true;
     this.updateAnimationsCurrentTime(event.pageX);
-  }
-
-  onMouseOut(event) {
-    event.stopPropagation();
-
-    if (!this.listenerTarget.contains(event.relatedTarget)) {
-      const endX = this.controllerArea.x + this.controllerArea.width;
-      const pageX = endX < event.pageX ? endX : event.pageX;
-      this.updateAnimationsCurrentTime(pageX, true);
-      this.uninstallListeners();
-    }
   }
 
   onMouseUp(event) {
@@ -100,10 +88,10 @@ class CurrentTimeScrubber extends PureComponent {
 
   uninstallListeners() {
     this.listenerTarget.removeEventListener("mousemove", this.onMouseMove);
-    this.listenerTarget.removeEventListener("mouseout", this.onMouseOut);
     this.listenerTarget.removeEventListener("mouseup", this.onMouseUp);
-    this.listenerTarget.classList.remove("active-scrubber");
     this.listenerTarget = null;
+    this.decorationTarget.classList.remove("active-scrubber");
+    this.decorationTarget = null;
     this.controllerArea = null;
   }
 
