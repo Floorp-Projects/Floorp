@@ -1374,7 +1374,7 @@ pref("dom.event.highrestimestamp.enabled",  true);
 pref("dom.event.coalesce_mouse_move",       true);
 
 #if defined(NIGHTLY_BUILD) && !defined(ANDROID)
-pref("dom.ua_widget.enabled", true);
+pref("dom.ua_widget.enabled", false);
 #else
 pref("dom.ua_widget.enabled", false);
 #endif
