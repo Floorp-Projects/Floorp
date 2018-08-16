@@ -7112,22 +7112,6 @@ class MOsrReturnValue
     }
 };
 
-class MBinarySharedStub
-  : public MBinaryInstruction,
-    public MixPolicy<BoxPolicy<0>, BoxPolicy<1> >::Data
-{
-  protected:
-    explicit MBinarySharedStub(MDefinition* left, MDefinition* right)
-      : MBinaryInstruction(classOpcode, left, right)
-    {
-        setResultType(MIRType::Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(BinarySharedStub)
-    TRIVIAL_NEW_WRAPPERS
-};
-
 class MBinaryCache
   : public MBinaryInstruction,
     public MixPolicy<BoxPolicy<0>, BoxPolicy<1> >::Data
