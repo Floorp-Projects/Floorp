@@ -16,7 +16,6 @@
     "patches": [
       "r318309.patch",
       "r320462.patch",
-      "r327876.patch",
       "loosen-msvc-detection.patch",
       "fflush-before-unlocking.patch"
     ]
