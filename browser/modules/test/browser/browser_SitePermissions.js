@@ -21,6 +21,8 @@ add_task(async function testTempAllowThrows() {
 
 // Tests that we can set TEMPORARY ALLOW permissions for autoplay-media
 add_task(async function testTempAutoplayAllowed() {
+  Services.prefs.setIntPref("media.autoplay.default", 2);
+
   let uri = Services.io.newURI("https://example.com");
   let permId = "autoplay-media";
 
@@ -39,6 +41,7 @@ add_task(async function testTempAutoplayAllowed() {
     scope: SitePermissions.SCOPE_TEMPORARY,
   });
 
+  Services.prefs.clearUserPref("media.autoplay.default");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
