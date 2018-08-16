@@ -146,7 +146,7 @@ add_task(async function testExtract() {
   await extension.startup();
 
   const adbBinary = await getFileForBinary();
-  ok(await adbBinary.exists);
+  ok(await adbBinary.exists());
 
   await extension.unload();
 });
