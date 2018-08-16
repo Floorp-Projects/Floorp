@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: navigator.locks.query method</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: navigator.locks.query method
+// META: script=resources/helpers.js
+
 'use strict';
 
 // Returns an array of the modes for the locks with matching name.
@@ -230,5 +225,3 @@ promise_test(async t => {
   assert_equals(res1_held_clients[0], res2_pending_clients[0]);
   assert_equals(res2_held_clients[0], res1_pending_clients[0]);
 }, 'query() can observe a deadlock');
-
-</script>

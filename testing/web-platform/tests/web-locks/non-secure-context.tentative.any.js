@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: API not available in non-secure context</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META title=Web Locks API: API not available in non-secure context
+
 'use strict';
 
 test(t => {
-  assert_false(window.isSecureContext);
+  assert_false(self.isSecureContext);
   assert_false('locks' in navigator,
                'navigator.locks is only present in secure contexts');
   assert_false('LockManager' in self,
@@ -16,4 +11,3 @@ test(t => {
   assert_false('Lock' in self,
                'Lock interface is only present in secure contexts');
 }, 'API presence in non-secure contexts');
-</script>

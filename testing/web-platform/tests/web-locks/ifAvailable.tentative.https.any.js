@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: ifAvailable option</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: ifAvailable option
+// META: script=resources/helpers.js
+
 'use strict';
 
 promise_test(async t => {
@@ -165,5 +160,3 @@ promise_test(async t => {
   });
   assert_true(callback1_called, 'callback1 should be called');
 }, 'Locks are available once previous release is processed');
-
-</script>
