@@ -147,10 +147,8 @@ MOZ_ARG_ENABLE_BOOL(llvm-hacks,
     MOZ_LLVM_HACKS= )
 if test -n "$MOZ_LLVM_HACKS"; then
     MOZ_NO_WLZDEFS=1
-    MOZ_CFLAGS_NSS=1
 fi
 AC_SUBST(MOZ_NO_WLZDEFS)
-AC_SUBST(MOZ_CFLAGS_NSS)
 
 dnl ========================================================
 dnl = Test for whether the compiler is compatible with the
