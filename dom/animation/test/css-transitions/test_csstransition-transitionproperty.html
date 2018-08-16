@@ -11,15 +11,17 @@
 test(t => {
   const div = addDiv(t);
 
-  // Add a transition
   div.style.left = '0px';
   getComputedStyle(div).transitionProperty;
   div.style.transition = 'all 100s';
   div.style.left = '100px';
 
-  assert_equals(div.getAnimations()[0].transitionProperty, 'left',
-                'The transitionProperty for the corresponds to the specific ' +
-                'property being transitioned');
+  assert_equals(
+    div.getAnimations()[0].transitionProperty,
+    'left',
+    'The transitionProperty for the returned transition corresponds to the'
+    + ' specific property being transitioned'
+  );
 }, 'CSSTransition.transitionProperty');
 
 </script>
