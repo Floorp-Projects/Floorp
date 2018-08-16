@@ -157,11 +157,11 @@ const PREFS_CONFIG = new Map([
   }],
   ["improvesearch.noDefaultSearchTile", {
     title: "Experiment to remove tiles that are the same as the default search",
-    value: true
+    value: AppConstants.MOZ_UPDATE_CHANNEL !== "release"
   }],
   ["improvesearch.topSiteSearchShortcuts", {
     title: "Experiment to show special top sites that perform keyword searches",
-    value: true
+    value: AppConstants.MOZ_UPDATE_CHANNEL !== "release"
   }],
   ["improvesearch.topSiteSearchShortcuts.searchEngines", {
     title: "An ordered, comma-delimited list of search shortcuts that we should try and pin",

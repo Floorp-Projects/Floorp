@@ -184,7 +184,9 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c)
     , isWebExtensionContentScript(false)
     , allowCPOWs(false)
     , isContentXBLCompartment(false)
+    , isUAWidgetCompartment(false)
     , isSandboxCompartment(false)
+    , isAddonCompartment(false)
     , universalXPConnectEnabled(false)
     , forcePermissiveCOWs(false)
     , wasNuked(false)
@@ -466,6 +468,26 @@ bool
 IsInContentXBLScope(JSObject* obj)
 {
     return IsContentXBLCompartment(js::GetObjectCompartment(obj));
+}
+
+bool
+IsUAWidgetCompartment(JS::Compartment* compartment)
+{
+    // We always eagerly create compartment privates for UA Widget compartments.
+    CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
+    return priv && priv->isUAWidgetCompartment;
+}
+
+bool
+IsUAWidgetScope(JS::Realm* realm)
+{
+    return IsUAWidgetCompartment(JS::GetCompartmentForRealm(realm));
+}
+
+bool
+IsInUAWidgetScope(JSObject* obj)
+{
+    return IsUAWidgetCompartment(js::GetObjectCompartment(obj));
 }
 
 bool
@@ -898,6 +920,7 @@ XPCJSRuntime::WeakPointerZonesCallback(JSContext* cx, void* data)
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(data);
 
     self->mWrappedJSMap->UpdateWeakPointersAfterGC();
+    self->mUAWidgetScopeMap.sweep();
 
     XPCWrappedNativeScope::UpdateWeakPointersInAllScopesAfterGC();
 }
@@ -3137,6 +3160,46 @@ XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb)
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");
     }
+}
+
+JSObject*
+XPCJSRuntime::GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal)
+{
+    MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(principal),
+        "Running UA Widget in chrome");
+
+    RefPtr<BasePrincipal> key = BasePrincipal::Cast(principal);
+    if (Principal2JSObjectMap::Ptr p = mUAWidgetScopeMap.lookup(key)) {
+        return p->value();
+    }
+
+    SandboxOptions options;
+    options.sandboxName.AssignLiteral("UA Widget Scope");
+    options.wantXrays = false;
+    options.wantComponents = false;
+    options.isUAWidgetScope = true;
+
+    // Use an ExpandedPrincipal to create asymmetric security.
+    MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
+    nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray(1);
+    principalAsArray.AppendElement(principal);
+    RefPtr<ExpandedPrincipal> ep =
+        ExpandedPrincipal::Create(principalAsArray,
+                                  principal->OriginAttributesRef());
+
+    // Create the sandbox.
+    RootedValue v(cx);
+    nsresult rv = CreateSandboxObject(cx, &v,
+                                      static_cast<nsIExpandedPrincipal*>(ep),
+                                      options);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    JSObject* scope = &v.toObject();
+
+    MOZ_ASSERT(xpc::IsInUAWidgetScope(js::UncheckedUnwrap(scope)));
+
+    MOZ_ALWAYS_TRUE(mUAWidgetScopeMap.putNew(key, scope));
+
+    return scope;
 }
 
 void

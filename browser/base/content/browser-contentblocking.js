@@ -132,6 +132,8 @@ var ContentBlocking = {
   PREF_ENABLED: "browser.contentblocking.enabled",
   PREF_UI_ENABLED: "browser.contentblocking.ui.enabled",
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
+  PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.reportBreakage.enabled",
+  PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   content: null,
   icon: null,
   activeTooltipText: null,
@@ -204,6 +206,23 @@ var ContentBlocking = {
     this.animatedIcon = $("#tracking-protection-icon-animatable-image");
     this.animatedIcon.addEventListener("animationend", () => this.iconBox.removeAttribute("animate"));
 
+    this.identityPopupMultiView = $("#identity-popup-multiView");
+    this.reportBreakageButton = $("#identity-popup-content-blocking-report-breakage");
+    this.reportBreakageURL = $("#identity-popup-breakageReportView-collection-url");
+    this.reportBreakageUA = $("#identity-popup-breakageReportView-collection-userAgent");
+    this.reportBreakageLearnMore = $("#identity-popup-breakageReportView-learn-more");
+
+    let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    this.reportBreakageLearnMore.href = baseURL + "tracking-protection-pbm";
+
+    this.updateReportBreakageUI = () => {
+      this.reportBreakageButton.hidden = !Services.prefs.getBoolPref(this.PREF_REPORT_BREAKAGE_ENABLED);
+    };
+
+    this.updateReportBreakageUI();
+
+    Services.prefs.addObserver(this.PREF_REPORT_BREAKAGE_ENABLED, this.updateReportBreakageUI);
+
     this.updateAnimationsEnabled = () => {
       this.iconBox.toggleAttribute("animationsenabled",
         Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false));
@@ -241,6 +260,7 @@ var ContentBlocking = {
     }
 
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
+    Services.prefs.removeObserver(this.PREF_REPORT_BREAKAGE_ENABLED, this.updateReportBreakageUI);
   },
 
   get enabled() {
@@ -284,6 +304,64 @@ var ContentBlocking = {
 
   openPreferences(origin) {
     openPreferences("privacy-trackingprotection", { origin });
+  },
+
+  backToMainView() {
+    this.identityPopupMultiView.goBack();
+  },
+
+  submitBreakageReport() {
+    document.getElementById("identity-popup").hidePopup();
+
+    let reportEndpoint = Services.prefs.getStringPref(this.PREF_REPORT_BREAKAGE_URL);
+    if (!reportEndpoint) {
+      return;
+    }
+
+    let formData = new FormData();
+    formData.set("title", this.reportURI.host);
+
+    // Leave the ? at the end of the URL to signify that this URL had its query stripped.
+    let urlWithoutQuery = this.reportURI.asciiSpec.replace(this.reportURI.query, "");
+    let body = `Full URL: ${urlWithoutQuery}\n`;
+    body += `userAgent: ${this.reportBreakageUA.textContent}\n`;
+
+    body += "\n**Preferences**\n";
+    body += `${TrackingProtection.PREF_ENABLED_GLOBALLY}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_ENABLED_GLOBALLY)}\n`;
+    body += `${TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS)}\n`;
+    body += `urlclassifier.trackingTable: ${Services.prefs.getStringPref("urlclassifier.trackingTable")}\n`;
+    body += `network.http.referer.defaultPolicy: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy")}\n`;
+    body += `network.http.referer.defaultPolicy.pbmode: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy.pbmode")}\n`;
+    body += `network.cookie.cookieBehavior: ${Services.prefs.getIntPref("network.cookie.cookieBehavior")}\n`;
+    body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref("network.cookie.lifetimePolicy")}\n`;
+    body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref("privacy.restrict3rdpartystorage.expiration")}\n`;
+    body += `${FastBlock.PREF_ENABLED}: ${Services.prefs.getBoolPref(FastBlock.PREF_ENABLED)}\n`;
+    body += `browser.fastblock.timeout: ${Services.prefs.getIntPref("browser.fastblock.timeout")}\n`;
+
+    let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
+    body += "\n**Comments**\n" + comments.value;
+
+    formData.set("body", body);
+
+    fetch(reportEndpoint, {
+      method: "POST",
+      credentials: "omit",
+      body: formData,
+    }).then(function(response) {
+      if (!response.ok) {
+        Cu.reportError(`Content Blocking report to ${reportEndpoint} failed with status ${response.status}`);
+      }
+    }).catch(Cu.reportError);
+  },
+
+  showReportBreakageSubview() {
+    // Save this URI to make sure that the user really only submits the location
+    // they see in the report breakage dialog.
+    this.reportURI = gBrowser.currentURI;
+    let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
+    this.reportBreakageURL.textContent = urlWithoutQuery;
+    this.reportBreakageUA.textContent = navigator.userAgent;
+    this.identityPopupMultiView.showSubView("identity-popup-breakageReportView");
   },
 
   eventsHistogramAdd(value) {

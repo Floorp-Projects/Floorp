@@ -209,6 +209,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
                                                                     const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
+  virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
@@ -262,6 +263,12 @@ private:
   // DocumentChannelCleanup.
   void CleanupBackgroundChannel();
 
+  // Check if the channel needs to enable the flow control on the IPC channel.
+  // That is, we may suspend the channel if the ODA-s to child process are not
+  // consumed quickly enough. Otherwise, memory explosion could happen.
+  bool NeedFlowControl();
+  int32_t mSendWindowSize;
+
   friend class HttpBackgroundChannelParent;
   friend class DivertDataAvailableEvent;
   friend class DivertStopRequestEvent;
@@ -309,6 +316,7 @@ private:
 
   uint8_t mSentRedirect1BeginFailed    : 1;
   uint8_t mReceivedRedirect2Verify     : 1;
+  uint8_t mHasSuspendedByBackPressure  : 1;
 
   // Indicates that diversion has been requested, but we could not start it
   // yet because the channel is still being opened with a synthesized response.
@@ -327,6 +335,11 @@ private:
   uint8_t mSuspendAfterSynthesizeResponse : 1;
   // Set if this channel will synthesize its response.
   uint8_t mWillSynthesizeResponse         : 1;
+
+  // Set if we get the result of and cache |mNeedFlowControl|
+  uint8_t mCacheNeedFlowControlInitialized : 1;
+  uint8_t mNeedFlowControl : 1;
+  uint8_t mSuspendedForFlowControl : 1;
 
   // Number of events to wait before actually invoking AsyncOpen on the main
   // channel. For each asynchronous step required before InvokeAsyncOpen, should

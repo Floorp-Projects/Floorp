@@ -49,6 +49,7 @@ public:
                 const nsAString& aTitle,
                 nsIURI* aURI,
                 StyleSheet* aSheet,
+                bool aSyncLoad,
                 nsIStyleSheetLinkingElement* aOwningElement,
                 IsAlternate aIsAlternate,
                 MediaMatched aMediaMatched,
@@ -124,8 +125,9 @@ public:
   // Number of sheets we @import-ed that are still loading
   uint32_t mPendingChildren;
 
-  // mSyncLoad is true when the load needs to be synchronous -- right
-  // now only for LoadSheetSync and children of sync loads.
+  // mSyncLoad is true when the load needs to be synchronous.
+  // For LoadSheetSync, <link> to chrome stylesheets in UA Widgets,
+  // and children of sync loads.
   bool mSyncLoad : 1;
 
   // mIsNonDocumentSheet is true if the load was triggered by LoadSheetSync or

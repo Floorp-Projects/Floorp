@@ -1373,6 +1373,12 @@ pref("dom.event.clipboardevents.enabled",   true);
 pref("dom.event.highrestimestamp.enabled",  true);
 pref("dom.event.coalesce_mouse_move",       true);
 
+#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+pref("dom.ua_widget.enabled", true);
+#else
+pref("dom.ua_widget.enabled", false);
+#endif
+
 #ifdef NIGHTLY_BUILD
 pref("dom.webcomponents.shadowdom.enabled", true);
 pref("dom.webcomponents.customelements.enabled", true);
@@ -1815,6 +1821,10 @@ pref("network.http.rcwn.max_wait_before_racing_ms", 500);
 // The ratio of the transaction count for the focused window and the count of
 // all available active connections.
 pref("network.http.focused_window_transaction_ratio", "0.9");
+
+// This is the size of the flow control window (KB) (i.e., the amount of data
+// that the parent can send to the child before getting an ack)
+pref("network.http.send_window_size", 1024);
 
 // Whether or not we give more priority to active tab.
 // Note that this requires restart for changes to take effect.

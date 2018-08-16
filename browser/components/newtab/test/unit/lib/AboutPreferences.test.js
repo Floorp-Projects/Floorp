@@ -132,7 +132,7 @@ describe("AboutPreferences Feed", () => {
     let gHomePane;
     const testRender = () => instance.renderPreferences({
       document: {
-        createElementNS: sandbox.stub().returns(node),
+        createXULElement: sandbox.stub().returns(node),
         createProcessingInstruction: sandbox.stub(),
         getElementById: sandbox.stub().returns(node),
         insertBefore: sandbox.stub().returnsArg(0)

@@ -1404,16 +1404,16 @@ GetParentPointer(const ParentObject& aObject)
 }
 
 template <typename T>
-inline bool
-GetUseXBLScope(T* aParentObject)
+inline mozilla::dom::ReflectionScope
+GetReflectionScope(T* aParentObject)
 {
-  return false;
+  return mozilla::dom::ReflectionScope::Content;
 }
 
-inline bool
-GetUseXBLScope(const ParentObject& aParentObject)
+inline mozilla::dom::ReflectionScope
+GetReflectionScope(const ParentObject& aParentObject)
 {
-  return aParentObject.mUseXBLScope;
+  return aParentObject.mReflectionScope;
 }
 
 template<class T>
@@ -1667,7 +1667,7 @@ struct WrapNativeHelper<T, false>
 template<typename T>
 static inline JSObject*
 FindAssociatedGlobal(JSContext* cx, T* p, nsWrapperCache* cache,
-                     bool useXBLScope = false)
+                     mozilla::dom::ReflectionScope scope = mozilla::dom::ReflectionScope::Content)
 {
   if (!p) {
     return JS::CurrentGlobalOrNull(cx);
@@ -1683,21 +1683,41 @@ FindAssociatedGlobal(JSContext* cx, T* p, nsWrapperCache* cache,
   // the JSContext.
   obj = JS::GetNonCCWObjectGlobal(obj);
 
-  if (!useXBLScope) {
-    return obj;
+  switch (scope) {
+    case mozilla::dom::ReflectionScope::XBL: {
+      // If scope is set to XBLScope, it means that the canonical reflector for this
+      // native object should live in the content XBL scope. Note that we never put
+      // anonymous content inside an add-on scope.
+      if (xpc::IsInContentXBLScope(obj)) {
+        return obj;
+      }
+      JS::Rooted<JSObject*> rootedObj(cx, obj);
+      JSObject* xblScope = xpc::GetXBLScope(cx, rootedObj);
+      MOZ_ASSERT_IF(xblScope, JS_IsGlobalObject(xblScope));
+      MOZ_ASSERT(JS::ObjectIsNotGray(xblScope));
+      return xblScope;
+    }
+
+    case mozilla::dom::ReflectionScope::UAWidget: {
+      // If scope is set to UAWidgetScope, it means that the canonical reflector
+      // for this native object should live in the UA widget scope.
+      if (xpc::IsInUAWidgetScope(obj)) {
+        return obj;
+      }
+      JS::Rooted<JSObject*> rootedObj(cx, obj);
+      JSObject* uaWidgetScope = xpc::GetUAWidgetScope(cx, rootedObj);
+      MOZ_ASSERT_IF(uaWidgetScope, JS_IsGlobalObject(uaWidgetScope));
+      MOZ_ASSERT(JS::ObjectIsNotGray(uaWidgetScope));
+      return uaWidgetScope;
+    }
+
+    case ReflectionScope::Content:
+      return obj;
   }
 
-  // If useXBLScope is true, it means that the canonical reflector for this
-  // native object should live in the content XBL scope. Note that we never put
-  // anonymous content inside an add-on scope.
-  if (xpc::IsInContentXBLScope(obj)) {
-    return obj;
-  }
-  JS::Rooted<JSObject*> rootedObj(cx, obj);
-  JSObject* xblScope = xpc::GetXBLScope(cx, rootedObj);
-  MOZ_ASSERT_IF(xblScope, JS_IsGlobalObject(xblScope));
-  MOZ_ASSERT(JS::ObjectIsNotGray(xblScope));
-  return xblScope;
+  MOZ_CRASH("Unknown ReflectionScope variant");
+
+  return nullptr;
 }
 
 // Finding of the associated global for an object, when we don't want to
@@ -1706,7 +1726,7 @@ template<typename T>
 static inline JSObject*
 FindAssociatedGlobal(JSContext* cx, const T& p)
 {
-  return FindAssociatedGlobal(cx, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
+  return FindAssociatedGlobal(cx, GetParentPointer(p), GetWrapperCache(p), GetReflectionScope(p));
 }
 
 // Specialization for the case of nsIGlobalObject, since in that case

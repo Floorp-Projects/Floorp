@@ -91,6 +91,10 @@ parent:
   // sure not to send any more messages after that.
   async DeletingChannel();
 
+  // Tell the parent the amount bytes read by child for the e10s back pressure
+  // flow control
+  async BytesRead(int32_t count);
+
   async __delete__();
 
 child:
