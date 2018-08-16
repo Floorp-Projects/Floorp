@@ -225,4 +225,4 @@ channel on irc.mozilla.org.  Don’t ask if you can ask a question, just
 ask, and please wait for an answer as we might not be in your timezone.
 
 [subscribe]: https://lists.mozilla.org/listinfo/tools-marionette
-[archive]: https://groups.google.com/group/mozilla.tools.marionette
+[archive]: https://lists.mozilla.org/pipermail/tools-marionette/

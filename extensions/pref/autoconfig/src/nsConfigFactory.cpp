@@ -4,24 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ModuleUtils.h"
-#include "nsAutoConfig.h"
 #include "nsReadConfig.h"
 #include "nsIAppStartupNotifier.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAutoConfig, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsReadConfig, Init)
 
-NS_DEFINE_NAMED_CID(NS_AUTOCONFIG_CID);
 NS_DEFINE_NAMED_CID(NS_READCONFIG_CID);
 
 static const mozilla::Module::CIDEntry kAutoConfigCIDs[] = {
-  { &kNS_AUTOCONFIG_CID, false, nullptr, nsAutoConfigConstructor },
   { &kNS_READCONFIG_CID, false, nullptr, nsReadConfigConstructor },
   { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kAutoConfigContracts[] = {
-  { NS_AUTOCONFIG_CONTRACTID, &kNS_AUTOCONFIG_CID },
   { NS_READCONFIG_CONTRACTID, &kNS_READCONFIG_CID },
   { nullptr }
 };

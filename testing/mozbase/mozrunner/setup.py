@@ -16,7 +16,7 @@ deps = [
     'mozfile==1.*',
     'mozinfo>=0.7,<2',
     'mozlog==3.*',
-    'mozprocess>=0.23,<2',
+    'mozprocess>=0.23,<1',
     'mozprofile>=1.1.0,<2',
     'six>=1.10.0,<2',
 ]

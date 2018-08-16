@@ -9,6 +9,7 @@ panel {
   -moz-appearance: menupopup;
   -moz-font-smoothing-background-color: -moz-mac-menupopup;
   background-color: Menu;
+  color: MenuText;
 }
 
 menupopup > menu > menupopup {

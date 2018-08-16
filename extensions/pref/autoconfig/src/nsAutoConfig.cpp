@@ -33,7 +33,7 @@ mozilla::LazyLogModule MCD("MCD");
 
 // nsISupports Implementation
 
-NS_IMPL_ISUPPORTS(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListener,
+NS_IMPL_ISUPPORTS(nsAutoConfig, nsITimerCallback, nsIStreamListener,
                   nsIObserver, nsIRequestObserver, nsISupportsWeakReference,
                   nsINamed)
 
@@ -63,28 +63,10 @@ nsAutoConfig::~nsAutoConfig()
 {
 }
 
-// attribute string configURL
-NS_IMETHODIMP nsAutoConfig::GetConfigURL(char **aConfigURL)
+void
+nsAutoConfig::SetConfigURL(const char *aConfigURL)
 {
-    if (!aConfigURL)
-        return NS_ERROR_NULL_POINTER;
-
-    if (mConfigURL.IsEmpty()) {
-        *aConfigURL = nullptr;
-        return NS_OK;
-    }
-
-    *aConfigURL = ToNewCString(mConfigURL);
-    if (!*aConfigURL)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-NS_IMETHODIMP nsAutoConfig::SetConfigURL(const char *aConfigURL)
-{
-    if (!aConfigURL)
-        return NS_ERROR_NULL_POINTER;
     mConfigURL.Assign(aConfigURL);
-    return NS_OK;
 }
 
 NS_IMETHODIMP

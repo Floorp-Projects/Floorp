@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-option('--enable-nodejs',
+option('--disable-nodejs',
        help='Require Node.js to build')
 
 
@@ -62,10 +62,19 @@ def nodejs_version(node):
 def nodejs_suitability(require, node, version):
     MIN_NODE_VERSION = Version('8.11')
 
+    MAYBE_FILE_A_BUG = '''
+
+If you believe this is a bug, <https://mzl.la/2vLbXAv> is a good way
+to file.  Executing `mach bootstrap --no-system changes` should
+install a compatible version in ~/.mozbuild on most platforms.
+More details: <https://bit.ly/2BbyD1E>
+'''
+
     if not node:
         msg = ('could not find Node.js executable; ensure `node` or `nodejs` '
                'is in PATH or set NODEJS in environment to point to an '
-               'executable')
+               'executable.%s' % (MAYBE_FILE_A_BUG)
+               )
 
         if require:
             raise FatalCheckError(msg)
@@ -75,7 +84,7 @@ def nodejs_suitability(require, node, version):
             return
 
     if not version:
-        msg = 'could not resolve Node.js version'
+        msg = 'could not resolve Node.js version.%s' % (MAYBE_FILE_A_BUG)
         if require:
             raise FatalCheckError(msg)
         else:
@@ -84,8 +93,8 @@ def nodejs_suitability(require, node, version):
             return
 
     if version < MIN_NODE_VERSION:
-        msg = 'NODEJS must point to node %s or newer; %s found' % (
-            MIN_NODE_VERSION, version)
+        msg = 'NODEJS must point to node %s or newer; %s found. %s' % (
+            MIN_NODE_VERSION, version, MAYBE_FILE_A_BUG)
 
         if require:
             raise FatalCheckError(msg)
