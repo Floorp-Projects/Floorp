@@ -147,6 +147,9 @@ class FontInspector {
    * Conversion is done via pixels. If neither of the two given unit types is "px",
    * recursively get the value in pixels, then convert that result to the desired unit.
    *
+   * @param  {String} property
+   *         Property name for the converted value.
+   *         Assumed to be "font-size", but special case for "line-height".
    * @param  {Number} value
    *         Numeric value to convert.
    * @param  {String} fromUnit
@@ -156,7 +159,7 @@ class FontInspector {
    * @return {Number}
    *         Converted numeric value.
    */
-  async convertUnits(value, fromUnit, toUnit) {
+  async convertUnits(property, value, fromUnit, toUnit) {
     if (value !== parseFloat(value)) {
       throw TypeError(`Invalid value for conversion. Expected Number, got ${value}`);
     }
@@ -165,10 +168,16 @@ class FontInspector {
       return value;
     }
 
+    // Special case for line-height. Consider em and untiless to be equivalent.
+    if (property === "line-height" &&
+       (fromUnit === "" && toUnit === "em") || (fromUnit === "em" && toUnit === "")) {
+      return value;
+    }
+
     // If neither unit is in pixels, first convert the value to pixels.
     // Reassign input value and source CSS unit.
     if (toUnit !== "px" && fromUnit !== "px") {
-      value = await this.convertUnits(value, fromUnit, "px");
+      value = await this.convertUnits(property, value, fromUnit, "px");
       fromUnit = "px";
     }
 
@@ -178,6 +187,8 @@ class FontInspector {
     const unit = toUnit === "px" ? fromUnit : toUnit;
     // NodeFront instance of selected element.
     const node = this.inspector.selection.nodeFront;
+    // Reference node based on which to convert relative sizes like "em" and "%".
+    const referenceNode = (property === "line-height") ? node : node.parentNode();
     // Default output value to input value for a 1-to-1 conversion as a guard against
     // unrecognized CSS units. It will not be correct, but it will also not break.
     let out = value;
@@ -216,7 +227,7 @@ class FontInspector {
 
     if (unit === "%") {
       computedStyle =
-        await this.pageStyle.getComputed(node.parentNode()).catch(console.error);
+        await this.pageStyle.getComputed(referenceNode).catch(console.error);
 
       if (!computedStyle) {
         return value;
@@ -227,9 +238,10 @@ class FontInspector {
         : value / 100 * parseFloat(computedStyle["font-size"].value);
     }
 
-    if (unit === "em") {
+    // Special handling for unitless line-height.
+    if (unit === "em" || (unit === "" && property === "line-height")) {
       computedStyle =
-        await this.pageStyle.getComputed(node.parentNode()).catch(console.error);
+        await this.pageStyle.getComputed(referenceNode).catch(console.error);
 
       if (!computedStyle) {
         return value;
@@ -772,8 +784,9 @@ class FontInspector {
     if (FONT_PROPERTIES.includes(property)) {
       let unit = fromUnit;
 
-      if (toUnit && fromUnit) {
-        value = await this.convertUnits(value, fromUnit, toUnit);
+      // Strict checks because "line-height" value may be unitless (empty string).
+      if (toUnit !== undefined && fromUnit !== undefined) {
+        value = await this.convertUnits(property, value, fromUnit, toUnit);
         unit = toUnit;
       }
 
