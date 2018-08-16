@@ -3247,22 +3247,6 @@ HTMLEditor::GetStyleSheetForURL(const nsAString& aURL)
   return mStyleSheets[foundIndex];
 }
 
-void
-HTMLEditor::GetURLForStyleSheet(StyleSheet* aStyleSheet,
-                                nsAString& aURL)
-{
-  // is it already in the list?
-  int32_t foundIndex = mStyleSheets.IndexOf(aStyleSheet);
-
-  // Don't fail if we don't find it in our list
-  if (foundIndex == -1) {
-    return;
-  }
-
-  // Found it in the list!
-  aURL = mStyleSheetURLs[foundIndex];
-}
-
 NS_IMETHODIMP
 HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
 {
