@@ -8328,7 +8328,8 @@ nsIDocument::GetContentInThisDocument(nsIFrame* aFrame) const
 void
 nsIDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
                                     const nsAString& aType,
-                                    bool aPersisted)
+                                    bool aPersisted,
+                                    bool aOnlySystemGroup)
 {
   if (!aDispatchTarget) {
     return;
@@ -8347,6 +8348,9 @@ nsIDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
 
   event->SetTrusted(true);
   event->SetTarget(this);
+  if (aOnlySystemGroup) {
+    event->WidgetEventPtr()->mFlags.mOnlySystemGroupDispatchInContent = true;
+  }
   EventDispatcher::DispatchDOMEvent(aDispatchTarget, nullptr, event,
                                     nullptr, nullptr);
 }
@@ -8360,7 +8364,8 @@ NotifyPageShow(nsIDocument* aDocument, void* aData)
 }
 
 void
-nsIDocument::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget)
+nsIDocument::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
+                        bool aOnlySystemGroup)
 {
   mVisible = true;
 
@@ -8413,7 +8418,8 @@ nsIDocument::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget)
     if (!target) {
       target = do_QueryInterface(GetWindow());
     }
-    DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
+    DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted,
+                           aOnlySystemGroup);
   }
 }
 
@@ -8460,7 +8466,8 @@ HasHttpScheme(nsIURI* aURI)
 }
 
 void
-nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget)
+nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
+                        bool aOnlySystemGroup)
 {
   if (IsTopLevelContentDocument() && GetDocGroup() &&
       Telemetry::CanRecordExtended()) {
@@ -8532,7 +8539,8 @@ nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget)
     }
     {
       PageUnloadingEventTimeStamp timeStamp(this);
-      DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
+      DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted,
+                             aOnlySystemGroup);
     }
   }
 

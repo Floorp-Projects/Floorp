@@ -51,10 +51,12 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
 
     rmvHide = BrowserTestUtils.addContentEventListener(browser, "pagehide",
                                                        () => eventListener("pagehide"),
-                                                       false, checkFn, false, false);
+                                                       {mozSystemGroup: true}, checkFn,
+                                                       false, false);
     rmvShow = BrowserTestUtils.addContentEventListener(browser, "pageshow",
                                                        () => eventListener("pageshow"),
-                                                       false, checkFn, false, false);
+                                                       {mozSystemGroup: true}, checkFn,
+                                                       false, false);
   });
 }
 
@@ -93,7 +95,7 @@ add_task(async function test_swap_frameloader_pagevisibility_events() {
   await ContentTask.spawn(emptyBrowser, {}, async() => {
     if (content.document.visibilityState === "hidden") {
       info("waiting for hidden emptyBrowser to pageshow");
-      await ContentTaskUtils.waitForEvent(content, "pageshow");
+      await ContentTaskUtils.waitForEvent(content, "pageshow", {mozSystemGroup: true});
     }
   });
 
