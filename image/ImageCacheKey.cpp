@@ -130,7 +130,10 @@ ImageCacheKey::SchemeIs(const char* aScheme)
 /* static */ void*
 ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
 {
-  if (!aDocument) {
+  // Cookie-averse documents can never have storage granted to them.  Since they
+  // may not have inner windows, they would require special handling below, so
+  // just bail out early here.
+  if (!aDocument || aDocument->IsCookieAverse()) {
     return nullptr;
   }
 
@@ -141,10 +144,11 @@ ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
     return aDocument;
   }
 
-  // If we must disable the storage, we want to create a unique cache key for
-  // this image.
-  if (nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI)) {
-    return aDocument;
+  // If the window is 3rd party resource, let's see if first-party storage
+  // access is granted for this image.
+  if (nsContentUtils::IsTrackingResourceWindow(aDocument->GetInnerWindow())) {
+    return nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI) ?
+             aDocument : nullptr;
   }
 
   // Another scenario is if this image is a 3rd party resource loaded by a
@@ -153,8 +157,7 @@ ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
   // this point.  The best approach here is to be conservative: if we are sure
   // that the permission is granted, let's return a nullptr. Otherwise, let's
   // make a unique image cache.
-  if (!aDocument->IsCookieAverse() &&
-      !AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(aDocument->GetInnerWindow(),
+  if (!AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(aDocument->GetInnerWindow(),
                                                                     aURI)) {
     return aDocument;
   }
