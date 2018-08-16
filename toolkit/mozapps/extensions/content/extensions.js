@@ -1207,15 +1207,15 @@ var gViewController = {
           return false;
         return hasPermission(aAddon, "uninstall");
       },
-      doCommand(aAddon) {
-        if (gViewController.currentViewObj != gDetailView) {
-          aAddon.uninstall();
-          return;
+      async doCommand(aAddon) {
+        // Make sure we're on the list view, which supports undo.
+        if (gViewController.currentViewObj != gListView) {
+          await new Promise(resolve => {
+            document.addEventListener("ViewChanged", resolve, {once: true});
+            gViewController.loadView(`addons://list/${aAddon.type}`);
+          });
         }
-
-        gViewController.popState(function() {
-          gViewController.currentViewObj.getListItemForID(aAddon.id).uninstall();
-        });
+        gViewController.currentViewObj.getListItemForID(aAddon.id).uninstall();
       },
       getTooltip(aAddon) {
         if (!aAddon)

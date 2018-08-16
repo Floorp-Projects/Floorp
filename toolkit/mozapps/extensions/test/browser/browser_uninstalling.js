@@ -7,6 +7,13 @@ var gDocument;
 var gCategoryUtilities;
 var gProvider;
 
+async function setup_manager(...args) {
+  let aWindow = await open_manager(...args);
+  gManagerWindow = aWindow;
+  gDocument = gManagerWindow.document;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+}
+
 async function test() {
   requestLongerTimeout(2);
   waitForExplicitFinish();
@@ -55,10 +62,7 @@ async function test() {
     operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
   }]);
 
-  let aWindow = await open_manager(null);
-  gManagerWindow = aWindow;
-  gDocument = gManagerWindow.document;
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  await setup_manager(null);
   run_next_test();
 }
 
@@ -179,27 +183,7 @@ add_test(async function() {
   run_next_test();
 });
 
-// Tests that uninstalling a restartless add-on from the details view switches
-// back to the list view and can be undone
-add_test(async function() {
-  var ID = "addon2@tests.mozilla.org";
-  var list = gDocument.getElementById("addon-list");
-
-  // Select the extensions category
-  await gCategoryUtilities.openType("extension");
-  is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
-
-  let aAddon = await AddonManager.getAddonByID(ID);
-  ok(aAddon.isActive, "Add-on should be active");
-  ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
-  ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
-
-  var item = get_item_in_list(ID, list);
-  isnot(item, null, "Should have found the add-on in the list");
-
-  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
-  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
-  await wait_for_view_load(gManagerWindow);
+async function test_uninstall_details(aAddon, ID) {
   is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
 
   var button = gDocument.getElementById("detail-uninstall-btn");
@@ -211,7 +195,8 @@ add_test(async function() {
   await wait_for_view_load(gManagerWindow);
   is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-  item = get_item_in_list(ID, list);
+  var list = gDocument.getElementById("addon-list");
+  var item = get_item_in_list(ID, list);
   isnot(item, null, "Should have found the add-on in the list");
   is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
@@ -235,6 +220,51 @@ add_test(async function() {
   ok(!button.disabled, "Button should not be disabled");
 
   run_next_test();
+}
+
+// Tests that uninstalling a restartless add-on from the details view switches
+// back to the list view and can be undone
+add_test(async function() {
+  var ID = "addon2@tests.mozilla.org";
+  var list = gDocument.getElementById("addon-list");
+
+  // Select the extensions category
+  await gCategoryUtilities.openType("extension");
+  is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
+
+  let aAddon = await AddonManager.getAddonByID(ID);
+  ok(aAddon.isActive, "Add-on should be active");
+  ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+  ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+
+  var item = get_item_in_list(ID, list);
+  isnot(item, null, "Should have found the add-on in the list");
+
+  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+  await wait_for_view_load(gManagerWindow);
+
+  // Test the uninstall.
+  return test_uninstall_details(aAddon, ID);
+});
+
+// Tests that uninstalling a restartless add-on from directly loading the
+// details view switches back to the list view and can be undone
+add_test(async function() {
+  // Close this about:addons and open a new one in a new tab.
+  await close_manager(gManagerWindow);
+
+  // Load the detail view directly.
+  var ID = "addon2@tests.mozilla.org";
+  await setup_manager(`addons://detail/${ID}`);
+
+  let aAddon = await AddonManager.getAddonByID(ID);
+  ok(aAddon.isActive, "Add-on should be active");
+  ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+  ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+
+  // Test the uninstall.
+  return test_uninstall_details(aAddon, ID);
 });
 
 // Tests that uninstalling a restartless add-on from the details view switches
@@ -412,10 +442,7 @@ add_test(async function() {
   is(bAddon, null, "Add-on should no longer be installed");
   is(bAddon2, null, "Second add-on should no longer be installed");
 
-  let aWindow = await open_manager(null);
-  gManagerWindow = aWindow;
-  gDocument = gManagerWindow.document;
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  await setup_manager(null);
   list = gDocument.getElementById("addon-list");
 
   is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
