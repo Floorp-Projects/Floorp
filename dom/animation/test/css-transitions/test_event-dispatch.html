@@ -351,7 +351,7 @@ promise_test(async t => {
   transition.cancel();
   // Then wait a couple of frames and check that no event was dispatched
   await waitForAnimationFrames(2);
-}, 'Call Animation.cancel after cancelling transition.');
+}, 'Call Animation.cancel after canceling transition.');
 
 promise_test(async t => {
   const { transition, watcher, div } =
@@ -364,7 +364,7 @@ promise_test(async t => {
   transition.play();
   await watcher.wait_for([ 'transitioncancel',
                            'transitionrun' ]);
-}, 'Restart transition after cancelling transition immediately');
+}, 'Restart transition after canceling transition immediately');
 
 promise_test(async t => {
   const { transition, watcher, div } =
