@@ -124,11 +124,6 @@ public:
 
   bool GetReturnInParagraphCreatesNewParagraph();
 
-  /**
-   * Returns the deepest container of the selection
-   */
-  Element* GetSelectionContainer();
-
   // TextEditor overrides
   virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,
                         nsISelectionController* aSelCon, uint32_t aFlags,
@@ -444,6 +439,17 @@ protected: // May be called by friends.
    */
   static Element* GetBlock(nsINode& aNode,
                            nsINode* aAncestorLimiter = nullptr);
+
+  /**
+   * Returns container element of ranges in Selection.  If Selection is
+   * collapsed, returns focus container node (or its parent element).
+   * If Selection selects only one element node, returns the element node.
+   * If Selection is only one range, returns common ancestor of the range.
+   * XXX If there are two or more Selection ranges, this returns parent node
+   *     of start container of a range which starts with different node from
+   *     start container of the first range.
+   */
+  Element* GetSelectionContainerElement(Selection& aSelection) const;
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,

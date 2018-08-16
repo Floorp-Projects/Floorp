@@ -4727,61 +4727,74 @@ HTMLEditor::GetElementOrigin(Element& aElement,
 }
 
 Element*
-HTMLEditor::GetSelectionContainer()
+HTMLEditor::GetSelectionContainerElement(Selection& aSelection) const
 {
-  // If we don't get the selection, just skip this
-  NS_ENSURE_TRUE(GetSelection(), nullptr);
-
-  OwningNonNull<Selection> selection = *GetSelection();
-
-  nsCOMPtr<nsINode> focusNode;
-
-  if (selection->IsCollapsed()) {
-    focusNode = selection->GetFocusNode();
+  nsINode* focusNode = nullptr;
+  if (aSelection.IsCollapsed()) {
+    focusNode = aSelection.GetFocusNode();
+    if (NS_WARN_IF(!focusNode)) {
+      return nullptr;
+    }
   } else {
-    int32_t rangeCount = selection->RangeCount();
+    uint32_t rangeCount = aSelection.RangeCount();
+    MOZ_ASSERT(rangeCount, "If 0, Selection::IsCollapsed() should return true");
 
     if (rangeCount == 1) {
-      RefPtr<nsRange> range = selection->GetRangeAt(0);
+      nsRange* range = aSelection.GetRangeAt(0);
 
-      nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
-      int32_t startOffset = range->StartOffset();
-      nsCOMPtr<nsINode> endContainer = range->GetEndContainer();
-      int32_t endOffset = range->EndOffset();
+      const RangeBoundary& startRef = range->StartRef();
+      const RangeBoundary& endRef = range->EndRef();
 
-      if (startContainer == endContainer && startOffset + 1 == endOffset) {
-        MOZ_ASSERT(!focusNode, "How did it get set already?");
-        IgnoredErrorResult error;
-        focusNode = GetSelectedElement(*selection, nullptr, error);
-        NS_WARNING_ASSERTION(!error.Failed(), "Failed to get selected element");
-      }
-      if (!focusNode) {
+      // This method called GetSelectedElement() to retrieve proper container
+      // when only one node is selected.  However, it simply returns start
+      // node of Selection with additional cost.  So, we do not need to call
+      // it anymore.
+      if (startRef.Container()->IsElement() &&
+          startRef.Container() == endRef.Container() &&
+          startRef.GetChildAtOffset() &&
+          startRef.GetChildAtOffset()->GetNextSibling() ==
+            endRef.GetChildAtOffset()) {
+        focusNode = startRef.GetChildAtOffset();
+        MOZ_ASSERT(focusNode, "Start container must not be nullptr");
+      } else {
         focusNode = range->GetCommonAncestor();
+        if (NS_WARN_IF(!focusNode)) {
+          return nullptr;
+        }
       }
     } else {
-      for (int32_t i = 0; i < rangeCount; i++) {
-        RefPtr<nsRange> range = selection->GetRangeAt(i);
-
-        nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
+      for (uint32_t i = 0; i < rangeCount; i++) {
+        nsRange* range = aSelection.GetRangeAt(i);
+        nsINode* startContainer = range->GetStartContainer();
         if (!focusNode) {
           focusNode = startContainer;
         } else if (focusNode != startContainer) {
+          // XXX Looks odd to use parent of startContainer because previous
+          //     range may not be in the parent node of current startContainer.
           focusNode = startContainer->GetParentNode();
+          // XXX Looks odd to break the for-loop here because we refer only
+          //     first range and another range which starts from different
+          //     container, and the latter range is preferred. Why?
           break;
         }
+      }
+      if (NS_WARN_IF(!focusNode)) {
+        return nullptr;
       }
     }
   }
 
-  if (focusNode && focusNode->GetAsText()) {
+  if (focusNode->GetAsText()) {
     focusNode = focusNode->GetParentNode();
+    if (NS_WARN_IF(!focusNode)) {
+      return nullptr;
+    }
   }
 
-  if (focusNode && focusNode->IsElement()) {
-    return focusNode->AsElement();
+  if (NS_WARN_IF(!focusNode->IsElement())) {
+    return nullptr;
   }
-
-  return nullptr;
+  return focusNode->AsElement();
 }
 
 NS_IMETHODIMP
