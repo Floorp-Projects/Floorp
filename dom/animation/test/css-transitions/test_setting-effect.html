@@ -9,16 +9,16 @@
 'use strict';
 
 promise_test(async t => {
-  var div = addDiv(t);
-  var watcher = new EventWatcher(t, div, [ 'transitionend',
-                                           'transitioncancel' ]);
+  const div = addDiv(t);
+  const watcher = new EventWatcher(t, div, [ 'transitionend',
+                                             'transitioncancel' ]);
   div.style.left = '0px';
 
   div.style.transition = 'left 100s';
   flushComputedStyle(div);
   div.style.left = '100px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   transition.currentTime = 50 * MS_PER_SEC;
@@ -31,16 +31,16 @@ promise_test(async t => {
 }, 'Test for removing a transition effect');
 
 promise_test(async t => {
-  var div = addDiv(t);
-  var watcher = new EventWatcher(t, div, [ 'transitionend',
-                                           'transitioncancel' ]);
+  const div = addDiv(t);
+  const watcher = new EventWatcher(t, div, [ 'transitionend',
+                                             'transitioncancel' ]);
   div.style.left = '0px';
 
   div.style.transition = 'left 100s';
   flushComputedStyle(div);
   div.style.left = '100px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   transition.currentTime = 50 * MS_PER_SEC;
@@ -54,9 +54,9 @@ promise_test(async t => {
 }, 'Test for replacing the transition effect by a new keyframe effect');
 
 promise_test(async t => {
-  var div = addDiv(t);
-  var watcher = new EventWatcher(t, div, [ 'transitionend',
-                                           'transitioncancel' ]);
+  const div = addDiv(t);
+  const watcher = new EventWatcher(t, div, [ 'transitionend',
+                                             'transitioncancel' ]);
   div.style.left = '0px';
   div.style.width = '0px';
 
@@ -64,7 +64,7 @@ promise_test(async t => {
   flushComputedStyle(div);
   div.style.left = '100px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   transition.currentTime = 50 * MS_PER_SEC;
@@ -75,9 +75,9 @@ promise_test(async t => {
 }, 'Test for setting a new keyframe effect with a shorter duration');
 
 promise_test(async t => {
-  var div = addDiv(t);
-  var watcher = new EventWatcher(t, div, [ 'transitionend',
-                                           'transitioncancel' ]);
+  const div = addDiv(t);
+  const watcher = new EventWatcher(t, div, [ 'transitionend',
+                                             'transitioncancel' ]);
   div.style.left = '0px';
   div.style.width = '0px';
 
@@ -85,7 +85,7 @@ promise_test(async t => {
   flushComputedStyle(div);
   div.style.left = '100px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   assert_true(transition.pending);
 
   transition.effect = new KeyframeEffect(div,

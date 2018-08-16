@@ -21,35 +21,34 @@
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().delay, 0,
                 'Initial value of delay');
 }, 'delay of a new tranisition');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().delay, 10000,
                 'Initial value of delay');
 }, 'Positive delay of a new transition');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s -5s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().delay, -5000,
                 'Initial value of delay');
 }, 'Negative delay of a new transition');
@@ -60,12 +59,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().endDelay, 0,
                 'Initial value of endDelay');
 }, 'endDelay of a new transition');
@@ -76,12 +75,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().fill, 'backwards',
                 'Fill backwards');
 }, 'fill of a new transition');
@@ -92,12 +91,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().iterationStart, 0,
                 'Initial value of iterationStart');
 }, 'iterationStart of a new transition');
@@ -108,12 +107,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().iterations, 1,
                 'Initial value of iterations');
 }, 'iterations of a new transition');
@@ -124,12 +123,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().duration, 10000,
                 'Initial value of duration');
 }, 'duration of a new transition');
@@ -140,12 +139,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().direction, 'normal',
                 'Initial value of direction');
 }, 'direction of a new transition');
@@ -156,12 +155,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().easing, 'linear',
                 'Initial value of easing');
 }, 'easing of a new transition');
@@ -173,13 +172,13 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s -5s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
-  var answer = 100000 - 5000; // ms
+  const effect = div.getAnimations()[0].effect;
+  const answer = 100000 - 5000; // ms
   assert_equals(effect.getComputedTiming().endTime, answer,
                 'Initial value of endTime');
 }, 'endTime of a new transition');
@@ -191,12 +190,12 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s -5s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().activeDuration, 100000,
                 'Initial value of activeDuration');
 }, 'activeDuration of a new transition');
@@ -207,35 +206,35 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().localTime, 0,
                 'Initial value of localTime');
 }, 'localTime of a new transition');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var anim = div.getAnimations()[0];
+  const anim = div.getAnimations()[0];
   anim.currentTime = 5000;
   assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
                 'current localTime after setting currentTime');
 }, 'localTime is always equal to currentTime');
 
 promise_test(async t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var anim = div.getAnimations()[0];
+  const anim = div.getAnimations()[0];
   anim.playbackRate = 2; // 2 times faster
 
   await anim.ready;
@@ -254,34 +253,34 @@ promise_test(async t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10.5s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().progress, 0.0,
                 'Initial value of progress');
 }, 'progress of a new transition');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10.5s 2s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().progress, 0.0,
                 'Initial value of progress');
 }, 'progress of a new transition with positive delay in before phase');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10.5s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var anim = div.getAnimations()[0];
+  const anim = div.getAnimations()[0];
   anim.finish()
   assert_equals(anim.effect.getComputedTiming().progress, null,
                 'finished progress');
@@ -293,34 +292,34 @@ test(t => {
 // --------------------
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().currentIteration, 0,
                 'Initial value of currentIteration');
 }, 'currentIteration of a new transition');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s 2s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var effect = div.getAnimations()[0].effect;
+  const effect = div.getAnimations()[0].effect;
   assert_equals(effect.getComputedTiming().currentIteration, 0,
                 'Initial value of currentIteration');
 }, 'currentIteration of a new transition with positive delay in before phase');
 
 test(t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
   div.style.marginLeft = '10px';
 
-  var anim = div.getAnimations()[0];
+  const anim = div.getAnimations()[0];
   anim.finish();
   assert_equals(anim.effect.getComputedTiming().currentIteration, null,
                 'finished currentIteration');

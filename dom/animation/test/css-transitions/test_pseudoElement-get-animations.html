@@ -23,19 +23,19 @@
 'use strict';
 
 test(t => {
-  var div = addDiv(t, { class: 'init' });
+  const div = addDiv(t, { class: 'init' });
   flushComputedStyle(div);
   div.classList.add('change');
 
   // Sanity checks
   assert_equals(document.getAnimations().length, 3,
                 'Got expected number of animations on document');
-  var pseudoTarget = document.getAnimations()[0].effect.target;
+  const pseudoTarget = document.getAnimations()[0].effect.target;
   assert_class_string(pseudoTarget, 'CSSPseudoElement',
                       'Got pseudo-element target');
 
   // Check animations returned from the pseudo element are in correct order
-  var anims = pseudoTarget.getAnimations();
+  const anims = pseudoTarget.getAnimations();
   assert_equals(anims.length, 3,
                 'Got expected number of animations on pseudo-element');
   assert_equals(anims[0].transitionProperty, 'height');

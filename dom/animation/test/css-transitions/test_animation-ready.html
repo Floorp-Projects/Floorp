@@ -9,15 +9,15 @@
 'use strict';
 
 promise_test(async t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
   div.style.transform = 'translate(0px)';
   getComputedStyle(div).transform;
   div.style.transition = 'transform 100s';
   div.style.transform = 'translate(10px)';
   getComputedStyle(div).transform;
 
-  var animation = div.getAnimations()[0];
-  var originalReadyPromise = animation.ready;
+  const animation = div.getAnimations()[0];
+  const originalReadyPromise = animation.ready;
 
   await animation.ready;
 
@@ -30,7 +30,7 @@ promise_test(async t => {
    + ' the animation property');
 
 promise_test(async t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // Set up pending transition
   div.style.transform = 'translate(0px)';
@@ -39,7 +39,7 @@ promise_test(async t => {
   div.style.transform = 'translate(10px)';
   getComputedStyle(div).transform;
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_true(animation.pending, 'Animation is initially pending');
   const readyPromise = animation.ready;
 
@@ -60,7 +60,7 @@ promise_test(async t => {
    + ' transition-property');
 
 promise_test(async t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // Set up pending transition
   div.style.marginLeft = '0px';
@@ -69,7 +69,7 @@ promise_test(async t => {
   div.style.marginLeft = '100px';
   getComputedStyle(div).marginLeft;
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_true(animation.pending, 'Animation is initially pending');
   const readyPromise = animation.ready;
 
