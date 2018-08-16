@@ -266,3 +266,19 @@ add_task(async function testPolicyPermission() {
   });
 });
 
+add_task(async function testHiddenAfterRefresh() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+
+    ok(BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup), "Popup is hidden");
+
+    await openIdentityPopup();
+
+    ok(!BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup), "Popup is shown");
+
+    let reloaded = BrowserTestUtils.browserLoaded(browser, false, PERMISSIONS_PAGE);
+    EventUtils.synthesizeKey("VK_F5", {}, browser.ownerGlobal);
+    await reloaded;
+
+    ok(BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup), "Popup is hidden");
+  });
+});
