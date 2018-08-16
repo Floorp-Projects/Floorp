@@ -4,14 +4,13 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-
 const { getStr } = require("../utils/l10n");
-const Types = require("../types");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
+const Types = require("../types");
+const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
 class DeviceSelector extends PureComponent {
   static get propTypes() {
@@ -27,54 +26,31 @@ class DeviceSelector extends PureComponent {
 
   constructor(props) {
     super(props);
-    this.onShowDeviceMenu = this.onShowDeviceMenu.bind(this);
+    this.onSelectChange = this.onSelectChange.bind(this);
   }
 
-  onShowDeviceMenu(event) {
+  onSelectChange({ target }) {
     const {
       devices,
-      selectedDevice,
       viewportId,
       onChangeDevice,
       onResizeViewport,
       onUpdateDeviceModal,
     } = this.props;
 
-    const menuItems = [];
-
+    if (target.value === OPEN_DEVICE_MODAL_VALUE) {
+      onUpdateDeviceModal(true, viewportId);
+      return;
+    }
     for (const type of devices.types) {
       for (const device of devices[type]) {
-        if (device.displayed) {
-          menuItems.push({
-            label: device.name,
-            type: "checkbox",
-            checked: selectedDevice === device.name,
-            click: () => {
-              onResizeViewport(viewportId, device.width, device.height);
-              onChangeDevice(viewportId, device, type);
-            },
-          });
+        if (device.name === target.value) {
+          onResizeViewport(device.width, device.height);
+          onChangeDevice(device, type);
+          return;
         }
       }
     }
-
-    menuItems.sort(function(a, b) {
-      return a.label.localeCompare(b.label);
-    });
-
-    if (menuItems.length > 0) {
-      menuItems.push("-");
-    }
-
-    menuItems.push({
-      label: getStr("responsive.editDeviceList2"),
-      click: () => onUpdateDeviceModal(true, viewportId),
-    });
-
-    showMenu(menuItems, {
-      button: event.target,
-      useTopLevelWindow: true,
-    });
   }
 
   render() {
@@ -83,19 +59,71 @@ class DeviceSelector extends PureComponent {
       selectedDevice,
     } = this.props;
 
-    return (
-      dom.button(
-        {
-          id: "device-selector",
-          className: "devtools-button devtools-dropdown-button",
-          disabled: devices.listState !== Types.loadableState.LOADED,
-          title: selectedDevice,
-          onClick: this.onShowDeviceMenu,
+    const options = [];
+    for (const type of devices.types) {
+      for (const device of devices[type]) {
+        if (device.displayed) {
+          options.push(device);
+        }
+      }
+    }
+
+    options.sort(function(a, b) {
+      return a.name.localeCompare(b.name);
+    });
+
+    let selectClass = "viewport-device-selector toolbar-dropdown";
+    if (selectedDevice) {
+      selectClass += " selected";
+    }
+
+    const state = devices.listState;
+    let listContent;
+
+    if (state == Types.loadableState.LOADED) {
+      listContent = [
+        dom.option({
+          value: "",
+          title: "",
+          disabled: true,
+          hidden: true,
         },
-        dom.span({ className: "title" },
-          selectedDevice || getStr("responsive.responsiveMode")
-        )
-      )
+        getStr("responsive.noDeviceSelected")),
+        options.map(device => {
+          return dom.option({
+            key: device.name,
+            value: device.name,
+            title: "",
+          }, device.name);
+        }),
+        dom.option({
+          value: OPEN_DEVICE_MODAL_VALUE,
+          title: "",
+        }, getStr("responsive.editDeviceList"))];
+    } else if (state == Types.loadableState.LOADING
+      || state == Types.loadableState.INITIALIZED) {
+      listContent = [dom.option({
+        value: "",
+        title: "",
+        disabled: true,
+      }, getStr("responsive.deviceListLoading"))];
+    } else if (state == Types.loadableState.ERROR) {
+      listContent = [dom.option({
+        value: "",
+        title: "",
+        disabled: true,
+      }, getStr("responsive.deviceListError"))];
+    }
+
+    return dom.select(
+      {
+        className: selectClass,
+        value: selectedDevice,
+        title: selectedDevice,
+        onChange: this.onSelectChange,
+        disabled: (state !== Types.loadableState.LOADED),
+      },
+      ...listContent
     );
   }
 }

@@ -11,5 +11,4 @@ exports.networkThrottling = require("devtools/client/shared/components/throttlin
 exports.reloadConditions = require("./reducers/reload-conditions");
 exports.screenshot = require("./reducers/screenshot");
 exports.touchSimulation = require("./reducers/touch-simulation");
-exports.ui = require("./reducers/ui");
 exports.viewports = require("./reducers/viewports");

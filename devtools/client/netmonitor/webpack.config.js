@@ -73,8 +73,7 @@ const webpackConfig = {
 
       "devtools/client/framework/devtools": path.join(__dirname, "../../client/shared/webpack/shims/framework-devtools-shim"),
       "devtools/client/framework/menu": "devtools-modules/src/menu",
-
-      "devtools/client/shared/components/menu/utils": "devtools-contextmenu",
+      "devtools/client/netmonitor/src/utils/menu": "devtools-contextmenu",
 
       "devtools/client/shared/vendor/react": "react",
       "devtools/client/shared/vendor/react-dom": "react-dom",
