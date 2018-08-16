@@ -9179,13 +9179,8 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
             return OptionFailure("ion-scalar-replacement", str);
     }
 
-    if (const char* str = op.getStringOption("ion-shared-stubs")) {
-        if (strcmp(str, "on") == 0)
-            jit::JitOptions.disableSharedStubs = false;
-        else if (strcmp(str, "off") == 0)
-            jit::JitOptions.disableSharedStubs = true;
-        else
-            return OptionFailure("ion-shared-stubs", str);
+    if (op.getStringOption("ion-shared-stubs")) {
+        // Dead option, preserved for now for potential fuzzer interaction.
     }
 
     if (const char* str = op.getStringOption("ion-gvn")) {

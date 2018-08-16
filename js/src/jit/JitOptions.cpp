@@ -125,9 +125,6 @@ DefaultJitOptions::DefaultJitOptions()
     // Toggles whether CacheIR stubs for binary arith operations are used
     SET_DEFAULT(disableCacheIRBinaryArith, false);
 
-    // Toggles whether shared stubs are used in Ionmonkey.
-    SET_DEFAULT(disableSharedStubs, false);
-
     // Toggles whether sincos optimization is globally disabled.
     // See bug984018: The MacOS is the only one that has the sincos fast.
     #if defined(XP_MACOSX)
