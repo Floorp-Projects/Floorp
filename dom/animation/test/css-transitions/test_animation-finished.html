@@ -8,7 +8,7 @@
 
 .animated-div {
   margin-left: 100px;
-  transition: margin-left 1000s linear 1000s;
+  transition: margin-left 100s linear 100s;
 }
 
 </style>
@@ -17,42 +17,22 @@
 
 'use strict';
 
-const ANIM_DELAY_MS = 1000000; // 1000s
-const ANIM_DUR_MS = 1000000; // 1000s
-
 promise_test(async t => {
-  const div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, { class: 'animated-div' });
   flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
+  div.style.marginLeft = '200px';
   const animation = div.getAnimations()[0];
 
   animation.finish();
   await animation.finished;
 
   animation.play();
-  assert_equals(animation.currentTime, 0,
-                'Replaying a finished transition should reset its ' +
-                'currentTime');
-}, 'Test restarting a finished transition');
-
-promise_test(async t => {
-  const div = addDiv(t, {'class': 'animated-div'});
-  flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
-  const animation = div.getAnimations()[0];
-  await animation.ready;
-
-  animation.playbackRate = -1;
-  await animation.finished;
-
-  animation.play();
-  // FIXME: once animation.effect.computedTiming.endTime is available (bug
-  // 1108055) we should use that here.
-  assert_equals(animation.currentTime, ANIM_DELAY_MS + ANIM_DUR_MS,
-                'Replaying a finished reversed transition should reset ' +
-                'its currentTime to the end of the effect');
-}, 'Test restarting a reversed finished transition');
+  const marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+  assert_equals(
+    marginLeft,
+    100,
+    'Replaying a finished transition should update the target element\'s style'
+  );
+}, 'Restarting a finished transition rewinds playback');
 
 </script>
