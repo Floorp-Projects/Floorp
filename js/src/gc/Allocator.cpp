@@ -151,8 +151,9 @@ GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize, AllocKind kind)
     if (allowGC && !cx->suppressGC) {
         cx->runtime()->gc.minorGC(JS::gcreason::OUT_OF_NURSERY);
 
-        // Exceeding gcMaxBytes while tenuring can disable the Nursery.
-        if (cx->nursery().isEnabled())
+        // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
+        // other heuristics can disable nursery strings for this zone.
+        if (cx->nursery().isEnabled() && cx->zone()->allocNurseryStrings)
             return static_cast<JSString*>(cx->nursery().allocateString(cx->zone(), thingSize, kind));
     }
     return nullptr;
