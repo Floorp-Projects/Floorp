@@ -11,31 +11,28 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const DeviceModal = createFactory(require("./DeviceModal"));
-const Toolbar = createFactory(require("./Toolbar"));
-const Viewports = createFactory(require("./Viewports"));
-
 const {
   addCustomDevice,
   removeCustomDevice,
   updateDeviceDisplayed,
   updateDeviceModal,
   updatePreferredDevices,
-} = require("../actions/devices");
+} = require("./actions/devices");
 const { changeNetworkThrottling } = require("devtools/client/shared/components/throttling/actions");
-const { changeReloadCondition } = require("../actions/reload-conditions");
-const { takeScreenshot } = require("../actions/screenshot");
-const { changeTouchSimulation } = require("../actions/touch-simulation");
-const { toggleLeftAlignment } = require("../actions/ui");
+const { changeReloadCondition } = require("./actions/reload-conditions");
+const { takeScreenshot } = require("./actions/screenshot");
+const { changeTouchSimulation } = require("./actions/touch-simulation");
 const {
   changeDevice,
   changePixelRatio,
   removeDeviceAssociation,
   resizeViewport,
   rotateViewport,
-} = require("../actions/viewports");
-
-const Types = require("../types");
+} = require("./actions/viewports");
+const DeviceModal = createFactory(require("./components/DeviceModal"));
+const GlobalToolbar = createFactory(require("./components/GlobalToolbar"));
+const Viewports = createFactory(require("./components/Viewports"));
+const Types = require("./types");
 
 class App extends Component {
   static get propTypes() {
@@ -53,7 +50,6 @@ class App extends Component {
 
   constructor(props) {
     super(props);
-
     this.onAddCustomDevice = this.onAddCustomDevice.bind(this);
     this.onBrowserMounted = this.onBrowserMounted.bind(this);
     this.onChangeDevice = this.onChangeDevice.bind(this);
@@ -69,7 +65,6 @@ class App extends Component {
     this.onResizeViewport = this.onResizeViewport.bind(this);
     this.onRotateViewport = this.onRotateViewport.bind(this);
     this.onScreenshot = this.onScreenshot.bind(this);
-    this.onToggleLeftAlignment = this.onToggleLeftAlignment.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);
     this.onUpdateDeviceModal = this.onUpdateDeviceModal.bind(this);
   }
@@ -164,10 +159,6 @@ class App extends Component {
     this.props.dispatch(takeScreenshot());
   }
 
-  onToggleLeftAlignment() {
-    this.props.dispatch(toggleLeftAlignment());
-  }
-
   onUpdateDeviceDisplayed(device, deviceType, displayed) {
     this.props.dispatch(updateDeviceDisplayed(device, deviceType, displayed));
   }
@@ -203,17 +194,17 @@ class App extends Component {
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
-      onToggleLeftAlignment,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
     } = this;
 
-    if (!viewports.length) {
-      return null;
-    }
+    let selectedDevice = "";
+    let selectedPixelRatio = { value: 0 };
 
-    const selectedDevice = viewports[0].device;
-    const selectedPixelRatio = viewports[0].pixelRatio;
+    if (viewports.length) {
+      selectedDevice = viewports[0].device;
+      selectedPixelRatio = viewports[0].pixelRatio;
+    }
 
     let deviceAdderViewportTemplate = {};
     if (devices.modalOpenedFromViewport !== null) {
@@ -224,7 +215,7 @@ class App extends Component {
       {
         id: "app",
       },
-      Toolbar({
+      GlobalToolbar({
         devices,
         displayPixelRatio,
         networkThrottling,
@@ -233,27 +224,24 @@ class App extends Component {
         selectedDevice,
         selectedPixelRatio,
         touchSimulation,
-        viewport: viewports[0],
-        onChangeDevice,
         onChangeNetworkThrottling,
         onChangePixelRatio,
         onChangeReloadCondition,
         onChangeTouchSimulation,
         onExit,
-        onRemoveDeviceAssociation,
-        onResizeViewport,
-        onRotateViewport,
         onScreenshot,
-        onToggleLeftAlignment,
-        onUpdateDeviceModal,
       }),
       Viewports({
+        devices,
         screenshot,
         viewports,
         onBrowserMounted,
+        onChangeDevice,
         onContentResize,
         onRemoveDeviceAssociation,
+        onRotateViewport,
         onResizeViewport,
+        onUpdateDeviceModal,
       }),
       DeviceModal({
         deviceAdderViewportTemplate,

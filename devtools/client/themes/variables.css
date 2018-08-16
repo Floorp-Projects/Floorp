@@ -224,7 +224,7 @@
 
   --toolbarbutton-background: var(--theme-toolbar-hover);
   --toolbarbutton-border-color: transparent;
-  --toolbarbutton-hover-background: var(--theme-toolbar-hover);
+  --toolbarbutton-hover-background: rgba(110,120,130,0.2);
   --toolbarbutton-hover-border-color: var(--toolbarbutton-border-color);
   --toolbarbutton-focus-background: var(--theme-selection-focus-background);
   --toolbarbutton-focus-color: var(--theme-selection-focus-color);

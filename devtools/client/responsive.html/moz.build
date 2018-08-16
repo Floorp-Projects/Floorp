@@ -14,13 +14,14 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'app.js',
     'commands.js',
     'constants.js',
     'index.css',
     'index.js',
     'manager.js',
     'reducers.js',
-    'setting-onboarding-tooltip.js',
+    'responsive-ua.css',
     'store.js',
     'types.js',
 )

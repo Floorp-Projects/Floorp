@@ -15,6 +15,7 @@ DevToolsModules(
     'headers-provider.js',
     'l10n.js',
     'mdn-utils.js',
+    'menu.js',
     'open-request-in-tab.js',
     'prefs.js',
     'request-utils.js',

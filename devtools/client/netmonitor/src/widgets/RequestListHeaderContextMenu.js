@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { showMenu } = require("devtools/client/shared/components/menu/utils");
+const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
 const { HEADERS } = require("../constants");
 const { L10N } = require("../utils/l10n");
 

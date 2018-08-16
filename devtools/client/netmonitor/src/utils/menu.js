@@ -7,23 +7,14 @@
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-loader.lazyRequireGetter(this, "getTopLevelWindow", "devtools/client/responsive.html/utils/window", true);
-
 /**
  * Helper function for opening context menu.
  *
- * @param {Array} items
- *        List of menu items.
+ * @param {Array} items List of menu items.
  * @param {Object} options:
- * @property {Element} button
- *           Button element used to open the menu.
- * @property {Number} screenX
- *           Screen x coordinate of the menu on the screen.
- * @property {Number} screenY
- *           Screen y coordinate of the menu on the screen.
- * @property {Boolean} useTopLevelWindow
- *           Whether or not the top level window needs to be fetched. This option is used
- *           by RDM.
+ * @property {Number} screenX coordinate of the menu on the screen
+ * @property {Number} screenY coordinate of the menu on the screen
+ * @property {Object} button parent used to open the menu
  */
 function showMenu(items, options) {
   if (items.length === 0) {
@@ -64,14 +55,7 @@ function showMenu(items, options) {
     screenY = rect.bottom + defaultView.mozInnerScreenY;
   }
 
-  let doc;
-  if (options.useTopLevelWindow) {
-    doc = getTopLevelWindow(window).document;
-  } else {
-    doc = window.parent.document;
-  }
-
-  menu.popup(screenX, screenY, { doc });
+  menu.popup(screenX, screenY, { doc: window.parent.document });
 }
 
 module.exports = {
