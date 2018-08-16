@@ -1195,16 +1195,33 @@ pref("print.font-variations-as-paths", true);
 // in a document.
 pref("extensions.spellcheck.inline.max-misspellings", 500);
 
-// Prefs used by libeditor. Prefs specific to seamonkey composer
-// belong in comm-central/editor/ui/composer.js
+// General prefs for editor.
+// Whether Gecko specific editing UI is enabled by default.
+// Those UIs are not impelemnted by any other browsers.  So, only Firefox users
+// can change some styles with them.  This means that only Firefox users may
+// get unexpected result of some web apps if they assume that users cannot
+// change such styles.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("editor.resizing.enabled_by_default", false);
+pref("editor.inline_table_editing.enabled_by_default", false);
+pref("editor.positioning.enabled_by_default", false);
+#else
+pref("editor.resizing.enabled_by_default", true);
+pref("editor.inline_table_editing.enabled_by_default", true);
+pref("editor.positioning.enabled_by_default", true);
+#endif
+// Whether inserting <div> when typing Enter in a block element which can
+// contain <div>.  If false, inserts <br> instead.
+pref("editor.use_div_for_default_newlines",  true);
 
+// Prefs specific to seamonkey composer belong in
+// comm-central/editor/ui/composer.js
 pref("editor.use_custom_colors", false);
 pref("editor.singleLine.pasteNewlines",      2);
 pref("editor.use_css",                       false);
 pref("editor.css.default_length_unit",       "px");
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
-pref("editor.use_div_for_default_newlines",  true);
 
 // Scripts & Windows prefs
 pref("dom.disable_beforeunload",            false);
